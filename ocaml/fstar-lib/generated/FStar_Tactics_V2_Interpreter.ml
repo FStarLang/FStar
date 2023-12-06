@@ -3455,138 +3455,144 @@ let run_tactic_on_ps' :
                        else ());
                       (match res with
                        | FStar_Tactics_Result.Success (ret, ps3) ->
-                           let remaining_smt_goals =
-                             FStar_Compiler_List.op_At
-                               ps3.FStar_Tactics_Types.goals
-                               ps3.FStar_Tactics_Types.smt_goals in
-                           (FStar_Compiler_List.iter
-                              (fun g1 ->
-                                 FStar_Tactics_V2_Basic.mark_goal_implicit_already_checked
-                                   g1;
-                                 (let uu___7 =
-                                    FStar_Tactics_V2_Basic.is_irrelevant g1 in
-                                  if uu___7
-                                  then
-                                    ((let uu___9 =
-                                        FStar_Compiler_Effect.op_Bang tacdbg in
-                                      if uu___9
-                                      then
-                                        let uu___10 =
-                                          let uu___11 =
-                                            FStar_Tactics_Types.goal_witness
-                                              g1 in
-                                          FStar_Class_Show.show
-                                            FStar_Syntax_Print.showable_term
-                                            uu___11 in
-                                        FStar_Compiler_Util.print1
-                                          "Assigning irrelevant goal %s\n"
-                                          uu___10
-                                      else ());
-                                     (let uu___9 =
-                                        let uu___10 =
-                                          FStar_Tactics_Types.goal_env g1 in
-                                        let uu___11 =
-                                          FStar_Tactics_Types.goal_witness g1 in
-                                        FStar_TypeChecker_Rel.teq_nosmt_force
-                                          uu___10 uu___11
-                                          FStar_Syntax_Util.exp_unit in
-                                      if uu___9
-                                      then ()
-                                      else
-                                        (let uu___11 =
-                                           let uu___12 =
-                                             let uu___13 =
-                                               FStar_Tactics_Types.goal_witness
-                                                 g1 in
-                                             FStar_Class_Show.show
-                                               FStar_Syntax_Print.showable_term
-                                               uu___13 in
-                                           FStar_Compiler_Util.format1
-                                             "Irrelevant tactic witness does not unify with (): %s"
-                                             uu___12 in
-                                         failwith uu___11)))
-                                  else ())) remaining_smt_goals;
-                            (let uu___7 =
+                           ((let uu___6 =
                                FStar_Compiler_Effect.op_Bang tacdbg in
-                             if uu___7
+                             if uu___6
                              then
-                               let uu___8 =
-                                 (FStar_Common.string_of_list ())
-                                   (fun imp ->
-                                      FStar_Class_Show.show
-                                        FStar_Syntax_Print.showable_ctxu
-                                        imp.FStar_TypeChecker_Common.imp_uvar)
-                                   ps3.FStar_Tactics_Types.all_implicits in
-                               FStar_Compiler_Util.print1
-                                 "About to check tactic implicits: %s\n"
-                                 uu___8
+                               FStar_Tactics_Printing.do_dump_proofstate ps3
+                                 "at the finish line"
                              else ());
-                            (let g1 =
-                               {
-                                 FStar_TypeChecker_Common.guard_f =
-                                   (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.guard_f);
-                                 FStar_TypeChecker_Common.deferred_to_tac =
-                                   (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred_to_tac);
-                                 FStar_TypeChecker_Common.deferred =
-                                   (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred);
-                                 FStar_TypeChecker_Common.univ_ineqs =
-                                   (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.univ_ineqs);
-                                 FStar_TypeChecker_Common.implicits =
-                                   (ps3.FStar_Tactics_Types.all_implicits)
-                               } in
-                             let g2 =
-                               FStar_TypeChecker_Rel.solve_deferred_constraints
-                                 env g1 in
-                             (let uu___8 =
-                                FStar_Compiler_Effect.op_Bang tacdbg in
-                              if uu___8
-                              then
-                                let uu___9 =
-                                  FStar_Class_Show.show
-                                    (FStar_Class_Show.printableshow
-                                       FStar_Class_Printable.printable_nat)
-                                    (FStar_Compiler_List.length
-                                       ps3.FStar_Tactics_Types.all_implicits) in
-                                let uu___10 =
-                                  FStar_Class_Show.show
-                                    (FStar_Class_Show.show_list
-                                       FStar_TypeChecker_Common.show_implicit)
-                                    ps3.FStar_Tactics_Types.all_implicits in
-                                FStar_Compiler_Util.print2
-                                  "Checked %s implicits (1): %s\n" uu___9
-                                  uu___10
-                              else ());
-                             (let tagged_implicits =
-                                FStar_TypeChecker_Rel.resolve_implicits_tac
-                                  env g2 in
-                              (let uu___9 =
-                                 FStar_Compiler_Effect.op_Bang tacdbg in
-                               if uu___9
-                               then
-                                 let uu___10 =
-                                   FStar_Class_Show.show
-                                     (FStar_Class_Show.printableshow
-                                        FStar_Class_Printable.printable_nat)
-                                     (FStar_Compiler_List.length
-                                        ps3.FStar_Tactics_Types.all_implicits) in
-                                 let uu___11 =
-                                   FStar_Class_Show.show
-                                     (FStar_Class_Show.show_list
-                                        FStar_TypeChecker_Common.show_implicit)
-                                     ps3.FStar_Tactics_Types.all_implicits in
-                                 FStar_Compiler_Util.print2
-                                   "Checked %s implicits (2): %s\n" uu___10
-                                   uu___11
-                               else ());
-                              report_implicits rng_goal tagged_implicits;
-                              (let uu___11 =
-                                 FStar_Compiler_Effect.op_Bang tacdbg in
-                               if uu___11
-                               then
-                                 FStar_Tactics_Printing.do_dump_proofstate
-                                   ps3 "at the finish line"
-                               else ());
-                              (remaining_smt_goals, ret))))
+                            (let remaining_smt_goals =
+                               FStar_Compiler_List.op_At
+                                 ps3.FStar_Tactics_Types.goals
+                                 ps3.FStar_Tactics_Types.smt_goals in
+                             FStar_Compiler_List.iter
+                               (fun g1 ->
+                                  FStar_Tactics_V2_Basic.mark_goal_implicit_already_checked
+                                    g1;
+                                  (let uu___8 =
+                                     FStar_Tactics_V2_Basic.is_irrelevant g1 in
+                                   if uu___8
+                                   then
+                                     ((let uu___10 =
+                                         FStar_Compiler_Effect.op_Bang tacdbg in
+                                       if uu___10
+                                       then
+                                         let uu___11 =
+                                           let uu___12 =
+                                             FStar_Tactics_Types.goal_witness
+                                               g1 in
+                                           FStar_Class_Show.show
+                                             FStar_Syntax_Print.showable_term
+                                             uu___12 in
+                                         FStar_Compiler_Util.print1
+                                           "Assigning irrelevant goal %s\n"
+                                           uu___11
+                                       else ());
+                                      (let uu___10 =
+                                         let uu___11 =
+                                           FStar_Tactics_Types.goal_env g1 in
+                                         let uu___12 =
+                                           FStar_Tactics_Types.goal_witness
+                                             g1 in
+                                         FStar_TypeChecker_Rel.teq_nosmt_force
+                                           uu___11 uu___12
+                                           FStar_Syntax_Util.exp_unit in
+                                       if uu___10
+                                       then ()
+                                       else
+                                         (let uu___12 =
+                                            let uu___13 =
+                                              let uu___14 =
+                                                FStar_Tactics_Types.goal_witness
+                                                  g1 in
+                                              FStar_Class_Show.show
+                                                FStar_Syntax_Print.showable_term
+                                                uu___14 in
+                                            FStar_Compiler_Util.format1
+                                              "Irrelevant tactic witness does not unify with (): %s"
+                                              uu___13 in
+                                          failwith uu___12)))
+                                   else ())) remaining_smt_goals;
+                             FStar_Errors.with_ctx
+                               "While checking implicits left by a tactic"
+                               (fun uu___8 ->
+                                  (let uu___10 =
+                                     FStar_Compiler_Effect.op_Bang tacdbg in
+                                   if uu___10
+                                   then
+                                     let uu___11 =
+                                       (FStar_Common.string_of_list ())
+                                         (fun imp ->
+                                            FStar_Class_Show.show
+                                              FStar_Syntax_Print.showable_ctxu
+                                              imp.FStar_TypeChecker_Common.imp_uvar)
+                                         ps3.FStar_Tactics_Types.all_implicits in
+                                     FStar_Compiler_Util.print1
+                                       "About to check tactic implicits: %s\n"
+                                       uu___11
+                                   else ());
+                                  (let g1 =
+                                     {
+                                       FStar_TypeChecker_Common.guard_f =
+                                         (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.guard_f);
+                                       FStar_TypeChecker_Common.deferred_to_tac
+                                         =
+                                         (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred_to_tac);
+                                       FStar_TypeChecker_Common.deferred =
+                                         (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred);
+                                       FStar_TypeChecker_Common.univ_ineqs =
+                                         (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.univ_ineqs);
+                                       FStar_TypeChecker_Common.implicits =
+                                         (ps3.FStar_Tactics_Types.all_implicits)
+                                     } in
+                                   let g2 =
+                                     FStar_TypeChecker_Rel.solve_deferred_constraints
+                                       env g1 in
+                                   (let uu___11 =
+                                      FStar_Compiler_Effect.op_Bang tacdbg in
+                                    if uu___11
+                                    then
+                                      let uu___12 =
+                                        FStar_Class_Show.show
+                                          (FStar_Class_Show.printableshow
+                                             FStar_Class_Printable.printable_nat)
+                                          (FStar_Compiler_List.length
+                                             ps3.FStar_Tactics_Types.all_implicits) in
+                                      let uu___13 =
+                                        FStar_Class_Show.show
+                                          (FStar_Class_Show.show_list
+                                             FStar_TypeChecker_Common.show_implicit)
+                                          ps3.FStar_Tactics_Types.all_implicits in
+                                      FStar_Compiler_Util.print2
+                                        "Checked %s implicits (1): %s\n"
+                                        uu___12 uu___13
+                                    else ());
+                                   (let tagged_implicits =
+                                      FStar_TypeChecker_Rel.resolve_implicits_tac
+                                        env g2 in
+                                    (let uu___12 =
+                                       FStar_Compiler_Effect.op_Bang tacdbg in
+                                     if uu___12
+                                     then
+                                       let uu___13 =
+                                         FStar_Class_Show.show
+                                           (FStar_Class_Show.printableshow
+                                              FStar_Class_Printable.printable_nat)
+                                           (FStar_Compiler_List.length
+                                              ps3.FStar_Tactics_Types.all_implicits) in
+                                       let uu___14 =
+                                         FStar_Class_Show.show
+                                           (FStar_Class_Show.show_list
+                                              FStar_TypeChecker_Common.show_implicit)
+                                           ps3.FStar_Tactics_Types.all_implicits in
+                                       FStar_Compiler_Util.print2
+                                         "Checked %s implicits (2): %s\n"
+                                         uu___13 uu___14
+                                     else ());
+                                    report_implicits rng_goal
+                                      tagged_implicits)));
+                             (remaining_smt_goals, ret)))
                        | FStar_Tactics_Result.Failed
                            (FStar_Errors.Error (code, msg, rng, ctx), ps3) ->
                            let msg1 =

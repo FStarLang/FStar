@@ -14211,150 +14211,159 @@ let (try_solve_deferred_constraints :
               smt_ok &&
                 (let uu___ = FStar_Options.ml_ish () in
                  Prims.op_Negation uu___) in
-            let uu___ =
-              let uu___1 =
-                let uu___2 = FStar_TypeChecker_Env.current_module env in
-                FStar_Ident.string_of_lid uu___2 in
-              FStar_Pervasives_Native.Some uu___1 in
-            FStar_Profiling.profile
-              (fun uu___1 ->
-                 let typeclass_variables =
-                   FStar_Compiler_Effect.op_Bar_Greater
-                     g.FStar_TypeChecker_Common.implicits
-                     (FStar_Compiler_List.collect
-                        (fun i ->
-                           match (i.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_meta
-                           with
-                           | FStar_Pervasives_Native.Some
-                               (FStar_Syntax_Syntax.Ctx_uvar_meta_tac tac) ->
-                               let uu___2 =
-                                 FStar_Syntax_Util.head_and_args_full tac in
-                               (match uu___2 with
-                                | (head, uu___3) ->
-                                    let uu___4 =
-                                      FStar_Syntax_Util.is_fvar
-                                        FStar_Parser_Const.tcresolve_lid head in
-                                    if uu___4
-                                    then
-                                      let goal_type =
-                                        FStar_Syntax_Util.ctx_uvar_typ
-                                          i.FStar_TypeChecker_Common.imp_uvar in
-                                      let uvs =
-                                        FStar_Syntax_Free.uvars goal_type in
-                                      FStar_Compiler_Util.set_elements uvs
-                                    else [])
-                           | uu___2 -> [])) in
-                 let wl =
+            FStar_Errors.with_ctx "While solving deferred constraints"
+              (fun uu___ ->
+                 let uu___1 =
                    let uu___2 =
-                     wl_of_guard env g.FStar_TypeChecker_Common.deferred in
-                   {
-                     attempting = (uu___2.attempting);
-                     wl_deferred = (uu___2.wl_deferred);
-                     wl_deferred_to_tac = (uu___2.wl_deferred_to_tac);
-                     ctr = (uu___2.ctr);
-                     defer_ok;
-                     smt_ok = smt_ok1;
-                     umax_heuristic_ok = (uu___2.umax_heuristic_ok);
-                     tcenv = (uu___2.tcenv);
-                     wl_implicits = (uu___2.wl_implicits);
-                     repr_subcomp_allowed = (uu___2.repr_subcomp_allowed);
-                     typeclass_variables
-                   } in
-                 let fail uu___2 =
-                   match uu___2 with
-                   | (d, s) ->
-                       let msg = explain wl d s in
-                       FStar_Errors.raise_error
-                         (FStar_Errors_Codes.Fatal_ErrorInSolveDeferredConstraints,
-                           msg) (p_loc d) in
-                 (let uu___3 =
-                    FStar_Compiler_Effect.op_Less_Bar
-                      (FStar_TypeChecker_Env.debug env)
-                      (FStar_Options.Other "Rel") in
-                  if uu___3
-                  then
-                    let uu___4 =
-                      FStar_Compiler_Util.string_of_bool deferred_to_tac_ok in
-                    let uu___5 = wl_to_string wl in
-                    let uu___6 =
-                      FStar_Compiler_Util.string_of_int
-                        (FStar_Compiler_List.length
-                           g.FStar_TypeChecker_Common.implicits) in
-                    FStar_Compiler_Util.print4
-                      "Trying to solve carried problems (defer_ok=%s) (deferred_to_tac_ok=%s): begin\n\t%s\nend\n and %s implicits\n"
-                      (string_of_defer_ok defer_ok) uu___4 uu___5 uu___6
-                  else ());
-                 (let g1 =
-                    let uu___3 = solve_and_commit wl fail in
-                    match uu___3 with
-                    | FStar_Pervasives_Native.Some
-                        (uu___4::uu___5, uu___6, uu___7) when
-                        defer_ok = NoDefer ->
-                        failwith
-                          "Impossible: Unexpected deferred constraints remain"
-                    | FStar_Pervasives_Native.Some
-                        (deferred, defer_to_tac, imps) ->
+                     let uu___3 = FStar_TypeChecker_Env.current_module env in
+                     FStar_Ident.string_of_lid uu___3 in
+                   FStar_Pervasives_Native.Some uu___2 in
+                 FStar_Profiling.profile
+                   (fun uu___2 ->
+                      let typeclass_variables =
+                        FStar_Compiler_Effect.op_Bar_Greater
+                          g.FStar_TypeChecker_Common.implicits
+                          (FStar_Compiler_List.collect
+                             (fun i ->
+                                match (i.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_meta
+                                with
+                                | FStar_Pervasives_Native.Some
+                                    (FStar_Syntax_Syntax.Ctx_uvar_meta_tac
+                                    tac) ->
+                                    let uu___3 =
+                                      FStar_Syntax_Util.head_and_args_full
+                                        tac in
+                                    (match uu___3 with
+                                     | (head, uu___4) ->
+                                         let uu___5 =
+                                           FStar_Syntax_Util.is_fvar
+                                             FStar_Parser_Const.tcresolve_lid
+                                             head in
+                                         if uu___5
+                                         then
+                                           let goal_type =
+                                             FStar_Syntax_Util.ctx_uvar_typ
+                                               i.FStar_TypeChecker_Common.imp_uvar in
+                                           let uvs =
+                                             FStar_Syntax_Free.uvars
+                                               goal_type in
+                                           FStar_Compiler_Util.set_elements
+                                             uvs
+                                         else [])
+                                | uu___3 -> [])) in
+                      let wl =
+                        let uu___3 =
+                          wl_of_guard env g.FStar_TypeChecker_Common.deferred in
+                        {
+                          attempting = (uu___3.attempting);
+                          wl_deferred = (uu___3.wl_deferred);
+                          wl_deferred_to_tac = (uu___3.wl_deferred_to_tac);
+                          ctr = (uu___3.ctr);
+                          defer_ok;
+                          smt_ok = smt_ok1;
+                          umax_heuristic_ok = (uu___3.umax_heuristic_ok);
+                          tcenv = (uu___3.tcenv);
+                          wl_implicits = (uu___3.wl_implicits);
+                          repr_subcomp_allowed =
+                            (uu___3.repr_subcomp_allowed);
+                          typeclass_variables
+                        } in
+                      let fail uu___3 =
+                        match uu___3 with
+                        | (d, s) ->
+                            let msg = explain wl d s in
+                            FStar_Errors.raise_error
+                              (FStar_Errors_Codes.Fatal_ErrorInSolveDeferredConstraints,
+                                msg) (p_loc d) in
+                      (let uu___4 =
+                         FStar_Compiler_Effect.op_Less_Bar
+                           (FStar_TypeChecker_Env.debug env)
+                           (FStar_Options.Other "Rel") in
+                       if uu___4
+                       then
+                         let uu___5 =
+                           FStar_Compiler_Util.string_of_bool
+                             deferred_to_tac_ok in
+                         let uu___6 = wl_to_string wl in
+                         let uu___7 =
+                           FStar_Compiler_Util.string_of_int
+                             (FStar_Compiler_List.length
+                                g.FStar_TypeChecker_Common.implicits) in
+                         FStar_Compiler_Util.print4
+                           "Trying to solve carried problems (defer_ok=%s) (deferred_to_tac_ok=%s): begin\n\t%s\nend\n and %s implicits\n"
+                           (string_of_defer_ok defer_ok) uu___5 uu___6 uu___7
+                       else ());
+                      (let g1 =
+                         let uu___4 = solve_and_commit wl fail in
+                         match uu___4 with
+                         | FStar_Pervasives_Native.Some
+                             (uu___5::uu___6, uu___7, uu___8) when
+                             defer_ok = NoDefer ->
+                             failwith
+                               "Impossible: Unexpected deferred constraints remain"
+                         | FStar_Pervasives_Native.Some
+                             (deferred, defer_to_tac, imps) ->
+                             {
+                               FStar_TypeChecker_Common.guard_f =
+                                 (g.FStar_TypeChecker_Common.guard_f);
+                               FStar_TypeChecker_Common.deferred_to_tac =
+                                 (FStar_Compiler_List.op_At
+                                    g.FStar_TypeChecker_Common.deferred_to_tac
+                                    defer_to_tac);
+                               FStar_TypeChecker_Common.deferred = deferred;
+                               FStar_TypeChecker_Common.univ_ineqs =
+                                 (g.FStar_TypeChecker_Common.univ_ineqs);
+                               FStar_TypeChecker_Common.implicits =
+                                 (FStar_Compiler_List.op_At
+                                    g.FStar_TypeChecker_Common.implicits imps)
+                             }
+                         | uu___5 ->
+                             failwith
+                               "Impossible: should have raised a failure already" in
+                       solve_universe_inequalities env
+                         g1.FStar_TypeChecker_Common.univ_ineqs;
+                       (let g2 =
+                          if deferred_to_tac_ok
+                          then
+                            let uu___5 =
+                              let uu___6 =
+                                let uu___7 =
+                                  FStar_TypeChecker_Env.current_module env in
+                                FStar_Ident.string_of_lid uu___7 in
+                              FStar_Pervasives_Native.Some uu___6 in
+                            FStar_Profiling.profile
+                              (fun uu___6 ->
+                                 FStar_TypeChecker_DeferredImplicits.solve_deferred_to_tactic_goals
+                                   env g1) uu___5
+                              "FStar.TypeChecker.Rel.solve_deferred_to_tactic_goals"
+                          else g1 in
+                        (let uu___6 =
+                           FStar_Compiler_Effect.op_Less_Bar
+                             (FStar_TypeChecker_Env.debug env)
+                             (FStar_Options.Other "ResolveImplicitsHook") in
+                         if uu___6
+                         then
+                           let uu___7 = guard_to_string env g2 in
+                           let uu___8 =
+                             FStar_Compiler_Util.string_of_int
+                               (FStar_Compiler_List.length
+                                  g2.FStar_TypeChecker_Common.implicits) in
+                           FStar_Compiler_Util.print2
+                             "ResolveImplicitsHook: Solved deferred to tactic goals, remaining guard is\n%s (and %s implicits)\n"
+                             uu___7 uu___8
+                         else ());
                         {
                           FStar_TypeChecker_Common.guard_f =
-                            (g.FStar_TypeChecker_Common.guard_f);
+                            (g2.FStar_TypeChecker_Common.guard_f);
                           FStar_TypeChecker_Common.deferred_to_tac =
-                            (FStar_Compiler_List.op_At
-                               g.FStar_TypeChecker_Common.deferred_to_tac
-                               defer_to_tac);
-                          FStar_TypeChecker_Common.deferred = deferred;
-                          FStar_TypeChecker_Common.univ_ineqs =
-                            (g.FStar_TypeChecker_Common.univ_ineqs);
+                            (g2.FStar_TypeChecker_Common.deferred_to_tac);
+                          FStar_TypeChecker_Common.deferred =
+                            (g2.FStar_TypeChecker_Common.deferred);
+                          FStar_TypeChecker_Common.univ_ineqs = ([], []);
                           FStar_TypeChecker_Common.implicits =
-                            (FStar_Compiler_List.op_At
-                               g.FStar_TypeChecker_Common.implicits imps)
-                        }
-                    | uu___4 ->
-                        failwith
-                          "Impossible: should have raised a failure already" in
-                  solve_universe_inequalities env
-                    g1.FStar_TypeChecker_Common.univ_ineqs;
-                  (let g2 =
-                     if deferred_to_tac_ok
-                     then
-                       let uu___4 =
-                         let uu___5 =
-                           let uu___6 =
-                             FStar_TypeChecker_Env.current_module env in
-                           FStar_Ident.string_of_lid uu___6 in
-                         FStar_Pervasives_Native.Some uu___5 in
-                       FStar_Profiling.profile
-                         (fun uu___5 ->
-                            FStar_TypeChecker_DeferredImplicits.solve_deferred_to_tactic_goals
-                              env g1) uu___4
-                         "FStar.TypeChecker.Rel.solve_deferred_to_tactic_goals"
-                     else g1 in
-                   (let uu___5 =
-                      FStar_Compiler_Effect.op_Less_Bar
-                        (FStar_TypeChecker_Env.debug env)
-                        (FStar_Options.Other "ResolveImplicitsHook") in
-                    if uu___5
-                    then
-                      let uu___6 = guard_to_string env g2 in
-                      let uu___7 =
-                        FStar_Compiler_Util.string_of_int
-                          (FStar_Compiler_List.length
-                             g2.FStar_TypeChecker_Common.implicits) in
-                      FStar_Compiler_Util.print2
-                        "ResolveImplicitsHook: Solved deferred to tactic goals, remaining guard is\n%s (and %s implicits)\n"
-                        uu___6 uu___7
-                    else ());
-                   {
-                     FStar_TypeChecker_Common.guard_f =
-                       (g2.FStar_TypeChecker_Common.guard_f);
-                     FStar_TypeChecker_Common.deferred_to_tac =
-                       (g2.FStar_TypeChecker_Common.deferred_to_tac);
-                     FStar_TypeChecker_Common.deferred =
-                       (g2.FStar_TypeChecker_Common.deferred);
-                     FStar_TypeChecker_Common.univ_ineqs = ([], []);
-                     FStar_TypeChecker_Common.implicits =
-                       (g2.FStar_TypeChecker_Common.implicits)
-                   }))) uu___
-              "FStar.TypeChecker.Rel.try_solve_deferred_constraints"
+                            (g2.FStar_TypeChecker_Common.implicits)
+                        }))) uu___1
+                   "FStar.TypeChecker.Rel.try_solve_deferred_constraints")
 let (solve_deferred_constraints :
   FStar_TypeChecker_Env.env ->
     FStar_TypeChecker_Common.guard_t -> FStar_TypeChecker_Common.guard_t)

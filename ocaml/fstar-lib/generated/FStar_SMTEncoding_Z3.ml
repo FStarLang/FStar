@@ -369,17 +369,47 @@ let (check_z3version : FStar_Compiler_Util.proc -> unit) =
      then
        ((let uu___4 =
            let uu___5 =
-             let uu___6 = FStar_Compiler_Util.proc_prog p in
+             let uu___6 =
+               let uu___7 =
+                 let uu___8 = FStar_Compiler_Util.proc_prog p in
+                 FStar_Compiler_Util.format3
+                   "Unexpected Z3 version for '%s': expected '%s', got '%s'."
+                   uu___8 ver_conf ver_found in
+               FStar_Errors_Msg.text uu___7 in
              let uu___7 =
                let uu___8 =
-                 let uu___9 = FStar_Options.z3_version () in
-                 Prims.op_Hat "z3-" uu___9 in
-               FStar_Platform.exe uu___8 in
-             FStar_Compiler_Util.format5
-               "Unexpected Z3 version for `%s': expected `%s', got `%s'.\nPlease download the correct version of Z3 from %s\nand install it into your $PATH as `%s'."
-               uu___6 ver_conf ver_found z3url uu___7 in
+                 let uu___9 =
+                   let uu___10 =
+                     FStar_Errors_Msg.text
+                       "Please download the correct version of Z3 from" in
+                   let uu___11 = FStar_Pprint.url z3url in
+                   FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
+                     uu___10 uu___11 in
+                 let uu___10 =
+                   let uu___11 =
+                     let uu___12 =
+                       FStar_Errors_Msg.text
+                         "and install it into your $PATH as" in
+                     let uu___13 =
+                       let uu___14 =
+                         let uu___15 =
+                           let uu___16 =
+                             let uu___17 =
+                               let uu___18 = FStar_Options.z3_version () in
+                               Prims.op_Hat "z3-" uu___18 in
+                             FStar_Platform.exe uu___17 in
+                           FStar_Pprint.doc_of_string uu___16 in
+                         FStar_Pprint.squotes uu___15 in
+                       FStar_Pprint.op_Hat_Hat uu___14 FStar_Pprint.dot in
+                     FStar_Pprint.op_Hat_Slash_Hat uu___12 uu___13 in
+                   FStar_Pprint.group uu___11 in
+                 FStar_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
+               [uu___8] in
+             uu___6 :: uu___7 in
            (FStar_Errors_Codes.Warning_SolverMismatch, uu___5) in
-         FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange uu___4);
+         FStar_Errors.log_issue_doc FStar_Compiler_Range_Type.dummyRange
+           uu___4);
+        FStar_Errors.stop_if_err ();
         FStar_Compiler_Effect.op_Colon_Equals
           _already_warned_version_mismatch true)
      else ())
@@ -1006,13 +1036,35 @@ let (mk_input :
   fun fresh ->
     fun theory ->
       let ver = FStar_Options.z3_version () in
-      let options = z3_options ver in
+      let options = "; Z3 invocation started by F*\n" in
       let options1 =
+        let uu___ =
+          let uu___1 =
+            let uu___2 = FStar_Compiler_Effect.op_Bang FStar_Options._version in
+            let uu___3 =
+              let uu___4 =
+                let uu___5 =
+                  FStar_Compiler_Effect.op_Bang FStar_Options._commit in
+                Prims.op_Hat uu___5 "\n" in
+              Prims.op_Hat " -- hash: " uu___4 in
+            Prims.op_Hat uu___2 uu___3 in
+          Prims.op_Hat "; F* version: " uu___1 in
+        Prims.op_Hat options uu___ in
+      let options2 =
+        let uu___ =
+          let uu___1 =
+            let uu___2 = FStar_Options.z3_version () in
+            Prims.op_Hat uu___2 "\n" in
+          Prims.op_Hat "; Z3 version (according to F*): " uu___1 in
+        Prims.op_Hat options1 uu___ in
+      let options3 =
+        let uu___ = z3_options ver in Prims.op_Hat options2 uu___ in
+      let options4 =
         let uu___ =
           let uu___1 = FStar_Options.z3_smtopt () in
           FStar_Compiler_Effect.op_Bar_Greater uu___1
             (FStar_Compiler_String.concat "\n") in
-        Prims.op_Hat options uu___ in
+        Prims.op_Hat options3 uu___ in
       (let uu___1 = FStar_Options.print_z3_statistics () in
        if uu___1 then context_profile theory else ());
       (let uu___1 =
@@ -1036,7 +1088,7 @@ let (mk_input :
            | (prefix, check_sat, suffix) ->
                let pp =
                  FStar_Compiler_List.map
-                   (FStar_SMTEncoding_Term.declToSmt options1) in
+                   (FStar_SMTEncoding_Term.declToSmt options4) in
                let suffix1 = check_sat :: suffix in
                let ps_lines = pp prefix in
                let ss_lines = pp suffix1 in
@@ -1049,7 +1101,7 @@ let (mk_input :
                    let uu___5 =
                      FStar_Compiler_Effect.op_Bar_Greater prefix
                        (FStar_Compiler_List.map
-                          (FStar_SMTEncoding_Term.declToSmt_no_caps options1)) in
+                          (FStar_SMTEncoding_Term.declToSmt_no_caps options4)) in
                    FStar_Compiler_Effect.op_Bar_Greater uu___5
                      (FStar_Compiler_String.concat "\n")
                  else ps in
@@ -1062,7 +1114,7 @@ let (mk_input :
            (let uu___4 =
               let uu___5 =
                 FStar_Compiler_List.map
-                  (FStar_SMTEncoding_Term.declToSmt options1) theory in
+                  (FStar_SMTEncoding_Term.declToSmt options4) theory in
               FStar_Compiler_Effect.op_Bar_Greater uu___5
                 (FStar_Compiler_String.concat "\n") in
             (uu___4, FStar_Pervasives_Native.None)) in
@@ -1148,6 +1200,33 @@ let (z3_job :
                         z3result_query_hash = qhash;
                         z3result_log_file = log_file
                       }
+let (ask_text :
+  FStar_Compiler_Range_Type.range ->
+    (FStar_SMTEncoding_Term.decl Prims.list ->
+       (FStar_SMTEncoding_Term.decl Prims.list * Prims.bool))
+      ->
+      Prims.string FStar_Pervasives_Native.option ->
+        FStar_SMTEncoding_Term.error_labels ->
+          FStar_SMTEncoding_Term.decl Prims.list ->
+            Prims.string -> Prims.string)
+  =
+  fun r ->
+    fun filter_theory ->
+      fun cache ->
+        fun label_messages ->
+          fun qry ->
+            fun queryid ->
+              let theory = flatten_fresh_scope () in
+              let theory1 =
+                FStar_Compiler_List.op_At theory
+                  (FStar_Compiler_List.op_At [FStar_SMTEncoding_Term.Push]
+                     (FStar_Compiler_List.op_At qry
+                        [FStar_SMTEncoding_Term.Pop])) in
+              let uu___ = filter_theory theory1 in
+              match uu___ with
+              | (theory2, _used_unsat_core) ->
+                  let uu___1 = mk_input true theory2 in
+                  (match uu___1 with | (input, qhash, log_file_name) -> input)
 let (ask :
   FStar_Compiler_Range_Type.range ->
     (FStar_SMTEncoding_Term.decl Prims.list ->
