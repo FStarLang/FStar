@@ -752,7 +752,7 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
        ( noshort,
         "dump_module",
         Accumulated (SimpleStr "module_name"),
-        "");
+        "Print out this module as it passes through the compiler pipeline");
 
        (noshort,
         "eager_subtyping",
