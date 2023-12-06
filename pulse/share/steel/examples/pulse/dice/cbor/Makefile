@@ -38,13 +38,10 @@ $(OUTPUT_DIRECTORY)/%.ml:
 
 .PHONY: extern
 
-extern/CBOR.h: $(OUTPUT_DIRECTORY)/CBOR.h
-	cp $^ $@ # I want to make sure that CBOR.c generated from Steel is compatible with CBOR.h generated from Pulse
-
 extern/CBOR.o: extern/CBOR.h extern/CBOR.c
 	+$(MAKE) -C extern
 
 extern: extern/CBOR.o
 
-test: extern
+test: extern extract_c
 	+$(MAKE) -C test
