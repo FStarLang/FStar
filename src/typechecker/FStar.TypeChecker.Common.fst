@@ -57,6 +57,25 @@ let rec decr_delta_depth = function
     | Delta_equational_at_level i -> Some (Delta_equational_at_level (i - 1))
     | Delta_abstract d            -> decr_delta_depth d
 
+instance showable_guard_formula : showable guard_formula = {
+  show = (function
+          | Trivial      -> "Trivial"
+          | NonTrivial f -> "NonTrivial " ^ show f)
+}
+
+instance showable_deferred_reason : showable deferred_reason = {
+  show = (function
+          | Deferred_univ_constraint -> "Deferred_univ_constraint"
+          | Deferred_occur_check_failed -> "Deferred_occur_check_failed"
+          | Deferred_first_order_heuristic_failed -> "Deferred_first_order_heuristic_failed"
+          | Deferred_flex -> "Deferred_flex"
+          | Deferred_free_names_check_failed -> "Deferred_free_names_check_failed"
+          | Deferred_not_a_pattern -> "Deferred_not_a_pattern"
+          | Deferred_flex_flex_nonpattern -> "Deferred_flex_flex_nonpattern"
+          | Deferred_delay_match_heuristic -> "Deferred_delay_match_heuristic"
+          | Deferred_to_user_tac -> "Deferred_to_user_tac"
+          );
+}
 (***********************************************************************************)
 (* A table of file -> starting row -> starting col -> identifier info              *)
 (* Used to support querying information about an identifier in interactive mode    *)

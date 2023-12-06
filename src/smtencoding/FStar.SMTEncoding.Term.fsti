@@ -15,13 +15,12 @@
 *)
 
 module FStar.SMTEncoding.Term
-open FStar.Compiler.Effect
-open Prims
-open FStar
+
 open FStar.Compiler
-open FStar.Syntax.Syntax
-open FStar.Syntax
+open FStar.Compiler.Effect
 open FStar.Compiler.Util
+
+module S = FStar.Syntax.Syntax
 
 type sort =
   | Bool_sort
@@ -87,7 +86,7 @@ type term' =
   | Labeled    of term * string * Range.range
   | LblPos     of term * string
 and pat  = term
-and term = {tm:term'; freevars:Syntax.memo fvs; rng:Range.range}
+and term = {tm:term'; freevars:S.memo fvs; rng:Range.range}
 and fv = string * sort * bool (* bool iff variable must be forced/unthunked *)
 and fvs = list fv
 

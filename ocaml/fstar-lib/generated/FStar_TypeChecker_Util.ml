@@ -7107,7 +7107,7 @@ let (short_circuit :
         match uu___ with
         | [] -> FStar_TypeChecker_Common.Trivial
         | (fst, uu___1)::[] -> f fst
-        | uu___1 -> failwith "Unexpexted args to binary operator" in
+        | uu___1 -> failwith "Unexpected args to binary operator" in
       let op_and_e e =
         let uu___ = FStar_Syntax_Util.b2t e in
         FStar_Compiler_Effect.op_Bar_Greater uu___

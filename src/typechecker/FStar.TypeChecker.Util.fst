@@ -3080,7 +3080,7 @@ let short_circuit (head:term) (seen_args:args) : guard_formula =
     let short_bin_op f : args -> guard_formula = function
         | [] -> (* no args seen yet *) Trivial
         | [(fst, _)] -> f fst
-        | _ -> failwith "Unexpexted args to binary operator" in
+        | _ -> failwith "Unexpected args to binary operator" in
 
     let op_and_e e = U.b2t e   |> NonTrivial in
     let op_or_e e  = U.mk_neg (U.b2t e) |> NonTrivial in

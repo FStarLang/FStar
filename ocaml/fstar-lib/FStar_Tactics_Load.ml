@@ -21,7 +21,9 @@ let dynlink (fname:string) : unit =
          [EM.text (U.format1 "Failed to load plugin file %s" fname);
           EM.text (U.format1 "Reason: `%s`" (Dynlink.error_message e));
           EM.text (U.format1 "Remove the `--load` option or use `--warn_error -%s` to ignore and continue."
-                    (string_of_int (Z.to_int (E.errno EC.Error_PluginDynlink))))])
+                    (string_of_int (Z.to_int (E.errno EC.Error_PluginDynlink))))]);
+    (* If we weren't ignoring this error, just stop now *)
+    E.stop_if_err ()
 
 let load_tactic tac =
   dynlink tac;

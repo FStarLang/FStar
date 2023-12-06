@@ -51,6 +51,15 @@ type query_log = {
 val status_string_and_errors : z3status -> string * error_labels
 val giveZ3 : list decl -> unit
 
+val ask_text
+       : r:Range.range
+       -> filter:(list decl -> list decl * bool)
+       -> cache:(option string) // hash
+       -> label_messages:error_labels
+       -> qry:list decl
+       -> queryid:string
+       -> string
+
 val ask: r:Range.range
        -> filter:(list decl -> list decl * bool)
        -> cache:(option string) // hash

@@ -126,105 +126,6 @@ let (uu___is_NonTrivial : guard_formula -> Prims.bool) =
 let (__proj__NonTrivial__item___0 :
   guard_formula -> FStar_Syntax_Syntax.formula) =
   fun projectee -> match projectee with | NonTrivial _0 -> _0
-type deferred_reason =
-  | Deferred_univ_constraint 
-  | Deferred_occur_check_failed 
-  | Deferred_first_order_heuristic_failed 
-  | Deferred_flex 
-  | Deferred_free_names_check_failed 
-  | Deferred_not_a_pattern 
-  | Deferred_flex_flex_nonpattern 
-  | Deferred_delay_match_heuristic 
-  | Deferred_to_user_tac 
-let (uu___is_Deferred_univ_constraint : deferred_reason -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Deferred_univ_constraint -> true | uu___ -> false
-let (uu___is_Deferred_occur_check_failed : deferred_reason -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | Deferred_occur_check_failed -> true
-    | uu___ -> false
-let (uu___is_Deferred_first_order_heuristic_failed :
-  deferred_reason -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | Deferred_first_order_heuristic_failed -> true
-    | uu___ -> false
-let (uu___is_Deferred_flex : deferred_reason -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Deferred_flex -> true | uu___ -> false
-let (uu___is_Deferred_free_names_check_failed :
-  deferred_reason -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | Deferred_free_names_check_failed -> true
-    | uu___ -> false
-let (uu___is_Deferred_not_a_pattern : deferred_reason -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Deferred_not_a_pattern -> true | uu___ -> false
-let (uu___is_Deferred_flex_flex_nonpattern : deferred_reason -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | Deferred_flex_flex_nonpattern -> true
-    | uu___ -> false
-let (uu___is_Deferred_delay_match_heuristic : deferred_reason -> Prims.bool)
-  =
-  fun projectee ->
-    match projectee with
-    | Deferred_delay_match_heuristic -> true
-    | uu___ -> false
-let (uu___is_Deferred_to_user_tac : deferred_reason -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Deferred_to_user_tac -> true | uu___ -> false
-type deferred = (deferred_reason * Prims.string * prob) Prims.list
-type univ_ineq =
-  (FStar_Syntax_Syntax.universe * FStar_Syntax_Syntax.universe)
-type identifier_info =
-  {
-  identifier:
-    (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) FStar_Pervasives.either ;
-  identifier_ty: FStar_Syntax_Syntax.typ ;
-  identifier_range: FStar_Compiler_Range_Type.range }
-let (__proj__Mkidentifier_info__item__identifier :
-  identifier_info ->
-    (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) FStar_Pervasives.either)
-  =
-  fun projectee ->
-    match projectee with
-    | { identifier; identifier_ty; identifier_range;_} -> identifier
-let (__proj__Mkidentifier_info__item__identifier_ty :
-  identifier_info -> FStar_Syntax_Syntax.typ) =
-  fun projectee ->
-    match projectee with
-    | { identifier; identifier_ty; identifier_range;_} -> identifier_ty
-let (__proj__Mkidentifier_info__item__identifier_range :
-  identifier_info -> FStar_Compiler_Range_Type.range) =
-  fun projectee ->
-    match projectee with
-    | { identifier; identifier_ty; identifier_range;_} -> identifier_range
-type id_info_by_col = (Prims.int * identifier_info) Prims.list
-type col_info_by_row = id_info_by_col FStar_Compiler_Util.pimap
-type row_info_by_file = col_info_by_row FStar_Compiler_Util.psmap
-type id_info_table =
-  {
-  id_info_enabled: Prims.bool ;
-  id_info_db: row_info_by_file ;
-  id_info_buffer: identifier_info Prims.list }
-let (__proj__Mkid_info_table__item__id_info_enabled :
-  id_info_table -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | { id_info_enabled; id_info_db; id_info_buffer;_} -> id_info_enabled
-let (__proj__Mkid_info_table__item__id_info_db :
-  id_info_table -> row_info_by_file) =
-  fun projectee ->
-    match projectee with
-    | { id_info_enabled; id_info_db; id_info_buffer;_} -> id_info_db
-let (__proj__Mkid_info_table__item__id_info_buffer :
-  id_info_table -> identifier_info Prims.list) =
-  fun projectee ->
-    match projectee with
-    | { id_info_enabled; id_info_db; id_info_buffer;_} -> id_info_buffer
 let (mk_by_tactic :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
@@ -276,6 +177,133 @@ let rec (decr_delta_depth :
         FStar_Pervasives_Native.Some
           (FStar_Syntax_Syntax.Delta_equational_at_level (i - Prims.int_one))
     | FStar_Syntax_Syntax.Delta_abstract d -> decr_delta_depth d
+let (showable_guard_formula : guard_formula FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | Trivial -> "Trivial"
+         | NonTrivial f ->
+             let uu___1 =
+               FStar_Class_Show.show FStar_Syntax_Print.showable_term f in
+             Prims.op_Hat "NonTrivial " uu___1)
+  }
+type deferred_reason =
+  | Deferred_univ_constraint 
+  | Deferred_occur_check_failed 
+  | Deferred_first_order_heuristic_failed 
+  | Deferred_flex 
+  | Deferred_free_names_check_failed 
+  | Deferred_not_a_pattern 
+  | Deferred_flex_flex_nonpattern 
+  | Deferred_delay_match_heuristic 
+  | Deferred_to_user_tac 
+let (uu___is_Deferred_univ_constraint : deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Deferred_univ_constraint -> true | uu___ -> false
+let (uu___is_Deferred_occur_check_failed : deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Deferred_occur_check_failed -> true
+    | uu___ -> false
+let (uu___is_Deferred_first_order_heuristic_failed :
+  deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Deferred_first_order_heuristic_failed -> true
+    | uu___ -> false
+let (uu___is_Deferred_flex : deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Deferred_flex -> true | uu___ -> false
+let (uu___is_Deferred_free_names_check_failed :
+  deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Deferred_free_names_check_failed -> true
+    | uu___ -> false
+let (uu___is_Deferred_not_a_pattern : deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Deferred_not_a_pattern -> true | uu___ -> false
+let (uu___is_Deferred_flex_flex_nonpattern : deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Deferred_flex_flex_nonpattern -> true
+    | uu___ -> false
+let (uu___is_Deferred_delay_match_heuristic : deferred_reason -> Prims.bool)
+  =
+  fun projectee ->
+    match projectee with
+    | Deferred_delay_match_heuristic -> true
+    | uu___ -> false
+let (uu___is_Deferred_to_user_tac : deferred_reason -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Deferred_to_user_tac -> true | uu___ -> false
+let (showable_deferred_reason : deferred_reason FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | Deferred_univ_constraint -> "Deferred_univ_constraint"
+         | Deferred_occur_check_failed -> "Deferred_occur_check_failed"
+         | Deferred_first_order_heuristic_failed ->
+             "Deferred_first_order_heuristic_failed"
+         | Deferred_flex -> "Deferred_flex"
+         | Deferred_free_names_check_failed ->
+             "Deferred_free_names_check_failed"
+         | Deferred_not_a_pattern -> "Deferred_not_a_pattern"
+         | Deferred_flex_flex_nonpattern -> "Deferred_flex_flex_nonpattern"
+         | Deferred_delay_match_heuristic -> "Deferred_delay_match_heuristic"
+         | Deferred_to_user_tac -> "Deferred_to_user_tac")
+  }
+type deferred = (deferred_reason * Prims.string * prob) Prims.list
+type univ_ineq =
+  (FStar_Syntax_Syntax.universe * FStar_Syntax_Syntax.universe)
+type identifier_info =
+  {
+  identifier:
+    (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) FStar_Pervasives.either ;
+  identifier_ty: FStar_Syntax_Syntax.typ ;
+  identifier_range: FStar_Compiler_Range_Type.range }
+let (__proj__Mkidentifier_info__item__identifier :
+  identifier_info ->
+    (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) FStar_Pervasives.either)
+  =
+  fun projectee ->
+    match projectee with
+    | { identifier; identifier_ty; identifier_range;_} -> identifier
+let (__proj__Mkidentifier_info__item__identifier_ty :
+  identifier_info -> FStar_Syntax_Syntax.typ) =
+  fun projectee ->
+    match projectee with
+    | { identifier; identifier_ty; identifier_range;_} -> identifier_ty
+let (__proj__Mkidentifier_info__item__identifier_range :
+  identifier_info -> FStar_Compiler_Range_Type.range) =
+  fun projectee ->
+    match projectee with
+    | { identifier; identifier_ty; identifier_range;_} -> identifier_range
+type id_info_by_col = (Prims.int * identifier_info) Prims.list
+type col_info_by_row = id_info_by_col FStar_Compiler_Util.pimap
+type row_info_by_file = col_info_by_row FStar_Compiler_Util.psmap
+type id_info_table =
+  {
+  id_info_enabled: Prims.bool ;
+  id_info_db: row_info_by_file ;
+  id_info_buffer: identifier_info Prims.list }
+let (__proj__Mkid_info_table__item__id_info_enabled :
+  id_info_table -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { id_info_enabled; id_info_db; id_info_buffer;_} -> id_info_enabled
+let (__proj__Mkid_info_table__item__id_info_db :
+  id_info_table -> row_info_by_file) =
+  fun projectee ->
+    match projectee with
+    | { id_info_enabled; id_info_db; id_info_buffer;_} -> id_info_db
+let (__proj__Mkid_info_table__item__id_info_buffer :
+  id_info_table -> identifier_info Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { id_info_enabled; id_info_db; id_info_buffer;_} -> id_info_buffer
 let (insert_col_info :
   Prims.int ->
     identifier_info ->

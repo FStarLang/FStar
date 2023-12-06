@@ -170,7 +170,7 @@ val print_any : 'a -> unit
 val strcat : string -> string -> string
 val concat_l : string -> list string -> string
 
-val write_file: string -> string -> unit
+val write_file: fn:string -> contents:string -> unit
 val copy_file: string -> string -> unit
 val delete_file: string -> unit
 val file_get_contents: string -> string

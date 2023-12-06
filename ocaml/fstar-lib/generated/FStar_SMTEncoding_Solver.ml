@@ -1739,6 +1739,33 @@ let (ask_solver_quake : query_settings Prims.list -> answer) =
             total_ran;
             tried_recovery = false
           }))
+type recovery_hammer =
+  | IncreaseRLimit of Prims.int 
+  | RestartAnd of recovery_hammer 
+let (uu___is_IncreaseRLimit : recovery_hammer -> Prims.bool) =
+  fun projectee ->
+    match projectee with | IncreaseRLimit _0 -> true | uu___ -> false
+let (__proj__IncreaseRLimit__item___0 : recovery_hammer -> Prims.int) =
+  fun projectee -> match projectee with | IncreaseRLimit _0 -> _0
+let (uu___is_RestartAnd : recovery_hammer -> Prims.bool) =
+  fun projectee ->
+    match projectee with | RestartAnd _0 -> true | uu___ -> false
+let (__proj__RestartAnd__item___0 : recovery_hammer -> recovery_hammer) =
+  fun projectee -> match projectee with | RestartAnd _0 -> _0
+let rec (pp_hammer : recovery_hammer -> FStar_Pprint.document) =
+  fun h ->
+    match h with
+    | IncreaseRLimit factor ->
+        let uu___ = FStar_Errors_Msg.text "increasing its rlimit by" in
+        let uu___1 =
+          let uu___2 = FStar_Class_PP.pp FStar_Class_PP.pp_int factor in
+          let uu___3 = FStar_Pprint.doc_of_string "x" in
+          FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
+        FStar_Pprint.op_Hat_Slash_Hat uu___ uu___1
+    | RestartAnd h1 ->
+        let uu___ = FStar_Errors_Msg.text "restarting the solver and" in
+        let uu___1 = pp_hammer h1 in
+        FStar_Pprint.op_Hat_Slash_Hat uu___ uu___1
 let (ask_solver_recover : query_settings Prims.list -> answer) =
   fun configs ->
     let uu___ = FStar_Options.proof_recovery () in
@@ -1748,13 +1775,14 @@ let (ask_solver_recover : query_settings Prims.list -> answer) =
       (if r.ok
        then r
        else
-         (let last_cfg = FStar_Compiler_List.last configs in
+         (let restarted = FStar_Compiler_Util.mk_ref false in
+          let cfg = FStar_Compiler_List.last configs in
           (let uu___3 =
              let uu___4 =
                FStar_Errors_Msg.text
                  "This query failed to be solved. Will now retry with higher rlimits due to --proof_recovery." in
              [uu___4] in
-           FStar_Errors.diag_doc last_cfg.query_range uu___3);
+           FStar_Errors.diag_doc cfg.query_range uu___3);
           (let try_factor n =
              (let uu___4 =
                 let uu___5 =
@@ -1763,29 +1791,41 @@ let (ask_solver_recover : query_settings Prims.list -> answer) =
                   let uu___7 = FStar_Class_PP.pp FStar_Class_PP.pp_int n in
                   FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
                 [uu___5] in
-              FStar_Errors.diag_doc last_cfg.query_range uu___4);
-             (let cfg =
+              FStar_Errors.diag_doc cfg.query_range uu___4);
+             (let cfg1 =
                 {
-                  query_env = (last_cfg.query_env);
-                  query_decl = (last_cfg.query_decl);
-                  query_name = (last_cfg.query_name);
-                  query_index = (last_cfg.query_index);
-                  query_range = (last_cfg.query_range);
-                  query_fuel = (last_cfg.query_fuel);
-                  query_ifuel = (last_cfg.query_ifuel);
-                  query_rlimit = (FStar_Mul.op_Star n last_cfg.query_rlimit);
-                  query_hint = (last_cfg.query_hint);
-                  query_errors = (last_cfg.query_errors);
-                  query_all_labels = (last_cfg.query_all_labels);
-                  query_suffix = (last_cfg.query_suffix);
-                  query_hash = (last_cfg.query_hash);
+                  query_env = (cfg.query_env);
+                  query_decl = (cfg.query_decl);
+                  query_name = (cfg.query_name);
+                  query_index = (cfg.query_index);
+                  query_range = (cfg.query_range);
+                  query_fuel = (cfg.query_fuel);
+                  query_ifuel = (cfg.query_ifuel);
+                  query_rlimit = (FStar_Mul.op_Star n cfg.query_rlimit);
+                  query_hint = (cfg.query_hint);
+                  query_errors = (cfg.query_errors);
+                  query_all_labels = (cfg.query_all_labels);
+                  query_suffix = (cfg.query_suffix);
+                  query_hash = (cfg.query_hash);
                   query_can_be_split_and_retried =
-                    (last_cfg.query_can_be_split_and_retried);
-                  query_term = (last_cfg.query_term)
+                    (cfg.query_can_be_split_and_retried);
+                  query_term = (cfg.query_term)
                 } in
-              ask_solver_quake [cfg]) in
-           let rec aux factors =
-             match factors with
+              ask_solver_quake [cfg1]) in
+           let rec try_hammer h =
+             match h with
+             | IncreaseRLimit factor -> try_factor factor
+             | RestartAnd h1 ->
+                 ((let uu___4 =
+                     let uu___5 =
+                       FStar_Errors_Msg.text "Trying a solver restart" in
+                     [uu___5] in
+                   FStar_Errors.diag_doc cfg.query_range uu___4);
+                  ((cfg.query_env).FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh
+                    ();
+                  try_hammer h1) in
+           let rec aux hammers =
+             match hammers with
              | [] ->
                  {
                    ok = (r.ok);
@@ -1798,8 +1838,8 @@ let (ask_solver_recover : query_settings Prims.list -> answer) =
                    total_ran = (r.total_ran);
                    tried_recovery = true
                  }
-             | n::ns ->
-                 let r1 = try_factor n in
+             | h::hs ->
+                 let r1 = try_hammer h in
                  if r1.ok
                  then
                    ((let uu___4 =
@@ -1807,12 +1847,8 @@ let (ask_solver_recover : query_settings Prims.list -> answer) =
                          let uu___6 =
                            let uu___7 =
                              FStar_Errors_Msg.text
-                               "This query succeeded after increasing its rlimit by" in
-                           let uu___8 =
-                             let uu___9 =
-                               FStar_Class_PP.pp FStar_Class_PP.pp_int n in
-                             let uu___10 = FStar_Pprint.doc_of_string "x" in
-                             FStar_Pprint.op_Hat_Hat uu___9 uu___10 in
+                               "This query succeeded after " in
+                           let uu___8 = pp_hammer h in
                            FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
                          let uu___7 =
                            let uu___8 =
@@ -1821,11 +1857,54 @@ let (ask_solver_recover : query_settings Prims.list -> answer) =
                            [uu___8] in
                          uu___6 :: uu___7 in
                        (FStar_Errors_Codes.Warning_ProofRecovery, uu___5) in
-                     FStar_Errors.log_issue_doc last_cfg.query_range uu___4);
+                     FStar_Errors.log_issue_doc cfg.query_range uu___4);
                     r1)
-                 else aux ns in
-           aux [(Prims.of_int (2)); (Prims.of_int (4)); (Prims.of_int (8))])))
+                 else aux hs in
+           aux
+             [IncreaseRLimit (Prims.of_int (2));
+             IncreaseRLimit (Prims.of_int (4));
+             IncreaseRLimit (Prims.of_int (8));
+             RestartAnd (IncreaseRLimit (Prims.of_int (8)))])))
     else ask_solver_quake configs
+let (failing_query_ctr : Prims.int FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Util.mk_ref Prims.int_zero
+let (maybe_save_failing_query :
+  FStar_TypeChecker_Env.env_t ->
+    FStar_SMTEncoding_Term.decl Prims.list -> query_settings -> unit)
+  =
+  fun env ->
+    fun prefix ->
+      fun qs ->
+        let uu___ = FStar_Options.proof_recovery () in
+        if uu___
+        then
+          let mod1 =
+            let uu___1 = FStar_TypeChecker_Env.current_module env in
+            FStar_Class_Show.show FStar_Ident.showable_lident uu___1 in
+          let n =
+            (let uu___2 =
+               let uu___3 = FStar_Compiler_Effect.op_Bang failing_query_ctr in
+               uu___3 + Prims.int_one in
+             FStar_Compiler_Effect.op_Colon_Equals failing_query_ctr uu___2);
+            FStar_Compiler_Effect.op_Bang failing_query_ctr in
+          let file_name =
+            let uu___1 =
+              FStar_Class_Show.show
+                (FStar_Class_Show.printableshow
+                   FStar_Class_Printable.printable_int) n in
+            FStar_Compiler_Util.format2 "failedQueries-%s-%s.smt2" mod1
+              uu___1 in
+          let query_str =
+            let uu___1 = with_fuel_and_diagnostics qs [] in
+            let uu___2 =
+              let uu___3 = FStar_Compiler_Util.string_of_int qs.query_index in
+              FStar_Compiler_Util.format2 "(%s, %s)" qs.query_name uu___3 in
+            FStar_SMTEncoding_Z3.ask_text qs.query_range
+              (filter_assertions qs.query_env FStar_Pervasives_Native.None
+                 qs.query_hint) qs.query_hash qs.query_all_labels uu___1
+              uu___2 in
+          FStar_Compiler_Util.write_file file_name query_str
+        else ()
 let (ask_solver :
   Prims.bool ->
     Prims.bool ->
@@ -1882,7 +1961,13 @@ let (ask_solver :
                            ans_ok)
                         else
                           (FStar_SMTEncoding_Z3.giveZ3 prefix;
-                           ask_solver_recover configs) in
+                           (let ans1 = ask_solver_recover configs in
+                            if Prims.op_Negation ans1.ok
+                            then
+                              (let uu___4 = FStar_Compiler_List.last configs in
+                               maybe_save_failing_query env prefix uu___4)
+                            else ();
+                            ans1)) in
                       (configs, ans)
 let (report : FStar_TypeChecker_Env.env -> query_settings -> answer -> unit)
   =

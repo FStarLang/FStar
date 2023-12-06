@@ -4943,6 +4943,7 @@ let solve_universe_inequalities env ineqs : unit =
 
 let try_solve_deferred_constraints (defer_ok:defer_ok_t) smt_ok deferred_to_tac_ok env (g:guard_t) : guard_t =
   let smt_ok = smt_ok && not (Options.ml_ish ()) in
+  Errors.with_ctx "While solving deferred constraints" (fun () ->
   Profiling.profile (fun () ->
    let typeclass_variables =
     g.implicits
@@ -5003,7 +5004,7 @@ let try_solve_deferred_constraints (defer_ok:defer_ok_t) smt_ok deferred_to_tac_
    {g with univ_ineqs=([], [])}
   )
   (Some (Ident.string_of_lid (Env.current_module env)))
-  "FStar.TypeChecker.Rel.try_solve_deferred_constraints"
+  "FStar.TypeChecker.Rel.try_solve_deferred_constraints")
 
 
 let solve_deferred_constraints env (g:guard_t) =

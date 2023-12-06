@@ -217,14 +217,17 @@ let check_z3version (p:proc) : unit =
   let ver_found : string = BU.trim_string (List.hd (BU.split (getinfo "version") "-")) in
   let ver_conf  : string = BU.trim_string (Options.z3_version ()) in
   if ver_conf <> ver_found && not (!_already_warned_version_mismatch) then (
-    Errors.log_issue Range.dummyRange (Errors.Warning_SolverMismatch,
-      BU.format5 "Unexpected Z3 version for `%s': expected `%s', got `%s'.\n\
-                  Please download the correct version of Z3 from %s\n\
-                  and install it into your $PATH as `%s'."
-        (proc_prog p)
-        ver_conf ver_found
-        z3url (Platform.exe ("z3-" ^ Options.z3_version  ()))
-        );
+    let open FStar.Errors in
+    let open FStar.Pprint in
+    Errors.log_issue_doc Range.dummyRange (Errors.Warning_SolverMismatch, [
+      text (BU.format3 "Unexpected Z3 version for '%s': expected '%s', got '%s'."
+                  (proc_prog p) ver_conf ver_found);
+      prefix 4 1 (text "Please download the correct version of Z3 from")
+                 (url z3url) ^/^
+        group (text "and install it into your $PATH as" ^/^ squotes
+          (doc_of_string (Platform.exe ("z3-" ^ Options.z3_version  ()))) ^^ dot);
+    ]);
+    Errors.stop_if_err(); (* stop now if this was a hard error *)
     _already_warned_version_mismatch := true
   );
   ()
@@ -594,9 +597,12 @@ let context_profile (theory:list decl) =
                         (string_of_int n))
                modules
 
-let mk_input fresh theory =
+let mk_input (fresh : bool) (theory : list decl) : string & option string & option string =
     let ver = Options.z3_version () in
-    let options = z3_options ver in
+    let options = "; Z3 invocation started by F*\n" in
+    let options = options ^ "; F* version: " ^ !Options._version ^ " -- hash: " ^ !Options._commit ^ "\n" in
+    let options = options ^ "; Z3 version (according to F*): " ^ Options.z3_version() ^ "\n" in
+    let options = options ^ z3_options ver in
     let options = options ^ (Options.z3_smtopt() |> String.concat "\n") in
     if Options.print_z3_statistics() then context_profile theory;
     let r, hash =
@@ -687,6 +693,22 @@ let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) inpu
     z3result_statistics = statistics;
     z3result_query_hash = qhash;
     z3result_log_file   = log_file }
+
+let ask_text
+    (r:Range.range)
+    (filter_theory:list decl -> list decl * bool)
+    (cache:option string)
+    (label_messages:error_labels)
+    (qry:list decl)
+    (queryid:string)
+  : string
+  = (* Mimics a fresh ask, and just returns the string that would
+    be sent to the solver. *)
+    let theory = flatten_fresh_scope() in
+    let theory = theory @[Push]@qry@[Pop] in
+    let theory, _used_unsat_core = filter_theory theory in
+    let input, qhash, log_file_name = mk_input true theory in
+    input
 
 let ask
     (r:Range.range)
