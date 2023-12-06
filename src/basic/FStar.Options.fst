@@ -494,18 +494,34 @@ let display_version () =
                                   !_version !_platform !_compiler !_date !_commit)
 
 let display_usage_aux specs =
-  Util.print_string "fstar.exe [options] file[s] [@respfile...]\n";
-  Util.print_string (Util.format1 "  %srespfile  read options from respfile\n" (Util.colorize_bold "@"));
-  List.iter
-    (fun (_, flag, p, doc) ->
-       match p with
-         | ZeroArgs ig ->
-             if doc = "" then Util.print_string (Util.format1 "  --%s\n" (Util.colorize_bold flag))
-             else Util.print_string (Util.format2 "  --%s  %s\n" (Util.colorize_bold flag) doc)
-         | OneArg (_, argname) ->
-             if doc = "" then Util.print_string (Util.format2 "  --%s %s\n" (Util.colorize_bold flag) (Util.colorize_bold argname))
-             else Util.print_string (Util.format3 "  --%s %s  %s\n" (Util.colorize_bold flag) (Util.colorize_bold argname) doc))
-    specs
+  let open FStar.Pprint in
+  let text (s:string) : document = flow (break_ 1) (words s) in
+  let bold_doc (d:document) : document =
+    (* very hacky, this would make no sense for documents going elsewhere
+    other than stdout *)
+    if stdout_isatty () = Some true
+    then fancystring "\x1b[39;1m" 0 ^^ d ^^ fancystring "\x1b[0m" 0
+    else d
+  in
+  let d : document =
+    doc_of_string "fstar.exe [options] file[s] [@respfile...]" ^/^
+    doc_of_string (Util.format1 "  %srespfile: read command-line options from respfile\n" (Util.colorize_bold "@")) ^/^
+    List.fold_right
+      (fun (_, flag, p, doc) rest ->
+        let opt = doc_of_string ("--" ^ flag) in
+        let arg =
+          match p with
+          | ZeroArgs _ -> empty
+          | OneArg (_, argname) -> blank 1 ^^ doc_of_string argname
+        in
+        let explain : document = arbitrary_string doc in
+        group (bold_doc (opt ^^ arg)) ^^ hardline ^^
+        group (blank 4 ^^ align explain) ^^ hardline ^^
+        rest
+      )
+      specs empty
+  in
+  Util.print_string (pretty_string (float_of_string "1.0") 80 d)
 
 let mk_spec o : opt =
     let ns, name, arg, desc = o in
