@@ -288,7 +288,7 @@ val va_code_Mov64 : dst:va_dst_operand -> src:va_operand -> Tot va_code
 
 val va_lemma_Mov64 : va_b0:va_codes -> va_s0:va_state -> va_sN:va_state -> dst:va_dst_operand ->
   src:va_operand
-  -> Ghost ((va_bM:va_codes) * (va_sM:va_state))
+  -> Ghost (va_codes & va_state)
   (requires ((va_require va_b0 (va_code_Mov64 dst src) va_s0 va_sN) /\
     (va_is_dst_dst_operand_uint64 dst va_s0) /\ (va_is_src_operand_uint64 src va_s0) /\ (va_get_ok
     va_s0)))
@@ -300,7 +300,7 @@ val va_code_Load64 : dst:va_dst_operand -> src:va_reg_operand -> offset:int -> T
 
 val va_lemma_Load64 : va_b0:va_codes -> va_s0:va_state -> va_sN:va_state -> dst:va_dst_operand ->
   src:va_reg_operand -> offset:int
-  -> Ghost ((va_bM:va_codes) * (va_sM:va_state))
+  -> Ghost (va_codes & va_state)
   (requires ((va_require va_b0 (va_code_Load64 dst src offset) va_s0 va_sN) /\
     (va_is_dst_dst_operand_uint64 dst va_s0) /\ (va_is_src_reg_operand_uint64 src va_s0) /\
     (va_get_ok va_s0) /\ (valid_src_addr (va_get_mem va_s0) ((va_eval_reg_operand_uint64 va_s0 src)
@@ -314,7 +314,7 @@ val va_code_Store64 : dst:va_reg_operand -> src:va_operand -> offset:int -> Tot 
 
 val va_lemma_Store64 : va_b0:va_codes -> va_s0:va_state -> va_sN:va_state -> dst:va_reg_operand ->
   src:va_operand -> offset:int
-  -> Ghost ((va_bM:va_codes) * (va_sM:va_state))
+  -> Ghost (va_codes & va_state)
   (requires ((va_require va_b0 (va_code_Store64 dst src offset) va_s0 va_sN) /\
     (va_is_src_reg_operand_uint64 dst va_s0) /\ (va_is_src_operand_uint64 src va_s0) /\ (va_get_ok
     va_s0) /\ (valid_dst_addr (va_get_mem va_s0) ((va_eval_reg_operand_uint64 va_s0 dst) +
@@ -328,7 +328,7 @@ val va_code_Add64 : dst:va_dst_operand -> src:va_operand -> Tot va_code
 
 val va_lemma_Add64 : va_b0:va_codes -> va_s0:va_state -> va_sN:va_state -> dst:va_dst_operand ->
   src:va_operand
-  -> Ghost ((va_bM:va_codes) * (va_sM:va_state))
+  -> Ghost (va_codes & va_state)
   (requires ((va_require va_b0 (va_code_Add64 dst src) va_s0 va_sN) /\
     (va_is_dst_dst_operand_uint64 dst va_s0) /\ (va_is_src_operand_uint64 src va_s0) /\ (va_get_ok
     va_s0) /\ (va_eval_operand_uint64 va_s0 src) + (va_eval_dst_operand_uint64 va_s0 dst) <
@@ -342,7 +342,7 @@ val va_code_Add64Wrap : dst:va_dst_operand -> src:va_operand -> Tot va_code
 
 val va_lemma_Add64Wrap : va_b0:va_codes -> va_s0:va_state -> va_sN:va_state -> dst:va_dst_operand
   -> src:va_operand
-  -> Ghost ((va_bM:va_codes) * (va_sM:va_state))
+  -> Ghost (va_codes & va_state)
   (requires ((va_require va_b0 (va_code_Add64Wrap dst src) va_s0 va_sN) /\
     (va_is_dst_dst_operand_uint64 dst va_s0) /\ (va_is_src_operand_uint64 src va_s0) /\ (va_get_ok
     va_s0)))
@@ -357,7 +357,7 @@ val va_code_AddLea64 : dst:va_dst_operand -> src1:va_operand -> src2:va_operand 
 
 val va_lemma_AddLea64 : va_b0:va_codes -> va_s0:va_state -> va_sN:va_state -> dst:va_dst_operand ->
   src1:va_operand -> src2:va_operand
-  -> Ghost ((va_bM:va_codes) * (va_sM:va_state))
+  -> Ghost (va_codes & va_state)
   (requires ((va_require va_b0 (va_code_AddLea64 dst src1 src2) va_s0 va_sN) /\
     (va_is_dst_dst_operand_uint64 dst va_s0) /\ (va_is_src_operand_uint64 src1 va_s0) /\
     (va_is_src_operand_uint64 src2 va_s0) /\ (va_get_ok va_s0) /\ (va_eval_operand_uint64 va_s0
@@ -371,7 +371,7 @@ val va_code_Adc64Wrap : dst:va_dst_operand -> src:va_operand -> Tot va_code
 
 val va_lemma_Adc64Wrap : va_b0:va_codes -> va_s0:va_state -> va_sN:va_state -> dst:va_dst_operand
   -> src:va_operand
-  -> Ghost ((va_bM:va_codes) * (va_sM:va_state))
+  -> Ghost (va_codes & va_state)
   (requires ((va_require va_b0 (va_code_Adc64Wrap dst src) va_s0 va_sN) /\
     (va_is_dst_dst_operand_uint64 dst va_s0) /\ (va_is_src_operand_uint64 src va_s0) /\ (va_get_ok
     va_s0)))
@@ -387,7 +387,7 @@ val va_code_Sub64 : dst:va_dst_operand -> src:va_operand -> Tot va_code
 
 val va_lemma_Sub64 : va_b0:va_codes -> va_s0:va_state -> va_sN:va_state -> dst:va_dst_operand ->
   src:va_operand
-  -> Ghost ((va_bM:va_codes) * (va_sM:va_state))
+  -> Ghost (va_codes & va_state)
   (requires ((va_require va_b0 (va_code_Sub64 dst src) va_s0 va_sN) /\
     (va_is_dst_dst_operand_uint64 dst va_s0) /\ (va_is_src_operand_uint64 src va_s0) /\ (va_get_ok
     va_s0) /\ 0 <= (va_eval_dst_operand_uint64 va_s0 dst) - (va_eval_operand_uint64 va_s0 src)))
@@ -400,7 +400,7 @@ val va_code_Sub64Wrap : dst:va_dst_operand -> src:va_operand -> Tot va_code
 
 val va_lemma_Sub64Wrap : va_b0:va_codes -> va_s0:va_state -> va_sN:va_state -> dst:va_dst_operand
   -> src:va_operand
-  -> Ghost ((va_bM:va_codes) * (va_sM:va_state))
+  -> Ghost (va_codes & va_state)
   (requires ((va_require va_b0 (va_code_Sub64Wrap dst src) va_s0 va_sN) /\
     (va_is_dst_dst_operand_uint64 dst va_s0) /\ (va_is_src_operand_uint64 src va_s0) /\ (va_get_ok
     va_s0)))
@@ -412,7 +412,7 @@ val va_lemma_Sub64Wrap : va_b0:va_codes -> va_s0:va_state -> va_sN:va_state -> d
 val va_code_Mul64Wrap : src:va_operand -> Tot va_code
 
 val va_lemma_Mul64Wrap : va_b0:va_codes -> va_s0:va_state -> va_sN:va_state -> src:va_operand
-  -> Ghost ((va_bM:va_codes) * (va_sM:va_state))
+  -> Ghost (va_codes & va_state)
   (requires ((va_require va_b0 (va_code_Mul64Wrap src) va_s0 va_sN) /\ (va_is_src_operand_uint64
     src va_s0) /\ (va_get_ok va_s0)))
   (ensures (fun ((va_bM:va_codes), (va_sM:va_state)) -> ((va_ensure va_b0 va_bM va_s0 va_sM va_sN)
@@ -425,7 +425,7 @@ val va_code_IMul64 : dst:va_dst_operand -> src:va_operand -> Tot va_code
 
 val va_lemma_IMul64 : va_b0:va_codes -> va_s0:va_state -> va_sN:va_state -> dst:va_dst_operand ->
   src:va_operand
-  -> Ghost ((va_bM:va_codes) * (va_sM:va_state))
+  -> Ghost (va_codes & va_state)
   (requires ((va_require va_b0 (va_code_IMul64 dst src) va_s0 va_sN) /\
     (va_is_dst_dst_operand_uint64 dst va_s0) /\ (va_is_src_operand_uint64 src va_s0) /\ (va_get_ok
     va_s0) /\ (va_eval_dst_operand_uint64 va_s0 dst) `op_Multiply` (va_eval_operand_uint64 va_s0
@@ -440,7 +440,7 @@ val va_code_Xor64 : dst:va_dst_operand -> src:va_operand -> Tot va_code
 
 val va_lemma_Xor64 : va_b0:va_codes -> va_s0:va_state -> va_sN:va_state -> dst:va_dst_operand ->
   src:va_operand
-  -> Ghost ((va_bM:va_codes) * (va_sM:va_state))
+  -> Ghost (va_codes & va_state)
   (requires ((va_require va_b0 (va_code_Xor64 dst src) va_s0 va_sN) /\
     (va_is_dst_dst_operand_uint64 dst va_s0) /\ (va_is_src_operand_uint64 src va_s0) /\ (va_get_ok
     va_s0)))
@@ -453,7 +453,7 @@ val va_code_And64 : dst:va_dst_operand -> src:va_operand -> Tot va_code
 
 val va_lemma_And64 : va_b0:va_codes -> va_s0:va_state -> va_sN:va_state -> dst:va_dst_operand ->
   src:va_operand
-  -> Ghost ((va_bM:va_codes) * (va_sM:va_state))
+  -> Ghost (va_codes & va_state)
   (requires ((va_require va_b0 (va_code_And64 dst src) va_s0 va_sN) /\
     (va_is_dst_dst_operand_uint64 dst va_s0) /\ (va_is_src_operand_uint64 src va_s0) /\ (va_get_ok
     va_s0)))
@@ -466,7 +466,7 @@ val va_code_Shl64 : dst:va_dst_operand -> amt:va_shift_amt -> Tot va_code
 
 val va_lemma_Shl64 : va_b0:va_codes -> va_s0:va_state -> va_sN:va_state -> dst:va_dst_operand ->
   amt:va_shift_amt
-  -> Ghost ((va_bM:va_codes) * (va_sM:va_state))
+  -> Ghost (va_codes & va_state)
   (requires ((va_require va_b0 (va_code_Shl64 dst amt) va_s0 va_sN) /\
     (va_is_dst_dst_operand_uint64 dst va_s0) /\ (va_is_src_shift_amt_uint64 amt va_s0) /\
     (va_get_ok va_s0)))
@@ -479,7 +479,7 @@ val va_code_Shr64 : dst:va_dst_operand -> amt:va_shift_amt -> Tot va_code
 
 val va_lemma_Shr64 : va_b0:va_codes -> va_s0:va_state -> va_sN:va_state -> dst:va_dst_operand ->
   amt:va_shift_amt
-  -> Ghost ((va_bM:va_codes) * (va_sM:va_state))
+  -> Ghost (va_codes & va_state)
   (requires ((va_require va_b0 (va_code_Shr64 dst amt) va_s0 va_sN) /\
     (va_is_dst_dst_operand_uint64 dst va_s0) /\ (va_is_src_shift_amt_uint64 amt va_s0) /\
     (va_get_ok va_s0)))
