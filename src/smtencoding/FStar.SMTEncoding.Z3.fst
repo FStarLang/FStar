@@ -694,6 +694,22 @@ let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) inpu
     z3result_query_hash = qhash;
     z3result_log_file   = log_file }
 
+let ask_text
+    (r:Range.range)
+    (filter_theory:list decl -> list decl * bool)
+    (cache:option string)
+    (label_messages:error_labels)
+    (qry:list decl)
+    (queryid:string)
+  : string
+  = (* Mimics a fresh ask, and just returns the string that would
+    be sent to the solver. *)
+    let theory = flatten_fresh_scope() in
+    let theory = theory @[Push]@qry@[Pop] in
+    let theory, _used_unsat_core = filter_theory theory in
+    let input, qhash, log_file_name = mk_input true theory in
+    input
+
 let ask
     (r:Range.range)
     (filter_theory:list decl -> list decl * bool)

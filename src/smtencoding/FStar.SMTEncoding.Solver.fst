@@ -1083,6 +1083,25 @@ let ask_solver_recover
   ) else
     ask_solver_quake configs
 
+let failing_query_ctr : ref int = BU.mk_ref 0
+
+let maybe_save_failing_query (env:env_t) (prefix:list decl) (qs:query_settings) : unit =
+  if Options.proof_recovery () then (
+    let mod = show (Env.current_module env) in
+    let n = (failing_query_ctr := !failing_query_ctr + 1; !failing_query_ctr) in
+    let file_name = BU.format2 "failedQueries-%s-%s.smt2" mod (show n) in
+    let query_str = Z3.ask_text
+                            qs.query_range
+                            (filter_assertions qs.query_env None qs.query_hint)
+                            qs.query_hash
+                            qs.query_all_labels
+                            (with_fuel_and_diagnostics qs [])
+                            (BU.format2 "(%s, %s)" qs.query_name (string_of_int qs.query_index))
+    in
+    write_file file_name query_str;
+    ()
+  )
+
 let ask_solver
     (can_split : bool)
     (is_retry : bool)
@@ -1122,7 +1141,11 @@ let ask_solver
         // once for every VC. Every actual query will push and pop
         // whatever else they encode.
         Z3.giveZ3 prefix;
-        ask_solver_recover configs
+        let ans = ask_solver_recover configs in
+        if not ans.ok then
+          maybe_save_failing_query env prefix (List.last configs);
+        ans
+
       )
     in
     configs, ans
