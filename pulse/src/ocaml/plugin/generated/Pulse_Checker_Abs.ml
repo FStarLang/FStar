@@ -741,9 +741,9 @@ let rec (rebuild_abs :
                                          (Obj.magic
                                             (FStar_Range.mk_range
                                                "FStar.Printf.fst"
-                                               (Prims.of_int (121))
+                                               (Prims.of_int (122))
                                                (Prims.of_int (8))
-                                               (Prims.of_int (123))
+                                               (Prims.of_int (124))
                                                (Prims.of_int (44)))))
                                       (Obj.magic
                                          (Pulse_Syntax_Printer.st_term_to_string
@@ -2778,9 +2778,9 @@ let (maybe_rewrite_body_typing :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Printf.fst"
-                                                                    (Prims.of_int (121))
+                                                                    (Prims.of_int (122))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (123))
+                                                                    (Prims.of_int (124))
                                                                     (Prims.of_int (44)))))
                                                                     (Obj.magic
                                                                     (Pulse_Syntax_Printer.comp_to_string
