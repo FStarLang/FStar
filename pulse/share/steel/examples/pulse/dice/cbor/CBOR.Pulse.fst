@@ -182,17 +182,17 @@ ensures
         if (i16_neq_0 c)
         {
             c
-        } else if (ty1 = major_type_uint64 || ty1 = major_type_neg_int64) {
-            let i1 = destr_cbor_int64 a1;
-            let i2 = destr_cbor_int64 a2;
+        } else if (ty1 = cbor_major_type_uint64 || ty1 = cbor_major_type_neg_int64) {
+            let i1 = cbor_destr_int64 a1;
+            let i2 = cbor_destr_int64 a2;
             (impl_compare_u64 i1.cbor_int_value i2.cbor_int_value)
-        } else if (ty1 = major_type_simple_value) {
-            let i1 = destr_cbor_simple_value a1;
-            let i2 = destr_cbor_simple_value a2;
+        } else if (ty1 = cbor_major_type_simple_value) {
+            let i1 = cbor_destr_simple_value a1;
+            let i2 = cbor_destr_simple_value a2;
             (impl_compare_u8 i1 i2)
-        } else if (ty1 = major_type_byte_string || ty1 = major_type_text_string) {
-            let s1 = destr_cbor_string a1;
-            let s2 = destr_cbor_string a2;
+        } else if (ty1 = cbor_major_type_byte_string || ty1 = cbor_major_type_text_string) {
+            let s1 = cbor_destr_string a1;
+            let s2 = cbor_destr_string a2;
             let c = impl_compare_u64 s1.cbor_string_length s2.cbor_string_length;
             if (i16_neq_0 c) {
                 elim_stick0 ();
@@ -206,7 +206,7 @@ ensures
                 elim_stick0 ();
                 test
             }
-        } else if (ty1 = major_type_array) {
+        } else if (ty1 = cbor_major_type_array) {
             let len1 = cbor_array_length a1;
             let len2 = cbor_array_length a2;
             let c = impl_compare_u64 len1 len2;
@@ -268,9 +268,9 @@ ensures
                 elim_stick0 ();
                 !pres
             }
-        } else if (ty1 = major_type_tagged) {
-            let tg1 = destr_cbor_tagged a1;
-            let tg2 = destr_cbor_tagged a2;
+        } else if (ty1 = cbor_major_type_tagged) {
+            let tg1 = cbor_destr_tagged a1;
+            let tg2 = cbor_destr_tagged a2;
             let c = impl_compare_u64 tg1.cbor_tagged_tag tg2.cbor_tagged_tag;
             if (i16_neq_0 c) {
                 elim_stick0 ();
@@ -284,7 +284,7 @@ ensures
                 elim_stick0 ();
                 test
             }
-        } else if (ty1 = major_type_map) {
+        } else if (ty1 = cbor_major_type_map) {
             let len1 = cbor_map_length a1;
             let len2 = cbor_map_length a2;
             let c = impl_compare_u64 len1 len2;

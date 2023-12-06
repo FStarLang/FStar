@@ -63,13 +63,13 @@ let t_literal (i: Cbor.raw_data_item) : typ =
 // Appendix D
 let any : typ = (fun _ -> true)
 
-let uint : typ = (fun x -> Cbor.Int64? x && Cbor.Int64?.typ x = Cbor.major_type_uint64)
-let nint : typ = (fun x -> Cbor.Int64? x && Cbor.Int64?.typ x = Cbor.major_type_neg_int64)
+let uint : typ = (fun x -> Cbor.Int64? x && Cbor.Int64?.typ x = Cbor.cbor_major_type_uint64)
+let nint : typ = (fun x -> Cbor.Int64? x && Cbor.Int64?.typ x = Cbor.cbor_major_type_neg_int64)
 let t_int : typ = uint `t_choice` nint
 
-let bstr : typ = (fun x -> Cbor.String? x && Cbor.String?.typ x = Cbor.major_type_byte_string)
+let bstr : typ = (fun x -> Cbor.String? x && Cbor.String?.typ x = Cbor.cbor_major_type_byte_string)
 let bytes = bstr
-let tstr : typ = (fun x -> Cbor.String? x && Cbor.String?.typ x = Cbor.major_type_text_string)
+let tstr : typ = (fun x -> Cbor.String? x && Cbor.String?.typ x = Cbor.cbor_major_type_text_string)
 let text = tstr
 
 [@@CMacro]
@@ -92,7 +92,7 @@ let t_null : typ = t_nil
 let t_undefined : typ = t_simple_value_literal simple_value_undefined
 
 let t_uint_literal (v: U64.t) : typ =
-  t_literal (Cbor.Int64 Cbor.major_type_uint64 v)
+  t_literal (Cbor.Int64 Cbor.cbor_major_type_uint64 v)
 
 // Section 2.1: Groups 
 
@@ -768,7 +768,7 @@ noextract
 let string64 = (s: Seq.seq U8.t {FStar.UInt.fits (Seq.length s) 64})
 
 let name_as_text_string (s: string64) : typ =
-  t_literal (Cbor.String Cbor.major_type_text_string s)
+  t_literal (Cbor.String Cbor.cbor_major_type_text_string s)
 
 let t_map (#b: option Cbor.raw_data_item) (m: map_group b) : bounded_typ_gen b = fun x ->
   Cbor.Map? x &&
@@ -834,7 +834,7 @@ let str_size (ty: Cbor.major_type_byte_string_or_text_string) (sz: nat) : typ = 
 
 let uint_size (sz: nat) : typ = fun x ->
   Cbor.Int64? x &&
-  Cbor.Int64?.typ x = Cbor.major_type_uint64 &&
+  Cbor.Int64?.typ x = Cbor.cbor_major_type_uint64 &&
   U64.v (Cbor.Int64?.v x) < pow2 sz
 
 // Section 3.8.4: Control .cbor
@@ -845,7 +845,7 @@ let bstr_cbor
   (ty: typ) // TODO: enable recursion for this construct? If so, we need to replace << with some serialization size
 : typ = fun x ->
   Cbor.String? x &&
-  Cbor.String?.typ x = Cbor.major_type_byte_string &&
+  Cbor.String?.typ x = Cbor.cbor_major_type_byte_string &&
   FStar.StrongExcludedMiddle.strong_excluded_middle (
     exists y . Cbor.serialize_cbor y == Cbor.String?.v x /\
     Cbor.data_item_wf data_item_order y /\

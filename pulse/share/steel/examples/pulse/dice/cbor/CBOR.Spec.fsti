@@ -148,29 +148,29 @@ let rec cbor_compare
   let c = int_compare (U8.v ty1) (U8.v ty2) in
   if c <> 0
   then c
-  else if ty1 = major_type_uint64 || ty1 = major_type_neg_int64
+  else if ty1 = cbor_major_type_uint64 || ty1 = cbor_major_type_neg_int64
   then int_compare (U64.v (Int64?.v x1)) (U64.v (Int64?.v x2))
-  else if ty1 = major_type_simple_value
+  else if ty1 = cbor_major_type_simple_value
   then int_compare (U8.v (Simple?.v x1)) (U8.v (Simple?.v x2))
-  else if ty1 = major_type_byte_string || ty1 = major_type_text_string
+  else if ty1 = cbor_major_type_byte_string || ty1 = cbor_major_type_text_string
   then
     let c = int_compare (Seq.length (String?.v x1)) (Seq.length (String?.v x2)) in
     if c <> 0
     then c
     else bytes_lex_compare (String?.v x1) (String?.v x2)
-  else if ty1 = major_type_tagged
+  else if ty1 = cbor_major_type_tagged
   then
     let c = int_compare (U64.v (Tagged?.tag x1)) (U64.v (Tagged?.tag x2)) in
     if c <> 0
     then c
     else cbor_compare (Tagged?.v x1) (Tagged?.v x2)
-  else if ty1 = major_type_array
+  else if ty1 = cbor_major_type_array
   then
     let c = int_compare (List.Tot.length (Array?.v x1)) (List.Tot.length (Array?.v x2)) in
     if c <> 0
     then c
     else cbor_compare_array (Array?.v x1) (Array?.v x2)
-  else if ty1 = major_type_map
+  else if ty1 = cbor_major_type_map
   then
     let c = int_compare (List.Tot.length (Map?.v x1)) (List.Tot.length (Map?.v x2)) in
     if c <> 0

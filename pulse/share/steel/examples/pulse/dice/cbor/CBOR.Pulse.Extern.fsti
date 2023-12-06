@@ -11,7 +11,7 @@ module R = Pulse.Lib.Reference
 module A = Pulse.Lib.Array
 module SM = Pulse.Lib.SeqMatch
 
-val dummy_cbor : cbor
+val cbor_dummy : cbor
 
 val cbor_map_entry_key: cbor_map_entry -> cbor
 
@@ -32,7 +32,7 @@ val cbor_map_entry_key_value_inj
     [SMTPat (cbor_map_entry_value m1); SMTPat (cbor_map_entry_value m2)];
   ]]
 
-val mk_cbor_map_entry
+val cbor_mk_map_entry
   (key: cbor)
   (value: cbor)
 : Pure cbor_map_entry
@@ -83,130 +83,130 @@ let raw_data_item_map_match
 
 [@@no_auto_projectors]
 noeq
-type read_cbor_t = {
-  read_cbor_is_success: bool;
-  read_cbor_payload: cbor;
-  read_cbor_remainder: A.array U8.t;
-  read_cbor_remainder_length: SZ.t;
+type cbor_read_t = {
+  cbor_read_is_success: bool;
+  cbor_read_payload: cbor;
+  cbor_read_remainder: A.array U8.t;
+  cbor_read_remainder_length: SZ.t;
 }
 
 noextract
-let read_cbor_success_postcond
+let cbor_read_success_postcond
   (va: Ghost.erased (Seq.seq U8.t))
-  (c: read_cbor_t)
+  (c: cbor_read_t)
   (v: Cbor.raw_data_item)
   (rem: Seq.seq U8.t)
 : Tot prop
-= SZ.v c.read_cbor_remainder_length == Seq.length rem /\
+= SZ.v c.cbor_read_remainder_length == Seq.length rem /\
   va `Seq.equal` (Cbor.serialize_cbor v `Seq.append` rem)
 
-let read_cbor_success_post
+let cbor_read_success_post
   (a: A.array U8.t)
   (p: perm)
   (va: Ghost.erased (Seq.seq U8.t))
-  (c: read_cbor_t)
+  (c: cbor_read_t)
 : Tot vprop
 = exists_ (fun v -> exists_ (fun rem ->
-    raw_data_item_match full_perm c.read_cbor_payload v **
-    A.pts_to c.read_cbor_remainder #p rem **
-    ((raw_data_item_match full_perm c.read_cbor_payload v ** A.pts_to c.read_cbor_remainder #p rem) @==>
+    raw_data_item_match full_perm c.cbor_read_payload v **
+    A.pts_to c.cbor_read_remainder #p rem **
+    ((raw_data_item_match full_perm c.cbor_read_payload v ** A.pts_to c.cbor_read_remainder #p rem) @==>
       A.pts_to a #p va) **
-    pure (read_cbor_success_postcond va c v rem)
+    pure (cbor_read_success_postcond va c v rem)
   ))
 
 noextract
-let read_cbor_error_postcond
+let cbor_read_error_postcond
   (va: Ghost.erased (Seq.seq U8.t))
 : Tot prop
 = forall v suff . ~ (Ghost.reveal va == Cbor.serialize_cbor v `Seq.append` suff)
 
-let read_cbor_error_post
+let cbor_read_error_post
   (a: A.array U8.t)
   (p: perm)
   (va: Ghost.erased (Seq.seq U8.t))
 : Tot vprop
-= A.pts_to a #p va ** pure (read_cbor_error_postcond va)
+= A.pts_to a #p va ** pure (cbor_read_error_postcond va)
 
-let read_cbor_post
+let cbor_read_post
   (a: A.array U8.t)
   (p: perm)
   (va: Ghost.erased (Seq.seq U8.t))
-  (res: read_cbor_t)
+  (res: cbor_read_t)
 : Tot vprop
-= if res.read_cbor_is_success
-  then read_cbor_success_post a p va res
-  else read_cbor_error_post a p va
+= if res.cbor_read_is_success
+  then cbor_read_success_post a p va res
+  else cbor_read_error_post a p va
 
-val read_cbor
+val cbor_read
   (a: A.array U8.t)
   (sz: SZ.t)
   (#va: Ghost.erased (Seq.seq U8.t))
   (#p: perm)
-: stt read_cbor_t
+: stt cbor_read_t
     (A.pts_to a #p va ** pure (
       (SZ.v sz == Seq.length va \/ SZ.v sz == A.length a)
     ))
-    (fun res -> read_cbor_post a p va res)
+    (fun res -> cbor_read_post a p va res)
 
 noextract
-let read_deterministically_encoded_cbor_success_postcond
+let cbor_read_deterministically_encoded_success_postcond
   (va: Ghost.erased (Seq.seq U8.t))
-  (c: read_cbor_t)
+  (c: cbor_read_t)
   (v: Cbor.raw_data_item)
   (rem: Seq.seq U8.t)
 : Tot prop
-= read_cbor_success_postcond va c v rem /\
+= cbor_read_success_postcond va c v rem /\
   Cbor.data_item_wf Cbor.deterministically_encoded_cbor_map_key_order v == true
 
-let read_deterministically_encoded_cbor_success_post
+let cbor_read_deterministically_encoded_success_post
   (a: A.array U8.t)
   (p: perm)
   (va: Ghost.erased (Seq.seq U8.t))
-  (c: read_cbor_t)
+  (c: cbor_read_t)
 : Tot vprop
 = exists_ (fun v -> exists_ (fun rem ->
-    raw_data_item_match full_perm c.read_cbor_payload v **
-    A.pts_to c.read_cbor_remainder #p rem **
-    ((raw_data_item_match full_perm c.read_cbor_payload v ** A.pts_to c.read_cbor_remainder #p rem) @==>
+    raw_data_item_match full_perm c.cbor_read_payload v **
+    A.pts_to c.cbor_read_remainder #p rem **
+    ((raw_data_item_match full_perm c.cbor_read_payload v ** A.pts_to c.cbor_read_remainder #p rem) @==>
       A.pts_to a #p va) **
-    pure (read_deterministically_encoded_cbor_success_postcond va c v rem)
+    pure (cbor_read_deterministically_encoded_success_postcond va c v rem)
   ))
 
 noextract
-let read_deterministically_encoded_cbor_error_postcond
+let cbor_read_deterministically_encoded_error_postcond
   (va: Ghost.erased (Seq.seq U8.t))
 : Tot prop
 = forall v suff . Ghost.reveal va == Cbor.serialize_cbor v `Seq.append` suff ==> Cbor.data_item_wf Cbor.deterministically_encoded_cbor_map_key_order v == false
 
-let read_deterministically_encoded_cbor_error_post
+let cbor_read_deterministically_encoded_error_post
   (a: A.array U8.t)
   (p: perm)
   (va: Ghost.erased (Seq.seq U8.t))
 : Tot vprop
-= A.pts_to a #p va ** pure (read_deterministically_encoded_cbor_error_postcond va)
+= A.pts_to a #p va ** pure (cbor_read_deterministically_encoded_error_postcond va)
 
-let read_deterministically_encoded_cbor_post
+let cbor_read_deterministically_encoded_post
   (a: A.array U8.t)
   (p: perm)
   (va: Ghost.erased (Seq.seq U8.t))
-  (res: read_cbor_t)
+  (res: cbor_read_t)
 : Tot vprop
-= if res.read_cbor_is_success
-  then read_deterministically_encoded_cbor_success_post a p va res
-  else read_deterministically_encoded_cbor_error_post a p va
+= if res.cbor_read_is_success
+  then cbor_read_deterministically_encoded_success_post a p va res
+  else cbor_read_deterministically_encoded_error_post a p va
 
-val read_deterministically_encoded_cbor
+val cbor_read_deterministically_encoded
   (a: A.array U8.t)
   (sz: SZ.t)
   (#va: Ghost.erased (Seq.seq U8.t))
   (#p: perm)
-: stt read_cbor_t
+: stt cbor_read_t
     (A.pts_to a #p va ** pure (SZ.v sz == Seq.length va \/ SZ.v sz == A.length a))
-    (fun res -> read_deterministically_encoded_cbor_post a p va res)
+    (fun res -> cbor_read_deterministically_encoded_post a p va res)
 
 (* Destructors and constructors *)
 
-val destr_cbor_int64
+val cbor_destr_int64
   (c: cbor)
   (#p: perm)
   (#va: Ghost.erased Cbor.raw_data_item)
@@ -218,14 +218,14 @@ val destr_cbor_int64
       Ghost.reveal va == Cbor.Int64 c'.cbor_int_type c'.cbor_int_value
     ))
 
-val constr_cbor_int64
+val cbor_constr_int64
   (ty: Cbor.major_type_uint64_or_neg_int64)
   (value: U64.t)
 : stt cbor
     emp
     (fun c -> raw_data_item_match full_perm c (Cbor.Int64 ty value))
 
-val destr_cbor_simple_value
+val cbor_destr_simple_value
   (c: cbor)
   (#p: perm)
   (#va: Ghost.erased Cbor.raw_data_item)
@@ -238,14 +238,14 @@ val destr_cbor_simple_value
       Ghost.reveal va == Cbor.Simple c'
     ))
 
-val constr_cbor_simple_value
+val cbor_constr_simple_value
   (value: Cbor.simple_value)
 : stt cbor
     emp
     (fun c -> raw_data_item_match full_perm c (Cbor.Simple value))
 
 noextract
-let destr_cbor_string_post
+let cbor_destr_string_post
   (va: Cbor.raw_data_item)
   (c': cbor_string)
   (vc' : Seq.seq U8.t)
@@ -256,7 +256,7 @@ let destr_cbor_string_post
         vc' == Cbor.String?.v va
 
 
-val destr_cbor_string
+val cbor_destr_string
   (c: cbor)
   (#p: perm)
   (#va: Ghost.erased Cbor.raw_data_item)
@@ -267,10 +267,10 @@ val destr_cbor_string
     (fun c' -> exists_ (fun vc' -> exists_ (fun p'->
       A.pts_to c'.cbor_string_payload #p' vc' **
       (A.pts_to c'.cbor_string_payload #p' vc' @==> raw_data_item_match p c (Ghost.reveal va)) **
-      pure (destr_cbor_string_post va c'  vc'
+      pure (cbor_destr_string_post va c'  vc'
     ))))
 
-val constr_cbor_string
+val cbor_constr_string
   (typ: Cbor.major_type_byte_string_or_text_string)
   (a: A.array U8.t)
   (len: U64.t)
@@ -289,7 +289,7 @@ val constr_cbor_string
       vc' == Cbor.String typ va
     )))
 
-val constr_cbor_array
+val cbor_constr_array
   (a: A.array cbor)
   (len: U64.t)
   (#c': Ghost.erased (Seq.seq cbor))
@@ -350,7 +350,7 @@ val cbor_array_index
         va' == List.Tot.index (Cbor.Array?.v v) (SZ.v i)
     )))
 
-val dummy_cbor_array_iterator: cbor_array_iterator_t
+val cbor_dummy_array_iterator: cbor_array_iterator_t
 
 val cbor_array_iterator_match
   (p: perm)
@@ -403,7 +403,7 @@ val cbor_array_iterator_next
       Ghost.reveal l == vc :: vi'
     )))))
 
-val read_cbor_array
+val cbor_read_array
   (a: cbor)
   (dest: A.array cbor) // it is the user's responsibility to allocate the array properly
   (len: U64.t)
@@ -440,7 +440,7 @@ let maybe_cbor_tagged_tag
   | _ -> 0uL // dummy
 
 let dummy_raw_data_item : Ghost.erased Cbor.raw_data_item =
-  Cbor.Int64 Cbor.major_type_uint64 0uL
+  Cbor.Int64 Cbor.cbor_major_type_uint64 0uL
 
 let maybe_cbor_tagged_payload
   (v: Cbor.raw_data_item)
@@ -456,7 +456,7 @@ type cbor_tagged = {
   cbor_tagged_payload: cbor;
 }
 
-val destr_cbor_tagged
+val cbor_destr_tagged
   (a: cbor)
   (#p: perm)
   (#v: Ghost.erased Cbor.raw_data_item)
@@ -473,7 +473,7 @@ val destr_cbor_tagged
       res.cbor_tagged_tag == Cbor.Tagged?.tag v
     ))
 
-val constr_cbor_tagged
+val cbor_constr_tagged
   (tag: U64.t)
   (a: R.ref cbor)
   (#c': Ghost.erased (cbor))
@@ -489,7 +489,7 @@ val constr_cbor_tagged
       )
     )
 
-val constr_cbor_map
+val cbor_constr_map
   (a: A.array cbor_map_entry)
   (len: U64.t)
   (#c': Ghost.erased (Seq.seq cbor_map_entry))
@@ -523,7 +523,7 @@ val cbor_map_length
       U64.v res == List.Tot.length (Cbor.Map?.v v)
     ))
 
-val dummy_cbor_map_iterator: cbor_map_iterator_t
+val cbor_dummy_map_iterator: cbor_map_iterator_t
 
 val cbor_map_iterator_match
   (p: perm)
@@ -610,7 +610,7 @@ val cbor_compare_aux
 (* Serialization *)
 
 noextract
-let write_cbor_postcond
+let cbor_write_postcond
   (va: Cbor.raw_data_item)
   (out: A.array U8.t)
   (vout': Seq.seq U8.t)
@@ -624,7 +624,7 @@ let write_cbor_postcond
     Seq.slice vout' 0 (Seq.length s) `Seq.equal` s
   ))
 
-let write_cbor_post
+let cbor_write_post
   (va: Ghost.erased Cbor.raw_data_item)
   (c: cbor)
   (vout: Ghost.erased (Seq.seq U8.t))
@@ -634,9 +634,9 @@ let write_cbor_post
 : Tot vprop
 = 
   A.pts_to out vout' **
-  pure (write_cbor_postcond va out vout' res)
+  pure (cbor_write_postcond va out vout' res)
 
-val write_cbor
+val cbor_write
   (c: cbor)
   (out: A.array U8.t)
   (sz: SZ.t)
@@ -651,7 +651,7 @@ val write_cbor
     ))
     (fun res -> 
       raw_data_item_match p c (Ghost.reveal va) **
-      exists_ (write_cbor_post va c vout out res)
+      exists_ (cbor_write_post va c vout out res)
     )
 
 val cbor_gather

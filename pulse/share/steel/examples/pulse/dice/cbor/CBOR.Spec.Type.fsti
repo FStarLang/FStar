@@ -38,19 +38,19 @@ type raw_data_item
 //  | Float: (v: Float.float) -> raw_data_item // TODO
 
 let dummy_raw_data_item : Ghost.erased raw_data_item =
-  Int64 major_type_uint64 0uL
+  Int64 cbor_major_type_uint64 0uL
 
 noextract
 let get_major_type
   (d: raw_data_item)
 : Tot major_type_t
 = match d with
-  | Simple _ -> major_type_simple_value
+  | Simple _ -> cbor_major_type_simple_value
   | Int64 m _ -> m
   | String m _ -> m
-  | Array _ -> major_type_array
-  | Map _ -> major_type_map
-  | Tagged _ _ -> major_type_tagged
+  | Array _ -> cbor_major_type_array
+  | Map _ -> cbor_major_type_map
+  | Tagged _ _ -> cbor_major_type_tagged
 
 noextract
 val holds_on_raw_data_item

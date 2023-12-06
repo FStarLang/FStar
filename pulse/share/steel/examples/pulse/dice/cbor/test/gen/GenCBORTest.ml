@@ -10,17 +10,17 @@ let gen_int (x: int) (name: string) : c list =
     then ("UINT64", x)
     else ("NEG_INT64", -1-x)
   in
-  [`Instr ("CBOR_cbor " ^ name ^ " = CBOR_constr_cbor_int64(CBOR_MAJOR_TYPE_" ^ major_type ^ "," ^ string_of_int count ^ ")")]
+  [`Instr ("cbor " ^ name ^ " = cbor_constr_int64(CBOR_MAJOR_TYPE_" ^ major_type ^ "," ^ string_of_int count ^ ")")]
 
 let quote_string s = Yojson.Safe.to_string (`String s)
 
 let gen_string (s: string) (name: string) : c list =
-  [`Instr ("CBOR_cbor " ^ name ^ " = CBOR_constr_cbor_string(CBOR_MAJOR_TYPE_TEXT_STRING, (uint8_t *" ^ ")" ^ quote_string s ^ ", " ^ string_of_int (String.length s) ^ ")")]
+  [`Instr ("cbor " ^ name ^ " = cbor_constr_string(CBOR_MAJOR_TYPE_TEXT_STRING, (uint8_t *" ^ ")" ^ quote_string s ^ ", " ^ string_of_int (String.length s) ^ ")")]
 
 let gen_map (gen: Yojson.Safe.t -> string -> c list) (l: (string * Yojson.Safe.t) list) (name: string) : c list =
   let len = List.length l in
   let elt i = name ^ "_map[" ^ string_of_int i ^ "]" in
-  let accu = [`Instr ("CBOR_cbor " ^ name ^ " = CBOR_constr_cbor_map(" ^ name ^ "_map, " ^ string_of_int len ^ ")")] in
+  let accu = [`Instr ("cbor " ^ name ^ " = cbor_constr_map(" ^ name ^ "_map, " ^ string_of_int len ^ ")")] in
   let rec aux accu i = function
   | [] -> accu
   | (s, x) :: q->
@@ -29,19 +29,19 @@ let gen_map (gen: Yojson.Safe.t -> string -> c list) (l: (string * Yojson.Safe.t
     let accu' =
       gen_string s key_name @
       gen x value_name @
-      `Instr (elt i ^ " = (CBOR_cbor_map_entry) {.cbor_map_entry_key = " ^ key_name ^ ", .cbor_map_entry_value = " ^ value_name ^ "}") ::
+      `Instr (elt i ^ " = (cbor_map_entry) {.cbor_map_entry_key = " ^ key_name ^ ", .cbor_map_entry_value = " ^ value_name ^ "}") ::
       accu
     in
     aux accu' (i + 1) q
   in
   let accu' = aux accu 0 l in
-  let accu' = `Instr ("CBOR_cbor_map_entry " ^ elt len) :: accu' in
+  let accu' = `Instr ("cbor_map_entry " ^ elt len) :: accu' in
   accu'
 
 let gen_array (gen: Yojson.Safe.t -> string -> c list) (l: Yojson.Safe.t list) (name: string) : c list =
   let len = List.length l in
   let elt i = name ^ "_array[" ^ string_of_int i ^ "]" in
-  let accu = [`Instr ("CBOR_cbor " ^ name ^ " = CBOR_constr_cbor_array(" ^ name ^ "_array, " ^ string_of_int len ^ ")")] in
+  let accu = [`Instr ("cbor " ^ name ^ " = cbor_constr_array(" ^ name ^ "_array, " ^ string_of_int len ^ ")")] in
   let rec aux accu i = function
   | [] -> accu
   | x :: q->
@@ -54,7 +54,7 @@ let gen_array (gen: Yojson.Safe.t -> string -> c list) (l: Yojson.Safe.t list) (
     aux accu' (i + 1) q
   in
   let accu' = aux accu 0 l in
-  let accu' = `Instr ("CBOR_cbor " ^ elt len) :: accu' in
+  let accu' = `Instr ("cbor " ^ elt len) :: accu' in
   accu'
 
 exception GenUnsupported
@@ -108,7 +108,7 @@ let gen_encoding_test_c
     `Instr source_bytes ::
     decoded_c @
     `Instr ("uint8_t target_bytes[" ^ size_s ^ "]") ::
-    `Instr ("size_t target_bytes_written = CBOR_write_cbor (source_cbor, target_bytes, " ^ size_s ^ ")") ::
+    `Instr ("size_t target_bytes_written = cbor_write (source_cbor, target_bytes, " ^ size_s ^ ")") ::
     `If ("target_bytes_written != " ^ size_s) ::
     `Block (
         `Instr ("printf(\"Encoding failed: expected " ^ size_s ^ " bytes, wrote %ld\\n\", target_bytes_written)") ::
@@ -125,14 +125,14 @@ let gen_encoding_test_c
         []
      ) ::
     `Instr ("printf(\"Encoding succeeded!\\n\")") ::
-    `Instr ("CBOR_read_cbor_t target_cbor = CBOR_read_cbor(source_bytes, " ^ size_s ^ ")") ::
-    `If ("! (target_cbor.read_cbor_is_success)") ::
+    `Instr ("cbor_read_t target_cbor = cbor_read(source_bytes, " ^ size_s ^ ")") ::
+    `If ("! (target_cbor.cbor_read_is_success)") ::
     `Block (
         `Instr ("printf(\"Decoding failed!\\n\")") ::
         `Instr ("return 1") ::
         []
     ) ::
-    `If ("! (CBOR_Pulse_cbor_is_equal(source_cbor, target_cbor.read_cbor_payload))") ::
+    `If ("! (CBOR_Pulse_cbor_is_equal(source_cbor, target_cbor.cbor_read_payload))") ::
     `Block (
         `Instr ("printf(\"Decoding mismatch!\\n\")") ::
         `Instr ("return 1") ::
