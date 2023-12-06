@@ -138,7 +138,6 @@ let set_admit_smt_queries (b:bool) = set_option "admit_smt_queries" (Bool b)
 
 let defaults =
      [
-      ("__temp_fast_implicits"        , Bool false);
       ("abort_on"                     , Int 0);
       ("admit_smt_queries"            , Bool false);
       ("admit_except"                 , Unset);
@@ -508,14 +507,13 @@ let display_usage_aux specs =
     doc_of_string "fstar.exe [options] file[s] [@respfile...]" ^/^
     doc_of_string (Util.format1 "  %srespfile: read command-line options from respfile\n" (Util.colorize_bold "@")) ^/^
     List.fold_right
-      (fun ((_, flag, p), doc) rest ->
+      (fun ((_, flag, p), explain) rest ->
         let opt = doc_of_string ("--" ^ flag) in
         let arg =
           match p with
           | ZeroArgs _ -> empty
           | OneArg (_, argname) -> blank 1 ^^ doc_of_string argname
         in
-        let explain : document = arbitrary_string doc in
         group (bold_doc (opt ^^ arg)) ^^ hardline ^^
         group (blank 4 ^^ align explain) ^^ hardline ^^
         rest
@@ -593,8 +591,7 @@ let rec parse_opt_val (opt_name: string) (typ: opt_type) (str_val: string) : opt
     failwith (Util.format1 "Invalid argument to --%s" opt_name)
 
 let rec desc_of_opt_type typ : option string =
-  let desc_of_enum cases =
-    Some ("[" ^ (String.concat "|" cases) ^ "]") in
+  let desc_of_enum cases = Some (String.concat "|" cases) in
   match typ with
   | Const c -> None
   | IntStr desc -> Some desc
@@ -609,10 +606,13 @@ let rec desc_of_opt_type typ : option string =
   | WithSideEffect (_, elem_spec) -> desc_of_opt_type elem_spec
 
 let arg_spec_of_opt_type opt_name typ : opt_variant option_val =
+  let wrap s = "<" ^ s ^ ">" in
   let parser = parse_opt_val opt_name typ in
   match desc_of_opt_type typ with
   | None -> ZeroArgs (fun () -> parser "")
-  | Some desc -> OneArg (parser, desc)
+  | Some desc ->
+    let desc = wrap desc in
+    OneArg (parser, desc)
 
 let pp_validate_dir p =
   let pp = as_string p in
@@ -655,750 +655,775 @@ let set_option_warning_callback_aux,
     set, call
 let set_option_warning_callback f = set_option_warning_callback_aux f
 
-let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) =
-     [( noshort,
-        "abort_on",
-        PostProcessed ((function Int x -> abort_counter := x; Int x
-                               | x -> failwith "?"), IntStr "non-negative integer"),
-        "Abort on the n-th error or warning raised. Useful in combination with --trace_error. Count starts at 1, use 0 to disable. (default 0)");
-
-      ( noshort,
-        "admit_smt_queries",
-        WithSideEffect ((fun _ -> if warn_unsafe then option_warning_callback "admit_smt_queries"), BoolStr),
-        "Admit SMT queries, unsafe! (default 'false')");
-
-      ( noshort,
-        "admit_except",
-        WithSideEffect ((fun _ -> if warn_unsafe then option_warning_callback "admit_except"), SimpleStr "[symbol|(symbol, id)]"),
-        "Admit all queries, except those with label ( symbol,  id)) (e.g. --admit_except '(FStar.Fin.pigeonhole, 1)' or --admit_except FStar.Fin.pigeonhole)");
-
-      ( noshort,
-        "compat_pre_core",
-        IntStr "0, 1, 2",
-        "Retain behavior of the tactic engine prior to the introduction of FStar.TypeChecker.Core (0 is most permissive, 2 is least permissive)");
-
-      ( noshort,
-        "compat_pre_typed_indexed_effects",
-        Const (Bool true),
-        "Retain untyped indexed effects implicits");
-
-      ( noshort,
-        "disallow_unification_guards",
-        BoolStr,
-        "Fail if the SMT guard are produced when the tactic engine re-checks solutions produced by the unifier (default 'false')");
-
-       ( noshort,
-         "already_cached",
-         Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module)'"),
-        "\n\t\tExpects all modules whose names or namespaces match the provided options \n\t\t\t\
-         to already have valid .checked files in the include path");
-
-      ( noshort,
-        "cache_checked_modules",
-        Const (Bool true),
-        "Write a '.checked' file for each module after verification and read from it if present, instead of re-verifying");
-
-      ( noshort,
-        "cache_dir",
-        PostProcessed (pp_validate_dir, PathStr "dir"),
-        "Read and write .checked and .checked.lax in directory  dir");
-
-      ( noshort,
-        "cache_off",
-        Const (Bool true),
-        "Do not read or write any .checked files");
-
-      ( noshort,
-        "print_cache_version",
-        Const (Bool true),
-        "Print the version for .checked files and exit.");
-
-      ( noshort,
-        "cmi",
-        Const (Bool true),
-        "Inline across module interfaces during extraction (aka. cross-module inlining)");
-
-      ( noshort,
-        "codegen",
-        EnumStr ["OCaml"; "FSharp"; "krml"; "Plugin"; "Extension"],
-        "Generate code for further compilation to executable code, or build a compiler plugin");
-
-      ( noshort,
-        "codegen-lib",
-        Accumulated (SimpleStr "namespace"),
-        "External runtime library (i.e. M.N.x extracts to M.N.X instead of M_N.x)");
-
-      ( noshort,
-        "debug",
-        Accumulated (SimpleStr "module_name"),
-        "Print lots of debugging information while checking module");
-
-       ( noshort,
-        "debug_level",
-        Accumulated (OpenEnumStr (["Low"; "Medium"; "High"; "Extreme"], "...")),
-        "Control the verbosity of debugging info");
-
-       (noshort,
-        "defensive",
-        EnumStr ["no"; "warn"; "error"; "abort"],
-        "Enable several internal sanity checks, useful to track bugs and report issues.\n\t\t\
-         if 'no', no checks are performed\n\t\t\
-         if 'warn', checks are performed and raise a warning when they fail\n\t\t\
-         if 'error, like 'warn', but the compiler raises a hard error instead \n\t\t\
-         if 'abort, like 'warn', but the compiler immediately aborts on an error\n\t\t\
-         (default 'no')");
-
-       ( noshort,
-        "dep",
-        EnumStr ["make"; "graph"; "full"; "raw"],
-        "Output the transitive closure of the full dependency graph in three formats:\n\t \
-         'graph': a format suitable the 'dot' tool from 'GraphViz'\n\t \
-         'full': a format suitable for 'make', including dependences for producing .ml and .krml files\n\t \
-         'make': (deprecated) a format suitable for 'make', including only dependences among source files");
-
-       ( noshort,
-        "detail_errors",
-        Const (Bool true),
-         "Emit a detailed error report by asking the SMT solver many queries; will take longer");
-
-       ( noshort,
-        "detail_hint_replay",
-        Const (Bool true),
-         "Emit a detailed report for proof whose unsat core fails to replay");
-
-       ( noshort,
-        "dump_module",
-        Accumulated (SimpleStr "module_name"),
-        "Print out this module as it passes through the compiler pipeline");
-
-       (noshort,
-        "eager_subtyping",
-        Const (Bool true),
-        "Try to solve subtyping constraints at each binder (loses precision but may be slightly more efficient)");
-
-       (noshort,
-        "error_contexts",
-        BoolStr,
-        "Print context information for each error or warning raised (default false)");
-
-       ( noshort,
-         "ext",
-         ReverseAccumulated (SimpleStr "One or more semicolon separated occurrences of key-value pairs"),
-         "\n\t\tThese options are set in extensions option map. Keys are usually namespaces separated by \":\".\n\t\t\
-         E.g., 'pulse:verbose=1;my:extension:option=xyz;foo:bar=baz'\n\t\t\
-         These options are typically interpreted by extensions. \n\t\t\
-         Any later use of --ext over the same key overrides the old value.\n\t\t\
-         An entry 'e' that is not of the form 'a=b' is treated as 'e=1', i.e., 'e' associated with string \"1\"");
-
-       ( noshort,
-         "extract",
-         Accumulated (SimpleStr "One or more semicolon separated occurrences of '[TargetName:]ModuleSelector'"),
-        "\n\t\tExtract only those modules whose names or namespaces match the provided options.\n\t\t\t\
-         'TargetName' ranges over {OCaml, krml, FSharp, Plugin, Extension}.\n\t\t\t\
-         A 'ModuleSelector' is a space or comma-separated list of '[+|-]( * | namespace | module)'.\n\t\t\t\
-         For example --extract 'OCaml:A -A.B' --extract 'krml:A -A.C' --extract '*' means\n\t\t\t\t\
-         for OCaml, extract everything in the A namespace only except A.B;\n\t\t\t\t\
-         for krml, extract everything in the A namespace only except A.C;\n\t\t\t\t\
-         for everything else, extract everything.\n\t\t\t\
-         Note, the '+' is optional: --extract '+A' and --extract 'A' mean the same thing.\n\t\t\t\
-         Note also that '--extract A' applies both to a module named 'A' and to any module in the 'A' namespace\n\t\t\
-         Multiple uses of this option accumulate, e.g., --extract A --extract B is interpreted as --extract 'A B'.");
-
-       ( noshort,
-        "extract_module",
-        Accumulated (PostProcessed (pp_lowercase, (SimpleStr "module_name"))),
-        "Deprecated: use --extract instead; Only extract the specified modules (instead of the possibly-partial dependency graph)");
-
-       ( noshort,
-        "extract_namespace",
-        Accumulated (PostProcessed (pp_lowercase, (SimpleStr "namespace name"))),
-        "Deprecated: use --extract instead; Only extract modules in the specified namespace");
-
-       ( noshort,
-        "expose_interfaces",
-        Const (Bool true),
-        "Explicitly break the abstraction imposed by the interface of any implementation file that appears on the command line (use with care!)");
-
-       ( noshort,
-        "hide_uvar_nums",
-        Const (Bool true),
-        "Don't print unification variable numbers");
-
-       ( noshort,
-         "hint_dir",
-         PostProcessed (pp_validate_dir, PathStr "dir"),
-        "Read/write hints to  dir/module_name.hints (instead of placing hint-file alongside source file)");
-
-       ( noshort,
-         "hint_file",
-         PathStr "path",
-        "Read/write hints to  path (instead of module-specific hints files; overrides hint_dir)");
-
-       ( noshort,
-        "hint_hook",
-        SimpleStr "command",
-        "Use <command> to generate hints for definitions which do not have them. The command will\n\t\
-         receive a JSON representation of the query, the type of the top-level definition involved,\n\t\
-         and the full SMT theory, and must output a comma separated list\n\t\
-         of facts to be used.");
-
-       ( noshort,
-        "hint_info",
-        Const (Bool true),
-        "Print information regarding hints (deprecated; use --query_stats instead)");
-
-       ( noshort,
-        "in",
-        Const (Bool true),
-        "Legacy interactive mode; reads input from stdin");
-
-       ( noshort,
-        "ide",
-        Const (Bool true),
-        "JSON-based interactive mode for IDEs");
-
-       ( noshort,
-        "ide_id_info_off",
-        Const (Bool true),
-        "Disable identifier tables in IDE mode (temporary workaround useful in Steel)");
-
-       ( noshort,
-        "lsp",
-        Const (Bool true),
-        "Language Server Protocol-based interactive mode for IDEs");
-
-       ( noshort,
-        "include",
-        ReverseAccumulated (PathStr "path"),
-        "A directory in which to search for files included on the command line");
-
-       ( noshort,
-        "print",
-        Const (Bool true),
-        "Parses and prettyprints the files included on the command line");
-
-       ( noshort,
-        "print_in_place",
-        Const (Bool true),
-        "Parses and prettyprints in place the files included on the command line");
-
-       ( 'f',
-        "force",
-        Const (Bool true),
-        "Force checking the files given as arguments even if they have valid checked files");
-
-       ( noshort,
-        "fuel",
-        PostProcessed
-            ((function | String s ->
-                         let p f = Int (int_of_string f) in
-                         let min, max =
-                           match split s "," with
-                           | [f] -> f, f
-                           | [f1;f2] -> f1, f2
-                           | _ -> failwith "unexpected value for --fuel"
-                         in
-                         set_option "initial_fuel" (p min);
-                         set_option "max_fuel" (p max);
-                         String s
-                       | _ -> failwith "impos"),
-            SimpleStr "non-negative integer or pair of non-negative integers"),
-        "Set initial_fuel and max_fuel at once");
-
-       ( noshort,
-        "ifuel",
-        PostProcessed
-            ((function | String s ->
-                         let p f = Int (int_of_string f) in
-                         let min, max =
-                           match split s "," with
-                           | [f] -> f, f
-                           | [f1;f2] -> f1, f2
-                           | _ -> failwith "unexpected value for --ifuel"
-                         in
-                         set_option "initial_ifuel" (p min);
-                         set_option "max_ifuel" (p max);
-                         String s
-                       | _ -> failwith "impos"),
-            SimpleStr "non-negative integer or pair of non-negative integers"),
-        "Set initial_ifuel and max_ifuel at once");
-
-       ( noshort,
-        "initial_fuel",
-        IntStr "non-negative integer",
-        "Number of unrolling of recursive functions to try initially (default 2)");
-
-       ( noshort,
-        "initial_ifuel",
-        IntStr "non-negative integer",
-        "Number of unrolling of inductive datatypes to try at first (default 1)");
-
-       ( noshort,
-        "keep_query_captions",
-        BoolStr,
-        "Retain comments in the logged SMT queries (requires --log_queries; default true)");
-
-       ( noshort,
-        "lax",
-        WithSideEffect ((fun () -> if warn_unsafe then option_warning_callback "lax"), Const (Bool true)),
-        "Run the lax-type checker only (admit all verification conditions)");
-
-      ( noshort,
-       "load",
-        ReverseAccumulated (PathStr "module"),
-        "Load OCaml module, compiling it if necessary");
-
-      ( noshort,
-       "load_cmxs",
-        ReverseAccumulated (PathStr "module"),
-        "Load compiled module, fails hard if the module is not already compiled");
-
-       ( noshort,
-        "log_types",
-        Const (Bool true),
-        "Print types computed for data/val/let-bindings");
-
-       ( noshort,
-        "log_queries",
-        Const (Bool true),
-        "Log the Z3 queries in several queries-*.smt2 files, as we go");
-
-       ( noshort,
-        "max_fuel",
-        IntStr "non-negative integer",
-        "Number of unrolling of recursive functions to try at most (default 8)");
-
-       ( noshort,
-        "max_ifuel",
-        IntStr "non-negative integer",
-        "Number of unrolling of inductive datatypes to try at most (default 2)");
-
-       ( noshort,
-        "MLish",
-        Const (Bool true),
-        "Trigger various specializations for compiling the F* compiler itself (not meant for user code)");
-
-       ( noshort,
-        "no_default_includes",
-        Const (Bool true),
-        "Ignore the default module search paths");
-
-       ( noshort,
-        "no_extract",
-        Accumulated (PathStr "module name"),
-        "Deprecated: use --extract instead; Do not extract code from this module");
-
-       ( noshort,
-        "no_location_info",
-        Const (Bool true),
-        "Suppress location information in the generated OCaml output (only relevant with --codegen OCaml)");
-
-       ( noshort,
-        "no_smt",
-        Const (Bool true),
-        "Do not send any queries to the SMT solver, and fail on them instead");
-
-       ( noshort,
-        "normalize_pure_terms_for_extraction",
-        Const (Bool true),
-        "Extract top-level pure terms after normalizing them. This can lead to very large code, but can result in more partial evaluation and compile-time specialization.");
-
-       ( noshort,
-        "odir",
-        PostProcessed (pp_validate_dir, PathStr "dir"),
-        "Place output in directory  dir");
-
-       ( noshort,
-        "output_deps_to",
-        PathStr "file",
-        "Output the result of --dep into this file instead of to standard output.");
-
-       ( noshort,
-        "prims",
-        PathStr "file",
-        "");
-
-       ( noshort,
-        "print_bound_var_types",
-        Const (Bool true),
-        "Print the types of bound variables");
-
-       ( noshort,
-        "print_effect_args",
-        Const (Bool true),
-        "Print inferred predicate transformers for all computation types");
-
-       ( noshort,
-        "print_expected_failures",
-        Const (Bool true),
-        "Print the errors generated by declarations marked with expect_failure, \
-        useful for debugging error locations");
-
-       ( noshort,
-        "print_full_names",
-        Const (Bool true),
-        "Print full names of variables");
-
-       ( noshort,
-        "print_implicits",
-        Const (Bool true),
-        "Print implicit arguments");
-
-       ( noshort,
-        "print_universes",
-        Const (Bool true),
-        "Print universes");
-
-       ( noshort,
-        "print_z3_statistics",
-        Const (Bool true),
-        "Print Z3 statistics for each SMT query (details such as relevant modules, facts, etc. for each proof)");
-
-       ( noshort,
-        "prn",
-        Const (Bool true),
-        "Print full names (deprecated; use --print_full_names instead)");
-
-       ( noshort,
-        "proof_recovery",
-        Const (Bool true),
-        "Proof recovery mode: before failing an SMT query, retry 3 times, increasing rlimits.\n\
-         If the query goes through after retrying, verification will succeed, but a warning will be emitted.\n\
-         This feature is useful to restore a project after some change to its libraries or F* upgrade.\n\
-         Importantly, then, this option cannot be used in a pragma (#set-options, etc).");
-
-       ( noshort,
-        "quake",
-        PostProcessed
-            ((function | String s ->
-                         let min, max, k = interp_quake_arg s in
-                         set_option "quake_lo" (Int min);
-                         set_option "quake_hi" (Int max);
-                         set_option "quake_keep" (Bool k);
-                         set_option "retry" (Bool false);
-                         String s
-                       | _ -> failwith "impos"),
-            SimpleStr "positive integer or pair of positive integers"),
-        "Repeats SMT queries to check for robustness\n\t\t\
-         --quake N/M repeats each query checks that it succeeds at least N out of M times, aborting early if possible\n\t\t\
-         --quake N/M/k works as above, except it will unconditionally run M times\n\t\t\
-         --quake N is an alias for --quake N/N\n\t\t\
-         --quake N/k is an alias for --quake N/N/k\n\t\
-         Using --quake disables --retry. When quake testing, queries are not splitted for error reporting unless\n\
-         '--split_queries always' is given. Queries from the smt_sync tactic are not quake-tested.");
-
-       ( noshort,
-        "query_stats",
-        Const (Bool true),
-        "Print SMT query statistics");
-
-       ( noshort,
-        "record_hints",
-        Const (Bool true),
-        "Record a database of hints for efficient proof replay");
-
-       ( noshort,
-        "record_options",
-        Const (Bool true),
-        "Record the state of options used to check each sigelt, useful for the `check_with` attribute and metaprogramming");
-
-       ( noshort,
-        "retry",
-        PostProcessed
-            ((function | Int i ->
-                         set_option "quake_lo" (Int 1);
-                         set_option "quake_hi" (Int i);
-                         set_option "quake_keep" (Bool false);
-                         set_option "retry" (Bool true);
-                         Bool true
-                       | _ -> failwith "impos"),
-            IntStr "positive integer"),
-        "Retry each SMT query N times and succeed on the first try. Using --retry disables --quake.");
-
-       ( noshort,
-        "reuse_hint_for",
-        SimpleStr "toplevel_name",
-        "Optimistically, attempt using the recorded hint for  toplevel_name (a top-level name in the current module) when trying to verify some other term 'g'");
-
-       ( noshort,
-         "report_assumes",
-          EnumStr ["warn"; "error"],
-         "Report every use of an escape hatch, include assume, admit, etc.");
-
-       ( noshort,
-        "silent",
-        Const (Bool true),
-        "Disable all non-critical output");
-
-       ( noshort,
-        "smt",
-        PathStr "path",
-        "Path to the Z3 SMT solver (we could eventually support other solvers)");
-
-       (noshort,
-        "smtencoding.elim_box",
-        BoolStr,
-        "Toggle a peephole optimization that eliminates redundant uses of boxing/unboxing in the SMT encoding (default 'false')");
-
-       (noshort,
-        "smtencoding.nl_arith_repr",
-        EnumStr ["native"; "wrapped"; "boxwrap"],
-        "Control the representation of non-linear arithmetic functions in the SMT encoding:\n\t\t\
-         i.e., if 'boxwrap' use 'Prims.op_Multiply, Prims.op_Division, Prims.op_Modulus'; \n\t\t\
-               if 'native' use '*, div, mod';\n\t\t\
-               if 'wrapped' use '_mul, _div, _mod : Int*Int -> Int'; \n\t\t\
-               (default 'boxwrap')");
-
-       (noshort,
-        "smtencoding.l_arith_repr",
-        EnumStr ["native"; "boxwrap"],
-        "Toggle the representation of linear arithmetic functions in the SMT encoding:\n\t\t\
-         i.e., if 'boxwrap', use 'Prims.op_Addition, Prims.op_Subtraction, Prims.op_Minus'; \n\t\t\
-               if 'native', use '+, -, -'; \n\t\t\
-               (default 'boxwrap')");
-
-       (noshort,
-        "smtencoding.valid_intro",
-        BoolStr,
-        "Include an axiom in the SMT encoding to introduce proof-irrelevance from a constructive proof");
-
-       (noshort,
-        "smtencoding.valid_elim",
-        BoolStr,
-        "Include an axiom in the SMT encoding to eliminate proof-irrelevance into the existence of a proof witness");
-
-       ( noshort,
-        "split_queries",
-        EnumStr ["no"; "on_failure"; "always"],
-        "Split SMT verification conditions into several separate queries, one per goal.\n\
-           Helps with localizing errors.\n\t\t\
-           - Use 'no' to disable (this may reduce the quality of error messages).\n\t\t\
-           - Use 'on_failure' to split queries and retry when discharging fails (the default)\n\t\t\
-           - Use 'yes' to always split.");
-
-       ( noshort,
-        "tactic_raw_binders",
-        Const (Bool true),
-        "Do not use the lexical scope of tactics to improve binder names");
-
-       ( noshort,
-        "tactics_failhard",
-        Const (Bool true),
-        "Do not recover from metaprogramming errors, and abort if one occurs");
-
-       ( noshort,
-        "tactics_info",
-        Const (Bool true),
-        "Print some rough information on tactics, such as the time they take to run");
-
-       ( noshort,
-        "tactic_trace",
-        Const (Bool true),
-        "Print a depth-indexed trace of tactic execution (Warning: very verbose)");
-
-       ( noshort,
-        "tactic_trace_d",
-        IntStr "positive_integer",
-        "Trace tactics up to a certain binding depth");
-
-       ( noshort,
-        "__tactics_nbe",
-        Const (Bool true),
-        "Use NBE to evaluate metaprograms (experimental)");
-
-       ( noshort,
-        "tcnorm",
-        BoolStr,
-        "Attempt to normalize definitions marked as tcnorm (default 'true')");
-
-       ( noshort,
-        "timing",
-        Const (Bool true),
-        "Print the time it takes to verify each top-level definition.\n\t\t\
-         This is just an alias for an invocation of the profiler, so it may not work well if combined with --profile.\n\t\t\
-         In particular, it implies --profile_group_by_decls.");
-
-       ( noshort,
-        "trace_error",
-        Const (Bool true),
-        "Don't print an error message; show an exception trace instead");
-
-      ( noshort,
-        "ugly",
-        Const (Bool true),
-        "Emit output formatted for debugging");
-
-       ( noshort,
-        "unthrottle_inductives",
-        Const (Bool true),
-        "Let the SMT solver unfold inductive types to arbitrary depths (may affect verifier performance)");
-
-       ( noshort,
-        "unsafe_tactic_exec",
-        Const (Bool true),
-        "Allow tactics to run external processes. WARNING: checking an untrusted F* file while \
-         using this option can have disastrous effects.");
-
-       ( noshort,
-        "use_eq_at_higher_order",
-        Const (Bool true),
-        "Use equality constraints when comparing higher-order types (Temporary)");
-
-       ( noshort,
-        "use_hints",
-        Const (Bool true),
-        "Use a previously recorded hints database for proof replay");
-
-       ( noshort,
-        "use_hint_hashes",
-        Const (Bool true),
-        "Admit queries if their hash matches the hash recorded in the hints database");
-
-       ( noshort,
-         "use_native_tactics",
-         PathStr "path",
-        "Use compiled tactics from  path");
-
-       ( noshort,
-        "no_plugins",
-        Const (Bool true),
-        "Do not run plugins natively and interpret them as usual instead");
-
-       ( noshort,
-        "no_tactics",
-        Const (Bool true),
-        "Do not run the tactic engine before discharging a VC");
-
-       ( noshort,
-         "using_facts_from",
-         ReverseAccumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | fact id)'"),
-        "\n\t\tPrunes the context to include only the facts from the given namespace or fact id. \n\t\t\t\
-         Facts can be include or excluded using the [+|-] qualifier. \n\t\t\t\
-         For example --using_facts_from '* -FStar.Reflection +FStar.Compiler.List -FStar.Compiler.List.Tot' will \n\t\t\t\t\
-         remove all facts from FStar.Compiler.List.Tot.*, \n\t\t\t\t\
-         retain all remaining facts from FStar.Compiler.List.*, \n\t\t\t\t\
-         remove all facts from FStar.Reflection.*, \n\t\t\t\t\
-         and retain all the rest.\n\t\t\
-         Note, the '+' is optional: --using_facts_from 'FStar.Compiler.List' is equivalent to --using_facts_from '+FStar.Compiler.List'. \n\t\t\
-         Multiple uses of this option accumulate, e.g., --using_facts_from A --using_facts_from B is interpreted as --using_facts_from A^B.");
-
-       ( noshort,
-        "__temp_fast_implicits",
-        Const (Bool true),
-        "Don't use this option yet");
-
-       ( 'v',
-         "version",
-         WithSideEffect ((fun _ -> display_version(); exit 0),
-                         (Const (Bool true))),
-         "Display version number");
-
-       ( noshort,
-         "warn_default_effects",
-         Const (Bool true),
-         "Warn when (a -> b) is desugared to (a -> Tot b)");
-
-       ( noshort,
-         "z3cliopt",
-         ReverseAccumulated (SimpleStr "option"),
-         "Z3 command line options");
-
-       ( noshort,
-         "z3smtopt",
-         ReverseAccumulated (SimpleStr "option"),
-         "Z3 options in smt2 format");
-
-       ( noshort,
-        "z3refresh",
-        Const (Bool true),
-        "Restart Z3 after each query; useful for ensuring proof robustness");
-
-       ( noshort,
-        "z3rlimit",
-        IntStr "positive_integer",
-        "Set the Z3 per-query resource limit (default 5 units, taking roughtly 5s)");
-
-       ( noshort,
-        "z3rlimit_factor",
-        IntStr "positive_integer",
-        "Set the Z3 per-query resource limit multiplier. This is useful when, say, regenerating hints and you want to be more lax. (default 1)");
-
-       ( noshort,
-        "z3seed",
-        IntStr "positive_integer",
-        "Set the Z3 random seed (default 0)");
-
-       ( noshort,
-        "z3version",
-        SimpleStr "version",
-        "Set the version of Z3 that is to be used. Default: 4.8.5");
-
-       ( noshort,
-        "__no_positivity",
-        WithSideEffect ((fun _ -> if warn_unsafe then option_warning_callback "__no_positivity"), Const (Bool true)),
-        "Don't check positivity of inductive types");
-
-        ( noshort,
-        "warn_error",
-        ReverseAccumulated (SimpleStr ("")),
-        "The [-warn_error] option follows the OCaml syntax, namely:\n\t\t\
-         - [r] is a range of warnings (either a number [n], or a range [n..n])\n\t\t\
-         - [-r] silences range [r]\n\t\t\
-         - [+r] enables range [r]\n\t\t\
-         - [@r] makes range [r] fatal.");
-
-        ( noshort,
-         "use_nbe",
-          BoolStr,
-         "Use normalization by evaluation as the default normalization strategy (default 'false')");
-
-        ( noshort,
-         "use_nbe_for_extraction",
-          BoolStr,
-         "Use normalization by evaluation for normalizing terms before extraction (default 'false')");
-
-        ( noshort,
-         "trivial_pre_for_unannotated_effectful_fns",
-          BoolStr,
-         "Enforce trivial preconditions for unannotated effectful functions (default 'true')");
-
-        ( noshort,
-          "__debug_embedding",
-           WithSideEffect ((fun _ -> debug_embedding := true),
-                           (Const (Bool true))),
-          "Debug messages for embeddings/unembeddings of natively compiled terms");
-
-       ( noshort,
-        "eager_embedding",
-         WithSideEffect ((fun _ -> eager_embedding := true),
-                          (Const (Bool true))),
-        "Eagerly embed and unembed terms to primitive operations and plugins: not recommended except for benchmarking");
-
-       ( noshort,
-        "profile_group_by_decl",
-         Const (Bool true),
-        "Emit profiles grouped by declaration rather than by module");
-
-       ( noshort,
-        "profile_component",
-         Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module | identifier)'"),
-        "\n\tSpecific source locations in the compiler are instrumented with profiling counters.\n\t\
-          Pass `--profile_component FStar.TypeChecker` to enable all counters in the FStar.TypeChecker namespace.\n\t\
+let rec specs_with_types warn_unsafe : list (char * string * opt_type * Pprint.document) =
+  let open FStar.Pprint in
+  let open FStar.Errors.Msg in
+  let text (s:string) : document = flow (break_ 1) (words s) in
+  [
+  ( noshort, "abort_on", 
+    PostProcessed ((function Int x -> abort_counter := x; Int x
+                           | x -> failwith "?"), IntStr "non-negative integer"),
+    text "Abort on the n-th error or warning raised. Useful in combination with --trace_error. Count starts at 1, use 0 to disable. (default 0)");
+
+  ( noshort,
+    "admit_smt_queries",
+    WithSideEffect ((fun _ -> if warn_unsafe then option_warning_callback "admit_smt_queries"),
+                   BoolStr),
+    text "Admit SMT queries, unsafe! (default 'false')");
+
+  ( noshort,
+    "admit_except",
+    WithSideEffect ((fun _ -> if warn_unsafe then option_warning_callback "admit_except"),
+                    SimpleStr "[symbol|(symbol, id)]"),
+    text "Admit all queries, except those with label ( symbol,  id))\
+          (e.g. --admit_except '(FStar.Fin.pigeonhole, 1)' or --admit_except FStar.Fin.pigeonhole)");
+
+  ( noshort,
+    "compat_pre_core",
+    IntStr "0, 1, 2",
+    text "Retain behavior of the tactic engine prior to the introduction \
+          of FStar.TypeChecker.Core (0 is most permissive, 2 is least permissive)");
+
+  ( noshort,
+    "compat_pre_typed_indexed_effects",
+    Const (Bool true),
+    text "Retain untyped indexed effects implicits");
+
+  ( noshort,
+    "disallow_unification_guards",
+    BoolStr,
+    text "Fail if the SMT guard are produced when the tactic engine re-checks solutions produced by the unifier (default 'false')");
+
+  ( noshort,
+    "already_cached",
+    Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module)'"),
+    text "Expects all modules whose names or namespaces match the provided options \
+          to already have valid .checked files in the include path");
+
+  ( noshort,
+    "cache_checked_modules",
+    Const (Bool true),
+    text "Write a '.checked' file for each module after verification and read from it if present, instead of re-verifying");
+
+  ( noshort,
+    "cache_dir",
+    PostProcessed (pp_validate_dir, PathStr "dir"),
+    text "Read and write .checked and .checked.lax in directory dir");
+
+  ( noshort,
+    "cache_off",
+    Const (Bool true),
+    text "Do not read or write any .checked files");
+
+  ( noshort,
+    "print_cache_version",
+    Const (Bool true),
+    text "Print the version for .checked files and exit.");
+
+  ( noshort,
+    "cmi",
+    Const (Bool true),
+    text "Inline across module interfaces during extraction (aka. cross-module inlining)");
+
+  ( noshort,
+    "codegen",
+    EnumStr ["OCaml"; "FSharp"; "krml"; "Plugin"; "Extension"],
+    text "Generate code for further compilation to executable code, or build a compiler plugin");
+
+  ( noshort,
+    "codegen-lib",
+    Accumulated (SimpleStr "namespace"),
+    text "External runtime library (i.e. M.N.x extracts to M.N.X instead of M_N.x)");
+
+  ( noshort,
+    "debug",
+    Accumulated (SimpleStr "module_name"),
+    text "Print lots of debugging information while checking module");
+
+  ( noshort,
+    "debug_level",
+    Accumulated (OpenEnumStr (["Low"; "Medium"; "High"; "Extreme"], "...")),
+    text "Control the verbosity of debugging info");
+
+  ( noshort,
+    "defensive",
+    EnumStr ["no"; "warn"; "error"; "abort"],
+    text "Enable several internal sanity checks, useful to track bugs and report issues."
+    ^^ bulleted [
+         text "if 'no', no checks are performed";
+         text "if 'warn', checks are performed and raise a warning when they fail";
+         text "if 'error, like 'warn', but the compiler raises a hard error instead";
+         text "if 'abort, like 'warn', but the compiler immediately aborts on an error"
+       ]
+    ^/^ text "(default 'no')");
+
+  ( noshort,
+    "dep",
+    EnumStr ["make"; "graph"; "full"; "raw"],
+    text "Output the transitive closure of the full dependency graph in three formats:"
+    ^^ bulleted [
+         text "'graph': a format suitable the 'dot' tool from 'GraphViz'";
+         text "'full': a format suitable for 'make', including dependences for producing .ml and .krml files";
+         text "'make': (deprecated) a format suitable for 'make', including only dependences among source files";
+       ]);
+
+  ( noshort,
+    "detail_errors",
+    Const (Bool true),
+    text "Emit a detailed error report by asking the SMT solver many queries; will take longer");
+
+  ( noshort,
+   "detail_hint_replay",
+    Const (Bool true),
+    text "Emit a detailed report for proof whose unsat core fails to replay");
+
+  ( noshort,
+    "dump_module",
+    Accumulated (SimpleStr "module_name"),
+    text "Print out this module as it passes through the compiler pipeline");
+
+  ( noshort,
+    "eager_subtyping",
+    Const (Bool true),
+    text "Try to solve subtyping constraints at each binder (loses precision but may be slightly more efficient)");
+
+  ( noshort,
+    "error_contexts",
+    BoolStr,
+    text "Print context information for each error or warning raised (default false)");
+
+  ( noshort,
+    "ext",
+    ReverseAccumulated (SimpleStr "One or more semicolon separated occurrences of key-value pairs"),
+    text "These options are set in extensions option map. Keys are usually namespaces separated by \":\". \
+          E.g., 'pulse:verbose=1;my:extension:option=xyz;foo:bar=baz'. \
+          These options are typically interpreted by extensions. \
+          Any later use of --ext over the same key overrides the old value. \
+          An entry 'e' that is not of the form 'a=b' is treated as 'e=1', i.e., 'e' associated with string \"1\".");
+
+  ( noshort,
+    "extract",
+    Accumulated (SimpleStr "One or more semicolon separated occurrences of '[TargetName:]ModuleSelector'"),
+    text "Extract only those modules whose names or namespaces match the provided options. \
+     'TargetName' ranges over {OCaml, krml, FSharp, Plugin, Extension}. \
+     A 'ModuleSelector' is a space or comma-separated list of '[+|-]( * | namespace | module)'. \
+     For example --extract 'OCaml:A -A.B' --extract 'krml:A -A.C' --extract '*' means \
+     for OCaml, extract everything in the A namespace only except A.B; \
+     for krml, extract everything in the A namespace only except A.C; \
+     for everything else, extract everything. \
+     Note, the '+' is optional: --extract '+A' and --extract 'A' mean the same thing. \
+     Note also that '--extract A' applies both to a module named 'A' and to any module in the 'A' namespace \
+     Multiple uses of this option accumulate, e.g., --extract A --extract B is interpreted as --extract 'A B'.");
+
+  ( noshort,
+    "extract_module",
+    Accumulated (PostProcessed (pp_lowercase, (SimpleStr "module_name"))),
+    text "Deprecated: use --extract instead; Only extract the specified modules (instead of the possibly-partial dependency graph)");
+
+  ( noshort,
+    "extract_namespace",
+    Accumulated (PostProcessed (pp_lowercase, (SimpleStr "namespace name"))),
+    text "Deprecated: use --extract instead; Only extract modules in the specified namespace");
+
+  ( noshort,
+    "expose_interfaces",
+    Const (Bool true),
+    text "Explicitly break the abstraction imposed by the interface of any implementation file that appears on the command line (use with care!)");
+
+  ( noshort,
+    "hide_uvar_nums",
+    Const (Bool true),
+    text "Don't print unification variable numbers");
+
+  ( noshort,
+    "hint_dir",
+    PostProcessed (pp_validate_dir, PathStr "dir"),
+    text "Read/write hints to  dir/module_name.hints (instead of placing hint-file alongside source file)");
+
+  ( noshort,
+    "hint_file",
+    PathStr "path",
+    text "Read/write hints to  path (instead of module-specific hints files; overrides hint_dir)");
+
+  ( noshort,
+    "hint_hook",
+    SimpleStr "command",
+    text "Use <command> to generate hints for definitions which do not have them. The command will \
+          receive a JSON representation of the query, the type of the top-level definition involved, \
+          and the full SMT theory, and must output a comma separated list \
+          of facts to be used.");
+
+  ( noshort,
+    "hint_info",
+    Const (Bool true),
+    text "Print information regarding hints (deprecated; use --query_stats instead)");
+
+  ( noshort,
+    "in",
+    Const (Bool true),
+    text "Legacy interactive mode; reads input from stdin");
+
+  ( noshort,
+    "ide",
+    Const (Bool true),
+    text "JSON-based interactive mode for IDEs");
+
+  ( noshort,
+    "ide_id_info_off",
+    Const (Bool true),
+    text "Disable identifier tables in IDE mode (temporary workaround useful in Steel)");
+
+  ( noshort,
+    "lsp",
+    Const (Bool true),
+    text "Language Server Protocol-based interactive mode for IDEs");
+
+  ( noshort,
+    "include",
+    ReverseAccumulated (PathStr "path"),
+    text "A directory in which to search for files included on the command line");
+
+  ( noshort,
+    "print",
+    Const (Bool true),
+    text "Parses and prettyprints the files included on the command line");
+
+  ( noshort,
+    "print_in_place",
+    Const (Bool true),
+    text "Parses and prettyprints in place the files included on the command line");
+
+  ( 'f',
+    "force",
+    Const (Bool true),
+    text "Force checking the files given as arguments even if they have valid checked files");
+
+  ( noshort,
+    "fuel",
+    PostProcessed
+        ((function | String s ->
+                     let p f = Int (int_of_string f) in
+                     let min, max =
+                       match Util.split s "," with
+                       | [f] -> f, f
+                       | [f1;f2] -> f1, f2
+                       | _ -> failwith "unexpected value for --fuel"
+                     in
+                     set_option "initial_fuel" (p min);
+                     set_option "max_fuel" (p max);
+                     String s
+                   | _ -> failwith "impos"),
+        SimpleStr "non-negative integer or pair of non-negative integers"),
+    text "Set initial_fuel and max_fuel at once");
+
+  ( noshort,
+    "ifuel",
+    PostProcessed
+        ((function | String s ->
+                     let p f = Int (int_of_string f) in
+                     let min, max =
+                       match Util.split s "," with
+                       | [f] -> f, f
+                       | [f1;f2] -> f1, f2
+                       | _ -> failwith "unexpected value for --ifuel"
+                     in
+                     set_option "initial_ifuel" (p min);
+                     set_option "max_ifuel" (p max);
+                     String s
+                   | _ -> failwith "impos"),
+        SimpleStr "non-negative integer or pair of non-negative integers"),
+    text "Set initial_ifuel and max_ifuel at once");
+
+  ( noshort,
+    "initial_fuel",
+    IntStr "non-negative integer",
+    text "Number of unrolling of recursive functions to try initially (default 2)");
+
+  ( noshort,
+    "initial_ifuel",
+    IntStr "non-negative integer",
+    text "Number of unrolling of inductive datatypes to try at first (default 1)");
+
+  ( noshort,
+    "keep_query_captions",
+    BoolStr,
+    text "Retain comments in the logged SMT queries (requires --log_queries; default true)");
+
+  ( noshort,
+    "lax",
+    WithSideEffect ((fun () -> if warn_unsafe then option_warning_callback "lax"), Const (Bool true)),
+    text "Run the lax-type checker only (admit all verification conditions)");
+
+  ( noshort,
+   "load",
+    ReverseAccumulated (PathStr "module"),
+    text "Load OCaml module, compiling it if necessary");
+
+  ( noshort,
+   "load_cmxs",
+    ReverseAccumulated (PathStr "module"),
+    text "Load compiled module, fails hard if the module is not already compiled");
+
+  ( noshort,
+    "log_types",
+    Const (Bool true),
+    text "Print types computed for data/val/let-bindings");
+
+  ( noshort,
+    "log_queries",
+    Const (Bool true),
+    text "Log the Z3 queries in several queries-*.smt2 files, as we go");
+
+  ( noshort,
+    "max_fuel",
+    IntStr "non-negative integer",
+    text "Number of unrolling of recursive functions to try at most (default 8)");
+
+  ( noshort,
+    "max_ifuel",
+    IntStr "non-negative integer",
+    text "Number of unrolling of inductive datatypes to try at most (default 2)");
+
+  ( noshort,
+    "MLish",
+    Const (Bool true),
+    text "Trigger various specializations for compiling the F* compiler itself (not meant for user code)");
+
+  ( noshort,
+    "no_default_includes",
+    Const (Bool true),
+    text "Ignore the default module search paths");
+
+  ( noshort,
+    "no_extract",
+    Accumulated (PathStr "module name"),
+    text "Deprecated: use --extract instead; Do not extract code from this module");
+
+  ( noshort,
+    "no_location_info",
+    Const (Bool true),
+    text "Suppress location information in the generated OCaml output (only relevant with --codegen OCaml)");
+
+  ( noshort,
+    "no_smt",
+    Const (Bool true),
+    text "Do not send any queries to the SMT solver, and fail on them instead");
+
+  ( noshort,
+    "normalize_pure_terms_for_extraction",
+    Const (Bool true),
+    text "Extract top-level pure terms after normalizing them. This can lead to very large code, but can result in more partial evaluation and compile-time specialization.");
+
+  ( noshort,
+    "odir",
+    PostProcessed (pp_validate_dir, PathStr "dir"),
+    text "Place output in directory  dir");
+
+  ( noshort,
+    "output_deps_to",
+    PathStr "file",
+    text "Output the result of --dep into this file instead of to standard output.");
+
+  ( noshort,
+    "prims",
+    PathStr "file",
+    text "Use a custom prims.fst file. Do not use if you do not know exactly what you're doing.");
+
+  ( noshort,
+    "print_bound_var_types",
+    Const (Bool true),
+    text "Print the types of bound variables");
+
+  ( noshort,
+    "print_effect_args",
+    Const (Bool true),
+    text "Print inferred predicate transformers for all computation types");
+
+  ( noshort,
+    "print_expected_failures",
+    Const (Bool true),
+    text "Print the errors generated by declarations marked with expect_failure, \
+          useful for debugging error locations");
+
+  ( noshort,
+    "print_full_names",
+    Const (Bool true),
+    text "Print full names of variables");
+
+  ( noshort,
+    "print_implicits",
+    Const (Bool true),
+    text "Print implicit arguments");
+
+  ( noshort,
+    "print_universes",
+    Const (Bool true),
+    text "Print universes");
+
+  ( noshort,
+    "print_z3_statistics",
+    Const (Bool true),
+    text "Print Z3 statistics for each SMT query (details such as relevant modules, facts, etc. for each proof)");
+
+  ( noshort,
+    "prn",
+    Const (Bool true),
+    text "Print full names (deprecated; use --print_full_names instead)");
+
+  ( noshort,
+    "proof_recovery",
+    Const (Bool true),
+    text "Proof recovery mode: before failing an SMT query, retry 3 times, increasing rlimits. \
+     If the query goes through after retrying, verification will succeed, but a warning will be emitted. \
+     This feature is useful to restore a project after some change to its libraries or F* upgrade. \
+     Importantly, then, this option cannot be used in a pragma (#set-options, etc).");
+
+  ( noshort,
+    "quake",
+    PostProcessed
+        ((function | String s ->
+                     let min, max, k = interp_quake_arg s in
+                     set_option "quake_lo" (Int min);
+                     set_option "quake_hi" (Int max);
+                     set_option "quake_keep" (Bool k);
+                     set_option "retry" (Bool false);
+                     String s
+                   | _ -> failwith "impos"),
+        SimpleStr "positive integer or pair of positive integers"),
+    text "Repeats SMT queries to check for robustness" ^^
+    bulleted [
+      text "--quake N/M repeats each query checks that it succeeds at least N out of M times, aborting early if possible";
+      text "--quake N/M/k works as above, except it will unconditionally run M times";
+      text "--quake N is an alias for --quake N/N";
+      text "--quake N/k is an alias for --quake N/N/k";
+    ] ^^
+    text "Using --quake disables --retry. When quake testing, queries are not splitted for error reporting unless \
+          '--split_queries always' is given. Queries from the smt_sync tactic are not quake-tested.");
+
+  ( noshort,
+    "query_stats",
+    Const (Bool true),
+    text "Print SMT query statistics");
+
+  ( noshort,
+    "record_hints",
+    Const (Bool true),
+    text "Record a database of hints for efficient proof replay");
+
+  ( noshort,
+    "record_options",
+    Const (Bool true),
+    text "Record the state of options used to check each sigelt, useful \
+          for the `check_with` attribute and metaprogramming. \
+          Note that this implies a performance hit and increases the size of checked files.");
+
+  ( noshort,
+    "retry",
+    PostProcessed
+        ((function | Int i ->
+                     set_option "quake_lo" (Int 1);
+                     set_option "quake_hi" (Int i);
+                     set_option "quake_keep" (Bool false);
+                     set_option "retry" (Bool true);
+                     Bool true
+                   | _ -> failwith "impos"),
+        IntStr "positive integer"),
+    text "Retry each SMT query N times and succeed on the first try. Using --retry disables --quake.");
+
+  ( noshort,
+    "reuse_hint_for",
+    SimpleStr "toplevel_name",
+    text "Optimistically, attempt using the recorded hint for  toplevel_name (a top-level name in the current module) when trying to verify some other term 'g'");
+
+  ( noshort,
+    "report_assumes",
+     EnumStr ["warn"; "error"],
+    text "Report every use of an escape hatch, include assume, admit, etc.");
+
+  ( noshort,
+    "silent",
+    Const (Bool true),
+    text "Disable all non-critical output");
+
+  ( noshort,
+    "smt",
+    PathStr "path",
+    text "Path to the Z3 SMT solver (we could eventually support other solvers)");
+
+  ( noshort,
+    "smtencoding.elim_box",
+    BoolStr,
+    text "Toggle a peephole optimization that eliminates redundant uses of boxing/unboxing in the SMT encoding (default 'false')");
+
+  ( noshort,
+    "smtencoding.nl_arith_repr",
+    EnumStr ["native"; "wrapped"; "boxwrap"],
+    text "Control the representation of non-linear arithmetic functions in the SMT encoding:" ^^
+    bulleted [
+      text "if 'boxwrap' use 'Prims.op_Multiply, Prims.op_Division, Prims.op_Modulus'";
+      text "if 'native' use '*, div, mod'";
+      text "if 'wrapped' use '_mul, _div, _mod : Int*Int -> Int'";
+    ] ^^
+    text "(default 'boxwrap')");
+
+  ( noshort,
+    "smtencoding.l_arith_repr",
+    EnumStr ["native"; "boxwrap"],
+    text "Toggle the representation of linear arithmetic functions in the SMT encoding:" ^^
+    bulleted [
+      text "if 'boxwrap', use 'Prims.op_Addition, Prims.op_Subtraction, Prims.op_Minus'";
+      text "if 'native', use '+, -, -'";
+    ] ^^
+    text "(default 'boxwrap')");
+
+  ( noshort,
+    "smtencoding.valid_intro",
+    BoolStr,
+    text "Include an axiom in the SMT encoding to introduce proof-irrelevance from a constructive proof");
+
+  ( noshort,
+    "smtencoding.valid_elim",
+    BoolStr,
+    text "Include an axiom in the SMT encoding to eliminate proof-irrelevance into the existence of a proof witness");
+
+  ( noshort,
+    "split_queries",
+    EnumStr ["no"; "on_failure"; "always"],
+    text "Split SMT verification conditions into several separate queries, one per goal. \
+          Helps with localizing errors." ^^
+    bulleted [
+      text "Use 'no' to disable (this may reduce the quality of error messages).";
+      text "Use 'on_failure' to split queries and retry when discharging fails (the default)";
+      text "Use 'yes' to always split.";
+    ]);
+
+  ( noshort,
+    "tactic_raw_binders",
+    Const (Bool true),
+    text "Do not use the lexical scope of tactics to improve binder names");
+
+  ( noshort,
+    "tactics_failhard",
+    Const (Bool true),
+    text "Do not recover from metaprogramming errors, and abort if one occurs");
+
+  ( noshort,
+    "tactics_info",
+    Const (Bool true),
+    text "Print some rough information on tactics, such as the time they take to run");
+
+  ( noshort,
+    "tactic_trace",
+    Const (Bool true),
+    text "Print a depth-indexed trace of tactic execution (Warning: very verbose)");
+
+  ( noshort,
+    "tactic_trace_d",
+    IntStr "positive_integer",
+    text "Trace tactics up to a certain binding depth");
+
+  ( noshort,
+    "__tactics_nbe",
+    Const (Bool true),
+    text "Use NBE to evaluate metaprograms (experimental)");
+
+  ( noshort,
+    "tcnorm",
+    BoolStr,
+    text "Attempt to normalize definitions marked as tcnorm (default 'true')");
+
+  ( noshort,
+    "timing",
+    Const (Bool true),
+    text "Print the time it takes to verify each top-level definition. \
+          This is just an alias for an invocation of the profiler, so it may not work well if combined with --profile. \
+          In particular, it implies --profile_group_by_decls.");
+
+  ( noshort,
+    "trace_error",
+    Const (Bool true),
+    text "Don't print an error message; show an exception trace instead");
+
+  ( noshort,
+    "ugly",
+    Const (Bool true),
+    text "Emit output formatted for debugging");
+
+  ( noshort,
+    "unthrottle_inductives",
+    Const (Bool true),
+    text "Let the SMT solver unfold inductive types to arbitrary depths (may affect verifier performance)");
+
+  ( noshort,
+    "unsafe_tactic_exec",
+    Const (Bool true),
+    text "Allow tactics to run external processes. WARNING: checking an untrusted F* file while \
+          using this option can have disastrous effects.");
+
+  ( noshort,
+    "use_eq_at_higher_order",
+    Const (Bool true),
+    text "Use equality constraints when comparing higher-order types (Temporary)");
+
+  ( noshort,
+    "use_hints",
+    Const (Bool true),
+    text "Use a previously recorded hints database for proof replay");
+
+  ( noshort,
+    "use_hint_hashes",
+    Const (Bool true),
+    text "Admit queries if their hash matches the hash recorded in the hints database");
+
+  ( noshort,
+     "use_native_tactics",
+     PathStr "path",
+    text "Use compiled tactics from  path");
+
+  ( noshort,
+    "no_plugins",
+    Const (Bool true),
+    text "Do not run plugins natively and interpret them as usual instead");
+
+  ( noshort,
+    "no_tactics",
+    Const (Bool true),
+    text "Do not run the tactic engine before discharging a VC");
+
+  ( noshort,
+    "using_facts_from",
+    ReverseAccumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | fact id)'"),
+    text "Prunes the context to include only the facts from the given namespace or fact id. \
+          Facts can be include or excluded using the [+|-] qualifier. \
+          For example --using_facts_from '* -FStar.Reflection +FStar.Compiler.List -FStar.Compiler.List.Tot' will \
+          remove all facts from FStar.Compiler.List.Tot.*, \
+          retain all remaining facts from FStar.Compiler.List.*, \
+          remove all facts from FStar.Reflection.*, \
+          and retain all the rest. \
+          Note, the '+' is optional: --using_facts_from 'FStar.Compiler.List' is equivalent to --using_facts_from '+FStar.Compiler.List'. \
+          Multiple uses of this option accumulate, e.g., --using_facts_from A --using_facts_from B is interpreted as --using_facts_from A^B.");
+
+  ( noshort,
+    "__temp_fast_implicits",
+    Const (Bool true),
+    text "This does nothing and will be removed");
+
+  ( 'v',
+    "version",
+    WithSideEffect ((fun _ -> display_version(); exit 0),
+                    (Const (Bool true))),
+    text "Display version number");
+
+  ( noshort,
+    "warn_default_effects",
+    Const (Bool true),
+    text "Warn when (a -> b) is desugared to (a -> Tot b)");
+
+  ( noshort,
+    "z3cliopt",
+    ReverseAccumulated (SimpleStr "option"),
+    text "Z3 command line options");
+
+  ( noshort,
+    "z3smtopt",
+    ReverseAccumulated (SimpleStr "option"),
+    text "Z3 options in smt2 format");
+
+  ( noshort,
+    "z3refresh",
+    Const (Bool true),
+    text "Restart Z3 after each query; useful for ensuring proof robustness");
+
+  ( noshort,
+    "z3rlimit",
+    IntStr "positive_integer",
+    text "Set the Z3 per-query resource limit (default 5 units, taking roughtly 5s)");
+
+  ( noshort,
+    "z3rlimit_factor",
+    IntStr "positive_integer",
+    text "Set the Z3 per-query resource limit multiplier. This is useful when, say, regenerating hints and you want to be more lax. (default 1)");
+
+  ( noshort,
+    "z3seed",
+    IntStr "positive_integer",
+    text "Set the Z3 random seed (default 0)");
+
+  ( noshort,
+    "z3version",
+    SimpleStr "version",
+    text "Set the version of Z3 that is to be used. Default: 4.8.5");
+
+  ( noshort,
+    "__no_positivity",
+    WithSideEffect ((fun _ -> if warn_unsafe then option_warning_callback "__no_positivity"), Const (Bool true)),
+    text "Don't check positivity of inductive types");
+
+  ( noshort,
+    "warn_error",
+    ReverseAccumulated (SimpleStr ("")),
+    text "The [-warn_error] option follows the OCaml syntax, namely:" ^^
+    bulleted [
+      text "[r] is a range of warnings (either a number [n], or a range [n..n])";
+      text "[-r] silences range [r]";
+      text "[+r] enables range [r] as warnings (NOTE: \"enabling\" an error will downgrade it to a warning)";
+      text "[@r] makes range [r] fatal."
+    ]);
+
+  ( noshort,
+    "use_nbe",
+    BoolStr,
+    text "Use normalization by evaluation as the default normalization strategy (default 'false')");
+
+  ( noshort,
+    "use_nbe_for_extraction",
+    BoolStr,
+    text "Use normalization by evaluation for normalizing terms before extraction (default 'false')");
+
+  ( noshort,
+   "trivial_pre_for_unannotated_effectful_fns",
+    BoolStr,
+    text "Enforce trivial preconditions for unannotated effectful functions (default 'true')" );
+
+  ( noshort,
+    "__debug_embedding",
+    WithSideEffect ((fun _ -> debug_embedding := true),
+                   (Const (Bool true))),
+    text "Debug messages for embeddings/unembeddings of natively compiled terms");
+
+  ( noshort,
+    "eager_embedding",
+     WithSideEffect ((fun _ -> eager_embedding := true),
+                      (Const (Bool true))),
+    text "Eagerly embed and unembed terms to primitive operations and plugins: not recommended except for benchmarking");
+
+  ( noshort,
+    "profile_group_by_decl",
+     Const (Bool true),
+    text "Emit profiles grouped by declaration rather than by module");
+
+  ( noshort,
+    "profile_component",
+    Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module | identifier)'"),
+    text "Specific source locations in the compiler are instrumented with profiling counters. \
+          Pass `--profile_component FStar.TypeChecker` to enable all counters in the FStar.TypeChecker namespace. \
           This option is a module or namespace selector, like many other options (e.g., `--extract`)");
 
-       ( noshort,
-         "profile",
-         Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module)'"),
-        "\n\tProfiling can be enabled when the compiler is processing a given set of source modules.\n\t\
-          Pass `--profile FStar.Pervasives` to enable profiling when the compiler is processing any module in FStar.Pervasives.\n\t\
+  ( noshort,
+    "profile",
+    Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module)'"),
+    text "Profiling can be enabled when the compiler is processing a given set of source modules. \
+          Pass `--profile FStar.Pervasives` to enable profiling when the compiler is processing any module in FStar.Pervasives. \
           This option is a module or namespace selector, like many other options (e.g., `--extract`)");
 
-       ('h',
-        "help", WithSideEffect ((fun _ -> display_usage_aux (specs warn_unsafe); exit 0),
-                                (Const (Bool true))),
-        "Display this information")]
+  ( 'h',
+    "help",
+     WithSideEffect ((fun _ -> display_usage_aux (specs warn_unsafe); exit 0),
+                     (Const (Bool true))),
+    text "Display this information")
+  ]
 
-and specs (warn_unsafe:bool) : list (FStar.Getopt.opt & string) =
+and specs (warn_unsafe:bool) : list (FStar.Getopt.opt & Pprint.document) =
   List.map (fun (short, long, typ, doc) ->
             mk_spec (short, long, arg_spec_of_opt_type long typ), doc)
            (specs_with_types warn_unsafe)
@@ -1474,7 +1499,6 @@ let settable = function
     | "tactic_trace"
     | "tactic_trace_d"
     | "tcnorm"
-    | "__temp_fast_implicits"
     | "timing"
     | "trace_error"
     | "ugly"
@@ -1723,7 +1747,6 @@ let parse_settings ns : list (list string * bool) =
              |> List.map parse_one_setting) s)
              |> List.rev
 
-let __temp_fast_implicits        () = lookup_opt "__temp_fast_implicits" as_bool
 let admit_smt_queries            () = get_admit_smt_queries           ()
 let admit_except                 () = get_admit_except                ()
 let compat_pre_core_should_register () = 
