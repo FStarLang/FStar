@@ -101,7 +101,6 @@ complete -c fstar.exe -l no_tactics --description "Do not run the tactic engine 
 complete -c fstar.exe -l using_facts_from --description "One or more space-separated occurrences of '[+|-]( * | namespace | fact id)'"
 complete -c fstar.exe -l vcgen.optimize_bind_as_seq --description "[off|without_type|with_type]"
 complete -c fstar.exe -l __temp_no_proj --description "module_name  Don't generate projectors for this module"
-complete -c fstar.exe -l __temp_fast_implicits --description "Don't use this option yet"
 complete -c fstar.exe -l version --description "Display version number"
 complete -c fstar.exe -l warn_default_effects --description "Warn when (a -> b) is desugared to (a -> Tot b)"
 complete -c fstar.exe -l z3cliopt --description "option  Z3 command line options"

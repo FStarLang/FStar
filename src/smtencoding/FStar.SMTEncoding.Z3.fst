@@ -499,29 +499,33 @@ let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_mess
     r
 
 let z3_options (ver:string) =
- (* Common z3 prefix for all supported versions (at minimum 4.8.5).
-  Note: smt.arith.solver defaults to 2 in 4.8.5, but it doesn't hurt to
-  specify it. *)
-  let opts =
-    "(set-option :global-decls false)\n\
-     (set-option :smt.mbqi false)\n\
-     (set-option :auto_config false)\n\
-     (set-option :produce-unsat-cores true)\n\
-     (set-option :model true)\n\
-     (set-option :smt.case_split 3)\n\
-     (set-option :smt.relevancy 2)\n\
-     (set-option :smt.arith.solver 2)\n"
+ (* Common z3 prefix for all supported versions (at minimum 4.8.5). *)
+  let opts = [
+    "(set-option :global-decls false)";
+    "(set-option :smt.mbqi false)";
+    "(set-option :auto_config false)";
+    "(set-option :produce-unsat-cores true)";
+    "(set-option :model true)";
+    "(set-option :smt.case_split 3)";
+    "(set-option :smt.relevancy 2)";
+  ]
   in
 
   (* We need the following options for Z3 >= 4.12.3 *)
-  let opts = opts ^ begin
-    if M.version_ge ver "4.12.3" then
-    "(set-option :rewriter.enable_der false)\n\
-     (set-option :rewriter.sort_disjunctions false)\n\
-     (set-option :pi.decompose_patterns false)\n"
-    else "" end
+  let opts = opts @ begin
+    if M.version_ge ver "4.12.3" then [
+      "(set-option :rewriter.enable_der false)";
+      "(set-option :rewriter.sort_disjunctions false)";
+      "(set-option :pi.decompose_patterns false)";
+      "(set-option :smt.arith.solver 6)";
+    ] else [
+      (* Note: smt.arith.solver defaults to 2 in 4.8.5, but it doesn't hurt to
+         specify it. *)
+      "(set-option :smt.arith.solver 2)";
+    ]
+    end
   in
-  opts
+  String.concat "\n" opts ^ "\n"
 
 // bg_scope is a global, mutable variable that keeps a list of the declarations
 // that we have given to z3 so far. In order to allow rollback of history,
@@ -603,7 +607,7 @@ let mk_input (fresh : bool) (theory : list decl) : string & option string & opti
     let options = options ^ "; F* version: " ^ !Options._version ^ " -- hash: " ^ !Options._commit ^ "\n" in
     let options = options ^ "; Z3 version (according to F*): " ^ Options.z3_version() ^ "\n" in
     let options = options ^ z3_options ver in
-    let options = options ^ (Options.z3_smtopt() |> String.concat "\n") in
+    let options = options ^ (Options.z3_smtopt() |> String.concat "\n") ^ "\n\n" in
     if Options.print_z3_statistics() then context_profile theory;
     let r, hash =
         if Options.record_hints()
