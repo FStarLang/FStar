@@ -259,10 +259,20 @@ let filter_assertions (e:env) (qsettings:option query_settings) (core:Z3.unsat_c
   let (theory, b, _, _) = filter_assertions_with_stats e core theory in
   theory, b
 
-(* Translation from F* rlimit units to Z3 rlimit units. *)
+(* Translation from F* rlimit units to Z3 rlimit units.
+
+This used to be defined as exactly 544656 since that roughtly
+corresponded to 5 seconds in some "blessed" setting. But rlimit units
+are only very roughly correlated to time, and having this very non-round
+number makes reading SMT query dumps pretty confusing. So, for new
+solvers, we now just make it 500k. *)
 let convert_rlimit (r : int) : int =
   let open FStar.Mul in
-  544656 * r
+  if Misc.version_ge (Options.z3_version ()) "4.12.3" then
+    500000 * r
+  else
+    544656 * r
+
 //surround the query with fuel options and various diagnostics
 let with_fuel_and_diagnostics settings label_assumptions =
     let n = settings.query_fuel in
