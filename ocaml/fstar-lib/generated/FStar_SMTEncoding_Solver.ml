@@ -531,6 +531,14 @@ let (filter_assertions :
           let core1 = maybe_build_core_from_hook e qsettings core theory in
           let uu___ = filter_assertions_with_stats e core1 theory in
           match uu___ with | (theory1, b, uu___1, uu___2) -> (theory1, b)
+let (convert_rlimit : Prims.int -> Prims.int) =
+  fun r ->
+    let uu___ =
+      let uu___1 = FStar_Options.z3_version () in
+      FStar_Compiler_Misc.version_ge uu___1 "4.12.3" in
+    if uu___
+    then FStar_Mul.op_Star (Prims.parse_int "500000") r
+    else FStar_Mul.op_Star (Prims.parse_int "544656") r
 let (with_fuel_and_diagnostics :
   query_settings ->
     FStar_SMTEncoding_Term.decl Prims.list ->
@@ -540,7 +548,7 @@ let (with_fuel_and_diagnostics :
     fun label_assumptions ->
       let n = settings.query_fuel in
       let i = settings.query_ifuel in
-      let rlimit = settings.query_rlimit in
+      let rlimit = convert_rlimit settings.query_rlimit in
       let uu___ =
         let uu___1 =
           let uu___2 =
@@ -934,7 +942,6 @@ let (report_errors : Prims.bool -> query_settings -> unit) =
     fun qry_settings ->
       let uu___ = errors_to_report tried_recovery qry_settings in
       FStar_Errors.add_errors uu___
-let (rlimit_conversion_factor : Prims.int) = (Prims.parse_int "544656")
 let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
   fun settings ->
     fun z3result ->
@@ -1140,8 +1147,7 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                                        FStar_Class_Show.show
                                          (FStar_Class_Show.printableshow
                                             FStar_Class_Printable.printable_int)
-                                         (settings.query_rlimit /
-                                            rlimit_conversion_factor) in
+                                         settings.query_rlimit in
                                      [uu___17; stats] in
                                    uu___15 :: uu___16 in
                                  uu___13 :: uu___14 in
@@ -1379,11 +1385,9 @@ let (make_solver_configs :
                     match uu___1 with
                     | (qname, index) ->
                         let rlimit =
-                          let uu___2 =
-                            let uu___3 = FStar_Options.z3_rlimit_factor () in
-                            let uu___4 = FStar_Options.z3_rlimit () in
-                            FStar_Mul.op_Star uu___3 uu___4 in
-                          FStar_Mul.op_Star uu___2 rlimit_conversion_factor in
+                          let uu___2 = FStar_Options.z3_rlimit_factor () in
+                          let uu___3 = FStar_Options.z3_rlimit () in
+                          FStar_Mul.op_Star uu___2 uu___3 in
                         let next_hint = get_hint_for qname index in
                         let default_settings =
                           let uu___2 = FStar_TypeChecker_Env.get_range env in

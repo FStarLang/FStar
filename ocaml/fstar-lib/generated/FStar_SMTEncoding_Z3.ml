@@ -900,16 +900,25 @@ let (doZ3Exe :
 let (z3_options : Prims.string -> Prims.string) =
   fun ver ->
     let opts =
-      "(set-option :global-decls false)\n(set-option :smt.mbqi false)\n(set-option :auto_config false)\n(set-option :produce-unsat-cores true)\n(set-option :model true)\n(set-option :smt.case_split 3)\n(set-option :smt.relevancy 2)\n(set-option :smt.arith.solver 2)\n" in
+      ["(set-option :global-decls false)";
+      "(set-option :smt.mbqi false)";
+      "(set-option :auto_config false)";
+      "(set-option :produce-unsat-cores true)";
+      "(set-option :model true)";
+      "(set-option :smt.case_split 3)";
+      "(set-option :smt.relevancy 2)"] in
     let opts1 =
       let uu___ =
         let uu___1 = FStar_Compiler_Misc.version_ge ver "4.12.3" in
         if uu___1
         then
-          "(set-option :rewriter.enable_der false)\n(set-option :rewriter.sort_disjunctions false)\n(set-option :pi.decompose_patterns false)\n"
-        else "" in
-      Prims.op_Hat opts uu___ in
-    opts1
+          ["(set-option :rewriter.enable_der false)";
+          "(set-option :rewriter.sort_disjunctions false)";
+          "(set-option :pi.decompose_patterns false)";
+          "(set-option :smt.arith.solver 6)"]
+        else ["(set-option :smt.arith.solver 2)"] in
+      FStar_Compiler_List.op_At opts uu___ in
+    Prims.op_Hat (FStar_Compiler_String.concat "\n" opts1) "\n"
 let (fresh_scope : scope_t FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref [[]]
 let (mk_fresh_scope : unit -> scope_t) =
@@ -1061,9 +1070,11 @@ let (mk_input :
         let uu___ = z3_options ver in Prims.op_Hat options2 uu___ in
       let options4 =
         let uu___ =
-          let uu___1 = FStar_Options.z3_smtopt () in
-          FStar_Compiler_Effect.op_Bar_Greater uu___1
-            (FStar_Compiler_String.concat "\n") in
+          let uu___1 =
+            let uu___2 = FStar_Options.z3_smtopt () in
+            FStar_Compiler_Effect.op_Bar_Greater uu___2
+              (FStar_Compiler_String.concat "\n") in
+          Prims.op_Hat uu___1 "\n\n" in
         Prims.op_Hat options3 uu___ in
       (let uu___1 = FStar_Options.print_z3_statistics () in
        if uu___1 then context_profile theory else ());
