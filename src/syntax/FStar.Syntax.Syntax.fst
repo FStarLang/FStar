@@ -51,6 +51,15 @@ instance showable_delta_depth = {
   show = delta_depth_to_string;
 }
 
+instance showable_should_check_uvar = {
+  show = (function
+          | Allow_unresolved s -> "Allow_unresolved " ^ s
+          | Allow_untyped s -> "Allow_untyped " ^ s
+          | Allow_ghost s -> "Allow_ghost " ^ s
+          | Strict -> "Strict"
+          | Already_checked -> "Already_checked");
+}
+
 // This is set in FStar.Main.main, where all modules are in-scope.
 let lazy_chooser : ref (option (lazy_kind -> lazyinfo -> term)) = mk_ref None
 

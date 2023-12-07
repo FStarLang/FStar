@@ -122,6 +122,8 @@ type should_check_uvar =
   | Strict                      (* Strict uvar that must be typechecked *)
   | Already_checked             (* A uvar whose solution has already been checked *)
 
+instance val showable_should_check_uvar : showable should_check_uvar
+
 type positivity_qualifier =
   | BinderStrictlyPositive
   | BinderUnused

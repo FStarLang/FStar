@@ -5487,8 +5487,8 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
       let { imp_reason = reason; imp_tm = tm; imp_uvar = ctx_u; imp_range = r } = hd in
       let { uvar_decoration_typ; uvar_decoration_should_check } = UF.find_decoration ctx_u.ctx_uvar_head in
       if Env.debug env <| Options.Other "Rel" then
-        BU.print3 "resolve_implicits' loop, imp_tm = %s and ctx_u = %s, is_tac: %s\n"
-             (show tm) (show ctx_u) (show is_tac);
+        BU.print4 "resolve_implicits' loop, imp_tm=%s and ctx_u=%s, is_tac=%s, should_check=%s\n"
+             (show tm) (show ctx_u) (show is_tac) (show uvar_decoration_should_check);
       begin match () with
       | _ when Allow_unresolved? uvar_decoration_should_check ->
         until_fixpoint (out, true) tl
