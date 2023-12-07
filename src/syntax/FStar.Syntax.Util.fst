@@ -104,7 +104,7 @@ let null_binders_of_tks (tks:list (typ * bqual)) : binders =
 let binders_of_tks (tks:list (typ * bqual)) : binders =
     tks |> List.map (fun (t, imp) -> mk_binder_with_attrs (new_bv (Some t.pos) t) imp None [])
 
-let binders_of_freevars fvs = U.set_elements fvs |> List.map mk_binder
+let binders_of_freevars fvs = Set.elems fvs |> List.map mk_binder
 
 let mk_subst s = [s]
 
@@ -1104,11 +1104,11 @@ let let_rec_arity (lb:letbinding) : int * option (list bool) =
          match d with
          | Decreases_lex l ->
            l |> List.fold_left (fun s t ->
-             set_union s (FStar.Syntax.Free.names t)) (new_set Syntax.order_bv)
+             Set.union s (FStar.Syntax.Free.names t)) (Set.empty ())
          | Decreases_wf (rel, e) ->
-           set_union (FStar.Syntax.Free.names rel) (FStar.Syntax.Free.names e) in
+           Set.union (FStar.Syntax.Free.names rel) (FStar.Syntax.Free.names e) in
        Common.tabulate n_univs (fun _ -> false)
-       @ (bs |> List.map (fun b -> U.set_mem b.binder_bv d_bvs)))
+       @ (bs |> List.map (fun b -> Set.mem b.binder_bv d_bvs)))
 
 let abs_formals_maybe_unascribe_body maybe_unascribe t =
     let subst_lcomp_opt s l = match l with
@@ -1447,7 +1447,7 @@ let un_squash t =
                     | _ -> failwith "impossible"
             in
             // A bit paranoid, but need this check for terms like `u:unit{u == ()}`
-            if set_mem b.binder_bv (Free.names p)
+            if Set.mem b.binder_bv (Free.names p)
             then None
             else Some p
         | _ -> None
@@ -1519,7 +1519,7 @@ let arrow_one (t:typ) : option (binder * comp) =
     Some (b, c))
 
 let is_free_in (bv:bv) (t:term) : bool =
-    U.set_mem bv (FStar.Syntax.Free.names t)
+    Set.mem bv (FStar.Syntax.Free.names t)
 
 (**************************************************************************************)
 (* Destructing a type as a formula *)

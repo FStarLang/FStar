@@ -26,10 +26,16 @@ open FStar.Ident
 open FStar.Const
 open FStar.Compiler.Dyn
 open FStar.VConfig
+
+open FStar.Class.Ord
+open FStar.Class.HasRange
+
+
 module O    = FStar.Options
 module PC   = FStar.Parser.Const
 module Err  = FStar.Errors
 module GS   = FStar.GenSym
+module Set  = FStar.Compiler.Set
 
 let rec emb_typ_to_string = function
     | ET_abstract -> "abstract"
@@ -122,22 +128,46 @@ let lookup_aq (bv : bv) (aq : antiquotations) : term =
 (* Syntax builders *)
 (*********************************************************************************)
 
+// Cleanup this mess please
+let deq_instance_from_cmp f = {
+  (=?) = (fun x y -> Order.eq (f x y));
+}
+let ord_instance_from_cmp f = {
+  super = deq_instance_from_cmp f;
+  cmp = f;
+}
+let order_univ_name x y = String.compare (Ident.string_of_id x) (Ident.string_of_id y)
+
+instance deq_bv : deq bv =
+  deq_instance_from_cmp (fun x y -> Order.order_from_int (order_bv x y))
+instance deq_ident : deq ident =
+  deq_instance_from_cmp (fun x y -> Order.order_from_int (order_ident x y))
+instance deq_fv : deq lident =
+  deq_instance_from_cmp (fun x y -> Order.order_from_int (order_fv x y))
+instance deq_univ_name : deq univ_name =
+  deq_instance_from_cmp (fun x y -> Order.order_from_int (order_univ_name x y))
+instance ord_bv : ord bv =
+  ord_instance_from_cmp (fun x y -> Order.order_from_int (order_bv x y))
+instance ord_ident : ord ident =
+  ord_instance_from_cmp (fun x y -> Order.order_from_int (order_ident x y))
+instance ord_fv : ord lident =
+  ord_instance_from_cmp (fun x y -> Order.order_from_int (order_fv x y))
+
 let syn p k f = f k p
 let mk_fvs () = Util.mk_ref None
 let mk_uvs () = Util.mk_ref None
-let new_bv_set () : set bv = Util.new_set order_bv
-let new_id_set () : set ident = Util.new_set order_ident
-let new_fv_set () :set lident = Util.new_set order_fv
-let order_univ_name x y = String.compare (Ident.string_of_id x) (Ident.string_of_id y)
-let new_universe_names_set () : set univ_name = Util.new_set order_univ_name
+let new_bv_set () : Set.t bv = Set.empty ()
+let new_id_set () : Set.t ident = Set.empty ()
+let new_fv_set () : Set.t lident = Set.empty ()
+let new_universe_names_set () : Set.t univ_name = Set.empty ()
 
 let no_names  = new_bv_set()
 let no_fvars  = new_fv_set()
 let no_universe_names = new_universe_names_set ()
 //let memo_no_uvs = Util.mk_ref (Some no_uvs)
 //let memo_no_names = Util.mk_ref (Some no_names)
-let freenames_of_list l = List.fold_right Util.set_add l no_names
-let list_of_freenames (fvs:freenames) = Util.set_elements fvs
+let freenames_of_list l = Set.addn l no_names
+let list_of_freenames (fvs:freenames) = Set.elems fvs
 
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
 let mk (t:'a) r = {
@@ -260,10 +290,10 @@ let is_top_level = function
     | _ -> false
 
 let freenames_of_binders (bs:binders) : freenames =
-    List.fold_right (fun b out -> Util.set_add b.binder_bv out) bs no_names
+    List.fold_right (fun b out -> Set.add b.binder_bv out) bs no_names
 
 let binders_of_list fvs : binders = (fvs |> List.map (fun t -> mk_binder t))
-let binders_of_freenames (fvs:freenames) = Util.set_elements fvs |> binders_of_list
+let binders_of_freenames (fvs:freenames) = Set.elems fvs |> binders_of_list
 let is_bqual_implicit = function Some (Implicit _) -> true | _ -> false
 let is_aqual_implicit = function Some { aqual_implicit = b } -> b | _ -> false
 let is_bqual_implicit_or_meta = function Some (Implicit _) | Some (Meta _) -> true | _ -> false
@@ -404,8 +434,6 @@ let t_sealed_of t = mk_Tm_app
 
 let unit_const_with_range r = mk (Tm_constant FStar.Const.Const_unit) r
 let unit_const = unit_const_with_range Range.dummyRange
-
-open FStar.Class.HasRange
 
 instance has_range_syntax #a : Tot (hasRange (syntax a)) = {
   pos = (fun (t:term) -> t.pos);

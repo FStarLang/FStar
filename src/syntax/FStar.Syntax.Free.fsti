@@ -19,6 +19,7 @@ open Prims
 open FStar
 open FStar.Compiler
 open FStar.Compiler.Util
+open FStar.Compiler.Set
 open FStar.Syntax
 open FStar.Syntax.Syntax
 
@@ -36,3 +37,8 @@ val names_of_binders: binders -> set bv
 
 val uvars_uncached: term -> set ctx_uvar
 val uvars_full: term -> set ctx_uvar
+
+(* Bad place for these instances. But they cannot be instance
+Syntax.Syntax since they reference the UF graph. *)
+instance val ord_ctx_uvar  : Class.Ord.ord ctx_uvar
+instance val ord_univ_uvar : Class.Ord.ord universe_uvar

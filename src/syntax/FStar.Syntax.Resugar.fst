@@ -1028,9 +1028,9 @@ and resugar_binder' env (b:S.binder) r : option A.binder =
         A.mk_binder (A.Annotated (bv_as_unique_ident b.binder_bv, e)) r A.Type_level imp
   end
 
-and resugar_bv_as_pat' env (v: S.bv) aqual (body_bv: BU.set bv) typ_opt =
+and resugar_bv_as_pat' env (v: S.bv) aqual (body_bv: Set.set bv) typ_opt =
   let mk a = A.mk_pattern a (S.range_of_bv v) in
-  let used = BU.set_mem v body_bv in
+  let used = Set.mem v body_bv in
   let pat =
     mk (if used
         then A.PatVar (bv_as_unique_ident v, aqual, [])
@@ -1046,7 +1046,7 @@ and resugar_bv_as_pat env (x:S.bv) qual body_bv: option A.pattern =
    (resugar_bqual env qual)
    (fun bq -> resugar_bv_as_pat' env x bq body_bv (Some <| SS.compress x.sort))
 
-and resugar_pat' env (p:S.pat) (branch_bv: set bv) : A.pattern =
+and resugar_pat' env (p:S.pat) (branch_bv: Set.set bv) : A.pattern =
   (* We lose information when desugar PatAscribed to able to resugar it back *)
   let mk a = A.mk_pattern a p.p in
   let to_arg_qual bopt = // FIXME do (Some false) and None mean the same thing?
@@ -1057,7 +1057,7 @@ and resugar_pat' env (p:S.pat) (branch_bv: set bv) : A.pattern =
       //FIXME
              let might_be_used =
                match pattern.v with
-               | Pat_var bv -> Util.set_mem bv branch_bv
+               | Pat_var bv -> Set.mem bv branch_bv
                | _ -> true in
              is_implicit && might_be_used) args) in
   let resugar_plain_pat_cons' fv args =
@@ -1477,7 +1477,7 @@ let resugar_sigelt se : option A.decl =
 let resugar_comp (c:S.comp) : A.term =
   noenv resugar_comp' c
 
-let resugar_pat (p:S.pat) (branch_bv: set bv) : A.pattern =
+let resugar_pat (p:S.pat) (branch_bv: Set.set bv) : A.pattern =
   noenv resugar_pat' p branch_bv
 
 let resugar_binder (b:S.binder) r : option A.binder =
