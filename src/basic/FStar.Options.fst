@@ -1432,6 +1432,7 @@ and specs (warn_unsafe:bool) : list (FStar.Getopt.opt & Pprint.document) =
 // and not controlled interactively via pragmas.
 // Additionaly, the --smt option is a security concern.
 let settable = function
+    | "__temp_fast_implicits"
     | "abort_on"
     | "admit_except"
     | "admit_smt_queries"
