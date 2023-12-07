@@ -495,6 +495,7 @@ let display_version () =
 
 let display_usage_aux specs =
   let open FStar.Pprint in
+  let open FStar.Errors.Msg in
   let text (s:string) : document = flow (break_ 1) (words s) in
   let bold_doc (d:document) : document =
     (* very hacky, this would make no sense for documents going elsewhere
@@ -507,7 +508,7 @@ let display_usage_aux specs =
     doc_of_string "fstar.exe [options] file[s] [@respfile...]" ^/^
     doc_of_string (Util.format1 "  %srespfile: read command-line options from respfile\n" (Util.colorize_bold "@")) ^/^
     List.fold_right
-      (fun (_, flag, p, doc) rest ->
+      (fun ((_, flag, p), doc) rest ->
         let opt = doc_of_string ("--" ^ flag) in
         let arg =
           match p with
@@ -523,8 +524,8 @@ let display_usage_aux specs =
   in
   Util.print_string (pretty_string (float_of_string "1.0") 80 d)
 
-let mk_spec o : opt =
-    let ns, name, arg, desc = o in
+let mk_spec (o : char & string & opt_variant option_val) : opt =
+    let ns, name, arg = o in
     let arg =
         match arg with
         | ZeroArgs f ->
@@ -534,7 +535,7 @@ let mk_spec o : opt =
         | OneArg (f, d) ->
           let g x = set_option name (f x) in
           OneArg (g, d) in
-    ns, name, arg, desc
+    ns, name, arg
 
 let accumulated_option name value =
     let prev_values = Util.dflt [] (lookup_opt name (as_option as_list')) in
@@ -1397,9 +1398,9 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
                                 (Const (Bool true))),
         "Display this information")]
 
-and specs (warn_unsafe:bool) : list FStar.Getopt.opt = // FIXME: Why does the interactive mode log the type of opt_specs_with_types as a triple??
+and specs (warn_unsafe:bool) : list (FStar.Getopt.opt & string) =
   List.map (fun (short, long, typ, doc) ->
-            mk_spec (short, long, arg_spec_of_opt_type long typ, doc))
+            mk_spec (short, long, arg_spec_of_opt_type long typ), doc)
            (specs_with_types warn_unsafe)
 
 // Several options can only be set at the time the process is created,
@@ -1495,8 +1496,10 @@ let settable = function
     | _ -> false
 
 let all_specs = specs true
+let all_specs_getopt = List.map fst all_specs
+
 let all_specs_with_types = specs_with_types true
-let settable_specs = all_specs |> List.filter (fun (_, x, _, _) -> settable x)
+let settable_specs = all_specs |> List.filter (fun ((_, x, _), _) -> settable x)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PUBLIC API
@@ -1549,7 +1552,7 @@ let rec parse_filename_arg specs enable_filenames arg =
   end
 
 let parse_cmd_line () =
-  let res = Getopt.parse_cmdline all_specs (parse_filename_arg all_specs true) in
+  let res = Getopt.parse_cmdline all_specs_getopt (parse_filename_arg all_specs_getopt true) in
   let res =
     if res = Success
     then set_error_flags()
@@ -1565,7 +1568,7 @@ let restore_cmd_line_options should_clear =
      * Add them here as needed. *)
     let old_verify_module = get_verify_module() in
     if should_clear then clear() else init();
-    let specs = specs false in
+    let specs = List.map fst <| specs false in
     let r = Getopt.parse_cmdline specs (parse_filename_arg specs false) in
     set_option' ("verify_module", List (List.map String old_verify_module));
     r
@@ -2127,7 +2130,8 @@ let set_options s =
     try
         if s = ""
         then Success
-        else let res = Getopt.parse_string settable_specs (fun s -> raise (File_argument s); Error "set_options with file argument") s in
+        else let settable_specs = List.map fst settable_specs in
+             let res = Getopt.parse_string settable_specs (fun s -> raise (File_argument s); Error "set_options with file argument") s in
              if res=Success
              then set_error_flags()
              else res

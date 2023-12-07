@@ -465,7 +465,7 @@ let fstar_options_list_cache =
                opt_default = default_value;
                opt_type = typ;
                opt_snippets = snippets_of_fstar_option name typ;
-               opt_documentation = if doc = "" then None else Some doc;
+               opt_documentation = if doc = FStar.Pprint.empty then None else Some (renderdoc doc);
                opt_permission_level = if Options.settable name then OptSet
                                       else OptReadOnly }))
   |> List.sortWith (fun o1 o2 ->
