@@ -10,6 +10,18 @@ class ord (a:Type) = {
   cmp : a -> a -> order;
 }
 
+val sort
+  (#a:Type) {| ord a |}
+  (xs : list a)
+  : list a
+
+(* Deduplicate elements, preserving order as determined by the leftmost occurrence.
+So dedup [a,b,c,a,f,e,c] = [a,b,c,f,e] *)
+val dedup
+  (#a:Type) {| ord a |}
+  (xs : list a)
+  : list a
+
 instance val ord_eq (a:Type) (d : ord a) : Tot (deq a)
 
 val (<?)  : #a:Type -> {| ord a |} -> a -> a -> bool
@@ -69,4 +81,3 @@ instance val ord_tuple6
    (_ : ord 'e)
    (_ : ord 'f)
 : Tot (ord ('a & 'b & 'c & 'd & 'e & 'f))
-

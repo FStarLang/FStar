@@ -1,14 +1,33 @@
 module FStar.Class.Ord
 
+open FStar.Compiler
 open FStar.Compiler.Effect
 open FStar.Tactics.Typeclasses
-
-instance ord_eq (a:Type) (d : ord a) : Tot (deq a) = d.super
 
 let (<?)  x y = cmp x y =  Lt
 let (<=?) x y = cmp x y <> Gt
 let (>?)  x y = cmp x y =  Gt
 let (>=?) x y = cmp x y <> Lt
+
+instance ord_eq (a:Type) (d : ord a) : Tot (deq a) = d.super
+
+let rec insert (#a:Type) {| ord a |} (x:a) (xs:list a) : list a =
+  match xs with
+  | [] -> [x]
+  | y::ys -> if x <=? y then x :: y :: ys else y :: insert x ys
+
+let rec sort xs =
+  match xs with
+  | [] -> []
+  | x::xs -> insert x (sort xs)
+
+let rec dedup #a xs =
+  let rec aux (xs:list a) : list a =
+    match xs with
+    | [] -> []
+    | x :: xs -> if List.existsb ((=?) x) xs then dedup xs else x :: dedup xs
+  in
+  aux (List.rev xs)
 
 instance ord_int : ord int = {
    super = solve;
