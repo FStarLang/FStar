@@ -3455,6 +3455,7 @@ and (specs :
 let (settable : Prims.string -> Prims.bool) =
   fun uu___ ->
     match uu___ with
+    | "__temp_fast_implicits" -> true
     | "abort_on" -> true
     | "admit_except" -> true
     | "admit_smt_queries" -> true
@@ -3557,7 +3558,7 @@ let (settable_specs :
     (FStar_Compiler_List.filter
        (fun uu___ ->
           match uu___ with | ((uu___1, x, uu___2), uu___3) -> settable x))
-let (uu___655 :
+let (uu___656 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -3574,11 +3575,11 @@ let (uu___655 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___655 with
+  match uu___656 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___655 with
+  match uu___656 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
