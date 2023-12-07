@@ -97,12 +97,9 @@ type defer_ok_t =
   | DeferAny
   | DeferFlexFlexOnly
 
-
-let string_of_defer_ok =
-  function
-  | NoDefer -> "NoDefer"
-  | DeferAny -> "DeferAny"
-  | DeferFlexFlexOnly -> "DeferFlexFlexOnly"
+instance _ : showable defer_ok_t = {
+  show = (function | NoDefer -> "NoDefer" | DeferAny -> "DeferAny" | DeferFlexFlexOnly -> "DeferFlexFlexOnly");
+}
 
 (* The set of problems currently being addressed *)
 type worklist = {
@@ -3334,13 +3331,13 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                      snd (occurs u_rhs new_uvar_typ))
                  then giveup_or_defer_flex_flex orig wl Deferred_flex_flex_nonpattern
                          (Thunk.mkv (BU.format1 "flex-flex: occurs\n defer_ok=%s\n"
-                                                (string_of_defer_ok wl.defer_ok)))
+                                                (show wl.defer_ok)))
                  else begin
-                   let _ =
-                     if debug wl <| Options.Other "Rel"
-                     then BU.print1 "flex-flex quasi: %s\n"
-                                    (BU.stack_dump())
-                   in
+                  //  let _ =
+                  //    if debug wl <| Options.Other "Rel"
+                  //    then BU.print1 "flex-flex quasi: %s\n"
+                  //                   (BU.stack_dump())
+                  //  in
                    let new_uvar_should_check, is_ghost =
                      match U.ctx_uvar_should_check u_lhs, U.ctx_uvar_should_check u_rhs with
                      | Allow_untyped r, Allow_untyped _ -> Allow_untyped r, false
@@ -4971,8 +4968,8 @@ let try_solve_deferred_constraints (defer_ok:defer_ok_t) smt_ok deferred_to_tac_
    if Env.debug env <| Options.Other "Rel"
    then begin
          BU.print4 "Trying to solve carried problems (defer_ok=%s) (deferred_to_tac_ok=%s): begin\n\t%s\nend\n and %s implicits\n"
-                  (string_of_defer_ok defer_ok)
-                  (string_of_bool deferred_to_tac_ok)
+                  (show defer_ok)
+                  (show deferred_to_tac_ok)
                   (wl_to_string wl)
                   (string_of_int (List.length g.implicits))
    end;

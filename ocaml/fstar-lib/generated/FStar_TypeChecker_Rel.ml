@@ -118,12 +118,15 @@ let (uu___is_DeferAny : defer_ok_t -> Prims.bool) =
 let (uu___is_DeferFlexFlexOnly : defer_ok_t -> Prims.bool) =
   fun projectee ->
     match projectee with | DeferFlexFlexOnly -> true | uu___ -> false
-let (string_of_defer_ok : defer_ok_t -> Prims.string) =
-  fun uu___ ->
-    match uu___ with
-    | NoDefer -> "NoDefer"
-    | DeferAny -> "DeferAny"
-    | DeferFlexFlexOnly -> "DeferFlexFlexOnly"
+let (uu___76 : defer_ok_t FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | NoDefer -> "NoDefer"
+         | DeferAny -> "DeferAny"
+         | DeferFlexFlexOnly -> "DeferFlexFlexOnly")
+  }
 type worklist =
   {
   attempting: FStar_TypeChecker_Common.probs ;
@@ -7794,236 +7797,220 @@ and (solve_t_flex_flex :
                                                 then
                                                   let uu___20 =
                                                     let uu___21 =
+                                                      let uu___22 =
+                                                        FStar_Class_Show.show
+                                                          uu___76 wl.defer_ok in
                                                       FStar_Compiler_Util.format1
                                                         "flex-flex: occurs\n defer_ok=%s\n"
-                                                        (string_of_defer_ok
-                                                           wl.defer_ok) in
+                                                        uu___22 in
                                                     FStar_Thunk.mkv uu___21 in
                                                   giveup_or_defer_flex_flex
                                                     orig wl
                                                     FStar_TypeChecker_Common.Deferred_flex_flex_nonpattern
                                                     uu___20
                                                 else
-                                                  ((let uu___22 =
-                                                      FStar_Compiler_Effect.op_Less_Bar
-                                                        (debug wl)
-                                                        (FStar_Options.Other
-                                                           "Rel") in
-                                                    if uu___22
-                                                    then
-                                                      let uu___23 =
-                                                        FStar_Compiler_Util.stack_dump
-                                                          () in
-                                                      FStar_Compiler_Util.print1
-                                                        "flex-flex quasi: %s\n"
-                                                        uu___23
-                                                    else ());
-                                                   (let uu___22 =
-                                                      let uu___23 =
-                                                        let uu___24 =
-                                                          FStar_Syntax_Util.ctx_uvar_should_check
-                                                            u_lhs in
-                                                        let uu___25 =
-                                                          FStar_Syntax_Util.ctx_uvar_should_check
-                                                            u_rhs in
-                                                        (uu___24, uu___25) in
-                                                      match uu___23 with
-                                                      | (FStar_Syntax_Syntax.Allow_untyped
-                                                         r,
-                                                         FStar_Syntax_Syntax.Allow_untyped
-                                                         uu___24) ->
-                                                          ((FStar_Syntax_Syntax.Allow_untyped
-                                                              r), false)
-                                                      | (FStar_Syntax_Syntax.Allow_ghost
-                                                         r, uu___24) ->
-                                                          ((FStar_Syntax_Syntax.Allow_ghost
-                                                              r), true)
-                                                      | (uu___24,
-                                                         FStar_Syntax_Syntax.Allow_ghost
-                                                         r) ->
-                                                          ((FStar_Syntax_Syntax.Allow_ghost
-                                                              r), true)
-                                                      | uu___24 ->
-                                                          (FStar_Syntax_Syntax.Strict,
-                                                            false) in
-                                                    match uu___22 with
-                                                    | (new_uvar_should_check,
-                                                       is_ghost) ->
-                                                        let uu___23 =
-                                                          new_uvar
-                                                            (Prims.op_Hat
-                                                               "flex-flex quasi:"
-                                                               (Prims.op_Hat
-                                                                  "\tlhs="
-                                                                  (Prims.op_Hat
+                                                  (let uu___21 =
+                                                     let uu___22 =
+                                                       let uu___23 =
+                                                         FStar_Syntax_Util.ctx_uvar_should_check
+                                                           u_lhs in
+                                                       let uu___24 =
+                                                         FStar_Syntax_Util.ctx_uvar_should_check
+                                                           u_rhs in
+                                                       (uu___23, uu___24) in
+                                                     match uu___22 with
+                                                     | (FStar_Syntax_Syntax.Allow_untyped
+                                                        r,
+                                                        FStar_Syntax_Syntax.Allow_untyped
+                                                        uu___23) ->
+                                                         ((FStar_Syntax_Syntax.Allow_untyped
+                                                             r), false)
+                                                     | (FStar_Syntax_Syntax.Allow_ghost
+                                                        r, uu___23) ->
+                                                         ((FStar_Syntax_Syntax.Allow_ghost
+                                                             r), true)
+                                                     | (uu___23,
+                                                        FStar_Syntax_Syntax.Allow_ghost
+                                                        r) ->
+                                                         ((FStar_Syntax_Syntax.Allow_ghost
+                                                             r), true)
+                                                     | uu___23 ->
+                                                         (FStar_Syntax_Syntax.Strict,
+                                                           false) in
+                                                   match uu___21 with
+                                                   | (new_uvar_should_check,
+                                                      is_ghost) ->
+                                                       let uu___22 =
+                                                         new_uvar
+                                                           (Prims.op_Hat
+                                                              "flex-flex quasi:"
+                                                              (Prims.op_Hat
+                                                                 "\tlhs="
+                                                                 (Prims.op_Hat
                                                                     u_lhs.FStar_Syntax_Syntax.ctx_uvar_reason
-                                                                    (Prims.op_Hat
+                                                                    (
+                                                                    Prims.op_Hat
                                                                     "\trhs="
                                                                     u_rhs.FStar_Syntax_Syntax.ctx_uvar_reason))))
-                                                            wl range gamma_w
-                                                            ctx_w
-                                                            new_uvar_typ
-                                                            new_uvar_should_check
-                                                            (if
-                                                               FStar_Pervasives_Native.uu___is_Some
-                                                                 u_lhs.FStar_Syntax_Syntax.ctx_uvar_meta
-                                                             then
-                                                               u_lhs.FStar_Syntax_Syntax.ctx_uvar_meta
-                                                             else
-                                                               u_rhs.FStar_Syntax_Syntax.ctx_uvar_meta) in
-                                                        (match uu___23 with
-                                                         | (uu___24, w, wl1)
-                                                             ->
-                                                             let w_app =
-                                                               let uu___25 =
-                                                                 FStar_Compiler_List.map
-                                                                   (fun
-                                                                    uu___26
+                                                           wl range gamma_w
+                                                           ctx_w new_uvar_typ
+                                                           new_uvar_should_check
+                                                           (if
+                                                              FStar_Pervasives_Native.uu___is_Some
+                                                                u_lhs.FStar_Syntax_Syntax.ctx_uvar_meta
+                                                            then
+                                                              u_lhs.FStar_Syntax_Syntax.ctx_uvar_meta
+                                                            else
+                                                              u_rhs.FStar_Syntax_Syntax.ctx_uvar_meta) in
+                                                       (match uu___22 with
+                                                        | (uu___23, w, wl1)
+                                                            ->
+                                                            let w_app =
+                                                              let uu___24 =
+                                                                FStar_Compiler_List.map
+                                                                  (fun
+                                                                    uu___25
                                                                     ->
-                                                                    match uu___26
+                                                                    match uu___25
                                                                     with
                                                                     | 
                                                                     {
                                                                     FStar_Syntax_Syntax.binder_bv
                                                                     = z;
                                                                     FStar_Syntax_Syntax.binder_qual
-                                                                    = uu___27;
+                                                                    = uu___26;
                                                                     FStar_Syntax_Syntax.binder_positivity
-                                                                    = uu___28;
+                                                                    = uu___27;
                                                                     FStar_Syntax_Syntax.binder_attrs
-                                                                    = uu___29;_}
+                                                                    = uu___28;_}
                                                                     ->
-                                                                    let uu___30
+                                                                    let uu___29
                                                                     =
                                                                     FStar_Syntax_Syntax.bv_to_name
                                                                     z in
                                                                     FStar_Syntax_Syntax.as_arg
-                                                                    uu___30)
-                                                                   zs in
-                                                               FStar_Syntax_Syntax.mk_Tm_app
-                                                                 w uu___25
-                                                                 w.FStar_Syntax_Syntax.pos in
-                                                             ((let uu___26 =
-                                                                 FStar_Compiler_Effect.op_Less_Bar
-                                                                   (debug wl1)
-                                                                   (FStar_Options.Other
+                                                                    uu___29)
+                                                                  zs in
+                                                              FStar_Syntax_Syntax.mk_Tm_app
+                                                                w uu___24
+                                                                w.FStar_Syntax_Syntax.pos in
+                                                            ((let uu___25 =
+                                                                FStar_Compiler_Effect.op_Less_Bar
+                                                                  (debug wl1)
+                                                                  (FStar_Options.Other
                                                                     "Rel") in
-                                                               if uu___26
-                                                               then
-                                                                 let uu___27
-                                                                   =
-                                                                   let uu___28
+                                                              if uu___25
+                                                              then
+                                                                let uu___26 =
+                                                                  let uu___27
                                                                     =
                                                                     flex_t_to_string
                                                                     lhs in
-                                                                   let uu___29
+                                                                  let uu___28
                                                                     =
-                                                                    let uu___30
+                                                                    let uu___29
                                                                     =
                                                                     flex_t_to_string
                                                                     rhs in
-                                                                    let uu___31
+                                                                    let uu___30
                                                                     =
-                                                                    let uu___32
+                                                                    let uu___31
                                                                     =
                                                                     term_to_string
                                                                     w in
-                                                                    let uu___33
+                                                                    let uu___32
                                                                     =
-                                                                    let uu___34
+                                                                    let uu___33
                                                                     =
                                                                     FStar_Syntax_Print.binders_to_string
                                                                     ", "
                                                                     (FStar_Compiler_List.op_At
                                                                     ctx_l
                                                                     binders_lhs) in
-                                                                    let uu___35
+                                                                    let uu___34
                                                                     =
-                                                                    let uu___36
+                                                                    let uu___35
                                                                     =
                                                                     FStar_Syntax_Print.binders_to_string
                                                                     ", "
                                                                     (FStar_Compiler_List.op_At
                                                                     ctx_r
                                                                     binders_rhs) in
-                                                                    let uu___37
+                                                                    let uu___36
                                                                     =
-                                                                    let uu___38
+                                                                    let uu___37
                                                                     =
                                                                     FStar_Syntax_Print.binders_to_string
                                                                     ", " zs in
-                                                                    [uu___38] in
-                                                                    uu___36
+                                                                    [uu___37] in
+                                                                    uu___35
                                                                     ::
-                                                                    uu___37 in
-                                                                    uu___34
+                                                                    uu___36 in
+                                                                    uu___33
                                                                     ::
-                                                                    uu___35 in
-                                                                    uu___32
+                                                                    uu___34 in
+                                                                    uu___31
                                                                     ::
-                                                                    uu___33 in
-                                                                    uu___30
+                                                                    uu___32 in
+                                                                    uu___29
                                                                     ::
-                                                                    uu___31 in
-                                                                   uu___28 ::
-                                                                    uu___29 in
-                                                                 FStar_Compiler_Util.print
-                                                                   "flex-flex quasi:\n\tlhs=%s\n\trhs=%s\n\tsol=%s\n\tctx_l@binders_lhs=%s\n\tctx_r@binders_rhs=%s\n\tzs=%s\n"
-                                                                   uu___27
-                                                               else ());
-                                                              (let rc =
-                                                                 if is_ghost
-                                                                 then
-                                                                   FStar_Syntax_Util.residual_gtot
+                                                                    uu___30 in
+                                                                  uu___27 ::
+                                                                    uu___28 in
+                                                                FStar_Compiler_Util.print
+                                                                  "flex-flex quasi:\n\tlhs=%s\n\trhs=%s\n\tsol=%s\n\tctx_l@binders_lhs=%s\n\tctx_r@binders_rhs=%s\n\tzs=%s\n"
+                                                                  uu___26
+                                                              else ());
+                                                             (let rc =
+                                                                if is_ghost
+                                                                then
+                                                                  FStar_Syntax_Util.residual_gtot
                                                                     t_res_lhs
-                                                                 else
-                                                                   FStar_Syntax_Util.residual_tot
+                                                                else
+                                                                  FStar_Syntax_Util.residual_tot
                                                                     t_res_lhs in
-                                                               let s1_sol =
-                                                                 FStar_Syntax_Util.abs
-                                                                   binders_lhs
-                                                                   w_app
-                                                                   (FStar_Pervasives_Native.Some
+                                                              let s1_sol =
+                                                                FStar_Syntax_Util.abs
+                                                                  binders_lhs
+                                                                  w_app
+                                                                  (FStar_Pervasives_Native.Some
                                                                     rc) in
-                                                               let s1 =
-                                                                 TERM
-                                                                   (u_lhs,
+                                                              let s1 =
+                                                                TERM
+                                                                  (u_lhs,
                                                                     s1_sol) in
-                                                               let uu___26 =
-                                                                 FStar_Syntax_Unionfind.equiv
-                                                                   u_lhs.FStar_Syntax_Syntax.ctx_uvar_head
-                                                                   u_rhs.FStar_Syntax_Syntax.ctx_uvar_head in
-                                                               if uu___26
-                                                               then
+                                                              let uu___25 =
+                                                                FStar_Syntax_Unionfind.equiv
+                                                                  u_lhs.FStar_Syntax_Syntax.ctx_uvar_head
+                                                                  u_rhs.FStar_Syntax_Syntax.ctx_uvar_head in
+                                                              if uu___25
+                                                              then
+                                                                let uu___26 =
+                                                                  solve_prob
+                                                                    orig
+                                                                    FStar_Pervasives_Native.None
+                                                                    [s1] wl1 in
+                                                                solve uu___26
+                                                              else
+                                                                (let s2_sol =
+                                                                   FStar_Syntax_Util.abs
+                                                                    binders_rhs
+                                                                    w_app
+                                                                    (FStar_Pervasives_Native.Some
+                                                                    rc) in
+                                                                 let s2 =
+                                                                   TERM
+                                                                    (u_rhs,
+                                                                    s2_sol) in
                                                                  let uu___27
                                                                    =
                                                                    solve_prob
                                                                     orig
                                                                     FStar_Pervasives_Native.None
-                                                                    [s1] wl1 in
-                                                                 solve
-                                                                   uu___27
-                                                               else
-                                                                 (let s2_sol
-                                                                    =
-                                                                    FStar_Syntax_Util.abs
-                                                                    binders_rhs
-                                                                    w_app
-                                                                    (FStar_Pervasives_Native.Some
-                                                                    rc) in
-                                                                  let s2 =
-                                                                    TERM
-                                                                    (u_rhs,
-                                                                    s2_sol) in
-                                                                  let uu___28
-                                                                    =
-                                                                    solve_prob
-                                                                    orig
-                                                                    FStar_Pervasives_Native.None
                                                                     [s1; s2]
                                                                     wl1 in
-                                                                  solve
-                                                                    uu___28)))))))))
+                                                                 solve
+                                                                   uu___27))))))))
                            | uu___8 ->
                                let uu___9 =
                                  FStar_Thunk.mkv "flex-flex: non-patterns" in
@@ -14281,17 +14268,20 @@ let (try_solve_deferred_constraints :
                            (FStar_Options.Other "Rel") in
                        if uu___4
                        then
-                         let uu___5 =
-                           FStar_Compiler_Util.string_of_bool
+                         let uu___5 = FStar_Class_Show.show uu___76 defer_ok in
+                         let uu___6 =
+                           FStar_Class_Show.show
+                             (FStar_Class_Show.printableshow
+                                FStar_Class_Printable.printable_bool)
                              deferred_to_tac_ok in
-                         let uu___6 = wl_to_string wl in
-                         let uu___7 =
+                         let uu___7 = wl_to_string wl in
+                         let uu___8 =
                            FStar_Compiler_Util.string_of_int
                              (FStar_Compiler_List.length
                                 g.FStar_TypeChecker_Common.implicits) in
                          FStar_Compiler_Util.print4
                            "Trying to solve carried problems (defer_ok=%s) (deferred_to_tac_ok=%s): begin\n\t%s\nend\n and %s implicits\n"
-                           (string_of_defer_ok defer_ok) uu___5 uu___6 uu___7
+                           uu___5 uu___6 uu___7 uu___8
                        else ());
                       (let g1 =
                          let uu___4 = solve_and_commit wl fail in

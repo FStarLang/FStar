@@ -1027,8 +1027,14 @@ let (fstar_options_list_cache : fstar_option Prims.list) =
                         let uu___3 = sig_of_fstar_option name typ in
                         let uu___4 = snippets_of_fstar_option name typ in
                         let uu___5 =
-                          let uu___6 = FStar_Options.settable name in
-                          if uu___6 then OptSet else OptReadOnly in
+                          if doc = FStar_Pprint.empty
+                          then FStar_Pervasives_Native.None
+                          else
+                            (let uu___7 = FStar_Errors_Msg.renderdoc doc in
+                             FStar_Pervasives_Native.Some uu___7) in
+                        let uu___6 =
+                          let uu___7 = FStar_Options.settable name in
+                          if uu___7 then OptSet else OptReadOnly in
                         {
                           opt_name = name;
                           opt_sig = uu___3;
@@ -1036,11 +1042,8 @@ let (fstar_options_list_cache : fstar_option Prims.list) =
                           opt_default = default_value;
                           opt_type = typ;
                           opt_snippets = uu___4;
-                          opt_documentation =
-                            (if doc = ""
-                             then FStar_Pervasives_Native.None
-                             else FStar_Pervasives_Native.Some doc);
-                          opt_permission_level = uu___5
+                          opt_documentation = uu___5;
+                          opt_permission_level = uu___6
                         })))) in
   FStar_Compiler_Effect.op_Bar_Greater uu___
     (FStar_Compiler_List.sortWith

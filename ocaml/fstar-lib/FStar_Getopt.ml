@@ -2,7 +2,7 @@ let noshort = 0
 type 'a opt_variant =
   | ZeroArgs of (unit -> 'a)
   | OneArg of (string -> 'a) * string
-type 'a opt' = FStar_Char.char * string * 'a opt_variant * string
+type 'a opt' = FStar_Char.char * string * 'a opt_variant
 type opt = unit opt'
 type parse_cmdline_res =
   | Empty
@@ -28,12 +28,12 @@ let find_matching_opt specs s : (opt option * string) option =
   else if String.sub s 0 2 = "--" then
     (* long opts *)
     let strim = String.sub s 2 ((String.length s) - 2) in
-    let o = FStar_List.tryFind (fun (_, option, _, _) -> option = strim) specs in
+    let o = FStar_List.tryFind (fun (_, option, _) -> option = strim) specs in
     Some (o, strim)
   else if String.sub s 0 1 = "-" then
     (* short opts *)
     let strim = String.sub s 1 ((String.length s) - 1) in
-    let o = FStar_List.tryFind (fun (shortoption, _, _, _) -> FStar_String.make Z.one shortoption = strim) specs in
+    let o = FStar_List.tryFind (fun (shortoption, _, _) -> FStar_String.make Z.one shortoption = strim) specs in
     Some (o, strim)
   else
     None
@@ -47,7 +47,7 @@ let rec parse (opts:opt list) def ar ix max i : parse_cmdline_res =
     match find_matching_opt opts arg with
     | None -> go_on ()
     | Some (None, _) -> Error ("unrecognized option '" ^ arg ^ "'\n")
-    | Some (Some (_, _, p, _), argtrim) ->
+    | Some (Some (_, _, p), argtrim) ->
       begin match p with
       | ZeroArgs f -> f (); parse opts def ar (ix + 1) max (i + 1)
       | OneArg (f, _) ->
