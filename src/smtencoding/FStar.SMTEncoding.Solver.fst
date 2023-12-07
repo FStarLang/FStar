@@ -259,11 +259,15 @@ let filter_assertions (e:env) (qsettings:option query_settings) (core:Z3.unsat_c
   let (theory, b, _, _) = filter_assertions_with_stats e core theory in
   theory, b
 
+(* Translation from F* rlimit units to Z3 rlimit units. *)
+let convert_rlimit (r : int) : int =
+  let open FStar.Mul in
+  544656 * r
 //surround the query with fuel options and various diagnostics
 let with_fuel_and_diagnostics settings label_assumptions =
     let n = settings.query_fuel in
     let i = settings.query_ifuel in
-    let rlimit = settings.query_rlimit in
+    let rlimit = convert_rlimit settings.query_rlimit in
     [  //fuel and ifuel settings
         Term.Caption (BU.format2 "<fuel='%s' ifuel='%s'>"
                         (string_of_int n)
@@ -510,9 +514,6 @@ let errors_to_report (tried_recovery : bool) (settings : query_settings) : list 
 let report_errors tried_recovery qry_settings =
     FStar.Errors.add_errors (errors_to_report tried_recovery qry_settings)
 
-(* Translation from F* rlimit to Z3 rlimit *)
-let rlimit_conversion_factor = 544656
-
 let query_info settings z3result =
     let process_unsat_core (core:unsat_core) =
         (* A generic accumulator of unique strings,
@@ -654,7 +655,7 @@ let query_info settings z3result =
                 show z3result.z3result_time;
                 show settings.query_fuel;
                 show settings.query_ifuel;
-                show (settings.query_rlimit / rlimit_conversion_factor);
+                show (settings.query_rlimit);
                 stats
              ];
         if Options.print_z3_statistics () then process_unsat_core core;
@@ -793,7 +794,7 @@ let make_solver_configs
         in
         let rlimit =
             let open FStar.Mul in
-            Options.z3_rlimit_factor () * Options.z3_rlimit () * rlimit_conversion_factor
+            Options.z3_rlimit_factor () * Options.z3_rlimit ()
         in
         let next_hint = get_hint_for qname index in
         let default_settings = {
