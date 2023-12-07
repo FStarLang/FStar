@@ -13,12 +13,23 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module ValueRestriction
+module PositiveRelaxed
 
-                                         // r generative
-val r : #a:Type -> ref (option a)
-let r (#a:Type) = alloc #(option a) None
+type nat =
+  | O : nat
+  | S : pre:nat -> nat
 
-let write () = (r #string) := Some "foo" // -- so the r here generates different
+(* First, this inductive shouldn't be accepted by the _current_ check *)
+(* Second, this inductive shouldn't be accepted by _any_ check *)
+#push-options "--__no_positivity"
+noeq
+type p : nat -> Type =
+  | PSO : f:(p O -> Tot (p (S O))) -> p (S O)
+  | POd : h:(p (S O)) -> p O
+#pop-options
 
-let v : option int = !(r #int)           // -- reference from the r here
+val bad : p (S O) -> Tot (p (S O))
+let bad h = (PSO?.f h) (POd h)
+
+val loop : p (S O)
+let loop = bad (PSO (fun h -> bad (POd?.h h)))

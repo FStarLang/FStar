@@ -23,4 +23,12 @@ type t0 = Map.t int int
 
 let eq_int : eqtype = int
 
-total  new_effect STMAP = STATE_h (Map.t int int)
+let state = (Map.t int int)
+total  new_effect {
+  STMAP  : a:Type -> Effect
+  with repr     = st state
+     ; bind     = bind_st state
+     ; return   = return_st state
+     ; get      = get state
+     ; put      = put state
+}

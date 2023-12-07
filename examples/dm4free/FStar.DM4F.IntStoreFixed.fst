@@ -25,17 +25,19 @@ let bind_is (a b : Type) (x:int_store a) (f: a -> int_store b) : int_store b =
     let (z, store') = x store in
     f z store'
 
-let get () : int_store heap = fun store -> store, store
-let put s : int_store unit = fun _ -> (), s
+let iget () : int_store heap = fun store -> store, store
+let iput s : int_store unit = fun _ -> (), s
 
 total reifiable reflectable new_effect {
   INT_STORE : a:Type -> Effect
   with repr   = int_store
      ; bind   = bind_is
      ; return = return_is
-     ; get   = get
-     ; put    = put
+     ; get   = iget
+     ; put    = iput
 }
+let get = INT_STORE?.get
+let put = INT_STORE?.put
 
 effect IntStore (a:Type) (pre:INT_STORE?.pre) (post: heap -> a -> heap -> GTot Type0) =
   INT_STORE a (fun l0 p -> pre l0 /\ (forall x l1. pre l0 /\ post l0 x l1 ==> p (x, l1)))
@@ -80,7 +82,8 @@ let (!) = read
 unfold
 let op_Colon_equals = write
 
-let refine_st (#a:Type)
+assume
+val refine_st (#a:Type)
               (#b:Type)
               (#pre : a -> Tot INT_STORE?.pre)
               (#post : a -> Tot (heap -> b -> heap -> Tot Type0))
@@ -89,15 +92,15 @@ let refine_st (#a:Type)
   : IntStore b (pre x) (fun h0 z h1 -> pre x h0 /\
                                     reify (f x) h0 == (z, h1) /\
                                     post x h0 z h1)
-  = let g (h0:heap)
-      : Pure (b * heap)
-             (pre x h0)
-             (fun (z,h1) -> pre x h0 /\
-                       reify (f x) h0 == (z, h1) /\
-                       post x h0 z h1)
-      = reify (f x) h0
-    in
-    IntStore?.reflect g
+  // = let g (h0:heap)
+  //     : Pure (b * heap)
+  //            (pre x h0)
+  //            (fun (z,h1) -> pre x h0 /\
+  //                      reify (f x) h0 == (z, h1) /\
+  //                      post x h0 z h1)
+  //     = reify (f x) h0
+  //   in
+  //   IntStore?.reflect g
 
 open FStar.DM4F.IntStoreFixedReader
 

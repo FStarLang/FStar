@@ -21,13 +21,13 @@ let printable_list : 'a . 'a printable -> 'a Prims.list printable =
     {
       to_string =
         (fun l ->
-           Prims.strcat "["
-             (Prims.strcat
+           Prims.op_Hat "["
+             (Prims.op_Hat
                 (FStar_String.concat "; "
                    (FStar_List_Tot_Base.map (to_string x) l)) "]"))
     }
 let (printable_string : Prims.string printable) =
-  { to_string = (fun x -> Prims.strcat "\"" (Prims.strcat x "\"")) }
+  { to_string = (fun x -> Prims.op_Hat "\"" (Prims.op_Hat x "\"")) }
 let printable_option :
   'a . 'a printable -> 'a FStar_Pervasives_Native.option printable =
   fun uu___ ->
@@ -37,7 +37,7 @@ let printable_option :
            match uu___1 with
            | FStar_Pervasives_Native.None -> "None"
            | FStar_Pervasives_Native.Some x ->
-               Prims.strcat "(Some " (Prims.strcat (to_string uu___ x) ")"))
+               Prims.op_Hat "(Some " (Prims.op_Hat (to_string uu___ x) ")"))
     }
 let printable_either :
   'a 'b .
@@ -51,9 +51,9 @@ let printable_either :
           (fun uu___2 ->
              match uu___2 with
              | FStar_Pervasives.Inl x ->
-                 Prims.strcat "(Inl " (Prims.strcat (to_string uu___ x) ")")
+                 Prims.op_Hat "(Inl " (Prims.op_Hat (to_string uu___ x) ")")
              | FStar_Pervasives.Inr x ->
-                 Prims.strcat "(Inr " (Prims.strcat (to_string uu___1 x) ")"))
+                 Prims.op_Hat "(Inr " (Prims.op_Hat (to_string uu___1 x) ")"))
       }
 let (printable_char : FStar_Char.char printable) =
   { to_string = FStar_String.string_of_char }
@@ -84,10 +84,10 @@ let printable_tuple2 :
           (fun uu___2 ->
              match uu___2 with
              | (x, y) ->
-                 Prims.strcat "("
-                   (Prims.strcat (to_string uu___ x)
-                      (Prims.strcat ", "
-                         (Prims.strcat (to_string uu___1 y) ")"))))
+                 Prims.op_Hat "("
+                   (Prims.op_Hat (to_string uu___ x)
+                      (Prims.op_Hat ", "
+                         (Prims.op_Hat (to_string uu___1 y) ")"))))
       }
 let printable_tuple3 :
   't0 't1 't2 .
@@ -102,12 +102,12 @@ let printable_tuple3 :
             (fun uu___3 ->
                match uu___3 with
                | (v0, v1, v2) ->
-                   Prims.strcat "("
-                     (Prims.strcat (to_string uu___ v0)
-                        (Prims.strcat ", "
-                           (Prims.strcat (to_string uu___1 v1)
-                              (Prims.strcat ", "
-                                 (Prims.strcat (to_string uu___2 v2) ")"))))))
+                   Prims.op_Hat "("
+                     (Prims.op_Hat (to_string uu___ v0)
+                        (Prims.op_Hat ", "
+                           (Prims.op_Hat (to_string uu___1 v1)
+                              (Prims.op_Hat ", "
+                                 (Prims.op_Hat (to_string uu___2 v2) ")"))))))
         }
 let printable_tuple4 :
   't0 't1 't2 't3 .
@@ -124,14 +124,14 @@ let printable_tuple4 :
               (fun uu___4 ->
                  match uu___4 with
                  | (v0, v1, v2, v3) ->
-                     Prims.strcat "("
-                       (Prims.strcat (to_string uu___ v0)
-                          (Prims.strcat ", "
-                             (Prims.strcat (to_string uu___1 v1)
-                                (Prims.strcat ", "
-                                   (Prims.strcat (to_string uu___2 v2)
-                                      (Prims.strcat ", "
-                                         (Prims.strcat (to_string uu___3 v3)
+                     Prims.op_Hat "("
+                       (Prims.op_Hat (to_string uu___ v0)
+                          (Prims.op_Hat ", "
+                             (Prims.op_Hat (to_string uu___1 v1)
+                                (Prims.op_Hat ", "
+                                   (Prims.op_Hat (to_string uu___2 v2)
+                                      (Prims.op_Hat ", "
+                                         (Prims.op_Hat (to_string uu___3 v3)
                                             ")"))))))))
           }
 let printable_tuple5 :
@@ -152,17 +152,17 @@ let printable_tuple5 :
                 (fun uu___5 ->
                    match uu___5 with
                    | (v0, v1, v2, v3, v4) ->
-                       Prims.strcat "("
-                         (Prims.strcat (to_string uu___ v0)
-                            (Prims.strcat ", "
-                               (Prims.strcat (to_string uu___1 v1)
-                                  (Prims.strcat ", "
-                                     (Prims.strcat (to_string uu___2 v2)
-                                        (Prims.strcat ", "
-                                           (Prims.strcat
+                       Prims.op_Hat "("
+                         (Prims.op_Hat (to_string uu___ v0)
+                            (Prims.op_Hat ", "
+                               (Prims.op_Hat (to_string uu___1 v1)
+                                  (Prims.op_Hat ", "
+                                     (Prims.op_Hat (to_string uu___2 v2)
+                                        (Prims.op_Hat ", "
+                                           (Prims.op_Hat
                                               (to_string uu___3 v3)
-                                              (Prims.strcat ", "
-                                                 (Prims.strcat
+                                              (Prims.op_Hat ", "
+                                                 (Prims.op_Hat
                                                     (to_string uu___4 v4) ")"))))))))))
             }
 let printable_tuple6 :
@@ -185,20 +185,20 @@ let printable_tuple6 :
                   (fun uu___6 ->
                      match uu___6 with
                      | (v0, v1, v2, v3, v4, v5) ->
-                         Prims.strcat "("
-                           (Prims.strcat (to_string uu___ v0)
-                              (Prims.strcat ", "
-                                 (Prims.strcat (to_string uu___1 v1)
-                                    (Prims.strcat ", "
-                                       (Prims.strcat (to_string uu___2 v2)
-                                          (Prims.strcat ", "
-                                             (Prims.strcat
+                         Prims.op_Hat "("
+                           (Prims.op_Hat (to_string uu___ v0)
+                              (Prims.op_Hat ", "
+                                 (Prims.op_Hat (to_string uu___1 v1)
+                                    (Prims.op_Hat ", "
+                                       (Prims.op_Hat (to_string uu___2 v2)
+                                          (Prims.op_Hat ", "
+                                             (Prims.op_Hat
                                                 (to_string uu___3 v3)
-                                                (Prims.strcat ", "
-                                                   (Prims.strcat
+                                                (Prims.op_Hat ", "
+                                                   (Prims.op_Hat
                                                       (to_string uu___4 v4)
-                                                      (Prims.strcat ", "
-                                                         (Prims.strcat
+                                                      (Prims.op_Hat ", "
+                                                         (Prims.op_Hat
                                                             (to_string uu___5
                                                                v5) ")"))))))))))))
               }
@@ -225,25 +225,25 @@ let printable_tuple7 :
                     (fun uu___7 ->
                        match uu___7 with
                        | (v0, v1, v2, v3, v4, v5, v6) ->
-                           Prims.strcat "("
-                             (Prims.strcat (to_string uu___ v0)
-                                (Prims.strcat ", "
-                                   (Prims.strcat (to_string uu___1 v1)
-                                      (Prims.strcat ", "
-                                         (Prims.strcat (to_string uu___2 v2)
-                                            (Prims.strcat ", "
-                                               (Prims.strcat
+                           Prims.op_Hat "("
+                             (Prims.op_Hat (to_string uu___ v0)
+                                (Prims.op_Hat ", "
+                                   (Prims.op_Hat (to_string uu___1 v1)
+                                      (Prims.op_Hat ", "
+                                         (Prims.op_Hat (to_string uu___2 v2)
+                                            (Prims.op_Hat ", "
+                                               (Prims.op_Hat
                                                   (to_string uu___3 v3)
-                                                  (Prims.strcat ", "
-                                                     (Prims.strcat
+                                                  (Prims.op_Hat ", "
+                                                     (Prims.op_Hat
                                                         (to_string uu___4 v4)
-                                                        (Prims.strcat ", "
-                                                           (Prims.strcat
+                                                        (Prims.op_Hat ", "
+                                                           (Prims.op_Hat
                                                               (to_string
                                                                  uu___5 v5)
-                                                              (Prims.strcat
+                                                              (Prims.op_Hat
                                                                  ", "
-                                                                 (Prims.strcat
+                                                                 (Prims.op_Hat
                                                                     (
                                                                     to_string
                                                                     uu___6 v6)
@@ -255,8 +255,8 @@ let printable_seq : 'b . 'b printable -> 'b FStar_Seq_Base.seq printable =
       to_string =
         (fun s ->
            let strings_of_b = FStar_Seq_Properties.map_seq (to_string x) s in
-           Prims.strcat "<"
-             (Prims.strcat
+           Prims.op_Hat "<"
+             (Prims.op_Hat
                 (FStar_String.concat "; "
                    (FStar_Seq_Properties.seq_to_list strings_of_b)) ">"))
     }

@@ -1380,6 +1380,15 @@ let topological_dependences_of
     let widened, dep_graph = phase1 file_system_map dep_graph interfaces_needing_inlining for_extraction in
     topological_dependences_of' file_system_map dep_graph interfaces_needing_inlining root_files widened
 
+let all_files_in_include_paths () =
+  let paths = Options.include_path () in
+  List.collect
+    (fun path -> 
+      let files = FStar.Compiler.Util.readdir path in
+      let files = List.filter (fun f -> Util.ends_with f ".fst" || Util.ends_with f ".fsti") files in
+      List.map (fun file -> Util.join_paths path file) files)
+    paths
+
 (** Collect the dependencies for a list of given files.
     And record the entire dependence graph in the memoized state above **)
 (*
@@ -1392,7 +1401,11 @@ let collect (all_cmd_line_files: list file_name)
     : list file_name
     * deps //topologically sorted transitive dependences of all_cmd_line_files
     =
-
+  let all_cmd_line_files =
+    match all_cmd_line_files with
+    | [] -> all_files_in_include_paths ()
+    | _ -> all_cmd_line_files
+  in
   let all_cmd_line_files =
       all_cmd_line_files |> List.map (fun fn ->
         match FStar.Options.find_file fn with

@@ -2053,6 +2053,20 @@ let (topological_dependences_of :
             | (widened, dep_graph1) ->
                 topological_dependences_of' file_system_map dep_graph1
                   interfaces_needing_inlining root_files widened
+let (all_files_in_include_paths : unit -> Prims.string Prims.list) =
+  fun uu___ ->
+    let paths = FStar_Options.include_path () in
+    FStar_Compiler_List.collect
+      (fun path ->
+         let files = FStar_Compiler_Util.readdir path in
+         let files1 =
+           FStar_Compiler_List.filter
+             (fun f ->
+                (FStar_Compiler_Util.ends_with f ".fst") ||
+                  (FStar_Compiler_Util.ends_with f ".fsti")) files in
+         FStar_Compiler_List.map
+           (fun file -> FStar_Compiler_Util.join_paths path file) files1)
+      paths
 let (collect :
   Prims.string Prims.list ->
     (Prims.string -> parsing_data FStar_Pervasives_Native.option) ->
@@ -2061,7 +2075,11 @@ let (collect :
   fun all_cmd_line_files ->
     fun get_parsing_data_from_cache ->
       let all_cmd_line_files1 =
-        FStar_Compiler_Effect.op_Bar_Greater all_cmd_line_files
+        match all_cmd_line_files with
+        | [] -> all_files_in_include_paths ()
+        | uu___ -> all_cmd_line_files in
+      let all_cmd_line_files2 =
+        FStar_Compiler_Effect.op_Bar_Greater all_cmd_line_files1
           (FStar_Compiler_List.map
              (fun fn ->
                 let uu___ = FStar_Options.find_file fn in
@@ -2075,7 +2093,7 @@ let (collect :
                     FStar_Errors.raise_err uu___1
                 | FStar_Pervasives_Native.Some fn1 -> fn1)) in
       let dep_graph = deps_empty () in
-      let file_system_map = build_map all_cmd_line_files1 in
+      let file_system_map = build_map all_cmd_line_files2 in
       let interfaces_needing_inlining = FStar_Compiler_Util.mk_ref [] in
       let add_interface_for_inlining l =
         let l1 = lowercase_module_name l in
@@ -2130,13 +2148,13 @@ let (collect :
                 deps_add_dep dep_graph file_name1 dep_node1;
                 (let uu___5 =
                    FStar_Compiler_List.map
-                     (file_of_dep file_system_map all_cmd_line_files1)
+                     (file_of_dep file_system_map all_cmd_line_files2)
                      (FStar_Compiler_List.op_At deps2 mo_roots) in
                  FStar_Compiler_List.iter discover_one uu___5)))
         else () in
       profile
         (fun uu___1 ->
-           FStar_Compiler_List.iter discover_one all_cmd_line_files1)
+           FStar_Compiler_List.iter discover_one all_cmd_line_files2)
         "FStar.Parser.Dep.discover";
       (let cycle_detected dep_graph1 cycle filename =
          FStar_Compiler_Util.print1
@@ -2224,8 +2242,8 @@ let (collect :
          FStar_Compiler_List.iter (aux []) all_command_line_files;
          (let uu___2 = FStar_Compiler_Effect.op_Bang mo_files in
           FStar_Compiler_List.iter (aux []) uu___2) in
-       full_cycle_detection all_cmd_line_files1 file_system_map;
-       FStar_Compiler_Effect.op_Bar_Greater all_cmd_line_files1
+       full_cycle_detection all_cmd_line_files2 file_system_map;
+       FStar_Compiler_Effect.op_Bar_Greater all_cmd_line_files2
          (FStar_Compiler_List.iter
             (fun f ->
                let m = lowercase_module_name f in
@@ -2239,7 +2257,7 @@ let (collect :
                  let uu___6 = FStar_Options.codegen () in
                  uu___6 <> FStar_Pervasives_Native.None in
                topological_dependences_of file_system_map dep_graph
-                 inlining_ifaces all_cmd_line_files1 uu___5)
+                 inlining_ifaces all_cmd_line_files2 uu___5)
             "FStar.Parser.Dep.topological_dependences_of" in
         match uu___3 with
         | (all_files, uu___4) ->
@@ -2253,7 +2271,7 @@ let (collect :
                   (FStar_Compiler_String.concat ", " inlining_ifaces)
               else ());
              (all_files,
-               (mk_deps dep_graph file_system_map all_cmd_line_files1
+               (mk_deps dep_graph file_system_map all_cmd_line_files2
                   all_files inlining_ifaces parse_results)))))
 let (deps_of : deps -> Prims.string -> Prims.string Prims.list) =
   fun deps1 ->

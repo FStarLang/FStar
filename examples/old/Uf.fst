@@ -28,7 +28,8 @@ open FStar.MarkovsPrinciple
 
 (** TODO : Prove that forall u1 u2 : ufh a h. u1.parent = u2.parent ==> u1 = u2  using reification *)
 
-type uf (a : Type) : Type = { content:a ; parent:ref (option (uf a)) }
+noeq
+type uf (a : Type0) : Type0 = { content:a ; parent:ref (option (uf a)) }
 
 
 let rec p (a:Type) (h:heap) (u: uf a) (n:nat) : GTot bool (decreases n) =
@@ -51,7 +52,7 @@ let markov_from_funcaccessible (#a:eqtype) (h:heap) (u: uf a) (w:funcaccessible 
     match sel h v.parent with | None -> 0 | Some v -> witness v w.next + 1
   in
   let n0 = witness u w in
-  let aux0 (f : forall n. ~(p a h u n)) : Lemma False = give_witness f ; assert (~(p a h u n0)) ; assert (False) in
+  let aux0 (f : (forall n. ~(p a h u n))) : Lemma False = give_witness f ; assert (~(p a h u n0)) ; assert (False) in
   not_intro aux0 ; get_proof (~(forall n. ~(p a h u n)))
 
 let reprfun (a:eqtype) (h:heap) = f:(uf a -> GTot (uf a)){

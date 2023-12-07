@@ -75,7 +75,7 @@ type lbytes (l:nat) = b:bytes{length b = l}
 
 (*@ val empty_bytes : (b:bytes){B (b) = C_array_of_list C_op_Nil ()} @*)
 val empty_bytes : lbytes 0
-let empty_bytes = Seq.create 0 0uy
+let empty_bytes = Seq.empty #byte
 
 (*@ assume val abytes : (b:cbytes -> (a:bytes){B (a) = b}) @*)
 assume val abytes : (cbytes -> Tot bytes)
@@ -147,7 +147,7 @@ val lemma_append_inj: s1:bytes -> s2:bytes -> t1:bytes -> t2:bytes {Seq.length s
         (ensures (Seq.equal s1 t1 /\ Seq.equal s2 t2))
 let lemma_append_inj s1 s2 t1 t2 = admit() (* CH: this used to fail *)
 
-let append_empty_bytes_l (l: bytes): Lemma (ensures (empty_bytes @| l == l)) =
+let append_empty_bytes_l (l: bytes): Lemma (ensures ((empty_bytes @| l) == l)) =
   Seq.append_empty_l l
 
 let append_empty_bytes_r (l: bytes): Lemma (ensures (l @| empty_bytes == l)) =

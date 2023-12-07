@@ -209,7 +209,7 @@ let rec (univ_cmp : FStar_Reflection_Types.universe comparator_for) =
           Obj.magic (Obj.repr Unknown)
       | (FStar_Reflection_V2_Data.Uv_Unk, FStar_Reflection_V2_Data.Uv_Unk) ->
           Obj.magic (Obj.repr Eq)
-      | uu___ -> Obj.magic (Obj.repr Neq)
+      | uu___2 -> Obj.magic (Obj.repr Neq)
 let (const_cmp : FStar_Reflection_V2_Data.vconst comparator_for) =
   fun c1 ->
     fun c2 ->
@@ -242,9 +242,9 @@ let rec (term_cmp : FStar_Reflection_Types.term comparator_for) =
       let tv1 = FStar_Reflection_V2_Builtins.inspect_ln t1 in
       let tv2 = FStar_Reflection_V2_Builtins.inspect_ln t2 in
       match (tv1, tv2) with
-      | (FStar_Reflection_V2_Data.Tv_Unsupp, uu___) ->
+      | (FStar_Reflection_V2_Data.Tv_Unsupp, uu___2) ->
           Obj.magic (Obj.repr Unknown)
-      | (uu___, FStar_Reflection_V2_Data.Tv_Unsupp) ->
+      | (uu___2, FStar_Reflection_V2_Data.Tv_Unsupp) ->
           Obj.magic (Obj.repr Unknown)
       | (FStar_Reflection_V2_Data.Tv_Var v1, FStar_Reflection_V2_Data.Tv_Var
          v2) -> Obj.magic (Obj.repr (namedv_cmp v1 v2))
@@ -339,7 +339,7 @@ let rec (term_cmp : FStar_Reflection_Types.term comparator_for) =
                   (eq_cmp eq1 eq2)))
       | (FStar_Reflection_V2_Data.Tv_Unknown,
          FStar_Reflection_V2_Data.Tv_Unknown) -> Obj.magic (Obj.repr Eq)
-      | uu___ -> Obj.magic (Obj.repr Neq)
+      | uu___2 -> Obj.magic (Obj.repr Neq)
 and (arg_cmp : FStar_Reflection_V2_Data.argv comparator_for) =
   fun uu___ ->
     fun uu___1 ->
@@ -431,7 +431,7 @@ and (comp_cmp : FStar_Reflection_Types.comp comparator_for) =
                            (eq_cmp ef1 ef2)) (term_cmp t1 t2))
                      (list_dec_cmp c1 c2 arg_cmp args1 args2))
                   (list_dec_cmp c1 c2 term_cmp dec1 dec2)))
-      | uu___ -> Obj.magic (Obj.repr Neq)
+      | uu___2 -> Obj.magic (Obj.repr Neq)
 and (br_cmp : FStar_Reflection_V2_Data.branch comparator_for) =
   fun br1 ->
     fun br2 ->
