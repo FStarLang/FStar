@@ -28,7 +28,6 @@ open FStar.Reflection.V2
 open FStar.List
 
 // --using_facts_from '* -FStar.Tactics -FStar.Reflection'
-#reset-options "--__temp_fast_implicits"
 
 let memory_cm : cm memory =
   CM emp (<*>) (fun x -> lemma_sep_unit' x) (fun x y z -> ()) (fun x y -> ())
