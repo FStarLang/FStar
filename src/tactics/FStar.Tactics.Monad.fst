@@ -52,7 +52,7 @@ let is_goal_safe_as_well_typed (g:goal) =
       List.for_all 
           (fun uv -> 
             match UF.find uv.ctx_uvar_head with
-            | Some t -> BU.set_is_empty (FStar.Syntax.Free.uvars t)
+            | Some t -> Set.is_empty (FStar.Syntax.Free.uvars t)
             | _ -> false)
           (U.ctx_uvar_typedness_deps uv)
   in

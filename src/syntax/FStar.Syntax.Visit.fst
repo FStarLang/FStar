@@ -420,11 +420,16 @@ let rec on_sub_sigelt' vfs (se : sigelt') : sigelt' =
                              typ=(us_ty, ty);
                              kind=k}
 
-  | Sig_fail _
-  | Sig_splice _ ->
-    failwith "Sig_fail and Sig_splice not supported in visit"
+  (* These two below are hardly used, since they disappear after
+  typechecking, but are still useful so the desugarer can make use of
+  deep_compress_se. *)
+  | Sig_fail {errs; fail_in_lax; ses} ->
+    Sig_fail {errs; fail_in_lax; ses=map (on_sub_sigelt vfs) ses}
 
-  | _ -> failwith "sorry"
+  | Sig_splice {is_typed; lids; tac} ->
+    Sig_splice {is_typed; lids; tac=(f_term vfs) tac}
+
+  | _ -> failwith "on_sub_sigelt: missing case"
 
 and on_sub_sigelt vfs (se : sigelt) : sigelt =
   {

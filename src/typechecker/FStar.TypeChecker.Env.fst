@@ -1181,7 +1181,7 @@ let all_binders env = binders_of_bindings env.gamma
 let bound_vars env = bound_vars_of_bindings env.gamma
 
 instance hasBinders_env : hasBinders env = {
-  boundNames = (fun e -> BU.as_set (bound_vars e) Syntax.order_bv);
+  boundNames = (fun e -> Set.from_list (bound_vars e) );
 }
 
 instance hasNames_lcomp : hasNames lcomp = {
@@ -1194,7 +1194,7 @@ instance pretty_lcomp : pretty lcomp = {
 
 instance hasNames_guard : hasNames guard_t = {
   freeNames = (fun g -> match g.guard_f with
-                        | Trivial -> new_set Syntax.order_bv
+                        | Trivial -> Set.empty ()
                         | NonTrivial f -> freeNames f);
 }
 
@@ -1686,7 +1686,7 @@ let finish_module =
 ////////////////////////////////////////////////////////////
 let uvars_in_env env =
   let no_uvs = Free.new_uv_set () in
-  let ext out uvs = BU.set_union out uvs in
+  let ext out uvs = Set.union out uvs in
   let rec aux out g = match g with
     | [] -> out
     | Binding_univ _ :: tl -> aux out tl
@@ -1697,7 +1697,7 @@ let uvars_in_env env =
 
 let univ_vars env =
     let no_univs = Free.new_universe_uvar_set () in
-    let ext out uvs = BU.set_union out uvs in
+    let ext out uvs = Set.union out uvs in
     let rec aux out g = match g with
       | [] -> out
       | Binding_univ _ :: tl -> aux out tl
@@ -1708,10 +1708,10 @@ let univ_vars env =
 
 let univnames env =
     let no_univ_names = Syntax.no_universe_names in
-    let ext out uvs = BU.set_union out uvs in
+    let ext out uvs = Set.union out uvs in
     let rec aux out g = match g with
         | [] -> out
-        | Binding_univ uname :: tl -> aux (BU.set_add uname out) tl
+        | Binding_univ uname :: tl -> aux (Set.add uname out) tl
         | Binding_lid(_, (_, t))::tl
         | Binding_var({sort=t})::tl -> aux (ext out (Free.univnames t)) tl
     in
@@ -1750,15 +1750,15 @@ let rem_proof_ns e path = cons_proof_ns false e path
 let get_proof_ns e = e.proof_ns
 let set_proof_ns ns e = {e with proof_ns = ns}
 
-let unbound_vars (e : env) (t : term) : BU.set bv =
+let unbound_vars (e : env) (t : term) : Set.t bv =
     // FV(t) \ Vars(Γ)
-    List.fold_left (fun s bv -> BU.set_remove bv s) (Free.names t) (bound_vars e)
+    List.fold_left (fun s bv -> Set.remove bv s) (Free.names t) (bound_vars e)
 
 let closed (e : env) (t : term) =
-    BU.set_is_empty (unbound_vars e t)
+    Set.is_empty (unbound_vars e t)
 
 let closed' (t : term) =
-    BU.set_is_empty (Free.names t)
+    Set.is_empty (Free.names t)
 
 let string_of_proof_ns env =
     let aux (p,b) =

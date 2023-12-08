@@ -918,7 +918,8 @@ let (force_thunk : fvar_binding -> FStar_SMTEncoding_Term.term) =
     then failwith "Forcing a non-thunk in the SMT encoding"
     else ();
     FStar_Compiler_Effect.op_Less_Bar FStar_SMTEncoding_Util.mkFreeV
-      ((fvb.smt_id), FStar_SMTEncoding_Term.Term_sort, true)
+      (FStar_SMTEncoding_Term.FV
+         ((fvb.smt_id), FStar_SMTEncoding_Term.Term_sort, true))
 let (try_lookup_free_var :
   env_t ->
     FStar_Ident.lident ->

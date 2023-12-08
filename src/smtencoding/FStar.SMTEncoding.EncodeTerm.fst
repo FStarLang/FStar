@@ -221,8 +221,8 @@ let check_pattern_vars env vars pats =
     match pats with
     | [] -> ()
     | hd::tl ->
-        let pat_vars = List.fold_left (fun out x -> BU.set_union out (Free.names x)) (Free.names hd) tl in
-        match vars |> BU.find_opt (fun ({binder_bv=b}) -> not(BU.set_mem b pat_vars)) with
+        let pat_vars = List.fold_left (fun out x -> Set.union out (Free.names x)) (Free.names hd) tl in
+        match vars |> BU.find_opt (fun ({binder_bv=b}) -> not(Set.mem b pat_vars)) with
         | None -> ()
         | Some ({binder_bv=x}) ->
         let pos = List.fold_left (fun out t -> Range.union_ranges out t.pos) hd.pos tl in
@@ -819,7 +819,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              issue #3028 *)
              let env0 = env in
              let fstar_fvs, (env, fv_decls, fv_vars, fv_tms, fv_guards) =
-               let fvs = Free.names t0 |> BU.set_elements in
+               let fvs = Free.names t0 |> Set.elems in
 
                let getfreeV (t:term) : fv =
                  match t.tm with
@@ -1188,7 +1188,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               (* We need to compute all free variables of this lambda
               expression and parametrize the encoding wrt to them. See
               issue #3028 *)
-              let fvs = Free.names t0 |> BU.set_elements in
+              let fvs = Free.names t0 |> Set.elems in
               let tms = List.map (lookup_term_var env) fvs in
               (List.map (fun _ -> Term_sort) fvs <: list sort),
               tms

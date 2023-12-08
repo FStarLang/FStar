@@ -39,12 +39,12 @@ module N     = FStar.TypeChecker.Normalize
 (* Generalizing types *)
 (**************************************************************************************)
 let string_of_univs univs =
-  BU.set_elements univs
+  Set.elems univs
   |> List.map (fun u -> UF.univ_uvar_id u |> string_of_int) |> String.concat ", "
 
-let gen_univs env (x:BU.set universe_uvar) : list univ_name =
-    if BU.set_is_empty x then []
-    else let s = BU.set_difference x (Env.univ_vars env) |> BU.set_elements in
+let gen_univs env (x:Set.t universe_uvar) : list univ_name =
+    if Set.is_empty x then []
+    else let s = Set.diff x (Env.univ_vars env) |> Set.elems in
          if Env.debug env <| Options.Other "Gen" then
          BU.print1 "univ_vars in env: %s\n" (string_of_univs (Env.univ_vars env));
          let r = Some (Env.get_range env) in
@@ -59,10 +59,10 @@ let gen_univs env (x:BU.set universe_uvar) : list univ_name =
             u_name) in
          u_names
 
-let gather_free_univnames env t : BU.set univ_name =
+let gather_free_univnames env t : Set.t univ_name =
     let ctx_univnames = Env.univnames env in
     let tm_univnames = Free.univnames t in
-    let univnames = BU.set_difference tm_univnames ctx_univnames in
+    let univnames = Set.diff tm_univnames ctx_univnames in
     // BU.print4 "Closing universe variables in term %s : %s in ctx, %s in tm, %s globally\n"
     //     (Print.term_to_string t)
     //     (Common.string_of_set Ident.string_of_id ctx_univnames)
@@ -85,7 +85,7 @@ let check_universe_generalization
 let generalize_universes (env:env) (t0:term) : tscheme =
   Errors.with_ctx "While generalizing universes" (fun () ->
     let t = N.normalize [Env.NoFullNorm; Env.Beta; Env.DoNotUnfoldPureLets] env t0 in
-    let univnames = BU.set_elements (gather_free_univnames env t) in
+    let univnames = Set.elems (gather_free_univnames env t) in
     if Env.debug env <| Options.Other "Gen"
     then BU.print2 "generalizing universes in the term (post norm): %s with univnames: %s\n" (Print.term_to_string t) (Print.univ_names_to_string univnames);
     let univs = Free.univs t in
@@ -112,7 +112,7 @@ let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbn
             BU.print1 "Normalized to:\n\t %s\n" (Print.comp_to_string c);
          c in
      let env_uvars = Env.uvars_in_env env in
-     let gen_uvars uvs = BU.set_difference uvs env_uvars |> BU.set_elements in
+     let gen_uvars uvs = Set.diff uvs env_uvars |> Set.elems in
      let univs_and_uvars_of_lec (lbname, e, c) =
           let c = norm c in
           let t = U.comp_result c in
@@ -120,19 +120,19 @@ let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbn
           let uvt = Free.uvars t in
           if Env.debug env <| Options.Other "Gen"
           then BU.print2 "^^^^\n\tFree univs = %s\n\tFree uvt=%s\n"
-                (BU.set_elements univs |> List.map (fun u -> Print.univ_to_string (U_unif u)) |> String.concat ", ")
-                (BU.set_elements uvt |> List.map (fun u -> BU.format2 "(%s : %s)"
+                (Set.elems univs |> List.map (fun u -> Print.univ_to_string (U_unif u)) |> String.concat ", ")
+                (Set.elems uvt |> List.map (fun u -> BU.format2 "(%s : %s)"
                                                                     (Print.uvar_to_string u.ctx_uvar_head)
                                                                     (Print.term_to_string (U.ctx_uvar_typ u))) |> String.concat ", ");
           let univs =
             List.fold_left
-              (fun univs uv -> BU.set_union univs (Free.univs (U.ctx_uvar_typ uv)))
+              (fun univs uv -> Set.union univs (Free.univs (U.ctx_uvar_typ uv)))
               univs
-             (BU.set_elements uvt) in
+             (Set.elems uvt) in
           let uvs = gen_uvars uvt in
           if Env.debug env <| Options.Other "Gen"
           then BU.print2 "^^^^\n\tFree univs = %s\n\tgen_uvars =%s"
-                (BU.set_elements univs |> List.map (fun u -> Print.univ_to_string (U_unif u)) |> String.concat ", ")
+                (Set.elems univs |> List.map (fun u -> Print.univ_to_string (U_unif u)) |> String.concat ", ")
                 (uvs |> List.map (fun u -> BU.format2 "(%s : %s)"
                                                         (Print.uvar_to_string u.ctx_uvar_head)
                                                         (N.term_to_string env (U.ctx_uvar_typ u))) |> String.concat ", ");
@@ -141,8 +141,8 @@ let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbn
      in
      let univs, uvs, lec_hd = univs_and_uvars_of_lec (List.hd lecs) in
      let force_univs_eq lec2 u1 u2 =
-        if BU.set_is_subset_of u1 u2
-        && BU.set_is_subset_of u2 u1
+        if Set.subset u1 u2
+        && Set.subset u2 u1
         then ()
         else let lb1, _, _ = lec_hd in
              let lb2, _, _ = lec2 in
@@ -200,7 +200,7 @@ let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbn
            match (U.unrefine (N.unfold_whnf env kres)).n with
            | Tm_type _ ->
               let free = FStar.Syntax.Free.names kres in
-              if not (BU.set_is_empty free) then
+              if not (Set.is_empty free) then
                 []
               else
               let a = S.new_bv (Some <| Env.get_range env) kres in
@@ -266,14 +266,14 @@ let generalize' env (is_rec:bool) (lecs:list (lbname*term*comp)) : (list (lbname
   then BU.print1 "Generalizing: %s\n"
        (List.map (fun (lb, _, _) -> Print.lbname_to_string lb) lecs |> String.concat ", ");
   let univnames_lecs = 
-    let empty = BU.as_set [] order_univ_name in
+    let empty = Set.from_list [] in
     List.fold_left
       (fun out (l, t, c) -> 
-          BU.set_union out (gather_free_univnames env t))
+          Set.union out (gather_free_univnames env t))
       empty
       lecs
   in
-  let univnames_lecs = BU.set_elements univnames_lecs in
+  let univnames_lecs = Set.elems univnames_lecs in
   let generalized_lecs =
       match gen env is_rec lecs with
           | None -> lecs |> List.map (fun (l,t,c) -> l,[],t,c,[])

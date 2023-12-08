@@ -175,7 +175,7 @@ let dump_all (print_resolved:bool) (msg:string) : tac unit =
 
 let dump_uvars_of (g:goal) (msg:string) : tac unit =
   mk_tac (fun ps ->
-    let uvs = SF.uvars (goal_type g) |> BU.set_elements in
+    let uvs = SF.uvars (goal_type g) |> Set.elems in
     let gs = List.map (goal_of_ctx_uvar g) uvs in
     let gs = List.filter (fun g -> not (check_goal_solved g)) gs in
     let ps' = { ps with smt_goals = [] ; goals = gs } in
@@ -375,8 +375,8 @@ let __do_unify_wflags
        | Check_none -> Free.new_uv_set ()
        | Check_left_only -> Free.uvars t1
        | Check_right_only -> Free.uvars t2
-       | Check_both -> BU.set_union (Free.uvars t1) (Free.uvars t2))
-      |> BU.set_elements in
+       | Check_both -> Set.union (Free.uvars t1) (Free.uvars t2))
+      |> Set.elems in
 
     match!
       catch (//restore UF graph in case anything fails
@@ -465,7 +465,7 @@ let do_match (must_tot:bool) (env:Env.env) (t1:term) (t2:term) : tac bool =
     bind (do_unify_aux must_tot Check_right_only env t1 t2) (fun r ->
     if r then begin
         let uvs2 = SF.uvars_uncached t1 in
-        if not (set_eq uvs1 uvs2)
+        if not (Set.equal uvs1 uvs2)
         then (UF.rollback tx; ret false)
         else ret true
     end
@@ -486,7 +486,7 @@ let do_match_on_lhs (must_tot:bool) (env:Env.env) (t1:term) (t2:term) : tac bool
     bind (do_unify_aux must_tot Check_right_only env t1 t2) (fun r ->
     if r then begin
         let uvs2 = SF.uvars_uncached lhs in
-        if not (set_eq uvs1 uvs2)
+        if not (Set.equal uvs1 uvs2)
         then (UF.rollback tx; ret false)
         else ret true
     end
@@ -976,11 +976,11 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : t
     let w = List.fold_right (fun (uvt, q, _) w -> U.mk_app w [(uvt, q)]) uvs tm in
     let uvset =
       List.fold_right
-        (fun (_, _, uv) s -> BU.set_union s (SF.uvars (U.ctx_uvar_typ uv)))
+        (fun (_, _, uv) s -> Set.union s (SF.uvars (U.ctx_uvar_typ uv)))
         uvs
         (SF.new_uv_set ())
     in
-    let free_in_some_goal uv = BU.set_mem uv uvset in
+    let free_in_some_goal uv = Set.mem uv uvset in
     solve' goal w ;!
     //
     //process uvs
@@ -1094,7 +1094,7 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
         let goal_sc = should_check_goal_uvar goal in
         solve' goal U.exp_unit ;!
         let is_free_uvar uv t =
-            let free_uvars = List.map (fun x -> x.ctx_uvar_head) (BU.set_elements (SF.uvars t)) in
+            let free_uvars = List.map (fun x -> x.ctx_uvar_head) (Set.elems (SF.uvars t)) in
             List.existsML (fun u -> UF.equiv u uv) free_uvars
         in
         let appears uv goals = List.existsML (fun g' -> is_free_uvar uv (goal_type g')) goals in
@@ -1290,7 +1290,7 @@ let revert () : tac unit =
       let g = mk_goal env' u_r goal.opts goal.is_guard goal.label in
       replace_cur g
 
-let free_in bv t = Util.set_mem bv (SF.names t)
+let free_in bv t = Set.mem bv (SF.names t)
 
 let clear (b : binder) : tac unit =
     let bv = b.binder_bv in
@@ -1383,7 +1383,7 @@ let _t_trefl (allow_guards:bool) (l : term) (r : term) : tac unit =
         | Inl (u, _, _) -> is_uvar_untyped_or_already_checked u
       in
       let t = U.ctx_uvar_typ g.goal_ctx_uvar in
-      let uvars = BU.set_elements (FStar.Syntax.Free.uvars t) in
+      let uvars = Set.elems (FStar.Syntax.Free.uvars t) in
       if BU.for_all is_uvar_untyped_or_already_checked uvars
       then skip_register //all the uvars are already checked or untyped
       else (
@@ -2281,7 +2281,7 @@ let t_smt_sync (vcfg : vconfig) : tac unit = wrap_err "t_smt_sync" <| (
 
 let free_uvars (tm : term) : tac (list Z.t)
   = idtac ;!
-    let uvs = Syntax.Free.uvars_uncached tm |> BU.set_elements |> List.map (fun u -> Z.of_int_fs (UF.uvar_id u.ctx_uvar_head)) in
+    let uvs = Syntax.Free.uvars_uncached tm |> Set.elems |> List.map (fun u -> Z.of_int_fs (UF.uvar_id u.ctx_uvar_head)) in
     ret uvs
 
 (***** Builtins used in the meta DSL framework *****)
@@ -2311,8 +2311,8 @@ let refl_typing_builtin_wrapper (f:unit -> 'a) : tac (option 'a & issues) =
   else ret (r, errs)
 
 let no_uvars_in_term (t:term) : bool =
-  t |> Free.uvars |> BU.set_is_empty &&
-  t |> Free.univs |> BU.set_is_empty
+  t |> Free.uvars |> Set.is_empty &&
+  t |> Free.univs |> Set.is_empty
 
 let no_uvars_in_g (g:env) : bool =
   g.gamma |> BU.for_all (function

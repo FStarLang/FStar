@@ -4659,7 +4659,7 @@ let (hasBinders_env : env FStar_Class_Binders.hasBinders) =
     FStar_Class_Binders.boundNames =
       (fun e ->
          let uu___ = bound_vars e in
-         FStar_Compiler_Util.as_set uu___ FStar_Syntax_Syntax.order_bv)
+         FStar_Compiler_Set.from_list FStar_Syntax_Syntax.ord_bv uu___)
   }
 let (hasNames_lcomp :
   FStar_TypeChecker_Common.lcomp FStar_Class_Binders.hasNames) =
@@ -4680,7 +4680,7 @@ let (hasNames_guard : guard_t FStar_Class_Binders.hasNames) =
       (fun g ->
          match g.FStar_TypeChecker_Common.guard_f with
          | FStar_TypeChecker_Common.Trivial ->
-             FStar_Compiler_Util.new_set FStar_Syntax_Syntax.order_bv
+             FStar_Compiler_Set.empty FStar_Syntax_Syntax.ord_bv ()
          | FStar_TypeChecker_Common.NonTrivial f ->
              FStar_Class_Binders.freeNames FStar_Class_Binders.hasNames_term
                f)
@@ -6186,7 +6186,8 @@ let (finish_module : env -> FStar_Syntax_Syntax.modul -> env) =
 let (uvars_in_env : env -> FStar_Syntax_Syntax.uvars) =
   fun env1 ->
     let no_uvs = FStar_Syntax_Free.new_uv_set () in
-    let ext out uvs = FStar_Compiler_Util.set_union out uvs in
+    let ext out uvs =
+      FStar_Compiler_Set.union FStar_Syntax_Free.ord_ctx_uvar out uvs in
     let rec aux out g =
       match g with
       | [] -> out
@@ -6205,10 +6206,11 @@ let (uvars_in_env : env -> FStar_Syntax_Syntax.uvars) =
           aux uu___2 tl in
     aux no_uvs env1.gamma
 let (univ_vars :
-  env -> FStar_Syntax_Syntax.universe_uvar FStar_Compiler_Util.set) =
+  env -> FStar_Syntax_Syntax.universe_uvar FStar_Compiler_Set.set) =
   fun env1 ->
     let no_univs = FStar_Syntax_Free.new_universe_uvar_set () in
-    let ext out uvs = FStar_Compiler_Util.set_union out uvs in
+    let ext out uvs =
+      FStar_Compiler_Set.union FStar_Syntax_Free.ord_univ_uvar out uvs in
     let rec aux out g =
       match g with
       | [] -> out
@@ -6226,16 +6228,19 @@ let (univ_vars :
             let uu___3 = FStar_Syntax_Free.univs t in ext out uu___3 in
           aux uu___2 tl in
     aux no_univs env1.gamma
-let (univnames :
-  env -> FStar_Syntax_Syntax.univ_name FStar_Compiler_Util.set) =
+let (univnames : env -> FStar_Syntax_Syntax.univ_name FStar_Compiler_Set.set)
+  =
   fun env1 ->
     let no_univ_names = FStar_Syntax_Syntax.no_universe_names in
-    let ext out uvs = FStar_Compiler_Util.set_union out uvs in
+    let ext out uvs =
+      FStar_Compiler_Set.union FStar_Syntax_Syntax.ord_ident out uvs in
     let rec aux out g =
       match g with
       | [] -> out
       | (FStar_Syntax_Syntax.Binding_univ uname)::tl ->
-          let uu___ = FStar_Compiler_Util.set_add uname out in aux uu___ tl
+          let uu___ =
+            FStar_Compiler_Set.add FStar_Syntax_Syntax.ord_ident uname out in
+          aux uu___ tl
       | (FStar_Syntax_Syntax.Binding_lid (uu___, (uu___1, t)))::tl ->
           let uu___2 =
             let uu___3 = FStar_Syntax_Free.univnames t in ext out uu___3 in
@@ -6416,23 +6421,26 @@ let (set_proof_ns : proof_namespace -> env -> env) =
       }
 let (unbound_vars :
   env ->
-    FStar_Syntax_Syntax.term ->
-      FStar_Syntax_Syntax.bv FStar_Compiler_Util.set)
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.bv FStar_Compiler_Set.set)
   =
   fun e ->
     fun t ->
       let uu___ = FStar_Syntax_Free.names t in
       let uu___1 = bound_vars e in
       FStar_Compiler_List.fold_left
-        (fun s -> fun bv -> FStar_Compiler_Util.set_remove bv s) uu___ uu___1
+        (fun s ->
+           fun bv ->
+             FStar_Compiler_Set.remove FStar_Syntax_Syntax.ord_bv bv s) uu___
+        uu___1
 let (closed : env -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun e ->
     fun t ->
-      let uu___ = unbound_vars e t in FStar_Compiler_Util.set_is_empty uu___
+      let uu___ = unbound_vars e t in
+      FStar_Compiler_Set.is_empty FStar_Syntax_Syntax.ord_bv uu___
 let (closed' : FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t ->
     let uu___ = FStar_Syntax_Free.names t in
-    FStar_Compiler_Util.set_is_empty uu___
+    FStar_Compiler_Set.is_empty FStar_Syntax_Syntax.ord_bv uu___
 let (string_of_proof_ns : env -> Prims.string) =
   fun env1 ->
     let aux uu___ =

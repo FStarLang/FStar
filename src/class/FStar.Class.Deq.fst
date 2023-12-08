@@ -16,6 +16,10 @@ instance deq_unit : deq unit = {
    (=?) = (fun x y -> true);
 }
 
+instance deq_string : deq string = {
+   (=?) = (fun x y -> x = y);
+}
+
 instance deq_option #a (_ : deq a) : Tot (deq (option a)) = {
    (=?) = (fun x y -> match x, y with
            | None, None -> true

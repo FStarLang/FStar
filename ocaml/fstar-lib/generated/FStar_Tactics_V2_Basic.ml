@@ -245,7 +245,7 @@ let (dump_uvars_of :
                let uu___1 = FStar_Tactics_Types.goal_type g in
                FStar_Syntax_Free.uvars uu___1 in
              FStar_Compiler_Effect.op_Bar_Greater uu___
-               FStar_Compiler_Util.set_elements in
+               (FStar_Compiler_Set.elems FStar_Syntax_Free.ord_ctx_uvar) in
            let gs =
              FStar_Compiler_List.map (FStar_Tactics_Types.goal_of_ctx_uvar g)
                uvs in
@@ -890,9 +890,10 @@ let (__do_unify_wflags :
                      | Check_both ->
                          let uu___2 = FStar_Syntax_Free.uvars t1 in
                          let uu___3 = FStar_Syntax_Free.uvars t2 in
-                         FStar_Compiler_Util.set_union uu___2 uu___3 in
+                         FStar_Compiler_Set.union
+                           FStar_Syntax_Free.ord_ctx_uvar uu___2 uu___3 in
                    FStar_Compiler_Effect.op_Bar_Greater uu___1
-                     FStar_Compiler_Util.set_elements in
+                     (FStar_Compiler_Set.elems FStar_Syntax_Free.ord_ctx_uvar) in
                  let uu___1 =
                    let uu___2 =
                      let uu___3 =
@@ -1095,7 +1096,9 @@ let (do_match :
                     then
                       let uvs2 = FStar_Syntax_Free.uvars_uncached t1 in
                       let uu___2 =
-                        let uu___3 = FStar_Compiler_Util.set_eq uvs1 uvs2 in
+                        let uu___3 =
+                          FStar_Compiler_Set.equal
+                            FStar_Syntax_Free.ord_ctx_uvar uvs1 uvs2 in
                         Prims.op_Negation uu___3 in
                       (if uu___2
                        then
@@ -1134,7 +1137,9 @@ let (do_match_on_lhs :
                         then
                           let uvs2 = FStar_Syntax_Free.uvars_uncached lhs in
                           let uu___4 =
-                            let uu___5 = FStar_Compiler_Util.set_eq uvs1 uvs2 in
+                            let uu___5 =
+                              FStar_Compiler_Set.equal
+                                FStar_Syntax_Free.ord_ctx_uvar uvs1 uvs2 in
                             Prims.op_Negation uu___5 in
                           (if uu___4
                            then
@@ -3047,7 +3052,8 @@ let (t_apply :
                                                    let uu___11 =
                                                      FStar_Syntax_Free.uvars_uncached
                                                        typ1 in
-                                                   FStar_Compiler_Util.set_is_empty
+                                                   FStar_Compiler_Set.is_empty
+                                                     FStar_Syntax_Free.ord_ctx_uvar
                                                      uu___11 in
                                                  Prims.op_Negation uu___10) in
                                             if uu___9
@@ -3127,12 +3133,14 @@ let (t_apply :
                                                                     uv in
                                                                     FStar_Syntax_Free.uvars
                                                                     uu___18 in
-                                                                    FStar_Compiler_Util.set_union
+                                                                    FStar_Compiler_Set.union
+                                                                    FStar_Syntax_Free.ord_ctx_uvar
                                                                     s uu___17)
                                                              uvs uu___13 in
                                                          let free_in_some_goal
                                                            uv =
-                                                           FStar_Compiler_Util.set_mem
+                                                           FStar_Compiler_Set.mem
+                                                             FStar_Syntax_Free.ord_ctx_uvar
                                                              uv uvset in
                                                          let uu___13 =
                                                            solve' goal w in
@@ -3528,7 +3536,8 @@ let (t_apply_lemma :
                                                                     =
                                                                     FStar_Syntax_Free.uvars
                                                                     t1 in
-                                                                    FStar_Compiler_Util.set_elements
+                                                                    FStar_Compiler_Set.elems
+                                                                    FStar_Syntax_Free.ord_ctx_uvar
                                                                     uu___17 in
                                                                     FStar_Compiler_List.map
                                                                     (fun x ->
@@ -4165,7 +4174,7 @@ let (free_in :
   fun bv ->
     fun t ->
       let uu___ = FStar_Syntax_Free.names t in
-      FStar_Compiler_Util.set_mem bv uu___
+      FStar_Compiler_Set.mem FStar_Syntax_Syntax.ord_bv bv uu___
 let (clear :
   FStar_Reflection_V2_Data.binding -> unit FStar_Tactics_Monad.tac) =
   fun b ->
@@ -4334,7 +4343,7 @@ let (_t_trefl :
                  g.FStar_Tactics_Types.goal_ctx_uvar in
              let uvars =
                let uu___2 = FStar_Syntax_Free.uvars t in
-               FStar_Compiler_Util.set_elements uu___2 in
+               FStar_Compiler_Set.elems FStar_Syntax_Free.ord_ctx_uvar uu___2 in
              let uu___2 =
                FStar_Compiler_Util.for_all is_uvar_untyped_or_already_checked
                  uvars in
@@ -6967,7 +6976,7 @@ let (free_uvars :
            let uu___1 =
              let uu___2 = FStar_Syntax_Free.uvars_uncached tm in
              FStar_Compiler_Effect.op_Bar_Greater uu___2
-               FStar_Compiler_Util.set_elements in
+               (FStar_Compiler_Set.elems FStar_Syntax_Free.ord_ctx_uvar) in
            FStar_Compiler_Effect.op_Bar_Greater uu___1
              (FStar_Compiler_List.map
                 (fun u ->
@@ -7169,18 +7178,18 @@ let (no_uvars_in_term : FStar_Syntax_Syntax.term -> Prims.bool) =
     (let uu___ =
        FStar_Compiler_Effect.op_Bar_Greater t FStar_Syntax_Free.uvars in
      FStar_Compiler_Effect.op_Bar_Greater uu___
-       FStar_Compiler_Util.set_is_empty)
+       (FStar_Compiler_Set.is_empty FStar_Syntax_Free.ord_ctx_uvar))
       &&
       (let uu___ =
          FStar_Compiler_Effect.op_Bar_Greater t FStar_Syntax_Free.univs in
        FStar_Compiler_Effect.op_Bar_Greater uu___
-         FStar_Compiler_Util.set_is_empty)
+         (FStar_Compiler_Set.is_empty FStar_Syntax_Free.ord_univ_uvar))
 let (no_univ_uvars_in_term : FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t ->
     let uu___ =
       FStar_Compiler_Effect.op_Bar_Greater t FStar_Syntax_Free.univs in
     FStar_Compiler_Effect.op_Bar_Greater uu___
-      FStar_Compiler_Util.set_is_empty
+      (FStar_Compiler_Set.is_empty FStar_Syntax_Free.ord_univ_uvar)
 let (no_uvars_in_g : env -> Prims.bool) =
   fun g ->
     FStar_Compiler_Effect.op_Bar_Greater g.FStar_TypeChecker_Env.gamma

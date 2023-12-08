@@ -58,8 +58,8 @@ type goal_dep =
   goal_dep_id: Prims.int ;
   goal_type: goal_type ;
   goal_imp: FStar_TypeChecker_Common.implicit ;
-  assignees: FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Util.set ;
-  goal_dep_uvars: FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Util.set ;
+  assignees: FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Set.t ;
+  goal_dep_uvars: FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Set.t ;
   dependences: goal_dep Prims.list FStar_Compiler_Effect.ref ;
   visited: Prims.int FStar_Compiler_Effect.ref }
 let (__proj__Mkgoal_dep__item__goal_dep_id : goal_dep -> Prims.int) =
@@ -79,13 +79,13 @@ let (__proj__Mkgoal_dep__item__goal_imp :
     | { goal_dep_id; goal_type = goal_type1; goal_imp; assignees;
         goal_dep_uvars; dependences; visited;_} -> goal_imp
 let (__proj__Mkgoal_dep__item__assignees :
-  goal_dep -> FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Util.set) =
+  goal_dep -> FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Set.t) =
   fun projectee ->
     match projectee with
     | { goal_dep_id; goal_type = goal_type1; goal_imp; assignees;
         goal_dep_uvars; dependences; visited;_} -> assignees
 let (__proj__Mkgoal_dep__item__goal_dep_uvars :
-  goal_dep -> FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Util.set) =
+  goal_dep -> FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Set.t) =
   fun projectee ->
     match projectee with
     | { goal_dep_id; goal_type = goal_type1; goal_imp; assignees;
@@ -104,10 +104,10 @@ let (__proj__Mkgoal_dep__item__visited :
         goal_dep_uvars; dependences; visited;_} -> visited
 type goal_deps = goal_dep Prims.list
 let (print_uvar_set :
-  FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Util.set -> Prims.string) =
+  FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Set.t -> Prims.string) =
   fun s ->
     let uu___ =
-      let uu___1 = FStar_Compiler_Util.set_elements s in
+      let uu___1 = FStar_Compiler_Set.elems FStar_Syntax_Free.ord_ctx_uvar s in
       FStar_Compiler_Effect.op_Bar_Greater uu___1
         (FStar_Compiler_List.map
            (fun u ->

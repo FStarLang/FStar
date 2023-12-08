@@ -725,8 +725,7 @@ let (pretype_axiom :
   FStar_Compiler_Range_Type.range ->
     FStar_SMTEncoding_Env.env_t ->
       FStar_SMTEncoding_Term.term ->
-        (Prims.string * FStar_SMTEncoding_Term.sort * Prims.bool) Prims.list
-          -> FStar_SMTEncoding_Term.decl)
+        FStar_SMTEncoding_Term.fv Prims.list -> FStar_SMTEncoding_Term.decl)
   =
   fun rng ->
     fun env ->

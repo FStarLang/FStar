@@ -13,10 +13,7 @@ let (compress1_t :
             let uu___ =
               let uu___1 =
                 let uu___2 =
-                  let uu___3 =
-                    FStar_Syntax_Unionfind.uvar_id
-                      uv.FStar_Syntax_Syntax.ctx_uvar_head in
-                  FStar_Compiler_Util.string_of_int uu___3 in
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_ctxu uv in
                 FStar_Compiler_Util.format1
                   "Internal error: unexpected unresolved uvar in deep_compress: %s"
                   uu___2 in
@@ -29,7 +26,8 @@ let (compress1_t :
               then
                 let uu___2 =
                   let uu___3 =
-                    let uu___4 = FStar_Syntax_Print.bv_to_string bv in
+                    let uu___4 =
+                      FStar_Class_Show.show FStar_Syntax_Print.showable_bv bv in
                     FStar_Compiler_Util.format1 "Tm_name %s in deep compress"
                       uu___4 in
                   (FStar_Errors_Codes.Warning_NameEscape, uu___3) in
@@ -73,23 +71,43 @@ let (compress1_t :
             mk uu___
         | uu___ -> t
 let (compress1_u :
-  Prims.bool -> FStar_Syntax_Syntax.universe -> FStar_Syntax_Syntax.universe)
+  Prims.bool ->
+    Prims.bool ->
+      FStar_Syntax_Syntax.universe -> FStar_Syntax_Syntax.universe)
   =
   fun allow_uvars ->
-    fun u ->
-      match u with
-      | FStar_Syntax_Syntax.U_unif uv when Prims.op_Negation allow_uvars ->
-          let uu___ =
-            let uu___1 =
-              let uu___2 =
-                let uu___3 = FStar_Syntax_Unionfind.univ_uvar_id uv in
-                FStar_Compiler_Util.string_of_int uu___3 in
-              FStar_Compiler_Util.format1
-                "Internal error: unexpected unresolved (universe) uvar in deep_compress: %s"
-                uu___2 in
-            (FStar_Errors_Codes.Error_UnexpectedUnresolvedUvar, uu___1) in
-          FStar_Errors.raise_err uu___
-      | uu___ -> u
+    fun allow_names ->
+      fun u ->
+        match u with
+        | FStar_Syntax_Syntax.U_name bv when Prims.op_Negation allow_names ->
+            ((let uu___1 = FStar_Options.debug_any () in
+              if uu___1
+              then
+                let uu___2 =
+                  let uu___3 =
+                    let uu___4 =
+                      FStar_Class_Show.show FStar_Ident.showable_ident bv in
+                    FStar_Compiler_Util.format1 "U_name %s in deep compress"
+                      uu___4 in
+                  (FStar_Errors_Codes.Warning_NameEscape, uu___3) in
+                FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
+                  uu___2
+              else ());
+             u)
+        | FStar_Syntax_Syntax.U_unif uv when Prims.op_Negation allow_uvars ->
+            let uu___ =
+              let uu___1 =
+                let uu___2 =
+                  let uu___3 = FStar_Syntax_Unionfind.univ_uvar_id uv in
+                  FStar_Class_Show.show
+                    (FStar_Class_Show.printableshow
+                       FStar_Class_Printable.printable_int) uu___3 in
+                FStar_Compiler_Util.format1
+                  "Internal error: unexpected unresolved (universe) uvar in deep_compress: %s"
+                  uu___2 in
+              (FStar_Errors_Codes.Error_UnexpectedUnresolvedUvar, uu___1) in
+            FStar_Errors.raise_err uu___
+        | uu___ -> u
 let (deep_compress :
   Prims.bool ->
     Prims.bool -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
@@ -101,7 +119,7 @@ let (deep_compress :
           (fun uu___ ->
              let uu___1 =
                let uu___2 = compress1_t allow_uvars allow_names in
-               let uu___3 = compress1_u allow_uvars in
+               let uu___3 = compress1_u allow_uvars allow_names in
                FStar_Syntax_Visit.visit_term_univs uu___2 uu___3 in
              uu___1 tm)
 let (deep_compress_uvars :
@@ -121,7 +139,7 @@ let (deep_compress_if_no_uvars :
                   let uu___2 =
                     let uu___3 =
                       let uu___4 = compress1_t false true in
-                      let uu___5 = compress1_u false in
+                      let uu___5 = compress1_u false true in
                       FStar_Syntax_Visit.visit_term_univs uu___4 uu___5 in
                     uu___3 tm in
                   FStar_Pervasives_Native.Some uu___2) ()
@@ -144,6 +162,6 @@ let (deep_compress_se :
           (fun uu___1 ->
              let uu___2 =
                let uu___3 = compress1_t allow_uvars allow_names in
-               let uu___4 = compress1_u allow_uvars in
+               let uu___4 = compress1_u allow_uvars allow_names in
                FStar_Syntax_Visit.visit_sigelt uu___3 uu___4 in
              uu___2 se)
