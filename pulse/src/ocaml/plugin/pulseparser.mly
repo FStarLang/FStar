@@ -1,8 +1,8 @@
 %{
 (*
- We are expected to have only 6 shift-reduce conflicts in ML and 8 in F#.
- A lot (222) of end-of-stream conflicts are also reported and
- should be investigated...
+Warning: 6 states have shift/reduce conflicts.
+Warning: 8 shift/reduce conflicts were arbitrarily resolved.
+Warning: 221 end-of-stream conflicts were arbitrarily resolved.
 *)
 (* (c) Microsoft Corporation. All rights reserved *)
 open Prims
@@ -127,6 +127,7 @@ pulseMultiBinder:
     { List.map (fun (q, id) -> (as_aqual q, id, t)) qual_ids }
   | q=option(HASH) id=lidentOrUnderscore
     { [(as_aqual q, id, mk_term Wild (rr ($loc(id))) Un)] }
+  | LPAREN_RPAREN { [ None, gen (rr $loc), snd default_return ] }
 
 pulseComputationType:
   | REQUIRES t=pulseVprop
