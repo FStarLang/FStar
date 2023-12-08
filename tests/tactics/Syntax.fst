@@ -126,12 +126,12 @@ let arith_test2 (x : int) =
             | Inl s -> fail ("oops: " ^ s)
             | _ -> fail "different thing")
 
-let _ = assert True
+let _3 = assert True
             by (let t = quote (let x = 2 in x + 6) in
                 match inspect t with
                 | Tv_Let r attrs bv t1 t2 -> (
                    print ("r = " ^ (if r then "true" else "false"));
-                   print ("bv = " ^ bv_to_string bv);
+                   print ("bv = " ^ binder_to_string bv);
                    print ("t1 = " ^ term_to_string t1);
                    print ("t2 = " ^ term_to_string t2)
                    )
@@ -142,7 +142,7 @@ let _ = assert True
                 match inspect t with
                 | Tv_Let r attrs bv t1 t2 -> (
                    print ("r = " ^ (if r then "true" else "false"));
-                   print ("bv = " ^ bv_to_string bv);
+                   print ("bv = " ^ binder_to_string bv);
                    print ("t1 = " ^ term_to_string t1);
                    print ("t2 = " ^ term_to_string t2)
                    )
