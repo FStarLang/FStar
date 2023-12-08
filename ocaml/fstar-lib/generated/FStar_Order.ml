@@ -23,7 +23,7 @@ let (order_from_int : Prims.int -> order) =
 let (int_of_order : order -> Prims.int) =
   fun uu___ ->
     match uu___ with
-    | Lt -> ~- Prims.int_one
+    | Lt -> (Prims.of_int (-1))
     | Eq -> Prims.int_zero
     | Gt -> Prims.int_one
 let (compare_int : Prims.int -> Prims.int -> order) =

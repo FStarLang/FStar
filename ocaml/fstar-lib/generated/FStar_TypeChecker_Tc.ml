@@ -445,7 +445,9 @@ let (tc_inductive' :
                                      FStar_Syntax_Syntax.mutuals = uu___11;
                                      FStar_Syntax_Syntax.ds = uu___12;_}
                                    -> (lid, (ty.FStar_Syntax_Syntax.sigrng))
-                               | uu___7 -> failwith "Impossible!" in
+                               | uu___7 ->
+                                   FStar_Compiler_Effect.failwith
+                                     "Impossible!" in
                              match uu___6 with
                              | (lid, r) ->
                                  let uu___7 =
@@ -453,9 +455,9 @@ let (tc_inductive' :
                                      let uu___9 =
                                        let uu___10 =
                                          FStar_Ident.string_of_lid lid in
-                                       Prims.op_Hat uu___10
+                                       Prims.strcat uu___10
                                          " does not satisfy the strict positivity condition" in
-                                     Prims.op_Hat "Inductive type " uu___9 in
+                                     Prims.strcat "Inductive type " uu___9 in
                                    (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
                                      uu___8) in
                                  FStar_Errors.log_issue r uu___7
@@ -472,7 +474,8 @@ let (tc_inductive' :
                                    FStar_Syntax_Syntax.num_ty_params = uu___9;
                                    FStar_Syntax_Syntax.mutuals1 = uu___10;_}
                                  -> (data_lid, ty_lid)
-                             | uu___7 -> failwith "Impossible" in
+                             | uu___7 ->
+                                 FStar_Compiler_Effect.failwith "Impossible" in
                            match uu___6 with
                            | (data_lid, ty_lid) ->
                                let uu___7 =
@@ -490,9 +493,9 @@ let (tc_inductive' :
                                      let uu___10 =
                                        let uu___11 =
                                          FStar_Ident.string_of_lid data_lid in
-                                       Prims.op_Hat uu___11
+                                       Prims.strcat uu___11
                                          " does not satisfy the positivity condition" in
-                                     Prims.op_Hat "Exception " uu___10 in
+                                     Prims.strcat "Exception " uu___10 in
                                    (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
                                      uu___9) in
                                  FStar_Errors.log_issue
@@ -513,7 +516,8 @@ let (tc_inductive' :
                                FStar_Syntax_Syntax.mutuals = uu___8;
                                FStar_Syntax_Syntax.ds = uu___9;_}
                              -> lid1
-                         | uu___4 -> failwith "Impossible" in
+                         | uu___4 ->
+                             FStar_Compiler_Effect.failwith "Impossible" in
                        FStar_Compiler_List.existsb
                          (fun s ->
                             let uu___4 =
@@ -766,11 +770,13 @@ let proc_check_with :
               FStar_Syntax_Embeddings.e_vconfig a1
               FStar_Syntax_Embeddings_Base.id_norm_cb in
           (match uu___1 with
-           | FStar_Pervasives_Native.None -> failwith "nah"
+           | FStar_Pervasives_Native.None ->
+               FStar_Compiler_Effect.failwith "nah"
            | FStar_Pervasives_Native.Some vcfg ->
                FStar_Options.with_saved_options
                  (fun uu___2 -> FStar_Options.set_vconfig vcfg; kont ())
-           | uu___2 -> failwith "ill-formed `check_with`")
+           | uu___2 ->
+               FStar_Compiler_Effect.failwith "ill-formed `check_with`")
 let (handle_postprocess_with_attr :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.attribute Prims.list ->
@@ -1341,7 +1347,7 @@ let (tc_sig_let :
                                                 -> true
                                             | uu___10 -> false)
                                        | uu___7 ->
-                                           failwith
+                                           FStar_Compiler_Effect.failwith
                                              "Impossible: first phase lb and second phase lb differ in structure!" in
                                      if lb_unannotated
                                      then
@@ -1661,7 +1667,9 @@ let (tc_sig_let :
                                        (se2.FStar_Syntax_Syntax.sigopts)
                                    } in
                                  set_hint_correlator env' se3
-                             | uu___5 -> failwith "no way, not a let?" in
+                             | uu___5 ->
+                                 FStar_Compiler_Effect.failwith
+                                   "no way, not a let?" in
                            let r1 =
                              let should_generalize1 =
                                let uu___4 = do_two_phases env'1 in
@@ -1858,7 +1866,7 @@ let (tc_sig_let :
                                         (se2.FStar_Syntax_Syntax.sigopts)
                                     }, lbs3)))
                              | uu___5 ->
-                                 failwith
+                                 FStar_Compiler_Effect.failwith
                                    "impossible (typechecking should preserve Tm_let)" in
                            (match uu___4 with
                             | (se3, lbs1) ->
@@ -2162,9 +2170,11 @@ let (tc_decl' :
              if uu___2 then store_sigopts se1 else se1 in
            match se2.FStar_Syntax_Syntax.sigel with
            | FStar_Syntax_Syntax.Sig_inductive_typ uu___2 ->
-               failwith "Impossible bare data-constructor"
+               FStar_Compiler_Effect.failwith
+                 "Impossible bare data-constructor"
            | FStar_Syntax_Syntax.Sig_datacon uu___2 ->
-               failwith "Impossible bare data-constructor"
+               FStar_Compiler_Effect.failwith
+                 "Impossible bare data-constructor"
            | FStar_Syntax_Syntax.Sig_fail
                { FStar_Syntax_Syntax.errs = uu___2;
                  FStar_Syntax_Syntax.fail_in_lax = false;
@@ -3076,7 +3086,7 @@ let (tc_decl' :
                                    FStar_Syntax_Syntax.cflags = uu___6;_}
                                  -> (lid1, uvs1, tps1, c1)
                              | uu___6 ->
-                                 failwith
+                                 FStar_Compiler_Effect.failwith
                                    "Did not expect Sig_effect_abbrev to not be one after phase 1"))
                  else (lid, uvs, tps, c) in
                (match uu___2 with
@@ -3853,7 +3863,7 @@ let (tc_decl' :
                                      FStar_Syntax_Syntax.kind1 = uu___11;_}
                                    -> (t2, ty)
                                | uu___8 ->
-                                   failwith
+                                   FStar_Compiler_Effect.failwith
                                      "Impossible! tc for Sig_polymonadic_bind must be a Sig_polymonadic_bind") in
                         match uu___6 with
                         | (t2, ty) ->
@@ -4103,7 +4113,7 @@ let (tc_decl' :
                                      FStar_Syntax_Syntax.kind2 = uu___10;_}
                                    -> (t2, ty)
                                | uu___8 ->
-                                   failwith
+                                   FStar_Compiler_Effect.failwith
                                      "Impossible! tc for Sig_polymonadic_subcomp must be a Sig_polymonadic_subcomp") in
                         match uu___6 with
                         | (t2, ty) ->
@@ -4909,8 +4919,8 @@ let (tc_decls :
                                       let uu___14 =
                                         FStar_Syntax_Print.sigelt_to_string
                                           se1 in
-                                      Prims.op_Hat uu___14 "\n" in
-                                    Prims.op_Hat s uu___13) "" ses'2 in
+                                      Prims.strcat uu___14 "\n" in
+                                    Prims.strcat s uu___13) "" ses'2 in
                            FStar_Compiler_Util.print1 "Checked: %s\n" uu___12
                          else ());
                         (let uu___12 =
@@ -5200,7 +5210,7 @@ let (finish_partial_modul :
              let uu___3 =
                let uu___4 =
                  FStar_Ident.string_of_lid m.FStar_Syntax_Syntax.name in
-               Prims.op_Hat "Ending modul " uu___4 in
+               Prims.strcat "Ending modul " uu___4 in
              pop_context env uu___3 in
            FStar_Compiler_Effect.op_Bar_Greater uu___2 (fun uu___3 -> ()));
           (m, env)
@@ -5226,7 +5236,7 @@ let (tc_modul :
       fun iface_exists ->
         let msg =
           let uu___ = FStar_Ident.string_of_lid m.FStar_Syntax_Syntax.name in
-          Prims.op_Hat "Internals for " uu___ in
+          Prims.strcat "Internals for " uu___ in
         let env01 = push_context env0 msg in
         let uu___ = tc_partial_modul env01 m in
         match uu___ with
@@ -5243,7 +5253,7 @@ let (load_checked_module_sigelts :
       let env1 =
         let uu___ =
           let uu___1 = FStar_Ident.string_of_lid m.FStar_Syntax_Syntax.name in
-          Prims.op_Hat "Internals for " uu___1 in
+          Prims.strcat "Internals for " uu___1 in
         push_context env uu___ in
       let env2 =
         FStar_Compiler_List.fold_left

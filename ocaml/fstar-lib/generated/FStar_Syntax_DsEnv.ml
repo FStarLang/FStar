@@ -451,7 +451,8 @@ let (set_current_module : env -> FStar_Ident.lident -> env) =
 let (current_module : env -> FStar_Ident.lident) =
   fun env1 ->
     match env1.curmodule with
-    | FStar_Pervasives_Native.None -> failwith "Unset current module"
+    | FStar_Pervasives_Native.None ->
+        FStar_Compiler_Effect.failwith "Unset current module"
     | FStar_Pervasives_Native.Some m -> m
 let (iface_decls :
   env ->
@@ -2454,7 +2455,7 @@ let (push_top_level_rec_binding :
           (let uu___2 =
              let uu___3 =
                let uu___4 = FStar_Ident.string_of_lid l in
-               Prims.op_Hat "Duplicate top-level names " uu___4 in
+               Prims.strcat "Duplicate top-level names " uu___4 in
              (FStar_Errors_Codes.Fatal_DuplicateTopLevelNames, uu___3) in
            let uu___3 = FStar_Ident.range_of_lid l in
            FStar_Errors.raise_error uu___2 uu___3)
@@ -2678,10 +2679,10 @@ let (push_namespace : env -> FStar_Ident.lident -> env) =
                    (fun m ->
                       let uu___3 =
                         let uu___4 = FStar_Ident.string_of_lid m in
-                        Prims.op_Hat uu___4 "." in
+                        Prims.strcat uu___4 "." in
                       let uu___4 =
                         let uu___5 = FStar_Ident.string_of_lid ns in
-                        Prims.op_Hat uu___5 "." in
+                        Prims.strcat uu___5 "." in
                       FStar_Compiler_Util.starts_with uu___3 uu___4)) in
             if uu___2
             then (ns, FStar_Syntax_Syntax.Open_namespace)
@@ -3125,7 +3126,8 @@ let (pop : unit -> env) =
              (pop_record_cache ();
               FStar_Compiler_Effect.op_Colon_Equals stack tl;
               env1)
-         | uu___3 -> failwith "Impossible: Too many pops")
+         | uu___3 ->
+             FStar_Compiler_Effect.failwith "Impossible: Too many pops")
 let (snapshot : env -> (Prims.int * env)) =
   fun env1 -> FStar_Common.snapshot push stack env1
 let (rollback : Prims.int FStar_Pervasives_Native.option -> env) =
@@ -3432,9 +3434,9 @@ let (enter_monad_scope : env -> FStar_Ident.ident -> env) =
                 let uu___3 = FStar_Ident.string_of_id mname in
                 let uu___4 =
                   let uu___5 = FStar_Ident.string_of_id mname' in
-                  Prims.op_Hat ", but already in monad scope " uu___5 in
-                Prims.op_Hat uu___3 uu___4 in
-              Prims.op_Hat "Trying to define monad " uu___2 in
+                  Prims.strcat ", but already in monad scope " uu___5 in
+                Prims.strcat uu___3 uu___4 in
+              Prims.strcat "Trying to define monad " uu___2 in
             (FStar_Errors_Codes.Fatal_MonadAlreadyDefined, uu___1) in
           let uu___1 = FStar_Ident.range_of_id mname in
           FStar_Errors.raise_error uu___ uu___1
@@ -3579,8 +3581,8 @@ let fail_or2 :
             let uu___2 =
               let uu___3 =
                 let uu___4 = FStar_Ident.string_of_id id in
-                Prims.op_Hat uu___4 "]" in
-              Prims.op_Hat "Identifier not found [" uu___3 in
+                Prims.strcat uu___4 "]" in
+              Prims.strcat "Identifier not found [" uu___3 in
             (FStar_Errors_Codes.Fatal_IdentifierNotFound, uu___2) in
           let uu___2 = FStar_Ident.range_of_id id in
           FStar_Errors.raise_error uu___1 uu___2

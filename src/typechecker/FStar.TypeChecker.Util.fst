@@ -76,17 +76,16 @@ let close_guard_implicits env solve_deferred (xs:binders) (g:guard_t) : guard_t 
 
 let check_uvars r t =
   let uvs = Free.uvars t in
-  if not (Set.is_empty uvs)
-  then
-    let us = List.map (fun u -> Print.uvar_to_string u.ctx_uvar_head) (Set.elems uvs) |> String.concat ", " in
+  if not (Set.is_empty uvs) then begin
     (* ignoring the hide_uvar_nums and print_implicits flags here *)
     Options.push();
     Options.set_option "hide_uvar_nums" (Options.Bool false);
     Options.set_option "print_implicits" (Options.Bool true);
     Errors.log_issue r
       (Errors.Error_UncontrainedUnificationVar, (BU.format2 "Unconstrained unification variables %s in type signature %s; \
-       please add an annotation" us (Print.term_to_string t)));
+       please add an annotation" (Class.Show.show uvs) (Class.Show.show t)));
     Options.pop()
+  end
 
 (************************************************************************)
 (* Extracting annotations, notably the decreases clause, for a recursive definion *)
@@ -2378,7 +2377,7 @@ let rec check_erased (env:Env.env) (t:term) : isErased =
             |> check_erased
                 (br_body
                  |> Free.names
-                 |> Set.elems
+                 |> Set.elems // GGG: bad, order-depending
                  |> Env.push_bvs env) with
           | No -> No
           | _ -> Maybe) No

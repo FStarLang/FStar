@@ -212,8 +212,10 @@ let (on_sub_term :
       let mk t = FStar_Syntax_Syntax.mk t tm.FStar_Syntax_Syntax.pos in
       let tm1 = compress tm in
       match tm1.FStar_Syntax_Syntax.n with
-      | FStar_Syntax_Syntax.Tm_lazy uu___ -> failwith "impos"
-      | FStar_Syntax_Syntax.Tm_delayed uu___ -> failwith "impos"
+      | FStar_Syntax_Syntax.Tm_lazy uu___ ->
+          FStar_Compiler_Effect.failwith "impos"
+      | FStar_Syntax_Syntax.Tm_delayed uu___ ->
+          FStar_Compiler_Effect.failwith "impos"
       | FStar_Syntax_Syntax.Tm_fvar uu___ -> tm1
       | FStar_Syntax_Syntax.Tm_constant uu___ -> tm1
       | FStar_Syntax_Syntax.Tm_unknown -> tm1
@@ -836,7 +838,7 @@ let rec (on_sub_sigelt' :
               FStar_Syntax_Syntax.tac = uu___1
             } in
           FStar_Syntax_Syntax.Sig_splice uu___
-      | uu___ -> failwith "on_sub_sigelt: missing case"
+      | uu___ -> FStar_Compiler_Effect.failwith "on_sub_sigelt: missing case"
 and (on_sub_sigelt :
   vfs_t -> FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.sigelt) =
   fun vfs ->

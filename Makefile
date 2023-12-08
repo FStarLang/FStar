@@ -41,8 +41,8 @@ clean-snapshot: clean-intermediate
 	$(Q)cd $(DUNE_SNAPSHOT) && { dune clean || true ; }
 	$(Q)rm -rf $(DUNE_SNAPSHOT)/fstar-lib/generated/*
 
-.PHONY: extract-all
-extract-all:
+.PHONY: dune-snapshot
+dune-snapshot:
 	+$(Q)$(MAKE) -C src/ocaml-output dune-snapshot
 
 # This rule is not incremental, by design.
@@ -54,12 +54,12 @@ full-bootstrap:
 
 .PHONY: bootstrap
 bootstrap:
-	+$(Q)$(MAKE) extract-all
+	+$(Q)$(MAKE) dune-snapshot
 	+$(Q)$(MAKE) fstar
 
 .PHONY: boot
 boot:
-	+$(Q)$(MAKE) extract-all
+	+$(Q)$(MAKE) dune-snapshot
 	$(Q)cp version.txt $(DUNE_SNAPSHOT)/
 	@# Call Dune to build the snapshot.
 	$(call msg, "DUNE BUILD")
@@ -182,8 +182,11 @@ ci-uregressions-ulong:
 
 1: fstar
 
+# This is a hacky rule to bootstrap the compiler, and not
+# the library, more quickly.
 2:
 	+$(Q)$(MAKE) -C src ocaml
+	+$(Q)$(MAKE) -C src/ocaml-output overlay-snapshots
 	+$(Q)$(MAKE) fstar
 
 3:

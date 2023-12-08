@@ -72,9 +72,9 @@ let (load_native_tactics : unit -> unit) =
         (FStar_Compiler_List.map FStar_Ident.lid_of_str) in
     let ml_module_name m = FStar_Extraction_ML_Util.ml_module_name_of_lid m in
     let ml_file m =
-      let uu___1 = ml_module_name m in Prims.op_Hat uu___1 ".ml" in
+      let uu___1 = ml_module_name m in Prims.strcat uu___1 ".ml" in
     let cmxs_file m =
-      let cmxs = let uu___1 = ml_module_name m in Prims.op_Hat uu___1 ".cmxs" in
+      let cmxs = let uu___1 = ml_module_name m in Prims.strcat uu___1 ".cmxs" in
       let uu___1 = FStar_Options.find_file cmxs in
       match uu___1 with
       | FStar_Pervasives_Native.Some f -> f
@@ -185,7 +185,7 @@ let go : 'uuuuu . 'uuuuu -> unit =
                          else FStar_Prettyprint.FromTempToFile in
                        FStar_Prettyprint.generate printing_mode filenames
                      else
-                       failwith
+                       FStar_Compiler_Effect.failwith
                          "You seem to be using the F#-generated version ofthe compiler ; \\o\n                         reindenting is not known to work yet with this version")
                   else
                     (let uu___8 = FStar_Options.lsp_server () in
@@ -260,7 +260,8 @@ let (lazy_chooser :
   fun k ->
     fun i ->
       match k with
-      | FStar_Syntax_Syntax.BadLazy -> failwith "lazy chooser: got a BadLazy"
+      | FStar_Syntax_Syntax.BadLazy ->
+          FStar_Compiler_Effect.failwith "lazy chooser: got a BadLazy"
       | FStar_Syntax_Syntax.Lazy_bv ->
           FStar_Reflection_V2_Embeddings.unfold_lazy_bv i
       | FStar_Syntax_Syntax.Lazy_namedv ->

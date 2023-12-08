@@ -2496,8 +2496,8 @@ let rec (close_pat :
                  fun uu___2 ->
                    match (uu___1, uu___2) with
                    | ((pats, s1), (pat, b)) ->
-                       let uu___4 = close_pat pat s1 in
-                       (match uu___4 with
+                       let uu___3 = close_pat pat s1 in
+                       (match uu___3 with
                         | (pat1, s') -> (((pat1, b) :: pats), s'))) ([], s)
               subpats in
           (match uu___ with
@@ -3636,10 +3636,8 @@ let rec (mk_arr :
                                 (Prims.of_int (610)) (Prims.of_int (37)))))
                        (FStar_Sealed.seal
                           (Obj.magic
-                             (FStar_Range.mk_range
-                                "FStar.Tactics.NamedView.fst"
-                                (Prims.of_int (611)) (Prims.of_int (4))
-                                (Prims.of_int (611)) (Prims.of_int (24)))))
+                             (FStar_Range.mk_range "dummy" Prims.int_zero
+                                Prims.int_zero Prims.int_zero Prims.int_zero)))
                        (Obj.magic
                           (FStar_Tactics_Effect.tac_bind
                              (FStar_Sealed.seal
@@ -4034,12 +4032,12 @@ let _ =
 type universe_view = named_universe_view
 type term_view = named_term_view
 type sigelt_view = named_sigelt_view
-let (inspect_namedv : namedv -> namedv) = FStar_Pervasives.id
-let (pack_namedv : namedv -> namedv) = FStar_Pervasives.id
-let (inspect_bv : bv -> bv) = FStar_Pervasives.id
-let (pack_bv : bv -> bv) = FStar_Pervasives.id
-let (inspect_comp : comp -> comp) = FStar_Pervasives.id
-let (pack_comp : comp -> comp) = FStar_Pervasives.id
+let (inspect_namedv : namedv -> namedv) = fun x -> x
+let (pack_namedv : namedv -> namedv) = fun x -> x
+let (inspect_bv : bv -> bv) = fun x -> x
+let (pack_bv : bv -> bv) = fun x -> x
+let (inspect_comp : comp -> comp) = fun x -> x
+let (pack_comp : comp -> comp) = fun x -> x
 let (tag_of : term -> (Prims.string, unit) FStar_Tactics_Effect.tac_repr) =
   fun t ->
     FStar_Tactics_Effect.tac_bind
@@ -4054,38 +4052,25 @@ let (tag_of : term -> (Prims.string, unit) FStar_Tactics_Effect.tac_repr) =
                (Prims.of_int (220)) (Prims.of_int (2)) (Prims.of_int (237))
                (Prims.of_int (28))))) (Obj.magic (inspect t))
       (fun uu___ ->
-         match uu___ with
-         | Tv_Var bv1 ->
-             FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> "Tv_Var")
-         | Tv_BVar fv ->
-             FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> "Tv_BVar")
-         | Tv_FVar fv ->
-             FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> "Tv_FVar")
-         | Tv_UInst (uu___1, uu___2) ->
-             FStar_Tactics_Effect.lift_div_tac (fun uu___3 -> "Tv_UInst")
-         | Tv_App (f, x) ->
-             FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> "Tv_App")
-         | Tv_Abs (x, t1) ->
-             FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> "Tv_Abs")
-         | Tv_Arrow (x, t1) ->
-             FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> "Tv_Arrow")
-         | Tv_Type uu___1 ->
-             FStar_Tactics_Effect.lift_div_tac (fun uu___2 -> "Tv_Type")
-         | Tv_Refine (x, t1) ->
-             FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> "Tv_Refine")
-         | Tv_Const cst ->
-             FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> "Tv_Const")
-         | Tv_Uvar (i, t1) ->
-             FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> "Tv_Uvar")
-         | Tv_Let (r, attrs, b, t1, t2) ->
-             FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> "Tv_Let")
-         | Tv_Match (t1, uu___1, branches) ->
-             FStar_Tactics_Effect.lift_div_tac (fun uu___2 -> "Tv_Match")
-         | Tv_AscribedT (uu___1, uu___2, uu___3, uu___4) ->
-             FStar_Tactics_Effect.lift_div_tac (fun uu___5 -> "Tv_AscribedT")
-         | Tv_AscribedC (uu___1, uu___2, uu___3, uu___4) ->
-             FStar_Tactics_Effect.lift_div_tac (fun uu___5 -> "Tv_AscribedC")
-         | Tv_Unknown ->
-             FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> "Tv_Unknown")
-         | Tv_Unsupp ->
-             FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> "Tv_Unsupp"))
+         FStar_Tactics_Effect.lift_div_tac
+           (fun uu___1 ->
+              match uu___ with
+              | Tv_Var bv1 -> "Tv_Var"
+              | Tv_BVar fv -> "Tv_BVar"
+              | Tv_FVar fv -> "Tv_FVar"
+              | Tv_UInst (uu___2, uu___3) -> "Tv_UInst"
+              | Tv_App (f, x) -> "Tv_App"
+              | Tv_Abs (x, t1) -> "Tv_Abs"
+              | Tv_Arrow (x, t1) -> "Tv_Arrow"
+              | Tv_Type uu___2 -> "Tv_Type"
+              | Tv_Refine (x, t1) -> "Tv_Refine"
+              | Tv_Const cst -> "Tv_Const"
+              | Tv_Uvar (i, t1) -> "Tv_Uvar"
+              | Tv_Let (r, attrs, b, t1, t2) -> "Tv_Let"
+              | Tv_Match (t1, uu___2, branches) -> "Tv_Match"
+              | Tv_AscribedT (uu___2, uu___3, uu___4, uu___5) ->
+                  "Tv_AscribedT"
+              | Tv_AscribedC (uu___2, uu___3, uu___4, uu___5) ->
+                  "Tv_AscribedC"
+              | Tv_Unknown -> "Tv_Unknown"
+              | Tv_Unsupp -> "Tv_Unsupp"))

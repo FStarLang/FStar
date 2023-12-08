@@ -8,7 +8,7 @@ include gmake/z3.mk
 include gmake/fstar.mk
 
 DUNE_SNAPSHOT ?= $(call maybe_cygwin_path,$(realpath $(FSTAR_HOME)/ocaml))
-OUTPUT_DIRECTORY=$(DUNE_SNAPSHOT)/fstar-lib/generated
+OUTPUT_DIRECTORY=$(FSTAR_HOME)/src/ocaml-output/fstarlib
 
 FSTAR_FILES:=
 FSTAR_FILES+=$(wildcard *.fst *.fsti)

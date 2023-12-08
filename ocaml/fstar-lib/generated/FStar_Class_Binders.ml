@@ -49,4 +49,4 @@ let (hasBinders_list_bv : FStar_Syntax_Syntax.bv Prims.list hasBinders) =
   { boundNames = (FStar_Compiler_Set.from_list FStar_Syntax_Syntax.ord_bv) }
 let (hasBinders_set_bv :
   FStar_Syntax_Syntax.bv FStar_Compiler_Set.set hasBinders) =
-  { boundNames = FStar_Pervasives.id }
+  { boundNames = (fun x -> x) }

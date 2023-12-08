@@ -173,7 +173,7 @@ let mod_filter :
             let uu___3 =
               let uu___4 =
                 let uu___5 = FStar_Interactive_CompletionTable.mod_name md in
-                Prims.op_Hat uu___5 "." in
+                Prims.strcat uu___5 "." in
               {
                 FStar_Interactive_CompletionTable.mod_name = uu___4;
                 FStar_Interactive_CompletionTable.mod_path =

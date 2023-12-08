@@ -11,7 +11,7 @@ let empty : 'a . 'a FStar_Class_Ord.ord -> unit -> 'a set =
            fun y ->
              let uu___2 = FStar_Class_Ord.cmp uu___ x y in
              match uu___2 with
-             | FStar_Compiler_Order.Lt -> ~- Prims.int_one
+             | FStar_Compiler_Order.Lt -> (Prims.of_int (-1))
              | FStar_Compiler_Order.Eq -> Prims.int_zero
              | FStar_Compiler_Order.Gt -> Prims.int_one)
 let from_list : 'a . 'a FStar_Class_Ord.ord -> 'a Prims.list -> 'a set =
@@ -22,7 +22,7 @@ let from_list : 'a . 'a FStar_Class_Ord.ord -> 'a Prims.list -> 'a set =
            fun y ->
              let uu___1 = FStar_Class_Ord.cmp uu___ x y in
              match uu___1 with
-             | FStar_Compiler_Order.Lt -> ~- Prims.int_one
+             | FStar_Compiler_Order.Lt -> (Prims.of_int (-1))
              | FStar_Compiler_Order.Eq -> Prims.int_zero
              | FStar_Compiler_Order.Gt -> Prims.int_one)
 let mem : 'a . 'a FStar_Class_Ord.ord -> 'a -> 'a set -> Prims.bool =
@@ -50,6 +50,32 @@ let subset : 'a . 'a FStar_Class_Ord.ord -> 'a set -> 'a set -> Prims.bool =
   fun uu___ -> fun s1 -> fun s2 -> FStar_Compiler_Util.set_is_subset_of s1 s2
 let elems : 'a . 'a FStar_Class_Ord.ord -> 'a set -> 'a Prims.list =
   fun uu___ -> fun s -> FStar_Compiler_Util.set_elements s
+let for_all :
+  'a . 'a FStar_Class_Ord.ord -> ('a -> Prims.bool) -> 'a set -> Prims.bool =
+  fun uu___ ->
+    fun p ->
+      fun s ->
+        let uu___1 = elems uu___ s in
+        FStar_Compiler_Effect.op_Bar_Greater uu___1
+          (FStar_Compiler_List.for_all p)
+let for_any :
+  'a . 'a FStar_Class_Ord.ord -> ('a -> Prims.bool) -> 'a set -> Prims.bool =
+  fun uu___ ->
+    fun p ->
+      fun s ->
+        let uu___1 = elems uu___ s in
+        FStar_Compiler_Effect.op_Bar_Greater uu___1
+          (FStar_Compiler_List.existsb p)
+let collect :
+  'a 'b . 'b FStar_Class_Ord.ord -> ('a -> 'b set) -> 'a Prims.list -> 'b set
+  =
+  fun uu___ ->
+    fun f ->
+      fun l ->
+        let uu___1 = empty uu___ () in
+        FStar_Compiler_List.fold_right
+          (fun x -> fun acc -> let uu___2 = f x in union uu___ uu___2 acc) l
+          uu___1
 let showable_set :
   'a .
     'a FStar_Class_Ord.ord ->

@@ -701,7 +701,8 @@ let (built_in_primitive_steps_list : primitive_step Prims.list) =
          | FStar_Syntax_Util.NotEqual ->
              FStar_Pervasives_Native.Some (if neg then tru else fal)
          | uu___4 -> FStar_Pervasives_Native.None)
-    | uu___ -> failwith "Unexpected number of arguments" in
+    | uu___ ->
+        FStar_Compiler_Effect.failwith "Unexpected number of arguments" in
   let and_op psc1 _norm_cb _us args =
     match args with
     | (a1, FStar_Pervasives_Native.None)::(a2, FStar_Pervasives_Native.None)::[]
@@ -716,7 +717,8 @@ let (built_in_primitive_steps_list : primitive_step Prims.list) =
          | FStar_Pervasives_Native.Some (true) ->
              FStar_Pervasives_Native.Some a2
          | uu___1 -> FStar_Pervasives_Native.None)
-    | uu___ -> failwith "Unexpected number of arguments" in
+    | uu___ ->
+        FStar_Compiler_Effect.failwith "Unexpected number of arguments" in
   let or_op psc1 _norm_cb _us args =
     match args with
     | (a1, FStar_Pervasives_Native.None)::(a2, FStar_Pervasives_Native.None)::[]
@@ -731,7 +733,8 @@ let (built_in_primitive_steps_list : primitive_step Prims.list) =
          | FStar_Pervasives_Native.Some (false) ->
              FStar_Pervasives_Native.Some a2
          | uu___1 -> FStar_Pervasives_Native.None)
-    | uu___ -> failwith "Unexpected number of arguments" in
+    | uu___ ->
+        FStar_Compiler_Effect.failwith "Unexpected number of arguments" in
   let division_modulus_op op psc1 _norm_cb _us args =
     match args with
     | (a1, FStar_Pervasives_Native.None)::(a2, FStar_Pervasives_Native.None)::[]
@@ -755,12 +758,13 @@ let (built_in_primitive_steps_list : primitive_step Prims.list) =
                FStar_Pervasives_Native.Some uu___2
              else FStar_Pervasives_Native.None
          | uu___1 -> FStar_Pervasives_Native.None)
-    | uu___ -> failwith "Unexpected number of arguments" in
+    | uu___ ->
+        FStar_Compiler_Effect.failwith "Unexpected number of arguments" in
   let bogus_cbs =
     {
       FStar_TypeChecker_NBETerm.iapp = (fun h -> fun _args -> h);
       FStar_TypeChecker_NBETerm.translate =
-        (fun uu___ -> failwith "bogus_cbs translate")
+        (fun uu___ -> FStar_Compiler_Effect.failwith "bogus_cbs translate")
     } in
   let int_as_bounded r int_to_t n =
     let c = embed_simple FStar_Syntax_Embeddings.e_int r n in
@@ -1028,14 +1032,14 @@ let (built_in_primitive_steps_list : primitive_step Prims.list) =
                                                     FStar_TypeChecker_NBETerm.binary_string_op
                                                       (fun x ->
                                                          fun y ->
-                                                           Prims.op_Hat x y) in
+                                                           Prims.strcat x y) in
                                                   (FStar_Parser_Const.prims_strcat_lid,
                                                     (Prims.of_int (2)),
                                                     Prims.int_zero,
                                                     (binary_string_op
                                                        (fun x ->
                                                           fun y ->
-                                                            Prims.op_Hat x y)),
+                                                            Prims.strcat x y)),
                                                     uu___41) in
                                                 let uu___41 =
                                                   let uu___42 =
@@ -1730,7 +1734,7 @@ let (built_in_primitive_steps_list : primitive_step Prims.list) =
           let uu___1 =
             FStar_Compiler_Util.format1
               "Impossible: bad string on mask: %s\n" m in
-          failwith uu___1 in
+          FStar_Compiler_Effect.failwith uu___1 in
     let bitwise =
       FStar_Compiler_Effect.op_Bar_Greater bounded_unsigned_int_types
         (FStar_Compiler_List.collect
@@ -2750,7 +2754,8 @@ let (equality_ops_list : primitive_step Prims.list) =
                    (FStar_Syntax_Util.t_false.FStar_Syntax_Syntax.hash_code)
                }
          | uu___4 -> FStar_Pervasives_Native.None)
-    | uu___ -> failwith "Unexpected number of arguments" in
+    | uu___ ->
+        FStar_Compiler_Effect.failwith "Unexpected number of arguments" in
   let propositional_equality =
     {
       name = FStar_Parser_Const.eq2_lid;

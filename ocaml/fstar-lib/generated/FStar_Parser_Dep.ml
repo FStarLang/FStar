@@ -56,7 +56,7 @@ let (intf_and_impl_to_string :
     | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.Some impl) ->
         impl
     | (FStar_Pervasives_Native.Some intf, FStar_Pervasives_Native.Some impl)
-        -> Prims.op_Hat intf (Prims.op_Hat ", " impl)
+        -> Prims.strcat intf (Prims.strcat ", " impl)
 let (files_for_module_name_to_string : files_for_module_name -> unit) =
   fun m ->
     FStar_Compiler_Util.print_string "Printing the file system map {\n";
@@ -187,10 +187,10 @@ let (__proj__FriendImplementation__item___0 : dependence -> module_name) =
 let (dep_to_string : dependence -> Prims.string) =
   fun uu___ ->
     match uu___ with
-    | UseInterface f -> Prims.op_Hat "UseInterface " f
-    | PreferInterface f -> Prims.op_Hat "PreferInterface " f
-    | UseImplementation f -> Prims.op_Hat "UseImplementation " f
-    | FriendImplementation f -> Prims.op_Hat "FriendImplementation " f
+    | UseInterface f -> Prims.strcat "UseInterface " f
+    | PreferInterface f -> Prims.strcat "PreferInterface " f
+    | UseImplementation f -> Prims.strcat "UseImplementation " f
+    | FriendImplementation f -> Prims.strcat "FriendImplementation " f
 let (showable_dependence : dependence FStar_Class_Show.showable) =
   { FStar_Class_Show.show = dep_to_string }
 type dependences = dependence Prims.list
@@ -270,52 +270,52 @@ let (str_of_parsing_data_elt : parsing_data_elt -> Prims.string) =
     | P_begin_module lid ->
         let uu___ =
           let uu___1 = FStar_Ident.string_of_lid lid in
-          Prims.op_Hat uu___1 ")" in
-        Prims.op_Hat "P_begin_module (" uu___
+          Prims.strcat uu___1 ")" in
+        Prims.strcat "P_begin_module (" uu___
     | P_open (b, lid) ->
         let uu___ =
           let uu___1 = FStar_Compiler_Util.string_of_bool b in
           let uu___2 =
             let uu___3 =
               let uu___4 = FStar_Ident.string_of_lid lid in
-              Prims.op_Hat uu___4 ")" in
-            Prims.op_Hat ", " uu___3 in
-          Prims.op_Hat uu___1 uu___2 in
-        Prims.op_Hat "P_open (" uu___
+              Prims.strcat uu___4 ")" in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "P_open (" uu___
     | P_implicit_open_module_or_namespace (k, lid) ->
         let uu___ =
           let uu___1 =
             let uu___2 =
               let uu___3 = FStar_Ident.string_of_lid lid in
-              Prims.op_Hat uu___3 ")" in
-            Prims.op_Hat ", " uu___2 in
-          Prims.op_Hat (str_of_open_kind k) uu___1 in
-        Prims.op_Hat "P_implicit_open_module_or_namespace (" uu___
+              Prims.strcat uu___3 ")" in
+            Prims.strcat ", " uu___2 in
+          Prims.strcat (str_of_open_kind k) uu___1 in
+        Prims.strcat "P_implicit_open_module_or_namespace (" uu___
     | P_dep (b, lid) ->
         let uu___ =
           let uu___1 = FStar_Ident.string_of_lid lid in
           let uu___2 =
             let uu___3 =
               let uu___4 = FStar_Compiler_Util.string_of_bool b in
-              Prims.op_Hat uu___4 ")" in
-            Prims.op_Hat ", " uu___3 in
-          Prims.op_Hat uu___1 uu___2 in
-        Prims.op_Hat "P_dep (" uu___
+              Prims.strcat uu___4 ")" in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "P_dep (" uu___
     | P_alias (id, lid) ->
         let uu___ =
           let uu___1 = FStar_Ident.string_of_id id in
           let uu___2 =
             let uu___3 =
               let uu___4 = FStar_Ident.string_of_lid lid in
-              Prims.op_Hat uu___4 ")" in
-            Prims.op_Hat ", " uu___3 in
-          Prims.op_Hat uu___1 uu___2 in
-        Prims.op_Hat "P_alias (" uu___
+              Prims.strcat uu___4 ")" in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "P_alias (" uu___
     | P_lid lid ->
         let uu___ =
           let uu___1 = FStar_Ident.string_of_lid lid in
-          Prims.op_Hat uu___1 ")" in
-        Prims.op_Hat "P_lid (" uu___
+          Prims.strcat uu___1 ")" in
+        Prims.strcat "P_lid (" uu___
     | P_inline_for_extraction -> "P_inline_for_extraction"
 let (str_of_parsing_data : parsing_data -> Prims.string) =
   fun uu___ ->
@@ -329,8 +329,8 @@ let (str_of_parsing_data : parsing_data -> Prims.string) =
                     let uu___2 =
                       FStar_Compiler_Effect.op_Bar_Greater elt
                         str_of_parsing_data_elt in
-                    Prims.op_Hat "; " uu___2 in
-                  Prims.op_Hat s uu___1) "")
+                    Prims.strcat "; " uu___2 in
+                  Prims.strcat s uu___1) "")
 let (friends : parsing_data -> FStar_Ident.lident Prims.list) =
   fun p ->
     let uu___ = p in
@@ -517,8 +517,8 @@ let (cache_file_name : Prims.string -> Prims.string) =
     let lax = FStar_Options.lax () in
     let cache_fn =
       if lax
-      then Prims.op_Hat fn ".checked.lax"
-      else Prims.op_Hat fn ".checked" in
+      then Prims.strcat fn ".checked.lax"
+      else Prims.strcat fn ".checked" in
     let mname = FStar_Compiler_Effect.op_Bar_Greater fn module_name_of_file in
     let uu___ =
       let uu___1 =
@@ -611,13 +611,13 @@ let (file_of_dep_aux :
               let uu___ = interface_of_internal file_system_map key in
               (match uu___ with
                | FStar_Pervasives_Native.None ->
-                   let uu___2 =
-                     let uu___3 =
+                   let uu___1 =
+                     let uu___2 =
                        FStar_Compiler_Util.format1
                          "Expected an interface for module %s, but couldn't find one"
                          key in
-                     (FStar_Errors_Codes.Fatal_MissingInterface, uu___3) in
-                   FStar_Errors.raise_err uu___2
+                     (FStar_Errors_Codes.Fatal_MissingInterface, uu___2) in
+                   FStar_Errors.raise_err uu___1
                | FStar_Pervasives_Native.Some f -> f)
           | PreferInterface key when has_interface file_system_map key ->
               let uu___ =
@@ -754,8 +754,8 @@ let (print_graph :
                           uu___5 (r (module_name_of_dep dep)) in
                       FStar_Compiler_List.map print deps1) uu___4 in
                FStar_Compiler_String.concat "\n" uu___3 in
-             Prims.op_Hat uu___2 "\n}\n" in
-           Prims.op_Hat "digraph {\n" uu___1 in
+             Prims.strcat uu___2 "\n}\n" in
+           Prims.strcat "digraph {\n" uu___1 in
          FStar_Compiler_Util.fprint outc "%s" [s])
 let (build_inclusion_candidates_list :
   unit -> (Prims.string * Prims.string) Prims.list) =
@@ -950,7 +950,7 @@ let (enter_namespace :
       fun prefix ->
         fun implicit_open ->
           let found = FStar_Compiler_Util.mk_ref false in
-          let prefix1 = Prims.op_Hat prefix "." in
+          let prefix1 = Prims.strcat prefix "." in
           let suffix_exists mopt =
             match mopt with
             | FStar_Pervasives_Native.None -> false
@@ -1912,7 +1912,7 @@ let (topological_dependences_of' :
                     FStar_Compiler_Util.must uu___1 in
                   (match dep_node1.color with
                    | Gray ->
-                       failwith
+                       FStar_Compiler_Effect.failwith
                          "Impossible: cycle detected after cycle detection has passed"
                    | Black -> (all_friends, all_files)
                    | White ->
@@ -2182,7 +2182,7 @@ let (collect :
                  let uu___2 =
                    FStar_Compiler_Util.format1
                      "Impossible: Failed to find dependencies of %s" filename in
-                 failwith uu___2 in
+                 FStar_Compiler_Effect.failwith uu___2 in
            let direct_deps =
              FStar_Compiler_Effect.op_Bar_Greater node.edges
                (FStar_Compiler_List.collect
@@ -2391,7 +2391,7 @@ let (print_full : FStar_Compiler_Util.out_channel -> deps -> unit) =
                            FStar_Compiler_Util.format2
                              "Impossible: module %s: %s not found"
                              lc_module_name file_name1 in
-                         failwith uu___2
+                         FStar_Compiler_Effect.failwith uu___2
                      | FStar_Pervasives_Native.Some
                          { edges = immediate_deps; color = uu___2;_} ->
                          let immediate_deps1 =
@@ -2438,7 +2438,7 @@ let (print_full : FStar_Compiler_Util.out_channel -> deps -> unit) =
           let uu___1 =
             FStar_Compiler_String.substring s l1
               ((FStar_Compiler_String.length s) - l1) in
-          Prims.op_Hat s2 uu___1
+          Prims.strcat s2 uu___1
         else s in
       let output_file ext fst_file =
         let basename =
@@ -2448,7 +2448,7 @@ let (print_full : FStar_Compiler_Util.out_channel -> deps -> unit) =
           FStar_Compiler_Option.get uu___ in
         let basename1 = no_fstar_stubs_file basename in
         let ml_base_name = FStar_Compiler_Util.replace_chars basename1 46 "_" in
-        FStar_Options.prepend_output_dir (Prims.op_Hat ml_base_name ext) in
+        FStar_Options.prepend_output_dir (Prims.strcat ml_base_name ext) in
       let norm_path s =
         FStar_Compiler_Util.replace_chars
           (FStar_Compiler_Util.replace_chars s 92 "/") 32 "\\ " in

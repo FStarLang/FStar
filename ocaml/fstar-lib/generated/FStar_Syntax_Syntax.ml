@@ -1275,17 +1275,17 @@ let rec (emb_typ_to_string : emb_typ -> Prims.string) =
                 let uu___5 = FStar_Compiler_List.map emb_typ_to_string args1 in
                 FStar_Compiler_Effect.op_Bar_Greater uu___5
                   (FStar_Compiler_String.concat " ") in
-              Prims.op_Hat uu___4 ")" in
-            Prims.op_Hat " " uu___3 in
-          Prims.op_Hat h uu___2 in
-        Prims.op_Hat "(" uu___1
+              Prims.strcat uu___4 ")" in
+            Prims.strcat " " uu___3 in
+          Prims.strcat h uu___2 in
+        Prims.strcat "(" uu___1
     | ET_fun (a, b) ->
         let uu___1 =
           let uu___2 = emb_typ_to_string a in
           let uu___3 =
-            let uu___4 = emb_typ_to_string b in Prims.op_Hat ") -> " uu___4 in
-          Prims.op_Hat uu___2 uu___3 in
-        Prims.op_Hat "(" uu___1
+            let uu___4 = emb_typ_to_string b in Prims.strcat ") -> " uu___4 in
+          Prims.strcat uu___2 uu___3 in
+        Prims.strcat "(" uu___1
 let (showable_emb_typ : emb_typ FStar_Class_Show.showable) =
   { FStar_Class_Show.show = emb_typ_to_string }
 let rec (delta_depth_to_string : delta_depth -> Prims.string) =
@@ -1293,14 +1293,14 @@ let rec (delta_depth_to_string : delta_depth -> Prims.string) =
     match uu___ with
     | Delta_constant_at_level i ->
         let uu___1 = FStar_Compiler_Util.string_of_int i in
-        Prims.op_Hat "Delta_constant_at_level " uu___1
+        Prims.strcat "Delta_constant_at_level " uu___1
     | Delta_equational_at_level i ->
         let uu___1 = FStar_Compiler_Util.string_of_int i in
-        Prims.op_Hat "Delta_equational_at_level " uu___1
+        Prims.strcat "Delta_equational_at_level " uu___1
     | Delta_abstract d ->
         let uu___1 =
-          let uu___2 = delta_depth_to_string d in Prims.op_Hat uu___2 ")" in
-        Prims.op_Hat "Delta_abstract (" uu___1
+          let uu___2 = delta_depth_to_string d in Prims.strcat uu___2 ")" in
+        Prims.strcat "Delta_abstract (" uu___1
 let (showable_delta_depth : delta_depth FStar_Class_Show.showable) =
   { FStar_Class_Show.show = delta_depth_to_string }
 let (showable_should_check_uvar :
@@ -1309,9 +1309,9 @@ let (showable_should_check_uvar :
     FStar_Class_Show.show =
       (fun uu___ ->
          match uu___ with
-         | Allow_unresolved s -> Prims.op_Hat "Allow_unresolved " s
-         | Allow_untyped s -> Prims.op_Hat "Allow_untyped " s
-         | Allow_ghost s -> Prims.op_Hat "Allow_ghost " s
+         | Allow_unresolved s -> Prims.strcat "Allow_unresolved " s
+         | Allow_untyped s -> Prims.strcat "Allow_untyped " s
+         | Allow_ghost s -> Prims.strcat "Allow_ghost " s
          | Strict -> "Strict"
          | Already_checked -> "Already_checked")
   }
@@ -2270,7 +2270,8 @@ let (lookup_aq : bv -> antiquotations -> term) =
                       - Prims.int_one)
                      - bv1.index)
                     + (FStar_Pervasives_Native.fst aq))) ()
-      with | uu___ -> failwith "antiquotation out of bounds"
+      with
+      | uu___ -> FStar_Compiler_Effect.failwith "antiquotation out of bounds"
 let deq_instance_from_cmp :
   'uuuuu .
     ('uuuuu -> 'uuuuu -> FStar_Compiler_Order.order) ->
@@ -2396,7 +2397,8 @@ let (mk_Tm_uinst : term -> universes -> term) =
       match t.n with
       | Tm_fvar uu___ ->
           (match us with | [] -> t | us1 -> mk (Tm_uinst (t, us1)) t.pos)
-      | uu___ -> failwith "Unexpected universe instantiation"
+      | uu___ ->
+          FStar_Compiler_Effect.failwith "Unexpected universe instantiation"
 let (extend_app_n : term -> args -> FStar_Compiler_Range_Type.range -> term)
   =
   fun t ->
@@ -2644,7 +2646,7 @@ let (new_univ_name :
     let uu___ =
       let uu___1 =
         let uu___2 = FStar_Compiler_Util.string_of_int id in
-        Prims.op_Hat FStar_Ident.reserved_prefix uu___2 in
+        Prims.strcat FStar_Ident.reserved_prefix uu___2 in
       (uu___1, (range_of_ropt ropt)) in
     FStar_Ident.mk_ident uu___
 let (lbname_eq :
@@ -2948,7 +2950,9 @@ let (deq_lazy_kind : lazy_kind FStar_Class_Deq.deq) =
            | (Lazy_extension s, Lazy_extension t) -> s = t
            | (Lazy_embedding uu___, uu___1) -> false
            | (uu___, Lazy_embedding uu___1) -> false
-           | uu___ -> failwith "FIXME! eq_lazy_kind must be complete")
+           | uu___ ->
+               FStar_Compiler_Effect.failwith
+                 "FIXME! eq_lazy_kind must be complete")
   }
 let (showable_lazy_kind : lazy_kind FStar_Class_Show.showable) =
   {
@@ -2975,6 +2979,8 @@ let (showable_lazy_kind : lazy_kind FStar_Class_Show.showable) =
          | Lazy_ident -> "Lazy_ident"
          | Lazy_tref -> "Lazy_tref"
          | Lazy_embedding uu___1 -> "Lazy_embedding _"
-         | Lazy_extension s -> Prims.op_Hat "Lazy_extension " s
-         | uu___1 -> failwith "FIXME! lazy_kind_to_string must be complete")
+         | Lazy_extension s -> Prims.strcat "Lazy_extension " s
+         | uu___1 ->
+             FStar_Compiler_Effect.failwith
+               "FIXME! lazy_kind_to_string must be complete")
   }
