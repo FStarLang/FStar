@@ -38,4 +38,5 @@ declaration. *)
 val mk_class (nm:string) : Tac decls
 
 (* Helper to solve an explicit argument by typeclass resolution *)
+[@@tcnorm]
 unfold let solve (#a:Type) (#[tcresolve ()] ev : a) : Tot a = ev

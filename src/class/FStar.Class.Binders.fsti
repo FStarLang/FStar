@@ -1,6 +1,7 @@
 module FStar.Class.Binders
 
 open FStar.Compiler.Util
+open FStar.Compiler.Set
 open FStar.Syntax.Syntax
 
 class hasNames (a:Type) = {

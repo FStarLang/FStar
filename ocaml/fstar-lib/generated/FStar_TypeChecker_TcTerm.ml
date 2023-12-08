@@ -263,7 +263,9 @@ let (check_no_escape :
                      let fvs' = FStar_Syntax_Free.names t1 in
                      let uu___2 =
                        FStar_Compiler_List.tryFind
-                         (fun x -> FStar_Compiler_Util.set_mem x fvs') fvs in
+                         (fun x ->
+                            FStar_Compiler_Set.mem FStar_Syntax_Syntax.ord_bv
+                              x fvs') fvs in
                      match uu___2 with
                      | FStar_Pervasives_Native.None ->
                          (t1, FStar_TypeChecker_Env.trivial_guard)
@@ -880,8 +882,7 @@ let (print_expected_ty : FStar_TypeChecker_Env.env -> unit) =
 let rec (get_pat_vars' :
   FStar_Syntax_Syntax.bv Prims.list ->
     Prims.bool ->
-      FStar_Syntax_Syntax.term ->
-        FStar_Syntax_Syntax.bv FStar_Compiler_Util.set)
+      FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.bv FStar_Compiler_Set.t)
   =
   fun all ->
     fun andlist ->
@@ -901,10 +902,9 @@ let rec (get_pat_vars' :
                  ->
                  if andlist
                  then
-                   FStar_Compiler_Util.as_set all
-                     FStar_Syntax_Syntax.order_bv
-                 else
-                   FStar_Compiler_Util.new_set FStar_Syntax_Syntax.order_bv
+                   FStar_Compiler_Set.from_list FStar_Syntax_Syntax.ord_bv
+                     all
+                 else FStar_Compiler_Set.empty FStar_Syntax_Syntax.ord_bv ()
              | (FStar_Syntax_Syntax.Tm_fvar fv,
                 (uu___2, FStar_Pervasives_Native.Some
                  { FStar_Syntax_Syntax.aqual_implicit = true;
@@ -917,8 +917,12 @@ let rec (get_pat_vars' :
                  let hdvs = get_pat_vars' all false hd in
                  let tlvs = get_pat_vars' all andlist tl in
                  if andlist
-                 then FStar_Compiler_Util.set_intersect hdvs tlvs
-                 else FStar_Compiler_Util.set_union hdvs tlvs
+                 then
+                   FStar_Compiler_Set.inter FStar_Syntax_Syntax.ord_bv hdvs
+                     tlvs
+                 else
+                   FStar_Compiler_Set.union FStar_Syntax_Syntax.ord_bv hdvs
+                     tlvs
              | (FStar_Syntax_Syntax.Tm_fvar fv,
                 (uu___2, FStar_Pervasives_Native.Some
                  { FStar_Syntax_Syntax.aqual_implicit = true;
@@ -933,11 +937,10 @@ let rec (get_pat_vars' :
                    FStar_Parser_Const.smtpatOr_lid
                  -> get_pat_vars' all true subpats
              | uu___2 ->
-                 FStar_Compiler_Util.new_set FStar_Syntax_Syntax.order_bv)
+                 FStar_Compiler_Set.empty FStar_Syntax_Syntax.ord_bv ())
 let (get_pat_vars :
   FStar_Syntax_Syntax.bv Prims.list ->
-    FStar_Syntax_Syntax.term ->
-      FStar_Syntax_Syntax.bv FStar_Compiler_Util.set)
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.bv FStar_Compiler_Set.t)
   = fun all -> fun pats -> get_pat_vars' all false pats
 let (check_pat_fvs :
   FStar_Compiler_Range_Type.range ->
@@ -966,7 +969,9 @@ let (check_pat_fvs :
                         FStar_Syntax_Syntax.binder_qual = uu___2;
                         FStar_Syntax_Syntax.binder_positivity = uu___3;
                         FStar_Syntax_Syntax.binder_attrs = uu___4;_} ->
-                        let uu___5 = FStar_Compiler_Util.set_mem b pat_vars in
+                        let uu___5 =
+                          FStar_Compiler_Set.mem FStar_Syntax_Syntax.ord_bv b
+                            pat_vars in
                         Prims.op_Negation uu___5)) in
           match uu___ with
           | FStar_Pervasives_Native.None -> ()
@@ -11268,8 +11273,9 @@ and (check_inner_let_rec :
                                           if uu___6
                                           then
                                             let bvss =
-                                              FStar_Compiler_Util.as_set bvs
-                                                FStar_Syntax_Syntax.order_bv in
+                                              FStar_Compiler_Set.from_list
+                                                FStar_Syntax_Syntax.ord_bv
+                                                bvs in
                                             FStar_TypeChecker_Common.apply_lcomp
                                               (fun c ->
                                                  let uu___7 =
@@ -11293,11 +11299,13 @@ and (check_inner_let_rec :
                                                                     FStar_Syntax_Free.names in
                                                                    FStar_Compiler_Effect.op_Bar_Greater
                                                                     uu___13
-                                                                    (FStar_Compiler_Util.set_intersect
+                                                                    (FStar_Compiler_Set.inter
+                                                                    FStar_Syntax_Syntax.ord_bv
                                                                     bvss) in
                                                                  FStar_Compiler_Effect.op_Bar_Greater
                                                                    uu___12
-                                                                   FStar_Compiler_Util.set_is_empty in
+                                                                   (FStar_Compiler_Set.is_empty
+                                                                    FStar_Syntax_Syntax.ord_bv) in
                                                                FStar_Compiler_Effect.op_Bar_Greater
                                                                  uu___11
                                                                  Prims.op_Negation)) in

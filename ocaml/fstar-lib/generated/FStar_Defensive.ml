@@ -8,26 +8,29 @@ let (pp_bv : FStar_Syntax_Syntax.bv FStar_Class_PP.pretty) =
   }
 let pp_set :
   'a .
-    'a FStar_Class_PP.pretty ->
-      'a FStar_Compiler_Util.set FStar_Class_PP.pretty
+    'a FStar_Class_Ord.ord ->
+      'a FStar_Class_PP.pretty ->
+        'a FStar_Compiler_Set.set FStar_Class_PP.pretty
   =
   fun uu___ ->
-    {
-      FStar_Class_PP.pp =
-        (fun s ->
-           let doclist ds =
-             let uu___1 = FStar_Pprint.doc_of_string "[]" in
+    fun uu___1 ->
+      {
+        FStar_Class_PP.pp =
+          (fun s ->
+             let doclist ds =
+               let uu___2 = FStar_Pprint.doc_of_string "[]" in
+               let uu___3 =
+                 let uu___4 = FStar_Pprint.break_ Prims.int_one in
+                 FStar_Pprint.op_Hat_Hat FStar_Pprint.semi uu___4 in
+               FStar_Pprint.surround_separate (Prims.of_int (2))
+                 Prims.int_zero uu___2 FStar_Pprint.lbracket uu___3
+                 FStar_Pprint.rbracket ds in
              let uu___2 =
-               let uu___3 = FStar_Pprint.break_ Prims.int_one in
-               FStar_Pprint.op_Hat_Hat FStar_Pprint.semi uu___3 in
-             FStar_Pprint.surround_separate (Prims.of_int (2)) Prims.int_zero
-               uu___1 FStar_Pprint.lbracket uu___2 FStar_Pprint.rbracket ds in
-           let uu___1 =
-             let uu___2 = FStar_Compiler_Util.set_elements s in
-             FStar_Compiler_Effect.op_Bar_Greater uu___2
-               (FStar_List.map (FStar_Class_PP.pp uu___)) in
-           doclist uu___1)
-    }
+               let uu___3 = FStar_Compiler_Set.elems uu___ s in
+               FStar_Compiler_Effect.op_Bar_Greater uu___3
+                 (FStar_Compiler_List.map (FStar_Class_PP.pp uu___1)) in
+             doclist uu___2)
+      }
 let __def_check_scoped :
   'envut 'thingut .
     'envut FStar_Class_Binders.hasBinders ->
@@ -47,10 +50,8 @@ let __def_check_scoped :
                 let scope = FStar_Class_Binders.boundNames uu___ env in
                 let uu___3 =
                   let uu___4 =
-                    let uu___5 =
-                      FStar_Compiler_Util.set_difference free scope in
-                    FStar_Compiler_Effect.op_Less_Bar
-                      FStar_Compiler_Util.set_is_empty uu___5 in
+                    FStar_Compiler_Set.subset FStar_Syntax_Syntax.ord_bv free
+                      scope in
                   Prims.op_Negation uu___4 in
                 if uu___3
                 then
@@ -73,22 +74,28 @@ let __def_check_scoped :
                           let uu___10 =
                             let uu___11 = FStar_Errors_Msg.text "FVs =" in
                             let uu___12 =
-                              FStar_Class_PP.pp (pp_set pp_bv) free in
+                              FStar_Class_PP.pp
+                                (pp_set FStar_Syntax_Syntax.ord_bv pp_bv)
+                                free in
                             FStar_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
                           let uu___11 =
                             let uu___12 =
                               let uu___13 = FStar_Errors_Msg.text "Scope =" in
                               let uu___14 =
-                                FStar_Class_PP.pp (pp_set pp_bv) scope in
+                                FStar_Class_PP.pp
+                                  (pp_set FStar_Syntax_Syntax.ord_bv pp_bv)
+                                  scope in
                               FStar_Pprint.op_Hat_Slash_Hat uu___13 uu___14 in
                             let uu___13 =
                               let uu___14 =
                                 let uu___15 = FStar_Errors_Msg.text "Diff =" in
                                 let uu___16 =
                                   let uu___17 =
-                                    FStar_Compiler_Util.set_difference free
-                                      scope in
-                                  FStar_Class_PP.pp (pp_set pp_bv) uu___17 in
+                                    FStar_Compiler_Set.diff
+                                      FStar_Syntax_Syntax.ord_bv free scope in
+                                  FStar_Class_PP.pp
+                                    (pp_set FStar_Syntax_Syntax.ord_bv pp_bv)
+                                    uu___17 in
                                 FStar_Pprint.op_Hat_Slash_Hat uu___15 uu___16 in
                               [uu___14] in
                             uu___12 :: uu___13 in

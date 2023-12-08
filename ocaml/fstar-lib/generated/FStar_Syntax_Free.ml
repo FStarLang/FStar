@@ -19,11 +19,9 @@ let (uu___is_NoCache : use_cache_t -> Prims.bool) =
 let (uu___is_Full : use_cache_t -> Prims.bool) =
   fun projectee -> match projectee with | Full -> true | uu___ -> false
 type free_vars_and_fvars =
-  (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident
-    FStar_Compiler_Util.set)
+  (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident FStar_Compiler_Set.set)
 let (no_free_vars :
-  (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident
-    FStar_Compiler_Util.set))
+  (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident FStar_Compiler_Set.t))
   =
   let uu___ = FStar_Syntax_Syntax.new_fv_set () in
   ({
@@ -35,18 +33,17 @@ let (no_free_vars :
 let (singleton_fvar :
   FStar_Syntax_Syntax.fv ->
     (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident
-      FStar_Compiler_Util.set))
+      FStar_Compiler_Set.set))
   =
   fun fv ->
     let uu___ =
       let uu___1 = FStar_Syntax_Syntax.new_fv_set () in
-      FStar_Compiler_Util.set_add
+      FStar_Compiler_Set.add FStar_Syntax_Syntax.ord_fv
         (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v uu___1 in
     ((FStar_Pervasives_Native.fst no_free_vars), uu___)
 let (singleton_bv :
   FStar_Syntax_Syntax.bv ->
-    (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident
-      FStar_Compiler_Util.set))
+    (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident FStar_Compiler_Set.t))
   =
   fun x ->
     ((let uu___ = FStar_Pervasives_Native.fst no_free_vars in
@@ -61,8 +58,7 @@ let (singleton_bv :
       }), (FStar_Pervasives_Native.snd no_free_vars))
 let (singleton_uv :
   FStar_Syntax_Syntax.ctx_uvar ->
-    (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident
-      FStar_Compiler_Util.set))
+    (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident FStar_Compiler_Set.t))
   =
   fun x ->
     ((let uu___ = FStar_Pervasives_Native.fst no_free_vars in
@@ -77,8 +73,7 @@ let (singleton_uv :
       }), (FStar_Pervasives_Native.snd no_free_vars))
 let (singleton_univ :
   FStar_Syntax_Syntax.universe_uvar ->
-    (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident
-      FStar_Compiler_Util.set))
+    (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident FStar_Compiler_Set.t))
   =
   fun x ->
     ((let uu___ = FStar_Pervasives_Native.fst no_free_vars in
@@ -93,8 +88,7 @@ let (singleton_univ :
       }), (FStar_Pervasives_Native.snd no_free_vars))
 let (singleton_univ_name :
   FStar_Syntax_Syntax.univ_name ->
-    (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident
-      FStar_Compiler_Util.set))
+    (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident FStar_Compiler_Set.t))
   =
   fun x ->
     ((let uu___ = FStar_Pervasives_Native.fst no_free_vars in
@@ -111,13 +105,13 @@ let (union :
   free_vars_and_fvars ->
     free_vars_and_fvars ->
       (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident
-        FStar_Compiler_Util.set))
+        FStar_Compiler_Set.set))
   =
   fun f1 ->
     fun f2 ->
       let uu___ =
-        FStar_Compiler_Util.set_union (FStar_Pervasives_Native.snd f1)
-          (FStar_Pervasives_Native.snd f2) in
+        FStar_Compiler_Set.union FStar_Syntax_Syntax.ord_fv
+          (FStar_Pervasives_Native.snd f1) (FStar_Pervasives_Native.snd f2) in
       ({
          FStar_Syntax_Syntax.free_names =
            (FStar_Compiler_List.op_At
@@ -373,10 +367,10 @@ and (free_names_and_uvars_args :
     FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
     Prims.list ->
     (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident
-      FStar_Compiler_Util.set) ->
+      FStar_Compiler_Set.set) ->
       use_cache_t ->
         (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident
-          FStar_Compiler_Util.set))
+          FStar_Compiler_Set.set))
   =
   fun args ->
     fun acc ->
@@ -490,8 +484,6 @@ let (compare_uv :
       let uu___1 =
         FStar_Syntax_Unionfind.uvar_id uv2.FStar_Syntax_Syntax.ctx_uvar_head in
       uu___ - uu___1
-let (new_uv_set : unit -> FStar_Syntax_Syntax.uvars) =
-  fun uu___ -> FStar_Compiler_Util.new_set compare_uv
 let (compare_universe_uvar :
   FStar_Syntax_Syntax.universe_uvar ->
     FStar_Syntax_Syntax.universe_uvar -> Prims.int)
@@ -500,13 +492,63 @@ let (compare_universe_uvar :
     fun y ->
       let uu___ = FStar_Syntax_Unionfind.univ_uvar_id x in
       let uu___1 = FStar_Syntax_Unionfind.univ_uvar_id y in uu___ - uu___1
+let (deq_ctx_uvar : FStar_Syntax_Syntax.ctx_uvar FStar_Class_Deq.deq) =
+  {
+    FStar_Class_Deq.op_Equals_Question =
+      (fun u ->
+         fun v ->
+           let uu___ =
+             FStar_Syntax_Unionfind.uvar_id
+               u.FStar_Syntax_Syntax.ctx_uvar_head in
+           let uu___1 =
+             FStar_Syntax_Unionfind.uvar_id
+               v.FStar_Syntax_Syntax.ctx_uvar_head in
+           FStar_Class_Deq.op_Equals_Question
+             (FStar_Class_Ord.ord_eq FStar_Class_Ord.ord_int) uu___ uu___1)
+  }
+let (ord_ctx_uvar : FStar_Syntax_Syntax.ctx_uvar FStar_Class_Ord.ord) =
+  {
+    FStar_Class_Ord.super = deq_ctx_uvar;
+    FStar_Class_Ord.cmp =
+      (fun u ->
+         fun v ->
+           let uu___ =
+             FStar_Syntax_Unionfind.uvar_id
+               u.FStar_Syntax_Syntax.ctx_uvar_head in
+           let uu___1 =
+             FStar_Syntax_Unionfind.uvar_id
+               v.FStar_Syntax_Syntax.ctx_uvar_head in
+           FStar_Class_Ord.cmp FStar_Class_Ord.ord_int uu___ uu___1)
+  }
+let (deq_univ_uvar : FStar_Syntax_Syntax.universe_uvar FStar_Class_Deq.deq) =
+  {
+    FStar_Class_Deq.op_Equals_Question =
+      (fun u ->
+         fun v ->
+           let uu___ = FStar_Syntax_Unionfind.univ_uvar_id u in
+           let uu___1 = FStar_Syntax_Unionfind.univ_uvar_id v in
+           FStar_Class_Deq.op_Equals_Question
+             (FStar_Class_Ord.ord_eq FStar_Class_Ord.ord_int) uu___ uu___1)
+  }
+let (ord_univ_uvar : FStar_Syntax_Syntax.universe_uvar FStar_Class_Ord.ord) =
+  {
+    FStar_Class_Ord.super = deq_univ_uvar;
+    FStar_Class_Ord.cmp =
+      (fun u ->
+         fun v ->
+           let uu___ = FStar_Syntax_Unionfind.univ_uvar_id u in
+           let uu___1 = FStar_Syntax_Unionfind.univ_uvar_id v in
+           FStar_Class_Ord.cmp FStar_Class_Ord.ord_int uu___ uu___1)
+  }
+let (new_uv_set : unit -> FStar_Syntax_Syntax.uvars) =
+  fun uu___ -> FStar_Compiler_Set.empty ord_ctx_uvar ()
 let (new_universe_uvar_set :
-  unit -> FStar_Syntax_Syntax.universe_uvar FStar_Compiler_Util.set) =
-  fun uu___ -> FStar_Compiler_Util.new_set compare_universe_uvar
-let (empty : FStar_Syntax_Syntax.bv FStar_Compiler_Util.set) =
-  FStar_Compiler_Util.new_set FStar_Syntax_Syntax.order_bv
+  unit -> FStar_Syntax_Syntax.universe_uvar FStar_Compiler_Set.set) =
+  fun uu___ -> FStar_Compiler_Set.empty ord_univ_uvar ()
+let (empty : FStar_Syntax_Syntax.bv FStar_Compiler_Set.set) =
+  FStar_Compiler_Set.empty FStar_Syntax_Syntax.ord_bv ()
 let (names :
-  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.bv FStar_Compiler_Util.set)
+  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.bv FStar_Compiler_Set.set)
   =
   fun t ->
     let uu___ =
@@ -514,10 +556,10 @@ let (names :
         let uu___2 = free_names_and_uvars t Def in
         FStar_Pervasives_Native.fst uu___2 in
       uu___1.FStar_Syntax_Syntax.free_names in
-    FStar_Compiler_Util.as_set uu___ FStar_Syntax_Syntax.order_bv
+    FStar_Compiler_Set.from_list FStar_Syntax_Syntax.ord_bv uu___
 let (uvars :
   FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Util.set)
+    FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Set.set)
   =
   fun t ->
     let uu___ =
@@ -525,10 +567,10 @@ let (uvars :
         let uu___2 = free_names_and_uvars t Def in
         FStar_Pervasives_Native.fst uu___2 in
       uu___1.FStar_Syntax_Syntax.free_uvars in
-    FStar_Compiler_Util.as_set uu___ compare_uv
+    FStar_Compiler_Set.from_list ord_ctx_uvar uu___
 let (univs :
   FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.universe_uvar FStar_Compiler_Util.set)
+    FStar_Syntax_Syntax.universe_uvar FStar_Compiler_Set.set)
   =
   fun t ->
     let uu___ =
@@ -536,10 +578,10 @@ let (univs :
         let uu___2 = free_names_and_uvars t Def in
         FStar_Pervasives_Native.fst uu___2 in
       uu___1.FStar_Syntax_Syntax.free_univs in
-    FStar_Compiler_Util.as_set uu___ compare_universe_uvar
+    FStar_Compiler_Set.from_list ord_univ_uvar uu___
 let (univnames :
   FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.univ_name FStar_Compiler_Util.set)
+    FStar_Syntax_Syntax.univ_name FStar_Compiler_Set.set)
   =
   fun t ->
     let uu___ =
@@ -547,10 +589,10 @@ let (univnames :
         let uu___2 = free_names_and_uvars t Def in
         FStar_Pervasives_Native.fst uu___2 in
       uu___1.FStar_Syntax_Syntax.free_univ_names in
-    FStar_Compiler_Util.as_set uu___ FStar_Syntax_Syntax.order_univ_name
+    FStar_Compiler_Set.from_list FStar_Syntax_Syntax.ord_ident uu___
 let (univnames_comp :
   FStar_Syntax_Syntax.comp ->
-    FStar_Syntax_Syntax.univ_name FStar_Compiler_Util.set)
+    FStar_Syntax_Syntax.univ_name FStar_Compiler_Set.set)
   =
   fun c ->
     let uu___ =
@@ -558,15 +600,15 @@ let (univnames_comp :
         let uu___2 = free_names_and_uvars_comp c Def in
         FStar_Pervasives_Native.fst uu___2 in
       uu___1.FStar_Syntax_Syntax.free_univ_names in
-    FStar_Compiler_Util.as_set uu___ FStar_Syntax_Syntax.order_univ_name
+    FStar_Compiler_Set.from_list FStar_Syntax_Syntax.ord_ident uu___
 let (fvars :
-  FStar_Syntax_Syntax.term -> FStar_Ident.lident FStar_Compiler_Util.set) =
+  FStar_Syntax_Syntax.term -> FStar_Ident.lident FStar_Compiler_Set.set) =
   fun t ->
     let uu___ = free_names_and_uvars t NoCache in
     FStar_Pervasives_Native.snd uu___
 let (names_of_binders :
   FStar_Syntax_Syntax.binders ->
-    FStar_Syntax_Syntax.bv FStar_Compiler_Util.set)
+    FStar_Syntax_Syntax.bv FStar_Compiler_Set.set)
   =
   fun bs ->
     let uu___ =
@@ -574,10 +616,10 @@ let (names_of_binders :
         let uu___2 = free_names_and_uvars_binders bs Def in
         FStar_Pervasives_Native.fst uu___2 in
       uu___1.FStar_Syntax_Syntax.free_names in
-    FStar_Compiler_Util.as_set uu___ FStar_Syntax_Syntax.order_bv
+    FStar_Compiler_Set.from_list FStar_Syntax_Syntax.ord_bv uu___
 let (uvars_uncached :
   FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Util.set)
+    FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Set.set)
   =
   fun t ->
     let uu___ =
@@ -585,10 +627,10 @@ let (uvars_uncached :
         let uu___2 = free_names_and_uvars t NoCache in
         FStar_Pervasives_Native.fst uu___2 in
       uu___1.FStar_Syntax_Syntax.free_uvars in
-    FStar_Compiler_Util.as_set uu___ compare_uv
+    FStar_Compiler_Set.from_list ord_ctx_uvar uu___
 let (uvars_full :
   FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Util.set)
+    FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Set.set)
   =
   fun t ->
     let uu___ =
@@ -596,4 +638,4 @@ let (uvars_full :
         let uu___2 = free_names_and_uvars t Full in
         FStar_Pervasives_Native.fst uu___2 in
       uu___1.FStar_Syntax_Syntax.free_uvars in
-    FStar_Compiler_Util.as_set uu___ compare_uv
+    FStar_Compiler_Set.from_list ord_ctx_uvar uu___

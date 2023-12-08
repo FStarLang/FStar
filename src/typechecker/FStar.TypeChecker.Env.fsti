@@ -399,8 +399,8 @@ val bound_vars   : env -> list bv
 val all_binders  : env -> binders
 val modules      : env -> list modul
 val uvars_in_env : env -> uvars
-val univ_vars    : env -> FStar.Compiler.Util.set universe_uvar
-val univnames    : env -> FStar.Compiler.Util.set univ_name
+val univ_vars    : env -> Set.set universe_uvar
+val univnames    : env -> Set.set univ_name
 val lidents      : env -> list lident
 
 (* operations on monads *)
@@ -450,7 +450,7 @@ val set_proof_ns    : proof_namespace -> env -> env
 val string_of_proof_ns : env -> string
 
 (* Check that all free variables of the term are defined in the environment *)
-val unbound_vars    : env -> term -> BU.set bv
+val unbound_vars    : env -> term -> Set.set bv
 val closed          : env -> term -> bool
 val closed'         : term -> bool
 

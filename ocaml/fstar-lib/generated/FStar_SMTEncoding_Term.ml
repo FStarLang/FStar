@@ -161,7 +161,7 @@ type term' =
   | String of Prims.string 
   | Real of Prims.string 
   | BoundV of Prims.int 
-  | FreeV of (Prims.string * sort * Prims.bool) 
+  | FreeV of fv 
   | App of (op * term Prims.list) 
   | Quant of (qop * term Prims.list Prims.list * Prims.int
   FStar_Pervasives_Native.option * sort Prims.list * term) 
@@ -171,9 +171,10 @@ type term' =
 and term =
   {
   tm: term' ;
-  freevars:
-    (Prims.string * sort * Prims.bool) Prims.list FStar_Syntax_Syntax.memo ;
+  freevars: fv Prims.list FStar_Syntax_Syntax.memo ;
   rng: FStar_Compiler_Range_Type.range }
+and fv =
+  | FV of (Prims.string * sort * Prims.bool) 
 let (uu___is_Integer : term' -> Prims.bool) =
   fun projectee -> match projectee with | Integer _0 -> true | uu___ -> false
 let (__proj__Integer__item___0 : term' -> Prims.string) =
@@ -192,7 +193,7 @@ let (__proj__BoundV__item___0 : term' -> Prims.int) =
   fun projectee -> match projectee with | BoundV _0 -> _0
 let (uu___is_FreeV : term' -> Prims.bool) =
   fun projectee -> match projectee with | FreeV _0 -> true | uu___ -> false
-let (__proj__FreeV__item___0 : term' -> (Prims.string * sort * Prims.bool)) =
+let (__proj__FreeV__item___0 : term' -> fv) =
   fun projectee -> match projectee with | FreeV _0 -> _0
 let (uu___is_App : term' -> Prims.bool) =
   fun projectee -> match projectee with | App _0 -> true | uu___ -> false
@@ -221,15 +222,15 @@ let (__proj__LblPos__item___0 : term' -> (term * Prims.string)) =
 let (__proj__Mkterm__item__tm : term -> term') =
   fun projectee -> match projectee with | { tm; freevars; rng;_} -> tm
 let (__proj__Mkterm__item__freevars :
-  term ->
-    (Prims.string * sort * Prims.bool) Prims.list FStar_Syntax_Syntax.memo)
-  =
+  term -> fv Prims.list FStar_Syntax_Syntax.memo) =
   fun projectee -> match projectee with | { tm; freevars; rng;_} -> freevars
 let (__proj__Mkterm__item__rng : term -> FStar_Compiler_Range_Type.range) =
   fun projectee -> match projectee with | { tm; freevars; rng;_} -> rng
+let (uu___is_FV : fv -> Prims.bool) = fun projectee -> true
+let (__proj__FV__item___0 : fv -> (Prims.string * sort * Prims.bool)) =
+  fun projectee -> match projectee with | FV _0 -> _0
 type pat = term
-type fv = (Prims.string * sort * Prims.bool)
-type fvs = (Prims.string * sort * Prims.bool) Prims.list
+type fvs = fv Prims.list
 type caption = Prims.string FStar_Pervasives_Native.option
 type binders = (Prims.string * sort) Prims.list
 type constructor_field =
@@ -495,15 +496,35 @@ let (decls_list_of : decls_t -> decl Prims.list) =
     FStar_Compiler_Effect.op_Bar_Greater l
       (FStar_Compiler_List.collect (fun elt -> elt.decls))
 let (mk_fv : (Prims.string * sort) -> fv) =
-  fun uu___ -> match uu___ with | (x, y) -> (x, y, false)
+  fun uu___ -> match uu___ with | (x, y) -> FV (x, y, false)
 let (fv_name : fv -> Prims.string) =
-  fun x -> let uu___ = x in match uu___ with | (nm, uu___1, uu___2) -> nm
+  fun x -> let uu___ = x in match uu___ with | FV (nm, uu___1, uu___2) -> nm
+let (deq_fv : fv FStar_Class_Deq.deq) =
+  {
+    FStar_Class_Deq.op_Equals_Question =
+      (fun fv1 ->
+         fun fv2 ->
+           let uu___ = fv_name fv1 in
+           let uu___1 = fv_name fv2 in uu___ = uu___1)
+  }
+let (ord_fv : fv FStar_Class_Ord.ord) =
+  {
+    FStar_Class_Ord.super = deq_fv;
+    FStar_Class_Ord.cmp =
+      (fun fv1 ->
+         fun fv2 ->
+           let uu___ =
+             let uu___1 = fv_name fv1 in
+             let uu___2 = fv_name fv2 in
+             FStar_Compiler_Util.compare uu___1 uu___2 in
+           FStar_Compiler_Order.order_from_int uu___)
+  }
 let (fv_sort : fv -> sort) =
   fun x ->
-    let uu___ = x in match uu___ with | (uu___1, sort1, uu___2) -> sort1
+    let uu___ = x in match uu___ with | FV (uu___1, sort1, uu___2) -> sort1
 let (fv_force : fv -> Prims.bool) =
   fun x ->
-    let uu___ = x in match uu___ with | (uu___1, uu___2, force) -> force
+    let uu___ = x in match uu___ with | FV (uu___1, uu___2, force) -> force
 type error_label = (fv * Prims.string * FStar_Compiler_Range_Type.range)
 type error_labels = error_label Prims.list
 let (fv_eq : fv -> fv -> Prims.bool) =
@@ -516,9 +537,9 @@ let (fvs_subset_of : fvs -> fvs -> Prims.bool) =
       let cmp_fv x1 y1 =
         let uu___ = fv_name x1 in
         let uu___1 = fv_name y1 in FStar_Compiler_Util.compare uu___ uu___1 in
-      let uu___ = FStar_Compiler_Util.as_set x cmp_fv in
-      let uu___1 = FStar_Compiler_Util.as_set y cmp_fv in
-      FStar_Compiler_Util.set_is_subset_of uu___ uu___1
+      let uu___ = FStar_Compiler_Set.from_list ord_fv x in
+      let uu___1 = FStar_Compiler_Set.from_list ord_fv y in
+      FStar_Compiler_Set.subset ord_fv uu___ uu___1
 let (freevar_eq : term -> term -> Prims.bool) =
   fun x ->
     fun y ->
@@ -535,7 +556,7 @@ let (fv_of_term : term -> fv) =
     match uu___ with
     | { tm = FreeV fv1; freevars = uu___1; rng = uu___2;_} -> fv1
     | uu___1 -> failwith "impossible"
-let rec (freevars : term -> (Prims.string * sort * Prims.bool) Prims.list) =
+let rec (freevars : term -> fv Prims.list) =
   fun t ->
     match t.tm with
     | Integer uu___ -> []

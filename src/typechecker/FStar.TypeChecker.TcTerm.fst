@@ -91,7 +91,7 @@ let check_no_escape (head_opt : option term)
     let rec aux try_norm t =
       let t = if try_norm then norm env t else t in
       let fvs' = Free.names t in
-      match List.tryFind (fun x -> BU.set_mem x fvs') fvs with
+      match List.tryFind (fun x -> Set.mem x fvs') fvs with
       | None -> t, Env.trivial_guard
       | Some x ->
         (* some variable x seems to escape, try normalizing if we haven't *)
@@ -385,14 +385,14 @@ let print_expected_ty env = BU.print1 "%s\n" (print_expected_ty_str env)
 
 (* andlist: whether we're inside an SMTPatOr and we should take the
  * intersection of the sub-variables instead of the union. *)
-let rec get_pat_vars' all (andlist : bool) (pats:term) :set bv =
+let rec get_pat_vars' all (andlist : bool) (pats:term) : Set.t bv =
   let pats = unmeta pats in
   let head, args = head_and_args pats in
   match (un_uinst head).n, args with
   | Tm_fvar fv, _ when fv_eq_lid fv Const.nil_lid ->
       if andlist
-      then BU.as_set all Syntax.order_bv
-      else BU.new_set Syntax.order_bv
+      then Set.from_list all
+      else Set.empty ()
 
   | Tm_fvar fv, [(_, Some ({ aqual_implicit = true })); (hd, None); (tl, None)] when fv_eq_lid fv Const.cons_lid ->
       (* The head is not under the scope of the SMTPatOr, consider
@@ -402,8 +402,8 @@ let rec get_pat_vars' all (andlist : bool) (pats:term) :set bv =
       let tlvs = get_pat_vars' all andlist tl in
 
       if andlist
-      then BU.set_intersect hdvs tlvs
-      else BU.set_union     hdvs tlvs
+      then Set.inter hdvs tlvs
+      else Set.union hdvs tlvs
 
   | Tm_fvar fv, [(_, Some ({ aqual_implicit = true })); (pat, None)] when fv_eq_lid fv Const.smtpat_lid ->
       Free.names pat
@@ -411,14 +411,13 @@ let rec get_pat_vars' all (andlist : bool) (pats:term) :set bv =
   | Tm_fvar fv, [(subpats, None)] when fv_eq_lid fv Const.smtpatOr_lid ->
       get_pat_vars' all true subpats
 
-  | _ ->
-      BU.new_set Syntax.order_bv
+  | _ -> Set.empty ()
 
 let get_pat_vars all pats = get_pat_vars' all false pats
 
 let check_pat_fvs rng env pats bs =
     let pat_vars = get_pat_vars (List.map (fun b -> b.binder_bv) bs) (N.normalize [Env.Beta] env pats) in
-    begin match bs |> BU.find_opt (fun ({binder_bv=b}) -> not(BU.set_mem b pat_vars)) with
+    begin match bs |> BU.find_opt (fun ({binder_bv=b}) -> not(Set.mem b pat_vars)) with
         | None -> ()
         | Some ({binder_bv=x}) ->
           Errors.log_issue rng
@@ -4121,14 +4120,14 @@ and check_inner_let_rec env top =
           let cres =
             if cres.eff_name |> Env.norm_eff_name env
                              |> Env.is_layered_effect env
-            then let bvss = BU.as_set bvs S.order_bv in
+            then let bvss = Set.from_list bvs in
                  TcComm.apply_lcomp
                    (fun c ->
                     if (c |> U.comp_effect_args
                           |> List.existsb (fun (t, _) ->
                               t |> Free.names
-                                |> BU.set_intersect bvss
-                                |> set_is_empty
+                                |> Set.inter bvss
+                                |> Set.is_empty
                                 |> not))
                     then raise_error (Errors.Fatal_EscapedBoundVar,
                            "One of the inner let recs escapes in the \

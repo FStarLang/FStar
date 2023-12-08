@@ -184,7 +184,7 @@ let apply_constr_arrow (dlid:lident) (dt:term) (all_params:list arg)
 let ty_occurs_in (ty_lid:lident)
                  (t:term)
   : bool
-  = FStar.Compiler.Util.set_mem ty_lid (Free.fvars t)
+  = Set.mem ty_lid (Free.fvars t)
 
 (* Checks if `t` is a name or fv and returns it, if so. *)
 let rec term_as_fv_or_name (t:term) 

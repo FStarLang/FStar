@@ -108,13 +108,15 @@ let (check_uvars :
     fun t ->
       let uvs = FStar_Syntax_Free.uvars t in
       let uu___ =
-        let uu___1 = FStar_Compiler_Util.set_is_empty uvs in
+        let uu___1 =
+          FStar_Compiler_Set.is_empty FStar_Syntax_Free.ord_ctx_uvar uvs in
         Prims.op_Negation uu___1 in
       if uu___
       then
         let us =
           let uu___1 =
-            let uu___2 = FStar_Compiler_Util.set_elements uvs in
+            let uu___2 =
+              FStar_Compiler_Set.elems FStar_Syntax_Free.ord_ctx_uvar uvs in
             FStar_Compiler_List.map
               (fun u ->
                  FStar_Syntax_Print.uvar_to_string
@@ -5237,7 +5239,8 @@ let rec (check_erased :
                                                FStar_Syntax_Free.names in
                                            FStar_Compiler_Effect.op_Bar_Greater
                                              uu___13
-                                             FStar_Compiler_Util.set_elements in
+                                             (FStar_Compiler_Set.elems
+                                                FStar_Syntax_Syntax.ord_bv) in
                                          FStar_Compiler_Effect.op_Bar_Greater
                                            uu___12
                                            (FStar_TypeChecker_Env.push_bvs

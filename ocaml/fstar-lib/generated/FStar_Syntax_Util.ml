@@ -217,11 +217,11 @@ let (binders_of_tks :
                 FStar_Syntax_Syntax.mk_binder_with_attrs uu___1 imp
                   FStar_Pervasives_Native.None []))
 let (binders_of_freevars :
-  FStar_Syntax_Syntax.bv FStar_Compiler_Util.set ->
+  FStar_Syntax_Syntax.bv FStar_Compiler_Set.set ->
     FStar_Syntax_Syntax.binder Prims.list)
   =
   fun fvs ->
-    let uu___ = FStar_Compiler_Util.set_elements fvs in
+    let uu___ = FStar_Compiler_Set.elems FStar_Syntax_Syntax.ord_bv fvs in
     FStar_Compiler_Effect.op_Bar_Greater uu___
       (FStar_Compiler_List.map FStar_Syntax_Syntax.mk_binder)
 let mk_subst : 'uuuuu . 'uuuuu -> 'uuuuu Prims.list = fun s -> [s]
@@ -2039,25 +2039,27 @@ let (let_rec_arity :
                  | FStar_Syntax_Syntax.Decreases_lex l ->
                      let uu___2 =
                        let uu___3 =
-                         FStar_Compiler_Util.new_set
-                           FStar_Syntax_Syntax.order_bv in
+                         FStar_Compiler_Set.empty FStar_Syntax_Syntax.ord_bv
+                           () in
                        FStar_Compiler_List.fold_left
                          (fun s ->
                             fun t ->
                               let uu___4 = FStar_Syntax_Free.names t in
-                              FStar_Compiler_Util.set_union s uu___4) uu___3 in
+                              FStar_Compiler_Set.union
+                                FStar_Syntax_Syntax.ord_bv s uu___4) uu___3 in
                      FStar_Compiler_Effect.op_Bar_Greater l uu___2
                  | FStar_Syntax_Syntax.Decreases_wf (rel, e) ->
                      let uu___2 = FStar_Syntax_Free.names rel in
                      let uu___3 = FStar_Syntax_Free.names e in
-                     FStar_Compiler_Util.set_union uu___2 uu___3 in
+                     FStar_Compiler_Set.union FStar_Syntax_Syntax.ord_bv
+                       uu___2 uu___3 in
                let uu___2 =
                  FStar_Common.tabulate n_univs (fun uu___3 -> false) in
                let uu___3 =
                  FStar_Compiler_Effect.op_Bar_Greater bs
                    (FStar_Compiler_List.map
                       (fun b ->
-                         FStar_Compiler_Util.set_mem
+                         FStar_Compiler_Set.mem FStar_Syntax_Syntax.ord_bv
                            b.FStar_Syntax_Syntax.binder_bv d_bvs)) in
                FStar_Compiler_List.op_At uu___2 uu___3) in
         ((n_univs + (FStar_Compiler_List.length bs)), uu___1)
@@ -3078,7 +3080,7 @@ let (un_squash :
                          | uu___3 -> failwith "impossible" in
                        let uu___3 =
                          let uu___4 = FStar_Syntax_Free.names p1 in
-                         FStar_Compiler_Util.set_mem
+                         FStar_Compiler_Set.mem FStar_Syntax_Syntax.ord_bv
                            b1.FStar_Syntax_Syntax.binder_bv uu___4 in
                        if uu___3
                        then FStar_Pervasives_Native.None
@@ -3249,7 +3251,7 @@ let (is_free_in :
   fun bv ->
     fun t ->
       let uu___ = FStar_Syntax_Free.names t in
-      FStar_Compiler_Util.set_mem bv uu___
+      FStar_Compiler_Set.mem FStar_Syntax_Syntax.ord_bv bv uu___
 type qpats = FStar_Syntax_Syntax.args Prims.list
 type connective =
   | QAll of (FStar_Syntax_Syntax.binders * qpats * FStar_Syntax_Syntax.typ) 

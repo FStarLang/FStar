@@ -87,7 +87,7 @@ type term' =
   | LblPos     of term * string
 and pat  = term
 and term = {tm:term'; freevars:S.memo fvs; rng:Range.range}
-and fv = string * sort * bool (* bool iff variable must be forced/unthunked *)
+and fv = | FV of string * sort * bool (* bool iff variable must be forced/unthunked *)
 and fvs = list fv
 
 type caption = option string

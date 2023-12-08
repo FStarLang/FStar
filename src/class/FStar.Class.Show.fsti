@@ -13,7 +13,6 @@ ML effect of the `printer. *)
 instance val printableshow (_ : printable 'a) : Tot (showable 'a)
 
 instance val show_list (a:Type) (_ : showable a) : Tot (showable (list a))
-instance val show_set  (a:Type) (_ : showable a) : Tot (showable (BU.set a))
 
 instance val show_option (a:Type) (_ : showable a) : Tot (showable (option a))
 
