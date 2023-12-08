@@ -116,7 +116,7 @@ type worklist = {
                                                 //is allowed; disabled by default, enabled in
                                                 //sub_comp which is called by the typechecker, and
                                                 //will insert the appropriate lifts.
-    typeclass_variables: list ctx_uvar          //variables that will be solved by typeclass instantiation
+    typeclass_variables: Set.t ctx_uvar         //variables that will be solved by typeclass instantiation
 }
 
 (* A NOTE ON ENVIRONMENTS
@@ -332,7 +332,7 @@ let term_to_string t =
       BU.format3 "%s%s %s"
             (show u)
             (match fst s with | [] -> "" | s -> BU.format1 "@<%s>" (Print.subst_to_string (List.hd s)))
-            (Print.args_to_string args)
+            (show args)
     | _ -> show t
 
 let prob_to_string env prob =
@@ -367,8 +367,6 @@ let uvi_to_string env = function
       let x = if (Options.hide_uvar_nums()) then "?" else UF.uvar_id u.ctx_uvar_head |> string_of_int in
       BU.format2 "TERM %s <- %s" x (N.term_to_string env t)
 let uvis_to_string env uvis = FStar.Common.string_of_list (uvi_to_string env) uvis
-let names_to_string nms = Set.elems nms |> List.map Print.bv_to_string |> String.concat ", "
-let args_to_string (args : S.args) = args |> List.map (fun (x, _) -> show x) |> String.concat " "
 
 (* ------------------------------------------------*)
 (* </Printing>                                     *)
@@ -389,7 +387,7 @@ let empty_worklist env = {
     umax_heuristic_ok=true;
     wl_implicits=[];
     repr_subcomp_allowed=false;
-    typeclass_variables=[];
+    typeclass_variables = Set.empty();
 }
 
 let giveup wl (reason : lstring) prob =
@@ -801,7 +799,7 @@ let flex_uvar_has_meta_tac u =
   | _ -> false
 
 let flex_t_to_string (Flex (_, c, args)) =
-    BU.format2 "%s [%s]" (show c) (Print.args_to_string args)
+    BU.format2 "%s [%s]" (show c) (show args)
 
 let is_flex t =
     let head, _args = U.head_and_args t in
@@ -1059,7 +1057,7 @@ let solve_prob (prob : prob) (logical_guard : option term) (uvis : list uvi) (wl
 let occurs (uk:ctx_uvar) t =
     let uvars =
         Free.uvars t
-        |> Set.elems
+        |> Set.elems // Bad: order dependent
     in
     let occurs =
         (uvars
@@ -1078,7 +1076,7 @@ let occurs_check (uk:ctx_uvar) t =
 let occurs_full (uk:ctx_uvar) t =
     let uvars =
         Free.uvars_full t
-        |> Set.elems
+        |> Set.elems // Bad: order dependent
     in
     let occurs =
         (uvars
@@ -2086,7 +2084,7 @@ let apply_ad_hoc_indexed_subcomp (env:Env.env)
 
 let has_typeclass_constraint (u:ctx_uvar) (wl:worklist)
   : bool
-  = wl.typeclass_variables |> List.existsb (fun v -> UF.equiv v.ctx_uvar_head u.ctx_uvar_head)
+  = wl.typeclass_variables |> Set.for_any (fun v -> UF.equiv v.ctx_uvar_head u.ctx_uvar_head)
 
 (* This function returns true for those lazykinds that
 are "complete" in the sense that unfolding them does not
@@ -2991,7 +2989,7 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
         // if debug wl <| Options.Other "Rel"
         // then BU.print2 "imitate_app 2:\n\trhs'=%s\n\tlast_arg_rhs=%s\n"
         //            (show rhs')
-        //            (Print.args_to_string [last_arg_rhs]);
+        //            (show [last_arg_rhs]);
         let (Flex (t_lhs, u_lhs, _lhs_args)) = lhs in
         let lhs', lhs'_last_arg, wl =
               let t_last_arg, _ =
@@ -3198,9 +3196,6 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
         if debug wl <| Options.Other "Rel" then
           BU.print_string "it's a pattern\n";
         let rhs = sn env rhs in
-        let names_to_string fvs =
-            List.map Print.bv_to_string (Set.elems fvs) |> String.concat ", "
-        in
         let fvs1 = binders_as_bv_set (ctx_uv.ctx_uvar_binders @ lhs_binders) in
         let fvs2 = Free.names rhs in
         //if debug wl <| Options.Other "Rel" then
@@ -3209,9 +3204,9 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
         //             rhs \t= %s\n\
         //             FV(rhs) \t= %s\n"
         //               (flex_t_to_string lhs)
-        //               (names_to_string fvs1)
+        //               (show fvs1)
         //               (show rhs)
-        //               (names_to_string fvs2);
+        //               (show fvs2);
         let uvars, occurs_ok, msg = occurs_check ctx_uv rhs in
         if not occurs_ok
         then giveup_or_defer orig wl
@@ -3225,8 +3220,8 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
         then
           let msg = mklstr (fun () ->
                                 BU.format3 "free names in the RHS {%s} are out of scope for the LHS: {%s}, {%s}"
-                                           (names_to_string fvs2)
-                                           (names_to_string fvs1)
+                                           (show fvs2)
+                                           (show fvs1)
                                            (Print.binders_to_string ", " (ctx_uv.ctx_uvar_binders @ lhs_binders))) in
           giveup_or_defer orig wl Deferred_free_names_check_failed msg
         else imitate orig env wl lhs rhs
@@ -3419,10 +3414,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
         then giveup wl
                     (mklstr
                       (fun () -> BU.format4 "unequal number of arguments: %s[%s] and %s[%s]"
-                                     (show head1)
-                                     (args_to_string args1)
-                                     (show head2)
-                                     (args_to_string args2)))
+                                     (show head1) (show args1) (show head2) (show args2)))
                     orig
         else
         if nargs=0 || U.eq_args args1 args2=U.Equal //special case: for easily proving things like nat <: nat, or greater_than i <: greater_than i etc.
@@ -4329,8 +4321,8 @@ and solve_c (problem:problem comp) (wl:worklist) : solution =
                                         (Print.lid_to_string c2_comp.effect_name))) orig
         else if List.length c1_comp.effect_args <> List.length c2_comp.effect_args
         then giveup wl (mklstr (fun () -> BU.format2 "incompatible effect arguments: %s <> %s"
-                                        (Print.args_to_string c1_comp.effect_args)
-                                        (Print.args_to_string c2_comp.effect_args))) orig
+                                        (show c1_comp.effect_args)
+                                        (show c2_comp.effect_args))) orig
         else
              let univ_sub_probs, wl =
                List.fold_left2 (fun (univ_sub_probs, wl) u1 u2 ->
@@ -4955,7 +4947,7 @@ let try_solve_deferred_constraints (defer_ok:defer_ok_t) smt_ok deferred_to_tac_
                 Set.elems uvs
               )
               else []
-            | _ -> [])
+            | _ -> []) |> Set.from_list
    in
    let wl = {wl_of_guard env g.deferred with defer_ok=defer_ok
                                            ; smt_ok=smt_ok
@@ -5407,8 +5399,7 @@ let pick_a_univ_deffered_implicit (out : tagged_implicits)
 let is_tac_implicit_resolved (env:env) (i:implicit) : bool =
     i.imp_tm
     |> Free.uvars
-    |> Set.elems
-    |> List.for_all (fun uv -> Allow_unresolved? (U.ctx_uvar_should_check uv))
+    |> Set.for_all (fun uv -> Allow_unresolved? (U.ctx_uvar_should_check uv))
 
 
 // is_tac: this is a call from within the tactic engine, hence do not use
