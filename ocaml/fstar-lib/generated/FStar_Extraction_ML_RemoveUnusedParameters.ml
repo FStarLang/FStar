@@ -45,17 +45,16 @@ let (lookup_tyname :
     fun name ->
       let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath name in
       FStar_Compiler_Util.psmap_try_find env.tydef_map uu___
-type var_set = FStar_Extraction_ML_Syntax.mlident FStar_Compiler_Util.set
-let (empty_var_set : Prims.string FStar_Compiler_Util.set) =
-  FStar_Compiler_Util.new_set
-    (fun x -> fun y -> FStar_Compiler_String.compare x y)
+type var_set = FStar_Extraction_ML_Syntax.mlident FStar_Compiler_Set.set
+let (empty_var_set : Prims.string FStar_Compiler_Set.set) =
+  FStar_Compiler_Set.empty FStar_Class_Ord.ord_string ()
 let rec (freevars_of_mlty' :
   var_set -> FStar_Extraction_ML_Syntax.mlty -> var_set) =
   fun vars ->
     fun t ->
       match t with
       | FStar_Extraction_ML_Syntax.MLTY_Var i ->
-          FStar_Compiler_Util.set_add i vars
+          FStar_Compiler_Set.add FStar_Class_Ord.ord_string i vars
       | FStar_Extraction_ML_Syntax.MLTY_Fun (t0, uu___, t1) ->
           let uu___1 = freevars_of_mlty' vars t0 in
           freevars_of_mlty' uu___1 t1
@@ -315,7 +314,9 @@ let (elim_tydef :
                    fun p ->
                      match uu___1 with
                      | (i, params, entry1) ->
-                         let uu___2 = FStar_Compiler_Util.set_mem p freevars in
+                         let uu___2 =
+                           FStar_Compiler_Set.mem FStar_Class_Ord.ord_string
+                             p freevars in
                          if uu___2
                          then
                            (if must_eliminate i

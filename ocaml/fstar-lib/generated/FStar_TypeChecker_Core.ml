@@ -1212,7 +1212,8 @@ let (check_no_escape :
         FStar_Compiler_Util.for_all
           (fun b ->
              let uu___1 =
-               FStar_Compiler_Util.set_mem b.FStar_Syntax_Syntax.binder_bv xs in
+               FStar_Compiler_Set.mem FStar_Syntax_Syntax.ord_bv
+                 b.FStar_Syntax_Syntax.binder_bv xs in
              Prims.op_Negation uu___1) bs in
       if uu___ then return () else fail "Name escapes its scope"
 let rec map :
@@ -4448,7 +4449,8 @@ let (check_term_top_gh :
                         (let guard_names =
                            let uu___7 = FStar_Syntax_Free.names guard1 in
                            FStar_Compiler_Effect.op_Bar_Greater uu___7
-                             FStar_Compiler_Util.set_elements in
+                             (FStar_Compiler_Set.elems
+                                FStar_Syntax_Syntax.ord_bv) in
                          let uu___7 =
                            FStar_Compiler_List.tryFind
                              (fun bv ->

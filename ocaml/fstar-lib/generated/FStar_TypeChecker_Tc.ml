@@ -2017,7 +2017,8 @@ let (tc_sig_let :
                                                        lb.FStar_Syntax_Syntax.lbtyp in
                                                    FStar_Compiler_Effect.op_Bar_Greater
                                                      uu___10
-                                                     FStar_Compiler_Util.set_elements in
+                                                     (FStar_Compiler_Set.elems
+                                                        FStar_Syntax_Syntax.ord_fv) in
                                                  FStar_Compiler_Effect.op_Bar_Greater
                                                    uu___9
                                                    (FStar_Compiler_List.tryFind

@@ -78,12 +78,12 @@ let (is_base_type :
            | uu___2 -> false)
 let (binders_as_bv_set :
   FStar_Syntax_Syntax.binders ->
-    FStar_Syntax_Syntax.bv FStar_Compiler_Util.set)
+    FStar_Syntax_Syntax.bv FStar_Compiler_Set.set)
   =
   fun bs ->
     let uu___ =
       FStar_Compiler_List.map (fun b -> b.FStar_Syntax_Syntax.binder_bv) bs in
-    FStar_Compiler_Util.as_set uu___ FStar_Syntax_Syntax.order_bv
+    FStar_Compiler_Set.from_list FStar_Syntax_Syntax.ord_bv uu___
 type lstring = Prims.string FStar_Thunk.t
 let (mklstr : (unit -> Prims.string) -> Prims.string FStar_Thunk.thunk) =
   fun f ->
@@ -809,7 +809,7 @@ let (hasBinders_prob :
            FStar_Compiler_Effect.op_Less_Bar
              (FStar_Compiler_List.map
                 (fun b -> b.FStar_Syntax_Syntax.binder_bv)) uu___1 in
-         FStar_Compiler_Util.as_set uu___ FStar_Syntax_Syntax.order_bv)
+         FStar_Compiler_Set.from_list FStar_Syntax_Syntax.ord_bv uu___)
   }
 let (def_check_term_scoped_in_prob :
   Prims.string ->
@@ -962,10 +962,10 @@ let (uvis_to_string :
   fun env ->
     fun uvis -> (FStar_Common.string_of_list ()) (uvi_to_string env) uvis
 let (names_to_string :
-  FStar_Syntax_Syntax.bv FStar_Compiler_Util.set -> Prims.string) =
+  FStar_Syntax_Syntax.bv FStar_Compiler_Set.set -> Prims.string) =
   fun nms ->
     let uu___ =
-      let uu___1 = FStar_Compiler_Util.set_elements nms in
+      let uu___1 = FStar_Compiler_Set.elems FStar_Syntax_Syntax.ord_bv nms in
       FStar_Compiler_Effect.op_Bar_Greater uu___1
         (FStar_Compiler_List.map FStar_Syntax_Print.bv_to_string) in
     FStar_Compiler_Effect.op_Bar_Greater uu___
@@ -2099,9 +2099,9 @@ let (ensure_no_uvar_subst :
 let (no_free_uvars : FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t ->
     (let uu___ = FStar_Syntax_Free.uvars t in
-     FStar_Compiler_Util.set_is_empty uu___) &&
+     FStar_Compiler_Set.is_empty FStar_Syntax_Free.ord_ctx_uvar uu___) &&
       (let uu___ = FStar_Syntax_Free.univs t in
-       FStar_Compiler_Util.set_is_empty uu___)
+       FStar_Compiler_Set.is_empty FStar_Syntax_Free.ord_univ_uvar uu___)
 let rec (may_relate_with_logical_guard :
   FStar_TypeChecker_Env.env ->
     Prims.bool -> FStar_Syntax_Syntax.typ -> Prims.bool)
@@ -2389,7 +2389,7 @@ let (occurs :
       let uvars =
         let uu___ = FStar_Syntax_Free.uvars t in
         FStar_Compiler_Effect.op_Bar_Greater uu___
-          FStar_Compiler_Util.set_elements in
+          (FStar_Compiler_Set.elems FStar_Syntax_Free.ord_ctx_uvar) in
       let occurs1 =
         FStar_Compiler_Effect.op_Bar_Greater uvars
           (FStar_Compiler_Util.for_some
@@ -2430,7 +2430,7 @@ let (occurs_full :
       let uvars =
         let uu___ = FStar_Syntax_Free.uvars_full t in
         FStar_Compiler_Effect.op_Bar_Greater uu___
-          FStar_Compiler_Util.set_elements in
+          (FStar_Compiler_Set.elems FStar_Syntax_Free.ord_ctx_uvar) in
       let occurs1 =
         FStar_Compiler_Effect.op_Bar_Greater uvars
           (FStar_Compiler_Util.for_some
@@ -2629,7 +2629,8 @@ let restrict_all_uvars :
                          binders_as_bv_set
                            src.FStar_Syntax_Syntax.ctx_uvar_binders in
                        let uu___ =
-                         FStar_Compiler_Util.set_is_subset_of ctx_src ctx_tgt in
+                         FStar_Compiler_Set.subset FStar_Syntax_Syntax.ord_bv
+                           ctx_src ctx_tgt in
                        if uu___ then wl1 else restrict_ctx env tgt [] src wl1)
                   sources wl
             | uu___ ->
@@ -2648,7 +2649,7 @@ let (intersect_binders :
             (FStar_Compiler_List.fold_left
                (fun out ->
                   fun x ->
-                    FStar_Compiler_Util.set_add
+                    FStar_Compiler_Set.add FStar_Syntax_Syntax.ord_bv
                       x.FStar_Syntax_Syntax.binder_bv out)
                FStar_Syntax_Syntax.no_names) in
         let v1_set = as_set v1 in
@@ -2658,7 +2659,7 @@ let (intersect_binders :
                fun b ->
                  match b with
                  | FStar_Syntax_Syntax.Binding_var x ->
-                     FStar_Compiler_Util.set_add x out
+                     FStar_Compiler_Set.add FStar_Syntax_Syntax.ord_bv x out
                  | uu___ -> out) FStar_Syntax_Syntax.no_names g in
         let uu___ =
           FStar_Compiler_Effect.op_Bar_Greater v2
@@ -2674,7 +2675,8 @@ let (intersect_binders :
                          | (x, imp) ->
                              let uu___3 =
                                let uu___4 =
-                                 FStar_Compiler_Util.set_mem x v1_set in
+                                 FStar_Compiler_Set.mem
+                                   FStar_Syntax_Syntax.ord_bv x v1_set in
                                FStar_Compiler_Effect.op_Less_Bar
                                  Prims.op_Negation uu___4 in
                              if uu___3
@@ -2684,12 +2686,13 @@ let (intersect_binders :
                                   FStar_Syntax_Free.names
                                     x.FStar_Syntax_Syntax.sort in
                                 let uu___5 =
-                                  FStar_Compiler_Util.set_is_subset_of fvs
-                                    isect_set in
+                                  FStar_Compiler_Set.subset
+                                    FStar_Syntax_Syntax.ord_bv fvs isect_set in
                                 if uu___5
                                 then
                                   let uu___6 =
-                                    FStar_Compiler_Util.set_add x isect_set in
+                                    FStar_Compiler_Set.add
+                                      FStar_Syntax_Syntax.ord_bv x isect_set in
                                   ((b :: isect), uu___6)
                                 else (isect, isect_set)))) ([], ctx_binders)) in
         match uu___ with | (isect, uu___1) -> FStar_Compiler_List.rev isect
@@ -4974,7 +4977,7 @@ let (has_free_uvars : FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t ->
     let uu___ =
       let uu___1 = FStar_Syntax_Free.uvars_uncached t in
-      FStar_Compiler_Util.set_is_empty uu___1 in
+      FStar_Compiler_Set.is_empty FStar_Syntax_Free.ord_ctx_uvar uu___1 in
     Prims.op_Negation uu___
 let (env_has_free_uvars : FStar_TypeChecker_Env.env_t -> Prims.bool) =
   fun e ->
@@ -6709,7 +6712,8 @@ and (solve_t_flex_rigid_eq :
                           let uu___7 =
                             FStar_Syntax_Free.names
                               (FStar_Pervasives_Native.fst arg) in
-                          FStar_Compiler_Util.set_mem x uu___7 in
+                          FStar_Compiler_Set.mem FStar_Syntax_Syntax.ord_bv x
+                            uu___7 in
                         Prims.op_Negation uu___6 in
                       let bv_not_free_in_args x args1 =
                         FStar_Compiler_Util.for_all (bv_not_free_in_arg x)
@@ -6818,8 +6822,9 @@ and (solve_t_flex_rigid_eq :
                                   let fvs_rhs = FStar_Syntax_Free.names rhs1 in
                                   let uu___9 =
                                     let uu___10 =
-                                      FStar_Compiler_Util.set_is_subset_of
-                                        fvs_rhs fvs_lhs in
+                                      FStar_Compiler_Set.subset
+                                        FStar_Syntax_Syntax.ord_bv fvs_rhs
+                                        fvs_lhs in
                                     Prims.op_Negation uu___10 in
                                   if uu___9
                                   then
@@ -7162,7 +7167,8 @@ and (solve_t_flex_rigid_eq :
                                              let uu___14 =
                                                binders_as_bv_set
                                                  ctx_uv.FStar_Syntax_Syntax.ctx_uvar_binders in
-                                             FStar_Compiler_Util.set_is_subset_of
+                                             FStar_Compiler_Set.subset
+                                               FStar_Syntax_Syntax.ord_bv
                                                uu___13 uu___14 in
                                            Prims.op_Negation uu___12 in
                                          if uu___11
@@ -7493,7 +7499,8 @@ and (solve_t_flex_rigid_eq :
                                                               FStar_Syntax_Free.uvars in
                                                           FStar_Compiler_Effect.op_Bar_Greater
                                                             uu___20
-                                                            FStar_Compiler_Util.set_elements in
+                                                            (FStar_Compiler_Set.elems
+                                                               FStar_Syntax_Free.ord_ctx_uvar) in
                                                         solve_sub_probs_if_head_types_equal
                                                           uu___19 wl2
                                                     | FStar_Pervasives.Inr
@@ -7542,7 +7549,8 @@ and (solve_t_flex_rigid_eq :
                               let names_to_string1 fvs =
                                 let uu___6 =
                                   let uu___7 =
-                                    FStar_Compiler_Util.set_elements fvs in
+                                    FStar_Compiler_Set.elems
+                                      FStar_Syntax_Syntax.ord_bv fvs in
                                   FStar_Compiler_List.map
                                     FStar_Syntax_Print.bv_to_string uu___7 in
                                 FStar_Compiler_Effect.op_Bar_Greater uu___6
@@ -7571,8 +7579,8 @@ and (solve_t_flex_rigid_eq :
                                       uu___7
                                   else
                                     (let uu___8 =
-                                       FStar_Compiler_Util.set_is_subset_of
-                                         fvs2 fvs1 in
+                                       FStar_Compiler_Set.subset
+                                         FStar_Syntax_Syntax.ord_bv fvs2 fvs1 in
                                      if uu___8
                                      then
                                        let sol =
@@ -9694,13 +9702,15 @@ and (solve_t' : tprob -> worklist -> solution) =
                                        (let uu___12 =
                                           let uu___13 =
                                             FStar_Syntax_Free.uvars phi12 in
-                                          FStar_Compiler_Util.set_is_empty
+                                          FStar_Compiler_Set.is_empty
+                                            FStar_Syntax_Free.ord_ctx_uvar
                                             uu___13 in
                                         Prims.op_Negation uu___12) ||
                                          (let uu___12 =
                                             let uu___13 =
                                               FStar_Syntax_Free.uvars phi22 in
-                                            FStar_Compiler_Util.set_is_empty
+                                            FStar_Compiler_Set.is_empty
+                                              FStar_Syntax_Free.ord_ctx_uvar
                                               uu___13 in
                                           Prims.op_Negation uu___12) in
                                      if
@@ -14234,7 +14244,8 @@ let (try_solve_deferred_constraints :
                                            let uvs =
                                              FStar_Syntax_Free.uvars
                                                goal_type in
-                                           FStar_Compiler_Util.set_elements
+                                           FStar_Compiler_Set.elems
+                                             FStar_Syntax_Free.ord_ctx_uvar
                                              uvs
                                          else [])
                                 | uu___3 -> [])) in
@@ -15338,7 +15349,7 @@ let (is_tac_implicit_resolved :
           FStar_Compiler_Effect.op_Bar_Greater
             i.FStar_TypeChecker_Common.imp_tm FStar_Syntax_Free.uvars in
         FStar_Compiler_Effect.op_Bar_Greater uu___1
-          FStar_Compiler_Util.set_elements in
+          (FStar_Compiler_Set.elems FStar_Syntax_Free.ord_ctx_uvar) in
       FStar_Compiler_Effect.op_Bar_Greater uu___
         (FStar_Compiler_List.for_all
            (fun uv ->
@@ -15459,9 +15470,13 @@ let (resolve_implicits' :
                                        (FStar_Class_Show.printableshow
                                           FStar_Class_Printable.printable_bool)
                                        is_tac in
-                                   FStar_Compiler_Util.print3
-                                     "resolve_implicits' loop, imp_tm = %s and ctx_u = %s, is_tac: %s\n"
-                                     uu___6 uu___7 uu___8
+                                   let uu___9 =
+                                     FStar_Class_Show.show
+                                       FStar_Syntax_Syntax.showable_should_check_uvar
+                                       uvar_decoration_should_check in
+                                   FStar_Compiler_Util.print4
+                                     "resolve_implicits' loop, imp_tm=%s and ctx_u=%s, is_tac=%s, should_check=%s\n"
+                                     uu___6 uu___7 uu___8 uu___9
                                  else ());
                                 (match () with
                                  | uu___5 when
