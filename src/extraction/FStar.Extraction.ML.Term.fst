@@ -1879,25 +1879,23 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                     //            BU.print1 "!!!!!!!About to normalize: %s\n" (Print.term_to_string lb.lbdef);
                     //            Options.set_option "debug_level" (Options.List [Options.String "Norm"; Options.String "Extraction"]));
                     let lbdef =
-                        if false && Options.ml_ish()
-                        then lb.lbdef
-                        else let norm_call () =
-                                 Profiling.profile
-                                   (fun () ->
-                                     N.normalize (Env.PureSubtermsWithinComputations::Env.Reify::extraction_norm_steps) tcenv lb.lbdef)
-                                   (Some (Ident.string_of_lid (Env.current_module tcenv)))
-                                   "FStar.Extraction.ML.Term.normalize_lb_def"
+                        let norm_call () =
+                            Profiling.profile
+                              (fun () ->
+                                N.normalize (Env.PureSubtermsWithinComputations::Env.Reify::extraction_norm_steps) tcenv lb.lbdef)
+                              (Some (Ident.string_of_lid (Env.current_module tcenv)))
+                              "FStar.Extraction.ML.Term.normalize_lb_def"
+                        in
+                        if TcEnv.debug tcenv <| Options.Other "Extraction"
+                        || TcEnv.debug tcenv <| Options.Other "ExtractNorm"
+                        then let _ = BU.print2 "Starting to normalize top-level let %s = %s\n"
+                                       (Print.lbname_to_string lb.lbname)
+                                       (Print.term_to_string lb.lbdef)
                              in
-                             if TcEnv.debug tcenv <| Options.Other "Extraction"
-                             || TcEnv.debug tcenv <| Options.Other "ExtractNorm"
-                             then let _ = BU.print2 "Starting to normalize top-level let %s = %s\n"
-                                            (Print.lbname_to_string lb.lbname)
-                                            (Print.term_to_string lb.lbdef)
-                                  in
-                                  let a = norm_call() in
-                                  BU.print1 "Normalized to %s\n" (Print.term_to_string a);
-                                  a
-                             else norm_call ()
+                             let a = norm_call() in
+                             BU.print1 "Normalized to %s\n" (Print.term_to_string a);
+                             a
+                        else norm_call ()
                     in
                     {lb with lbdef=lbdef})
             else lbs
