@@ -113,25 +113,21 @@ let (check_uvars :
         Prims.op_Negation uu___1 in
       if uu___
       then
-        let us =
-          let uu___1 =
-            let uu___2 =
-              FStar_Compiler_Set.elems FStar_Syntax_Free.ord_ctx_uvar uvs in
-            FStar_Compiler_List.map
-              (fun u ->
-                 FStar_Syntax_Print.uvar_to_string
-                   u.FStar_Syntax_Syntax.ctx_uvar_head) uu___2 in
-          FStar_Compiler_Effect.op_Bar_Greater uu___1
-            (FStar_Compiler_String.concat ", ") in
         (FStar_Options.push ();
          FStar_Options.set_option "hide_uvar_nums" (FStar_Options.Bool false);
          FStar_Options.set_option "print_implicits" (FStar_Options.Bool true);
          (let uu___5 =
             let uu___6 =
-              let uu___7 = FStar_Syntax_Print.term_to_string t in
+              let uu___7 =
+                FStar_Class_Show.show
+                  (FStar_Compiler_Set.showable_set
+                     FStar_Syntax_Free.ord_ctx_uvar
+                     FStar_Syntax_Print.showable_ctxu) uvs in
+              let uu___8 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
               FStar_Compiler_Util.format2
                 "Unconstrained unification variables %s in type signature %s; please add an annotation"
-                us uu___7 in
+                uu___7 uu___8 in
             (FStar_Errors_Codes.Error_UncontrainedUnificationVar, uu___6) in
           FStar_Errors.log_issue r uu___5);
          FStar_Options.pop ())

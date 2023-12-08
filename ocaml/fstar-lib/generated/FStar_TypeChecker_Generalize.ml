@@ -1,18 +1,12 @@
 open Prims
-let (string_of_univs :
-  FStar_Syntax_Syntax.universe_uvar FStar_Compiler_Set.set -> Prims.string) =
-  fun univs ->
-    let uu___ =
-      let uu___1 =
-        FStar_Compiler_Set.elems FStar_Syntax_Free.ord_univ_uvar univs in
-      FStar_Compiler_Effect.op_Bar_Greater uu___1
-        (FStar_Compiler_List.map
-           (fun u ->
-              let uu___2 = FStar_Syntax_Unionfind.univ_uvar_id u in
-              FStar_Compiler_Effect.op_Bar_Greater uu___2
-                FStar_Compiler_Util.string_of_int)) in
-    FStar_Compiler_Effect.op_Bar_Greater uu___
-      (FStar_Compiler_String.concat ", ")
+let (showable_univ_var :
+  FStar_Syntax_Syntax.universe_uvar FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun u ->
+         FStar_Class_Show.show FStar_Syntax_Print.showable_univ
+           (FStar_Syntax_Syntax.U_unif u))
+  }
 let (gen_univs :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.universe_uvar FStar_Compiler_Set.t ->
@@ -38,7 +32,9 @@ let (gen_univs :
           then
             let uu___4 =
               let uu___5 = FStar_TypeChecker_Env.univ_vars env in
-              string_of_univs uu___5 in
+              FStar_Class_Show.show
+                (FStar_Compiler_Set.showable_set
+                   FStar_Syntax_Free.ord_univ_uvar showable_univ_var) uu___5 in
             FStar_Compiler_Util.print1 "univ_vars in env: %s\n" uu___4
           else ());
          (let r =
@@ -60,10 +56,12 @@ let (gen_univs :
                          FStar_Compiler_Effect.op_Less_Bar
                            FStar_Compiler_Util.string_of_int uu___6 in
                        let uu___6 =
-                         FStar_Syntax_Print.univ_to_string
+                         FStar_Class_Show.show
+                           FStar_Syntax_Print.showable_univ
                            (FStar_Syntax_Syntax.U_unif u) in
                        let uu___7 =
-                         FStar_Syntax_Print.univ_to_string
+                         FStar_Class_Show.show
+                           FStar_Syntax_Print.showable_univ
                            (FStar_Syntax_Syntax.U_name u_name) in
                        FStar_Compiler_Util.print3 "Setting ?%s (%s) to %s\n"
                          uu___5 uu___6 uu___7
@@ -99,7 +97,8 @@ let (check_universe_generalization :
         | uu___ ->
             let uu___1 =
               let uu___2 =
-                let uu___3 = FStar_Syntax_Print.term_to_string t in
+                let uu___3 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
                 Prims.strcat
                   "Generalized universe in a term containing explicit universe annotation : "
                   uu___3 in
@@ -127,8 +126,12 @@ let (generalize_universes :
                 (FStar_TypeChecker_Env.debug env) (FStar_Options.Other "Gen") in
             if uu___2
             then
-              let uu___3 = FStar_Syntax_Print.term_to_string t in
-              let uu___4 = FStar_Syntax_Print.univ_names_to_string univnames in
+              let uu___3 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
+              let uu___4 =
+                FStar_Class_Show.show
+                  (FStar_Class_Show.show_list FStar_Ident.showable_ident)
+                  univnames in
               FStar_Compiler_Util.print2
                 "generalizing universes in the term (post norm): %s with univnames: %s\n"
                 uu___3 uu___4
@@ -140,7 +143,11 @@ let (generalize_universes :
                  (FStar_Options.Other "Gen") in
              if uu___3
              then
-               let uu___4 = string_of_univs univs in
+               let uu___4 =
+                 FStar_Class_Show.show
+                   (FStar_Compiler_Set.showable_set
+                      FStar_Syntax_Free.ord_univ_uvar showable_univ_var)
+                   univs in
                FStar_Compiler_Util.print1 "univs to gen : %s\n" uu___4
              else ());
             (let gen = gen_univs env univs in
@@ -150,8 +157,12 @@ let (generalize_universes :
                   (FStar_Options.Other "Gen") in
               if uu___4
               then
-                let uu___5 = FStar_Syntax_Print.term_to_string t in
-                let uu___6 = FStar_Syntax_Print.univ_names_to_string gen in
+                let uu___5 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
+                let uu___6 =
+                  FStar_Class_Show.show
+                    (FStar_Class_Show.show_list FStar_Ident.showable_ident)
+                    gen in
                 FStar_Compiler_Util.print2
                   "After generalization, t: %s and univs: %s\n" uu___5 uu___6
               else ());
@@ -189,7 +200,8 @@ let (gen :
                 FStar_TypeChecker_Env.debug env FStar_Options.Medium in
               if uu___3
               then
-                let uu___4 = FStar_Syntax_Print.comp_to_string c in
+                let uu___4 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_comp c in
                 FStar_Compiler_Util.print1
                   "Normalizing before generalizing:\n\t %s\n" uu___4
               else ());
@@ -203,7 +215,8 @@ let (gen :
                  FStar_TypeChecker_Env.debug env FStar_Options.Medium in
                if uu___4
                then
-                 let uu___5 = FStar_Syntax_Print.comp_to_string c1 in
+                 let uu___5 =
+                   FStar_Class_Show.show FStar_Syntax_Print.showable_comp c1 in
                  FStar_Compiler_Util.print1 "Normalized to:\n\t %s\n" uu___5
                else ());
               c1) in
@@ -228,36 +241,15 @@ let (gen :
                    if uu___4
                    then
                      let uu___5 =
-                       let uu___6 =
-                         let uu___7 =
-                           FStar_Compiler_Set.elems
-                             FStar_Syntax_Free.ord_univ_uvar univs in
-                         FStar_Compiler_Effect.op_Bar_Greater uu___7
-                           (FStar_Compiler_List.map
-                              (fun u ->
-                                 FStar_Syntax_Print.univ_to_string
-                                   (FStar_Syntax_Syntax.U_unif u))) in
-                       FStar_Compiler_Effect.op_Bar_Greater uu___6
-                         (FStar_Compiler_String.concat ", ") in
+                       FStar_Class_Show.show
+                         (FStar_Compiler_Set.showable_set
+                            FStar_Syntax_Free.ord_univ_uvar showable_univ_var)
+                         univs in
                      let uu___6 =
-                       let uu___7 =
-                         let uu___8 =
-                           FStar_Compiler_Set.elems
-                             FStar_Syntax_Free.ord_ctx_uvar uvt in
-                         FStar_Compiler_Effect.op_Bar_Greater uu___8
-                           (FStar_Compiler_List.map
-                              (fun u ->
-                                 let uu___9 =
-                                   FStar_Syntax_Print.uvar_to_string
-                                     u.FStar_Syntax_Syntax.ctx_uvar_head in
-                                 let uu___10 =
-                                   let uu___11 =
-                                     FStar_Syntax_Util.ctx_uvar_typ u in
-                                   FStar_Syntax_Print.term_to_string uu___11 in
-                                 FStar_Compiler_Util.format2 "(%s : %s)"
-                                   uu___9 uu___10)) in
-                       FStar_Compiler_Effect.op_Bar_Greater uu___7
-                         (FStar_Compiler_String.concat ", ") in
+                       FStar_Class_Show.show
+                         (FStar_Compiler_Set.showable_set
+                            FStar_Syntax_Free.ord_ctx_uvar
+                            FStar_Syntax_Print.showable_ctxu) uvt in
                      FStar_Compiler_Util.print2
                        "^^^^\n\tFree univs = %s\n\tFree uvt=%s\n" uu___5
                        uu___6
@@ -283,36 +275,16 @@ let (gen :
                     if uu___5
                     then
                       let uu___6 =
-                        let uu___7 =
-                          let uu___8 =
-                            FStar_Compiler_Set.elems
-                              FStar_Syntax_Free.ord_univ_uvar univs1 in
-                          FStar_Compiler_Effect.op_Bar_Greater uu___8
-                            (FStar_Compiler_List.map
-                               (fun u ->
-                                  FStar_Syntax_Print.univ_to_string
-                                    (FStar_Syntax_Syntax.U_unif u))) in
-                        FStar_Compiler_Effect.op_Bar_Greater uu___7
-                          (FStar_Compiler_String.concat ", ") in
+                        FStar_Class_Show.show
+                          (FStar_Compiler_Set.showable_set
+                             FStar_Syntax_Free.ord_univ_uvar
+                             showable_univ_var) univs1 in
                       let uu___7 =
-                        let uu___8 =
-                          FStar_Compiler_Effect.op_Bar_Greater uvs
-                            (FStar_Compiler_List.map
-                               (fun u ->
-                                  let uu___9 =
-                                    FStar_Syntax_Print.uvar_to_string
-                                      u.FStar_Syntax_Syntax.ctx_uvar_head in
-                                  let uu___10 =
-                                    let uu___11 =
-                                      FStar_Syntax_Util.ctx_uvar_typ u in
-                                    FStar_TypeChecker_Normalize.term_to_string
-                                      env uu___11 in
-                                  FStar_Compiler_Util.format2 "(%s : %s)"
-                                    uu___9 uu___10)) in
-                        FStar_Compiler_Effect.op_Bar_Greater uu___8
-                          (FStar_Compiler_String.concat ", ") in
+                        FStar_Class_Show.show
+                          (FStar_Class_Show.show_list
+                             FStar_Syntax_Print.showable_ctxu) uvs in
                       FStar_Compiler_Util.print2
-                        "^^^^\n\tFree univs = %s\n\tgen_uvars =%s" uu___6
+                        "^^^^\n\tFree univs = %s\n\tgen_uvars = %s\n" uu___6
                         uu___7
                     else ());
                    (univs1, uvs, (lbname, e, c1)))) in
@@ -649,15 +621,18 @@ let (generalize' :
                            match uu___5 with
                            | (l, us, e, c, gvs) ->
                                let uu___6 =
-                                 FStar_Compiler_Range_Ops.string_of_range
+                                 FStar_Class_Show.show
+                                   FStar_Compiler_Range_Ops.show_range
                                    e.FStar_Syntax_Syntax.pos in
                                let uu___7 =
                                  FStar_Syntax_Print.lbname_to_string l in
                                let uu___8 =
-                                 FStar_Syntax_Print.term_to_string
+                                 FStar_Class_Show.show
+                                   FStar_Syntax_Print.showable_term
                                    (FStar_Syntax_Util.comp_result c) in
                                let uu___9 =
-                                 FStar_Syntax_Print.term_to_string e in
+                                 FStar_Class_Show.show
+                                   FStar_Syntax_Print.showable_term e in
                                let uu___10 =
                                  FStar_Syntax_Print.binders_to_string ", "
                                    gvs in

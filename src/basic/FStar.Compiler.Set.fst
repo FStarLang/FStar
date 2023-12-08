@@ -19,6 +19,7 @@
 module FStar.Compiler.Set
 
 open FStar.Class.Ord
+open FStar.Compiler.Effect
 open FStar.Compiler.Order
 open FStar.Compiler.Util
 
@@ -41,6 +42,9 @@ let union s1 s2 = set_union s1 s2
 let diff s1 s2 = set_difference s1 s2
 let subset s1 s2 = set_is_subset_of s1 s2
 let elems s = set_elements s
+let for_all p s = elems s |> List.for_all p
+let for_any p s = elems s |> List.existsb p
+let collect f l = List.fold_right (fun x acc -> f x `union` acc) l (empty ())
 
 (* Note: no deduplication in the internal list, so duplicate elements will be printed here. *)
 instance showable_set (a:Type) (_ : ord a) (_ : showable a) : Tot (showable (set a)) = {

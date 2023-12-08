@@ -25,6 +25,8 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 
+open FStar.Class.Show
+
 module BU    = FStar.Compiler.Util
 module S     = FStar.Syntax.Syntax
 module SS    = FStar.Syntax.Subst
@@ -35,28 +37,30 @@ module UF    = FStar.Syntax.Unionfind
 module Env   = FStar.TypeChecker.Env
 module N     = FStar.TypeChecker.Normalize
 
+instance showable_univ_var : showable universe_uvar = {
+  show = (fun u -> show (U_unif u));
+}
+
 (**************************************************************************************)
 (* Generalizing types *)
 (**************************************************************************************)
-let string_of_univs univs =
-  Set.elems univs
-  |> List.map (fun u -> UF.univ_uvar_id u |> string_of_int) |> String.concat ", "
 
 let gen_univs env (x:Set.t universe_uvar) : list univ_name =
     if Set.is_empty x then []
-    else let s = Set.diff x (Env.univ_vars env) |> Set.elems in
+    else let s = Set.diff x (Env.univ_vars env) |> Set.elems in // GGG: bad, order dependent
          if Env.debug env <| Options.Other "Gen" then
-         BU.print1 "univ_vars in env: %s\n" (string_of_univs (Env.univ_vars env));
+           BU.print1 "univ_vars in env: %s\n" (show (Env.univ_vars env));
          let r = Some (Env.get_range env) in
          let u_names = s |> List.map (fun u ->
-            let u_name = Syntax.new_univ_name r in
-            if Env.debug env <| Options.Other "Gen"
-            then BU.print3 "Setting ?%s (%s) to %s\n"
+           let u_name = Syntax.new_univ_name r in
+           if Env.debug env <| Options.Other "Gen" then
+            BU.print3 "Setting ?%s (%s) to %s\n"
                             (string_of_int <| UF.univ_uvar_id u)
-                            (Print.univ_to_string (U_unif u))
-                            (Print.univ_to_string (U_name u_name));
-            UF.univ_change u (U_name u_name);
-            u_name) in
+                            (show (U_unif u))
+                            (show (U_name u_name));
+           UF.univ_change u (U_name u_name);
+           u_name)
+         in
          u_names
 
 let gather_free_univnames env t : Set.t univ_name =
@@ -64,7 +68,7 @@ let gather_free_univnames env t : Set.t univ_name =
     let tm_univnames = Free.univnames t in
     let univnames = Set.diff tm_univnames ctx_univnames in
     // BU.print4 "Closing universe variables in term %s : %s in ctx, %s in tm, %s globally\n"
-    //     (Print.term_to_string t)
+    //     (show t)
     //     (Common.string_of_set Ident.string_of_id ctx_univnames)
     //     (Common.string_of_set Ident.string_of_id tm_univnames)
     //     (Common.string_of_list Ident.string_of_id univnames);
@@ -80,20 +84,20 @@ let check_universe_generalization
   | [], _ -> generalized_univ_names
   | _, [] -> explicit_univ_names
   | _ -> raise_error (Errors.Fatal_UnexpectedGeneralizedUniverse, ("Generalized universe in a term containing explicit universe annotation : "
-                      ^ Print.term_to_string t)) t.pos
+                      ^ show t)) t.pos
 
 let generalize_universes (env:env) (t0:term) : tscheme =
   Errors.with_ctx "While generalizing universes" (fun () ->
     let t = N.normalize [Env.NoFullNorm; Env.Beta; Env.DoNotUnfoldPureLets] env t0 in
-    let univnames = Set.elems (gather_free_univnames env t) in
+    let univnames = Set.elems (gather_free_univnames env t) in /// GGG: bad, order dependent
     if Env.debug env <| Options.Other "Gen"
-    then BU.print2 "generalizing universes in the term (post norm): %s with univnames: %s\n" (Print.term_to_string t) (Print.univ_names_to_string univnames);
+    then BU.print2 "generalizing universes in the term (post norm): %s with univnames: %s\n" (show t) (show univnames);
     let univs = Free.univs t in
     if Env.debug env <| Options.Other "Gen"
-    then BU.print1 "univs to gen : %s\n" (string_of_univs univs);
+    then BU.print1 "univs to gen : %s\n" (show univs);
     let gen = gen_univs env univs in
     if Env.debug env <| Options.Other "Gen"
-    then BU.print2 "After generalization, t: %s and univs: %s\n"  (Print.term_to_string t) (Print.univ_names_to_string gen);
+    then BU.print2 "After generalization, t: %s and univs: %s\n"  (show t) (show gen);
     let univs = check_universe_generalization univnames gen t0 in
     let t = N.reduce_uvar_solutions env t in
     let ts = SS.close_univ_vars univs t in
@@ -106,13 +110,13 @@ let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbn
   else
      let norm c =
         if debug env Options.Medium
-        then BU.print1 "Normalizing before generalizing:\n\t %s\n" (Print.comp_to_string c);
+        then BU.print1 "Normalizing before generalizing:\n\t %s\n" (show c);
          let c = Normalize.normalize_comp [Env.Beta; Env.Exclude Env.Zeta; Env.NoFullNorm; Env.DoNotUnfoldPureLets] env c in
          if debug env Options.Medium then
-            BU.print1 "Normalized to:\n\t %s\n" (Print.comp_to_string c);
+            BU.print1 "Normalized to:\n\t %s\n" (show c);
          c in
      let env_uvars = Env.uvars_in_env env in
-     let gen_uvars uvs = Set.diff uvs env_uvars |> Set.elems in
+     let gen_uvars uvs = Set.diff uvs env_uvars |> Set.elems in /// GGG: bad, order depenedent
      let univs_and_uvars_of_lec (lbname, e, c) =
           let c = norm c in
           let t = U.comp_result c in
@@ -120,22 +124,17 @@ let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbn
           let uvt = Free.uvars t in
           if Env.debug env <| Options.Other "Gen"
           then BU.print2 "^^^^\n\tFree univs = %s\n\tFree uvt=%s\n"
-                (Set.elems univs |> List.map (fun u -> Print.univ_to_string (U_unif u)) |> String.concat ", ")
-                (Set.elems uvt |> List.map (fun u -> BU.format2 "(%s : %s)"
-                                                                    (Print.uvar_to_string u.ctx_uvar_head)
-                                                                    (Print.term_to_string (U.ctx_uvar_typ u))) |> String.concat ", ");
+                (show univs) (show uvt);
           let univs =
             List.fold_left
               (fun univs uv -> Set.union univs (Free.univs (U.ctx_uvar_typ uv)))
               univs
-             (Set.elems uvt) in
+             (Set.elems uvt) // Bad; order dependent
+          in
           let uvs = gen_uvars uvt in
           if Env.debug env <| Options.Other "Gen"
-          then BU.print2 "^^^^\n\tFree univs = %s\n\tgen_uvars =%s"
-                (Set.elems univs |> List.map (fun u -> Print.univ_to_string (U_unif u)) |> String.concat ", ")
-                (uvs |> List.map (fun u -> BU.format2 "(%s : %s)"
-                                                        (Print.uvar_to_string u.ctx_uvar_head)
-                                                        (N.term_to_string env (U.ctx_uvar_typ u))) |> String.concat ", ");
+          then BU.print2 "^^^^\n\tFree univs = %s\n\tgen_uvars = %s\n"
+                (show univs) (show uvs);
 
          univs, uvs, (lbname, e, c)
      in
@@ -273,7 +272,7 @@ let generalize' env (is_rec:bool) (lecs:list (lbname*term*comp)) : (list (lbname
       empty
       lecs
   in
-  let univnames_lecs = Set.elems univnames_lecs in
+  let univnames_lecs = Set.elems univnames_lecs in /// GGG: bad, order dependent
   let generalized_lecs =
       match gen env is_rec lecs with
           | None -> lecs |> List.map (fun (l,t,c) -> l,[],t,c,[])
@@ -282,10 +281,10 @@ let generalize' env (is_rec:bool) (lecs:list (lbname*term*comp)) : (list (lbname
             then luecs |> List.iter
                     (fun (l, us, e, c, gvs) ->
                          BU.print5 "(%s) Generalized %s at type %s\n%s\nVars = (%s)\n"
-                                          (Range.string_of_range e.pos)
+                                          (show e.pos)
                                           (Print.lbname_to_string l)
-                                          (Print.term_to_string (U.comp_result c))
-                                          (Print.term_to_string e)
+                                          (show (U.comp_result c))
+                                          (show e)
                                           (Print.binders_to_string ", " gvs));
             luecs
    in

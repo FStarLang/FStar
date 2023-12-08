@@ -2034,6 +2034,8 @@ let (showable_comp : FStar_Syntax_Syntax.comp FStar_Class_Show.showable) =
   { FStar_Class_Show.show = comp_to_string }
 let (showable_sigelt : FStar_Syntax_Syntax.sigelt FStar_Class_Show.showable)
   = { FStar_Class_Show.show = sigelt_to_string }
+let (showable_args : FStar_Syntax_Syntax.args FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = args_to_string }
 let (showable_bv : FStar_Syntax_Syntax.bv FStar_Class_Show.showable) =
   { FStar_Class_Show.show = bv_to_string }
 let (showable_binder : FStar_Syntax_Syntax.binder FStar_Class_Show.showable)

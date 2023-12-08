@@ -3530,26 +3530,17 @@ let (t_apply_lemma :
                                                                     ->
                                                                     let is_free_uvar
                                                                     uv t1 =
-                                                                    let free_uvars
-                                                                    =
                                                                     let uu___16
-                                                                    =
-                                                                    let uu___17
                                                                     =
                                                                     FStar_Syntax_Free.uvars
                                                                     t1 in
-                                                                    FStar_Compiler_Set.elems
+                                                                    FStar_Compiler_Set.for_any
                                                                     FStar_Syntax_Free.ord_ctx_uvar
-                                                                    uu___17 in
-                                                                    FStar_Compiler_List.map
-                                                                    (fun x ->
-                                                                    x.FStar_Syntax_Syntax.ctx_uvar_head)
-                                                                    uu___16 in
-                                                                    FStar_Compiler_List.existsML
                                                                     (fun u ->
                                                                     FStar_Syntax_Unionfind.equiv
-                                                                    u uv)
-                                                                    free_uvars in
+                                                                    u.FStar_Syntax_Syntax.ctx_uvar_head
+                                                                    uv)
+                                                                    uu___16 in
                                                                     let appears
                                                                     uv goals
                                                                     =
@@ -4343,12 +4334,10 @@ let (_t_trefl :
              let t =
                FStar_Syntax_Util.ctx_uvar_typ
                  g.FStar_Tactics_Types.goal_ctx_uvar in
-             let uvars =
-               let uu___2 = FStar_Syntax_Free.uvars t in
-               FStar_Compiler_Set.elems FStar_Syntax_Free.ord_ctx_uvar uu___2 in
+             let uvars = FStar_Syntax_Free.uvars t in
              let uu___2 =
-               FStar_Compiler_Util.for_all is_uvar_untyped_or_already_checked
-                 uvars in
+               FStar_Compiler_Set.for_all FStar_Syntax_Free.ord_ctx_uvar
+                 is_uvar_untyped_or_already_checked uvars in
              if uu___2
              then skip_register
              else

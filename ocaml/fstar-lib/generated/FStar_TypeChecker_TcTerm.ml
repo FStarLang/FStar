@@ -13588,20 +13588,28 @@ let rec (__typeof_tot_or_gtot_term_fastpath :
               FStar_Syntax_Syntax.brs = uu___2;
               FStar_Syntax_Syntax.rc_opt1 = FStar_Pervasives_Native.Some rc;_}
             -> rc.FStar_Syntax_Syntax.residual_typ
-        | FStar_Syntax_Syntax.Tm_match uu___ ->
-            let uu___1 =
-              let uu___2 =
-                let uu___3 = FStar_Syntax_Print.tag_of_term t1 in
-                Prims.strcat uu___3 ")" in
-              Prims.strcat "Impossible! (" uu___2 in
-            FStar_Compiler_Effect.failwith uu___1
-        | FStar_Syntax_Syntax.Tm_let uu___ ->
-            let uu___1 =
-              let uu___2 =
-                let uu___3 = FStar_Syntax_Print.tag_of_term t1 in
-                Prims.strcat uu___3 ")" in
-              Prims.strcat "Impossible! (" uu___2 in
-            FStar_Compiler_Effect.failwith uu___1
+        | FStar_Syntax_Syntax.Tm_let
+            { FStar_Syntax_Syntax.lbs = (false, lb::[]);
+              FStar_Syntax_Syntax.body1 = body;_}
+            ->
+            let x = FStar_Compiler_Util.left lb.FStar_Syntax_Syntax.lbname in
+            let uu___ =
+              let uu___1 =
+                let uu___2 = FStar_Syntax_Syntax.mk_binder x in [uu___2] in
+              FStar_Syntax_Subst.open_term uu___1 body in
+            (match uu___ with
+             | (xb, body1) ->
+                 let xbinder = FStar_Compiler_List.hd xb in
+                 let x1 = xbinder.FStar_Syntax_Syntax.binder_bv in
+                 let env_x = FStar_TypeChecker_Env.push_bv env x1 in
+                 let t2 =
+                   __typeof_tot_or_gtot_term_fastpath env_x body1 must_tot in
+                 FStar_Compiler_Util.bind_opt t2
+                   (fun t3 ->
+                      let t4 = FStar_Syntax_Subst.close xb t3 in
+                      FStar_Pervasives_Native.Some t4))
+        | FStar_Syntax_Syntax.Tm_match uu___ -> FStar_Pervasives_Native.None
+        | FStar_Syntax_Syntax.Tm_let uu___ -> FStar_Pervasives_Native.None
         | FStar_Syntax_Syntax.Tm_unknown ->
             let uu___ =
               let uu___1 =

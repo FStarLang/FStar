@@ -104,4 +104,22 @@ val elems
   (s:set a)
   : list a
 
+val for_all
+  (#a:Type) {| ord a |}
+  (p:(a -> bool))
+  (s:set a)
+  : bool
+
+val for_any
+  (#a:Type) {| ord a |}
+  (p:(a -> bool))
+  (s:set a)
+  : bool
+
+val collect
+  (#a:Type) (#b:Type) {| ord b |}
+  (f : a -> set b)
+  (l : list a)
+  : set b
+
 instance val showable_set (a:Type) (_ : ord a) (_ : showable a) : Tot (showable (set a))
