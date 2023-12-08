@@ -153,7 +153,9 @@ let rec (resugar_universe :
                     mk uu___3 r))
       | FStar_Syntax_Syntax.U_max l ->
           (match l with
-           | [] -> failwith "Impossible: U_max without arguments"
+           | [] ->
+               FStar_Compiler_Effect.failwith
+                 "Impossible: U_max without arguments"
            | uu___ ->
                let t =
                  let uu___1 =
@@ -419,7 +421,7 @@ let (resugar_machine_integer :
         let uu___ = parse_machine_integer_desc fv in
         match uu___ with
         | FStar_Pervasives_Native.None ->
-            failwith
+            FStar_Compiler_Effect.failwith
               "Impossible: should be guarded by can_resugar_machine_integer"
         | FStar_Pervasives_Native.Some (sw, uu___1) ->
             FStar_Parser_AST.mk_term
@@ -443,7 +445,8 @@ let rec (resugar_term' :
         uu___1.FStar_Syntax_Syntax.n in
       match uu___ with
       | FStar_Syntax_Syntax.Tm_delayed uu___1 ->
-          failwith "Tm_delayed is impossible after compress"
+          FStar_Compiler_Effect.failwith
+            "Tm_delayed is impossible after compress"
       | FStar_Syntax_Syntax.Tm_lazy i ->
           let uu___1 = FStar_Syntax_Util.unfold_lazy i in
           resugar_term' env uu___1
@@ -501,7 +504,8 @@ let rec (resugar_term' :
                    let r1 =
                      FStar_Ident.mk_ident (snd, (t.FStar_Syntax_Syntax.pos)) in
                    mk (FStar_Parser_AST.Projector (l, r1))
-               | uu___2 -> failwith "wrong projector format")
+               | uu___2 ->
+                   FStar_Compiler_Effect.failwith "wrong projector format")
             else
               (let uu___3 =
                  FStar_Ident.lid_equals a FStar_Parser_Const.smtpat_lid in
@@ -651,7 +655,9 @@ let rec (resugar_term' :
                 { FStar_Syntax_Syntax.bs1 = xs;
                   FStar_Syntax_Syntax.comp = body;_}
                 -> (xs, body)
-            | uu___4 -> failwith "impossible: Tm_arrow in resugar_term" in
+            | uu___4 ->
+                FStar_Compiler_Effect.failwith
+                  "impossible: Tm_arrow in resugar_term" in
           (match uu___2 with
            | (xs, body) ->
                let uu___3 = FStar_Syntax_Subst.open_comp xs body in
@@ -732,7 +738,8 @@ let rec (resugar_term' :
             match uu___1 with
             | hd::[] -> [hd]
             | hd::tl -> last tl
-            | uu___2 -> failwith "last of an empty list" in
+            | uu___2 ->
+                FStar_Compiler_Effect.failwith "last of an empty list" in
           let first_two_explicit args1 =
             let rec drop_implicits args2 =
               match args2 with
@@ -743,8 +750,12 @@ let rec (resugar_term' :
               | uu___1 -> args2 in
             let uu___1 = drop_implicits args1 in
             match uu___1 with
-            | [] -> failwith "not_enough explicit_arguments"
-            | uu___2::[] -> failwith "not_enough explicit_arguments"
+            | [] ->
+                FStar_Compiler_Effect.failwith
+                  "not_enough explicit_arguments"
+            | uu___2::[] ->
+                FStar_Compiler_Effect.failwith
+                  "not_enough explicit_arguments"
             | a1::a2::uu___2 -> [a1; a2] in
           let resugar_as_app e1 args1 =
             let args2 =
@@ -850,7 +861,9 @@ let rec (resugar_term' :
                          let uu___4 =
                            match new_args with
                            | (a1, uu___5)::(a2, uu___6)::[] -> (a1, a2)
-                           | uu___5 -> failwith "wrong arguments to try_with" in
+                           | uu___5 ->
+                               FStar_Compiler_Effect.failwith
+                                 "wrong arguments to try_with" in
                          (match uu___4 with
                           | (body, handler) ->
                               let decomp term =
@@ -876,7 +889,7 @@ let rec (resugar_term' :
                                       Prims.strcat
                                         "wrong argument format to try_with: "
                                         uu___8 in
-                                    failwith uu___7 in
+                                    FStar_Compiler_Effect.failwith uu___7 in
                               let body1 =
                                 let uu___5 = decomp body in
                                 resugar_term' env uu___5 in
@@ -901,7 +914,7 @@ let rec (resugar_term' :
                                       FStar_Parser_AST.Ascribed uu___6 in
                                     mk uu___5
                                 | uu___5 ->
-                                    failwith
+                                    FStar_Compiler_Effect.failwith
                                       "unexpected body format to try_with" in
                               let e1 = resugar_body body1 in
                               let rec resugar_branches t1 =
@@ -995,7 +1008,7 @@ let rec (resugar_term' :
                                              (body3, s, p)) in
                                       ([], uu___9)
                                   | uu___9 ->
-                                      failwith
+                                      FStar_Compiler_Effect.failwith
                                         "wrong pattern format for QForall/QExists" in
                                 (match uu___8 with
                                  | (pats, body4) -> (pats, body4))
@@ -1052,7 +1065,9 @@ let rec (resugar_term' :
                  let args2 = last args1 in
                  (match args2 with
                   | (b, uu___3)::[] -> resugar_forall_body b
-                  | uu___3 -> failwith "wrong args format to QForall")
+                  | uu___3 ->
+                      FStar_Compiler_Effect.failwith
+                        "wrong args format to QForall")
                else resugar_as_app e args1
            | FStar_Pervasives_Native.Some ("alloc", uu___2) ->
                let uu___3 = FStar_Compiler_List.hd args1 in
@@ -1210,7 +1225,9 @@ let rec (resugar_term' :
                              FStar_Syntax_Syntax.args =
                                (t1, uu___6)::(d, uu___7)::[];_}
                            -> (t1, d)
-                       | uu___5 -> failwith "wrong let binding format" in
+                       | uu___5 ->
+                           FStar_Compiler_Effect.failwith
+                             "wrong let binding format" in
                      (match uu___3 with
                       | (typ, def) ->
                           let uu___4 =
@@ -1737,7 +1754,7 @@ and (resugar_match_returns :
                      | (asc2, FStar_Pervasives_Native.None, use_eq) ->
                          (asc2, use_eq)
                      | uu___3 ->
-                         failwith
+                         FStar_Compiler_Effect.failwith
                            "resugaring does not support match return annotation with a tactic" in
                    (match uu___1 with
                     | (asc2, use_eq) ->
@@ -1827,7 +1844,7 @@ and (resugar_comp' :
               match c1.FStar_Syntax_Syntax.effect_args with
               | (pre, uu___2)::(post, uu___3)::(pats, uu___4)::[] ->
                   (pre, post, pats)
-              | uu___2 -> failwith "impossible" in
+              | uu___2 -> FStar_Compiler_Effect.failwith "impossible" in
             (match uu___1 with
              | (pre, post, pats) ->
                  let pre1 =
@@ -2348,7 +2365,7 @@ let (resugar_typ :
                             FStar_Syntax_Syntax.num_ty_params = uu___6;
                             FStar_Syntax_Syntax.mutuals1 = uu___7;_}
                           -> FStar_Ident.lid_equals inductive_lid tylid
-                      | uu___3 -> failwith "unexpected")) in
+                      | uu___3 -> FStar_Compiler_Effect.failwith "unexpected")) in
             (match uu___2 with
              | (current_datacons, other_datacons) ->
                  let bs1 =
@@ -2415,8 +2432,10 @@ let (resugar_typ :
                                                   uu___13) in
                                               [uu___10])) in
                                 FStar_Compiler_List.op_At mfields fields
-                            | uu___8 -> failwith "unexpected")
-                       | uu___4 -> failwith "unexpected" in
+                            | uu___8 ->
+                                FStar_Compiler_Effect.failwith "unexpected")
+                       | uu___4 ->
+                           FStar_Compiler_Effect.failwith "unexpected" in
                      let fields =
                        FStar_Compiler_List.fold_left
                          resugar_datacon_as_fields [] current_datacons in
@@ -2451,7 +2470,8 @@ let (resugar_typ :
                                   se1.FStar_Syntax_Syntax.sigattrs in
                               (uu___7, uu___8, uu___9) in
                             c :: constructors
-                        | uu___5 -> failwith "unexpected" in
+                        | uu___5 ->
+                            FStar_Compiler_Effect.failwith "unexpected" in
                       let constructors =
                         FStar_Compiler_List.fold_left resugar_datacon []
                           current_datacons in
@@ -2462,7 +2482,7 @@ let (resugar_typ :
                       FStar_Parser_AST.TyconVariant uu___5) in
                  (other_datacons, tyc))
         | uu___ ->
-            failwith
+            FStar_Compiler_Effect.failwith
               "Impossible : only Sig_inductive_typ can be resugared as types"
 let (mk_decl :
   FStar_Compiler_Range_Type.range ->
@@ -2752,7 +2772,7 @@ let (resugar_sigelt' :
                     | FStar_Syntax_Syntax.Sig_declare_typ uu___2 -> true
                     | FStar_Syntax_Syntax.Sig_datacon uu___2 -> false
                     | uu___2 ->
-                        failwith
+                        FStar_Compiler_Effect.failwith
                           "Found a sigelt which is neither a type declaration or a data constructor in a sigelt")) in
           (match uu___1 with
            | (decl_typ_ses, datacon_ses) ->
@@ -2793,9 +2813,11 @@ let (resugar_sigelt' :
                                 decl'_to_decl se1 uu___9 in
                               FStar_Pervasives_Native.Some uu___8
                           | uu___3 ->
-                              failwith
+                              FStar_Compiler_Effect.failwith
                                 "wrong format for resguar to Exception")
-                     | uu___3 -> failwith "Should not happen hopefully")))
+                     | uu___3 ->
+                         FStar_Compiler_Effect.failwith
+                           "Should not happen hopefully")))
       | FStar_Syntax_Syntax.Sig_fail uu___ -> FStar_Pervasives_Native.None
       | FStar_Syntax_Syntax.Sig_let
           { FStar_Syntax_Syntax.lbs1 = lbs;
@@ -2876,7 +2898,8 @@ let (resugar_sigelt' :
                      FStar_Parser_AST.TopLevelLet uu___6 in
                    decl'_to_decl se uu___5 in
                  FStar_Pervasives_Native.Some uu___4
-             | uu___3 -> failwith "Should not happen hopefully")
+             | uu___3 ->
+                 FStar_Compiler_Effect.failwith "Should not happen hopefully")
       | FStar_Syntax_Syntax.Sig_assume
           { FStar_Syntax_Syntax.lid3 = lid; FStar_Syntax_Syntax.us3 = uu___;
             FStar_Syntax_Syntax.phi1 = fml;_}
@@ -2917,7 +2940,8 @@ let (resugar_sigelt' :
                t) -> FStar_Parser_AST.ReifiableLift (wp, t)
             | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.Some t)
                 -> FStar_Parser_AST.LiftForFree t
-            | uu___ -> failwith "Should not happen hopefully" in
+            | uu___ ->
+                FStar_Compiler_Effect.failwith "Should not happen hopefully" in
           let uu___ =
             decl'_to_decl se
               (FStar_Parser_AST.SubEffect

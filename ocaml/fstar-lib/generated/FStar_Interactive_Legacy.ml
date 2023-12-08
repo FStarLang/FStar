@@ -28,7 +28,7 @@ let (tc_one_file :
              | (uu___2, env1) ->
                  ((FStar_Pervasives_Native.None, intf_or_impl), env1,
                    remaining1))
-        | [] -> failwith "Impossible" in
+        | [] -> FStar_Compiler_Effect.failwith "Impossible" in
       match uu___ with
       | ((intf, impl), env1, remaining1) -> ((intf, impl), env1, remaining1)
 type env_t = FStar_TypeChecker_Env.env
@@ -535,7 +535,7 @@ let (update_deps :
                  | (FStar_Pervasives_Native.None,
                     FStar_Pervasives_Native.None) -> false
                  | (uu___, uu___1) ->
-                     failwith
+                     FStar_Compiler_Effect.failwith
                        "Impossible, if the interface is None, the timestamp entry should also be None") in
             let rec iterate depnames st env' ts1 good_stack good_ts =
               let match_dep depnames1 intf impl =

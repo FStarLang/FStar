@@ -137,7 +137,8 @@ let (label_goals :
               | FStar_SMTEncoding_Term.Integer uu___1 -> (labels1, q1)
               | FStar_SMTEncoding_Term.String uu___1 -> (labels1, q1)
               | FStar_SMTEncoding_Term.Real uu___1 -> (labels1, q1)
-              | FStar_SMTEncoding_Term.LblPos uu___1 -> failwith "Impossible"
+              | FStar_SMTEncoding_Term.LblPos uu___1 ->
+                  FStar_Compiler_Effect.failwith "Impossible"
               | FStar_SMTEncoding_Term.Labeled
                   (arg, "Could not prove post-condition", label_range) ->
                   let fallback debug_msg =
@@ -644,70 +645,90 @@ let (label_goals :
                   (match uu___3 with | (lab, q2) -> ((lab :: labels1), q2))
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.RealDiv, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.Add, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.Sub, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.Div, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.Mul, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.Minus, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.Mod, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.BvAnd, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.BvXor, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.BvOr, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.BvAdd, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.BvSub, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.BvShl, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.BvShr, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.BvUdiv, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.BvMod, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.BvMul, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.BvUext uu___1, uu___2) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.BvToNat, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.NatToBv uu___1, uu___2) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.ITE, uu___1) ->
-                  failwith "Impossible: arity mismatch"
+                  FStar_Compiler_Effect.failwith "Impossible: arity mismatch"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.Imp, uu___1) ->
-                  failwith "Impossible: arity mismatch"
+                  FStar_Compiler_Effect.failwith "Impossible: arity mismatch"
               | FStar_SMTEncoding_Term.Quant
                   (FStar_SMTEncoding_Term.Forall, pats, iopt, sorts, body) ->
                   let uu___1 =

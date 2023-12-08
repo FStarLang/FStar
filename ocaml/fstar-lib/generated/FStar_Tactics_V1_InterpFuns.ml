@@ -26,7 +26,7 @@ let rec drop : 'uuuuu . Prims.int -> 'uuuuu Prims.list -> 'uuuuu Prims.list =
       then l
       else
         (match l with
-         | [] -> failwith "drop: impossible"
+         | [] -> FStar_Compiler_Effect.failwith "drop: impossible"
          | uu___1::xs -> drop (n - Prims.int_one) xs)
 let timing_int :
   'uuuuu 'uuuuu1 'uuuuu2 'uuuuu3 .

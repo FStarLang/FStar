@@ -41,7 +41,7 @@ let (parse_fragment : FStar_Parser_ParseIt.input_frag -> fragment) =
     | FStar_Parser_ParseIt.ParseError (e, msg, r) ->
         FStar_Errors.raise_error_doc (e, msg) r
     | FStar_Parser_ParseIt.Term uu___1 ->
-        failwith
+        FStar_Compiler_Effect.failwith
           "Impossible: parsing a Toplevel always results in an ASTFragment"
 let (parse_file :
   Prims.string ->
@@ -62,5 +62,5 @@ let (parse_file :
     | FStar_Parser_ParseIt.ParseError (e, msg, r) ->
         FStar_Errors.raise_error_doc (e, msg) r
     | FStar_Parser_ParseIt.Term uu___1 ->
-        failwith
+        FStar_Compiler_Effect.failwith
           "Impossible: parsing a Filename always results in an ASTFragment"

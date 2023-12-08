@@ -243,7 +243,7 @@ let (subst_of_list :
                     ((f.FStar_Syntax_Syntax.binder_bv),
                       (FStar_Pervasives_Native.fst a)))
                  :: out) formals actuals []
-      else failwith "Ill-formed substitution"
+      else FStar_Compiler_Effect.failwith "Ill-formed substitution"
 let (rename_binders :
   FStar_Syntax_Syntax.binders ->
     FStar_Syntax_Syntax.binders -> FStar_Syntax_Syntax.subst_t)
@@ -263,7 +263,7 @@ let (rename_binders :
                      y.FStar_Syntax_Syntax.binder_bv in
                  ((x.FStar_Syntax_Syntax.binder_bv), uu___1) in
                FStar_Syntax_Syntax.NT uu___) replace_xs with_ys
-      else failwith "Ill-formed substitution"
+      else FStar_Compiler_Effect.failwith "Ill-formed substitution"
 let rec (unmeta : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun e ->
     let e1 = FStar_Syntax_Subst.compress e in
@@ -318,7 +318,7 @@ let rec (univ_kernel :
         let uu___ = univ_kernel u1 in
         (match uu___ with | (k, n) -> (k, (n + Prims.int_one)))
     | FStar_Syntax_Syntax.U_bvar uu___ ->
-        failwith "Imposible: univ_kernel (U_bvar _)"
+        FStar_Compiler_Effect.failwith "Imposible: univ_kernel (U_bvar _)"
 let (constant_univ_as_nat : FStar_Syntax_Syntax.universe -> Prims.int) =
   fun u -> let uu___ = univ_kernel u in FStar_Pervasives_Native.snd uu___
 let rec (compare_univs :
@@ -329,13 +329,13 @@ let rec (compare_univs :
       let rec compare_kernel uk1 uk2 =
         match (uk1, uk2) with
         | (FStar_Syntax_Syntax.U_bvar uu___, uu___1) ->
-            failwith "Impossible: compare_kernel bvar"
+            FStar_Compiler_Effect.failwith "Impossible: compare_kernel bvar"
         | (uu___, FStar_Syntax_Syntax.U_bvar uu___1) ->
-            failwith "Impossible: compare_kernel bvar"
+            FStar_Compiler_Effect.failwith "Impossible: compare_kernel bvar"
         | (FStar_Syntax_Syntax.U_succ uu___, uu___1) ->
-            failwith "Impossible: compare_kernel succ"
+            FStar_Compiler_Effect.failwith "Impossible: compare_kernel succ"
         | (uu___, FStar_Syntax_Syntax.U_succ uu___1) ->
-            failwith "Impossible: compare_kernel succ"
+            FStar_Compiler_Effect.failwith "Impossible: compare_kernel succ"
         | (FStar_Syntax_Syntax.U_unknown, FStar_Syntax_Syntax.U_unknown) ->
             Prims.int_zero
         | (FStar_Syntax_Syntax.U_unknown, uu___) -> (Prims.of_int (-1))
@@ -503,7 +503,7 @@ let (destruct_comp :
             FStar_Compiler_Util.format2
               "Impossible: Got a computation %s with %s effect args" uu___2
               uu___3 in
-          failwith uu___1 in
+          FStar_Compiler_Effect.failwith uu___1 in
     let uu___ = FStar_Compiler_List.hd c.FStar_Syntax_Syntax.comp_univs in
     (uu___, (c.FStar_Syntax_Syntax.result_typ), wp)
 let (is_named_tot :
@@ -919,8 +919,9 @@ let unlazy_as_t :
                    k' in
                FStar_Compiler_Util.format2
                  "Expected Tm_lazy of kind %s, got %s" uu___6 uu___7 in
-             failwith uu___5)
-      | uu___1 -> failwith "Not a Tm_lazy of the expected kind"
+             FStar_Compiler_Effect.failwith uu___5)
+      | uu___1 ->
+          FStar_Compiler_Effect.failwith "Not a Tm_lazy of the expected kind"
 let mk_lazy :
   'a .
     'a ->
@@ -1651,7 +1652,8 @@ let (ses_of_sigbundle :
     | FStar_Syntax_Syntax.Sig_bundle
         { FStar_Syntax_Syntax.ses = ses; FStar_Syntax_Syntax.lids = uu___;_}
         -> ses
-    | uu___ -> failwith "ses_of_sigbundle: not a Sig_bundle"
+    | uu___ ->
+        FStar_Compiler_Effect.failwith "ses_of_sigbundle: not a Sig_bundle"
 let (set_uvar : FStar_Syntax_Syntax.uvar -> FStar_Syntax_Syntax.term -> unit)
   =
   fun uv ->
@@ -1669,7 +1671,7 @@ let (set_uvar : FStar_Syntax_Syntax.uvar -> FStar_Syntax_Syntax.term -> unit)
             FStar_Compiler_Util.format3
               "Changing a fixed uvar! ?%s to %s but it is already set to %s\n"
               uu___2 uu___3 uu___4 in
-          failwith uu___1
+          FStar_Compiler_Effect.failwith uu___1
       | uu___1 -> FStar_Syntax_Unionfind.change uv t
 let (qualifier_equal :
   FStar_Syntax_Syntax.qualifier ->
@@ -2245,7 +2247,7 @@ let (open_univ_vars_binders_and_comp :
                       { FStar_Syntax_Syntax.bs1 = binders1;
                         FStar_Syntax_Syntax.comp = c1;_}
                       -> (uvs1, binders1, c1)
-                  | uu___3 -> failwith "Impossible"))
+                  | uu___3 -> FStar_Compiler_Effect.failwith "Impossible"))
 let (is_tuple_constructor : FStar_Syntax_Syntax.typ -> Prims.bool) =
   fun t ->
     match t.FStar_Syntax_Syntax.n with
@@ -3077,7 +3079,8 @@ let (un_squash :
                        let b1 =
                          match bs with
                          | b2::[] -> b2
-                         | uu___3 -> failwith "impossible" in
+                         | uu___3 ->
+                             FStar_Compiler_Effect.failwith "impossible" in
                        let uu___3 =
                          let uu___4 = FStar_Syntax_Free.names p1 in
                          FStar_Compiler_Set.mem FStar_Syntax_Syntax.ord_bv
@@ -3213,7 +3216,7 @@ let (arrow_one_ln :
     match uu___ with
     | FStar_Syntax_Syntax.Tm_arrow
         { FStar_Syntax_Syntax.bs1 = []; FStar_Syntax_Syntax.comp = uu___1;_}
-        -> failwith "fatal: empty binders on arrow?"
+        -> FStar_Compiler_Effect.failwith "fatal: empty binders on arrow?"
     | FStar_Syntax_Syntax.Tm_arrow
         { FStar_Syntax_Syntax.bs1 = b::[]; FStar_Syntax_Syntax.comp = c;_} ->
         FStar_Pervasives_Native.Some (b, c)
@@ -3243,7 +3246,7 @@ let (arrow_one :
                     match bs with
                     | b2::[] -> b2
                     | uu___3 ->
-                        failwith
+                        FStar_Compiler_Effect.failwith
                           "impossible: open_comp returned different amount of binders" in
                   FStar_Pervasives_Native.Some (b1, c1)))
 let (is_free_in :
@@ -3554,7 +3557,9 @@ let (destruct_typ_as_formula :
                               let b1 =
                                 match bs with
                                 | b2::[] -> b2
-                                | uu___8 -> failwith "impossible" in
+                                | uu___8 ->
+                                    FStar_Compiler_Effect.failwith
+                                      "impossible" in
                               let uu___8 = patterns q1 in
                               (match uu___8 with
                                | (pats, q2) ->
@@ -3693,7 +3698,8 @@ let rec (delta_qualifier :
   fun t ->
     let t1 = FStar_Syntax_Subst.compress t in
     match t1.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Tm_delayed uu___ -> failwith "Impossible"
+    | FStar_Syntax_Syntax.Tm_delayed uu___ ->
+        FStar_Compiler_Effect.failwith "Impossible"
     | FStar_Syntax_Syntax.Tm_lazy i ->
         let uu___ = unfold_lazy i in delta_qualifier uu___
     | FStar_Syntax_Syntax.Tm_fvar fv ->
@@ -3767,7 +3773,7 @@ let rec apply_last :
   fun f ->
     fun l ->
       match l with
-      | [] -> failwith "apply_last: got empty list"
+      | [] -> FStar_Compiler_Effect.failwith "apply_last: got empty list"
       | a::[] -> let uu___ = f a in [uu___]
       | x::xs -> let uu___ = apply_last f xs in x :: uu___
 let (dm4f_lid :
@@ -3913,17 +3919,23 @@ let rec (term_eq_dbg :
           (uu___1, uu___2) in
         match uu___ with
         | (FStar_Syntax_Syntax.Tm_uinst uu___1, uu___2) ->
-            failwith "term_eq: impossible, should have been removed"
+            FStar_Compiler_Effect.failwith
+              "term_eq: impossible, should have been removed"
         | (uu___1, FStar_Syntax_Syntax.Tm_uinst uu___2) ->
-            failwith "term_eq: impossible, should have been removed"
+            FStar_Compiler_Effect.failwith
+              "term_eq: impossible, should have been removed"
         | (FStar_Syntax_Syntax.Tm_delayed uu___1, uu___2) ->
-            failwith "term_eq: impossible, should have been removed"
+            FStar_Compiler_Effect.failwith
+              "term_eq: impossible, should have been removed"
         | (uu___1, FStar_Syntax_Syntax.Tm_delayed uu___2) ->
-            failwith "term_eq: impossible, should have been removed"
+            FStar_Compiler_Effect.failwith
+              "term_eq: impossible, should have been removed"
         | (FStar_Syntax_Syntax.Tm_ascribed uu___1, uu___2) ->
-            failwith "term_eq: impossible, should have been removed"
+            FStar_Compiler_Effect.failwith
+              "term_eq: impossible, should have been removed"
         | (uu___1, FStar_Syntax_Syntax.Tm_ascribed uu___2) ->
-            failwith "term_eq: impossible, should have been removed"
+            FStar_Compiler_Effect.failwith
+              "term_eq: impossible, should have been removed"
         | (FStar_Syntax_Syntax.Tm_bvar x, FStar_Syntax_Syntax.Tm_bvar y) ->
             check1 "bvar"
               (x.FStar_Syntax_Syntax.index = y.FStar_Syntax_Syntax.index)
@@ -4329,7 +4341,8 @@ let rec (unbound_variables :
   fun tm ->
     let t = FStar_Syntax_Subst.compress tm in
     match t.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Tm_delayed uu___ -> failwith "Impossible"
+    | FStar_Syntax_Syntax.Tm_delayed uu___ ->
+        FStar_Compiler_Effect.failwith "Impossible"
     | FStar_Syntax_Syntax.Tm_name x -> []
     | FStar_Syntax_Syntax.Tm_uvar uu___ -> []
     | FStar_Syntax_Syntax.Tm_type u -> []
@@ -4766,8 +4779,8 @@ let (smt_lemma_as_forall :
                       ->
                       let uu___10 = lemma_pats pats in
                       (binders1, pre, post, uu___10)
-                  | uu___3 -> failwith "impos"))
-        | uu___2 -> failwith "Impos" in
+                  | uu___3 -> FStar_Compiler_Effect.failwith "impos"))
+        | uu___2 -> FStar_Compiler_Effect.failwith "Impos" in
       match uu___ with
       | (binders, pre, post, patterns) ->
           let post1 = unthunk_lemma_post post in
@@ -4818,7 +4831,9 @@ let (eff_decl_of_new_effect :
   fun se ->
     match se.FStar_Syntax_Syntax.sigel with
     | FStar_Syntax_Syntax.Sig_new_effect ne -> ne
-    | uu___ -> failwith "eff_decl_of_new_effect: not a Sig_new_effect"
+    | uu___ ->
+        FStar_Compiler_Effect.failwith
+          "eff_decl_of_new_effect: not a Sig_new_effect"
 let (is_layered : FStar_Syntax_Syntax.eff_decl -> Prims.bool) =
   fun ed ->
     match ed.FStar_Syntax_Syntax.combinators with

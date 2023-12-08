@@ -460,7 +460,7 @@ let (un_univ : FStar_TypeChecker_NBETerm.t -> FStar_Syntax_Syntax.universe) =
         let uu___1 =
           let uu___2 = FStar_TypeChecker_NBETerm.t_to_string tm in
           Prims.strcat "Not a universe: " uu___2 in
-        failwith uu___1
+        FStar_Compiler_Effect.failwith uu___1
 let (is_constr_fv : FStar_Syntax_Syntax.fv -> Prims.bool) =
   fun fvar ->
     fvar.FStar_Syntax_Syntax.fv_qual =
@@ -500,7 +500,9 @@ let (translate_univ :
                 if
                   ((cfg.core_cfg).FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.allow_unbound_universes
                 then FStar_Syntax_Syntax.U_zero
-                else failwith "Universe index out of bounds"
+                else
+                  FStar_Compiler_Effect.failwith
+                    "Universe index out of bounds"
           | FStar_Syntax_Syntax.U_succ u3 ->
               let uu___ = aux u3 in FStar_Syntax_Syntax.U_succ uu___
           | FStar_Syntax_Syntax.U_max us ->
@@ -521,7 +523,8 @@ let (find_let :
       FStar_Compiler_Util.find_map lbs
         (fun lb ->
            match lb.FStar_Syntax_Syntax.lbname with
-           | FStar_Pervasives.Inl uu___ -> failwith "find_let : impossible"
+           | FStar_Pervasives.Inl uu___ ->
+               FStar_Compiler_Effect.failwith "find_let : impossible"
            | FStar_Pervasives.Inr name ->
                let uu___ = FStar_Syntax_Syntax.fv_eq name fvar in
                if uu___
@@ -567,7 +570,7 @@ let rec (translate :
            uu___2.FStar_Syntax_Syntax.n in
          match uu___1 with
          | FStar_Syntax_Syntax.Tm_delayed uu___2 ->
-             failwith "Tm_delayed: Impossible"
+             FStar_Compiler_Effect.failwith "Tm_delayed: Impossible"
          | FStar_Syntax_Syntax.Tm_unknown ->
              mk_t1 FStar_TypeChecker_NBETerm.Unknown
          | FStar_Syntax_Syntax.Tm_constant c ->
@@ -594,7 +597,8 @@ let rec (translate :
                        "Resolved bvar to %s\n\tcontext is [%s]\n" uu___4
                        uu___5);
                 t)
-             else failwith "de Bruijn index out of bounds"
+             else
+               FStar_Compiler_Effect.failwith "de Bruijn index out of bounds"
          | FStar_Syntax_Syntax.Tm_uinst (t, us) ->
              (debug1
                 (fun uu___3 ->
@@ -723,7 +727,8 @@ let rec (translate :
                             (x, (x_j.FStar_Syntax_Syntax.index))
                       | uu___4 -> FStar_Syntax_Syntax.NT (x, t))
                  | uu___4 ->
-                     failwith "Impossible: subst invariant of uvar nodes" in
+                     FStar_Compiler_Effect.failwith
+                       "Impossible: subst invariant of uvar nodes" in
                let subst1 =
                  FStar_Compiler_List.map
                    (FStar_Compiler_List.map norm_subst_elt) subst in
@@ -749,7 +754,9 @@ let rec (translate :
              { FStar_Syntax_Syntax.bs = [];
                FStar_Syntax_Syntax.body = uu___2;
                FStar_Syntax_Syntax.rc_opt = uu___3;_}
-             -> failwith "Impossible: abstraction with no binders"
+             ->
+             FStar_Compiler_Effect.failwith
+               "Impossible: abstraction with no binders"
          | FStar_Syntax_Syntax.Tm_abs
              { FStar_Syntax_Syntax.bs = xs; FStar_Syntax_Syntax.body = body;
                FStar_Syntax_Syntax.rc_opt = resc;_}
@@ -1139,7 +1146,7 @@ let rec (translate :
                          FStar_TypeChecker_NBETerm.mkAccuMatch scrut2
                            make_returns make_branches make_rc
                      | FStar_Pervasives_Native.Some (uu___5, hd::tl) ->
-                         failwith
+                         FStar_Compiler_Effect.failwith
                            "Impossible: Matching on constants cannot bind more than one variable"))
                | uu___3 ->
                    FStar_TypeChecker_NBETerm.mkAccuMatch scrut2 make_returns
@@ -1676,7 +1683,7 @@ and (iapp :
                    let uu___3 = FStar_TypeChecker_NBETerm.t_to_string f in
                    Prims.strcat "NBE ill-typed application Const_range_of: "
                      uu___3 in
-                 failwith uu___2)
+                 FStar_Compiler_Effect.failwith uu___2)
         | FStar_TypeChecker_NBETerm.Constant
             (FStar_TypeChecker_NBETerm.SConst
             (FStar_Const.Const_set_range_of)) ->
@@ -1698,12 +1705,12 @@ and (iapp :
                    let uu___3 = FStar_TypeChecker_NBETerm.t_to_string f in
                    Prims.strcat
                      "NBE ill-typed application Const_set_range_of: " uu___3 in
-                 failwith uu___2)
+                 FStar_Compiler_Effect.failwith uu___2)
         | uu___1 ->
             let uu___2 =
               let uu___3 = FStar_TypeChecker_NBETerm.t_to_string f in
               Prims.strcat "NBE ill-typed application: " uu___3 in
-            failwith uu___2
+            FStar_Compiler_Effect.failwith uu___2
 and (translate_fv :
   config ->
     FStar_TypeChecker_NBETerm.t Prims.list ->
@@ -1727,7 +1734,7 @@ and (translate_fv :
                fvar qninfo in
            match uu___2 with
            | FStar_TypeChecker_Normalize.Should_unfold_fully ->
-               failwith "Not yet handled"
+               FStar_Compiler_Effect.failwith "Not yet handled"
            | FStar_TypeChecker_Normalize.Should_unfold_no ->
                (debug1
                   (fun uu___4 ->
@@ -1812,8 +1819,9 @@ and (translate_fv :
                                                 FStar_TypeChecker_NBETerm.nbe_r
                                                   = uu___12;_},
                                               uu___13) -> u
-                                           | uu___12 -> failwith "Impossible")
-                                        univs in
+                                           | uu___12 ->
+                                               FStar_Compiler_Effect.failwith
+                                                 "Impossible") univs in
                                     let uu___11 =
                                       prim_step.FStar_TypeChecker_Primops.interpretation_nbe
                                         callbacks univs1 rest in
@@ -1914,7 +1922,8 @@ and (translate_fv :
                                          (lb, ar, lst, [])))
                              else translate_letbinding cfg bs lb
                          | FStar_Pervasives_Native.None ->
-                             failwith "Could not find let binding"))
+                             FStar_Compiler_Effect.failwith
+                               "Could not find let binding"))
                    | uu___3 ->
                        (debug1
                           (fun uu___5 ->
@@ -1985,7 +1994,8 @@ and (translate_fv :
                                          (lb, ar, lst, [])))
                              else translate_letbinding cfg bs lb
                          | FStar_Pervasives_Native.None ->
-                             failwith "Could not find let binding"))
+                             FStar_Compiler_Effect.failwith
+                               "Could not find let binding"))
                    | uu___3 ->
                        (debug1
                           (fun uu___5 ->
@@ -2307,7 +2317,7 @@ and (translate_monadic :
                           let uu___3 = FStar_Ident.string_of_lid m in
                           FStar_Compiler_Util.format1
                             "Effect declaration not found: %s" uu___3 in
-                        failwith uu___2
+                        FStar_Compiler_Effect.failwith uu___2
                     | FStar_Pervasives_Native.Some (ed, q) ->
                         let cfg' = reifying_false cfg in
                         let body_lam =
@@ -2558,7 +2568,7 @@ and (translate_monadic :
                      let uu___3 = FStar_Syntax_Print.tag_of_term e1 in
                      FStar_Compiler_Util.format1
                        "Unexpected case in translate_monadic: %s" uu___3 in
-                   failwith uu___2)
+                   FStar_Compiler_Effect.failwith uu___2)
 and (translate_monadic_lift :
   (FStar_Syntax_Syntax.monad_name * FStar_Syntax_Syntax.monad_name *
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax) ->
@@ -2606,7 +2616,8 @@ and (translate_monadic_lift :
                            (ret1, [FStar_Syntax_Syntax.U_unknown]))
                         e1.FStar_Syntax_Syntax.pos
                   | uu___3 ->
-                      failwith "NYI: Reification of indexed effect (NBE)" in
+                      FStar_Compiler_Effect.failwith
+                        "NYI: Reification of indexed effect (NBE)" in
                 let cfg' = reifying_false cfg in
                 let t =
                   let uu___2 =
@@ -2649,7 +2660,7 @@ and (translate_monadic_lift :
                        FStar_Compiler_Util.format2
                          "Impossible : trying to reify a lift between unrelated effects (%s and %s)"
                          uu___5 uu___6 in
-                     failwith uu___4
+                     FStar_Compiler_Effect.failwith uu___4
                  | FStar_Pervasives_Native.Some
                      { FStar_TypeChecker_Env.msource = uu___4;
                        FStar_TypeChecker_Env.mtarget = uu___5;
@@ -2665,7 +2676,7 @@ and (translate_monadic_lift :
                        FStar_Compiler_Util.format2
                          "Impossible : trying to reify a non-reifiable lift (from %s to %s)"
                          uu___9 uu___10 in
-                     failwith uu___8
+                     FStar_Compiler_Effect.failwith uu___8
                  | FStar_Pervasives_Native.Some
                      { FStar_TypeChecker_Env.msource = uu___4;
                        FStar_TypeChecker_Env.mtarget = uu___5;
@@ -2728,7 +2739,8 @@ and (readback :
            FStar_Compiler_Util.print1 "Readback: %s\n" uu___2);
       (match x.FStar_TypeChecker_NBETerm.nbe_t with
        | FStar_TypeChecker_NBETerm.Univ u ->
-           failwith "Readback of universes should not occur"
+           FStar_Compiler_Effect.failwith
+             "Readback of universes should not occur"
        | FStar_TypeChecker_NBETerm.Unknown ->
            FStar_Syntax_Syntax.mk FStar_Syntax_Syntax.Tm_unknown
              x.FStar_TypeChecker_NBETerm.nbe_r

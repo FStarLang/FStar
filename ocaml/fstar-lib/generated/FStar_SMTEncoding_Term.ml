@@ -550,12 +550,12 @@ let (freevar_sort : term -> sort) =
   fun uu___ ->
     match uu___ with
     | { tm = FreeV x; freevars = uu___1; rng = uu___2;_} -> fv_sort x
-    | uu___1 -> failwith "impossible"
+    | uu___1 -> FStar_Compiler_Effect.failwith "impossible"
 let (fv_of_term : term -> fv) =
   fun uu___ ->
     match uu___ with
     | { tm = FreeV fv1; freevars = uu___1; rng = uu___2;_} -> fv1
-    | uu___1 -> failwith "impossible"
+    | uu___1 -> FStar_Compiler_Effect.failwith "impossible"
 let rec (freevars : term -> fv Prims.list) =
   fun t ->
     match t.tm with
@@ -982,7 +982,7 @@ let (mkCases : term Prims.list -> FStar_Compiler_Range_Type.range -> term) =
   fun t ->
     fun r ->
       match t with
-      | [] -> failwith "Impos"
+      | [] -> FStar_Compiler_Effect.failwith "Impos"
       | hd::tl ->
           FStar_Compiler_List.fold_left
             (fun out -> fun t1 -> mkAnd (out, t1) r) hd tl
@@ -2234,7 +2234,7 @@ let (mk_Valid : term -> term) =
           let uu___2 = getBoxedInteger t0 in
           match uu___2 with
           | FStar_Pervasives_Native.Some sz1 -> sz1
-          | uu___3 -> failwith "impossible" in
+          | uu___3 -> FStar_Compiler_Effect.failwith "impossible" in
         let uu___2 =
           let uu___3 = unboxBitVec sz t1 in
           let uu___4 = unboxBitVec sz t2 in (uu___3, uu___4) in
@@ -2250,7 +2250,7 @@ let (mk_Valid : term -> term) =
           let uu___4 = getBoxedInteger t0 in
           match uu___4 with
           | FStar_Pervasives_Native.Some sz1 -> sz1
-          | uu___5 -> failwith "impossible" in
+          | uu___5 -> FStar_Compiler_Effect.failwith "impossible" in
         let uu___4 =
           let uu___5 = unboxBitVec sz t1 in
           let uu___6 = unboxBitVec sz t2 in (uu___5, uu___6) in

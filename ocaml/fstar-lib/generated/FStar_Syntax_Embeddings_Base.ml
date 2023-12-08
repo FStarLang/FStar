@@ -79,7 +79,7 @@ let (term_as_fv : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.fv) =
             FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
           FStar_Compiler_Util.format1 "Embeddings not defined for type %s"
             uu___3 in
-        failwith uu___2
+        FStar_Compiler_Effect.failwith uu___2
 let mk_emb :
   'a .
     'a raw_embedder ->

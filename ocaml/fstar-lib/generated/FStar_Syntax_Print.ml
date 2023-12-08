@@ -335,11 +335,12 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
              let uu___3 = FStar_Options.print_implicits () in
              if uu___3 then x1 else FStar_Syntax_Util.unmeta x1 in
            match x2.FStar_Syntax_Syntax.n with
-           | FStar_Syntax_Syntax.Tm_delayed uu___3 -> failwith "impossible"
+           | FStar_Syntax_Syntax.Tm_delayed uu___3 ->
+               FStar_Compiler_Effect.failwith "impossible"
            | FStar_Syntax_Syntax.Tm_app
                { FStar_Syntax_Syntax.hd = uu___3;
                  FStar_Syntax_Syntax.args = [];_}
-               -> failwith "Empty args!"
+               -> FStar_Compiler_Effect.failwith "Empty args!"
            | FStar_Syntax_Syntax.Tm_lazy
                { FStar_Syntax_Syntax.blob = b;
                  FStar_Syntax_Syntax.lkind =
@@ -1670,7 +1671,7 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
                           { FStar_Syntax_Syntax.bs1 = bs;
                             FStar_Syntax_Syntax.comp = c1;_}
                           -> (bs, c1)
-                      | uu___6 -> failwith "impossible" in
+                      | uu___6 -> FStar_Compiler_Effect.failwith "impossible" in
                     (match uu___4 with
                      | (tps1, c1) ->
                          let uu___5 = sli l in
@@ -1785,7 +1786,8 @@ let rec (sigelt_to_string_short : FStar_Syntax_Syntax.sigelt -> Prims.string)
           FStar_Compiler_String.concat " and " uu___2 in
         FStar_Compiler_Util.format1 "let rec %s" uu___1
     | FStar_Syntax_Syntax.Sig_let uu___ ->
-        failwith "Impossible: sigelt_to_string_short, ill-formed let"
+        FStar_Compiler_Effect.failwith
+          "Impossible: sigelt_to_string_short, ill-formed let"
     | FStar_Syntax_Syntax.Sig_declare_typ
         { FStar_Syntax_Syntax.lid2 = lid; FStar_Syntax_Syntax.us2 = uu___;
           FStar_Syntax_Syntax.t2 = uu___1;_}

@@ -733,8 +733,12 @@ let (pop_unit : mltyscheme -> mltyscheme) =
          | MLTY_Fun (l, E_PURE, t) ->
              if l = ml_unit_ty
              then (vs, t)
-             else failwith "unexpected: pop_unit: domain was not unit"
-         | uu___1 -> failwith "unexpected: pop_unit: not a function type")
+             else
+               FStar_Compiler_Effect.failwith
+                 "unexpected: pop_unit: domain was not unit"
+         | uu___1 ->
+             FStar_Compiler_Effect.failwith
+               "unexpected: pop_unit: not a function type")
 let (mlpath_to_string :
   (Prims.string Prims.list * Prims.string) -> Prims.string) =
   fun mlp ->

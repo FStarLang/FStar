@@ -513,7 +513,8 @@ let (run_full_buffer :
                        log_syntax_issues (FStar_Pervasives_Native.Some err)
                      else ();
                      ([], []))
-                | uu___ -> failwith "Unexpected parse result" in
+                | uu___ ->
+                    FStar_Compiler_Effect.failwith "Unexpected parse result" in
               qs
 let (format_code :
   FStar_Interactive_Ide_Types.repl_state ->
@@ -572,4 +573,4 @@ let (format_code :
       | FStar_Parser_ParseIt.ParseError err ->
           let uu___ = let uu___1 = syntax_issue err in [uu___1] in
           FStar_Pervasives.Inr uu___
-      | uu___ -> failwith "Unexpected parse result"
+      | uu___ -> FStar_Compiler_Effect.failwith "Unexpected parse result"

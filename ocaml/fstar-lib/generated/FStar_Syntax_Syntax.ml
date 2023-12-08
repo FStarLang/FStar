@@ -2270,7 +2270,8 @@ let (lookup_aq : bv -> antiquotations -> term) =
                       - Prims.int_one)
                      - bv1.index)
                     + (FStar_Pervasives_Native.fst aq))) ()
-      with | uu___ -> failwith "antiquotation out of bounds"
+      with
+      | uu___ -> FStar_Compiler_Effect.failwith "antiquotation out of bounds"
 let deq_instance_from_cmp :
   'uuuuu .
     ('uuuuu -> 'uuuuu -> FStar_Compiler_Order.order) ->
@@ -2396,7 +2397,8 @@ let (mk_Tm_uinst : term -> universes -> term) =
       match t.n with
       | Tm_fvar uu___ ->
           (match us with | [] -> t | us1 -> mk (Tm_uinst (t, us1)) t.pos)
-      | uu___ -> failwith "Unexpected universe instantiation"
+      | uu___ ->
+          FStar_Compiler_Effect.failwith "Unexpected universe instantiation"
 let (extend_app_n : term -> args -> FStar_Compiler_Range_Type.range -> term)
   =
   fun t ->
@@ -2948,7 +2950,9 @@ let (deq_lazy_kind : lazy_kind FStar_Class_Deq.deq) =
            | (Lazy_extension s, Lazy_extension t) -> s = t
            | (Lazy_embedding uu___, uu___1) -> false
            | (uu___, Lazy_embedding uu___1) -> false
-           | uu___ -> failwith "FIXME! eq_lazy_kind must be complete")
+           | uu___ ->
+               FStar_Compiler_Effect.failwith
+                 "FIXME! eq_lazy_kind must be complete")
   }
 let (showable_lazy_kind : lazy_kind FStar_Class_Show.showable) =
   {
@@ -2976,5 +2980,7 @@ let (showable_lazy_kind : lazy_kind FStar_Class_Show.showable) =
          | Lazy_tref -> "Lazy_tref"
          | Lazy_embedding uu___1 -> "Lazy_embedding _"
          | Lazy_extension s -> Prims.strcat "Lazy_extension " s
-         | uu___1 -> failwith "FIXME! lazy_kind_to_string must be complete")
+         | uu___1 ->
+             FStar_Compiler_Effect.failwith
+               "FIXME! lazy_kind_to_string must be complete")
   }

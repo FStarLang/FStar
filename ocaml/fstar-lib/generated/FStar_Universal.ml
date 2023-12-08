@@ -912,7 +912,7 @@ let (load_interface_decls :
           FStar_Compiler_Effect.raise
             (FStar_Errors.Error (err, msg, rng, []))
       | FStar_Parser_ParseIt.Term uu___ ->
-          failwith
+          FStar_Compiler_Effect.failwith
             "Impossible: parsing a Toplevel always results in an ASTFragment"
 let (emit : (uenv * FStar_Extraction_ML_Syntax.mllib) Prims.list -> unit) =
   fun mllibs ->
@@ -926,7 +926,7 @@ let (emit : (uenv * FStar_Extraction_ML_Syntax.mllib) Prims.list -> unit) =
         | FStar_Pervasives_Native.Some (FStar_Options.Plugin) -> ".ml"
         | FStar_Pervasives_Native.Some (FStar_Options.Krml) -> ".krml"
         | FStar_Pervasives_Native.Some (FStar_Options.Extension) -> ".ast"
-        | uu___ -> failwith "Unrecognized option" in
+        | uu___ -> FStar_Compiler_Effect.failwith "Unrecognized option" in
       match opt with
       | FStar_Pervasives_Native.Some (FStar_Options.FSharp) ->
           let outdir = FStar_Options.output_dir () in
@@ -976,7 +976,7 @@ let (emit : (uenv * FStar_Extraction_ML_Syntax.mllib) Prims.list -> unit) =
                                       FStar_Compiler_Util.save_value_to_file
                                         uu___5 (bindings, decls)
                                   | FStar_Pervasives_Native.None ->
-                                      failwith
+                                      FStar_Compiler_Effect.failwith
                                         "Unexpected ml modul in Extension extraction mode"))
                           ms)) mllibs
       | FStar_Pervasives_Native.Some (FStar_Options.Krml) ->
@@ -993,7 +993,7 @@ let (emit : (uenv * FStar_Extraction_ML_Syntax.mllib) Prims.list -> unit) =
            | uu___ ->
                let uu___1 = FStar_Options.prepend_output_dir "out.krml" in
                FStar_Compiler_Util.save_value_to_file uu___1 bin)
-      | uu___ -> failwith "Unrecognized option"
+      | uu___ -> FStar_Compiler_Effect.failwith "Unrecognized option"
     else ()
 let (tc_one_file :
   uenv ->
@@ -1075,7 +1075,7 @@ let (tc_one_file :
                           (match tcenv.FStar_TypeChecker_Env.gamma with
                            | [] -> ()
                            | uu___6 ->
-                               failwith
+                               FStar_Compiler_Effect.failwith
                                  "Impossible: gamma contains leaked names");
                           (let uu___6 =
                              FStar_TypeChecker_Tc.check_module tcenv fmod
@@ -1329,7 +1329,9 @@ let (tc_one_file_from_remaining :
                   uu___2 in
               (match uu___1 with
                | (m, mllib, env1) -> (remaining1, (m, mllib, env1)))
-          | [] -> failwith "Impossible: Empty remaining modules" in
+          | [] ->
+              FStar_Compiler_Effect.failwith
+                "Impossible: Empty remaining modules" in
         match uu___ with
         | (remaining1, (nmods, mllib, env1)) ->
             (remaining1, nmods, mllib, env1)

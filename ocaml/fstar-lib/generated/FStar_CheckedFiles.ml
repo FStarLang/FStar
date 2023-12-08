@@ -185,7 +185,7 @@ let (hash_dependences :
                    FStar_Compiler_Util.format1
                      "Impossible: unknown entry in the mcache for interface %s\n"
                      iface in
-                 failwith uu___2) in
+                 FStar_Compiler_Effect.failwith uu___2) in
       let rec hash_deps out uu___ =
         match uu___ with
         | [] -> maybe_add_iface_hash out
@@ -215,7 +215,7 @@ let (hash_dependences :
                     FStar_Compiler_Util.format2
                       "Impossible: unknown entry in the cache for dependence %s of module %s"
                       fn2 module_name in
-                  failwith uu___3 in
+                  FStar_Compiler_Effect.failwith uu___3 in
             (match digest with
              | FStar_Pervasives.Inl msg -> FStar_Pervasives.Inl msg
              | FStar_Pervasives.Inr dig ->
@@ -313,7 +313,7 @@ let (load_checked_file_with_tc_result :
            | FStar_Pervasives_Native.Some (uu___1, s2) ->
                ((s2.deps_dig), (s2.tc_res))
            | uu___1 ->
-               failwith
+               FStar_Compiler_Effect.failwith
                  "Impossible! if first phase of loading was unknown, it should have succeeded" in
          let elt = load_checked_file fn checked_fn in
          match elt with

@@ -451,7 +451,8 @@ let (set_current_module : env -> FStar_Ident.lident -> env) =
 let (current_module : env -> FStar_Ident.lident) =
   fun env1 ->
     match env1.curmodule with
-    | FStar_Pervasives_Native.None -> failwith "Unset current module"
+    | FStar_Pervasives_Native.None ->
+        FStar_Compiler_Effect.failwith "Unset current module"
     | FStar_Pervasives_Native.Some m -> m
 let (iface_decls :
   env ->
@@ -3125,7 +3126,8 @@ let (pop : unit -> env) =
              (pop_record_cache ();
               FStar_Compiler_Effect.op_Colon_Equals stack tl;
               env1)
-         | uu___3 -> failwith "Impossible: Too many pops")
+         | uu___3 ->
+             FStar_Compiler_Effect.failwith "Impossible: Too many pops")
 let (snapshot : env -> (Prims.int * env)) =
   fun env1 -> FStar_Common.snapshot push stack env1
 let (rollback : Prims.int FStar_Pervasives_Native.option -> env) =

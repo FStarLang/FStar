@@ -333,7 +333,7 @@ let (pop_repl :
     fun st ->
       let uu___ = FStar_Compiler_Effect.op_Bang repl_stack in
       match uu___ with
-      | [] -> failwith "Too many pops"
+      | [] -> FStar_Compiler_Effect.failwith "Too many pops"
       | (depth, (uu___1, st'))::stack_tl ->
           let env =
             rollback_env

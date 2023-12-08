@@ -49,7 +49,7 @@ let (parse_mod :
             (FStar_Errors_Codes.Fatal_ModuleExpected, msg)
             FStar_Compiler_Range_Type.dummyRange
       | FStar_Parser_ParseIt.Term uu___1 ->
-          failwith
+          FStar_Compiler_Effect.failwith
             "Impossible: parsing a Filename always results in an ASTFragment"
 let (add_mods :
   Prims.string Prims.list ->
@@ -315,7 +315,7 @@ let (init : unit -> FStar_TypeChecker_Env.env) =
     match uu___1 with
     | FStar_Pervasives_Native.Some f -> f
     | uu___2 ->
-        failwith
+        FStar_Compiler_Effect.failwith
           "Should have already been initialized by the top-level effect"
 let (frag_of_text : Prims.string -> FStar_Parser_ParseIt.input_frag) =
   fun s ->
@@ -345,7 +345,7 @@ let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
               | FStar_Parser_ParseIt.ParseError (e, msg, r) ->
                   FStar_Errors.raise_error_doc (e, msg) r
               | FStar_Parser_ParseIt.ASTFragment uu___2 ->
-                  failwith
+                  FStar_Compiler_Effect.failwith
                     "Impossible: parsing a Fragment always results in a Term"))
         ()
     with
@@ -696,13 +696,13 @@ let (parse_incremental_decls : unit -> unit) =
                FStar_Compiler_Util.format4
                  "Incremental parsing failed: Expected syntax error at (%s, %s), got error at (%s, %s)"
                  uu___7 uu___8 uu___9 uu___10 in
-             failwith uu___6) in
+             FStar_Compiler_Effect.failwith uu___6) in
         ((match (parse_err0, parse_err1) with
           | (FStar_Pervasives_Native.None, uu___5) ->
-              failwith
+              FStar_Compiler_Effect.failwith
                 "Incremental parsing failed: Expected syntax error at (8, 6), got no error"
           | (uu___5, FStar_Pervasives_Native.None) ->
-              failwith
+              FStar_Compiler_Effect.failwith
                 "Incremental parsing failed: Expected syntax error at (9, 6), got no error"
           | (FStar_Pervasives_Native.Some (uu___5, uu___6, rng0),
              FStar_Pervasives_Native.Some (uu___7, uu___8, rng1)) ->
@@ -720,7 +720,7 @@ let (parse_incremental_decls : unit -> unit) =
               if uu___5
               then ()
               else
-                failwith
+                FStar_Compiler_Effect.failwith
                   "Incremental parsing failed; unexpected change in a decl"
           | uu___5 ->
               let uu___6 =
@@ -733,19 +733,21 @@ let (parse_incremental_decls : unit -> unit) =
                 FStar_Compiler_Util.format2
                   "Incremental parsing failed; expected 6 decls got %s and %s\n"
                   uu___7 uu___8 in
-              failwith uu___6))
+              FStar_Compiler_Effect.failwith uu___6))
     | (FStar_Parser_ParseIt.ParseError (code, message, range), uu___2) ->
         let msg =
           let uu___3 = FStar_Compiler_Range_Ops.string_of_range range in
           let uu___4 = FStar_Errors_Msg.rendermsg message in
           FStar_Compiler_Util.format2
             "Incremental parsing failed: Syntax error @ %s: %s" uu___3 uu___4 in
-        failwith msg
+        FStar_Compiler_Effect.failwith msg
     | (uu___2, FStar_Parser_ParseIt.ParseError (code, message, range)) ->
         let msg =
           let uu___3 = FStar_Compiler_Range_Ops.string_of_range range in
           let uu___4 = FStar_Errors_Msg.rendermsg message in
           FStar_Compiler_Util.format2
             "Incremental parsing failed: Syntax error @ %s: %s" uu___3 uu___4 in
-        failwith msg
-    | uu___2 -> failwith "Incremental parsing failed: Unexpected output"
+        FStar_Compiler_Effect.failwith msg
+    | uu___2 ->
+        FStar_Compiler_Effect.failwith
+          "Incremental parsing failed: Unexpected output"

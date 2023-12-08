@@ -311,7 +311,9 @@ let (isTotFun_axioms :
                   let rest =
                     is_tot_fun_axioms ctx1 ctx_guard1 app vars2 guards2 in
                   FStar_SMTEncoding_Util.mkAnd (is_tot_fun_head, rest)
-              | uu___ -> failwith "impossible: isTotFun_axioms" in
+              | uu___ ->
+                  FStar_Compiler_Effect.failwith
+                    "impossible: isTotFun_axioms" in
             is_tot_fun_axioms [] FStar_SMTEncoding_Util.mkTrue head vars
               guards
 let (maybe_curry_app :
@@ -497,7 +499,7 @@ let (as_function_typ :
                  let uu___4 = FStar_Syntax_Print.term_to_string t0 in
                  FStar_Compiler_Util.format2
                    "(%s) Expected a function typ; got %s" uu___3 uu___4 in
-               failwith uu___2) in
+               FStar_Compiler_Effect.failwith uu___2) in
       aux true t0
 let rec (curried_arrow_formals_comp :
   FStar_Syntax_Syntax.term ->
@@ -582,7 +584,7 @@ let (getInteger : FStar_Syntax_Syntax.term' -> Prims.int) =
     | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_int
         (n, FStar_Pervasives_Native.None)) ->
         FStar_Compiler_Util.int_of_string n
-    | uu___ -> failwith "Expected an Integer term"
+    | uu___ -> FStar_Compiler_Effect.failwith "Expected an Integer term"
 let is_BitVector_primitive :
   'uuuuu .
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
@@ -699,7 +701,7 @@ let rec (encode_const :
           let uu___ =
             let uu___1 = FStar_Syntax_Print.const_to_string c1 in
             FStar_Compiler_Util.format1 "Unhandled constant: %s" uu___1 in
-          failwith uu___
+          FStar_Compiler_Effect.failwith uu___
 and (encode_binders :
   FStar_SMTEncoding_Term.term FStar_Pervasives_Native.option ->
     FStar_Syntax_Syntax.binders ->
@@ -785,7 +787,7 @@ and (encode_arith_term :
             let head_fv =
               match head.FStar_Syntax_Syntax.n with
               | FStar_Syntax_Syntax.Tm_fvar fv -> fv
-              | uu___1 -> failwith "Impossible" in
+              | uu___1 -> FStar_Compiler_Effect.failwith "Impossible" in
             let unary unbox arg_tms1 =
               let uu___1 = FStar_Compiler_List.hd arg_tms1 in unbox uu___1 in
             let binary unbox arg_tms1 =
@@ -997,7 +999,7 @@ and (encode_BitVector_term :
                     let uu___8 = FStar_Syntax_Print.term_to_string sz_arg in
                     FStar_Compiler_Util.format1
                       "Not a constant bitvector extend size: %s" uu___8 in
-                  failwith uu___7
+                  FStar_Compiler_Effect.failwith uu___7
               | uu___4 ->
                   let uu___5 = FStar_Compiler_List.tail args_e in
                   (uu___5, FStar_Pervasives_Native.None) in
@@ -1009,7 +1011,8 @@ and (encode_BitVector_term :
                       let head_fv =
                         match head.FStar_Syntax_Syntax.n with
                         | FStar_Syntax_Syntax.Tm_fvar fv -> fv
-                        | uu___5 -> failwith "Impossible" in
+                        | uu___5 ->
+                            FStar_Compiler_Effect.failwith "Impossible" in
                       let unary arg_tms2 =
                         let uu___5 = FStar_Compiler_List.hd arg_tms2 in
                         FStar_SMTEncoding_Term.unboxBitVec sz uu___5 in
@@ -1078,7 +1081,7 @@ and (encode_BitVector_term :
                             match ext_sz with
                             | FStar_Pervasives_Native.Some x -> x
                             | FStar_Pervasives_Native.None ->
-                                failwith "impossible" in
+                                FStar_Compiler_Effect.failwith "impossible" in
                           FStar_SMTEncoding_Util.mkBvUext uu___6 in
                         let uu___6 =
                           let uu___7 =
@@ -1086,7 +1089,7 @@ and (encode_BitVector_term :
                               match ext_sz with
                               | FStar_Pervasives_Native.Some x -> x
                               | FStar_Pervasives_Native.None ->
-                                  failwith "impossible" in
+                                  FStar_Compiler_Effect.failwith "impossible" in
                             sz + uu___8 in
                           FStar_SMTEncoding_Term.boxBitVec uu___7 in
                         mk_bv uu___5 unary uu___6 arg_tms2 in
@@ -1260,7 +1263,7 @@ and (encode_term :
               let uu___6 = FStar_Syntax_Print.term_to_string t1 in
               FStar_Compiler_Util.format3 "(%s) Impossible: %s\n%s\n" uu___4
                 uu___5 uu___6 in
-            failwith uu___3
+            FStar_Compiler_Effect.failwith uu___3
         | FStar_Syntax_Syntax.Tm_unknown ->
             let uu___2 =
               let uu___3 =
@@ -1271,7 +1274,7 @@ and (encode_term :
               let uu___5 = FStar_Syntax_Print.term_to_string t1 in
               FStar_Compiler_Util.format3 "(%s) Impossible: %s\n%s\n" uu___3
                 uu___4 uu___5 in
-            failwith uu___2
+            FStar_Compiler_Effect.failwith uu___2
         | FStar_Syntax_Syntax.Tm_lazy i ->
             let e = FStar_Syntax_Util.unfold_lazy i in
             ((let uu___3 =
@@ -1292,7 +1295,7 @@ and (encode_term :
               let uu___3 = FStar_Syntax_Print.bv_to_string x in
               FStar_Compiler_Util.format1
                 "Impossible: locally nameless; got %s" uu___3 in
-            failwith uu___2
+            FStar_Compiler_Effect.failwith uu___2
         | FStar_Syntax_Syntax.Tm_ascribed
             { FStar_Syntax_Syntax.tm = t2;
               FStar_Syntax_Syntax.asc = (k, uu___2, uu___3);
@@ -1857,7 +1860,7 @@ and (encode_term :
                         match t2.FStar_SMTEncoding_Term.tm with
                         | FStar_SMTEncoding_Term.FreeV fv -> fv
                         | uu___6 ->
-                            failwith
+                            FStar_Compiler_Effect.failwith
                               "Impossible: getfreeV: gen_term_var should always returns a FreeV" in
                       let uu___6 =
                         FStar_Compiler_List.fold_left
@@ -1983,7 +1986,7 @@ and (encode_term :
                          let uu___10 = FStar_Compiler_List.hd b in
                          uu___10.FStar_Syntax_Syntax.binder_bv in
                        (uu___9, f1))
-              | uu___5 -> failwith "impossible" in
+              | uu___5 -> FStar_Compiler_Effect.failwith "impossible" in
             (match uu___3 with
              | (x, f) ->
                  let uu___4 = encode_term x.FStar_Syntax_Syntax.sort env in
@@ -3002,7 +3005,9 @@ and (encode_term :
                    FStar_Syntax_Syntax.lbattrs = uu___8;
                    FStar_Syntax_Syntax.lbpos = uu___9;_}::uu___10);
               FStar_Syntax_Syntax.body1 = uu___11;_}
-            -> failwith "Impossible: already handled by encoding of Sig_let"
+            ->
+            FStar_Compiler_Effect.failwith
+              "Impossible: already handled by encoding of Sig_let"
         | FStar_Syntax_Syntax.Tm_let
             {
               FStar_Syntax_Syntax.lbs =
@@ -3020,7 +3025,8 @@ and (encode_term :
             { FStar_Syntax_Syntax.lbs = (false, uu___2::uu___3);
               FStar_Syntax_Syntax.body1 = uu___4;_}
             ->
-            failwith "Impossible: non-recursive let with multiple bindings"
+            FStar_Compiler_Effect.failwith
+              "Impossible: non-recursive let with multiple bindings"
         | FStar_Syntax_Syntax.Tm_let
             { FStar_Syntax_Syntax.lbs = (uu___2, lbs);
               FStar_Syntax_Syntax.body1 = uu___3;_}
@@ -3251,7 +3257,7 @@ and (encode_pat :
                        | (tm, decls) ->
                            ((match decls with
                              | uu___5::uu___6 ->
-                                 failwith
+                                 FStar_Compiler_Effect.failwith
                                    "Unexpected encoding of constant pattern"
                              | uu___5 -> ());
                             FStar_SMTEncoding_Util.mkEq (scrutinee, tm)))
@@ -3484,7 +3490,7 @@ and (encode_formula :
       let bin_op f uu___ =
         match uu___ with
         | t1::t2::[] -> f (t1, t2)
-        | uu___1 -> failwith "Impossible" in
+        | uu___1 -> FStar_Compiler_Effect.failwith "Impossible" in
       let enc_prop_c f r l =
         let uu___ =
           FStar_Compiler_Util.fold_map
@@ -3527,7 +3533,7 @@ and (encode_formula :
             FStar_Compiler_Util.format1
               "eq_op: got %s non-implicit arguments instead of 2?"
               (Prims.string_of_int (FStar_Compiler_List.length rf)) in
-          failwith uu___
+          FStar_Compiler_Effect.failwith uu___
         else
           (let uu___1 = enc (bin_op FStar_SMTEncoding_Util.mkEq) in
            uu___1 r rf) in
@@ -3548,7 +3554,7 @@ and (encode_formula :
                              FStar_SMTEncoding_Term.mkImp (l2, l1) r in
                            (uu___6,
                              (FStar_Compiler_List.op_At decls1 decls2)))))
-        | uu___1 -> failwith "impossible" in
+        | uu___1 -> FStar_Compiler_Effect.failwith "impossible" in
       let mk_ite r uu___ =
         match uu___ with
         | (guard, uu___1)::(_then, uu___2)::(_else, uu___3)::[] ->
@@ -3565,7 +3571,7 @@ and (encode_formula :
                            (res,
                              (FStar_Compiler_List.op_At decls1
                                 (FStar_Compiler_List.op_At decls2 decls3))))))
-        | uu___1 -> failwith "impossible" in
+        | uu___1 -> FStar_Compiler_Effect.failwith "impossible" in
       let unboxInt_l f l =
         let uu___ = FStar_Compiler_List.map FStar_SMTEncoding_Term.unboxInt l in
         f uu___ in

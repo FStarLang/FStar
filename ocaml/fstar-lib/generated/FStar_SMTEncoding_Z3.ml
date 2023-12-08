@@ -203,7 +203,8 @@ let (query_logging : query_log) =
   let get_module_name uu___ =
     let uu___1 = FStar_Compiler_Effect.op_Bang current_module_name in
     match uu___1 with
-    | FStar_Pervasives_Native.None -> failwith "Module name not set"
+    | FStar_Pervasives_Native.None ->
+        FStar_Compiler_Effect.failwith "Module name not set"
     | FStar_Pervasives_Native.Some n -> n in
   let next_file_name uu___ =
     let n = get_module_name () in
@@ -261,7 +262,8 @@ let (query_logging : query_log) =
   let log_file_name uu___ =
     let uu___1 = FStar_Compiler_Effect.op_Bang current_file_name in
     match uu___1 with
-    | FStar_Pervasives_Native.None -> failwith "no log file"
+    | FStar_Pervasives_Native.None ->
+        FStar_Compiler_Effect.failwith "no log file"
     | FStar_Pervasives_Native.Some n -> n in
   { get_module_name; set_module_name; write_to_log; append_to_log; close_log
   }
@@ -621,7 +623,7 @@ let (smt_output_sections :
               let uu___1 = until (end_tag tag) suffix in
               (match uu___1 with
                | FStar_Pervasives_Native.None ->
-                   failwith
+                   FStar_Compiler_Effect.failwith
                      (Prims.strcat "Parse error: "
                         (Prims.strcat (end_tag tag) " not found"))
                | FStar_Pervasives_Native.Some (section, suffix1) ->
@@ -848,7 +850,7 @@ let (doZ3Exe :
                            "Unexpected output from Z3: got output result: %s\n"
                            (FStar_Compiler_String.concat "\n"
                               smt_output1.smt_result) in
-                       failwith uu___2) in
+                       FStar_Compiler_Effect.failwith uu___2) in
                 (status, statistics) in
               let log_result fwrite uu___ =
                 match uu___ with
@@ -974,15 +976,17 @@ let (giveZ3 : FStar_SMTEncoding_Term.decl Prims.list -> unit) =
       (FStar_Compiler_List.iter
          (fun uu___1 ->
             match uu___1 with
-            | FStar_SMTEncoding_Term.Push -> failwith "Unexpected push/pop"
-            | FStar_SMTEncoding_Term.Pop -> failwith "Unexpected push/pop"
+            | FStar_SMTEncoding_Term.Push ->
+                FStar_Compiler_Effect.failwith "Unexpected push/pop"
+            | FStar_SMTEncoding_Term.Pop ->
+                FStar_Compiler_Effect.failwith "Unexpected push/pop"
             | uu___2 -> ()));
     (let uu___2 = FStar_Compiler_Effect.op_Bang fresh_scope in
      match uu___2 with
      | hd::tl ->
          FStar_Compiler_Effect.op_Colon_Equals fresh_scope
            ((FStar_Compiler_List.op_At hd decls) :: tl)
-     | uu___3 -> failwith "Impossible");
+     | uu___3 -> FStar_Compiler_Effect.failwith "Impossible");
     (let uu___2 =
        let uu___3 = FStar_Compiler_Effect.op_Bang bg_scope in
        FStar_Compiler_List.op_At uu___3 decls in

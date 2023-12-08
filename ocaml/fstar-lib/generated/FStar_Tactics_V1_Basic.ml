@@ -1025,7 +1025,7 @@ let (do_unify_aux :
                          Prims.op_Negation uu___4 in
                        if uu___3
                        then
-                         failwith
+                         FStar_Compiler_Effect.failwith
                            "internal error: do_unify: guard is not trivial"
                        else ());
                       FStar_Tactics_Monad.ret true))
@@ -3134,7 +3134,9 @@ let (lemma_or_sq :
             | pre::post::uu___3 ->
                 ((FStar_Pervasives_Native.fst pre),
                   (FStar_Pervasives_Native.fst post))
-            | uu___3 -> failwith "apply_lemma: impossible: not a lemma" in
+            | uu___3 ->
+                FStar_Compiler_Effect.failwith
+                  "apply_lemma: impossible: not a lemma" in
           (match uu___2 with
            | (pre, post) ->
                let post1 =
@@ -4481,7 +4483,7 @@ let (_t_trefl :
                                  if uu___6
                                  then FStar_Tactics_Monad.ret true
                                  else
-                                   failwith
+                                   FStar_Compiler_Effect.failwith
                                      "internal error: _t_refl: guard is not trivial"))) in
               let uu___1 = attempt l r in
               FStar_Tactics_Monad.op_let_Bang uu___1
@@ -5222,7 +5224,8 @@ let (tac_and :
            match uu___1 with
            | FStar_Pervasives_Native.Some (true) ->
                FStar_Tactics_Monad.ret true
-           | FStar_Pervasives_Native.Some (false) -> failwith "impossible"
+           | FStar_Pervasives_Native.Some (false) ->
+               FStar_Compiler_Effect.failwith "impossible"
            | FStar_Pervasives_Native.None -> FStar_Tactics_Monad.ret false)
 let (match_env :
   env ->
@@ -5559,7 +5562,7 @@ let (t_destruct :
                                     | FStar_Syntax_Syntax.Tm_fvar fv ->
                                         FStar_Tactics_Monad.ret (fv, us)
                                     | uu___9 ->
-                                        failwith
+                                        FStar_Compiler_Effect.failwith
                                           "impossible: uinst over something that's not an fvar")
                                | uu___8 ->
                                    FStar_Tactics_Monad.fail
@@ -6362,13 +6365,13 @@ let (gather_explicit_guards_for_resolved_goals :
 let rec last : 'a . 'a Prims.list -> 'a =
   fun l ->
     match l with
-    | [] -> failwith "last: empty list"
+    | [] -> FStar_Compiler_Effect.failwith "last: empty list"
     | x::[] -> x
     | uu___::xs -> last xs
 let rec init : 'a . 'a Prims.list -> 'a Prims.list =
   fun l ->
     match l with
-    | [] -> failwith "init: empty list"
+    | [] -> FStar_Compiler_Effect.failwith "init: empty list"
     | x::[] -> []
     | x::xs -> let uu___ = init xs in x :: uu___
 let rec (inspect :
@@ -6410,7 +6413,8 @@ let rec (inspect :
                     FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret
                       (FStar_Reflection_V1_Data.Tv_UInst (fv, us))
                 | uu___3 ->
-                    failwith "Tac::inspect: Tm_uinst head not an fvar")
+                    FStar_Compiler_Effect.failwith
+                      "Tac::inspect: Tm_uinst head not an fvar")
            | FStar_Syntax_Syntax.Tm_ascribed
                { FStar_Syntax_Syntax.tm = t3;
                  FStar_Syntax_Syntax.asc =
@@ -6430,7 +6434,7 @@ let rec (inspect :
            | FStar_Syntax_Syntax.Tm_app
                { FStar_Syntax_Syntax.hd = uu___2;
                  FStar_Syntax_Syntax.args = [];_}
-               -> failwith "empty arguments on Tm_app"
+               -> FStar_Compiler_Effect.failwith "empty arguments on Tm_app"
            | FStar_Syntax_Syntax.Tm_app
                { FStar_Syntax_Syntax.hd = hd;
                  FStar_Syntax_Syntax.args = args;_}
@@ -6453,7 +6457,7 @@ let rec (inspect :
                { FStar_Syntax_Syntax.bs = [];
                  FStar_Syntax_Syntax.body = uu___2;
                  FStar_Syntax_Syntax.rc_opt = uu___3;_}
-               -> failwith "empty arguments on Tm_abs"
+               -> FStar_Compiler_Effect.failwith "empty arguments on Tm_abs"
            | FStar_Syntax_Syntax.Tm_abs
                { FStar_Syntax_Syntax.bs = bs; FStar_Syntax_Syntax.body = t3;
                  FStar_Syntax_Syntax.rc_opt = k;_}
@@ -6462,7 +6466,7 @@ let rec (inspect :
                (match uu___2 with
                 | (bs1, t4) ->
                     (match bs1 with
-                     | [] -> failwith "impossible"
+                     | [] -> FStar_Compiler_Effect.failwith "impossible"
                      | b::bs2 ->
                          let uu___3 =
                            let uu___4 =
@@ -6477,14 +6481,15 @@ let rec (inspect :
            | FStar_Syntax_Syntax.Tm_arrow
                { FStar_Syntax_Syntax.bs1 = [];
                  FStar_Syntax_Syntax.comp = uu___2;_}
-               -> failwith "empty binders on arrow"
+               -> FStar_Compiler_Effect.failwith "empty binders on arrow"
            | FStar_Syntax_Syntax.Tm_arrow uu___2 ->
                let uu___3 = FStar_Syntax_Util.arrow_one t2 in
                (match uu___3 with
                 | FStar_Pervasives_Native.Some (b, c) ->
                     FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret
                       (FStar_Reflection_V1_Data.Tv_Arrow (b, c))
-                | FStar_Pervasives_Native.None -> failwith "impossible")
+                | FStar_Pervasives_Native.None ->
+                    FStar_Compiler_Effect.failwith "impossible")
            | FStar_Syntax_Syntax.Tm_refine
                { FStar_Syntax_Syntax.b = bv; FStar_Syntax_Syntax.phi = t3;_}
                ->
@@ -6495,7 +6500,7 @@ let rec (inspect :
                     let b1 =
                       match b' with
                       | b'1::[] -> b'1
-                      | uu___3 -> failwith "impossible" in
+                      | uu___3 -> FStar_Compiler_Effect.failwith "impossible" in
                     FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret
                       (FStar_Reflection_V1_Data.Tv_Refine
                          ((b1.FStar_Syntax_Syntax.binder_bv),
@@ -6542,7 +6547,7 @@ let rec (inspect :
                              match bs with
                              | b2::[] -> b2
                              | uu___4 ->
-                                 failwith
+                                 FStar_Compiler_Effect.failwith
                                    "impossible: open_term returned different amount of binders" in
                            FStar_Compiler_Effect.op_Less_Bar
                              FStar_Tactics_Monad.ret
@@ -6586,7 +6591,7 @@ let rec (inspect :
                                             (lb1.FStar_Syntax_Syntax.lbdef),
                                             t22)))
                             | uu___4 ->
-                                failwith
+                                FStar_Compiler_Effect.failwith
                                   "impossible: open_term returned different amount of binders")))
            | FStar_Syntax_Syntax.Tm_match
                { FStar_Syntax_Syntax.scrutinee = t3;
@@ -7043,7 +7048,7 @@ let (t_commute_applied_match : unit -> unit FStar_Tactics_Monad.tac) =
                                        g.FStar_Tactics_Types.goal_ctx_uvar;
                                      solve g FStar_Syntax_Util.exp_unit)
                                   else
-                                    failwith
+                                    FStar_Compiler_Effect.failwith
                                       "internal error: _t_refl: guard is not trivial")
                      | uu___5 ->
                          FStar_Tactics_Monad.fail "lhs is not a match"))

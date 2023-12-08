@@ -2686,7 +2686,9 @@ let (encode_top_level_let :
                                          let uu___12 =
                                            match e_t with
                                            | e1::t_norm1::[] -> (e1, t_norm1)
-                                           | uu___13 -> failwith "Impossible" in
+                                           | uu___13 ->
+                                               FStar_Compiler_Effect.failwith
+                                                 "Impossible" in
                                          (match uu___12 with
                                           | (e1, t_norm1) ->
                                               ({
@@ -2966,7 +2968,9 @@ let (encode_top_level_let :
                                                                  decls1
                                                                  uu___17 in
                                                              (uu___16, env2)))))))
-                               | uu___5 -> failwith "Impossible" in
+                               | uu___5 ->
+                                   FStar_Compiler_Effect.failwith
+                                     "Impossible" in
                              let encode_rec_lbdefs bindings1 typs2 toks1 env2
                                =
                                let fuel =
@@ -3045,7 +3049,8 @@ let (encode_top_level_let :
                                                  | e1::t_norm1::[] ->
                                                      (e1, t_norm1)
                                                  | uu___16 ->
-                                                     failwith "Impossible" in
+                                                     FStar_Compiler_Effect.failwith
+                                                       "Impossible" in
                                                (match uu___15 with
                                                 | (e1, t_norm1) ->
                                                     ({
@@ -3942,9 +3947,10 @@ and (encode_sigelt' :
          | uu___2 -> false in
        match se.FStar_Syntax_Syntax.sigel with
        | FStar_Syntax_Syntax.Sig_splice uu___1 ->
-           failwith "impossible -- splice should have been removed by Tc.fs"
+           FStar_Compiler_Effect.failwith
+             "impossible -- splice should have been removed by Tc.fs"
        | FStar_Syntax_Syntax.Sig_fail uu___1 ->
-           failwith
+           FStar_Compiler_Effect.failwith
              "impossible -- Sig_fail should have been removed by Tc.fs"
        | FStar_Syntax_Syntax.Sig_pragma uu___1 -> ([], env)
        | FStar_Syntax_Syntax.Sig_effect_abbrev uu___1 -> ([], env)
@@ -4707,7 +4713,8 @@ and (encode_sigelt' :
                                              FStar_Compiler_Util.format3
                                                "Impossible: Unresolved or unknown universe in inductive type %s (%s, %s)"
                                                uu___12 uu___13 uu___14 in
-                                           failwith uu___11
+                                           FStar_Compiler_Effect.failwith
+                                             uu___11
                                        | (uu___10,
                                           FStar_Syntax_Syntax.U_unknown) ->
                                            let uu___11 =
@@ -4722,7 +4729,8 @@ and (encode_sigelt' :
                                              FStar_Compiler_Util.format3
                                                "Impossible: Unresolved or unknown universe in inductive type %s (%s, %s)"
                                                uu___12 uu___13 uu___14 in
-                                           failwith uu___11
+                                           FStar_Compiler_Effect.failwith
+                                             uu___11
                                        | (FStar_Syntax_Syntax.U_unif uu___10,
                                           uu___11) ->
                                            let uu___12 =
@@ -4737,7 +4745,8 @@ and (encode_sigelt' :
                                              FStar_Compiler_Util.format3
                                                "Impossible: Unresolved or unknown universe in inductive type %s (%s, %s)"
                                                uu___13 uu___14 uu___15 in
-                                           failwith uu___12
+                                           FStar_Compiler_Effect.failwith
+                                             uu___12
                                        | (uu___10, FStar_Syntax_Syntax.U_unif
                                           uu___11) ->
                                            let uu___12 =
@@ -4752,7 +4761,8 @@ and (encode_sigelt' :
                                              FStar_Compiler_Util.format3
                                                "Impossible: Unresolved or unknown universe in inductive type %s (%s, %s)"
                                                uu___13 uu___14 uu___15 in
-                                           failwith uu___12
+                                           FStar_Compiler_Effect.failwith
+                                             uu___12
                                        | uu___10 -> false in
                                      let u_leq_u_k u =
                                        let uu___10 =
@@ -4909,7 +4919,8 @@ and (encode_sigelt' :
                                                           (FStar_Compiler_List.length
                                                              vars)
                                                       then
-                                                        failwith "Impossible"
+                                                        FStar_Compiler_Effect.failwith
+                                                          "Impossible"
                                                       else ();
                                                       (let eqs =
                                                          if is_injective
@@ -7378,7 +7389,7 @@ let (get_env :
     fun tcenv ->
       let uu___ = FStar_Compiler_Effect.op_Bang last_env in
       match uu___ with
-      | [] -> failwith "No env; call init first!"
+      | [] -> FStar_Compiler_Effect.failwith "No env; call init first!"
       | e::uu___1 ->
           let uu___2 = FStar_Ident.string_of_lid cmn in
           {
@@ -7405,14 +7416,14 @@ let (set_env : FStar_SMTEncoding_Env.env_t -> unit) =
   fun env ->
     let uu___ = FStar_Compiler_Effect.op_Bang last_env in
     match uu___ with
-    | [] -> failwith "Empty env stack"
+    | [] -> FStar_Compiler_Effect.failwith "Empty env stack"
     | uu___1::tl ->
         FStar_Compiler_Effect.op_Colon_Equals last_env (env :: tl)
 let (push_env : unit -> unit) =
   fun uu___ ->
     let uu___1 = FStar_Compiler_Effect.op_Bang last_env in
     match uu___1 with
-    | [] -> failwith "Empty env stack"
+    | [] -> FStar_Compiler_Effect.failwith "Empty env stack"
     | hd::tl ->
         let top = copy_env hd in
         FStar_Compiler_Effect.op_Colon_Equals last_env (top :: hd :: tl)
@@ -7420,7 +7431,7 @@ let (pop_env : unit -> unit) =
   fun uu___ ->
     let uu___1 = FStar_Compiler_Effect.op_Bang last_env in
     match uu___1 with
-    | [] -> failwith "Popping an empty stack"
+    | [] -> FStar_Compiler_Effect.failwith "Popping an empty stack"
     | uu___2::tl -> FStar_Compiler_Effect.op_Colon_Equals last_env tl
 let (snapshot_env : unit -> (Prims.int * unit)) =
   fun uu___ -> FStar_Common.snapshot push_env last_env ()

@@ -52,7 +52,7 @@ let rollback :
       fun depth ->
         let rec aux n =
           if n <= Prims.int_zero
-          then failwith "Too many pops"
+          then FStar_Compiler_Effect.failwith "Too many pops"
           else
             if n = Prims.int_one
             then pop ()
@@ -68,7 +68,7 @@ let rollback :
 let raise_failed_assertion : 'uuuuu . Prims.string -> 'uuuuu =
   fun msg ->
     let uu___ = FStar_Compiler_Util.format1 "Assertion failed: %s" msg in
-    failwith uu___
+    FStar_Compiler_Effect.failwith uu___
 let (runtime_assert : Prims.bool -> Prims.string -> unit) =
   fun b ->
     fun msg -> if Prims.op_Negation b then raise_failed_assertion msg else ()

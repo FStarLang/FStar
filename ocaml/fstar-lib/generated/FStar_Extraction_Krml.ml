@@ -754,7 +754,7 @@ let (find_name : env -> Prims.string -> name) =
       match uu___ with
       | FStar_Pervasives_Native.Some name1 -> name1
       | FStar_Pervasives_Native.None ->
-          failwith "internal error: name not found"
+          FStar_Compiler_Effect.failwith "internal error: name not found"
 let (find : env -> Prims.string -> Prims.int) =
   fun env1 ->
     fun x ->
@@ -769,7 +769,7 @@ let (find : env -> Prims.string -> Prims.int) =
           let uu___1 =
             FStar_Compiler_Util.format1 "Internal error: name not found %s\n"
               x in
-          failwith uu___1
+          FStar_Compiler_Effect.failwith uu___1
 let (find_t : env -> Prims.string -> Prims.int) =
   fun env1 ->
     fun x ->
@@ -784,7 +784,7 @@ let (find_t : env -> Prims.string -> Prims.int) =
           let uu___1 =
             FStar_Compiler_Util.format1 "Internal error: name not found %s\n"
               x in
-          failwith uu___1
+          FStar_Compiler_Effect.failwith uu___1
 let add_binders : 'uuuuu . env -> (Prims.string * 'uuuuu) Prims.list -> env =
   fun env1 ->
     fun binders ->
@@ -806,7 +806,8 @@ let (list_elements :
       | FStar_Extraction_ML_Syntax.MLE_CTor (("Prims"::[], "Nil"), []) ->
           FStar_Compiler_List.rev acc
       | uu___ ->
-          failwith "Argument of FStar.Buffer.createL is not a list literal!" in
+          FStar_Compiler_Effect.failwith
+            "Argument of FStar.Buffer.createL is not a list literal!" in
     list_elements1 [] e2
 let (translate_flags :
   FStar_Extraction_ML_Syntax.meta Prims.list -> flag Prims.list) =
@@ -2196,7 +2197,7 @@ and (translate_expr' : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
            | FStar_Extraction_ML_Syntax.MLE_Const
                (FStar_Extraction_ML_Syntax.MLC_String s) -> EString s
            | uu___4 ->
-               failwith
+               FStar_Compiler_Effect.failwith
                  "Cannot extract string_of_literal applied to a non-literal")
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -2213,7 +2214,7 @@ and (translate_expr' : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
            | FStar_Extraction_ML_Syntax.MLE_Const
                (FStar_Extraction_ML_Syntax.MLC_String s) -> EString s
            | uu___4 ->
-               failwith
+               FStar_Compiler_Effect.failwith
                  "Cannot extract string_of_literal applied to a non-literal")
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -2230,7 +2231,7 @@ and (translate_expr' : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
            | FStar_Extraction_ML_Syntax.MLE_Const
                (FStar_Extraction_ML_Syntax.MLC_String s) -> EString s
            | uu___4 ->
-               failwith
+               FStar_Compiler_Effect.failwith
                  "Cannot extract string_of_literal applied to a non-literal")
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -2262,17 +2263,22 @@ and (translate_expr' : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
               FStar_Extraction_ML_Syntax.MLE_Const
               (FStar_Extraction_ML_Syntax.MLC_String safter)) ->
                (if FStar_Compiler_Util.contains sbefore "*/"
-                then failwith "Before Comment contains end-of-comment marker"
+                then
+                  FStar_Compiler_Effect.failwith
+                    "Before Comment contains end-of-comment marker"
                 else ();
                 if FStar_Compiler_Util.contains safter "*/"
-                then failwith "After Comment contains end-of-comment marker"
+                then
+                  FStar_Compiler_Effect.failwith
+                    "After Comment contains end-of-comment marker"
                 else ();
                 (let uu___11 =
                    let uu___12 = translate_expr env1 e1 in
                    (sbefore, uu___12, safter) in
                  EComment uu___11))
            | uu___9 ->
-               failwith "Cannot extract comment applied to a non-literal")
+               FStar_Compiler_Effect.failwith
+                 "Cannot extract comment applied to a non-literal")
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
@@ -2290,12 +2296,13 @@ and (translate_expr' : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
                (FStar_Extraction_ML_Syntax.MLC_String s) ->
                (if FStar_Compiler_Util.contains s "*/"
                 then
-                  failwith
+                  FStar_Compiler_Effect.failwith
                     "Standalone Comment contains end-of-comment marker"
                 else ();
                 EStandaloneComment s)
            | uu___4 ->
-               failwith "Cannot extract comment applied to a non-literal")
+               FStar_Compiler_Effect.failwith
+                 "Cannot extract comment applied to a non-literal")
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
@@ -2312,7 +2319,7 @@ and (translate_expr' : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
                (FStar_Extraction_ML_Syntax.MLC_String s) ->
                ECast ((EString s), (TBuf (TInt UInt8)))
            | uu___4 ->
-               failwith
+               FStar_Compiler_Effect.failwith
                  "Cannot extract buffer_of_literal applied to a non-literal")
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -2478,14 +2485,14 @@ and (translate_expr' : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
             let uu___2 = FStar_Extraction_ML_Code.string_of_mlexpr ([], "") e in
             FStar_Compiler_Util.format1
               "todo: translate_expr [MLE_Let] (expr is: %s)" uu___2 in
-          failwith uu___1
+          FStar_Compiler_Effect.failwith uu___1
       | FStar_Extraction_ML_Syntax.MLE_App (head, uu___) ->
           let uu___1 =
             let uu___2 =
               FStar_Extraction_ML_Code.string_of_mlexpr ([], "") head in
             FStar_Compiler_Util.format1
               "todo: translate_expr [MLE_App] (head is: %s)" uu___2 in
-          failwith uu___1
+          FStar_Compiler_Effect.failwith uu___1
       | FStar_Extraction_ML_Syntax.MLE_Seq seqs ->
           let uu___ = FStar_Compiler_List.map (translate_expr env1) seqs in
           ESequence uu___
@@ -2518,11 +2525,11 @@ and (translate_expr' : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
             (uu___1, uu___2, uu___3) in
           EIfThenElse uu___
       | FStar_Extraction_ML_Syntax.MLE_Raise uu___ ->
-          failwith "todo: translate_expr [MLE_Raise]"
+          FStar_Compiler_Effect.failwith "todo: translate_expr [MLE_Raise]"
       | FStar_Extraction_ML_Syntax.MLE_Try uu___ ->
-          failwith "todo: translate_expr [MLE_Try]"
+          FStar_Compiler_Effect.failwith "todo: translate_expr [MLE_Try]"
       | FStar_Extraction_ML_Syntax.MLE_Coerce uu___ ->
-          failwith "todo: translate_expr [MLE_Coerce]"
+          FStar_Compiler_Effect.failwith "todo: translate_expr [MLE_Coerce]"
 and (assert_lid : env -> FStar_Extraction_ML_Syntax.mlty -> typ) =
   fun env1 ->
     fun t ->
@@ -2540,7 +2547,7 @@ and (assert_lid : env -> FStar_Extraction_ML_Syntax.mlty -> typ) =
             let uu___2 = FStar_Extraction_ML_Code.string_of_mlty ([], "") t in
             FStar_Compiler_Util.format1
               "invalid argument: expected MLTY_Named, got %s" uu___2 in
-          failwith uu___1
+          FStar_Compiler_Effect.failwith uu___1
 and (translate_branches :
   env ->
     (FStar_Extraction_ML_Syntax.mlpattern * FStar_Extraction_ML_Syntax.mlexpr
@@ -2566,7 +2573,7 @@ and (translate_branch :
             (match uu___1 with
              | (env2, pat1) ->
                  let uu___2 = translate_expr env2 expr1 in (pat1, uu___2))
-          else failwith "todo: translate_branch"
+          else FStar_Compiler_Effect.failwith "todo: translate_branch"
 and (translate_width :
   (FStar_Const.signedness * FStar_Const.width) FStar_Pervasives_Native.option
     -> width)
@@ -2652,9 +2659,9 @@ and (translate_pat :
           (match uu___ with
            | (env2, ps1) -> (env2, (PTuple (FStar_Compiler_List.rev ps1))))
       | FStar_Extraction_ML_Syntax.MLP_Const uu___ ->
-          failwith "todo: translate_pat [MLP_Const]"
+          FStar_Compiler_Effect.failwith "todo: translate_pat [MLP_Const]"
       | FStar_Extraction_ML_Syntax.MLP_Branch uu___ ->
-          failwith "todo: translate_pat [MLP_Branch]"
+          FStar_Compiler_Effect.failwith "todo: translate_pat [MLP_Branch]"
 and (translate_constant : FStar_Extraction_ML_Syntax.mlconstant -> expr) =
   fun c ->
     match c with
@@ -2672,7 +2679,7 @@ and (translate_constant : FStar_Extraction_ML_Syntax.mlconstant -> expr) =
               FStar_Compiler_Util.format1
                 "Refusing to translate a string literal that contains a null character: %s"
                 s in
-            failwith uu___2
+            FStar_Compiler_Effect.failwith uu___2
           else ());
          EString s)
     | FStar_Extraction_ML_Syntax.MLC_Char c1 ->
@@ -2689,9 +2696,9 @@ and (translate_constant : FStar_Extraction_ML_Syntax.mlconstant -> expr) =
           (uu___1, s) in
         EConstant uu___
     | FStar_Extraction_ML_Syntax.MLC_Float uu___ ->
-        failwith "todo: translate_expr [MLC_Float]"
+        FStar_Compiler_Effect.failwith "todo: translate_expr [MLC_Float]"
     | FStar_Extraction_ML_Syntax.MLC_Bytes uu___ ->
-        failwith "todo: translate_expr [MLC_Bytes]"
+        FStar_Compiler_Effect.failwith "todo: translate_expr [MLC_Bytes]"
     | FStar_Extraction_ML_Syntax.MLC_Int (s, FStar_Pervasives_Native.None) ->
         EConstant (CInt, s)
 and (mk_op_app :
@@ -3060,7 +3067,7 @@ let (translate_decl :
       | FStar_Extraction_ML_Syntax.MLM_Ty tys ->
           FStar_Compiler_List.choose (translate_type_decl env1) tys
       | FStar_Extraction_ML_Syntax.MLM_Top uu___ ->
-          failwith "todo: translate_decl [MLM_Top]"
+          FStar_Compiler_Effect.failwith "todo: translate_decl [MLM_Top]"
       | FStar_Extraction_ML_Syntax.MLM_Exn (m, uu___) ->
           (FStar_Compiler_Util.print1_warning
              "Not extracting exception %s to KaRaMeL (exceptions unsupported)\n"
@@ -3084,7 +3091,8 @@ let (translate_module :
               FStar_Compiler_List.collect
                 (translate_decl (empty module_name1)) decls
           | uu___2 ->
-              failwith "Unexpected standalone interface or nested modules" in
+              FStar_Compiler_Effect.failwith
+                "Unexpected standalone interface or nested modules" in
         ((FStar_Compiler_String.concat "_" module_name1), program1)
 let (translate : FStar_Extraction_ML_Syntax.mllib -> file Prims.list) =
   fun uu___ ->

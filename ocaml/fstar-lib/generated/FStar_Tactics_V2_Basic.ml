@@ -1044,7 +1044,7 @@ let (do_unify_aux :
                          Prims.op_Negation uu___4 in
                        if uu___3
                        then
-                         failwith
+                         FStar_Compiler_Effect.failwith
                            "internal error: do_unify: guard is not trivial"
                        else ());
                       FStar_Tactics_Monad.ret true))
@@ -3232,7 +3232,9 @@ let (lemma_or_sq :
             | pre::post::uu___3 ->
                 ((FStar_Pervasives_Native.fst pre),
                   (FStar_Pervasives_Native.fst post))
-            | uu___3 -> failwith "apply_lemma: impossible: not a lemma" in
+            | uu___3 ->
+                FStar_Compiler_Effect.failwith
+                  "apply_lemma: impossible: not a lemma" in
           (match uu___2 with
            | (pre, post) ->
                let post1 =
@@ -4581,7 +4583,7 @@ let (_t_trefl :
                                  if uu___6
                                  then FStar_Tactics_Monad.ret true
                                  else
-                                   failwith
+                                   FStar_Compiler_Effect.failwith
                                      "internal error: _t_refl: guard is not trivial"))) in
               let uu___1 = attempt l r in
               FStar_Tactics_Monad.op_let_Bang uu___1
@@ -5319,7 +5321,8 @@ let (tac_and :
            match uu___1 with
            | FStar_Pervasives_Native.Some (true) ->
                FStar_Tactics_Monad.ret true
-           | FStar_Pervasives_Native.Some (false) -> failwith "impossible"
+           | FStar_Pervasives_Native.Some (false) ->
+               FStar_Compiler_Effect.failwith "impossible"
            | FStar_Pervasives_Native.None -> FStar_Tactics_Monad.ret false)
 let (match_env :
   env ->
@@ -5656,7 +5659,7 @@ let (t_destruct :
                                     | FStar_Syntax_Syntax.Tm_fvar fv ->
                                         FStar_Tactics_Monad.ret (fv, us)
                                     | uu___9 ->
-                                        failwith
+                                        FStar_Compiler_Effect.failwith
                                           "impossible: uinst over something that's not an fvar")
                                | uu___8 ->
                                    FStar_Tactics_Monad.fail
@@ -6459,13 +6462,13 @@ let (gather_explicit_guards_for_resolved_goals :
 let rec last : 'a . 'a Prims.list -> 'a =
   fun l ->
     match l with
-    | [] -> failwith "last: empty list"
+    | [] -> FStar_Compiler_Effect.failwith "last: empty list"
     | x::[] -> x
     | uu___::xs -> last xs
 let rec init : 'a . 'a Prims.list -> 'a Prims.list =
   fun l ->
     match l with
-    | [] -> failwith "init: empty list"
+    | [] -> FStar_Compiler_Effect.failwith "init: empty list"
     | x::[] -> []
     | x::xs -> let uu___ = init xs in x :: uu___
 let (binder_bv :
@@ -6673,7 +6676,7 @@ let (t_commute_applied_match : unit -> unit FStar_Tactics_Monad.tac) =
                                        g.FStar_Tactics_Types.goal_ctx_uvar;
                                      solve g FStar_Syntax_Util.exp_unit)
                                   else
-                                    failwith
+                                    FStar_Compiler_Effect.failwith
                                       "internal error: _t_refl: guard is not trivial")
                      | uu___5 ->
                          FStar_Tactics_Monad.fail "lhs is not a match"))
@@ -8147,7 +8150,7 @@ let (refl_check_match_complete :
                                              | (p, uu___10, uu___11) -> p)
                                           brs1
                                     | uu___6 ->
-                                        failwith
+                                        FStar_Compiler_Effect.failwith
                                           "refl_check_match_complete: not a match?" in
                                   let pats1 = get_pats mm1 in
                                   let rec bnds_for_pat p =

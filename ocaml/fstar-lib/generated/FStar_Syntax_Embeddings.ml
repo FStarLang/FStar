@@ -43,7 +43,7 @@ let (term_as_fv : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.fv) =
           let uu___3 = FStar_Syntax_Print.term_to_string t in
           FStar_Compiler_Util.format1 "Embeddings not defined for type %s"
             uu___3 in
-        failwith uu___2
+        FStar_Compiler_Effect.failwith uu___2
 let lazy_embed :
   'a .
     'a printer ->

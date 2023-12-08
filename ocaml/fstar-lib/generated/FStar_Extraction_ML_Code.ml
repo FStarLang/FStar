@@ -443,7 +443,9 @@ let (string_of_mlconstant :
               (escape_or FStar_Compiler_Util.string_of_char) chars in
           Prims.strcat uu___1 "\"" in
         Prims.strcat "\"" uu___
-    | uu___ -> failwith "TODO: extract integer constants properly into OCaml"
+    | uu___ ->
+        FStar_Compiler_Effect.failwith
+          "TODO: extract integer constants properly into OCaml"
 let rec (doc_of_mltype' :
   FStar_Extraction_ML_Syntax.mlsymbol ->
     level -> FStar_Extraction_ML_Syntax.mlty -> doc)

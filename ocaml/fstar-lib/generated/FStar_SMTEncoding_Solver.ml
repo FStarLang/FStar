@@ -145,7 +145,7 @@ let (filter_using_facts_from :
                       true) names;
                true)
           | FStar_SMTEncoding_Term.Module uu___1 ->
-              failwith
+              FStar_Compiler_Effect.failwith
                 "Solver.fs::keep_decl should never have been called with a Module decl"
           | uu___1 -> true in
         FStar_Compiler_List.fold_left
@@ -1377,7 +1377,7 @@ let (make_solver_configs :
                       match env.FStar_TypeChecker_Env.qtbl_name_and_index
                       with
                       | (FStar_Pervasives_Native.None, uu___2) ->
-                          failwith "No query name set!"
+                          FStar_Compiler_Effect.failwith "No query name set!"
                       | (FStar_Pervasives_Native.Some (q, _typ, n), uu___2)
                           ->
                           let uu___3 = FStar_Ident.string_of_lid q in
@@ -2266,7 +2266,8 @@ let (encode_and_ask :
                              else ());
                             ask_solver can_split is_retry tcenv1 labels
                               prefix qry q suffix)
-                       | uu___4 -> failwith "Impossible")))
+                       | uu___4 ->
+                           FStar_Compiler_Effect.failwith "Impossible")))
 let (do_solve :
   Prims.bool ->
     Prims.bool ->
@@ -2316,7 +2317,8 @@ let (do_solve :
             | FStar_Pervasives_Native.Some (uu___, ans) when ans.ok -> ()
             | FStar_Pervasives_Native.Some ([], ans) when
                 Prims.op_Negation ans.ok ->
-                failwith "impossible: bad answer from encode_and_ask"
+                FStar_Compiler_Effect.failwith
+                  "impossible: bad answer from encode_and_ask"
             | FStar_Pervasives_Native.None -> ()
 let (split_and_solve :
   Prims.bool ->
@@ -2347,7 +2349,8 @@ let (split_and_solve :
              let uu___1 = FStar_TypeChecker_Env.split_smt_query tcenv q in
              match uu___1 with
              | FStar_Pervasives_Native.None ->
-                 failwith "Impossible: split_query callback is not set"
+                 FStar_Compiler_Effect.failwith
+                   "Impossible: split_query callback is not set"
              | FStar_Pervasives_Native.Some goals1 -> goals1 in
            FStar_Compiler_Effect.op_Bar_Greater goals
              (FStar_Compiler_List.iter

@@ -136,21 +136,23 @@ let (as_bool : option_val -> Prims.bool) =
   fun uu___ ->
     match uu___ with
     | Bool b -> b
-    | uu___1 -> failwith "Impos: expected Bool"
+    | uu___1 -> FStar_Compiler_Effect.failwith "Impos: expected Bool"
 let (as_int : option_val -> Prims.int) =
   fun uu___ ->
-    match uu___ with | Int b -> b | uu___1 -> failwith "Impos: expected Int"
+    match uu___ with
+    | Int b -> b
+    | uu___1 -> FStar_Compiler_Effect.failwith "Impos: expected Int"
 let (as_string : option_val -> Prims.string) =
   fun uu___ ->
     match uu___ with
     | String b -> b
     | Path b -> FStar_Common.try_convert_file_name_to_mixed b
-    | uu___1 -> failwith "Impos: expected String"
+    | uu___1 -> FStar_Compiler_Effect.failwith "Impos: expected String"
 let (as_list' : option_val -> option_val Prims.list) =
   fun uu___ ->
     match uu___ with
     | List ts -> ts
-    | uu___1 -> failwith "Impos: expected List"
+    | uu___1 -> FStar_Compiler_Effect.failwith "Impos: expected List"
 let as_list :
   'uuuuu . (option_val -> 'uuuuu) -> option_val -> 'uuuuu Prims.list =
   fun as_t ->
@@ -178,7 +180,8 @@ let (as_comma_string_list : option_val -> Prims.string Prims.list) =
                let uu___2 = as_string l in
                FStar_Compiler_Util.split uu___2 ",") ls in
         FStar_Compiler_Effect.op_Less_Bar FStar_Compiler_List.flatten uu___1
-    | uu___1 -> failwith "Impos: expected String (comma list)"
+    | uu___1 ->
+        FStar_Compiler_Effect.failwith "Impos: expected String (comma list)"
 let copy_optionstate :
   'uuuuu . 'uuuuu FStar_Compiler_Util.smap -> 'uuuuu FStar_Compiler_Util.smap
   = fun m -> FStar_Compiler_Util.smap_copy m
@@ -197,8 +200,8 @@ let (pop : unit -> unit) =
   fun uu___ ->
     let uu___1 = FStar_Compiler_Effect.op_Bang fstar_options in
     match uu___1 with
-    | [] -> failwith "TOO MANY POPS!"
-    | uu___2::[] -> failwith "TOO MANY POPS!"
+    | [] -> FStar_Compiler_Effect.failwith "TOO MANY POPS!"
+    | uu___2::[] -> FStar_Compiler_Effect.failwith "TOO MANY POPS!"
     | uu___2::tl -> FStar_Compiler_Effect.op_Colon_Equals fstar_options tl
 let (push : unit -> unit) =
   fun uu___ ->
@@ -217,7 +220,9 @@ let (internal_pop : unit -> Prims.bool) =
       let uu___1 = FStar_Compiler_Effect.op_Bang fstar_options in
       FStar_Compiler_List.hd uu___1 in
     match curstack with
-    | [] -> failwith "impossible: empty current option stack"
+    | [] ->
+        FStar_Compiler_Effect.failwith
+          "impossible: empty current option stack"
     | uu___1::[] -> false
     | uu___1::tl ->
         ((let uu___3 =
@@ -247,8 +252,9 @@ let (set : optionstate -> unit) =
   fun o ->
     let uu___ = FStar_Compiler_Effect.op_Bang fstar_options in
     match uu___ with
-    | [] -> failwith "set on empty option stack"
-    | []::uu___1 -> failwith "set on empty current option stack"
+    | [] -> FStar_Compiler_Effect.failwith "set on empty option stack"
+    | []::uu___1 ->
+        FStar_Compiler_Effect.failwith "set on empty current option stack"
     | (uu___1::tl)::os ->
         FStar_Compiler_Effect.op_Colon_Equals fstar_options ((o :: tl) :: os)
 let (snapshot : unit -> (Prims.int * unit)) =
@@ -421,7 +427,7 @@ let (get_option : Prims.string -> option_val) =
         let uu___1 =
           let uu___2 = FStar_Compiler_String.op_Hat s " not found" in
           FStar_Compiler_String.op_Hat "Impossible: option " uu___2 in
-        failwith uu___1
+        FStar_Compiler_Effect.failwith uu___1
     | FStar_Pervasives_Native.Some s1 -> s1
 let (set_verification_options : optionstate -> unit) =
   fun o ->
@@ -953,7 +959,7 @@ let rec (parse_opt_val :
             let uu___1 =
               FStar_Compiler_Util.format1 "Invalid argument to --%s"
                 opt_name1 in
-            failwith uu___1
+            FStar_Compiler_Effect.failwith uu___1
 let rec (desc_of_opt_type :
   opt_type -> Prims.string FStar_Pervasives_Native.option) =
   fun typ ->
@@ -1013,8 +1019,8 @@ let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
         if k = "k"
         then
           let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
-        else failwith "unexpected value for --quake"
-    | uu___ -> failwith "unexpected value for --quake"
+        else FStar_Compiler_Effect.failwith "unexpected value for --quake"
+    | uu___ -> FStar_Compiler_Effect.failwith "unexpected value for --quake"
 let (uu___460 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
   =
   let cb = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
@@ -1056,8 +1062,8 @@ let rec (specs_with_types :
                | Int x ->
                    (FStar_Compiler_Effect.op_Colon_Equals abort_counter x;
                     Int x)
-               | x -> failwith "?"), (IntStr "non-negative integer"))),
-        uu___1) in
+               | x -> FStar_Compiler_Effect.failwith "?"),
+             (IntStr "non-negative integer"))), uu___1) in
     let uu___1 =
       let uu___2 =
         let uu___3 = text "Admit SMT queries, unsafe! (default 'false')" in
@@ -1565,7 +1571,7 @@ let rec (specs_with_types :
                                                                     | 
                                                                     uu___86
                                                                     ->
-                                                                    failwith
+                                                                    FStar_Compiler_Effect.failwith
                                                                     "unexpected value for --fuel" in
                                                                     (match uu___85
                                                                     with
@@ -1587,7 +1593,7 @@ let rec (specs_with_types :
                                                                     | 
                                                                     uu___85
                                                                     ->
-                                                                    failwith
+                                                                    FStar_Compiler_Effect.failwith
                                                                     "impos"),
                                                                     (SimpleStr
                                                                     "non-negative integer or pair of non-negative integers"))),
@@ -1634,7 +1640,7 @@ let rec (specs_with_types :
                                                                     | 
                                                                     uu___88
                                                                     ->
-                                                                    failwith
+                                                                    FStar_Compiler_Effect.failwith
                                                                     "unexpected value for --ifuel" in
                                                                     (match uu___87
                                                                     with
@@ -1656,7 +1662,7 @@ let rec (specs_with_types :
                                                                     | 
                                                                     uu___87
                                                                     ->
-                                                                    failwith
+                                                                    FStar_Compiler_Effect.failwith
                                                                     "impos"),
                                                                     (SimpleStr
                                                                     "non-negative integer or pair of non-negative integers"))),
@@ -2154,7 +2160,7 @@ let rec (specs_with_types :
                                                                     | 
                                                                     uu___145
                                                                     ->
-                                                                    failwith
+                                                                    FStar_Compiler_Effect.failwith
                                                                     "impos"),
                                                                     (SimpleStr
                                                                     "positive integer or pair of positive integers"))),
@@ -2238,7 +2244,7 @@ let rec (specs_with_types :
                                                                     | 
                                                                     uu___153
                                                                     ->
-                                                                    failwith
+                                                                    FStar_Compiler_Effect.failwith
                                                                     "impos"),
                                                                     (IntStr
                                                                     "positive integer"))),
@@ -3570,7 +3576,7 @@ let (uu___656 :
     let uu___1 = FStar_Compiler_Effect.op_Bang callback in
     match uu___1 with
     | FStar_Pervasives_Native.None ->
-        failwith "Error flags callback not yet set"
+        FStar_Compiler_Effect.failwith "Error flags callback not yet set"
     | FStar_Pervasives_Native.Some f -> f () in
   (set1, call)
 let (set_error_flags_callback_aux :
@@ -3762,7 +3768,7 @@ let (prims : unit -> Prims.string) =
                FStar_Compiler_Util.format1
                  "unable to find required file \"%s\" in the module search path.\n"
                  filename in
-             failwith uu___3)
+             FStar_Compiler_Effect.failwith uu___3)
     | FStar_Pervasives_Native.Some x -> x
 let (prims_basename : unit -> Prims.string) =
   fun uu___ -> let uu___1 = prims () in FStar_Compiler_Util.basename uu___1
@@ -3777,7 +3783,7 @@ let (pervasives : unit -> Prims.string) =
           FStar_Compiler_Util.format1
             "unable to find required file \"%s\" in the module search path.\n"
             filename in
-        failwith uu___2
+        FStar_Compiler_Effect.failwith uu___2
 let (pervasives_basename : unit -> Prims.string) =
   fun uu___ ->
     let uu___1 = pervasives () in FStar_Compiler_Util.basename uu___1
@@ -3793,7 +3799,7 @@ let (pervasives_native_basename : unit -> Prims.string) =
           FStar_Compiler_Util.format1
             "unable to find required file \"%s\" in the module search path.\n"
             filename in
-        failwith uu___2
+        FStar_Compiler_Effect.failwith uu___2
 let (prepend_output_dir : Prims.string -> Prims.string) =
   fun fname ->
     let uu___ = get_odir () in
@@ -4313,7 +4319,7 @@ let (extract_settings :
           (let uu___3 =
              FStar_Compiler_Util.format1
                "Could not parse '%s' passed to the --extract option" msg in
-           failwith uu___3) in
+           FStar_Compiler_Effect.failwith uu___3) in
         if set1
         then result
         else
@@ -4350,7 +4356,7 @@ let (extract_settings :
                       FStar_Compiler_Util.format2
                         "Could not parse '%s'; multiple setting for %s target"
                         msg tgt in
-                    failwith uu___5) in
+                    FStar_Compiler_Effect.failwith uu___5) in
                  let pes =
                    FStar_Compiler_List.fold_right
                      (fun setting ->
@@ -4420,7 +4426,7 @@ let (should_extract : Prims.string -> codegen_t -> Prims.bool) =
             match uu___2 with
             | ([], [], []) -> ()
             | uu___3 ->
-                failwith
+                FStar_Compiler_Effect.failwith
                   "Incompatible options: --extract cannot be used with --no_extract, --extract_namespace or --extract_module");
            (let tsetting =
               let uu___2 =

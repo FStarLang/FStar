@@ -413,7 +413,7 @@ let (gen :
                                 u.FStar_Syntax_Syntax.ctx_uvar_head in
                             match uu___4 with
                             | FStar_Pervasives_Native.Some uu___5 ->
-                                failwith
+                                FStar_Compiler_Effect.failwith
                                   "Unexpected instantiation of mutually recursive uvar"
                             | uu___5 ->
                                 let k =

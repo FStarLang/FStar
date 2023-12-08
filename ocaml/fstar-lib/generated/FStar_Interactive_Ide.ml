@@ -1503,7 +1503,8 @@ let (load_partial_checked_file :
         let uu___ = FStar_CheckedFiles.load_module_from_cache env filename in
         match uu___ with
         | FStar_Pervasives_Native.None ->
-            failwith (Prims.strcat "cannot find checked file for " filename)
+            FStar_Compiler_Effect.failwith
+              (Prims.strcat "cannot find checked file for " filename)
         | FStar_Pervasives_Native.Some tc_result ->
             let uu___1 =
               FStar_Universal.with_dsenv_of_tcenv env
@@ -1541,7 +1542,7 @@ let (load_partial_checked_file :
                        | (found_decl, m) ->
                            if Prims.op_Negation found_decl
                            then
-                             failwith
+                             FStar_Compiler_Effect.failwith
                                (Prims.strcat
                                   "did not find declaration with lident "
                                   until_lid)
@@ -3011,15 +3012,16 @@ let (js_repl_init_opts : unit -> unit) =
     | (res, fnames) ->
         (match res with
          | FStar_Getopt.Error msg ->
-             failwith (Prims.strcat "repl_init: " msg)
-         | FStar_Getopt.Help -> failwith "repl_init: --help unexpected"
+             FStar_Compiler_Effect.failwith (Prims.strcat "repl_init: " msg)
+         | FStar_Getopt.Help ->
+             FStar_Compiler_Effect.failwith "repl_init: --help unexpected"
          | FStar_Getopt.Success ->
              (match fnames with
               | [] ->
-                  failwith
+                  FStar_Compiler_Effect.failwith
                     "repl_init: No file name given in --ide invocation"
               | h::uu___2::uu___3 ->
-                  failwith
+                  FStar_Compiler_Effect.failwith
                     "repl_init: Too many file names given in --ide invocation"
               | uu___2 -> ()))
 let rec (go : FStar_Interactive_Ide_Types.repl_state -> Prims.int) =

@@ -28,7 +28,8 @@ let (mlconst_of_const' :
   FStar_Const.sconst -> FStar_Extraction_ML_Syntax.mlconstant) =
   fun sctt ->
     match sctt with
-    | FStar_Const.Const_effect -> failwith "Unsupported constant"
+    | FStar_Const.Const_effect ->
+        FStar_Compiler_Effect.failwith "Unsupported constant"
     | FStar_Const.Const_range uu___ -> FStar_Extraction_ML_Syntax.MLC_Unit
     | FStar_Const.Const_unit -> FStar_Extraction_ML_Syntax.MLC_Unit
     | FStar_Const.Const_char c -> FStar_Extraction_ML_Syntax.MLC_Char c
@@ -38,15 +39,20 @@ let (mlconst_of_const' :
     | FStar_Const.Const_string (s, uu___) ->
         FStar_Extraction_ML_Syntax.MLC_String s
     | FStar_Const.Const_range_of ->
-        failwith "Unhandled constant: range_of/set_range_of"
+        FStar_Compiler_Effect.failwith
+          "Unhandled constant: range_of/set_range_of"
     | FStar_Const.Const_set_range_of ->
-        failwith "Unhandled constant: range_of/set_range_of"
+        FStar_Compiler_Effect.failwith
+          "Unhandled constant: range_of/set_range_of"
     | FStar_Const.Const_real uu___ ->
-        failwith "Unhandled constant: real/reify/reflect"
+        FStar_Compiler_Effect.failwith
+          "Unhandled constant: real/reify/reflect"
     | FStar_Const.Const_reify uu___ ->
-        failwith "Unhandled constant: real/reify/reflect"
+        FStar_Compiler_Effect.failwith
+          "Unhandled constant: real/reify/reflect"
     | FStar_Const.Const_reflect uu___ ->
-        failwith "Unhandled constant: real/reify/reflect"
+        FStar_Compiler_Effect.failwith
+          "Unhandled constant: real/reify/reflect"
 let (mlconst_of_const :
   FStar_Compiler_Range_Type.range ->
     FStar_Const.sconst -> FStar_Extraction_ML_Syntax.mlconstant)
@@ -61,7 +67,7 @@ let (mlconst_of_const :
             let uu___3 = FStar_Syntax_Print.const_to_string c in
             FStar_Compiler_Util.format2
               "(%s) Failed to translate constant %s " uu___2 uu___3 in
-          failwith uu___1
+          FStar_Compiler_Effect.failwith uu___1
 let (mlexpr_of_range :
   FStar_Compiler_Range_Type.range -> FStar_Extraction_ML_Syntax.mlexpr') =
   fun r ->
@@ -210,7 +216,7 @@ let (subst :
       let uu___ = try_subst ts args in
       match uu___ with
       | FStar_Pervasives_Native.None ->
-          failwith
+          FStar_Compiler_Effect.failwith
             "Substitution must be fully applied (see GitHub issue #490)"
       | FStar_Pervasives_Native.Some t -> t
 let (udelta_unfold :
@@ -241,7 +247,7 @@ let (udelta_unfold :
                       FStar_Compiler_Util.format3
                         "Substitution must be fully applied; got an application of %s with %s args whereas %s were expected (see GitHub issue #490)"
                         uu___4 uu___5 uu___6 in
-                    failwith uu___3
+                    FStar_Compiler_Effect.failwith uu___3
                 | FStar_Pervasives_Native.Some r ->
                     FStar_Pervasives_Native.Some r)
            | uu___2 -> FStar_Pervasives_Native.None)
@@ -303,7 +309,7 @@ let (join :
               FStar_Compiler_Util.format3
                 "Impossible (%s): Inconsistent effects %s and %s" uu___2
                 uu___3 uu___4 in
-            failwith uu___1
+            FStar_Compiler_Effect.failwith uu___1
 let (join_l :
   FStar_Compiler_Range_Type.range ->
     FStar_Extraction_ML_Syntax.e_tag Prims.list ->
@@ -551,7 +557,7 @@ let (record_field_path :
              FStar_Compiler_Effect.op_Bar_Greater ns
                (FStar_Compiler_List.map
                   (fun id -> FStar_Ident.string_of_id id)))
-    | uu___1 -> failwith "impos"
+    | uu___1 -> FStar_Compiler_Effect.failwith "impos"
 let record_fields :
   'a .
     FStar_Ident.lident Prims.list ->

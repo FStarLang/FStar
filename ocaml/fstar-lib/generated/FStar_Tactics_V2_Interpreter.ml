@@ -444,7 +444,9 @@ let e_tactic_thunk :
       (fun uu___1 ->
          fun uu___2 ->
            fun uu___3 ->
-             fun uu___4 -> failwith "Impossible: embedding tactic (thunk)?")
+             fun uu___4 ->
+               FStar_Compiler_Effect.failwith
+                 "Impossible: embedding tactic (thunk)?")
       (fun t ->
          fun cb ->
            let uu___1 =
@@ -465,7 +467,9 @@ let e_tactic_nbe_thunk :
       FStar_Syntax_Embeddings_Base.emb_typ_of FStar_Syntax_Embeddings.e_unit in
     FStar_TypeChecker_NBETerm.mk_emb
       (fun cb ->
-         fun uu___2 -> failwith "Impossible: NBE embedding tactic (thunk)?")
+         fun uu___2 ->
+           FStar_Compiler_Effect.failwith
+             "Impossible: NBE embedding tactic (thunk)?")
       (fun cb ->
          fun t ->
            let uu___2 =
@@ -488,7 +492,9 @@ let e_tactic_1 :
         (fun uu___1 ->
            fun uu___2 ->
              fun uu___3 ->
-               fun uu___4 -> failwith "Impossible: embedding tactic (1)?")
+               fun uu___4 ->
+                 FStar_Compiler_Effect.failwith
+                   "Impossible: embedding tactic (1)?")
         (fun t ->
            fun cb ->
              let uu___1 = unembed_tactic_1 ea er t cb in
@@ -510,7 +516,9 @@ let e_tactic_nbe_1 :
           FStar_Syntax_Embeddings.e_unit in
       FStar_TypeChecker_NBETerm.mk_emb
         (fun cb ->
-           fun uu___2 -> failwith "Impossible: NBE embedding tactic (1)?")
+           fun uu___2 ->
+             FStar_Compiler_Effect.failwith
+               "Impossible: NBE embedding tactic (1)?")
         (fun cb ->
            fun t ->
              let uu___2 = unembed_tactic_nbe_1 ea er cb t in
@@ -1043,7 +1051,7 @@ let (uu___193 : unit) =
                                                                     fun
                                                                     uu___76
                                                                     ->
-                                                                    failwith
+                                                                    FStar_Compiler_Effect.failwith
                                                                     "NBE unquote")
                                                                     FStar_TypeChecker_NBETerm.e_any
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_term
@@ -3016,7 +3024,7 @@ let e_tactic_1_alt :
   fun ea ->
     fun er ->
       let em uu___ uu___1 uu___2 uu___3 =
-        failwith "Impossible: embedding tactic (1)?" in
+        FStar_Compiler_Effect.failwith "Impossible: embedding tactic (1)?" in
       let un t0 n =
         let uu___ = unembed_tactic_1_alt ea er t0 n in
         match uu___ with
@@ -3512,7 +3520,8 @@ let run_tactic_on_ps' :
                                             FStar_Compiler_Util.format1
                                               "Irrelevant tactic witness does not unify with (): %s"
                                               uu___13 in
-                                          failwith uu___12)))
+                                          FStar_Compiler_Effect.failwith
+                                            uu___12)))
                                    else ())) remaining_smt_goals;
                              FStar_Errors.with_ctx
                                "While checking implicits left by a tactic"
