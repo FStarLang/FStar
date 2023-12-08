@@ -589,30 +589,43 @@ let mk_ref_assign t1 t2 pos =
  * Collect the explicitly annotated universes in the sigelt, close the sigelt with them, and stash them appropriately in the sigelt
  *)
 let rec generalize_annotated_univs (s:sigelt) :sigelt =
-  let bs_univnames (bs:binders) : Set.set univ_name =
-    bs |> List.fold_left (fun uvs b -> Set.union uvs (Free.univnames b.binder_bv.sort)) (Set.empty ())
+  (* NB!! Order is very important here, so a definition like
+      type t = Type u#a -> Type u#b
+    gets is two universe parameters in the order in which
+    they appear. So we do not use a set, and instead just use a mutable
+    list that we update as we find universes. We also keep a set of 'seen'
+    universes, whose order we do not care, just for efficiency. *)
+  let vars : ref (list univ_name) = mk_ref [] in
+  let seen : ref (Set.t univ_name) = mk_ref (Set.empty ()) in
+  let reg (u:univ_name) : unit =
+    if not (Set.mem u !seen) then (
+      seen := Set.add u !seen;
+      vars := u::!vars
+    )
   in
-  let empty_set = Set.empty () in
+  let get () : list univ_name = List.rev !vars in
+
+  (* Visit the sigelt and rely on side effects to capture all
+  the names. This goes roughly in left-to-right order. *)
+  let _ = Visit.visit_sigelt
+            (fun t -> t)
+            (fun u -> ignore (match u with
+                              | U_name nm -> reg nm
+                              | _ -> ());
+                      u) s
+  in
+  let unames = get () in
 
   match s.sigel with
   | Sig_inductive_typ _
   | Sig_datacon _ -> failwith "Impossible: collect_annotated_universes: bare data/type constructor"
   | Sig_bundle {ses=sigs; lids} ->
-    let uvs = sigs |> List.fold_left (fun uvs se ->
-      let se_univs =
-        match se.sigel with
-        | Sig_inductive_typ {params=bs;t} -> Set.union (bs_univnames bs) (Free.univnames t)
-        | Sig_datacon {t} -> Free.univnames t
-        | _ -> failwith "Impossible: collect_annotated_universes: Sig_bundle should not have a non data/type sigelt"
-      in
-      Set.union uvs se_univs) empty_set |> Set.elems
-    in
-    let usubst = Subst.univ_var_closing uvs in
+    let usubst = Subst.univ_var_closing unames in
     { s with sigel = Sig_bundle {ses=sigs |> List.map (fun se ->
       match se.sigel with
       | Sig_inductive_typ {lid; params=bs; num_uniform_params=num_uniform; t; mutuals=lids1; ds=lids2} ->
         { se with sigel = Sig_inductive_typ {lid;
-                                             us=uvs;
+                                             us=unames;
                                              params=Subst.subst_binders usubst bs;
                                              num_uniform_params=num_uniform;
                                              t=Subst.subst (Subst.shift_subst (List.length bs) usubst) t;
@@ -620,7 +633,7 @@ let rec generalize_annotated_univs (s:sigelt) :sigelt =
                                              ds=lids2} }
       | Sig_datacon {lid;t;ty_lid=tlid;num_ty_params=n;mutuals=lids} ->
         { se with sigel = Sig_datacon {lid;
-                                       us=uvs;
+                                       us=unames;
                                        t=Subst.subst usubst t;
                                        ty_lid=tlid;
                                        num_ty_params=n;
@@ -628,26 +641,18 @@ let rec generalize_annotated_univs (s:sigelt) :sigelt =
       | _ -> failwith "Impossible: collect_annotated_universes: Sig_bundle should not have a non data/type sigelt"
       ); lids} }
   | Sig_declare_typ {lid; t} ->
-    let uvs = Free.univnames t |> Set.elems in
-    { s with sigel = Sig_declare_typ {lid; us=uvs; t=Subst.close_univ_vars uvs t} }
+    { s with sigel = Sig_declare_typ {lid; us=unames; t=Subst.close_univ_vars unames t} }
   | Sig_let {lbs=(b, lbs); lids} ->
-    let lb_univnames (lb:letbinding) : Set.set univ_name =
-      Set.union (Free.univnames lb.lbtyp)
-                   (Free.univnames lb.lbdef)
-    in
-    let all_lb_univs = lbs |> List.fold_left (fun uvs lb -> Set.union uvs (lb_univnames lb)) empty_set |> Set.elems in
-    let usubst = Subst.univ_var_closing all_lb_univs in
+    let usubst = Subst.univ_var_closing unames in
     //This respects the invariant enforced by FStar.Syntax.Util.check_mutual_universes
-    { s with sigel = Sig_let {lbs=(b, lbs |> List.map (fun lb -> { lb with lbunivs = all_lb_univs; lbdef = Subst.subst usubst lb.lbdef; lbtyp = Subst.subst usubst lb.lbtyp }));
+    { s with sigel = Sig_let {lbs=(b, lbs |> List.map (fun lb -> { lb with lbunivs = unames; lbdef = Subst.subst usubst lb.lbdef; lbtyp = Subst.subst usubst lb.lbtyp }));
                               lids} }
   | Sig_assume {lid;phi=fml} ->
-    let uvs = Free.univnames fml |> Set.elems in
-    { s with sigel = Sig_assume {lid; us=uvs; phi=Subst.close_univ_vars uvs fml} }
+    { s with sigel = Sig_assume {lid; us=unames; phi=Subst.close_univ_vars unames fml} }
   | Sig_effect_abbrev {lid;bs;comp=c;cflags=flags} ->
-    let uvs = Set.union (bs_univnames bs) (Free.univnames_comp c) |> Set.elems in
-    let usubst = Subst.univ_var_closing uvs in
+    let usubst = Subst.univ_var_closing unames in
     { s with sigel = Sig_effect_abbrev {lid;
-                                        us=uvs;
+                                        us=unames;
                                         bs=Subst.subst_binders usubst bs;
                                         comp=Subst.subst_comp usubst c;
                                         cflags=flags} }
