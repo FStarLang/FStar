@@ -372,9 +372,11 @@ let nbe_dummy : 'a . unit -> 'a FStar_TypeChecker_NBETerm.embedding =
     let uu___1 =
       FStar_TypeChecker_NBETerm.mk_t FStar_TypeChecker_NBETerm.Unknown in
     FStar_TypeChecker_NBETerm.mk_emb
-      (fun uu___2 -> fun uu___3 -> failwith "nbe_dummy embed")
-      (fun uu___2 -> fun uu___3 -> failwith "nbe_dummy unembed") uu___1
-      FStar_Syntax_Syntax.ET_abstract
+      (fun uu___2 ->
+         fun uu___3 -> FStar_Compiler_Effect.failwith "nbe_dummy embed")
+      (fun uu___2 ->
+         fun uu___3 -> FStar_Compiler_Effect.failwith "nbe_dummy unembed")
+      uu___1 FStar_Syntax_Syntax.ET_abstract
 let (e_ident : FStar_Ident.ident dualemb) =
   let uu___ = nbe_dummy () in (FStar_Reflection_V2_Embeddings.e_ident, uu___)
 let (e_subst : FStar_Syntax_Syntax.subst_elt Prims.list dualemb) =

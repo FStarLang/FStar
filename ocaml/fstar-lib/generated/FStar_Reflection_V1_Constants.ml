@@ -49,8 +49,8 @@ let (mk_refl_data_lid_as_fv : Prims.string -> FStar_Syntax_Syntax.fv) =
 let (mk_inspect_pack_pair : Prims.string -> (refl_constant * refl_constant))
   =
   fun s ->
-    let inspect_lid = fstar_refl_builtins_lid (Prims.op_Hat "inspect" s) in
-    let pack_lid = fstar_refl_builtins_lid (Prims.op_Hat "pack" s) in
+    let inspect_lid = fstar_refl_builtins_lid (Prims.strcat "inspect" s) in
+    let pack_lid = fstar_refl_builtins_lid (Prims.strcat "pack" s) in
     let inspect_fv =
       FStar_Syntax_Syntax.lid_as_fv inspect_lid FStar_Pervasives_Native.None in
     let pack_fv =

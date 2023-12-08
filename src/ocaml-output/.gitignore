@@ -10,3 +10,6 @@ fstar/
 install-compiler-lib
 
 main.ml
+
+fstarc/
+fstarlib/

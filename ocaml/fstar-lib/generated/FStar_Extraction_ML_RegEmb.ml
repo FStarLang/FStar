@@ -146,7 +146,7 @@ let (fresh : Prims.string -> Prims.string) =
   fun s ->
     let v = FStar_Compiler_Effect.op_Bang r in
     FStar_Compiler_Effect.op_Colon_Equals r (v + Prims.int_one);
-    Prims.op_Hat s (Prims.op_Hat "_" (Prims.string_of_int v))
+    Prims.strcat s (Prims.strcat "_" (Prims.string_of_int v))
 let (not_implemented_warning :
   FStar_Compiler_Range_Type.range -> Prims.string -> Prims.string -> unit) =
   fun r ->
@@ -1073,7 +1073,7 @@ let (find_fv_embedding : FStar_Ident.lident -> embedding_data) =
         let uu___1 =
           let uu___2 =
             let uu___3 = FStar_Ident.string_of_lid l in
-            Prims.op_Hat "Embedding not defined for type " uu___3 in
+            Prims.strcat "Embedding not defined for type " uu___3 in
           NoEmbedding uu___2 in
         FStar_Compiler_Effect.raise uu___1
 type embedding_kind =
@@ -1201,7 +1201,7 @@ let rec (embedding_for :
                           FStar_Ident.ident_of_lid
                             (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
                         FStar_Ident.string_of_id uu___3 in
-                      Prims.op_Hat "__knot_e_" uu___2 in
+                      Prims.strcat "__knot_e_" uu___2 in
                     FStar_Extraction_ML_Syntax.MLE_Var uu___1 in
                   FStar_Compiler_Effect.op_Less_Bar mk uu___ in
                 mk
@@ -1238,7 +1238,7 @@ let rec (embedding_for :
                          let uu___3 =
                            let uu___4 = FStar_Ident.ident_of_lid lid in
                            FStar_Ident.string_of_id uu___4 in
-                         Prims.op_Hat "e_" uu___3 in
+                         Prims.strcat "e_" uu___3 in
                        (uu___1, uu___2) in
                      as_name uu___
                  | NBETerm -> ml_nbe_unsupported)
@@ -1333,7 +1333,7 @@ let (interpret_plugin_as_term_fun :
                    | NBETerm -> "mk_nbe_tactic_interpretation_" in
                  as_name1
                    (["FStar_Tactics_V2_InterpFuns"],
-                     (Prims.op_Hat idroot (Prims.string_of_int arity)))) in
+                     (Prims.strcat idroot (Prims.string_of_int arity)))) in
             let mk_from_tactic l arity =
               let idroot =
                 match l with
@@ -1341,7 +1341,7 @@ let (interpret_plugin_as_term_fun :
                 | NBETerm -> "from_nbe_tactic_" in
               as_name1
                 (["FStar_Tactics_Native"],
-                  (Prims.op_Hat idroot (Prims.string_of_int arity))) in
+                  (Prims.strcat idroot (Prims.string_of_int arity))) in
             let mk_arrow_as_prim_step k arity =
               let modul =
                 match k with
@@ -1349,7 +1349,7 @@ let (interpret_plugin_as_term_fun :
                 | NBETerm -> ["FStar"; "TypeChecker"; "NBETerm"] in
               as_name1
                 (modul,
-                  (Prims.op_Hat "arrow_as_prim_step_"
+                  (Prims.strcat "arrow_as_prim_step_"
                      (Prims.string_of_int arity))) in
             let abstract_tvars tvar_names body =
               match tvar_names with
@@ -1527,7 +1527,7 @@ let (interpret_plugin_as_term_fun :
                             FStar_Compiler_List.mapi
                               (fun i ->
                                  fun tv ->
-                                   Prims.op_Hat "tv_" (Prims.string_of_int i))
+                                   Prims.strcat "tv_" (Prims.string_of_int i))
                               type_vars in
                           let tvar_context =
                             FStar_Compiler_List.map2
@@ -1624,7 +1624,7 @@ let (interpret_plugin_as_term_fun :
                                                  let uu___11 =
                                                    FStar_Ident.string_of_lid
                                                      fv_lid1 in
-                                                 Prims.op_Hat uu___11
+                                                 Prims.strcat uu___11
                                                    " (plugin)" in
                                                FStar_Extraction_ML_Syntax.MLC_String
                                                  uu___10 in
@@ -1666,7 +1666,7 @@ let (interpret_plugin_as_term_fun :
                                           let uu___9 =
                                             FStar_Syntax_Print.term_to_string
                                               t1 in
-                                          Prims.op_Hat
+                                          Prims.strcat
                                             "Plugins not defined for type "
                                             uu___9 in
                                         NoEmbedding uu___8 in
@@ -1840,7 +1840,9 @@ let (mk_unembed :
                              br :: uu___4 in
                            FStar_Compiler_Effect.op_Colon_Equals e_branches
                              uu___3)
-                  | uu___1 -> failwith "impossible, filter above"));
+                  | uu___1 ->
+                      FStar_Compiler_Effect.failwith
+                        "impossible, filter above"));
           (let nomatch =
              (FStar_Extraction_ML_Syntax.MLP_Wild,
                FStar_Pervasives_Native.None, ml_none) in
@@ -2001,7 +2003,9 @@ let (mk_embed :
                              br :: uu___4 in
                            FStar_Compiler_Effect.op_Colon_Equals e_branches
                              uu___3)
-                  | uu___1 -> failwith "impossible, filter above"));
+                  | uu___1 ->
+                      FStar_Compiler_Effect.failwith
+                        "impossible, filter above"));
           (let branches =
              let uu___1 = FStar_Compiler_Effect.op_Bang e_branches in
              FStar_Compiler_List.rev uu___1 in
@@ -2180,7 +2184,7 @@ let (__do_handle_plugin :
                     let lb =
                       {
                         FStar_Extraction_ML_Syntax.mllb_name =
-                          (Prims.op_Hat "__knot_e_" name);
+                          (Prims.strcat "__knot_e_" name);
                         FStar_Extraction_ML_Syntax.mllb_tysc =
                           FStar_Pervasives_Native.None;
                         FStar_Extraction_ML_Syntax.mllb_add_unit = false;
@@ -2192,7 +2196,7 @@ let (__do_handle_plugin :
                        let uu___10 =
                          let uu___11 =
                            FStar_Ident.mk_ident
-                             ((Prims.op_Hat "e_" name),
+                             ((Prims.strcat "e_" name),
                                FStar_Compiler_Range_Type.dummyRange) in
                          FStar_Ident.lid_of_ns_and_id ns uu___11 in
                        {
@@ -2227,14 +2231,14 @@ let (__do_handle_plugin :
                         let head =
                           FStar_Compiler_Effect.op_Less_Bar mk
                             (FStar_Extraction_ML_Syntax.MLE_Var
-                               (Prims.op_Hat "__knot_e_" name)) in
+                               (Prims.strcat "__knot_e_" name)) in
                         mk
                           (FStar_Extraction_ML_Syntax.MLE_App
                              (head, [FStar_Extraction_ML_Syntax.ml_unit])) in
                       let lb =
                         {
                           FStar_Extraction_ML_Syntax.mllb_name =
-                            (Prims.op_Hat "e_" name);
+                            (Prims.strcat "e_" name);
                           FStar_Extraction_ML_Syntax.mllb_tysc =
                             FStar_Pervasives_Native.None;
                           FStar_Extraction_ML_Syntax.mllb_add_unit = false;

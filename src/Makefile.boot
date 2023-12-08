@@ -17,11 +17,11 @@ FSTAR_BOOT ?= $(FSTAR)
 #   -- we use automatic dependence analysis based on files in ulib, src/{basic, ...} and boot
 #   -- MLish and lax tune type-inference for use with unverified ML programs
 DUNE_SNAPSHOT ?= $(call maybe_cygwin_path,$(FSTAR_HOME)/ocaml)
-OUTPUT_DIRECTORY = $(DUNE_SNAPSHOT)/fstar-lib/generated
+OUTPUT_DIRECTORY = $(FSTAR_HOME)/src/ocaml-output/fstarc
 FSTAR_C=$(RUNLIM) $(FSTAR_BOOT) $(SIL) $(FSTAR_BOOT_OPTIONS) --cache_checked_modules
 
 # Tests.* goes to fstar-tests, the rest to fstar-lib
-OUTPUT_DIRECTORY_FOR = $(if $(findstring FStar_Tests_,$(1)),$(DUNE_SNAPSHOT)/fstar-tests/generated,$(DUNE_SNAPSHOT)/fstar-lib/generated)
+OUTPUT_DIRECTORY_FOR = $(if $(findstring FStar_Tests_,$(1)),$(DUNE_SNAPSHOT)/fstar-tests/generated,$(OUTPUT_DIRECTORY))
 
 # Each "project" for the compiler is in its own namespace.  We want to
 # extract them all to OCaml.  Would be more convenient if all of them
@@ -73,14 +73,12 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 
 # And then, in a separate invocation, from each .checked.lax we
 # extract an .ml file
-# We always extract with --MLish for the compiler.
 %.ml:
 	$(call msg, "EXTRACT", $(notdir $@))
 	$(Q)$(BENCHMARK_PRE) $(FSTAR_C) $(notdir $(subst .checked.lax,,$<)) \
-		   --MLish \
 		   --odir "$(call OUTPUT_DIRECTORY_FOR,"$@")" \
-                   --codegen Plugin \
-                   --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
+		   --codegen Plugin \
+		   --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
 
 # --------------------------------------------------------------------
 # Dependency analysis for bootstrapping
@@ -104,7 +102,7 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 		--output_deps_to ._depend
 	@# We've generated deps for everything into fstar-lib/generated.
 	@# Here we fix up the .depend file to move tests out of the library.
-	$(Q)$(SED) 's,fstar-lib/generated/FStar_Test,fstar-tests/generated/FStar_Test,g' <._depend >.depend
+	$(Q)$(SED) 's,src/ocaml-output/fstarc/FStar_Test,ocaml/fstar-tests/generated/FStar_Test,g' <._depend >.depend
 	$(Q)mkdir -p $(CACHE_DIR)
 
 .PHONY: dep.graph
@@ -113,7 +111,6 @@ dep.graph:
 	$(Q)$(FSTAR_C) --dep graph		\
 		fstar/FStar.Main.fst		\
 		tests/FStar.Tests.Test.fst	\
-		--odir $(OUTPUT_DIRECTORY)	\
 		$(EXTRACT)			\
 		--output_deps_to dep.graph
 

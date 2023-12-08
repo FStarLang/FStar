@@ -17,7 +17,7 @@ include $(FSTAR_HOME)/.common.mk
 
 DUNE_SNAPSHOT ?= $(call maybe_cygwin_path,$(FSTAR_HOME)/ocaml)
 
-TARGET_DIR=$(DUNE_SNAPSHOT)/fstar-lib/generated/
+TARGET_DIR=$(FSTAR_HOME)/src/ocaml-output/fstarlib/
 INTFILES=$(addprefix $(TARGET_DIR),$(INTFILES_RAW))
 
 intfiles: $(INTFILES)

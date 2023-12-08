@@ -730,7 +730,9 @@ let unlazy_as_t :
           FStar_Class_Deq.op_Equals_Question
             FStar_Syntax_Syntax.deq_lazy_kind k k'
           -> FStar_Compiler_Dyn.undyn v
-      | uu___ -> failwith "Not a Lazy of the expected kind (NBE)"
+      | uu___ ->
+          FStar_Compiler_Effect.failwith
+            "Not a Lazy of the expected kind (NBE)"
 let (e_ident : FStar_Ident.ident FStar_TypeChecker_NBETerm.embedding) =
   let embed_ident cb se =
     mk_lazy cb se FStar_Reflection_V2_Constants.fstar_refl_ident
@@ -2798,8 +2800,8 @@ let (e_qualifiers :
     FStar_TypeChecker_NBETerm.embedding)
   = FStar_TypeChecker_NBETerm.e_list e_qualifier
 let (e_vconfig : FStar_Order.order FStar_TypeChecker_NBETerm.embedding) =
-  let emb cb o = failwith "emb vconfig NBE" in
-  let unemb cb t = failwith "unemb vconfig NBE" in
+  let emb cb o = FStar_Compiler_Effect.failwith "emb vconfig NBE" in
+  let unemb cb t = FStar_Compiler_Effect.failwith "unemb vconfig NBE" in
   let uu___ =
     FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.vconfig_lid
       FStar_Pervasives_Native.None in

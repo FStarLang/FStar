@@ -297,13 +297,13 @@ let rec (term_eq' :
             let uu___3 = FStar_Syntax_Print.tag_of_term t11 in
             let uu___4 = FStar_Syntax_Print.tag_of_term t21 in
             FStar_Compiler_Util.format2 "Impossible: %s and %s" uu___3 uu___4 in
-          failwith uu___2
+          FStar_Compiler_Effect.failwith uu___2
       | (uu___, FStar_Syntax_Syntax.Tm_delayed uu___1) ->
           let uu___2 =
             let uu___3 = FStar_Syntax_Print.tag_of_term t11 in
             let uu___4 = FStar_Syntax_Print.tag_of_term t21 in
             FStar_Compiler_Util.format2 "Impossible: %s and %s" uu___3 uu___4 in
-          failwith uu___2
+          FStar_Compiler_Effect.failwith uu___2
       | (FStar_Syntax_Syntax.Tm_unknown, FStar_Syntax_Syntax.Tm_unknown) ->
           true
       | uu___ -> false

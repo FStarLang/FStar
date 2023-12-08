@@ -509,12 +509,7 @@ let rec (go : FStar_Interactive_Ide_Types.grepl_state -> Prims.int) =
               let response' =
                 FStar_Interactive_JsonHelper.json_of_response
                   query.FStar_Interactive_JsonHelper.query_id response in
-              (if false
-               then
-                 (let uu___3 = FStar_Json.string_of_json response' in
-                  FStar_Compiler_Util.print1_error "<<< %s\n" uu___3)
-               else ();
-               FStar_Interactive_JsonHelper.write_jsonrpc response')
+              FStar_Interactive_JsonHelper.write_jsonrpc response'
           | FStar_Pervasives_Native.None -> ());
          (match state_opt with
           | FStar_Pervasives.Inl gst' -> go gst'

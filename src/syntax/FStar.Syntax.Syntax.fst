@@ -435,12 +435,12 @@ let t_sealed_of t = mk_Tm_app
 let unit_const_with_range r = mk (Tm_constant FStar.Const.Const_unit) r
 let unit_const = unit_const_with_range Range.dummyRange
 
-instance has_range_syntax #a : Tot (hasRange (syntax a)) = {
+instance has_range_syntax #a (_:unit) : Tot (hasRange (syntax a)) = {
   pos = (fun (t:term) -> t.pos);
   setPos = (fun r t -> { t with pos = r });
 }
 
-instance has_range_withinfo #a : Tot (hasRange (withinfo_t a)) = {
+instance has_range_withinfo #a (_:unit) : Tot (hasRange (withinfo_t a)) = {
   pos = (fun t -> t.p);
   setPos = (fun r t -> { t with p = r });
 }

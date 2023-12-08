@@ -107,7 +107,7 @@ let (fail_exp :
                       let uu___10 =
                         let uu___11 =
                           let uu___12 = FStar_Syntax_Print.lid_to_string lid in
-                          Prims.op_Hat "Not yet implemented:" uu___12 in
+                          Prims.strcat "Not yet implemented:" uu___12 in
                         (uu___11, FStar_Compiler_Range_Type.dummyRange) in
                       FStar_Const.Const_string uu___10 in
                     FStar_Syntax_Syntax.Tm_constant uu___9 in
@@ -165,7 +165,8 @@ let as_pair : 'uuuuu . 'uuuuu Prims.list -> ('uuuuu * 'uuuuu) =
   fun uu___ ->
     match uu___ with
     | a::b::[] -> (a, b)
-    | uu___1 -> failwith "Expected a list with 2 elements"
+    | uu___1 ->
+        FStar_Compiler_Effect.failwith "Expected a list with 2 elements"
 let (flag_of_qual :
   FStar_Syntax_Syntax.qualifier ->
     FStar_Extraction_ML_Syntax.meta FStar_Pervasives_Native.option)
@@ -345,7 +346,7 @@ let (binders_as_mlty_binders :
                    match uu___4 with
                    | FStar_Pervasives.Inl ty ->
                        ty.FStar_Extraction_ML_UEnv.ty_b_name
-                   | uu___5 -> failwith "Impossible" in
+                   | uu___5 -> FStar_Compiler_Effect.failwith "Impossible" in
                  (env2, name)) env bs
 type data_constructor =
   {
@@ -414,8 +415,8 @@ let (print_ifamily : inductive_family -> unit) =
                 let uu___5 = FStar_Syntax_Print.lid_to_string d.dname in
                 let uu___6 =
                   let uu___7 = FStar_Syntax_Print.term_to_string d.dtyp in
-                  Prims.op_Hat " : " uu___7 in
-                Prims.op_Hat uu___5 uu___6)) in
+                  Prims.strcat " : " uu___7 in
+                Prims.strcat uu___5 uu___6)) in
       FStar_Compiler_Effect.op_Bar_Greater uu___4
         (FStar_Compiler_String.concat "\n\t\t") in
     FStar_Compiler_Util.print4 "\n\t%s %s : %s { %s }\n" uu___ uu___1 uu___2
@@ -621,10 +622,7 @@ let (iface_of_type_names :
 let (iface_union : iface -> iface -> iface) =
   fun if1 ->
     fun if2 ->
-      let uu___ =
-        if if1.iface_module_name <> if1.iface_module_name
-        then failwith "Union not defined"
-        else if1.iface_module_name in
+      let uu___ = if1.iface_module_name in
       {
         iface_module_name = uu___;
         iface_bindings =
@@ -1052,7 +1050,8 @@ let (extract_bundle_iface :
                         iface_union uu___6
                           (iface_of_bindings (FStar_Compiler_List.flatten td)) in
                       (env2, uu___5)))
-      | uu___ -> failwith "Unexpected signature element"
+      | uu___ ->
+          FStar_Compiler_Effect.failwith "Unexpected signature element"
 let (extract_type_declaration :
   FStar_Extraction_ML_UEnv.uenv ->
     Prims.bool ->
@@ -1201,32 +1200,32 @@ let (extract_reifiable_effect :
                    tm.FStar_Syntax_Syntax.pos in
                let uu___5 = FStar_Syntax_Print.term_to_string tm in
                FStar_Compiler_Util.format2 "(%s) Not an fv: %s" uu___4 uu___5 in
-             failwith uu___3) in
+             FStar_Compiler_Effect.failwith uu___3) in
       let extract_action g1 a =
-        (let uu___2 =
-           let uu___3 =
-             let uu___4 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g1 in
-             FStar_TypeChecker_Env.debug uu___4 in
-           FStar_Compiler_Effect.op_Less_Bar uu___3
+        (let uu___1 =
+           let uu___2 =
+             let uu___3 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g1 in
+             FStar_TypeChecker_Env.debug uu___3 in
+           FStar_Compiler_Effect.op_Less_Bar uu___2
              (FStar_Options.Other "ExtractionReify") in
-         if uu___2
+         if uu___1
          then
-           let uu___3 =
+           let uu___2 =
              FStar_Syntax_Print.term_to_string
                a.FStar_Syntax_Syntax.action_typ in
-           let uu___4 =
+           let uu___3 =
              FStar_Syntax_Print.term_to_string
                a.FStar_Syntax_Syntax.action_defn in
-           FStar_Compiler_Util.print2 "Action type %s and term %s\n" uu___3
-             uu___4
+           FStar_Compiler_Util.print2 "Action type %s and term %s\n" uu___2
+             uu___3
          else ());
         (let lbname =
-           let uu___2 =
+           let uu___1 =
              FStar_Syntax_Syntax.new_bv
                (FStar_Pervasives_Native.Some
                   ((a.FStar_Syntax_Syntax.action_defn).FStar_Syntax_Syntax.pos))
                FStar_Syntax_Syntax.tun in
-           FStar_Pervasives.Inl uu___2 in
+           FStar_Pervasives.Inl uu___1 in
          let lb =
            FStar_Syntax_Syntax.mk_lb
              (lbname, (a.FStar_Syntax_Syntax.action_univs),
@@ -1244,27 +1243,42 @@ let (extract_reifiable_effect :
                     FStar_Syntax_Util.exp_false_bool
                 })
              (a.FStar_Syntax_Syntax.action_defn).FStar_Syntax_Syntax.pos in
-         let uu___2 = FStar_Extraction_ML_Term.term_as_mlexpr g1 action_lb in
-         match uu___2 with
-         | (a_let, uu___3, ty) ->
-             let uu___4 =
+         let uu___1 = FStar_Extraction_ML_Term.term_as_mlexpr g1 action_lb in
+         match uu___1 with
+         | (a_let, uu___2, ty) ->
+             let uu___3 =
                match a_let.FStar_Extraction_ML_Syntax.expr with
                | FStar_Extraction_ML_Syntax.MLE_Let
-                   ((uu___5, mllb::[]), uu___6) ->
+                   ((uu___4, mllb::[]), uu___5) ->
                    (match mllb.FStar_Extraction_ML_Syntax.mllb_tysc with
                     | FStar_Pervasives_Native.Some tysc ->
                         ((mllb.FStar_Extraction_ML_Syntax.mllb_def), tysc)
                     | FStar_Pervasives_Native.None ->
-                        failwith "No type scheme")
-               | uu___5 -> failwith "Impossible" in
-             (match uu___4 with
+                        FStar_Compiler_Effect.failwith "No type scheme")
+               | uu___4 -> FStar_Compiler_Effect.failwith "Impossible" in
+             (match uu___3 with
               | (exp, tysc) ->
-                  let uu___5 =
+                  let uu___4 =
                     FStar_Extraction_ML_UEnv.extend_with_action_name g1 ed a
                       tysc in
-                  (match uu___5 with
+                  (match uu___4 with
                    | (a_nm, a_lid, exp_b, g2) ->
-                       ((let uu___7 =
+                       ((let uu___6 =
+                           let uu___7 =
+                             let uu___8 =
+                               FStar_Extraction_ML_UEnv.tcenv_of_uenv g2 in
+                             FStar_TypeChecker_Env.debug uu___8 in
+                           FStar_Compiler_Effect.op_Less_Bar uu___7
+                             (FStar_Options.Other "ExtractionReify") in
+                         if uu___6
+                         then
+                           let uu___7 =
+                             FStar_Extraction_ML_Code.string_of_mlexpr a_nm
+                               a_let in
+                           FStar_Compiler_Util.print1
+                             "Extracted action term: %s\n" uu___7
+                         else ());
+                        (let uu___7 =
                            let uu___8 =
                              let uu___9 =
                                FStar_Extraction_ML_UEnv.tcenv_of_uenv g2 in
@@ -1273,34 +1287,19 @@ let (extract_reifiable_effect :
                              (FStar_Options.Other "ExtractionReify") in
                          if uu___7
                          then
-                           let uu___8 =
-                             FStar_Extraction_ML_Code.string_of_mlexpr a_nm
-                               a_let in
-                           FStar_Compiler_Util.print1
-                             "Extracted action term: %s\n" uu___8
-                         else ());
-                        (let uu___8 =
-                           let uu___9 =
-                             let uu___10 =
-                               FStar_Extraction_ML_UEnv.tcenv_of_uenv g2 in
-                             FStar_TypeChecker_Env.debug uu___10 in
-                           FStar_Compiler_Effect.op_Less_Bar uu___9
-                             (FStar_Options.Other "ExtractionReify") in
-                         if uu___8
-                         then
-                           ((let uu___10 =
+                           ((let uu___9 =
                                FStar_Extraction_ML_Code.string_of_mlty a_nm
                                  (FStar_Pervasives_Native.snd tysc) in
                              FStar_Compiler_Util.print1
-                               "Extracted action type: %s\n" uu___10);
+                               "Extracted action type: %s\n" uu___9);
                             FStar_Compiler_List.iter
                               (fun x ->
                                  FStar_Compiler_Util.print1
                                    "and binders: %s\n" x)
                               (FStar_Pervasives_Native.fst tysc))
                          else ());
-                        (let uu___8 = extend_iface a_lid a_nm exp exp_b in
-                         match uu___8 with
+                        (let uu___7 = extend_iface a_lid a_nm exp exp_b in
+                         match uu___7 with
                          | (iface1, impl) -> (g2, (iface1, impl))))))) in
       let uu___ =
         let uu___1 =
@@ -1513,7 +1512,9 @@ let (extract_let_rec_types :
                    lb.FStar_Syntax_Syntax.lbtyp in
                Prims.op_Negation uu___1) lbs in
         if uu___
-        then failwith "Impossible: mixed mutual types and terms"
+        then
+          FStar_Compiler_Effect.failwith
+            "Impossible: mixed mutual types and terms"
         else
           (let uu___2 =
              FStar_Compiler_List.fold_left
@@ -1797,9 +1798,11 @@ let rec (extract_sigelt_iface :
                 se1.FStar_Syntax_Syntax.sigrng;
               (g, empty_iface))
          | FStar_Syntax_Syntax.Sig_splice uu___2 ->
-             failwith "impossible: trying to extract splice"
+             FStar_Compiler_Effect.failwith
+               "impossible: trying to extract splice"
          | FStar_Syntax_Syntax.Sig_fail uu___2 ->
-             failwith "impossible: trying to extract Sig_fail"
+             FStar_Compiler_Effect.failwith
+               "impossible: trying to extract Sig_fail"
          | FStar_Syntax_Syntax.Sig_new_effect ed ->
              let uu___2 =
                (let uu___3 =
@@ -1987,7 +1990,7 @@ let (extract_bundle :
                                   fun uu___5 ->
                                     let uu___6 =
                                       FStar_Compiler_Util.string_of_int i in
-                                    Prims.op_Hat "'dummyV" uu___6)) in
+                                    Prims.strcat "'dummyV" uu___6)) in
                         FStar_Compiler_List.append vars uu___4 in
                       let uu___4 =
                         let uu___5 =
@@ -2003,22 +2006,22 @@ let (extract_bundle :
                             let uu___6 = FStar_Compiler_List.hd ctors in
                             (match uu___6 with
                              | (uu___7, c_ty) ->
-                                 let uu___9 =
+                                 let uu___8 =
                                    FStar_Compiler_List.fold_right2
                                      (fun id ->
-                                        fun uu___10 ->
-                                          fun uu___11 ->
-                                            match (uu___10, uu___11) with
-                                            | ((uu___12, ty), (fields, g)) ->
-                                                let uu___13 =
+                                        fun uu___9 ->
+                                          fun uu___10 ->
+                                            match (uu___9, uu___10) with
+                                            | ((uu___11, ty), (fields, g)) ->
+                                                let uu___12 =
                                                   FStar_Extraction_ML_UEnv.extend_record_field_name
                                                     g ((ind.iname), id) in
-                                                (match uu___13 with
+                                                (match uu___12 with
                                                  | (mlid, g1) ->
                                                      (((mlid, ty) :: fields),
                                                        g1))) ids c_ty
                                      ([], env2) in
-                                 (match uu___9 with
+                                 (match uu___8 with
                                   | (fields, g) ->
                                       ((FStar_Pervasives_Native.Some
                                           (FStar_Extraction_ML_Syntax.MLTD_Record
@@ -2096,7 +2099,8 @@ let (extract_bundle :
                  (match uu___4 with
                   | (env2, td) ->
                       (env2, [FStar_Extraction_ML_Syntax.MLM_Ty td])))
-      | uu___ -> failwith "Unexpected signature element"
+      | uu___ ->
+          FStar_Compiler_Effect.failwith "Unexpected signature element"
 let (lb_irrelevant : env_t -> FStar_Syntax_Syntax.letbinding -> Prims.bool) =
   fun g ->
     fun lb ->
@@ -2171,9 +2175,11 @@ let rec (extract_sig :
                    let uu___5 = extract_reifiable_effect g ed in
                    (match uu___5 with | (env, _iface, impl) -> (env, impl))
                | FStar_Syntax_Syntax.Sig_splice uu___5 ->
-                   failwith "impossible: trying to extract splice"
+                   FStar_Compiler_Effect.failwith
+                     "impossible: trying to extract splice"
                | FStar_Syntax_Syntax.Sig_fail uu___5 ->
-                   failwith "impossible: trying to extract Sig_fail"
+                   FStar_Compiler_Effect.failwith
+                     "impossible: trying to extract Sig_fail"
                | FStar_Syntax_Syntax.Sig_new_effect uu___5 -> (g, [])
                | FStar_Syntax_Syntax.Sig_let
                    { FStar_Syntax_Syntax.lbs1 = (uu___5, lbs);
@@ -2320,7 +2326,8 @@ let rec (extract_sig :
                                                FStar_Compiler_Util.format1
                                                  "Unexpected ML decl returned by the extension: %s"
                                                  uu___11 in
-                                             failwith uu___10)) (g, []) decls
+                                             FStar_Compiler_Effect.failwith
+                                               uu___10)) (g, []) decls
                          | FStar_Pervasives.Inr err ->
                              let uu___8 =
                                let uu___9 =
@@ -2439,7 +2446,9 @@ and (extract_sig_let :
       if
         Prims.op_Negation
           (FStar_Syntax_Syntax.uu___is_Sig_let se.FStar_Syntax_Syntax.sigel)
-      then failwith "Impossible: should only be called with Sig_let"
+      then
+        FStar_Compiler_Effect.failwith
+          "Impossible: should only be called with Sig_let"
       else
         (let uu___1 = se.FStar_Syntax_Syntax.sigel in
          match uu___1 with
@@ -2886,7 +2895,7 @@ and (extract_sig_let :
                          FStar_Compiler_Util.format1
                            "Impossible: Translated a let to a non-let: %s"
                            uu___8 in
-                       failwith uu___7)))
+                       FStar_Compiler_Effect.failwith uu___7)))
 let (extract' :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Syntax_Syntax.modul ->
@@ -2977,7 +2986,8 @@ let (extract :
          let uu___1 = FStar_Options.codegen () in
          match uu___1 with
          | FStar_Pervasives_Native.None ->
-             failwith "Impossible: We're in extract, codegen must be set!"
+             FStar_Compiler_Effect.failwith
+               "Impossible: We're in extract, codegen must be set!"
          | FStar_Pervasives_Native.Some t -> t in
        (let uu___2 =
           let uu___3 =
@@ -2991,7 +3001,7 @@ let (extract :
             FStar_Compiler_Util.format1
               "Extract called on a module %s that should not be extracted"
               uu___4 in
-          failwith uu___3
+          FStar_Compiler_Effect.failwith uu___3
         else ());
        (let uu___2 = FStar_Options.interactive () in
         if uu___2
@@ -3002,7 +3012,7 @@ let (extract :
              FStar_Syntax_Unionfind.with_uf_enabled
                (fun uu___5 ->
                   FStar_Errors.with_ctx
-                    (Prims.op_Hat "While extracting module " nm)
+                    (Prims.strcat "While extracting module " nm)
                     (fun uu___6 ->
                        FStar_Profiling.profile (fun uu___7 -> extract' g m)
                          (FStar_Pervasives_Native.Some nm)

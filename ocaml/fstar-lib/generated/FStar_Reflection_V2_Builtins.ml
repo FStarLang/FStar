@@ -6,7 +6,8 @@ let (get_env : unit -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Normalize.reflection_env_hook in
     match uu___1 with
     | FStar_Pervasives_Native.None ->
-        failwith "impossible: env_hook unset in reflection"
+        FStar_Compiler_Effect.failwith
+          "impossible: env_hook unset in reflection"
     | FStar_Pervasives_Native.Some e -> e
 let (inspect_bqual :
   FStar_Syntax_Syntax.bqual -> FStar_Reflection_V2_Data.aqualv) =
@@ -91,13 +92,13 @@ let (pack_fv : Prims.string Prims.list -> FStar_Syntax_Syntax.fv) =
 let rec last : 'a . 'a Prims.list -> 'a =
   fun l ->
     match l with
-    | [] -> failwith "last: empty list"
+    | [] -> FStar_Compiler_Effect.failwith "last: empty list"
     | x::[] -> x
     | uu___::xs -> last xs
 let rec init : 'a . 'a Prims.list -> 'a Prims.list =
   fun l ->
     match l with
-    | [] -> failwith "init: empty list"
+    | [] -> FStar_Compiler_Effect.failwith "init: empty list"
     | x::[] -> []
     | x::xs -> let uu___ = init xs in x :: uu___
 let (inspect_const :
@@ -121,7 +122,7 @@ let (inspect_const :
         let uu___1 =
           let uu___2 = FStar_Syntax_Print.const_to_string c in
           FStar_Compiler_Util.format1 "unknown constant: %s" uu___2 in
-        failwith uu___1
+        FStar_Compiler_Effect.failwith uu___1
 let (inspect_universe :
   FStar_Syntax_Syntax.universe -> FStar_Reflection_V2_Data.universe_view) =
   fun u ->
@@ -186,7 +187,8 @@ let rec (inspect_ln :
          | FStar_Syntax_Syntax.Tm_fvar fv ->
              FStar_Reflection_V2_Data.Tv_UInst (fv, us)
          | uu___ ->
-             failwith "Reflection::inspect_ln: uinst for a non-fvar node")
+             FStar_Compiler_Effect.failwith
+               "Reflection::inspect_ln: uinst for a non-fvar node")
     | FStar_Syntax_Syntax.Tm_ascribed
         { FStar_Syntax_Syntax.tm = t2;
           FStar_Syntax_Syntax.asc = (FStar_Pervasives.Inl ty, tacopt, eq);
@@ -199,7 +201,8 @@ let rec (inspect_ln :
         -> FStar_Reflection_V2_Data.Tv_AscribedC (t2, cty, tacopt, eq)
     | FStar_Syntax_Syntax.Tm_app
         { FStar_Syntax_Syntax.hd = uu___; FStar_Syntax_Syntax.args = [];_} ->
-        failwith "inspect_ln: empty arguments on Tm_app"
+        FStar_Compiler_Effect.failwith
+          "inspect_ln: empty arguments on Tm_app"
     | FStar_Syntax_Syntax.Tm_app
         { FStar_Syntax_Syntax.hd = hd; FStar_Syntax_Syntax.args = args;_} ->
         let uu___ = last args in
@@ -214,7 +217,9 @@ let rec (inspect_ln :
     | FStar_Syntax_Syntax.Tm_abs
         { FStar_Syntax_Syntax.bs = []; FStar_Syntax_Syntax.body = uu___;
           FStar_Syntax_Syntax.rc_opt = uu___1;_}
-        -> failwith "inspect_ln: empty arguments on Tm_abs"
+        ->
+        FStar_Compiler_Effect.failwith
+          "inspect_ln: empty arguments on Tm_abs"
     | FStar_Syntax_Syntax.Tm_abs
         { FStar_Syntax_Syntax.bs = b::bs; FStar_Syntax_Syntax.body = t2;
           FStar_Syntax_Syntax.rc_opt = k;_}
@@ -234,13 +239,15 @@ let rec (inspect_ln :
     | FStar_Syntax_Syntax.Tm_type u -> FStar_Reflection_V2_Data.Tv_Type u
     | FStar_Syntax_Syntax.Tm_arrow
         { FStar_Syntax_Syntax.bs1 = []; FStar_Syntax_Syntax.comp = uu___;_}
-        -> failwith "inspect_ln: empty binders on arrow"
+        ->
+        FStar_Compiler_Effect.failwith "inspect_ln: empty binders on arrow"
     | FStar_Syntax_Syntax.Tm_arrow uu___ ->
         let uu___1 = FStar_Syntax_Util.arrow_one_ln t1 in
         (match uu___1 with
          | FStar_Pervasives_Native.Some (b, c) ->
              FStar_Reflection_V2_Data.Tv_Arrow (b, c)
-         | FStar_Pervasives_Native.None -> failwith "impossible")
+         | FStar_Pervasives_Native.None ->
+             FStar_Compiler_Effect.failwith "impossible")
     | FStar_Syntax_Syntax.Tm_refine
         { FStar_Syntax_Syntax.b = bv; FStar_Syntax_Syntax.phi = t2;_} ->
         let uu___ =
@@ -329,7 +336,7 @@ let (inspect_comp :
               (FStar_Errors_Codes.Warning_CantInspect, uu___4) in
             FStar_Errors.log_issue c.FStar_Syntax_Syntax.pos uu___3);
            [])
-      | uu___1 -> failwith "Impossible!" in
+      | uu___1 -> FStar_Compiler_Effect.failwith "Impossible!" in
     match c.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Total t -> FStar_Reflection_V2_Data.C_Total t
     | FStar_Syntax_Syntax.GTotal t -> FStar_Reflection_V2_Data.C_GTotal t
@@ -351,7 +358,8 @@ let (inspect_comp :
            | (pre, uu___1)::(post, uu___2)::(pats, uu___3)::uu___4 ->
                FStar_Reflection_V2_Data.C_Lemma (pre, post, pats)
            | uu___1 ->
-               failwith "inspect_comp: Lemma does not have enough arguments?")
+               FStar_Compiler_Effect.failwith
+                 "inspect_comp: Lemma does not have enough arguments?")
         else
           (let inspect_arg uu___2 =
              match uu___2 with
@@ -837,7 +845,8 @@ let (inspect_sigelt :
                 FStar_Syntax_Syntax.sigopts = uu___10;_}
               -> let uu___11 = FStar_Ident.path_of_lid lid1 in (uu___11, cty)
           | uu___3 ->
-              failwith "impossible: inspect_sigelt: did not find ctor" in
+              FStar_Compiler_Effect.failwith
+                "impossible: inspect_sigelt: did not find ctor" in
         let uu___2 =
           let uu___3 = FStar_Compiler_List.map inspect_ctor c_lids in
           (nm, us, param_bs, ty, uu___3) in
@@ -863,9 +872,9 @@ let (pack_sigelt :
         let uu___1 =
           let uu___2 =
             let uu___3 = FStar_Ident.string_of_lid lid in
-            Prims.op_Hat uu___3 "\" (did you forget a module path?)" in
-          Prims.op_Hat "pack_sigelt: invalid long identifier \"" uu___2 in
-        failwith uu___1
+            Prims.strcat uu___3 "\" (did you forget a module path?)" in
+          Prims.strcat "pack_sigelt: invalid long identifier \"" uu___2 in
+        FStar_Compiler_Effect.failwith uu___1
       else () in
     match sv with
     | FStar_Reflection_V2_Data.Sg_Let (r, lbs) ->
@@ -883,7 +892,7 @@ let (pack_sigelt :
                 match nm with
                 | FStar_Pervasives.Inr fv -> FStar_Syntax_Syntax.lid_of_fv fv
                 | uu___7 ->
-                    failwith
+                    FStar_Compiler_Effect.failwith
                       "impossible: pack_sigelt: bv in toplevel let binding" in
               (check_lid lid; (lid, lb)) in
         let packed = FStar_Compiler_List.map pack_letbinding lbs in
@@ -968,7 +977,8 @@ let (pack_sigelt :
                 FStar_Syntax_Syntax.t2 = ty
               }))
     | FStar_Reflection_V2_Data.Unk ->
-        failwith "packing Unk, this should never happen"
+        FStar_Compiler_Effect.failwith
+          "packing Unk, this should never happen"
 let (inspect_lb :
   FStar_Syntax_Syntax.letbinding -> FStar_Reflection_V2_Data.lb_view) =
   fun lb ->
@@ -987,7 +997,9 @@ let (inspect_lb :
                FStar_Reflection_V2_Data.lb_typ = typ;
                FStar_Reflection_V2_Data.lb_def = def
              }
-         | uu___4 -> failwith "Impossible: bv in top-level let binding")
+         | uu___4 ->
+             FStar_Compiler_Effect.failwith
+               "Impossible: bv in top-level let binding")
 let (pack_lb :
   FStar_Reflection_V2_Data.lb_view -> FStar_Syntax_Syntax.letbinding) =
   fun lbv ->

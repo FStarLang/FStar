@@ -344,7 +344,7 @@ let (e_exn : Prims.exn FStar_Syntax_Embeddings_Base.embedding) =
     | e1 ->
         let s =
           let uu___2 = FStar_Compiler_Util.message_of_exn e1 in
-          Prims.op_Hat "uncaught exception: " uu___2 in
+          Prims.strcat "uncaught exception: " uu___2 in
         let uu___2 =
           let uu___3 =
             let uu___4 = embed FStar_Syntax_Embeddings.e_string rng s in
@@ -388,7 +388,7 @@ let (e_exn_nbe : Prims.exn FStar_TypeChecker_NBETerm.embedding) =
         let uu___1 =
           let uu___2 = FStar_Compiler_Util.message_of_exn e in
           FStar_Compiler_Util.format1 "cannot embed exn (NBE) : %s" uu___2 in
-        failwith uu___1 in
+        FStar_Compiler_Effect.failwith uu___1 in
   let unembed_exn cb t =
     let uu___ = FStar_TypeChecker_NBETerm.nbe_t_of_t t in
     match uu___ with

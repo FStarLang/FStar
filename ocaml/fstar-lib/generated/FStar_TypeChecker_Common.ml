@@ -113,7 +113,9 @@ let (__proj__CProb__item___0 : prob -> FStar_Syntax_Syntax.comp problem) =
 type prob_t = prob
 let (as_tprob : prob -> FStar_Syntax_Syntax.typ problem) =
   fun uu___ ->
-    match uu___ with | TProb p -> p | uu___1 -> failwith "Expected a TProb"
+    match uu___ with
+    | TProb p -> p
+    | uu___1 -> FStar_Compiler_Effect.failwith "Expected a TProb"
 type probs = prob Prims.list
 type guard_formula =
   | Trivial 
@@ -186,7 +188,7 @@ let (showable_guard_formula : guard_formula FStar_Class_Show.showable) =
          | NonTrivial f ->
              let uu___1 =
                FStar_Class_Show.show FStar_Syntax_Print.showable_term f in
-             Prims.op_Hat "NonTrivial " uu___1)
+             Prims.strcat "NonTrivial " uu___1)
   }
 type deferred_reason =
   | Deferred_univ_constraint 
@@ -514,7 +516,7 @@ let (check_uvar_ctx_invariant :
                   "Invariant violation: gamma and binders are out of sync\n\treason=%s, range=%s, should_check=%s\n\t\n                               gamma=%s\n\tbinders=%s\n"
                   reason uu___2 (if should_check then "true" else "false")
                   uu___3 uu___4 in
-              failwith uu___1 in
+              FStar_Compiler_Effect.failwith uu___1 in
             if Prims.op_Negation should_check
             then ()
             else
@@ -1419,7 +1421,7 @@ let (simplify :
                                                             = uu___32;_}
                                                         -> hd
                                                     | uu___32 ->
-                                                        failwith
+                                                        FStar_Compiler_Effect.failwith
                                                           "Impossible! We have already checked that this is a Tm_app" in
                                                   let uu___31 =
                                                     let uu___32 =
@@ -1791,7 +1793,7 @@ let (simplify :
                                                             = uu___28;_}
                                                         -> hd
                                                     | uu___28 ->
-                                                        failwith
+                                                        FStar_Compiler_Effect.failwith
                                                           "Impossible! We have already checked that this is a Tm_app" in
                                                   let uu___27 =
                                                     let uu___28 =

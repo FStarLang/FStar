@@ -99,7 +99,7 @@ let (check_universe_generalization :
               let uu___2 =
                 let uu___3 =
                   FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
-                Prims.op_Hat
+                Prims.strcat
                   "Generalized universe in a term containing explicit universe annotation : "
                   uu___3 in
               (FStar_Errors_Codes.Fatal_UnexpectedGeneralizedUniverse,
@@ -385,7 +385,7 @@ let (gen :
                                 u.FStar_Syntax_Syntax.ctx_uvar_head in
                             match uu___4 with
                             | FStar_Pervasives_Native.Some uu___5 ->
-                                failwith
+                                FStar_Compiler_Effect.failwith
                                   "Unexpected instantiation of mutually recursive uvar"
                             | uu___5 ->
                                 let k =

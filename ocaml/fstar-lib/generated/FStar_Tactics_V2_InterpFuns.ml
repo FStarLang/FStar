@@ -26,7 +26,7 @@ let rec drop : 'uuuuu . Prims.int -> 'uuuuu Prims.list -> 'uuuuu Prims.list =
       then l
       else
         (match l with
-         | [] -> failwith "drop: impossible"
+         | [] -> FStar_Compiler_Effect.failwith "drop: impossible"
          | uu___1::xs -> drop (n - Prims.int_one) xs)
 let timing_int :
   'uuuuu 'uuuuu1 'uuuuu2 'uuuuu3 .
@@ -202,7 +202,7 @@ let (max_tac_arity : Prims.int) = (Prims.of_int (20))
 let interp_ctx : 'uuuuu . Prims.string -> (unit -> 'uuuuu) -> 'uuuuu =
   fun s ->
     fun f ->
-      FStar_Errors.with_ctx (Prims.op_Hat "While running primitive " s) f
+      FStar_Errors.with_ctx (Prims.strcat "While running primitive " s) f
 let mk_tactic_interpretation_1 :
   'r 't1 .
     Prims.string ->

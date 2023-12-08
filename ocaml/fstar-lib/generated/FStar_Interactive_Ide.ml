@@ -18,13 +18,9 @@ let with_captured_errors' :
         with
         | FStar_Compiler_Effect.Failure msg ->
             let msg1 =
-              Prims.op_Hat "ASSERTION FAILURE: "
-                (Prims.op_Hat msg
-                   (Prims.op_Hat "\n"
-                      (Prims.op_Hat "F* may be in an inconsistent state.\n"
-                         (Prims.op_Hat
-                            "Please file a bug report, ideally with a "
-                            "minimized version of the program that triggered the error.")))) in
+              Prims.strcat "ASSERTION FAILURE: "
+                (Prims.strcat msg
+                   "\nF* may be in an inconsistent state.\nPlease file a bug report, ideally with a minimized version of the program that triggered the error.") in
             ((let uu___2 = FStar_TypeChecker_Env.get_range env in
               FStar_Errors.log_issue uu___2
                 (FStar_Errors_Codes.Error_IDEAssertionFailure, msg1));
@@ -861,11 +857,11 @@ let (snippets_of_fstar_option :
   fun name ->
     fun typ ->
       let mk_field field_name =
-        Prims.op_Hat "${" (Prims.op_Hat field_name "}") in
+        Prims.strcat "${" (Prims.strcat field_name "}") in
       let mk_snippet name1 argstring =
-        Prims.op_Hat "--"
-          (Prims.op_Hat name1
-             (if argstring <> "" then Prims.op_Hat " " argstring else "")) in
+        Prims.strcat "--"
+          (Prims.strcat name1
+             (if argstring <> "" then Prims.strcat " " argstring else "")) in
       let rec arg_snippets_of_type typ1 =
         match typ1 with
         | FStar_Options.Const uu___ -> [""]
@@ -1006,12 +1002,12 @@ let (sig_of_fstar_option :
   Prims.string -> FStar_Options.opt_type -> Prims.string) =
   fun name ->
     fun typ ->
-      let flag = Prims.op_Hat "--" name in
+      let flag = Prims.strcat "--" name in
       let uu___ = FStar_Options.desc_of_opt_type typ in
       match uu___ with
       | FStar_Pervasives_Native.None -> flag
       | FStar_Pervasives_Native.Some arg_sig ->
-          Prims.op_Hat flag (Prims.op_Hat " " arg_sig)
+          Prims.strcat flag (Prims.strcat " " arg_sig)
 let (fstar_options_list_cache : fstar_option Prims.list) =
   let defaults = FStar_Compiler_Util.smap_of_list FStar_Options.defaults in
   let uu___ =
@@ -1507,7 +1503,8 @@ let (load_partial_checked_file :
         let uu___ = FStar_CheckedFiles.load_module_from_cache env filename in
         match uu___ with
         | FStar_Pervasives_Native.None ->
-            failwith (Prims.op_Hat "cannot find checked file for " filename)
+            FStar_Compiler_Effect.failwith
+              (Prims.strcat "cannot find checked file for " filename)
         | FStar_Pervasives_Native.Some tc_result ->
             let uu___1 =
               FStar_Universal.with_dsenv_of_tcenv env
@@ -1545,8 +1542,8 @@ let (load_partial_checked_file :
                        | (found_decl, m) ->
                            if Prims.op_Negation found_decl
                            then
-                             failwith
-                               (Prims.op_Hat
+                             FStar_Compiler_Effect.failwith
+                               (Prims.strcat
                                   "did not find declaration with lident "
                                   until_lid)
                            else
@@ -1995,7 +1992,7 @@ let (run_option_lookup :
             trimmed_name in
         (match uu___2 with
          | FStar_Pervasives_Native.None ->
-             FStar_Pervasives.Inl (Prims.op_Hat "Unknown option:" opt_name)
+             FStar_Pervasives.Inl (Prims.strcat "Unknown option:" opt_name)
          | FStar_Pervasives_Native.Some opt ->
              let uu___3 =
                let uu___4 =
@@ -2132,8 +2129,8 @@ let run_lookup :
               | uu___ ->
                   ((FStar_Interactive_Ide_Types.QueryOK,
                      [FStar_Json.JsonStr
-                        (Prims.op_Hat "Lookup of "
-                           (Prims.op_Hat symbol " failed"))]),
+                        (Prims.strcat "Lookup of "
+                           (Prims.strcat symbol " failed"))]),
                     (FStar_Pervasives.Inl st))
 let run_code_autocomplete :
   'uuuuu .
@@ -2211,9 +2208,9 @@ let candidates_of_fstar_option :
               if may_set
               then opt_type
               else
-                Prims.op_Hat "("
-                  (Prims.op_Hat explanation
-                     (Prims.op_Hat " " (Prims.op_Hat opt_type ")"))) in
+                Prims.strcat "("
+                  (Prims.strcat explanation
+                     (Prims.strcat " " (Prims.strcat opt_type ")"))) in
             FStar_Compiler_Effect.op_Bar_Greater opt.opt_snippets
               (FStar_Compiler_List.map
                  (fun snippet ->
@@ -2666,7 +2663,7 @@ let run_search :
           | TypeContainsLid l ->
               let uu___1 = FStar_Ident.string_of_lid l in
               FStar_Compiler_Util.format1 "%s" uu___1 in
-        Prims.op_Hat (if term.st_negate then "-" else "") uu___ in
+        Prims.strcat (if term.st_negate then "-" else "") uu___ in
       let results =
         try
           (fun uu___ ->
@@ -3015,15 +3012,16 @@ let (js_repl_init_opts : unit -> unit) =
     | (res, fnames) ->
         (match res with
          | FStar_Getopt.Error msg ->
-             failwith (Prims.op_Hat "repl_init: " msg)
-         | FStar_Getopt.Help -> failwith "repl_init: --help unexpected"
+             FStar_Compiler_Effect.failwith (Prims.strcat "repl_init: " msg)
+         | FStar_Getopt.Help ->
+             FStar_Compiler_Effect.failwith "repl_init: --help unexpected"
          | FStar_Getopt.Success ->
              (match fnames with
               | [] ->
-                  failwith
+                  FStar_Compiler_Effect.failwith
                     "repl_init: No file name given in --ide invocation"
               | h::uu___2::uu___3 ->
-                  failwith
+                  FStar_Compiler_Effect.failwith
                     "repl_init: Too many file names given in --ide invocation"
               | uu___2 -> ()))
 let rec (go : FStar_Interactive_Ide_Types.repl_state -> Prims.int) =

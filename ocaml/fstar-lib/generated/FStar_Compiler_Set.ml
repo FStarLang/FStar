@@ -11,7 +11,7 @@ let empty : 'a . 'a FStar_Class_Ord.ord -> unit -> 'a set =
            fun y ->
              let uu___2 = FStar_Class_Ord.cmp uu___ x y in
              match uu___2 with
-             | FStar_Compiler_Order.Lt -> ~- Prims.int_one
+             | FStar_Compiler_Order.Lt -> (Prims.of_int (-1))
              | FStar_Compiler_Order.Eq -> Prims.int_zero
              | FStar_Compiler_Order.Gt -> Prims.int_one)
 let from_list : 'a . 'a FStar_Class_Ord.ord -> 'a Prims.list -> 'a set =
@@ -22,7 +22,7 @@ let from_list : 'a . 'a FStar_Class_Ord.ord -> 'a Prims.list -> 'a set =
            fun y ->
              let uu___1 = FStar_Class_Ord.cmp uu___ x y in
              match uu___1 with
-             | FStar_Compiler_Order.Lt -> ~- Prims.int_one
+             | FStar_Compiler_Order.Lt -> (Prims.of_int (-1))
              | FStar_Compiler_Order.Eq -> Prims.int_zero
              | FStar_Compiler_Order.Gt -> Prims.int_one)
 let mem : 'a . 'a FStar_Class_Ord.ord -> 'a -> 'a set -> Prims.bool =

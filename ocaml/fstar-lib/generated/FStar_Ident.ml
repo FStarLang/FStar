@@ -38,7 +38,7 @@ let (gen' : Prims.string -> FStar_Compiler_Range_Type.range -> ident) =
   fun s ->
     fun r ->
       let i = FStar_GenSym.next_id () in
-      mk_ident ((Prims.op_Hat s (Prims.string_of_int i)), r)
+      mk_ident ((Prims.strcat s (Prims.string_of_int i)), r)
 let (gen : FStar_Compiler_Range_Type.range -> ident) =
   fun r -> gen' reserved_prefix r
 let (ident_of_lid : lident -> ident) = fun l -> l.ident
@@ -73,7 +73,7 @@ let (lid_of_ns_and_id : ipath -> ident -> lident) =
         str =
           (if nsstr = ""
            then id.idText
-           else Prims.op_Hat nsstr (Prims.op_Hat "." id.idText))
+           else Prims.strcat nsstr (Prims.strcat "." id.idText))
       }
 let (lid_of_ids : ipath -> lident) =
   fun ids ->

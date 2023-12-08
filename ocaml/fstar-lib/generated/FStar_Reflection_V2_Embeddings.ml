@@ -617,71 +617,74 @@ let rec e_pattern_aq :
         (fun uu___1 ->
            match uu___1 with
            | (fv, args) ->
-               (match () with
-                | uu___2 when
-                    FStar_Syntax_Syntax.fv_eq_lid fv
-                      FStar_Reflection_V2_Constants.ref_Pat_Constant.FStar_Reflection_V2_Constants.lid
-                    ->
-                    let uu___3 =
-                      FStar_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
-                        (fun uu___4 ->
-                           FStar_Reflection_V2_Data.Pat_Constant uu___4)
-                        e_vconst in
-                    FStar_Syntax_Embeddings_AppEmb.run args uu___3
-                | uu___2 when
-                    FStar_Syntax_Syntax.fv_eq_lid fv
-                      FStar_Reflection_V2_Constants.ref_Pat_Cons.FStar_Reflection_V2_Constants.lid
-                    ->
-                    let uu___3 =
+               if
+                 FStar_Syntax_Syntax.fv_eq_lid fv
+                   FStar_Reflection_V2_Constants.ref_Pat_Constant.FStar_Reflection_V2_Constants.lid
+               then
+                 let uu___2 =
+                   FStar_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
+                     (fun uu___3 ->
+                        FStar_Reflection_V2_Data.Pat_Constant uu___3)
+                     e_vconst in
+                 FStar_Syntax_Embeddings_AppEmb.run args uu___2
+               else
+                 if
+                   FStar_Syntax_Syntax.fv_eq_lid fv
+                     FStar_Reflection_V2_Constants.ref_Pat_Cons.FStar_Reflection_V2_Constants.lid
+                 then
+                   (let uu___2 =
+                      let uu___3 =
+                        let uu___4 =
+                          FStar_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
+                            (fun uu___5 ->
+                               fun uu___6 ->
+                                 fun uu___7 ->
+                                   FStar_Reflection_V2_Data.Pat_Cons
+                                     (uu___5, uu___6, uu___7)) e_fv in
+                        let uu___5 =
+                          let uu___6 =
+                            FStar_Syntax_Embeddings.e_list e_universe in
+                          FStar_Syntax_Embeddings.e_option uu___6 in
+                        FStar_Syntax_Embeddings_AppEmb.op_Less_Star_Star_Greater
+                          uu___4 uu___5 in
                       let uu___4 =
                         let uu___5 =
-                          FStar_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
-                            (fun uu___6 ->
-                               fun uu___7 ->
-                                 fun uu___8 ->
-                                   FStar_Reflection_V2_Data.Pat_Cons
-                                     (uu___6, uu___7, uu___8)) e_fv in
-                        let uu___6 =
-                          let uu___7 =
-                            FStar_Syntax_Embeddings.e_list e_universe in
-                          FStar_Syntax_Embeddings.e_option uu___7 in
-                        FStar_Syntax_Embeddings_AppEmb.op_Less_Star_Star_Greater
-                          uu___5 uu___6 in
-                      let uu___5 =
-                        let uu___6 =
-                          let uu___7 = e_pattern_aq aq in
-                          FStar_Syntax_Embeddings.e_tuple2 uu___7
+                          let uu___6 = e_pattern_aq aq in
+                          FStar_Syntax_Embeddings.e_tuple2 uu___6
                             FStar_Syntax_Embeddings.e_bool in
-                        FStar_Syntax_Embeddings.e_list uu___6 in
+                        FStar_Syntax_Embeddings.e_list uu___5 in
                       FStar_Syntax_Embeddings_AppEmb.op_Less_Star_Star_Greater
-                        uu___4 uu___5 in
-                    FStar_Syntax_Embeddings_AppEmb.run args uu___3
-                | uu___2 when
-                    FStar_Syntax_Syntax.fv_eq_lid fv
-                      FStar_Reflection_V2_Constants.ref_Pat_Var.FStar_Reflection_V2_Constants.lid
-                    ->
-                    let uu___3 =
-                      let uu___4 =
-                        FStar_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
-                          (fun uu___5 ->
-                             fun uu___6 ->
-                               FStar_Reflection_V2_Data.Pat_Var
-                                 (uu___5, uu___6)) e_sort in
-                      FStar_Syntax_Embeddings_AppEmb.op_Less_Star_Star_Greater
-                        uu___4 e_ppname in
-                    FStar_Syntax_Embeddings_AppEmb.run args uu___3
-                | uu___2 when
-                    FStar_Syntax_Syntax.fv_eq_lid fv
-                      FStar_Reflection_V2_Constants.ref_Pat_Dot_Term.FStar_Reflection_V2_Constants.lid
-                    ->
-                    let uu___3 =
-                      let uu___4 = FStar_Syntax_Embeddings.e_option e_term in
-                      FStar_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
-                        (fun uu___5 ->
-                           FStar_Reflection_V2_Data.Pat_Dot_Term uu___5)
-                        uu___4 in
-                    FStar_Syntax_Embeddings_AppEmb.run args uu___3
-                | uu___2 -> FStar_Pervasives_Native.None)) in
+                        uu___3 uu___4 in
+                    FStar_Syntax_Embeddings_AppEmb.run args uu___2)
+                 else
+                   if
+                     FStar_Syntax_Syntax.fv_eq_lid fv
+                       FStar_Reflection_V2_Constants.ref_Pat_Var.FStar_Reflection_V2_Constants.lid
+                   then
+                     (let uu___2 =
+                        let uu___3 =
+                          FStar_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
+                            (fun uu___4 ->
+                               fun uu___5 ->
+                                 FStar_Reflection_V2_Data.Pat_Var
+                                   (uu___4, uu___5)) e_sort in
+                        FStar_Syntax_Embeddings_AppEmb.op_Less_Star_Star_Greater
+                          uu___3 e_ppname in
+                      FStar_Syntax_Embeddings_AppEmb.run args uu___2)
+                   else
+                     if
+                       FStar_Syntax_Syntax.fv_eq_lid fv
+                         FStar_Reflection_V2_Constants.ref_Pat_Dot_Term.FStar_Reflection_V2_Constants.lid
+                     then
+                       (let uu___2 =
+                          let uu___3 =
+                            FStar_Syntax_Embeddings.e_option e_term in
+                          FStar_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
+                            (fun uu___4 ->
+                               FStar_Reflection_V2_Data.Pat_Dot_Term uu___4)
+                            uu___3 in
+                        FStar_Syntax_Embeddings_AppEmb.run args uu___2)
+                     else FStar_Pervasives_Native.None) in
     mk_emb embed_pattern unembed_pattern
       FStar_Reflection_V2_Constants.fstar_refl_pattern
 let (e_pattern :

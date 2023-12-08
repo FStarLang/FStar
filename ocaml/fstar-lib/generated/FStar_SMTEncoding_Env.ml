@@ -51,7 +51,7 @@ let (primitive_projector_by_pos :
             FStar_Compiler_Util.format2
               "Projector %s on data constructor %s not found"
               (Prims.string_of_int i) uu___2 in
-          failwith uu___1 in
+          FStar_Compiler_Effect.failwith uu___1 in
         let uu___ = FStar_TypeChecker_Env.lookup_datacon env lid in
         match uu___ with
         | (uu___1, t) ->
@@ -211,8 +211,8 @@ let (varops : varops_t) =
               let uu___4 =
                 let uu___5 = FStar_Compiler_Effect.op_Bang ctr in
                 Prims.string_of_int uu___5 in
-              Prims.op_Hat "__" uu___4 in
-            Prims.op_Hat y1 uu___3)) in
+              Prims.strcat "__" uu___4 in
+            Prims.strcat y1 uu___3)) in
     let top_scope =
       let uu___ = FStar_Compiler_Effect.op_Bang scopes in
       FStar_Compiler_List.hd uu___ in
@@ -220,7 +220,7 @@ let (varops : varops_t) =
   let new_var pp rn =
     let uu___ =
       let uu___1 = FStar_Ident.string_of_id pp in
-      Prims.op_Hat uu___1 (Prims.op_Hat "__" (Prims.string_of_int rn)) in
+      Prims.strcat uu___1 (Prims.strcat "__" (Prims.string_of_int rn)) in
     FStar_Compiler_Effect.op_Less_Bar mk_unique uu___ in
   let new_fvar lid =
     let uu___ = FStar_Ident.string_of_lid lid in mk_unique uu___ in
@@ -339,7 +339,7 @@ let (check_valid_fvb : fvar_binding -> unit) =
          let uu___2 = FStar_Ident.string_of_lid fvb.fvar_lid in
          FStar_Compiler_Util.format1 "Unexpected thunked SMT symbol: %s"
            uu___2 in
-       failwith uu___1)
+       FStar_Compiler_Effect.failwith uu___1)
     else
       if fvb.fvb_thunked && (fvb.smt_arity <> Prims.int_zero)
       then
@@ -347,7 +347,7 @@ let (check_valid_fvb : fvar_binding -> unit) =
            let uu___3 = FStar_Ident.string_of_lid fvb.fvar_lid in
            FStar_Compiler_Util.format1
              "Unexpected arity of thunked SMT symbol: %s" uu___3 in
-         failwith uu___2)
+         FStar_Compiler_Effect.failwith uu___2)
       else ();
     (match fvb.smt_token with
      | FStar_Pervasives_Native.Some
@@ -358,7 +358,7 @@ let (check_valid_fvb : fvar_binding -> unit) =
          let uu___4 =
            let uu___5 = fvb_to_string fvb in
            FStar_Compiler_Util.format1 "bad fvb\n%s" uu___5 in
-         failwith uu___4
+         FStar_Compiler_Effect.failwith uu___4
      | uu___1 -> ())
 let binder_of_eithervar :
   'uuuuu 'uuuuu1 .
@@ -481,7 +481,7 @@ let (print_env : env_t -> Prims.string) =
       | [] -> ""
       | l::uu___ ->
           let uu___1 = FStar_Syntax_Print.lid_to_string l in
-          Prims.op_Hat "...," uu___1 in
+          Prims.strcat "...," uu___1 in
     FStar_Compiler_String.concat ", " (last_fvar :: bvars)
 let (lookup_bvar_binding :
   env_t ->
@@ -563,7 +563,7 @@ let (gen_term_var :
   =
   fun env ->
     fun x ->
-      let ysym = Prims.op_Hat "@x" (Prims.string_of_int env.depth) in
+      let ysym = Prims.strcat "@x" (Prims.string_of_int env.depth) in
       let y =
         let uu___ =
           FStar_SMTEncoding_Term.mk_fv
@@ -677,7 +677,7 @@ let (lookup_term_var :
             FStar_Compiler_Util.format2
               "Bound term variable not found  %s in environment: %s" uu___2
               uu___3 in
-          failwith uu___1
+          FStar_Compiler_Effect.failwith uu___1
 let (mk_fvb :
   FStar_Ident.lident ->
     Prims.string ->
@@ -719,7 +719,7 @@ let (new_term_constant_and_tok_from_lid_aux :
             if thunked
             then (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None)
             else
-              (let ftok_name = Prims.op_Hat fname "@tok" in
+              (let ftok_name = Prims.strcat fname "@tok" in
                let ftok = FStar_SMTEncoding_Util.mkApp (ftok_name, []) in
                ((FStar_Pervasives_Native.Some ftok_name),
                  (FStar_Pervasives_Native.Some ftok))) in
@@ -780,7 +780,7 @@ let fail_fvar_lookup : 'uuuuu . env_t -> FStar_Ident.lident -> 'uuuuu =
             FStar_Compiler_Util.format1
               "Name %s not found in the smtencoding and typechecker env"
               uu___1 in
-          failwith uu___
+          FStar_Compiler_Effect.failwith uu___
       | uu___ ->
           let quals = FStar_TypeChecker_Env.quals_of_qninfo q in
           let uu___1 =
@@ -807,7 +807,7 @@ let fail_fvar_lookup : 'uuuuu . env_t -> FStar_Ident.lident -> 'uuuuu =
                let uu___4 = FStar_Syntax_Print.lid_to_string a in
                FStar_Compiler_Util.format1
                  "Name %s not found in the smtencoding env" uu___4 in
-             failwith uu___3)
+             FStar_Compiler_Effect.failwith uu___3)
 let (lookup_lid : env_t -> FStar_Ident.lident -> fvar_binding) =
   fun env ->
     fun a ->
@@ -915,7 +915,9 @@ let (force_thunk : fvar_binding -> FStar_SMTEncoding_Term.term) =
     if
       (Prims.op_Negation fvb.fvb_thunked) ||
         (fvb.smt_arity <> Prims.int_zero)
-    then failwith "Forcing a non-thunk in the SMT encoding"
+    then
+      FStar_Compiler_Effect.failwith
+        "Forcing a non-thunk in the SMT encoding"
     else ();
     FStar_Compiler_Effect.op_Less_Bar FStar_SMTEncoding_Util.mkFreeV
       (FStar_SMTEncoding_Term.FV

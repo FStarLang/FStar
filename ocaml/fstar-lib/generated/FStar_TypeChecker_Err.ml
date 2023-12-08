@@ -50,18 +50,20 @@ let print_discrepancy : 'a 'b . ('a -> 'b) -> 'a -> 'a -> ('b * 'b) =
           | (h1::t1, h2::t2) ->
               ((Prims.op_Negation h1) || h2) && (blist_leq t1 t2)
           | ([], []) -> true
-          | uu___ -> failwith "print_discrepancy: bad lists" in
+          | uu___ ->
+              FStar_Compiler_Effect.failwith "print_discrepancy: bad lists" in
         let rec succ l =
           match l with
           | (false)::t -> true :: t
           | (true)::t -> let uu___ = succ t in false :: uu___
-          | [] -> failwith "" in
+          | [] -> FStar_Compiler_Effect.failwith "" in
         let full l = FStar_Compiler_List.for_all (fun b1 -> b1) l in
         let get_bool_option s =
           let uu___ = FStar_Options.get_option s in
           match uu___ with
           | FStar_Options.Bool b1 -> b1
-          | uu___1 -> failwith "print_discrepancy: impossible" in
+          | uu___1 ->
+              FStar_Compiler_Effect.failwith "print_discrepancy: impossible" in
         let set_bool_option s b1 =
           FStar_Options.set_option s (FStar_Options.Bool b1) in
         let get uu___ =
@@ -76,16 +78,18 @@ let print_discrepancy : 'a 'b . ('a -> 'b) -> 'a -> 'a -> ('b * 'b) =
                set_bool_option "print_universes" pu;
                set_bool_option "print_effect_args" pea;
                set_bool_option "print_full_names " pf)
-          | uu___ -> failwith "impossible: print_discrepancy" in
+          | uu___ ->
+              FStar_Compiler_Effect.failwith "impossible: print_discrepancy" in
         let bas = get () in
         let rec go cur =
-          match () with
-          | () when full cur ->
-              let uu___ = print () in
-              (match uu___ with | (xs, ys, uu___1) -> (xs, ys))
-          | () when let uu___ = blist_leq bas cur in Prims.op_Negation uu___
-              -> let uu___ = succ cur in go uu___
-          | () ->
+          if full cur
+          then
+            let uu___ = print () in
+            match uu___ with | (xs, ys, uu___1) -> (xs, ys)
+          else
+            if (let uu___ = blist_leq bas cur in Prims.op_Negation uu___)
+            then (let uu___ = succ cur in go uu___)
+            else
               (set cur;
                (let uu___1 = print () in
                 match uu___1 with
@@ -134,7 +138,7 @@ let (errors_smt_detail :
                                      let uu___7 =
                                        FStar_Compiler_Range_Ops.string_of_use_range
                                          r in
-                                     Prims.op_Hat "Also see: " uu___7 in
+                                     Prims.strcat "Also see: " uu___7 in
                                    FStar_Pprint.doc_of_string uu___6 in
                                  let uu___6 =
                                    let uu___7 =
@@ -152,7 +156,7 @@ let (errors_smt_detail :
                                          let uu___10 =
                                            FStar_Compiler_Range_Ops.string_of_def_range
                                              r in
-                                         Prims.op_Hat
+                                         Prims.strcat
                                            "Other related locations: "
                                            uu___10 in
                                        FStar_Pprint.doc_of_string uu___9
@@ -532,7 +536,7 @@ let (expected_pure_expression :
         let msg1 =
           if reason = ""
           then msg
-          else FStar_Compiler_Util.format1 (Prims.op_Hat msg " (%s)") reason in
+          else FStar_Compiler_Util.format1 (Prims.strcat msg " (%s)") reason in
         let uu___ =
           let uu___1 = FStar_Syntax_Print.term_to_string e in
           let uu___2 =
@@ -540,7 +544,7 @@ let (expected_pure_expression :
             FStar_Compiler_Effect.op_Less_Bar FStar_Pervasives_Native.fst
               uu___3 in
           FStar_Compiler_Util.format2
-            (Prims.op_Hat msg1
+            (Prims.strcat msg1
                "; got an expression \"%s\" with effect \"%s\"") uu___1 uu___2 in
         (FStar_Errors_Codes.Fatal_ExpectedPureExpression, uu___)
 let (expected_ghost_expression :
@@ -555,7 +559,7 @@ let (expected_ghost_expression :
         let msg1 =
           if reason = ""
           then msg
-          else FStar_Compiler_Util.format1 (Prims.op_Hat msg " (%s)") reason in
+          else FStar_Compiler_Util.format1 (Prims.strcat msg " (%s)") reason in
         let uu___ =
           let uu___1 = FStar_Syntax_Print.term_to_string e in
           let uu___2 =
@@ -563,7 +567,7 @@ let (expected_ghost_expression :
             FStar_Compiler_Effect.op_Less_Bar FStar_Pervasives_Native.fst
               uu___3 in
           FStar_Compiler_Util.format2
-            (Prims.op_Hat msg1
+            (Prims.strcat msg1
                "; got an expression \"%s\" with effect \"%s\"") uu___1 uu___2 in
         (FStar_Errors_Codes.Fatal_ExpectedGhostExpression, uu___)
 let (expected_effect_1_got_effect_2 :
