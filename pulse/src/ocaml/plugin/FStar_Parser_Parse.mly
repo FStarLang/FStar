@@ -729,6 +729,13 @@ multiBinder:
          mkRefinedBinder x t should_bind_var r (rr $loc) q attrs) qual_ids
      }
 
+  | LPAREN_RPAREN
+    {
+      let r = rr $loc in
+      let unit_t = mk_term (Var (lid_of_ids [(mk_ident("unit", r))])) r Un in
+      [mk_binder (Annotated (gen r, unit_t)) r Un None]
+    }
+
   | b=binder { [b] }
 
 binders: bss=list(bs=multiBinder {bs}) { flatten bss }
