@@ -1613,7 +1613,8 @@ and (star_type' :
           ->
           let debug t2 s =
             let string_of_set f s1 =
-              let elts = FStar_Compiler_Util.set_elements s1 in
+              let elts =
+                FStar_Compiler_Set.elems FStar_Syntax_Syntax.ord_bv s1 in
               match elts with
               | [] -> "{}"
               | x::xs ->
@@ -1659,10 +1660,12 @@ and (star_type' :
                             let non_dependent_or_raise s ty1 =
                               let sinter =
                                 let uu___4 = FStar_Syntax_Free.names ty1 in
-                                FStar_Compiler_Util.set_intersect uu___4 s in
+                                FStar_Compiler_Set.inter
+                                  FStar_Syntax_Syntax.ord_bv uu___4 s in
                               let uu___4 =
                                 let uu___5 =
-                                  FStar_Compiler_Util.set_is_empty sinter in
+                                  FStar_Compiler_Set.is_empty
+                                    FStar_Syntax_Syntax.ord_bv sinter in
                                 Prims.op_Negation uu___5 in
                               if uu___4
                               then
@@ -1690,8 +1693,9 @@ and (star_type' :
                                               ->
                                               (non_dependent_or_raise s1
                                                  bv.FStar_Syntax_Syntax.sort;
-                                               FStar_Compiler_Util.set_add bv
-                                                 s1))
+                                               FStar_Compiler_Set.add
+                                                 FStar_Syntax_Syntax.ord_bv
+                                                 bv s1))
                                      FStar_Syntax_Syntax.no_names binders1 in
                                  let ct = FStar_Syntax_Util.comp_result c1 in
                                  (non_dependent_or_raise s ct;
@@ -4908,7 +4912,8 @@ let (cps_and_elaborate :
                                                                     bv.FStar_Syntax_Syntax.sort in
                                                                     FStar_Compiler_Effect.op_Bar_Greater
                                                                     uu___28
-                                                                    (FStar_Compiler_Util.set_mem
+                                                                    (FStar_Compiler_Set.mem
+                                                                    FStar_Syntax_Syntax.ord_bv
                                                                     type_param1.FStar_Syntax_Syntax.binder_bv) in
                                                                     FStar_Compiler_Effect.op_Bar_Greater
                                                                     uu___27

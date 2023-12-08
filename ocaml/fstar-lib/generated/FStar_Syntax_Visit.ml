@@ -810,11 +810,33 @@ let rec (on_sub_sigelt' :
               FStar_Syntax_Syntax.typ1 = (us_ty, ty1);
               FStar_Syntax_Syntax.kind2 = k
             }
-      | FStar_Syntax_Syntax.Sig_fail uu___ ->
-          failwith "Sig_fail and Sig_splice not supported in visit"
-      | FStar_Syntax_Syntax.Sig_splice uu___ ->
-          failwith "Sig_fail and Sig_splice not supported in visit"
-      | uu___ -> failwith "sorry"
+      | FStar_Syntax_Syntax.Sig_fail
+          { FStar_Syntax_Syntax.errs = errs;
+            FStar_Syntax_Syntax.fail_in_lax = fail_in_lax;
+            FStar_Syntax_Syntax.ses1 = ses;_}
+          ->
+          let uu___ =
+            let uu___1 = FStar_Compiler_List.map (on_sub_sigelt vfs) ses in
+            {
+              FStar_Syntax_Syntax.errs = errs;
+              FStar_Syntax_Syntax.fail_in_lax = fail_in_lax;
+              FStar_Syntax_Syntax.ses1 = uu___1
+            } in
+          FStar_Syntax_Syntax.Sig_fail uu___
+      | FStar_Syntax_Syntax.Sig_splice
+          { FStar_Syntax_Syntax.is_typed = is_typed;
+            FStar_Syntax_Syntax.lids2 = lids;
+            FStar_Syntax_Syntax.tac = tac;_}
+          ->
+          let uu___ =
+            let uu___1 = f_term vfs tac in
+            {
+              FStar_Syntax_Syntax.is_typed = is_typed;
+              FStar_Syntax_Syntax.lids2 = lids;
+              FStar_Syntax_Syntax.tac = uu___1
+            } in
+          FStar_Syntax_Syntax.Sig_splice uu___
+      | uu___ -> failwith "on_sub_sigelt: missing case"
 and (on_sub_sigelt :
   vfs_t -> FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.sigelt) =
   fun vfs ->

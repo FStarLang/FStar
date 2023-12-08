@@ -100,25 +100,6 @@ let string_of_list' :
   'uuuuu .
     unit -> ('uuuuu -> Prims.string) -> 'uuuuu Prims.list -> Prims.string
   = fun uu___ -> __string_of_list "; "
-let string_of_set :
-  'a . ('a -> Prims.string) -> 'a FStar_Compiler_Util.set -> Prims.string =
-  fun f ->
-    fun l ->
-      let uu___ = FStar_Compiler_Util.set_elements l in
-      match uu___ with
-      | [] -> "{}"
-      | x::xs ->
-          let strb = FStar_Compiler_Util.new_string_builder () in
-          (FStar_Compiler_Util.string_builder_append strb "{";
-           (let uu___3 = f x in
-            FStar_Compiler_Util.string_builder_append strb uu___3);
-           FStar_Compiler_List.iter
-             (fun x1 ->
-                FStar_Compiler_Util.string_builder_append strb ", ";
-                (let uu___5 = f x1 in
-                 FStar_Compiler_Util.string_builder_append strb uu___5)) xs;
-           FStar_Compiler_Util.string_builder_append strb "}";
-           FStar_Compiler_Util.string_of_string_builder strb)
 let list_of_option : 'a . 'a FStar_Pervasives_Native.option -> 'a Prims.list
   =
   fun o ->

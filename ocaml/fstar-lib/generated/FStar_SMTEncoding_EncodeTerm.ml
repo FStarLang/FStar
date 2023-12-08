@@ -395,7 +395,8 @@ let check_pattern_vars :
                 (fun out ->
                    fun x ->
                      let uu___1 = FStar_Syntax_Free.names x in
-                     FStar_Compiler_Util.set_union out uu___1) uu___ tl in
+                     FStar_Compiler_Set.union FStar_Syntax_Syntax.ord_bv out
+                       uu___1) uu___ tl in
             let uu___ =
               FStar_Compiler_Effect.op_Bar_Greater vars
                 (FStar_Compiler_Util.find_opt
@@ -405,7 +406,9 @@ let check_pattern_vars :
                           FStar_Syntax_Syntax.binder_qual = uu___2;
                           FStar_Syntax_Syntax.binder_positivity = uu___3;
                           FStar_Syntax_Syntax.binder_attrs = uu___4;_} ->
-                          let uu___5 = FStar_Compiler_Util.set_mem b pat_vars in
+                          let uu___5 =
+                            FStar_Compiler_Set.mem FStar_Syntax_Syntax.ord_bv
+                              b pat_vars in
                           Prims.op_Negation uu___5)) in
             (match uu___ with
              | FStar_Pervasives_Native.None -> ()
@@ -1848,7 +1851,8 @@ and (encode_term :
                       let fvs =
                         let uu___6 = FStar_Syntax_Free.names t0 in
                         FStar_Compiler_Effect.op_Bar_Greater uu___6
-                          FStar_Compiler_Util.set_elements in
+                          (FStar_Compiler_Set.elems
+                             FStar_Syntax_Syntax.ord_bv) in
                       let getfreeV t2 =
                         match t2.FStar_SMTEncoding_Term.tm with
                         | FStar_SMTEncoding_Term.FreeV fv -> fv
@@ -2955,7 +2959,7 @@ and (encode_term :
                      let fvs =
                        let uu___5 = FStar_Syntax_Free.names t0 in
                        FStar_Compiler_Effect.op_Bar_Greater uu___5
-                         FStar_Compiler_Util.set_elements in
+                         (FStar_Compiler_Set.elems FStar_Syntax_Syntax.ord_bv) in
                      let tms =
                        FStar_Compiler_List.map
                          (FStar_SMTEncoding_Env.lookup_term_var env) fvs in

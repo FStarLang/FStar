@@ -2061,3 +2061,5 @@ let (showable_binding :
              let uu___1 = FStar_Class_Show.show FStar_Ident.showable_ident x in
              Prims.op_Hat "Binding_univ " uu___1)
   }
+let (showable_pragma : FStar_Syntax_Syntax.pragma FStar_Class_Show.showable)
+  = { FStar_Class_Show.show = pragma_to_string }

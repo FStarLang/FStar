@@ -299,7 +299,7 @@ let push_zfuel_name env (x:lident) f ftok =
 let force_thunk fvb =
     if not (fvb.fvb_thunked) || fvb.smt_arity <> 0
     then failwith "Forcing a non-thunk in the SMT encoding";
-    mkFreeV <| (fvb.smt_id, Term_sort, true)
+    mkFreeV <| FV (fvb.smt_id, Term_sort, true)
 module TcEnv = FStar.TypeChecker.Env
 let try_lookup_free_var env l =
     match lookup_fvar_binding env l with

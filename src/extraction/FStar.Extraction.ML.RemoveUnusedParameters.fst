@@ -75,12 +75,12 @@ let lookup_tyname (env:env_t) (name:mlpath)
   = BU.psmap_try_find env.tydef_map (string_of_mlpath name)
 
 (** Free variables of a type: Computed to check which parameters are used *)
-type var_set = BU.set mlident
-let empty_var_set = BU.new_set (fun x y -> String.compare x y)
+type var_set = Set.set mlident
+let empty_var_set : Set.set string = Set.empty ()
 let rec freevars_of_mlty' (vars:var_set) (t:mlty) =
   match t with
   | MLTY_Var i ->
-    BU.set_add i vars
+    Set.add i vars
   | MLTY_Fun (t0, _, t1) ->
     freevars_of_mlty' (freevars_of_mlty' vars t0) t1
   | MLTY_Named (tys, _)
@@ -202,7 +202,7 @@ let elim_tydef (env:env_t) name metadata parameters mlty
     let _, parameters, entry =
         List.fold_left
           (fun (i, params, entry) p ->
-             if BU.set_mem p freevars
+             if Set.mem p freevars
              then begin
                if must_eliminate i
                then begin

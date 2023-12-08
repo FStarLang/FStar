@@ -603,7 +603,7 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
         then err ("no_subtype annotation on a non-lemma") lb.lbpos
         else let lid_opt =
                    Free.fvars lb.lbtyp
-                   |> BU.set_elements
+                   |> Set.elems
                    |> List.tryFind (fun lid ->
                                    not (lid |> Ident.path_of_lid |> List.hd = "Prims" ||
                                         lid_equals lid PC.pattern_lid)) in

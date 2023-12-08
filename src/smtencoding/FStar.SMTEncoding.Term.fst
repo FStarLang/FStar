@@ -19,6 +19,7 @@ open FStar
 open FStar.Compiler
 open FStar.Compiler.Effect
 open FStar.Compiler.List
+open FStar.Class.Ord
 
 module S   = FStar.Syntax.Syntax
 module BU  = FStar.Compiler.Util
@@ -128,18 +129,27 @@ let mk_decls_trivial decls = [{
 
 let decls_list_of l = l |> List.collect (fun elt -> elt.decls)
 
-let mk_fv (x, y) : fv = x, y, false
+let mk_fv (x, y) : fv = FV (x, y, false)
 
-let fv_name (x:fv) = let nm, _, _ = x in nm
-let fv_sort (x:fv) = let _, sort, _ = x in sort
-let fv_force (x:fv) = let _, _, force = x in force
+let fv_name (x:fv) = let FV (nm, _, _) = x in nm
+
+instance deq_fv : deq fv = {
+  (=?) = (fun fv1 fv2 -> fv_name fv1 = fv_name fv2);
+}
+instance ord_fv : ord fv = {
+  super = deq_fv;
+  cmp = (fun fv1 fv2 -> Order.order_from_int (BU.compare (fv_name fv1) (fv_name fv2)));
+}
+
+let fv_sort (x:fv) = let FV (_, sort, _) = x in sort
+let fv_force (x:fv) = let FV (_, _, force) = x in force
 let fv_eq (x:fv) (y:fv) = fv_name x = fv_name y
 let fvs_subset_of (x:fvs) (y:fvs) =
   let cmp_fv x y =
     BU.compare (fv_name x) (fv_name y)
   in
-  BU.set_is_subset_of (BU.as_set x cmp_fv)
-                      (BU.as_set y cmp_fv)
+  Set.subset (Set.from_list x) (Set.from_list y)
+
 let freevar_eq x y = match x.tm, y.tm with
     | FreeV x, FreeV y -> fv_eq x y
     | _ -> false

@@ -90,20 +90,6 @@ breaking change to anything that parses F* source code (like Vale). *)
 let string_of_list = __string_of_list ", "
 let string_of_list' = __string_of_list "; "
 
-let string_of_set (f : 'a -> string) (l : BU.set 'a) : string =
-  match BU.set_elements l with
-  | [] -> "{}"
-  | x::xs ->
-    let strb = BU.new_string_builder () in
-    BU.string_builder_append strb "{";
-    BU.string_builder_append strb (f x);
-    List.iter (fun x ->
-               BU.string_builder_append strb ", ";
-               BU.string_builder_append strb (f x)
-               ) xs ;
-    BU.string_builder_append strb "}";
-    BU.string_of_string_builder strb
-
 let list_of_option (o:option 'a) : list 'a =
     match o with
     | None -> []

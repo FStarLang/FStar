@@ -44,6 +44,12 @@ let order_from_int (i : int) : order =
 
 let compare_int (i : int) (j : int) : order = order_from_int (i - j)
 
+let compare_bool (b1 b2 : bool) : order =
+  match b1, b2 with
+  | false, true -> Lt
+  | true, false -> Gt
+  | _ -> Eq
+
 (*
  * It promises to call the comparator in strictly smaller elements
  * Useful when writing a comparator for an inductive type,

@@ -11,10 +11,6 @@ instance show_list (a:Type) (_ : showable a) : Tot (showable (list a)) = {
   show = FStar.Common.string_of_list show;
 }
 
-instance show_set (a:Type) (_ : showable a) : Tot (showable (BU.set a)) = {
-  show = FStar.Common.string_of_set show;
-}
-
 instance show_option (a:Type) (_ : showable a) : Tot (showable (option a)) = {
   show = FStar.Common.string_of_option show;
 }

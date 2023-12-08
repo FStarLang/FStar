@@ -9,8 +9,6 @@ let printableshow : 'a . 'a FStar_Class_Printable.printable -> 'a showable =
   fun uu___ -> { show = (FStar_Class_Printable.to_string uu___) }
 let show_list : 'a . 'a showable -> 'a Prims.list showable =
   fun uu___ -> { show = ((FStar_Common.string_of_list ()) (show uu___)) }
-let show_set : 'a . 'a showable -> 'a FStar_Compiler_Util.set showable =
-  fun uu___ -> { show = (FStar_Common.string_of_set (show uu___)) }
 let show_option :
   'a . 'a showable -> 'a FStar_Pervasives_Native.option showable =
   fun uu___ -> { show = (FStar_Common.string_of_option (show uu___)) }

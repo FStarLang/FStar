@@ -7,6 +7,8 @@ open FStar.Syntax.Syntax
 open FStar.Syntax.Subst
 open FStar.Syntax.Visit
 
+open FStar.Class.Show
+
 module List = FStar.Compiler.List
 module Err = FStar.Errors
 
@@ -19,12 +21,12 @@ let compress1_t (allow_uvars: bool) (allow_names: bool) : term -> term =
     match t.n with
     | Tm_uvar (uv, s) when not allow_uvars ->
       Err.raise_err (Err.Error_UnexpectedUnresolvedUvar,
-                     format1 "Internal error: unexpected unresolved uvar in deep_compress: %s" (string_of_int (Unionfind.uvar_id uv.ctx_uvar_head)))
+                     format1 "Internal error: unexpected unresolved uvar in deep_compress: %s" (show uv))
 
     | Tm_name bv when not allow_names ->
       (* This currently happens, and often, but it should not! *)
       if Options.debug_any () then
-        Errors.log_issue t.pos (Err.Warning_NameEscape, format1 "Tm_name %s in deep compress" (Syntax.Print.bv_to_string bv));
+        Errors.log_issue t.pos (Err.Warning_NameEscape, format1 "Tm_name %s in deep compress" (show bv));
       mk (Tm_name ({bv with sort = mk Tm_unknown}))
 
     (* The sorts are not needed. Delete them. *)
@@ -33,12 +35,17 @@ let compress1_t (allow_uvars: bool) (allow_names: bool) : term -> term =
 
     | _ -> t
 
-let compress1_u (allow_uvars:bool) : universe -> universe =
+let compress1_u (allow_uvars:bool) (allow_names:bool) : universe -> universe =
   fun u ->
     match u with
+    | U_name bv when not allow_names ->
+      if Options.debug_any () then
+        Errors.log_issue Range.dummyRange (Err.Warning_NameEscape, format1 "U_name %s in deep compress" (show bv));
+      u
+
     | U_unif uv when not allow_uvars ->
       Err.raise_err (Err.Error_UnexpectedUnresolvedUvar,
-                     format1 "Internal error: unexpected unresolved (universe) uvar in deep_compress: %s" (string_of_int (Unionfind.univ_uvar_id uv)))
+                     format1 "Internal error: unexpected unresolved (universe) uvar in deep_compress: %s" (show (Unionfind.univ_uvar_id uv)))
     | _ -> u
 
 (* deep_compress_*: eliminating all unification variables and delayed
@@ -57,8 +64,8 @@ lambdas and every uvar node that must be replaced by its solution (and
 hence must have been resolved).
 
 Eliminating the substitutions and resolving uvars is all done by the
-`compress` call at the top, so this all looks like a big identity
-function.
+`compress` call in the implementation of Visit.visit_tm, so this all
+looks like a big identity function.
 
 [1] OCaml's Marshal module can actually serialize closures, but this
 makes .checked files more brittle, so we don't do it.
@@ -67,7 +74,7 @@ let deep_compress (allow_uvars:bool) (allow_names: bool) (tm : term) : term =
   Err.with_ctx ("While deep-compressing a term") (fun () ->
     Visit.visit_term_univs
       (compress1_t allow_uvars allow_names)
-      (compress1_u allow_uvars)
+      (compress1_u allow_uvars allow_names)
       tm
   )
 
@@ -78,7 +85,7 @@ let deep_compress_if_no_uvars (tm : term) : option term =
     try 
       Some (Visit.visit_term_univs
               (compress1_t false true)
-              (compress1_u false)
+              (compress1_u false true)
               tm)
     with
     | FStar.Errors.Err (Err.Error_UnexpectedUnresolvedUvar, _, _) -> None
@@ -88,6 +95,6 @@ let deep_compress_se (allow_uvars:bool) (allow_names:bool) (se : sigelt) : sigel
   Err.with_ctx (format1 "While deep-compressing %s" (Syntax.Print.sigelt_to_string_short se)) (fun () ->
     Visit.visit_sigelt
       (compress1_t allow_uvars allow_names)
-      (compress1_u allow_uvars)
+      (compress1_u allow_uvars allow_names)
       se
   )

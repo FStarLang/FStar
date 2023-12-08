@@ -531,15 +531,15 @@ let rec gather_pattern_bound_vars_maybe_top acc p =
   | PatOp _ -> acc
   | PatApp (phead, pats) -> gather_pattern_bound_vars_from_list (phead::pats)
   | PatTvar (x, _, _)
-  | PatVar (x, _, _) -> set_add x acc
+  | PatVar (x, _, _) -> Set.add x acc
   | PatList pats
   | PatTuple  (pats, _)
   | PatOr pats -> gather_pattern_bound_vars_from_list pats
   | PatRecord guarded_pats -> gather_pattern_bound_vars_from_list (List.map snd guarded_pats)
   | PatAscribed (pat, _) -> gather_pattern_bound_vars_maybe_top acc pat
 
-let gather_pattern_bound_vars : pattern -> set Ident.ident =
-  let acc = new_set (fun id1 id2 -> if (string_of_id id1) = (string_of_id id2) then 0 else 1) in
+let gather_pattern_bound_vars : pattern -> Set.set Ident.ident =
+  let acc = Set.empty () in
   fun p -> gather_pattern_bound_vars_maybe_top acc p
 
 type bnd =
@@ -589,30 +589,43 @@ let mk_ref_assign t1 t2 pos =
  * Collect the explicitly annotated universes in the sigelt, close the sigelt with them, and stash them appropriately in the sigelt
  *)
 let rec generalize_annotated_univs (s:sigelt) :sigelt =
-  let bs_univnames (bs:binders) :BU.set univ_name =
-    bs |> List.fold_left (fun uvs b -> BU.set_union uvs (Free.univnames b.binder_bv.sort)) (BU.new_set Syntax.order_univ_name)
+  (* NB!! Order is very important here, so a definition like
+      type t = Type u#a -> Type u#b
+    gets is two universe parameters in the order in which
+    they appear. So we do not use a set, and instead just use a mutable
+    list that we update as we find universes. We also keep a set of 'seen'
+    universes, whose order we do not care, just for efficiency. *)
+  let vars : ref (list univ_name) = mk_ref [] in
+  let seen : ref (Set.t univ_name) = mk_ref (Set.empty ()) in
+  let reg (u:univ_name) : unit =
+    if not (Set.mem u !seen) then (
+      seen := Set.add u !seen;
+      vars := u::!vars
+    )
   in
-  let empty_set = BU.new_set Syntax.order_univ_name in
+  let get () : list univ_name = List.rev !vars in
+
+  (* Visit the sigelt and rely on side effects to capture all
+  the names. This goes roughly in left-to-right order. *)
+  let _ = Visit.visit_sigelt
+            (fun t -> t)
+            (fun u -> ignore (match u with
+                              | U_name nm -> reg nm
+                              | _ -> ());
+                      u) s
+  in
+  let unames = get () in
 
   match s.sigel with
   | Sig_inductive_typ _
   | Sig_datacon _ -> failwith "Impossible: collect_annotated_universes: bare data/type constructor"
   | Sig_bundle {ses=sigs; lids} ->
-    let uvs = sigs |> List.fold_left (fun uvs se ->
-      let se_univs =
-        match se.sigel with
-        | Sig_inductive_typ {params=bs;t} -> BU.set_union (bs_univnames bs) (Free.univnames t)
-        | Sig_datacon {t} -> Free.univnames t
-        | _ -> failwith "Impossible: collect_annotated_universes: Sig_bundle should not have a non data/type sigelt"
-      in
-      BU.set_union uvs se_univs) empty_set |> BU.set_elements
-    in
-    let usubst = Subst.univ_var_closing uvs in
+    let usubst = Subst.univ_var_closing unames in
     { s with sigel = Sig_bundle {ses=sigs |> List.map (fun se ->
       match se.sigel with
       | Sig_inductive_typ {lid; params=bs; num_uniform_params=num_uniform; t; mutuals=lids1; ds=lids2} ->
         { se with sigel = Sig_inductive_typ {lid;
-                                             us=uvs;
+                                             us=unames;
                                              params=Subst.subst_binders usubst bs;
                                              num_uniform_params=num_uniform;
                                              t=Subst.subst (Subst.shift_subst (List.length bs) usubst) t;
@@ -620,7 +633,7 @@ let rec generalize_annotated_univs (s:sigelt) :sigelt =
                                              ds=lids2} }
       | Sig_datacon {lid;t;ty_lid=tlid;num_ty_params=n;mutuals=lids} ->
         { se with sigel = Sig_datacon {lid;
-                                       us=uvs;
+                                       us=unames;
                                        t=Subst.subst usubst t;
                                        ty_lid=tlid;
                                        num_ty_params=n;
@@ -628,26 +641,18 @@ let rec generalize_annotated_univs (s:sigelt) :sigelt =
       | _ -> failwith "Impossible: collect_annotated_universes: Sig_bundle should not have a non data/type sigelt"
       ); lids} }
   | Sig_declare_typ {lid; t} ->
-    let uvs = Free.univnames t |> BU.set_elements in
-    { s with sigel = Sig_declare_typ {lid; us=uvs; t=Subst.close_univ_vars uvs t} }
+    { s with sigel = Sig_declare_typ {lid; us=unames; t=Subst.close_univ_vars unames t} }
   | Sig_let {lbs=(b, lbs); lids} ->
-    let lb_univnames (lb:letbinding) :BU.set univ_name =
-      BU.set_union (Free.univnames lb.lbtyp)
-                   (Free.univnames lb.lbdef)
-    in
-    let all_lb_univs = lbs |> List.fold_left (fun uvs lb -> BU.set_union uvs (lb_univnames lb)) empty_set |> BU.set_elements in
-    let usubst = Subst.univ_var_closing all_lb_univs in
+    let usubst = Subst.univ_var_closing unames in
     //This respects the invariant enforced by FStar.Syntax.Util.check_mutual_universes
-    { s with sigel = Sig_let {lbs=(b, lbs |> List.map (fun lb -> { lb with lbunivs = all_lb_univs; lbdef = Subst.subst usubst lb.lbdef; lbtyp = Subst.subst usubst lb.lbtyp }));
+    { s with sigel = Sig_let {lbs=(b, lbs |> List.map (fun lb -> { lb with lbunivs = unames; lbdef = Subst.subst usubst lb.lbdef; lbtyp = Subst.subst usubst lb.lbtyp }));
                               lids} }
   | Sig_assume {lid;phi=fml} ->
-    let uvs = Free.univnames fml |> BU.set_elements in
-    { s with sigel = Sig_assume {lid; us=uvs; phi=Subst.close_univ_vars uvs fml} }
+    { s with sigel = Sig_assume {lid; us=unames; phi=Subst.close_univ_vars unames fml} }
   | Sig_effect_abbrev {lid;bs;comp=c;cflags=flags} ->
-    let uvs = BU.set_union (bs_univnames bs) (Free.univnames_comp c) |> BU.set_elements in
-    let usubst = Subst.univ_var_closing uvs in
+    let usubst = Subst.univ_var_closing unames in
     { s with sigel = Sig_effect_abbrev {lid;
-                                        us=uvs;
+                                        us=unames;
                                         bs=Subst.subst_binders usubst bs;
                                         comp=Subst.subst_comp usubst c;
                                         cflags=flags} }
@@ -766,15 +771,15 @@ let check_linear_pattern_variables pats r =
       not wildcards. *)
       if string_of_id x.ppname = Ident.reserved_prefix
       then S.no_names
-      else BU.set_add x S.no_names
+      else Set.add x S.no_names
     | Pat_cons(_, _, pats) ->
       let aux out (p, _) =
           let p_vars = pat_vars p in
-          let intersection = BU.set_intersect p_vars out in
-          if BU.set_is_empty intersection
-          then BU.set_union out p_vars
+          let intersection = Set.inter p_vars out in
+          if Set.is_empty intersection
+          then Set.union out p_vars
           else
-            let duplicate_bv = List.hd (BU.set_elements intersection) in
+            let duplicate_bv = List.hd (Set.elems intersection) in
             raise_error ( Errors.Fatal_NonLinearPatternNotPermitted,
                           BU.format1
                             "Non-linear patterns are not permitted: `%s` appears more than once in this pattern."
@@ -792,9 +797,10 @@ let check_linear_pattern_variables pats r =
   | p::ps ->
     let pvars = pat_vars p in
     let aux p =
-      if BU.set_eq pvars (pat_vars p) then () else
-      let nonlinear_vars = BU.set_symmetric_difference pvars (pat_vars p) in
-      let first_nonlinear_var = List.hd (BU.set_elements nonlinear_vars) in
+      if Set.equal pvars (pat_vars p) then () else
+      let symdiff s1 s2 = Set.union (Set.diff s1 s2) (Set.diff s2 s1) in
+      let nonlinear_vars = symdiff pvars (pat_vars p) in
+      let first_nonlinear_var = List.hd (Set.elems nonlinear_vars) in
       raise_error ( Errors.Fatal_IncoherentPatterns,
                     BU.format1
                       "Patterns in this match are incoherent, variable %s is bound in some but not all patterns."
@@ -1394,15 +1400,15 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
     | Abs(binders, body) ->
       (* First of all, forbid definitions such as `f x x = ...` *)
       let bvss = List.map gather_pattern_bound_vars binders in
-      let check_disjoint (sets : list (set ident)) : option ident =
+      let check_disjoint (sets : list (Set.set ident)) : option ident =
         let rec aux acc sets =
             match sets with
             | [] -> None
             | set::sets ->
-                let i = BU.set_intersect acc set in
-                if BU.set_is_empty i
-                then aux (BU.set_union acc set) sets
-                else Some (List.hd (BU.set_elements i))
+                let i = Set.inter acc set in
+                if Set.is_empty i
+                then aux (Set.union acc set) sets
+                else Some (List.hd (Set.elems i))
         in
         aux (S.new_id_set ()) sets
       in
@@ -1930,9 +1936,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let tm = SS.close vt_binders tm in // but we need to close the variables in tm
       let () =
         let fvs = Free.names tm in
-        if not (BU.set_is_empty fvs) then
+        if not (Set.is_empty fvs) then
           raise_error (Errors.Fatal_MissingFieldInRecord,
-                     BU.format1 "Static quotation refers to external variables: %s" (Common.string_of_set Print.nm_to_string fvs))
+                     BU.format1 "Static quotation refers to external variables: %s" (Class.Show.show fvs))
                      (e.range)
       in
 
@@ -3957,7 +3963,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
       let build_projection (env, ses) id  = build_generic_projection (env, ses) (Some id) in
       let build_coverage_check (env, ses) = build_generic_projection (env, ses) None in
 
-      let bvs = gather_pattern_bound_vars pat |> set_elements in
+      let bvs = gather_pattern_bound_vars pat |> Set.elems in
 
       (* If there are no variables in the pattern (and it is not a
        * wildcard), we should still check to see that it is complete,
