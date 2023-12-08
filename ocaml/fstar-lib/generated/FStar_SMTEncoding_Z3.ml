@@ -138,7 +138,7 @@ let (z3_exe : unit -> Prims.string) =
     find_or uu___1
       (fun version ->
          let path =
-           let z3_v = FStar_Platform.exe (Prims.op_Hat "z3-" version) in
+           let z3_v = FStar_Platform.exe (Prims.strcat "z3-" version) in
            let smto = FStar_Options.smt () in
            if FStar_Pervasives_Native.uu___is_Some smto
            then FStar_Pervasives_Native.__proj__Some__item__v smto
@@ -171,7 +171,7 @@ let (status_string_and_errors :
             (match msg with
              | FStar_Pervasives_Native.None -> ""
              | FStar_Pervasives_Native.Some msg1 ->
-                 Prims.op_Hat " because " msg1) in
+                 Prims.strcat " because " msg1) in
         (uu___, errs)
     | UNKNOWN (errs, msg) ->
         let uu___ =
@@ -179,7 +179,7 @@ let (status_string_and_errors :
             (match msg with
              | FStar_Pervasives_Native.None -> ""
              | FStar_Pervasives_Native.Some msg1 ->
-                 Prims.op_Hat " because " msg1) in
+                 Prims.strcat " because " msg1) in
         (uu___, errs)
     | TIMEOUT (errs, msg) ->
         let uu___ =
@@ -187,7 +187,7 @@ let (status_string_and_errors :
             (match msg with
              | FStar_Pervasives_Native.None -> ""
              | FStar_Pervasives_Native.Some msg1 ->
-                 Prims.op_Hat " because " msg1) in
+                 Prims.strcat " because " msg1) in
         (uu___, errs)
 let (query_logging : query_log) =
   let query_number = FStar_Compiler_Util.mk_ref Prims.int_zero in
@@ -315,7 +315,7 @@ let (check_z3version : FStar_Compiler_Util.proc -> unit) =
             arg in
         FStar_Compiler_Util.ask_process p uu___ (fun uu___1 -> "Killed")
           (warn_handler []) in
-      if FStar_Compiler_Util.starts_with s (Prims.op_Hat "(:" arg)
+      if FStar_Compiler_Util.starts_with s (Prims.strcat "(:" arg)
       then
         let ss = FStar_Compiler_String.split [34] s in
         FStar_Compiler_List.nth ss Prims.int_one
@@ -340,7 +340,7 @@ let (check_z3version : FStar_Compiler_Util.proc -> unit) =
              let uu___5 =
                let uu___6 =
                  let uu___7 = FStar_Options.z3_version () in
-                 Prims.op_Hat "z3-" uu___7 in
+                 Prims.strcat "z3-" uu___7 in
                FStar_Platform.exe uu___6 in
              FStar_Compiler_Util.format3
                "Unexpected SMT solver: expected to be talking to Z3, got %s.\nPlease download the correct version of Z3 from %s\nand install it into your $PATH as `%s'."
@@ -396,7 +396,7 @@ let (check_z3version : FStar_Compiler_Util.proc -> unit) =
                            let uu___16 =
                              let uu___17 =
                                let uu___18 = FStar_Options.z3_version () in
-                               Prims.op_Hat "z3-" uu___18 in
+                               Prims.strcat "z3-" uu___18 in
                              FStar_Platform.exe uu___17 in
                            FStar_Pprint.doc_of_string uu___16 in
                          FStar_Pprint.squotes uu___15 in
@@ -426,7 +426,7 @@ let (new_z3proc :
       check_z3version proc; proc
 let (new_z3proc_with_id :
   (Prims.string * Prims.string Prims.list) -> FStar_Compiler_Util.proc) =
-  let ctr = FStar_Compiler_Util.mk_ref (~- Prims.int_one) in
+  let ctr = FStar_Compiler_Util.mk_ref (Prims.of_int (-1)) in
   fun cmd_and_args ->
     let p =
       let uu___ =
@@ -610,8 +610,8 @@ let (smt_output_sections :
                    (fun uu___2 ->
                       match uu___2 with
                       | (until_tag, rest) -> ((l :: until_tag), rest))) in
-        let start_tag tag = Prims.op_Hat "<" (Prims.op_Hat tag ">") in
-        let end_tag tag = Prims.op_Hat "</" (Prims.op_Hat tag ">") in
+        let start_tag tag = Prims.strcat "<" (Prims.strcat tag ">") in
+        let end_tag tag = Prims.strcat "</" (Prims.strcat tag ">") in
         let find_section tag lines1 =
           let uu___ = until (start_tag tag) lines1 in
           match uu___ with
@@ -622,8 +622,8 @@ let (smt_output_sections :
               (match uu___1 with
                | FStar_Pervasives_Native.None ->
                    failwith
-                     (Prims.op_Hat "Parse error: "
-                        (Prims.op_Hat (end_tag tag) " not found"))
+                     (Prims.strcat "Parse error: "
+                        (Prims.strcat (end_tag tag) " not found"))
                | FStar_Pervasives_Native.Some (section, suffix1) ->
                    ((FStar_Pervasives_Native.Some section),
                      (FStar_Compiler_List.op_At prefix suffix1))) in
@@ -855,17 +855,17 @@ let (doZ3Exe :
                 | (res, _stats) ->
                     (match log_file with
                      | FStar_Pervasives_Native.Some fname ->
-                         (fwrite fname (Prims.op_Hat "; QUERY ID: " queryid);
+                         (fwrite fname (Prims.strcat "; QUERY ID: " queryid);
                           (let uu___3 =
                              let uu___4 =
                                let uu___5 = status_string_and_errors res in
                                FStar_Pervasives_Native.fst uu___5 in
-                             Prims.op_Hat "; STATUS: " uu___4 in
+                             Prims.strcat "; STATUS: " uu___4 in
                            fwrite fname uu___3);
                           (match res with
                            | UNSAT (FStar_Pervasives_Native.Some core) ->
                                fwrite fname
-                                 (Prims.op_Hat "; UNSAT CORE GENERATED: "
+                                 (Prims.strcat "; UNSAT CORE GENERATED: "
                                     (FStar_Compiler_String.concat ", " core))
                            | uu___3 -> ()))
                      | FStar_Pervasives_Native.None -> ()) in
@@ -918,7 +918,7 @@ let (z3_options : Prims.string -> Prims.string) =
           "(set-option :smt.arith.solver 6)"]
         else ["(set-option :smt.arith.solver 2)"] in
       FStar_Compiler_List.op_At opts uu___ in
-    Prims.op_Hat (FStar_Compiler_String.concat "\n" opts1) "\n"
+    Prims.strcat (FStar_Compiler_String.concat "\n" opts1) "\n"
 let (fresh_scope : scope_t FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref [[]]
 let (mk_fresh_scope : unit -> scope_t) =
@@ -1054,28 +1054,28 @@ let (mk_input :
               let uu___4 =
                 let uu___5 =
                   FStar_Compiler_Effect.op_Bang FStar_Options._commit in
-                Prims.op_Hat uu___5 "\n" in
-              Prims.op_Hat " -- hash: " uu___4 in
-            Prims.op_Hat uu___2 uu___3 in
-          Prims.op_Hat "; F* version: " uu___1 in
-        Prims.op_Hat options uu___ in
+                Prims.strcat uu___5 "\n" in
+              Prims.strcat " -- hash: " uu___4 in
+            Prims.strcat uu___2 uu___3 in
+          Prims.strcat "; F* version: " uu___1 in
+        Prims.strcat options uu___ in
       let options2 =
         let uu___ =
           let uu___1 =
             let uu___2 = FStar_Options.z3_version () in
-            Prims.op_Hat uu___2 "\n" in
-          Prims.op_Hat "; Z3 version (according to F*): " uu___1 in
-        Prims.op_Hat options1 uu___ in
+            Prims.strcat uu___2 "\n" in
+          Prims.strcat "; Z3 version (according to F*): " uu___1 in
+        Prims.strcat options1 uu___ in
       let options3 =
-        let uu___ = z3_options ver in Prims.op_Hat options2 uu___ in
+        let uu___ = z3_options ver in Prims.strcat options2 uu___ in
       let options4 =
         let uu___ =
           let uu___1 =
             let uu___2 = FStar_Options.z3_smtopt () in
             FStar_Compiler_Effect.op_Bar_Greater uu___2
               (FStar_Compiler_String.concat "\n") in
-          Prims.op_Hat uu___1 "\n\n" in
-        Prims.op_Hat options3 uu___ in
+          Prims.strcat uu___1 "\n\n" in
+        Prims.strcat options3 uu___ in
       (let uu___1 = FStar_Options.print_z3_statistics () in
        if uu___1 then context_profile theory else ());
       (let uu___1 =
@@ -1116,11 +1116,11 @@ let (mk_input :
                    FStar_Compiler_Effect.op_Bar_Greater uu___5
                      (FStar_Compiler_String.concat "\n")
                  else ps in
-               let hs1 = Prims.op_Hat hs (Prims.op_Hat "Z3 version: " ver) in
+               let hs1 = Prims.strcat hs (Prims.strcat "Z3 version: " ver) in
                let uu___4 =
                  let uu___5 = FStar_Compiler_Util.digest_of_string hs1 in
                  FStar_Pervasives_Native.Some uu___5 in
-               ((Prims.op_Hat ps (Prims.op_Hat "\n" ss)), uu___4)
+               ((Prims.strcat ps (Prims.strcat "\n" ss)), uu___4)
          else
            (let uu___4 =
               let uu___5 =

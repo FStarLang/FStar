@@ -487,10 +487,10 @@ let (query_to_string : query -> Prims.string) =
     | Pop -> "Pop"
     | Push pq ->
         let uu___ =
-          let uu___1 = push_query_to_string pq in Prims.op_Hat uu___1 ")" in
-        Prims.op_Hat "(Push " uu___
+          let uu___1 = push_query_to_string pq in Prims.strcat uu___1 ")" in
+        Prims.strcat "(Push " uu___
     | PushPartialCheckedFile d ->
-        Prims.op_Hat "(PushPartialCheckedFile " (Prims.op_Hat d ")")
+        Prims.strcat "(PushPartialCheckedFile " (Prims.strcat d ")")
     | VfsAdd uu___ -> "VfsAdd"
     | AutoComplete uu___ -> "AutoComplete"
     | Lookup (s, _lc, pos, features, _sr) ->

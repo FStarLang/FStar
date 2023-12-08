@@ -30,9 +30,9 @@ let (check_and_gen :
                              (FStar_Class_Show.show_list
                                 FStar_Ident.showable_ident)
                              FStar_Syntax_Print.showable_term) (us, t) in
-                      Prims.op_Hat " = " uu___4 in
-                    Prims.op_Hat comb uu___3 in
-                  Prims.op_Hat "While checking combinator " uu___2 in
+                      Prims.strcat " = " uu___4 in
+                    Prims.strcat comb uu___3 in
+                  Prims.strcat "While checking combinator " uu___2 in
                 FStar_Errors.with_ctx uu___1
                   (fun uu___2 ->
                      let uu___3 = FStar_Syntax_Subst.open_univ_vars us t in
@@ -4178,8 +4178,8 @@ let (tc_layered_eff_decl :
                         let uu___7 =
                           FStar_Ident.string_of_lid
                             ed.FStar_Syntax_Syntax.mname in
-                        Prims.op_Hat uu___7 ")" in
-                      Prims.op_Hat
+                        Prims.strcat uu___7 ")" in
+                      Prims.strcat
                         "Binders are not supported for layered effects ("
                         uu___6 in
                     (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___5) in
@@ -10335,8 +10335,8 @@ let (tc_polymonadic_subcomp :
                      FStar_Ident.ident_of_lid in
                  FStar_Compiler_Effect.op_Bar_Greater uu___4
                    FStar_Ident.string_of_id in
-               Prims.op_Hat " <: " uu___3 in
-             Prims.op_Hat uu___1 uu___2 in
+               Prims.strcat " <: " uu___3 in
+             Prims.strcat uu___1 uu___2 in
            let uu___1 =
              check_and_gen env0 combinator_name "polymonadic_subcomp"
                Prims.int_one ts in

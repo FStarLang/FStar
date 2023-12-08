@@ -612,14 +612,15 @@ let (pars_and_tc_fragment : Prims.string -> unit) =
                    (report ();
                     FStar_Errors.raise_err
                       (FStar_Errors_Codes.Fatal_TcOneFragmentFailed,
-                        (Prims.op_Hat "tc_one_fragment failed: " s))))) ()
+                        (Prims.strcat "tc_one_fragment failed: " s))))) ()
      with
      | uu___1 ->
-         if
-           let uu___2 = FStar_Options.trace_error () in
-           Prims.op_Negation uu___2
-         then Obj.magic (Obj.repr (FStar_Compiler_Effect.raise uu___1))
-         else Obj.magic (Obj.repr (failwith "unreachable")))
+         ((fun uu___1 ->
+             if
+               let uu___2 = FStar_Options.trace_error () in
+               Prims.op_Negation uu___2
+             then Obj.magic (Obj.repr (FStar_Compiler_Effect.raise uu___1))
+             else Obj.magic (Obj.repr (failwith "unreachable")))) uu___1)
 let (test_hashes : unit -> unit) =
   fun uu___ ->
     (let uu___2 = FStar_Main.process_args () in
@@ -632,8 +633,8 @@ let (test_hashes : unit -> unit) =
          else
            (let uu___4 =
               let uu___5 = aux (n1 - Prims.int_one) in
-              Prims.op_Hat uu___5 ")" in
-            Prims.op_Hat "(US " uu___4) in
+              Prims.strcat uu___5 ")" in
+            Prims.strcat "(US " uu___4) in
        let tm = let uu___3 = aux n in tc uu___3 in
        let hc = FStar_Syntax_Hash.ext_hash_term tm in
        let uu___3 = FStar_Compiler_Util.string_of_int n in

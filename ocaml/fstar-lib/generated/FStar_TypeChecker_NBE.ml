@@ -56,7 +56,7 @@ let drop_until : 'a . ('a -> Prims.bool) -> 'a Prims.list -> 'a Prims.list =
       aux l
 let (trim : Prims.bool Prims.list -> Prims.bool Prims.list) =
   fun l ->
-    let uu___ = drop_until FStar_Pervasives.id (FStar_Compiler_List.rev l) in
+    let uu___ = drop_until (fun x -> x) (FStar_Compiler_List.rev l) in
     FStar_Compiler_List.rev uu___
 let (implies : Prims.bool -> Prims.bool -> Prims.bool) =
   fun b1 ->
@@ -369,12 +369,12 @@ let (pickBranch :
                match uu___1 with
                | FStar_Pervasives.Inr b ->
                    let uu___2 = FStar_Compiler_Util.string_of_bool b in
-                   Prims.op_Hat "Inr " uu___2
+                   Prims.strcat "Inr " uu___2
                | FStar_Pervasives.Inl bs ->
                    let uu___2 =
                      FStar_Compiler_Util.string_of_int
                        (FStar_Compiler_List.length bs) in
-                   Prims.op_Hat "Inl " uu___2 in
+                   Prims.strcat "Inl " uu___2 in
              debug cfg
                (fun uu___2 ->
                   let uu___3 =
@@ -459,7 +459,7 @@ let (un_univ : FStar_TypeChecker_NBETerm.t -> FStar_Syntax_Syntax.universe) =
     | uu___ ->
         let uu___1 =
           let uu___2 = FStar_TypeChecker_NBETerm.t_to_string tm in
-          Prims.op_Hat "Not a universe: " uu___2 in
+          Prims.strcat "Not a universe: " uu___2 in
         failwith uu___1
 let (is_constr_fv : FStar_Syntax_Syntax.fv -> Prims.bool) =
   fun fvar ->
@@ -1105,7 +1105,7 @@ let rec (translate :
                                          let uu___8 =
                                            FStar_TypeChecker_NBETerm.t_to_string
                                              x in
-                                         Prims.op_Hat
+                                         Prims.strcat
                                            (if FStar_Compiler_Util.is_some q
                                             then "#"
                                             else "") uu___8)) in
@@ -1674,7 +1674,7 @@ and (iapp :
              | uu___1 ->
                  let uu___2 =
                    let uu___3 = FStar_TypeChecker_NBETerm.t_to_string f in
-                   Prims.op_Hat "NBE ill-typed application Const_range_of: "
+                   Prims.strcat "NBE ill-typed application Const_range_of: "
                      uu___3 in
                  failwith uu___2)
         | FStar_TypeChecker_NBETerm.Constant
@@ -1696,13 +1696,13 @@ and (iapp :
              | uu___1 ->
                  let uu___2 =
                    let uu___3 = FStar_TypeChecker_NBETerm.t_to_string f in
-                   Prims.op_Hat
+                   Prims.strcat
                      "NBE ill-typed application Const_set_range_of: " uu___3 in
                  failwith uu___2)
         | uu___1 ->
             let uu___2 =
               let uu___3 = FStar_TypeChecker_NBETerm.t_to_string f in
-              Prims.op_Hat "NBE ill-typed application: " uu___3 in
+              Prims.strcat "NBE ill-typed application: " uu___3 in
             failwith uu___2
 and (translate_fv :
   config ->

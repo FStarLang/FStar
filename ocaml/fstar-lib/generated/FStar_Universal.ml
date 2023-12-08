@@ -972,7 +972,7 @@ let (emit : (uenv * FStar_Extraction_ML_Syntax.mllib) Prims.list -> unit) =
                                           env in
                                       let uu___5 =
                                         FStar_Options.prepend_output_dir
-                                          (Prims.op_Hat filename ext) in
+                                          (Prims.strcat filename ext) in
                                       FStar_Compiler_Util.save_value_to_file
                                         uu___5 (bindings, decls)
                                   | FStar_Pervasives_Native.None ->
@@ -988,7 +988,7 @@ let (emit : (uenv * FStar_Extraction_ML_Syntax.mllib) Prims.list -> unit) =
           (match programs with
            | (name, uu___)::[] ->
                let uu___1 =
-                 FStar_Options.prepend_output_dir (Prims.op_Hat name ext) in
+                 FStar_Options.prepend_output_dir (Prims.strcat name ext) in
                FStar_Compiler_Util.save_value_to_file uu___1 bin
            | uu___ ->
                let uu___1 = FStar_Options.prepend_output_dir "out.krml" in

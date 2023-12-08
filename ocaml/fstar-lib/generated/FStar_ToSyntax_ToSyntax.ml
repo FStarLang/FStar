@@ -1429,7 +1429,7 @@ let rec (desugar_maybe_non_constant_universe :
          then
            FStar_Errors.raise_error
              (FStar_Errors_Codes.Fatal_NegativeUniverseConstFatal_NotSupported,
-               (Prims.op_Hat
+               (Prims.strcat
                   "Negative universe constant  are not supported : " repr))
              t.FStar_Parser_AST.range
          else ();
@@ -1448,7 +1448,7 @@ let rec (desugar_maybe_non_constant_universe :
              let uu___2 =
                let uu___3 =
                  let uu___4 = FStar_Parser_AST.term_to_string t in
-                 Prims.op_Hat
+                 Prims.strcat
                    "This universe might contain a sum of two universe variables "
                    uu___4 in
                (FStar_Errors_Codes.Fatal_UniverseMightContainSumOfTwoUnivVars,
@@ -1497,8 +1497,8 @@ let rec (desugar_maybe_non_constant_universe :
                 let uu___5 =
                   let uu___6 =
                     let uu___7 = FStar_Parser_AST.term_to_string t1 in
-                    Prims.op_Hat uu___7 " in universe context" in
-                  Prims.op_Hat "Unexpected term " uu___6 in
+                    Prims.strcat uu___7 " in universe context" in
+                  Prims.strcat "Unexpected term " uu___6 in
                 (FStar_Errors_Codes.Fatal_UnexpectedTermInUniverse, uu___5) in
               FStar_Errors.raise_error uu___4 t1.FStar_Parser_AST.range in
         aux t []
@@ -1507,8 +1507,8 @@ let rec (desugar_maybe_non_constant_universe :
           let uu___3 =
             let uu___4 =
               let uu___5 = FStar_Parser_AST.term_to_string t in
-              Prims.op_Hat uu___5 " in universe context" in
-            Prims.op_Hat "Unexpected term " uu___4 in
+              Prims.strcat uu___5 " in universe context" in
+            Prims.strcat "Unexpected term " uu___4 in
           (FStar_Errors_Codes.Fatal_UnexpectedTermInUniverse, uu___3) in
         FStar_Errors.raise_error uu___2 t.FStar_Parser_AST.range
 let (desugar_universe :
@@ -2306,12 +2306,12 @@ and (desugar_machine_integer :
                 if width = FStar_Const.Sizet
                 then "FStar.SizeT"
                 else
-                  Prims.op_Hat "FStar."
-                    (Prims.op_Hat
+                  Prims.strcat "FStar."
+                    (Prims.strcat
                        (match signedness with
                         | FStar_Const.Unsigned -> "U"
                         | FStar_Const.Signed -> "")
-                       (Prims.op_Hat "Int"
+                       (Prims.strcat "Int"
                           (match width with
                            | FStar_Const.Int8 -> "8"
                            | FStar_Const.Int16 -> "16"
@@ -2331,16 +2331,16 @@ and (desugar_machine_integer :
                   FStar_Errors.log_issue range uu___3
                 else ());
                (let private_intro_nm =
-                  Prims.op_Hat tnm
-                    (Prims.op_Hat ".__"
-                       (Prims.op_Hat
+                  Prims.strcat tnm
+                    (Prims.strcat ".__"
+                       (Prims.strcat
                           (match signedness with
                            | FStar_Const.Unsigned -> "u"
                            | FStar_Const.Signed -> "") "int_to_t")) in
                 let intro_nm =
-                  Prims.op_Hat tnm
-                    (Prims.op_Hat "."
-                       (Prims.op_Hat
+                  Prims.strcat tnm
+                    (Prims.strcat "."
+                       (Prims.strcat
                           (match signedness with
                            | FStar_Const.Unsigned -> "u"
                            | FStar_Const.Signed -> "") "int_to_t")) in
@@ -2376,7 +2376,7 @@ and (desugar_machine_integer :
                            }
                        | uu___3 ->
                            failwith
-                             (Prims.op_Hat "Unexpected non-fvar for "
+                             (Prims.strcat "Unexpected non-fvar for "
                                 intro_nm))
                   | FStar_Pervasives_Native.None ->
                       let uu___3 =
@@ -2547,8 +2547,8 @@ and (desugar_term_maybe_top :
               let uu___2 =
                 let uu___3 =
                   let uu___4 = FStar_Ident.string_of_id u in
-                  Prims.op_Hat uu___4 " in non-universe context" in
-                Prims.op_Hat "Unexpected universe variable " uu___3 in
+                  Prims.strcat uu___4 " in non-universe context" in
+                Prims.strcat "Unexpected universe variable " uu___3 in
               (FStar_Errors_Codes.Fatal_UnexpectedUniverseVariable, uu___2) in
             FStar_Errors.raise_error uu___1 top.FStar_Parser_AST.range
         | FStar_Parser_AST.Op (s, args) ->
@@ -2558,7 +2558,7 @@ and (desugar_term_maybe_top :
                  let uu___2 =
                    let uu___3 =
                      let uu___4 = FStar_Ident.string_of_id s in
-                     Prims.op_Hat "Unexpected or unbound operator: " uu___4 in
+                     Prims.strcat "Unexpected or unbound operator: " uu___4 in
                    (FStar_Errors_Codes.Fatal_UnepxectedOrUnboundOperator,
                      uu___3) in
                  FStar_Errors.raise_error uu___2 top.FStar_Parser_AST.range
@@ -2840,16 +2840,16 @@ and (desugar_term_maybe_top :
                        let uu___3 =
                          let uu___4 =
                            let uu___5 = FStar_Ident.string_of_lid l in
-                           Prims.op_Hat uu___5 " not found" in
-                         Prims.op_Hat "Constructor " uu___4 in
+                           Prims.strcat uu___5 " not found" in
+                         Prims.strcat "Constructor " uu___4 in
                        (FStar_Errors_Codes.Fatal_ConstructorNotFound, uu___3)
                    | FStar_Pervasives_Native.Some uu___3 ->
                        let uu___4 =
                          let uu___5 =
                            let uu___6 = FStar_Ident.string_of_lid l in
-                           Prims.op_Hat uu___6
+                           Prims.strcat uu___6
                              " used at an unexpected position" in
-                         Prims.op_Hat "Effect " uu___5 in
+                         Prims.strcat "Effect " uu___5 in
                        (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___4) in
                  let uu___2 = FStar_Ident.range_of_lid l in
                  FStar_Errors.raise_error err uu___2)
@@ -3963,7 +3963,7 @@ and (desugar_term_maybe_top :
             (e, FStar_Pervasives_Native.Some op, asc_opt, t2, t3) ->
             let var_id =
               FStar_Ident.mk_ident
-                ((Prims.op_Hat FStar_Ident.reserved_prefix "if_op_head"),
+                ((Prims.strcat FStar_Ident.reserved_prefix "if_op_head"),
                   (e.FStar_Parser_AST.range)) in
             let var =
               let uu___1 =
@@ -4084,7 +4084,7 @@ and (desugar_term_maybe_top :
             (e, FStar_Pervasives_Native.Some op, topt, branches) ->
             let var_id =
               FStar_Ident.mk_ident
-                ((Prims.op_Hat FStar_Ident.reserved_prefix "match_op_head"),
+                ((Prims.strcat FStar_Ident.reserved_prefix "match_op_head"),
                   (e.FStar_Parser_AST.range)) in
             let var =
               let uu___1 =
@@ -5122,7 +5122,7 @@ and (desugar_term_maybe_top :
             let uu___2 =
               let uu___3 =
                 let uu___4 = FStar_Parser_AST.term_to_string top in
-                Prims.op_Hat "Unexpected term: " uu___4 in
+                Prims.strcat "Unexpected term: " uu___4 in
               (FStar_Errors_Codes.Fatal_UnexpectedTerm, uu___3) in
             FStar_Errors.raise_error uu___2 top.FStar_Parser_AST.range
 and (desugar_match_returns :
@@ -6030,7 +6030,7 @@ and (desugar_vquote :
             let uu___2 =
               let uu___3 =
                 let uu___4 = FStar_Syntax_Print.term_to_string tm in
-                Prims.op_Hat "VQuote, expected an fvar, got: " uu___4 in
+                Prims.strcat "VQuote, expected an fvar, got: " uu___4 in
               (FStar_Errors_Codes.Fatal_UnexpectedTermVQuote, uu___3) in
             FStar_Errors.raise_error uu___2 r
 and (as_binder :
@@ -6158,7 +6158,7 @@ let (desugar_attributes :
             let uu___2 =
               let uu___3 =
                 let uu___4 = FStar_Parser_AST.term_to_string t in
-                Prims.op_Hat "Unknown attribute " uu___4 in
+                Prims.strcat "Unknown attribute " uu___4 in
               (FStar_Errors_Codes.Fatal_UnknownAttribute, uu___3) in
             FStar_Errors.raise_error uu___2 t.FStar_Parser_AST.range in
       FStar_Compiler_List.map desugar_attribute cattributes
@@ -6566,9 +6566,9 @@ let rec (desugar_tycon :
                                             let uu___8 =
                                               let uu___9 =
                                                 FStar_Ident.string_of_id cid in
-                                              Prims.op_Hat uu___9 "__payload" in
-                                            Prims.op_Hat "__" uu___8 in
-                                          Prims.op_Hat uu___6 uu___7 in
+                                              Prims.strcat uu___9 "__payload" in
+                                            Prims.strcat "__" uu___8 in
+                                          Prims.strcat uu___6 uu___7 in
                                         let uu___6 =
                                           FStar_Ident.range_of_id cid in
                                         (uu___5, uu___6) in
@@ -6707,7 +6707,7 @@ let rec (desugar_tycon :
                     let uu___1 =
                       let uu___2 =
                         let uu___3 = FStar_Ident.string_of_id id in
-                        Prims.op_Hat "Mk" uu___3 in
+                        Prims.strcat "Mk" uu___3 in
                       let uu___3 = FStar_Ident.range_of_id id in
                       (uu___2, uu___3) in
                     FStar_Ident.mk_ident uu___1 in
@@ -7816,8 +7816,8 @@ let (lookup_effect_lid :
               let uu___2 =
                 let uu___3 =
                   let uu___4 = FStar_Syntax_Print.lid_to_string l in
-                  Prims.op_Hat uu___4 " not found" in
-                Prims.op_Hat "Effect name " uu___3 in
+                  Prims.strcat uu___4 " not found" in
+                Prims.strcat "Effect name " uu___3 in
               (FStar_Errors_Codes.Fatal_EffectNotFound, uu___2) in
             FStar_Errors.raise_error uu___1 r
         | FStar_Pervasives_Native.Some l1 -> l1
@@ -8514,8 +8514,8 @@ and (desugar_redefine_effect :
                                         let uu___7 =
                                           FStar_Parser_AST.term_to_string
                                             head in
-                                        Prims.op_Hat uu___7 " not found" in
-                                      Prims.op_Hat "Effect " uu___6 in
+                                        Prims.strcat uu___7 " not found" in
+                                      Prims.strcat "Effect " uu___6 in
                                     (FStar_Errors_Codes.Fatal_EffectNotFound,
                                       uu___5) in
                                   FStar_Errors.raise_error uu___4

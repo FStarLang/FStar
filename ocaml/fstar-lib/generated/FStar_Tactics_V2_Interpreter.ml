@@ -75,7 +75,7 @@ let mk_total_step_1' :
                       ea er nf ena enr in
                   let uu___1 =
                     FStar_Ident.lid_of_str
-                      (Prims.op_Hat "FStar.Stubs.Tactics.Types." nm) in
+                      (Prims.strcat "FStar.Stubs.Tactics.Types." nm) in
                   {
                     FStar_TypeChecker_Primops.name = uu___1;
                     FStar_TypeChecker_Primops.arity =
@@ -120,7 +120,7 @@ let mk_total_step_1'_psc :
                       f ea er nf ena enr in
                   let uu___1 =
                     FStar_Ident.lid_of_str
-                      (Prims.op_Hat "FStar.Stubs.Tactics.Types." nm) in
+                      (Prims.strcat "FStar.Stubs.Tactics.Types." nm) in
                   {
                     FStar_TypeChecker_Primops.name = uu___1;
                     FStar_TypeChecker_Primops.arity =
@@ -169,7 +169,7 @@ let mk_total_step_2' :
                           f ea eb er nf ena enb enr in
                       let uu___1 =
                         FStar_Ident.lid_of_str
-                          (Prims.op_Hat "FStar.Stubs.Tactics.Types." nm) in
+                          (Prims.strcat "FStar.Stubs.Tactics.Types." nm) in
                       {
                         FStar_TypeChecker_Primops.name = uu___1;
                         FStar_TypeChecker_Primops.arity =
@@ -3615,12 +3615,12 @@ let run_tactic_on_ps' :
                             (let texn_to_string e1 =
                                match e1 with
                                | FStar_Tactics_Common.TacticFailure s ->
-                                   Prims.op_Hat "\"" (Prims.op_Hat s "\"")
+                                   Prims.strcat "\"" (Prims.strcat s "\"")
                                | FStar_Tactics_Common.EExn t ->
                                    let uu___6 =
                                      FStar_Class_Show.show
                                        FStar_Syntax_Print.showable_term t in
-                                   Prims.op_Hat "Uncaught exception: " uu___6
+                                   Prims.strcat "Uncaught exception: " uu___6
                                | e2 -> FStar_Compiler_Effect.raise e2 in
                              let rng =
                                if background

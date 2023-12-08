@@ -21,8 +21,8 @@ let (mk_discriminator : FStar_Ident.lident -> FStar_Ident.lident) =
                 let uu___7 =
                   let uu___8 = FStar_Ident.ident_of_lid lid in
                   FStar_Ident.string_of_id uu___8 in
-                Prims.op_Hat "is_" uu___7 in
-              Prims.op_Hat FStar_Ident.reserved_prefix uu___6 in
+                Prims.strcat "is_" uu___7 in
+              Prims.strcat FStar_Ident.reserved_prefix uu___6 in
             let uu___6 = FStar_Ident.range_of_lid lid in (uu___5, uu___6) in
           FStar_Ident.mk_ident uu___4 in
         [uu___3] in
@@ -141,7 +141,7 @@ let (name_binders :
                 let bname =
                   let uu___1 =
                     let uu___2 = FStar_Compiler_Util.string_of_int i in
-                    Prims.op_Hat "_" uu___2 in
+                    Prims.strcat "_" uu___2 in
                   FStar_Ident.id_of_text uu___1 in
                 let bv =
                   {
@@ -338,23 +338,23 @@ let rec (compare_univs :
             failwith "Impossible: compare_kernel succ"
         | (FStar_Syntax_Syntax.U_unknown, FStar_Syntax_Syntax.U_unknown) ->
             Prims.int_zero
-        | (FStar_Syntax_Syntax.U_unknown, uu___) -> ~- Prims.int_one
+        | (FStar_Syntax_Syntax.U_unknown, uu___) -> (Prims.of_int (-1))
         | (uu___, FStar_Syntax_Syntax.U_unknown) -> Prims.int_one
         | (FStar_Syntax_Syntax.U_zero, FStar_Syntax_Syntax.U_zero) ->
             Prims.int_zero
-        | (FStar_Syntax_Syntax.U_zero, uu___) -> ~- Prims.int_one
+        | (FStar_Syntax_Syntax.U_zero, uu___) -> (Prims.of_int (-1))
         | (uu___, FStar_Syntax_Syntax.U_zero) -> Prims.int_one
         | (FStar_Syntax_Syntax.U_name u11, FStar_Syntax_Syntax.U_name u21) ->
             let uu___ = FStar_Ident.string_of_id u11 in
             let uu___1 = FStar_Ident.string_of_id u21 in
             FStar_Compiler_String.compare uu___ uu___1
-        | (FStar_Syntax_Syntax.U_name uu___, uu___1) -> ~- Prims.int_one
+        | (FStar_Syntax_Syntax.U_name uu___, uu___1) -> (Prims.of_int (-1))
         | (uu___, FStar_Syntax_Syntax.U_name uu___1) -> Prims.int_one
         | (FStar_Syntax_Syntax.U_unif u11, FStar_Syntax_Syntax.U_unif u21) ->
             let uu___ = FStar_Syntax_Unionfind.univ_uvar_id u11 in
             let uu___1 = FStar_Syntax_Unionfind.univ_uvar_id u21 in
             uu___ - uu___1
-        | (FStar_Syntax_Syntax.U_unif uu___, uu___1) -> ~- Prims.int_one
+        | (FStar_Syntax_Syntax.U_unif uu___, uu___1) -> (Prims.of_int (-1))
         | (uu___, FStar_Syntax_Syntax.U_unif uu___1) -> Prims.int_one
         | (FStar_Syntax_Syntax.U_max us1, FStar_Syntax_Syntax.U_max us2) ->
             let n1 = FStar_Compiler_List.length us1 in
@@ -1010,15 +1010,15 @@ let rec (eq_tm :
         let uu___ = FStar_Syntax_Syntax.fv_eq f1 f2 in
         if uu___
         then
-          let uu___2 = FStar_Compiler_List.zip args1 args2 in
+          let uu___1 = FStar_Compiler_List.zip args1 args2 in
           FStar_Compiler_Effect.op_Less_Bar
             (FStar_Compiler_List.fold_left
                (fun acc ->
-                  fun uu___3 ->
-                    match uu___3 with
+                  fun uu___2 ->
+                    match uu___2 with
                     | ((a1, q1), (a2, q2)) ->
-                        let uu___4 = eq_tm a1 a2 in eq_inj acc uu___4) Equal)
-            uu___2
+                        let uu___3 = eq_tm a1 a2 in eq_inj acc uu___3) Equal)
+            uu___1
         else NotEqual in
       let qual_is_inj uu___ =
         match uu___ with
@@ -1601,8 +1601,8 @@ let (mk_field_projector_name_from_string :
   Prims.string -> Prims.string -> Prims.string) =
   fun constr ->
     fun field ->
-      Prims.op_Hat field_projector_prefix
-        (Prims.op_Hat constr (Prims.op_Hat field_projector_sep field))
+      Prims.strcat field_projector_prefix
+        (Prims.strcat constr (Prims.strcat field_projector_sep field))
 let (mk_field_projector_name_from_ident :
   FStar_Ident.lident -> FStar_Ident.ident -> FStar_Ident.lident) =
   fun lid ->
@@ -1638,7 +1638,7 @@ let (mk_field_projector_name :
             let uu___1 =
               let uu___2 =
                 let uu___3 = FStar_Compiler_Util.string_of_int i in
-                Prims.op_Hat "_" uu___3 in
+                Prims.strcat "_" uu___3 in
               let uu___3 = FStar_Syntax_Syntax.range_of_bv x in
               (uu___2, uu___3) in
             FStar_Ident.mk_ident uu___1
@@ -3778,7 +3778,7 @@ let (dm4f_lid :
       let p' =
         apply_last
           (fun s ->
-             Prims.op_Hat "_dm4f_" (Prims.op_Hat s (Prims.op_Hat "_" name)))
+             Prims.strcat "_dm4f_" (Prims.strcat s (Prims.strcat "_" name)))
           p in
       FStar_Ident.lid_of_path p' FStar_Compiler_Range_Type.dummyRange
 let (mk_list :
@@ -4298,7 +4298,7 @@ let (process_pragma :
          | FStar_Getopt.Error s1 ->
              FStar_Errors.raise_error
                (FStar_Errors_Codes.Fatal_FailToProcessPragma,
-                 (Prims.op_Hat "Failed to process pragma: " s1)) r in
+                 (Prims.strcat "Failed to process pragma: " s1)) r in
        match p with
        | FStar_Syntax_Syntax.SetOptions o -> set_options o
        | FStar_Syntax_Syntax.ResetOptions sopt ->

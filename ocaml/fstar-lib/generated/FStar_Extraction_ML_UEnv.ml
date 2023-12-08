@@ -261,9 +261,9 @@ let (debug : uenv -> (unit -> unit) -> unit) =
 let (print_mlpath_map : uenv -> Prims.string) =
   fun g ->
     let string_of_mlpath mlp =
-      Prims.op_Hat
+      Prims.strcat
         (FStar_Compiler_String.concat "." (FStar_Pervasives_Native.fst mlp))
-        (Prims.op_Hat "." (FStar_Pervasives_Native.snd mlp)) in
+        (Prims.strcat "." (FStar_Pervasives_Native.snd mlp)) in
     let entries =
       FStar_Compiler_Util.psmap_fold g.mlpath_of_lid
         (fun key ->
@@ -429,7 +429,7 @@ let (mlpath_of_lident :
                  FStar_Compiler_Util.print1 "Env is \n%s\n" uu___4));
            (let uu___2 =
               let uu___3 = FStar_Ident.string_of_lid x in
-              Prims.op_Hat "Identifier not found: " uu___3 in
+              Prims.strcat "Identifier not found: " uu___3 in
             failwith uu___2))
       | FStar_Pervasives_Native.Some mlp -> mlp
 let (is_type_name : uenv -> FStar_Syntax_Syntax.fv -> Prims.bool) =
@@ -480,7 +480,7 @@ let (lookup_record_field_name :
            | FStar_Pervasives_Native.None ->
                let uu___2 =
                  let uu___3 = FStar_Ident.string_of_lid key in
-                 Prims.op_Hat "Field name not found: " uu___3 in
+                 Prims.strcat "Field name not found: " uu___3 in
                failwith uu___2
            | FStar_Pervasives_Native.Some mlp ->
                let uu___2 = mlp in
@@ -576,7 +576,7 @@ let (find_uniq :
             then root_name1
             else
               (let uu___1 = FStar_Compiler_Util.string_of_int i in
-               Prims.op_Hat root_name1 uu___1) in
+               Prims.strcat root_name1 uu___1) in
           let uu___ =
             FStar_Compiler_Util.psmap_try_find ml_ident_map target_mlident in
           match uu___ with
@@ -593,7 +593,7 @@ let (find_uniq :
             let uu___1 =
               FStar_Compiler_Util.substring_from mlident Prims.int_one in
             aux Prims.int_zero uu___1 in
-          match uu___ with | (nm, map) -> ((Prims.op_Hat "'" nm), map)
+          match uu___ with | (nm, map) -> ((Prims.strcat "'" nm), map)
         else aux Prims.int_zero mlident
 let (mlns_of_lid :
   FStar_Ident.lident -> FStar_Extraction_ML_Syntax.mlsymbol Prims.list) =

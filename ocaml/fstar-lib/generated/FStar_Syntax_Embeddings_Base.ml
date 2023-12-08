@@ -369,7 +369,7 @@ let lazy_unembed :
                         match res with
                         | FStar_Pervasives_Native.None -> "None"
                         | FStar_Pervasives_Native.Some x2 ->
-                            let uu___8 = pa x2 in Prims.op_Hat "Some " uu___8 in
+                            let uu___8 = pa x2 in Prims.strcat "Some " uu___8 in
                       FStar_Compiler_Util.print3
                         "Unembed cancellation failed\n\t%s <> %s\nvalue is %s\n"
                         uu___5 uu___6 uu___7
@@ -408,7 +408,7 @@ let lazy_unembed :
                       match aopt with
                       | FStar_Pervasives_Native.None -> "None"
                       | FStar_Pervasives_Native.Some a1 ->
-                          let uu___6 = pa a1 in Prims.op_Hat "Some " uu___6 in
+                          let uu___6 = pa a1 in Prims.strcat "Some " uu___6 in
                     FStar_Compiler_Util.print3
                       "Unembedding:\n\temb_typ=%s\n\tterm is %s\n\tvalue is %s\n"
                       uu___3 uu___4 uu___5

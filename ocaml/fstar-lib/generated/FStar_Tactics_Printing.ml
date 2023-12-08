@@ -39,8 +39,8 @@ let (unshadow :
                 FStar_Class_Show.show
                   (FStar_Class_Show.printableshow
                      FStar_Class_Printable.printable_int) i in
-              Prims.op_Hat "'" uu___1 in
-            Prims.op_Hat b uu___ in
+              Prims.strcat "'" uu___1 in
+            Prims.strcat b uu___ in
           let uu___ = f t1 in if uu___ then t1 else aux (i + Prims.int_one) in
         let uu___ = f b in if uu___ then b else aux Prims.int_zero in
       let rec go seen subst bs1 bs' t1 =
@@ -123,7 +123,7 @@ let (goal_to_string :
           let maybe_label =
             match g.FStar_Tactics_Types.label with
             | "" -> ""
-            | l -> Prims.op_Hat " (" (Prims.op_Hat l ")") in
+            | l -> Prims.strcat " (" (Prims.strcat l ")") in
           let uu___ =
             let rename_binders subst bs =
               FStar_Compiler_Effect.op_Bar_Greater bs

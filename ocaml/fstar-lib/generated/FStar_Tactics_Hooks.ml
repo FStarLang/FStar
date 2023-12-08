@@ -669,10 +669,10 @@ let (preprocess :
                                          (let uu___12 =
                                             let uu___13 =
                                               FStar_Tactics_Types.get_label g in
-                                            Prims.op_Hat uu___13 ")" in
-                                          Prims.op_Hat " (" uu___12) in
-                                     Prims.op_Hat uu___8 uu___9 in
-                                   Prims.op_Hat "Could not prove goal #"
+                                            Prims.strcat uu___13 ")" in
+                                          Prims.strcat " (" uu___12) in
+                                     Prims.strcat uu___8 uu___9 in
+                                   Prims.strcat "Could not prove goal #"
                                      uu___7 in
                                  let gt' =
                                    let uu___7 =

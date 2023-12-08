@@ -65,7 +65,7 @@ let (e_bin_prio_seq : (Prims.int * fixity)) =
 let (e_app_prio : (Prims.int * fixity)) =
   ((Prims.of_int (10000)), (Infix Left))
 let (min_op_prec : (Prims.int * fixity)) =
-  ((~- Prims.int_one), (Infix NonAssoc))
+  ((Prims.of_int (-1)), (Infix NonAssoc))
 let (max_op_prec : (Prims.int * fixity)) =
   (FStar_Compiler_Util.max_int, (Infix NonAssoc))
 let (empty : doc) = Doc ""
@@ -79,7 +79,7 @@ let (enclose : doc -> doc -> doc -> doc) =
     fun uu___1 ->
       fun uu___2 ->
         match (uu___, uu___1, uu___2) with
-        | (Doc l, Doc r, Doc x) -> Doc (Prims.op_Hat l (Prims.op_Hat x r))
+        | (Doc l, Doc r, Doc x) -> Doc (Prims.strcat l (Prims.strcat x r))
 let (cbrackets : doc -> doc) =
   fun uu___ ->
     match uu___ with | Doc d -> enclose (text "{") (text "}") (Doc d)
@@ -90,7 +90,7 @@ let (cat : doc -> doc -> doc) =
   fun uu___ ->
     fun uu___1 ->
       match (uu___, uu___1) with
-      | (Doc d1, Doc d2) -> Doc (Prims.op_Hat d1 d2)
+      | (Doc d1, Doc d2) -> Doc (Prims.strcat d1 d2)
 let (reduce : doc Prims.list -> doc) =
   fun docs -> FStar_Compiler_List.fold_left cat empty docs
 let (combine : doc -> doc Prims.list -> doc) =
@@ -174,7 +174,7 @@ let (ptsym_of_symbol :
         FStar_Char.lowercase uu___2 in
       let uu___2 = FStar_Compiler_String.get s Prims.int_zero in
       uu___1 <> uu___2 in
-    if uu___ then Prims.op_Hat "l__" s else s
+    if uu___ then Prims.strcat "l__" s else s
 let (ptsym :
   FStar_Extraction_ML_Syntax.mlsymbol ->
     FStar_Extraction_ML_Syntax.mlpath -> FStar_Extraction_ML_Syntax.mlsymbol)
@@ -207,7 +207,7 @@ let (ptctor :
                 FStar_Char.uppercase uu___3 in
               let uu___3 = FStar_Compiler_String.get s Prims.int_zero in
               uu___2 <> uu___3 in
-            if uu___1 then Prims.op_Hat "U__" s else s in
+            if uu___1 then Prims.strcat "U__" s else s in
           FStar_Compiler_String.concat "." (FStar_Compiler_List.op_At p [s1])
 let (infix_prim_ops :
   (Prims.string * (Prims.int * fixity) * Prims.string) Prims.list) =
@@ -322,7 +322,7 @@ let (maybe_paren :
                            | (uu___3, uu___4) -> false))) in
             if noparens inner outer side then doc1 else parens doc1
 let (escape_byte_hex : FStar_BaseTypes.byte -> Prims.string) =
-  fun x -> Prims.op_Hat "\\x" (FStar_Compiler_Util.hex_string_of_byte x)
+  fun x -> Prims.strcat "\\x" (FStar_Compiler_Util.hex_string_of_byte x)
 let (escape_char_hex : FStar_BaseTypes.char -> Prims.string) =
   fun x -> escape_byte_hex (FStar_Compiler_Util.byte_of_char x)
 let (escape_or :
@@ -375,35 +375,35 @@ let (string_of_mlconstant :
         let uu___ = FStar_Extraction_ML_Util.codegen_fsharp () in
         if uu___
         then
-          Prims.op_Hat "'"
-            (Prims.op_Hat (FStar_Compiler_Util.string_of_char c) "'")
+          Prims.strcat "'"
+            (Prims.strcat (FStar_Compiler_Util.string_of_char c) "'")
         else
           (let nc = FStar_Char.int_of_char c in
            let uu___2 = FStar_Compiler_Util.string_of_int nc in
-           Prims.op_Hat uu___2
+           Prims.strcat uu___2
              (if
                 ((nc >= (Prims.of_int (32))) && (nc = (Prims.of_int (127))))
                   && (nc < (Prims.of_int (34)))
               then
-                Prims.op_Hat " (*"
-                  (Prims.op_Hat (FStar_Compiler_Util.string_of_char c) "*)")
+                Prims.strcat " (*"
+                  (Prims.strcat (FStar_Compiler_Util.string_of_char c) "*)")
               else ""))
     | FStar_Extraction_ML_Syntax.MLC_Int
         (s, FStar_Pervasives_Native.Some
          (FStar_Const.Signed, FStar_Const.Int32))
-        -> Prims.op_Hat s "l"
+        -> Prims.strcat s "l"
     | FStar_Extraction_ML_Syntax.MLC_Int
         (s, FStar_Pervasives_Native.Some
          (FStar_Const.Signed, FStar_Const.Int64))
-        -> Prims.op_Hat s "L"
+        -> Prims.strcat s "L"
     | FStar_Extraction_ML_Syntax.MLC_Int
         (s, FStar_Pervasives_Native.Some (uu___, FStar_Const.Int8)) -> s
     | FStar_Extraction_ML_Syntax.MLC_Int
         (s, FStar_Pervasives_Native.Some (uu___, FStar_Const.Int16)) -> s
     | FStar_Extraction_ML_Syntax.MLC_Int
         (v, FStar_Pervasives_Native.Some (uu___, FStar_Const.Sizet)) ->
-        let z = Prims.op_Hat "(Prims.parse_int \"" (Prims.op_Hat v "\")") in
-        Prims.op_Hat "(FStar_SizeT.int_to_t (" (Prims.op_Hat z "))")
+        let z = Prims.strcat "(Prims.parse_int \"" (Prims.strcat v "\")") in
+        Prims.strcat "(FStar_SizeT.int_to_t (" (Prims.strcat z "))")
     | FStar_Extraction_ML_Syntax.MLC_Int
         (v, FStar_Pervasives_Native.Some (s, w)) ->
         let sign =
@@ -416,33 +416,33 @@ let (string_of_mlconstant :
           | FStar_Const.Int16 -> "16"
           | FStar_Const.Int32 -> "32"
           | FStar_Const.Int64 -> "64" in
-        let z = Prims.op_Hat "(Prims.parse_int \"" (Prims.op_Hat v "\")") in
+        let z = Prims.strcat "(Prims.parse_int \"" (Prims.strcat v "\")") in
         let u =
           match s with
           | FStar_Const.Signed -> ""
           | FStar_Const.Unsigned -> "u" in
-        Prims.op_Hat "(FStar_"
-          (Prims.op_Hat sign
-             (Prims.op_Hat ws
-                (Prims.op_Hat "."
-                   (Prims.op_Hat u
-                      (Prims.op_Hat "int_to_t (" (Prims.op_Hat z "))"))))))
+        Prims.strcat "(FStar_"
+          (Prims.strcat sign
+             (Prims.strcat ws
+                (Prims.strcat "."
+                   (Prims.strcat u
+                      (Prims.strcat "int_to_t (" (Prims.strcat z "))"))))))
     | FStar_Extraction_ML_Syntax.MLC_Int (s, FStar_Pervasives_Native.None) ->
-        Prims.op_Hat "(Prims.parse_int \"" (Prims.op_Hat s "\")")
+        Prims.strcat "(Prims.parse_int \"" (Prims.strcat s "\")")
     | FStar_Extraction_ML_Syntax.MLC_Float d ->
         FStar_Compiler_Util.string_of_float d
     | FStar_Extraction_ML_Syntax.MLC_Bytes bytes ->
         let uu___ =
           let uu___1 = FStar_Compiler_Bytes.f_encode escape_byte_hex bytes in
-          Prims.op_Hat uu___1 "\"" in
-        Prims.op_Hat "\"" uu___
+          Prims.strcat uu___1 "\"" in
+        Prims.strcat "\"" uu___
     | FStar_Extraction_ML_Syntax.MLC_String chars ->
         let uu___ =
           let uu___1 =
             FStar_Compiler_String.collect
               (escape_or FStar_Compiler_Util.string_of_char) chars in
-          Prims.op_Hat uu___1 "\"" in
-        Prims.op_Hat "\"" uu___
+          Prims.strcat uu___1 "\"" in
+        Prims.strcat "\"" uu___
     | uu___ -> failwith "TODO: extract integer constants properly into OCaml"
 let rec (doc_of_mltype' :
   FStar_Extraction_ML_Syntax.mlsymbol ->
@@ -1106,7 +1106,7 @@ and (doc_of_loc : FStar_Extraction_ML_Syntax.mlloc -> doc) =
            let uu___3 =
              let uu___4 =
                let uu___5 = num lineno in
-               [uu___5; text (Prims.op_Hat "\"" (Prims.op_Hat file1 "\""))] in
+               [uu___5; text (Prims.strcat "\"" (Prims.strcat file1 "\""))] in
              (text "#") :: uu___4 in
            reduce1 uu___3)
 let (doc_of_mltydecl :
@@ -1332,7 +1332,7 @@ let (doc_of_mllib_r :
                     let pervasives =
                       FStar_Extraction_ML_Util.flatten_mlpath
                         (["FStar"], "Pervasives") in
-                    [hardline; text (Prims.op_Hat "open " pervasives)] in
+                    [hardline; text (Prims.strcat "open " pervasives)] in
               let head =
                 let uu___2 =
                   let uu___3 = FStar_Extraction_ML_Util.codegen_fsharp () in

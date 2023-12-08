@@ -738,9 +738,9 @@ let (pop_unit : mltyscheme -> mltyscheme) =
 let (mlpath_to_string :
   (Prims.string Prims.list * Prims.string) -> Prims.string) =
   fun mlp ->
-    Prims.op_Hat
+    Prims.strcat
       (FStar_Compiler_String.concat "." (FStar_Pervasives_Native.fst mlp))
-      (Prims.op_Hat "." (FStar_Pervasives_Native.snd mlp))
+      (Prims.strcat "." (FStar_Pervasives_Native.snd mlp))
 let rec (mlty_to_string : mlty -> Prims.string) =
   fun t ->
     match t with

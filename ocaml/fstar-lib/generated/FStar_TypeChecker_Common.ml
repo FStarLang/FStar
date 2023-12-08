@@ -186,7 +186,7 @@ let (showable_guard_formula : guard_formula FStar_Class_Show.showable) =
          | NonTrivial f ->
              let uu___1 =
                FStar_Class_Show.show FStar_Syntax_Print.showable_term f in
-             Prims.op_Hat "NonTrivial " uu___1)
+             Prims.strcat "NonTrivial " uu___1)
   }
 type deferred_reason =
   | Deferred_univ_constraint 

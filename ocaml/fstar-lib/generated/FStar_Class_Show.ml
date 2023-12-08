@@ -23,9 +23,9 @@ let show_either :
           (fun uu___2 ->
              match uu___2 with
              | FStar_Pervasives.Inl x ->
-                 let uu___3 = show uu___ x in Prims.op_Hat "Inl " uu___3
+                 let uu___3 = show uu___ x in Prims.strcat "Inl " uu___3
              | FStar_Pervasives.Inr y ->
-                 let uu___3 = show uu___1 y in Prims.op_Hat "Inr " uu___3)
+                 let uu___3 = show uu___1 y in Prims.strcat "Inr " uu___3)
       }
 let show_tuple2 : 'a 'b . 'a showable -> 'b showable -> ('a * 'b) showable =
   fun uu___ ->
@@ -39,10 +39,10 @@ let show_tuple2 : 'a 'b . 'a showable -> 'b showable -> ('a * 'b) showable =
                    let uu___4 = show uu___ x1 in
                    let uu___5 =
                      let uu___6 =
-                       let uu___7 = show uu___1 x2 in Prims.op_Hat uu___7 ")" in
-                     Prims.op_Hat ", " uu___6 in
-                   Prims.op_Hat uu___4 uu___5 in
-                 Prims.op_Hat "(" uu___3)
+                       let uu___7 = show uu___1 x2 in Prims.strcat uu___7 ")" in
+                     Prims.strcat ", " uu___6 in
+                   Prims.strcat uu___4 uu___5 in
+                 Prims.strcat "(" uu___3)
       }
 let show_tuple3 :
   'a 'b 'c .
@@ -64,12 +64,12 @@ let show_tuple3 :
                          let uu___9 =
                            let uu___10 =
                              let uu___11 = show uu___2 x3 in
-                             Prims.op_Hat uu___11 ")" in
-                           Prims.op_Hat ", " uu___10 in
-                         Prims.op_Hat uu___8 uu___9 in
-                       Prims.op_Hat ", " uu___7 in
-                     Prims.op_Hat uu___5 uu___6 in
-                   Prims.op_Hat "(" uu___4)
+                             Prims.strcat uu___11 ")" in
+                           Prims.strcat ", " uu___10 in
+                         Prims.strcat uu___8 uu___9 in
+                       Prims.strcat ", " uu___7 in
+                     Prims.strcat uu___5 uu___6 in
+                   Prims.strcat "(" uu___4)
         }
 let show_tuple4 :
   'a 'b 'c 'd .
@@ -97,14 +97,14 @@ let show_tuple4 :
                                let uu___13 =
                                  let uu___14 =
                                    let uu___15 = show uu___3 x4 in
-                                   Prims.op_Hat uu___15 ")" in
-                                 Prims.op_Hat ", " uu___14 in
-                               Prims.op_Hat uu___12 uu___13 in
-                             Prims.op_Hat ", " uu___11 in
-                           Prims.op_Hat uu___9 uu___10 in
-                         Prims.op_Hat ", " uu___8 in
-                       Prims.op_Hat uu___6 uu___7 in
-                     Prims.op_Hat "(" uu___5)
+                                   Prims.strcat uu___15 ")" in
+                                 Prims.strcat ", " uu___14 in
+                               Prims.strcat uu___12 uu___13 in
+                             Prims.strcat ", " uu___11 in
+                           Prims.strcat uu___9 uu___10 in
+                         Prims.strcat ", " uu___8 in
+                       Prims.strcat uu___6 uu___7 in
+                     Prims.strcat "(" uu___5)
           }
 let show_tuple5 :
   'a 'b 'c 'd 'e .
@@ -137,16 +137,16 @@ let show_tuple5 :
                                      let uu___17 =
                                        let uu___18 =
                                          let uu___19 = show uu___4 x5 in
-                                         Prims.op_Hat uu___19 ")" in
-                                       Prims.op_Hat ", " uu___18 in
-                                     Prims.op_Hat uu___16 uu___17 in
-                                   Prims.op_Hat ", " uu___15 in
-                                 Prims.op_Hat uu___13 uu___14 in
-                               Prims.op_Hat ", " uu___12 in
-                             Prims.op_Hat uu___10 uu___11 in
-                           Prims.op_Hat ", " uu___9 in
-                         Prims.op_Hat uu___7 uu___8 in
-                       Prims.op_Hat "(" uu___6)
+                                         Prims.strcat uu___19 ")" in
+                                       Prims.strcat ", " uu___18 in
+                                     Prims.strcat uu___16 uu___17 in
+                                   Prims.strcat ", " uu___15 in
+                                 Prims.strcat uu___13 uu___14 in
+                               Prims.strcat ", " uu___12 in
+                             Prims.strcat uu___10 uu___11 in
+                           Prims.strcat ", " uu___9 in
+                         Prims.strcat uu___7 uu___8 in
+                       Prims.strcat "(" uu___6)
             }
 let show_tuple6 :
   'a 'b 'c 'd 'e 'f .
@@ -185,16 +185,16 @@ let show_tuple6 :
                                            let uu___21 =
                                              let uu___22 =
                                                let uu___23 = show uu___5 x6 in
-                                               Prims.op_Hat uu___23 ")" in
-                                             Prims.op_Hat ", " uu___22 in
-                                           Prims.op_Hat uu___20 uu___21 in
-                                         Prims.op_Hat ", " uu___19 in
-                                       Prims.op_Hat uu___17 uu___18 in
-                                     Prims.op_Hat ", " uu___16 in
-                                   Prims.op_Hat uu___14 uu___15 in
-                                 Prims.op_Hat ", " uu___13 in
-                               Prims.op_Hat uu___11 uu___12 in
-                             Prims.op_Hat ", " uu___10 in
-                           Prims.op_Hat uu___8 uu___9 in
-                         Prims.op_Hat "(" uu___7)
+                                               Prims.strcat uu___23 ")" in
+                                             Prims.strcat ", " uu___22 in
+                                           Prims.strcat uu___20 uu___21 in
+                                         Prims.strcat ", " uu___19 in
+                                       Prims.strcat uu___17 uu___18 in
+                                     Prims.strcat ", " uu___16 in
+                                   Prims.strcat uu___14 uu___15 in
+                                 Prims.strcat ", " uu___13 in
+                               Prims.strcat uu___11 uu___12 in
+                             Prims.strcat ", " uu___10 in
+                           Prims.strcat uu___8 uu___9 in
+                         Prims.strcat "(" uu___7)
               }

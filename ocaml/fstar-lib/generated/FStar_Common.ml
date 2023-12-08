@@ -116,7 +116,7 @@ let string_of_option :
       match uu___ with
       | FStar_Pervasives_Native.None -> "None"
       | FStar_Pervasives_Native.Some x ->
-          let uu___1 = f x in Prims.op_Hat "Some " uu___1
+          let uu___1 = f x in Prims.strcat "Some " uu___1
 let tabulate : 'a . Prims.int -> (Prims.int -> 'a) -> 'a Prims.list =
   fun n ->
     fun f ->

@@ -1047,7 +1047,7 @@ let (mk_uminus :
                 ->
                 Const
                   (FStar_Const.Const_int
-                     ((Prims.op_Hat "-" s),
+                     ((Prims.strcat "-" s),
                        (FStar_Pervasives_Native.Some
                           (FStar_Const.Signed, width))))
             | uu___ ->
@@ -1580,7 +1580,7 @@ let (compile_op :
               let uu___1 =
                 FStar_Compiler_Util.string_of_int
                   (FStar_Compiler_Util.int_of_char c) in
-              Prims.op_Hat "u" uu___1 in
+              Prims.strcat "u" uu___1 in
         match s with
         | ".[]<-" -> "op_String_Assignment"
         | ".()<-" -> "op_Array_Assignment"
@@ -1600,7 +1600,7 @@ let (compile_op :
                   let uu___3 =
                     FStar_Compiler_Util.substring s Prims.int_zero
                       (Prims.of_int (3)) in
-                  Prims.op_Hat uu___3 "_" in
+                  Prims.strcat uu___3 "_" in
                 let uu___3 =
                   FStar_Compiler_Util.substring_from s (Prims.of_int (3)) in
                 (uu___2, uu___3)
@@ -1613,11 +1613,11 @@ let (compile_op :
                        let uu___5 = FStar_Compiler_String.list_of_string s1 in
                        FStar_Compiler_List.map name_of_char uu___5 in
                      FStar_Compiler_String.concat "_" uu___4 in
-                   Prims.op_Hat prefix uu___3 in
-                 Prims.op_Hat "op_" uu___2)
+                   Prims.strcat prefix uu___3 in
+                 Prims.strcat "op_" uu___2)
 let (compile_op' :
   Prims.string -> FStar_Compiler_Range_Type.range -> Prims.string) =
-  fun s -> fun r -> compile_op (~- Prims.int_one) s r
+  fun s -> fun r -> compile_op (Prims.of_int (-1)) s r
 let (string_to_op :
   Prims.string ->
     (Prims.string * Prims.int FStar_Pervasives_Native.option)
@@ -1728,7 +1728,7 @@ let (string_to_op :
                             (match x with
                              | FStar_Pervasives_Native.Some (op, uu___3) ->
                                  FStar_Pervasives_Native.Some
-                                   (Prims.op_Hat acc1 op)
+                                   (Prims.strcat acc1 op)
                              | FStar_Pervasives_Native.None ->
                                  FStar_Pervasives_Native.None))
                    (FStar_Pervasives_Native.Some "") uu___2 in
@@ -1746,9 +1746,9 @@ let (string_of_fsdoc :
             FStar_Compiler_List.map
               (fun uu___3 ->
                  match uu___3 with
-                 | (k, v) -> Prims.op_Hat k (Prims.op_Hat "->" v)) keywords in
+                 | (k, v) -> Prims.strcat k (Prims.strcat "->" v)) keywords in
           FStar_Compiler_String.concat "," uu___2 in
-        Prims.op_Hat comment uu___1
+        Prims.strcat comment uu___1
 let (string_of_let_qualifier : let_qualifier -> Prims.string) =
   fun uu___ -> match uu___ with | NoLetQualifier -> "" | Rec -> "rec"
 let to_string_l :
@@ -1779,8 +1779,8 @@ let rec (term_to_string : term -> Prims.string) =
                      fun t ->
                        let uu___3 =
                          let uu___4 = term_to_string t in
-                         Prims.op_Hat "; " uu___4 in
-                       Prims.op_Hat s uu___3) uu___2 in
+                         Prims.strcat "; " uu___4 in
+                       Prims.strcat s uu___3) uu___2 in
               FStar_Compiler_Effect.op_Bar_Greater tl uu___1 in
         FStar_Compiler_Util.format1 "%[%s]" uu___
     | Decreases (t, uu___) ->
@@ -2235,8 +2235,8 @@ and (binder_to_string : binder -> Prims.string) =
       FStar_Compiler_Util.format3 "%s%s%s" uu___ uu___1 s in
     match x.aqual with
     | FStar_Pervasives_Native.Some (TypeClassArg) ->
-        let uu___ = let uu___1 = pr x in Prims.op_Hat uu___1 " |}" in
-        Prims.op_Hat "{| " uu___
+        let uu___ = let uu___1 = pr x in Prims.strcat uu___1 " |}" in
+        Prims.strcat "{| " uu___
     | uu___ -> pr x
 and (aqual_to_string :
   arg_qualifier FStar_Pervasives_Native.option -> Prims.string) =
@@ -2258,11 +2258,11 @@ and (pat_to_string : pattern -> Prims.string) =
   fun x ->
     match x.pat with
     | PatWild (FStar_Pervasives_Native.None, attrs) ->
-        let uu___ = attr_list_to_string attrs in Prims.op_Hat uu___ "_"
+        let uu___ = attr_list_to_string attrs in Prims.strcat uu___ "_"
     | PatWild (uu___, attrs) ->
         let uu___1 =
-          let uu___2 = attr_list_to_string attrs in Prims.op_Hat uu___2 "_" in
-        Prims.op_Hat "#" uu___1
+          let uu___2 = attr_list_to_string attrs in Prims.strcat uu___2 "_" in
+        Prims.strcat "#" uu___1
     | PatConst c -> FStar_Parser_Const.const_to_string c
     | PatVQuote t ->
         let uu___ = term_to_string t in
@@ -2367,15 +2367,15 @@ let (decl_to_string : decl -> Prims.string) =
     match d.d with
     | TopLevelModule l ->
         let uu___ = FStar_Ident.string_of_lid l in
-        Prims.op_Hat "module " uu___
+        Prims.strcat "module " uu___
     | Open l ->
-        let uu___ = FStar_Ident.string_of_lid l in Prims.op_Hat "open " uu___
+        let uu___ = FStar_Ident.string_of_lid l in Prims.strcat "open " uu___
     | Friend l ->
         let uu___ = FStar_Ident.string_of_lid l in
-        Prims.op_Hat "friend " uu___
+        Prims.strcat "friend " uu___
     | Include l ->
         let uu___ = FStar_Ident.string_of_lid l in
-        Prims.op_Hat "include " uu___
+        Prims.strcat "include " uu___
     | ModuleAbbrev (i, l) ->
         let uu___ = FStar_Ident.string_of_id i in
         let uu___1 = FStar_Ident.string_of_lid l in
@@ -2388,10 +2388,10 @@ let (decl_to_string : decl -> Prims.string) =
               (FStar_Compiler_List.map (fun l -> FStar_Ident.string_of_lid l)) in
           FStar_Compiler_Effect.op_Bar_Greater uu___2
             (FStar_Compiler_String.concat ", ") in
-        Prims.op_Hat "let " uu___1
+        Prims.strcat "let " uu___1
     | Assume (i, uu___) ->
         let uu___1 = FStar_Ident.string_of_id i in
-        Prims.op_Hat "assume " uu___1
+        Prims.strcat "assume " uu___1
     | Tycon (uu___, uu___1, tys) ->
         let uu___2 =
           let uu___3 =
@@ -2399,24 +2399,24 @@ let (decl_to_string : decl -> Prims.string) =
               (FStar_Compiler_List.map id_of_tycon) in
           FStar_Compiler_Effect.op_Bar_Greater uu___3
             (FStar_Compiler_String.concat ", ") in
-        Prims.op_Hat "type " uu___2
+        Prims.strcat "type " uu___2
     | Val (i, uu___) ->
-        let uu___1 = FStar_Ident.string_of_id i in Prims.op_Hat "val " uu___1
+        let uu___1 = FStar_Ident.string_of_id i in Prims.strcat "val " uu___1
     | Exception (i, uu___) ->
         let uu___1 = FStar_Ident.string_of_id i in
-        Prims.op_Hat "exception " uu___1
+        Prims.strcat "exception " uu___1
     | NewEffect (DefineEffect (i, uu___, uu___1, uu___2)) ->
         let uu___3 = FStar_Ident.string_of_id i in
-        Prims.op_Hat "new_effect " uu___3
+        Prims.strcat "new_effect " uu___3
     | NewEffect (RedefineEffect (i, uu___, uu___1)) ->
         let uu___2 = FStar_Ident.string_of_id i in
-        Prims.op_Hat "new_effect " uu___2
+        Prims.strcat "new_effect " uu___2
     | LayeredEffect (DefineEffect (i, uu___, uu___1, uu___2)) ->
         let uu___3 = FStar_Ident.string_of_id i in
-        Prims.op_Hat "layered_effect " uu___3
+        Prims.strcat "layered_effect " uu___3
     | LayeredEffect (RedefineEffect (i, uu___, uu___1)) ->
         let uu___2 = FStar_Ident.string_of_id i in
-        Prims.op_Hat "layered_effect " uu___2
+        Prims.strcat "layered_effect " uu___2
     | Polymonadic_bind (l1, l2, l3, uu___) ->
         let uu___1 = FStar_Ident.string_of_lid l1 in
         let uu___2 = FStar_Ident.string_of_lid l2 in
@@ -2440,18 +2440,18 @@ let (decl_to_string : decl -> Prims.string) =
                   (FStar_Compiler_String.concat ";") uu___4 in
               let uu___4 =
                 let uu___5 =
-                  let uu___6 = term_to_string t in Prims.op_Hat uu___6 ")" in
-                Prims.op_Hat "] (" uu___5 in
-              Prims.op_Hat uu___3 uu___4 in
-            Prims.op_Hat "[" uu___2 in
-          Prims.op_Hat (if is_typed then "_t" else "") uu___1 in
-        Prims.op_Hat "splice" uu___
+                  let uu___6 = term_to_string t in Prims.strcat uu___6 ")" in
+                Prims.strcat "] (" uu___5 in
+              Prims.strcat uu___3 uu___4 in
+            Prims.strcat "[" uu___2 in
+          Prims.strcat (if is_typed then "_t" else "") uu___1 in
+        Prims.strcat "splice" uu___
     | SubEffect uu___ -> "sub_effect"
     | Pragma p ->
-        let uu___ = string_of_pragma p in Prims.op_Hat "pragma #" uu___
+        let uu___ = string_of_pragma p in Prims.strcat "pragma #" uu___
     | DeclSyntaxExtension (id, content, uu___, uu___1) ->
-        Prims.op_Hat "```"
-          (Prims.op_Hat id (Prims.op_Hat "\n" (Prims.op_Hat content "\n```")))
+        Prims.strcat "```"
+          (Prims.strcat id (Prims.strcat "\n" (Prims.strcat content "\n```")))
 let (modul_to_string : modul -> Prims.string) =
   fun m ->
     match m with

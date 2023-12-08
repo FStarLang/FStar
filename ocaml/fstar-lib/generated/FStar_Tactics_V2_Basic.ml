@@ -2348,8 +2348,8 @@ let (binding_to_string : FStar_Reflection_V2_Data.binding -> Prims.string) =
         FStar_Class_Show.show
           (FStar_Class_Show.printableshow FStar_Class_Printable.printable_int)
           uu___2 in
-      Prims.op_Hat "#" uu___1 in
-    Prims.op_Hat b.FStar_Reflection_V2_Data.ppname3 uu___
+      Prims.strcat "#" uu___1 in
+    Prims.strcat b.FStar_Reflection_V2_Data.ppname3 uu___
 let (binding_to_bv :
   FStar_Reflection_V2_Data.binding -> FStar_Syntax_Syntax.bv) =
   fun b ->
@@ -5832,7 +5832,7 @@ let (t_destruct :
                                                                     FStar_Class_Show.show
                                                                     FStar_Ident.showable_ident
                                                                     ppname in
-                                                                    Prims.op_Hat
+                                                                    Prims.strcat
                                                                     "a"
                                                                     uu___27 in
                                                                     let uu___27
@@ -6711,7 +6711,7 @@ let (string_to_term :
            | FStar_Errors.Error (uu___2, e1, uu___3, uu___4) ->
                let uu___5 =
                  let uu___6 = FStar_Errors_Msg.rendermsg e1 in
-                 Prims.op_Hat "string_to_term: " uu___6 in
+                 Prims.strcat "string_to_term: " uu___6 in
                FStar_Tactics_Monad.fail uu___5
            | uu___2 ->
                FStar_Tactics_Monad.fail "string_to_term: Unknown error")
@@ -6721,7 +6721,7 @@ let (string_to_term :
       | FStar_Parser_ParseIt.ParseError (uu___1, err, uu___2) ->
           let uu___3 =
             let uu___4 = FStar_Errors_Msg.rendermsg err in
-            Prims.op_Hat "string_to_term: got error " uu___4 in
+            Prims.strcat "string_to_term: got error " uu___4 in
           FStar_Tactics_Monad.fail uu___3
 let (push_bv_dsenv :
   env ->
@@ -7157,7 +7157,7 @@ let refl_typing_builtin_wrapper :
                            let uu___3 =
                              let uu___4 =
                                FStar_Errors_Msg.text
-                                 (Prims.op_Hat "Raised within Tactics." label) in
+                                 (Prims.strcat "Raised within Tactics." label) in
                              [uu___4] in
                            FStar_Compiler_List.op_At
                              is.FStar_Errors.issue_msg uu___3 in
@@ -7329,7 +7329,7 @@ let (refl_check_relation :
                           let uu___6 =
                             let uu___7 =
                               FStar_TypeChecker_Core.print_error err in
-                            Prims.op_Hat "check_relation failed: " uu___7 in
+                            Prims.strcat "check_relation failed: " uu___7 in
                           (FStar_Errors_Codes.Fatal_IllTyped, uu___6) in
                         let uu___6 = FStar_TypeChecker_Env.get_range g1 in
                         FStar_Errors.raise_error uu___5 uu___6))))
@@ -7430,7 +7430,7 @@ let (refl_core_compute_term_type :
                    (let uu___5 =
                       let uu___6 =
                         let uu___7 = FStar_TypeChecker_Core.print_error err in
-                        Prims.op_Hat "core_compute_term_type failed: " uu___7 in
+                        Prims.strcat "core_compute_term_type failed: " uu___7 in
                       (FStar_Errors_Codes.Fatal_IllTyped, uu___6) in
                     let uu___6 = FStar_TypeChecker_Env.get_range g1 in
                     FStar_Errors.raise_error uu___5 uu___6))))
@@ -7502,7 +7502,7 @@ let (refl_core_check_term :
                           let uu___6 =
                             let uu___7 =
                               FStar_TypeChecker_Core.print_error err in
-                            Prims.op_Hat "refl_core_check_term failed: "
+                            Prims.strcat "refl_core_check_term failed: "
                               uu___7 in
                           (FStar_Errors_Codes.Fatal_IllTyped, uu___6) in
                         let uu___6 = FStar_TypeChecker_Env.get_range g1 in
@@ -7572,7 +7572,7 @@ let (refl_core_check_term_at_type :
                      (let uu___5 =
                         let uu___6 =
                           let uu___7 = FStar_TypeChecker_Core.print_error err in
-                          Prims.op_Hat "refl_core_check_term failed: " uu___7 in
+                          Prims.strcat "refl_core_check_term failed: " uu___7 in
                         (FStar_Errors_Codes.Fatal_IllTyped, uu___6) in
                       let uu___6 = FStar_TypeChecker_Env.get_range g1 in
                       FStar_Errors.raise_error uu___5 uu___6))))
@@ -7926,7 +7926,7 @@ let (refl_tc_term :
                                    let uu___11 =
                                      let uu___12 =
                                        FStar_TypeChecker_Core.print_error err in
-                                     Prims.op_Hat "tc_term callback failed: "
+                                     Prims.strcat "tc_term callback failed: "
                                        uu___12 in
                                    (FStar_Errors_Codes.Fatal_IllTyped,
                                      uu___11) in
@@ -7999,7 +7999,7 @@ let (refl_universe_of :
                           let uu___6 =
                             let uu___7 =
                               FStar_TypeChecker_Core.print_error err in
-                            Prims.op_Hat "universe_of failed: " uu___7 in
+                            Prims.strcat "universe_of failed: " uu___7 in
                           (FStar_Errors_Codes.Fatal_IllTyped, uu___6) in
                         let uu___6 = FStar_TypeChecker_Env.get_range g1 in
                         FStar_Errors.raise_error uu___5 uu___6))))

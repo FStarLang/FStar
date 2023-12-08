@@ -386,15 +386,15 @@ let (norm_universe :
                                  uu___4 in
                              failwith uu___3)) ()
                with
-               | uu___1 ->
+               | uu___ ->
                    if
                      (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.allow_unbound_universes
                    then [FStar_Syntax_Syntax.U_unknown]
                    else
-                     (let uu___3 =
-                        let uu___4 = FStar_Compiler_Util.string_of_int x in
-                        Prims.op_Hat "Universe variable not found: u@" uu___4 in
-                      failwith uu___3))
+                     (let uu___2 =
+                        let uu___3 = FStar_Compiler_Util.string_of_int x in
+                        Prims.strcat "Universe variable not found: u@" uu___3 in
+                      failwith uu___2))
           | FStar_Syntax_Syntax.U_unif uu___ when
               (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.check_no_uvars
               -> [FStar_Syntax_Syntax.U_zero]
@@ -1771,7 +1771,7 @@ let (rejig_norm_request :
       | uu___1 ->
           let uu___2 =
             let uu___3 = FStar_Syntax_Print.term_to_string hd in
-            Prims.op_Hat "Impossible! invalid rejig_norm_request for: %s"
+            Prims.strcat "Impossible! invalid rejig_norm_request for: %s"
               uu___3 in
           failwith uu___2
 let (is_nbe_request : FStar_TypeChecker_Env.step Prims.list -> Prims.bool) =
@@ -2240,10 +2240,10 @@ let (should_unfold :
                                                           fv in
                                                       FStar_Ident.nsstr
                                                         uu___22 in
-                                                    Prims.op_Hat uu___21 "." in
+                                                    Prims.strcat uu___21 "." in
                                                   FStar_Compiler_Util.starts_with
                                                     uu___20
-                                                    (Prims.op_Hat ns "."))
+                                                    (Prims.strcat ns "."))
                                                namespaces in
                                            FStar_Compiler_Effect.op_Less_Bar
                                              yesno uu___19 in
@@ -2352,10 +2352,10 @@ let (should_unfold :
                                                           fv in
                                                       FStar_Ident.nsstr
                                                         uu___22 in
-                                                    Prims.op_Hat uu___21 "." in
+                                                    Prims.strcat uu___21 "." in
                                                   FStar_Compiler_Util.starts_with
                                                     uu___20
-                                                    (Prims.op_Hat ns "."))
+                                                    (Prims.strcat ns "."))
                                                namespaces in
                                            FStar_Compiler_Effect.op_Less_Bar
                                              yesno uu___19 in
@@ -2464,10 +2464,10 @@ let (should_unfold :
                                                           fv in
                                                       FStar_Ident.nsstr
                                                         uu___22 in
-                                                    Prims.op_Hat uu___21 "." in
+                                                    Prims.strcat uu___21 "." in
                                                   FStar_Compiler_Util.starts_with
                                                     uu___20
-                                                    (Prims.op_Hat ns "."))
+                                                    (Prims.strcat ns "."))
                                                namespaces in
                                            FStar_Compiler_Effect.op_Less_Bar
                                              yesno uu___19 in
@@ -2576,10 +2576,10 @@ let (should_unfold :
                                                           fv in
                                                       FStar_Ident.nsstr
                                                         uu___22 in
-                                                    Prims.op_Hat uu___21 "." in
+                                                    Prims.strcat uu___21 "." in
                                                   FStar_Compiler_Util.starts_with
                                                     uu___20
-                                                    (Prims.op_Hat ns "."))
+                                                    (Prims.strcat ns "."))
                                                namespaces in
                                            FStar_Compiler_Effect.op_Less_Bar
                                              yesno uu___19 in
@@ -2688,10 +2688,10 @@ let (should_unfold :
                                                           fv in
                                                       FStar_Ident.nsstr
                                                         uu___22 in
-                                                    Prims.op_Hat uu___21 "." in
+                                                    Prims.strcat uu___21 "." in
                                                   FStar_Compiler_Util.starts_with
                                                     uu___20
-                                                    (Prims.op_Hat ns "."))
+                                                    (Prims.strcat ns "."))
                                                namespaces in
                                            FStar_Compiler_Effect.op_Less_Bar
                                              yesno uu___19 in

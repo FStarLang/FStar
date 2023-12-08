@@ -291,7 +291,7 @@ let separate_map_or_flow_last :
 let (separate_or_flow :
   FStar_Pprint.document ->
     FStar_Pprint.document Prims.list -> FStar_Pprint.document)
-  = fun sep -> fun l -> separate_map_or_flow sep FStar_Pervasives.id l
+  = fun sep -> fun l -> separate_map_or_flow sep (fun x -> x) l
 let (surround_maybe_empty :
   Prims.int ->
     Prims.int ->
@@ -547,7 +547,7 @@ let (token_to_string : token -> Prims.string) =
   fun uu___ ->
     match uu___ with
     | StartsWith c ->
-        Prims.op_Hat (FStar_Compiler_Util.string_of_char c) ".*"
+        Prims.strcat (FStar_Compiler_Util.string_of_char c) ".*"
     | Exact s -> s
     | UnicodeOperator -> "<unicode-op>"
 let (is_non_latin_char : FStar_Char.char -> Prims.bool) =
@@ -623,7 +623,7 @@ let (assign_levels :
       let uu___ = FStar_Compiler_List.tryFind (matches_level s) level_table in
       match uu___ with
       | FStar_Pervasives_Native.Some (assoc_levels, uu___1) -> assoc_levels
-      | uu___1 -> failwith (Prims.op_Hat "Unrecognized operator " s)
+      | uu___1 -> failwith (Prims.strcat "Unrecognized operator " s)
 let max_level : 'uuuuu . ('uuuuu * token Prims.list) Prims.list -> Prims.int
   =
   fun l ->
@@ -1405,8 +1405,7 @@ and (p_typeDecl :
       match uu___ with
       | FStar_Parser_AST.TyconAbstract (lid, bs, typ_opt) ->
           let uu___1 = p_typeDeclPrefix pre false lid bs typ_opt in
-          (FStar_Pprint.empty, uu___1, FStar_Pprint.empty,
-            FStar_Pervasives.id)
+          (FStar_Pprint.empty, uu___1, FStar_Pprint.empty, ((fun x -> x)))
       | FStar_Parser_AST.TyconAbbrev (lid, bs, typ_opt, t) ->
           let uu___1 = p_typ_sep false false t in
           (match uu___1 with
@@ -2603,17 +2602,17 @@ and (p_noSeqTerm' :
               FStar_Pprint.op_Hat_Hat uu___1 uu___2 in
             FStar_Pprint.group uu___
         | FStar_Parser_AST.Requires (e1, wtf) ->
-            let uu___1 =
-              let uu___2 = str "requires" in
-              let uu___3 = p_typ ps pb e1 in
-              FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
-            FStar_Pprint.group uu___1
+            let uu___ =
+              let uu___1 = str "requires" in
+              let uu___2 = p_typ ps pb e1 in
+              FStar_Pprint.op_Hat_Slash_Hat uu___1 uu___2 in
+            FStar_Pprint.group uu___
         | FStar_Parser_AST.Ensures (e1, wtf) ->
-            let uu___1 =
-              let uu___2 = str "ensures" in
-              let uu___3 = p_typ ps pb e1 in
-              FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
-            FStar_Pprint.group uu___1
+            let uu___ =
+              let uu___1 = str "ensures" in
+              let uu___2 = p_typ ps pb e1 in
+              FStar_Pprint.op_Hat_Slash_Hat uu___1 uu___2 in
+            FStar_Pprint.group uu___
         | FStar_Parser_AST.WFOrder (rel, e1) -> p_dec_wf ps pb rel e1
         | FStar_Parser_AST.LexList l ->
             let uu___ =
@@ -2622,11 +2621,11 @@ and (p_noSeqTerm' :
               FStar_Pprint.op_Hat_Hat uu___1 uu___2 in
             FStar_Pprint.group uu___
         | FStar_Parser_AST.Decreases (e1, wtf) ->
-            let uu___1 =
-              let uu___2 = str "decreases" in
-              let uu___3 = p_typ ps pb e1 in
-              FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
-            FStar_Pprint.group uu___1
+            let uu___ =
+              let uu___1 = str "decreases" in
+              let uu___2 = p_typ ps pb e1 in
+              FStar_Pprint.op_Hat_Slash_Hat uu___1 uu___2 in
+            FStar_Pprint.group uu___
         | FStar_Parser_AST.Attributes es ->
             let uu___ =
               let uu___1 = str "attributes" in
@@ -2648,7 +2647,7 @@ and (p_noSeqTerm' :
                           FStar_Compiler_Util.bind_opt uu___6
                             (FStar_Parser_AST.strip_prefix "let") in
                         FStar_Compiler_Util.dflt "" uu___5 in
-                      Prims.op_Hat "if" uu___4 in
+                      Prims.strcat "if" uu___4 in
                     str uu___3 in
                   let uu___3 = p_noSeqTermAndComment false false e1 in
                   op_Hat_Slash_Plus_Hat uu___2 uu___3 in
@@ -2745,7 +2744,7 @@ and (p_noSeqTerm' :
                     FStar_Compiler_Util.bind_opt uu___3
                       (FStar_Parser_AST.strip_prefix "let") in
                   FStar_Compiler_Util.dflt "" uu___2 in
-                Prims.op_Hat "match" uu___1 in
+                Prims.strcat "match" uu___1 in
               str uu___ in
             let uu___ =
               let uu___1 =
@@ -4749,7 +4748,7 @@ and (p_projectionLHS : FStar_Parser_AST.term -> FStar_Pprint.document) =
         FStar_Pprint.surround (Prims.of_int (2)) Prims.int_zero uu___1 uu___2
           FStar_Pprint.rbrace
     | FStar_Parser_AST.Labeled (e1, s, b) ->
-        let uu___ = str (Prims.op_Hat "(*" (Prims.op_Hat s "*)")) in
+        let uu___ = str (Prims.strcat "(*" (Prims.strcat s "*)")) in
         let uu___1 = p_term false false e1 in
         FStar_Pprint.op_Hat_Slash_Hat uu___ uu___1
     | FStar_Parser_AST.Op (op, args) when
@@ -4762,11 +4761,11 @@ and (p_projectionLHS : FStar_Parser_AST.term -> FStar_Pprint.document) =
                 let uu___5 =
                   FStar_Compiler_Util.string_of_int
                     (FStar_Compiler_List.length args) in
-                Prims.op_Hat uu___5
+                Prims.strcat uu___5
                   " arguments couldn't be handled by the pretty printer" in
-              Prims.op_Hat " with " uu___4 in
-            Prims.op_Hat uu___2 uu___3 in
-          Prims.op_Hat "Operation " uu___1 in
+              Prims.strcat " with " uu___4 in
+            Prims.strcat uu___2 uu___3 in
+          Prims.strcat "Operation " uu___1 in
         failwith uu___
     | FStar_Parser_AST.Uvar id ->
         failwith "Unexpected universe variable out of universe context"
@@ -4855,7 +4854,7 @@ and (p_constant : FStar_Const.sconst -> FStar_Pprint.document) =
     | FStar_Const.Const_effect -> str "Effect"
     | FStar_Const.Const_unit -> str "()"
     | FStar_Const.Const_bool b -> FStar_Pprint.doc_of_bool b
-    | FStar_Const.Const_real r -> str (Prims.op_Hat r "R")
+    | FStar_Const.Const_real r -> str (Prims.strcat r "R")
     | FStar_Const.Const_char x -> FStar_Pprint.doc_of_char x
     | FStar_Const.Const_string (s, uu___1) ->
         let uu___2 = str (FStar_Compiler_String.escaped s) in

@@ -453,9 +453,9 @@ let (tc_inductive' :
                                      let uu___9 =
                                        let uu___10 =
                                          FStar_Ident.string_of_lid lid in
-                                       Prims.op_Hat uu___10
+                                       Prims.strcat uu___10
                                          " does not satisfy the strict positivity condition" in
-                                     Prims.op_Hat "Inductive type " uu___9 in
+                                     Prims.strcat "Inductive type " uu___9 in
                                    (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
                                      uu___8) in
                                  FStar_Errors.log_issue r uu___7
@@ -490,9 +490,9 @@ let (tc_inductive' :
                                      let uu___10 =
                                        let uu___11 =
                                          FStar_Ident.string_of_lid data_lid in
-                                       Prims.op_Hat uu___11
+                                       Prims.strcat uu___11
                                          " does not satisfy the positivity condition" in
-                                     Prims.op_Hat "Exception " uu___10 in
+                                     Prims.strcat "Exception " uu___10 in
                                    (FStar_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition,
                                      uu___9) in
                                  FStar_Errors.log_issue
@@ -4909,8 +4909,8 @@ let (tc_decls :
                                       let uu___14 =
                                         FStar_Syntax_Print.sigelt_to_string
                                           se1 in
-                                      Prims.op_Hat uu___14 "\n" in
-                                    Prims.op_Hat s uu___13) "" ses'2 in
+                                      Prims.strcat uu___14 "\n" in
+                                    Prims.strcat s uu___13) "" ses'2 in
                            FStar_Compiler_Util.print1 "Checked: %s\n" uu___12
                          else ());
                         (let uu___12 =
@@ -5200,7 +5200,7 @@ let (finish_partial_modul :
              let uu___3 =
                let uu___4 =
                  FStar_Ident.string_of_lid m.FStar_Syntax_Syntax.name in
-               Prims.op_Hat "Ending modul " uu___4 in
+               Prims.strcat "Ending modul " uu___4 in
              pop_context env uu___3 in
            FStar_Compiler_Effect.op_Bar_Greater uu___2 (fun uu___3 -> ()));
           (m, env)
@@ -5226,7 +5226,7 @@ let (tc_modul :
       fun iface_exists ->
         let msg =
           let uu___ = FStar_Ident.string_of_lid m.FStar_Syntax_Syntax.name in
-          Prims.op_Hat "Internals for " uu___ in
+          Prims.strcat "Internals for " uu___ in
         let env01 = push_context env0 msg in
         let uu___ = tc_partial_modul env01 m in
         match uu___ with
@@ -5243,7 +5243,7 @@ let (load_checked_module_sigelts :
       let env1 =
         let uu___ =
           let uu___1 = FStar_Ident.string_of_lid m.FStar_Syntax_Syntax.name in
-          Prims.op_Hat "Internals for " uu___1 in
+          Prims.strcat "Internals for " uu___1 in
         push_context env uu___ in
       let env2 =
         FStar_Compiler_List.fold_left

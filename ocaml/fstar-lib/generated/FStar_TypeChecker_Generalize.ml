@@ -100,7 +100,7 @@ let (check_universe_generalization :
             let uu___1 =
               let uu___2 =
                 let uu___3 = FStar_Syntax_Print.term_to_string t in
-                Prims.op_Hat
+                Prims.strcat
                   "Generalized universe in a term containing explicit universe annotation : "
                   uu___3 in
               (FStar_Errors_Codes.Fatal_UnexpectedGeneralizedUniverse,

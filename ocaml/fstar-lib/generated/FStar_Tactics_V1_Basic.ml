@@ -5735,7 +5735,7 @@ let (t_destruct :
                                                                     FStar_Class_Show.show
                                                                     FStar_Ident.showable_ident
                                                                     ppname in
-                                                                    Prims.op_Hat
+                                                                    Prims.strcat
                                                                     "a"
                                                                     uu___27 in
                                                                     let uu___27
@@ -7081,7 +7081,7 @@ let (string_to_term :
            | FStar_Errors.Error (uu___2, e1, uu___3, uu___4) ->
                let uu___5 =
                  let uu___6 = FStar_Errors_Msg.rendermsg e1 in
-                 Prims.op_Hat "string_to_term: " uu___6 in
+                 Prims.strcat "string_to_term: " uu___6 in
                FStar_Tactics_Monad.fail uu___5
            | uu___2 ->
                FStar_Tactics_Monad.fail "string_to_term: Unknown error")
@@ -7091,7 +7091,7 @@ let (string_to_term :
       | FStar_Parser_ParseIt.ParseError (uu___1, err, uu___2) ->
           let uu___3 =
             let uu___4 = FStar_Errors_Msg.rendermsg err in
-            Prims.op_Hat "string_to_term: got error " uu___4 in
+            Prims.strcat "string_to_term: got error " uu___4 in
           FStar_Tactics_Monad.fail uu___3
 let (push_bv_dsenv :
   env ->

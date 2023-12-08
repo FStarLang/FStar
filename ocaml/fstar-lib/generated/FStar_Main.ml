@@ -72,9 +72,9 @@ let (load_native_tactics : unit -> unit) =
         (FStar_Compiler_List.map FStar_Ident.lid_of_str) in
     let ml_module_name m = FStar_Extraction_ML_Util.ml_module_name_of_lid m in
     let ml_file m =
-      let uu___1 = ml_module_name m in Prims.op_Hat uu___1 ".ml" in
+      let uu___1 = ml_module_name m in Prims.strcat uu___1 ".ml" in
     let cmxs_file m =
-      let cmxs = let uu___1 = ml_module_name m in Prims.op_Hat uu___1 ".cmxs" in
+      let cmxs = let uu___1 = ml_module_name m in Prims.strcat uu___1 ".cmxs" in
       let uu___1 = FStar_Options.find_file cmxs in
       match uu___1 with
       | FStar_Pervasives_Native.Some f -> f

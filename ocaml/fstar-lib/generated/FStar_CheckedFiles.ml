@@ -92,13 +92,13 @@ let (uu___46 : tc_result_t FStar_Class_Show.showable) =
                FStar_Class_Show.show
                  (FStar_Class_Show.printableshow
                     FStar_Class_Printable.printable_string) s in
-             Prims.op_Hat "Invalid " uu___1
+             Prims.strcat "Invalid " uu___1
          | Valid s ->
              let uu___1 =
                FStar_Class_Show.show
                  (FStar_Class_Show.printableshow
                     FStar_Class_Printable.printable_string) s in
-             Prims.op_Hat "Valid " uu___1)
+             Prims.strcat "Valid " uu___1)
   }
 type cache_t =
   (tc_result_t * (Prims.string, FStar_Parser_Dep.parsing_data)
@@ -444,7 +444,7 @@ let (load_parsing_data_from_cache :
   =
   fun file_name ->
     FStar_Errors.with_ctx
-      (Prims.op_Hat "While loading parsing data from " file_name)
+      (Prims.strcat "While loading parsing data from " file_name)
       (fun uu___ ->
          let cache_file =
            try
@@ -472,7 +472,7 @@ let (load_module_from_cache :
   fun env ->
     fun fn ->
       FStar_Errors.with_ctx
-        (Prims.op_Hat "While loading module from file " fn)
+        (Prims.strcat "While loading module from file " fn)
         (fun uu___ ->
            let load_it fn1 uu___1 =
              let cache_file = FStar_Parser_Dep.cache_file_name fn1 in
@@ -549,7 +549,7 @@ let (store_values_to_cache :
     fun stage1 ->
       fun stage2 ->
         FStar_Errors.with_ctx
-          (Prims.op_Hat "While writing checked file " cache_file)
+          (Prims.strcat "While writing checked file " cache_file)
           (fun uu___ ->
              FStar_Compiler_Util.save_2values_to_file cache_file stage1
                stage2)

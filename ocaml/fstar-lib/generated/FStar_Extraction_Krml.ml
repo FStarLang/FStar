@@ -1174,8 +1174,7 @@ let rec (translate_type_without_decay' :
             FStar_Compiler_List.map (translate_type_without_decay env1) ts in
           TTuple uu___
 and (translate_type' : env -> FStar_Extraction_ML_Syntax.mlty -> typ) =
-  fun env1 ->
-    fun t -> match t with | t1 -> translate_type_without_decay env1 t1
+  fun env1 -> fun t -> translate_type_without_decay env1 t
 and (translate_binders :
   env ->
     (Prims.string * FStar_Extraction_ML_Syntax.mlty) Prims.list ->
@@ -2937,8 +2936,8 @@ let (translate_let' :
                                      (FStar_Compiler_List.length tvars), t1,
                                      name2, binders, body1))) ()
                      with
-                     | e ->
-                         let msg = FStar_Compiler_Util.print_exn e in
+                     | uu___7 ->
+                         let msg = FStar_Compiler_Util.print_exn uu___7 in
                          ((let uu___9 =
                              let uu___10 =
                                let uu___11 =
@@ -2952,7 +2951,7 @@ let (translate_let' :
                            FStar_Errors.log_issue
                              FStar_Compiler_Range_Type.dummyRange uu___9);
                           (let msg1 =
-                             Prims.op_Hat
+                             Prims.strcat
                                "This function was not extracted:\n" msg in
                            FStar_Pervasives_Native.Some
                              (DFunction

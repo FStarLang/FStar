@@ -419,7 +419,7 @@ let (print_issue : issue -> unit) =
       | EWarning -> FStar_Compiler_Util.print_warning
       | EError -> FStar_Compiler_Util.print_error
       | ENotImplemented -> FStar_Compiler_Util.print_error in
-    let uu___ = let uu___1 = format_issue issue1 in Prims.op_Hat uu___1 "\n" in
+    let uu___ = let uu___1 = format_issue issue1 in Prims.strcat uu___1 "\n" in
     printer uu___
 let (compare_issues : issue -> issue -> Prims.int) =
   fun i1 ->
@@ -428,7 +428,7 @@ let (compare_issues : issue -> issue -> Prims.int) =
       | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) ->
           Prims.int_zero
       | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.Some uu___) ->
-          ~- Prims.int_one
+          (Prims.of_int (-1))
       | (FStar_Pervasives_Native.Some uu___, FStar_Pervasives_Native.None) ->
           Prims.int_one
       | (FStar_Pervasives_Native.Some r1, FStar_Pervasives_Native.Some r2) ->
@@ -706,7 +706,7 @@ let (warn_unsafe_options :
           let uu___1 =
             let uu___2 =
               FStar_Errors_Msg.mkmsg
-                (Prims.op_Hat "Every use of this option triggers a warning: "
+                (Prims.strcat "Every use of this option triggers a warning: "
                    msg) in
             mk_issue EWarning rng_opt uu___2
               (FStar_Pervasives_Native.Some warn_on_use_errno) [] in
@@ -715,7 +715,7 @@ let (warn_unsafe_options :
           let uu___1 =
             let uu___2 =
               FStar_Errors_Msg.mkmsg
-                (Prims.op_Hat "Every use of this option triggers an error: "
+                (Prims.strcat "Every use of this option triggers an error: "
                    msg) in
             mk_issue EError rng_opt uu___2
               (FStar_Pervasives_Native.Some warn_on_use_errno) [] in
@@ -753,8 +753,8 @@ let (uu___381 :
         (FStar_Compiler_Util.smap_add error_flags we
            FStar_Pervasives_Native.None;
          FStar_Getopt.Error
-           (Prims.op_Hat "Invalid --warn_error setting: "
-              (Prims.op_Hat msg "\n"))) in
+           (Prims.strcat "Invalid --warn_error setting: "
+              (Prims.strcat msg "\n"))) in
   let get_error_flags uu___ =
     let we = FStar_Options.warn_error () in
     let uu___1 = FStar_Compiler_Util.smap_try_find error_flags we in
@@ -845,7 +845,7 @@ let (log_issue_ctx :
                  else
                    (let uu___5 =
                       let uu___6 = format_issue i in
-                      Prims.op_Hat
+                      Prims.strcat
                         "don't use log_issue to report fatal error, should use raise_error: "
                         uu___6 in
                     failwith uu___5))
@@ -1008,7 +1008,7 @@ let with_ctx : 'a . Prims.string -> (unit -> 'a) -> 'a =
                           let uu___9 = error_context.get () in ctx_doc uu___9 in
                         [uu___8] in
                       FStar_Errors_Msg.rendermsg uu___7 in
-                    Prims.op_Hat msg uu___6 in
+                    Prims.strcat msg uu___6 in
                   FStar_Compiler_Effect.Failure uu___5 in
                 FStar_Pervasives.Inl uu___4
             | ex -> FStar_Pervasives.Inl ex) in

@@ -117,7 +117,7 @@ let (print_uvar_set :
                     u.FStar_Syntax_Syntax.ctx_uvar_head in
                 FStar_Compiler_Effect.op_Less_Bar
                   FStar_Compiler_Util.string_of_int uu___3 in
-              Prims.op_Hat "?" uu___2)) in
+              Prims.strcat "?" uu___2)) in
     FStar_Compiler_Effect.op_Bar_Greater uu___
       (FStar_Compiler_String.concat "; ")
 let (print_goal_dep : goal_dep -> Prims.string) =

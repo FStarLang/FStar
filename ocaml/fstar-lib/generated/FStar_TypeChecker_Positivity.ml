@@ -14,8 +14,8 @@ let (debug_positivity :
       if uu___
       then
         let uu___1 =
-          let uu___2 = let uu___3 = msg () in Prims.op_Hat uu___3 "\n" in
-          Prims.op_Hat "Positivity::" uu___2 in
+          let uu___2 = let uu___3 = msg () in Prims.strcat uu___3 "\n" in
+          Prims.strcat "Positivity::" uu___2 in
         FStar_Compiler_Util.print_string uu___1
       else ()
 let (normalize :
@@ -1553,7 +1553,7 @@ let (ty_strictly_positive_in_datacon_decl :
               debug_positivity env
                 (fun uu___1 ->
                    let uu___2 = FStar_Syntax_Print.term_to_string dt in
-                   Prims.op_Hat "Checking data constructor type: " uu___2);
+                   Prims.strcat "Checking data constructor type: " uu___2);
               (let uu___1 = FStar_Syntax_Util.args_of_binders ty_bs in
                match uu___1 with
                | (ty_bs1, args) ->

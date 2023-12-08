@@ -4028,7 +4028,7 @@ and (term_as_mlexpr' :
                       (FStar_Compiler_List.map
                          (fun lb ->
                             let lbdef =
-                              let uu___2 = FStar_Options.ml_ish () in
+                              let uu___2 = false in
                               if uu___2
                               then lb.FStar_Syntax_Syntax.lbdef
                               else

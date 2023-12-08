@@ -1028,14 +1028,14 @@ let (built_in_primitive_steps_list : primitive_step Prims.list) =
                                                     FStar_TypeChecker_NBETerm.binary_string_op
                                                       (fun x ->
                                                          fun y ->
-                                                           Prims.op_Hat x y) in
+                                                           Prims.strcat x y) in
                                                   (FStar_Parser_Const.prims_strcat_lid,
                                                     (Prims.of_int (2)),
                                                     Prims.int_zero,
                                                     (binary_string_op
                                                        (fun x ->
                                                           fun y ->
-                                                            Prims.op_Hat x y)),
+                                                            Prims.strcat x y)),
                                                     uu___41) in
                                                 let uu___41 =
                                                   let uu___42 =

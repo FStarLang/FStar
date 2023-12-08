@@ -2973,11 +2973,11 @@ let (effect_signature :
                               let uu___9 =
                                 FStar_Compiler_Util.string_of_int
                                   (FStar_Compiler_List.length us) in
-                              Prims.op_Hat ", got " uu___9 in
-                            Prims.op_Hat uu___7 uu___8 in
-                          Prims.op_Hat ", expected " uu___6 in
-                        Prims.op_Hat uu___4 uu___5 in
-                      Prims.op_Hat
+                              Prims.strcat ", got " uu___9 in
+                            Prims.strcat uu___7 uu___8 in
+                          Prims.strcat ", expected " uu___6 in
+                        Prims.strcat uu___4 uu___5 in
+                      Prims.strcat
                         "effect_signature: incorrect number of universes for the signature of "
                         uu___3 in
                     failwith uu___2
@@ -5464,8 +5464,8 @@ let (update_effect_lattice :
                  let uu___1 = FStar_Ident.string_of_lid i in
                  let uu___2 =
                    let uu___3 = FStar_Ident.string_of_lid j in
-                   Prims.op_Hat ":" uu___3 in
-                 Prims.op_Hat uu___1 uu___2 in
+                   Prims.strcat ":" uu___3 in
+                 Prims.strcat uu___1 uu___2 in
                let v =
                  let uu___1 = FStar_Compiler_Util.smap_try_find ubs key in
                  match uu___1 with
@@ -6263,7 +6263,7 @@ let (string_of_delta_level : delta_level -> Prims.string) =
     | Unfold d ->
         let uu___1 =
           FStar_Class_Show.show FStar_Syntax_Syntax.showable_delta_depth d in
-        Prims.op_Hat "Unfold " uu___1
+        Prims.strcat "Unfold " uu___1
 let (lidents : env -> FStar_Ident.lident Prims.list) =
   fun env1 ->
     let keys =
@@ -6450,7 +6450,7 @@ let (string_of_proof_ns : env -> Prims.string) =
           then "*"
           else
             (let uu___2 = FStar_Ident.text_of_path p in
-             Prims.op_Hat (if b then "+" else "-") uu___2) in
+             Prims.strcat (if b then "+" else "-") uu___2) in
     let uu___ =
       let uu___1 = FStar_Compiler_List.map aux env1.proof_ns in
       FStar_Compiler_Effect.op_Bar_Greater uu___1 FStar_Compiler_List.rev in

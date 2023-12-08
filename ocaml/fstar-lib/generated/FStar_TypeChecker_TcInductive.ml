@@ -1103,7 +1103,7 @@ let (get_haseq_axiom_lid : FStar_Ident.lid -> FStar_Ident.lid) =
             let uu___5 =
               let uu___6 = FStar_Ident.ident_of_lid lid in
               FStar_Ident.string_of_id uu___6 in
-            Prims.op_Hat uu___5 haseq_suffix in
+            Prims.strcat uu___5 haseq_suffix in
           FStar_Ident.id_of_text uu___4 in
         [uu___3] in
       FStar_Compiler_List.op_At uu___1 uu___2 in

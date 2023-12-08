@@ -854,7 +854,7 @@ let (add_module_completions :
              let uu___1 =
                FStar_Compiler_String.substring str Prims.int_one
                  ((FStar_Compiler_String.length str) - Prims.int_one) in
-             Prims.op_Hat (FStar_Compiler_String.uppercase first) uu___1) in
+             Prims.strcat (FStar_Compiler_String.uppercase first) uu___1) in
         let mods = FStar_Parser_Dep.build_inclusion_candidates_list () in
         let loaded_mods_set =
           let uu___ = FStar_Compiler_Util.psmap_empty () in

@@ -1093,7 +1093,7 @@ let (gen_wps_for_free :
                                          let uu___11 =
                                            FStar_Compiler_Util.string_of_int
                                              i in
-                                         Prims.op_Hat "a" uu___11 in
+                                         Prims.strcat "a" uu___11 in
                                        FStar_Syntax_Syntax.gen_bv uu___10
                                          FStar_Pervasives_Native.None
                                          bv.FStar_Syntax_Syntax.sort)
@@ -1137,7 +1137,7 @@ let (gen_wps_for_free :
                                          let uu___11 =
                                            FStar_Compiler_Util.string_of_int
                                              i in
-                                         Prims.op_Hat "a" uu___11 in
+                                         Prims.strcat "a" uu___11 in
                                        FStar_Syntax_Syntax.gen_bv uu___10
                                          FStar_Pervasives_Native.None
                                          bv.FStar_Syntax_Syntax.sort)
@@ -2181,7 +2181,7 @@ let rec (check :
               let uu___ =
                 let uu___1 =
                   let uu___2 = FStar_Syntax_Print.term_to_string t in
-                  Prims.op_Hat
+                  Prims.strcat
                     "let-bound monadic body has a non-monadic continuation or a branch of a match is monadic and the others aren't : "
                     uu___2 in
                 (FStar_Errors_Codes.Fatal_LetBoundMonadicMismatch, uu___1) in
@@ -2370,7 +2370,7 @@ and (infer :
                              let uu___9 =
                                FStar_Ident.string_of_id
                                  bv.FStar_Syntax_Syntax.ppname in
-                             Prims.op_Hat uu___9 "__w" in
+                             Prims.strcat uu___9 "__w" in
                            let uu___9 = star_type' env3 c in
                            FStar_Syntax_Syntax.gen_bv uu___8
                              FStar_Pervasives_Native.None uu___9 in
@@ -3697,7 +3697,7 @@ and (trans_F_ :
                                      let uu___8 =
                                        FStar_Ident.string_of_id
                                          bv.FStar_Syntax_Syntax.ppname in
-                                     Prims.op_Hat uu___8 "__w'" in
+                                     Prims.strcat uu___8 "__w'" in
                                    let uu___8 = star_type' env1 h in
                                    FStar_Syntax_Syntax.gen_bv uu___7
                                      FStar_Pervasives_Native.None uu___8 in
@@ -3739,7 +3739,7 @@ and (trans_F_ :
                                       let uu___9 =
                                         FStar_Ident.string_of_id
                                           bv.FStar_Syntax_Syntax.ppname in
-                                      Prims.op_Hat uu___9 "__x" in
+                                      Prims.strcat uu___9 "__x" in
                                     let uu___9 = star_type' env1 h in
                                     FStar_Syntax_Syntax.gen_bv uu___8
                                       FStar_Pervasives_Native.None uu___9 in
@@ -4432,9 +4432,9 @@ let (cps_and_elaborate :
                                            let p' =
                                              apply_last
                                                (fun s ->
-                                                  Prims.op_Hat "__"
-                                                    (Prims.op_Hat s
-                                                       (Prims.op_Hat
+                                                  Prims.strcat "__"
+                                                    (Prims.strcat s
+                                                       (Prims.strcat
                                                           "_eff_override_"
                                                           name))) p in
                                            let l' =
@@ -4719,14 +4719,14 @@ let (cps_and_elaborate :
                                                                  (let action_elab3
                                                                     =
                                                                     register1
-                                                                    (Prims.op_Hat
+                                                                    (Prims.strcat
                                                                     name
                                                                     "_elab")
                                                                     action_elab2 in
                                                                   let action_typ_with_wp3
                                                                     =
                                                                     register1
-                                                                    (Prims.op_Hat
+                                                                    (Prims.strcat
                                                                     name
                                                                     "_complete_type")
                                                                     action_typ_with_wp2 in

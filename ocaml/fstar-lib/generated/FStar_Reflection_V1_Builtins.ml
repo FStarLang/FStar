@@ -977,8 +977,8 @@ let (pack_sigelt :
         let uu___1 =
           let uu___2 =
             let uu___3 = FStar_Ident.string_of_lid lid in
-            Prims.op_Hat uu___3 "\" (did you forget a module path?)" in
-          Prims.op_Hat "pack_sigelt: invalid long identifier \"" uu___2 in
+            Prims.strcat uu___3 "\" (did you forget a module path?)" in
+          Prims.strcat "pack_sigelt: invalid long identifier \"" uu___2 in
         failwith uu___1
       else () in
     match sv with

@@ -2011,7 +2011,7 @@ let (ad_hoc_indexed_bind_substs :
                                                  let uu___7 =
                                                    FStar_Syntax_Print.term_to_string
                                                      t in
-                                                 Prims.op_Hat
+                                                 Prims.strcat
                                                    "Impossible, expected a uvar, got : "
                                                    uu___7 in
                                                failwith uu___6))
@@ -7590,7 +7590,7 @@ let (check_sigelt_quals :
                  uu___4 msg in
              (FStar_Errors_Codes.Fatal_QulifierListNotPermitted, uu___3) in
            FStar_Errors.raise_error uu___2 r in
-         let err msg = err' (Prims.op_Hat ": " msg) in
+         let err msg = err' (Prims.strcat ": " msg) in
          let err'1 uu___2 = err' "" in
          (if
             (FStar_Compiler_List.length quals) <>
