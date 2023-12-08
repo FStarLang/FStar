@@ -896,8 +896,8 @@ val t_sealed_of     : term -> term
 val unit_const_with_range : Range.range -> term
 val unit_const            : term
 
-instance val has_range_syntax #a : Tot (hasRange (syntax a))
-instance val has_range_withinfo #a : Tot (hasRange (withinfo_t a))
+instance val has_range_syntax #a : unit -> Tot (hasRange (syntax a))
+instance val has_range_withinfo #a : unit -> Tot (hasRange (withinfo_t a))
 instance val has_range_sigelt : hasRange sigelt
 
 instance val showable_emb_typ : showable emb_typ
