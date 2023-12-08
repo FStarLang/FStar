@@ -21,13 +21,13 @@ let rec sort xs =
   | [] -> []
   | x::xs -> insert x (sort xs)
 
-let rec dedup #a xs =
+let dedup #a xs =
   let rec aux (xs:list a) : list a =
     match xs with
     | [] -> []
-    | x :: xs -> if List.existsb ((=?) x) xs then dedup xs else x :: dedup xs
+    | x :: xs -> if List.existsb ((=?) x) xs then aux xs else x :: aux xs
   in
-  aux (List.rev xs)
+  List.rev (aux (List.rev xs))
 
 instance ord_int : ord int = {
    super = solve;
