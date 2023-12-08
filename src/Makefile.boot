@@ -17,11 +17,11 @@ FSTAR_BOOT ?= $(FSTAR)
 #   -- we use automatic dependence analysis based on files in ulib, src/{basic, ...} and boot
 #   -- MLish and lax tune type-inference for use with unverified ML programs
 DUNE_SNAPSHOT ?= $(call maybe_cygwin_path,$(FSTAR_HOME)/ocaml)
-OUTPUT_DIRECTORY = $(DUNE_SNAPSHOT)/fstar-lib/generated
+OUTPUT_DIRECTORY = $(FSTAR_HOME)/src/ocaml-output/fstarc
 FSTAR_C=$(RUNLIM) $(FSTAR_BOOT) $(SIL) $(FSTAR_BOOT_OPTIONS) --cache_checked_modules
 
 # Tests.* goes to fstar-tests, the rest to fstar-lib
-OUTPUT_DIRECTORY_FOR = $(if $(findstring FStar_Tests_,$(1)),$(DUNE_SNAPSHOT)/fstar-tests/generated,$(DUNE_SNAPSHOT)/fstar-lib/generated)
+OUTPUT_DIRECTORY_FOR = $(if $(findstring FStar_Tests_,$(1)),$(DUNE_SNAPSHOT)/fstar-tests/generated,$(OUTPUT_DIRECTORY))
 
 # Each "project" for the compiler is in its own namespace.  We want to
 # extract them all to OCaml.  Would be more convenient if all of them
@@ -111,7 +111,6 @@ dep.graph:
 	$(Q)$(FSTAR_C) --dep graph		\
 		fstar/FStar.Main.fst		\
 		tests/FStar.Tests.Test.fst	\
-		--odir $(OUTPUT_DIRECTORY)	\
 		$(EXTRACT)			\
 		--output_deps_to dep.graph
 

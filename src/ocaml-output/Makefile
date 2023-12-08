@@ -34,6 +34,10 @@ dune-stdlib-snapshot: dune-verify-ulib
 	$(MAKE) -C ../../ulib -f Makefile.extract dune-snapshot
 
 dune-snapshot: dune-fstar-snapshot dune-stdlib-snapshot
+	@# These copies MUST be done in this order to make sure
+	@# we avoid races and always end in a consistent state.
+	cp -t $(DUNE_SNAPSHOT)/fstar-lib/generated/ fstarc/*.ml
+	cp -t $(DUNE_SNAPSHOT)/fstar-lib/generated/ fstarlib/*.ml
 
 # ------------------------------------------------------------------------------
 # Preparing a release... these targets are not optimized and the Makefile is
