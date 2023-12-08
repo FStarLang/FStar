@@ -4830,8 +4830,20 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
   | Tm_meta {tm=t} -> __typeof_tot_or_gtot_term_fastpath env t must_tot
 
   | Tm_match {rc_opt=Some rc} -> rc.residual_typ
-  | Tm_match _
-  | Tm_let _
+
+  | Tm_let {lbs=(false, [lb]); body} ->
+    let x = BU.left lb.lbname in
+    let xb, body = SS.open_term [S.mk_binder x] body in
+    let xbinder = List.hd xb in
+    let x = xbinder.binder_bv in
+    let env_x = Env.push_bv env x in
+    let t = __typeof_tot_or_gtot_term_fastpath env_x body must_tot in
+    bind_opt t (fun t ->
+      let t = FStar.Syntax.Subst.close xb t in
+      Some t)
+
+  | Tm_match _ -> None //unelaborated matches
+  | Tm_let _ -> None //recursive lets
   | Tm_unknown
   | _ -> failwith ("Impossible! (" ^ (Print.tag_of_term t) ^ ")")
 

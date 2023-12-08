@@ -21,18 +21,14 @@ let tac_bind :
       fun t1 ->
         fun t2 ->
           fun ps ->
-            match t1
-                    (FStar_Tactics_Types.incr_depth
-                       (FStar_Tactics_Types.set_proofstate_range ps r1))
-            with
+            let ps1 = FStar_Tactics_Types.set_proofstate_range ps r1 in
+            let ps2 = FStar_Tactics_Types.incr_depth ps1 in
+            let r = t1 ps2 in
+            match r with
             | FStar_Tactics_Result.Success (a1, ps') ->
-                (match FStar_Tactics_Types.tracepoint
-                         (FStar_Tactics_Types.set_proofstate_range ps' r2)
-                 with
-                 | true ->
-                     t2 a1
-                       (FStar_Tactics_Types.decr_depth
-                          (FStar_Tactics_Types.set_proofstate_range ps' r2)))
+                let ps'1 = FStar_Tactics_Types.set_proofstate_range ps' r2 in
+                (match FStar_Tactics_Types.tracepoint ps'1 with
+                 | true -> t2 a1 (FStar_Tactics_Types.decr_depth ps'1))
             | FStar_Tactics_Result.Failed (e, ps') ->
                 FStar_Tactics_Result.Failed (e, ps')
 type ('a, 'wputhen, 'wpuelse, 'b, 'ps, 'post) tac_if_then_else_wp = unit
@@ -46,7 +42,8 @@ let __proj__TAC__item__return = tac_return
 let __proj__TAC__item__bind = tac_bind
 type ('a, 'wp, 'uuuuu, 'uuuuu1) lift_div_tac_wp = 'wp
 let lift_div_tac : 'a 'wp . (unit -> 'a) -> ('a, 'wp) tac_repr =
-  fun f -> fun ps -> FStar_Tactics_Result.Success ((f ()), ps)
+  fun f ->
+    fun ps -> let uu___1 = f () in FStar_Tactics_Result.Success (uu___1, ps)
 let (get : unit -> (FStar_Tactics_Types.proofstate, Obj.t) tac_repr) =
   fun uu___ -> fun ps -> FStar_Tactics_Result.Success (ps, ps)
 let raise : 'a . Prims.exn -> ('a, Obj.t) tac_repr =
@@ -58,6 +55,18 @@ let (rewrite_with_tactic :
 let synth_by_tactic : 'uuuuu . (unit -> (unit, unit) tac_repr) -> 'uuuuu =
   fun uu___ -> Prims.admit ()
 let assume_safe : 'a . (unit -> ('a, unit) tac_repr) -> ('a, unit) tac_repr =
-  fun tau -> tau ()
+  fun tau ->
+    tac_bind
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.Effect.fsti"
+               (Prims.of_int (221)) (Prims.of_int (57)) (Prims.of_int (221))
+               (Prims.of_int (65)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.Effect.fsti"
+               (Prims.of_int (221)) (Prims.of_int (67)) (Prims.of_int (221))
+               (Prims.of_int (73))))) (lift_div_tac (fun uu___ -> ()))
+      (fun uu___ -> (fun uu___ -> Obj.magic (tau ())) uu___)
 type ('a, 'b) tac = 'a -> ('b, unit) tac_repr
 type 'a tactic = (unit, 'a) tac
