@@ -182,8 +182,11 @@ ci-uregressions-ulong:
 
 1: fstar
 
+# This is a hacky rule to bootstrap the compiler, and not
+# the library, more quickly.
 2:
 	+$(Q)$(MAKE) -C src ocaml
+	+$(Q)$(MAKE) -C src/ocaml-output overlay-snapshots
 	+$(Q)$(MAKE) fstar
 
 3:
