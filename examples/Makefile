@@ -37,6 +37,7 @@ HAS_OCAML := $(shell which ocamlfind 2>/dev/null)
 
 ifneq (,$(HAS_OCAML))
 SPECIAL_CASES += hello
+SPECIAL_CASES += native_tactics
 endif
 
 ifdef KRML_HOME
@@ -45,6 +46,7 @@ SPECIAL_CASES += miniparse
 endif
 
 special_cases: $(addsuffix .all, $(SPECIAL_CASES))
+	$(MAKE) -C semiring CanonCommSemiring.native
 
 %.all: %
 	+$(MAKE) -C $^ all
