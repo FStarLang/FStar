@@ -4299,6 +4299,71 @@ let (run_meta_arg_tac :
       | uu___ ->
           FStar_Compiler_Effect.failwith
             "run_meta_arg_tac must have been called with a uvar that has a meta tac"
+let (simplify_vc :
+  Prims.bool ->
+    FStar_TypeChecker_Env.env ->
+      FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+  =
+  fun full_norm_allowed ->
+    fun env ->
+      fun t ->
+        (let uu___1 =
+           FStar_Compiler_Effect.op_Less_Bar
+             (FStar_TypeChecker_Env.debug env)
+             (FStar_Options.Other "Simplification") in
+         if uu___1
+         then
+           let uu___2 =
+             FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
+           FStar_Compiler_Util.print1 "Simplifying guard %s\n" uu___2
+         else ());
+        (let steps =
+           [FStar_TypeChecker_Env.Beta;
+           FStar_TypeChecker_Env.Eager_unfolding;
+           FStar_TypeChecker_Env.Simplify;
+           FStar_TypeChecker_Env.Primops;
+           FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta] in
+         let steps1 =
+           if full_norm_allowed
+           then steps
+           else FStar_TypeChecker_Env.NoFullNorm :: steps in
+         let t' =
+           norm_with_steps "FStar.TypeChecker.Rel.simplify_vc" steps1 env t in
+         (let uu___2 =
+            FStar_Compiler_Effect.op_Less_Bar
+              (FStar_TypeChecker_Env.debug env)
+              (FStar_Options.Other "Simplification") in
+          if uu___2
+          then
+            let uu___3 =
+              FStar_Class_Show.show FStar_Syntax_Print.showable_term t' in
+            FStar_Compiler_Util.print1 "Simplified guard to %s\n" uu___3
+          else ());
+         t')
+let (__simplify_guard :
+  Prims.bool ->
+    FStar_TypeChecker_Env.env ->
+      FStar_TypeChecker_Common.guard_t -> FStar_TypeChecker_Common.guard_t)
+  =
+  fun full_norm_allowed ->
+    fun env ->
+      fun g ->
+        match g.FStar_TypeChecker_Common.guard_f with
+        | FStar_TypeChecker_Common.Trivial -> g
+        | FStar_TypeChecker_Common.NonTrivial f ->
+            let f1 = simplify_vc full_norm_allowed env f in
+            let f2 = FStar_TypeChecker_Common.check_trivial f1 in
+            {
+              FStar_TypeChecker_Common.guard_f = f2;
+              FStar_TypeChecker_Common.deferred_to_tac =
+                (g.FStar_TypeChecker_Common.deferred_to_tac);
+              FStar_TypeChecker_Common.deferred =
+                (g.FStar_TypeChecker_Common.deferred);
+              FStar_TypeChecker_Common.univ_ineqs =
+                (g.FStar_TypeChecker_Common.univ_ineqs);
+              FStar_TypeChecker_Common.implicits =
+                (g.FStar_TypeChecker_Common.implicits)
+            }
 let (simplify_guard :
   FStar_TypeChecker_Env.env ->
     FStar_TypeChecker_Common.guard_t -> FStar_TypeChecker_Common.guard_t)
@@ -4308,60 +4373,41 @@ let (simplify_guard :
       match g.FStar_TypeChecker_Common.guard_f with
       | FStar_TypeChecker_Common.Trivial -> g
       | FStar_TypeChecker_Common.NonTrivial f ->
-          ((let uu___1 =
-              FStar_Compiler_Effect.op_Less_Bar
-                (FStar_TypeChecker_Env.debug env)
-                (FStar_Options.Other "Simplification") in
-            if uu___1
-            then
-              let uu___2 =
-                FStar_Class_Show.show FStar_Syntax_Print.showable_term f in
-              FStar_Compiler_Util.print1 "Simplifying guard %s\n" uu___2
-            else ());
-           (let f1 =
-              norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.6"
-                [FStar_TypeChecker_Env.Beta;
-                FStar_TypeChecker_Env.Eager_unfolding;
-                FStar_TypeChecker_Env.Simplify;
-                FStar_TypeChecker_Env.Primops;
-                FStar_TypeChecker_Env.NoFullNorm;
-                FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta] env
-                f in
-            (let uu___2 =
-               FStar_Compiler_Effect.op_Less_Bar
-                 (FStar_TypeChecker_Env.debug env)
-                 (FStar_Options.Other "Simplification") in
-             if uu___2
-             then
-               let uu___3 =
-                 FStar_Class_Show.show FStar_Syntax_Print.showable_term f1 in
-               FStar_Compiler_Util.print1 "Simplified guard to %s\n" uu___3
-             else ());
-            (let f2 =
-               let g1 = FStar_Syntax_Util.unmeta f1 in
-               let g2 =
-                 let uu___2 = FStar_Syntax_Util.un_squash g1 in
-                 match uu___2 with
-                 | FStar_Pervasives_Native.Some g' ->
-                     FStar_Syntax_Util.unmeta g'
-                 | uu___3 -> g1 in
-               match g2.FStar_Syntax_Syntax.n with
-               | FStar_Syntax_Syntax.Tm_fvar fv when
-                   FStar_Syntax_Syntax.fv_eq_lid fv
-                     FStar_Parser_Const.true_lid
-                   -> FStar_TypeChecker_Common.Trivial
-               | uu___2 -> FStar_TypeChecker_Common.NonTrivial f1 in
-             {
-               FStar_TypeChecker_Common.guard_f = f2;
-               FStar_TypeChecker_Common.deferred_to_tac =
-                 (g.FStar_TypeChecker_Common.deferred_to_tac);
-               FStar_TypeChecker_Common.deferred =
-                 (g.FStar_TypeChecker_Common.deferred);
-               FStar_TypeChecker_Common.univ_ineqs =
-                 (g.FStar_TypeChecker_Common.univ_ineqs);
-               FStar_TypeChecker_Common.implicits =
-                 (g.FStar_TypeChecker_Common.implicits)
-             })))
+          let f1 = simplify_vc false env f in
+          let f2 = FStar_TypeChecker_Common.check_trivial f1 in
+          {
+            FStar_TypeChecker_Common.guard_f = f2;
+            FStar_TypeChecker_Common.deferred_to_tac =
+              (g.FStar_TypeChecker_Common.deferred_to_tac);
+            FStar_TypeChecker_Common.deferred =
+              (g.FStar_TypeChecker_Common.deferred);
+            FStar_TypeChecker_Common.univ_ineqs =
+              (g.FStar_TypeChecker_Common.univ_ineqs);
+            FStar_TypeChecker_Common.implicits =
+              (g.FStar_TypeChecker_Common.implicits)
+          }
+let (simplify_guard_full_norm :
+  FStar_TypeChecker_Env.env ->
+    FStar_TypeChecker_Common.guard_t -> FStar_TypeChecker_Common.guard_t)
+  =
+  fun env ->
+    fun g ->
+      match g.FStar_TypeChecker_Common.guard_f with
+      | FStar_TypeChecker_Common.Trivial -> g
+      | FStar_TypeChecker_Common.NonTrivial f ->
+          let f1 = simplify_vc true env f in
+          let f2 = FStar_TypeChecker_Common.check_trivial f1 in
+          {
+            FStar_TypeChecker_Common.guard_f = f2;
+            FStar_TypeChecker_Common.deferred_to_tac =
+              (g.FStar_TypeChecker_Common.deferred_to_tac);
+            FStar_TypeChecker_Common.deferred =
+              (g.FStar_TypeChecker_Common.deferred);
+            FStar_TypeChecker_Common.univ_ineqs =
+              (g.FStar_TypeChecker_Common.univ_ineqs);
+            FStar_TypeChecker_Common.implicits =
+              (g.FStar_TypeChecker_Common.implicits)
+          }
 let (apply_substitutive_indexed_subcomp :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.indexed_effect_combinator_kind ->
@@ -14394,6 +14440,161 @@ let (solve_non_tactic_deferred_constraints :
               let deferred_to_tac_ok = false in
               try_solve_deferred_constraints defer_ok smt_ok
                 deferred_to_tac_ok env g))
+let (do_discharge_vc :
+  (unit -> Prims.string) FStar_Pervasives_Native.option ->
+    FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.goal -> unit)
+  =
+  fun use_env_range_msg ->
+    fun env ->
+      fun vc ->
+        let debug1 =
+          ((FStar_Compiler_Effect.op_Less_Bar
+              (FStar_TypeChecker_Env.debug env) (FStar_Options.Other "Rel"))
+             ||
+             (FStar_Compiler_Effect.op_Less_Bar
+                (FStar_TypeChecker_Env.debug env)
+                (FStar_Options.Other "SMTQuery")))
+            ||
+            (FStar_Compiler_Effect.op_Less_Bar
+               (FStar_TypeChecker_Env.debug env)
+               (FStar_Options.Other "Discharge")) in
+        let diag_doc =
+          if debug1
+          then
+            let uu___ = FStar_TypeChecker_Env.get_range env in
+            FStar_Errors.diag_doc uu___
+          else (fun uu___1 -> ()) in
+        (let uu___1 =
+           let uu___2 =
+             let uu___3 = FStar_Errors_Msg.text "Checking VC:" in
+             let uu___4 = FStar_Class_PP.pp FStar_Syntax_Print.pretty_term vc in
+             FStar_Pprint.op_Hat_Slash_Hat uu___3 uu___4 in
+           [uu___2] in
+         diag_doc uu___1);
+        (let vcs =
+           let uu___1 = FStar_Options.use_tactics () in
+           if uu___1
+           then
+             FStar_Options.with_saved_options
+               (fun uu___2 ->
+                  (let uu___4 = FStar_Options.set_options "--no_tactics" in
+                   FStar_Compiler_Effect.op_Less_Bar (fun uu___5 -> ())
+                     uu___4);
+                  (let vcs1 =
+                     (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.preprocess
+                       env vc in
+                   (let uu___5 =
+                      let uu___6 =
+                        let uu___7 =
+                          FStar_Errors_Msg.text
+                            "Tactic preprocessing produced" in
+                        let uu___8 =
+                          let uu___9 =
+                            FStar_Class_PP.pp FStar_Class_PP.pp_int
+                              (FStar_Compiler_List.length vcs1) in
+                          let uu___10 = FStar_Errors_Msg.text "goals" in
+                          FStar_Pprint.op_Hat_Hat uu___9 uu___10 in
+                        FStar_Pprint.op_Hat_Hat uu___7 uu___8 in
+                      [uu___6] in
+                    diag_doc uu___5);
+                   (let vcs2 =
+                      FStar_Compiler_Effect.op_Bar_Greater vcs1
+                        (FStar_Compiler_List.map
+                           (fun uu___5 ->
+                              match uu___5 with
+                              | (env1, goal, opts) ->
+                                  let uu___6 =
+                                    norm_with_steps
+                                      "FStar.TypeChecker.Rel.norm_with_steps.7"
+                                      [FStar_TypeChecker_Env.Simplify;
+                                      FStar_TypeChecker_Env.Primops;
+                                      FStar_TypeChecker_Env.Exclude
+                                        FStar_TypeChecker_Env.Zeta] env1 goal in
+                                  (env1, uu___6, opts))) in
+                    let vcs3 =
+                      FStar_Compiler_Effect.op_Bar_Greater vcs2
+                        (FStar_Compiler_List.concatMap
+                           (fun uu___5 ->
+                              match uu___5 with
+                              | (env1, goal, opts) ->
+                                  let uu___6 =
+                                    (env1.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.handle_smt_goal
+                                      env1 goal in
+                                  FStar_Compiler_Effect.op_Bar_Greater uu___6
+                                    (FStar_Compiler_List.map
+                                       (fun uu___7 ->
+                                          match uu___7 with
+                                          | (env2, goal1) ->
+                                              (env2, goal1, opts))))) in
+                    let vcs4 =
+                      FStar_Compiler_Effect.op_Bar_Greater vcs3
+                        (FStar_Compiler_List.concatMap
+                           (fun uu___5 ->
+                              match uu___5 with
+                              | (env1, goal, opts) ->
+                                  let uu___6 =
+                                    FStar_TypeChecker_Common.check_trivial
+                                      goal in
+                                  (match uu___6 with
+                                   | FStar_TypeChecker_Common.Trivial ->
+                                       ((let uu___8 =
+                                           let uu___9 =
+                                             FStar_Errors_Msg.text
+                                               "Goal completely solved by tactic\n" in
+                                           [uu___9] in
+                                         diag_doc uu___8);
+                                        [])
+                                   | FStar_TypeChecker_Common.NonTrivial
+                                       goal1 -> [(env1, goal1, opts)]))) in
+                    vcs4)))
+           else
+             (let uu___3 =
+                let uu___4 = FStar_Options.peek () in (env, vc, uu___4) in
+              [uu___3]) in
+         let vcs1 =
+           let uu___1 =
+             let uu___2 = FStar_Options.split_queries () in
+             uu___2 = FStar_Options.Always in
+           if uu___1
+           then
+             FStar_Compiler_Effect.op_Bar_Greater vcs
+               (FStar_Compiler_List.collect
+                  (fun uu___2 ->
+                     match uu___2 with
+                     | (env1, goal, opts) ->
+                         let uu___3 =
+                           FStar_TypeChecker_Env.split_smt_query env1 goal in
+                         (match uu___3 with
+                          | FStar_Pervasives_Native.None ->
+                              [(env1, goal, opts)]
+                          | FStar_Pervasives_Native.Some goals ->
+                              FStar_Compiler_Effect.op_Bar_Greater goals
+                                (FStar_Compiler_List.map
+                                   (fun uu___4 ->
+                                      match uu___4 with
+                                      | (env2, goal1) -> (env2, goal1, opts))))))
+           else vcs in
+         FStar_Compiler_Effect.op_Bar_Greater vcs1
+           (FStar_Compiler_List.iter
+              (fun uu___1 ->
+                 match uu___1 with
+                 | (env1, goal, opts) ->
+                     FStar_Options.with_saved_options
+                       (fun uu___2 ->
+                          FStar_Options.set opts;
+                          (let uu___5 =
+                             let uu___6 =
+                               let uu___7 =
+                                 FStar_Errors_Msg.text
+                                   "Before calling solver, VC=:" in
+                               let uu___8 =
+                                 FStar_Class_PP.pp
+                                   FStar_Syntax_Print.pretty_term goal in
+                               FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                             [uu___6] in
+                           diag_doc uu___5);
+                          (env1.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.solve
+                            use_env_range_msg env1 goal))))
 let (discharge_guard' :
   (unit -> Prims.string) FStar_Pervasives_Native.option ->
     FStar_TypeChecker_Env.env ->
@@ -14406,12 +14607,22 @@ let (discharge_guard' :
       fun g ->
         fun use_smt ->
           let debug1 =
-            (FStar_Compiler_Effect.op_Less_Bar
-               (FStar_TypeChecker_Env.debug env) (FStar_Options.Other "Rel"))
+            ((FStar_Compiler_Effect.op_Less_Bar
+                (FStar_TypeChecker_Env.debug env) (FStar_Options.Other "Rel"))
+               ||
+               (FStar_Compiler_Effect.op_Less_Bar
+                  (FStar_TypeChecker_Env.debug env)
+                  (FStar_Options.Other "SMTQuery")))
               ||
               (FStar_Compiler_Effect.op_Less_Bar
                  (FStar_TypeChecker_Env.debug env)
-                 (FStar_Options.Other "SMTQuery")) in
+                 (FStar_Options.Other "Disch")) in
+          let diag_doc =
+            if debug1
+            then
+              let uu___ = FStar_TypeChecker_Env.get_range env in
+              FStar_Errors.diag_doc uu___
+            else (fun uu___1 -> ()) in
           (let uu___1 =
              FStar_Compiler_Effect.op_Less_Bar
                (FStar_TypeChecker_Env.debug env)
@@ -14441,247 +14652,40 @@ let (discharge_guard' :
                FStar_TypeChecker_Common.implicits =
                  (g1.FStar_TypeChecker_Common.implicits)
              } in
-           let uu___1 =
-             let uu___2 = FStar_TypeChecker_Env.should_verify env in
-             Prims.op_Negation uu___2 in
-           if uu___1
-           then FStar_Pervasives_Native.Some ret_g
-           else
-             (match g1.FStar_TypeChecker_Common.guard_f with
-              | FStar_TypeChecker_Common.Trivial ->
-                  FStar_Pervasives_Native.Some ret_g
-              | FStar_TypeChecker_Common.NonTrivial vc ->
-                  (if debug1
-                   then
-                     (let uu___4 = FStar_TypeChecker_Env.get_range env in
-                      let uu___5 =
-                        let uu___6 =
-                          FStar_Class_Show.show
-                            FStar_Syntax_Print.showable_term vc in
-                        FStar_Compiler_Util.format1
-                          "Before normalization VC=\n%s\n" uu___6 in
-                      FStar_Errors.diag uu___4 uu___5)
-                   else ();
-                   (let vc1 =
-                      let uu___4 =
-                        let uu___5 =
-                          let uu___6 =
-                            FStar_TypeChecker_Env.current_module env in
-                          FStar_Ident.string_of_lid uu___6 in
-                        FStar_Pervasives_Native.Some uu___5 in
-                      FStar_Profiling.profile
-                        (fun uu___5 ->
-                           FStar_TypeChecker_Normalize.normalize
-                             [FStar_TypeChecker_Env.Eager_unfolding;
-                             FStar_TypeChecker_Env.Simplify;
-                             FStar_TypeChecker_Env.Primops;
-                             FStar_TypeChecker_Env.Exclude
-                               FStar_TypeChecker_Env.Zeta] env vc) uu___4
-                        "FStar.TypeChecker.Rel.vc_normalization" in
-                    if debug1
-                    then
-                      (let uu___5 = FStar_TypeChecker_Env.get_range env in
-                       let uu___6 =
-                         let uu___7 =
-                           FStar_Class_Show.show
-                             FStar_Syntax_Print.showable_term vc1 in
-                         FStar_Compiler_Util.format1
-                           "After normalization VC=\n%s\n" uu___7 in
-                       FStar_Errors.diag uu___5 uu___6)
-                    else ();
-                    (let uu___6 = FStar_TypeChecker_Env.get_range env in
-                     FStar_Defensive.def_check_scoped
-                       FStar_TypeChecker_Env.hasBinders_env
-                       FStar_Class_Binders.hasNames_term
-                       FStar_Syntax_Print.pretty_term uu___6
-                       "discharge_guard'" env vc1);
-                    (let uu___6 = FStar_TypeChecker_Common.check_trivial vc1 in
-                     match uu___6 with
-                     | FStar_TypeChecker_Common.Trivial ->
-                         FStar_Pervasives_Native.Some ret_g
-                     | FStar_TypeChecker_Common.NonTrivial vc2 ->
-                         if Prims.op_Negation use_smt
-                         then
-                           (if debug1
-                            then
-                              (let uu___8 =
-                                 FStar_TypeChecker_Env.get_range env in
-                               let uu___9 =
-                                 let uu___10 =
-                                   FStar_Class_Show.show
-                                     FStar_Syntax_Print.showable_term vc2 in
-                                 FStar_Compiler_Util.format1
-                                   "Cannot solve without SMT : %s\n" uu___10 in
-                               FStar_Errors.diag uu___8 uu___9)
-                            else ();
-                            FStar_Pervasives_Native.None)
-                         else
-                           (if debug1
-                            then
-                              (let uu___10 =
-                                 FStar_TypeChecker_Env.get_range env in
-                               let uu___11 =
-                                 let uu___12 =
-                                   FStar_Class_Show.show
-                                     FStar_Syntax_Print.showable_term vc2 in
-                                 FStar_Compiler_Util.format1
-                                   "Checking VC=\n%s\n" uu___12 in
-                               FStar_Errors.diag uu___10 uu___11)
-                            else ();
-                            (let vcs =
-                               let uu___10 = FStar_Options.use_tactics () in
-                               if uu___10
-                               then
-                                 FStar_Options.with_saved_options
-                                   (fun uu___11 ->
-                                      (let uu___13 =
-                                         FStar_Options.set_options
-                                           "--no_tactics" in
-                                       FStar_Compiler_Effect.op_Less_Bar
-                                         (fun uu___14 -> ()) uu___13);
-                                      (let vcs1 =
-                                         (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.preprocess
-                                           env vc2 in
-                                       (let uu___14 =
-                                          FStar_Options.profile_enabled
-                                            FStar_Pervasives_Native.None
-                                            "FStar.TypeChecker" in
-                                        if uu___14
-                                        then
-                                          let uu___15 =
-                                            FStar_Compiler_Util.string_of_int
-                                              (FStar_Compiler_List.length
-                                                 vcs1) in
-                                          FStar_Compiler_Util.print1
-                                            "Tactic preprocessing produced %s goals\n"
-                                            uu___15
-                                        else ());
-                                       (let vcs2 =
-                                          FStar_Compiler_List.map
-                                            (fun uu___14 ->
-                                               match uu___14 with
-                                               | (env1, goal, opts) ->
-                                                   let uu___15 =
-                                                     norm_with_steps
-                                                       "FStar.TypeChecker.Rel.norm_with_steps.7"
-                                                       [FStar_TypeChecker_Env.Simplify;
-                                                       FStar_TypeChecker_Env.Primops;
-                                                       FStar_TypeChecker_Env.Exclude
-                                                         FStar_TypeChecker_Env.Zeta]
-                                                       env1 goal in
-                                                   (env1, uu___15, opts))
-                                            vcs1 in
-                                        let vcs3 =
-                                          FStar_Compiler_List.map
-                                            (fun uu___14 ->
-                                               match uu___14 with
-                                               | (env1, goal, opts) ->
-                                                   let uu___15 =
-                                                     (env1.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.handle_smt_goal
-                                                       env1 goal in
-                                                   FStar_Compiler_Effect.op_Bar_Greater
-                                                     uu___15
-                                                     (FStar_Compiler_List.map
-                                                        (fun uu___16 ->
-                                                           match uu___16 with
-                                                           | (env2, goal1) ->
-                                                               (env2, goal1,
-                                                                 opts))))
-                                            vcs2 in
-                                        FStar_Compiler_List.flatten vcs3)))
-                               else
-                                 (let uu___12 =
-                                    let uu___13 = FStar_Options.peek () in
-                                    (env, vc2, uu___13) in
-                                  [uu___12]) in
-                             let vcs1 =
-                               let uu___10 =
-                                 let uu___11 = FStar_Options.split_queries () in
-                                 uu___11 = FStar_Options.Always in
-                               if uu___10
-                               then
-                                 FStar_Compiler_Effect.op_Bar_Greater vcs
-                                   (FStar_Compiler_List.collect
-                                      (fun uu___11 ->
-                                         match uu___11 with
-                                         | (env1, goal, opts) ->
-                                             let uu___12 =
-                                               FStar_TypeChecker_Env.split_smt_query
-                                                 env1 goal in
-                                             (match uu___12 with
-                                              | FStar_Pervasives_Native.None
-                                                  -> [(env1, goal, opts)]
-                                              | FStar_Pervasives_Native.Some
-                                                  goals ->
-                                                  FStar_Compiler_Effect.op_Bar_Greater
-                                                    goals
-                                                    (FStar_Compiler_List.map
-                                                       (fun uu___13 ->
-                                                          match uu___13 with
-                                                          | (env2, goal1) ->
-                                                              (env2, goal1,
-                                                                opts))))))
-                               else vcs in
-                             FStar_Compiler_Effect.op_Bar_Greater vcs1
-                               (FStar_Compiler_List.iter
-                                  (fun uu___10 ->
-                                     match uu___10 with
-                                     | (env1, goal, opts) ->
-                                         let uu___11 =
-                                           FStar_TypeChecker_Common.check_trivial
-                                             goal in
-                                         (match uu___11 with
-                                          | FStar_TypeChecker_Common.Trivial
-                                              ->
-                                              if debug1
-                                              then
-                                                FStar_Compiler_Util.print_string
-                                                  "Goal completely solved by tactic\n"
-                                              else ()
-                                          | FStar_TypeChecker_Common.NonTrivial
-                                              goal1 ->
-                                              FStar_Options.with_saved_options
-                                                (fun uu___12 ->
-                                                   FStar_Options.set opts;
-                                                   if debug1
-                                                   then
-                                                     (let uu___15 =
-                                                        FStar_TypeChecker_Env.get_range
-                                                          env1 in
-                                                      let uu___16 =
-                                                        let uu___17 =
-                                                          FStar_Class_Show.show
-                                                            FStar_Syntax_Print.showable_term
-                                                            goal1 in
-                                                        let uu___18 =
-                                                          FStar_TypeChecker_Env.string_of_proof_ns
-                                                            env1 in
-                                                        FStar_Compiler_Util.format2
-                                                          "Trying to solve:\n> %s\nWith proof_ns:\n %s\n"
-                                                          uu___17 uu___18 in
-                                                      FStar_Errors.diag
-                                                        uu___15 uu___16)
-                                                   else ();
-                                                   if debug1
-                                                   then
-                                                     (let uu___16 =
-                                                        FStar_TypeChecker_Env.get_range
-                                                          env1 in
-                                                      let uu___17 =
-                                                        let uu___18 =
-                                                          FStar_Class_Show.show
-                                                            FStar_Syntax_Print.showable_term
-                                                            goal1 in
-                                                        FStar_Compiler_Util.format1
-                                                          "Before calling solver VC=\n%s\n"
-                                                          uu___18 in
-                                                      FStar_Errors.diag
-                                                        uu___16 uu___17)
-                                                   else ();
-                                                   (env1.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.solve
-                                                     use_env_range_msg env1
-                                                     goal1)))));
-                            FStar_Pervasives_Native.Some ret_g))))))
+           let g2 = simplify_guard_full_norm env g1 in
+           match g2.FStar_TypeChecker_Common.guard_f with
+           | FStar_TypeChecker_Common.Trivial ->
+               ((let uu___2 =
+                   let uu___3 =
+                     FStar_Errors_Msg.text "Query formula was trivial" in
+                   [uu___3] in
+                 diag_doc uu___2);
+                FStar_Pervasives_Native.Some ret_g)
+           | FStar_TypeChecker_Common.NonTrivial vc when
+               let uu___1 = FStar_TypeChecker_Env.should_verify env in
+               Prims.op_Negation uu___1 ->
+               ((let uu___2 =
+                   let uu___3 =
+                     FStar_Errors_Msg.text
+                       "Skipping VC because verification is disabled" in
+                   [uu___3] in
+                 diag_doc uu___2);
+                FStar_Pervasives_Native.Some ret_g)
+           | FStar_TypeChecker_Common.NonTrivial vc when
+               Prims.op_Negation use_smt ->
+               ((let uu___2 =
+                   let uu___3 =
+                     let uu___4 =
+                       FStar_Errors_Msg.text "Cannot solve without SMT:" in
+                     let uu___5 =
+                       FStar_Class_PP.pp FStar_Syntax_Print.pretty_term vc in
+                     FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                   [uu___3] in
+                 diag_doc uu___2);
+                FStar_Pervasives_Native.None)
+           | FStar_TypeChecker_Common.NonTrivial vc ->
+               (do_discharge_vc use_env_range_msg env vc;
+                FStar_Pervasives_Native.Some ret_g))
 let (discharge_guard_no_smt :
   FStar_TypeChecker_Env.env ->
     FStar_TypeChecker_Common.guard_t -> FStar_TypeChecker_Common.guard_t)
