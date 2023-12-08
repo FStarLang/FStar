@@ -182,7 +182,7 @@ let pts_to_range_upd'
 
 let pts_to_range_upd = pts_to_range_upd'
 
-assume val admits (#a:Type) (#p:vprop) (#q:a -> vprop) (_:unit)
+assume val admits (#a:Type) (#p:vprop) (#q:a -> vprop) ()
   : S.STF a p q True (fun _ -> False)
 
 #set-options "--print_implicits"

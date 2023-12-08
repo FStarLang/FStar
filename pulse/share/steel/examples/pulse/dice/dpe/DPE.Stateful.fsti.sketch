@@ -76,12 +76,12 @@ let transition (s:state_t) (r:repr_t) (hdl:ctxt_hndl_t) (s':state_t) =
 
 val in_state (s:sid_t) (s:state_t): vprop
 
-val get_profile (_:unit)
+val get_profile ()
   : stt profile_descriptor_t 
     (requires emp)
     (ensures fun _ -> emp)
 
-val open_session (_:unit)
+val open_session ()
   : stt (option sid_t)
     (requires emp)
     (function

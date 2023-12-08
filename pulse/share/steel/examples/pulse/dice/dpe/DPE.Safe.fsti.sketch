@@ -37,12 +37,12 @@ val snapshots_related (#o:_) (s:sid_t) (st0 st1:state_t)
     (ensures fun _ ->
         pure (st0 `leads_to` st1 \/ st1 `leads_to` st0))
         
-val get_profile (_:unit)
+val get_profile ()
   : stt profile_descriptor_t 
     (requires emp)
     (ensures fun _ -> emp)
 
-val open_session (_:unit)
+val open_session ()
   : stt (option sid_t)
     (requires emp)
     (function

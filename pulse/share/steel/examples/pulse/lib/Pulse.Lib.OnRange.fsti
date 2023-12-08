@@ -34,7 +34,7 @@ val on_range_singleton_intro
 
 val on_range_singleton_elim
   (#opened: _)
-  (_:unit)
+  ()
   (#p: (nat -> vprop))
   (#i:nat)
   (#j:nat { j == i + 1 })
@@ -72,7 +72,7 @@ val on_range_cons
 
 val on_range_uncons
   (#opened: _)
-  (_:unit)
+  ()
   (#p: (nat -> vprop))
   (#i:nat)
   (#k:nat { i < k })
@@ -94,7 +94,7 @@ val on_range_cons_with_implies
 
 val on_range_snoc
   (#opened: _)
-  (_:unit)
+  ()
   (#p: (nat -> vprop))
   (#i #j:nat)
 : stt_ghost unit opened
@@ -103,7 +103,7 @@ val on_range_snoc
 
 val on_range_unsnoc
   (#opened: _)
-  (_:unit)
+  ()
   (#p: (nat -> vprop))
   (#i:nat)
   (#k:nat{ i < k })
@@ -113,7 +113,7 @@ val on_range_unsnoc
 
 val on_range_snoc_with_implies
   (#opened: _)
-  (_:unit)
+  ()
   (#p: (nat -> vprop))
   (#i:nat)
   (#j:nat)

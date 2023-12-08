@@ -15,7 +15,7 @@ val global_tup : tup_t
 
 [@@expect_failure]
 ```pulse
-fn tuple (_:unit)
+fn tuple ()
   requires emp
   ensures emp
 {
@@ -40,7 +40,7 @@ assume
 val global_rec : rec_t
 
 ```pulse
-fn record (_:unit)
+fn record ()
   requires emp
   ensures emp
 {

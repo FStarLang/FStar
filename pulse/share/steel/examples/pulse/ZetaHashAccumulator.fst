@@ -303,7 +303,7 @@ fn package
 
 // Allocting a new instance of ha
 ```pulse
-fn create (_:unit)
+fn create ()
     requires emp
     returns h:ha
     ensures ha_val h initial_hash

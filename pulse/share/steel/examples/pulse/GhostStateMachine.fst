@@ -71,10 +71,10 @@ val some_payload : payload_t
 // TODO: init establishes the global state, so we cannot reference global state
 // before this function. the next and close signatures reference the global state,
 // so we can't include the API before the implementation of init
-val init (_:unit) : stt locked_state_t emp (fun st -> pure_handle_has_state st.ph Init)
+val init () : stt locked_state_t emp (fun st -> pure_handle_has_state st.ph Init)
 
 ```pulse
-fn init' (_:unit)
+fn init' ()
   requires emp
   returns st:locked_state_t
   ensures pure_handle_has_state st.ph Init
@@ -104,10 +104,10 @@ let init = init'
 
 let global_locked_state : locked_state_t = run_stt (init' ())
 
-val next (_:unit) : stt unit (pure_handle_has_state global_locked_state.ph Init) (fun st -> pure_handle_has_state global_locked_state.ph Next)
+val next () : stt unit (pure_handle_has_state global_locked_state.ph Init) (fun st -> pure_handle_has_state global_locked_state.ph Next)
 
 ```pulse
-fn next' (_:unit)
+fn next' ()
   requires pure_handle_has_state global_locked_state.ph Init
   ensures pure_handle_has_state global_locked_state.ph Next
 {
@@ -137,10 +137,10 @@ fn next' (_:unit)
 ```
 let next = next'
 
-val close (_:unit) : stt unit (pure_handle_has_state global_locked_state.ph Next) (fun st -> pure_handle_has_state global_locked_state.ph Final)
+val close () : stt unit (pure_handle_has_state global_locked_state.ph Next) (fun st -> pure_handle_has_state global_locked_state.ph Final)
 
 ```pulse
-fn close' (_:unit)
+fn close' ()
   requires pure_handle_has_state global_locked_state.ph Next
   ensures pure_handle_has_state global_locked_state.ph Final
 {

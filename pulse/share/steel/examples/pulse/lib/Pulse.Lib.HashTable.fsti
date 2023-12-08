@@ -92,4 +92,4 @@ val not_full (#kt:eqtype) (#vt:Type0)
         models ht pht ** 
         pure (b ==> PHT.not_full pht.repr))
 
-val test_mono (_:unit) : stt unit emp (fun _ -> emp)
+val test_mono () : stt unit emp (fun _ -> emp)

@@ -19,9 +19,9 @@ val ctxt_hndl_t : eqtype
 let sid_t : eqtype = U32.t // FIXME: type needed by DPE_CBOR
 
 
-val get_profile (_:unit) : stt profile_descriptor_t emp (fun _ -> emp)
+val get_profile () : stt profile_descriptor_t emp (fun _ -> emp)
 
-val open_session (_:unit) : stt (option sid_t) emp (fun _ -> emp)
+val open_session () : stt (option sid_t) emp (fun _ -> emp)
 
 val destroy_context (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) : stt bool emp (fun _ -> emp)
 

@@ -373,7 +373,7 @@ let emp_inames_disjoint (t:inames)
 
 ```pulse
 ghost
-fn elim_yields (_:unit) (#p #q:vprop)
+fn elim_yields () (#p #q:vprop)
    requires yields p q ** p
    ensures q
 {
@@ -406,7 +406,7 @@ val yields_elim' (#t:Type)
                  (v:node_ptr t)
                  (n:node t)
                  (tl:list t)
-                 (_:unit)
+                 ()
    : stt_ghost unit emp_inames
         (pts_to v n ** is_list n.tail tl)
         (fun _ -> is_list (Some v) (n.head::tl))
@@ -484,7 +484,7 @@ fn length_iter (#t:Type) (x: llist t)
 
 ```pulse
 ghost
-fn foo (_:unit)
+fn foo ()
   requires emp
   returns y:int
   ensures emp

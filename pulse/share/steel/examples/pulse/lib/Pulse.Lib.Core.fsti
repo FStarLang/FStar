@@ -9,7 +9,7 @@ module Set = FStar.Set
 let one_half =
   half_perm full_perm
 
-val double_one_half (_:unit)
+val double_one_half ()
   : Lemma (sum_perm one_half one_half == full_perm)
 
 (* This attribute can be used on the indexes of a vprop
@@ -379,7 +379,7 @@ val elim_pure_explicit (p:prop)
               (pure p)
               (fun _ -> emp)
 
-val elim_pure (_:unit) (#p:prop)
+val elim_pure () (#p:prop)
   : stt_ghost (squash p) emp_inames
               (pure p)
               (fun _ -> emp)

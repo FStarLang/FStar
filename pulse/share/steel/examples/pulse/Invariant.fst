@@ -41,7 +41,7 @@ fn package (r:ref int)
 // Fails as it is not atomic
 [@@expect_failure]
 ```pulse
-fn test2 (_:unit)
+fn test2 ()
   requires emp
   returns v:(v:int{v == 2})
   ensures emp
@@ -59,7 +59,7 @@ fn test2 (_:unit)
 
  ```pulse
  ghost
- fn t00 (_:unit) (i:inv emp)
+ fn t00 () (i:inv emp)
    requires emp
    ensures emp
    opens (add_inv emp_inames i)
@@ -71,7 +71,7 @@ fn test2 (_:unit)
 // FIXME: crashes
  ```pulse
  ghost
- fn t0 (_:unit) (i:inv emp)
+ fn t0 () (i:inv emp)
    requires emp
    ensures emp
    opens (add_inv emp_inames i)
@@ -90,7 +90,7 @@ assume val i2 : inv emp
 [@@expect_failure]
 ```pulse
 ghost
-fn basic_ghost (_:unit)
+fn basic_ghost ()
   requires emp
   ensures emp
 {
@@ -102,7 +102,7 @@ fn basic_ghost (_:unit)
 [@@expect_failure]
 ```pulse
 ghost
-fn t1 (_:unit)
+fn t1 ()
   requires emp
   ensures emp
   opens emp_inames
@@ -116,7 +116,7 @@ fn t1 (_:unit)
 (* Overclaiming, OK *)
 ```pulse
 ghost
-fn t3 (_:unit)
+fn t3 ()
   requires emp
   ensures emp
   opens (add_inv (add_inv emp_inames i) i2)
@@ -129,7 +129,7 @@ fn t3 (_:unit)
 
 (* Works, no need to declare opens as its an effectful fn *)
 ```pulse
-fn t2 (_:unit)
+fn t2 ()
   requires emp
   returns _:int
   ensures emp

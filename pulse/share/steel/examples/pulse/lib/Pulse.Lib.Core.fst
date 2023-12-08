@@ -20,7 +20,7 @@ let emp = emp
 [@@"__reduce__"; "__steel_reduce__"]
 let op_Star_Star = star
 
-let star_def (_:unit)
+let star_def ()
   : Lemma ( ( ** ) == star )
   = assert ( ( ** ) == star )
         by (T.trefl())
@@ -309,7 +309,7 @@ let sub_invs_stt_ghost #a #opens1 #opens2 #pre #post e _ = e
 //   : (x:a -> stt_unobservable (r x) opens (pre x) (post x))
 //   = fun x () -> f x
 
-// val noop (#opened:inames) (_:unit)
+// val noop (#opened:inames) ()
 //   : STGhostT unit opened emp (fun _ -> emp)
 // let noop #opened () =
 //   return_stt_ghost_noeq () (fun _ -> emp) () #opened

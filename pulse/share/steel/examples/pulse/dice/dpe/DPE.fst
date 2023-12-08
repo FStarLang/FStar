@@ -128,7 +128,7 @@ let sid_hash (x:sid_t) : US.t = US.of_u32 x
 
 #push-options "--ext 'pulse:env_on_err' --print_implicits"
 ```pulse
-fn alloc_global_state (_:unit)
+fn alloc_global_state ()
   requires emp
   returns _:global_state_t
   ensures emp
@@ -200,7 +200,7 @@ let coerce_us (x:pos_us) : SZ.t = x
   Get the DPE's profile. 
 *)
 ```pulse
-fn get_profile' (_:unit)
+fn get_profile' ()
   requires emp
   returns d:profile_descriptor_t
   ensures emp
@@ -315,7 +315,7 @@ fn insert (#kt:eqtype) (#vt:Type0)
   NOTE: Current implementation disregards session protocol 
 *)
 ```pulse
-fn open_session' (_:unit)
+fn open_session' ()
   requires emp
   returns _:option sid_t
   ensures emp
@@ -656,7 +656,7 @@ fn close_session' (sid:sid_t)
 let close_session = close_session'
 
 // TODO: 
-let prng (_:unit) : U32.t = admit()
+let prng () : U32.t = admit()
 
 ```pulse
 fn init_engine_ctxt (uds:A.larray U8.t (US.v uds_len))

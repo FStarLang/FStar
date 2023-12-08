@@ -491,7 +491,7 @@ let init_not_full (#kt:eqtype) (#vt:eqtype) (hashf:kt -> US.t) (l:pos_us)
   = assert (~(Used? ((mk_init_pht #kt #vt hashf l).repr @@ 0)))
   
 ```pulse
-fn test_mono' (_:unit)
+fn test_mono' ()
   requires emp
   ensures emp
 {

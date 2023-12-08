@@ -85,7 +85,7 @@ val r : vprop
 
 ```pulse
 ghost
-fn p_q (_:unit)
+fn p_q ()
 requires p
 ensures q
 {
@@ -95,7 +95,7 @@ ensures q
 
 ```pulse
 ghost
-fn q_r (_:unit)
+fn q_r ()
 requires q
 ensures r
 {
@@ -105,7 +105,7 @@ ensures r
 
 ```pulse
 ghost
-fn p_r (_:unit)
+fn p_r ()
 requires p
 ensures r
 {

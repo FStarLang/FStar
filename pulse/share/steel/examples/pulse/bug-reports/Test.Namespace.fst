@@ -2,7 +2,7 @@ module Test.Namespace
 open Pulse.Lib.Pervasives
 
 ```pulse
-fn test (_:unit)
+fn test ()
    requires emp
    ensures emp
 {

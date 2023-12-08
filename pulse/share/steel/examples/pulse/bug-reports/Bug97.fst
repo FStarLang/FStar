@@ -8,7 +8,7 @@ assume val f : x:int -> #v1:int -> #v2:int{v2 > v1} ->
                 stt unit (p x v1 v2) (fun _ -> emp)
 
 ```pulse
-fn test (_:unit)
+fn test ()
   requires p 1 2 4
   ensures emp
   {

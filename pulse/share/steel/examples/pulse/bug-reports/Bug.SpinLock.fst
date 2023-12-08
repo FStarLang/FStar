@@ -15,7 +15,7 @@ fn lock_ref (r:R.ref int) (#v_:Ghost.erased int)
 
 [@@expect_failure]
 ```pulse
-fn create_and_lock_ref (_:unit)
+fn create_and_lock_ref ()
   requires emp
   ensures emp
 {

@@ -13,7 +13,7 @@ open Pulse.Lib.Core
 let my_list : list int = [1;2;3]
 
 ```pulse
-fn five (_:unit)
+fn five ()
   requires emp
   returns n:int
   ensures  pure (n == 5)

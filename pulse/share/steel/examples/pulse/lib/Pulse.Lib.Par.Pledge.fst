@@ -15,7 +15,7 @@ let pledge_sub_inv (os1:inames) (os2:inames{inames_subset os1 os2}) (f:vprop) (v
 
 ```pulse
 ghost
-fn return_pledge_aux (os:inames) (f v : vprop) (_:unit)
+fn return_pledge_aux (os:inames) (f v : vprop) ()
     requires v ** f
     ensures f ** v
     opens os
@@ -39,7 +39,7 @@ let return_pledge = __return_pledge
 ghost
 fn make_pledge_aux (os:inames) (f v extra : vprop)
                  (k : (unit -> stt_ghost unit os (f ** extra) (fun _ -> f ** v)))
-                 (_:unit)
+                 ()
     requires extra ** f
     ensures f ** v
     opens os
@@ -82,7 +82,7 @@ fn bind_pledge_aux
   (os : inames)
   (f v1 v2 extra : vprop)
   (k : (unit -> stt_ghost unit os (f ** extra ** v1) (fun _ -> f ** pledge os f v2)))
-  (_:unit)
+  ()
   requires f  ** (extra ** pledge os f v1)
   ensures f ** v2
   opens os
@@ -104,7 +104,6 @@ fn __bind_pledge
   (extra : vprop)
   (k : (unit -> stt_ghost unit os (f ** extra ** v1) (fun _ -> f ** pledge os f v2)))
   requires pledge os f v1 ** extra
-  returns _:unit
   ensures pledge os f v2
 {
   make_pledge os f v2 (extra ** pledge os f v1) (bind_pledge_aux os f v1 v2 extra k);
@@ -120,7 +119,7 @@ fn __bind_pledge'_aux
   (f v1 v2 : vprop)
   (extra : vprop)
   (k : (unit -> stt_ghost unit os (extra ** v1) (fun _ -> pledge os f v2)))
-  (_:unit)
+  ()
   requires f ** extra ** v1
   ensures f ** pledge os f v2
   opens os
@@ -137,7 +136,6 @@ fn __bind_pledge'
   (extra : vprop)
   (k : (unit -> stt_ghost unit os (extra ** v1) (fun _ -> pledge os f v2)))
   requires pledge os f v1 ** extra
-  returns _:unit
   ensures pledge os f v2
 {
   bind_pledge #os #f #v1 #v2 extra (__bind_pledge'_aux os f v1 v2 extra k)
@@ -147,7 +145,7 @@ let bind_pledge' = __bind_pledge'
 
 ```pulse
 ghost
-fn __join_pledge_aux (os:inames) (f v1 v2 : vprop) (_:unit)
+fn __join_pledge_aux (os:inames) (f v1 v2 : vprop) ()
   requires f ** (pledge os f v1 ** pledge os f v2)
   ensures f ** (v1 ** v2)
   opens os
@@ -187,7 +185,7 @@ let inv_p (os0 : inames) (f v1 v2 : vprop) (r1 r2 : GR.ref bool) : vprop =
 
 ```pulse
 ghost
-fn __elim_l (#os0:inames) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool) (i : inv (inv_p os0 f v1 v2 r1 r2)) (_:unit)
+fn __elim_l (#os0:inames) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool) (i : inv (inv_p os0 f v1 v2 r1 r2)) ()
   requires f ** GR.pts_to r1 #one_half false
   ensures f ** v1
   opens (add_inv os0 i)
@@ -279,7 +277,7 @@ fn __elim_l (#os0:inames) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool)
 
 ```pulse
 ghost
-fn __elim_r (#os0:inames) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool) (i : inv (inv_p os0 f v1 v2 r1 r2)) (_:unit)
+fn __elim_r (#os0:inames) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool) (i : inv (inv_p os0 f v1 v2 r1 r2)) ()
   requires f ** GR.pts_to r2 #one_half false
   ensures f ** v2
   opens (add_inv os0 i)
@@ -358,7 +356,7 @@ let split_pledge = __split_pledge
 ghost
 fn __rewrite_pledge_aux (os:inames) (f v1 v2 : vprop)
       (k : (unit -> stt_ghost unit os v1 (fun _ -> v2)))
-      (_:unit)
+      ()
   requires (f ** emp) ** v1
   ensures  f ** pledge os f v2
   opens os

@@ -367,7 +367,7 @@ fn sort3_alt (a:array U32.t)
 ```
 
 ```pulse
-fn test_local_array0 (_:unit)
+fn test_local_array0 ()
   requires emp
   returns  b:bool
   ensures  pure (b)
@@ -381,7 +381,7 @@ fn test_local_array0 (_:unit)
 ```
 
 ```pulse
-fn test_local_array1 (_:unit)
+fn test_local_array1 ()
   requires emp
   returns  i:int
   ensures  pure (i == 3)
@@ -395,7 +395,7 @@ fn test_local_array1 (_:unit)
 
 [@@ expect_failure]  // cannot call free on a local array
 ```pulse
-fn test_local_array2 (_:unit)
+fn test_local_array2 ()
   requires emp
   ensures  emp
 {
@@ -406,7 +406,7 @@ fn test_local_array2 (_:unit)
 
 [@@ expect_failure]  // cannot return a local array
 ```pulse
-fn test_local_array3 (_:unit)
+fn test_local_array3 ()
   requires emp
   returns  a:array int
   ensures  (
@@ -420,7 +420,7 @@ fn test_local_array3 (_:unit)
 
 [@@ expect_failure]  // immutable local arrays are not yet supported
 ```pulse
-fn test_local_array4 (_:unit)
+fn test_local_array4 ()
   requires emp
   ensures  emp
 {

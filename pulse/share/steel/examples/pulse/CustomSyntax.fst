@@ -138,7 +138,7 @@ fn elim_intro_exists2 (r:ref U32.t)
 assume
 val pred (b:bool) : vprop
 assume
-val read_pred (_:unit) (#b:erased bool)
+val read_pred () (#b:erased bool)
     : stt bool (pred b) (fun r -> pred r)
 
 ```pulse

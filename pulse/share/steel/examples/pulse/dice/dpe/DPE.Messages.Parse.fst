@@ -23,7 +23,7 @@ let emp_inames_disjoint (t:inames)
 
 ```pulse
 ghost
-fn elim_implies (#p #q:vprop) (_:unit)
+fn elim_implies (#p #q:vprop) ()
    requires `@(p @==> q) ** p
    ensures q
 {

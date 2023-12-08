@@ -23,7 +23,7 @@ let just #a (x:a) : stt a emp (fun _ -> emp) =
   sub_stt _ _ (magic()) (magic ()) (return_stt x (fun _ -> emp))
 
 ```pulse
-fn pth (n:pos) (_:unit)
+fn pth (n:pos) ()
   requires emp
   returns n:nat
   ensures emp
