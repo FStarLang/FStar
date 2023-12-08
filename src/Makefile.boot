@@ -102,7 +102,7 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 		--output_deps_to ._depend
 	@# We've generated deps for everything into fstar-lib/generated.
 	@# Here we fix up the .depend file to move tests out of the library.
-	$(Q)$(SED) 's,fstar-lib/generated/FStar_Test,fstar-tests/generated/FStar_Test,g' <._depend >.depend
+	$(Q)$(SED) 's,src/ocaml-output/fstarc/FStar_Test,ocaml/fstar-tests/generated/FStar_Test,g' <._depend >.depend
 	$(Q)mkdir -p $(CACHE_DIR)
 
 .PHONY: dep.graph
