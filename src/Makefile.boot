@@ -79,8 +79,8 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 	$(Q)$(BENCHMARK_PRE) $(FSTAR_C) $(notdir $(subst .checked.lax,,$<)) \
 		   --MLish \
 		   --odir "$(call OUTPUT_DIRECTORY_FOR,"$@")" \
-                   --codegen Plugin \
-                   --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
+		   --codegen Plugin \
+		   --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
 
 # --------------------------------------------------------------------
 # Dependency analysis for bootstrapping

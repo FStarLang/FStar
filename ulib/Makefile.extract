@@ -23,7 +23,7 @@ EXTRACT_MODULES=--extract '* $(NOEXTRACT_MODULES)'
 # extract an .ml file
 $(OUTPUT_DIRECTORY)/%.ml:
 	$(call msg, "EXTRACT", $(basename $(notdir $@)))
-	$(Q)$(MY_FSTAR) $(subst .checked,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked,,$<)))
+	$(Q)$(MY_FSTAR) $(subst .checked,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked,,$<))) --MLish
 
 DEPEND=.depend.extract
 DEPENDRSP=.depend.extract.rsp
