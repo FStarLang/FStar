@@ -104,7 +104,7 @@ let rec (flatten_name : FStar_Reflection_Types.name -> Prims.string) =
     match ns with
     | [] -> ""
     | n::[] -> n
-    | n::ns1 -> Prims.op_Hat n (Prims.op_Hat "." (flatten_name ns1))
+    | n::ns1 -> Prims.strcat n (Prims.strcat "." (flatten_name ns1))
 let rec (collect_app_ln' :
   FStar_Reflection_V2_Data.argv Prims.list ->
     FStar_Reflection_Types.term ->

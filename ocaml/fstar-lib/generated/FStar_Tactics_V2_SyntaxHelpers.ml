@@ -183,10 +183,8 @@ let rec (mk_arr :
                                 (Prims.of_int (56)) (Prims.of_int (49)))))
                        (FStar_Sealed.seal
                           (Obj.magic
-                             (FStar_Range.mk_range
-                                "FStar.Tactics.V2.SyntaxHelpers.fst"
-                                (Prims.of_int (56)) (Prims.of_int (6))
-                                (Prims.of_int (56)) (Prims.of_int (49)))))
+                             (FStar_Range.mk_range "dummy" Prims.int_zero
+                                Prims.int_zero Prims.int_zero Prims.int_zero)))
                        (Obj.magic
                           (FStar_Tactics_Effect.tac_bind
                              (FStar_Sealed.seal
@@ -260,10 +258,8 @@ let rec (mk_tot_arr :
                                 (Prims.of_int (62)) (Prims.of_int (53)))))
                        (FStar_Sealed.seal
                           (Obj.magic
-                             (FStar_Range.mk_range
-                                "FStar.Tactics.V2.SyntaxHelpers.fst"
-                                (Prims.of_int (62)) (Prims.of_int (6))
-                                (Prims.of_int (62)) (Prims.of_int (53)))))
+                             (FStar_Range.mk_range "dummy" Prims.int_zero
+                                Prims.int_zero Prims.int_zero Prims.int_zero)))
                        (Obj.magic
                           (FStar_Tactics_Effect.tac_bind
                              (FStar_Sealed.seal
