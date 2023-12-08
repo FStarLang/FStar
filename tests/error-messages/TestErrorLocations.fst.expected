@@ -1,0 +1,89 @@
+>> Got issues: [
+* Error 19 at TestErrorLocations.fst(20,21-20,23):
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+
+>>]
+>> Got issues: [
+* Error 19 at TestErrorLocations.fst(24,21-24,23):
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+
+>>]
+>> Got issues: [
+* Error 19 at TestErrorLocations.fst(31,10-31,19):
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also TestErrorLocations.fst(27,50-27,58)
+
+>>]
+>> Got issues: [
+* Error 19 at TestErrorLocations.fst(37,10-37,11):
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also TestErrorLocations.fst(27,50-27,58)
+
+>>]
+>> Got issues: [
+* Error 19 at TestErrorLocations.fst(43,20-43,21):
+  - Subtyping check failed; expected type Prims.nat; got type Prims.int
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also prims.fst(659,18-659,24)
+
+>>]
+>> Got issues: [
+* Error 19 at TestErrorLocations.fst(48,14-48,19):
+  - Could not prove post-condition
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also TestErrorLocations.fst(46,84-46,90)
+
+>>]
+>> Got issues: [
+* Error 19 at TestErrorLocations.fst(58,15-58,17):
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also prims.fst(430,90-430,102)
+
+>>]
+>> Got issues: [
+* Error 19 at TestErrorLocations.fst(62,15-62,17):
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also prims.fst(430,90-430,102)
+
+>>]
+>> Got issues: [
+* Error 19 at TestErrorLocations.fst(66,27-66,28):
+  - Subtyping check failed; expected type Prims.nat; got type Prims.int
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also prims.fst(659,18-659,24)
+
+>>]
+>> Got issues: [
+* Error 19 at TestErrorLocations.fst(70,25-70,34):
+  - Subtyping check failed; expected type Type0; got type Type0
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also TestErrorLocations.fst(68,52-68,66)
+
+>>]
+* Warning 240 at TestErrorLocations.fst(46,4-46,9):
+  - TestErrorLocations.test5 is declared but no definition was found; add an 'assume' if this is intentional
+
+* Warning 240 at TestErrorLocations.fst(56,4-56,9):
+  - TestErrorLocations.test6 is declared but no definition was found; add an 'assume' if this is intentional
+
+* Warning 240 at TestErrorLocations.fst(60,4-60,9):
+  - TestErrorLocations.test7 is declared but no definition was found; add an 'assume' if this is intentional
+
+Verified module: TestErrorLocations
+All verification conditions discharged successfully
