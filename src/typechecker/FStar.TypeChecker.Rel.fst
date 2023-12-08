@@ -1849,25 +1849,40 @@ let run_meta_arg_tac (env:env_t) (ctx_u:ctx_uvar) : term =
   | _ ->
     failwith "run_meta_arg_tac must have been called with a uvar that has a meta tac"
 
+let simplify_vc full_norm_allowed env t =
+  if Env.debug env <| Options.Other "Simplification" then
+    BU.print1 "Simplifying guard %s\n" (show t);
+  let steps = [Env.Beta;
+               Env.Eager_unfolding;
+               Env.Simplify;
+               Env.Primops;
+               Env.Exclude Env.Zeta] in
+  let steps = if full_norm_allowed then steps else Env.NoFullNorm::steps in
+  let t' = norm_with_steps "FStar.TypeChecker.Rel.simplify_vc" steps env t in
+  if Env.debug env <| Options.Other "Simplification" then
+    BU.print1 "Simplified guard to %s\n" (show t');
+  t'
+
+let __simplify_guard full_norm_allowed env g = match g.guard_f with
+  | Trivial -> g
+  | NonTrivial f ->
+    let f = simplify_vc full_norm_allowed env f in
+    let f = check_trivial f in
+    { g with guard_f = f}
+
 let simplify_guard env g = match g.guard_f with
-    | Trivial -> g
-    | NonTrivial f ->
-      if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplifying guard %s\n" (show f);
-      let f = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.6"
-              [Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops; Env.NoFullNorm; Env.Exclude Env.Zeta] env f in
-      if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplified guard to %s\n" (show f);
-      let f =
-        let g = U.unmeta f in
-        let g =
-          match U.un_squash g with
-          | Some g' -> U.unmeta g'
-          | _ -> g
-        in
-        match g.n with
-        | Tm_fvar fv when S.fv_eq_lid fv PC.true_lid -> Trivial
-        | _ -> NonTrivial f
-      in
-      {g with guard_f=f}
+  | Trivial -> g
+  | NonTrivial f ->
+    let f = simplify_vc false env f in
+    let f = check_trivial f in
+    { g with guard_f = f}
+
+let simplify_guard_full_norm env g = match g.guard_f with
+  | Trivial -> g
+  | NonTrivial f ->
+    let f = simplify_vc true env f in
+    let f = check_trivial f in
+    { g with guard_f = f}
 
 //
 // Apply substitutive indexed effects subcomp for an effect M
@@ -5010,6 +5025,83 @@ let solve_non_tactic_deferred_constraints maybe_defer_flex_flex env (g:guard_t) 
     try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env g
   )
 
+let do_discharge_vc use_env_range_msg env vc : unit =
+  let open FStar.Pprint in
+  let open FStar.Errors.Msg in
+  let open FStar.Class.PP in
+  let debug : bool =
+      (Env.debug env <| Options.Other "Rel")
+    || (Env.debug env <| Options.Other "SMTQuery")
+    || (Env.debug env <| Options.Other "Discharge")
+  in
+  let diag_doc = if debug then Errors.diag_doc (Env.get_range env) else (fun _ -> ()) in
+  diag_doc [text "Checking VC:" ^/^ pp vc];
+
+  (* Tactic preprocessing *)
+  let vcs : list (env_t & typ & Options.optionstate) = (
+    if Options.use_tactics() then begin
+      Options.with_saved_options (fun () ->
+        ignore <| Options.set_options "--no_tactics";
+        let vcs = env.solver.preprocess env vc in
+        diag_doc [text "Tactic preprocessing produced" ^^ pp (List.length vcs <: int) ^^ text "goals"];
+        let vcs = vcs |> List.map (fun (env, goal, opts) ->
+                            // NB: No Eager_unfolding. Why?
+                            env,
+                            norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.7"
+                                            [Env.Simplify; Env.Primops; Env.Exclude Env.Zeta] env goal,
+                            opts)
+        in
+
+        (* handle_smt_goals: users can register a tactic to run on all
+           remaining goals after tactic execution. *)
+        let vcs = vcs |> List.concatMap (fun (env, goal, opts) ->
+          env.solver.handle_smt_goal env goal |>
+            (* Keep the same SMT options *)
+            List.map (fun (env, goal) -> (env, goal, opts)))
+        in
+
+        (* discard trivial goals *)
+        let vcs = vcs |> List.concatMap (fun (env, goal, opts) ->
+          match check_trivial goal with
+          | Trivial ->
+            diag_doc [text "Goal completely solved by tactic\n"];
+            []
+
+          | NonTrivial goal ->
+            [(env, goal, opts)]
+        )
+        in
+        vcs
+      )
+    end
+    else [env, vc, FStar.Options.peek ()]
+    )
+  in
+
+  (* Splitting queries. FIXME: isn't this redundant given the
+  code in SMTEncoding.Solver? *)
+  let vcs =
+    if Options.split_queries () = Options.Always
+    then vcs |>
+          List.collect
+            (fun (env, goal, opts) ->
+                match Env.split_smt_query env goal with
+                | None -> [env,goal,opts]
+                | Some goals -> goals |> List.map (fun (env, goal) -> env,goal,opts))
+    else vcs
+  in
+
+  (* Solve one by one. If anything fails the SMT module will log errors. *)
+  vcs |> List.iter (fun (env, goal, opts) ->
+    Options.with_saved_options (fun () ->
+      FStar.Options.set opts;
+      (* diag (BU.format2 "Trying to solve:\n> %s\nWith proof_ns:\n %s\n" *)
+      (*                   (show goal) (Env.string_of_proof_ns env)); *)
+      diag_doc [text "Before calling solver, VC=:" ^/^ pp goal];
+      env.solver.solve use_env_range_msg env goal
+    )
+  )
+
 // Discharge (the logical part of) a guard [g].
 //
 // The `use_smt` flag says whether to use the smt solver to discharge
@@ -5030,105 +5122,45 @@ let solve_non_tactic_deferred_constraints maybe_defer_flex_flex env (g:guard_t) 
 // In every case, when this function returns [Some g], then the logical
 // part of [g] is [Trivial].
 let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option guard_t =
-  let debug =
+  let open FStar.Pprint in
+  let open FStar.Errors.Msg in
+  let open FStar.Class.PP in
+  let debug : bool =
       (Env.debug env <| Options.Other "Rel")
     || (Env.debug env <| Options.Other "SMTQuery")
+    || (Env.debug env <| Options.Other "Disch")
   in
+  let diag_doc = if debug then Errors.diag_doc (Env.get_range env) else (fun _ -> ()) in
+
   if Env.debug env <| Options.Other "ResolveImplicitsHook"
   then BU.print1 "///////////////////ResolveImplicitsHook: discharge_guard'\n\
                   guard = %s\n"
                   (guard_to_string env g);
+
   let g =
     let defer_ok = NoDefer in
     let deferred_to_tac_ok = true in
     try_solve_deferred_constraints defer_ok use_smt deferred_to_tac_ok env g
   in
   let ret_g = {g with guard_f = Trivial} in
-  if not (Env.should_verify env) then Some ret_g
-  // GM: ^ this doesn't look like the right place for this check.
-  else
-    match g.guard_f with
-    | Trivial -> Some ret_g
-    | NonTrivial vc ->
-      if debug
-      then Errors.diag (Env.get_range env)
-                       (BU.format1 "Before normalization VC=\n%s\n" (show vc));
-      let vc =
-        Profiling.profile
-          (fun () -> N.normalize [Env.Eager_unfolding; Env.Simplify; Env.Primops; Env.Exclude Env.Zeta] env vc)
-          (Some (Ident.string_of_lid (Env.current_module env)))
-          "FStar.TypeChecker.Rel.vc_normalization"
-      in
-      if debug
-      then Errors.diag (Env.get_range env)
-                       (BU.format1 "After normalization VC=\n%s\n" (show vc));
-      def_check_scoped (Env.get_range env) "discharge_guard'" env vc;
-      match check_trivial vc with
-      | Trivial -> Some ret_g
-      | NonTrivial vc ->
-        if not use_smt then (
-            if debug then
-                Errors.diag (Env.get_range env)
-                            (BU.format1 "Cannot solve without SMT : %s\n" (show vc));
-                None
-        ) else
-          let _ =
-            if debug
-            then Errors.diag (Env.get_range env)
-                             (BU.format1 "Checking VC=\n%s\n" (show vc));
-            let vcs =
-                if Options.use_tactics()
-                then begin
-                    Options.with_saved_options (fun () ->
-                        ignore <| Options.set_options "--no_tactics";
-                        let vcs = env.solver.preprocess env vc in
-                        if Options.profile_enabled None "FStar.TypeChecker"
-                        then BU.print1 "Tactic preprocessing produced %s goals\n" (BU.string_of_int (List.length vcs));
-                        let vcs = List.map (fun (env, goal, opts) ->
-                        env, norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.7" [Env.Simplify; Env.Primops; Env.Exclude Env.Zeta] env goal, opts) vcs in
-                        let vcs = List.map (fun (env, goal, opts) ->
-                          env.solver.handle_smt_goal env goal |>
-                            (* Keep the same SMT options if the goals were transformed *)
-                            List.map (fun (env, goal) -> (env, goal, opts)))
-                          vcs
-                        in List.flatten vcs
-                    )
-                end
-                else [env,vc,FStar.Options.peek ()]
-            in
-            let vcs =
-              if Options.split_queries () = Options.Always
-              then vcs |>
-                   List.collect
-                     (fun (env, goal, opts) ->
-                         match Env.split_smt_query env goal with
-                         | None -> [env,goal,opts]
-                         | Some goals -> goals |> List.map (fun (env, goal) -> env,goal,opts))
-              else vcs
-            in
-            vcs |> List.iter (fun (env, goal, opts) ->
-                    match check_trivial goal with
-                    | Trivial ->
-                        if debug
-                        then BU.print_string "Goal completely solved by tactic\n";
-                        () // do nothing
+  let g = simplify_guard_full_norm env g in
+  match g.guard_f with
+  | Trivial ->
+    diag_doc [text "Query formula was trivial"];
+    Some ret_g
 
-                    | NonTrivial goal ->
-                      Options.with_saved_options (fun () ->
-                        FStar.Options.set opts;
-                        if debug then
-                          Errors.diag (Env.get_range env)
-                                      (BU.format2 "Trying to solve:\n> %s\nWith proof_ns:\n %s\n"
-                                                 (show goal)
-                                                 (Env.string_of_proof_ns env));
-                        if debug then
-                          Errors.diag (Env.get_range env)
-                                      (BU.format1 "Before calling solver VC=\n%s\n" (show goal));
-                        env.solver.solve use_env_range_msg env goal
-                      )
-                   )
-          in
-          Some ret_g
+  | NonTrivial vc when not (Env.should_verify env) ->
+    // GM: not sure if this is the right place for this check.
+    diag_doc [text "Skipping VC because verification is disabled"];
+    Some ret_g
+
+  | NonTrivial vc when not use_smt ->
+    diag_doc [text "Cannot solve without SMT:" ^/^ pp vc];
+    None
+
+  | NonTrivial vc ->
+    do_discharge_vc use_env_range_msg env vc;
+    Some ret_g
 
 let discharge_guard_no_smt env g =
   match discharge_guard' None env g false with

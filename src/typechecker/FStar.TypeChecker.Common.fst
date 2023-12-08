@@ -230,7 +230,7 @@ let conj_guard_f g1 g2 = match g1, g2 with
   | g, Trivial -> g
   | NonTrivial f1, NonTrivial f2 -> NonTrivial (U.mk_conj f1 f2)
 
-let rec check_trivial t =
+let rec check_trivial (t:term) : guard_formula =
     let hd, args = U.head_and_args (U.unmeta t) in
     match (U.un_uinst (U.unmeta hd)).n, args with
     | Tm_fvar tc, [] 
