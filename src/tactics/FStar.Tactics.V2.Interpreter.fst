@@ -39,6 +39,7 @@ open FStar.Tactics.V2.InterpFuns
 open FStar.Tactics.Native
 open FStar.Tactics.Common
 open FStar.Class.Show
+open FStar.Class.Monad
 
 module BU      = FStar.Compiler.Util
 module Cfg     = FStar.TypeChecker.Cfg
@@ -129,7 +130,7 @@ let rec t_head_of (t : term) : term =
     | _ -> t
 
 let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac 'b =
-    bind get (fun proof_state ->
+    let! proof_state = get in
     let rng = embedded_tac_b.pos in
 
     (* First, reify it from Tac a into __tac a *)
@@ -164,10 +165,12 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
 
     match res with
     | Some (Success (b, ps)) ->
-        bind (set ps) (fun _ -> ret b)
+      set ps;!
+      return b
 
     | Some (Failed (e, ps)) ->
-        bind (set ps) (fun _ -> traise e)
+      set ps;!
+      traise e
 
     | None ->
         (* The tactic got stuck, try to provide a helpful error message. *)
@@ -192,10 +195,9 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
           [str "Tactic got stuck!";
            str "Reduction stopped at: " ^^ ttd h_result;
            maybe_admit_tip]) proof_state.main_context.range)
-    )
 
 let unembed_tactic_nbe_0 (eb:NBET.embedding 'b) (cb:NBET.nbe_cbs) (embedded_tac_b:NBET.t) : tac 'b =
-    bind get (fun proof_state ->
+    let! proof_state = get in
 
     (* Applying is normalizing!!! *)
     let result = NBET.iapp_cb cb embedded_tac_b [NBET.as_arg (NBET.embed E.e_proofstate_nbe cb proof_state)] in
@@ -203,10 +205,12 @@ let unembed_tactic_nbe_0 (eb:NBET.embedding 'b) (cb:NBET.nbe_cbs) (embedded_tac_
 
     match res with
     | Some (Success (b, ps)) ->
-        bind (set ps) (fun _ -> ret b)
+      set ps;!
+      return b
 
     | Some (Failed (e, ps)) ->
-        bind (set ps) (fun _ -> traise e)
+      set ps;!
+      traise e
 
     | None ->
         FStar.Errors.Raise.(
@@ -215,7 +219,6 @@ let unembed_tactic_nbe_0 (eb:NBET.embedding 'b) (cb:NBET.nbe_cbs) (embedded_tac_
              text "Please file a bug report with a minimal reproduction of this issue.";
              str "Result = " ^^ str (NBET.t_to_string result)]) proof_state.main_context.range
         )
-    )
 
 let unembed_tactic_1 (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : 'a -> tac 'r =
     fun x ->
@@ -259,7 +262,7 @@ let e_tactic_nbe_1 (ea : NBET.embedding 'a) (er : NBET.embedding 'r) : NBET.embe
            (emb_typ_of e_unit)
 
 (* Takes a `sealed a`, but that's just a userspace abstraction. *)
-let unseal (_typ:_) (x:'a) : tac 'a = ret x
+let unseal (_typ:_) (x:'a) : tac 'a = return x
 
 let unseal_step =
   (* Unseal is not in builtins. *)

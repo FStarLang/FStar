@@ -36,6 +36,7 @@ open FStar.Tactics.V1.InterpFuns
 open FStar.Tactics.Native
 open FStar.Tactics.Common
 open FStar.Class.Show
+open FStar.Class.Monad
 
 module BU      = FStar.Compiler.Util
 module Cfg     = FStar.TypeChecker.Cfg
@@ -119,7 +120,7 @@ let rec t_head_of (t : term) : term =
     | _ -> t
 
 let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac 'b =
-    bind get (fun proof_state ->
+    let! proof_state = get in
     let rng = embedded_tac_b.pos in
 
     (* First, reify it from Tac a into __tac a *)
@@ -154,10 +155,12 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
 
     match res with
     | Some (Success (b, ps)) ->
-        bind (set ps) (fun _ -> ret b)
+      set ps;!
+      return b
 
     | Some (Failed (e, ps)) ->
-        bind (set ps) (fun _ -> traise e)
+      set ps;!
+      traise e
 
     | None ->
         (* The tactic got stuck, try to provide a helpful error message. *)
@@ -180,10 +183,9 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
         Err.raise_error (Err.Fatal_TacticGotStuck,
           (BU.format2 "Tactic got stuck!\n\
                        Reduction stopped at: %s%s" (show h_result) maybe_admit_tip)) proof_state.main_context.range
-    )
 
 let unembed_tactic_nbe_0 (eb:NBET.embedding 'b) (cb:NBET.nbe_cbs) (embedded_tac_b:NBET.t) : tac 'b =
-    bind get (fun proof_state ->
+    let! proof_state = get in
 
     (* Applying is normalizing!!! *)
     let result = NBET.iapp_cb cb embedded_tac_b [NBET.as_arg (NBET.embed E.e_proofstate_nbe cb proof_state)] in
@@ -191,14 +193,15 @@ let unembed_tactic_nbe_0 (eb:NBET.embedding 'b) (cb:NBET.nbe_cbs) (embedded_tac_
 
     match res with
     | Some (Success (b, ps)) ->
-        bind (set ps) (fun _ -> ret b)
+      set ps;!
+      return b
 
     | Some (Failed (e, ps)) ->
-        bind (set ps) (fun _ -> traise e)
+      set ps;!
+      traise e
 
     | None ->
         Err.raise_error (Err.Fatal_TacticGotStuck, (BU.format1 "Tactic got stuck (in NBE)! Please file a bug report with a minimal reproduction of this issue.\n%s" (NBET.t_to_string result))) proof_state.main_context.range
-    )
 
 let unembed_tactic_1 (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : 'a -> tac 'r =
     fun x ->
