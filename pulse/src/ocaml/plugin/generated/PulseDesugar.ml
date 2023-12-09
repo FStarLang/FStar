@@ -2344,14 +2344,13 @@ let (mk_knot_arr :
                    op_let_Question uu___3
                      (fun res_t ->
                         let bs'' =
-                          FStar_Compiler_Effect.op_Bar_Greater bs
-                            (FStar_Compiler_List.map
-                               (fun uu___4 ->
-                                  match uu___4 with
-                                  | (q, x, ty) ->
-                                      FStar_Parser_AST.mk_binder
-                                        (FStar_Parser_AST.Annotated (x, ty))
-                                        r FStar_Parser_AST.Expr q)) in
+                          FStar_Compiler_List.map
+                            (fun uu___4 ->
+                               match uu___4 with
+                               | (q, x, ty) ->
+                                   FStar_Parser_AST.mk_binder
+                                     (FStar_Parser_AST.Annotated (x, ty)) r
+                                     FStar_Parser_AST.Expr q) bs in
                         let last = FStar_Compiler_List.last bs'' in
                         let init = FStar_Compiler_List.init bs'' in
                         let bs''1 = FStar_List_Tot_Base.op_At init [last] in

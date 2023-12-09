@@ -63,7 +63,10 @@ jobs:
           # Just outputs to the github snippet. Could be part of slack message.
           # This command never triggers a failure, if we did not find anything
           # with grep then we just no-op
-          if grep -C10 -E ' \*\*\* |\(Error' BUILDLOG > BUILDLOG_ERRORS; then
+          .scripts/fstar_errs.sh BUILDLOG > BUILDLOG_ERRORS || true
+          # attach Make error lines, with context
+          grep -C10 -E ' \*\*\* ' BUILDLOG >> BUILDLOG_ERRORS || true
+          if [ -s BUILDLOG_ERRORS ]; then # if file not empty, report
             ERRORS_URL=$(.scripts/sprang BUILDLOG_ERRORS)
             ERRORS_MSG=" <$ERRORS_URL|(Error summary)>"
             echo "ERRORS_MSG=$ERRORS_MSG" >> $GITHUB_ENV
