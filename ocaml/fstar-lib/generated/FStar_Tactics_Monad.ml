@@ -152,8 +152,7 @@ let (register_goal : FStar_Tactics_Types.goal -> unit) =
                    (env.FStar_TypeChecker_Env.core_check)
                } in
              (let uu___6 =
-                FStar_Compiler_Effect.op_Less_Bar
-                  (FStar_TypeChecker_Env.debug env1)
+                FStar_TypeChecker_Env.debug env1
                   (FStar_Options.Other "CoreEq") in
               if uu___6
               then
@@ -167,12 +166,10 @@ let (register_goal : FStar_Tactics_Types.goal -> unit) =
               if Prims.op_Negation should_register
               then
                 let uu___7 =
-                  (FStar_Compiler_Effect.op_Less_Bar
-                     (FStar_TypeChecker_Env.debug env1)
+                  (FStar_TypeChecker_Env.debug env1
                      (FStar_Options.Other "Core"))
                     ||
-                    (FStar_Compiler_Effect.op_Less_Bar
-                       (FStar_TypeChecker_Env.debug env1)
+                    (FStar_TypeChecker_Env.debug env1
                        (FStar_Options.Other "RegisterGoal")) in
                 (if uu___7
                  then
@@ -186,12 +183,10 @@ let (register_goal : FStar_Tactics_Types.goal -> unit) =
                  else ())
               else
                 ((let uu___8 =
-                    (FStar_Compiler_Effect.op_Less_Bar
-                       (FStar_TypeChecker_Env.debug env1)
+                    (FStar_TypeChecker_Env.debug env1
                        (FStar_Options.Other "Core"))
                       ||
-                      (FStar_Compiler_Effect.op_Less_Bar
-                         (FStar_TypeChecker_Env.debug env1)
+                      (FStar_TypeChecker_Env.debug env1
                          (FStar_Options.Other "RegisterGoal")) in
                   if uu___8
                   then

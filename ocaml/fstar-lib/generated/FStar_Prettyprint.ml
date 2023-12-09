@@ -45,8 +45,7 @@ let (generate : printing_mode -> Prims.string Prims.list -> unit) =
                           FStar_Pprint.pretty_string
                             (FStar_Compiler_Util.float_of_string "1.0")
                             (Prims.of_int (100)) doc in
-                        FStar_Compiler_Effect.op_Less_Bar
-                          (FStar_Compiler_Util.append_to_file f) uu___3
+                        FStar_Compiler_Util.append_to_file f uu___3
                     | FStar_Pervasives_Native.None ->
                         FStar_Pprint.pretty_out_channel
                           (FStar_Compiler_Util.float_of_string "1.0")
@@ -84,7 +83,6 @@ let (generate : printing_mode -> Prims.string Prims.list -> unit) =
                      FStar_Pprint.pretty_string
                        (FStar_Compiler_Util.float_of_string "1.0")
                        (Prims.of_int (100)) left_over_doc in
-                   FStar_Compiler_Effect.op_Less_Bar
-                     (FStar_Compiler_Util.append_to_file outf1) uu___2);
+                   FStar_Compiler_Util.append_to_file outf1 uu___2);
                   FStar_Compiler_Util.close_out_channel outf1)) in
       FStar_Compiler_List.iter (parse_and_prettyprint m) filenames

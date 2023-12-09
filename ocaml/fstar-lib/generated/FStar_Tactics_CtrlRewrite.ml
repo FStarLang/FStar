@@ -588,9 +588,8 @@ and (on_subterms :
                     (match uu___1 with
                      | (bs_orig, t1, subst) ->
                          let k1 =
-                           FStar_Compiler_Effect.op_Bar_Greater k
-                             (FStar_Compiler_Util.map_option
-                                (FStar_Syntax_Subst.subst_residual_comp subst)) in
+                           FStar_Compiler_Util.map_option
+                             (FStar_Syntax_Subst.subst_residual_comp subst) k in
                          descend_binders tm1 [] []
                            FStar_Tactics_Types.Continue env bs_orig t1 k1
                            (fun bs1 ->
@@ -978,5 +977,4 @@ let (ctrl_rewrite :
                                                 g gt' in
                                             FStar_Tactics_Monad.add_goals
                                               [g1])))))) in
-        FStar_Compiler_Effect.op_Less_Bar
-          (FStar_Tactics_Monad.wrap_err "ctrl_rewrite") uu___
+        FStar_Tactics_Monad.wrap_err "ctrl_rewrite" uu___

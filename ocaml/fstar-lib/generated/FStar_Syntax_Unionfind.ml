@@ -181,8 +181,7 @@ let (chk_v_t :
         let uvar_to_string u1 =
           let uu___1 =
             let uu___2 = FStar_Unionfind.puf_unique_id u1 in
-            FStar_Compiler_Effect.op_Bar_Greater uu___2
-              FStar_Compiler_Util.string_of_int in
+            FStar_Compiler_Util.string_of_int uu___2 in
           Prims.strcat "?" uu___1 in
         let expected = get_version () in
         if
@@ -289,8 +288,7 @@ let chk_v_u :
         let uvar_to_string u1 =
           let uu___1 =
             let uu___2 = FStar_Unionfind.puf_unique_id u1 in
-            FStar_Compiler_Effect.op_Bar_Greater uu___2
-              FStar_Compiler_Util.string_of_int in
+            FStar_Compiler_Util.string_of_int uu___2 in
           Prims.strcat "?" uu___1 in
         let expected = get_version () in
         if

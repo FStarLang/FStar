@@ -157,24 +157,21 @@ let (e_term_aq :
               (fun aq_ts ->
                  let uu___2 =
                    let uu___3 =
-                     FStar_Compiler_Effect.op_Bar_Greater aq_ts
-                       (FStar_Compiler_List.mapi
-                          (fun i ->
-                             fun at ->
-                               let x =
-                                 FStar_Syntax_Syntax.new_bv
-                                   FStar_Pervasives_Native.None
-                                   FStar_Syntax_Syntax.t_term in
-                               ((FStar_Syntax_Syntax.DB ((shift + i), x)),
-                                 (FStar_Syntax_Syntax.NT (x, at))))) in
-                   FStar_Compiler_Effect.op_Bar_Greater uu___3
-                     FStar_Compiler_List.unzip in
+                     FStar_Compiler_List.mapi
+                       (fun i ->
+                          fun at ->
+                            let x =
+                              FStar_Syntax_Syntax.new_bv
+                                FStar_Pervasives_Native.None
+                                FStar_Syntax_Syntax.t_term in
+                            ((FStar_Syntax_Syntax.DB ((shift + i), x)),
+                              (FStar_Syntax_Syntax.NT (x, at)))) aq_ts in
+                   FStar_Compiler_List.unzip uu___3 in
                  match uu___2 with
                  | (subst_open, subst) ->
                      let uu___3 =
                        let uu___4 = FStar_Syntax_Subst.subst subst_open t1 in
-                       FStar_Compiler_Effect.op_Less_Bar
-                         (FStar_Syntax_Subst.subst subst) uu___4 in
+                       FStar_Syntax_Subst.subst subst uu___4 in
                      FStar_Pervasives_Native.Some uu___3) in
       let t1 = FStar_Syntax_Util.unmeta t in
       let uu___ =

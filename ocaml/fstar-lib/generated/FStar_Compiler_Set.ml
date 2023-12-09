@@ -55,17 +55,13 @@ let for_all :
   fun uu___ ->
     fun p ->
       fun s ->
-        let uu___1 = elems uu___ s in
-        FStar_Compiler_Effect.op_Bar_Greater uu___1
-          (FStar_Compiler_List.for_all p)
+        let uu___1 = elems uu___ s in FStar_Compiler_List.for_all p uu___1
 let for_any :
   'a . 'a FStar_Class_Ord.ord -> ('a -> Prims.bool) -> 'a set -> Prims.bool =
   fun uu___ ->
     fun p ->
       fun s ->
-        let uu___1 = elems uu___ s in
-        FStar_Compiler_Effect.op_Bar_Greater uu___1
-          (FStar_Compiler_List.existsb p)
+        let uu___1 = elems uu___ s in FStar_Compiler_List.existsb p uu___1
 let collect :
   'a 'b . 'b FStar_Class_Ord.ord -> ('a -> 'b set) -> 'a Prims.list -> 'b set
   =

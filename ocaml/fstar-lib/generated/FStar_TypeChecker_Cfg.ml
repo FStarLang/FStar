@@ -382,141 +382,107 @@ let (steps_to_string : fsteps -> Prims.string) =
           FStar_Compiler_String.op_Hat "Some (" uu___ in
     let b = FStar_Compiler_Util.string_of_bool in
     let uu___ =
-      let uu___1 = FStar_Compiler_Effect.op_Bar_Greater f.beta b in
+      let uu___1 = b f.beta in
       let uu___2 =
-        let uu___3 = FStar_Compiler_Effect.op_Bar_Greater f.iota b in
+        let uu___3 = b f.iota in
         let uu___4 =
-          let uu___5 = FStar_Compiler_Effect.op_Bar_Greater f.zeta b in
+          let uu___5 = b f.zeta in
           let uu___6 =
-            let uu___7 = FStar_Compiler_Effect.op_Bar_Greater f.zeta_full b in
+            let uu___7 = b f.zeta_full in
             let uu___8 =
-              let uu___9 = FStar_Compiler_Effect.op_Bar_Greater f.weak b in
+              let uu___9 = b f.weak in
               let uu___10 =
-                let uu___11 = FStar_Compiler_Effect.op_Bar_Greater f.hnf b in
+                let uu___11 = b f.hnf in
                 let uu___12 =
-                  let uu___13 =
-                    FStar_Compiler_Effect.op_Bar_Greater f.primops b in
+                  let uu___13 = b f.primops in
                   let uu___14 =
-                    let uu___15 =
-                      FStar_Compiler_Effect.op_Bar_Greater
-                        f.do_not_unfold_pure_lets b in
+                    let uu___15 = b f.do_not_unfold_pure_lets in
                     let uu___16 =
                       let uu___17 =
-                        FStar_Compiler_Effect.op_Bar_Greater f.unfold_until
-                          (format_opt
-                             (FStar_Class_Show.show
-                                FStar_Syntax_Syntax.showable_delta_depth)) in
+                        format_opt
+                          (FStar_Class_Show.show
+                             FStar_Syntax_Syntax.showable_delta_depth)
+                          f.unfold_until in
                       let uu___18 =
                         let uu___19 =
-                          FStar_Compiler_Effect.op_Bar_Greater f.unfold_only
-                            (format_opt
-                               (fun x ->
-                                  let uu___20 =
-                                    FStar_Compiler_List.map
-                                      FStar_Ident.string_of_lid x in
-                                  FStar_Compiler_Effect.op_Bar_Greater
-                                    uu___20
-                                    (FStar_Compiler_String.concat ", "))) in
+                          format_opt
+                            (fun x ->
+                               let uu___20 =
+                                 FStar_Compiler_List.map
+                                   FStar_Ident.string_of_lid x in
+                               FStar_Compiler_String.concat ", " uu___20)
+                            f.unfold_only in
                         let uu___20 =
                           let uu___21 =
-                            FStar_Compiler_Effect.op_Bar_Greater
-                              f.unfold_fully
-                              (format_opt
-                                 (fun x ->
-                                    let uu___22 =
-                                      FStar_Compiler_List.map
-                                        FStar_Ident.string_of_lid x in
-                                    FStar_Compiler_Effect.op_Bar_Greater
-                                      uu___22
-                                      (FStar_Compiler_String.concat ", "))) in
+                            format_opt
+                              (fun x ->
+                                 let uu___22 =
+                                   FStar_Compiler_List.map
+                                     FStar_Ident.string_of_lid x in
+                                 FStar_Compiler_String.concat ", " uu___22)
+                              f.unfold_fully in
                           let uu___22 =
                             let uu___23 =
-                              FStar_Compiler_Effect.op_Bar_Greater
-                                f.unfold_attr
-                                (format_opt
-                                   (fun x ->
-                                      let uu___24 =
-                                        FStar_Compiler_List.map
-                                          FStar_Ident.string_of_lid x in
-                                      FStar_Compiler_Effect.op_Bar_Greater
-                                        uu___24
-                                        (FStar_Compiler_String.concat ", "))) in
+                              format_opt
+                                (fun x ->
+                                   let uu___24 =
+                                     FStar_Compiler_List.map
+                                       FStar_Ident.string_of_lid x in
+                                   FStar_Compiler_String.concat ", " uu___24)
+                                f.unfold_attr in
                             let uu___24 =
                               let uu___25 =
-                                FStar_Compiler_Effect.op_Bar_Greater
-                                  f.unfold_qual
-                                  (format_opt
-                                     (FStar_Compiler_String.concat ", ")) in
+                                format_opt
+                                  (FStar_Compiler_String.concat ", ")
+                                  f.unfold_qual in
                               let uu___26 =
                                 let uu___27 =
-                                  FStar_Compiler_Effect.op_Bar_Greater
-                                    f.unfold_namespace
-                                    (format_opt
-                                       (FStar_Compiler_String.concat ", ")) in
+                                  format_opt
+                                    (FStar_Compiler_String.concat ", ")
+                                    f.unfold_namespace in
                                 let uu___28 =
-                                  let uu___29 =
-                                    FStar_Compiler_Effect.op_Bar_Greater
-                                      f.unfold_tac b in
+                                  let uu___29 = b f.unfold_tac in
                                   let uu___30 =
                                     let uu___31 =
-                                      FStar_Compiler_Effect.op_Bar_Greater
-                                        f.pure_subterms_within_computations b in
+                                      b f.pure_subterms_within_computations in
                                     let uu___32 =
-                                      let uu___33 =
-                                        FStar_Compiler_Effect.op_Bar_Greater
-                                          f.simplify b in
+                                      let uu___33 = b f.simplify in
                                       let uu___34 =
-                                        let uu___35 =
-                                          FStar_Compiler_Effect.op_Bar_Greater
-                                            f.erase_universes b in
+                                        let uu___35 = b f.erase_universes in
                                         let uu___36 =
                                           let uu___37 =
-                                            FStar_Compiler_Effect.op_Bar_Greater
-                                              f.allow_unbound_universes b in
+                                            b f.allow_unbound_universes in
                                           let uu___38 =
-                                            let uu___39 =
-                                              FStar_Compiler_Effect.op_Bar_Greater
-                                                f.reify_ b in
+                                            let uu___39 = b f.reify_ in
                                             let uu___40 =
                                               let uu___41 =
-                                                FStar_Compiler_Effect.op_Bar_Greater
-                                                  f.compress_uvars b in
+                                                b f.compress_uvars in
                                               let uu___42 =
                                                 let uu___43 =
-                                                  FStar_Compiler_Effect.op_Bar_Greater
-                                                    f.no_full_norm b in
+                                                  b f.no_full_norm in
                                                 let uu___44 =
                                                   let uu___45 =
-                                                    FStar_Compiler_Effect.op_Bar_Greater
-                                                      f.check_no_uvars b in
+                                                    b f.check_no_uvars in
                                                   let uu___46 =
-                                                    let uu___47 =
-                                                      FStar_Compiler_Effect.op_Bar_Greater
-                                                        f.unmeta b in
+                                                    let uu___47 = b f.unmeta in
                                                     let uu___48 =
                                                       let uu___49 =
-                                                        FStar_Compiler_Effect.op_Bar_Greater
-                                                          f.unascribe b in
+                                                        b f.unascribe in
                                                       let uu___50 =
                                                         let uu___51 =
-                                                          FStar_Compiler_Effect.op_Bar_Greater
-                                                            f.in_full_norm_request
-                                                            b in
+                                                          b
+                                                            f.in_full_norm_request in
                                                         let uu___52 =
                                                           let uu___53 =
-                                                            FStar_Compiler_Effect.op_Bar_Greater
-                                                              f.weakly_reduce_scrutinee
-                                                              b in
+                                                            b
+                                                              f.weakly_reduce_scrutinee in
                                                           let uu___54 =
                                                             let uu___55 =
-                                                              FStar_Compiler_Effect.op_Bar_Greater
-                                                                f.for_extraction
-                                                                b in
+                                                              b
+                                                                f.for_extraction in
                                                             let uu___56 =
                                                               let uu___57 =
-                                                                FStar_Compiler_Effect.op_Bar_Greater
-                                                                  f.unrefine
-                                                                  b in
+                                                                b f.unrefine in
                                                               [uu___57] in
                                                             uu___55 ::
                                                               uu___56 in
@@ -2063,31 +2029,26 @@ let (config' :
       fun e ->
         let d =
           let uu___ =
-            FStar_Compiler_Effect.op_Bar_Greater s
-              (FStar_Compiler_List.collect
-                 (fun uu___1 ->
-                    match uu___1 with
-                    | FStar_TypeChecker_Env.UnfoldUntil k ->
-                        [FStar_TypeChecker_Env.Unfold k]
-                    | FStar_TypeChecker_Env.Eager_unfolding ->
-                        [FStar_TypeChecker_Env.Eager_unfolding_only]
-                    | FStar_TypeChecker_Env.UnfoldQual l when
-                        FStar_Compiler_List.contains "unfold" l ->
-                        [FStar_TypeChecker_Env.Eager_unfolding_only]
-                    | FStar_TypeChecker_Env.Inlining ->
-                        [FStar_TypeChecker_Env.InliningDelta]
-                    | FStar_TypeChecker_Env.UnfoldQual l when
-                        FStar_Compiler_List.contains "inline_for_extraction"
-                          l
-                        -> [FStar_TypeChecker_Env.InliningDelta]
-                    | uu___2 -> [])) in
-          FStar_Compiler_Effect.op_Bar_Greater uu___
-            FStar_Compiler_List.unique in
+            FStar_Compiler_List.collect
+              (fun uu___1 ->
+                 match uu___1 with
+                 | FStar_TypeChecker_Env.UnfoldUntil k ->
+                     [FStar_TypeChecker_Env.Unfold k]
+                 | FStar_TypeChecker_Env.Eager_unfolding ->
+                     [FStar_TypeChecker_Env.Eager_unfolding_only]
+                 | FStar_TypeChecker_Env.UnfoldQual l when
+                     FStar_Compiler_List.contains "unfold" l ->
+                     [FStar_TypeChecker_Env.Eager_unfolding_only]
+                 | FStar_TypeChecker_Env.Inlining ->
+                     [FStar_TypeChecker_Env.InliningDelta]
+                 | FStar_TypeChecker_Env.UnfoldQual l when
+                     FStar_Compiler_List.contains "inline_for_extraction" l
+                     -> [FStar_TypeChecker_Env.InliningDelta]
+                 | uu___2 -> []) s in
+          FStar_Compiler_List.unique uu___ in
         let d1 =
           match d with | [] -> [FStar_TypeChecker_Env.NoDelta] | uu___ -> d in
-        let steps =
-          let uu___ = to_fsteps s in
-          FStar_Compiler_Effect.op_Bar_Greater uu___ add_nbe in
+        let steps = let uu___ = to_fsteps s in add_nbe uu___ in
         let psteps1 = let uu___ = cached_steps () in add_steps uu___ psteps in
         let dbg_flag =
           FStar_Compiler_List.contains FStar_TypeChecker_Env.NormDebug s in

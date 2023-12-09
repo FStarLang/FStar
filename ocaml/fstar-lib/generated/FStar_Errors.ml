@@ -258,15 +258,14 @@ let (ctx_doc : Prims.string Prims.list -> FStar_Pprint.document) =
     if uu___
     then
       let uu___1 =
-        FStar_Compiler_Effect.op_Bar_Greater ctx
-          (FStar_Compiler_List.map
-             (fun s ->
-                let uu___2 =
-                  let uu___3 = FStar_Pprint.doc_of_string "> " in
-                  let uu___4 = FStar_Pprint.doc_of_string s in
-                  FStar_Pprint.op_Hat_Hat uu___3 uu___4 in
-                FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu___2)) in
-      FStar_Compiler_Effect.op_Bar_Greater uu___1 FStar_Pprint.concat
+        FStar_Compiler_List.map
+          (fun s ->
+             let uu___2 =
+               let uu___3 = FStar_Pprint.doc_of_string "> " in
+               let uu___4 = FStar_Pprint.doc_of_string s in
+               FStar_Pprint.op_Hat_Hat uu___3 uu___4 in
+             FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu___2) ctx in
+      FStar_Pprint.concat uu___1
     else FStar_Pprint.empty
 let (issue_message : issue -> FStar_Errors_Msg.error_message) =
   fun i ->

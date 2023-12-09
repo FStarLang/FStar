@@ -52,7 +52,7 @@ let (guard_eq :
                   FStar_Compiler_Util.format3
                     "Test %s failed:\n\tExpected guard %s;\n\tGot guard      %s\n"
                     uu___3 uu___4 uu___5 in
-                FStar_Compiler_Effect.op_Less_Bar fail uu___2)
+                fail uu___2)
              else ();
              (let uu___2 = (FStar_Compiler_Effect.op_Bang success) && b in
               FStar_Compiler_Effect.op_Colon_Equals success uu___2))
@@ -71,8 +71,7 @@ let (unify :
             fun check ->
               (let uu___1 = FStar_Compiler_Util.string_of_int i in
                FStar_Compiler_Util.print1 "%s ..." uu___1);
-              (let uu___2 = FStar_Main.process_args () in
-               FStar_Compiler_Effect.op_Bar_Greater uu___2 (fun uu___3 -> ()));
+              (let uu___2 = FStar_Main.process_args () in ());
               (let uu___3 = FStar_Syntax_Print.term_to_string x in
                let uu___4 = FStar_Syntax_Print.term_to_string y in
                FStar_Compiler_Util.print2 "Unify %s\nand %s\n" uu___3 uu___4);
@@ -81,10 +80,9 @@ let (unify :
                let g =
                  let uu___3 =
                    let uu___4 = FStar_TypeChecker_Rel.teq tcenv2 x y in
-                   FStar_Compiler_Effect.op_Bar_Greater uu___4
-                     (FStar_TypeChecker_Rel.solve_deferred_constraints tcenv2) in
-                 FStar_Compiler_Effect.op_Bar_Greater uu___3
-                   (FStar_TypeChecker_Rel.simplify_guard tcenv2) in
+                   FStar_TypeChecker_Rel.solve_deferred_constraints tcenv2
+                     uu___4 in
+                 FStar_TypeChecker_Rel.simplify_guard tcenv2 uu___3 in
                guard_eq i g.FStar_TypeChecker_Common.guard_f g';
                check ();
                FStar_Options.init ())
@@ -99,13 +97,12 @@ let (should_fail :
            match () with
            | () ->
                let g =
-                 let uu___1 =
-                   let uu___2 = tcenv () in
-                   FStar_TypeChecker_Rel.teq uu___2 x y in
+                 let uu___1 = tcenv () in
                  let uu___2 =
                    let uu___3 = tcenv () in
-                   FStar_TypeChecker_Rel.solve_deferred_constraints uu___3 in
-                 FStar_Compiler_Effect.op_Bar_Greater uu___1 uu___2 in
+                   FStar_TypeChecker_Rel.teq uu___3 x y in
+                 FStar_TypeChecker_Rel.solve_deferred_constraints uu___1
+                   uu___2 in
                (match g.FStar_TypeChecker_Common.guard_f with
                 | FStar_TypeChecker_Common.Trivial ->
                     let uu___1 =
@@ -131,12 +128,10 @@ let (unify' : Prims.string -> Prims.string -> unit) =
       let x1 = FStar_Tests_Pars.pars x in
       let y1 = FStar_Tests_Pars.pars y in
       let g =
-        let uu___ =
-          let uu___1 = tcenv () in FStar_TypeChecker_Rel.teq uu___1 x1 y1 in
+        let uu___ = tcenv () in
         let uu___1 =
-          let uu___2 = tcenv () in
-          FStar_TypeChecker_Rel.solve_deferred_constraints uu___2 in
-        FStar_Compiler_Effect.op_Bar_Greater uu___ uu___1 in
+          let uu___2 = tcenv () in FStar_TypeChecker_Rel.teq uu___2 x1 y1 in
+        FStar_TypeChecker_Rel.solve_deferred_constraints uu___ uu___1 in
       let uu___ = FStar_Syntax_Print.term_to_string x1 in
       let uu___1 = FStar_Syntax_Print.term_to_string y1 in
       let uu___2 = guard_to_string g.FStar_TypeChecker_Common.guard_f in
@@ -156,8 +151,7 @@ let (check_core :
       fun guard_ok ->
         fun x ->
           fun y ->
-            (let uu___1 = FStar_Main.process_args () in
-             FStar_Compiler_Effect.op_Bar_Greater uu___1 (fun uu___2 -> ()));
+            (let uu___1 = FStar_Main.process_args () in ());
             (let env = tcenv () in
              let res =
                if subtyping
@@ -187,8 +181,7 @@ let (check_core_typing :
   fun i ->
     fun e ->
       fun t ->
-        (let uu___1 = FStar_Main.process_args () in
-         FStar_Compiler_Effect.op_Bar_Greater uu___1 (fun uu___2 -> ()));
+        (let uu___1 = FStar_Main.process_args () in ());
         (let env = tcenv () in
          (let uu___2 = FStar_TypeChecker_Core.check_term env e t true in
           match uu___2 with
@@ -285,8 +278,7 @@ let (run_all : unit -> Prims.bool) =
                "(forall (x:int). (forall (y:int). (forall (z:int). y==z)))" in
            FStar_TypeChecker_Common.NonTrivial uu___15 in
          unify1 (Prims.of_int (8)) [] uu___12 uu___13 uu___14);
-        (let uu___13 = FStar_Main.process_args () in
-         FStar_Compiler_Effect.op_Bar_Greater uu___13 (fun uu___14 -> ()));
+        (let uu___13 = FStar_Main.process_args () in ());
         (let uu___13 =
            let uu___14 =
              FStar_Tests_Pars.tc "fun (u:Type0 -> Type0) (x:Type0) -> u x" in

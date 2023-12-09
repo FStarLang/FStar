@@ -1142,11 +1142,8 @@ let no_guard : 'a . 'a result -> 'a result =
 let (equatable : env -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun g ->
     fun t ->
-      let uu___ =
-        FStar_Compiler_Effect.op_Bar_Greater t
-          FStar_Syntax_Util.leftmost_head in
-      FStar_Compiler_Effect.op_Bar_Greater uu___
-        (FStar_TypeChecker_Rel.may_relate_with_logical_guard g.tcenv true)
+      let uu___ = FStar_Syntax_Util.leftmost_head t in
+      FStar_TypeChecker_Rel.may_relate_with_logical_guard g.tcenv true uu___
 let (apply_predicate :
   FStar_Syntax_Syntax.binder ->
     FStar_Syntax_Syntax.term ->
@@ -5235,12 +5232,10 @@ and (do_check :
                                                                     FStar_TypeChecker_PatternUtils.raw_pat_as_exp
                                                                     g.tcenv
                                                                     p1 in
-                                                                    FStar_Compiler_Effect.op_Bar_Greater
-                                                                    uu___21
-                                                                    FStar_Compiler_Util.must in
-                                                                    FStar_Compiler_Effect.op_Bar_Greater
-                                                                    uu___20
-                                                                    FStar_Pervasives_Native.fst in
+                                                                    FStar_Compiler_Util.must
+                                                                    uu___21 in
+                                                                    FStar_Pervasives_Native.fst
+                                                                    uu___20 in
                                                                     FStar_Syntax_Util.mk_eq2
                                                                     x1 t_sc
                                                                     sc
@@ -5997,12 +5992,10 @@ and (do_check :
                                                                     FStar_TypeChecker_PatternUtils.raw_pat_as_exp
                                                                     g.tcenv
                                                                     p1 in
-                                                                    FStar_Compiler_Effect.op_Bar_Greater
-                                                                    uu___30
-                                                                    FStar_Compiler_Util.must in
-                                                                    FStar_Compiler_Effect.op_Bar_Greater
-                                                                    uu___29
-                                                                    FStar_Pervasives_Native.fst in
+                                                                    FStar_Compiler_Util.must
+                                                                    uu___30 in
+                                                                    FStar_Pervasives_Native.fst
+                                                                    uu___29 in
                                                                     FStar_Syntax_Util.mk_eq2
                                                                     x1 t_sc
                                                                     sc
@@ -6578,12 +6571,11 @@ and (check_comp :
                                         let uu___10 =
                                           FStar_TypeChecker_Env.lookup_effect_quals
                                             g.tcenv c_lid in
-                                        FStar_Compiler_Effect.op_Bar_Greater
-                                          uu___10
-                                          (FStar_Compiler_List.existsb
-                                             (fun q ->
-                                                q =
-                                                  FStar_Syntax_Syntax.TotalEffect)) in
+                                        FStar_Compiler_List.existsb
+                                          (fun q ->
+                                             q =
+                                               FStar_Syntax_Syntax.TotalEffect)
+                                          uu___10 in
                                       if Prims.op_Negation is_total
                                       then
                                         fun uu___10 ->
@@ -6667,11 +6659,9 @@ and (check_pat :
       fun t_sc ->
         let unrefine_tsc t_sc1 =
           let uu___ =
-            FStar_Compiler_Effect.op_Bar_Greater t_sc1
-              (FStar_TypeChecker_Normalize.normalize_refinement
-                 FStar_TypeChecker_Normalize.whnf_steps g.tcenv) in
-          FStar_Compiler_Effect.op_Bar_Greater uu___
-            FStar_Syntax_Util.unrefine in
+            FStar_TypeChecker_Normalize.normalize_refinement
+              FStar_TypeChecker_Normalize.whnf_steps g.tcenv t_sc1 in
+          FStar_Syntax_Util.unrefine uu___ in
         match p.FStar_Syntax_Syntax.v with
         | FStar_Syntax_Syntax.Pat_constant c ->
             let e =
@@ -6765,39 +6755,32 @@ and (check_pat :
             let us =
               if FStar_Compiler_Util.is_none usopt
               then []
-              else
-                FStar_Compiler_Effect.op_Bar_Greater usopt
-                  FStar_Compiler_Util.must in
+              else FStar_Compiler_Util.must usopt in
             let uu___ =
               let uu___1 =
                 let uu___2 = FStar_Syntax_Syntax.lid_of_fv fv in
                 FStar_TypeChecker_Env.lookup_and_inst_datacon g.tcenv us
                   uu___2 in
-              FStar_Compiler_Effect.op_Bar_Greater uu___1
-                FStar_Syntax_Util.arrow_formals in
+              FStar_Syntax_Util.arrow_formals uu___1 in
             (match uu___ with
              | (formals, t_pat) ->
                  let uu___1 =
                    let pats1 =
-                     FStar_Compiler_Effect.op_Bar_Greater pats
-                       (FStar_Compiler_List.map FStar_Pervasives_Native.fst) in
+                     FStar_Compiler_List.map FStar_Pervasives_Native.fst pats in
                    let uu___2 =
                      let uu___3 =
-                       FStar_Compiler_Effect.op_Bar_Greater pats1
-                         (FStar_Compiler_Util.prefix_until
-                            (fun p1 ->
-                               match p1.FStar_Syntax_Syntax.v with
-                               | FStar_Syntax_Syntax.Pat_dot_term uu___4 ->
-                                   false
-                               | uu___4 -> true)) in
-                     FStar_Compiler_Effect.op_Bar_Greater uu___3
-                       (FStar_Compiler_Util.map_option
-                          (fun uu___4 ->
-                             match uu___4 with
-                             | (dot_pats, pat, rest_pats) ->
-                                 (dot_pats, (pat :: rest_pats)))) in
-                   FStar_Compiler_Effect.op_Bar_Greater uu___2
-                     (FStar_Compiler_Util.dflt (pats1, [])) in
+                       FStar_Compiler_Util.prefix_until
+                         (fun p1 ->
+                            match p1.FStar_Syntax_Syntax.v with
+                            | FStar_Syntax_Syntax.Pat_dot_term uu___4 ->
+                                false
+                            | uu___4 -> true) pats1 in
+                     FStar_Compiler_Util.map_option
+                       (fun uu___4 ->
+                          match uu___4 with
+                          | (dot_pats, pat, rest_pats) ->
+                              (dot_pats, (pat :: rest_pats))) uu___3 in
+                   FStar_Compiler_Util.dflt (pats1, []) uu___2 in
                  (match uu___1 with
                   | (dot_pats, rest_pats) ->
                       let uu___2 =
@@ -6994,12 +6977,10 @@ and (check_pat :
                                                                     FStar_TypeChecker_PatternUtils.raw_pat_as_exp
                                                                     g2.tcenv
                                                                     p1 in
-                                                                    FStar_Compiler_Effect.op_Bar_Greater
-                                                                    uu___18
-                                                                    FStar_Compiler_Util.must in
-                                                                    FStar_Compiler_Effect.op_Bar_Greater
-                                                                    uu___17
-                                                                    FStar_Pervasives_Native.fst in
+                                                                    FStar_Compiler_Util.must
+                                                                    uu___18 in
+                                                                    FStar_Pervasives_Native.fst
+                                                                    uu___17 in
                                                                     let uu___17
                                                                     =
                                                                     let uu___18
@@ -7808,9 +7789,8 @@ let (check_term_top_gh :
                            uu___7 uu___8 uu___9);
                         (let guard_names =
                            let uu___7 = FStar_Syntax_Free.names guard1 in
-                           FStar_Compiler_Effect.op_Bar_Greater uu___7
-                             (FStar_Compiler_Set.elems
-                                FStar_Syntax_Syntax.ord_bv) in
+                           FStar_Compiler_Set.elems
+                             FStar_Syntax_Syntax.ord_bv uu___7 in
                          let uu___7 =
                            FStar_Compiler_List.tryFind
                              (fun bv ->

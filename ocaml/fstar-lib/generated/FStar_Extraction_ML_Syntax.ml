@@ -1025,8 +1025,7 @@ let (mlmodule1_to_string : mlmodule1 -> Prims.string) =
     | MLM_Ty d ->
         let uu___ =
           let uu___1 = FStar_Compiler_List.map one_mltydecl_to_string d in
-          FStar_Compiler_Effect.op_Bar_Greater uu___1
-            (FStar_Compiler_String.concat "; ") in
+          FStar_Compiler_String.concat "; " uu___1 in
         FStar_Compiler_Util.format1 "MLM_Ty [%s]" uu___
     | MLM_Let l ->
         let uu___ = mlletbinding_to_string l in
@@ -1050,6 +1049,5 @@ let (mlmodule_to_string : mlmodule -> Prims.string) =
   fun m ->
     let uu___ =
       let uu___1 = FStar_Compiler_List.map mlmodule1_to_string m in
-      FStar_Compiler_Effect.op_Bar_Greater uu___1
-        (FStar_Compiler_String.concat ";\n") in
+      FStar_Compiler_String.concat ";\n" uu___1 in
     FStar_Compiler_Util.format1 "[ %s ]" uu___

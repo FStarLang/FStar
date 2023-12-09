@@ -27,8 +27,7 @@ let pp_set :
                  FStar_Pprint.rbracket ds in
              let uu___2 =
                let uu___3 = FStar_Compiler_Set.elems uu___ s in
-               FStar_Compiler_Effect.op_Bar_Greater uu___3
-                 (FStar_Compiler_List.map (FStar_Class_PP.pp uu___1)) in
+               FStar_Compiler_List.map (FStar_Class_PP.pp uu___1) uu___3 in
              doclist uu___2)
       }
 let __def_check_scoped :

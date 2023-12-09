@@ -618,8 +618,7 @@ let (json_of_issue : FStar_Errors.issue -> FStar_Json.json) =
       FStar_Compiler_List.op_At
         [("level", (json_of_issue_level issue.FStar_Errors.issue_level))]
         uu___1 in
-    FStar_Compiler_Effect.op_Less_Bar
-      (fun uu___1 -> FStar_Json.JsonAssoc uu___1) uu___
+    FStar_Json.JsonAssoc uu___
 let (js_pushkind : FStar_Json.json -> push_kind) =
   fun s ->
     let uu___ = FStar_Interactive_JsonHelper.js_str s in

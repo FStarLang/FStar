@@ -577,7 +577,7 @@ let rec (translate :
              let uu___2 =
                let uu___3 = translate_constant c in
                FStar_TypeChecker_NBETerm.Constant uu___3 in
-             FStar_Compiler_Effect.op_Less_Bar mk_t1 uu___2
+             mk_t1 uu___2
          | FStar_Syntax_Syntax.Tm_bvar db ->
              if
                db.FStar_Syntax_Syntax.index < (FStar_Compiler_List.length bs)
@@ -591,8 +591,7 @@ let rec (translate :
                        let uu___6 =
                          FStar_Compiler_List.map
                            FStar_TypeChecker_NBETerm.t_to_string bs in
-                       FStar_Compiler_Effect.op_Bar_Greater uu___6
-                         (FStar_Compiler_String.concat "; ") in
+                       FStar_Compiler_String.concat "; " uu___6 in
                      FStar_Compiler_Util.print2
                        "Resolved bvar to %s\n\tcontext is [%s]\n" uu___4
                        uu___5);
@@ -607,8 +606,7 @@ let rec (translate :
                      let uu___6 =
                        FStar_Compiler_List.map
                          FStar_Syntax_Print.univ_to_string us in
-                     FStar_Compiler_Effect.op_Bar_Greater uu___6
-                       (FStar_Compiler_String.concat ", ") in
+                     FStar_Compiler_String.concat ", " uu___6 in
                    FStar_Compiler_Util.print2 "Uinst term : %s\nUnivs : %s\n"
                      uu___4 uu___5);
               (let uu___3 = translate cfg bs t in
@@ -619,14 +617,14 @@ let rec (translate :
                         let uu___6 =
                           let uu___7 = translate_univ cfg bs x in
                           FStar_TypeChecker_NBETerm.Univ uu___7 in
-                        FStar_Compiler_Effect.op_Less_Bar mk_t1 uu___6 in
+                        mk_t1 uu___6 in
                       FStar_TypeChecker_NBETerm.as_arg uu___5) us in
                iapp cfg uu___3 uu___4))
          | FStar_Syntax_Syntax.Tm_type u ->
              let uu___2 =
                let uu___3 = translate_univ cfg bs u in
                FStar_TypeChecker_NBETerm.Type_t uu___3 in
-             FStar_Compiler_Effect.op_Less_Bar mk_t1 uu___2
+             mk_t1 uu___2
          | FStar_Syntax_Syntax.Tm_arrow
              { FStar_Syntax_Syntax.bs1 = xs; FStar_Syntax_Syntax.comp = c;_}
              ->
@@ -677,7 +675,7 @@ let rec (translate :
                  let uu___4 = FStar_Thunk.mk norm in
                  FStar_Pervasives.Inl uu___4 in
                FStar_TypeChecker_NBETerm.Arrow uu___3 in
-             FStar_Compiler_Effect.op_Less_Bar mk_t1 uu___2
+             mk_t1 uu___2
          | FStar_Syntax_Syntax.Tm_refine
              { FStar_Syntax_Syntax.b = bv; FStar_Syntax_Syntax.phi = tm;_} ->
              if
@@ -686,7 +684,7 @@ let rec (translate :
                  ((cfg.core_cfg).FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unrefine
              then translate cfg bs bv.FStar_Syntax_Syntax.sort
              else
-               FStar_Compiler_Effect.op_Less_Bar mk_t1
+               mk_t1
                  (FStar_TypeChecker_NBETerm.Refinement
                     ((fun y -> translate cfg (y :: bs) tm),
                       (fun uu___3 ->
@@ -747,7 +745,7 @@ let rec (translate :
                    FStar_TypeChecker_NBETerm.UVar uu___5 in
                  (uu___4, []) in
                FStar_TypeChecker_NBETerm.Accu uu___3 in
-             FStar_Compiler_Effect.op_Less_Bar mk_t1 uu___2
+             mk_t1 uu___2
          | FStar_Syntax_Syntax.Tm_name x ->
              FStar_TypeChecker_NBETerm.mkAccuVar x
          | FStar_Syntax_Syntax.Tm_abs
@@ -761,7 +759,7 @@ let rec (translate :
              { FStar_Syntax_Syntax.bs = xs; FStar_Syntax_Syntax.body = body;
                FStar_Syntax_Syntax.rc_opt = resc;_}
              ->
-             FStar_Compiler_Effect.op_Less_Bar mk_t1
+             mk_t1
                (FStar_TypeChecker_NBETerm.Lam
                   ((fun ys ->
                       let uu___2 =
@@ -851,7 +849,7 @@ let rec (translate :
                let uu___7 =
                  translate cfg bs (FStar_Pervasives_Native.fst arg) in
                FStar_TypeChecker_NBETerm.Reflect uu___7 in
-             FStar_Compiler_Effect.op_Less_Bar mk_t1 uu___6
+             mk_t1 uu___6
          | FStar_Syntax_Syntax.Tm_app
              {
                FStar_Syntax_Syntax.hd =
@@ -882,7 +880,7 @@ let rec (translate :
                let uu___7 =
                  translate cfg bs (FStar_Pervasives_Native.fst arg) in
                FStar_TypeChecker_NBETerm.Reflect uu___7 in
-             FStar_Compiler_Effect.op_Less_Bar mk_t1 uu___6
+             mk_t1 uu___6
          | FStar_Syntax_Syntax.Tm_app
              {
                FStar_Syntax_Syntax.hd =
@@ -1104,20 +1102,18 @@ let rec (translate :
                       (fun uu___4 ->
                          let uu___5 =
                            let uu___6 =
-                             FStar_Compiler_Effect.op_Bar_Greater args
-                               (FStar_Compiler_List.map
-                                  (fun uu___7 ->
-                                     match uu___7 with
-                                     | (x, q) ->
-                                         let uu___8 =
-                                           FStar_TypeChecker_NBETerm.t_to_string
-                                             x in
-                                         Prims.strcat
-                                           (if FStar_Compiler_Util.is_some q
-                                            then "#"
-                                            else "") uu___8)) in
-                           FStar_Compiler_Effect.op_Bar_Greater uu___6
-                             (FStar_Compiler_String.concat "; ") in
+                             FStar_Compiler_List.map
+                               (fun uu___7 ->
+                                  match uu___7 with
+                                  | (x, q) ->
+                                      let uu___8 =
+                                        FStar_TypeChecker_NBETerm.t_to_string
+                                          x in
+                                      Prims.strcat
+                                        (if FStar_Compiler_Util.is_some q
+                                         then "#"
+                                         else "") uu___8) args in
+                           FStar_Compiler_String.concat "; " uu___6 in
                          FStar_Compiler_Util.print1 "Match args: %s\n" uu___5);
                     (let uu___4 = pickBranch cfg scrut2 branches in
                      match uu___4 with
@@ -1197,7 +1193,7 @@ let rec (translate :
                  let uu___4 = translate cfg bs e1 in
                  let uu___5 = FStar_Thunk.mk norm_meta in (uu___4, uu___5) in
                FStar_TypeChecker_NBETerm.Meta uu___3 in
-             FStar_Compiler_Effect.op_Less_Bar mk_t1 uu___2
+             mk_t1 uu___2
          | FStar_Syntax_Syntax.Tm_let
              { FStar_Syntax_Syntax.lbs = (false, lb::[]);
                FStar_Syntax_Syntax.body1 = body;_}
@@ -1242,7 +1238,7 @@ let rec (translate :
                          lb.FStar_Syntax_Syntax.lbeff) in
                   if uu___5
                   then
-                    FStar_Compiler_Effect.op_Less_Bar mk_t1
+                    mk_t1
                       (FStar_TypeChecker_NBETerm.Constant
                          FStar_TypeChecker_NBETerm.Unit)
                   else translate cfg bs lb.FStar_Syntax_Syntax.lbdef in
@@ -1271,7 +1267,7 @@ let rec (translate :
                       FStar_TypeChecker_NBETerm.UnreducedLet uu___7 in
                     (uu___6, []) in
                   FStar_TypeChecker_NBETerm.Accu uu___5 in
-                FStar_Compiler_Effect.op_Less_Bar mk_t1 uu___4)
+                mk_t1 uu___4)
          | FStar_Syntax_Syntax.Tm_let
              { FStar_Syntax_Syntax.lbs = (_rec, lbs);
                FStar_Syntax_Syntax.body1 = body;_}
@@ -1297,10 +1293,8 @@ let rec (translate :
                  let uu___2 =
                    FStar_Compiler_List.map
                      (fun v ->
-                        let uu___3 =
-                          let uu___4 = FStar_Syntax_Syntax.range_of_bv v in
-                          mk_rt uu___4 in
-                        FStar_Compiler_Effect.op_Less_Bar uu___3
+                        let uu___3 = FStar_Syntax_Syntax.range_of_bv v in
+                        mk_rt uu___3
                           (FStar_TypeChecker_NBETerm.Accu
                              ((FStar_TypeChecker_NBETerm.Var v), []))) vars in
                  FStar_Compiler_List.op_At uu___2 bs in
@@ -1318,7 +1312,7 @@ let rec (translate :
                      FStar_TypeChecker_NBETerm.UnreducedLetRec uu___5 in
                    (uu___4, []) in
                  FStar_TypeChecker_NBETerm.Accu uu___3 in
-               FStar_Compiler_Effect.op_Less_Bar mk_t1 uu___2
+               mk_t1 uu___2
              else
                (let uu___3 = make_rec_env lbs bs in translate cfg uu___3 body)
          | FStar_Syntax_Syntax.Tm_quoted (qt, qi) ->
@@ -1345,12 +1339,10 @@ let rec (translate :
              (match qi.FStar_Syntax_Syntax.qkind with
               | FStar_Syntax_Syntax.Quote_dynamic ->
                   let qt1 = close qt in
-                  FStar_Compiler_Effect.op_Less_Bar mk_t1
-                    (FStar_TypeChecker_NBETerm.Quote (qt1, qi))
+                  mk_t1 (FStar_TypeChecker_NBETerm.Quote (qt1, qi))
               | FStar_Syntax_Syntax.Quote_static ->
                   let qi1 = FStar_Syntax_Syntax.on_antiquoted close qi in
-                  FStar_Compiler_Effect.op_Less_Bar mk_t1
-                    (FStar_TypeChecker_NBETerm.Quote (qt, qi1)))
+                  mk_t1 (FStar_TypeChecker_NBETerm.Quote (qt, qi1)))
          | FStar_Syntax_Syntax.Tm_lazy li ->
              let f uu___2 =
                let t = FStar_Syntax_Util.unfold_lazy li in
@@ -1365,7 +1357,7 @@ let rec (translate :
                  let uu___4 = FStar_Thunk.mk f in
                  ((FStar_Pervasives.Inl li), uu___4) in
                FStar_TypeChecker_NBETerm.Lazy uu___3 in
-             FStar_Compiler_Effect.op_Less_Bar mk_t1 uu___2)
+             mk_t1 uu___2)
 and (translate_comp :
   config ->
     FStar_TypeChecker_NBETerm.t Prims.list ->
@@ -1418,7 +1410,7 @@ and (iapp :
                                FStar_Pervasives_Native.fst arg_values_rev in
                            FStar_Compiler_List.append uu___3 ctx in
                          FStar_Pervasives.Inl (ctx1, xs1, rc)) in
-              FStar_Compiler_Effect.op_Less_Bar mk
+              mk
                 (FStar_TypeChecker_NBETerm.Lam
                    ((fun l ->
                        f1 (FStar_Compiler_List.append l arg_values_rev)),
@@ -1435,7 +1427,7 @@ and (iapp :
                      let uu___4 = f1 (FStar_Compiler_List.rev args1) in
                      iapp cfg uu___4 args')
         | FStar_TypeChecker_NBETerm.Accu (a, ts) ->
-            FStar_Compiler_Effect.op_Less_Bar mk
+            mk
               (FStar_TypeChecker_NBETerm.Accu
                  (a, (FStar_Compiler_List.rev_append args ts)))
         | FStar_TypeChecker_NBETerm.Construct (i, us, ts) ->
@@ -1451,8 +1443,7 @@ and (iapp :
             let uu___1 = aux args us ts in
             (match uu___1 with
              | (us', ts') ->
-                 FStar_Compiler_Effect.op_Less_Bar mk
-                   (FStar_TypeChecker_NBETerm.Construct (i, us', ts')))
+                 mk (FStar_TypeChecker_NBETerm.Construct (i, us', ts')))
         | FStar_TypeChecker_NBETerm.FV (i, us, ts) ->
             let rec aux args1 us1 ts1 =
               match args1 with
@@ -1465,9 +1456,7 @@ and (iapp :
               | [] -> (us1, ts1) in
             let uu___1 = aux args us ts in
             (match uu___1 with
-             | (us', ts') ->
-                 FStar_Compiler_Effect.op_Less_Bar mk
-                   (FStar_TypeChecker_NBETerm.FV (i, us', ts')))
+             | (us', ts') -> mk (FStar_TypeChecker_NBETerm.FV (i, us', ts')))
         | FStar_TypeChecker_NBETerm.TopLevelLet (lb, arity, args_rev) ->
             let args_rev1 = FStar_Compiler_List.rev_append args args_rev in
             let n_args_rev = FStar_Compiler_List.length args_rev1 in
@@ -1522,9 +1511,7 @@ and (iapp :
                                           | (x, uu___11) ->
                                               FStar_TypeChecker_NBETerm.t_to_string
                                                 x) args_rev2 in
-                                   FStar_Compiler_Effect.op_Bar_Greater
-                                     uu___9
-                                     (FStar_Compiler_String.concat ", ") in
+                                   FStar_Compiler_String.concat ", " uu___9 in
                                  FStar_Compiler_Util.print3
                                    "Reducing body of %s = %s,\n\twith args = %s\n"
                                    uu___6 uu___7 uu___8);
@@ -1551,7 +1538,7 @@ and (iapp :
                                lb.FStar_Syntax_Syntax.lbdef in
                            iapp cfg uu___5 (FStar_Compiler_List.rev extra)))
              else
-               FStar_Compiler_Effect.op_Less_Bar mk
+               mk
                  (FStar_TypeChecker_NBETerm.TopLevelLet
                     (lb, arity, args_rev1)))
         | FStar_TypeChecker_NBETerm.TopLevelRec
@@ -1606,7 +1593,7 @@ and (iapp :
                                lb.FStar_Syntax_Syntax.lbdef in
                            iapp cfg uu___7 rest)))
             else
-              FStar_Compiler_Effect.op_Less_Bar mk
+              mk
                 (FStar_TypeChecker_NBETerm.TopLevelRec
                    (lb, arity, decreases_list, args1))
         | FStar_TypeChecker_NBETerm.LocalLetRec
@@ -1615,7 +1602,7 @@ and (iapp :
             ->
             if remaining_arity = Prims.int_zero
             then
-              FStar_Compiler_Effect.op_Less_Bar mk
+              mk
                 (FStar_TypeChecker_NBETerm.LocalLetRec
                    (i, lb, mutual_lbs, local_env,
                      (FStar_Compiler_List.op_At acc_args args),
@@ -1624,7 +1611,7 @@ and (iapp :
               (let n_args = FStar_Compiler_List.length args in
                if n_args < remaining_arity
                then
-                 FStar_Compiler_Effect.op_Less_Bar mk
+                 mk
                    (FStar_TypeChecker_NBETerm.LocalLetRec
                       (i, lb, mutual_lbs, local_env,
                         (FStar_Compiler_List.op_At acc_args args),
@@ -1637,7 +1624,7 @@ and (iapp :
                   | (should_reduce, uu___4, uu___5) ->
                       if Prims.op_Negation should_reduce
                       then
-                        FStar_Compiler_Effect.op_Less_Bar mk
+                        mk
                           (FStar_TypeChecker_NBETerm.LocalLetRec
                              (i, lb, mutual_lbs, local_env, args1,
                                Prims.int_zero, decreases_list))
@@ -1787,9 +1774,8 @@ and (translate_fv :
                                              | (x, uu___14) ->
                                                  FStar_TypeChecker_NBETerm.t_to_string
                                                    x) args' in
-                                      FStar_Compiler_Effect.op_Bar_Greater
-                                        uu___12
-                                        (FStar_Compiler_String.concat "; ") in
+                                      FStar_Compiler_String.concat "; "
+                                        uu___12 in
                                     FStar_Compiler_Util.print1
                                       "Caling primop with args = [%s]\n"
                                       uu___11);
@@ -1854,7 +1840,7 @@ and (translate_fv :
                                            iapp cfg uu___13 args'))))),
                              uu___8, arity) in
                          FStar_TypeChecker_NBETerm.Lam uu___7 in
-                       FStar_Compiler_Effect.op_Less_Bar mk_t uu___6))
+                       mk_t uu___6))
                  | FStar_Pervasives_Native.Some uu___5 ->
                      (debug1
                         (fun uu___7 ->
@@ -1914,10 +1900,8 @@ and (translate_fv :
                                (match uu___10 with
                                 | (ar, lst) ->
                                     let uu___11 =
-                                      let uu___12 =
-                                        FStar_Syntax_Syntax.range_of_fv fvar in
-                                      mk_rt uu___12 in
-                                    FStar_Compiler_Effect.op_Less_Bar uu___11
+                                      FStar_Syntax_Syntax.range_of_fv fvar in
+                                    mk_rt uu___11
                                       (FStar_TypeChecker_NBETerm.TopLevelRec
                                          (lb, ar, lst, [])))
                              else translate_letbinding cfg bs lb
@@ -1986,10 +1970,8 @@ and (translate_fv :
                                (match uu___10 with
                                 | (ar, lst) ->
                                     let uu___11 =
-                                      let uu___12 =
-                                        FStar_Syntax_Syntax.range_of_fv fvar in
-                                      mk_rt uu___12 in
-                                    FStar_Compiler_Effect.op_Less_Bar uu___11
+                                      FStar_Syntax_Syntax.range_of_fv fvar in
+                                    mk_rt uu___11
                                       (FStar_TypeChecker_NBETerm.TopLevelRec
                                          (lb, ar, lst, [])))
                              else translate_letbinding cfg bs lb
@@ -2047,11 +2029,9 @@ and (translate_letbinding :
                          "Making TopLevelLet for %s with arity %s\n" uu___6
                          uu___7);
                   (let uu___5 =
-                     let uu___6 =
-                       FStar_Syntax_Syntax.range_of_lbname
-                         lb.FStar_Syntax_Syntax.lbname in
-                     mk_rt uu___6 in
-                   FStar_Compiler_Effect.op_Less_Bar uu___5
+                     FStar_Syntax_Syntax.range_of_lbname
+                       lb.FStar_Syntax_Syntax.lbname in
+                   mk_rt uu___5
                      (FStar_TypeChecker_NBETerm.TopLevelLet (lb, arity, []))))
                else translate cfg bs lb.FStar_Syntax_Syntax.lbdef)
 and (mkRec :
@@ -2067,7 +2047,7 @@ and (mkRec :
           let uu___ = let_rec_arity b in
           match uu___ with
           | (ar, ar_lst) ->
-              FStar_Compiler_Effect.op_Less_Bar mk_t
+              mk_t
                 (FStar_TypeChecker_NBETerm.LocalLetRec
                    (i, b, bs, env, [], ar, ar_lst))
 and (make_rec_env :
@@ -2243,9 +2223,7 @@ and (translate_flag :
         | FStar_Syntax_Syntax.CPS -> FStar_TypeChecker_NBETerm.CPS
         | FStar_Syntax_Syntax.DECREASES (FStar_Syntax_Syntax.Decreases_lex l)
             ->
-            let uu___ =
-              FStar_Compiler_Effect.op_Bar_Greater l
-                (FStar_Compiler_List.map (translate cfg bs)) in
+            let uu___ = FStar_Compiler_List.map (translate cfg bs) l in
             FStar_TypeChecker_NBETerm.DECREASES_lex uu___
         | FStar_Syntax_Syntax.DECREASES (FStar_Syntax_Syntax.Decreases_wf
             (rel, e)) ->
@@ -2273,9 +2251,7 @@ and (readback_flag :
       | FStar_TypeChecker_NBETerm.CPS -> FStar_Syntax_Syntax.CPS
       | FStar_TypeChecker_NBETerm.DECREASES_lex l ->
           let uu___ =
-            let uu___1 =
-              FStar_Compiler_Effect.op_Bar_Greater l
-                (FStar_Compiler_List.map (readback cfg)) in
+            let uu___1 = FStar_Compiler_List.map (readback cfg) l in
             FStar_Syntax_Syntax.Decreases_lex uu___1 in
           FStar_Syntax_Syntax.DECREASES uu___
       | FStar_TypeChecker_NBETerm.DECREASES_wf (rel, e) ->
@@ -2383,31 +2359,20 @@ and (translate_monadic :
                                 let uu___5 =
                                   let uu___6 =
                                     let uu___7 =
-                                      FStar_Compiler_Effect.op_Bar_Greater ed
-                                        FStar_Syntax_Util.get_bind_repr in
-                                    FStar_Compiler_Effect.op_Bar_Greater
-                                      uu___7 FStar_Compiler_Util.must in
-                                  FStar_Compiler_Effect.op_Bar_Greater uu___6
-                                    FStar_Pervasives_Native.snd in
+                                      FStar_Syntax_Util.get_bind_repr ed in
+                                    FStar_Compiler_Util.must uu___7 in
+                                  FStar_Pervasives_Native.snd uu___6 in
                                 FStar_Syntax_Util.un_uinst uu___5 in
                               translate cfg' [] uu___4 in
-                            let uu___4 =
-                              let uu___5 =
-                                let uu___6 =
-                                  FStar_Compiler_Effect.op_Less_Bar mk_t
-                                    (FStar_TypeChecker_NBETerm.Univ
-                                       FStar_Syntax_Syntax.U_unknown) in
-                                (uu___6, FStar_Pervasives_Native.None) in
-                              let uu___6 =
-                                let uu___7 =
-                                  let uu___8 =
-                                    FStar_Compiler_Effect.op_Less_Bar mk_t
-                                      (FStar_TypeChecker_NBETerm.Univ
-                                         FStar_Syntax_Syntax.U_unknown) in
-                                  (uu___8, FStar_Pervasives_Native.None) in
-                                [uu___7] in
-                              uu___5 :: uu___6 in
-                            iapp cfg uu___3 uu___4 in
+                            iapp cfg uu___3
+                              [((mk_t
+                                   (FStar_TypeChecker_NBETerm.Univ
+                                      FStar_Syntax_Syntax.U_unknown)),
+                                 FStar_Pervasives_Native.None);
+                              ((mk_t
+                                  (FStar_TypeChecker_NBETerm.Univ
+                                     FStar_Syntax_Syntax.U_unknown)),
+                                FStar_Pervasives_Native.None)] in
                           let uu___3 =
                             let uu___4 =
                               let uu___5 =
@@ -2533,15 +2498,14 @@ and (translate_monadic :
                      FStar_Syntax_Syntax.rc_opt1 = lopt;_}
                    ->
                    let branches1 =
-                     FStar_Compiler_Effect.op_Bar_Greater branches
-                       (FStar_Compiler_List.map
-                          (fun uu___1 ->
-                             match uu___1 with
-                             | (pat, wopt, tm) ->
-                                 let uu___2 =
-                                   FStar_Syntax_Util.mk_reify tm
-                                     (FStar_Pervasives_Native.Some m) in
-                                 (pat, wopt, uu___2))) in
+                     FStar_Compiler_List.map
+                       (fun uu___1 ->
+                          match uu___1 with
+                          | (pat, wopt, tm) ->
+                              let uu___2 =
+                                FStar_Syntax_Util.mk_reify tm
+                                  (FStar_Pervasives_Native.Some m) in
+                              (pat, wopt, uu___2)) branches in
                    let tm =
                      FStar_Syntax_Syntax.mk
                        (FStar_Syntax_Syntax.Tm_match
@@ -2600,13 +2564,9 @@ and (translate_monadic_lift :
                     let uu___3 =
                       let uu___4 =
                         let uu___5 =
-                          let uu___6 =
-                            FStar_Compiler_Effect.op_Bar_Greater ed
-                              FStar_Syntax_Util.get_return_repr in
-                          FStar_Compiler_Effect.op_Bar_Greater uu___6
-                            FStar_Compiler_Util.must in
-                        FStar_Compiler_Effect.op_Bar_Greater uu___5
-                          FStar_Pervasives_Native.snd in
+                          let uu___6 = FStar_Syntax_Util.get_return_repr ed in
+                          FStar_Compiler_Util.must uu___6 in
+                        FStar_Pervasives_Native.snd uu___5 in
                       FStar_Syntax_Subst.compress uu___4 in
                     uu___3.FStar_Syntax_Syntax.n in
                   match uu___2 with
@@ -2622,15 +2582,11 @@ and (translate_monadic_lift :
                 let t =
                   let uu___2 =
                     let uu___3 = translate cfg' [] ret in
-                    let uu___4 =
-                      let uu___5 =
-                        let uu___6 =
-                          FStar_Compiler_Effect.op_Less_Bar mk_t
-                            (FStar_TypeChecker_NBETerm.Univ
-                               FStar_Syntax_Syntax.U_unknown) in
-                        (uu___6, FStar_Pervasives_Native.None) in
-                      [uu___5] in
-                    iapp cfg' uu___3 uu___4 in
+                    iapp cfg' uu___3
+                      [((mk_t
+                           (FStar_TypeChecker_NBETerm.Univ
+                              FStar_Syntax_Syntax.U_unknown)),
+                         FStar_Pervasives_Native.None)] in
                   let uu___3 =
                     let uu___4 =
                       let uu___5 = translate cfg' bs ty in

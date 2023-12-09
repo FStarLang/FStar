@@ -333,11 +333,8 @@ let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
          | () ->
              let tcenv = init () in
              let uu___1 =
-               let uu___2 =
-                 FStar_Compiler_Effect.op_Less_Bar
-                   (fun uu___3 -> FStar_Parser_ParseIt.Fragment uu___3)
-                   (frag_of_text s) in
-               FStar_Parser_ParseIt.parse uu___2 in
+               FStar_Parser_ParseIt.parse
+                 (FStar_Parser_ParseIt.Fragment (frag_of_text s)) in
              (match uu___1 with
               | FStar_Parser_ParseIt.Term t ->
                   FStar_ToSyntax_ToSyntax.desugar_term
@@ -350,8 +347,8 @@ let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
         ()
     with
     | FStar_Errors.Error (err, msg, r, _ctx) when
-        let uu___1 = FStar_Options.trace_error () in
-        FStar_Compiler_Effect.op_Less_Bar Prims.op_Negation uu___1 ->
+        let uu___1 = FStar_Options.trace_error () in Prims.op_Negation uu___1
+        ->
         (if r = FStar_Compiler_Range_Type.dummyRange
          then
            (let uu___2 = FStar_Errors_Msg.rendermsg msg in
@@ -569,9 +566,7 @@ let (tc_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
 let (pars_and_tc_fragment : Prims.string -> unit) =
   fun s ->
     FStar_Options.set_option "trace_error" (FStar_Options.Bool true);
-    (let report uu___1 =
-       let uu___2 = FStar_Errors.report_all () in
-       FStar_Compiler_Effect.op_Bar_Greater uu___2 (fun uu___3 -> ()) in
+    (let report uu___1 = let uu___2 = FStar_Errors.report_all () in () in
      try
        (fun uu___1 ->
           match () with
@@ -623,8 +618,7 @@ let (pars_and_tc_fragment : Prims.string -> unit) =
              else Obj.magic (Obj.repr (failwith "unreachable")))) uu___1)
 let (test_hashes : unit -> unit) =
   fun uu___ ->
-    (let uu___2 = FStar_Main.process_args () in
-     FStar_Compiler_Effect.op_Bar_Greater uu___2 (fun uu___3 -> ()));
+    (let uu___2 = FStar_Main.process_args () in ());
     pars_and_tc_fragment "type unary_nat = | U0 | US of unary_nat";
     (let test_one_hash n =
        let rec aux n1 =

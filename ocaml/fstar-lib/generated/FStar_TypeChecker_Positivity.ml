@@ -2,15 +2,13 @@ open Prims
 let (string_of_lids : FStar_Ident.lident Prims.list -> Prims.string) =
   fun lids ->
     let uu___ = FStar_Compiler_List.map FStar_Ident.string_of_lid lids in
-    FStar_Compiler_Effect.op_Bar_Greater uu___
-      (FStar_Compiler_String.concat ", ")
+    FStar_Compiler_String.concat ", " uu___
 let (debug_positivity :
   FStar_TypeChecker_Env.env_t -> (unit -> Prims.string) -> unit) =
   fun env ->
     fun msg ->
       let uu___ =
-        FStar_Compiler_Effect.op_Less_Bar (FStar_TypeChecker_Env.debug env)
-          (FStar_Options.Other "Positivity") in
+        FStar_TypeChecker_Env.debug env (FStar_Options.Other "Positivity") in
       if uu___
       then
         let uu___1 =
@@ -210,8 +208,7 @@ let (max_uniformly_recursive_parameters :
           let params_to_string uu___ =
             let uu___1 =
               FStar_Compiler_List.map FStar_Syntax_Print.bv_to_string params in
-            FStar_Compiler_Effect.op_Bar_Greater uu___1
-              (FStar_Compiler_String.concat ", ") in
+            FStar_Compiler_String.concat ", " uu___1 in
           debug_positivity env
             (fun uu___1 ->
                let uu___2 = params_to_string () in
@@ -1066,16 +1063,12 @@ let rec (ty_strictly_positive_in_type :
                        (FStar_Syntax_Util.is_pure_or_ghost_comp c) ||
                          (let uu___7 =
                             let uu___8 =
-                              let uu___9 =
-                                FStar_Compiler_Effect.op_Bar_Greater c
-                                  FStar_Syntax_Util.comp_effect_name in
-                              FStar_Compiler_Effect.op_Bar_Greater uu___9
-                                (FStar_TypeChecker_Env.norm_eff_name env) in
-                            FStar_Compiler_Effect.op_Bar_Greater uu___8
-                              (FStar_TypeChecker_Env.lookup_effect_quals env) in
-                          FStar_Compiler_Effect.op_Bar_Greater uu___7
-                            (FStar_Compiler_List.contains
-                               FStar_Syntax_Syntax.TotalEffect)) in
+                              FStar_TypeChecker_Env.norm_eff_name env
+                                (FStar_Syntax_Util.comp_effect_name c) in
+                            FStar_TypeChecker_Env.lookup_effect_quals env
+                              uu___8 in
+                          FStar_Compiler_List.contains
+                            FStar_Syntax_Syntax.TotalEffect uu___7) in
                      if Prims.op_Negation check_comp
                      then
                        (debug_positivity env
