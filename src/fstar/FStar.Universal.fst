@@ -88,6 +88,8 @@ let parse (env:uenv) (pre_fn: option string) (fn:string)
   : Syntax.modul
   * uenv =
   let ast, _ = Parser.Driver.parse_file fn in
+  if Options.dump_module (Parser.Dep.module_name_of_file fn)
+  then BU.print1 "Module after parsing:\n%s\n" (FStar.Parser.AST.modul_to_string ast);
   let ast, env = match pre_fn with
     | None ->
         ast, env

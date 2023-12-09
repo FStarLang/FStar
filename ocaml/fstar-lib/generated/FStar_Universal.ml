@@ -180,36 +180,47 @@ let (parse :
         let uu___ = FStar_Parser_Driver.parse_file fn in
         match uu___ with
         | (ast, uu___1) ->
-            let uu___2 =
-              match pre_fn with
-              | FStar_Pervasives_Native.None -> (ast, env)
-              | FStar_Pervasives_Native.Some pre_fn1 ->
-                  let uu___3 = FStar_Parser_Driver.parse_file pre_fn1 in
-                  (match uu___3 with
-                   | (pre_ast, uu___4) ->
-                       (match (pre_ast, ast) with
-                        | (FStar_Parser_AST.Interface (lid1, decls1, uu___5),
-                           FStar_Parser_AST.Module (lid2, decls2)) when
-                            FStar_Ident.lid_equals lid1 lid2 ->
-                            let uu___6 =
+            ((let uu___3 =
+                let uu___4 = FStar_Parser_Dep.module_name_of_file fn in
+                FStar_Options.dump_module uu___4 in
+              if uu___3
+              then
+                let uu___4 = FStar_Parser_AST.modul_to_string ast in
+                FStar_Compiler_Util.print1 "Module after parsing:\n%s\n"
+                  uu___4
+              else ());
+             (let uu___3 =
+                match pre_fn with
+                | FStar_Pervasives_Native.None -> (ast, env)
+                | FStar_Pervasives_Native.Some pre_fn1 ->
+                    let uu___4 = FStar_Parser_Driver.parse_file pre_fn1 in
+                    (match uu___4 with
+                     | (pre_ast, uu___5) ->
+                         (match (pre_ast, ast) with
+                          | (FStar_Parser_AST.Interface
+                             (lid1, decls1, uu___6), FStar_Parser_AST.Module
+                             (lid2, decls2)) when
+                              FStar_Ident.lid_equals lid1 lid2 ->
                               let uu___7 =
-                                FStar_ToSyntax_Interleave.initialize_interface
-                                  lid1 decls1 in
-                              with_dsenv_of_env env uu___7 in
-                            (match uu___6 with
-                             | (uu___7, env1) ->
-                                 let uu___8 =
-                                   FStar_ToSyntax_Interleave.interleave_module
-                                     ast true in
-                                 with_dsenv_of_env env1 uu___8)
-                        | uu___5 ->
-                            FStar_Errors.raise_err
-                              (FStar_Errors_Codes.Fatal_PreModuleMismatch,
-                                "mismatch between pre-module and module\n"))) in
-            (match uu___2 with
-             | (ast1, env1) ->
-                 let uu___3 = FStar_ToSyntax_ToSyntax.ast_modul_to_modul ast1 in
-                 with_dsenv_of_env env1 uu___3)
+                                let uu___8 =
+                                  FStar_ToSyntax_Interleave.initialize_interface
+                                    lid1 decls1 in
+                                with_dsenv_of_env env uu___8 in
+                              (match uu___7 with
+                               | (uu___8, env1) ->
+                                   let uu___9 =
+                                     FStar_ToSyntax_Interleave.interleave_module
+                                       ast true in
+                                   with_dsenv_of_env env1 uu___9)
+                          | uu___6 ->
+                              FStar_Errors.raise_err
+                                (FStar_Errors_Codes.Fatal_PreModuleMismatch,
+                                  "mismatch between pre-module and module\n"))) in
+              match uu___3 with
+              | (ast1, env1) ->
+                  let uu___4 =
+                    FStar_ToSyntax_ToSyntax.ast_modul_to_modul ast1 in
+                  with_dsenv_of_env env1 uu___4))
 let (core_check : FStar_TypeChecker_Env.core_check_t) =
   fun env ->
     fun tm ->

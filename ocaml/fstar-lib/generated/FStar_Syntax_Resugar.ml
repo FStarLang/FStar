@@ -942,15 +942,33 @@ let rec (resugar_term' :
                  && (FStar_Options.print_implicits ())
                -> resugar_as_app e args1
            | FStar_Pervasives_Native.Some (op, uu___2) when
-               (op = "forall") || (op = "exists") ->
-               let rec uncurry xs pats t1 =
+               (FStar_Compiler_Util.starts_with op "forall") ||
+                 (FStar_Compiler_Util.starts_with op "exists")
+               ->
+               let rec uncurry xs pats t1 flavor_matches =
                  match t1.FStar_Parser_AST.tm with
-                 | FStar_Parser_AST.QExists (xs', (uu___3, pats'), body) ->
+                 | FStar_Parser_AST.QExists (xs', (uu___3, pats'), body) when
+                     flavor_matches t1 ->
                      uncurry (FStar_Compiler_List.op_At xs xs')
                        (FStar_Compiler_List.op_At pats pats') body
-                 | FStar_Parser_AST.QForall (xs', (uu___3, pats'), body) ->
+                       flavor_matches
+                 | FStar_Parser_AST.QForall (xs', (uu___3, pats'), body) when
+                     flavor_matches t1 ->
                      uncurry (FStar_Compiler_List.op_At xs xs')
                        (FStar_Compiler_List.op_At pats pats') body
+                       flavor_matches
+                 | FStar_Parser_AST.QForallOp
+                     (uu___3, xs', (uu___4, pats'), body) when
+                     flavor_matches t1 ->
+                     uncurry (FStar_Compiler_List.op_At xs xs')
+                       (FStar_Compiler_List.op_At pats pats') body
+                       flavor_matches
+                 | FStar_Parser_AST.QExistsOp
+                     (uu___3, xs', (uu___4, pats'), body) when
+                     flavor_matches t1 ->
+                     uncurry (FStar_Compiler_List.op_At xs xs')
+                       (FStar_Compiler_List.op_At pats pats') body
+                       flavor_matches
                  | uu___3 -> (xs, pats, t1) in
                let resugar_forall_body body =
                  let uu___3 =
@@ -1017,33 +1035,76 @@ let rec (resugar_term' :
                                 ([], uu___9) in
                           (match uu___6 with
                            | (pats, body3) ->
-                               let uu___7 = uncurry xs3 pats body3 in
+                               let decompile_op op1 =
+                                 let uu___7 =
+                                   FStar_Parser_AST.string_to_op op1 in
+                                 match uu___7 with
+                                 | FStar_Pervasives_Native.None -> op1
+                                 | FStar_Pervasives_Native.Some (op2, uu___8)
+                                     -> op2 in
+                               let flavor_matches t1 =
+                                 match ((t1.FStar_Parser_AST.tm), op) with
+                                 | (FStar_Parser_AST.QExists uu___7,
+                                    "exists") -> true
+                                 | (FStar_Parser_AST.QForall uu___7,
+                                    "forall") -> true
+                                 | (FStar_Parser_AST.QExistsOp
+                                    (id, uu___7, uu___8, uu___9), uu___10) ->
+                                     let uu___11 =
+                                       FStar_Ident.string_of_id id in
+                                     uu___11 = op
+                                 | (FStar_Parser_AST.QForallOp
+                                    (id, uu___7, uu___8, uu___9), uu___10) ->
+                                     let uu___11 =
+                                       FStar_Ident.string_of_id id in
+                                     uu___11 = op
+                                 | uu___7 -> false in
+                               let uu___7 =
+                                 uncurry xs3 pats body3 flavor_matches in
                                (match uu___7 with
                                 | (xs4, pats1, body4) ->
+                                    let binders =
+                                      FStar_Parser_AST.idents_of_binders xs4
+                                        t.FStar_Syntax_Syntax.pos in
                                     if op = "forall"
                                     then
-                                      let uu___8 =
-                                        let uu___9 =
-                                          let uu___10 =
-                                            let uu___11 =
-                                              FStar_Parser_AST.idents_of_binders
-                                                xs4 t.FStar_Syntax_Syntax.pos in
-                                            (uu___11, pats1) in
-                                          (xs4, uu___10, body4) in
-                                        FStar_Parser_AST.QForall uu___9 in
-                                      mk uu___8
+                                      mk
+                                        (FStar_Parser_AST.QForall
+                                           (xs4, (binders, pats1), body4))
                                     else
-                                      (let uu___9 =
-                                         let uu___10 =
-                                           let uu___11 =
-                                             let uu___12 =
-                                               FStar_Parser_AST.idents_of_binders
-                                                 xs4
-                                                 t.FStar_Syntax_Syntax.pos in
-                                             (uu___12, pats1) in
-                                           (xs4, uu___11, body4) in
-                                         FStar_Parser_AST.QExists uu___10 in
-                                       mk uu___9))))
+                                      if op = "exists"
+                                      then
+                                        mk
+                                          (FStar_Parser_AST.QExists
+                                             (xs4, (binders, pats1), body4))
+                                      else
+                                        if
+                                          FStar_Compiler_Util.starts_with op
+                                            "forall"
+                                        then
+                                          (FStar_Compiler_Util.print1
+                                             "Resugaring as %s\n" op;
+                                           (let uu___11 =
+                                              let uu___12 =
+                                                let uu___13 =
+                                                  FStar_Ident.id_of_text op in
+                                                (uu___13, xs4,
+                                                  (binders, pats1), body4) in
+                                              FStar_Parser_AST.QForallOp
+                                                uu___12 in
+                                            mk uu___11))
+                                        else
+                                          (FStar_Compiler_Util.print1
+                                             "Resugaring as %s\n" op;
+                                           (let uu___12 =
+                                              let uu___13 =
+                                                let uu___14 =
+                                                  FStar_Ident.id_of_text op in
+                                                (uu___14, xs4,
+                                                  (binders, pats1), body4) in
+                                              FStar_Parser_AST.QExistsOp
+                                                uu___13 in
+                                            mk uu___12)))))
                  | uu___4 ->
                      if op = "forall"
                      then

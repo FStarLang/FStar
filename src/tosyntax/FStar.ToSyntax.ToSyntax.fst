@@ -223,8 +223,6 @@ let op_as_term env arity op : option S.term =
     match Ident.string_of_id op with
     | "=" ->
       r C.op_Eq delta_equational
-    // | ":=" ->
-    //   r C.write_lid delta_equational
     | "<" ->
       r C.op_LT delta_equational
     | "<=" ->
@@ -247,18 +245,12 @@ let op_as_term env arity op : option S.term =
       r C.op_Division delta_equational
     | "%" ->
       r C.op_Modulus delta_equational
-    // | "!" ->
-    //   r C.read_lid delta_equational
     | "@" ->
       FStar.Errors.log_issue
         (range_of_id op)
         (FStar.Errors.Warning_DeprecatedGeneric,
          "The operator '@' has been resolved to FStar.List.Tot.append even though FStar.List.Tot is not in scope. Please add an 'open FStar.List.Tot' to stop relying on this deprecated, special treatment of '@'");
       r C.list_tot_append_lid (Delta_equational_at_level 2)
-    // | "|>" ->
-    //   r C.pipe_right_lid delta_equational
-    // | "<|" ->
-    //   r C.pipe_left_lid delta_equational
     | "<>" ->
       r C.op_notEq delta_equational
     | "~"   ->
@@ -445,6 +437,8 @@ and free_vars tvars_only env t = match (unparen t).tm with
   | If _
   | QForall _
   | QExists _
+  | QForallOp _
+  | QExistsOp _
   | Record _
   | Match _
   | TryWith _
@@ -2613,7 +2607,7 @@ and desugar_comp r (allow_type_promotion:bool) env t =
 and desugar_formula env (f:term) : S.term =
   let mk t = S.mk t f.range in
   let setpos t = {t with pos=f.range} in
-  let desugar_quant (q:lident) b pats body =
+  let desugar_quant (q_head:S.term) b pats should_wrap_with_pat body =
     let tk = desugar_binder env ({b with blevel=Formula}) in
     let with_pats env (names, pats) body =
       match names, pats with
@@ -2632,7 +2626,9 @@ and desugar_formula env (f:term) : S.term =
           (fun es -> es |> List.map
                   (fun e -> arg_withimp_t Nothing <| desugar_term env e))
         in
-        mk (Tm_meta {tm=body;meta=Meta_pattern (names, pats)})
+        match pats with
+        | [] when not should_wrap_with_pat -> body
+        | _ -> mk (Tm_meta {tm=body;meta=Meta_pattern (names, pats)})
     in
     match tk with
       | Some a, k, _ ->  //AR: ignoring the attributes here
@@ -2641,7 +2637,7 @@ and desugar_formula env (f:term) : S.term =
         let body = desugar_formula env body in
         let body = with_pats env pats body in
         let body = setpos <| no_annot_abs [S.mk_binder a] body in
-        mk <| Tm_app {hd=S.fvar_with_dd (set_lid_range q b.brange) (Delta_constant_at_level 1) None;  //NS delta: wrong?  Delta_constant_at_level 2?
+        mk <| Tm_app {hd=q_head;
                       args=[as_arg body]}
 
       | _ -> failwith "impossible" in
@@ -2663,21 +2659,51 @@ and desugar_formula env (f:term) : S.term =
       mk <| Tm_meta {tm=f; meta=Meta_labeled(l, f.pos, p)}
 
     | QForall([], _, _)
-    | QExists([], _, _) -> failwith "Impossible: Quantifier without binders"
+    | QExists([], _, _)
+    | QForallOp(_, [], _, _)
+    | QExistsOp(_, [], _, _) -> failwith "Impossible: Quantifier without binders"
 
     | QForall((_1::_2::_3), pats, body) ->
       let binders = _1::_2::_3 in
       desugar_formula env (push_quant (fun x -> QForall x) binders pats body)
 
+    | QForallOp(i, (_1::_2::_3), pats, body) ->
+      let binders = _1::_2::_3 in
+      desugar_formula env (push_quant (fun (x,y,z) -> QForallOp(i, x, y, z)) binders pats body)
+
     | QExists((_1::_2::_3), pats, body) ->
       let binders = _1::_2::_3 in
       desugar_formula env (push_quant (fun x -> QExists x) binders pats body)
 
+    | QExistsOp(i, (_1::_2::_3), pats, body) ->
+      let binders = _1::_2::_3 in
+      desugar_formula env (push_quant (fun (x,y,z) -> QExistsOp(i, x, y, z)) binders pats body)
+
     | QForall([b], pats, body) ->
-      desugar_quant C.forall_lid b pats body
+      let q = C.forall_lid in
+      let q_head =    //NS delta: wrong?  Delta_constant_at_level 2?
+        S.fvar_with_dd (set_lid_range q b.brange) (Delta_constant_at_level 1) None
+      in
+      desugar_quant q_head b pats true body
 
     | QExists([b], pats, body) ->
-      desugar_quant C.exists_lid b pats body
+      let q = C.exists_lid in
+      let q_head =    //NS delta: wrong?  Delta_constant_at_level 2?
+        S.fvar_with_dd (set_lid_range q b.brange) (Delta_constant_at_level 1) None
+      in
+      desugar_quant q_head b pats true body
+    
+    | QForallOp(i, [b], pats, body)
+    | QExistsOp(i, [b], pats, body) ->
+      let q_head =
+        match op_as_term env 0 i with
+        | None -> 
+          raise_error (Errors.Fatal_VariableNotFound, 
+                       BU.format1 "quantifier operator %s not found" (Ident.string_of_id i)) 
+                      (Ident.range_of_id i)
+        | Some t -> t
+      in
+      desugar_quant q_head b pats false body
 
     | Paren f -> failwith "impossible"
 
