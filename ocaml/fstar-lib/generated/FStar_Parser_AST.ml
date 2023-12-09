@@ -69,6 +69,8 @@ type term' =
   Prims.list Prims.list) * term) 
   | QExists of (binder Prims.list * (FStar_Ident.ident Prims.list * term
   Prims.list Prims.list) * term) 
+  | QuantOp of (FStar_Ident.ident * binder Prims.list * (FStar_Ident.ident
+  Prims.list * term Prims.list Prims.list) * term) 
   | Refine of (binder * term) 
   | NamedTyp of (FStar_Ident.ident * term) 
   | Paren of term 
@@ -285,6 +287,13 @@ let (__proj__QExists__item___0 :
     (binder Prims.list * (FStar_Ident.ident Prims.list * term Prims.list
       Prims.list) * term))
   = fun projectee -> match projectee with | QExists _0 -> _0
+let (uu___is_QuantOp : term' -> Prims.bool) =
+  fun projectee -> match projectee with | QuantOp _0 -> true | uu___ -> false
+let (__proj__QuantOp__item___0 :
+  term' ->
+    (FStar_Ident.ident * binder Prims.list * (FStar_Ident.ident Prims.list *
+      term Prims.list Prims.list) * term))
+  = fun projectee -> match projectee with | QuantOp _0 -> _0
 let (uu___is_Refine : term' -> Prims.bool) =
   fun projectee -> match projectee with | Refine _0 -> true | uu___ -> false
 let (__proj__Refine__item___0 : term' -> (binder * term)) =
@@ -1604,7 +1613,20 @@ let (compile_op :
                 let uu___3 =
                   FStar_Compiler_Util.substring_from s (Prims.of_int (3)) in
                 (uu___2, uu___3)
-              else ("", s) in
+              else
+                if
+                  (FStar_Compiler_Util.starts_with s "exists") ||
+                    (FStar_Compiler_Util.starts_with s "forall")
+                then
+                  (let uu___3 =
+                     let uu___4 =
+                       FStar_Compiler_Util.substring s Prims.int_zero
+                         (Prims.of_int (6)) in
+                     Prims.strcat uu___4 "_" in
+                   let uu___4 =
+                     FStar_Compiler_Util.substring_from s (Prims.of_int (6)) in
+                   (uu___3, uu___4))
+                else ("", s) in
             (match uu___1 with
              | (prefix, s1) ->
                  let uu___2 =
@@ -1624,8 +1646,8 @@ let (string_to_op :
       FStar_Pervasives_Native.option)
   =
   fun s ->
-    let name_of_op uu___ =
-      match uu___ with
+    let name_of_op s1 =
+      match s1 with
       | "Amp" ->
           FStar_Pervasives_Native.Some ("&", FStar_Pervasives_Native.None)
       | "At" ->
@@ -1670,10 +1692,14 @@ let (string_to_op :
       | "Dot" ->
           FStar_Pervasives_Native.Some (".", FStar_Pervasives_Native.None)
       | "let" ->
-          FStar_Pervasives_Native.Some (s, FStar_Pervasives_Native.None)
+          FStar_Pervasives_Native.Some (s1, FStar_Pervasives_Native.None)
       | "and" ->
-          FStar_Pervasives_Native.Some (s, FStar_Pervasives_Native.None)
-      | uu___1 -> FStar_Pervasives_Native.None in
+          FStar_Pervasives_Native.Some (s1, FStar_Pervasives_Native.None)
+      | "forall" ->
+          FStar_Pervasives_Native.Some (s1, FStar_Pervasives_Native.None)
+      | "exists" ->
+          FStar_Pervasives_Native.Some (s1, FStar_Pervasives_Native.None)
+      | uu___ -> FStar_Pervasives_Native.None in
     match s with
     | "op_String_Assignment" ->
         FStar_Pervasives_Native.Some (".[]<-", FStar_Pervasives_Native.None)
@@ -1696,12 +1722,12 @@ let (string_to_op :
     | uu___ ->
         if FStar_Compiler_Util.starts_with s "op_"
         then
-          let s1 =
+          let frags =
             let uu___1 =
               FStar_Compiler_Util.substring_from s
                 (FStar_Compiler_String.length "op_") in
             FStar_Compiler_Util.split uu___1 "_" in
-          (match s1 with
+          (match frags with
            | op::[] ->
                if FStar_Compiler_Util.starts_with op "u"
                then
@@ -1717,7 +1743,7 @@ let (string_to_op :
                else name_of_op op
            | uu___1 ->
                let maybeop =
-                 let uu___2 = FStar_Compiler_List.map name_of_op s1 in
+                 let uu___2 = FStar_Compiler_List.map name_of_op frags in
                  FStar_Compiler_List.fold_left
                    (fun acc ->
                       fun x ->
@@ -1988,6 +2014,19 @@ let rec (term_to_string : term -> Prims.string) =
         let uu___3 = FStar_Compiler_Effect.op_Bar_Greater t term_to_string in
         FStar_Compiler_Util.format3 "exists %s.{:pattern %s} %s" uu___1
           uu___2 uu___3
+    | QuantOp (i, bs, (uu___, []), t) ->
+        let uu___1 = FStar_Ident.string_of_id i in
+        let uu___2 = to_string_l " " binder_to_string bs in
+        let uu___3 = FStar_Compiler_Effect.op_Bar_Greater t term_to_string in
+        FStar_Compiler_Util.format3 "%s %s. %s" uu___1 uu___2 uu___3
+    | QuantOp (i, bs, (uu___, pats), t) ->
+        let uu___1 = FStar_Ident.string_of_id i in
+        let uu___2 = to_string_l " " binder_to_string bs in
+        let uu___3 =
+          to_string_l " \\/ " (to_string_l "; " term_to_string) pats in
+        let uu___4 = FStar_Compiler_Effect.op_Bar_Greater t term_to_string in
+        FStar_Compiler_Util.format4 "%s %s.{:pattern %s} %s" uu___1 uu___2
+          uu___3 uu___4
     | Refine (b, t) ->
         let uu___ = FStar_Compiler_Effect.op_Bar_Greater b binder_to_string in
         let uu___1 = FStar_Compiler_Effect.op_Bar_Greater t term_to_string in

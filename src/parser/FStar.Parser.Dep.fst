@@ -1005,7 +1005,8 @@ let collect_one
               binders;
             collect_term t
         | QForall (binders, (_, ts), t)
-        | QExists (binders, (_, ts), t) ->
+        | QExists (binders, (_, ts), t)
+        | QuantOp (_, binders, (_, ts), t) ->
             collect_binders binders;
             List.iter (List.iter collect_term) ts;
             collect_term t

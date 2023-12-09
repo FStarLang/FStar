@@ -16,7 +16,7 @@
 
 module Arrows
 
-val op_At_Bar (#a: Type) (s1 s2: array a)
+val ( @| ) (#a: Type) (s1 s2: array a)
     : ST (array a)
       (requires (fun h -> contains h s1 /\ contains h s2))
       (ensures

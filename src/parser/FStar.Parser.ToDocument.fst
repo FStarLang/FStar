@@ -673,6 +673,58 @@ let separate_map_with_comments_kw prefix sep f xs extract_meta =
   in
   snd (List.fold_left fold_fun init xs)
 
+let p_lidentOrOperator' l s_l p_l = 
+  let lstr = s_l l in 
+  if lstr `starts_with` "op_" then
+    match AST.string_to_op lstr with
+    | None -> 
+      str "( " ^^  p_l l ^^ str " )"
+    | Some (s, _) -> 
+      str "( " ^^ str s ^^ str " )"
+  else
+    p_l l
+
+(* ****************************************************************************)
+(*                                                                            *)
+(*                Printing identifiers and module paths                       *)
+(*                                                                            *)
+(* ****************************************************************************)
+
+let string_of_id_or_underscore lid =
+  if starts_with (string_of_id lid) reserved_prefix && not (Options.print_real_names ())
+  then underscore
+  else str (string_of_id lid)
+
+let text_of_lid_or_underscore lid =
+  if starts_with (string_of_id (ident_of_lid lid)) reserved_prefix && not (Options.print_real_names ())
+  then underscore
+  else str (string_of_lid lid)
+
+let p_qlident lid =
+  text_of_lid_or_underscore lid
+
+let p_quident lid =
+  text_of_lid_or_underscore lid
+
+let p_ident lid =
+  string_of_id_or_underscore lid
+
+let p_lident lid =
+  string_of_id_or_underscore lid
+
+let p_uident lid =
+  string_of_id_or_underscore lid
+
+let p_tvar lid =
+  string_of_id_or_underscore lid
+
+let p_qlidentOrOperator lid =
+  p_lidentOrOperator' lid Ident.string_of_lid p_qlident
+  
+let p_lidentOrOperator lid =
+  p_lidentOrOperator' lid Ident.string_of_id p_lident
+
+
 
 (* ****************************************************************************)
 (*                                                                            *)
@@ -702,7 +754,7 @@ and p_attributes isTopLevel attrs =
 
 and p_justSig d = match d.d with
   | Val (lid, t) ->
-      (str "val" ^^ space ^^ p_lident lid ^^ space ^^ colon) ^^ p_typ false false t
+      (str "val" ^^ space ^^ p_lidentOrOperator lid ^^ space ^^ colon) ^^ p_typ false false t
   | TopLevelLet (_, lbs) ->
       separate_map hardline (fun lb -> group (p_letlhs (str "let") lb false)) lbs
   | _ ->
@@ -742,7 +794,7 @@ and p_rawDecl d = match d.d with
           has_qs = false;
           has_attrs = false; })
   | Val(lid, t) ->
-    group <| str "val" ^^ space ^^ p_lident lid ^^ (sig_as_binders_if_possible t false)
+    group <| str "val" ^^ space ^^ p_lidentOrOperator lid ^^ (sig_as_binders_if_possible t false)
     (* KM : not exactly sure which one of the cases below and above is used for 'assume val ..'*)
   | Assume(id, t) ->
     let decl_keyword =
@@ -852,7 +904,11 @@ and p_typeDeclPrefix kw eq lid bs typ_opt =
     with_kw (fun n -> prefix2 (prefix2 n (flow break1 binders)) typ)
 
 and p_recordFieldDecl ps (lid, aq, attrs, t) =
-  group (optional p_aqual aq ^^ p_attributes false attrs ^^ p_lident lid ^^ colon ^^ p_typ ps false t)
+  group (optional p_aqual aq ^^
+         p_attributes false attrs ^^
+         p_lidentOrOperator lid ^^
+         colon ^^
+         p_typ ps false t)
 
 and p_constructorBranch (uid, variant, attrs) =
   let h isOf t = (if isOf then str "of" else colon) ^^ space ^^ p_typ false false t
@@ -890,7 +946,7 @@ and p_letlhs kw (pat, _) inner_let =
           let bs, style = pats_as_binders_if_possible pats in
           bs, style
       in
-      group <| kw ^^ space ^^ p_lident lid ^^ (format_sig style terms ascr_doc true true)
+      group <| kw ^^ space ^^ p_lidentOrOperator lid ^^ (format_sig style terms ascr_doc true true)
   | _ ->
       (* doesn't have binders *)
       let ascr_doc =
@@ -1182,39 +1238,6 @@ and p_binders (is_atomic: bool) (bs: list binder): document = separate_or_flow b
 and p_binders_sep (bs: list binder): document = separate_map space (fun x -> x) (p_binders_list true bs)
 
 
-(* ****************************************************************************)
-(*                                                                            *)
-(*                Printing identifiers and module paths                       *)
-(*                                                                            *)
-(* ****************************************************************************)
-
-and string_of_id_or_underscore lid =
-  if starts_with (string_of_id lid) reserved_prefix && not (Options.print_real_names ())
-  then underscore
-  else str (string_of_id lid)
-
-and text_of_lid_or_underscore lid =
-  if starts_with (string_of_id (ident_of_lid lid)) reserved_prefix && not (Options.print_real_names ())
-  then underscore
-  else str (string_of_lid lid)
-
-and p_qlident lid =
-  text_of_lid_or_underscore lid
-
-and p_quident lid =
-  text_of_lid_or_underscore lid
-
-and p_ident lid =
-  string_of_id_or_underscore lid
-
-and p_lident lid =
-  string_of_id_or_underscore lid
-
-and p_uident lid =
-  string_of_id_or_underscore lid
-
-and p_tvar lid =
-  string_of_id_or_underscore lid
 
 (* ****************************************************************************)
 (*                                                                            *)
@@ -1581,7 +1604,8 @@ and p_typ_sep ps pb e = with_comment_sep (p_typ' ps pb) e e.range
 
 and p_typ' ps pb e = match e.tm with
   | QForall (bs, (_, trigger), e1)
-  | QExists (bs, (_, trigger), e1) ->
+  | QExists (bs, (_, trigger), e1)
+  | QuantOp (_, bs, (_, trigger), e1) ->
       let binders_doc = p_binders true bs in
       let term_doc = p_noSeqTermAndComment ps pb e1 in
       //VD: We could dispense with this pattern matching if we removed trailing whitespace after the fact
@@ -1659,6 +1683,7 @@ and pats_as_binders_if_possible pats : list document & annotation_style =
 and p_quantifier e = match e.tm with
     | QForall _ -> str "forall"
     | QExists _ -> str "exists"
+    | QuantOp (i, _, _, _) -> p_ident i
     | _ -> failwith "Imposible : p_quantifier called on a non-quantifier term"
 
 and p_trigger = function
@@ -1977,7 +2002,8 @@ and p_refinedBinder b phi =
 
 (* A simple def can be followed by a ';'. Protect except for the last one. *)
 and p_simpleDef ps (lid, e) =
-  group (p_qlident lid ^/^ equals ^/^ p_noSeqTermAndComment ps false e)
+  group (p_qlidentOrOperator lid ^/^ equals ^/^ p_noSeqTermAndComment ps false e)
+
 
 and p_appTerm e = match e.tm with
   | App _ when is_general_application e ->
@@ -2150,6 +2176,7 @@ and p_projectionLHS e = match e.tm with
   | Sum _       (* p_tmNoEq *)
   | QForall _   (* p_typ *)
   | QExists _   (* p_typ *)
+  | QuantOp _
   | Refine _    (* p_tmNoEq *)
   | NamedTyp _  (* p_tmNoEq *)
   | Requires _  (* p_noSeqTerm *)

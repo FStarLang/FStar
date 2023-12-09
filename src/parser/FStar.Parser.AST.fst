@@ -306,17 +306,21 @@ let compile_op arity s r =
     | ".()" -> "op_Array_Access"
     | ".[||]" -> "op_Brack_Lens_Access"
     | ".(||)" -> "op_Lens_Access"
-    | _ -> // handle let operators (i.e. [let?] or [and*])
-          let prefix, s = if starts_with s "let" || starts_with s "and"
-                          then substring s 0 3 ^ "_", substring_from s 3
-                          else "", s in
+    | _ -> // handle let operators (i.e. [let?] or [and*], and [exists*] and [forall*])
+          let prefix, s = 
+            if starts_with s "let" || starts_with s "and"
+            then substring s 0 3 ^ "_", substring_from s 3
+            else if starts_with s "exists" || starts_with s "forall"
+            then substring s 0 6 ^ "_", substring_from s 6
+            else "", s in
           "op_" ^ prefix ^ String.concat "_" (List.map name_of_char (String.list_of_string s))
 
 let compile_op' s r =
   compile_op (-1) s r
 
 let string_to_op s =
-  let name_of_op = function
+  let name_of_op s =
+    match s with
     | "Amp" ->  Some ("&", None)
     | "At" -> Some ("@", None)
     | "Plus" -> Some ("+", None)
@@ -338,7 +342,7 @@ let string_to_op s =
     | "Colon" -> Some (":", None)
     | "Dollar" -> Some ("$", None)
     | "Dot" -> Some (".", None)
-    | "let" | "and" -> Some (s, None)
+    | "let" | "and" | "forall" | "exists" -> Some (s, None)
     | _ -> None
   in
   match s with
@@ -352,8 +356,8 @@ let string_to_op s =
   | "op_Lens_Access" -> Some (".(||)", None)
   | _ ->
     if starts_with s "op_"
-    then let s = split (substring_from s (String.length "op_")) "_" in
-         match s with
+    then let frags = split (substring_from s (String.length "op_")) "_" in
+         match frags with
          | [op] ->
                 if starts_with op "u"
                 then map_opt (safe_int_of_string (substring_from op 1)) (
@@ -369,7 +373,7 @@ let string_to_op s =
                                               | Some (op, _) -> Some (acc ^ op)
                                               | None -> None)
                             (Some "")
-                            (List.map name_of_op s)
+                            (List.map name_of_op frags)
            in
            map_opt maybeop (fun o -> (o, None))
     else None
@@ -499,6 +503,17 @@ let rec term_to_string (x:term) = match x.tm with
       (t|> term_to_string)
   | QExists(bs, (_, pats), t) ->
     Util.format3 "exists %s.{:pattern %s} %s"
+      (to_string_l " " binder_to_string bs)
+      (to_string_l " \/ " (to_string_l "; " term_to_string) pats)
+      (t|> term_to_string)
+  | QuantOp(i, bs, (_, []), t) ->
+    Util.format3 "%s %s. %s"
+      (string_of_id i)
+      (to_string_l " " binder_to_string bs)
+      (t|> term_to_string)
+  | QuantOp(i, bs, (_, pats), t) ->
+    Util.format4 "%s %s.{:pattern %s} %s"
+      (string_of_id i)
       (to_string_l " " binder_to_string bs)
       (to_string_l " \/ " (to_string_l "; " term_to_string) pats)
       (t|> term_to_string)
