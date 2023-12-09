@@ -12,7 +12,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_16.x | sed 's,https://deb.nodeso
 RUN sudo apt-get install -y --no-install-recommends nodejs
 
 # install rust
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
 ARG opamthreads=24
 
