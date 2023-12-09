@@ -17,9 +17,9 @@ let (__proj__Mkenv__item__gamma : env -> binding Prims.list) =
 let (tyvar_of : Prims.string -> Prims.string) =
   fun s ->
     let uu___ =
-      FStar_String.substring s Prims.int_one
-        ((FStar_String.length s) - Prims.int_one) in
-    FStar_String.uppercase uu___
+      FStar_Compiler_String.substring s Prims.int_one
+        ((FStar_Compiler_String.length s) - Prims.int_one) in
+    FStar_Compiler_String.uppercase uu___
 let (varname : Prims.string -> Prims.string) =
   fun s -> FStar_Compiler_Util.replace_char s 39 95
 let (is_internal_name : Prims.string -> Prims.bool) =
@@ -32,13 +32,13 @@ let fail : 'uuuuu . Prims.string -> 'uuuuu =
   fun s ->
     let uu___ =
       FStar_Compiler_Util.format1 "Pulse to Rust extraction failed: %s" s in
-    failwith uu___
+    FStar_Compiler_Effect.failwith uu___
 let fail_nyi : 'uuuuu . Prims.string -> 'uuuuu =
   fun s ->
     let uu___ =
       FStar_Compiler_Util.format1
         "Pulse to Rust extraction failed: no support yet for %s" s in
-    failwith uu___
+    FStar_Compiler_Effect.failwith uu___
 let (empty_env : unit -> env) =
   fun uu___ -> { fns = []; statics = []; gamma = [] }
 let (lookup_global_fn :
@@ -1247,7 +1247,8 @@ let (extract_one : Prims.string -> unit) =
       let uu___1 = FStar_Compiler_Util.load_value_from_file file in
       match uu___1 with
       | FStar_Pervasives_Native.Some r -> r
-      | FStar_Pervasives_Native.None -> failwith "Could not load file" in
+      | FStar_Pervasives_Native.None ->
+          FStar_Compiler_Effect.failwith "Could not load file" in
     match uu___ with
     | (gamma, decls) ->
         let uu___1 = uu___ in
@@ -1286,6 +1287,6 @@ let (extract_one : Prims.string -> unit) =
          | (items, uu___3) ->
              let f = Pulse2Rust_Rust_Syntax.mk_file "a.rs" items in
              let s = RustBindings.file_to_rust f in
-             FStar_Compiler_Util.print_string (Prims.op_Hat s "\n"))
+             FStar_Compiler_Util.print_string (Prims.strcat s "\n"))
 let (extract : Prims.string Prims.list -> unit) =
   fun files -> FStar_Compiler_List.iter extract_one files

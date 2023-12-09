@@ -74,8 +74,12 @@ check-for-changes:
 	# Test if nothing has changed
 	if ! git diff-index --exit-code HEAD .. ; then git diff .. ; false ; fi
 
+pulse2rust:
+	+$(MAKE) -C .. pulse2rust
+
 .PHONY: ci
 ci:
 	+$(MAKE) full-boot
 	+$(MAKE) check-for-changes
 	+$(MAKE) test
+	+$(MAKE) pulse2rust
