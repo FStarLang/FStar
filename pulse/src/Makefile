@@ -79,7 +79,7 @@ pulse2rust:
 
 .PHONY: ci
 ci:
-	#+$(MAKE) full-boot
-	#+$(MAKE) check-for-changes
-	#+$(MAKE) test
+	+$(MAKE) full-boot
+	+$(MAKE) check-for-changes
+	+$(MAKE) test
 	+$(MAKE) pulse2rust
