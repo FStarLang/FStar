@@ -4,16 +4,12 @@ ARG ocaml_version=4.12
 FROM ocaml/opam:ubuntu-22.04-ocaml-$ocaml_version
 
 # CI dependencies for the Wasm11 test: node.js
-# The sed call is a workaround for these upstream issues... sigh.
-# https://github.com/nodesource/distributions/issues/1576
-# https://github.com/nodesource/distributions/issues/1593
-# Remove when they are solved
-RUN curl -fsSL https://deb.nodesource.com/setup_16.x | sed 's,https://deb.nodesource.com,http://deb.nodesource.com,' | sudo -E bash -
+RUN curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
 RUN sudo apt-get install -y --no-install-recommends nodejs
 
 # install rust
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-RUN source "$HOME/.cargo/env"
+RUN . "$HOME/.cargo/env"
 
 ARG opamthreads=24
 
