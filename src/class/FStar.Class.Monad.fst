@@ -15,7 +15,7 @@ let rec foldM_left f e xs =
   match xs with
   | [] -> return e
   | x::xs ->
-    let! e' = f x e in
+    let! e' = f e x in
     foldM_left f e' xs
 
 let rec foldM_right f xs e =
