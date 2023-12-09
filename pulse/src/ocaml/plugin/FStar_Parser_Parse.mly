@@ -86,13 +86,19 @@ let parse_extension_blob (extension_name:string)
 %token <string> AND_OP
 %token <string> MATCH_OP
 %token <string> IF_OP
+%token <bool> EXISTS
+%token <string> EXISTS_OP
+%token <bool> FORALL
+%token <string> FORALL_OP
+
+
 /* [SEMICOLON_OP] encodes either:
 - [;;], which used to be SEMICOLON_SEMICOLON, or
 - [;<OP>], with <OP> a sequence of [op_char] (see FStar_Parser_LexFStar).
 */
 %token <string option> SEMICOLON_OP
 
-%token FORALL EXISTS ASSUME NEW LOGIC ATTRIBUTES
+%token ASSUME NEW LOGIC ATTRIBUTES
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE UNFOLD INLINE_FOR_EXTRACTION
 %token NOEXTRACT
 %token NOEQUALITY UNOPTEQUALITY PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS PRAGMA_PUSH_OPTIONS PRAGMA_POP_OPTIONS PRAGMA_RESTART_SOLVER PRAGMA_PRINT_EFFECTS_GRAPH
@@ -1074,6 +1080,16 @@ typ:
 %inline quantifier:
   | FORALL { fun x -> QForall x }
   | EXISTS { fun x -> QExists x}
+  | op=FORALL_OP
+    { 
+      let op = mk_ident("forall" ^ op, rr $loc(op)) in
+      fun (x,y,z) -> QuantOp (op, x, y, z)
+    }
+  | op=EXISTS_OP
+    { 
+      let op = mk_ident("exists" ^ op, rr $loc(op)) in
+      fun (x,y,z) -> QuantOp (op, x, y, z)
+    }
 
 trigger:
   |   { [] }
@@ -1541,6 +1557,11 @@ string:
   | op=TILDE        { mk_ident (op, rr $loc) }
   | op=and_op       {op}
   | op=let_op       {op}
+  | op=quantifier_op {op}
+
+%inline quantifier_op:
+  | op=EXISTS_OP    { mk_ident ("exists" ^ op, rr $loc) }
+  | op=FORALL_OP    { mk_ident ("forall" ^ op, rr $loc) }
 
 %inline and_op:
   | op=AND_OP { mk_ident ("and" ^ op, rr $loc) }
