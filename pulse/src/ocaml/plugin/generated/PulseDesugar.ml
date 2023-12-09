@@ -1553,7 +1553,7 @@ let (fresh_var : FStar_Ident.ident -> FStar_Ident.ident err) =
       (fun ctr ->
          let s =
            let uu___ = FStar_Ident.string_of_id nm in
-           Prims.op_Hat uu___ (Prims.op_Hat "@" (Prims.string_of_int ctr)) in
+           Prims.strcat uu___ (Prims.strcat "@" (Prims.string_of_int ctr)) in
          let uu___ =
            let uu___1 =
              let uu___2 = FStar_Ident.range_of_id nm in (s, uu___2) in
