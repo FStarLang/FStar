@@ -77,8 +77,11 @@ check-for-changes:
 pulse2rust:
 	+$(MAKE) -C .. pulse2rust
 
+OTHERFLAGS += --admit_smt_queries true
+
 .PHONY: ci
 ci:
 	+$(MAKE) full-boot
 	+$(MAKE) check-for-changes
 	+$(MAKE) test
+	+$(MAKE) pulse2rust
