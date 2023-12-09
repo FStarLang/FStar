@@ -1602,14 +1602,7 @@ let (collect_one :
                   FStar_Compiler_List.iter
                     (FStar_Compiler_List.iter collect_term) ts;
                   collect_term t)
-             | FStar_Parser_AST.QForallOp (uu___3, binders, (uu___4, ts), t)
-                 ->
-                 (collect_binders binders;
-                  FStar_Compiler_List.iter
-                    (FStar_Compiler_List.iter collect_term) ts;
-                  collect_term t)
-             | FStar_Parser_AST.QExistsOp (uu___3, binders, (uu___4, ts), t)
-                 ->
+             | FStar_Parser_AST.QuantOp (uu___3, binders, (uu___4, ts), t) ->
                  (collect_binders binders;
                   FStar_Compiler_List.iter
                     (FStar_Compiler_List.iter collect_term) ts;

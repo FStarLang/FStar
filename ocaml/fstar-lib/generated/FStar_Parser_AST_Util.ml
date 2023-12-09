@@ -270,6 +270,16 @@ and (eq_term' :
                   (eq_list (eq_list eq_term) ts1 ts2) in
           ((eq_list eq_binder bs1 bs2) && (eq_ps ps1 ps2)) &&
             (eq_term t11 t21)
+      | (FStar_Parser_AST.QuantOp (i1, bs1, ps1, t11),
+         FStar_Parser_AST.QuantOp (i2, bs2, ps2, t21)) ->
+          let eq_ps uu___ uu___1 =
+            match (uu___, uu___1) with
+            | ((is1, ts1), (is2, ts2)) ->
+                (eq_list eq_ident is1 is2) &&
+                  (eq_list (eq_list eq_term) ts1 ts2) in
+          (((FStar_Ident.ident_equals i1 i2) && (eq_list eq_binder bs1 bs2))
+             && (eq_ps ps1 ps2))
+            && (eq_term t11 t21)
       | (FStar_Parser_AST.Refine (t11, t21), FStar_Parser_AST.Refine
          (t3, t4)) -> (eq_binder t11 t3) && (eq_term t21 t4)
       | (FStar_Parser_AST.NamedTyp (i1, t11), FStar_Parser_AST.NamedTyp

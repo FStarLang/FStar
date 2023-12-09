@@ -1083,12 +1083,12 @@ typ:
   | op=FORALL_OP
     { 
       let op = mk_ident("forall" ^ op, rr $loc(op)) in
-      fun (x,y,z) -> QForallOp (op, x, y, z)
+      fun (x,y,z) -> QuantOp (op, x, y, z)
     }
   | op=EXISTS_OP
     { 
       let op = mk_ident("exists" ^ op, rr $loc(op)) in
-      fun (x,y,z) -> QExistsOp (op, x, y, z)
+      fun (x,y,z) -> QuantOp (op, x, y, z)
     }
 
 trigger:

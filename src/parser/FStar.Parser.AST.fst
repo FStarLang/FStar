@@ -506,19 +506,12 @@ let rec term_to_string (x:term) = match x.tm with
       (to_string_l " " binder_to_string bs)
       (to_string_l " \/ " (to_string_l "; " term_to_string) pats)
       (t|> term_to_string)
-  | QForallOp(i, bs, (_, []), t)
-  | QExistsOp(i, bs, (_, []), t) ->
+  | QuantOp(i, bs, (_, []), t) ->
     Util.format3 "%s %s. %s"
       (string_of_id i)
       (to_string_l " " binder_to_string bs)
       (t|> term_to_string)
-  | QForallOp(i, bs, (_, pats), t) ->
-    Util.format4 "%s %s.{:pattern %s} %s"
-      (string_of_id i)
-      (to_string_l " " binder_to_string bs)
-      (to_string_l " \/ " (to_string_l "; " term_to_string) pats)
-      (t|> term_to_string)
-  | QExistsOp(i, bs, (_, pats), t) ->
+  | QuantOp(i, bs, (_, pats), t) ->
     Util.format4 "%s %s.{:pattern %s} %s"
       (string_of_id i)
       (to_string_l " " binder_to_string bs)

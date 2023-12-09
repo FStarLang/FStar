@@ -69,9 +69,7 @@ type term' =
   Prims.list Prims.list) * term) 
   | QExists of (binder Prims.list * (FStar_Ident.ident Prims.list * term
   Prims.list Prims.list) * term) 
-  | QForallOp of (FStar_Ident.ident * binder Prims.list * (FStar_Ident.ident
-  Prims.list * term Prims.list Prims.list) * term) 
-  | QExistsOp of (FStar_Ident.ident * binder Prims.list * (FStar_Ident.ident
+  | QuantOp of (FStar_Ident.ident * binder Prims.list * (FStar_Ident.ident
   Prims.list * term Prims.list Prims.list) * term) 
   | Refine of (binder * term) 
   | NamedTyp of (FStar_Ident.ident * term) 
@@ -289,22 +287,13 @@ let (__proj__QExists__item___0 :
     (binder Prims.list * (FStar_Ident.ident Prims.list * term Prims.list
       Prims.list) * term))
   = fun projectee -> match projectee with | QExists _0 -> _0
-let (uu___is_QForallOp : term' -> Prims.bool) =
-  fun projectee ->
-    match projectee with | QForallOp _0 -> true | uu___ -> false
-let (__proj__QForallOp__item___0 :
+let (uu___is_QuantOp : term' -> Prims.bool) =
+  fun projectee -> match projectee with | QuantOp _0 -> true | uu___ -> false
+let (__proj__QuantOp__item___0 :
   term' ->
     (FStar_Ident.ident * binder Prims.list * (FStar_Ident.ident Prims.list *
       term Prims.list Prims.list) * term))
-  = fun projectee -> match projectee with | QForallOp _0 -> _0
-let (uu___is_QExistsOp : term' -> Prims.bool) =
-  fun projectee ->
-    match projectee with | QExistsOp _0 -> true | uu___ -> false
-let (__proj__QExistsOp__item___0 :
-  term' ->
-    (FStar_Ident.ident * binder Prims.list * (FStar_Ident.ident Prims.list *
-      term Prims.list Prims.list) * term))
-  = fun projectee -> match projectee with | QExistsOp _0 -> _0
+  = fun projectee -> match projectee with | QuantOp _0 -> _0
 let (uu___is_Refine : term' -> Prims.bool) =
   fun projectee -> match projectee with | Refine _0 -> true | uu___ -> false
 let (__proj__Refine__item___0 : term' -> (binder * term)) =
@@ -2025,25 +2014,12 @@ let rec (term_to_string : term -> Prims.string) =
         let uu___3 = FStar_Compiler_Effect.op_Bar_Greater t term_to_string in
         FStar_Compiler_Util.format3 "exists %s.{:pattern %s} %s" uu___1
           uu___2 uu___3
-    | QForallOp (i, bs, (uu___, []), t) ->
+    | QuantOp (i, bs, (uu___, []), t) ->
         let uu___1 = FStar_Ident.string_of_id i in
         let uu___2 = to_string_l " " binder_to_string bs in
         let uu___3 = FStar_Compiler_Effect.op_Bar_Greater t term_to_string in
         FStar_Compiler_Util.format3 "%s %s. %s" uu___1 uu___2 uu___3
-    | QExistsOp (i, bs, (uu___, []), t) ->
-        let uu___1 = FStar_Ident.string_of_id i in
-        let uu___2 = to_string_l " " binder_to_string bs in
-        let uu___3 = FStar_Compiler_Effect.op_Bar_Greater t term_to_string in
-        FStar_Compiler_Util.format3 "%s %s. %s" uu___1 uu___2 uu___3
-    | QForallOp (i, bs, (uu___, pats), t) ->
-        let uu___1 = FStar_Ident.string_of_id i in
-        let uu___2 = to_string_l " " binder_to_string bs in
-        let uu___3 =
-          to_string_l " \\/ " (to_string_l "; " term_to_string) pats in
-        let uu___4 = FStar_Compiler_Effect.op_Bar_Greater t term_to_string in
-        FStar_Compiler_Util.format4 "%s %s.{:pattern %s} %s" uu___1 uu___2
-          uu___3 uu___4
-    | QExistsOp (i, bs, (uu___, pats), t) ->
+    | QuantOp (i, bs, (uu___, pats), t) ->
         let uu___1 = FStar_Ident.string_of_id i in
         let uu___2 = to_string_l " " binder_to_string bs in
         let uu___3 =

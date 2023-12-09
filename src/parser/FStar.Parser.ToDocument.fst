@@ -1605,8 +1605,7 @@ and p_typ_sep ps pb e = with_comment_sep (p_typ' ps pb) e e.range
 and p_typ' ps pb e = match e.tm with
   | QForall (bs, (_, trigger), e1)
   | QExists (bs, (_, trigger), e1)
-  | QForallOp (_, bs, (_, trigger), e1)
-  | QExistsOp (_, bs, (_, trigger), e1) ->
+  | QuantOp (_, bs, (_, trigger), e1) ->
       let binders_doc = p_binders true bs in
       let term_doc = p_noSeqTermAndComment ps pb e1 in
       //VD: We could dispense with this pattern matching if we removed trailing whitespace after the fact
@@ -1684,8 +1683,7 @@ and pats_as_binders_if_possible pats : list document & annotation_style =
 and p_quantifier e = match e.tm with
     | QForall _ -> str "forall"
     | QExists _ -> str "exists"
-    | QForallOp (i, _, _, _)
-    | QExistsOp (i, _, _, _) -> p_ident i
+    | QuantOp (i, _, _, _) -> p_ident i
     | _ -> failwith "Imposible : p_quantifier called on a non-quantifier term"
 
 and p_trigger = function
@@ -2178,8 +2176,7 @@ and p_projectionLHS e = match e.tm with
   | Sum _       (* p_tmNoEq *)
   | QForall _   (* p_typ *)
   | QExists _   (* p_typ *)
-  | QForallOp _
-  | QExistsOp _
+  | QuantOp _
   | Refine _    (* p_tmNoEq *)
   | NamedTyp _  (* p_tmNoEq *)
   | Requires _  (* p_noSeqTerm *)

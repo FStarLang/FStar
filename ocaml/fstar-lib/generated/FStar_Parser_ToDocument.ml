@@ -3643,31 +3643,7 @@ and (p_typ' :
                      let uu___4 = p_trigger trigger in prefix2 uu___3 uu___4 in
                    FStar_Pprint.group uu___2 in
                  prefix2 uu___1 term_doc)
-        | FStar_Parser_AST.QForallOp (uu___, bs, (uu___1, trigger), e1) ->
-            let binders_doc = p_binders true bs in
-            let term_doc = p_noSeqTermAndComment ps pb e1 in
-            (match trigger with
-             | [] ->
-                 let uu___2 =
-                   let uu___3 =
-                     let uu___4 = p_quantifier e in
-                     FStar_Pprint.op_Hat_Hat uu___4 FStar_Pprint.space in
-                   FStar_Pprint.soft_surround (Prims.of_int (2))
-                     Prims.int_zero uu___3 binders_doc FStar_Pprint.dot in
-                 prefix2 uu___2 term_doc
-             | pats ->
-                 let uu___2 =
-                   let uu___3 =
-                     let uu___4 =
-                       let uu___5 =
-                         let uu___6 = p_quantifier e in
-                         FStar_Pprint.op_Hat_Hat uu___6 FStar_Pprint.space in
-                       FStar_Pprint.soft_surround (Prims.of_int (2))
-                         Prims.int_zero uu___5 binders_doc FStar_Pprint.dot in
-                     let uu___5 = p_trigger trigger in prefix2 uu___4 uu___5 in
-                   FStar_Pprint.group uu___3 in
-                 prefix2 uu___2 term_doc)
-        | FStar_Parser_AST.QExistsOp (uu___, bs, (uu___1, trigger), e1) ->
+        | FStar_Parser_AST.QuantOp (uu___, bs, (uu___1, trigger), e1) ->
             let binders_doc = p_binders true bs in
             let term_doc = p_noSeqTermAndComment ps pb e1 in
             (match trigger with
@@ -3834,8 +3810,7 @@ and (p_quantifier : FStar_Parser_AST.term -> FStar_Pprint.document) =
     match e.FStar_Parser_AST.tm with
     | FStar_Parser_AST.QForall uu___ -> str "forall"
     | FStar_Parser_AST.QExists uu___ -> str "exists"
-    | FStar_Parser_AST.QForallOp (i, uu___, uu___1, uu___2) -> p_ident i
-    | FStar_Parser_AST.QExistsOp (i, uu___, uu___1, uu___2) -> p_ident i
+    | FStar_Parser_AST.QuantOp (i, uu___, uu___1, uu___2) -> p_ident i
     | uu___ ->
         FStar_Compiler_Effect.failwith
           "Imposible : p_quantifier called on a non-quantifier term"
@@ -4909,9 +4884,7 @@ and (p_projectionLHS : FStar_Parser_AST.term -> FStar_Pprint.document) =
         let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
     | FStar_Parser_AST.QExists uu___ ->
         let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
-    | FStar_Parser_AST.QForallOp uu___ ->
-        let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
-    | FStar_Parser_AST.QExistsOp uu___ ->
+    | FStar_Parser_AST.QuantOp uu___ ->
         let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
     | FStar_Parser_AST.Refine uu___ ->
         let uu___1 = p_term false false e in soft_parens_with_nesting uu___1

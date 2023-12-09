@@ -957,13 +957,7 @@ let rec (resugar_term' :
                      uncurry (FStar_Compiler_List.op_At xs xs')
                        (FStar_Compiler_List.op_At pats pats') body
                        flavor_matches
-                 | FStar_Parser_AST.QForallOp
-                     (uu___3, xs', (uu___4, pats'), body) when
-                     flavor_matches t1 ->
-                     uncurry (FStar_Compiler_List.op_At xs xs')
-                       (FStar_Compiler_List.op_At pats pats') body
-                       flavor_matches
-                 | FStar_Parser_AST.QExistsOp
+                 | FStar_Parser_AST.QuantOp
                      (uu___3, xs', (uu___4, pats'), body) when
                      flavor_matches t1 ->
                      uncurry (FStar_Compiler_List.op_At xs xs')
@@ -1048,12 +1042,7 @@ let rec (resugar_term' :
                                     "exists") -> true
                                  | (FStar_Parser_AST.QForall uu___7,
                                     "forall") -> true
-                                 | (FStar_Parser_AST.QExistsOp
-                                    (id, uu___7, uu___8, uu___9), uu___10) ->
-                                     let uu___11 =
-                                       FStar_Ident.string_of_id id in
-                                     uu___11 = op
-                                 | (FStar_Parser_AST.QForallOp
+                                 | (FStar_Parser_AST.QuantOp
                                     (id, uu___7, uu___8, uu___9), uu___10) ->
                                      let uu___11 =
                                        FStar_Ident.string_of_id id in
@@ -1078,33 +1067,14 @@ let rec (resugar_term' :
                                           (FStar_Parser_AST.QExists
                                              (xs4, (binders, pats1), body4))
                                       else
-                                        if
-                                          FStar_Compiler_Util.starts_with op
-                                            "forall"
-                                        then
-                                          (FStar_Compiler_Util.print1
-                                             "Resugaring as %s\n" op;
-                                           (let uu___11 =
-                                              let uu___12 =
-                                                let uu___13 =
-                                                  FStar_Ident.id_of_text op in
-                                                (uu___13, xs4,
-                                                  (binders, pats1), body4) in
-                                              FStar_Parser_AST.QForallOp
-                                                uu___12 in
-                                            mk uu___11))
-                                        else
-                                          (FStar_Compiler_Util.print1
-                                             "Resugaring as %s\n" op;
-                                           (let uu___12 =
-                                              let uu___13 =
-                                                let uu___14 =
-                                                  FStar_Ident.id_of_text op in
-                                                (uu___14, xs4,
-                                                  (binders, pats1), body4) in
-                                              FStar_Parser_AST.QExistsOp
-                                                uu___13 in
-                                            mk uu___12)))))
+                                        (let uu___10 =
+                                           let uu___11 =
+                                             let uu___12 =
+                                               FStar_Ident.id_of_text op in
+                                             (uu___12, xs4, (binders, pats1),
+                                               body4) in
+                                           FStar_Parser_AST.QuantOp uu___11 in
+                                         mk uu___10))))
                  | uu___4 ->
                      if op = "forall"
                      then

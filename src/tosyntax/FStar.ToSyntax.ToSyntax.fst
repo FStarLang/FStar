@@ -437,8 +437,7 @@ and free_vars tvars_only env t = match (unparen t).tm with
   | If _
   | QForall _
   | QExists _
-  | QForallOp _
-  | QExistsOp _
+  | QuantOp _
   | Record _
   | Match _
   | TryWith _
@@ -2660,24 +2659,19 @@ and desugar_formula env (f:term) : S.term =
 
     | QForall([], _, _)
     | QExists([], _, _)
-    | QForallOp(_, [], _, _)
-    | QExistsOp(_, [], _, _) -> failwith "Impossible: Quantifier without binders"
+    | QuantOp(_, [], _, _) -> failwith "Impossible: Quantifier without binders"
 
     | QForall((_1::_2::_3), pats, body) ->
       let binders = _1::_2::_3 in
       desugar_formula env (push_quant (fun x -> QForall x) binders pats body)
 
-    | QForallOp(i, (_1::_2::_3), pats, body) ->
-      let binders = _1::_2::_3 in
-      desugar_formula env (push_quant (fun (x,y,z) -> QForallOp(i, x, y, z)) binders pats body)
-
     | QExists((_1::_2::_3), pats, body) ->
       let binders = _1::_2::_3 in
       desugar_formula env (push_quant (fun x -> QExists x) binders pats body)
 
-    | QExistsOp(i, (_1::_2::_3), pats, body) ->
+    | QuantOp(i, (_1::_2::_3), pats, body) ->
       let binders = _1::_2::_3 in
-      desugar_formula env (push_quant (fun (x,y,z) -> QExistsOp(i, x, y, z)) binders pats body)
+      desugar_formula env (push_quant (fun (x,y,z) -> QuantOp(i, x, y, z)) binders pats body)
 
     | QForall([b], pats, body) ->
       let q = C.forall_lid in
@@ -2693,8 +2687,7 @@ and desugar_formula env (f:term) : S.term =
       in
       desugar_quant q_head b pats true body
     
-    | QForallOp(i, [b], pats, body)
-    | QExistsOp(i, [b], pats, body) ->
+    | QuantOp(i, [b], pats, body) ->
       let q_head =
         match op_as_term env 0 i with
         | None -> 

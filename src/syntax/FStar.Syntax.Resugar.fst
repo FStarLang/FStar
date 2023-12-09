@@ -561,8 +561,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
             match t.tm with
             | A.QExists(xs', (_, pats'), body)
             | A.QForall(xs', (_, pats'), body)
-            | A.QForallOp(_, xs', (_, pats'), body)
-            | A.QExistsOp(_, xs', (_, pats'), body) when flavor_matches t ->
+            | A.QuantOp(_, xs', (_, pats'), body) when flavor_matches t ->
                 uncurry (xs@xs') (pats@pats') body flavor_matches
             | _ ->
                 xs, pats, t
@@ -599,8 +598,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
                   match t.tm, op with
                   | A.QExists _, "exists"
                   | A.QForall _, "forall" -> true
-                  | A.QExistsOp(id, _, _, _), _
-                  | A.QForallOp(id, _, _, _), _ ->
+                  | A.QuantOp(id, _, _, _), _ ->
                     Ident.string_of_id id = op
                   | _ -> false
                 in
@@ -610,17 +608,8 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
                 then mk (A.QForall(xs, (binders, pats), body))
                 else if op = "exists"
                 then mk (A.QExists(xs, (binders, pats), body))
-                else (
-                  if op `starts_with` "forall"
-                  then (
-                    BU.print1 "Resugaring as %s\n" op;
-                    mk (A.QForallOp(Ident.id_of_text op, xs, (binders, pats), body))
-                  )
-                  else (
-                      BU.print1 "Resugaring as %s\n" op;
-                      mk (A.QExistsOp(Ident.id_of_text op, xs, (binders, pats), body))
-                  )
-                )
+                else mk (A.QuantOp(Ident.id_of_text op, xs, (binders, pats), body))
+                 
             | _ ->
               (*forall added by typechecker.normalize doesn't not have Tm_abs as body*)
               (*TODO:  should we resugar them back as forall/exists or just as the term of the body *)
