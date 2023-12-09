@@ -60,10 +60,10 @@ let () =
   Hashtbl.add keywords "end"           END         ;
   Hashtbl.add keywords "ensures"       ENSURES     ;
   Hashtbl.add keywords "exception"     EXCEPTION   ;
-  Hashtbl.add keywords "exists"        EXISTS      ;
+  Hashtbl.add keywords "exists"        (EXISTS false);
   Hashtbl.add keywords "false"         FALSE       ;
   Hashtbl.add keywords "friend"        FRIEND      ;
-  Hashtbl.add keywords "forall"        FORALL      ;
+  Hashtbl.add keywords "forall"        (FORALL false);
   Hashtbl.add keywords "fun"           FUN         ;
   Hashtbl.add keywords "λ"             FUN         ;
   Hashtbl.add keywords "function"      FUNCTION    ;
@@ -191,8 +191,8 @@ let () =
    "}", RBRACE;
    "$", DOLLAR;
      (* New Unicode equivalents *)
-   "∀", FORALL;
-   "∃", EXISTS;
+   "∀", (FORALL false);
+   "∃", (EXISTS false);
    "⊤", NAME "True";
    "⊥", NAME "False";
    "⟹", IMPLIES;
@@ -490,6 +490,34 @@ match%sedlex lexbuf with
         | s  -> LET_OP s
       )
 
+ | "exists", Plus op_char ->
+    ensure_no_comment lexbuf (fun s ->
+        match BatString.lchop ~n:6 s with
+        | "" -> EXISTS false
+        | s  -> EXISTS_OP s
+      )
+
+ | "∃", Plus op_char ->
+    ensure_no_comment lexbuf (fun s ->
+        match BatString.lchop ~n:1 s with
+        | "" -> EXISTS false
+        | s  -> EXISTS_OP s
+      )
+ 
+ | "forall", Plus op_char ->
+    ensure_no_comment lexbuf (fun s ->
+        match BatString.lchop ~n:6 s with
+        | "" -> FORALL false
+        | s  -> FORALL_OP s
+      )
+
+ | "∀", Plus op_char ->
+    ensure_no_comment lexbuf (fun s ->
+        match BatString.lchop ~n:1 s with
+        | "" -> FORALL false
+        | s  -> FORALL_OP s
+      )
+    
  | "and", Plus op_char ->
     ensure_no_comment lexbuf (fun s ->
         match BatString.lchop ~n:3 s with

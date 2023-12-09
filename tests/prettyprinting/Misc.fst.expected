@@ -179,7 +179,7 @@ val gsub_old_to_new (#t: Type0) (b: Old.buffer t) (i len: U32.t)
 
 [@@ mark_for_norm]
 unfold
-let op_Slash (#sw: signed_width{sw <> Unsigned W128}) = ()
+let ( / ) (#sw: signed_width{sw <> Unsigned W128}) = ()
 
 (** [zip3] takes a 3-tuple of list of the same length and returns
     the list of index-wise 3-tuples *)
@@ -191,7 +191,7 @@ val zip3 (#a1 #a2 #a3: Type) (l1: list a1) (l2: list a2) (l3: list a3)
       (ensures (fun _ -> True))
 let zip3 #a1 #a2 #a3 l1 l2 l3 = map3 (fun x y z -> x, y, z) l1 l2 l3
 
-let op_Bang_Star (#a: Type0) (#rrel #rel: Seq.seq_pre a) (p: B.mpointer a rrel rel)
+let ( !* ) (#a: Type0) (#rrel #rel: Seq.seq_pre a) (p: B.mpointer a rrel rel)
     : HST.Stack a
       (requires (fun h -> B.live h p))
       (ensures (fun h0 x h1 -> B.live h1 p /\ x == B.get h0 p 0 /\ h1 == h0)) = B.index p 0ul
@@ -470,7 +470,7 @@ let formula_as_term_view (f: formula) : Tot term_view =
   let mk_app' tv args = List.Tot.fold_left (fun tv a -> Tv_App (pack_ln tv) a) tv args in
   ()
 
-val op_Slash
+val ( / )
       (#sw: signed_width{sw <> Unsigned W128})
       (x: int_t sw)
       (y:
@@ -481,7 +481,7 @@ val op_Slash
                 | Signed _ -> within_bounds sw ((v x) `FStar.Int.op_Slash` (v y))) })
     : Tot (int_t sw)
 
-val op_Slash
+val ( / )
       (#sw: signed_width{sw <> Unsigned W128})
       (x: int_t sw)
       (y:

@@ -706,6 +706,7 @@ and (free_vars :
         | FStar_Parser_AST.If uu___1 -> []
         | FStar_Parser_AST.QForall uu___1 -> []
         | FStar_Parser_AST.QExists uu___1 -> []
+        | FStar_Parser_AST.QuantOp uu___1 -> []
         | FStar_Parser_AST.Record uu___1 -> []
         | FStar_Parser_AST.Match uu___1 -> []
         | FStar_Parser_AST.TryWith uu___1 -> []
@@ -5884,7 +5885,7 @@ and (desugar_formula :
           FStar_Syntax_Syntax.vars = (t.FStar_Syntax_Syntax.vars);
           FStar_Syntax_Syntax.hash_code = (t.FStar_Syntax_Syntax.hash_code)
         } in
-      let desugar_quant q b pats body =
+      let desugar_quant q_head b pats should_wrap_with_pat body =
         let tk =
           desugar_binder env
             {
@@ -5931,13 +5932,17 @@ and (desugar_formula :
                                      FStar_Compiler_Effect.op_Less_Bar
                                        (arg_withimp_t
                                           FStar_Parser_AST.Nothing) uu___2)))) in
-                   mk
-                     (FStar_Syntax_Syntax.Tm_meta
-                        {
-                          FStar_Syntax_Syntax.tm2 = body1;
-                          FStar_Syntax_Syntax.meta =
-                            (FStar_Syntax_Syntax.Meta_pattern (names1, pats2))
-                        })) in
+                   (match pats2 with
+                    | [] when Prims.op_Negation should_wrap_with_pat -> body1
+                    | uu___2 ->
+                        mk
+                          (FStar_Syntax_Syntax.Tm_meta
+                             {
+                               FStar_Syntax_Syntax.tm2 = body1;
+                               FStar_Syntax_Syntax.meta =
+                                 (FStar_Syntax_Syntax.Meta_pattern
+                                    (names1, pats2))
+                             }))) in
         match tk with
         | (FStar_Pervasives_Native.Some a, k, uu___) ->
             let uu___1 = FStar_Syntax_DsEnv.push_bv env a in
@@ -5963,18 +5968,11 @@ and (desugar_formula :
                  let uu___2 =
                    let uu___3 =
                      let uu___4 =
-                       let uu___5 =
-                         FStar_Ident.set_lid_range q
-                           b.FStar_Parser_AST.brange in
-                       FStar_Syntax_Syntax.fvar_with_dd uu___5
-                         (FStar_Syntax_Syntax.Delta_constant_at_level
-                            Prims.int_one) FStar_Pervasives_Native.None in
-                     let uu___5 =
-                       let uu___6 = FStar_Syntax_Syntax.as_arg body3 in
-                       [uu___6] in
+                       let uu___5 = FStar_Syntax_Syntax.as_arg body3 in
+                       [uu___5] in
                      {
-                       FStar_Syntax_Syntax.hd = uu___4;
-                       FStar_Syntax_Syntax.args = uu___5
+                       FStar_Syntax_Syntax.hd = q_head;
+                       FStar_Syntax_Syntax.args = uu___4
                      } in
                    FStar_Syntax_Syntax.Tm_app uu___3 in
                  FStar_Compiler_Effect.op_Less_Bar mk uu___2)
@@ -6011,6 +6009,9 @@ and (desugar_formula :
       | FStar_Parser_AST.QExists ([], uu___1, uu___2) ->
           FStar_Compiler_Effect.failwith
             "Impossible: Quantifier without binders"
+      | FStar_Parser_AST.QuantOp (uu___1, [], uu___2, uu___3) ->
+          FStar_Compiler_Effect.failwith
+            "Impossible: Quantifier without binders"
       | FStar_Parser_AST.QForall (_1::_2::_3, pats, body) ->
           let binders = _1 :: _2 :: _3 in
           let uu___1 =
@@ -6023,10 +6024,48 @@ and (desugar_formula :
             push_quant (fun x -> FStar_Parser_AST.QExists x) binders pats
               body in
           desugar_formula env uu___1
+      | FStar_Parser_AST.QuantOp (i, _1::_2::_3, pats, body) ->
+          let binders = _1 :: _2 :: _3 in
+          let uu___1 =
+            push_quant
+              (fun uu___2 ->
+                 match uu___2 with
+                 | (x, y, z) -> FStar_Parser_AST.QuantOp (i, x, y, z))
+              binders pats body in
+          desugar_formula env uu___1
       | FStar_Parser_AST.QForall (b::[], pats, body) ->
-          desugar_quant FStar_Parser_Const.forall_lid b pats body
+          let q = FStar_Parser_Const.forall_lid in
+          let q_head =
+            let uu___1 =
+              FStar_Ident.set_lid_range q b.FStar_Parser_AST.brange in
+            FStar_Syntax_Syntax.fvar_with_dd uu___1
+              (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
+              FStar_Pervasives_Native.None in
+          desugar_quant q_head b pats true body
       | FStar_Parser_AST.QExists (b::[], pats, body) ->
-          desugar_quant FStar_Parser_Const.exists_lid b pats body
+          let q = FStar_Parser_Const.exists_lid in
+          let q_head =
+            let uu___1 =
+              FStar_Ident.set_lid_range q b.FStar_Parser_AST.brange in
+            FStar_Syntax_Syntax.fvar_with_dd uu___1
+              (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
+              FStar_Pervasives_Native.None in
+          desugar_quant q_head b pats true body
+      | FStar_Parser_AST.QuantOp (i, b::[], pats, body) ->
+          let q_head =
+            let uu___1 = op_as_term env Prims.int_zero i in
+            match uu___1 with
+            | FStar_Pervasives_Native.None ->
+                let uu___2 =
+                  let uu___3 =
+                    let uu___4 = FStar_Ident.string_of_id i in
+                    FStar_Compiler_Util.format1
+                      "quantifier operator %s not found" uu___4 in
+                  (FStar_Errors_Codes.Fatal_VariableNotFound, uu___3) in
+                let uu___3 = FStar_Ident.range_of_id i in
+                FStar_Errors.raise_error uu___2 uu___3
+            | FStar_Pervasives_Native.Some t -> t in
+          desugar_quant q_head b pats false body
       | FStar_Parser_AST.Paren f1 ->
           FStar_Compiler_Effect.failwith "impossible"
       | uu___1 -> desugar_term env f

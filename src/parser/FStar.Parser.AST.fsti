@@ -69,6 +69,7 @@ type term' =
   | Sum       of list (either binder term) * term (* dependent tuple *)
   | QForall   of list binder * patterns * term
   | QExists   of list binder * patterns * term
+  | QuantOp   of ident * list binder * patterns * term
   | Refine    of binder * term
   | NamedTyp  of ident * term
   | Paren     of term

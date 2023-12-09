@@ -255,6 +255,15 @@ and eq_term' (t1 t2:term')
       eq_list eq_binder bs1 bs2 &&
       eq_ps ps1 ps2 &&
       eq_term t1 t2
+    | QuantOp (i1, bs1, ps1, t1), QuantOp (i2, bs2, ps2, t2) ->
+      let eq_ps (is1, ts1) (is2, ts2) =
+        eq_list eq_ident is1 is2 &&
+        eq_list (eq_list eq_term) ts1 ts2
+      in
+      Ident.ident_equals i1 i2 &&
+      eq_list eq_binder bs1 bs2 &&
+      eq_ps ps1 ps2 &&
+      eq_term t1 t2
     // continue comparing all the remaining cases of terms, starting with Refine
     | Refine (t1, t2), Refine (t3, t4) ->
       eq_binder t1 t3 &&
