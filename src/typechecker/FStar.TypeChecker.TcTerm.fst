@@ -35,6 +35,8 @@ open FStar.Const
 open FStar.Compiler.Dyn
 open FStar.TypeChecker.Rel
 
+open FStar.Class.Show
+
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module TcComm = FStar.TypeChecker.Common
@@ -736,7 +738,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   def_check_scoped e.pos "tc_maybe_toplevel_term.entry" env e;
   let top = SS.compress e in
   if debug env Options.Medium then
-    BU.print3 "Typechecking %s (%s): %s\n" (Range.string_of_range <| Env.get_range env) (Print.tag_of_term top) (Print.term_to_string top);
+    BU.print3 "Typechecking %s (%s): %s\n"  (show <| Env.get_range env) (Print.tag_of_term top) (show top);
   match top.n with
   | Tm_delayed _ -> failwith "Impossible"
   | Tm_bvar _ -> failwith "Impossible: tc_maybe_toplevel_term: not LN"
@@ -2236,7 +2238,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
           (match topt with
            | None -> "None"
            | Some (t, use_eq) -> Print.term_to_string t ^ ", use_eq = " ^ string_of_bool use_eq)
-          (if env.top_level then "true" else "false");
+          (show env.top_level);
 
     let tfun_opt, bs, letrec_binders, c_opt, envbody, body, g_env =
       tc_abs_expected_function_typ env bs topt body in
@@ -2329,23 +2331,24 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     then BU.print1 "tc_abs: guard_body: %s\n"
            (Rel.guard_to_string env guard_body);
 
-    let guard = if env.top_level
-                || not (Options.should_verify (string_of_lid env.curmodule))
-                then begin
-                  if env.lax ||
-                     env.phase1
-                  then Env.conj_guard (Rel.discharge_guard env g_env)
-                                      (Rel.discharge_guard envbody guard_body)
-                  else
-                    let g_env, g_env_logical = TcComm.split_guard g_env in
-                    let guard_body, guard_body_logical = TcComm.split_guard guard_body in
-                    Rel.force_trivial_guard env (Env.conj_guard g_env guard_body);
-                    Rel.force_trivial_guard env g_env_logical;
-                    Rel.force_trivial_guard envbody guard_body_logical;
-                    Env.trivial_guard
-                end
-                else let guard = Env.conj_guard g_env (Env.close_guard envbody (bs@letrec_binders) guard_body) in
-                     guard in
+    let guard_body =
+      (* If we were checking a top-level definition, which may be a let rec,
+      we must discharge this the guard of the body here, as it is
+      only typeable in the extended environment which contains the Binding_lids.
+      Closing the guard (below) won't help with that. *)
+      if env.top_level then (
+        if Env.debug env <| Options.Medium then
+          BU.print1 "tc_abs: FORCING guard_body: %s\n" (Rel.guard_to_string env guard_body);
+        Rel.discharge_guard envbody guard_body
+      ) else (
+        guard_body
+      )
+    in
+
+    let guard =
+        let guard_body = Env.close_guard envbody (bs@letrec_binders) guard_body in
+        Env.conj_guard g_env guard_body
+    in
 
     let guard = TcUtil.close_guard_implicits env false bs guard in //TODO: this is a noop w.r.t scoping; remove it and the eager_subtyping flag
     let tfun_computed = U.arrow bs cbody in
