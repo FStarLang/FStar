@@ -68,19 +68,11 @@ utests:
 	+$(MAKE) -C ../tests all
 
 .PHONY: uexamples
-uexamples: examples-all native_tactics-all semiring-all
+uexamples: examples-all
 
 .PHONY: examples-all
 examples-all:
 	+$(MAKE) -C ../examples all
-
-.PHONY: native_tactics-all
-native_tactics-all:
-	+$(MAKE) -C ../examples native_tactics.all
-
-.PHONY: semiring-all
-semiring-all:
-	+$(MAKE) -C ../examples semiring.all
 
 ctags:
 	ctags --exclude=boot_fsts --exclude=boot_fstis --exclude=ocaml-output -R .

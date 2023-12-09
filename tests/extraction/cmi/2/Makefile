@@ -10,7 +10,7 @@
 # This is needed because ../Makefile.common includes
 # ../../../Makefile.common, but GNU Make does not support chained
 # includes with relative paths
-FSTAR_EXAMPLES = $(realpath ../../..)
+FSTAR_EXAMPLES = $(realpath ../../../../examples)
 
 ROOTS=Test.fst
 EXTRACT=Test

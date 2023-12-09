@@ -19,7 +19,7 @@ open FStar.DM4F.Heap.IntStoreFixed
 open FStar.DM4F.IntStoreExcFixed
 
 module ISFR = FStar.DM4F.IntStoreFixedReader
-
+module X = FStar.DM4F.IntStoreExcFixed
 type binop =
 | Plus
 | Minus
@@ -105,31 +105,31 @@ exception OutOfFuel
     write x v
   | Seq c1 c2 ->
     begin
-      let h1 = (ISE?.get()) in
+      let h1 = (X.get()) in
       interpret_com_st c1 h1;
-      let h2 = (ISE?.get()) in
+      let h2 = (X.get()) in
       interpret_com_st c2 h2
     end
   | If e ct cf ->
       let v = interpret_exp_st e in
       let c = if v = 0 then cf else ct in
-      let h = (ISE?.get()) in
+      let h = (X.get()) in
       interpret_com_st c h
   | While e body v ->
     let v0 = interpret_exp_st e in
     if v0 <> 0 then
       begin
         (* let m0 = interpret_exp_st v in *)
-        (* let h = ISE?.get () in *)
+        (* let h = X.get () in *)
         (* interpret_com_st body h; *)
         (* let m1 = interpret_exp_st v in *)
         (* proving recursive terminating relies of interpret_exp not *)
         (* changing the state? somehow F* can't prove this although *)
         (* interpret_exp_st has that in the spec! *)
         let m0 = interpret_exp' h0 v in
-        let h1 = ISE?.get () in
+        let h1 = X.get () in
         interpret_com_st body h1;
-        let h2 = ISE?.get() in
+        let h2 = X.get() in
         let m1 = interpret_exp' h2 v in
         if m0 > m1 then
           interpret_com_st c h2

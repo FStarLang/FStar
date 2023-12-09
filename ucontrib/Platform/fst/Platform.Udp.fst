@@ -15,8 +15,6 @@
 *)
 module Platform.Udp
 
-open FStar.HyperHeap
-
 open Platform.Bytes
 open Platform.Error
 

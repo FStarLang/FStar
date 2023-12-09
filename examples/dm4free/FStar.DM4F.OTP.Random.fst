@@ -70,11 +70,16 @@ let sample () =
     RAND?.raise elem ()
 
 
-let test_sample_some (v:elem) (t:tape{sel t (to_id 0) == v}) =
-  let f = reify (sample ()) in
+let test_sample_some (v:elem) (t:tape{
+  sel t (to_id 0) == v /\
+  incrementable (to_id 0) /\
+  incr (to_id 0) == to_id 1
+}) =
+  let f = reify (sample()) in
   assert (f (to_id 0,t) == (Some v, to_id 1))
+  
 
-let test_sample_none (v:elem) (t:tape) =
+let test_sample_none (v:elem) (t:tape { not (incrementable (to_id 9)) } ) =
   let f = reify (sample ()) in
   assert (f (to_id 9,t) == (None, to_id 9))
 

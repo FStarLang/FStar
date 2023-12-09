@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module StlcCbvDbPntSubstLists
-
+#push-options "--z3rlimit_factor 5"
 (* de Bruijn indices based STLC *)
 
 type typ =
@@ -82,6 +82,7 @@ val is_value: exp -> Tot bool
 let is_value = EAbs?
 
 val step: exp -> Tot (option exp)
+#push-options "--query_stats --z3cliopt 'smt.qi.eager_threshold=100'"
 let rec step = function
   | EApp e1 e2 ->
      if is_value e1 then

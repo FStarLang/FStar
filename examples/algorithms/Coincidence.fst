@@ -37,7 +37,7 @@ let rec sorted l =
 
 
 val lemma1 : y:int -> xs:list int ->
-  Lemma (requires (sorted xs && (xs = [] || y < Cons.hd xs)))
+  Lemma (requires (sorted xs && (xs = [] || y < Cons?.hd xs)))
         (ensures (not (mem y xs)))
 let rec lemma1 y xs =
   match xs with

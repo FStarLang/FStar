@@ -15,7 +15,6 @@
 *)
 module Platform.Tcp
 
-open FStar.HyperHeap
 
 open Platform.Bytes
 open Platform.Error

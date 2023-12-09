@@ -34,7 +34,9 @@ let prop = p:Type0{forall (x y:p). x == y}
 
 (* The type a is positive but not strictly positive; *)
 (* that's the first ingredient leading to an inconsistency *)
+#push-options "--__no_positivity"
 noeq type a = | IntroA : ((a -> prop) -> prop) -> a
+#pop-options
 
 let introA_injective (p p': (a -> prop) -> prop) : Lemma (IntroA p == IntroA p' ==> p == p) = ()
 

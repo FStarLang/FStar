@@ -1,4 +1,5 @@
-include ../Makefile.include
+FSTAR_EXAMPLES=$(realpath ../../examples)
+include $(FSTAR_EXAMPLES)/Makefile.include
 include $(FSTAR_ULIB)/ml/Makefile.include
 
 eta_expand: out Eta_expand.fst

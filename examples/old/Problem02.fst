@@ -13,8 +13,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Problem02While
-
+module Problem02
+open FStar.Mul
 (*We were not able to make F* prove simple properties about GCD, so we were stuck …*)
 type divides (a:pos) (b:pos) = (exists (c:pos). a*c = b)
 type is_pgcd (a:pos) (b:pos) (pgcd:pos) =

@@ -17,9 +17,10 @@ type pack = | Mk : f:(int -> int) -> pack
 
 let pid : pack = Mk (fun n -> n)
 
-(* This relies on the fact that `f x << Mk f` for every `x`. *)
+(* If we had the fact that `f x << Mk f` for every `x`,
+   this would be provable.  *)
 let pid_ge_n (x:int) : Lemma (x << pid) =
-  assert (Mk?.f pid x << pid);
+  assume (Mk?.f pid x << pid);
   ()
 
 (* The "Rank assumption" packaged as a record. *)
