@@ -93,8 +93,7 @@ let mk_emb :
           let uu___1 =
             let uu___2 =
               let uu___3 = FStar_Syntax_Syntax.lid_of_fv fv in
-              FStar_Compiler_Effect.op_Bar_Greater uu___3
-                FStar_Ident.string_of_lid in
+              FStar_Ident.string_of_lid uu___3 in
             (uu___2, []) in
           FStar_Syntax_Syntax.ET_app uu___1 in
         { em; un; typ; print = (unknown_printer typ); emb_typ = uu___ }

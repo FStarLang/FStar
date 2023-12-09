@@ -1063,15 +1063,13 @@ and (doc_of_lets :
                                   (min_op_prec, NonAssoc) ty in
                               let vars =
                                 let uu___7 =
-                                  FStar_Compiler_Effect.op_Bar_Greater vs
-                                    (FStar_Compiler_List.map
-                                       (fun x ->
-                                          doc_of_mltype currentModule
-                                            (min_op_prec, NonAssoc)
-                                            (FStar_Extraction_ML_Syntax.MLTY_Var
-                                               x))) in
-                                FStar_Compiler_Effect.op_Bar_Greater uu___7
-                                  reduce1 in
+                                  FStar_Compiler_List.map
+                                    (fun x ->
+                                       doc_of_mltype currentModule
+                                         (min_op_prec, NonAssoc)
+                                         (FStar_Extraction_ML_Syntax.MLTY_Var
+                                            x)) vs in
+                                reduce1 uu___7 in
                               reduce1 [text ":"; vars; text "."; ty1])
                        else text "") in
                 let uu___4 =
@@ -1382,7 +1380,7 @@ let (doc_of_mllib_r :
                   FStar_Compiler_List.op_At
                     [head; hardline; text "open Prims"] uu___4 in
                 FStar_Compiler_List.op_At prefix uu___3 in
-              FStar_Compiler_Effect.op_Less_Bar reduce uu___2 in
+              reduce uu___2 in
         let docs =
           FStar_Compiler_List.map
             (fun uu___1 ->

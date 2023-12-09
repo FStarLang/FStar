@@ -3041,79 +3041,77 @@ let (report_implicits :
   =
   fun rng ->
     fun is ->
-      FStar_Compiler_Effect.op_Bar_Greater is
-        (FStar_Compiler_List.iter
-           (fun uu___1 ->
-              match uu___1 with
-              | (imp, tag) ->
-                  (match tag with
-                   | FStar_TypeChecker_Rel.Implicit_unresolved ->
-                       let uu___2 =
-                         let uu___3 =
-                           let uu___4 =
-                             FStar_Class_Show.show
-                               FStar_Syntax_Print.showable_uvar
-                               (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
-                           let uu___5 =
-                             let uu___6 =
-                               FStar_Syntax_Util.ctx_uvar_typ
-                                 imp.FStar_TypeChecker_Common.imp_uvar in
-                             FStar_Class_Show.show
-                               FStar_Syntax_Print.showable_term uu___6 in
-                           FStar_Compiler_Util.format3
-                             "Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")"
-                             uu___4 uu___5
-                             imp.FStar_TypeChecker_Common.imp_reason in
-                         (FStar_Errors_Codes.Error_UninstantiatedUnificationVarInTactic,
-                           uu___3) in
-                       FStar_Errors.log_issue rng uu___2
-                   | FStar_TypeChecker_Rel.Implicit_checking_defers_univ_constraint
-                       ->
-                       let uu___2 =
-                         let uu___3 =
-                           let uu___4 =
-                             FStar_Class_Show.show
-                               FStar_Syntax_Print.showable_uvar
-                               (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
-                           let uu___5 =
-                             let uu___6 =
-                               FStar_Syntax_Util.ctx_uvar_typ
-                                 imp.FStar_TypeChecker_Common.imp_uvar in
-                             FStar_Class_Show.show
-                               FStar_Syntax_Print.showable_term uu___6 in
-                           FStar_Compiler_Util.format3
-                             "Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")"
-                             uu___4 uu___5
-                             imp.FStar_TypeChecker_Common.imp_reason in
-                         (FStar_Errors_Codes.Error_UninstantiatedUnificationVarInTactic,
-                           uu___3) in
-                       FStar_Errors.log_issue rng uu___2
-                   | FStar_TypeChecker_Rel.Implicit_has_typing_guard 
-                       (tm, ty) ->
-                       let uu___2 =
-                         let uu___3 =
-                           let uu___4 =
-                             FStar_Class_Show.show
-                               FStar_Syntax_Print.showable_uvar
-                               (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
-                           let uu___5 =
-                             let uu___6 =
-                               FStar_Syntax_Util.ctx_uvar_typ
-                                 imp.FStar_TypeChecker_Common.imp_uvar in
-                             FStar_Class_Show.show
-                               FStar_Syntax_Print.showable_term uu___6 in
-                           let uu___6 =
-                             FStar_Class_Show.show
-                               FStar_Syntax_Print.showable_term tm in
-                           let uu___7 =
-                             FStar_Class_Show.show
-                               FStar_Syntax_Print.showable_term ty in
-                           FStar_Compiler_Util.format4
-                             "Tactic solved goal %s of type %s to %s : %s, but it has a non-trivial typing guard. Use gather_or_solve_explicit_guards_for_resolved_goals to inspect and prove these goals"
-                             uu___4 uu___5 uu___6 uu___7 in
-                         (FStar_Errors_Codes.Error_UninstantiatedUnificationVarInTactic,
-                           uu___3) in
-                       FStar_Errors.log_issue rng uu___2)));
+      FStar_Compiler_List.iter
+        (fun uu___1 ->
+           match uu___1 with
+           | (imp, tag) ->
+               (match tag with
+                | FStar_TypeChecker_Rel.Implicit_unresolved ->
+                    let uu___2 =
+                      let uu___3 =
+                        let uu___4 =
+                          FStar_Class_Show.show
+                            FStar_Syntax_Print.showable_uvar
+                            (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
+                        let uu___5 =
+                          let uu___6 =
+                            FStar_Syntax_Util.ctx_uvar_typ
+                              imp.FStar_TypeChecker_Common.imp_uvar in
+                          FStar_Class_Show.show
+                            FStar_Syntax_Print.showable_term uu___6 in
+                        FStar_Compiler_Util.format3
+                          "Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")"
+                          uu___4 uu___5
+                          imp.FStar_TypeChecker_Common.imp_reason in
+                      (FStar_Errors_Codes.Error_UninstantiatedUnificationVarInTactic,
+                        uu___3) in
+                    FStar_Errors.log_issue rng uu___2
+                | FStar_TypeChecker_Rel.Implicit_checking_defers_univ_constraint
+                    ->
+                    let uu___2 =
+                      let uu___3 =
+                        let uu___4 =
+                          FStar_Class_Show.show
+                            FStar_Syntax_Print.showable_uvar
+                            (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
+                        let uu___5 =
+                          let uu___6 =
+                            FStar_Syntax_Util.ctx_uvar_typ
+                              imp.FStar_TypeChecker_Common.imp_uvar in
+                          FStar_Class_Show.show
+                            FStar_Syntax_Print.showable_term uu___6 in
+                        FStar_Compiler_Util.format3
+                          "Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")"
+                          uu___4 uu___5
+                          imp.FStar_TypeChecker_Common.imp_reason in
+                      (FStar_Errors_Codes.Error_UninstantiatedUnificationVarInTactic,
+                        uu___3) in
+                    FStar_Errors.log_issue rng uu___2
+                | FStar_TypeChecker_Rel.Implicit_has_typing_guard (tm, ty) ->
+                    let uu___2 =
+                      let uu___3 =
+                        let uu___4 =
+                          FStar_Class_Show.show
+                            FStar_Syntax_Print.showable_uvar
+                            (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
+                        let uu___5 =
+                          let uu___6 =
+                            FStar_Syntax_Util.ctx_uvar_typ
+                              imp.FStar_TypeChecker_Common.imp_uvar in
+                          FStar_Class_Show.show
+                            FStar_Syntax_Print.showable_term uu___6 in
+                        let uu___6 =
+                          FStar_Class_Show.show
+                            FStar_Syntax_Print.showable_term tm in
+                        let uu___7 =
+                          FStar_Class_Show.show
+                            FStar_Syntax_Print.showable_term ty in
+                        FStar_Compiler_Util.format4
+                          "Tactic solved goal %s of type %s to %s : %s, but it has a non-trivial typing guard. Use gather_or_solve_explicit_guards_for_resolved_goals to inspect and prove these goals"
+                          uu___4 uu___5 uu___6 uu___7 in
+                      (FStar_Errors_Codes.Error_UninstantiatedUnificationVarInTactic,
+                        uu___3) in
+                    FStar_Errors.log_issue rng uu___2)) is;
       FStar_Errors.stop_if_err ()
 let run_tactic_on_ps' :
   'a 'b .

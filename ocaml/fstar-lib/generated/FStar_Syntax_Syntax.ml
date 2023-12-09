@@ -1273,8 +1273,7 @@ let rec (emb_typ_to_string : emb_typ -> Prims.string) =
             let uu___3 =
               let uu___4 =
                 let uu___5 = FStar_Compiler_List.map emb_typ_to_string args1 in
-                FStar_Compiler_Effect.op_Bar_Greater uu___5
-                  (FStar_Compiler_String.concat " ") in
+                FStar_Compiler_String.concat " " uu___5 in
               Prims.strcat uu___4 ")" in
             Prims.strcat " " uu___3 in
           Prims.strcat h uu___2 in
@@ -2381,9 +2380,7 @@ let (bv_to_tm : bv -> term) =
 let (bv_to_name : bv -> term) =
   fun bv1 -> let uu___ = range_of_bv bv1 in mk (Tm_name bv1) uu___
 let (binders_to_names : binders -> term Prims.list) =
-  fun bs ->
-    FStar_Compiler_Effect.op_Bar_Greater bs
-      (FStar_Compiler_List.map (fun b -> bv_to_name b.binder_bv))
+  fun bs -> FStar_Compiler_List.map (fun b -> bv_to_name b.binder_bv) bs
 let (mk_Tm_app : term -> args -> FStar_Compiler_Range_Type.range -> term) =
   fun t1 ->
     fun args1 ->
@@ -2579,13 +2576,10 @@ let (freenames_of_binders : binders -> freenames) =
       (fun b -> fun out -> FStar_Compiler_Set.add ord_bv b.binder_bv out) bs
       no_names
 let (binders_of_list : bv Prims.list -> binders) =
-  fun fvs ->
-    FStar_Compiler_Effect.op_Bar_Greater fvs
-      (FStar_Compiler_List.map (fun t -> mk_binder t))
+  fun fvs -> FStar_Compiler_List.map (fun t -> mk_binder t) fvs
 let (binders_of_freenames : freenames -> binders) =
   fun fvs ->
-    let uu___ = FStar_Compiler_Set.elems ord_bv fvs in
-    FStar_Compiler_Effect.op_Bar_Greater uu___ binders_of_list
+    let uu___ = FStar_Compiler_Set.elems ord_bv fvs in binders_of_list uu___
 let (is_bqual_implicit : bqual -> Prims.bool) =
   fun uu___ ->
     match uu___ with
@@ -2627,8 +2621,7 @@ let (pat_bvs : pat -> bv Prims.list) =
             (fun b1 ->
                fun uu___2 -> match uu___2 with | (p2, uu___3) -> aux b1 p2) b
             pats in
-    let uu___ = aux [] p in
-    FStar_Compiler_Effect.op_Less_Bar FStar_Compiler_List.rev uu___
+    let uu___ = aux [] p in FStar_Compiler_List.rev uu___
 let (freshen_binder : binder -> binder) =
   fun b ->
     let uu___ = freshen_bv b.binder_bv in

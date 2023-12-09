@@ -158,9 +158,7 @@ let (pack_universe :
 let rec (inspect_ln :
   FStar_Syntax_Syntax.term -> FStar_Reflection_V1_Data.term_view) =
   fun t ->
-    let t1 =
-      FStar_Compiler_Effect.op_Bar_Greater t
-        FStar_Syntax_Subst.compress_subst in
+    let t1 = FStar_Syntax_Subst.compress_subst t in
     match t1.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Tm_meta
         { FStar_Syntax_Syntax.tm2 = t2; FStar_Syntax_Syntax.meta = uu___;_}
@@ -315,10 +313,7 @@ let rec (inspect_ln :
         FStar_Reflection_V1_Data.Tv_Match (t2, ret_opt, brs1)
     | FStar_Syntax_Syntax.Tm_unknown -> FStar_Reflection_V1_Data.Tv_Unknown
     | FStar_Syntax_Syntax.Tm_lazy i ->
-        let uu___ =
-          FStar_Compiler_Effect.op_Bar_Greater i
-            FStar_Syntax_Util.unfold_lazy in
-        FStar_Compiler_Effect.op_Bar_Greater uu___ inspect_ln
+        let uu___ = FStar_Syntax_Util.unfold_lazy i in inspect_ln uu___
     | uu___ ->
         ((let uu___2 =
             let uu___3 =
@@ -365,9 +360,7 @@ let (inspect_comp :
             (FStar_Compiler_List.length ct.FStar_Syntax_Syntax.comp_univs) =
               Prims.int_zero
           then FStar_Syntax_Syntax.U_unknown
-          else
-            FStar_Compiler_Effect.op_Bar_Greater
-              ct.FStar_Syntax_Syntax.comp_univs FStar_Compiler_List.hd in
+          else FStar_Compiler_List.hd ct.FStar_Syntax_Syntax.comp_univs in
         let uu___ =
           FStar_Ident.lid_equals ct.FStar_Syntax_Syntax.effect_name
             FStar_Parser_Const.effect_Lemma_lid in
@@ -561,7 +554,7 @@ let (pack_ln :
               let uu___ =
                 let uu___1 = pack_const c in
                 FStar_Syntax_Syntax.Pat_constant uu___1 in
-              FStar_Compiler_Effect.op_Less_Bar wrap uu___
+              wrap uu___
           | FStar_Reflection_V1_Data.Pat_Cons (fv, us_opt, ps) ->
               let uu___ =
                 let uu___1 =
@@ -573,13 +566,11 @@ let (pack_ln :
                       ps in
                   (fv, us_opt, uu___2) in
                 FStar_Syntax_Syntax.Pat_cons uu___1 in
-              FStar_Compiler_Effect.op_Less_Bar wrap uu___
+              wrap uu___
           | FStar_Reflection_V1_Data.Pat_Var (bv, _sort) ->
-              FStar_Compiler_Effect.op_Less_Bar wrap
-                (FStar_Syntax_Syntax.Pat_var bv)
+              wrap (FStar_Syntax_Syntax.Pat_var bv)
           | FStar_Reflection_V1_Data.Pat_Dot_Term eopt ->
-              FStar_Compiler_Effect.op_Less_Bar wrap
-                (FStar_Syntax_Syntax.Pat_dot_term eopt) in
+              wrap (FStar_Syntax_Syntax.Pat_dot_term eopt) in
         let brs1 =
           FStar_Compiler_List.map
             (fun uu___ ->
@@ -675,10 +666,8 @@ let (defs_in_module :
         (fun l ->
            let ns =
              let uu___1 =
-               let uu___2 = FStar_Ident.ids_of_lid l in
-               FStar_Compiler_Effect.op_Bar_Greater uu___2 init in
-             FStar_Compiler_Effect.op_Bar_Greater uu___1
-               (FStar_Compiler_List.map FStar_Ident.string_of_id) in
+               let uu___2 = FStar_Ident.ids_of_lid l in init uu___2 in
+             FStar_Compiler_List.map FStar_Ident.string_of_id uu___1 in
            if ns = modul
            then
              let uu___1 =
@@ -813,8 +802,7 @@ let (sigelt_quals :
   FStar_Syntax_Syntax.sigelt -> FStar_Reflection_V1_Data.qualifier Prims.list)
   =
   fun se ->
-    FStar_Compiler_Effect.op_Bar_Greater se.FStar_Syntax_Syntax.sigquals
-      (FStar_Compiler_List.map syntax_to_rd_qual)
+    FStar_Compiler_List.map syntax_to_rd_qual se.FStar_Syntax_Syntax.sigquals
 let (set_sigelt_quals :
   FStar_Reflection_V1_Data.qualifier Prims.list ->
     FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.sigelt)
@@ -1018,7 +1006,7 @@ let (pack_sigelt :
         let packed = FStar_Compiler_List.map pack_letbinding lbs in
         let lbs1 = FStar_Compiler_List.map FStar_Pervasives_Native.snd packed in
         let lids = FStar_Compiler_List.map FStar_Pervasives_Native.fst packed in
-        FStar_Compiler_Effect.op_Less_Bar FStar_Syntax_Syntax.mk_sigelt
+        FStar_Syntax_Syntax.mk_sigelt
           (FStar_Syntax_Syntax.Sig_let
              {
                FStar_Syntax_Syntax.lbs1 = (r, lbs1);
@@ -1043,8 +1031,7 @@ let (pack_sigelt :
                   let uu___2 = FStar_Syntax_Syntax.mk_Total ty1 in
                   FStar_Syntax_Util.arrow param_bs uu___2 in
                 let ty3 = FStar_Syntax_Subst.subst s ty2 in
-                FStar_Compiler_Effect.op_Less_Bar
-                  FStar_Syntax_Syntax.mk_sigelt
+                FStar_Syntax_Syntax.mk_sigelt
                   (FStar_Syntax_Syntax.Sig_datacon
                      {
                        FStar_Syntax_Syntax.lid1 = lid;
@@ -1065,7 +1052,7 @@ let (pack_sigelt :
             let ty1 = FStar_Syntax_Subst.close param_bs1 ty in
             let param_bs2 = FStar_Syntax_Subst.subst_binders s param_bs1 in
             let ty2 = FStar_Syntax_Subst.subst s ty1 in
-            FStar_Compiler_Effect.op_Less_Bar FStar_Syntax_Syntax.mk_sigelt
+            FStar_Syntax_Syntax.mk_sigelt
               (FStar_Syntax_Syntax.Sig_inductive_typ
                  {
                    FStar_Syntax_Syntax.lid = ind_lid;
@@ -1078,7 +1065,7 @@ let (pack_sigelt :
                    FStar_Syntax_Syntax.ds = c_lids
                  }) in
           let se =
-            FStar_Compiler_Effect.op_Less_Bar FStar_Syntax_Syntax.mk_sigelt
+            FStar_Syntax_Syntax.mk_sigelt
               (FStar_Syntax_Syntax.Sig_bundle
                  {
                    FStar_Syntax_Syntax.ses = (ind_se :: ctor_ses);
@@ -1101,7 +1088,7 @@ let (pack_sigelt :
           FStar_Ident.lid_of_path nm FStar_Compiler_Range_Type.dummyRange in
         (check_lid val_lid;
          (let typ = FStar_Syntax_Subst.close_univ_vars us_names1 ty in
-          FStar_Compiler_Effect.op_Less_Bar FStar_Syntax_Syntax.mk_sigelt
+          FStar_Syntax_Syntax.mk_sigelt
             (FStar_Syntax_Syntax.Sig_declare_typ
                {
                  FStar_Syntax_Syntax.lid2 = val_lid;

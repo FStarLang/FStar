@@ -34,8 +34,6 @@ effect All (a:Type) (pre:all_pre) (post: (h0:HyperStack.mem -> Tot (all_post' a 
 effect ML (a:Type) =
   ALL a (fun (p:all_post a) (_:HyperStack.mem) -> forall (a:result a) (h:HyperStack.mem). p a h)
 
-assume val pipe_right: 'a -> ('a -> ML 'b) -> ML 'b
-assume val pipe_left: ('a -> ML 'b) -> 'a -> ML 'b
 assume val failwith: string -> All 'a (fun h -> True) (fun h a h' -> Err? a /\ h==h')
 assume val exit: int -> ML 'a
 assume val try_with: (unit -> ML 'a) -> (exn -> ML 'a) -> ML 'a

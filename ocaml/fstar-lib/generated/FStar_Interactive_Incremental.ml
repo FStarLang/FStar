@@ -549,11 +549,8 @@ let (format_code :
           (match uu___ with
            | (formatted_code_rev, leftover_comments) ->
                let code1 =
-                 let uu___1 =
-                   FStar_Compiler_Effect.op_Bar_Greater formatted_code_rev
-                     FStar_Compiler_List.rev in
-                 FStar_Compiler_Effect.op_Bar_Greater uu___1
-                   (FStar_Compiler_String.concat "\n\n") in
+                 FStar_Compiler_String.concat "\n\n"
+                   (FStar_Compiler_List.rev formatted_code_rev) in
                let formatted_code =
                  match leftover_comments with
                  | [] -> code1

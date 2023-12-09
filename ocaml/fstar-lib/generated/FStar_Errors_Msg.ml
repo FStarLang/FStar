@@ -24,10 +24,9 @@ let (sublist :
         let uu___1 =
           let uu___2 =
             let uu___3 =
-              FStar_Compiler_Effect.op_Bar_Greater ds
-                (FStar_Compiler_List.map
-                   (fun d -> FStar_Pprint.op_Hat_Hat h d)) in
-            FStar_Compiler_Effect.op_Bar_Greater uu___3 vconcat in
+              FStar_Compiler_List.map (fun d -> FStar_Pprint.op_Hat_Hat h d)
+                ds in
+            vconcat uu___3 in
           FStar_Pprint.align uu___2 in
         FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu___1 in
       FStar_Pprint.nest (Prims.of_int (2)) uu___

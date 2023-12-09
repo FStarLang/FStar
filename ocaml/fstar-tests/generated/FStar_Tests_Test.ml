@@ -19,9 +19,7 @@ let main : 'uuuuu 'uuuuu1 . 'uuuuu -> 'uuuuu1 =
                          FStar_Compiler_Effect.exit Prims.int_one)
                     | FStar_Getopt.Empty ->
                         (FStar_Main.setup_hooks ();
-                         (let uu___5 = FStar_Tests_Pars.init () in
-                          FStar_Compiler_Effect.op_Bar_Greater uu___5
-                            (fun uu___6 -> ()));
+                         (let uu___5 = FStar_Tests_Pars.init () in ());
                          FStar_Tests_Pars.parse_incremental_decls ();
                          FStar_Tests_Norm.run_all ();
                          (let uu___8 = FStar_Tests_Unif.run_all () in
@@ -31,9 +29,7 @@ let main : 'uuuuu 'uuuuu1 . 'uuuuu -> 'uuuuu1 =
                          FStar_Compiler_Effect.exit Prims.int_zero)
                     | FStar_Getopt.Success ->
                         (FStar_Main.setup_hooks ();
-                         (let uu___5 = FStar_Tests_Pars.init () in
-                          FStar_Compiler_Effect.op_Bar_Greater uu___5
-                            (fun uu___6 -> ()));
+                         (let uu___5 = FStar_Tests_Pars.init () in ());
                          FStar_Tests_Pars.parse_incremental_decls ();
                          FStar_Tests_Norm.run_all ();
                          (let uu___8 = FStar_Tests_Unif.run_all () in
@@ -44,7 +40,7 @@ let main : 'uuuuu 'uuuuu1 . 'uuuuu -> 'uuuuu1 =
      with
      | FStar_Errors.Error (err, msg, r, _ctx) when
          let uu___2 = FStar_Options.trace_error () in
-         FStar_Compiler_Effect.op_Less_Bar Prims.op_Negation uu___2 ->
+         Prims.op_Negation uu___2 ->
          (if r = FStar_Compiler_Range_Type.dummyRange
           then
             (let uu___3 = FStar_Errors_Msg.rendermsg msg in
@@ -56,7 +52,7 @@ let main : 'uuuuu 'uuuuu1 . 'uuuuu -> 'uuuuu1 =
           FStar_Compiler_Effect.exit Prims.int_one)
      | FStar_Errors.Err (raw_error, s, ls) when
          let uu___2 = FStar_Options.trace_error () in
-         FStar_Compiler_Effect.op_Less_Bar Prims.op_Negation uu___2 ->
+         Prims.op_Negation uu___2 ->
          ((let uu___3 = FStar_Errors_Msg.rendermsg s in
            FStar_Compiler_Util.print2 "%s : [%s]\n" uu___3
              (FStar_String.concat "; " ls));

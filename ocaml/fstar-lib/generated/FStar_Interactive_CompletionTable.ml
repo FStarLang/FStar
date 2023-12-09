@@ -888,7 +888,5 @@ let (autocomplete_mod_or_ns :
       fun filter ->
         let uu___ =
           let uu___1 = trie_find_prefix tbl.tbl_mods query1 in
-          FStar_Compiler_Effect.op_Bar_Greater uu___1
-            (FStar_Compiler_List.filter_map filter) in
-        FStar_Compiler_Effect.op_Bar_Greater uu___
-          (FStar_Compiler_List.map completion_result_of_ns_or_mod)
+          FStar_Compiler_List.filter_map filter uu___1 in
+        FStar_Compiler_List.map completion_result_of_ns_or_mod uu___

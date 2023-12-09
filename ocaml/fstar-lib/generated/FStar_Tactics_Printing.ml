@@ -128,41 +128,40 @@ let (goal_to_string :
             | l -> Prims.strcat " (" (Prims.strcat l ")") in
           let uu___ =
             let rename_binders subst bs =
-              FStar_Compiler_Effect.op_Bar_Greater bs
-                (FStar_Compiler_List.map
-                   (fun uu___1 ->
-                      let x = uu___1.FStar_Syntax_Syntax.binder_bv in
-                      let y =
-                        let uu___2 = FStar_Syntax_Syntax.bv_to_name x in
-                        FStar_Syntax_Subst.subst subst uu___2 in
-                      let uu___2 =
-                        let uu___3 = FStar_Syntax_Subst.compress y in
-                        uu___3.FStar_Syntax_Syntax.n in
-                      match uu___2 with
-                      | FStar_Syntax_Syntax.Tm_name y1 ->
-                          let uu___3 =
-                            let uu___4 = uu___1.FStar_Syntax_Syntax.binder_bv in
-                            let uu___5 =
-                              FStar_Syntax_Subst.subst subst
-                                x.FStar_Syntax_Syntax.sort in
-                            {
-                              FStar_Syntax_Syntax.ppname =
-                                (uu___4.FStar_Syntax_Syntax.ppname);
-                              FStar_Syntax_Syntax.index =
-                                (uu___4.FStar_Syntax_Syntax.index);
-                              FStar_Syntax_Syntax.sort = uu___5
-                            } in
-                          {
-                            FStar_Syntax_Syntax.binder_bv = uu___3;
-                            FStar_Syntax_Syntax.binder_qual =
-                              (uu___1.FStar_Syntax_Syntax.binder_qual);
-                            FStar_Syntax_Syntax.binder_positivity =
-                              (uu___1.FStar_Syntax_Syntax.binder_positivity);
-                            FStar_Syntax_Syntax.binder_attrs =
-                              (uu___1.FStar_Syntax_Syntax.binder_attrs)
-                          }
-                      | uu___3 ->
-                          FStar_Compiler_Effect.failwith "Not a renaming")) in
+              FStar_Compiler_List.map
+                (fun uu___1 ->
+                   let x = uu___1.FStar_Syntax_Syntax.binder_bv in
+                   let y =
+                     let uu___2 = FStar_Syntax_Syntax.bv_to_name x in
+                     FStar_Syntax_Subst.subst subst uu___2 in
+                   let uu___2 =
+                     let uu___3 = FStar_Syntax_Subst.compress y in
+                     uu___3.FStar_Syntax_Syntax.n in
+                   match uu___2 with
+                   | FStar_Syntax_Syntax.Tm_name y1 ->
+                       let uu___3 =
+                         let uu___4 = uu___1.FStar_Syntax_Syntax.binder_bv in
+                         let uu___5 =
+                           FStar_Syntax_Subst.subst subst
+                             x.FStar_Syntax_Syntax.sort in
+                         {
+                           FStar_Syntax_Syntax.ppname =
+                             (uu___4.FStar_Syntax_Syntax.ppname);
+                           FStar_Syntax_Syntax.index =
+                             (uu___4.FStar_Syntax_Syntax.index);
+                           FStar_Syntax_Syntax.sort = uu___5
+                         } in
+                       {
+                         FStar_Syntax_Syntax.binder_bv = uu___3;
+                         FStar_Syntax_Syntax.binder_qual =
+                           (uu___1.FStar_Syntax_Syntax.binder_qual);
+                         FStar_Syntax_Syntax.binder_positivity =
+                           (uu___1.FStar_Syntax_Syntax.binder_positivity);
+                         FStar_Syntax_Syntax.binder_attrs =
+                           (uu___1.FStar_Syntax_Syntax.binder_attrs)
+                       }
+                   | uu___3 ->
+                       FStar_Compiler_Effect.failwith "Not a renaming") bs in
             let goal_binders =
               (g.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_binders in
             let goal_ty = FStar_Tactics_Types.goal_type g in

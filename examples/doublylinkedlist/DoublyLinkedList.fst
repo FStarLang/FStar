@@ -348,10 +348,10 @@ let fragment_aa (#t:Type) (f:fragment t) : GTot Type0 =
 
 /// Connectivity properties
 
-let ( |> ) (#t:Type) (a:node t) (b:pointer (node t)) : GTot Type0 =
+let ( |>> ) (#t:Type) (a:node t) (b:pointer (node t)) : GTot Type0 =
   a.flink == b
 
-let ( <| ) (#t:Type) (a:pointer (node t)) (b: node t) : GTot Type0 =
+let ( <<| ) (#t:Type) (a:pointer (node t)) (b: node t) : GTot Type0 =
   b.blink == a
 
 let rec nodelist_conn (#t:Type) (h0:heap) (nl:nodelist t) : GTot Type0 (decreases (length nl)) =
@@ -360,8 +360,8 @@ let rec nodelist_conn (#t:Type) (h0:heap) (nl:nodelist t) : GTot Type0 (decrease
   | n1 :: rest -> match rest with
     | [] -> True
     | n2 :: ns ->
-      n1@h0 |> n2 /\
-      n1 <| n2@h0 /\
+      n1@h0 |>> n2 /\
+      n1 <<| n2@h0 /\
       nodelist_conn h0 rest
 
 let dll_conn (#t:Type) (h0:heap) (d:dll t) : GTot Type0 =
@@ -428,7 +428,7 @@ let ( =|> ) (#t:Type) (a:pointer (node t)) (b:pointer (node t)) : StackInline un
          unchanged_node_val h0 h1 a /\
          (a@h0).blink == (a@h1).blink /\
          b@h0 == b@h1 /\
-         (a@h1) |> b)) =
+         (a@h1) |>> b)) =
   a *= { !*a with flink = b }
 
 let ( <|= ) (#t:Type) (a:pointer (node t)) (b:pointer (node t)) : StackInline unit
@@ -440,7 +440,7 @@ let ( <|= ) (#t:Type) (a:pointer (node t)) (b:pointer (node t)) : StackInline un
          a@h0 == a@h1 /\
          unchanged_node_val h0 h1 b /\
          (b@h0).flink == (b@h1).flink /\
-         a <| (b@h1))) =
+         a <<| (b@h1))) =
   b *= { !*b with blink = a }
 
 let ( !=|> ) (#t:Type) (a:pointer (node t)) : StackInline unit
@@ -512,8 +512,8 @@ let rec extract_nodelist_conn (#t:Type) (h0:heap) (nl:nodelist t) (i:nat{i < len
   Lemma
     (requires (nodelist_conn h0 nl))
     (ensures (
-        (nl.[i]@h0 |> nl.[i+1]) /\
-        (nl.[i] <| nl.[i+1]@h0)))
+        (nl.[i]@h0 |>> nl.[i+1]) /\
+        (nl.[i] <<| nl.[i+1]@h0)))
     (decreases (length nl)) =
   match i with
   | 0 -> ()
@@ -769,8 +769,8 @@ let rec nodelist_append_conn (#t:Type) (h0:heap) (nl1 nl2:nodelist t) :
     (requires (nodelist_conn h0 nl1 /\ nodelist_conn h0 nl2 /\
                Mod.loc_disjoint (nodelist_fp0 nl1) (nodelist_fp0 nl2) /\
                length nl1 > 0 /\ length nl2 > 0 /\ // For "= 0", it is trivially held
-               (last nl1)@h0 |> (hd nl2) /\
-               (last nl1) <| (hd nl2)@h0))
+               (last nl1)@h0 |>> (hd nl2) /\
+               (last nl1) <<| (hd nl2)@h0))
     (ensures (nodelist_conn h0 (append nl1 nl2))) =
   match nl1 with
   | [_] -> ()
@@ -781,8 +781,8 @@ let nodelist_append_valid (#t:Type) (h0:heap) (nl1 nl2:nodelist t) :
     (requires (nodelist_valid h0 nl1 /\ nodelist_valid h0 nl2 /\
                Mod.loc_disjoint (nodelist_fp0 nl1) (nodelist_fp0 nl2) /\
                length nl1 > 0 /\ length nl2 > 0 /\ // For "= 0", it is trivially held
-               (last nl1)@h0 |> (hd nl2) /\
-               (last nl1) <| (hd nl2)@h0))
+               (last nl1)@h0 |>> (hd nl2) /\
+               (last nl1) <<| (hd nl2)@h0))
     (ensures (nodelist_valid h0 (append nl1 nl2))) =
   nodelist_append_contained h0 nl1 nl2;
   nodelist_append_aa nl1 nl2;
@@ -808,8 +808,8 @@ val piece_merge (#t:Type) (h0:heap)
     (p2:piece t{piece_valid h0 p2}) :
   Pure (piece t)
     (requires (let a, b = last p1.pnodes, hd p2.pnodes in
-               (a@h0 |> b) /\
-               (a <| b@h0) /\
+               (a@h0 |>> b) /\
+               (a <<| b@h0) /\
                Mod.loc_disjoint (piece_fp0 p1) (piece_fp0 p2)))
     (ensures (fun p -> (piece_valid h0 p) /\
                        (reveal p.pnodes == p1.pnodes `append` p2.pnodes)))
@@ -827,8 +827,8 @@ let piece_merge_fp0 (#t:Type) (h0:heap)
     (p2:piece t{piece_valid h0 p2}) :
   Lemma
     (requires (let a, b = last p1.pnodes, hd p2.pnodes in
-               (a@h0 |> b) /\
-               (a <| b@h0) /\
+               (a@h0 |>> b) /\
+               (a <<| b@h0) /\
                Mod.loc_disjoint (piece_fp0 p1) (piece_fp0 p2)))
     (ensures (loc_equiv
                 (piece_fp0 (piece_merge h0 p1 p2))
@@ -880,7 +880,7 @@ let rec fragment_defragmentable (#t:Type) (h0:heap) (f:fragment t{fragment_valid
   GTot Type0 =
   let aux (p1 p2:(p:piece t{piece_valid h0 p})) =
     let a, b = last p1.pnodes, hd p2.pnodes in
-    (a@h0 |> b) /\(a <| b@h0) in
+    (a@h0 |>> b) /\(a <<| b@h0) in
   match f with
   | Frag0 -> True
   | Frag1 p1 -> True
@@ -1046,8 +1046,8 @@ let rec nodelist_split_conn (#t:Type) (h0:heap) (nl1 nl2:nodelist t) :
         (nodelist_conn h0 (append nl1 nl2)) /\
         length nl1 > 0 /\ length nl2 > 0)) // For "= 0", it is trivially held
     (ensures (nodelist_conn h0 nl1 /\ nodelist_conn h0 nl2 /\
-               (last nl1)@h0 |> (hd nl2) /\
-               (last nl1) <| (hd nl2)@h0)) =
+               (last nl1)@h0 |>> (hd nl2) /\
+               (last nl1) <<| (hd nl2)@h0)) =
   match nl1 with
   | [_] -> ()
   | _ -> nodelist_split_conn h0 (tl nl1) nl2
@@ -1058,8 +1058,8 @@ let nodelist_split_valid (#t:Type) (h0:heap) (nl1 nl2:nodelist t) :
                length nl1 > 0 /\ length nl2 > 0)) // For "= 0", it is trivially held
     (ensures (nodelist_valid h0 nl1 /\ nodelist_valid h0 nl2 /\
               Mod.loc_disjoint (nodelist_fp0 nl1) (nodelist_fp0 nl2) /\
-               (last nl1)@h0 |> (hd nl2) /\
-               (last nl1) <| (hd nl2)@h0)) =
+               (last nl1)@h0 |>> (hd nl2) /\
+               (last nl1) <<| (hd nl2)@h0)) =
   nodelist_split_contained h0 nl1 nl2;
   nodelist_split_aa nl1 nl2;
   nodelist_split_conn h0 nl1 nl2
@@ -1092,7 +1092,7 @@ let tot_dll_to_fragment_split (#t:Type) (h0:heap) (d:dll t{dll_valid h0 d})
     (requires (
         n1 `memP` d.nodes /\
         n2 `memP` d.nodes /\
-        n1@h0 |> n2 /\ n1 <| n2@h0))
+        n1@h0 |>> n2 /\ n1 <<| n2@h0))
     (ensures (fun f ->
          fragment_valid h0 f /\
          fragment_length f = 2 /\
@@ -1337,7 +1337,7 @@ let piece_remains_valid_f (#t:Type) (h0 h1:heap) (p:piece t) :
     // assert (last nl1 == nl1.[length nodes - 2]);
     lemma_unsnoc_index nodes (length nodes - 2);
     // assert (last nl1 == nodes.[length nodes - 2]);
-    // assert ((last (fst (unsnoc nodes)))@h0 |> (hd [snd (unsnoc nodes)]));
+    // assert ((last (fst (unsnoc nodes)))@h0 |>> (hd [snd (unsnoc nodes)]));
     // assert (Mod.loc_disjoint (nodelist_fp0 (fst (unsnoc nodes))) (Mod.loc_buffer p.ptail));
     // assert (Mod.loc_disjoint (Mod.loc_buffer (last (fst (unsnoc nodes)))) (Mod.loc_buffer p.ptail));
     // assert (Mod.modifies (Mod.loc_buffer p.ptail) h0 h1);
@@ -1348,8 +1348,8 @@ let piece_remains_valid_f (#t:Type) (h0 h1:heap) (p:piece t) :
     // assert (Mod.loc_disjoint (Mod.loc_buffer (last (fst (unsnoc nodes)))) (Mod.loc_buffer p.ptail));
     lemma_snoc_length (unsnoc nodes);
     // assert ((last (fst (unsnoc nodes)))@h0 == (last (fst (unsnoc nodes)))@h1);
-    // assert ((last (fst (unsnoc nodes)))@h1 |> (hd [snd (unsnoc nodes)]));
-    // assert ((last (fst (unsnoc nodes))) <| (hd [snd (unsnoc nodes)])@h1);
+    // assert ((last (fst (unsnoc nodes)))@h1 |>> (hd [snd (unsnoc nodes)]));
+    // assert ((last (fst (unsnoc nodes))) <<| (hd [snd (unsnoc nodes)])@h1);
     nodelist_append_conn h1 (fst (unsnoc nodes)) [snd (unsnoc nodes)];
     // assert (nodelist_conn h1 (reveal p.pnodes));
     // assert (piece_conn h1 p);
@@ -1617,7 +1617,7 @@ let dll_insert_after (#t:Type) (d:dll t) (e:pointer (node t)) (n:pointer (node t
     //
     // assert (e `memP` reveal d.nodes);
     // assert (e2 `memP` reveal d.nodes);
-    // assert (e@h0 |> e2 /\ e <| e2@h0);
+    // assert (e@h0 |>> e2 /\ e <<| e2@h0);
     let f = tot_dll_to_fragment_split h0 d e e2 in
     // assert (length f = 2);
     let Frag2 p1 p3 = f in
@@ -1886,7 +1886,7 @@ let dll_remove_node (#t:Type) (d:dll t) (e:pointer (node t)) :
     let h1 = ST.get () in
     // assert (e1 == (reveal d.nodes).[reveal d.nodes `index_of` e - 1]);
     // assert (e1 `memP` reveal d.nodes);
-    // assert (e1@h0 |> e);
+    // assert (e1@h0 |>> e);
     let f = tot_dll_to_fragment_split h0 d e1 e in
     let Frag2 p1 p2 = f in
     let p2' = tot_piece_tail h0 p2 e2 in

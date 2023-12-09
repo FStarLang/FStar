@@ -7,7 +7,7 @@ let (fstar_stubs_tactics_lid' : Prims.string Prims.list -> FStar_Ident.lid) =
 let (lid_as_tm : FStar_Ident.lident -> FStar_Syntax_Syntax.term) =
   fun l ->
     let uu___ = FStar_Syntax_Syntax.lid_as_fv l FStar_Pervasives_Native.None in
-    FStar_Compiler_Effect.op_Bar_Greater uu___ FStar_Syntax_Syntax.fv_to_tm
+    FStar_Syntax_Syntax.fv_to_tm uu___
 let (mk_tactic_lid_as_term : Prims.string -> FStar_Syntax_Syntax.term) =
   fun s -> let uu___ = fstar_tactics_lid' ["Effect"; s] in lid_as_tm uu___
 type tac_constant =
@@ -222,7 +222,7 @@ let (e_proofstate_nbe :
     let thunk =
       FStar_Thunk.mk
         (fun uu___ ->
-           FStar_Compiler_Effect.op_Less_Bar FStar_TypeChecker_NBETerm.mk_t
+           FStar_TypeChecker_NBETerm.mk_t
              (FStar_TypeChecker_NBETerm.Constant
                 (FStar_TypeChecker_NBETerm.String
                    ("(((proofstate.nbe)))",
@@ -241,8 +241,7 @@ let (e_proofstate_nbe :
          uu___3)
         ->
         let uu___4 = FStar_Compiler_Dyn.undyn b in
-        FStar_Compiler_Effect.op_Less_Bar
-          (fun uu___5 -> FStar_Pervasives_Native.Some uu___5) uu___4
+        FStar_Pervasives_Native.Some uu___4
     | uu___1 ->
         ((let uu___3 =
             FStar_Compiler_Effect.op_Bang FStar_Options.debug_embedding in
@@ -280,11 +279,11 @@ let (e_goal_nbe :
     let thunk =
       FStar_Thunk.mk
         (fun uu___ ->
-           FStar_Compiler_Effect.op_Less_Bar FStar_TypeChecker_NBETerm.mk_t
+           FStar_TypeChecker_NBETerm.mk_t
              (FStar_TypeChecker_NBETerm.Constant
                 (FStar_TypeChecker_NBETerm.String
                    ("(((goal.nbe)))", FStar_Compiler_Range_Type.dummyRange)))) in
-    FStar_Compiler_Effect.op_Less_Bar FStar_TypeChecker_NBETerm.mk_t
+    FStar_TypeChecker_NBETerm.mk_t
       (FStar_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl li), thunk)) in
   let unembed_goal _cb t =
     let uu___ = FStar_TypeChecker_NBETerm.nbe_t_of_t t in
@@ -298,8 +297,7 @@ let (e_goal_nbe :
          uu___3)
         ->
         let uu___4 = FStar_Compiler_Dyn.undyn b in
-        FStar_Compiler_Effect.op_Less_Bar
-          (fun uu___5 -> FStar_Pervasives_Native.Some uu___5) uu___4
+        FStar_Pervasives_Native.Some uu___4
     | uu___1 ->
         ((let uu___3 =
             FStar_Compiler_Effect.op_Bang FStar_Options.debug_embedding in
@@ -853,18 +851,13 @@ let (t_tref : FStar_Syntax_Syntax.term) =
       let uu___2 =
         FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.tref_lid
           FStar_Pervasives_Native.None in
-      FStar_Compiler_Effect.op_Bar_Greater uu___2
-        FStar_Syntax_Syntax.fv_to_tm in
-    FStar_Compiler_Effect.op_Bar_Greater uu___1
-      (fun tm ->
-         FStar_Syntax_Syntax.mk_Tm_uinst tm [FStar_Syntax_Syntax.U_zero]) in
-  FStar_Compiler_Effect.op_Bar_Greater uu___
-    (fun head ->
-       let uu___1 =
-         let uu___2 = FStar_Syntax_Syntax.iarg FStar_Syntax_Syntax.t_term in
-         [uu___2] in
-       FStar_Syntax_Syntax.mk_Tm_app head uu___1
-         FStar_Compiler_Range_Type.dummyRange)
+      FStar_Syntax_Syntax.fv_to_tm uu___2 in
+    FStar_Syntax_Syntax.mk_Tm_uinst uu___1 [FStar_Syntax_Syntax.U_zero] in
+  let uu___1 =
+    let uu___2 = FStar_Syntax_Syntax.iarg FStar_Syntax_Syntax.t_term in
+    [uu___2] in
+  FStar_Syntax_Syntax.mk_Tm_app uu___ uu___1
+    FStar_Compiler_Range_Type.dummyRange
 let e_tref :
   'a .
     unit ->
@@ -890,9 +883,7 @@ let e_tref :
       | uu___3 -> FStar_Pervasives_Native.None in
     let uu___1 =
       let uu___2 =
-        let uu___3 =
-          FStar_Compiler_Effect.op_Bar_Greater FStar_Parser_Const.tref_lid
-            FStar_Ident.string_of_lid in
+        let uu___3 = FStar_Ident.string_of_lid FStar_Parser_Const.tref_lid in
         (uu___3, [FStar_Syntax_Syntax.ET_abstract]) in
       FStar_Syntax_Syntax.ET_app uu___2 in
     FStar_Syntax_Embeddings_Base.mk_emb_full em un t_tref (fun i -> "tref")
@@ -914,7 +905,7 @@ let e_tref_nbe :
       let thunk =
         FStar_Thunk.mk
           (fun uu___1 ->
-             FStar_Compiler_Effect.op_Less_Bar FStar_TypeChecker_NBETerm.mk_t
+             FStar_TypeChecker_NBETerm.mk_t
                (FStar_TypeChecker_NBETerm.Constant
                   (FStar_TypeChecker_NBETerm.String
                      ("(((tref.nbe)))", FStar_Compiler_Range_Type.dummyRange)))) in
@@ -932,8 +923,7 @@ let e_tref_nbe :
            uu___4)
           ->
           let uu___5 = FStar_Compiler_Dyn.undyn b in
-          FStar_Compiler_Effect.op_Less_Bar
-            (fun uu___6 -> FStar_Pervasives_Native.Some uu___6) uu___5
+          FStar_Pervasives_Native.Some uu___5
       | uu___2 ->
           ((let uu___4 =
               FStar_Compiler_Effect.op_Bang FStar_Options.debug_embedding in
@@ -964,9 +954,7 @@ let e_tref_nbe :
       mkFV uu___2 [FStar_Syntax_Syntax.U_zero] uu___3 in
     let uu___2 =
       let uu___3 =
-        let uu___4 =
-          FStar_Compiler_Effect.op_Bar_Greater FStar_Parser_Const.tref_lid
-            FStar_Ident.string_of_lid in
+        let uu___4 = FStar_Ident.string_of_lid FStar_Parser_Const.tref_lid in
         (uu___4, [FStar_Syntax_Syntax.ET_abstract]) in
       FStar_Syntax_Syntax.ET_app uu___3 in
     {

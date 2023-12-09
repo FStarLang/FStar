@@ -2669,10 +2669,9 @@ and (translate_constant : FStar_Extraction_ML_Syntax.mlconstant -> expr) =
     | FStar_Extraction_ML_Syntax.MLC_Bool b -> EBool b
     | FStar_Extraction_ML_Syntax.MLC_String s ->
         ((let uu___1 =
-            FStar_Compiler_Effect.op_Bar_Greater
-              (FStar_String.list_of_string s)
-              (FStar_Compiler_Util.for_some
-                 (fun c1 -> c1 = (FStar_Char.char_of_int Prims.int_zero))) in
+            FStar_Compiler_Util.for_some
+              (fun c1 -> c1 = (FStar_Char.char_of_int Prims.int_zero))
+              (FStar_String.list_of_string s) in
           if uu___1
           then
             let uu___2 =

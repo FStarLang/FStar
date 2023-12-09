@@ -91,21 +91,20 @@ let (report_and_clear : Prims.string -> unit) =
               let uu___1 = FStar_Compiler_Effect.op_Bang c2.total_time in
               let uu___2 = FStar_Compiler_Effect.op_Bang c1.total_time in
               uu___1 - uu___2) ctrs in
-     FStar_Compiler_Effect.op_Bar_Greater ctrs1
-       (FStar_Compiler_List.iter
-          (fun c ->
-             let warn =
-               let uu___1 = FStar_Compiler_Effect.op_Bang c.running in
-               if uu___1
-               then " (Warning, this counter is still running)"
-               else
-                 (let uu___3 = FStar_Compiler_Effect.op_Bang c.undercount in
-                  if uu___3
-                  then
-                    " (Warning, some operations raised exceptions and we not accounted for)"
-                  else "") in
-             let uu___1 =
-               let uu___2 = FStar_Compiler_Effect.op_Bang c.total_time in
-               FStar_Compiler_Util.string_of_int uu___2 in
-             FStar_Compiler_Util.print4 "%s, profiled %s:\t %s ms%s\n" tag
-               c.cid uu___1 warn)))
+     FStar_Compiler_List.iter
+       (fun c ->
+          let warn =
+            let uu___1 = FStar_Compiler_Effect.op_Bang c.running in
+            if uu___1
+            then " (Warning, this counter is still running)"
+            else
+              (let uu___3 = FStar_Compiler_Effect.op_Bang c.undercount in
+               if uu___3
+               then
+                 " (Warning, some operations raised exceptions and we not accounted for)"
+               else "") in
+          let uu___1 =
+            let uu___2 = FStar_Compiler_Effect.op_Bang c.total_time in
+            FStar_Compiler_Util.string_of_int uu___2 in
+          FStar_Compiler_Util.print4 "%s, profiled %s:\t %s ms%s\n" tag 
+            c.cid uu___1 warn) ctrs1)
