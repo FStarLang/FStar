@@ -29,7 +29,7 @@ jobs:
         run: |
           TEMP_IMAGE_NAME=fstar:update-base-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
           CI_IMAGEBUILD_INITIAL_TIMESTAMP=$(date '+%s')
-          docker build --pull --no-cache -f .docker/base.Dockerfile -t ${TEMP_IMAGE_NAME} .
+          NO_COLOR=1 docker build --pull --no-cache -f .docker/base.Dockerfile -t ${TEMP_IMAGE_NAME} .
           CI_IMAGEBUILD_FINAL_TIMESTAMP=$(date '+%s')
           echo "CI_IMAGEBUILD_INITIAL_TIMESTAMP=$CI_IMAGEBUILD_INITIAL_TIMESTAMP" >> $GITHUB_ENV
           echo "CI_IMAGEBUILD_FINAL_TIMESTAMP=$CI_IMAGEBUILD_FINAL_TIMESTAMP" >> $GITHUB_ENV
@@ -42,7 +42,7 @@ jobs:
           echo "ci_docker_image_tag=$ci_docker_image_tag" >> $GITHUB_ENV
 
           CI_TARGET=uregressions
-          docker build --no-cache -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg FSTAR_CI_BASE=$TEMP_IMAGE_NAME --build-arg CI_TARGET="$CI_TARGET" --build-arg CI_THREADS=$(nproc) . |& tee BUILDLOG
+          NO_COLOR=1 docker build --no-cache -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg FSTAR_CI_BASE=$TEMP_IMAGE_NAME --build-arg CI_TARGET="$CI_TARGET" --build-arg CI_THREADS=$(nproc) . |& tee BUILDLOG
           ci_docker_status=$(docker run $ci_docker_image_tag /bin/bash -c 'cat $FSTAR_HOME/status.txt' || echo false)
           $ci_docker_status
 
