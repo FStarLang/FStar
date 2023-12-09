@@ -5034,8 +5034,9 @@ let do_discharge_vc use_env_range_msg env vc : unit =
     || (Env.debug env <| Options.Other "SMTQuery")
     || (Env.debug env <| Options.Other "Discharge")
   in
-  let diag_doc = if debug then Errors.diag_doc (Env.get_range env) else (fun _ -> ()) in
-  diag_doc [text "Checking VC:" ^/^ pp vc];
+  let diag_doc = Errors.diag_doc (Env.get_range env) in
+  if debug then
+    diag_doc [text "Checking VC:" ^/^ pp vc];
 
   (* Tactic preprocessing *)
   let vcs : list (env_t & typ & Options.optionstate) = (
@@ -5043,7 +5044,8 @@ let do_discharge_vc use_env_range_msg env vc : unit =
       Options.with_saved_options (fun () ->
         ignore <| Options.set_options "--no_tactics";
         let vcs = env.solver.preprocess env vc in
-        diag_doc [text "Tactic preprocessing produced" ^^ pp (List.length vcs <: int) ^^ text "goals"];
+        if debug then
+          diag_doc [text "Tactic preprocessing produced" ^/^ pp (List.length vcs <: int) ^/^ text "goals"];
         let vcs = vcs |> List.map (fun (env, goal, opts) ->
                             // NB: No Eager_unfolding. Why?
                             env,
@@ -5064,7 +5066,8 @@ let do_discharge_vc use_env_range_msg env vc : unit =
         let vcs = vcs |> List.concatMap (fun (env, goal, opts) ->
           match check_trivial goal with
           | Trivial ->
-            diag_doc [text "Goal completely solved by tactic\n"];
+            if debug then
+              diag_doc [text "Goal completely solved by tactic\n"];
             []
 
           | NonTrivial goal ->
@@ -5097,7 +5100,8 @@ let do_discharge_vc use_env_range_msg env vc : unit =
       FStar.Options.set opts;
       (* diag (BU.format2 "Trying to solve:\n> %s\nWith proof_ns:\n %s\n" *)
       (*                   (show goal) (Env.string_of_proof_ns env)); *)
-      diag_doc [text "Before calling solver, VC=:" ^/^ pp goal];
+      if debug then
+        diag_doc [text "Before calling solver, VC =" ^/^ pp goal];
       env.solver.solve use_env_range_msg env goal
     )
   )
@@ -5130,7 +5134,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option g
     || (Env.debug env <| Options.Other "SMTQuery")
     || (Env.debug env <| Options.Other "Disch")
   in
-  let diag_doc = if debug then Errors.diag_doc (Env.get_range env) else (fun _ -> ()) in
+  let diag_doc = Errors.diag_doc (Env.get_range env) in
 
   if Env.debug env <| Options.Other "ResolveImplicitsHook"
   then BU.print1 "///////////////////ResolveImplicitsHook: discharge_guard'\n\
@@ -5146,16 +5150,19 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option g
   let g = simplify_guard_full_norm env g in
   match g.guard_f with
   | Trivial ->
-    diag_doc [text "Query formula was trivial"];
+    if debug then
+      diag_doc [text "Query formula was trivial"];
     Some ret_g
 
   | NonTrivial vc when not (Env.should_verify env) ->
     // GM: not sure if this is the right place for this check.
-    diag_doc [text "Skipping VC because verification is disabled"];
+    if debug then
+      diag_doc [text "Skipping VC because verification is disabled"];
     Some ret_g
 
   | NonTrivial vc when not use_smt ->
-    diag_doc [text "Cannot solve without SMT:" ^/^ pp vc];
+    if debug then
+      diag_doc [text "Cannot solve without SMT:" ^/^ pp vc];
     None
 
   | NonTrivial vc ->

@@ -1904,9 +1904,11 @@ and (tc_maybe_toplevel_term :
           let uu___3 =
             let uu___4 = FStar_TypeChecker_Env.get_range env1 in
             FStar_Compiler_Effect.op_Less_Bar
-              FStar_Compiler_Range_Ops.string_of_range uu___4 in
+              (FStar_Class_Show.show FStar_Compiler_Range_Ops.show_range)
+              uu___4 in
           let uu___4 = FStar_Syntax_Print.tag_of_term top in
-          let uu___5 = FStar_Syntax_Print.term_to_string top in
+          let uu___5 =
+            FStar_Class_Show.show FStar_Syntax_Print.showable_term top in
           FStar_Compiler_Util.print3 "Typechecking %s (%s): %s\n" uu___3
             uu___4 uu___5
         else ());
@@ -6275,12 +6277,14 @@ and (tc_abs :
                             FStar_Compiler_Util.string_of_bool use_eq in
                           Prims.strcat ", use_eq = " uu___6 in
                         Prims.strcat uu___4 uu___5 in
+                  let uu___4 =
+                    FStar_Class_Show.show
+                      (FStar_Class_Show.printableshow
+                         FStar_Class_Printable.printable_bool)
+                      env1.FStar_TypeChecker_Env.top_level in
                   FStar_Compiler_Util.print2
                     "!!!!!!!!!!!!!!!Expected type is (%s), top_level=%s\n"
-                    uu___3
-                    (if env1.FStar_TypeChecker_Env.top_level
-                     then "true"
-                     else "false")
+                    uu___3 uu___4
                 else ());
                (let uu___2 = tc_abs_expected_function_typ env1 bs topt body in
                 match uu___2 with
@@ -6587,61 +6591,32 @@ and (tc_abs :
                               FStar_Compiler_Util.print1
                                 "tc_abs: guard_body: %s\n" uu___8
                             else ());
-                           (let guard =
-                              let uu___7 =
-                                env1.FStar_TypeChecker_Env.top_level ||
-                                  (let uu___8 =
-                                     let uu___9 =
-                                       FStar_Ident.string_of_lid
-                                         env1.FStar_TypeChecker_Env.curmodule in
-                                     FStar_Options.should_verify uu___9 in
-                                   Prims.op_Negation uu___8) in
-                              if uu___7
+                           (let guard_body1 =
+                              if env1.FStar_TypeChecker_Env.top_level
                               then
-                                (if
-                                   env1.FStar_TypeChecker_Env.lax ||
-                                     env1.FStar_TypeChecker_Env.phase1
-                                 then
-                                   let uu___8 =
-                                     FStar_TypeChecker_Rel.discharge_guard
-                                       env1 g_env in
-                                   let uu___9 =
-                                     FStar_TypeChecker_Rel.discharge_guard
-                                       envbody1 guard_body in
-                                   FStar_TypeChecker_Env.conj_guard uu___8
-                                     uu___9
-                                 else
-                                   (let uu___9 =
-                                      FStar_TypeChecker_Common.split_guard
-                                        g_env in
-                                    match uu___9 with
-                                    | (g_env1, g_env_logical) ->
-                                        let uu___10 =
-                                          FStar_TypeChecker_Common.split_guard
-                                            guard_body in
-                                        (match uu___10 with
-                                         | (guard_body1, guard_body_logical)
-                                             ->
-                                             ((let uu___12 =
-                                                 FStar_TypeChecker_Env.conj_guard
-                                                   g_env1 guard_body1 in
-                                               FStar_TypeChecker_Rel.force_trivial_guard
-                                                 env1 uu___12);
-                                              FStar_TypeChecker_Rel.force_trivial_guard
-                                                env1 g_env_logical;
-                                              FStar_TypeChecker_Rel.force_trivial_guard
-                                                envbody1 guard_body_logical;
-                                              FStar_TypeChecker_Env.trivial_guard))))
-                              else
-                                (let guard1 =
-                                   let uu___9 =
-                                     FStar_TypeChecker_Env.close_guard
-                                       envbody1
-                                       (FStar_Compiler_List.op_At bs1
-                                          letrec_binders) guard_body in
-                                   FStar_TypeChecker_Env.conj_guard g_env
-                                     uu___9 in
-                                 guard1) in
+                                ((let uu___8 =
+                                    FStar_Compiler_Effect.op_Less_Bar
+                                      (FStar_TypeChecker_Env.debug env1)
+                                      FStar_Options.Medium in
+                                  if uu___8
+                                  then
+                                    let uu___9 =
+                                      FStar_TypeChecker_Rel.guard_to_string
+                                        env1 guard_body in
+                                    FStar_Compiler_Util.print1
+                                      "tc_abs: FORCING guard_body: %s\n"
+                                      uu___9
+                                  else ());
+                                 FStar_TypeChecker_Rel.discharge_guard
+                                   envbody1 guard_body)
+                              else guard_body in
+                            let guard =
+                              let guard_body2 =
+                                FStar_TypeChecker_Env.close_guard envbody1
+                                  (FStar_Compiler_List.op_At bs1
+                                     letrec_binders) guard_body1 in
+                              FStar_TypeChecker_Env.conj_guard g_env
+                                guard_body2 in
                             let guard1 =
                               FStar_TypeChecker_Util.close_guard_implicits
                                 env1 false bs1 guard in

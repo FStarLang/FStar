@@ -14459,18 +14459,19 @@ let (do_discharge_vc :
                (FStar_TypeChecker_Env.debug env)
                (FStar_Options.Other "Discharge")) in
         let diag_doc =
-          if debug1
-          then
-            let uu___ = FStar_TypeChecker_Env.get_range env in
-            FStar_Errors.diag_doc uu___
-          else (fun uu___1 -> ()) in
-        (let uu___1 =
-           let uu___2 =
-             let uu___3 = FStar_Errors_Msg.text "Checking VC:" in
-             let uu___4 = FStar_Class_PP.pp FStar_Syntax_Print.pretty_term vc in
-             FStar_Pprint.op_Hat_Slash_Hat uu___3 uu___4 in
-           [uu___2] in
-         diag_doc uu___1);
+          let uu___ = FStar_TypeChecker_Env.get_range env in
+          FStar_Errors.diag_doc uu___ in
+        if debug1
+        then
+          (let uu___1 =
+             let uu___2 =
+               let uu___3 = FStar_Errors_Msg.text "Checking VC:" in
+               let uu___4 =
+                 FStar_Class_PP.pp FStar_Syntax_Print.pretty_term vc in
+               FStar_Pprint.op_Hat_Slash_Hat uu___3 uu___4 in
+             [uu___2] in
+           diag_doc uu___1)
+        else ();
         (let vcs =
            let uu___1 = FStar_Options.use_tactics () in
            if uu___1
@@ -14483,20 +14484,23 @@ let (do_discharge_vc :
                   (let vcs1 =
                      (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.preprocess
                        env vc in
-                   (let uu___5 =
-                      let uu___6 =
-                        let uu___7 =
-                          FStar_Errors_Msg.text
-                            "Tactic preprocessing produced" in
-                        let uu___8 =
-                          let uu___9 =
-                            FStar_Class_PP.pp FStar_Class_PP.pp_int
-                              (FStar_Compiler_List.length vcs1) in
-                          let uu___10 = FStar_Errors_Msg.text "goals" in
-                          FStar_Pprint.op_Hat_Hat uu___9 uu___10 in
-                        FStar_Pprint.op_Hat_Hat uu___7 uu___8 in
-                      [uu___6] in
-                    diag_doc uu___5);
+                   if debug1
+                   then
+                     (let uu___5 =
+                        let uu___6 =
+                          let uu___7 =
+                            FStar_Errors_Msg.text
+                              "Tactic preprocessing produced" in
+                          let uu___8 =
+                            let uu___9 =
+                              FStar_Class_PP.pp FStar_Class_PP.pp_int
+                                (FStar_Compiler_List.length vcs1) in
+                            let uu___10 = FStar_Errors_Msg.text "goals" in
+                            FStar_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
+                          FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                        [uu___6] in
+                      diag_doc uu___5)
+                   else ();
                    (let vcs2 =
                       FStar_Compiler_Effect.op_Bar_Greater vcs1
                         (FStar_Compiler_List.map
@@ -14537,12 +14541,15 @@ let (do_discharge_vc :
                                       goal in
                                   (match uu___6 with
                                    | FStar_TypeChecker_Common.Trivial ->
-                                       ((let uu___8 =
-                                           let uu___9 =
-                                             FStar_Errors_Msg.text
-                                               "Goal completely solved by tactic\n" in
-                                           [uu___9] in
-                                         diag_doc uu___8);
+                                       (if debug1
+                                        then
+                                          (let uu___8 =
+                                             let uu___9 =
+                                               FStar_Errors_Msg.text
+                                                 "Goal completely solved by tactic\n" in
+                                             [uu___9] in
+                                           diag_doc uu___8)
+                                        else ();
                                         [])
                                    | FStar_TypeChecker_Common.NonTrivial
                                        goal1 -> [(env1, goal1, opts)]))) in
@@ -14582,17 +14589,20 @@ let (do_discharge_vc :
                      FStar_Options.with_saved_options
                        (fun uu___2 ->
                           FStar_Options.set opts;
-                          (let uu___5 =
-                             let uu___6 =
-                               let uu___7 =
-                                 FStar_Errors_Msg.text
-                                   "Before calling solver, VC=:" in
-                               let uu___8 =
-                                 FStar_Class_PP.pp
-                                   FStar_Syntax_Print.pretty_term goal in
-                               FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
-                             [uu___6] in
-                           diag_doc uu___5);
+                          if debug1
+                          then
+                            (let uu___5 =
+                               let uu___6 =
+                                 let uu___7 =
+                                   FStar_Errors_Msg.text
+                                     "Before calling solver, VC =" in
+                                 let uu___8 =
+                                   FStar_Class_PP.pp
+                                     FStar_Syntax_Print.pretty_term goal in
+                                 FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                               [uu___6] in
+                             diag_doc uu___5)
+                          else ();
                           (env1.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.solve
                             use_env_range_msg env1 goal))))
 let (discharge_guard' :
@@ -14618,11 +14628,8 @@ let (discharge_guard' :
                  (FStar_TypeChecker_Env.debug env)
                  (FStar_Options.Other "Disch")) in
           let diag_doc =
-            if debug1
-            then
-              let uu___ = FStar_TypeChecker_Env.get_range env in
-              FStar_Errors.diag_doc uu___
-            else (fun uu___1 -> ()) in
+            let uu___ = FStar_TypeChecker_Env.get_range env in
+            FStar_Errors.diag_doc uu___ in
           (let uu___1 =
              FStar_Compiler_Effect.op_Less_Bar
                (FStar_TypeChecker_Env.debug env)
@@ -14655,33 +14662,42 @@ let (discharge_guard' :
            let g2 = simplify_guard_full_norm env g1 in
            match g2.FStar_TypeChecker_Common.guard_f with
            | FStar_TypeChecker_Common.Trivial ->
-               ((let uu___2 =
-                   let uu___3 =
-                     FStar_Errors_Msg.text "Query formula was trivial" in
-                   [uu___3] in
-                 diag_doc uu___2);
+               (if debug1
+                then
+                  (let uu___2 =
+                     let uu___3 =
+                       FStar_Errors_Msg.text "Query formula was trivial" in
+                     [uu___3] in
+                   diag_doc uu___2)
+                else ();
                 FStar_Pervasives_Native.Some ret_g)
            | FStar_TypeChecker_Common.NonTrivial vc when
                let uu___1 = FStar_TypeChecker_Env.should_verify env in
                Prims.op_Negation uu___1 ->
-               ((let uu___2 =
-                   let uu___3 =
-                     FStar_Errors_Msg.text
-                       "Skipping VC because verification is disabled" in
-                   [uu___3] in
-                 diag_doc uu___2);
+               (if debug1
+                then
+                  (let uu___2 =
+                     let uu___3 =
+                       FStar_Errors_Msg.text
+                         "Skipping VC because verification is disabled" in
+                     [uu___3] in
+                   diag_doc uu___2)
+                else ();
                 FStar_Pervasives_Native.Some ret_g)
            | FStar_TypeChecker_Common.NonTrivial vc when
                Prims.op_Negation use_smt ->
-               ((let uu___2 =
-                   let uu___3 =
-                     let uu___4 =
-                       FStar_Errors_Msg.text "Cannot solve without SMT:" in
-                     let uu___5 =
-                       FStar_Class_PP.pp FStar_Syntax_Print.pretty_term vc in
-                     FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
-                   [uu___3] in
-                 diag_doc uu___2);
+               (if debug1
+                then
+                  (let uu___2 =
+                     let uu___3 =
+                       let uu___4 =
+                         FStar_Errors_Msg.text "Cannot solve without SMT:" in
+                       let uu___5 =
+                         FStar_Class_PP.pp FStar_Syntax_Print.pretty_term vc in
+                       FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                     [uu___3] in
+                   diag_doc uu___2)
+                else ();
                 FStar_Pervasives_Native.None)
            | FStar_TypeChecker_Common.NonTrivial vc ->
                (do_discharge_vc use_env_range_msg env vc;
