@@ -2614,6 +2614,18 @@ and (desugar_term_maybe_top :
                 Prims.strcat "Unexpected universe variable " uu___3 in
               (FStar_Errors_Codes.Fatal_UnexpectedUniverseVariable, uu___2) in
             FStar_Errors.raise_error uu___1 top.FStar_Parser_AST.range
+        | FStar_Parser_AST.Op (s, f::e::[]) when
+            let uu___1 = FStar_Ident.string_of_id s in uu___1 = "<|" ->
+            let uu___1 =
+              FStar_Parser_AST.mkApp f [(e, FStar_Parser_AST.Nothing)]
+                top.FStar_Parser_AST.range in
+            desugar_term_maybe_top top_level env uu___1
+        | FStar_Parser_AST.Op (s, e::f::[]) when
+            let uu___1 = FStar_Ident.string_of_id s in uu___1 = "|>" ->
+            let uu___1 =
+              FStar_Parser_AST.mkApp f [(e, FStar_Parser_AST.Nothing)]
+                top.FStar_Parser_AST.range in
+            desugar_term_maybe_top top_level env uu___1
         | FStar_Parser_AST.Op (s, args) ->
             let uu___1 = op_as_term env (FStar_Compiler_List.length args) s in
             (match uu___1 with

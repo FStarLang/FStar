@@ -1484,8 +1484,8 @@ let (double_star : FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) =
         [uu___1] in
       let uu___1 = FStar_Syntax_Syntax.mk_Total FStar_Syntax_Util.ktype0 in
       FStar_Syntax_Util.arrow uu___ uu___1 in
-    let uu___ = FStar_Compiler_Effect.op_Bar_Greater typ star_once in
-    FStar_Compiler_Effect.op_Less_Bar star_once uu___
+    let uu___ = FStar_Compiler_Effect.op_Less_Bar star_once typ in
+    FStar_Compiler_Effect.op_Bar_Greater uu___ star_once
 let rec (mk_star_to_type :
   (FStar_Syntax_Syntax.term' ->
      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
