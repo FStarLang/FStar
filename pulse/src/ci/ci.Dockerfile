@@ -11,6 +11,9 @@ FROM ocaml/opam:ubuntu-22.04-ocaml-$ocaml_version
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | sed 's,https://deb.nodesource.com,http://deb.nodesource.com,' | sudo -E bash -
 RUN sudo apt-get install -y --no-install-recommends nodejs
 
+# install rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
 ARG opamthreads=24
 
 ADD --chown=opam:opam ./ steel/
