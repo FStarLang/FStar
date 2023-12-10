@@ -248,151 +248,232 @@ let unembed_tactic_0 :
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Embeddings_Base.norm_cb -> 'b FStar_Tactics_Monad.tac
   =
-  fun eb ->
-    fun embedded_tac_b ->
-      fun ncb ->
-        FStar_Tactics_Monad.bind FStar_Tactics_Monad.get
-          (fun proof_state ->
-             let rng = embedded_tac_b.FStar_Syntax_Syntax.pos in
-             let embedded_tac_b1 =
-               FStar_Syntax_Util.mk_reify embedded_tac_b
-                 (FStar_Pervasives_Native.Some
-                    FStar_Parser_Const.effect_TAC_lid) in
-             let tm =
-               let uu___ =
-                 let uu___1 =
-                   let uu___2 =
-                     embed FStar_Tactics_Embedding.e_proofstate rng
-                       proof_state ncb in
-                   FStar_Syntax_Syntax.as_arg uu___2 in
-                 [uu___1] in
-               FStar_Syntax_Syntax.mk_Tm_app embedded_tac_b1 uu___ rng in
-             let steps =
-               [FStar_TypeChecker_Env.Weak;
-               FStar_TypeChecker_Env.Reify;
-               FStar_TypeChecker_Env.UnfoldUntil
-                 FStar_Syntax_Syntax.delta_constant;
-               FStar_TypeChecker_Env.UnfoldTac;
-               FStar_TypeChecker_Env.Primops;
-               FStar_TypeChecker_Env.Unascribe] in
-             let norm_f =
-               let uu___ = FStar_Options.tactics_nbe () in
-               if uu___
-               then FStar_TypeChecker_NBE.normalize
-               else
-                 FStar_TypeChecker_Normalize.normalize_with_primitive_steps in
-             let result =
-               let uu___ = primitive_steps () in
-               norm_f uu___ steps
-                 proof_state.FStar_Tactics_Types.main_context tm in
-             let res =
-               let uu___ = FStar_Tactics_Embedding.e_result eb in
-               unembed uu___ result ncb in
-             match res with
-             | FStar_Pervasives_Native.Some (FStar_Tactics_Result.Success
-                 (b1, ps)) ->
-                 let uu___ = FStar_Tactics_Monad.set ps in
-                 FStar_Tactics_Monad.bind uu___
-                   (fun uu___1 -> FStar_Tactics_Monad.ret b1)
-             | FStar_Pervasives_Native.Some (FStar_Tactics_Result.Failed
-                 (e, ps)) ->
-                 let uu___ = FStar_Tactics_Monad.set ps in
-                 FStar_Tactics_Monad.bind uu___
-                   (fun uu___1 -> FStar_Tactics_Monad.traise e)
-             | FStar_Pervasives_Native.None ->
-                 let h_result = t_head_of result in
-                 let maybe_admit_tip =
-                   let has_admit = FStar_Compiler_Util.mk_ref false in
-                   let uu___ =
-                     FStar_Syntax_Visit.visit_term
-                       (fun t ->
-                          match t.FStar_Syntax_Syntax.n with
-                          | FStar_Syntax_Syntax.Tm_fvar fv when
-                              FStar_Syntax_Syntax.fv_eq_lid fv
-                                FStar_Parser_Const.admit_lid
-                              ->
-                              (FStar_Compiler_Effect.op_Colon_Equals
-                                 has_admit true;
-                               FStar_Syntax_Syntax.tun)
-                          | uu___1 -> FStar_Syntax_Syntax.tun) h_result in
-                   let uu___1 = FStar_Compiler_Effect.op_Bang has_admit in
-                   if uu___1
-                   then
-                     FStar_Pprint.doc_of_string
-                       "The term contains an `admit`, which will not reduce. Did you mean `tadmit()`?"
-                   else FStar_Pprint.empty in
-                 let uu___ =
-                   let uu___1 =
-                     let uu___2 = FStar_Errors_Raise.str "Tactic got stuck!" in
-                     let uu___3 =
-                       let uu___4 =
-                         let uu___5 =
-                           FStar_Errors_Raise.str "Reduction stopped at: " in
-                         let uu___6 = FStar_Errors_Raise.ttd h_result in
-                         FStar_Pprint.op_Hat_Hat uu___5 uu___6 in
-                       [uu___4; maybe_admit_tip] in
-                     uu___2 :: uu___3 in
-                   (FStar_Errors_Codes.Fatal_TacticGotStuck, uu___1) in
-                 FStar_Errors_Raise.error_doc uu___
-                   (proof_state.FStar_Tactics_Types.main_context).FStar_TypeChecker_Env.range)
+  fun uu___2 ->
+    fun uu___1 ->
+      fun uu___ ->
+        (fun eb ->
+           fun embedded_tac_b ->
+             fun ncb ->
+               Obj.magic
+                 (FStar_Class_Monad.op_let_Bang FStar_Tactics_Monad.monad_tac
+                    () () (Obj.magic FStar_Tactics_Monad.get)
+                    (fun uu___ ->
+                       (fun proof_state ->
+                          let proof_state = Obj.magic proof_state in
+                          let rng = embedded_tac_b.FStar_Syntax_Syntax.pos in
+                          let embedded_tac_b1 =
+                            FStar_Syntax_Util.mk_reify embedded_tac_b
+                              (FStar_Pervasives_Native.Some
+                                 FStar_Parser_Const.effect_TAC_lid) in
+                          let tm =
+                            let uu___ =
+                              let uu___1 =
+                                let uu___2 =
+                                  embed FStar_Tactics_Embedding.e_proofstate
+                                    rng proof_state ncb in
+                                FStar_Syntax_Syntax.as_arg uu___2 in
+                              [uu___1] in
+                            FStar_Syntax_Syntax.mk_Tm_app embedded_tac_b1
+                              uu___ rng in
+                          let steps =
+                            [FStar_TypeChecker_Env.Weak;
+                            FStar_TypeChecker_Env.Reify;
+                            FStar_TypeChecker_Env.UnfoldUntil
+                              FStar_Syntax_Syntax.delta_constant;
+                            FStar_TypeChecker_Env.UnfoldTac;
+                            FStar_TypeChecker_Env.Primops;
+                            FStar_TypeChecker_Env.Unascribe] in
+                          let norm_f =
+                            let uu___ = FStar_Options.tactics_nbe () in
+                            if uu___
+                            then FStar_TypeChecker_NBE.normalize
+                            else
+                              FStar_TypeChecker_Normalize.normalize_with_primitive_steps in
+                          let result =
+                            let uu___ = primitive_steps () in
+                            norm_f uu___ steps
+                              proof_state.FStar_Tactics_Types.main_context tm in
+                          let res =
+                            let uu___ = FStar_Tactics_Embedding.e_result eb in
+                            unembed uu___ result ncb in
+                          match res with
+                          | FStar_Pervasives_Native.Some
+                              (FStar_Tactics_Result.Success (b1, ps)) ->
+                              Obj.magic
+                                (Obj.repr
+                                   (let uu___ = FStar_Tactics_Monad.set ps in
+                                    FStar_Class_Monad.op_let_Bang
+                                      FStar_Tactics_Monad.monad_tac () ()
+                                      uu___
+                                      (fun uu___1 ->
+                                         (fun uu___1 ->
+                                            let uu___1 = Obj.magic uu___1 in
+                                            Obj.magic
+                                              (FStar_Class_Monad.return
+                                                 FStar_Tactics_Monad.monad_tac
+                                                 () (Obj.magic b1))) uu___1)))
+                          | FStar_Pervasives_Native.Some
+                              (FStar_Tactics_Result.Failed (e, ps)) ->
+                              Obj.magic
+                                (Obj.repr
+                                   (let uu___ = FStar_Tactics_Monad.set ps in
+                                    FStar_Class_Monad.op_let_Bang
+                                      FStar_Tactics_Monad.monad_tac () ()
+                                      uu___
+                                      (fun uu___1 ->
+                                         (fun uu___1 ->
+                                            let uu___1 = Obj.magic uu___1 in
+                                            Obj.magic
+                                              (FStar_Tactics_Monad.traise e))
+                                           uu___1)))
+                          | FStar_Pervasives_Native.None ->
+                              Obj.magic
+                                (Obj.repr
+                                   (let h_result = t_head_of result in
+                                    let maybe_admit_tip =
+                                      let has_admit =
+                                        FStar_Compiler_Util.mk_ref false in
+                                      let uu___ =
+                                        FStar_Syntax_Visit.visit_term
+                                          (fun t ->
+                                             match t.FStar_Syntax_Syntax.n
+                                             with
+                                             | FStar_Syntax_Syntax.Tm_fvar fv
+                                                 when
+                                                 FStar_Syntax_Syntax.fv_eq_lid
+                                                   fv
+                                                   FStar_Parser_Const.admit_lid
+                                                 ->
+                                                 (FStar_Compiler_Effect.op_Colon_Equals
+                                                    has_admit true;
+                                                  FStar_Syntax_Syntax.tun)
+                                             | uu___1 ->
+                                                 FStar_Syntax_Syntax.tun)
+                                          h_result in
+                                      let uu___1 =
+                                        FStar_Compiler_Effect.op_Bang
+                                          has_admit in
+                                      if uu___1
+                                      then
+                                        FStar_Pprint.doc_of_string
+                                          "The term contains an `admit`, which will not reduce. Did you mean `tadmit()`?"
+                                      else FStar_Pprint.empty in
+                                    let uu___ =
+                                      let uu___1 =
+                                        let uu___2 =
+                                          FStar_Errors_Raise.str
+                                            "Tactic got stuck!" in
+                                        let uu___3 =
+                                          let uu___4 =
+                                            let uu___5 =
+                                              FStar_Errors_Raise.str
+                                                "Reduction stopped at: " in
+                                            let uu___6 =
+                                              FStar_Errors_Raise.ttd h_result in
+                                            FStar_Pprint.op_Hat_Hat uu___5
+                                              uu___6 in
+                                          [uu___4; maybe_admit_tip] in
+                                        uu___2 :: uu___3 in
+                                      (FStar_Errors_Codes.Fatal_TacticGotStuck,
+                                        uu___1) in
+                                    FStar_Errors_Raise.error_doc uu___
+                                      (proof_state.FStar_Tactics_Types.main_context).FStar_TypeChecker_Env.range)))
+                         uu___))) uu___2 uu___1 uu___
 let unembed_tactic_nbe_0 :
   'b .
     'b FStar_TypeChecker_NBETerm.embedding ->
       FStar_TypeChecker_NBETerm.nbe_cbs ->
         FStar_TypeChecker_NBETerm.t -> 'b FStar_Tactics_Monad.tac
   =
-  fun eb ->
-    fun cb ->
-      fun embedded_tac_b ->
-        FStar_Tactics_Monad.bind FStar_Tactics_Monad.get
-          (fun proof_state ->
-             let result =
-               let uu___ =
-                 let uu___1 =
-                   let uu___2 =
-                     FStar_TypeChecker_NBETerm.embed
-                       FStar_Tactics_Embedding.e_proofstate_nbe cb
-                       proof_state in
-                   FStar_TypeChecker_NBETerm.as_arg uu___2 in
-                 [uu___1] in
-               FStar_TypeChecker_NBETerm.iapp_cb cb embedded_tac_b uu___ in
-             let res =
-               let uu___ = FStar_Tactics_Embedding.e_result_nbe eb in
-               FStar_TypeChecker_NBETerm.unembed uu___ cb result in
-             match res with
-             | FStar_Pervasives_Native.Some (FStar_Tactics_Result.Success
-                 (b1, ps)) ->
-                 let uu___ = FStar_Tactics_Monad.set ps in
-                 FStar_Tactics_Monad.bind uu___
-                   (fun uu___1 -> FStar_Tactics_Monad.ret b1)
-             | FStar_Pervasives_Native.Some (FStar_Tactics_Result.Failed
-                 (e, ps)) ->
-                 let uu___ = FStar_Tactics_Monad.set ps in
-                 FStar_Tactics_Monad.bind uu___
-                   (fun uu___1 -> FStar_Tactics_Monad.traise e)
-             | FStar_Pervasives_Native.None ->
-                 let uu___ =
-                   let uu___1 =
-                     let uu___2 =
-                       FStar_Errors_Raise.str "Tactic got stuck (in NBE)!" in
-                     let uu___3 =
-                       let uu___4 =
-                         FStar_Errors_Msg.text
-                           "Please file a bug report with a minimal reproduction of this issue." in
-                       let uu___5 =
-                         let uu___6 =
-                           let uu___7 = FStar_Errors_Raise.str "Result = " in
-                           let uu___8 =
-                             let uu___9 =
-                               FStar_TypeChecker_NBETerm.t_to_string result in
-                             FStar_Errors_Raise.str uu___9 in
-                           FStar_Pprint.op_Hat_Hat uu___7 uu___8 in
-                         [uu___6] in
-                       uu___4 :: uu___5 in
-                     uu___2 :: uu___3 in
-                   (FStar_Errors_Codes.Fatal_TacticGotStuck, uu___1) in
-                 FStar_Errors_Raise.error_doc uu___
-                   (proof_state.FStar_Tactics_Types.main_context).FStar_TypeChecker_Env.range)
+  fun uu___2 ->
+    fun uu___1 ->
+      fun uu___ ->
+        (fun eb ->
+           fun cb ->
+             fun embedded_tac_b ->
+               Obj.magic
+                 (FStar_Class_Monad.op_let_Bang FStar_Tactics_Monad.monad_tac
+                    () () (Obj.magic FStar_Tactics_Monad.get)
+                    (fun uu___ ->
+                       (fun proof_state ->
+                          let proof_state = Obj.magic proof_state in
+                          let result =
+                            let uu___ =
+                              let uu___1 =
+                                let uu___2 =
+                                  FStar_TypeChecker_NBETerm.embed
+                                    FStar_Tactics_Embedding.e_proofstate_nbe
+                                    cb proof_state in
+                                FStar_TypeChecker_NBETerm.as_arg uu___2 in
+                              [uu___1] in
+                            FStar_TypeChecker_NBETerm.iapp_cb cb
+                              embedded_tac_b uu___ in
+                          let res =
+                            let uu___ =
+                              FStar_Tactics_Embedding.e_result_nbe eb in
+                            FStar_TypeChecker_NBETerm.unembed uu___ cb result in
+                          match res with
+                          | FStar_Pervasives_Native.Some
+                              (FStar_Tactics_Result.Success (b1, ps)) ->
+                              Obj.magic
+                                (Obj.repr
+                                   (let uu___ = FStar_Tactics_Monad.set ps in
+                                    FStar_Class_Monad.op_let_Bang
+                                      FStar_Tactics_Monad.monad_tac () ()
+                                      uu___
+                                      (fun uu___1 ->
+                                         (fun uu___1 ->
+                                            let uu___1 = Obj.magic uu___1 in
+                                            Obj.magic
+                                              (FStar_Class_Monad.return
+                                                 FStar_Tactics_Monad.monad_tac
+                                                 () (Obj.magic b1))) uu___1)))
+                          | FStar_Pervasives_Native.Some
+                              (FStar_Tactics_Result.Failed (e, ps)) ->
+                              Obj.magic
+                                (Obj.repr
+                                   (let uu___ = FStar_Tactics_Monad.set ps in
+                                    FStar_Class_Monad.op_let_Bang
+                                      FStar_Tactics_Monad.monad_tac () ()
+                                      uu___
+                                      (fun uu___1 ->
+                                         (fun uu___1 ->
+                                            let uu___1 = Obj.magic uu___1 in
+                                            Obj.magic
+                                              (FStar_Tactics_Monad.traise e))
+                                           uu___1)))
+                          | FStar_Pervasives_Native.None ->
+                              Obj.magic
+                                (Obj.repr
+                                   (let uu___ =
+                                      let uu___1 =
+                                        let uu___2 =
+                                          FStar_Errors_Raise.str
+                                            "Tactic got stuck (in NBE)!" in
+                                        let uu___3 =
+                                          let uu___4 =
+                                            FStar_Errors_Msg.text
+                                              "Please file a bug report with a minimal reproduction of this issue." in
+                                          let uu___5 =
+                                            let uu___6 =
+                                              let uu___7 =
+                                                FStar_Errors_Raise.str
+                                                  "Result = " in
+                                              let uu___8 =
+                                                let uu___9 =
+                                                  FStar_TypeChecker_NBETerm.t_to_string
+                                                    result in
+                                                FStar_Errors_Raise.str uu___9 in
+                                              FStar_Pprint.op_Hat_Hat uu___7
+                                                uu___8 in
+                                            [uu___6] in
+                                          uu___4 :: uu___5 in
+                                        uu___2 :: uu___3 in
+                                      (FStar_Errors_Codes.Fatal_TacticGotStuck,
+                                        uu___1) in
+                                    FStar_Errors_Raise.error_doc uu___
+                                      (proof_state.FStar_Tactics_Types.main_context).FStar_TypeChecker_Env.range)))
+                         uu___))) uu___2 uu___1 uu___
 let unembed_tactic_1 :
   'a 'r .
     'a FStar_Syntax_Embeddings_Base.embedding ->
@@ -524,7 +605,13 @@ let e_tactic_nbe_1 :
              let uu___2 = unembed_tactic_nbe_1 ea er cb t in
              FStar_Pervasives_Native.Some uu___2) uu___ uu___1
 let unseal : 'uuuuu 'a . 'uuuuu -> 'a -> 'a FStar_Tactics_Monad.tac =
-  fun _typ -> fun x -> FStar_Tactics_Monad.ret x
+  fun uu___1 ->
+    fun uu___ ->
+      (fun _typ ->
+         fun x ->
+           Obj.magic
+             (FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac ()
+                (Obj.magic x))) uu___1 uu___
 let (unseal_step : FStar_TypeChecker_Primops.primitive_step) =
   let s =
     let uu___ =
