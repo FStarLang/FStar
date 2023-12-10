@@ -573,7 +573,7 @@ let e_subst_elt =
         | DB (i, x) ->
             S.mk_Tm_app ref_DB.t [
                 S.as_arg (embed rng i);
-                S.as_arg (embed #_ #e_bv rng x);
+                S.as_arg (embed #_ #e_namedv rng x);
                ]
                rng
 

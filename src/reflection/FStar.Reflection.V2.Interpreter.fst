@@ -141,8 +141,8 @@ instance e_order           : dualemb FStar.Order.order  = Mkdualemb RE.e_order N
 instance e_term            : dualemb term               = Mkdualemb RE.e_term NRE.e_term
 instance e_term_view       : dualemb RD.term_view       = Mkdualemb RE.e_term_view NRE.e_term_view
 instance e_fv              : dualemb fv                 = Mkdualemb RE.e_fv NRE.e_fv
-instance e_bv              : dualemb bv                 = Mkdualemb RE.e_bv NRE.e_bv
-instance e_namedv          : dualemb RE.namedv          = Mkdualemb RE.e_namedv NRE.e_namedv
+let      e_bv              : dualemb bv                 = Mkdualemb RE.e_bv NRE.e_bv
+let      e_namedv          : dualemb RE.namedv          = Mkdualemb RE.e_namedv NRE.e_namedv
 instance e_bv_view         : dualemb RD.bv_view         = Mkdualemb RE.e_bv_view NRE.e_bv_view
 instance e_namedv_view     : dualemb RD.namedv_view     = Mkdualemb RE.e_namedv_view NRE.e_namedv_view
 instance e_binding         : dualemb RD.binding         = Mkdualemb RE.e_binding NRE.e_binding
@@ -248,10 +248,18 @@ let reflection_primops : list PO.primitive_step = [
   mk1 "pack_sigelt" RB.pack_sigelt;
   mk1 "inspect_lb" RB.inspect_lb;
   mk1 "pack_lb" RB.pack_lb;
-  mk1 "inspect_namedv" RB.inspect_namedv;
-  mk1 "pack_namedv" RB.pack_namedv;
-  mk1 "inspect_bv" RB.inspect_bv;
-  mk1 "pack_bv" RB.pack_bv;
+  mk1 "inspect_namedv"
+    #e_namedv #e_namedv_view
+    RB.inspect_namedv;
+  mk1 "pack_namedv"
+    #e_namedv_view #e_namedv
+    RB.pack_namedv;
+  mk1 "inspect_bv"
+    #e_bv #e_bv_view
+    RB.inspect_bv;
+  mk1 "pack_bv"
+    #e_bv_view #e_bv
+    RB.pack_bv;
   mk1 "inspect_binder" RB.inspect_binder;
   mk1 "pack_binder" RB.pack_binder;
 
@@ -265,8 +273,12 @@ let reflection_primops : list PO.primitive_step = [
   mk2 "set_sigelt_quals" RB.set_sigelt_quals;
   mk2 "subst_term" RB.subst_term;
   mk2 "subst_comp" RB.subst_comp;
-  mk2 "compare_bv" RB.compare_bv;
-  mk2 "compare_namedv" RB.compare_namedv;
+  mk2 "compare_bv"
+    #e_bv #e_bv
+    RB.compare_bv;
+  mk2 "compare_namedv"
+    #e_namedv #e_namedv
+    RB.compare_namedv;
   mk2 "lookup_attr" RB.lookup_attr;
   mk1 "all_defs_in_env" RB.all_defs_in_env;
   mk2 "defs_in_module" RB.defs_in_module;
@@ -282,7 +294,9 @@ let reflection_primops : list PO.primitive_step = [
 
   mk1 "explode_qn" RB.explode_qn;
   mk2 "compare_string" RB.compare_string;
-  mk2 "push_namedv" RB.push_namedv;
+  mk2 "push_namedv"
+    #e_env #e_namedv
+    RB.push_namedv;
   mk1 "range_of_term" RB.range_of_term;
   mk1 "range_of_sigelt" RB.range_of_sigelt;
   mk1 "inspect_ident" RB.inspect_ident;

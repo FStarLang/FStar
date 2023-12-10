@@ -71,7 +71,7 @@ val arrow_as_prim_step_1:  embedding 'a
                         -> n_tvars:int
                         -> repr_f:Ident.lid
                         -> norm_cb
-                        -> (args -> option term)
+                        -> (universes -> args -> option term)
 
 val arrow_as_prim_step_2:  embedding 'a
                         -> embedding 'b
@@ -80,7 +80,7 @@ val arrow_as_prim_step_2:  embedding 'a
                         -> n_tvars:int
                         -> repr_f:Ident.lid
                         -> norm_cb
-                        -> (args -> option term)
+                        -> (universes -> args -> option term)
 
 val arrow_as_prim_step_3:  embedding 'a
                         -> embedding 'b
@@ -90,6 +90,6 @@ val arrow_as_prim_step_3:  embedding 'a
                         -> n_tvars:int
                         -> repr_f:Ident.lid
                         -> norm_cb
-                        -> (args -> option term)
+                        -> (universes -> args -> option term)
 
 val debug_wrap : string -> (unit -> 'a) -> 'a

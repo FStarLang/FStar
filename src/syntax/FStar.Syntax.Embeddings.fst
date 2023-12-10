@@ -1041,9 +1041,9 @@ let e_document : embedding Pprint.document = e_lazy Lazy_doc (S.fvar PC.document
 
 let arrow_as_prim_step_1 (ea:embedding 'a) (eb:embedding 'b)
                          (f:'a -> 'b) (n_tvars:int) (fv_lid:Ident.lid) norm
-   : args -> option term =
+   : universes -> args -> option term =
     let rng = Ident.range_of_lid fv_lid in
-    let f_wrapped args =
+    let f_wrapped _us args =
         let _tvar_args, rest_args = List.splitAt n_tvars args in
         //arity mismatches are handled by the caller
         let [(x, _)] = rest_args in
@@ -1062,9 +1062,9 @@ let arrow_as_prim_step_1 (ea:embedding 'a) (eb:embedding 'b)
 
 let arrow_as_prim_step_2 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c)
                          (f:'a -> 'b -> 'c) n_tvars fv_lid norm
-   : args -> option term =
+   : universes -> args -> option term =
     let rng = Ident.range_of_lid fv_lid in
-    let f_wrapped args =
+    let f_wrapped _us args =
         let _tvar_args, rest_args = List.splitAt n_tvars args in
         //arity mismatches are handled by the caller
         let [(x, _); (y, _)] = rest_args in
@@ -1085,9 +1085,9 @@ let arrow_as_prim_step_2 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c)
 let arrow_as_prim_step_3 (ea:embedding 'a) (eb:embedding 'b)
                          (ec:embedding 'c) (ed:embedding 'd)
                          (f:'a -> 'b -> 'c -> 'd) n_tvars fv_lid norm
-   : args -> option term =
+   : universes -> args -> option term =
     let rng = Ident.range_of_lid fv_lid in
-    let f_wrapped args =
+    let f_wrapped _us args =
         let _tvar_args, rest_args = List.splitAt n_tvars args in
         //arity mismatches are handled by the caller
         let [(x, _); (y, _); (z, _)] = rest_args in

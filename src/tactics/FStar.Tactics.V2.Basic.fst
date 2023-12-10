@@ -1963,9 +1963,6 @@ let rec init (l:list 'a) : list 'a =
     | [x] -> []
     | x::xs -> x :: init xs
 
-let binder_bv (b:binder) : tac bv =
-  return <| b.binder_bv
-
 let lget (ty:term) (k:string) : tac term = wrap_err "lget" <| (
     let! ps = get in
     match BU.psmap_try_find ps.local_state k with

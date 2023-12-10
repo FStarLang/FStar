@@ -25,6 +25,7 @@ function make_tactic_interp_def () {
     echo "    (er:embedding 'r)"
     echo "    (psc:PO.psc)"
     echo "    (ncb:norm_cb)"
+    echo "    (us:universes)"
     echo "    (args:args)"
     echo "  : option term"
     echo "  ="
@@ -60,6 +61,7 @@ function make_tactic_nbe_interp_def () {
     echo "    (e$i:NBET.embedding 't$i)"
     done
     echo "    (er:NBET.embedding 'r)"
+    echo "    (us:universes)"
     echo "    (args:NBET.args)"
     echo "  : option NBET.t"
     echo "  ="
@@ -95,6 +97,7 @@ function make_total_interp_def () {
     echo "    (er:embedding 'r)"
     echo "    (psc:PO.psc)"
     echo "    (ncb:norm_cb)"
+    echo "    (us:universes)"
     echo "    (args:args)"
     echo "  : option term"
     echo "  ="
@@ -128,6 +131,7 @@ function make_total_nbe_interp_def () {
     echo "    (e$i:NBET.embedding 't$i)"
     done
     echo "    (er:NBET.embedding 'r)"
+    echo "    (us:universes)"
     echo "    (args:NBET.args)"
     echo "  : option NBET.t"
     echo "  ="
@@ -173,8 +177,8 @@ function make_tac_step_def () {
     echo "    mk name $((n+1)) nunivs"
     echo -n "      (mk_tactic_interpretation_$n name t"
       for i in $(seq 1 $n); do echo -n " e$i"; done; echo " er)"
-    echo -n "      (fun cb args -> mk_tactic_nbe_interpretation_$n name cb nt"
-    for i in $(seq 1 $n); do echo -n " ne$i"; done; echo " ner (drop nunivs args))"
+    echo -n "      (fun cb us args -> mk_tactic_nbe_interpretation_$n name cb nt"
+    for i in $(seq 1 $n); do echo -n " ne$i"; done; echo " ner us (drop nunivs args))"
     echo
 }
 
@@ -203,8 +207,8 @@ function make_total_step_def () {
     echo "    mk name $n nunivs"
     echo -n "      (mk_total_interpretation_$n name f"
       for i in $(seq 1 $n); do echo -n " e$i"; done; echo " er)"
-    echo -n "      (fun cb args -> mk_total_nbe_interpretation_$n name cb nf"
-    for i in $(seq 1 $n); do echo -n " ne$i"; done; echo " ner (drop nunivs args))"
+    echo -n "      (fun cb us args -> mk_total_nbe_interpretation_$n name cb nf"
+    for i in $(seq 1 $n); do echo -n " ne$i"; done; echo " ner us (drop nunivs args))"
     echo
 }
 

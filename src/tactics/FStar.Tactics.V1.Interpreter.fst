@@ -73,7 +73,7 @@ let native_tactics_steps () =
     ; strong_reduction_ok          = s.strong_reduction_ok
     ; requires_binder_substitution = false // GM: Don't think we care about pretty-printing on native
     ; renorm_after                 = false
-    ; interpretation               = (fun psc cb _us t -> s.tactic psc cb t)
+    ; interpretation               = s.tactic
     ; interpretation_nbe           = fun _cb _us -> NBET.dummy_interp s.name
     }
   in

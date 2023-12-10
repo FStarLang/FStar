@@ -540,7 +540,7 @@ let e_list (ea:embedding 'a) =
   
 let e_string_list = e_list e_string
 
-let e_arrow (ea:embedding 'a) (eb:embedding 'b) : embedding ('a -> 'b) =
+let e_arrow (ea:embedding 'a) (eb:embedding 'b) : Prims.Tot (embedding ('a -> 'b)) =
     let etyp () = ET_fun(ea.emb_typ (), eb.emb_typ ()) in
     let em cb (f : 'a -> 'b) : t =
         lazy_embed etyp f (fun () ->
@@ -1004,8 +1004,8 @@ let division_modulus_op (op:Z.bigint -> Z.bigint -> Z.bigint) (args:args) : opti
 
 let arrow_as_prim_step_1 (ea:embedding 'a) (eb:embedding 'b)
                          (f:'a -> 'b) (n_tvars:int) (_fv_lid:Ident.lid) cb
-   : args -> option t =
-    let f_wrapped args =
+   : universes -> args -> option t =
+    let f_wrapped _us args =
         let _tvar_args, rest_args = List.splitAt n_tvars args in
         let x, _ = List.hd rest_args in //arity mismatches are handled by code that dispatches here
         BU.map_opt
@@ -1016,8 +1016,8 @@ let arrow_as_prim_step_1 (ea:embedding 'a) (eb:embedding 'b)
 
 let arrow_as_prim_step_2 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c)
                          (f:'a -> 'b -> 'c) (n_tvars:int) (_fv_lid:Ident.lid) cb
-   : args -> option t =
-    let f_wrapped args =
+   : universes -> args -> option t =
+    let f_wrapped _us args =
         let _tvar_args, rest_args = List.splitAt n_tvars args in
         let x, _ = List.hd rest_args in //arity mismatches are handled by code that dispatches here
         let y, _ = List.hd (List.tl rest_args) in
@@ -1031,8 +1031,8 @@ let arrow_as_prim_step_2 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c)
 let arrow_as_prim_step_3 (ea:embedding 'a) (eb:embedding 'b)
                          (ec:embedding 'c) (ed:embedding 'd)
                          (f:'a -> 'b -> 'c -> 'd) (n_tvars:int) (_fv_lid:Ident.lid) cb
-   : args -> option t =
-    let f_wrapped args =
+   : universes -> args -> option t =
+    let f_wrapped _us args =
         let _tvar_args, rest_args = List.splitAt n_tvars args in
         let x, _ = List.hd rest_args in //arity mismatches are handled by code that dispatches here
         let y, _ = List.hd (List.tl rest_args) in

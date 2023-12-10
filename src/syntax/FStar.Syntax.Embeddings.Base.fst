@@ -233,7 +233,7 @@ let e_lazy #a (k:lazy_kind) (ty : typ) : embedding a =
                 BU.format3 "Warning, lazy unembedding failed, tag mismatch.\n\t\
                             Expected %s, got %s\n\t\
                             t = %s."
-                            (show lkind) (show k) (show t0));
+                            (show k) (show lkind) (show t0));
       None
     | _ ->
       None
