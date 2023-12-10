@@ -218,16 +218,16 @@ function make_tac_step_decl () {
     for i in $(seq 2 $n); do echo -n " -> 't$i"; done
     echo " -> tac 'r) ->"
     for i in $(seq 1 $n); do
-    echo "  embedding 't$i> ->"
+    echo "  {|embedding 't$i|} ->"
     done
-    echo "  er:embedding 'r> ->"
+    echo "  {|embedding 'r|} ->"
     echo -n "  ('nt1"
     for i in $(seq 2 $n); do echo -n " -> 'nt$i"; done
     echo " -> tac 'nr) ->"
     for i in $(seq 1 $n); do
-    echo "  NBET.embedding 'nt$i> ->"
+    echo "  NBET.embedding 'nt$i ->"
     done
-    echo "  NBET.embedding 'nr> ->"
+    echo "  NBET.embedding 'nr ->"
     echo "  PO.primitive_step"
     echo
 }
@@ -242,16 +242,16 @@ function make_total_step_decl () {
     for i in $(seq 2 $n); do echo -n " -> 't$i"; done
     echo " -> 'r) ->"
     for i in $(seq 1 $n); do
-    echo "  embedding 't$i> ->"
+    echo "  {|embedding 't$i|} ->"
     done
-    echo "  embedding 'r> ->"
+    echo "  {|embedding 'r|} ->"
     echo -n "  ('nt1"
     for i in $(seq 2 $n); do echo -n " -> 'nt$i"; done
     echo " -> 'nr) ->"
     for i in $(seq 1 $n); do
-    echo "  NBET.embedding 'nt$i> ->"
+    echo "  NBET.embedding 'nt$i ->"
     done
-    echo "  NBET.embedding 'nr> ->"
+    echo "  NBET.embedding 'nr ->"
     echo "  PO.primitive_step"
     echo
 }
