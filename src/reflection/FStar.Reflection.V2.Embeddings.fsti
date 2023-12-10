@@ -54,16 +54,12 @@ instance val e_sigelt_view   : embedding sigelt_view
 instance val e_namedv_view   : embedding namedv_view
 instance val e_bv_view       : embedding bv_view
 instance val e_attribute     : embedding attribute
-instance val e_attributes    : embedding (list attribute) (* This seems rather silly, but `attributes` is a keyword *)
 instance val e_qualifier     : embedding RD.qualifier
-instance val e_qualifiers    : embedding (list RD.qualifier)
 instance val e_ident         : embedding Ident.ident
 instance val e_univ_name     : embedding univ_name
-instance val e_univ_names    : embedding (list univ_name)
 instance val e_universe      : embedding universe
 instance val e_universe_view : embedding universe_view
 instance val e_subst_elt     : embedding subst_elt
-instance val e_subst         : embedding (list subst_elt)
 
 (* Useful for embedding antiquoted terms. They are only used for the embedding part,
  * so this is a bit hackish. *)

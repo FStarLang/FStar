@@ -164,8 +164,7 @@ instance e_lb_view         : dualemb RD.lb_view         = Mkdualemb RE.e_lb_view
 instance e_env             : dualemb Env.env            = Mkdualemb RE.e_env NRE.e_env
 instance e_aqualv          : dualemb RD.aqualv          = Mkdualemb RE.e_aqualv NRE.e_aqualv
 instance e_vconfig         : dualemb VConfig.vconfig    = Mkdualemb EMB.e_vconfig NBET.e_vconfig
-instance e_attributes      : dualemb (list attribute)   = Mkdualemb RE.e_attributes NRE.e_attributes
-instance e_qualifiers      : dualemb RD.qualifiers      = Mkdualemb RE.e_qualifiers NRE.e_qualifiers
+instance e_qualifier       : dualemb RD.qualifier       = Mkdualemb RE.e_qualifier NRE.e_qualifier
 instance e_range           : dualemb Range.range              =
   Mkdualemb FStar.Syntax.Embeddings.e_range FStar.TypeChecker.NBETerm.e_range
 
@@ -190,8 +189,8 @@ let nbe_dummy #a : NBET.embedding a =
     (fun () -> NBET.mk_t NBET.Unknown)
     (fun () -> ET_abstract)
 
-instance e_ident : dualemb Ident.ident        = Mkdualemb RE.e_ident (nbe_dummy #Ident.ident)
-instance e_subst : dualemb (list subst_elt)   = Mkdualemb RE.e_subst NRE.e_subst
+instance e_ident : dualemb Ident.ident = Mkdualemb RE.e_ident (nbe_dummy #Ident.ident)
+instance e_subst_elt : dualemb subst_elt = Mkdualemb RE.e_subst_elt NRE.e_subst_elt
 
 
 (** Helpers to create a (total) primitive step from a function and embeddings. *)
