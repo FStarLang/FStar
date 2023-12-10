@@ -295,17 +295,6 @@ val decr: ref int -> unit
 val geq: int -> int -> Tot bool
 val for_range: int -> int -> (int -> unit) -> unit
 
-(* A simple state monad *)
-type state 's 'a = ('s -> 'a * 's) (* not relying on definition *)
-val get: state 's 's
-val put: 's -> state 's unit
-val upd: ('s -> 's) -> state 's unit
-val ret: 'a -> state 's 'a
-val bind: state 's 'a -> ('a -> state 's 'b) -> state 's 'b
-val stmap: list 'a -> ('a -> state 's 'b) -> state 's (list 'b)
-val stiter: list 'a -> ('a -> state 's unit) -> state 's unit
-val stfold: 'b -> list 'a -> ('b -> 'a -> state 's 'b) -> state 's 'b
-val run_st: 's -> state 's 'a -> ('a * 's)
 val mk_ref: 'a -> ref 'a
 
 val get_exec_dir: unit -> string

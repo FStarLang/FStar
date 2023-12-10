@@ -810,51 +810,6 @@ let ascii_bytes_to_string (b:char array) : string =
   BatString.implode (BatArray.to_list b)
 let mk_ref a = FStar_ST.alloc a
 
-(* A simple state monad *)
-type ('s,'a) state = 's -> ('a*'s)
-let get : ('s,'s) state = fun s -> (s,s)
-let upd (f:'s -> 's) : ('s,unit) state = fun s -> ((), f s)
-let put (s:'s) : ('s,unit) state = fun _ -> ((), s)
-let ret (x:'a) : ('s,'a) state = fun s -> (x, s)
-let bind (sa:('s,'a) state) (f : 'a -> ('s,'b) state) : ('s,'b) state =
-  fun s1 -> let (a, s2) = sa s1 in f a s2
-let (>>) s f = bind s f
-let run_st init (s:('s,'a) state) = s init
-
-let rec stmap (l:'a list) (f: 'a -> ('s,'b) state) : ('s, ('b list)) state =
-  match l with
-  | [] -> ret []
-  | hd::tl -> bind (f hd)
-                   (fun b ->
-                    let stl = stmap tl f in
-                    bind stl (fun tl -> ret (b::tl)))
-
-let stmapi (l:'a list) (f:int -> 'a -> ('s, 'b) state) : ('s, ('b list)) state =
-  let rec aux i l =
-    match l with
-    | [] -> ret []
-    | hd::tl ->
-       bind (f i hd)
-            (fun b ->
-             let stl = aux (i + 1) tl in
-             bind stl (fun tl -> ret (b::tl))) in
-  aux 0 l
-
-let rec stiter (l:'a list) (f: 'a -> ('s,unit) state) : ('s,unit) state =
-  match l with
-  | [] -> ret ()
-  | hd::tl -> bind (f hd) (fun () -> stiter tl f)
-
-let rec stfoldr_pfx (l:'a list) (f: 'a list -> 'a -> ('s,unit) state) : ('s,unit) state =
-  match l with
-  | [] -> ret ()
-  | hd::tl -> (stfoldr_pfx tl f) >> (fun _ -> f tl hd)
-
-let rec stfold (init:'b) (l:'a list) (f: 'b -> 'a -> ('s,'b) state) : ('s,'b) state =
-  match l with
-  | [] -> ret init
-  | hd::tl -> (f init hd) >> (fun next -> stfold next tl f)
-
 let write_file (fn:string) s =
   let fh = open_file_for_writing fn in
   append_to_file fh s;
