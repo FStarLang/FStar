@@ -79,7 +79,7 @@ let steps_to_string f =
     f.unfold_fully |> format_opt (fun x -> List.map Ident.string_of_lid x |> String.concat ", ");
     f.unfold_attr |> format_opt (fun x -> List.map Ident.string_of_lid x |> String.concat ", ");
     f.unfold_qual |> format_opt (String.concat ", ");
-    f.unfold_namespace |> format_opt (String.concat ", ");
+    f.unfold_namespace |> show;
     f.unfold_tac |> b;
     f.pure_subterms_within_computations |> b;
     f.simplify |> b;
@@ -156,7 +156,8 @@ let fstep_add_one s fs =
       then {fs with pure_subterms_within_computations = true}
       else fs
     | UnfoldNamespace strs ->
-     { fs with unfold_namespace  = Some strs }
+     { fs with unfold_namespace =
+         Some (List.map (fun s -> (Ident.path_of_text s, true)) strs, false) }
     | UnfoldTac ->  { fs with unfold_tac = true }
     | PureSubtermsWithinComputations ->  { fs with pure_subterms_within_computations = true }
     | Simplify ->  { fs with simplify = true }

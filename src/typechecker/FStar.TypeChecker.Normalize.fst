@@ -1021,8 +1021,10 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
                the (printed) lid. But, to prevent unfolding `ABCD.def` when we
                are trying to unfold `AB`, we append a single `.` to both before checking,
                so `AB` only unfold lids under the `AB` module and its submodules. *)
-               yesno <| BU.for_some (fun ns ->
-                BU.starts_with (FStar.Ident.nsstr (lid_of_fv fv) ^ ".") (ns ^ ".")) namespaces)
+               let p : list string = Ident.path_of_lid (lid_of_fv fv) in
+               let r : bool = Path.search_forest p namespaces in
+               yesno <| r
+             )
            ]
         in
         meets_some_criterion
