@@ -29,6 +29,7 @@ module Util = FStar.Compiler.Util
 module UF = FStar.Syntax.Unionfind
 
 open FStar.Class.Ord
+open FStar.Class.Show
 
 let ctx_uvar_typ (u:ctx_uvar) = 
     (UF.find_decoration u.ctx_uvar_head).uvar_decoration_typ

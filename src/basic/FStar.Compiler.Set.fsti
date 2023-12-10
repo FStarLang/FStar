@@ -25,101 +25,32 @@ val set (a:Type0) : Type0
 
 type t = set
 
-val empty
-  (#a:Type) {| ord a |}
-  (_:unit)
-  : set a
+val empty (#a:Type) {| ord a |} (_:unit) : set a
+val singleton (#a:Type) {| ord a |} (x:a) : set a
 
-val is_empty
-  (#a:Type) {| ord a |}
-  (s:set a)
-  : bool
+val is_empty (#a:Type) {| ord a |} (s:set a) : bool
 
-val add
-  (#a:Type) {| ord a |}
-  (x:a)
-  (s:set a)
-  : set a
+val from_list (#a:Type) {| ord a |} (l:list a) : set a
+val elems (#a:Type) {| ord a |} (s:set a) : list a
 
-val addn
-  (#a:Type) {| ord a |}
-  (x:list a)
-  (s:set a)
-  : set a
+val add (#a:Type) {| ord a |} (x:a) (s:set a) : set a
+val addn (#a:Type) {| ord a |} (x:list a) (s:set a) : set a
 
-val remove
-  (#a:Type) {| ord a |}
-  (x:a)
-  (s:set a)
-  : set a
+val remove (#a:Type) {| ord a |} (x:a) (s:set a) : set a
 
-val mem
-  (#a:Type) {| ord a |}
-  (x:a)
-  (s:set a)
-  : bool
+val mem (#a:Type) {| ord a |} (x:a) (s:set a) : bool
 
-val equal
-  (#a:Type) {| ord a |}
-  (s1:set a)
-  (s2:set a)
-  : bool
+val equal (#a:Type) {| ord a |} (s1:set a) (s2:set a) : bool
 
-val subset
-  (#a:Type) {| ord a |}
-  (s1:set a)
-  (s2:set a)
-  : bool
+val subset (#a:Type) {| ord a |} (s1:set a) (s2:set a) : bool
 
-val singleton
-  (#a:Type) {| ord a |}
-  (x:a)
-  : set a
+val union (#a:Type) {| ord a |} (s1:set a) (s2:set a) : set a
+val inter (#a:Type) {| ord a |} (s1:set a) (s2:set a) : set a
+val diff  (#a:Type) {| ord a |} (s1:set a) (s2:set a) : set a
   
-val from_list
-  (#a:Type) {| ord a |}
-  (l:list a)
-  : set a
+val collect (#a:Type) (#b:Type) {| ord b |} (f : a -> set b) (l : list a) : set b
 
-val union
-  (#a:Type) {| ord a |}
-  (s1:set a)
-  (s2:set a)
-  : set a
-
-val inter
-  (#a:Type) {| ord a |}
-  (s1:set a)
-  (s2:set a)
-  : set a
-
-val diff
-  (#a:Type) {| ord a |}
-  (s1:set a)
-  (s2:set a)
-  : set a
-  
-val elems
-  (#a:Type) {| ord a |}
-  (s:set a)
-  : list a
-
-val for_all
-  (#a:Type) {| ord a |}
-  (p:(a -> bool))
-  (s:set a)
-  : bool
-
-val for_any
-  (#a:Type) {| ord a |}
-  (p:(a -> bool))
-  (s:set a)
-  : bool
-
-val collect
-  (#a:Type) (#b:Type) {| ord b |}
-  (f : a -> set b)
-  (l : list a)
-  : set b
+val for_all (#a:Type) {| ord a |} (p:(a -> bool)) (s:set a) : bool
+val for_any (#a:Type) {| ord a |} (p:(a -> bool)) (s:set a) : bool
 
 instance val showable_set (a:Type) (_ : ord a) (_ : showable a) : Tot (showable (set a))

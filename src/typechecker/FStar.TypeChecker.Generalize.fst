@@ -140,8 +140,7 @@ let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbn
      in
      let univs, uvs, lec_hd = univs_and_uvars_of_lec (List.hd lecs) in
      let force_univs_eq lec2 u1 u2 =
-        if Set.subset u1 u2
-        && Set.subset u2 u1
+        if Set.equal u1 u2
         then ()
         else let lb1, _, _ = lec_hd in
              let lb2, _, _ = lec2 in
@@ -256,14 +255,15 @@ let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbn
                       U.arrow tvars_bs c in
               let e' = U.abs tvars_bs e (Some (U.residual_comp_of_comp c)) in
               e', S.mk_Total t, tvars_bs in
-          (lbname, gen_univs, e, c, gvs)) in
+          (lbname, gen_univs, e, c, gvs))
+     in
      Some ecs
 
 let generalize' env (is_rec:bool) (lecs:list (lbname*term*comp)) : (list (lbname*univ_names*term*comp*list binder)) =
   assert (List.for_all (fun (l, _, _) -> is_right l) lecs); //only generalize top-level lets
-  if debug env Options.Low
-  then BU.print1 "Generalizing: %s\n"
-       (List.map (fun (lb, _, _) -> Print.lbname_to_string lb) lecs |> String.concat ", ");
+  if debug env Options.Low then
+     BU.print1 "Generalizing: %s\n"
+       (show <| List.map (fun (lb, _, _) -> Print.lbname_to_string lb) lecs);
   let univnames_lecs = 
     let empty = Set.from_list [] in
     List.fold_left
@@ -288,7 +288,7 @@ let generalize' env (is_rec:bool) (lecs:list (lbname*term*comp)) : (list (lbname
                                           (Print.binders_to_string ", " gvs));
             luecs
    in
-   List.map (fun (l,generalized_univs, t, c, gvs) ->
+   List.map (fun (l, generalized_univs, t, c, gvs) ->
               (l, check_universe_generalization univnames_lecs generalized_univs t, t, c, gvs))
              generalized_lecs
 
