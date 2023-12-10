@@ -1490,7 +1490,8 @@ let (e_binder_view :
         let uu___4 =
           let uu___5 =
             let uu___6 =
-              embed e_attributes rng bview.FStar_Reflection_V2_Data.attrs in
+              embed (FStar_Syntax_Embeddings.e_list e_attribute) rng
+                bview.FStar_Reflection_V2_Data.attrs in
             FStar_Syntax_Syntax.as_arg uu___6 in
           let uu___6 =
             let uu___7 =
@@ -1746,7 +1747,7 @@ let (e_subst_elt :
             FStar_Syntax_Syntax.as_arg uu___2 in
           let uu___2 =
             let uu___3 =
-              let uu___4 = embed e_bv rng x in
+              let uu___4 = embed e_namedv rng x in
               FStar_Syntax_Syntax.as_arg uu___4 in
             [uu___3] in
           uu___1 :: uu___2 in
@@ -1932,7 +1933,8 @@ let (e_lb_view :
       let uu___2 =
         let uu___3 =
           let uu___4 =
-            embed e_univ_names rng lbv.FStar_Reflection_V2_Data.lb_us in
+            embed (FStar_Syntax_Embeddings.e_list e_univ_name) rng
+              lbv.FStar_Reflection_V2_Data.lb_us in
           FStar_Syntax_Syntax.as_arg uu___4 in
         let uu___4 =
           let uu___5 =
@@ -2012,7 +2014,8 @@ let (e_sigelt_view :
             FStar_Syntax_Syntax.as_arg uu___2 in
           let uu___2 =
             let uu___3 =
-              let uu___4 = embed e_univ_names rng univs in
+              let uu___4 =
+                embed (FStar_Syntax_Embeddings.e_list e_univ_name) rng univs in
               FStar_Syntax_Syntax.as_arg uu___4 in
             let uu___4 =
               let uu___5 =
@@ -2046,7 +2049,8 @@ let (e_sigelt_view :
             FStar_Syntax_Syntax.as_arg uu___2 in
           let uu___2 =
             let uu___3 =
-              let uu___4 = embed e_univ_names rng univs in
+              let uu___4 =
+                embed (FStar_Syntax_Embeddings.e_list e_univ_name) rng univs in
               FStar_Syntax_Syntax.as_arg uu___4 in
             let uu___4 =
               let uu___5 =
@@ -2227,8 +2231,10 @@ let (e_qualifier :
             let uu___1 =
               let uu___2 =
                 embed
-                  (FStar_Syntax_Embeddings.e_tuple2 e_univ_names e_univ_names)
-                  rng (ids1, ids2) in
+                  (FStar_Syntax_Embeddings.e_tuple2
+                     (FStar_Syntax_Embeddings.e_list e_univ_name)
+                     (FStar_Syntax_Embeddings.e_list e_univ_name)) rng
+                  (ids1, ids2) in
               FStar_Syntax_Syntax.as_arg uu___2 in
             [uu___1] in
           FStar_Syntax_Syntax.mk_Tm_app
@@ -2239,8 +2245,10 @@ let (e_qualifier :
             let uu___1 =
               let uu___2 =
                 embed
-                  (FStar_Syntax_Embeddings.e_tuple2 e_univ_names e_univ_names)
-                  rng (ids1, ids2) in
+                  (FStar_Syntax_Embeddings.e_tuple2
+                     (FStar_Syntax_Embeddings.e_list e_univ_name)
+                     (FStar_Syntax_Embeddings.e_list e_univ_name)) rng
+                  (ids1, ids2) in
               FStar_Syntax_Syntax.as_arg uu___2 in
             [uu___1] in
           FStar_Syntax_Syntax.mk_Tm_app
@@ -2588,8 +2596,8 @@ let (unfold_lazy_letbinding :
       let uu___2 =
         let uu___3 =
           let uu___4 =
-            embed e_univ_names i.FStar_Syntax_Syntax.rng
-              lbv.FStar_Reflection_V2_Data.lb_us in
+            embed (FStar_Syntax_Embeddings.e_list e_univ_name)
+              i.FStar_Syntax_Syntax.rng lbv.FStar_Reflection_V2_Data.lb_us in
           FStar_Syntax_Syntax.as_arg uu___4 in
         let uu___4 =
           let uu___5 =

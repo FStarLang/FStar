@@ -1502,6 +1502,7 @@ let (interpret_plugin_as_term_fun :
                                 if uu___3
                                 then
                                   let cb = str_to_name "cb" in
+                                  let us = str_to_name "us" in
                                   let embed_fun_N =
                                     mk_arrow_as_prim_step loc non_tvar_arity in
                                   let args =
@@ -1517,7 +1518,8 @@ let (interpret_plugin_as_term_fun :
                                                     tvar_arity),
                                                   FStar_Pervasives_Native.None)));
                                         fv_lid_embedded;
-                                        cb] in
+                                        cb;
+                                        us] in
                                       res_embedding :: uu___5 in
                                     FStar_Compiler_List.op_At
                                       arg_unembeddings uu___4 in
@@ -1527,7 +1529,8 @@ let (interpret_plugin_as_term_fun :
                                          (embed_fun_N, args)) in
                                   let tabs =
                                     abstract_tvars tvar_names fun_embedding in
-                                  let cb_tabs = ml_lam "cb" tabs in
+                                  let cb_tabs =
+                                    ml_lam "cb" (ml_lam "us" tabs) in
                                   (((if loc = NBETerm
                                      then cb_tabs
                                      else ml_lam "_psc" cb_tabs)), arity,
@@ -1559,6 +1562,7 @@ let (interpret_plugin_as_term_fun :
                                        mk uu___6 in
                                      let psc = str_to_name "psc" in
                                      let ncb = str_to_name "ncb" in
+                                     let us = str_to_name "us" in
                                      let all_args = str_to_name "args" in
                                      let args =
                                        let uu___6 =
@@ -1581,7 +1585,7 @@ let (interpret_plugin_as_term_fun :
                                          (FStar_Compiler_List.op_At [tac_fun]
                                             (FStar_Compiler_List.op_At
                                                arg_unembeddings
-                                               [res_embedding; psc; ncb])) in
+                                               [res_embedding; psc; ncb; us])) in
                                      let tabs =
                                        match tvar_names with
                                        | [] ->
@@ -1596,7 +1600,8 @@ let (interpret_plugin_as_term_fun :
                                              (mk
                                                 (FStar_Extraction_ML_Syntax.MLE_App
                                                    (h, args))) in
-                                     ((ml_lam "psc" (ml_lam "ncb" tabs)),
+                                     ((ml_lam "psc"
+                                         (ml_lam "ncb" (ml_lam "us" tabs))),
                                        (arity + Prims.int_one), false)
                                    else
                                      (let uu___7 =

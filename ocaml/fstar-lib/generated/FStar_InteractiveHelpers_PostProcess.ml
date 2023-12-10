@@ -2671,13 +2671,14 @@ let _ =
     (Prims.of_int (5))
     (fun psc ->
        fun ncb ->
-         fun args ->
-           FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_4
-             "FStar.InteractiveHelpers.PostProcess.pp_analyze_effectful_term (plugin)"
-             (FStar_Tactics_Native.from_tactic_4 pp_analyze_effectful_term)
-             FStar_Syntax_Embeddings.e_bool FStar_Syntax_Embeddings.e_bool
-             FStar_Syntax_Embeddings.e_bool FStar_Syntax_Embeddings.e_unit
-             FStar_Syntax_Embeddings.e_unit psc ncb args)
+         fun us ->
+           fun args ->
+             FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_4
+               "FStar.InteractiveHelpers.PostProcess.pp_analyze_effectful_term (plugin)"
+               (FStar_Tactics_Native.from_tactic_4 pp_analyze_effectful_term)
+               FStar_Syntax_Embeddings.e_bool FStar_Syntax_Embeddings.e_bool
+               FStar_Syntax_Embeddings.e_bool FStar_Syntax_Embeddings.e_unit
+               FStar_Syntax_Embeddings.e_unit psc ncb us args)
 let (remove_b2t :
   FStar_Reflection_Types.term ->
     (FStar_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
@@ -3253,12 +3254,13 @@ let _ =
     (Prims.of_int (3))
     (fun psc ->
        fun ncb ->
-         fun args ->
-           FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_2
-             "FStar.InteractiveHelpers.PostProcess.pp_split_assert_conjs (plugin)"
-             (FStar_Tactics_Native.from_tactic_2 pp_split_assert_conjs)
-             FStar_Syntax_Embeddings.e_bool FStar_Syntax_Embeddings.e_unit
-             FStar_Syntax_Embeddings.e_unit psc ncb args)
+         fun us ->
+           fun args ->
+             FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_2
+               "FStar.InteractiveHelpers.PostProcess.pp_split_assert_conjs (plugin)"
+               (FStar_Tactics_Native.from_tactic_2 pp_split_assert_conjs)
+               FStar_Syntax_Embeddings.e_bool FStar_Syntax_Embeddings.e_unit
+               FStar_Syntax_Embeddings.e_unit psc ncb us args)
 type eq_kind =
   | Eq_Dec of FStar_Reflection_Types.typ 
   | Eq_Undec of FStar_Reflection_Types.typ 
@@ -8345,10 +8347,11 @@ let _ =
     (Prims.of_int (3))
     (fun psc ->
        fun ncb ->
-         fun args ->
-           FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_2
-             "FStar.InteractiveHelpers.PostProcess.pp_unfold_in_assert_or_assume (plugin)"
-             (FStar_Tactics_Native.from_tactic_2
-                pp_unfold_in_assert_or_assume) FStar_Syntax_Embeddings.e_bool
-             FStar_Syntax_Embeddings.e_unit FStar_Syntax_Embeddings.e_unit
-             psc ncb args)
+         fun us ->
+           fun args ->
+             FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_2
+               "FStar.InteractiveHelpers.PostProcess.pp_unfold_in_assert_or_assume (plugin)"
+               (FStar_Tactics_Native.from_tactic_2
+                  pp_unfold_in_assert_or_assume)
+               FStar_Syntax_Embeddings.e_bool FStar_Syntax_Embeddings.e_unit
+               FStar_Syntax_Embeddings.e_unit psc ncb us args)

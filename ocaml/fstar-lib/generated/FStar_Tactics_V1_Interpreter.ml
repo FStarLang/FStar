@@ -39,9 +39,7 @@ let (native_tactics_steps :
         FStar_TypeChecker_Primops.requires_binder_substitution = false;
         FStar_TypeChecker_Primops.renorm_after = false;
         FStar_TypeChecker_Primops.interpretation =
-          (fun psc ->
-             fun cb ->
-               fun _us -> fun t -> s.FStar_Tactics_Native.tactic psc cb t);
+          (s.FStar_Tactics_Native.tactic);
         FStar_TypeChecker_Primops.interpretation_nbe =
           (fun _cb ->
              fun _us ->
@@ -387,9 +385,9 @@ let unembed_tactic_nbe_0 :
                             FStar_TypeChecker_NBETerm.iapp_cb cb
                               embedded_tac_b uu___ in
                           let res =
-                            let uu___ =
-                              FStar_Tactics_Embedding.e_result_nbe eb in
-                            FStar_TypeChecker_NBETerm.unembed uu___ cb result in
+                            FStar_TypeChecker_NBETerm.unembed
+                              (FStar_Tactics_Embedding.e_result_nbe eb) cb
+                              result in
                           match res with
                           | FStar_Pervasives_Native.Some
                               (FStar_Tactics_Result.Success (b1, ps)) ->
@@ -565,7 +563,7 @@ let e_tactic_nbe_1 :
                 FStar_TypeChecker_NBETerm.Unit))
         (FStar_Syntax_Embeddings_Base.emb_typ_of
            FStar_Syntax_Embeddings.e_unit)
-let (uu___189 : unit) =
+let (uu___185 : unit) =
   let uu___ =
     let uu___1 =
       mk_total_step_1'_psc Prims.int_zero "tracepoint"

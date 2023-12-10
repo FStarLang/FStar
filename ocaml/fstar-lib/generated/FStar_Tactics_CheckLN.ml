@@ -726,9 +726,10 @@ let _ =
     (Prims.of_int (2))
     (fun psc ->
        fun ncb ->
-         fun args ->
-           FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_1
-             "FStar.Tactics.CheckLN.check_ln (plugin)"
-             (FStar_Tactics_Native.from_tactic_1 check_ln)
-             FStar_Reflection_V2_Embeddings.e_term
-             FStar_Syntax_Embeddings.e_bool psc ncb args)
+         fun us ->
+           fun args ->
+             FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_1
+               "FStar.Tactics.CheckLN.check_ln (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 check_ln)
+               FStar_Reflection_V2_Embeddings.e_term
+               FStar_Syntax_Embeddings.e_bool psc ncb us args)

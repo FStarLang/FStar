@@ -2180,7 +2180,9 @@ let arrow_as_prim_step_1 :
         ('a -> 'b) ->
           Prims.int ->
             FStar_Ident.lid ->
-              nbe_cbs -> args -> t FStar_Pervasives_Native.option
+              nbe_cbs ->
+                FStar_Syntax_Syntax.universes ->
+                  args -> t FStar_Pervasives_Native.option
   =
   fun ea ->
     fun eb ->
@@ -2188,7 +2190,7 @@ let arrow_as_prim_step_1 :
         fun n_tvars ->
           fun _fv_lid ->
             fun cb ->
-              let f_wrapped args1 =
+              let f_wrapped _us args1 =
                 let uu___ = FStar_Compiler_List.splitAt n_tvars args1 in
                 match uu___ with
                 | (_tvar_args, rest_args) ->
@@ -2207,7 +2209,9 @@ let arrow_as_prim_step_2 :
           ('a -> 'b -> 'c) ->
             Prims.int ->
               FStar_Ident.lid ->
-                nbe_cbs -> args -> t FStar_Pervasives_Native.option
+                nbe_cbs ->
+                  FStar_Syntax_Syntax.universes ->
+                    args -> t FStar_Pervasives_Native.option
   =
   fun ea ->
     fun eb ->
@@ -2216,7 +2220,7 @@ let arrow_as_prim_step_2 :
           fun n_tvars ->
             fun _fv_lid ->
               fun cb ->
-                let f_wrapped args1 =
+                let f_wrapped _us args1 =
                   let uu___ = FStar_Compiler_List.splitAt n_tvars args1 in
                   match uu___ with
                   | (_tvar_args, rest_args) ->
@@ -2248,7 +2252,9 @@ let arrow_as_prim_step_3 :
             ('a -> 'b -> 'c -> 'd) ->
               Prims.int ->
                 FStar_Ident.lid ->
-                  nbe_cbs -> args -> t FStar_Pervasives_Native.option
+                  nbe_cbs ->
+                    FStar_Syntax_Syntax.universes ->
+                      args -> t FStar_Pervasives_Native.option
   =
   fun ea ->
     fun eb ->
@@ -2258,7 +2264,7 @@ let arrow_as_prim_step_3 :
             fun n_tvars ->
               fun _fv_lid ->
                 fun cb ->
-                  let f_wrapped args1 =
+                  let f_wrapped _us args1 =
                     let uu___ = FStar_Compiler_List.splitAt n_tvars args1 in
                     match uu___ with
                     | (_tvar_args, rest_args) ->

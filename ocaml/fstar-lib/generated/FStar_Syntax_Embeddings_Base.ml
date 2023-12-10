@@ -280,10 +280,10 @@ let e_lazy :
                 let uu___5 =
                   let uu___6 =
                     FStar_Class_Show.show
-                      FStar_Syntax_Syntax.showable_lazy_kind lkind in
+                      FStar_Syntax_Syntax.showable_lazy_kind k in
                   let uu___7 =
                     FStar_Class_Show.show
-                      FStar_Syntax_Syntax.showable_lazy_kind k in
+                      FStar_Syntax_Syntax.showable_lazy_kind lkind in
                   let uu___8 =
                     FStar_Class_Show.show FStar_Syntax_Print.showable_term t0 in
                   FStar_Compiler_Util.format3

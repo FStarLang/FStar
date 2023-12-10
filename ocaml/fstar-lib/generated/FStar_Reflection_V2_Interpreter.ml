@@ -557,15 +557,10 @@ let (e_vconfig : FStar_VConfig.vconfig dualemb) =
     s_emb = FStar_Syntax_Embeddings.e_vconfig;
     nbe_emb = FStar_TypeChecker_NBETerm.e_vconfig
   }
-let (e_attributes : FStar_Syntax_Syntax.attribute Prims.list dualemb) =
+let (e_qualifier : FStar_Reflection_V2_Data.qualifier dualemb) =
   {
-    s_emb = FStar_Reflection_V2_Embeddings.e_attributes;
-    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_attributes
-  }
-let (e_qualifiers : FStar_Reflection_V2_Data.qualifiers dualemb) =
-  {
-    s_emb = FStar_Reflection_V2_Embeddings.e_qualifiers;
-    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_qualifiers
+    s_emb = FStar_Reflection_V2_Embeddings.e_qualifier;
+    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_qualifier
   }
 let (e_range : FStar_Compiler_Range_Type.range dualemb) =
   {
@@ -604,10 +599,10 @@ let nbe_dummy : 'a . unit -> 'a FStar_TypeChecker_NBETerm.embedding =
 let (e_ident : FStar_Ident.ident dualemb) =
   let uu___ = nbe_dummy () in
   { s_emb = FStar_Reflection_V2_Embeddings.e_ident; nbe_emb = uu___ }
-let (e_subst : FStar_Syntax_Syntax.subst_elt Prims.list dualemb) =
+let (e_subst_elt : FStar_Syntax_Syntax.subst_elt dualemb) =
   {
-    s_emb = FStar_Reflection_V2_Embeddings.e_subst;
-    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_subst
+    s_emb = FStar_Reflection_V2_Embeddings.e_subst_elt;
+    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_subst_elt
   }
 let mk1 :
   'a 'r .
@@ -719,11 +714,11 @@ let (reflection_primops :
                                 FStar_Reflection_V2_Builtins.pack_namedv in
                             let uu___27 =
                               let uu___28 =
-                                mk1 "inspect_bv" e_namedv e_bv_view
+                                mk1 "inspect_bv" e_bv e_bv_view
                                   FStar_Reflection_V2_Builtins.inspect_bv in
                               let uu___29 =
                                 let uu___30 =
-                                  mk1 "pack_bv" e_bv_view e_namedv
+                                  mk1 "pack_bv" e_bv_view e_bv
                                     FStar_Reflection_V2_Builtins.pack_bv in
                                 let uu___31 =
                                   let uu___32 =
@@ -759,29 +754,30 @@ let (reflection_primops :
                                             let uu___43 =
                                               let uu___44 =
                                                 mk1 "sigelt_quals" e_sigelt
-                                                  e_qualifiers
+                                                  (e_list e_qualifier)
                                                   FStar_Reflection_V2_Builtins.sigelt_quals in
                                               let uu___45 =
                                                 let uu___46 =
                                                   mk2 "set_sigelt_quals"
-                                                    e_qualifiers e_sigelt
-                                                    e_sigelt
+                                                    (e_list e_qualifier)
+                                                    e_sigelt e_sigelt
                                                     FStar_Reflection_V2_Builtins.set_sigelt_quals in
                                                 let uu___47 =
                                                   let uu___48 =
-                                                    mk2 "subst_term" e_subst
+                                                    mk2 "subst_term"
+                                                      (e_list e_subst_elt)
                                                       e_term e_term
                                                       FStar_Reflection_V2_Builtins.subst_term in
                                                   let uu___49 =
                                                     let uu___50 =
                                                       mk2 "subst_comp"
-                                                        e_subst e_comp e_comp
+                                                        (e_list e_subst_elt)
+                                                        e_comp e_comp
                                                         FStar_Reflection_V2_Builtins.subst_comp in
                                                     let uu___51 =
                                                       let uu___52 =
-                                                        mk2 "compare_bv"
-                                                          e_namedv e_namedv
-                                                          e_order
+                                                        mk2 "compare_bv" e_bv
+                                                          e_bv e_order
                                                           FStar_Reflection_V2_Builtins.compare_bv in
                                                       let uu___53 =
                                                         let uu___54 =

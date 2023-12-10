@@ -2248,8 +2248,9 @@ let arrow_as_prim_step_1 :
           Prims.int ->
             FStar_Ident.lid ->
               FStar_Syntax_Embeddings_Base.norm_cb ->
-                FStar_Syntax_Syntax.args ->
-                  FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
+                FStar_Syntax_Syntax.universes ->
+                  FStar_Syntax_Syntax.args ->
+                    FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
   fun ea ->
     fun eb ->
@@ -2258,7 +2259,7 @@ let arrow_as_prim_step_1 :
           fun fv_lid ->
             fun norm ->
               let rng = FStar_Ident.range_of_lid fv_lid in
-              let f_wrapped args =
+              let f_wrapped _us args =
                 let uu___ = FStar_Compiler_List.splitAt n_tvars args in
                 match uu___ with
                 | (_tvar_args, rest_args) ->
@@ -2300,8 +2301,9 @@ let arrow_as_prim_step_2 :
             Prims.int ->
               FStar_Ident.lid ->
                 FStar_Syntax_Embeddings_Base.norm_cb ->
-                  FStar_Syntax_Syntax.args ->
-                    FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
+                  FStar_Syntax_Syntax.universes ->
+                    FStar_Syntax_Syntax.args ->
+                      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
   fun ea ->
     fun eb ->
@@ -2311,7 +2313,7 @@ let arrow_as_prim_step_2 :
             fun fv_lid ->
               fun norm ->
                 let rng = FStar_Ident.range_of_lid fv_lid in
-                let f_wrapped args =
+                let f_wrapped _us args =
                   let uu___ = FStar_Compiler_List.splitAt n_tvars args in
                   match uu___ with
                   | (_tvar_args, rest_args) ->
@@ -2361,8 +2363,10 @@ let arrow_as_prim_step_3 :
               Prims.int ->
                 FStar_Ident.lid ->
                   FStar_Syntax_Embeddings_Base.norm_cb ->
-                    FStar_Syntax_Syntax.args ->
-                      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
+                    FStar_Syntax_Syntax.universes ->
+                      FStar_Syntax_Syntax.args ->
+                        FStar_Syntax_Syntax.term
+                          FStar_Pervasives_Native.option
   =
   fun ea ->
     fun eb ->
@@ -2373,7 +2377,7 @@ let arrow_as_prim_step_3 :
               fun fv_lid ->
                 fun norm ->
                   let rng = FStar_Ident.range_of_lid fv_lid in
-                  let f_wrapped args =
+                  let f_wrapped _us args =
                     let uu___ = FStar_Compiler_List.splitAt n_tvars args in
                     match uu___ with
                     | (_tvar_args, rest_args) ->

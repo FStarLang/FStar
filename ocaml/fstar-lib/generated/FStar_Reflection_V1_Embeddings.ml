@@ -1257,7 +1257,9 @@ let (e_binder_view :
         let uu___4 =
           let uu___5 =
             let uu___6 =
-              embed FStar_Reflection_V2_Embeddings.e_attributes rng
+              embed
+                (FStar_Syntax_Embeddings.e_list
+                   FStar_Reflection_V2_Embeddings.e_attribute) rng
                 bview.FStar_Reflection_V1_Data.binder_attrs in
             FStar_Syntax_Syntax.as_arg uu___6 in
           let uu___6 =
@@ -1296,7 +1298,9 @@ let (e_binder_view :
                   FStar_Compiler_Util.bind_opt uu___7
                     (fun q1 ->
                        let uu___8 =
-                         unembed FStar_Reflection_V2_Embeddings.e_attributes
+                         unembed
+                           (FStar_Syntax_Embeddings.e_list
+                              FStar_Reflection_V2_Embeddings.e_attribute)
                            attrs in
                        FStar_Compiler_Util.bind_opt uu___8
                          (fun attrs1 ->
