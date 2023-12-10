@@ -1812,19 +1812,11 @@ let (splice :
                              if is_typed
                              then
                                let e_blob =
-                                 let uu___7 =
-                                   FStar_Syntax_Embeddings.e_tuple2
-                                     FStar_Syntax_Embeddings.e_string
-                                     FStar_Reflection_V2_Embeddings.e_term in
-                                 FStar_Syntax_Embeddings.e_option uu___7 in
+                                 FStar_Syntax_Embeddings.e_option
+                                   (FStar_Syntax_Embeddings.e_tuple2
+                                      FStar_Syntax_Embeddings.e_string
+                                      FStar_Reflection_V2_Embeddings.e_term) in
                                let uu___7 =
-                                 let uu___8 =
-                                   let uu___9 =
-                                     FStar_Syntax_Embeddings.e_tuple3
-                                       FStar_Syntax_Embeddings.e_bool
-                                       FStar_Reflection_V2_Embeddings.e_sigelt
-                                       e_blob in
-                                   FStar_Syntax_Embeddings.e_list uu___9 in
                                  FStar_Tactics_V2_Interpreter.run_tactic_on_ps
                                    tau1.FStar_Syntax_Syntax.pos
                                    tau1.FStar_Syntax_Syntax.pos false
@@ -1943,7 +1935,13 @@ let (splice :
                                        (env.FStar_TypeChecker_Env.erase_erasable_args);
                                      FStar_TypeChecker_Env.core_check =
                                        (env.FStar_TypeChecker_Env.core_check)
-                                   } uu___8 tau1 tactic_already_typed ps in
+                                   }
+                                   (FStar_Syntax_Embeddings.e_list
+                                      (FStar_Syntax_Embeddings.e_tuple3
+                                         FStar_Syntax_Embeddings.e_bool
+                                         FStar_Reflection_V2_Embeddings.e_sigelt
+                                         e_blob)) tau1 tactic_already_typed
+                                   ps in
                                match uu___7 with
                                | (gs, sig_blobs) ->
                                    let sigelts =
@@ -2002,14 +2000,13 @@ let (splice :
                                               }) sig_blobs in
                                    (gs, sigelts)
                              else
-                               (let uu___8 =
-                                  FStar_Syntax_Embeddings.e_list
-                                    FStar_Reflection_V2_Embeddings.e_sigelt in
-                                FStar_Tactics_V2_Interpreter.run_tactic_on_ps
-                                  tau1.FStar_Syntax_Syntax.pos
-                                  tau1.FStar_Syntax_Syntax.pos false
-                                  FStar_Syntax_Embeddings.e_unit () uu___8
-                                  tau1 tactic_already_typed ps) in
+                               FStar_Tactics_V2_Interpreter.run_tactic_on_ps
+                                 tau1.FStar_Syntax_Syntax.pos
+                                 tau1.FStar_Syntax_Syntax.pos false
+                                 FStar_Syntax_Embeddings.e_unit ()
+                                 (FStar_Syntax_Embeddings.e_list
+                                    FStar_Reflection_V2_Embeddings.e_sigelt)
+                                 tau1 tactic_already_typed ps in
                            match uu___6 with
                            | (gs, sigelts) ->
                                let sigelts1 =

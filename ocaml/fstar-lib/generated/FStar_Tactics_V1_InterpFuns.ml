@@ -1,16 +1,9 @@
 open Prims
-let unembed :
-  'uuuuu .
-    'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
-      FStar_Syntax_Syntax.term ->
-        FStar_Syntax_Embeddings_Base.norm_cb ->
-          'uuuuu FStar_Pervasives_Native.option
-  = fun e -> fun t -> fun n -> FStar_Syntax_Embeddings_Base.unembed e t n
 let embed :
-  'uuuuu .
-    'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
+  'a .
+    'a FStar_Syntax_Embeddings_Base.embedding ->
       FStar_Compiler_Range_Type.range ->
-        'uuuuu ->
+        'a ->
           FStar_Syntax_Embeddings_Base.norm_cb -> FStar_Syntax_Syntax.term
   =
   fun e ->
@@ -19,6 +12,13 @@ let embed :
         fun n ->
           let uu___ = FStar_Syntax_Embeddings_Base.embed e t in
           uu___ rng FStar_Pervasives_Native.None n
+let unembed :
+  'a .
+    'a FStar_Syntax_Embeddings_Base.embedding ->
+      FStar_Syntax_Syntax.term ->
+        FStar_Syntax_Embeddings_Base.norm_cb ->
+          'a FStar_Pervasives_Native.option
+  = fun e -> fun t -> fun n -> FStar_Syntax_Embeddings_Base.unembed e t n
 let rec drop : 'uuuuu . Prims.int -> 'uuuuu Prims.list -> 'uuuuu Prims.list =
   fun n ->
     fun l ->
@@ -230,10 +230,9 @@ let mk_tactic_interpretation_1 :
                               FStar_Tactics_Monad.run_safe uu___4 ps1 in
                             let uu___4 =
                               let uu___5 =
-                                FStar_Tactics_Embedding.e_result er in
-                              let uu___6 =
                                 FStar_TypeChecker_Primops.psc_range psc in
-                              embed uu___5 uu___6 r1 ncb in
+                              embed (FStar_Tactics_Embedding.e_result er)
+                                uu___5 r1 ncb in
                             FStar_Pervasives_Native.Some uu___4))
               | uu___ -> FStar_Pervasives_Native.None
 let mk_tactic_interpretation_2 :
@@ -274,11 +273,11 @@ let mk_tactic_interpretation_2 :
                                      FStar_Tactics_Monad.run_safe uu___6 ps1 in
                                    let uu___6 =
                                      let uu___7 =
-                                       FStar_Tactics_Embedding.e_result er in
-                                     let uu___8 =
                                        FStar_TypeChecker_Primops.psc_range
                                          psc in
-                                     embed uu___7 uu___8 r1 ncb in
+                                     embed
+                                       (FStar_Tactics_Embedding.e_result er)
+                                       uu___7 r1 ncb in
                                    FStar_Pervasives_Native.Some uu___6)))
                 | uu___ -> FStar_Pervasives_Native.None
 let mk_tactic_interpretation_3 :
@@ -328,12 +327,11 @@ let mk_tactic_interpretation_3 :
                                               uu___8 ps1 in
                                           let uu___8 =
                                             let uu___9 =
-                                              FStar_Tactics_Embedding.e_result
-                                                er in
-                                            let uu___10 =
                                               FStar_TypeChecker_Primops.psc_range
                                                 psc in
-                                            embed uu___9 uu___10 r1 ncb in
+                                            embed
+                                              (FStar_Tactics_Embedding.e_result
+                                                 er) uu___9 r1 ncb in
                                           FStar_Pervasives_Native.Some uu___8))))
                   | uu___ -> FStar_Pervasives_Native.None
 let mk_tactic_interpretation_4 :
@@ -390,13 +388,11 @@ let mk_tactic_interpretation_4 :
                                                      uu___10 ps1 in
                                                  let uu___10 =
                                                    let uu___11 =
-                                                     FStar_Tactics_Embedding.e_result
-                                                       er in
-                                                   let uu___12 =
                                                      FStar_TypeChecker_Primops.psc_range
                                                        psc in
-                                                   embed uu___11 uu___12 r1
-                                                     ncb in
+                                                   embed
+                                                     (FStar_Tactics_Embedding.e_result
+                                                        er) uu___11 r1 ncb in
                                                  FStar_Pervasives_Native.Some
                                                    uu___10)))))
                     | uu___ -> FStar_Pervasives_Native.None
@@ -462,13 +458,12 @@ let mk_tactic_interpretation_5 :
                                                             uu___12 ps1 in
                                                         let uu___12 =
                                                           let uu___13 =
-                                                            FStar_Tactics_Embedding.e_result
-                                                              er in
-                                                          let uu___14 =
                                                             FStar_TypeChecker_Primops.psc_range
                                                               psc in
-                                                          embed uu___13
-                                                            uu___14 r1 ncb in
+                                                          embed
+                                                            (FStar_Tactics_Embedding.e_result
+                                                               er) uu___13 r1
+                                                            ncb in
                                                         FStar_Pervasives_Native.Some
                                                           uu___12))))))
                       | uu___ -> FStar_Pervasives_Native.None
@@ -548,15 +543,12 @@ let mk_tactic_interpretation_6 :
                                                                let uu___14 =
                                                                  let uu___15
                                                                    =
-                                                                   FStar_Tactics_Embedding.e_result
-                                                                    er in
-                                                                 let uu___16
-                                                                   =
                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                  embed
-                                                                   uu___15
-                                                                   uu___16 r1
+                                                                   (FStar_Tactics_Embedding.e_result
+                                                                    er)
+                                                                   uu___15 r1
                                                                    ncb in
                                                                FStar_Pervasives_Native.Some
                                                                  uu___14)))))))
@@ -650,15 +642,12 @@ let mk_tactic_interpretation_7 :
                                                                     =
                                                                     let uu___17
                                                                     =
-                                                                    FStar_Tactics_Embedding.e_result
-                                                                    er in
-                                                                    let uu___18
-                                                                    =
                                                                     FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed
+                                                                    (FStar_Tactics_Embedding.e_result
+                                                                    er)
                                                                     uu___17
-                                                                    uu___18
                                                                     r1 ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___16))))))))
@@ -767,15 +756,12 @@ let mk_tactic_interpretation_8 :
                                                                     =
                                                                     let uu___19
                                                                     =
-                                                                    FStar_Tactics_Embedding.e_result
-                                                                    er in
-                                                                    let uu___20
-                                                                    =
                                                                     FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed
+                                                                    (FStar_Tactics_Embedding.e_result
+                                                                    er)
                                                                     uu___19
-                                                                    uu___20
                                                                     r1 ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___18)))))))))
@@ -898,15 +884,12 @@ let mk_tactic_interpretation_9 :
                                                                     =
                                                                     let uu___21
                                                                     =
-                                                                    FStar_Tactics_Embedding.e_result
-                                                                    er in
-                                                                    let uu___22
-                                                                    =
                                                                     FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed
+                                                                    (FStar_Tactics_Embedding.e_result
+                                                                    er)
                                                                     uu___21
-                                                                    uu___22
                                                                     r1 ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___20))))))))))
@@ -1044,15 +1027,12 @@ let mk_tactic_interpretation_10 :
                                                                     =
                                                                     let uu___23
                                                                     =
-                                                                    FStar_Tactics_Embedding.e_result
-                                                                    er in
-                                                                    let uu___24
-                                                                    =
                                                                     FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed
+                                                                    (FStar_Tactics_Embedding.e_result
+                                                                    er)
                                                                     uu___23
-                                                                    uu___24
                                                                     r1 ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___22)))))))))))
@@ -1208,15 +1188,12 @@ let mk_tactic_interpretation_11 :
                                                                     =
                                                                     let uu___25
                                                                     =
-                                                                    FStar_Tactics_Embedding.e_result
-                                                                    er in
-                                                                    let uu___26
-                                                                    =
                                                                     FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed
+                                                                    (FStar_Tactics_Embedding.e_result
+                                                                    er)
                                                                     uu___25
-                                                                    uu___26
                                                                     r1 ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___24))))))))))))
@@ -1388,15 +1365,12 @@ let mk_tactic_interpretation_12 :
                                                                     =
                                                                     let uu___27
                                                                     =
-                                                                    FStar_Tactics_Embedding.e_result
-                                                                    er in
-                                                                    let uu___28
-                                                                    =
                                                                     FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed
+                                                                    (FStar_Tactics_Embedding.e_result
+                                                                    er)
                                                                     uu___27
-                                                                    uu___28
                                                                     r1 ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___26)))))))))))))
@@ -1584,15 +1558,12 @@ let mk_tactic_interpretation_13 :
                                                                     =
                                                                     let uu___29
                                                                     =
-                                                                    FStar_Tactics_Embedding.e_result
-                                                                    er in
-                                                                    let uu___30
-                                                                    =
                                                                     FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed
+                                                                    (FStar_Tactics_Embedding.e_result
+                                                                    er)
                                                                     uu___29
-                                                                    uu___30
                                                                     r1 ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___28))))))))))))))
@@ -1795,15 +1766,12 @@ let mk_tactic_interpretation_14 :
                                                                     =
                                                                     let uu___31
                                                                     =
-                                                                    FStar_Tactics_Embedding.e_result
-                                                                    er in
-                                                                    let uu___32
-                                                                    =
                                                                     FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed
+                                                                    (FStar_Tactics_Embedding.e_result
+                                                                    er)
                                                                     uu___31
-                                                                    uu___32
                                                                     r1 ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___30)))))))))))))))
@@ -2027,15 +1995,12 @@ let mk_tactic_interpretation_15 :
                                                                     =
                                                                     let uu___33
                                                                     =
-                                                                    FStar_Tactics_Embedding.e_result
-                                                                    er in
-                                                                    let uu___34
-                                                                    =
                                                                     FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed
+                                                                    (FStar_Tactics_Embedding.e_result
+                                                                    er)
                                                                     uu___33
-                                                                    uu___34
                                                                     r1 ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___32))))))))))))))))
@@ -2277,15 +2242,12 @@ let mk_tactic_interpretation_16 :
                                                                     =
                                                                     let uu___35
                                                                     =
-                                                                    FStar_Tactics_Embedding.e_result
-                                                                    er in
-                                                                    let uu___36
-                                                                    =
                                                                     FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed
+                                                                    (FStar_Tactics_Embedding.e_result
+                                                                    er)
                                                                     uu___35
-                                                                    uu___36
                                                                     r1 ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___34)))))))))))))))))
@@ -2548,15 +2510,12 @@ let mk_tactic_interpretation_17 :
                                                                     =
                                                                     let uu___37
                                                                     =
-                                                                    FStar_Tactics_Embedding.e_result
-                                                                    er in
-                                                                    let uu___38
-                                                                    =
                                                                     FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed
+                                                                    (FStar_Tactics_Embedding.e_result
+                                                                    er)
                                                                     uu___37
-                                                                    uu___38
                                                                     r1 ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___36))))))))))))))))))
@@ -2839,15 +2798,12 @@ let mk_tactic_interpretation_18 :
                                                                     =
                                                                     let uu___39
                                                                     =
-                                                                    FStar_Tactics_Embedding.e_result
-                                                                    er in
-                                                                    let uu___40
-                                                                    =
                                                                     FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed
+                                                                    (FStar_Tactics_Embedding.e_result
+                                                                    er)
                                                                     uu___39
-                                                                    uu___40
                                                                     r1 ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___38)))))))))))))))))))
@@ -3147,15 +3103,12 @@ let mk_tactic_interpretation_19 :
                                                                     =
                                                                     let uu___41
                                                                     =
-                                                                    FStar_Tactics_Embedding.e_result
-                                                                    er in
-                                                                    let uu___42
-                                                                    =
                                                                     FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed
+                                                                    (FStar_Tactics_Embedding.e_result
+                                                                    er)
                                                                     uu___41
-                                                                    uu___42
                                                                     r1 ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___40))))))))))))))))))))
@@ -3476,15 +3429,12 @@ let mk_tactic_interpretation_20 :
                                                                     =
                                                                     let uu___43
                                                                     =
-                                                                    FStar_Tactics_Embedding.e_result
-                                                                    er in
-                                                                    let uu___44
-                                                                    =
                                                                     FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed
+                                                                    (FStar_Tactics_Embedding.e_result
+                                                                    er)
                                                                     uu___43
-                                                                    uu___44
                                                                     r1 ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___42)))))))))))))))))))))

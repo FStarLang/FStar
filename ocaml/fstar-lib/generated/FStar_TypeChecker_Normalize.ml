@@ -1753,10 +1753,9 @@ let get_norm_request :
       fun args ->
         let parse_steps s =
           let uu___ =
-            let uu___1 =
-              FStar_Syntax_Embeddings.e_list
-                FStar_Syntax_Embeddings.e_norm_step in
-            FStar_TypeChecker_Primops.try_unembed_simple uu___1 s in
+            FStar_TypeChecker_Primops.try_unembed_simple
+              (FStar_Syntax_Embeddings.e_list
+                 FStar_Syntax_Embeddings.e_norm_step) s in
           match uu___ with
           | FStar_Pervasives_Native.Some steps ->
               let uu___1 = FStar_TypeChecker_Cfg.translate_norm_steps steps in

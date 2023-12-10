@@ -2471,11 +2471,9 @@ and (extract_sig_let :
                          FStar_TypeChecker_Env.Iota;
                          FStar_TypeChecker_Env.Primops] uu___6 steps in
                      let uu___6 =
-                       let uu___7 =
-                         FStar_Syntax_Embeddings.e_list
-                           FStar_Syntax_Embeddings.e_norm_step in
-                       FStar_TypeChecker_Primops.try_unembed_simple uu___7
-                         steps1 in
+                       FStar_TypeChecker_Primops.try_unembed_simple
+                         (FStar_Syntax_Embeddings.e_list
+                            FStar_Syntax_Embeddings.e_norm_step) steps1 in
                      (match uu___6 with
                       | FStar_Pervasives_Native.Some steps2 ->
                           let uu___7 =
