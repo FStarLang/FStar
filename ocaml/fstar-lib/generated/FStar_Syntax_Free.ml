@@ -1,4 +1,70 @@
 open Prims
+let (compare_uv :
+  FStar_Syntax_Syntax.ctx_uvar -> FStar_Syntax_Syntax.ctx_uvar -> Prims.int)
+  =
+  fun uv1 ->
+    fun uv2 ->
+      let uu___ =
+        FStar_Syntax_Unionfind.uvar_id uv1.FStar_Syntax_Syntax.ctx_uvar_head in
+      let uu___1 =
+        FStar_Syntax_Unionfind.uvar_id uv2.FStar_Syntax_Syntax.ctx_uvar_head in
+      uu___ - uu___1
+let (compare_universe_uvar :
+  FStar_Syntax_Syntax.universe_uvar ->
+    FStar_Syntax_Syntax.universe_uvar -> Prims.int)
+  =
+  fun x ->
+    fun y ->
+      let uu___ = FStar_Syntax_Unionfind.univ_uvar_id x in
+      let uu___1 = FStar_Syntax_Unionfind.univ_uvar_id y in uu___ - uu___1
+let (deq_ctx_uvar : FStar_Syntax_Syntax.ctx_uvar FStar_Class_Deq.deq) =
+  {
+    FStar_Class_Deq.op_Equals_Question =
+      (fun u ->
+         fun v ->
+           let uu___ =
+             FStar_Syntax_Unionfind.uvar_id
+               u.FStar_Syntax_Syntax.ctx_uvar_head in
+           let uu___1 =
+             FStar_Syntax_Unionfind.uvar_id
+               v.FStar_Syntax_Syntax.ctx_uvar_head in
+           FStar_Class_Deq.op_Equals_Question
+             (FStar_Class_Ord.ord_eq FStar_Class_Ord.ord_int) uu___ uu___1)
+  }
+let (ord_ctx_uvar : FStar_Syntax_Syntax.ctx_uvar FStar_Class_Ord.ord) =
+  {
+    FStar_Class_Ord.super = deq_ctx_uvar;
+    FStar_Class_Ord.cmp =
+      (fun u ->
+         fun v ->
+           let uu___ =
+             FStar_Syntax_Unionfind.uvar_id
+               u.FStar_Syntax_Syntax.ctx_uvar_head in
+           let uu___1 =
+             FStar_Syntax_Unionfind.uvar_id
+               v.FStar_Syntax_Syntax.ctx_uvar_head in
+           FStar_Class_Ord.cmp FStar_Class_Ord.ord_int uu___ uu___1)
+  }
+let (deq_univ_uvar : FStar_Syntax_Syntax.universe_uvar FStar_Class_Deq.deq) =
+  {
+    FStar_Class_Deq.op_Equals_Question =
+      (fun u ->
+         fun v ->
+           let uu___ = FStar_Syntax_Unionfind.univ_uvar_id u in
+           let uu___1 = FStar_Syntax_Unionfind.univ_uvar_id v in
+           FStar_Class_Deq.op_Equals_Question
+             (FStar_Class_Ord.ord_eq FStar_Class_Ord.ord_int) uu___ uu___1)
+  }
+let (ord_univ_uvar : FStar_Syntax_Syntax.universe_uvar FStar_Class_Ord.ord) =
+  {
+    FStar_Class_Ord.super = deq_univ_uvar;
+    FStar_Class_Ord.cmp =
+      (fun u ->
+         fun v ->
+           let uu___ = FStar_Syntax_Unionfind.univ_uvar_id u in
+           let uu___1 = FStar_Syntax_Unionfind.univ_uvar_id v in
+           FStar_Class_Ord.cmp FStar_Class_Ord.ord_int uu___ uu___1)
+  }
 let (ctx_uvar_typ :
   FStar_Syntax_Syntax.ctx_uvar ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
@@ -20,6 +86,27 @@ let (uu___is_Full : use_cache_t -> Prims.bool) =
   fun projectee -> match projectee with | Full -> true | uu___ -> false
 type free_vars_and_fvars =
   (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident FStar_Compiler_Set.set)
+let rec snoc :
+  'a . 'a FStar_Class_Deq.deq -> 'a Prims.list -> 'a -> 'a Prims.list =
+  fun uu___ ->
+    fun xx ->
+      fun y ->
+        match xx with
+        | [] -> [y]
+        | x::xx' ->
+            let uu___1 = FStar_Class_Deq.op_Equals_Question uu___ x y in
+            if uu___1
+            then xx
+            else (let uu___3 = snoc uu___ xx' y in x :: uu___3)
+let op_At_At :
+  'a .
+    'a FStar_Class_Deq.deq -> 'a Prims.list -> 'a Prims.list -> 'a Prims.list
+  =
+  fun uu___ ->
+    fun xs ->
+      fun ys ->
+        FStar_Compiler_List.fold_left (fun xs1 -> fun y -> snoc uu___ xs1 y)
+          xs ys
 let (no_free_vars :
   (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident FStar_Compiler_Set.t))
   =
@@ -110,26 +197,32 @@ let (union :
   fun f1 ->
     fun f2 ->
       let uu___ =
+        let uu___1 =
+          op_At_At FStar_Syntax_Syntax.deq_bv
+            (FStar_Pervasives_Native.fst f1).FStar_Syntax_Syntax.free_names
+            (FStar_Pervasives_Native.fst f2).FStar_Syntax_Syntax.free_names in
+        let uu___2 =
+          op_At_At deq_ctx_uvar
+            (FStar_Pervasives_Native.fst f1).FStar_Syntax_Syntax.free_uvars
+            (FStar_Pervasives_Native.fst f2).FStar_Syntax_Syntax.free_uvars in
+        let uu___3 =
+          op_At_At deq_univ_uvar
+            (FStar_Pervasives_Native.fst f1).FStar_Syntax_Syntax.free_univs
+            (FStar_Pervasives_Native.fst f2).FStar_Syntax_Syntax.free_univs in
+        let uu___4 =
+          op_At_At FStar_Syntax_Syntax.deq_univ_name
+            (FStar_Pervasives_Native.fst f1).FStar_Syntax_Syntax.free_univ_names
+            (FStar_Pervasives_Native.fst f2).FStar_Syntax_Syntax.free_univ_names in
+        {
+          FStar_Syntax_Syntax.free_names = uu___1;
+          FStar_Syntax_Syntax.free_uvars = uu___2;
+          FStar_Syntax_Syntax.free_univs = uu___3;
+          FStar_Syntax_Syntax.free_univ_names = uu___4
+        } in
+      let uu___1 =
         FStar_Compiler_Set.union FStar_Syntax_Syntax.ord_fv
           (FStar_Pervasives_Native.snd f1) (FStar_Pervasives_Native.snd f2) in
-      ({
-         FStar_Syntax_Syntax.free_names =
-           (FStar_Compiler_List.op_At
-              (FStar_Pervasives_Native.fst f1).FStar_Syntax_Syntax.free_names
-              (FStar_Pervasives_Native.fst f2).FStar_Syntax_Syntax.free_names);
-         FStar_Syntax_Syntax.free_uvars =
-           (FStar_Compiler_List.op_At
-              (FStar_Pervasives_Native.fst f1).FStar_Syntax_Syntax.free_uvars
-              (FStar_Pervasives_Native.fst f2).FStar_Syntax_Syntax.free_uvars);
-         FStar_Syntax_Syntax.free_univs =
-           (FStar_Compiler_List.op_At
-              (FStar_Pervasives_Native.fst f1).FStar_Syntax_Syntax.free_univs
-              (FStar_Pervasives_Native.fst f2).FStar_Syntax_Syntax.free_univs);
-         FStar_Syntax_Syntax.free_univ_names =
-           (FStar_Compiler_List.op_At
-              (FStar_Pervasives_Native.fst f1).FStar_Syntax_Syntax.free_univ_names
-              (FStar_Pervasives_Native.fst f2).FStar_Syntax_Syntax.free_univ_names)
-       }, uu___)
+      (uu___, uu___1)
 let rec (free_univs : FStar_Syntax_Syntax.universe -> free_vars_and_fvars) =
   fun u ->
     let uu___ = FStar_Syntax_Subst.compress_univ u in
@@ -462,72 +555,6 @@ and (should_invalidate_cache :
               | FStar_Pervasives_Native.Some uu___1 -> true
               | FStar_Pervasives_Native.None -> false)
            n.FStar_Syntax_Syntax.free_univs)
-let (compare_uv :
-  FStar_Syntax_Syntax.ctx_uvar -> FStar_Syntax_Syntax.ctx_uvar -> Prims.int)
-  =
-  fun uv1 ->
-    fun uv2 ->
-      let uu___ =
-        FStar_Syntax_Unionfind.uvar_id uv1.FStar_Syntax_Syntax.ctx_uvar_head in
-      let uu___1 =
-        FStar_Syntax_Unionfind.uvar_id uv2.FStar_Syntax_Syntax.ctx_uvar_head in
-      uu___ - uu___1
-let (compare_universe_uvar :
-  FStar_Syntax_Syntax.universe_uvar ->
-    FStar_Syntax_Syntax.universe_uvar -> Prims.int)
-  =
-  fun x ->
-    fun y ->
-      let uu___ = FStar_Syntax_Unionfind.univ_uvar_id x in
-      let uu___1 = FStar_Syntax_Unionfind.univ_uvar_id y in uu___ - uu___1
-let (deq_ctx_uvar : FStar_Syntax_Syntax.ctx_uvar FStar_Class_Deq.deq) =
-  {
-    FStar_Class_Deq.op_Equals_Question =
-      (fun u ->
-         fun v ->
-           let uu___ =
-             FStar_Syntax_Unionfind.uvar_id
-               u.FStar_Syntax_Syntax.ctx_uvar_head in
-           let uu___1 =
-             FStar_Syntax_Unionfind.uvar_id
-               v.FStar_Syntax_Syntax.ctx_uvar_head in
-           FStar_Class_Deq.op_Equals_Question
-             (FStar_Class_Ord.ord_eq FStar_Class_Ord.ord_int) uu___ uu___1)
-  }
-let (ord_ctx_uvar : FStar_Syntax_Syntax.ctx_uvar FStar_Class_Ord.ord) =
-  {
-    FStar_Class_Ord.super = deq_ctx_uvar;
-    FStar_Class_Ord.cmp =
-      (fun u ->
-         fun v ->
-           let uu___ =
-             FStar_Syntax_Unionfind.uvar_id
-               u.FStar_Syntax_Syntax.ctx_uvar_head in
-           let uu___1 =
-             FStar_Syntax_Unionfind.uvar_id
-               v.FStar_Syntax_Syntax.ctx_uvar_head in
-           FStar_Class_Ord.cmp FStar_Class_Ord.ord_int uu___ uu___1)
-  }
-let (deq_univ_uvar : FStar_Syntax_Syntax.universe_uvar FStar_Class_Deq.deq) =
-  {
-    FStar_Class_Deq.op_Equals_Question =
-      (fun u ->
-         fun v ->
-           let uu___ = FStar_Syntax_Unionfind.univ_uvar_id u in
-           let uu___1 = FStar_Syntax_Unionfind.univ_uvar_id v in
-           FStar_Class_Deq.op_Equals_Question
-             (FStar_Class_Ord.ord_eq FStar_Class_Ord.ord_int) uu___ uu___1)
-  }
-let (ord_univ_uvar : FStar_Syntax_Syntax.universe_uvar FStar_Class_Ord.ord) =
-  {
-    FStar_Class_Ord.super = deq_univ_uvar;
-    FStar_Class_Ord.cmp =
-      (fun u ->
-         fun v ->
-           let uu___ = FStar_Syntax_Unionfind.univ_uvar_id u in
-           let uu___1 = FStar_Syntax_Unionfind.univ_uvar_id v in
-           FStar_Class_Ord.cmp FStar_Class_Ord.ord_int uu___ uu___1)
-  }
 let (new_uv_set : unit -> FStar_Syntax_Syntax.uvars) =
   fun uu___ -> FStar_Compiler_Set.empty ord_ctx_uvar ()
 let (new_universe_uvar_set :

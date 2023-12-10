@@ -15,7 +15,10 @@ type fsteps =
   unfold_fully: FStar_Ident.lid Prims.list FStar_Pervasives_Native.option ;
   unfold_attr: FStar_Ident.lid Prims.list FStar_Pervasives_Native.option ;
   unfold_qual: Prims.string Prims.list FStar_Pervasives_Native.option ;
-  unfold_namespace: Prims.string Prims.list FStar_Pervasives_Native.option ;
+  unfold_namespace:
+    (Prims.string, Prims.bool) FStar_Compiler_Path.forest
+      FStar_Pervasives_Native.option
+    ;
   unfold_tac: Prims.bool ;
   pure_subterms_within_computations: Prims.bool ;
   simplify: Prims.bool ;
@@ -181,7 +184,10 @@ let (__proj__Mkfsteps__item__unfold_qual :
         weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;_} ->
         unfold_qual
 let (__proj__Mkfsteps__item__unfold_namespace :
-  fsteps -> Prims.string Prims.list FStar_Pervasives_Native.option) =
+  fsteps ->
+    (Prims.string, Prims.bool) FStar_Compiler_Path.forest
+      FStar_Pervasives_Native.option)
+  =
   fun projectee ->
     match projectee with
     | { beta; iota; zeta; zeta_full; weak; hnf; primops;
@@ -437,8 +443,18 @@ let (steps_to_string : fsteps -> Prims.string) =
                                   f.unfold_qual in
                               let uu___26 =
                                 let uu___27 =
-                                  format_opt
-                                    (FStar_Compiler_String.concat ", ")
+                                  FStar_Class_Show.show
+                                    (FStar_Class_Show.show_option
+                                       (FStar_Class_Show.show_tuple2
+                                          (FStar_Class_Show.show_list
+                                             (FStar_Class_Show.show_tuple2
+                                                (FStar_Class_Show.show_list
+                                                   (FStar_Class_Show.printableshow
+                                                      FStar_Class_Printable.printable_string))
+                                                (FStar_Class_Show.printableshow
+                                                   FStar_Class_Printable.printable_bool)))
+                                          (FStar_Class_Show.printableshow
+                                             FStar_Class_Printable.printable_bool)))
                                     f.unfold_namespace in
                                 let uu___28 =
                                   let uu___29 = b f.unfold_tac in
@@ -1140,6 +1156,15 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             }
           else fs1
       | FStar_TypeChecker_Env.UnfoldNamespace strs ->
+          let uu___ =
+            let uu___1 =
+              let uu___2 =
+                FStar_Compiler_List.map
+                  (fun s1 ->
+                     let uu___3 = FStar_Ident.path_of_text s1 in
+                     (uu___3, true)) strs in
+              (uu___2, false) in
+            FStar_Pervasives_Native.Some uu___1 in
           {
             beta = (fs.beta);
             iota = (fs.iota);
@@ -1154,7 +1179,7 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             unfold_fully = (fs.unfold_fully);
             unfold_attr = (fs.unfold_attr);
             unfold_qual = (fs.unfold_qual);
-            unfold_namespace = (FStar_Pervasives_Native.Some strs);
+            unfold_namespace = uu___;
             unfold_tac = (fs.unfold_tac);
             pure_subterms_within_computations =
               (fs.pure_subterms_within_computations);
