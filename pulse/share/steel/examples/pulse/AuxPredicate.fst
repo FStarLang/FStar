@@ -10,10 +10,10 @@ module R = Pulse.Lib.Reference
 // Defining a vprop using F* syntax. We do not yet allow
 // writing Pulse syntax for vprops in predicates 
 let my_inv (b:bool) (r:R.ref int) : vprop
-  = exists_ (fun v -> 
+  = exists* v.
       R.pts_to r v ** 
       pure ( (v==0 \/ v == 1) /\ b == (v = 0) )
-    )
+    
 
 
 ```pulse

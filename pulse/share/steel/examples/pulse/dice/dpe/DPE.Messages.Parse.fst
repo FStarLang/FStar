@@ -194,7 +194,7 @@ let parse_dpe_cmd_post
 : vprop
 = match res with
   | None -> A.pts_to input #p s ** pure (parse_dpe_cmd_failure_postcond s)
-  | Some cmd -> exists_ (fun vargs ->
+  | Some cmd -> exists* vargs.
       raw_data_item_match full_perm cmd.dpe_cmd_args vargs **
       (raw_data_item_match full_perm cmd.dpe_cmd_args vargs @==>
         A.pts_to input #p s
@@ -204,7 +204,7 @@ let parse_dpe_cmd_post
         Ghost.reveal s == serialize_cbor vsess `Seq.append` rem /\
         parse_dpe_cmd_postcond cmd.dpe_cmd_sid cmd.dpe_cmd_cid vargs vsess rem
       )
-    )
+
 
 ```pulse
 fn parse_dpe_cmd (#s:erased (Seq.seq U8.t))

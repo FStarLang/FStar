@@ -69,8 +69,10 @@ let rewrite_token (tok:FP.token)
     | EQUALTYPE -> PP.EQUALTYPE 
     | EXCEPTION -> PP.EXCEPTION 
     | EXISTS s -> PP.EXISTS s 
+    | EXISTS_OP s -> PP.EXISTS_OP s
     | FALSE -> PP.FALSE 
     | FORALL s -> PP.FORALL s 
+    | FORALL_OP s -> PP.FORALL_OP s
     | FRIEND -> PP.FRIEND 
     | FUN -> PP.FUN 
     | FUNCTION -> PP.FUNCTION 

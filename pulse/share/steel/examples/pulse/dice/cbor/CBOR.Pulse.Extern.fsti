@@ -106,13 +106,13 @@ let cbor_read_success_post
   (va: Ghost.erased (Seq.seq U8.t))
   (c: cbor_read_t)
 : Tot vprop
-= exists_ (fun v -> exists_ (fun rem ->
+= exists* v rem.
     raw_data_item_match full_perm c.cbor_read_payload v **
     A.pts_to c.cbor_read_remainder #p rem **
     ((raw_data_item_match full_perm c.cbor_read_payload v ** A.pts_to c.cbor_read_remainder #p rem) @==>
       A.pts_to a #p va) **
     pure (cbor_read_success_postcond va c v rem)
-  ))
+
 
 noextract
 let cbor_read_error_postcond
@@ -164,7 +164,7 @@ let cbor_read_deterministically_encoded_success_post
   (va: Ghost.erased (Seq.seq U8.t))
   (c: cbor_read_t)
 : Tot vprop
-= exists_ (fun v -> exists_ (fun rem ->
+= ((exists* v rem.
     raw_data_item_match full_perm c.cbor_read_payload v **
     A.pts_to c.cbor_read_remainder #p rem **
     ((raw_data_item_match full_perm c.cbor_read_payload v ** A.pts_to c.cbor_read_remainder #p rem) @==>
@@ -264,11 +264,11 @@ val cbor_destr_string
     (raw_data_item_match p c (Ghost.reveal va) ** pure (
       Cbor.String? va
     ))
-    (fun c' -> exists_ (fun vc' -> exists_ (fun p'->
+    (fun c' -> exists* vc' p'.
       A.pts_to c'.cbor_string_payload #p' vc' **
       (A.pts_to c'.cbor_string_payload #p' vc' @==> raw_data_item_match p c (Ghost.reveal va)) **
       pure (cbor_destr_string_post va c'  vc'
-    ))))
+    ))
 
 val cbor_constr_string
   (typ: Cbor.major_type_byte_string_or_text_string)
@@ -280,14 +280,14 @@ val cbor_constr_string
     (A.pts_to a #p va ** pure (
       U64.v len == Seq.length va
     ))
-    (fun c' -> exists_ (fun vc' ->
+    (fun c' -> exists* vc'.
       raw_data_item_match full_perm c' vc' **
       (raw_data_item_match full_perm c' vc' @==>
         A.pts_to a #p va
       ) ** pure (
       U64.v len == Seq.length va /\
       vc' == Cbor.String typ va
-    )))
+    ))
 
 val cbor_constr_array
   (a: A.array cbor)
@@ -300,7 +300,7 @@ val cbor_constr_array
       pure (
         U64.v len == List.Tot.length v'
     ))
-    (fun res -> exists_ (fun vres ->
+    (fun res -> exists* vres.
       raw_data_item_match full_perm res vres **
       (raw_data_item_match full_perm res vres @==>
         (A.pts_to a c' **
@@ -308,7 +308,7 @@ val cbor_constr_array
       ) ** pure (
       U64.v len == List.Tot.length v' /\
       vres == Cbor.Array v'
-    )))
+    ))
 
 let maybe_cbor_array
   (v: Cbor.raw_data_item)
@@ -340,7 +340,7 @@ val cbor_array_index
       Cbor.Array? v /\
       SZ.v i < List.Tot.length (Cbor.Array?.v v)
     ))
-    (fun a' -> exists_ (fun va' ->
+    (fun a' -> exists* va'.
       raw_data_item_match p a' va' **
       (raw_data_item_match p a' va' @==>
         raw_data_item_match p a v) **
@@ -348,7 +348,7 @@ val cbor_array_index
         Cbor.Array? v /\
         SZ.v i < List.Tot.length (Cbor.Array?.v v) /\
         va' == List.Tot.index (Cbor.Array?.v v) (SZ.v i)
-    )))
+    ))
 
 val cbor_dummy_array_iterator: cbor_array_iterator_t
 
@@ -364,14 +364,14 @@ val cbor_array_iterator_init
   (#v: Ghost.erased Cbor.raw_data_item)
 : stt cbor_array_iterator_t
     (raw_data_item_match p a v)
-    (fun i -> exists_ (fun vi ->
+    (fun i -> exists* vi.
       cbor_array_iterator_match p i vi **
       (cbor_array_iterator_match p i vi @==>
         raw_data_item_match p a v) **
       pure (
         Cbor.Array? v /\
         vi == Cbor.Array?.v v
-    )))
+    ))
 
 val cbor_array_iterator_is_done
   (i: cbor_array_iterator_t)
@@ -392,7 +392,7 @@ val cbor_array_iterator_next
     (R.pts_to pi i ** cbor_array_iterator_match p i l **
       pure (Cons? l)
     )
-    (fun c -> exists_ (fun i' -> exists_ (fun vc -> exists_ (fun vi' ->
+    (fun c -> exists* i' vc vi'.
       R.pts_to pi i' **
       raw_data_item_match p c vc **
       cbor_array_iterator_match p i' vi' **
@@ -401,7 +401,7 @@ val cbor_array_iterator_next
         cbor_array_iterator_match p i l
       ) ** pure (
       Ghost.reveal l == vc :: vi'
-    )))))
+    ))
 
 val cbor_read_array
   (a: cbor)
@@ -419,18 +419,18 @@ val cbor_read_array
           U64.v len == List.Tot.length (Cbor.Array?.v v)
         )
     ))
-    (fun res -> exists_ (fun vres ->
+    (fun res -> exists* vres.
       A.pts_to res vres **
       raw_data_item_array_match p vres (maybe_cbor_array v) **
       ((A.pts_to res vres **
         raw_data_item_array_match p vres (maybe_cbor_array v)) @==> (
         raw_data_item_match p a v **
-        (exists_ (A.pts_to dest #full_perm))
+        (exists* _x. (A.pts_to dest #full_perm _x))
       )) ** pure (
       Cbor.Array? v /\
       U64.v len == A.length dest /\
       U64.v len == A.length res
-    )))
+    ))
 
 let maybe_cbor_tagged_tag
   (v: Cbor.raw_data_item)
@@ -500,7 +500,7 @@ val cbor_constr_map
       pure (
         U64.v len == List.Tot.length v'
     ))
-    (fun res -> exists_ (fun vres ->
+    (fun res -> exists* vres.
       raw_data_item_match full_perm res vres **
       (raw_data_item_match full_perm res vres @==>
         (A.pts_to a c' **
@@ -508,7 +508,7 @@ val cbor_constr_map
       ) ** pure (
       U64.v len == List.Tot.length v' /\
       vres == Cbor.Map v'
-    )))
+    ))
 
 val cbor_map_length
   (a: cbor)
@@ -537,7 +537,7 @@ val cbor_map_iterator_init
   (#v: Ghost.erased Cbor.raw_data_item)
 : stt cbor_map_iterator_t
     (raw_data_item_match p a v ** pure (Cbor.Map? v))
-    (fun i -> exists_ (fun l ->
+    (fun i -> exists* l.
       cbor_map_iterator_match p i l **
       (cbor_map_iterator_match p i l @==>
         raw_data_item_match p a v) **
@@ -545,7 +545,7 @@ val cbor_map_iterator_init
         Cbor.Map? v /\
         l == Cbor.Map?.v v
       )
-    ))
+    )
 
 val cbor_map_iterator_is_done
   (i: cbor_map_iterator_t)
@@ -562,7 +562,7 @@ val cbor_map_iterator_next
   (#i: Ghost.erased cbor_map_iterator_t)
 : stt cbor_map_entry
     (pts_to pi i ** cbor_map_iterator_match p i l ** pure (Cons? l))
-    (fun c -> exists_ (fun i' -> exists_ (fun vc -> exists_ (fun l' ->
+    (fun c -> exists* i' vc l'.
       pts_to pi i' **
       raw_data_item_map_entry_match p c vc **
       cbor_map_iterator_match p i' l' **
@@ -571,7 +571,7 @@ val cbor_map_iterator_next
         cbor_map_iterator_match p i l
       ) **
       pure (Ghost.reveal l == vc :: l')
-    )))))
+    ))
 
 val cbor_get_major_type
   (a: cbor)
@@ -651,7 +651,7 @@ val cbor_write
     ))
     (fun res -> 
       raw_data_item_match p c (Ghost.reveal va) **
-      exists_ (cbor_write_post va c vout out res)
+      (exists* _x. cbor_write_post va c vout out res _x)
     )
 
 val cbor_gather

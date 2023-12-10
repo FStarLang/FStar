@@ -56,11 +56,10 @@ noeq
 type locked_state_t = 
 { h:handle_t; 
   ph:pure_handle_t; 
-  lk:lock (exists_ (fun s ->
-      exists_ (fun ps -> 
+  lk:lock (exists* s ps. 
           handle_has_state h s **
           pure_handle_has_state ph ps **
-          pure (states_correspond s ps))));}
+          pure (states_correspond s ps));}
 let mk_locked_st h ph lk = {h; ph; lk;}
 
 assume
@@ -87,11 +86,10 @@ fn init' ()
   fold pure_handle_has_state ph Init;
   fold handle_has_state h CInit;
 
-  let lk = new_lock (exists_ (fun s ->
-                     exists_ (fun ps -> 
+  let lk = new_lock (exists* s ps.
                         handle_has_state h s **
                         pure_handle_has_state ph ps **
-                        pure (states_correspond s ps))));
+                        pure (states_correspond s ps));
 
   let locked_st = mk_locked_st h ph lk;
   rewrite (pure_handle_has_state ph Init)

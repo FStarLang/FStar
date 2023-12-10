@@ -5,7 +5,7 @@ open Pulse.Lib.Pervasives
 val pledge (opens:inames) (f:vprop) (v:vprop) : vprop
 
 let pledge_any (f:vprop) (v:vprop) : vprop =
-  exists_ (fun is -> pledge is f v)
+  exists* is. pledge is f v
 
 val pledge_sub_inv (os1:inames) (os2:inames{inames_subset os1 os2}) (f:vprop) (v:vprop)
   : stt_ghost unit emp_inames (pledge os1 f v) (fun _ -> pledge os2 f v)

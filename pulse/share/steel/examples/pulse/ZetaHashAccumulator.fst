@@ -195,7 +195,7 @@ let mk_ha_core acc ctr = { acc; ctr }
 let ha_val_core (core:ha_core) (h:hash_value_t) 
   : vprop
   = A.pts_to core.acc (fst h) **
-    exists_ (λ (n:U32.t) →
+    (exists* (n:U32.t).
       pure (U32.v n == snd h) **
       pts_to core.ctr n)
 
@@ -252,7 +252,7 @@ let mk_ha core tmp dummy = { core; tmp; dummy }
 // A representation predicate for ha, encapsulating an ha_val_core
 let ha_val (h:ha) (s:hash_value_t) =
   ha_val_core h.core s **
-  exists_ (fun (s:Seq.lseq U8.t 32) -> A.pts_to h.tmp s) **
+  (exists* (s:Seq.lseq U8.t 32). A.pts_to h.tmp s) **
   A.pts_to h.dummy (Seq.create 1 0uy)
 
 // A ghost function to package up a ha_val predicate

@@ -21,12 +21,11 @@ let rec is_list #t (x:llist t) (l:list t)
   = match l with
     | [] -> pure (x == None)
     | head::tl -> 
-      exists_ (fun (v:node_ptr t) ->
-      exists_ (fun (tail:llist t) ->
+      exists* (v:node_ptr t) (tail:llist t).
         pure (x == Some v) **
         pts_to v (mk_node head tail) **
         is_list tail tl
-    ))
+    
 
 
 let is_list_cases #t (x:llist t) (l:list t)
@@ -34,30 +33,27 @@ let is_list_cases #t (x:llist t) (l:list t)
   = match x with
     | None -> pure (l == [])
     | Some v -> 
-      exists_ (fun (n:node t) ->
-      exists_ (fun (tl:list t) ->
+      exists* (n:node t) (tl:list t).
         pts_to v n **
         pure (l == n.head::tl) **
         is_list n.tail tl
-      ))
 
 
 
 let unfold_is_list_cons #t (x:llist t) (head:t) (tl:list t)
   :  Lemma (is_list x (head::tl) ==
-            exists_ (fun (v:node_ptr t) ->
-                exists_ (fun (tail:llist t) ->
+            (exists* (v:node_ptr t) (tail:llist t).
                     pure (x == Some v) **
                     pts_to v (mk_node head tail) **
                     is_list tail tl
-                )))
+                ))
   = assert (is_list x (head::tl) ==
-            exists_ (fun (v:node_ptr t) ->
-                exists_ (fun (tail:llist t) ->
+            (exists* (v:node_ptr t)
+                     (tail:llist t).
                     pure (x == Some v) **
                     pts_to v (mk_node head tail) **
                     is_list tail tl
-                )))
+                ))
     by (T.norm [delta_only [`%is_list]; zeta;iota]; T.dump "A") //trefl())
 
 ```pulse

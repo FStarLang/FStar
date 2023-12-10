@@ -9,10 +9,10 @@ module R = Pulse.Lib.Reference
   var outside the loop is not ghost
 *)
 let my_inv (b:bool) (r:R.ref int) : vprop
-  = exists_ (fun v -> 
+  = exists* v.
       R.pts_to r v ** 
       pure ( b == (v = 0) )
-    )
+    
 
 [@@expect_failure]
 ```pulse

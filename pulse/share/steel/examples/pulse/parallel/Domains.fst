@@ -42,7 +42,7 @@ let task_elem = (
   & p: (a -> prop) // postcondition about the return value
   & (unit_emp_stt_pure_pure a p) // the computation
   & r: ref (option a) // the reference where we put the result of the computation
-  & Lock.lock (exists_ (fun v -> pts_to r v ** pure (maybe_sat p v)))
+  & Lock.lock (exists* v. pts_to r v ** pure (maybe_sat p v))
 )
 // depends negatively on par_env
 
@@ -53,9 +53,9 @@ let inv_task_queue
   (q: HR.ref task_queue) // the task queue
   (c: ref int) // a counter of how many tasks are currently being performed
   : vprop
-= (exists_ (fun vq -> exists_ (fun vc ->
+= exists* vq vc.
     HR.pts_to q vq **
-    pts_to c vc)))
+    pts_to c vc
 // depends postivitely on task_queue
 // depends negatively on par_env
 
@@ -83,7 +83,7 @@ val higher_alloc (#a:Type) (x:a)
 
 assume
 val higher_free (#a:Type) (r: HR.ref a)
-  : stt unit (exists_ (fun v -> HR.pts_to r v)) (fun _ -> emp)
+  : stt unit (exists* v. HR.pts_to r v) (fun _ -> emp)
 
 assume
 val higher_read (#a:Type)
@@ -137,13 +137,16 @@ fn release_queue_lock
 ```
 
 let ref_ownership r: vprop
-  = exists_ (fun v -> pts_to r v)
+  = exists* v. pts_to r v
 
 
 let pure_handler #a (post: a -> prop)
-  = (res: ref (option a) & Lock.lock (exists_ (fun v -> pts_to res v ** pure (maybe_sat post v))))
+  = (res: ref (option a) & Lock.lock (exists* v. pts_to res v ** pure (maybe_sat post v)))
 
-let mk_pure_handler #a (p: a -> prop) (r: ref (option a)) (l: Lock.lock (exists_ (fun v -> pts_to r v ** pure (maybe_sat p v))))
+let mk_pure_handler #a 
+      (p: a -> prop)
+      (r: ref (option a)) 
+      (l: Lock.lock (exists* v. pts_to r v ** pure (maybe_sat p v)))
  : pure_handler p //(res: ref (option a) & Lock.lock (exists_ (fun v -> pts_to res v ** pure (maybe_sat p v))))
 = (| r, l |)
 
@@ -162,7 +165,7 @@ fn spawn_emp'
  ensures emp
 {
   let res = Pulse.Lib.Reference.alloc #(option a) None;
-  let l_res = Lock.new_lock (exists_ (fun v -> pts_to res v ** pure (maybe_sat post v)));
+  let l_res = Lock.new_lock (exists* v. pts_to res v ** pure (maybe_sat post v));
   let task = create_task_elem #a post (f p) res l_res;
 
   acquire_queue_lock p;
@@ -198,7 +201,7 @@ let half = half_perm
 assume val free_ref (#a:Type) (r: ref a)
  //(x:a)
   : stt unit
-  (exists_ (fun v -> pts_to r v))
+  (exists* v. pts_to r v)
   (fun _ -> emp)
   
 

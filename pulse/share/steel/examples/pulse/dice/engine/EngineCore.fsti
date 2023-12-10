@@ -20,7 +20,7 @@ val engine_main (cdi:cdi_t) (uds:A.larray U8.t (SZ.v uds_len)) (record:engine_re
                          (fun r -> 
                             engine_record_perm record p repr **
                             A.pts_to uds #uds_perm uds_bytes **
-                            exists_ (fun (c1:Seq.seq U8.t) ->
+                            (exists* (c1:Seq.seq U8.t).
                                       A.pts_to cdi c1 **
                                       pure (r = DICE_SUCCESS ==>
                                             l0_is_authentic repr /\ cdi_functional_correctness c1 uds_bytes repr)))

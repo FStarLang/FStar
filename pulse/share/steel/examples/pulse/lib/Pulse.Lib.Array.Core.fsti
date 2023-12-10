@@ -116,7 +116,7 @@ val pts_to_range_split
     (pts_to_range a i j #p s **
       pure (i <= m /\ m <= j)
     )
-    (fun _ -> exists_ (fun s1 -> exists_ (fun s2 ->
+    (fun _ -> exists* s1 s2.
       pts_to_range a i m #p s1 **
       pts_to_range a m j #p s2 **
       pure (
@@ -125,7 +125,7 @@ val pts_to_range_split
         s1 == Seq.slice s 0 (m - i) /\
         s2 == Seq.slice s (m - i) (Seq.length s) /\
         s == Seq.append s1 s2
-    ))))
+    ))
 
 val pts_to_range_join
   (#elt: Type0)
@@ -167,10 +167,12 @@ val pts_to_range_upd
     (requires pts_to_range a l r s0)
     //(ensures fun _ -> A.pts_to_range a l r full_perm (Seq.upd s0 (US.v i - l) v))
     //(ensures fun _ -> pure (Seq.length s0 == r - l) `star` A.pts_to a full_perm (Seq.upd s0 (US.v i - l) v))
-    (ensures fun _ -> (exists_ (fun s -> pts_to_range a l r s **
-    pure(
-      Seq.length s0 == r - l /\ s == Seq.upd s0 (SZ.v i - l) v
-    ))))
+    (ensures fun _ ->
+      exists* s.
+        pts_to_range a l r s **
+        pure(
+          Seq.length s0 == r - l /\ s == Seq.upd s0 (SZ.v i - l) v
+        ))
 
 val with_local
   (#a:Type0)
@@ -183,5 +185,5 @@ val with_local
                                     (pts_to arr (Seq.create (SZ.v len) init) **
                                      (pure (is_full_array arr) **
                                       pure (length arr == SZ.v len))))
-                                   (fun r -> post r ** exists_ (pts_to arr)))
+                                   (fun r -> post r ** (exists* v. pts_to arr v)))
   : stt ret_t pre post

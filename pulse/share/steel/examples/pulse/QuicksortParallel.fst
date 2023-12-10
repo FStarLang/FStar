@@ -120,10 +120,12 @@ let op_Array_Assignment
   (#s0: Ghost.erased (Seq.seq t))
 : stt unit
     (requires A.pts_to_range a l r s0)
-    (ensures fun _ -> (exists_ (fun s -> A.pts_to_range a l r s **
-    pure(
-      Seq.length s0 == r - l /\ s == Seq.upd s0 (SZ.v i - l) v
-    ))))
+    (ensures fun _ -> 
+      exists* s.
+        A.pts_to_range a l r s **
+        pure(
+          Seq.length s0 == r - l /\ s == Seq.upd s0 (SZ.v i - l) v
+        ))
 = pts_to_range_upd a i v #l #r
 
 (** Partitioning **)

@@ -44,12 +44,12 @@ let pht_sz #k #v (pht:pht_t k v) : GTot pos = pht.repr.sz
 val alloc (#k:eqtype) (#v:Type0) (hashf:k -> US.t) (l:pos_us)
   : stt (ht_t k v) emp 
         (fun ht ->
-          exists_ (fun pht ->
+          exists* pht.
             models ht pht **
-            pure (pht == mk_init_pht hashf l)))
+            pure (pht == mk_init_pht hashf l))
 
 val dealloc (#k:eqtype) (#v:Type0) (ht:ht_t k v)
-  : stt unit (requires exists_ (fun pht -> models ht pht))
+  : stt unit (requires exists* pht. models ht pht)
              (ensures fun _ -> emp)
 
 val lookup (#kt:eqtype) (#vt:Type0)
@@ -65,11 +65,11 @@ val insert (#kt:eqtype) (#vt:Type0)
   : stt bool 
         (models ht pht)
         (fun b -> 
-          exists_ (fun pht' -> 
+          exists* pht'.
             models ht pht' **
             pure (if b
                   then pht'==PHT.insert pht k v
-                  else pht'==reveal pht)))
+                  else pht'==reveal pht))
 
 
 val delete (#kt:eqtype) (#vt:Type0)
@@ -78,11 +78,11 @@ val delete (#kt:eqtype) (#vt:Type0)
   : stt bool
     (models ht pht)
     (fun b -> 
-        exists_ (fun pht' -> 
+        exists* pht'.
             models ht pht' **
             pure (if b
                   then pht'==PHT.delete pht k
-                  else pht'==reveal pht)))
+                  else pht'==reveal pht))
 
 val not_full (#kt:eqtype) (#vt:Type0)
              (ht:ht_t kt vt)

@@ -3,7 +3,7 @@ open Pulse.Lib.Pervasives
 open Pulse.Lib.Reference
 open Pulse.Lib.SpinLock
 
-let exists_n (r:ref nat) : vprop = exists_ (fun n -> pts_to r n)
+let exists_n (r:ref nat) : vprop = exists* n. pts_to r n
 
 type tup_t = r:ref nat & lock (exists_n r)
 let mk_tup r lk : tup_t = (| r, lk |)
@@ -24,7 +24,7 @@ fn tuple ()
   unfold exists_n global_tup._1;  // this unfold affects the type of the dependent 
                                   // tuple, so we lost syntactic equality and the 
                                   // following assertion fails
-  assert (exists_ (fun n -> pts_to global_tup._1 n));
+  assert (`@(exists* n. pts_to global_tup._1 n));
   admit()
 }
 ```
@@ -47,7 +47,7 @@ fn record ()
   acquire global_rec.lk;
   assert (exists_n global_rec.r);
   unfold exists_n global_rec.r;
-  assert (exists_ (fun n -> pts_to global_rec.r n));
+  assert (exists n. pts_to global_rec.r n);
   admit()
 }
 ```

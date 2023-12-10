@@ -14,7 +14,7 @@ include $(FSTAR_HOME)/src/Makefile.boot.common
 FSTAR_BOOT_OPTIONS+=--include . --MLish
 OUTPUT_DIRECTORY = $(CURDIR)/../ocaml/plugin/generated
 FSTAR_C=$(RUNLIM) $(FSTAR_EXE) $(SIL) $(FSTAR_BOOT_OPTIONS)
-ADDITIONAL_INCLUDES=
+ADDITIONAL_INCLUDES=$(FSTAR_HOME)/src/.cache.boot
 EXTRACT_FILES=Pulse_ASTBuilder.ml PulseSugar.ml PulseDesugar.ml
 extract: $(addprefix $(OUTPUT_DIRECTORY)/,$(EXTRACT_FILES))
 
@@ -27,5 +27,6 @@ $(OUTPUT_DIRECTORY)/%.ml: %.fst
 		   $(addprefix --include , $(ADDITIONAL_INCLUDES)) \
 		   --odir "$(OUTPUT_DIRECTORY)" \
                    --codegen OCaml \
+				   --already_cached 'Prims,FStar' \
                    --extract_module $(basename $(notdir $<))
 	chmod -x $@

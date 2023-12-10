@@ -162,8 +162,10 @@ let (mk_star :
         (FStar_Reflection_V2_Data.Tv_App
            (t1, (r, FStar_Reflection_V2_Data.Q_Explicit)))
 let (pure_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "pure"
-let (exists_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "exists_"
-let (forall_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "forall_"
+let (exists_lid : Prims.string Prims.list) =
+  mk_pulse_lib_core_lid "op_exists_Star"
+let (forall_lid : Prims.string Prims.list) =
+  mk_pulse_lib_core_lid "op_forall_Star"
 let (args_of :
   FStar_Reflection_Types.term Prims.list ->
     (FStar_Reflection_Types.term * FStar_Reflection_V2_Data.aqualv)

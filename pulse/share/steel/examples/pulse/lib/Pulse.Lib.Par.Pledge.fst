@@ -181,7 +181,7 @@ let inv_p' (os0 : inames) (f v1 v2 : vprop) (r1 r2 : GR.ref bool) (b1 b2 : bool)
       | true, true -> emp)
 
 let inv_p (os0 : inames) (f v1 v2 : vprop) (r1 r2 : GR.ref bool) : vprop =
-  exists_ (fun b1 -> exists_ (fun b2 -> inv_p' os0 f v1 v2 r1 r2 b1 b2))
+  exists* b1 b2. inv_p' os0 f v1 v2 r1 r2 b1 b2
 
 ```pulse
 ghost

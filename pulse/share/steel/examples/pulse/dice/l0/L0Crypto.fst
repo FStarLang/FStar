@@ -49,12 +49,11 @@ val derive_key_pair'
   (ensures (fun _ ->
     A.pts_to ikm #ikm_perm ikm_seq ** 
     A.pts_to lbl #lbl_perm lbl_seq **
-    exists_ (fun (pub_seq:Seq.seq U8.t) ->
-    exists_ (fun (priv_seq:Seq.seq U8.t) ->
+    (exists* (pub_seq priv_seq:Seq.seq U8.t).
       A.pts_to pub pub_seq ** 
       A.pts_to priv priv_seq **
       pure ((pub_seq, priv_seq) == derive_key_pair_spec ikm_len ikm_seq lbl_len lbl_seq)
-    ))))
+    )))
 
 // ```pulse
 // fn derive_key_pair'

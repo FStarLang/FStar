@@ -105,12 +105,12 @@ val l0_main
              (fun _ -> 
               l0_record_perm record p repr **
               A.pts_to cdi #cdi_perm cdi0 **
-              exists_ (fun (deviceID_pub1:Seq.seq U8.t) ->
-              exists_ (fun (deviceID_priv1:Seq.seq U8.t) -> 
-              exists_ (fun (aliasKey_pub1:Seq.seq U8.t) ->
-              exists_ (fun (aliasKey_priv1:Seq.seq U8.t) ->
-              exists_ (fun (aliasKeyCRT1:Seq.seq U8.t) ->
-              exists_ (fun (deviceIDCSR1:Seq.seq U8.t) ->
+              (exists* (deviceID_pub1
+                        deviceID_priv1
+                        aliasKey_pub1
+                        aliasKey_priv1
+                        aliasKeyCRT1
+                        deviceIDCSR1:Seq.seq U8.t).
                 A.pts_to deviceID_pub deviceID_pub1 **
                 A.pts_to deviceID_priv deviceID_priv1 **
                 A.pts_to aliasKey_pub aliasKey_pub1 **
@@ -130,4 +130,4 @@ val l0_main
                   aliasKeyCRT_functional_correctness 
                     dice_hash_alg dice_digest_len cdi0 repr.fwid
                     record.deviceID_label_len repr.deviceID_label record.aliasKeyCRT_ingredients 
-                    aliasKeyCRT_len aliasKeyCRT1 aliasKey_pub1))))))))
+                    aliasKeyCRT_len aliasKeyCRT1 aliasKey_pub1)))

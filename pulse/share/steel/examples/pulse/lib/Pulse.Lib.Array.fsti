@@ -47,9 +47,9 @@ val fill
         (requires 
             pts_to a s)
         (ensures fun _ ->
-            exists_ (fun (s:Seq.seq t) ->
+            exists* (s:Seq.seq t).
                 pts_to a s **
-                pure (s `Seq.equal` Seq.create (SZ.v l) v)))
+                pure (s `Seq.equal` Seq.create (SZ.v l) v))
 
 val zeroize
         (l:SZ.t)
@@ -59,6 +59,6 @@ val zeroize
         (requires 
             pts_to a s)
         (ensures fun _ -> 
-            exists_ (fun (s:Seq.seq U8.t) ->
-            pts_to a s **
-            pure (s `Seq.equal` Seq.create (SZ.v l) 0uy)))
+            exists* (s:Seq.seq U8.t).
+                pts_to a s **
+                pure (s `Seq.equal` Seq.create (SZ.v l) 0uy))

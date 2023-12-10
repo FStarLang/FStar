@@ -65,7 +65,7 @@ val with_local
   (#ret_t:Type)
   (#post:ret_t -> vprop)
   (body:(r:ref a) -> stt ret_t (pre ** pts_to r init)
-                              (fun v -> post v ** exists_ (pts_to r)))
+                              (fun v -> post v ** op_exists_Star (pts_to r)))
   : stt ret_t pre post
 
 

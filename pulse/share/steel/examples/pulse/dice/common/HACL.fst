@@ -127,11 +127,11 @@ val ed25519_sign
     (A.pts_to buf buf0 **
      A.pts_to privk #pprivk privk_seq **
      A.pts_to msg #pmsg msg_seq)
-    (fun _ -> exists_ (fun (buf1:Seq.seq U8.t) ->
-      A.pts_to buf buf1 **
+    (fun _ -> exists* (buf1:Seq.seq U8.t).
+      A.pts_to buf buf1 ** 
       A.pts_to privk #pprivk privk_seq **
       A.pts_to msg #pmsg msg_seq **
-      pure (buf1 `Seq.equal` spec_ed25519_sign privk_seq msg_seq)))
+      pure (buf1 `Seq.equal` spec_ed25519_sign privk_seq msg_seq))
 
 (* DICE hash constants *)
 

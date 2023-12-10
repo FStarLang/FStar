@@ -187,7 +187,7 @@ let impl_array_group3
             cbor_array_iterator_match p i l **
             pure (opt_precedes (Ghost.reveal l) b)
         )
-        (fun res -> exists_ (fun i' -> exists_ (fun l' ->
+        (fun res -> exists* i' l'.
             R.pts_to pi i' **
             cbor_array_iterator_match p i' l' **
             (cbor_array_iterator_match p i' l' @==> cbor_array_iterator_match p i l) **
@@ -196,7 +196,7 @@ let impl_array_group3
                 res == Some? (g l) /\
                 (res == true ==> Some?.v (g l) == l')
             )
-        )))
+        )
 
 ```pulse
 ghost
@@ -222,7 +222,7 @@ requires
             )
     )
 ensures
-        (exists_ (fun i' -> exists_ (fun l' ->
+        `@(exists* i' l'.
             R.pts_to pi i' **
             cbor_array_iterator_match p i' l' **
             (cbor_array_iterator_match p i' l' @==> cbor_array_iterator_match p i l) **
@@ -231,7 +231,7 @@ ensures
                 res == Some? (g l) /\
                 (res == true ==> Some?.v (g l) == l')
             )
-        )))
+        )
 
 {
     ()
@@ -370,13 +370,12 @@ let cbor_read_with_typ_success_post
   (va: Ghost.erased (Seq.seq U8.t))
   (c: cbor_read_t)
 : Tot vprop
-= exists_ (fun v -> exists_ (fun rem ->
+= exists* v rem.
     raw_data_item_match full_perm c.cbor_read_payload v **
     A.pts_to c.cbor_read_remainder #p rem **
     ((raw_data_item_match full_perm c.cbor_read_payload v ** A.pts_to c.cbor_read_remainder #p rem) @==>
       A.pts_to a #p va) **
     pure (cbor_read_with_typ_success_postcond t va c v rem)
-  ))
 
 noextract [@@noextract_to "krml"]
 let cbor_read_with_typ_error_postcond
@@ -521,13 +520,12 @@ let cbor_read_deterministically_encoded_with_typ_success_post
   (va: Ghost.erased (Seq.seq U8.t))
   (res: cbor_read_t)
 : Tot vprop
-=   exists_ (fun v -> exists_ (fun rem ->
+=   exists* v rem.
         raw_data_item_match full_perm res.cbor_read_payload v **
         A.pts_to res.cbor_read_remainder #p rem **
         ((raw_data_item_match full_perm res.cbor_read_payload v ** A.pts_to res.cbor_read_remainder #p rem) @==>
         A.pts_to a #p va) **
         pure (cbor_read_deterministically_encoded_with_typ_success_postcond t va res v rem)
-    ))
 
 let cbor_read_deterministically_encoded_with_typ_error_post
   (t: typ)
@@ -626,11 +624,10 @@ let cbor_map_get_with_typ_post
         end
     )
   | Found value ->
-    exists_ (fun vvalue ->
+    exists* vvalue.
         raw_data_item_match p value vvalue **
         (raw_data_item_match p value vvalue @==> raw_data_item_match p map vmap) **
         pure (cbor_map_get_with_typ_post_found t vkey vmap vvalue)
-    )
 
 let cbor_map_get_post_eq_found
   (p: perm)

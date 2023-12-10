@@ -28,7 +28,7 @@ let star_def ()
 [@@"__reduce__"; "__steel_reduce__"]
 let pure = pure
 [@@"__reduce__"; "__steel_reduce__"]
-let exists_ = exists_
+let op_exists_Star = exists_
 
 let vprop_equiv (p q:vprop) = squash (equiv p q)
 let vprop_post_equiv (#t:Type u#a) (p q: t -> vprop) = forall x. vprop_equiv (p x) (q x)

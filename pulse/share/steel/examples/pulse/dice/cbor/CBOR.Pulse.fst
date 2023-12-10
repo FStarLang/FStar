@@ -435,13 +435,13 @@ let cbor_map_get_post_found
   (map: cbor)
   (value: cbor)
 : Tot vprop
-= exists_ (fun vvalue ->
+= exists* vvalue.
     raw_data_item_match p value vvalue **
     (raw_data_item_match p value vvalue @==> raw_data_item_match p map vmap) **
     pure (
       Cbor.Map? vmap /\
       list_ghost_assoc vkey (Cbor.Map?.v vmap) == Some vvalue
-  ))
+  )
 
 let cbor_map_get_post
   (p: perm)
@@ -843,14 +843,13 @@ requires
     A.pts_to_range a (SZ.v lo) (SZ.v hi) c **
     SM.seq_list_match c l (raw_data_item_map_entry_match full_perm)
 returns res: bool
-ensures (exists_ (fun (c': Seq.seq cbor_map_entry) -> exists_ (fun (l': list (Cbor.raw_data_item & Cbor.raw_data_item)) ->
+ensures `@(exists* (c': Seq.seq cbor_map_entry) (l': list (Cbor.raw_data_item & Cbor.raw_data_item)).
     // FIXME: WHY WHY WHY do I need to use exists_ instead of Pulse exists? Error message is: "IOU"
     A.pts_to_range a (SZ.v lo) (SZ.v hi) c' **
     SM.seq_list_match c' l' (raw_data_item_map_entry_match full_perm) **
     pure (
         Cbor.cbor_map_sort l == (res, l')
-    )
-)))
+    ))
 {
     Cbor.cbor_map_sort_eq l;
     A.pts_to_range_prop a;

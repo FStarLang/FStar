@@ -80,8 +80,8 @@ let mk_star (l r:R.term) : R.term =
   pack_ln (Tv_App t (r, Q_Explicit))
 
 let pure_lid = mk_pulse_lib_core_lid "pure"
-let exists_lid = mk_pulse_lib_core_lid "exists_"
-let forall_lid = mk_pulse_lib_core_lid "forall_"
+let exists_lid = mk_pulse_lib_core_lid "op_exists_Star"
+let forall_lid = mk_pulse_lib_core_lid "op_forall_Star"
 let args_of (tms:list R.term) =
   List.Tot.map (fun x -> x, R.Q_Explicit) tms
 

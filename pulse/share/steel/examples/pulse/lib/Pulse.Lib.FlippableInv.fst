@@ -4,7 +4,7 @@ open Pulse.Lib.Pervasives
 module GR = Pulse.Lib.GhostReference
 
 let finv_p (p:vprop) (r : GR.ref bool) : vprop =
-  exists_ (fun (b:bool) -> GR.pts_to r #one_half b ** (if b then p else emp))
+  exists* (b:bool). GR.pts_to r #one_half b ** (if b then p else emp)
 
 noeq
 type finv (p:vprop) = {

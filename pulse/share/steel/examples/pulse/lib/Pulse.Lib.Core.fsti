@@ -43,7 +43,7 @@ val vprop : Type u#2
 val emp : vprop
 val ( ** ) (p q:vprop) : vprop
 val pure (p:prop) : vprop
-val exists_ (#a:Type) (p:a -> vprop) : vprop
+val ( exists* ) (#a:Type) (p:a -> vprop) : vprop
 
 val vprop_equiv (p q:vprop) : prop
 val vprop_post_equiv (#t:Type u#a) (p q: t -> vprop) : prop
@@ -390,19 +390,19 @@ val intro_pure (p:prop) (_:squash p)
               (fun _ -> pure p)
 
 val elim_exists (#a:Type) (p:a -> vprop)
-  : stt_ghost (erased a) emp_inames (exists_ p) (fun x -> p (reveal x))
+  : stt_ghost (erased a) emp_inames (op_exists_Star p) (fun x -> p (reveal x))
 
 val intro_exists (#a:Type) (p:a -> vprop) (e:a)
-  : stt_ghost unit emp_inames (p e) (fun _ -> exists_ p)
+  : stt_ghost unit emp_inames (p e) (fun _ -> op_exists_Star p)
 
 val intro_exists_erased (#a:Type) (p:a -> vprop) (e:erased a)
-  : stt_ghost unit emp_inames (p (reveal e)) (fun _ -> exists_ p)
+  : stt_ghost unit emp_inames (p (reveal e)) (fun _ -> op_exists_Star p)
 
 val while_loop
   (inv:bool -> vprop)
-  (cond:stt bool (exists_ inv) inv)
-  (body:stt unit (inv true) (fun _ -> exists_ inv))
-  : stt unit (exists_ inv) (fun _ -> inv false)
+  (cond:stt bool (op_exists_Star inv) inv)
+  (body:stt unit (inv true) (fun _ -> op_exists_Star inv))
+  : stt unit (op_exists_Star inv) (fun _ -> inv false)
 
 val stt_ghost_reveal (a:Type) (x:erased a)
   : stt_ghost a emp_inames emp (fun y -> pure (reveal x == y))

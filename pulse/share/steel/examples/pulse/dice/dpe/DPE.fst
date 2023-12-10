@@ -53,7 +53,7 @@ let session_state_perm (s:session_state) =
   | SessionClosed
   | SessionError -> emp
   | Available _ ->
-    exists_ (fun repr -> context_perm (ctxt_of s) repr)
+    exists* repr. context_perm (ctxt_of s) repr
 
 let mk_available_payload handle context = { handle; context }
 ```pulse
@@ -102,11 +102,10 @@ let global_state_lock_pred
   (session_id_counter: R.ref sid_t)
   (session_table: ht_t sid_t session_state)
 : vprop
-= exists_ (fun stm ->
-  exists_ (fun sid ->
+= exists* stm sid.
     pts_to session_id_counter sid **
     models session_table stm **
-    on_range (session_perm stm) 0 (U32.v sid)))
+    on_range (session_perm stm) 0 (U32.v sid)
   
 noeq
 type global_state_t = {
@@ -913,7 +912,7 @@ let rotate_context_handle = rotate_context_handle'
 let maybe_context_perm (o:option context_t) =
   match o with
   | None -> emp
-  | _ -> exists_ (fun repr -> context_perm (Some?.v o) repr)
+  | _ -> exists* repr. context_perm (Some?.v o) repr
 
 ```pulse
 fn intro_maybe_context_perm (c:context_t)

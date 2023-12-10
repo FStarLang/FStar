@@ -41,13 +41,12 @@ val derive_key_pair
     (ensures (fun _ ->
         A.pts_to ikm #ikm_perm ikm_seq ** 
         A.pts_to lbl #lbl_perm lbl_seq **
-        exists_ (fun (pub_seq:Seq.seq U8.t) ->
-        exists_ (fun (priv_seq:Seq.seq U8.t) -> (
+        (exists* (pub_seq
+                 priv_seq:Seq.seq U8.t).
           A.pts_to pub pub_seq ** 
           A.pts_to priv priv_seq **
           pure ((pub_seq, priv_seq) == derive_key_pair_spec ikm_len ikm_seq lbl_len lbl_seq)
         )))
-      ))
 
 let derive_DeviceID_spec
   (alg:alg_t)
@@ -81,8 +80,7 @@ val derive_DeviceID
   (ensures (fun _ ->
     A.pts_to cdi #cdi_perm cdi0 **
     A.pts_to deviceID_label #p deviceID_label0 **
-    (exists_ (fun (deviceID_pub1:Seq.seq U8.t) ->
-     exists_ (fun (deviceID_priv1:Seq.seq U8.t) ->
+    (exists* (deviceID_pub1 deviceID_priv1:Seq.seq U8.t).
         A.pts_to deviceID_pub deviceID_pub1 **
         A.pts_to deviceID_priv deviceID_priv1 **
         pure (
@@ -91,7 +89,7 @@ val derive_DeviceID
             == (deviceID_pub1, deviceID_priv1)
         )
       ))
-  )))
+  )
 
 let derive_AliasKey_spec
   (alg:alg_t)
@@ -130,8 +128,7 @@ val derive_AliasKey
     A.pts_to cdi #cdi_perm cdi0 **
     A.pts_to fwid #p fwid0 **
     A.pts_to aliasKey_label #p aliasKey_label0 **
-    (exists_ (fun (aliasKey_pub1:Seq.seq U8.t) ->
-     exists_ (fun (aliasKey_priv1:Seq.seq U8.t) ->
+    (exists* (aliasKey_pub1 aliasKey_priv1:Seq.seq U8.t).
         A.pts_to aliasKey_pub aliasKey_pub1 **
         A.pts_to aliasKey_priv aliasKey_priv1 **
         pure (
@@ -141,7 +138,7 @@ val derive_AliasKey
             == (aliasKey_pub1, aliasKey_priv1)
         )
       ))
-  )))
+  )
 
 let derive_AuthKeyID_spec
   (alg:alg_t)
@@ -162,8 +159,7 @@ val derive_AuthKeyID
    ))
   (ensures (fun _ ->
     A.pts_to deviceID_pub #p deviceID_pub0 **
-    exists_ (fun (authKeyID1:Seq.seq U8.t) ->
+    (exists* (authKeyID1:Seq.seq U8.t).
       A.pts_to authKeyID authKeyID1 **
       pure (Seq.equal (derive_AuthKeyID_spec alg deviceID_pub0) authKeyID1)
-    )
-  ))
+    )))
