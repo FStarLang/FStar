@@ -544,7 +544,7 @@ let set_sigelt_quals (quals : list RD.qualifier) (se : sigelt) : sigelt =
 let sigelt_opts (se : sigelt) : option vconfig = se.sigopts
 
 let embed_vconfig (vcfg : vconfig) : term =
-  EMB.embed EMB.e_vconfig vcfg Range.dummyRange None EMB.id_norm_cb
+  EMB.embed vcfg Range.dummyRange None EMB.id_norm_cb
 
 let inspect_sigelt (se : sigelt) : sigelt_view =
     match se.sigel with

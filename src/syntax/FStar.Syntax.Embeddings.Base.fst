@@ -119,13 +119,16 @@ let map_shadow (s:shadow_term) (f:term -> term) : shadow_term =
 let force_shadow (s:shadow_term) = BU.map_opt s Thunk.force
 
 type embedding (a:Type0) = {
-  em : a -> embed_t;
-  un : term -> unembed_t a;
-  typ : typ;
-  print: printer a;
-  emb_typ: emb_typ
+  em      : a -> embed_t;
+  un      : term -> unembed_t a;
+  print   : printer a;
+
+  (* These are thunked so we can create Tot instances. *)
+  typ     : unit -> typ;
+  emb_typ : unit -> emb_typ;
 }
-let emb_typ_of e = e.emb_typ
+
+let emb_typ_of a #e () = e.emb_typ ()
 
 let unknown_printer (typ : term) (_ : 'a) : string =
     BU.format1 "unknown %s" (show typ)
@@ -135,24 +138,23 @@ let term_as_fv t =
     | Tm_fvar fv -> fv
     | _ -> failwith (BU.format1 "Embeddings not defined for type %s" (show t))
 
-let mk_emb em un fv =
-    let typ = S.fv_to_tm fv in
+let mk_emb em un fv : Tot _ =
     {
-        em = em ;
-        un = un ;
-        typ = typ;
-        print=unknown_printer typ;
-        emb_typ=ET_app (S.lid_of_fv fv |> Ident.string_of_lid, [])
+        em = em;
+        un = un;
+        print = (fun x -> let typ = S.fv_to_tm fv in unknown_printer typ x);
+        typ = (fun () -> S.fv_to_tm fv);
+        emb_typ= (fun () -> ET_app (S.lid_of_fv fv |> Ident.string_of_lid, []));
     }
 
-let mk_emb_full em un typ printer emb_typ = {
-    em = em ;
-    un = un ;
-    typ = typ;
-    print = printer;
-    emb_typ = emb_typ
+let mk_emb_full em un typ printe emb_typ : Tot _ = {
+    em      = em ;
+    un      = un ;
+    typ     = typ;
+    print   = printe;
+    emb_typ = emb_typ;
 }
-
+// 
 //
 // AR/NS: 04/22/2022:
 //        In the case of metaprograms, we reduce divergent terms in
@@ -187,34 +189,34 @@ let rec unmeta_div_results t =
 
   | _ -> t
 
-let type_of      (e:embedding 'a) = e.typ
+let type_of      (e:embedding 'a) = e.typ ()
 let printer_of   (e:embedding 'a) = e.print
-let set_type ty  (e:embedding 'a) = { e with typ = ty }
+let set_type ty  (e:embedding 'a) = { e with typ = (fun () -> ty) }
 
-let embed        (e:embedding 'a) = e.em
-let try_unembed  (e:embedding 'a) t n =
+let embed        {| e:embedding 'a |} = e.em
+let try_unembed  {| e:embedding 'a |} t n =
   (* Unembed always receives a term without the meta_monadics above,
   and also already compressed. *)
   let t = unmeta_div_results t in
   e.un (SS.compress t) n
 
-let unembed (e:embedding 'a) t n =
-  let r = try_unembed e t n in
+let unembed #a {| e:embedding a |} t n =
+  let r = try_unembed t n in
   let open FStar.Errors.Msg in
   let open FStar.Pprint in
   if None? r then
     Err.log_issue_doc t.pos (Err.Warning_NotEmbedded, [
       text "Unembedding failed for type" ^/^ pp (type_of e);
-      text "emb_typ = " ^/^ doc_of_string (show (emb_typ_of e));
+      text "emb_typ = " ^/^ doc_of_string (show (emb_typ_of a ()));
       text "Term =" ^/^ pp t;
       ]);
   r
 
 
 let embed_as (ea:embedding 'a) (ab : 'a -> 'b) (ba : 'b -> 'a) (o:option typ) =
-    mk_emb_full (fun (x:'b) -> embed ea (ba x))
-                (fun (t:term) cb -> BU.map_opt (try_unembed ea t cb) ab)
-                (match o with | Some t -> t | _ -> type_of ea)
+    mk_emb_full (fun (x:'b) -> embed (ba x))
+                (fun (t:term) cb -> BU.map_opt (try_unembed t cb) ab)
+                (fun () -> match o with | Some t -> t | _ -> type_of ea)
                 (fun (x:'b) -> BU.format1 "(embed_as>> %s)\n" (ea.print (ba x)))
                 ea.emb_typ
 
@@ -293,7 +295,7 @@ let mk_extracted_embedding (name: string) (u: string & list term -> option 'a) (
   mk_emb ee uu (S.lid_as_fv (Ident.lid_of_str name) None)
 
 let extracted_embed (e: embedding 'a) (x: 'a) : term =
-  embed e x Range.dummyRange None id_norm_cb
+  embed x Range.dummyRange None id_norm_cb
 
 let extracted_unembed (e: embedding 'a) (t: term) : option 'a =
-  try_unembed e t id_norm_cb
+  try_unembed t id_norm_cb

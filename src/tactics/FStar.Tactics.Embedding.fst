@@ -127,8 +127,8 @@ let mk_emb (em: Range.range -> 'a -> term)
     mk_emb (fun x r _topt _norm -> em r x)
            (fun x _norm -> un x)
            (FStar.Syntax.Embeddings.term_as_fv t)
-let embed e r x = FStar.Syntax.Embeddings.embed e x r None id_norm_cb
-let unembed' e x = FStar.Syntax.Embeddings.unembed e x id_norm_cb
+let embed {|embedding 'a|} r (x:'a) = FStar.Syntax.Embeddings.embed x r None id_norm_cb
+let unembed' {|embedding 'a|} x : option 'a = FStar.Syntax.Embeddings.unembed x id_norm_cb
 
 let t_result_of t   = U.mk_app fstar_tactics_result.t [S.as_arg t] // TODO: uinst on t_result?
 
@@ -137,8 +137,8 @@ let hd'_and_args tm =
   let hd, args = U.head_and_args tm in
   (U.un_uinst hd).n, args
 
-let e_proofstate : embedding proofstate = e_lazy Lazy_proofstate fstar_tactics_proofstate.t
-let e_goal       : embedding goal       = e_lazy Lazy_goal fstar_tactics_goal.t
+instance e_proofstate : embedding proofstate = e_lazy Lazy_proofstate fstar_tactics_proofstate.t
+instance e_goal       : embedding goal       = e_lazy Lazy_goal fstar_tactics_goal.t
 
 let unfold_lazy_proofstate (i : lazyinfo) : term =
     U.exp_string "(((proofstate)))"
@@ -179,8 +179,9 @@ let e_proofstate_nbe =
     in
     { NBETerm.em = embed_proofstate
     ; NBETerm.un = unembed_proofstate
-    ; NBETerm.typ = mkFV fstar_tactics_proofstate.fv [] []
-    ; NBETerm.emb_typ = fv_as_emb_typ fstar_tactics_proofstate.fv }
+    ; NBETerm.typ = (fun () -> mkFV fstar_tactics_proofstate.fv [] [])
+    ; NBETerm.emb_typ = (fun () -> fv_as_emb_typ fstar_tactics_proofstate.fv)
+     }
 
 let e_goal_nbe =
     let embed_goal _cb (ps:goal) : NBETerm.t =
@@ -203,28 +204,29 @@ let e_goal_nbe =
     in
     { NBETerm.em = embed_goal
     ; NBETerm.un = unembed_goal
-    ; NBETerm.typ = mkFV fstar_tactics_goal.fv [] []
-    ; NBETerm.emb_typ = fv_as_emb_typ fstar_tactics_goal.fv }
+    ; NBETerm.typ = (fun () -> mkFV fstar_tactics_goal.fv [] [])
+    ; NBETerm.emb_typ = (fun () -> fv_as_emb_typ fstar_tactics_goal.fv)
+     }
 
-let e_exn : embedding exn =
+instance e_exn : embedding exn =
     let embed_exn (e:exn) (rng:Range.range) _ _ : term =
         match e with
         | TacticFailure s ->
             S.mk_Tm_app fstar_tactics_TacticFailure.t
-                [S.as_arg (embed e_string rng s)]
+                [S.as_arg (embed rng s)]
                 rng
         | EExn t ->
             { t with pos = rng }
         | e ->
             let s = "uncaught exception: " ^ (BU.message_of_exn e) in
             S.mk_Tm_app fstar_tactics_TacticFailure.t
-                [S.as_arg (embed e_string rng s)]
+                [S.as_arg (embed rng s)]
                 rng
     in
     let unembed_exn (t:term) _ : option exn =
         match hd'_and_args t with
         | Tm_fvar fv, [(s, _)] when S.fv_eq_lid fv fstar_tactics_TacticFailure.lid ->
-            BU.bind_opt (unembed' e_string s) (fun s ->
+            BU.bind_opt (unembed' s) (fun s ->
             Some (TacticFailure s))
 
         | _ ->
@@ -234,9 +236,9 @@ let e_exn : embedding exn =
     mk_emb_full
         embed_exn
         unembed_exn
-        t_exn
+        (fun () -> t_exn)
         (fun _ -> "(exn)")
-        (ET_app (show PC.exn_lid, []))
+        (fun () -> ET_app (show PC.exn_lid, []))
 
 let e_exn_nbe =
     let embed_exn cb (e:exn) : NBET.t =
@@ -261,45 +263,45 @@ let e_exn_nbe =
     let fv_exn = S.fvconst PC.exn_lid in
     { NBETerm.em = embed_exn
     ; NBETerm.un = unembed_exn
-    ; NBETerm.typ = mkFV fv_exn [] []
-    ; NBETerm.emb_typ = fv_as_emb_typ fv_exn }
+    ; NBETerm.typ = (fun () -> mkFV fv_exn [] [])
+    ; NBETerm.emb_typ = (fun () -> fv_as_emb_typ fv_exn) }
 
-let e_result (ea : embedding 'a)  =
-    let embed_result (res:__result 'a) (rng:Range.range) _ _ : term =
+let e_result (ea : embedding 'a) : Tot _ =
+    let embed_result (res:__result 'a) (rng:Range.range) (sh:shadow_term) (cbs:norm_cb) : term =
         match res with
         | Success (a, ps) ->
           S.mk_Tm_app (S.mk_Tm_uinst fstar_tactics_Success.t [U_zero])
                  [S.iarg (type_of ea);
-                  S.as_arg (embed ea rng a);
-                  S.as_arg (embed e_proofstate rng ps)]
+                  S.as_arg (embed rng a);
+                  S.as_arg (embed rng ps)]
                  rng
         | Failed (e, ps) ->
           S.mk_Tm_app (S.mk_Tm_uinst fstar_tactics_Failed.t [U_zero])
                  [S.iarg (type_of ea);
-                  S.as_arg (embed e_exn rng e);
-                  S.as_arg (embed e_proofstate rng ps)]
+                  S.as_arg (embed rng e);
+                  S.as_arg (embed rng ps)]
                  rng
     in
     let unembed_result (t:term) _ : option (__result 'a) =
         match hd'_and_args t with
         | Tm_fvar fv, [_t; (a, _); (ps, _)] when S.fv_eq_lid fv fstar_tactics_Success.lid ->
-            BU.bind_opt (unembed' ea a) (fun a ->
-            BU.bind_opt (unembed' e_proofstate ps) (fun ps ->
+            BU.bind_opt (unembed' a) (fun a ->
+            BU.bind_opt (unembed' ps) (fun ps ->
             Some (Success (a, ps))))
 
         | Tm_fvar fv, [_t; (e, _); (ps, _)] when S.fv_eq_lid fv fstar_tactics_Failed.lid ->
-            BU.bind_opt (unembed' e_exn e) (fun e ->
-            BU.bind_opt (unembed' e_proofstate ps) (fun ps ->
+            BU.bind_opt (unembed' e) (fun e ->
+            BU.bind_opt (unembed' ps) (fun ps ->
             Some (Failed (e, ps))))
 
         | _ -> None
     in
-    mk_emb_full
+    mk_emb_full #(__result 'a)
         embed_result
         unembed_result
-        (t_result_of (type_of ea))
+        (fun () -> t_result_of (type_of ea))
         (fun _ -> "")
-        (ET_app (show fstar_tactics_result.lid, [emb_typ_of ea]))
+        (fun () -> ET_app (show fstar_tactics_result.lid, [emb_typ_of 'a ()]))
 
 let e_result_nbe (ea : NBET.embedding 'a)  =
     let embed_result cb (res:__result 'a) : NBET.t =
@@ -333,9 +335,8 @@ let e_result_nbe (ea : NBET.embedding 'a)  =
     in
     { NBETerm.em = embed_result
     ; NBETerm.un = unembed_result
-    ; NBETerm.typ = mkFV fstar_tactics_result.fv [] []
-    ; NBETerm.emb_typ = fv_as_emb_typ fstar_tactics_result.fv }
-
+    ; NBETerm.typ = (fun () -> mkFV fstar_tactics_result.fv [] [])
+    ; NBETerm.emb_typ = (fun () -> fv_as_emb_typ fstar_tactics_result.fv) }
 
 let e_direction =
     let embed_direction (rng:Range.range) (d : direction) : term =
@@ -368,8 +369,8 @@ let e_direction_nbe  =
     in
     { NBETerm.em = embed_direction
     ; NBETerm.un = unembed_direction
-    ; NBETerm.typ = mkFV fstar_tactics_direction.fv [] []
-    ; NBETerm.emb_typ = fv_as_emb_typ fstar_tactics_direction.fv}
+    ; NBETerm.typ = (fun () ->mkFV fstar_tactics_direction.fv [] [])
+    ; NBETerm.emb_typ = (fun () -> fv_as_emb_typ fstar_tactics_direction.fv) }
 
 let e_ctrl_flag =
     let embed_ctrl_flag (rng:Range.range) (d : ctrl_flag) : term =
@@ -406,8 +407,8 @@ let e_ctrl_flag_nbe  =
     in
     { NBETerm.em = embed_ctrl_flag
     ; NBETerm.un = unembed_ctrl_flag
-    ; NBETerm.typ = mkFV fstar_tactics_ctrl_flag.fv [] []
-    ; NBETerm.emb_typ = fv_as_emb_typ fstar_tactics_ctrl_flag.fv }
+    ; NBETerm.typ = (fun () -> mkFV fstar_tactics_ctrl_flag.fv [] [])
+    ; NBETerm.emb_typ = (fun () -> fv_as_emb_typ fstar_tactics_ctrl_flag.fv) }
 
 let e_unfold_side =
   let open FStar.TypeChecker.Core in
@@ -456,8 +457,8 @@ let e_unfold_side_nbe  =
   in
   { NBETerm.em = embed_unfold_side
   ; NBETerm.un = unembed_unfold_side
-  ; NBETerm.typ = mkFV fstar_tc_core_unfold_side.fv [] []
-  ; NBETerm.emb_typ = fv_as_emb_typ fstar_tc_core_unfold_side.fv }
+  ; NBETerm.typ = (fun () -> mkFV fstar_tc_core_unfold_side.fv [] [])
+  ; NBETerm.emb_typ = (fun () -> fv_as_emb_typ fstar_tc_core_unfold_side.fv) }
 
 let e_tot_or_ghost =
   let open FStar.TypeChecker.Core in
@@ -497,8 +498,8 @@ let e_tot_or_ghost_nbe  =
   in
   { NBETerm.em = embed_tot_or_ghost
   ; NBETerm.un = unembed_tot_or_ghost
-  ; NBETerm.typ = mkFV fstar_tc_core_tot_or_ghost.fv [] []
-  ; NBETerm.emb_typ = fv_as_emb_typ fstar_tc_core_tot_or_ghost.fv }
+  ; NBETerm.typ = (fun () -> mkFV fstar_tc_core_tot_or_ghost.fv [] [])
+  ; NBETerm.emb_typ = (fun () -> fv_as_emb_typ fstar_tc_core_tot_or_ghost.fv) }
 
 let t_tref = S.lid_as_fv PC.tref_lid None
   |> S.fv_to_tm
@@ -517,9 +518,9 @@ let e_tref #a =
   mk_emb_full
     em
     un
-    t_tref
+    (fun () -> t_tref)
     (fun i -> "tref")
-    (ET_app (PC.tref_lid |> Ident.string_of_lid, [ET_abstract]))
+    (fun () -> ET_app (PC.tref_lid |> Ident.string_of_lid, [ET_abstract]))
 
 let e_tref_nbe #a =
   let embed_tref _cb (r:tref a) : NBETerm.t =
@@ -546,9 +547,10 @@ let e_tref_nbe #a =
   { NBETerm.em = embed_tref
   ; NBETerm.un = unembed_tref
   ; NBETerm.typ =
-    (let term_t = mkFV (S.lid_as_fv PC.fstar_syntax_syntax_term None) [] [] in
+    (fun () ->
+      let term_t = mkFV (S.lid_as_fv PC.fstar_syntax_syntax_term None) [] [] in
       mkFV (S.lid_as_fv PC.tref_lid None) [U_zero] [NBETerm.as_arg term_t])
-  ; NBETerm.emb_typ = ET_app (PC.tref_lid |> Ident.string_of_lid, [ET_abstract]) }
+  ; NBETerm.emb_typ = (fun () -> ET_app (PC.tref_lid |> Ident.string_of_lid, [ET_abstract])) }
 
 let e_guard_policy =
     let embed_guard_policy (rng:Range.range) (p : guard_policy) : term =
@@ -590,5 +592,5 @@ let e_guard_policy_nbe  =
     in
     { NBETerm.em = embed_guard_policy
     ; NBETerm.un = unembed_guard_policy
-    ; NBETerm.typ = mkFV fstar_tactics_guard_policy.fv [] []
-    ; NBETerm.emb_typ = fv_as_emb_typ fstar_tactics_guard_policy.fv }
+    ; NBETerm.typ = (fun () -> mkFV fstar_tactics_guard_policy.fv [] [])
+    ; NBETerm.emb_typ = (fun () -> fv_as_emb_typ fstar_tactics_guard_policy.fv) }

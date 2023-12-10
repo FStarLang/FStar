@@ -49,8 +49,8 @@ let mk_emb f g t =
     mk_emb (fun x r _topt _norm -> f r x)
            (fun x _norm -> g x)
            (term_as_fv t)
-let embed e r x = embed e x r None id_norm_cb
-let try_unembed e x = try_unembed e x id_norm_cb
+let embed {|embedding 'a|} r (x:'a) = embed x r None id_norm_cb
+let try_unembed {|embedding 'a|} x : option 'a = try_unembed x id_norm_cb
 
 open FStar.Reflection.V2.Constants
 
@@ -81,10 +81,11 @@ let e_comp               : embedding comp               = EMB.e_lazy Lazy_comp f
 let e_universe           : embedding universe           = EMB.e_lazy Lazy_universe fstar_refl_universe
 let e_ident              : embedding I.ident            = EMB.e_lazy Lazy_ident fstar_refl_ident
 let e_env                : embedding env                = EMB.e_lazy Lazy_env fstar_refl_env
-let e_ctx_uvar_and_subst : embedding ctx_uvar_and_subst = EMB.e_lazy Lazy_uvar fstar_refl_ctx_uvar_and_subst
 let e_sigelt             : embedding sigelt             = EMB.e_lazy Lazy_sigelt fstar_refl_sigelt
 let e_letbinding         : embedding letbinding         = EMB.e_lazy Lazy_letbinding fstar_refl_letbinding
-let e_universe_uvar      : embedding universe_uvar      = EMB.e_lazy Lazy_universe_uvar fstar_refl_universe_uvar
+
+instance e_ctx_uvar_and_subst : embedding ctx_uvar_and_subst = EMB.e_lazy Lazy_uvar fstar_refl_ctx_uvar_and_subst
+instance e_universe_uvar      : embedding universe_uvar      = EMB.e_lazy Lazy_universe_uvar fstar_refl_universe_uvar
 
 let rec mapM_opt (f : ('a -> option 'b)) (l : list 'a) : option (list 'b) =
     match l with
@@ -138,7 +139,7 @@ let e_aqualv =
       | Data.Q_Explicit -> ref_Q_Explicit.t
       | Data.Q_Implicit -> ref_Q_Implicit.t
       | Data.Q_Meta t ->
-          S.mk_Tm_app ref_Q_Meta.t [S.as_arg (embed e_term rng t)]
+          S.mk_Tm_app ref_Q_Meta.t [S.as_arg (embed #_ #e_term rng t)]
                       Range.dummyRange
       in { r with pos = rng }
     in
@@ -161,27 +162,27 @@ let e_universe_view =
     | Uv_Succ u ->
       S.mk_Tm_app
         ref_Uv_Succ.t
-        [S.as_arg (embed e_universe rng u)]
+        [S.as_arg (embed rng u)]
         rng
     | Uv_Max us ->
       S.mk_Tm_app
         ref_Uv_Max.t
-        [S.as_arg (embed (e_list e_universe) rng us)]
+        [S.as_arg (embed rng us)]
         rng
     | Uv_BVar n ->
       S.mk_Tm_app
         ref_Uv_BVar.t
-        [S.as_arg (embed e_int rng n)]
+        [S.as_arg (embed rng n)]
         rng
     | Uv_Name i ->
       S.mk_Tm_app
         ref_Uv_Name.t
-        [S.as_arg (embed e_ident rng i)]
+        [S.as_arg (embed rng i)]
         rng
     | Uv_Unif u ->
       S.mk_Tm_app
         ref_Uv_Unif.t
-        [S.as_arg (embed e_universe_uvar rng u)]
+        [S.as_arg (embed rng u)]
         rng
     | Uv_Unk ->
       ref_Uv_Unk.t in
@@ -213,17 +214,17 @@ let e_vconst =
             S.mk_Tm_app ref_C_Int.t [S.as_arg (U.exp_int (Z.string_of_big_int i))]
                         Range.dummyRange
         | C_String s ->
-            S.mk_Tm_app ref_C_String.t [S.as_arg (embed e_string rng s)]
+            S.mk_Tm_app ref_C_String.t [S.as_arg (embed rng s)]
                         Range.dummyRange
 
         | C_Range r ->
-            S.mk_Tm_app ref_C_Range.t [S.as_arg (embed e_range rng r)]
+            S.mk_Tm_app ref_C_Range.t [S.as_arg (embed rng r)]
                         Range.dummyRange
 
         | C_Reify -> ref_C_Reify.t
 
         | C_Reflect ns ->
-            S.mk_Tm_app ref_C_Reflect.t [S.as_arg (embed e_string_list rng ns)]
+            S.mk_Tm_app ref_C_Reflect.t [S.as_arg (embed rng ns)]
                         Range.dummyRange
 
         in { r with pos = rng }
@@ -247,19 +248,19 @@ let rec e_pattern_aq aq =
     let rec embed_pattern (rng:Range.range) (p : pattern) : term =
         match p with
         | Pat_Constant c ->
-            S.mk_Tm_app ref_Pat_Constant.t [S.as_arg (embed e_vconst rng c)] rng
+            S.mk_Tm_app ref_Pat_Constant.t [S.as_arg (embed rng c)] rng
         | Pat_Cons head univs subpats ->
             S.mk_Tm_app ref_Pat_Cons.t
-              [S.as_arg (embed e_fv rng head);
-               S.as_arg (embed (e_option (e_list e_universe)) rng univs);
-               S.as_arg (embed (e_list (e_tuple2 (e_pattern_aq aq) e_bool)) rng subpats)] rng
+              [S.as_arg (embed rng head);
+               S.as_arg (embed rng univs);
+               S.as_arg (embed #_ #(e_list (e_tuple2 (e_pattern_aq aq) e_bool)) rng subpats)] rng
         | Pat_Var sort ppname ->
             S.mk_Tm_app ref_Pat_Var.t [
-              S.as_arg (embed e_sort rng sort);
-              S.as_arg (embed e_ppname rng ppname);
+              S.as_arg (embed #_ #e_sort rng sort);
+              S.as_arg (embed rng ppname);
             ] rng
         | Pat_Dot_Term eopt ->
-            S.mk_Tm_app ref_Pat_Dot_Term.t [S.as_arg (embed (e_option e_term) rng eopt)]
+            S.mk_Tm_app ref_Pat_Dot_Term.t [S.as_arg (embed #_ #(e_option e_term) rng eopt)]
                         rng
     in
     let rec unembed_pattern (t : term) : option pattern =
@@ -291,7 +292,7 @@ let e_args   = e_list e_argv
 let e_branch_aq aq = e_tuple2 (e_pattern_aq aq) (e_term_aq aq)
 let e_argv_aq   aq = e_tuple2 (e_term_aq aq) e_aqualv
 
-let e_match_returns_annotation =
+instance e_match_returns_annotation =
   e_option (e_tuple2 e_binder
                      (e_tuple3 (e_either e_term e_comp) (e_option e_term) e_bool))
 
@@ -300,83 +301,83 @@ let e_term_view_aq aq =
     let embed_term_view (rng:Range.range) (t:term_view) : term =
         match t with
         | Tv_FVar fv ->
-            S.mk_Tm_app ref_Tv_FVar.t [S.as_arg (embed e_fv rng fv)]
+            S.mk_Tm_app ref_Tv_FVar.t [S.as_arg (embed rng fv)]
                         rng
 
         | Tv_BVar fv ->
-            S.mk_Tm_app ref_Tv_BVar.t [S.as_arg (embed e_bv rng fv)]
+            S.mk_Tm_app ref_Tv_BVar.t [S.as_arg (embed #_ #e_bv rng fv)]
                         rng
 
         | Tv_Var bv ->
-            S.mk_Tm_app ref_Tv_Var.t [S.as_arg (embed e_namedv rng bv)]
+            S.mk_Tm_app ref_Tv_Var.t [S.as_arg (embed #_ #e_namedv rng bv)]
                         rng
 
         | Tv_UInst (fv, us) ->
           S.mk_Tm_app
             ref_Tv_UInst.t
-            [S.as_arg (embed e_fv rng fv);
-             S.as_arg (embed (e_list e_universe) rng us)]
+            [S.as_arg (embed rng fv);
+             S.as_arg (embed rng us)]
             rng
 
         | Tv_App (hd, a) ->
-            S.mk_Tm_app ref_Tv_App.t [S.as_arg (embed (e_term_aq aq) rng hd); S.as_arg (embed (e_argv_aq aq) rng a)]
+            S.mk_Tm_app ref_Tv_App.t [S.as_arg (embed #_ #(e_term_aq aq) rng hd); S.as_arg (embed #_ #(e_argv_aq aq) rng a)]
                         rng
 
         | Tv_Abs (b, t) ->
-            S.mk_Tm_app ref_Tv_Abs.t [S.as_arg (embed e_binder rng b); S.as_arg (embed (e_term_aq (push aq)) rng t)]
+            S.mk_Tm_app ref_Tv_Abs.t [S.as_arg (embed rng b); S.as_arg (embed #_ #(e_term_aq (push aq)) rng t)]
                         rng
 
         | Tv_Arrow (b, c) ->
-            S.mk_Tm_app ref_Tv_Arrow.t [S.as_arg (embed e_binder rng b); S.as_arg (embed e_comp rng c)]
+            S.mk_Tm_app ref_Tv_Arrow.t [S.as_arg (embed rng b); S.as_arg (embed rng c)]
                         rng
 
         | Tv_Type u ->
-            S.mk_Tm_app ref_Tv_Type.t [S.as_arg (embed e_universe rng u)]
+            S.mk_Tm_app ref_Tv_Type.t [S.as_arg (embed rng u)]
                         rng
 
         | Tv_Refine (b, t) ->
-            S.mk_Tm_app ref_Tv_Refine.t [S.as_arg (embed e_binder rng b);
-                                         S.as_arg (embed (e_term_aq (push aq)) rng t)]
+            S.mk_Tm_app ref_Tv_Refine.t [S.as_arg (embed rng b);
+                                         S.as_arg (embed #_ #(e_term_aq (push aq)) rng t)]
                         rng
 
         | Tv_Const c ->
-            S.mk_Tm_app ref_Tv_Const.t [S.as_arg (embed e_vconst rng c)]
+            S.mk_Tm_app ref_Tv_Const.t [S.as_arg (embed rng c)]
                         rng
 
         | Tv_Uvar (u, ctx_u) ->
             S.mk_Tm_app ref_Tv_Uvar.t
-                        [S.as_arg (embed e_int rng u);
-                         S.as_arg (embed e_ctx_uvar_and_subst rng ctx_u)]
+                        [S.as_arg (embed rng u);
+                         S.as_arg (embed rng ctx_u)]
                         rng
 
         | Tv_Let (r, attrs, b, t1, t2) ->
-            S.mk_Tm_app ref_Tv_Let.t [S.as_arg (embed e_bool rng r);
-                                      S.as_arg (embed (e_list e_term) rng attrs);
-                                      S.as_arg (embed e_binder rng b);
-                                      S.as_arg (embed (e_term_aq aq) rng t1);
-                                      S.as_arg (embed (e_term_aq (push aq)) rng t2)]
+            S.mk_Tm_app ref_Tv_Let.t [S.as_arg (embed rng r);
+                                      S.as_arg (embed #_ #(e_list e_term) rng attrs);
+                                      S.as_arg (embed rng b);
+                                      S.as_arg (embed #_ #(e_term_aq aq) rng t1);
+                                      S.as_arg (embed #_ #(e_term_aq (push aq)) rng t2)]
                         rng
 
         | Tv_Match (t, ret_opt, brs) ->
-            S.mk_Tm_app ref_Tv_Match.t [S.as_arg (embed (e_term_aq aq) rng t);
-                                        S.as_arg (embed e_match_returns_annotation rng ret_opt);
-                                        S.as_arg (embed (e_list (e_branch_aq aq)) rng brs)]
+            S.mk_Tm_app ref_Tv_Match.t [S.as_arg (embed #_ #(e_term_aq aq) rng t);
+                                        S.as_arg (embed rng ret_opt);
+                                        S.as_arg (embed #_ #(e_list (e_branch_aq aq)) rng brs)]
                         rng
 
         | Tv_AscribedT (e, t, tacopt, use_eq) ->
             S.mk_Tm_app ref_Tv_AscT.t
-                        [S.as_arg (embed (e_term_aq aq) rng e);
-                         S.as_arg (embed (e_term_aq aq) rng t);
-                         S.as_arg (embed (e_option (e_term_aq aq)) rng tacopt);
-                         S.as_arg (embed e_bool rng use_eq)]
+                        [S.as_arg (embed #_ #(e_term_aq aq) rng e);
+                         S.as_arg (embed #_ #(e_term_aq aq) rng t);
+                         S.as_arg (embed #_ #(e_option (e_term_aq aq)) rng tacopt);
+                         S.as_arg (embed rng use_eq)]
                         rng
 
         | Tv_AscribedC (e, c, tacopt, use_eq) ->
             S.mk_Tm_app ref_Tv_AscC.t
-                        [S.as_arg (embed (e_term_aq aq) rng e);
-                         S.as_arg (embed e_comp rng c);
-                         S.as_arg (embed (e_option (e_term_aq aq)) rng tacopt);
-                         S.as_arg (embed e_bool rng use_eq)]
+                        [S.as_arg (embed #_ #(e_term_aq aq) rng e);
+                         S.as_arg (embed rng c);
+                         S.as_arg (embed #_ #(e_option (e_term_aq aq)) rng tacopt);
+                         S.as_arg (embed rng use_eq)]
                         rng
 
         | Tv_Unknown ->
@@ -413,26 +414,26 @@ let e_term_view_aq aq =
 let e_term_view = e_term_view_aq noaqs
 
 (* embeds as a string list *)
-let e_lid : embedding I.lid =
+instance e_lid : embedding I.lid =
     let embed rng lid : term =
-        embed e_string_list rng (I.path_of_lid lid)
+        embed rng (I.path_of_lid lid)
     in
     let uu t _norm : option I.lid =
-        BU.map_opt (try_unembed e_string_list t) (fun p -> I.lid_of_path p t.pos)
+        BU.map_opt (try_unembed t) (fun p -> I.lid_of_path p t.pos)
     in
     EMB.mk_emb_full (fun x r _ _ -> embed r x)
                uu
-               (t_list_of t_string)
+               (fun () -> t_list_of t_string)
                I.string_of_lid
-               ET_abstract
+               (fun () -> ET_abstract)
 
 
-let e_namedv_view =
+instance e_namedv_view =
     let embed_namedv_view (rng:Range.range) (namedvv:namedv_view) : term =
         S.mk_Tm_app ref_Mk_namedv_view.t [
-          S.as_arg (embed e_int    rng namedvv.uniq);
-          S.as_arg (embed e_sort   rng namedvv.sort);
-          S.as_arg (embed e_ppname rng namedvv.ppname);
+          S.as_arg (embed rng namedvv.uniq);
+          S.as_arg (embed #_ #e_sort   rng namedvv.sort);
+          S.as_arg (embed #_ #e_ppname rng namedvv.ppname);
         ]
                     rng
     in
@@ -445,12 +446,12 @@ let e_namedv_view =
     in
     mk_emb embed_namedv_view unembed_namedv_view fstar_refl_namedv_view
 
-let e_bv_view =
+instance e_bv_view =
     let embed_bv_view (rng:Range.range) (bvv:bv_view) : term =
         S.mk_Tm_app ref_Mk_bv_view.t [
-          S.as_arg (embed e_int    rng bvv.index);
-          S.as_arg (embed e_sort   rng bvv.sort);
-          S.as_arg (embed e_ppname rng bvv.ppname);
+          S.as_arg (embed rng bvv.index);
+          S.as_arg (embed #_ #e_sort   rng bvv.sort);
+          S.as_arg (embed #_ #e_ppname rng bvv.ppname);
         ]
                     rng
     in
@@ -463,12 +464,12 @@ let e_bv_view =
     in
     mk_emb embed_bv_view unembed_bv_view fstar_refl_bv_view
 
-let e_binding =
+instance e_binding =
     let embed (rng:Range.range) (bindingv:RD.binding) : term =
         S.mk_Tm_app ref_Mk_binding.t [
-          S.as_arg (embed e_int    rng bindingv.uniq);
-          S.as_arg (embed e_term   rng bindingv.sort);
-          S.as_arg (embed e_ppname rng bindingv.ppname);
+          S.as_arg (embed rng bindingv.uniq);
+          S.as_arg (embed #_ #e_term   rng bindingv.sort);
+          S.as_arg (embed #_ #e_ppname rng bindingv.ppname);
         ]
                     rng
     in
@@ -487,10 +488,10 @@ let e_attributes = e_list e_attribute
 let e_binder_view =
   let embed_binder_view (rng:Range.range) (bview:binder_view) : term =
     S.mk_Tm_app ref_Mk_binder_view.t [
-      S.as_arg (embed e_term rng bview.sort);
-      S.as_arg (embed e_aqualv rng bview.qual);
-      S.as_arg (embed e_attributes rng bview.attrs);
-      S.as_arg (embed e_ppname rng bview.ppname);
+      S.as_arg (embed #_ #e_term rng bview.sort);
+      S.as_arg (embed rng bview.qual);
+      S.as_arg (embed rng bview.attrs);
+      S.as_arg (embed #_ #e_ppname rng bview.ppname);
     ]
                 rng in
 
@@ -507,24 +508,26 @@ let e_comp_view =
     let embed_comp_view (rng:Range.range) (cv : comp_view) : term =
         match cv with
         | C_Total t ->
-            S.mk_Tm_app ref_C_Total.t [S.as_arg (embed e_term rng t)]
+            S.mk_Tm_app ref_C_Total.t [S.as_arg (embed #_ #e_term rng t)]
                         rng
 
         | C_GTotal t ->
-            S.mk_Tm_app ref_C_GTotal.t [S.as_arg (embed e_term rng t)]
+            S.mk_Tm_app ref_C_GTotal.t [S.as_arg (embed #_ #e_term rng t)]
                         rng
 
         | C_Lemma (pre, post, pats) ->
-            S.mk_Tm_app ref_C_Lemma.t [S.as_arg (embed e_term rng pre); S.as_arg (embed e_term rng post); S.as_arg (embed e_term rng pats)]
+            S.mk_Tm_app ref_C_Lemma.t [S.as_arg (embed #_ #e_term rng pre);
+                                       S.as_arg (embed #_ #e_term rng post);
+                                       S.as_arg (embed #_ #e_term rng pats)]
                         rng
 
         | C_Eff (us, eff, res, args, decrs) ->
             S.mk_Tm_app ref_C_Eff.t
-                [ S.as_arg (embed (e_list e_universe) rng us)
-                ; S.as_arg (embed e_string_list rng eff)
-                ; S.as_arg (embed e_term rng res)
-                ; S.as_arg (embed (e_list e_argv) rng args)
-                ; S.as_arg (embed (e_list e_term) rng decrs)] rng
+                [ S.as_arg (embed rng us)
+                ; S.as_arg (embed rng eff)
+                ; S.as_arg (embed #_ #e_term rng res)
+                ; S.as_arg (embed #_ #(e_list e_argv) rng args)
+                ; S.as_arg (embed #_ #(e_list e_term) rng decrs)] rng
 
 
     in
@@ -569,43 +572,43 @@ let e_subst_elt =
         match e with
         | DB (i, x) ->
             S.mk_Tm_app ref_DB.t [
-                S.as_arg (embed e_fsint rng i);
-                S.as_arg (embed e_namedv rng x);
+                S.as_arg (embed rng i);
+                S.as_arg (embed #_ #e_bv rng x);
                ]
                rng
 
         | DT (i, t) ->
             S.mk_Tm_app ref_DT.t [
-                S.as_arg (embed e_fsint rng i);
-                S.as_arg (embed e_term rng t);
+                S.as_arg (embed rng i);
+                S.as_arg (embed rng t);
                ]
                rng
 
         | NM (x, i) ->
             S.mk_Tm_app ref_NM.t [
-                S.as_arg (embed e_namedv rng x);
-                S.as_arg (embed e_fsint rng i);
+                S.as_arg (embed #_ #e_namedv rng x);
+                S.as_arg (embed rng i);
                ]
                rng
 
         | NT (x, t) ->
             S.mk_Tm_app ref_NT.t [
-                S.as_arg (embed e_namedv rng x);
-                S.as_arg (embed e_term rng t);
+                S.as_arg (embed #_ #e_namedv rng x);
+                S.as_arg (embed rng t);
                ]
                rng
 
         | UN (i, u) ->
             S.mk_Tm_app ref_UN.t [
-                S.as_arg (embed e_fsint rng i);
-                S.as_arg (embed e_universe rng u);
+                S.as_arg (embed rng i);
+                S.as_arg (embed rng u);
                ]
                rng
 
         | UD (u, i) ->
             S.mk_Tm_app ref_UD.t [
-                S.as_arg (embed e_ident rng u);
-                S.as_arg (embed e_fsint rng i);
+                S.as_arg (embed rng u);
+                S.as_arg (embed rng i);
                ]
                rng
     in
@@ -633,10 +636,10 @@ let e_ctor = e_tuple2 (e_string_list) e_term
 
 let e_lb_view =
     let embed_lb_view (rng:Range.range) (lbv:lb_view) : term =
-        S.mk_Tm_app ref_Mk_lb.t [S.as_arg (embed e_fv         rng lbv.lb_fv);
-                                 S.as_arg (embed e_univ_names rng lbv.lb_us);
-                                 S.as_arg (embed e_term       rng lbv.lb_typ);
-                                 S.as_arg (embed e_term       rng lbv.lb_def)]
+        S.mk_Tm_app ref_Mk_lb.t [S.as_arg (embed rng lbv.lb_fv);
+                                 S.as_arg (embed rng lbv.lb_us);
+                                 S.as_arg (embed #_ #e_term       rng lbv.lb_typ);
+                                 S.as_arg (embed #_ #e_term       rng lbv.lb_def)]
                     rng
     in
     let unembed_lb_view (t : term) : option lb_view =
@@ -653,24 +656,24 @@ let e_sigelt_view =
         match sev with
         | Sg_Let (r, lbs) ->
             S.mk_Tm_app ref_Sg_Let.t
-                        [S.as_arg (embed e_bool rng r);
-                         S.as_arg (embed (e_list e_letbinding) rng lbs)]
+                        [S.as_arg (embed rng r);
+                         S.as_arg (embed rng lbs)]
                         rng
 
         | Sg_Inductive (nm, univs, bs, t, dcs) ->
             S.mk_Tm_app ref_Sg_Inductive.t
-                        [S.as_arg (embed e_string_list rng nm);
-                            S.as_arg (embed e_univ_names rng univs);
-                            S.as_arg (embed e_binders rng bs);
-                            S.as_arg (embed e_term rng t);
-                            S.as_arg (embed (e_list e_ctor) rng dcs)]
+                        [S.as_arg (embed rng nm);
+                            S.as_arg (embed rng univs);
+                            S.as_arg (embed rng bs);
+                            S.as_arg (embed rng t);
+                            S.as_arg (embed rng dcs)]
                         rng
 
         | Sg_Val (nm, univs, t) ->
             S.mk_Tm_app ref_Sg_Val.t
-                        [S.as_arg (embed e_string_list rng nm);
-                         S.as_arg (embed e_univ_names rng univs);
-                         S.as_arg (embed e_term rng t)]
+                        [S.as_arg (embed rng nm);
+                         S.as_arg (embed rng univs);
+                         S.as_arg (embed rng t)]
                         rng
 
         | Unk ->
@@ -714,27 +717,27 @@ let e_qualifier =
         | RD.Effect                           -> ref_qual_Effect.t
         | RD.OnlyName                         -> ref_qual_OnlyName.t
         | RD.Reflectable l ->
-            S.mk_Tm_app ref_qual_Reflectable.t [S.as_arg (embed e_lid rng l)]
+            S.mk_Tm_app ref_qual_Reflectable.t [S.as_arg (embed rng l)]
                         Range.dummyRange
 
         | RD.Discriminator l ->
-            S.mk_Tm_app ref_qual_Discriminator.t [S.as_arg (embed e_lid rng l)]
+            S.mk_Tm_app ref_qual_Discriminator.t [S.as_arg (embed rng l)]
                         Range.dummyRange
 
         | RD.Action l ->
-            S.mk_Tm_app ref_qual_Action.t [S.as_arg (embed e_lid rng l)]
+            S.mk_Tm_app ref_qual_Action.t [S.as_arg (embed rng l)]
                         Range.dummyRange
 
         | RD.Projector (l, i) ->
-            S.mk_Tm_app ref_qual_Projector.t [S.as_arg (embed (e_tuple2 e_lid e_ident) rng (l, i))]
+            S.mk_Tm_app ref_qual_Projector.t [S.as_arg (embed rng (l, i))]
                         Range.dummyRange
 
         | RD.RecordType (ids1, ids2) ->
-            S.mk_Tm_app ref_qual_RecordType.t [S.as_arg (embed (e_tuple2 (e_list e_ident) (e_list e_ident)) rng (ids1, ids2))]
+            S.mk_Tm_app ref_qual_RecordType.t [S.as_arg (embed rng (ids1, ids2))]
                         Range.dummyRange
 
         | RD.RecordConstructor (ids1, ids2) ->
-            S.mk_Tm_app ref_qual_RecordConstructor.t [S.as_arg (embed (e_tuple2 (e_list e_ident) (e_list e_ident)) rng (ids1, ids2))]
+            S.mk_Tm_app ref_qual_RecordConstructor.t [S.as_arg (embed rng (ids1, ids2))]
                         Range.dummyRange
 
         in { r with pos = rng }
@@ -789,17 +792,17 @@ let e_qualifiers = e_list e_qualifier
 
 let unfold_lazy_bv (i : lazyinfo) : term =
     let bv : bv = undyn i.blob in
-    S.mk_Tm_app fstar_refl_pack_bv.t [S.as_arg (embed e_bv_view i.rng (inspect_bv bv))]
+    S.mk_Tm_app fstar_refl_pack_bv.t [S.as_arg (embed i.rng (inspect_bv bv))]
                 i.rng
 
 let unfold_lazy_namedv (i : lazyinfo) : term =
     let namedv : namedv = undyn i.blob in
-    S.mk_Tm_app fstar_refl_pack_namedv.t [S.as_arg (embed e_namedv_view i.rng (inspect_namedv namedv))]
+    S.mk_Tm_app fstar_refl_pack_namedv.t [S.as_arg (embed i.rng (inspect_namedv namedv))]
                 i.rng
 
 let unfold_lazy_binder (i : lazyinfo) : term =
     let binder : binder = undyn i.blob in
-    S.mk_Tm_app fstar_refl_pack_binder.t [S.as_arg (embed e_binder_view i.rng (inspect_binder binder))]
+    S.mk_Tm_app fstar_refl_pack_binder.t [S.as_arg (embed i.rng (inspect_binder binder))]
                 i.rng
 
 let unfold_lazy_letbinding (i : lazyinfo) : term =
@@ -807,21 +810,21 @@ let unfold_lazy_letbinding (i : lazyinfo) : term =
     let lbv = inspect_lb lb in
     S.mk_Tm_app fstar_refl_pack_lb.t
         [
-            S.as_arg (embed e_fv i.rng lbv.lb_fv);
-            S.as_arg (embed e_univ_names i.rng lbv.lb_us);
-            S.as_arg (embed e_term i.rng lbv.lb_typ);
-            S.as_arg (embed e_term i.rng lbv.lb_def)
+            S.as_arg (embed i.rng lbv.lb_fv);
+            S.as_arg (embed i.rng lbv.lb_us);
+            S.as_arg (embed i.rng lbv.lb_typ);
+            S.as_arg (embed i.rng lbv.lb_def)
         ]
         i.rng
 
 let unfold_lazy_fvar (i : lazyinfo) : term =
     let fv : fv = undyn i.blob in
-    S.mk_Tm_app fstar_refl_pack_fv.t [S.as_arg (embed (e_list e_string) i.rng (inspect_fv fv))]
+    S.mk_Tm_app fstar_refl_pack_fv.t [S.as_arg (embed i.rng (inspect_fv fv))]
                 i.rng
 
 let unfold_lazy_comp (i : lazyinfo) : term =
     let comp : comp = undyn i.blob in
-    S.mk_Tm_app fstar_refl_pack_comp.t [S.as_arg (embed e_comp_view i.rng (inspect_comp comp))]
+    S.mk_Tm_app fstar_refl_pack_comp.t [S.as_arg (embed i.rng (inspect_comp comp))]
                 i.rng
 
 let unfold_lazy_env (i : lazyinfo) : term =
@@ -834,10 +837,10 @@ let unfold_lazy_optionstate (i : lazyinfo) : term =
 
 let unfold_lazy_sigelt (i : lazyinfo) : term =
     let sigelt : sigelt = undyn i.blob in
-    S.mk_Tm_app fstar_refl_pack_sigelt.t [S.as_arg (embed e_sigelt_view i.rng (inspect_sigelt sigelt))]
+    S.mk_Tm_app fstar_refl_pack_sigelt.t [S.as_arg (embed i.rng (inspect_sigelt sigelt))]
                 i.rng
 
 let unfold_lazy_universe (i : lazyinfo) : term =
     let u : universe = undyn i.blob in
-    S.mk_Tm_app fstar_refl_pack_universe.t [S.as_arg (embed e_universe_view i.rng (inspect_universe u))]
+    S.mk_Tm_app fstar_refl_pack_universe.t [S.as_arg (embed i.rng (inspect_universe u))]
                 i.rng

@@ -62,7 +62,7 @@ let mkConstruct fv us ts = mkConstruct fv (List.rev us) (List.rev ts)
 (* ^ We still need to match on them in reverse order though, so this is pretty dumb *)
 
 let fv_as_emb_typ fv = S.ET_app (FStar.Ident.string_of_lid fv.fv_name.v, [])
-let mk_emb' x y fv = mk_emb x y (mkFV fv [] []) (fv_as_emb_typ fv)
+let mk_emb' x y fv = mk_emb x y (fun () -> mkFV fv [] []) (fun () -> fv_as_emb_typ fv)
 
 let mk_lazy cb obj ty kind =
     let li = {
@@ -134,14 +134,15 @@ let e_term_aq aq =
         match t.nbe_t with
         | NBETerm.Quote (tm, qi) ->
             (* Just reuse the code from Reflection *)
-            Syntax.Embeddings.unembed (Reflection.V2.Embeddings.e_term_aq (0, [])) (S.mk (Tm_quoted (tm, qi)) Range.dummyRange) Syntax.Embeddings.id_norm_cb
+            Syntax.Embeddings.unembed #_ #(Reflection.V2.Embeddings.e_term_aq (0, [])) (S.mk (Tm_quoted (tm, qi)) Range.dummyRange) Syntax.Embeddings.id_norm_cb
         | _ ->
             None
     in
     { NBETerm.em = embed_term
     ; NBETerm.un = unembed_term
-    ; NBETerm.typ = mkFV fstar_refl_term_fv [] []
-    ; NBETerm.emb_typ = fv_as_emb_typ fstar_refl_term_fv }
+    ; NBETerm.typ = (fun () -> mkFV fstar_refl_term_fv [] [])
+    ; NBETerm.emb_typ = (fun () -> fv_as_emb_typ fstar_refl_term_fv )
+    }
 
 let e_term = e_term_aq (0, [])
 
@@ -165,8 +166,8 @@ let e_aqualv =
             None
     in
     mk_emb embed_aqualv unembed_aqualv
-        (mkConstruct fstar_refl_aqualv_fv [] [])
-        (fv_as_emb_typ fstar_refl_aqualv_fv)
+        (fun () -> mkConstruct fstar_refl_aqualv_fv [] [])
+        (fun () -> fv_as_emb_typ fstar_refl_aqualv_fv)
 
 let e_binders = e_list e_binder
 
@@ -833,8 +834,8 @@ let e_lid : embedding I.lid =
         BU.map_opt (unembed e_string_list cb t) (fun p -> I.lid_of_path p Range.dummyRange)
     in
     mk_emb embed unembed
-        (mkConstruct fstar_refl_aqualv_fv [] [])
-        (fv_as_emb_typ fstar_refl_aqualv_fv)
+        (fun () -> mkConstruct fstar_refl_aqualv_fv [] [])
+        (fun () -> fv_as_emb_typ fstar_refl_aqualv_fv)
 
 let e_letbinding =
     let embed_letbinding cb (lb:letbinding) : t =
@@ -991,8 +992,8 @@ let e_qualifier =
             None
     in
     mk_emb embed unembed
-        (mkConstruct fstar_refl_qualifier_fv [] [])
-        (fv_as_emb_typ fstar_refl_qualifier_fv)
+        (fun () -> mkConstruct fstar_refl_qualifier_fv [] [])
+        (fun () -> fv_as_emb_typ fstar_refl_qualifier_fv)
 
 let e_qualifiers = e_list e_qualifier
 

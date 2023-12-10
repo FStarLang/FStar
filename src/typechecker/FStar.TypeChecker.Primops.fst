@@ -15,6 +15,7 @@ open FStar.Syntax.Syntax
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
 open FStar.Errors
+open FStar.Class.Monad
 
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
@@ -35,18 +36,22 @@ let null_psc = { psc_range = Range.dummyRange ; psc_subst = fun () -> [] }
 let psc_range psc = psc.psc_range
 let psc_subst psc = psc.psc_subst ()
 
-let embed_simple (emb:EMB.embedding 'a) (r:Range.range) (x:'a) : term =
-    EMB.embed emb x r None EMB.id_norm_cb
+let embed_simple {| EMB.embedding 'a |} (r:Range.range) (x:'a) : term =
+    EMB.embed x r None EMB.id_norm_cb
 
-let try_unembed_simple (emb:EMB.embedding 'a) (x:term) : option 'a =
-    EMB.try_unembed emb x EMB.id_norm_cb
+let try_unembed_simple {| EMB.embedding 'a |} (x:term) : option 'a =
+    EMB.try_unembed x EMB.id_norm_cb
 
-let arg_as_int    (a:arg) = fst a |> try_unembed_simple EMB.e_int
-let arg_as_bool   (a:arg) = fst a |> try_unembed_simple EMB.e_bool
-let arg_as_char   (a:arg) = fst a |> try_unembed_simple EMB.e_char
-let arg_as_string (a:arg) = fst a |> try_unembed_simple EMB.e_string
-let arg_as_list   (e:EMB.embedding 'a) (a:arg) = fst a |> try_unembed_simple (EMB.e_list e)
-let arg_as_doc    (a:arg) = fst a |> try_unembed_simple EMB.e_document
+let arg_as_int    (a:arg) : option Z.t = fst a |> try_unembed_simple
+let arg_as_bool   (a:arg) : option bool = fst a |> try_unembed_simple
+let arg_as_char   (a:arg) : option char = fst a |> try_unembed_simple
+let arg_as_string (a:arg) : option string = fst a |> try_unembed_simple
+
+let arg_as_list {|e:EMB.embedding 'a|} (a:arg)
+: option (list 'a)
+  = fst a |> try_unembed_simple
+
+let arg_as_doc (a:arg) : option Pprint.document = fst a |> try_unembed_simple
 
 let arg_as_bounded_int ((a, _) :arg) : option (fv * Z.t * option S.meta_source_info) =
     let (a, m) =
@@ -110,24 +115,47 @@ let as_primitive_step_nbecbs is_strong (l, arity, u_arity, f, f_nbe) : primitive
     interpretation_nbe=(fun cb univs args -> f_nbe cb univs args)
 }
 
+let mk1 (f : 'a -> 'b)
+        {| EMB.embedding 'a |} {| EMB.embedding 'b |}
+: interp_t =
+  fun psc cbs us args ->
+    match args with
+    | [(a1, _)] ->
+      let! x = try_unembed_simple a1 in
+      let r : 'b = f x in
+      return (embed_simple psc.psc_range r)
+
+let mk2 (f : 'a -> 'b -> 'c)
+        {| EMB.embedding 'a |} {| EMB.embedding 'b |} {| EMB.embedding 'c |}
+: interp_t =
+  fun psc cbs us args ->
+    match args with
+    | [(a1, _); (a2, _)] ->
+      let! x = try_unembed_simple a1 in
+      let! y = try_unembed_simple a2 in
+      let r : 'c = f x y in
+      return (embed_simple psc.psc_range r)
+
+
+
 (* Most primitive steps don't use the NBE cbs, so they can use this wrapper. *)
 let as_primitive_step is_strong (l, arity, u_arity, f, f_nbe) =
   as_primitive_step_nbecbs is_strong (l, arity, u_arity, f, (fun cb univs args -> f_nbe univs args))
 
 let unary_int_op (f:Z.t -> Z.t) =
-    unary_op arg_as_int (fun r x -> embed_simple EMB.e_int r (f x))
+    unary_op arg_as_int (fun r x -> embed_simple r (f x))
 
 let binary_int_op (f:Z.t -> Z.t -> Z.t) =
-    binary_op arg_as_int (fun r x y -> embed_simple EMB.e_int r (f x y))
+    binary_op arg_as_int (fun r x y -> embed_simple r (f x y))
 
 let unary_bool_op (f:bool -> bool) =
-    unary_op arg_as_bool (fun r x -> embed_simple EMB.e_bool r (f x))
+    unary_op arg_as_bool (fun r x -> embed_simple r (f x))
 
 let binary_bool_op (f:bool -> bool -> bool) =
-    binary_op arg_as_bool (fun r x y -> embed_simple EMB.e_bool r (f x y))
+    binary_op arg_as_bool (fun r x y -> embed_simple r (f x y))
 
 let binary_string_op (f : string -> string -> string) =
-    binary_op arg_as_string (fun r x y -> embed_simple EMB.e_string r (f x y))
+    binary_op arg_as_string (fun r x y -> embed_simple r (f x y))
 
 let mixed_binary_op
   (as_a : arg -> option 'a)
@@ -187,17 +215,17 @@ let built_in_primitive_steps_list : list primitive_step =
     in
     let string_compare' rng (s1:string) (s2:string) : term =
         let r = String.compare s1 s2 in
-        embed_simple EMB.e_int rng (Z.big_int_of_string (BU.string_of_int r))
+        embed_simple rng (Z.big_int_of_string (BU.string_of_int r))
     in
     let string_concat' psc _n _us args : option term =
         match args with
         | [a1; a2] ->
             begin match arg_as_string a1 with
             | Some s1 ->
-                begin match arg_as_list EMB.e_string a2 with
+                begin match arg_as_list a2 with
                 | Some s2 ->
                     let r = String.concat s1 s2 in
-                    Some (embed_simple EMB.e_string psc.psc_range r)
+                    Some (embed_simple psc.psc_range r)
                 | _ -> None
                 end
             | _ -> None
@@ -207,12 +235,12 @@ let built_in_primitive_steps_list : list primitive_step =
     let string_split' psc _norm_cb _us args : option term =
         match args with
         | [a1; a2] ->
-            begin match arg_as_list EMB.e_char a1 with
+            begin match arg_as_list a1 with
             | Some s1 ->
                 begin match arg_as_string a2 with
                 | Some s2 ->
                     let r = String.split s1 s2 in
-                    Some (embed_simple (EMB.e_list EMB.e_string) psc.psc_range r)
+                    Some (embed_simple psc.psc_range r)
                 | _ -> None
                 end
             | _ -> None
@@ -229,7 +257,7 @@ let built_in_primitive_steps_list : list primitive_step =
                 (* Might raise an OOB exception, but not if the precondition is proven *)
                 begin
                 try let r = String.substring s1 n1 n2 in
-                    Some (embed_simple EMB.e_string psc.psc_range r)
+                    Some (embed_simple psc.psc_range r)
                 with | _ -> None
                 end
             | _ -> None
@@ -237,14 +265,14 @@ let built_in_primitive_steps_list : list primitive_step =
         | _ -> None
     in
     let string_of_int rng (i:Z.t) : term =
-        embed_simple EMB.e_string rng (Z.string_of_big_int i)
+        embed_simple rng (Z.string_of_big_int i)
     in
     let string_of_bool rng (b:bool) : term =
-        embed_simple EMB.e_string rng (if b then "true" else "false")
+        embed_simple rng (if b then "true" else "false")
     in
     let int_of_string rng (s:string) : term =
       let r = BU.safe_int_of_string s in
-      embed_simple EMB.(e_option e_fsint) rng r
+      embed_simple rng r
     in
     let bool_of_string rng (s:string) : term =
       let r =
@@ -253,13 +281,13 @@ let built_in_primitive_steps_list : list primitive_step =
         | "false" -> Some false
         | _ -> None
       in
-      embed_simple EMB.(e_option e_bool) rng r
+      embed_simple rng r
     in
     let lowercase rng (s:string) : term =
-        embed_simple EMB.e_string rng (String.lowercase s)
+        embed_simple rng (String.lowercase s)
     in
     let uppercase rng (s:string) : term =
-        embed_simple EMB.e_string rng (String.uppercase s)
+        embed_simple rng (String.uppercase s)
     in
     let string_index psc _norm_cb _us args : option term =
         match args with
@@ -268,7 +296,7 @@ let built_in_primitive_steps_list : list primitive_step =
             | Some s, Some i ->
               begin
               try let r = String.index s i in
-                  Some (embed_simple EMB.e_char psc.psc_range r)
+                  Some (embed_simple psc.psc_range r)
               with | _ -> None
               end
             | _  -> None
@@ -282,7 +310,7 @@ let built_in_primitive_steps_list : list primitive_step =
             | Some s, Some c ->
               begin
               try let r = String.index_of s c in
-                  Some (embed_simple EMB.e_int psc.psc_range r)
+                  Some (embed_simple psc.psc_range r)
               with | _ -> None
               end
             | _ -> None
@@ -301,7 +329,7 @@ let built_in_primitive_steps_list : list primitive_step =
           let r = FStar.Compiler.Range.mk_range fn
                               (FStar.Compiler.Range.mk_pos (Z.to_int_fs from_l) (Z.to_int_fs from_c))
                               (FStar.Compiler.Range.mk_pos (Z.to_int_fs to_l) (Z.to_int_fs to_c)) in
-          Some (embed_simple EMB.e_range psc.psc_range r)
+          Some (embed_simple psc.psc_range r)
         | _ -> None
         end
       | _ -> None
@@ -326,9 +354,9 @@ let built_in_primitive_steps_list : list primitive_step =
       = fun psc _norm_cb _us args ->
         match args with
         | [(a1, None); (a2, None)] ->
-            begin match try_unembed_simple EMB.e_bool a1 with
+            begin match try_unembed_simple a1 with
             | Some false ->
-              Some (embed_simple EMB.e_bool psc.psc_range false)
+              Some (embed_simple psc.psc_range false)
             | Some true ->
               Some a2
             | _ -> None
@@ -339,9 +367,9 @@ let built_in_primitive_steps_list : list primitive_step =
       = fun psc _norm_cb _us args ->
         match args with
         | [(a1, None); (a2, None)] ->
-            begin match try_unembed_simple EMB.e_bool a1 with
+            begin match try_unembed_simple a1 with
             | Some true ->
-              Some (embed_simple EMB.e_bool psc.psc_range true)
+              Some (embed_simple psc.psc_range true)
             | Some false ->
               Some a2
             | _ -> None
@@ -354,11 +382,11 @@ let built_in_primitive_steps_list : list primitive_step =
       = fun psc _norm_cb _us args ->
         match args with
         | [(a1, None); (a2, None)] ->
-            begin match try_unembed_simple EMB.e_int a1,
-                        try_unembed_simple EMB.e_int a2 with
+            begin match try_unembed_simple a1,
+                        try_unembed_simple a2 with
             | Some m, Some n ->
               if Z.to_int_fs n <> 0
-              then Some (embed_simple EMB.e_int psc.psc_range (op m n))
+              then Some (embed_simple psc.psc_range (op m n))
               else None
 
             | _ -> None
@@ -372,7 +400,7 @@ let built_in_primitive_steps_list : list primitive_step =
     }
     in
     let int_as_bounded r int_to_t n =
-      let c = embed_simple EMB.e_int r n in
+      let c = embed_simple r n in
       let int_to_t = S.fv_to_tm int_to_t in
       S.mk_Tm_app int_to_t [S.as_arg c] r
     in
@@ -420,22 +448,22 @@ let built_in_primitive_steps_list : list primitive_step =
          (PC.op_LT,
              2,
              0,
-             binary_op arg_as_int (fun r x y -> embed_simple EMB.e_bool r (Z.lt_big_int x y)),
+             binary_op arg_as_int (fun r x y -> embed_simple r (Z.lt_big_int x y)),
              NBETerm.binary_op NBETerm.arg_as_int (fun x y -> NBETerm.embed NBETerm.e_bool bogus_cbs (Z.lt_big_int x y)));
          (PC.op_LTE,
              2,
              0,
-             binary_op arg_as_int (fun r x y -> embed_simple EMB.e_bool r (Z.le_big_int x y)),
+             binary_op arg_as_int (fun r x y -> embed_simple r (Z.le_big_int x y)),
              NBETerm.binary_op NBETerm.arg_as_int (fun  x y -> NBETerm.embed NBETerm.e_bool bogus_cbs (Z.le_big_int x y)));
          (PC.op_GT,
              2,
              0,
-             binary_op arg_as_int (fun r x y -> embed_simple EMB.e_bool r (Z.gt_big_int x y)),
+             binary_op arg_as_int (fun r x y -> embed_simple r (Z.gt_big_int x y)),
              NBETerm.binary_op NBETerm.arg_as_int (fun x y -> NBETerm.embed NBETerm.e_bool bogus_cbs (Z.gt_big_int x y)));
          (PC.op_GTE,
              2,
              0,
-             binary_op arg_as_int (fun r x y -> embed_simple EMB.e_bool r (Z.ge_big_int x y)),
+             binary_op arg_as_int (fun r x y -> embed_simple r (Z.ge_big_int x y)),
              NBETerm.binary_op NBETerm.arg_as_int (fun x y -> NBETerm.embed NBETerm.e_bool bogus_cbs (Z.ge_big_int x y)));
          (PC.op_Modulus,
              2,
@@ -500,7 +528,7 @@ let built_in_primitive_steps_list : list primitive_step =
          (PC.string_string_of_list_lid,
              1,
              0,
-             unary_op (arg_as_list EMB.e_char) string_of_list',
+             unary_op arg_as_list string_of_list',
              NBETerm.unary_op (NBETerm.arg_as_list NBETerm.e_char) NBETerm.string_of_list');
          (PC.string_make_lid,
              2,
@@ -508,7 +536,7 @@ let built_in_primitive_steps_list : list primitive_step =
              mixed_binary_op
                    (fun (x:arg) -> arg_as_int x <: option Z.t)
                    (fun (x:arg) -> arg_as_char x <: option char)
-                   (fun (r:Range.range) (s:string) -> embed_simple EMB.e_string r s)
+                   (fun (r:Range.range) (s:string) -> embed_simple r s)
                    (fun (r:Range.range) _us (x:BigInt.t) (y:char) -> Some (String.make (BigInt.to_int_fs x) y)),
              NBETerm.mixed_binary_op
                    NBETerm.arg_as_int
@@ -641,7 +669,7 @@ let built_in_primitive_steps_list : list primitive_step =
                   unary_op
                     arg_as_bounded_int
                     (fun r (int_to_t, x, m) ->
-                      with_meta_ds r (embed_simple EMB.e_int r x) m),
+                      with_meta_ds r (embed_simple r x) m),
                   NBETerm.unary_op
                     NBETerm.arg_as_bounded_int
                     (fun (int_to_t, x, m) ->
@@ -654,7 +682,7 @@ let built_in_primitive_steps_list : list primitive_step =
                    arg_as_bounded_int
                    (fun r (int_to_t, x, m) (_, y, _) ->
                      with_meta_ds r
-                       (embed_simple EMB.e_bool r (Z.gt_big_int x y)) m),
+                       (embed_simple r (Z.gt_big_int x y)) m),
                  NBETerm.binary_op
                    NBETerm.arg_as_bounded_int
                    (fun (int_to_t, x, m) (_, y, _) ->
@@ -667,7 +695,7 @@ let built_in_primitive_steps_list : list primitive_step =
                    arg_as_bounded_int
                    (fun r (int_to_t, x, m) (_, y, _) ->
                      with_meta_ds r
-                       (embed_simple EMB.e_bool r (Z.ge_big_int x y)) m),
+                       (embed_simple r (Z.ge_big_int x y)) m),
                  NBETerm.binary_op
                    NBETerm.arg_as_bounded_int
                    (fun (int_to_t, x, m) (_, y, _) ->
@@ -680,7 +708,7 @@ let built_in_primitive_steps_list : list primitive_step =
                    arg_as_bounded_int
                    (fun r (int_to_t, x, m) (_, y, _) ->
                      with_meta_ds r
-                       (embed_simple EMB.e_bool r (Z.lt_big_int x y)) m),
+                       (embed_simple r (Z.lt_big_int x y)) m),
                  NBETerm.binary_op
                    NBETerm.arg_as_bounded_int
                    (fun (int_to_t, x, m) (_, y, _) ->
@@ -693,7 +721,7 @@ let built_in_primitive_steps_list : list primitive_step =
                    arg_as_bounded_int
                    (fun r (int_to_t, x, m) (_, y, _) ->
                      with_meta_ds r
-                       (embed_simple EMB.e_bool r (Z.le_big_int x y)) m),
+                       (embed_simple r (Z.le_big_int x y)) m),
                  NBETerm.binary_op
                    NBETerm.arg_as_bounded_int
                    (fun (int_to_t, x, m) (_, y, _) ->
@@ -917,7 +945,7 @@ let built_in_primitive_steps_list : list primitive_step =
            mixed_binary_op
               (fun (elt_t, _) -> Some elt_t) //the first arg of of_list is the element type
               (fun (l, q) -> //2nd arg: unembed as a list term
-                match arg_as_list FStar.Syntax.Embeddings.e_any (l, q) with
+                match arg_as_list #_ #FStar.Syntax.Embeddings.e_any (l, q) with
                 | Some lst -> Some (l, lst)
                 | _ -> None)
               (fun r (universes, elt_t, (l, blob)) -> 
@@ -929,7 +957,7 @@ let built_in_primitive_steps_list : list primitive_step =
                 //e.g., in the SMT encoding, we represent the blob computed by of_list l
                 //just as the unreduced term `of_list l`
                 S.mk (Tm_lazy { blob;
-                                lkind=Lazy_embedding (emb_typ EMB.(emb_typ_of e_any), Thunk.mk (fun _ -> un_lazy universes elt_t l r));
+                                lkind=Lazy_embedding (emb_typ EMB.(emb_typ_of _ #e_any ()), Thunk.mk (fun _ -> un_lazy universes elt_t l r));
                                 ltyp=S.mk_Tm_app (S.mk_Tm_uinst (U.fvar_const PC.immutable_array_t_lid) universes) [S.as_arg elt_t] r;
                                 rng=r }) r)
               (fun r universes elt_t (l, lst) ->
@@ -946,7 +974,7 @@ let built_in_primitive_steps_list : list primitive_step =
                //The embedding is similar to the non-NBE case
                //But, this time the thunk is the NBE.t representation of `of_list l`
                NBETerm.mk_t <|
-               NBETerm.Lazy (Inr (blob, emb_typ EMB.(emb_typ_of e_any)),
+               NBETerm.Lazy (Inr (blob, emb_typ EMB.(emb_typ_of _ #e_any ())),
                              Thunk.mk (fun _ ->
                                NBETerm.mk_t <| NBETerm.FV (S.lid_as_fv PC.immutable_array_of_list_lid None,
                                                           universes,
@@ -974,7 +1002,7 @@ let built_in_primitive_steps_list : list primitive_step =
           | _ -> None
       in
       let length_op =
-        let embed_int (r:Range.range) (i:Z.t) : term = embed_simple EMB.e_int r i in
+        let embed_int (r:Range.range) (i:Z.t) : term = embed_simple r i in
         let run_op (blob:FStar.Compiler.Dyn.dyn) : option Z.t =
             Some (BU.array_length #term (FStar.Compiler.Dyn.undyn blob))
         in
@@ -1009,7 +1037,7 @@ let built_in_primitive_steps_list : list primitive_step =
     let issue_ops =
         let mk_lid l = PC.p2l ["FStar"; "Issue"; l] in
         let arg_as_issue (x:arg) : option Errors.issue =
-            EMB.(try_unembed e_issue (fst x) id_norm_cb)
+            EMB.(try_unembed (fst x) id_norm_cb)
         in
         let option_int_as_option_z oi = 
           match oi with
@@ -1033,7 +1061,7 @@ let built_in_primitive_steps_list : list primitive_step =
         [
         (mk_lid "message_of_issue", 1, 0,
          unary_op arg_as_issue
-                  (fun _r issue -> EMB.(embed_simple (e_list e_document) Range.dummyRange issue.issue_msg)),
+                  (fun _r issue -> EMB.(embed_simple Range.dummyRange issue.issue_msg)),
          NBETerm.unary_op
                   nbe_arg_as_issue
                   (fun issue -> FStar.TypeChecker.NBETerm.(embed (e_list e_document) bogus_cbs issue.issue_msg)));
@@ -1045,14 +1073,14 @@ let built_in_primitive_steps_list : list primitive_step =
                   (fun issue -> nbe_str (Errors.string_of_issue_level issue.issue_level)));
         (mk_lid "number_of_issue", 1, 0,
          unary_op arg_as_issue
-                  (fun _r issue -> EMB.(embed_simple (e_option e_int) Range.dummyRange 
+                  (fun _r issue -> EMB.(embed_simple Range.dummyRange 
                                                       (option_int_as_option_z issue.issue_number))),
          NBETerm.unary_op
                   nbe_arg_as_issue
                   (fun issue -> nbe_option_int issue.issue_number));
         (mk_lid "range_of_issue", 1, 0,
          unary_op arg_as_issue
-                  (fun _r issue -> EMB.(embed_simple (e_option e_range) Range.dummyRange 
+                  (fun _r issue -> EMB.(embed_simple Range.dummyRange 
                                                       issue.issue_range)),
          NBETerm.unary_op
                   nbe_arg_as_issue
@@ -1060,7 +1088,7 @@ let built_in_primitive_steps_list : list primitive_step =
                                                       issue.issue_range)));
         (mk_lid "context_of_issue", 1, 0,
          unary_op arg_as_issue
-                  (fun _r issue -> EMB.(embed_simple (e_list e_string) Range.dummyRange 
+                  (fun _r issue -> EMB.(embed_simple Range.dummyRange 
                                                       issue.issue_ctx)),
          NBETerm.unary_op
                   nbe_arg_as_issue
@@ -1081,7 +1109,7 @@ let built_in_primitive_steps_list : list primitive_step =
               begin
               let open EMB in
               let try_unembed (#a:Type) (e:embedding a) (x:term) : option a =
-                  try_unembed e x id_norm_cb
+                  try_unembed x id_norm_cb
               in
               match try_unembed e_string level,
                     try_unembed (e_list e_document) msg,
@@ -1094,7 +1122,7 @@ let built_in_primitive_steps_list : list primitive_step =
                              issue_number = option_z_as_option_int number;
                              issue_msg = msg;
                              issue_ctx = context} in
-                Some (embed_simple e_issue psc.psc_range issue)
+                Some (embed_simple psc.psc_range issue)
               | _ -> None
               end
             | _ -> None),
@@ -1131,14 +1159,14 @@ let built_in_primitive_steps_list : list primitive_step =
         (mk_lid "arbitrary_string", 1, 0,
          unary_op arg_as_string
                   (fun r str ->
-                  embed_simple EMB.e_document r (FStar.Pprint.arbitrary_string str)),
+                  embed_simple r (FStar.Pprint.arbitrary_string str)),
          NBETerm.unary_op NBETerm.arg_as_string
                   (fun str -> NBETerm.embed NBETerm.e_document bogus_cbs (FStar.Pprint.arbitrary_string str)));
 
         (mk_lid "render", 1, 0,
          unary_op arg_as_doc
                   (fun r doc ->
-                  embed_simple EMB.e_string r (FStar.Pprint.render doc)),
+                  embed_simple r (FStar.Pprint.render doc)),
          NBETerm.unary_op NBETerm.arg_as_doc
                   (fun doc -> NBETerm.embed NBETerm.e_string bogus_cbs (FStar.Pprint.render doc)));
         ]
@@ -1153,7 +1181,7 @@ let built_in_primitive_steps_list : list primitive_step =
               begin
               let open EMB in
               let try_unembed (#a:Type) (e:embedding a) (x:term) : option a =
-                  try_unembed e x id_norm_cb
+                  try_unembed x id_norm_cb
               in
               match try_unembed e_any ta,
                     try_unembed e_any tb,
@@ -1162,7 +1190,7 @@ let built_in_primitive_steps_list : list primitive_step =
               | Some ta, Some tb, Some s, Some f ->
                 let r = U.mk_app f [S.as_arg s] in
                 let emb = set_type ta e_any in
-                Some (embed_simple (e_sealed emb) psc.psc_range r)
+                Some (embed_simple #_ #(e_sealed emb) psc.psc_range r)
               | _ -> None
               end
             | _ -> None),
@@ -1193,7 +1221,7 @@ let built_in_primitive_steps_list : list primitive_step =
               begin
               let open EMB in
               let try_unembed (#a:Type) (e:embedding a) (x:term) : option a =
-                  try_unembed e x id_norm_cb
+                  try_unembed x id_norm_cb
               in
               match try_unembed e_any ta,
                     try_unembed e_any tb,
@@ -1201,7 +1229,7 @@ let built_in_primitive_steps_list : list primitive_step =
                     try_unembed e_any f with
               | Some ta, Some tb, Some s, Some f ->
                 let r = U.mk_app f [S.as_arg s] in
-                Some (embed_simple e_any psc.psc_range r)
+                Some (embed_simple #_ #e_any psc.psc_range r)
               | _ -> None
               end
             | _ -> None),

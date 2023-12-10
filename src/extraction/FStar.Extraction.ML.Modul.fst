@@ -687,7 +687,7 @@ let get_noextract_to (se:sigelt) (backend:option Options.codegen_t) : bool =
     let hd, args = U.head_and_args attr in
     match (SS.compress hd).n, args with
     | Tm_fvar fv, [(a, _)] when S.fv_eq_lid fv PC.noextract_to_attr ->
-        begin match EMB.try_unembed EMB.e_string a EMB.id_norm_cb with
+        begin match EMB.try_unembed a EMB.id_norm_cb with
         | Some s ->
           Option.isSome backend && Options.parse_codegen s = backend
         | None ->
@@ -1160,7 +1160,7 @@ and extract_sig_let (g:uenv) (se:sigelt) : uenv * list mlmodule1 =
               steps
           in
           begin
-          match PO.try_unembed_simple (EMB.e_list EMB.e_norm_step) steps with
+          match PO.try_unembed_simple steps with
           | Some steps -> 
             Some (Cfg.translate_norm_steps steps)
           | _ -> 

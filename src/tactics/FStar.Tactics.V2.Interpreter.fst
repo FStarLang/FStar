@@ -63,8 +63,8 @@ module PO      = FStar.TypeChecker.Primops
 
 let tacdbg = BU.mk_ref false
 
-let unembed ea a norm_cb = unembed ea a norm_cb
-let embed ea r x norm_cb = embed ea x r None norm_cb
+let embed {|embedding 'a|} r (x:'a) norm_cb = embed x r None norm_cb
+let unembed {|embedding 'a|} a norm_cb : option 'a = unembed a norm_cb
 
 let native_tactics_steps () =
   let step_from_native_step (s: native_primitive_step) : PO.primitive_step =
@@ -137,7 +137,7 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
     let embedded_tac_b = U.mk_reify embedded_tac_b (Some PC.effect_TAC_lid) in
 
     let tm = S.mk_Tm_app embedded_tac_b
-                         [S.as_arg (embed E.e_proofstate rng proof_state ncb)]
+                         [S.as_arg (embed rng proof_state ncb)]
                           rng in
 
 
@@ -161,7 +161,7 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
     (* if proof_state.tac_verb_dbg then *)
     (*     BU.print1 "Reduced tactic: got %s\n" (show result); *)
 
-    let res = unembed (E.e_result eb) result ncb in
+    let res = unembed result ncb in
 
     match res with
     | Some (Success (b, ps)) ->
@@ -223,7 +223,7 @@ let unembed_tactic_nbe_0 (eb:NBET.embedding 'b) (cb:NBET.nbe_cbs) (embedded_tac_
 let unembed_tactic_1 (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : 'a -> tac 'r =
     fun x ->
       let rng = FStar.Compiler.Range.dummyRange  in
-      let x_tm = embed ea rng x ncb in
+      let x_tm = embed rng x ncb in
       let app = S.mk_Tm_app f [as_arg x_tm] rng in
       unembed_tactic_0 er app ncb
 
@@ -244,8 +244,8 @@ let e_tactic_nbe_thunk (er : NBET.embedding 'r) : NBET.embedding (tac 'r)
     NBET.mk_emb
            (fun cb _ -> failwith "Impossible: NBE embedding tactic (thunk)?")
            (fun cb t -> Some (unembed_tactic_nbe_1 NBET.e_unit er cb t ()))
-           (NBET.mk_t (NBET.Constant NBET.Unit))
-           (emb_typ_of e_unit)
+           (fun () -> NBET.mk_t (NBET.Constant NBET.Unit))
+           (emb_typ_of unit)
 
 let e_tactic_1 (ea : embedding 'a) (er : embedding 'r) : embedding ('a -> tac 'r)
     =
@@ -258,8 +258,8 @@ let e_tactic_nbe_1 (ea : NBET.embedding 'a) (er : NBET.embedding 'r) : NBET.embe
     NBET.mk_emb
            (fun cb _ -> failwith "Impossible: NBE embedding tactic (1)?")
            (fun cb t -> Some (unembed_tactic_nbe_1 ea er cb t))
-           (NBET.mk_t (NBET.Constant NBET.Unit))
-           (emb_typ_of e_unit)
+           (fun () -> NBET.mk_t (NBET.Constant NBET.Unit))
+           (emb_typ_of unit)
 
 (* Takes a `sealed a`, but that's just a userspace abstraction. *)
 let unseal (_typ:_) (x:'a) : tac 'a = return x
@@ -726,7 +726,7 @@ let () =
 let unembed_tactic_1_alt (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : option ('a -> tac 'r) =
     Some (fun x ->
       let rng = FStar.Compiler.Range.dummyRange  in
-      let x_tm = embed ea rng x ncb in
+      let x_tm = embed rng x ncb in
       let app = S.mk_Tm_app f [as_arg x_tm] rng in
       unembed_tactic_0 er app ncb)
 

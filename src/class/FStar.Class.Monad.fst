@@ -3,6 +3,11 @@ module FStar.Class.Monad
 open FStar.Compiler
 open FStar.Compiler.Effect
 
+instance monad_option : monad option = {
+  return = (fun x -> Some x); // FIXME: without the we gell ill-typed ML
+  ( let! ) = Util.bind_opt;
+}
+
 let rec mapM f l =
   match l with
    | [] -> return []
@@ -24,3 +29,12 @@ let rec foldM_right f xs e =
   | x::xs ->
     let! e' = foldM_right f xs e in
     f x e'
+
+let (<$>) f x =
+  let! v = x in
+  return (f v)
+
+let (<*>) ff x =
+  let! f = ff in
+  let! v = x in
+  return (f v)

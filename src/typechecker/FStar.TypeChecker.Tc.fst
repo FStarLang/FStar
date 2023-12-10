@@ -334,7 +334,7 @@ let proc_check_with (attrs:list attribute) (kont : unit -> 'a) : 'a =
   match U.get_attribute PC.check_with_lid attrs with
   | None -> kont ()
   | Some [(a, None)] ->
-    match EMB.unembed EMB.e_vconfig a EMB.id_norm_cb with
+    match EMB.unembed a EMB.id_norm_cb with
     | None -> failwith "nah"
     | Some vcfg ->
     Options.with_saved_options (fun () ->

@@ -799,7 +799,7 @@ let maybe_register_plugin (g:uenv) (se:sigelt) : list mlmodule1 =
       else match args with
       | [(a, _)] ->
          (* Try to unembed the argument as an int, warn if not possible. *)
-         let nopt = EMB.unembed EMB.e_fsint a EMB.id_norm_cb in
+         let nopt = EMB.unembed a EMB.id_norm_cb in
          Some nopt
       | _ -> Some None
     )
