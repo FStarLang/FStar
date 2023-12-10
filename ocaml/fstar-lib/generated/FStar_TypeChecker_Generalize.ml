@@ -280,11 +280,8 @@ let (gen :
            | (univs, uvs, lec_hd) ->
                let force_univs_eq lec2 u1 u2 =
                  let uu___3 =
-                   (FStar_Compiler_Set.subset FStar_Syntax_Free.ord_univ_uvar
-                      u1 u2)
-                     &&
-                     (FStar_Compiler_Set.subset
-                        FStar_Syntax_Free.ord_univ_uvar u2 u1) in
+                   FStar_Compiler_Set.equal FStar_Syntax_Free.ord_univ_uvar
+                     u1 u2 in
                  if uu___3
                  then ()
                  else
@@ -555,7 +552,10 @@ let (generalize' :
                     match uu___5 with
                     | (lb, uu___6, uu___7) ->
                         FStar_Syntax_Print.lbname_to_string lb) lecs in
-             FStar_Compiler_String.concat ", " uu___4 in
+             FStar_Class_Show.show
+               (FStar_Class_Show.show_list
+                  (FStar_Class_Show.printableshow
+                     FStar_Class_Printable.printable_string)) uu___4 in
            FStar_Compiler_Util.print1 "Generalizing: %s\n" uu___3
          else ());
         (let univnames_lecs =
