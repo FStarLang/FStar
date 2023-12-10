@@ -6,6 +6,7 @@ INCLUDE_PATHS = \
 	../ulib \
 	basic \
 	class \
+	data \
 	extraction \
 	fstar \
 	parser \
