@@ -35,23 +35,7 @@ val get_file_last_modification_time: string -> time
 val string_of_time: time -> string
 
 (* generic utils *)
-(* Functional sets *)
-type set 'a
-val as_set : list 'a -> ('a -> 'a -> int) -> set 'a
-val set_elements: set 'a -> list 'a
-val new_set: ('a -> 'a -> int) -> set 'a
-val set_is_empty: set 'a -> bool
-val set_add: 'a -> set 'a -> set 'a
-val set_remove: 'a -> set 'a -> set 'a
-val set_mem: 'a -> set 'a -> bool
-val set_union: set 'a -> set 'a -> set 'a
-val set_intersect: set 'a -> set 'a -> set 'a
-val set_is_subset_of: set 'a -> set 'a -> bool
-val set_count: set 'a -> int
-val set_difference: set 'a -> set 'a -> set 'a
-val set_symmetric_difference: set 'a -> set 'a -> set 'a
-val set_eq: set 'a -> set 'a -> bool
-
+(* smap: map from string keys *)
 type smap 'value
 val smap_create: int -> smap 'value
 val smap_clear:smap 'value -> unit

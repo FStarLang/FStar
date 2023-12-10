@@ -384,47 +384,6 @@ let string_builder_append b s = BatBuffer.add_string b s
 let message_of_exn (e:exn) = Printexc.to_string e
 let trace_of_exn (e:exn) = Printexc.get_backtrace ()
 
-type 'a set = ('a list) * ('a -> 'a -> bool)
-[@@deriving show]
-let set_to_yojson _ _ = `Null
-let set_of_yojson _ _ = failwith "cannot readback"
-
-let set_is_empty ((s, _):'a set) =
-  match s with
-  | [] -> true
-  | _ -> false
-
-let as_set (l:'a list) (cmp:('a -> 'a -> Z.t)) = (l, fun x y -> cmp x y = Z.zero)
-let new_set (cmp:'a -> 'a -> Z.t) : 'a set = as_set [] cmp
-
-let set_elements ((s1, eq):'a set) : 'a list =
-  let rec aux out = function
-    | [] -> BatList.rev_append out []
-    | hd::tl ->
-       if BatList.exists (eq hd) out then
-         aux out tl
-       else
-         aux (hd::out) tl in
-  aux [] s1
-
-let set_add a ((s, b):'a set) = (s@[a], b)
-let set_remove x ((s1, eq):'a set) =
-  (BatList.filter (fun y -> not (eq x y)) s1, eq)
-let set_mem a ((s, b):'a set) = BatList.exists (b a) s
-let set_union ((s1, b):'a set) ((s2, _):'a set) = (s1@s2, b)
-let set_intersect ((s1, eq):'a set) ((s2, _):'a set) =
-  (BatList.filter (fun y -> BatList.exists (eq y) s2) s1, eq)
-let set_is_subset_of ((s1, eq):'a set) ((s2, _):'a set) =
-  BatList.for_all (fun y -> BatList.exists (eq y) s2) s1
-let set_count ((s1, _):'a set) = Z.of_int (BatList.length s1)
-let set_difference ((s1, eq):'a set) ((s2, _):'a set) : 'a set =
-  (BatList.filter (fun y -> not (BatList.exists (eq y) s2)) s1, eq)
-let set_symmetric_difference ((s1, eq):'a set) ((s2, _):'a set) : 'a set =
-  set_union (set_difference (s1, eq) (s2, eq))
-            (set_difference (s2, eq) (s1, eq))
-let set_eq ((s1, eq):'a set) ((s2, _):'a set) : bool =
-  set_is_empty (set_symmetric_difference (s1, eq) (s2, eq))
-
 module StringOps =
   struct
     type t = string
