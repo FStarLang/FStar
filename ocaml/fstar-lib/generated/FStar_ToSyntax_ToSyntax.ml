@@ -7704,10 +7704,9 @@ let (parse_attr_with_list :
                   | [] -> ((FStar_Pervasives_Native.Some []), true)
                   | (a1, uu___2)::[] ->
                       let uu___3 =
-                        let uu___4 =
-                          FStar_Syntax_Embeddings.e_list
-                            FStar_Syntax_Embeddings.e_int in
-                        FStar_Syntax_Embeddings_Base.unembed uu___4 a1
+                        FStar_Syntax_Embeddings_Base.unembed
+                          (FStar_Syntax_Embeddings.e_list
+                             FStar_Syntax_Embeddings.e_int) a1
                           FStar_Syntax_Embeddings_Base.id_norm_cb in
                       (match uu___3 with
                        | FStar_Pervasives_Native.Some es ->

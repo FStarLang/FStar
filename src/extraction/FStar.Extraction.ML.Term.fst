@@ -1416,7 +1416,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
             if bv.index < shift then
               (* just a local bvar *)
               let tv' = RD.Tv_BVar bv in
-              let tv = EMB.embed RE.e_term_view tv' t.pos None EMB.id_norm_cb in
+              let tv = EMB.embed tv' t.pos None EMB.id_norm_cb in
               let t = U.mk_app (RC.refl_constant_term RC.fstar_refl_pack_ln) [S.as_arg tv] in
               term_as_mlexpr g t
             else
@@ -1425,7 +1425,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
 
           | tv ->
             (* Else, just embed recursively. *)
-            let tv = EMB.embed (RE.e_term_view_aq (shift, aqs)) tv t.pos None EMB.id_norm_cb in
+            let tv = EMB.embed #_ #(RE.e_term_view_aq (shift, aqs)) tv t.pos None EMB.id_norm_cb in
             let t = U.mk_app (RC.refl_constant_term RC.fstar_refl_pack_ln) [S.as_arg tv] in
             term_as_mlexpr g t
           end

@@ -26,27 +26,27 @@ module Core = FStar.TypeChecker.Core
 
 module NBETerm = FStar.TypeChecker.NBETerm
 
-val e_exn                    : embedding exn
-val e_proofstate             : embedding proofstate
-val e_goal                   : embedding goal
-val e_result                 : embedding 'a -> embedding (__result 'a)
-val e_direction              : embedding direction
-val e_ctrl_flag              : embedding ctrl_flag
-val e_guard_policy           : embedding guard_policy
-val e_unfold_side            : embedding Core.side
-val e_tot_or_ghost           : embedding Core.tot_or_ghost
-val e_tref (#a:Type)         : embedding (tref a)
+instance val e_exn                    : embedding exn
+instance val e_proofstate             : embedding proofstate
+instance val e_goal                   : embedding goal
+instance val e_result                 : embedding 'a -> Tot (embedding (__result 'a))
+instance val e_direction              : embedding direction
+instance val e_ctrl_flag              : embedding ctrl_flag
+instance val e_guard_policy           : embedding guard_policy
+instance val e_unfold_side            : embedding Core.side
+instance val e_tot_or_ghost           : embedding Core.tot_or_ghost
+instance val e_tref (#a:Type)         : Tot (embedding (tref a))
 
-val e_exn_nbe                : NBETerm.embedding exn
-val e_proofstate_nbe         : NBETerm.embedding proofstate
-val e_goal_nbe               : NBETerm.embedding goal
-val e_result_nbe             : NBETerm.embedding 'a -> NBETerm.embedding (__result 'a)
-val e_direction_nbe          : NBETerm.embedding direction
-val e_ctrl_flag_nbe          : NBETerm.embedding ctrl_flag
-val e_guard_policy_nbe       : NBETerm.embedding guard_policy
-val e_unfold_side_nbe        : NBETerm.embedding Core.side
-val e_tot_or_ghost_nbe       : NBETerm.embedding Core.tot_or_ghost
-val e_tref_nbe (#a:Type)     : NBETerm.embedding (tref a)
+instance val e_exn_nbe                : NBETerm.embedding exn
+instance val e_proofstate_nbe         : NBETerm.embedding proofstate
+instance val e_goal_nbe               : NBETerm.embedding goal
+instance val e_result_nbe             : NBETerm.embedding 'a -> Tot (NBETerm.embedding (__result 'a))
+instance val e_direction_nbe          : NBETerm.embedding direction
+instance val e_ctrl_flag_nbe          : NBETerm.embedding ctrl_flag
+instance val e_guard_policy_nbe       : NBETerm.embedding guard_policy
+instance val e_unfold_side_nbe        : NBETerm.embedding Core.side
+instance val e_tot_or_ghost_nbe       : NBETerm.embedding Core.tot_or_ghost
+instance val e_tref_nbe (#a:Type)     : Tot (NBETerm.embedding (tref a))
 
 val unfold_lazy_proofstate   : lazyinfo -> term
 val unfold_lazy_goal         : lazyinfo -> term

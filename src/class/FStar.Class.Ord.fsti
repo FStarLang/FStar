@@ -15,8 +15,8 @@ val sort
   (xs : list a)
   : list a
 
-(* Deduplicate elements, preserving order as determined by the leftmost occurrence.
-So dedup [a,b,c,a,f,e,c] = [a,b,c,f,e] *)
+(* Deduplicate elements, preserving order as determined by the leftmost
+occurrence. So dedup [a,b,c,a,f,e,c] = [a,b,c,f,e] *)
 val dedup
   (#a:Type) {| ord a |}
   (xs : list a)

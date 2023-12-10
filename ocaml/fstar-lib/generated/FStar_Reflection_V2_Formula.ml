@@ -991,11 +991,13 @@ let _ =
     "FStar.Reflection.V2.Formula.term_as_formula'" (Prims.of_int (2))
     (fun psc ->
        fun ncb ->
-         fun args ->
-           FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_1
-             "FStar.Reflection.V2.Formula.term_as_formula' (plugin)"
-             (FStar_Tactics_Native.from_tactic_1 term_as_formula')
-             FStar_Reflection_V2_Embeddings.e_term e_formula psc ncb args)
+         fun us ->
+           fun args ->
+             FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_1
+               "FStar.Reflection.V2.Formula.term_as_formula' (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 term_as_formula')
+               FStar_Reflection_V2_Embeddings.e_term e_formula psc ncb us
+               args)
 let (term_as_formula :
   FStar_Tactics_NamedView.term ->
     (formula, unit) FStar_Tactics_Effect.tac_repr)

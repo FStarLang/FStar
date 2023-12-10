@@ -22,12 +22,9 @@ let rec sort xs =
   | x::xs -> insert x (sort xs)
 
 let dedup #a xs =
-  let rec aux (xs:list a) : list a =
-    match xs with
-    | [] -> []
-    | x :: xs -> if List.existsb ((=?) x) xs then aux xs else x :: aux xs
-  in
-  List.rev (aux (List.rev xs))
+  let open FStar.Compiler.List in
+  let out = fold_left (fun out x -> if existsb (fun y -> x =? y) out then out else x :: out) [] xs in
+  List.rev out
 
 instance ord_int : ord int = {
    super = solve;

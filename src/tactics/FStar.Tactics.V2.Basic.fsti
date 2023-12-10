@@ -100,7 +100,6 @@ val get_guard_policy       : unit -> tac guard_policy
 val set_guard_policy       : guard_policy -> tac unit
 val lax_on                 : unit -> tac bool
 val tadmit_t               : term -> tac unit
-val binder_bv              : binder -> tac bv
 val join                   : unit -> tac unit
 val lget                   : typ -> string -> tac term
 val lset                   : typ -> string -> term -> tac unit

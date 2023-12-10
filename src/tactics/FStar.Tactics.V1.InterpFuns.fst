@@ -39,8 +39,9 @@ module E     = FStar.Tactics.Embedding
 module NBETerm = FStar.TypeChecker.NBETerm
 module NBET    = FStar.TypeChecker.NBETerm
 
-let unembed e t n = FStar.Syntax.Embeddings.unembed e t n
-let embed e rng t n = FStar.Syntax.Embeddings.embed e t rng None n
+(* This module does not use typeclasses *)
+let embed (e:embedding 'a) rng (t:'a) n = FStar.Syntax.Embeddings.embed #_ #e t rng None n
+let unembed (e:embedding 'a) t n : option 'a = FStar.Syntax.Embeddings.unembed #_ #e t n
 
 let rec drop n l =
     if n = 0 then l

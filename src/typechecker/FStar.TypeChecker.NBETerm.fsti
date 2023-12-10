@@ -37,6 +37,8 @@ module Z = FStar.BigInt
 module C = FStar.Const
 open FStar.Char
 
+val interleave_hack : int
+
 (*
    This module provides the internal term representations used in the
    NBE algorithm implemented by FStar.TypeChecker.NBE.fs (see the
@@ -200,6 +202,15 @@ and cflag =
 and arg = t * aqual
 and args = list (arg)
 
+val isAccu : t -> bool
+val isNotAccu : t -> bool
+
+val mkConstruct : fv -> list universe -> args -> t
+val mkFV : fv -> list universe -> args -> t
+
+val mkAccuVar : var -> t
+val mkAccuMatch : t -> (unit -> option match_returns_ascription) -> (unit -> list branch) -> (unit -> option S.residual_comp) -> t
+
 type head = t
 type annot = option t
 
@@ -208,11 +219,13 @@ type nbe_cbs = {
    translate : term -> t;
 }
 
-type embedding 'a = {
-  em  : nbe_cbs -> 'a -> t;
-  un  : nbe_cbs -> t -> option 'a;
-  typ : t;
-  emb_typ : emb_typ
+[@Tactics.Typeclasses.tcclass]
+type embedding (a:Type0) = {
+  em  : nbe_cbs -> a -> t;
+  un  : nbe_cbs -> t -> option a;
+  (* thunking to allow total instances *)
+  typ : unit -> t;
+  emb_typ : unit -> emb_typ;
 }
 
 // Printing functions
@@ -226,14 +239,6 @@ val args_to_string : args -> string
 // NBE term manipulation
 val mk_t : t' -> t
 val nbe_t_of_t : t -> t'
-val isAccu : t -> bool
-val isNotAccu : t -> bool
-
-val mkConstruct : fv -> list universe -> args -> t
-val mkFV : fv -> list universe -> args -> t
-
-val mkAccuVar : var -> t
-val mkAccuMatch : t -> (unit -> option match_returns_ascription) -> (unit -> list branch) -> (unit -> option S.residual_comp) -> t
 
 val as_arg : t -> arg
 val as_iarg : t -> arg
@@ -243,9 +248,9 @@ val translate_cb : nbe_cbs -> term -> t
 
 val mk_emb : (nbe_cbs -> 'a -> t) ->
              (nbe_cbs -> t -> option 'a) ->
-             t ->
-             emb_typ ->
-             embedding 'a
+             (unit -> t) ->
+             (unit -> emb_typ) ->
+             Prims.Tot (embedding 'a)
 
 val embed_as : embedding 'a -> ('a -> 'b) -> ('b -> 'a) -> option t -> embedding 'b
 
@@ -255,25 +260,25 @@ val lazy_unembed_lazy_kind (#a:Type) (k:lazy_kind) (x:t) : option a
 val type_of : embedding 'a -> t
 val set_type : t -> embedding 'a -> embedding 'a
 
-val e_bool   : embedding bool
-val e_string : embedding string
-val e_char   : embedding char
-val e_int    : embedding Z.t
-val e_unit   : embedding unit
+instance val e_bool   : embedding bool
+instance val e_string : embedding string
+instance val e_char   : embedding char
+instance val e_int    : embedding Z.t
+instance val e_unit   : embedding unit
 val e_any    : embedding t
 val mk_any_emb : t -> embedding t
-val e_range  : embedding Range.range
-val e_issue  : embedding FStar.Errors.issue
-val e_document : embedding FStar.Pprint.document
-val e_vconfig  : embedding vconfig
-val e_norm_step : embedding Pervasives.norm_step
-val e_list   : embedding 'a -> embedding (list 'a)
-val e_option : embedding 'a -> embedding (option 'a)
-val e_tuple2 : embedding 'a -> embedding 'b -> embedding ('a * 'b)
-val e_tuple3 : embedding 'a -> embedding 'b -> embedding 'c -> embedding ('a * 'b * 'c)
-val e_either : embedding 'a -> embedding 'b -> embedding (either 'a 'b)
+instance val e_range  : embedding Range.range
+instance val e_issue  : embedding FStar.Errors.issue
+instance val e_document : embedding FStar.Pprint.document
+instance val e_vconfig  : embedding vconfig
+instance val e_norm_step : embedding Pervasives.norm_step
+instance val e_list   : #a:Type -> embedding a -> Prims.Tot (embedding (list a))
+instance val e_option : embedding 'a -> Prims.Tot (embedding (option 'a))
+instance val e_tuple2 : embedding 'a -> embedding 'b -> Prims.Tot (embedding ('a * 'b))
+instance val e_tuple3 : embedding 'a -> embedding 'b -> embedding 'c -> Prims.Tot (embedding ('a * 'b * 'c))
+instance val e_either : embedding 'a -> embedding 'b -> Prims.Tot (embedding (either 'a 'b))
 val e_sealed : embedding 'a -> embedding 'a
-val e_string_list : embedding (list string)
+instance val e_string_list : embedding (list string)
 val e_arrow : embedding 'a -> embedding 'b -> embedding ('a -> 'b)
 
 (* Unconditionally fails raising an exception when called *)
@@ -287,7 +292,7 @@ val arrow_as_prim_step_1:  embedding 'a
                         -> n_tvars:int
                         -> repr_f:Ident.lid
                         -> nbe_cbs
-                        -> (args -> option t)
+                        -> (universes -> args -> option t)
 
 val arrow_as_prim_step_2:  embedding 'a
                         -> embedding 'b
@@ -296,7 +301,7 @@ val arrow_as_prim_step_2:  embedding 'a
                         -> n_tvars:int
                         -> repr_f:Ident.lid
                         -> nbe_cbs
-                        -> (args -> option t)
+                        -> (universes -> args -> option t)
 
 val arrow_as_prim_step_3:  embedding 'a
                         -> embedding 'b
@@ -306,7 +311,7 @@ val arrow_as_prim_step_3:  embedding 'a
                         -> n_tvars:int
                         -> repr_f:Ident.lid
                         -> nbe_cbs
-                        -> (args -> option t)
+                        -> (universes -> args -> option t)
 
 
 

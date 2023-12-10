@@ -9040,15 +9040,6 @@ let rec init : 'a . 'a Prims.list -> 'a Prims.list =
     | [] -> FStar_Compiler_Effect.failwith "init: empty list"
     | x::[] -> []
     | x::xs -> let uu___ = init xs in x :: uu___
-let (binder_bv :
-  FStar_Syntax_Syntax.binder ->
-    FStar_Syntax_Syntax.bv FStar_Tactics_Monad.tac)
-  =
-  fun uu___ ->
-    (fun b ->
-       Obj.magic
-         (FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac ()
-            (Obj.magic b.FStar_Syntax_Syntax.binder_bv))) uu___
 let (lget :
   FStar_Syntax_Syntax.typ ->
     Prims.string -> FStar_Syntax_Syntax.term FStar_Tactics_Monad.tac)

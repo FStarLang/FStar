@@ -3270,7 +3270,7 @@ let parse_attr_with_list warn (at:S.term) (head:lident) : option (list int) * bo
        | [] -> Some [], true
        | [(a1, _)] ->
          begin
-         match EMB.unembed (EMB.e_list EMB.e_int) a1 EMB.id_norm_cb with
+         match EMB.unembed a1 EMB.id_norm_cb with
          | Some es ->
            Some (List.map FStar.BigInt.to_int_fs es), true
          | _ ->
