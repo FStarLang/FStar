@@ -5197,9 +5197,11 @@ let subtype_nosmt env t1 t2 =
 let check_subtyping env t1 t2 =
   Profiling.profile (fun () ->
     if Env.debug env <| Options.Other "Rel" || Env.debug env <| Options.Other "RelTop"
+
     then BU.print2 "check_subtyping of %s and %s\n" (N.term_to_string env t1) (N.term_to_string env t2);
     let prob, x, wl = new_t_prob (empty_worklist env) env t1 SUB t2 in
-    let g = with_guard env prob <| solve_and_commit (singleton wl prob true) (fun _ -> None) in
+    let smt_ok = not (Options.ml_ish ()) in
+    let g = with_guard env prob <| solve_and_commit (singleton wl prob smt_ok) (fun _ -> None) in
     if Env.debug env <| Options.Other "Rel" || Env.debug env <| Options.Other "RelTop"
     && BU.is_some g
     then BU.print3 "check_subtyping succeeded: %s <: %s\n\tguard is %s\n"
