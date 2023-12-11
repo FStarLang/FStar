@@ -1950,6 +1950,7 @@ let (mask : bounded_int_kind -> FStar_BigInt.bigint) =
     | UInt8 -> FStar_BigInt.of_hex "ff"
     | UInt16 -> FStar_BigInt.of_hex "ffff"
     | UInt32 -> FStar_BigInt.of_hex "ffffffff"
+    | SizeT -> FStar_BigInt.of_hex "ffffffffffffffff"
     | UInt64 -> FStar_BigInt.of_hex "ffffffffffffffff"
     | UInt128 -> FStar_BigInt.of_hex "ffffffffffffffffffffffffffffffff"
 let (int_to_t_lid_for : bounded_int_kind -> FStar_Ident.lid) =
@@ -1961,6 +1962,18 @@ let (int_to_t_lid_for : bounded_int_kind -> FStar_Ident.lid) =
       "FStar" :: uu___ in
     FStar_Ident.lid_of_path path FStar_Compiler_Range_Type.dummyRange
 let (int_to_t_for : bounded_int_kind -> FStar_Syntax_Syntax.term) =
+  fun k ->
+    let lid = int_to_t_lid_for k in
+    FStar_Syntax_Syntax.fvar lid FStar_Pervasives_Native.None
+let (__int_to_t_lid_for : bounded_int_kind -> FStar_Ident.lid) =
+  fun k ->
+    let path =
+      let uu___ =
+        let uu___1 = module_name_for k in
+        [uu___1; if is_unsigned k then "__uint_to_t" else "__int_to_t"] in
+      "FStar" :: uu___ in
+    FStar_Ident.lid_of_path path FStar_Compiler_Range_Type.dummyRange
+let (__int_to_t_for : bounded_int_kind -> FStar_Syntax_Syntax.term) =
   fun k ->
     let lid = int_to_t_lid_for k in
     FStar_Syntax_Syntax.fvar lid FStar_Pervasives_Native.None
@@ -2047,8 +2060,11 @@ let (e_bounded_int :
                     { FStar_Syntax_Syntax.hd = hd;
                       FStar_Syntax_Syntax.args = (a, uu___2)::[];_}
                     when
-                    let uu___3 = int_to_t_lid_for k in
-                    FStar_Syntax_Util.is_fvar uu___3 hd ->
+                    (let uu___3 = int_to_t_lid_for k in
+                     FStar_Syntax_Util.is_fvar uu___3 hd) ||
+                      (let uu___3 = __int_to_t_lid_for k in
+                       FStar_Syntax_Util.is_fvar uu___3 hd)
+                    ->
                     Obj.magic
                       (Obj.repr
                          (let a1 = FStar_Syntax_Util.unlazy_emb a in
