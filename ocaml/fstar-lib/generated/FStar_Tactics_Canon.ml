@@ -1350,9 +1350,10 @@ let _ =
     (Prims.of_int (2))
     (fun psc ->
        fun ncb ->
-         fun args ->
-           FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_1
-             "FStar.Tactics.Canon.canon (plugin)"
-             (FStar_Tactics_Native.from_tactic_1 canon)
-             FStar_Syntax_Embeddings.e_unit FStar_Syntax_Embeddings.e_unit
-             psc ncb args)
+         fun us ->
+           fun args ->
+             FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_1
+               "FStar.Tactics.Canon.canon (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 canon)
+               FStar_Syntax_Embeddings.e_unit FStar_Syntax_Embeddings.e_unit
+               psc ncb us args)
