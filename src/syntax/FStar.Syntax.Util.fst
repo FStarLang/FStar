@@ -1560,7 +1560,7 @@ let destruct_typ_as_formula f : option connective =
       | Tm_meta {tm=t; meta=Meta_monadic_lift _} -> unmeta_monadic t
       | _ -> f in
     let lookup_arity_lid table target_lid args =
-        let arg_len = List.length args in
+        let arg_len : int = List.length args in
         let aux (arity, lids) =
             if arg_len = arity
             then U.find_map lids
