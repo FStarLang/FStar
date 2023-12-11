@@ -587,6 +587,7 @@ let mask m =
   | UInt8 -> Z.of_hex "ff"
   | UInt16 -> Z.of_hex "ffff"
   | UInt32 -> Z.of_hex "ffffffff"
+  | SizeT -> Z.of_hex "ffffffffffffffff"
   | UInt64 -> Z.of_hex "ffffffffffffffff"
   | UInt128 -> Z.of_hex "ffffffffffffffffffffffffffffffff"
 
@@ -596,6 +597,14 @@ let int_to_t_lid_for (k:bounded_int_kind) : Ident.lid =
 
 let int_to_t_for (k:bounded_int_kind) : S.term =
   let lid = int_to_t_lid_for k in
+  S.fvar lid None
+
+let __int_to_t_lid_for (k:bounded_int_kind) : Ident.lid =
+  let path = "FStar" :: module_name_for k :: (if is_unsigned k then "__uint_to_t" else "__int_to_t") :: [] in
+  Ident.lid_of_path path Range.dummyRange
+
+let __int_to_t_for (k:bounded_int_kind) : S.term =
+  let lid = __int_to_t_lid_for k in
   S.fvar lid None
 
 (* just a newtype really, no checks or conditions here *)
@@ -627,7 +636,8 @@ instance e_bounded_int (k : bounded_int_kind) : Tot (EMB.embedding (bounded_int 
     in
     let t = U.unmeta_safe t in
     match (SS.compress t).n with
-    | Tm_app {hd; args=[(a,_)]} when U.is_fvar (int_to_t_lid_for k) hd ->
+    | Tm_app {hd; args=[(a,_)]} when U.is_fvar (int_to_t_lid_for k) hd
+                                  || U.is_fvar (__int_to_t_lid_for k) hd ->
       let a = U.unlazy_emb a in
       let! a : Z.t = try_unembed_simple a in
       Some (Mk a m)
@@ -646,7 +656,7 @@ instance nbe_bounded_int (k : bounded_int_kind) : Tot (NBE.embedding (bounded_in
   let em cbs (x : bounded_int k) =
     let Mk i m = x in
     let it = embed e_int cbs i in
-    let int_to_t args = mk_t <| FV (S.lid_as_fv (int_to_t_lid_for k) None, [], args) in
+    let int_to_t args = mk_t <| FV (S.lid_as_fv (__int_to_t_lid_for k) None, [], args) in
     let t = int_to_t [as_arg it] in
     with_meta_ds t m
   in
@@ -699,11 +709,18 @@ let bounded_arith_ops : list primitive_step =
     let mod_name = module_name_for k in
     let nm s = (PC.p2l ["FStar"; module_name_for k; s]) in
     [
+      mk1 0 (nm "v")   (v #k);
+
+      mk1 0 (__int_to_t_lid_for k) (fun x -> Mk #k x None);
+      // GM 2023-12-11: ^ We allow reducing this unchecked operator
+      // into the actual checked operator as a primop, without needing delta
+      // to be enabled. Probably this also means we can delete that definition
+      // outright.
+
       (* basic ops supported by all *)
       mk2 0 (nm "add") (on_bounded2 k Z.add_big_int);
       mk2 0 (nm "sub") (on_bounded2 k Z.sub_big_int);
       mk2 0 (nm "mul") (on_bounded2 k Z.mult_big_int);
-      mk1 0 (nm "v")   (v #k);
 
       mk2 0 (nm "gt")  (on_bounded2' k Z.gt_big_int);
       mk2 0 (nm "gte") (on_bounded2' k Z.ge_big_int);
