@@ -566,12 +566,13 @@ let _ =
     (Prims.of_int (2))
     (fun psc ->
        fun ncb ->
-         fun args ->
-           FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_1
-             "Steel.Effect.Common.frame_vc_norm (plugin)"
-             (FStar_Tactics_Native.from_tactic_1 frame_vc_norm)
-             FStar_Syntax_Embeddings.e_unit FStar_Syntax_Embeddings.e_unit
-             psc ncb args)
+         fun us ->
+           fun args ->
+             FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_1
+               "Steel.Effect.Common.frame_vc_norm (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 frame_vc_norm)
+               FStar_Syntax_Embeddings.e_unit FStar_Syntax_Embeddings.e_unit
+               psc ncb us args)
 type ('frame, 'h0, 'h1) frame_equalities = Obj.t
 type ('v, 'p) vrefine_am = 'p
 type ('v, 'p) vrefine_t = Obj.t
@@ -16907,12 +16908,13 @@ let _ =
     (Prims.of_int (2))
     (fun psc ->
        fun ncb ->
-         fun args ->
-           FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_1
-             "Steel.Effect.Common.init_resolve_tac (plugin)"
-             (FStar_Tactics_Native.from_tactic_1 init_resolve_tac)
-             FStar_Syntax_Embeddings.e_unit FStar_Syntax_Embeddings.e_unit
-             psc ncb args)
+         fun us ->
+           fun args ->
+             FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_1
+               "Steel.Effect.Common.init_resolve_tac (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 init_resolve_tac)
+               FStar_Syntax_Embeddings.e_unit FStar_Syntax_Embeddings.e_unit
+               psc ncb us args)
 
 let (selector_tactic : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
@@ -17034,12 +17036,13 @@ let _ =
     (Prims.of_int (2))
     (fun psc ->
        fun ncb ->
-         fun args ->
-           FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_1
-             "Steel.Effect.Common.selector_tactic (plugin)"
-             (FStar_Tactics_Native.from_tactic_1 selector_tactic)
-             FStar_Syntax_Embeddings.e_unit FStar_Syntax_Embeddings.e_unit
-             psc ncb args)
+         fun us ->
+           fun args ->
+             FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_1
+               "Steel.Effect.Common.selector_tactic (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 selector_tactic)
+               FStar_Syntax_Embeddings.e_unit FStar_Syntax_Embeddings.e_unit
+               psc ncb us args)
 let (ite_soundness_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___ ->

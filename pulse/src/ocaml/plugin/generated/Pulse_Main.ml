@@ -2019,25 +2019,27 @@ let _ =
     (Prims.of_int (9))
     (fun psc ->
        fun ncb ->
-         fun args ->
-           FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_8
-             "Pulse.Main.check_pulse (plugin)"
-             (FStar_Tactics_Native.from_tactic_8 check_pulse)
-             (FStar_Syntax_Embeddings.e_list FStar_Syntax_Embeddings.e_string)
-             (FStar_Syntax_Embeddings.e_list
-                (FStar_Syntax_Embeddings.e_tuple2
-                   FStar_Syntax_Embeddings.e_string
-                   FStar_Syntax_Embeddings.e_string))
-             FStar_Syntax_Embeddings.e_string
-             FStar_Syntax_Embeddings.e_string FStar_Syntax_Embeddings.e_int
-             FStar_Syntax_Embeddings.e_int FStar_Syntax_Embeddings.e_string
-             FStar_Reflection_V2_Embeddings.e_env
-             (FStar_Syntax_Embeddings.e_list
-                (FStar_Syntax_Embeddings.e_tuple3
-                   FStar_Syntax_Embeddings.e_bool
-                   FStar_Reflection_V2_Embeddings.e_sigelt
-                   (FStar_Syntax_Embeddings.e_option
-                      (FStar_Syntax_Embeddings.e_tuple2
-                         FStar_Syntax_Embeddings.e_string
-                         FStar_Reflection_V2_Embeddings.e_term)))) psc ncb
-             args)
+         fun us ->
+           fun args ->
+             FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_8
+               "Pulse.Main.check_pulse (plugin)"
+               (FStar_Tactics_Native.from_tactic_8 check_pulse)
+               (FStar_Syntax_Embeddings.e_list
+                  FStar_Syntax_Embeddings.e_string)
+               (FStar_Syntax_Embeddings.e_list
+                  (FStar_Syntax_Embeddings.e_tuple2
+                     FStar_Syntax_Embeddings.e_string
+                     FStar_Syntax_Embeddings.e_string))
+               FStar_Syntax_Embeddings.e_string
+               FStar_Syntax_Embeddings.e_string FStar_Syntax_Embeddings.e_int
+               FStar_Syntax_Embeddings.e_int FStar_Syntax_Embeddings.e_string
+               FStar_Reflection_V2_Embeddings.e_env
+               (FStar_Syntax_Embeddings.e_list
+                  (FStar_Syntax_Embeddings.e_tuple3
+                     FStar_Syntax_Embeddings.e_bool
+                     FStar_Reflection_V2_Embeddings.e_sigelt
+                     (FStar_Syntax_Embeddings.e_option
+                        (FStar_Syntax_Embeddings.e_tuple2
+                           FStar_Syntax_Embeddings.e_string
+                           FStar_Reflection_V2_Embeddings.e_term)))) psc ncb
+               us args)
