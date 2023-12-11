@@ -31,6 +31,7 @@ open FStar.Tactics.Monad
 open FStar.Tactics.Common
 open FStar.Syntax.Syntax
 open FStar.Class.Show
+open FStar.Class.Monad
 
 module Print  = FStar.Syntax.Print
 module BU     = FStar.Compiler.Util
@@ -73,7 +74,7 @@ let __do_rewrite
       true
     | _ -> false
   in
-  if should_skip then ret tm else begin
+  if should_skip then return tm else begin
 
     (* It's important to keep the original term if we want to do
      * nothing, (hence the underscore below) since after the call to
@@ -97,11 +98,11 @@ let __do_rewrite
       | e -> raise e
     in
     match res with
-    | None -> ret tm
+    | None -> return tm
     | Some (_, lcomp, g) ->
 
     if not (TcComm.is_pure_or_ghost_lcomp lcomp) then 
-      ret tm (* SHOULD THIS CHECK BE IN maybe_rewrite INSTEAD? *)
+      return tm (* SHOULD THIS CHECK BE IN maybe_rewrite INSTEAD? *)
     else
     let g = FStar.TypeChecker.Rel.solve_deferred_constraints env g in
     let typ = lcomp.res_typ in
@@ -133,7 +134,7 @@ let __do_rewrite
        BU.print2 "rewrite_rec: succeeded rewriting\n\t%s to\n\t%s\n"
                    (show tm)
                    (show ut)) ;!
-    ret ut
+    return ut
   end
 
 (* If __do_rewrite fails with "SKIP" we do nothing *)
@@ -144,9 +145,9 @@ let do_rewrite
     (tm : term)
   : tac term
   = match! catch (__do_rewrite g0 rewriter env tm) with
-    | Inl (TacticFailure "SKIP") -> ret tm
+    | Inl (TacticFailure "SKIP") -> return tm
     | Inl e -> traise e
-    | Inr tm' -> ret tm'
+    | Inr tm' -> return tm'
 
 type ctac 'a = 'a -> tac ('a * ctrl_flag)
 
@@ -156,8 +157,8 @@ let seq_ctac (c1 : ctac 'a) (c2 : ctac 'a)
   = fun (x:'a) ->
       let! x', flag = c1 x in
       match flag with
-      | Abort -> ret (x', Abort)
-      | Skip -> ret (x', Skip)
+      | Abort -> return (x', Abort)
+      | Skip -> return (x', Skip)
       | Continue -> c2 x'
 
 let par_combine = function
@@ -174,22 +175,22 @@ let par_ctac (cl : ctac 'a) (cr : ctac 'b)
   = fun (x, y) ->
       let! x, flag = cl x in
       match flag with
-      | Abort -> ret ((x, y), Abort)
+      | Abort -> return ((x, y), Abort)
       | fa ->
         let! y, flag = cr y in
         match flag with
-        | Abort -> ret ((x, y),Abort)
+        | Abort -> return ((x, y),Abort)
         | fb ->
-          ret ((x, y), par_combine (fa, fb))
+          return ((x, y), par_combine (fa, fb))
 
 let rec map_ctac (c : ctac 'a)
   : ctac (list 'a)
   = fun xs ->
       match xs with
-      | [] -> ret ([], Continue)
+      | [] -> return ([], Continue)
       | x::xs ->
         let! ((x, xs), flag) = par_ctac c (map_ctac c) (x, xs) in
-        ret (x::xs, flag)
+        return (x::xs, flag)
 
 (* let bind_ctac *)
 (*     (t : ctac 'a) *)
@@ -197,11 +198,11 @@ let rec map_ctac (c : ctac 'a)
 (*   : ctac 'b *)
 (*   = fun b -> failwith "" *)
 
-let ctac_id (* : ctac 'a *) =
-  fun (x:'a) -> ret (x, Continue)
+let ctac_id : #a:Type -> ctac a =
+  fun #a (x:a) -> return (x, Continue)
 
 let ctac_args (c : ctac term) : ctac args =
-  map_ctac (par_ctac c ctac_id)
+  map_ctac (par_ctac c (ctac_id #_))
 
 let maybe_rewrite
     (g0 : goal)
@@ -214,9 +215,9 @@ let maybe_rewrite
     let! tm' = 
          if rw
          then do_rewrite g0 rewriter env tm
-         else ret tm
+         else return tm
     in
-    ret (tm', ctrl_flag)
+    return (tm', ctrl_flag)
 
 let rec ctrl_fold_env
     (g0 : goal)
@@ -240,16 +241,16 @@ let rec ctrl_fold_env
 
 and recurse_option_residual_comp (env:env) (retyping_subst:list subst_elt) (rc_opt:option residual_comp) recurse
   : tac (option residual_comp & ctrl_flag)
-  = // ret (None, Continue)
+  = // return (None, Continue)
     match rc_opt with
-    | None -> ret (None, Continue)
+    | None -> return (None, Continue)
     | Some rc ->
       match rc.residual_typ with
-      | None -> ret (Some rc, Continue)
+      | None -> return (Some rc, Continue)
       | Some t ->
         let t = SS.subst retyping_subst t in
         let! t, flag = recurse env t in
-        ret (Some ({rc with residual_typ=Some t}), flag)
+        return (Some ({rc with residual_typ=Some t}), flag)
 
 and on_subterms
     (g0 : goal)
@@ -276,7 +277,7 @@ and on_subterms
         let! t, t_flag = recurse env t in
         begin
         match t_flag with
-        | Abort -> ret (orig.n, t_flag) //if anything aborts, just return the original abs
+        | Abort -> return (orig.n, t_flag) //if anything aborts, just return the original abs
         | _ ->
           let! k, k_flag = recurse_option_residual_comp env retyping_subst k recurse in
           let bs = List.rev accum_binders in
@@ -285,7 +286,7 @@ and on_subterms
           let bs = SS.close_binders bs in
           let t = SS.subst subst t in
           let k = BU.map_option (SS.subst_residual_comp subst) k in
-          ret (rebuild bs t k,
+          return (rebuild bs t k,
                par_combine (accum_flag, (par_combine (t_flag, k_flag))))
         end
         
@@ -293,7 +294,7 @@ and on_subterms
         let s = SS.subst retyping_subst b.binder_bv.sort in
         let! s, flag = recurse env s in
         match flag with
-        | Abort -> ret (orig.n, flag) //if anything aborts, just return the original abs
+        | Abort -> return (orig.n, flag) //if anything aborts, just return the original abs
         | _ ->
           let bv = {b.binder_bv with sort = s} in
           let b = {b with binder_bv = bv} in
@@ -307,7 +308,7 @@ and on_subterms
       (* Run on hd and args in parallel *)
       | Tm_app {hd; args} ->
         let! ((hd, args), flag) = par_ctac rr (ctac_args rr) (hd, args) in
-        ret (Tm_app {hd; args}, flag)
+        return (Tm_app {hd; args}, flag)
 
       (* Open, descend, rebuild *)
       | Tm_abs {bs; body=t; rc_opt=k} ->
@@ -340,7 +341,7 @@ and on_subterms
         | _ ->
           (* Do nothing (FIXME).
             What should we do for effectful computations? *)
-          ret (tm.n, Continue))
+          return (tm.n, Continue))
 
       (* Descend on head and branches in parallel. Branches
        * are opened with their contexts extended. Ignore the when clause,
@@ -352,10 +353,10 @@ and on_subterms
           let bvs = S.pat_bvs pat in
           let! e, flag = recurse (Env.push_bvs env bvs) e in
           let br = SS.close_branch (pat, w, e) in
-          ret (br, flag)
+          return (br, flag)
         in
         let! ((hd, brs), flag) = par_ctac rr (map_ctac c_branch) (hd, brs) in
-        ret (Tm_match {scrutinee=hd; ret_opt=asc_opt; brs; rc_opt=lopt}, flag)
+        return (Tm_match {scrutinee=hd; ret_opt=asc_opt; brs; rc_opt=lopt}, flag)
 
       (* Descend, in parallel, in the definiens and the body, where
        * the body is extended with the bv. Do not go into the type. *)
@@ -371,37 +372,37 @@ and on_subterms
         in
         let lb = { lb with lbdef = lbdef } in
         let e = SS.close [S.mk_binder bv] e in
-        ret (Tm_let {lbs=(false, [lb]); body=e}, flag)
+        return (Tm_let {lbs=(false, [lb]); body=e}, flag)
 
       (* Descend, in parallel, in *every* definiens and the body.
        * Again body is properly opened, and we don't go into types. *)
      | Tm_let {lbs=(true, lbs); body=e} ->
        let c_lb (lb:S.letbinding) : tac (S.letbinding * ctrl_flag) =
          let! (def, flag) = rr lb.lbdef in
-         ret ({lb with lbdef = def }, flag)
+         return ({lb with lbdef = def }, flag)
        in
        let lbs, e = SS.open_let_rec lbs e in
        (* TODO: the `rr` has to be wrong, we need more binders *)
        let! ((lbs, e), flag) = par_ctac (map_ctac c_lb) rr (lbs, e) in
        let lbs, e = SS.close_let_rec lbs e in
-       ret (Tm_let {lbs=(true, lbs); body=e}, flag)
+       return (Tm_let {lbs=(true, lbs); body=e}, flag)
 
      (* Descend into the ascripted term, ignore all else *)
      | Tm_ascribed {tm=t; asc; eff_opt=eff} ->
        let! t, flag = rr t in
-       ret (Tm_ascribed {tm=t; asc; eff_opt=eff}, flag)
+       return (Tm_ascribed {tm=t; asc; eff_opt=eff}, flag)
 
      (* Ditto *)
      | Tm_meta {tm=t; meta=m} ->
        let! (t, flag) = rr t in
-       ret (Tm_meta {tm=t; meta=m}, flag)
+       return (Tm_meta {tm=t; meta=m}, flag)
 
      | _ ->
        (* BU.print1 "GG ignoring %s\n" (Print.tag_of_term tm); *)
-       ret (tm.n, Continue)
+       return (tm.n, Continue)
     in
     let! (tmn', flag) = go () in
-    ret ({tm with n = tmn'}, flag)
+    return ({tm with n = tmn'}, flag)
 
 let do_ctrl_rewrite
     (g0 : goal)
@@ -412,7 +413,7 @@ let do_ctrl_rewrite
     (tm : term)
   : tac term
   = let! tm', _ = ctrl_fold_env g0 dir controller rewriter env tm in
-    ret tm'
+    return tm'
 
 let ctrl_rewrite
     (dir : direction)

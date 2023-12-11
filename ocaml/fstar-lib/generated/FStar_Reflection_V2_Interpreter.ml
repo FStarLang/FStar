@@ -1,138 +1,262 @@
 open Prims
 let unembed :
-  'uuuuu .
-    unit ->
-      'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
-        FStar_Syntax_Syntax.term ->
-          FStar_Syntax_Embeddings_Base.norm_cb ->
-            'uuuuu FStar_Pervasives_Native.option
-  = fun uu___ -> FStar_Syntax_Embeddings_Base.unembed
+  'a .
+    'a FStar_Syntax_Embeddings_Base.embedding ->
+      FStar_Syntax_Syntax.term ->
+        FStar_Syntax_Embeddings_Base.norm_cb ->
+          'a FStar_Pervasives_Native.option
+  =
+  fun uu___ ->
+    fun x ->
+      fun norm_cb -> FStar_Syntax_Embeddings_Base.unembed uu___ x norm_cb
 let try_unembed :
-  'uuuuu .
-    unit ->
-      'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
-        FStar_Syntax_Syntax.term ->
-          FStar_Syntax_Embeddings_Base.norm_cb ->
-            'uuuuu FStar_Pervasives_Native.option
-  = fun uu___ -> FStar_Syntax_Embeddings_Base.try_unembed
+  'a .
+    'a FStar_Syntax_Embeddings_Base.embedding ->
+      FStar_Syntax_Syntax.term ->
+        FStar_Syntax_Embeddings_Base.norm_cb ->
+          'a FStar_Pervasives_Native.option
+  =
+  fun uu___ ->
+    fun x ->
+      fun norm_cb -> FStar_Syntax_Embeddings_Base.try_unembed uu___ x norm_cb
 let embed :
-  'uuuuu .
-    'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
+  'a .
+    'a FStar_Syntax_Embeddings_Base.embedding ->
       FStar_Compiler_Range_Type.range ->
-        'uuuuu ->
+        'a ->
           FStar_Syntax_Embeddings_Base.norm_cb -> FStar_Syntax_Syntax.term
   =
-  fun ea ->
+  fun uu___ ->
     fun r ->
       fun x ->
         fun norm_cb ->
-          let uu___ = FStar_Syntax_Embeddings_Base.embed ea x in
-          uu___ r FStar_Pervasives_Native.None norm_cb
+          let uu___1 = FStar_Syntax_Embeddings_Base.embed uu___ x in
+          uu___1 r FStar_Pervasives_Native.None norm_cb
 let int1 :
   'a 'r .
     FStar_Ident.lid ->
-      ('a -> 'r) ->
-        'a FStar_Syntax_Embeddings_Base.embedding ->
-          'r FStar_Syntax_Embeddings_Base.embedding ->
+      'a FStar_Syntax_Embeddings_Base.embedding ->
+        'r FStar_Syntax_Embeddings_Base.embedding ->
+          ('a -> 'r) ->
             FStar_TypeChecker_Primops.psc ->
               FStar_Syntax_Embeddings_Base.norm_cb ->
                 FStar_Syntax_Syntax.args ->
                   FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
-  fun m ->
-    fun f ->
-      fun ea ->
-        fun er ->
-          fun psc ->
-            fun n ->
-              fun args ->
-                match args with
-                | (a1, uu___)::[] ->
-                    let uu___1 = (try_unembed ()) ea a1 n in
-                    FStar_Compiler_Util.bind_opt uu___1
-                      (fun a2 ->
-                         let uu___2 =
-                           let uu___3 =
-                             FStar_TypeChecker_Primops.psc_range psc in
-                           let uu___4 = f a2 in embed er uu___3 uu___4 n in
-                         FStar_Pervasives_Native.Some uu___2)
-                | uu___ -> FStar_Pervasives_Native.None
+  fun uu___6 ->
+    fun uu___5 ->
+      fun uu___4 ->
+        fun uu___3 ->
+          fun uu___2 ->
+            fun uu___1 ->
+              fun uu___ ->
+                (fun m ->
+                   fun uu___ ->
+                     fun uu___1 ->
+                       fun f ->
+                         fun psc ->
+                           fun n ->
+                             fun args ->
+                               match args with
+                               | (a1, uu___2)::[] ->
+                                   Obj.magic
+                                     (Obj.repr
+                                        (let uu___3 =
+                                           let uu___4 =
+                                             try_unembed uu___ a1 n in
+                                           Obj.magic
+                                             (FStar_Class_Monad.op_Less_Dollar_Greater
+                                                FStar_Class_Monad.monad_option
+                                                () ()
+                                                (fun uu___5 ->
+                                                   (Obj.magic f) uu___5)
+                                                (Obj.magic uu___4)) in
+                                         FStar_Class_Monad.op_let_Bang
+                                           FStar_Class_Monad.monad_option ()
+                                           () (Obj.magic uu___3)
+                                           (fun uu___4 ->
+                                              (fun v ->
+                                                 let v = Obj.magic v in
+                                                 let uu___4 =
+                                                   let uu___5 =
+                                                     FStar_TypeChecker_Primops.psc_range
+                                                       psc in
+                                                   embed uu___1 uu___5 v n in
+                                                 Obj.magic
+                                                   (FStar_Class_Monad.return
+                                                      FStar_Class_Monad.monad_option
+                                                      () (Obj.magic uu___4)))
+                                                uu___4)))
+                               | uu___2 ->
+                                   Obj.magic
+                                     (Obj.repr FStar_Pervasives_Native.None))
+                  uu___6 uu___5 uu___4 uu___3 uu___2 uu___1 uu___
 let int2 :
   'a 'b 'r .
     FStar_Ident.lid ->
-      ('a -> 'b -> 'r) ->
-        'a FStar_Syntax_Embeddings_Base.embedding ->
-          'b FStar_Syntax_Embeddings_Base.embedding ->
-            'r FStar_Syntax_Embeddings_Base.embedding ->
+      'a FStar_Syntax_Embeddings_Base.embedding ->
+        'b FStar_Syntax_Embeddings_Base.embedding ->
+          'r FStar_Syntax_Embeddings_Base.embedding ->
+            ('a -> 'b -> 'r) ->
               FStar_TypeChecker_Primops.psc ->
                 FStar_Syntax_Embeddings_Base.norm_cb ->
                   FStar_Syntax_Syntax.args ->
                     FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
-  fun m ->
-    fun f ->
-      fun ea ->
-        fun eb ->
-          fun er ->
-            fun psc ->
-              fun n ->
-                fun args ->
-                  match args with
-                  | (a1, uu___)::(b1, uu___1)::[] ->
-                      let uu___2 = (try_unembed ()) ea a1 n in
-                      FStar_Compiler_Util.bind_opt uu___2
-                        (fun a2 ->
-                           let uu___3 = (try_unembed ()) eb b1 n in
-                           FStar_Compiler_Util.bind_opt uu___3
-                             (fun b2 ->
-                                let uu___4 =
-                                  let uu___5 =
-                                    FStar_TypeChecker_Primops.psc_range psc in
-                                  let uu___6 = f a2 b2 in
-                                  embed er uu___5 uu___6 n in
-                                FStar_Pervasives_Native.Some uu___4))
-                  | uu___ -> FStar_Pervasives_Native.None
+  fun uu___7 ->
+    fun uu___6 ->
+      fun uu___5 ->
+        fun uu___4 ->
+          fun uu___3 ->
+            fun uu___2 ->
+              fun uu___1 ->
+                fun uu___ ->
+                  (fun m ->
+                     fun uu___ ->
+                       fun uu___1 ->
+                         fun uu___2 ->
+                           fun f ->
+                             fun psc ->
+                               fun n ->
+                                 fun args ->
+                                   match args with
+                                   | (a1, uu___3)::(b1, uu___4)::[] ->
+                                       Obj.magic
+                                         (Obj.repr
+                                            (let uu___5 =
+                                               let uu___6 =
+                                                 let uu___7 =
+                                                   try_unembed uu___ a1 n in
+                                                 Obj.magic
+                                                   (FStar_Class_Monad.op_Less_Dollar_Greater
+                                                      FStar_Class_Monad.monad_option
+                                                      () ()
+                                                      (fun uu___8 ->
+                                                         (Obj.magic f) uu___8)
+                                                      (Obj.magic uu___7)) in
+                                               let uu___7 =
+                                                 try_unembed uu___1 b1 n in
+                                               Obj.magic
+                                                 (FStar_Class_Monad.op_Less_Star_Greater
+                                                    FStar_Class_Monad.monad_option
+                                                    () () (Obj.magic uu___6)
+                                                    (Obj.magic uu___7)) in
+                                             FStar_Class_Monad.op_let_Bang
+                                               FStar_Class_Monad.monad_option
+                                               () () (Obj.magic uu___5)
+                                               (fun uu___6 ->
+                                                  (fun v ->
+                                                     let v = Obj.magic v in
+                                                     let uu___6 =
+                                                       let uu___7 =
+                                                         FStar_TypeChecker_Primops.psc_range
+                                                           psc in
+                                                       embed uu___2 uu___7 v
+                                                         n in
+                                                     Obj.magic
+                                                       (FStar_Class_Monad.return
+                                                          FStar_Class_Monad.monad_option
+                                                          ()
+                                                          (Obj.magic uu___6)))
+                                                    uu___6)))
+                                   | uu___3 ->
+                                       Obj.magic
+                                         (Obj.repr
+                                            FStar_Pervasives_Native.None))
+                    uu___7 uu___6 uu___5 uu___4 uu___3 uu___2 uu___1 uu___
 let int3 :
   'a 'b 'c 'r .
     FStar_Ident.lid ->
-      ('a -> 'b -> 'c -> 'r) ->
-        'a FStar_Syntax_Embeddings_Base.embedding ->
-          'b FStar_Syntax_Embeddings_Base.embedding ->
-            'c FStar_Syntax_Embeddings_Base.embedding ->
-              'r FStar_Syntax_Embeddings_Base.embedding ->
+      'a FStar_Syntax_Embeddings_Base.embedding ->
+        'b FStar_Syntax_Embeddings_Base.embedding ->
+          'c FStar_Syntax_Embeddings_Base.embedding ->
+            'r FStar_Syntax_Embeddings_Base.embedding ->
+              ('a -> 'b -> 'c -> 'r) ->
                 FStar_TypeChecker_Primops.psc ->
                   FStar_Syntax_Embeddings_Base.norm_cb ->
                     FStar_Syntax_Syntax.args ->
                       FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
-  fun m ->
-    fun f ->
-      fun ea ->
-        fun eb ->
-          fun ec ->
-            fun er ->
-              fun psc ->
-                fun n ->
-                  fun args ->
-                    match args with
-                    | (a1, uu___)::(b1, uu___1)::(c1, uu___2)::[] ->
-                        let uu___3 = (try_unembed ()) ea a1 n in
-                        FStar_Compiler_Util.bind_opt uu___3
-                          (fun a2 ->
-                             let uu___4 = (try_unembed ()) eb b1 n in
-                             FStar_Compiler_Util.bind_opt uu___4
-                               (fun b2 ->
-                                  let uu___5 = (try_unembed ()) ec c1 n in
-                                  FStar_Compiler_Util.bind_opt uu___5
-                                    (fun c2 ->
-                                       let uu___6 =
-                                         let uu___7 =
-                                           FStar_TypeChecker_Primops.psc_range
-                                             psc in
-                                         let uu___8 = f a2 b2 c2 in
-                                         embed er uu___7 uu___8 n in
-                                       FStar_Pervasives_Native.Some uu___6)))
-                    | uu___ -> FStar_Pervasives_Native.None
+  fun uu___8 ->
+    fun uu___7 ->
+      fun uu___6 ->
+        fun uu___5 ->
+          fun uu___4 ->
+            fun uu___3 ->
+              fun uu___2 ->
+                fun uu___1 ->
+                  fun uu___ ->
+                    (fun m ->
+                       fun uu___ ->
+                         fun uu___1 ->
+                           fun uu___2 ->
+                             fun uu___3 ->
+                               fun f ->
+                                 fun psc ->
+                                   fun n ->
+                                     fun args ->
+                                       match args with
+                                       | (a1, uu___4)::(b1, uu___5)::
+                                           (c1, uu___6)::[] ->
+                                           Obj.magic
+                                             (Obj.repr
+                                                (let uu___7 =
+                                                   let uu___8 =
+                                                     let uu___9 =
+                                                       let uu___10 =
+                                                         try_unembed uu___ a1
+                                                           n in
+                                                       Obj.magic
+                                                         (FStar_Class_Monad.op_Less_Dollar_Greater
+                                                            FStar_Class_Monad.monad_option
+                                                            () ()
+                                                            (fun uu___11 ->
+                                                               (Obj.magic f)
+                                                                 uu___11)
+                                                            (Obj.magic
+                                                               uu___10)) in
+                                                     let uu___10 =
+                                                       try_unembed uu___1 b1
+                                                         n in
+                                                     Obj.magic
+                                                       (FStar_Class_Monad.op_Less_Star_Greater
+                                                          FStar_Class_Monad.monad_option
+                                                          () ()
+                                                          (Obj.magic uu___9)
+                                                          (Obj.magic uu___10)) in
+                                                   let uu___9 =
+                                                     try_unembed uu___2 c1 n in
+                                                   Obj.magic
+                                                     (FStar_Class_Monad.op_Less_Star_Greater
+                                                        FStar_Class_Monad.monad_option
+                                                        () ()
+                                                        (Obj.magic uu___8)
+                                                        (Obj.magic uu___9)) in
+                                                 FStar_Class_Monad.op_let_Bang
+                                                   FStar_Class_Monad.monad_option
+                                                   () () (Obj.magic uu___7)
+                                                   (fun uu___8 ->
+                                                      (fun v ->
+                                                         let v = Obj.magic v in
+                                                         let uu___8 =
+                                                           let uu___9 =
+                                                             FStar_TypeChecker_Primops.psc_range
+                                                               psc in
+                                                           embed uu___3
+                                                             uu___9 v n in
+                                                         Obj.magic
+                                                           (FStar_Class_Monad.return
+                                                              FStar_Class_Monad.monad_option
+                                                              ()
+                                                              (Obj.magic
+                                                                 uu___8)))
+                                                        uu___8)))
+                                       | uu___4 ->
+                                           Obj.magic
+                                             (Obj.repr
+                                                FStar_Pervasives_Native.None))
+                      uu___8 uu___7 uu___6 uu___5 uu___4 uu___3 uu___2 uu___1
+                      uu___
 let nbe_int1 :
   'a 'r .
     FStar_Ident.lid ->
@@ -283,512 +407,537 @@ let (mk :
     fun arity ->
       fun fn -> fun nbe_fn -> mk_us l Prims.int_zero arity fn nbe_fn
 type 'a dualemb =
-  ('a FStar_Syntax_Embeddings_Base.embedding * 'a
-    FStar_TypeChecker_NBETerm.embedding)
+  {
+  s_emb: 'a FStar_Syntax_Embeddings_Base.embedding ;
+  nbe_emb: 'a FStar_TypeChecker_NBETerm.embedding }
+let __proj__Mkdualemb__item__s_emb :
+  'a . 'a dualemb -> 'a FStar_Syntax_Embeddings_Base.embedding =
+  fun projectee -> match projectee with | { s_emb; nbe_emb;_} -> s_emb
+let __proj__Mkdualemb__item__nbe_emb :
+  'a . 'a dualemb -> 'a FStar_TypeChecker_NBETerm.embedding =
+  fun projectee -> match projectee with | { s_emb; nbe_emb;_} -> nbe_emb
+let s_emb : 'a . 'a dualemb -> 'a FStar_Syntax_Embeddings_Base.embedding =
+  fun projectee ->
+    match projectee with | { s_emb = s_emb1; nbe_emb;_} -> s_emb1
+let nbe_emb : 'a . 'a dualemb -> 'a FStar_TypeChecker_NBETerm.embedding =
+  fun projectee ->
+    match projectee with
+    | { s_emb = s_emb1; nbe_emb = nbe_emb1;_} -> nbe_emb1
+let emb_from_dual :
+  'a . 'a dualemb -> 'a FStar_Syntax_Embeddings_Base.embedding =
+  fun d -> d.s_emb
 let (e_int : FStar_BigInt.t dualemb) =
-  (FStar_Syntax_Embeddings.e_int, FStar_TypeChecker_NBETerm.e_int)
+  {
+    s_emb = FStar_Syntax_Embeddings.e_int;
+    nbe_emb = FStar_TypeChecker_NBETerm.e_int
+  }
 let (e_bool : Prims.bool dualemb) =
-  (FStar_Syntax_Embeddings.e_bool, FStar_TypeChecker_NBETerm.e_bool)
+  {
+    s_emb = FStar_Syntax_Embeddings.e_bool;
+    nbe_emb = FStar_TypeChecker_NBETerm.e_bool
+  }
 let (e_string : Prims.string dualemb) =
-  (FStar_Syntax_Embeddings.e_string, FStar_TypeChecker_NBETerm.e_string)
+  {
+    s_emb = FStar_Syntax_Embeddings.e_string;
+    nbe_emb = FStar_TypeChecker_NBETerm.e_string
+  }
 let (e_order : FStar_Order.order dualemb) =
-  (FStar_Reflection_V2_Embeddings.e_order,
-    FStar_Reflection_V2_NBEEmbeddings.e_order)
+  {
+    s_emb = FStar_Reflection_V2_Embeddings.e_order;
+    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_order
+  }
 let (e_term : FStar_Syntax_Syntax.term dualemb) =
-  (FStar_Reflection_V2_Embeddings.e_term,
-    FStar_Reflection_V2_NBEEmbeddings.e_term)
+  {
+    s_emb = FStar_Reflection_V2_Embeddings.e_term;
+    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_term
+  }
 let (e_term_view : FStar_Reflection_V2_Data.term_view dualemb) =
-  (FStar_Reflection_V2_Embeddings.e_term_view,
-    FStar_Reflection_V2_NBEEmbeddings.e_term_view)
+  {
+    s_emb = FStar_Reflection_V2_Embeddings.e_term_view;
+    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_term_view
+  }
 let (e_fv : FStar_Syntax_Syntax.fv dualemb) =
-  (FStar_Reflection_V2_Embeddings.e_fv,
-    FStar_Reflection_V2_NBEEmbeddings.e_fv)
+  {
+    s_emb = FStar_Reflection_V2_Embeddings.e_fv;
+    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_fv
+  }
 let (e_bv : FStar_Syntax_Syntax.bv dualemb) =
-  (FStar_Reflection_V2_Embeddings.e_bv,
-    FStar_Reflection_V2_NBEEmbeddings.e_bv)
+  {
+    s_emb = FStar_Reflection_V2_Embeddings.e_bv;
+    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_bv
+  }
 let (e_namedv : FStar_Reflection_V2_Embeddings.namedv dualemb) =
-  (FStar_Reflection_V2_Embeddings.e_namedv,
-    FStar_Reflection_V2_NBEEmbeddings.e_namedv)
+  {
+    s_emb = FStar_Reflection_V2_Embeddings.e_namedv;
+    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_namedv
+  }
 let (e_bv_view : FStar_Reflection_V2_Data.bv_view dualemb) =
-  (FStar_Reflection_V2_Embeddings.e_bv_view,
-    FStar_Reflection_V2_NBEEmbeddings.e_bv_view)
+  {
+    s_emb = FStar_Reflection_V2_Embeddings.e_bv_view;
+    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_bv_view
+  }
 let (e_namedv_view : FStar_Reflection_V2_Data.namedv_view dualemb) =
-  (FStar_Reflection_V2_Embeddings.e_namedv_view,
-    FStar_Reflection_V2_NBEEmbeddings.e_namedv_view)
+  {
+    s_emb = FStar_Reflection_V2_Embeddings.e_namedv_view;
+    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_namedv_view
+  }
 let (e_binding : FStar_Reflection_V2_Data.binding dualemb) =
-  (FStar_Reflection_V2_Embeddings.e_binding,
-    FStar_Reflection_V2_NBEEmbeddings.e_binding)
+  {
+    s_emb = FStar_Reflection_V2_Embeddings.e_binding;
+    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_binding
+  }
 let (e_comp : FStar_Syntax_Syntax.comp dualemb) =
-  (FStar_Reflection_V2_Embeddings.e_comp,
-    FStar_Reflection_V2_NBEEmbeddings.e_comp)
+  {
+    s_emb = FStar_Reflection_V2_Embeddings.e_comp;
+    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_comp
+  }
 let (e_comp_view : FStar_Reflection_V2_Data.comp_view dualemb) =
-  (FStar_Reflection_V2_Embeddings.e_comp_view,
-    FStar_Reflection_V2_NBEEmbeddings.e_comp_view)
+  {
+    s_emb = FStar_Reflection_V2_Embeddings.e_comp_view;
+    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_comp_view
+  }
 let (e_universe : FStar_Syntax_Syntax.universe dualemb) =
-  (FStar_Reflection_V2_Embeddings.e_universe,
-    FStar_Reflection_V2_NBEEmbeddings.e_universe)
+  {
+    s_emb = FStar_Reflection_V2_Embeddings.e_universe;
+    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_universe
+  }
 let (e_universe_view : FStar_Reflection_V2_Data.universe_view dualemb) =
-  (FStar_Reflection_V2_Embeddings.e_universe_view,
-    FStar_Reflection_V2_NBEEmbeddings.e_universe_view)
+  {
+    s_emb = FStar_Reflection_V2_Embeddings.e_universe_view;
+    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_universe_view
+  }
 let (e_sigelt : FStar_Syntax_Syntax.sigelt dualemb) =
-  (FStar_Reflection_V2_Embeddings.e_sigelt,
-    FStar_Reflection_V2_NBEEmbeddings.e_sigelt)
+  {
+    s_emb = FStar_Reflection_V2_Embeddings.e_sigelt;
+    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_sigelt
+  }
 let (e_sigelt_view : FStar_Reflection_V2_Data.sigelt_view dualemb) =
-  (FStar_Reflection_V2_Embeddings.e_sigelt_view,
-    FStar_Reflection_V2_NBEEmbeddings.e_sigelt_view)
+  {
+    s_emb = FStar_Reflection_V2_Embeddings.e_sigelt_view;
+    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_sigelt_view
+  }
 let (e_binder : FStar_Syntax_Syntax.binder dualemb) =
-  (FStar_Reflection_V2_Embeddings.e_binder,
-    FStar_Reflection_V2_NBEEmbeddings.e_binder)
+  {
+    s_emb = FStar_Reflection_V2_Embeddings.e_binder;
+    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_binder
+  }
 let (e_binder_view : FStar_Reflection_V2_Data.binder_view dualemb) =
-  (FStar_Reflection_V2_Embeddings.e_binder_view,
-    FStar_Reflection_V2_NBEEmbeddings.e_binder_view)
+  {
+    s_emb = FStar_Reflection_V2_Embeddings.e_binder_view;
+    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_binder_view
+  }
 let (e_binders : FStar_Syntax_Syntax.binders dualemb) =
-  (FStar_Reflection_V2_Embeddings.e_binders,
-    FStar_Reflection_V2_NBEEmbeddings.e_binders)
+  {
+    s_emb = FStar_Reflection_V2_Embeddings.e_binders;
+    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_binders
+  }
 let (e_letbinding : FStar_Syntax_Syntax.letbinding dualemb) =
-  (FStar_Reflection_V2_Embeddings.e_letbinding,
-    FStar_Reflection_V2_NBEEmbeddings.e_letbinding)
+  {
+    s_emb = FStar_Reflection_V2_Embeddings.e_letbinding;
+    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_letbinding
+  }
 let (e_lb_view : FStar_Reflection_V2_Data.lb_view dualemb) =
-  (FStar_Reflection_V2_Embeddings.e_lb_view,
-    FStar_Reflection_V2_NBEEmbeddings.e_lb_view)
+  {
+    s_emb = FStar_Reflection_V2_Embeddings.e_lb_view;
+    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_lb_view
+  }
 let (e_env : FStar_TypeChecker_Env.env dualemb) =
-  (FStar_Reflection_V2_Embeddings.e_env,
-    FStar_Reflection_V2_NBEEmbeddings.e_env)
+  {
+    s_emb = FStar_Reflection_V2_Embeddings.e_env;
+    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_env
+  }
 let (e_aqualv : FStar_Reflection_V2_Data.aqualv dualemb) =
-  (FStar_Reflection_V2_Embeddings.e_aqualv,
-    FStar_Reflection_V2_NBEEmbeddings.e_aqualv)
+  {
+    s_emb = FStar_Reflection_V2_Embeddings.e_aqualv;
+    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_aqualv
+  }
 let (e_vconfig : FStar_VConfig.vconfig dualemb) =
-  (FStar_Syntax_Embeddings.e_vconfig, FStar_TypeChecker_NBETerm.e_vconfig)
-let (e_attributes : FStar_Syntax_Syntax.attribute Prims.list dualemb) =
-  (FStar_Reflection_V2_Embeddings.e_attributes,
-    FStar_Reflection_V2_NBEEmbeddings.e_attributes)
-let (e_qualifiers : FStar_Reflection_V2_Data.qualifiers dualemb) =
-  (FStar_Reflection_V2_Embeddings.e_qualifiers,
-    FStar_Reflection_V2_NBEEmbeddings.e_qualifiers)
+  {
+    s_emb = FStar_Syntax_Embeddings.e_vconfig;
+    nbe_emb = FStar_TypeChecker_NBETerm.e_vconfig
+  }
+let (e_qualifier : FStar_Reflection_V2_Data.qualifier dualemb) =
+  {
+    s_emb = FStar_Reflection_V2_Embeddings.e_qualifier;
+    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_qualifier
+  }
 let (e_range : FStar_Compiler_Range_Type.range dualemb) =
-  (FStar_Syntax_Embeddings.e_range, FStar_TypeChecker_NBETerm.e_range)
-let nbe_dummy : 'a . unit -> 'a FStar_TypeChecker_NBETerm.embedding =
-  fun uu___ ->
-    let uu___1 =
-      FStar_TypeChecker_NBETerm.mk_t FStar_TypeChecker_NBETerm.Unknown in
-    FStar_TypeChecker_NBETerm.mk_emb
-      (fun uu___2 ->
-         fun uu___3 -> FStar_Compiler_Effect.failwith "nbe_dummy embed")
-      (fun uu___2 ->
-         fun uu___3 -> FStar_Compiler_Effect.failwith "nbe_dummy unembed")
-      uu___1 FStar_Syntax_Syntax.ET_abstract
-let (e_ident : FStar_Ident.ident dualemb) =
-  let uu___ = nbe_dummy () in (FStar_Reflection_V2_Embeddings.e_ident, uu___)
-let (e_subst : FStar_Syntax_Syntax.subst_elt Prims.list dualemb) =
-  (FStar_Reflection_V2_Embeddings.e_subst,
-    FStar_Reflection_V2_NBEEmbeddings.e_subst)
+  {
+    s_emb = FStar_Syntax_Embeddings.e_range;
+    nbe_emb = FStar_TypeChecker_NBETerm.e_range
+  }
 let e_list : 'a . 'a dualemb -> 'a Prims.list dualemb =
   fun e ->
-    let uu___ =
-      FStar_Syntax_Embeddings.e_list (FStar_Pervasives_Native.fst e) in
-    let uu___1 =
-      FStar_TypeChecker_NBETerm.e_list (FStar_Pervasives_Native.snd e) in
-    (uu___, uu___1)
+    {
+      s_emb = (FStar_Syntax_Embeddings.e_list e.s_emb);
+      nbe_emb = (FStar_TypeChecker_NBETerm.e_list e.nbe_emb)
+    }
 let e_option : 'a . 'a dualemb -> 'a FStar_Pervasives_Native.option dualemb =
   fun e ->
-    let uu___ =
-      FStar_Syntax_Embeddings.e_option (FStar_Pervasives_Native.fst e) in
-    let uu___1 =
-      FStar_TypeChecker_NBETerm.e_option (FStar_Pervasives_Native.snd e) in
-    (uu___, uu___1)
+    {
+      s_emb = (FStar_Syntax_Embeddings.e_option e.s_emb);
+      nbe_emb = (FStar_TypeChecker_NBETerm.e_option e.nbe_emb)
+    }
 let e_tuple2 : 'a 'b . 'a dualemb -> 'b dualemb -> ('a * 'b) dualemb =
   fun ea ->
     fun eb ->
-      let uu___ =
-        FStar_Syntax_Embeddings.e_tuple2 (FStar_Pervasives_Native.fst ea)
-          (FStar_Pervasives_Native.fst eb) in
-      let uu___1 =
-        FStar_TypeChecker_NBETerm.e_tuple2 (FStar_Pervasives_Native.snd ea)
-          (FStar_Pervasives_Native.snd eb) in
-      (uu___, uu___1)
-let (e_string_list : Prims.string Prims.list dualemb) = e_list e_string
-let mk1' :
-  'a 'r .
-    Prims.string ->
-      ('a -> 'r) ->
-        'a dualemb -> 'r dualemb -> FStar_TypeChecker_Primops.primitive_step
-  =
-  fun nm ->
-    fun f ->
-      fun ea ->
-        fun er ->
-          let l = mklid nm in
-          mk_us l Prims.int_one Prims.int_one
-            (int1 l f (FStar_Pervasives_Native.fst ea)
-               (FStar_Pervasives_Native.fst er))
-            (nbe_int1 l f (FStar_Pervasives_Native.snd ea)
-               (FStar_Pervasives_Native.snd er))
+      {
+        s_emb = (FStar_Syntax_Embeddings.e_tuple2 ea.s_emb eb.s_emb);
+        nbe_emb = (FStar_TypeChecker_NBETerm.e_tuple2 ea.nbe_emb eb.nbe_emb)
+      }
+let nbe_dummy : 'a . unit -> 'a FStar_TypeChecker_NBETerm.embedding =
+  fun uu___ ->
+    FStar_TypeChecker_NBETerm.mk_emb
+      (fun uu___1 ->
+         fun uu___2 -> FStar_Compiler_Effect.failwith "nbe_dummy embed")
+      (fun uu___1 ->
+         fun uu___2 -> FStar_Compiler_Effect.failwith "nbe_dummy unembed")
+      (fun uu___1 ->
+         FStar_TypeChecker_NBETerm.mk_t FStar_TypeChecker_NBETerm.Unknown)
+      (fun uu___1 -> FStar_Syntax_Syntax.ET_abstract)
+let (e_ident : FStar_Ident.ident dualemb) =
+  let uu___ = nbe_dummy () in
+  { s_emb = FStar_Reflection_V2_Embeddings.e_ident; nbe_emb = uu___ }
+let (e_subst_elt : FStar_Syntax_Syntax.subst_elt dualemb) =
+  {
+    s_emb = FStar_Reflection_V2_Embeddings.e_subst_elt;
+    nbe_emb = FStar_Reflection_V2_NBEEmbeddings.e_subst_elt
+  }
 let mk1 :
   'a 'r .
     Prims.string ->
-      ('a -> 'r) ->
-        'a dualemb -> 'r dualemb -> FStar_TypeChecker_Primops.primitive_step
+      'a dualemb ->
+        'r dualemb -> ('a -> 'r) -> FStar_TypeChecker_Primops.primitive_step
   =
   fun nm ->
-    fun f ->
-      fun ea ->
-        fun er ->
+    fun ea ->
+      fun er ->
+        fun f ->
           let l = mklid nm in
-          mk l Prims.int_one
-            (int1 l f (FStar_Pervasives_Native.fst ea)
-               (FStar_Pervasives_Native.fst er))
-            (nbe_int1 l f (FStar_Pervasives_Native.snd ea)
-               (FStar_Pervasives_Native.snd er))
+          mk l Prims.int_one (int1 l (emb_from_dual ea) (emb_from_dual er) f)
+            (nbe_int1 l f ea.nbe_emb er.nbe_emb)
 let mk2 :
   'a 'b 'r .
     Prims.string ->
-      ('a -> 'b -> 'r) ->
-        'a dualemb ->
-          'b dualemb ->
-            'r dualemb -> FStar_TypeChecker_Primops.primitive_step
+      'a dualemb ->
+        'b dualemb ->
+          'r dualemb ->
+            ('a -> 'b -> 'r) -> FStar_TypeChecker_Primops.primitive_step
   =
   fun nm ->
-    fun f ->
-      fun ea ->
-        fun eb ->
-          fun er ->
+    fun ea ->
+      fun eb ->
+        fun er ->
+          fun f ->
             let l = mklid nm in
             mk l (Prims.of_int (2))
-              (int2 l f (FStar_Pervasives_Native.fst ea)
-                 (FStar_Pervasives_Native.fst eb)
-                 (FStar_Pervasives_Native.fst er))
-              (nbe_int2 l f (FStar_Pervasives_Native.snd ea)
-                 (FStar_Pervasives_Native.snd eb)
-                 (FStar_Pervasives_Native.snd er))
+              (int2 l (emb_from_dual ea) (emb_from_dual eb)
+                 (emb_from_dual er) f)
+              (nbe_int2 l f ea.nbe_emb eb.nbe_emb er.nbe_emb)
 let mk3 :
   'a 'b 'c 'r .
     Prims.string ->
-      ('a -> 'b -> 'c -> 'r) ->
-        'a dualemb ->
-          'b dualemb ->
-            'c dualemb ->
-              'r dualemb -> FStar_TypeChecker_Primops.primitive_step
+      'a dualemb ->
+        'b dualemb ->
+          'c dualemb ->
+            'r dualemb ->
+              ('a -> 'b -> 'c -> 'r) ->
+                FStar_TypeChecker_Primops.primitive_step
   =
   fun nm ->
-    fun f ->
-      fun ea ->
-        fun eb ->
-          fun ec ->
-            fun er ->
+    fun ea ->
+      fun eb ->
+        fun ec ->
+          fun er ->
+            fun f ->
               let l = mklid nm in
               mk l (Prims.of_int (3))
-                (int3 l f (FStar_Pervasives_Native.fst ea)
-                   (FStar_Pervasives_Native.fst eb)
-                   (FStar_Pervasives_Native.fst ec)
-                   (FStar_Pervasives_Native.fst er))
-                (nbe_int3 l f (FStar_Pervasives_Native.snd ea)
-                   (FStar_Pervasives_Native.snd eb)
-                   (FStar_Pervasives_Native.snd ec)
-                   (FStar_Pervasives_Native.snd er))
+                (int3 l (emb_from_dual ea) (emb_from_dual eb)
+                   (emb_from_dual ec) (emb_from_dual er) f)
+                (nbe_int3 l f ea.nbe_emb eb.nbe_emb ec.nbe_emb er.nbe_emb)
 let (reflection_primops :
   FStar_TypeChecker_Primops.primitive_step Prims.list) =
   let uu___ =
-    mk1 "inspect_ln" FStar_Reflection_V2_Builtins.inspect_ln e_term
-      e_term_view in
+    mk1 "inspect_ln" e_term e_term_view
+      FStar_Reflection_V2_Builtins.inspect_ln in
   let uu___1 =
     let uu___2 =
-      mk1 "pack_ln" FStar_Reflection_V2_Builtins.pack_ln e_term_view e_term in
+      mk1 "pack_ln" e_term_view e_term FStar_Reflection_V2_Builtins.pack_ln in
     let uu___3 =
       let uu___4 =
-        mk1 "inspect_fv" FStar_Reflection_V2_Builtins.inspect_fv e_fv
-          e_string_list in
+        mk1 "inspect_fv" e_fv (e_list e_string)
+          FStar_Reflection_V2_Builtins.inspect_fv in
       let uu___5 =
         let uu___6 =
-          mk1 "pack_fv" FStar_Reflection_V2_Builtins.pack_fv e_string_list
-            e_fv in
+          mk1 "pack_fv" (e_list e_string) e_fv
+            FStar_Reflection_V2_Builtins.pack_fv in
         let uu___7 =
           let uu___8 =
-            mk1 "inspect_comp" FStar_Reflection_V2_Builtins.inspect_comp
-              e_comp e_comp_view in
+            mk1 "inspect_comp" e_comp e_comp_view
+              FStar_Reflection_V2_Builtins.inspect_comp in
           let uu___9 =
             let uu___10 =
-              mk1 "pack_comp" FStar_Reflection_V2_Builtins.pack_comp
-                e_comp_view e_comp in
+              mk1 "pack_comp" e_comp_view e_comp
+                FStar_Reflection_V2_Builtins.pack_comp in
             let uu___11 =
               let uu___12 =
-                mk1 "inspect_universe"
-                  FStar_Reflection_V2_Builtins.inspect_universe e_universe
-                  e_universe_view in
+                mk1 "inspect_universe" e_universe e_universe_view
+                  FStar_Reflection_V2_Builtins.inspect_universe in
               let uu___13 =
                 let uu___14 =
-                  mk1 "pack_universe"
-                    FStar_Reflection_V2_Builtins.pack_universe
-                    e_universe_view e_universe in
+                  mk1 "pack_universe" e_universe_view e_universe
+                    FStar_Reflection_V2_Builtins.pack_universe in
                 let uu___15 =
                   let uu___16 =
-                    mk1 "inspect_sigelt"
-                      FStar_Reflection_V2_Builtins.inspect_sigelt e_sigelt
-                      e_sigelt_view in
+                    mk1 "inspect_sigelt" e_sigelt e_sigelt_view
+                      FStar_Reflection_V2_Builtins.inspect_sigelt in
                   let uu___17 =
                     let uu___18 =
-                      mk1 "pack_sigelt"
-                        FStar_Reflection_V2_Builtins.pack_sigelt
-                        e_sigelt_view e_sigelt in
+                      mk1 "pack_sigelt" e_sigelt_view e_sigelt
+                        FStar_Reflection_V2_Builtins.pack_sigelt in
                     let uu___19 =
                       let uu___20 =
-                        mk1 "inspect_lb"
-                          FStar_Reflection_V2_Builtins.inspect_lb
-                          e_letbinding e_lb_view in
+                        mk1 "inspect_lb" e_letbinding e_lb_view
+                          FStar_Reflection_V2_Builtins.inspect_lb in
                       let uu___21 =
                         let uu___22 =
-                          mk1 "pack_lb" FStar_Reflection_V2_Builtins.pack_lb
-                            e_lb_view e_letbinding in
+                          mk1 "pack_lb" e_lb_view e_letbinding
+                            FStar_Reflection_V2_Builtins.pack_lb in
                         let uu___23 =
                           let uu___24 =
-                            mk1 "inspect_namedv"
-                              FStar_Reflection_V2_Builtins.inspect_namedv
-                              e_namedv e_namedv_view in
+                            mk1 "inspect_namedv" e_namedv e_namedv_view
+                              FStar_Reflection_V2_Builtins.inspect_namedv in
                           let uu___25 =
                             let uu___26 =
-                              mk1 "pack_namedv"
-                                FStar_Reflection_V2_Builtins.pack_namedv
-                                e_namedv_view e_namedv in
+                              mk1 "pack_namedv" e_namedv_view e_namedv
+                                FStar_Reflection_V2_Builtins.pack_namedv in
                             let uu___27 =
                               let uu___28 =
-                                mk1 "inspect_bv"
-                                  FStar_Reflection_V2_Builtins.inspect_bv
-                                  e_bv e_bv_view in
+                                mk1 "inspect_bv" e_bv e_bv_view
+                                  FStar_Reflection_V2_Builtins.inspect_bv in
                               let uu___29 =
                                 let uu___30 =
-                                  mk1 "pack_bv"
-                                    FStar_Reflection_V2_Builtins.pack_bv
-                                    e_bv_view e_bv in
+                                  mk1 "pack_bv" e_bv_view e_bv
+                                    FStar_Reflection_V2_Builtins.pack_bv in
                                 let uu___31 =
                                   let uu___32 =
-                                    mk1 "inspect_binder"
-                                      FStar_Reflection_V2_Builtins.inspect_binder
-                                      e_binder e_binder_view in
+                                    mk1 "inspect_binder" e_binder
+                                      e_binder_view
+                                      FStar_Reflection_V2_Builtins.inspect_binder in
                                   let uu___33 =
                                     let uu___34 =
-                                      mk1 "pack_binder"
-                                        FStar_Reflection_V2_Builtins.pack_binder
-                                        e_binder_view e_binder in
+                                      mk1 "pack_binder" e_binder_view
+                                        e_binder
+                                        FStar_Reflection_V2_Builtins.pack_binder in
                                     let uu___35 =
                                       let uu___36 =
-                                        let uu___37 = e_option e_vconfig in
-                                        mk1 "sigelt_opts"
-                                          FStar_Reflection_V2_Builtins.sigelt_opts
-                                          e_sigelt uu___37 in
+                                        mk1 "sigelt_opts" e_sigelt
+                                          (e_option e_vconfig)
+                                          FStar_Reflection_V2_Builtins.sigelt_opts in
                                       let uu___37 =
                                         let uu___38 =
-                                          mk1 "embed_vconfig"
-                                            FStar_Reflection_V2_Builtins.embed_vconfig
-                                            e_vconfig e_term in
+                                          mk1 "embed_vconfig" e_vconfig
+                                            e_term
+                                            FStar_Reflection_V2_Builtins.embed_vconfig in
                                         let uu___39 =
                                           let uu___40 =
-                                            mk1 "sigelt_attrs"
-                                              FStar_Reflection_V2_Builtins.sigelt_attrs
-                                              e_sigelt e_attributes in
+                                            mk1 "sigelt_attrs" e_sigelt
+                                              (e_list e_term)
+                                              FStar_Reflection_V2_Builtins.sigelt_attrs in
                                           let uu___41 =
                                             let uu___42 =
                                               mk2 "set_sigelt_attrs"
-                                                FStar_Reflection_V2_Builtins.set_sigelt_attrs
-                                                e_attributes e_sigelt
-                                                e_sigelt in
+                                                (e_list e_term) e_sigelt
+                                                e_sigelt
+                                                FStar_Reflection_V2_Builtins.set_sigelt_attrs in
                                             let uu___43 =
                                               let uu___44 =
-                                                mk1 "sigelt_quals"
-                                                  FStar_Reflection_V2_Builtins.sigelt_quals
-                                                  e_sigelt e_qualifiers in
+                                                mk1 "sigelt_quals" e_sigelt
+                                                  (e_list e_qualifier)
+                                                  FStar_Reflection_V2_Builtins.sigelt_quals in
                                               let uu___45 =
                                                 let uu___46 =
                                                   mk2 "set_sigelt_quals"
-                                                    FStar_Reflection_V2_Builtins.set_sigelt_quals
-                                                    e_qualifiers e_sigelt
-                                                    e_sigelt in
+                                                    (e_list e_qualifier)
+                                                    e_sigelt e_sigelt
+                                                    FStar_Reflection_V2_Builtins.set_sigelt_quals in
                                                 let uu___47 =
                                                   let uu___48 =
                                                     mk2 "subst_term"
-                                                      FStar_Reflection_V2_Builtins.subst_term
-                                                      e_subst e_term e_term in
+                                                      (e_list e_subst_elt)
+                                                      e_term e_term
+                                                      FStar_Reflection_V2_Builtins.subst_term in
                                                   let uu___49 =
                                                     let uu___50 =
                                                       mk2 "subst_comp"
-                                                        FStar_Reflection_V2_Builtins.subst_comp
-                                                        e_subst e_comp e_comp in
+                                                        (e_list e_subst_elt)
+                                                        e_comp e_comp
+                                                        FStar_Reflection_V2_Builtins.subst_comp in
                                                     let uu___51 =
                                                       let uu___52 =
-                                                        mk2 "compare_bv"
-                                                          FStar_Reflection_V2_Builtins.compare_bv
-                                                          e_bv e_bv e_order in
+                                                        mk2 "compare_bv" e_bv
+                                                          e_bv e_order
+                                                          FStar_Reflection_V2_Builtins.compare_bv in
                                                       let uu___53 =
                                                         let uu___54 =
                                                           mk2
                                                             "compare_namedv"
-                                                            FStar_Reflection_V2_Builtins.compare_namedv
                                                             e_namedv e_namedv
-                                                            e_order in
+                                                            e_order
+                                                            FStar_Reflection_V2_Builtins.compare_namedv in
                                                         let uu___55 =
                                                           let uu___56 =
-                                                            let uu___57 =
-                                                              e_list e_fv in
                                                             mk2 "lookup_attr"
-                                                              FStar_Reflection_V2_Builtins.lookup_attr
                                                               e_term e_env
-                                                              uu___57 in
+                                                              (e_list e_fv)
+                                                              FStar_Reflection_V2_Builtins.lookup_attr in
                                                           let uu___57 =
                                                             let uu___58 =
-                                                              let uu___59 =
-                                                                e_list e_fv in
                                                               mk1
                                                                 "all_defs_in_env"
-                                                                FStar_Reflection_V2_Builtins.all_defs_in_env
-                                                                e_env uu___59 in
+                                                                e_env
+                                                                (e_list e_fv)
+                                                                FStar_Reflection_V2_Builtins.all_defs_in_env in
                                                             let uu___59 =
                                                               let uu___60 =
-                                                                let uu___61 =
-                                                                  e_list e_fv in
                                                                 mk2
                                                                   "defs_in_module"
-                                                                  FStar_Reflection_V2_Builtins.defs_in_module
                                                                   e_env
-                                                                  e_string_list
-                                                                  uu___61 in
+                                                                  (e_list
+                                                                    e_string)
+                                                                  (e_list
+                                                                    e_fv)
+                                                                  FStar_Reflection_V2_Builtins.defs_in_module in
                                                               let uu___61 =
                                                                 let uu___62 =
                                                                   mk2
                                                                     "term_eq"
-                                                                    FStar_Reflection_V2_Builtins.term_eq
                                                                     e_term
                                                                     e_term
-                                                                    e_bool in
+                                                                    e_bool
+                                                                    FStar_Reflection_V2_Builtins.term_eq in
                                                                 let uu___63 =
                                                                   let uu___64
                                                                     =
                                                                     mk1
                                                                     "moduleof"
-                                                                    FStar_Reflection_V2_Builtins.moduleof
                                                                     e_env
-                                                                    e_string_list in
+                                                                    (e_list
+                                                                    e_string)
+                                                                    FStar_Reflection_V2_Builtins.moduleof in
                                                                   let uu___65
                                                                     =
                                                                     let uu___66
                                                                     =
-                                                                    let uu___67
-                                                                    =
-                                                                    e_list
-                                                                    e_binding in
                                                                     mk1
                                                                     "vars_of_env"
-                                                                    FStar_Reflection_V2_Builtins.vars_of_env
                                                                     e_env
-                                                                    uu___67 in
+                                                                    (e_list
+                                                                    e_binding)
+                                                                    FStar_Reflection_V2_Builtins.vars_of_env in
                                                                     let uu___67
                                                                     =
                                                                     let uu___68
                                                                     =
-                                                                    let uu___69
-                                                                    =
-                                                                    e_option
-                                                                    e_sigelt in
                                                                     mk2
                                                                     "lookup_typ"
-                                                                    FStar_Reflection_V2_Builtins.lookup_typ
                                                                     e_env
-                                                                    e_string_list
-                                                                    uu___69 in
+                                                                    (e_list
+                                                                    e_string)
+                                                                    (e_option
+                                                                    e_sigelt)
+                                                                    FStar_Reflection_V2_Builtins.lookup_typ in
                                                                     let uu___69
                                                                     =
                                                                     let uu___70
                                                                     =
-                                                                    let uu___71
-                                                                    =
-                                                                    e_list
-                                                                    e_string_list in
                                                                     mk1
                                                                     "env_open_modules"
-                                                                    FStar_Reflection_V2_Builtins.env_open_modules
                                                                     e_env
-                                                                    uu___71 in
+                                                                    (e_list
+                                                                    (e_list
+                                                                    e_string))
+                                                                    FStar_Reflection_V2_Builtins.env_open_modules in
                                                                     let uu___71
                                                                     =
                                                                     let uu___72
                                                                     =
                                                                     mk1
                                                                     "implode_qn"
-                                                                    FStar_Reflection_V2_Builtins.implode_qn
-                                                                    e_string_list
-                                                                    e_string in
+                                                                    (e_list
+                                                                    e_string)
+                                                                    e_string
+                                                                    FStar_Reflection_V2_Builtins.implode_qn in
                                                                     let uu___73
                                                                     =
                                                                     let uu___74
                                                                     =
                                                                     mk1
                                                                     "explode_qn"
-                                                                    FStar_Reflection_V2_Builtins.explode_qn
                                                                     e_string
-                                                                    e_string_list in
+                                                                    (e_list
+                                                                    e_string)
+                                                                    FStar_Reflection_V2_Builtins.explode_qn in
                                                                     let uu___75
                                                                     =
                                                                     let uu___76
                                                                     =
                                                                     mk2
                                                                     "compare_string"
-                                                                    FStar_Reflection_V2_Builtins.compare_string
                                                                     e_string
                                                                     e_string
-                                                                    e_int in
+                                                                    e_int
+                                                                    FStar_Reflection_V2_Builtins.compare_string in
                                                                     let uu___77
                                                                     =
                                                                     let uu___78
                                                                     =
                                                                     mk2
                                                                     "push_namedv"
-                                                                    FStar_Reflection_V2_Builtins.push_namedv
                                                                     e_env
                                                                     e_namedv
-                                                                    e_env in
+                                                                    e_env
+                                                                    FStar_Reflection_V2_Builtins.push_namedv in
                                                                     let uu___79
                                                                     =
                                                                     let uu___80
                                                                     =
                                                                     mk1
                                                                     "range_of_term"
-                                                                    FStar_Reflection_V2_Builtins.range_of_term
                                                                     e_term
-                                                                    e_range in
+                                                                    e_range
+                                                                    FStar_Reflection_V2_Builtins.range_of_term in
                                                                     let uu___81
                                                                     =
                                                                     let uu___82
                                                                     =
                                                                     mk1
                                                                     "range_of_sigelt"
-                                                                    FStar_Reflection_V2_Builtins.range_of_sigelt
                                                                     e_sigelt
-                                                                    e_range in
+                                                                    e_range
+                                                                    FStar_Reflection_V2_Builtins.range_of_sigelt in
                                                                     let uu___83
                                                                     =
                                                                     let uu___84
                                                                     =
-                                                                    let uu___85
-                                                                    =
-                                                                    e_tuple2
-                                                                    e_string
-                                                                    e_range in
                                                                     mk1
                                                                     "inspect_ident"
-                                                                    FStar_Reflection_V2_Builtins.inspect_ident
                                                                     e_ident
-                                                                    uu___85 in
+                                                                    (e_tuple2
+                                                                    e_string
+                                                                    e_range)
+                                                                    FStar_Reflection_V2_Builtins.inspect_ident in
                                                                     let uu___85
                                                                     =
                                                                     let uu___86
                                                                     =
-                                                                    let uu___87
-                                                                    =
-                                                                    e_tuple2
-                                                                    e_string
-                                                                    e_range in
                                                                     mk1
                                                                     "pack_ident"
-                                                                    FStar_Reflection_V2_Builtins.pack_ident
-                                                                    uu___87
-                                                                    e_ident in
+                                                                    (e_tuple2
+                                                                    e_string
+                                                                    e_range)
+                                                                    e_ident
+                                                                    FStar_Reflection_V2_Builtins.pack_ident in
                                                                     [uu___86] in
                                                                     uu___84
                                                                     ::
@@ -857,6 +1006,6 @@ let (reflection_primops :
       uu___4 :: uu___5 in
     uu___2 :: uu___3 in
   uu___ :: uu___1
-let (uu___216 : unit) =
+let (uu___243 : unit) =
   FStar_Compiler_List.iter FStar_TypeChecker_Cfg.register_extra_step
     reflection_primops

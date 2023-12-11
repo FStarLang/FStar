@@ -23,30 +23,52 @@ open FStar.Compiler.Effect
 open FStar.Compiler.Order
 open FStar.Compiler.Util
 
-(* This is a dummy implementation referring to FStar.Compiler.Util.set, which
-is implemented with lists. To be changed soon. *)
+(* This is a slow implementation that mimics FStar.Compiler.Util.set,
+which is implemented with lists. As it turns out we heavily rely on
+the exact order of `elems` provided by this list representation, so we
+cannot (yet) do big changes here. *)
 
-let set t = Util.set t
+(* Inv: no duplication. We are left-biased. *)
+let set t = list t
 
-let add x s = set_add x s
-let empty () = new_set (fun x y -> match (cmp x y) with | Lt -> -1 | Eq -> 0 | Gt -> 1)
-let from_list xs = as_set xs (fun x y -> match (cmp x y) with | Lt -> -1 | Eq -> 0 | Gt -> 1)
-let mem x s = set_mem x s
-let singleton x = set_add x (empty ())
-let is_empty s = set_is_empty s
+let rec add x s =
+  match s with
+  | [] -> [x]
+  | y::yy -> if x =? y then s else y :: add x yy
+
+let empty () = []
+
+let from_list xs = dedup xs
+
+let mem x s = List.existsb (fun y -> x =? y) s
+
+let singleton x = [x]
+
+let is_empty s = Nil? s
+
 let addn xs ys = List.fold_right add xs ys
-let remove x s = set_remove x s
-let equal s1 s2 = set_eq s1 s2
-let inter s1 s2 = set_intersect s1 s2
-let union s1 s2 = set_union s1 s2
-let diff s1 s2 = set_difference s1 s2
-let subset s1 s2 = set_is_subset_of s1 s2
-let elems s = set_elements s
+
+let rec remove x s =
+  match s with
+  | [] -> []
+  | y::yy -> if x =? y then yy else y :: remove x yy
+
+let elems s = s
+
 let for_all p s = elems s |> List.for_all p
 let for_any p s = elems s |> List.existsb p
+
+let subset s1 s2 = for_all (fun y -> mem y s2) s1
+let equal s1 s2 = sort s1 =? sort s2
+
+let union s1 s2 = List.fold_left (fun s x -> add x s) s1 s2
+let inter s1 s2 = List.filter (fun y -> mem y s2) s1
+
+let diff  s1 s2 = List.filter (fun y -> not (mem y s2)) s1
+
+
 let collect f l = List.fold_right (fun x acc -> f x `union` acc) l (empty ())
 
-(* Note: no deduplication in the internal list, so duplicate elements will be printed here. *)
 instance showable_set (a:Type) (_ : ord a) (_ : showable a) : Tot (showable (set a)) = {
     show = (fun s -> show (elems s));
 }

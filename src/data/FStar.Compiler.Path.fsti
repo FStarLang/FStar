@@ -1,5 +1,7 @@
 (*
-   Copyright 2008-2016 Microsoft Research
+   Copyright 2008-2017 Microsoft Research
+
+   Authors: Aseem Rastogi, Nikhil Swamy, Jonathan Protzenko
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -13,23 +15,16 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+module FStar.Compiler.Path
 
-module FStar.Tactics.Native
+open FStar.Class.Deq
+open FStar.Class.Show
 
-open FStar.Compiler.Range
-open FStar.Syntax.Syntax
-open FStar.Tactics.Types
+type path a = list a
 
-module Cfg   = FStar.TypeChecker.Cfg
-module N     = FStar.TypeChecker.Normalize
-module PO    = FStar.TypeChecker.Primops
+type forest (a:Type) (qual:Type) =
+  list (path a & qual) & qual
 
-type itac = PO.psc -> FStar.Syntax.Embeddings.norm_cb -> universes -> args -> option term
+val is_under {| deq 'a |} (p1 p2 : path 'a) : bool
 
-type native_primitive_step =
-    { name: FStar.Ident.lid;
-      arity: Prims.int;
-      strong_reduction_ok: bool;
-      tactic: itac}
-
-val list_all            : unit -> list native_primitive_step
+val search_forest #a #q {| deq a |} (p:path a) (f : forest a q) : q

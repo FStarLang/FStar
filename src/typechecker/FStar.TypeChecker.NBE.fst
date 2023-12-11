@@ -1062,8 +1062,8 @@ and translate_monadic (m, ty) cfg bs e : t =
        in
        let maybe_range_arg =
            if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
-           then [translate cfg [] (PO.embed_simple EMB.e_range lb.lbpos lb.lbpos), None;
-                 translate cfg [] (PO.embed_simple EMB.e_range body.pos body.pos), None]
+           then [translate cfg [] (PO.embed_simple lb.lbpos lb.lbpos), None;
+                 translate cfg [] (PO.embed_simple body.pos body.pos), None]
            else []
        in
        let t =
@@ -1215,7 +1215,7 @@ and readback (cfg:config) (x:t) : term =
     | Constant (Int i) -> with_range (U.exp_int (Z.string_of_big_int i))
     | Constant (String (s, r)) -> mk (S.Tm_constant (C.Const_string (s, r)))
     | Constant (Char c) -> with_range (U.exp_char c)
-    | Constant (Range r) -> PO.embed_simple EMB.e_range x.nbe_r r
+    | Constant (Range r) -> PO.embed_simple x.nbe_r r
     | Constant (SConst c) -> mk (S.Tm_constant c)
 
     | Meta(t, m) ->

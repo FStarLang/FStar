@@ -436,7 +436,7 @@ let unit_const_with_range r = mk (Tm_constant FStar.Const.Const_unit) r
 let unit_const = unit_const_with_range Range.dummyRange
 
 instance has_range_syntax #a (_:unit) : Tot (hasRange (syntax a)) = {
-  pos = (fun (t:term) -> t.pos);
+  pos = (fun (t:syntax a) -> t.pos);
   setPos = (fun r t -> { t with pos = r });
 }
 
@@ -448,6 +448,33 @@ instance has_range_withinfo #a (_:unit) : Tot (hasRange (withinfo_t a)) = {
 instance has_range_sigelt : hasRange sigelt = {
   pos = (fun t -> t.sigrng);
   setPos = (fun r t -> { t with sigrng = r });
+}
+
+instance showable_lazy_kind = {
+  show = (function
+          | BadLazy -> "BadLazy"
+          | Lazy_bv -> "Lazy_bv"
+          | Lazy_namedv -> "Lazy_namedv"
+          | Lazy_binder -> "Lazy_binder"
+          | Lazy_optionstate -> "Lazy_optionstate"
+          | Lazy_fvar -> "Lazy_fvar"
+          | Lazy_comp -> "Lazy_comp"
+          | Lazy_env -> "Lazy_env"
+          | Lazy_proofstate -> "Lazy_proofstate"
+          | Lazy_goal -> "Lazy_goal"
+          | Lazy_sigelt -> "Lazy_sigelt"
+          | Lazy_letbinding -> "Lazy_letbinding"
+          | Lazy_uvar -> "Lazy_uvar"
+          | Lazy_universe -> "Lazy_universe"
+          | Lazy_universe_uvar -> "Lazy_universe_uvar"
+          | Lazy_issue -> "Lazy_issue"
+          | Lazy_doc -> "Lazy_doc"
+          | Lazy_ident -> "Lazy_ident"
+          | Lazy_tref -> "Lazy_tref"
+          | Lazy_embedding _ -> "Lazy_embedding _"
+          | Lazy_extension s -> "Lazy_extension " ^ s
+          | _ -> failwith "FIXME! lazy_kind_to_string must be complete"
+  );
 }
 
 instance deq_lazy_kind : deq lazy_kind = {
@@ -478,32 +505,5 @@ instance deq_lazy_kind : deq lazy_kind = {
             s = t
           | Lazy_embedding _, _
           | _, Lazy_embedding _ -> false
-          | _ -> failwith "FIXME! eq_lazy_kind must be complete");
-}
-
-instance showable_lazy_kind = {
-  show = (function
-          | BadLazy -> "BadLazy"
-          | Lazy_bv -> "Lazy_bv"
-          | Lazy_namedv -> "Lazy_namedv"
-          | Lazy_binder -> "Lazy_binder"
-          | Lazy_optionstate -> "Lazy_optionstate"
-          | Lazy_fvar -> "Lazy_fvar"
-          | Lazy_comp -> "Lazy_comp"
-          | Lazy_env -> "Lazy_env"
-          | Lazy_proofstate -> "Lazy_proofstate"
-          | Lazy_goal -> "Lazy_goal"
-          | Lazy_sigelt -> "Lazy_sigelt"
-          | Lazy_letbinding -> "Lazy_letbinding"
-          | Lazy_uvar -> "Lazy_uvar"
-          | Lazy_universe -> "Lazy_universe"
-          | Lazy_universe_uvar -> "Lazy_universe_uvar"
-          | Lazy_issue -> "Lazy_issue"
-          | Lazy_doc -> "Lazy_doc"
-          | Lazy_ident -> "Lazy_ident"
-          | Lazy_tref -> "Lazy_tref"
-          | Lazy_embedding _ -> "Lazy_embedding _"
-          | Lazy_extension s -> "Lazy_extension " ^ s
-          | _ -> failwith "FIXME! lazy_kind_to_string must be complete"
-  );
+          | _ -> false);
 }

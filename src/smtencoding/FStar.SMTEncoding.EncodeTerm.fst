@@ -633,7 +633,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         // They should be equivalent to a fully spelled out view.
         //
         // Actual encoding: `q ~> pack qv where qv is the view of q
-        let tv = EMB.embed RE.e_term_view (R.inspect_ln qt) t.pos None EMB.id_norm_cb in
+        let tv = EMB.embed (R.inspect_ln qt) t.pos None EMB.id_norm_cb in
         if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
             BU.print2 ">> Inspected (%s) ~> (%s)\n" (Print.term_to_string t0)
                                                     (Print.term_to_string tv);
@@ -1574,8 +1574,8 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
               encode_formula phi env
 
             | Tm_fvar fv, [(r, _); (msg, _); (phi, _)] when S.fv_eq_lid fv Const.labeled_lid -> //interpret (labeled r msg t) as Tm_meta(t, Meta_labeled(msg, r, false)
-              begin match SE.try_unembed SE.e_range r SE.id_norm_cb,
-                          SE.try_unembed SE.e_string msg SE.id_norm_cb with
+              begin match SE.try_unembed r SE.id_norm_cb,
+                          SE.try_unembed msg SE.id_norm_cb with
               | Some r, Some s ->
                 let phi = S.mk (Tm_meta {tm=phi; meta=Meta_labeled(s, r, false)}) r in
                 fallback phi

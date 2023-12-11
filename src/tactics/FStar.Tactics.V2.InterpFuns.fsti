@@ -36,6 +36,26 @@ module PO    = FStar.TypeChecker.Primops
  * will be instantiated differently (again term vs NBET.t). Such is life
  * without higher-order polymorphism. *)
 
+val interp_ctx : string -> (unit -> 'a) -> 'a
+
+(* for tactics *)
+val mk :
+    nm:string ->
+    arity:int ->
+    univ_arity:int ->
+    PO.interp_t ->
+    PO.nbe_interp_t ->
+    PO.primitive_step
+
+(* for total *)
+val mkt :
+    nm:string ->
+    arity:int ->
+    univ_arity:int ->
+    PO.interp_t ->
+    PO.nbe_interp_t ->
+    PO.primitive_step
+
 val mk_total_step_1_psc :
     int ->
     string ->

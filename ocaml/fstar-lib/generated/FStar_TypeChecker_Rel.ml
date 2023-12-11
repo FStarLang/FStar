@@ -13410,8 +13410,11 @@ let (try_teq :
            FStar_Profiling.profile
              (fun uu___3 ->
                 (let uu___5 =
-                   FStar_TypeChecker_Env.debug env
-                     (FStar_Options.Other "Rel") in
+                   (FStar_TypeChecker_Env.debug env
+                      (FStar_Options.Other "Rel"))
+                     ||
+                     (FStar_TypeChecker_Env.debug env
+                        (FStar_Options.Other "RelTop")) in
                  if uu___5
                  then
                    let uu___6 =
@@ -13441,8 +13444,11 @@ let (try_teq :
                            (fun uu___7 -> FStar_Pervasives_Native.None) in
                        with_guard env prob uu___6 in
                      ((let uu___7 =
-                         FStar_TypeChecker_Env.debug env
-                           (FStar_Options.Other "Rel") in
+                         (FStar_TypeChecker_Env.debug env
+                            (FStar_Options.Other "Rel"))
+                           ||
+                           (FStar_TypeChecker_Env.debug env
+                              (FStar_Options.Other "RelTop")) in
                        if uu___7
                        then
                          let uu___8 =
@@ -13470,7 +13476,10 @@ let (teq :
              FStar_TypeChecker_Common.trivial_guard)
         | FStar_Pervasives_Native.Some g ->
             ((let uu___2 =
-                FStar_TypeChecker_Env.debug env (FStar_Options.Other "Rel") in
+                (FStar_TypeChecker_Env.debug env (FStar_Options.Other "Rel"))
+                  ||
+                  (FStar_TypeChecker_Env.debug env
+                     (FStar_Options.Other "RelTop")) in
               if uu___2
               then
                 let uu___3 =
@@ -13493,7 +13502,8 @@ let (get_teq_predicate :
     fun t1 ->
       fun t2 ->
         (let uu___1 =
-           FStar_TypeChecker_Env.debug env (FStar_Options.Other "Rel") in
+           (FStar_TypeChecker_Env.debug env (FStar_Options.Other "Rel")) ||
+             (FStar_TypeChecker_Env.debug env (FStar_Options.Other "RelTop")) in
          if uu___1
          then
            let uu___2 =
@@ -13514,7 +13524,10 @@ let (get_teq_predicate :
                    (fun uu___3 -> FStar_Pervasives_Native.None) in
                with_guard env prob uu___2 in
              ((let uu___3 =
-                 FStar_TypeChecker_Env.debug env (FStar_Options.Other "Rel") in
+                 (FStar_TypeChecker_Env.debug env (FStar_Options.Other "Rel"))
+                   ||
+                   (FStar_TypeChecker_Env.debug env
+                      (FStar_Options.Other "RelTop")) in
                if uu___3
                then
                  let uu___4 =
@@ -13566,7 +13579,11 @@ let (sub_or_eq_comp :
                  then FStar_TypeChecker_Common.EQ
                  else FStar_TypeChecker_Common.SUB in
                (let uu___3 =
-                  FStar_TypeChecker_Env.debug env (FStar_Options.Other "Rel") in
+                  (FStar_TypeChecker_Env.debug env
+                     (FStar_Options.Other "Rel"))
+                    ||
+                    (FStar_TypeChecker_Env.debug env
+                       (FStar_Options.Other "RelTop")) in
                 if uu___3
                 then
                   let uu___4 =
@@ -14346,7 +14363,8 @@ let (subtype_nosmt :
     fun t1 ->
       fun t2 ->
         (let uu___1 =
-           FStar_TypeChecker_Env.debug env (FStar_Options.Other "Rel") in
+           (FStar_TypeChecker_Env.debug env (FStar_Options.Other "Rel")) ||
+             (FStar_TypeChecker_Env.debug env (FStar_Options.Other "RelTop")) in
          if uu___1
          then
            let uu___2 = FStar_TypeChecker_Normalize.term_to_string env t1 in
@@ -14391,7 +14409,10 @@ let (check_subtyping :
         FStar_Profiling.profile
           (fun uu___1 ->
              (let uu___3 =
-                FStar_TypeChecker_Env.debug env (FStar_Options.Other "Rel") in
+                (FStar_TypeChecker_Env.debug env (FStar_Options.Other "Rel"))
+                  ||
+                  (FStar_TypeChecker_Env.debug env
+                     (FStar_Options.Other "RelTop")) in
               if uu___3
               then
                 let uu___4 =
@@ -14406,15 +14427,21 @@ let (check_subtyping :
                 new_t_prob uu___4 env t1 FStar_TypeChecker_Common.SUB t2 in
               match uu___3 with
               | (prob, x, wl) ->
+                  let smt_ok =
+                    let uu___4 = FStar_Options.ml_ish () in
+                    Prims.op_Negation uu___4 in
                   let g =
                     let uu___4 =
-                      solve_and_commit (singleton wl prob true)
+                      solve_and_commit (singleton wl prob smt_ok)
                         (fun uu___5 -> FStar_Pervasives_Native.None) in
                     with_guard env prob uu___4 in
                   ((let uu___5 =
                       (FStar_TypeChecker_Env.debug env
                          (FStar_Options.Other "Rel"))
-                        && (FStar_Compiler_Util.is_some g) in
+                        ||
+                        ((FStar_TypeChecker_Env.debug env
+                            (FStar_Options.Other "RelTop"))
+                           && (FStar_Compiler_Util.is_some g)) in
                     if uu___5
                     then
                       let uu___6 =

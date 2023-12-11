@@ -1252,19 +1252,22 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
       match ed.signature with
       | Layered_eff_sig (n, ts) -> n, ts
       | _ -> failwith "Impossible (tc_layered_eff_decl with a wp effect sig" in
-    let r = (snd sig_ts).pos in
-    let sig_us, sig_t, sig_ty = check_and_gen "signature" 1 sig_ts in
 
-    let us, t = SS.open_univ_vars sig_us sig_t in
-    let env = Env.push_univ_vars env0 us in
+    Errors.with_ctx ("While checking the effect signature") (fun () ->
+      let r = (snd sig_ts).pos in
+      let sig_us, sig_t, sig_ty = check_and_gen "signature" 1 sig_ts in
 
-    let a, u = fresh_a_and_u_a "a" in
-    let rest_bs = TcUtil.layered_effect_indices_as_binders env r ed.mname (sig_us, sig_t) u (a.binder_bv |> S.bv_to_name) in
-    let bs = a::rest_bs in
-    let k = U.arrow bs (S.mk_Total S.teff) in  //U.arrow does closing over bs
-    let g_eq = Rel.teq env t k in
-    Rel.force_trivial_guard env g_eq;
-    n, (sig_us, SS.close_univ_vars us (k |> N.remove_uvar_solutions env), sig_ty) in
+      let us, t = SS.open_univ_vars sig_us sig_t in
+      let env = Env.push_univ_vars env0 us in
+
+      let a, u = fresh_a_and_u_a "a" in
+      let rest_bs =
+        TcUtil.layered_effect_indices_as_binders env r ed.mname (sig_us, sig_t) u (a.binder_bv |> S.bv_to_name) in
+      let bs = a::rest_bs in
+      let k = U.arrow bs (S.mk_Total S.teff) in  //U.arrow does closing over bs
+      let g_eq = Rel.teq env t k in
+      Rel.force_trivial_guard env g_eq;
+      n, (sig_us, SS.close_univ_vars us (k |> N.remove_uvar_solutions env), sig_ty)) in
 
   log_combinator "signature" signature;
 
@@ -1275,23 +1278,23 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
    *   a:Type -> <binders for effect indices> -> Type  //polymorphic in one universe (that of a)
    *)
   let repr =
-    let repr_ts = ed |> U.get_eff_repr |> must in
-    let r = (snd repr_ts).pos in
-    let repr_us, repr_t, repr_ty = check_and_gen "repr" 1 repr_ts in
+    Errors.with_ctx ("While checking the effect repr") (fun () ->
+      let repr_ts = ed |> U.get_eff_repr |> must in
+      let r = (snd repr_ts).pos in
+      let repr_us, repr_t, repr_ty = check_and_gen "repr" 1 repr_ts in
+  
+      let us, ty = SS.open_univ_vars repr_us repr_ty in
+      let env = Env.push_univ_vars env0 us in
 
-    
-    let us, ty = SS.open_univ_vars repr_us repr_ty in
-    let env = Env.push_univ_vars env0 us in
-
-    let a, u = fresh_a_and_u_a "a" in
-    let rest_bs =
-      let signature_ts = let us, t, _ = signature in (us, t) in
-      TcUtil.layered_effect_indices_as_binders env r ed.mname signature_ts u (a.binder_bv |> S.bv_to_name) in
-    let bs = a::rest_bs in
-    let k = U.arrow bs (U.type_u () |> (fun (t, u) -> S.mk_Total t)) in  //note the universe of Tot need not be u
-    let g = Rel.teq env ty k in
-    Rel.force_trivial_guard env g;
-    (repr_us, repr_t, SS.close_univ_vars us (k |> N.remove_uvar_solutions env))
+      let a, u = fresh_a_and_u_a "a" in
+      let rest_bs =
+        let signature_ts = let us, t, _ = signature in (us, t) in
+        TcUtil.layered_effect_indices_as_binders env r ed.mname signature_ts u (a.binder_bv |> S.bv_to_name) in
+      let bs = a::rest_bs in
+      let k = U.arrow bs (U.type_u () |> (fun (t, u) -> S.mk_Total t)) in  //note the universe of Tot need not be u
+      let g = Rel.teq env ty k in
+      Rel.force_trivial_guard env g;
+      (repr_us, repr_t, SS.close_univ_vars us (k |> N.remove_uvar_solutions env)))
   in
 
   log_combinator "repr" repr;
@@ -1324,31 +1327,32 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
    *   and not a repr
    *)
   let return_repr =
-    let return_repr_ts = ed |> U.get_return_repr |> must in
-    let r = (snd return_repr_ts).pos in
-    let ret_us, ret_t, ret_ty = check_and_gen "return_repr" 1 return_repr_ts in
+    Errors.with_ctx ("While checking the return combinator") (fun () ->
+      let return_repr_ts = ed |> U.get_return_repr |> must in
+      let r = (snd return_repr_ts).pos in
+      let ret_us, ret_t, ret_ty = check_and_gen "return_repr" 1 return_repr_ts in
 
-    let us, ty = SS.open_univ_vars ret_us ret_ty in
-    let env = Env.push_univ_vars env0 us in
+      let us, ty = SS.open_univ_vars ret_us ret_ty in
+      let env = Env.push_univ_vars env0 us in
 
-    let a, u_a = fresh_a_and_u_a "a" in
-    let x_a = fresh_x_a "x" a in
-    let rest_bs =
-      match (SS.compress ty).n with
-      | Tm_arrow {bs} when List.length bs >= 2 ->
-        let (({binder_bv=a'})::({binder_bv=x'})::bs) = SS.open_binders bs in
-        bs |> SS.subst_binders [NT (a', bv_to_name a.binder_bv)]
-           |> SS.subst_binders [NT (x', bv_to_name x_a.binder_bv)]
-      | _ -> not_an_arrow_error "return" 2 ty r in
-    let bs = a::x_a::rest_bs in
-    let repr, g = fresh_repr r (Env.push_binders env bs) u_a (a.binder_bv |> S.bv_to_name) in
-    let k = U.arrow bs (S.mk_Total repr) in
-    let g_eq = Rel.teq env ty k in
-    Rel.force_trivial_guard env (Env.conj_guard g g_eq);
+      let a, u_a = fresh_a_and_u_a "a" in
+      let x_a = fresh_x_a "x" a in
+      let rest_bs =
+        match (SS.compress ty).n with
+        | Tm_arrow {bs} when List.length bs >= 2 ->
+          let (({binder_bv=a'})::({binder_bv=x'})::bs) = SS.open_binders bs in
+          bs |> SS.subst_binders [NT (a', bv_to_name a.binder_bv)]
+             |> SS.subst_binders [NT (x', bv_to_name x_a.binder_bv)]
+        | _ -> not_an_arrow_error "return" 2 ty r in
+      let bs = a::x_a::rest_bs in
+      let repr, g = fresh_repr r (Env.push_binders env bs) u_a (a.binder_bv |> S.bv_to_name) in
+      let k = U.arrow bs (S.mk_Total repr) in
+      let g_eq = Rel.teq env ty k in
+      Rel.force_trivial_guard env (Env.conj_guard g g_eq);
 
-    let k = k |> N.remove_uvar_solutions env in
+      let k = k |> N.remove_uvar_solutions env in
 
-    ret_us, ret_t, k |> SS.close_univ_vars us in
+      ret_us, ret_t, k |> SS.close_univ_vars us) in
 
   log_combinator "return_repr" return_repr;
 
@@ -1363,27 +1367,28 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
    * The binders have arbitrary sorts
    *)
   let bind_repr, bind_kind =
-    let bind_repr_ts = ed |> U.get_bind_repr |> must in
-    let r = (snd bind_repr_ts).pos in
-    let bind_us, bind_t, bind_ty = check_and_gen "bind_repr" 2 bind_repr_ts in
+    Errors.with_ctx ("While checking the bind combinator") (fun () ->
+      let bind_repr_ts = ed |> U.get_bind_repr |> must in
+      let r = (snd bind_repr_ts).pos in
+      let bind_us, bind_t, bind_ty = check_and_gen "bind_repr" 2 bind_repr_ts in
 
-    let us, ty = SS.open_univ_vars bind_us bind_ty in
-    let env = Env.push_univ_vars env0 us in
+      let us, ty = SS.open_univ_vars bind_us bind_ty in
+      let env = Env.push_univ_vars env0 us in
 
-    let k, kind =
-      let sig_ts = let us, t, _ = signature in (us, t) in
-      let repr_ts = let us, t, _ = repr in (us, t) in
-      validate_indexed_effect_bind_shape env
-        ed.mname ed.mname ed.mname
-        sig_ts sig_ts sig_ts
-        (Some repr_ts) (Some repr_ts) (Some repr_ts)
-        us
-        ty
-        r
-        num_effect_params
-        (U.has_attribute ed.eff_attrs PC.bind_has_range_args_attr) in
+      let k, kind =
+        let sig_ts = let us, t, _ = signature in (us, t) in
+        let repr_ts = let us, t, _ = repr in (us, t) in
+        validate_indexed_effect_bind_shape env
+          ed.mname ed.mname ed.mname
+          sig_ts sig_ts sig_ts
+          (Some repr_ts) (Some repr_ts) (Some repr_ts)
+          us
+          ty
+          r
+          num_effect_params
+          (U.has_attribute ed.eff_attrs PC.bind_has_range_args_attr) in
 
-    (bind_us, bind_t, k |> SS.close_univ_vars bind_us), kind in
+      (bind_us, bind_t, k |> SS.close_univ_vars bind_us), kind) in
 
   log_combinator "bind_repr" bind_repr;
 
@@ -1401,53 +1406,54 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
    * 
    *)
   let stronger_repr, subcomp_kind =
-    let stronger_repr =
-      let ts = ed |> U.get_stronger_repr |> must in
-      match (ts |> snd |> SS.compress).n with
-      | Tm_unknown ->
-        let signature_ts = let (us, t, _) = signature in (us, t) in
-        let _, signature_t = Env.inst_tscheme_with signature_ts [U_unknown] in
-        (match (SS.compress signature_t).n with
-         | Tm_arrow {bs} ->
-           let bs = SS.open_binders bs in
-           let repr_t =
-             let repr_ts = let (us, t, _) = repr in (us, t) in
-             Env.inst_tscheme_with repr_ts [U_unknown] |> snd in
-           let repr_t_applied = mk
-             (Tm_app {hd=repr_t;
-                      args=bs |> List.map (fun b -> b.binder_bv) |> List.map S.bv_to_name |> List.map S.as_arg})
-             (Ident.range_of_lid ed.mname) in
-           let f_b = S.null_binder repr_t_applied in
-           [], {U.abs (bs@[f_b]) (f_b.binder_bv |> S.bv_to_name) None
-                with pos=Ident.range_of_lid ed.mname}
-         | _ -> failwith "Impossible!")
-      | _ -> ts in
+    Errors.with_ctx ("While checking the subcomp combinator") (fun () ->
+      let stronger_repr =
+        let ts = ed |> U.get_stronger_repr |> must in
+        match (ts |> snd |> SS.compress).n with
+        | Tm_unknown ->
+          let signature_ts = let (us, t, _) = signature in (us, t) in
+          let _, signature_t = Env.inst_tscheme_with signature_ts [U_unknown] in
+          (match (SS.compress signature_t).n with
+           | Tm_arrow {bs} ->
+             let bs = SS.open_binders bs in
+             let repr_t =
+               let repr_ts = let (us, t, _) = repr in (us, t) in
+               Env.inst_tscheme_with repr_ts [U_unknown] |> snd in
+             let repr_t_applied = mk
+               (Tm_app {hd=repr_t;
+                        args=bs |> List.map (fun b -> b.binder_bv) |> List.map S.bv_to_name |> List.map S.as_arg})
+               (Ident.range_of_lid ed.mname) in
+             let f_b = S.null_binder repr_t_applied in
+             [], {U.abs (bs@[f_b]) (f_b.binder_bv |> S.bv_to_name) None
+                  with pos=Ident.range_of_lid ed.mname}
+           | _ -> failwith "Impossible!")
+        | _ -> ts in
         
-    let r = (snd stronger_repr).pos in
+      let r = (snd stronger_repr).pos in
 
-    let stronger_us, stronger_t, stronger_ty = check_and_gen "stronger_repr" 1 stronger_repr in
+      let stronger_us, stronger_t, stronger_ty = check_and_gen "stronger_repr" 1 stronger_repr in
 
-    if Env.debug env0 <| Options.Other "LayeredEffectsTc" then
-      BU.print2 "stronger combinator typechecked with term: %s and type: %s\n"
-        (Print.tscheme_to_string (stronger_us, stronger_t))
-        (Print.tscheme_to_string (stronger_us, stronger_ty));
+      if Env.debug env0 <| Options.Other "LayeredEffectsTc" then
+        BU.print2 "stronger combinator typechecked with term: %s and type: %s\n"
+          (Print.tscheme_to_string (stronger_us, stronger_t))
+          (Print.tscheme_to_string (stronger_us, stronger_ty));
 
-    let us, ty = SS.open_univ_vars stronger_us stronger_ty in
-    let env = Env.push_univ_vars env0 us in
+      let us, ty = SS.open_univ_vars stronger_us stronger_ty in
+      let env = Env.push_univ_vars env0 us in
 
-    let k, kind =
-      let sig_ts = let us, t, _ = signature in (us, t) in
-      let repr_ts = let us, t, _ = repr in (us, t) in
-      validate_indexed_effect_subcomp_shape env
-        ed.mname ed.mname
-        sig_ts sig_ts
-        (Some repr_ts) (Some repr_ts)
-        (List.hd us)
-        ty
-        num_effect_params
-        r in
+      let k, kind =
+        let sig_ts = let us, t, _ = signature in (us, t) in
+        let repr_ts = let us, t, _ = repr in (us, t) in
+        validate_indexed_effect_subcomp_shape env
+          ed.mname ed.mname
+          sig_ts sig_ts
+          (Some repr_ts) (Some repr_ts)
+          (List.hd us)
+          ty
+          num_effect_params
+          r in
 
-    (stronger_us, stronger_t, k |> SS.close_univ_vars stronger_us), kind in
+      (stronger_us, stronger_t, k |> SS.close_univ_vars stronger_us), kind) in
 
   log_combinator "stronger_repr" stronger_repr;
 
@@ -1457,53 +1463,54 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
    * fun (a:Type) (signature_bs) (f:repr a signature_bs) (g:repr a signature_bs) (b:bool) -> repr a signature_bs
    *)
   let if_then_else, ite_kind =
-    let if_then_else_ts =
-      let ts = ed |> U.get_layered_if_then_else_combinator |> must |> fst in
-      match (ts |> snd |> SS.compress).n with
-      | Tm_unknown ->
-        let signature_ts = let (us, t, _) = signature in (us, t) in
-        let _, signature_t = Env.inst_tscheme_with signature_ts [U_unknown] in
-        (match (SS.compress signature_t).n with
-         | Tm_arrow {bs} ->
-           let bs = SS.open_binders bs in
-           let repr_t =
-             let repr_ts = let (us, t, _) = repr in (us, t) in
-             Env.inst_tscheme_with repr_ts [U_unknown] |> snd in
-           let repr_t_applied = mk
-             (Tm_app {hd=repr_t;
-                      args=bs |> List.map (fun b -> b.binder_bv) |> List.map S.bv_to_name |> List.map S.as_arg})
-             (Ident.range_of_lid ed.mname) in
-           let f_b = S.null_binder repr_t_applied in
-           let g_b = S.null_binder repr_t_applied in
-           let b_b = S.null_binder U.t_bool in
-           [], {U.abs (bs@[f_b; g_b; b_b]) repr_t_applied None
-                with pos=Ident.range_of_lid ed.mname}
-         | _ -> failwith "Impossible!")
-      | _ -> ts in
+    Errors.with_ctx ("While checking the if_then_else combinator") (fun () ->
+      let if_then_else_ts =
+        let ts = ed |> U.get_layered_if_then_else_combinator |> must |> fst in
+        match (ts |> snd |> SS.compress).n with
+        | Tm_unknown ->
+          let signature_ts = let (us, t, _) = signature in (us, t) in
+          let _, signature_t = Env.inst_tscheme_with signature_ts [U_unknown] in
+          (match (SS.compress signature_t).n with
+           | Tm_arrow {bs} ->
+             let bs = SS.open_binders bs in
+             let repr_t =
+               let repr_ts = let (us, t, _) = repr in (us, t) in
+               Env.inst_tscheme_with repr_ts [U_unknown] |> snd in
+             let repr_t_applied = mk
+               (Tm_app {hd=repr_t;
+                        args=bs |> List.map (fun b -> b.binder_bv) |> List.map S.bv_to_name |> List.map S.as_arg})
+               (Ident.range_of_lid ed.mname) in
+             let f_b = S.null_binder repr_t_applied in
+             let g_b = S.null_binder repr_t_applied in
+             let b_b = S.null_binder U.t_bool in
+             [], {U.abs (bs@[f_b; g_b; b_b]) repr_t_applied None
+                  with pos=Ident.range_of_lid ed.mname}
+           | _ -> failwith "Impossible!")
+        | _ -> ts in
 
-    let r = (snd if_then_else_ts).pos in
-    let if_then_else_us, if_then_else_t, if_then_else_ty = check_and_gen "if_then_else" 1 if_then_else_ts in
+      let r = (snd if_then_else_ts).pos in
+      let if_then_else_us, if_then_else_t, if_then_else_ty = check_and_gen "if_then_else" 1 if_then_else_ts in
 
-    let us, t = SS.open_univ_vars if_then_else_us if_then_else_t in
-    let _, ty = SS.open_univ_vars if_then_else_us if_then_else_ty in
-    let env = Env.push_univ_vars env0 us in
+      let us, t = SS.open_univ_vars if_then_else_us if_then_else_t in
+      let _, ty = SS.open_univ_vars if_then_else_us if_then_else_ty in
+      let env = Env.push_univ_vars env0 us in
 
-    let k, kind = 
-      let sig_ts = let us, t, _ = signature in (us, t) in
-      let repr_ts = let us, t, _ = repr in (us, t) in
-      validate_indexed_effect_ite_shape env
-        ed.mname
-        sig_ts
-        repr_ts
-        (List.hd us)
-        ty
-        t
-        num_effect_params
-        r in
+      let k, kind = 
+        let sig_ts = let us, t, _ = signature in (us, t) in
+        let repr_ts = let us, t, _ = repr in (us, t) in
+        validate_indexed_effect_ite_shape env
+          ed.mname
+          sig_ts
+          repr_ts
+          (List.hd us)
+          ty
+          t
+          num_effect_params
+          r in
    
-    (if_then_else_us,
-     k |> SS.close_univ_vars if_then_else_us,
-     if_then_else_ty), kind in
+      (if_then_else_us,
+       k |> SS.close_univ_vars if_then_else_us,
+       if_then_else_ty), kind) in
 
   log_combinator "if_then_else" if_then_else;
 
@@ -1671,21 +1678,22 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
   //   typecheck it only if it is set, else leave it as None
   //
   let close_ =
-    let ts_opt = ed |> U.get_layered_close_combinator in
-    match ts_opt with
-    | None -> None
-    | Some close_ts ->
-      let r = (snd close_ts).pos in
-      let close_us, close_t, close_ty = check_and_gen "close" 2 close_ts in
-      let us, t = SS.open_univ_vars close_us close_t in
-      let env = Env.push_univ_vars env0 us in
-      let k =
-        let sig_ts = let us, t, _ = signature in (us, t) in
-        let repr_ts = let us, t, _ = repr in (us, t) in
-        let [u_a; u_b] = us in
-        validate_indexed_effect_close_shape env ed.mname sig_ts repr_ts u_a u_b t num_effect_params r
-      in
-      Some (close_us, k |> SS.close_univ_vars close_us, close_ty) in
+    Errors.with_ctx ("While checking the close combinator") (fun () ->
+      let ts_opt = ed |> U.get_layered_close_combinator in
+      match ts_opt with
+      | None -> None
+      | Some close_ts ->
+        let r = (snd close_ts).pos in
+        let close_us, close_t, close_ty = check_and_gen "close" 2 close_ts in
+        let us, t = SS.open_univ_vars close_us close_t in
+        let env = Env.push_univ_vars env0 us in
+        let k =
+          let sig_ts = let us, t, _ = signature in (us, t) in
+          let repr_ts = let us, t, _ = repr in (us, t) in
+          let [u_a; u_b] = us in
+          validate_indexed_effect_close_shape env ed.mname sig_ts repr_ts u_a u_b t num_effect_params r
+        in
+        Some (close_us, k |> SS.close_univ_vars close_us, close_ty)) in
   
   //
   // Checking the soundness of the close combinator
@@ -1701,7 +1709,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
   //   substitute them in the subcomp combinator,
   //   and prove its (Pure) precondition
   //
-  let _close_is_sound =
+  let _close_is_sound = Errors.with_ctx ("While checking the soundness of the close combinator") (fun () ->
     match close_ with
     | None -> ()
     | Some close_ ->
@@ -1754,7 +1762,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         subcomp_c.result_typ
         (subcomp_c.effect_args |> List.hd |> fst)
         r in
-      Rel.force_trivial_guard env (fml |> NonTrivial |> Env.guard_of_guard_formula)
+      Rel.force_trivial_guard env (fml |> NonTrivial |> Env.guard_of_guard_formula))
   in
 
   (*
@@ -1885,6 +1893,10 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
 
     act in
 
+  let tc_action_with_ctx env (act:action) =
+    Errors.with_ctx (BU.format1 "While checking the action %s" (string_of_lid act.action_name))
+                    (fun () -> tc_action env act) in
+
   // set extraction mode
   let extraction_mode =
     let has_primitive_extraction =
@@ -1948,7 +1960,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
   { ed with
     signature     = Layered_eff_sig (num_effect_params, (let us, t, _ = signature in (us, t)));
     combinators   = combinators;
-    actions       = List.map (tc_action env0) ed.actions;
+    actions       = List.map (tc_action_with_ctx env0) ed.actions;
     extraction_mode }
   )
 

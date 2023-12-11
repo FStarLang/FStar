@@ -1753,10 +1753,9 @@ let get_norm_request :
       fun args ->
         let parse_steps s =
           let uu___ =
-            let uu___1 =
-              FStar_Syntax_Embeddings.e_list
-                FStar_Syntax_Embeddings.e_norm_step in
-            FStar_TypeChecker_Primops.try_unembed_simple uu___1 s in
+            FStar_TypeChecker_Primops.try_unembed_simple
+              (FStar_Syntax_Embeddings.e_list
+                 FStar_Syntax_Embeddings.e_norm_step) s in
           match uu___ with
           | FStar_Pervasives_Native.Some steps ->
               let uu___1 = FStar_TypeChecker_Cfg.translate_norm_steps steps in
@@ -2186,22 +2185,17 @@ let (should_unfold :
                                        | FStar_Pervasives_Native.None -> no
                                        | FStar_Pervasives_Native.Some
                                            namespaces ->
-                                           let uu___19 =
-                                             FStar_Compiler_Util.for_some
-                                               (fun ns ->
-                                                  let uu___20 =
-                                                    let uu___21 =
-                                                      let uu___22 =
-                                                        FStar_Syntax_Syntax.lid_of_fv
-                                                          fv in
-                                                      FStar_Ident.nsstr
-                                                        uu___22 in
-                                                    Prims.strcat uu___21 "." in
-                                                  FStar_Compiler_Util.starts_with
-                                                    uu___20
-                                                    (Prims.strcat ns "."))
-                                               namespaces in
-                                           yesno uu___19 in
+                                           let p =
+                                             let uu___19 =
+                                               FStar_Syntax_Syntax.lid_of_fv
+                                                 fv in
+                                             FStar_Ident.path_of_lid uu___19 in
+                                           let r =
+                                             FStar_Compiler_Path.search_forest
+                                               (FStar_Class_Ord.ord_eq
+                                                  FStar_Class_Ord.ord_string)
+                                               p namespaces in
+                                           yesno r in
                                      [uu___18] in
                                    uu___16 :: uu___17 in
                                  uu___14 :: uu___15 in
@@ -2293,22 +2287,17 @@ let (should_unfold :
                                        | FStar_Pervasives_Native.None -> no
                                        | FStar_Pervasives_Native.Some
                                            namespaces ->
-                                           let uu___19 =
-                                             FStar_Compiler_Util.for_some
-                                               (fun ns ->
-                                                  let uu___20 =
-                                                    let uu___21 =
-                                                      let uu___22 =
-                                                        FStar_Syntax_Syntax.lid_of_fv
-                                                          fv in
-                                                      FStar_Ident.nsstr
-                                                        uu___22 in
-                                                    Prims.strcat uu___21 "." in
-                                                  FStar_Compiler_Util.starts_with
-                                                    uu___20
-                                                    (Prims.strcat ns "."))
-                                               namespaces in
-                                           yesno uu___19 in
+                                           let p =
+                                             let uu___19 =
+                                               FStar_Syntax_Syntax.lid_of_fv
+                                                 fv in
+                                             FStar_Ident.path_of_lid uu___19 in
+                                           let r =
+                                             FStar_Compiler_Path.search_forest
+                                               (FStar_Class_Ord.ord_eq
+                                                  FStar_Class_Ord.ord_string)
+                                               p namespaces in
+                                           yesno r in
                                      [uu___18] in
                                    uu___16 :: uu___17 in
                                  uu___14 :: uu___15 in
@@ -2400,22 +2389,17 @@ let (should_unfold :
                                        | FStar_Pervasives_Native.None -> no
                                        | FStar_Pervasives_Native.Some
                                            namespaces ->
-                                           let uu___19 =
-                                             FStar_Compiler_Util.for_some
-                                               (fun ns ->
-                                                  let uu___20 =
-                                                    let uu___21 =
-                                                      let uu___22 =
-                                                        FStar_Syntax_Syntax.lid_of_fv
-                                                          fv in
-                                                      FStar_Ident.nsstr
-                                                        uu___22 in
-                                                    Prims.strcat uu___21 "." in
-                                                  FStar_Compiler_Util.starts_with
-                                                    uu___20
-                                                    (Prims.strcat ns "."))
-                                               namespaces in
-                                           yesno uu___19 in
+                                           let p =
+                                             let uu___19 =
+                                               FStar_Syntax_Syntax.lid_of_fv
+                                                 fv in
+                                             FStar_Ident.path_of_lid uu___19 in
+                                           let r =
+                                             FStar_Compiler_Path.search_forest
+                                               (FStar_Class_Ord.ord_eq
+                                                  FStar_Class_Ord.ord_string)
+                                               p namespaces in
+                                           yesno r in
                                      [uu___18] in
                                    uu___16 :: uu___17 in
                                  uu___14 :: uu___15 in
@@ -2507,22 +2491,17 @@ let (should_unfold :
                                        | FStar_Pervasives_Native.None -> no
                                        | FStar_Pervasives_Native.Some
                                            namespaces ->
-                                           let uu___19 =
-                                             FStar_Compiler_Util.for_some
-                                               (fun ns ->
-                                                  let uu___20 =
-                                                    let uu___21 =
-                                                      let uu___22 =
-                                                        FStar_Syntax_Syntax.lid_of_fv
-                                                          fv in
-                                                      FStar_Ident.nsstr
-                                                        uu___22 in
-                                                    Prims.strcat uu___21 "." in
-                                                  FStar_Compiler_Util.starts_with
-                                                    uu___20
-                                                    (Prims.strcat ns "."))
-                                               namespaces in
-                                           yesno uu___19 in
+                                           let p =
+                                             let uu___19 =
+                                               FStar_Syntax_Syntax.lid_of_fv
+                                                 fv in
+                                             FStar_Ident.path_of_lid uu___19 in
+                                           let r =
+                                             FStar_Compiler_Path.search_forest
+                                               (FStar_Class_Ord.ord_eq
+                                                  FStar_Class_Ord.ord_string)
+                                               p namespaces in
+                                           yesno r in
                                      [uu___18] in
                                    uu___16 :: uu___17 in
                                  uu___14 :: uu___15 in
@@ -2614,22 +2593,17 @@ let (should_unfold :
                                        | FStar_Pervasives_Native.None -> no
                                        | FStar_Pervasives_Native.Some
                                            namespaces ->
-                                           let uu___19 =
-                                             FStar_Compiler_Util.for_some
-                                               (fun ns ->
-                                                  let uu___20 =
-                                                    let uu___21 =
-                                                      let uu___22 =
-                                                        FStar_Syntax_Syntax.lid_of_fv
-                                                          fv in
-                                                      FStar_Ident.nsstr
-                                                        uu___22 in
-                                                    Prims.strcat uu___21 "." in
-                                                  FStar_Compiler_Util.starts_with
-                                                    uu___20
-                                                    (Prims.strcat ns "."))
-                                               namespaces in
-                                           yesno uu___19 in
+                                           let p =
+                                             let uu___19 =
+                                               FStar_Syntax_Syntax.lid_of_fv
+                                                 fv in
+                                             FStar_Ident.path_of_lid uu___19 in
+                                           let r =
+                                             FStar_Compiler_Path.search_forest
+                                               (FStar_Class_Ord.ord_eq
+                                                  FStar_Class_Ord.ord_string)
+                                               p namespaces in
+                                           yesno r in
                                      [uu___18] in
                                    uu___16 :: uu___17 in
                                  uu___14 :: uu___15 in

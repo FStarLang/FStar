@@ -136,18 +136,19 @@ let term_as_fv t =
     | Tm_fvar fv -> fv
     | _ -> failwith (BU.format1 "Embeddings not defined for type %s" (Print.term_to_string t))
 
-let lazy_embed (pa:printer 'a) (et:emb_typ) rng (ta:term) (x:'a) (f:unit -> term) =
+let lazy_embed (pa:printer 'a) (et:unit -> emb_typ) rng (ta: unit -> term) (x:'a) (f:unit -> term) =
     if !Options.debug_embedding
     then BU.print3 "Embedding a %s\n\temb_typ=%s\n\tvalue is %s\n"
-                         (show ta)
-                         (show et)
+                         (show (ta ()))
+                         (show (et ()))
                          (pa x);
     if !Options.eager_embedding
     then f()
     else let thunk = Thunk.mk f in
-         U.mk_lazy x S.tun (Lazy_embedding (et, thunk)) (Some rng)
+         U.mk_lazy x S.tun (Lazy_embedding (et (), thunk)) (Some rng)
 
-let lazy_unembed (pa:printer 'a) (et:emb_typ) (x:term) (ta:term) (f:term -> option 'a) : option 'a =
+let lazy_unembed (pa:printer 'a) (et: unit -> emb_typ) (x:term) (ta: unit -> term) (f:term -> option 'a) : option 'a =
+    let et = et () in
     let x = unmeta_div_results x in
     match x.n with
     | Tm_lazy {blob=b; lkind=Lazy_embedding (et', t)}  ->
@@ -192,9 +193,9 @@ let mk_any_emb typ =
     mk_emb_full
         em
         un
-        typ
+        (fun () -> typ)
         (unknown_printer typ)
-        ET_abstract
+        (fun () -> ET_abstract)
 
 let e_any =
     let em = fun t _r _shadow _norm -> t in
@@ -202,9 +203,9 @@ let e_any =
     mk_emb_full
         em
         un
-        S.t_term
+        (fun () -> S.t_term)
         Print.term_to_string
-        (ET_app (PC.term_lid |> Ident.string_of_lid, []))
+        (fun () -> ET_app (PC.term_lid |> Ident.string_of_lid, []))
 
 let e_unit =
     let em (u:unit) rng _shadow _norm : term = { U.exp_unit with pos = rng } in
@@ -217,9 +218,9 @@ let e_unit =
     mk_emb_full
         em
         un
-        S.t_unit
+        (fun () -> S.t_unit)
         (fun _ -> "()")
-        (ET_app(PC.unit_lid |> Ident.string_of_lid, []))
+        (fun () -> ET_app(PC.unit_lid |> Ident.string_of_lid, []))
 
 let e_bool =
     let em (b:bool) rng _shadow _norm : term =
@@ -234,9 +235,9 @@ let e_bool =
     mk_emb_full
         em
         un
-        S.t_bool
+        (fun () -> S.t_bool)
         BU.string_of_bool
-        (ET_app(PC.bool_lid |> Ident.string_of_lid, []))
+        (fun () -> ET_app(PC.bool_lid |> Ident.string_of_lid, []))
 
 let e_char =
     let em (c:char) (rng:range) _shadow _norm : term =
@@ -251,9 +252,9 @@ let e_char =
     mk_emb_full
         em
         un
-        S.t_char
+        (fun () -> S.t_char)
         BU.string_of_char
-        (ET_app(PC.char_lid |> Ident.string_of_lid, []))
+        (fun () -> ET_app(PC.char_lid |> Ident.string_of_lid, []))
 
 let e_int =
     let ty = S.t_int in
@@ -261,18 +262,18 @@ let e_int =
     let em (i:Z.t) (rng:range) _shadow _norm : term =
         lazy_embed
             BigInt.string_of_big_int
-            emb_t_int
+            (fun () -> emb_t_int)
             rng
-            ty
+            (fun () -> ty)
             i
             (fun () -> U.exp_int (Z.string_of_big_int i))
     in
     let un (t:term) _norm : option Z.t =
         lazy_unembed
             BigInt.string_of_big_int
-            emb_t_int
+            (fun () -> emb_t_int)
             t
-            ty
+            (fun () -> ty)
             (fun t ->
                 match t.n with
                 | Tm_constant(FStar.Const.Const_int (s, _)) -> Some (Z.big_int_of_string s)
@@ -281,9 +282,9 @@ let e_int =
     mk_emb_full
         em
         un
-        ty
+        (fun () -> ty)
         BigInt.string_of_big_int
-        emb_t_int
+        (fun () -> emb_t_int)
 
 let e_fsint = embed_as e_int Z.to_int_fs Z.of_int_fs None
 
@@ -301,22 +302,22 @@ let e_string =
     mk_emb_full
         em
         un
-        S.t_string
+        (fun () -> S.t_string)
         (fun x -> "\"" ^ x ^ "\"")
-        emb_t_string
+        (fun () -> emb_t_string)
 
-let e_option (ea : embedding 'a) =
-    let typ = S.t_option_of (type_of ea) in
-    let emb_t_option_a =
-        ET_app(PC.option_lid |> Ident.string_of_lid, [emb_typ_of ea])
+let e_option (ea : embedding 'a) : Tot _ =
+    let typ () = S.t_option_of (type_of ea) in
+    let emb_t_option_a () =
+        ET_app(PC.option_lid |> Ident.string_of_lid, [emb_typ_of 'a ()])
     in
-    let printer = FStar.Common.string_of_option (printer_of ea) in
+    let printer x = FStar.Common.string_of_option (printer_of ea) x in
     let em (o:option 'a) (rng:range) shadow norm : term =
         lazy_embed
             printer
             emb_t_option_a
             rng
-            typ
+            (fun () -> S.t_option_of (type_of ea))
             o
             (fun () ->
                 match o with
@@ -334,7 +335,7 @@ let e_option (ea : embedding 'a) =
                                 rng)
                   in
                   S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.some_lid) [U_zero])
-                              [S.iarg (type_of ea); S.as_arg (embed ea a rng shadow_a norm)]
+                              [S.iarg (type_of ea); S.as_arg (embed a rng shadow_a norm)]
                               rng)
     in
     let un (t:term)  norm : option (option 'a) =
@@ -342,13 +343,13 @@ let e_option (ea : embedding 'a) =
             printer
             emb_t_option_a
             t
-            typ
+            (fun () -> S.t_option_of (type_of ea))
             (fun t ->
                 let hd, args = U.head_and_args_full t in
                 match (U.un_uinst hd).n, args with
                 | Tm_fvar fv, _ when S.fv_eq_lid fv PC.none_lid -> Some None
                 | Tm_fvar fv, [_; (a, _)] when S.fv_eq_lid fv PC.some_lid ->
-                     BU.bind_opt (try_unembed ea a norm) (fun a -> Some (Some a))
+                     BU.bind_opt (try_unembed a norm) (fun a -> Some (Some a))
                 | _ -> None)
     in
     mk_emb_full
@@ -359,9 +360,9 @@ let e_option (ea : embedding 'a) =
         emb_t_option_a
 
 let e_tuple2 (ea:embedding 'a) (eb:embedding 'b) =
-    let typ = S.t_tuple2_of (type_of ea) (type_of eb) in
-    let emb_t_pair_a_b =
-        ET_app(PC.lid_tuple2 |> Ident.string_of_lid, [emb_typ_of ea; emb_typ_of eb])
+    let typ () = S.t_tuple2_of (type_of ea) (type_of eb) in
+    let emb_t_pair_a_b () =
+        ET_app(PC.lid_tuple2 |> Ident.string_of_lid, [emb_typ_of 'a (); emb_typ_of 'b ()])
     in
     let printer (x, y) =
         BU.format2 "(%s, %s)" (printer_of ea x) (printer_of eb y)
@@ -388,8 +389,8 @@ let e_tuple2 (ea:embedding 'a) (eb:embedding 'b) =
                 S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.lid_Mktuple2) [U_zero;U_zero])
                             [S.iarg (type_of ea);
                              S.iarg (type_of eb);
-                             S.as_arg (embed ea (fst x) rng shadow_a norm);
-                             S.as_arg (embed eb (snd x) rng shadow_b norm)]
+                             S.as_arg (embed (fst x) rng shadow_a norm);
+                             S.as_arg (embed (snd x) rng shadow_b norm)]
                             rng)
     in
     let un (t:term)  norm : option ('a * 'b) =
@@ -402,8 +403,8 @@ let e_tuple2 (ea:embedding 'a) (eb:embedding 'b) =
                 let hd, args = U.head_and_args_full t in
                 match (U.un_uinst hd).n, args with
                 | Tm_fvar fv, [_; _; (a, _); (b, _)] when S.fv_eq_lid fv PC.lid_Mktuple2 ->
-                    BU.bind_opt (try_unembed ea a norm) (fun a ->
-                    BU.bind_opt (try_unembed eb b norm) (fun b ->
+                    BU.bind_opt (try_unembed a norm) (fun a ->
+                    BU.bind_opt (try_unembed b norm) (fun b ->
                     Some (a, b)))
                 | _ -> None)
     in
@@ -415,9 +416,9 @@ let e_tuple2 (ea:embedding 'a) (eb:embedding 'b) =
         emb_t_pair_a_b
 
 let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
-    let typ = S.t_tuple3_of (type_of ea) (type_of eb) (type_of ec) in
-    let emb_t_pair_a_b_c =
-        ET_app(PC.lid_tuple3 |> Ident.string_of_lid, [emb_typ_of ea; emb_typ_of eb; emb_typ_of ec])
+    let typ () = S.t_tuple3_of (type_of ea) (type_of eb) (type_of ec) in
+    let emb_t_pair_a_b_c () =
+        ET_app(PC.lid_tuple3 |> Ident.string_of_lid, [emb_typ_of 'a (); emb_typ_of 'b (); emb_typ_of 'c ()])
     in
     let printer (x, y, z) =
         BU.format3 "(%s, %s, %s)" (printer_of ea x) (printer_of eb y) (printer_of ec z)
@@ -447,9 +448,9 @@ let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
                             [S.iarg (type_of ea);
                              S.iarg (type_of eb);
                              S.iarg (type_of ec);
-                             S.as_arg (embed ea x1 rng shadow_a norm);
-                             S.as_arg (embed eb x2 rng shadow_b norm);
-                             S.as_arg (embed ec x3 rng shadow_c norm)]
+                             S.as_arg (embed x1 rng shadow_a norm);
+                             S.as_arg (embed x2 rng shadow_b norm);
+                             S.as_arg (embed x3 rng shadow_c norm)]
                             rng)
     in
     let un (t:term) norm : option ('a * 'b * 'c) =
@@ -462,9 +463,9 @@ let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
                 let hd, args = U.head_and_args_full t in
                 match (U.un_uinst hd).n, args with
                 | Tm_fvar fv, [_; _; _; (a, _); (b, _); (c, _)] when S.fv_eq_lid fv PC.lid_Mktuple3 ->
-                    BU.bind_opt (try_unembed ea a norm) (fun a ->
-                    BU.bind_opt (try_unembed eb b norm) (fun b ->
-                    BU.bind_opt (try_unembed ec c norm) (fun c ->
+                    BU.bind_opt (try_unembed a norm) (fun a ->
+                    BU.bind_opt (try_unembed b norm) (fun b ->
+                    BU.bind_opt (try_unembed c norm) (fun c ->
                     Some (a, b, c))))
                 | _ -> None)
     in
@@ -476,9 +477,9 @@ let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
         emb_t_pair_a_b_c
 
 let e_either (ea:embedding 'a) (eb:embedding 'b) =
-    let typ = S.t_either_of (type_of ea) (type_of eb) in
-    let emb_t_sum_a_b =
-        ET_app(PC.either_lid |> Ident.string_of_lid, [emb_typ_of ea; emb_typ_of eb])
+    let typ () = S.t_either_of (type_of ea) (type_of eb) in
+    let emb_t_sum_a_b () =
+        ET_app(PC.either_lid |> Ident.string_of_lid, [emb_typ_of 'a (); emb_typ_of 'b ()])
     in
     let printer s =
         match s with
@@ -507,7 +508,7 @@ let e_either (ea:embedding 'a) (eb:embedding 'b) =
                 S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.inl_lid) [U_zero;U_zero])
                             [S.iarg (type_of ea);
                              S.iarg (type_of eb);
-                             S.as_arg (embed ea a rng shadow_a norm)]
+                             S.as_arg (embed a rng shadow_a norm)]
                             rng)
              | Inr b ->
                 (fun () ->
@@ -522,7 +523,7 @@ let e_either (ea:embedding 'a) (eb:embedding 'b) =
                 S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.inr_lid) [U_zero;U_zero])
                             [S.iarg (type_of ea);
                              S.iarg (type_of eb);
-                             S.as_arg (embed eb b rng shadow_b norm)]
+                             S.as_arg (embed b rng shadow_b norm)]
                             rng)
              )
     in
@@ -536,10 +537,10 @@ let e_either (ea:embedding 'a) (eb:embedding 'b) =
                 let hd, args = U.head_and_args_full t in
                 match (U.un_uinst hd).n, args with
                 | Tm_fvar fv, [_; _; (a, _)] when S.fv_eq_lid fv PC.inl_lid ->
-                    BU.bind_opt (try_unembed ea a norm) (fun a ->
+                    BU.bind_opt (try_unembed a norm) (fun a ->
                     Some (Inl a))
                 | Tm_fvar fv, [_; _; (b, _)] when S.fv_eq_lid fv PC.inr_lid ->
-                    BU.bind_opt (try_unembed eb b norm) (fun b ->
+                    BU.bind_opt (try_unembed b norm) (fun b ->
                     Some (Inr b))
                 | _ ->
                     None)
@@ -552,9 +553,9 @@ let e_either (ea:embedding 'a) (eb:embedding 'b) =
         emb_t_sum_a_b
 
 let e_list (ea:embedding 'a) =
-    let typ = S.t_list_of (type_of ea) in
-    let emb_t_list_a =
-        ET_app(PC.list_lid |> Ident.string_of_lid, [emb_typ_of ea])
+    let typ () = S.t_list_of (type_of ea) in
+    let emb_t_list_a () =
+        ET_app(PC.list_lid |> Ident.string_of_lid, [emb_typ_of 'a ()])
     in
     let printer =
         (fun (l:list 'a) -> "[" ^ (List.map (printer_of ea) l |> String.concat "; ") ^ "]")
@@ -590,7 +591,7 @@ let e_list (ea:embedding 'a) =
                   let shadow_tl = map_shadow shadow_l (proj "tl") in
                   S.mk_Tm_app cons
                               [t;
-                               S.as_arg (embed ea hd rng shadow_hd norm);
+                               S.as_arg (embed hd rng shadow_hd norm);
                                S.as_arg (em tl rng shadow_tl norm)]
                               rng)
     in
@@ -609,7 +610,7 @@ let e_list (ea:embedding 'a) =
                 | Tm_fvar fv, [(_, Some ({aqual_implicit=true})); (hd, None); (tl, None)]
                 | Tm_fvar fv, [(hd, None); (tl, None)]
                     when S.fv_eq_lid fv PC.cons_lid ->
-                    BU.bind_opt (try_unembed ea hd norm) (fun hd ->
+                    BU.bind_opt (try_unembed hd norm) (fun hd ->
                     BU.bind_opt (un tl norm) (fun tl ->
                     Some (hd :: tl)))
                 | _ ->
@@ -645,8 +646,8 @@ let steps_NBE           = tconst PC.steps_nbe
 let steps_Unmeta        = tconst PC.steps_unmeta
 
 let e_norm_step : embedding Pervasives.norm_step =
-    let typ = S.t_norm_step in
-    let emb_t_norm_step = ET_app (PC.norm_step_lid |> Ident.string_of_lid, []) in
+    let typ () = S.t_norm_step in
+    let emb_t_norm_step () = ET_app (PC.norm_step_lid |> Ident.string_of_lid, []) in
     let printer _ = "norm_step" in
     let em (n:Pervasives.norm_step) (rng:range) _shadow norm : term =
         lazy_embed
@@ -684,19 +685,19 @@ let e_norm_step : embedding Pervasives.norm_step =
                 | NormDebug ->
                     steps_NormDebug
                 | UnfoldOnly l ->
-                    S.mk_Tm_app steps_UnfoldOnly [S.as_arg (embed (e_list e_string) l rng None norm)]
+                    S.mk_Tm_app steps_UnfoldOnly [S.as_arg (embed l rng None norm)]
                                 rng
                 | UnfoldFully l ->
-                    S.mk_Tm_app steps_UnfoldFully [S.as_arg (embed (e_list e_string) l rng None norm)]
+                    S.mk_Tm_app steps_UnfoldFully [S.as_arg (embed l rng None norm)]
                                 rng
                 | UnfoldAttr l ->
-                    S.mk_Tm_app steps_UnfoldAttr [S.as_arg (embed (e_list e_string) l rng None norm)]
+                    S.mk_Tm_app steps_UnfoldAttr [S.as_arg (embed l rng None norm)]
                                 rng
                 | UnfoldQual l ->
-                    S.mk_Tm_app steps_UnfoldQual [S.as_arg (embed (e_list e_string) l rng None norm)]
+                    S.mk_Tm_app steps_UnfoldQual [S.as_arg (embed l rng None norm)]
                                 rng
                 | UnfoldNamespace l ->
-                    S.mk_Tm_app steps_UnfoldNamespace [S.as_arg (embed (e_list e_string) l rng None norm)]
+                    S.mk_Tm_app steps_UnfoldNamespace [S.as_arg (embed l rng None norm)]
                                 rng
 
 
@@ -738,19 +739,19 @@ let e_norm_step : embedding Pervasives.norm_step =
                 | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_norm_debug ->
                     Some NormDebug
                 | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldonly ->
-                    BU.bind_opt (try_unembed (e_list e_string) l norm) (fun ss ->
+                    BU.bind_opt (try_unembed l norm) (fun ss ->
                     Some <| UnfoldOnly ss)
                 | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldfully ->
-                    BU.bind_opt (try_unembed (e_list e_string) l norm) (fun ss ->
+                    BU.bind_opt (try_unembed l norm) (fun ss ->
                     Some <| UnfoldFully ss)
                 | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldattr ->
-                    BU.bind_opt (try_unembed (e_list e_string) l norm) (fun ss ->
+                    BU.bind_opt (try_unembed l norm) (fun ss ->
                     Some <| UnfoldAttr ss)
                 | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldqual ->
-                    BU.bind_opt (try_unembed (e_list e_string) l norm) (fun ss ->
+                    BU.bind_opt (try_unembed l norm) (fun ss ->
                     Some <| UnfoldQual ss)
                 | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldnamespace ->
-                    BU.bind_opt (try_unembed (e_list e_string) l norm) (fun ss ->
+                    BU.bind_opt (try_unembed l norm) (fun ss ->
                     Some <| UnfoldNamespace ss)
                 | _ -> None)
     in
@@ -765,34 +766,34 @@ let e_vconfig =
     let em (vcfg:vconfig) (rng:Range.range) _shadow norm : term =
       (* The order is very important here, even if this is a record. *)
       S.mk_Tm_app (tdataconstr PC.mkvconfig_lid) // TODO: should this be a record constructor? does it matter?
-                  [S.as_arg (embed e_fsint             vcfg.initial_fuel                              rng None norm);
-                   S.as_arg (embed e_fsint             vcfg.max_fuel                                  rng None norm);
-                   S.as_arg (embed e_fsint             vcfg.initial_ifuel                             rng None norm);
-                   S.as_arg (embed e_fsint             vcfg.max_ifuel                                 rng None norm);
-                   S.as_arg (embed e_bool              vcfg.detail_errors                             rng None norm);
-                   S.as_arg (embed e_bool              vcfg.detail_hint_replay                        rng None norm);
-                   S.as_arg (embed e_bool              vcfg.no_smt                                    rng None norm);
-                   S.as_arg (embed e_fsint             vcfg.quake_lo                                  rng None norm);
-                   S.as_arg (embed e_fsint             vcfg.quake_hi                                  rng None norm);
-                   S.as_arg (embed e_bool              vcfg.quake_keep                                rng None norm);
-                   S.as_arg (embed e_bool              vcfg.retry                                     rng None norm);
-                   S.as_arg (embed e_bool              vcfg.smtencoding_elim_box                      rng None norm);
-                   S.as_arg (embed e_string            vcfg.smtencoding_nl_arith_repr                 rng None norm);
-                   S.as_arg (embed e_string            vcfg.smtencoding_l_arith_repr                  rng None norm);
-                   S.as_arg (embed e_bool              vcfg.smtencoding_valid_intro                   rng None norm);
-                   S.as_arg (embed e_bool              vcfg.smtencoding_valid_elim                    rng None norm);
-                   S.as_arg (embed e_bool              vcfg.tcnorm                                    rng None norm);
-                   S.as_arg (embed e_bool              vcfg.no_plugins                                rng None norm);
-                   S.as_arg (embed e_bool              vcfg.no_tactics                                rng None norm);
-                   S.as_arg (embed e_string_list       vcfg.z3cliopt                                  rng None norm);
-                   S.as_arg (embed e_string_list       vcfg.z3smtopt                                  rng None norm);
-                   S.as_arg (embed e_bool              vcfg.z3refresh                                 rng None norm);
-                   S.as_arg (embed e_fsint             vcfg.z3rlimit                                  rng None norm);
-                   S.as_arg (embed e_fsint             vcfg.z3rlimit_factor                           rng None norm);
-                   S.as_arg (embed e_fsint             vcfg.z3seed                                    rng None norm);
-                   S.as_arg (embed e_string            vcfg.z3version                                 rng None norm);
-                   S.as_arg (embed e_bool              vcfg.trivial_pre_for_unannotated_effectful_fns rng None norm);
-                   S.as_arg (embed (e_option e_string) vcfg.reuse_hint_for                            rng None norm);
+                  [S.as_arg (embed vcfg.initial_fuel                              rng None norm);
+                   S.as_arg (embed vcfg.max_fuel                                  rng None norm);
+                   S.as_arg (embed vcfg.initial_ifuel                             rng None norm);
+                   S.as_arg (embed vcfg.max_ifuel                                 rng None norm);
+                   S.as_arg (embed vcfg.detail_errors                             rng None norm);
+                   S.as_arg (embed vcfg.detail_hint_replay                        rng None norm);
+                   S.as_arg (embed vcfg.no_smt                                    rng None norm);
+                   S.as_arg (embed vcfg.quake_lo                                  rng None norm);
+                   S.as_arg (embed vcfg.quake_hi                                  rng None norm);
+                   S.as_arg (embed vcfg.quake_keep                                rng None norm);
+                   S.as_arg (embed vcfg.retry                                     rng None norm);
+                   S.as_arg (embed vcfg.smtencoding_elim_box                      rng None norm);
+                   S.as_arg (embed vcfg.smtencoding_nl_arith_repr                 rng None norm);
+                   S.as_arg (embed vcfg.smtencoding_l_arith_repr                  rng None norm);
+                   S.as_arg (embed vcfg.smtencoding_valid_intro                   rng None norm);
+                   S.as_arg (embed vcfg.smtencoding_valid_elim                    rng None norm);
+                   S.as_arg (embed vcfg.tcnorm                                    rng None norm);
+                   S.as_arg (embed vcfg.no_plugins                                rng None norm);
+                   S.as_arg (embed vcfg.no_tactics                                rng None norm);
+                   S.as_arg (embed vcfg.z3cliopt                                  rng None norm);
+                   S.as_arg (embed vcfg.z3smtopt                                  rng None norm);
+                   S.as_arg (embed vcfg.z3refresh                                 rng None norm);
+                   S.as_arg (embed vcfg.z3rlimit                                  rng None norm);
+                   S.as_arg (embed vcfg.z3rlimit_factor                           rng None norm);
+                   S.as_arg (embed vcfg.z3seed                                    rng None norm);
+                   S.as_arg (embed vcfg.z3version                                 rng None norm);
+                   S.as_arg (embed vcfg.trivial_pre_for_unannotated_effectful_fns rng None norm);
+                   S.as_arg (embed vcfg.reuse_hint_for                            rng None norm);
                   ]
                   rng
     in
@@ -830,34 +831,34 @@ let e_vconfig =
             (trivial_pre_for_unannotated_effectful_fns, _);
             (reuse_hint_for, _)
             ] when S.fv_eq_lid fv PC.mkvconfig_lid ->
-                  BU.bind_opt (try_unembed e_fsint             initial_fuel norm) (fun initial_fuel ->
-                  BU.bind_opt (try_unembed e_fsint             max_fuel norm) (fun max_fuel ->
-                  BU.bind_opt (try_unembed e_fsint             initial_ifuel norm) (fun initial_ifuel ->
-                  BU.bind_opt (try_unembed e_fsint             max_ifuel norm) (fun max_ifuel ->
-                  BU.bind_opt (try_unembed e_bool              detail_errors norm) (fun detail_errors ->
-                  BU.bind_opt (try_unembed e_bool              detail_hint_replay norm) (fun detail_hint_replay ->
-                  BU.bind_opt (try_unembed e_bool              no_smt norm) (fun no_smt ->
-                  BU.bind_opt (try_unembed e_fsint             quake_lo norm) (fun quake_lo ->
-                  BU.bind_opt (try_unembed e_fsint             quake_hi norm) (fun quake_hi ->
-                  BU.bind_opt (try_unembed e_bool              quake_keep norm) (fun quake_keep ->
-                  BU.bind_opt (try_unembed e_bool              retry norm) (fun retry ->
-                  BU.bind_opt (try_unembed e_bool              smtencoding_elim_box norm) (fun smtencoding_elim_box ->
-                  BU.bind_opt (try_unembed e_string            smtencoding_nl_arith_repr norm) (fun smtencoding_nl_arith_repr ->
-                  BU.bind_opt (try_unembed e_string            smtencoding_l_arith_repr norm) (fun smtencoding_l_arith_repr ->
-                  BU.bind_opt (try_unembed e_bool              smtencoding_valid_intro norm) (fun smtencoding_valid_intro ->
-                  BU.bind_opt (try_unembed e_bool              smtencoding_valid_elim norm) (fun smtencoding_valid_elim ->
-                  BU.bind_opt (try_unembed e_bool              tcnorm norm) (fun tcnorm ->
-                  BU.bind_opt (try_unembed e_bool              no_plugins norm) (fun no_plugins ->
-                  BU.bind_opt (try_unembed e_bool              no_tactics norm) (fun no_tactics ->
-                  BU.bind_opt (try_unembed e_string_list       z3cliopt norm) (fun z3cliopt ->
-                  BU.bind_opt (try_unembed e_string_list       z3smtopt norm) (fun z3smtopt ->
-                  BU.bind_opt (try_unembed e_bool              z3refresh norm) (fun z3refresh ->
-                  BU.bind_opt (try_unembed e_fsint             z3rlimit norm) (fun z3rlimit ->
-                  BU.bind_opt (try_unembed e_fsint             z3rlimit_factor norm) (fun z3rlimit_factor ->
-                  BU.bind_opt (try_unembed e_fsint             z3seed norm) (fun z3seed ->
-                  BU.bind_opt (try_unembed e_string            z3version norm) (fun z3version ->
-                  BU.bind_opt (try_unembed e_bool              trivial_pre_for_unannotated_effectful_fns norm) (fun trivial_pre_for_unannotated_effectful_fns ->
-                  BU.bind_opt (try_unembed (e_option e_string) reuse_hint_for norm) (fun reuse_hint_for ->
+                  BU.bind_opt (try_unembed initial_fuel norm) (fun initial_fuel ->
+                  BU.bind_opt (try_unembed max_fuel norm) (fun max_fuel ->
+                  BU.bind_opt (try_unembed initial_ifuel norm) (fun initial_ifuel ->
+                  BU.bind_opt (try_unembed max_ifuel norm) (fun max_ifuel ->
+                  BU.bind_opt (try_unembed detail_errors norm) (fun detail_errors ->
+                  BU.bind_opt (try_unembed detail_hint_replay norm) (fun detail_hint_replay ->
+                  BU.bind_opt (try_unembed no_smt norm) (fun no_smt ->
+                  BU.bind_opt (try_unembed quake_lo norm) (fun quake_lo ->
+                  BU.bind_opt (try_unembed quake_hi norm) (fun quake_hi ->
+                  BU.bind_opt (try_unembed quake_keep norm) (fun quake_keep ->
+                  BU.bind_opt (try_unembed retry norm) (fun retry ->
+                  BU.bind_opt (try_unembed smtencoding_elim_box norm) (fun smtencoding_elim_box ->
+                  BU.bind_opt (try_unembed smtencoding_nl_arith_repr norm) (fun smtencoding_nl_arith_repr ->
+                  BU.bind_opt (try_unembed smtencoding_l_arith_repr norm) (fun smtencoding_l_arith_repr ->
+                  BU.bind_opt (try_unembed smtencoding_valid_intro norm) (fun smtencoding_valid_intro ->
+                  BU.bind_opt (try_unembed smtencoding_valid_elim norm) (fun smtencoding_valid_elim ->
+                  BU.bind_opt (try_unembed tcnorm norm) (fun tcnorm ->
+                  BU.bind_opt (try_unembed no_plugins norm) (fun no_plugins ->
+                  BU.bind_opt (try_unembed no_tactics norm) (fun no_tactics ->
+                  BU.bind_opt (try_unembed z3cliopt norm) (fun z3cliopt ->
+                  BU.bind_opt (try_unembed z3smtopt norm) (fun z3smtopt ->
+                  BU.bind_opt (try_unembed z3refresh norm) (fun z3refresh ->
+                  BU.bind_opt (try_unembed z3rlimit norm) (fun z3rlimit ->
+                  BU.bind_opt (try_unembed z3rlimit_factor norm) (fun z3rlimit_factor ->
+                  BU.bind_opt (try_unembed z3seed norm) (fun z3seed ->
+                  BU.bind_opt (try_unembed z3version norm) (fun z3version ->
+                  BU.bind_opt (try_unembed trivial_pre_for_unannotated_effectful_fns norm) (fun trivial_pre_for_unannotated_effectful_fns ->
+                  BU.bind_opt (try_unembed reuse_hint_for norm) (fun reuse_hint_for ->
                   Some ({
                     initial_fuel = initial_fuel;
                     max_fuel = max_fuel;
@@ -894,22 +895,22 @@ let e_vconfig =
     mk_emb_full
         em
         un
-        S.t_vconfig
+        (fun () -> S.t_vconfig)
         (fun _ -> "vconfig")
-        (ET_app (PC.vconfig_lid |> Ident.string_of_lid, []))
+        (fun () -> ET_app (PC.vconfig_lid |> Ident.string_of_lid, []))
 
 let or_else (f: option 'a) (g:unit -> 'a) =
     match f with
     | Some x -> x
     | None -> g ()
 
-let e_arrow (ea:embedding 'a) (eb:embedding 'b) : embedding ('a -> 'b) =
-    let typ =
+let e_arrow (ea:embedding 'a) (eb:embedding 'b) : Tot (embedding ('a -> 'b)) =
+    let typ () =
         S.mk (Tm_arrow {bs=[S.mk_binder (S.null_bv (type_of ea))];
                         comp=S.mk_Total (type_of eb)})
               Range.dummyRange
     in
-    let emb_t_arr_a_b = ET_fun(emb_typ_of ea, emb_typ_of eb) in
+    let emb_t_arr_a_b () = ET_fun(emb_typ_of 'a (), emb_typ_of 'b ()) in
     let printer (f:'a -> 'b) = "<fun>" in
     let em (f:'a -> 'b) rng shadow_f norm =
         // let f_wrapped (x:term) =
@@ -958,9 +959,9 @@ let e_arrow (ea:embedding 'a) (eb:embedding 'b) : embedding ('a -> 'b) =
                     BU.print2 "Calling back into normalizer for %s\n%s\n"
                               (Print.term_to_string f)
                               (BU.stack_dump());
-                    let a_tm = embed ea a f.pos None norm in
+                    let a_tm = embed a f.pos None norm in
                     let b_tm = norm (Inr (S.mk_Tm_app f [S.as_arg a_tm] f.pos)) in
-                    match unembed eb b_tm norm with
+                    match unembed b_tm norm with
                     | None -> raise Unembedding_failure
                     | Some b -> b
                 in
@@ -973,10 +974,10 @@ let e_arrow (ea:embedding 'a) (eb:embedding 'b) : embedding ('a -> 'b) =
         printer
         emb_t_arr_a_b
 
-let e_sealed (ea : embedding 'a) : embedding 'a =
-    let typ = S.t_sealed_of (type_of ea) in
-    let emb_ty_a =
-        ET_app(PC.sealed_lid |> Ident.string_of_lid, [emb_typ_of ea])
+let e_sealed (ea : embedding 'a) : Tot (embedding 'a) =
+    let typ () = S.t_sealed_of (type_of ea) in
+    let emb_ty_a () =
+        ET_app(PC.sealed_lid |> Ident.string_of_lid, [emb_typ_of 'a ()])
     in
     let printer x = "(seal " ^ printer_of ea x ^ ")" in
     let em (a:'a) (rng:range) shadow norm : term =
@@ -989,7 +990,7 @@ let e_sealed (ea : embedding 'a) : embedding 'a =
                       rng)
       in
       S.mk_Tm_app (S.mk_Tm_uinst (U.fvar_const PC.seal_lid) [U_zero])
-                  [S.iarg (type_of ea); S.as_arg (embed ea a rng shadow_a norm)]
+                  [S.iarg (type_of ea); S.as_arg (embed a rng shadow_a norm)]
                   rng
     in
     let un (t:term) norm : option 'a =
@@ -997,7 +998,7 @@ let e_sealed (ea : embedding 'a) : embedding 'a =
       match (U.un_uinst hd).n, args with
       | Tm_fvar fv, [_; (a, _)] when S.fv_eq_lid fv PC.seal_lid ->
            // Just relay it
-           try_unembed ea a norm
+           try_unembed a norm
       | _ ->
            None
     in
@@ -1025,9 +1026,9 @@ let e___range =
     mk_emb_full
         em
         un
-        S.t___range
+        (fun () -> S.t___range)
         Range.string_of_range
-        (ET_app (PC.range_lid |> Ident.string_of_lid, []))
+        (fun () -> ET_app (PC.range_lid |> Ident.string_of_lid, []))
 
 let e_range = e_sealed e___range
 
@@ -1040,9 +1041,9 @@ let e_document : embedding Pprint.document = e_lazy Lazy_doc (S.fvar PC.document
 
 let arrow_as_prim_step_1 (ea:embedding 'a) (eb:embedding 'b)
                          (f:'a -> 'b) (n_tvars:int) (fv_lid:Ident.lid) norm
-   : args -> option term =
+   : universes -> args -> option term =
     let rng = Ident.range_of_lid fv_lid in
-    let f_wrapped args =
+    let f_wrapped _us args =
         let _tvar_args, rest_args = List.splitAt n_tvars args in
         //arity mismatches are handled by the caller
         let [(x, _)] = rest_args in
@@ -1050,8 +1051,8 @@ let arrow_as_prim_step_1 (ea:embedding 'a) (eb:embedding 'b)
             Some (Thunk.mk (fun () -> S.mk_Tm_app (norm (Inl fv_lid)) args rng))
         in
         match
-            (BU.map_opt (try_unembed ea x norm) (fun x ->
-             embed eb (f x) rng shadow_app norm))
+            (BU.map_opt (try_unembed x norm) (fun x ->
+             embed (f x) rng shadow_app norm))
         with
         // NB: this always returns a Some
         | Some x -> Some x
@@ -1061,9 +1062,9 @@ let arrow_as_prim_step_1 (ea:embedding 'a) (eb:embedding 'b)
 
 let arrow_as_prim_step_2 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c)
                          (f:'a -> 'b -> 'c) n_tvars fv_lid norm
-   : args -> option term =
+   : universes -> args -> option term =
     let rng = Ident.range_of_lid fv_lid in
-    let f_wrapped args =
+    let f_wrapped _us args =
         let _tvar_args, rest_args = List.splitAt n_tvars args in
         //arity mismatches are handled by the caller
         let [(x, _); (y, _)] = rest_args in
@@ -1071,9 +1072,9 @@ let arrow_as_prim_step_2 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c)
             Some (Thunk.mk (fun () -> S.mk_Tm_app (norm (Inl fv_lid)) args rng))
         in
         match
-            (BU.bind_opt (try_unembed ea x norm) (fun x ->
-             BU.bind_opt (try_unembed eb y norm) (fun y ->
-             Some (embed ec (f x y) rng shadow_app norm))))
+            (BU.bind_opt (try_unembed x norm) (fun x ->
+             BU.bind_opt (try_unembed y norm) (fun y ->
+             Some (embed (f x y) rng shadow_app norm))))
         with
         // NB: this always returns a Some
         | Some x -> Some x
@@ -1084,9 +1085,9 @@ let arrow_as_prim_step_2 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c)
 let arrow_as_prim_step_3 (ea:embedding 'a) (eb:embedding 'b)
                          (ec:embedding 'c) (ed:embedding 'd)
                          (f:'a -> 'b -> 'c -> 'd) n_tvars fv_lid norm
-   : args -> option term =
+   : universes -> args -> option term =
     let rng = Ident.range_of_lid fv_lid in
-    let f_wrapped args =
+    let f_wrapped _us args =
         let _tvar_args, rest_args = List.splitAt n_tvars args in
         //arity mismatches are handled by the caller
         let [(x, _); (y, _); (z, _)] = rest_args in
@@ -1094,10 +1095,10 @@ let arrow_as_prim_step_3 (ea:embedding 'a) (eb:embedding 'b)
             Some (Thunk.mk (fun () -> S.mk_Tm_app (norm (Inl fv_lid)) args rng))
         in
         match
-            (BU.bind_opt (try_unembed ea x norm) (fun x ->
-             BU.bind_opt (try_unembed eb y norm) (fun y ->
-             BU.bind_opt (try_unembed ec z norm) (fun z ->
-             Some (embed ed (f x y z) rng shadow_app norm)))))
+            (BU.bind_opt (try_unembed x norm) (fun x ->
+             BU.bind_opt (try_unembed y norm) (fun y ->
+             BU.bind_opt (try_unembed z norm) (fun z ->
+             Some (embed (f x y z) rng shadow_app norm)))))
         with
         // NB: this always returns a Some
         | Some x -> Some x

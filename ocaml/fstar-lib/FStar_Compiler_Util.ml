@@ -384,47 +384,6 @@ let string_builder_append b s = BatBuffer.add_string b s
 let message_of_exn (e:exn) = Printexc.to_string e
 let trace_of_exn (e:exn) = Printexc.get_backtrace ()
 
-type 'a set = ('a list) * ('a -> 'a -> bool)
-[@@deriving show]
-let set_to_yojson _ _ = `Null
-let set_of_yojson _ _ = failwith "cannot readback"
-
-let set_is_empty ((s, _):'a set) =
-  match s with
-  | [] -> true
-  | _ -> false
-
-let as_set (l:'a list) (cmp:('a -> 'a -> Z.t)) = (l, fun x y -> cmp x y = Z.zero)
-let new_set (cmp:'a -> 'a -> Z.t) : 'a set = as_set [] cmp
-
-let set_elements ((s1, eq):'a set) : 'a list =
-  let rec aux out = function
-    | [] -> BatList.rev_append out []
-    | hd::tl ->
-       if BatList.exists (eq hd) out then
-         aux out tl
-       else
-         aux (hd::out) tl in
-  aux [] s1
-
-let set_add a ((s, b):'a set) = (s@[a], b)
-let set_remove x ((s1, eq):'a set) =
-  (BatList.filter (fun y -> not (eq x y)) s1, eq)
-let set_mem a ((s, b):'a set) = BatList.exists (b a) s
-let set_union ((s1, b):'a set) ((s2, _):'a set) = (s1@s2, b)
-let set_intersect ((s1, eq):'a set) ((s2, _):'a set) =
-  (BatList.filter (fun y -> BatList.exists (eq y) s2) s1, eq)
-let set_is_subset_of ((s1, eq):'a set) ((s2, _):'a set) =
-  BatList.for_all (fun y -> BatList.exists (eq y) s2) s1
-let set_count ((s1, _):'a set) = Z.of_int (BatList.length s1)
-let set_difference ((s1, eq):'a set) ((s2, _):'a set) : 'a set =
-  (BatList.filter (fun y -> not (BatList.exists (eq y) s2)) s1, eq)
-let set_symmetric_difference ((s1, eq):'a set) ((s2, _):'a set) : 'a set =
-  set_union (set_difference (s1, eq) (s2, eq))
-            (set_difference (s2, eq) (s1, eq))
-let set_eq ((s1, eq):'a set) ((s2, _):'a set) : bool =
-  set_is_empty (set_symmetric_difference (s1, eq) (s2, eq))
-
 module StringOps =
   struct
     type t = string
@@ -850,51 +809,6 @@ let string_to_ascii_bytes (s:string) : char array =
 let ascii_bytes_to_string (b:char array) : string =
   BatString.implode (BatArray.to_list b)
 let mk_ref a = FStar_ST.alloc a
-
-(* A simple state monad *)
-type ('s,'a) state = 's -> ('a*'s)
-let get : ('s,'s) state = fun s -> (s,s)
-let upd (f:'s -> 's) : ('s,unit) state = fun s -> ((), f s)
-let put (s:'s) : ('s,unit) state = fun _ -> ((), s)
-let ret (x:'a) : ('s,'a) state = fun s -> (x, s)
-let bind (sa:('s,'a) state) (f : 'a -> ('s,'b) state) : ('s,'b) state =
-  fun s1 -> let (a, s2) = sa s1 in f a s2
-let (>>) s f = bind s f
-let run_st init (s:('s,'a) state) = s init
-
-let rec stmap (l:'a list) (f: 'a -> ('s,'b) state) : ('s, ('b list)) state =
-  match l with
-  | [] -> ret []
-  | hd::tl -> bind (f hd)
-                   (fun b ->
-                    let stl = stmap tl f in
-                    bind stl (fun tl -> ret (b::tl)))
-
-let stmapi (l:'a list) (f:int -> 'a -> ('s, 'b) state) : ('s, ('b list)) state =
-  let rec aux i l =
-    match l with
-    | [] -> ret []
-    | hd::tl ->
-       bind (f i hd)
-            (fun b ->
-             let stl = aux (i + 1) tl in
-             bind stl (fun tl -> ret (b::tl))) in
-  aux 0 l
-
-let rec stiter (l:'a list) (f: 'a -> ('s,unit) state) : ('s,unit) state =
-  match l with
-  | [] -> ret ()
-  | hd::tl -> bind (f hd) (fun () -> stiter tl f)
-
-let rec stfoldr_pfx (l:'a list) (f: 'a list -> 'a -> ('s,unit) state) : ('s,unit) state =
-  match l with
-  | [] -> ret ()
-  | hd::tl -> (stfoldr_pfx tl f) >> (fun _ -> f tl hd)
-
-let rec stfold (init:'b) (l:'a list) (f: 'b -> 'a -> ('s,'b) state) : ('s,'b) state =
-  match l with
-  | [] -> ret init
-  | hd::tl -> (f init hd) >> (fun next -> stfold next tl f)
 
 let write_file (fn:string) s =
   let fh = open_file_for_writing fn in

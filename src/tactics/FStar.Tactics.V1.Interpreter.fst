@@ -36,6 +36,7 @@ open FStar.Tactics.V1.InterpFuns
 open FStar.Tactics.Native
 open FStar.Tactics.Common
 open FStar.Class.Show
+open FStar.Class.Monad
 
 module BU      = FStar.Compiler.Util
 module Cfg     = FStar.TypeChecker.Cfg
@@ -59,8 +60,9 @@ module PO      = FStar.TypeChecker.Primops
 
 let tacdbg = BU.mk_ref false
 
-let unembed ea a norm_cb = unembed ea a norm_cb
-let embed ea r x norm_cb = embed ea x r None norm_cb
+(* No typeclasses in this module, it's deprecated anyway *)
+let unembed ea a norm_cb = unembed #_ #ea a norm_cb
+let embed ea r x norm_cb = embed #_ #ea x r None norm_cb
 
 let native_tactics_steps () =
   let step_from_native_step (s: native_primitive_step): PO.primitive_step =
@@ -71,7 +73,7 @@ let native_tactics_steps () =
     ; strong_reduction_ok          = s.strong_reduction_ok
     ; requires_binder_substitution = false // GM: Don't think we care about pretty-printing on native
     ; renorm_after                 = false
-    ; interpretation               = (fun psc cb _us t -> s.tactic psc cb t)
+    ; interpretation               = s.tactic
     ; interpretation_nbe           = fun _cb _us -> NBET.dummy_interp s.name
     }
   in
@@ -119,7 +121,7 @@ let rec t_head_of (t : term) : term =
     | _ -> t
 
 let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac 'b =
-    bind get (fun proof_state ->
+    let! proof_state = get in
     let rng = embedded_tac_b.pos in
 
     (* First, reify it from Tac a into __tac a *)
@@ -154,10 +156,12 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
 
     match res with
     | Some (Success (b, ps)) ->
-        bind (set ps) (fun _ -> ret b)
+      set ps;!
+      return b
 
     | Some (Failed (e, ps)) ->
-        bind (set ps) (fun _ -> traise e)
+      set ps;!
+      traise e
 
     | None ->
         (* The tactic got stuck, try to provide a helpful error message. *)
@@ -180,10 +184,9 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
         Err.raise_error (Err.Fatal_TacticGotStuck,
           (BU.format2 "Tactic got stuck!\n\
                        Reduction stopped at: %s%s" (show h_result) maybe_admit_tip)) proof_state.main_context.range
-    )
 
 let unembed_tactic_nbe_0 (eb:NBET.embedding 'b) (cb:NBET.nbe_cbs) (embedded_tac_b:NBET.t) : tac 'b =
-    bind get (fun proof_state ->
+    let! proof_state = get in
 
     (* Applying is normalizing!!! *)
     let result = NBET.iapp_cb cb embedded_tac_b [NBET.as_arg (NBET.embed E.e_proofstate_nbe cb proof_state)] in
@@ -191,14 +194,15 @@ let unembed_tactic_nbe_0 (eb:NBET.embedding 'b) (cb:NBET.nbe_cbs) (embedded_tac_
 
     match res with
     | Some (Success (b, ps)) ->
-        bind (set ps) (fun _ -> ret b)
+      set ps;!
+      return b
 
     | Some (Failed (e, ps)) ->
-        bind (set ps) (fun _ -> traise e)
+      set ps;!
+      traise e
 
     | None ->
         Err.raise_error (Err.Fatal_TacticGotStuck, (BU.format1 "Tactic got stuck (in NBE)! Please file a bug report with a minimal reproduction of this issue.\n%s" (NBET.t_to_string result))) proof_state.main_context.range
-    )
 
 let unembed_tactic_1 (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : 'a -> tac 'r =
     fun x ->
@@ -224,8 +228,8 @@ let e_tactic_nbe_thunk (er : NBET.embedding 'r) : NBET.embedding (tac 'r)
     NBET.mk_emb
            (fun cb _ -> failwith "Impossible: NBE embedding tactic (thunk)?")
            (fun cb t -> Some (unembed_tactic_nbe_1 NBET.e_unit er cb t ()))
-           (NBET.mk_t (NBET.Constant NBET.Unit))
-           (emb_typ_of e_unit)
+           (fun () -> NBET.mk_t (NBET.Constant NBET.Unit))
+           (emb_typ_of unit)
 
 let e_tactic_1 (ea : embedding 'a) (er : embedding 'r) : embedding ('a -> tac 'r)
     =
@@ -238,8 +242,8 @@ let e_tactic_nbe_1 (ea : NBET.embedding 'a) (er : NBET.embedding 'r) : NBET.embe
     NBET.mk_emb
            (fun cb _ -> failwith "Impossible: NBE embedding tactic (1)?")
            (fun cb t -> Some (unembed_tactic_nbe_1 ea er cb t))
-           (NBET.mk_t (NBET.Constant NBET.Unit))
-           (emb_typ_of e_unit)
+           (fun () -> NBET.mk_t (NBET.Constant NBET.Unit))
+           (emb_typ_of unit)
 
 (* Set the primitive steps ref *)
 let () =

@@ -2878,20 +2878,14 @@ let (unit_const : term) =
   unit_const_with_range FStar_Compiler_Range_Type.dummyRange
 let has_range_syntax : 'a . unit -> 'a syntax FStar_Class_HasRange.hasRange =
   fun uu___ ->
-    (fun uu___ ->
-       Obj.magic
-         {
-           FStar_Class_HasRange.pos = (fun t -> t.pos);
-           FStar_Class_HasRange.setPos =
-             (fun r ->
-                fun t ->
-                  {
-                    n = (t.n);
-                    pos = r;
-                    vars = (t.vars);
-                    hash_code = (t.hash_code)
-                  })
-         }) uu___
+    {
+      FStar_Class_HasRange.pos = (fun t -> t.pos);
+      FStar_Class_HasRange.setPos =
+        (fun r ->
+           fun t ->
+             { n = (t.n); pos = r; vars = (t.vars); hash_code = (t.hash_code)
+             })
+    }
 let has_range_withinfo :
   'a . unit -> 'a withinfo_t FStar_Class_HasRange.hasRange =
   fun uu___ ->
@@ -2914,38 +2908,6 @@ let (has_range_sigelt : sigelt FStar_Class_HasRange.hasRange) =
              sigopens_and_abbrevs = (t.sigopens_and_abbrevs);
              sigopts = (t.sigopts)
            })
-  }
-let (deq_lazy_kind : lazy_kind FStar_Class_Deq.deq) =
-  {
-    FStar_Class_Deq.op_Equals_Question =
-      (fun k ->
-         fun k' ->
-           match (k, k') with
-           | (BadLazy, BadLazy) -> true
-           | (Lazy_bv, Lazy_bv) -> true
-           | (Lazy_namedv, Lazy_namedv) -> true
-           | (Lazy_binder, Lazy_binder) -> true
-           | (Lazy_optionstate, Lazy_optionstate) -> true
-           | (Lazy_fvar, Lazy_fvar) -> true
-           | (Lazy_comp, Lazy_comp) -> true
-           | (Lazy_env, Lazy_env) -> true
-           | (Lazy_proofstate, Lazy_proofstate) -> true
-           | (Lazy_goal, Lazy_goal) -> true
-           | (Lazy_sigelt, Lazy_sigelt) -> true
-           | (Lazy_letbinding, Lazy_letbinding) -> true
-           | (Lazy_uvar, Lazy_uvar) -> true
-           | (Lazy_universe, Lazy_universe) -> true
-           | (Lazy_universe_uvar, Lazy_universe_uvar) -> true
-           | (Lazy_issue, Lazy_issue) -> true
-           | (Lazy_ident, Lazy_ident) -> true
-           | (Lazy_doc, Lazy_doc) -> true
-           | (Lazy_tref, Lazy_tref) -> true
-           | (Lazy_extension s, Lazy_extension t) -> s = t
-           | (Lazy_embedding uu___, uu___1) -> false
-           | (uu___, Lazy_embedding uu___1) -> false
-           | uu___ ->
-               FStar_Compiler_Effect.failwith
-                 "FIXME! eq_lazy_kind must be complete")
   }
 let (showable_lazy_kind : lazy_kind FStar_Class_Show.showable) =
   {
@@ -2976,4 +2938,34 @@ let (showable_lazy_kind : lazy_kind FStar_Class_Show.showable) =
          | uu___1 ->
              FStar_Compiler_Effect.failwith
                "FIXME! lazy_kind_to_string must be complete")
+  }
+let (deq_lazy_kind : lazy_kind FStar_Class_Deq.deq) =
+  {
+    FStar_Class_Deq.op_Equals_Question =
+      (fun k ->
+         fun k' ->
+           match (k, k') with
+           | (BadLazy, BadLazy) -> true
+           | (Lazy_bv, Lazy_bv) -> true
+           | (Lazy_namedv, Lazy_namedv) -> true
+           | (Lazy_binder, Lazy_binder) -> true
+           | (Lazy_optionstate, Lazy_optionstate) -> true
+           | (Lazy_fvar, Lazy_fvar) -> true
+           | (Lazy_comp, Lazy_comp) -> true
+           | (Lazy_env, Lazy_env) -> true
+           | (Lazy_proofstate, Lazy_proofstate) -> true
+           | (Lazy_goal, Lazy_goal) -> true
+           | (Lazy_sigelt, Lazy_sigelt) -> true
+           | (Lazy_letbinding, Lazy_letbinding) -> true
+           | (Lazy_uvar, Lazy_uvar) -> true
+           | (Lazy_universe, Lazy_universe) -> true
+           | (Lazy_universe_uvar, Lazy_universe_uvar) -> true
+           | (Lazy_issue, Lazy_issue) -> true
+           | (Lazy_ident, Lazy_ident) -> true
+           | (Lazy_doc, Lazy_doc) -> true
+           | (Lazy_tref, Lazy_tref) -> true
+           | (Lazy_extension s, Lazy_extension t) -> s = t
+           | (Lazy_embedding uu___, uu___1) -> false
+           | (uu___, Lazy_embedding uu___1) -> false
+           | uu___ -> false)
   }

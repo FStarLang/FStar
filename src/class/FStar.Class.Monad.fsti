@@ -8,6 +8,8 @@ class monad (m : Type -> Type) = {
    ( let! )  : #a:Type -> #b:Type -> m a -> (a -> m b) -> m b
 }
 
+instance val monad_option : monad option
+
 val mapM
   (#m: Type -> Type)
   {| monad m |}
@@ -25,3 +27,22 @@ val foldM_right
   {| monad m |}
   (#a #b :Type)
 : (a -> b -> m b) -> list a -> b -> m b
+
+val (<$>) 
+  (#m: Type -> Type)
+  {| monad m |}
+  (#a #b :Type)
+: (a -> b) -> m a -> m b
+
+val (<*>) 
+  (#m: Type -> Type)
+  {| monad m |}
+  (#a #b :Type)
+: m (a -> b) -> m a -> m b
+
+val fmap
+  (#m: Type -> Type)
+  {| monad m |}
+  (#a #b :Type)
+  (f : a -> b)
+: m a -> m b

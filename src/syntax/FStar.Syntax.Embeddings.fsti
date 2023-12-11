@@ -31,29 +31,33 @@ module Z = FStar.BigInt
 module BU = FStar.Compiler.Util
 
 (* Embeddings, both ways and containing type information *)
-val e_any         : embedding term // an identity
-val e_unit        : embedding unit
-val e_bool        : embedding bool
-val e_char        : embedding char
-val e_int         : embedding Z.t
-val e_fsint       : embedding int
-val e_string      : embedding string
-val e_norm_step   : embedding Pervasives.norm_step
-val e_vconfig     : embedding vconfig
+val e_any         : embedding term
+// An identity. Not an instance as sometimes
+// we make different choices for embedding a term
 
-val e_option      : embedding 'a -> embedding (option 'a)
-val e_list        : embedding 'a -> embedding (list 'a)
-val e_tuple2      : embedding 'a -> embedding 'b -> embedding ('a * 'b)
-val e_tuple3      : embedding 'a -> embedding 'b -> embedding 'c -> embedding ('a * 'b * 'c)
-val e_either      : embedding 'a -> embedding 'b -> embedding (either 'a 'b)
-val e_string_list : embedding (list string)
-val e_arrow       : embedding 'a -> embedding 'b -> embedding ('a -> 'b)
-val e_sealed      : embedding 'a -> embedding 'a
+instance val e_unit        : embedding unit
+instance val e_bool        : embedding bool
+instance val e_char        : embedding char
+instance val e_int         : embedding Z.t
+instance val e_fsint       : embedding int
+instance val e_string      : embedding string
+instance val e_norm_step   : embedding Pervasives.norm_step
+instance val e_vconfig     : embedding vconfig
 
-val e___range     : embedding Range.range (* unsealed *)
-val e_range       : embedding Range.range (* sealed *)
-val e_document    : embedding FStar.Pprint.document
-val e_issue       : embedding FStar.Errors.issue
+instance val e_option      : embedding 'a -> Tot (embedding (option 'a))
+instance val e_list        : embedding 'a -> Tot (embedding (list 'a))
+instance val e_tuple2      : embedding 'a -> embedding 'b -> Tot (embedding ('a * 'b))
+instance val e_tuple3      : embedding 'a -> embedding 'b -> embedding 'c -> Tot (embedding ('a * 'b * 'c))
+instance val e_either      : embedding 'a -> embedding 'b -> Tot (embedding (either 'a 'b))
+instance val e_string_list : embedding (list string)
+val e_arrow       : embedding 'a -> embedding 'b -> Tot (embedding ('a -> 'b))
+val e_sealed      : embedding 'a -> Tot (embedding 'a)
+(* ^ This one is explicit. Or we could add a Sealed "newtype" in compiler land. *)
+
+instance val e___range     : embedding Range.range (* unsealed *)
+instance val e_range       : embedding Range.range (* sealed *)
+instance val e_document    : embedding FStar.Pprint.document
+instance val e_issue       : embedding FStar.Errors.issue
 
 val mk_any_emb : typ -> embedding term
 
@@ -67,7 +71,7 @@ val arrow_as_prim_step_1:  embedding 'a
                         -> n_tvars:int
                         -> repr_f:Ident.lid
                         -> norm_cb
-                        -> (args -> option term)
+                        -> (universes -> args -> option term)
 
 val arrow_as_prim_step_2:  embedding 'a
                         -> embedding 'b
@@ -76,7 +80,7 @@ val arrow_as_prim_step_2:  embedding 'a
                         -> n_tvars:int
                         -> repr_f:Ident.lid
                         -> norm_cb
-                        -> (args -> option term)
+                        -> (universes -> args -> option term)
 
 val arrow_as_prim_step_3:  embedding 'a
                         -> embedding 'b
@@ -86,6 +90,6 @@ val arrow_as_prim_step_3:  embedding 'a
                         -> n_tvars:int
                         -> repr_f:Ident.lid
                         -> norm_cb
-                        -> (args -> option term)
+                        -> (universes -> args -> option term)
 
 val debug_wrap : string -> (unit -> 'a) -> 'a

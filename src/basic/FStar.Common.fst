@@ -50,7 +50,7 @@ let try_convert_file_name_to_mixed =
       s
 
 let snapshot (push: 'a -> 'b) (stackref: ref (list 'c)) (arg: 'a) : (int * 'b) = BU.atomically (fun () ->
-  let len = List.length !stackref in
+  let len : int = List.length !stackref in
   let arg' = push arg in
   (len, arg'))
 

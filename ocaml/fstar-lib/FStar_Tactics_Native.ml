@@ -18,8 +18,10 @@ type 'a __tac = FStar_Tactics_Types.proofstate -> 'a __result
 
 let r = dummyRange
 
-type itac = PO.psc -> FStar_Syntax_Embeddings_Base.norm_cb -> args -> term option
-type nbe_itac =  NBETerm.nbe_cbs -> NBETerm.args -> NBETerm.t option
+type itac =
+    PO.psc -> FStar_Syntax_Embeddings_Base.norm_cb -> universes -> args -> term option
+type nbe_itac =
+    NBETerm.nbe_cbs -> universes -> NBETerm.args -> NBETerm.t option
 
 type native_primitive_step =
     { name: FStar_Ident.lid;
@@ -45,9 +47,9 @@ let register_plugin (s: string) (arity: Prims.int) (t: itac) (n:nbe_itac) =
              PO.strong_reduction_ok=true;
              PO.requires_binder_substitution = false;
              PO.renorm_after = false;
-             PO.interpretation=(fun psc cbs _us args -> t psc cbs args);
-             PO.univ_arity=Z.of_int 0; (* TODO: bogus for now, just as in Tactics.Interpreter *)
-             PO.interpretation_nbe = (fun cbs _us args -> n cbs args);
+             PO.interpretation=t;
+             PO.univ_arity=Z.of_int 0;
+             PO.interpretation_nbe=n;
           }
     in
     FStar_TypeChecker_Cfg.register_plugin step;

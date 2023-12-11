@@ -52,16 +52,17 @@ let rec sort : 'a . 'a ord -> 'a Prims.list -> 'a Prims.list =
 let dedup : 'a . 'a ord -> 'a Prims.list -> 'a Prims.list =
   fun uu___ ->
     fun xs ->
-      let rec aux xs1 =
-        match xs1 with
-        | [] -> []
-        | x::xs2 ->
-            let uu___1 =
-              FStar_Compiler_List.existsb
-                (FStar_Class_Deq.op_Equals_Question (ord_eq uu___) x) xs2 in
-            if uu___1 then aux xs2 else (let uu___3 = aux xs2 in x :: uu___3) in
-      let uu___1 = aux (FStar_Compiler_List.rev xs) in
-      FStar_Compiler_List.rev uu___1
+      let out =
+        FStar_Compiler_List.fold_left
+          (fun out1 ->
+             fun x ->
+               let uu___1 =
+                 FStar_Compiler_List.existsb
+                   (fun y ->
+                      FStar_Class_Deq.op_Equals_Question (ord_eq uu___) x y)
+                   out1 in
+               if uu___1 then out1 else x :: out1) [] xs in
+      FStar_Compiler_List.rev out
 let (ord_int : Prims.int ord) =
   { super = FStar_Class_Deq.deq_int; cmp = FStar_Compiler_Order.compare_int }
 let (ord_bool : Prims.bool ord) =
