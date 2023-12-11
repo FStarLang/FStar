@@ -4839,7 +4839,7 @@ and (desugar_term_maybe_top :
              | (env', bs1) ->
                  let p1 = desugar_term env' p in
                  let vs1 = FStar_Compiler_List.map (desugar_term env) vs in
-                 let mk_forall_elim a p2 v t =
+                 let mk_forall_elim a p2 v tok =
                    let head =
                      let uu___2 =
                        FStar_Syntax_Syntax.lid_and_dd_as_fv
@@ -4859,10 +4859,10 @@ and (desugar_term_maybe_top :
                          (p2, uu___5) in
                        [uu___4;
                        (v, FStar_Pervasives_Native.None);
-                       (t, FStar_Pervasives_Native.None)] in
+                       (tok, FStar_Pervasives_Native.None)] in
                      uu___2 :: uu___3 in
                    FStar_Syntax_Syntax.mk_Tm_app head args
-                     v.FStar_Syntax_Syntax.pos in
+                     tok.FStar_Syntax_Syntax.pos in
                  let rec aux bs2 vs2 sub token =
                    match (bs2, vs2) with
                    | ([], []) -> token
@@ -4886,7 +4886,26 @@ and (desugar_term_maybe_top :
                          (FStar_Errors_Codes.Fatal_UnexpectedTerm,
                            "Unexpected number of instantiations in _elim_forall_")
                          top.FStar_Parser_AST.range in
-                 let uu___2 = aux bs1 vs1 [] FStar_Syntax_Util.exp_unit in
+                 let range =
+                   FStar_Compiler_List.fold_right
+                     (fun bs2 ->
+                        fun r ->
+                          let uu___2 =
+                            FStar_Syntax_Syntax.range_of_bv
+                              bs2.FStar_Syntax_Syntax.binder_bv in
+                          FStar_Compiler_Range_Ops.union_ranges uu___2 r) bs1
+                     p1.FStar_Syntax_Syntax.pos in
+                 let uu___2 =
+                   aux bs1 vs1 []
+                     {
+                       FStar_Syntax_Syntax.n =
+                         (FStar_Syntax_Util.exp_unit.FStar_Syntax_Syntax.n);
+                       FStar_Syntax_Syntax.pos = range;
+                       FStar_Syntax_Syntax.vars =
+                         (FStar_Syntax_Util.exp_unit.FStar_Syntax_Syntax.vars);
+                       FStar_Syntax_Syntax.hash_code =
+                         (FStar_Syntax_Util.exp_unit.FStar_Syntax_Syntax.hash_code)
+                     } in
                  (uu___2, noaqs))
         | FStar_Parser_AST.ElimExists (binders, p, q, binder, e) ->
             let uu___1 = desugar_binders env binders in
@@ -4975,9 +4994,9 @@ and (desugar_term_maybe_top :
                                     FStar_Pervasives_Native.None, false) in
                               FStar_Syntax_Util.abs [b; b_pf_p] uu___5
                                 FStar_Pervasives_Native.None in
-                            let uu___5 = FStar_Syntax_Syntax.range_of_bv x in
                             mk_exists_elim x.FStar_Syntax_Syntax.sort uu___3
-                              squash_token uu___4 uu___5
+                              squash_token uu___4
+                              squash_token.FStar_Syntax_Syntax.pos
                         | b::bs1 ->
                             let pf_i =
                               let uu___3 =
@@ -5005,10 +5024,29 @@ and (desugar_term_maybe_top :
                                 b :: uu___6 in
                               FStar_Syntax_Util.abs uu___5 k
                                 FStar_Pervasives_Native.None in
-                            let uu___5 = FStar_Syntax_Syntax.range_of_bv x in
                             mk_exists_elim x.FStar_Syntax_Syntax.sort uu___3
-                              squash_token uu___4 uu___5 in
-                      let uu___3 = aux bs FStar_Syntax_Util.exp_unit in
+                              squash_token uu___4
+                              squash_token.FStar_Syntax_Syntax.pos in
+                      let range =
+                        FStar_Compiler_List.fold_right
+                          (fun bs1 ->
+                             fun r ->
+                               let uu___3 =
+                                 FStar_Syntax_Syntax.range_of_bv
+                                   bs1.FStar_Syntax_Syntax.binder_bv in
+                               FStar_Compiler_Range_Ops.union_ranges uu___3 r)
+                          bs p1.FStar_Syntax_Syntax.pos in
+                      let uu___3 =
+                        aux bs
+                          {
+                            FStar_Syntax_Syntax.n =
+                              (FStar_Syntax_Util.exp_unit.FStar_Syntax_Syntax.n);
+                            FStar_Syntax_Syntax.pos = range;
+                            FStar_Syntax_Syntax.vars =
+                              (FStar_Syntax_Util.exp_unit.FStar_Syntax_Syntax.vars);
+                            FStar_Syntax_Syntax.hash_code =
+                              (FStar_Syntax_Util.exp_unit.FStar_Syntax_Syntax.hash_code)
+                          } in
                       (uu___3, noaqs)))
         | FStar_Parser_AST.ElimImplies (p, q, e) ->
             let p1 = desugar_term env p in
@@ -5026,11 +5064,26 @@ and (desugar_term_maybe_top :
                 let uu___2 =
                   let uu___3 =
                     let uu___4 =
-                      let uu___5 = mk_thunk e1 in
-                      (uu___5, FStar_Pervasives_Native.None) in
-                    [uu___4] in
-                  (FStar_Syntax_Util.exp_unit, FStar_Pervasives_Native.None)
-                    :: uu___3 in
+                      let uu___5 =
+                        FStar_Compiler_Range_Ops.union_ranges
+                          p1.FStar_Syntax_Syntax.pos
+                          q1.FStar_Syntax_Syntax.pos in
+                      {
+                        FStar_Syntax_Syntax.n =
+                          (FStar_Syntax_Util.exp_unit.FStar_Syntax_Syntax.n);
+                        FStar_Syntax_Syntax.pos = uu___5;
+                        FStar_Syntax_Syntax.vars =
+                          (FStar_Syntax_Util.exp_unit.FStar_Syntax_Syntax.vars);
+                        FStar_Syntax_Syntax.hash_code =
+                          (FStar_Syntax_Util.exp_unit.FStar_Syntax_Syntax.hash_code)
+                      } in
+                    (uu___4, FStar_Pervasives_Native.None) in
+                  let uu___4 =
+                    let uu___5 =
+                      let uu___6 = mk_thunk e1 in
+                      (uu___6, FStar_Pervasives_Native.None) in
+                    [uu___5] in
+                  uu___3 :: uu___4 in
                 (q1, FStar_Pervasives_Native.None) :: uu___2 in
               (p1, FStar_Pervasives_Native.None) :: uu___1 in
             let uu___1 =
@@ -5072,20 +5125,35 @@ and (desugar_term_maybe_top :
                               let uu___7 =
                                 let uu___8 =
                                   let uu___9 =
-                                    FStar_Syntax_Util.abs [x1] e11
-                                      FStar_Pervasives_Native.None in
-                                  (uu___9, FStar_Pervasives_Native.None) in
+                                    FStar_Compiler_Range_Ops.union_ranges
+                                      p1.FStar_Syntax_Syntax.pos
+                                      q1.FStar_Syntax_Syntax.pos in
+                                  {
+                                    FStar_Syntax_Syntax.n =
+                                      (FStar_Syntax_Util.exp_unit.FStar_Syntax_Syntax.n);
+                                    FStar_Syntax_Syntax.pos = uu___9;
+                                    FStar_Syntax_Syntax.vars =
+                                      (FStar_Syntax_Util.exp_unit.FStar_Syntax_Syntax.vars);
+                                    FStar_Syntax_Syntax.hash_code =
+                                      (FStar_Syntax_Util.exp_unit.FStar_Syntax_Syntax.hash_code)
+                                  } in
+                                (uu___8, FStar_Pervasives_Native.None) in
+                              let uu___8 =
                                 let uu___9 =
                                   let uu___10 =
-                                    let uu___11 =
+                                    FStar_Syntax_Util.abs [x1] e11
+                                      FStar_Pervasives_Native.None in
+                                  (uu___10, FStar_Pervasives_Native.None) in
+                                let uu___10 =
+                                  let uu___11 =
+                                    let uu___12 =
                                       FStar_Syntax_Util.abs
                                         [extra_binder; y1] e21
                                         FStar_Pervasives_Native.None in
-                                    (uu___11, FStar_Pervasives_Native.None) in
-                                  [uu___10] in
-                                uu___8 :: uu___9 in
-                              (FStar_Syntax_Util.exp_unit,
-                                FStar_Pervasives_Native.None) :: uu___7 in
+                                    (uu___12, FStar_Pervasives_Native.None) in
+                                  [uu___11] in
+                                uu___9 :: uu___10 in
+                              uu___7 :: uu___8 in
                             (r1, FStar_Pervasives_Native.None) :: uu___6 in
                           uu___4 :: uu___5 in
                         (p1, FStar_Pervasives_Native.None) :: uu___3 in
@@ -5118,12 +5186,27 @@ and (desugar_term_maybe_top :
                          let uu___6 =
                            let uu___7 =
                              let uu___8 =
+                               FStar_Compiler_Range_Ops.union_ranges
+                                 p1.FStar_Syntax_Syntax.pos
+                                 q1.FStar_Syntax_Syntax.pos in
+                             {
+                               FStar_Syntax_Syntax.n =
+                                 (FStar_Syntax_Util.exp_unit.FStar_Syntax_Syntax.n);
+                               FStar_Syntax_Syntax.pos = uu___8;
+                               FStar_Syntax_Syntax.vars =
+                                 (FStar_Syntax_Util.exp_unit.FStar_Syntax_Syntax.vars);
+                               FStar_Syntax_Syntax.hash_code =
+                                 (FStar_Syntax_Util.exp_unit.FStar_Syntax_Syntax.hash_code)
+                             } in
+                           (uu___7, FStar_Pervasives_Native.None) in
+                         let uu___7 =
+                           let uu___8 =
+                             let uu___9 =
                                FStar_Syntax_Util.abs [x1; y1] e1
                                  FStar_Pervasives_Native.None in
-                             (uu___8, FStar_Pervasives_Native.None) in
-                           [uu___7] in
-                         (FStar_Syntax_Util.exp_unit,
-                           FStar_Pervasives_Native.None) :: uu___6 in
+                             (uu___9, FStar_Pervasives_Native.None) in
+                           [uu___8] in
+                         uu___6 :: uu___7 in
                        (r1, FStar_Pervasives_Native.None) :: uu___5 in
                      uu___3 :: uu___4 in
                    (p1, FStar_Pervasives_Native.None) :: uu___2 in
