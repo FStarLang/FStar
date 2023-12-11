@@ -1262,9 +1262,13 @@ let (simple_ops : primitive_step Prims.list) =
         FStar_Syntax_Embeddings.e_string FStar_TypeChecker_NBETerm.e_string
         (FStar_Syntax_Embeddings.e_option FStar_Syntax_Embeddings.e_int)
         (FStar_TypeChecker_NBETerm.e_option FStar_TypeChecker_NBETerm.e_int)
-        (fun s ->
-           let uu___3 = FStar_Compiler_Util.safe_int_of_string s in
-           FStar_Compiler_Util.map_opt uu___3 FStar_BigInt.of_int_fs) in
+        (fun uu___3 ->
+           (fun s ->
+              let uu___3 = FStar_Compiler_Util.safe_int_of_string s in
+              Obj.magic
+                (FStar_Class_Monad.fmap FStar_Class_Monad.monad_option () ()
+                   (fun uu___4 -> (Obj.magic FStar_BigInt.of_int_fs) uu___4)
+                   (Obj.magic uu___3))) uu___3) in
     let uu___3 =
       let uu___4 =
         mk1 Prims.int_zero FStar_Parser_Const.string_of_bool_lid
@@ -1653,9 +1657,13 @@ let (issue_ops : primitive_step Prims.list) =
           FStar_TypeChecker_NBETerm.e_issue
           (FStar_Syntax_Embeddings.e_option FStar_Syntax_Embeddings.e_int)
           (FStar_TypeChecker_NBETerm.e_option FStar_TypeChecker_NBETerm.e_int)
-          (fun i ->
-             FStar_Compiler_Util.map_opt i.FStar_Errors.issue_number
-               FStar_BigInt.of_int_fs) in
+          (fun uu___6 ->
+             (fun i ->
+                Obj.magic
+                  (FStar_Class_Monad.fmap FStar_Class_Monad.monad_option ()
+                     ()
+                     (fun uu___6 -> (Obj.magic FStar_BigInt.of_int_fs) uu___6)
+                     (Obj.magic i.FStar_Errors.issue_number))) uu___6) in
       let uu___5 =
         let uu___6 =
           let uu___7 = mk_lid "range_of_issue" in
@@ -1709,8 +1717,12 @@ let (issue_ops : primitive_step Prims.list) =
                              let uu___14 =
                                FStar_Errors.issue_level_of_string level in
                              let uu___15 =
-                               FStar_Compiler_Util.map_opt number
-                                 FStar_BigInt.to_int_fs in
+                               Obj.magic
+                                 (FStar_Class_Monad.fmap
+                                    FStar_Class_Monad.monad_option () ()
+                                    (fun uu___16 ->
+                                       (Obj.magic FStar_BigInt.to_int_fs)
+                                         uu___16) (Obj.magic number)) in
                              {
                                FStar_Errors.issue_msg = msg;
                                FStar_Errors.issue_level = uu___14;
