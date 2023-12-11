@@ -213,7 +213,7 @@ let unembed #a {| e:embedding a |} t n =
   r
 
 
-let embed_as (ea:embedding 'a) (ab : 'a -> 'b) (ba : 'b -> 'a) (o:option typ) =
+let embed_as (ea:embedding 'a) (ab : 'a -> 'b) (ba : 'b -> 'a) (o:option typ) : Tot (embedding 'b) =
     mk_emb_full (fun (x:'b) -> embed (ba x))
                 (fun (t:term) cb -> BU.map_opt (try_unembed t cb) ab)
                 (fun () -> match o with | Some t -> t | _ -> type_of ea)

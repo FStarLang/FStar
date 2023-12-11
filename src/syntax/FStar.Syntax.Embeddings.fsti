@@ -50,8 +50,8 @@ instance val e_tuple2      : embedding 'a -> embedding 'b -> Tot (embedding ('a 
 instance val e_tuple3      : embedding 'a -> embedding 'b -> embedding 'c -> Tot (embedding ('a * 'b * 'c))
 instance val e_either      : embedding 'a -> embedding 'b -> Tot (embedding (either 'a 'b))
 instance val e_string_list : embedding (list string)
-instance val e_arrow       : embedding 'a -> embedding 'b -> Tot (embedding ('a -> 'b))
-val e_sealed      : embedding 'a -> embedding 'a
+val e_arrow       : embedding 'a -> embedding 'b -> Tot (embedding ('a -> 'b))
+val e_sealed      : embedding 'a -> Tot (embedding 'a)
 (* ^ This one is explicit. Or we could add a Sealed "newtype" in compiler land. *)
 
 instance val e___range     : embedding Range.range (* unsealed *)
