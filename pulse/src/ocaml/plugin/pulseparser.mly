@@ -258,10 +258,13 @@ mutOrRefQualifier:
   | MUT { MUT }
   | REF { REF }
 
+(*
 maybeHash:
   |      { Nothing }
   | HASH { Hash }
+*)
 
+(*
 atomicVprop:
   | LPAREN p=pulseVprop RPAREN
     { p }
@@ -273,19 +276,22 @@ atomicVprop:
       let app = mkApp head (map (fun (x,y) -> (y,x)) args) (rr2 $loc(head) $loc(args)) in
       PulseSugar.(as_vprop (VPropTerm app) (rr $loc))
     }
+*)
 
+(*
 %inline
 starOp:
   | o=OPINFIX3
     { if o = "**" then () else raise_error (Fatal_SyntaxError, "Unexpected infix operator; expected '**'") (rr $loc) }
   | BACKTICK id=IDENT BACKTICK
     { if id = "star" then () else raise_error (Fatal_SyntaxError, "Unexpected infix operator; expected '**'") (rr $loc) }
-
+*)
 
 pulseVprop:
-  | t=atomicVprop
-    { t }
-  | EXISTS bs=nonempty_list(pulseMultiBinder) DOT body=pulseVprop
+  | p=typX(tmEqWith(appTermNoRecordExp), tmEqWith(appTermNoRecordExp))
+    { PulseSugar.(as_vprop (VPropTerm p) (rr $loc)) }
+(*  | EXISTS bs=nonempty_list(pulseMultiBinder) DOT body=pulseVprop
     { PulseSugar.(as_vprop (mk_vprop_exists (List.flatten bs) body) (rr $loc)) }
   | l=pulseVprop starOp r=pulseVprop
     {  PulseSugar.(as_vprop (VPropStar (l, r)) (rr $loc)) }
+*)

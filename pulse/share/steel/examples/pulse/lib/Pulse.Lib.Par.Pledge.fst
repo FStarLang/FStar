@@ -16,8 +16,8 @@ let pledge_sub_inv (os1:inames) (os2:inames{inames_subset os1 os2}) (f:vprop) (v
 ```pulse
 ghost
 fn return_pledge_aux (os:inames) (f v : vprop) ()
-    requires v ** f
-    ensures f ** v
+    requires (v ** f)
+    ensures (f ** v)
     opens os
 { () }
 ```
