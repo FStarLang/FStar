@@ -1450,7 +1450,7 @@ let solver = {
     encode_sig=Encode.encode_sig;
 
     (* These three to be overriden by FStar.Universal.init_env *)
-    preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
+    preprocess=(fun e g -> (false, [e,g, FStar.Options.peek ()]));
     spinoff_strictly_positive_goals = None;
     handle_smt_goal=(fun e g -> [e,g]);
 
@@ -1467,7 +1467,7 @@ let dummy = {
     snapshot=(fun _ -> (0, 0, 0), ());
     rollback=(fun _ _ -> ());
     encode_sig=(fun _ _ -> ());
-    preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
+    preprocess=(fun e g -> (false, [e,g, FStar.Options.peek ()]));
     spinoff_strictly_positive_goals = None;
     handle_smt_goal=(fun e g -> [e,g]);
     solve=(fun _ _ _ -> ());
