@@ -1966,8 +1966,6 @@ let print_full (outc : out_channel) (deps:deps) : unit =
 
     FStar.StringBuffer.output_channel outc sb
 
-let coerce #a #b (x : a) : b = x
-
 let do_print (outc : out_channel) (fn : string) deps : unit =
   match Options.dep() with
   | Some "make" ->
