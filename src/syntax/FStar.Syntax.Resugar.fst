@@ -224,6 +224,7 @@ let maybe_shorten_fv env fv : lident =
   let lid = fv.fv_name.v in
   maybe_shorten_lid env lid
 
+(* Sizet handled below *)
 let serialize_machine_integer_desc (s,w) =
   BU.format3 "FStar.%sInt%s.__%sint_to_t"
     (match s with
@@ -241,7 +242,10 @@ let serialize_machine_integer_desc (s,w) =
 let parse_machine_integer_desc =
   let signs = [Unsigned; Signed] in
   let widths = [Int8; Int16; Int32; Int64] in
-  let descs = List.collect (fun s -> List.map (fun w -> (s, w), serialize_machine_integer_desc (s, w)) widths) signs in
+  let descs =
+    ((Unsigned, Sizet), "FStar.SizeT.__uint_to_t") ::
+    List.collect (fun s -> List.map (fun w -> (s, w), serialize_machine_integer_desc (s, w)) widths) signs
+  in
   fun (fv:fv) ->
     List.tryFind (fun (_, d) -> d = Ident.string_of_lid (lid_of_fv fv)) descs
 
