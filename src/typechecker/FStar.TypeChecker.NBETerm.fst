@@ -672,39 +672,7 @@ let arg_as_int    (a:arg) = fst a |> unembed e_int bogus_cbs
 
 let arg_as_bool   (a:arg) = fst a |> unembed e_bool bogus_cbs
 
-let arg_as_char   (a:arg) = fst a |> unembed e_char  bogus_cbs
-
-let arg_as_string (a:arg) = fst a |> unembed e_string  bogus_cbs
-
 let arg_as_list   (e:embedding 'a) (a:arg) = fst a |> unembed (e_list e) bogus_cbs
-
-let arg_as_doc    (a:arg) = fst a |> unembed e_document bogus_cbs
-
-let arg_as_bounded_int ((a, _) : arg) : option (fv * Z.t * option S.meta_source_info) =
-    let (a, m) =
-      (match a.nbe_t with
-       | Meta(t, tm) ->
-         (match Thunk.force tm with
-          | Meta_desugared m -> (t, Some m)
-          | _ -> (a, None))
-       | _ -> (a, None)) in
-    match a.nbe_t with
-    | FV (fv1, [], [({nbe_t=Constant (Int i)}, _)])
-      when BU.ends_with (Ident.string_of_lid fv1.fv_name.v)
-                        "int_to_t" ->
-      Some (fv1, i, m)
-    | _ -> None
-
-let int_as_bounded int_to_t n =
-    let c = embed e_int bogus_cbs n in
-    let int_to_t args = mk_t <| FV(int_to_t, [], args) in
-    int_to_t [as_arg c]
-
-let with_meta_ds t (m:option meta_source_info) =
-      match m with
-      | None -> t
-      | Some m -> mk_t (Meta(t, Thunk.mk (fun _ -> Meta_desugared m)))
-
 
 (* XXX a lot of code duplication. Same code as in cfg.fs *)
 let lift_unary (f : 'a -> 'b) (aopts : list (option 'a)) : option 'b =
@@ -717,27 +685,6 @@ let lift_binary (f : 'a -> 'a -> 'b) (aopts : list (option 'a)) : option 'b =
         match aopts with
         | [Some a0; Some a1] -> Some (f a0 a1)
         | _ -> None
-
-let unary_op (as_a : arg -> option 'a) (f : 'a -> t) (us:universes) (args : args) : option t =
-    lift_unary f (List.map as_a args)
-
-let binary_op (as_a : arg -> option 'a) (f : 'a -> 'a -> t) _us (args : args) : option t =
-    lift_binary f (List.map as_a args)
-
-let unary_int_op (f:Z.t -> Z.t) =
-    unary_op arg_as_int (fun x -> embed e_int bogus_cbs (f x))
-
-let binary_int_op (f:Z.t -> Z.t -> Z.t) =
-    binary_op arg_as_int (fun x y -> embed e_int bogus_cbs (f x y))
-
-let unary_bool_op (f:bool -> bool) =
-    unary_op arg_as_bool (fun x -> embed e_bool bogus_cbs (f x))
-
-let binary_bool_op (f:bool -> bool -> bool) =
-    binary_op arg_as_bool (fun x y -> embed e_bool bogus_cbs (f x y))
-
-let binary_string_op (f : string -> string -> string) =
-    binary_op arg_as_string (fun x y -> embed e_string bogus_cbs (f x y))
 
 let mixed_binary_op (as_a : arg -> option 'a) (as_b : arg -> option 'b)
        (embed_c : 'c -> t) (f : universes -> 'a -> 'b -> option 'c)
@@ -800,16 +747,6 @@ let interp_prop_eq2 (args:args) : option t =
 
 let dummy_interp (lid : Ident.lid) (args : args) : option t =
     failwith ("No interpretation for " ^ (Ident.string_of_lid lid))
-
-let prims_to_fstar_range_step (args:args) : option t =
-    match args with
-    | [(a1, _)] ->
-      begin match unembed e_range bogus_cbs a1 with
-      | Some r -> Some (embed e_range bogus_cbs r)
-      | None ->
-        None
-      end
-   | _ -> failwith "Unexpected number of arguments"
 
 let and_op (args:args) : option t =
   match args with

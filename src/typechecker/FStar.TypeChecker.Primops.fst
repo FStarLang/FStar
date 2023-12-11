@@ -16,6 +16,7 @@ open FStar.TypeChecker
 open FStar.TypeChecker.Env
 open FStar.Errors
 open FStar.Class.Monad
+open FStar.Class.Show
 
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
@@ -48,26 +49,6 @@ let arg_as_char   (a:arg) : option char = fst a |> try_unembed_simple
 let arg_as_list {|e:EMB.embedding 'a|} (a:arg)
 : option (list 'a)
   = fst a |> try_unembed_simple
-
-let arg_as_bounded_int ((a, _) :arg) : option (fv * Z.t * option S.meta_source_info) =
-    let (a, m) =
-        (match (SS.compress a).n with
-         | Tm_meta {tm=t; meta=Meta_desugared m} -> (t, Some m)
-         | _ -> (a, None)) in
-    let a = U.unmeta_safe a in
-    let hd, args = U.head_and_args_full a in
-    let a = U.unlazy_emb a in
-    match (SS.compress hd).n, args with
-    | Tm_fvar fv1, [(arg, _)]
-        when BU.ends_with (Ident.string_of_lid fv1.fv_name.v) "int_to_t" ->
-        let arg = U.unlazy_emb arg in
-        begin match (SS.compress arg).n with
-        | Tm_constant (FC.Const_int (i, None)) ->
-            Some (fv1, Z.big_int_of_string i, m)
-        | _ ->
-            None
-        end
-    | _ -> None
 
 let lift_unary (f : 'a -> 'b) (aopts : list (option 'a)) : option 'b
     = match aopts with
@@ -547,17 +528,226 @@ let seal_steps =
         ));
   ]
 
+type bounded_int_kind =
+  | Int8
+  | Int16
+  | Int32
+  | Int64
+  | UInt8
+  | UInt16
+  | UInt32
+  | UInt64
+  | UInt128
+  | SizeT
+
+let all_bounded_int_kinds =
+  [Int8; Int16; Int32; Int64; UInt8; UInt16; UInt32; UInt64; UInt128; SizeT]
+
+let is_unsigned (k : bounded_int_kind) =
+  match k with
+  | Int8
+  | Int16
+  | Int32
+  | Int64 -> false
+  | UInt8
+  | UInt16
+  | UInt32
+  | UInt64
+  | UInt128
+  | SizeT -> true
+
+let width (k : bounded_int_kind) : int =
+  match k with
+  | Int8 -> 8
+  | Int16 -> 16
+  | Int32 -> 32
+  | Int64 -> 64
+  | UInt8 -> 8
+  | UInt16 -> 16
+  | UInt32 -> 32
+  | UInt64 -> 64
+  | UInt128 -> 128
+  | SizeT -> 64
+
+let module_name_for (k:bounded_int_kind) : string =
+  match k with
+  | Int8    -> "Int8"
+  | Int16   -> "Int16"
+  | Int32   -> "Int32"
+  | Int64   -> "Int64"
+  | UInt8   -> "UInt8"
+  | UInt16  -> "UInt16"
+  | UInt32  -> "UInt32"
+  | UInt64  -> "UInt64"
+  | UInt128 -> "UInt128"
+  | SizeT   -> "SizeT"
+
+let mask m =
+  match m with
+  | UInt8 -> Z.of_hex "ff"
+  | UInt16 -> Z.of_hex "ffff"
+  | UInt32 -> Z.of_hex "ffffffff"
+  | UInt64 -> Z.of_hex "ffffffffffffffff"
+  | UInt128 -> Z.of_hex "ffffffffffffffffffffffffffffffff"
+
+let int_to_t_lid_for (k:bounded_int_kind) : Ident.lid =
+  let path = "FStar" :: module_name_for k :: (if is_unsigned k then "uint_to_t" else "int_to_t") :: [] in
+  Ident.lid_of_path path Range.dummyRange
+
+let int_to_t_for (k:bounded_int_kind) : S.term =
+  let lid = int_to_t_lid_for k in
+  S.fvar lid None
+
+(* just a newtype really, no checks or conditions here *)
+type bounded_int (k : bounded_int_kind) = | Mk : Z.t -> option S.meta_source_info -> bounded_int k
+
+(* just for debugging *)
+instance shoable_bounded_K k : Tot (showable (bounded_int k)) = {
+  show = (function Mk x m -> "bounded " ^ show (Z.to_int_fs x) ^ "@@" ^ module_name_for k);
+}
+
+instance e_bounded_int (k : bounded_int_kind) : Tot (EMB.embedding (bounded_int k)) =
+  let with_meta_ds r t (m:option meta_source_info) =
+    match m with
+    | None -> t
+    | Some m -> S.mk (Tm_meta {tm=t; meta=Meta_desugared m}) r
+  in
+  let em (x : bounded_int k) rng shadow cb =
+    let Mk i m = x in
+    let it = embed_simple rng i in
+    let int_to_t = int_to_t_for k in
+    let t = S.mk_Tm_app int_to_t [S.as_arg it] rng in
+    with_meta_ds rng t m
+  in
+  let un (t:term) cb : option (bounded_int k) =
+    let (t, m) =
+        (match (SS.compress t).n with
+        | Tm_meta {tm=t; meta=Meta_desugared m} -> (t, Some m)
+        | _ -> (t, None))
+    in
+    let t = U.unmeta_safe t in
+    match (SS.compress t).n with
+    | Tm_app {hd; args=[(a,_)]} when U.is_fvar (int_to_t_lid_for k) hd ->
+      let a = U.unlazy_emb a in
+      let! a : Z.t = try_unembed_simple a in
+      Some (Mk a m)
+    | _ ->
+      None
+  in
+  EMB.mk_emb_full em un (fun () -> S.t_int) (fun _ -> "boundedint") (fun () -> ET_abstract)
+
+instance nbe_bounded_int (k : bounded_int_kind) : Tot (NBE.embedding (bounded_int k)) =
+  let open NBE in
+  let with_meta_ds t (m:option meta_source_info) =
+    match m with
+    | None -> t
+    | Some m -> NBE.mk_t (Meta(t, Thunk.mk (fun _ -> Meta_desugared m)))
+  in
+  let em cbs (x : bounded_int k) =
+    let Mk i m = x in
+    let it = embed e_int cbs i in
+    let int_to_t args = mk_t <| FV (S.lid_as_fv (int_to_t_lid_for k) None, [], args) in
+    let t = int_to_t [as_arg it] in
+    with_meta_ds t m
+  in
+  let un cbs a : option (bounded_int k) =
+    let (a, m) =
+      (match a.nbe_t with
+       | Meta(t, tm) ->
+         (match Thunk.force tm with
+          | Meta_desugared m -> (t, Some m)
+          | _ -> (a, None))
+       | _ -> (a, None))
+    in
+    match a.nbe_t with
+    | FV (fv1, [], [(a, _)]) when Ident.lid_equals (fv1.fv_name.v) (int_to_t_lid_for k) ->
+      let! a : Z.t = unembed e_int cbs a in
+      Some (Mk a m)
+    | _ -> None
+  in
+  mk_emb em un (fun () -> mkFV (lid_as_fv PC.int_lid None) [] [] (* fixme *)) (fun () -> ET_abstract)
+
+let on_bounded1 k (f : Z.t -> Z.t) : (bounded_int k -> bounded_int k) =
+  fun x ->
+    let Mk vx mx = x in
+    Mk (f vx) mx
+
+let on_bounded2 k (f : Z.t -> Z.t -> Z.t) : (bounded_int k -> bounded_int k -> bounded_int k) =
+  fun x y ->
+    let Mk vx mx = x in
+    let Mk vy my = y in
+    Mk (f vx vy) mx
+
+let on_bounded2' k (f : Z.t -> Z.t -> 'r) : (bounded_int k -> bounded_int k -> 'r) =
+  fun x y ->
+    let Mk vx mx = x in
+    let Mk vy my = y in
+    f vx vy
+
+let v #k (x : bounded_int k) =
+  let Mk v _ = x in v
+let meta #k (x : bounded_int k) =
+  let Mk _ meta = x in meta
+
+let bounded_arith_ops : list primitive_step =
+  [
+    (* single extra op that returns a U32 *)
+    mk1 0 PC.char_u32_of_char (fun (c : char) -> let n = BU.int_of_char c |> Z.of_int_fs in
+                                                 Mk #UInt32 n None);
+  ] @ begin
+  all_bounded_int_kinds |> List.collect (fun k ->
+    let mod_name = module_name_for k in
+    let nm s = (PC.p2l ["FStar"; module_name_for k; s]) in
+    [
+      (* basic ops supported by all *)
+      mk2 0 (nm "add") (on_bounded2 k Z.add_big_int);
+      mk2 0 (nm "sub") (on_bounded2 k Z.sub_big_int);
+      mk2 0 (nm "mul") (on_bounded2 k Z.mult_big_int);
+      mk1 0 (nm "v")   (v #k);
+
+      mk2 0 (nm "gt")  (on_bounded2' k Z.gt_big_int);
+      mk2 0 (nm "gte") (on_bounded2' k Z.ge_big_int);
+      mk2 0 (nm "lt")  (on_bounded2' k Z.lt_big_int);
+      mk2 0 (nm "lte") (on_bounded2' k Z.le_big_int);
+    ]
+    @
+    (if not (is_unsigned k) then [] else
+      let sz = width k in
+      let modulus = Z.shift_left_big_int Z.one (Z.of_int_fs sz) in
+      let mod x = Z.mod_big_int x modulus in
+
+      (* operators for unsigned only *)
+
+      (if sz = 128 then [] else [
+        (* all uints except uint128 have a mul_mod *)
+      mk2 0 (nm "mul_mod") (on_bounded2 k (fun x y -> mod (Z.mult_big_int x y)));
+      ])
+      @
+      [
+
+      (* modulo operators *)
+      mk2 0 (nm "add_mod") (on_bounded2 k (fun x y -> mod (Z.add_big_int x y)));
+      mk2 0 (nm "sub_mod") (on_bounded2 k (fun x y -> mod (Z.sub_big_int x y)));
+      mk2 0 (nm "div")     (on_bounded2 k (fun x y -> mod (Z.div_big_int x y)));
+      mk2 0 (nm "rem")     (on_bounded2 k (fun x y -> mod (Z.mod_big_int x y)));
+
+      (* bitwise *)
+      mk2 0 (nm "logor")  (on_bounded2 k Z.logor_big_int);
+      mk2 0 (nm "logand") (on_bounded2 k Z.logand_big_int);
+      mk2 0 (nm "logxor") (on_bounded2 k Z.logxor_big_int);
+      mk1 0 (nm "lognot") (on_bounded1 k (fun x -> Z.logand_big_int (Z.lognot_big_int x) (mask k)));
+
+      (* NB: shift_{left,right} always take a UInt32 on the right, hence the annotations
+      to choose the right instances. *)
+      mk2 0 (nm "shift_left")  (fun (x : bounded_int k) (y : bounded_int UInt32) ->
+                                 Mk #k (Z.logand_big_int (Z.shift_left_big_int (v x) (v y)) (mask k)) (meta x));
+      mk2 0 (nm "shift_right")  (fun (x : bounded_int k) (y : bounded_int UInt32) ->
+                                 Mk #k (Z.logand_big_int (Z.shift_right_big_int (v x) (v y)) (mask k)) (meta x));
+      ])
+  )
+  end
+
 let built_in_primitive_steps_list : list primitive_step =
-    let int_as_bounded r int_to_t n =
-      let c = embed_simple r n in
-      let int_to_t = S.fv_to_tm int_to_t in
-      S.mk_Tm_app int_to_t [S.as_arg c] r
-    in
-    let with_meta_ds r t (m:option meta_source_info) =
-      match m with
-      | None -> t
-      | Some m -> S.mk (Tm_meta {tm=t; meta=Meta_desugared m}) r
-    in
 
     let basic_ops
       //because our support for F# style type-applications is very limited
@@ -569,20 +759,7 @@ let built_in_primitive_steps_list : list primitive_step =
           //universe arity
           //interp for normalizer
           //interp for NBE
-      = [(let u32_int_to_t =
-            ["FStar"; "UInt32"; "uint_to_t"]
-            |> PC.p2l
-            |> (fun l -> S.lid_as_fv l None) in
-          PC.char_u32_of_char,
-             1,
-             0,
-             unary_op
-               arg_as_char
-               (fun r c -> int_as_bounded r u32_int_to_t (c |> BU.int_of_char |> Z.of_int_fs)),
-             NBETerm.unary_op
-               NBETerm.arg_as_char
-               (fun c -> NBETerm.int_as_bounded u32_int_to_t (c |> BU.int_of_char |> Z.of_int_fs)));
-         (PC.op_And,
+      = [(PC.op_And,
              2,
              0,
              and_op,
@@ -603,300 +780,6 @@ let built_in_primitive_steps_list : list primitive_step =
              decidable_eq true,
              (fun _ -> NBETerm.decidable_eq true));
         ]
-    in
-    let bounded_arith_ops
-        =
-        (* FIXME: using a newtype with custom embeddings should make this whole
-        section very straightforward, as for simple_ops above. *)
-        let bounded_signed_int_types =
-           [ "Int8", 8; "Int16", 16; "Int32", 32; "Int64", 64 ]
-        in
-        let bounded_unsigned_int_types =
-           [ "UInt8", 8; "UInt16", 16; "UInt32", 32; "UInt64", 64; "UInt128", 128; "SizeT", 64]
-        in
-        let add_sub_mul_v_comparisons =
-          (bounded_signed_int_types @ bounded_unsigned_int_types)
-          |> List.collect (fun (m, _) ->
-            [(PC.p2l ["FStar"; m; "add"],
-                 2,
-                 0,
-                 binary_op
-                   arg_as_bounded_int
-                   (fun r (int_to_t, x, m) (_, y, _) ->
-                     with_meta_ds r
-                       (int_as_bounded r int_to_t (Z.add_big_int x y)) m) ,
-                 NBETerm.binary_op
-                   NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x, m) (_, y, _) ->
-                     NBETerm.with_meta_ds
-                       (NBETerm.int_as_bounded int_to_t (Z.add_big_int x y)) m));
-             (PC.p2l ["FStar"; m; "sub"],
-                 2,
-                 0,
-                 binary_op
-                   arg_as_bounded_int
-                   (fun r (int_to_t, x, m) (_, y, _) ->
-                     with_meta_ds r
-                       (int_as_bounded r int_to_t (Z.sub_big_int x y)) m),
-                 NBETerm.binary_op
-                   NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x, m) (_, y, _) ->
-                     NBETerm.with_meta_ds
-                       (NBETerm.int_as_bounded int_to_t (Z.sub_big_int x y)) m));
-             (PC.p2l ["FStar"; m; "mul"],
-                 2,
-                 0,
-                 binary_op
-                   arg_as_bounded_int
-                   (fun r (int_to_t, x, m) (_, y, _) ->
-                     with_meta_ds r
-                       (int_as_bounded r int_to_t (Z.mult_big_int x y)) m),
-                 NBETerm.binary_op
-                   NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x, m) (_, y, _) ->
-                     NBETerm.with_meta_ds
-                       (NBETerm.int_as_bounded int_to_t (Z.mult_big_int x y)) m));
-              (PC.p2l ["FStar"; m; "v"],
-                  1,
-                  0,
-                  unary_op
-                    arg_as_bounded_int
-                    (fun r (int_to_t, x, m) ->
-                      with_meta_ds r (embed_simple r x) m),
-                  NBETerm.unary_op
-                    NBETerm.arg_as_bounded_int
-                    (fun (int_to_t, x, m) ->
-                     NBETerm.with_meta_ds
-                       (NBETerm.embed NBETerm.e_int bogus_cbs x) m));
-             (PC.p2l ["FStar"; m; "gt"],
-                 2,
-                 0,
-                 binary_op
-                   arg_as_bounded_int
-                   (fun r (int_to_t, x, m) (_, y, _) ->
-                     with_meta_ds r
-                       (embed_simple r (Z.gt_big_int x y)) m),
-                 NBETerm.binary_op
-                   NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x, m) (_, y, _) ->
-                     NBETerm.with_meta_ds
-                       (NBETerm.embed NBETerm.e_bool bogus_cbs (Z.gt_big_int x y)) m));
-             (PC.p2l ["FStar"; m; "gte"],
-                 2,
-                 0,
-                 binary_op
-                   arg_as_bounded_int
-                   (fun r (int_to_t, x, m) (_, y, _) ->
-                     with_meta_ds r
-                       (embed_simple r (Z.ge_big_int x y)) m),
-                 NBETerm.binary_op
-                   NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x, m) (_, y, _) ->
-                     NBETerm.with_meta_ds
-                       (NBETerm.embed NBETerm.e_bool bogus_cbs (Z.ge_big_int x y)) m));
-             (PC.p2l ["FStar"; m; "lt"],
-                 2,
-                 0,
-                 binary_op
-                   arg_as_bounded_int
-                   (fun r (int_to_t, x, m) (_, y, _) ->
-                     with_meta_ds r
-                       (embed_simple r (Z.lt_big_int x y)) m),
-                 NBETerm.binary_op
-                   NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x, m) (_, y, _) ->
-                     NBETerm.with_meta_ds
-                       (NBETerm.embed NBETerm.e_bool bogus_cbs (Z.lt_big_int x y)) m));
-             (PC.p2l ["FStar"; m; "lte"],
-                 2,
-                 0,
-                 binary_op
-                   arg_as_bounded_int
-                   (fun r (int_to_t, x, m) (_, y, _) ->
-                     with_meta_ds r
-                       (embed_simple r (Z.le_big_int x y)) m),
-                 NBETerm.binary_op
-                   NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x, m) (_, y, _) ->
-                     NBETerm.with_meta_ds
-                       (NBETerm.embed NBETerm.e_bool bogus_cbs (Z.le_big_int x y)) m));
-                       ])
-        in
-        let unsigned_modulo_add_sub_mul_div_rem =
-          bounded_unsigned_int_types
-          |> List.collect (fun (m, sz) ->
-            let modulus = Z.shift_left_big_int Z.one (Z.of_int_fs sz) in
-            let mod x = Z.mod_big_int x modulus in
-            //UInt128 does not have a mul_mod
-           (if sz = 128
-            then []
-            else [(PC.p2l ["FStar"; m; "mul_mod"],
-                 2,
-                 0,
-                 binary_op
-                   arg_as_bounded_int
-                   (fun r (int_to_t, x, m) (_, y, _) ->
-                     with_meta_ds r
-                       (int_as_bounded r int_to_t (mod (Z.mult_big_int x y))) m),
-                 NBETerm.binary_op
-                   NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x, m) (_, y, _) ->
-                     NBETerm.with_meta_ds
-                       (NBETerm.int_as_bounded int_to_t (mod (Z.mult_big_int x y))) m))])@
-            [(PC.p2l ["FStar"; m; "add_mod"],
-                 2,
-                 0,
-                 binary_op
-                   arg_as_bounded_int
-                   (fun r (int_to_t, x, m) (_, y, _) ->
-                     with_meta_ds r
-                       (int_as_bounded r int_to_t (mod (Z.add_big_int x y))) m),
-                 NBETerm.binary_op
-                   NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x, m) (_, y, _) ->
-                     NBETerm.with_meta_ds
-                       (NBETerm.int_as_bounded int_to_t (mod (Z.add_big_int x y))) m));
-             (PC.p2l ["FStar"; m; "sub_mod"],
-                 2,
-                 0,
-                 binary_op
-                   arg_as_bounded_int
-                   (fun r (int_to_t, x, m) (_, y, _) ->
-                     with_meta_ds r
-                       (int_as_bounded r int_to_t (mod (Z.sub_big_int x y))) m),
-                 NBETerm.binary_op
-                   NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x, m) (_, y, _) ->
-                     NBETerm.with_meta_ds
-                       (NBETerm.int_as_bounded int_to_t (mod (Z.sub_big_int x y))) m));
-            (PC.p2l ["FStar"; m; "div"],
-                 2,
-                 0,
-                 binary_op
-                   arg_as_bounded_int
-                   (fun r (int_to_t, x, m) (_, y, _) ->
-                     with_meta_ds r
-                       (int_as_bounded r int_to_t (Z.div_big_int x y)) m),
-                 NBETerm.binary_op
-                   NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x, m) (_, y, _) ->
-                     NBETerm.with_meta_ds
-                       (NBETerm.int_as_bounded int_to_t (Z.div_big_int x y)) m));
-             (PC.p2l ["FStar"; m; "rem"],
-                 2,
-                 0,
-                 binary_op
-                   arg_as_bounded_int
-                   (fun r (int_to_t, x, m) (_, y, _) ->
-                     with_meta_ds r
-                       (int_as_bounded r int_to_t (Z.mod_big_int x y)) m),
-                 NBETerm.binary_op
-                   NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x, m) (_, y, _) ->
-                     NBETerm.with_meta_ds
-                     (NBETerm.int_as_bounded int_to_t (Z.mod_big_int x y)) m))
-            ])
-        in
-        let mask m =
-          match m with
-          | "UInt8" -> Z.of_hex "ff"
-          | "UInt16" -> Z.of_hex "ffff"
-          | "UInt32" -> Z.of_hex "ffffffff"
-          | "UInt64" -> Z.of_hex "ffffffffffffffff"
-          | "UInt128" -> Z.of_hex "ffffffffffffffffffffffffffffffff"
-          | _ -> failwith (BU.format1 "Impossible: bad string on mask: %s\n" m)
-        in
-        let bitwise =
-          bounded_unsigned_int_types
-          |> List.collect (fun (m, _) ->
-            [
-              PC.p2l ["FStar"; m; "logor"],
-                 2,
-                 0,
-                 binary_op
-                   arg_as_bounded_int
-                   (fun r (int_to_t, x, m) (_, y, _) ->
-                      with_meta_ds r
-                        (int_as_bounded r int_to_t (Z.logor_big_int x y)) m),
-                 NBETerm.binary_op
-                   NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x, m) (_, y, _) ->
-                      NBETerm.with_meta_ds
-                        (NBETerm.int_as_bounded int_to_t (Z.logor_big_int x y)) m);
-              PC.p2l ["FStar"; m; "logand"],
-                 2,
-                 0,
-                 binary_op
-                   arg_as_bounded_int
-                   (fun r (int_to_t, x, m) (_, y, _) ->
-                      with_meta_ds r
-                        (int_as_bounded r int_to_t (Z.logand_big_int x y)) m),
-                 NBETerm.binary_op
-                   NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x, m) (_, y, _) ->
-                      NBETerm.with_meta_ds
-                        (NBETerm.int_as_bounded int_to_t (Z.logand_big_int x y)) m);
-              PC.p2l ["FStar"; m; "logxor"],
-                 2,
-                 0,
-                 binary_op
-                   arg_as_bounded_int
-                   (fun r (int_to_t, x, m) (_, y, _) ->
-                     with_meta_ds r
-                       (int_as_bounded r int_to_t (Z.logxor_big_int x y)) m),
-                 NBETerm.binary_op
-                   NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x, m) (_, y, _) ->
-                       NBETerm.with_meta_ds
-                         (NBETerm.int_as_bounded int_to_t (Z.logxor_big_int x y)) m);
-              PC.p2l ["FStar"; m; "lognot"],
-                 1,
-                 0,
-                 unary_op
-                   arg_as_bounded_int
-                   (fun r (int_to_t, x, d) ->
-                    with_meta_ds r
-                      (int_as_bounded r int_to_t
-                        (Z.logand_big_int (Z.lognot_big_int x) (mask m))) d),
-                 NBETerm.unary_op
-                   NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x, d) ->
-                    NBETerm.with_meta_ds
-                      (NBETerm.int_as_bounded int_to_t
-                        (Z.logand_big_int (Z.lognot_big_int x) (mask m))) d);
-              PC.p2l ["FStar"; m; "shift_left"],
-                 2,
-                 0,
-                 binary_op
-                   arg_as_bounded_int
-                   (fun r (int_to_t, x, d) (_, y, _) ->
-                    with_meta_ds r
-                    (int_as_bounded r int_to_t
-                      (Z.logand_big_int (Z.shift_left_big_int x y) (mask m))) d),
-                 NBETerm.binary_op
-                   NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x, d) (_, y, _) ->
-                    NBETerm.with_meta_ds
-                    (NBETerm.int_as_bounded int_to_t
-                      (Z.logand_big_int (Z.shift_left_big_int x y) (mask m))) d);
-              PC.p2l ["FStar"; m; "shift_right"],
-                 2,
-                 0,
-                 binary_op
-                   arg_as_bounded_int
-                   (fun r (int_to_t, x, d) (_, y, _) ->
-                    with_meta_ds r
-                    (int_as_bounded r int_to_t (Z.shift_right_big_int x y)) d),
-                 NBETerm.binary_op
-                   NBETerm.arg_as_bounded_int
-                   (fun (int_to_t, x, d) (_, y, _) ->
-                    NBETerm.with_meta_ds
-                    (NBETerm.int_as_bounded int_to_t (Z.shift_right_big_int x y)) d);
-            ])
-        in
-       add_sub_mul_v_comparisons
-       @ unsigned_modulo_add_sub_mul_div_rem
-       @ bitwise
     in
     let reveal_hide =
       (* unconditionally reduce reveal #t' (hide #t x) to x *)
@@ -1029,9 +912,9 @@ let built_in_primitive_steps_list : list primitive_step =
     in
     let strong_steps =
       List.map (as_primitive_step true)
-               (basic_ops@bounded_arith_ops@[reveal_hide]@array_ops)
+               (basic_ops@[reveal_hide]@array_ops)
     in
-    simple_ops @ issue_ops @ doc_ops @ strong_steps @ seal_steps
+    simple_ops @ issue_ops @ doc_ops @ strong_steps @ seal_steps @ bounded_arith_ops
 
 let equality_ops_list : list primitive_step =
     let interp_prop_eq2 (psc:psc) _norm_cb _univs (args:args) : option term =

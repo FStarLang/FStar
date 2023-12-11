@@ -318,23 +318,7 @@ val arrow_as_prim_step_3:  embedding 'a
 // Interface for NBE interpretations
 
 val arg_as_int : arg -> option Z.t
-val arg_as_bool : arg -> option bool
-val arg_as_char : arg -> option FStar.Char.char
-val arg_as_string : arg -> option string
 val arg_as_list : embedding 'a -> arg -> option (list 'a)
-val arg_as_doc : arg -> option FStar.Pprint.document
-val arg_as_bounded_int : arg -> option (fv * Z.t * option S.meta_source_info)
-
-val int_as_bounded : fv -> Z.t -> t
-val with_meta_ds : t -> option meta_source_info -> t
-
-val unary_int_op : (Z.t -> Z.t) -> (universes -> args -> option t)
-val binary_int_op : (Z.t -> Z.t -> Z.t) -> (universes -> args -> option t)
-
-val unary_bool_op : (bool -> bool) -> (universes -> args -> option t)
-val binary_bool_op : (bool -> bool -> bool) -> (universes -> args -> option t)
-
-val binary_string_op : (string -> string -> string) -> (universes -> args -> option t)
 
 val decidable_eq : bool -> args -> option t
 val interp_prop_eq2 : args -> option t
@@ -350,11 +334,7 @@ val mixed_ternary_op (as_a : arg -> option 'a)
                      (us:universes)
                      (args : args) : option t
 
-val unary_op : (arg -> option 'a) -> ('a -> t) -> (universes -> args -> option t)
-val binary_op : (arg -> option 'a) -> ('a -> 'a -> t) -> (universes -> args -> option t)
-
 val dummy_interp : Ident.lid -> args -> option t
-val prims_to_fstar_range_step : args -> option t
 
 val and_op : args -> option t
 val or_op : args -> option t
