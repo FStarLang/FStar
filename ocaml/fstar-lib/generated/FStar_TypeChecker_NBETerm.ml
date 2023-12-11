@@ -1686,71 +1686,10 @@ let (arg_as_int : arg -> FStar_BigInt.t FStar_Pervasives_Native.option) =
   fun a -> unembed e_int bogus_cbs (FStar_Pervasives_Native.fst a)
 let (arg_as_bool : arg -> Prims.bool FStar_Pervasives_Native.option) =
   fun a -> unembed e_bool bogus_cbs (FStar_Pervasives_Native.fst a)
-let (arg_as_char : arg -> FStar_Char.char FStar_Pervasives_Native.option) =
-  fun a -> unembed e_char bogus_cbs (FStar_Pervasives_Native.fst a)
-let (arg_as_string : arg -> Prims.string FStar_Pervasives_Native.option) =
-  fun a -> unembed e_string bogus_cbs (FStar_Pervasives_Native.fst a)
 let arg_as_list :
   'a . 'a embedding -> arg -> 'a Prims.list FStar_Pervasives_Native.option =
   fun e ->
     fun a1 -> unembed (e_list e) bogus_cbs (FStar_Pervasives_Native.fst a1)
-let (arg_as_doc :
-  arg -> FStar_Pprint.document FStar_Pervasives_Native.option) =
-  fun a -> unembed e_document bogus_cbs (FStar_Pervasives_Native.fst a)
-let (arg_as_bounded_int :
-  arg ->
-    (FStar_Syntax_Syntax.fv * FStar_BigInt.t *
-      FStar_Syntax_Syntax.meta_source_info FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.option)
-  =
-  fun uu___ ->
-    match uu___ with
-    | (a, uu___1) ->
-        let uu___2 =
-          match a.nbe_t with
-          | Meta (t1, tm) ->
-              let uu___3 = FStar_Thunk.force tm in
-              (match uu___3 with
-               | FStar_Syntax_Syntax.Meta_desugared m ->
-                   (t1, (FStar_Pervasives_Native.Some m))
-               | uu___4 -> (a, FStar_Pervasives_Native.None))
-          | uu___3 -> (a, FStar_Pervasives_Native.None) in
-        (match uu___2 with
-         | (a1, m) ->
-             (match a1.nbe_t with
-              | FV
-                  (fv1, [],
-                   ({ nbe_t = Constant (Int i); nbe_r = uu___3;_}, uu___4)::[])
-                  when
-                  let uu___5 =
-                    FStar_Ident.string_of_lid
-                      (fv1.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-                  FStar_Compiler_Util.ends_with uu___5 "int_to_t" ->
-                  FStar_Pervasives_Native.Some (fv1, i, m)
-              | uu___3 -> FStar_Pervasives_Native.None))
-let (int_as_bounded : FStar_Syntax_Syntax.fv -> FStar_BigInt.t -> t) =
-  fun int_to_t ->
-    fun n ->
-      let c = embed e_int bogus_cbs n in
-      let int_to_t1 args1 = mk_t (FV (int_to_t, [], args1)) in
-      let uu___ = let uu___1 = as_arg c in [uu___1] in int_to_t1 uu___
-let (with_meta_ds :
-  t ->
-    FStar_Syntax_Syntax.meta_source_info FStar_Pervasives_Native.option -> t)
-  =
-  fun t1 ->
-    fun m ->
-      match m with
-      | FStar_Pervasives_Native.None -> t1
-      | FStar_Pervasives_Native.Some m1 ->
-          let uu___ =
-            let uu___1 =
-              let uu___2 =
-                FStar_Thunk.mk
-                  (fun uu___3 -> FStar_Syntax_Syntax.Meta_desugared m1) in
-              (t1, uu___2) in
-            Meta uu___1 in
-          mk_t uu___
 let lift_unary :
   'a 'b .
     ('a -> 'b) ->
@@ -1776,67 +1715,6 @@ let lift_binary :
           a1)::[] ->
           let uu___ = f a0 a1 in FStar_Pervasives_Native.Some uu___
       | uu___ -> FStar_Pervasives_Native.None
-let unary_op :
-  'a .
-    (arg -> 'a FStar_Pervasives_Native.option) ->
-      ('a -> t) ->
-        FStar_Syntax_Syntax.universes ->
-          args -> t FStar_Pervasives_Native.option
-  =
-  fun as_a ->
-    fun f ->
-      fun us ->
-        fun args1 ->
-          let uu___ = FStar_Compiler_List.map as_a args1 in
-          lift_unary f uu___
-let binary_op :
-  'a .
-    (arg -> 'a FStar_Pervasives_Native.option) ->
-      ('a -> 'a -> t) ->
-        FStar_Syntax_Syntax.universes ->
-          args -> t FStar_Pervasives_Native.option
-  =
-  fun as_a ->
-    fun f ->
-      fun _us ->
-        fun args1 ->
-          let uu___ = FStar_Compiler_List.map as_a args1 in
-          lift_binary f uu___
-let (unary_int_op :
-  (FStar_BigInt.t -> FStar_BigInt.t) ->
-    FStar_Syntax_Syntax.universes -> args -> t FStar_Pervasives_Native.option)
-  =
-  fun f ->
-    unary_op arg_as_int
-      (fun x -> let uu___ = f x in embed e_int bogus_cbs uu___)
-let (binary_int_op :
-  (FStar_BigInt.t -> FStar_BigInt.t -> FStar_BigInt.t) ->
-    FStar_Syntax_Syntax.universes -> args -> t FStar_Pervasives_Native.option)
-  =
-  fun f ->
-    binary_op arg_as_int
-      (fun x -> fun y -> let uu___ = f x y in embed e_int bogus_cbs uu___)
-let (unary_bool_op :
-  (Prims.bool -> Prims.bool) ->
-    FStar_Syntax_Syntax.universes -> args -> t FStar_Pervasives_Native.option)
-  =
-  fun f ->
-    unary_op arg_as_bool
-      (fun x -> let uu___ = f x in embed e_bool bogus_cbs uu___)
-let (binary_bool_op :
-  (Prims.bool -> Prims.bool -> Prims.bool) ->
-    FStar_Syntax_Syntax.universes -> args -> t FStar_Pervasives_Native.option)
-  =
-  fun f ->
-    binary_op arg_as_bool
-      (fun x -> fun y -> let uu___ = f x y in embed e_bool bogus_cbs uu___)
-let (binary_string_op :
-  (Prims.string -> Prims.string -> Prims.string) ->
-    FStar_Syntax_Syntax.universes -> args -> t FStar_Pervasives_Native.option)
-  =
-  fun f ->
-    binary_op arg_as_string
-      (fun x -> fun y -> let uu___ = f x y in embed e_string bogus_cbs uu___)
 let mixed_binary_op :
   'a 'b 'c .
     (arg -> 'a FStar_Pervasives_Native.option) ->
@@ -1946,18 +1824,6 @@ let (dummy_interp :
         let uu___1 = FStar_Ident.string_of_lid lid in
         Prims.strcat "No interpretation for " uu___1 in
       FStar_Compiler_Effect.failwith uu___
-let (prims_to_fstar_range_step : args -> t FStar_Pervasives_Native.option) =
-  fun args1 ->
-    match args1 with
-    | (a1, uu___)::[] ->
-        let uu___1 = unembed e_range bogus_cbs a1 in
-        (match uu___1 with
-         | FStar_Pervasives_Native.Some r ->
-             let uu___2 = embed e_range bogus_cbs r in
-             FStar_Pervasives_Native.Some uu___2
-         | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None)
-    | uu___ ->
-        FStar_Compiler_Effect.failwith "Unexpected number of arguments"
 let (and_op : args -> t FStar_Pervasives_Native.option) =
   fun args1 ->
     match args1 with
