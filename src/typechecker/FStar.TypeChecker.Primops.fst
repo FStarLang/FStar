@@ -587,6 +587,7 @@ let mask m =
   | UInt8 -> Z.of_hex "ff"
   | UInt16 -> Z.of_hex "ffff"
   | UInt32 -> Z.of_hex "ffffffff"
+  | SizeT -> Z.of_hex "ffffffffffffffff"
   | UInt64 -> Z.of_hex "ffffffffffffffff"
   | UInt128 -> Z.of_hex "ffffffffffffffffffffffffffffffff"
 
@@ -595,6 +596,14 @@ let int_to_t_lid_for (k:bounded_int_kind) : Ident.lid =
   Ident.lid_of_path path Range.dummyRange
 
 let int_to_t_for (k:bounded_int_kind) : S.term =
+  let lid = int_to_t_lid_for k in
+  S.fvar lid None
+
+let __int_to_t_lid_for (k:bounded_int_kind) : Ident.lid =
+  let path = "FStar" :: module_name_for k :: (if is_unsigned k then "__uint_to_t" else "__int_to_t") :: [] in
+  Ident.lid_of_path path Range.dummyRange
+
+let __int_to_t_for (k:bounded_int_kind) : S.term =
   let lid = int_to_t_lid_for k in
   S.fvar lid None
 
@@ -627,7 +636,8 @@ instance e_bounded_int (k : bounded_int_kind) : Tot (EMB.embedding (bounded_int 
     in
     let t = U.unmeta_safe t in
     match (SS.compress t).n with
-    | Tm_app {hd; args=[(a,_)]} when U.is_fvar (int_to_t_lid_for k) hd ->
+    | Tm_app {hd; args=[(a,_)]} when U.is_fvar (int_to_t_lid_for k) hd
+                                  || U.is_fvar (__int_to_t_lid_for k) hd ->
       let a = U.unlazy_emb a in
       let! a : Z.t = try_unembed_simple a in
       Some (Mk a m)
