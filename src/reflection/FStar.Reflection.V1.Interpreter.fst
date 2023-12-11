@@ -34,10 +34,9 @@ open FStar.Syntax.Syntax
 open FStar.Reflection.V1.Constants
 open FStar.Class.Monad
 
-// FIXME: why are the #a needed?
-let unembed #a {| EMB.embedding a |} (x:a) norm_cb = EMB.unembed #a x norm_cb
-let try_unembed #a {| EMB.embedding a |} x norm_cb = EMB.try_unembed #a x norm_cb
-let embed #a {| EMB.embedding a |} r x norm_cb     = EMB.embed #a x r None norm_cb
+let unembed     {| EMB.embedding 'a |} (x:term) norm_cb : option 'a = EMB.unembed x norm_cb
+let try_unembed {| EMB.embedding 'a |} (x:term) norm_cb : option 'a = EMB.try_unembed x norm_cb
+let embed       {| EMB.embedding 'a |} r (x:'a) norm_cb = EMB.embed x r None norm_cb
 
 (* We use `try_unembed` instead of `unembedding`, since we very well
  * might fail to unembed during the *previous* normalization stages

@@ -4787,11 +4787,11 @@ let try_teq smt_ok env t1 t2 : option guard_t =
   let smt_ok = smt_ok && not (Options.ml_ish ()) in
   Profiling.profile
     (fun () ->
-      if Env.debug env <| Options.Other "Rel" then
+      if Env.debug env <| Options.Other "Rel" || Env.debug env <| Options.Other "RelTop" then
         BU.print3 "try_teq of %s and %s in %s {\n" (show t1) (show t2) (show env.gamma);
       let prob, wl = new_t_problem (empty_worklist env) env t1 EQ t2 None (Env.get_range env) in
       let g = with_guard env prob <| solve_and_commit (singleton wl prob smt_ok) (fun _ -> None) in
-      if Env.debug env <| Options.Other "Rel" then
+      if Env.debug env <| Options.Other "Rel" || Env.debug env <| Options.Other "RelTop" then
         BU.print1 "} res = %s\n" (FStar.Common.string_of_option (guard_to_string env) g);
       g)
     (Some (Ident.string_of_lid (Env.current_module env)))
@@ -4806,11 +4806,9 @@ let teq env t1 t2 : guard_t =
             (Err.basic_type_error env None t2 t1);
         trivial_guard
     | Some g ->
-        if Env.debug env <| Options.Other "Rel"
-        then BU.print3 "teq of %s and %s succeeded with guard %s\n"
-                        (show t1)
-                        (show t2)
-                        (guard_to_string env g);
+        if Env.debug env <| Options.Other "Rel" || Env.debug env <| Options.Other "RelTop" then
+          BU.print3 "teq of %s and %s succeeded with guard %s\n"
+                        (show t1) (show t2) (guard_to_string env g);
         g
 
 (*
@@ -4820,11 +4818,11 @@ let teq env t1 t2 : guard_t =
  *     But that may change the existing VCs shape a bit
  *)
 let get_teq_predicate env t1 t2 =
-     if Env.debug env <| Options.Other "Rel" then
+    if Env.debug env <| Options.Other "Rel" || Env.debug env <| Options.Other "RelTop" then
        BU.print2 "get_teq_predicate of %s and %s {\n" (show t1) (show t2);
      let prob, x, wl = new_t_prob (empty_worklist env) env t1 EQ t2 in
      let g = with_guard env prob <| solve_and_commit (singleton wl prob true) (fun _ -> None) in
-     if Env.debug env <| Options.Other "Rel" then
+    if Env.debug env <| Options.Other "Rel" || Env.debug env <| Options.Other "RelTop" then
        BU.print1 "} res teq predicate = %s\n" (FStar.Common.string_of_option (guard_to_string env) g);
 
     match g with
@@ -4837,7 +4835,7 @@ let subtype_fail env e t1 t2 =
 let sub_or_eq_comp env (use_eq:bool) c1 c2 =
   Profiling.profile (fun () ->
     let rel = if use_eq then EQ else SUB in
-    if Env.debug env <| Options.Other "Rel" then
+    if Env.debug env <| Options.Other "Rel" || Env.debug env <| Options.Other "RelTop" then
       BU.print3 "sub_comp of %s --and-- %s --with-- %s\n" (show c1) (show c2) (if rel = EQ then "EQ" else "SUB");
     let prob, wl = new_problem (empty_worklist env) env c1 rel c2 None (Env.get_range env) "sub_comp" in
     let wl = { wl with repr_subcomp_allowed = true } in
@@ -5185,7 +5183,7 @@ let teq_nosmt (env:env) (t1:typ) (t2:typ) : option guard_t =
   | Some g -> discharge_guard' None env g false
 
 let subtype_nosmt env t1 t2 =
-    if Env.debug env <| Options.Other "Rel"
+    if Env.debug env <| Options.Other "Rel" || Env.debug env <| Options.Other "RelTop"
     then BU.print2 "try_subtype_no_smt of %s and %s\n" (N.term_to_string env t1) (N.term_to_string env t2);
     let prob, x, wl = new_t_prob (empty_worklist env) env t1 SUB t2 in
     let g = with_guard env prob <| solve_and_commit (singleton wl prob false) (fun _ -> None) in
@@ -5198,11 +5196,13 @@ let subtype_nosmt env t1 t2 =
 ///////////////////////////////////////////////////////////////////
 let check_subtyping env t1 t2 =
   Profiling.profile (fun () ->
-    if Env.debug env <| Options.Other "Rel"
+    if Env.debug env <| Options.Other "Rel" || Env.debug env <| Options.Other "RelTop"
+
     then BU.print2 "check_subtyping of %s and %s\n" (N.term_to_string env t1) (N.term_to_string env t2);
     let prob, x, wl = new_t_prob (empty_worklist env) env t1 SUB t2 in
-    let g = with_guard env prob <| solve_and_commit (singleton wl prob true) (fun _ -> None) in
-    if Env.debug env <| Options.Other "Rel"
+    let smt_ok = not (Options.ml_ish ()) in
+    let g = with_guard env prob <| solve_and_commit (singleton wl prob smt_ok) (fun _ -> None) in
+    if Env.debug env <| Options.Other "Rel" || Env.debug env <| Options.Other "RelTop"
     && BU.is_some g
     then BU.print3 "check_subtyping succeeded: %s <: %s\n\tguard is %s\n"
                     (N.term_to_string env t1)

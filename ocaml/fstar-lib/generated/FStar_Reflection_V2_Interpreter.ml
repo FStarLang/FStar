@@ -2,14 +2,13 @@ open Prims
 let unembed :
   'a .
     'a FStar_Syntax_Embeddings_Base.embedding ->
-      'a ->
+      FStar_Syntax_Syntax.term ->
         FStar_Syntax_Embeddings_Base.norm_cb ->
           'a FStar_Pervasives_Native.option
   =
   fun uu___ ->
     fun x ->
-      fun norm_cb ->
-        FStar_Syntax_Embeddings_Base.unembed uu___ (Obj.magic x) norm_cb
+      fun norm_cb -> FStar_Syntax_Embeddings_Base.unembed uu___ x norm_cb
 let try_unembed :
   'a .
     'a FStar_Syntax_Embeddings_Base.embedding ->
