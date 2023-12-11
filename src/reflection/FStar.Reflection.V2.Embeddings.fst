@@ -22,27 +22,27 @@ open FStar.Syntax.Embeddings
 open FStar.Order
 open FStar.Errors
 
-module S = FStar.Syntax.Syntax // TODO: remove, it's open
-
-module I = FStar.Ident
-module SS = FStar.Syntax.Subst
-module BU = FStar.Compiler.Util
-module Range = FStar.Compiler.Range
-module U = FStar.Syntax.Util
-module Print = FStar.Syntax.Print
-module Env = FStar.TypeChecker.Env
-module Err = FStar.Errors
-module Z = FStar.BigInt
-module EMB = FStar.Syntax.Embeddings
-open FStar.Reflection.V2.Builtins //needed for inspect_fv, but that feels wrong
+module BU      = FStar.Compiler.Util
+module EMB     = FStar.Syntax.Embeddings
+module Env     = FStar.TypeChecker.Env
+module Err     = FStar.Errors
+module I       = FStar.Ident
+module List    = FStar.Compiler.List
 module NBETerm = FStar.TypeChecker.NBETerm
-module PC = FStar.Parser.Const
-module O = FStar.Options
-module RD = FStar.Reflection.V2.Data
-module List = FStar.Compiler.List
+module O       = FStar.Options
+module PC      = FStar.Parser.Const
+module Print   = FStar.Syntax.Print
+module Range   = FStar.Compiler.Range
+module RD      = FStar.Reflection.V2.Data
+module S       = FStar.Syntax.Syntax // TODO: remove, it's open
+module SS      = FStar.Syntax.Subst
+module U       = FStar.Syntax.Util
+module Z       = FStar.BigInt
 
+open FStar.Reflection.V2.Builtins //needed for inspect_fv, but that feels wrong
 open FStar.Compiler.Dyn
 open FStar.Syntax.Embeddings.AppEmb
+open FStar.Class.Monad
 
 (* We only use simple embeddings here *)
 let mk_emb f g t =

@@ -38,3 +38,7 @@ let (<*>) ff x =
   let! f = ff in
   let! v = x in
   return (f v)
+
+let fmap f m =
+  let! v = m in
+  return (f v)

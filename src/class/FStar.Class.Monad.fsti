@@ -39,3 +39,10 @@ val (<*>)
   {| monad m |}
   (#a #b :Type)
 : m (a -> b) -> m a -> m b
+
+val fmap
+  (#m: Type -> Type)
+  {| monad m |}
+  (#a #b :Type)
+  (f : a -> b)
+: m a -> m b

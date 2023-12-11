@@ -386,7 +386,7 @@ over embeddable types. *)
 let simple_ops = [
   (* Basic *)
   mk1 0 PC.string_of_int_lid (fun z -> string_of_int (Z.to_int_fs z));
-  mk1 0 PC.int_of_string_lid (fun s -> BU.map_opt (BU.safe_int_of_string s) Z.of_int_fs);
+  mk1 0 PC.int_of_string_lid (fun s -> fmap Z.of_int_fs (BU.safe_int_of_string s));
   mk1 0 PC.string_of_bool_lid string_of_bool;
   mk1 0 PC.bool_of_string_lid (function "true" -> Some true | "false" -> Some false | _ -> None);
 
@@ -441,14 +441,14 @@ let issue_ops : list primitive_step =
   let mk_lid l = PC.p2l ["FStar"; "Issue"; l] in [
     mk1 0 (mk_lid "message_of_issue") Mkissue?.issue_msg;
     mk1 0 (mk_lid "level_of_issue") (fun i -> Errors.string_of_issue_level i.issue_level);
-    mk1 0 (mk_lid "number_of_issue") (fun i -> BU.map_opt i.issue_number Z.of_int_fs);
+    mk1 0 (mk_lid "number_of_issue") (fun i -> fmap Z.of_int_fs i.issue_number);
     mk1 0 (mk_lid "range_of_issue") Mkissue?.issue_range;
     mk1 0 (mk_lid "context_of_issue") Mkissue?.issue_ctx;
     mk1 0 (mk_lid "render_issue") Errors.format_issue;
     mk5 0 (mk_lid "mk_issue_doc") (fun level msg range number context ->
           { issue_level = Errors.issue_level_of_string level;
             issue_range = range;
-            issue_number = BU.map_opt number Z.to_int_fs;
+            issue_number = fmap Z.to_int_fs number;
             issue_msg = msg;
             issue_ctx = context}
     );
