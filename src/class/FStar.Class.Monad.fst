@@ -8,6 +8,11 @@ instance monad_option : monad option = {
   ( let! ) = Util.bind_opt;
 }
 
+instance monad_list : monad list = {
+  return = (fun x -> [x]);
+  ( let! ) = (fun x f -> List.concatMap f x)
+}
+
 let rec mapM f l =
   match l with
    | [] -> return []

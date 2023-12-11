@@ -9,6 +9,7 @@ class monad (m : Type -> Type) = {
 }
 
 instance val monad_option : monad option
+instance val monad_list   : monad list
 
 val mapM
   (#m: Type -> Type)
