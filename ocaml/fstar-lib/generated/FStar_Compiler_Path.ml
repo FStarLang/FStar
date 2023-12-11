@@ -24,6 +24,6 @@ let search_forest :
               match roots1 with
               | [] -> def
               | (r, q1)::rs ->
-                  let uu___2 = is_under uu___ p (Obj.magic r) in
+                  let uu___2 = is_under uu___ p r in
                   if uu___2 then q1 else aux rs in
-            aux (Obj.magic roots)
+            aux roots

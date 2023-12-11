@@ -2878,20 +2878,14 @@ let (unit_const : term) =
   unit_const_with_range FStar_Compiler_Range_Type.dummyRange
 let has_range_syntax : 'a . unit -> 'a syntax FStar_Class_HasRange.hasRange =
   fun uu___ ->
-    (fun uu___ ->
-       Obj.magic
-         {
-           FStar_Class_HasRange.pos = (fun t -> t.pos);
-           FStar_Class_HasRange.setPos =
-             (fun r ->
-                fun t ->
-                  {
-                    n = (t.n);
-                    pos = r;
-                    vars = (t.vars);
-                    hash_code = (t.hash_code)
-                  })
-         }) uu___
+    {
+      FStar_Class_HasRange.pos = (fun t -> t.pos);
+      FStar_Class_HasRange.setPos =
+        (fun r ->
+           fun t ->
+             { n = (t.n); pos = r; vars = (t.vars); hash_code = (t.hash_code)
+             })
+    }
 let has_range_withinfo :
   'a . unit -> 'a withinfo_t FStar_Class_HasRange.hasRange =
   fun uu___ ->

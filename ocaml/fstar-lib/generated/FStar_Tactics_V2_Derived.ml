@@ -311,8 +311,8 @@ let (cur_goal_safe :
                FStar_Tactics_Effect.lift_div_tac
                  (fun uu___2 -> FStar_Tactics_Types.goals_of uu___1))))
       (fun uu___1 ->
-         FStar_Tactics_Effect.lift_div_tac
-           (fun uu___2 -> match uu___1 with | g::uu___3 -> g))
+         match uu___1 with
+         | g::uu___2 -> FStar_Tactics_Effect.lift_div_tac (fun uu___3 -> g))
 let (cur_vars :
   unit ->
     (FStar_Tactics_NamedView.binding Prims.list, unit)
@@ -3782,18 +3782,22 @@ let (grewrite :
                                                               (FStar_Tactics_NamedView.inspect
                                                                  lhs))
                                                            (fun uu___3 ->
-                                                              FStar_Tactics_Effect.lift_div_tac
-                                                                (fun uu___4
-                                                                   ->
-                                                                   match uu___3
-                                                                   with
-                                                                   | 
-                                                                   FStar_Tactics_NamedView.Tv_Uvar
-                                                                    (uu___5,
-                                                                    uu___6)
-                                                                    -> true
-                                                                   | 
-                                                                   uu___5 ->
+                                                              match uu___3
+                                                              with
+                                                              | FStar_Tactics_NamedView.Tv_Uvar
+                                                                  (uu___4,
+                                                                   uu___5)
+                                                                  ->
+                                                                  FStar_Tactics_Effect.lift_div_tac
+                                                                    (
+                                                                    fun
+                                                                    uu___6 ->
+                                                                    true)
+                                                              | uu___4 ->
+                                                                  FStar_Tactics_Effect.lift_div_tac
+                                                                    (
+                                                                    fun
+                                                                    uu___5 ->
                                                                     false))))
                                                | uu___2 ->
                                                    Obj.magic

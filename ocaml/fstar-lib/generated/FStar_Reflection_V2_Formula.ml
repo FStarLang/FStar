@@ -702,18 +702,18 @@ let (term_as_formula' :
                                                                     ts 
                                                                     [t1]))))))
                                                   (fun uu___2 ->
-                                                     FStar_Tactics_Effect.lift_div_tac
-                                                       (fun uu___3 ->
-                                                          match uu___2 with
-                                                          | (FStar_Tactics_NamedView.Tv_FVar
-                                                             fv,
-                                                             (a1,
-                                                              FStar_Reflection_V2_Data.Q_Implicit)::
-                                                             (a2,
-                                                              FStar_Reflection_V2_Data.Q_Explicit)::
-                                                             (a3,
-                                                              FStar_Reflection_V2_Data.Q_Explicit)::[])
-                                                              ->
+                                                     match uu___2 with
+                                                     | (FStar_Tactics_NamedView.Tv_FVar
+                                                        fv,
+                                                        (a1,
+                                                         FStar_Reflection_V2_Data.Q_Implicit)::
+                                                        (a2,
+                                                         FStar_Reflection_V2_Data.Q_Explicit)::
+                                                        (a3,
+                                                         FStar_Reflection_V2_Data.Q_Explicit)::[])
+                                                         ->
+                                                         FStar_Tactics_Effect.lift_div_tac
+                                                           (fun uu___3 ->
                                                               if
                                                                 (FStar_Reflection_V2_Builtins.inspect_fv
                                                                    fv)
@@ -776,14 +776,16 @@ let (term_as_formula' :
                                                                     App
                                                                     (h0,
                                                                     (FStar_Pervasives_Native.fst
-                                                                    t1))
-                                                          | (FStar_Tactics_NamedView.Tv_FVar
-                                                             fv,
-                                                             (a1,
-                                                              FStar_Reflection_V2_Data.Q_Explicit)::
-                                                             (a2,
-                                                              FStar_Reflection_V2_Data.Q_Explicit)::[])
-                                                              ->
+                                                                    t1)))
+                                                     | (FStar_Tactics_NamedView.Tv_FVar
+                                                        fv,
+                                                        (a1,
+                                                         FStar_Reflection_V2_Data.Q_Explicit)::
+                                                        (a2,
+                                                         FStar_Reflection_V2_Data.Q_Explicit)::[])
+                                                         ->
+                                                         FStar_Tactics_Effect.lift_div_tac
+                                                           (fun uu___3 ->
                                                               if
                                                                 (FStar_Reflection_V2_Builtins.inspect_fv
                                                                    fv)
@@ -840,14 +842,16 @@ let (term_as_formula' :
                                                                     App
                                                                     (h0,
                                                                     (FStar_Pervasives_Native.fst
-                                                                    t1))
-                                                          | (FStar_Tactics_NamedView.Tv_FVar
-                                                             fv,
-                                                             (a1,
-                                                              FStar_Reflection_V2_Data.Q_Implicit)::
-                                                             (a2,
-                                                              FStar_Reflection_V2_Data.Q_Explicit)::[])
-                                                              ->
+                                                                    t1)))
+                                                     | (FStar_Tactics_NamedView.Tv_FVar
+                                                        fv,
+                                                        (a1,
+                                                         FStar_Reflection_V2_Data.Q_Implicit)::
+                                                        (a2,
+                                                         FStar_Reflection_V2_Data.Q_Explicit)::[])
+                                                         ->
+                                                         FStar_Tactics_Effect.lift_div_tac
+                                                           (fun uu___3 ->
                                                               if
                                                                 (FStar_Reflection_V2_Builtins.inspect_fv
                                                                    fv)
@@ -868,12 +872,14 @@ let (term_as_formula' :
                                                                   App
                                                                     (h0,
                                                                     (FStar_Pervasives_Native.fst
-                                                                    t1))
-                                                          | (FStar_Tactics_NamedView.Tv_FVar
-                                                             fv,
-                                                             (a,
-                                                              FStar_Reflection_V2_Data.Q_Explicit)::[])
-                                                              ->
+                                                                    t1)))
+                                                     | (FStar_Tactics_NamedView.Tv_FVar
+                                                        fv,
+                                                        (a,
+                                                         FStar_Reflection_V2_Data.Q_Explicit)::[])
+                                                         ->
+                                                         FStar_Tactics_Effect.lift_div_tac
+                                                           (fun uu___3 ->
                                                               if
                                                                 (FStar_Reflection_V2_Builtins.inspect_fv
                                                                    fv)
@@ -912,8 +918,10 @@ let (term_as_formula' :
                                                                   App
                                                                     (h0,
                                                                     (FStar_Pervasives_Native.fst
-                                                                    t1))
-                                                          | uu___4 ->
+                                                                    t1)))
+                                                     | uu___3 ->
+                                                         FStar_Tactics_Effect.lift_div_tac
+                                                           (fun uu___4 ->
                                                               App
                                                                 (h0,
                                                                   (FStar_Pervasives_Native.fst
