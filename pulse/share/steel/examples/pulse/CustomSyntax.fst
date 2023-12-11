@@ -343,16 +343,16 @@ fn sum2 (r:ref nat) (n:nat)
 
 ```pulse
 fn if_then_else_in_specs (r:ref U32.t)
-  requires `@(if true
+  requires (if true
               then pts_to r 0ul
               else pts_to r 1ul)
-  ensures  `@(if true
+  ensures  (if true
               then pts_to r 1ul
               else pts_to r 0ul)
 {
   // need this for typechecking !r on the next line,
   //   with inference of implicits
-  rewrite `@(if true then pts_to r 0ul else pts_to r 1ul)
+  rewrite (if true then pts_to r 0ul else pts_to r 1ul)
        as (pts_to r 0ul);
   let x = !r;
   r := U32.add x 1ul

@@ -212,12 +212,12 @@ fn __elim_l (#os0:inames) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool)
       by the other subpledge, so we just extract our resource. *)
       assert (pts_to r1 false);
       r1 := true;
-      rewrite emp ** `@(match false, true with
+      rewrite emp ** (match false, true with
                  | false, false -> pledge os0 f (v1 ** v2)
                  | false, true -> v1
                  | true, false -> v2
                  | true, true -> emp)
-           as `@(match true, true with
+           as (match true, true with
                  | false, false -> pledge os0 f (v1 ** v2)
                  | false, true -> v1
                  | true, false -> v2
@@ -225,7 +225,7 @@ fn __elim_l (#os0:inames) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool)
 
       (* I don't understand why this remains in the ctx, but get rid
       of it as it's just emp *)
-      rewrite `@(match true, true with
+      rewrite (match true, true with
                  | false, false -> pledge os0 f (v1 ** v2)
                  | false, true -> v1
                  | true, false -> v2
@@ -243,7 +243,7 @@ fn __elim_l (#os0:inames) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool)
       Claim it, split it, and store the leftover in the invariant. *)
       assert (pts_to r1 false);
 
-      rewrite `@(match false, false with
+      rewrite (match false, false with
                  | false, false -> pledge os0 f (v1 ** v2)
                  | false, true -> v1
                  | true, false -> v2
@@ -257,7 +257,7 @@ fn __elim_l (#os0:inames) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool)
       r1 := true;
 
       rewrite v2
-           as `@(match true, false with
+           as (match true, false with
                  | false, false -> pledge os0 f (v1 ** v2)
                  | false, true -> v1
                  | true, false -> v2
@@ -304,7 +304,7 @@ fn __split_pledge (#os:inames) (#f:vprop) (v1:vprop) (v2:vprop)
    GR.share2 r2;
 
    rewrite (pledge os f (v1 ** v2))
-        as `@(match false, false with
+        as (match false, false with
             | false, false -> pledge os f (v1 ** v2)
             | false, true -> v1
             | true, false -> v2
@@ -313,7 +313,7 @@ fn __split_pledge (#os:inames) (#f:vprop) (v1:vprop) (v2:vprop)
   assert (
      GR.pts_to r1 #one_half false
   ** GR.pts_to r2 #one_half false
-  ** `@(match false, false with
+  ** (match false, false with
       | false, false -> pledge os f (v1 ** v2)
       | false, true -> v1
       | true, false -> v2

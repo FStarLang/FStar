@@ -24,11 +24,11 @@ let emp_inames_disjoint (t:inames)
 ```pulse
 ghost
 fn elim_implies (#p #q:vprop) ()
-   requires `@(p @==> q) ** p
+   requires (p @==> q) ** p
    ensures q
 {
   open Pulse.Lib.Stick;
-  rewrite `@(p @==> q) as (stick #emp_inames p q);
+  rewrite (p @==> q) as (stick #emp_inames p q);
   elim_stick #emp_inames p q;
 }
 ```
@@ -283,8 +283,8 @@ fn parse_dpe_cmd (#s:erased (Seq.seq U8.t))
                 dpe_cmd_args = cmd_args;
               };
 *)              
-              rewrite (raw_data_item_match full_perm cmd_args vargs ** `@(raw_data_item_match full_perm cmd_args vargs @==> A.pts_to input #p s)) // FIXME: should `fold` honor projectors and not just `match`?
-                as (raw_data_item_match full_perm res.dpe_cmd_args vargs ** `@(raw_data_item_match full_perm res.dpe_cmd_args vargs @==> A.pts_to input #p s));
+              rewrite (raw_data_item_match full_perm cmd_args vargs ** (raw_data_item_match full_perm cmd_args vargs @==> A.pts_to input #p s)) // FIXME: should `fold` honor projectors and not just `match`?
+                as (raw_data_item_match full_perm res.dpe_cmd_args vargs ** (raw_data_item_match full_perm res.dpe_cmd_args vargs @==> A.pts_to input #p s));
               fold (parse_dpe_cmd_post len input s p (Some res));
               Some res
             }

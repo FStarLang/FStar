@@ -214,7 +214,7 @@ requires
     (
             R.pts_to pi i' **
             cbor_array_iterator_match p i' l' **
-            `@(cbor_array_iterator_match p i' l' @==> cbor_array_iterator_match p i l) **
+            (cbor_array_iterator_match p i' l' @==> cbor_array_iterator_match p i l) **
             pure (
                 opt_precedes (Ghost.reveal l) b /\
                 res == Some? (g l) /\
@@ -222,7 +222,7 @@ requires
             )
     )
 ensures
-        `@(exists* i' l'.
+        (exists* i' l'.
             R.pts_to pi i' **
             cbor_array_iterator_match p i' l' **
             (cbor_array_iterator_match p i' l' @==> cbor_array_iterator_match p i l) **
@@ -290,7 +290,7 @@ fn impl_array_group3_item
         with gc i' l' . assert (
             raw_data_item_match p c gc **
             cbor_array_iterator_match p i' l' **
-            `@((raw_data_item_match p c gc ** cbor_array_iterator_match p i' l') @==> cbor_array_iterator_match p gi l)
+            ((raw_data_item_match p c gc ** cbor_array_iterator_match p i' l') @==> cbor_array_iterator_match p gi l)
         ); // this is needed for the explicit arguments to split_consume_l below
         let test = fty c;
         if (test) {
@@ -895,7 +895,7 @@ fn impl_matches_map_group_no_restricted
         pts_to pres res **
         pts_to pi i **
         cbor_map_iterator_match p i l **
-        `@(cbor_map_iterator_match p i l @==> raw_data_item_match p c v) **
+        (cbor_map_iterator_match p i l @==> raw_data_item_match p c v) **
         pure (
             list_ghost_forall_exists matches_map_group_entry' (Map?.v v) g.zero_or_more ==
                 (res && list_ghost_forall_exists matches_map_group_entry' l g.zero_or_more) /\
@@ -907,7 +907,7 @@ fn impl_matches_map_group_no_restricted
         let x = cbor_map_iterator_next pi;
         stick_trans ();
         let res = ig x;
-        with vx gi l . assert (pts_to pi gi ** raw_data_item_map_entry_match p x vx ** cbor_map_iterator_match p gi l ** `@((raw_data_item_map_entry_match p x vx ** cbor_map_iterator_match p gi l) @==> raw_data_item_match p c v)) ;
+        with vx gi l . assert (pts_to pi gi ** raw_data_item_map_entry_match p x vx ** cbor_map_iterator_match p gi l ** ((raw_data_item_map_entry_match p x vx ** cbor_map_iterator_match p gi l) @==> raw_data_item_match p c v)) ;
         stick_consume_l ()
             #(raw_data_item_map_entry_match p x vx)
             #(cbor_map_iterator_match p gi l);

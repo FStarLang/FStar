@@ -229,8 +229,8 @@ ensures
                     pts_to pi1 i1 ** pts_to pi2 i2 ** pts_to pdone done ** pts_to pres res **
                     cbor_array_iterator_match p1 i1 l1 **
                     cbor_array_iterator_match p2 i2 l2 **
-                    `@(cbor_array_iterator_match p1 i1 l1 @==> raw_data_item_match p1 a1 v1) **
-                    `@(cbor_array_iterator_match p2 i2 l2 @==> raw_data_item_match p2 a2 v2) **
+                    (cbor_array_iterator_match p1 i1 l1 @==> raw_data_item_match p1 a1 v1) **
+                    (cbor_array_iterator_match p2 i2 l2 @==> raw_data_item_match p2 a2 v2) **
                     pure (
                         List.Tot.length l1 == List.Tot.length l2 /\
                         Cbor.cbor_compare v1 v2 == (if res = 0s then Cbor.cbor_compare_array l1 l2 else I16.v res) /\
@@ -307,8 +307,8 @@ ensures
                     pts_to pi1 i1 ** pts_to pi2 i2 ** pts_to pdone done ** pts_to pres res **
                     cbor_map_iterator_match p1 i1 l1 **
                     cbor_map_iterator_match p2 i2 l2 **
-                    `@(cbor_map_iterator_match p1 i1 l1 @==> raw_data_item_match p1 a1 v1) **
-                    `@(cbor_map_iterator_match p2 i2 l2 @==> raw_data_item_match p2 a2 v2) **
+                    (cbor_map_iterator_match p1 i1 l1 @==> raw_data_item_match p1 a1 v1) **
+                    (cbor_map_iterator_match p2 i2 l2 @==> raw_data_item_match p2 a2 v2) **
                     pure (
                         List.Tot.length l1 == List.Tot.length l2 /\
                         (Cbor.cbor_compare v1 v2 == (if res = 0s then Cbor.cbor_compare_map l1 l2 else I16.v res)) /\
@@ -337,8 +337,8 @@ ensures
                         raw_data_item_match p2 (cbor_map_entry_value x2) (sndp v2') **
                         cbor_map_iterator_match p1 gi1' l1' **
                         cbor_map_iterator_match p2 gi2' l2' **
-                        `@((raw_data_item_map_entry_match p1 x1 v1' ** cbor_map_iterator_match p1 gi1' l1') @==> raw_data_item_match p1 a1 v1) **
-                        `@((raw_data_item_map_entry_match p2 x2 v2' ** cbor_map_iterator_match p2 gi2' l2') @==> raw_data_item_match p2 a2 v2) **
+                        ((raw_data_item_map_entry_match p1 x1 v1' ** cbor_map_iterator_match p1 gi1' l1') @==> raw_data_item_match p1 a1 v1) **
+                        ((raw_data_item_map_entry_match p2 x2 v2' ** cbor_map_iterator_match p2 gi2' l2') @==> raw_data_item_match p2 a2 v2) **
                         pts_to pres res ** pure ((I16.v res <: int) == (if Cbor.cbor_compare (fstp v1') (fstp v2') <> 0 then Cbor.cbor_compare (fstp v1') (fstp v2') else Cbor.cbor_compare (sndp v1') (sndp v2')))
                     {
                         let test = cbor_compare (cbor_map_entry_value x1) (cbor_map_entry_value x2);
@@ -843,7 +843,7 @@ requires
     A.pts_to_range a (SZ.v lo) (SZ.v hi) c **
     SM.seq_list_match c l (raw_data_item_map_entry_match full_perm)
 returns res: bool
-ensures `@(exists* (c': Seq.seq cbor_map_entry) (l': list (Cbor.raw_data_item & Cbor.raw_data_item)).
+ensures (exists* (c': Seq.seq cbor_map_entry) (l': list (Cbor.raw_data_item & Cbor.raw_data_item)).
     // FIXME: WHY WHY WHY do I need to use exists_ instead of Pulse exists? Error message is: "IOU"
     A.pts_to_range a (SZ.v lo) (SZ.v hi) c' **
     SM.seq_list_match c' l' (raw_data_item_map_entry_match full_perm) **
