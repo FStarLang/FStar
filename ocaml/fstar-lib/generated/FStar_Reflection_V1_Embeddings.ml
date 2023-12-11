@@ -450,8 +450,7 @@ let rec e_pattern_aq :
             let uu___2 =
               let uu___3 =
                 let uu___4 =
-                  let uu___5 = FStar_Syntax_Embeddings.e_sealed e_term in
-                  embed uu___5 rng sort in
+                  embed (FStar_Syntax_Embeddings.e_sealed e_term) rng sort in
                 FStar_Syntax_Syntax.as_arg uu___4 in
               [uu___3] in
             uu___1 :: uu___2 in
@@ -528,8 +527,7 @@ let rec e_pattern_aq :
                FStar_Compiler_Util.bind_opt uu___4
                  (fun bv1 ->
                     let uu___5 =
-                      let uu___6 = FStar_Syntax_Embeddings.e_sealed e_term in
-                      unembed uu___6 sort in
+                      unembed (FStar_Syntax_Embeddings.e_sealed e_term) sort in
                     FStar_Compiler_Util.bind_opt uu___5
                       (fun sort1 ->
                          FStar_Pervasives_Native.Some
@@ -1185,9 +1183,10 @@ let (e_bv_view :
     let uu___ =
       let uu___1 =
         let uu___2 =
-          let uu___3 =
-            FStar_Syntax_Embeddings.e_sealed FStar_Syntax_Embeddings.e_string in
-          embed uu___3 rng bvv.FStar_Reflection_V1_Data.bv_ppname in
+          embed
+            (FStar_Syntax_Embeddings.e_sealed
+               FStar_Syntax_Embeddings.e_string) rng
+            bvv.FStar_Reflection_V1_Data.bv_ppname in
         FStar_Syntax_Syntax.as_arg uu___2 in
       let uu___2 =
         let uu___3 =
@@ -1217,10 +1216,9 @@ let (e_bv_view :
                FStar_Reflection_V1_Constants.ref_Mk_bv.FStar_Reflection_V1_Constants.lid
              ->
              let uu___4 =
-               let uu___5 =
-                 FStar_Syntax_Embeddings.e_sealed
-                   FStar_Syntax_Embeddings.e_string in
-               unembed uu___5 nm in
+               unembed
+                 (FStar_Syntax_Embeddings.e_sealed
+                    FStar_Syntax_Embeddings.e_string) nm in
              FStar_Compiler_Util.bind_opt uu___4
                (fun nm1 ->
                   let uu___5 = unembed FStar_Syntax_Embeddings.e_int idx in

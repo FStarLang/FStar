@@ -86,7 +86,7 @@ val embed_as     : embedding 'a ->
                    ('a -> 'b) ->
                    ('b -> 'a) ->
                    option typ -> (* optionally change the type *)
-                   embedding 'b
+                   Tot (embedding 'b)
 
 (* Construct a simple lazy embedding as a blob. *)
 val e_lazy        : lazy_kind ->

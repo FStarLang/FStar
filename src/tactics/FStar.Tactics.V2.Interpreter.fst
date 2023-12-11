@@ -35,7 +35,6 @@ open FStar.Tactics.Printing
 open FStar.Tactics.Monad
 open FStar.Tactics.V2.Basic
 open FStar.Tactics.CtrlRewrite
-open FStar.Tactics.V2.InterpFuns
 open FStar.Tactics.Native
 open FStar.Tactics.Common
 open FStar.Class.Show
@@ -46,10 +45,13 @@ module Cfg     = FStar.TypeChecker.Cfg
 module E       = FStar.Tactics.Embedding
 module Env     = FStar.TypeChecker.Env
 module Err     = FStar.Errors
+module IFuns   = FStar.Tactics.V2.InterpFuns
 module NBE     = FStar.TypeChecker.NBE
 module NBET    = FStar.TypeChecker.NBETerm
 module N       = FStar.TypeChecker.Normalize
 module NRE     = FStar.Reflection.V2.NBEEmbeddings
+module PC      = FStar.Parser.Const
+module PO      = FStar.TypeChecker.Primops
 module Print   = FStar.Syntax.Print
 module RE      = FStar.Reflection.V2.Embeddings
 module S       = FStar.Syntax.Syntax
@@ -58,8 +60,6 @@ module TcComm  = FStar.TypeChecker.Common
 module TcRel   = FStar.TypeChecker.Rel
 module TcTerm  = FStar.TypeChecker.TcTerm
 module U       = FStar.Syntax.Util
-module PC      = FStar.Parser.Const
-module PO      = FStar.TypeChecker.Primops
 
 let tacdbg = BU.mk_ref false
 
@@ -84,15 +84,15 @@ let native_tactics_steps () =
 (* mk_total_step_1/mk_total_step_2 uses names in FStar.Tactics.Builtins, we override these few who
  * are in other modules: *)
 let mk_total_step_1' uarity nm f ea er nf ena enr =
-  { mk_total_step_1  uarity nm f ea er nf ena enr
+  { IFuns.mk_total_step_1  uarity nm f ea er nf ena enr
     with name = Ident.lid_of_str ("FStar.Stubs.Tactics.Types." ^ nm) }
 
 let mk_total_step_1'_psc uarity nm f ea er nf ena enr =
-  { mk_total_step_1_psc  uarity nm f ea er nf ena enr
+  { IFuns.mk_total_step_1_psc  uarity nm f ea er nf ena enr
     with name = Ident.lid_of_str ("FStar.Stubs.Tactics.Types." ^ nm) }
 
 let mk_total_step_2' uarity nm f ea eb er nf ena enb enr =
-  { mk_total_step_2  uarity nm f ea eb er nf ena enb enr
+  { IFuns.mk_total_step_2  uarity nm f ea eb er nf ena enb enr
     with name = Ident.lid_of_str ("FStar.Stubs.Tactics.Types." ^ nm) }
 
 
@@ -117,7 +117,7 @@ let mk_tac_step_1 univ_arity nm f nbe_f : PO.primitive_step =
       let! a = unembed a cbs in
       let! ps = unembed ps cbs in
       let ps = set_ps_psc psc ps in
-      let r = interp_ctx nm (fun () -> run_safe (f a) ps) in
+      let r = IFuns.interp_ctx nm (fun () -> run_safe (f a) ps) in
       return (embed (PO.psc_range psc) r cbs)
     | _ ->
       None
@@ -127,7 +127,7 @@ let mk_tac_step_1 univ_arity nm f nbe_f : PO.primitive_step =
     | [(a,_); (ps, _)] ->
       let! a = NBET.unembed solve cb a in
       let! ps = NBET.unembed E.e_proofstate_nbe cb ps in
-      let r = interp_ctx nm (fun () -> run_safe (nbe_f a) ps) in
+      let r = IFuns.interp_ctx nm (fun () -> run_safe (nbe_f a) ps) in
       return (NBET.embed (E.e_result_nbe solve) cb r)
     | _ ->
       None
@@ -155,7 +155,7 @@ let mk_tac_step_2 univ_arity nm f nbe_f : PO.primitive_step =
       let! b = unembed b cbs in
       let! ps = unembed ps cbs in
       let ps = set_ps_psc psc ps in
-      let r = interp_ctx nm (fun () -> run_safe (f a b) ps) in
+      let r = IFuns.interp_ctx nm (fun () -> run_safe (f a b) ps) in
       return (embed (PO.psc_range psc) r cbs)
     | _ ->
       None
@@ -166,7 +166,7 @@ let mk_tac_step_2 univ_arity nm f nbe_f : PO.primitive_step =
       let! a = NBET.unembed solve cb a in
       let! b = NBET.unembed solve cb b in
       let! ps = NBET.unembed E.e_proofstate_nbe cb ps in
-      let r = interp_ctx nm (fun () -> run_safe (nbe_f a b) ps) in
+      let r = IFuns.interp_ctx nm (fun () -> run_safe (nbe_f a b) ps) in
       return (NBET.embed (E.e_result_nbe solve) cb r)
     | _ ->
       None
@@ -197,7 +197,7 @@ let mk_tac_step_3 univ_arity nm f nbe_f : PO.primitive_step =
       let! c = unembed c cbs in
       let! ps = unembed ps cbs in
       let ps = set_ps_psc psc ps in
-      let r = interp_ctx nm (fun () -> run_safe (f a b c) ps) in
+      let r = IFuns.interp_ctx nm (fun () -> run_safe (f a b c) ps) in
       return (embed (PO.psc_range psc) r cbs)
     | _ ->
       None
@@ -209,7 +209,7 @@ let mk_tac_step_3 univ_arity nm f nbe_f : PO.primitive_step =
       let! b = NBET.unembed solve cb b in
       let! c = NBET.unembed solve cb c in
       let! ps = NBET.unembed E.e_proofstate_nbe cb ps in
-      let r = interp_ctx nm (fun () -> run_safe (nbe_f a b c) ps) in
+      let r = IFuns.interp_ctx nm (fun () -> run_safe (nbe_f a b c) ps) in
       return (NBET.embed (E.e_result_nbe solve) cb r)
     | _ ->
       None
@@ -243,7 +243,7 @@ let mk_tac_step_4 univ_arity nm f nbe_f : PO.primitive_step =
       let! d = unembed d cbs in
       let! ps = unembed ps cbs in
       let ps = set_ps_psc psc ps in
-      let r = interp_ctx nm (fun () -> run_safe (f a b c d) ps) in
+      let r = IFuns.interp_ctx nm (fun () -> run_safe (f a b c d) ps) in
       return (embed (PO.psc_range psc) r cbs)
     | _ ->
       None
@@ -256,7 +256,7 @@ let mk_tac_step_4 univ_arity nm f nbe_f : PO.primitive_step =
       let! c = NBET.unembed solve cb c in
       let! d = NBET.unembed solve cb d in
       let! ps = NBET.unembed E.e_proofstate_nbe cb ps in
-      let r = interp_ctx nm (fun () -> run_safe (nbe_f a b c d) ps) in
+      let r = IFuns.interp_ctx nm (fun () -> run_safe (nbe_f a b c d) ps) in
       return (NBET.embed (E.e_result_nbe solve) cb r)
     | _ ->
       None

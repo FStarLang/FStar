@@ -112,3 +112,11 @@ let op_Less_Star_Greater : 'm . 'm monad -> unit -> unit -> 'm -> 'm -> 'm =
                       (op_let_Bang uu___ () () x
                          (fun v -> let uu___1 = f v in return uu___ () uu___1)))
                    uu___1)
+let fmap : 'm . 'm monad -> unit -> unit -> (Obj.t -> Obj.t) -> 'm -> 'm =
+  fun uu___ ->
+    fun a ->
+      fun b ->
+        fun f ->
+          fun m1 ->
+            op_let_Bang uu___ () () m1
+              (fun v -> let uu___1 = f v in return uu___ () uu___1)
