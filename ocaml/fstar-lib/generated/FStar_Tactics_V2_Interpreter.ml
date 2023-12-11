@@ -1492,11 +1492,10 @@ let unseal : 'uuuuu 'a . 'uuuuu -> 'a -> 'a FStar_Tactics_Monad.tac =
 let (unseal_step : FStar_TypeChecker_Primops.primitive_step) =
   let s =
     let uu___ =
-      FStar_Syntax_Embeddings.e_sealed FStar_Syntax_Embeddings.e_any in
-    let uu___1 =
       FStar_TypeChecker_NBETerm.e_sealed FStar_TypeChecker_NBETerm.e_any in
-    mk_tac_step_2 Prims.int_one "unseal" FStar_Syntax_Embeddings.e_any uu___
-      FStar_Syntax_Embeddings.e_any FStar_TypeChecker_NBETerm.e_any uu___1
+    mk_tac_step_2 Prims.int_one "unseal" FStar_Syntax_Embeddings.e_any
+      (FStar_Syntax_Embeddings.e_sealed FStar_Syntax_Embeddings.e_any)
+      FStar_Syntax_Embeddings.e_any FStar_TypeChecker_NBETerm.e_any uu___
       FStar_TypeChecker_NBETerm.e_any unseal unseal in
   {
     FStar_TypeChecker_Primops.name = FStar_Parser_Const.unseal_lid;

@@ -1907,58 +1907,6 @@ let mixed_ternary_op :
                           | uu___2 -> FStar_Pervasives_Native.None)
                      | uu___1 -> FStar_Pervasives_Native.None)
                 | uu___ -> FStar_Pervasives_Native.None
-let (list_of_string' : Prims.string -> t) =
-  fun s -> embed (e_list e_char) bogus_cbs (FStar_String.list_of_string s)
-let (string_of_list' : FStar_String.char Prims.list -> t) =
-  fun l ->
-    let s = FStar_String.string_of_list l in
-    mk_t (Constant (String (s, FStar_Compiler_Range_Type.dummyRange)))
-let (string_compare' : Prims.string -> Prims.string -> t) =
-  fun s1 ->
-    fun s2 ->
-      let r = FStar_Compiler_String.compare s1 s2 in
-      let uu___ =
-        let uu___1 = FStar_Compiler_Util.string_of_int r in
-        FStar_BigInt.big_int_of_string uu___1 in
-      embed e_int bogus_cbs uu___
-let (string_concat' : args -> t FStar_Pervasives_Native.option) =
-  fun args1 ->
-    match args1 with
-    | a1::a2::[] ->
-        let uu___ = arg_as_string a1 in
-        (match uu___ with
-         | FStar_Pervasives_Native.Some s1 ->
-             let uu___1 = arg_as_list e_string a2 in
-             (match uu___1 with
-              | FStar_Pervasives_Native.Some s2 ->
-                  let r = FStar_Compiler_String.concat s1 s2 in
-                  let uu___2 = embed e_string bogus_cbs r in
-                  FStar_Pervasives_Native.Some uu___2
-              | uu___2 -> FStar_Pervasives_Native.None)
-         | uu___1 -> FStar_Pervasives_Native.None)
-    | uu___ -> FStar_Pervasives_Native.None
-let (string_of_int : FStar_BigInt.t -> t) =
-  fun i ->
-    let uu___ = FStar_BigInt.string_of_big_int i in
-    embed e_string bogus_cbs uu___
-let (string_of_bool : Prims.bool -> t) =
-  fun b -> embed e_string bogus_cbs (if b then "true" else "false")
-let (int_of_string : Prims.string -> t) =
-  fun s ->
-    let uu___ = FStar_Compiler_Util.safe_int_of_string s in
-    embed (e_option e_fsint) bogus_cbs uu___
-let (bool_of_string : Prims.string -> t) =
-  fun s ->
-    let r =
-      match s with
-      | "true" -> FStar_Pervasives_Native.Some true
-      | "false" -> FStar_Pervasives_Native.Some false
-      | uu___ -> FStar_Pervasives_Native.None in
-    embed (e_option e_bool) bogus_cbs r
-let (string_lowercase : Prims.string -> t) =
-  fun s -> embed e_string bogus_cbs (FStar_Compiler_String.lowercase s)
-let (string_uppercase : Prims.string -> t) =
-  fun s -> embed e_string bogus_cbs (FStar_Compiler_String.lowercase s)
 let (decidable_eq : Prims.bool -> args -> t FStar_Pervasives_Native.option) =
   fun neg ->
     fun args1 ->
@@ -2010,115 +1958,6 @@ let (prims_to_fstar_range_step : args -> t FStar_Pervasives_Native.option) =
          | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None)
     | uu___ ->
         FStar_Compiler_Effect.failwith "Unexpected number of arguments"
-let (string_split' : args -> t FStar_Pervasives_Native.option) =
-  fun args1 ->
-    match args1 with
-    | a1::a2::[] ->
-        let uu___ = arg_as_list e_char a1 in
-        (match uu___ with
-         | FStar_Pervasives_Native.Some s1 ->
-             let uu___1 = arg_as_string a2 in
-             (match uu___1 with
-              | FStar_Pervasives_Native.Some s2 ->
-                  let r = FStar_Compiler_String.split s1 s2 in
-                  let uu___2 = embed (e_list e_string) bogus_cbs r in
-                  FStar_Pervasives_Native.Some uu___2
-              | uu___2 -> FStar_Pervasives_Native.None)
-         | uu___1 -> FStar_Pervasives_Native.None)
-    | uu___ -> FStar_Pervasives_Native.None
-let (string_index : args -> t FStar_Pervasives_Native.option) =
-  fun args1 ->
-    match args1 with
-    | a1::a2::[] ->
-        let uu___ =
-          let uu___1 = arg_as_string a1 in
-          let uu___2 = arg_as_int a2 in (uu___1, uu___2) in
-        (match uu___ with
-         | (FStar_Pervasives_Native.Some s, FStar_Pervasives_Native.Some i)
-             ->
-             (try
-                (fun uu___1 ->
-                   match () with
-                   | () ->
-                       let r = FStar_Compiler_String.index s i in
-                       let uu___2 = embed e_char bogus_cbs r in
-                       FStar_Pervasives_Native.Some uu___2) ()
-              with | uu___1 -> FStar_Pervasives_Native.None)
-         | uu___1 -> FStar_Pervasives_Native.None)
-    | uu___ -> FStar_Pervasives_Native.None
-let (string_index_of : args -> t FStar_Pervasives_Native.option) =
-  fun args1 ->
-    match args1 with
-    | a1::a2::[] ->
-        let uu___ =
-          let uu___1 = arg_as_string a1 in
-          let uu___2 = arg_as_char a2 in (uu___1, uu___2) in
-        (match uu___ with
-         | (FStar_Pervasives_Native.Some s, FStar_Pervasives_Native.Some c)
-             ->
-             (try
-                (fun uu___1 ->
-                   match () with
-                   | () ->
-                       let r = FStar_Compiler_String.index_of s c in
-                       let uu___2 = embed e_int bogus_cbs r in
-                       FStar_Pervasives_Native.Some uu___2) ()
-              with | uu___1 -> FStar_Pervasives_Native.None)
-         | uu___1 -> FStar_Pervasives_Native.None)
-    | uu___ -> FStar_Pervasives_Native.None
-let (string_substring' : args -> t FStar_Pervasives_Native.option) =
-  fun args1 ->
-    match args1 with
-    | a1::a2::a3::[] ->
-        let uu___ =
-          let uu___1 = arg_as_string a1 in
-          let uu___2 = arg_as_int a2 in
-          let uu___3 = arg_as_int a3 in (uu___1, uu___2, uu___3) in
-        (match uu___ with
-         | (FStar_Pervasives_Native.Some s1, FStar_Pervasives_Native.Some n1,
-            FStar_Pervasives_Native.Some n2) ->
-             let n11 = FStar_BigInt.to_int_fs n1 in
-             let n21 = FStar_BigInt.to_int_fs n2 in
-             (try
-                (fun uu___1 ->
-                   match () with
-                   | () ->
-                       let r = FStar_Compiler_String.substring s1 n11 n21 in
-                       let uu___2 = embed e_string bogus_cbs r in
-                       FStar_Pervasives_Native.Some uu___2) ()
-              with | uu___1 -> FStar_Pervasives_Native.None)
-         | uu___1 -> FStar_Pervasives_Native.None)
-    | uu___ -> FStar_Pervasives_Native.None
-let (mk_range : args -> t FStar_Pervasives_Native.option) =
-  fun args1 ->
-    match args1 with
-    | fn::from_line::from_col::to_line::to_col::[] ->
-        let uu___ =
-          let uu___1 = arg_as_string fn in
-          let uu___2 = arg_as_int from_line in
-          let uu___3 = arg_as_int from_col in
-          let uu___4 = arg_as_int to_line in
-          let uu___5 = arg_as_int to_col in
-          (uu___1, uu___2, uu___3, uu___4, uu___5) in
-        (match uu___ with
-         | (FStar_Pervasives_Native.Some fn1, FStar_Pervasives_Native.Some
-            from_l, FStar_Pervasives_Native.Some from_c,
-            FStar_Pervasives_Native.Some to_l, FStar_Pervasives_Native.Some
-            to_c) ->
-             let r =
-               let uu___1 =
-                 let uu___2 = FStar_BigInt.to_int_fs from_l in
-                 let uu___3 = FStar_BigInt.to_int_fs from_c in
-                 FStar_Compiler_Range_Type.mk_pos uu___2 uu___3 in
-               let uu___2 =
-                 let uu___3 = FStar_BigInt.to_int_fs to_l in
-                 let uu___4 = FStar_BigInt.to_int_fs to_c in
-                 FStar_Compiler_Range_Type.mk_pos uu___3 uu___4 in
-               FStar_Compiler_Range_Type.mk_range fn1 uu___1 uu___2 in
-             let uu___1 = embed e_range bogus_cbs r in
-             FStar_Pervasives_Native.Some uu___1
-         | uu___1 -> FStar_Pervasives_Native.None)
-    | uu___ -> FStar_Pervasives_Native.None
 let (and_op : args -> t FStar_Pervasives_Native.option) =
   fun args1 ->
     match args1 with
@@ -2147,32 +1986,6 @@ let (or_op : args -> t FStar_Pervasives_Native.option) =
          | uu___1 -> FStar_Pervasives_Native.None)
     | uu___ ->
         FStar_Compiler_Effect.failwith "Unexpected number of arguments"
-let (division_modulus_op :
-  (FStar_BigInt.bigint -> FStar_BigInt.bigint -> FStar_BigInt.bigint) ->
-    args -> t FStar_Pervasives_Native.option)
-  =
-  fun op ->
-    fun args1 ->
-      match args1 with
-      | a1::a2::[] ->
-          let uu___ =
-            let uu___1 = arg_as_int a1 in
-            let uu___2 = arg_as_int a2 in (uu___1, uu___2) in
-          (match uu___ with
-           | (FStar_Pervasives_Native.Some m, FStar_Pervasives_Native.Some n)
-               ->
-               let uu___1 =
-                 let uu___2 = FStar_BigInt.to_int_fs n in
-                 uu___2 <> Prims.int_zero in
-               if uu___1
-               then
-                 let uu___2 =
-                   let uu___3 = op m n in embed e_int bogus_cbs uu___3 in
-                 FStar_Pervasives_Native.Some uu___2
-               else FStar_Pervasives_Native.None
-           | uu___1 -> FStar_Pervasives_Native.None)
-      | uu___ ->
-          FStar_Compiler_Effect.failwith "Unexpected number of arguments"
 let arrow_as_prim_step_1 :
   'a 'b .
     'a embedding ->
