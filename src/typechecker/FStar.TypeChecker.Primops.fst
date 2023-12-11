@@ -721,6 +721,9 @@ let bounded_arith_ops : list primitive_step =
       mk2 0 (nm "add") (on_bounded2 k Z.add_big_int);
       mk2 0 (nm "sub") (on_bounded2 k Z.sub_big_int);
       mk2 0 (nm "mul") (on_bounded2 k Z.mult_big_int);
+      mk2 0 (nm "add_underspec") (on_bounded2 k Z.add_big_int);
+      mk2 0 (nm "sub_underspec") (on_bounded2 k Z.sub_big_int);
+      mk2 0 (nm "mul_underspec") (on_bounded2 k Z.mult_big_int);
 
       mk2 0 (nm "gt")  (on_bounded2' k Z.gt_big_int);
       mk2 0 (nm "gte") (on_bounded2' k Z.ge_big_int);
