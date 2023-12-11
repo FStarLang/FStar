@@ -45,9 +45,12 @@ let profile f c = Profiling.profile f None c
 the file is deleted. *)
 let with_file_outchannel (fn : string) (k : out_channel -> 'a) : 'a =
   let outc = BU.open_file_for_writing fn in
-  (try k outc
-   with | e -> BU.close_out_channel outc; BU.delete_file fn; raise e);
-  BU.close_out_channel outc
+  let r =
+    try k outc
+    with | e -> BU.close_out_channel outc; BU.delete_file fn; raise e
+  in
+  BU.close_out_channel outc;
+  r
 
 (* In case the user passed [--verify_all], we record every single module name we
  * found in the list of modules to be verified.

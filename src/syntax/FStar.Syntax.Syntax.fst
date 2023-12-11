@@ -436,7 +436,7 @@ let unit_const_with_range r = mk (Tm_constant FStar.Const.Const_unit) r
 let unit_const = unit_const_with_range Range.dummyRange
 
 instance has_range_syntax #a (_:unit) : Tot (hasRange (syntax a)) = {
-  pos = (fun (t:term) -> t.pos);
+  pos = (fun (t:syntax a) -> t.pos);
   setPos = (fun r t -> { t with pos = r });
 }
 
