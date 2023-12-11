@@ -1399,11 +1399,12 @@ let solve use_env_msg tcenv q : unit =
     if Options.no_smt () then
         let open FStar.Errors.Msg in
         let open FStar.Pprint in
+        let open FStar.Class.PP in
         FStar.TypeChecker.Err.log_issue
           tcenv tcenv.range
             (Errors.Error_NoSMTButNeeded,
              [text "A query could not be solved internally, and --no_smt was given.";
-              text "Query = " ^/^ FStar.Syntax.Print.Pretty.term_to_doc q])
+              text "Query = " ^/^ pp q])
     else
     Profiling.profile
       (fun () -> do_solve_maybe_split use_env_msg tcenv q)
