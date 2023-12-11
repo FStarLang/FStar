@@ -26,6 +26,7 @@ open FStar.Compiler.Util
 open FStar.Const
 open FStar.Compiler.List
 open FStar.Parser.AST
+open FStar.Class.Monad
 
 module I = FStar.Ident
 module S  = FStar.Syntax.Syntax
@@ -225,26 +226,28 @@ let maybe_shorten_fv env fv : lident =
   maybe_shorten_lid env lid
 
 (* Sizet handled below *)
-let serialize_machine_integer_desc (s,w) =
-  BU.format3 "FStar.%sInt%s.__%sint_to_t"
-    (match s with
-     | Unsigned -> "U"
-     | Signed -> "")
-    (match w with
-     | Int8 -> "8"
-     | Int16 -> "16"
-     | Int32 -> "32"
-     | Int64 -> "64")
-    (match s with
-     | Unsigned -> "u"
-     | Signed -> "")
+let serialize_machine_integer_desc (s,w) : list string =
+  let sU = match s with | Unsigned -> "U" | Signed -> "" in
+  let sW =
+    match w with
+    | Int8 -> "8"
+    | Int16 -> "16"
+    | Int32 -> "32"
+    | Int64 -> "64"
+  in
+  let su = match s with | Unsigned -> "u" | Signed -> "" in
+  [ BU.format3 "FStar.%sInt%s.__%sint_to_t" sU sW su;
+    BU.format3 "FStar.%sInt%s.%sint_to_t" sU sW su ]
 
 let parse_machine_integer_desc =
   let signs = [Unsigned; Signed] in
   let widths = [Int8; Int16; Int32; Int64] in
   let descs =
     ((Unsigned, Sizet), "FStar.SizeT.__uint_to_t") ::
-    List.collect (fun s -> List.map (fun w -> (s, w), serialize_machine_integer_desc (s, w)) widths) signs
+    (let! s = signs in
+     let! w = widths in
+     let! desc = serialize_machine_integer_desc (s, w) in
+     [((s, w), desc)])
   in
   fun (fv:fv) ->
     List.tryFind (fun (_, d) -> d = Ident.string_of_lid (lid_of_fv fv)) descs
