@@ -59,6 +59,10 @@ let deep_transform_to_unary_applications (t:S.term) =
     (fun t -> 
       let open S in
       match t.n with
+      | Tm_app { hd={n=Tm_fvar {fv_qual=Some (Unresolved_constructor _)}} }
+      | Tm_app { hd={n=Tm_fvar {fv_qual=Some (Unresolved_projector _)}} } ->
+        t
+
       | Tm_app { hd; args=_::_::_ as args } ->
         List.fold_left (fun t arg -> { t with n = Tm_app {hd=t; args=[arg]} }) hd args
 
