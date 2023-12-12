@@ -7,35 +7,37 @@ module U8 = FStar.UInt8
 module U64 = FStar.UInt64
 module PHT = Pulse.Lib.HashTable.Spec
 
+open Pulse.Lib.HashTable.Spec
+
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 
-type pos_us = n:US.t{US.v n > 0}
+type pos_us = n:SZ.t{SZ.v n > 0}
 
 let mk_used_cell (#a:eqtype) #b (k:a) (v:b) : cell a b = Used k v
 
 noeq
 type ht_t (keyt:eqtype) (valt:Type) = {
   sz : pos_us;
-  hashf: keyt -> US.t;
+  hashf: keyt -> SZ.t;
   contents : V.vec (cell keyt valt);
 }
 
 let mk_ht (#k:eqtype) #v 
           (sz:pos_us) 
-          (hashf:k -> US.t)
+          (hashf:k -> SZ.t)
           (contents:V.vec (cell k v))
   : ht_t k v
   = { sz; hashf; contents; }
 
-let lift_hash_fun (#k:eqtype) (hashf:k -> US.t) : k -> nat = fun k -> US.v (hashf k)
+let lift_hash_fun (#k:eqtype) (hashf:k -> SZ.t) : k -> nat = fun k -> SZ.v (hashf k)
 
-let mk_init_pht (#k:eqtype) #v (hashf:k -> US.t) (sz:pos_us)
+let mk_init_pht (#k:eqtype) #v (hashf:k -> SZ.t) (sz:pos_us)
   : GTot (pht_t k v)
   = 
   { spec = (fun k -> None);
     repr = {
-      sz=US.v sz;
-      seq=Seq.create (US.v sz) Clean;
+      sz=SZ.v sz;
+      seq=Seq.create (SZ.v sz) Clean;
       hashf=lift_hash_fun hashf;
     };
     inv = (); }
@@ -55,7 +57,7 @@ let pht_sz #k #v (pht:pht_t k v) : GTot pos = pht.repr.sz
 
 type exploded_refs (k:eqtype) (v:Type0) =
   ref pos_us &
-  ref (k -> US.t) &
+  ref (k -> SZ.t) &
   ref (V.vec (cell k v))
 
 let tfst (x:'a & 'b & 'c) : 'a = Mktuple3?._1 x
@@ -78,9 +80,9 @@ fn explode_ref (#k:eqtype) (#v:Type0) (#ht:erased (ht_t k v)) (r:ref (ht_t k v))
   ensures exploded_vp r ht res
 {
   let htc = !r;
-  let r_sz = alloc htc.sz;
-  let r_hashf = alloc htc.hashf;
-  let r_contents = alloc htc.contents;
+  let r_sz = R.alloc htc.sz;
+  let r_hashf = R.alloc htc.hashf;
+  let r_contents = R.alloc htc.contents;
   let res = (r_sz, r_hashf, r_contents);
   rewrite each r_sz as (tfst res),
                r_hashf as (tsnd res),
@@ -110,7 +112,7 @@ fn unexplode_ref (#k:eqtype) (#v:Type0) (#ht:erased (ht_t k v))
 ```
 
 ```pulse
-fn alloc (#k:eqtype) (#v:Type0) (hashf:(k -> US.t)) (l:pos_us)
+fn alloc (#k:eqtype) (#v:Type0) (hashf:(k -> SZ.t)) (l:pos_us)
   requires emp
   returns ht:ht_t k v
   ensures exists pht. models ht pht ** pure (pht == mk_init_pht hashf l)
@@ -216,7 +218,7 @@ fn pulse_lookup_index (#kt:eqtype) (#vt:Type0)
     R.pts_to err verr **
     R.pts_to ret (if (vcont || verr) then None else (PHT.lookup_index_us pht k)) **
     pure (
-      US.v ht.sz == pht_sz pht /\
+      SZ.v ht.sz == pht_sz pht /\
       voff <=^ ht.sz /\
       walk_get_idx pht.repr (SZ.v cidx) k (SZ.v voff) 
         == lookup_repr_index pht.repr k /\
@@ -699,21 +701,21 @@ fn not_full (#kt:eqtype) (#vt:Type0)
 }
 ```
 
-let hash_us (k:US.t) : US.t = k
+let hash_us (k:SZ.t) : SZ.t = k
 
-let init_not_full (#kt:eqtype) (#vt:eqtype) (hashf:kt -> US.t) (l:pos_us)
+let init_not_full (#kt:eqtype) (#vt:eqtype) (hashf:kt -> SZ.t) (l:pos_us)
   : Lemma (Pulse.Lib.HashTable.Spec.not_full (mk_init_pht #kt #vt hashf l).repr)
   = assert (~(Used? ((mk_init_pht #kt #vt hashf l).repr @@ 0)))
 
 ```pulse
-fn test_mono' ()
+fn test_mono ()
   requires emp
   ensures emp
 {
-   let htc = alloc #US.t #US.t hash_us 128sz;
+   let htc = alloc #SZ.t #SZ.t hash_us 128sz;
    with pht. assert (models htc pht);
    let ht = R.alloc htc;
-   init_not_full #US.t #US.t hash_us 128sz;
+   init_not_full #SZ.t #SZ.t hash_us 128sz;
    rewrite (models htc pht) as (models (reveal (hide htc)) pht);
    let b = insert ht 0sz 17sz;
    if (b) {
@@ -742,4 +744,4 @@ fn test_mono' ()
    } 
 }
 ```
-let test_mono = test_mono'
+// let test_mono = test_mono'

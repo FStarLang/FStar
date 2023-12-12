@@ -100,22 +100,23 @@ let session_perm (stm:session_table_map) (sid:nat) =
 
 let global_state_lock_pred
   (session_id_counter: R.ref sid_t)
-  (session_table: ht_t sid_t session_state)
+  (session_table: R.ref (ht_t sid_t session_state))
 : vprop
-= exists* stm sid.
+= exists* ht stm sid.
     pts_to session_id_counter sid **
-    models session_table stm **
+    pts_to session_table ht **
+    models ht stm **
     on_range (session_perm stm) 0 (U32.v sid)
   
 noeq
 type global_state_t = {
   session_id_counter: R.ref sid_t;
-  session_table: ht_t sid_t session_state;
+  session_table: R.ref (ht_t sid_t session_state);
   lock: L.lock (global_state_lock_pred session_id_counter session_table)
 }
 let mk_global_state
       (sid_counter:R.ref sid_t)
-      (session_table:ht_t sid_t session_state)
+      (session_table:R.ref (ht_t sid_t session_state))
       (lock:L.lock (global_state_lock_pred sid_counter session_table))
 : global_state_t
 = { session_id_counter = sid_counter;
@@ -133,8 +134,9 @@ fn alloc_global_state ()
   ensures emp
 {
   let sid_counter = R.alloc #sid_t 0ul;
-  let session_table = HT.alloc #sid_t #session_state sid_hash 256sz;
-  with stm. assert (models session_table stm);
+  let session_table_c = HT.alloc #sid_t #session_state sid_hash 256sz;
+  with stm. assert (models session_table_c stm);
+  let session_table = R.alloc session_table_c;
   Pulse.Lib.OnRange.on_range_empty #emp_inames (session_perm stm) 0;
   fold (global_state_lock_pred sid_counter session_table);
   let lock = L.new_lock (global_state_lock_pred sid_counter session_table);
@@ -281,23 +283,24 @@ let get_profile = get_profile'
 
 ```pulse
 fn insert (#kt:eqtype) (#vt:Type0)
-          (ht:ht_t kt vt) (k:kt) (v:vt)
-          (#pht:erased (PHT.pht_t kt vt))
-  requires
-    models ht pht
+  (r:ref (ht_t kt vt)) (k:kt) (v:vt)
+  (#ht:erased (ht_t kt vt))
+  (#pht:erased (PHT.pht_t kt vt))
+  requires pts_to r ht ** models ht pht
   returns b:bool
   ensures
     exists pht'.
+      pts_to r ht **
       models ht pht' **
       pure (if b
             then (PHT.not_full (reveal pht).repr /\
                   pht'==PHT.insert pht k v)
             else pht'==pht)
 {
-  let b = not_full ht;
+  let b = not_full r;
   if b
   {
-    Pulse.Lib.HashTable.insert ht k v;
+    Pulse.Lib.HashTable.insert r k v;
   }
   else
   {
@@ -321,7 +324,8 @@ fn open_session' ()
 {
   L.acquire global_state.lock;
   unfold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
-  with pht0. assert (models global_state.session_table pht0);
+  with ht. assert (pts_to global_state.session_table ht);
+  with pht0. assert (models ht pht0);
   with i j. assert (on_range (session_perm pht0) i j);
   let sid = !global_state.session_id_counter;
   assert pure (U32.v sid == j);
@@ -340,7 +344,7 @@ fn open_session' ()
       if r 
       {
         global_state.session_id_counter := next_sid;
-        with pht1. assert (models global_state.session_table pht1);
+        with pht1. assert (models ht pht1);
         frame_session_perm_on_range pht0 pht1 i j;
         rewrite emp as (session_perm pht1 j);
         Pulse.Lib.OnRange.on_range_snoc #emp_inames () #(session_perm pht1);
@@ -350,8 +354,8 @@ fn open_session' ()
       } 
       else
       {
-        with pht1. rewrite (models global_state.session_table pht1)
-                        as (models global_state.session_table pht0);    
+        with pht1. rewrite (models ht pht1)
+                        as (models ht pht0);
         // ERROR - insert failed
         fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
         L.release global_state.lock;
@@ -446,9 +450,10 @@ fn take_session_state (sid:sid_t) (replace:session_state)
     if U32.(sid < max_sid)
     {
       with stm. assert (on_range (session_perm stm) 0 (U32.v max_sid));
-      assert (models global_state.session_table stm);
+      with ht. assert (pts_to global_state.session_table ht);
+      assert (models ht stm);
       let ss = HT.lookup global_state.session_table sid;
-      assert (models global_state.session_table stm);
+      assert (models ht stm);
       if fst ss
       {
         match snd ss 
@@ -461,7 +466,7 @@ fn take_session_state (sid:sid_t) (replace:session_state)
               Pulse.Lib.OnRange.on_range_get #emp_inames (U32.v sid);
               rewrite (session_perm stm (U32.v sid))
                    as (session_state_perm st);
-              with stm'. assert (models global_state.session_table stm');
+              with stm'. assert (models ht stm');
               frame_session_perm_on_range stm stm' 0 (U32.v sid);
               // with stm0. assert (on_range (session_perm stm0) 
               //                             (U32.v sid `Prims.op_Addition` 1)
@@ -478,7 +483,7 @@ fn take_session_state (sid:sid_t) (replace:session_state)
             }
             else
             {
-              assert (models global_state.session_table stm);
+              assert (models ht stm);
               fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
               L.release global_state.lock;
               None #session_state
