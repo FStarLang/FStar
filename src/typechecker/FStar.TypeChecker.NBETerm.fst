@@ -713,16 +713,6 @@ let mixed_ternary_op (as_a : arg -> option 'a)
                 end
              | _ -> None
 
-let interp_prop_eq2 (args:args) : option t =
-    match args with
-    | [(_u, _); (_typ, _); (a1, _); (a2, _)] ->  //eq2
-      begin match eq_t a1 a2 with
-      | U.Equal -> Some (embed e_bool bogus_cbs true)
-      | U.NotEqual -> Some (embed e_bool bogus_cbs false)
-      | U.Unknown -> None
-      end
-   | _ -> failwith "Unexpected number of arguments"
-
 let dummy_interp (lid : Ident.lid) (args : args) : option t =
     failwith ("No interpretation for " ^ (Ident.string_of_lid lid))
 

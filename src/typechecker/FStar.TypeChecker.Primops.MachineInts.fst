@@ -83,7 +83,7 @@ let bounded_arith_ops_for (k : machint_kind) : mymon unit =
 
   return ()
 
-let bounded_arith_ops : list primitive_step =
+let ops : list primitive_step =
   fst <|
   run_writer <|
   (iterM bounded_arith_ops_for all_machint_kinds ;!

@@ -315,8 +315,6 @@ val arrow_as_prim_step_3:  embedding 'a
 val arg_as_int : arg -> option Z.t
 val arg_as_list : embedding 'a -> arg -> option (list 'a)
 
-val interp_prop_eq2 : args -> option t
-
 val mixed_binary_op : (arg -> option 'a) -> (arg -> option 'b) -> ('c -> t) ->
                       (universes -> 'a -> 'b -> option 'c) -> universes -> args -> option t
 

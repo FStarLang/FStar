@@ -11,7 +11,7 @@ module PC = FStar.Parser.Const
 
 open FStar.TypeChecker.Primops.Base
 
-let doc_ops =
+let ops =
   let nm l = PC.p2l ["FStar"; "Stubs"; "Pprint"; l] in
     let open FStar.Pprint in
     [

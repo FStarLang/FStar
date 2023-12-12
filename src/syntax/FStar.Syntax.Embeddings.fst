@@ -198,12 +198,12 @@ let mk_any_emb typ =
         (fun () -> ET_abstract)
 
 let e_any =
-    let em = fun t _r _shadow _norm -> t in
+    let em = fun t r _shadow _norm -> { t with pos = r} in
     let un = fun t _n -> Some t in
     mk_emb_full
         em
         un
-        (fun () -> S.t_term)
+        (fun () -> S.t_term) // not correct
         Print.term_to_string
         (fun () -> ET_app (PC.term_lid |> Ident.string_of_lid, []))
 
