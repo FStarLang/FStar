@@ -48,7 +48,7 @@ fn fold_rec_perm (r:rec2) (#v1 #v2:erased U8.t)
 ```pulse
 fn mutate_r2 (r:rec2) (#v:Ghost.erased rec_repr)
   requires rec_perm r v
-  ensures exists (v_:rec_repr) .
+  ensures exists* (v_:rec_repr) .
     rec_perm r v_ ** pure (v_.v2 == 0uy /\ v_.v1 == v.v1)
 {
   unfold (rec_perm r v); //1. unfolding the predicate
@@ -130,7 +130,7 @@ ensures R.pts_to x y ** pure (y==z)
 ```pulse
 fn unfold_and_fold_manually (r:rec2) (#v:Ghost.erased rec_repr)
   requires rec_perm r v
-  ensures exists (v_:rec_repr) . rec_perm r v_
+  ensures exists* (v_:rec_repr) . rec_perm r v_
 {
   rewrite (rec_perm r v)
     as (R.pts_to r.r1 v.v1 **
@@ -151,7 +151,7 @@ let rec_repr_with_v2 (v:rec_repr) (v2:U8.t) = { v1=v.v1; v2=v2 }
 ```pulse
 fn explicit_unfold_witness_taking_and_fold (r:rec2) (#v:Ghost.erased rec_repr)
   requires rec_perm r v
-  ensures exists (v_:rec_repr) . rec_perm r v_
+  ensures exists* (v_:rec_repr) . rec_perm r v_
 {
   rewrite (rec_perm r v)
     as (R.pts_to r.r1 v.v1 **
@@ -171,7 +171,7 @@ fn explicit_unfold_witness_taking_and_fold (r:rec2) (#v:Ghost.erased rec_repr)
 ```pulse
 fn explicit_unfold_slightly_better_witness_taking_and_fold (r:rec2) (#v:Ghost.erased rec_repr)
   requires rec_perm r v
-  ensures exists (v_:rec_repr) . rec_perm r v_
+  ensures exists* (v_:rec_repr) . rec_perm r v_
 {
   rewrite (rec_perm r v)
     as (R.pts_to r.r1 v.v1 **

@@ -80,13 +80,13 @@ fn intro_is_list_nil (#t:Type0) (x:(x:llist t { x == None }))
 ghost
 fn elim_is_list_cons (#t:Type0) (x:llist t) (head:t) (tl:list t)
   requires is_list x (head::tl)
-  ensures exists (v:node_ptr t) (tail:llist t).
+  ensures exists* (v:node_ptr t) (tail:llist t).
             pure (x == Some v) **
             pts_to v (mk_node head tail) **
             is_list tail tl
 {
 //   rewrite (is_list x (hd::tl))
-//     as exists (tail:llist t). pts_to x (Some (mk_ll hd tail)) ** is_list tail tl
+//     as exists* (tail:llist t). pts_to x (Some (mk_ll hd tail)) ** is_list tail tl
 //     (by T.norm ())
     //unfold (is_list #t x (head::tl));
     admit()
@@ -99,7 +99,7 @@ fn intro_is_list_cons (#t:Type0) (x:llist t) (v:node_ptr t) (#node:node t) (#tl:
     requires pts_to v node ** is_list node.tail tl ** pure (x == Some v)
     ensures is_list x (node.head::tl)
 {
-//     assert (exists (v:node_ptr t) (tail:llist t).
+//     assert (exists* (v:node_ptr t) (tail:llist t).
 //         pure (Some v == Some v) **
 //         pts_to v (mk_node hd tail) **
 //         is_list tail tl);
@@ -191,7 +191,7 @@ fn is_list_cases_none (#t:Type) (x:llist t) (#l:list t)
 ghost
 fn is_list_cases_some (#t:Type) (x:llist t) (v:node_ptr t) (#l:list t) 
     requires is_list x l ** pure (x == Some v)
-    ensures exists (node:node t) (tl:list t).
+    ensures exists* (node:node t) (tl:list t).
                 pts_to v node **
                 pure (l == node.head::tl) **
                 is_list node.tail tl
@@ -444,7 +444,7 @@ fn length_iter (#t:Type) (x: llist t)
         Some? v
     )
     invariant b.  
-    exists n ll suffix.
+    exists* n ll suffix.
         pts_to ctr n **
         pts_to cur ll **
         is_list ll suffix **

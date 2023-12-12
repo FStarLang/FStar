@@ -16,7 +16,7 @@ let my_list : list int = [1;2;3]
 fn five ()
   requires emp
   returns n:int
-  ensures  pure (n == 5)
+  ensures pure (n == 5)
 { 
   5
 }
@@ -34,10 +34,13 @@ module R = Pulse.Lib.Reference
 *)
 ```pulse
 fn ref_swap (r1 r2:ref int)
-  requires R.pts_to r1 'n1 
-        ** R.pts_to r2 'n2
-  ensures  R.pts_to r1 'n2
-        ** R.pts_to r2 'n1
+  requires
+    R.pts_to r1 'n1 **
+    R.pts_to r2 'n2
+  ensures
+    R.pts_to r1 'n2 **
+    R.pts_to r2 'n1
+
 {
   let v1 = !r1;
   let v2 = !r2;
@@ -54,21 +57,22 @@ open Pulse.Lib.BoundedIntegers
 (* 
   Things to note:
   - heap array, read and write
-  - exists and forall in spec
+  - exists* and forall in spec
   - machine integers, ops on bounded integers
 *)
 
 ```pulse
 fn arr_swap (#t:Type0) (n i j:SZ.t) (a:larray t (v n))
-  requires 
+  requires
     A.pts_to a 's0 **
     pure (Seq.length 's0 == v n /\ i < n /\ j < n)
-  ensures exists s. 
+  ensures
+    exists* s. 
     A.pts_to a s **
     pure (Seq.length 's0 == v n /\ Seq.length s == v n /\ i < n /\ j < n
        /\ (forall (k:nat). k < v n /\ k <> v i /\ k <> v j ==> Seq.index 's0 k == Seq.index s k)
        /\ Seq.index 's0 (v i) == Seq.index s (v j)
-       /\ Seq.index 's0 (v j) == Seq.index s (v i))
+       /\ Seq.index 's0 (v j) == Seq.index s (v i))  
 {
   let vi = a.(i);
   let vj = a.(j);
@@ -85,16 +89,19 @@ fn arr_swap (#t:Type0) (n i j:SZ.t) (a:larray t (v n))
 *)
 ```pulse
 fn max (n:SZ.t) (a:larray nat (v n))
-  requires A.pts_to a #'p 's ** pure (Seq.length 's == v n)
+  requires
+    A.pts_to a #'p 's **
+    pure (Seq.length 's == v n)
   returns r:nat
-  ensures A.pts_to a #'p 's
-       ** pure (Seq.length 's == v n
-             /\ (forall (i:nat). i < v n ==> Seq.index 's i <= r))
+  ensures
+    A.pts_to a #'p 's **
+    pure (Seq.length 's == v n /\
+          (forall (i:nat). i < v n ==> Seq.index 's i <= r))
 {
   let mut i : SZ.t = 0sz;
   let mut max : nat = 0; //Note: without that `nat` annotation, this fails with very poor feedback. "SMT query failed"
   while (let vi = !i; (vi < n))
-  invariant b. exists (vi:SZ.t) (vmax:nat).
+  invariant b. exists* (vi:SZ.t) (vmax:nat).
     A.pts_to a #'p 's **
     R.pts_to i vi **
     R.pts_to max vmax **
@@ -124,16 +131,19 @@ fn max (n:SZ.t) (a:larray nat (v n))
 #push-options "--ext 'pulse:rvalues'"
 ```pulse
 fn max_alt (n:SZ.t) (a:larray nat (v n))
-  requires A.pts_to a #'p 's ** pure (Seq.length 's == v n)
+  requires
+    A.pts_to a #'p 's **
+    pure (Seq.length 's == v n)
   returns r:nat
-  ensures A.pts_to a #'p 's
-       ** pure (Seq.length 's == v n
-             /\ (forall (i:nat). i < v n ==> Seq.index 's i <= r))
+  ensures
+    A.pts_to a #'p 's **
+    pure (Seq.length 's == v n /\
+          (forall (i:nat). i < v n ==> Seq.index 's i <= r))
 {
   let mut i = 0sz;
   let mut max : nat = 0;
   while ((i < n))
-  invariant b. exists (vi:SZ.t) (vmax:nat).
+  invariant b. exists* (vi:SZ.t) (vmax:nat).
     A.pts_to a #'p 's **
     R.pts_to i vi **
     R.pts_to max vmax **

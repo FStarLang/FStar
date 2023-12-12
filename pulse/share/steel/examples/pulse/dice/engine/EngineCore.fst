@@ -65,9 +65,9 @@ fn compute_cdi (cdi:cdi_t) (uds:A.larray U8.t (US.v uds_len)) (record:engine_rec
         ** engine_record_perm record p 'repr
   ensures engine_record_perm record p 'repr
        ** A.pts_to uds #uds_perm uds_bytes
-       ** exists (c1:Seq.seq U8.t). 
+       ** (exists* (c1:Seq.seq U8.t). 
             A.pts_to cdi c1 **
-            pure (cdi_functional_correctness c1 uds_bytes 'repr)
+            pure (cdi_functional_correctness c1 uds_bytes 'repr))
 {
   A.pts_to_len uds;
   let mut uds_digest = [| 0uy; dice_digest_len |];
@@ -97,9 +97,9 @@ fn engine_main' (cdi:cdi_t) (uds:A.larray U8.t (US.v uds_len)) (record:engine_re
   returns  r:dice_return_code
   ensures  engine_record_perm record p repr **
            A.pts_to uds #uds_perm uds_bytes **
-           exists (c1:Seq.seq U8.t).
+          (exists* (c1:Seq.seq U8.t).
              A.pts_to cdi c1 **
-             pure (r = DICE_SUCCESS ==> l0_is_authentic repr /\ cdi_functional_correctness c1 uds_bytes repr)
+             pure (r = DICE_SUCCESS ==> l0_is_authentic repr /\ cdi_functional_correctness c1 uds_bytes repr))
 {
   let b = authenticate_l0_image record;
   if b 

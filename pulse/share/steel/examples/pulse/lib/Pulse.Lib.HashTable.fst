@@ -26,7 +26,7 @@ let models #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt) : vprop
 fn alloc' (#k:eqtype) (#v:Type0) (hashf:(k -> US.t)) (l:pos_us)
   requires emp
   returns ht:ht_t k v
-  ensures exists pht. models ht pht ** pure (pht == mk_init_pht hashf l)
+  ensures exists* pht. models ht pht ** pure (pht == mk_init_pht hashf l)
 {
   let contents = A.alloc #(cell k v) Clean l;
   let ht = mk_ht l hashf contents;
@@ -41,7 +41,7 @@ let alloc = alloc'
 
 ```pulse
 fn dealloc' (#k:eqtype) (#v:Type0) (ht:ht_t k v)
-  requires exists pht. models ht pht
+  requires exists* pht. models ht pht
   ensures emp
 {
   open SZ;
@@ -90,7 +90,7 @@ fn pulse_lookup_index (#kt:eqtype) (#vt:Type0)
          let vcont = !cont;
          let verr = !err; 
          (voff <=^ ht.sz && vcont = true && verr = false)) 
-  invariant b. exists (voff:SZ.t) (vcont verr:bool). (
+  invariant b. exists* (voff:SZ.t) (vcont verr:bool). (
     A.pts_to ht.contents pht.repr.seq **
     R.pts_to off voff **
     R.pts_to cont vcont **
@@ -206,7 +206,7 @@ fn insert' (#kt:eqtype) (#vt:Type0)
            (#pht:(p:erased (pht_t kt vt){PHT.not_full p.repr}))
   requires models ht pht
   returns b:bool
-  ensures exists pht'. 
+  ensures exists* pht'. 
     models ht pht' **
     pure (if b
           then pht'==PHT.insert pht k v
@@ -224,7 +224,7 @@ fn insert' (#kt:eqtype) (#vt:Type0)
     let verr = !err;
     (vcont = true && verr = false)
   ) 
-  invariant b. exists (voff:SZ.t) (vcont verr:bool). (
+  invariant b. exists* (voff:SZ.t) (vcont verr:bool). (
     R.pts_to off voff **
     R.pts_to cont vcont **
     R.pts_to err verr **
@@ -340,7 +340,7 @@ fn delete' (#kt:eqtype) (#vt:Type0)
            (#pht:erased (pht_t kt vt))
   requires models ht pht
   returns b:bool
-  ensures exists pht'. 
+  ensures exists* pht'. 
     models ht pht' **
     pure (if b then pht' == PHT.delete pht k else pht' == pht)
 {
@@ -356,7 +356,7 @@ fn delete' (#kt:eqtype) (#vt:Type0)
     let verr = !err; 
     (vcont = true && verr = false)
   )
-  invariant b. exists (voff:SZ.t) (vcont verr:bool). (
+  invariant b. exists* (voff:SZ.t) (vcont verr:bool). (
     R.pts_to off voff **
     R.pts_to cont vcont **
     R.pts_to err verr **
@@ -461,7 +461,7 @@ fn not_full' (#kt:eqtype) (#vt:Type0)
       false
     }
   )
-  invariant b. exists (vi:SZ.t). (
+  invariant b. exists* (vi:SZ.t). (
     A.pts_to ht.contents pht.repr.seq **
     R.pts_to i vi **
     pure (

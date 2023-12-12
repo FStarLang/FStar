@@ -21,7 +21,7 @@ fn mult (x y:nat)
     let mut acc = 0;
     while ((ctr < x))
     invariant b.
-    exists c a.
+    exists* c a.
         pts_to ctr c **
         pts_to acc a **
         pure (a == (c * y) /\
@@ -48,7 +48,7 @@ fn mult32 (x y:U32.t)
     let mut acc = 0ul;
     while ((ctr < x))
     invariant b.
-    exists c a.
+    exists* c a.
         pts_to ctr c **
         pts_to acc a **
         pure (c <= x /\
@@ -75,7 +75,7 @@ fn mult32' (x y:U32.t)
     let mut acc = 0ul;
     while ((ctr <^ x))
     invariant b.
-    exists c a.
+    exists* c a.
         pts_to ctr c **
         pts_to acc a **
         pure (c <=^ x /\

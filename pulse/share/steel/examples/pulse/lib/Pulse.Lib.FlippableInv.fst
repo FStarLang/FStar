@@ -24,7 +24,7 @@ fn __mk_finv (p:vprop)
    let r = GR.alloc false;
    GR.share2 r;
    rewrite emp
-        as `@(if false then p else emp);
+        as (if false then p else emp);
    fold finv_p p r;
    let i = new_invariant' (finv_p p r);
    let fi = Mkfinv r i; // See #121
@@ -52,7 +52,7 @@ fn __flip_on (#p:vprop) (fi : finv p)
 
     GR.gather2 fi.r;
 
-    rewrite `@(if false then p else emp)
+    rewrite (if false then p else emp)
          as emp;
 
     fi.r := true;
@@ -85,7 +85,7 @@ fn __flip_off (#p:vprop) (fi : finv p)
     GR.share2 fi.r;
     
     rewrite emp
-         as `@(if false then p else emp);
+         as (if false then p else emp);
          
     fold finv_p p fi.r;
     fold (off fi)

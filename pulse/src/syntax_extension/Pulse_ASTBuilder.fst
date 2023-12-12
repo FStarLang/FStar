@@ -60,8 +60,10 @@ let extension_parser
         let d = { d; drange = r; quals = [ Irreducible ]; attrs = [str "uninterpreted_by_smt"]  } in
         Inr d
 
+#push-options "--warn_error -272" //intentional top-level effect
 let _ = 
     register_extension_parser "pulse" extension_parser
+#pop-options
    
 module TcEnv = FStar.TypeChecker.Env
 module D = PulseDesugar

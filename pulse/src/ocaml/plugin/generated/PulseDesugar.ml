@@ -24,6 +24,11 @@ let fail : 'a . Prims.string -> FStar_Compiler_Range_Type.range -> 'a err =
       fun ctr ->
         ((FStar_Pervasives.Inr
             (FStar_Pervasives_Native.Some (message, range))), ctr)
+let (fail_if :
+  Prims.bool -> Prims.string -> FStar_Compiler_Range_Type.range -> unit err)
+  =
+  fun b ->
+    fun message -> fun range -> if b then fail message range else return ()
 let just_fail : 'a . unit -> 'a err =
   fun uu___ ->
     fun ctr -> ((FStar_Pervasives.Inr FStar_Pervasives_Native.None), ctr)
@@ -330,6 +335,11 @@ let (pulse_lib_ref_lid : Prims.string -> FStar_Ident.lident) =
   fun l ->
     FStar_Ident.lid_of_path
       (FStar_List_Tot_Base.op_At ["Pulse"; "Lib"; "Reference"] [l]) r_
+let (prims_exists_lid : FStar_Ident.lident) =
+  FStar_Ident.lid_of_path ["Prims"; "l_Exists"] r_
+let (prims_forall_lid : FStar_Ident.lident) =
+  FStar_Ident.lid_of_path ["Prims"; "l_Forall"] r_
+let (exists_lid : FStar_Ident.lident) = pulse_lib_core_lid "op_exists_Star"
 let (star_lid : FStar_Ident.lident) = pulse_lib_core_lid "op_Star_Star"
 let (emp_lid : FStar_Ident.lident) = pulse_lib_core_lid "emp"
 let (pure_lid : FStar_Ident.lident) = pulse_lib_core_lid "pure"
@@ -526,8 +536,8 @@ let (desugar_term_opt :
               FStar_Compiler_Range_Type.dummyRange in
           return uu___
       | FStar_Pervasives_Native.Some e -> desugar_term env e
-let (interpret_vprop_constructors :
-  env_t -> FStar_Syntax_Syntax.term -> PulseSyntaxWrapper.term) =
+let rec (interpret_vprop_constructors :
+  env_t -> FStar_Syntax_Syntax.term -> PulseSyntaxWrapper.term err) =
   fun env ->
     fun v ->
       let uu___ = FStar_Syntax_Util.head_and_args_full v in
@@ -539,12 +549,59 @@ let (interpret_vprop_constructors :
                let res =
                  let uu___2 = as_term l in
                  PulseSyntaxWrapper.tm_pure uu___2 v.FStar_Syntax_Syntax.pos in
-               res
+               return res
            | (FStar_Syntax_Syntax.Tm_fvar fv, []) when
                FStar_Syntax_Syntax.fv_eq_lid fv emp_lid ->
-               PulseSyntaxWrapper.tm_emp v.FStar_Syntax_Syntax.pos
-           | uu___1 -> as_term v)
-let rec (desugar_vprop :
+               let uu___1 =
+                 PulseSyntaxWrapper.tm_emp v.FStar_Syntax_Syntax.pos in
+               return uu___1
+           | (FStar_Syntax_Syntax.Tm_fvar fv, (l, uu___1)::(r, uu___2)::[])
+               when FStar_Syntax_Syntax.fv_eq_lid fv star_lid ->
+               let uu___3 = interpret_vprop_constructors env l in
+               op_let_Question uu___3
+                 (fun l1 ->
+                    let uu___4 = interpret_vprop_constructors env r in
+                    op_let_Question uu___4
+                      (fun r1 ->
+                         let uu___5 =
+                           PulseSyntaxWrapper.tm_star l1 r1
+                             v.FStar_Syntax_Syntax.pos in
+                         return uu___5))
+           | (FStar_Syntax_Syntax.Tm_fvar fv, (l, uu___1)::[]) when
+               FStar_Syntax_Syntax.fv_eq_lid fv exists_lid ->
+               let uu___2 =
+                 let uu___3 = FStar_Syntax_Subst.compress l in
+                 uu___3.FStar_Syntax_Syntax.n in
+               (match uu___2 with
+                | FStar_Syntax_Syntax.Tm_abs
+                    { FStar_Syntax_Syntax.bs = b::[];
+                      FStar_Syntax_Syntax.body = body;
+                      FStar_Syntax_Syntax.rc_opt = uu___3;_}
+                    ->
+                    let b1 =
+                      let uu___4 =
+                        as_term
+                          (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
+                      PulseSyntaxWrapper.mk_binder
+                        (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.ppname
+                        uu___4 in
+                    let uu___4 = interpret_vprop_constructors env body in
+                    op_let_Question uu___4
+                      (fun body1 ->
+                         let uu___5 =
+                           PulseSyntaxWrapper.tm_exists b1 body1
+                             v.FStar_Syntax_Syntax.pos in
+                         return uu___5)
+                | uu___3 -> let uu___4 = as_term v in return uu___4)
+           | (FStar_Syntax_Syntax.Tm_fvar fv, (l, uu___1)::[]) when
+               (FStar_Syntax_Syntax.fv_eq_lid fv prims_exists_lid) ||
+                 (FStar_Syntax_Syntax.fv_eq_lid fv prims_forall_lid)
+               ->
+               fail
+                 "exists/forall are prop connectives; you probably meant to use exists*/forall*"
+                 v.FStar_Syntax_Syntax.pos
+           | uu___1 -> let uu___2 = as_term v in return uu___2)
+let (desugar_vprop :
   env_t -> PulseSugar.vprop -> PulseSyntaxWrapper.vprop err) =
   fun env ->
     fun v ->
@@ -552,43 +609,7 @@ let rec (desugar_vprop :
       | PulseSugar.VPropTerm t ->
           let uu___ = tosyntax env t in
           op_let_Question uu___
-            (fun t1 ->
-               let uu___1 = interpret_vprop_constructors env t1 in
-               return uu___1)
-      | PulseSugar.VPropStar (v1, v2) ->
-          let uu___ = desugar_vprop env v1 in
-          op_let_Question uu___
-            (fun v11 ->
-               let uu___1 = desugar_vprop env v2 in
-               op_let_Question uu___1
-                 (fun v21 ->
-                    let uu___2 =
-                      PulseSyntaxWrapper.tm_star v11 v21 v.PulseSugar.vrange in
-                    return uu___2))
-      | PulseSugar.VPropExists
-          { PulseSugar.binders = binders; PulseSugar.body = body;_} ->
-          let rec aux env1 binders1 =
-            match binders1 with
-            | [] -> desugar_vprop env1 body
-            | (uu___, i, t)::bs ->
-                let uu___1 = desugar_term env1 t in
-                op_let_Question uu___1
-                  (fun t1 ->
-                     let uu___2 = push_bv env1 i in
-                     match uu___2 with
-                     | (env2, bv) ->
-                         let uu___3 = aux env2 bs in
-                         op_let_Question uu___3
-                           (fun body1 ->
-                              let body2 =
-                                PulseSyntaxWrapper.close_term body1
-                                  bv.FStar_Syntax_Syntax.index in
-                              let b = PulseSyntaxWrapper.mk_binder i t1 in
-                              let uu___4 =
-                                PulseSyntaxWrapper.tm_exists b body2
-                                  v.PulseSugar.vrange in
-                              return uu___4)) in
-          aux env binders
+            (fun t1 -> interpret_vprop_constructors env t1)
 let (mk_totbind :
   PulseSyntaxWrapper.binder ->
     PulseSyntaxWrapper.term ->
@@ -863,7 +884,7 @@ let rec (desugar_stmt :
                          return uu___3)))
       | PulseSugar.While
           { PulseSugar.guard = guard; PulseSugar.id1 = id;
-            PulseSugar.invariant = invariant; PulseSugar.body1 = body;_}
+            PulseSugar.invariant = invariant; PulseSugar.body = body;_}
           ->
           let uu___ = desugar_stmt env guard in
           op_let_Question uu___
@@ -890,21 +911,24 @@ let rec (desugar_stmt :
                          return uu___3)))
       | PulseSugar.Introduce
           { PulseSugar.vprop = vprop; PulseSugar.witnesses = witnesses;_} ->
-          (match vprop.PulseSugar.v with
-           | PulseSugar.VPropTerm uu___ ->
-               fail "introduce expects an existential formula"
-                 s.PulseSugar.range1
-           | PulseSugar.VPropExists uu___ ->
-               let uu___1 = desugar_vprop env vprop in
+          let uu___ = desugar_vprop env vprop in
+          op_let_Question uu___
+            (fun vp ->
+               let uu___1 =
+                 let uu___2 =
+                   let uu___3 = PulseSyntaxWrapper.is_tm_exists vp in
+                   Prims.op_Negation uu___3 in
+                 fail_if uu___2 "introduce expects an existential formula"
+                   s.PulseSugar.range1 in
                op_let_Question uu___1
-                 (fun vp ->
-                    let uu___2 = map_err (desugar_term env) witnesses in
-                    op_let_Question uu___2
+                 (fun uu___2 ->
+                    let uu___3 = map_err (desugar_term env) witnesses in
+                    op_let_Question uu___3
                       (fun witnesses1 ->
-                         let uu___3 =
+                         let uu___4 =
                            PulseSyntaxWrapper.tm_intro_exists vp witnesses1
                              s.PulseSugar.range1 in
-                         return uu___3)))
+                         return uu___4)))
       | PulseSugar.Parallel
           { PulseSugar.p1 = p1; PulseSugar.p2 = p2; PulseSugar.q1 = q1;
             PulseSugar.q2 = q2; PulseSugar.b1 = b1; PulseSugar.b2 = b2;_}
@@ -946,7 +970,7 @@ let rec (desugar_stmt :
       | PulseSugar.LetBinding uu___ ->
           fail "Terminal let binding" s.PulseSugar.range1
       | PulseSugar.WithInvariants
-          { PulseSugar.names = n1::names; PulseSugar.body2 = body;
+          { PulseSugar.names = n1::names; PulseSugar.body1 = body;
             PulseSugar.returns_ = returns_;_}
           ->
           let uu___ = tosyntax env n1 in
@@ -1218,7 +1242,7 @@ and (desugar_proof_hint_with_binders :
         fun r ->
           match s1.PulseSugar.s with
           | PulseSugar.ProofHintWithBinders
-              { PulseSugar.hint_type = hint_type; PulseSugar.binders1 = bs;_}
+              { PulseSugar.hint_type = hint_type; PulseSugar.binders = bs;_}
               ->
               let uu___ = desugar_binders env bs in
               op_let_Question uu___
@@ -1392,17 +1416,6 @@ and (free_vars_vprop :
     fun t ->
       match t.PulseSugar.v with
       | PulseSugar.VPropTerm t1 -> free_vars_term env t1
-      | PulseSugar.VPropStar (t0, t1) ->
-          let uu___ = free_vars_vprop env t0 in
-          let uu___1 = free_vars_vprop env t1 in
-          FStar_List_Tot_Base.op_At uu___ uu___1
-      | PulseSugar.VPropExists
-          { PulseSugar.binders = binders; PulseSugar.body = body;_} ->
-          let uu___ = free_vars_binders env binders in
-          (match uu___ with
-           | (env', fvs) ->
-               let uu___1 = free_vars_vprop env' body in
-               FStar_List_Tot_Base.op_At fvs uu___1)
 and (free_vars_binders :
   env_t -> PulseSugar.binders -> (env_t * FStar_Ident.ident Prims.list)) =
   fun env ->
@@ -2011,9 +2024,9 @@ let rec (transform_stmt_with_reads :
                                          len_needs), m2)))
             | FStar_Pervasives_Native.Some (PulseSugar.Lambda_initializer
                 { PulseSugar.id2 = uu___1; PulseSugar.is_rec = uu___2;
-                  PulseSugar.binders3 = uu___3;
+                  PulseSugar.binders2 = uu___3;
                   PulseSugar.ascription1 = uu___4;
-                  PulseSugar.measure = uu___5; PulseSugar.body4 = uu___6;
+                  PulseSugar.measure = uu___5; PulseSugar.body3 = uu___6;
                   PulseSugar.range3 = range;_})
                 -> fail "Lambdas are not yet supported" range in
           op_let_Question uu___
@@ -2129,7 +2142,7 @@ let rec (transform_stmt_with_reads :
                         return (p1, needs, m1)))
       | PulseSugar.While
           { PulseSugar.guard = guard; PulseSugar.id1 = id;
-            PulseSugar.invariant = invariant; PulseSugar.body1 = body;_}
+            PulseSugar.invariant = invariant; PulseSugar.body = body;_}
           ->
           let uu___ = transform_stmt m guard in
           op_let_Question uu___
@@ -2145,7 +2158,7 @@ let rec (transform_stmt_with_reads :
                                PulseSugar.guard = guard1;
                                PulseSugar.id1 = id;
                                PulseSugar.invariant = invariant;
-                               PulseSugar.body1 = body1
+                               PulseSugar.body = body1
                              });
                         PulseSugar.range1 = (p.PulseSugar.range1)
                       } in
@@ -2187,33 +2200,8 @@ and (transform_stmt : menv -> PulseSugar.stmt -> PulseSugar.stmt err) =
            match uu___1 with
            | (p1, needs, m1) ->
                let uu___2 = add_derefs_in_scope needs p1 in return uu___2)
-let rec (vprop_to_ast_term : PulseSugar.vprop -> FStar_Parser_AST.term err) =
-  fun v ->
-    match v.PulseSugar.v with
-    | PulseSugar.VPropTerm t -> return t
-    | PulseSugar.VPropStar (v1, v2) ->
-        let t =
-          FStar_Parser_AST.mk_term (FStar_Parser_AST.Var star_lid)
-            v.PulseSugar.vrange FStar_Parser_AST.Expr in
-        let uu___ = vprop_to_ast_term v1 in
-        op_let_Question uu___
-          (fun vv1 ->
-             let t1 =
-               FStar_Parser_AST.mk_term
-                 (FStar_Parser_AST.App (t, vv1, FStar_Parser_AST.Nothing))
-                 v.PulseSugar.vrange FStar_Parser_AST.Expr in
-             let uu___1 = vprop_to_ast_term v2 in
-             op_let_Question uu___1
-               (fun vv2 ->
-                  let t2 =
-                    FStar_Parser_AST.mk_term
-                      (FStar_Parser_AST.App
-                         (t1, vv2, FStar_Parser_AST.Nothing))
-                      v.PulseSugar.vrange FStar_Parser_AST.Expr in
-                  return t2))
-    | PulseSugar.VPropExists
-        { PulseSugar.binders = binders; PulseSugar.body = body;_} ->
-        fail "IOU :(" v.PulseSugar.vrange
+let (vprop_to_ast_term : PulseSugar.vprop -> FStar_Parser_AST.term err) =
+  fun v -> match v.PulseSugar.v with | PulseSugar.VPropTerm t -> return t
 let (comp_to_ast_term :
   PulseSugar.computation_type -> FStar_Parser_AST.term err) =
   fun c ->
@@ -2385,8 +2373,8 @@ let (desugar_lambda :
     fun l ->
       let uu___ = l in
       match uu___ with
-      | { PulseSugar.binders2 = binders; PulseSugar.ascription = ascription;
-          PulseSugar.body3 = body; PulseSugar.range2 = range;_} ->
+      | { PulseSugar.binders1 = binders; PulseSugar.ascription = ascription;
+          PulseSugar.body2 = body; PulseSugar.range2 = range;_} ->
           let uu___1 = desugar_binders env binders in
           op_let_Question uu___1
             (fun uu___2 ->
@@ -2479,10 +2467,10 @@ let (desugar_decl' : env_t -> PulseSugar.decl -> PulseSyntaxWrapper.decl err)
       match d with
       | PulseSugar.FnDecl
           { PulseSugar.id2 = id; PulseSugar.is_rec = is_rec;
-            PulseSugar.binders3 = binders;
+            PulseSugar.binders2 = binders;
             PulseSugar.ascription1 = FStar_Pervasives.Inl ascription;
             PulseSugar.measure = measure;
-            PulseSugar.body4 = FStar_Pervasives.Inl body;
+            PulseSugar.body3 = FStar_Pervasives.Inl body;
             PulseSugar.range3 = range;_}
           ->
           let uu___ = desugar_binders env binders in
@@ -2571,10 +2559,10 @@ let (desugar_decl' : env_t -> PulseSugar.decl -> PulseSyntaxWrapper.decl err)
                                                               return uu___11))))))))
       | PulseSugar.FnDecl
           { PulseSugar.id2 = id; PulseSugar.is_rec = false;
-            PulseSugar.binders3 = binders;
+            PulseSugar.binders2 = binders;
             PulseSugar.ascription1 = FStar_Pervasives.Inr ascription;
             PulseSugar.measure = FStar_Pervasives_Native.None;
-            PulseSugar.body4 = FStar_Pervasives.Inr body;
+            PulseSugar.body3 = FStar_Pervasives.Inr body;
             PulseSugar.range3 = range;_}
           ->
           let uu___ = desugar_binders env binders in

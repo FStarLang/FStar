@@ -10,11 +10,11 @@ type binders = list binder
 
 type vprop' =
   | VPropTerm of A.term
-  | VPropStar of vprop & vprop
-  | VPropExists {
-      binders:binders;
-      body:vprop
-    }
+  // | VPropStar of vprop & vprop
+  // | VPropExists {
+  //     binders:binders;
+  //     body:vprop
+  //   }
 and vprop = {
   v:vprop';
   vrange:rng
@@ -186,7 +186,7 @@ let mk_comp tag precondition return_name return_type postcondition opens range =
      range
   }
 
-let mk_vprop_exists binders body = VPropExists { binders; body }
+// let mk_vprop_exists binders body = VPropExists { binders; body }
 let mk_expr e = Expr { e }
 let mk_assignment id value = Assignment { lhs=id; value }
 let mk_array_assignment arr index value = ArrayAssignment { arr; index; value }

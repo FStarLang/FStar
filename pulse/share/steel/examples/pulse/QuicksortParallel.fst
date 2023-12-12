@@ -134,7 +134,7 @@ let op_Array_Assignment
 fn swap (a: A.array int) (i j: nat_fits) (#l:(l:nat{l <= i /\ l <= j})) (#r:(r:nat{i < r /\ j < r}))
   (#s0: Ghost.erased (Seq.seq int))
   requires A.pts_to_range a l r s0
-  ensures exists s. (A.pts_to_range a l r s
+  ensures exists* s. (A.pts_to_range a l r s
     ** pure (Seq.length s0 = r - l /\ Seq.length s = r - l /\
       s = seq_swap s0 (i - l) (j - l) /\ permutation s0 s
     ))
@@ -170,7 +170,7 @@ fn partition (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi - 1})) (n: nat) (lb 
       )
   )
   returns r: nat & nat & int // left, right, pivot
-  ensures exists s. (
+  ensures exists* s. (
     A.pts_to_range a lo hi s
      **
     pure (
@@ -189,7 +189,7 @@ fn partition (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi - 1})) (n: nat) (lb 
   let mut j = lo - 1;
   let mut k = lo;
   while (let vk = !k; (vk < hi - 1))
-    invariant b . exists s vi vj vk. (
+    invariant b . exists* s vi vj vk. (
       A.pts_to_range a lo hi s **
       R.pts_to i vi **
       R.pts_to j vj **
@@ -272,7 +272,7 @@ fn partition_wrapper (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi - 1})) (n: n
       /\ Seq.length s0 = hi - lo)
   )
   returns r: nat & nat & int // left, right, pivot
-  ensures exists s1 s2 s3. (
+  ensures exists* s1 s2 s3. (
     A.pts_to_range a lo r._1 s1 **
     A.pts_to_range a r._1 r._2 s2 **
     A.pts_to_range a r._2 hi s3 **
@@ -336,7 +336,7 @@ fn quicksort' (a: A.array int) (lo: nat)
 (hi:(hi:int{-1 <= hi - 1 /\ lo <= hi}))
 (lb rb: int) (n: nat) (#s0: Ghost.erased (Seq.seq int))
   requires A.pts_to_range a lo hi s0 ** pure (pure_pre_quicksort a lo hi lb rb n s0)
-  ensures exists s. (A.pts_to_range a lo hi s ** pure (pure_post_quicksort a lo hi lb rb n s0 s))
+  ensures exists* s. (A.pts_to_range a lo hi s ** pure (pure_post_quicksort a lo hi lb rb n s0 s))
 { admit() }
 ```
 
@@ -344,7 +344,7 @@ fn quicksort' (a: A.array int) (lo: nat)
 ```pulse
 fn quicksort (a: A.array int) (lo: nat) (hi:(hi:int{-1 <= hi - 1 /\ lo <= hi})) (lb rb: int) (n: nat) (#s0: Ghost.erased (Seq.seq int))
   requires A.pts_to_range a lo hi s0 ** pure (pure_pre_quicksort a lo hi lb rb n s0)
-  ensures exists s. (A.pts_to_range a lo hi s ** pure (pure_post_quicksort a lo hi lb rb n s0 s))
+  ensures exists* s. (A.pts_to_range a lo hi s ** pure (pure_post_quicksort a lo hi lb rb n s0 s))
   // decreases hi + 1 - lo
 {
   if (lo < hi - 1)
@@ -361,8 +361,8 @@ fn quicksort (a: A.array int) (lo: nat) (hi:(hi:int{-1 <= hi - 1 /\ lo <= hi})) 
       parallel
       requires (A.pts_to_range a lo r._1 s1 ** pure (pure_pre_quicksort a lo r._1 lb pivot n s1))
           and (A.pts_to_range a r._2 hi s3 ** pure (pure_pre_quicksort a r._2 hi pivot rb n s3))
-      ensures (exists s. (A.pts_to_range a lo r._1 s ** pure (pure_post_quicksort a lo r._1 lb pivot n s1 s)))
-          and (exists s. (A.pts_to_range a r._2 hi s ** pure (pure_post_quicksort a r._2 hi pivot rb n s3 s)))
+      ensures (exists* s. (A.pts_to_range a lo r._1 s ** pure (pure_post_quicksort a lo r._1 lb pivot n s1 s)))
+          and (exists* s. (A.pts_to_range a r._2 hi s ** pure (pure_post_quicksort a r._2 hi pivot rb n s3 s)))
       {
         // termination check
         assert_prop (hi - lo > (r._1 - 1) + 1 - lo);

@@ -1066,10 +1066,11 @@ calcStep:
          CalcStep (rel, justif, next)
      }
 
-typ:
-  | t=simpleTerm { t }
+%public
+typX(X,Y):
+  | t=Y { t }
 
-  | q=quantifier bs=binders DOT trigger=trigger e=noSeqTerm
+  | q=quantifier bs=binders DOT trigger=trigger e=X
       {
         match bs with
         | [] ->
@@ -1078,6 +1079,9 @@ typ:
           let idents = idents_of_binders bs (rr2 $loc(q) $loc($3)) in
           mk_term (q (bs, (idents, trigger), e)) (rr2 $loc(q) $loc(e)) Formula
       }
+
+typ:
+  | t=typX(noSeqTerm,simpleTerm) { t }
 
 %inline quantifier:
   | FORALL { fun x -> QForall x }
@@ -1194,6 +1198,8 @@ tmTuple:
       }
 
 
+
+%public
 tmEqWith(X):
   | e1=tmEqWith(X) tok=EQUALS e2=tmEqWith(X)
       { mk_term (Op(mk_ident("=", rr $loc(tok)), [e1; e2])) (rr $loc) Un}

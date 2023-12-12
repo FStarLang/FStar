@@ -35,8 +35,8 @@ ensures
 [@@expect_failure]
 ```pulse
 fn test_assert_with_duplicates(r: ref nat)
-    requires exists v. pts_to r v
-    ensures exists v. pts_to r v
+    requires exists* v. pts_to r v
+    ensures exists* v. pts_to r v
 {
     with v. assert (pts_to r v ** pts_to r v);
     ()

@@ -1,0 +1,26 @@
+{
+  "fstar_exe": "fstar.exe",
+  "options": [
+    "--load_cmxs",
+    "steel",
+    "--cache_dir",
+    "_output/cache",
+    "--using_facts_from",
+    "* -FStar.Tactics -FStar.Reflection"
+  ],
+  "include_dirs": [
+    "../../../../lib/steel/pulse",
+    "../../../../lib/steel",
+    "bug-reports",
+    "by-example",
+    "lib",
+    "parallel",
+    "dice",
+    "dice/cbor",
+    "dice/dpe",
+    "dice/l0",
+    "dice/engine",
+    "dice/common",
+    "dice/cbor"
+  ]
+}

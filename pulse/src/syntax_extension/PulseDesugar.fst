@@ -29,6 +29,9 @@ let return (x:'a) : err 'a = fun ctr -> Inl x, ctr
 let fail #a (message:string) (range:R.range) : err a =
   fun ctr -> Inr (Some (message, range)), ctr
 
+let fail_if (b:bool) (message:string) (range:R.range) : err unit =
+  if b then fail message range else return ()
+
 // Fail without logging another error
 let just_fail (#a:Type) () : err a =
   fun ctr -> Inr None, ctr
@@ -96,10 +99,14 @@ let desugar_const (c:FStar.Const.sconst) : SW.constant =
   SW.inspect_const c
 
 let r_ = FStar.Compiler.Range.dummyRange
-let admit_lid = Ident.lid_of_path ["Prims"; "admit"] r_
 open FStar.List.Tot
+#push-options "--warn_error -272" //intentional top-level effects
+let admit_lid = Ident.lid_of_path ["Prims"; "admit"] r_
 let pulse_lib_core_lid l = Ident.lid_of_path (["Pulse"; "Lib"; "Core"]@[l]) r_
 let pulse_lib_ref_lid l = Ident.lid_of_path (["Pulse"; "Lib"; "Reference"]@[l]) r_
+let prims_exists_lid = Ident.lid_of_path ["Prims"; "l_Exists"] r_
+let prims_forall_lid = Ident.lid_of_path ["Prims"; "l_Forall"] r_
+let exists_lid = pulse_lib_core_lid "op_exists_Star"
 let star_lid = pulse_lib_core_lid "op_Star_Star"
 let emp_lid = pulse_lib_core_lid "emp"
 let pure_lid = pulse_lib_core_lid "pure"
@@ -110,6 +117,7 @@ let stt_atomic_lid = pulse_lib_core_lid "stt_atomic"
 let op_colon_equals_lid r = Ident.lid_of_path ["op_Colon_Equals"] r
 let op_array_assignment_lid r = Ident.lid_of_path ["op_Array_Assignment"] r
 let op_bang_lid = pulse_lib_ref_lid "op_Bang"
+#pop-options
 let read (x:ident) = 
   let open A in
   let range = Ident.range_of_id x in
@@ -201,47 +209,51 @@ let desugar_term_opt (env:env_t) (t:option A.term)
     | None -> return (SW.tm_unknown FStar.Compiler.Range.dummyRange)
     | Some e -> desugar_term env e
 
-let interpret_vprop_constructors (env:env_t) (v:S.term)
-  : SW.term
+let rec interpret_vprop_constructors (env:env_t) (v:S.term)
+  : err SW.term
   = let head, args = U.head_and_args_full v in
     match head.n, args with
     | S.Tm_fvar fv, [(l, _)]
       when S.fv_eq_lid fv pure_lid ->
       let res = SW.tm_pure (as_term l) v.pos in
-      res
-      
-
+      return res
+    
     | S.Tm_fvar fv, []
       when S.fv_eq_lid fv emp_lid ->
-      SW.tm_emp v.pos
+      return <| SW.tm_emp v.pos
       
-    | _ -> as_term v
+    | S.Tm_fvar fv, [(l, _); (r, _)]
+      when S.fv_eq_lid fv star_lid ->
+      let? l = interpret_vprop_constructors env l in
+      let? r = interpret_vprop_constructors env r in
+      return <| SW.tm_star l r v.pos
+
+    | S.Tm_fvar fv, [(l, _)]
+      when S.fv_eq_lid fv exists_lid -> (
+        match (SS.compress l).n with
+        | S.Tm_abs {bs=[b]; body } ->
+          let b = SW.mk_binder b.S.binder_bv.ppname (as_term b.S.binder_bv.sort) in
+          let? body = interpret_vprop_constructors env body in
+          return <| SW.tm_exists b body v.pos
+        | _ ->
+          return <| as_term v
+      )
+      
+    | S.Tm_fvar fv, [(l, _)]
+      when S.fv_eq_lid fv prims_exists_lid
+      ||   S.fv_eq_lid fv prims_forall_lid -> (
+      fail "exists/forall are prop connectives; you probably meant to use exists*/forall*" v.pos  
+      )
+
+    | _ ->
+      return <| as_term v
   
-let rec desugar_vprop (env:env_t) (v:Sugar.vprop)
+let desugar_vprop (env:env_t) (v:Sugar.vprop)
   : err SW.vprop
   = match v.v with
     | Sugar.VPropTerm t -> 
       let? t = tosyntax env t in
-      return (interpret_vprop_constructors env t)
-    | Sugar.VPropStar (v1, v2) ->
-      let? v1 = desugar_vprop env v1 in
-      let? v2 = desugar_vprop env v2 in
-      return (SW.tm_star v1 v2 v.vrange)
-    | Sugar.VPropExists { binders; body } ->
-      let rec aux env binders
-        : err SW.vprop =
-        match binders with
-        | [] -> 
-          desugar_vprop env body
-        | (_, i, t)::bs ->
-          let? t = desugar_term env t in
-          let env, bv = push_bv env i in
-          let? body = aux env bs in
-          let body = SW.close_term body bv.index in
-          let b = SW.mk_binder i t in
-          return (SW.tm_exists b body v.vrange)
-      in
-      aux env binders
+      interpret_vprop_constructors env t
 
 let mk_totbind b s1 s2 r : SW.st_term =
   SW.tm_totbind b s1 s2 r
@@ -390,15 +402,11 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       return (SW.tm_while guard (id, invariant) body s.range)
 
     | Introduce { vprop; witnesses } -> (
-      match vprop.v with
-      | VPropTerm _ ->
-        fail "introduce expects an existential formula" s.range
-      | VPropExists _ ->
-        let? vp = desugar_vprop env vprop in
-        let? witnesses = map_err (desugar_term env) witnesses in
-        return (SW.tm_intro_exists vp witnesses s.range)
+      let? vp = desugar_vprop env vprop in
+      fail_if (not (SW.is_tm_exists vp)) "introduce expects an existential formula" s.range ;?
+      let? witnesses = map_err (desugar_term env) witnesses in
+      return (SW.tm_intro_exists vp witnesses s.range)
     )
-
 
     | Parallel { p1; p2; q1; q2; b1; b2 } ->
       let? p1 = desugar_vprop env p1 in
@@ -433,7 +441,7 @@ and desugar_branch (env:env_t) (br:A.pattern & Sugar.stmt)
     let? (p, vs) = desugar_pat env p in
     let env, bvs = push_bvs env vs in
     let? e = desugar_stmt env e in
-    let e = SW.close_st_term_n e (L.map (fun (v:S.bv) -> v.index) bvs) in
+    let e = SW.close_st_term_n e (L.map (fun (v:S.bv) -> v.index <: nat) bvs) in
     return (p,e)
 
 and desugar_pat (env:env_t) (p:A.pattern)
@@ -525,7 +533,7 @@ and desugar_proof_hint_with_binders (env:env_t) (s1:Sugar.stmt) (k:option Sugar.
   = match s1.s with
     | Sugar.ProofHintWithBinders { hint_type; binders=bs } -> //; vprop=v } ->
       let? env, binders, bvs = desugar_binders env bs in
-      let vars = L.map (fun bv -> bv.S.index) bvs in
+      let vars = L.map #_ #nat (fun bv -> bv.S.index) bvs in
       let? ht = desugar_hint_type env hint_type in
       let? s2 = 
         match k with
@@ -604,12 +612,7 @@ and free_vars_vprop (env:env_t) (t:Sugar.vprop) =
   let open Sugar in
   match t.v with
   | VPropTerm t -> free_vars_term env t
-  | VPropStar (t0, t1) -> 
-    free_vars_vprop env t0 @
-    free_vars_vprop env t1
-  | VPropExists { binders; body } ->
-    let env', fvs = free_vars_binders env binders in
-    fvs @ free_vars_vprop env' body
+
 and free_vars_binders (env:env_t) (bs:Sugar.binders)
   : env_t & list ident
   = match bs with
@@ -937,21 +940,11 @@ and transform_stmt (m:menv) (p:Sugar.stmt)
     let? p, needs, m = transform_stmt_with_reads m p in
     return (add_derefs_in_scope needs p)      
 
-let rec vprop_to_ast_term (v:Sugar.vprop)
+let vprop_to_ast_term (v:Sugar.vprop)
   : err A.term
   = let open FStar.Parser.AST in
     match v.v with
     | Sugar.VPropTerm t -> return t
-    | Sugar.VPropStar (v1, v2) ->
-      let t = mk_term (Var star_lid) v.vrange Expr in
-      let? vv1 = vprop_to_ast_term v1 in
-      let t = mk_term (App (t, vv1, Nothing)) v.vrange Expr in
-      let? vv2 = vprop_to_ast_term v2 in
-      let t = mk_term (App (t, vv2, Nothing)) v.vrange Expr in
-      return t
-
-    | Sugar.VPropExists { binders; body } ->
-      fail "IOU :(" v.vrange
 
 let comp_to_ast_term (c:Sugar.computation_type) : err A.term =
   let open FStar.Parser.AST in

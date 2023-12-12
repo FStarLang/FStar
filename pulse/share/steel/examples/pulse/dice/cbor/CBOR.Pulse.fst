@@ -129,7 +129,7 @@ ensures
     let prf1 : squash (Ghost.reveal va1 `Seq.equal` Seq.slice va1 0 (SZ.v sz)) = ();
     let prf2 : squash (Ghost.reveal va2 `Seq.equal` Seq.slice va2 0 (SZ.v sz)) = ();
     while (let i = !pi; let res = !pres; ((i `SZ.lt` sz) && (res = 0s)))
-    invariant cont . exists i res .
+    invariant cont . exists* i res .
         A.pts_to a1 #p1 va1 ** A.pts_to a2 #p2 va2 **
         pts_to pi i ** pts_to pres res **
         pure (
@@ -225,12 +225,12 @@ ensures
                     let res = !pres;
                     (res = 0s && not done)
                 )
-                invariant cont . exists i1 i2 done res l1 l2 .
+                invariant cont . exists* i1 i2 done res l1 l2 .
                     pts_to pi1 i1 ** pts_to pi2 i2 ** pts_to pdone done ** pts_to pres res **
                     cbor_array_iterator_match p1 i1 l1 **
                     cbor_array_iterator_match p2 i2 l2 **
-                    `@(cbor_array_iterator_match p1 i1 l1 @==> raw_data_item_match p1 a1 v1) **
-                    `@(cbor_array_iterator_match p2 i2 l2 @==> raw_data_item_match p2 a2 v2) **
+                    (cbor_array_iterator_match p1 i1 l1 @==> raw_data_item_match p1 a1 v1) **
+                    (cbor_array_iterator_match p2 i2 l2 @==> raw_data_item_match p2 a2 v2) **
                     pure (
                         List.Tot.length l1 == List.Tot.length l2 /\
                         Cbor.cbor_compare v1 v2 == (if res = 0s then Cbor.cbor_compare_array l1 l2 else I16.v res) /\
@@ -303,12 +303,12 @@ ensures
                     let res = !pres;
                     (res = 0s && not done)
                 )
-                invariant cont . exists i1 i2 done res l1 l2 .
+                invariant cont . exists* i1 i2 done res l1 l2 .
                     pts_to pi1 i1 ** pts_to pi2 i2 ** pts_to pdone done ** pts_to pres res **
                     cbor_map_iterator_match p1 i1 l1 **
                     cbor_map_iterator_match p2 i2 l2 **
-                    `@(cbor_map_iterator_match p1 i1 l1 @==> raw_data_item_match p1 a1 v1) **
-                    `@(cbor_map_iterator_match p2 i2 l2 @==> raw_data_item_match p2 a2 v2) **
+                    (cbor_map_iterator_match p1 i1 l1 @==> raw_data_item_match p1 a1 v1) **
+                    (cbor_map_iterator_match p2 i2 l2 @==> raw_data_item_match p2 a2 v2) **
                     pure (
                         List.Tot.length l1 == List.Tot.length l2 /\
                         (Cbor.cbor_compare v1 v2 == (if res = 0s then Cbor.cbor_compare_map l1 l2 else I16.v res)) /\
@@ -329,7 +329,7 @@ ensures
                     unfold (raw_data_item_map_entry_match p1 x1 v1');
                     unfold (raw_data_item_map_entry_match p2 x2 v2');
                     let test = cbor_compare (cbor_map_entry_key x1) (cbor_map_entry_key x2);
-                    if (test = 0s) ensures exists res done . // FIXME: HOW HOW HOW can I frame some things out?
+                    if (test = 0s) ensures exists* res done . // FIXME: HOW HOW HOW can I frame some things out?
                         pts_to pi1 gi1' ** pts_to pi2 gi2' ** pts_to pdone done **
                         raw_data_item_match p1 (cbor_map_entry_key x1) (fstp v1') **
                         raw_data_item_match p2 (cbor_map_entry_key x2) (fstp v2') **
@@ -337,8 +337,8 @@ ensures
                         raw_data_item_match p2 (cbor_map_entry_value x2) (sndp v2') **
                         cbor_map_iterator_match p1 gi1' l1' **
                         cbor_map_iterator_match p2 gi2' l2' **
-                        `@((raw_data_item_map_entry_match p1 x1 v1' ** cbor_map_iterator_match p1 gi1' l1') @==> raw_data_item_match p1 a1 v1) **
-                        `@((raw_data_item_map_entry_match p2 x2 v2' ** cbor_map_iterator_match p2 gi2' l2') @==> raw_data_item_match p2 a2 v2) **
+                        ((raw_data_item_map_entry_match p1 x1 v1' ** cbor_map_iterator_match p1 gi1' l1') @==> raw_data_item_match p1 a1 v1) **
+                        ((raw_data_item_map_entry_match p2 x2 v2' ** cbor_map_iterator_match p2 gi2' l2') @==> raw_data_item_match p2 a2 v2) **
                         pts_to pres res ** pure ((I16.v res <: int) == (if Cbor.cbor_compare (fstp v1') (fstp v2') <> 0 then Cbor.cbor_compare (fstp v1') (fstp v2') else Cbor.cbor_compare (sndp v1') (sndp v2')))
                     {
                         let test = cbor_compare (cbor_map_entry_value x1) (cbor_map_entry_value x2);
@@ -555,7 +555,7 @@ ensures
         assert (pts_to pres gres ** cbor_map_get_invariant pmap vkey vmap map gres i l); // FIXME: WHY WHY WHY?
         not (done || Found? res)
     )
-    invariant cont . exists (done: bool) (res: cbor_map_get_t) (i: cbor_map_iterator_t) (l: list (Cbor.raw_data_item & Cbor.raw_data_item)) .
+    invariant cont . exists* (done: bool) (res: cbor_map_get_t) (i: cbor_map_iterator_t) (l: list (Cbor.raw_data_item & Cbor.raw_data_item)) .
         raw_data_item_match pkey key vkey ** 
         pts_to pdone done **
         pts_to pi i **
@@ -680,7 +680,7 @@ requires
     SM.seq_list_match c1 l1_0 (raw_data_item_map_entry_match full_perm) **
     SM.seq_list_match c2 l2_0 (raw_data_item_map_entry_match full_perm)
 returns res: bool
-ensures exists c l .
+ensures exists* c l .
     A.pts_to_range a (SZ.v lo) (SZ.v hi) c **
     SM.seq_list_match c l (raw_data_item_map_entry_match full_perm) **
     pure (
@@ -714,7 +714,7 @@ ensures exists c l .
         fold (cbor_map_sort_merge_invariant a lo hi l1_0 l2_0 pi1 pi2 pres cont gi1 gi2 gres c c1 c2 accu l1 l2);
         cont
     )
-    invariant cont . exists i1 i2 res c c1 c2 accu l1 l2 .
+    invariant cont . exists* i1 i2 res c c1 c2 accu l1 l2 .
         cbor_map_sort_merge_invariant a lo hi l1_0 l2_0 pi1 pi2 pres cont i1 i2 res c c1 c2 accu l1 l2
     {
         with gi1 gi2 gres c c1 c2 accu l1 l2 .
@@ -843,13 +843,12 @@ requires
     A.pts_to_range a (SZ.v lo) (SZ.v hi) c **
     SM.seq_list_match c l (raw_data_item_map_entry_match full_perm)
 returns res: bool
-ensures `@(exists* (c': Seq.seq cbor_map_entry) (l': list (Cbor.raw_data_item & Cbor.raw_data_item)).
-    // FIXME: WHY WHY WHY do I need to use exists_ instead of Pulse exists? Error message is: "IOU"
+ensures exists* (c': Seq.seq cbor_map_entry) (l': list (Cbor.raw_data_item & Cbor.raw_data_item)).
     A.pts_to_range a (SZ.v lo) (SZ.v hi) c' **
     SM.seq_list_match c' l' (raw_data_item_map_entry_match full_perm) **
     pure (
         Cbor.cbor_map_sort l == (res, l')
-    ))
+    )
 {
     Cbor.cbor_map_sort_eq l;
     A.pts_to_range_prop a;
@@ -903,7 +902,7 @@ requires
     SM.seq_list_match c l (raw_data_item_map_entry_match full_perm) **
     pure (SZ.v len == A.length a \/ SZ.v len == Seq.length c \/ SZ.v len == List.Tot.length l)
 returns res: bool
-ensures exists c' l' .
+ensures exists* c' l' .
     A.pts_to a c' **
     SM.seq_list_match c' l' (raw_data_item_map_entry_match full_perm) **
     pure (

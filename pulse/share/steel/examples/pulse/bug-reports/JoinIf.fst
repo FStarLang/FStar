@@ -17,8 +17,8 @@ fn sort3_alt (a:array U32.t)
              (#s:(s:Ghost.erased (Seq.seq U32.t) {Seq.length s == 3}))
    requires (A.pts_to a s)
    ensures 
-      exists s'. (
-         A.pts_to a s' `star`
+      exists* s'. (
+         A.pts_to a s' **
          pure (sorted s s')
       )
 {
@@ -60,8 +60,8 @@ fn sort3_alt (a:array U32.t)
              (#s:(s:Ghost.erased (Seq.seq U32.t) {Seq.length s == 3}))
    requires (A.pts_to a s)
    ensures 
-      exists s'. (
-         A.pts_to a s' `star`
+      exists* s'. (
+         A.pts_to a s' **
          pure (sorted s s')
       )
 {

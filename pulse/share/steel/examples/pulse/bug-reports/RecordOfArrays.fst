@@ -45,7 +45,7 @@ fn fold_rec_array_perm (r:rec_array) (#v1 #v2:erased (Seq.seq U8.t))
 ```pulse
 fn mutate_r2 (r:rec_array) (#v:(v:Ghost.erased rec_array_repr { Seq.length v.v2 > 0 }))
   requires rec_array_perm r v
-  ensures exists (v_:rec_array_repr) .
+  ensures exists* (v_:rec_array_repr) .
     rec_array_perm r v_ ** pure (v_.v2 `Seq.equal` Seq.upd v.v2 0 0uy /\ v_.v1 == v.v1)
 {
   unfold (rec_array_perm r v); //1. unfolding the predicate
@@ -75,7 +75,7 @@ fn mutate_rec_get_witness (l:US.t) (r:rec_array) (#v:Ghost.erased rec_array_repr
     rec_array_perm r v **
     pure (US.v l > 0 /\ A.length r.r2 == (US.v l) /\ Seq.length v.v2 == (US.v l))
   )
-  ensures exists v_.
+  ensures exists* v_.
     rec_array_perm r v_ **
     pure (Seq.length v.v2 > 0 /\ v_.v2 `Seq.equal` Seq.upd v.v2 0 0uy /\ v_.v1 == v.v1)
 {
