@@ -553,6 +553,9 @@ let e_arrow (ea:embedding 'a) (eb:embedding 'b) : Prims.Tot (embedding ('a -> 'b
     in
     mk_emb em un (fun () -> make_arrow1 (type_of ea) (as_iarg (type_of eb))) etyp
 
+let e_abstract_nbe_term =
+  embed_as e_any (fun x -> AbstractNBE x) (fun x -> match x with AbstractNBE x -> x) None
+
 let e_unsupported #a : embedding a =
     let em = (fun _cb a -> failwith "Unsupported NBE embedding") in
     let un = (fun _cb t -> failwith "Unsupported NBE embedding") in

@@ -431,6 +431,10 @@ let t_sealed_of t = mk_Tm_app
   (mk_Tm_uinst (tabbrev PC.sealed_lid) [U_zero])
   [as_arg t]
   Range.dummyRange
+let t_erased_of t = mk_Tm_app
+  (mk_Tm_uinst (tabbrev PC.erased_lid) [U_zero])
+  [as_arg t]
+  Range.dummyRange
 
 let unit_const_with_range r = mk (Tm_constant FStar.Const.Const_unit) r
 let unit_const = unit_const_with_range Range.dummyRange

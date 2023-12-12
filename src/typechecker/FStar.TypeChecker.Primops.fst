@@ -35,7 +35,7 @@ open FStar.TypeChecker.Primops.Base
 (* Semantics for primitive operators (+, -, >, &&, ...)            *)
 (*******************************************************************)
 
-let arg_as_int    (a:arg) : option Z.t = fst a |> try_unembed_simple
+let arg_as_int (a:arg) : option Z.t = fst a |> try_unembed_simple
 
 let arg_as_list {|e:EMB.embedding 'a|} (a:arg)
 : option (list 'a)
@@ -384,34 +384,6 @@ let seal_steps =
       List.map (as_primitive_step true)
       [of_list_op; length_op; index_op]
 
-let reveal_hide =
-  as_primitive_step true (
-  (* unconditionally reduce reveal #t' (hide #t x) to x *)
-        PC.reveal,
-        2,
-        1,
-        mixed_binary_op
-        (fun x -> Some x)
-        (fun (x, _) ->
-          let head, args = U.head_and_args x  in
-          if U.is_fvar PC.hide head
-          then match args with
-               | [_t; (body, _)] -> Some body
-               | _ -> None
-          else None)
-        (fun r body -> body)
-        (fun r _us _t body -> Some body),
-        NBETerm.mixed_binary_op
-        (fun x -> Some x)
-        (fun (x, _) ->
-          match NBETerm.nbe_t_of_t x with
-          | NBETerm.FV (fv, _, [(_t, _); (body, _)])
-            when fv_eq_lid fv PC.hide ->
-            Some body
-          | _ -> None)
-        (fun body -> body)
-        (fun _us _t body -> Some body))
-
 let short_circuit_ops : list primitive_step =
   List.map (as_primitive_step true)
    [(PC.op_And,
@@ -429,10 +401,10 @@ let short_circuit_ops : list primitive_step =
 let built_in_primitive_steps_list : list primitive_step =
     simple_ops
     @ short_circuit_ops
-    @ [reveal_hide]
     @ issue_ops
     @ array_ops
     @ seal_steps
+    @ Primops.Erased.ops
     @ Primops.Docs.ops
     @ Primops.MachineInts.ops
     @ Primops.Eq.dec_eq_ops

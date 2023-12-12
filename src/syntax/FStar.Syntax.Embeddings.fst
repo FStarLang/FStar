@@ -1113,3 +1113,6 @@ let debug_wrap (s:string) (f:unit -> 'a) =
     if !Options.debug_embedding
     then BU.print1 "------ending %s\n" s;
     res
+
+instance e_abstract_term : embedding abstract_term =
+  embed_as e_any (fun x -> Abstract x) (fun x -> match x with Abstract x -> x) None

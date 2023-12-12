@@ -255,6 +255,8 @@ val lazy_unembed_lazy_kind (#a:Type) (k:lazy_kind) (x:t) : option a
 val type_of : embedding 'a -> t
 val set_type : t -> embedding 'a -> embedding 'a
 
+type abstract_nbe_term = | AbstractNBE : t:t -> abstract_nbe_term
+
 instance val e_bool   : embedding bool
 instance val e_string : embedding string
 instance val e_char   : embedding char
@@ -275,6 +277,8 @@ instance val e_either : embedding 'a -> embedding 'b -> Prims.Tot (embedding (ei
 val e_sealed : embedding 'a -> embedding 'a
 instance val e_string_list : embedding (list string)
 val e_arrow : embedding 'a -> embedding 'b -> embedding ('a -> 'b)
+
+instance val e_abstract_nbe_term : embedding abstract_nbe_term
 
 (* Unconditionally fails raising an exception when called *)
 val e_unsupported : #a:Type -> embedding a
