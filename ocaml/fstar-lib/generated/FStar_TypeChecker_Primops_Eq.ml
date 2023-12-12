@@ -137,7 +137,7 @@ let (nbe_eq2 :
 let (prop_eq_ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list)
   =
   let uu___ =
-    FStar_TypeChecker_Primops_Base.mk3' Prims.int_zero
+    FStar_TypeChecker_Primops_Base.mk3' Prims.int_one
       FStar_Parser_Const.eq2_lid FStar_Syntax_Embeddings.e_abstract_term
       FStar_TypeChecker_NBETerm.e_abstract_nbe_term
       FStar_Syntax_Embeddings.e_abstract_term

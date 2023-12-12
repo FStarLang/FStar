@@ -145,7 +145,7 @@ let simple_ops : list primitive_step = [
 
   (* Use ' variant to allow for non-reduction. Impl is the same on each normalizer. *)
   mk2' 0 PC.op_Division (division_modulus_op Z.div_big_int) (division_modulus_op Z.div_big_int);
-  mk2' 0 PC.op_Modulus  (division_modulus_op Z.mod_big_int) (division_modulus_op Z.div_big_int);
+  mk2' 0 PC.op_Modulus  (division_modulus_op Z.mod_big_int) (division_modulus_op Z.mod_big_int);
 
   (* Bool opts. NB: && and || are special-cased since they are
   short-circuiting, and can run even if their second arg does not
@@ -386,28 +386,21 @@ let seal_steps =
 
 let short_circuit_ops : list primitive_step =
   List.map (as_primitive_step true)
-   [(PC.op_And,
-         2,
-         0,
-         and_op,
-         (fun _us -> NBETerm.and_op));
-     (PC.op_Or,
-         2,
-         0,
-         or_op,
-         (fun _us -> NBETerm.or_op));
-    ]
+  [
+    (PC.op_And, 2, 0, and_op, (fun _us -> NBETerm.and_op));
+    (PC.op_Or, 2, 0, or_op, (fun _us -> NBETerm.or_op));
+  ]
 
 let built_in_primitive_steps_list : list primitive_step =
-    simple_ops
-    @ short_circuit_ops
-    @ issue_ops
-    @ array_ops
-    @ seal_steps
-    @ Primops.Erased.ops
-    @ Primops.Docs.ops
-    @ Primops.MachineInts.ops
-    @ Primops.Eq.dec_eq_ops
+  simple_ops
+  @ short_circuit_ops
+  @ issue_ops
+  @ array_ops
+  @ seal_steps
+  @ Primops.Erased.ops
+  @ Primops.Docs.ops
+  @ Primops.MachineInts.ops
+  @ Primops.Eq.dec_eq_ops
 
 let equality_ops_list : list primitive_step =
   Primops.Eq.prop_eq_ops

@@ -25,15 +25,15 @@ let try_unembed_simple {| EMB.embedding 'a |} (x:term) : option 'a =
 let solve (#a:Type) {| ev : a |} : Tot a = ev
 
 let as_primitive_step_nbecbs is_strong (l, arity, u_arity, f, f_nbe) : primitive_step = {
-    name=l;
-    arity=arity;
-    univ_arity=u_arity;
-    auto_reflect=None;
-    strong_reduction_ok=is_strong;
-    requires_binder_substitution=false;
-    renorm_after=false;
-    interpretation=(fun psc cb univs args -> f psc cb univs args);
-    interpretation_nbe=(fun cb univs args -> f_nbe cb univs args)
+    name                           = l;
+    arity                          = arity;
+    univ_arity                     = u_arity;
+    auto_reflect                   = None;
+    strong_reduction_ok            = is_strong;
+    requires_binder_substitution   = false;
+    renorm_after                   = false;
+    interpretation                 = f;
+    interpretation_nbe             = f_nbe;
 }
 
 let mk_interp1 #a #r
