@@ -1950,6 +1950,7 @@ let (mask : bounded_int_kind -> FStar_BigInt.bigint) =
     | UInt8 -> FStar_BigInt.of_hex "ff"
     | UInt16 -> FStar_BigInt.of_hex "ffff"
     | UInt32 -> FStar_BigInt.of_hex "ffffffff"
+    | SizeT -> FStar_BigInt.of_hex "ffffffffffffffff"
     | UInt64 -> FStar_BigInt.of_hex "ffffffffffffffff"
     | UInt128 -> FStar_BigInt.of_hex "ffffffffffffffffffffffffffffffff"
 let (int_to_t_lid_for : bounded_int_kind -> FStar_Ident.lid) =
@@ -1963,6 +1964,18 @@ let (int_to_t_lid_for : bounded_int_kind -> FStar_Ident.lid) =
 let (int_to_t_for : bounded_int_kind -> FStar_Syntax_Syntax.term) =
   fun k ->
     let lid = int_to_t_lid_for k in
+    FStar_Syntax_Syntax.fvar lid FStar_Pervasives_Native.None
+let (__int_to_t_lid_for : bounded_int_kind -> FStar_Ident.lid) =
+  fun k ->
+    let path =
+      let uu___ =
+        let uu___1 = module_name_for k in
+        [uu___1; if is_unsigned k then "__uint_to_t" else "__int_to_t"] in
+      "FStar" :: uu___ in
+    FStar_Ident.lid_of_path path FStar_Compiler_Range_Type.dummyRange
+let (__int_to_t_for : bounded_int_kind -> FStar_Syntax_Syntax.term) =
+  fun k ->
+    let lid = __int_to_t_lid_for k in
     FStar_Syntax_Syntax.fvar lid FStar_Pervasives_Native.None
 type 'k bounded_int =
   | Mk of FStar_BigInt.t * FStar_Syntax_Syntax.meta_source_info
@@ -2047,8 +2060,11 @@ let (e_bounded_int :
                     { FStar_Syntax_Syntax.hd = hd;
                       FStar_Syntax_Syntax.args = (a, uu___2)::[];_}
                     when
-                    let uu___3 = int_to_t_lid_for k in
-                    FStar_Syntax_Util.is_fvar uu___3 hd ->
+                    (let uu___3 = int_to_t_lid_for k in
+                     FStar_Syntax_Util.is_fvar uu___3 hd) ||
+                      (let uu___3 = __int_to_t_lid_for k in
+                       FStar_Syntax_Util.is_fvar uu___3 hd)
+                    ->
                     Obj.magic
                       (Obj.repr
                          (let a1 = FStar_Syntax_Util.unlazy_emb a in
@@ -2095,7 +2111,7 @@ let (nbe_bounded_int :
             let uu___1 =
               let uu___2 =
                 let uu___3 =
-                  let uu___4 = int_to_t_lid_for k in
+                  let uu___4 = __int_to_t_lid_for k in
                   FStar_Syntax_Syntax.lid_as_fv uu___4
                     FStar_Pervasives_Native.None in
                 (uu___3, [], args) in
@@ -2221,66 +2237,78 @@ let (bounded_arith_ops : primitive_step Prims.list) =
            FStar_Parser_Const.p2l uu___2 in
          let uu___2 =
            let uu___3 =
-             let uu___4 = nm "add" in
-             let uu___5 = on_bounded2 k FStar_BigInt.add_big_int in
-             mk2 Prims.int_zero uu___4 (e_bounded_int k) (nbe_bounded_int k)
-               (e_bounded_int k) (nbe_bounded_int k) (e_bounded_int k)
-               (nbe_bounded_int k) uu___5 in
+             let uu___4 = nm "v" in
+             mk1 Prims.int_zero uu___4 (e_bounded_int k) (nbe_bounded_int k)
+               FStar_Syntax_Embeddings.e_int FStar_TypeChecker_NBETerm.e_int
+               (v k) in
            let uu___4 =
              let uu___5 =
-               let uu___6 = nm "sub" in
-               let uu___7 = on_bounded2 k FStar_BigInt.sub_big_int in
-               mk2 Prims.int_zero uu___6 (e_bounded_int k)
-                 (nbe_bounded_int k) (e_bounded_int k) (nbe_bounded_int k)
-                 (e_bounded_int k) (nbe_bounded_int k) uu___7 in
+               let uu___6 = __int_to_t_lid_for k in
+               mk1 Prims.int_zero uu___6 FStar_Syntax_Embeddings.e_int
+                 FStar_TypeChecker_NBETerm.e_int (e_bounded_int k)
+                 (nbe_bounded_int k)
+                 (fun x -> Mk (x, FStar_Pervasives_Native.None)) in
              let uu___6 =
                let uu___7 =
-                 let uu___8 = nm "mul" in
-                 let uu___9 = on_bounded2 k FStar_BigInt.mult_big_int in
+                 let uu___8 = nm "add" in
+                 let uu___9 = on_bounded2 k FStar_BigInt.add_big_int in
                  mk2 Prims.int_zero uu___8 (e_bounded_int k)
                    (nbe_bounded_int k) (e_bounded_int k) (nbe_bounded_int k)
                    (e_bounded_int k) (nbe_bounded_int k) uu___9 in
                let uu___8 =
                  let uu___9 =
-                   let uu___10 = nm "v" in
-                   mk1 Prims.int_zero uu___10 (e_bounded_int k)
-                     (nbe_bounded_int k) FStar_Syntax_Embeddings.e_int
-                     FStar_TypeChecker_NBETerm.e_int (v k) in
+                   let uu___10 = nm "sub" in
+                   let uu___11 = on_bounded2 k FStar_BigInt.sub_big_int in
+                   mk2 Prims.int_zero uu___10 (e_bounded_int k)
+                     (nbe_bounded_int k) (e_bounded_int k)
+                     (nbe_bounded_int k) (e_bounded_int k)
+                     (nbe_bounded_int k) uu___11 in
                  let uu___10 =
                    let uu___11 =
-                     let uu___12 = nm "gt" in
-                     let uu___13 = on_bounded2' k FStar_BigInt.gt_big_int in
+                     let uu___12 = nm "mul" in
+                     let uu___13 = on_bounded2 k FStar_BigInt.mult_big_int in
                      mk2 Prims.int_zero uu___12 (e_bounded_int k)
                        (nbe_bounded_int k) (e_bounded_int k)
-                       (nbe_bounded_int k) FStar_Syntax_Embeddings.e_bool
-                       FStar_TypeChecker_NBETerm.e_bool uu___13 in
+                       (nbe_bounded_int k) (e_bounded_int k)
+                       (nbe_bounded_int k) uu___13 in
                    let uu___12 =
                      let uu___13 =
-                       let uu___14 = nm "gte" in
-                       let uu___15 = on_bounded2' k FStar_BigInt.ge_big_int in
+                       let uu___14 = nm "gt" in
+                       let uu___15 = on_bounded2' k FStar_BigInt.gt_big_int in
                        mk2 Prims.int_zero uu___14 (e_bounded_int k)
                          (nbe_bounded_int k) (e_bounded_int k)
                          (nbe_bounded_int k) FStar_Syntax_Embeddings.e_bool
                          FStar_TypeChecker_NBETerm.e_bool uu___15 in
                      let uu___14 =
                        let uu___15 =
-                         let uu___16 = nm "lt" in
-                         let uu___17 = on_bounded2' k FStar_BigInt.lt_big_int in
+                         let uu___16 = nm "gte" in
+                         let uu___17 = on_bounded2' k FStar_BigInt.ge_big_int in
                          mk2 Prims.int_zero uu___16 (e_bounded_int k)
                            (nbe_bounded_int k) (e_bounded_int k)
                            (nbe_bounded_int k) FStar_Syntax_Embeddings.e_bool
                            FStar_TypeChecker_NBETerm.e_bool uu___17 in
                        let uu___16 =
                          let uu___17 =
-                           let uu___18 = nm "lte" in
+                           let uu___18 = nm "lt" in
                            let uu___19 =
-                             on_bounded2' k FStar_BigInt.le_big_int in
+                             on_bounded2' k FStar_BigInt.lt_big_int in
                            mk2 Prims.int_zero uu___18 (e_bounded_int k)
                              (nbe_bounded_int k) (e_bounded_int k)
                              (nbe_bounded_int k)
                              FStar_Syntax_Embeddings.e_bool
                              FStar_TypeChecker_NBETerm.e_bool uu___19 in
-                         [uu___17] in
+                         let uu___18 =
+                           let uu___19 =
+                             let uu___20 = nm "lte" in
+                             let uu___21 =
+                               on_bounded2' k FStar_BigInt.le_big_int in
+                             mk2 Prims.int_zero uu___20 (e_bounded_int k)
+                               (nbe_bounded_int k) (e_bounded_int k)
+                               (nbe_bounded_int k)
+                               FStar_Syntax_Embeddings.e_bool
+                               FStar_TypeChecker_NBETerm.e_bool uu___21 in
+                           [uu___19] in
+                         uu___17 :: uu___18 in
                        uu___15 :: uu___16 in
                      uu___13 :: uu___14 in
                    uu___11 :: uu___12 in
