@@ -54,5 +54,5 @@ let nbe_eq2 (_typ x y : NBE.abstract_nbe_term) : option NBE.abstract_nbe_term =
   | U.Unknown  -> None
 
 let prop_eq_ops : list primitive_step = [
-  mk3' 0 PC.eq2_lid s_eq2 nbe_eq2;
+  mk3' 1 PC.eq2_lid s_eq2 nbe_eq2;
 ]

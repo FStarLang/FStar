@@ -207,6 +207,13 @@ let arg_to_string (a : arg) = a |> fst |> t_to_string
 
 let args_to_string args = args |> List.map arg_to_string |> String.concat " "
 
+instance showable_t = {
+  show = t_to_string;
+}
+instance showable_args = {
+  show = args_to_string;
+}
+
 // Embedding and de-embedding
 
 let iapp_cb cbs    h a = cbs.iapp h a

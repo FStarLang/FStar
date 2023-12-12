@@ -30,6 +30,8 @@ module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module Z = FStar.BigInt
 
+open FStar.Class.Show
+
 val interleave_hack : int
 
 (*
@@ -194,6 +196,9 @@ and cflag =
 
 and arg = t * aqual
 and args = list (arg)
+
+instance val showable_t    : showable t
+instance val showable_args : showable args
 
 val isAccu : t -> bool
 val isNotAccu : t -> bool
