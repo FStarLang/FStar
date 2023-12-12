@@ -541,8 +541,8 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
 
   | S.MLE_Coerce (e, _, _) -> extract_mlexpr g e  // TODO: FIXME: perhaps cast in Rust?
 
-  | S.MLE_Record (p, fields) ->
-    mk_expr_struct p (List.map (fun (f, e) -> f, extract_mlexpr g e) fields)
+  | S.MLE_Record (_, nm, fields) ->
+    mk_expr_struct [nm] (List.map (fun (f, e) -> f, extract_mlexpr g e) fields)
 
   | S.MLE_Proj (e, p) -> mk_expr_field (extract_mlexpr g e) (snd p)
 

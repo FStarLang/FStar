@@ -1044,14 +1044,14 @@ and (extract_mlexpr :
           Pulse2Rust_Rust_Syntax.mk_match e2 uu___
       | FStar_Extraction_ML_Syntax.MLE_Coerce (e1, uu___, uu___1) ->
           extract_mlexpr g e1
-      | FStar_Extraction_ML_Syntax.MLE_Record (p, fields) ->
-          let uu___ =
+      | FStar_Extraction_ML_Syntax.MLE_Record (uu___, nm, fields) ->
+          let uu___1 =
             FStar_Compiler_List.map
-              (fun uu___1 ->
-                 match uu___1 with
-                 | (f, e1) -> let uu___2 = extract_mlexpr g e1 in (f, uu___2))
+              (fun uu___2 ->
+                 match uu___2 with
+                 | (f, e1) -> let uu___3 = extract_mlexpr g e1 in (f, uu___3))
               fields in
-          Pulse2Rust_Rust_Syntax.mk_expr_struct p uu___
+          Pulse2Rust_Rust_Syntax.mk_expr_struct [nm] uu___1
       | FStar_Extraction_ML_Syntax.MLE_Proj (e1, p) ->
           let uu___ = extract_mlexpr g e1 in
           Pulse2Rust_Rust_Syntax.mk_expr_field uu___
