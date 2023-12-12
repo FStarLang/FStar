@@ -37,7 +37,6 @@ INCLUDE_PATHS?= \
 	$(FSTAR_UCONTRIB)/Platform/fst \
 	$(shell ls -d dsls/*/) \
 	$(shell ls -d verifythis/*/) \
-	$(shell ls -d demos/*/) \
 	tactics/eci19
 
 include Makefile.common
@@ -52,6 +51,7 @@ SPECIAL_CASES += native_tactics
 endif
 
 ifdef KRML_HOME
+SPECIAL_CASES += demos
 SPECIAL_CASES += kv_parsing
 SPECIAL_CASES += miniparse
 endif
