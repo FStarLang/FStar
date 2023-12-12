@@ -1,4 +1,4 @@
-module FStar.TypeChecker.Primops.MachineInts
+module FStar.TypeChecker.Primops.Docs
 
 open FStar.TypeChecker.Primops.Base
 

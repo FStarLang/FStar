@@ -15,20 +15,27 @@
 *)
 
 module FStar.TypeChecker.NBETerm
-open FStar.Pervasives
-open FStar.Compiler.Effect
 open FStar
 open FStar.Compiler
-open FStar.TypeChecker
-open FStar.TypeChecker.Env
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
-open FStar.Ident
 open FStar.Errors
 open FStar.Char
 open FStar.String
-open FStar.Class.Show
 
 friend FStar.Pervasives (* To expose norm_step *)
+
+module PC = FStar.Parser.Const
+module S = FStar.Syntax.Syntax
+module P = FStar.Syntax.Print
+module BU = FStar.Compiler.Util
+module C = FStar.Const
+module SE = FStar.Syntax.Embeddings
+open FStar.VConfig
+
+open FStar.Class.Show
+
+// NBE term manipulation
 
 (**** NOTE: Don't say I didn't warn you! ***)
 (* FV and Construct accumulate arguments *in reverse order*.
@@ -49,20 +56,6 @@ friend FStar.Pervasives (* To expose norm_step *)
  *
  * Note how the implicit argument is seemingly *after* the explicit one.
  *)
-
-module PC = FStar.Parser.Const
-module S = FStar.Syntax.Syntax
-module U = FStar.Syntax.Util
-module P = FStar.Syntax.Print
-module BU = FStar.Compiler.Util
-module Env = FStar.TypeChecker.Env
-module Z = FStar.BigInt
-module C = FStar.Const
-module Range = FStar.Compiler.Range
-module SE = FStar.Syntax.Embeddings
-open FStar.VConfig
-// NBE term manipulation
-
 let interleave_hack = 123
 
 let isAccu (trm:t) =
@@ -560,6 +553,9 @@ let e_arrow (ea:embedding 'a) (eb:embedding 'b) : Prims.Tot (embedding ('a -> 'b
     in
     mk_emb em un (fun () -> make_arrow1 (type_of ea) (as_iarg (type_of eb))) etyp
 
+let e_abstract_nbe_term =
+  embed_as e_any (fun x -> AbstractNBE x) (fun x -> match x with AbstractNBE x -> x) None
+
 let e_unsupported #a : embedding a =
     let em = (fun _cb a -> failwith "Unsupported NBE embedding") in
     let un = (fun _cb t -> failwith "Unsupported NBE embedding") in
@@ -719,16 +715,6 @@ let mixed_ternary_op (as_a : arg -> option 'a)
                 | _ -> None
                 end
              | _ -> None
-
-let interp_prop_eq2 (args:args) : option t =
-    match args with
-    | [(_u, _); (_typ, _); (a1, _); (a2, _)] ->  //eq2
-      begin match eq_t a1 a2 with
-      | U.Equal -> Some (embed e_bool bogus_cbs true)
-      | U.NotEqual -> Some (embed e_bool bogus_cbs false)
-      | U.Unknown -> None
-      end
-   | _ -> failwith "Unexpected number of arguments"
 
 let dummy_interp (lid : Ident.lid) (args : args) : option t =
     failwith ("No interpretation for " ^ (Ident.string_of_lid lid))

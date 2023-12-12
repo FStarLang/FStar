@@ -203,7 +203,13 @@ let (mk_any_emb :
       (unknown_printer typ) (fun uu___ -> FStar_Syntax_Syntax.ET_abstract)
 let (e_any : FStar_Syntax_Syntax.term FStar_Syntax_Embeddings_Base.embedding)
   =
-  let em t _r _shadow _norm = t in
+  let em t r _shadow _norm =
+    {
+      FStar_Syntax_Syntax.n = (t.FStar_Syntax_Syntax.n);
+      FStar_Syntax_Syntax.pos = r;
+      FStar_Syntax_Syntax.vars = (t.FStar_Syntax_Syntax.vars);
+      FStar_Syntax_Syntax.hash_code = (t.FStar_Syntax_Syntax.hash_code)
+    } in
   let un t _n = FStar_Pervasives_Native.Some t in
   FStar_Syntax_Embeddings_Base.mk_emb_full em un
     (fun uu___ -> FStar_Syntax_Syntax.t_term)
@@ -2240,6 +2246,11 @@ let (e_document :
     FStar_Syntax_Syntax.fvar FStar_Parser_Const.document_lid
       FStar_Pervasives_Native.None in
   FStar_Syntax_Embeddings_Base.e_lazy FStar_Syntax_Syntax.Lazy_doc uu___
+type abstract_term =
+  | Abstract of FStar_Syntax_Syntax.term 
+let (uu___is_Abstract : abstract_term -> Prims.bool) = fun projectee -> true
+let (__proj__Abstract__item__t : abstract_term -> FStar_Syntax_Syntax.term) =
+  fun projectee -> match projectee with | Abstract t -> t
 let arrow_as_prim_step_1 :
   'a 'b .
     'a FStar_Syntax_Embeddings_Base.embedding ->
@@ -2438,3 +2449,7 @@ let debug_wrap : 'a . Prims.string -> (unit -> 'a) -> 'a =
         then FStar_Compiler_Util.print1 "------ending %s\n" s
         else ());
        res)
+let (e_abstract_term : abstract_term FStar_Syntax_Embeddings_Base.embedding)
+  =
+  FStar_Syntax_Embeddings_Base.embed_as e_any (fun x -> Abstract x)
+    (fun x -> match x with | Abstract x1 -> x1) FStar_Pervasives_Native.None

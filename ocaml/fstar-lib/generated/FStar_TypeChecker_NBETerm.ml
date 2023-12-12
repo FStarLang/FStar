@@ -893,6 +893,12 @@ let lazy_unembed_lazy_kind :
             FStar_Pervasives_Native.Some uu___1
           else FStar_Pervasives_Native.None
       | uu___ -> FStar_Pervasives_Native.None
+type abstract_nbe_term =
+  | AbstractNBE of t 
+let (uu___is_AbstractNBE : abstract_nbe_term -> Prims.bool) =
+  fun projectee -> true
+let (__proj__AbstractNBE__item__t : abstract_nbe_term -> t) =
+  fun projectee -> match projectee with | AbstractNBE t1 -> t1
 let (mk_any_emb : t -> t embedding) =
   fun ty ->
     let em _cb a = a in
@@ -1442,6 +1448,10 @@ let e_arrow : 'a 'b . 'a embedding -> 'b embedding -> ('a -> 'b) embedding =
            let uu___1 = type_of ea in
            let uu___2 = let uu___3 = type_of eb in as_iarg uu___3 in
            make_arrow1 uu___1 uu___2) etyp
+let (e_abstract_nbe_term : abstract_nbe_term embedding) =
+  embed_as e_any (fun x -> AbstractNBE x)
+    (fun x -> match x with | AbstractNBE x1 -> x1)
+    FStar_Pervasives_Native.None
 let e_unsupported : 'a . unit -> 'a embedding =
   fun uu___ ->
     let em _cb a1 =
@@ -1785,21 +1795,6 @@ let mixed_ternary_op :
                           | uu___2 -> FStar_Pervasives_Native.None)
                      | uu___1 -> FStar_Pervasives_Native.None)
                 | uu___ -> FStar_Pervasives_Native.None
-let (interp_prop_eq2 : args -> t FStar_Pervasives_Native.option) =
-  fun args1 ->
-    match args1 with
-    | (_u, uu___)::(_typ, uu___1)::(a1, uu___2)::(a2, uu___3)::[] ->
-        let uu___4 = eq_t a1 a2 in
-        (match uu___4 with
-         | FStar_Syntax_Util.Equal ->
-             let uu___5 = embed e_bool bogus_cbs true in
-             FStar_Pervasives_Native.Some uu___5
-         | FStar_Syntax_Util.NotEqual ->
-             let uu___5 = embed e_bool bogus_cbs false in
-             FStar_Pervasives_Native.Some uu___5
-         | FStar_Syntax_Util.Unknown -> FStar_Pervasives_Native.None)
-    | uu___ ->
-        FStar_Compiler_Effect.failwith "Unexpected number of arguments"
 let (dummy_interp :
   FStar_Ident.lid -> args -> t FStar_Pervasives_Native.option) =
   fun lid ->

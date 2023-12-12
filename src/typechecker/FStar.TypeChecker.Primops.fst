@@ -35,41 +35,11 @@ open FStar.TypeChecker.Primops.Base
 (* Semantics for primitive operators (+, -, >, &&, ...)            *)
 (*******************************************************************)
 
-let arg_as_int    (a:arg) : option Z.t = fst a |> try_unembed_simple
+let arg_as_int (a:arg) : option Z.t = fst a |> try_unembed_simple
 
 let arg_as_list {|e:EMB.embedding 'a|} (a:arg)
 : option (list 'a)
   = fst a |> try_unembed_simple
-
-let lift_unary (f : 'a -> 'b) (aopts : list (option 'a)) : option 'b
-    = match aopts with
-      | [Some a] -> Some (f a)
-      | _ -> None
-
-let lift_binary (f : 'a -> 'a -> 'b) (aopts : list (option 'a)) : option 'b
-    = match aopts with
-      | [Some a0; Some a1] -> Some (f a0 a1)
-      | _ -> None
-
-let unary_op
-    (as_a : arg -> option 'a)
-    (f : Range.range -> 'a -> term)
-    (psc : psc)
-    (norm_cb : EMB.norm_cb)
-    (_univs : universes)
-    (args : args)
-  : option term
-  = lift_unary (f psc.psc_range) (List.map as_a args)
-
-let binary_op
-    (as_a : arg -> option 'a)
-    (f : Range.range -> 'a -> 'a -> term)
-    (psc : psc)
-    (norm_cb : EMB.norm_cb)
-    (_univs : universes)
-    (args : args)
-  : option term
-  = lift_binary (f psc.psc_range) (List.map as_a args)
 
 (* Most primitive steps don't use the NBE cbs, so they can use this wrapper. *)
 let as_primitive_step is_strong (l, arity, u_arity, f, f_nbe) =
@@ -119,20 +89,6 @@ let mixed_ternary_op
        | _ -> None
        end
     | _ -> None
-
-let decidable_eq (neg:bool) (psc:psc) _norm_cb _us (args:args)
-    : option term =
-    let r = psc.psc_range in
-    let tru = mk (Tm_constant (FC.Const_bool true)) r in
-    let fal = mk (Tm_constant (FC.Const_bool false)) r in
-    match args with
-    | [(_typ, _); (a1, _); (a2, _)] ->
-        (match U.eq_tm a1 a2 with
-        | U.Equal -> Some (if neg then fal else tru)
-        | U.NotEqual -> Some (if neg then tru else fal)
-        | _ -> None)
-    | _ ->
-        failwith "Unexpected number of arguments"
 
 (* and_op and or_op are special cased because they are short-circuting,
   * can run without unembedding its second argument. *)
@@ -242,16 +198,6 @@ let issue_ops : list primitive_step =
     );
   ]
 
-let doc_ops =
-  let mk_lid l = PC.p2l ["FStar"; "Stubs"; "Pprint"; l] in
-    (* FIXME: we only implement the absolute minimum. The rest of the operations
-    are availabe to plugins. *)
-    let open FStar.Pprint in
-    [
-      mk1 0 (mk_lid "arbitrary_string") arbitrary_string;
-      mk1 0 (mk_lid "render") render;
-    ]
-
 let seal_steps =
   List.map (fun p -> { as_primitive_step_nbecbs true p with renorm_after = true}) [
     (PC.map_seal_lid, 4, 2,
@@ -335,49 +281,7 @@ let seal_steps =
         ));
   ]
 
-let built_in_primitive_steps_list : list primitive_step =
-    let short_circuit_ops : list primitive_step =
-      List.map (as_primitive_step true)
-       [(PC.op_And,
-             2,
-             0,
-             and_op,
-             (fun _us -> NBETerm.and_op));
-         (PC.op_Or,
-             2,
-             0,
-             or_op,
-             (fun _us -> NBETerm.or_op));
-        ]
-    in
-    let reveal_hide =
-      (* unconditionally reduce reveal #t' (hide #t x) to x *)
-            PC.reveal,
-            2,
-            1,
-            mixed_binary_op
-            (fun x -> Some x)
-            (fun (x, _) ->
-              let head, args = U.head_and_args x  in
-              if U.is_fvar PC.hide head
-              then match args with
-                   | [_t; (body, _)] -> Some body
-                   | _ -> None
-              else None)
-            (fun r body -> body)
-            (fun r _us _t body -> Some body),
-            NBETerm.mixed_binary_op
-            (fun x -> Some x)
-            (fun (x, _) ->
-              match NBETerm.nbe_t_of_t x with
-              | NBETerm.FV (fv, _, [(_t, _); (body, _)])
-                when fv_eq_lid fv PC.hide ->
-                Some body
-              | _ -> None)
-            (fun body -> body)
-            (fun _us _t body -> Some body)
-    in
-    let array_ops =
+    let array_ops : list primitive_step =
       let of_list_op =
         let emb_typ t = ET_app(PC.immutable_array_t_lid |> Ident.string_of_lid, [t]) in
         let un_lazy universes t l r =
@@ -477,43 +381,33 @@ let built_in_primitive_steps_list : list primitive_step =
              (fun tm -> tm) //In this case, the result is a NBE.t, so embedding is the identity
              (fun _universes _t blob i  -> Some (BU.array_index #NBETerm.t (FStar.Compiler.Dyn.undyn blob) i)))
       in
-      [of_list_op; length_op; index_op]
-    in
-    let strong_steps =
       List.map (as_primitive_step true)
-               ([reveal_hide]@array_ops)
-    in
+      [of_list_op; length_op; index_op]
+
+let short_circuit_ops : list primitive_step =
+  List.map (as_primitive_step true)
+   [(PC.op_And,
+         2,
+         0,
+         and_op,
+         (fun _us -> NBETerm.and_op));
+     (PC.op_Or,
+         2,
+         0,
+         or_op,
+         (fun _us -> NBETerm.or_op));
+    ]
+
+let built_in_primitive_steps_list : list primitive_step =
     simple_ops
     @ short_circuit_ops
     @ issue_ops
-    @ doc_ops
-    @ strong_steps
+    @ array_ops
     @ seal_steps
+    @ Primops.Erased.ops
+    @ Primops.Docs.ops
+    @ Primops.MachineInts.ops
     @ Primops.Eq.dec_eq_ops
-    @ Primops.MachineInts.bounded_arith_ops
 
 let equality_ops_list : list primitive_step =
-    let interp_prop_eq2 (psc:psc) _norm_cb _univs (args:args) : option term =
-        let r = psc.psc_range in
-        match args with
-        | [(_typ, _); (a1, _); (a2, _)]  ->         //eq2
-            (match U.eq_tm a1 a2 with
-            | U.Equal -> Some ({U.t_true with pos=r})
-            | U.NotEqual -> Some ({U.t_false with pos=r})
-            | _ -> None)
-
-        | _ ->
-            failwith "Unexpected number of arguments"
-    in
-    let propositional_equality : primitive_step =
-        {name = PC.eq2_lid;
-         arity = 3;
-         univ_arity = 1;
-         auto_reflect=None;
-         strong_reduction_ok=true;
-         requires_binder_substitution=false;
-         renorm_after=false;
-         interpretation = interp_prop_eq2;
-         interpretation_nbe = fun _cb _univs -> NBETerm.interp_prop_eq2}
-    in
-    [propositional_equality]
+  Primops.Eq.prop_eq_ops

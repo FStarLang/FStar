@@ -17,25 +17,18 @@
 *)
 
 module FStar.TypeChecker.NBETerm
-open FStar.Pervasives
-open FStar.Compiler.Effect
+
 open FStar
 open FStar.Compiler
-open FStar.TypeChecker
-open FStar.TypeChecker.Env
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Ident
-open FStar.Errors
 open FStar.VConfig
+open FStar.Char
 
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
-module P = FStar.Syntax.Print
-module BU = FStar.Compiler.Util
-module Env = FStar.TypeChecker.Env
 module Z = FStar.BigInt
-module C = FStar.Const
-open FStar.Char
 
 val interleave_hack : int
 
@@ -262,6 +255,8 @@ val lazy_unembed_lazy_kind (#a:Type) (k:lazy_kind) (x:t) : option a
 val type_of : embedding 'a -> t
 val set_type : t -> embedding 'a -> embedding 'a
 
+type abstract_nbe_term = | AbstractNBE : t:t -> abstract_nbe_term
+
 instance val e_bool   : embedding bool
 instance val e_string : embedding string
 instance val e_char   : embedding char
@@ -282,6 +277,8 @@ instance val e_either : embedding 'a -> embedding 'b -> Prims.Tot (embedding (ei
 val e_sealed : embedding 'a -> embedding 'a
 instance val e_string_list : embedding (list string)
 val e_arrow : embedding 'a -> embedding 'b -> embedding ('a -> 'b)
+
+instance val e_abstract_nbe_term : embedding abstract_nbe_term
 
 (* Unconditionally fails raising an exception when called *)
 val e_unsupported : #a:Type -> embedding a
@@ -321,8 +318,6 @@ val arrow_as_prim_step_3:  embedding 'a
 
 val arg_as_int : arg -> option Z.t
 val arg_as_list : embedding 'a -> arg -> option (list 'a)
-
-val interp_prop_eq2 : args -> option t
 
 val mixed_binary_op : (arg -> option 'a) -> (arg -> option 'b) -> ('c -> t) ->
                       (universes -> 'a -> 'b -> option 'c) -> universes -> args -> option t

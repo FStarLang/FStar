@@ -59,6 +59,9 @@ instance val e_range       : embedding Range.range (* sealed *)
 instance val e_document    : embedding FStar.Pprint.document
 instance val e_issue       : embedding FStar.Errors.issue
 
+type abstract_term = | Abstract : t:term -> abstract_term
+instance val e_abstract_term : embedding abstract_term
+
 val mk_any_emb : typ -> embedding term
 
 (* Arity specific raw_embeddings of arrows; used to generate top-level

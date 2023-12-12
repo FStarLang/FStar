@@ -198,12 +198,12 @@ let mk_any_emb typ =
         (fun () -> ET_abstract)
 
 let e_any =
-    let em = fun t _r _shadow _norm -> t in
+    let em = fun t r _shadow _norm -> { t with pos = r} in
     let un = fun t _n -> Some t in
     mk_emb_full
         em
         un
-        (fun () -> S.t_term)
+        (fun () -> S.t_term) // not correct
         Print.term_to_string
         (fun () -> ET_app (PC.term_lid |> Ident.string_of_lid, []))
 
@@ -1113,3 +1113,6 @@ let debug_wrap (s:string) (f:unit -> 'a) =
     if !Options.debug_embedding
     then BU.print1 "------ending %s\n" s;
     res
+
+instance e_abstract_term : embedding abstract_term =
+  embed_as e_any (fun x -> Abstract x) (fun x -> match x with Abstract x -> x) None
