@@ -166,7 +166,9 @@ type mlexpr' =
 | MLE_CTor   of mlpath * list mlexpr
 | MLE_Seq    of list mlexpr
 | MLE_Tuple  of list mlexpr
-| MLE_Record of list mlsymbol * list (mlsymbol * mlexpr) // path of record type, and fields with values
+| MLE_Record of list mlsymbol * mlsymbol * list (mlsymbol * mlexpr) // path of record type,
+                                                                    // name of record type,
+                                                                    // and fields with values
 | MLE_Proj   of mlexpr * mlpath
 | MLE_If     of mlexpr * mlexpr * option mlexpr
 | MLE_Raise  of mlpath * list mlexpr
@@ -314,8 +316,8 @@ let rec mlexpr_to_string (e:mlexpr) =
     BU.format1 "(MLE_Seq [%s])" (String.concat "; " (List.map mlexpr_to_string es))
   | MLE_Tuple es ->
     BU.format1 "(MLE_Tuple [%s])" (String.concat "; " (List.map mlexpr_to_string es))
-  | MLE_Record (p, es) ->
-    BU.format2 "(MLE_Record (%s, [%s]))" (String.concat "; " p) (String.concat "; " (List.map (fun (x, e) -> BU.format2 "(%s, %s)" x (mlexpr_to_string e)) es))
+  | MLE_Record (p, n, es) ->
+    BU.format2 "(MLE_Record (%s, [%s]))" (String.concat "; " (p@[n])) (String.concat "; " (List.map (fun (x, e) -> BU.format2 "(%s, %s)" x (mlexpr_to_string e)) es))
   | MLE_Proj (e, p) ->
     BU.format2 "(MLE_Proj (%s, %s))" (mlexpr_to_string e) (mlpath_to_string p)
   | MLE_If (e1, e2, None) ->
