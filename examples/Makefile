@@ -57,7 +57,6 @@ SPECIAL_CASES += miniparse
 endif
 
 special_cases: $(addsuffix .all, $(SPECIAL_CASES))
-	$(MAKE) -C semiring CanonCommSemiring.native
 
 %.all: %
 	+$(MAKE) -C $^ all
