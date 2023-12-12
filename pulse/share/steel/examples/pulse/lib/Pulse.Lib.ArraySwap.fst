@@ -19,7 +19,7 @@ fn gcd (n0: SZ.t) (l0: SZ.t)
   let mut pn = n0;
   let mut pl = l0;
   while (let l = !pl ; (l `SZ.gt` 0sz))
-  invariant b . exists n l . (
+  invariant b . exists* n l . (
     pts_to pn n **
     pts_to pl l **
     pure (
@@ -99,7 +99,7 @@ fn array_swap_aux(#t: Type0) (a: A.array t) (lb: SZ.t) (rb: SZ.t) (mb: (mb: SZ.t
       SZ.v q == bz.q_n
     )
   )
-  ensures exists s . (
+  ensures exists* s . (
     A.pts_to_range a (Ghost.reveal (SZ.v lb)) (Ghost.reveal (SZ.v rb)) s **
     pure (Prf.array_swap_post s0 (SZ.v rb - SZ.v lb) (SZ.v mb - SZ.v lb) s) // hoisted out because of the SMT pattern on array_as_ring_buffer_swap
   )
@@ -107,7 +107,7 @@ fn array_swap_aux(#t: Type0) (a: A.array t) (lb: SZ.t) (rb: SZ.t) (mb: (mb: SZ.t
     A.pts_to_range_prop a;
     let mut pi = lb;
     while (let i = !pi; ((i `SZ.sub` lb) `size_lt` d))
-    invariant b . exists s i . (
+    invariant b . exists* s i . (
       A.pts_to_range a (Ghost.reveal (SZ.v lb)) (Ghost.reveal (SZ.v rb)) s **
       R.pts_to pi i **
       pure (
@@ -121,7 +121,7 @@ fn array_swap_aux(#t: Type0) (a: A.array t) (lb: SZ.t) (rb: SZ.t) (mb: (mb: SZ.t
       let mut pj = 0sz;
       let mut pidx = i;
       while (let j = !pj; (j `size_lt` (size_sub q 1sz ())))
-      invariant b . exists s j idx . (
+      invariant b . exists* s j idx . (
         A.pts_to_range a (Ghost.reveal (SZ.v lb)) (Ghost.reveal (SZ.v rb)) s **
         R.pts_to pi i **
         R.pts_to pj j **

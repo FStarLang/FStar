@@ -114,7 +114,7 @@ fn acquire_queue_lock
   //(#q: HR.ref task_queue) (#c: ref int)
   //(l: Lock.lock (inv_task_queue q c))
   requires emp
-  ensures (exists vq vc. HR.pts_to (get_queue p) vq ** pts_to (get_counter p) vc)
+  ensures (exists* vq vc. HR.pts_to (get_queue p) vq ** pts_to (get_counter p) vc)
 {
   Lock.acquire (get_lock p);
   unfold (inv_task_queue (get_queue p) (get_counter p));
@@ -127,7 +127,7 @@ fn release_queue_lock
   //(#q: HR.ref task_queue) (#c: ref int)
   //(l: Lock.lock (inv_task_queue q c))
   (p: par_env)
-  requires (exists vq vc. HR.pts_to (get_queue p) vq ** pts_to (get_counter p) vc)
+  requires (exists* vq vc. HR.pts_to (get_queue p) vq ** pts_to (get_counter p) vc)
   ensures emp
 {
   fold (inv_task_queue (get_queue p) (get_counter p));
@@ -220,7 +220,7 @@ fn join_emp'
 {
   let r = Pulse.Lib.Reference.alloc #(option a) None;
   while (let res = !r; None? res)
-    invariant b. (exists res. pts_to r res ** pure (b == None? res)
+    invariant b. (exists* res. pts_to r res ** pure (b == None? res)
     ** pure (maybe_sat post res))
   {
     Lock.acquire h._2;
@@ -300,7 +300,7 @@ fn worker' //(#q: HR.ref task_queue) (#c: ref int) (l: Lock.lock (inv_task_queue
   let r_working = alloc #bool true;
   
   while (let working = !r_working; working)
-    invariant b. (exists w. pts_to r_working w ** pure (b == w))
+    invariant b. (exists* w. pts_to r_working w ** pure (b == w))
   {
     acquire_queue_lock p;
 

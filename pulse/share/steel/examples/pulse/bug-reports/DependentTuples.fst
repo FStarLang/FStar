@@ -47,7 +47,7 @@ fn record ()
   acquire global_rec.lk;
   assert (exists_n global_rec.r);
   unfold exists_n global_rec.r;
-  assert (exists n. pts_to global_rec.r n);
+  assert (exists* n. pts_to global_rec.r n);
   admit()
 }
 ```

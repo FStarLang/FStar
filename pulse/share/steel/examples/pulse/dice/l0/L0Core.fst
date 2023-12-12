@@ -30,7 +30,7 @@ fn create_deviceIDCRI
                           deviceIDCSR_ingredients.s_country
     )
   ensures
-    exists (buf:Seq.seq U8.t).
+    exists* (buf:Seq.seq U8.t).
       A.pts_to deviceID_pub #pub_perm pub **
       A.pts_to deviceIDCRI_buf buf **
       pure (
@@ -83,7 +83,7 @@ fn sign_and_finalize_deviceIDCSR
       deviceIDCSR_len == length_of_deviceIDCSR deviceIDCRI_len
     ))
   ensures (
-    exists (csr_buf:Seq.seq U8.t).
+    exists* (csr_buf:Seq.seq U8.t).
     A.pts_to deviceID_priv #priv_perm priv **
     A.pts_to deviceIDCRI_buf _cri_buf **
     A.pts_to deviceIDCSR_buf csr_buf **
@@ -141,7 +141,7 @@ fn create_aliasKeyTBS
                           aliasKeyCRT_ingredients.s_country
                           aliasKeyCRT_ingredients.l0_version
     )
-  ensures exists (buf:Seq.seq U8.t).
+  ensures exists* (buf:Seq.seq U8.t).
     A.pts_to fwid #fwid_perm fwid0 **
     A.pts_to authKeyID #authKey_perm authKeyID0 **
     A.pts_to deviceID_pub #device_perm deviceID_pub0 **
@@ -197,7 +197,7 @@ fn sign_and_finalize_aliasKeyCRT
       aliasKeyCRT_len == length_of_aliasKeyCRT aliasKeyTBS_len
     ))
   ensures (
-    exists (crt_buf:Seq.seq U8.t). 
+    exists* (crt_buf:Seq.seq U8.t). 
     A.pts_to deviceID_priv #priv_perm priv **
     A.pts_to aliasKeyTBS_buf _tbs_buf **
     A.pts_to aliasKeyCRT_buf crt_buf **
@@ -325,7 +325,7 @@ fn l0_main'
   ensures (
       l0_record_perm record p repr **
       A.pts_to cdi #cdi_perm cdi0 **
-      exists (deviceID_pub1 deviceID_priv1 aliasKey_pub1 aliasKey_priv1
+      (exists* (deviceID_pub1 deviceID_priv1 aliasKey_pub1 aliasKey_priv1
               aliasKeyCRT1 deviceIDCSR1:Seq.seq U8.t). (
         A.pts_to deviceID_pub deviceID_pub1 **
         A.pts_to deviceID_priv deviceID_priv1 **
@@ -347,7 +347,7 @@ fn l0_main'
             dice_hash_alg dice_digest_len cdi0 repr.fwid
             record.deviceID_label_len repr.deviceID_label record.aliasKeyCRT_ingredients 
             aliasKeyCRT_len aliasKeyCRT1 aliasKey_pub1
-      )))
+      ))))
 {
   unfold (l0_record_perm record p repr);
   dice_digest_len_is_hkdf_ikm;

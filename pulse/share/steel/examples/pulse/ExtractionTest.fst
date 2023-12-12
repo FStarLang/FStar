@@ -38,7 +38,7 @@ fn write10 (x:ref U32.t)
   let mut ctr = 10ul;
   while ((ctr >^ 0ul))
   invariant b.
-    exists n i.
+    exists* n i.
       pts_to x n **
       pts_to ctr i **
       pure (i <=^ 10ul /\ 
@@ -57,13 +57,13 @@ module A = Pulse.Lib.Array
 ```pulse
 fn fill_array (x:array U32.t) (n:SZ.t) (v:U32.t)
   requires A.pts_to x 's ** pure (A.length x == SZ.v n)
-  ensures exists s. A.pts_to x s ** pure (Seq.equal s (Seq.create (SZ.v n) v))
+  ensures exists* s. A.pts_to x s ** pure (Seq.equal s (Seq.create (SZ.v n) v))
 {
   A.pts_to_len x;
   let mut i : SZ.t = 0sz;
   while (SZ.(i `SZ.lt` n))
   invariant b.
-    exists (vi:SZ.t) (s:Seq.seq U32.t).
+    exists* (vi:SZ.t) (s:Seq.seq U32.t).
       pts_to i vi **
       A.pts_to x s **
       pure (SZ.(vi <=^ n) /\

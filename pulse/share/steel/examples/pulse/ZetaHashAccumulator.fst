@@ -360,7 +360,7 @@ fn aggregate_raw_hashes (#s1 #s2:e_raw_hash_value_t)
     assert (pure (s1 `Seq.equal` xor_bytes_pfx s1 s2 0));
     while ((i < 32sz))
     invariant b.
-        exists wi.
+        exists* wi.
             pts_to i wi **
             A.pts_to b1 (xor_bytes_pfx s1 s2 (v wi)) **
             A.pts_to b2 s2 **

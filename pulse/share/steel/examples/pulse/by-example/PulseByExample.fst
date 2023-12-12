@@ -57,7 +57,7 @@ open Pulse.Lib.BoundedIntegers
 (* 
   Things to note:
   - heap array, read and write
-  - exists and forall in spec
+  - exists* and forall in spec
   - machine integers, ops on bounded integers
 *)
 

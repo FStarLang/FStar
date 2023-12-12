@@ -63,7 +63,7 @@ fn swap
   (i j: nat_smaller n)
   (#s0: Ghost.erased (Seq.seq int))
   requires A.pts_to a s0 ** pure (Seq.length s0 == n)
-  ensures exists s. (A.pts_to a #full_perm s **
+  ensures exists* s. (A.pts_to a #full_perm s **
     pure (Seq.length s0 = n /\ Seq.length s = n /\ s = seq_swap s0 i j
     /\ permutation s0 s))
 {
@@ -98,7 +98,7 @@ fn partition (a: A.array int) (lo hi: int) (n: nat) (lb rb: int) (#s0: Ghost.era
       )
   )
   returns r: int & int & int // left, right, pivot
-  ensures exists s. (
+  ensures exists* s. (
     A.pts_to a s **
     pure (
       Seq.length s = n /\ Seq.length s0 = n /\ A.length a = n
@@ -117,7 +117,7 @@ fn partition (a: A.array int) (lo hi: int) (n: nat) (lb rb: int) (#s0: Ghost.era
   let mut j = lo - 1;
   let mut k = lo;
   while (let vk = !k; (vk < hi))
-    invariant b . exists s vi vj vk. (
+    invariant b . exists* s vi vj vk. (
       A.pts_to a s **
       R.pts_to i vi **
       R.pts_to j vj **
@@ -189,7 +189,7 @@ fn quicksort' (a: A.array int) (lo hi: int) (lb rb: int) (n: nat) (#s0: (s0:Ghos
     /\ hi >= -1 /\ lo <= n /\ lb <= rb
     /\ between_bounds n s0 lo hi lb rb
     )
-  ensures exists s. (
+  ensures exists* s. (
     A.pts_to a s ** pure (
       0 <= lo /\ hi < n /\ Seq.length s0 = n /\ Seq.length s = n /\ SZ.fits n /\ A.length a = n
       /\ same_between n s0 s 0 (lo - 1) /\ same_between n s0 s (hi + 1) (n - 1)
@@ -208,7 +208,7 @@ fn quicksort (a: A.array int) (lo hi: int) (lb rb: int) (n: nat) (#s0: (s0:Ghost
     /\ hi >= -1 /\ lo <= n /\ lb <= rb
     /\ between_bounds n s0 lo hi lb rb
     )
-  ensures exists s. (
+  ensures exists* s. (
     A.pts_to a s ** pure (
       0 <= lo /\ hi < n /\ Seq.length s0 = n /\ Seq.length s = n /\ SZ.fits n /\ A.length a = n
       /\ same_between n s0 s 0 (lo - 1) /\ same_between n s0 s (hi + 1) (n - 1)

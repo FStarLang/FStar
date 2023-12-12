@@ -36,7 +36,7 @@ fn invar_introduces_ghost (r:R.ref int)
 ```
 
 (* 
-  intro exists pattern exhibits the 
+  intro exists* pattern exhibits the 
   same issue as the invariant pattern 
 *)
 [@@expect_failure]
@@ -49,7 +49,7 @@ fn exists_introduces_ghost (r:R.ref int)
 
   fold (my_inv true r);
 
-  introduce exists b. (my_inv b r) with _;  // FAILS: trying to prove: my_inv (reveal (hide true)) r
+  introduce exists* b. (my_inv b r) with _;  // FAILS: trying to prove: my_inv (reveal (hide true)) r
                                             // but typing context has: my_inv true r
   ()
 }
@@ -69,7 +69,7 @@ fn exists_with_witness_introduces_ghost (r:R.ref int)
 
   fold (my_inv true r);
 
-  introduce exists b. (my_inv b r) with true; // this is OK but then we lose access
+  introduce exists* b. (my_inv b r) with true; // this is OK but then we lose access
                                               // to witness b=true
 
   assert (my_inv true r); // FAILS
