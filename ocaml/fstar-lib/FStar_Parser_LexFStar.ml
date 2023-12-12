@@ -675,7 +675,8 @@ match %sedlex lexbuf with
  | "```" ->
    BLOB(name, Buffer.contents buffer, pos, snap)
  | eof ->
-   EOF
+   E.raise_error (Codes.Fatal_SyntaxError, "Syntax error: unterminated extension syntax")
+                 (current_range lexbuf)
  | newline ->
    L.new_line lexbuf;
    Buffer.add_string buffer (L.lexeme lexbuf);
