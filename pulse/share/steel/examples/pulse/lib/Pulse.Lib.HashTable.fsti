@@ -14,13 +14,13 @@ noeq
 type ht_t (keyt:eqtype) (valt:Type) = {
   sz : pos_us;
   hashf: keyt -> US.t;
-  contents : A.larray (cell keyt valt) (US.v sz);
+  contents : A.array (cell keyt valt);
 }
 
 let mk_ht (#k:eqtype) #v 
           (sz:pos_us) 
           (hashf:k -> US.t)
-          (contents:A.larray (cell k v) (US.v sz))
+          (contents:A.array (cell k v))
   : ht_t k v
   = { sz; hashf; contents; }
 
