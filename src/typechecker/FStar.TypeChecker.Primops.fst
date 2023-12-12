@@ -41,36 +41,6 @@ let arg_as_list {|e:EMB.embedding 'a|} (a:arg)
 : option (list 'a)
   = fst a |> try_unembed_simple
 
-let lift_unary (f : 'a -> 'b) (aopts : list (option 'a)) : option 'b
-    = match aopts with
-      | [Some a] -> Some (f a)
-      | _ -> None
-
-let lift_binary (f : 'a -> 'a -> 'b) (aopts : list (option 'a)) : option 'b
-    = match aopts with
-      | [Some a0; Some a1] -> Some (f a0 a1)
-      | _ -> None
-
-let unary_op
-    (as_a : arg -> option 'a)
-    (f : Range.range -> 'a -> term)
-    (psc : psc)
-    (norm_cb : EMB.norm_cb)
-    (_univs : universes)
-    (args : args)
-  : option term
-  = lift_unary (f psc.psc_range) (List.map as_a args)
-
-let binary_op
-    (as_a : arg -> option 'a)
-    (f : Range.range -> 'a -> 'a -> term)
-    (psc : psc)
-    (norm_cb : EMB.norm_cb)
-    (_univs : universes)
-    (args : args)
-  : option term
-  = lift_binary (f psc.psc_range) (List.map as_a args)
-
 (* Most primitive steps don't use the NBE cbs, so they can use this wrapper. *)
 let as_primitive_step is_strong (l, arity, u_arity, f, f_nbe) =
   Primops.Base.as_primitive_step_nbecbs is_strong (l, arity, u_arity, f, (fun cb univs args -> f_nbe univs args))
@@ -119,20 +89,6 @@ let mixed_ternary_op
        | _ -> None
        end
     | _ -> None
-
-let decidable_eq (neg:bool) (psc:psc) _norm_cb _us (args:args)
-    : option term =
-    let r = psc.psc_range in
-    let tru = mk (Tm_constant (FC.Const_bool true)) r in
-    let fal = mk (Tm_constant (FC.Const_bool false)) r in
-    match args with
-    | [(_typ, _); (a1, _); (a2, _)] ->
-        (match U.eq_tm a1 a2 with
-        | U.Equal -> Some (if neg then fal else tru)
-        | U.NotEqual -> Some (if neg then tru else fal)
-        | _ -> None)
-    | _ ->
-        failwith "Unexpected number of arguments"
 
 (* and_op and or_op are special cased because they are short-circuting,
   * can run without unembedding its second argument. *)
