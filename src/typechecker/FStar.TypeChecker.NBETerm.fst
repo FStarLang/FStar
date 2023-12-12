@@ -15,20 +15,27 @@
 *)
 
 module FStar.TypeChecker.NBETerm
-open FStar.Pervasives
-open FStar.Compiler.Effect
 open FStar
 open FStar.Compiler
-open FStar.TypeChecker
-open FStar.TypeChecker.Env
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
-open FStar.Ident
 open FStar.Errors
 open FStar.Char
 open FStar.String
-open FStar.Class.Show
 
 friend FStar.Pervasives (* To expose norm_step *)
+
+module PC = FStar.Parser.Const
+module S = FStar.Syntax.Syntax
+module P = FStar.Syntax.Print
+module BU = FStar.Compiler.Util
+module C = FStar.Const
+module SE = FStar.Syntax.Embeddings
+open FStar.VConfig
+
+open FStar.Class.Show
+
+// NBE term manipulation
 
 (**** NOTE: Don't say I didn't warn you! ***)
 (* FV and Construct accumulate arguments *in reverse order*.
@@ -49,20 +56,6 @@ friend FStar.Pervasives (* To expose norm_step *)
  *
  * Note how the implicit argument is seemingly *after* the explicit one.
  *)
-
-module PC = FStar.Parser.Const
-module S = FStar.Syntax.Syntax
-module U = FStar.Syntax.Util
-module P = FStar.Syntax.Print
-module BU = FStar.Compiler.Util
-module Env = FStar.TypeChecker.Env
-module Z = FStar.BigInt
-module C = FStar.Const
-module Range = FStar.Compiler.Range
-module SE = FStar.Syntax.Embeddings
-open FStar.VConfig
-// NBE term manipulation
-
 let interleave_hack = 123
 
 let isAccu (trm:t) =

@@ -17,25 +17,18 @@
 *)
 
 module FStar.TypeChecker.NBETerm
-open FStar.Pervasives
-open FStar.Compiler.Effect
+
 open FStar
 open FStar.Compiler
-open FStar.TypeChecker
-open FStar.TypeChecker.Env
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Ident
-open FStar.Errors
 open FStar.VConfig
+open FStar.Char
 
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
-module P = FStar.Syntax.Print
-module BU = FStar.Compiler.Util
-module Env = FStar.TypeChecker.Env
 module Z = FStar.BigInt
-module C = FStar.Const
-open FStar.Char
 
 val interleave_hack : int
 
