@@ -1129,7 +1129,16 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
              | _ -> failwith "Impossible"
         else None, args
       in
-      base_term, List.zip uc.uc_fields (List.map fst fields)
+      if List.length uc.uc_fields <> List.length fields
+      then raise_error
+            (Errors.Fatal_IdentifierNotFound,
+             BU.format2 "Could not resolve constructor; expected %s fields but only found %s"
+                              (show <| List.length uc.uc_fields)
+                              (show <| List.length fields))
+             top.pos
+      else (
+        base_term, List.zip uc.uc_fields (List.map fst fields)
+      )
     in
     let (rdc, constrname, constructor), topt =
       match Env.expected_typ env with

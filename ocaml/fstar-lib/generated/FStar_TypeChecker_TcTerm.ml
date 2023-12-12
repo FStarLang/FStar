@@ -3172,13 +3172,38 @@ and (tc_maybe_toplevel_term :
                 else (FStar_Pervasives_Native.None, args) in
               match uu___8 with
               | (base_term, fields) ->
-                  let uu___9 =
-                    let uu___10 =
-                      FStar_Compiler_List.map FStar_Pervasives_Native.fst
-                        fields in
-                    FStar_Compiler_List.zip uc.FStar_Syntax_Syntax.uc_fields
-                      uu___10 in
-                  (base_term, uu___9) in
+                  if
+                    (FStar_Compiler_List.length
+                       uc.FStar_Syntax_Syntax.uc_fields)
+                      <> (FStar_Compiler_List.length fields)
+                  then
+                    let uu___9 =
+                      let uu___10 =
+                        let uu___11 =
+                          FStar_Class_Show.show
+                            (FStar_Class_Show.printableshow
+                               FStar_Class_Printable.printable_nat)
+                            (FStar_Compiler_List.length
+                               uc.FStar_Syntax_Syntax.uc_fields) in
+                        let uu___12 =
+                          FStar_Class_Show.show
+                            (FStar_Class_Show.printableshow
+                               FStar_Class_Printable.printable_nat)
+                            (FStar_Compiler_List.length fields) in
+                        FStar_Compiler_Util.format2
+                          "Could not resolve constructor; expected %s fields but only found %s"
+                          uu___11 uu___12 in
+                      (FStar_Errors_Codes.Fatal_IdentifierNotFound, uu___10) in
+                    FStar_Errors.raise_error uu___9
+                      top.FStar_Syntax_Syntax.pos
+                  else
+                    (let uu___10 =
+                       let uu___11 =
+                         FStar_Compiler_List.map FStar_Pervasives_Native.fst
+                           fields in
+                       FStar_Compiler_List.zip
+                         uc.FStar_Syntax_Syntax.uc_fields uu___11 in
+                     (base_term, uu___10)) in
             (match uu___7 with
              | (base_term, uc_fields) ->
                  let uu___8 =
