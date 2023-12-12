@@ -338,7 +338,7 @@ let (simple_ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                 FStar_Syntax_Embeddings.e_int
                                 FStar_TypeChecker_NBETerm.e_int
                                 (division_modulus_op FStar_BigInt.mod_big_int)
-                                (division_modulus_op FStar_BigInt.div_big_int) in
+                                (division_modulus_op FStar_BigInt.mod_big_int) in
                             let uu___27 =
                               let uu___28 =
                                 FStar_TypeChecker_Primops_Base.mk1

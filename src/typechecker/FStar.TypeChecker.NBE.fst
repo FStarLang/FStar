@@ -46,6 +46,8 @@ module FC = FStar.Const
 module EMB = FStar.Syntax.Embeddings
 module PC = FStar.Parser.Const
 
+open FStar.Class.Show
+
 (* Broadly, the algorithm implemented here is inspired by
 
    Full Reduction at Full Throttle:
@@ -878,8 +880,7 @@ and translate_fv (cfg: config) (bs:list t) (fvar:fv): t =
                         iapp = iapp cfg;
                         translate = translate cfg bs;
                       } in
-                      debug (fun () -> BU.print1 "Caling primop with args = [%s]\n"
-                                    (List.map (fun (x, _) -> t_to_string x) args' |> String.concat "; "));
+                      debug (fun () -> BU.print1 "Caling primop with args = [%s]\n" (show args'));
                       let univs, rest = List.span (function ({nbe_t=Univ _ }, _) -> true | _ -> false) args' in
                       let univs = List.map (function ({nbe_t=Univ u}, _) -> u | _ -> failwith "Impossible") univs in
                       match prim_step.interpretation_nbe callbacks univs rest with

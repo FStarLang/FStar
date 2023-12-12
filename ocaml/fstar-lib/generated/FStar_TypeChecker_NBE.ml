@@ -1767,15 +1767,9 @@ and (translate_fv :
                                debug1
                                  (fun uu___10 ->
                                     let uu___11 =
-                                      let uu___12 =
-                                        FStar_Compiler_List.map
-                                          (fun uu___13 ->
-                                             match uu___13 with
-                                             | (x, uu___14) ->
-                                                 FStar_TypeChecker_NBETerm.t_to_string
-                                                   x) args' in
-                                      FStar_Compiler_String.concat "; "
-                                        uu___12 in
+                                      FStar_Class_Show.show
+                                        FStar_TypeChecker_NBETerm.showable_args
+                                        args' in
                                     FStar_Compiler_Util.print1
                                       "Caling primop with args = [%s]\n"
                                       uu___11);
