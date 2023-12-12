@@ -97,6 +97,18 @@ let rec uncurry_arrow (t:S.mlty) : (list S.mlty & S.mlty) =
     t1::arg_ts, ret_t
   | _ -> ([], t)
 
+let arg_ts_and_ret_t (t:S.mltyscheme)
+  : S.mlidents &   // type parameters
+    list S.mlty &  // function argument types (after uncurrying the input type)
+    S.mlty =       // function return type
+  let tvars, t = t in
+  match t with
+  | S.MLTY_Fun (_, S.E_PURE, _)
+  | S.MLTY_Fun (_, S.E_IMPURE, _) ->
+    let arg_ts, ret_t = uncurry_arrow t in
+    tvars, arg_ts, ret_t
+  | _ -> fail_nyi (format1 "top level arg_ts and ret_t %s" (S.mlty_to_string t))
+
 //
 // Most translations are straightforward
 //
@@ -149,6 +161,10 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
   | S.MLTY_Named (args, p) ->
     mk_named_typ (snd p) (List.map (extract_mlty g) args)
 
+  | S.MLTY_Fun _ ->
+    let _, arg_ts, ret_t = arg_ts_and_ret_t ([], t) in
+    mk_fn_typ (List.map (extract_mlty g) arg_ts) (extract_mlty g ret_t)
+
   | S.MLTY_Top -> Typ_infer
 
   | _ -> fail_nyi (format1 "mlty %s" (S.mlty_to_string t))
@@ -189,18 +205,6 @@ let extract_top_level_sig
   mk_fn_signature fn_name (List.map tyvar_of tvars) fn_args fn_ret_t,
   fold_left (fun g (arg_name, arg) -> push_fn_arg g arg_name arg) g (zip arg_names fn_args)
 
-let arg_ts_and_ret_t (t:S.mltyscheme)
-  : S.mlidents &   // type parameters
-    list S.mlty &  // function argument types (after uncurrying the input type)
-    S.mlty =       // function return type
-  let tvars, t = t in
-  match t with
-  | S.MLTY_Fun (_, S.E_PURE, _)
-  | S.MLTY_Fun (_, S.E_IMPURE, _) ->
-    let arg_ts, ret_t = uncurry_arrow t in
-    tvars, arg_ts, ret_t
-  | _ -> fail_nyi (format1 "top level arg_ts and ret_t %s" (S.mlty_to_string t))
-
 //
 // TODO: add machine integers binops?
 //
@@ -209,17 +213,23 @@ let is_binop (s:string) : option binop =
      s = "FStar.UInt32.add" ||
      s = "FStar.SizeT.add"
   then Some Add
-  else if s = "Prims.op_Subtraction"
+  else if s = "Prims.op_Subtraction" ||
+          s = "FStar.SizeT.sub" ||
+          s = "FStar.UInt32.sub"
   then Some Sub
   else if s = "Prims.op_disEquality"
   then Some Ne
-  else if s = "Prims.op_LessThanOrEqual"
+  else if s = "Prims.op_LessThanOrEqual" ||
+          s = "FStar.UInt32.lte" ||
+          s = "FStar.SizeT.lte"
   then Some Le
   else if s = "Prims.op_LessThan" ||
           s = "FStar.UInt32.lt" ||
           s = "FStar.SizeT.lt"
   then Some Lt
-  else if s = "Prims.op_GreaterThanOrEqual"
+  else if s = "Prims.op_GreaterThanOrEqual" ||
+          s = "FStar.UInt32.gte" ||
+          s = "FStar.SizeT.gte"
   then Some Ge
   else if s = "Prims.op_GreaterThan" ||
           s = "FStar.UInt32.gt" ||
@@ -227,6 +237,10 @@ let is_binop (s:string) : option binop =
   then Some Gt
   else if s = "Prims.op_Equality"
   then Some Eq
+  else if s = "Prims.rem" ||
+          s = "FStar.UInt32.rem" ||
+          s = "FStar.SizeT.rem"
+  then Some Rem
   else None
 
 let extract_mlconstant_to_lit (c:S.mlconstant) : lit =
@@ -349,6 +363,9 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     // nested let binding
   | S.MLE_Let _ -> e |> extract_mlexpr_to_stmts g |> mk_block_expr
 
+  // | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, [e])
+  //   when S.string_of_mlpath p = "Pulse.Lib.Pervasives.tfst" ->
+
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2; _])
     when S.string_of_mlpath p = "Pulse.Lib.Reference.op_Colon_Equals" ||
          S.string_of_mlpath p = "Pulse.Lib.Box.op_Colon_Equals" ->
@@ -366,6 +383,11 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     if b then e
     else mk_ref_read e
   
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2; _])
+    when S.string_of_mlpath p = "Pulse.Lib.Pervasives.ref_apply" ->
+
+    mk_call (extract_mlexpr g e1) [extract_mlexpr g e2]
+ 
     //
     // box_as_ref e extracted to &mut e
     //
@@ -386,13 +408,15 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e; i; _; _])
     when S.string_of_mlpath p = "Pulse.Lib.Array.Core.op_Array_Access" ||
-         S.string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Access"  ->
+         S.string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Access" ||
+         S.string_of_mlpath p = "Pulse.Lib.Vec.vec_ref_read" ->
 
     mk_expr_index (extract_mlexpr g e) (extract_mlexpr g i)
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2; e3; _])
     when S.string_of_mlpath p = "Pulse.Lib.Array.Core.op_Array_Assignment" ||
-         S.string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Assignment" ->
+         S.string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Assignment" ||
+         S.string_of_mlpath p = "Pulse.Lib.Vec.vec_ref_write" ->
 
     let e1 = extract_mlexpr g e1 in
     let e2 = extract_mlexpr g e2 in
@@ -459,7 +483,9 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     mk_call head args
 
   | S.MLE_CTor (p, args) ->
-    mk_call (mk_expr_path_singl (snd p)) (List.map (extract_mlexpr g) args)
+    if List.length args = 0
+    then mk_expr_path_singl (snd p)
+    else mk_call (mk_expr_path_singl (snd p)) (List.map (extract_mlexpr g) args)
 
   | S.MLE_TApp (head, _) -> extract_mlexpr g head  // make type applications explicit in the Rust code?
   | S.MLE_If (cond, if_then, if_else_opt) ->
@@ -630,6 +656,9 @@ let extract_one (file:string) : unit =
   let items, _ = List.fold_left (fun (items, g) d ->
     print1 "Decl: %s\n" (S.mlmodule1_to_string d);
     match d with
+    | S.MLM_Let (S.NonRec, [{mllb_name}])
+      when mllb_name = "explode_ref" ||
+           mllb_name = "unexplode_ref" -> items, g
     | S.MLM_Let lb ->
       let f, g = extract_top_level_lb g lb in
       // print_string "Extracted to:\n";

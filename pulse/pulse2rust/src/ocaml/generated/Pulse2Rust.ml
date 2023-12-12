@@ -116,18 +116,39 @@ let rec (uncurry_arrow :
         let uu___1 = uncurry_arrow t2 in
         (match uu___1 with | (arg_ts, ret_t) -> ((t1 :: arg_ts), ret_t))
     | uu___ -> ([], t)
+let (arg_ts_and_ret_t :
+  FStar_Extraction_ML_Syntax.mltyscheme ->
+    (FStar_Extraction_ML_Syntax.mlidents * FStar_Extraction_ML_Syntax.mlty
+      Prims.list * FStar_Extraction_ML_Syntax.mlty))
+  =
+  fun t ->
+    let uu___ = t in
+    match uu___ with
+    | (tvars, t1) ->
+        (match t1 with
+         | FStar_Extraction_ML_Syntax.MLTY_Fun
+             (uu___1, FStar_Extraction_ML_Syntax.E_PURE, uu___2) ->
+             let uu___3 = uncurry_arrow t1 in
+             (match uu___3 with | (arg_ts, ret_t) -> (tvars, arg_ts, ret_t))
+         | FStar_Extraction_ML_Syntax.MLTY_Fun
+             (uu___1, FStar_Extraction_ML_Syntax.E_IMPURE, uu___2) ->
+             let uu___3 = uncurry_arrow t1 in
+             (match uu___3 with | (arg_ts, ret_t) -> (tvars, arg_ts, ret_t))
+         | uu___1 ->
+             let uu___2 =
+               let uu___3 = FStar_Extraction_ML_Syntax.mlty_to_string t1 in
+               FStar_Compiler_Util.format1 "top level arg_ts and ret_t %s"
+                 uu___3 in
+             fail_nyi uu___2)
 let rec (extract_mlty :
   env -> FStar_Extraction_ML_Syntax.mlty -> Pulse2Rust_Rust_Syntax.typ) =
   fun g ->
     fun t ->
       let mk_slice is_mut t1 =
         let uu___ =
-          let uu___1 =
-            FStar_Compiler_Effect.op_Bar_Greater t1 (extract_mlty g) in
-          FStar_Compiler_Effect.op_Bar_Greater uu___1
-            Pulse2Rust_Rust_Syntax.mk_slice_typ in
-        FStar_Compiler_Effect.op_Bar_Greater uu___
-          (Pulse2Rust_Rust_Syntax.mk_ref_typ is_mut) in
+          let uu___1 = extract_mlty g t1 in
+          Pulse2Rust_Rust_Syntax.mk_slice_typ uu___1 in
+        Pulse2Rust_Rust_Syntax.mk_ref_typ is_mut uu___ in
       match t with
       | FStar_Extraction_ML_Syntax.MLTY_Var s ->
           let uu___ = tyvar_of s in
@@ -164,17 +185,13 @@ let rec (extract_mlty :
           let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
           uu___ = "Pulse.Lib.Reference.ref" ->
           let is_mut = true in
-          let uu___ =
-            FStar_Compiler_Effect.op_Bar_Greater arg (extract_mlty g) in
-          FStar_Compiler_Effect.op_Bar_Greater uu___
-            (Pulse2Rust_Rust_Syntax.mk_ref_typ is_mut)
+          let uu___ = extract_mlty g arg in
+          Pulse2Rust_Rust_Syntax.mk_ref_typ is_mut uu___
       | FStar_Extraction_ML_Syntax.MLTY_Named (arg::[], p) when
           let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
           uu___ = "Pulse.Lib.Box.box" ->
-          let uu___ =
-            FStar_Compiler_Effect.op_Bar_Greater arg (extract_mlty g) in
-          FStar_Compiler_Effect.op_Bar_Greater uu___
-            Pulse2Rust_Rust_Syntax.mk_box_typ
+          let uu___ = extract_mlty g arg in
+          Pulse2Rust_Rust_Syntax.mk_box_typ uu___
       | FStar_Extraction_ML_Syntax.MLTY_Named (arg::[], p) when
           let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
           uu___ = "Pulse.Lib.Array.Core.array" ->
@@ -186,23 +203,26 @@ let rec (extract_mlty :
       | FStar_Extraction_ML_Syntax.MLTY_Named (arg::[], p) when
           let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
           uu___ = "Pulse.Lib.Vec.vec" ->
-          let uu___ =
-            FStar_Compiler_Effect.op_Bar_Greater arg (extract_mlty g) in
-          FStar_Compiler_Effect.op_Bar_Greater uu___
-            Pulse2Rust_Rust_Syntax.mk_vec_typ
+          let uu___ = extract_mlty g arg in
+          Pulse2Rust_Rust_Syntax.mk_vec_typ uu___
       | FStar_Extraction_ML_Syntax.MLTY_Named (arg::[], p) when
           let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
           uu___ = "FStar.Pervasives.Native.option" ->
-          let uu___ =
-            FStar_Compiler_Effect.op_Bar_Greater arg (extract_mlty g) in
-          FStar_Compiler_Effect.op_Bar_Greater uu___
-            Pulse2Rust_Rust_Syntax.mk_option_typ
+          let uu___ = extract_mlty g arg in
+          Pulse2Rust_Rust_Syntax.mk_option_typ uu___
       | FStar_Extraction_ML_Syntax.MLTY_Erased ->
           Pulse2Rust_Rust_Syntax.Typ_unit
       | FStar_Extraction_ML_Syntax.MLTY_Named (args, p) ->
           let uu___ = FStar_Compiler_List.map (extract_mlty g) args in
           Pulse2Rust_Rust_Syntax.mk_named_typ (FStar_Pervasives_Native.snd p)
             uu___
+      | FStar_Extraction_ML_Syntax.MLTY_Fun uu___ ->
+          let uu___1 = arg_ts_and_ret_t ([], t) in
+          (match uu___1 with
+           | (uu___2, arg_ts, ret_t) ->
+               let uu___3 = FStar_Compiler_List.map (extract_mlty g) arg_ts in
+               let uu___4 = extract_mlty g ret_t in
+               Pulse2Rust_Rust_Syntax.mk_fn_typ uu___3 uu___4)
       | FStar_Extraction_ML_Syntax.MLTY_Top ->
           Pulse2Rust_Rust_Syntax.Typ_infer
       | uu___ ->
@@ -228,9 +248,8 @@ let (extract_top_level_fn_arg :
   fun g ->
     fun arg_name ->
       fun t ->
-        let uu___ = FStar_Compiler_Effect.op_Bar_Greater t (extract_mlty g) in
-        FStar_Compiler_Effect.op_Bar_Greater uu___
-          (Pulse2Rust_Rust_Syntax.mk_scalar_fn_arg arg_name)
+        let uu___ = extract_mlty g t in
+        Pulse2Rust_Rust_Syntax.mk_scalar_fn_arg arg_name uu___
 let (push_fn_arg :
   env -> Prims.string -> Pulse2Rust_Rust_Syntax.fn_arg -> env) =
   fun g ->
@@ -274,30 +293,6 @@ let (extract_top_level_sig :
                        | (arg_name, arg) -> push_fn_arg g1 arg_name arg) g
                   uu___2 in
               (uu___, uu___1)
-let (arg_ts_and_ret_t :
-  FStar_Extraction_ML_Syntax.mltyscheme ->
-    (FStar_Extraction_ML_Syntax.mlidents * FStar_Extraction_ML_Syntax.mlty
-      Prims.list * FStar_Extraction_ML_Syntax.mlty))
-  =
-  fun t ->
-    let uu___ = t in
-    match uu___ with
-    | (tvars, t1) ->
-        (match t1 with
-         | FStar_Extraction_ML_Syntax.MLTY_Fun
-             (uu___1, FStar_Extraction_ML_Syntax.E_PURE, uu___2) ->
-             let uu___3 = uncurry_arrow t1 in
-             (match uu___3 with | (arg_ts, ret_t) -> (tvars, arg_ts, ret_t))
-         | FStar_Extraction_ML_Syntax.MLTY_Fun
-             (uu___1, FStar_Extraction_ML_Syntax.E_IMPURE, uu___2) ->
-             let uu___3 = uncurry_arrow t1 in
-             (match uu___3 with | (arg_ts, ret_t) -> (tvars, arg_ts, ret_t))
-         | uu___1 ->
-             let uu___2 =
-               let uu___3 = FStar_Extraction_ML_Syntax.mlty_to_string t1 in
-               FStar_Compiler_Util.format1 "top level arg_ts and ret_t %s"
-                 uu___3 in
-             fail_nyi uu___2)
 let (is_binop :
   Prims.string -> Pulse2Rust_Rust_Syntax.binop FStar_Pervasives_Native.option)
   =
@@ -307,13 +302,17 @@ let (is_binop :
         (s = "FStar.SizeT.add")
     then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Add
     else
-      if s = "Prims.op_Subtraction"
+      if
+        ((s = "Prims.op_Subtraction") || (s = "FStar.SizeT.sub")) ||
+          (s = "FStar.UInt32.sub")
       then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Sub
       else
         if s = "Prims.op_disEquality"
         then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Ne
         else
-          if s = "Prims.op_LessThanOrEqual"
+          if
+            ((s = "Prims.op_LessThanOrEqual") || (s = "FStar.UInt32.lte")) ||
+              (s = "FStar.SizeT.lte")
           then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Le
           else
             if
@@ -321,7 +320,10 @@ let (is_binop :
                 (s = "FStar.SizeT.lt")
             then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Lt
             else
-              if s = "Prims.op_GreaterThanOrEqual"
+              if
+                ((s = "Prims.op_GreaterThanOrEqual") ||
+                   (s = "FStar.UInt32.gte"))
+                  || (s = "FStar.SizeT.gte")
               then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Ge
               else
                 if
@@ -331,7 +333,13 @@ let (is_binop :
                 else
                   if s = "Prims.op_Equality"
                   then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Eq
-                  else FStar_Pervasives_Native.None
+                  else
+                    if
+                      ((s = "Prims.rem") || (s = "FStar.UInt32.rem")) ||
+                        (s = "FStar.SizeT.rem")
+                    then
+                      FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Rem
+                    else FStar_Pervasives_Native.None
 let (extract_mlconstant_to_lit :
   FStar_Extraction_ML_Syntax.mlconstant -> Pulse2Rust_Rust_Syntax.lit) =
   fun c ->
@@ -452,12 +460,10 @@ let rec (lb_init_and_def :
             let uu___2 =
               let uu___3 =
                 let uu___4 =
-                  FStar_Compiler_Effect.op_Bar_Greater
-                    lb.FStar_Extraction_ML_Syntax.mllb_tysc
-                    FStar_Compiler_Util.must in
-                FStar_Compiler_Effect.op_Bar_Greater uu___4
-                  FStar_Pervasives_Native.snd in
-              FStar_Compiler_Effect.op_Bar_Greater uu___3 (extract_mlty g) in
+                  FStar_Compiler_Util.must
+                    lb.FStar_Extraction_ML_Syntax.mllb_tysc in
+                FStar_Pervasives_Native.snd uu___4 in
+              extract_mlty g uu___3 in
             let uu___3 =
               let uu___4 = Pulse2Rust_Rust_Syntax.mk_repeat init1 len1 in
               Pulse2Rust_Rust_Syntax.mk_reference_expr true uu___4 in
@@ -496,12 +502,10 @@ let rec (lb_init_and_def :
          let uu___1 =
            let uu___2 =
              let uu___3 =
-               FStar_Compiler_Effect.op_Bar_Greater
-                 lb.FStar_Extraction_ML_Syntax.mllb_tysc
-                 FStar_Compiler_Util.must in
-             FStar_Compiler_Effect.op_Bar_Greater uu___3
-               FStar_Pervasives_Native.snd in
-           FStar_Compiler_Effect.op_Bar_Greater uu___2 (extract_mlty g) in
+               FStar_Compiler_Util.must
+                 lb.FStar_Extraction_ML_Syntax.mllb_tysc in
+             FStar_Pervasives_Native.snd uu___3 in
+           extract_mlty g uu___2 in
          let uu___2 = extract_mlexpr g lb.FStar_Extraction_ML_Syntax.mllb_def in
          (is_mut1, uu___1, uu___2))
 and (extract_mlexpr :
@@ -532,11 +536,8 @@ and (extract_mlexpr :
           Pulse2Rust_Rust_Syntax.mk_expr_path_singl
             (FStar_Pervasives_Native.snd p)
       | FStar_Extraction_ML_Syntax.MLE_Let uu___ ->
-          let uu___1 =
-            FStar_Compiler_Effect.op_Bar_Greater e
-              (extract_mlexpr_to_stmts g) in
-          FStar_Compiler_Effect.op_Bar_Greater uu___1
-            Pulse2Rust_Rust_Syntax.mk_block_expr
+          let uu___1 = extract_mlexpr_to_stmts g e in
+          Pulse2Rust_Rust_Syntax.mk_block_expr uu___1
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
@@ -596,6 +597,25 @@ and (extract_mlexpr :
                 uu___2::[]);
              FStar_Extraction_ML_Syntax.mlty = uu___3;
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
+           e1::e2::uu___5::[])
+          when
+          let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___6 = "Pulse.Lib.Pervasives.ref_apply" ->
+          let uu___6 = extract_mlexpr g e1 in
+          let uu___7 = let uu___8 = extract_mlexpr g e2 in [uu___8] in
+          Pulse2Rust_Rust_Syntax.mk_call uu___6 uu___7
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                uu___2::[]);
+             FStar_Extraction_ML_Syntax.mlty = uu___3;
+             FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e1::[])
           when
           let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
@@ -638,10 +658,13 @@ and (extract_mlexpr :
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e1::i::uu___5::uu___6::[])
           when
-          (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-           uu___7 = "Pulse.Lib.Array.Core.op_Array_Access") ||
+          ((let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___7 = "Pulse.Lib.Array.Core.op_Array_Access") ||
+             (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              uu___7 = "Pulse.Lib.Vec.op_Array_Access"))
+            ||
             (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___7 = "Pulse.Lib.Vec.op_Array_Access")
+             uu___7 = "Pulse.Lib.Vec.vec_ref_read")
           ->
           let uu___7 = extract_mlexpr g e1 in
           let uu___8 = extract_mlexpr g i in
@@ -660,10 +683,13 @@ and (extract_mlexpr :
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e1::e2::e3::uu___5::[])
           when
-          (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-           uu___6 = "Pulse.Lib.Array.Core.op_Array_Assignment") ||
+          ((let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___6 = "Pulse.Lib.Array.Core.op_Array_Assignment") ||
+             (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              uu___6 = "Pulse.Lib.Vec.op_Array_Assignment"))
+            ||
             (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___6 = "Pulse.Lib.Vec.op_Array_Assignment")
+             uu___6 = "Pulse.Lib.Vec.vec_ref_write")
           ->
           let e11 = extract_mlexpr g e1 in
           let e21 = extract_mlexpr g e2 in
@@ -831,22 +857,15 @@ and (extract_mlexpr :
            e1::e2::[])
           when
           let uu___2 =
-            let uu___3 =
-              FStar_Compiler_Effect.op_Bar_Greater p
-                FStar_Extraction_ML_Syntax.string_of_mlpath in
-            FStar_Compiler_Effect.op_Bar_Greater uu___3 is_binop in
-          FStar_Compiler_Effect.op_Bar_Greater uu___2
-            FStar_Pervasives_Native.uu___is_Some
-          ->
+            let uu___3 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            is_binop uu___3 in
+          FStar_Pervasives_Native.uu___is_Some uu___2 ->
           let e11 = extract_mlexpr g e1 in
           let op =
             let uu___2 =
-              let uu___3 =
-                FStar_Compiler_Effect.op_Bar_Greater p
-                  FStar_Extraction_ML_Syntax.string_of_mlpath in
-              FStar_Compiler_Effect.op_Bar_Greater uu___3 is_binop in
-            FStar_Compiler_Effect.op_Bar_Greater uu___2
-              FStar_Compiler_Util.must in
+              let uu___3 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              is_binop uu___3 in
+            FStar_Compiler_Util.must uu___2 in
           let e21 = extract_mlexpr g e2 in
           Pulse2Rust_Rust_Syntax.mk_binop e11 op e21
       | FStar_Extraction_ML_Syntax.MLE_App
@@ -864,22 +883,15 @@ and (extract_mlexpr :
            e1::e2::[])
           when
           let uu___5 =
-            let uu___6 =
-              FStar_Compiler_Effect.op_Bar_Greater p
-                FStar_Extraction_ML_Syntax.string_of_mlpath in
-            FStar_Compiler_Effect.op_Bar_Greater uu___6 is_binop in
-          FStar_Compiler_Effect.op_Bar_Greater uu___5
-            FStar_Pervasives_Native.uu___is_Some
-          ->
+            let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            is_binop uu___6 in
+          FStar_Pervasives_Native.uu___is_Some uu___5 ->
           let e11 = extract_mlexpr g e1 in
           let op =
             let uu___5 =
-              let uu___6 =
-                FStar_Compiler_Effect.op_Bar_Greater p
-                  FStar_Extraction_ML_Syntax.string_of_mlpath in
-              FStar_Compiler_Effect.op_Bar_Greater uu___6 is_binop in
-            FStar_Compiler_Effect.op_Bar_Greater uu___5
-              FStar_Compiler_Util.must in
+              let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              is_binop uu___6 in
+            FStar_Compiler_Util.must uu___5 in
           let e21 = extract_mlexpr g e2 in
           Pulse2Rust_Rust_Syntax.mk_binop e11 op e21
       | FStar_Extraction_ML_Syntax.MLE_App
@@ -891,22 +903,15 @@ and (extract_mlexpr :
            e1::e2::[])
           when
           let uu___2 =
-            let uu___3 =
-              FStar_Compiler_Effect.op_Bar_Greater p
-                FStar_Extraction_ML_Syntax.string_of_mlpath in
-            FStar_Compiler_Effect.op_Bar_Greater uu___3 is_binop in
-          FStar_Compiler_Effect.op_Bar_Greater uu___2
-            FStar_Pervasives_Native.uu___is_Some
-          ->
+            let uu___3 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            is_binop uu___3 in
+          FStar_Pervasives_Native.uu___is_Some uu___2 ->
           let e11 = extract_mlexpr g e1 in
           let op =
             let uu___2 =
-              let uu___3 =
-                FStar_Compiler_Effect.op_Bar_Greater p
-                  FStar_Extraction_ML_Syntax.string_of_mlpath in
-              FStar_Compiler_Effect.op_Bar_Greater uu___3 is_binop in
-            FStar_Compiler_Effect.op_Bar_Greater uu___2
-              FStar_Compiler_Util.must in
+              let uu___3 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              is_binop uu___3 in
+            FStar_Compiler_Util.must uu___2 in
           let e21 = extract_mlexpr g e2 in
           Pulse2Rust_Rust_Syntax.mk_binop e11 op e21
       | FStar_Extraction_ML_Syntax.MLE_App (head, args) ->
@@ -914,11 +919,16 @@ and (extract_mlexpr :
           let args1 = FStar_Compiler_List.map (extract_mlexpr g) args in
           Pulse2Rust_Rust_Syntax.mk_call head1 args1
       | FStar_Extraction_ML_Syntax.MLE_CTor (p, args) ->
-          let uu___ =
+          if (FStar_Compiler_List.length args) = Prims.int_zero
+          then
             Pulse2Rust_Rust_Syntax.mk_expr_path_singl
-              (FStar_Pervasives_Native.snd p) in
-          let uu___1 = FStar_Compiler_List.map (extract_mlexpr g) args in
-          Pulse2Rust_Rust_Syntax.mk_call uu___ uu___1
+              (FStar_Pervasives_Native.snd p)
+          else
+            (let uu___1 =
+               Pulse2Rust_Rust_Syntax.mk_expr_path_singl
+                 (FStar_Pervasives_Native.snd p) in
+             let uu___2 = FStar_Compiler_List.map (extract_mlexpr g) args in
+             Pulse2Rust_Rust_Syntax.mk_call uu___1 uu___2)
       | FStar_Extraction_ML_Syntax.MLE_TApp (head, uu___) ->
           extract_mlexpr g head
       | FStar_Extraction_ML_Syntax.MLE_If (cond, if_then, if_else_opt) ->
@@ -1262,6 +1272,21 @@ let (extract_one : Prims.string -> unit) =
                          FStar_Extraction_ML_Syntax.mlmodule1_to_string d in
                        FStar_Compiler_Util.print1 "Decl: %s\n" uu___5);
                       (match d with
+                       | FStar_Extraction_ML_Syntax.MLM_Let
+                           (FStar_Extraction_ML_Syntax.NonRec,
+                            {
+                              FStar_Extraction_ML_Syntax.mllb_name =
+                                mllb_name;
+                              FStar_Extraction_ML_Syntax.mllb_tysc = uu___5;
+                              FStar_Extraction_ML_Syntax.mllb_add_unit =
+                                uu___6;
+                              FStar_Extraction_ML_Syntax.mllb_def = uu___7;
+                              FStar_Extraction_ML_Syntax.mllb_meta = uu___8;
+                              FStar_Extraction_ML_Syntax.print_typ = uu___9;_}::[])
+                           when
+                           (mllb_name = "explode_ref") ||
+                             (mllb_name = "unexplode_ref")
+                           -> (items, g)
                        | FStar_Extraction_ML_Syntax.MLM_Let lb ->
                            let uu___5 = extract_top_level_lb g lb in
                            (match uu___5 with

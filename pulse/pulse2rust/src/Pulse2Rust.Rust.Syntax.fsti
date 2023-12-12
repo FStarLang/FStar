@@ -29,6 +29,7 @@ type binop =
   | Le
   | Gt
   | Ge
+  | Rem
 
 type unop =
   | Deref
@@ -166,6 +167,7 @@ type typ =
   | Typ_array of typ_array
   | Typ_unit
   | Typ_infer
+  | Typ_fn of typ_fn
 
 and typ_reference = {
   typ_ref_mut : bool;
@@ -180,6 +182,11 @@ and typ_path_segment = {
 and typ_array = {
   typ_array_elem : typ;
   typ_array_len : expr;
+}
+
+and typ_fn = {
+  typ_fn_args : list typ;
+  typ_fn_ret : typ;
 }
 
 type pat_typ = {
@@ -262,6 +269,7 @@ val mk_vec_typ (t:typ) : typ
 val mk_option_typ (t:typ) : typ
 val mk_array_typ (t:typ) (len:expr) : typ
 val mk_named_typ (s:string) (generic_args:list typ) : typ
+val mk_fn_typ (arg_typs:list typ) (ret_typ:typ) : typ
 
 val mk_expr_path_singl (s:string) : expr
 val mk_expr_path (l:list string) : expr

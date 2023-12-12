@@ -64,6 +64,7 @@ type binop =
   | Le 
   | Gt 
   | Ge 
+  | Rem 
 let (uu___is_Add : binop -> Prims.bool) =
   fun projectee -> match projectee with | Add -> true | uu___ -> false
 let (uu___is_Sub : binop -> Prims.bool) =
@@ -80,6 +81,8 @@ let (uu___is_Gt : binop -> Prims.bool) =
   fun projectee -> match projectee with | Gt -> true | uu___ -> false
 let (uu___is_Ge : binop -> Prims.bool) =
   fun projectee -> match projectee with | Ge -> true | uu___ -> false
+let (uu___is_Rem : binop -> Prims.bool) =
+  fun projectee -> match projectee with | Rem -> true | uu___ -> false
 type unop =
   | Deref 
 let (uu___is_Deref : unop -> Prims.bool) = fun projectee -> true
@@ -460,6 +463,7 @@ type typ =
   | Typ_array of typ_array 
   | Typ_unit 
   | Typ_infer 
+  | Typ_fn of typ_fn 
 and typ_reference = {
   typ_ref_mut: Prims.bool ;
   typ_ref_typ: typ }
@@ -470,6 +474,9 @@ and typ_path_segment =
 and typ_array = {
   typ_array_elem: typ ;
   typ_array_len: expr }
+and typ_fn = {
+  typ_fn_args: typ Prims.list ;
+  typ_fn_ret: typ }
 let (uu___is_Typ_path : typ -> Prims.bool) =
   fun projectee ->
     match projectee with | Typ_path _0 -> true | uu___ -> false
@@ -494,6 +501,10 @@ let (uu___is_Typ_unit : typ -> Prims.bool) =
   fun projectee -> match projectee with | Typ_unit -> true | uu___ -> false
 let (uu___is_Typ_infer : typ -> Prims.bool) =
   fun projectee -> match projectee with | Typ_infer -> true | uu___ -> false
+let (uu___is_Typ_fn : typ -> Prims.bool) =
+  fun projectee -> match projectee with | Typ_fn _0 -> true | uu___ -> false
+let (__proj__Typ_fn__item___0 : typ -> typ_fn) =
+  fun projectee -> match projectee with | Typ_fn _0 -> _0
 let (__proj__Mktyp_reference__item__typ_ref_mut :
   typ_reference -> Prims.bool) =
   fun projectee ->
@@ -521,6 +532,12 @@ let (__proj__Mktyp_array__item__typ_array_len : typ_array -> expr) =
   fun projectee ->
     match projectee with
     | { typ_array_elem; typ_array_len;_} -> typ_array_len
+let (__proj__Mktyp_fn__item__typ_fn_args : typ_fn -> typ Prims.list) =
+  fun projectee ->
+    match projectee with | { typ_fn_args; typ_fn_ret;_} -> typ_fn_args
+let (__proj__Mktyp_fn__item__typ_fn_ret : typ_fn -> typ) =
+  fun projectee ->
+    match projectee with | { typ_fn_args; typ_fn_ret;_} -> typ_fn_ret
 type pat_typ = {
   pat_typ_pat: pat ;
   pat_typ_typ: typ }
@@ -762,6 +779,8 @@ let (mk_named_typ : Prims.string -> typ Prims.list -> typ) =
            typ_path_segment_name = s;
            typ_path_segment_generic_args = generic_args
          }]
+let (mk_fn_typ : typ Prims.list -> typ -> typ) =
+  fun typ_fn_args -> fun typ_fn_ret -> Typ_fn { typ_fn_args; typ_fn_ret }
 let (mk_expr_path_singl : Prims.string -> expr) = fun s -> Expr_path [s]
 let (mk_expr_path : Prims.string Prims.list -> expr) = fun l -> Expr_path l
 let (mk_lit_bool : Prims.bool -> expr) = fun b -> Expr_lit (Lit_bool b)

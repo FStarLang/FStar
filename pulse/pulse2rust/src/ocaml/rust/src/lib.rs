@@ -43,6 +43,7 @@ enum BinOp {
     Le,
     Gt,
     Ge,
+    Rem,
 }
 
 enum UnOp {
@@ -154,6 +155,11 @@ struct TypeArray {
     type_array_len: Expr,
 }
 
+struct TypeFn {
+    type_fn_args: Vec<Typ>,
+    type_fn_ret: Box<Typ>,
+}
+
 enum Typ {
     TPath(Vec<TypePathSegment>),
     TReference(TypeReference),
@@ -161,6 +167,7 @@ enum Typ {
     TArray(TypeArray),
     TUnit,
     TInfer,
+    TFn(TypeFn),
 }
 
 struct PatIdent {
@@ -318,6 +325,7 @@ impl_from_ocaml_variant! {
       BinOp::Le,
       BinOp::Gt,
       BinOp::Ge,
+      BinOp::Rem,
   }
 }
 
@@ -468,6 +476,13 @@ impl_from_ocaml_record! {
   }
 }
 
+impl_from_ocaml_record! {
+  TypeFn {
+    type_fn_args: OCamlList<Typ>,
+    type_fn_ret: Typ,
+  }
+}
+
 impl_from_ocaml_variant! {
   Typ {
     Typ::TPath (payload:OCamlList<TypePathSegment>),
@@ -476,6 +491,7 @@ impl_from_ocaml_variant! {
     Typ::TArray (payload:TypeArray),
     Typ::TUnit,
     Typ::TInfer,
+    Typ::TFn (payload:TypeFn),
   }
 }
 
@@ -669,6 +685,9 @@ fn to_syn_binop(op: &BinOp) -> syn::BinOp {
         }),
         BinOp::Ge => syn::BinOp::Ge(syn::token::Ge {
             spans: [Span::call_site(), Span::call_site()],
+        }),
+        BinOp::Rem => syn::BinOp::Rem(syn::token::Percent {
+            spans: [Span::call_site()],
         }),
     }
 }
@@ -1206,6 +1225,36 @@ fn to_syn_typ(t: &Typ) -> Type {
                 spans: [Span::call_site()],
             },
         }),
+        Typ::TFn(TypeFn {
+            type_fn_args,
+            type_fn_ret,
+        }) => syn::Type::BareFn(syn::TypeBareFn {
+            lifetimes: None,
+            unsafety: None,
+            abi: None,
+            fn_token: syn::token::Fn {
+                span: Span::call_site(),
+            },
+            paren_token: Paren::default(),
+            inputs: {
+                let mut args: Punctuated<syn::BareFnArg, Comma> = Punctuated::new();
+                type_fn_args.iter().for_each(|t| {
+                    args.push(syn::BareFnArg {
+                        attrs: vec![],
+                        name: None,
+                        ty: to_syn_typ(t),
+                    })
+                });
+                args
+            },
+            variadic: None,
+            output: ReturnType::Type(
+                RArrow {
+                    spans: [Span::call_site(), Span::call_site()],
+                },
+                Box::new(to_syn_typ(&type_fn_ret)),
+            ),
+        }),
     }
 }
 
@@ -1223,6 +1272,27 @@ fn to_syn_fn_arg(a: &FnArg) -> syn::FnArg {
     })
 }
 
+fn generic_param_clone_bounds() -> Punctuated<syn::TypeParamBound, syn::token::Plus> {
+    let mut bounds = Punctuated::new();
+    bounds.push(syn::TypeParamBound::Trait(syn::TraitBound {
+        paren_token: None,
+        modifier: syn::TraitBoundModifier::None,
+        lifetimes: None,
+        path: syn::Path {
+            leading_colon: None,
+            segments: {
+                let mut segs = Punctuated::new();
+                segs.push(syn::PathSegment {
+                    ident: Ident::new("Clone", Span::call_site()),
+                    arguments: syn::PathArguments::None,
+                });
+                segs
+            },
+        },
+    }));
+    bounds
+}
+
 fn to_syn_fn_sig(s: &FnSig) -> Signature {
     let mut args: Punctuated<syn::FnArg, Comma> = Punctuated::new();
     s.fn_args.iter().for_each(|a| args.push(to_syn_fn_arg(a)));
@@ -1234,7 +1304,7 @@ fn to_syn_fn_sig(s: &FnSig) -> Signature {
             attrs: vec![],
             ident: Ident::new(g, Span::call_site()),
             colon_token: None,
-            bounds: Punctuated::new(),
+            bounds: generic_param_clone_bounds(),
             eq_token: None,
             default: None,
         }))
@@ -1293,7 +1363,7 @@ fn to_syn_item(i: &Item) -> syn::Item {
                     attrs: vec![],
                     ident: Ident::new(s, Span::call_site()),
                     colon_token: None,
-                    bounds: Punctuated::new(),
+                    bounds: generic_param_clone_bounds(),
                     eq_token: None,
                     default: None,
                 }))
@@ -1359,7 +1429,7 @@ fn to_syn_item(i: &Item) -> syn::Item {
                     attrs: vec![],
                     ident: Ident::new(s, Span::call_site()),
                     colon_token: None,
-                    bounds: Punctuated::new(),
+                    bounds: generic_param_clone_bounds(),
                     eq_token: None,
                     default: None,
                 }))
@@ -1406,7 +1476,7 @@ fn to_syn_item(i: &Item) -> syn::Item {
                     attrs: vec![],
                     ident: Ident::new(s, Span::call_site()),
                     colon_token: None,
-                    bounds: Punctuated::new(),
+                    bounds: generic_param_clone_bounds(),
                     eq_token: None,
                     default: None,
                 }))
@@ -1529,6 +1599,7 @@ impl fmt::Display for BinOp {
             BinOp::Le => "<=",
             BinOp::Gt => ">",
             BinOp::Ge => ">=",
+            BinOp::Rem => "%",
         };
         write!(f, "{}", s)
     }
@@ -1758,6 +1829,19 @@ impl fmt::Display for Typ {
             }) => write!(f, "[{}; {}]", type_array_elem, type_array_len),
             Typ::TUnit => write!(f, "()"),
             Typ::TInfer => write!(f, "_"),
+            Typ::TFn(TypeFn {
+                type_fn_args,
+                type_fn_ret,
+            }) => write!(
+                f,
+                "({}) -> {}",
+                type_fn_args
+                    .iter()
+                    .map(|t| t.to_string())
+                    .collect::<Vec<_>>()
+                    .join(","),
+                type_fn_ret
+            ),
         }
     }
 }
@@ -1952,4 +2036,11 @@ ocaml_export! {
   //   };
   //   z.to_string().to_owned().to_ocaml(cr)
   // }
+}
+
+#[derive(Clone)]
+pub enum cell<A: Clone, B: Clone> {
+    Clean,
+    Zombie,
+    Used(A, B),
 }
