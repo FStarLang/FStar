@@ -525,7 +525,7 @@ and desugar_sequence (env:env_t) (s1 s2:Sugar.stmt) r
   : err SW.st_term
   = let? s1 = desugar_stmt env s1 in
     let? s2 = desugar_stmt env s2 in
-    let annot = SW.mk_binder (Ident.id_of_text "_") (SW.tm_unknown r) in
+    let annot = SW.mk_binder (Ident.id_of_text "_") (SW.tm_expr S.t_unit r) in
     return (mk_bind annot s1 s2 r)
 
 and desugar_proof_hint_with_binders (env:env_t) (s1:Sugar.stmt) (k:option Sugar.stmt) r

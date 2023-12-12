@@ -12,6 +12,7 @@ fn my_fn (#t:Type0) (x y:t)
 
 // Line 22 is a partial application that returns _:t -> unit.
 // We should warn the user in case this return type was unintentional. 
+[@@expect_failure [228]]
 ```pulse
 fn app (#t:Type0) (v:t)
   requires emp

@@ -1227,7 +1227,9 @@ and (desugar_sequence :
                  (fun s21 ->
                     let annot =
                       let uu___2 = FStar_Ident.id_of_text "_" in
-                      let uu___3 = PulseSyntaxWrapper.tm_unknown r in
+                      let uu___3 =
+                        PulseSyntaxWrapper.tm_expr FStar_Syntax_Syntax.t_unit
+                          r in
                       PulseSyntaxWrapper.mk_binder uu___2 uu___3 in
                     let uu___2 = mk_bind annot s11 s21 r in return uu___2))
 and (desugar_proof_hint_with_binders :
