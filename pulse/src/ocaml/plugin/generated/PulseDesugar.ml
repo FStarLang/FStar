@@ -2200,7 +2200,7 @@ and (transform_stmt : menv -> PulseSugar.stmt -> PulseSugar.stmt err) =
            match uu___1 with
            | (p1, needs, m1) ->
                let uu___2 = add_derefs_in_scope needs p1 in return uu___2)
-let rec (vprop_to_ast_term : PulseSugar.vprop -> FStar_Parser_AST.term err) =
+let (vprop_to_ast_term : PulseSugar.vprop -> FStar_Parser_AST.term err) =
   fun v -> match v.PulseSugar.v with | PulseSugar.VPropTerm t -> return t
 let (comp_to_ast_term :
   PulseSugar.computation_type -> FStar_Parser_AST.term err) =

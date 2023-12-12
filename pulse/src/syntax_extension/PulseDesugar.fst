@@ -254,25 +254,6 @@ let desugar_vprop (env:env_t) (v:Sugar.vprop)
     | Sugar.VPropTerm t -> 
       let? t = tosyntax env t in
       interpret_vprop_constructors env t
-    // | Sugar.VPropStar (v1, v2) ->
-    //   let? v1 = desugar_vprop env v1 in
-    //   let? v2 = desugar_vprop env v2 in
-    //   return (SW.tm_star v1 v2 v.vrange)
-    // | Sugar.VPropExists { binders; body } ->
-    //   let rec aux env binders
-    //     : err SW.vprop =
-    //     match binders with
-    //     | [] -> 
-    //       desugar_vprop env body
-    //     | (_, i, t)::bs ->
-    //       let? t = desugar_term env t in
-    //       let env, bv = push_bv env i in
-    //       let? body = aux env bs in
-    //       let body = SW.close_term body bv.index in
-    //       let b = SW.mk_binder i t in
-    //       return (SW.tm_exists b body v.vrange)
-    //   in
-    //   aux env binders
 
 let mk_totbind b s1 s2 r : SW.st_term =
   SW.tm_totbind b s1 s2 r
@@ -631,12 +612,7 @@ and free_vars_vprop (env:env_t) (t:Sugar.vprop) =
   let open Sugar in
   match t.v with
   | VPropTerm t -> free_vars_term env t
-  // | VPropStar (t0, t1) -> 
-  //   free_vars_vprop env t0 @
-  //   free_vars_vprop env t1
-  // | VPropExists { binders; body } ->
-  //   let env', fvs = free_vars_binders env binders in
-  //   fvs @ free_vars_vprop env' body
+
 and free_vars_binders (env:env_t) (bs:Sugar.binders)
   : env_t & list ident
   = match bs with
@@ -964,21 +940,11 @@ and transform_stmt (m:menv) (p:Sugar.stmt)
     let? p, needs, m = transform_stmt_with_reads m p in
     return (add_derefs_in_scope needs p)      
 
-let rec vprop_to_ast_term (v:Sugar.vprop)
+let vprop_to_ast_term (v:Sugar.vprop)
   : err A.term
   = let open FStar.Parser.AST in
     match v.v with
     | Sugar.VPropTerm t -> return t
-    // | Sugar.VPropStar (v1, v2) ->
-    //   let t = mk_term (Var star_lid) v.vrange Expr in
-    //   let? vv1 = vprop_to_ast_term v1 in
-    //   let t = mk_term (App (t, vv1, Nothing)) v.vrange Expr in
-    //   let? vv2 = vprop_to_ast_term v2 in
-    //   let t = mk_term (App (t, vv2, Nothing)) v.vrange Expr in
-    //   return t
-
-    // | Sugar.VPropExists { binders; body } ->
-    //   fail "IOU :(" v.vrange
 
 let comp_to_ast_term (c:Sugar.computation_type) : err A.term =
   let open FStar.Parser.AST in
