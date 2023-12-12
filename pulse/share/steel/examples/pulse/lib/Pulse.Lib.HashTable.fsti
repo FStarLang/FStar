@@ -1,6 +1,6 @@
 module Pulse.Lib.HashTable
 open Pulse.Lib.Pervasives
-module A = Pulse.Lib.Array
+module V = Pulse.Lib.Vec
 module US = FStar.SizeT
 module U8 = FStar.UInt8
 module PHT = Pulse.Lib.HashTable.Spec
@@ -14,13 +14,13 @@ noeq
 type ht_t (keyt:eqtype) (valt:Type) = {
   sz : pos_us;
   hashf: keyt -> US.t;
-  contents : A.array (cell keyt valt);
+  contents : V.vec (cell keyt valt);
 }
 
 let mk_ht (#k:eqtype) #v 
           (sz:pos_us) 
           (hashf:k -> US.t)
-          (contents:A.array (cell k v))
+          (contents:V.vec (cell k v))
   : ht_t k v
   = { sz; hashf; contents; }
 

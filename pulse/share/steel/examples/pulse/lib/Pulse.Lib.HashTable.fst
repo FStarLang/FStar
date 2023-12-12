@@ -1,6 +1,6 @@
 module Pulse.Lib.HashTable
 open Pulse.Lib.Pervasives
-module A = Pulse.Lib.Array
+module V = Pulse.Lib.Vec
 module R = Pulse.Lib.Reference
 module SZ = FStar.SizeT
 module U8 = FStar.UInt8
@@ -15,10 +15,10 @@ let related #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt) : prop =
     pht.repr.hashf == lift_hash_fun ht.hashf
 
 let models #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt) : vprop
-= A.pts_to ht.contents pht.repr.seq **
+= V.pts_to ht.contents pht.repr.seq **
   pure (
     related ht pht /\
-    A.is_full_array ht.contents
+    V.is_full_vec ht.contents
   )
 
 
@@ -28,11 +28,11 @@ fn alloc' (#k:eqtype) (#v:Type0) (hashf:(k -> US.t)) (l:pos_us)
   returns ht:ht_t k v
   ensures exists pht. models ht pht ** pure (pht == mk_init_pht hashf l)
 {
-  let contents = A.alloc #(cell k v) Clean l;
+  let contents = V.alloc #(cell k v) Clean l;
   let ht = mk_ht l hashf contents;
   let pht = Ghost.hide (mk_init_pht #k #v hashf l);
-  rewrite (A.pts_to contents (Seq.create (SZ.v l) Clean))
-       as (A.pts_to ht.contents pht.repr.seq);
+  rewrite (V.pts_to contents (Seq.create (SZ.v l) Clean))
+       as (V.pts_to ht.contents pht.repr.seq);
   fold (models ht pht);
   ht
 }
@@ -48,7 +48,7 @@ fn dealloc' (#k:eqtype) (#v:Type0) (ht:ht_t k v)
   let mut off = 0sz;
   with pht. assert (models ht pht);
   unfold (models ht pht);
-  A.free ht.contents;
+  V.free ht.contents;
 }
 ```
 let dealloc = dealloc'
@@ -91,7 +91,7 @@ fn pulse_lookup_index (#kt:eqtype) (#vt:Type0)
          let verr = !err; 
          (voff <=^ ht.sz && vcont = true && verr = false)) 
   invariant b. exists (voff:SZ.t) (vcont verr:bool). (
-    A.pts_to ht.contents pht.repr.seq **
+    V.pts_to ht.contents pht.repr.seq **
     R.pts_to off voff **
     R.pts_to cont vcont **
     R.pts_to err verr **
@@ -118,7 +118,7 @@ fn pulse_lookup_index (#kt:eqtype) (#vt:Type0)
         Some sum -> 
         {
           let idx = size_t_mod sum ht.sz;
-          let c = ht.contents.(idx); 
+          let c = V.op_Array_Access ht.contents idx; 
           match c
           {
             Used k' v' ->
@@ -228,7 +228,7 @@ fn insert' (#kt:eqtype) (#vt:Type0)
     R.pts_to off voff **
     R.pts_to cont vcont **
     R.pts_to err verr **
-    A.pts_to ht.contents (if (vcont || verr) then pht.repr.seq else (PHT.insert pht k v).repr.seq) **
+    V.pts_to ht.contents (if (vcont || verr) then pht.repr.seq else (PHT.insert pht k v).repr.seq) **
     pure (
       related ht pht /\
       SZ.(voff <=^ ht.sz) /\
@@ -245,7 +245,7 @@ fn insert' (#kt:eqtype) (#vt:Type0)
       cont := false;
       full_not_full pht.repr k;
       // elim_false unit (fun _ -> A.pts_to ht.contents pht.repr.seq);
-      assert (A.pts_to ht.contents pht.repr.seq);
+      assert (V.pts_to ht.contents pht.repr.seq);
     }
     else
     {
@@ -255,14 +255,14 @@ fn insert' (#kt:eqtype) (#vt:Type0)
         Some sum ->
         {
           let idx = size_t_mod sum ht.sz;
-          let c = (ht.contents).(idx); 
+          let c = V.op_Array_Access ht.contents idx;
           match c
           {
             Used k' v' -> { 
               if (k' = k) {
-                assert (A.pts_to ht.contents pht.repr.seq);
+                assert (V.pts_to ht.contents pht.repr.seq);
                 assert (pure ( SZ.v idx < Seq.length pht.repr.seq));
-                ht.contents.(idx) <- (mk_used_cell k v);
+                V.op_Array_Assignment ht.contents idx (mk_used_cell k v);
                 cont := false;
                 assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal` 
                               Seq.upd pht.repr.seq (SZ.v idx) (mk_used_cell k v))); 
@@ -271,7 +271,7 @@ fn insert' (#kt:eqtype) (#vt:Type0)
               } 
             }
             Clean -> {
-              ht.contents.(idx) <- (mk_used_cell k v);
+              V.op_Array_Assignment ht.contents idx (mk_used_cell k v);
               cont := false;
               assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal` 
                       Seq.upd pht.repr.seq (SZ.v idx) (mk_used_cell k v)));
@@ -288,15 +288,15 @@ fn insert' (#kt:eqtype) (#vt:Type0)
                 {
                   Some p ->
                   {
-                    ((ht.contents).(snd p) <- Zombie);
-                    ((ht.contents).(idx) <- (mk_used_cell k v));
+                    V.op_Array_Assignment ht.contents (snd p) Zombie;
+                    V.op_Array_Assignment ht.contents idx (mk_used_cell k v);
                     cont := false;
                     assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal` 
                                   Seq.upd (Seq.upd pht.repr.seq (SZ.v (snd p)) Zombie) (SZ.v idx) (mk_used_cell k v)));
                   }
                   None ->
                   { 
-                    ((ht.contents).(idx) <- (mk_used_cell k v)); 
+                    V.op_Array_Assignment ht.contents idx (mk_used_cell k v);
                     cont := false;
                     assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal`
                                   Seq.upd pht.repr.seq (SZ.v idx) (mk_used_cell k v)));
@@ -325,7 +325,7 @@ fn insert' (#kt:eqtype) (#vt:Type0)
     fold (models ht pht);
     false
   } else {
-    assert (A.pts_to ht.contents (PHT.insert pht k v).repr.seq);
+    assert (V.pts_to ht.contents (PHT.insert pht k v).repr.seq);
     fold (models ht (PHT.insert pht k v));
     true
   }
@@ -360,7 +360,7 @@ fn delete' (#kt:eqtype) (#vt:Type0)
     R.pts_to off voff **
     R.pts_to cont vcont **
     R.pts_to err verr **
-    A.pts_to ht.contents (if (vcont || verr) then pht.repr.seq else (PHT.delete pht k).repr.seq) **
+    V.pts_to ht.contents (if (vcont || verr) then pht.repr.seq else (PHT.delete pht k).repr.seq) **
     pure (
       SZ.v ht.sz == pht_sz pht /\
       SZ.(voff <=^ ht.sz) /\
@@ -375,7 +375,7 @@ fn delete' (#kt:eqtype) (#vt:Type0)
     if (voff = ht.sz)
     {
       cont := false;
-      assert (A.pts_to ht.contents pht.repr.seq);
+      assert (V.pts_to ht.contents pht.repr.seq);
     }
     else
     {
@@ -385,14 +385,14 @@ fn delete' (#kt:eqtype) (#vt:Type0)
         Some sum ->
         {
           let idx = size_t_mod sum ht.sz;
-          let c = ht.contents.(idx); 
+          let c = V.op_Array_Access ht.contents idx;
           match c
           {
             Used k' v' ->
             { 
               if (k' = k)
               {
-                ht.contents.(idx) <- Zombie;
+                V.op_Array_Assignment ht.contents idx Zombie;
                 cont := false;
                 assert (pure (pht.repr @@ SZ.v idx == Used k v'));
                 assert (pure (Seq.upd pht.repr.seq (SZ.v idx) Zombie 
@@ -453,7 +453,7 @@ fn not_full' (#kt:eqtype) (#vt:Type0)
     let vi = !i;  
     if SZ.(vi <^ ht.sz) 
     { 
-      let c = ht.contents.(vi); 
+      let c = V.op_Array_Access ht.contents vi; 
       (Used? c) 
     }
     else 
@@ -462,7 +462,7 @@ fn not_full' (#kt:eqtype) (#vt:Type0)
     }
   )
   invariant b. exists (vi:SZ.t). (
-    A.pts_to ht.contents pht.repr.seq **
+    V.pts_to ht.contents pht.repr.seq **
     R.pts_to i vi **
     pure (
       SZ.v ht.sz == pht_sz pht /\
@@ -516,5 +516,3 @@ fn test_mono' ()
 }
 ```
 let test_mono = test_mono'
-
-
