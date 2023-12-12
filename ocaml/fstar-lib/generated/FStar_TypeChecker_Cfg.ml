@@ -1772,7 +1772,7 @@ type cfg =
   debug: debug_switches ;
   delta_level: FStar_TypeChecker_Env.delta_level Prims.list ;
   primitive_steps:
-    FStar_TypeChecker_Primops.primitive_step FStar_Compiler_Util.psmap ;
+    FStar_TypeChecker_Primops_Base.primitive_step FStar_Compiler_Util.psmap ;
   strong: Prims.bool ;
   memoize_lazy: Prims.bool ;
   normalize_pure_lets: Prims.bool ;
@@ -1804,7 +1804,8 @@ let (__proj__Mkcfg__item__delta_level :
         memoize_lazy; normalize_pure_lets; reifying;
         compat_memo_ignore_cfg;_} -> delta_level
 let (__proj__Mkcfg__item__primitive_steps :
-  cfg -> FStar_TypeChecker_Primops.primitive_step FStar_Compiler_Util.psmap)
+  cfg ->
+    FStar_TypeChecker_Primops_Base.primitive_step FStar_Compiler_Util.psmap)
   =
   fun projectee ->
     match projectee with
@@ -1842,32 +1843,33 @@ let (__proj__Mkcfg__item__compat_memo_ignore_cfg : cfg -> Prims.bool) =
         memoize_lazy; normalize_pure_lets; reifying;
         compat_memo_ignore_cfg;_} -> compat_memo_ignore_cfg
 type prim_step_set =
-  FStar_TypeChecker_Primops.primitive_step FStar_Compiler_Util.psmap
+  FStar_TypeChecker_Primops_Base.primitive_step FStar_Compiler_Util.psmap
 let (empty_prim_steps : unit -> prim_step_set) =
   fun uu___ -> FStar_Compiler_Util.psmap_empty ()
 let (add_step :
-  FStar_TypeChecker_Primops.primitive_step ->
+  FStar_TypeChecker_Primops_Base.primitive_step ->
     prim_step_set ->
-      FStar_TypeChecker_Primops.primitive_step FStar_Compiler_Util.psmap)
+      FStar_TypeChecker_Primops_Base.primitive_step FStar_Compiler_Util.psmap)
   =
   fun s ->
     fun ss ->
-      let uu___ = FStar_Ident.string_of_lid s.FStar_TypeChecker_Primops.name in
+      let uu___ =
+        FStar_Ident.string_of_lid s.FStar_TypeChecker_Primops_Base.name in
       FStar_Compiler_Util.psmap_add ss uu___ s
 let (merge_steps : prim_step_set -> prim_step_set -> prim_step_set) =
   fun s1 -> fun s2 -> FStar_Compiler_Util.psmap_merge s1 s2
 let (add_steps :
   prim_step_set ->
-    FStar_TypeChecker_Primops.primitive_step Prims.list -> prim_step_set)
+    FStar_TypeChecker_Primops_Base.primitive_step Prims.list -> prim_step_set)
   = fun m -> fun l -> FStar_Compiler_List.fold_right add_step l m
 let (prim_from_list :
-  FStar_TypeChecker_Primops.primitive_step Prims.list -> prim_step_set) =
-  fun l -> let uu___ = empty_prim_steps () in add_steps uu___ l
+  FStar_TypeChecker_Primops_Base.primitive_step Prims.list -> prim_step_set)
+  = fun l -> let uu___ = empty_prim_steps () in add_steps uu___ l
 let (built_in_primitive_steps :
-  FStar_TypeChecker_Primops.primitive_step FStar_Compiler_Util.psmap) =
+  FStar_TypeChecker_Primops_Base.primitive_step FStar_Compiler_Util.psmap) =
   prim_from_list FStar_TypeChecker_Primops.built_in_primitive_steps_list
 let (equality_ops :
-  FStar_TypeChecker_Primops.primitive_step FStar_Compiler_Util.psmap) =
+  FStar_TypeChecker_Primops_Base.primitive_step FStar_Compiler_Util.psmap) =
   prim_from_list FStar_TypeChecker_Primops.equality_ops_list
 let (cfg_to_string : cfg -> Prims.string) =
   fun cfg1 ->
@@ -1883,7 +1885,8 @@ let (cfg_env : cfg -> FStar_TypeChecker_Env.env) = fun cfg1 -> cfg1.tcenv
 let (find_prim_step :
   cfg ->
     FStar_Syntax_Syntax.fv ->
-      FStar_TypeChecker_Primops.primitive_step FStar_Pervasives_Native.option)
+      FStar_TypeChecker_Primops_Base.primitive_step
+        FStar_Pervasives_Native.option)
   =
   fun cfg1 ->
     fun fv ->
@@ -1959,7 +1962,8 @@ let (primop_time_report : unit -> Prims.string) =
                FStar_Compiler_String.op_Hat uu___2 rest) pairs1 ""
 let (extendable_primops_dirty : Prims.bool FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref true
-type register_prim_step_t = FStar_TypeChecker_Primops.primitive_step -> unit
+type register_prim_step_t =
+  FStar_TypeChecker_Primops_Base.primitive_step -> unit
 type retrieve_prim_step_t = unit -> prim_step_set
 let (mk_extendable_primop_set :
   unit -> (register_prim_step_t * retrieve_prim_step_t)) =
@@ -1978,16 +1982,17 @@ let (plugins : (register_prim_step_t * retrieve_prim_step_t)) =
   mk_extendable_primop_set ()
 let (extra_steps : (register_prim_step_t * retrieve_prim_step_t)) =
   mk_extendable_primop_set ()
-let (register_plugin : FStar_TypeChecker_Primops.primitive_step -> unit) =
-  fun p -> FStar_Pervasives_Native.fst plugins p
+let (register_plugin : FStar_TypeChecker_Primops_Base.primitive_step -> unit)
+  = fun p -> FStar_Pervasives_Native.fst plugins p
 let (retrieve_plugins : unit -> prim_step_set) =
   fun uu___ ->
     let uu___1 = FStar_Options.no_plugins () in
     if uu___1
     then empty_prim_steps ()
     else FStar_Pervasives_Native.snd plugins ()
-let (register_extra_step : FStar_TypeChecker_Primops.primitive_step -> unit)
-  = fun p -> FStar_Pervasives_Native.fst extra_steps p
+let (register_extra_step :
+  FStar_TypeChecker_Primops_Base.primitive_step -> unit) =
+  fun p -> FStar_Pervasives_Native.fst extra_steps p
 let (retrieve_extra_steps : unit -> prim_step_set) =
   fun uu___ -> FStar_Pervasives_Native.snd extra_steps ()
 let (cached_steps : unit -> prim_step_set) =
@@ -2046,7 +2051,7 @@ let (add_nbe : fsteps -> fsteps) =
       }
     else s
 let (config' :
-  FStar_TypeChecker_Primops.primitive_step Prims.list ->
+  FStar_TypeChecker_Primops_Base.primitive_step Prims.list ->
     FStar_TypeChecker_Env.step Prims.list -> FStar_TypeChecker_Env.env -> cfg)
   =
   fun psteps ->

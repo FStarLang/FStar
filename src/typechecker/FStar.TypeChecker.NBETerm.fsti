@@ -228,6 +228,8 @@ type embedding (a:Type0) = {
   emb_typ : unit -> emb_typ;
 }
 
+val eq_t : t -> t -> U.eq_result
+
 // Printing functions
 
 val constant_to_string : constant -> string
@@ -320,7 +322,6 @@ val arrow_as_prim_step_3:  embedding 'a
 val arg_as_int : arg -> option Z.t
 val arg_as_list : embedding 'a -> arg -> option (list 'a)
 
-val decidable_eq : bool -> args -> option t
 val interp_prop_eq2 : args -> option t
 
 val mixed_binary_op : (arg -> option 'a) -> (arg -> option 'b) -> ('c -> t) ->

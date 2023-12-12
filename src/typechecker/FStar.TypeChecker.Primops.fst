@@ -29,22 +29,13 @@ module EMB = FStar.Syntax.Embeddings
 module Z = FStar.BigInt
 module NBE = FStar.TypeChecker.NBETerm
 
+open FStar.TypeChecker.Primops.Base
+
 (*******************************************************************)
 (* Semantics for primitive operators (+, -, >, &&, ...)            *)
 (*******************************************************************)
 
-let null_psc = { psc_range = Range.dummyRange ; psc_subst = fun () -> [] }
-let psc_range psc = psc.psc_range
-let psc_subst psc = psc.psc_subst ()
-
-let embed_simple {| EMB.embedding 'a |} (r:Range.range) (x:'a) : term =
-    EMB.embed x r None EMB.id_norm_cb
-
-let try_unembed_simple {| EMB.embedding 'a |} (x:term) : option 'a =
-    EMB.try_unembed x EMB.id_norm_cb
-
 let arg_as_int    (a:arg) : option Z.t = fst a |> try_unembed_simple
-let arg_as_char   (a:arg) : option char = fst a |> try_unembed_simple
 
 let arg_as_list {|e:EMB.embedding 'a|} (a:arg)
 : option (list 'a)
@@ -79,195 +70,10 @@ let binary_op
     (args : args)
   : option term
   = lift_binary (f psc.psc_range) (List.map as_a args)
-  
-let as_primitive_step_nbecbs is_strong (l, arity, u_arity, f, f_nbe) : primitive_step = {
-    name=l;
-    arity=arity;
-    univ_arity=u_arity;
-    auto_reflect=None;
-    strong_reduction_ok=is_strong;
-    requires_binder_substitution=false;
-    renorm_after=false;
-    interpretation=(fun psc cb univs args -> f psc cb univs args);
-    interpretation_nbe=(fun cb univs args -> f_nbe cb univs args)
-}
 
 (* Most primitive steps don't use the NBE cbs, so they can use this wrapper. *)
 let as_primitive_step is_strong (l, arity, u_arity, f, f_nbe) =
-  as_primitive_step_nbecbs is_strong (l, arity, u_arity, f, (fun cb univs args -> f_nbe univs args))
-
-let solve (#a:Type) {| ev : a |} : Tot a = ev
-
-let mk1 #a #r
-  (u_arity : int)
-  (name : Ident.lid)
-  {| EMB.embedding a |} {| NBE.embedding a |}
-  {| EMB.embedding r |} {| NBE.embedding r |}
-  (f : a -> r)
-  : primitive_step =
-  let interp : interp_t =
-    fun psc cb us args ->
-      match args with
-      | [(a, _)] ->
-        let! a = try_unembed_simple a in
-        return (embed_simple psc.psc_range (f a))
-      | _ -> None
-  in
-  let nbe_interp : nbe_interp_t =
-    fun cbs us args ->
-      match args with
-      | [(a, _)] ->
-        let! r = f <$> NBE.unembed solve cbs a in
-        return (NBE.embed solve cbs r)
-      | _ ->
-        None
-  in
-  as_primitive_step_nbecbs true (name, 1, u_arity, interp, nbe_interp)
-
-let mk2 #a #b #r
-  (u_arity : int)
-  (name : Ident.lid)
-  {| EMB.embedding a |} {| NBE.embedding a |}
-  {| EMB.embedding b |} {| NBE.embedding b |}
-  {| EMB.embedding r |} {| NBE.embedding r |}
-  (f : a -> b -> r)
-  : primitive_step =
-  let interp : interp_t =
-    fun psc cb us args ->
-      match args with
-      | [(a, _); (b, _)] ->
-        let! r = f <$> try_unembed_simple a <*> try_unembed_simple b in
-        return (embed_simple psc.psc_range r)
-      | _ -> None
-  in
-  let nbe_interp : nbe_interp_t =
-    fun cbs us args ->
-      match args with
-      | [(a, _); (b, _)] ->
-        let! r = f <$> NBE.unembed solve cbs a <*> NBE.unembed solve cbs b in
-        return (NBE.embed solve cbs r)
-      | _ ->
-        None
-  in
-  as_primitive_step_nbecbs true (name, 2, u_arity, interp, nbe_interp)
-
-(* Duplication for op_Division / op_Modulus which can prevent reduction. The `f`
-already returns something in the option monad, so we add an extra join. *)
-let mk2' #a #b #r
-  (u_arity : int)
-  (name : Ident.lid)
-  {| EMB.embedding a |} {| NBE.embedding a |}
-  {| EMB.embedding b |} {| NBE.embedding b |}
-  {| EMB.embedding r |} {| NBE.embedding r |}
-  (f : a -> b -> option r)
-  : primitive_step =
-  let interp : interp_t =
-    fun psc cb us args ->
-      match args with
-      | [(a, _); (b, _)] ->
-        let! r = f <$> try_unembed_simple a <*> try_unembed_simple b in
-        let! r = r in
-        return (embed_simple psc.psc_range r)
-      | _ -> None
-  in
-  let nbe_interp : nbe_interp_t =
-    fun cbs us args ->
-      match args with
-      | [(a, _); (b, _)] ->
-        let! r = f <$> NBE.unembed solve cbs a <*> NBE.unembed solve cbs b in
-        let! r = r in
-        return (NBE.embed solve cbs r)
-      | _ ->
-        None
-  in
-  as_primitive_step_nbecbs true (name, 2, u_arity, interp, nbe_interp)
-
-let mk3 #a #b #c #r
-  (u_arity : int)
-  (name : Ident.lid)
-  {| EMB.embedding a |} {| NBE.embedding a |}
-  {| EMB.embedding b |} {| NBE.embedding b |}
-  {| EMB.embedding c |} {| NBE.embedding c |}
-  {| EMB.embedding r |} {| NBE.embedding r |}
-  (f : a -> b -> c -> r)
-  : primitive_step =
-  let interp : interp_t =
-    fun psc cb us args ->
-      match args with
-      | [(a, _); (b, _); (c, _)] ->
-        let! r = f <$> try_unembed_simple a <*> try_unembed_simple b <*> try_unembed_simple c in
-        return (embed_simple psc.psc_range r)
-      | _ -> None
-  in
-  let nbe_interp : nbe_interp_t =
-    fun cbs us args ->
-      match args with
-      | [(a, _); (b, _); (c, _)] ->
-        let! r = f <$> NBE.unembed solve cbs a <*> NBE.unembed solve cbs b <*> NBE.unembed solve cbs c in
-        return (NBE.embed solve cbs r)
-      | _ ->
-        None
-  in
-  as_primitive_step_nbecbs true (name, 3, u_arity, interp, nbe_interp)
-
-let mk4 #a #b #c #d #r
-  (u_arity : int)
-  (name : Ident.lid)
-  {| EMB.embedding a |} {| NBE.embedding a |}
-  {| EMB.embedding b |} {| NBE.embedding b |}
-  {| EMB.embedding c |} {| NBE.embedding c |}
-  {| EMB.embedding d |} {| NBE.embedding d |}
-  {| EMB.embedding r |} {| NBE.embedding r |}
-  (f : a -> b -> c -> d -> r)
-  : primitive_step =
-  let interp : interp_t =
-    fun psc cb us args ->
-      match args with
-      | [(a, _); (b, _); (c, _); (d, _); (e, _)] ->
-        let! r = f <$> try_unembed_simple a <*> try_unembed_simple b <*> try_unembed_simple c <*> try_unembed_simple d in
-        return (embed_simple psc.psc_range r)
-      | _ -> None
-  in
-  let nbe_interp : nbe_interp_t =
-    fun cbs us args ->
-      match args with
-      | [(a, _); (b, _); (c, _); (d, _)] ->
-        let! r = f <$> NBE.unembed solve cbs a <*> NBE.unembed solve cbs b <*> NBE.unembed solve cbs c <*> NBE.unembed solve cbs d in
-        return (NBE.embed solve cbs r)
-      | _ ->
-        None
-  in
-  as_primitive_step_nbecbs true (name, 4, u_arity, interp, nbe_interp)
-
-let mk5 #a #b #c #d #e #r
-  (u_arity : int)
-  (name : Ident.lid)
-  {| EMB.embedding a |} {| NBE.embedding a |}
-  {| EMB.embedding b |} {| NBE.embedding b |}
-  {| EMB.embedding c |} {| NBE.embedding c |}
-  {| EMB.embedding d |} {| NBE.embedding d |}
-  {| EMB.embedding e |} {| NBE.embedding e |}
-  {| EMB.embedding r |} {| NBE.embedding r |}
-  (f : a -> b -> c -> d -> e -> r)
-  : primitive_step =
-  let interp : interp_t =
-    fun psc cb us args ->
-      match args with
-      | [(a, _); (b, _); (c, _); (d, _); (e, _)] ->
-        let! r = f <$> try_unembed_simple a <*> try_unembed_simple b <*> try_unembed_simple c <*> try_unembed_simple d <*> try_unembed_simple e in
-        return (embed_simple psc.psc_range r)
-      | _ -> None
-  in
-  let nbe_interp : nbe_interp_t =
-    fun cbs us args ->
-      match args with
-      | [(a, _); (b, _); (c, _); (d, _); (e, _)] ->
-        let! r = f <$> NBE.unembed solve cbs a <*> NBE.unembed solve cbs b <*> NBE.unembed solve cbs c <*> NBE.unembed solve cbs d <*> NBE.unembed solve cbs e in
-        return (NBE.embed solve cbs r)
-      | _ ->
-        None
-  in
-  as_primitive_step_nbecbs true (name, 5, u_arity, interp, nbe_interp)
+  Primops.Base.as_primitive_step_nbecbs is_strong (l, arity, u_arity, f, (fun cb univs args -> f_nbe univs args))
 
 let mixed_binary_op
   (as_a : arg -> option 'a)
@@ -364,7 +170,7 @@ let division_modulus_op (f : Z.t -> Z.t -> Z.t) (x y : Z.t) : option Z.t =
 
 (* Simple primops that are just implemented by some concrete function
 over embeddable types. *)
-let simple_ops = [
+let simple_ops : list primitive_step = [
   (* Basic *)
   mk1 0 PC.string_of_int_lid (fun z -> string_of_int (Z.to_int_fs z));
   mk1 0 PC.int_of_string_lid (fun s -> fmap Z.of_int_fs (BU.safe_int_of_string s));
@@ -381,8 +187,9 @@ let simple_ops = [
   mk2 0 PC.op_GT  Z.gt_big_int;
   mk2 0 PC.op_GTE Z.ge_big_int;
 
-  mk2' 0 PC.op_Division (division_modulus_op Z.div_big_int);
-  mk2' 0 PC.op_Modulus  (division_modulus_op Z.mod_big_int);
+  (* Use ' variant to allow for non-reduction. Impl is the same on each normalizer. *)
+  mk2' 0 PC.op_Division (division_modulus_op Z.div_big_int) (division_modulus_op Z.div_big_int);
+  mk2' 0 PC.op_Modulus  (division_modulus_op Z.mod_big_int) (division_modulus_op Z.div_big_int);
 
   (* Bool opts. NB: && and || are special-cased since they are
   short-circuiting, and can run even if their second arg does not
@@ -528,274 +335,19 @@ let seal_steps =
         ));
   ]
 
-type bounded_int_kind =
-  | Int8
-  | Int16
-  | Int32
-  | Int64
-  | UInt8
-  | UInt16
-  | UInt32
-  | UInt64
-  | UInt128
-  | SizeT
-
-let all_bounded_int_kinds =
-  [Int8; Int16; Int32; Int64; UInt8; UInt16; UInt32; UInt64; UInt128; SizeT]
-
-let is_unsigned (k : bounded_int_kind) =
-  match k with
-  | Int8
-  | Int16
-  | Int32
-  | Int64 -> false
-  | UInt8
-  | UInt16
-  | UInt32
-  | UInt64
-  | UInt128
-  | SizeT -> true
-
-let width (k : bounded_int_kind) : int =
-  match k with
-  | Int8 -> 8
-  | Int16 -> 16
-  | Int32 -> 32
-  | Int64 -> 64
-  | UInt8 -> 8
-  | UInt16 -> 16
-  | UInt32 -> 32
-  | UInt64 -> 64
-  | UInt128 -> 128
-  | SizeT -> 64
-
-let module_name_for (k:bounded_int_kind) : string =
-  match k with
-  | Int8    -> "Int8"
-  | Int16   -> "Int16"
-  | Int32   -> "Int32"
-  | Int64   -> "Int64"
-  | UInt8   -> "UInt8"
-  | UInt16  -> "UInt16"
-  | UInt32  -> "UInt32"
-  | UInt64  -> "UInt64"
-  | UInt128 -> "UInt128"
-  | SizeT   -> "SizeT"
-
-let mask m =
-  match m with
-  | UInt8 -> Z.of_hex "ff"
-  | UInt16 -> Z.of_hex "ffff"
-  | UInt32 -> Z.of_hex "ffffffff"
-  | SizeT -> Z.of_hex "ffffffffffffffff"
-  | UInt64 -> Z.of_hex "ffffffffffffffff"
-  | UInt128 -> Z.of_hex "ffffffffffffffffffffffffffffffff"
-
-let int_to_t_lid_for (k:bounded_int_kind) : Ident.lid =
-  let path = "FStar" :: module_name_for k :: (if is_unsigned k then "uint_to_t" else "int_to_t") :: [] in
-  Ident.lid_of_path path Range.dummyRange
-
-let int_to_t_for (k:bounded_int_kind) : S.term =
-  let lid = int_to_t_lid_for k in
-  S.fvar lid None
-
-let __int_to_t_lid_for (k:bounded_int_kind) : Ident.lid =
-  let path = "FStar" :: module_name_for k :: (if is_unsigned k then "__uint_to_t" else "__int_to_t") :: [] in
-  Ident.lid_of_path path Range.dummyRange
-
-let __int_to_t_for (k:bounded_int_kind) : S.term =
-  let lid = __int_to_t_lid_for k in
-  S.fvar lid None
-
-(* just a newtype really, no checks or conditions here *)
-type bounded_int (k : bounded_int_kind) = | Mk : Z.t -> option S.meta_source_info -> bounded_int k
-
-(* just for debugging *)
-instance shoable_bounded_K k : Tot (showable (bounded_int k)) = {
-  show = (function Mk x m -> "bounded " ^ show (Z.to_int_fs x) ^ "@@" ^ module_name_for k);
-}
-
-instance e_bounded_int (k : bounded_int_kind) : Tot (EMB.embedding (bounded_int k)) =
-  let with_meta_ds r t (m:option meta_source_info) =
-    match m with
-    | None -> t
-    | Some m -> S.mk (Tm_meta {tm=t; meta=Meta_desugared m}) r
-  in
-  let em (x : bounded_int k) rng shadow cb =
-    let Mk i m = x in
-    let it = embed_simple rng i in
-    let int_to_t = int_to_t_for k in
-    let t = S.mk_Tm_app int_to_t [S.as_arg it] rng in
-    with_meta_ds rng t m
-  in
-  let un (t:term) cb : option (bounded_int k) =
-    let (t, m) =
-        (match (SS.compress t).n with
-        | Tm_meta {tm=t; meta=Meta_desugared m} -> (t, Some m)
-        | _ -> (t, None))
-    in
-    let t = U.unmeta_safe t in
-    match (SS.compress t).n with
-    | Tm_app {hd; args=[(a,_)]} when U.is_fvar (int_to_t_lid_for k) hd
-                                  || U.is_fvar (__int_to_t_lid_for k) hd ->
-      let a = U.unlazy_emb a in
-      let! a : Z.t = try_unembed_simple a in
-      Some (Mk a m)
-    | _ ->
-      None
-  in
-  EMB.mk_emb_full em un (fun () -> S.t_int) (fun _ -> "boundedint") (fun () -> ET_abstract)
-
-instance nbe_bounded_int (k : bounded_int_kind) : Tot (NBE.embedding (bounded_int k)) =
-  let open NBE in
-  let with_meta_ds t (m:option meta_source_info) =
-    match m with
-    | None -> t
-    | Some m -> NBE.mk_t (Meta(t, Thunk.mk (fun _ -> Meta_desugared m)))
-  in
-  let em cbs (x : bounded_int k) =
-    let Mk i m = x in
-    let it = embed e_int cbs i in
-    let int_to_t args = mk_t <| FV (S.lid_as_fv (__int_to_t_lid_for k) None, [], args) in
-    let t = int_to_t [as_arg it] in
-    with_meta_ds t m
-  in
-  let un cbs a : option (bounded_int k) =
-    let (a, m) =
-      (match a.nbe_t with
-       | Meta(t, tm) ->
-         (match Thunk.force tm with
-          | Meta_desugared m -> (t, Some m)
-          | _ -> (a, None))
-       | _ -> (a, None))
-    in
-    match a.nbe_t with
-    | FV (fv1, [], [(a, _)]) when Ident.lid_equals (fv1.fv_name.v) (int_to_t_lid_for k) ->
-      let! a : Z.t = unembed e_int cbs a in
-      Some (Mk a m)
-    | _ -> None
-  in
-  mk_emb em un (fun () -> mkFV (lid_as_fv PC.int_lid None) [] [] (* fixme *)) (fun () -> ET_abstract)
-
-let on_bounded1 k (f : Z.t -> Z.t) : (bounded_int k -> bounded_int k) =
-  fun x ->
-    let Mk vx mx = x in
-    Mk (f vx) mx
-
-let on_bounded2 k (f : Z.t -> Z.t -> Z.t) : (bounded_int k -> bounded_int k -> bounded_int k) =
-  fun x y ->
-    let Mk vx mx = x in
-    let Mk vy my = y in
-    Mk (f vx vy) mx
-
-let on_bounded2' k (f : Z.t -> Z.t -> 'r) : (bounded_int k -> bounded_int k -> 'r) =
-  fun x y ->
-    let Mk vx mx = x in
-    let Mk vy my = y in
-    f vx vy
-
-let v #k (x : bounded_int k) =
-  let Mk v _ = x in v
-let meta #k (x : bounded_int k) =
-  let Mk _ meta = x in meta
-
-let bounded_arith_ops : list primitive_step =
-  [
-    (* single extra op that returns a U32 *)
-    mk1 0 PC.char_u32_of_char (fun (c : char) -> let n = BU.int_of_char c |> Z.of_int_fs in
-                                                 Mk #UInt32 n None);
-  ] @ begin
-  all_bounded_int_kinds |> List.collect (fun k ->
-    let mod_name = module_name_for k in
-    let nm s = (PC.p2l ["FStar"; module_name_for k; s]) in
-    [
-      mk1 0 (nm "v")   (v #k);
-
-      mk1 0 (__int_to_t_lid_for k) (fun x -> Mk #k x None);
-      // GM 2023-12-11: ^ We allow reducing this unchecked operator
-      // into the actual checked operator as a primop, without needing delta
-      // to be enabled. Probably this also means we can delete that definition
-      // outright.
-
-      (* basic ops supported by all *)
-      mk2 0 (nm "add") (on_bounded2 k Z.add_big_int);
-      mk2 0 (nm "sub") (on_bounded2 k Z.sub_big_int);
-      mk2 0 (nm "mul") (on_bounded2 k Z.mult_big_int);
-
-      mk2 0 (nm "gt")  (on_bounded2' k Z.gt_big_int);
-      mk2 0 (nm "gte") (on_bounded2' k Z.ge_big_int);
-      mk2 0 (nm "lt")  (on_bounded2' k Z.lt_big_int);
-      mk2 0 (nm "lte") (on_bounded2' k Z.le_big_int);
-    ]
-    @
-    (if not (is_unsigned k) then [] else
-      let sz = width k in
-      let modulus = Z.shift_left_big_int Z.one (Z.of_int_fs sz) in
-      let mod x = Z.mod_big_int x modulus in
-
-      (* operators for unsigned only *)
-
-      (if sz = 128 then [] else [
-        (* all uints except uint128 have a mul_mod *)
-      mk2 0 (nm "mul_mod") (on_bounded2 k (fun x y -> mod (Z.mult_big_int x y)));
-      ])
-      @
-      [
-
-      (* modulo operators *)
-      mk2 0 (nm "add_mod") (on_bounded2 k (fun x y -> mod (Z.add_big_int x y)));
-      mk2 0 (nm "sub_mod") (on_bounded2 k (fun x y -> mod (Z.sub_big_int x y)));
-      mk2 0 (nm "div")     (on_bounded2 k (fun x y -> mod (Z.div_big_int x y)));
-      mk2 0 (nm "rem")     (on_bounded2 k (fun x y -> mod (Z.mod_big_int x y)));
-
-      (* bitwise *)
-      mk2 0 (nm "logor")  (on_bounded2 k Z.logor_big_int);
-      mk2 0 (nm "logand") (on_bounded2 k Z.logand_big_int);
-      mk2 0 (nm "logxor") (on_bounded2 k Z.logxor_big_int);
-      mk1 0 (nm "lognot") (on_bounded1 k (fun x -> Z.logand_big_int (Z.lognot_big_int x) (mask k)));
-
-      (* NB: shift_{left,right} always take a UInt32 on the right, hence the annotations
-      to choose the right instances. *)
-      mk2 0 (nm "shift_left")  (fun (x : bounded_int k) (y : bounded_int UInt32) ->
-                                 Mk #k (Z.logand_big_int (Z.shift_left_big_int (v x) (v y)) (mask k)) (meta x));
-      mk2 0 (nm "shift_right")  (fun (x : bounded_int k) (y : bounded_int UInt32) ->
-                                 Mk #k (Z.logand_big_int (Z.shift_right_big_int (v x) (v y)) (mask k)) (meta x));
-      ])
-  )
-  end
-
 let built_in_primitive_steps_list : list primitive_step =
-
-    let basic_ops
-      //because our support for F# style type-applications is very limited
-      : list (Ident.lid * int * int * 
-              (psc -> EMB.norm_cb -> universes -> args -> option term) *
-              (universes -> NBETerm.args -> option NBETerm.t))
-       //name of primitive
-          //arity
-          //universe arity
-          //interp for normalizer
-          //interp for NBE
-      = [(PC.op_And,
+    let short_circuit_ops : list primitive_step =
+      List.map (as_primitive_step true)
+       [(PC.op_And,
              2,
              0,
              and_op,
-             (fun _ -> NBETerm.and_op));
+             (fun _us -> NBETerm.and_op));
          (PC.op_Or,
              2,
              0,
              or_op,
-             (fun _ -> NBETerm.or_op));
-         (PC.op_Eq,
-             3,
-             0,
-             decidable_eq false,
-             (fun _ -> NBETerm.decidable_eq false));
-         (PC.op_notEq,
-             3,
-             0,
-             decidable_eq true,
-             (fun _ -> NBETerm.decidable_eq true));
+             (fun _us -> NBETerm.or_op));
         ]
     in
     let reveal_hide =
@@ -929,9 +481,16 @@ let built_in_primitive_steps_list : list primitive_step =
     in
     let strong_steps =
       List.map (as_primitive_step true)
-               (basic_ops@[reveal_hide]@array_ops)
+               ([reveal_hide]@array_ops)
     in
-    simple_ops @ issue_ops @ doc_ops @ strong_steps @ seal_steps @ bounded_arith_ops
+    simple_ops
+    @ short_circuit_ops
+    @ issue_ops
+    @ doc_ops
+    @ strong_steps
+    @ seal_steps
+    @ Primops.Eq.dec_eq_ops
+    @ Primops.MachineInts.bounded_arith_ops
 
 let equality_ops_list : list primitive_step =
     let interp_prop_eq2 (psc:psc) _norm_cb _univs (args:args) : option term =
@@ -946,7 +505,7 @@ let equality_ops_list : list primitive_step =
         | _ ->
             failwith "Unexpected number of arguments"
     in
-    let propositional_equality =
+    let propositional_equality : primitive_step =
         {name = PC.eq2_lid;
          arity = 3;
          univ_arity = 1;

@@ -1,7 +1,6 @@
 open Prims
 type uint32_t = FStar_UInt32.t
-let (max_uint32 : uint32_t) =
-  FStar_UInt32.uint_to_t (Prims.parse_int "4294967295")
+let (max_uint32 : uint32_t) = (Stdint.Uint32.of_string "4294967295")
 type 'a vector_str =
   | Vec of uint32_t * uint32_t * 'a LowStar_Buffer.buffer 
 let uu___is_Vec : 'a . 'a vector_str -> Prims.bool = fun projectee -> true
@@ -78,7 +77,7 @@ let assign : 'a . 'a vector -> uint32_t -> 'a -> unit =
          let h = FStar_HyperStack_ST.get () in
          LowStar_Monotonic_Buffer.upd' uu___1 Stdint.Uint32.zero v);
         (let hh1 = FStar_HyperStack_ST.get () in ())
-let (resize_ratio : uint32_t) = FStar_UInt32.uint_to_t (Prims.of_int (2))
+let (resize_ratio : uint32_t) = (Stdint.Uint32.of_int (2))
 let (new_capacity : uint32_t -> uint32_t) =
   fun cap ->
     if FStar_UInt32.gte cap (FStar_UInt32.div max_uint32 resize_ratio)

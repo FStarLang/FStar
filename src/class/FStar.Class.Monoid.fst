@@ -27,11 +27,6 @@ instance monoid_list (a:Type) : Tot (monoid (list a)) = {
    mplus = (fun x y -> x @ y);
 }
 
-instance monoid_set (a:Type) : Tot (monoid (Util.set a)) = {
-   mzero = Set.empty;
-   mplus = Set.union;
-}
-
 (* Funny output from Copilot... not bad!
 
 instance monoid_effect (a:Type) (e:effect) : monoid (a!e) = {

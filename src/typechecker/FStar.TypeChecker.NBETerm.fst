@@ -720,21 +720,6 @@ let mixed_ternary_op (as_a : arg -> option 'a)
                 end
              | _ -> None
 
-let decidable_eq (neg:bool) (args:args) : option t =
-  let tru = embed e_bool bogus_cbs true in
-  let fal = embed e_bool bogus_cbs false in
-  match args with
-  | [(_typ, _); (a1, _); (a2, _)] ->
-     //BU.print2 "Comparing %s and %s.\n" (t_to_string a1) (t_to_string a2);
-     begin match eq_t a1 a2 with
-     | U.Equal -> Some (if neg then fal else tru)
-     | U.NotEqual -> Some (if neg then tru else fal)
-     | _ -> None
-     end
-  | _ ->
-   failwith "Unexpected number of arguments"
-
-
 let interp_prop_eq2 (args:args) : option t =
     match args with
     | [(_u, _); (_typ, _); (a1, _); (a2, _)] ->  //eq2

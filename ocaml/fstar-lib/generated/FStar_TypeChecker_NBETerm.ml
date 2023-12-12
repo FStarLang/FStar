@@ -1785,22 +1785,6 @@ let mixed_ternary_op :
                           | uu___2 -> FStar_Pervasives_Native.None)
                      | uu___1 -> FStar_Pervasives_Native.None)
                 | uu___ -> FStar_Pervasives_Native.None
-let (decidable_eq : Prims.bool -> args -> t FStar_Pervasives_Native.option) =
-  fun neg ->
-    fun args1 ->
-      let tru = embed e_bool bogus_cbs true in
-      let fal = embed e_bool bogus_cbs false in
-      match args1 with
-      | (_typ, uu___)::(a1, uu___1)::(a2, uu___2)::[] ->
-          let uu___3 = eq_t a1 a2 in
-          (match uu___3 with
-           | FStar_Syntax_Util.Equal ->
-               FStar_Pervasives_Native.Some (if neg then fal else tru)
-           | FStar_Syntax_Util.NotEqual ->
-               FStar_Pervasives_Native.Some (if neg then tru else fal)
-           | uu___4 -> FStar_Pervasives_Native.None)
-      | uu___ ->
-          FStar_Compiler_Effect.failwith "Unexpected number of arguments"
 let (interp_prop_eq2 : args -> t FStar_Pervasives_Native.option) =
   fun args1 ->
     match args1 with

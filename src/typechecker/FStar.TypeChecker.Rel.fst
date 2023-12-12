@@ -5041,8 +5041,8 @@ let do_discharge_vc use_env_range_msg env vc : unit =
     if Options.use_tactics() then begin
       Options.with_saved_options (fun () ->
         ignore <| Options.set_options "--no_tactics";
-        let vcs = env.solver.preprocess env vc in
-        if debug then
+        let did_anything, vcs = env.solver.preprocess env vc in
+        if debug && did_anything then
           diag_doc [text "Tactic preprocessing produced" ^/^ pp (List.length vcs <: int) ^/^ text "goals"];
         let vcs = vcs |> List.map (fun (env, goal, opts) ->
                             // NB: No Eager_unfolding. Why?
@@ -5148,8 +5148,6 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option g
   let g = simplify_guard_full_norm env g in
   match g.guard_f with
   | Trivial ->
-    if debug then
-      diag_doc [text "Query formula was trivial"];
     Some ret_g
 
   | NonTrivial vc when not (Env.should_verify env) ->

@@ -380,7 +380,10 @@ and solver_t =
     ;
   encode_sig: env -> FStar_Syntax_Syntax.sigelt -> unit ;
   preprocess:
-    env -> goal -> (env * goal * FStar_Options.optionstate) Prims.list ;
+    env ->
+      goal ->
+        (Prims.bool * (env * goal * FStar_Options.optionstate) Prims.list)
+    ;
   spinoff_strictly_positive_goals:
     (env -> goal -> (env * goal) Prims.list) FStar_Pervasives_Native.option ;
   handle_smt_goal: env -> goal -> (env * goal) Prims.list ;
@@ -1377,7 +1380,9 @@ let (__proj__Mksolver_t__item__encode_sig :
         finish; refresh;_} -> encode_sig
 let (__proj__Mksolver_t__item__preprocess :
   solver_t ->
-    env -> goal -> (env * goal * FStar_Options.optionstate) Prims.list)
+    env ->
+      goal ->
+        (Prims.bool * (env * goal * FStar_Options.optionstate) Prims.list))
   =
   fun projectee ->
     match projectee with

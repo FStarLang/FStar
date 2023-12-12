@@ -2383,7 +2383,8 @@ let (solve :
               let uu___4 =
                 let uu___5 =
                   let uu___6 = FStar_Errors_Msg.text "Query = " in
-                  let uu___7 = FStar_Syntax_Print_Pretty.term_to_doc q in
+                  let uu___7 =
+                    FStar_Class_PP.pp FStar_Syntax_Print.pretty_term q in
                   FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
                 [uu___5] in
               uu___3 :: uu___4 in
@@ -2441,8 +2442,11 @@ let (solver : FStar_TypeChecker_Env.solver_t) =
     FStar_TypeChecker_Env.preprocess =
       (fun e ->
          fun g ->
-           let uu___ = let uu___1 = FStar_Options.peek () in (e, g, uu___1) in
-           [uu___]);
+           let uu___ =
+             let uu___1 =
+               let uu___2 = FStar_Options.peek () in (e, g, uu___2) in
+             [uu___1] in
+           (false, uu___));
     FStar_TypeChecker_Env.spinoff_strictly_positive_goals =
       FStar_Pervasives_Native.None;
     FStar_TypeChecker_Env.handle_smt_goal = (fun e -> fun g -> [(e, g)]);
@@ -2463,8 +2467,11 @@ let (dummy : FStar_TypeChecker_Env.solver_t) =
     FStar_TypeChecker_Env.preprocess =
       (fun e ->
          fun g ->
-           let uu___ = let uu___1 = FStar_Options.peek () in (e, g, uu___1) in
-           [uu___]);
+           let uu___ =
+             let uu___1 =
+               let uu___2 = FStar_Options.peek () in (e, g, uu___2) in
+             [uu___1] in
+           (false, uu___));
     FStar_TypeChecker_Env.spinoff_strictly_positive_goals =
       FStar_Pervasives_Native.None;
     FStar_TypeChecker_Env.handle_smt_goal = (fun e -> fun g -> [(e, g)]);

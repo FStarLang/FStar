@@ -9,12 +9,19 @@ class monad (m : Type -> Type) = {
 }
 
 instance val monad_option : monad option
+instance val monad_list   : monad list
 
 val mapM
   (#m: Type -> Type)
   {| monad m |}
   (#a #b :Type)
 : (a -> m b) -> list a -> m (list b)
+
+val iterM
+  (#m: Type -> Type)
+  {| monad m |}
+  (#a :Type)
+: (a -> m unit) -> list a -> m unit
 
 val foldM_left
   (#m: Type -> Type)
