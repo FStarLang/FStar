@@ -44,6 +44,8 @@ enum BinOp {
     Gt,
     Ge,
     Rem,
+    And,
+    Or,
 }
 
 enum UnOp {
@@ -110,6 +112,7 @@ struct ExprMatch {
 struct ExprField {
     expr_field_base: Box<Expr>,
     expr_field_name: String,
+    expr_field_named: bool,
 }
 
 struct FieldVal {
@@ -138,6 +141,7 @@ enum Expr {
     EMatch(ExprMatch),
     EField(ExprField),
     EStruct(ExprStruct),
+    ETuple(Vec<Expr>),
 }
 
 struct TypeReference {
@@ -326,6 +330,8 @@ impl_from_ocaml_variant! {
       BinOp::Gt,
       BinOp::Ge,
       BinOp::Rem,
+      BinOp::And,
+      BinOp::Or,
   }
 }
 
@@ -352,6 +358,7 @@ impl_from_ocaml_variant! {
     Expr::EMatch (payload:ExprMatch),
     Expr::EField (payload:ExprField),
     Expr::EStruct (payload:ExprStruct),
+    Expr::ETuple (payload:OCamlList<Expr>),
   }
 }
 
@@ -438,6 +445,7 @@ impl_from_ocaml_record! {
   ExprField {
     expr_field_base: Expr,
     expr_field_name: String,
+    expr_field_named: bool,
   }
 }
 
@@ -688,6 +696,12 @@ fn to_syn_binop(op: &BinOp) -> syn::BinOp {
         }),
         BinOp::Rem => syn::BinOp::Rem(syn::token::Percent {
             spans: [Span::call_site()],
+        }),
+        BinOp::And => syn::BinOp::And(syn::token::AndAnd {
+            spans: [Span::call_site(), Span::call_site()],
+        }),
+        BinOp::Or => syn::BinOp::Or(syn::token::OrOr {
+            spans: [Span::call_site(), Span::call_site()],
         }),
     }
 }
@@ -981,13 +995,21 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
         Expr::EField(ExprField {
             expr_field_base,
             expr_field_name,
+            expr_field_named,
         }) => syn::Expr::Field(syn::ExprField {
             attrs: vec![],
             base: Box::new(to_syn_expr(expr_field_base)),
             dot_token: syn::token::Dot {
                 spans: [Span::call_site()],
             },
-            member: syn::Member::Named(Ident::new(expr_field_name, Span::call_site())),
+            member: if *expr_field_named {
+                syn::Member::Named(Ident::new(expr_field_name, Span::call_site()))
+            } else {
+                syn::Member::Unnamed(syn::Index {
+                    index: expr_field_name.parse::<u32>().unwrap(),
+                    span: Span::call_site(),
+                })
+            },
         }),
         Expr::EStruct(ExprStruct {
             expr_struct_path,
@@ -1014,6 +1036,15 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
                 rest: None,
             })
         }
+        Expr::ETuple(es) => syn::Expr::Tuple(syn::ExprTuple {
+            attrs: vec![],
+            paren_token: Paren::default(),
+            elems: {
+                let mut exprs: Punctuated<syn::Expr, Comma> = Punctuated::new();
+                es.iter().for_each(|e| exprs.push(to_syn_expr(e)));
+                exprs
+            },
+        }),
     }
 }
 
@@ -1272,24 +1303,26 @@ fn to_syn_fn_arg(a: &FnArg) -> syn::FnArg {
     })
 }
 
-fn generic_param_clone_bounds() -> Punctuated<syn::TypeParamBound, syn::token::Plus> {
+fn generic_param_bounds() -> Punctuated<syn::TypeParamBound, syn::token::Plus> {
     let mut bounds = Punctuated::new();
-    bounds.push(syn::TypeParamBound::Trait(syn::TraitBound {
-        paren_token: None,
-        modifier: syn::TraitBoundModifier::None,
-        lifetimes: None,
-        path: syn::Path {
-            leading_colon: None,
-            segments: {
-                let mut segs = Punctuated::new();
-                segs.push(syn::PathSegment {
-                    ident: Ident::new("Clone", Span::call_site()),
-                    arguments: syn::PathArguments::None,
-                });
-                segs
+    ["Clone", "Copy", "PartialEq"].iter().for_each(|s| {
+        bounds.push(syn::TypeParamBound::Trait(syn::TraitBound {
+            paren_token: None,
+            modifier: syn::TraitBoundModifier::None,
+            lifetimes: None,
+            path: syn::Path {
+                leading_colon: None,
+                segments: {
+                    let mut segs = Punctuated::new();
+                    segs.push(syn::PathSegment {
+                        ident: Ident::new(s, Span::call_site()),
+                        arguments: syn::PathArguments::None,
+                    });
+                    segs
+                },
             },
-        },
-    }));
+        }));
+    });
     bounds
 }
 
@@ -1304,7 +1337,7 @@ fn to_syn_fn_sig(s: &FnSig) -> Signature {
             attrs: vec![],
             ident: Ident::new(g, Span::call_site()),
             colon_token: None,
-            bounds: generic_param_clone_bounds(),
+            bounds: generic_param_bounds(),
             eq_token: None,
             default: None,
         }))
@@ -1363,7 +1396,7 @@ fn to_syn_item(i: &Item) -> syn::Item {
                     attrs: vec![],
                     ident: Ident::new(s, Span::call_site()),
                     colon_token: None,
-                    bounds: generic_param_clone_bounds(),
+                    bounds: generic_param_bounds(),
                     eq_token: None,
                     default: None,
                 }))
@@ -1429,7 +1462,7 @@ fn to_syn_item(i: &Item) -> syn::Item {
                     attrs: vec![],
                     ident: Ident::new(s, Span::call_site()),
                     colon_token: None,
-                    bounds: generic_param_clone_bounds(),
+                    bounds: generic_param_bounds(),
                     eq_token: None,
                     default: None,
                 }))
@@ -1476,7 +1509,7 @@ fn to_syn_item(i: &Item) -> syn::Item {
                     attrs: vec![],
                     ident: Ident::new(s, Span::call_site()),
                     colon_token: None,
-                    bounds: generic_param_clone_bounds(),
+                    bounds: generic_param_bounds(),
                     eq_token: None,
                     default: None,
                 }))
@@ -1600,6 +1633,8 @@ impl fmt::Display for BinOp {
             BinOp::Gt => ">",
             BinOp::Ge => ">=",
             BinOp::Rem => "%",
+            BinOp::And => "&&",
+            BinOp::Or => "||",
         };
         write!(f, "{}", s)
     }
@@ -1767,6 +1802,7 @@ impl fmt::Display for Expr {
             Expr::EField(ExprField {
                 expr_field_base,
                 expr_field_name,
+                ..
             }) => write!(f, "{}.{}", expr_field_base, expr_field_name),
             Expr::EStruct(ExprStruct {
                 expr_struct_path,
@@ -1782,6 +1818,14 @@ impl fmt::Display for Expr {
                 expr_struct_fields
                     .iter()
                     .map(|f| format!("{}:{}", f.field_val_name, f.field_val_expr))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            Expr::ETuple(es) => write!(
+                f,
+                "({})",
+                es.iter()
+                    .map(|e| e.to_string())
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -2038,8 +2082,8 @@ ocaml_export! {
   // }
 }
 
-#[derive(Clone)]
-pub enum cell<A: Clone, B: Clone> {
+#[derive(Clone, Copy)]
+pub enum Cell<A: Clone + Copy, B: Clone + Copy> {
     Clean,
     Zombie,
     Used(A, B),

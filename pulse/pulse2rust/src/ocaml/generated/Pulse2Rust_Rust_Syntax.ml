@@ -180,6 +180,7 @@ type expr =
   | Expr_match of expr_match 
   | Expr_field of expr_field 
   | Expr_struct of expr_struct 
+  | Expr_tuple of expr Prims.list 
 and expr_bin =
   {
   expr_bin_left: expr ;
@@ -218,9 +219,11 @@ and arm = {
 and expr_match = {
   expr_match_expr: expr ;
   expr_match_arms: arm Prims.list }
-and expr_field = {
+and expr_field =
+  {
   expr_field_base: expr ;
-  expr_field_member: Prims.string }
+  expr_field_member: Prims.string ;
+  expr_field_named: Prims.bool }
 and expr_struct =
   {
   expr_struct_path: Prims.string Prims.list ;
@@ -309,6 +312,11 @@ let (uu___is_Expr_struct : expr -> Prims.bool) =
     match projectee with | Expr_struct _0 -> true | uu___ -> false
 let (__proj__Expr_struct__item___0 : expr -> expr_struct) =
   fun projectee -> match projectee with | Expr_struct _0 -> _0
+let (uu___is_Expr_tuple : expr -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Expr_tuple _0 -> true | uu___ -> false
+let (__proj__Expr_tuple__item___0 : expr -> expr Prims.list) =
+  fun projectee -> match projectee with | Expr_tuple _0 -> _0
 let (__proj__Mkexpr_bin__item__expr_bin_left : expr_bin -> expr) =
   fun projectee ->
     match projectee with
@@ -412,12 +420,20 @@ let (__proj__Mkexpr_match__item__expr_match_arms :
 let (__proj__Mkexpr_field__item__expr_field_base : expr_field -> expr) =
   fun projectee ->
     match projectee with
-    | { expr_field_base; expr_field_member;_} -> expr_field_base
+    | { expr_field_base; expr_field_member; expr_field_named;_} ->
+        expr_field_base
 let (__proj__Mkexpr_field__item__expr_field_member :
   expr_field -> Prims.string) =
   fun projectee ->
     match projectee with
-    | { expr_field_base; expr_field_member;_} -> expr_field_member
+    | { expr_field_base; expr_field_member; expr_field_named;_} ->
+        expr_field_member
+let (__proj__Mkexpr_field__item__expr_field_named : expr_field -> Prims.bool)
+  =
+  fun projectee ->
+    match projectee with
+    | { expr_field_base; expr_field_member; expr_field_named;_} ->
+        expr_field_named
 let (__proj__Mkexpr_struct__item__expr_struct_path :
   expr_struct -> Prims.string Prims.list) =
   fun projectee ->
@@ -855,7 +871,22 @@ let (mk_match : expr -> arm Prims.list -> expr) =
     fun expr_match_arms -> Expr_match { expr_match_expr; expr_match_arms }
 let (mk_expr_field : expr -> Prims.string -> expr) =
   fun base ->
-    fun f -> Expr_field { expr_field_base = base; expr_field_member = f }
+    fun f ->
+      Expr_field
+        {
+          expr_field_base = base;
+          expr_field_member = f;
+          expr_field_named = true
+        }
+let (mk_expr_field_unnamed : expr -> Prims.int -> expr) =
+  fun base ->
+    fun i ->
+      Expr_field
+        {
+          expr_field_base = base;
+          expr_field_member = (Prims.string_of_int i);
+          expr_field_named = false
+        }
 let (mk_expr_struct :
   Prims.string Prims.list -> (Prims.string * expr) Prims.list -> expr) =
   fun path ->
@@ -868,6 +899,7 @@ let (mk_expr_struct :
                | (f, e) -> { field_val_name = f; field_val_expr = e }) fields in
         { expr_struct_path = path; expr_struct_fields = uu___1 } in
       Expr_struct uu___
+let (mk_expr_tuple : expr Prims.list -> expr) = fun l -> Expr_tuple l
 let (mk_scalar_fn_arg : Prims.string -> typ -> fn_arg) =
   fun name ->
     fun t ->

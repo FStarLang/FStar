@@ -39,6 +39,10 @@ let tyvar_of (s:string) : string =
 let varname (s:string) : string =
   replace_char s '\'' '_'
 
+let enum_or_struct_name (s:string) : string = s
+  // let hd::tl = String.list_of_string s in
+  // String.string_of_list ((FStar.Char.uppercase hd)::tl)
+
 let is_internal_name (s:string) : bool =
   s = "uu___" ||
   s = "_fret" ||
@@ -241,6 +245,10 @@ let is_binop (s:string) : option binop =
           s = "FStar.UInt32.rem" ||
           s = "FStar.SizeT.rem"
   then Some Rem
+  else if s = "Prims.op_Amp_Amp"
+  then Some And
+  else if s = "Prims.op_Bar_Bar"
+  then Some Or
   else None
 
 let extract_mlconstant_to_lit (c:S.mlconstant) : lit =
@@ -363,8 +371,18 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     // nested let binding
   | S.MLE_Let _ -> e |> extract_mlexpr_to_stmts g |> mk_block_expr
 
-  // | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, [e])
-  //   when S.string_of_mlpath p = "Pulse.Lib.Pervasives.tfst" ->
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, [e])
+    when S.string_of_mlpath p = "Pulse.Lib.Pervasives.tfst" ->
+    let e = extract_mlexpr g e in
+    mk_expr_field_unnamed e 0
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, [e])
+    when S.string_of_mlpath p = "Pulse.Lib.Pervasives.tsnd" ->
+    let e = extract_mlexpr g e in
+    mk_expr_field_unnamed e 1
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, [e])
+    when S.string_of_mlpath p = "Pulse.Lib.Pervasives.tthd" ->
+    let e = extract_mlexpr g e in
+    mk_expr_field_unnamed e 2
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2; _])
     when S.string_of_mlpath p = "Pulse.Lib.Reference.op_Colon_Equals" ||
@@ -483,9 +501,14 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     mk_call head args
 
   | S.MLE_CTor (p, args) ->
+    let ty_name =
+      match e.mlty with
+      | S.MLTY_Named (_, p) -> p |> snd |> enum_or_struct_name
+      | _ -> failwith "S.MLE_CTor: unexpected type" in
+    let dexpr = mk_expr_path [ty_name; snd p] in
     if List.length args = 0
-    then mk_expr_path_singl (snd p)
-    else mk_call (mk_expr_path_singl (snd p)) (List.map (extract_mlexpr g) args)
+    then dexpr
+    else mk_call dexpr (List.map (extract_mlexpr g) args)
 
   | S.MLE_TApp (head, _) -> extract_mlexpr g head  // make type applications explicit in the Rust code?
   | S.MLE_If (cond, if_then, if_else_opt) ->
@@ -513,6 +536,8 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     mk_expr_struct p (List.map (fun (f, e) -> f, extract_mlexpr g e) fields)
 
   | S.MLE_Proj (e, p) -> mk_expr_field (extract_mlexpr g e) (snd p)
+
+  | S.MLE_Tuple l -> mk_expr_tuple (List.map (extract_mlexpr g) l)
 
   | _ -> fail_nyi (format1 "mlexpr %s" (S.mlexpr_to_string e))
 
@@ -617,7 +642,7 @@ let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : item & env =
 let extract_struct_defn (g:env) (d:S.one_mltydecl) : item & env =
   let Some (S.MLTD_Record fts) = d.tydecl_defn in
   mk_item_struct
-    d.tydecl_name
+    (d.tydecl_name |> enum_or_struct_name)
     (List.map tyvar_of d.tydecl_parameters)
     (List.map (fun (f, t) -> f, extract_mlty g t) fts),
   g  // TODO: add it to env if needed later
@@ -630,7 +655,7 @@ let extract_type_abbrev (g:env) (d:S.one_mltydecl) : item & env =
 let extract_enum (g:env) (d:S.one_mltydecl) : item & env =
   let Some (S.MLTD_DType cts) = d.tydecl_defn in
   mk_item_enum
-    d.tydecl_name
+    (d.tydecl_name |> enum_or_struct_name)
     (List.map tyvar_of d.tydecl_parameters)
     (List.map (fun (cname, dts) -> cname, List.map (fun (_, t) -> extract_mlty g t) dts) cts),
   g  // TODO: add it to env if needed later

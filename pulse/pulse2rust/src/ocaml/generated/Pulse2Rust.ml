@@ -22,6 +22,13 @@ let (tyvar_of : Prims.string -> Prims.string) =
     FStar_Compiler_String.uppercase uu___
 let (varname : Prims.string -> Prims.string) =
   fun s -> FStar_Compiler_Util.replace_char s 39 95
+let (enum_or_struct_name : Prims.string -> Prims.string) =
+  fun s ->
+    let uu___ = FStar_Compiler_String.list_of_string s in
+    match uu___ with
+    | hd::tl ->
+        FStar_Compiler_String.string_of_list ((FStar_Char.uppercase hd) ::
+          tl)
 let (is_internal_name : Prims.string -> Prims.bool) =
   fun s ->
     (((((s = "uu___") || (s = "_fret")) || (s = "_bind_c")) ||
@@ -547,6 +554,60 @@ and (extract_mlexpr :
                     FStar_Extraction_ML_Syntax.MLE_Name p;
                   FStar_Extraction_ML_Syntax.mlty = uu___;
                   FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                uu___2);
+             FStar_Extraction_ML_Syntax.mlty = uu___3;
+             FStar_Extraction_ML_Syntax.loc = uu___4;_},
+           e1::[])
+          when
+          let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___5 = "Pulse.Lib.Pervasives.tfst" ->
+          let e2 = extract_mlexpr g e1 in
+          Pulse2Rust_Rust_Syntax.mk_expr_field_unnamed e2 Prims.int_zero
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                uu___2);
+             FStar_Extraction_ML_Syntax.mlty = uu___3;
+             FStar_Extraction_ML_Syntax.loc = uu___4;_},
+           e1::[])
+          when
+          let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___5 = "Pulse.Lib.Pervasives.tsnd" ->
+          let e2 = extract_mlexpr g e1 in
+          Pulse2Rust_Rust_Syntax.mk_expr_field_unnamed e2 Prims.int_one
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                uu___2);
+             FStar_Extraction_ML_Syntax.mlty = uu___3;
+             FStar_Extraction_ML_Syntax.loc = uu___4;_},
+           e1::[])
+          when
+          let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___5 = "Pulse.Lib.Pervasives.tthd" ->
+          let e2 = extract_mlexpr g e1 in
+          Pulse2Rust_Rust_Syntax.mk_expr_field_unnamed e2 (Prims.of_int (2))
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
                 uu___2::[]);
              FStar_Extraction_ML_Syntax.mlty = uu___3;
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
@@ -919,16 +980,20 @@ and (extract_mlexpr :
           let args1 = FStar_Compiler_List.map (extract_mlexpr g) args in
           Pulse2Rust_Rust_Syntax.mk_call head1 args1
       | FStar_Extraction_ML_Syntax.MLE_CTor (p, args) ->
+          let ty_name =
+            match e.FStar_Extraction_ML_Syntax.mlty with
+            | FStar_Extraction_ML_Syntax.MLTY_Named (uu___, p1) ->
+                enum_or_struct_name (FStar_Pervasives_Native.snd p1)
+            | uu___ ->
+                FStar_Compiler_Effect.failwith "S.MLE_CTor: unexpected type" in
+          let dexpr =
+            Pulse2Rust_Rust_Syntax.mk_expr_path
+              [ty_name; FStar_Pervasives_Native.snd p] in
           if (FStar_Compiler_List.length args) = Prims.int_zero
-          then
-            Pulse2Rust_Rust_Syntax.mk_expr_path_singl
-              (FStar_Pervasives_Native.snd p)
+          then dexpr
           else
-            (let uu___1 =
-               Pulse2Rust_Rust_Syntax.mk_expr_path_singl
-                 (FStar_Pervasives_Native.snd p) in
-             let uu___2 = FStar_Compiler_List.map (extract_mlexpr g) args in
-             Pulse2Rust_Rust_Syntax.mk_call uu___1 uu___2)
+            (let uu___1 = FStar_Compiler_List.map (extract_mlexpr g) args in
+             Pulse2Rust_Rust_Syntax.mk_call dexpr uu___1)
       | FStar_Extraction_ML_Syntax.MLE_TApp (head, uu___) ->
           extract_mlexpr g head
       | FStar_Extraction_ML_Syntax.MLE_If (cond, if_then, if_else_opt) ->
@@ -968,6 +1033,9 @@ and (extract_mlexpr :
           let uu___ = extract_mlexpr g e1 in
           Pulse2Rust_Rust_Syntax.mk_expr_field uu___
             (FStar_Pervasives_Native.snd p)
+      | FStar_Extraction_ML_Syntax.MLE_Tuple l ->
+          let uu___ = FStar_Compiler_List.map (extract_mlexpr g) l in
+          Pulse2Rust_Rust_Syntax.mk_expr_tuple uu___
       | uu___ ->
           let uu___1 =
             let uu___2 = FStar_Extraction_ML_Syntax.mlexpr_to_string e in
@@ -1157,16 +1225,17 @@ let (extract_struct_defn :
           fts) ->
           let uu___1 =
             let uu___2 =
+              enum_or_struct_name d.FStar_Extraction_ML_Syntax.tydecl_name in
+            let uu___3 =
               FStar_Compiler_List.map tyvar_of
                 d.FStar_Extraction_ML_Syntax.tydecl_parameters in
-            let uu___3 =
+            let uu___4 =
               FStar_Compiler_List.map
-                (fun uu___4 ->
-                   match uu___4 with
-                   | (f, t) -> let uu___5 = extract_mlty g t in (f, uu___5))
+                (fun uu___5 ->
+                   match uu___5 with
+                   | (f, t) -> let uu___6 = extract_mlty g t in (f, uu___6))
                 fts in
-            Pulse2Rust_Rust_Syntax.mk_item_struct
-              d.FStar_Extraction_ML_Syntax.tydecl_name uu___2 uu___3 in
+            Pulse2Rust_Rust_Syntax.mk_item_struct uu___2 uu___3 uu___4 in
           (uu___1, g)
 let (extract_type_abbrev :
   env ->
@@ -1200,21 +1269,22 @@ let (extract_enum :
           cts) ->
           let uu___1 =
             let uu___2 =
+              enum_or_struct_name d.FStar_Extraction_ML_Syntax.tydecl_name in
+            let uu___3 =
               FStar_Compiler_List.map tyvar_of
                 d.FStar_Extraction_ML_Syntax.tydecl_parameters in
-            let uu___3 =
+            let uu___4 =
               FStar_Compiler_List.map
-                (fun uu___4 ->
-                   match uu___4 with
+                (fun uu___5 ->
+                   match uu___5 with
                    | (cname, dts) ->
-                       let uu___5 =
+                       let uu___6 =
                          FStar_Compiler_List.map
-                           (fun uu___6 ->
-                              match uu___6 with
-                              | (uu___7, t) -> extract_mlty g t) dts in
-                       (cname, uu___5)) cts in
-            Pulse2Rust_Rust_Syntax.mk_item_enum
-              d.FStar_Extraction_ML_Syntax.tydecl_name uu___2 uu___3 in
+                           (fun uu___7 ->
+                              match uu___7 with
+                              | (uu___8, t) -> extract_mlty g t) dts in
+                       (cname, uu___6)) cts in
+            Pulse2Rust_Rust_Syntax.mk_item_enum uu___2 uu___3 uu___4 in
           (uu___1, g)
 let (extract_mltydecl :
   env ->

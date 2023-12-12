@@ -30,6 +30,8 @@ type binop =
   | Gt
   | Ge
   | Rem
+  | And
+  | Or
 
 type unop =
   | Deref
@@ -78,6 +80,7 @@ type expr =
   | Expr_match of expr_match
   | Expr_field of expr_field
   | Expr_struct of expr_struct
+  | Expr_tuple of list expr
 
 and expr_bin = {
   expr_bin_left : expr;
@@ -139,6 +142,7 @@ and expr_match = {
 and expr_field = {
   expr_field_base : expr;
   expr_field_member : string;
+  expr_field_named : bool;
 }
 
 and expr_struct = {
@@ -291,7 +295,9 @@ val mk_pat_struct (path:string) (fields:list (string & pat)) : pat
 val mk_arm (arm_pat:pat) (arm_body:expr) : arm
 val mk_match (scrutinee:expr) (arms:list arm) : expr
 val mk_expr_field (base:expr) (f:string) : expr
+val mk_expr_field_unnamed (base:expr) (i:int) : expr
 val mk_expr_struct (path:list string) (fields:list (string & expr)) : expr
+val mk_expr_tuple (l:list expr) : expr
 
 val mk_local_stmt (name:option string) (is_mut:bool) (init:expr) : stmt
 val mk_scalar_fn_arg (name:string) (t:typ) : fn_arg
