@@ -25,6 +25,7 @@ type env = {
   fns : list (string & fn_signature);
   statics : list (string & typ);
   gamma : list binding;
+  record_field_names : psmap (list string);
 }
 
 //
@@ -57,7 +58,7 @@ let fail (s:string) =
 let fail_nyi (s:string) =
   failwith (format1 "Pulse to Rust extraction failed: no support yet for %s" s)
 
-let empty_env () = { fns = []; gamma = []; statics = []; }
+let empty_env () = { fns = []; gamma = []; statics = []; record_field_names = psmap_empty () }
 
 let lookup_global_fn (g:env) (s:string) : option fn_signature =
   map_option (fun (_, t) -> t) (tryFind (fun (f, _) -> f = s) g.fns)
@@ -376,17 +377,28 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
   | S.MLE_Let _ -> e |> extract_mlexpr_to_stmts g |> mk_block_expr
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, [e])
-    when S.string_of_mlpath p = "Pulse.Lib.Pervasives.tfst" ->
+    when S.string_of_mlpath p = "Pulse.Lib.Pervasives.tfst" ||
+         S.string_of_mlpath p = "FStar.Pervasives.Native.fst" ->
     let e = extract_mlexpr g e in
     mk_expr_field_unnamed e 0
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, [e])
-    when S.string_of_mlpath p = "Pulse.Lib.Pervasives.tsnd" ->
+    when S.string_of_mlpath p = "Pulse.Lib.Pervasives.tsnd" ||
+         S.string_of_mlpath p = "FStar.Pervasives.Native.snd" ->
     let e = extract_mlexpr g e in
     mk_expr_field_unnamed e 1
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, [e])
     when S.string_of_mlpath p = "Pulse.Lib.Pervasives.tthd" ->
     let e = extract_mlexpr g e in
     mk_expr_field_unnamed e 2
+
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, [_; e])
+    when String.length (snd p) > 12 &&
+         String.substring (snd p) 0 12 = "explode_ref_" ->
+    let rname = String.substring (snd p) 12 (String.length (snd p) - 12) in
+    let flds = psmap_try_find g.record_field_names rname |> must in
+    let e = extract_mlexpr g e in
+    let es = flds |> List.map (fun f -> mk_reference_expr true (mk_expr_field e f)) in
+    mk_expr_tuple es
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2; _])
     when S.string_of_mlpath p = "Pulse.Lib.Reference.op_Colon_Equals" ||
@@ -435,7 +447,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
 
     mk_expr_index (extract_mlexpr g e) (extract_mlexpr g i)
 
-  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2; e3; _])
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, e1::e2::e3::_)
     when S.string_of_mlpath p = "Pulse.Lib.Array.Core.op_Array_Assignment" ||
          S.string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Assignment" ||
          S.string_of_mlpath p = "Pulse.Lib.Vec.vec_ref_write" ->
@@ -558,14 +570,22 @@ and extract_mlexpr_to_stmts (g:env) (e:S.mlexpr) : list stmt =
     extract_mlexpr_to_stmts g e
 
   | S.MLE_Let ((S.NonRec, [lb]), e) ->
-    let is_mut, ty, init = lb_init_and_def g lb in
-    let s = mk_local_stmt
-      (match lb.mllb_tysc with
-       | Some (_, S.MLTY_Erased) -> None
-       | _ -> Some (varname lb.mllb_name))
-      is_mut
-      init in
-    s::(extract_mlexpr_to_stmts (push_local g lb.mllb_name ty is_mut) e)
+    begin
+      match lb.mllb_def.expr with
+      | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, _)
+        when snd p = "unexplode_ref" ->
+        extract_mlexpr_to_stmts g e
+      | _ ->
+        let is_mut, ty, init = lb_init_and_def g lb in
+        let s = mk_local_stmt
+          (match lb.mllb_tysc with
+           | Some (_, S.MLTY_Erased) -> None
+           | _ -> Some (varname lb.mllb_name))
+          is_mut
+          init in
+        s::(extract_mlexpr_to_stmts (push_local g lb.mllb_name ty is_mut) e)
+    end
+
 
   | S.MLE_App ({ expr=S.MLE_TApp ({ expr=S.MLE_Name p }, _) }, _)
     when S.string_of_mlpath p = "failwith" ->
@@ -654,7 +674,7 @@ let extract_struct_defn (g:env) (d:S.one_mltydecl) : item & env =
     (d.tydecl_name |> enum_or_struct_name)
     (List.map tyvar_of d.tydecl_parameters)
     (List.map (fun (f, t) -> f, extract_mlty g t) fts),
-  g  // TODO: add it to env if needed later
+  { g with record_field_names = psmap_add g.record_field_names d.tydecl_name (List.map fst fts) }
 
 let extract_type_abbrev (g:env) (d:S.one_mltydecl) : item & env =
   let Some (S.MLTD_Abbrev t) = d.tydecl_defn in
@@ -691,7 +711,7 @@ let extract_one (file:string) : unit =
     print1 "Decl: %s\n" (S.mlmodule1_to_string d);
     match d with
     | S.MLM_Let (S.NonRec, [{mllb_name}])
-      when mllb_name = "explode_ref" ||
+      when (String.length mllb_name > 12 && String.substring mllb_name 0 12 = "explode_ref_") ||
            mllb_name = "unexplode_ref" -> items, g
     | S.MLM_Let lb ->
       let f, g = extract_top_level_lb g lb in

@@ -2107,3 +2107,142 @@ pub enum cell<A: Clone + Copy, B: Clone + Copy> {
     Used(A, B),
 }
 use crate::cell::*;
+
+pub type pos_us = usize;
+pub fn mk_used_cell<A: Clone + Copy + PartialEq, B: Clone + Copy + PartialEq>(
+    k: A,
+    v: B,
+) -> cell<A, B> {
+    cell::Used(k, v)
+}
+pub struct ht_t<KEYT: Clone + Copy + PartialEq, VALT: Clone + Copy + PartialEq> {
+    sz: pos_us,
+    hashf: fn(KEYT) -> usize,
+    contents: std::vec::Vec<cell<KEYT, VALT>>,
+}
+pub fn mk_ht<K: Clone + Copy + PartialEq, V: Clone + Copy + PartialEq>(
+    sz: pos_us,
+    hashf: fn(K) -> usize,
+    contents: std::vec::Vec<cell<K, V>>,
+) -> ht_t<K, V> {
+    ht_t {
+        sz: sz,
+        hashf: hashf,
+        contents: contents,
+    }
+}
+pub fn alloc<K: Clone + Copy + PartialEq, V: Clone + Copy + PartialEq>(
+    hashf: fn(K) -> usize,
+    l: pos_us,
+) -> ht_t<K, V> {
+    let mut contents = vec![cell::Clean; l];
+    let ht = mk_ht(l, hashf, contents);
+    ht
+}
+pub fn dealloc<K: Clone + Copy + PartialEq, V: Clone + Copy + PartialEq>(ht: ht_t<K, V>) -> () {
+    drop(ht.contents)
+}
+pub fn sz_add(x: usize, y: usize) -> std::option::Option<usize> {
+    match x <= 0xffff {
+        true => match y <= 0xffff - x {
+            true => Some(x + y),
+            uu___ => None,
+        },
+        uu___ => None,
+    }
+}
+pub fn size_t_mod(x: usize, y: usize) -> usize {
+    x % y
+}
+pub fn pulse_lookup_index<KT: Clone + Copy + PartialEq, VT: Clone + Copy + PartialEq>(
+    ht: (),
+    pht: (),
+    r: (),
+    r_sz: &mut pos_us,
+    r_hashf: &mut fn(KT) -> usize,
+    r_contents: &mut std::vec::Vec<cell<KT, VT>>,
+    k: KT,
+) -> (bool, std::option::Option<(VT, usize)>) {
+    let sz = *r_sz;
+    let hash = r_hashf(k);
+    let cidx = size_t_mod(hash, sz);
+    let mut off = 0;
+    let mut cont = true;
+    let mut err = false;
+    let mut ret = None;
+    while {
+        let voff = off;
+        let vcont = cont;
+        let verr = err;
+        voff <= sz && vcont == true && verr == false
+    } {
+        let voff = off;
+        if voff == sz {
+            cont = false;
+        } else {
+            let opt_sum = sz_add(cidx, voff);
+            match opt_sum {
+                Some(sum) => {
+                    let idx = size_t_mod(sum, sz);
+                    let c = r_contents[idx];
+                    match c {
+                        Used(k_, v_) => {
+                            if k_ == k {
+                                cont = false;
+                                ret = Some((v_, idx));
+                            } else {
+                                off = voff + 1;
+                            };
+                        }
+                        Clean => {
+                            cont = false;
+                        }
+                        Zombie => {
+                            off = voff + 1;
+                        }
+                    };
+                }
+                None => {
+                    err = true;
+                }
+            }
+        };
+    }
+    let verr = err;
+    let o = ret;
+    let _bind_c = if verr { (false, o) } else { (true, o) };
+    let ret1 = _bind_c;
+    let err1 = ret1;
+    let cont1 = err1;
+    let off1 = cont1;
+    off1
+}
+pub fn lookup<KT: Clone + Copy + PartialEq, VT: Clone + Copy + PartialEq>(
+    r: &mut ht_t<KT, VT>,
+    k: KT,
+    ht: (),
+    pht: (),
+) -> (bool, std::option::Option<VT>) {
+    let res = (&mut r.sz, &mut r.hashf, &mut r.contents);
+    match res {
+        Mktuple3(r_sz, r_hashf, r_contents) => {
+            let p = pulse_lookup_index((), (), (), r_sz, r_hashf, r_contents, k);
+            let _bind_c = if p.0 {
+                match p.1 {
+                    Some(p1) => {
+                        let _br = (true, Some(p1.0));
+                        _br
+                    }
+                    None => {
+                        let _br = (true, None);
+                        _br
+                    }
+                }
+            } else {
+                (false, None)
+            };
+            let _br = _bind_c;
+            _br
+        }
+    }
+}

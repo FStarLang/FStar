@@ -60,31 +60,42 @@ type exploded_refs (k:eqtype) (v:Type0) =
   ref (k -> SZ.t) &
   ref (V.vec (cell k v))
 
-let token (#k:eqtype) (#v:Type0) (r:ref (ht_t k v)) (res:exploded_refs k v) : vprop =
+let token (#k:eqtype) (#v:Type0)
+  (r:ref (ht_t k v))
+  (r_sz:ref pos_us)
+  (r_hashf:ref (k -> SZ.t))
+  (r_contents:ref (V.vec (cell k v))) : vprop =
   exists* ht. pts_to r ht
 
-let exploded_vp (#k:eqtype) (#v:Type0) (r:ref (ht_t k v)) (ht:ht_t k v) (res:exploded_refs k v) : vprop =
-  pts_to (tfst res) ht.sz **
-  pts_to (tsnd res) ht.hashf **
-  pts_to (tthd res) ht.contents **
-  token r res
+let exploded_vp (#k:eqtype) (#v:Type0)
+  (r:ref (ht_t k v))
+  (ht:ht_t k v)
+  (r_sz:ref pos_us)
+  (r_hashf:ref (k -> SZ.t))
+  (r_contents:ref (V.vec (cell k v))) : vprop =  
+  pts_to r_sz ht.sz **
+  pts_to r_hashf ht.hashf **
+  pts_to r_contents ht.contents **
+  token r r_sz r_hashf r_contents
 
 ```pulse
-fn explode_ref (#k:eqtype) (#v:Type0) (#ht:erased (ht_t k v)) (r:ref (ht_t k v))
+fn explode_ref_ht_t (#k:eqtype) (#v:Type0) (#ht:erased (ht_t k v)) (r:ref (ht_t k v))
   requires pts_to r ht
   returns res:exploded_refs k v
-  ensures exploded_vp r ht res
+  ensures exploded_vp r ht (tfst res) (tsnd res) (tthd res)
 {
   let htc = !r;
   let r_sz = R.alloc htc.sz;
   let r_hashf = R.alloc htc.hashf;
   let r_contents = R.alloc htc.contents;
   let res = (r_sz, r_hashf, r_contents);
-  rewrite each r_sz as (tfst res),
-               r_hashf as (tsnd res),
-               r_contents as (tthd res);
-  fold (token r res);
-  fold (exploded_vp r ht res);
+  // rewrite each r_sz as (tfst res),
+  //              r_hashf as (tsnd res),
+  //              r_contents as (tthd res);
+  fold (token r r_sz r_hashf r_contents);
+  fold (exploded_vp r ht r_sz r_hashf r_contents);
+  rewrite (exploded_vp r ht r_sz r_hashf r_contents)
+       as (exploded_vp r ht (tfst res) (tsnd res) (tthd res));
   res
 }
 ```
@@ -92,16 +103,18 @@ fn explode_ref (#k:eqtype) (#v:Type0) (#ht:erased (ht_t k v)) (r:ref (ht_t k v))
 ```pulse
 fn unexplode_ref (#k:eqtype) (#v:Type0) (#ht:erased (ht_t k v))
   (r:ref (ht_t k v))
-  (res:exploded_refs k v)
-  requires exploded_vp r ht res
+  (r_sz:ref pos_us)
+  (r_hashf:ref (k -> SZ.t))
+  (r_contents:ref (V.vec (cell k v)))
+  requires exploded_vp r ht r_sz r_hashf r_contents
   ensures pts_to r ht
 {
-  unfold (exploded_vp r ht res);
-  unfold (token r res);
-  let sz = !(tfst res);
-  let hashf = !(tsnd res);
-  let contents = !(tthd res);
-  free (tfst res); free (tsnd res); free (tthd res);
+  unfold (exploded_vp r ht r_sz r_hashf r_contents);
+  unfold (token r r_sz r_hashf r_contents);
+  let sz = !r_sz;
+  let hashf = !r_hashf;
+  let contents = !r_contents;
+  free r_sz; free r_hashf; free r_contents;
   let s = mk_ht sz hashf contents;
   r := s
 }
@@ -156,20 +169,23 @@ let size_t_mod (x:SZ.t) (y : SZ.t { y =!= 0sz })
 fn pulse_lookup_index (#kt:eqtype) (#vt:Type0)
   (#ht:erased (ht_t kt vt))
   (#pht:erased (pht_t kt vt))
-  (r:ref (ht_t kt vt))
-  (res:(ref pos_us & ref (kt -> SZ.t) & ref (V.vec (cell kt vt))))
+  (r:erased (ref (ht_t kt vt)))
+  (r_sz:ref pos_us)
+  (r_hashf:ref (kt -> SZ.t))
+  (r_contents:ref (V.vec (cell kt vt)))
+  // (res:(ref pos_us & ref (kt -> SZ.t) & ref (V.vec (cell kt vt))))
   (k:kt)
-  requires exploded_vp r ht res ** models ht pht
+  requires exploded_vp r ht r_sz r_hashf r_contents ** models ht pht
   returns  p:bool & option (vt & SZ.t)
-  ensures  exploded_vp r ht res ** models ht pht ** 
+  ensures  exploded_vp r ht r_sz r_hashf r_contents ** models ht pht ** 
            pure ( fst p ==> (snd p) == PHT.lookup_index_us pht k )
 {
   open SZ;
 
-  unfold (exploded_vp r ht res);
-  let sz = !(tfst res);
-  let hash = ref_apply (tsnd res) k;
-  fold (exploded_vp r ht res);
+  unfold (exploded_vp r ht r_sz r_hashf r_contents);
+  let sz = !r_sz;
+  let hash = ref_apply r_hashf k;
+  fold (exploded_vp r ht r_sz r_hashf r_contents);
 
   let cidx = size_t_mod hash sz;
   let mut off = 0sz;
@@ -183,7 +199,7 @@ fn pulse_lookup_index (#kt:eqtype) (#vt:Type0)
          let verr = !err; 
          (voff <=^ sz && vcont = true && verr = false)) 
   invariant b. exists (voff:SZ.t) (vcont verr:bool). (
-    exploded_vp r ht res **
+    exploded_vp r ht r_sz r_hashf r_contents **
     V.pts_to ht.contents pht.repr.seq **
     R.pts_to off voff **
     R.pts_to cont vcont **
@@ -197,13 +213,13 @@ fn pulse_lookup_index (#kt:eqtype) (#vt:Type0)
       b == (voff <=^ ht.sz && vcont = true && verr = false)
     ))
   {
-    unfold (exploded_vp r ht res);
+    unfold (exploded_vp r ht r_sz r_hashf r_contents);
     let voff = !off;
     if (voff = sz)
     {
       cont := false;
       assert (R.pts_to ret None);
-      fold (exploded_vp r ht res);
+      fold (exploded_vp r ht r_sz r_hashf r_contents);
     }
     else
     {
@@ -215,7 +231,7 @@ fn pulse_lookup_index (#kt:eqtype) (#vt:Type0)
           let idx = size_t_mod sum sz;
           rewrite (V.pts_to ht.contents pht.repr.seq)
                as (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)));
-          let c = V.vec_ref_read (tthd res) idx;
+          let c = V.vec_ref_read r_contents idx;
           rewrite (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)))
                as (V.pts_to ht.contents pht.repr.seq);
           match c
@@ -228,13 +244,13 @@ fn pulse_lookup_index (#kt:eqtype) (#vt:Type0)
                 ret := Some (v', idx);
                 assert (pure (pht.repr @@ SZ.v idx == Used k' v'));
                 assert (pure (lookup_repr_index pht.repr k == Some (v', SZ.v idx)));
-                fold (exploded_vp r ht res);
+                fold (exploded_vp r ht r_sz r_hashf r_contents);
               } else
               {
                 off := voff +^ 1sz;
                 assert (pure (walk_get_idx pht.repr (SZ.v cidx) k (SZ.v voff) 
                   == walk_get_idx pht.repr (SZ.v cidx) k (SZ.v (voff+^1sz))));
-                fold (exploded_vp r ht res);
+                fold (exploded_vp r ht r_sz r_hashf r_contents);
               }
             }
             Clean ->
@@ -242,14 +258,14 @@ fn pulse_lookup_index (#kt:eqtype) (#vt:Type0)
               cont := false;
               assert (pure (walk_get_idx pht.repr (SZ.v cidx) k (SZ.v voff) == None));
               assert (R.pts_to ret (PHT.lookup_index_us pht k));
-              fold (exploded_vp r ht res);
+              fold (exploded_vp r ht r_sz r_hashf r_contents);
             }
             Zombie ->
             {
               off := voff +^ 1sz;
               assert (pure (walk_get_idx pht.repr (SZ.v cidx) k (SZ.v voff) 
                 == walk_get_idx pht.repr (SZ.v cidx) k (SZ.v (voff+^1sz))));
-              fold (exploded_vp r ht res);
+              fold (exploded_vp r ht r_sz r_hashf r_contents);
             }
           }
         }
@@ -257,7 +273,7 @@ fn pulse_lookup_index (#kt:eqtype) (#vt:Type0)
         { 
           // ERROR - add failed
           err := true;
-          fold (exploded_vp r ht res);
+          fold (exploded_vp r ht r_sz r_hashf r_contents);
         }
       }
     }
@@ -278,34 +294,44 @@ fn pulse_lookup_index (#kt:eqtype) (#vt:Type0)
 ```
 #pop-options
 
-
-// ```pulse
-// fn lookup (#kt:eqtype) (#vt:Type0)
-//   (r:ref (ht_t kt vt)) (k:kt)
-//   (#ht:erased (ht_t kt vt))
-//   (#pht:erased (pht_t kt vt))
-//   requires pts_to r ht ** models ht pht
-//   returns  p:bool & option vt
-//   ensures  pts_to r ht ** models ht pht ** 
-//            pure ( fst p ==> (snd p) == PHT.lookup pht k )
-// {
-//   let res = explode_ref r;
-//   let p = pulse_lookup_index r res k;
-//   unexplode_ref r res;
-//   if (fst p)
-//   {
-//     match (snd p)
-//     {
-//       Some p -> { (true, Some (fst p)) }
-//       None -> { (true, None #vt) }
-//     }
-//   } 
-//   else
-//   {
-//     (false, None #vt)
-//   }
-// }
-// ```
+```pulse
+fn lookup (#kt:eqtype) (#vt:Type0)
+  (r:ref (ht_t kt vt)) (k:kt)
+  (#ht:erased (ht_t kt vt))
+  (#pht:erased (pht_t kt vt))
+  requires pts_to r ht ** models ht pht
+  returns  p:bool & option vt
+  ensures  pts_to r ht ** models ht pht ** 
+           pure ( fst p ==> (snd p) == PHT.lookup pht k )
+{
+  let res = explode_ref_ht_t r;
+  match res
+  {
+    Mktuple3 r_sz r_hashf r_contents -> {
+      rewrite (exploded_vp r ht (tfst res) (tsnd res) (tthd res))
+           as (exploded_vp r ht r_sz r_hashf r_contents);
+      rewrite (exploded_vp r ht r_sz r_hashf r_contents)
+           as (exploded_vp (reveal (hide r)) ht r_sz r_hashf r_contents);
+      let p = pulse_lookup_index (hide r) r_sz r_hashf r_contents k;
+      rewrite (exploded_vp (reveal (hide r)) ht r_sz r_hashf r_contents)
+           as (exploded_vp r ht r_sz r_hashf r_contents);
+      unexplode_ref r r_sz r_hashf r_contents;
+      if (fst p)
+      {
+        match (snd p)
+        {
+          Some p -> { (true, Some (fst p)) }
+          None -> { (true, None #vt) }
+        }
+      } 
+      else
+      {
+        (false, None #vt)
+      }
+    }
+  }
+}
+```
 
 // ```pulse
 // fn insert (#kt:eqtype) (#vt:Type0)
@@ -321,7 +347,7 @@ fn pulse_lookup_index (#kt:eqtype) (#vt:Type0)
 //           then pht'== PHT.insert pht k v
 //           else pht'== pht)
 // {
-//   let res = explode_ref r;
+//   let res = explode_ref_ht_t r;
 
 //   unfold (exploded_vp r ht res);
 //   let sz = !(tfst res);
@@ -375,7 +401,7 @@ fn pulse_lookup_index (#kt:eqtype) (#vt:Type0)
 //           let idx = size_t_mod sum sz;
 //           rewrite (V.pts_to ht.contents pht.repr.seq)
 //                as (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)));
-//           let c = vec_ref_read (tthd res) idx;
+//           let c = V.vec_ref_read (tthd res) idx;
 //           rewrite (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)))
 //                as (V.pts_to ht.contents pht.repr.seq);
 
@@ -387,7 +413,7 @@ fn pulse_lookup_index (#kt:eqtype) (#vt:Type0)
 //                 assert (pure ( SZ.v idx < Seq.length pht.repr.seq));
 //                 rewrite (V.pts_to ht.contents pht.repr.seq)
 //                      as (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)));
-//                 vec_ref_write (tthd res) idx (mk_used_cell k v);
+//                 V.vec_ref_write (tthd res) idx (mk_used_cell k v);
 //                 assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal` 
 //                               Seq.upd pht.repr.seq (SZ.v idx) (mk_used_cell k v)));
 //                 rewrite (V.pts_to (reveal (hide ht.contents)) (Seq.upd (reveal (hide pht.repr.seq)) (SZ.v idx) (mk_used_cell k v)))
@@ -402,7 +428,7 @@ fn pulse_lookup_index (#kt:eqtype) (#vt:Type0)
 //             Clean -> {
 //               rewrite (V.pts_to ht.contents pht.repr.seq)
 //                    as (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)));
-//               vec_ref_write (tthd res) idx (mk_used_cell k v);
+//               V.vec_ref_write (tthd res) idx (mk_used_cell k v);
 //               assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal` 
 //                             Seq.upd pht.repr.seq (SZ.v idx) (mk_used_cell k v)));
 //               rewrite (V.pts_to (reveal (hide ht.contents)) (Seq.upd (reveal (hide pht.repr.seq)) (SZ.v idx) (mk_used_cell k v)))
@@ -414,7 +440,11 @@ fn pulse_lookup_index (#kt:eqtype) (#vt:Type0)
 //             {
 //               fold (models ht pht);
 //               fold (exploded_vp r ht res);
-//               let lookup_res = pulse_lookup_index r res k;
+//               rewrite (exploded_vp r ht res)
+//                    as (exploded_vp (reveal (hide r)) ht res);
+//               let lookup_res = pulse_lookup_index (hide r) res k;
+//               rewrite (exploded_vp (reveal (hide r)) ht res)
+//                    as (exploded_vp r ht res);
 //               unfold (models ht pht);
 //               unfold (exploded_vp r ht res);
 
@@ -427,8 +457,8 @@ fn pulse_lookup_index (#kt:eqtype) (#vt:Type0)
 //                   {
 //                     rewrite (V.pts_to ht.contents pht.repr.seq)
 //                          as (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)));
-//                     vec_ref_write (tthd res) (snd p) Zombie;
-//                     vec_ref_write (tthd res) idx (mk_used_cell k v);
+//                     V.vec_ref_write (tthd res) (snd p) Zombie;
+//                     V.vec_ref_write (tthd res) idx (mk_used_cell k v);
 //                     cont := false;
 //                     assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal` 
 //                                   Seq.upd (Seq.upd pht.repr.seq (SZ.v (snd p)) Zombie) (SZ.v idx) (mk_used_cell k v)));
@@ -441,7 +471,7 @@ fn pulse_lookup_index (#kt:eqtype) (#vt:Type0)
 //                   {
 //                     rewrite (V.pts_to ht.contents pht.repr.seq)
 //                          as (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)));
-//                     vec_ref_write (tthd res) idx (mk_used_cell k v);                    
+//                     V.vec_ref_write (tthd res) idx (mk_used_cell k v);                    
 //                     cont := false;
 //                     assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal`
 //                                   Seq.upd pht.repr.seq (SZ.v idx) (mk_used_cell k v)));
