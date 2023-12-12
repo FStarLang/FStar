@@ -9,8 +9,10 @@ open FStar.Compiler.List
 open FStar.Char
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Primops.Base
-open FStar.Class.Monad
 open FStar.Class.Show
+
+(* We're going full Haskell in this module *)
+open FStar.Class.Monad
 open FStar.Compiler.Writer
 
 module I  = FStar.Ident

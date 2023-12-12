@@ -45,6 +45,66 @@ val as_primitive_step_nbecbs
 val embed_simple: {| EMB.embedding 'a |} -> Range.range -> 'a -> term
 val try_unembed_simple: {| EMB.embedding 'a |} -> term -> option 'a
 
+val mk_interp1 #a #r
+  {| EMB.embedding a |}
+  {| EMB.embedding r |}
+  (f : a -> r)
+  : interp_t
+
+val mk_nbe_interp1 #a #r
+  {| NBE.embedding a |}
+  {| NBE.embedding r |}
+  (f : a -> r)
+  : nbe_interp_t
+
+val mk_interp2 #a #b #r
+  {| EMB.embedding a |} {| EMB.embedding b |}
+  {| EMB.embedding r |}
+  (f : a -> b -> r)
+  : interp_t
+
+val mk_nbe_interp2 #a #b #r
+  {| NBE.embedding a |} {| NBE.embedding b |}
+  {| NBE.embedding r |}
+  (f : a -> b -> r)
+  : nbe_interp_t
+
+val mk_interp3 #a #b #c #r
+  {| EMB.embedding a |} {| EMB.embedding b |} {| EMB.embedding c |}
+  {| EMB.embedding r |}
+  (f : a -> b -> c -> r)
+  : interp_t
+
+val mk_nbe_interp3 #a #b #c #r
+  {| NBE.embedding a |} {| NBE.embedding b |} {| NBE.embedding c |}
+  {| NBE.embedding r |}
+  (f : a -> b -> c -> r)
+  : nbe_interp_t
+
+val mk_interp4 #a #b #c #d #r
+  {| EMB.embedding a |} {| EMB.embedding b |} {| EMB.embedding c |} {| EMB.embedding d |}
+  {| EMB.embedding r |}
+  (f : a -> b -> c -> d -> r)
+  : interp_t
+
+val mk_nbe_interp4 #a #b #c #d #r
+  {| NBE.embedding a |} {| NBE.embedding b |} {| NBE.embedding c |} {| NBE.embedding d |}
+  {| NBE.embedding r |}
+  (f : a -> b -> c -> d -> r)
+  : nbe_interp_t
+
+val mk_interp5 #a #b #c #d #e #r
+  {| EMB.embedding a |} {| EMB.embedding b |} {| EMB.embedding c |} {| EMB.embedding d |} {| EMB.embedding e |}
+  {| EMB.embedding r |}
+  (f : a -> b -> c -> d -> e -> r)
+  : interp_t
+
+val mk_nbe_interp5 #a #b #c #d #e #r
+  {| NBE.embedding a |} {| NBE.embedding b |} {| NBE.embedding c |} {| NBE.embedding d |} {| NBE.embedding e |}
+  {| NBE.embedding r |}
+  (f : a -> b -> c -> d -> e -> r)
+  : nbe_interp_t
+
 val mk1 #a #r
   (u_arity : int)
   (name : Ident.lid)
@@ -60,17 +120,6 @@ val mk2 #a #b #r
   {| EMB.embedding b |} {| NBE.embedding b |}
   {| EMB.embedding r |} {| NBE.embedding r |}
   (f : a -> b -> r)
-  : primitive_step
-
-(* Duplication for op_Division / op_Modulus which can prevent reduction. The `f`
-already returns something in the option monad, so we add an extra join. *)
-val mk2' #a #b #r
-  (u_arity : int)
-  (name : Ident.lid)
-  {| EMB.embedding a |} {| NBE.embedding a |}
-  {| EMB.embedding b |} {| NBE.embedding b |}
-  {| EMB.embedding r |} {| NBE.embedding r |}
-  (f : a -> b -> option r)
   : primitive_step
 
 val mk3 #a #b #c #r
@@ -104,4 +153,28 @@ val mk5 #a #b #c #d #e #r
   {| EMB.embedding e |} {| NBE.embedding e |}
   {| EMB.embedding r |} {| NBE.embedding r |}
   (f : a -> b -> c -> d -> e -> r)
+  : primitive_step
+
+(* Duplication for op_Division / op_Modulus which can prevent reduction. The `f`
+already returns something in the option monad, so we add an extra join. Also for
+decidable eq which needs different impls in each normalizer *)
+val mk2' #a #b #r #na #nb #nr
+  (u_arity : int)
+  (name : Ident.lid)
+  {| EMB.embedding a |} {| NBE.embedding na |}
+  {| EMB.embedding b |} {| NBE.embedding nb |}
+  {| EMB.embedding r |} {| NBE.embedding nr |}
+  (f : a -> b -> option r)
+  (f : na -> nb -> option nr)
+  : primitive_step
+
+val mk3' #a #b #c #r #na #nb #nc #nr
+  (u_arity : int)
+  (name : Ident.lid)
+  {| EMB.embedding a |} {| NBE.embedding na |}
+  {| EMB.embedding b |} {| NBE.embedding nb |}
+  {| EMB.embedding c |} {| NBE.embedding nc |}
+  {| EMB.embedding r |} {| NBE.embedding nr |}
+  (f : a -> b -> c -> option r)
+  (f : na -> nb -> nc -> option nr)
   : primitive_step

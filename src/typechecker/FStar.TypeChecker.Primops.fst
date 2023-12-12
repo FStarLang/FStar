@@ -170,7 +170,7 @@ let division_modulus_op (f : Z.t -> Z.t -> Z.t) (x y : Z.t) : option Z.t =
 
 (* Simple primops that are just implemented by some concrete function
 over embeddable types. *)
-let simple_ops = [
+let simple_ops : list primitive_step = [
   (* Basic *)
   mk1 0 PC.string_of_int_lid (fun z -> string_of_int (Z.to_int_fs z));
   mk1 0 PC.int_of_string_lid (fun s -> fmap Z.of_int_fs (BU.safe_int_of_string s));
@@ -187,8 +187,9 @@ let simple_ops = [
   mk2 0 PC.op_GT  Z.gt_big_int;
   mk2 0 PC.op_GTE Z.ge_big_int;
 
-  mk2' 0 PC.op_Division (division_modulus_op Z.div_big_int);
-  mk2' 0 PC.op_Modulus  (division_modulus_op Z.mod_big_int);
+  (* Use ' variant to allow for non-reduction. Impl is the same on each normalizer. *)
+  mk2' 0 PC.op_Division (division_modulus_op Z.div_big_int) (division_modulus_op Z.div_big_int);
+  mk2' 0 PC.op_Modulus  (division_modulus_op Z.mod_big_int) (division_modulus_op Z.div_big_int);
 
   (* Bool opts. NB: && and || are special-cased since they are
   short-circuiting, and can run even if their second arg does not
@@ -335,37 +336,18 @@ let seal_steps =
   ]
 
 let built_in_primitive_steps_list : list primitive_step =
-
-    let basic_ops
-      //because our support for F# style type-applications is very limited
-      : list (Ident.lid * int * int * 
-              (psc -> EMB.norm_cb -> universes -> args -> option term) *
-              (universes -> NBETerm.args -> option NBETerm.t))
-       //name of primitive
-          //arity
-          //universe arity
-          //interp for normalizer
-          //interp for NBE
-      = [(PC.op_And,
+    let short_circuit_ops : list primitive_step =
+      List.map (as_primitive_step true)
+       [(PC.op_And,
              2,
              0,
              and_op,
-             (fun _ -> NBETerm.and_op));
+             (fun _us -> NBETerm.and_op));
          (PC.op_Or,
              2,
              0,
              or_op,
-             (fun _ -> NBETerm.or_op));
-         (PC.op_Eq,
-             3,
-             0,
-             decidable_eq false,
-             (fun _ -> NBETerm.decidable_eq false));
-         (PC.op_notEq,
-             3,
-             0,
-             decidable_eq true,
-             (fun _ -> NBETerm.decidable_eq true));
+             (fun _us -> NBETerm.or_op));
         ]
     in
     let reveal_hide =
@@ -499,9 +481,15 @@ let built_in_primitive_steps_list : list primitive_step =
     in
     let strong_steps =
       List.map (as_primitive_step true)
-               (basic_ops@[reveal_hide]@array_ops)
+               ([reveal_hide]@array_ops)
     in
-    simple_ops @ issue_ops @ doc_ops @ strong_steps @ seal_steps
+    simple_ops
+    @ short_circuit_ops
+    @ issue_ops
+    @ doc_ops
+    @ strong_steps
+    @ seal_steps
+    @ Primops.Eq.dec_eq_ops
     @ Primops.MachineInts.bounded_arith_ops
 
 let equality_ops_list : list primitive_step =
