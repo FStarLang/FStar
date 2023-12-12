@@ -62,36 +62,39 @@ val lookup (#kt:eqtype) (#vt:Type0)
     (fun p -> pts_to r ht ** models ht pht ** pure (fst p ==> (snd p) == PHT.lookup pht k ))
 
 val insert (#kt:eqtype) (#vt:Type0)
-           (ht:ht_t kt vt) (k:kt) (v:vt)
-           (#pht:erased (pht_t kt vt){PHT.not_full pht.repr})
+  (r:ref (ht_t kt vt)) (k:kt) (v:vt)
+  (#ht:erased (ht_t kt vt))
+  (#pht:erased (pht_t kt vt){PHT.not_full pht.repr})
   : stt bool 
-        (models ht pht)
+        (pts_to r ht ** models ht pht)
         (fun b -> 
-          exists* pht'.
-            models ht pht' **
+          exists* ht' pht'.
+            models ht' pht' **
             pure (if b
-                  then pht'==PHT.insert pht k v
-                  else pht'==reveal pht))
-
+                  then pht'== PHT.insert pht k v
+                  else pht'== reveal pht))
 
 val delete (#kt:eqtype) (#vt:Type0)
-           (ht:ht_t kt vt) (k:kt)
-           (#pht:erased (pht_t kt vt))
+  (r:ref (ht_t kt vt)) (k:kt)
+  (#ht:erased (ht_t kt vt))
+  (#pht:erased (pht_t kt vt))
   : stt bool
-    (models ht pht)
+    (pts_to r ht ** models ht pht)
     (fun b -> 
-        exists* pht'.
-            models ht pht' **
+        exists* ht' pht'.
+            models ht' pht' **
             pure (if b
-                  then pht'==PHT.delete pht k
-                  else pht'==reveal pht))
+                  then pht'== PHT.delete pht k
+                  else pht'== reveal pht))
 
 val not_full (#kt:eqtype) (#vt:Type0)
-             (ht:ht_t kt vt)
-             (#pht:erased (pht_t kt vt))
-  : stt bool (models ht pht)
-      (fun b -> 
-        models ht pht ** 
+  (r:ref (ht_t kt vt))
+  (#ht:erased (ht_t kt vt))
+  (#pht:erased (pht_t kt vt))
+  : stt bool (pts_to r ht ** models ht pht)
+      (fun b ->
+        pts_to r ht **
+        models ht pht **
         pure (b ==> PHT.not_full pht.repr))
 
 val test_mono () : stt unit emp (fun _ -> emp)

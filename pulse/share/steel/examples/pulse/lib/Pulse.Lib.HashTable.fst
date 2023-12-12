@@ -477,16 +477,25 @@ fn insert (#kt:eqtype) (#vt:Type0)
 ```
 
 ```pulse
-fn delete' (#kt:eqtype) (#vt:Type0)
-           (ht:ht_t kt vt) (k:kt)
-           (#pht:erased (pht_t kt vt))
-  requires models ht pht
+fn delete (#kt:eqtype) (#vt:Type0)
+  (r:ref (ht_t kt vt)) (k:kt)
+  (#ht:erased (ht_t kt vt))
+  (#pht:erased (pht_t kt vt))
+  requires pts_to r ht ** models ht pht
   returns b:bool
-  ensures exists pht'. 
-    models ht pht' **
+  ensures exists ht' pht'.
+    pts_to r ht' **
+    models ht' pht' **
     pure (if b then pht' == PHT.delete pht k else pht' == pht)
 {
-  let cidx = size_t_mod (ht.hashf k) ht.sz;
+  let res = explode_ref r;
+
+  unfold (exploded_vp r ht res);
+  let sz = !(tfst res);
+  let hash = ref_apply (tsnd res) k;
+  fold (exploded_vp r ht res);
+
+  let cidx = size_t_mod hash sz;
   let mut off = 0sz;
   let mut cont = true;
   let mut err = false;
@@ -499,6 +508,7 @@ fn delete' (#kt:eqtype) (#vt:Type0)
     (vcont = true && verr = false)
   )
   invariant b. exists (voff:SZ.t) (vcont verr:bool). (
+    exploded_vp r ht res **
     R.pts_to off voff **
     R.pts_to cont vcont **
     R.pts_to err verr **
@@ -513,11 +523,13 @@ fn delete' (#kt:eqtype) (#vt:Type0)
       b == (vcont = true && verr = false)
     ))
   {
+    unfold (exploded_vp r ht res);
     let voff = !off;
-    if (voff = ht.sz)
+    if (voff = sz)
     {
       cont := false;
       assert (V.pts_to ht.contents pht.repr.seq);
+      fold (exploded_vp r ht res);
     }
     else
     {
@@ -526,58 +538,61 @@ fn delete' (#kt:eqtype) (#vt:Type0)
       {
         Some sum ->
         {
-          let idx = size_t_mod sum ht.sz;
-          let c = V.op_Array_Access ht.contents idx;
+          let idx = size_t_mod sum sz;
+          rewrite (V.pts_to ht.contents pht.repr.seq)
+               as (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)));
+          let c = vec_ref_read (tthd res) idx;
+          rewrite (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)))
+               as (V.pts_to ht.contents pht.repr.seq);
+
           match c
           {
             Used k' v' ->
             { 
               if (k' = k)
               {
-                V.op_Array_Assignment ht.contents idx Zombie;
+                rewrite (V.pts_to ht.contents pht.repr.seq)
+                     as (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)));
+                vec_ref_write (tthd res) idx Zombie;
                 cont := false;
                 assert (pure (pht.repr @@ SZ.v idx == Used k v'));
-                assert (pure (Seq.upd pht.repr.seq (SZ.v idx) Zombie 
-                  `Seq.equal` (PHT.delete pht k).repr.seq));
+                assert (pure (Seq.upd pht.repr.seq (SZ.v idx) Zombie  `Seq.equal`
+                              (PHT.delete pht k).repr.seq));
+                rewrite (V.pts_to (reveal (hide ht.contents)) (Seq.upd (reveal (hide pht.repr.seq)) (SZ.v idx) Zombie))
+                     as (V.pts_to ht.contents (PHT.delete pht k).repr.seq);
+                fold (exploded_vp r ht res);
               }
               else
               {
                 off := SZ.(voff +^ 1sz);
+                fold (exploded_vp r ht res);
               } 
             }
             Clean ->
             {
               cont := false;
               assert (pure (pht.repr == (PHT.delete pht k).repr));
+              fold (exploded_vp r ht res);
             }
             Zombie ->
             {
               off := SZ.(voff +^ 1sz);
+              fold (exploded_vp r ht res);
             }
           }
         }
         None ->
         {
           // ERROR - add failed
-          err := false 
+          err := false;
+          fold (exploded_vp r ht res);
         }
       }
     }
   };
-  let verr = !err;
-  if verr
-  {
-    fold (models ht pht);
-    false
-  }
-  else
-  {
-    fold (models ht (PHT.delete pht k));
-    true
-  }
+  unexplode_ref r res;
 }
 ```
-let delete = delete'
 
 ```pulse
 fn not_full' (#kt:eqtype) (#vt:Type0)
