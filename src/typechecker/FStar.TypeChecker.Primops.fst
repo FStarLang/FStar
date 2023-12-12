@@ -242,16 +242,6 @@ let issue_ops : list primitive_step =
     );
   ]
 
-let doc_ops =
-  let mk_lid l = PC.p2l ["FStar"; "Stubs"; "Pprint"; l] in
-    (* FIXME: we only implement the absolute minimum. The rest of the operations
-    are availabe to plugins. *)
-    let open FStar.Pprint in
-    [
-      mk1 0 (mk_lid "arbitrary_string") arbitrary_string;
-      mk1 0 (mk_lid "render") render;
-    ]
-
 let seal_steps =
   List.map (fun p -> { as_primitive_step_nbecbs true p with renorm_after = true}) [
     (PC.map_seal_lid, 4, 2,
@@ -486,9 +476,9 @@ let built_in_primitive_steps_list : list primitive_step =
     simple_ops
     @ short_circuit_ops
     @ issue_ops
-    @ doc_ops
     @ strong_steps
     @ seal_steps
+    @ Primops.Docs.doc_ops
     @ Primops.Eq.dec_eq_ops
     @ Primops.MachineInts.bounded_arith_ops
 
