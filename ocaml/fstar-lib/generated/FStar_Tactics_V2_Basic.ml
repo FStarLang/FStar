@@ -203,7 +203,7 @@ let (do_dump_ps : Prims.string -> FStar_Tactics_Types.proofstate -> unit) =
   fun msg ->
     fun ps ->
       let psc = ps.FStar_Tactics_Types.psc in
-      let subst = FStar_TypeChecker_Primops.psc_subst psc in
+      let subst = FStar_TypeChecker_Primops_Base.psc_subst psc in
       FStar_Tactics_Printing.do_dump_proofstate ps msg
 let (dump : Prims.string -> unit FStar_Tactics_Monad.tac) =
   fun msg ->
@@ -7314,62 +7314,44 @@ let (tac_and :
     fun uu___ ->
       (fun t1 ->
          fun t2 ->
-           let comp =
-             Obj.magic
-               (FStar_Class_Monad.op_let_Bang FStar_Tactics_Monad.monad_tac
-                  () () (Obj.magic t1)
-                  (fun uu___ ->
-                     (fun uu___ ->
-                        let uu___ = Obj.magic uu___ in
-                        if uu___
-                        then
-                          Obj.magic
-                            (Obj.repr
-                               (FStar_Class_Monad.op_let_Bang
-                                  FStar_Tactics_Monad.monad_tac () ()
-                                  (Obj.magic t2)
-                                  (fun uu___1 ->
-                                     (fun uu___1 ->
-                                        let uu___1 = Obj.magic uu___1 in
-                                        if uu___1
-                                        then
-                                          Obj.magic
-                                            (Obj.repr
-                                               (FStar_Class_Monad.return
-                                                  FStar_Tactics_Monad.monad_tac
-                                                  () (Obj.magic true)))
-                                        else
-                                          Obj.magic
-                                            (Obj.repr
-                                               (FStar_Tactics_Monad.fail "")))
-                                       uu___1)))
-                        else
-                          Obj.magic (Obj.repr (FStar_Tactics_Monad.fail "")))
-                       uu___)) in
-           let uu___ = FStar_Tactics_Monad.trytac comp in
+           Obj.magic
+             (FStar_Class_Monad.op_let_Bang FStar_Tactics_Monad.monad_tac ()
+                () (Obj.magic t1)
+                (fun uu___ ->
+                   (fun uu___ ->
+                      let uu___ = Obj.magic uu___ in
+                      if uu___
+                      then Obj.magic (Obj.repr t2)
+                      else
+                        Obj.magic
+                          (Obj.repr
+                             (FStar_Class_Monad.return
+                                FStar_Tactics_Monad.monad_tac ()
+                                (Obj.magic false)))) uu___))) uu___1 uu___
+let default_if_err :
+  'a . 'a -> 'a FStar_Tactics_Monad.tac -> 'a FStar_Tactics_Monad.tac =
+  fun uu___1 ->
+    fun uu___ ->
+      (fun def ->
+         fun t ->
+           let uu___ = FStar_Tactics_Monad.catch t in
            Obj.magic
              (FStar_Class_Monad.op_let_Bang FStar_Tactics_Monad.monad_tac ()
                 () (Obj.magic uu___)
                 (fun uu___1 ->
-                   (fun uu___1 ->
-                      let uu___1 = Obj.magic uu___1 in
-                      match uu___1 with
-                      | FStar_Pervasives_Native.Some (true) ->
+                   (fun r ->
+                      let r = Obj.magic r in
+                      match r with
+                      | FStar_Pervasives.Inl uu___1 ->
                           Obj.magic
-                            (Obj.repr
-                               (FStar_Class_Monad.return
-                                  FStar_Tactics_Monad.monad_tac ()
-                                  (Obj.magic true)))
-                      | FStar_Pervasives_Native.Some (false) ->
+                            (FStar_Class_Monad.return
+                               FStar_Tactics_Monad.monad_tac ()
+                               (Obj.magic def))
+                      | FStar_Pervasives.Inr v ->
                           Obj.magic
-                            (Obj.repr
-                               (FStar_Compiler_Effect.failwith "impossible"))
-                      | FStar_Pervasives_Native.None ->
-                          Obj.magic
-                            (Obj.repr
-                               (FStar_Class_Monad.return
-                                  FStar_Tactics_Monad.monad_tac ()
-                                  (Obj.magic false)))) uu___1))) uu___1 uu___
+                            (FStar_Class_Monad.return
+                               FStar_Tactics_Monad.monad_tac () (Obj.magic v)))
+                     uu___1))) uu___1 uu___
 let (match_env :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -7442,18 +7424,23 @@ let (match_env :
                                                                     = true in
                                                                     let uu___9
                                                                     =
-                                                                    do_match
-                                                                    must_tot
-                                                                    e ty1 ty2 in
                                                                     let uu___10
                                                                     =
                                                                     do_match
                                                                     must_tot
+                                                                    e ty1 ty2 in
+                                                                    let uu___11
+                                                                    =
+                                                                    do_match
+                                                                    must_tot
                                                                     e t11 t21 in
+                                                                    tac_and
+                                                                    uu___10
+                                                                    uu___11 in
                                                                     Obj.magic
-                                                                    (tac_and
-                                                                    uu___9
-                                                                    uu___10))
+                                                                    (default_if_err
+                                                                    false
+                                                                    uu___9))
                                                                     uu___8)))
                                                              uu___6))) uu___4)))
                                uu___2))) uu___1)) in
@@ -7530,18 +7517,23 @@ let (unify_env :
                                                                     = true in
                                                                     let uu___9
                                                                     =
-                                                                    do_unify
-                                                                    must_tot
-                                                                    e ty1 ty2 in
                                                                     let uu___10
                                                                     =
                                                                     do_unify
                                                                     must_tot
+                                                                    e ty1 ty2 in
+                                                                    let uu___11
+                                                                    =
+                                                                    do_unify
+                                                                    must_tot
                                                                     e t11 t21 in
+                                                                    tac_and
+                                                                    uu___10
+                                                                    uu___11 in
                                                                     Obj.magic
-                                                                    (tac_and
-                                                                    uu___9
-                                                                    uu___10))
+                                                                    (default_if_err
+                                                                    false
+                                                                    uu___9))
                                                                     uu___8)))
                                                              uu___6))) uu___4)))
                                uu___2))) uu___1)) in
@@ -12191,7 +12183,8 @@ let (proofstate_of_goals :
               FStar_Tactics_Types.depth = Prims.int_zero;
               FStar_Tactics_Types.__dump =
                 FStar_Tactics_Printing.do_dump_proofstate;
-              FStar_Tactics_Types.psc = FStar_TypeChecker_Primops.null_psc;
+              FStar_Tactics_Types.psc =
+                FStar_TypeChecker_Primops_Base.null_psc;
               FStar_Tactics_Types.entry_range = rng;
               FStar_Tactics_Types.guard_policy = FStar_Tactics_Types.SMT;
               FStar_Tactics_Types.freshness = Prims.int_zero;
@@ -12347,7 +12340,7 @@ let (proofstate_of_all_implicits :
             FStar_Tactics_Types.depth = Prims.int_zero;
             FStar_Tactics_Types.__dump =
               FStar_Tactics_Printing.do_dump_proofstate;
-            FStar_Tactics_Types.psc = FStar_TypeChecker_Primops.null_psc;
+            FStar_Tactics_Types.psc = FStar_TypeChecker_Primops_Base.null_psc;
             FStar_Tactics_Types.entry_range = rng;
             FStar_Tactics_Types.guard_policy = FStar_Tactics_Types.SMT;
             FStar_Tactics_Types.freshness = Prims.int_zero;

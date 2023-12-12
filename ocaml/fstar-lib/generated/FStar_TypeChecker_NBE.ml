@@ -1732,11 +1732,11 @@ and (translate_fv :
                    FStar_TypeChecker_Cfg.find_prim_step cfg.core_cfg fvar in
                  match uu___4 with
                  | FStar_Pervasives_Native.Some prim_step when
-                     prim_step.FStar_TypeChecker_Primops.strong_reduction_ok
+                     prim_step.FStar_TypeChecker_Primops_Base.strong_reduction_ok
                      ->
                      let arity =
-                       prim_step.FStar_TypeChecker_Primops.arity +
-                         prim_step.FStar_TypeChecker_Primops.univ_arity in
+                       prim_step.FStar_TypeChecker_Primops_Base.arity +
+                         prim_step.FStar_TypeChecker_Primops_Base.univ_arity in
                      (debug1
                         (fun uu___6 ->
                            let uu___7 = FStar_Syntax_Print.fv_to_string fvar in
@@ -1809,7 +1809,7 @@ and (translate_fv :
                                                FStar_Compiler_Effect.failwith
                                                  "Impossible") univs in
                                     let uu___11 =
-                                      prim_step.FStar_TypeChecker_Primops.interpretation_nbe
+                                      prim_step.FStar_TypeChecker_Primops_Base.interpretation_nbe
                                         callbacks univs1 rest in
                                     (match uu___11 with
                                      | FStar_Pervasives_Native.Some x ->
@@ -2333,7 +2333,7 @@ and (translate_monadic :
                             let uu___3 =
                               let uu___4 =
                                 let uu___5 =
-                                  FStar_TypeChecker_Primops.embed_simple
+                                  FStar_TypeChecker_Primops_Base.embed_simple
                                     FStar_Syntax_Embeddings.e_range
                                     lb.FStar_Syntax_Syntax.lbpos
                                     lb.FStar_Syntax_Syntax.lbpos in
@@ -2343,7 +2343,7 @@ and (translate_monadic :
                               let uu___5 =
                                 let uu___6 =
                                   let uu___7 =
-                                    FStar_TypeChecker_Primops.embed_simple
+                                    FStar_TypeChecker_Primops_Base.embed_simple
                                       FStar_Syntax_Embeddings.e_range
                                       body.FStar_Syntax_Syntax.pos
                                       body.FStar_Syntax_Syntax.pos in
@@ -2722,7 +2722,7 @@ and (readback :
            let uu___1 = FStar_Syntax_Util.exp_char c in with_range uu___1
        | FStar_TypeChecker_NBETerm.Constant (FStar_TypeChecker_NBETerm.Range
            r) ->
-           FStar_TypeChecker_Primops.embed_simple
+           FStar_TypeChecker_Primops_Base.embed_simple
              FStar_Syntax_Embeddings.e_range
              x.FStar_TypeChecker_NBETerm.nbe_r r
        | FStar_TypeChecker_NBETerm.Constant (FStar_TypeChecker_NBETerm.SConst
@@ -3240,7 +3240,7 @@ let (reduce_application :
   fun cfg ->
     fun t -> fun args -> let uu___ = new_config cfg in iapp uu___ t args
 let (normalize :
-  FStar_TypeChecker_Primops.primitive_step Prims.list ->
+  FStar_TypeChecker_Primops_Base.primitive_step Prims.list ->
     FStar_TypeChecker_Env.step Prims.list ->
       FStar_TypeChecker_Env.env ->
         FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)

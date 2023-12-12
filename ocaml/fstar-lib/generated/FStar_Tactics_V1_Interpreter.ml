@@ -24,23 +24,23 @@ let embed :
           let uu___ = FStar_Syntax_Embeddings_Base.embed ea x in
           uu___ r FStar_Pervasives_Native.None norm_cb
 let (native_tactics_steps :
-  unit -> FStar_TypeChecker_Primops.primitive_step Prims.list) =
+  unit -> FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
   fun uu___ ->
     let step_from_native_step s =
       {
-        FStar_TypeChecker_Primops.name = (s.FStar_Tactics_Native.name);
-        FStar_TypeChecker_Primops.arity = (s.FStar_Tactics_Native.arity);
-        FStar_TypeChecker_Primops.univ_arity = Prims.int_zero;
-        FStar_TypeChecker_Primops.auto_reflect =
+        FStar_TypeChecker_Primops_Base.name = (s.FStar_Tactics_Native.name);
+        FStar_TypeChecker_Primops_Base.arity = (s.FStar_Tactics_Native.arity);
+        FStar_TypeChecker_Primops_Base.univ_arity = Prims.int_zero;
+        FStar_TypeChecker_Primops_Base.auto_reflect =
           (FStar_Pervasives_Native.Some
              (s.FStar_Tactics_Native.arity - Prims.int_one));
-        FStar_TypeChecker_Primops.strong_reduction_ok =
+        FStar_TypeChecker_Primops_Base.strong_reduction_ok =
           (s.FStar_Tactics_Native.strong_reduction_ok);
-        FStar_TypeChecker_Primops.requires_binder_substitution = false;
-        FStar_TypeChecker_Primops.renorm_after = false;
-        FStar_TypeChecker_Primops.interpretation =
+        FStar_TypeChecker_Primops_Base.requires_binder_substitution = false;
+        FStar_TypeChecker_Primops_Base.renorm_after = false;
+        FStar_TypeChecker_Primops_Base.interpretation =
           (s.FStar_Tactics_Native.tactic);
-        FStar_TypeChecker_Primops.interpretation_nbe =
+        FStar_TypeChecker_Primops_Base.interpretation_nbe =
           (fun _cb ->
              fun _us ->
                FStar_TypeChecker_NBETerm.dummy_interp
@@ -58,7 +58,7 @@ let mk_total_step_1' :
               ('uuuuu2 -> 'uuuuu3) ->
                 'uuuuu2 FStar_TypeChecker_NBETerm.embedding ->
                   'uuuuu3 FStar_TypeChecker_NBETerm.embedding ->
-                    FStar_TypeChecker_Primops.primitive_step
+                    FStar_TypeChecker_Primops_Base.primitive_step
   =
   fun uarity ->
     fun nm ->
@@ -75,35 +75,36 @@ let mk_total_step_1' :
                     FStar_Ident.lid_of_str
                       (Prims.strcat "FStar.Stubs.Tactics.Types." nm) in
                   {
-                    FStar_TypeChecker_Primops.name = uu___1;
-                    FStar_TypeChecker_Primops.arity =
-                      (uu___.FStar_TypeChecker_Primops.arity);
-                    FStar_TypeChecker_Primops.univ_arity =
-                      (uu___.FStar_TypeChecker_Primops.univ_arity);
-                    FStar_TypeChecker_Primops.auto_reflect =
-                      (uu___.FStar_TypeChecker_Primops.auto_reflect);
-                    FStar_TypeChecker_Primops.strong_reduction_ok =
-                      (uu___.FStar_TypeChecker_Primops.strong_reduction_ok);
-                    FStar_TypeChecker_Primops.requires_binder_substitution =
-                      (uu___.FStar_TypeChecker_Primops.requires_binder_substitution);
-                    FStar_TypeChecker_Primops.renorm_after =
-                      (uu___.FStar_TypeChecker_Primops.renorm_after);
-                    FStar_TypeChecker_Primops.interpretation =
-                      (uu___.FStar_TypeChecker_Primops.interpretation);
-                    FStar_TypeChecker_Primops.interpretation_nbe =
-                      (uu___.FStar_TypeChecker_Primops.interpretation_nbe)
+                    FStar_TypeChecker_Primops_Base.name = uu___1;
+                    FStar_TypeChecker_Primops_Base.arity =
+                      (uu___.FStar_TypeChecker_Primops_Base.arity);
+                    FStar_TypeChecker_Primops_Base.univ_arity =
+                      (uu___.FStar_TypeChecker_Primops_Base.univ_arity);
+                    FStar_TypeChecker_Primops_Base.auto_reflect =
+                      (uu___.FStar_TypeChecker_Primops_Base.auto_reflect);
+                    FStar_TypeChecker_Primops_Base.strong_reduction_ok =
+                      (uu___.FStar_TypeChecker_Primops_Base.strong_reduction_ok);
+                    FStar_TypeChecker_Primops_Base.requires_binder_substitution
+                      =
+                      (uu___.FStar_TypeChecker_Primops_Base.requires_binder_substitution);
+                    FStar_TypeChecker_Primops_Base.renorm_after =
+                      (uu___.FStar_TypeChecker_Primops_Base.renorm_after);
+                    FStar_TypeChecker_Primops_Base.interpretation =
+                      (uu___.FStar_TypeChecker_Primops_Base.interpretation);
+                    FStar_TypeChecker_Primops_Base.interpretation_nbe =
+                      (uu___.FStar_TypeChecker_Primops_Base.interpretation_nbe)
                   }
 let mk_total_step_1'_psc :
   'uuuuu 'uuuuu1 'uuuuu2 'uuuuu3 .
     Prims.int ->
       Prims.string ->
-        (FStar_TypeChecker_Primops.psc -> 'uuuuu -> 'uuuuu1) ->
+        (FStar_TypeChecker_Primops_Base.psc -> 'uuuuu -> 'uuuuu1) ->
           'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
             'uuuuu1 FStar_Syntax_Embeddings_Base.embedding ->
-              (FStar_TypeChecker_Primops.psc -> 'uuuuu2 -> 'uuuuu3) ->
+              (FStar_TypeChecker_Primops_Base.psc -> 'uuuuu2 -> 'uuuuu3) ->
                 'uuuuu2 FStar_TypeChecker_NBETerm.embedding ->
                   'uuuuu3 FStar_TypeChecker_NBETerm.embedding ->
-                    FStar_TypeChecker_Primops.primitive_step
+                    FStar_TypeChecker_Primops_Base.primitive_step
   =
   fun uarity ->
     fun nm ->
@@ -120,23 +121,24 @@ let mk_total_step_1'_psc :
                     FStar_Ident.lid_of_str
                       (Prims.strcat "FStar.Stubs.Tactics.Types." nm) in
                   {
-                    FStar_TypeChecker_Primops.name = uu___1;
-                    FStar_TypeChecker_Primops.arity =
-                      (uu___.FStar_TypeChecker_Primops.arity);
-                    FStar_TypeChecker_Primops.univ_arity =
-                      (uu___.FStar_TypeChecker_Primops.univ_arity);
-                    FStar_TypeChecker_Primops.auto_reflect =
-                      (uu___.FStar_TypeChecker_Primops.auto_reflect);
-                    FStar_TypeChecker_Primops.strong_reduction_ok =
-                      (uu___.FStar_TypeChecker_Primops.strong_reduction_ok);
-                    FStar_TypeChecker_Primops.requires_binder_substitution =
-                      (uu___.FStar_TypeChecker_Primops.requires_binder_substitution);
-                    FStar_TypeChecker_Primops.renorm_after =
-                      (uu___.FStar_TypeChecker_Primops.renorm_after);
-                    FStar_TypeChecker_Primops.interpretation =
-                      (uu___.FStar_TypeChecker_Primops.interpretation);
-                    FStar_TypeChecker_Primops.interpretation_nbe =
-                      (uu___.FStar_TypeChecker_Primops.interpretation_nbe)
+                    FStar_TypeChecker_Primops_Base.name = uu___1;
+                    FStar_TypeChecker_Primops_Base.arity =
+                      (uu___.FStar_TypeChecker_Primops_Base.arity);
+                    FStar_TypeChecker_Primops_Base.univ_arity =
+                      (uu___.FStar_TypeChecker_Primops_Base.univ_arity);
+                    FStar_TypeChecker_Primops_Base.auto_reflect =
+                      (uu___.FStar_TypeChecker_Primops_Base.auto_reflect);
+                    FStar_TypeChecker_Primops_Base.strong_reduction_ok =
+                      (uu___.FStar_TypeChecker_Primops_Base.strong_reduction_ok);
+                    FStar_TypeChecker_Primops_Base.requires_binder_substitution
+                      =
+                      (uu___.FStar_TypeChecker_Primops_Base.requires_binder_substitution);
+                    FStar_TypeChecker_Primops_Base.renorm_after =
+                      (uu___.FStar_TypeChecker_Primops_Base.renorm_after);
+                    FStar_TypeChecker_Primops_Base.interpretation =
+                      (uu___.FStar_TypeChecker_Primops_Base.interpretation);
+                    FStar_TypeChecker_Primops_Base.interpretation_nbe =
+                      (uu___.FStar_TypeChecker_Primops_Base.interpretation_nbe)
                   }
 let mk_total_step_2' :
   'uuuuu 'uuuuu1 'uuuuu2 'uuuuu3 'uuuuu4 'uuuuu5 .
@@ -150,7 +152,7 @@ let mk_total_step_2' :
                   'uuuuu3 FStar_TypeChecker_NBETerm.embedding ->
                     'uuuuu4 FStar_TypeChecker_NBETerm.embedding ->
                       'uuuuu5 FStar_TypeChecker_NBETerm.embedding ->
-                        FStar_TypeChecker_Primops.primitive_step
+                        FStar_TypeChecker_Primops_Base.primitive_step
   =
   fun uarity ->
     fun nm ->
@@ -169,27 +171,27 @@ let mk_total_step_2' :
                         FStar_Ident.lid_of_str
                           (Prims.strcat "FStar.Stubs.Tactics.Types." nm) in
                       {
-                        FStar_TypeChecker_Primops.name = uu___1;
-                        FStar_TypeChecker_Primops.arity =
-                          (uu___.FStar_TypeChecker_Primops.arity);
-                        FStar_TypeChecker_Primops.univ_arity =
-                          (uu___.FStar_TypeChecker_Primops.univ_arity);
-                        FStar_TypeChecker_Primops.auto_reflect =
-                          (uu___.FStar_TypeChecker_Primops.auto_reflect);
-                        FStar_TypeChecker_Primops.strong_reduction_ok =
-                          (uu___.FStar_TypeChecker_Primops.strong_reduction_ok);
-                        FStar_TypeChecker_Primops.requires_binder_substitution
+                        FStar_TypeChecker_Primops_Base.name = uu___1;
+                        FStar_TypeChecker_Primops_Base.arity =
+                          (uu___.FStar_TypeChecker_Primops_Base.arity);
+                        FStar_TypeChecker_Primops_Base.univ_arity =
+                          (uu___.FStar_TypeChecker_Primops_Base.univ_arity);
+                        FStar_TypeChecker_Primops_Base.auto_reflect =
+                          (uu___.FStar_TypeChecker_Primops_Base.auto_reflect);
+                        FStar_TypeChecker_Primops_Base.strong_reduction_ok =
+                          (uu___.FStar_TypeChecker_Primops_Base.strong_reduction_ok);
+                        FStar_TypeChecker_Primops_Base.requires_binder_substitution
                           =
-                          (uu___.FStar_TypeChecker_Primops.requires_binder_substitution);
-                        FStar_TypeChecker_Primops.renorm_after =
-                          (uu___.FStar_TypeChecker_Primops.renorm_after);
-                        FStar_TypeChecker_Primops.interpretation =
-                          (uu___.FStar_TypeChecker_Primops.interpretation);
-                        FStar_TypeChecker_Primops.interpretation_nbe =
-                          (uu___.FStar_TypeChecker_Primops.interpretation_nbe)
+                          (uu___.FStar_TypeChecker_Primops_Base.requires_binder_substitution);
+                        FStar_TypeChecker_Primops_Base.renorm_after =
+                          (uu___.FStar_TypeChecker_Primops_Base.renorm_after);
+                        FStar_TypeChecker_Primops_Base.interpretation =
+                          (uu___.FStar_TypeChecker_Primops_Base.interpretation);
+                        FStar_TypeChecker_Primops_Base.interpretation_nbe =
+                          (uu___.FStar_TypeChecker_Primops_Base.interpretation_nbe)
                       }
 let (primitive_steps :
-  unit -> FStar_TypeChecker_Primops.primitive_step Prims.list) =
+  unit -> FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
   fun uu___ -> FStar_Tactics_V2_Interpreter.primitive_steps ()
 let rec (t_head_of : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun t ->
