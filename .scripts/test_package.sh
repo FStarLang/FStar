@@ -78,7 +78,7 @@ diag "-- Verify all examples --"
 if [[ -z "$CI_THREADS" ]] ; then
     CI_THREADS=1
 fi
-make -j "$CI_THREADS" -C /tmp/fstar_examples && make -j "$CI_THREADS" -C /tmp/fstar_doc/tutorial regressions
+make -j "$CI_THREADS" -C /tmp/fstar_examples HAS_OCAML= && make -j "$CI_THREADS" -C /tmp/fstar_doc/tutorial HAS_OCAMLFIND= regressions
 if [ $? -ne 0 ]; then
     echo -e "* ${RED}FAIL!${NC} for all examples - make returned $?"
     exit 1
