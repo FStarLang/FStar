@@ -946,18 +946,24 @@ let (injectives : Prims.string Prims.list) =
   "FStar.Int16.int_to_t";
   "FStar.Int32.int_to_t";
   "FStar.Int64.int_to_t";
+  "FStar.Int128.int_to_t";
   "FStar.UInt8.uint_to_t";
   "FStar.UInt16.uint_to_t";
   "FStar.UInt32.uint_to_t";
   "FStar.UInt64.uint_to_t";
+  "FStar.UInt128.uint_to_t";
+  "FStar.SizeT.uint_to_t";
   "FStar.Int8.__int_to_t";
   "FStar.Int16.__int_to_t";
   "FStar.Int32.__int_to_t";
   "FStar.Int64.__int_to_t";
+  "FStar.Int128.__int_to_t";
   "FStar.UInt8.__uint_to_t";
   "FStar.UInt16.__uint_to_t";
   "FStar.UInt32.__uint_to_t";
-  "FStar.UInt64.__uint_to_t"]
+  "FStar.UInt64.__uint_to_t";
+  "FStar.UInt128.__uint_to_t";
+  "FStar.SizeT.__uint_to_t"]
 let (eq_inj : eq_result -> eq_result -> eq_result) =
   fun r ->
     fun s ->

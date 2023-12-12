@@ -13,71 +13,6 @@ let arg_as_list :
     fun a1 ->
       FStar_TypeChecker_Primops_Base.try_unembed_simple
         (FStar_Syntax_Embeddings.e_list e) (FStar_Pervasives_Native.fst a1)
-let lift_unary :
-  'a 'b .
-    ('a -> 'b) ->
-      'a FStar_Pervasives_Native.option Prims.list ->
-        'b FStar_Pervasives_Native.option
-  =
-  fun f ->
-    fun aopts ->
-      match aopts with
-      | (FStar_Pervasives_Native.Some a1)::[] ->
-          let uu___ = f a1 in FStar_Pervasives_Native.Some uu___
-      | uu___ -> FStar_Pervasives_Native.None
-let lift_binary :
-  'a 'b .
-    ('a -> 'a -> 'b) ->
-      'a FStar_Pervasives_Native.option Prims.list ->
-        'b FStar_Pervasives_Native.option
-  =
-  fun f ->
-    fun aopts ->
-      match aopts with
-      | (FStar_Pervasives_Native.Some a0)::(FStar_Pervasives_Native.Some
-          a1)::[] ->
-          let uu___ = f a0 a1 in FStar_Pervasives_Native.Some uu___
-      | uu___ -> FStar_Pervasives_Native.None
-let unary_op :
-  'a .
-    (FStar_Syntax_Syntax.arg -> 'a FStar_Pervasives_Native.option) ->
-      (FStar_Compiler_Range_Type.range -> 'a -> FStar_Syntax_Syntax.term) ->
-        FStar_TypeChecker_Primops_Base.psc ->
-          FStar_Syntax_Embeddings_Base.norm_cb ->
-            FStar_Syntax_Syntax.universes ->
-              FStar_Syntax_Syntax.args ->
-                FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
-  =
-  fun as_a ->
-    fun f ->
-      fun psc ->
-        fun norm_cb ->
-          fun _univs ->
-            fun args ->
-              let uu___ = FStar_Compiler_List.map as_a args in
-              lift_unary (f psc.FStar_TypeChecker_Primops_Base.psc_range)
-                uu___
-let binary_op :
-  'a .
-    (FStar_Syntax_Syntax.arg -> 'a FStar_Pervasives_Native.option) ->
-      (FStar_Compiler_Range_Type.range ->
-         'a -> 'a -> FStar_Syntax_Syntax.term)
-        ->
-        FStar_TypeChecker_Primops_Base.psc ->
-          FStar_Syntax_Embeddings_Base.norm_cb ->
-            FStar_Syntax_Syntax.universes ->
-              FStar_Syntax_Syntax.args ->
-                FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
-  =
-  fun as_a ->
-    fun f ->
-      fun psc ->
-        fun norm_cb ->
-          fun _univs ->
-            fun args ->
-              let uu___ = FStar_Compiler_List.map as_a args in
-              lift_binary (f psc.FStar_TypeChecker_Primops_Base.psc_range)
-                uu___
 let (as_primitive_step :
   Prims.bool ->
     (FStar_Ident.lident * Prims.int * Prims.int *
@@ -188,41 +123,6 @@ let mixed_ternary_op :
                               | uu___2 -> FStar_Pervasives_Native.None)
                          | uu___1 -> FStar_Pervasives_Native.None)
                     | uu___ -> FStar_Pervasives_Native.None
-let decidable_eq :
-  'uuuuu 'uuuuu1 .
-    Prims.bool ->
-      FStar_TypeChecker_Primops_Base.psc ->
-        'uuuuu ->
-          'uuuuu1 ->
-            FStar_Syntax_Syntax.args ->
-              FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
-  =
-  fun neg ->
-    fun psc ->
-      fun _norm_cb ->
-        fun _us ->
-          fun args ->
-            let r = psc.FStar_TypeChecker_Primops_Base.psc_range in
-            let tru =
-              FStar_Syntax_Syntax.mk
-                (FStar_Syntax_Syntax.Tm_constant
-                   (FStar_Const.Const_bool true)) r in
-            let fal =
-              FStar_Syntax_Syntax.mk
-                (FStar_Syntax_Syntax.Tm_constant
-                   (FStar_Const.Const_bool false)) r in
-            match args with
-            | (_typ, uu___)::(a1, uu___1)::(a2, uu___2)::[] ->
-                let uu___3 = FStar_Syntax_Util.eq_tm a1 a2 in
-                (match uu___3 with
-                 | FStar_Syntax_Util.Equal ->
-                     FStar_Pervasives_Native.Some (if neg then fal else tru)
-                 | FStar_Syntax_Util.NotEqual ->
-                     FStar_Pervasives_Native.Some (if neg then tru else fal)
-                 | uu___4 -> FStar_Pervasives_Native.None)
-            | uu___ ->
-                FStar_Compiler_Effect.failwith
-                  "Unexpected number of arguments"
 let (and_op :
   FStar_TypeChecker_Primops_Base.psc ->
     FStar_Syntax_Embeddings_Base.norm_cb ->
@@ -812,23 +712,6 @@ let (issue_ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
       uu___4 :: uu___5 in
     uu___2 :: uu___3 in
   uu___ :: uu___1
-let (doc_ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
-  let mk_lid l = FStar_Parser_Const.p2l ["FStar"; "Stubs"; "Pprint"; l] in
-  let uu___ =
-    let uu___1 = mk_lid "arbitrary_string" in
-    FStar_TypeChecker_Primops_Base.mk1 Prims.int_zero uu___1
-      FStar_Syntax_Embeddings.e_string FStar_TypeChecker_NBETerm.e_string
-      FStar_Syntax_Embeddings.e_document FStar_TypeChecker_NBETerm.e_document
-      FStar_Pprint.arbitrary_string in
-  let uu___1 =
-    let uu___2 =
-      let uu___3 = mk_lid "render" in
-      FStar_TypeChecker_Primops_Base.mk1 Prims.int_zero uu___3
-        FStar_Syntax_Embeddings.e_document
-        FStar_TypeChecker_NBETerm.e_document FStar_Syntax_Embeddings.e_string
-        FStar_TypeChecker_NBETerm.e_string FStar_Pprint.render in
-    [uu___2] in
-  uu___ :: uu___1
 let (seal_steps : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
   FStar_Compiler_List.map
     (fun p ->
@@ -1012,150 +895,41 @@ let (seal_steps : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                        FStar_Pervasives_Native.Some uu___5
                    | uu___5 -> FStar_Pervasives_Native.None)
               | uu___ -> FStar_Pervasives_Native.None)))]
-let (built_in_primitive_steps_list :
-  FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
-  let short_circuit_ops =
-    FStar_Compiler_List.map (as_primitive_step true)
-      [(FStar_Parser_Const.op_And, (Prims.of_int (2)), Prims.int_zero,
-         and_op, ((fun _us -> FStar_TypeChecker_NBETerm.and_op)));
-      (FStar_Parser_Const.op_Or, (Prims.of_int (2)), Prims.int_zero, or_op,
-        ((fun _us -> FStar_TypeChecker_NBETerm.or_op)))] in
-  let reveal_hide =
-    (FStar_Parser_Const.reveal, (Prims.of_int (2)), Prims.int_one,
-      (mixed_binary_op (fun x -> FStar_Pervasives_Native.Some x)
-         (fun uu___ ->
-            match uu___ with
-            | (x, uu___1) ->
-                let uu___2 = FStar_Syntax_Util.head_and_args x in
-                (match uu___2 with
-                 | (head, args) ->
-                     let uu___3 =
-                       FStar_Syntax_Util.is_fvar FStar_Parser_Const.hide head in
-                     if uu___3
-                     then
-                       (match args with
-                        | _t::(body, uu___4)::[] ->
-                            FStar_Pervasives_Native.Some body
-                        | uu___4 -> FStar_Pervasives_Native.None)
-                     else FStar_Pervasives_Native.None))
-         (fun r -> fun body -> body)
-         (fun r ->
-            fun _us ->
-              fun _t -> fun body -> FStar_Pervasives_Native.Some body)),
-      (FStar_TypeChecker_NBETerm.mixed_binary_op
-         (fun x -> FStar_Pervasives_Native.Some x)
-         (fun uu___ ->
-            match uu___ with
-            | (x, uu___1) ->
-                let uu___2 = FStar_TypeChecker_NBETerm.nbe_t_of_t x in
-                (match uu___2 with
-                 | FStar_TypeChecker_NBETerm.FV
-                     (fv, uu___3, (_t, uu___4)::(body, uu___5)::[]) when
-                     FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.hide
-                     -> FStar_Pervasives_Native.Some body
-                 | uu___3 -> FStar_Pervasives_Native.None))
-         (fun body -> body)
-         (fun _us -> fun _t -> fun body -> FStar_Pervasives_Native.Some body))) in
-  let array_ops =
-    let of_list_op =
-      let emb_typ t =
-        let uu___ =
-          let uu___1 =
-            FStar_Ident.string_of_lid
-              FStar_Parser_Const.immutable_array_t_lid in
-          (uu___1, [t]) in
-        FStar_Syntax_Syntax.ET_app uu___ in
-      let un_lazy universes t l r =
-        let uu___ =
-          let uu___1 =
-            FStar_Syntax_Util.fvar_const
-              FStar_Parser_Const.immutable_array_of_list_lid in
-          FStar_Syntax_Syntax.mk_Tm_uinst uu___1 universes in
+let (array_ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
+  let of_list_op =
+    let emb_typ t =
+      let uu___ =
         let uu___1 =
-          let uu___2 = FStar_Syntax_Syntax.iarg t in
-          let uu___3 = let uu___4 = FStar_Syntax_Syntax.as_arg l in [uu___4] in
-          uu___2 :: uu___3 in
-        FStar_Syntax_Syntax.mk_Tm_app uu___ uu___1 r in
-      (FStar_Parser_Const.immutable_array_of_list_lid, (Prims.of_int (2)),
-        Prims.int_one,
-        (mixed_binary_op
-           (fun uu___ ->
-              match uu___ with
-              | (elt_t, uu___1) -> FStar_Pervasives_Native.Some elt_t)
-           (fun uu___ ->
-              match uu___ with
-              | (l, q) ->
-                  let uu___1 =
-                    arg_as_list FStar_Syntax_Embeddings.e_any (l, q) in
-                  (match uu___1 with
-                   | FStar_Pervasives_Native.Some lst ->
-                       FStar_Pervasives_Native.Some (l, lst)
-                   | uu___2 -> FStar_Pervasives_Native.None))
-           (fun r ->
-              fun uu___ ->
-                match uu___ with
-                | (universes, elt_t, (l, blob)) ->
-                    let uu___1 =
-                      let uu___2 =
-                        let uu___3 =
-                          let uu___4 =
-                            let uu___5 =
-                              let uu___6 =
-                                FStar_Syntax_Embeddings_Base.emb_typ_of
-                                  FStar_Syntax_Embeddings.e_any () in
-                              emb_typ uu___6 in
-                            let uu___6 =
-                              FStar_Thunk.mk
-                                (fun uu___7 -> un_lazy universes elt_t l r) in
-                            (uu___5, uu___6) in
-                          FStar_Syntax_Syntax.Lazy_embedding uu___4 in
-                        let uu___4 =
-                          let uu___5 =
-                            let uu___6 =
-                              FStar_Syntax_Util.fvar_const
-                                FStar_Parser_Const.immutable_array_t_lid in
-                            FStar_Syntax_Syntax.mk_Tm_uinst uu___6 universes in
-                          let uu___6 =
-                            let uu___7 = FStar_Syntax_Syntax.as_arg elt_t in
-                            [uu___7] in
-                          FStar_Syntax_Syntax.mk_Tm_app uu___5 uu___6 r in
-                        {
-                          FStar_Syntax_Syntax.blob = blob;
-                          FStar_Syntax_Syntax.lkind = uu___3;
-                          FStar_Syntax_Syntax.ltyp = uu___4;
-                          FStar_Syntax_Syntax.rng = r
-                        } in
-                      FStar_Syntax_Syntax.Tm_lazy uu___2 in
-                    FStar_Syntax_Syntax.mk uu___1 r)
-           (fun r ->
-              fun universes ->
-                fun elt_t ->
-                  fun uu___ ->
-                    match uu___ with
-                    | (l, lst) ->
-                        let blob = FStar_ImmutableArray_Base.of_list lst in
-                        let uu___1 =
-                          let uu___2 =
-                            let uu___3 = FStar_Compiler_Dyn.mkdyn blob in
-                            (l, uu___3) in
-                          (universes, elt_t, uu___2) in
-                        FStar_Pervasives_Native.Some uu___1)),
-        (FStar_TypeChecker_NBETerm.mixed_binary_op
-           (fun uu___ ->
-              match uu___ with
-              | (elt_t, uu___1) -> FStar_Pervasives_Native.Some elt_t)
-           (fun uu___ ->
-              match uu___ with
-              | (l, q) ->
-                  let uu___1 =
-                    FStar_TypeChecker_NBETerm.arg_as_list
-                      FStar_TypeChecker_NBETerm.e_any (l, q) in
-                  (match uu___1 with
-                   | FStar_Pervasives_Native.None ->
-                       FStar_Pervasives_Native.None
-                   | FStar_Pervasives_Native.Some lst ->
-                       FStar_Pervasives_Native.Some (l, lst)))
-           (fun uu___ ->
+          FStar_Ident.string_of_lid FStar_Parser_Const.immutable_array_t_lid in
+        (uu___1, [t]) in
+      FStar_Syntax_Syntax.ET_app uu___ in
+    let un_lazy universes t l r =
+      let uu___ =
+        let uu___1 =
+          FStar_Syntax_Util.fvar_const
+            FStar_Parser_Const.immutable_array_of_list_lid in
+        FStar_Syntax_Syntax.mk_Tm_uinst uu___1 universes in
+      let uu___1 =
+        let uu___2 = FStar_Syntax_Syntax.iarg t in
+        let uu___3 = let uu___4 = FStar_Syntax_Syntax.as_arg l in [uu___4] in
+        uu___2 :: uu___3 in
+      FStar_Syntax_Syntax.mk_Tm_app uu___ uu___1 r in
+    (FStar_Parser_Const.immutable_array_of_list_lid, (Prims.of_int (2)),
+      Prims.int_one,
+      (mixed_binary_op
+         (fun uu___ ->
+            match uu___ with
+            | (elt_t, uu___1) -> FStar_Pervasives_Native.Some elt_t)
+         (fun uu___ ->
+            match uu___ with
+            | (l, q) ->
+                let uu___1 = arg_as_list FStar_Syntax_Embeddings.e_any (l, q) in
+                (match uu___1 with
+                 | FStar_Pervasives_Native.Some lst ->
+                     FStar_Pervasives_Native.Some (l, lst)
+                 | uu___2 -> FStar_Pervasives_Native.None))
+         (fun r ->
+            fun uu___ ->
               match uu___ with
               | (universes, elt_t, (l, blob)) ->
                   let uu___1 =
@@ -1167,28 +941,31 @@ let (built_in_primitive_steps_list :
                               FStar_Syntax_Embeddings_Base.emb_typ_of
                                 FStar_Syntax_Embeddings.e_any () in
                             emb_typ uu___6 in
-                          (blob, uu___5) in
-                        FStar_Pervasives.Inr uu___4 in
+                          let uu___6 =
+                            FStar_Thunk.mk
+                              (fun uu___7 -> un_lazy universes elt_t l r) in
+                          (uu___5, uu___6) in
+                        FStar_Syntax_Syntax.Lazy_embedding uu___4 in
                       let uu___4 =
-                        FStar_Thunk.mk
-                          (fun uu___5 ->
-                             let uu___6 =
-                               let uu___7 =
-                                 let uu___8 =
-                                   FStar_Syntax_Syntax.lid_as_fv
-                                     FStar_Parser_Const.immutable_array_of_list_lid
-                                     FStar_Pervasives_Native.None in
-                                 let uu___9 =
-                                   let uu___10 =
-                                     FStar_TypeChecker_NBETerm.as_arg l in
-                                   [uu___10] in
-                                 (uu___8, universes, uu___9) in
-                               FStar_TypeChecker_NBETerm.FV uu___7 in
-                             FStar_TypeChecker_NBETerm.mk_t uu___6) in
-                      (uu___3, uu___4) in
-                    FStar_TypeChecker_NBETerm.Lazy uu___2 in
-                  FStar_TypeChecker_NBETerm.mk_t uu___1)
-           (fun universes ->
+                        let uu___5 =
+                          let uu___6 =
+                            FStar_Syntax_Util.fvar_const
+                              FStar_Parser_Const.immutable_array_t_lid in
+                          FStar_Syntax_Syntax.mk_Tm_uinst uu___6 universes in
+                        let uu___6 =
+                          let uu___7 = FStar_Syntax_Syntax.as_arg elt_t in
+                          [uu___7] in
+                        FStar_Syntax_Syntax.mk_Tm_app uu___5 uu___6 r in
+                      {
+                        FStar_Syntax_Syntax.blob = blob;
+                        FStar_Syntax_Syntax.lkind = uu___3;
+                        FStar_Syntax_Syntax.ltyp = uu___4;
+                        FStar_Syntax_Syntax.rng = r
+                      } in
+                    FStar_Syntax_Syntax.Tm_lazy uu___2 in
+                  FStar_Syntax_Syntax.mk uu___1 r)
+         (fun r ->
+            fun universes ->
               fun elt_t ->
                 fun uu___ ->
                   match uu___ with
@@ -1199,147 +976,169 @@ let (built_in_primitive_steps_list :
                           let uu___3 = FStar_Compiler_Dyn.mkdyn blob in
                           (l, uu___3) in
                         (universes, elt_t, uu___2) in
-                      FStar_Pervasives_Native.Some uu___1))) in
-    let arg1_as_elt_t x =
-      FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst x) in
-    let arg2_as_blob x =
+                      FStar_Pervasives_Native.Some uu___1)),
+      (FStar_TypeChecker_NBETerm.mixed_binary_op
+         (fun uu___ ->
+            match uu___ with
+            | (elt_t, uu___1) -> FStar_Pervasives_Native.Some elt_t)
+         (fun uu___ ->
+            match uu___ with
+            | (l, q) ->
+                let uu___1 =
+                  FStar_TypeChecker_NBETerm.arg_as_list
+                    FStar_TypeChecker_NBETerm.e_any (l, q) in
+                (match uu___1 with
+                 | FStar_Pervasives_Native.None ->
+                     FStar_Pervasives_Native.None
+                 | FStar_Pervasives_Native.Some lst ->
+                     FStar_Pervasives_Native.Some (l, lst)))
+         (fun uu___ ->
+            match uu___ with
+            | (universes, elt_t, (l, blob)) ->
+                let uu___1 =
+                  let uu___2 =
+                    let uu___3 =
+                      let uu___4 =
+                        let uu___5 =
+                          let uu___6 =
+                            FStar_Syntax_Embeddings_Base.emb_typ_of
+                              FStar_Syntax_Embeddings.e_any () in
+                          emb_typ uu___6 in
+                        (blob, uu___5) in
+                      FStar_Pervasives.Inr uu___4 in
+                    let uu___4 =
+                      FStar_Thunk.mk
+                        (fun uu___5 ->
+                           let uu___6 =
+                             let uu___7 =
+                               let uu___8 =
+                                 FStar_Syntax_Syntax.lid_as_fv
+                                   FStar_Parser_Const.immutable_array_of_list_lid
+                                   FStar_Pervasives_Native.None in
+                               let uu___9 =
+                                 let uu___10 =
+                                   FStar_TypeChecker_NBETerm.as_arg l in
+                                 [uu___10] in
+                               (uu___8, universes, uu___9) in
+                             FStar_TypeChecker_NBETerm.FV uu___7 in
+                           FStar_TypeChecker_NBETerm.mk_t uu___6) in
+                    (uu___3, uu___4) in
+                  FStar_TypeChecker_NBETerm.Lazy uu___2 in
+                FStar_TypeChecker_NBETerm.mk_t uu___1)
+         (fun universes ->
+            fun elt_t ->
+              fun uu___ ->
+                match uu___ with
+                | (l, lst) ->
+                    let blob = FStar_ImmutableArray_Base.of_list lst in
+                    let uu___1 =
+                      let uu___2 =
+                        let uu___3 = FStar_Compiler_Dyn.mkdyn blob in
+                        (l, uu___3) in
+                      (universes, elt_t, uu___2) in
+                    FStar_Pervasives_Native.Some uu___1))) in
+  let arg1_as_elt_t x =
+    FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst x) in
+  let arg2_as_blob x =
+    let uu___ =
+      let uu___1 =
+        FStar_Syntax_Subst.compress (FStar_Pervasives_Native.fst x) in
+      uu___1.FStar_Syntax_Syntax.n in
+    match uu___ with
+    | FStar_Syntax_Syntax.Tm_lazy
+        { FStar_Syntax_Syntax.blob = blob;
+          FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_embedding
+            (FStar_Syntax_Syntax.ET_app (head, uu___1), uu___2);
+          FStar_Syntax_Syntax.ltyp = uu___3;
+          FStar_Syntax_Syntax.rng = uu___4;_}
+        when
+        let uu___5 =
+          FStar_Ident.string_of_lid FStar_Parser_Const.immutable_array_t_lid in
+        head = uu___5 -> FStar_Pervasives_Native.Some blob
+    | uu___1 -> FStar_Pervasives_Native.None in
+  let arg2_as_blob_nbe x =
+    match (FStar_Pervasives_Native.fst x).FStar_TypeChecker_NBETerm.nbe_t
+    with
+    | FStar_TypeChecker_NBETerm.Lazy
+        (FStar_Pervasives.Inr
+         (blob, FStar_Syntax_Syntax.ET_app (head, uu___)), uu___1)
+        when
+        let uu___2 =
+          FStar_Ident.string_of_lid FStar_Parser_Const.immutable_array_t_lid in
+        head = uu___2 -> FStar_Pervasives_Native.Some blob
+    | uu___ -> FStar_Pervasives_Native.None in
+  let length_op =
+    let embed_int r i =
+      FStar_TypeChecker_Primops_Base.embed_simple
+        FStar_Syntax_Embeddings.e_int r i in
+    let run_op blob =
       let uu___ =
-        let uu___1 =
-          FStar_Syntax_Subst.compress (FStar_Pervasives_Native.fst x) in
-        uu___1.FStar_Syntax_Syntax.n in
-      match uu___ with
-      | FStar_Syntax_Syntax.Tm_lazy
-          { FStar_Syntax_Syntax.blob = blob;
-            FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_embedding
-              (FStar_Syntax_Syntax.ET_app (head, uu___1), uu___2);
-            FStar_Syntax_Syntax.ltyp = uu___3;
-            FStar_Syntax_Syntax.rng = uu___4;_}
-          when
-          let uu___5 =
-            FStar_Ident.string_of_lid
-              FStar_Parser_Const.immutable_array_t_lid in
-          head = uu___5 -> FStar_Pervasives_Native.Some blob
-      | uu___1 -> FStar_Pervasives_Native.None in
-    let arg2_as_blob_nbe x =
-      match (FStar_Pervasives_Native.fst x).FStar_TypeChecker_NBETerm.nbe_t
-      with
-      | FStar_TypeChecker_NBETerm.Lazy
-          (FStar_Pervasives.Inr
-           (blob, FStar_Syntax_Syntax.ET_app (head, uu___)), uu___1)
-          when
-          let uu___2 =
-            FStar_Ident.string_of_lid
-              FStar_Parser_Const.immutable_array_t_lid in
-          head = uu___2 -> FStar_Pervasives_Native.Some blob
-      | uu___ -> FStar_Pervasives_Native.None in
-    let length_op =
-      let embed_int r i =
-        FStar_TypeChecker_Primops_Base.embed_simple
-          FStar_Syntax_Embeddings.e_int r i in
-      let run_op blob =
-        let uu___ =
-          let uu___1 = FStar_Compiler_Dyn.undyn blob in
-          FStar_Compiler_Util.array_length uu___1 in
-        FStar_Pervasives_Native.Some uu___ in
-      (FStar_Parser_Const.immutable_array_length_lid, (Prims.of_int (2)),
-        Prims.int_one,
-        (mixed_binary_op arg1_as_elt_t arg2_as_blob embed_int
-           (fun _r -> fun _universes -> fun uu___ -> fun blob -> run_op blob)),
-        (FStar_TypeChecker_NBETerm.mixed_binary_op
-           (fun uu___ ->
-              match uu___ with
-              | (elt_t, uu___1) -> FStar_Pervasives_Native.Some elt_t)
-           arg2_as_blob_nbe
-           (fun i ->
-              FStar_TypeChecker_NBETerm.embed FStar_TypeChecker_NBETerm.e_int
-                bogus_cbs i)
-           (fun _universes -> fun uu___ -> fun blob -> run_op blob))) in
-    let index_op =
-      (FStar_Parser_Const.immutable_array_index_lid, (Prims.of_int (3)),
-        Prims.int_one,
-        (mixed_ternary_op arg1_as_elt_t arg2_as_blob arg_as_int
-           (fun r -> fun tm -> tm)
-           (fun r ->
-              fun _universes ->
-                fun _t ->
-                  fun blob ->
-                    fun i ->
-                      let uu___ =
-                        let uu___1 = FStar_Compiler_Dyn.undyn blob in
-                        FStar_Compiler_Util.array_index uu___1 i in
-                      FStar_Pervasives_Native.Some uu___)),
-        (FStar_TypeChecker_NBETerm.mixed_ternary_op
-           (fun uu___ ->
-              match uu___ with
-              | (elt_t, uu___1) -> FStar_Pervasives_Native.Some elt_t)
-           arg2_as_blob_nbe FStar_TypeChecker_NBETerm.arg_as_int
-           (fun tm -> tm)
-           (fun _universes ->
+        let uu___1 = FStar_Compiler_Dyn.undyn blob in
+        FStar_Compiler_Util.array_length uu___1 in
+      FStar_Pervasives_Native.Some uu___ in
+    (FStar_Parser_Const.immutable_array_length_lid, (Prims.of_int (2)),
+      Prims.int_one,
+      (mixed_binary_op arg1_as_elt_t arg2_as_blob embed_int
+         (fun _r -> fun _universes -> fun uu___ -> fun blob -> run_op blob)),
+      (FStar_TypeChecker_NBETerm.mixed_binary_op
+         (fun uu___ ->
+            match uu___ with
+            | (elt_t, uu___1) -> FStar_Pervasives_Native.Some elt_t)
+         arg2_as_blob_nbe
+         (fun i ->
+            FStar_TypeChecker_NBETerm.embed FStar_TypeChecker_NBETerm.e_int
+              bogus_cbs i)
+         (fun _universes -> fun uu___ -> fun blob -> run_op blob))) in
+  let index_op =
+    (FStar_Parser_Const.immutable_array_index_lid, (Prims.of_int (3)),
+      Prims.int_one,
+      (mixed_ternary_op arg1_as_elt_t arg2_as_blob arg_as_int
+         (fun r -> fun tm -> tm)
+         (fun r ->
+            fun _universes ->
               fun _t ->
                 fun blob ->
                   fun i ->
                     let uu___ =
                       let uu___1 = FStar_Compiler_Dyn.undyn blob in
                       FStar_Compiler_Util.array_index uu___1 i in
-                    FStar_Pervasives_Native.Some uu___))) in
-    [of_list_op; length_op; index_op] in
-  let strong_steps =
-    FStar_Compiler_List.map (as_primitive_step true)
-      (FStar_Compiler_List.op_At [reveal_hide] array_ops) in
+                    FStar_Pervasives_Native.Some uu___)),
+      (FStar_TypeChecker_NBETerm.mixed_ternary_op
+         (fun uu___ ->
+            match uu___ with
+            | (elt_t, uu___1) -> FStar_Pervasives_Native.Some elt_t)
+         arg2_as_blob_nbe FStar_TypeChecker_NBETerm.arg_as_int (fun tm -> tm)
+         (fun _universes ->
+            fun _t ->
+              fun blob ->
+                fun i ->
+                  let uu___ =
+                    let uu___1 = FStar_Compiler_Dyn.undyn blob in
+                    FStar_Compiler_Util.array_index uu___1 i in
+                  FStar_Pervasives_Native.Some uu___))) in
+  FStar_Compiler_List.map (as_primitive_step true)
+    [of_list_op; length_op; index_op]
+let (short_circuit_ops :
+  FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
+  FStar_Compiler_List.map (as_primitive_step true)
+    [(FStar_Parser_Const.op_And, (Prims.of_int (2)), Prims.int_zero, and_op,
+       ((fun _us -> FStar_TypeChecker_NBETerm.and_op)));
+    (FStar_Parser_Const.op_Or, (Prims.of_int (2)), Prims.int_zero, or_op,
+      ((fun _us -> FStar_TypeChecker_NBETerm.or_op)))]
+let (built_in_primitive_steps_list :
+  FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
   FStar_Compiler_List.op_At simple_ops
     (FStar_Compiler_List.op_At short_circuit_ops
        (FStar_Compiler_List.op_At issue_ops
-          (FStar_Compiler_List.op_At doc_ops
-             (FStar_Compiler_List.op_At strong_steps
-                (FStar_Compiler_List.op_At seal_steps
+          (FStar_Compiler_List.op_At array_ops
+             (FStar_Compiler_List.op_At seal_steps
+                (FStar_Compiler_List.op_At
+                   FStar_TypeChecker_Primops_Erased.ops
                    (FStar_Compiler_List.op_At
-                      FStar_TypeChecker_Primops_Eq.dec_eq_ops
-                      FStar_TypeChecker_Primops_MachineInts.bounded_arith_ops))))))
+                      FStar_TypeChecker_Primops_Docs.ops
+                      (FStar_Compiler_List.op_At
+                         FStar_TypeChecker_Primops_MachineInts.ops
+                         FStar_TypeChecker_Primops_Eq.dec_eq_ops)))))))
 let (equality_ops_list :
   FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
-  let interp_prop_eq2 psc _norm_cb _univs args =
-    let r = psc.FStar_TypeChecker_Primops_Base.psc_range in
-    match args with
-    | (_typ, uu___)::(a1, uu___1)::(a2, uu___2)::[] ->
-        let uu___3 = FStar_Syntax_Util.eq_tm a1 a2 in
-        (match uu___3 with
-         | FStar_Syntax_Util.Equal ->
-             FStar_Pervasives_Native.Some
-               {
-                 FStar_Syntax_Syntax.n =
-                   (FStar_Syntax_Util.t_true.FStar_Syntax_Syntax.n);
-                 FStar_Syntax_Syntax.pos = r;
-                 FStar_Syntax_Syntax.vars =
-                   (FStar_Syntax_Util.t_true.FStar_Syntax_Syntax.vars);
-                 FStar_Syntax_Syntax.hash_code =
-                   (FStar_Syntax_Util.t_true.FStar_Syntax_Syntax.hash_code)
-               }
-         | FStar_Syntax_Util.NotEqual ->
-             FStar_Pervasives_Native.Some
-               {
-                 FStar_Syntax_Syntax.n =
-                   (FStar_Syntax_Util.t_false.FStar_Syntax_Syntax.n);
-                 FStar_Syntax_Syntax.pos = r;
-                 FStar_Syntax_Syntax.vars =
-                   (FStar_Syntax_Util.t_false.FStar_Syntax_Syntax.vars);
-                 FStar_Syntax_Syntax.hash_code =
-                   (FStar_Syntax_Util.t_false.FStar_Syntax_Syntax.hash_code)
-               }
-         | uu___4 -> FStar_Pervasives_Native.None)
-    | uu___ ->
-        FStar_Compiler_Effect.failwith "Unexpected number of arguments" in
-  let propositional_equality =
-    {
-      FStar_TypeChecker_Primops_Base.name = FStar_Parser_Const.eq2_lid;
-      FStar_TypeChecker_Primops_Base.arity = (Prims.of_int (3));
-      FStar_TypeChecker_Primops_Base.univ_arity = Prims.int_one;
-      FStar_TypeChecker_Primops_Base.auto_reflect =
-        FStar_Pervasives_Native.None;
-      FStar_TypeChecker_Primops_Base.strong_reduction_ok = true;
-      FStar_TypeChecker_Primops_Base.requires_binder_substitution = false;
-      FStar_TypeChecker_Primops_Base.renorm_after = false;
-      FStar_TypeChecker_Primops_Base.interpretation = interp_prop_eq2;
-      FStar_TypeChecker_Primops_Base.interpretation_nbe =
-        (fun _cb -> fun _univs -> FStar_TypeChecker_NBETerm.interp_prop_eq2)
-    } in
-  [propositional_equality]
+  FStar_TypeChecker_Primops_Eq.prop_eq_ops
