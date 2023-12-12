@@ -21,6 +21,13 @@ let rec mapM f l =
       let! ys = mapM f xs in
       return (y::ys)
 
+let rec iterM f l =
+  match l with
+   | [] -> return ()
+   | x::xs ->
+      f x;!
+      iterM f xs
+
 let rec foldM_left f e xs =
   match xs with
   | [] -> return e

@@ -17,6 +17,12 @@ val mapM
   (#a #b :Type)
 : (a -> m b) -> list a -> m (list b)
 
+val iterM
+  (#m: Type -> Type)
+  {| monad m |}
+  (#a :Type)
+: (a -> m unit) -> list a -> m unit
+
 val foldM_left
   (#m: Type -> Type)
   {| monad m |}
