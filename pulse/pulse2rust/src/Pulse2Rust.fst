@@ -86,7 +86,7 @@ let type_of (g:env) (e:expr) : bool =  // is_mut
   | Expr_path [s] ->
     (match lookup_local g s with
      | Some (_t, b) -> b
-     | None -> fail (format1 "lookup in env for %s" s))
+     | None -> false) //TODO: FIXME: EXTEND WITH PATTERN VARIABLES fail (format1 "lookup in env for %s" s))
   
   | _ -> false
 
@@ -283,6 +283,9 @@ let rec extract_mlpattern_to_pat (p:S.mlpattern) : pat =
   | S.MLP_Wild -> Pat_wild
   | S.MLP_Const c -> Pat_lit (extract_mlconstant_to_lit c)
   | S.MLP_Var x -> mk_pat_ident (varname x)
+  | S.MLP_CTor (p, ps)
+    when snd p = "Mktuple3" ->
+    mk_pat_tuple (List.map extract_mlpattern_to_pat ps)
   | S.MLP_CTor (p, ps) ->
     mk_pat_ts (snd p) (List.map extract_mlpattern_to_pat ps)
   | S.MLP_Record (p, fs) ->

@@ -63,6 +63,7 @@ and pat =
   | Pat_wild
   | Pat_lit of lit
   | Pat_struct of pat_struct
+  | Pat_tuple of list pat
 
 type expr =
   | Expr_binop of expr_bin
@@ -294,6 +295,7 @@ val mk_reference_expr (is_mut:bool) (e:expr) : expr
 val mk_pat_ident (path:string) : pat
 val mk_pat_ts (path:string) (elems:list pat) : pat
 val mk_pat_struct (path:string) (fields:list (string & pat)) : pat
+val mk_pat_tuple (l:list pat) : pat
 val mk_arm (arm_pat:pat) (arm_body:expr) : arm
 val mk_match (scrutinee:expr) (arms:list arm) : expr
 val mk_expr_field (base:expr) (f:string) : expr

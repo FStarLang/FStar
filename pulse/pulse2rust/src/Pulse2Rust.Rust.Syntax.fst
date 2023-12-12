@@ -107,6 +107,8 @@ let mk_pat_struct (pat_struct_path:string) (pats:list (string & pat)) : pat =
     }) pats;
   }
 
+let mk_pat_tuple (l:list pat) : pat = Pat_tuple l
+
 let mk_arm (arm_pat:pat) (arm_body:expr) : arm = { arm_pat; arm_body }
 
 let mk_match (expr_match_expr:expr) (expr_match_arms:list arm) : expr =

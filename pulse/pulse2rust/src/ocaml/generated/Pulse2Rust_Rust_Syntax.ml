@@ -123,6 +123,7 @@ and pat =
   | Pat_wild 
   | Pat_lit of lit 
   | Pat_struct of pat_struct 
+  | Pat_tuple of pat Prims.list 
 let (__proj__Mkpat_tuple_struct__item__pat_ts_path :
   pat_tuple_struct -> Prims.string) =
   fun projectee ->
@@ -170,6 +171,11 @@ let (uu___is_Pat_struct : pat -> Prims.bool) =
     match projectee with | Pat_struct _0 -> true | uu___ -> false
 let (__proj__Pat_struct__item___0 : pat -> pat_struct) =
   fun projectee -> match projectee with | Pat_struct _0 -> _0
+let (uu___is_Pat_tuple : pat -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Pat_tuple _0 -> true | uu___ -> false
+let (__proj__Pat_tuple__item___0 : pat -> pat Prims.list) =
+  fun projectee -> match projectee with | Pat_tuple _0 -> _0
 type expr =
   | Expr_binop of expr_bin 
   | Expr_path of Prims.string Prims.list 
@@ -877,6 +883,7 @@ let (mk_pat_struct : Prims.string -> (Prims.string * pat) Prims.list -> pat)
                | (s, p) -> { field_pat_name = s; field_pat_pat = p }) pats in
         { pat_struct_path; pat_struct_fields = uu___1 } in
       Pat_struct uu___
+let (mk_pat_tuple : pat Prims.list -> pat) = fun l -> Pat_tuple l
 let (mk_arm : pat -> expr -> arm) =
   fun arm_pat -> fun arm_body -> { arm_pat; arm_body }
 let (mk_match : expr -> arm Prims.list -> expr) =

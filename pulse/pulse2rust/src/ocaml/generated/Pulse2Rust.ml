@@ -124,10 +124,7 @@ let (type_of : env -> Pulse2Rust_Rust_Syntax.expr -> Prims.bool) =
           let uu___ = lookup_local g s in
           (match uu___ with
            | FStar_Pervasives_Native.Some (_t, b) -> b
-           | FStar_Pervasives_Native.None ->
-               let uu___1 =
-                 FStar_Compiler_Util.format1 "lookup in env for %s" s in
-               fail uu___1)
+           | FStar_Pervasives_Native.None -> false)
       | uu___ -> false
 let rec (uncurry_arrow :
   FStar_Extraction_ML_Syntax.mlty ->
@@ -432,6 +429,10 @@ let rec (extract_mlpattern_to_pat :
         Pulse2Rust_Rust_Syntax.Pat_lit uu___
     | FStar_Extraction_ML_Syntax.MLP_Var x ->
         let uu___ = varname x in Pulse2Rust_Rust_Syntax.mk_pat_ident uu___
+    | FStar_Extraction_ML_Syntax.MLP_CTor (p1, ps) when
+        (FStar_Pervasives_Native.snd p1) = "Mktuple3" ->
+        let uu___ = FStar_Compiler_List.map extract_mlpattern_to_pat ps in
+        Pulse2Rust_Rust_Syntax.mk_pat_tuple uu___
     | FStar_Extraction_ML_Syntax.MLP_CTor (p1, ps) ->
         let uu___ = FStar_Compiler_List.map extract_mlpattern_to_pat ps in
         Pulse2Rust_Rust_Syntax.mk_pat_ts (FStar_Pervasives_Native.snd p1)

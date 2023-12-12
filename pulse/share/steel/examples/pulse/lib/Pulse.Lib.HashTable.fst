@@ -333,185 +333,193 @@ fn lookup (#kt:eqtype) (#vt:Type0)
 }
 ```
 
-// ```pulse
-// fn insert (#kt:eqtype) (#vt:Type0)
-//   (r:ref (ht_t kt vt)) (k:kt) (v:vt)
-//   (#ht:erased (ht_t kt vt))
-//   (#pht:(p:erased (pht_t kt vt) { PHT.not_full p.repr }))
+```pulse
+fn insert (#kt:eqtype) (#vt:Type0)
+  (r:ref (ht_t kt vt)) (k:kt) (v:vt)
+  (#ht:erased (ht_t kt vt))
+  (#pht:(p:erased (pht_t kt vt) { PHT.not_full p.repr }))
   
-//   requires pts_to r ht ** models ht pht
-//   returns b:bool
-//   ensures exists pht'.
-//     pts_to r ht ** models ht pht' **
-//     pure (if b
-//           then pht'== PHT.insert pht k v
-//           else pht'== pht)
-// {
-//   let res = explode_ref_ht_t r;
+  requires pts_to r ht ** models ht pht
+  returns b:bool
+  ensures exists pht'.
+    pts_to r ht ** models ht pht' **
+    pure (if b
+          then pht'== PHT.insert pht k v
+          else pht'== pht)
+{
+  let res = explode_ref_ht_t r;
 
-//   unfold (exploded_vp r ht res);
-//   let sz = !(tfst res);
-//   let hash = ref_apply (tsnd res) k;
-//   fold (exploded_vp r ht res);
+  match res {
 
-//   let cidx = size_t_mod hash sz;
-//   let mut off = 0sz;
-//   let mut cont = true;
-//   let mut err = false;
+  Mktuple3 r_sz r_hashf r_contents -> {
+    rewrite (exploded_vp r ht (tfst res) (tsnd res) (tthd res))
+         as (exploded_vp r ht r_sz r_hashf r_contents);
 
-//   unfold (models ht pht);
-//   while
-//   (
-//     let vcont = !cont;
-//     let verr = !err;
-//     (vcont = true && verr = false)
-//   ) 
-//   invariant b. exists (voff:SZ.t) (vcont verr:bool). (
-//     exploded_vp r ht res **
-//     R.pts_to off voff **
-//     R.pts_to cont vcont **
-//     R.pts_to err verr **
-//     V.pts_to ht.contents (if (vcont || verr) then pht.repr.seq else (PHT.insert pht k v).repr.seq) **
-//     pure (
-//       related ht pht /\
-//       SZ.(voff <=^ ht.sz) /\
-//       strong_all_used_not_by pht.repr (SZ.v cidx) (SZ.v voff) k /\
-//       walk pht.repr (SZ.v cidx) k (SZ.v voff) == lookup_repr pht.repr k /\
-//       insert_repr_walk #kt #vt #(pht_sz pht) #pht.spec pht.repr k v (SZ.v voff) (SZ.v cidx) () () 
-//         == insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v /\
-//       b == (vcont = true && verr = false)
-//     ))
-//   {
-//     unfold (exploded_vp r ht res);
-//     let voff = !off;
-//     if (voff = sz)
-//     {
-//       cont := false;
-//       full_not_full pht.repr k;
-//       assert (V.pts_to ht.contents pht.repr.seq);
-//       fold (exploded_vp r ht res);
-//     }
-//     else
-//     {
-//       let opt_sum = cidx `sz_add` voff;
-//       match opt_sum
-//       {
-//         Some sum ->
-//         {
-//           let idx = size_t_mod sum sz;
-//           rewrite (V.pts_to ht.contents pht.repr.seq)
-//                as (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)));
-//           let c = V.vec_ref_read (tthd res) idx;
-//           rewrite (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)))
-//                as (V.pts_to ht.contents pht.repr.seq);
+    unfold (exploded_vp r ht r_sz r_hashf r_contents);
+    let sz = !r_sz;
+    let hash = ref_apply r_hashf k;
+    fold (exploded_vp r ht r_sz r_hashf r_contents);
 
-//           match c
-//           {
-//             Used k' v' -> { 
-//               if (k' = k) {
-//                 assert (V.pts_to ht.contents pht.repr.seq);
-//                 assert (pure ( SZ.v idx < Seq.length pht.repr.seq));
-//                 rewrite (V.pts_to ht.contents pht.repr.seq)
-//                      as (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)));
-//                 V.vec_ref_write (tthd res) idx (mk_used_cell k v);
-//                 assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal` 
-//                               Seq.upd pht.repr.seq (SZ.v idx) (mk_used_cell k v)));
-//                 rewrite (V.pts_to (reveal (hide ht.contents)) (Seq.upd (reveal (hide pht.repr.seq)) (SZ.v idx) (mk_used_cell k v)))
-//                      as (V.pts_to ht.contents (insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq);
-//                 cont := false;
-//                 fold (exploded_vp r ht res);
-//               } else {
-//                 off := SZ.(voff +^ 1sz);
-//                 fold (exploded_vp r ht res);
-//               } 
-//             }
-//             Clean -> {
-//               rewrite (V.pts_to ht.contents pht.repr.seq)
-//                    as (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)));
-//               V.vec_ref_write (tthd res) idx (mk_used_cell k v);
-//               assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal` 
-//                             Seq.upd pht.repr.seq (SZ.v idx) (mk_used_cell k v)));
-//               rewrite (V.pts_to (reveal (hide ht.contents)) (Seq.upd (reveal (hide pht.repr.seq)) (SZ.v idx) (mk_used_cell k v)))
-//                    as (V.pts_to ht.contents (insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq);
-//               cont := false;
-//               fold (exploded_vp r ht res);
-//             }
-//             Zombie ->
-//             {
-//               fold (models ht pht);
-//               fold (exploded_vp r ht res);
-//               rewrite (exploded_vp r ht res)
-//                    as (exploded_vp (reveal (hide r)) ht res);
-//               let lookup_res = pulse_lookup_index (hide r) res k;
-//               rewrite (exploded_vp (reveal (hide r)) ht res)
-//                    as (exploded_vp r ht res);
-//               unfold (models ht pht);
-//               unfold (exploded_vp r ht res);
+    let cidx = size_t_mod hash sz;
+    let mut off = 0sz;
+    let mut cont = true;
+    let mut err = false;
 
-//               if (fst lookup_res)
-//               {
-//                 let o = snd lookup_res;
-//                 match o
-//                 {
-//                   Some p ->
-//                   {
-//                     rewrite (V.pts_to ht.contents pht.repr.seq)
-//                          as (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)));
-//                     V.vec_ref_write (tthd res) (snd p) Zombie;
-//                     V.vec_ref_write (tthd res) idx (mk_used_cell k v);
-//                     cont := false;
-//                     assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal` 
-//                                   Seq.upd (Seq.upd pht.repr.seq (SZ.v (snd p)) Zombie) (SZ.v idx) (mk_used_cell k v)));
-//                     rewrite (V.pts_to (reveal (hide ht.contents))
-//                                       (Seq.upd (Seq.upd (reveal (hide pht.repr.seq)) (SZ.v (snd p)) Zombie) (SZ.v idx) (mk_used_cell k v)))
-//                          as (V.pts_to ht.contents (insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq);
-//                     fold (exploded_vp r ht res);
-//                   }
-//                   None ->
-//                   {
-//                     rewrite (V.pts_to ht.contents pht.repr.seq)
-//                          as (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)));
-//                     V.vec_ref_write (tthd res) idx (mk_used_cell k v);                    
-//                     cont := false;
-//                     assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal`
-//                                   Seq.upd pht.repr.seq (SZ.v idx) (mk_used_cell k v)));
-//                     rewrite (V.pts_to (reveal (hide ht.contents)) (Seq.upd (reveal (hide pht.repr.seq)) (SZ.v idx) (mk_used_cell k v)))
-//                          as (V.pts_to ht.contents (insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq);
-//                     fold (exploded_vp r ht res);
-//                   }
-//                 }
-//               }
-//               else
-//               {
-//                 // ERROR - lookup failed
-//                 err := true;
-//                 fold (exploded_vp r ht res);
-//               }
-//             }
-//           }
-//         }
-//         None ->
-//         {
-//           // ERROR - add failed
-//           err := true;
-//           fold (exploded_vp r ht res);
-//         }
-//       }
-//     }
-//   };
-//   unexplode_ref r res;
-//   let verr = !err;
-//   if verr
-//   {
-//     fold (models ht pht);
-//     false
-//   } else {
-//     assert (V.pts_to ht.contents (PHT.insert pht k v).repr.seq);
-//     fold (models ht (PHT.insert pht k v));
-//     true
-//   }
-// }
-// ```
+    unfold (models ht pht);
+    while
+    (
+      let vcont = !cont;
+      let verr = !err;
+      (vcont = true && verr = false)
+    ) 
+    invariant b. exists (voff:SZ.t) (vcont verr:bool). (
+      exploded_vp r ht r_sz r_hashf r_contents **
+      R.pts_to off voff **
+      R.pts_to cont vcont **
+      R.pts_to err verr **
+      V.pts_to ht.contents (if (vcont || verr) then pht.repr.seq else (PHT.insert pht k v).repr.seq) **
+      pure (
+        related ht pht /\
+        SZ.(voff <=^ ht.sz) /\
+        strong_all_used_not_by pht.repr (SZ.v cidx) (SZ.v voff) k /\
+        walk pht.repr (SZ.v cidx) k (SZ.v voff) == lookup_repr pht.repr k /\
+        insert_repr_walk #kt #vt #(pht_sz pht) #pht.spec pht.repr k v (SZ.v voff) (SZ.v cidx) () () 
+          == insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v /\
+        b == (vcont = true && verr = false)
+      ))
+    {
+      unfold (exploded_vp r ht r_sz r_hashf r_contents);
+      let voff = !off;
+      if (voff = sz)
+      {
+        cont := false;
+        full_not_full pht.repr k;
+        assert (V.pts_to ht.contents pht.repr.seq);
+        fold (exploded_vp r ht r_sz r_hashf r_contents);
+      }
+      else
+      {
+        let opt_sum = cidx `sz_add` voff;
+        match opt_sum
+        {
+          Some sum ->
+          {
+            let idx = size_t_mod sum sz;
+            rewrite (V.pts_to ht.contents pht.repr.seq)
+                 as (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)));
+            let c = V.vec_ref_read r_contents idx;
+            rewrite (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)))
+                 as (V.pts_to ht.contents pht.repr.seq);
+
+            match c
+            {
+              Used k' v' -> { 
+                if (k' = k) {
+                  assert (V.pts_to ht.contents pht.repr.seq);
+                  assert (pure ( SZ.v idx < Seq.length pht.repr.seq));
+                  rewrite (V.pts_to ht.contents pht.repr.seq)
+                       as (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)));
+                  V.vec_ref_write r_contents idx (mk_used_cell k v);
+                  assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal` 
+                                Seq.upd pht.repr.seq (SZ.v idx) (mk_used_cell k v)));
+                  rewrite (V.pts_to (reveal (hide ht.contents)) (Seq.upd (reveal (hide pht.repr.seq)) (SZ.v idx) (mk_used_cell k v)))
+                       as (V.pts_to ht.contents (insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq);
+                  cont := false;
+                  fold (exploded_vp r ht r_sz r_hashf r_contents);
+                } else {
+                  off := SZ.(voff +^ 1sz);
+                  fold (exploded_vp r ht r_sz r_hashf r_contents);
+                } 
+              }
+              Clean -> {
+                rewrite (V.pts_to ht.contents pht.repr.seq)
+                     as (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)));
+                V.vec_ref_write r_contents idx (mk_used_cell k v);
+                assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal` 
+                              Seq.upd pht.repr.seq (SZ.v idx) (mk_used_cell k v)));
+                rewrite (V.pts_to (reveal (hide ht.contents)) (Seq.upd (reveal (hide pht.repr.seq)) (SZ.v idx) (mk_used_cell k v)))
+                     as (V.pts_to ht.contents (insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq);
+                cont := false;
+                fold (exploded_vp r ht r_sz r_hashf r_contents);
+              }
+              Zombie ->
+              {
+                fold (models ht pht);
+                fold (exploded_vp r ht r_sz r_hashf r_contents);
+                rewrite (exploded_vp r ht r_sz r_hashf r_contents)
+                     as (exploded_vp (reveal (hide r)) ht r_sz r_hashf r_contents);
+                let lookup_res = pulse_lookup_index (hide r) r_sz r_hashf r_contents k;
+                rewrite (exploded_vp (reveal (hide r)) ht r_sz r_hashf r_contents)
+                     as (exploded_vp r ht r_sz r_hashf r_contents);
+                unfold (models ht pht);
+                unfold (exploded_vp r ht r_sz r_hashf r_contents);
+
+                if (fst lookup_res)
+                {
+                  let o = snd lookup_res;
+                  match o
+                  {
+                    Some p ->
+                    {
+                      rewrite (V.pts_to ht.contents pht.repr.seq)
+                           as (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)));
+                      V.vec_ref_write r_contents (snd p) Zombie;
+                      V.vec_ref_write r_contents idx (mk_used_cell k v);
+                      cont := false;
+                      assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal` 
+                                    Seq.upd (Seq.upd pht.repr.seq (SZ.v (snd p)) Zombie) (SZ.v idx) (mk_used_cell k v)));
+                      rewrite (V.pts_to (reveal (hide ht.contents))
+                                        (Seq.upd (Seq.upd (reveal (hide pht.repr.seq)) (SZ.v (snd p)) Zombie) (SZ.v idx) (mk_used_cell k v)))
+                           as (V.pts_to ht.contents (insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq);
+                      fold (exploded_vp r ht r_sz r_hashf r_contents);
+                    }
+                    None ->
+                    {
+                      rewrite (V.pts_to ht.contents pht.repr.seq)
+                           as (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)));
+                      V.vec_ref_write r_contents idx (mk_used_cell k v);                    
+                      cont := false;
+                      assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal`
+                                    Seq.upd pht.repr.seq (SZ.v idx) (mk_used_cell k v)));
+                      rewrite (V.pts_to (reveal (hide ht.contents)) (Seq.upd (reveal (hide pht.repr.seq)) (SZ.v idx) (mk_used_cell k v)))
+                           as (V.pts_to ht.contents (insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq);
+                      fold (exploded_vp r ht r_sz r_hashf r_contents);
+                    }
+                  }
+                }
+                else
+                {
+                  // ERROR - lookup failed
+                  err := true;
+                  fold (exploded_vp r ht r_sz r_hashf r_contents);
+                }
+              }
+            }
+          }
+          None ->
+          {
+            // ERROR - add failed
+            err := true;
+            fold (exploded_vp r ht r_sz r_hashf r_contents);
+          }
+        }
+      }
+    };
+    unexplode_ref r r_sz r_hashf r_contents;
+    let verr = !err;
+    if verr
+    {
+      fold (models ht pht);
+      false
+    } else {
+      assert (V.pts_to ht.contents (PHT.insert pht k v).repr.seq);
+      fold (models ht (PHT.insert pht k v));
+      true
+    }
+    }
+  }
+}
+```
 
 // ```pulse
 // fn delete (#kt:eqtype) (#vt:Type0)
