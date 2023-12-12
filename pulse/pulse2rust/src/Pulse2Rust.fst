@@ -139,6 +139,10 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
     when S.string_of_mlpath p = "FStar.SizeT.t" -> mk_scalar_typ "usize"
   | S.MLTY_Named ([], p)
     when S.string_of_mlpath p = "Prims.bool" -> mk_scalar_typ "bool"
+  | S.MLTY_Named (l, p)
+    when S.string_of_mlpath p = "FStar.Pervasives.Native.tuple2" ||
+         S.string_of_mlpath p = "FStar.Pervasives.Native.tuple3" ->
+    mk_tuple_typ (List.map (extract_mlty g) l)
   | S.MLTY_Named ([arg], p)
     when S.string_of_mlpath p = "Pulse.Lib.Reference.ref" ->
     let is_mut = true in
@@ -245,9 +249,9 @@ let is_binop (s:string) : option binop =
           s = "FStar.UInt32.rem" ||
           s = "FStar.SizeT.rem"
   then Some Rem
-  else if s = "Prims.op_Amp_Amp"
+  else if s = "Prims.op_AmpAmp"
   then Some And
-  else if s = "Prims.op_Bar_Bar"
+  else if s = "Prims.op_BarBar"
   then Some Or
   else None
 
@@ -401,7 +405,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     if b then e
     else mk_ref_read e
   
-  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2; _])
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, [e1; e2; _])
     when S.string_of_mlpath p = "Pulse.Lib.Pervasives.ref_apply" ->
 
     mk_call (extract_mlexpr g e1) [extract_mlexpr g e2]
@@ -501,11 +505,16 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     mk_call head args
 
   | S.MLE_CTor (p, args) ->
+    let is_native =
+      S.mlpath_to_string p = "FStar.Pervasives.Native.Some" ||
+      S.mlpath_to_string p = "FStar.Pervasives.Native.None" in
     let ty_name =
       match e.mlty with
       | S.MLTY_Named (_, p) -> p |> snd |> enum_or_struct_name
       | _ -> failwith "S.MLE_CTor: unexpected type" in
-    let dexpr = mk_expr_path [ty_name; snd p] in
+    let dexpr =
+      if is_native then mk_expr_path_singl (snd p)
+      else mk_expr_path [ty_name; snd p] in
     if List.length args = 0
     then dexpr
     else mk_call dexpr (List.map (extract_mlexpr g) args)

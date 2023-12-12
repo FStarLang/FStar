@@ -43,6 +43,7 @@ let mk_init_pht (#k:eqtype) #v (hashf:k -> SZ.t) (sz:pos_us)
     };
     inv = (); }
 
+noextract
 let related #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt) : GTot prop =
   SZ.v ht.sz == pht.repr.sz /\
   pht.repr.hashf == lift_hash_fun ht.hashf

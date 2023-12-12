@@ -65,6 +65,8 @@ type binop =
   | Gt 
   | Ge 
   | Rem 
+  | And 
+  | Or 
 let (uu___is_Add : binop -> Prims.bool) =
   fun projectee -> match projectee with | Add -> true | uu___ -> false
 let (uu___is_Sub : binop -> Prims.bool) =
@@ -83,6 +85,10 @@ let (uu___is_Ge : binop -> Prims.bool) =
   fun projectee -> match projectee with | Ge -> true | uu___ -> false
 let (uu___is_Rem : binop -> Prims.bool) =
   fun projectee -> match projectee with | Rem -> true | uu___ -> false
+let (uu___is_And : binop -> Prims.bool) =
+  fun projectee -> match projectee with | And -> true | uu___ -> false
+let (uu___is_Or : binop -> Prims.bool) =
+  fun projectee -> match projectee with | Or -> true | uu___ -> false
 type unop =
   | Deref 
 let (uu___is_Deref : unop -> Prims.bool) = fun projectee -> true
@@ -480,6 +486,7 @@ type typ =
   | Typ_unit 
   | Typ_infer 
   | Typ_fn of typ_fn 
+  | Typ_tuple of typ Prims.list 
 and typ_reference = {
   typ_ref_mut: Prims.bool ;
   typ_ref_typ: typ }
@@ -521,6 +528,11 @@ let (uu___is_Typ_fn : typ -> Prims.bool) =
   fun projectee -> match projectee with | Typ_fn _0 -> true | uu___ -> false
 let (__proj__Typ_fn__item___0 : typ -> typ_fn) =
   fun projectee -> match projectee with | Typ_fn _0 -> _0
+let (uu___is_Typ_tuple : typ -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Typ_tuple _0 -> true | uu___ -> false
+let (__proj__Typ_tuple__item___0 : typ -> typ Prims.list) =
+  fun projectee -> match projectee with | Typ_tuple _0 -> _0
 let (__proj__Mktyp_reference__item__typ_ref_mut :
   typ_reference -> Prims.bool) =
   fun projectee ->
@@ -797,6 +809,7 @@ let (mk_named_typ : Prims.string -> typ Prims.list -> typ) =
          }]
 let (mk_fn_typ : typ Prims.list -> typ -> typ) =
   fun typ_fn_args -> fun typ_fn_ret -> Typ_fn { typ_fn_args; typ_fn_ret }
+let (mk_tuple_typ : typ Prims.list -> typ) = fun l -> Typ_tuple l
 let (mk_expr_path_singl : Prims.string -> expr) = fun s -> Expr_path [s]
 let (mk_expr_path : Prims.string Prims.list -> expr) = fun l -> Expr_path l
 let (mk_lit_bool : Prims.bool -> expr) = fun b -> Expr_lit (Lit_bool b)

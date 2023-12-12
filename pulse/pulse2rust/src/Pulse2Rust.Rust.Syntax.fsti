@@ -172,6 +172,7 @@ type typ =
   | Typ_unit
   | Typ_infer
   | Typ_fn of typ_fn
+  | Typ_tuple of list typ
 
 and typ_reference = {
   typ_ref_mut : bool;
@@ -274,6 +275,7 @@ val mk_option_typ (t:typ) : typ
 val mk_array_typ (t:typ) (len:expr) : typ
 val mk_named_typ (s:string) (generic_args:list typ) : typ
 val mk_fn_typ (arg_typs:list typ) (ret_typ:typ) : typ
+val mk_tuple_typ (l:list typ) : typ
 
 val mk_expr_path_singl (s:string) : expr
 val mk_expr_path (l:list string) : expr

@@ -172,6 +172,7 @@ enum Typ {
     TUnit,
     TInfer,
     TFn(TypeFn),
+    TTuple(Vec<Typ>),
 }
 
 struct PatIdent {
@@ -500,6 +501,7 @@ impl_from_ocaml_variant! {
     Typ::TUnit,
     Typ::TInfer,
     Typ::TFn (payload:TypeFn),
+    Typ::TTuple (payload:OCamlList<Typ>),
   }
 }
 
@@ -1286,6 +1288,14 @@ fn to_syn_typ(t: &Typ) -> Type {
                 Box::new(to_syn_typ(&type_fn_ret)),
             ),
         }),
+        Typ::TTuple(ts) => syn::Type::Tuple(syn::TypeTuple {
+            paren_token: Paren::default(),
+            elems: {
+                let mut types: Punctuated<syn::Type, Comma> = Punctuated::new();
+                ts.iter().for_each(|t| types.push(to_syn_typ(t)));
+                types
+            },
+        }),
     }
 }
 
@@ -1886,6 +1896,14 @@ impl fmt::Display for Typ {
                     .join(","),
                 type_fn_ret
             ),
+            Typ::TTuple(ts) => write!(
+                f,
+                "({})",
+                ts.iter()
+                    .map(|t| t.to_string())
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
         }
     }
 }
@@ -2083,8 +2101,9 @@ ocaml_export! {
 }
 
 #[derive(Clone, Copy)]
-pub enum Cell<A: Clone + Copy, B: Clone + Copy> {
+pub enum cell<A: Clone + Copy, B: Clone + Copy> {
     Clean,
     Zombie,
     Used(A, B),
 }
+use crate::cell::*;

@@ -47,6 +47,8 @@ let mk_named_typ (s:string) (generic_args:list typ) : typ =
 let mk_fn_typ (typ_fn_args:list typ) (typ_fn_ret:typ) : typ =
   Typ_fn { typ_fn_args; typ_fn_ret }
 
+let mk_tuple_typ (l:list typ) : typ = Typ_tuple l
+
 let mk_expr_path_singl s = Expr_path [s]
 let mk_expr_path l = Expr_path l
 

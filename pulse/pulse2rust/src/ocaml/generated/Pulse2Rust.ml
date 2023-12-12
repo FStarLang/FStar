@@ -22,13 +22,7 @@ let (tyvar_of : Prims.string -> Prims.string) =
     FStar_Compiler_String.uppercase uu___
 let (varname : Prims.string -> Prims.string) =
   fun s -> FStar_Compiler_Util.replace_char s 39 95
-let (enum_or_struct_name : Prims.string -> Prims.string) =
-  fun s ->
-    let uu___ = FStar_Compiler_String.list_of_string s in
-    match uu___ with
-    | hd::tl ->
-        FStar_Compiler_String.string_of_list ((FStar_Char.uppercase hd) ::
-          tl)
+let (enum_or_struct_name : Prims.string -> Prims.string) = fun s -> s
 let (is_internal_name : Prims.string -> Prims.bool) =
   fun s ->
     (((((s = "uu___") || (s = "_fret")) || (s = "_bind_c")) ||
@@ -188,6 +182,14 @@ let rec (extract_mlty :
       | FStar_Extraction_ML_Syntax.MLTY_Named ([], p) when
           let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
           uu___ = "Prims.bool" -> Pulse2Rust_Rust_Syntax.mk_scalar_typ "bool"
+      | FStar_Extraction_ML_Syntax.MLTY_Named (l, p) when
+          (let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___ = "FStar.Pervasives.Native.tuple2") ||
+            (let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___ = "FStar.Pervasives.Native.tuple3")
+          ->
+          let uu___ = FStar_Compiler_List.map (extract_mlty g) l in
+          Pulse2Rust_Rust_Syntax.mk_tuple_typ uu___
       | FStar_Extraction_ML_Syntax.MLTY_Named (arg::[], p) when
           let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
           uu___ = "Pulse.Lib.Reference.ref" ->
@@ -346,7 +348,17 @@ let (is_binop :
                         (s = "FStar.SizeT.rem")
                     then
                       FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Rem
-                    else FStar_Pervasives_Native.None
+                    else
+                      if s = "Prims.op_AmpAmp"
+                      then
+                        FStar_Pervasives_Native.Some
+                          Pulse2Rust_Rust_Syntax.And
+                      else
+                        if s = "Prims.op_BarBar"
+                        then
+                          FStar_Pervasives_Native.Some
+                            Pulse2Rust_Rust_Syntax.Or
+                        else FStar_Pervasives_Native.None
 let (extract_mlconstant_to_lit :
   FStar_Extraction_ML_Syntax.mlconstant -> Pulse2Rust_Rust_Syntax.lit) =
   fun c ->
@@ -655,7 +667,7 @@ and (extract_mlexpr :
                     FStar_Extraction_ML_Syntax.MLE_Name p;
                   FStar_Extraction_ML_Syntax.mlty = uu___;
                   FStar_Extraction_ML_Syntax.loc = uu___1;_},
-                uu___2::[]);
+                uu___2);
              FStar_Extraction_ML_Syntax.mlty = uu___3;
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e1::e2::uu___5::[])
@@ -980,6 +992,12 @@ and (extract_mlexpr :
           let args1 = FStar_Compiler_List.map (extract_mlexpr g) args in
           Pulse2Rust_Rust_Syntax.mk_call head1 args1
       | FStar_Extraction_ML_Syntax.MLE_CTor (p, args) ->
+          let is_native =
+            ((FStar_Extraction_ML_Syntax.mlpath_to_string p) =
+               "FStar.Pervasives.Native.Some")
+              ||
+              ((FStar_Extraction_ML_Syntax.mlpath_to_string p) =
+                 "FStar.Pervasives.Native.None") in
           let ty_name =
             match e.FStar_Extraction_ML_Syntax.mlty with
             | FStar_Extraction_ML_Syntax.MLTY_Named (uu___, p1) ->
@@ -987,8 +1005,13 @@ and (extract_mlexpr :
             | uu___ ->
                 FStar_Compiler_Effect.failwith "S.MLE_CTor: unexpected type" in
           let dexpr =
-            Pulse2Rust_Rust_Syntax.mk_expr_path
-              [ty_name; FStar_Pervasives_Native.snd p] in
+            if is_native
+            then
+              Pulse2Rust_Rust_Syntax.mk_expr_path_singl
+                (FStar_Pervasives_Native.snd p)
+            else
+              Pulse2Rust_Rust_Syntax.mk_expr_path
+                [ty_name; FStar_Pervasives_Native.snd p] in
           if (FStar_Compiler_List.length args) = Prims.int_zero
           then dexpr
           else
