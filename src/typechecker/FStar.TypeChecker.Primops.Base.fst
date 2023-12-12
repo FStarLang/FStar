@@ -306,3 +306,35 @@ let mk3' #a #b #c #r #na #nb #nc #nr
         None
   in
   as_primitive_step_nbecbs true (name, 3, u_arity, interp, nbe_interp)
+
+let mk4' #a #b #c #d #r #na #nb #nc #nd #nr
+  (u_arity : int)
+  (name : Ident.lid)
+  {| EMB.embedding a |} {| NBE.embedding na |}
+  {| EMB.embedding b |} {| NBE.embedding nb |}
+  {| EMB.embedding c |} {| NBE.embedding nc |}
+  {| EMB.embedding d |} {| NBE.embedding nd |}
+  {| EMB.embedding r |} {| NBE.embedding nr |}
+  (f : a -> b -> c -> d -> option r)
+  (nbe_f : na -> nb -> nc -> nd -> option nr)
+  : primitive_step =
+  let interp : interp_t =
+    fun psc cb us args ->
+      match args with
+      | [(a, _); (b, _); (c, _); (d, _)] ->
+        let! r = f <$> try_unembed_simple a <*> try_unembed_simple b <*> try_unembed_simple c <*> try_unembed_simple d in
+        let! r = r in
+        return (embed_simple psc.psc_range r)
+      | _ -> None
+  in
+  let nbe_interp : nbe_interp_t =
+    fun cbs us args ->
+      match args with
+      | [(a, _); (b, _); (c, _); (d, _)] ->
+        let! r = nbe_f <$> NBE.unembed solve cbs a <*> NBE.unembed solve cbs b <*> NBE.unembed solve cbs c <*> NBE.unembed solve cbs d in
+        let! r = r in
+        return (NBE.embed solve cbs r)
+      | _ ->
+        None
+  in
+  as_primitive_step_nbecbs true (name, 4, u_arity, interp, nbe_interp)

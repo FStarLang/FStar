@@ -178,3 +178,15 @@ val mk3' #a #b #c #r #na #nb #nc #nr
   (f : a -> b -> c -> option r)
   (f : na -> nb -> nc -> option nr)
   : primitive_step
+
+val mk4' #a #b #c #d #r #na #nb #nc #nd #nr
+  (u_arity : int)
+  (name : Ident.lid)
+  {| EMB.embedding a |} {| NBE.embedding na |}
+  {| EMB.embedding b |} {| NBE.embedding nb |}
+  {| EMB.embedding c |} {| NBE.embedding nc |}
+  {| EMB.embedding d |} {| NBE.embedding nd |}
+  {| EMB.embedding r |} {| NBE.embedding nr |}
+  (f : a -> b -> c -> d -> option r)
+  (f : na -> nb -> nc -> nd -> option nr)
+  : primitive_step
