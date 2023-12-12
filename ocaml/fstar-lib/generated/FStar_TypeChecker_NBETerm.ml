@@ -388,34 +388,6 @@ let (mkAccuMatch :
   =
   fun s ->
     fun ret -> fun bs -> fun rc -> mk_t (Accu ((Match (s, ret, bs, rc)), []))
-type head = t
-type annot = t FStar_Pervasives_Native.option
-type nbe_cbs =
-  {
-  iapp: t -> args -> t ;
-  translate: FStar_Syntax_Syntax.term -> t }
-let (__proj__Mknbe_cbs__item__iapp : nbe_cbs -> t -> args -> t) =
-  fun projectee -> match projectee with | { iapp; translate;_} -> iapp
-let (__proj__Mknbe_cbs__item__translate :
-  nbe_cbs -> FStar_Syntax_Syntax.term -> t) =
-  fun projectee -> match projectee with | { iapp; translate;_} -> translate
-type 'a embedding =
-  {
-  em: nbe_cbs -> 'a -> t ;
-  un: nbe_cbs -> t -> 'a FStar_Pervasives_Native.option ;
-  typ: unit -> t ;
-  emb_typ: unit -> FStar_Syntax_Syntax.emb_typ }
-let __proj__Mkembedding__item__em : 'a . 'a embedding -> nbe_cbs -> 'a -> t =
-  fun projectee -> match projectee with | { em; un; typ; emb_typ;_} -> em
-let __proj__Mkembedding__item__un :
-  'a . 'a embedding -> nbe_cbs -> t -> 'a FStar_Pervasives_Native.option =
-  fun projectee -> match projectee with | { em; un; typ; emb_typ;_} -> un
-let __proj__Mkembedding__item__typ : 'a . 'a embedding -> unit -> t =
-  fun projectee -> match projectee with | { em; un; typ; emb_typ;_} -> typ
-let __proj__Mkembedding__item__emb_typ :
-  'a . 'a embedding -> unit -> FStar_Syntax_Syntax.emb_typ =
-  fun projectee ->
-    match projectee with | { em; un; typ; emb_typ;_} -> emb_typ
 let (equal_if : Prims.bool -> FStar_Syntax_Util.eq_result) =
   fun uu___ ->
     if uu___ then FStar_Syntax_Util.Equal else FStar_Syntax_Util.Unknown
@@ -711,6 +683,38 @@ let (args_to_string : args -> Prims.string) =
   fun args1 ->
     let uu___ = FStar_Compiler_List.map arg_to_string args1 in
     FStar_Compiler_String.concat " " uu___
+let (showable_t : t FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = t_to_string }
+let (showable_args : args FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = args_to_string }
+type head = t
+type annot = t FStar_Pervasives_Native.option
+type nbe_cbs =
+  {
+  iapp: t -> args -> t ;
+  translate: FStar_Syntax_Syntax.term -> t }
+let (__proj__Mknbe_cbs__item__iapp : nbe_cbs -> t -> args -> t) =
+  fun projectee -> match projectee with | { iapp; translate;_} -> iapp
+let (__proj__Mknbe_cbs__item__translate :
+  nbe_cbs -> FStar_Syntax_Syntax.term -> t) =
+  fun projectee -> match projectee with | { iapp; translate;_} -> translate
+type 'a embedding =
+  {
+  em: nbe_cbs -> 'a -> t ;
+  un: nbe_cbs -> t -> 'a FStar_Pervasives_Native.option ;
+  typ: unit -> t ;
+  emb_typ: unit -> FStar_Syntax_Syntax.emb_typ }
+let __proj__Mkembedding__item__em : 'a . 'a embedding -> nbe_cbs -> 'a -> t =
+  fun projectee -> match projectee with | { em; un; typ; emb_typ;_} -> em
+let __proj__Mkembedding__item__un :
+  'a . 'a embedding -> nbe_cbs -> t -> 'a FStar_Pervasives_Native.option =
+  fun projectee -> match projectee with | { em; un; typ; emb_typ;_} -> un
+let __proj__Mkembedding__item__typ : 'a . 'a embedding -> unit -> t =
+  fun projectee -> match projectee with | { em; un; typ; emb_typ;_} -> typ
+let __proj__Mkembedding__item__emb_typ :
+  'a . 'a embedding -> unit -> FStar_Syntax_Syntax.emb_typ =
+  fun projectee ->
+    match projectee with | { em; un; typ; emb_typ;_} -> emb_typ
 let (iapp_cb : nbe_cbs -> t -> args -> t) =
   fun cbs -> fun h -> fun a -> cbs.iapp h a
 let (translate_cb : nbe_cbs -> FStar_Syntax_Syntax.term -> t) =

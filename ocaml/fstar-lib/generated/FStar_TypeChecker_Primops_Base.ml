@@ -142,11 +142,8 @@ let (as_primitive_step_nbecbs :
             strong_reduction_ok = is_strong;
             requires_binder_substitution = false;
             renorm_after = false;
-            interpretation =
-              ((fun psc1 ->
-                  fun cb -> fun univs -> fun args -> f psc1 cb univs args));
-            interpretation_nbe =
-              ((fun cb -> fun univs -> fun args -> f_nbe cb univs args))
+            interpretation = f;
+            interpretation_nbe = f_nbe
           }
 let mk_interp1 :
   'a 'r .
