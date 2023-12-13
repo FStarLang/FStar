@@ -11,14 +11,14 @@ let _ =
           fun args  ->
             match args with
             | (tv_0,_)::args_tail ->
-                (FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_9
+                (FStar_Tactics_InterpFuns.mk_tactic_interpretation_9
                    "CanonCommSemiring.canon_semiring_aux (plugin)"
                    (FStar_Tactics_Native.from_tactic_9 canon_semiring_aux)
                    FStar_Reflection_V2_Embeddings.e_term
-                   (FStar_Tactics_V2_Interpreter.e_tactic_1_alt
+                   (FStar_Tactics_Interpreter.e_tactic_1_alt
                        FStar_Reflection_V2_Embeddings.e_term
                        (FStar_Syntax_Embeddings.mk_any_emb tv_0))
-                   (FStar_Tactics_V2_Interpreter.e_tactic_1_alt
+                   (FStar_Tactics_Interpreter.e_tactic_1_alt
                        (FStar_Syntax_Embeddings.mk_any_emb tv_0)
                        FStar_Reflection_V2_Embeddings.e_term)
                    FStar_Reflection_V2_Embeddings.e_term
