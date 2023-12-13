@@ -164,17 +164,15 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
         let h_result = t_head_of result in
         let open FStar.Pprint in
         let maybe_admit_tip : document =
-          (* (ab)use the map visitor to check whether the reduced head
+          (* Use the monadic visitor to check whether the reduced head
           contains an admit, which is a common error *)
-          let has_admit = BU.mk_ref false in
-          let _ : term =
-            Syntax.Visit.visit_term (fun t ->
+          let r : option term =
+            Syntax.VisitM.visitM_term (fun t ->
               match t.n with
-              | Tm_fvar fv when fv_eq_lid fv PC.admit_lid -> (has_admit := true; S.tun)
-              | _ -> S.tun
-            ) h_result
+              | Tm_fvar fv when fv_eq_lid fv PC.admit_lid -> None
+              | _ -> Some t) h_result
           in
-          if !has_admit
+          if None? r
           then doc_of_string "The term contains an `admit`, which will not reduce. Did you mean `tadmit()`?"
           else empty
         in
