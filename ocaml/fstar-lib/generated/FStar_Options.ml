@@ -2602,7 +2602,7 @@ let rec (specs_with_types :
                                                                     let uu___189
                                                                     =
                                                                     text
-                                                                    "Don't print an error message; show an exception trace instead" in
+                                                                    "Attach stack traces on errors" in
                                                                     (FStar_Getopt.noshort,
                                                                     "trace_error",
                                                                     (Const

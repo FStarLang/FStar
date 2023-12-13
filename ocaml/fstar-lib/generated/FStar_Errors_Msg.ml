@@ -42,7 +42,8 @@ let (backtrace_doc : unit -> FStar_Pprint.document) =
   fun uu___ ->
     let s = FStar_Compiler_Util.stack_dump () in
     let uu___1 = text "Stack trace:" in
-    let uu___2 = FStar_Pprint.arbitrary_string s in
+    let uu___2 =
+      FStar_Pprint.arbitrary_string (FStar_Compiler_Util.trim_string s) in
     FStar_Pprint.op_Hat_Slash_Hat uu___1 uu___2
 let (subdoc : FStar_Pprint.document -> FStar_Pprint.document) =
   fun d ->

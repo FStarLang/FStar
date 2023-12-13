@@ -880,13 +880,13 @@ let (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
              let uu___1 =
                FStar_Class_Show.show FStar_Syntax_Print.showable_ctxu u in
              let uu___2 =
-               match FStar_Pervasives_Native.fst s with
-               | [] -> ""
-               | s1 ->
-                   let uu___3 =
-                     let uu___4 = FStar_Compiler_List.hd s1 in
-                     FStar_Syntax_Print.subst_to_string uu___4 in
-                   FStar_Compiler_Util.format1 "@<%s>" uu___3 in
+               let uu___3 =
+                 FStar_Class_Show.show
+                   (FStar_Class_Show.show_list
+                      (FStar_Class_Show.show_list
+                         FStar_Syntax_Print.showable_subst_elt))
+                   (FStar_Pervasives_Native.fst s) in
+               Prims.strcat "@" uu___3 in
              let uu___3 =
                FStar_Class_Show.show FStar_Syntax_Print.showable_args args in
              FStar_Compiler_Util.format3 "%s%s %s" uu___1 uu___2 uu___3
@@ -2702,6 +2702,8 @@ let (string_of_match_result : match_result -> Prims.string) =
         let uu___1 = FStar_Compiler_Util.string_of_bool u in
         Prims.strcat "HeadMatch " uu___1
     | FullMatch -> "FullMatch"
+let (showable_match_result : match_result FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = string_of_match_result }
 let (head_match : match_result -> match_result) =
   fun uu___ ->
     match uu___ with
@@ -3215,28 +3217,14 @@ let (head_matches_delta :
              let uu___3 =
                FStar_Class_Show.show FStar_Syntax_Print.showable_term t2 in
              let uu___4 =
-               string_of_match_result (FStar_Pervasives_Native.fst r) in
-             let uu___5 =
-               if
-                 FStar_Compiler_Option.isNone (FStar_Pervasives_Native.snd r)
-               then "None"
-               else
-                 (let uu___7 =
-                    FStar_Compiler_Util.must (FStar_Pervasives_Native.snd r) in
-                  match uu___7 with
-                  | (t11, t21) ->
-                      let uu___8 =
-                        FStar_Class_Show.show
-                          FStar_Syntax_Print.showable_term t11 in
-                      let uu___9 =
-                        let uu___10 =
-                          FStar_Class_Show.show
-                            FStar_Syntax_Print.showable_term t21 in
-                        Prims.strcat "; " uu___10 in
-                      Prims.strcat uu___8 uu___9) in
-             FStar_Compiler_Util.print4
-               "head_matches_delta (%s, %s) = %s (%s)\n" uu___2 uu___3 uu___4
-               uu___5
+               FStar_Class_Show.show
+                 (FStar_Class_Show.show_tuple2 showable_match_result
+                    (FStar_Class_Show.show_option
+                       (FStar_Class_Show.show_tuple2
+                          FStar_Syntax_Print.showable_term
+                          FStar_Syntax_Print.showable_term))) r in
+             FStar_Compiler_Util.print3 "head_matches_delta (%s, %s) = %s\n"
+               uu___2 uu___3 uu___4
            else ());
           r
 let (kind_type :
@@ -10437,7 +10425,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                         uu___14 :: uu___15 in
                       uu___12 :: uu___13 in
                     FStar_Compiler_Util.print
-                      ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+                      ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s; no_free_uvars=%s]\n"
                       uu___11
                   else ());
                  (let equal t11 t21 =
@@ -10573,7 +10561,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                         uu___14 :: uu___15 in
                       uu___12 :: uu___13 in
                     FStar_Compiler_Util.print
-                      ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+                      ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s; no_free_uvars=%s]\n"
                       uu___11
                   else ());
                  (let equal t11 t21 =
@@ -10709,7 +10697,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                         uu___14 :: uu___15 in
                       uu___12 :: uu___13 in
                     FStar_Compiler_Util.print
-                      ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+                      ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s; no_free_uvars=%s]\n"
                       uu___11
                   else ());
                  (let equal t11 t21 =
@@ -10845,7 +10833,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                         uu___14 :: uu___15 in
                       uu___12 :: uu___13 in
                     FStar_Compiler_Util.print
-                      ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+                      ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s; no_free_uvars=%s]\n"
                       uu___11
                   else ());
                  (let equal t11 t21 =
@@ -10981,7 +10969,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                         uu___14 :: uu___15 in
                       uu___12 :: uu___13 in
                     FStar_Compiler_Util.print
-                      ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+                      ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s; no_free_uvars=%s]\n"
                       uu___11
                   else ());
                  (let equal t11 t21 =
@@ -11117,7 +11105,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                         uu___14 :: uu___15 in
                       uu___12 :: uu___13 in
                     FStar_Compiler_Util.print
-                      ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+                      ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s; no_free_uvars=%s]\n"
                       uu___11
                   else ());
                  (let equal t11 t21 =
@@ -11253,7 +11241,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                         uu___14 :: uu___15 in
                       uu___12 :: uu___13 in
                     FStar_Compiler_Util.print
-                      ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+                      ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s; no_free_uvars=%s]\n"
                       uu___11
                   else ());
                  (let equal t11 t21 =
@@ -11389,7 +11377,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                         uu___14 :: uu___15 in
                       uu___12 :: uu___13 in
                     FStar_Compiler_Util.print
-                      ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+                      ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s; no_free_uvars=%s]\n"
                       uu___11
                   else ());
                  (let equal t11 t21 =
@@ -11525,7 +11513,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                         uu___14 :: uu___15 in
                       uu___12 :: uu___13 in
                     FStar_Compiler_Util.print
-                      ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+                      ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s; no_free_uvars=%s]\n"
                       uu___11
                   else ());
                  (let equal t11 t21 =
@@ -11661,7 +11649,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                         uu___14 :: uu___15 in
                       uu___12 :: uu___13 in
                     FStar_Compiler_Util.print
-                      ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+                      ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s; no_free_uvars=%s]\n"
                       uu___11
                   else ());
                  (let equal t11 t21 =
@@ -11797,7 +11785,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                         uu___14 :: uu___15 in
                       uu___12 :: uu___13 in
                     FStar_Compiler_Util.print
-                      ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+                      ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s; no_free_uvars=%s]\n"
                       uu___11
                   else ());
                  (let equal t11 t21 =
@@ -11933,7 +11921,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                         uu___14 :: uu___15 in
                       uu___12 :: uu___13 in
                     FStar_Compiler_Util.print
-                      ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+                      ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s; no_free_uvars=%s]\n"
                       uu___11
                   else ());
                  (let equal t11 t21 =
@@ -14449,12 +14437,12 @@ let (check_subtyping :
                         (fun uu___5 -> FStar_Pervasives_Native.None) in
                     with_guard env prob uu___4 in
                   ((let uu___5 =
-                      (FStar_TypeChecker_Env.debug env
-                         (FStar_Options.Other "Rel"))
-                        ||
-                        ((FStar_TypeChecker_Env.debug env
-                            (FStar_Options.Other "RelTop"))
-                           && (FStar_Compiler_Util.is_some g)) in
+                      ((FStar_TypeChecker_Env.debug env
+                          (FStar_Options.Other "Rel"))
+                         ||
+                         (FStar_TypeChecker_Env.debug env
+                            (FStar_Options.Other "RelTop")))
+                        && (FStar_Compiler_Util.is_some g) in
                     if uu___5
                     then
                       let uu___6 =
