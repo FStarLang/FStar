@@ -353,7 +353,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
                      [with_ty MLTY_Top <| MLE_Const (MLC_String (Ident.string_of_lid fv_lid))])
     in
     let mk_tactic_interpretation l arity =
-      if arity > FStar.Tactics.V2.InterpFuns.max_tac_arity then
+      if arity > FStar.Tactics.InterpFuns.max_tac_arity then
         raise (NoEmbedding("tactic plugins can only take up to 20 arguments"))
       else
       let idroot =
@@ -361,7 +361,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
         | SyntaxTerm -> "mk_tactic_interpretation_"
         | NBETerm    -> "mk_nbe_tactic_interpretation_"
       in
-      as_name (["FStar_Tactics_V2_InterpFuns"], idroot^string_of_int arity)
+      as_name (["FStar_Tactics_InterpFuns"], idroot^string_of_int arity)
     in
     let mk_from_tactic l arity =
       let idroot =

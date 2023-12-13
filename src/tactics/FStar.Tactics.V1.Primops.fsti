@@ -1,5 +1,5 @@
 ﻿(*
-   Copyright 2008-2022 Microsoft Research
+   Copyright 2008-2016 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -13,12 +13,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.Reflection.V1.Placeholder
-open FStar
-open FStar.Compiler
-open FStar.Compiler.Effect
-open FStar.Syntax.Syntax
-open FStar.Compiler.Util
-open FStar.Ident
-open FStar.TypeChecker.Env
-let _ = 0
+module FStar.Tactics.V1.Primops
+
+open FStar.TypeChecker.Primops.Base
+
+val ops : list primitive_step

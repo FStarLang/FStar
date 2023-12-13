@@ -809,6 +809,7 @@ let arrow_as_prim_step_3 (ea:embedding 'a) (eb:embedding 'b)
     in
     f_wrapped
 
+(* TODO: move to, Syntax.Embeddings or somewhere better even *)
 let e_order =
   let ord_Lt_lid = Ident.lid_of_path (["FStar"; "Order"; "Lt"]) Range.dummyRange in
   let ord_Eq_lid = Ident.lid_of_path (["FStar"; "Order"; "Eq"]) Range.dummyRange in

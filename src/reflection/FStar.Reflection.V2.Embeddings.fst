@@ -490,7 +490,7 @@ let e_binder_view =
     S.mk_Tm_app ref_Mk_binder_view.t [
       S.as_arg (embed #_ #e_term rng bview.sort);
       S.as_arg (embed rng bview.qual);
-      S.as_arg (embed rng bview.attrs);
+      S.as_arg (embed #_ #e_attributes rng bview.attrs);
       S.as_arg (embed #_ #e_ppname rng bview.ppname);
     ]
                 rng in
@@ -560,7 +560,7 @@ let e_subst_elt =
         | DT (i, t) ->
             S.mk_Tm_app ref_DT.t [
                 S.as_arg (embed rng i);
-                S.as_arg (embed rng t);
+                S.as_arg (embed #_ #e_term rng t);
                ]
                rng
 
@@ -574,7 +574,7 @@ let e_subst_elt =
         | NT (x, t) ->
             S.mk_Tm_app ref_NT.t [
                 S.as_arg (embed #_ #e_namedv rng x);
-                S.as_arg (embed rng t);
+                S.as_arg (embed #_ #e_term rng t);
                ]
                rng
 
@@ -645,15 +645,15 @@ let e_sigelt_view =
                         [S.as_arg (embed rng nm);
                             S.as_arg (embed rng univs);
                             S.as_arg (embed rng bs);
-                            S.as_arg (embed rng t);
-                            S.as_arg (embed rng dcs)]
+                            S.as_arg (embed #_ #e_term rng t);
+                            S.as_arg (embed #_ #(e_list e_ctor) rng dcs)]
                         rng
 
         | Sg_Val (nm, univs, t) ->
             S.mk_Tm_app ref_Sg_Val.t
                         [S.as_arg (embed rng nm);
                          S.as_arg (embed rng univs);
-                         S.as_arg (embed rng t)]
+                         S.as_arg (embed #_ #e_term rng t)]
                         rng
 
         | Unk ->
@@ -792,8 +792,8 @@ let unfold_lazy_letbinding (i : lazyinfo) : term =
         [
             S.as_arg (embed i.rng lbv.lb_fv);
             S.as_arg (embed i.rng lbv.lb_us);
-            S.as_arg (embed i.rng lbv.lb_typ);
-            S.as_arg (embed i.rng lbv.lb_def)
+            S.as_arg (embed #_ #e_term i.rng lbv.lb_typ);
+            S.as_arg (embed #_ #e_term i.rng lbv.lb_def)
         ]
         i.rng
 
