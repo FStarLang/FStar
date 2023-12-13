@@ -2031,6 +2031,65 @@ let (e_vconfig :
            FStar_Ident.string_of_lid FStar_Parser_Const.vconfig_lid in
          (uu___2, []) in
        FStar_Syntax_Syntax.ET_app uu___1)
+let (e_order : FStar_Order.order FStar_Syntax_Embeddings_Base.embedding) =
+  let ord_Lt_lid =
+    FStar_Ident.lid_of_path ["FStar"; "Order"; "Lt"]
+      FStar_Compiler_Range_Type.dummyRange in
+  let ord_Eq_lid =
+    FStar_Ident.lid_of_path ["FStar"; "Order"; "Eq"]
+      FStar_Compiler_Range_Type.dummyRange in
+  let ord_Gt_lid =
+    FStar_Ident.lid_of_path ["FStar"; "Order"; "Gt"]
+      FStar_Compiler_Range_Type.dummyRange in
+  let ord_Lt = FStar_Syntax_Syntax.tdataconstr ord_Lt_lid in
+  let ord_Eq = FStar_Syntax_Syntax.tdataconstr ord_Eq_lid in
+  let ord_Gt = FStar_Syntax_Syntax.tdataconstr ord_Gt_lid in
+  let ord_Lt_fv =
+    FStar_Syntax_Syntax.lid_as_fv ord_Lt_lid
+      (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor) in
+  let ord_Eq_fv =
+    FStar_Syntax_Syntax.lid_as_fv ord_Eq_lid
+      (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor) in
+  let ord_Gt_fv =
+    FStar_Syntax_Syntax.lid_as_fv ord_Gt_lid
+      (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor) in
+  let embed_order o rng shadow cb =
+    let r =
+      match o with
+      | FStar_Order.Lt -> ord_Lt
+      | FStar_Order.Eq -> ord_Eq
+      | FStar_Order.Gt -> ord_Gt in
+    {
+      FStar_Syntax_Syntax.n = (r.FStar_Syntax_Syntax.n);
+      FStar_Syntax_Syntax.pos = rng;
+      FStar_Syntax_Syntax.vars = (r.FStar_Syntax_Syntax.vars);
+      FStar_Syntax_Syntax.hash_code = (r.FStar_Syntax_Syntax.hash_code)
+    } in
+  let unembed_order t cb =
+    let t1 = FStar_Syntax_Util.unascribe t in
+    let uu___ = FStar_Syntax_Util.head_and_args t1 in
+    match uu___ with
+    | (hd, args) ->
+        let uu___1 =
+          let uu___2 =
+            let uu___3 = FStar_Syntax_Util.un_uinst hd in
+            uu___3.FStar_Syntax_Syntax.n in
+          (uu___2, args) in
+        (match uu___1 with
+         | (FStar_Syntax_Syntax.Tm_fvar fv, []) when
+             FStar_Syntax_Syntax.fv_eq_lid fv ord_Lt_lid ->
+             FStar_Pervasives_Native.Some FStar_Order.Lt
+         | (FStar_Syntax_Syntax.Tm_fvar fv, []) when
+             FStar_Syntax_Syntax.fv_eq_lid fv ord_Eq_lid ->
+             FStar_Pervasives_Native.Some FStar_Order.Eq
+         | (FStar_Syntax_Syntax.Tm_fvar fv, []) when
+             FStar_Syntax_Syntax.fv_eq_lid fv ord_Gt_lid ->
+             FStar_Pervasives_Native.Some FStar_Order.Gt
+         | uu___2 -> FStar_Pervasives_Native.None) in
+  let uu___ =
+    FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.order_lid
+      FStar_Pervasives_Native.None in
+  FStar_Syntax_Embeddings_Base.mk_emb embed_order unembed_order uu___
 let or_else : 'a . 'a FStar_Pervasives_Native.option -> (unit -> 'a) -> 'a =
   fun f ->
     fun g ->

@@ -3046,7 +3046,7 @@ let _ =
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_1
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
                "FStar.Tactics.NamedView.inspect (plugin)"
                (FStar_Tactics_Native.from_tactic_1 inspect)
                FStar_Reflection_V2_Embeddings.e_term e_named_term_view psc
@@ -3958,7 +3958,7 @@ let _ =
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_1
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
                "FStar.Tactics.NamedView.inspect_sigelt (plugin)"
                (FStar_Tactics_Native.from_tactic_1 inspect_sigelt)
                FStar_Reflection_V2_Embeddings.e_sigelt e_named_sigelt_view
@@ -3989,7 +3989,7 @@ let _ =
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_1
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
                "FStar.Tactics.NamedView.pack_sigelt (plugin)"
                (FStar_Tactics_Native.from_tactic_1 pack_sigelt)
                e_named_sigelt_view FStar_Reflection_V2_Embeddings.e_sigelt
@@ -4022,7 +4022,7 @@ let _ =
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_2
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_2
                "FStar.Tactics.NamedView.tcc (plugin)"
                (FStar_Tactics_Native.from_tactic_2 tcc)
                FStar_Reflection_V2_Embeddings.e_env
@@ -4040,7 +4040,7 @@ let _ =
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_1
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
                "FStar.Tactics.NamedView.comp_to_string (plugin)"
                (FStar_Tactics_Native.from_tactic_1 comp_to_string)
                FStar_Reflection_V2_Embeddings.e_comp_view

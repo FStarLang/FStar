@@ -1687,41 +1687,6 @@ let (e_comp_view :
          FStar_Pervasives_Native.None) in
   mk_emb' embed_comp_view unembed_comp_view
     FStar_Reflection_V1_Constants.fstar_refl_comp_view_fv
-let (e_order : FStar_Order.order FStar_TypeChecker_NBETerm.embedding) =
-  let embed_order cb o =
-    match o with
-    | FStar_Order.Lt ->
-        mkConstruct FStar_Reflection_V1_Constants.ord_Lt_fv [] []
-    | FStar_Order.Eq ->
-        mkConstruct FStar_Reflection_V1_Constants.ord_Eq_fv [] []
-    | FStar_Order.Gt ->
-        mkConstruct FStar_Reflection_V1_Constants.ord_Gt_fv [] [] in
-  let unembed_order cb t =
-    match t.FStar_TypeChecker_NBETerm.nbe_t with
-    | FStar_TypeChecker_NBETerm.Construct (fv, uu___, []) when
-        FStar_Syntax_Syntax.fv_eq_lid fv
-          FStar_Reflection_V1_Constants.ord_Lt_lid
-        -> FStar_Pervasives_Native.Some FStar_Order.Lt
-    | FStar_TypeChecker_NBETerm.Construct (fv, uu___, []) when
-        FStar_Syntax_Syntax.fv_eq_lid fv
-          FStar_Reflection_V1_Constants.ord_Eq_lid
-        -> FStar_Pervasives_Native.Some FStar_Order.Eq
-    | FStar_TypeChecker_NBETerm.Construct (fv, uu___, []) when
-        FStar_Syntax_Syntax.fv_eq_lid fv
-          FStar_Reflection_V1_Constants.ord_Gt_lid
-        -> FStar_Pervasives_Native.Some FStar_Order.Gt
-    | uu___ ->
-        ((let uu___2 =
-            let uu___3 =
-              let uu___4 = FStar_TypeChecker_NBETerm.t_to_string t in
-              FStar_Compiler_Util.format1 "Not an embedded order: %s" uu___4 in
-            (FStar_Errors_Codes.Warning_NotEmbedded, uu___3) in
-          FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange uu___2);
-         FStar_Pervasives_Native.None) in
-  let uu___ =
-    FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.order_lid
-      FStar_Pervasives_Native.None in
-  mk_emb' embed_order unembed_order uu___
 let (e_sigelt :
   FStar_Syntax_Syntax.sigelt FStar_TypeChecker_NBETerm.embedding) =
   let embed_sigelt cb se =
