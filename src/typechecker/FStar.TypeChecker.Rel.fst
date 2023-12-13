@@ -331,7 +331,7 @@ let term_to_string t =
     | Tm_uvar (u, s) ->
       BU.format3 "%s%s %s"
             (show u)
-            (match fst s with | [] -> "" | s -> BU.format1 "@<%s>" (Print.subst_to_string (List.hd s)))
+            ("@" ^ show (fst s))
             (show args)
     | _ -> show t
 
@@ -1228,6 +1228,8 @@ let string_of_match_result = function
     | HeadMatch u -> "HeadMatch " ^ string_of_bool u
     | FullMatch -> "FullMatch"
 
+instance showable_match_result = { show = string_of_match_result; }
+
 let head_match = function
     | MisMatch(i, j) -> MisMatch(i, j)
     | HeadMatch true -> HeadMatch true
@@ -1444,18 +1446,8 @@ let head_matches_delta env smt_ok t1 t2 : (match_result & option (typ&typ)) =
               success n_delta r t1 t2 in
     let r = aux true 0 t1 t2 in
     if Env.debug env <| Options.Other "RelDelta" then
-        BU.print4 "head_matches_delta (%s, %s) = %s (%s)\n"
-            (show t1)
-            (show t2)
-            (string_of_match_result (fst r))
-            (if Option.isNone (snd r)
-             then "None"
-             else snd r
-                 |> must
-                 |> (fun (t1, t2) ->
-                     show t1
-                     ^ "; "
-                     ^ show t2));
+        BU.print3 "head_matches_delta (%s, %s) = %s\n"
+            (show t1) (show t2) (show r);
     r
 
 let kind_type (binders:binders) (r:Range.range) =
@@ -4231,7 +4223,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
          let head2 = U.head_and_args t2 |> fst in
          let _ =
              if debug wl (Options.Other "Rel")
-             then BU.print ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+             then BU.print ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s; no_free_uvars=%s]\n"
                [(string_of_int problem.pid);
                 (string_of_bool wl.smt_ok);
                 (show head1);
@@ -5201,8 +5193,8 @@ let check_subtyping env t1 t2 =
     let prob, x, wl = new_t_prob (empty_worklist env) env t1 SUB t2 in
     let smt_ok = not (Options.ml_ish ()) in
     let g = with_guard env prob <| solve_and_commit (singleton wl prob smt_ok) (fun _ -> None) in
-    if Env.debug env <| Options.Other "Rel" || Env.debug env <| Options.Other "RelTop"
-    && BU.is_some g
+    if (Env.debug env <| Options.Other "Rel" || Env.debug env <| Options.Other "RelTop")
+        && BU.is_some g
     then BU.print3 "check_subtyping succeeded: %s <: %s\n\tguard is %s\n"
                     (N.term_to_string env t1)
                     (N.term_to_string env t2)
