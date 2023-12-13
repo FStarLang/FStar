@@ -899,6 +899,37 @@ let e_vconfig =
         (fun _ -> "vconfig")
         (fun () -> ET_app (PC.vconfig_lid |> Ident.string_of_lid, []))
 
+let e_order =
+  let ord_Lt_lid = Ident.lid_of_path (["FStar"; "Order"; "Lt"]) Range.dummyRange in
+  let ord_Eq_lid = Ident.lid_of_path (["FStar"; "Order"; "Eq"]) Range.dummyRange in
+  let ord_Gt_lid = Ident.lid_of_path (["FStar"; "Order"; "Gt"]) Range.dummyRange in
+  let ord_Lt = tdataconstr ord_Lt_lid in
+  let ord_Eq = tdataconstr ord_Eq_lid in
+  let ord_Gt = tdataconstr ord_Gt_lid in
+  let ord_Lt_fv = lid_as_fv ord_Lt_lid (Some Data_ctor) in
+  let ord_Eq_fv = lid_as_fv ord_Eq_lid (Some Data_ctor) in
+  let ord_Gt_fv = lid_as_fv ord_Gt_lid (Some Data_ctor) in
+  let open FStar.Order in
+  let embed_order (o:order) rng shadow cb : term =
+      let r =
+      match o with
+      | Lt -> ord_Lt
+      | Eq -> ord_Eq
+      | Gt -> ord_Gt
+      in { r with pos = rng }
+  in
+  let unembed_order (t:term) cb : option order =
+      let t = U.unascribe t in
+      let hd, args = U.head_and_args t in
+      match (U.un_uinst hd).n, args with
+      | Tm_fvar fv, [] when S.fv_eq_lid fv ord_Lt_lid -> Some Lt
+      | Tm_fvar fv, [] when S.fv_eq_lid fv ord_Eq_lid -> Some Eq
+      | Tm_fvar fv, [] when S.fv_eq_lid fv ord_Gt_lid -> Some Gt
+      | _ ->
+          None
+  in
+  mk_emb embed_order unembed_order (lid_as_fv PC.order_lid None)
+
 let or_else (f: option 'a) (g:unit -> 'a) =
     match f with
     | Some x -> x

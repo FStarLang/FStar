@@ -808,3 +808,31 @@ let arrow_as_prim_step_3 (ea:embedding 'a) (eb:embedding 'b)
         Some (embed ed cb (f x y z)))))
     in
     f_wrapped
+
+let e_order =
+  let ord_Lt_lid = Ident.lid_of_path (["FStar"; "Order"; "Lt"]) Range.dummyRange in
+  let ord_Eq_lid = Ident.lid_of_path (["FStar"; "Order"; "Eq"]) Range.dummyRange in
+  let ord_Gt_lid = Ident.lid_of_path (["FStar"; "Order"; "Gt"]) Range.dummyRange in
+  let ord_Lt = tdataconstr ord_Lt_lid in
+  let ord_Eq = tdataconstr ord_Eq_lid in
+  let ord_Gt = tdataconstr ord_Gt_lid in
+  let ord_Lt_fv = lid_as_fv ord_Lt_lid (Some Data_ctor) in
+  let ord_Eq_fv = lid_as_fv ord_Eq_lid (Some Data_ctor) in
+  let ord_Gt_fv = lid_as_fv ord_Gt_lid (Some Data_ctor) in
+  let open FStar.Order in
+  let embed_order cb (o:order) : t =
+      match o with
+      | Lt -> mkConstruct ord_Lt_fv [] []
+      | Eq -> mkConstruct ord_Eq_fv [] []
+      | Gt -> mkConstruct ord_Gt_fv [] []
+  in
+  let unembed_order cb (t:t) : option order =
+      match t.nbe_t with
+      | Construct (fv, _, []) when S.fv_eq_lid fv ord_Lt_lid -> Some Lt
+      | Construct (fv, _, []) when S.fv_eq_lid fv ord_Eq_lid -> Some Eq
+      | Construct (fv, _, []) when S.fv_eq_lid fv ord_Gt_lid -> Some Gt
+      | _ -> None
+  in
+  let fv_as_emb_typ fv = S.ET_app (FStar.Ident.string_of_lid fv.fv_name.v, []) in
+  let fv = lid_as_fv PC.order_lid None in
+  mk_emb embed_order unembed_order (fun () -> mkFV fv [] []) (fun () -> fv_as_emb_typ fv)

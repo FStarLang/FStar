@@ -606,27 +606,6 @@ instance e_comp_view =
 
 
 (* TODO: move to, Syntax.Embeddings or somewhere better even *)
-let e_order =
-    let embed_order (rng:Range.range) (o:order) : term =
-        let r =
-        match o with
-        | Lt -> ord_Lt
-        | Eq -> ord_Eq
-        | Gt -> ord_Gt
-        in { r with pos = rng }
-    in
-    let unembed_order (t:term) : option order =
-        let t = U.unascribe t in
-        let hd, args = U.head_and_args t in
-        match (U.un_uinst hd).n, args with
-        | Tm_fvar fv, [] when S.fv_eq_lid fv ord_Lt_lid -> Some Lt
-        | Tm_fvar fv, [] when S.fv_eq_lid fv ord_Eq_lid -> Some Eq
-        | Tm_fvar fv, [] when S.fv_eq_lid fv ord_Gt_lid -> Some Gt
-        | _ ->
-            None
-    in
-    mk_emb embed_order unembed_order S.t_order
-
 instance e_sigelt =
     let embed_sigelt (rng:Range.range) (se:sigelt) : term =
         U.mk_lazy se fstar_refl_sigelt Lazy_sigelt (Some rng)

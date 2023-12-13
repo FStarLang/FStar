@@ -46,7 +46,6 @@ instance val e_pattern       : embedding pattern
 instance val e_branch        : embedding Data.branch
 instance val e_aqualv        : embedding aqualv
 instance val e_argv          : embedding argv
-instance val e_order         : embedding order
 instance val e_sigelt        : embedding sigelt
 instance val e_letbinding    : embedding letbinding
 instance val e_lb_view       : embedding lb_view

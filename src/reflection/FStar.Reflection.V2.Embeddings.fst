@@ -544,26 +544,6 @@ let e_comp_view =
     in
     mk_emb embed_comp_view unembed_comp_view fstar_refl_comp_view
 
-(* TODO: move to, Syntax.Embeddings or somewhere better even *)
-let e_order =
-    let embed_order (rng:Range.range) (o:order) : term =
-        let r =
-        match o with
-        | Lt -> ord_Lt
-        | Eq -> ord_Eq
-        | Gt -> ord_Gt
-        in { r with pos = rng }
-    in
-    let unembed_order (t:term) : option order =
-        let? fv, args = head_fv_and_args t in
-        match () with
-        | _ when S.fv_eq_lid fv ord_Lt_lid -> run args (pure Lt)
-        | _ when S.fv_eq_lid fv ord_Eq_lid -> run args (pure Eq)
-        | _ when S.fv_eq_lid fv ord_Gt_lid -> run args (pure Gt)
-        | _ -> None
-    in
-    mk_emb embed_order unembed_order S.t_order
-
 let e_univ_name = e_ident
 let e_univ_names = e_list e_univ_name
 
