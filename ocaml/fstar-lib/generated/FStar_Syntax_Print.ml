@@ -1976,3 +1976,6 @@ let (showable_binding :
   }
 let (showable_pragma : FStar_Syntax_Syntax.pragma FStar_Class_Show.showable)
   = { FStar_Class_Show.show = pragma_to_string }
+let (showable_subst_elt :
+  FStar_Syntax_Syntax.subst_elt FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = subst_elt_to_string }

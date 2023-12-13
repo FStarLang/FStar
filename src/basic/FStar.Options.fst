@@ -1242,7 +1242,7 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * Pprint.d
   ( noshort,
     "trace_error",
     Const (Bool true),
-    text "Don't print an error message; show an exception trace instead");
+    text "Attach stack traces on errors");
 
   ( noshort,
     "ugly",

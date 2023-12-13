@@ -815,6 +815,15 @@ let (lookup :
                | FStar_Pervasives_Native.Some uu___2 -> level in
              with_level level'
          | uu___1 -> with_level level)
+let (maybe_add_backtrace :
+  FStar_Errors_Msg.error_message -> FStar_Errors_Msg.error_message) =
+  fun msg ->
+    let uu___ = FStar_Options.trace_error () in
+    if uu___
+    then
+      let uu___1 = let uu___2 = FStar_Errors_Msg.backtrace_doc () in [uu___2] in
+      FStar_Compiler_List.op_At msg uu___1
+    else msg
 let (log_issue_ctx :
   FStar_Compiler_Range_Type.range ->
     (FStar_Errors_Codes.raw_error * FStar_Errors_Msg.error_message) ->
@@ -825,24 +834,25 @@ let (log_issue_ctx :
       fun ctx ->
         match uu___ with
         | (e, msg) ->
+            let msg1 = maybe_add_backtrace msg in
             let uu___1 = lookup e in
             (match uu___1 with
              | (uu___2, FStar_Errors_Codes.CAlwaysError, errno1) ->
                  add_one
-                   (mk_issue EError (FStar_Pervasives_Native.Some r) msg
+                   (mk_issue EError (FStar_Pervasives_Native.Some r) msg1
                       (FStar_Pervasives_Native.Some errno1) ctx)
              | (uu___2, FStar_Errors_Codes.CError, errno1) ->
                  add_one
-                   (mk_issue EError (FStar_Pervasives_Native.Some r) msg
+                   (mk_issue EError (FStar_Pervasives_Native.Some r) msg1
                       (FStar_Pervasives_Native.Some errno1) ctx)
              | (uu___2, FStar_Errors_Codes.CWarning, errno1) ->
                  add_one
-                   (mk_issue EWarning (FStar_Pervasives_Native.Some r) msg
+                   (mk_issue EWarning (FStar_Pervasives_Native.Some r) msg1
                       (FStar_Pervasives_Native.Some errno1) ctx)
              | (uu___2, FStar_Errors_Codes.CSilent, uu___3) -> ()
              | (uu___2, FStar_Errors_Codes.CFatal, errno1) ->
                  let i =
-                   mk_issue EError (FStar_Pervasives_Native.Some r) msg
+                   mk_issue EError (FStar_Pervasives_Native.Some r) msg1
                      (FStar_Pervasives_Native.Some errno1) ctx in
                  let uu___3 = FStar_Options.ide () in
                  if uu___3
@@ -926,7 +936,8 @@ let raise_error_doc :
       | (e, msg) ->
           let uu___1 =
             let uu___2 =
-              let uu___3 = error_context.get () in (e, msg, r, uu___3) in
+              let uu___3 = maybe_add_backtrace msg in
+              let uu___4 = error_context.get () in (e, uu___3, r, uu___4) in
             Error uu___2 in
           FStar_Compiler_Effect.raise uu___1
 let raise_err_doc :
@@ -936,7 +947,9 @@ let raise_err_doc :
     match uu___ with
     | (e, msg) ->
         let uu___1 =
-          let uu___2 = let uu___3 = error_context.get () in (e, msg, uu___3) in
+          let uu___2 =
+            let uu___3 = maybe_add_backtrace msg in
+            let uu___4 = error_context.get () in (e, uu___3, uu___4) in
           Err uu___2 in
         FStar_Compiler_Effect.raise uu___1
 let raise_error :
