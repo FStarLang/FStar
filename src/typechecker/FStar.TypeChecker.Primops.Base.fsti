@@ -158,6 +158,24 @@ val mk5 #a #b #c #d #e #r
 (* Duplication for op_Division / op_Modulus which can prevent reduction. The `f`
 already returns something in the option monad, so we add an extra join. Also for
 decidable eq which needs different impls in each normalizer *)
+val mk1' #a #r #na #nr
+  (u_arity : int)
+  (name : Ident.lid)
+  {| EMB.embedding a |} {| NBE.embedding na |}
+  {| EMB.embedding r |} {| NBE.embedding nr |}
+  (f : a -> option r)
+  (f : na -> option nr)
+  : primitive_step
+
+val mk1_psc' #a #r #na #nr
+  (u_arity : int)
+  (name : Ident.lid)
+  {| EMB.embedding a |} {| NBE.embedding na |}
+  {| EMB.embedding r |} {| NBE.embedding nr |}
+  (f : psc -> a -> option r)
+  (f : psc -> na -> option nr)
+  : primitive_step
+
 val mk2' #a #b #r #na #nb #nr
   (u_arity : int)
   (name : Ident.lid)
@@ -177,4 +195,30 @@ val mk3' #a #b #c #r #na #nb #nc #nr
   {| EMB.embedding r |} {| NBE.embedding nr |}
   (f : a -> b -> c -> option r)
   (f : na -> nb -> nc -> option nr)
+  : primitive_step
+
+val mk4' #a #b #c #d #r #na #nb #nc #nd #nr
+  (u_arity : int)
+  (name : Ident.lid)
+  {| EMB.embedding a |} {| NBE.embedding na |}
+  {| EMB.embedding b |} {| NBE.embedding nb |}
+  {| EMB.embedding c |} {| NBE.embedding nc |}
+  {| EMB.embedding d |} {| NBE.embedding nd |}
+  {| EMB.embedding r |} {| NBE.embedding nr |}
+  (f : a -> b -> c -> d -> option r)
+  (f : na -> nb -> nc -> nd -> option nr)
+  : primitive_step
+
+
+val mk5' #a #b #c #d #e #r #na #nb #nc #nd #ne #nr
+  (u_arity : int)
+  (name : Ident.lid)
+  {| EMB.embedding a |} {| NBE.embedding na |}
+  {| EMB.embedding b |} {| NBE.embedding nb |}
+  {| EMB.embedding c |} {| NBE.embedding nc |}
+  {| EMB.embedding d |} {| NBE.embedding nd |}
+  {| EMB.embedding e |} {| NBE.embedding ne |}
+  {| EMB.embedding r |} {| NBE.embedding nr |}
+  (f : a -> b -> c -> d -> e -> option r)
+  (f : na -> nb -> nc -> nd -> ne -> option nr)
   : primitive_step

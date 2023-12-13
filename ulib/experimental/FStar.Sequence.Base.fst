@@ -515,6 +515,7 @@ private let append_then_take_or_drop_lemma ()
       append_then_take_or_drop_helper s t n
     )
 
+#push-options "--z3rlimit 20"
 private let rec take_commutes_with_in_range_update_helper (#ty: Type) (s: list ty) (i: nat) (v: ty) (n: nat)
   : Lemma (requires   i < n
                     /\ n <= length s
@@ -523,6 +524,7 @@ private let rec take_commutes_with_in_range_update_helper (#ty: Type) (s: list t
           (ensures  take (update s i v) n == update (take s n) i v) =
   match s with
   | hd :: tl -> if i = 0 then () else (update_maintains_length_lemma() ; take_commutes_with_in_range_update_helper tl (i - 1) v (n - 1))
+#pop-options
 
 private let take_commutes_with_in_range_update_lemma ()
   : Lemma (requires update_maintains_length_fact u#a /\ take_length_fact u#a)

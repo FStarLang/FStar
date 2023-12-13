@@ -728,7 +728,7 @@ let _ =
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_1
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
                "FStar.Tactics.CheckLN.check_ln (plugin)"
                (FStar_Tactics_Native.from_tactic_1 check_ln)
                FStar_Reflection_V2_Embeddings.e_term

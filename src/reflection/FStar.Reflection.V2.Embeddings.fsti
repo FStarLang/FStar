@@ -46,14 +46,13 @@ instance val e_pattern       : embedding pattern
 instance val e_branch        : embedding Data.branch
 instance val e_aqualv        : embedding aqualv
 instance val e_argv          : embedding argv
-instance val e_order         : embedding order
 instance val e_sigelt        : embedding sigelt
 instance val e_letbinding    : embedding letbinding
 instance val e_lb_view       : embedding lb_view
 instance val e_sigelt_view   : embedding sigelt_view
 instance val e_namedv_view   : embedding namedv_view
 instance val e_bv_view       : embedding bv_view
-instance val e_attribute     : embedding attribute
+         val e_attribute     : embedding attribute
 instance val e_qualifier     : embedding RD.qualifier
 instance val e_ident         : embedding Ident.ident
 instance val e_univ_name     : embedding univ_name

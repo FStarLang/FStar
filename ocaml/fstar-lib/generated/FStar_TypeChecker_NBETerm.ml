@@ -1964,3 +1964,54 @@ let arrow_as_prim_step_3 :
                                                       FStar_Pervasives_Native.Some
                                                         uu___10)))))) in
                   f_wrapped
+let (e_order : FStar_Order.order embedding) =
+  let ord_Lt_lid =
+    FStar_Ident.lid_of_path ["FStar"; "Order"; "Lt"]
+      FStar_Compiler_Range_Type.dummyRange in
+  let ord_Eq_lid =
+    FStar_Ident.lid_of_path ["FStar"; "Order"; "Eq"]
+      FStar_Compiler_Range_Type.dummyRange in
+  let ord_Gt_lid =
+    FStar_Ident.lid_of_path ["FStar"; "Order"; "Gt"]
+      FStar_Compiler_Range_Type.dummyRange in
+  let ord_Lt = FStar_Syntax_Syntax.tdataconstr ord_Lt_lid in
+  let ord_Eq = FStar_Syntax_Syntax.tdataconstr ord_Eq_lid in
+  let ord_Gt = FStar_Syntax_Syntax.tdataconstr ord_Gt_lid in
+  let ord_Lt_fv =
+    FStar_Syntax_Syntax.lid_as_fv ord_Lt_lid
+      (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor) in
+  let ord_Eq_fv =
+    FStar_Syntax_Syntax.lid_as_fv ord_Eq_lid
+      (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor) in
+  let ord_Gt_fv =
+    FStar_Syntax_Syntax.lid_as_fv ord_Gt_lid
+      (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor) in
+  let embed_order cb o =
+    match o with
+    | FStar_Order.Lt -> mkConstruct ord_Lt_fv [] []
+    | FStar_Order.Eq -> mkConstruct ord_Eq_fv [] []
+    | FStar_Order.Gt -> mkConstruct ord_Gt_fv [] [] in
+  let unembed_order cb t1 =
+    match t1.nbe_t with
+    | Construct (fv, uu___, []) when
+        FStar_Syntax_Syntax.fv_eq_lid fv ord_Lt_lid ->
+        FStar_Pervasives_Native.Some FStar_Order.Lt
+    | Construct (fv, uu___, []) when
+        FStar_Syntax_Syntax.fv_eq_lid fv ord_Eq_lid ->
+        FStar_Pervasives_Native.Some FStar_Order.Eq
+    | Construct (fv, uu___, []) when
+        FStar_Syntax_Syntax.fv_eq_lid fv ord_Gt_lid ->
+        FStar_Pervasives_Native.Some FStar_Order.Gt
+    | uu___ -> FStar_Pervasives_Native.None in
+  let fv_as_emb_typ fv =
+    let uu___ =
+      let uu___1 =
+        FStar_Ident.string_of_lid
+          (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
+      (uu___1, []) in
+    FStar_Syntax_Syntax.ET_app uu___ in
+  let fv =
+    FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.order_lid
+      FStar_Pervasives_Native.None in
+  mk_emb embed_order unembed_order (fun uu___ -> mkFV fv [] [])
+    (fun uu___ -> fv_as_emb_typ fv)

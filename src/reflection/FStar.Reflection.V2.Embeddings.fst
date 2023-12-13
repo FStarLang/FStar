@@ -490,7 +490,7 @@ let e_binder_view =
     S.mk_Tm_app ref_Mk_binder_view.t [
       S.as_arg (embed #_ #e_term rng bview.sort);
       S.as_arg (embed rng bview.qual);
-      S.as_arg (embed rng bview.attrs);
+      S.as_arg (embed #_ #e_attributes rng bview.attrs);
       S.as_arg (embed #_ #e_ppname rng bview.ppname);
     ]
                 rng in
@@ -544,26 +544,6 @@ let e_comp_view =
     in
     mk_emb embed_comp_view unembed_comp_view fstar_refl_comp_view
 
-(* TODO: move to, Syntax.Embeddings or somewhere better even *)
-let e_order =
-    let embed_order (rng:Range.range) (o:order) : term =
-        let r =
-        match o with
-        | Lt -> ord_Lt
-        | Eq -> ord_Eq
-        | Gt -> ord_Gt
-        in { r with pos = rng }
-    in
-    let unembed_order (t:term) : option order =
-        let? fv, args = head_fv_and_args t in
-        match () with
-        | _ when S.fv_eq_lid fv ord_Lt_lid -> run args (pure Lt)
-        | _ when S.fv_eq_lid fv ord_Eq_lid -> run args (pure Eq)
-        | _ when S.fv_eq_lid fv ord_Gt_lid -> run args (pure Gt)
-        | _ -> None
-    in
-    mk_emb embed_order unembed_order S.t_order
-
 let e_univ_name = e_ident
 let e_univ_names = e_list e_univ_name
 
@@ -580,7 +560,7 @@ let e_subst_elt =
         | DT (i, t) ->
             S.mk_Tm_app ref_DT.t [
                 S.as_arg (embed rng i);
-                S.as_arg (embed rng t);
+                S.as_arg (embed #_ #e_term rng t);
                ]
                rng
 
@@ -594,7 +574,7 @@ let e_subst_elt =
         | NT (x, t) ->
             S.mk_Tm_app ref_NT.t [
                 S.as_arg (embed #_ #e_namedv rng x);
-                S.as_arg (embed rng t);
+                S.as_arg (embed #_ #e_term rng t);
                ]
                rng
 
@@ -665,15 +645,15 @@ let e_sigelt_view =
                         [S.as_arg (embed rng nm);
                             S.as_arg (embed rng univs);
                             S.as_arg (embed rng bs);
-                            S.as_arg (embed rng t);
-                            S.as_arg (embed rng dcs)]
+                            S.as_arg (embed #_ #e_term rng t);
+                            S.as_arg (embed #_ #(e_list e_ctor) rng dcs)]
                         rng
 
         | Sg_Val (nm, univs, t) ->
             S.mk_Tm_app ref_Sg_Val.t
                         [S.as_arg (embed rng nm);
                          S.as_arg (embed rng univs);
-                         S.as_arg (embed rng t)]
+                         S.as_arg (embed #_ #e_term rng t)]
                         rng
 
         | Unk ->
@@ -812,8 +792,8 @@ let unfold_lazy_letbinding (i : lazyinfo) : term =
         [
             S.as_arg (embed i.rng lbv.lb_fv);
             S.as_arg (embed i.rng lbv.lb_us);
-            S.as_arg (embed i.rng lbv.lb_typ);
-            S.as_arg (embed i.rng lbv.lb_def)
+            S.as_arg (embed #_ #e_term i.rng lbv.lb_typ);
+            S.as_arg (embed #_ #e_term i.rng lbv.lb_def)
         ]
         i.rng
 

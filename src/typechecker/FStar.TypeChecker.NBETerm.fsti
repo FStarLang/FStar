@@ -284,6 +284,7 @@ instance val e_string_list : embedding (list string)
 val e_arrow : embedding 'a -> embedding 'b -> embedding ('a -> 'b)
 
 instance val e_abstract_nbe_term : embedding abstract_nbe_term
+instance val e_order : embedding FStar.Order.order
 
 (* Unconditionally fails raising an exception when called *)
 val e_unsupported : #a:Type -> embedding a
