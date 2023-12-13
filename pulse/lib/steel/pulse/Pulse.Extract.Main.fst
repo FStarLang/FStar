@@ -308,7 +308,8 @@ let is_internal_binder (b:binder) : T.Tac bool =
   s = "_bind_c" ||
   s = "_while_c" ||
   s = "_tbind_c" ||
-  s = "_if_br"
+  s = "_if_br" ||
+  s = "_br"
 
 let is_return (e:st_term) : option term =
   match e.term with
