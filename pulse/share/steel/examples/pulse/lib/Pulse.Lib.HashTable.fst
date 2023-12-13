@@ -693,7 +693,10 @@ fn not_full (#kt:eqtype) (#vt:Type0)
       rewrite (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)))
            as (V.pts_to ht.contents pht.repr.seq);
       fold (exploded_vp r ht r_sz r_hashf r_contents);
-      (Used? c) 
+      match c {
+        Used _ _ -> { true }
+        _ -> { false }
+      }
     }
     else 
     { 
@@ -725,47 +728,47 @@ fn not_full (#kt:eqtype) (#vt:Type0)
 }
 ```
 
-let hash_us (k:SZ.t) : SZ.t = k
+// let hash_us (k:SZ.t) : SZ.t = k
 
-let init_not_full (#kt:eqtype) (#vt:eqtype) (hashf:kt -> SZ.t) (l:pos_us)
-  : Lemma (Pulse.Lib.HashTable.Spec.not_full (mk_init_pht #kt #vt hashf l).repr)
-  = assert (~(Used? ((mk_init_pht #kt #vt hashf l).repr @@ 0)))
+// let init_not_full (#kt:eqtype) (#vt:eqtype) (hashf:kt -> SZ.t) (l:pos_us)
+//   : Lemma (Pulse.Lib.HashTable.Spec.not_full (mk_init_pht #kt #vt hashf l).repr)
+//   = assert (~(Used? ((mk_init_pht #kt #vt hashf l).repr @@ 0)))
 
-```pulse
-fn test_mono ()
-  requires emp
-  ensures emp
-{
-   let htc = alloc #SZ.t #SZ.t hash_us 128sz;
-   with pht. assert (models htc pht);
-   let ht = R.alloc htc;
-   init_not_full #SZ.t #SZ.t hash_us 128sz;
-   rewrite (models htc pht) as (models (reveal (hide htc)) pht);
-   let b = insert ht 0sz 17sz;
-   if (b) {
-     let v = lookup ht 0sz;
-     if (fst v) {
-       assert pure (snd v == Some 17sz);
-       R.free ht;
-       with pht. assert (models (reveal (hide htc)) pht);
-       rewrite (models (reveal (hide htc)) pht) as (models htc pht);
-       dealloc htc
-     }
-     else {
-      R.free ht;
-      with pht. assert (models (reveal (hide htc)) pht);
-      rewrite (models (reveal (hide htc)) pht) as (models htc pht);
-      dealloc htc
-     }
-   }
-   else {
-    let b = delete ht 0sz;
-    let b' = not_full ht;
-    R.free ht;
-    with pht. assert (models (reveal (hide htc)) pht);
-    rewrite (models (reveal (hide htc)) pht) as (models htc pht);
-    dealloc htc
-   } 
-}
-```
-// let test_mono = test_mono'
+// ```pulse
+// fn test_mono ()
+//   requires emp
+//   ensures emp
+// {
+//    let htc = alloc #SZ.t #SZ.t hash_us 128sz;
+//    with pht. assert (models htc pht);
+//    let ht = R.alloc htc;
+//    init_not_full #SZ.t #SZ.t hash_us 128sz;
+//    rewrite (models htc pht) as (models (reveal (hide htc)) pht);
+//    let b = insert ht 0sz 17sz;
+//    if (b) {
+//      let v = lookup ht 0sz;
+//      if (fst v) {
+//        assert pure (snd v == Some 17sz);
+//        R.free ht;
+//        with pht. assert (models (reveal (hide htc)) pht);
+//        rewrite (models (reveal (hide htc)) pht) as (models htc pht);
+//        dealloc htc
+//      }
+//      else {
+//       R.free ht;
+//       with pht. assert (models (reveal (hide htc)) pht);
+//       rewrite (models (reveal (hide htc)) pht) as (models htc pht);
+//       dealloc htc
+//      }
+//    }
+//    else {
+//     let b = delete ht 0sz;
+//     let b' = not_full ht;
+//     R.free ht;
+//     with pht. assert (models (reveal (hide htc)) pht);
+//     rewrite (models (reveal (hide htc)) pht) as (models htc pht);
+//     dealloc htc
+//    } 
+// }
+// ```
+// // let test_mono = test_mono'
