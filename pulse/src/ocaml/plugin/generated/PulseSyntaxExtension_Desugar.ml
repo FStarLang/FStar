@@ -1826,44 +1826,97 @@ and (desugar_bind :
                                                    | FStar_Pervasives_Native.None
                                                        ->
                                                        Obj.repr
-                                                         (if
-                                                            PulseSyntaxExtension_Sugar.uu___is_Array_initializer
-                                                              e1
-                                                          then
-                                                            Obj.repr
-                                                              (PulseSyntaxExtension_Err.fail
-                                                                 "immutable local arrays are not yet supported"
-                                                                 r)
-                                                          else
-                                                            Obj.repr
-                                                              (if
-                                                                 PulseSyntaxExtension_Sugar.uu___is_Lambda_initializer
-                                                                   e1
-                                                               then
-                                                                 Obj.repr
-                                                                   (PulseSyntaxExtension_Err.fail
-                                                                    "lambdas are not yet supported"
-                                                                    r)
-                                                               else
-                                                                 Obj.repr
-                                                                   (let uu___4
-                                                                    = e1 in
-                                                                    match uu___4
-                                                                    with
-                                                                    | 
-                                                                    PulseSyntaxExtension_Sugar.Default_initializer
-                                                                    e11 ->
-                                                                    let uu___5
+                                                         (match e1 with
+                                                          | PulseSyntaxExtension_Sugar.Array_initializer
+                                                              uu___2 ->
+                                                              Obj.repr
+                                                                (PulseSyntaxExtension_Err.fail
+                                                                   "immutable local arrays are not yet supported"
+                                                                   r)
+                                                          | PulseSyntaxExtension_Sugar.Lambda_initializer
+                                                              {
+                                                                PulseSyntaxExtension_Sugar.id2
+                                                                  = id;
+                                                                PulseSyntaxExtension_Sugar.is_rec
+                                                                  = false;
+                                                                PulseSyntaxExtension_Sugar.binders2
+                                                                  = binders;
+                                                                PulseSyntaxExtension_Sugar.ascription1
+                                                                  =
+                                                                  FStar_Pervasives.Inl
+                                                                  c;
+                                                                PulseSyntaxExtension_Sugar.measure
+                                                                  =
+                                                                  FStar_Pervasives_Native.None;
+                                                                PulseSyntaxExtension_Sugar.body3
+                                                                  =
+                                                                  FStar_Pervasives.Inl
+                                                                  stmt;
+                                                                PulseSyntaxExtension_Sugar.range3
+                                                                  = range;_}
+                                                              ->
+                                                              Obj.repr
+                                                                (let lam =
+                                                                   {
+                                                                    PulseSyntaxExtension_Sugar.binders1
+                                                                    = binders;
+                                                                    PulseSyntaxExtension_Sugar.ascription
                                                                     =
-                                                                    tosyntax
+                                                                    (FStar_Pervasives_Native.Some
+                                                                    c);
+                                                                    PulseSyntaxExtension_Sugar.body2
+                                                                    = stmt;
+                                                                    PulseSyntaxExtension_Sugar.range2
+                                                                    = range
+                                                                   } in
+                                                                 let uu___2 =
+                                                                   desugar_lambda
+                                                                    env lam in
+                                                                 FStar_Class_Monad.op_let_Bang
+                                                                   PulseSyntaxExtension_Err.err_monad
+                                                                   () ()
+                                                                   (Obj.magic
+                                                                    uu___2)
+                                                                   (fun
+                                                                    uu___3 ->
+                                                                    (fun lam1
+                                                                    ->
+                                                                    let lam1
+                                                                    =
+                                                                    Obj.magic
+                                                                    lam1 in
+                                                                    let b =
+                                                                    PulseSyntaxExtension_SyntaxWrapper.mk_binder
+                                                                    lb.PulseSyntaxExtension_Sugar.id
+                                                                    annot in
+                                                                    let uu___3
+                                                                    =
+                                                                    mk_bind b
+                                                                    lam1 s21
+                                                                    r in
+                                                                    Obj.magic
+                                                                    (PulseSyntaxExtension_Err.return
+                                                                    uu___3))
+                                                                    uu___3))
+                                                          | PulseSyntaxExtension_Sugar.Lambda_initializer
+                                                              uu___2 ->
+                                                              Obj.repr
+                                                                (PulseSyntaxExtension_Err.fail
+                                                                   "Nested functions are not yet fully supported"
+                                                                   r)
+                                                          | PulseSyntaxExtension_Sugar.Default_initializer
+                                                              e11 ->
+                                                              Obj.repr
+                                                                (let uu___2 =
+                                                                   tosyntax
                                                                     env e11 in
-                                                                    FStar_Class_Monad.op_let_Bang
-                                                                    PulseSyntaxExtension_Err.err_monad
-                                                                    () ()
-                                                                    (Obj.magic
-                                                                    uu___5)
-                                                                    (fun
-                                                                    uu___6 ->
+                                                                 FStar_Class_Monad.op_let_Bang
+                                                                   PulseSyntaxExtension_Err.err_monad
+                                                                   () ()
+                                                                   (Obj.magic
+                                                                    uu___2)
+                                                                   (fun
+                                                                    uu___3 ->
                                                                     (fun s1
                                                                     ->
                                                                     let s1 =
@@ -1874,11 +1927,11 @@ and (desugar_bind :
                                                                     lb.PulseSyntaxExtension_Sugar.id
                                                                     annot in
                                                                     let t =
-                                                                    let uu___6
+                                                                    let uu___3
                                                                     =
                                                                     admit_or_return
                                                                     env s1 in
-                                                                    match uu___6
+                                                                    match uu___3
                                                                     with
                                                                     | 
                                                                     STTerm
@@ -1888,17 +1941,17 @@ and (desugar_bind :
                                                                     | 
                                                                     Return
                                                                     s11 ->
-                                                                    let uu___7
+                                                                    let uu___4
                                                                     =
                                                                     as_term
                                                                     s11 in
                                                                     mk_totbind
-                                                                    b uu___7
+                                                                    b uu___4
                                                                     s21 r in
                                                                     Obj.magic
                                                                     (PulseSyntaxExtension_Err.return
                                                                     t))
-                                                                    uu___6))))
+                                                                    uu___3)))
                                                    | FStar_Pervasives_Native.Some
                                                        (PulseSyntaxExtension_Sugar.MUT)
                                                        ->
@@ -2306,7 +2359,7 @@ and (desugar_binders :
                             (env1, uu___3, bvs) in
                           Obj.magic (PulseSyntaxExtension_Err.return uu___2))
                      uu___1))) uu___1 uu___
-let (desugar_lambda :
+and (desugar_lambda :
   PulseSyntaxExtension_Env.env_t ->
     PulseSyntaxExtension_Sugar.lambda ->
       PulseSyntaxExtension_SyntaxWrapper.st_term PulseSyntaxExtension_Err.err)
@@ -2518,7 +2571,7 @@ let (desugar_lambda :
                                                                   uu___7)))
                                                        uu___6))) uu___4)))
                          uu___2))) uu___1 uu___
-let (desugar_decl' :
+and (desugar_decl :
   PulseSyntaxExtension_Env.env_t ->
     PulseSyntaxExtension_Sugar.decl ->
       PulseSyntaxExtension_SyntaxWrapper.decl PulseSyntaxExtension_Err.err)
@@ -2922,24 +2975,6 @@ let (desugar_decl' :
                                                               uu___5)))
                                                    uu___4))) uu___3))) uu___1)))
         uu___1 uu___
-let (desugar_decl :
-  PulseSyntaxExtension_Env.env_t ->
-    PulseSyntaxExtension_Sugar.decl ->
-      PulseSyntaxExtension_SyntaxWrapper.decl PulseSyntaxExtension_Err.err)
-  =
-  fun uu___1 ->
-    fun uu___ ->
-      (fun env ->
-         fun d ->
-           let uu___ = desugar_decl' env d in
-           Obj.magic
-             (FStar_Class_Monad.op_let_Bang
-                PulseSyntaxExtension_Err.err_monad () () (Obj.magic uu___)
-                (fun uu___1 ->
-                   (fun decl ->
-                      let decl = Obj.magic decl in
-                      Obj.magic (PulseSyntaxExtension_Err.return decl))
-                     uu___1))) uu___1 uu___
 let (initialize_env :
   FStar_TypeChecker_Env.env ->
     PulseSyntaxExtension_Env.name Prims.list ->

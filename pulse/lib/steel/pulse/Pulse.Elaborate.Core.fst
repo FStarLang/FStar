@@ -183,6 +183,12 @@ let rec elab_st_typing (#g:env)
       let ty1 = elab_term (comp_res c1) in
       elab_bind bc e1 (mk_abs_with_name b.binder_ppname.name ty1 R.Q_Explicit (RT.close_term e2 x))
 
+    | T_BindFn _ _ _ c1 c2 b x e1_typing _u t_typing e2_typing _ c2_typing ->
+      let e1 = elab_st_typing e1_typing in
+      let e2 = elab_st_typing e2_typing in
+      let ty1 = elab_term (comp_res c1) in
+      RT.mk_let RT.pp_name_default e1 ty1 (RT.close_term e2 x)
+
     | T_TotBind _ e1 e2 t1 _ _ x _ e2_typing
     | T_GhostBind _ e1 e2 t1 _ _ x _ e2_typing _ ->
       let re1 = elab_term e1 in

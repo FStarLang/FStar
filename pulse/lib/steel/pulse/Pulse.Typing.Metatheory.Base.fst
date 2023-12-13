@@ -95,7 +95,7 @@ let bind_comp_weakening (g:env) (g':env { disjoint g g' })
     let y = fresh (push_env (push_env g g1) g') in
     assume (~ (y `Set.mem` (freevars (comp_post c2))));
     Bind_comp_ghost_r _ x c1 c2 (non_informative_c_weakening g g' g1 _ n_d) (magic ()) y (magic ())
-
+  
 let lift_comp_weakening (g:env) (g':env { disjoint g g'})
   (#c1 #c2:comp) (d:lift_comp (push_env g g') c1 c2)
   (g1:env { pairwise_disjoint g g1 g' })
@@ -234,6 +234,39 @@ let rec st_typing_weakening g g' t c d g1
                   c2 = d_e2 in
     let d_bc = bind_comp_weakening g g' d_bc g1 in
     T_Bind _ e1 e2 c1 c2 b x c d_e1 (magic ()) d_e2 d_bc
+
+  | T_BindFn _ e1 e2 c1 c2 b x d_e1 u _ d_e2 u2 c2_typing  ->
+    let d_e1 : st_typing (push_env (push_env g g1) g') e1 c1 =
+      st_typing_weakening g g' e1 c1 d_e1 g1 in
+    //
+    // When we call it, g' will actually be empty
+    // And they way bind checker invokes the lemma, we also know x is not in g1
+    // But we must fix it cleanly
+    // Perhaps typing rules should take a thunk, fun (x:var) ...
+    //
+    assume (~ (x `Set.mem` dom g'));
+    assume (~ (x `Set.mem` dom g1));
+    let d_e2
+      : st_typing (push_binding (push_env g g') x ppname_default (comp_res c1))
+                  (open_st_term_nv e2 (b.binder_ppname, x))
+                  c2 = d_e2 in
+    assert (equal (push_binding (push_env g g') x ppname_default (comp_res c1))
+                  (push_env g (push_binding g' x ppname_default (comp_res c1))));
+    let d_e2
+      : st_typing (push_env g (push_binding g' x ppname_default (comp_res c1)))
+                  (open_st_term_nv e2 (b.binder_ppname, x))
+                  c2 = d_e2 in
+    let d_e2
+      : st_typing (push_env (push_env g g1) (push_binding g' x ppname_default (comp_res c1)))
+                  (open_st_term_nv e2 (b.binder_ppname, x))
+                  c2 = st_typing_weakening g (push_binding g' x ppname_default (comp_res c1)) _ _ d_e2 g1 in
+    assert (equal (push_env (push_env g g1) (push_binding g' x ppname_default (comp_res c1)))
+                  (push_binding (push_env (push_env g g1) g') x ppname_default (comp_res c1)));
+    let d_e2
+      : st_typing (push_binding (push_env (push_env g g1) g') x ppname_default (comp_res c1))
+                  (open_st_term_nv e2 (b.binder_ppname, x))
+                  c2 = d_e2 in
+    T_BindFn _ e1 e2 c1 c2 b x d_e1 u (magic()) d_e2 u2 (magic())
 
   | T_TotBind _ e1 e2 t1 c2 b x _ d_e2 ->
     assume (~ (x `Set.mem` dom g'));
@@ -630,6 +663,20 @@ let rec st_typing_subst g x t g' #e #eff e_typing #e1 #c1 e1_typing _
              (magic ())
              (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default (comp_res c1)) e_typing d_e2 (magic ())) ())
              (bind_comp_subst g x t g' e_typing d_bc)
+
+  | T_BindFn _ e1 e2 c1 c2 b y d_e1 u _ d_e2 u2 d_c2 ->
+    T_BindFn _ (subst_st_term e1 ss)
+               (subst_st_term e2 ss)
+               (subst_comp c1 ss)
+               (subst_comp c2 ss)
+               (subst_binder b ss)
+               y
+               (st_typing_subst g x t g' e_typing d_e1 (magic ()))
+               u
+               (magic ())
+               (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default (comp_res c1)) e_typing d_e2 (magic ())) ())
+               u2
+               (comp_typing_subst g x t (push_binding g' y ppname_default (comp_res c1)) e_typing d_c2)
 
   | T_TotBind _ e1 e2 t1 c2 b y _ d_e2 ->
     T_TotBind _ (subst_term e1 ss)

@@ -617,6 +617,36 @@ type st_sub : env -> comp -> comp -> Type =
 
 [@@ no_auto_projectors]
 noeq
+type lift_comp : env -> comp -> comp -> Type =
+  | Lift_STAtomic_ST :
+      g:env ->
+      c:comp_st{C_STAtomic? c} -> // Note: we no longer require an empty set of invariants, due to the positive view
+      lift_comp g c (C_ST (st_comp_of_comp c))
+
+  | Lift_STGhost_STAtomic :
+      g:env ->
+      c:comp_st{C_STGhost? c} ->
+      non_informative_c:non_informative_c g c ->
+      lift_comp g c (C_STAtomic (comp_inames c) (st_comp_of_comp c))
+
+let wr (ct:comp_st) (t:st_term') : st_term = { term = t; range = FStar.Range.range_0; effect_tag = as_effect_hint (ctag_of_comp_st ct) }
+let wtag (ct:option ctag)  (t:st_term') : st_term = { term = t; range = FStar.Range.range_0; effect_tag = FStar.Sealed.seal ct }
+
+[@@ no_auto_projectors]
+noeq
+type st_comp_typing : env -> st_comp -> Type =
+  | STC:
+      g:env -> 
+      st:st_comp ->
+      x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars st.post) } ->
+      universe_of g st.res st.u ->
+      tot_typing g st.pre tm_vprop ->
+      tot_typing (push_binding g x ppname_default st.res) (open_term st.post x) tm_vprop ->
+      st_comp_typing g st
+
+
+[@@ no_auto_projectors]
+noeq
 type bind_comp  : env -> var -> comp -> comp -> comp -> Type =
   | Bind_comp :  // (C_ST and C_ST) or (C_STGhost and C_STGhost)
       g:env ->
@@ -652,35 +682,6 @@ type bind_comp  : env -> var -> comp -> comp -> comp -> Type =
       y:var { None? (lookup g y) /\ ~(y `Set.mem` freevars (comp_post c2)) } ->
       tot_typing (push_binding g y ppname_default (comp_res c2)) (open_term (comp_post c2) y) tm_vprop ->
       bind_comp g x c1 c2 (bind_comp_ghost_r_out c1 c2)
-
-[@@ no_auto_projectors]
-noeq
-type lift_comp : env -> comp -> comp -> Type =
-  | Lift_STAtomic_ST :
-      g:env ->
-      c:comp_st{C_STAtomic? c} -> // Note: we no longer require an empty set of invariants, due to the positive view
-      lift_comp g c (C_ST (st_comp_of_comp c))
-
-  | Lift_STGhost_STAtomic :
-      g:env ->
-      c:comp_st{C_STGhost? c} ->
-      non_informative_c:non_informative_c g c ->
-      lift_comp g c (C_STAtomic (comp_inames c) (st_comp_of_comp c))
-
-let wr (ct:comp_st) (t:st_term') : st_term = { term = t; range = FStar.Range.range_0; effect_tag = as_effect_hint (ctag_of_comp_st ct) }
-let wtag (ct:option ctag)  (t:st_term') : st_term = { term = t; range = FStar.Range.range_0; effect_tag = FStar.Sealed.seal ct }
-
-[@@ no_auto_projectors]
-noeq
-type st_comp_typing : env -> st_comp -> Type =
-  | STC:
-      g:env -> 
-      st:st_comp ->
-      x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars st.post) } ->
-      universe_of g st.res st.u ->
-      tot_typing g st.pre tm_vprop ->
-      tot_typing (push_binding g x ppname_default st.res) (open_term st.post x) tm_vprop ->
-      st_comp_typing g st
 
 let tr_binding (vt : var & typ) : Tot R.binding =
   let v, t = vt in
@@ -827,6 +828,22 @@ type st_typing : env -> st_term -> comp -> Type =
       st_typing (push_binding g x ppname_default (comp_res c1)) (open_st_term_nv e2 (b.binder_ppname, x)) c2 ->
       bind_comp g x c1 c2 c ->
       st_typing g (wr c (Tm_Bind { binder=b; head=e1; body=e2 })) c
+
+  | T_BindFn:
+      g:env ->
+      e1:st_term ->
+      e2:st_term ->
+      c1:comp { C_Tot? c1 } ->
+      c2:comp_st ->
+      b:binder { b.binder_ty == comp_res c1 }->
+      x:var { None? (lookup g x)  /\ ~(x `Set.mem` freevars_st e2) } ->
+      st_typing g e1 c1 ->
+      u:universe ->
+      tot_typing g (comp_res c1) (tm_type u) -> //type-correctness; would be nice to derive it instead      
+      st_typing (push_binding g x ppname_default (comp_res c1)) (open_st_term_nv e2 (b.binder_ppname, x)) c2 ->
+      u2:universe ->
+      comp_typing g c2 u ->
+      st_typing g (wr c2 (Tm_Bind { binder=b; head=e1; body=e2 })) c2
 
   | T_TotBind:
       g:env ->

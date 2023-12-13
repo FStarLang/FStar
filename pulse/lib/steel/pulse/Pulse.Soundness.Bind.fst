@@ -277,3 +277,47 @@ let ghost_bind_typing #g #t #c d soundness =
     : RT.non_informative (elab_env g) (elab_comp c) = magic () in
 
   RT.T_Sub _ _ _ _ d (RT.Relc_ghost_total _ _ d_non_info)
+
+#push-options "--query_stats --z3rlimit_factor 4 --split_queries no"
+
+assume
+val open_close_inverse_t (e:R.term { RT.ln e }) (x:var) (t:R.term)
+  : Lemma (RT.open_with (RT.close_term e x) t == e)
+
+let bind_fn_typing #g #t #c d soundness =
+  let T_BindFn _ e1 e2 c1 c2 b x e1_typing u t1_typing e2_typing u2 c2_typing = d in
+  let t1 = comp_res c1 in
+  let g_x = push_binding g x ppname_default t1 in
+
+  let re1 = elab_st_typing e1_typing in
+  let rt1 = elab_term t1 in
+  let re2 = elab_st_typing e2_typing in
+
+  let re1_typing : RT.tot_typing (elab_env g) re1 rt1 =
+    soundness g e1 c1 e1_typing in
+  
+  let re2_typing : RT.tot_typing (elab_env g_x) re2 (elab_comp c2) =
+    soundness g_x (open_st_term_nv e2 (v_as_nv x)) c2 e2_typing in
+
+  RT.well_typed_terms_are_ln _ _ _ re2_typing;
+  calc (==) {
+    RT.open_term (RT.close_term re2 x) x;
+       (==) { RT.open_term_spec (RT.close_term re2 x) x }
+    RT.subst_term (RT.close_term re2 x) (RT.open_with_var x 0);
+       (==) { RT.close_term_spec re2 x }
+    RT.subst_term (RT.subst_term re2 [ RT.ND x 0 ]) (RT.open_with_var x 0);
+       (==) { RT.open_close_inverse' 0 re2 x }
+    re2;
+  };
+  let elab_t = RT.mk_let RT.pp_name_default re1 rt1 (RT.close_term re2 x) in
+  let res
+    : RT.tot_typing (elab_env g) elab_t (RT.open_with (RT.close_term (elab_comp c2) x) re1)
+    = RT.T_Let (elab_env g) x re1 rt1 (RT.close_term re2 x) (elab_comp c2) T.E_Total RT.pp_name_default re1_typing re2_typing in
+  Pulse.Typing.LN.comp_typing_ln c2_typing;
+  Pulse.Elaborate.elab_ln_comp c (-1);
+  assert (RT.ln (elab_comp c2));
+  open_close_inverse_t (elab_comp c2) x re1;
+  assert (RT.open_with (RT.close_term (elab_comp c2) x) re1 == elab_comp c2); 
+  res
+  
+

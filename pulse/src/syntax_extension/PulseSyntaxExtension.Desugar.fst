@@ -90,14 +90,6 @@ let faux (qb : option SW.qualifier & SW.binder) (bv : S.bv)
     (q,b,bv)
 
 
-// let read (x:ident) = 
-//   let open A in
-//   let range = Ident.range_of_id x in
-//   let level = Un in
-//   let head : A.term = {tm = Var op_bang_lid; range; level} in
-//   let arg = {tm = Var (Ident.lid_of_ids [x]); range; level} in
-//   {tm = App (head, arg, Nothing); range; level}
-
 let stapp_assignment assign_lid (args:list S.term) (last_arg:S.term) (r:_)
   : SW.st_term
   = let head_fv = S.lid_as_fv assign_lid None in
@@ -514,13 +506,33 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
 
     | Some e1 -> (
       match lb.qualifier with
-      | None -> //just a regular bind
-        if Sugar.Array_initializer? e1
-        then fail "immutable local arrays are not yet supported" r
-        else if Sugar.Lambda_initializer? e1
-        then fail "lambdas are not yet supported" r
-        else (
-          let Default_initializer e1 = e1 in
+      | None -> ( //just a regular bind
+        match e1 with
+        | Sugar.Array_initializer _ ->
+          fail "immutable local arrays are not yet supported" r
+        | Sugar.Lambda_initializer { 
+            id; is_rec=false;
+            binders;
+            ascription=Inl c;
+            measure=None;
+            body=Inl stmt;
+            range
+          } ->
+          let lam : lambda = {
+              binders = binders;
+              ascription = Some c;
+              body = stmt;
+              range
+            }
+          in
+          let! lam = desugar_lambda env lam in
+          let b = SW.mk_binder lb.id annot in
+          return <| mk_bind b lam s2 r
+
+        | Sugar.Lambda_initializer _ -> 
+          fail "Nested functions are not yet fully supported" r
+
+        | Default_initializer e1 ->
           let! s1 = tosyntax env e1 in
           let b = SW.mk_binder lb.id annot in
           let t =
@@ -531,7 +543,7 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
               mk_totbind b (as_term s1) s2 r
           in
           return t
-        )
+      )
       | Some MUT //these are handled the same for now
       | Some REF ->
         let b = SW.mk_binder lb.id annot in
@@ -585,8 +597,7 @@ and desugar_binders (env:env_t) (bs:Sugar.binders)
     let! env, bs, bvs = aux env bs in
     return (env, L.map (fun (aq, b, t) -> aq, SW.mk_binder b t) bs, bvs)
 
-
-let desugar_lambda (env:env_t) (l:Sugar.lambda)
+and desugar_lambda (env:env_t) (l:Sugar.lambda)
   : err SW.st_term
   = let { binders; ascription; body; range } = l in
     let! env, bs, bvs = desugar_binders env binders in
@@ -621,8 +632,8 @@ let desugar_lambda (env:env_t) (l:Sugar.lambda)
         qbs (comp, body)
     in
     return abs
-    
-let desugar_decl' (env:env_t)
+
+and desugar_decl (env:env_t)
                  (d:Sugar.decl)
 : err SW.decl
 = let mk_knot_arr
@@ -683,10 +694,6 @@ let desugar_decl' (env:env_t)
     let! body = desugar_lambda env body in
     let! qbs = map2 faux bs bvs in
     return (SW.fn_decl range id false qbs comp None body)
-
-let desugar_decl env d =
-  let! decl = desugar_decl' env d in
-  return decl
 
 
 let initialize_env (env:TcEnv.env)

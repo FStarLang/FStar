@@ -351,6 +351,9 @@ let rec soundness (g:stt_env)
     | T_Bind _ _e1 _e2 _c1 _c2 _b _x _c _e1_typing _t_typing _e2_typing _bc ->
       bind_soundness d soundness mk_t_abs
 
+    | T_BindFn _ _ _ _ _ _ _ _ _ _ _ _ _ ->
+      Bind.bind_fn_typing d soundness
+
     | T_TotBind _ _ _ _ _ _ _ _ _ ->
       Bind.tot_bind_typing d soundness
 

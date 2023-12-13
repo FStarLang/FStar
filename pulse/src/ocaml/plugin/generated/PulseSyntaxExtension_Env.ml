@@ -381,13 +381,6 @@ let rec (free_vars_term :
     fun t ->
       FStar_ToSyntax_ToSyntax.free_vars false
         (env.tcenv).FStar_TypeChecker_Env.dsenv t
-and (free_vars_vprop :
-  env_t -> PulseSyntaxExtension_Sugar.vprop -> FStar_Ident.ident Prims.list)
-  =
-  fun env ->
-    fun t ->
-      match t.PulseSyntaxExtension_Sugar.v with
-      | PulseSyntaxExtension_Sugar.VPropTerm t1 -> free_vars_term env t1
 and (free_vars_binders :
   env_t ->
     PulseSyntaxExtension_Sugar.binders ->
@@ -406,6 +399,13 @@ and (free_vars_binders :
             free_vars_binders uu___2 bs1 in
           (match uu___1 with
            | (env', res) -> (env', (FStar_List_Tot_Base.op_At fvs res)))
+let (free_vars_vprop :
+  env_t -> PulseSyntaxExtension_Sugar.vprop -> FStar_Ident.ident Prims.list)
+  =
+  fun env ->
+    fun t ->
+      match t.PulseSyntaxExtension_Sugar.v with
+      | PulseSyntaxExtension_Sugar.VPropTerm t1 -> free_vars_term env t1
 let free_vars_list :
   'a .
     (env_t -> 'a -> FStar_Ident.ident Prims.list) ->
