@@ -1,5 +1,6 @@
 *~
 *.checked
+*.checked.lax
 .depend*
 *.cm*
 lib/steel/*.a
