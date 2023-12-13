@@ -64,7 +64,7 @@ fn s3 () : swap_fun
     }
 ```
 
-// [@@expect_failure]
+[@@expect_failure]
 ```pulse
 fn test_inner_lambda (#a:Type0)
                      (x y:ref int)
