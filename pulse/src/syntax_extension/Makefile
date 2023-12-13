@@ -9,24 +9,51 @@ include $(FSTAR_HOME)/ulib/gmake/z3.mk    # This pins $(Z3) ...
 include $(FSTAR_HOME)/ulib/gmake/fstar.mk # and $(FSTAR) for all sub-make calls
 include $(FSTAR_HOME)/src/Makefile.boot.common
 
-# FSTAR_BOOT_OPTIONS does not unconditionally contain --MLish now, but
-# we need it for every file, so add it.
-FSTAR_BOOT_OPTIONS+=--include . --MLish
 OUTPUT_DIRECTORY = $(CURDIR)/../ocaml/plugin/generated
-FSTAR_C=$(RUNLIM) $(FSTAR_EXE) $(SIL) $(FSTAR_BOOT_OPTIONS)
 ADDITIONAL_INCLUDES=$(FSTAR_HOME)/src/.cache.boot
-EXTRACT_FILES=Pulse_ASTBuilder.ml PulseSugar.ml PulseDesugar.ml
-extract: $(addprefix $(OUTPUT_DIRECTORY)/,$(EXTRACT_FILES))
+
+FSTAR_OPTIONS= \
+	$(OTHERFLAGS) --lax --MLish \
+	--no_location_info --warn_error -271-272-241-319-274 \
+	$(addprefix --include , $(addprefix $(FSTAR_HOME)/src/,$(INCLUDE_PATHS))) \
+	$(addprefix --include , $(ADDITIONAL_INCLUDES)) \
+	--include . \
+	--odir "$(OUTPUT_DIRECTORY)" \
+	--cache_checked_modules
+
+FSTAR_C=$(RUNLIM) $(FSTAR_EXE) $(SIL) $(FSTAR_OPTIONS)
+
+FSTAR_FILES=$(wildcard *.fst)
+
+all: extract
+
+.depend: $(FSTAR_FILES)
+	$(FSTAR_C) --warn_error -321 --dep full --extract PulseSyntaxExtension --output_deps_to $@ $^
+
+depend: .depend
+include .depend
+
+
+%.checked.lax:
+	$(call msg, "CHECK", $(notdir $@))
+	$(Q)$(BENCHMARK_PRE) $(FSTAR_C) $< --already_cached 'Prims,FStar'
 
 # And then, in a separate invocation, from each .checked.lax we
 # extract an .ml file
-$(OUTPUT_DIRECTORY)/%.ml: %.fst
+$(OUTPUT_DIRECTORY)/%.ml: 
 	mkdir -p $(OUTPUT_DIRECTORY)
 	$(call msg, "EXTRACT", $(notdir $@))
-	$(Q)$(BENCHMARK_PRE) $(FSTAR_C) $< \
-		   $(addprefix --include , $(ADDITIONAL_INCLUDES)) \
-		   --odir "$(OUTPUT_DIRECTORY)" \
-                   --codegen OCaml \
-				   --already_cached 'Prims,FStar' \
-                   --extract_module $(basename $(notdir $<))
+	$(Q)$(BENCHMARK_PRE) $(FSTAR_C) $(notdir $(subst .checked.lax,, $<)) \
+		--extract $(basename $(notdir $(subst .checked.lax,, $<))) \
+		--already_cached '*' \
+		--codegen OCaml
 	chmod -x $@
+
+extract: $(ALL_ML_FILES)
+
+clean:
+	rm -rf $(addprefix $(OUTPUT_DIRECTORY)/, $(ALL_ML_FILES))
+	rm *.checked.lax
+	rm -f .depend
+
+.PHONY: all extract clean depend

@@ -1,4 +1,4 @@
-module PulseSugar
+module PulseSyntaxExtension.Sugar
 open FStar.Ident
 module A = FStar.Parser.AST
 let rng = FStar.Compiler.Range.range

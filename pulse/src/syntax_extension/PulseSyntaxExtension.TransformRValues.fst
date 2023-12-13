@@ -1,7 +1,7 @@
-module PulseTransformRValues
+module PulseSyntaxExtension.TransformRValues
 open FStar.Compiler.Effect
-module Sugar = PulseSugar
-module SW = PulseSyntaxWrapper
+module Sugar = PulseSyntaxExtension.Sugar
+module SW = PulseSyntaxExtension.SyntaxWrapper
 module A = FStar.Parser.AST
 module D = FStar.Syntax.DsEnv
 module S = FStar.Syntax.Syntax
@@ -17,8 +17,8 @@ open FStar.Class.HasRange
 open FStar.Class.Monad
 open FStar.Ident
 open FStar.List.Tot
-open PulseErr
-open PulseEnv
+open PulseSyntaxExtension.Err
+open PulseSyntaxExtension.Env
 
 (* Local mutable variables are implicitly dereferenced *)
 

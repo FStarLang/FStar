@@ -177,7 +177,7 @@ let check_pulse (namespaces:list string)
                 (nm:string)
   : RT.dsl_tac_t
   = fun env ->
-      match Pulse.ASTBuilder.parse_pulse env namespaces module_abbrevs content file_name line col with
+      match PulseSyntaxExtension.ASTBuilder.parse_pulse env namespaces module_abbrevs content file_name line col with
       | Inl decl ->
         main nm decl tm_emp env
 

@@ -39,30 +39,13 @@ let is_list_cases #t (x:llist t) (l:list t)
         is_list n.tail tl
 
 
-
-let unfold_is_list_cons #t (x:llist t) (head:t) (tl:list t)
-  :  Lemma (is_list x (head::tl) ==
-            (exists* (v:node_ptr t) (tail:llist t).
-                    pure (x == Some v) **
-                    pts_to v (mk_node head tail) **
-                    is_list tail tl
-                ))
-  = assert (is_list x (head::tl) ==
-            (exists* (v:node_ptr t)
-                     (tail:llist t).
-                    pure (x == Some v) **
-                    pts_to v (mk_node head tail) **
-                    is_list tail tl
-                ))
-    by (T.norm [delta_only [`%is_list]; zeta;iota]; T.dump "A") //trefl())
-
 ```pulse
 ghost
 fn elim_is_list_nil (#t:Type0) (x:llist t) 
   requires is_list x []
   ensures pure(x == None)
 {
-   rewrite (is_list x []) as pure (x == None)
+   unfold (is_list x [])
 }
 ```
 
@@ -76,6 +59,28 @@ fn intro_is_list_nil (#t:Type0) (x:(x:llist t { x == None }))
 }
 ```
 
+module T = FStar.Tactics
+
+let prop_squash_idem (p:prop)
+  : Tot (p == squash p)
+  = admit()
+//   FStar.PropositionalExtensionality.apply p (squash p)
+
+
+#push-options "--no_tactics"
+let rewrite_by (p:vprop) (q:vprop) 
+               (t:unit -> T.Tac unit)
+               (_:unit { T.with_tactic t (vprop_equiv p q) })
+  : stt_ghost unit emp_inames p (fun _ -> q)
+  = let pf : squash (vprop_equiv p q) = T.by_tactic_seman t (vprop_equiv p q) in
+    prop_squash_idem (vprop_equiv p q);
+    rewrite p q (coerce_eq () pf)
+#pop-options
+
+
+let norm_tac (_:unit) : T.Tac unit =
+    T.mapply (`vprop_equiv_refl)
+    
 ```pulse
 ghost
 fn elim_is_list_cons (#t:Type0) (x:llist t) (head:t) (tl:list t)
@@ -85,11 +90,15 @@ fn elim_is_list_cons (#t:Type0) (x:llist t) (head:t) (tl:list t)
             pts_to v (mk_node head tail) **
             is_list tail tl
 {
-//   rewrite (is_list x (hd::tl))
-//     as exists* (tail:llist t). pts_to x (Some (mk_ll hd tail)) ** is_list tail tl
-//     (by T.norm ())
-    //unfold (is_list #t x (head::tl));
-    admit()
+
+    rewrite_by (is_list x (head::tl))
+               (exists* (v:node_ptr t)
+                        (tail:llist t).
+                    pure (x == Some v) **
+                    pts_to v (mk_node head tail) **
+                    is_list tail tl)
+                norm_tac
+                ()
 }
 ```
 
@@ -99,13 +108,15 @@ fn intro_is_list_cons (#t:Type0) (x:llist t) (v:node_ptr t) (#node:node t) (#tl:
     requires pts_to v node ** is_list node.tail tl ** pure (x == Some v)
     ensures is_list x (node.head::tl)
 {
-//     assert (exists* (v:node_ptr t) (tail:llist t).
-//         pure (Some v == Some v) **
-//         pts_to v (mk_node hd tail) **
-//         is_list tail tl);
-    admit()
-//    fold // [iota] 
-//      (is_list (Some v) (hd::tl))
+    rewrite (pts_to v node) as (pts_to v (mk_node node.head node.tail));
+    rewrite_by
+         (exists* (v:node_ptr t) (tail:llist t).
+                pure (x == Some v) **
+                pts_to v (mk_node node.head tail) **
+                is_list tail tl)
+        (is_list x (node.head::tl))
+        norm_tac
+        ()
 }
 ```
 let elim_false (p:vprop) : stt_ghost unit emp_inames (pure False) (fun _ -> p) = Pulse.Lib.Core.elim_false unit (fun _ -> p)
@@ -309,33 +320,56 @@ fn rec append (#t:Type0) (x y:llist t)
 }
 ```
 
-// #push-options "--ext 'pulse:rvalues'"
-let yields (p q:vprop) = Pulse.Lib.Stick.stick #emp_inames p q
+open Pulse.Lib.Stick
+
+```pulse
+ghost
+fn intro_stick_aux (p:vprop) (u:unit)
+    requires emp ** p
+    ensures p
+{
+    ()
+}
+```
+
+assume val dbg : vprop
 ```pulse
 ghost
 fn yields_idem (p:vprop)
    requires emp
-   ensures yields p p
+   ensures p @==> p
 {
-    admit()
+   Pulse.Lib.Stick.intro_stick p p emp (intro_stick_aux p);
+   fold (p @==> p);
 }
 ```
 
 ```pulse
 ghost
 fn yields_curry (p q r:vprop)
-   requires yields (p ** q) r
-   ensures yields p (yields q r)
+   requires (p ** q) @==> r
+   ensures p @==> (q @==> r)
 {
-  admit()
+//   intro_stick p (q @==> r) (p ** q @==> r)
+//     ((_:unit) 
+//     {
+//         intro_stick q r
+//             ((_:unit) 
+//             {
+//             yields_idem r;
+//             })
+//         })
+//     })
+
+    admit()
 }
 ```
 
 ```pulse
 ghost
 fn yields_trans (p q r:vprop)
-    requires yields p q ** yields q r
-    ensures yields p r
+    requires (p @==> q) ** (q @==> r)
+    ensures p @==> r
 {
     admit()
 }
@@ -344,8 +378,8 @@ fn yields_trans (p q r:vprop)
 ```pulse
 ghost
 fn yields_comm_l (p q r:vprop)
-   requires yields (p ** q) r
-   ensures yields (q ** p) r
+   requires (p ** q) @==> r
+   ensures (q ** p) @==> r
 {
   admit()
 }
@@ -354,34 +388,27 @@ fn yields_comm_l (p q r:vprop)
 ```pulse
 ghost
 fn yields_assoc_l (p q r:vprop)
-   requires yields (p ** (q ** r)) r
-   ensures yields ((p ** q) ** r) r
+   requires (p ** (q ** r)) @==> r
+   ensures ((p ** q) ** r) @==> r
 {
   admit()
 }
 ```
 
-let emp_inames_disjoint (t:inames)
-  : Lemma 
-    (ensures (t /! emp_inames))
-    [SMTPat (Set.disjoint t emp_inames)]
-  = admit()
 
 ```pulse
 ghost
 fn elim_yields () (#p #q:vprop)
-   requires yields p q ** p
+   requires (p @==> q) ** p
    ensures q
 {
-  open Pulse.Lib.Stick;
-  rewrite (yields p q) as (stick #emp_inames p q);
+  unfold (p @==> q);
   elim_stick #emp_inames p q;
 }
 ```
 
 let assume_ (p:vprop) : stt_ghost unit emp_inames emp (fun _ -> p) = admit()
 let not_null #t (x:llist t) : bool = Some? x
-assume val dbg : vprop
 
 ```pulse
 ghost
@@ -397,6 +424,7 @@ fn yields_elim (#t:Type)
     intro_is_list_cons (Some v) v
 }
 ```
+
 assume
 val yields_elim' (#t:Type) 
                  (v:node_ptr t)
@@ -417,13 +445,12 @@ fn intro_yields_cons (#t:Type)
         pts_to v n ** is_list n.tail tl
     ensures 
         is_list n.tail tl **
-        yields (is_list n.tail tl) 
-               (is_list (Some v) (n.head::tl))
+        (is_list n.tail tl @==> is_list (Some v) (n.head::tl))
 {
     open Pulse.Lib.Stick;
     intro_stick #emp_inames _ _ _ 
                 (yields_elim' #t v n tl);
-    with p q. rewrite (stick p q) as (yields p q); 
+    with p q. fold (p @==> q)
 }
 ```
 
@@ -448,7 +475,7 @@ fn length_iter (#t:Type) (x: llist t)
         pts_to ctr n **
         pts_to cur ll **
         is_list ll suffix **
-        yields (is_list ll suffix) (is_list x 'l) **
+        (is_list ll suffix @==> is_list x 'l) **
         pure (n == List.Tot.length 'l - List.Tot.length suffix) **
         pure (b == (Some? ll))
     {

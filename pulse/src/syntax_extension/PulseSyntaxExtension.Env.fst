@@ -1,7 +1,7 @@
-module PulseEnv
+module PulseSyntaxExtension.Env
 open FStar.Compiler.Effect
-module Sugar = PulseSugar
-module SW = PulseSyntaxWrapper
+// module Sugar = PulseSugar
+module SW = PulseSyntaxExtension.SyntaxWrapper
 module A = FStar.Parser.AST
 module D = FStar.Syntax.DsEnv
 module S = FStar.Syntax.Syntax
@@ -18,7 +18,7 @@ open FStar.Class.HasRange
 open FStar.Class.Monad
 open FStar.Ident
 open FStar.List.Tot
-open PulseErr
+open PulseSyntaxExtension.Err
 
 let r_ = FStar.Compiler.Range.dummyRange
 #push-options "--warn_error -272" //intentional top-level effects
@@ -100,7 +100,7 @@ let rec free_vars_term (env:env_t) (t:A.term) =
   ToSyntax.free_vars false env.tcenv.dsenv t
 
 and free_vars_vprop (env:env_t) (t:Sugar.vprop) =
-  let open Sugar in
+  let open PulseSyntaxExtension.Sugar in
   match t.v with
   | VPropTerm t -> free_vars_term env t
 
