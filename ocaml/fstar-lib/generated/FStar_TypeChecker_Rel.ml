@@ -9396,8 +9396,20 @@ and (solve_t' : tprob -> worklist -> solution) =
                   | uu___9 -> (x1, x2) in
                 (match uu___7 with
                  | (x11, x21) ->
-                     let t11 = FStar_Syntax_Util.refine x11 phi1 in
-                     let t21 = FStar_Syntax_Util.refine x21 phi2 in
+                     let t11 =
+                       FStar_Syntax_Syntax.mk
+                         (FStar_Syntax_Syntax.Tm_refine
+                            {
+                              FStar_Syntax_Syntax.b = x11;
+                              FStar_Syntax_Syntax.phi = phi1
+                            }) t1.FStar_Syntax_Syntax.pos in
+                     let t21 =
+                       FStar_Syntax_Syntax.mk
+                         (FStar_Syntax_Syntax.Tm_refine
+                            {
+                              FStar_Syntax_Syntax.b = x21;
+                              FStar_Syntax_Syntax.phi = phi2
+                            }) t2.FStar_Syntax_Syntax.pos in
                      let uu___8 = as_refinement false env t11 in
                      (match uu___8 with
                       | (x12, phi11) ->
@@ -9409,7 +9421,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                                  if uu___11
                                  then
                                    ((let uu___13 =
-                                       FStar_Syntax_Print.bv_to_string x12 in
+                                       FStar_Class_Show.show
+                                         FStar_Syntax_Print.showable_bv x12 in
                                      let uu___14 =
                                        FStar_Class_Show.show
                                          FStar_Syntax_Print.showable_term
@@ -9422,7 +9435,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                                        "ref1 = (%s):(%s){%s}\n" uu___13
                                        uu___14 uu___15);
                                     (let uu___13 =
-                                       FStar_Syntax_Print.bv_to_string x22 in
+                                       FStar_Class_Show.show
+                                         FStar_Syntax_Print.showable_bv x22 in
                                      let uu___14 =
                                        FStar_Class_Show.show
                                          FStar_Syntax_Print.showable_term
