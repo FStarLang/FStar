@@ -37,8 +37,9 @@ let (varname : Prims.string -> Prims.string) =
 let (enum_or_struct_name : Prims.string -> Prims.string) = fun s -> s
 let (is_internal_name : Prims.string -> Prims.bool) =
   fun s ->
-    (((((s = "uu___") || (s = "_fret")) || (s = "_bind_c")) ||
-        (s = "_while_c"))
+    (((((FStar_Compiler_Util.starts_with s "uu___") || (s = "_fret")) ||
+         (s = "_bind_c"))
+        || (s = "_while_c"))
        || (s = "_while_b"))
       || (s = "_if_br")
 let fail : 'uuuuu . Prims.string -> 'uuuuu =
@@ -124,7 +125,10 @@ let (type_of : env -> Pulse2Rust_Rust_Syntax.expr -> Prims.bool) =
           let uu___ = lookup_local g s in
           (match uu___ with
            | FStar_Pervasives_Native.Some (_t, b) -> b
-           | FStar_Pervasives_Native.None -> false)
+           | FStar_Pervasives_Native.None ->
+               let uu___1 =
+                 FStar_Compiler_Util.format1 "lookup in env for %s" s in
+               fail uu___1)
       | uu___ -> false
 let rec (uncurry_arrow :
   FStar_Extraction_ML_Syntax.mlty ->
@@ -420,38 +424,70 @@ let (extract_mlconstant_to_lit :
           FStar_Compiler_Util.format1 "mlconstant_to_lit %s" uu___2 in
         fail_nyi uu___1
 let rec (extract_mlpattern_to_pat :
-  FStar_Extraction_ML_Syntax.mlpattern -> Pulse2Rust_Rust_Syntax.pat) =
-  fun p ->
-    match p with
-    | FStar_Extraction_ML_Syntax.MLP_Wild -> Pulse2Rust_Rust_Syntax.Pat_wild
-    | FStar_Extraction_ML_Syntax.MLP_Const c ->
-        let uu___ = extract_mlconstant_to_lit c in
-        Pulse2Rust_Rust_Syntax.Pat_lit uu___
-    | FStar_Extraction_ML_Syntax.MLP_Var x ->
-        let uu___ = varname x in Pulse2Rust_Rust_Syntax.mk_pat_ident uu___
-    | FStar_Extraction_ML_Syntax.MLP_CTor (p1, ps) when
-        (FStar_Pervasives_Native.snd p1) = "Mktuple3" ->
-        let uu___ = FStar_Compiler_List.map extract_mlpattern_to_pat ps in
-        Pulse2Rust_Rust_Syntax.mk_pat_tuple uu___
-    | FStar_Extraction_ML_Syntax.MLP_CTor (p1, ps) ->
-        let uu___ = FStar_Compiler_List.map extract_mlpattern_to_pat ps in
-        Pulse2Rust_Rust_Syntax.mk_pat_ts (FStar_Pervasives_Native.snd p1)
-          uu___
-    | FStar_Extraction_ML_Syntax.MLP_Record (p1, fs) ->
-        let uu___ = FStar_Compiler_List.last p1 in
-        let uu___1 =
-          FStar_Compiler_List.map
-            (fun uu___2 ->
-               match uu___2 with
-               | (f, p2) ->
-                   let uu___3 = extract_mlpattern_to_pat p2 in (f, uu___3))
-            fs in
-        Pulse2Rust_Rust_Syntax.mk_pat_struct uu___ uu___1
-    | uu___ ->
-        let uu___1 =
-          let uu___2 = FStar_Extraction_ML_Syntax.mlpattern_to_string p in
-          FStar_Compiler_Util.format1 "mlpattern_to_pat %s" uu___2 in
-        fail_nyi uu___1
+  env ->
+    FStar_Extraction_ML_Syntax.mlpattern ->
+      (env * Pulse2Rust_Rust_Syntax.pat))
+  =
+  fun g ->
+    fun p ->
+      match p with
+      | FStar_Extraction_ML_Syntax.MLP_Wild ->
+          (g, Pulse2Rust_Rust_Syntax.Pat_wild)
+      | FStar_Extraction_ML_Syntax.MLP_Const c ->
+          let uu___ =
+            let uu___1 = extract_mlconstant_to_lit c in
+            Pulse2Rust_Rust_Syntax.Pat_lit uu___1 in
+          (g, uu___)
+      | FStar_Extraction_ML_Syntax.MLP_Var x ->
+          let uu___ = push_local g x Pulse2Rust_Rust_Syntax.Typ_infer false in
+          let uu___1 =
+            let uu___2 = is_internal_name x in
+            if uu___2
+            then Pulse2Rust_Rust_Syntax.Pat_wild
+            else
+              (let uu___4 = varname x in
+               Pulse2Rust_Rust_Syntax.mk_pat_ident uu___4) in
+          (uu___, uu___1)
+      | FStar_Extraction_ML_Syntax.MLP_CTor (p1, ps) when
+          ((FStar_Pervasives_Native.snd p1) = "Mktuple2") ||
+            ((FStar_Pervasives_Native.snd p1) = "Mktuple3")
+          ->
+          let uu___ =
+            FStar_Compiler_List.fold_left_map extract_mlpattern_to_pat g ps in
+          (match uu___ with
+           | (g1, ps1) ->
+               let uu___1 = Pulse2Rust_Rust_Syntax.mk_pat_tuple ps1 in
+               (g1, uu___1))
+      | FStar_Extraction_ML_Syntax.MLP_CTor (p1, ps) ->
+          let uu___ =
+            FStar_Compiler_List.fold_left_map extract_mlpattern_to_pat g ps in
+          (match uu___ with
+           | (g1, ps1) ->
+               let uu___1 =
+                 Pulse2Rust_Rust_Syntax.mk_pat_ts
+                   (FStar_Pervasives_Native.snd p1) ps1 in
+               (g1, uu___1))
+      | FStar_Extraction_ML_Syntax.MLP_Record (p1, fs) ->
+          let uu___ =
+            let uu___1 =
+              FStar_Compiler_List.map FStar_Pervasives_Native.snd fs in
+            FStar_Compiler_List.fold_left_map extract_mlpattern_to_pat g
+              uu___1 in
+          (match uu___ with
+           | (g1, ps) ->
+               let uu___1 =
+                 let uu___2 = FStar_Compiler_List.last p1 in
+                 let uu___3 =
+                   let uu___4 =
+                     FStar_Compiler_List.map FStar_Pervasives_Native.fst fs in
+                   FStar_Compiler_List.zip uu___4 ps in
+                 Pulse2Rust_Rust_Syntax.mk_pat_struct uu___2 uu___3 in
+               (g1, uu___1))
+      | uu___ ->
+          let uu___1 =
+            let uu___2 = FStar_Extraction_ML_Syntax.mlpattern_to_string p in
+            FStar_Compiler_Util.format1 "mlpattern_to_pat %s" uu___2 in
+          fail_nyi uu___1
 let rec (lb_init_and_def :
   env ->
     FStar_Extraction_ML_Syntax.mllb ->
@@ -655,20 +691,14 @@ and (extract_mlexpr :
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            uu___5::e1::[])
           when
-          ((FStar_Compiler_String.length (FStar_Pervasives_Native.snd p)) >
-             (Prims.of_int (12)))
-            &&
-            (let uu___6 =
-               FStar_Compiler_String.substring
-                 (FStar_Pervasives_Native.snd p) Prims.int_zero
-                 (Prims.of_int (12)) in
-             uu___6 = "explode_ref_")
+          FStar_Compiler_Util.starts_with (FStar_Pervasives_Native.snd p)
+            "explode_ref_"
           ->
+          let n = FStar_Compiler_String.length "explode_ref_" in
           let rname =
-            FStar_Compiler_String.substring (FStar_Pervasives_Native.snd p)
-              (Prims.of_int (12))
+            FStar_Compiler_String.substring (FStar_Pervasives_Native.snd p) n
               ((FStar_Compiler_String.length (FStar_Pervasives_Native.snd p))
-                 - (Prims.of_int (12))) in
+                 - n) in
           let flds =
             let uu___6 =
               FStar_Compiler_Util.psmap_try_find g.record_field_names rname in
@@ -1242,9 +1272,11 @@ and (extract_mlbranch_to_arm :
                    "mlbranch_to_arm with pat guard %s" uu___2 in
                fail_nyi uu___1
            | FStar_Pervasives_Native.None ->
-               let pat1 = extract_mlpattern_to_pat pat in
-               let arm_body = extract_mlexpr g body in
-               Pulse2Rust_Rust_Syntax.mk_arm pat1 arm_body)
+               let uu___1 = extract_mlpattern_to_pat g pat in
+               (match uu___1 with
+                | (g1, pat1) ->
+                    let arm_body = extract_mlexpr g1 body in
+                    Pulse2Rust_Rust_Syntax.mk_arm pat1 arm_body))
 let (extract_top_level_lb :
   env ->
     FStar_Extraction_ML_Syntax.mlletbinding ->

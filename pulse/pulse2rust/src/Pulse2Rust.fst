@@ -45,7 +45,7 @@ let enum_or_struct_name (s:string) : string = s
   // String.string_of_list ((FStar.Char.uppercase hd)::tl)
 
 let is_internal_name (s:string) : bool =
-  s = "uu___" ||
+  starts_with s "uu___" ||
   s = "_fret" ||
   s = "_bind_c" ||
   s = "_while_c" ||
@@ -86,7 +86,7 @@ let type_of (g:env) (e:expr) : bool =  // is_mut
   | Expr_path [s] ->
     (match lookup_local g s with
      | Some (_t, b) -> b
-     | None -> false) //TODO: FIXME: EXTEND WITH PATTERN VARIABLES fail (format1 "lookup in env for %s" s))
+     | None -> fail (format1 "lookup in env for %s" s))
   
   | _ -> false
 
@@ -278,18 +278,29 @@ let extract_mlconstant_to_lit (c:S.mlconstant) : lit =
   | _ -> fail_nyi (format1 "mlconstant_to_lit %s" (S.mlconstant_to_string c))
 
 
-let rec extract_mlpattern_to_pat (p:S.mlpattern) : pat =
+let rec extract_mlpattern_to_pat (g:env) (p:S.mlpattern) : env & pat =
   match p with
-  | S.MLP_Wild -> Pat_wild
-  | S.MLP_Const c -> Pat_lit (extract_mlconstant_to_lit c)
-  | S.MLP_Var x -> mk_pat_ident (varname x)
+  | S.MLP_Wild -> g, Pat_wild
+  | S.MLP_Const c -> g, Pat_lit (extract_mlconstant_to_lit c)
+  | S.MLP_Var x ->
+    push_local g x Typ_infer false,
+    (if is_internal_name x
+     then Pat_wild
+     else mk_pat_ident (varname x))
   | S.MLP_CTor (p, ps)
-    when snd p = "Mktuple3" ->
-    mk_pat_tuple (List.map extract_mlpattern_to_pat ps)
+    when snd p = "Mktuple2" ||
+         snd p = "Mktuple3" ->
+    let g, ps = fold_left_map extract_mlpattern_to_pat g ps in
+    g,
+    mk_pat_tuple ps
   | S.MLP_CTor (p, ps) ->
-    mk_pat_ts (snd p) (List.map extract_mlpattern_to_pat ps)
+    let g, ps = fold_left_map extract_mlpattern_to_pat g ps in
+    g,
+    mk_pat_ts (snd p) ps
   | S.MLP_Record (p, fs) ->
-    mk_pat_struct (List.last p) (List.map (fun (f, p) -> f, extract_mlpattern_to_pat p) fs)
+    let g, ps = fold_left_map extract_mlpattern_to_pat g (List.map snd fs) in
+    g,
+    mk_pat_struct (List.last p) (zip (List.map fst fs) ps)
   | _ -> fail_nyi (format1 "mlpattern_to_pat %s" (S.mlpattern_to_string p))
 
 //
@@ -395,9 +406,9 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     mk_expr_field_unnamed e 2
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, [_; e])
-    when String.length (snd p) > 12 &&
-         String.substring (snd p) 0 12 = "explode_ref_" ->
-    let rname = String.substring (snd p) 12 (String.length (snd p) - 12) in
+    when starts_with (snd p) "explode_ref_" ->
+    let n = String.length "explode_ref_" in
+    let rname = String.substring (snd p) n (String.length (snd p) - n) in
     let flds = psmap_try_find g.record_field_names rname |> must in
     let e = extract_mlexpr g e in
     let es = flds |> List.map (fun f -> mk_reference_expr true (mk_expr_field e f)) in
@@ -600,7 +611,7 @@ and extract_mlbranch_to_arm (g:env) ((pat, pat_guard, body):S.mlbranch) : arm =
   match pat_guard with
   | Some e -> fail_nyi (format1 "mlbranch_to_arm with pat guard %s" (S.mlexpr_to_string e))
   | None ->
-    let pat = extract_mlpattern_to_pat pat in
+    let g, pat = extract_mlpattern_to_pat g pat in
     let arm_body = extract_mlexpr g body in
     mk_arm pat arm_body
 
