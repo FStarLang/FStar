@@ -76,3 +76,4 @@ val unique: #a:eqtype -> list a -> list a
 val index: #a:eqtype -> (a -> bool) -> list a -> int
 val span: #a:eqtype -> (a -> bool) -> list a -> Tot ((list a) * (list a))
 val deduplicate (f: 'a -> 'a -> bool) (s: list 'a) : list 'a
+val fold_left_map (f: 'a -> 'b -> 'a * 'c) (s: 'a) (l: list 'b) : 'a * list 'c
