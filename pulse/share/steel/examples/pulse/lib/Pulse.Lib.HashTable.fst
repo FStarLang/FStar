@@ -655,6 +655,11 @@ fn delete (#kt:eqtype) (#vt:Type0)
 }
 ```
 
+let is_used (#k:eqtype) (#v:Type0) (c:cell k v) : bool =
+  match c with
+  | Used _ _ -> true
+  | _ -> false
+
 ```pulse
 fn not_full (#kt:eqtype) (#vt:Type0)
   (r:ref (ht_t kt vt))
@@ -693,7 +698,7 @@ fn not_full (#kt:eqtype) (#vt:Type0)
       rewrite (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)))
            as (V.pts_to ht.contents pht.repr.seq);
       fold (exploded_vp r ht r_sz r_hashf r_contents);
-      (Used? c)
+      is_used c
     }
     else 
     { 
@@ -708,7 +713,7 @@ fn not_full (#kt:eqtype) (#vt:Type0)
       SZ.v ht.sz == pht_sz pht /\
       SZ.(vi <=^ ht.sz) /\
       (b == (SZ.(vi <^ ht.sz) && Used? (pht.repr @@ (SZ.v vi)))) /\
-      (forall (i:nat). i < SZ.v vi ==> Used? (pht.repr @@ i))
+      (forall (i:nat). i < SZ.v vi ==> is_used (pht.repr @@ i))
     )
   )
   {
