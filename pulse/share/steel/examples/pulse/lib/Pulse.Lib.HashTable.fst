@@ -134,7 +134,7 @@ fn alloc (#k:eqtype) (#v:Type0) (hashf:(k -> SZ.t)) (l:pos_us)
 ```
 
 ```pulse
-fn dealloc' (#k:eqtype) (#v:Type0) (ht:ht_t k v)
+fn dealloc (#k:eqtype) (#v:Type0) (ht:ht_t k v)
   requires exists* pht. models ht pht
   ensures emp
 {
@@ -530,12 +530,18 @@ fn delete (#kt:eqtype) (#vt:Type0)
     models ht pht' **
     pure (if b then pht' == PHT.delete pht k else pht' == pht)
 {
-  let res = explode_ref r;
+  let res = explode_ref_ht_t r;
 
-  unfold (exploded_vp r ht res);
-  let sz = !(tfst res);
-  let hash = ref_apply (tsnd res) k;
-  fold (exploded_vp r ht res);
+  match res {
+
+  Mktuple3 r_sz r_hashf r_contents -> {
+  rewrite (exploded_vp r ht (tfst res) (tsnd res) (tthd res))
+       as (exploded_vp r ht r_sz r_hashf r_contents);
+  
+  unfold (exploded_vp r ht r_sz r_hashf r_contents);
+  let sz = !r_sz;
+  let hash = ref_apply r_hashf k;
+  fold (exploded_vp r ht r_sz r_hashf r_contents);
 
   let cidx = size_t_mod hash sz;
   let mut off = 0sz;
@@ -550,7 +556,7 @@ fn delete (#kt:eqtype) (#vt:Type0)
     (vcont = true && verr = false)
   )
   invariant b. exists* (voff:SZ.t) (vcont verr:bool). (
-    exploded_vp r ht res **
+    exploded_vp r ht r_sz r_hashf r_contents **
     R.pts_to off voff **
     R.pts_to cont vcont **
     R.pts_to err verr **
@@ -565,13 +571,13 @@ fn delete (#kt:eqtype) (#vt:Type0)
       b == (vcont = true && verr = false)
     ))
   {
-    unfold (exploded_vp r ht res);
+    unfold (exploded_vp r ht r_sz r_hashf r_contents);
     let voff = !off;
     if (voff = sz)
     {
       cont := false;
       assert (V.pts_to ht.contents pht.repr.seq);
-      fold (exploded_vp r ht res);
+      fold (exploded_vp r ht r_sz r_hashf r_contents);
     }
     else
     {
@@ -583,7 +589,7 @@ fn delete (#kt:eqtype) (#vt:Type0)
           let idx = size_t_mod sum sz;
           rewrite (V.pts_to ht.contents pht.repr.seq)
                as (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)));
-          let c = vec_ref_read (tthd res) idx;
+          let c = V.vec_ref_read r_contents idx;
           rewrite (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)))
                as (V.pts_to ht.contents pht.repr.seq);
 
@@ -595,31 +601,31 @@ fn delete (#kt:eqtype) (#vt:Type0)
               {
                 rewrite (V.pts_to ht.contents pht.repr.seq)
                      as (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)));
-                vec_ref_write (tthd res) idx Zombie;
+                V.vec_ref_write r_contents idx Zombie;
                 cont := false;
                 assert (pure (pht.repr @@ SZ.v idx == Used k v'));
                 assert (pure (Seq.upd pht.repr.seq (SZ.v idx) Zombie  `Seq.equal`
                               (PHT.delete pht k).repr.seq));
                 rewrite (V.pts_to (reveal (hide ht.contents)) (Seq.upd (reveal (hide pht.repr.seq)) (SZ.v idx) Zombie))
                      as (V.pts_to ht.contents (PHT.delete pht k).repr.seq);
-                fold (exploded_vp r ht res);
+                fold (exploded_vp r ht r_sz r_hashf r_contents);
               }
               else
               {
                 off := SZ.(voff +^ 1sz);
-                fold (exploded_vp r ht res);
+                fold (exploded_vp r ht r_sz r_hashf r_contents);
               } 
             }
             Clean ->
             {
               cont := false;
               assert (pure (pht.repr == (PHT.delete pht k).repr));
-              fold (exploded_vp r ht res);
+              fold (exploded_vp r ht r_sz r_hashf r_contents);
             }
             Zombie ->
             {
               off := SZ.(voff +^ 1sz);
-              fold (exploded_vp r ht res);
+              fold (exploded_vp r ht r_sz r_hashf r_contents);
             }
           }
         }
@@ -627,12 +633,12 @@ fn delete (#kt:eqtype) (#vt:Type0)
         {
           // ERROR - add failed
           err := false;
-          fold (exploded_vp r ht res);
+          fold (exploded_vp r ht r_sz r_hashf r_contents);
         }
       }
     }
   };
-  unexplode_ref r res;
+  unexplode_ref r r_sz r_hashf r_contents;
   let verr = !err;
   if verr
   {
@@ -643,6 +649,8 @@ fn delete (#kt:eqtype) (#vt:Type0)
   {
     fold (models ht (PHT.delete pht k));
     true
+  }
+  }
   }
 }
 ```
@@ -657,27 +665,34 @@ fn not_full (#kt:eqtype) (#vt:Type0)
   ensures pts_to r ht ** models ht pht ** 
           pure (b ==> PHT.not_full pht.repr)
 {
-  let res = explode_ref r;
+  let res = explode_ref_ht_t r;
+
+  match res {
+ 
+  Mktuple3 r_sz r_hashf r_contents -> {
+
+  rewrite (exploded_vp r ht (tfst res) (tsnd res) (tthd res))
+       as (exploded_vp r ht r_sz r_hashf r_contents);
 
   let mut i = 0sz;
   unfold (models ht pht);
 
-  unfold (exploded_vp r ht res);
-  let sz = !(tfst res);
-  fold (exploded_vp r ht res);
+  unfold (exploded_vp r ht r_sz r_hashf r_contents);
+  let sz = !r_sz;
+  fold (exploded_vp r ht r_sz r_hashf r_contents);
 
   while
   (
     let vi = !i;  
     if SZ.(vi <^ sz)
     {
-      unfold (exploded_vp r ht res);
+      unfold (exploded_vp r ht r_sz r_hashf r_contents);
       rewrite (V.pts_to ht.contents pht.repr.seq)
            as (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)));
-      let c = vec_ref_read (tthd res) vi;
+      let c = V.vec_ref_read r_contents vi;
       rewrite (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)))
            as (V.pts_to ht.contents pht.repr.seq);
-      fold (exploded_vp r ht res);
+      fold (exploded_vp r ht r_sz r_hashf r_contents);
       (Used? c) 
     }
     else 
@@ -686,7 +701,7 @@ fn not_full (#kt:eqtype) (#vt:Type0)
     }
   )
   invariant b. exists* (vi:SZ.t). (
-    exploded_vp r ht res **
+    exploded_vp r ht r_sz r_hashf r_contents **
     V.pts_to ht.contents pht.repr.seq **
     R.pts_to i vi **
     pure (
@@ -700,11 +715,13 @@ fn not_full (#kt:eqtype) (#vt:Type0)
     let vi = !i;
     i := SZ.(vi +^ 1sz);
   };
-  unexplode_ref r res;
+  unexplode_ref r r_sz r_hashf r_contents;
   let vi = !i;
   let res = SZ.(vi <^ sz);
   fold (models ht pht);  
   res
+}
+}
 }
 ```
 
