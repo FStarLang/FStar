@@ -19,8 +19,8 @@ let assume_squash (p:prop) : squash p = assume p
 
 ```pulse
 fn sample (x:R.ref int)
-requires exists p y. R.pts_to x #p y
-ensures exists p y. R.pts_to x #p y ** pure (y == 17)
+requires exists* p y. R.pts_to x #p y
+ensures exists* p y. R.pts_to x #p y ** pure (y == 17)
 {
     let y' = get_witness x;
     assume_squash (y'==17);
@@ -30,8 +30,8 @@ ensures exists p y. R.pts_to x #p y ** pure (y == 17)
 
 ```pulse
 fn sample_ (x:R.ref int) (#p:perm)
-requires exists y. R.pts_to x #p y
-ensures exists y. R.pts_to x #p y ** pure (y == 17)
+requires exists* y. R.pts_to x #p y
+ensures exists* y. R.pts_to x #p y ** pure (y == 17)
 {
     let y = get_witness x;
     assume_squash (y==17);
@@ -41,8 +41,8 @@ ensures exists y. R.pts_to x #p y ** pure (y == 17)
 
 ```pulse
 fn sample2 (x:R.ref int) (#p:perm)
-requires exists y. R.pts_to x #p y
-ensures exists y. R.pts_to x #p y ** pure (y == 17)
+requires exists* y. R.pts_to x #p y
+ensures exists* y. R.pts_to x #p y ** pure (y == 17)
 {
     with (y:erased _).
     assert (R.pts_to x #p y);
@@ -55,7 +55,7 @@ assume val drop (p:vprop) : stt unit p (fun _ -> emp)
 
 ```pulse
 fn sample3 (x0:R.ref int) (x1:R.ref bool) (#p0 #p1:perm)
-requires exists v0 v1. R.pts_to x0 #p0 v0 ** R.pts_to x1 #p1 v1
+requires exists* v0 v1. R.pts_to x0 #p0 v0 ** R.pts_to x1 #p1 v1
 ensures emp
 {
     
@@ -68,7 +68,7 @@ ensures emp
 
 ```pulse
 fn sample4 (x0:R.ref int) (x1:R.ref bool) (#p0 #p1:perm)
-requires exists v0 v1. R.pts_to x0 #p0 v0 ** R.pts_to x1 #p1 v1
+requires exists* v0 v1. R.pts_to x0 #p0 v0 ** R.pts_to x1 #p1 v1
 ensures emp
 {
     
@@ -81,7 +81,7 @@ ensures emp
 
 ```pulse
 fn sample5 (x0:R.ref int) (x1:R.ref bool) (#p0 #p1:perm)
-requires exists v0 v1. R.pts_to x0 #p0 v0 ** R.pts_to x1 #p1 v1
+requires exists* v0 v1. R.pts_to x0 #p0 v0 ** R.pts_to x1 #p1 v1
 ensures emp
 {
     
@@ -96,7 +96,7 @@ ensures emp
 
 ```pulse
 fn sample6 (x0:R.ref int) (x1:R.ref bool)
-requires exists p0 p1 v0 v1. R.pts_to x0 #p0 v0 ** R.pts_to x1 #p1 v1
+requires exists* p0 p1 v0 v1. R.pts_to x0 #p0 v0 ** R.pts_to x1 #p1 v1
 ensures emp
 {
     

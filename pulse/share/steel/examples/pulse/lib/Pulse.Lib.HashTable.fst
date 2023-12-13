@@ -89,9 +89,6 @@ fn explode_ref_ht_t (#k:eqtype) (#v:Type0) (#ht:erased (ht_t k v)) (r:ref (ht_t 
   let r_hashf = R.alloc htc.hashf;
   let r_contents = R.alloc htc.contents;
   let res = (r_sz, r_hashf, r_contents);
-  // rewrite each r_sz as (tfst res),
-  //              r_hashf as (tsnd res),
-  //              r_contents as (tthd res);
   fold (token r r_sz r_hashf r_contents);
   fold (exploded_vp r ht r_sz r_hashf r_contents);
   rewrite (exploded_vp r ht r_sz r_hashf r_contents)
@@ -124,7 +121,7 @@ fn unexplode_ref (#k:eqtype) (#v:Type0) (#ht:erased (ht_t k v))
 fn alloc (#k:eqtype) (#v:Type0) (hashf:(k -> SZ.t)) (l:pos_us)
   requires emp
   returns ht:ht_t k v
-  ensures exists pht. models ht pht ** pure (pht == mk_init_pht hashf l)
+  ensures exists* pht. models ht pht ** pure (pht == mk_init_pht hashf l)
 {
   let contents = V.alloc #(cell k v) Clean l;
   let ht = mk_ht l hashf contents;
@@ -137,8 +134,8 @@ fn alloc (#k:eqtype) (#v:Type0) (hashf:(k -> SZ.t)) (l:pos_us)
 ```
 
 ```pulse
-fn dealloc (#k:eqtype) (#v:Type0) (ht:ht_t k v)
-  requires exists pht. models ht pht
+fn dealloc' (#k:eqtype) (#v:Type0) (ht:ht_t k v)
+  requires exists* pht. models ht pht
   ensures emp
 {
   open SZ;
@@ -198,7 +195,7 @@ fn pulse_lookup_index (#kt:eqtype) (#vt:Type0)
          let vcont = !cont;
          let verr = !err; 
          (voff <=^ sz && vcont = true && verr = false)) 
-  invariant b. exists (voff:SZ.t) (vcont verr:bool). (
+  invariant b. exists* (voff:SZ.t) (vcont verr:bool). (
     exploded_vp r ht r_sz r_hashf r_contents **
     V.pts_to ht.contents pht.repr.seq **
     R.pts_to off voff **
@@ -341,7 +338,7 @@ fn insert (#kt:eqtype) (#vt:Type0)
   
   requires pts_to r ht ** models ht pht
   returns b:bool
-  ensures exists pht'.
+  ensures exists* pht'.
     pts_to r ht ** models ht pht' **
     pure (if b
           then pht'== PHT.insert pht k v
@@ -372,7 +369,7 @@ fn insert (#kt:eqtype) (#vt:Type0)
       let verr = !err;
       (vcont = true && verr = false)
     ) 
-    invariant b. exists (voff:SZ.t) (vcont verr:bool). (
+    invariant b. exists* (voff:SZ.t) (vcont verr:bool). (
       exploded_vp r ht r_sz r_hashf r_contents **
       R.pts_to off voff **
       R.pts_to cont vcont **
@@ -521,237 +518,237 @@ fn insert (#kt:eqtype) (#vt:Type0)
 }
 ```
 
-// ```pulse
-// fn delete (#kt:eqtype) (#vt:Type0)
-//   (r:ref (ht_t kt vt)) (k:kt)
-//   (#ht:erased (ht_t kt vt))
-//   (#pht:erased (pht_t kt vt))
-//   requires pts_to r ht ** models ht pht
-//   returns b:bool
-//   ensures exists pht'.
-//     pts_to r ht **
-//     models ht pht' **
-//     pure (if b then pht' == PHT.delete pht k else pht' == pht)
-// {
-//   let res = explode_ref r;
+```pulse
+fn delete (#kt:eqtype) (#vt:Type0)
+  (r:ref (ht_t kt vt)) (k:kt)
+  (#ht:erased (ht_t kt vt))
+  (#pht:erased (pht_t kt vt))
+  requires pts_to r ht ** models ht pht
+  returns b:bool
+  ensures exists* pht'.
+    pts_to r ht **
+    models ht pht' **
+    pure (if b then pht' == PHT.delete pht k else pht' == pht)
+{
+  let res = explode_ref r;
 
-//   unfold (exploded_vp r ht res);
-//   let sz = !(tfst res);
-//   let hash = ref_apply (tsnd res) k;
-//   fold (exploded_vp r ht res);
+  unfold (exploded_vp r ht res);
+  let sz = !(tfst res);
+  let hash = ref_apply (tsnd res) k;
+  fold (exploded_vp r ht res);
 
-//   let cidx = size_t_mod hash sz;
-//   let mut off = 0sz;
-//   let mut cont = true;
-//   let mut err = false;
+  let cidx = size_t_mod hash sz;
+  let mut off = 0sz;
+  let mut cont = true;
+  let mut err = false;
 
-//   unfold (models ht pht);
-//   while 
-//   (
-//     let vcont = !cont;
-//     let verr = !err; 
-//     (vcont = true && verr = false)
-//   )
-//   invariant b. exists (voff:SZ.t) (vcont verr:bool). (
-//     exploded_vp r ht res **
-//     R.pts_to off voff **
-//     R.pts_to cont vcont **
-//     R.pts_to err verr **
-//     V.pts_to ht.contents (if (vcont || verr) then pht.repr.seq else (PHT.delete pht k).repr.seq) **
-//     pure (
-//       SZ.v ht.sz == pht_sz pht /\
-//       SZ.(voff <=^ ht.sz) /\
-//       all_used_not_by pht.repr (SZ.v cidx) (SZ.v voff) k /\
-//       walk pht.repr (SZ.v cidx) k (SZ.v voff) == lookup_repr pht.repr k /\
-//       delete_repr_walk #kt #vt #(pht_sz pht) #pht.spec pht.repr k (SZ.v voff) (SZ.v cidx) () () 
-//         == delete_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k /\
-//       b == (vcont = true && verr = false)
-//     ))
-//   {
-//     unfold (exploded_vp r ht res);
-//     let voff = !off;
-//     if (voff = sz)
-//     {
-//       cont := false;
-//       assert (V.pts_to ht.contents pht.repr.seq);
-//       fold (exploded_vp r ht res);
-//     }
-//     else
-//     {
-//       let opt_sum = cidx `sz_add` voff;
-//       match opt_sum
-//       {
-//         Some sum ->
-//         {
-//           let idx = size_t_mod sum sz;
-//           rewrite (V.pts_to ht.contents pht.repr.seq)
-//                as (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)));
-//           let c = vec_ref_read (tthd res) idx;
-//           rewrite (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)))
-//                as (V.pts_to ht.contents pht.repr.seq);
+  unfold (models ht pht);
+  while 
+  (
+    let vcont = !cont;
+    let verr = !err; 
+    (vcont = true && verr = false)
+  )
+  invariant b. exists* (voff:SZ.t) (vcont verr:bool). (
+    exploded_vp r ht res **
+    R.pts_to off voff **
+    R.pts_to cont vcont **
+    R.pts_to err verr **
+    V.pts_to ht.contents (if (vcont || verr) then pht.repr.seq else (PHT.delete pht k).repr.seq) **
+    pure (
+      SZ.v ht.sz == pht_sz pht /\
+      SZ.(voff <=^ ht.sz) /\
+      all_used_not_by pht.repr (SZ.v cidx) (SZ.v voff) k /\
+      walk pht.repr (SZ.v cidx) k (SZ.v voff) == lookup_repr pht.repr k /\
+      delete_repr_walk #kt #vt #(pht_sz pht) #pht.spec pht.repr k (SZ.v voff) (SZ.v cidx) () () 
+        == delete_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k /\
+      b == (vcont = true && verr = false)
+    ))
+  {
+    unfold (exploded_vp r ht res);
+    let voff = !off;
+    if (voff = sz)
+    {
+      cont := false;
+      assert (V.pts_to ht.contents pht.repr.seq);
+      fold (exploded_vp r ht res);
+    }
+    else
+    {
+      let opt_sum = cidx `sz_add` voff;
+      match opt_sum
+      {
+        Some sum ->
+        {
+          let idx = size_t_mod sum sz;
+          rewrite (V.pts_to ht.contents pht.repr.seq)
+               as (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)));
+          let c = vec_ref_read (tthd res) idx;
+          rewrite (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)))
+               as (V.pts_to ht.contents pht.repr.seq);
 
-//           match c
-//           {
-//             Used k' v' ->
-//             { 
-//               if (k' = k)
-//               {
-//                 rewrite (V.pts_to ht.contents pht.repr.seq)
-//                      as (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)));
-//                 vec_ref_write (tthd res) idx Zombie;
-//                 cont := false;
-//                 assert (pure (pht.repr @@ SZ.v idx == Used k v'));
-//                 assert (pure (Seq.upd pht.repr.seq (SZ.v idx) Zombie  `Seq.equal`
-//                               (PHT.delete pht k).repr.seq));
-//                 rewrite (V.pts_to (reveal (hide ht.contents)) (Seq.upd (reveal (hide pht.repr.seq)) (SZ.v idx) Zombie))
-//                      as (V.pts_to ht.contents (PHT.delete pht k).repr.seq);
-//                 fold (exploded_vp r ht res);
-//               }
-//               else
-//               {
-//                 off := SZ.(voff +^ 1sz);
-//                 fold (exploded_vp r ht res);
-//               } 
-//             }
-//             Clean ->
-//             {
-//               cont := false;
-//               assert (pure (pht.repr == (PHT.delete pht k).repr));
-//               fold (exploded_vp r ht res);
-//             }
-//             Zombie ->
-//             {
-//               off := SZ.(voff +^ 1sz);
-//               fold (exploded_vp r ht res);
-//             }
-//           }
-//         }
-//         None ->
-//         {
-//           // ERROR - add failed
-//           err := false;
-//           fold (exploded_vp r ht res);
-//         }
-//       }
-//     }
-//   };
-//   unexplode_ref r res;
-//   let verr = !err;
-//   if verr
-//   {
-//     fold (models ht pht);
-//     false
-//   }
-//   else
-//   {
-//     fold (models ht (PHT.delete pht k));
-//     true
-//   }
-// }
-// ```
+          match c
+          {
+            Used k' v' ->
+            { 
+              if (k' = k)
+              {
+                rewrite (V.pts_to ht.contents pht.repr.seq)
+                     as (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)));
+                vec_ref_write (tthd res) idx Zombie;
+                cont := false;
+                assert (pure (pht.repr @@ SZ.v idx == Used k v'));
+                assert (pure (Seq.upd pht.repr.seq (SZ.v idx) Zombie  `Seq.equal`
+                              (PHT.delete pht k).repr.seq));
+                rewrite (V.pts_to (reveal (hide ht.contents)) (Seq.upd (reveal (hide pht.repr.seq)) (SZ.v idx) Zombie))
+                     as (V.pts_to ht.contents (PHT.delete pht k).repr.seq);
+                fold (exploded_vp r ht res);
+              }
+              else
+              {
+                off := SZ.(voff +^ 1sz);
+                fold (exploded_vp r ht res);
+              } 
+            }
+            Clean ->
+            {
+              cont := false;
+              assert (pure (pht.repr == (PHT.delete pht k).repr));
+              fold (exploded_vp r ht res);
+            }
+            Zombie ->
+            {
+              off := SZ.(voff +^ 1sz);
+              fold (exploded_vp r ht res);
+            }
+          }
+        }
+        None ->
+        {
+          // ERROR - add failed
+          err := false;
+          fold (exploded_vp r ht res);
+        }
+      }
+    }
+  };
+  unexplode_ref r res;
+  let verr = !err;
+  if verr
+  {
+    fold (models ht pht);
+    false
+  }
+  else
+  {
+    fold (models ht (PHT.delete pht k));
+    true
+  }
+}
+```
 
-// ```pulse
-// fn not_full (#kt:eqtype) (#vt:Type0)
-//   (r:ref (ht_t kt vt))
-//   (#ht:erased (ht_t kt vt))
-//   (#pht:erased (pht_t kt vt))
-//   requires pts_to r ht ** models ht pht
-//   returns b:bool
-//   ensures pts_to r ht ** models ht pht ** 
-//           pure (b ==> PHT.not_full pht.repr)
-// {
-//   let res = explode_ref r;
+```pulse
+fn not_full (#kt:eqtype) (#vt:Type0)
+  (r:ref (ht_t kt vt))
+  (#ht:erased (ht_t kt vt))
+  (#pht:erased (pht_t kt vt))
+  requires pts_to r ht ** models ht pht
+  returns b:bool
+  ensures pts_to r ht ** models ht pht ** 
+          pure (b ==> PHT.not_full pht.repr)
+{
+  let res = explode_ref r;
 
-//   let mut i = 0sz;
-//   unfold (models ht pht);
+  let mut i = 0sz;
+  unfold (models ht pht);
 
-//   unfold (exploded_vp r ht res);
-//   let sz = !(tfst res);
-//   fold (exploded_vp r ht res);
+  unfold (exploded_vp r ht res);
+  let sz = !(tfst res);
+  fold (exploded_vp r ht res);
 
-//   while
-//   (
-//     let vi = !i;  
-//     if SZ.(vi <^ sz)
-//     {
-//       unfold (exploded_vp r ht res);
-//       rewrite (V.pts_to ht.contents pht.repr.seq)
-//            as (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)));
-//       let c = vec_ref_read (tthd res) vi;
-//       rewrite (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)))
-//            as (V.pts_to ht.contents pht.repr.seq);
-//       fold (exploded_vp r ht res);
-//       (Used? c) 
-//     }
-//     else 
-//     { 
-//       false
-//     }
-//   )
-//   invariant b. exists (vi:SZ.t). (
-//     exploded_vp r ht res **
-//     V.pts_to ht.contents pht.repr.seq **
-//     R.pts_to i vi **
-//     pure (
-//       SZ.v ht.sz == pht_sz pht /\
-//       SZ.(vi <=^ ht.sz) /\
-//       (b == (SZ.(vi <^ ht.sz) && Used? (pht.repr @@ (SZ.v vi)))) /\
-//       (forall (i:nat). i < SZ.v vi ==> Used? (pht.repr @@ i))
-//     )
-//   )
-//   {
-//     let vi = !i;
-//     i := SZ.(vi +^ 1sz);
-//   };
-//   unexplode_ref r res;
-//   let vi = !i;
-//   let res = SZ.(vi <^ sz);
-//   fold (models ht pht);  
-//   res
-// }
-// ```
+  while
+  (
+    let vi = !i;  
+    if SZ.(vi <^ sz)
+    {
+      unfold (exploded_vp r ht res);
+      rewrite (V.pts_to ht.contents pht.repr.seq)
+           as (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)));
+      let c = vec_ref_read (tthd res) vi;
+      rewrite (V.pts_to (reveal (hide ht.contents)) (reveal (hide pht.repr.seq)))
+           as (V.pts_to ht.contents pht.repr.seq);
+      fold (exploded_vp r ht res);
+      (Used? c) 
+    }
+    else 
+    { 
+      false
+    }
+  )
+  invariant b. exists* (vi:SZ.t). (
+    exploded_vp r ht res **
+    V.pts_to ht.contents pht.repr.seq **
+    R.pts_to i vi **
+    pure (
+      SZ.v ht.sz == pht_sz pht /\
+      SZ.(vi <=^ ht.sz) /\
+      (b == (SZ.(vi <^ ht.sz) && Used? (pht.repr @@ (SZ.v vi)))) /\
+      (forall (i:nat). i < SZ.v vi ==> Used? (pht.repr @@ i))
+    )
+  )
+  {
+    let vi = !i;
+    i := SZ.(vi +^ 1sz);
+  };
+  unexplode_ref r res;
+  let vi = !i;
+  let res = SZ.(vi <^ sz);
+  fold (models ht pht);  
+  res
+}
+```
 
-// let hash_us (k:SZ.t) : SZ.t = k
+let hash_us (k:SZ.t) : SZ.t = k
 
-// let init_not_full (#kt:eqtype) (#vt:eqtype) (hashf:kt -> SZ.t) (l:pos_us)
-//   : Lemma (Pulse.Lib.HashTable.Spec.not_full (mk_init_pht #kt #vt hashf l).repr)
-//   = assert (~(Used? ((mk_init_pht #kt #vt hashf l).repr @@ 0)))
+let init_not_full (#kt:eqtype) (#vt:eqtype) (hashf:kt -> SZ.t) (l:pos_us)
+  : Lemma (Pulse.Lib.HashTable.Spec.not_full (mk_init_pht #kt #vt hashf l).repr)
+  = assert (~(Used? ((mk_init_pht #kt #vt hashf l).repr @@ 0)))
 
-// ```pulse
-// fn test_mono ()
-//   requires emp
-//   ensures emp
-// {
-//    let htc = alloc #SZ.t #SZ.t hash_us 128sz;
-//    with pht. assert (models htc pht);
-//    let ht = R.alloc htc;
-//    init_not_full #SZ.t #SZ.t hash_us 128sz;
-//    rewrite (models htc pht) as (models (reveal (hide htc)) pht);
-//    let b = insert ht 0sz 17sz;
-//    if (b) {
-//      let v = lookup ht 0sz;
-//      if (fst v) {
-//        assert pure (snd v == Some 17sz);
-//        R.free ht;
-//        with pht. assert (models (reveal (hide htc)) pht);
-//        rewrite (models (reveal (hide htc)) pht) as (models htc pht);
-//        dealloc htc
-//      }
-//      else {
-//       R.free ht;
-//       with pht. assert (models (reveal (hide htc)) pht);
-//       rewrite (models (reveal (hide htc)) pht) as (models htc pht);
-//       dealloc htc
-//      }
-//    }
-//    else {
-//     let b = delete ht 0sz;
-//     let b' = not_full ht;
-//     R.free ht;
-//     with pht. assert (models (reveal (hide htc)) pht);
-//     rewrite (models (reveal (hide htc)) pht) as (models htc pht);
-//     dealloc htc
-//    } 
-// }
-// ```
-// // let test_mono = test_mono'
+```pulse
+fn test_mono ()
+  requires emp
+  ensures emp
+{
+   let htc = alloc #SZ.t #SZ.t hash_us 128sz;
+   with pht. assert (models htc pht);
+   let ht = R.alloc htc;
+   init_not_full #SZ.t #SZ.t hash_us 128sz;
+   rewrite (models htc pht) as (models (reveal (hide htc)) pht);
+   let b = insert ht 0sz 17sz;
+   if (b) {
+     let v = lookup ht 0sz;
+     if (fst v) {
+       assert pure (snd v == Some 17sz);
+       R.free ht;
+       with pht. assert (models (reveal (hide htc)) pht);
+       rewrite (models (reveal (hide htc)) pht) as (models htc pht);
+       dealloc htc
+     }
+     else {
+      R.free ht;
+      with pht. assert (models (reveal (hide htc)) pht);
+      rewrite (models (reveal (hide htc)) pht) as (models htc pht);
+      dealloc htc
+     }
+   }
+   else {
+    let b = delete ht 0sz;
+    let b' = not_full ht;
+    R.free ht;
+    with pht. assert (models (reveal (hide htc)) pht);
+    rewrite (models (reveal (hide htc)) pht) as (models htc pht);
+    dealloc htc
+   } 
+}
+```
+// let test_mono = test_mono'

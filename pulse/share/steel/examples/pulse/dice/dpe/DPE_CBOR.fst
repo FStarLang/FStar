@@ -31,11 +31,11 @@ let emp_inames_disjoint (t:inames)
 ```pulse
 ghost
 fn elim_implies () (#p #q:vprop)
-   requires `@(p @==> q) ** p
+   requires (p @==> q) ** p
    ensures q
 {
   open Pulse.Lib.Stick;
-  rewrite `@(p @==> q) as (stick #emp_inames p q);
+  rewrite (p @==> q) as (stick #emp_inames p q);
   elim_stick #emp_inames p q;
 }
 ```
@@ -46,7 +46,7 @@ fn finish (c:cbor_read_t)
           (#v:erased (raw_data_item))
           (#s:erased (Seq.seq U8.t))
           (#rem:erased (Seq.seq U8.t))
-  requires `@((raw_data_item_match full_perm c.cbor_read_payload v **
+  requires ((raw_data_item_match full_perm c.cbor_read_payload v **
                A.pts_to c.cbor_read_remainder #p rem) @==>
               A.pts_to input #p s) **
             raw_data_item_match full_perm c.cbor_read_payload v **

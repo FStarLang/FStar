@@ -21,6 +21,7 @@ open FStar_Parser_Util
 open FStar_Const
 open FStar_Ident
 open FStar_String
+module PulseSyntaxExtension_Sugar = PulseSyntaxExtension_Sugar
 
 let mk_meta_tac m = Meta m
 
@@ -46,7 +47,7 @@ let default_return =
     gen dummyRange,
     mk_term (Var (lid_of_ids [(mk_ident("unit", dummyRange))])) dummyRange Un
 
-let with_computation_tag (c:PulseSugar.computation_type) t =
+let with_computation_tag (c:PulseSyntaxExtension_Sugar.computation_type) t =
   match t with
   | None -> c
   | Some t -> { c with tag = t }
@@ -57,10 +58,10 @@ let mk_fn_decl q id is_rec bs body range =
     match body with
     | Inl (ascription, measure, body) ->
       let ascription = with_computation_tag ascription q in 
-      PulseSugar.mk_fn_decl id is_rec (List.flatten bs) (Inl ascription) measure (Inl body) range
+      PulseSyntaxExtension_Sugar.mk_fn_decl id is_rec (List.flatten bs) (Inl ascription) measure (Inl body) range
 
     | Inr (lambda, typ) ->
-      PulseSugar.mk_fn_decl id is_rec (List.flatten bs) (Inr typ) None (Inr lambda) range
+      PulseSyntaxExtension_Sugar.mk_fn_decl id is_rec (List.flatten bs) (Inr typ) None (Inr lambda) range
 
 %}
 
@@ -70,7 +71,7 @@ let mk_fn_decl q id is_rec bs body range =
 
 %start pulseDecl
 %start peekFnId
-%type <PulseSugar.decl> pulseDecl
+%type <PulseSyntaxExtension_Sugar.decl> pulseDecl
 %type <string> peekFnId
 %%
 
@@ -86,16 +87,16 @@ peekFnId:
       { FStar_Ident.string_of_id id }
 
 qual:
-  | GHOST { PulseSugar.STGhost }
-  | ATOMIC { PulseSugar.STAtomic }
+  | GHOST { PulseSyntaxExtension_Sugar.STGhost }
+  | ATOMIC { PulseSyntaxExtension_Sugar.STAtomic }
 
 /* This is the main entry point for the pulse parser */
 pulseDecl:
   | q=option(qual)
     FN isRec=maybeRec lid=lident bs=pulseBinderList
-    body=fnBody
+    body=fnBody EOF
     {
-      PulseSugar.FnDecl (mk_fn_decl q lid isRec bs body (rr $loc))
+      PulseSyntaxExtension_Sugar.FnDecl (mk_fn_decl q lid isRec bs body (rr $loc))
     }
 
 pulseBinderList:
@@ -140,63 +141,63 @@ pulseComputationType:
           | Some (i, r) -> i, r
           | None -> default_return
         in
-        PulseSugar.mk_comp ST t i r t2 maybe_opens (rr $loc)
+        PulseSyntaxExtension_Sugar.mk_comp ST t i r t2 maybe_opens (rr $loc)
     }
 
 
 pulseStmtNoSeq:
   | OPEN i=quident
-    { PulseSugar.mk_open i }
+    { PulseSyntaxExtension_Sugar.mk_open i }
   | tm=appTerm o=option(LARROW v=noSeqTerm { v })
     {
         match o, tm.tm with
         | None, _ ->
-          PulseSugar.mk_expr tm
+          PulseSyntaxExtension_Sugar.mk_expr tm
 
         | Some arr_elt, Op(op, [arr;ix]) when FStar_Ident.string_of_id op = ".()" ->
-          PulseSugar.mk_array_assignment arr ix arr_elt
+          PulseSyntaxExtension_Sugar.mk_array_assignment arr ix arr_elt
 
         | _ ->
           raise_error (Fatal_SyntaxError, "Expected an array assignment of the form x.(i) <- v") (rr $loc)
     }
   | lhs=appTermNoRecordExp COLON_EQUALS a=noSeqTerm
-    { PulseSugar.mk_assignment lhs a }
+    { PulseSyntaxExtension_Sugar.mk_assignment lhs a }
   | LET q=option(mutOrRefQualifier) i=lident typOpt=option(preceded(COLON, appTerm)) EQUALS LBRACK_BAR v=noSeqTerm SEMICOLON n=noSeqTerm BAR_RBRACK
-    { PulseSugar.mk_let_binding q i typOpt (Some (Array_initializer { init=v; len=n })) }
+    { PulseSyntaxExtension_Sugar.mk_let_binding q i typOpt (Some (Array_initializer { init=v; len=n })) }
   | LET q=option(mutOrRefQualifier) i=lident typOpt=option(preceded(COLON, appTerm)) EQUALS tm=noSeqTerm
-    { PulseSugar.mk_let_binding q i typOpt (Some (Default_initializer tm)) }
+    { PulseSyntaxExtension_Sugar.mk_let_binding q i typOpt (Some (Default_initializer tm)) }
   | LBRACE s=pulseStmt RBRACE
-    { PulseSugar.mk_block s }
+    { PulseSyntaxExtension_Sugar.mk_block s }
   | s=ifStmt
     { s }
   | MATCH tm=appTermNoRecordExp c=option(ensuresVprop) LBRACE brs=list(pulseMatchBranch) RBRACE
-    { PulseSugar.mk_match tm c brs }
+    { PulseSyntaxExtension_Sugar.mk_match tm c brs }
   | WHILE LPAREN tm=pulseStmt RPAREN INVARIANT i=lident DOT v=pulseVprop LBRACE body=pulseStmt RBRACE
-    { PulseSugar.mk_while tm i v body }
+    { PulseSyntaxExtension_Sugar.mk_while tm i v body }
   | INTRO p=pulseVprop WITH ws=nonempty_list(indexingTerm)
-    { PulseSugar.mk_intro p ws }
+    { PulseSyntaxExtension_Sugar.mk_intro p ws }
   | PARALLEL REQUIRES p1=pulseVprop AND p2=pulseVprop
              ENSURES q1=pulseVprop AND q2=pulseVprop
              LBRACE b1=pulseStmt RBRACE
              LBRACE b2=pulseStmt RBRACE
-    { PulseSugar.mk_par p1 p2 q1 q2 b1 b2 }
+    { PulseSyntaxExtension_Sugar.mk_par p1 p2 q1 q2 b1 b2 }
   | bs=withBindersOpt REWRITE body=rewriteBody
     {
-        PulseSugar.mk_proof_hint_with_binders body bs
+        PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders body bs
     }
   | bs=withBindersOpt ASSERT p=pulseVprop
-    { PulseSugar.mk_proof_hint_with_binders (ASSERT p) bs }
+    { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders (ASSERT p) bs }
   | bs=withBindersOpt UNFOLD ns=option(names) p=pulseVprop
-    { PulseSugar.mk_proof_hint_with_binders (UNFOLD (ns,p)) bs }
+    { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders (UNFOLD (ns,p)) bs }
   | bs=withBindersOpt FOLD ns=option(names) p=pulseVprop
-    { PulseSugar.mk_proof_hint_with_binders (FOLD (ns,p)) bs }
+    { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders (FOLD (ns,p)) bs }
   | WITH_INVS names=nonempty_list(atomicTerm) r=option(ensuresVprop) LBRACE body=pulseStmt RBRACE
-    { PulseSugar.mk_with_invs names body r }
+    { PulseSyntaxExtension_Sugar.mk_with_invs names body r }
 
   | f=localFnDecl
     {
       let id, fndecl = f in
-      PulseSugar.mk_let_binding None id None (Some (Lambda_initializer fndecl))
+      PulseSyntaxExtension_Sugar.mk_let_binding None id None (Some (Lambda_initializer fndecl))
     }
 
 pulseLambda:
@@ -204,14 +205,14 @@ pulseLambda:
     ascription=option(pulseComputationType)
     LBRACE body=pulseStmt RBRACE
     {
-      PulseSugar.mk_lambda (List.flatten bs) ascription body (rr ($loc))
+      PulseSyntaxExtension_Sugar.mk_lambda (List.flatten bs) ascription body (rr ($loc))
     }
 
 rewriteBody:
   | EACH pairs=separated_nonempty_list (COMMA, x=appTerm AS y=appTerm { (x, y)}) goal=option(IN t=pulseVprop { t })
     { RENAME(pairs, goal) }
   | p1=pulseVprop AS p2=pulseVprop
-    { PulseSugar.REWRITE(p1, p2) }
+    { PulseSyntaxExtension_Sugar.REWRITE(p1, p2) }
 
 names:
   | LBRACK l=separated_nonempty_list(SEMICOLON, qlident) RBRACK
@@ -235,57 +236,29 @@ pulsePattern:
 
 pulseStmt:
   | s=pulseStmtNoSeq
-    { PulseSugar.mk_stmt s (rr $loc) }
+    { PulseSyntaxExtension_Sugar.mk_stmt s (rr $loc) }
   | s1=pulseStmtNoSeq SEMICOLON s2=option(pulseStmt)
     {
-      let s1 = PulseSugar.mk_stmt s1 (rr ($loc(s1))) in
+      let s1 = PulseSyntaxExtension_Sugar.mk_stmt s1 (rr ($loc(s1))) in
       match s2 with
       | None -> s1
-      | Some s2 -> PulseSugar.mk_stmt (PulseSugar.mk_sequence s1 s2) (rr ($loc))
+      | Some s2 -> PulseSyntaxExtension_Sugar.mk_stmt (PulseSyntaxExtension_Sugar.mk_sequence s1 s2) (rr ($loc))
     }
 
 ifStmt:
   | IF tm=appTermNoRecordExp vp=option(ensuresVprop) LBRACE th=pulseStmt RBRACE e=option(elseBlock)
-    { PulseSugar.mk_if tm vp th e }
+    { PulseSyntaxExtension_Sugar.mk_if tm vp th e }
 
 elseBlock:
   | ELSE LBRACE p=pulseStmt RBRACE
     { p }
   | ELSE s=ifStmt
-    { PulseSugar.mk_stmt s (rr $loc) }
+    { PulseSyntaxExtension_Sugar.mk_stmt s (rr $loc) }
 
 mutOrRefQualifier:
   | MUT { MUT }
   | REF { REF }
 
-maybeHash:
-  |      { Nothing }
-  | HASH { Hash }
-
-atomicVprop:
-  | LPAREN p=pulseVprop RPAREN
-    { p }
-  | BACKTICK_AT p=atomicTerm
-    { PulseSugar.(as_vprop (VPropTerm p) (rr $loc)) }
-  | head=qlident args=list(argTerm)
-    {
-      let head = mk_term (Var head) (rr $loc(head)) Un in
-      let app = mkApp head (map (fun (x,y) -> (y,x)) args) (rr2 $loc(head) $loc(args)) in
-      PulseSugar.(as_vprop (VPropTerm app) (rr $loc))
-    }
-
-%inline
-starOp:
-  | o=OPINFIX3
-    { if o = "**" then () else raise_error (Fatal_SyntaxError, "Unexpected infix operator; expected '**'") (rr $loc) }
-  | BACKTICK id=IDENT BACKTICK
-    { if id = "star" then () else raise_error (Fatal_SyntaxError, "Unexpected infix operator; expected '**'") (rr $loc) }
-
-
 pulseVprop:
-  | t=atomicVprop
-    { t }
-  | EXISTS bs=nonempty_list(pulseMultiBinder) DOT body=pulseVprop
-    { PulseSugar.(as_vprop (mk_vprop_exists (List.flatten bs) body) (rr $loc)) }
-  | l=pulseVprop starOp r=pulseVprop
-    {  PulseSugar.(as_vprop (VPropStar (l, r)) (rr $loc)) }
+  | p=typX(tmEqWith(appTermNoRecordExp), tmEqWith(appTermNoRecordExp))
+    { PulseSyntaxExtension_Sugar.(as_vprop (VPropTerm p) (rr $loc)) }

@@ -1,8 +1,8 @@
-module PulseDesugar
+module PulseSyntaxExtension.Desugar
 
 open FStar.Compiler.Effect
-module Sugar = PulseSugar
-module SW = PulseSyntaxWrapper
+module Sugar = PulseSyntaxExtension.Sugar
+module SW = PulseSyntaxExtension.SyntaxWrapper
 module TcEnv = FStar.TypeChecker.Env
 module R = FStar.Compiler.Range
 
@@ -12,8 +12,7 @@ type error = option (string & R.range)
 
 let err a = nat -> either a error & nat
 
-new
-val env_t : Type0
+let env_t : Type0 = PulseSyntaxExtension.Env.env_t
 
 val desugar_decl (env:env_t)
                  (p:Sugar.decl)

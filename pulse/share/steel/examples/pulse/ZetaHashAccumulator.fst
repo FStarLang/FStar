@@ -129,41 +129,6 @@ val blake2b:
            **
            A.pts_to d #p sd)
 
-
-// We also don't yet expose a ghost lemma relating the length of a sequence
-// to its underlying array. So assuming it here for now.
-assume
-val array_pts_to_len (#t:Type0) (a:A.array t) (#p:perm) (#x:Seq.seq t)
-    : stt_ghost unit emp_inames
-          (A.pts_to a #p x)
-          (fun _ -> A.pts_to a #p x ** pure (A.length a == Seq.length x))
-
-// // Array compare is implemented in other Pulse array modules, but this is not
-
-
-// // yet in a standard place in the library. So, I just assume it here.
-// ```pulse
-// fn array_compare (#t:eqtype) (l:SZ.t) (a1 a2:A.larray t (SZ.v l))
-//   requires (
-//     A.pts_to a1 #p1 's1 **
-//     A.pts_to a2 #p2 's2
-//   )
-//   returns res:bool
-//   ensures (
-//     A.pts_to a1 #p1 's1 **
-//     A.pts_to a2 #p2 's2 **
-//     (pure (res <==> Seq.equal 's1 's2))
-//   )
-// {
-//   array_pts_to_len a1;
-//   array_pts_to_len a2;
-//   Pulse.Lib.Array.compare l a1 a2 
-//             #p1 #p2
-//             #(hide #(elseq t l) (reveal 's1))
-//             #(hide #(elseq t l) (reveal 's2));
-// }
-// ```
-
 (***************************************************************)
 (* Pulse *)
 
@@ -181,10 +146,6 @@ type ha_core = {
   acc: hash_value_buf;
   ctr: ref U32.t;
 }
-
-// Pulse syntax does not currently allow using record syntax
-// So, we define a wrapper for constructing a record
-let mk_ha_core acc ctr = { acc; ctr }
 
 // The representation predicate for ha_core ties it to a hash_value_t
 // An interesting bit is that at the spec level, a hash_value_t's counter
@@ -223,9 +184,9 @@ fn package_core (#vacc:erased (Seq.lseq U8.t 32)) (acc:hash_value_buf) (ctr:ref 
            pts_to ctr 'vctr 
   returns h:ha_core
   ensures ha_val_core h (reveal vacc, U32.v 'vctr) **
-          pure (h == mk_ha_core acc ctr)
+          pure (h == { acc; ctr } )
 {
-   let core = mk_ha_core acc ctr;
+   let core = { acc; ctr };
    rewrite each acc as core.acc, ctr as core.ctr;
    fold_ha_val_core core;
    core
@@ -246,8 +207,6 @@ type ha = {
 }
 
 // Again, we play the same game as with ha_core
-
-let mk_ha core tmp dummy = { core; tmp; dummy }
 
 // A representation predicate for ha, encapsulating an ha_val_core
 let ha_val (h:ha) (s:hash_value_t) =
@@ -289,9 +248,9 @@ fn package
            A.pts_to dummy (Seq.create 1 0uy)
   returns h:ha
   ensures ha_val h (reveal vacc, U32.v 'vctr) **
-          pure (h == mk_ha (mk_ha_core acc ctr) tmp dummy)
+          pure (h == { core={acc;ctr}; tmp; dummy })
 {
-   let ha = mk_ha (mk_ha_core acc ctr) tmp dummy;
+   let ha = { core={acc;ctr}; tmp; dummy };
    rewrite each acc as ha.core.acc, ctr as ha.core.ctr,
           tmp as ha.tmp, dummy as ha.dummy;
    fold_ha_val ha;
@@ -360,7 +319,7 @@ fn aggregate_raw_hashes (#s1 #s2:e_raw_hash_value_t)
     assert (pure (s1 `Seq.equal` xor_bytes_pfx s1 s2 0));
     while ((i < 32sz))
     invariant b.
-        exists wi.
+        exists* wi.
             pts_to i wi **
             A.pts_to b1 (xor_bytes_pfx s1 s2 (v wi)) **
             A.pts_to b2 s2 **
@@ -464,7 +423,7 @@ fn add (ha:ha) (input:hashable_buffer) (l:(l:SZ.t {SZ.v l <= blake2_max_input_le
 { 
    let mut ctr = 1ul;
    unfold (ha_val ha 'h);
-   array_pts_to_len input;
+   A.pts_to_len input;
    blake2b 32sz ha.tmp l input 0sz ha.dummy;
    let ha' = package_core ha.tmp ctr;
    let v = aggregate ha.core ha';

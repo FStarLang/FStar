@@ -1857,7 +1857,7 @@ let (check_pulse :
                        (Obj.magic
                           (FStar_Range.mk_range "Pulse.Main.fst"
                              (Prims.of_int (180)) (Prims.of_int (12))
-                             (Prims.of_int (180)) (Prims.of_int (97)))))
+                             (Prims.of_int (180)) (Prims.of_int (112)))))
                     (FStar_Sealed.seal
                        (Obj.magic
                           (FStar_Range.mk_range "Pulse.Main.fst"
@@ -1865,8 +1865,9 @@ let (check_pulse :
                              (Prims.of_int (196)) (Prims.of_int (36)))))
                     (FStar_Tactics_Effect.lift_div_tac
                        (fun uu___ ->
-                          Pulse_ASTBuilder.parse_pulse env namespaces
-                            module_abbrevs content file_name line col))
+                          PulseSyntaxExtension_ASTBuilder.parse_pulse env
+                            namespaces module_abbrevs content file_name line
+                            col))
                     (fun uu___ ->
                        (fun uu___ ->
                           match uu___ with

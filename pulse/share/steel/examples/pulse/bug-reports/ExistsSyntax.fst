@@ -7,7 +7,7 @@ module R = Pulse.Lib.Reference
 fn some_function (r0:ref U8.t) (r1:ref U8.t) (#s:erased U8.t)
    requires 
       R.pts_to r0 s **
-      exists (s1:U8.t). R.pts_to r1 s1
+      (exists* (s1:U8.t). R.pts_to r1 s1)
    ensures
         emp
 {

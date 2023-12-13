@@ -75,7 +75,7 @@ fn intro_session_state_perm_available
 ghost
 fn elim_session_state_perm_available (s:(s:session_state { Available? s }))
   requires session_state_perm s 
-  ensures exists r. context_perm (ctxt_of s) r 
+  ensures exists* r. context_perm (ctxt_of s) r 
 {
   match s
   {
@@ -289,7 +289,7 @@ fn insert (#kt:eqtype) (#vt:Type0)
   requires pts_to r ht ** models ht pht
   returns b:bool
   ensures
-    exists pht'.
+    exists* pht'.
       pts_to r ht **
       models ht pht' **
       pure (if b
@@ -695,7 +695,7 @@ fn init_l0_ctxt (cdi:A.larray U8.t (US.v dice_digest_len))
   requires A.pts_to cdi s
         ** pure (A.is_full_array cdi)
   returns ctxt:context_t
-  ensures exists repr.
+  ensures exists* repr.
     context_perm ctxt repr **
     pure (repr == L0_context_repr (mk_l0_context_repr_t uds_bytes s engine_repr))
 {
@@ -760,7 +760,7 @@ fn init_l1_ctxt (deviceIDCSR_len: US.t) (aliasKeyCRT_len: US.t)
     A.pts_to aliasKey_pub aliasKey_pub0 ** 
     A.pts_to deviceIDCSR deviceIDCSR0 **
     A.pts_to aliasKeyCRT aliasKeyCRT0 **
-    exists l1repr. (
+    (exists* l1repr. 
       context_perm ctxt l1repr **
       pure (l1repr ==
             L1_context_repr (mk_l1_context_repr_t 
@@ -936,7 +936,7 @@ fn intro_maybe_context_perm (c:context_t)
 ghost
 fn elim_maybe_context_perm (c:context_t)
   requires maybe_context_perm (Some c)
-  ensures exists repr. context_perm c repr
+  ensures exists* repr. context_perm c repr
 {
   unfold (maybe_context_perm (Some c));
   with x y. rewrite (context_perm x y) as (context_perm c y)

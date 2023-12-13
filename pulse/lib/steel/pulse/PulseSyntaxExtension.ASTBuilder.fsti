@@ -1,4 +1,4 @@
-module Pulse.ASTBuilder
+module PulseSyntaxExtension.ASTBuilder
 module R = FStar.Reflection
 val parse_pulse (env:R.env) 
                 (namespaces:list string)

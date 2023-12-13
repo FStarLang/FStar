@@ -1,4 +1,4 @@
-module Pulse_ASTBuilder
+module PulseSyntaxExtension.ASTBuilder
 open FStar.Compiler.Effect
 open FStar.Parser.AST
 open FStar.Parser.AST.Util
@@ -20,7 +20,7 @@ let extension_parser
       let tm t = tm t r in
       let str s = tm (Const (Const_string (s, r))) in
       let i s = tm (Const (Const_int(BU.string_of_int s, None))) in
-      match Pulse.Parser.parse_peek_id contents r with
+      match Parser.parse_peek_id contents r with
       | Inr (err, r) ->
         Inl { message = err; range = r }
 
@@ -60,11 +60,13 @@ let extension_parser
         let d = { d; drange = r; quals = [ Irreducible ]; attrs = [str "uninterpreted_by_smt"]  } in
         Inr d
 
+#push-options "--warn_error -272" //intentional top-level effect
 let _ = 
     register_extension_parser "pulse" extension_parser
+#pop-options
    
 module TcEnv = FStar.TypeChecker.Env
-module D = PulseDesugar
+module D = PulseSyntaxExtension.Desugar
 module L = FStar.Compiler.List
 module R = FStar.Compiler.Range
 
@@ -75,7 +77,7 @@ let parse_pulse (env:TcEnv.env)
                 (content:string)
                 (file_name:string)
                 (line col:int)
-  : either PulseSyntaxWrapper.decl (option (string & R.range))
+  : either PulseSyntaxExtension.SyntaxWrapper.decl (option (string & R.range))
   = let namespaces = L.map Ident.path_of_text namespaces in
     let module_abbrevs = L.map (fun (x, l) -> x, Ident.path_of_text l) module_abbrevs in
     let env = D.initialize_env env namespaces module_abbrevs in
@@ -83,7 +85,7 @@ let parse_pulse (env:TcEnv.env)
       let p = R.mk_pos line col in
       R.mk_range file_name p p
     in
-    match Pulse.Parser.parse_decl content range with
+    match Parser.parse_decl content range with
     | Inl d -> fst (D.desugar_decl env d 0)
     | Inr e -> Inr e
     
