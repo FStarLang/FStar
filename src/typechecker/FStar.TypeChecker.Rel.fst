@@ -3983,17 +3983,18 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                 ({ x1 with sort = t1 }), ({ x2 with sort = t2 })
             | _ -> x1, x2
         in
-        (* A bit hackish *)
-        let t1 = U.refine x1 phi1 in
-        let t2 = U.refine x2 phi2 in
-        (* / hack *)
+        (* A bit hackish, reconstruct the refinements and flatten them with
+        as_refinement. *)
+        let t1 = S.mk (Tm_refine {b=x1; phi=phi1}) t1.pos in
+        let t2 = S.mk (Tm_refine {b=x2; phi=phi2}) t2.pos in
         let x1, phi1 = as_refinement false env t1 in
         let x2, phi2 = as_refinement false env t2 in
+        (* / hack *)
         if debug wl (Options.Other "Rel") then begin
-            BU.print3 "ref1 = (%s):(%s){%s}\n" (Print.bv_to_string x1)
+            BU.print3 "ref1 = (%s):(%s){%s}\n" (show x1)
                                                (show x1.sort)
                                                (show phi1);
-            BU.print3 "ref2 = (%s):(%s){%s}\n" (Print.bv_to_string x2)
+            BU.print3 "ref2 = (%s):(%s){%s}\n" (show x2)
                                                (show x2.sort)
                                                (show phi2)
         end;
