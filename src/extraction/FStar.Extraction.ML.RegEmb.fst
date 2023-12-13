@@ -70,7 +70,7 @@ let ml_record : Ident.lid -> list (string & mlexpr) -> mlexpr =
   fun l args ->
     let s = Ident.path_of_lid l in
     // [] -> assuming same module
-    mk (MLE_Record ([], args))
+    mk (MLE_Record ([], l |> Ident.ident_of_lid |> Ident.string_of_id, args))
 
 let ml_lam nm e =
     mk <| MLE_Fun ([(nm, MLTY_Top)], e)

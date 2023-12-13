@@ -299,7 +299,7 @@ let rec build_expr (e: mlexpr): expression =
    | MLE_CTor args -> build_constructor_expr args
    | MLE_Seq args -> build_seq args
    | MLE_Tuple l -> Exp.tuple (map build_expr l)
-   | MLE_Record (path, l) ->
+   | MLE_Record (path, _, l) ->
       let fields = map (fun (x,y) -> (path_to_ident(path, x), build_expr y)) l in
       Exp.record fields None
    | MLE_Proj (e, path) ->

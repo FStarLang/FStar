@@ -535,22 +535,22 @@ let rec (doc_of_expr :
         | FStar_Extraction_ML_Syntax.MLE_Var x -> text x
         | FStar_Extraction_ML_Syntax.MLE_Name path ->
             let uu___ = ptsym currentModule path in text uu___
-        | FStar_Extraction_ML_Syntax.MLE_Record (path, fields) ->
-            let for1 uu___ =
-              match uu___ with
+        | FStar_Extraction_ML_Syntax.MLE_Record (path, uu___, fields) ->
+            let for1 uu___1 =
+              match uu___1 with
               | (name, e1) ->
                   let doc1 =
                     doc_of_expr currentModule (min_op_prec, NonAssoc) e1 in
-                  let uu___1 =
-                    let uu___2 =
-                      let uu___3 = ptsym currentModule (path, name) in
-                      text uu___3 in
-                    [uu___2; text "="; doc1] in
-                  reduce1 uu___1 in
-            let uu___ =
-              let uu___1 = FStar_Compiler_List.map for1 fields in
-              combine (text "; ") uu___1 in
-            cbrackets uu___
+                  let uu___2 =
+                    let uu___3 =
+                      let uu___4 = ptsym currentModule (path, name) in
+                      text uu___4 in
+                    [uu___3; text "="; doc1] in
+                  reduce1 uu___2 in
+            let uu___1 =
+              let uu___2 = FStar_Compiler_List.map for1 fields in
+              combine (text "; ") uu___2 in
+            cbrackets uu___1
         | FStar_Extraction_ML_Syntax.MLE_CTor (ctor, []) ->
             let name =
               let uu___ = is_standard_constructor ctor in

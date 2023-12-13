@@ -2462,18 +2462,18 @@ and (translate_expr' : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
             let uu___1 = translate_expr env1 e1 in
             let uu___2 = translate_type env1 t_to in (uu___1, uu___2) in
           ECast uu___
-      | FStar_Extraction_ML_Syntax.MLE_Record (uu___, fields) ->
-          let uu___1 =
-            let uu___2 = assert_lid env1 e.FStar_Extraction_ML_Syntax.mlty in
-            let uu___3 =
+      | FStar_Extraction_ML_Syntax.MLE_Record (uu___, uu___1, fields) ->
+          let uu___2 =
+            let uu___3 = assert_lid env1 e.FStar_Extraction_ML_Syntax.mlty in
+            let uu___4 =
               FStar_Compiler_List.map
-                (fun uu___4 ->
-                   match uu___4 with
+                (fun uu___5 ->
+                   match uu___5 with
                    | (field, expr1) ->
-                       let uu___5 = translate_expr env1 expr1 in
-                       (field, uu___5)) fields in
-            (uu___2, uu___3) in
-          EFlat uu___1
+                       let uu___6 = translate_expr env1 expr1 in
+                       (field, uu___6)) fields in
+            (uu___3, uu___4) in
+          EFlat uu___2
       | FStar_Extraction_ML_Syntax.MLE_Proj (e1, path) ->
           let uu___ =
             let uu___1 = assert_lid env1 e1.FStar_Extraction_ML_Syntax.mlty in
@@ -3125,7 +3125,7 @@ let (translate : FStar_Extraction_ML_Syntax.mllib -> file Prims.list) =
                      "Unable to translate module: %s because:\n  %s\n" m_name
                      uu___3);
                   FStar_Pervasives_Native.None)) modules
-let (uu___1714 : unit) =
+let (uu___1715 : unit) =
   register_post_translate_type_without_decay translate_type_without_decay';
   register_post_translate_type translate_type';
   register_post_translate_type_decl translate_type_decl';
