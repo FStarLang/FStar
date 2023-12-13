@@ -358,22 +358,31 @@ let (maybe_shorten_fv :
       let lid = (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
       maybe_shorten_lid env lid
 let (serialize_machine_integer_desc :
-  (FStar_Const.signedness * FStar_Const.width) -> Prims.string) =
+  (FStar_Const.signedness * FStar_Const.width) -> Prims.string Prims.list) =
   fun uu___ ->
     match uu___ with
     | (s, w) ->
-        FStar_Compiler_Util.format3 "FStar.%sInt%s.__%sint_to_t"
-          (match s with
-           | FStar_Const.Unsigned -> "U"
-           | FStar_Const.Signed -> "")
-          (match w with
-           | FStar_Const.Int8 -> "8"
-           | FStar_Const.Int16 -> "16"
-           | FStar_Const.Int32 -> "32"
-           | FStar_Const.Int64 -> "64")
-          (match s with
-           | FStar_Const.Unsigned -> "u"
-           | FStar_Const.Signed -> "")
+        let sU =
+          match s with
+          | FStar_Const.Unsigned -> "U"
+          | FStar_Const.Signed -> "" in
+        let sW =
+          match w with
+          | FStar_Const.Int8 -> "8"
+          | FStar_Const.Int16 -> "16"
+          | FStar_Const.Int32 -> "32"
+          | FStar_Const.Int64 -> "64" in
+        let su =
+          match s with
+          | FStar_Const.Unsigned -> "u"
+          | FStar_Const.Signed -> "" in
+        let uu___1 =
+          FStar_Compiler_Util.format3 "FStar.%sInt%s.__%sint_to_t" sU sW su in
+        let uu___2 =
+          let uu___3 =
+            FStar_Compiler_Util.format3 "FStar.%sInt%s.%sint_to_t" sU sW su in
+          [uu___3] in
+        uu___1 :: uu___2
 let (parse_machine_integer_desc :
   FStar_Syntax_Syntax.fv ->
     ((FStar_Const.signedness * FStar_Const.width) * Prims.string)
@@ -386,12 +395,32 @@ let (parse_machine_integer_desc :
     FStar_Const.Int32;
     FStar_Const.Int64] in
   let descs =
-    FStar_Compiler_List.collect
-      (fun s ->
-         FStar_Compiler_List.map
-           (fun w ->
-              let uu___ = serialize_machine_integer_desc (s, w) in
-              ((s, w), uu___)) widths) signs in
+    let uu___ =
+      Obj.magic
+        (FStar_Class_Monad.op_let_Bang FStar_Class_Monad.monad_list () ()
+           (Obj.magic signs)
+           (fun uu___1 ->
+              (fun s ->
+                 let s = Obj.magic s in
+                 Obj.magic
+                   (FStar_Class_Monad.op_let_Bang
+                      FStar_Class_Monad.monad_list () () (Obj.magic widths)
+                      (fun uu___1 ->
+                         (fun w ->
+                            let w = Obj.magic w in
+                            let uu___1 =
+                              serialize_machine_integer_desc (s, w) in
+                            Obj.magic
+                              (FStar_Class_Monad.op_let_Bang
+                                 FStar_Class_Monad.monad_list () ()
+                                 (Obj.magic uu___1)
+                                 (fun uu___2 ->
+                                    (fun desc ->
+                                       let desc = Obj.magic desc in
+                                       Obj.magic [((s, w), desc)]) uu___2)))
+                           uu___1))) uu___1)) in
+    ((FStar_Const.Unsigned, FStar_Const.Sizet), "FStar.SizeT.__uint_to_t") ::
+      uu___ in
   fun fv ->
     FStar_Compiler_List.tryFind
       (fun uu___ ->

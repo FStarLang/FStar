@@ -547,8 +547,8 @@ let rec (traverse :
 let (preprocess :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      (FStar_TypeChecker_Env.env * FStar_Syntax_Syntax.term *
-        FStar_Options.optionstate) Prims.list)
+      (Prims.bool * (FStar_TypeChecker_Env.env * FStar_Syntax_Syntax.term *
+        FStar_Options.optionstate) Prims.list))
   =
   fun env ->
     fun goal ->
@@ -575,13 +575,13 @@ let (preprocess :
             let uu___3 =
               let uu___4 = traverse by_tactic_interp Pos env goal in
               match uu___4 with
-              | Unchanged t' -> (t', [])
-              | Simplified (t', gs) -> (t', gs)
+              | Unchanged t' -> (false, (t', []))
+              | Simplified (t', gs) -> (true, (t', gs))
               | uu___5 ->
                   FStar_Compiler_Effect.failwith
                     "preprocess: impossible, traverse returned a Dual" in
             match uu___3 with
-            | (t', gs) ->
+            | (did_anything, (t', gs)) ->
                 ((let uu___5 =
                     FStar_Compiler_Effect.op_Bang
                       FStar_Tactics_V2_Interpreter.tacdbg in
@@ -689,9 +689,11 @@ let (preprocess :
                   | (uu___6, gs1) ->
                       let gs2 = FStar_Compiler_List.rev gs1 in
                       let uu___7 =
-                        let uu___8 = FStar_Options.peek () in
-                        (env, t', uu___8) in
-                      uu___7 :: gs2))))
+                        let uu___8 =
+                          let uu___9 = FStar_Options.peek () in
+                          (env, t', uu___9) in
+                        uu___8 :: gs2 in
+                      (did_anything, uu___7)))))
 let rec (traverse_for_spinoff :
   pol ->
     (Prims.string * FStar_Compiler_Range_Type.range)

@@ -1709,19 +1709,15 @@ let unshelve (t : term) : tac unit = wrap_err "unshelve" <| (
     )
 
 let tac_and (t1 : tac bool) (t2 : tac bool) : tac bool =
-    let comp =
-      match! t1 with
-      | true ->
-        (match! t2 with
-         | true -> return true
-         | _ -> fail "")
-      | _ -> fail ""
-    in
-    match! trytac comp with
-    | Some true -> return true
-    | Some false -> failwith "impossible"
-    | None -> return false
+  match! t1 with
+  | false -> return false
+  | true -> t2
 
+let default_if_err (def : 'a) (t : tac 'a) : tac 'a =
+  let! r = catch t in
+  match r with
+  | Inl _ -> return def
+  | Inr v -> return v
 
 let match_env (e:env) (t1 : term) (t2 : term) : tac bool = wrap_err "match_env" <| (
     let! ps = get in
@@ -1730,8 +1726,9 @@ let match_env (e:env) (t1 : term) (t2 : term) : tac bool = wrap_err "match_env" 
     proc_guard "match_env g1" e g1 None ps.entry_range ;!
     proc_guard "match_env g2" e g2 None ps.entry_range ;!
     let must_tot = true in
-    tac_and (do_match must_tot e ty1 ty2)
-            (do_match must_tot e t1 t2)
+    default_if_err false <|
+      tac_and (do_match must_tot e ty1 ty2)
+              (do_match must_tot e t1 t2)
     )
 
 let unify_env (e:env) (t1 : term) (t2 : term) : tac bool = wrap_err "unify_env" <| (
@@ -1741,8 +1738,9 @@ let unify_env (e:env) (t1 : term) (t2 : term) : tac bool = wrap_err "unify_env" 
     proc_guard "unify_env g1" e g1 None ps.entry_range ;!
     proc_guard "unify_env g2" e g2 None ps.entry_range ;!
     let must_tot = true in
-    tac_and (do_unify must_tot e ty1 ty2)
-            (do_unify must_tot e t1 t2)
+    default_if_err false <|
+      tac_and (do_unify must_tot e ty1 ty2)
+              (do_unify must_tot e t1 t2)
     )
 
 let unify_guard_env (e:env) (t1 : term) (t2 : term) : tac bool = wrap_err "unify_guard_env" <| (

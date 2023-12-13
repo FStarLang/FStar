@@ -584,7 +584,7 @@ let context_profile (theory:list decl) =
                     (function Assume _ -> true
                              | _ -> false)
                     decls in
-              let n = List.length decls in
+              let n : int = List.length decls in
               (name, n)::out, n + _total
             | _ -> out, _total)
             ([], 0)

@@ -15,20 +15,27 @@
 *)
 
 module FStar.TypeChecker.NBETerm
-open FStar.Pervasives
-open FStar.Compiler.Effect
 open FStar
 open FStar.Compiler
-open FStar.TypeChecker
-open FStar.TypeChecker.Env
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
-open FStar.Ident
 open FStar.Errors
 open FStar.Char
 open FStar.String
-open FStar.Class.Show
 
 friend FStar.Pervasives (* To expose norm_step *)
+
+module PC = FStar.Parser.Const
+module S = FStar.Syntax.Syntax
+module P = FStar.Syntax.Print
+module BU = FStar.Compiler.Util
+module C = FStar.Const
+module SE = FStar.Syntax.Embeddings
+open FStar.VConfig
+
+open FStar.Class.Show
+
+// NBE term manipulation
 
 (**** NOTE: Don't say I didn't warn you! ***)
 (* FV and Construct accumulate arguments *in reverse order*.
@@ -49,20 +56,6 @@ friend FStar.Pervasives (* To expose norm_step *)
  *
  * Note how the implicit argument is seemingly *after* the explicit one.
  *)
-
-module PC = FStar.Parser.Const
-module S = FStar.Syntax.Syntax
-module U = FStar.Syntax.Util
-module P = FStar.Syntax.Print
-module BU = FStar.Compiler.Util
-module Env = FStar.TypeChecker.Env
-module Z = FStar.BigInt
-module C = FStar.Const
-module Range = FStar.Compiler.Range
-module SE = FStar.Syntax.Embeddings
-open FStar.VConfig
-// NBE term manipulation
-
 let interleave_hack = 123
 
 let isAccu (trm:t) =
@@ -213,6 +206,13 @@ and atom_to_string (a: atom) =
 let arg_to_string (a : arg) = a |> fst |> t_to_string
 
 let args_to_string args = args |> List.map arg_to_string |> String.concat " "
+
+instance showable_t = {
+  show = t_to_string;
+}
+instance showable_args = {
+  show = args_to_string;
+}
 
 // Embedding and de-embedding
 
@@ -560,6 +560,9 @@ let e_arrow (ea:embedding 'a) (eb:embedding 'b) : Prims.Tot (embedding ('a -> 'b
     in
     mk_emb em un (fun () -> make_arrow1 (type_of ea) (as_iarg (type_of eb))) etyp
 
+let e_abstract_nbe_term =
+  embed_as e_any (fun x -> AbstractNBE x) (fun x -> match x with AbstractNBE x -> x) None
+
 let e_unsupported #a : embedding a =
     let em = (fun _cb a -> failwith "Unsupported NBE embedding") in
     let un = (fun _cb t -> failwith "Unsupported NBE embedding") in
@@ -672,39 +675,7 @@ let arg_as_int    (a:arg) = fst a |> unembed e_int bogus_cbs
 
 let arg_as_bool   (a:arg) = fst a |> unembed e_bool bogus_cbs
 
-let arg_as_char   (a:arg) = fst a |> unembed e_char  bogus_cbs
-
-let arg_as_string (a:arg) = fst a |> unembed e_string  bogus_cbs
-
 let arg_as_list   (e:embedding 'a) (a:arg) = fst a |> unembed (e_list e) bogus_cbs
-
-let arg_as_doc    (a:arg) = fst a |> unembed e_document bogus_cbs
-
-let arg_as_bounded_int ((a, _) : arg) : option (fv * Z.t * option S.meta_source_info) =
-    let (a, m) =
-      (match a.nbe_t with
-       | Meta(t, tm) ->
-         (match Thunk.force tm with
-          | Meta_desugared m -> (t, Some m)
-          | _ -> (a, None))
-       | _ -> (a, None)) in
-    match a.nbe_t with
-    | FV (fv1, [], [({nbe_t=Constant (Int i)}, _)])
-      when BU.ends_with (Ident.string_of_lid fv1.fv_name.v)
-                        "int_to_t" ->
-      Some (fv1, i, m)
-    | _ -> None
-
-let int_as_bounded int_to_t n =
-    let c = embed e_int bogus_cbs n in
-    let int_to_t args = mk_t <| FV(int_to_t, [], args) in
-    int_to_t [as_arg c]
-
-let with_meta_ds t (m:option meta_source_info) =
-      match m with
-      | None -> t
-      | Some m -> mk_t (Meta(t, Thunk.mk (fun _ -> Meta_desugared m)))
-
 
 (* XXX a lot of code duplication. Same code as in cfg.fs *)
 let lift_unary (f : 'a -> 'b) (aopts : list (option 'a)) : option 'b =
@@ -717,27 +688,6 @@ let lift_binary (f : 'a -> 'a -> 'b) (aopts : list (option 'a)) : option 'b =
         match aopts with
         | [Some a0; Some a1] -> Some (f a0 a1)
         | _ -> None
-
-let unary_op (as_a : arg -> option 'a) (f : 'a -> t) (us:universes) (args : args) : option t =
-    lift_unary f (List.map as_a args)
-
-let binary_op (as_a : arg -> option 'a) (f : 'a -> 'a -> t) _us (args : args) : option t =
-    lift_binary f (List.map as_a args)
-
-let unary_int_op (f:Z.t -> Z.t) =
-    unary_op arg_as_int (fun x -> embed e_int bogus_cbs (f x))
-
-let binary_int_op (f:Z.t -> Z.t -> Z.t) =
-    binary_op arg_as_int (fun x y -> embed e_int bogus_cbs (f x y))
-
-let unary_bool_op (f:bool -> bool) =
-    unary_op arg_as_bool (fun x -> embed e_bool bogus_cbs (f x))
-
-let binary_bool_op (f:bool -> bool -> bool) =
-    binary_op arg_as_bool (fun x y -> embed e_bool bogus_cbs (f x y))
-
-let binary_string_op (f : string -> string -> string) =
-    binary_op arg_as_string (fun x y -> embed e_string bogus_cbs (f x y))
 
 let mixed_binary_op (as_a : arg -> option 'a) (as_b : arg -> option 'b)
        (embed_c : 'c -> t) (f : universes -> 'a -> 'b -> option 'c)
@@ -773,181 +723,8 @@ let mixed_ternary_op (as_a : arg -> option 'a)
                 end
              | _ -> None
 
-let list_of_string' (s:string) : t =
-  embed (e_list e_char) bogus_cbs (list_of_string s)
-  // let name l = mk (Tm_fvar (lid_as_fv l delta_constant None)) rng in
-  // let char_t = name PC.char_lid in
-  // let charterm c = mk (Tm_constant (Const_char c)) rng in
-  // U.mk_list char_t rng <| List.map charterm (list_of_string s)
-
-let string_of_list' (l:list char) : t =
-    let s = string_of_list l in
-    mk_t <| Constant (String (s, Range.dummyRange))
-
-let string_compare' (s1:string) (s2:string) : t =
-    let r = String.compare s1 s2 in
-    embed e_int bogus_cbs (Z.big_int_of_string (BU.string_of_int r))
-
-
-let string_concat' args : option t =
-    match args with
-    | [a1; a2] ->
-        begin match arg_as_string a1 with
-        | Some s1 ->
-            begin match arg_as_list e_string a2 with
-            | Some s2 ->
-                let r = String.concat s1 s2 in
-                Some (embed e_string bogus_cbs r)
-            | _ -> None
-            end
-        | _ -> None
-        end
-    | _ -> None             
-
-let string_of_int (i:Z.t) : t =
-    embed e_string bogus_cbs (Z.string_of_big_int i)
-
-let string_of_bool (b:bool) : t =
-    embed e_string bogus_cbs (if b then "true" else "false")
-
-let int_of_string (s:string) : t =
-    embed (e_option e_fsint) bogus_cbs (BU.safe_int_of_string s)
-
-let bool_of_string (s:string) : t =
-    let r = match s with
-            | "true" -> Some true
-            | "false" -> Some false
-            | _ -> None
-    in
-    embed (e_option e_bool) bogus_cbs r
-
-let string_lowercase (s:string) : t =
-    embed e_string bogus_cbs (String.lowercase s)
-
-let string_uppercase (s:string) : t =
-    embed e_string bogus_cbs (String.lowercase s)
-
-let decidable_eq (neg:bool) (args:args) : option t =
-  let tru = embed e_bool bogus_cbs true in
-  let fal = embed e_bool bogus_cbs false in
-  match args with
-  | [(_typ, _); (a1, _); (a2, _)] ->
-     //BU.print2 "Comparing %s and %s.\n" (t_to_string a1) (t_to_string a2);
-     begin match eq_t a1 a2 with
-     | U.Equal -> Some (if neg then fal else tru)
-     | U.NotEqual -> Some (if neg then tru else fal)
-     | _ -> None
-     end
-  | _ ->
-   failwith "Unexpected number of arguments"
-
-
-let interp_prop_eq2 (args:args) : option t =
-    match args with
-    | [(_u, _); (_typ, _); (a1, _); (a2, _)] ->  //eq2
-      begin match eq_t a1 a2 with
-      | U.Equal -> Some (embed e_bool bogus_cbs true)
-      | U.NotEqual -> Some (embed e_bool bogus_cbs false)
-      | U.Unknown -> None
-      end
-   | _ -> failwith "Unexpected number of arguments"
-
 let dummy_interp (lid : Ident.lid) (args : args) : option t =
     failwith ("No interpretation for " ^ (Ident.string_of_lid lid))
-
-let prims_to_fstar_range_step (args:args) : option t =
-    match args with
-    | [(a1, _)] ->
-      begin match unembed e_range bogus_cbs a1 with
-      | Some r -> Some (embed e_range bogus_cbs r)
-      | None ->
-        None
-      end
-   | _ -> failwith "Unexpected number of arguments"
-
-
-let string_split' args : option t =
-    match args with
-    | [a1; a2] ->
-        begin match arg_as_list e_char a1 with
-        | Some s1 ->
-            begin match arg_as_string a2 with
-            | Some s2 ->
-                let r = String.split s1 s2 in
-                Some (embed (e_list e_string) bogus_cbs r)
-            | _ -> None
-            end
-        | _ -> None
-        end
-    | _ -> None
-
-
-let string_index args : option t =
-    match args with
-    | [a1; a2] ->
-        begin match arg_as_string a1, arg_as_int a2 with
-        | Some s, Some i ->
-          begin
-          try
-            let r = String.index s i in
-            Some (embed e_char bogus_cbs r)
-          with
-          | _ -> None
-          end
-        | _ -> None
-        end
-    | _ -> None
-
-let string_index_of args : option t =
-    match args with
-    | [a1; a2] ->
-        begin match arg_as_string a1, arg_as_char a2 with
-        | Some s, Some c ->
-          begin
-          try
-            let r = String.index_of s c in
-            Some (embed e_int bogus_cbs r)
-          with
-          | _ -> None
-          end
-        | _ -> None
-        end
-    | _ -> None
-
-
-let string_substring' args : option t =
-  match args with
-  | [a1; a2; a3] ->
-      begin match arg_as_string a1, arg_as_int a2, arg_as_int a3 with
-      | Some s1, Some n1, Some n2 ->
-        let n1 = Z.to_int_fs n1 in
-        let n2 = Z.to_int_fs n2 in
-        begin
-        try let r = String.substring s1 n1 n2 in
-            Some (embed e_string bogus_cbs r)
-        with | _ -> None
-        end
-    | _ -> None
-    end
-
-| _ -> None
-
-let mk_range args : option t =
-  match args with
-  | [fn; from_line; from_col; to_line; to_col] -> begin
-    match arg_as_string fn,
-          arg_as_int from_line,
-          arg_as_int from_col,
-          arg_as_int to_line,
-          arg_as_int to_col with
-    | Some fn, Some from_l, Some from_c, Some to_l, Some to_c ->
-      let r = FStar.Compiler.Range.mk_range fn
-                (FStar.Compiler.Range.mk_pos (Z.to_int_fs from_l) (Z.to_int_fs from_c))
-                (FStar.Compiler.Range.mk_pos (Z.to_int_fs to_l) (Z.to_int_fs to_c)) in
-      Some (embed e_range bogus_cbs r)
-    | _ -> None
-    end
-| _ -> None
 
 let and_op (args:args) : option t =
   match args with
@@ -969,18 +746,6 @@ let or_op (args:args) : option t =
       Some (embed e_bool bogus_cbs true)
     | Some false ->
       Some (fst a2)
-    | _ -> None
-    end
-  | _ -> failwith "Unexpected number of arguments"
-
-let division_modulus_op (op:Z.bigint -> Z.bigint -> Z.bigint) (args:args) : option t =
-  match args with
-  | [a1; a2] -> begin
-    match arg_as_int a1, arg_as_int a2 with
-    | Some m, Some n ->
-      if Z.to_int_fs n <> 0
-      then Some (embed e_int bogus_cbs (op m n))
-      else None
     | _ -> None
     end
   | _ -> failwith "Unexpected number of arguments"

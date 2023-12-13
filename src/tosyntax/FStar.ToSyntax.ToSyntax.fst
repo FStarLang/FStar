@@ -2175,13 +2175,13 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
          (forall_elim #a1 #(fun x1 -> forall xs. p[v0/x]) v1
           (forall_elim #a0 #(fun x0 -> forall xs. p) v0 ())))
       *)
-      let mk_forall_elim a p v t =
+      let mk_forall_elim a p v tok =
         let head = S.fv_to_tm (S.lid_and_dd_as_fv C.forall_elim_lid S.delta_equational None) in
         let args = [(a, S.as_aqual_implicit true);
                     (p, S.as_aqual_implicit true);
                     (v, None);
-                    (t, None)] in
-        S.mk_Tm_app head args v.pos
+                    (tok, None)] in
+        S.mk_Tm_app head args tok.pos
       in
       let rec aux bs vs sub token : S.term =
         match bs, vs with
@@ -2200,7 +2200,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
         | _ ->
           raise_error (Fatal_UnexpectedTerm, "Unexpected number of instantiations in _elim_forall_") top.range
       in
-      aux bs vs [] U.exp_unit, noaqs
+      let range = List.fold_right (fun bs r -> Range.union_ranges (S.range_of_bv bs.binder_bv) r) bs p.pos in
+      aux bs vs [] { U.exp_unit with pos = range }, noaqs
 
     | ElimExists (binders, p, q, binder, e) -> (
       let env', bs = desugar_binders env binders in
@@ -2247,7 +2248,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
               (U.abs [b] p None)
               squash_token
               (U.abs [b;b_pf_p] (U.ascribe e (Inl sq_q, None, false)) None)
-              (range_of_bv x)
+              squash_token.pos
 
         | b::bs ->
           let pf_i =
@@ -2269,9 +2270,10 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
             (U.abs [b] (mk_exists bs p) None)
             squash_token
             (U.abs [b; S.mk_binder pf_i] k None)
-            (range_of_bv x)
+            squash_token.pos
       in
-      aux bs U.exp_unit, noaqs
+      let range = List.fold_right (fun bs r -> Range.union_ranges (S.range_of_bv bs.binder_bv) r) bs p.pos in
+      aux bs { U.exp_unit with pos = range }, noaqs
       )
 
     | ElimImplies (p, q, e) ->
@@ -2281,7 +2283,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let head = S.fv_to_tm (S.lid_and_dd_as_fv C.implies_elim_lid S.delta_equational None) in
       let args = [(p, None);
                   (q, None);
-                  (U.exp_unit, None);
+                  ({ U.exp_unit with pos = Range.union_ranges p.pos q.pos }, None);
                   (mk_thunk e, None)] in
       mk_Tm_app head args top.range, noaqs
 
@@ -2298,7 +2300,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let args = [(p, None);
                   (mk_thunk q, None);
                   (r, None);
-                  (U.exp_unit, None);
+                  ({ U.exp_unit with pos = Range.union_ranges p.pos q.pos }, None);
                   (U.abs [x] e1 None, None);
                   (U.abs [extra_binder; y] e2 None, None)] in
       mk_Tm_app head args top.range, noaqs
@@ -2313,7 +2315,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let args = [(p, None);
                   (mk_thunk q, None);
                   (r, None);
-                  (U.exp_unit, None);
+                  ({ U.exp_unit with pos = Range.union_ranges p.pos q.pos }, None);
                   (U.abs [x;y] e None, None)] in
       mk_Tm_app head args top.range, noaqs
 

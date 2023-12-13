@@ -76,6 +76,45 @@
   - See also TestErrorLocations.fst(68,52-68,66)
 
 >>]
+>> Got issues: [
+* Error 19 at TestErrorLocations.fst(89,20-89,36):
+  - Subtyping check failed; expected type Prims.squash (exists (x: Prims.nat). x = 0); got type Prims.unit
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also FStar.Classical.Sugar.fsti(66,22-66,41)
+
+>>]
+>> Got issues: [
+* Error 19 at TestErrorLocations.fst(97,28-97,33):
+  - Subtyping check failed; expected type Prims.squash (forall (x: Prims.nat). x = 0); got type Prims.unit
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+
+>>]
+>> Got issues: [
+* Error 19 at TestErrorLocations.fst(102,12-102,13):
+  - Subtyping check failed; expected type Prims.squash (p /\ q); got type Prims.unit
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also TestErrorLocations.fst(101,19-101,20)
+
+>>]
+>> Got issues: [
+* Error 19 at TestErrorLocations.fst(108,17-108,18):
+  - Subtyping check failed; expected type Prims.squash (p /\ q); got type Prims.unit
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also TestErrorLocations.fst(107,21-107,22)
+
+>>]
+>> Got issues: [
+* Error 19 at TestErrorLocations.fst(114,12-114,18):
+  - Subtyping check failed; expected type Prims.squash (p \/ q); got type Prims.unit
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also FStar.Classical.Sugar.fsti(88,21-88,31)
+
+>>]
 * Warning 240 at TestErrorLocations.fst(46,4-46,9):
   - TestErrorLocations.test5 is declared but no definition was found; add an 'assume' if this is intentional
 

@@ -82,3 +82,36 @@ let test10 =
   assert p3;
   assert (p2 \/ p3)
 *)
+
+
+[@@expect_failure [19]]
+let test_elim_exists () : unit
+= eliminate exists (n: nat). (n = 0)
+  returns True
+  with pf_zero . assert(n = 0)
+
+open FStar.Mul
+
+[@@expect_failure [19]]
+let test_elim_forall () : unit
+= eliminate forall (n:nat). n = 0
+  with 0
+
+[@@expect_failure [19]]
+let test_elim_and (p q:prop) : unit
+= eliminate p /\ q
+  returns q
+  with pp qq. qq
+
+[@@expect_failure [19]]
+let test_elim_and (p q:prop) (_:squash p) : unit
+= eliminate p /\ q
+  returns q
+  with pp qq. qq
+
+[@@expect_failure [19]]
+let test_elim_or (p q:prop) : unit
+= eliminate p \/ q
+  returns False
+  with pp. admit()
+  and qq. admit()

@@ -17,25 +17,20 @@
 *)
 
 module FStar.TypeChecker.NBETerm
-open FStar.Pervasives
-open FStar.Compiler.Effect
+
 open FStar
 open FStar.Compiler
-open FStar.TypeChecker
-open FStar.TypeChecker.Env
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Ident
-open FStar.Errors
 open FStar.VConfig
+open FStar.Char
 
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
-module P = FStar.Syntax.Print
-module BU = FStar.Compiler.Util
-module Env = FStar.TypeChecker.Env
 module Z = FStar.BigInt
-module C = FStar.Const
-open FStar.Char
+
+open FStar.Class.Show
 
 val interleave_hack : int
 
@@ -202,6 +197,9 @@ and cflag =
 and arg = t * aqual
 and args = list (arg)
 
+instance val showable_t    : showable t
+instance val showable_args : showable args
+
 val isAccu : t -> bool
 val isNotAccu : t -> bool
 
@@ -227,6 +225,8 @@ type embedding (a:Type0) = {
   typ : unit -> t;
   emb_typ : unit -> emb_typ;
 }
+
+val eq_t : t -> t -> U.eq_result
 
 // Printing functions
 
@@ -260,6 +260,8 @@ val lazy_unembed_lazy_kind (#a:Type) (k:lazy_kind) (x:t) : option a
 val type_of : embedding 'a -> t
 val set_type : t -> embedding 'a -> embedding 'a
 
+type abstract_nbe_term = | AbstractNBE : t:t -> abstract_nbe_term
+
 instance val e_bool   : embedding bool
 instance val e_string : embedding string
 instance val e_char   : embedding char
@@ -280,6 +282,8 @@ instance val e_either : embedding 'a -> embedding 'b -> Prims.Tot (embedding (ei
 val e_sealed : embedding 'a -> embedding 'a
 instance val e_string_list : embedding (list string)
 val e_arrow : embedding 'a -> embedding 'b -> embedding ('a -> 'b)
+
+instance val e_abstract_nbe_term : embedding abstract_nbe_term
 
 (* Unconditionally fails raising an exception when called *)
 val e_unsupported : #a:Type -> embedding a
@@ -318,42 +322,7 @@ val arrow_as_prim_step_3:  embedding 'a
 // Interface for NBE interpretations
 
 val arg_as_int : arg -> option Z.t
-val arg_as_bool : arg -> option bool
-val arg_as_char : arg -> option FStar.Char.char
-val arg_as_string : arg -> option string
 val arg_as_list : embedding 'a -> arg -> option (list 'a)
-val arg_as_doc : arg -> option FStar.Pprint.document
-val arg_as_bounded_int : arg -> option (fv * Z.t * option S.meta_source_info)
-
-val int_as_bounded : fv -> Z.t -> t
-val with_meta_ds : t -> option meta_source_info -> t
-
-val unary_int_op : (Z.t -> Z.t) -> (universes -> args -> option t)
-val binary_int_op : (Z.t -> Z.t -> Z.t) -> (universes -> args -> option t)
-
-val unary_bool_op : (bool -> bool) -> (universes -> args -> option t)
-val binary_bool_op : (bool -> bool -> bool) -> (universes -> args -> option t)
-
-val binary_string_op : (string -> string -> string) -> (universes -> args -> option t)
-
-val string_of_int : Z.t -> t
-val string_of_bool : bool -> t
-val int_of_string : string -> t
-val bool_of_string : string -> t
-val string_of_list' : list char -> t
-val string_compare' : string -> string -> t
-val string_concat' : args -> option t
-val string_substring' : args -> option t
-val string_split' : args -> option t
-val string_lowercase : string -> t
-val string_uppercase : string -> t
-val string_index : args -> option t
-val string_index_of : args -> option t
-
-val list_of_string' : (string -> t)
-
-val decidable_eq : bool -> args -> option t
-val interp_prop_eq2 : args -> option t
 
 val mixed_binary_op : (arg -> option 'a) -> (arg -> option 'b) -> ('c -> t) ->
                       (universes -> 'a -> 'b -> option 'c) -> universes -> args -> option t
@@ -366,13 +335,7 @@ val mixed_ternary_op (as_a : arg -> option 'a)
                      (us:universes)
                      (args : args) : option t
 
-val unary_op : (arg -> option 'a) -> ('a -> t) -> (universes -> args -> option t)
-val binary_op : (arg -> option 'a) -> ('a -> 'a -> t) -> (universes -> args -> option t)
-
 val dummy_interp : Ident.lid -> args -> option t
-val prims_to_fstar_range_step : args -> option t
 
-val mk_range : args -> option t
-val division_modulus_op (op:Z.bigint -> Z.bigint -> Z.bigint) : args -> option t
 val and_op : args -> option t
 val or_op : args -> option t

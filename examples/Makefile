@@ -20,15 +20,25 @@ all: prep verify special_cases
 
 EXCLUDE_DIRS=old/ hello/ native_tactics/ kv_parsing/ miniparse/ 
 
+# F* contrib directory needed by crypto/ . Since this Makefile
+# supersedes crypto/Makefile, we need to determine the location of the
+# F* contrib directory here.
+ifdef FSTAR_HOME
+FSTAR_UCONTRIB = $(shell if test -d $(FSTAR_HOME)/ucontrib ; then echo $(FSTAR_HOME)/ucontrib ; else echo $(FSTAR_HOME)/share/fstar/contrib ; fi)
+else
+   # FSTAR_HOME not defined, assume fstar.exe installed through opam
+   # or binary package, and reachable from PATH
+FSTAR_UCONTRIB=$(dir $(shell which fstar.exe))/../share/fstar/contrib
+endif
+
 INCLUDE_PATHS?= \
 	$(filter-out $(EXCLUDE_DIRS),$(shell ls -d */)) \
-	../ucontrib/CoreCrypto/fst \
-	../ucontrib/Platform/fst \
+	$(FSTAR_UCONTRIB)/CoreCrypto/fst \
+	$(FSTAR_UCONTRIB)/Platform/fst \
 	$(shell ls -d dsls/*/) \
 	$(shell ls -d verifythis/*/) \
-	$(shell ls -d demos/*/) \
 	tactics/eci19
-	
+
 include Makefile.common
 
 verify: prep $(filter-out $(CACHE_DIR)/Launch.fst.checked, $(ALL_CHECKED_FILES))
@@ -41,12 +51,12 @@ SPECIAL_CASES += native_tactics
 endif
 
 ifdef KRML_HOME
+SPECIAL_CASES += demos
 SPECIAL_CASES += kv_parsing
 SPECIAL_CASES += miniparse
 endif
 
 special_cases: $(addsuffix .all, $(SPECIAL_CASES))
-	$(MAKE) -C semiring CanonCommSemiring.native
 
 %.all: %
 	+$(MAKE) -C $^ all

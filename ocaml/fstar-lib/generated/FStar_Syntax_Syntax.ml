@@ -2872,26 +2872,27 @@ let (t_sealed_of : term -> term) =
       mk_Tm_uinst uu___1 [U_zero] in
     let uu___1 = let uu___2 = as_arg t in [uu___2] in
     mk_Tm_app uu___ uu___1 FStar_Compiler_Range_Type.dummyRange
+let (t_erased_of : term -> term) =
+  fun t ->
+    let uu___ =
+      let uu___1 = tabbrev FStar_Parser_Const.erased_lid in
+      mk_Tm_uinst uu___1 [U_zero] in
+    let uu___1 = let uu___2 = as_arg t in [uu___2] in
+    mk_Tm_app uu___ uu___1 FStar_Compiler_Range_Type.dummyRange
 let (unit_const_with_range : FStar_Compiler_Range_Type.range -> term) =
   fun r -> mk (Tm_constant FStar_Const.Const_unit) r
 let (unit_const : term) =
   unit_const_with_range FStar_Compiler_Range_Type.dummyRange
 let has_range_syntax : 'a . unit -> 'a syntax FStar_Class_HasRange.hasRange =
   fun uu___ ->
-    (fun uu___ ->
-       Obj.magic
-         {
-           FStar_Class_HasRange.pos = (fun t -> t.pos);
-           FStar_Class_HasRange.setPos =
-             (fun r ->
-                fun t ->
-                  {
-                    n = (t.n);
-                    pos = r;
-                    vars = (t.vars);
-                    hash_code = (t.hash_code)
-                  })
-         }) uu___
+    {
+      FStar_Class_HasRange.pos = (fun t -> t.pos);
+      FStar_Class_HasRange.setPos =
+        (fun r ->
+           fun t ->
+             { n = (t.n); pos = r; vars = (t.vars); hash_code = (t.hash_code)
+             })
+    }
 let has_range_withinfo :
   'a . unit -> 'a withinfo_t FStar_Class_HasRange.hasRange =
   fun uu___ ->

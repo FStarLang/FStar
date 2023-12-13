@@ -33,6 +33,25 @@ let (monad_option : unit FStar_Pervasives_Native.option monad) =
                   fun uu___ -> Obj.magic FStar_Compiler_Util.bind_opt) uu___3
                  uu___2 uu___1 uu___)
   }
+let (monad_list : unit Prims.list monad) =
+  {
+    return =
+      (fun uu___1 ->
+         fun uu___ -> (fun a -> fun x -> Obj.magic [x]) uu___1 uu___);
+    op_let_Bang =
+      (fun uu___3 ->
+         fun uu___2 ->
+           fun uu___1 ->
+             fun uu___ ->
+               (fun a ->
+                  fun b ->
+                    fun x ->
+                      let x = Obj.magic x in
+                      fun f ->
+                        let f = Obj.magic f in
+                        Obj.magic (FStar_Compiler_List.concatMap f x)) uu___3
+                 uu___2 uu___1 uu___)
+  }
 let rec mapM :
   'm . 'm monad -> unit -> unit -> (Obj.t -> 'm) -> Obj.t Prims.list -> 'm =
   fun uu___ ->
@@ -54,6 +73,21 @@ let rec mapM :
                              Obj.magic
                                (return uu___ () (Obj.magic (y :: ys))))
                             uu___3))
+let rec iterM :
+  'm . 'm monad -> unit -> (Obj.t -> 'm) -> Obj.t Prims.list -> 'm =
+  fun uu___ ->
+    fun a ->
+      fun f ->
+        fun l ->
+          match l with
+          | [] -> return uu___ () (Obj.repr ())
+          | x::xs ->
+              let uu___1 = f x in
+              op_let_Bang uu___ () () uu___1
+                (fun uu___2 ->
+                   (fun uu___2 ->
+                      let uu___2 = Obj.magic uu___2 in
+                      Obj.magic (iterM uu___ () f xs)) uu___2)
 let rec foldM_left :
   'm .
     'm monad ->
@@ -112,3 +146,11 @@ let op_Less_Star_Greater : 'm . 'm monad -> unit -> unit -> 'm -> 'm -> 'm =
                       (op_let_Bang uu___ () () x
                          (fun v -> let uu___1 = f v in return uu___ () uu___1)))
                    uu___1)
+let fmap : 'm . 'm monad -> unit -> unit -> (Obj.t -> Obj.t) -> 'm -> 'm =
+  fun uu___ ->
+    fun a ->
+      fun b ->
+        fun f ->
+          fun m1 ->
+            op_let_Bang uu___ () () m1
+              (fun v -> let uu___1 = f v in return uu___ () uu___1)

@@ -8,6 +8,11 @@ instance monad_option : monad option = {
   ( let! ) = Util.bind_opt;
 }
 
+instance monad_list : monad list = {
+  return = (fun x -> [x]);
+  ( let! ) = (fun x f -> List.concatMap f x)
+}
+
 let rec mapM f l =
   match l with
    | [] -> return []
@@ -15,6 +20,13 @@ let rec mapM f l =
       let! y = f x in
       let! ys = mapM f xs in
       return (y::ys)
+
+let rec iterM f l =
+  match l with
+   | [] -> return ()
+   | x::xs ->
+      f x;!
+      iterM f xs
 
 let rec foldM_left f e xs =
   match xs with
@@ -37,4 +49,8 @@ let (<$>) f x =
 let (<*>) ff x =
   let! f = ff in
   let! v = x in
+  return (f v)
+
+let fmap f m =
+  let! v = m in
   return (f v)

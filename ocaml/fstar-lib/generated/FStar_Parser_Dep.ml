@@ -13,20 +13,17 @@ let profile : 'uuuuu . (unit -> 'uuuuu) -> Prims.string -> 'uuuuu =
   fun f -> fun c -> FStar_Profiling.profile f FStar_Pervasives_Native.None c
 let with_file_outchannel :
   'a . Prims.string -> (FStar_Compiler_Util.out_channel -> 'a) -> 'a =
-  fun uu___1 ->
-    fun uu___ ->
-      (fun fn ->
-         fun k ->
-           let outc = FStar_Compiler_Util.open_file_for_writing fn in
-           Obj.magic
-             (try (fun uu___1 -> match () with | () -> k outc) ()
-              with
-              | uu___1 ->
-                  (FStar_Compiler_Util.close_out_channel outc;
-                   FStar_Compiler_Util.delete_file fn;
-                   FStar_Compiler_Effect.raise uu___1));
-           Obj.magic (FStar_Compiler_Util.close_out_channel outc)) uu___1
-        uu___
+  fun fn ->
+    fun k ->
+      let outc = FStar_Compiler_Util.open_file_for_writing fn in
+      let r =
+        try (fun uu___ -> match () with | () -> k outc) ()
+        with
+        | uu___ ->
+            (FStar_Compiler_Util.close_out_channel outc;
+             FStar_Compiler_Util.delete_file fn;
+             FStar_Compiler_Effect.raise uu___) in
+      FStar_Compiler_Util.close_out_channel outc; r
 type verify_mode =
   | VerifyAll 
   | VerifyUserList 
@@ -2742,7 +2739,6 @@ let (print_full : FStar_Compiler_Util.out_channel -> deps -> unit) =
            print_all "ALL_ML_FILES" all_ml_files;
            print_all "ALL_KRML_FILES" all_krml_files;
            FStar_StringBuffer.output_channel outc sb)
-let coerce : 'a 'b . 'a -> 'b = fun uu___ -> (fun x -> Obj.magic x) uu___
 let (do_print :
   FStar_Compiler_Util.out_channel -> Prims.string -> deps -> unit) =
   fun outc ->

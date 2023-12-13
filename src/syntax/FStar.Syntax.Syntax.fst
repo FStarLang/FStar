@@ -431,12 +431,16 @@ let t_sealed_of t = mk_Tm_app
   (mk_Tm_uinst (tabbrev PC.sealed_lid) [U_zero])
   [as_arg t]
   Range.dummyRange
+let t_erased_of t = mk_Tm_app
+  (mk_Tm_uinst (tabbrev PC.erased_lid) [U_zero])
+  [as_arg t]
+  Range.dummyRange
 
 let unit_const_with_range r = mk (Tm_constant FStar.Const.Const_unit) r
 let unit_const = unit_const_with_range Range.dummyRange
 
 instance has_range_syntax #a (_:unit) : Tot (hasRange (syntax a)) = {
-  pos = (fun (t:term) -> t.pos);
+  pos = (fun (t:syntax a) -> t.pos);
   setPos = (fun r t -> { t with pos = r });
 }
 
