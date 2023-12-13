@@ -15,11 +15,18 @@ instance monad_list : monad list = {
 
 let rec mapM f l =
   match l with
-   | [] -> return []
-   | x::xs ->
-      let! y = f x in
-      let! ys = mapM f xs in
-      return (y::ys)
+  | [] -> return []
+  | x::xs ->
+    let! y = f x in
+    let! ys = mapM f xs in
+    return (y::ys)
+
+let map_optM f l =
+  match l with
+  | None -> return None
+  | Some x ->
+    let! x = f x in
+    return (Some x)
 
 let rec iterM f l =
   match l with
