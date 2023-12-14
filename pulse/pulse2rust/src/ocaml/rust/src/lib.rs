@@ -43,6 +43,9 @@ enum BinOp {
     Le,
     Gt,
     Ge,
+    Rem,
+    And,
+    Or,
 }
 
 enum UnOp {
@@ -109,6 +112,7 @@ struct ExprMatch {
 struct ExprField {
     expr_field_base: Box<Expr>,
     expr_field_name: String,
+    expr_field_named: bool,
 }
 
 struct FieldVal {
@@ -137,6 +141,7 @@ enum Expr {
     EMatch(ExprMatch),
     EField(ExprField),
     EStruct(ExprStruct),
+    ETuple(Vec<Expr>),
 }
 
 struct TypeReference {
@@ -154,6 +159,11 @@ struct TypeArray {
     type_array_len: Expr,
 }
 
+struct TypeFn {
+    type_fn_args: Vec<Typ>,
+    type_fn_ret: Box<Typ>,
+}
+
 enum Typ {
     TPath(Vec<TypePathSegment>),
     TReference(TypeReference),
@@ -161,6 +171,8 @@ enum Typ {
     TArray(TypeArray),
     TUnit,
     TInfer,
+    TFn(TypeFn),
+    TTuple(Vec<Typ>),
 }
 
 struct PatIdent {
@@ -190,6 +202,7 @@ enum Pat {
     PWild,
     PLit(Lit),
     PStruct(PatStruct),
+    PTuple(Vec<Pat>),
 }
 
 struct LocalStmt {
@@ -318,6 +331,9 @@ impl_from_ocaml_variant! {
       BinOp::Le,
       BinOp::Gt,
       BinOp::Ge,
+      BinOp::Rem,
+      BinOp::And,
+      BinOp::Or,
   }
 }
 
@@ -344,6 +360,7 @@ impl_from_ocaml_variant! {
     Expr::EMatch (payload:ExprMatch),
     Expr::EField (payload:ExprField),
     Expr::EStruct (payload:ExprStruct),
+    Expr::ETuple (payload:OCamlList<Expr>),
   }
 }
 
@@ -430,6 +447,7 @@ impl_from_ocaml_record! {
   ExprField {
     expr_field_base: Expr,
     expr_field_name: String,
+    expr_field_named: bool,
   }
 }
 
@@ -468,6 +486,13 @@ impl_from_ocaml_record! {
   }
 }
 
+impl_from_ocaml_record! {
+  TypeFn {
+    type_fn_args: OCamlList<Typ>,
+    type_fn_ret: Typ,
+  }
+}
+
 impl_from_ocaml_variant! {
   Typ {
     Typ::TPath (payload:OCamlList<TypePathSegment>),
@@ -476,6 +501,8 @@ impl_from_ocaml_variant! {
     Typ::TArray (payload:TypeArray),
     Typ::TUnit,
     Typ::TInfer,
+    Typ::TFn (payload:TypeFn),
+    Typ::TTuple (payload:OCamlList<Typ>),
   }
 }
 
@@ -515,6 +542,7 @@ impl_from_ocaml_variant! {
     Pat::PWild,
     Pat::PLit (payload:Lit),
     Pat::PStruct (payload:PatStruct),
+    Pat::PTuple (payload:OCamlList<Pat>),
   }
 }
 
@@ -668,6 +696,15 @@ fn to_syn_binop(op: &BinOp) -> syn::BinOp {
             spans: [Span::call_site()],
         }),
         BinOp::Ge => syn::BinOp::Ge(syn::token::Ge {
+            spans: [Span::call_site(), Span::call_site()],
+        }),
+        BinOp::Rem => syn::BinOp::Rem(syn::token::Percent {
+            spans: [Span::call_site()],
+        }),
+        BinOp::And => syn::BinOp::And(syn::token::AndAnd {
+            spans: [Span::call_site(), Span::call_site()],
+        }),
+        BinOp::Or => syn::BinOp::Or(syn::token::OrOr {
             spans: [Span::call_site(), Span::call_site()],
         }),
     }
@@ -962,13 +999,21 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
         Expr::EField(ExprField {
             expr_field_base,
             expr_field_name,
+            expr_field_named,
         }) => syn::Expr::Field(syn::ExprField {
             attrs: vec![],
             base: Box::new(to_syn_expr(expr_field_base)),
             dot_token: syn::token::Dot {
                 spans: [Span::call_site()],
             },
-            member: syn::Member::Named(Ident::new(expr_field_name, Span::call_site())),
+            member: if *expr_field_named {
+                syn::Member::Named(Ident::new(expr_field_name, Span::call_site()))
+            } else {
+                syn::Member::Unnamed(syn::Index {
+                    index: expr_field_name.parse::<u32>().unwrap(),
+                    span: Span::call_site(),
+                })
+            },
         }),
         Expr::EStruct(ExprStruct {
             expr_struct_path,
@@ -995,6 +1040,15 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
                 rest: None,
             })
         }
+        Expr::ETuple(es) => syn::Expr::Tuple(syn::ExprTuple {
+            attrs: vec![],
+            paren_token: Paren::default(),
+            elems: {
+                let mut exprs: Punctuated<syn::Expr, Comma> = Punctuated::new();
+                es.iter().for_each(|e| exprs.push(to_syn_expr(e)));
+                exprs
+            },
+        }),
     }
 }
 
@@ -1072,6 +1126,15 @@ fn to_syn_pat(p: &Pat) -> syn::Pat {
                 brace_token: Brace::default(),
                 fields,
                 rest: None,
+            })
+        }
+        Pat::PTuple(pats) => {
+            let mut spats: Punctuated<syn::Pat, Comma> = Punctuated::new();
+            pats.iter().for_each(|p| spats.push(to_syn_pat(p)));
+            syn::Pat::Tuple(syn::PatTuple {
+                attrs: vec![],
+                paren_token: Paren::default(),
+                elems: spats,
             })
         }
     }
@@ -1206,6 +1269,44 @@ fn to_syn_typ(t: &Typ) -> Type {
                 spans: [Span::call_site()],
             },
         }),
+        Typ::TFn(TypeFn {
+            type_fn_args,
+            type_fn_ret,
+        }) => syn::Type::BareFn(syn::TypeBareFn {
+            lifetimes: None,
+            unsafety: None,
+            abi: None,
+            fn_token: syn::token::Fn {
+                span: Span::call_site(),
+            },
+            paren_token: Paren::default(),
+            inputs: {
+                let mut args: Punctuated<syn::BareFnArg, Comma> = Punctuated::new();
+                type_fn_args.iter().for_each(|t| {
+                    args.push(syn::BareFnArg {
+                        attrs: vec![],
+                        name: None,
+                        ty: to_syn_typ(t),
+                    })
+                });
+                args
+            },
+            variadic: None,
+            output: ReturnType::Type(
+                RArrow {
+                    spans: [Span::call_site(), Span::call_site()],
+                },
+                Box::new(to_syn_typ(&type_fn_ret)),
+            ),
+        }),
+        Typ::TTuple(ts) => syn::Type::Tuple(syn::TypeTuple {
+            paren_token: Paren::default(),
+            elems: {
+                let mut types: Punctuated<syn::Type, Comma> = Punctuated::new();
+                ts.iter().for_each(|t| types.push(to_syn_typ(t)));
+                types
+            },
+        }),
     }
 }
 
@@ -1223,6 +1324,29 @@ fn to_syn_fn_arg(a: &FnArg) -> syn::FnArg {
     })
 }
 
+fn generic_param_bounds() -> Punctuated<syn::TypeParamBound, syn::token::Plus> {
+    let mut bounds = Punctuated::new();
+    ["Clone", "Copy", "PartialEq"].iter().for_each(|s| {
+        bounds.push(syn::TypeParamBound::Trait(syn::TraitBound {
+            paren_token: None,
+            modifier: syn::TraitBoundModifier::None,
+            lifetimes: None,
+            path: syn::Path {
+                leading_colon: None,
+                segments: {
+                    let mut segs = Punctuated::new();
+                    segs.push(syn::PathSegment {
+                        ident: Ident::new(s, Span::call_site()),
+                        arguments: syn::PathArguments::None,
+                    });
+                    segs
+                },
+            },
+        }));
+    });
+    bounds
+}
+
 fn to_syn_fn_sig(s: &FnSig) -> Signature {
     let mut args: Punctuated<syn::FnArg, Comma> = Punctuated::new();
     s.fn_args.iter().for_each(|a| args.push(to_syn_fn_arg(a)));
@@ -1234,7 +1358,7 @@ fn to_syn_fn_sig(s: &FnSig) -> Signature {
             attrs: vec![],
             ident: Ident::new(g, Span::call_site()),
             colon_token: None,
-            bounds: Punctuated::new(),
+            bounds: generic_param_bounds(),
             eq_token: None,
             default: None,
         }))
@@ -1293,7 +1417,7 @@ fn to_syn_item(i: &Item) -> syn::Item {
                     attrs: vec![],
                     ident: Ident::new(s, Span::call_site()),
                     colon_token: None,
-                    bounds: Punctuated::new(),
+                    bounds: generic_param_bounds(),
                     eq_token: None,
                     default: None,
                 }))
@@ -1359,7 +1483,7 @@ fn to_syn_item(i: &Item) -> syn::Item {
                     attrs: vec![],
                     ident: Ident::new(s, Span::call_site()),
                     colon_token: None,
-                    bounds: Punctuated::new(),
+                    bounds: generic_param_bounds(),
                     eq_token: None,
                     default: None,
                 }))
@@ -1406,7 +1530,7 @@ fn to_syn_item(i: &Item) -> syn::Item {
                     attrs: vec![],
                     ident: Ident::new(s, Span::call_site()),
                     colon_token: None,
-                    bounds: Punctuated::new(),
+                    bounds: generic_param_bounds(),
                     eq_token: None,
                     default: None,
                 }))
@@ -1529,6 +1653,9 @@ impl fmt::Display for BinOp {
             BinOp::Le => "<=",
             BinOp::Gt => ">",
             BinOp::Ge => ">=",
+            BinOp::Rem => "%",
+            BinOp::And => "&&",
+            BinOp::Or => "||",
         };
         write!(f, "{}", s)
     }
@@ -1598,6 +1725,14 @@ impl fmt::Display for Pat {
                 pat_struct_fields
                     .iter()
                     .map(|f| format!("{}:{}", f.field_pat_name, f.field_pat_pat))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            Pat::PTuple(pats) => write!(
+                f,
+                "({})",
+                pats.iter()
+                    .map(|p| p.to_string())
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -1696,6 +1831,7 @@ impl fmt::Display for Expr {
             Expr::EField(ExprField {
                 expr_field_base,
                 expr_field_name,
+                ..
             }) => write!(f, "{}.{}", expr_field_base, expr_field_name),
             Expr::EStruct(ExprStruct {
                 expr_struct_path,
@@ -1711,6 +1847,14 @@ impl fmt::Display for Expr {
                 expr_struct_fields
                     .iter()
                     .map(|f| format!("{}:{}", f.field_val_name, f.field_val_expr))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            Expr::ETuple(es) => write!(
+                f,
+                "({})",
+                es.iter()
+                    .map(|e| e.to_string())
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -1758,6 +1902,27 @@ impl fmt::Display for Typ {
             }) => write!(f, "[{}; {}]", type_array_elem, type_array_len),
             Typ::TUnit => write!(f, "()"),
             Typ::TInfer => write!(f, "_"),
+            Typ::TFn(TypeFn {
+                type_fn_args,
+                type_fn_ret,
+            }) => write!(
+                f,
+                "({}) -> {}",
+                type_fn_args
+                    .iter()
+                    .map(|t| t.to_string())
+                    .collect::<Vec<_>>()
+                    .join(","),
+                type_fn_ret
+            ),
+            Typ::TTuple(ts) => write!(
+                f,
+                "({})",
+                ts.iter()
+                    .map(|t| t.to_string())
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
         }
     }
 }
@@ -1953,3 +2118,11 @@ ocaml_export! {
   //   z.to_string().to_owned().to_ocaml(cr)
   // }
 }
+
+#[derive(Clone, Copy)]
+pub enum cell<A: Clone + Copy, B: Clone + Copy> {
+    Clean,
+    Zombie,
+    Used(A, B),
+}
+use crate::cell::*;

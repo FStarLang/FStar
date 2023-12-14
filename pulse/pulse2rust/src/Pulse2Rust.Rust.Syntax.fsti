@@ -29,6 +29,9 @@ type binop =
   | Le
   | Gt
   | Ge
+  | Rem
+  | And
+  | Or
 
 type unop =
   | Deref
@@ -60,6 +63,7 @@ and pat =
   | Pat_wild
   | Pat_lit of lit
   | Pat_struct of pat_struct
+  | Pat_tuple of list pat
 
 type expr =
   | Expr_binop of expr_bin
@@ -77,6 +81,7 @@ type expr =
   | Expr_match of expr_match
   | Expr_field of expr_field
   | Expr_struct of expr_struct
+  | Expr_tuple of list expr
 
 and expr_bin = {
   expr_bin_left : expr;
@@ -138,6 +143,7 @@ and expr_match = {
 and expr_field = {
   expr_field_base : expr;
   expr_field_member : string;
+  expr_field_named : bool;
 }
 
 and expr_struct = {
@@ -166,6 +172,8 @@ type typ =
   | Typ_array of typ_array
   | Typ_unit
   | Typ_infer
+  | Typ_fn of typ_fn
+  | Typ_tuple of list typ
 
 and typ_reference = {
   typ_ref_mut : bool;
@@ -180,6 +188,11 @@ and typ_path_segment = {
 and typ_array = {
   typ_array_elem : typ;
   typ_array_len : expr;
+}
+
+and typ_fn = {
+  typ_fn_args : list typ;
+  typ_fn_ret : typ;
 }
 
 type pat_typ = {
@@ -262,6 +275,8 @@ val mk_vec_typ (t:typ) : typ
 val mk_option_typ (t:typ) : typ
 val mk_array_typ (t:typ) (len:expr) : typ
 val mk_named_typ (s:string) (generic_args:list typ) : typ
+val mk_fn_typ (arg_typs:list typ) (ret_typ:typ) : typ
+val mk_tuple_typ (l:list typ) : typ
 
 val mk_expr_path_singl (s:string) : expr
 val mk_expr_path (l:list string) : expr
@@ -280,10 +295,13 @@ val mk_reference_expr (is_mut:bool) (e:expr) : expr
 val mk_pat_ident (path:string) : pat
 val mk_pat_ts (path:string) (elems:list pat) : pat
 val mk_pat_struct (path:string) (fields:list (string & pat)) : pat
+val mk_pat_tuple (l:list pat) : pat
 val mk_arm (arm_pat:pat) (arm_body:expr) : arm
 val mk_match (scrutinee:expr) (arms:list arm) : expr
 val mk_expr_field (base:expr) (f:string) : expr
+val mk_expr_field_unnamed (base:expr) (i:int) : expr
 val mk_expr_struct (path:list string) (fields:list (string & expr)) : expr
+val mk_expr_tuple (l:list expr) : expr
 
 val mk_local_stmt (name:option string) (is_mut:bool) (init:expr) : stmt
 val mk_scalar_fn_arg (name:string) (t:typ) : fn_arg

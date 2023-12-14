@@ -64,6 +64,9 @@ type binop =
   | Le 
   | Gt 
   | Ge 
+  | Rem 
+  | And 
+  | Or 
 let (uu___is_Add : binop -> Prims.bool) =
   fun projectee -> match projectee with | Add -> true | uu___ -> false
 let (uu___is_Sub : binop -> Prims.bool) =
@@ -80,6 +83,12 @@ let (uu___is_Gt : binop -> Prims.bool) =
   fun projectee -> match projectee with | Gt -> true | uu___ -> false
 let (uu___is_Ge : binop -> Prims.bool) =
   fun projectee -> match projectee with | Ge -> true | uu___ -> false
+let (uu___is_Rem : binop -> Prims.bool) =
+  fun projectee -> match projectee with | Rem -> true | uu___ -> false
+let (uu___is_And : binop -> Prims.bool) =
+  fun projectee -> match projectee with | And -> true | uu___ -> false
+let (uu___is_Or : binop -> Prims.bool) =
+  fun projectee -> match projectee with | Or -> true | uu___ -> false
 type unop =
   | Deref 
 let (uu___is_Deref : unop -> Prims.bool) = fun projectee -> true
@@ -114,6 +123,7 @@ and pat =
   | Pat_wild 
   | Pat_lit of lit 
   | Pat_struct of pat_struct 
+  | Pat_tuple of pat Prims.list 
 let (__proj__Mkpat_tuple_struct__item__pat_ts_path :
   pat_tuple_struct -> Prims.string) =
   fun projectee ->
@@ -161,6 +171,11 @@ let (uu___is_Pat_struct : pat -> Prims.bool) =
     match projectee with | Pat_struct _0 -> true | uu___ -> false
 let (__proj__Pat_struct__item___0 : pat -> pat_struct) =
   fun projectee -> match projectee with | Pat_struct _0 -> _0
+let (uu___is_Pat_tuple : pat -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Pat_tuple _0 -> true | uu___ -> false
+let (__proj__Pat_tuple__item___0 : pat -> pat Prims.list) =
+  fun projectee -> match projectee with | Pat_tuple _0 -> _0
 type expr =
   | Expr_binop of expr_bin 
   | Expr_path of Prims.string Prims.list 
@@ -177,6 +192,7 @@ type expr =
   | Expr_match of expr_match 
   | Expr_field of expr_field 
   | Expr_struct of expr_struct 
+  | Expr_tuple of expr Prims.list 
 and expr_bin =
   {
   expr_bin_left: expr ;
@@ -215,9 +231,11 @@ and arm = {
 and expr_match = {
   expr_match_expr: expr ;
   expr_match_arms: arm Prims.list }
-and expr_field = {
+and expr_field =
+  {
   expr_field_base: expr ;
-  expr_field_member: Prims.string }
+  expr_field_member: Prims.string ;
+  expr_field_named: Prims.bool }
 and expr_struct =
   {
   expr_struct_path: Prims.string Prims.list ;
@@ -306,6 +324,11 @@ let (uu___is_Expr_struct : expr -> Prims.bool) =
     match projectee with | Expr_struct _0 -> true | uu___ -> false
 let (__proj__Expr_struct__item___0 : expr -> expr_struct) =
   fun projectee -> match projectee with | Expr_struct _0 -> _0
+let (uu___is_Expr_tuple : expr -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Expr_tuple _0 -> true | uu___ -> false
+let (__proj__Expr_tuple__item___0 : expr -> expr Prims.list) =
+  fun projectee -> match projectee with | Expr_tuple _0 -> _0
 let (__proj__Mkexpr_bin__item__expr_bin_left : expr_bin -> expr) =
   fun projectee ->
     match projectee with
@@ -409,12 +432,20 @@ let (__proj__Mkexpr_match__item__expr_match_arms :
 let (__proj__Mkexpr_field__item__expr_field_base : expr_field -> expr) =
   fun projectee ->
     match projectee with
-    | { expr_field_base; expr_field_member;_} -> expr_field_base
+    | { expr_field_base; expr_field_member; expr_field_named;_} ->
+        expr_field_base
 let (__proj__Mkexpr_field__item__expr_field_member :
   expr_field -> Prims.string) =
   fun projectee ->
     match projectee with
-    | { expr_field_base; expr_field_member;_} -> expr_field_member
+    | { expr_field_base; expr_field_member; expr_field_named;_} ->
+        expr_field_member
+let (__proj__Mkexpr_field__item__expr_field_named : expr_field -> Prims.bool)
+  =
+  fun projectee ->
+    match projectee with
+    | { expr_field_base; expr_field_member; expr_field_named;_} ->
+        expr_field_named
 let (__proj__Mkexpr_struct__item__expr_struct_path :
   expr_struct -> Prims.string Prims.list) =
   fun projectee ->
@@ -460,6 +491,8 @@ type typ =
   | Typ_array of typ_array 
   | Typ_unit 
   | Typ_infer 
+  | Typ_fn of typ_fn 
+  | Typ_tuple of typ Prims.list 
 and typ_reference = {
   typ_ref_mut: Prims.bool ;
   typ_ref_typ: typ }
@@ -470,6 +503,9 @@ and typ_path_segment =
 and typ_array = {
   typ_array_elem: typ ;
   typ_array_len: expr }
+and typ_fn = {
+  typ_fn_args: typ Prims.list ;
+  typ_fn_ret: typ }
 let (uu___is_Typ_path : typ -> Prims.bool) =
   fun projectee ->
     match projectee with | Typ_path _0 -> true | uu___ -> false
@@ -494,6 +530,15 @@ let (uu___is_Typ_unit : typ -> Prims.bool) =
   fun projectee -> match projectee with | Typ_unit -> true | uu___ -> false
 let (uu___is_Typ_infer : typ -> Prims.bool) =
   fun projectee -> match projectee with | Typ_infer -> true | uu___ -> false
+let (uu___is_Typ_fn : typ -> Prims.bool) =
+  fun projectee -> match projectee with | Typ_fn _0 -> true | uu___ -> false
+let (__proj__Typ_fn__item___0 : typ -> typ_fn) =
+  fun projectee -> match projectee with | Typ_fn _0 -> _0
+let (uu___is_Typ_tuple : typ -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Typ_tuple _0 -> true | uu___ -> false
+let (__proj__Typ_tuple__item___0 : typ -> typ Prims.list) =
+  fun projectee -> match projectee with | Typ_tuple _0 -> _0
 let (__proj__Mktyp_reference__item__typ_ref_mut :
   typ_reference -> Prims.bool) =
   fun projectee ->
@@ -521,6 +566,12 @@ let (__proj__Mktyp_array__item__typ_array_len : typ_array -> expr) =
   fun projectee ->
     match projectee with
     | { typ_array_elem; typ_array_len;_} -> typ_array_len
+let (__proj__Mktyp_fn__item__typ_fn_args : typ_fn -> typ Prims.list) =
+  fun projectee ->
+    match projectee with | { typ_fn_args; typ_fn_ret;_} -> typ_fn_args
+let (__proj__Mktyp_fn__item__typ_fn_ret : typ_fn -> typ) =
+  fun projectee ->
+    match projectee with | { typ_fn_args; typ_fn_ret;_} -> typ_fn_ret
 type pat_typ = {
   pat_typ_pat: pat ;
   pat_typ_typ: typ }
@@ -762,6 +813,9 @@ let (mk_named_typ : Prims.string -> typ Prims.list -> typ) =
            typ_path_segment_name = s;
            typ_path_segment_generic_args = generic_args
          }]
+let (mk_fn_typ : typ Prims.list -> typ -> typ) =
+  fun typ_fn_args -> fun typ_fn_ret -> Typ_fn { typ_fn_args; typ_fn_ret }
+let (mk_tuple_typ : typ Prims.list -> typ) = fun l -> Typ_tuple l
 let (mk_expr_path_singl : Prims.string -> expr) = fun s -> Expr_path [s]
 let (mk_expr_path : Prims.string Prims.list -> expr) = fun l -> Expr_path l
 let (mk_lit_bool : Prims.bool -> expr) = fun b -> Expr_lit (Lit_bool b)
@@ -829,6 +883,7 @@ let (mk_pat_struct : Prims.string -> (Prims.string * pat) Prims.list -> pat)
                | (s, p) -> { field_pat_name = s; field_pat_pat = p }) pats in
         { pat_struct_path; pat_struct_fields = uu___1 } in
       Pat_struct uu___
+let (mk_pat_tuple : pat Prims.list -> pat) = fun l -> Pat_tuple l
 let (mk_arm : pat -> expr -> arm) =
   fun arm_pat -> fun arm_body -> { arm_pat; arm_body }
 let (mk_match : expr -> arm Prims.list -> expr) =
@@ -836,7 +891,22 @@ let (mk_match : expr -> arm Prims.list -> expr) =
     fun expr_match_arms -> Expr_match { expr_match_expr; expr_match_arms }
 let (mk_expr_field : expr -> Prims.string -> expr) =
   fun base ->
-    fun f -> Expr_field { expr_field_base = base; expr_field_member = f }
+    fun f ->
+      Expr_field
+        {
+          expr_field_base = base;
+          expr_field_member = f;
+          expr_field_named = true
+        }
+let (mk_expr_field_unnamed : expr -> Prims.int -> expr) =
+  fun base ->
+    fun i ->
+      Expr_field
+        {
+          expr_field_base = base;
+          expr_field_member = (Prims.string_of_int i);
+          expr_field_named = false
+        }
 let (mk_expr_struct :
   Prims.string Prims.list -> (Prims.string * expr) Prims.list -> expr) =
   fun path ->
@@ -849,6 +919,7 @@ let (mk_expr_struct :
                | (f, e) -> { field_val_name = f; field_val_expr = e }) fields in
         { expr_struct_path = path; expr_struct_fields = uu___1 } in
       Expr_struct uu___
+let (mk_expr_tuple : expr Prims.list -> expr) = fun l -> Expr_tuple l
 let (mk_scalar_fn_arg : Prims.string -> typ -> fn_arg) =
   fun name ->
     fun t ->

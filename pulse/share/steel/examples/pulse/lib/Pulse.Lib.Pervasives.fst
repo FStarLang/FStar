@@ -44,3 +44,24 @@ let inames_join_emp_l (is1 : inames)
 let inames_join_self (is1 : inames)
   : Lemma (join_inames is1 is1 == is1) [SMTPat (join_inames is1 is1)]
   = Set.lemma_equal_intro (join_inames is1 is1) is1
+
+//
+// Native extraction in the Rust backend
+//
+```pulse
+fn ref_apply (#a #b:Type) (r:ref (a -> b)) (x:a) (#f:erased (a -> b))
+  requires pts_to r f
+  returns y:b
+  ensures pts_to r f ** pure (y == (reveal f) x)
+{
+  let f = !r;
+  f x
+}
+```
+
+//
+// Native extraction in the Rust backend
+//
+let tfst (x:'a & 'b & 'c) : 'a = Mktuple3?._1 x
+let tsnd (x:'a & 'b & 'c) : 'b = Mktuple3?._2 x
+let tthd (x:'a & 'b & 'c) : 'c = Mktuple3?._3 x

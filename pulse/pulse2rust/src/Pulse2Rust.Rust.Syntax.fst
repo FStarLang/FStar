@@ -44,6 +44,11 @@ let mk_named_typ (s:string) (generic_args:list typ) : typ =
     { typ_path_segment_name = s; typ_path_segment_generic_args = generic_args };
   ]
 
+let mk_fn_typ (typ_fn_args:list typ) (typ_fn_ret:typ) : typ =
+  Typ_fn { typ_fn_args; typ_fn_ret }
+
+let mk_tuple_typ (l:list typ) : typ = Typ_tuple l
+
 let mk_expr_path_singl s = Expr_path [s]
 let mk_expr_path l = Expr_path l
 
@@ -102,13 +107,18 @@ let mk_pat_struct (pat_struct_path:string) (pats:list (string & pat)) : pat =
     }) pats;
   }
 
+let mk_pat_tuple (l:list pat) : pat = Pat_tuple l
+
 let mk_arm (arm_pat:pat) (arm_body:expr) : arm = { arm_pat; arm_body }
 
 let mk_match (expr_match_expr:expr) (expr_match_arms:list arm) : expr =
   Expr_match { expr_match_expr; expr_match_arms }
 
 let mk_expr_field (base:expr) (f:string) : expr =
-  Expr_field { expr_field_base = base; expr_field_member = f }
+  Expr_field { expr_field_base = base; expr_field_member = f; expr_field_named = true }
+
+let mk_expr_field_unnamed (base:expr) (i:int) : expr =
+  Expr_field { expr_field_base = base; expr_field_member = string_of_int i; expr_field_named = false }
 
 let mk_expr_struct (path:list string) (fields:list (string & expr)) : expr =
   Expr_struct {
@@ -118,6 +128,8 @@ let mk_expr_struct (path:list string) (fields:list (string & expr)) : expr =
       field_val_expr = e;
     }) fields;
   }
+
+let mk_expr_tuple (l:list expr) : expr = Expr_tuple l
 
 let mk_scalar_fn_arg (name:string) (t:typ) =
   Fn_arg_pat {

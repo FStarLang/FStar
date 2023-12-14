@@ -3,4 +3,4 @@ all: extract
 	cp -f src/_build/default/ocaml/main.exe .
 
 extract:
-	make -C src extract
+	+$(MAKE) -C src extract

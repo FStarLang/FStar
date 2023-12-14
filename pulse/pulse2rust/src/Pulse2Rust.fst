@@ -25,6 +25,7 @@ type env = {
   fns : list (string & fn_signature);
   statics : list (string & typ);
   gamma : list binding;
+  record_field_names : psmap (list string);
 }
 
 //
@@ -39,8 +40,12 @@ let tyvar_of (s:string) : string =
 let varname (s:string) : string =
   replace_char s '\'' '_'
 
+let enum_or_struct_name (s:string) : string = s
+  // let hd::tl = String.list_of_string s in
+  // String.string_of_list ((FStar.Char.uppercase hd)::tl)
+
 let is_internal_name (s:string) : bool =
-  s = "uu___" ||
+  starts_with s "uu___" ||
   s = "_fret" ||
   s = "_bind_c" ||
   s = "_while_c" ||
@@ -53,7 +58,7 @@ let fail (s:string) =
 let fail_nyi (s:string) =
   failwith (format1 "Pulse to Rust extraction failed: no support yet for %s" s)
 
-let empty_env () = { fns = []; gamma = []; statics = []; }
+let empty_env () = { fns = []; gamma = []; statics = []; record_field_names = psmap_empty () }
 
 let lookup_global_fn (g:env) (s:string) : option fn_signature =
   map_option (fun (_, t) -> t) (tryFind (fun (f, _) -> f = s) g.fns)
@@ -97,6 +102,18 @@ let rec uncurry_arrow (t:S.mlty) : (list S.mlty & S.mlty) =
     t1::arg_ts, ret_t
   | _ -> ([], t)
 
+let arg_ts_and_ret_t (t:S.mltyscheme)
+  : S.mlidents &   // type parameters
+    list S.mlty &  // function argument types (after uncurrying the input type)
+    S.mlty =       // function return type
+  let tvars, t = t in
+  match t with
+  | S.MLTY_Fun (_, S.E_PURE, _)
+  | S.MLTY_Fun (_, S.E_IMPURE, _) ->
+    let arg_ts, ret_t = uncurry_arrow t in
+    tvars, arg_ts, ret_t
+  | _ -> fail_nyi (format1 "top level arg_ts and ret_t %s" (S.mlty_to_string t))
+
 //
 // Most translations are straightforward
 //
@@ -123,6 +140,10 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
     when S.string_of_mlpath p = "FStar.SizeT.t" -> mk_scalar_typ "usize"
   | S.MLTY_Named ([], p)
     when S.string_of_mlpath p = "Prims.bool" -> mk_scalar_typ "bool"
+  | S.MLTY_Named (l, p)
+    when S.string_of_mlpath p = "FStar.Pervasives.Native.tuple2" ||
+         S.string_of_mlpath p = "FStar.Pervasives.Native.tuple3" ->
+    mk_tuple_typ (List.map (extract_mlty g) l)
   | S.MLTY_Named ([arg], p)
     when S.string_of_mlpath p = "Pulse.Lib.Reference.ref" ->
     let is_mut = true in
@@ -148,6 +169,10 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
 
   | S.MLTY_Named (args, p) ->
     mk_named_typ (snd p) (List.map (extract_mlty g) args)
+
+  | S.MLTY_Fun _ ->
+    let _, arg_ts, ret_t = arg_ts_and_ret_t ([], t) in
+    mk_fn_typ (List.map (extract_mlty g) arg_ts) (extract_mlty g ret_t)
 
   | S.MLTY_Top -> Typ_infer
 
@@ -189,18 +214,6 @@ let extract_top_level_sig
   mk_fn_signature fn_name (List.map tyvar_of tvars) fn_args fn_ret_t,
   fold_left (fun g (arg_name, arg) -> push_fn_arg g arg_name arg) g (zip arg_names fn_args)
 
-let arg_ts_and_ret_t (t:S.mltyscheme)
-  : S.mlidents &   // type parameters
-    list S.mlty &  // function argument types (after uncurrying the input type)
-    S.mlty =       // function return type
-  let tvars, t = t in
-  match t with
-  | S.MLTY_Fun (_, S.E_PURE, _)
-  | S.MLTY_Fun (_, S.E_IMPURE, _) ->
-    let arg_ts, ret_t = uncurry_arrow t in
-    tvars, arg_ts, ret_t
-  | _ -> fail_nyi (format1 "top level arg_ts and ret_t %s" (S.mlty_to_string t))
-
 //
 // TODO: add machine integers binops?
 //
@@ -209,17 +222,23 @@ let is_binop (s:string) : option binop =
      s = "FStar.UInt32.add" ||
      s = "FStar.SizeT.add"
   then Some Add
-  else if s = "Prims.op_Subtraction"
+  else if s = "Prims.op_Subtraction" ||
+          s = "FStar.SizeT.sub" ||
+          s = "FStar.UInt32.sub"
   then Some Sub
   else if s = "Prims.op_disEquality"
   then Some Ne
-  else if s = "Prims.op_LessThanOrEqual"
+  else if s = "Prims.op_LessThanOrEqual" ||
+          s = "FStar.UInt32.lte" ||
+          s = "FStar.SizeT.lte"
   then Some Le
   else if s = "Prims.op_LessThan" ||
           s = "FStar.UInt32.lt" ||
           s = "FStar.SizeT.lt"
   then Some Lt
-  else if s = "Prims.op_GreaterThanOrEqual"
+  else if s = "Prims.op_GreaterThanOrEqual" ||
+          s = "FStar.UInt32.gte" ||
+          s = "FStar.SizeT.gte"
   then Some Ge
   else if s = "Prims.op_GreaterThan" ||
           s = "FStar.UInt32.gt" ||
@@ -227,6 +246,14 @@ let is_binop (s:string) : option binop =
   then Some Gt
   else if s = "Prims.op_Equality"
   then Some Eq
+  else if s = "Prims.rem" ||
+          s = "FStar.UInt32.rem" ||
+          s = "FStar.SizeT.rem"
+  then Some Rem
+  else if s = "Prims.op_AmpAmp"
+  then Some And
+  else if s = "Prims.op_BarBar"
+  then Some Or
   else None
 
 let extract_mlconstant_to_lit (c:S.mlconstant) : lit =
@@ -251,15 +278,29 @@ let extract_mlconstant_to_lit (c:S.mlconstant) : lit =
   | _ -> fail_nyi (format1 "mlconstant_to_lit %s" (S.mlconstant_to_string c))
 
 
-let rec extract_mlpattern_to_pat (p:S.mlpattern) : pat =
+let rec extract_mlpattern_to_pat (g:env) (p:S.mlpattern) : env & pat =
   match p with
-  | S.MLP_Wild -> Pat_wild
-  | S.MLP_Const c -> Pat_lit (extract_mlconstant_to_lit c)
-  | S.MLP_Var x -> mk_pat_ident (varname x)
+  | S.MLP_Wild -> g, Pat_wild
+  | S.MLP_Const c -> g, Pat_lit (extract_mlconstant_to_lit c)
+  | S.MLP_Var x ->
+    push_local g x Typ_infer false,
+    (if is_internal_name x
+     then Pat_wild
+     else mk_pat_ident (varname x))
+  | S.MLP_CTor (p, ps)
+    when snd p = "Mktuple2" ||
+         snd p = "Mktuple3" ->
+    let g, ps = fold_left_map extract_mlpattern_to_pat g ps in
+    g,
+    mk_pat_tuple ps
   | S.MLP_CTor (p, ps) ->
-    mk_pat_ts (snd p) (List.map extract_mlpattern_to_pat ps)
+    let g, ps = fold_left_map extract_mlpattern_to_pat g ps in
+    g,
+    mk_pat_ts (snd p) ps
   | S.MLP_Record (p, fs) ->
-    mk_pat_struct (List.last p) (List.map (fun (f, p) -> f, extract_mlpattern_to_pat p) fs)
+    let g, ps = fold_left_map extract_mlpattern_to_pat g (List.map snd fs) in
+    g,
+    mk_pat_struct (List.last p) (zip (List.map fst fs) ps)
   | _ -> fail_nyi (format1 "mlpattern_to_pat %s" (S.mlpattern_to_string p))
 
 //
@@ -349,6 +390,30 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     // nested let binding
   | S.MLE_Let _ -> e |> extract_mlexpr_to_stmts g |> mk_block_expr
 
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, [e])
+    when S.string_of_mlpath p = "Pulse.Lib.Pervasives.tfst" ||
+         S.string_of_mlpath p = "FStar.Pervasives.Native.fst" ->
+    let e = extract_mlexpr g e in
+    mk_expr_field_unnamed e 0
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, [e])
+    when S.string_of_mlpath p = "Pulse.Lib.Pervasives.tsnd" ||
+         S.string_of_mlpath p = "FStar.Pervasives.Native.snd" ->
+    let e = extract_mlexpr g e in
+    mk_expr_field_unnamed e 1
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, [e])
+    when S.string_of_mlpath p = "Pulse.Lib.Pervasives.tthd" ->
+    let e = extract_mlexpr g e in
+    mk_expr_field_unnamed e 2
+
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, [_; e])
+    when starts_with (snd p) "explode_ref_" ->
+    let n = String.length "explode_ref_" in
+    let rname = String.substring (snd p) n (String.length (snd p) - n) in
+    let flds = psmap_try_find g.record_field_names rname |> must in
+    let e = extract_mlexpr g e in
+    let es = flds |> List.map (fun f -> mk_reference_expr true (mk_expr_field e f)) in
+    mk_expr_tuple es
+
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2; _])
     when S.string_of_mlpath p = "Pulse.Lib.Reference.op_Colon_Equals" ||
          S.string_of_mlpath p = "Pulse.Lib.Box.op_Colon_Equals" ->
@@ -366,6 +431,11 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     if b then e
     else mk_ref_read e
   
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, [e1; e2; _])
+    when S.string_of_mlpath p = "Pulse.Lib.Pervasives.ref_apply" ->
+
+    mk_call (extract_mlexpr g e1) [extract_mlexpr g e2]
+ 
     //
     // box_as_ref e extracted to &mut e
     //
@@ -386,13 +456,15 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e; i; _; _])
     when S.string_of_mlpath p = "Pulse.Lib.Array.Core.op_Array_Access" ||
-         S.string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Access"  ->
+         S.string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Access" ||
+         S.string_of_mlpath p = "Pulse.Lib.Vec.vec_ref_read" ->
 
     mk_expr_index (extract_mlexpr g e) (extract_mlexpr g i)
 
-  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2; e3; _])
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, e1::e2::e3::_)
     when S.string_of_mlpath p = "Pulse.Lib.Array.Core.op_Array_Assignment" ||
-         S.string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Assignment" ->
+         S.string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Assignment" ||
+         S.string_of_mlpath p = "Pulse.Lib.Vec.vec_ref_write" ->
 
     let e1 = extract_mlexpr g e1 in
     let e2 = extract_mlexpr g e2 in
@@ -459,7 +531,19 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     mk_call head args
 
   | S.MLE_CTor (p, args) ->
-    mk_call (mk_expr_path_singl (snd p)) (List.map (extract_mlexpr g) args)
+    let is_native =
+      S.mlpath_to_string p = "FStar.Pervasives.Native.Some" ||
+      S.mlpath_to_string p = "FStar.Pervasives.Native.None" in
+    let ty_name =
+      match e.mlty with
+      | S.MLTY_Named (_, p) -> p |> snd |> enum_or_struct_name
+      | _ -> failwith "S.MLE_CTor: unexpected type" in
+    let dexpr =
+      if is_native then mk_expr_path_singl (snd p)
+      else mk_expr_path [ty_name; snd p] in
+    if List.length args = 0
+    then dexpr
+    else mk_call dexpr (List.map (extract_mlexpr g) args)
 
   | S.MLE_TApp (head, _) -> extract_mlexpr g head  // make type applications explicit in the Rust code?
   | S.MLE_If (cond, if_then, if_else_opt) ->
@@ -483,10 +567,12 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
 
   | S.MLE_Coerce (e, _, _) -> extract_mlexpr g e  // TODO: FIXME: perhaps cast in Rust?
 
-  | S.MLE_Record (p, fields) ->
-    mk_expr_struct p (List.map (fun (f, e) -> f, extract_mlexpr g e) fields)
+  | S.MLE_Record (_, nm, fields) ->
+    mk_expr_struct [nm] (List.map (fun (f, e) -> f, extract_mlexpr g e) fields)
 
   | S.MLE_Proj (e, p) -> mk_expr_field (extract_mlexpr g e) (snd p)
+
+  | S.MLE_Tuple l -> mk_expr_tuple (List.map (extract_mlexpr g) l)
 
   | _ -> fail_nyi (format1 "mlexpr %s" (S.mlexpr_to_string e))
 
@@ -498,14 +584,22 @@ and extract_mlexpr_to_stmts (g:env) (e:S.mlexpr) : list stmt =
     extract_mlexpr_to_stmts g e
 
   | S.MLE_Let ((S.NonRec, [lb]), e) ->
-    let is_mut, ty, init = lb_init_and_def g lb in
-    let s = mk_local_stmt
-      (match lb.mllb_tysc with
-       | Some (_, S.MLTY_Erased) -> None
-       | _ -> Some (varname lb.mllb_name))
-      is_mut
-      init in
-    s::(extract_mlexpr_to_stmts (push_local g lb.mllb_name ty is_mut) e)
+    begin
+      match lb.mllb_def.expr with
+      | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, _)
+        when snd p = "unexplode_ref" ->
+        extract_mlexpr_to_stmts g e
+      | _ ->
+        let is_mut, ty, init = lb_init_and_def g lb in
+        let s = mk_local_stmt
+          (match lb.mllb_tysc with
+           | Some (_, S.MLTY_Erased) -> None
+           | _ -> Some (varname lb.mllb_name))
+          is_mut
+          init in
+        s::(extract_mlexpr_to_stmts (push_local g lb.mllb_name ty is_mut) e)
+    end
+
 
   | S.MLE_App ({ expr=S.MLE_TApp ({ expr=S.MLE_Name p }, _) }, _)
     when S.string_of_mlpath p = "failwith" ->
@@ -517,7 +611,7 @@ and extract_mlbranch_to_arm (g:env) ((pat, pat_guard, body):S.mlbranch) : arm =
   match pat_guard with
   | Some e -> fail_nyi (format1 "mlbranch_to_arm with pat guard %s" (S.mlexpr_to_string e))
   | None ->
-    let pat = extract_mlpattern_to_pat pat in
+    let g, pat = extract_mlpattern_to_pat g pat in
     let arm_body = extract_mlexpr g body in
     mk_arm pat arm_body
 
@@ -591,10 +685,10 @@ let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : item & env =
 let extract_struct_defn (g:env) (d:S.one_mltydecl) : item & env =
   let Some (S.MLTD_Record fts) = d.tydecl_defn in
   mk_item_struct
-    d.tydecl_name
+    (d.tydecl_name |> enum_or_struct_name)
     (List.map tyvar_of d.tydecl_parameters)
     (List.map (fun (f, t) -> f, extract_mlty g t) fts),
-  g  // TODO: add it to env if needed later
+  { g with record_field_names = psmap_add g.record_field_names d.tydecl_name (List.map fst fts) }
 
 let extract_type_abbrev (g:env) (d:S.one_mltydecl) : item & env =
   let Some (S.MLTD_Abbrev t) = d.tydecl_defn in
@@ -604,7 +698,7 @@ let extract_type_abbrev (g:env) (d:S.one_mltydecl) : item & env =
 let extract_enum (g:env) (d:S.one_mltydecl) : item & env =
   let Some (S.MLTD_DType cts) = d.tydecl_defn in
   mk_item_enum
-    d.tydecl_name
+    (d.tydecl_name |> enum_or_struct_name)
     (List.map tyvar_of d.tydecl_parameters)
     (List.map (fun (cname, dts) -> cname, List.map (fun (_, t) -> extract_mlty g t) dts) cts),
   g  // TODO: add it to env if needed later
@@ -630,6 +724,9 @@ let extract_one (file:string) : unit =
   let items, _ = List.fold_left (fun (items, g) d ->
     print1 "Decl: %s\n" (S.mlmodule1_to_string d);
     match d with
+    | S.MLM_Let (S.NonRec, [{mllb_name}])
+      when (String.length mllb_name > 12 && String.substring mllb_name 0 12 = "explode_ref_") ||
+           mllb_name = "unexplode_ref" -> items, g
     | S.MLM_Let lb ->
       let f, g = extract_top_level_lb g lb in
       // print_string "Extracted to:\n";
