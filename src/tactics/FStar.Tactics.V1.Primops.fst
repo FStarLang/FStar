@@ -125,12 +125,12 @@ let ops =
   mk_tac_step_1 0 "t_trefl" t_trefl t_trefl ;
   mk_tac_step_1 0 "dup" dup dup  ;
 
-  mk_tac_step_1 0 "tadmit_t" #RE.e_term #solve #NRE.e_term #solve tadmit_t tadmit_t ;
+  mk_tac_step_1 0 "tadmit_t" #RE.e_term #_ #NRE.e_term #_ tadmit_t tadmit_t ;
   mk_tac_step_1 0 "join" join join ;
 
   mk_tac_step_1 0 "t_destruct"
-    #RE.e_term #solve
-    #NRE.e_term #solve
+    #RE.e_term #_
+    #NRE.e_term #_
     t_destruct t_destruct;
 
   mk_tac_step_1 0 "top_env"
@@ -138,35 +138,35 @@ let ops =
     top_env ;
 
   mk_tac_step_1 0 "inspect"
-    #RE.e_term #solve
-    #NRE.e_term #solve
+    #RE.e_term #_
+    #NRE.e_term #_
     inspect inspect ;
 
   mk_tac_step_1 0 "pack"
-    #solve #RE.e_term
-    #solve #NRE.e_term
+    #_ #RE.e_term
+    #_ #NRE.e_term
     pack pack ;
 
   mk_tac_step_1 0 "pack_curried"
-    #solve #RE.e_term
-    #solve #NRE.e_term
+    #_ #RE.e_term
+    #_ #NRE.e_term
     pack_curried pack_curried;
 
   mk_tac_step_1 0 "fresh" fresh fresh ;
   mk_tac_step_1 0 "curms" curms curms ;
   mk_tac_step_2 0 "uvar_env"
-    #solve #(e_option RE.e_term) #RE.e_term
-    #solve #(NBET.e_option NRE.e_term) #NRE.e_term
+    #_ #(e_option RE.e_term) #RE.e_term
+    #_ #(NBET.e_option NRE.e_term) #NRE.e_term
     uvar_env uvar_env ;
 
   mk_tac_step_2 0 "ghost_uvar_env"
-    #solve #RE.e_term #RE.e_term
-    #solve #NRE.e_term #NRE.e_term
+    #_ #RE.e_term #RE.e_term
+    #_ #NRE.e_term #NRE.e_term
     ghost_uvar_env ghost_uvar_env ;
 
   mk_tac_step_1 0 "fresh_universe_uvar"
-    #solve #RE.e_term
-    #solve #NRE.e_term
+    #_ #RE.e_term
+    #_ #NRE.e_term
     fresh_universe_uvar
     fresh_universe_uvar ;
 
@@ -259,8 +259,8 @@ let ops =
   mk_tac_step_1 0 "t_smt_sync" t_smt_sync t_smt_sync ;
 
   mk_tac_step_1 0 "free_uvars"
-    #RE.e_term #solve
-    #NRE.e_term #solve
+    #RE.e_term #_
+    #NRE.e_term #_
     free_uvars free_uvars ;
 
 ]
