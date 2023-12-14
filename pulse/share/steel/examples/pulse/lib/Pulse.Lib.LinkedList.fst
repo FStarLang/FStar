@@ -322,16 +322,6 @@ fn rec append (#t:Type0) (x y:llist t)
 
 open Pulse.Lib.Stick
 
-```pulse
-ghost
-fn intro_stick_aux (p:vprop) (u:unit)
-    requires emp ** p
-    ensures p
-{
-    ()
-}
-```
-
 assume val dbg : vprop
 ```pulse
 ghost
@@ -339,8 +329,12 @@ fn yields_idem (p:vprop)
    requires emp
    ensures p @==> p
 {
-   Pulse.Lib.Stick.intro_stick p p emp (intro_stick_aux p);
-   fold (p @==> p);
+    ghost fn intro_stick_aux (u:unit)
+    requires emp ** p
+    ensures p
+    { () };
+    Pulse.Lib.Stick.intro_stick _ _ _ intro_stick_aux;
+    fold (p @==> p);
 }
 ```
 
@@ -350,20 +344,25 @@ fn yields_curry (p q r:vprop)
    requires (p ** q) @==> r
    ensures p @==> (q @==> r)
 {
-//   intro_stick p (q @==> r) (p ** q @==> r)
-//     ((_:unit) 
-//     {
-//         intro_stick q r
-//             ((_:unit) 
-//             {
-//             yields_idem r;
-//             })
-//         })
-//     })
-
-    admit()
+    ghost fn aux (_:unit)
+    requires ((p ** q) @==> r) ** p
+    ensures q @==> r
+    { 
+        ghost fn aux (_:unit)
+        requires (((p ** q) @==> r) ** p) ** q
+        ensures r
+        { 
+            unfold ((p ** q) @==> r);
+            elim_stick (p ** q) _;
+        };
+        intro_stick _ _ _ aux; 
+        fold (q @==> r);
+    };
+    intro_stick _ _ _ aux;
+    fold (p @==> (q @==> r));
 }
 ```
+
 
 ```pulse
 ghost
@@ -371,7 +370,18 @@ fn yields_trans (p q r:vprop)
     requires (p @==> q) ** (q @==> r)
     ensures p @==> r
 {
-    admit()
+   ghost fn aux (_:unit)
+   requires ((p @==> q) ** (q @==> r)) ** p
+   ensures r
+   { 
+      unfold (p @==> q);
+      elim_stick _ _;
+      
+      unfold (q @==> r);
+      elim_stick _ _;
+   };
+   intro_stick _ _ _ aux;
+   fold (p @==> r);
 }
 ```
 
@@ -381,17 +391,33 @@ fn yields_comm_l (p q r:vprop)
    requires (p ** q) @==> r
    ensures (q ** p) @==> r
 {
-  admit()
+    ghost fn aux (_:unit)
+    requires ((p ** q) @==> r) ** (q ** p)
+    ensures r
+    { 
+        unfold (p ** q) @==> r;
+        elim_stick (p ** q) _;
+    };
+    intro_stick _ _ _ aux; 
+    fold ((q ** p) @==> r);
 }
 ```
 
 ```pulse
 ghost
-fn yields_assoc_l (p q r:vprop)
-   requires (p ** (q ** r)) @==> r
-   ensures ((p ** q) ** r) @==> r
+fn yields_assoc_l (p q r s:vprop)
+   requires (p ** (q ** r)) @==> s
+   ensures ((p ** q) ** r) @==> s
 {
-  admit()
+    ghost fn aux (_:unit)
+    requires ((p ** (q ** r)) @==> s) ** ((p ** q) ** r)
+    ensures s
+    { 
+        unfold (p ** (q ** r)) @==> s;
+        elim_stick (p ** (q ** r)) _;
+    };
+    intro_stick _ _ _ aux;
+    fold (((p ** q) ** r) @==> s);
 }
 ```
 
@@ -489,16 +515,13 @@ fn length_iter (#t:Type) (x: llist t)
         with _node tl. assert (is_list #t _node.tail tl);
         rewrite (is_list #t _node.tail tl)
             as  (is_list node.tail tl);
-        intro_yields_cons node_ptr;// #node #tl;
-        // rewrite (yields (is_list node.tail tl) (is_list (Some node_ptr) (node.head::tl)))
-        //     as  (yields (is_list node.tail tl) (is_list ll suffix));
+        intro_yields_cons node_ptr;
         yields_trans (is_list node.tail tl) (is_list ll suffix) (is_list x 'l);
         cur := node.tail;
         ctr := n + 1;
     };
     with ll _sfx. assert (is_list #t ll _sfx);
     is_list_cases_none ll;
-    // with p. rewrite (yields p (is_list x 'l)) as (yields (is_list #t ll []) (is_list x 'l));
     elim_yields ();
     let n = !ctr;
     n

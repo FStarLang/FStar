@@ -14,6 +14,13 @@ module Metatheory = Pulse.Typing.Metatheory
 
 val format_failed_goal (g:env) (ctxt:list term) (goal:list term) : T.Tac string
 
+val post_typing_as_abstraction
+  (#g:env) (#x:var) (#ty:term) (#t:term { fresh_wrt x g (freevars t) })
+  (_:tot_typing (push_binding g x ppname_default ty) (open_term t x) tm_vprop)
+  : FStar.Ghost.erased (RT.tot_typing (elab_env g)
+                             (RT.mk_abs (elab_term ty) T.Q_Explicit (elab_term t))
+                             (RT.mk_arrow (elab_term ty) T.Q_Explicit (elab_term tm_vprop)))
+
 val intro_post_hint (g:env) (ctag_opt:option ctag) (ret_ty:option term) (post:term)
   : T.Tac (h:post_hint_for_env g{h.ctag_hint == ctag_opt})
 
@@ -70,6 +77,17 @@ val continuation_elaborator_with_let (#g:env) (#ctxt:term)
   : T.Tac (continuation_elaborator
            g ctxt
            (push_binding g (snd x) ppname_default t1) ctxt)
+
+val continuation_elaborator_with_bind_fn (#g:env) (#ctxt:term)
+  (ctxt_typing:tot_typing g ctxt tm_vprop)
+  (#e1:st_term)
+  (#c1:comp { C_Tot? c1 })
+  (b:binder{b.binder_ty == comp_res c1})
+  (e1_typing:st_typing g e1 c1)
+  (x:nvar { None? (lookup g (snd x)) })
+: T.Tac (continuation_elaborator
+          g ctxt
+          (push_binding g (snd x) ppname_default (comp_res c1)) ctxt)
 
 val check_equiv_emp (g:env) (vp:term)
   : option (vprop_equiv g vp tm_emp)

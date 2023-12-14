@@ -235,7 +235,7 @@ let rec st_typing_weakening g g' t c d g1
     let d_bc = bind_comp_weakening g g' d_bc g1 in
     T_Bind _ e1 e2 c1 c2 b x c d_e1 (magic ()) d_e2 d_bc
 
-  | T_BindFn _ e1 e2 c1 c2 b x d_e1 u _ d_e2 u2 c2_typing  ->
+  | T_BindFn _ e1 e2 c1 c2 b x d_e1 u _ d_e2 c2_typing  ->
     let d_e1 : st_typing (push_env (push_env g g1) g') e1 c1 =
       st_typing_weakening g g' e1 c1 d_e1 g1 in
     //
@@ -266,7 +266,7 @@ let rec st_typing_weakening g g' t c d g1
       : st_typing (push_binding (push_env (push_env g g1) g') x ppname_default (comp_res c1))
                   (open_st_term_nv e2 (b.binder_ppname, x))
                   c2 = d_e2 in
-    T_BindFn _ e1 e2 c1 c2 b x d_e1 u (magic()) d_e2 u2 (magic())
+    T_BindFn _ e1 e2 c1 c2 b x d_e1 u (magic()) d_e2 (magic())
 
   | T_TotBind _ e1 e2 t1 c2 b x _ d_e2 ->
     assume (~ (x `Set.mem` dom g'));
@@ -664,7 +664,7 @@ let rec st_typing_subst g x t g' #e #eff e_typing #e1 #c1 e1_typing _
              (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default (comp_res c1)) e_typing d_e2 (magic ())) ())
              (bind_comp_subst g x t g' e_typing d_bc)
 
-  | T_BindFn _ e1 e2 c1 c2 b y d_e1 u _ d_e2 u2 d_c2 ->
+  | T_BindFn _ e1 e2 c1 c2 b y d_e1 u _ d_e2 d_c2 ->
     T_BindFn _ (subst_st_term e1 ss)
                (subst_st_term e2 ss)
                (subst_comp c1 ss)
@@ -675,7 +675,6 @@ let rec st_typing_subst g x t g' #e #eff e_typing #e1 #c1 e1_typing _
                u
                (magic ())
                (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default (comp_res c1)) e_typing d_e2 (magic ())) ())
-               u2
                (comp_typing_subst g x t (push_binding g' y ppname_default (comp_res c1)) e_typing d_c2)
 
   | T_TotBind _ e1 e2 t1 c2 b y _ d_e2 ->

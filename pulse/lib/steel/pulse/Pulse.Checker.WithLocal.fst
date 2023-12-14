@@ -11,7 +11,12 @@ module P = Pulse.Syntax.Printer
 let extend_post_hint_for_local (g:env) (p:post_hint_for_env g)
                                (init_t:term) (x:var { ~ (Set.mem x (dom g)) })
   : post_hint_for_env (push_binding g x ppname_default init_t)
-  = { p with post = comp_withlocal_body_post p.post init_t (null_var x);
+  = let post = comp_withlocal_body_post p.post init_t (null_var x) in
+    let y = fresh (push_binding g x ppname_default init_t) in
+    assume (fresh_wrt y g (freevars post));
+    { p with post;
+             x=y;
+             post_typing_src = magic();
              post_typing = admit() } //star typing intro
 
 let with_local_pre_typing (#g:env) (#pre:term) (pre_typing:tot_typing g pre tm_vprop)

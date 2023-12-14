@@ -921,22 +921,6 @@ let uu___is_STS_GhostInvs uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | STS_GhostInvs _ -> true | _ -> false
 let uu___is_STS_AtomicInvs uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | STS_AtomicInvs _ -> true | _ -> false
-type ('dummyV0, 'dummyV1, 'dummyV2, 'dummyV3, 'dummyV4) bind_comp =
-  | Bind_comp of Pulse_Typing_Env.env * Pulse_Syntax_Base.var *
-  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.comp_st * unit *
-  Pulse_Syntax_Base.var * unit 
-  | Bind_comp_ghost_l of Pulse_Typing_Env.env * Pulse_Syntax_Base.var *
-  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.comp_st * (unit, unit)
-  non_informative_c * unit * Pulse_Syntax_Base.var * unit 
-  | Bind_comp_ghost_r of Pulse_Typing_Env.env * Pulse_Syntax_Base.var *
-  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.comp_st * (unit, unit)
-  non_informative_c * unit * Pulse_Syntax_Base.var * unit 
-let uu___is_Bind_comp uu___4 uu___3 uu___2 uu___1 uu___ uu___5 =
-  match uu___5 with | Bind_comp _ -> true | _ -> false
-let uu___is_Bind_comp_ghost_l uu___4 uu___3 uu___2 uu___1 uu___ uu___5 =
-  match uu___5 with | Bind_comp_ghost_l _ -> true | _ -> false
-let uu___is_Bind_comp_ghost_r uu___4 uu___3 uu___2 uu___1 uu___ uu___5 =
-  match uu___5 with | Bind_comp_ghost_r _ -> true | _ -> false
 type ('dummyV0, 'dummyV1, 'dummyV2) lift_comp =
   | Lift_STAtomic_ST of Pulse_Typing_Env.env * Pulse_Syntax_Base.comp_st 
   | Lift_STGhost_STAtomic of Pulse_Typing_Env.env * Pulse_Syntax_Base.comp_st
@@ -974,6 +958,22 @@ type ('dummyV0, 'dummyV1) st_comp_typing =
   Pulse_Syntax_Base.var * unit * unit * unit 
 let uu___is_STC uu___1 uu___ uu___2 =
   match uu___2 with | STC _ -> true | _ -> false
+type ('dummyV0, 'dummyV1, 'dummyV2, 'dummyV3, 'dummyV4) bind_comp =
+  | Bind_comp of Pulse_Typing_Env.env * Pulse_Syntax_Base.var *
+  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.comp_st * unit *
+  Pulse_Syntax_Base.var * unit 
+  | Bind_comp_ghost_l of Pulse_Typing_Env.env * Pulse_Syntax_Base.var *
+  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.comp_st * (unit, unit)
+  non_informative_c * unit * Pulse_Syntax_Base.var * unit 
+  | Bind_comp_ghost_r of Pulse_Typing_Env.env * Pulse_Syntax_Base.var *
+  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.comp_st * (unit, unit)
+  non_informative_c * unit * Pulse_Syntax_Base.var * unit 
+let uu___is_Bind_comp uu___4 uu___3 uu___2 uu___1 uu___ uu___5 =
+  match uu___5 with | Bind_comp _ -> true | _ -> false
+let uu___is_Bind_comp_ghost_l uu___4 uu___3 uu___2 uu___1 uu___ uu___5 =
+  match uu___5 with | Bind_comp_ghost_l _ -> true | _ -> false
+let uu___is_Bind_comp_ghost_r uu___4 uu___3 uu___2 uu___1 uu___ uu___5 =
+  match uu___5 with | Bind_comp_ghost_r _ -> true | _ -> false
 let (tr_binding :
   (Pulse_Syntax_Base.var * Pulse_Syntax_Base.typ) ->
     FStar_Reflection_V2_Data.binding)
@@ -1055,6 +1055,11 @@ type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   Pulse_Syntax_Base.var * Pulse_Syntax_Base.comp * (unit, unit, unit)
   st_typing * unit * (unit, unit, unit) st_typing * (unit, unit, unit, 
   unit, unit) bind_comp 
+  | T_BindFn of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_term *
+  Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.comp *
+  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.binder *
+  Pulse_Syntax_Base.var * (unit, unit, unit) st_typing * unit * unit * (
+  unit, unit, unit) st_typing * (unit, unit, unit) comp_typing 
   | T_TotBind of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
   Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.term *
   Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.binder *
@@ -1144,6 +1149,8 @@ let uu___is_T_Lift uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Lift _ -> true | _ -> false
 let uu___is_T_Bind uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Bind _ -> true | _ -> false
+let uu___is_T_BindFn uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | T_BindFn _ -> true | _ -> false
 let uu___is_T_TotBind uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_TotBind _ -> true | _ -> false
 let uu___is_T_GhostBind uu___2 uu___1 uu___ uu___3 =
@@ -1190,6 +1197,7 @@ let uu___is_TBR uu___6 uu___5 uu___4 uu___3 uu___2 uu___1 uu___ uu___7 =
 
 
 
+type ('x, 'g, 'vars) fresh_wrt = unit
 type post_hint_t =
   {
   g: Pulse_Typing_Env.env ;
@@ -1198,32 +1206,45 @@ type post_hint_t =
   u: Pulse_Syntax_Base.universe ;
   ty_typing: unit ;
   post: Pulse_Syntax_Base.term ;
+  x: Pulse_Syntax_Base.var ;
+  post_typing_src: unit ;
   post_typing: unit }
 let (__proj__Mkpost_hint_t__item__g : post_hint_t -> Pulse_Typing_Env.env) =
   fun projectee ->
     match projectee with
-    | { g; ctag_hint; ret_ty; u; ty_typing; post; post_typing;_} -> g
+    | { g; ctag_hint; ret_ty; u; ty_typing; post; x; post_typing_src;
+        post_typing;_} -> g
 let (__proj__Mkpost_hint_t__item__ctag_hint :
   post_hint_t -> Pulse_Syntax_Base.ctag FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with
-    | { g; ctag_hint; ret_ty; u; ty_typing; post; post_typing;_} -> ctag_hint
+    | { g; ctag_hint; ret_ty; u; ty_typing; post; x; post_typing_src;
+        post_typing;_} -> ctag_hint
 let (__proj__Mkpost_hint_t__item__ret_ty :
   post_hint_t -> Pulse_Syntax_Base.term) =
   fun projectee ->
     match projectee with
-    | { g; ctag_hint; ret_ty; u; ty_typing; post; post_typing;_} -> ret_ty
+    | { g; ctag_hint; ret_ty; u; ty_typing; post; x; post_typing_src;
+        post_typing;_} -> ret_ty
 let (__proj__Mkpost_hint_t__item__u :
   post_hint_t -> Pulse_Syntax_Base.universe) =
   fun projectee ->
     match projectee with
-    | { g; ctag_hint; ret_ty; u; ty_typing; post; post_typing;_} -> u
+    | { g; ctag_hint; ret_ty; u; ty_typing; post; x; post_typing_src;
+        post_typing;_} -> u
 
 let (__proj__Mkpost_hint_t__item__post :
   post_hint_t -> Pulse_Syntax_Base.term) =
   fun projectee ->
     match projectee with
-    | { g; ctag_hint; ret_ty; u; ty_typing; post; post_typing;_} -> post
+    | { g; ctag_hint; ret_ty; u; ty_typing; post; x; post_typing_src;
+        post_typing;_} -> post
+let (__proj__Mkpost_hint_t__item__x : post_hint_t -> Pulse_Syntax_Base.var) =
+  fun projectee ->
+    match projectee with
+    | { g; ctag_hint; ret_ty; u; ty_typing; post; x; post_typing_src;
+        post_typing;_} -> x
+
 type ('g, 'p) post_hint_for_env_p = unit
 type 'g post_hint_for_env = post_hint_t
 type 'g post_hint_opt = post_hint_t FStar_Pervasives_Native.option
@@ -1233,7 +1254,6 @@ type ('g, 'p, 'x) post_hint_typing_t =
   post_typing1: unit }
 
 
-type ('x, 'g, 'vars) fresh_wrt = unit
 let (post_hint_typing :
   Pulse_Typing_Env.env ->
     unit post_hint_for_env ->

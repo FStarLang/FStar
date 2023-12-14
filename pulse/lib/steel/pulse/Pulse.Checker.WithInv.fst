@@ -41,7 +41,7 @@ let st_comp_remove_inv (inv:vprop) (c:st_comp) : T.Tac st_comp =
   { c with pre = term_remove_inv inv c.pre
          ; post = term_remove_inv inv c.post }
 
-#push-options "--z3rlimit 50"
+#push-options "--z3rlimit 50 --query_stats --split_queries no --max_fuel 2 --max_ifuel 1"
 
 let check
   (g:env)
@@ -114,12 +114,19 @@ let check
   let pre'_typing : tot_typing g pre' tm_vprop = recheck () in
   let post_p' : vprop = tm_star post.post inv_p in
   let elab_ret_ty = elab_term post.ret_ty in
-  let post_p'_typing
-    : RT.tot_typing (elab_env g)
-                    (RT.(mk_abs elab_ret_ty T.Q_Explicit (elab_term post_p')))
-                    (RT.mk_arrow elab_ret_ty T.Q_Explicit (elab_term tm_vprop))
-    = rt_recheck g ()
+  let x = fresh g in
+  assume (fresh_wrt x g (freevars post_p'));
+  // Pulse.Typing.FV.freevars_close_term post_p' x 0;
+  // let post_p' = close_term post_p' x in
+  let g' = (push_binding g x ppname_default post.ret_ty) in
+  let r_g' = elab_env g' in
+  let post_p'_typing_src
+    : RT.tot_typing r_g'
+                    (elab_term (open_term_nv post_p' (v_as_nv x)))
+                    (elab_term tm_vprop)
+    = rt_recheck g' #r_g' ()
   in
+  let post_p'_typing = Pulse.Checker.Base.post_typing_as_abstraction (E post_p'_typing_src) in
   let ctag_hint' =
     if None? post.ctag_hint || post.ctag_hint = Some STT then
       Some STT_Ghost
@@ -133,6 +140,8 @@ let check
     g = g;
     ty_typing = recheck (); // Pulse.Typing.Metatheory.tot_typing_weakening _ _ _ _ post.ty_typing _;
     post = post_p';
+    x;
+    post_typing_src=E post_p'_typing_src;
     post_typing = post_p'_typing;
     ctag_hint = ctag_hint';
   }
@@ -153,7 +162,9 @@ let check
     let a = elab_term inames in
     let b = elab_term i in
     let inv_p = elab_term inv_p in
-    with_range (Tm_FStar (Pulse.Reflection.Util.add_inv_tm inv_p a b)) (T.range_of_term a)
+    let inv_tm = (Pulse.Reflection.Util.add_inv_tm inv_p a b) in
+    assume (not_tv_unknown inv_tm);
+    with_range (Tm_FStar inv_tm) (T.range_of_term a)
   in
 
   let c_out : comp_st =

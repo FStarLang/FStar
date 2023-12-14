@@ -382,6 +382,26 @@ let rec (st_typing_weakening :
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), e1, e2, c1, c2,
                       b, x, c3, d_e11, (), d_e24, d_bc1)
+              | Pulse_Typing.T_BindFn
+                  (uu___, e1, e2, c1, c2, b, x, d_e1, u, uu___1, d_e2,
+                   c2_typing)
+                  ->
+                  let d_e11 = st_typing_weakening g g' e1 c1 d_e1 g1 in
+                  let d_e21 = d_e2 in
+                  let d_e22 = d_e21 in
+                  let d_e23 =
+                    st_typing_weakening g
+                      (Pulse_Typing_Env.push_binding g' x
+                         Pulse_Syntax_Base.ppname_default
+                         (Pulse_Syntax_Base.comp_res c1))
+                      (Pulse_Syntax_Naming.open_st_term_nv e2
+                         ((b.Pulse_Syntax_Base.binder_ppname), x)) c2 d_e22
+                      g1 in
+                  let d_e24 = d_e23 in
+                  Pulse_Typing.T_BindFn
+                    ((Pulse_Typing_Env.push_env
+                        (Pulse_Typing_Env.push_env g g1) g'), e1, e2, c1, c2,
+                      b, x, d_e11, (), (), d_e24, (Prims.magic ()))
               | Pulse_Typing.T_TotBind
                   (uu___, e1, e2, t1, c2, b, x, uu___1, d_e2) ->
                   let d_e21 = d_e2 in
@@ -942,6 +962,34 @@ let rec (st_typing_subst :
                                            y)) c2 d_e2 ()) ()),
                                 (bind_comp_subst g x t g' e () y c11 c2 c
                                    d_bc))
+                        | Pulse_Typing.T_BindFn
+                            (uu___1, e11, e2, c11, c2, b, y, d_e1, u, uu___2,
+                             d_e2, d_c2)
+                            ->
+                            Pulse_Typing.T_BindFn
+                              ((Pulse_Typing_Env.push_env g
+                                  (Pulse_Typing_Env.subst_env g' (nt x e))),
+                                (Pulse_Syntax_Naming.subst_st_term e11 ss),
+                                (Pulse_Syntax_Naming.subst_st_term e2 ss),
+                                (Pulse_Syntax_Naming.subst_comp c11 ss),
+                                (Pulse_Syntax_Naming.subst_comp c2 ss),
+                                (Pulse_Syntax_Naming.subst_binder b ss), y,
+                                (st_typing_subst g x t g' e eff () e11 c11
+                                   d_e1 ()), (), (),
+                                (coerce_eq
+                                   (st_typing_subst g x t
+                                      (Pulse_Typing_Env.push_binding g' y
+                                         Pulse_Syntax_Base.ppname_default
+                                         (Pulse_Syntax_Base.comp_res c11)) e
+                                      eff ()
+                                      (Pulse_Syntax_Naming.open_st_term_nv e2
+                                         ((b.Pulse_Syntax_Base.binder_ppname),
+                                           y)) c2 d_e2 ()) ()),
+                                (comp_typing_subst g x t
+                                   (Pulse_Typing_Env.push_binding g' y
+                                      Pulse_Syntax_Base.ppname_default
+                                      (Pulse_Syntax_Base.comp_res c11)) e ()
+                                   c2 (Pulse_Syntax_Base.comp_u c2) d_c2))
                         | Pulse_Typing.T_TotBind
                             (uu___1, e11, e2, t1, c2, b, y, uu___2, d_e2) ->
                             Pulse_Typing.T_TotBind

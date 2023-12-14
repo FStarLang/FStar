@@ -285,7 +285,7 @@ val open_close_inverse_t (e:R.term { RT.ln e }) (x:var) (t:R.term)
   : Lemma (RT.open_with (RT.close_term e x) t == e)
 
 let bind_fn_typing #g #t #c d soundness =
-  let T_BindFn _ e1 e2 c1 c2 b x e1_typing u t1_typing e2_typing u2 c2_typing = d in
+  let T_BindFn _ e1 e2 c1 c2 b x e1_typing u t1_typing e2_typing c2_typing = d in
   let t1 = comp_res c1 in
   let g_x = push_binding g x ppname_default t1 in
 

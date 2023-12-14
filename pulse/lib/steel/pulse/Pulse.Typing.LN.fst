@@ -1160,7 +1160,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       open_st_term_ln e2 x;
       bind_comp_ln bc
 
-    | T_BindFn _g _e1 e2 _c1 _c2 _b x d1 _u dc1 d2 _u2 c ->
+    | T_BindFn _g _e1 e2 _c1 _c2 _b x d1 _u dc1 d2 c ->
       st_typing_ln d1;
       tot_or_ghost_typing_ln dc1;
       st_typing_ln d2;

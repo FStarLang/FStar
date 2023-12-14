@@ -52,7 +52,11 @@ let intro_post_hint g ctag_opt ret_ty_opt post =
   let post' = close_term post x in
   Pulse.Typing.FV.freevars_close_term post x 0;
   assume (open_term post' x == post);
-  { g; ctag_hint=ctag_opt; ret_ty; u; ty_typing; post=post'; post_typing=post_typing_as_abstraction #_ #_ #_ #post' post_typing }
+  { g; ctag_hint=ctag_opt;
+    ret_ty; u; ty_typing;
+    post=post';
+    x; post_typing_src=post_typing;
+    post_typing=post_typing_as_abstraction #_ #_ #_ #post' post_typing }
 
 let post_hint_from_comp_typing #g #c ct = 
   let st_comp_typing = Metatheory.comp_typing_inversion ct in
@@ -63,6 +67,8 @@ let post_hint_from_comp_typing #g #c ct =
       ret_ty = comp_res c; u=comp_u c; 
       ty_typing=ty_typing;
       post=comp_post c;
+      x;
+      post_typing_src=post_typing;
       post_typing=post_typing_as_abstraction post_typing }
   in
   p
@@ -359,6 +365,76 @@ let continuation_elaborator_with_let (#g:env) (#ctxt:term)
   open_with_gt_ln ctxt (-1) e1 0;
 
   (| e, c, d |)
+
+    
+let st_comp_typing_with_post_hint 
+      (#g:env) (#ctxt:_)
+      (ctxt_typing:tot_typing g ctxt tm_vprop)
+      (post_hint:post_hint_opt g { Some? post_hint })
+      (c:comp_st { comp_pre c == ctxt /\ comp_post_matches_hint c post_hint })
+: st_comp_typing g (st_comp_of_comp c)
+= let st = st_comp_of_comp c in
+  let Some ph = post_hint in
+  let post_typing_src
+    : tot_typing (push_binding ph.g ph.x ppname_default ph.ret_ty)
+                 (open_term ph.post ph.x) tm_vprop
+    = ph.post_typing_src
+  in
+  let x = fresh g in
+  assume (fresh_wrt x g (freevars ph.post));
+  let post_typing_src
+    : tot_typing (push_binding g x ppname_default ph.ret_ty)
+                 (open_term ph.post x) tm_vprop
+    = magic ()
+  in
+  let ty_typing : universe_of ph.g st.res st.u = ph.ty_typing in
+  let ty_typing : universe_of g st.res st.u =
+    Pulse.Typing.Metatheory.tot_typing_weakening_standard ph.g ty_typing g
+  in
+  assert (st.res == ph.ret_ty);
+  assert (st.post == ph.post);
+  STC g st x ty_typing ctxt_typing post_typing_src
+
+let continuation_elaborator_with_bind_fn (#g:env) (#ctxt:term)
+  (ctxt_typing:tot_typing g ctxt tm_vprop)
+  (#e1:st_term)
+  (#c1:comp { C_Tot? c1 })
+  (b:binder{b.binder_ty == comp_res c1})
+  (e1_typing:st_typing g e1 c1)
+  (x:nvar { None? (lookup g (snd x)) })
+: T.Tac (continuation_elaborator
+          g ctxt
+          (push_binding g (snd x) ppname_default (comp_res c1)) ctxt)
+= let t1 = comp_res c1 in
+  assert ((push_binding g (snd x) (fst x) t1) `env_extends` g);
+  fun post_hint (| e2, c2, d2 |) ->
+    if None? post_hint then T.fail "bind_fn: expects the post_hint to be set";
+    let ppname, x = x in
+    let e2_closed = close_st_term e2 x in
+    assume (open_st_term (close_st_term e2 x) x == e2);
+    let e = wr c2 (Tm_Bind {binder=b; head=e1; body=e2_closed}) in
+    let u : Ghost.erased universe = magic () in
+    let c1_typing : tot_typing g t1 (tm_type u) = magic () in
+    let c2_typing : comp_typing g c2 (comp_u c2) =
+      match c2 with
+      | C_ST st -> 
+        let stc = st_comp_typing_with_post_hint ctxt_typing post_hint c2 in
+        CT_ST _ _ stc
+      
+      | C_STAtomic i st -> 
+        let stc = st_comp_typing_with_post_hint ctxt_typing post_hint c2 in
+        let i_typing = CP.core_check_term g i T.E_Total tm_inames in
+        CT_STAtomic _ _ _ i_typing stc
+
+      | C_STGhost i st -> 
+        let stc = st_comp_typing_with_post_hint ctxt_typing post_hint c2 in
+        let i_typing = CP.core_check_term g i T.E_Total tm_inames in
+        CT_STGhost _ _ _ i_typing stc
+    in
+    let d : st_typing g e c2 =
+        T_BindFn g e1 e2_closed c1 c2 b x e1_typing u c1_typing d2 c2_typing
+    in
+    (| e, c2, d |)
 
 let rec check_equiv_emp (g:env) (vp:term)
   : option (vprop_equiv g vp tm_emp)

@@ -522,7 +522,7 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
     bind_comp_freevars bc;
     freevars_open_st_term_inv e2 x
 
-  | T_BindFn _g _e1 e2 _c1 _c2 _b x d1 _u dc1 d2 _u2 c ->
+  | T_BindFn _g _e1 e2 _c1 _c2 _b x d1 _u dc1 d2 c ->
     st_typing_freevars d1;
     tot_or_ghost_typing_freevars dc1;
     st_typing_freevars d2;

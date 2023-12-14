@@ -838,11 +838,11 @@ type st_typing : env -> st_term -> comp -> Type =
       b:binder { b.binder_ty == comp_res c1 }->
       x:var { None? (lookup g x)  /\ ~(x `Set.mem` freevars_st e2) } ->
       st_typing g e1 c1 ->
-      u:universe ->
+      u:Ghost.erased universe ->
       tot_typing g (comp_res c1) (tm_type u) -> //type-correctness; would be nice to derive it instead      
       st_typing (push_binding g x ppname_default (comp_res c1)) (open_st_term_nv e2 (b.binder_ppname, x)) c2 ->
-      u2:universe ->
-      comp_typing g c2 u ->
+      // u2:universe ->
+      comp_typing g c2 (comp_u c2) ->
       st_typing g (wr c2 (Tm_Bind { binder=b; head=e1; body=e2 })) c2
 
   | T_TotBind:
@@ -1155,6 +1155,9 @@ let emp_typing (#g:_)
   : tot_typing g tm_emp tm_vprop
   = admit ()
 
+let fresh_wrt (x:var) (g:env) (vars:_) = 
+    None? (lookup g x) /\  ~(x `Set.mem` vars)
+
 noeq
 type post_hint_t = {
   g:env;
@@ -1163,6 +1166,8 @@ type post_hint_t = {
   u:universe;
   ty_typing:universe_of g ret_ty u;
   post:term;
+  x:(x:var { fresh_wrt x g (freevars post) });
+  post_typing_src:tot_typing (push_binding g x ppname_default ret_ty) (open_term post x) tm_vprop;
   post_typing:
     FStar.Ghost.erased (RT.tot_typing (elab_env g)
                                       (RT.(mk_abs (elab_term ret_ty) T.Q_Explicit (elab_term post)))
@@ -1187,9 +1192,8 @@ type post_hint_typing_t (g:env) (p:post_hint_t) (x:var { ~ (Set.mem x (dom g)) }
   post_typing:tot_typing (push_binding g x ppname_default p.ret_ty) (open_term p.post x) tm_vprop
 }
 
-let fresh_wrt (x:var) (g:env) (vars:_) = 
-    None? (lookup g x) /\  ~(x `Set.mem` vars)
 
+irreducible
 let post_hint_typing (g:env)
                      (p:post_hint_for_env g)
                      (x:var { fresh_wrt x g (freevars p.post) })
