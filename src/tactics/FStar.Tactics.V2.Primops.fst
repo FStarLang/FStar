@@ -90,8 +90,8 @@ let ops = [
   mk_tot_step_1 0 "goals_of" goals_of goals_of;
   mk_tot_step_1 0 "smt_goals_of" smt_goals_of smt_goals_of;
   mk_tot_step_1 0 "goal_env" goal_env goal_env;
-  mk_tot_step_1 0 "goal_type" #solve #RE.e_term goal_type goal_type;
-  mk_tot_step_1 0 "goal_witness" #solve #RE.e_term goal_witness goal_witness;
+  mk_tot_step_1 0 "goal_type" #_ #RE.e_term goal_type goal_type;
+  mk_tot_step_1 0 "goal_witness" #_ #RE.e_term goal_witness goal_witness;
   mk_tot_step_1 0 "is_guard" is_guard is_guard;
   mk_tot_step_1 0 "get_label" get_label get_label;
   mk_tot_step_2 0 "set_label" set_label set_label;
@@ -119,7 +119,7 @@ let ops = [
   mk_tac_step_1 0 "intro" intro intro;
   mk_tac_step_1 0 "intro_rec" intro_rec intro_rec;
   mk_tac_step_1 0 "norm" norm norm;
-  mk_tac_step_3 0 "norm_term_env" #solve #solve #RE.e_term #RE.e_term norm_term_env norm_term_env;
+  mk_tac_step_3 0 "norm_term_env" #_ #_ #RE.e_term #RE.e_term norm_term_env norm_term_env;
   mk_tac_step_2 0 "norm_binding_type" norm_binding_type norm_binding_type;
   mk_tac_step_2 0 "rename_to" rename_to rename_to;
   mk_tac_step_1 0 "var_retype" var_retype var_retype;
@@ -128,12 +128,12 @@ let ops = [
   mk_tac_step_1 0 "clear" clear clear;
   mk_tac_step_1 0 "rewrite" rewrite rewrite;
   mk_tac_step_1 0 "refine_intro" refine_intro refine_intro;
-  mk_tac_step_3 0 "t_exact" #solve #solve #RE.e_term t_exact t_exact;
-  mk_tac_step_4 0 "t_apply" #solve #solve #solve #RE.e_term t_apply t_apply;
-  mk_tac_step_3 0 "t_apply_lemma" #solve #solve #RE.e_term t_apply_lemma t_apply_lemma;
+  mk_tac_step_3 0 "t_exact" #_ #_ #RE.e_term t_exact t_exact;
+  mk_tac_step_4 0 "t_apply" #_ #_ #_ #RE.e_term t_apply t_apply;
+  mk_tac_step_3 0 "t_apply_lemma" #_ #_ #RE.e_term t_apply_lemma t_apply_lemma;
   mk_tac_step_1 0 "set_options" set_options set_options;
-  mk_tac_step_2 0 "tcc" #solve #RE.e_term tcc tcc;
-  mk_tac_step_2 0 "tc" #solve #RE.e_term #RE.e_term tc tc;
+  mk_tac_step_2 0 "tcc" #_ #RE.e_term tcc tcc;
+  mk_tac_step_2 0 "tc" #_ #RE.e_term #RE.e_term tc tc;
   mk_tac_step_1 0 "unshelve" #RE.e_term unshelve unshelve;
 
   mk_tac_step_2 1 "unquote"
@@ -168,12 +168,12 @@ let ops = [
   mk_tac_step_1 0 "top_env" top_env top_env;
   mk_tac_step_1 0 "fresh" fresh fresh;
   mk_tac_step_1 0 "curms" curms curms;
-  mk_tac_step_2 0 "uvar_env" #solve #(e_option RE.e_term) #RE.e_term uvar_env uvar_env;
-  mk_tac_step_2 0 "ghost_uvar_env" #solve #RE.e_term #RE.e_term ghost_uvar_env ghost_uvar_env;
-  mk_tac_step_1 0 "fresh_universe_uvar" #solve #RE.e_term fresh_universe_uvar fresh_universe_uvar;
-  mk_tac_step_3 0 "unify_env" #solve #RE.e_term #RE.e_term unify_env unify_env;
-  mk_tac_step_3 0 "unify_guard_env" #solve #RE.e_term #RE.e_term unify_guard_env unify_guard_env;
-  mk_tac_step_3 0 "match_env" #solve #RE.e_term #RE.e_term match_env match_env;
+  mk_tac_step_2 0 "uvar_env" #_ #(e_option RE.e_term) #RE.e_term uvar_env uvar_env;
+  mk_tac_step_2 0 "ghost_uvar_env" #_ #RE.e_term #RE.e_term ghost_uvar_env ghost_uvar_env;
+  mk_tac_step_1 0 "fresh_universe_uvar" #_ #RE.e_term fresh_universe_uvar fresh_universe_uvar;
+  mk_tac_step_3 0 "unify_env" #_ #RE.e_term #RE.e_term unify_env unify_env;
+  mk_tac_step_3 0 "unify_guard_env" #_ #RE.e_term #RE.e_term unify_guard_env unify_guard_env;
+  mk_tac_step_3 0 "match_env" #_ #RE.e_term #RE.e_term match_env match_env;
   mk_tac_step_3 0 "launch_process" launch_process launch_process;
   mk_tac_step_1 0 "change" #RE.e_term change change;
   mk_tac_step_1 0 "get_guard_policy" get_guard_policy get_guard_policy;
@@ -197,7 +197,7 @@ let ops = [
   mk_tac_step_1 0 "gather_or_solve_explicit_guards_for_resolved_goals"
     gather_explicit_guards_for_resolved_goals
     gather_explicit_guards_for_resolved_goals;
-  mk_tac_step_2 0 "string_to_term" #solve #solve #RE.e_term string_to_term string_to_term;
+  mk_tac_step_2 0 "string_to_term" #_ #_ #RE.e_term string_to_term string_to_term;
   mk_tac_step_2 0 "push_bv_dsenv" push_bv_dsenv push_bv_dsenv;
   mk_tac_step_1 0 "term_to_string" #RE.e_term term_to_string term_to_string;
   mk_tac_step_1 0 "comp_to_string" comp_to_string comp_to_string;
@@ -240,27 +240,27 @@ let ops = [
 
   // reflection typechecker callbacks (part of the DSL framework)
 
-  mk_tac_step_2 0 "is_non_informative" #solve #RE.e_term refl_is_non_informative refl_is_non_informative;
-  mk_tac_step_3 0 "check_subtyping" #solve #RE.e_term #RE.e_term refl_check_subtyping refl_check_subtyping;
-  mk_tac_step_3 0 "check_equiv"  #solve #RE.e_term #RE.e_term refl_check_equiv refl_check_equiv;
-  mk_tac_step_2 0 "core_compute_term_type" #solve #RE.e_term #(e_ret_t (e_tuple2 solve RE.e_term)) refl_core_compute_term_type refl_core_compute_term_type;
-  mk_tac_step_4 0 "core_check_term" #solve #RE.e_term #RE.e_term refl_core_check_term refl_core_check_term;
-  mk_tac_step_3 0 "core_check_term_at_type" #solve #RE.e_term #RE.e_term refl_core_check_term_at_type refl_core_check_term_at_type;
-  mk_tac_step_2 0 "tc_term" #solve #RE.e_term #(e_ret_t (e_tuple2 RE.e_term (e_tuple2 solve RE.e_term))) refl_tc_term refl_tc_term;
-  mk_tac_step_2 0 "universe_of" #solve #RE.e_term refl_universe_of refl_universe_of;
-  mk_tac_step_2 0 "check_prop_validity" #solve #RE.e_term refl_check_prop_validity refl_check_prop_validity;
-  mk_tac_step_4 0 "check_match_complete" #solve #RE.e_term #RE.e_term refl_check_match_complete refl_check_match_complete;
+  mk_tac_step_2 0 "is_non_informative" #_ #RE.e_term refl_is_non_informative refl_is_non_informative;
+  mk_tac_step_3 0 "check_subtyping" #_ #RE.e_term #RE.e_term refl_check_subtyping refl_check_subtyping;
+  mk_tac_step_3 0 "check_equiv"  #_ #RE.e_term #RE.e_term refl_check_equiv refl_check_equiv;
+  mk_tac_step_2 0 "core_compute_term_type" #_ #RE.e_term #(e_ret_t (e_tuple2 solve RE.e_term)) refl_core_compute_term_type refl_core_compute_term_type;
+  mk_tac_step_4 0 "core_check_term" #_ #RE.e_term #RE.e_term refl_core_check_term refl_core_check_term;
+  mk_tac_step_3 0 "core_check_term_at_type" #_ #RE.e_term #RE.e_term refl_core_check_term_at_type refl_core_check_term_at_type;
+  mk_tac_step_2 0 "tc_term" #_ #RE.e_term #(e_ret_t (e_tuple2 RE.e_term (e_tuple2 solve RE.e_term))) refl_tc_term refl_tc_term;
+  mk_tac_step_2 0 "universe_of" #_ #RE.e_term refl_universe_of refl_universe_of;
+  mk_tac_step_2 0 "check_prop_validity" #_ #RE.e_term refl_check_prop_validity refl_check_prop_validity;
+  mk_tac_step_4 0 "check_match_complete" #_ #RE.e_term #RE.e_term refl_check_match_complete refl_check_match_complete;
   mk_tac_step_2 0 "instantiate_implicits"
-    #solve #solve #(e_ret_t (e_tuple3 (e_list (e_tuple2 RE.e_namedv solve)) solve solve))
-    #solve #solve #(nbe_e_ret_t (NBET.e_tuple3 (NBET.e_list (NBET.e_tuple2 NRE.e_namedv solve)) solve solve))
+    #_ #_ #(e_ret_t (e_tuple3 (e_list (e_tuple2 RE.e_namedv solve)) solve solve))
+    #_ #_ #(nbe_e_ret_t (NBET.e_tuple3 (NBET.e_list (NBET.e_tuple2 NRE.e_namedv solve)) solve solve))
     refl_instantiate_implicits refl_instantiate_implicits;
   mk_tac_step_3 0 "maybe_relate_after_unfolding" refl_maybe_relate_after_unfolding refl_maybe_relate_after_unfolding;
   mk_tac_step_2 0 "maybe_unfold_head" refl_maybe_unfold_head refl_maybe_unfold_head;
   mk_tac_step_2 0 "push_open_namespace" push_open_namespace push_open_namespace;
   mk_tac_step_3 0 "push_module_abbrev" push_module_abbrev push_module_abbrev;
   mk_tac_step_2 0 "resolve_name"
-    #solve #solve #(e_option (e_either RE.e_bv solve)) // disambiguate bv/namedv
-    #solve #solve #(NBET.e_option (NBET.e_either NRE.e_bv solve))
+    #_ #_ #(e_option (e_either RE.e_bv solve)) // disambiguate bv/namedv
+    #_ #_ #(NBET.e_option (NBET.e_either NRE.e_bv solve))
     resolve_name resolve_name;
   mk_tac_step_1 0 "log_issues" log_issues log_issues;
 ]

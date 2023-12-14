@@ -94,13 +94,13 @@ let mk3 nm f =
 let reflection_primops : list PO.primitive_step = [
   (****** Inspecting/packing various kinds of syntax ******)
   mk1 "inspect_ln"
-    #RE.e_term #solve
-    #NRE.e_term #solve
+    #RE.e_term #_
+    #NRE.e_term #_
     RB.inspect_ln;
 
   mk1 "pack_ln"
-    #solve #RE.e_term
-    #solve #NRE.e_term
+    #_ #RE.e_term
+    #_ #NRE.e_term
     RB.pack_ln;
 
   mk1 "inspect_fv" RB.inspect_fv;
@@ -136,11 +136,11 @@ let reflection_primops : list PO.primitive_step = [
 
   mk1 "sigelt_opts" RB.sigelt_opts;
   mk1 "embed_vconfig"
-    #solve #RE.e_term
+    #_ #RE.e_term
     RB.embed_vconfig;
 
   mk1 "sigelt_attrs"
-    #solve #(EMB.e_list RE.e_term)
+    #_ #(EMB.e_list RE.e_term)
     RB.sigelt_attrs;
 
   mk2 "set_sigelt_attrs"
@@ -150,17 +150,17 @@ let reflection_primops : list PO.primitive_step = [
   mk1 "sigelt_quals" RB.sigelt_quals;
   mk2 "set_sigelt_quals" RB.set_sigelt_quals;
   mk2 "subst_term"
-    #solve #RE.e_term #RE.e_term
+    #_ #RE.e_term #RE.e_term
     RB.subst_term;
 
   mk2 "subst_comp" RB.subst_comp;
   mk2 "compare_bv"
-    #RE.e_bv #RE.e_bv #solve
-    #NRE.e_bv #NRE.e_bv #solve
+    #RE.e_bv #RE.e_bv #_
+    #NRE.e_bv #NRE.e_bv #_
     RB.compare_bv;
   mk2 "compare_namedv"
-    #RE.e_namedv #RE.e_namedv #solve
-    #NRE.e_namedv #NRE.e_namedv #solve
+    #RE.e_namedv #RE.e_namedv #_
+    #NRE.e_namedv #NRE.e_namedv #_
     RB.compare_namedv;
 
   mk2 "lookup_attr"
@@ -186,8 +186,8 @@ let reflection_primops : list PO.primitive_step = [
   mk1 "explode_qn" RB.explode_qn;
   mk2 "compare_string" RB.compare_string;
   mk2 "push_namedv"
-    #solve #RE.e_namedv #solve
-    #solve #NRE.e_namedv #solve
+    #_ #RE.e_namedv #_
+    #_ #NRE.e_namedv #_
     RB.push_namedv;
 
   mk1 "range_of_term"
