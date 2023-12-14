@@ -61,6 +61,16 @@ val typing_correctness
   (_:erased (RT.typing g t (eff, ty)))
   : erased (u:R.universe & RT.typing g ty (C.E_Total, RT.tm_type u))
 
+let renaming x y = [NT x (tm_var {nm_index=y; nm_ppname=ppname_default})]
+val tot_typing_renaming1
+  (g:env) (x:var {None? (lookup g x)}) (tx e ty:term)
+  (_:tot_typing (push_binding g x ppname_default tx) e ty)
+  (y:var { None? (lookup g y) /\ x <> y })
+  : tot_typing (push_binding g y ppname_default tx)
+               (subst_term e (renaming x y))
+               (subst_term ty (renaming x y))
+
+
 val tot_typing_weakening
   (g:env) (g':env { disjoint g g' })
   (t:term) (ty:typ) (_:tot_typing (push_env g g') t ty)

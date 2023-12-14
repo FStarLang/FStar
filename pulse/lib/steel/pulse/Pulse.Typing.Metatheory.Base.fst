@@ -63,6 +63,7 @@ let pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (tm_pure p) tm_vpro
    = admit ()
 
 let typing_correctness _ = admit()
+let tot_typing_renaming1 _ _ _ _ _ _ = admit()
 let tot_typing_weakening _ _ _ _ _ _ = admit ()
 
 let non_informative_t_weakening (g g':env) (g1:env{ pairwise_disjoint g g1 g' })

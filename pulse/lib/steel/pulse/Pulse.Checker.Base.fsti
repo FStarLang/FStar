@@ -27,6 +27,16 @@ val intro_post_hint (g:env) (ctag_opt:option ctag) (ret_ty:option term) (post:te
 val post_hint_from_comp_typing (#g:env) (#c:comp_st) (ct:Metatheory.comp_typing_u g c)
   : post_hint_for_env g
 
+val extend_post_hint (g:env) (p:post_hint_for_env g)
+                     (x:var{ None? (lookup g x) }) (tx:term)
+                     (conjunct:term) (_:tot_typing (push_binding g x ppname_default tx) conjunct tm_vprop)
+  : T.Tac (q:post_hint_for_env (push_binding g x ppname_default tx) {
+            q.post == tm_star p.post conjunct /\
+            q.ret_ty == p.ret_ty /\
+            q.u == p.u
+          })
+  
+
 type continuation_elaborator
   (g:env)                         (ctxt:vprop)
   (g':env { g' `env_extends` g }) (ctxt':vprop) =

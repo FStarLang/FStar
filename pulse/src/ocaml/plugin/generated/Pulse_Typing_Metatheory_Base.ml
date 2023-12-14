@@ -84,6 +84,21 @@ let (tm_exists_inversion :
           unit -> Pulse_Syntax_Base.var -> (unit * unit))
   = fun g -> fun u -> fun ty -> fun p -> fun uu___ -> fun x -> ((), ())
 
+let (renaming :
+  Pulse_Syntax_Base.var ->
+    Pulse_Syntax_Base.var -> Pulse_Syntax_Naming.subst_elt Prims.list)
+  =
+  fun x ->
+    fun y ->
+      [Pulse_Syntax_Naming.NT
+         (x,
+           (Pulse_Syntax_Pure.tm_var
+              {
+                Pulse_Syntax_Base.nm_index = y;
+                Pulse_Syntax_Base.nm_ppname =
+                  Pulse_Syntax_Base.ppname_default
+              }))]
+
 
 let (non_informative_t_weakening :
   Pulse_Typing_Env.env ->

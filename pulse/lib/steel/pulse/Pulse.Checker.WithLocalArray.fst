@@ -10,18 +10,22 @@ module P = Pulse.Syntax.Printer
 module RU = Pulse.Reflection.Util
 
 let extend_post_hint
-  (g:env)
-  (p:post_hint_for_env g)
-  (init_t:term)
-  (x:var { ~ (Set.mem x (dom g)) })
-  : post_hint_for_env (push_binding g x ppname_default init_t)
-  = let post = comp_withlocal_array_body_post p.post init_t (null_var x) in
-    let y = fresh (push_binding g x ppname_default init_t) in
-    assume (fresh_wrt y g (freevars post));
-    { p with post = post;
-             x = y;
-             post_typing_src=magic();
-             post_typing = admit() } //star typing intro
+      (g:env)
+      (p:post_hint_for_env g)
+      (init_t:term)
+      (x:var { ~ (Set.mem x (dom g)) })
+: T.Tac (q:post_hint_for_env (push_binding g x ppname_default (mk_array init_t)) {
+          q.post == comp_withlocal_array_body_post p.post init_t (null_var x) /\
+          q.ret_ty == p.ret_ty /\
+          q.u == p.u
+        })
+= let arr = null_var x in
+  let conjunct = (tm_exists_sl u0 (as_binder (mk_seq u0 init_t)) (mk_array_pts_to init_t arr (null_bvar 0))) in
+  let g' = push_binding g x ppname_default (mk_array init_t) in
+  let c_typing = Pulse.Checker.Pure.core_check_term g' conjunct T.E_Total tm_vprop in
+  let res = Pulse.Checker.Base.extend_post_hint g p x (mk_array init_t) _ c_typing in
+  res
+
 
 let with_local_array_pre_typing (#g:env) (#pre:term)
   (pre_typing:tot_typing g pre tm_vprop)

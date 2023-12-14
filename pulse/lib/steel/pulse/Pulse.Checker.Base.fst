@@ -33,6 +33,7 @@ let format_failed_goal (g:env) (ctxt:list term) (goal:list term) =
 let mk_arrow ty t = RT.mk_arrow (elab_term ty) T.Q_Explicit (elab_term t)
 let mk_abs ty t = RT.(mk_abs (elab_term ty) T.Q_Explicit (elab_term t))
 
+irreducible
 let post_typing_as_abstraction
   (#g:env) (#x:var) (#ty:term) (#t:term { fresh_wrt x g (freevars t) })
   (_:tot_typing (push_binding g x ppname_default ty) (open_term t x) tm_vprop)
@@ -72,6 +73,44 @@ let post_hint_from_comp_typing #g #c ct =
       post_typing=post_typing_as_abstraction post_typing }
   in
   p
+
+let extend_post_hint g p x tx conjunct conjunct_typing =
+  let g' = push_binding g x ppname_default tx in
+  let y = fresh g' in
+  let g'' = push_binding g' y ppname_default p.ret_ty in
+  let p_post_typing_src
+    : tot_typing (push_binding p.g p.x ppname_default p.ret_ty)
+                 (open_term p.post p.x) tm_vprop
+    = p.post_typing_src
+  in
+  let p_post_typing_src''
+    : tot_typing g'' (open_term p.post y) tm_vprop
+    = magic() //weaken, rename
+  in
+  let conjunct_typing'
+    : tot_typing g' conjunct tm_vprop
+    = conjunct_typing
+  in
+  let conjunct_typing''
+    : tot_typing g'' (open_term conjunct y) tm_vprop
+    = magic () //weaken
+  in
+  let new_post = tm_star p.post conjunct in
+  let new_post_typing
+    : tot_typing g'' (open_term new_post y) tm_vprop
+    = Pulse.Typing.star_typing p_post_typing_src'' conjunct_typing''
+  in
+  assume (fresh_wrt y g'' (freevars new_post));
+  let new_post_abs_typing
+    : Ghost.erased (RT.tot_typing (elab_env g'') (mk_abs p.ret_ty new_post) (mk_arrow p.ret_ty tm_vprop))
+    = post_typing_as_abstraction new_post_typing
+  in
+  { p with
+    g=g';
+    post=new_post;
+    x=y;
+    post_typing_src=new_post_typing;
+    post_typing=new_post_abs_typing }
 
 let k_elab_unit (g:env) (ctxt:term)
   : continuation_elaborator g ctxt g ctxt
@@ -382,10 +421,31 @@ let st_comp_typing_with_post_hint
   in
   let x = fresh g in
   assume (fresh_wrt x g (freevars ph.post));
+  assume (None? (lookup g ph.x));
+  let post_typing_src
+    : tot_typing (push_binding ph.g x ppname_default ph.ret_ty)
+                 (open_term ph.post x) tm_vprop
+    = if x = ph.x
+      then post_typing_src
+      else 
+        let open Pulse.Typing.Metatheory.Base in
+        let tt :
+         tot_typing
+            (push_binding ph.g x ppname_default ph.ret_ty)
+            (subst_term (open_term ph.post ph.x) (renaming ph.x x))
+            (subst_term tm_vprop (renaming ph.x x)) =
+          tot_typing_renaming1 ph.g ph.x ph.ret_ty (open_term ph.post ph.x) tm_vprop post_typing_src x
+        in
+        assert (subst_term tm_vprop (renaming ph.x x) == tm_vprop);
+        assume (subst_term (open_term ph.post ph.x) (renaming ph.x x) ==
+                open_term ph.post x);
+        tt
+  in
   let post_typing_src
     : tot_typing (push_binding g x ppname_default ph.ret_ty)
                  (open_term ph.post x) tm_vprop
-    = magic ()
+    = //weakening: TODO
+      magic ()
   in
   let ty_typing : universe_of ph.g st.res st.u = ph.ty_typing in
   let ty_typing : universe_of g st.res st.u =
@@ -413,7 +473,6 @@ let continuation_elaborator_with_bind_fn (#g:env) (#ctxt:term)
     let e2_closed = close_st_term e2 x in
     assume (open_st_term (close_st_term e2 x) x == e2);
     let e = wr c2 (Tm_Bind {binder=b; head=e1; body=e2_closed}) in
-    let u : Ghost.erased universe = magic () in
     let (| u, c1_typing |) = Pulse.Typing.Metatheory.Base.st_typing_correctness_ctot e1_typing in
     let c2_typing : comp_typing g c2 (comp_u c2) =
       match c2 with
