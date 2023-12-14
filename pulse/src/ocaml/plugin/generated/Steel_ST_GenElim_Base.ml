@@ -3738,7 +3738,7 @@ let _ =
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_1
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
                "Steel.ST.GenElim.Base.init_resolve_tac (plugin)"
                (FStar_Tactics_Native.from_tactic_1 init_resolve_tac)
                FStar_Syntax_Embeddings.e_unit FStar_Syntax_Embeddings.e_unit

@@ -2022,7 +2022,7 @@ let _ =
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_8
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_8
                "Pulse.Main.check_pulse (plugin)"
                (FStar_Tactics_Native.from_tactic_8 check_pulse)
                (FStar_Syntax_Embeddings.e_list
