@@ -99,15 +99,15 @@ let (reflection_primops :
   FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
   let uu___ =
     mk1 "inspect_ln" FStar_Reflection_V2_Embeddings.e_term
-      (solve FStar_Reflection_V2_Embeddings.e_term_view)
+      FStar_Reflection_V2_Embeddings.e_term_view
       FStar_Reflection_V2_NBEEmbeddings.e_term
-      (solve FStar_Reflection_V2_NBEEmbeddings.e_term_view)
+      FStar_Reflection_V2_NBEEmbeddings.e_term_view
       FStar_Reflection_V2_Builtins.inspect_ln in
   let uu___1 =
     let uu___2 =
-      mk1 "pack_ln" (solve FStar_Reflection_V2_Embeddings.e_term_view)
+      mk1 "pack_ln" FStar_Reflection_V2_Embeddings.e_term_view
         FStar_Reflection_V2_Embeddings.e_term
-        (solve FStar_Reflection_V2_NBEEmbeddings.e_term_view)
+        FStar_Reflection_V2_NBEEmbeddings.e_term_view
         FStar_Reflection_V2_NBEEmbeddings.e_term
         FStar_Reflection_V2_Builtins.pack_ln in
     let uu___3 =
@@ -247,8 +247,7 @@ let (reflection_primops :
                                       let uu___37 =
                                         let uu___38 =
                                           mk1 "embed_vconfig"
-                                            (solve
-                                               FStar_Syntax_Embeddings.e_vconfig)
+                                            FStar_Syntax_Embeddings.e_vconfig
                                             FStar_Reflection_V2_Embeddings.e_term
                                             FStar_TypeChecker_NBETerm.e_vconfig
                                             FStar_Reflection_V2_NBEEmbeddings.e_attribute
@@ -256,8 +255,7 @@ let (reflection_primops :
                                         let uu___39 =
                                           let uu___40 =
                                             mk1 "sigelt_attrs"
-                                              (solve
-                                                 FStar_Reflection_V2_Embeddings.e_sigelt)
+                                              FStar_Reflection_V2_Embeddings.e_sigelt
                                               (FStar_Syntax_Embeddings.e_list
                                                  FStar_Reflection_V2_Embeddings.e_term)
                                               FStar_Reflection_V2_NBEEmbeddings.e_sigelt
@@ -297,9 +295,8 @@ let (reflection_primops :
                                                 let uu___47 =
                                                   let uu___48 =
                                                     mk2 "subst_term"
-                                                      (solve
-                                                         (FStar_Syntax_Embeddings.e_list
-                                                            FStar_Reflection_V2_Embeddings.e_subst_elt))
+                                                      (FStar_Syntax_Embeddings.e_list
+                                                         FStar_Reflection_V2_Embeddings.e_subst_elt)
                                                       FStar_Reflection_V2_Embeddings.e_term
                                                       FStar_Reflection_V2_Embeddings.e_term
                                                       FStar_Reflection_V2_NBEEmbeddings.e_subst
@@ -322,12 +319,10 @@ let (reflection_primops :
                                                         mk2 "compare_bv"
                                                           FStar_Reflection_V2_Embeddings.e_bv
                                                           FStar_Reflection_V2_Embeddings.e_bv
-                                                          (solve
-                                                             FStar_Syntax_Embeddings.e_order)
+                                                          FStar_Syntax_Embeddings.e_order
                                                           FStar_Reflection_V2_NBEEmbeddings.e_bv
                                                           FStar_Reflection_V2_NBEEmbeddings.e_bv
-                                                          (solve
-                                                             FStar_TypeChecker_NBETerm.e_order)
+                                                          FStar_TypeChecker_NBETerm.e_order
                                                           FStar_Reflection_V2_Builtins.compare_bv in
                                                       let uu___53 =
                                                         let uu___54 =
@@ -335,12 +330,10 @@ let (reflection_primops :
                                                             "compare_namedv"
                                                             FStar_Reflection_V2_Embeddings.e_namedv
                                                             FStar_Reflection_V2_Embeddings.e_namedv
-                                                            (solve
-                                                               FStar_Syntax_Embeddings.e_order)
+                                                            FStar_Syntax_Embeddings.e_order
                                                             FStar_Reflection_V2_NBEEmbeddings.e_namedv
                                                             FStar_Reflection_V2_NBEEmbeddings.e_namedv
-                                                            (solve
-                                                               FStar_TypeChecker_NBETerm.e_order)
+                                                            FStar_TypeChecker_NBETerm.e_order
                                                             FStar_Reflection_V2_Builtins.compare_namedv in
                                                         let uu___55 =
                                                           let uu___56 =
@@ -481,16 +474,12 @@ let (reflection_primops :
                                                                     =
                                                                     mk2
                                                                     "push_namedv"
-                                                                    (solve
-                                                                    FStar_Reflection_V2_Embeddings.e_env)
+                                                                    FStar_Reflection_V2_Embeddings.e_env
                                                                     FStar_Reflection_V2_Embeddings.e_namedv
-                                                                    (solve
-                                                                    FStar_Reflection_V2_Embeddings.e_env)
-                                                                    (solve
-                                                                    FStar_Reflection_V2_NBEEmbeddings.e_env)
+                                                                    FStar_Reflection_V2_Embeddings.e_env
+                                                                    FStar_Reflection_V2_NBEEmbeddings.e_env
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_namedv
-                                                                    (solve
-                                                                    FStar_Reflection_V2_NBEEmbeddings.e_env)
+                                                                    FStar_Reflection_V2_NBEEmbeddings.e_env
                                                                     FStar_Reflection_V2_Builtins.push_namedv in
                                                                     let uu___79
                                                                     =
