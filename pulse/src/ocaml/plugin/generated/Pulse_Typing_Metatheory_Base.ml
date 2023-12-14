@@ -22,6 +22,13 @@ let (admit_comp_typing :
       | Pulse_Syntax_Base.C_STGhost (inames, st) ->
           Pulse_Typing.CT_STGhost
             (g, inames, st, (), (admit_st_comp_typing g st))
+let (st_typing_correctness_ctot :
+  Pulse_Typing_Env.env ->
+    Pulse_Syntax_Base.st_term ->
+      Pulse_Syntax_Base.comp ->
+        (unit, unit, unit) Pulse_Typing.st_typing ->
+          (unit, unit) Prims.dtuple2)
+  = fun g -> fun t -> fun c -> fun uu___ -> Prims.Mkdtuple2 ((), ())
 let (st_typing_correctness :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_term ->

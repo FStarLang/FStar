@@ -21,6 +21,13 @@ let admit_comp_typing (g:env) (c:comp_st)
     | C_STGhost inames st ->
       CT_STGhost g inames st (admit()) (admit_st_comp_typing g st)      
 
+let st_typing_correctness_ctot (#g:env) (#t:st_term) (#c:comp{C_Tot? c}) 
+                               (_:st_typing g t c)
+: (u:Ghost.erased universe & universe_of g (comp_res c) u)
+= let u : Ghost.erased universe = magic () in
+  let ty : universe_of g (comp_res c) u = magic () in
+  (| u, ty |)    
+
 let st_typing_correctness (#g:env) (#t:st_term) (#c:comp_st) 
                           (_:st_typing g t c)
   : comp_typing_u g c

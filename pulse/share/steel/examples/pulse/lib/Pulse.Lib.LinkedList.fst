@@ -451,15 +451,33 @@ fn yields_elim (#t:Type)
 }
 ```
 
-assume
-val yields_elim' (#t:Type) 
-                 (v:node_ptr t)
-                 (n:node t)
-                 (tl:list t)
-                 ()
-   : stt_ghost unit emp_inames
-        (pts_to v n ** is_list n.tail tl)
-        (fun _ -> is_list (Some v) (n.head::tl))
+```pulse
+ghost
+fn elim_hyp_l (p q r:vprop)
+    requires ((p ** q) @==> r) ** p
+    ensures (q @==> r)
+{
+    yields_curry p q r;
+    unfold (p @==> q @==> r);
+    elim_stick _ _;
+    fold (q @==> r);
+}
+```
+
+```pulse
+ghost
+fn elim_hyp_r (p q r:vprop)
+    requires ((p ** q) @==> r) ** q
+    ensures (p @==> r)
+{
+    yields_comm_l p q r;
+    yields_curry q p r;
+    unfold (q @==> p @==> r);
+    elim_stick _ _;
+    fold (p @==> r);
+}
+```
+
 
 ```pulse
 ghost
@@ -468,14 +486,13 @@ fn intro_yields_cons (#t:Type)
                      (#n:node t)
                      (#tl:erased (list t))
     requires 
-        pts_to v n ** is_list n.tail tl
+        pts_to v n **
+        is_list n.tail tl //only there to enable inference of n and tl at call site
     ensures 
         is_list n.tail tl **
         (is_list n.tail tl @==> is_list (Some v) (n.head::tl))
 {
-    open Pulse.Lib.Stick;
-    intro_stick #emp_inames _ _ _ 
-                (yields_elim' #t v n tl);
+    intro_stick _ _ _ (fun _ -> yields_elim v n tl);
     with p q. fold (p @==> q)
 }
 ```

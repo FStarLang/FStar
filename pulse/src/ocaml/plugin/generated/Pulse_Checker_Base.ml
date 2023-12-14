@@ -1879,25 +1879,33 @@ let (continuation_elaborator_with_bind_fn :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Base.fst"
                                                                     (Prims.of_int (417))
-                                                                    (Prims.of_int (50))
+                                                                    (Prims.of_int (29))
                                                                     (Prims.of_int (417))
-                                                                    (Prims.of_int (58)))))
+                                                                    (Prims.of_int (94)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Base.fst"
-                                                                    (Prims.of_int (417))
-                                                                    (Prims.of_int (61))
+                                                                    (Prims.of_int (416))
+                                                                    (Prims.of_int (47))
                                                                     (Prims.of_int (437))
                                                                     (Prims.of_int (18)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___4 ->
-                                                                    ()))
+                                                                    Pulse_Typing_Metatheory_Base.st_typing_correctness_ctot
+                                                                    g e1 c1
+                                                                    e1_typing))
                                                                     (fun
                                                                     uu___4 ->
                                                                     (fun
-                                                                    c1_typing
+                                                                    uu___4 ->
+                                                                    match uu___4
+                                                                    with
+                                                                    | 
+                                                                    Prims.Mkdtuple2
+                                                                    (u1,
+                                                                    c1_typing)
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1926,7 +1934,7 @@ let (continuation_elaborator_with_bind_fn :
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___5 ->
                                                                     Pulse_Typing.CT_ST
                                                                     (g,
                                                                     (Pulse_Syntax_Base.st_comp_of_comp
@@ -1960,13 +1968,13 @@ let (continuation_elaborator_with_bind_fn :
                                                                     (Prims.of_int (38)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___5 ->
                                                                     st_comp_typing_with_post_hint
                                                                     g ctxt ()
                                                                     post_hint
                                                                     c2))
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___5 ->
                                                                     (fun stc
                                                                     ->
                                                                     Obj.magic
@@ -1997,13 +2005,13 @@ let (continuation_elaborator_with_bind_fn :
                                                                     ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___5 ->
                                                                     Pulse_Typing.CT_STAtomic
                                                                     (g, i,
                                                                     (Pulse_Syntax_Base.st_comp_of_comp
                                                                     c2), (),
                                                                     stc)))))
-                                                                    uu___4)))
+                                                                    uu___5)))
                                                                     | 
                                                                     Pulse_Syntax_Base.C_STGhost
                                                                     (i, st)
@@ -2029,13 +2037,13 @@ let (continuation_elaborator_with_bind_fn :
                                                                     (Prims.of_int (37)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___5 ->
                                                                     st_comp_typing_with_post_hint
                                                                     g ctxt ()
                                                                     post_hint
                                                                     c2))
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___5 ->
                                                                     (fun stc
                                                                     ->
                                                                     Obj.magic
@@ -2066,19 +2074,19 @@ let (continuation_elaborator_with_bind_fn :
                                                                     ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___5 ->
                                                                     Pulse_Typing.CT_STGhost
                                                                     (g, i,
                                                                     (Pulse_Syntax_Base.st_comp_of_comp
                                                                     c2), (),
                                                                     stc)))))
-                                                                    uu___4))))
+                                                                    uu___5))))
                                                                     (fun
                                                                     c2_typing
                                                                     ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___5 ->
                                                                     FStar_Pervasives.Mkdtuple3
                                                                     (e, c2,
                                                                     (Pulse_Typing.T_BindFn

@@ -414,7 +414,7 @@ let continuation_elaborator_with_bind_fn (#g:env) (#ctxt:term)
     assume (open_st_term (close_st_term e2 x) x == e2);
     let e = wr c2 (Tm_Bind {binder=b; head=e1; body=e2_closed}) in
     let u : Ghost.erased universe = magic () in
-    let c1_typing : tot_typing g t1 (tm_type u) = magic () in
+    let (| u, c1_typing |) = Pulse.Typing.Metatheory.Base.st_typing_correctness_ctot e1_typing in
     let c2_typing : comp_typing g c2 (comp_u c2) =
       match c2 with
       | C_ST st -> 
