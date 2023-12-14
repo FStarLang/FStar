@@ -191,29 +191,30 @@ let unembed_tactic_0 :
                                 (Obj.repr
                                    (let h_result = t_head_of result in
                                     let maybe_admit_tip =
-                                      let has_admit =
-                                        FStar_Compiler_Util.mk_ref false in
-                                      let uu___ =
-                                        FStar_Syntax_Visit.visit_term
-                                          (fun t ->
-                                             match t.FStar_Syntax_Syntax.n
-                                             with
-                                             | FStar_Syntax_Syntax.Tm_fvar fv
-                                                 when
-                                                 FStar_Syntax_Syntax.fv_eq_lid
-                                                   fv
-                                                   FStar_Parser_Const.admit_lid
-                                                 ->
-                                                 (FStar_Compiler_Effect.op_Colon_Equals
-                                                    has_admit true;
-                                                  FStar_Syntax_Syntax.tun)
-                                             | uu___1 ->
-                                                 FStar_Syntax_Syntax.tun)
-                                          h_result in
-                                      let uu___1 =
-                                        FStar_Compiler_Effect.op_Bang
-                                          has_admit in
-                                      if uu___1
+                                      let r =
+                                        Obj.magic
+                                          (FStar_Syntax_VisitM.visitM_term
+                                             FStar_Class_Monad.monad_option
+                                             (fun uu___ ->
+                                                (fun t ->
+                                                   match t.FStar_Syntax_Syntax.n
+                                                   with
+                                                   | FStar_Syntax_Syntax.Tm_fvar
+                                                       fv when
+                                                       FStar_Syntax_Syntax.fv_eq_lid
+                                                         fv
+                                                         FStar_Parser_Const.admit_lid
+                                                       ->
+                                                       Obj.magic
+                                                         FStar_Pervasives_Native.None
+                                                   | uu___ ->
+                                                       Obj.magic
+                                                         (FStar_Pervasives_Native.Some
+                                                            t)) uu___)
+                                             h_result) in
+                                      if
+                                        FStar_Pervasives_Native.uu___is_None
+                                          r
                                       then
                                         FStar_Pprint.doc_of_string
                                           "The term contains an `admit`, which will not reduce. Did you mean `tadmit()`?"
