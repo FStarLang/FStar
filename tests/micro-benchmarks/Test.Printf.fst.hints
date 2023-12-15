@@ -2,15 +2,6 @@
   "ÛŒCnÃì#ç¸éç\fÍ\u0019\u0012Y",
   [
     [
-      "Test.Printf.test_sprintf",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "4a64075df317a28aa303518173078be9"
-    ],
-    [
       "Test.Printf.something_to_string",
       1,
       2,
@@ -22,7 +13,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "6dad86c225ed98c68165465551402bb4"
+      "6a5f3a9140bb125e481d5b50a7e91100"
     ],
     [
       "Test.Printf.parse_something",
@@ -31,16 +22,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "subterm_ordering_Prims.Cons" ],
       0,
-      "6048eac183a4cff693a048b7da37faa0"
-    ],
-    [
-      "Test.Printf.test_ext",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "d4296af1ca835824a02e1dff5d0b1a20"
+      "774f770104f95d67fe53c750aaaf9b3a"
     ]
   ]
 ]

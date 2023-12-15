@@ -8,12 +8,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "data_elim_FStar.Tactics.Result.Success",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "data_elim_FStar.Stubs.Tactics.Result.Success",
+        "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
         "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "026976b6e102a28b53d6cc420826e712"
+      "240729957a36380a67113e96fd0b1d28"
     ],
     [
       "Bug1299.test",
@@ -22,13 +22,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "data_typing_intro_FStar.Tactics.Common.TacticFailure@tok",
-        "data_typing_intro_FStar.Tactics.Result.Failed@tok",
+        "data_typing_intro_FStar.Stubs.Tactics.Common.TacticFailure@tok",
+        "data_typing_intro_FStar.Stubs.Tactics.Result.Failed@tok",
         "equation_FStar.Pervasives.pattern",
         "function_token_typing_FStar.Pervasives.pattern", "string_typing"
       ],
       0,
-      "bc822c333320652368a92999fc16a7ab"
+      "8240ffeccb72007e98551057a1b802fc"
     ]
   ]
 ]

@@ -14,7 +14,7 @@
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0,
-      "b130a6b3d898623569b47bc6f790acf4"
+      "b8f6c246267339fc8d75fd85c060afda"
     ],
     [
       "RPC.recv",
@@ -30,7 +30,7 @@
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0,
-      "344fe36545030109715525387e787e0e"
+      "98d5876aea0468238f5cb65e65165038"
     ],
     [
       "RPC.reqresp",
@@ -42,7 +42,7 @@
         "equation_Formatting.message"
       ],
       0,
-      "2eb22d754c8348ee1fe3240cb6628b6f"
+      "2bf6afd8d395011ca5a6b52cb7ddaaf9"
     ],
     [
       "RPC.k",
@@ -50,15 +50,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_MAC.pkey",
-        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
-        "equation_SHA1.key", "equation_SHA1.keysize",
-        "fuel_guarded_inversion_FStar.Pervasives.result",
-        "refinement_interpretation_MAC_Tm_refine_1cf95beb4e0ccb163dfdf90ffb00eff2",
-        "refinement_interpretation_Platform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Pervasives.result"
       ],
       0,
-      "ee1a476dba2d54d3fcc906bae65af96a"
+      "3365c45d93ee4c796335d4fb31097bc0"
     ],
     [
       "RPC.client_send",
@@ -66,19 +62,17 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "equation_Formatting.request", "equation_Formatting.string16",
-        "equation_RPC.reqresp",
+        "@MaxIFuel_assumption", "@query", "equation_Formatting.request",
+        "equation_Formatting.string16", "equation_RPC.reqresp",
         "fuel_guarded_inversion_FStar.Pervasives.result",
         "function_token_typing_RPC.reqresp",
         "refinement_interpretation_Tm_refine_51ee4cf0b5fc41ca89f8061de05f28f9",
         "refinement_interpretation_Tm_refine_64c1f3e625d0826505a6e122a1e6f34c",
         "string_inversion", "token_correspondence_MAC.key_prop",
-        "typing_RPC.k", "unit_typing"
+        "typing_RPC.k"
       ],
       0,
-      "b13eae70f195a8221d2ddc4193f4636c"
+      "2700387a43216902ff418de80a48a83f"
     ],
     [
       "RPC.client_recv",
@@ -115,7 +109,7 @@
         "typing_Formatting.response", "typing_RPC.k"
       ],
       0,
-      "f95dced9bd53f61d660a72b288bc3ba4"
+      "1894e40cd59d69ba7e6500dca62f76f1"
     ],
     [
       "RPC.server",
@@ -125,14 +119,13 @@
       [
         "@MaxIFuel_assumption", "@query", "assumption_Formatting.UTF8_inj",
         "assumption_Platform.Bytes.HasEq_bytes", "bool_inversion",
-        "equation_FStar.Pervasives.Native.fst", "equation_Formatting.length",
-        "equation_Formatting.message", "equation_Formatting.request",
-        "equation_Formatting.string16", "equation_Formatting.tag0",
-        "equation_Formatting.uInt16", "equation_Platform.Bytes.byte",
-        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
-        "equation_Platform.Bytes.length", "equation_Prims.eqtype",
-        "equation_Prims.nat", "equation_RPC.reqresp",
-        "equation_SHA1.macsize",
+        "equation_Formatting.length", "equation_Formatting.message",
+        "equation_Formatting.request", "equation_Formatting.string16",
+        "equation_Formatting.tag0", "equation_Formatting.uInt16",
+        "equation_Platform.Bytes.byte", "equation_Platform.Bytes.bytes",
+        "equation_Platform.Bytes.lbytes", "equation_Platform.Bytes.length",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "equation_RPC.reqresp", "equation_SHA1.macsize",
         "fuel_guarded_inversion_FStar.Pervasives.result",
         "function_token_typing_MAC.key_prop",
         "function_token_typing_Platform.Bytes.byte",
@@ -143,27 +136,24 @@
         "lemma_Formatting.req_resp_distinct",
         "primitive_Prims.op_GreaterThan", "primitive_Prims.op_LessThan",
         "primitive_Prims.op_Subtraction",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "refinement_interpretation_Tm_refine_0211373a5344a025a9e2c0ab62cefe15",
         "refinement_interpretation_Tm_refine_1c0effbdef48f9b00a1efb7b571fbb69",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_51ee4cf0b5fc41ca89f8061de05f28f9",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_60dec82ab41f03ba1c1a91d4aee1d1ea",
         "refinement_interpretation_Tm_refine_64c1f3e625d0826505a6e122a1e6f34c",
-        "refinement_interpretation_Tm_refine_667a832d49afa5939e79462b1abb7118",
         "refinement_interpretation_Tm_refine_b3982a6d174e1d047431ae85c35dc7d8",
         "refinement_interpretation_Tm_refine_cd09ddcf1e74b0ee438bf6649f57e1a7",
         "string_typing", "token_correspondence_RPC.reqresp",
         "typing_FStar.Seq.Base.eq", "typing_FStar.UInt8.t",
-        "typing_Formatting.request", "typing_Formatting.tag0",
-        "typing_Platform.Bytes.utf8", "typing_RPC.k"
+        "typing_Formatting.length", "typing_Formatting.request",
+        "typing_Formatting.tag0", "typing_Platform.Bytes.utf8",
+        "typing_RPC.k"
       ],
       0,
-      "3df33a9b635617f7c6cc9c0d9893df1b"
+      "947eea40f10826f0daebea72e529d7a2"
     ],
     [
       "RPC.test",
@@ -172,7 +162,6 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "disc_equation_FStar.Pervasives.Err", "equation_Formatting.length",
         "equation_Formatting.uInt16", "equation_Prims.nat",
         "fuel_guarded_inversion_FStar.Pervasives.result",
@@ -181,10 +170,10 @@
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "string_typing", "typing_Formatting.length",
-        "typing_Platform.Bytes.utf8", "unit_typing"
+        "typing_Platform.Bytes.utf8"
       ],
       0,
-      "43d4f2a56322e3909a1c782941293c27"
+      "9c4387bc419421ba9920f85e10bb3e5f"
     ]
   ]
 ]

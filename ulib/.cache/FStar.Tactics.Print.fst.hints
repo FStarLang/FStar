@@ -1,5 +1,5 @@
 [
-  "ÙhC}\u0006%ï ë.ÖUÐ}ï\r",
+  "`M\u0016·Ä\u001bS6µß^.É\u001e\u0004¯",
   [
     [
       "FStar.Tactics.Print.print_list_aux",
@@ -11,7 +11,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "899452333673f97d73b3467f37d3052d"
+      "bed1c9cc0d637951cfbe6e4796e0993f"
     ],
     [
       "FStar.Tactics.Print.universe_to_ast_string",
@@ -32,7 +32,7 @@
         "typing_FStar.Tactics.NamedView.inspect_universe"
       ],
       0,
-      "740688fd978a6d1c25f7feb53b63ee23"
+      "1da840ea170b37a62aed47aa8f0f140f"
     ],
     [
       "FStar.Tactics.Print.term_to_ast_string",
@@ -41,7 +41,7 @@
       2,
       [
         "@MaxIFuel_assumption", "@query",
-        "data_elim_FStar.Tactics.Result.Success",
+        "data_elim_FStar.Stubs.Tactics.Result.Success",
         "disc_equation_FStar.Tactics.NamedView.Tv_Abs",
         "disc_equation_FStar.Tactics.NamedView.Tv_App",
         "disc_equation_FStar.Tactics.NamedView.Tv_Arrow",
@@ -59,12 +59,12 @@
         "disc_equation_FStar.Tactics.NamedView.Tv_Unsupp",
         "disc_equation_FStar.Tactics.NamedView.Tv_Uvar",
         "disc_equation_FStar.Tactics.NamedView.Tv_Var",
+        "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
         "fuel_guarded_inversion_FStar.Tactics.NamedView.named_term_view",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "cf45c8ea488440dd74f5ccc35fd5bb7f"
+      "d991fd3e0afabde2622c5d6fffd3135a"
     ],
     [
       "FStar.Tactics.Print.term_to_ast_string",
@@ -74,41 +74,34 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "constructor_distinct_FStar.Tactics.Result.Success",
-        "data_elim_FStar.Pervasives.Native.Some",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "constructor_distinct_FStar.Stubs.Tactics.Result.Success",
         "disc_equation_FStar.Pervasives.Inl",
         "disc_equation_FStar.Pervasives.Inr",
-        "disc_equation_FStar.Pervasives.Native.Some",
         "equation_FStar.Tactics.NamedView.comp",
         "equation_FStar.Tactics.NamedView.match_returns_ascription",
         "equation_FStar.Tactics.NamedView.term", "equation_Prims.eqtype",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple3",
         "fuel_guarded_inversion_FStar.Pervasives.either",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
-        "function_token_typing_FStar.Reflection.Types.term",
+        "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
+        "function_token_typing_FStar.Stubs.Reflection.Types.term",
         "function_token_typing_FStar.Tactics.NamedView.match_returns_ascription",
         "function_token_typing_Prims.bool",
         "kinding_FStar.Pervasives.Native.option@tok",
-        "kinding_FStar.Pervasives.Native.tuple3@tok",
         "kinding_FStar.Pervasives.either@tok",
-        "kinding_FStar.Reflection.V2.Data.comp_view@tok",
-        "kinding_FStar.Tactics.NamedView.binder@tok",
+        "kinding_FStar.Stubs.Reflection.V2.Data.comp_view@tok",
         "lemma_FStar.Pervasives.invertOption",
         "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
-        "proj_equation_FStar.Pervasives.Native.Some_v",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Tactics.Result.Success_a",
-        "projection_inverse_FStar.Tactics.Result.Success_ps",
-        "projection_inverse_FStar.Tactics.Result.Success_v",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_v",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "string_typing",
-        "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___2",
-        "typing_FStar.Pervasives.Native.__proj__Mktuple3__item___1",
-        "typing_FStar.Pervasives.Native.uu___is_Some"
+        "typing_FStar.Pervasives.Native.__proj__Mktuple3__item___1"
       ],
       0,
-      "793626ed8008f6512df4b46612762443"
+      "f68ac7abefc5464413b9a7e80da6e050"
     ],
     [
       "FStar.Tactics.Print.term_to_ast_string",
@@ -117,17 +110,17 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Reflection.V2.Data.C_Eff",
-        "disc_equation_FStar.Reflection.V2.Data.C_GTotal",
-        "disc_equation_FStar.Reflection.V2.Data.C_Lemma",
-        "disc_equation_FStar.Reflection.V2.Data.C_Total",
+        "disc_equation_FStar.Stubs.Reflection.V2.Data.C_Eff",
+        "disc_equation_FStar.Stubs.Reflection.V2.Data.C_GTotal",
+        "disc_equation_FStar.Stubs.Reflection.V2.Data.C_Lemma",
+        "disc_equation_FStar.Stubs.Reflection.V2.Data.C_Total",
         "equation_FStar.Tactics.NamedView.comp",
         "equation_FStar.Tactics.NamedView.inspect_comp",
-        "fuel_guarded_inversion_FStar.Reflection.V2.Data.comp_view",
+        "fuel_guarded_inversion_FStar.Stubs.Reflection.V2.Data.comp_view",
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "13c6d6174511167da164141c1aa4a3ef"
+      "c682e5e7eab27faf8a792e7e33227cc6"
     ],
     [
       "FStar.Tactics.Print.term_to_ast_string",
@@ -136,19 +129,19 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Reflection.V2.Data.C_False",
-        "disc_equation_FStar.Reflection.V2.Data.C_Int",
-        "disc_equation_FStar.Reflection.V2.Data.C_Range",
-        "disc_equation_FStar.Reflection.V2.Data.C_Reflect",
-        "disc_equation_FStar.Reflection.V2.Data.C_Reify",
-        "disc_equation_FStar.Reflection.V2.Data.C_String",
-        "disc_equation_FStar.Reflection.V2.Data.C_True",
-        "disc_equation_FStar.Reflection.V2.Data.C_Unit",
-        "fuel_guarded_inversion_FStar.Reflection.V2.Data.vconst",
+        "disc_equation_FStar.Stubs.Reflection.V2.Data.C_False",
+        "disc_equation_FStar.Stubs.Reflection.V2.Data.C_Int",
+        "disc_equation_FStar.Stubs.Reflection.V2.Data.C_Range",
+        "disc_equation_FStar.Stubs.Reflection.V2.Data.C_Reflect",
+        "disc_equation_FStar.Stubs.Reflection.V2.Data.C_Reify",
+        "disc_equation_FStar.Stubs.Reflection.V2.Data.C_String",
+        "disc_equation_FStar.Stubs.Reflection.V2.Data.C_True",
+        "disc_equation_FStar.Stubs.Reflection.V2.Data.C_Unit",
+        "fuel_guarded_inversion_FStar.Stubs.Reflection.V2.Data.vconst",
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "e21c1ab01b888e9ec291718e957d27a2"
+      "d8a1fea565e46bfbd7ca358a0405bb4c"
     ]
   ]
 ]

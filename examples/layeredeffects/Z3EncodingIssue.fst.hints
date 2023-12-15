@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "ea0e0bfa7d36268ecd7393d18beb0ed7"
+      "5f8e3a5c1152de21d9ff4aed9a199e2c"
     ],
     [
       "Z3EncodingIssue.subcomp",
@@ -18,7 +18,7 @@
       [
         "@query", "equation_FStar.Integers.uint_8",
         "equation_LowStar.Buffer.buffer", "equation_Z3EncodingIssue.post_t",
-        "equation_Z3EncodingIssue.repr", "equation_Z3EncodingIssue.u8",
+        "equation_Z3EncodingIssue.u8",
         "function_token_typing_FStar.Integers.uint_8",
         "typing_LowStar.Buffer.trivial_preorder",
         "typing_LowStar.Monotonic.Buffer.as_seq",
@@ -26,11 +26,20 @@
         "typing_Z3EncodingIssue.buf"
       ],
       0,
-      "6fee11a1050f01a5843eb1f3c2a6d9d6"
+      "de6d4a1b302a59b68e1d1c54a4e90efd"
     ],
     [
       "Z3EncodingIssue.CHACHA",
       1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ab528e8e9b398c8d88661df1a526fc56"
+    ],
+    [
+      "Z3EncodingIssue.CHACHA",
+      2,
       2,
       1,
       [
@@ -38,19 +47,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "b2ef104b3f3e8e159821e9a3dffb8632"
-    ],
-    [
-      "Z3EncodingIssue.CHACHA",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "cb93eb687b70a3187ed49600c1353a76"
+      "1ccd19cfec083d345b63ad51f81887ab"
     ],
     [
       "Z3EncodingIssue.CHACHA",
@@ -62,7 +59,7 @@
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "fe1ce47af4ce83ecd7f454869bd46750"
+      "57d5919ecd6e3808b73d8bb98a62a205"
     ],
     [
       "Z3EncodingIssue.lift_div_chacha",
@@ -83,7 +80,7 @@
         "typing_Tm_abs_e8e7dd3fad251651880a411e491cc508"
       ],
       0,
-      "2cf63e2bb686ee7a8d3c9f360e5e2432"
+      "a80f817584d9fba5da949527fb84b46f"
     ],
     [
       "Z3EncodingIssue.chacha_fn_ok",
@@ -92,7 +89,7 @@
       1,
       [ "@query" ],
       0,
-      "65af2ff0f2cf75ab141636377a002144"
+      "f7f27752b4cd0ebba4c3fe839e50cb0d"
     ],
     [
       "Z3EncodingIssue.hreturn",
@@ -101,7 +98,7 @@
       1,
       [ "@query" ],
       0,
-      "34faf418f121f3282df9c6d45f50cb1d"
+      "89ec281e10ec40439f9bac448a8225d9"
     ],
     [
       "Z3EncodingIssue.hsubcomp",
@@ -113,7 +110,6 @@
         "equation_FStar.Heap.trivial_preorder",
         "equation_FStar.Integers.int", "equation_FStar.ST.mref",
         "equation_FStar.ST.ref", "equation_Z3EncodingIssue.hpost_t",
-        "equation_Z3EncodingIssue.hrepr",
         "function_token_typing_FStar.Integers.int",
         "refinement_interpretation_Tm_refine_e33ef751d600ad1c7f71142479103c47",
         "typing_FStar.Heap.trivial_preorder",
@@ -122,11 +118,20 @@
         "typing_Z3EncodingIssue.state"
       ],
       0,
-      "54a7150f0ae548191a8a8d0e31edc148"
+      "b901b2911210fe97f58c377ae12675ad"
     ],
     [
       "Z3EncodingIssue.REF",
       1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a4415e2413e41c02ea59cfd2145f4d80"
+    ],
+    [
+      "Z3EncodingIssue.REF",
+      2,
       2,
       1,
       [
@@ -134,19 +139,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "15f03386cb97002a9cba7031beacfa7e"
-    ],
-    [
-      "Z3EncodingIssue.REF",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "68a41d438817a6b271aa47ca8a83a09d"
+      "a6ee4c29607405cbe341deeeef70b75f"
     ],
     [
       "Z3EncodingIssue.REF",
@@ -158,7 +151,7 @@
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "b55bfcc0cfebf5a8bbc20eda5e5d08ad"
+      "ffa1fa227ea84b59957ec97f730f0c5a"
     ],
     [
       "Z3EncodingIssue.lift_div_ref",
@@ -179,7 +172,7 @@
         "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
       ],
       0,
-      "9090f57a87e52a4c07c1902b797c6f21"
+      "a3ee2e1adad437123a597f679683bacf"
     ],
     [
       "Z3EncodingIssue.ref_hfn",
@@ -197,7 +190,7 @@
         "unit_typing"
       ],
       0,
-      "86e6f3f8d4a625694dab9121576928ce"
+      "d9cb421e9cc513241489687f482ff1c5"
     ]
   ]
 ]

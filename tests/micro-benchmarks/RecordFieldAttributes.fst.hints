@@ -13,7 +13,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ee01f64638e6b2c178487fddf41ee5f8"
+      "22f3f313e7a234e33e95be961be10000"
     ],
     [
       "RecordFieldAttributes.unpack_field",
@@ -27,7 +27,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "1678745df7d2e9900c6218914abfad04"
+      "535107c7a4676dbb861f99073dddfd34"
     ],
     [
       "RecordFieldAttributes.get_record_fields",
@@ -38,28 +38,27 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "data_elim_FStar.Tactics.Result.Success",
+        "constructor_distinct_BoxInt",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "constructor_distinct_Tm_unit",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "disc_equation_FStar.Tactics.NamedView.Sg_Inductive",
-        "disc_equation_Prims.Cons", "equation_FStar.Reflection.Types.name",
-        "equation_FStar.Reflection.V2.Data.ctor",
+        "disc_equation_Prims.Cons",
+        "equation_FStar.Stubs.Reflection.Types.name",
+        "equation_FStar.Stubs.Reflection.V2.Data.ctor",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
-        "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_FStar.Reflection.Types.sigelt",
-        "function_token_typing_FStar.Reflection.V2.Data.ctor",
+        "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
+        "function_token_typing_FStar.Stubs.Reflection.Types.sigelt",
+        "function_token_typing_FStar.Stubs.Reflection.V2.Data.ctor",
         "function_token_typing_Prims.__cache_version_number__",
         "lemma_FStar.Pervasives.invertOption", "primitive_Prims.op_Equality",
-        "proj_equation_FStar.Tactics.NamedView.Mknamed_sigelt_view__Sg_Inductive__payload_ctors",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_452c9c8e2825a8035099cf4978a670c1",
-        "typing_FStar.Reflection.V2.Builtins.lookup_typ",
-        "typing_FStar.Tactics.NamedView.__proj__Mknamed_sigelt_view__Sg_Inductive__payload__item__ctors",
-        "typing_FStar.Tactics.NamedView.__proj__Sg_Inductive__item___0"
+        "projection_inverse_FStar.Pervasives.Native.Some_a",
+        "projection_inverse_FStar.Pervasives.Native.Some_v",
+        "typing_FStar.Stubs.Reflection.V2.Builtins.lookup_typ"
       ],
       0,
-      "76798f290a72f9ae09d0b37ba44b4474"
+      "839ef08bb605c0edc8d105fa21d2da70"
     ]
   ]
 ]

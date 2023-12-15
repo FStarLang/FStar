@@ -1,0 +1,53 @@
+[
+  "Ÿ\n´jìæ\u0017\u0019<vm·\u0018Ù\u0000‘",
+  [
+    [
+      "FStar.Stubs.Tactics.Result.__proj__Success__item__v",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_b4c1e6949a3a57698645ab5be039dc6f"
+      ],
+      0,
+      "6013a8f06e3407db49b26ab5edc52796"
+    ],
+    [
+      "FStar.Stubs.Tactics.Result.__proj__Success__item__ps",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_b4c1e6949a3a57698645ab5be039dc6f"
+      ],
+      0,
+      "e2885662a8106e591463a6a54106f406"
+    ],
+    [
+      "FStar.Stubs.Tactics.Result.__proj__Failed__item__exn",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_3e8cae0c9d54f7b2657be55ddd0643d7"
+      ],
+      0,
+      "45dfcbb9fb9fe9014e939a1ce59ed595"
+    ],
+    [
+      "FStar.Stubs.Tactics.Result.__proj__Failed__item__ps",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_3e8cae0c9d54f7b2657be55ddd0643d7"
+      ],
+      0,
+      "c97f01d6d34f2cac6357acc42ea6ccaa"
+    ]
+  ]
+]

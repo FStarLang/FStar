@@ -1,0 +1,45 @@
+[
+  "$\u001f*‹Œ§—±\u0002\u0016\u000f≥?£Ì¡",
+  [
+    [
+      "FStar.InteractiveHelpers.ParseTest.x1",
+      1,
+      0,
+      0,
+      [
+        "@query", "constructor_distinct_FStar.Pervasives.Native.Some",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Some_a",
+        "projection_inverse_FStar.Pervasives.Native.Some_v"
+      ],
+      0,
+      "27177cf8ed71d24e492285bf641bc38f"
+    ],
+    [
+      "FStar.InteractiveHelpers.ParseTest.simpl_ex1",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_GreaterThan", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "2a5f5d10a818a127507061c36de430c3"
+    ],
+    [
+      "FStar.InteractiveHelpers.ParseTest.test2",
+      1,
+      0,
+      0,
+      [ "@MaxIFuel_assumption", "@query", "bool_inversion" ],
+      0,
+      "3392e8e19925f2e79e0a56744358c6c7"
+    ]
+  ]
+]

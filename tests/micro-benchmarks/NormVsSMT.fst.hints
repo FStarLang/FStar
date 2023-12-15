@@ -6,39 +6,9 @@
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "e31539b15cc38a6383a0b568f1ea1d3e"
-    ],
-    [
-      "NormVsSMT.uu___5",
-      1,
-      2,
-      1,
       [ "@query" ],
       0,
-      "38f8e10341ebd7c68eb0a8ec3a3c11fa"
-    ],
-    [
-      "NormVsSMT.uu___6",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "e3459af6bc630aff7c19b4926a455aaa"
-    ],
-    [
-      "NormVsSMT.uu___7",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "cd16348fbdb90d393a450cbcfc916604"
+      "3616affcdaf63f5724f7edd81d67f4d0"
     ],
     [
       "NormVsSMT.uu___11",
@@ -50,7 +20,7 @@
         "refinement_interpretation_Tm_refine_1780a0fddfda88c43d203b562c6d3f5b"
       ],
       0,
-      "0d15856e6f60e56c8108e6b660040557"
+      "02262c89ebf6165d898f0b28075cb0ee"
     ],
     [
       "NormVsSMT.uu___14",
@@ -59,7 +29,7 @@
       1,
       [ "@query", "equation_NormVsSMT.trigger", "int_typing" ],
       0,
-      "f642788d49e14925165350f069c5dfb9"
+      "ebcdbf8ecf799c6a3c916a6eb5ecfdd4"
     ]
   ]
 ]
