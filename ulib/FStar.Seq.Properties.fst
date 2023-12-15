@@ -567,6 +567,7 @@ let intro_of_list' = intro_of_list''
 
 let intro_of_list #_ s l = intro_of_list' 0 s l
 
+#push-options "--z3rlimit 20"
 let rec elim_of_list'': #a:Type ->
   i:nat ->
   s:seq a ->
@@ -586,6 +587,7 @@ let rec elim_of_list'': #a:Type ->
   | hd :: tl ->
       lemma_seq_of_list_induction l;
       elim_of_list'' (i + 1) s tl
+#pop-options
 
 let elim_of_list' = elim_of_list''
 
