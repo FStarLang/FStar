@@ -2,7 +2,7 @@ module Pulse.Typing.Metatheory.Base
 open Pulse.Syntax
 open Pulse.Syntax.Naming
 open Pulse.Typing
-
+module RU = Pulse.RuntimeUtils
 module T = FStar.Tactics.V2
 module RT = FStar.Reflection.Typing
 
@@ -24,8 +24,8 @@ let admit_comp_typing (g:env) (c:comp_st)
 let st_typing_correctness_ctot (#g:env) (#t:st_term) (#c:comp{C_Tot? c}) 
                                (_:st_typing g t c)
 : (u:Ghost.erased universe & universe_of g (comp_res c) u)
-= let u : Ghost.erased universe = magic () in
-  let ty : universe_of g (comp_res c) u = magic () in
+= let u : Ghost.erased universe = RU.magic_s "st_typing_correctness_ctot.u" in
+  let ty : universe_of g (comp_res c) u = RU.magic_s "st_typing_correctness_ctot.universe_of" in
   (| u, ty |)    
 
 let st_typing_correctness (#g:env) (#t:st_term) (#c:comp_st) 

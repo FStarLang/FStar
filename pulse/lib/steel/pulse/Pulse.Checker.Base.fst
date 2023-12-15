@@ -85,7 +85,7 @@ let extend_post_hint g p x tx conjunct conjunct_typing =
   in
   let p_post_typing_src''
     : tot_typing g'' (open_term p.post y) tm_vprop
-    = magic() //weaken, rename
+    = RU.magic_s "p_post_typing_src''" //weaken, rename
   in
   let conjunct_typing'
     : tot_typing g' conjunct tm_vprop
@@ -93,7 +93,7 @@ let extend_post_hint g p x tx conjunct conjunct_typing =
   in
   let conjunct_typing''
     : tot_typing g'' (open_term conjunct y) tm_vprop
-    = magic () //weaken
+    = RU.magic_s "conjunct_typing''" //weaken
   in
   let new_post = tm_star p.post conjunct in
   let new_post_typing
@@ -445,7 +445,7 @@ let st_comp_typing_with_post_hint
     : tot_typing (push_binding g x ppname_default ph.ret_ty)
                  (open_term ph.post x) tm_vprop
     = //weakening: TODO
-      magic ()
+      RU.magic_s "post_typing_src"
   in
   let ty_typing : universe_of ph.g st.res st.u = ph.ty_typing in
   let ty_typing : universe_of g st.res st.u =
@@ -639,10 +639,10 @@ let checker_result_for_st_typing (#g:env) (#ctxt:vprop) (#post_hint:post_hint_op
     : continuation_elaborator
         g (tm_star tm_emp (comp_pre c))
         g' (tm_star ctxt' tm_emp) =
-    continuation_elaborator_with_bind tm_emp d (magic ()) (ppname, x) in
+    continuation_elaborator_with_bind tm_emp d (RU.magic_s "checker_result_for_st_typing.1") (ppname, x) in
   let k
     : continuation_elaborator g (comp_pre c) g' ctxt' =
-    k_elab_equiv k (magic ()) (magic ()) in
+    k_elab_equiv k (RU.magic_s "checker_result_for_st_typing.2") (RU.magic_s "checker_result_for_st_typing.3") in
 
   let _ : squash (checker_res_matches_post_hint g post_hint x (comp_res c) ctxt') =
     match post_hint with
@@ -658,7 +658,7 @@ let checker_result_for_st_typing (#g:env) (#ctxt:vprop) (#post_hint:post_hint_op
   // weaken comp_res_typing
 
   assume (~ (x `Set.mem` freevars (comp_post c)));
-  (| x, g', (| comp_u c, comp_res c, magic () |), (| ctxt', f x |), k |)
+  (| x, g', (| comp_u c, comp_res c, RU.magic_s (RU.magic_s "checker_result_for_st_typing.4") |), (| ctxt', f x |), k |)
 #pop-options
 
 module R = FStar.Reflection.V2

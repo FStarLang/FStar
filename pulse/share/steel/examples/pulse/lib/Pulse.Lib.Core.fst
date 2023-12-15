@@ -6,7 +6,8 @@ open Steel.ST.Effect.Ghost
 open Steel.Memory
 open Steel.ST.Util
 open Steel.ST.Loops
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
+module F = FStar.FunctionalExtensionality
 
 let double_one_half () = ()
 
@@ -29,6 +30,8 @@ let star_def ()
 let pure = pure
 [@@"__reduce__"; "__steel_reduce__"]
 let op_exists_Star = exists_
+[@@"__reduce__"; "__steel_reduce__"]
+let op_forall_Star #a (p:a -> vprop) = forall_ (F.on_dom a p)
 
 let vprop_equiv (p q:vprop) = squash (equiv p q)
 let vprop_post_equiv (#t:Type u#a) (p q: t -> vprop) = forall x. vprop_equiv (p x) (q x)
@@ -85,6 +88,29 @@ let vprop_equiv_cong (p1 p2 p3 p4:vprop)
   = star_congruence p1 p2 p3 p4
 
 let vprop_equiv_ext p1 p2 _ = equiv_refl p1
+
+let vprop_equiv_forall #a (p q:a -> vprop)
+                      (_:squash (F.feq p q))
+: vprop_equiv (op_forall_Star p) (op_forall_Star q)
+= let pf : squash (eq2 #(F.arrow a (fun _ -> vprop)) (F.on_dom a p) (F.on_dom a q)) = F.extensionality _ _ p q in
+  let x : vprop_equiv (op_forall_Star p) (op_forall_Star q) = _ by (
+      T.norm [delta_only [`%op_forall_Star; `%F.on_dom]; unascribe];
+      let bindings = T.cur_vars() in
+      let bindings = List.Tot.rev bindings in
+      match bindings with
+      | hd::_ -> (
+        match T.term_as_formula hd.sort with
+        | T.Comp (T.Eq _) lhs rhs ->
+          T.grewrite lhs rhs;
+          T.mapply (`vprop_equiv_refl);
+          T.exact (T.binding_to_term hd)
+        | _ -> T.fail "Unexpected type of hd"
+      )
+      | _ ->
+        T.fail "empty bindings"
+    ) in
+  x
+
 
 (* Invariants, just reexport *)
 let iname = iname
@@ -385,9 +411,11 @@ let intro_exists #a p e = fun _ -> intro_exists e p
 
 let intro_exists_erased #a p e = intro_exists p (reveal e)
 
+let elim_forall #a = admit()
+let intro_forall #a = admit()
+
 let while_loop inv cond body = fun _ -> while_loop inv cond body
 
-#push-options "--print_full_names"
 val stt_ghost_reveal_aux (a:Type) (x:erased a)
   : stt_ghost a emp_inames Steel.ST.Util.emp (fun y -> Steel.ST.Util.pure (reveal x == y))
 let stt_ghost_reveal_aux a x = fun _ ->

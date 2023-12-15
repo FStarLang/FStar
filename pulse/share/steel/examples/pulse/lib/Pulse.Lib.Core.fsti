@@ -44,7 +44,7 @@ val emp : vprop
 val ( ** ) (p q:vprop) : vprop
 val pure (p:prop) : vprop
 val ( exists* ) (#a:Type) (p:a -> vprop) : vprop
-
+val ( forall* ) (#a:Type) (p:a -> vprop) : vprop
 val vprop_equiv (p q:vprop) : prop
 val vprop_post_equiv (#t:Type u#a) (p q: t -> vprop) : prop
 
@@ -83,6 +83,9 @@ val vprop_equiv_cong (p1 p2 p3 p4:vprop)
 
 val vprop_equiv_ext (p1 p2:vprop) (_:p1 == p2)
   : vprop_equiv p1 p2
+
+val vprop_equiv_forall (#a:Type) (p q: a -> vprop) (_:squash (forall x. p x == q x))
+  : vprop_equiv (op_forall_Star p) (op_forall_Star q)
 
 (***** end vprop_equiv *****)
 
@@ -397,6 +400,18 @@ val intro_exists (#a:Type) (p:a -> vprop) (e:a)
 
 val intro_exists_erased (#a:Type) (p:a -> vprop) (e:erased a)
   : stt_ghost unit emp_inames (p (reveal e)) (fun _ -> op_exists_Star p)
+
+val elim_forall (#a:Type) (#p:a->vprop) (x:a)
+: stt_ghost unit emp_inames
+    (forall* x. p x)
+    (fun _ -> p x)
+
+val intro_forall (#a:Type) (#p:a->vprop)
+    (v:vprop)
+    (f_elim : (x:a -> stt_ghost unit emp_inames v (fun _ -> p x)))
+: stt_ghost unit emp_inames
+    v
+    (fun _ -> forall* x. p x)
 
 val while_loop
   (inv:bool -> vprop)

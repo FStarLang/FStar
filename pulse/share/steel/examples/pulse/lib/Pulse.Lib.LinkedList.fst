@@ -650,18 +650,77 @@ fn non_empty_list (#t:Type0) (x:llist t)
 ```
 
 ```pulse
+ghost
+fn forall_intro_is_list_idem (#t:Type) (x:llist t)
+    requires emp
+    ensures forall* l. is_list x l @==> is_list x l
+{
+    ghost
+    fn aux (l:list t)
+    requires emp
+    ensures is_list x l @==> is_list x l
+    { yields_idem (is_list x l) };
+    intro_forall emp aux 
+}
+```
+
+//#push-options "--print_implicits --ugly --print_bound_var_types --print_full_names"// --debug Pulse.Lib.LinkedList --debug_level prover"
+open FStar.List.Tot
+let something (#a:Type) (x:a) : vprop = emp
+
+
+let rewrite_tac () =
+    // T.dump "RW";
+    // T.grewrite _;
+    T.tadmit()
+
+```pulse
+fn test (#t:Type0) (x:ref (llist t))
+    requires
+        exists* ll pfx.
+            something pfx **
+            pts_to x ll ** 
+            (forall* sfx. is_list ll (pfx @ sfx) @==> is_list ll (pfx @ sfx))
+    ensures emp
+{
+    with pfx. assert (something #(list t) pfx);
+    with _ll. assert (pts_to x _ll);
+    let l = !x;
+    rewrite_by
+        (forall* sfx. is_list _ll (pfx @ sfx) @==> is_list _ll (pfx @ sfx))
+        (forall* sfx. is_list l (pfx @ sfx) @==> is_list l (pfx @ sfx))
+        rewrite_tac
+        (); 
+    admit();
+    ()
+}
+```
+
+```pulse
+
+
+```pulse
 fn append_iter (#t:Type) (x y:llist t)
     requires is_list x 'l1 ** is_list y 'l2 ** pure (Some? x /\ List.Tot.length 'l1 >= 1)
     ensures is_list x (List.Tot.append 'l1 'l2)
 {
     let mut cur = x;
-    yields_idem (is_list x 'l1);
+    forall_intro_is_list_idem x;
+    rewrite_by (forall* l. is_list x l @==> is_list x l)
+               (forall* l. is_list x l @==> is_list x ([]@l))
+               norm_tac ();
+    fold (something #(list t) []);
     intro_not_b_if_sfx_1_true 'l1;
     while (
         with _b _sfx. unfold (not_b_if_sfx_1 #t _b _sfx);
+        with pfx. assert (something #(list t) pfx);
+        unfold (something #(list t) pfx);
         let l = !cur;
         with _ll sfx. assert (is_list #t _ll sfx);
-        rewrite each _ll as l;
+        rewrite each _ll as l in (is_list _ll sfx);
+        rewrite each _ll as l in (forall* sfx'. is_list _ll sfx' @==> is_list x (pfx @ sfx'));
+        // assert (forall* sfx'. is_list l sfx' @==> is_list x (pfx @ sfx'));
+        admit();
         let b = is_last_cell l;
         if b 
         { 
@@ -670,9 +729,13 @@ fn append_iter (#t:Type) (x y:llist t)
         }
         else 
         {
+            admit();
             let next = move_next l;
             with tl. assert (is_list next tl);
-            yields_trans (is_list next tl) (is_list l sfx) (is_list x 'l1);
+            yields_trans (is_list next tl) (is_list l sfx) (is_list x (pfx @ sfx));
+            List.Tot.Properties.append_assoc pfx [Cons?.hd sfx] tl;
+            rewrite (is_list next tl @==> is_list x (pfx @ sfx))
+                as (is_list next tl @==> is_list x ((pfx@[Cons?.hd sfx])@tl));
             cur := next;
             intro_not_b_if_sfx_1_true tl;
             non_empty_list next;
@@ -680,12 +743,14 @@ fn append_iter (#t:Type) (x y:llist t)
         }
     )
     invariant b.
-    exists* ll sfx.
+    exists* ll pfx sfx.
+        something pfx **
         pts_to cur ll **
         is_list ll sfx **
-        (is_list ll sfx @==> is_list x 'l1) **
+        (forall* sfx'. is_list ll sfx' @==> is_list x (pfx @ sfx')) **
         not_b_if_sfx_1 b sfx **
         pure (List.Tot.length sfx >= 1 /\
+              pfx@sfx == 'l1 /\
               Some? ll)
     // invariant b.
     // exists* ll pfx sfx.
@@ -697,6 +762,7 @@ fn append_iter (#t:Type) (x y:llist t)
     //           Some? ll /\
     //           pfx@sfx == ll)
     { () };
+    admit();
     let last = !cur;
     with _ll sfx. assert (is_list #t _ll sfx);
     rewrite each _ll as last;
