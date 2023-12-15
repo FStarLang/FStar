@@ -992,11 +992,7 @@ let encode_top_level_let :
 
 
 let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t * env_t) =
-    let nm =
-        match U.lid_of_sigelt se with
-        | None -> ""
-        | Some l -> (string_of_lid l)
-    in
+    let nm = Print.sigelt_to_string_short se in
     let g, env = Errors.with_ctx (BU.format1 "While encoding top-level declaration `%s`"
                                              (Print.sigelt_to_string_short se))
                    (fun () -> encode_sigelt' env se)
@@ -1879,7 +1875,7 @@ let recover_caching_and_update_env (env:env_t) (decls:decls_t) :decls_t =
 let encode_sig tcenv se =
    let caption decls =
     if Options.log_queries()
-    then Term.Caption ("encoding sigelt " ^ (U.lids_of_sigelt se |> List.map Print.lid_to_string |> String.concat ", "))::decls
+    then Term.Caption ("encoding sigelt " ^ Print.sigelt_to_string_short se)::decls
     else decls in
    if Env.debug tcenv Options.Medium
    then BU.print1 "+++++++++++Encoding sigelt %s\n" (Print.sigelt_to_string se);
