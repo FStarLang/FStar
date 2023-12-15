@@ -78,7 +78,7 @@ let rec embed_string_list (xs : list string) : term =
     `(Cons #string (`#t) (`#(embed_string_list xs)))
 
 let mk_proj_decl (is_method:bool)
-                 (tyqn:name) ctorname univs indices (params:list binder)
+                 (tyqn:name) ctorname (univs : list univ_name) indices (params:list binder)
                  (idx:nat)
                  (field : binder)
                  (unfold_names : list string)
@@ -89,14 +89,14 @@ let mk_proj_decl (is_method:bool)
   let ni = length indices in
   let tyfv = pack_fv tyqn in
   let fv = pack_fv (cur_module () @ ["__proj__" ^ list_last ctorname ^ "__item__" ^ unseal field.ppname]) in
-  let rty : binder = fresh_binder (mk_app (pack (Tv_FVar tyfv))
-                                          (List.Tot.map binder_argv (params @ indices)))
+  let rty : term =
+    let hd = pack (Tv_UInst tyfv (List.Tot.map (fun un -> pack_universe (Uv_Name un)) univs)) in
+    mk_app hd (List.Tot.map binder_argv (params @ indices))
   in
-  let s : typ = (rty <: binder).sort in
-  //print ("rty " ^ term_to_string s);
+  let rb : binder = fresh_binder rty in
   let projty = mk_tot_arr (List.Tot.map binder_mk_implicit (params @ indices)
-                           @ [rty])
-                          (subst_map smap (binder_to_term rty) field.sort)
+                           @ [rb])
+                          (subst_map smap (binder_to_term rb) field.sort)
   in
   let se_proj = pack_sigelt <|
     Sg_Let {
@@ -118,11 +118,10 @@ let mk_proj_decl (is_method:bool)
     if not is_method then [] else
     if List.existsb (Reflection.V2.TermEq.term_eq (`Typeclasses.no_method)) field.attrs then [] else
     let meth_fv = pack_fv (cur_module () @ [unseal field.ppname]) in
-    let s : typ = (rty <: binder).sort in
-    let rty = { rty with qual = Q_Meta (`Typeclasses.tcresolve) } in
+    let rb = { rb with qual = Q_Meta (`Typeclasses.tcresolve) } in
     let projty = mk_tot_arr (List.Tot.map binder_mk_implicit (params @ indices)
-                             @ [rty])
-                            (subst_map smap (binder_to_term rty) field.sort)
+                             @ [rb])
+                            (subst_map smap (binder_to_term rb) field.sort)
     in
     [pack_sigelt <| Sg_Let {
       isrec = false;
