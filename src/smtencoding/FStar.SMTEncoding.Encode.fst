@@ -31,6 +31,7 @@ open FStar.SMTEncoding
 open FStar.SMTEncoding.Util
 open FStar.SMTEncoding.Env
 open FStar.SMTEncoding.EncodeTerm
+open FStar.Class.Show
 
 module BU     = FStar.Compiler.Util
 module Const  = FStar.Parser.Const
