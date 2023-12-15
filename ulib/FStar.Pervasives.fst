@@ -188,9 +188,9 @@ let strictly_positive = ()
 
 let unused = ()
 
-let no_auto_projectors_decls = ()
-
 let no_auto_projectors = ()
+
+let no_auto_projectors_decls = ()
 
 let no_subtyping = ()
 

@@ -3,7 +3,9 @@ module FStar.Tactics.MkProjectors
 open FStar.Stubs.Reflection.Types
 open FStar.Tactics.Effect
 
-(* To be called by projection generation. *)
+(** Opt-in to the new projector generation by a metaprogram. This also
+    affects typeclass method generation. *)
+val meta_projectors : unit
 
 [@@plugin]
 val mk_one_projector (unf:list string) (np:nat) (i:nat) : Tac unit

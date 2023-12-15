@@ -826,7 +826,7 @@ let collect_one
         | Tycon (_, tc, ts) ->
             begin
             if tc then
-                add_to_parsing_data (P_lid Const.mk_class_lid);
+                add_to_parsing_data (P_lid Const.tcclass_lid);
             List.iter collect_tycon ts
             end
         | Exception (_, t) ->

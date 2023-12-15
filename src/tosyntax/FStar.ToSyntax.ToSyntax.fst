@@ -2868,7 +2868,8 @@ let mk_indexed_projector_names iquals fvq attrs env lid (fields:list S.binder) =
 
 let mk_data_projector_names iquals env se : list sigelt =
   match se.sigel with
-  | _ when U.has_attribute se.sigattrs C.no_auto_projectors_decls_attr ->
+  | _ when U.has_attribute se.sigattrs C.no_auto_projectors_decls_attr
+        || U.has_attribute se.sigattrs C.meta_projectors_attr ->
     []
   | Sig_datacon {lid;t;num_ty_params=n} ->
     let formals, _ = U.arrow_formals t in
@@ -3777,11 +3778,19 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
      * we traverse the new declarations marked with "Projector", and get
      * the field names. This is pretty ugly. *)
     let mkclass lid =
-        let r = range_of_lid lid in
-        U.abs [S.mk_binder (S.new_bv (Some r) (tun_r r))]
-              (U.mk_app (S.tabbrev C.mk_class_lid)
-                        [S.as_arg (U.exp_string (string_of_lid lid))])
-              None
+      let r = range_of_lid lid in
+      let body =
+      if U.has_attribute d_attrs C.meta_projectors_attr then
+        (* new meta projectors *)
+        U.mk_app (S.tabbrev C.mk_projs_lid)
+                 [S.as_arg (U.exp_bool true);
+                  S.as_arg (U.exp_string (string_of_lid lid))]
+      else
+        (* old mk_class *)
+        U.mk_app (S.tabbrev C.mk_class_lid)
+                 [S.as_arg (U.exp_string (string_of_lid lid))]
+      in
+      U.abs [S.mk_binder (S.new_bv (Some r) (tun_r r))] body None
     in
     let get_meths se =
         let rec get_fname quals =
@@ -3853,7 +3862,10 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
                match se.sigel with
                | Sig_bundle {ses; lids} ->
                  let ses = List.map add_class_attr ses in
-                 { se with sigel = Sig_bundle {ses; lids} }
+                 { se with sigel = Sig_bundle {ses; lids}
+                         ; sigattrs = U.deduplicate_terms
+                                    (S.fvar_with_dd FStar.Parser.Const.tcclass_lid S.delta_constant None
+                                      :: se.sigattrs) }
 
                | Sig_inductive_typ _ ->
                  { se 

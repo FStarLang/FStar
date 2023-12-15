@@ -1031,6 +1031,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
 
     let projectors_ses =
       if U.has_attribute attrs C.no_auto_projectors_decls_attr
+        || U.has_attribute attrs C.meta_projectors_attr
       then []
       else
       fields |> List.mapi (fun i ({binder_bv=x}) ->

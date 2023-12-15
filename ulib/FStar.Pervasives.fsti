@@ -1177,8 +1177,11 @@ val unused : unit
     typechecking lot of projectors, most of which are not going to be used
     in the rest of the program
   *)
-val no_auto_projectors_decls : unit
 val no_auto_projectors : unit
+
+(** As [no_auto_projectors] but also do not even generate declarations
+    for them. *)
+val no_auto_projectors_decls : unit
 
 (** This attribute can be added to a let definition
     and indicates to the typechecker to typecheck the signature of the definition

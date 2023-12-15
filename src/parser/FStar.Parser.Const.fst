@@ -479,6 +479,9 @@ let fstar_tactics_lid  s = fstar_tactics_lid' [s]
 let tac_lid = fstar_tactics_lid' ["Effect"; "tac"]
 let tactic_lid = fstar_tactics_lid' ["Effect"; "tactic"]
 
+let meta_projectors_attr = fstar_tactics_lid' ["MkProjectors"; "meta_projectors"]
+let mk_projs_lid   = fstar_tactics_lid' ["MkProjectors"; "mk_projs"]
+
 let mk_class_lid   = fstar_tactics_lid' ["Typeclasses"; "mk_class"]
 let tcresolve_lid  = fstar_tactics_lid' ["Typeclasses"; "tcresolve"]
 let tcclass_lid = fstar_tactics_lid' ["Typeclasses"; "tcclass"]

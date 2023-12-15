@@ -16,6 +16,8 @@ open FStar.Tactics.NamedView
 
 exception NotFound
 
+let meta_projectors = ()
+
 (* Thunked version of debug *)
 let debug (f : unit -> Tac string) : Tac unit =
   if debugging () then
@@ -189,6 +191,7 @@ let mk_proj_decl (is_method:bool)
 
 [@@plugin]
 let mk_projs (is_class:bool) (tyname:string) : Tac decls =
+  print ("!! mk_projs tactic called on: " ^ tyname);
   let tyqn = explode_qn tyname in
   match lookup_typ (top_env ()) tyqn with
   | None ->
