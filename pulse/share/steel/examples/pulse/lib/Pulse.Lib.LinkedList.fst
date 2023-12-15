@@ -1,6 +1,10 @@
 module Pulse.Lib.LinkedList
 open Pulse.Lib.Pervasives
+open Pulse.Lib.Stick.Util
+open FStar.List.Tot
 module T = FStar.Tactics
+module I = Pulse.Lib.Stick.Util
+module FA = Pulse.Lib.Forall.Util
 
 noeq
 type node (t:Type0) = {
@@ -312,163 +316,12 @@ fn rec append (#t:Type0) (x y:llist t)
 }
 ```
 
-open Pulse.Lib.Stick
 
 assume val dbg : vprop
-```pulse
-ghost
-fn yields_idem (p:vprop)
-   requires emp
-   ensures p @==> p
-{
-    ghost fn intro_stick_aux (u:unit)
-    requires emp ** p
-    ensures p
-    { () };
-    Pulse.Lib.Stick.intro_stick _ _ _ intro_stick_aux;
-    fold (p @==> p);
-}
-```
 
-```pulse
-ghost
-fn yields_curry (p q r:vprop)
-   requires (p ** q) @==> r
-   ensures p @==> (q @==> r)
-{
-    ghost fn aux (_:unit)
-    requires ((p ** q) @==> r) ** p
-    ensures q @==> r
-    { 
-        ghost fn aux (_:unit)
-        requires (((p ** q) @==> r) ** p) ** q
-        ensures r
-        { 
-            unfold ((p ** q) @==> r);
-            elim_stick (p ** q) _;
-        };
-        intro_stick _ _ _ aux; 
-        fold (q @==> r);
-    };
-    intro_stick _ _ _ aux;
-    fold (p @==> (q @==> r));
-}
-```
-
-
-```pulse
-ghost
-fn yields_trans (p q r:vprop)
-    requires (p @==> q) ** (q @==> r)
-    ensures p @==> r
-{
-   ghost fn aux (_:unit)
-   requires ((p @==> q) ** (q @==> r)) ** p
-   ensures r
-   { 
-      unfold (p @==> q);
-      elim_stick _ _;
-      
-      unfold (q @==> r);
-      elim_stick _ _;
-   };
-   intro_stick _ _ _ aux;
-   fold (p @==> r);
-}
-```
-
-```pulse
-ghost
-fn yields_comm_l (p q r:vprop)
-   requires (p ** q) @==> r
-   ensures (q ** p) @==> r
-{
-    ghost fn aux (_:unit)
-    requires ((p ** q) @==> r) ** (q ** p)
-    ensures r
-    { 
-        unfold (p ** q) @==> r;
-        elim_stick (p ** q) _;
-    };
-    intro_stick _ _ _ aux; 
-    fold ((q ** p) @==> r);
-}
-```
-
-```pulse
-ghost
-fn yields_assoc_l (p q r s:vprop)
-   requires (p ** (q ** r)) @==> s
-   ensures ((p ** q) ** r) @==> s
-{
-    ghost fn aux (_:unit)
-    requires ((p ** (q ** r)) @==> s) ** ((p ** q) ** r)
-    ensures s
-    { 
-        unfold (p ** (q ** r)) @==> s;
-        elim_stick (p ** (q ** r)) _;
-    };
-    intro_stick _ _ _ aux;
-    fold (((p ** q) ** r) @==> s);
-}
-```
-
-
-```pulse
-ghost
-fn elim_yields () (#p #q:vprop)
-   requires (p @==> q) ** p
-   ensures q
-{
-  unfold (p @==> q);
-  elim_stick #emp_inames p q;
-}
-```
 
 let assume_ (p:vprop) : stt_ghost unit emp_inames emp (fun _ -> p) = admit()
 let not_null #t (x:llist t) : bool = Some? x
-
-```pulse
-ghost
-fn yields_elim (#t:Type) 
-               (v:node_ptr t)
-               (n:node t)
-               (tl:list t)
-    requires 
-        pts_to v n ** is_list n.tail tl
-    ensures 
-        is_list (Some v) (n.head::tl)
-{
-    intro_is_list_cons (Some v) v
-}
-```
-
-```pulse
-ghost
-fn elim_hyp_l (p q r:vprop)
-    requires ((p ** q) @==> r) ** p
-    ensures (q @==> r)
-{
-    yields_curry p q r;
-    unfold (p @==> q @==> r);
-    elim_stick _ _;
-    fold (q @==> r);
-}
-```
-
-```pulse
-ghost
-fn elim_hyp_r (p q r:vprop)
-    requires ((p ** q) @==> r) ** q
-    ensures (p @==> r)
-{
-    yields_comm_l p q r;
-    yields_curry q p r;
-    unfold (q @==> p @==> r);
-    elim_stick _ _;
-    fold (p @==> r);
-}
-```
 
 
 ```pulse
@@ -484,6 +337,18 @@ fn intro_yields_cons (#t:Type)
         is_list n.tail tl **
         (is_list n.tail tl @==> is_list (Some v) (n.head::tl))
 {
+    ghost
+    fn yields_elim (#t:Type) 
+                (v:node_ptr t)
+                (n:node t)
+                (tl:list t)
+        requires 
+            pts_to v n ** is_list n.tail tl
+        ensures 
+            is_list (Some v) (n.head::tl)
+    {
+        intro_is_list_cons (Some v) v
+    };
     intro_stick _ _ _ (fun _ -> yields_elim v n tl);
     with p q. fold (p @==> q)
 }
@@ -517,7 +382,7 @@ fn length_iter (#t:Type) (x: llist t)
 {
     let mut cur = x;
     let mut ctr = 0; 
-    yields_idem (is_list x 'l);
+    I.refl (is_list x 'l);
     while (
         with ll. assert pts_to cur ll;
         let v = !cur; 
@@ -539,13 +404,13 @@ fn length_iter (#t:Type) (x: llist t)
         rewrite each _ll as ll;
         let next = move_next ll;
         with tl. assert (is_list next tl);
-        yields_trans (is_list next tl) (is_list ll suffix) (is_list x 'l);
+        I.trans (is_list next tl) (is_list ll suffix) (is_list x 'l);
         cur := next;
         ctr := n + 1;
     };
     with ll _sfx. assert (is_list #t ll _sfx);
     is_list_cases_none ll;
-    elim_yields ();
+    I.elim _ _;
     let n = !ctr;
     n
 }
@@ -613,6 +478,7 @@ fn append_at_last_cell (#t:Type) (x y:llist t)
 }
 ```
 
+//UGLY! workaround for while invariant instantiation hint
 let not_b_if_sfx_1 #t (b:bool) (sfx:list t) : vprop = pure (not b ==> (List.Tot.length sfx = 1))
 
 ```pulse
@@ -659,42 +525,18 @@ fn forall_intro_is_list_idem (#t:Type) (x:llist t)
     fn aux (l:list t)
     requires emp
     ensures is_list x l @==> is_list x l
-    { yields_idem (is_list x l) };
+    { I.refl (is_list x l) };
     intro_forall emp aux 
 }
 ```
 
 //#push-options "--print_implicits --ugly --print_bound_var_types --print_full_names"// --debug Pulse.Lib.LinkedList --debug_level prover"
 open FStar.List.Tot
+//ugly, workaround for unification under forall
 let something (#a:Type) (x:a) : vprop = emp
 
-
-let rewrite_tac () =
-    // T.dump "RW";
-    // T.grewrite _;
-    T.tadmit()
-
-```pulse
-fn test (#t:Type0) (x:ref (llist t))
-    requires
-        exists* ll pfx.
-            something pfx **
-            pts_to x ll ** 
-            (forall* sfx. is_list ll (pfx @ sfx) @==> is_list ll (pfx @ sfx))
-    ensures emp
-{
-    with pfx. assert (something #(list t) pfx);
-    with _ll. assert (pts_to x _ll);
-    let l = !x;
-    rewrite_by
-        (forall* sfx. is_list _ll (pfx @ sfx) @==> is_list _ll (pfx @ sfx))
-        (forall* sfx. is_list l (pfx @ sfx) @==> is_list l (pfx @ sfx))
-        rewrite_tac
-        (); 
-    admit();
-    ()
-}
-```
+//ugly, for admitting equality on forall* 
+let rewrite_tac () = T.tadmit()
 
 ```pulse
 fn move_next_forall (#t:Type) (x:llist t)
@@ -730,77 +572,6 @@ fn move_next_forall (#t:Type) (x:llist t)
 }
 ```
 
-
-```pulse
-ghost
-fn forall_trans (#a:Type0) (p q r: (a -> vprop))
-    requires (forall* x. p x @==> q x) ** (forall* x. q x @==> r x)
-    ensures forall* x. p x @==> r x
-{
-    ghost fn aux (x:a)
-        requires ((forall* x. p x @==> q x) ** (forall* x. q x @==> r x))
-        ensures p x @==> r x
-    {
-        ghost fn aux (_:unit)
-        requires ((forall* x. p x @==> q x) ** (forall* x. q x @==> r x)) ** p x
-        ensures r x
-        {
-            elim_forall #_ #(fun x -> p x @==> q x) x;
-            unfold (p x @==> q x);
-            elim_stick _ _;
-            elim_forall #a #(fun x -> q x @==> r x) x;
-            unfold (q x @==> r x);
-            elim_stick _ _;
-        };
-        intro_stick _ _ _ aux;
-        fold (p x @==> r x);
-    };
-    intro_forall _ aux
-}
-```
-
-```pulse
-ghost
-fn forall_trans_alt (#a #b #c:Type0) (p:(a -> vprop)) (q:(b -> vprop)) (r:(c -> vprop))
-                   (f: (a -> GTot b)) (g: (b -> GTot c))
-    requires (forall* x. p x @==> q (f x)) ** (forall* x. q x @==> r (g x))
-    ensures forall* x. p x @==> r (g (f x))
-{
-    ghost fn aux (x:a)
-        requires ((forall* x. p x @==> q (f x)) ** (forall* x. q x @==> r (g x)))
-        ensures p x @==> r (g (f x))
-    {
-        ghost fn aux (_:unit) 
-        requires ((forall* x. p x @==> q (f x)) ** (forall* x. q x @==> r (g x))) ** p x
-        ensures r (g (f x))
-        {
-            elim_forall #_ #(fun x -> p x @==> q (f x)) x;
-            unfold (p x @==> q (f x));
-            elim_stick _ _;
-            elim_forall #_ #(fun x -> q x @==> r (g x)) (f x);
-            unfold (q (f x) @==> r (g (f x)));
-            elim_stick _ _;
-        };
-        intro_stick _ _ _ aux;
-        fold (p x @==> r (g (f x)));
-    };
-    intro_forall _ aux
-}
-```
-
-```pulse
-ghost fn elim_forall_imp (#a:Type0) (p q: (a -> vprop)) (x:a)
-    requires (forall* x. p x @==> q x) ** p x
-    ensures q x
-{
-    elim_forall #_ #(fun x -> p x @==> q x) x;
-    unfold (p x @==> q x);
-    elim_stick _ _;
-}
-```
-
-
-
 ```pulse
 fn append_iter (#t:Type) (x y:llist t)
     requires is_list x 'l1 ** is_list y 'l2 ** pure (Some? x /\ List.Tot.length 'l1 >= 1)
@@ -835,9 +606,10 @@ fn append_iter (#t:Type) (x y:llist t)
             let next = move_next_forall l;
             with tl. assert (is_list next tl);
             with hd. assert (something #t hd);
-            forall_trans_alt (is_list next) (is_list l) (is_list x)
-                         (fun tl -> hd :: tl)
-                         (fun tl -> pfx @ tl);
+            FA.trans_compose 
+                (is_list next) (is_list l) (is_list x)
+                (fun tl -> hd :: tl)
+                (fun tl -> pfx @ tl);
             List.Tot.Properties.append_assoc pfx [Cons?.hd sfx] tl;
             rewrite_by (forall* tl. is_list next tl @==> is_list x (pfx @ (hd::tl)))
                        (forall* tl. is_list next tl @==> is_list x ((pfx@[hd])@tl))
@@ -871,24 +643,13 @@ fn append_iter (#t:Type) (x y:llist t)
     with _b _sfx. unfold (not_b_if_sfx_1 #t _b _sfx);
     assert (pure (List.Tot.length sfx == 1));
     append_at_last_cell last y;
-    elim_forall_imp (is_list last) (fun sfx' -> is_list x (pfx @ sfx')) (sfx@'l2);
+    FA.elim_forall_imp (is_list last) (fun sfx' -> is_list x (pfx @ sfx')) (sfx@'l2);
     List.Tot.Properties.append_assoc pfx sfx 'l2;
     unfold (something #(list t) pfx);
     with l. rewrite (is_list x l) as is_list x (List.Tot.append 'l1 'l2);
 }
 ```
 
-
-```pulse
-ghost
-fn foo ()
-  requires emp
-  returns y:int
-  ensures emp
-{
-  17
-}
-```
 // let rec take (n:nat) (l:list 't { n < List.Tot.length l })
 //   : list 'tg
 //   = if n = 0 then []
