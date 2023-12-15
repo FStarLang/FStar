@@ -25,7 +25,7 @@ val set (a:Type0) : Type0
 
 type t = set
 
-val empty (#a:Type) {| ord a |} (_:unit) : set a
+val empty (#a:Type) {| ord a |} () : set a
 val singleton (#a:Type) {| ord a |} (x:a) : set a
 
 val is_empty (#a:Type) {| ord a |} (s:set a) : bool

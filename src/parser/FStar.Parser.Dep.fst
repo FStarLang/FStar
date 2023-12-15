@@ -39,6 +39,8 @@ open FStar.Class.Show
 module Const = FStar.Parser.Const
 module BU = FStar.Compiler.Util
 
+module Set = FStar.Compiler.Set
+
 let profile f c = Profiling.profile f None c
 
 (* Meant to write to a file as an out_channel. If an exception is raised,
@@ -1595,6 +1597,16 @@ let collect (all_cmd_line_files: list file_name)
 let deps_of deps (f:file_name)
     : list file_name =
     dependences_of deps.file_system_map deps.dep_graph deps.cmd_line_files f
+
+let deps_of_modul deps (m:module_name) : list module_name =
+  let aux (fopt:option string) =
+    fopt |> BU.map_option (fun f -> f |> deps_of deps |> List.map module_name_of_file)
+         |> BU.dflt []
+  in
+  m |> BU.smap_try_find deps.file_system_map
+    |> BU.map_option (fun (intf_opt, impl_opt) ->
+                      BU.remove_dups (fun x y -> x = y) (aux intf_opt @ aux impl_opt))
+    |> BU.dflt []
 
 (* In public interface *)
 let print_digest (dig:list (string * string)) : string =
