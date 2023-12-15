@@ -458,3 +458,8 @@ val elim_false (a:Type) (p:a -> vprop)
   : stt_ghost a emp_inames (pure False) p
 
 let eq2_prop (#a:Type) (x:a) (y:a) : prop = x == y
+val unreachable (#a:Type) (#p:vprop) (#q:a -> vprop) (_:squash False)
+  : stt_ghost a emp_inames p q
+val dummy_goal : vprop
+val show_proof_state (_:unit)
+  : stt_ghost unit emp_inames dummy_goal (fun _ -> emp)

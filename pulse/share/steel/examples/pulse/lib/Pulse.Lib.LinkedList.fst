@@ -298,11 +298,6 @@ fn rec append (#t:Type0) (x y:llist t)
 }
 ```
 
-
-assume val dbg : vprop
-
-
-let assume_ (p:vprop) : stt_ghost unit emp_inames emp (fun _ -> p) = admit()
 let not_null #t (x:llist t) : bool = Some? x
 
 
@@ -503,12 +498,7 @@ fn forall_intro_is_list_idem (#t:Type) (x:llist t)
     requires emp
     ensures forall* l. is_list x l @==> is_list x l
 {
-    ghost
-    fn aux (l:list t)
-    requires emp
-    ensures is_list x l @==> is_list x l
-    { I.refl (is_list x l) };
-    intro_forall emp aux 
+    intro_forall emp (fun l -> I.refl (is_list x l))
 }
 ```
 

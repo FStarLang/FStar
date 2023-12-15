@@ -504,3 +504,13 @@ let elim_false (a:Type) (p:a -> vprop) =
     let x = false_elim #a () in
     Steel.ST.Util.rewrite Steel.ST.Util.emp (p x);
     x
+
+let unreachable (#a:Type) (#p:vprop) (#q:a -> vprop) (_:squash False)
+  : stt_ghost a emp_inames p q
+  = let v = FStar.Pervasives.false_elim #a () in
+    v
+
+let dummy_goal = emp
+let show_proof_state (_:unit)
+  : stt_ghost unit emp_inames dummy_goal (fun _ -> emp)
+  = fun _ -> noop()
