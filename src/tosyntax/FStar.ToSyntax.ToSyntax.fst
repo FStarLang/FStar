@@ -2868,6 +2868,8 @@ let mk_indexed_projector_names iquals fvq attrs env lid (fields:list S.binder) =
 
 let mk_data_projector_names iquals env se : list sigelt =
   match se.sigel with
+  | _ when U.has_attribute se.sigattrs C.no_auto_projectors_decls_attr ->
+    []
   | Sig_datacon {lid;t;num_ty_params=n} ->
     let formals, _ = U.arrow_formals t in
     begin match formals with
