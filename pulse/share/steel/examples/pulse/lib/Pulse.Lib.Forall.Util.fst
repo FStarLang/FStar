@@ -3,6 +3,9 @@ open Pulse.Lib.Pervasives
 open Pulse.Lib.Stick.Util
 module I = Pulse.Lib.Stick
 
+let intro #a #p = Pulse.Lib.Core.intro_forall #a #p
+let elim #a #p = Pulse.Lib.Core.elim_forall #a #p
+ 
 ```pulse
 ghost
 fn trans_compose (#a #b #c:Type0) (p:(a -> vprop)) (q:(b -> vprop)) (r:(c -> vprop))

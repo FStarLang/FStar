@@ -44,16 +44,16 @@ val stick_sub_inv
     (stick #os1 hyp concl)
     (fun _ -> stick #os2 hyp concl)
 
-val ( forall* ) (#a:Type) (p:a->vprop) : vprop
+// val ( forall* ) (#a:Type) (p:a->vprop) : vprop
 
-val elim_forall (#a:Type) (#p:a->vprop) (x:a)
-: stt_ghost unit emp_inames
-    (forall* x. p x)
-    (fun _ -> p x)
+// val elim_forall (#a:Type) (#p:a->vprop) (x:a)
+// : stt_ghost unit emp_inames
+//     (forall* x. p x)
+//     (fun _ -> p x)
 
-val intro_forall (#a:Type) (#p:a->vprop)
-    (v:vprop)
-    (f_elim : (x:a -> stt_ghost unit emp_inames v (fun _ -> p x)))
-: stt_ghost unit emp_inames
-    v
-    (fun _ -> forall* x. p x)
+// val intro_forall (#a:Type) (#p:a->vprop)
+//     (v:vprop)
+//     (f_elim : (x:a -> stt_ghost unit emp_inames v (fun _ -> p x)))
+// : stt_ghost unit emp_inames
+//     v
+//     (fun _ -> forall* x. p x)

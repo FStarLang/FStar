@@ -548,7 +548,7 @@ fn move_next_forall (#t:Type) (x:llist t)
         intro_stick _ _ _ aux;
         fold (is_list node.tail tl' @==> is_list x (node.head::tl'));
     };
-    Pulse.Lib.Stick.intro_forall _ aux;
+    FA.intro _ aux;
     fold (something node.head);
     node.tail
 }
