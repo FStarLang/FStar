@@ -17,7 +17,7 @@ type monad (m:Type0 -> Type0) : Type = {
 			 Lemma (bind (bind x f) g ==
 			        bind x (fun y -> bind (f y) g));
 }
-%splice[] (Tactics.MkProjectors.mk_projs true (`%monad))
+%splice[return; bind; idL] (Tactics.MkProjectors.mk_projs true (`%monad))
 
 let test #m {| monad m |} (x : 'a) (f g : 'a -> 'a) =
   idL #m x (fun y -> bind (return (f y)) (fun z -> return (g z)));
