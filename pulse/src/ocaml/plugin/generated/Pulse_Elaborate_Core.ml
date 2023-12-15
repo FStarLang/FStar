@@ -347,6 +347,24 @@ let rec (elab_st_typing :
                    (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name
                    ty1 FStar_Reflection_V2_Data.Q_Explicit
                    (FStar_Reflection_Typing.close_term e21 x))
+          | Pulse_Typing.T_BindFn
+              (uu___, uu___1, uu___2, c1, c2, b, x, e1_typing, _u, t_typing,
+               e2_typing, c2_typing)
+              ->
+              let e1 = elab_st_typing uu___ uu___1 c1 e1_typing in
+              let e2 =
+                elab_st_typing
+                  (Pulse_Typing_Env.push_binding uu___ x
+                     Pulse_Syntax_Base.ppname_default
+                     (Pulse_Syntax_Base.comp_res c1))
+                  (Pulse_Syntax_Naming.open_st_term_nv uu___2
+                     ((b.Pulse_Syntax_Base.binder_ppname), x)) c2 e2_typing in
+              let ty1 =
+                Pulse_Elaborate_Pure.elab_term
+                  (Pulse_Syntax_Base.comp_res c1) in
+              FStar_Reflection_Typing.mk_let
+                FStar_Reflection_Typing.pp_name_default e1 ty1
+                (FStar_Reflection_Typing.close_term e2 x)
           | Pulse_Typing.T_TotBind
               (uu___, e1, e2, t1, uu___1, uu___2, x, uu___3, e2_typing) ->
               let re1 = Pulse_Elaborate_Pure.elab_term e1 in

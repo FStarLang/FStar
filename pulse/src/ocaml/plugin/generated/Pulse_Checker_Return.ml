@@ -575,8 +575,11 @@ let (check :
                                                   Pulse_Typing.ty_typing =
                                                     uu___5;
                                                   Pulse_Typing.post = uu___6;
+                                                  Pulse_Typing.x = uu___7;
+                                                  Pulse_Typing.post_typing_src
+                                                    = uu___8;
                                                   Pulse_Typing.post_typing =
-                                                    uu___7;_}
+                                                    uu___9;_}
                                                 ->
                                                 if
                                                   ct =
@@ -606,7 +609,7 @@ let (check :
                                                                 (Prims.of_int (86))
                                                                 (Prims.of_int (66)))))
                                                        (FStar_Tactics_Effect.lift_div_tac
-                                                          (fun uu___9 ->
+                                                          (fun uu___11 ->
                                                              {
                                                                Pulse_Syntax_Base.term1
                                                                  =
@@ -628,7 +631,7 @@ let (check :
                                                                  =
                                                                  (st.Pulse_Syntax_Base.effect_tag)
                                                              }))
-                                                       (fun uu___9 ->
+                                                       (fun uu___11 ->
                                                           (fun st1 ->
                                                              Obj.magic
                                                                (check_core g
@@ -636,7 +639,7 @@ let (check :
                                                                   post_hint
                                                                   res_ppname
                                                                   st1))
-                                                            uu___9))
+                                                            uu___11))
                                             | uu___2 ->
                                                 Obj.magic
                                                   (check_core g ctxt ()

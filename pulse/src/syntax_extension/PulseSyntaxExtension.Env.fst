@@ -99,11 +99,6 @@ let resolve_names (env:env_t) (ns:option (list lident))
 let rec free_vars_term (env:env_t) (t:A.term) =
   ToSyntax.free_vars false env.tcenv.dsenv t
 
-and free_vars_vprop (env:env_t) (t:Sugar.vprop) =
-  let open PulseSyntaxExtension.Sugar in
-  match t.v with
-  | VPropTerm t -> free_vars_term env t
-
 and free_vars_binders (env:env_t) (bs:Sugar.binders)
   : env_t & list ident
   = match bs with
@@ -112,6 +107,11 @@ and free_vars_binders (env:env_t) (bs:Sugar.binders)
       let fvs = free_vars_term env t in
       let env', res = free_vars_binders (fst (push_bv env x)) bs in
       env', fvs@res
+
+let free_vars_vprop (env:env_t) (t:Sugar.vprop) =
+  let open PulseSyntaxExtension.Sugar in
+  match t.v with
+  | VPropTerm t -> free_vars_term env t
 
 let free_vars_list (#a:Type0) (f : env_t -> a -> list ident) (env:env_t) (xs : list a) : list ident =
   L.collect (f env) xs

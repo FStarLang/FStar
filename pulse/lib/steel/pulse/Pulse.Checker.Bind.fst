@@ -11,6 +11,41 @@ module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 module Metatheory = Pulse.Typing.Metatheory
 module PS = Pulse.Checker.Prover.Substs
+module Abs = Pulse.Checker.Abs
+
+
+#push-options "--query_stats --z3rlimit_factor 4 --split_queries no"
+let check_bind_fn
+  (g:env)
+  (ctxt:vprop)
+  (ctxt_typing:tot_typing g ctxt tm_vprop)
+  (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
+  (t:st_term {Tm_Bind? t.term})
+  (check:check_t)
+: T.Tac (checker_result_t g ctxt post_hint)
+= let Tm_Bind { binder; head; body } = t.term in
+  match head.term with
+  | Tm_Abs _ -> (
+    let (| t, c, head_typing |) = Abs.check_abs g head check in
+    if not (C_Tot? c)
+    then fail g (Some t.range) "check_bind_fn: head is not a total abstraction";
+    if None? post_hint
+    then fail g (Some t.range) "check_bind: please annotate the postcondition";
+
+    let x = fresh g in
+    let b = { binder with binder_ty = comp_res c } in
+    let g' = push_binding g x (binder.binder_ppname) b.binder_ty in
+    let ctxt_typing' : tot_typing g' ctxt tm_vprop =
+      Metatheory.tot_typing_weakening_single ctxt_typing x b.binder_ty in
+    let r = check g' _ ctxt_typing' post_hint res_ppname (open_st_term_nv body (binder.binder_ppname, x)) in
+    let body_typing = apply_checker_result_k #_ #_ #(Some?.v post_hint) r res_ppname in
+    let k = Pulse.Checker.Base.continuation_elaborator_with_bind_fn ctxt_typing b head_typing (binder.binder_ppname, x) in
+    let d = k post_hint body_typing in
+    checker_result_for_st_typing d res_ppname
+  )
+  | _ -> fail g (Some t.range) "check_bind_fn: head is not an abstraction"
+#pop-options
 
 #push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 1"
 let check_bind
@@ -35,6 +70,10 @@ let check_bind
   if Tm_Admit? e1.term
   then ( //Discard the continuation if the head is an admit
     check g ctxt ctxt_typing post_hint res_ppname e1
+  )
+  else if Tm_Abs? e1.term
+  then (
+    check_bind_fn g ctxt ctxt_typing post_hint res_ppname t check
   )
   else (
     let (| x, g1, _, (| ctxt', ctxt'_typing |), k1 |) =

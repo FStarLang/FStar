@@ -679,7 +679,9 @@ let (check :
                                  Pulse_Typing.u = uu___3;
                                  Pulse_Typing.ty_typing = uu___4;
                                  Pulse_Typing.post = uu___5;
-                                 Pulse_Typing.post_typing = uu___6;_}
+                                 Pulse_Typing.x = uu___6;
+                                 Pulse_Typing.post_typing_src = uu___7;
+                                 Pulse_Typing.post_typing = uu___8;_}
                                ->
                                Obj.magic
                                  (check_core g pre () post_hint res_ppname

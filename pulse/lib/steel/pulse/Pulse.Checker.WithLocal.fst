@@ -10,9 +10,16 @@ module P = Pulse.Syntax.Printer
 
 let extend_post_hint_for_local (g:env) (p:post_hint_for_env g)
                                (init_t:term) (x:var { ~ (Set.mem x (dom g)) })
-  : post_hint_for_env (push_binding g x ppname_default init_t)
-  = { p with post = comp_withlocal_body_post p.post init_t (null_var x);
-             post_typing = admit() } //star typing intro
+  : T.Tac (q:post_hint_for_env (push_binding g x ppname_default (mk_ref init_t)){ 
+      q.post == comp_withlocal_body_post p.post init_t (null_var x) /\
+      q.ret_ty == p.ret_ty /\
+      q.u == p.u
+      })
+  = let conjunct = tm_exists_sl u0 (as_binder init_t) (mk_pts_to init_t (null_var x) (null_bvar 0)) in
+    let g' = push_binding g x ppname_default (mk_ref init_t) in
+    let c_typing = Pulse.Checker.Pure.core_check_term g' conjunct T.E_Total tm_vprop in
+    let res = Pulse.Checker.Base.extend_post_hint g p x (mk_ref init_t) _ c_typing in
+    res
 
 let with_local_pre_typing (#g:env) (#pre:term) (pre_typing:tot_typing g pre tm_vprop)
                           (init_t:term) (x:var { ~ (Set.mem x (dom g)) }) (i:term)

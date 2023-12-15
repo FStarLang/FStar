@@ -17,10 +17,14 @@ let rt_equiv_typing (#g:_) (#t0 #t1:_) (d:RT.equiv g t0 t1)
   : Ghost.erased (RT.tot_typing g t1 k)
   = admit()
 
-val st_typing_correctness (#g:env) (#t:st_term) (#c:comp_st) 
-                          (_:st_typing g t c)
-  : comp_typing_u g c
+val st_typing_correctness_ctot (#g:env) (#t:st_term) (#c:comp{C_Tot? c}) 
+                               (_:st_typing g t c)
+  : (u:Ghost.erased universe & universe_of g (comp_res c) u)
 
+val st_typing_correctness (#g:env) (#t:st_term) (#c:comp_st) 
+                          (d:st_typing g t c)
+  : comp_typing_u g c
+  
 val comp_typing_inversion (#g:env) (#c:comp_st) (ct:comp_typing_u g c)
   : st_comp_typing g (st_comp_of_comp c)
 
@@ -56,6 +60,16 @@ val typing_correctness
   (#eff:_)
   (_:erased (RT.typing g t (eff, ty)))
   : erased (u:R.universe & RT.typing g ty (C.E_Total, RT.tm_type u))
+
+let renaming x y = [NT x (tm_var {nm_index=y; nm_ppname=ppname_default})]
+val tot_typing_renaming1
+  (g:env) (x:var {None? (lookup g x)}) (tx e ty:term)
+  (_:tot_typing (push_binding g x ppname_default tx) e ty)
+  (y:var { None? (lookup g y) /\ x <> y })
+  : tot_typing (push_binding g y ppname_default tx)
+               (subst_term e (renaming x y))
+               (subst_term ty (renaming x y))
+
 
 val tot_typing_weakening
   (g:env) (g':env { disjoint g g' })

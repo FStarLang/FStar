@@ -215,7 +215,7 @@ type st_term' =
       binder:binder;
       head:term;
       body:st_term;
-    } 
+    }
   | Tm_If {
       b:term;
       then_:st_term;

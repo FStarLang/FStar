@@ -64,15 +64,14 @@ fn s3 () : swap_fun
     }
 ```
 
-[@@expect_failure]
 ```pulse
 fn test_inner_lambda (#a:Type0)
                      (x y:ref int)
 requires pts_to x 'vx ** pts_to y 'vy
-ensures  pts_to x 'vy ** pts_to y 'vx
+ensures  pts_to x 'vy ** pts_to y 'vy
 {
-  fn write_helper (#a:Type) (x:ref a) (n:a)
-    requires pts_to x 'vx
+  fn write_helper (#a:Type) (x:ref a) (n:a) (#vx:erased a)
+    requires pts_to x vx
     ensures  pts_to x n
   {
     x := n;
