@@ -26,7 +26,7 @@ module LN = Pulse.Typing.LN
 module FV = Pulse.Typing.FV
 module STT = Pulse.Soundness.STT
 module Sub = Pulse.Soundness.Sub
-
+module RU = Pulse.RuntimeUtils
 module Typing = Pulse.Typing
 module EPure = Pulse.Elaborate.Pure
 module WT= Pulse.Steel.Wrapper.Typing
@@ -181,7 +181,7 @@ let stghostapp_soundness
 
   // TODO: substitution lemma in RT for non_informative judgment
   let d_non_info
-    : RT.non_informative (elab_env g) (elab_comp (open_comp_with res arg)) = magic () in
+    : RT.non_informative (elab_env g) (elab_comp (open_comp_with res arg)) = RU.magic () in
 
   RT.T_Sub _ _ _ _ d (RT.Relc_ghost_total _ _ d_non_info)
 
@@ -406,7 +406,7 @@ let rec soundness (g:stt_env)
 
     | T_Sub _ _ _ _ _ _ -> Sub.sub_soundness d soundness
 
-    | T_WithInv _ _ _ _ _ _ _ _ -> magic() // IOU
+    | T_WithInv _ _ _ _ _ _ _ _ -> RU.magic() // IOU
 #pop-options
 
 let soundness_lemma

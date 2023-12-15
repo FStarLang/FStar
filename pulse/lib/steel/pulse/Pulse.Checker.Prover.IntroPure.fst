@@ -9,7 +9,7 @@ open Pulse.Checker.VPropEquiv
 open Pulse.Checker.Prover.Base
 open Pulse.Checker.Base
 open Pulse.Checker.Prover.Util
-
+module RU = Pulse.RuntimeUtils
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 module PS = Pulse.Checker.Prover.Substs
@@ -35,12 +35,12 @@ let k_intro_pure (g:env) (p:term)
   let k : continuation_elaborator
             g (frame * tm_emp)
             (push_binding g x ppname_default tm_unit) (tm_pure p * frame) =
-    continuation_elaborator_with_bind frame d (magic ()) (ppname, x) in
+    continuation_elaborator_with_bind frame d (RU.magic ()) (ppname, x) in
 
   let k : continuation_elaborator
             g frame
             (push_binding g x ppname_default tm_unit) (frame * tm_pure p) =
-    k_elab_equiv k (magic ()) (magic ()) in
+    k_elab_equiv k (RU.magic ()) (RU.magic ()) in
 
   fun post_hint r ->
   let (| t1, c1, d1 |) = r in
@@ -162,10 +162,10 @@ let intro_pure (#preamble:_) (pst:prover_state preamble)
   //     let ss_new = PS.push_ss pst.ss ss_uv in
   //     assume (t_ss_new == ss_new.(t));
   //     // we know this is refl, can we avoid this call?
-  //     let token = check_prop_validity pst.pg t_ss_new (magic ()) in
+  //     let token = check_prop_validity pst.pg t_ss_new (RU.magic ()) in
   //     (| ss_new,
   //        t_ss_new,
-  //        magic (),
+  //        RU.magic (),
   //        token |)
   //   | None ->
   //     //
@@ -194,7 +194,7 @@ let intro_pure (#preamble:_) (pst:prover_state preamble)
       : vprop_equiv pst.pg
           (((list_as_vprop pst.remaining_ctxt * preamble.frame) * ss_new.(pst.solved)) * tm_pure t_ss)
           ((list_as_vprop pst.remaining_ctxt * preamble.frame) * (tm_pure t_ss * ss_new.(pst.solved))) =
-      magic () in
+      RU.magic () in
 
     // need lemmas in Prover.Subst
     assume (tm_pure ss_new.(t) * ss_new.(pst.solved) ==
@@ -225,7 +225,7 @@ let intro_pure (#preamble:_) (pst:prover_state preamble)
 
   let veq : vprop_equiv (push_env pst.pg pst.uvs)
                         (list_as_vprop ((tm_pure t)::unsolved_new))
-                        (list_as_vprop unsolved_new * tm_pure t) = magic () in
+                        (list_as_vprop unsolved_new * tm_pure t) = RU.magic () in
 
   let veq : vprop_equiv (push_env pst.pg pst.uvs)
                         (list_as_vprop ((tm_pure t)::unsolved_new) * pst.solved)

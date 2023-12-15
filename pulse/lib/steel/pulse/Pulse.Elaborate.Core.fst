@@ -7,7 +7,7 @@ open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Elaborate.Pure
 open Pulse.Typing
-
+module RU = Pulse.RuntimeUtils
 open Pulse.Reflection.Util
 
 let elab_frame (c:comp_st) (frame:term) (e:R.term) =
@@ -132,15 +132,13 @@ let simple_arr (t1 t2 : R.term) : R.term =
            ppname = Sealed.seal "x";
            qual = R.Q_Explicit;
            attrs = [] } in
-  let v : var = magic () in
-  let t2 = RT.close_term t2 v in
   R.pack_ln (R.Tv_Arrow b (R.pack_comp (R.C_Total t2)))
 
 let elab_st_sub (#g:env) (#c1 #c2 : comp)
      (d_sub : st_sub g c1 c2)
    : Tot (t:R.term
           & RT.tot_typing (elab_env g) t (simple_arr (elab_comp c1) (elab_comp c2)))
-= magic()
+= RU.magic_s "elab_st_sub"
 
 let rec elab_st_typing (#g:env)
                        (#t:st_term)

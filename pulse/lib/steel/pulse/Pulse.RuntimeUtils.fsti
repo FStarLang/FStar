@@ -64,4 +64,5 @@ val add_noextract_qual (x:T.sigelt) : (y:T.sigelt { x == y })
 val must_erase_for_extraction (g:env) (ty:T.term) : bool
 
 val magic : #a: Type -> unit -> GTot a
-val magic_s: #a: Type -> string -> GTot a
+(* magic with a string, to at least report an error message if it is hit at runtime *)
+val magic_s: #a: Type -> string -> Tot a

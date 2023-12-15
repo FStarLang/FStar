@@ -3,6 +3,7 @@ module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
 module L = FStar.List.Tot
 module T = FStar.Tactics.V2
+module RU = Pulse.RuntimeUtils
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Typing
@@ -274,7 +275,7 @@ let ghost_bind_typing #g #t #c d soundness =
 
   // substitution lemma using d_non_info and the calc proof above
   let d_non_info
-    : RT.non_informative (elab_env g) (elab_comp c) = magic () in
+    : RT.non_informative (elab_env g) (elab_comp c) = RU.magic () in
 
   RT.T_Sub _ _ _ _ d (RT.Relc_ghost_total _ _ d_non_info)
 

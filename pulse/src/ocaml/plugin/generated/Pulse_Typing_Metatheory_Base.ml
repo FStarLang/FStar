@@ -345,9 +345,14 @@ let rec (st_typing_weakening :
             fun g1 ->
               match d with
               | Pulse_Typing.T_Abs
-                  (uu___, uu___1, uu___2, uu___3, uu___4, uu___5, uu___6,
-                   uu___7, uu___8)
-                  -> Prims.magic ()
+                  (g2, x, q, b, u, body, c1, b_typing, body_typing) ->
+                  let x1 =
+                    Pulse_Typing_Env.fresh
+                      (Pulse_Typing_Env.push_env
+                         (Pulse_Typing_Env.push_env g2 g1) g') in
+                  Pulse_Typing.T_Abs
+                    (g2, x1, q, b, u, body, c1, (),
+                      (st_typing_weakening g2 g' body c1 body_typing g1))
               | Pulse_Typing.T_STApp
                   (uu___, head, ty, q, res, arg, uu___1, uu___2) ->
                   Pulse_Typing.T_STApp
@@ -420,10 +425,13 @@ let rec (st_typing_weakening :
                          ((b.Pulse_Syntax_Base.binder_ppname), x)) c2 d_e22
                       g1 in
                   let d_e24 = d_e23 in
+                  let c2_typing1 =
+                    comp_typing_weakening g g' c2
+                      (Pulse_Syntax_Base.comp_u c2) c2_typing g1 in
                   Pulse_Typing.T_BindFn
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), e1, e2, c1, c2,
-                      b, x, d_e11, (), (), d_e24, (Prims.magic ()))
+                      b, x, d_e11, (), (), d_e24, c2_typing1)
               | Pulse_Typing.T_TotBind
                   (uu___, e1, e2, t1, c2, b, x, uu___1, d_e2) ->
                   let d_e21 = d_e2 in
@@ -911,7 +919,7 @@ let rec (st_typing_subst :
                         | Pulse_Typing.T_Abs
                             (uu___1, uu___2, uu___3, uu___4, uu___5, uu___6,
                              uu___7, uu___8, uu___9)
-                            -> Prims.magic ()
+                            -> FStar_Pervasives.coerce_eq () e1_typing
                         | Pulse_Typing.T_STApp
                             (uu___1, head, ty, q, res, arg, uu___2, uu___3)
                             ->
@@ -1081,9 +1089,9 @@ let rec (st_typing_subst :
                                             Pulse_Typing.tm_false)) e eff ()
                                       e2 c d_e2 ()) ()), ())
                         | Pulse_Typing.T_Match
-                            (uu___1, uu___2, uu___3, uu___4, uu___5, uu___6,
-                             uu___7, uu___8, uu___9, uu___10)
-                            -> Prims.magic ()
+                            (uu___1, sc_u, sc_ty, sc, _ty_typing, _sc_typing,
+                             c, brs, brs_typing, pats_complete)
+                            -> FStar_Pervasives.coerce_eq () e1_typing
                         | Pulse_Typing.T_Frame
                             (uu___1, e2, c, frame, uu___2, d_e) ->
                             Pulse_Typing.T_Frame

@@ -2,6 +2,7 @@ module Pulse.Soundness.While
 
 module R = FStar.Reflection.V2
 module RT = FStar.Reflection.Typing
+module RU = Pulse.RuntimeUtils
 
 open Pulse.Syntax
 open Pulse.Reflection.Util
@@ -70,7 +71,7 @@ let while_soundness
        (R.pack_ln (R.Tv_App (mk_abs bool_tm R.Q_Explicit (elab_term inv)) (false_tm, R.Q_Explicit))))
     (RT.mk_abs unit_tm R.Q_Explicit
        (RT.subst_term (elab_term inv) [ RT.DT 0 false_tm ]))
-    = magic () in
+    = RU.magic () in
 
   let d = WT.while_typing rinv_typing rcond_typing rbody_typing in
   RT.T_Sub _ _ _ _ d

@@ -697,6 +697,108 @@ fn test (#t:Type0) (x:ref (llist t))
 ```
 
 ```pulse
+fn move_next_forall (#t:Type) (x:llist t)
+    requires is_list x 'l ** pure (Some? x)
+    returns y:llist t
+    ensures exists* hd tl.
+        something hd **
+        is_list y tl **
+        (forall* tl'. is_list y tl' @==> is_list x (hd::tl')) **
+        pure ('l == hd::tl)
+{ 
+    let np = Some?.v x;
+    is_list_cases_some x np;
+    let node = !np;
+    with tail tl. assert (is_list #t tail tl);
+    rewrite each tail as node.tail;
+    ghost fn aux (tl':list t)
+        requires pts_to np node
+        ensures is_list node.tail tl' @==> is_list x (node.head::tl')
+    {
+        ghost fn aux (_:unit)
+        requires pts_to np node ** is_list node.tail tl'
+        ensures is_list x (node.head::tl')
+        {
+            intro_is_list_cons x np;
+        };
+        intro_stick _ _ _ aux;
+        fold (is_list node.tail tl' @==> is_list x (node.head::tl'));
+    };
+    Pulse.Lib.Stick.intro_forall _ aux;
+    fold (something node.head);
+    node.tail
+}
+```
+
+
+```pulse
+ghost
+fn forall_trans (#a:Type0) (p q r: (a -> vprop))
+    requires (forall* x. p x @==> q x) ** (forall* x. q x @==> r x)
+    ensures forall* x. p x @==> r x
+{
+    ghost fn aux (x:a)
+        requires ((forall* x. p x @==> q x) ** (forall* x. q x @==> r x))
+        ensures p x @==> r x
+    {
+        ghost fn aux (_:unit)
+        requires ((forall* x. p x @==> q x) ** (forall* x. q x @==> r x)) ** p x
+        ensures r x
+        {
+            elim_forall #_ #(fun x -> p x @==> q x) x;
+            unfold (p x @==> q x);
+            elim_stick _ _;
+            elim_forall #a #(fun x -> q x @==> r x) x;
+            unfold (q x @==> r x);
+            elim_stick _ _;
+        };
+        intro_stick _ _ _ aux;
+        fold (p x @==> r x);
+    };
+    intro_forall _ aux
+}
+```
+
+```pulse
+ghost
+fn forall_trans_alt (#a #b #c:Type0) (p:(a -> vprop)) (q:(b -> vprop)) (r:(c -> vprop))
+                   (f: (a -> GTot b)) (g: (b -> GTot c))
+    requires (forall* x. p x @==> q (f x)) ** (forall* x. q x @==> r (g x))
+    ensures forall* x. p x @==> r (g (f x))
+{
+    ghost fn aux (x:a)
+        requires ((forall* x. p x @==> q (f x)) ** (forall* x. q x @==> r (g x)))
+        ensures p x @==> r (g (f x))
+    {
+        ghost fn aux (_:unit) 
+        requires ((forall* x. p x @==> q (f x)) ** (forall* x. q x @==> r (g x))) ** p x
+        ensures r (g (f x))
+        {
+            elim_forall #_ #(fun x -> p x @==> q (f x)) x;
+            unfold (p x @==> q (f x));
+            elim_stick _ _;
+            elim_forall #_ #(fun x -> q x @==> r (g x)) (f x);
+            unfold (q (f x) @==> r (g (f x)));
+            elim_stick _ _;
+        };
+        intro_stick _ _ _ aux;
+        fold (p x @==> r (g (f x)));
+    };
+    intro_forall _ aux
+}
+```
+
+```pulse
+ghost fn elim_forall_imp (#a:Type0) (p q: (a -> vprop)) (x:a)
+    requires (forall* x. p x @==> q x) ** p x
+    ensures q x
+{
+    elim_forall #_ #(fun x -> p x @==> q x) x;
+    unfold (p x @==> q x);
+    elim_stick _ _;
+}
+```
+
 
 
 ```pulse
@@ -718,24 +820,30 @@ fn append_iter (#t:Type) (x y:llist t)
         let l = !cur;
         with _ll sfx. assert (is_list #t _ll sfx);
         rewrite each _ll as l in (is_list _ll sfx);
-        rewrite each _ll as l in (forall* sfx'. is_list _ll sfx' @==> is_list x (pfx @ sfx'));
-        // assert (forall* sfx'. is_list l sfx' @==> is_list x (pfx @ sfx'));
-        admit();
+        rewrite_by (forall* sfx'. is_list _ll sfx' @==> is_list x (pfx @ sfx'))
+                   (forall* sfx'. is_list l sfx' @==> is_list x (pfx @ sfx'))
+                   rewrite_tac ();
         let b = is_last_cell l;
         if b 
         { 
             intro_not_b_if_sfx_1_false sfx;
+            fold (something pfx);
             false
         }
         else 
         {
-            admit();
-            let next = move_next l;
+            let next = move_next_forall l;
             with tl. assert (is_list next tl);
-            yields_trans (is_list next tl) (is_list l sfx) (is_list x (pfx @ sfx));
+            with hd. assert (something #t hd);
+            forall_trans_alt (is_list next) (is_list l) (is_list x)
+                         (fun tl -> hd :: tl)
+                         (fun tl -> pfx @ tl);
             List.Tot.Properties.append_assoc pfx [Cons?.hd sfx] tl;
-            rewrite (is_list next tl @==> is_list x (pfx @ sfx))
-                as (is_list next tl @==> is_list x ((pfx@[Cons?.hd sfx])@tl));
+            rewrite_by (forall* tl. is_list next tl @==> is_list x (pfx @ (hd::tl)))
+                       (forall* tl. is_list next tl @==> is_list x ((pfx@[hd])@tl))
+                       rewrite_tac ();
+            unfold (something #t hd);
+            fold (something #(list t) (pfx@[hd]));
             cur := next;
             intro_not_b_if_sfx_1_true tl;
             non_empty_list next;
@@ -752,24 +860,21 @@ fn append_iter (#t:Type) (x y:llist t)
         pure (List.Tot.length sfx >= 1 /\
               pfx@sfx == 'l1 /\
               Some? ll)
-    // invariant b.
-    // exists* ll pfx sfx.
-    //     pts_to cur ll **
-    //     is_list ll sfx **
-    //     (forall* sfx. is_list ll sfx @==> is_list x (pfx @ sfx)) **
-    //     not_b_if_sfx_1 b sfx **
-    //     pure (List.Tot.length sfx >= 1 /\
-    //           Some? ll /\
-    //           pfx@sfx == ll)
     { () };
-    admit();
     let last = !cur;
+    with pfx. assert (something #(list t) pfx);
     with _ll sfx. assert (is_list #t _ll sfx);
-    rewrite each _ll as last;
+    rewrite each _ll as last in (is_list _ll sfx);
+    rewrite_by (forall* sfx'. is_list _ll sfx' @==> is_list x (pfx @ sfx'))
+               (forall* sfx'. is_list last sfx' @==> is_list x (pfx @ sfx'))
+               rewrite_tac ();
     with _b _sfx. unfold (not_b_if_sfx_1 #t _b _sfx);
     assert (pure (List.Tot.length sfx == 1));
     append_at_last_cell last y;
-    admit()
+    elim_forall_imp (is_list last) (fun sfx' -> is_list x (pfx @ sfx')) (sfx@'l2);
+    List.Tot.Properties.append_assoc pfx sfx 'l2;
+    unfold (something #(list t) pfx);
+    with l. rewrite (is_list x l) as is_list x (List.Tot.append 'l1 'l2);
 }
 ```
 

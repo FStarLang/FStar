@@ -191,7 +191,7 @@ let tie_knot (g : env)  (rng : R.range)
     mk_arr bs c
   in
   (* This is a temporary implementation. It will just create
-  a new letbinding at the appropriate type with a `magic()` body. *)
+  a new letbinding at the appropriate type with a `RU.magic()` body. *)
   let flag, sig, _ = RT.mk_unchecked_let (fstar_env g) nm_orig (`(magic())) knot_r_typ in
   let nm = string_as_term nm_aux in 
   let sig = RU.add_attribute sig (`("pulse.recursive.knot", `#(nm))) in

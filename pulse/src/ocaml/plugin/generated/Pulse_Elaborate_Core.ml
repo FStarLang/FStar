@@ -243,13 +243,11 @@ let (simple_arr :
             FStar_Reflection_V2_Data.attrs = [];
             FStar_Reflection_V2_Data.ppname2 = (FStar_Sealed.seal "x")
           } in
-      let v = Prims.magic () in
-      let t21 = FStar_Reflection_Typing.close_term t2 v in
       FStar_Reflection_V2_Builtins.pack_ln
         (FStar_Reflection_V2_Data.Tv_Arrow
            (b,
              (FStar_Reflection_V2_Builtins.pack_comp
-                (FStar_Reflection_V2_Data.C_Total t21))))
+                (FStar_Reflection_V2_Data.C_Total t2))))
 let (elab_st_sub :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.comp ->
@@ -258,7 +256,9 @@ let (elab_st_sub :
           (FStar_Reflection_Types.term,
             (unit, unit, unit) FStar_Reflection_Typing.tot_typing)
             Prims.dtuple2)
-  = fun g -> fun c1 -> fun c2 -> fun d_sub -> Prims.magic ()
+  =
+  fun g ->
+    fun c1 -> fun c2 -> fun d_sub -> Pulse_RuntimeUtils.magic_s "elab_st_sub"
 let rec (elab_st_typing :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_term ->
