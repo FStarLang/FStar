@@ -31,11 +31,24 @@ let subst_map (ss : list (namedv * fv)) (r:term) (t : term) : Tac term =
   let subst = List.Tot.map (fun (x, fv) -> NT (Reflection.V2.pack_namedv x) (mk_e_app (Tv_FVar fv) [r])) ss in
   subst_term subst t
 
-let binder_set_qual (q:aqualv) (b:binder) : binder =
+let binder_mk_implicit (b:binder) : binder =
+  let q =
+    match b.qual with
+    | Q_Explicit -> Q_Implicit
+    | q -> q (* keep Q_Meta as it is *)
+  in
   { b with qual = q }
 
 let binder_to_term (b:binder) : Tot term =
   pack (Tv_Var (binder_to_namedv b))
+
+let binder_argv (b:binder) : Tot argv =
+  let q =
+    match b.qual with
+    | Q_Meta _ -> Q_Implicit
+    | q -> q
+  in
+  (binder_to_term b, q)
 
 let rec list_last #a (xs : list a) : Tac a =
   match xs with
@@ -44,7 +57,9 @@ let rec list_last #a (xs : list a) : Tac a =
   | _::xs -> list_last xs
 
 let mk_proj_decl (is_method:bool)
-                 (tyqn:name) ctorname univs indices (params:list binder) (idx:nat) (fieldnm : ppname_t) (fieldty : typ)
+                 (tyqn:name) ctorname univs indices (params:list binder)
+                 (idx:nat)
+                 (field : binder)
                  (unfold_names : list string)
                  (smap : list (namedv & fv))
 : Tac (list sigelt & fv)
@@ -52,16 +67,15 @@ let mk_proj_decl (is_method:bool)
   let np = length params in
   let ni = length indices in
   let tyfv = pack_fv tyqn in
-  let fv = pack_fv (cur_module () @ ["__proj__" ^ list_last ctorname ^ "__item__" ^ unseal fieldnm]) in
-  let rty : binder = fresh_binder (mk_e_app (pack (Tv_FVar tyfv))
-                                   (List.Tot.map binder_to_term (params @ indices)))
+  let fv = pack_fv (cur_module () @ ["__proj__" ^ list_last ctorname ^ "__item__" ^ unseal field.ppname]) in
+  let rty : binder = fresh_binder (mk_app (pack (Tv_FVar tyfv))
+                                          (List.Tot.map binder_argv (params @ indices)))
   in
   let s : typ = (rty <: binder).sort in
   //print ("rty " ^ term_to_string s);
-  let projty = mk_tot_arr (List.Tot.map (binder_set_qual Q_Implicit) params
-                           @ List.Tot.map (binder_set_qual Q_Implicit) indices
+  let projty = mk_tot_arr (List.Tot.map binder_mk_implicit (params @ indices)
                            @ [rty])
-                          (subst_map smap (binder_to_term rty) fieldty)
+                          (subst_map smap (binder_to_term rty) field.sort)
   in
   let se_proj = pack_sigelt <|
     Sg_Let {
@@ -81,13 +95,13 @@ let mk_proj_decl (is_method:bool)
   in
   let maybe_se_method : list sigelt =
     if not is_method then [] else
-    let meth_fv = pack_fv (cur_module () @ [unseal fieldnm]) in
+    if List.existsb (Reflection.V2.TermEq.term_eq (`Typeclasses.no_method)) field.attrs then [] else
+    let meth_fv = pack_fv (cur_module () @ [unseal field.ppname]) in
     let s : typ = (rty <: binder).sort in
     let rty = { rty with qual = Q_Meta (`Typeclasses.tcresolve) } in
-    let projty = mk_tot_arr (List.Tot.map (binder_set_qual Q_Implicit) params
-                             @ List.Tot.map (binder_set_qual Q_Implicit) indices
+    let projty = mk_tot_arr (List.Tot.map binder_mk_implicit (params @ indices)
                              @ [rty])
-                            (subst_map smap (binder_to_term rty) fieldty)
+                            (subst_map smap (binder_to_term rty) field.sort)
     in
     [pack_sigelt <| Sg_Let {
       isrec = false;
@@ -105,6 +119,14 @@ let mk_proj_decl (is_method:bool)
     }]}]
 
   in
+  (* Do we need to set the sigelt's Projector qual? If so,
+  here is how to do it, but F* currently rejects tactics
+  trying to generate "internal" qualifiers like Projector. However,
+  it does not seem to make a difference. *)
+  // let se_proj = set_sigelt_quals (
+  //                 Projector (tyqn, pack_ident (unseal field.ppname, range_0)) ::
+  //                 sigelt_quals se_proj) se_proj
+  // in
   (se_proj :: maybe_se_method , fv)
 
 [@@plugin]
@@ -123,7 +145,7 @@ let mk_projs (is_class:bool) (tyname:string) : Tac decls =
       let (fields, _) = collect_arr_bs ctor_t in
       let (decls, _, _, _) =
         fold_left (fun (decls, smap, unfold_names, idx) (field : binder) ->
-                     let (ds, fv) = mk_proj_decl is_class tyqn ctorname univs indices params idx field.ppname field.sort unfold_names smap in
+                     let (ds, fv) = mk_proj_decl is_class tyqn ctorname univs indices params idx field unfold_names smap in
                      (decls @ ds,
                       (binder_to_namedv field,fv)::smap,
                       (implode_qn (inspect_fv fv))::unfold_names,
