@@ -138,7 +138,7 @@ let e_term_aq aq =
     { NBETerm.em = embed_term
     ; NBETerm.un = unembed_term
     ; NBETerm.typ = (fun () -> mkFV fstar_refl_term_fv [] [])
-    ; NBETerm.emb_typ = (fun () -> fv_as_emb_typ fstar_refl_term_fv )
+    ; NBETerm.e_typ = (fun () -> fv_as_emb_typ fstar_refl_term_fv )
     }
 
 let e_term = e_term_aq (0, [])
