@@ -494,15 +494,18 @@ let tie_bu (#m : Type -> Type) {| md : monad m |} (d : lvm m) : lvm m =
     };
   !r
 
-let visitM_term #m {| md : monad m |} f (tm : term) : m term =
+let visitM_term_univs #m {| md : monad m |} vt vu (tm : term) : m term =
   let dict : lvm m =
-    tie_bu #m #md { novfs #m #md with f_term = f }
+    tie_bu #m #md { novfs #m #md with f_term = vt; f_univ = vu }
   in
   f_term #_ #dict tm
 
-let visitM_sigelt #m {| md : monad m |} f (tm : sigelt) : m sigelt =
+let visitM_term #m {| md : monad m |} vt (tm : term) : m term =
+  visitM_term_univs vt return tm
+
+let visitM_sigelt #m {| md : monad m |} vt vu (tm : sigelt) : m sigelt =
   let dict : lvm m =
-    tie_bu #m #md { novfs #m #md with f_term = f }
+    tie_bu #m #md { novfs #m #md with f_term = vt; f_univ = vu }
   in
   on_sub_sigelt #_ #dict tm
 
