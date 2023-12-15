@@ -1311,7 +1311,7 @@ let (interpret_plugin_as_term_fun :
               FStar_Extraction_ML_Syntax.with_ty
                 FStar_Extraction_ML_Syntax.MLTY_Top uu___ in
             let mk_tactic_interpretation l arity =
-              if arity > FStar_Tactics_V2_InterpFuns.max_tac_arity
+              if arity > FStar_Tactics_InterpFuns.max_tac_arity
               then
                 FStar_Compiler_Effect.raise
                   (NoEmbedding
@@ -1322,7 +1322,7 @@ let (interpret_plugin_as_term_fun :
                    | SyntaxTerm -> "mk_tactic_interpretation_"
                    | NBETerm -> "mk_nbe_tactic_interpretation_" in
                  as_name1
-                   (["FStar_Tactics_V2_InterpFuns"],
+                   (["FStar_Tactics_InterpFuns"],
                      (Prims.strcat idroot (Prims.string_of_int arity)))) in
             let mk_from_tactic l arity =
               let idroot =

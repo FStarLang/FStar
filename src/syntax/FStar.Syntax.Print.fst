@@ -1007,3 +1007,4 @@ instance showable_binding = {
           | Binding_univ x -> "Binding_univ " ^ show x);
 }
 instance showable_pragma = { show = pragma_to_string; }
+instance showable_subst_elt = { show = subst_elt_to_string; }

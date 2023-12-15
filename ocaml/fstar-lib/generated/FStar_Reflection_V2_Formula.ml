@@ -993,7 +993,7 @@ let _ =
        fun ncb ->
          fun us ->
            fun args ->
-             FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_1
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
                "FStar.Reflection.V2.Formula.term_as_formula' (plugin)"
                (FStar_Tactics_Native.from_tactic_1 term_as_formula')
                FStar_Reflection_V2_Embeddings.e_term e_formula psc ncb us

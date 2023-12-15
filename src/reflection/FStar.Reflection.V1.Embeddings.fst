@@ -245,7 +245,7 @@ let rec e_pattern_aq aq =
         | Pat_Var (bv, sort) ->
             S.mk_Tm_app ref_Pat_Var.t [S.as_arg (embed #_ #e_bv rng bv); S.as_arg (embed #_ #(e_sealed e_term) rng sort)] rng
         | Pat_Dot_Term eopt ->
-            S.mk_Tm_app ref_Pat_Dot_Term.t [S.as_arg (embed rng eopt)]
+            S.mk_Tm_app ref_Pat_Dot_Term.t [S.as_arg (embed #_ #(e_option e_term) rng eopt)]
                         rng
     in
     let rec unembed_pattern (t : term) : option pattern =
@@ -268,7 +268,7 @@ let rec e_pattern_aq aq =
             Some <| Pat_Var (bv, sort)))
 
         | Tm_fvar fv, [(eopt, _)] when S.fv_eq_lid fv ref_Pat_Dot_Term.lid ->
-            BU.bind_opt (unembed eopt) (fun eopt ->
+            BU.bind_opt (unembed #_ #(e_option e_term) eopt) (fun eopt ->
             Some <| Pat_Dot_Term eopt)
 
         | _ ->
@@ -356,7 +356,7 @@ let e_term_view_aq aq =
 
         | Tv_Match (t, ret_opt, brs) ->
             S.mk_Tm_app ref_Tv_Match.t [S.as_arg (embed #_ #(e_term_aq aq) rng t);
-                                        S.as_arg (embed rng ret_opt);
+                                        S.as_arg (embed #_ #e_match_returns_annotation rng ret_opt);
                                         S.as_arg (embed #_ #(e_list (e_branch_aq aq)) rng brs)]
                         rng
 
@@ -448,8 +448,8 @@ let e_term_view_aq aq =
 
         | Tm_fvar fv, [(t, _); (ret_opt, _); (brs, _)] when S.fv_eq_lid fv ref_Tv_Match.lid ->
             BU.bind_opt (unembed #_ #e_term t) (fun t ->
+            BU.bind_opt (unembed #_ #e_match_returns_annotation ret_opt) (fun ret_opt ->
             BU.bind_opt (unembed #_ #(e_list e_branch) brs) (fun brs ->
-            BU.bind_opt (unembed ret_opt) (fun ret_opt ->
             Some <| Tv_Match (t, ret_opt, brs))))
 
         | Tm_fvar fv, [(e, _); (t, _); (tacopt, _); (use_eq, _)] when S.fv_eq_lid fv ref_Tv_AscT.lid ->
@@ -522,7 +522,7 @@ instance e_binder_view =
   let embed_binder_view (rng:Range.range) (bview:binder_view) : term =
     S.mk_Tm_app ref_Mk_binder.t [S.as_arg (embed #_ #e_bv rng bview.binder_bv);
                                  S.as_arg (embed rng bview.binder_qual);
-                                 S.as_arg (embed rng bview.binder_attrs);
+                                 S.as_arg (embed #_ #e_attributes rng bview.binder_attrs);
                                  S.as_arg (embed #_ #e_term rng bview.binder_sort)]
                 rng in
 
@@ -534,7 +534,7 @@ instance e_binder_view =
       when S.fv_eq_lid fv ref_Mk_binder.lid ->
       BU.bind_opt (unembed #_ #e_bv bv) (fun bv ->
       BU.bind_opt (unembed q) (fun q ->
-      BU.bind_opt (unembed attrs) (fun attrs ->
+      BU.bind_opt (unembed #_ #e_attributes attrs) (fun attrs ->
       BU.bind_opt (unembed #_ #e_term sort) (fun sort ->
       Some <| RD.({ binder_bv=bv;binder_qual=q; binder_attrs=attrs; binder_sort = sort})))))
 
@@ -606,27 +606,6 @@ instance e_comp_view =
 
 
 (* TODO: move to, Syntax.Embeddings or somewhere better even *)
-let e_order =
-    let embed_order (rng:Range.range) (o:order) : term =
-        let r =
-        match o with
-        | Lt -> ord_Lt
-        | Eq -> ord_Eq
-        | Gt -> ord_Gt
-        in { r with pos = rng }
-    in
-    let unembed_order (t:term) : option order =
-        let t = U.unascribe t in
-        let hd, args = U.head_and_args t in
-        match (U.un_uinst hd).n, args with
-        | Tm_fvar fv, [] when S.fv_eq_lid fv ord_Lt_lid -> Some Lt
-        | Tm_fvar fv, [] when S.fv_eq_lid fv ord_Eq_lid -> Some Eq
-        | Tm_fvar fv, [] when S.fv_eq_lid fv ord_Gt_lid -> Some Gt
-        | _ ->
-            None
-    in
-    mk_emb embed_order unembed_order S.t_order
-
 instance e_sigelt =
     let embed_sigelt (rng:Range.range) (se:sigelt) : term =
         U.mk_lazy se fstar_refl_sigelt Lazy_sigelt (Some rng)
@@ -682,6 +661,8 @@ let e_letbinding =
     in
     mk_emb embed_letbinding unembed_letbinding fstar_refl_letbinding
 
+let e_ctor : embedding RD.ctor = e_tuple2 (e_list e_string) e_term
+
 instance e_sigelt_view =
     let embed_sigelt_view (rng:Range.range) (sev:sigelt_view) : term =
         match sev with
@@ -697,7 +678,7 @@ instance e_sigelt_view =
                             S.as_arg (embed rng univs);
                             S.as_arg (embed rng bs);
                             S.as_arg (embed #_ #e_term rng t);
-                            S.as_arg (embed rng dcs)]
+                            S.as_arg (embed #_ #(e_list e_ctor) rng dcs)]
                         rng
 
         | Sg_Val (nm, univs, t) ->
@@ -719,7 +700,7 @@ instance e_sigelt_view =
             BU.bind_opt (unembed us) (fun us ->
             BU.bind_opt (unembed bs) (fun bs ->
             BU.bind_opt (unembed #_ #e_term t) (fun t ->
-            BU.bind_opt (unembed  dcs) (fun dcs ->
+            BU.bind_opt (unembed #_ #(e_list e_ctor) dcs) (fun dcs ->
             Some <| Sg_Inductive (nm, us, bs, t, dcs))))))
 
         | Tm_fvar fv, [(r, _); (lbs, _)] when S.fv_eq_lid fv ref_Sg_Let.lid ->

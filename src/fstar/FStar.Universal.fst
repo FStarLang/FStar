@@ -144,8 +144,7 @@ let init_env deps : TcEnv.env =
         solver
         Const.prims_lid
         (NBE.normalize
-          (FStar.Tactics.V1.Interpreter.primitive_steps () @
-           FStar.Tactics.V2.Interpreter.primitive_steps ()))
+          (FStar.Tactics.Interpreter.primitive_steps ()))
         core_check
   in
   (* Set up some tactics callbacks *)

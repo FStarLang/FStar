@@ -16,6 +16,11 @@
 module Bug1482
 
 #set-options "--no_smt"
+
+let _ = assert (1 = 1)
+let _ = assert (1 == 1)
+let _ = assert (1 === 1)
+
 let _ = assert_norm (1 = 1)
 let _ = assert_norm (1 == 1)
 let _ = assert_norm (1 === 1)

@@ -305,7 +305,13 @@ let (setup_hooks : unit -> unit) =
       (FStar_Pervasives_Native.Some FStar_Syntax_Print.term_to_string);
     FStar_Compiler_Effect.op_Colon_Equals
       FStar_TypeChecker_Normalize.unembed_binder_knot
-      (FStar_Pervasives_Native.Some FStar_Reflection_V2_Embeddings.e_binder)
+      (FStar_Pervasives_Native.Some FStar_Reflection_V2_Embeddings.e_binder);
+    FStar_Compiler_List.iter
+      FStar_Tactics_Interpreter.register_tactic_primitive_step
+      FStar_Tactics_V1_Primops.ops;
+    FStar_Compiler_List.iter
+      FStar_Tactics_Interpreter.register_tactic_primitive_step
+      FStar_Tactics_V2_Primops.ops
 let (handle_error : Prims.exn -> unit) =
   fun e ->
     (let uu___1 = FStar_Errors.handleable e in

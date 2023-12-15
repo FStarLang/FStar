@@ -31,7 +31,7 @@ let renderdoc (d : document) : string =
 let backtrace_doc () : document =
   let s = stack_dump () in
   text "Stack trace:" ^/^
-  arbitrary_string s
+  arbitrary_string (trim_string s)
 
 let subdoc d =
   (* NOTE: slight hack here, using equality on Pprint documents. This works

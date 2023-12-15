@@ -134,6 +134,92 @@ let (nbe_eq2 :
               FStar_TypeChecker_NBETerm.AbstractNBE uu___2 in
             FStar_Pervasives_Native.Some uu___1
         | FStar_Syntax_Util.Unknown -> FStar_Pervasives_Native.None
+let (s_eq3 :
+  FStar_Syntax_Embeddings.abstract_term ->
+    FStar_Syntax_Embeddings.abstract_term ->
+      FStar_Syntax_Embeddings.abstract_term ->
+        FStar_Syntax_Embeddings.abstract_term ->
+          FStar_Syntax_Embeddings.abstract_term
+            FStar_Pervasives_Native.option)
+  =
+  fun typ1 ->
+    fun typ2 ->
+      fun x ->
+        fun y ->
+          let uu___ =
+            let uu___1 =
+              FStar_Syntax_Util.eq_tm
+                (FStar_Syntax_Embeddings.__proj__Abstract__item__t typ1)
+                (FStar_Syntax_Embeddings.__proj__Abstract__item__t typ2) in
+            let uu___2 =
+              FStar_Syntax_Util.eq_tm
+                (FStar_Syntax_Embeddings.__proj__Abstract__item__t x)
+                (FStar_Syntax_Embeddings.__proj__Abstract__item__t y) in
+            (uu___1, uu___2) in
+          match uu___ with
+          | (FStar_Syntax_Util.Equal, FStar_Syntax_Util.Equal) ->
+              FStar_Pervasives_Native.Some
+                (FStar_Syntax_Embeddings.Abstract FStar_Syntax_Util.t_true)
+          | (FStar_Syntax_Util.NotEqual, uu___1) ->
+              FStar_Pervasives_Native.Some
+                (FStar_Syntax_Embeddings.Abstract FStar_Syntax_Util.t_false)
+          | (uu___1, FStar_Syntax_Util.NotEqual) ->
+              FStar_Pervasives_Native.Some
+                (FStar_Syntax_Embeddings.Abstract FStar_Syntax_Util.t_false)
+          | uu___1 -> FStar_Pervasives_Native.None
+let (nbe_eq3 :
+  FStar_TypeChecker_NBETerm.abstract_nbe_term ->
+    FStar_TypeChecker_NBETerm.abstract_nbe_term ->
+      FStar_TypeChecker_NBETerm.abstract_nbe_term ->
+        FStar_TypeChecker_NBETerm.abstract_nbe_term ->
+          FStar_TypeChecker_NBETerm.abstract_nbe_term
+            FStar_Pervasives_Native.option)
+  =
+  fun typ1 ->
+    fun typ2 ->
+      fun x ->
+        fun y ->
+          let uu___ =
+            let uu___1 =
+              FStar_TypeChecker_NBETerm.eq_t
+                (FStar_TypeChecker_NBETerm.__proj__AbstractNBE__item__t typ1)
+                (FStar_TypeChecker_NBETerm.__proj__AbstractNBE__item__t typ2) in
+            let uu___2 =
+              FStar_TypeChecker_NBETerm.eq_t
+                (FStar_TypeChecker_NBETerm.__proj__AbstractNBE__item__t x)
+                (FStar_TypeChecker_NBETerm.__proj__AbstractNBE__item__t y) in
+            (uu___1, uu___2) in
+          match uu___ with
+          | (FStar_Syntax_Util.Equal, FStar_Syntax_Util.Equal) ->
+              let uu___1 =
+                let uu___2 =
+                  let uu___3 =
+                    FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.true_lid
+                      FStar_Pervasives_Native.None in
+                  FStar_TypeChecker_NBETerm.mkFV uu___3 [] [] in
+                FStar_TypeChecker_NBETerm.AbstractNBE uu___2 in
+              FStar_Pervasives_Native.Some uu___1
+          | (FStar_Syntax_Util.NotEqual, uu___1) ->
+              let uu___2 =
+                let uu___3 =
+                  let uu___4 =
+                    FStar_Syntax_Syntax.lid_as_fv
+                      FStar_Parser_Const.false_lid
+                      FStar_Pervasives_Native.None in
+                  FStar_TypeChecker_NBETerm.mkFV uu___4 [] [] in
+                FStar_TypeChecker_NBETerm.AbstractNBE uu___3 in
+              FStar_Pervasives_Native.Some uu___2
+          | (uu___1, FStar_Syntax_Util.NotEqual) ->
+              let uu___2 =
+                let uu___3 =
+                  let uu___4 =
+                    FStar_Syntax_Syntax.lid_as_fv
+                      FStar_Parser_Const.false_lid
+                      FStar_Pervasives_Native.None in
+                  FStar_TypeChecker_NBETerm.mkFV uu___4 [] [] in
+                FStar_TypeChecker_NBETerm.AbstractNBE uu___3 in
+              FStar_Pervasives_Native.Some uu___2
+          | uu___1 -> FStar_Pervasives_Native.None
 let (prop_eq_ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list)
   =
   let uu___ =
@@ -146,4 +232,18 @@ let (prop_eq_ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list)
       FStar_TypeChecker_NBETerm.e_abstract_nbe_term
       FStar_Syntax_Embeddings.e_abstract_term
       FStar_TypeChecker_NBETerm.e_abstract_nbe_term s_eq2 nbe_eq2 in
-  [uu___]
+  let uu___1 =
+    let uu___2 =
+      FStar_TypeChecker_Primops_Base.mk4' (Prims.of_int (2))
+        FStar_Parser_Const.eq3_lid FStar_Syntax_Embeddings.e_abstract_term
+        FStar_TypeChecker_NBETerm.e_abstract_nbe_term
+        FStar_Syntax_Embeddings.e_abstract_term
+        FStar_TypeChecker_NBETerm.e_abstract_nbe_term
+        FStar_Syntax_Embeddings.e_abstract_term
+        FStar_TypeChecker_NBETerm.e_abstract_nbe_term
+        FStar_Syntax_Embeddings.e_abstract_term
+        FStar_TypeChecker_NBETerm.e_abstract_nbe_term
+        FStar_Syntax_Embeddings.e_abstract_term
+        FStar_TypeChecker_NBETerm.e_abstract_nbe_term s_eq3 nbe_eq3 in
+    [uu___2] in
+  uu___ :: uu___1

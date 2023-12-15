@@ -132,3 +132,21 @@ let (showable_ident : ident FStar_Class_Show.showable) =
   { FStar_Class_Show.show = string_of_id }
 let (showable_lident : lident FStar_Class_Show.showable) =
   { FStar_Class_Show.show = string_of_lid }
+let (hasrange_ident : ident FStar_Class_HasRange.hasRange) =
+  {
+    FStar_Class_HasRange.pos = range_of_id;
+    FStar_Class_HasRange.setPos =
+      (fun rng -> fun id -> { idText = (id.idText); idRange = rng })
+  }
+let (hasrange_lident : lident FStar_Class_HasRange.hasRange) =
+  {
+    FStar_Class_HasRange.pos =
+      (fun lid1 -> FStar_Class_HasRange.pos hasrange_ident lid1.ident);
+    FStar_Class_HasRange.setPos =
+      (fun rng ->
+         fun id ->
+           let uu___ =
+             FStar_Class_HasRange.setPos hasrange_ident rng id.ident in
+           { ns = (id.ns); ident = uu___; nsstr = (id.nsstr); str = (id.str)
+           })
+  }

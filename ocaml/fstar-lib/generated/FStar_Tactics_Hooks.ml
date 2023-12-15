@@ -22,8 +22,8 @@ let (run_tactic_on_typ :
             | (ps, w) ->
                 let tactic_already_typed = false in
                 let uu___1 =
-                  FStar_Tactics_V2_Interpreter.run_tactic_on_ps rng_tac
-                    rng_goal false FStar_Syntax_Embeddings.e_unit ()
+                  FStar_Tactics_Interpreter.run_tactic_on_ps rng_tac rng_goal
+                    false FStar_Syntax_Embeddings.e_unit ()
                     FStar_Syntax_Embeddings.e_unit tactic
                     tactic_already_typed ps in
                 (match uu___1 with | (gs, _res) -> (gs, w))
@@ -48,8 +48,8 @@ let (run_tactic_on_all_implicits :
                 let tactic_already_typed = false in
                 let uu___2 =
                   let uu___3 = FStar_TypeChecker_Env.get_range env in
-                  FStar_Tactics_V2_Interpreter.run_tactic_on_ps uu___3
-                    rng_goal true FStar_Syntax_Embeddings.e_unit ()
+                  FStar_Tactics_Interpreter.run_tactic_on_ps uu___3 rng_goal
+                    true FStar_Syntax_Embeddings.e_unit ()
                     FStar_Syntax_Embeddings.e_unit tactic
                     tactic_already_typed ps in
                 (match uu___2 with | (goals, ()) -> goals)
@@ -226,7 +226,7 @@ let (by_tactic_interp :
                            let tagged_imps =
                              FStar_TypeChecker_Rel.resolve_implicits_tac e
                                g_imp in
-                           (FStar_Tactics_V2_Interpreter.report_implicits
+                           (FStar_Tactics_Interpreter.report_implicits
                               tm.FStar_Syntax_Syntax.pos tagged_imps;
                             Simplified (uvtm, gs))))
              | uu___2 -> Unchanged t)
@@ -557,10 +557,9 @@ let (preprocess :
            (let uu___2 =
               FStar_TypeChecker_Env.debug env (FStar_Options.Other "Tac") in
             FStar_Compiler_Effect.op_Colon_Equals
-              FStar_Tactics_V2_Interpreter.tacdbg uu___2);
+              FStar_Tactics_Interpreter.tacdbg uu___2);
            (let uu___3 =
-              FStar_Compiler_Effect.op_Bang
-                FStar_Tactics_V2_Interpreter.tacdbg in
+              FStar_Compiler_Effect.op_Bang FStar_Tactics_Interpreter.tacdbg in
             if uu___3
             then
               let uu___4 =
@@ -584,7 +583,7 @@ let (preprocess :
             | (did_anything, (t', gs)) ->
                 ((let uu___5 =
                     FStar_Compiler_Effect.op_Bang
-                      FStar_Tactics_V2_Interpreter.tacdbg in
+                      FStar_Tactics_Interpreter.tacdbg in
                   if uu___5
                   then
                     let uu___6 =
@@ -630,7 +629,7 @@ let (preprocess :
                                  | FStar_Pervasives_Native.Some phi1 -> phi1 in
                                ((let uu___7 =
                                    FStar_Compiler_Effect.op_Bang
-                                     FStar_Tactics_V2_Interpreter.tacdbg in
+                                     FStar_Tactics_Interpreter.tacdbg in
                                  if uu___7
                                  then
                                    let uu___8 =
@@ -1528,7 +1527,7 @@ let (synthesize :
                    FStar_TypeChecker_Env.debug env
                      (FStar_Options.Other "Tac") in
                  FStar_Compiler_Effect.op_Colon_Equals
-                   FStar_Tactics_V2_Interpreter.tacdbg uu___3);
+                   FStar_Tactics_Interpreter.tacdbg uu___3);
                 (let uu___3 =
                    run_tactic_on_typ tau.FStar_Syntax_Syntax.pos
                      typ.FStar_Syntax_Syntax.pos tau env typ in
@@ -1544,7 +1543,7 @@ let (synthesize :
                            | FStar_Pervasives_Native.Some vc ->
                                ((let uu___7 =
                                    FStar_Compiler_Effect.op_Bang
-                                     FStar_Tactics_V2_Interpreter.tacdbg in
+                                     FStar_Tactics_Interpreter.tacdbg in
                                  if uu___7
                                  then
                                    let uu___8 =
@@ -1590,7 +1589,7 @@ let (solve_implicits :
                    FStar_TypeChecker_Env.debug env
                      (FStar_Options.Other "Tac") in
                  FStar_Compiler_Effect.op_Colon_Equals
-                   FStar_Tactics_V2_Interpreter.tacdbg uu___3);
+                   FStar_Tactics_Interpreter.tacdbg uu___3);
                 (let gs =
                    let uu___3 = FStar_TypeChecker_Env.get_range env in
                    run_tactic_on_all_implicits tau.FStar_Syntax_Syntax.pos
@@ -1623,7 +1622,7 @@ let (solve_implicits :
                             | FStar_Pervasives_Native.Some vc ->
                                 ((let uu___9 =
                                     FStar_Compiler_Effect.op_Bang
-                                      FStar_Tactics_V2_Interpreter.tacdbg in
+                                      FStar_Tactics_Interpreter.tacdbg in
                                   if uu___9
                                   then
                                     let uu___10 =
@@ -1727,7 +1726,7 @@ let (handle_smt_goal :
                          FStar_TypeChecker_Env.debug env
                            (FStar_Options.Other "Tac") in
                        FStar_Compiler_Effect.op_Colon_Equals
-                         FStar_Tactics_V2_Interpreter.tacdbg uu___4);
+                         FStar_Tactics_Interpreter.tacdbg uu___4);
                       (let uu___4 =
                          let uu___5 = FStar_TypeChecker_Env.get_range env in
                          let uu___6 =
@@ -1748,7 +1747,7 @@ let (handle_smt_goal :
                                 | FStar_Pervasives_Native.Some vc ->
                                     ((let uu___8 =
                                         FStar_Compiler_Effect.op_Bang
-                                          FStar_Tactics_V2_Interpreter.tacdbg in
+                                          FStar_Tactics_Interpreter.tacdbg in
                                       if uu___8
                                       then
                                         let uu___9 =
@@ -1793,7 +1792,7 @@ let (splice :
                        FStar_TypeChecker_Env.debug env
                          (FStar_Options.Other "Tac") in
                      FStar_Compiler_Effect.op_Colon_Equals
-                       FStar_Tactics_V2_Interpreter.tacdbg uu___3);
+                       FStar_Tactics_Interpreter.tacdbg uu___3);
                     (let uu___3 =
                        if is_typed
                        then
@@ -1819,7 +1818,7 @@ let (splice :
                                       FStar_Syntax_Embeddings.e_string
                                       FStar_Reflection_V2_Embeddings.e_term) in
                                let uu___7 =
-                                 FStar_Tactics_V2_Interpreter.run_tactic_on_ps
+                                 FStar_Tactics_Interpreter.run_tactic_on_ps
                                    tau1.FStar_Syntax_Syntax.pos
                                    tau1.FStar_Syntax_Syntax.pos false
                                    FStar_Reflection_V2_Embeddings.e_env
@@ -2002,7 +2001,7 @@ let (splice :
                                               }) sig_blobs in
                                    (gs, sigelts)
                              else
-                               FStar_Tactics_V2_Interpreter.run_tactic_on_ps
+                               FStar_Tactics_Interpreter.run_tactic_on_ps
                                  tau1.FStar_Syntax_Syntax.pos
                                  tau1.FStar_Syntax_Syntax.pos false
                                  FStar_Syntax_Embeddings.e_unit ()
@@ -2119,7 +2118,7 @@ let (splice :
                                                ->
                                                ((let uu___12 =
                                                    FStar_Compiler_Effect.op_Bang
-                                                     FStar_Tactics_V2_Interpreter.tacdbg in
+                                                     FStar_Tactics_Interpreter.tacdbg in
                                                  if uu___12
                                                  then
                                                    let uu___13 =
@@ -2190,7 +2189,7 @@ let (splice :
                                       | uu___10 -> ()) lids;
                                  (let uu___10 =
                                     FStar_Compiler_Effect.op_Bang
-                                      FStar_Tactics_V2_Interpreter.tacdbg in
+                                      FStar_Tactics_Interpreter.tacdbg in
                                   if uu___10
                                   then
                                     let uu___11 =
@@ -2301,13 +2300,13 @@ let (mpreprocess :
                    FStar_TypeChecker_Env.debug env
                      (FStar_Options.Other "Tac") in
                  FStar_Compiler_Effect.op_Colon_Equals
-                   FStar_Tactics_V2_Interpreter.tacdbg uu___3);
+                   FStar_Tactics_Interpreter.tacdbg uu___3);
                 (let ps =
                    FStar_Tactics_V2_Basic.proofstate_of_goals
                      tm.FStar_Syntax_Syntax.pos env [] [] in
                  let tactic_already_typed = false in
                  let uu___3 =
-                   FStar_Tactics_V2_Interpreter.run_tactic_on_ps
+                   FStar_Tactics_Interpreter.run_tactic_on_ps
                      tau.FStar_Syntax_Syntax.pos tm.FStar_Syntax_Syntax.pos
                      false FStar_Reflection_V2_Embeddings.e_term tm
                      FStar_Reflection_V2_Embeddings.e_term tau
@@ -2333,7 +2332,7 @@ let (postprocess :
                      FStar_TypeChecker_Env.debug env
                        (FStar_Options.Other "Tac") in
                    FStar_Compiler_Effect.op_Colon_Equals
-                     FStar_Tactics_V2_Interpreter.tacdbg uu___3);
+                     FStar_Tactics_Interpreter.tacdbg uu___3);
                   (let uu___3 =
                      FStar_TypeChecker_Env.new_implicit_var_aux
                        "postprocess RHS" tm.FStar_Syntax_Syntax.pos env typ
@@ -2363,7 +2362,7 @@ let (postprocess :
                                   | FStar_Pervasives_Native.Some vc ->
                                       ((let uu___9 =
                                           FStar_Compiler_Effect.op_Bang
-                                            FStar_Tactics_V2_Interpreter.tacdbg in
+                                            FStar_Tactics_Interpreter.tacdbg in
                                         if uu___9
                                         then
                                           let uu___10 =
@@ -2401,6 +2400,6 @@ let (postprocess :
                              (let tagged_imps =
                                 FStar_TypeChecker_Rel.resolve_implicits_tac
                                   env g_imp in
-                              FStar_Tactics_V2_Interpreter.report_implicits
+                              FStar_Tactics_Interpreter.report_implicits
                                 tm.FStar_Syntax_Syntax.pos tagged_imps;
                               uvtm))))))

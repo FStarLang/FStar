@@ -323,14 +323,3 @@ let ref_qual_ExceptionConstructor             = fstar_refl_data_const "Exception
 let ref_qual_HasMaskedEffect                  = fstar_refl_data_const "HasMaskedEffect"
 let ref_qual_Effect                           = fstar_refl_data_const "Effect"
 let ref_qual_OnlyName                         = fstar_refl_data_const "OnlyName"
-
-(* Should not be here *)
-let ord_Lt_lid = Ident.lid_of_path (["FStar"; "Order"; "Lt"]) Range.dummyRange
-let ord_Eq_lid = Ident.lid_of_path (["FStar"; "Order"; "Eq"]) Range.dummyRange
-let ord_Gt_lid = Ident.lid_of_path (["FStar"; "Order"; "Gt"]) Range.dummyRange
-let ord_Lt = tdataconstr ord_Lt_lid
-let ord_Eq = tdataconstr ord_Eq_lid
-let ord_Gt = tdataconstr ord_Gt_lid
-let ord_Lt_fv = lid_as_fv ord_Lt_lid (Some Data_ctor)
-let ord_Eq_fv = lid_as_fv ord_Eq_lid (Some Data_ctor)
-let ord_Gt_fv = lid_as_fv ord_Gt_lid (Some Data_ctor)

@@ -17,6 +17,12 @@ val mapM
   (#a #b :Type)
 : (a -> m b) -> list a -> m (list b)
 
+val map_optM
+  (#m: Type -> Type)
+  {| monad m |}
+  (#a #b :Type)
+: (a -> m b) -> option a -> m (option b)
+
 val iterM
   (#m: Type -> Type)
   {| monad m |}

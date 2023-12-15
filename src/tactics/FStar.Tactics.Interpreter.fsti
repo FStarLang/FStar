@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.Tactics.V2.Interpreter
+module FStar.Tactics.Interpreter
 
 open FStar.Compiler.Effect
 open FStar.Compiler.Range
@@ -36,10 +36,17 @@ val run_tactic_on_ps :
 
 val primitive_steps : unit -> list FStar.TypeChecker.Primops.primitive_step
 
-(* Used by tactics V1 *)
-val register_tactic_primitive_step : FStar.TypeChecker.Primops.primitive_step -> unit
-
 val report_implicits : range -> FStar.TypeChecker.Rel.tagged_implicits -> unit
+
+(* Called by Main *)
+val register_tactic_primitive_step : FStar.TypeChecker.Primops.primitive_step -> unit
 
 (* For debugging only *)
 val tacdbg : ref bool
+
+open FStar.Tactics.Monad
+module NBET = FStar.TypeChecker.NBETerm
+val e_tactic_thunk (er : embedding 'r) : embedding (tac 'r)
+val e_tactic_nbe_thunk (er : NBET.embedding 'r) : NBET.embedding (tac 'r)
+val e_tactic_1 (ea : embedding 'a) (er : embedding 'r) : embedding ('a -> tac 'r)
+val e_tactic_nbe_1 (ea : NBET.embedding 'a) (er : NBET.embedding 'r) : NBET.embedding ('a -> tac 'r)

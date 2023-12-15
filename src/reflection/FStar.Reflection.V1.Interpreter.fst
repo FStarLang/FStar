@@ -34,174 +34,99 @@ open FStar.Syntax.Syntax
 open FStar.Reflection.V1.Constants
 open FStar.Class.Monad
 
-let unembed     {| EMB.embedding 'a |} (x:term) norm_cb : option 'a = EMB.unembed x norm_cb
-let try_unembed {| EMB.embedding 'a |} (x:term) norm_cb : option 'a = EMB.try_unembed x norm_cb
-let embed       {| EMB.embedding 'a |} r (x:'a) norm_cb = EMB.embed x r None norm_cb
+(* NB: assuming uarity = 0 for these three. Also, they are homogenous in KAM and NBE. *)
 
-(* We use `try_unembed` instead of `unembedding`, since we very well
- * might fail to unembed during the *previous* normalization stages
- * of metaprograms. When actually running, we certainly expect
- * everything to reduce to proper values and unembed just fine, but
- * we cannot ignore this case. So, use `try_` so we don't generate
- * spurious warnings. *)
+val mk1 :
+  string ->
+  {| EMB.embedding 't1 |} ->
+  {| EMB.embedding 'res |} ->
+  {| NBET.embedding 't1 |} ->
+  {| NBET.embedding 'res |} ->
+  ('t1 -> 'res) ->
+  PO.primitive_step
+let mk1 nm f =
+  let lid = fstar_refl_builtins_lid nm in
+  PO.mk1' 0 lid
+    (fun x -> f x |> Some)
+    (fun x -> f x |> Some)
 
-let int1 (m:lid)
-         {| EMB.embedding 'a |} {| EMB.embedding 'r |}
-         (f:'a -> 'r)
-         (psc:PO.psc) n (args : args) : option term =
-    match args with
-    | [(a, _)] ->
-      let! a = try_unembed a n in
-      return (embed (PO.psc_range psc) (f a) n)
-    | _ -> None
+val mk2 :
+  string ->
+  {| EMB.embedding 't1 |} ->
+  {| EMB.embedding 't2 |} ->
+  {| EMB.embedding 'res |} ->
+  {| NBET.embedding 't1 |} ->
+  {| NBET.embedding 't2 |} ->
+  {| NBET.embedding 'res |} ->
+  ('t1 -> 't2 -> 'res) ->
+  PO.primitive_step
+let mk2 nm f =
+  let lid = fstar_refl_builtins_lid nm in
+  PO.mk2' 0 lid
+    (fun x y -> f x y |> Some)
+    (fun x y -> f x y |> Some)
 
-let int2 (m:lid)
-         {| EMB.embedding 'a |} {| EMB.embedding 'b |} {| EMB.embedding 'r |}
-         (f:'a -> 'b -> 'r)
-         (psc:PO.psc) n (args : args) : option term =
-    match args with
-    | [(a, _); (b, _)] ->
-      let! a = try_unembed a n in
-      let! b = try_unembed b n in
-      return (embed (PO.psc_range psc) (f a b) n)
-    | _ -> None
+val mk3 :
+  string ->
+  {| EMB.embedding 't1 |} ->
+  {| EMB.embedding 't2 |} ->
+  {| EMB.embedding 't3 |} ->
+  {| EMB.embedding 'res |} ->
+  {| NBET.embedding 't1 |} ->
+  {| NBET.embedding 't2 |} ->
+  {| NBET.embedding 't3 |} ->
+  {| NBET.embedding 'res |} ->
+  ('t1 -> 't2 -> 't3 -> 'res) ->
+  PO.primitive_step
+let mk3 nm f =
+  let lid = fstar_refl_builtins_lid nm in
+  PO.mk3' 0 lid
+    (fun x y z -> f x y z |> Some)
+    (fun x y z -> f x y z |> Some)
+    
+(* Use these instances in this module *)
 
-let int3 (m:lid)
-         {| EMB.embedding 'a |} {| EMB.embedding 'b |} {| EMB.embedding 'c |} {| EMB.embedding 'r |}
-         (f:'a -> 'b -> 'c -> 'r)
-         (psc:PO.psc) n (args : args) : option term =
-    match args with
-    | [(a, _); (b, _); (c, _)] ->
-      let! a = try_unembed a n in
-      let! b = try_unembed b n in
-      let! c = try_unembed c n in
-      return (embed (PO.psc_range psc) (f a b c) n)
-    | _ -> None
-
-let nbe_int1 (m:lid) (f:'a -> 'r) (ea:NBET.embedding 'a) (er:NBET.embedding 'r)
-                     (cb:NBET.nbe_cbs) (args : NBET.args) : option NBET.t =
-    match args with
-    | [(a, _)] ->
-        BU.bind_opt (NBET.unembed ea cb a) (fun a ->
-        Some (NBET.embed er cb (f a)))
-    | _ -> None
-
-let nbe_int2 (m:lid) (f:'a -> 'b -> 'r) (ea:NBET.embedding 'a) (eb:NBET.embedding 'b) (er:NBET.embedding 'r)
-                     (cb:NBET.nbe_cbs) (args : NBET.args) : option NBET.t =
-    match args with
-    | [(a, _); (b, _)] ->
-        BU.bind_opt (NBET.unembed ea cb a) (fun a ->
-        BU.bind_opt (NBET.unembed eb cb b) (fun b ->
-        Some (NBET.embed er cb (f a b))))
-    | _ -> None
-
-let nbe_int3 (m:lid) (f:'a -> 'b -> 'c -> 'r) (ea:NBET.embedding 'a) (eb:NBET.embedding 'b) (ec:NBET.embedding 'c) (er:NBET.embedding 'r)
-                     (cb:NBET.nbe_cbs) (args : NBET.args) : option NBET.t =
-    match args with
-    | [(a, _); (b, _); (c, _)] ->
-        BU.bind_opt (NBET.unembed ea cb a) (fun a ->
-        BU.bind_opt (NBET.unembed eb cb b) (fun b ->
-        BU.bind_opt (NBET.unembed ec cb c) (fun c ->
-        Some (NBET.embed er cb (f a b c)))))
-    | _ -> None
-
-let mklid (nm : string) : lid = fstar_refl_builtins_lid nm
-
-let mk_us (l : lid) (u_arity:int) (arity : int)
-            (fn     : PO.psc -> EMB.norm_cb -> args -> option term)
-            (nbe_fn : NBET.nbe_cbs -> NBET.args -> option NBET.t) : PO.primitive_step
-  =
-  { name                         = l
-  ; arity                        = arity
-  ; univ_arity                   = u_arity
-  ; auto_reflect                 = None
-  ; strong_reduction_ok          = true
-  ; requires_binder_substitution = false
-  ; renorm_after                 = false
-  ; interpretation               = (fun psc cbs _us args -> fn psc cbs args)
-  ; interpretation_nbe           = (fun cbs _us args -> nbe_fn cbs args)
-  }
-
-(* Most primitives are not universe polymorphic. *)
-let mk l arity fn nbe_fn = mk_us l 0 arity fn nbe_fn
-
-(*
- ** Packing both regular and NBE embedding in a single type, for brevity
- ** in the table below. This should all be unfolded at F* initialization
- ** time so it won't be a performance concern.
- *)
-class dualemb 'a = {
-  s_emb : EMB.embedding 'a;
-  nbe_emb : NBET.embedding 'a;
-}
-
-instance emb_from_dual (d : dualemb 'a) : Tot (EMB.embedding 'a) = d.s_emb
-
-instance e_int             : dualemb Z.t                = Mkdualemb EMB.e_int NBET.e_int
-instance e_bool            : dualemb bool               = Mkdualemb EMB.e_bool NBET.e_bool
-instance e_string          : dualemb string             = Mkdualemb EMB.e_string NBET.e_string
-instance e_order           : dualemb FStar.Order.order  = Mkdualemb RE.e_order NRE.e_order
-
-instance e_term            : dualemb term               = Mkdualemb RE.e_term NRE.e_term
-instance e_term_view       : dualemb RD.term_view       = Mkdualemb RE.e_term_view NRE.e_term_view
-instance e_fv              : dualemb fv                 = Mkdualemb RE.e_fv NRE.e_fv
-instance e_bv              : dualemb bv                 = Mkdualemb RE.e_bv NRE.e_bv
-instance e_bv_view         : dualemb RD.bv_view         = Mkdualemb RE.e_bv_view NRE.e_bv_view
-instance e_comp            : dualemb comp               = Mkdualemb RE.e_comp NRE.e_comp
-instance e_comp_view       : dualemb RD.comp_view       = Mkdualemb RE.e_comp_view NRE.e_comp_view
-instance e_universe        : dualemb universe           = Mkdualemb RE.e_universe NRE.e_universe
-instance e_universe_view   : dualemb RD.universe_view   = Mkdualemb RE.e_universe_view NRE.e_universe_view
-instance e_sigelt          : dualemb sigelt             = Mkdualemb RE.e_sigelt NRE.e_sigelt
-instance e_sigelt_view     : dualemb RD.sigelt_view     = Mkdualemb RE.e_sigelt_view NRE.e_sigelt_view
-instance e_binder          : dualemb binder             = Mkdualemb RE.e_binder NRE.e_binder
-instance e_binder_view     : dualemb RD.binder_view     = Mkdualemb RE.e_binder_view NRE.e_binder_view
-instance e_binders         : dualemb binders            = Mkdualemb RE.e_binders NRE.e_binders
-
-instance e_letbinding      : dualemb letbinding         = Mkdualemb RE.e_letbinding NRE.e_letbinding
-instance e_lb_view         : dualemb RD.lb_view         = Mkdualemb RE.e_lb_view NRE.e_lb_view
-(* ^ Inconsistent naming with these.. but too long otherwise and userspace has
- * lb_view already. Probably not worth the fix. *)
-
-instance e_env             : dualemb Env.env            = Mkdualemb RE.e_env NRE.e_env
-instance e_aqualv          : dualemb RD.aqualv          = Mkdualemb RE.e_aqualv NRE.e_aqualv
-instance e_vconfig         : dualemb VConfig.vconfig    = Mkdualemb EMB.e_vconfig NBET.e_vconfig
-instance e_attributes      : dualemb (list attribute)   = Mkdualemb RE.e_attributes NRE.e_attributes
-instance e_qualifiers      : dualemb RD.qualifiers      = Mkdualemb RE.e_qualifiers NRE.e_qualifiers
-instance e_range           : dualemb Range.range              =
-  Mkdualemb FStar.Syntax.Embeddings.e_range FStar.TypeChecker.NBETerm.e_range
-
-instance e_list (e : dualemb 'a) : Tot (dualemb (list 'a)) =
-  { s_emb = EMB.e_list e.s_emb;
-    nbe_emb = NBET.e_list e.nbe_emb; }
-
-instance e_option (e : dualemb 'a) : Tot (dualemb (option 'a)) =
-  { s_emb = EMB.e_option e.s_emb;
-    nbe_emb = NBET.e_option e.nbe_emb; }
-
-(** Helpers to create a (total) primitive step from a function and embeddings. *)
-let mk1 (nm : string)
-    {|ea  : dualemb 'a|} {|er : dualemb 'r|}
-    (f : 'a  -> 'r)
-: PO.primitive_step =
-    let l = mklid nm in
-    mk l 1 (int1     l f)
-           (nbe_int1 l f ea.nbe_emb er.nbe_emb)
-
-let mk2 (nm : string)
-    {|ea  : dualemb 'a|} {|eb : dualemb 'b|} {|er : dualemb 'r|}
-    (f : 'a  -> 'b -> 'r)
-: PO.primitive_step =
-    let l = mklid nm in
-    mk l 2 (int2     l f)
-           (nbe_int2 l f ea.nbe_emb eb.nbe_emb er.nbe_emb)
-
-let mk3 (nm : string)
-    {|ea  : dualemb 'a|} {|eb : dualemb 'b|} {|ec : dualemb 'c|} {|er : dualemb 'r|}
-    (f  : 'a  -> 'b -> 'c -> 'r)
-: PO.primitive_step =
-    let l = mklid nm in
-    mk l 3 (int3     l f)
-           (nbe_int3 l f ea.nbe_emb eb.nbe_emb ec.nbe_emb er.nbe_emb)
+instance _ = RE.e_term
+instance _ = RE.e_term_view
+instance _ = RE.e_fv
+instance _ = RE.e_bv
+instance _ = RE.e_bv_view
+instance _ = RE.e_comp
+instance _ = RE.e_comp_view
+instance _ = RE.e_universe
+instance _ = RE.e_universe_view
+instance _ = RE.e_sigelt
+instance _ = RE.e_sigelt_view
+instance _ = RE.e_binder
+instance _ = RE.e_binder_view
+instance _ = RE.e_binders
+instance _ = RE.e_letbinding
+instance _ = RE.e_lb_view
+instance _ = RE.e_env
+instance _ = RE.e_aqualv
+instance _ = RE.e_attributes
+instance _ = RE.e_qualifiers
+(* And NBE *)
+instance _ = NRE.e_term
+instance _ = NRE.e_term_view
+instance _ = NRE.e_fv
+instance _ = NRE.e_bv
+instance _ = NRE.e_bv_view
+instance _ = NRE.e_comp
+instance _ = NRE.e_comp_view
+instance _ = NRE.e_universe
+instance _ = NRE.e_universe_view
+instance _ = NRE.e_sigelt
+instance _ = NRE.e_sigelt_view
+instance _ = NRE.e_binder
+instance _ = NRE.e_binder_view
+instance _ = NRE.e_binders
+instance _ = NRE.e_letbinding
+instance _ = NRE.e_lb_view
+instance _ = NRE.e_env
+instance _ = NRE.e_aqualv
+instance _ = NRE.e_attributes
+instance _ = NRE.e_qualifiers
 
 (*
  * NOTE: all primitives must be carefully inspected to make sure they
@@ -266,7 +191,7 @@ let reflection_primops : list PO.primitive_step = [
   mk2 "lookup_typ" RB.lookup_typ;
   mk1 "env_open_modules" RB.env_open_modules;
 
-  (* See note in ulib/FStar.Reflection.V1.Builints.fsti: we expose these
+  (* See note in ulib/FStar.Reflection.V1.Builtins.fsti: we expose these
      three to reduce dependencies. *)
   mk1 "implode_qn" RB.implode_qn;
 
