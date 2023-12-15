@@ -1,5 +1,5 @@
 [
-  "w\u0016m\u001a\u0017¤£Ç³\u0001\u0015F4;0·",
+  "Ç«_[\u0011Ž\f's˜Ö&²ŠÏÛ",
   [
     [
       "STLC.Infer.__proj__EBVar__item___0",
@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_67dd0c8a36eaf642ae0fc764a3b385e4"
       ],
       0,
-      "db9e486e98c2a13bd6963c1b80190e38"
+      "41281f71c3e9454502061c62383731d1"
     ],
     [
       "STLC.Infer.__proj__EVar__item___0",
@@ -23,7 +23,7 @@
         "refinement_interpretation_Tm_refine_10f5db85a110b66ccb5055c6ad6b968a"
       ],
       0,
-      "b383ca032dfd393e2aedcd0a690e1103"
+      "03e9d9b640638465a39a0baef91e79ef"
     ],
     [
       "STLC.Infer.__proj__ELam__item___0",
@@ -35,7 +35,7 @@
         "refinement_interpretation_Tm_refine_77e8f911aba7f63a6e07ac80f3ab2530"
       ],
       0,
-      "021b85df81369b3484abafbf8f6e197d"
+      "752a973bcaf9674d1c7195b7dc3fa882"
     ],
     [
       "STLC.Infer.__proj__ELam__item___1",
@@ -47,7 +47,7 @@
         "refinement_interpretation_Tm_refine_77e8f911aba7f63a6e07ac80f3ab2530"
       ],
       0,
-      "6b4bab8dc9af69fdedbdc1130a09fc41"
+      "94591af8565c3756c4e397be8bb9bfaa"
     ],
     [
       "STLC.Infer.__proj__EApp__item___0",
@@ -59,7 +59,7 @@
         "refinement_interpretation_Tm_refine_ab6d475508fc8c19b7a29918cef42c03"
       ],
       0,
-      "12ba438d50517d36d5c6d1eb6a378df9"
+      "2f3ab2fd2d3729978d4db1ed6bb6f2c1"
     ],
     [
       "STLC.Infer.__proj__EApp__item___1",
@@ -71,7 +71,7 @@
         "refinement_interpretation_Tm_refine_ab6d475508fc8c19b7a29918cef42c03"
       ],
       0,
-      "cac30d1ac0d64d15c1c483620fd278a7"
+      "0c79059609c1f61e714021f18d26cfd6"
     ],
     [
       "STLC.Infer.open_exp'",
@@ -97,7 +97,7 @@
         "subterm_ordering_STLC.Infer.ELam"
       ],
       0,
-      "9d931857021984837d460e088b5adfdf"
+      "6fe894e30946967b2d3c4d1ee3147f5f"
     ],
     [
       "STLC.Infer.close_exp'",
@@ -123,7 +123,7 @@
         "subterm_ordering_STLC.Infer.ELam"
       ],
       0,
-      "58a9c4375ab9c069cfcf73acaf721d5e"
+      "2292bd80c8af6171bc55b23a48c3db94"
     ],
     [
       "STLC.Infer.infer",
@@ -134,17 +134,13 @@
         "@MaxIFuel_assumption", "@query", "disc_equation_STLC.Infer.EApp",
         "disc_equation_STLC.Infer.EBVar", "disc_equation_STLC.Infer.ELam",
         "disc_equation_STLC.Infer.EUnit", "disc_equation_STLC.Infer.EVar",
-        "equation_FStar.Pervasives.pattern",
         "fuel_guarded_inversion_STLC.Infer.stlc_exp",
-        "function_token_typing_FStar.Pervasives.pattern",
-        "function_token_typing_FStar.Reflection.Types.term",
+        "function_token_typing_FStar.Stubs.Reflection.Types.term",
         "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_10f5db85a110b66ccb5055c6ad6b968a",
-        "typing_STLC.Core.lookup", "typing_STLC.Infer.__proj__EVar__item___0"
+        "projection_inverse_BoxBool_proj_0", "typing_STLC.Core.lookup"
       ],
       0,
-      "dec5a7957906268a43abd4ff899e175d"
+      "fe1133f53ff86eff846b07ac0ecdeed6"
     ],
     [
       "STLC.Infer.elab_core",
@@ -159,7 +155,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "2a46860cea52cc895775fdbd4131a7ed"
+      "3f40e005d9849a2f70b8e393b12584c1"
     ]
   ]
 ]

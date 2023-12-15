@@ -2301,3 +2301,5 @@ let (mk_or_l : term Prims.list -> FStar_Compiler_Range_Type.range -> term) =
 let (mk_haseq : term -> term) =
   fun t -> let uu___ = mkApp ("Prims.hasEq", [t]) t.rng in mk_Valid uu___
 let (dummy_sort : sort) = Sort "Dummy_sort"
+let (showable_smt_term : term FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = print_smt_term }

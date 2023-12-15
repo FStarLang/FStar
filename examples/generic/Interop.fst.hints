@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Interop.reg__uu___haseq" ],
       0,
-      "a2ce580b23ac8e291a4d5e01e1065168"
+      "f2dfa1736919b4a08c09858a5117ad3e"
     ],
     [
       "Interop.as_reg",
@@ -26,7 +26,7 @@
         "refinement_interpretation_Tm_refine_e6b2aee2400a046740e3ca5c2a276983"
       ],
       0,
-      "86fe092b7813a0284c09e74a517b0ffa"
+      "bd53dfb81ebd65440fe35b3302582463"
     ],
     [
       "Interop.n_arrow",
@@ -49,7 +49,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "8b041d88a9ef4caebf97d318dae6c5a9"
+      "a2e3c8c42456f397455b238c17fdaa06"
     ],
     [
       "Interop.elim",
@@ -66,7 +66,7 @@
         "primitive_Prims.op_Subtraction"
       ],
       0,
-      "b737369625b5ddc219553a7f2b126325"
+      "f3f7d772fd5f5d7a3df72dcb8f1e9521"
     ],
     [
       "Interop.elim_1",
@@ -95,7 +95,7 @@
         "refinement_interpretation_Tm_refine_d96fe6e9eadc3273f1a658360d08788d"
       ],
       0,
-      "8a40ec0889183555ce10624e6df0114e"
+      "7972d80d60ad36b1a03760f8be9d9e79"
     ],
     [
       "Interop.elim_m",
@@ -106,7 +106,6 @@
         "@MaxIFuel_assumption", "@query",
         "assumption_Interop.reg__uu___haseq",
         "binder_x_49a4247c1099bc9e821570eed8ff54c1_1",
-        "binder_x_d6ab5bad6ecdec1fec56c1da5cec14df_3",
         "constructor_distinct_FStar.Integers.Signed",
         "constructor_distinct_FStar.Integers.Winfinite",
         "equality_tok_FStar.Integers.Winfinite@tok",
@@ -120,7 +119,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "0159e1deaa3d00ad96b716a158150da1"
+      "7906bbf639feedec936cfd0524cf23df"
     ],
     [
       "Interop.as_vale_pre",
@@ -132,7 +131,7 @@
         "refinement_interpretation_Tm_refine_d96fe6e9eadc3273f1a658360d08788d"
       ],
       0,
-      "489959caa8267f3adc4e7982ea58d399"
+      "a197ab91b4f61dffe5452b7dd72bdf09"
     ],
     [
       "Interop.as_vale_post",
@@ -144,7 +143,7 @@
         "refinement_interpretation_Tm_refine_d96fe6e9eadc3273f1a658360d08788d"
       ],
       0,
-      "80ac94a61f0a11b62ca027e820caa8a9"
+      "aab7153af42518f09ee236374ebe0ec6"
     ],
     [
       "Interop.as_lowstar_sig",
@@ -182,7 +181,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "746f47c9452134a07195b6a3a8a167f4"
+      "ab6d80cb774fc28a1d0ea179f41f05a1"
     ],
     [
       "Interop.wrap",
@@ -206,7 +205,6 @@
         "Interop_interpretation_Tm_ghost_arrow_03f9b220dea5d86a2320f2e023430eec",
         "Interop_pretyping_d0cf4df241d5c82acedf643c4d2d5e32",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "assumption_Interop.reg__uu___haseq",
         "binder_x_054c867d1f22ade92fd8803be106fd6b_1",
         "binder_x_485d7192aee833f26ba81d29d8b5fe66_2",
@@ -216,9 +214,7 @@
         "constructor_distinct_FStar.Integers.Winfinite",
         "constructor_distinct_Interop.R1", "constructor_distinct_Interop.R2",
         "constructor_distinct_Interop.R3", "constructor_distinct_Interop.R4",
-        "constructor_distinct_Interop.reg",
-        "constructor_distinct_Prims.unit", "constructor_distinct_Tm_unit",
-        "data_typing_intro_Interop.R2@tok",
+        "constructor_distinct_Tm_unit", "data_typing_intro_Interop.R2@tok",
         "equality_tok_FStar.Integers.Winfinite@tok",
         "equality_tok_Interop.R1@tok", "equality_tok_Interop.R2@tok",
         "equality_tok_Interop.R3@tok", "equality_tok_Interop.R4@tok",
@@ -279,12 +275,11 @@
         "typing_FStar.Monotonic.HyperHeap.root",
         "typing_FStar.Monotonic.HyperStack.get_hmap",
         "typing_FStar.Monotonic.HyperStack.get_tip", "typing_Interop.as_reg",
-        "typing_Interop.n_arrow", "typing_tok_Interop.R1@tok",
-        "typing_tok_Interop.R2@tok", "typing_tok_Interop.R3@tok",
-        "unit_typing", "well-founded-ordering-on-nat"
+        "typing_Interop.n_arrow", "typing_tok_Interop.R2@tok",
+        "well-founded-ordering-on-nat"
       ],
       0,
-      "f479822616d976ae75a52aa4d61ed1ae"
+      "1b845e630ac1b3fdd7920f6bb0861627"
     ]
   ]
 ]

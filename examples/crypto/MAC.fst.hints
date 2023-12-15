@@ -13,33 +13,16 @@
         "haseqTm_refine_b3982a6d174e1d047431ae85c35dc7d8"
       ],
       0,
-      "735ab2848b509f19f2a8574d90520a61"
+      "75626536945523f4120dfdd3a4ce12fa"
     ],
     [
       "MAC.verify",
       1,
       2,
-      2,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "assumption_Platform.Bytes.HasEq_bytes",
-        "assumption_Prims.HasEq_bool",
-        "data_elim_FStar.Pervasives.Native.Some", "data_elim_MAC.Entry",
-        "disc_equation_FStar.Pervasives.Native.Some",
-        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
-        "equation_SHA1.key", "equation_SHA1.keysize", "equation_SHA1.text",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
-        "fuel_guarded_inversion_MAC.entry", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_MAC_Tm_refine_41dd6cceb17df1e54d0ecf64f0496d0f",
-        "refinement_interpretation_MAC_Tm_refine_61aeee88c37953ca4933a44381e61e4a",
-        "refinement_interpretation_Platform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94",
-        "refinement_interpretation_Platform.Bytes_Tm_refine_ad9cde64c932cdae765806f65e24e93b",
-        "typing_Platform.Bytes.equalBytes"
-      ],
+      1,
+      [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
       0,
-      "fe7f77f51c55d5580d73d0d1ddcb8aad"
+      "088d0df0cf6609709727ad3ce55e2d94"
     ],
     [
       "MAC.keygen",
@@ -53,7 +36,7 @@
         "refinement_interpretation_Tm_refine_8780019b0aae248f45fa2cdeef995357"
       ],
       0,
-      "81bfa6743ad9943cf65364854bc2a3a3"
+      "249a8904137d3d39c4cb285d6d5f5067"
     ],
     [
       "MAC.mac",
@@ -99,7 +82,7 @@
         "typing_Tm_abs_7b3114bf1eb1202b6687fce89dcc274d"
       ],
       0,
-      "a4d7d75d59dc9e25c6da5427cb270020"
+      "31f1f86b99af52f268b9ce10dd63cf8c"
     ],
     [
       "MAC.verify",
@@ -133,7 +116,7 @@
         "typing_Tm_abs_7b3114bf1eb1202b6687fce89dcc274d"
       ],
       0,
-      "620c88a72fee0d089ca437327118c24a"
+      "ebae7fbafcf3d32a73442d4a6ce02788"
     ]
   ]
 ]

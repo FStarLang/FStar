@@ -6,21 +6,21 @@
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_6ec37c325718f5099cb90fb5226ecae8"
+      ],
       0,
-      "c0ef544beb7702c03b198e115da08b8c"
+      "1bb436453c06dd213849dad41835937e"
     ],
     [
       "CoreEqualityGuard.test",
       2,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_6ec37c325718f5099cb90fb5226ecae8"
-      ],
+      [ "@query" ],
       0,
-      "c7e09267e3c0c26b3a1c9c4130875c90"
+      "8f60e458c7357b0d220db60d10a0515e"
     ]
   ]
 ]

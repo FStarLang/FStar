@@ -840,10 +840,10 @@ let branch_on_match () : Tac unit =
         norm [iota])
     )
 
-(** When the argument [i] is non-negative, [nth_binder] grabs the nth
+(** When the argument [i] is non-negative, [nth_var] grabs the nth
 binder in the current goal. When it is negative, it grabs the (-i-1)th
-binder counting from the end of the goal. That is, [nth_binder (-1)]
-will return the last binder, [nth_binder (-2)] the second to last, and
+binder counting from the end of the goal. That is, [nth_var (-1)]
+will return the last binder, [nth_var (-2)] the second to last, and
 so on. *)
 let nth_var (i:int) : Tac binding =
   let bs = cur_vars () in

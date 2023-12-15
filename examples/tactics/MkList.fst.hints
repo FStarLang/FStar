@@ -8,23 +8,23 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Stubs.Tactics.Result.Failed",
+        "constructor_distinct_FStar.Stubs.Tactics.Result.Success",
         "constructor_distinct_FStar.Tactics.NamedView.Sg_Let",
-        "constructor_distinct_FStar.Tactics.Result.Failed",
-        "constructor_distinct_FStar.Tactics.Result.Success",
         "disc_equation_FStar.Tactics.NamedView.Unk",
-        "equation_FStar.Reflection.Types.name",
+        "equation_FStar.Stubs.Reflection.Types.name",
         "equation_FStar.Tactics.NamedView.term",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Tactics.Result.Failed_a",
-        "projection_inverse_FStar.Tactics.Result.Failed_exn",
-        "projection_inverse_FStar.Tactics.Result.Failed_ps",
-        "projection_inverse_FStar.Tactics.Result.Success_a",
-        "projection_inverse_FStar.Tactics.Result.Success_ps",
-        "projection_inverse_FStar.Tactics.Result.Success_v"
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_a",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_exn",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_ps",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_v"
       ],
       0,
-      "cdfc5f7b44ccee5d50ae302f39f46c14"
+      "6e956ef9a8f50d7712345889a1896898"
     ],
     [
       "MkList.l1",
@@ -60,7 +60,7 @@
         "typing_FStar.UInt8.uint_to_t"
       ],
       0,
-      "8fb095b47368dab85cb7257cb6d09878"
+      "126777d4fd278965916b84114ae660b2"
     ],
     [
       "MkList.l2",
@@ -97,7 +97,7 @@
         "typing_FStar.UInt8.uint_to_t"
       ],
       0,
-      "c4a53a491e4ce4b2f29269ac3bdb9b1a"
+      "4c2844b154d7510e4893dcf5ed2024be"
     ]
   ]
 ]

@@ -313,3 +313,5 @@ val print_smt_term_list: list term -> string
 val print_smt_term_list_list: list (list term) -> string
 
 val dummy_sort : sort
+
+instance val showable_smt_term : Class.Show.showable term

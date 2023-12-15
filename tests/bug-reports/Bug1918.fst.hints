@@ -1,1 +1,17 @@
-[ "ÎäUã\r‡\u0016Rÿ§Û\u000bs|Y\b", [] ]
+[
+  ".b\u0011Y.yð\u0016\u0010\u000f|ßjÿ¤w",
+  [
+    [
+      "Bug1918.comp1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Bug1918.t",
+        "fuel_guarded_inversion_Bug1918.mon", "proj_equation_Bug1918.Mkmon_t"
+      ],
+      0,
+      "3a5c38a8737f9783dbc76f319fb1769c"
+    ]
+  ]
+]

@@ -10,7 +10,7 @@
         "@MaxIFuel_assumption", "@query", "data_elim_OPLSS2021.ValeVC.QProc"
       ],
       0,
-      "48c038cb8608c13cf16923944f4ec3ad"
+      "b9a82cb38435863c7056dd3cf4f96fc0"
     ],
     [
       "OPLSS2021.ValeVC.__proj__QSeq__item__c",
@@ -22,7 +22,7 @@
         "refinement_interpretation_Tm_refine_7188de91919c2e2cc9199174205a400e"
       ],
       0,
-      "d25f7ff09f29700bae92adb0c813ba79"
+      "a75790e401b6d099a66e2367f0004d07"
     ],
     [
       "OPLSS2021.ValeVC.__proj__QSeq__item__cs",
@@ -34,7 +34,7 @@
         "refinement_interpretation_Tm_refine_7188de91919c2e2cc9199174205a400e"
       ],
       0,
-      "e3fe7f1a3cc4514c3f65a5bc2eb8abc6"
+      "3190407122858fedbc1edfaff4008981"
     ],
     [
       "OPLSS2021.ValeVC.__proj__QSeq__item__hd",
@@ -46,7 +46,7 @@
         "refinement_interpretation_Tm_refine_7188de91919c2e2cc9199174205a400e"
       ],
       0,
-      "f0974ee344eee91a1e0f7591c27bce68"
+      "7d200933ef9f262f963eb155f1ff8259"
     ],
     [
       "OPLSS2021.ValeVC.__proj__QSeq__item__tl",
@@ -58,7 +58,7 @@
         "refinement_interpretation_Tm_refine_7188de91919c2e2cc9199174205a400e"
       ],
       0,
-      "d7ecceb723224a2a4a37924866753e43"
+      "05549ded09f7b4621c2abcdad1333d4a"
     ],
     [
       "OPLSS2021.ValeVC.__proj__QLemma__item__cs",
@@ -70,7 +70,7 @@
         "refinement_interpretation_Tm_refine_6723a33414f0aa8250465c1a7196a79d"
       ],
       0,
-      "2eaa26a6a0e570817d90e19ccf8891db"
+      "d27111b067dea9515b607efac6f9ceca"
     ],
     [
       "OPLSS2021.ValeVC.__proj__QLemma__item__pre",
@@ -82,7 +82,7 @@
         "refinement_interpretation_Tm_refine_6723a33414f0aa8250465c1a7196a79d"
       ],
       0,
-      "81178c10ad3d1fd8fafcb52a8da3532f"
+      "bcb2d963f807d651561a487500b76b3e"
     ],
     [
       "OPLSS2021.ValeVC.__proj__QLemma__item__post",
@@ -94,7 +94,7 @@
         "refinement_interpretation_Tm_refine_6723a33414f0aa8250465c1a7196a79d"
       ],
       0,
-      "ad7431c2070edb52ee9f83092f6e711b"
+      "37ad06062207c4a639d75a60f8e53e3c"
     ],
     [
       "OPLSS2021.ValeVC.__proj__QLemma__item___3",
@@ -107,7 +107,7 @@
         "refinement_interpretation_Tm_refine_6723a33414f0aa8250465c1a7196a79d"
       ],
       0,
-      "c408f0928c7c3fa92ee9990466c1ee9e"
+      "fe2c47a803d6ef2bca226626a82e4ec8"
     ],
     [
       "OPLSS2021.ValeVC.__proj__QLemma__item___4",
@@ -120,7 +120,7 @@
         "refinement_interpretation_Tm_refine_6723a33414f0aa8250465c1a7196a79d"
       ],
       0,
-      "ea439d70b1f91c3e43e5352508291308"
+      "619780b09022cc13969f2ecd1499d224"
     ],
     [
       "OPLSS2021.ValeVC.vc_gen",
@@ -145,7 +145,7 @@
         "subterm_ordering_OPLSS2021.ValeVC.QSeq"
       ],
       0,
-      "5bedaf111aa7621f8a3ce8f4ad7d68fa"
+      "24505783ad34f30c085793a53b16a838"
     ],
     [
       "OPLSS2021.ValeVC.vc_sound",
@@ -178,7 +178,6 @@
         "equality_tok_OPLSS2021.ValeVC.QEmpty@tok",
         "equation_OPLSS2021.Vale.fuel", "equation_OPLSS2021.Vale.state",
         "equation_OPLSS2021.ValeVC.t_post", "equation_Prims.nat",
-        "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_OPLSS2021.Vale.eval_code.fuel_instrumented",
         "equation_with_fuel_OPLSS2021.Vale.eval_codes.fuel_instrumented",
         "equation_with_fuel_OPLSS2021.ValeVC.vc_gen.fuel_instrumented",
@@ -212,7 +211,7 @@
         "typing_tok_OPLSS2021.ValeVC.QEmpty@tok"
       ],
       0,
-      "d827c3146d3bc96dfc513113cd820621"
+      "54732bd33fcc78fe035d3ec20ce4e23d"
     ],
     [
       "OPLSS2021.ValeVC.wp_Move",
@@ -221,7 +220,7 @@
       1,
       [ "@query" ],
       0,
-      "6910f724b0cb742a87ee45478dbbaa43"
+      "7c0a3fa7b7528958fbb086e030c0cd53"
     ],
     [
       "OPLSS2021.ValeVC.hasWp_Move",
@@ -238,7 +237,7 @@
         "typing_OPLSS2021.Vale.eval_operand"
       ],
       0,
-      "25c11eacf7f0b4a71d1b58e00dda48b5"
+      "cb5dc4ce65c9b6ccdf73d020e9496638"
     ],
     [
       "OPLSS2021.ValeVC.wp_Add",
@@ -247,7 +246,7 @@
       1,
       [ "@query" ],
       0,
-      "0412532d2e1e46dc48f0b8613f0359ce"
+      "0c13c94c76e3a00477b325cc4eb71416"
     ],
     [
       "OPLSS2021.ValeVC.hasWp_Add",
@@ -267,7 +266,7 @@
         "typing_Tm_abs_8faaca484d7f2c70ef2d5458c2bc4e63"
       ],
       0,
-      "20e1f03e2d7f93f9270a8d58f69be37f"
+      "95d94df578470bd242cae907d8e33977"
     ],
     [
       "OPLSS2021.ValeVC.vc_sound_norm",
@@ -276,7 +275,7 @@
       1,
       [ "@query" ],
       0,
-      "c1ab9c2ac487ea2ce5f0c7cfc6c8b6f4"
+      "d93085bf753081859f554ea66b715b92"
     ],
     [
       "OPLSS2021.ValeVC.state_eq",
@@ -296,7 +295,7 @@
         "fuel_guarded_inversion_OPLSS2021.Vale.reg", "l_and-interp"
       ],
       0,
-      "5d2abbb9e0e7b188965ace83d722f349"
+      "6e1d649801965eee595eca6edfeb07d6"
     ],
     [
       "OPLSS2021.ValeVC.lemma_Triple_opt",
@@ -313,22 +312,24 @@
         "equality_tok_OPLSS2021.Vale.Rax@tok",
         "equality_tok_OPLSS2021.Vale.Rbx@tok",
         "equation_FStar.FunctionalExtensionality.feq",
-        "equation_OPLSS2021.Vale.fuel", "equation_OPLSS2021.Vale.pow2_64",
-        "equation_OPLSS2021.Vale.state",
+        "equation_OPLSS2021.Vale.fuel", "equation_OPLSS2021.Vale.nat64",
+        "equation_OPLSS2021.Vale.pow2_64", "equation_OPLSS2021.Vale.state",
         "equation_OPLSS2021.Vale.update_reg",
         "equation_OPLSS2021.Vale.update_state",
         "equation_OPLSS2021.ValeVC.state_eq", "equation_Prims.nat",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "int_inversion", "int_typing",
+        "int_inversion",
         "interpretation_Tm_abs_8faaca484d7f2c70ef2d5458c2bc4e63",
-        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_b3c5a7af1b5524553dc82cef72baac45",
+        "refinement_interpretation_Tm_refine_c5c5dd75ebebb1f25581102c583fe79e",
         "typing_OPLSS2021.ValeVC.state_eq",
         "typing_Tm_abs_8faaca484d7f2c70ef2d5458c2bc4e63"
       ],
       0,
-      "5f862677a339f4b4e4f145b348b64991"
+      "3855ebc8e30b993595f0ba276febd101"
     ]
   ]
 ]
