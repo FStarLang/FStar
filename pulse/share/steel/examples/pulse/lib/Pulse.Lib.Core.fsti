@@ -4,7 +4,7 @@ open Steel.FractionalPermission
 module U32 = FStar.UInt32
 module G = FStar.Ghost
 module Set = FStar.Set
-
+module T = FStar.Tactics.V2
 (* Common alias *)
 let one_half =
   half_perm full_perm
@@ -374,6 +374,10 @@ let squash_non_informative (a:Type u#a) : non_informative_witness (squash  u#a a
 val rewrite (p:vprop) (q:vprop) (_:vprop_equiv p q)
   : stt_ghost unit emp_inames p (fun _ -> q)
 
+val rewrite_by (p:vprop) (q:vprop) 
+               (t:unit -> T.Tac unit)
+               (_:unit { T.with_tactic t (vprop_equiv p q) })
+  : stt_ghost unit emp_inames p (fun _ -> q)
 
 open FStar.Ghost
 

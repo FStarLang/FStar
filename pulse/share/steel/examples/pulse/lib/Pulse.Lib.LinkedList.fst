@@ -63,24 +63,6 @@ fn intro_is_list_nil (#t:Type0) (x:(x:llist t { x == None }))
 }
 ```
 
-module T = FStar.Tactics
-
-let prop_squash_idem (p:prop)
-  : Tot (p == squash p)
-  = admit()
-//   FStar.PropositionalExtensionality.apply p (squash p)
-
-
-#push-options "--no_tactics"
-let rewrite_by (p:vprop) (q:vprop) 
-               (t:unit -> T.Tac unit)
-               (_:unit { T.with_tactic t (vprop_equiv p q) })
-  : stt_ghost unit emp_inames p (fun _ -> q)
-  = let pf : squash (vprop_equiv p q) = T.by_tactic_seman t (vprop_equiv p q) in
-    prop_squash_idem (vprop_equiv p q);
-    rewrite p q (coerce_eq () pf)
-#pop-options
-
 
 let norm_tac (_:unit) : T.Tac unit =
     T.mapply (`vprop_equiv_refl)

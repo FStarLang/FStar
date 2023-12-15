@@ -400,6 +400,21 @@ let with_invariant_a (#a:Type)
 
 let rewrite p q _ = fun _ -> rewrite_equiv p q
 
+let prop_squash_idem (p:prop)
+  : Tot (squash (p == squash p))
+  = FStar.PropositionalExtensionality.apply p (squash p)
+
+
+#push-options "--no_tactics"
+let rewrite_by (p:vprop) (q:vprop) 
+               (t:unit -> T.Tac unit)
+               (_:unit { T.with_tactic t (vprop_equiv p q) })
+  : stt_ghost unit emp_inames p (fun _ -> q)
+  = let pf : squash (vprop_equiv p q) = T.by_tactic_seman t (vprop_equiv p q) in
+    prop_squash_idem (vprop_equiv p q);
+    rewrite p q (coerce_eq () pf)
+#pop-options
+
 let elim_pure_explicit p = fun _ -> elim_pure p
 let elim_pure _ #p = fun _ -> elim_pure p
 
