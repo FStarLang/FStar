@@ -117,8 +117,8 @@ clean-intermediate:
 # Regenerate all hints for the standard library and regression test suite
 .PHONY: hints
 hints:
-	+$(Q)OTHERFLAGS=--record_hints $(MAKE) -C ulib/
-	+$(Q)OTHERFLAGS=--record_hints $(MAKE) ci-uregressions
+	+$(Q)OTHERFLAGS="${OTHERFLAGS} --record_hints" $(MAKE) -C ulib/
+	+$(Q)OTHERFLAGS="${OTHERFLAGS} --record_hints" $(MAKE) ci-uregressions
 
 .PHONY: bench
 bench:
