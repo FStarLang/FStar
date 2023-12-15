@@ -1,9 +1,18 @@
 module FStar.Tactics.MkProjectors
 
+(* NB: We cannot use typeclasses here, or any module that depends on
+them, since they use the tactics defined here. So we must be careful
+with our includes. *)
 open FStar.List.Tot
-open FStar.Class.Embeddable
-open FStar.Tactics.V2
-open FStar.Class.Printable
+open FStar.Reflection.V2
+open FStar.Tactics.Effect
+open FStar.Stubs.Tactics.V2.Builtins
+open FStar.Stubs.Syntax.Syntax
+open FStar.Tactics.V2.SyntaxCoercions
+open FStar.Tactics.V2.SyntaxHelpers
+open FStar.Tactics.V2.Derived
+open FStar.Tactics.Util
+open FStar.Tactics.NamedView
 
 exception NotFound
 
@@ -56,6 +65,18 @@ let rec list_last #a (xs : list a) : Tac a =
   | [x] -> x
   | _::xs -> list_last xs
 
+let embed_int (i:int) : term =
+  let open FStar.Reflection.V2 in
+  pack_ln (Tv_Const (C_Int i))
+
+let rec embed_string_list (xs : list string) : term =
+  let open FStar.Reflection.V2 in
+  match xs with
+  | [] -> `Nil
+  | x::xs ->
+    let t = pack_ln (Tv_Const (C_String x)) in
+    `(Cons #string (`#t) (`#(embed_string_list xs)))
+
 let mk_proj_decl (is_method:bool)
                  (tyqn:name) ctorname univs indices (params:list binder)
                  (idx:nat)
@@ -88,9 +109,9 @@ let mk_proj_decl (is_method:bool)
                  (* NB: the definition of the projector is again a tactic
                  invocation, so this whole thing has two phases. *)
                  (`(_ by (mk_one_projector
-                            (`#(embed unfold_names))
-                            (`#(embed (np+ni)))
-                            (`#(embed #int idx)))))
+                            (`#(embed_string_list unfold_names))
+                            (`#(embed_int (np+ni)))
+                            (`#(embed_int idx)))))
     }]}
   in
   let maybe_se_method : list sigelt =
@@ -113,11 +134,10 @@ let mk_proj_decl (is_method:bool)
                  (* NB: the definition of the projector is again a tactic
                  invocation, so this whole thing has two phases. *)
                  (`(_ by (mk_one_projector
-                            (`#(embed unfold_names))
-                            (`#(embed (np+ni)))
-                            (`#(embed #int idx)))))
+                            (`#(embed_string_list unfold_names))
+                            (`#(embed_int (np+ni)))
+                            (`#(embed_int idx)))))
     }]}]
-
   in
   (* Do we need to set the sigelt's Projector qual? If so,
   here is how to do it, but F* currently rejects tactics
