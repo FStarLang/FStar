@@ -1859,8 +1859,19 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <| (
                     | Sig_datacon {us=c_us; t=c_ty; num_ty_params=nparam; mutuals=mut} ->
                         (* BU.print2 "ty of %s = %s\n" (show c_lid) *)
                         (*                             (show c_ty); *)
-                        let fv = S.lid_as_fv c_lid (Some Data_ctor) in
-
+                        (* Make sure to preserve qualifiers if possible.
+                        This is mostly so we retain Record_projector quals, which
+                        are meaningful for extraction. *)
+                        let qual =
+                          let fallback () = Some Data_ctor in
+                          let qninfo = Env.lookup_qname (goal_env g) c_lid in
+                          match qninfo with
+                          | Some (Inr (se, _us), _rng) ->
+                              Syntax.DsEnv.fv_qual_of_se se
+                          | _ ->
+                              fallback ()
+                        in
+                        let fv = S.lid_as_fv c_lid qual in
 
                         failwhen (List.length a_us <> List.length c_us) "t_us don't match?" ;!
                         let s = Env.mk_univ_subst c_us a_us in
