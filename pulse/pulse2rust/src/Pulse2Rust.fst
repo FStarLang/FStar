@@ -715,14 +715,162 @@ let extract_mltydecl (g:env) (d:S.mltydecl) : list item & env =
     let item, g = f g d in
     items@[item], g) ([], g) d
 
-let extract_one (file:string) : unit =
-  let (gamma, decls)  : (list UEnv.binding & S.mlmodule) =
-    match load_value_from_file file with
-    | Some r -> r
-    | None -> failwith "Could not load file" in
-  
+
+type reachable_defs = Set.set string
+let empty_defs : reachable_defs = Set.empty ()
+let singleton (p:S.mlpath) : reachable_defs = Set.singleton (S.string_of_mlpath p)
+
+let reachable_defs_list (#a:Type) (f:a -> reachable_defs) (l:list a) : reachable_defs =
+  List.fold_left (fun defs x -> Set.union defs (f x)) (Set.empty ()) l
+
+let reachable_defs_option (#a:Type) (f:a -> reachable_defs) (o:option a) : reachable_defs =
+  match o with
+  | None -> empty_defs
+  | Some x -> f x
+
+let rec reachable_defs_mlty (t:S.mlty) : reachable_defs =
+  let open S in
+  match t with
+  | MLTY_Var _ -> empty_defs
+  | MLTY_Fun (t1, _, t2) -> Set.union (reachable_defs_mlty t1) (reachable_defs_mlty t2)
+  | MLTY_Named (tps, p) ->
+    Set.union (reachable_defs_list reachable_defs_mlty tps) (singleton p)
+  | MLTY_Tuple ts -> reachable_defs_list reachable_defs_mlty ts
+  | MLTY_Top
+  | MLTY_Erased -> empty_defs
+
+let reachable_defs_mltyscheme ((_, t):S.mltyscheme) : reachable_defs =
+  reachable_defs_mlty t
+
+let rec reachable_defs_mlpattern (p:S.mlpattern) : reachable_defs =
+  let open S in
+  match p with
+  | MLP_Wild
+  | MLP_Const _
+  | MLP_Var _ -> empty_defs
+  | MLP_CTor (c, ps) ->
+    Set.union (singleton c) (reachable_defs_list reachable_defs_mlpattern ps)
+  | MLP_Branch ps -> reachable_defs_list reachable_defs_mlpattern ps
+  | MLP_Record (syms, fs) ->
+    Set.union (Set.singleton (String.concat "." syms))
+              (reachable_defs_list (fun (_, p) -> reachable_defs_mlpattern p) fs)
+  | MLP_Tuple ps -> reachable_defs_list reachable_defs_mlpattern ps
+
+let rec reachable_defs_expr' (e:S.mlexpr') : reachable_defs =
+  let open S in
+  match e with
+  | MLE_Const _
+  | MLE_Var _ -> empty_defs
+  | MLE_Name p -> singleton p
+  | MLE_Let (lb, e) -> Set.union (reachable_defs_mlletbinding lb) (reachable_defs_expr e)
+  | MLE_App (e, es) ->
+    Set.union (reachable_defs_expr e) (reachable_defs_list reachable_defs_expr es)
+  | MLE_TApp (e, ts) ->
+    Set.union (reachable_defs_expr e) (reachable_defs_list reachable_defs_mlty ts)
+  | MLE_Fun (args, e) ->
+    Set.union (reachable_defs_list (fun (_, t) -> reachable_defs_mlty t) args)
+              (reachable_defs_expr e)
+  | MLE_Match (e, bs) ->
+    Set.union (reachable_defs_expr e)
+              (reachable_defs_list reachable_defs_mlbranch bs)
+  | MLE_Coerce (e, t1, t2) ->
+    Set.union (reachable_defs_expr e)
+              (Set.union (reachable_defs_mlty t1) (reachable_defs_mlty t2))
+  | MLE_CTor (p, es) ->
+    Set.union (singleton p)
+               (reachable_defs_list reachable_defs_expr es)
+  | MLE_Seq es
+  | MLE_Tuple es -> reachable_defs_list reachable_defs_expr es
+  | MLE_Record (p, n, fs) ->
+    Set.union (Set.singleton (String.concat "." (p@[n])))
+              (reachable_defs_list (fun (_, e) -> reachable_defs_expr e) fs)
+  | MLE_Proj (e, _) -> reachable_defs_expr e
+  | MLE_If (e1, e2, e3_opt) ->
+    Set.union (reachable_defs_expr e1)
+              (Set.union (reachable_defs_expr e2)
+                         (reachable_defs_option reachable_defs_expr e3_opt))
+  | MLE_Raise (p, es) ->
+    Set.union (singleton p)
+              (reachable_defs_list reachable_defs_expr es)
+  | MLE_Try (e, bs) -> Set.union (reachable_defs_expr e)
+                                 (reachable_defs_list reachable_defs_mlbranch bs)
+
+and reachable_defs_expr (e:S.mlexpr) : reachable_defs =
+  Set.union (reachable_defs_expr' e.expr)
+            (reachable_defs_mlty e.mlty)
+
+and reachable_defs_mlbranch ((p, wopt, e):S.mlbranch) : reachable_defs =
+  Set.union (reachable_defs_mlpattern p)
+            (Set.union (reachable_defs_option reachable_defs_expr wopt)
+                       (reachable_defs_expr e))
+
+and reachable_defs_mllb (lb:S.mllb) : reachable_defs =
+  Set.union (reachable_defs_option reachable_defs_mltyscheme lb.mllb_tysc)
+            (reachable_defs_expr lb.mllb_def)
+
+and reachable_defs_mlletbinding ((_, lbs):S.mlletbinding) : reachable_defs =
+  reachable_defs_list reachable_defs_mllb lbs
+
+let reachable_defs_mltybody (t:S.mltybody) : reachable_defs =
+  let open S in
+  match t with
+  | MLTD_Abbrev t -> reachable_defs_mlty t
+  | MLTD_Record fs ->
+    reachable_defs_list (fun (_, t) -> reachable_defs_mlty t) fs
+  | MLTD_DType cts ->
+    reachable_defs_list (fun (_, dts) -> reachable_defs_list (fun (_, t) -> reachable_defs_mlty t) dts) cts
+
+let reachable_defs_one_mltydecl (t:S.one_mltydecl) : reachable_defs =
+  reachable_defs_option reachable_defs_mltybody t.tydecl_defn
+
+let reachable_defs_mltydecl (t:S.mltydecl) : reachable_defs =
+  reachable_defs_list reachable_defs_one_mltydecl t
+
+let reachable_defs_mlmodule1 (m:S.mlmodule1) : reachable_defs =
+  let open S in
+  match m with
+  | MLM_Ty t -> reachable_defs_mltydecl t
+  | MLM_Let lb -> reachable_defs_mlletbinding lb
+  | MLM_Exn (_, args) ->
+    reachable_defs_list (fun (_, t) -> reachable_defs_mlty t) args
+  | MLM_Top e -> reachable_defs_expr e
+  | MLM_Loc _ -> empty_defs
+
+let reachable_defs_mlmodule (m:S.mlmodule) : reachable_defs =
+  reachable_defs_list reachable_defs_mlmodule1 m
+
+let decl_reachable (reachable_defs:reachable_defs) (mname:string) (d:S.mlmodule1) : bool =
+  let open S in
+  match d with
+  | MLM_Ty t ->
+    List.existsb (fun ty_decl ->Set.mem (mname ^ "." ^ ty_decl.tydecl_name) reachable_defs) t
+  | MLM_Let (_, lbs) ->
+    List.existsb (fun lb -> Set.mem (mname ^ "." ^ lb.mllb_name) reachable_defs) lbs
+  | MLM_Exn (p, _) -> false
+  | MLM_Top _ -> false
+  | MLM_Loc _ -> false
+
+let extract_one
+  (reachable_defs:reachable_defs)
+  (mname:string)
+  (gamma:list UEnv.binding)
+  (decls:S.mlmodule) : string =
+  // let (deps, gamma, decls)  : (list string & list UEnv.binding & S.mlmodule) =
+  //   match load_value_from_file file with
+  //   | Some r -> r
+  //   | None -> failwith "Could not load file" in
+
+  // print2 "Loaded file %s with deps: %s\n" file (String.concat "; " deps);  
   let items, _ = List.fold_left (fun (items, g) d ->
-    print1 "Decl: %s\n" (S.mlmodule1_to_string d);
+    // print1 "Decl: %s\n" (S.mlmodule1_to_string d);
+    // print1 "Decl deps: %s\n"
+    //   (String.concat "\n" (reachable_defs_mlmodule1 d |> Set.elems));
+    if not (decl_reachable reachable_defs mname d)
+    then begin
+      print1 "decl %s is not reachable\n" (S.mlmodule1_to_string d);
+      items, g
+    end
+    else
     match d with
     | S.MLM_Let (S.NonRec, [{mllb_name}])
       when (String.length mllb_name > 12 && String.substring mllb_name 0 12 = "explode_ref_") ||
@@ -742,7 +890,66 @@ let extract_one (file:string) : unit =
   
   let f = mk_file "a.rs" items in
   let s = RustBindings.file_to_rust f in
-  print_string (s ^ "\n")
+  s
+
+let collect_reachable_defs (files:list string) (roots:list string) : reachable_defs =
+  let files = List.filter (fun x -> List.mem x roots) files in
+  reachable_defs_list (fun f ->
+    let (_, _, decls)  : (list string & list UEnv.binding & S.mlmodule) =
+      match load_value_from_file f with
+      | Some r -> r
+      | None -> failwith "Could not load file" in
+    reachable_defs_mlmodule decls) files
+
+let file_to_module_name (f:string) : string =
+  let suffix = ".ast" in
+  let s = basename f in
+  let s = String.substring s 0 (String.length s - String.length suffix) in
+  replace_chars s '_' "."
+
+type dict = smap (list string & list UEnv.binding & S.mlmodule)
+
+let rec topsort (d:dict) (grey:list string) (black:list string) (root:string)
+  : (list string & list string) =  // grey and black
+  let grey = root::grey in
+  let deps = root |> smap_try_find d |> must |> (fun (deps, _, _) -> deps) in
+  let deps = deps |> List.filter (fun f -> List.mem f (smap_keys d)) in
+  if List.existsb (fun d -> List.mem d grey) deps
+  then failwith (format1 "cyclic dependency: %s" root);
+  let deps = deps |> List.filter (fun f -> not (List.mem f black)) in
+  let grey, black = List.fold_left (fun (grey, black) dep ->
+    topsort d grey black dep) (grey, black) deps in
+  List.filter (fun g -> not (g = root)) grey, root::black
+
+let rec topsort_all (d:dict) (black:list string)
+  : list string =
+  
+  if List.for_all (fun f -> List.contains f black) (smap_keys d)
+  then black
+  else
+    let rem = List.filter (fun f -> not (List.contains f black)) (smap_keys d) in
+    let root = List.nth rem (List.length rem - 1) in
+    let grey, black = topsort d [] black root in
+    if List.length grey <> 0
+    then failwith "topsort_all: not all files are reachable";
+    topsort_all d black
 
 let extract (files:list string) : unit =
-  List.iter extract_one files
+  // assume the last file is the root
+  let last = List.nth files (List.length files - 1) in
+  let reachable_defs = collect_reachable_defs files [last] in
+  let d = smap_create 100 in
+  List.iter (fun f ->
+    let contents  : (list string & list UEnv.binding & S.mlmodule) =
+      match load_value_from_file f with
+      | Some r -> r
+      | None -> failwith "Could not load file" in
+    smap_add d (file_to_module_name f) contents) files;
+  // print1 "reachable_defs: %s\n"
+  //   (String.concat "\n" (reachable_defs |> Set.elems));
+  let files = topsort_all d [] |> List.rev in
+  print1 "order: %s\n" (String.concat "; " files);
+  let s = List.map (fun f ->
+    let (_, bs, ds) = smap_try_find d f |> must in
+    extract_one reachable_defs f bs ds) files |> String.concat " " in
+  print1 "\n%s\n" s
