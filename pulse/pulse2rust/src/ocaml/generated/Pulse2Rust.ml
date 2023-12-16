@@ -1936,5 +1936,5 @@ let (extract : Prims.string Prims.list -> unit) =
                match uu___3 with
                | (uu___4, bs, ds) -> extract_one reachable_defs1 f bs ds)
             files1 in
-        FStar_Compiler_String.concat "\n" uu___2 in
+        FStar_Compiler_String.concat " " uu___2 in
       FStar_Compiler_Util.print1 "\n%s\n" s))

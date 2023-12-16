@@ -951,5 +951,5 @@ let extract (files:list string) : unit =
   print1 "order: %s\n" (String.concat "; " files);
   let s = List.map (fun f ->
     let (_, bs, ds) = smap_try_find d f |> must in
-    extract_one reachable_defs f bs ds) files |> String.concat "\n" in
+    extract_one reachable_defs f bs ds) files |> String.concat " " in
   print1 "\n%s\n" s
