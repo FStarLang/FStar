@@ -1599,6 +1599,9 @@ and tc_synth head env args rng =
         raise_error (Errors.Fatal_SynthByTacticError, "synth_by_tactic: bad application") rng
     in
 
+    if Env.debug env <| Options.Other "Tac" then
+      BU.print2 "Processing synth of %s at type %s\n" (show tau) (show atyp);
+
     let typ =
         match atyp with
         | Some t -> t
