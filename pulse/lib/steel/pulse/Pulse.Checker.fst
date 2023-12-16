@@ -134,14 +134,20 @@ let rec check
   (t:st_term) : T.Tac (checker_result_t g0 pre0 post_hint) =
 
   if RU.debug_at_level (fstar_env g0) "pulse.checker" then
-    T.print (Printf.sprintf "At %s: context: %s, term: %s (LABEL %s)\n"
+    T.print (Printf.sprintf "At %s{\n\tenv=%s\n context: %s, term: %s (LABEL %s)}\n"
               (T.range_to_string t.range)
+              (Pulse.Typing.Env.env_to_string g0)
               (Pulse.Syntax.Printer.term_to_string pre0)
               (Pulse.Syntax.Printer.st_term_to_string t)
               (Pulse.Syntax.Printer.tag_of_st_term t));
 
   let (| g, pre, pre_typing, k_elim_pure |) =
     Pulse.Checker.Prover.ElimPure.elim_pure pre0_typing in
+
+  if RU.debug_at_level (fstar_env g0) "pulse.checker" then
+    T.print (Printf.sprintf "After elim_pure{\n\t env=%s\n\tcontext: %s\n}"
+              (Pulse.Typing.Env.env_to_string g0)
+              (Pulse.Syntax.Printer.term_to_string pre));
 
   let r : checker_result_t g pre post_hint =
     let g = push_context (P.tag_of_st_term t) t.range g in
