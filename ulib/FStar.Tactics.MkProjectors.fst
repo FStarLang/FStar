@@ -16,23 +16,32 @@ open FStar.Tactics.NamedView
 
 exception NotFound
 
+(* Thunked version of debug *)
+let debug (f : unit -> Tac string) : Tac unit =
+  if debugging () then
+    print (f ())
+
 [@@plugin]
 let mk_one_projector (unf:list string) (np:nat) (i:nat) : Tac unit =
-  let _ = ignore (repeatn (np+1) intro) in
-  let r = t_destruct (nth_var (-1)) in
+  debug (fun () -> dump "ENTRY mk_one_projector"; "");
+  let _params = repeatn np intro in
+  let thing : binding = intro () in
+  let r = t_destruct thing in
   match r with
   | [(cons, arity)] -> begin
     if (i >= arity) then
       fail "proj: bad index in mk_one_projector";
-    let bs = repeatn (arity+1) (fun () -> intro ()) in
-    rewrite (nth_var (-1));
+    let _      = repeatn i intro in
+    let the_b  = intro () in
+    let _      = repeatn (arity-i-1) intro in
+    let eq_b   : binding = intro () in
+    rewrite eq_b;
     norm [iota; delta_only unf; zeta_full];
     (* NB: ^ zeta_full above so we reduce under matches too. Since
     we are not unfolding anything but the projectors, which are
     not, recursive, this should not bring about any divergence. An
     alternative is to use NBE. *)
-    let t = List.Tot.index bs i in
-    exact t
+    exact the_b
   end
   | _ -> fail "proj: more than one case?"
 
@@ -69,35 +78,35 @@ let embed_int (i:int) : term =
   let open FStar.Reflection.V2 in
   pack_ln (Tv_Const (C_Int i))
 
-let rec embed_string_list (xs : list string) : term =
+let embed_string (s:string) : term =
   let open FStar.Reflection.V2 in
-  match xs with
-  | [] -> `Nil
-  | x::xs ->
-    let t = pack_ln (Tv_Const (C_String x)) in
-    `(Cons #string (`#t) (`#(embed_string_list xs)))
+  pack_ln (Tv_Const (C_String s))
 
 let mk_proj_decl (is_method:bool)
-                 (tyqn:name) ctorname (univs : list univ_name) indices (params:list binder)
+                 (tyqn:name) ctorname
+                 (univs : list univ_name)
+                 (params : list binder)
                  (idx:nat)
                  (field : binder)
-                 (unfold_names : list string)
+                 (unfold_names_tm : term)
                  (smap : list (namedv & fv))
 : Tac (list sigelt & fv)
 =
+  debug (fun () -> "Processing field " ^ unseal field.ppname);
+  debug (fun () -> "Field typ = " ^ term_to_string field.sort);
   let np = length params in
-  let ni = length indices in
   let tyfv = pack_fv tyqn in
   let fv = pack_fv (cur_module () @ ["__proj__" ^ list_last ctorname ^ "__item__" ^ unseal field.ppname]) in
   let rty : term =
     let hd = pack (Tv_UInst tyfv (List.Tot.map (fun un -> pack_universe (Uv_Name un)) univs)) in
-    mk_app hd (List.Tot.map binder_argv (params @ indices))
+    mk_app hd (List.Tot.map binder_argv params)
   in
   let rb : binder = fresh_binder rty in
-  let projty = mk_tot_arr (List.Tot.map binder_mk_implicit (params @ indices)
+  let projty = mk_tot_arr (List.Tot.map binder_mk_implicit params
                            @ [rb])
                           (subst_map smap (binder_to_term rb) field.sort)
   in
+  debug (fun () -> "Proj typ = " ^ term_to_string projty);
   let se_proj = pack_sigelt <|
     Sg_Let {
       isrec = false;
@@ -109,8 +118,8 @@ let mk_proj_decl (is_method:bool)
                  (* NB: the definition of the projector is again a tactic
                  invocation, so this whole thing has two phases. *)
                  (`(_ by (mk_one_projector
-                            (`#(embed_string_list unfold_names))
-                            (`#(embed_int (np+ni)))
+                            (`#unfold_names_tm)
+                            (`#(embed_int np))
                             (`#(embed_int idx)))))
     }]}
   in
@@ -119,23 +128,27 @@ let mk_proj_decl (is_method:bool)
     if List.existsb (Reflection.V2.TermEq.term_eq (`Typeclasses.no_method)) field.attrs then [] else
     let meth_fv = pack_fv (cur_module () @ [unseal field.ppname]) in
     let rb = { rb with qual = Q_Meta (`Typeclasses.tcresolve) } in
-    let projty = mk_tot_arr (List.Tot.map binder_mk_implicit (params @ indices)
+    let projty = mk_tot_arr (List.Tot.map binder_mk_implicit params
                              @ [rb])
                             (subst_map smap (binder_to_term rb) field.sort)
     in
+    (* NB: the definition of the projector is again a tactic
+    invocation, so this whole thing has two phases. *)
+    let lb_def =
+      (`(_ by (mk_one_projector
+                 (`#unfold_names_tm)
+                 (`#(embed_int np))
+                 (`#(embed_int idx)))))
+    in
+    (* dump ("returning se with name " ^ unseal field.ppname); *)
+    (* dump ("def = " ^ term_to_string lb_def); *)
     [pack_sigelt <| Sg_Let {
       isrec = false;
       lbs = [{
               lb_fv  = meth_fv;
               lb_us  = univs;
               lb_typ = projty;
-              lb_def =
-                 (* NB: the definition of the projector is again a tactic
-                 invocation, so this whole thing has two phases. *)
-                 (`(_ by (mk_one_projector
-                            (`#(embed_string_list unfold_names))
-                            (`#(embed_int (np+ni)))
-                            (`#(embed_int idx)))))
+              lb_def = lb_def;
     }]}]
   in
   (* Propagate binder attributes, i.e. attributes in the field
@@ -146,10 +159,13 @@ let mk_proj_decl (is_method:bool)
   here is how to do it, but F* currently rejects tactics
   trying to generate "internal" qualifiers like Projector. However,
   it does not seem to make a difference. *)
-  // let se_proj = set_sigelt_quals (
-  //                 Projector (tyqn, pack_ident (unseal field.ppname, range_0)) ::
-  //                 sigelt_quals se_proj) se_proj
-  // in
+  (* In fact, it seems to trip the encoding as soon as a field
+  has more binders, since the encoding has some primitive treatment
+  for projectors/discriminators. *)
+  //let se_proj = set_sigelt_quals (
+  //                Projector (ctorname, pack_ident (unseal field.ppname, range_0)) ::
+  //                sigelt_quals se_proj) se_proj
+  //in
   (se_proj :: maybe_se_method , fv)
 
 [@@plugin]
@@ -164,17 +180,22 @@ let mk_projs (is_class:bool) (tyname:string) : Tac decls =
       if (length ctors <> 1) then
         fail "Expected an inductive with one constructor";
       let indices = fst (collect_arr_bs typ) in
+      if Cons? indices then
+        fail "Inductive indices nonempty?";
       let [(ctorname, ctor_t)] = ctors in
+      (* dump ("ityp = " ^ term_to_string typ); *)
+      (* dump ("ctor_t = " ^ term_to_string ctor_t); *)
       let (fields, _) = collect_arr_bs ctor_t in
+      let unfold_names_tm = `(Nil #string) in
       let (decls, _, _, _) =
-        fold_left (fun (decls, smap, unfold_names, idx) (field : binder) ->
-                     let (ds, fv) = mk_proj_decl is_class tyqn ctorname univs indices params idx field unfold_names smap in
-                     (decls @ ds,
-                      (binder_to_namedv field,fv)::smap,
-                      (implode_qn (inspect_fv fv))::unfold_names,
-                      idx+1))
-                  ([], [], [], 0)
-                  fields
+        fold_left (fun (decls, smap, unfold_names_tm, idx) (field : binder) ->
+          let (ds, fv) = mk_proj_decl is_class tyqn ctorname univs params idx field unfold_names_tm smap in
+          (decls @ ds,
+           (binder_to_namedv field, fv)::smap,
+           (`(Cons #string (`#(embed_string (implode_qn (inspect_fv fv)))) (`#unfold_names_tm))),
+           idx+1))
+        ([], [], unfold_names_tm, 0)
+        fields
       in
       decls
     | _ ->
