@@ -473,6 +473,86 @@ let rec (pack_pat :
         wrap (FStar_Syntax_Syntax.Pat_var bv)
     | FStar_Reflection_V2_Data.Pat_Dot_Term eopt ->
         wrap (FStar_Syntax_Syntax.Pat_dot_term eopt)
+let rec (canon_app : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
+  fun t ->
+    let t1 = FStar_Syntax_Subst.compress_subst t in
+    match t1.FStar_Syntax_Syntax.n with
+    | FStar_Syntax_Syntax.Tm_app
+        { FStar_Syntax_Syntax.hd = hd; FStar_Syntax_Syntax.args = args;_} ->
+        let hd1 = canon_app hd in
+        let uu___ =
+          let uu___1 = FStar_Syntax_Subst.compress_subst hd1 in
+          uu___1.FStar_Syntax_Syntax.n in
+        (match uu___ with
+         | FStar_Syntax_Syntax.Tm_app
+             { FStar_Syntax_Syntax.hd = hd';
+               FStar_Syntax_Syntax.args = args';_}
+             ->
+             FStar_Syntax_Syntax.mk
+               (FStar_Syntax_Syntax.Tm_app
+                  {
+                    FStar_Syntax_Syntax.hd = hd';
+                    FStar_Syntax_Syntax.args =
+                      (FStar_List_Tot_Base.op_At args' args)
+                  }) t1.FStar_Syntax_Syntax.pos
+         | uu___1 -> t1)
+    | uu___ -> t1
+let rec (canon_abs : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
+  fun t ->
+    let t1 = FStar_Syntax_Subst.compress_subst t in
+    match t1.FStar_Syntax_Syntax.n with
+    | FStar_Syntax_Syntax.Tm_abs
+        { FStar_Syntax_Syntax.bs = bs; FStar_Syntax_Syntax.body = body;
+          FStar_Syntax_Syntax.rc_opt = FStar_Pervasives_Native.None;_}
+        ->
+        let body1 = canon_abs body in
+        let uu___ =
+          let uu___1 = FStar_Syntax_Subst.compress_subst body1 in
+          uu___1.FStar_Syntax_Syntax.n in
+        (match uu___ with
+         | FStar_Syntax_Syntax.Tm_abs
+             { FStar_Syntax_Syntax.bs = bs';
+               FStar_Syntax_Syntax.body = body';
+               FStar_Syntax_Syntax.rc_opt = rc_opt;_}
+             ->
+             FStar_Syntax_Syntax.mk
+               (FStar_Syntax_Syntax.Tm_abs
+                  {
+                    FStar_Syntax_Syntax.bs =
+                      (FStar_List_Tot_Base.op_At bs bs');
+                    FStar_Syntax_Syntax.body = body';
+                    FStar_Syntax_Syntax.rc_opt = rc_opt
+                  }) t1.FStar_Syntax_Syntax.pos
+         | uu___1 -> t1)
+    | uu___ -> t1
+let rec (canon_arrow : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+  =
+  fun t ->
+    let t1 = FStar_Syntax_Subst.compress_subst t in
+    match t1.FStar_Syntax_Syntax.n with
+    | FStar_Syntax_Syntax.Tm_arrow
+        { FStar_Syntax_Syntax.bs1 = bs; FStar_Syntax_Syntax.comp = comp;_} ->
+        (match comp.FStar_Syntax_Syntax.n with
+         | FStar_Syntax_Syntax.Total t' ->
+             let t'1 = canon_arrow t' in
+             let uu___ =
+               let uu___1 = FStar_Syntax_Subst.compress_subst t'1 in
+               uu___1.FStar_Syntax_Syntax.n in
+             (match uu___ with
+              | FStar_Syntax_Syntax.Tm_arrow
+                  { FStar_Syntax_Syntax.bs1 = bs';
+                    FStar_Syntax_Syntax.comp = comp';_}
+                  ->
+                  FStar_Syntax_Syntax.mk
+                    (FStar_Syntax_Syntax.Tm_arrow
+                       {
+                         FStar_Syntax_Syntax.bs1 =
+                           (FStar_List_Tot_Base.op_At bs bs');
+                         FStar_Syntax_Syntax.comp = comp'
+                       }) t1.FStar_Syntax_Syntax.pos
+              | uu___1 -> t1)
+         | uu___ -> t1)
+    | uu___ -> t1
 let (pack_ln :
   FStar_Reflection_V2_Data.term_view -> FStar_Syntax_Syntax.term) =
   fun tv ->
@@ -496,20 +576,26 @@ let (pack_ln :
         let uu___ = FStar_Syntax_Syntax.fv_to_tm fv in
         FStar_Syntax_Syntax.mk_Tm_uinst uu___ us
     | FStar_Reflection_V2_Data.Tv_App (l, (r, q)) ->
-        let q' = pack_aqual q in FStar_Syntax_Util.mk_app l [(r, q')]
+        let uu___ =
+          let q' = pack_aqual q in FStar_Syntax_Util.mk_app l [(r, q')] in
+        canon_app uu___
     | FStar_Reflection_V2_Data.Tv_Abs (b, t) ->
-        FStar_Syntax_Syntax.mk
-          (FStar_Syntax_Syntax.Tm_abs
-             {
-               FStar_Syntax_Syntax.bs = [b];
-               FStar_Syntax_Syntax.body = t;
-               FStar_Syntax_Syntax.rc_opt = FStar_Pervasives_Native.None
-             }) t.FStar_Syntax_Syntax.pos
+        let uu___ =
+          FStar_Syntax_Syntax.mk
+            (FStar_Syntax_Syntax.Tm_abs
+               {
+                 FStar_Syntax_Syntax.bs = [b];
+                 FStar_Syntax_Syntax.body = t;
+                 FStar_Syntax_Syntax.rc_opt = FStar_Pervasives_Native.None
+               }) t.FStar_Syntax_Syntax.pos in
+        canon_abs uu___
     | FStar_Reflection_V2_Data.Tv_Arrow (b, c) ->
-        FStar_Syntax_Syntax.mk
-          (FStar_Syntax_Syntax.Tm_arrow
-             { FStar_Syntax_Syntax.bs1 = [b]; FStar_Syntax_Syntax.comp = c })
-          c.FStar_Syntax_Syntax.pos
+        let uu___ =
+          FStar_Syntax_Syntax.mk
+            (FStar_Syntax_Syntax.Tm_arrow
+               { FStar_Syntax_Syntax.bs1 = [b]; FStar_Syntax_Syntax.comp = c
+               }) c.FStar_Syntax_Syntax.pos in
+        canon_arrow uu___
     | FStar_Reflection_V2_Data.Tv_Type u ->
         FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_type u)
           FStar_Compiler_Range_Type.dummyRange
