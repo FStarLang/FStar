@@ -20,12 +20,14 @@ type var = string
 //   for a mutable local x
 //
 type binding = var & typ & bool // name, type, is_mut
+type reachable_defs = Set.set string
 
 type env = {
   fns : list (string & fn_signature);
   statics : list (string & typ);
   gamma : list binding;
   record_field_names : psmap (list string);
+  reachable_defs : reachable_defs
 }
 
 //
@@ -58,7 +60,8 @@ let fail (s:string) =
 let fail_nyi (s:string) =
   failwith (format1 "Pulse to Rust extraction failed: no support yet for %s" s)
 
-let empty_env () = { fns = []; gamma = []; statics = []; record_field_names = psmap_empty () }
+let empty_env (reachable_defs:reachable_defs) =
+  { fns = []; gamma = []; statics = []; record_field_names = psmap_empty (); reachable_defs }
 
 let lookup_global_fn (g:env) (s:string) : option fn_signature =
   map_option (fun (_, t) -> t) (tryFind (fun (f, _) -> f = s) g.fns)
@@ -409,7 +412,10 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     when starts_with (snd p) "explode_ref_" ->
     let n = String.length "explode_ref_" in
     let rname = String.substring (snd p) n (String.length (snd p) - n) in
-    let flds = psmap_try_find g.record_field_names rname |> must in
+    let flds = psmap_try_find g.record_field_names rname in
+    // print2 "record flds is None: %s for %s\n" (if flds = None then "yes" else "no") rname;
+    let flds = flds |> must in
+    // print_string "passed\n";
     let e = extract_mlexpr g e in
     let es = flds |> List.map (fun f -> mk_reference_expr true (mk_expr_field e f)) in
     mk_expr_tuple es
@@ -587,7 +593,7 @@ and extract_mlexpr_to_stmts (g:env) (e:S.mlexpr) : list stmt =
     begin
       match lb.mllb_def.expr with
       | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, _)
-        when snd p = "unexplode_ref" ->
+        when starts_with (snd p) "unexplode_ref" ->
         extract_mlexpr_to_stmts g e
       | _ ->
         let is_mut, ty, init = lb_init_and_def g lb in
@@ -635,7 +641,7 @@ let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : item & env =
       
       let fn_sig, g_body =
         extract_top_level_sig g lb.mllb_name tvars arg_names arg_ts ret_t in
-       let fn_body = extract_mlexpr_to_stmts g_body body in
+      let fn_body = extract_mlexpr_to_stmts g_body body in
 
       Item_fn (mk_fn fn_sig fn_body),
       push_fn g lb.mllb_name fn_sig
@@ -684,6 +690,7 @@ let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : item & env =
 
 let extract_struct_defn (g:env) (d:S.one_mltydecl) : item & env =
   let Some (S.MLTD_Record fts) = d.tydecl_defn in
+  // print1 "Adding to record field with %s\n" d.tydecl_name;
   mk_item_struct
     (d.tydecl_name |> enum_or_struct_name)
     (List.map tyvar_of d.tydecl_parameters)
@@ -716,7 +723,6 @@ let extract_mltydecl (g:env) (d:S.mltydecl) : list item & env =
     items@[item], g) ([], g) d
 
 
-type reachable_defs = Set.set string
 let empty_defs : reachable_defs = Set.empty ()
 let singleton (p:S.mlpath) : reachable_defs = Set.singleton (S.string_of_mlpath p)
 
@@ -851,30 +857,31 @@ let decl_reachable (reachable_defs:reachable_defs) (mname:string) (d:S.mlmodule1
   | MLM_Loc _ -> false
 
 let extract_one
-  (reachable_defs:reachable_defs)
+  (g:env)
   (mname:string)
   (gamma:list UEnv.binding)
-  (decls:S.mlmodule) : string =
+  (decls:S.mlmodule) : string & env =
   // let (deps, gamma, decls)  : (list string & list UEnv.binding & S.mlmodule) =
   //   match load_value_from_file file with
   //   | Some r -> r
   //   | None -> failwith "Could not load file" in
 
   // print2 "Loaded file %s with deps: %s\n" file (String.concat "; " deps);  
-  let items, _ = List.fold_left (fun (items, g) d ->
+  let items, env = List.fold_left (fun (items, g) d ->
     // print1 "Decl: %s\n" (S.mlmodule1_to_string d);
     // print1 "Decl deps: %s\n"
     //   (String.concat "\n" (reachable_defs_mlmodule1 d |> Set.elems));
-    if not (decl_reachable reachable_defs mname d)
+    if not (decl_reachable g.reachable_defs mname d)
     then begin
-      print1 "decl %s is not reachable\n" (S.mlmodule1_to_string d);
+      // if mname = "Pulse.Lib.HashTable.Type"
+      // then print1 "decl %s is not reachable\n" (S.mlmodule1_to_string d);
       items, g
     end
     else
     match d with
     | S.MLM_Let (S.NonRec, [{mllb_name}])
-      when (String.length mllb_name > 12 && String.substring mllb_name 0 12 = "explode_ref_") ||
-           mllb_name = "unexplode_ref" -> items, g
+      when starts_with mllb_name "explode_ref" ||
+           starts_with mllb_name "unexplode_ref" -> items, g
     | S.MLM_Let lb ->
       let f, g = extract_top_level_lb g lb in
       // print_string "Extracted to:\n";
@@ -886,11 +893,11 @@ let extract_one
       let d_items, g = extract_mltydecl g d in
       items@d_items, g
     | _ -> fail_nyi (format1 "top level decl %s" (S.mlmodule1_to_string d))
-  ) ([], empty_env ()) decls in
+  ) ([], g) decls in
   
   let f = mk_file "a.rs" items in
   let s = RustBindings.file_to_rust f in
-  s
+  s, env
 
 let collect_reachable_defs (files:list string) (roots:list string) : reachable_defs =
   let files = List.filter (fun x -> List.mem x roots) files in
@@ -913,7 +920,7 @@ let rec topsort (d:dict) (grey:list string) (black:list string) (root:string)
   : (list string & list string) =  // grey and black
   let grey = root::grey in
   let deps = root |> smap_try_find d |> must |> (fun (deps, _, _) -> deps) in
-  let deps = deps |> List.filter (fun f -> List.mem f (smap_keys d)) in
+  let deps = deps |> List.filter (fun f -> List.mem f (smap_keys d) && not (f = root)) in
   if List.existsb (fun d -> List.mem d grey) deps
   then failwith (format1 "cyclic dependency: %s" root);
   let deps = deps |> List.filter (fun f -> not (List.mem f black)) in
@@ -949,7 +956,9 @@ let extract (files:list string) : unit =
   //   (String.concat "\n" (reachable_defs |> Set.elems));
   let files = topsort_all d [] |> List.rev in
   print1 "order: %s\n" (String.concat "; " files);
-  let s = List.map (fun f ->
+  let g = empty_env reachable_defs in
+  let s = List.fold_left_map (fun g f ->
     let (_, bs, ds) = smap_try_find d f |> must in
-    extract_one reachable_defs f bs ds) files |> String.concat " " in
+    let s, g = extract_one g f bs ds in
+    g, s) g files |> snd |> String.concat " " in
   print1 "\n%s\n" s

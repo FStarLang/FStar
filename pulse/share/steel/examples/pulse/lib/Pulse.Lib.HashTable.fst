@@ -3,25 +3,14 @@ open Pulse.Lib.Pervasives
 module V = Pulse.Lib.Vec
 module R = Pulse.Lib.Reference
 module SZ = FStar.SizeT
-module U8 = FStar.UInt8
-module U64 = FStar.UInt64
 module PHT = Pulse.Lib.HashTable.Spec
 
 open Pulse.Lib.HashTable.Spec
+open Pulse.Lib.HashTable.Type
 
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 
-type pos_us = n:SZ.t{SZ.v n > 0}
-
 let mk_used_cell (#a:eqtype) #b (k:a) (v:b) : cell a b = Used k v
-
-[@@ no_auto_projectors]
-noeq
-type ht_t (keyt:eqtype) (valt:Type) = {
-  sz : pos_us;
-  hashf: keyt -> SZ.t;
-  contents : V.vec (cell keyt valt);
-}
 
 let mk_ht (#k:eqtype) #v 
           (sz:pos_us) 
@@ -54,68 +43,6 @@ let models #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt) : vprop =
 
 let pht_sz #k #v (pht:pht_t k v) : GTot pos = pht.repr.sz
 
-noextract
-type exploded_refs (k:eqtype) (v:Type0) =
-  ref pos_us &
-  ref (k -> SZ.t) &
-  ref (V.vec (cell k v))
-
-let token (#k:eqtype) (#v:Type0)
-  (r:ref (ht_t k v))
-  (r_sz:ref pos_us)
-  (r_hashf:ref (k -> SZ.t))
-  (r_contents:ref (V.vec (cell k v))) : vprop =
-  exists* ht. pts_to r ht
-
-let exploded_vp (#k:eqtype) (#v:Type0)
-  (r:ref (ht_t k v))
-  (ht:ht_t k v)
-  (r_sz:ref pos_us)
-  (r_hashf:ref (k -> SZ.t))
-  (r_contents:ref (V.vec (cell k v))) : vprop =  
-  pts_to r_sz ht.sz **
-  pts_to r_hashf ht.hashf **
-  pts_to r_contents ht.contents **
-  token r r_sz r_hashf r_contents
-
-```pulse
-fn explode_ref_ht_t (#k:eqtype) (#v:Type0) (#ht:erased (ht_t k v)) (r:ref (ht_t k v))
-  requires pts_to r ht
-  returns res:exploded_refs k v
-  ensures exploded_vp r ht (tfst res) (tsnd res) (tthd res)
-{
-  let htc = !r;
-  let r_sz = R.alloc htc.sz;
-  let r_hashf = R.alloc htc.hashf;
-  let r_contents = R.alloc htc.contents;
-  let res = (r_sz, r_hashf, r_contents);
-  fold (token r r_sz r_hashf r_contents);
-  fold (exploded_vp r ht r_sz r_hashf r_contents);
-  rewrite (exploded_vp r ht r_sz r_hashf r_contents)
-       as (exploded_vp r ht (tfst res) (tsnd res) (tthd res));
-  res
-}
-```
-
-```pulse
-fn unexplode_ref (#k:eqtype) (#v:Type0) (#ht:erased (ht_t k v))
-  (r:ref (ht_t k v))
-  (r_sz:ref pos_us)
-  (r_hashf:ref (k -> SZ.t))
-  (r_contents:ref (V.vec (cell k v)))
-  requires exploded_vp r ht r_sz r_hashf r_contents
-  ensures pts_to r ht
-{
-  unfold (exploded_vp r ht r_sz r_hashf r_contents);
-  unfold (token r r_sz r_hashf r_contents);
-  let sz = !r_sz;
-  let hashf = !r_hashf;
-  let contents = !r_contents;
-  free r_sz; free r_hashf; free r_contents;
-  let s = mk_ht sz hashf contents;
-  r := s
-}
-```
 
 ```pulse
 fn alloc (#k:eqtype) (#v:Type0) (hashf:(k -> SZ.t)) (l:pos_us)
@@ -773,4 +700,3 @@ fn test_mono ()
    } 
 }
 ```
-// let test_mono = test_mono'
