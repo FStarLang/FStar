@@ -195,6 +195,19 @@ let is_reveal (t:term) : bool =
 
 module RT = FStar.Reflection.Typing
 
+let compose (s0 s1: PS.ss_t)
+  : T.Tac 
+    (option (s:PS.ss_t {  
+      Set.equal (PS.dom s) (Set.union (PS.dom s0) (PS.dom s1))
+     }))
+  = if PS.check_disjoint s0 s1  // TODO: should implement a better compose
+    then (
+      let s = PS.push_ss s0 s1 in
+      assume (Set.equal (PS.dom s) (Set.union (PS.dom s0) (PS.dom s1)));
+      Some s
+    ) 
+    else None
+
 let rec try_solve_uvars (g:env) (uvs:env { disjoint uvs g })
   (p q:term)
   : T.Tac (ss:PS.ss_t { PS.dom ss `Set.subset` freevars q }) =
@@ -220,24 +233,31 @@ let rec try_solve_uvars (g:env) (uvs:env { disjoint uvs g })
          let ss = PS.push PS.empty n w in
          assume (n `Set.mem` freevars q);
          assume (Set.equal (PS.dom ss) (Set.singleton n));
+         debug_prover g (fun _ ->
+           Printf.sprintf "prover matcher: solved uvar %d with %s" n (P.term_to_string w));
          ss
        | _ ->
          match p.t, q.t with
-         | Tm_Pure p1, Tm_Pure q1 -> try_solve_uvars g uvs p1 q1
+         | Tm_Pure p1, Tm_Pure q1 ->
+           try_solve_uvars g uvs p1 q1
 
+         | Tm_Star p1 p2, Tm_Star q1 q2 -> (
+           let ss1 = try_solve_uvars g uvs p1 q1 in
+           let ss2 = try_solve_uvars g uvs p2 q2 in
+           match compose ss1 ss2 with
+           | None -> PS.empty
+           | Some ss -> ss
+         )
          | _, _ ->
            match is_pure_app p, is_pure_app q with
-           | Some (head_p, qual_p, arg_p), Some (head_q, qual_q, arg_q) ->
-            let ss_head = try_solve_uvars g uvs head_p head_q in
-            let ss_arg = try_solve_uvars g uvs arg_p arg_q in
-            if PS.check_disjoint ss_head ss_arg  // TODO: should implement a better compose
-            then begin
-              let ss = PS.push_ss ss_head ss_arg in
-              assume (Set.equal (PS.dom ss) (Set.union (PS.dom ss_head) (PS.dom ss_arg)));
-              assume ((Set.union (freevars head_q) (freevars arg_q)) `Set.subset` freevars q);
-              ss
-            end
-            else PS.empty
+           | Some (head_p, qual_p, arg_p), Some (head_q, qual_q, arg_q) -> (
+             assume ((Set.union (freevars head_q) (freevars arg_q)) `Set.subset` freevars q);
+             let ss_head = try_solve_uvars g uvs head_p head_q in
+             let ss_arg = try_solve_uvars g uvs arg_p arg_q in
+              match compose ss_head ss_arg with
+              | None -> PS.empty
+              | Some ss -> ss
+            )
            | _, _ -> PS.empty
   end
 
