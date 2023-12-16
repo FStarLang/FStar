@@ -45,6 +45,16 @@ let mk_one_projector (unf:list string) (np:nat) (i:nat) : Tac unit =
   end
   | _ -> fail "proj: more than one case?"
 
+[@@plugin]
+let mk_one_method (proj:string) (np:nat) : Tac unit =
+  debug (fun () -> dump "ENTRY mk_one_method"; "");
+  let nm = explode_qn proj in
+  let params = repeatn np (fun () -> let b : binding = intro () in
+                                     (binding_to_term b, Q_Implicit)) in
+  let thing : binding = intro () in
+  let proj = pack (Tv_FVar (pack_fv nm)) in
+  exact (mk_app proj (params @ [(binding_to_term thing, Q_Explicit)]))
+
 let subst_map (ss : list (namedv * fv)) (r:term) (t : term) : Tac term =
   let subst = List.Tot.map (fun (x, fv) -> NT (Reflection.V2.pack_namedv x) (mk_e_app (Tv_FVar fv) [r])) ss in
   subst_term subst t
@@ -96,7 +106,8 @@ let mk_proj_decl (is_method:bool)
   debug (fun () -> "Field typ = " ^ term_to_string field.sort);
   let np = length params in
   let tyfv = pack_fv tyqn in
-  let fv = pack_fv (cur_module () @ ["__proj__" ^ list_last ctorname ^ "__item__" ^ unseal field.ppname]) in
+  let nm : name = cur_module () @ ["__proj__" ^ list_last ctorname ^ "__item__" ^ unseal field.ppname] in
+  let fv = pack_fv nm in
   let rty : term =
     let hd = pack (Tv_UInst tyfv (List.Tot.map (fun un -> pack_universe (Uv_Name un)) univs)) in
     mk_app hd (List.Tot.map binder_argv params)
@@ -132,13 +143,21 @@ let mk_proj_decl (is_method:bool)
                              @ [rb])
                             (subst_map smap (binder_to_term rb) field.sort)
     in
-    (* NB: the definition of the projector is again a tactic
-    invocation, so this whole thing has two phases. *)
+    (* The method is just defined based on the projector. *)
     let lb_def =
+      (`(_ by (mk_one_method
+                 (`#(embed_string (implode_qn nm)))
+                 (`#(embed_int np)))))
+      (* NB: if we wanted a 'direct' definition of the method,
+      using a match instead of calling the projector, the following
+      will do. The same mk_one_projector tactic should handle it
+      well.
+
       (`(_ by (mk_one_projector
                  (`#unfold_names_tm)
                  (`#(embed_int np))
                  (`#(embed_int idx)))))
+      *)
     in
     (* dump ("returning se with name " ^ unseal field.ppname); *)
     (* dump ("def = " ^ term_to_string lb_def); *)

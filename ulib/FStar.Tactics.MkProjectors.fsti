@@ -9,4 +9,7 @@ open FStar.Tactics.Effect
 val mk_one_projector (unf:list string) (np:nat) (i:nat) : Tac unit
 
 [@@plugin]
+val mk_one_method (proj:string) (np:nat) : Tac unit
+
+[@@plugin]
 val mk_projs (is_class:bool) (tyname:string) : Tac (list sigelt)
