@@ -11841,67 +11841,72 @@ and (check_lbtyp :
   fun top_level ->
     fun env ->
       fun lb ->
-        let t = FStar_Syntax_Subst.compress lb.FStar_Syntax_Syntax.lbtyp in
-        match t.FStar_Syntax_Syntax.n with
-        | FStar_Syntax_Syntax.Tm_unknown ->
-            let uu___ =
-              FStar_Syntax_Subst.univ_var_opening
-                lb.FStar_Syntax_Syntax.lbunivs in
-            (match uu___ with
-             | (univ_opening, univ_vars) ->
+        FStar_Errors.with_ctx
+          "While checking type annotation of a letbinding"
+          (fun uu___ ->
+             let t = FStar_Syntax_Subst.compress lb.FStar_Syntax_Syntax.lbtyp in
+             match t.FStar_Syntax_Syntax.n with
+             | FStar_Syntax_Syntax.Tm_unknown ->
                  let uu___1 =
-                   FStar_TypeChecker_Env.push_univ_vars env univ_vars in
-                 (FStar_Pervasives_Native.None,
-                   FStar_TypeChecker_Env.trivial_guard, univ_vars,
-                   univ_opening, uu___1))
-        | uu___ ->
-            let uu___1 =
-              FStar_Syntax_Subst.univ_var_opening
-                lb.FStar_Syntax_Syntax.lbunivs in
-            (match uu___1 with
-             | (univ_opening, univ_vars) ->
-                 let t1 = FStar_Syntax_Subst.subst univ_opening t in
-                 let env1 =
-                   FStar_TypeChecker_Env.push_univ_vars env univ_vars in
-                 if
-                   top_level &&
-                     (Prims.op_Negation env.FStar_TypeChecker_Env.generalize)
-                 then
-                   let uu___2 =
-                     FStar_TypeChecker_Env.set_expected_typ env1 t1 in
-                   ((FStar_Pervasives_Native.Some t1),
-                     FStar_TypeChecker_Env.trivial_guard, univ_vars,
-                     univ_opening, uu___2)
-                 else
-                   (let uu___3 = FStar_Syntax_Util.type_u () in
-                    match uu___3 with
-                    | (k, uu___4) ->
-                        let uu___5 = tc_check_tot_or_gtot_term env1 t1 k "" in
-                        (match uu___5 with
-                         | (t2, uu___6, g) ->
-                             ((let uu___8 =
-                                 FStar_TypeChecker_Env.debug env
-                                   FStar_Options.Medium in
-                               if uu___8
-                               then
-                                 let uu___9 =
-                                   let uu___10 =
-                                     FStar_Syntax_Syntax.range_of_lbname
-                                       lb.FStar_Syntax_Syntax.lbname in
-                                   FStar_Compiler_Range_Ops.string_of_range
-                                     uu___10 in
-                                 let uu___10 =
-                                   FStar_Syntax_Print.term_to_string t2 in
-                                 FStar_Compiler_Util.print2
-                                   "(%s) Checked type annotation %s\n" uu___9
-                                   uu___10
-                               else ());
-                              (let t3 = norm env1 t2 in
-                               let uu___8 =
-                                 FStar_TypeChecker_Env.set_expected_typ env1
-                                   t3 in
-                               ((FStar_Pervasives_Native.Some t3), g,
-                                 univ_vars, univ_opening, uu___8))))))
+                   FStar_Syntax_Subst.univ_var_opening
+                     lb.FStar_Syntax_Syntax.lbunivs in
+                 (match uu___1 with
+                  | (univ_opening, univ_vars) ->
+                      let uu___2 =
+                        FStar_TypeChecker_Env.push_univ_vars env univ_vars in
+                      (FStar_Pervasives_Native.None,
+                        FStar_TypeChecker_Env.trivial_guard, univ_vars,
+                        univ_opening, uu___2))
+             | uu___1 ->
+                 let uu___2 =
+                   FStar_Syntax_Subst.univ_var_opening
+                     lb.FStar_Syntax_Syntax.lbunivs in
+                 (match uu___2 with
+                  | (univ_opening, univ_vars) ->
+                      let t1 = FStar_Syntax_Subst.subst univ_opening t in
+                      let env1 =
+                        FStar_TypeChecker_Env.push_univ_vars env univ_vars in
+                      if
+                        top_level &&
+                          (Prims.op_Negation
+                             env.FStar_TypeChecker_Env.generalize)
+                      then
+                        let uu___3 =
+                          FStar_TypeChecker_Env.set_expected_typ env1 t1 in
+                        ((FStar_Pervasives_Native.Some t1),
+                          FStar_TypeChecker_Env.trivial_guard, univ_vars,
+                          univ_opening, uu___3)
+                      else
+                        (let uu___4 = FStar_Syntax_Util.type_u () in
+                         match uu___4 with
+                         | (k, uu___5) ->
+                             let uu___6 =
+                               tc_check_tot_or_gtot_term env1 t1 k "" in
+                             (match uu___6 with
+                              | (t2, uu___7, g) ->
+                                  ((let uu___9 =
+                                      FStar_TypeChecker_Env.debug env
+                                        FStar_Options.Medium in
+                                    if uu___9
+                                    then
+                                      let uu___10 =
+                                        let uu___11 =
+                                          FStar_Syntax_Syntax.range_of_lbname
+                                            lb.FStar_Syntax_Syntax.lbname in
+                                        FStar_Compiler_Range_Ops.string_of_range
+                                          uu___11 in
+                                      let uu___11 =
+                                        FStar_Syntax_Print.term_to_string t2 in
+                                      FStar_Compiler_Util.print2
+                                        "(%s) Checked type annotation %s\n"
+                                        uu___10 uu___11
+                                    else ());
+                                   (let t3 = norm env1 t2 in
+                                    let uu___9 =
+                                      FStar_TypeChecker_Env.set_expected_typ
+                                        env1 t3 in
+                                    ((FStar_Pervasives_Native.Some t3), g,
+                                      univ_vars, univ_opening, uu___9)))))))
 and (tc_binder :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.binder ->

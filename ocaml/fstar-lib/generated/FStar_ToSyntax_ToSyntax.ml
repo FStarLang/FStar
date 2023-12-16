@@ -6489,41 +6489,49 @@ let (mk_data_projector_names :
   fun iquals ->
     fun env ->
       fun se ->
-        match se.FStar_Syntax_Syntax.sigel with
-        | FStar_Syntax_Syntax.Sig_datacon
-            { FStar_Syntax_Syntax.lid1 = lid;
-              FStar_Syntax_Syntax.us1 = uu___; FStar_Syntax_Syntax.t1 = t;
-              FStar_Syntax_Syntax.ty_lid = uu___1;
-              FStar_Syntax_Syntax.num_ty_params = n;
-              FStar_Syntax_Syntax.mutuals1 = uu___2;_}
-            ->
-            let uu___3 = FStar_Syntax_Util.arrow_formals t in
-            (match uu___3 with
-             | (formals, uu___4) ->
-                 (match formals with
-                  | [] -> []
-                  | uu___5 ->
-                      let filter_records uu___6 =
-                        match uu___6 with
-                        | FStar_Syntax_Syntax.RecordConstructor (uu___7, fns)
-                            ->
-                            FStar_Pervasives_Native.Some
-                              (FStar_Syntax_Syntax.Record_ctor (lid, fns))
-                        | uu___7 -> FStar_Pervasives_Native.None in
-                      let fv_qual =
-                        let uu___6 =
-                          FStar_Compiler_Util.find_map
-                            se.FStar_Syntax_Syntax.sigquals filter_records in
-                        match uu___6 with
-                        | FStar_Pervasives_Native.None ->
-                            FStar_Syntax_Syntax.Data_ctor
-                        | FStar_Pervasives_Native.Some q -> q in
-                      let uu___6 = FStar_Compiler_Util.first_N n formals in
-                      (match uu___6 with
-                       | (uu___7, rest) ->
-                           mk_indexed_projector_names iquals fv_qual
-                             se.FStar_Syntax_Syntax.sigattrs env lid rest)))
-        | uu___ -> []
+        if
+          (FStar_Syntax_Util.has_attribute se.FStar_Syntax_Syntax.sigattrs
+             FStar_Parser_Const.no_auto_projectors_decls_attr)
+            ||
+            (FStar_Syntax_Util.has_attribute se.FStar_Syntax_Syntax.sigattrs
+               FStar_Parser_Const.meta_projectors_attr)
+        then []
+        else
+          (match se.FStar_Syntax_Syntax.sigel with
+           | FStar_Syntax_Syntax.Sig_datacon
+               { FStar_Syntax_Syntax.lid1 = lid;
+                 FStar_Syntax_Syntax.us1 = uu___; FStar_Syntax_Syntax.t1 = t;
+                 FStar_Syntax_Syntax.ty_lid = uu___1;
+                 FStar_Syntax_Syntax.num_ty_params = n;
+                 FStar_Syntax_Syntax.mutuals1 = uu___2;_}
+               ->
+               let uu___3 = FStar_Syntax_Util.arrow_formals t in
+               (match uu___3 with
+                | (formals, uu___4) ->
+                    (match formals with
+                     | [] -> []
+                     | uu___5 ->
+                         let filter_records uu___6 =
+                           match uu___6 with
+                           | FStar_Syntax_Syntax.RecordConstructor
+                               (uu___7, fns) ->
+                               FStar_Pervasives_Native.Some
+                                 (FStar_Syntax_Syntax.Record_ctor (lid, fns))
+                           | uu___7 -> FStar_Pervasives_Native.None in
+                         let fv_qual =
+                           let uu___6 =
+                             FStar_Compiler_Util.find_map
+                               se.FStar_Syntax_Syntax.sigquals filter_records in
+                           match uu___6 with
+                           | FStar_Pervasives_Native.None ->
+                               FStar_Syntax_Syntax.Data_ctor
+                           | FStar_Pervasives_Native.Some q -> q in
+                         let uu___6 = FStar_Compiler_Util.first_N n formals in
+                         (match uu___6 with
+                          | (uu___7, rest) ->
+                              mk_indexed_projector_names iquals fv_qual
+                                se.FStar_Syntax_Syntax.sigattrs env lid rest)))
+           | uu___ -> [])
 let (mk_typ_abbrev :
   FStar_Syntax_DsEnv.env ->
     FStar_Parser_AST.decl ->
@@ -9014,6 +9022,40 @@ and (desugar_decl_core :
                    else ());
                   (let mkclass lid =
                      let r = FStar_Ident.range_of_lid lid in
+                     let body =
+                       let uu___2 =
+                         FStar_Syntax_Util.has_attribute d_attrs
+                           FStar_Parser_Const.meta_projectors_attr in
+                       if uu___2
+                       then
+                         let uu___3 =
+                           FStar_Syntax_Syntax.tabbrev
+                             FStar_Parser_Const.mk_projs_lid in
+                         let uu___4 =
+                           let uu___5 =
+                             let uu___6 = FStar_Syntax_Util.exp_bool true in
+                             FStar_Syntax_Syntax.as_arg uu___6 in
+                           let uu___6 =
+                             let uu___7 =
+                               let uu___8 =
+                                 let uu___9 = FStar_Ident.string_of_lid lid in
+                                 FStar_Syntax_Util.exp_string uu___9 in
+                               FStar_Syntax_Syntax.as_arg uu___8 in
+                             [uu___7] in
+                           uu___5 :: uu___6 in
+                         FStar_Syntax_Util.mk_app uu___3 uu___4
+                       else
+                         (let uu___4 =
+                            FStar_Syntax_Syntax.tabbrev
+                              FStar_Parser_Const.mk_class_lid in
+                          let uu___5 =
+                            let uu___6 =
+                              let uu___7 =
+                                let uu___8 = FStar_Ident.string_of_lid lid in
+                                FStar_Syntax_Util.exp_string uu___8 in
+                              FStar_Syntax_Syntax.as_arg uu___7 in
+                            [uu___6] in
+                          FStar_Syntax_Util.mk_app uu___4 uu___5) in
                      let uu___2 =
                        let uu___3 =
                          let uu___4 =
@@ -9022,19 +9064,7 @@ and (desugar_decl_core :
                              (FStar_Pervasives_Native.Some r) uu___5 in
                          FStar_Syntax_Syntax.mk_binder uu___4 in
                        [uu___3] in
-                     let uu___3 =
-                       let uu___4 =
-                         FStar_Syntax_Syntax.tabbrev
-                           FStar_Parser_Const.mk_class_lid in
-                       let uu___5 =
-                         let uu___6 =
-                           let uu___7 =
-                             let uu___8 = FStar_Ident.string_of_lid lid in
-                             FStar_Syntax_Util.exp_string uu___8 in
-                           FStar_Syntax_Syntax.as_arg uu___7 in
-                         [uu___6] in
-                       FStar_Syntax_Util.mk_app uu___4 uu___5 in
-                     FStar_Syntax_Util.abs uu___2 uu___3
+                     FStar_Syntax_Util.abs uu___2 body
                        FStar_Pervasives_Native.None in
                    let get_meths se =
                      let rec get_fname quals3 =
@@ -9186,6 +9216,15 @@ and (desugar_decl_core :
                              ->
                              let ses2 =
                                FStar_Compiler_List.map add_class_attr ses1 in
+                             let uu___3 =
+                               let uu___4 =
+                                 let uu___5 =
+                                   FStar_Syntax_Syntax.fvar_with_dd
+                                     FStar_Parser_Const.tcclass_lid
+                                     FStar_Syntax_Syntax.delta_constant
+                                     FStar_Pervasives_Native.None in
+                                 uu___5 :: (se.FStar_Syntax_Syntax.sigattrs) in
+                               FStar_Syntax_Util.deduplicate_terms uu___4 in
                              {
                                FStar_Syntax_Syntax.sigel =
                                  (FStar_Syntax_Syntax.Sig_bundle
@@ -9199,8 +9238,7 @@ and (desugar_decl_core :
                                  (se.FStar_Syntax_Syntax.sigquals);
                                FStar_Syntax_Syntax.sigmeta =
                                  (se.FStar_Syntax_Syntax.sigmeta);
-                               FStar_Syntax_Syntax.sigattrs =
-                                 (se.FStar_Syntax_Syntax.sigattrs);
+                               FStar_Syntax_Syntax.sigattrs = uu___3;
                                FStar_Syntax_Syntax.sigopens_and_abbrevs =
                                  (se.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                                FStar_Syntax_Syntax.sigopts =

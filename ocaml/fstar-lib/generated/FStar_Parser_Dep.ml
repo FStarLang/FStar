@@ -1291,7 +1291,7 @@ let (collect_one :
                  (if tc
                   then
                     add_to_parsing_data
-                      (P_lid FStar_Parser_Const.mk_class_lid)
+                      (P_lid FStar_Parser_Const.tcclass_lid)
                   else ();
                   FStar_Compiler_List.iter collect_tycon ts)
              | FStar_Parser_AST.Exception (uu___1, t) ->

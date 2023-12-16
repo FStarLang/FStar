@@ -2334,14 +2334,13 @@ let (attr_substitute : FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
         FStar_Pervasives_Native.None in
     FStar_Syntax_Syntax.Tm_fvar uu___1 in
   FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range_Type.dummyRange
-let (exp_true_bool : FStar_Syntax_Syntax.term) =
-  FStar_Syntax_Syntax.mk
-    (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_bool true))
-    FStar_Compiler_Range_Type.dummyRange
-let (exp_false_bool : FStar_Syntax_Syntax.term) =
-  FStar_Syntax_Syntax.mk
-    (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_bool false))
-    FStar_Compiler_Range_Type.dummyRange
+let (exp_bool : Prims.bool -> FStar_Syntax_Syntax.term) =
+  fun b ->
+    FStar_Syntax_Syntax.mk
+      (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_bool b))
+      FStar_Compiler_Range_Type.dummyRange
+let (exp_true_bool : FStar_Syntax_Syntax.term) = exp_bool true
+let (exp_false_bool : FStar_Syntax_Syntax.term) = exp_bool false
 let (exp_unit : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.mk
     (FStar_Syntax_Syntax.Tm_constant FStar_Const.Const_unit)

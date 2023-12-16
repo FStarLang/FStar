@@ -327,6 +327,8 @@ let (primitive_extraction_attr : FStar_Ident.lident) =
 let (binder_strictly_positive_attr : FStar_Ident.lident) =
   psconst "strictly_positive"
 let (binder_unused_attr : FStar_Ident.lident) = psconst "unused"
+let (no_auto_projectors_decls_attr : FStar_Ident.lident) =
+  psconst "no_auto_projectors_decls"
 let (no_auto_projectors_attr : FStar_Ident.lident) =
   psconst "no_auto_projectors"
 let (no_subtping_attr_lid : FStar_Ident.lident) = psconst "no_subtyping"
@@ -493,6 +495,10 @@ let (fstar_tactics_lid : Prims.string -> FStar_Ident.lid) =
   fun s -> fstar_tactics_lid' [s]
 let (tac_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "tac"]
 let (tactic_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "tactic"]
+let (meta_projectors_attr : FStar_Ident.lid) =
+  fstar_tactics_lid' ["MkProjectors"; "meta_projectors"]
+let (mk_projs_lid : FStar_Ident.lid) =
+  fstar_tactics_lid' ["MkProjectors"; "mk_projs"]
 let (mk_class_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Typeclasses"; "mk_class"]
 let (tcresolve_lid : FStar_Ident.lid) =
