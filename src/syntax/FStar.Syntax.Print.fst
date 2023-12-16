@@ -1012,3 +1012,5 @@ instance showable_binding = {
 }
 instance showable_pragma = { show = pragma_to_string; }
 instance showable_subst_elt = { show = subst_elt_to_string; }
+instance showable_branch = { show = branch_to_string; }
+instance showable_qualifier = { show = qual_to_string; }
