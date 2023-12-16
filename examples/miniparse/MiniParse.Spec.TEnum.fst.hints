@@ -8,25 +8,25 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "constructor_distinct_FStar.Tactics.Result.Failed",
-        "constructor_distinct_FStar.Tactics.Result.Success",
+        "constructor_distinct_FStar.Stubs.Tactics.Result.Failed",
+        "constructor_distinct_FStar.Stubs.Tactics.Result.Success",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_FStar.Reflection.Types.name",
-        "equation_FStar.Reflection.V2.Data.argv", "equation_Prims.nat",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "equation_FStar.Stubs.Reflection.Types.name",
+        "equation_FStar.Stubs.Reflection.V2.Data.argv", "equation_Prims.nat",
+        "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
         "fuel_guarded_inversion_Prims.list", "int_inversion",
         "primitive_Prims.op_Addition", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_FStar.Tactics.Result.Failed_a",
-        "projection_inverse_FStar.Tactics.Result.Failed_exn",
-        "projection_inverse_FStar.Tactics.Result.Failed_ps",
-        "projection_inverse_FStar.Tactics.Result.Success_a",
-        "projection_inverse_FStar.Tactics.Result.Success_ps",
-        "projection_inverse_FStar.Tactics.Result.Success_v",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_a",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_exn",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_ps",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_v",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "4d64668c9a07160efb37cb6c6318e3e3"
+      "86e1bf5a2b9924b01288ebc5ee7e48c3"
     ],
     [
       "MiniParse.Spec.TEnum.get_inductive_constructors",
@@ -35,23 +35,17 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.Reflection.Types_pretyping_b57262eead998d474939c05a17e1ffab",
-        "bool_inversion", "bool_typing",
-        "data_elim_FStar.Tactics.Result.Success",
-        "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Tactics.NamedView.Tv_FVar",
+        "FStar.Stubs.Reflection.Types_pretyping_d880a66b21ec85b3fa80d2570aa5edd8",
+        "bool_inversion", "data_elim_FStar.Stubs.Tactics.Result.Success",
         "equation_FStar.Tactics.NamedView.term_view",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
-        "function_token_typing_FStar.Reflection.Types.sigelt",
+        "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
+        "function_token_typing_FStar.Stubs.Reflection.Types.sigelt",
         "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_7aae385a6086c7833dd8519240cd12b3",
-        "typing_FStar.Reflection.V2.Builtins.inspect_fv",
-        "typing_FStar.Reflection.V2.Builtins.lookup_typ",
-        "typing_FStar.Tactics.NamedView.__proj__Tv_FVar__item__v"
+        "typing_FStar.Stubs.Reflection.V2.Builtins.inspect_fv",
+        "typing_FStar.Stubs.Reflection.V2.Builtins.lookup_typ"
       ],
       0,
-      "a74a551b226f1e9d2de7f8ad37184fc3"
+      "ab0cbdbbdf0e09f36a8c1cd64ca7ea99"
     ],
     [
       "MiniParse.Spec.TEnum.invert_branches_with_cascade",
@@ -62,14 +56,14 @@
         "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
         "disc_equation_Prims.Nil", "equation_FStar.Tactics.NamedView.branch",
         "equation_FStar.Tactics.NamedView.term",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
         "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_FStar.Reflection.Types.term",
+        "function_token_typing_FStar.Stubs.Reflection.Types.term",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "6d7e71b179edcd9b0c8bcb8d6e2075db"
+      "3b665ca6886349a54f0a2fdc4aa59c85"
     ],
     [
       "MiniParse.Spec.TEnum.synth_inverse_forall_bounded_u16_intro",
@@ -87,7 +81,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "40f869337d8f9053acde6e5422df099f"
+      "6d0bd31d536d98d1693577aebe5e1fbc"
     ]
   ]
 ]

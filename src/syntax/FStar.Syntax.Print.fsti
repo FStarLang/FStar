@@ -106,3 +106,5 @@ instance val showable_ctxu      : showable ctx_uvar
 instance val showable_binding   : showable binding
 instance val showable_pragma    : showable pragma
 instance val showable_subst_elt : showable subst_elt
+instance val showable_branch    : showable branch
+instance val showable_qualifier : showable qualifier

@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_eee646ed2c0261b2e37307734e5990b8"
       ],
       0,
-      "9ac18454c78c46764eb25ce7440c957b"
+      "58a1bfb4c31016683f54753541a13f78"
     ],
     [
       "Bug2756.last",
@@ -20,13 +20,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "disc_equation_FStar.Tactics.Result.Failed",
+        "disc_equation_FStar.Stubs.Tactics.Result.Failed",
         "disc_equation_Prims.Cons",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
         "projection_inverse_BoxBool_proj_0", "typing_Prims.uu___is_Cons"
       ],
       0,
-      "858efa5115a1b179cf00cfaa18282866"
+      "f0f1181c355d063e6c6485e830ca88ff"
     ],
     [
       "Bug2756.test_dependent_sum",
@@ -41,7 +41,7 @@
         "refinement_interpretation_Tm_refine_baba3c4ff195e8afc82d572a0bec0709"
       ],
       0,
-      "89251234112a0ec42239ab876590c3ed"
+      "1f583905b9ad0fd98ab86fa3d22d716e"
     ],
     [
       "Bug2756.__proj__TestDependentSum1__item__n1",
@@ -53,7 +53,7 @@
         "refinement_interpretation_Tm_refine_8256746bd526b538748945da2ceec1d9"
       ],
       0,
-      "d6402efda62bbc697512b2268d9b7407"
+      "ac5482e5f3e19c29eb72d8e149d821ef"
     ],
     [
       "Bug2756.__proj__TestDependentSum1__item__n2",
@@ -70,7 +70,7 @@
         "typing_Bug2756.__proj__TestDependentSum1__item__n1"
       ],
       0,
-      "c2e2309253b128f897217ad6ea616ada"
+      "8b1f112efb30979000d241e3e4a06a13"
     ],
     [
       "Bug2756.__proj__TestDependentSum1__item__n2",
@@ -92,7 +92,7 @@
         "typing_Bug2756.__proj__TestDependentSum1__item__n1"
       ],
       0,
-      "087246cbd6d15ec7cada6481ab5fce6a"
+      "225e6e69560a1c58f78e3e57e6362433"
     ],
     [
       "Bug2756.__proj__TestDependentSum1__item__tdn1",
@@ -104,7 +104,7 @@
         "refinement_interpretation_Tm_refine_8256746bd526b538748945da2ceec1d9"
       ],
       0,
-      "134b3ae6ea941a5e124077d73b0b2c3c"
+      "fb23ba673b3fc3b1ef308c6076f98f76"
     ],
     [
       "Bug2756.__proj__TestDependentSum2__item___0",
@@ -116,7 +116,7 @@
         "refinement_interpretation_Tm_refine_c84f9dca56e7aa544dcd8db84b7fdd84"
       ],
       0,
-      "22827783fc249a2af39b172b8001d97a"
+      "40a498a41cdcf3bad16df270a9bca205"
     ],
     [
       "Bug2756.encoded_snd",
@@ -139,7 +139,7 @@
         "refinement_interpretation_Tm_refine_baba3c4ff195e8afc82d572a0bec0709"
       ],
       0,
-      "3048b8b86892d99667fcf7f9b23f9eb0"
+      "533042862f0a71f1eb2d5ae25160ec23"
     ],
     [
       "Bug2756.encoded_type",
@@ -148,7 +148,7 @@
       1,
       [ "@query" ],
       0,
-      "ebbf7b4d9925f6f0641d275a32d73f88"
+      "c817ba7279e9ecb678a3acf6f289f70c"
     ],
     [
       "Bug2756.uu___55",
@@ -177,7 +177,7 @@
         "refinement_interpretation_Tm_refine_baba3c4ff195e8afc82d572a0bec0709"
       ],
       0,
-      "706cd2ae8f47c6c962297a401ac66c3e"
+      "f2b0164630bb892929ba9456dadac4bc"
     ],
     [
       "Bug2756.uu___55",
@@ -211,7 +211,7 @@
         "typing_Prims.pow2"
       ],
       0,
-      "90c2fcb981c0554daaec46700fb67951"
+      "7f22c4acdb93f8f75376b787fd17ec5d"
     ]
   ]
 ]

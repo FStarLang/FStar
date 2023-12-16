@@ -4164,76 +4164,92 @@ and (tc_synth :
                     "synth_by_tactic: bad application") rng in
           match uu___ with
           | (tau, atyp) ->
-              let typ =
-                match atyp with
-                | FStar_Pervasives_Native.Some t -> t
-                | FStar_Pervasives_Native.None ->
-                    let uu___1 = FStar_TypeChecker_Env.expected_typ env in
-                    (match uu___1 with
-                     | FStar_Pervasives_Native.Some (t, use_eq) ->
-                         (if use_eq
-                          then
-                            (let uu___3 =
-                               let uu___4 =
+              ((let uu___2 =
+                  FStar_TypeChecker_Env.debug env (FStar_Options.Other "Tac") in
+                if uu___2
+                then
+                  let uu___3 =
+                    FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                      tau in
+                  let uu___4 =
+                    FStar_Class_Show.show
+                      (FStar_Class_Show.show_option
+                         FStar_Syntax_Print.showable_term) atyp in
+                  FStar_Compiler_Util.print2
+                    "Processing synth of %s at type %s\n" uu___3 uu___4
+                else ());
+               (let typ =
+                  match atyp with
+                  | FStar_Pervasives_Native.Some t -> t
+                  | FStar_Pervasives_Native.None ->
+                      let uu___2 = FStar_TypeChecker_Env.expected_typ env in
+                      (match uu___2 with
+                       | FStar_Pervasives_Native.Some (t, use_eq) ->
+                           (if use_eq
+                            then
+                              (let uu___4 =
                                  let uu___5 =
-                                   FStar_Syntax_Print.term_to_string t in
-                                 FStar_Compiler_Util.format1
-                                   "Equality ascription in synth (%s) is not yet supported, please use subtyping"
-                                   uu___5 in
-                               (FStar_Errors_Codes.Fatal_NotSupported,
-                                 uu___4) in
-                             FStar_Errors.raise_error uu___3
-                               t.FStar_Syntax_Syntax.pos)
-                          else ();
-                          t)
-                     | FStar_Pervasives_Native.None ->
-                         let uu___2 = FStar_TypeChecker_Env.get_range env in
-                         FStar_Errors.raise_error
-                           (FStar_Errors_Codes.Fatal_SynthByTacticError,
-                             "synth_by_tactic: need a type annotation when no expected type is present")
-                           uu___2) in
-              let uu___1 =
+                                   let uu___6 =
+                                     FStar_Syntax_Print.term_to_string t in
+                                   FStar_Compiler_Util.format1
+                                     "Equality ascription in synth (%s) is not yet supported, please use subtyping"
+                                     uu___6 in
+                                 (FStar_Errors_Codes.Fatal_NotSupported,
+                                   uu___5) in
+                               FStar_Errors.raise_error uu___4
+                                 t.FStar_Syntax_Syntax.pos)
+                            else ();
+                            t)
+                       | FStar_Pervasives_Native.None ->
+                           let uu___3 = FStar_TypeChecker_Env.get_range env in
+                           FStar_Errors.raise_error
+                             (FStar_Errors_Codes.Fatal_SynthByTacticError,
+                               "synth_by_tactic: need a type annotation when no expected type is present")
+                             uu___3) in
                 let uu___2 =
                   let uu___3 =
-                    let uu___4 = FStar_Syntax_Util.type_u () in
-                    FStar_Pervasives_Native.fst uu___4 in
-                  FStar_TypeChecker_Env.set_expected_typ env uu___3 in
-                tc_term uu___2 typ in
-              (match uu___1 with
-               | (typ1, uu___2, g1) ->
-                   (FStar_TypeChecker_Rel.force_trivial_guard env g1;
-                    (let uu___4 =
-                       tc_tactic FStar_Syntax_Syntax.t_unit
-                         FStar_Syntax_Syntax.t_unit env tau in
-                     match uu___4 with
-                     | (tau1, uu___5, g2) ->
-                         (FStar_TypeChecker_Rel.force_trivial_guard env g2;
-                          (let t =
-                             env.FStar_TypeChecker_Env.synth_hook env typ1
-                               {
-                                 FStar_Syntax_Syntax.n =
-                                   (tau1.FStar_Syntax_Syntax.n);
-                                 FStar_Syntax_Syntax.pos = rng;
-                                 FStar_Syntax_Syntax.vars =
-                                   (tau1.FStar_Syntax_Syntax.vars);
-                                 FStar_Syntax_Syntax.hash_code =
-                                   (tau1.FStar_Syntax_Syntax.hash_code)
-                               } in
-                           (let uu___8 =
-                              FStar_TypeChecker_Env.debug env
-                                (FStar_Options.Other "Tac") in
-                            if uu___8
-                            then
-                              let uu___9 =
-                                FStar_Syntax_Print.term_to_string t in
-                              FStar_Compiler_Util.print1 "Got %s\n" uu___9
-                            else ());
-                           FStar_TypeChecker_Util.check_uvars
-                             tau1.FStar_Syntax_Syntax.pos t;
-                           (let uu___9 =
-                              let uu___10 = FStar_Syntax_Syntax.mk_Total typ1 in
-                              FStar_TypeChecker_Common.lcomp_of_comp uu___10 in
-                            (t, uu___9, FStar_TypeChecker_Env.trivial_guard)))))))
+                    let uu___4 =
+                      let uu___5 = FStar_Syntax_Util.type_u () in
+                      FStar_Pervasives_Native.fst uu___5 in
+                    FStar_TypeChecker_Env.set_expected_typ env uu___4 in
+                  tc_term uu___3 typ in
+                match uu___2 with
+                | (typ1, uu___3, g1) ->
+                    (FStar_TypeChecker_Rel.force_trivial_guard env g1;
+                     (let uu___5 =
+                        tc_tactic FStar_Syntax_Syntax.t_unit
+                          FStar_Syntax_Syntax.t_unit env tau in
+                      match uu___5 with
+                      | (tau1, uu___6, g2) ->
+                          (FStar_TypeChecker_Rel.force_trivial_guard env g2;
+                           (let t =
+                              env.FStar_TypeChecker_Env.synth_hook env typ1
+                                {
+                                  FStar_Syntax_Syntax.n =
+                                    (tau1.FStar_Syntax_Syntax.n);
+                                  FStar_Syntax_Syntax.pos = rng;
+                                  FStar_Syntax_Syntax.vars =
+                                    (tau1.FStar_Syntax_Syntax.vars);
+                                  FStar_Syntax_Syntax.hash_code =
+                                    (tau1.FStar_Syntax_Syntax.hash_code)
+                                } in
+                            (let uu___9 =
+                               FStar_TypeChecker_Env.debug env
+                                 (FStar_Options.Other "Tac") in
+                             if uu___9
+                             then
+                               let uu___10 =
+                                 FStar_Syntax_Print.term_to_string t in
+                               FStar_Compiler_Util.print1 "Got %s\n" uu___10
+                             else ());
+                            FStar_TypeChecker_Util.check_uvars
+                              tau1.FStar_Syntax_Syntax.pos t;
+                            (let uu___10 =
+                               let uu___11 =
+                                 FStar_Syntax_Syntax.mk_Total typ1 in
+                               FStar_TypeChecker_Common.lcomp_of_comp uu___11 in
+                             (t, uu___10,
+                               FStar_TypeChecker_Env.trivial_guard))))))))
 and (tc_tactic :
   FStar_Syntax_Syntax.typ ->
     FStar_Syntax_Syntax.typ ->

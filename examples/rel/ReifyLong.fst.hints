@@ -7,19 +7,17 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
+        "@query",
         "FStar.DM4F.IntStoreFixed.__proj__INT_STORE__item__put_equality",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "equation_FStar.DM4F.IntStoreFixed.write",
         "equation_FStar.Pervasives.Native.fst", "equation_ReifyLong.p1",
         "interpretation_Tm_abs_b39c8c630087b05df5c03dcc1ddf75bf",
         "interpretation_Tm_abs_f5eb1bdda21a9c56f1f99baa07af86ee",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "unit_typing"
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
       ],
       0,
-      "e589cff0ef38aeeb7835c236a483a42b"
+      "8f1840a98d11e6d7c6471b7a83c8d2a5"
     ]
   ]
 ]

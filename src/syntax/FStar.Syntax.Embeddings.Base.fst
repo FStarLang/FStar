@@ -118,17 +118,17 @@ let map_shadow (s:shadow_term) (f:term -> term) : shadow_term =
     BU.map_opt s (Thunk.map f)
 let force_shadow (s:shadow_term) = BU.map_opt s Thunk.force
 
-type embedding (a:Type0) = {
+class embedding (a:Type0) = {
   em      : a -> embed_t;
   un      : term -> unembed_t a;
   print   : printer a;
 
   (* These are thunked so we can create Tot instances. *)
   typ     : unit -> typ;
-  emb_typ : unit -> emb_typ;
+  e_typ : unit -> emb_typ;
 }
 
-let emb_typ_of a #e () = e.emb_typ ()
+let emb_typ_of a #e () = e.e_typ ()
 
 let unknown_printer (typ : term) (_ : 'a) : string =
     BU.format1 "unknown %s" (show typ)
@@ -144,7 +144,7 @@ let mk_emb em un fv : Tot _ =
         un = un;
         print = (fun x -> let typ = S.fv_to_tm fv in unknown_printer typ x);
         typ = (fun () -> S.fv_to_tm fv);
-        emb_typ= (fun () -> ET_app (S.lid_of_fv fv |> Ident.string_of_lid, []));
+        e_typ= (fun () -> ET_app (S.lid_of_fv fv |> Ident.string_of_lid, []));
     }
 
 let mk_emb_full em un typ printe emb_typ : Tot _ = {
@@ -152,7 +152,7 @@ let mk_emb_full em un typ printe emb_typ : Tot _ = {
     un      = un ;
     typ     = typ;
     print   = printe;
-    emb_typ = emb_typ;
+    e_typ = emb_typ;
 }
 // 
 //
@@ -213,15 +213,15 @@ let unembed #a {| e:embedding a |} t n =
   r
 
 
-let embed_as (ea:embedding 'a) (ab : 'a -> 'b) (ba : 'b -> 'a) (o:option typ) : Tot (embedding 'b) =
+let embed_as (ea:embedding 'a) (ab : 'a -> 'b) (ba : 'b -> 'a) (o:option S.typ) : Tot (embedding 'b) =
     mk_emb_full (fun (x:'b) -> embed (ba x))
                 (fun (t:term) cb -> BU.map_opt (try_unembed t cb) ab)
                 (fun () -> match o with | Some t -> t | _ -> type_of ea)
                 (fun (x:'b) -> BU.format1 "(embed_as>> %s)\n" (ea.print (ba x)))
-                ea.emb_typ
+                ea.e_typ
 
 (* A simple lazy embedding, without cancellations nor an expressive type. *)
-let e_lazy #a (k:lazy_kind) (ty : typ) : embedding a =
+let e_lazy #a (k:lazy_kind) (ty : S.typ) : embedding a =
   let ee (x:a) rng _topt _norm : term = U.mk_lazy x ty k (Some rng) in
   let uu (t:term) _norm : option a =
     let t0 = t in

@@ -1,0 +1,409 @@
+[
+  "¯³{\u0017\u0012ˆøùpøŒÿà*‹©",
+  [
+    [
+      "X64.Vale.StrongPost_i.ins",
+      1,
+      1,
+      0,
+      [ "@query", "assumption_X64.Machine_s.operand__uu___haseq" ],
+      0,
+      "802bf3c37421fe3fe970206de3ed8881"
+    ],
+    [
+      "X64.Vale.StrongPost_i.__proj__Mov64__item__dst",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_40cd61a9068cbeed2a346b66c4d06035"
+      ],
+      0,
+      "956acd0fe1bda530ba568d588d6a5900"
+    ],
+    [
+      "X64.Vale.StrongPost_i.__proj__Mov64__item__src",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_40cd61a9068cbeed2a346b66c4d06035"
+      ],
+      0,
+      "95e0e1b1c324fd79921b0385954725c7"
+    ],
+    [
+      "X64.Vale.StrongPost_i.__proj__Load64__item__dst",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_328c39e52cac4f714a2fd55744d2632c"
+      ],
+      0,
+      "acf7ccbd83ee025ac79816f4492b4f42"
+    ],
+    [
+      "X64.Vale.StrongPost_i.__proj__Load64__item__src",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_328c39e52cac4f714a2fd55744d2632c"
+      ],
+      0,
+      "e0026042220acc428274a65fc86f1cfd"
+    ],
+    [
+      "X64.Vale.StrongPost_i.__proj__Load64__item__offset",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_328c39e52cac4f714a2fd55744d2632c"
+      ],
+      0,
+      "7cb5b4cd3b836553244435c9ed6f76e7"
+    ],
+    [
+      "X64.Vale.StrongPost_i.__proj__Store64__item__dst",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_f5d1e4d4ea78ee50a5c8db0f990998d3"
+      ],
+      0,
+      "9ff4d9eaae36a95a77d174cad02105ac"
+    ],
+    [
+      "X64.Vale.StrongPost_i.__proj__Store64__item__src",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_f5d1e4d4ea78ee50a5c8db0f990998d3"
+      ],
+      0,
+      "f6cff9d6023b6b5471100d41b2bc6f20"
+    ],
+    [
+      "X64.Vale.StrongPost_i.__proj__Store64__item__offset",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_f5d1e4d4ea78ee50a5c8db0f990998d3"
+      ],
+      0,
+      "4f771f571a41770c6bfc005719ee8e8d"
+    ],
+    [
+      "X64.Vale.StrongPost_i.__proj__Add64Wrap__item__dst",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_8af824417febca2dd666f55860e37123"
+      ],
+      0,
+      "e24e3099a2d307156888a91732207465"
+    ],
+    [
+      "X64.Vale.StrongPost_i.__proj__Add64Wrap__item__src",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_8af824417febca2dd666f55860e37123"
+      ],
+      0,
+      "6758321b700f50e8831ceff803322f8c"
+    ],
+    [
+      "X64.Vale.StrongPost_i.__proj__Adc64Wrap__item__dst",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_ecd294cd2663e86c405e1ba18cfc9132"
+      ],
+      0,
+      "7af6bfb27f1b086ef8805bac11fa3d4a"
+    ],
+    [
+      "X64.Vale.StrongPost_i.__proj__Adc64Wrap__item__src",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_ecd294cd2663e86c405e1ba18cfc9132"
+      ],
+      0,
+      "02c00f49bd02ed8ce840348d991d8add"
+    ],
+    [
+      "X64.Vale.StrongPost_i.__proj__Mul64Wrap__item__src",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_cdee9644b84d60ced7b907e879e8f711"
+      ],
+      0,
+      "58375793065ae2edc569f915179df6c3"
+    ],
+    [
+      "X64.Vale.StrongPost_i.__proj__IMul64__item__dst",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_682d3d695d007eebd7b34b81e68201a2"
+      ],
+      0,
+      "120c274b4483eae078d8ca6fe6fc3779"
+    ],
+    [
+      "X64.Vale.StrongPost_i.__proj__IMul64__item__src",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_682d3d695d007eebd7b34b81e68201a2"
+      ],
+      0,
+      "b06cba23098dcd868d9508fd74f5ad38"
+    ],
+    [
+      "X64.Vale.StrongPost_i.__proj__And64__item__dst",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_5dc689cbcdb3326b49d445a095bac099"
+      ],
+      0,
+      "3751acf4b71160ea9755480b98f6ed2e"
+    ],
+    [
+      "X64.Vale.StrongPost_i.__proj__And64__item__amt",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_5dc689cbcdb3326b49d445a095bac099"
+      ],
+      0,
+      "83e418494f1f20d1828e0ddf4f4cadfa"
+    ],
+    [
+      "X64.Vale.StrongPost_i.__proj__Shr64__item__dst",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_9d8aaa9f141413804a9831bfdf4fa3af"
+      ],
+      0,
+      "9c427a8f0b51eb16545ddc6686e69796"
+    ],
+    [
+      "X64.Vale.StrongPost_i.__proj__Shr64__item__amt",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_9d8aaa9f141413804a9831bfdf4fa3af"
+      ],
+      0,
+      "5bef9fcd1332b7d91260ef2d67c6dbba"
+    ],
+    [
+      "X64.Vale.StrongPost_i.__proj__Sub64__item__dst",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_8a2af6d0ec73b071a6dcad5176f1f0e2"
+      ],
+      0,
+      "ab371d4a3210f1e150745d6dac9a2289"
+    ],
+    [
+      "X64.Vale.StrongPost_i.__proj__Sub64__item__src",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_8a2af6d0ec73b071a6dcad5176f1f0e2"
+      ],
+      0,
+      "605bee2f89333e32b99624504bf97437"
+    ],
+    [
+      "X64.Vale.StrongPost_i.valid_operand_norm",
+      1,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_X64.Machine_s.OConst",
+        "disc_equation_X64.Machine_s.OMem",
+        "disc_equation_X64.Machine_s.OReg",
+        "fuel_guarded_inversion_X64.Machine_s.operand",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "cdaf58dc39c431355e7be21fad1f317b"
+    ],
+    [
+      "X64.Vale.StrongPost_i.eval_operand_norm",
+      1,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_X64.Machine_s.OConst",
+        "disc_equation_X64.Machine_s.OMem",
+        "disc_equation_X64.Machine_s.OReg",
+        "fuel_guarded_inversion_X64.Machine_s.operand",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "8348868ec0f2fdf68b2e65c59bf2ce6b"
+    ],
+    [
+      "X64.Vale.StrongPost_i.regs_match",
+      1,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_136fd5270a258ddaaad5b0c5f45f8938_0",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "5480fe8c6941d15750a4071ff683d7b6"
+    ],
+    [
+      "X64.Vale.StrongPost_i.inss_to_codes",
+      1,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "X64.Vale.StrongPost_i_pretyping_b57a61b8460583814cc6086893d3abc9",
+        "binder_x_64054ab5c496dbf376bb97c3f7e4eb60_0", "bool_inversion",
+        "bool_typing", "constructor_distinct_Prims.Cons",
+        "constructor_distinct_X64.Machine_s.OReg",
+        "constructor_distinct_X64.Vale.StrongPost_i.Adc64Wrap",
+        "constructor_distinct_X64.Vale.StrongPost_i.Add64Wrap",
+        "constructor_distinct_X64.Vale.StrongPost_i.And64",
+        "constructor_distinct_X64.Vale.StrongPost_i.IMul64",
+        "constructor_distinct_X64.Vale.StrongPost_i.Load64",
+        "constructor_distinct_X64.Vale.StrongPost_i.Mov64",
+        "constructor_distinct_X64.Vale.StrongPost_i.Shr64",
+        "constructor_distinct_X64.Vale.StrongPost_i.Sub64",
+        "data_elim_Prims.Cons", "disc_equation_Prims.Cons",
+        "disc_equation_X64.Machine_s.OConst",
+        "disc_equation_X64.Machine_s.OReg",
+        "disc_equation_X64.Machine_s.Rsp",
+        "disc_equation_X64.Vale.StrongPost_i.Adc64Wrap",
+        "disc_equation_X64.Vale.StrongPost_i.Add64Wrap",
+        "disc_equation_X64.Vale.StrongPost_i.And64",
+        "disc_equation_X64.Vale.StrongPost_i.IMul64",
+        "disc_equation_X64.Vale.StrongPost_i.Load64",
+        "disc_equation_X64.Vale.StrongPost_i.Mov64",
+        "disc_equation_X64.Vale.StrongPost_i.Shr64",
+        "disc_equation_X64.Vale.StrongPost_i.Sub64",
+        "equation_X64.Machine_s.valid_dst", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_Negation",
+        "proj_equation_Prims.Cons_hd",
+        "proj_equation_X64.Vale.StrongPost_i.Adc64Wrap_dst",
+        "proj_equation_X64.Vale.StrongPost_i.Add64Wrap_dst",
+        "proj_equation_X64.Vale.StrongPost_i.And64_dst",
+        "proj_equation_X64.Vale.StrongPost_i.IMul64_dst",
+        "proj_equation_X64.Vale.StrongPost_i.Load64_dst",
+        "proj_equation_X64.Vale.StrongPost_i.Mov64_dst",
+        "proj_equation_X64.Vale.StrongPost_i.Shr64_dst",
+        "proj_equation_X64.Vale.StrongPost_i.Sub64_dst",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "projection_inverse_X64.Machine_s.OReg_r",
+        "projection_inverse_X64.Vale.StrongPost_i.Adc64Wrap_dst",
+        "projection_inverse_X64.Vale.StrongPost_i.Adc64Wrap_src",
+        "projection_inverse_X64.Vale.StrongPost_i.Add64Wrap_dst",
+        "projection_inverse_X64.Vale.StrongPost_i.Add64Wrap_src",
+        "projection_inverse_X64.Vale.StrongPost_i.And64_amt",
+        "projection_inverse_X64.Vale.StrongPost_i.And64_dst",
+        "projection_inverse_X64.Vale.StrongPost_i.IMul64_dst",
+        "projection_inverse_X64.Vale.StrongPost_i.IMul64_src",
+        "projection_inverse_X64.Vale.StrongPost_i.Load64_dst",
+        "projection_inverse_X64.Vale.StrongPost_i.Load64_offset",
+        "projection_inverse_X64.Vale.StrongPost_i.Load64_src",
+        "projection_inverse_X64.Vale.StrongPost_i.Mov64_dst",
+        "projection_inverse_X64.Vale.StrongPost_i.Mov64_src",
+        "projection_inverse_X64.Vale.StrongPost_i.Shr64_amt",
+        "projection_inverse_X64.Vale.StrongPost_i.Shr64_dst",
+        "projection_inverse_X64.Vale.StrongPost_i.Sub64_dst",
+        "projection_inverse_X64.Vale.StrongPost_i.Sub64_src",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "ad20caae715a3894ff08fb0906ba0b80"
+    ],
+    [
+      "X64.Vale.StrongPost_i.wp_code",
+      1,
+      1,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_64054ab5c496dbf376bb97c3f7e4eb60_0",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "67443214b9540efa855ec15d4a65334b"
+    ],
+    [
+      "X64.Vale.StrongPost_i.va_lemma_weakest_pre_norm_wp",
+      1,
+      1,
+      0,
+      [ "@query" ],
+      0,
+      "e9d01388797f28f0a8d43ad105196e6b"
+    ]
+  ]
+]

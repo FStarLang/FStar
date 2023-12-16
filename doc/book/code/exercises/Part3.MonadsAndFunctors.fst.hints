@@ -30,7 +30,7 @@
         "token_correspondence_Part3.MonadsAndFunctors.return"
       ],
       0,
-      "41fa7aa072bea55451899b0e551726ef"
+      "30c06536d61f23def11562b15edf6dcf"
     ],
     [
       "Part3.MonadsAndFunctors.opt_monad",
@@ -39,7 +39,7 @@
       1,
       [ "@query", "lemma_FStar.Pervasives.invertOption" ],
       0,
-      "74b267e82b28b5a46a76735d9096fd24"
+      "4e3c323b0dda6a79d950cb693c59554d"
     ],
     [
       "Part3.MonadsAndFunctors.div",
@@ -48,7 +48,7 @@
       1,
       [ "@query", "primitive_Prims.op_Equality" ],
       0,
-      "8e335290a1e4ca379b5575822003c6ac"
+      "b6187c80b56ec71c2fd18025a97104da"
     ]
   ]
 ]

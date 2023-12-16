@@ -1,5 +1,10 @@
 module GradedMonad
 
+(* NB: this is the old version of the graded monad that has a monoid
+index parameter everywhere instead of a constraint on the type. We
+keep it for CI purposes. See doc/book/code/GradedMonad.fst for better
+version. *)
+
 #set-options "--warn_error -350"
 
 //SNIPPET_START:monoid$

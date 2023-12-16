@@ -12,7 +12,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "a3d1b1f0933c9cace726b0bb47ec8048"
+      "21d97a269f833bc650ce64e3e868ed19"
     ],
     [
       "Bug1902.f",
@@ -30,7 +30,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "2600d8f066ea27d12b6213f7491a2008"
+      "99f03516c6df08d6bd1c430f7072e94a"
     ],
     [
       "Bug1902.mk_tot_arr_decr",
@@ -43,7 +43,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "36c15e30290af6fcf882923935ca9d8a"
+      "dde77a5a1d7b2c98c41b8ea3493fa6c9"
     ],
     [
       "Bug1902.craft_f'",
@@ -53,29 +53,29 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
+        "constructor_distinct_FStar.Stubs.Tactics.Result.Failed",
+        "constructor_distinct_FStar.Stubs.Tactics.Result.Success",
         "constructor_distinct_FStar.Tactics.NamedView.Sg_Let",
-        "constructor_distinct_FStar.Tactics.Result.Failed",
-        "constructor_distinct_FStar.Tactics.Result.Success",
         "data_typing_intro_Prims.Nil@tok",
         "disc_equation_FStar.Tactics.NamedView.Unk",
-        "equation_FStar.Reflection.Types.name",
-        "equation_FStar.Reflection.Types.typ",
+        "equation_FStar.Stubs.Reflection.Types.name",
+        "equation_FStar.Stubs.Reflection.Types.typ",
         "equation_FStar.Tactics.NamedView.branch",
         "equation_FStar.Tactics.NamedView.namedv",
         "equation_FStar.Tactics.NamedView.simple_binder",
         "equation_FStar.Tactics.NamedView.term",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
         "function_token_typing_FStar.Tactics.NamedView.branch",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Tactics.Result.Failed_a",
-        "projection_inverse_FStar.Tactics.Result.Failed_exn",
-        "projection_inverse_FStar.Tactics.Result.Failed_ps",
-        "projection_inverse_FStar.Tactics.Result.Success_a",
-        "projection_inverse_FStar.Tactics.Result.Success_ps",
-        "projection_inverse_FStar.Tactics.Result.Success_v"
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_a",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_exn",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_ps",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_v"
       ],
       0,
-      "de5f3ab0be0fa9b6abe4bffef382e926"
+      "d7e5579eff79b626de9f4f832ff7291b"
     ],
     [
       "Bug1902.f'_using_f_type",
@@ -91,7 +91,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "361dccd1e26ec0bcd0ff2e2a8e7880f8"
+      "bef8c4f5b5113ae0e50dffc29091216b"
     ]
   ]
 ]

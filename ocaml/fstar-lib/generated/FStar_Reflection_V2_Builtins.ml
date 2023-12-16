@@ -701,16 +701,27 @@ let (rd_to_syntax_qual :
     | FStar_Reflection_V2_Data.Logic -> FStar_Syntax_Syntax.Logic
     | FStar_Reflection_V2_Data.Reifiable -> FStar_Syntax_Syntax.Reifiable
     | FStar_Reflection_V2_Data.Reflectable l ->
-        FStar_Syntax_Syntax.Reflectable l
+        let uu___1 =
+          FStar_Ident.lid_of_path l FStar_Compiler_Range_Type.dummyRange in
+        FStar_Syntax_Syntax.Reflectable uu___1
     | FStar_Reflection_V2_Data.Discriminator l ->
-        FStar_Syntax_Syntax.Discriminator l
+        let uu___1 =
+          FStar_Ident.lid_of_path l FStar_Compiler_Range_Type.dummyRange in
+        FStar_Syntax_Syntax.Discriminator uu___1
     | FStar_Reflection_V2_Data.Projector (l, i) ->
-        FStar_Syntax_Syntax.Projector (l, i)
+        let uu___1 =
+          let uu___2 =
+            FStar_Ident.lid_of_path l FStar_Compiler_Range_Type.dummyRange in
+          (uu___2, i) in
+        FStar_Syntax_Syntax.Projector uu___1
     | FStar_Reflection_V2_Data.RecordType (l1, l2) ->
         FStar_Syntax_Syntax.RecordType (l1, l2)
     | FStar_Reflection_V2_Data.RecordConstructor (l1, l2) ->
         FStar_Syntax_Syntax.RecordConstructor (l1, l2)
-    | FStar_Reflection_V2_Data.Action l -> FStar_Syntax_Syntax.Action l
+    | FStar_Reflection_V2_Data.Action l ->
+        let uu___1 =
+          FStar_Ident.lid_of_path l FStar_Compiler_Range_Type.dummyRange in
+        FStar_Syntax_Syntax.Action uu___1
     | FStar_Reflection_V2_Data.ExceptionConstructor ->
         FStar_Syntax_Syntax.ExceptionConstructor
     | FStar_Reflection_V2_Data.HasMaskedEffect ->
@@ -738,16 +749,21 @@ let (syntax_to_rd_qual :
     | FStar_Syntax_Syntax.Logic -> FStar_Reflection_V2_Data.Logic
     | FStar_Syntax_Syntax.Reifiable -> FStar_Reflection_V2_Data.Reifiable
     | FStar_Syntax_Syntax.Reflectable l ->
-        FStar_Reflection_V2_Data.Reflectable l
+        let uu___1 = FStar_Ident.path_of_lid l in
+        FStar_Reflection_V2_Data.Reflectable uu___1
     | FStar_Syntax_Syntax.Discriminator l ->
-        FStar_Reflection_V2_Data.Discriminator l
+        let uu___1 = FStar_Ident.path_of_lid l in
+        FStar_Reflection_V2_Data.Discriminator uu___1
     | FStar_Syntax_Syntax.Projector (l, i) ->
-        FStar_Reflection_V2_Data.Projector (l, i)
+        let uu___1 = let uu___2 = FStar_Ident.path_of_lid l in (uu___2, i) in
+        FStar_Reflection_V2_Data.Projector uu___1
     | FStar_Syntax_Syntax.RecordType (l1, l2) ->
         FStar_Reflection_V2_Data.RecordType (l1, l2)
     | FStar_Syntax_Syntax.RecordConstructor (l1, l2) ->
         FStar_Reflection_V2_Data.RecordConstructor (l1, l2)
-    | FStar_Syntax_Syntax.Action l -> FStar_Reflection_V2_Data.Action l
+    | FStar_Syntax_Syntax.Action l ->
+        let uu___1 = FStar_Ident.path_of_lid l in
+        FStar_Reflection_V2_Data.Action uu___1
     | FStar_Syntax_Syntax.ExceptionConstructor ->
         FStar_Reflection_V2_Data.ExceptionConstructor
     | FStar_Syntax_Syntax.HasMaskedEffect ->

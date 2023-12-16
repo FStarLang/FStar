@@ -1040,36 +1040,14 @@ let (mk_input :
   fun fresh ->
     fun theory ->
       let ver = FStar_Options.z3_version () in
-      let options = "; Z3 invocation started by F*\n" in
+      let options = z3_options ver in
       let options1 =
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStar_Compiler_Effect.op_Bang FStar_Options._version in
-            let uu___3 =
-              let uu___4 =
-                let uu___5 =
-                  FStar_Compiler_Effect.op_Bang FStar_Options._commit in
-                Prims.strcat uu___5 "\n" in
-              Prims.strcat " -- hash: " uu___4 in
-            Prims.strcat uu___2 uu___3 in
-          Prims.strcat "; F* version: " uu___1 in
-        Prims.strcat options uu___ in
-      let options2 =
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStar_Options.z3_version () in
-            Prims.strcat uu___2 "\n" in
-          Prims.strcat "; Z3 version (according to F*): " uu___1 in
-        Prims.strcat options1 uu___ in
-      let options3 =
-        let uu___ = z3_options ver in Prims.strcat options2 uu___ in
-      let options4 =
         let uu___ =
           let uu___1 =
             let uu___2 = FStar_Options.z3_smtopt () in
             FStar_Compiler_String.concat "\n" uu___2 in
           Prims.strcat uu___1 "\n\n" in
-        Prims.strcat options3 uu___ in
+        Prims.strcat options uu___ in
       (let uu___1 = FStar_Options.print_z3_statistics () in
        if uu___1 then context_profile theory else ());
       (let uu___1 =
@@ -1089,11 +1067,23 @@ let (mk_input :
              FStar_Compiler_Option.get uu___4 in
            match uu___3 with
            | (prefix, check_sat, suffix) ->
+               let prefix1 =
+                 let uu___4 =
+                   let uu___5 =
+                     let uu___6 =
+                       FStar_Compiler_Effect.op_Bang FStar_Options._version in
+                     let uu___7 =
+                       FStar_Compiler_Effect.op_Bang FStar_Options._commit in
+                     FStar_Compiler_Util.format3
+                       "Z3 invocation started by F*\nF* version: %s -- commit hash: %s\nZ3 version (according to F*): %s"
+                       uu___6 uu___7 ver in
+                   FStar_SMTEncoding_Term.Caption uu___5 in
+                 uu___4 :: prefix in
                let pp =
                  FStar_Compiler_List.map
-                   (FStar_SMTEncoding_Term.declToSmt options4) in
+                   (FStar_SMTEncoding_Term.declToSmt options1) in
                let suffix1 = check_sat :: suffix in
-               let ps_lines = pp prefix in
+               let ps_lines = pp prefix1 in
                let ss_lines = pp suffix1 in
                let ps = FStar_Compiler_String.concat "\n" ps_lines in
                let ss = FStar_Compiler_String.concat "\n" ss_lines in
@@ -1103,8 +1093,8 @@ let (mk_input :
                  then
                    let uu___5 =
                      FStar_Compiler_List.map
-                       (FStar_SMTEncoding_Term.declToSmt_no_caps options4)
-                       prefix in
+                       (FStar_SMTEncoding_Term.declToSmt_no_caps options1)
+                       prefix1 in
                    FStar_Compiler_String.concat "\n" uu___5
                  else ps in
                let hs1 = Prims.strcat hs (Prims.strcat "Z3 version: " ver) in
@@ -1116,7 +1106,7 @@ let (mk_input :
            (let uu___4 =
               let uu___5 =
                 FStar_Compiler_List.map
-                  (FStar_SMTEncoding_Term.declToSmt options4) theory in
+                  (FStar_SMTEncoding_Term.declToSmt options1) theory in
               FStar_Compiler_String.concat "\n" uu___5 in
             (uu___4, FStar_Pervasives_Native.None)) in
        match uu___1 with

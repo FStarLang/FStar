@@ -1,5 +1,5 @@
 [
-  "P◊\u001b∑f\u000f¨\u0018ﬁwj\u000e˚œÊÖ",
+  ">◊\u001f–C'\u0005\u0013È£Dh·Ó÷-",
   [
     [
       "Connectives.empty_elim",
@@ -11,7 +11,7 @@
         "fuel_guarded_inversion_Connectives.empty"
       ],
       0,
-      "07717d4960e236eeb2e147f5eaf902e5"
+      "552284b6c8bc641d00eba2e716019f89"
     ],
     [
       "Connectives.false_elim",
@@ -23,7 +23,7 @@
         "equation_Prims.l_False", "false_interp"
       ],
       0,
-      "5cfba53b12f0213fea33f43e04bb4fd7"
+      "abd9246d7e273a132ab56b0c5cbf9551"
     ],
     [
       "Connectives.conj_intro",
@@ -35,7 +35,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "061edfab7002aa45d8de587d6ef455ba"
+      "61d845bee2c6fee52850360dbbeb7f2d"
     ],
     [
       "Connectives.conj_elim_1",
@@ -47,7 +47,7 @@
         "refinement_interpretation_Tm_refine_b88b26704ce5354755b4f9e280b3a2d9"
       ],
       0,
-      "9a6b04d3f2e483a72320b0a2ce8a3d09"
+      "1a91f4366b81305c49b2fffae37663a5"
     ],
     [
       "Connectives.conj_elim_2",
@@ -59,7 +59,7 @@
         "refinement_interpretation_Tm_refine_b88b26704ce5354755b4f9e280b3a2d9"
       ],
       0,
-      "a1b8f54e93b66487daaa3e0c24956bea"
+      "7b760abb3c3ce4d39ed17f525efef36d"
     ],
     [
       "Connectives.conj_elim_sugar_1",
@@ -71,7 +71,7 @@
         "refinement_interpretation_Tm_refine_b88b26704ce5354755b4f9e280b3a2d9"
       ],
       0,
-      "146e60ea88dbb24218b463fc311c4958"
+      "cce679d3d3f97fcfd946eeb9ff9af099"
     ],
     [
       "Connectives.conj_elim_sugar_2",
@@ -83,7 +83,7 @@
         "refinement_interpretation_Tm_refine_b88b26704ce5354755b4f9e280b3a2d9"
       ],
       0,
-      "df549d617f12e175816c63aaa623099d"
+      "d7f877b96b63781eb1a6bc75c2b65eef"
     ],
     [
       "Connectives.or_intro_left",
@@ -95,7 +95,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "f3940b9604546742f9a248eb9dd57e56"
+      "ffef68ad867aa7863e64dc9eb60399ec"
     ],
     [
       "Connectives.or_intro_right",
@@ -107,7 +107,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "aacda4293eafec037c3e9d626e333802"
+      "7bcc6fcd124c958c4d7ce72a7de1495c"
     ],
     [
       "Connectives.or_intro_sugar_right",
@@ -119,22 +119,20 @@
         "refinement_interpretation_Tm_refine_953a6e4e702e848a7213bd619baaa22d"
       ],
       0,
-      "c6befb387656fcb01ecf1a05a55b7960"
+      "5fd65ed73e5be4605ae5206f9eb232c4"
     ],
     [
-      "Connectives.either_elim",
+      "Connectives.sum_elim",
       1,
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Pervasives.Inl",
-        "disc_equation_FStar.Pervasives.Inr",
-        "fuel_guarded_inversion_FStar.Pervasives.either",
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
+        "disc_equation_Prims.Right", "fuel_guarded_inversion_Prims.sum",
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "fcad340f0360b21cec8a1493b31b7a0b"
+      "0ea43a5851f7617b4234cee7955b0a17"
     ],
     [
       "Connectives.or_elim",
@@ -147,7 +145,7 @@
         "refinement_interpretation_Tm_refine_fe5dc86c0b5ea8bea91e659ca9e2937e"
       ],
       0,
-      "71ea9e199d645a809b9c8abf56cad329"
+      "7da97028a8c506a18d7cf571e9a72d8b"
     ],
     [
       "Connectives.or_elim_sugar",
@@ -161,7 +159,7 @@
         "refinement_interpretation_Tm_refine_fe5dc86c0b5ea8bea91e659ca9e2937e"
       ],
       0,
-      "ad0d1aaeebb499d50781e1b3a3a9aac8"
+      "aec244d74841132ee59a8e4356e8ea2b"
     ],
     [
       "Connectives.implies_intro_2",
@@ -173,7 +171,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "79ad2581a9b93fcccb5efe32a08d637e"
+      "b24ad4e993a6341ab54e32fb6331d178"
     ],
     [
       "Connectives.implies_intro_3",
@@ -186,7 +184,7 @@
         "refinement_interpretation_Tm_refine_913239c2cf9dc8a14e1f047e0206138d"
       ],
       0,
-      "7cd598679c65f5c31c4d598504b344e7"
+      "8c698332d9bba7982e87b5ed92df65fb"
     ],
     [
       "Connectives.implies_elim",
@@ -199,7 +197,7 @@
         "refinement_interpretation_Tm_refine_913239c2cf9dc8a14e1f047e0206138d"
       ],
       0,
-      "b661d29dee91ad41c619bdba7cb253fd"
+      "d6743258756169ed9da1021b0d987ac1"
     ],
     [
       "Connectives.implies_elim_sugar",
@@ -211,7 +209,7 @@
         "refinement_interpretation_Tm_refine_913239c2cf9dc8a14e1f047e0206138d"
       ],
       0,
-      "f8401d23506a9a289f1b5feadb10549c"
+      "b8331fc83c172eb157e8163201ba7093"
     ],
     [
       "Connectives.neg_elim",
@@ -223,7 +221,7 @@
         "refinement_interpretation_Tm_refine_953a6e4e702e848a7213bd619baaa22d"
       ],
       0,
-      "7ebfed51c453bbe92618497e0c06e3af"
+      "ba5a2b1fb7cb0909758a44aae5db3b3f"
     ],
     [
       "Connectives.forall_intro_2",
@@ -232,7 +230,7 @@
       1,
       [ "@query" ],
       0,
-      "0ab07c5b61c14c5bb0031cc2dbd4f1d9"
+      "fc16e3f7c52104ab2a8a957238fd356f"
     ],
     [
       "Connectives.forall_intro_3",
@@ -241,7 +239,7 @@
       1,
       [ "@query" ],
       0,
-      "3fc861b3a625a0063615ecfe71e1a68b"
+      "34539978ce364d79189ead067a5305ac"
     ],
     [
       "Connectives.forall_elim_1",
@@ -253,7 +251,7 @@
         "refinement_interpretation_Tm_refine_eee646ed2c0261b2e37307734e5990b8"
       ],
       0,
-      "9882625c25171a939cdf3e425748d95c"
+      "f771d976eb9d51437d1ff18184af1ce6"
     ],
     [
       "Connectives.forall_elim_2",
@@ -265,7 +263,7 @@
         "refinement_interpretation_Tm_refine_d163e3ea535eee9f7ded35da82a97326"
       ],
       0,
-      "7ef1a7b87bb877fd3cef78438475522a"
+      "cbe4fe439f5a30f658af2c2ea68bb03b"
     ],
     [
       "Connectives.exists_intro_1",
@@ -277,7 +275,7 @@
         "refinement_interpretation_Tm_refine_c2a6462ba4b9477e34b8a7b0105344c7"
       ],
       0,
-      "e0b8d2a28e2082ba0e7595016bcaa8ba"
+      "853a59b4d63b6b61508167464cda3f53"
     ],
     [
       "Connectives.exists_intro_3",
@@ -286,7 +284,7 @@
       1,
       [ "@query" ],
       0,
-      "24ebeee85a4d531a32258c7a4ddd73bf"
+      "f51821ae4ce6a1a51a5087782290145d"
     ],
     [
       "Connectives.exists_elim",
@@ -298,7 +296,7 @@
         "refinement_interpretation_Tm_refine_df2d65c00128265e81a98d1694fa32db"
       ],
       0,
-      "7efcfaee658ed1046539f8187b152be6"
+      "f2f6bfec9bfbd334924408194e13c0a7"
     ],
     [
       "Connectives.exists_elim_alt",
@@ -311,7 +309,7 @@
         "refinement_interpretation_Tm_refine_df2d65c00128265e81a98d1694fa32db"
       ],
       0,
-      "90ebb4b860dff43d8c70bedd7f4715fb"
+      "94a9f4a2756ffa09933e51a076cf5587"
     ]
   ]
 ]

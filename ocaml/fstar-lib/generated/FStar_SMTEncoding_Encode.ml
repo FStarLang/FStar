@@ -3755,11 +3755,7 @@ let rec (encode_sigelt :
   =
   fun env ->
     fun se ->
-      let nm =
-        let uu___ = FStar_Syntax_Util.lid_of_sigelt se in
-        match uu___ with
-        | FStar_Pervasives_Native.None -> ""
-        | FStar_Pervasives_Native.Some l -> FStar_Ident.string_of_lid l in
+      let nm = FStar_Syntax_Print.sigelt_to_string_short se in
       let uu___ =
         let uu___1 =
           let uu___2 = FStar_Syntax_Print.sigelt_to_string_short se in
@@ -7399,11 +7395,7 @@ let (encode_sig :
         then
           let uu___1 =
             let uu___2 =
-              let uu___3 =
-                let uu___4 =
-                  FStar_Compiler_List.map FStar_Syntax_Print.lid_to_string
-                    (FStar_Syntax_Util.lids_of_sigelt se) in
-                FStar_Compiler_String.concat ", " uu___4 in
+              let uu___3 = FStar_Syntax_Print.sigelt_to_string_short se in
               Prims.strcat "encoding sigelt " uu___3 in
             FStar_SMTEncoding_Term.Caption uu___2 in
           uu___1 :: decls

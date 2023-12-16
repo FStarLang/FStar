@@ -262,7 +262,7 @@ let (e_proofstate_nbe :
     FStar_TypeChecker_NBETerm.un = unembed_proofstate;
     FStar_TypeChecker_NBETerm.typ =
       (fun uu___ -> mkFV fstar_tactics_proofstate.fv [] []);
-    FStar_TypeChecker_NBETerm.emb_typ =
+    FStar_TypeChecker_NBETerm.e_typ =
       (fun uu___ -> fv_as_emb_typ fstar_tactics_proofstate.fv)
   }
 let (e_goal_nbe :
@@ -318,7 +318,7 @@ let (e_goal_nbe :
     FStar_TypeChecker_NBETerm.un = unembed_goal;
     FStar_TypeChecker_NBETerm.typ =
       (fun uu___ -> mkFV fstar_tactics_goal.fv [] []);
-    FStar_TypeChecker_NBETerm.emb_typ =
+    FStar_TypeChecker_NBETerm.e_typ =
       (fun uu___ -> fv_as_emb_typ fstar_tactics_goal.fv)
   }
 let (e_exn : Prims.exn FStar_Syntax_Embeddings_Base.embedding) =
@@ -405,7 +405,7 @@ let (e_exn_nbe : Prims.exn FStar_TypeChecker_NBETerm.embedding) =
     FStar_TypeChecker_NBETerm.em = embed_exn;
     FStar_TypeChecker_NBETerm.un = unembed_exn;
     FStar_TypeChecker_NBETerm.typ = (fun uu___ -> mkFV fv_exn [] []);
-    FStar_TypeChecker_NBETerm.emb_typ = (fun uu___ -> fv_as_emb_typ fv_exn)
+    FStar_TypeChecker_NBETerm.e_typ = (fun uu___ -> fv_as_emb_typ fv_exn)
   }
 let e_result :
   'a .
@@ -572,7 +572,7 @@ let e_result_nbe :
       FStar_TypeChecker_NBETerm.un = unembed_result;
       FStar_TypeChecker_NBETerm.typ =
         (fun uu___ -> mkFV fstar_tactics_result.fv [] []);
-      FStar_TypeChecker_NBETerm.emb_typ =
+      FStar_TypeChecker_NBETerm.e_typ =
         (fun uu___ -> fv_as_emb_typ fstar_tactics_result.fv)
     }
 let (e_direction :
@@ -631,7 +631,7 @@ let (e_direction_nbe :
     FStar_TypeChecker_NBETerm.un = unembed_direction;
     FStar_TypeChecker_NBETerm.typ =
       (fun uu___ -> mkFV fstar_tactics_direction.fv [] []);
-    FStar_TypeChecker_NBETerm.emb_typ =
+    FStar_TypeChecker_NBETerm.e_typ =
       (fun uu___ -> fv_as_emb_typ fstar_tactics_direction.fv)
   }
 let (e_ctrl_flag :
@@ -697,7 +697,7 @@ let (e_ctrl_flag_nbe :
     FStar_TypeChecker_NBETerm.un = unembed_ctrl_flag;
     FStar_TypeChecker_NBETerm.typ =
       (fun uu___ -> mkFV fstar_tactics_ctrl_flag.fv [] []);
-    FStar_TypeChecker_NBETerm.emb_typ =
+    FStar_TypeChecker_NBETerm.e_typ =
       (fun uu___ -> fv_as_emb_typ fstar_tactics_ctrl_flag.fv)
   }
 let (e_unfold_side :
@@ -776,7 +776,7 @@ let (e_unfold_side_nbe :
     FStar_TypeChecker_NBETerm.un = unembed_unfold_side;
     FStar_TypeChecker_NBETerm.typ =
       (fun uu___ -> mkFV fstar_tc_core_unfold_side.fv [] []);
-    FStar_TypeChecker_NBETerm.emb_typ =
+    FStar_TypeChecker_NBETerm.e_typ =
       (fun uu___ -> fv_as_emb_typ fstar_tc_core_unfold_side.fv)
   }
 let (e_tot_or_ghost :
@@ -840,7 +840,7 @@ let (e_tot_or_ghost_nbe :
     FStar_TypeChecker_NBETerm.un = unembed_tot_or_ghost;
     FStar_TypeChecker_NBETerm.typ =
       (fun uu___ -> mkFV fstar_tc_core_tot_or_ghost.fv [] []);
-    FStar_TypeChecker_NBETerm.emb_typ =
+    FStar_TypeChecker_NBETerm.e_typ =
       (fun uu___ -> fv_as_emb_typ fstar_tc_core_tot_or_ghost.fv)
   }
 let (t_tref : FStar_Syntax_Syntax.term) =
@@ -954,7 +954,7 @@ let e_tref_nbe :
            let uu___3 =
              let uu___4 = FStar_TypeChecker_NBETerm.as_arg term_t in [uu___4] in
            mkFV uu___2 [FStar_Syntax_Syntax.U_zero] uu___3);
-      FStar_TypeChecker_NBETerm.emb_typ =
+      FStar_TypeChecker_NBETerm.e_typ =
         (fun uu___1 ->
            let uu___2 =
              let uu___3 =
@@ -1027,6 +1027,6 @@ let (e_guard_policy_nbe :
     FStar_TypeChecker_NBETerm.un = unembed_guard_policy;
     FStar_TypeChecker_NBETerm.typ =
       (fun uu___ -> mkFV fstar_tactics_guard_policy.fv [] []);
-    FStar_TypeChecker_NBETerm.emb_typ =
+    FStar_TypeChecker_NBETerm.e_typ =
       (fun uu___ -> fv_as_emb_typ fstar_tactics_guard_policy.fv)
   }

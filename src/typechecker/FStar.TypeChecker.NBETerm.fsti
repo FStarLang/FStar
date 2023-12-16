@@ -217,13 +217,12 @@ type nbe_cbs = {
    translate : term -> t;
 }
 
-[@Tactics.Typeclasses.tcclass]
-type embedding (a:Type0) = {
+class embedding (a:Type0) = {
   em  : nbe_cbs -> a -> t;
   un  : nbe_cbs -> t -> option a;
   (* thunking to allow total instances *)
   typ : unit -> t;
-  emb_typ : unit -> emb_typ;
+  e_typ : unit -> emb_typ;
 }
 
 val eq_t : t -> t -> U.eq_result

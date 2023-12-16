@@ -1293,18 +1293,8 @@ let (e_term_view_aq :
 let (e_term_view :
   FStar_Reflection_V2_Data.term_view FStar_Syntax_Embeddings_Base.embedding)
   = e_term_view_aq noaqs
-let (e_lid : FStar_Ident.lid FStar_Syntax_Embeddings_Base.embedding) =
-  let embed1 rng lid =
-    let uu___ = FStar_Ident.path_of_lid lid in
-    embed FStar_Syntax_Embeddings.e_string_list rng uu___ in
-  let uu t _norm =
-    let uu___ = try_unembed FStar_Syntax_Embeddings.e_string_list t in
-    FStar_Compiler_Util.map_opt uu___
-      (fun p -> FStar_Ident.lid_of_path p t.FStar_Syntax_Syntax.pos) in
-  FStar_Syntax_Embeddings_Base.mk_emb_full
-    (fun x -> fun r -> fun uu___ -> fun uu___1 -> embed1 r x) uu
-    (fun uu___ -> FStar_Syntax_Syntax.t_list_of FStar_Syntax_Syntax.t_string)
-    FStar_Ident.string_of_lid (fun uu___ -> FStar_Syntax_Syntax.ET_abstract)
+let (e_name : Prims.string Prims.list FStar_Syntax_Embeddings_Base.embedding)
+  = FStar_Syntax_Embeddings.e_list FStar_Syntax_Embeddings.e_string
 let (e_namedv_view :
   FStar_Reflection_V2_Data.namedv_view FStar_Syntax_Embeddings_Base.embedding)
   =
@@ -2142,7 +2132,7 @@ let (e_qualifier :
       | FStar_Reflection_V2_Data.Reflectable l ->
           let uu___ =
             let uu___1 =
-              let uu___2 = embed e_lid rng l in
+              let uu___2 = embed FStar_Syntax_Embeddings.e_string_list rng l in
               FStar_Syntax_Syntax.as_arg uu___2 in
             [uu___1] in
           FStar_Syntax_Syntax.mk_Tm_app
@@ -2151,7 +2141,7 @@ let (e_qualifier :
       | FStar_Reflection_V2_Data.Discriminator l ->
           let uu___ =
             let uu___1 =
-              let uu___2 = embed e_lid rng l in
+              let uu___2 = embed FStar_Syntax_Embeddings.e_string_list rng l in
               FStar_Syntax_Syntax.as_arg uu___2 in
             [uu___1] in
           FStar_Syntax_Syntax.mk_Tm_app
@@ -2160,7 +2150,7 @@ let (e_qualifier :
       | FStar_Reflection_V2_Data.Action l ->
           let uu___ =
             let uu___1 =
-              let uu___2 = embed e_lid rng l in
+              let uu___2 = embed FStar_Syntax_Embeddings.e_string_list rng l in
               FStar_Syntax_Syntax.as_arg uu___2 in
             [uu___1] in
           FStar_Syntax_Syntax.mk_Tm_app
@@ -2170,8 +2160,10 @@ let (e_qualifier :
           let uu___ =
             let uu___1 =
               let uu___2 =
-                embed (FStar_Syntax_Embeddings.e_tuple2 e_lid e_univ_name)
-                  rng (l, i) in
+                embed
+                  (FStar_Syntax_Embeddings.e_tuple2
+                     FStar_Syntax_Embeddings.e_string_list e_univ_name) rng
+                  (l, i) in
               FStar_Syntax_Syntax.as_arg uu___2 in
             [uu___1] in
           FStar_Syntax_Syntax.mk_Tm_app
@@ -2400,7 +2392,7 @@ let (e_qualifier :
                                                       FStar_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
                                                         (fun uu___3 ->
                                                            FStar_Reflection_V2_Data.Reflectable
-                                                             uu___3) e_lid in
+                                                             uu___3) e_name in
                                                     FStar_Syntax_Embeddings_AppEmb.run
                                                       args uu___2)
                                                  else
@@ -2413,7 +2405,7 @@ let (e_qualifier :
                                                         FStar_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
                                                           (fun uu___3 ->
                                                              FStar_Reflection_V2_Data.Discriminator
-                                                               uu___3) e_lid in
+                                                               uu___3) e_name in
                                                       FStar_Syntax_Embeddings_AppEmb.run
                                                         args uu___2)
                                                    else
@@ -2427,7 +2419,7 @@ let (e_qualifier :
                                                             (fun uu___3 ->
                                                                FStar_Reflection_V2_Data.Action
                                                                  uu___3)
-                                                            e_lid in
+                                                            e_name in
                                                         FStar_Syntax_Embeddings_AppEmb.run
                                                           args uu___2)
                                                      else
@@ -2442,7 +2434,7 @@ let (e_qualifier :
                                                                  FStar_Reflection_V2_Data.Projector
                                                                    uu___3)
                                                               (FStar_Syntax_Embeddings.e_tuple2
-                                                                 e_lid
+                                                                 e_name
                                                                  e_ident) in
                                                           FStar_Syntax_Embeddings_AppEmb.run
                                                             args uu___2)

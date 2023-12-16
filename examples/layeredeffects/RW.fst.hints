@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_754b00004f4a881ff74d076ab276dfe1"
       ],
       0,
-      "5487e7ca1446d0461b5229367175dd5c"
+      "d2e24c5d5430818ac9d8e141659d13a7"
     ],
     [
       "RW.ro_sanity_check",
@@ -24,7 +24,7 @@
         "l_and-interp"
       ],
       0,
-      "0f54895c9444f57dc983ba497a01274c"
+      "1f857f232f216c7f1a61cc24ae5ad843"
     ],
     [
       "RW.return",
@@ -40,7 +40,7 @@
         "l_and-interp", "token_correspondence_RW.real_post"
       ],
       0,
-      "8565420587dfe8935c22b0779b88c9f0"
+      "6bec6fdf4eea62e6ccec113d878e0566"
     ],
     [
       "RW.bind",
@@ -66,7 +66,7 @@
         "token_correspondence_RW.real_post"
       ],
       0,
-      "d4a8d30c0c64f2639ea7c9bf2ec3143d"
+      "9ca224ece9dd8a8fd46478c107dce8e2"
     ],
     [
       "RW.rwi_subtype",
@@ -91,7 +91,7 @@
         "token_correspondence_RW.real_post"
       ],
       0,
-      "b24c0267fe93ea810c6968c4018490a5"
+      "31559acbc630cb8ebb3262dd70ac7d66"
     ],
     [
       "RW.subcomp",
@@ -114,30 +114,10 @@
         "token_correspondence_RW.real_post"
       ],
       0,
-      "6cbc6e6062f53ec24ef7f133853e6216"
+      "4ccd50902d7c5ac35ab87db898d0b35c"
     ],
     [
-      "RW.RWI",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "RW_pretyping_fd3570324fcfa9ce675e4b3ac31dbd63", "bool_inversion",
-        "constructor_distinct_RW.RO", "constructor_distinct_RW.RW",
-        "data_typing_intro_RW.RW@tok", "equality_tok_RW.RW@tok",
-        "equation_Prims.squash", "equation_RW.flows", "equation_RW.ite",
-        "equation_RW.join", "equation_RW.post_leq", "equation_RW.pre_leq",
-        "fuel_guarded_inversion_RW.idx",
-        "interpretation_Tm_abs_6ffe1d7f26ddf74123e393b8b7d06717",
-        "interpretation_Tm_abs_7b642842c117ceefe58ab59f312266e8",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "true_interp"
-      ],
-      0,
-      "be2329ec14aa20ed0cc7cdc54231a58b"
+      "RW.RWI", 1, 2, 1, [ "@query" ], 0, "992445264fc2d1aa6dcafbfc4a9b5a53"
     ],
     [
       "RW.RWI",
@@ -161,7 +141,7 @@
         "true_interp"
       ],
       0,
-      "d4a6c3e6b6d4bd240e93cba1294764bd"
+      "2ea695cac4829bef35c80bf2265e7733"
     ],
     [
       "RW.RWI",
@@ -185,7 +165,7 @@
         "true_interp"
       ],
       0,
-      "db56baff87818b4dad5003c6a31d6fa9"
+      "3c478c2aea261f840e5f640fc470fae8"
     ],
     [
       "RW.lift_pure_rwi",
@@ -224,7 +204,7 @@
         "typing_Tm_abs_e5f9da69b4e622fc8b88c80c57775066", "unit_typing"
       ],
       0,
-      "a89b1123bc927fc856f787dd82faef00"
+      "f92b42daa2138d6e01c19a6a888fa516"
     ],
     [
       "RW.test_rrr",
@@ -257,7 +237,7 @@
         "unit_typing"
       ],
       0,
-      "bc857b230416affafe994ac56a9f417f"
+      "715d126481fb4c5f0c36ab0c36be0764"
     ],
     [
       "RW.test_rrw",
@@ -293,7 +273,7 @@
         "typing_tok_RW.RO@tok", "unit_inversion"
       ],
       0,
-      "184639cfa6bed9dcd322d80047367a58"
+      "b1fa46d72980b748225cb9a1381bb48b"
     ],
     [
       "RW.test_rww",
@@ -329,7 +309,7 @@
         "typing_tok_RW.RO@tok", "typing_tok_RW.RW@tok", "unit_inversion"
       ],
       0,
-      "cf624d3fbf4fba83b1f62c039311cb08"
+      "dcafa5c9b3f9675aa5d8743eb519ef87"
     ],
     [
       "RW.test_wrw",
@@ -363,7 +343,7 @@
         "typing_tok_RW.RO@tok", "typing_tok_RW.RW@tok", "unit_inversion"
       ],
       0,
-      "6a4d82831349b09ac1940c5ed9e82618"
+      "5d011de956be12119c9c7989a15b85b1"
     ],
     [
       "RW.test_www",
@@ -399,7 +379,7 @@
         "typing_tok_RW.RO@tok", "typing_tok_RW.RW@tok", "unit_inversion"
       ],
       0,
-      "a130322e7ec7ff8b942169e7c3c8f60f"
+      "16af9d5c5c3b31ec9f4d1668d086a8fc"
     ],
     [
       "RW.map",
@@ -425,7 +405,7 @@
         "true_interp"
       ],
       0,
-      "2c3d785c318792e3fe3bb2ee98ae49b1"
+      "ebd0f10ac234515501384a8f7efedc82"
     ],
     [
       "RW.app",
@@ -444,7 +424,7 @@
         "true_interp"
       ],
       0,
-      "3501c9c528cf7cc969749f940bf4a3a1"
+      "d3b866dc7af99371b76a105ce57853e7"
     ],
     [
       "RW.appn",
@@ -469,7 +449,7 @@
         "true_interp", "typing_RW.join", "typing_tok_RW.RO@tok"
       ],
       0,
-      "8fd0852aecd65961916368acfb6e3a4e"
+      "fca9209e01816cf4d58ab5d7045529f6"
     ],
     [
       "RW.labs0",
@@ -497,7 +477,7 @@
         "true_interp"
       ],
       0,
-      "b28bcd6537f93b2deb1cab0ec962b268"
+      "d1cb8bd80e0134ba7e1e5f9baccf3b31"
     ],
     [
       "RW.labs",
@@ -521,11 +501,10 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "true_interp"
       ],
       0,
-      "fe5b17ab02657b3fdb11a841a94d273f"
+      "3401a7db4ccb53401453d9549f7f5d33"
     ],
     [
       "RW.rwi_assert",
@@ -542,7 +521,7 @@
         "token_correspondence_RW.real_post", "unit_inversion"
       ],
       0,
-      "7bac5b1a8d529d4eaaec52557881803f"
+      "edaf25aa22d9874377edd2b9d6956deb"
     ],
     [
       "RW.rwi_assume",
@@ -558,7 +537,7 @@
         "l_and-interp", "token_correspondence_RW.real_post", "unit_inversion"
       ],
       0,
-      "82d25520b16b817f115c0a102f9d37f7"
+      "2f3441348d2e0c58c073a83da3540119"
     ],
     [
       "RW.test_abs0",
@@ -588,7 +567,7 @@
         "token_correspondence_RW.real_post", "true_interp"
       ],
       0,
-      "f5b7a664936a790924539b722ee67103"
+      "8ce27ff60e5acf155a8fcec676c10dbd"
     ],
     [
       "RW.test_abs0'",
@@ -615,10 +594,10 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "token_correspondence_RW.real_post", "true_interp", "unit_typing"
+        "token_correspondence_RW.real_post", "true_interp"
       ],
       0,
-      "8bc2c43197b985102c90c1c30ddf2798"
+      "7d690293fe162ca159f34092539634ba"
     ],
     [
       "RW.test_abs",
@@ -637,7 +616,7 @@
         "true_interp"
       ],
       0,
-      "4f98604b11d310f628d0cdc0fa3d27cd"
+      "416942047da9bf289d7df602d3e690e4"
     ],
     [
       "RW.get_indexed",
@@ -652,7 +631,7 @@
         "l_and-interp", "token_correspondence_RW.real_post"
       ],
       0,
-      "286afe6950f1249ca7ab4f31b4a5c859"
+      "d4a1d6311e2824ce0cd2e56e79f7ae5b"
     ],
     [
       "RW.get_r",
@@ -668,7 +647,7 @@
         "l_and-interp", "token_correspondence_RW.real_post"
       ],
       0,
-      "3a61ae8addcd9ea98b961f41b0ac37dc"
+      "95a7a129ea62fafbd95ec91b0ac27a47"
     ],
     [
       "RW.test_state_eq_rrr",
@@ -693,10 +672,10 @@
         "l_and-interp", "l_quant_interp_7b78a53c82a4b8a7c312f8063573fbe1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "token_correspondence_RW.real_post", "true_interp", "unit_typing"
+        "token_correspondence_RW.real_post", "true_interp"
       ],
       0,
-      "da99a067e128e8a13222de51dd53054a"
+      "5267c0aa9f39c77899db84cc56accb56"
     ],
     [
       "RW.test_state_eq_rrw",
@@ -721,10 +700,10 @@
         "interpretation_Tm_abs_ed75920970fe97939123d30eaa58e134",
         "l_and-interp", "l_quant_interp_7b78a53c82a4b8a7c312f8063573fbe1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "token_correspondence_RW.real_post", "true_interp", "unit_typing"
+        "token_correspondence_RW.real_post", "true_interp"
       ],
       0,
-      "72edee818fe675c7ff96494d78e148f0"
+      "7809bcd1098817648752fa5d8f50f534"
     ],
     [
       "RW.test_state_eq_rww",
@@ -749,10 +728,10 @@
         "interpretation_Tm_abs_ed75920970fe97939123d30eaa58e134",
         "l_and-interp", "l_quant_interp_a32cc1a0d0ea90cb3146e48dff25aac5",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "token_correspondence_RW.real_post", "true_interp", "unit_typing"
+        "token_correspondence_RW.real_post", "true_interp"
       ],
       0,
-      "eb1ede2798b5acf7a89e3525b6a6a701"
+      "a964b16b5bcd543d90642c6c70e21bc7"
     ],
     [
       "RW.test_state_eq_www",
@@ -773,7 +752,7 @@
         "true_interp"
       ],
       0,
-      "5d6a0a326950de2152a71c3d64683f8c"
+      "971b384acfc9f198dee92ed99ded9e2e"
     ],
     [
       "RW.makero",
@@ -792,7 +771,7 @@
         "token_correspondence_RW.real_post"
       ],
       0,
-      "fd0bf4ee70ff45ecd2d8aa4575bb1e83"
+      "6616481e538a63c1983bd04783db87e7"
     ]
   ]
 ]

@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "14b6a3b461a6f9ff51fc9147ef6f26e2"
+      "d08571b6e61100c1b8fa57afacf41e3e"
     ],
     [
       "FStar.DM4F.Heap.Random.tape",
@@ -31,7 +31,7 @@
         "refinement_kinding_Tm_refine_c45738073e069418e791c7f105cc9178"
       ],
       0,
-      "c5d173508c049cd315598bf718c7ff3e"
+      "95343e63119795f5ee06a260d738ac79"
     ],
     [
       "FStar.DM4F.Heap.Random.incr",
@@ -50,7 +50,7 @@
         "refinement_interpretation_Tm_refine_704d8d13f27c4dc76ad704087a7f94d4"
       ],
       0,
-      "a3df8b0fc39588bc69370c2abdc04721"
+      "8ddedb9bf8e1a5a9a9250540a055287b"
     ],
     [
       "FStar.DM4F.Heap.Random.index",
@@ -63,7 +63,7 @@
         "refinement_interpretation_Tm_refine_a0cc2a17677bbaeff2f143ee81ec1933"
       ],
       0,
-      "a3d0a2cf81d533bc3806fc9516430c58"
+      "4805155f6f85aed4a1ebbbcbdffb4ec2"
     ],
     [
       "FStar.DM4F.Heap.Random.upd",
@@ -84,7 +84,7 @@
         "refinement_kinding_Tm_refine_c45738073e069418e791c7f105cc9178"
       ],
       0,
-      "a051de64489389d68a15def5caed6397"
+      "54daa6751c6319c78ce0f5e1b1310222"
     ],
     [
       "FStar.DM4F.Heap.Random.create",
@@ -95,14 +95,14 @@
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.DM4F.Heap.Random.elem",
         "equation_FStar.DM4F.Heap.Random.size", "equation_Prims.nat",
-        "function_token_typing_FStar.DM4F.Heap.Random.elem", "int_inversion",
-        "lemma_FStar.Seq.Base.lemma_create_len",
+        "int_inversion", "lemma_FStar.Seq.Base.lemma_create_len",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c"
+        "refinement_interpretation_Tm_refine_c45738073e069418e791c7f105cc9178",
+        "refinement_kinding_Tm_refine_c45738073e069418e791c7f105cc9178"
       ],
       0,
-      "6318eac022345bc1bec138346e95eff4"
+      "9ff8a3d50bfc62ad75a5fccee6aab8ef"
     ],
     [
       "FStar.DM4F.Heap.Random.lemma_eq_intro",
@@ -122,7 +122,7 @@
         "refinement_interpretation_Tm_refine_a0cc2a17677bbaeff2f143ee81ec1933"
       ],
       0,
-      "af248a10eb8f670f2e35dafe4d40fd88"
+      "325b8fcc078a2514662d2fdce22e0252"
     ],
     [
       "FStar.DM4F.Heap.Random.lemma_eq_elim",
@@ -139,7 +139,7 @@
         "refinement_kinding_Tm_refine_c45738073e069418e791c7f105cc9178"
       ],
       0,
-      "48596e979cbca2052224021313a6cd1b"
+      "fbbb4cc753e9f3ad6bd3709fed79b539"
     ],
     [
       "FStar.DM4F.Heap.Random.lemma_index_upd1",
@@ -160,7 +160,7 @@
         "refinement_interpretation_Tm_refine_c45738073e069418e791c7f105cc9178"
       ],
       0,
-      "d55dac4c5eaedac3ceb8858f2cc7e817"
+      "fecff3aadbd7500bac60bf1e0983a0e6"
     ],
     [
       "FStar.DM4F.Heap.Random.lemma_index_upd2",
@@ -182,7 +182,7 @@
         "refinement_interpretation_Tm_refine_c45738073e069418e791c7f105cc9178"
       ],
       0,
-      "59348e80ea53cc27a057e01787297c04"
+      "15ade89bdb94e9124386f791eae5ec91"
     ],
     [
       "FStar.DM4F.Heap.Random.lemma_index_create",
@@ -190,13 +190,18 @@
       2,
       1,
       [
-        "@query", "equation_FStar.DM4F.Heap.Random.create",
-        "equation_FStar.DM4F.Heap.Random.index",
-        "equation_FStar.DM4F.Heap.Random.size",
-        "projection_inverse_BoxInt_proj_0"
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.DM4F.Heap.Random.create",
+        "equation_FStar.DM4F.Heap.Random.elem",
+        "equation_FStar.DM4F.Heap.Random.id",
+        "equation_FStar.DM4F.Heap.Random.index", "equation_Prims.nat",
+        "int_inversion",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_58a086443339478d36dbba851cb85235",
+        "refinement_interpretation_Tm_refine_c45738073e069418e791c7f105cc9178"
       ],
       0,
-      "ed6fc60a10b35701cc660b7bc9129d94"
+      "5ce9db9a41dc7c68ba2704bad6861f2d"
     ]
   ]
 ]

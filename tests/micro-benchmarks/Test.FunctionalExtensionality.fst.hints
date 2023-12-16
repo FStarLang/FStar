@@ -35,7 +35,7 @@
         "typing_Tm_abs_d28f38ba11bb810de36e822e960dcddd"
       ],
       0,
-      "977655e2b2e8bef604710874cf5f45ff"
+      "06a481e6f2bea993648053c3ba380715"
     ],
     [
       "Test.FunctionalExtensionality.shrinking_domains_ok",
@@ -52,16 +52,7 @@
         "typing_Test.FunctionalExtensionality.g1"
       ],
       0,
-      "351c66ad974da45c0dc912fb82190c0a"
-    ],
-    [
-      "Test.FunctionalExtensionality.test_1542",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "176f99ce8dbce36058b8f3c6eeb64e57"
+      "0b99cb6d5a4d5a74e59c0a0cc8410f07"
     ],
     [
       "Test.FunctionalExtensionality.restricted_t_2_idem",
@@ -75,7 +66,7 @@
         "refinement_interpretation_Tm_refine_7e4a6c5999db731b5d17d0418dfeea3e"
       ],
       0,
-      "bc360e543ce9c463b69efbe38449b3c5"
+      "0b504ba0def3d39580f47e1869195f45"
     ],
     [
       "Test.FunctionalExtensionality.on_2_interp",
@@ -101,7 +92,7 @@
         "typing_Tm_abs_e9b780d87b9e0e900694c1825f5011b6"
       ],
       0,
-      "3fed126fa9e030e3a6f227634e8b8b1f"
+      "bc4b222f6523f750c567fe74a171290c"
     ],
     [
       "Test.FunctionalExtensionality.needs_explicit_coercion",
@@ -128,7 +119,7 @@
         "typing_Tm_abs_198369e9b95c3a9aefb7ef145e8927e9"
       ],
       0,
-      "90506ed6a96521c6289c167802d23f32"
+      "b54e6dc238c38e3ab5013a007571418c"
     ],
     [
       "Test.FunctionalExtensionality.sub_currently_not_why",
@@ -155,7 +146,7 @@
         "typing_Tm_abs_198369e9b95c3a9aefb7ef145e8927e9"
       ],
       0,
-      "23952ff585f50ad0f9fd0cabfb34397d"
+      "f0d5681782fcdbbaab57da82e17671d8"
     ]
   ]
 ]
