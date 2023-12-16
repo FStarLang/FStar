@@ -6,6 +6,7 @@ open Pulse.Syntax.Pure
 open Pulse.Typing
 open Pulse.Elaborate.Core
 open Pulse.Elaborate.Pure
+module RU = Pulse.RuntimeUtils
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
 module T = FStar.Tactics.V2
@@ -58,7 +59,7 @@ let match_soundness
   let rcty = (T.E_Total, elab_comp c) in
   let PC_Elab _ _ _ _ bnds _ = brs_complete in
   let brs_e_ty : RT.branches_typing (elab_env g) sc_u sc_e_ty sc_e rcty brs_e bnds =
-    magic ()
+    RU.magic ()
   in
   let brs_complete
      : RT.match_is_complete (elab_env g) (elab_term sc) (elab_term sc_ty) (List.Tot.map fst brs_e) bnds

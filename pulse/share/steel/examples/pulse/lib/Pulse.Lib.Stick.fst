@@ -49,3 +49,8 @@ let stick_sub_inv
     (stick #os1 hyp concl)
     (fun _ -> stick #os2 hyp concl)
 =  intro_stick #os2 hyp concl (stick #os1 hyp concl) (fun () -> elim_stick #os1 hyp concl)
+
+let op_forall_Star (#a:Type) (p:a -> vprop) : vprop = forall_ #a p
+
+let elim_forall #a = admit()
+let intro_forall #a = admit()

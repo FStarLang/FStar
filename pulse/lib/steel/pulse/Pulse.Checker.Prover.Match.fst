@@ -9,6 +9,7 @@ open Pulse.Checker.VPropEquiv
 open Pulse.Checker.Prover.Base
 open Pulse.Checker.Prover.Util
 
+module RU = Pulse.RuntimeUtils
 module L = FStar.List.Tot
 module R = FStar.Reflection.V2
 module TermEq = FStar.Reflection.V2.TermEq
@@ -266,7 +267,7 @@ let try_match_pq (g:env) (uvs:env { disjoint uvs g}) (p q:vprop)
   let r = unify g uvs p q in
   match r with
   | (| ss, None |) -> (| ss, None |)
-  | (| ss, Some _ |) -> (| ss, Some (magic ()) |)
+  | (| ss, Some _ |) -> (| ss, Some (RU.magic #(vprop_equiv _ _ _) ()) |)
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
 
@@ -319,7 +320,7 @@ match ropt with
     : continuation_elaborator
         preamble.g0 (preamble.ctxt * preamble.frame)
         pst.pg ((list_as_vprop remaining_ctxt_new * preamble.frame) * (ss_new.(q) * ss_new.(pst.solved))) =
-    k_elab_equiv k (VE_Refl _ _) (magic ()) in
+    k_elab_equiv k (VE_Refl _ _) (RU.magic ()) in
   
   assume (ss_new.(q) * ss_new.(pst.solved) == ss_new.(q * pst.solved));
 
@@ -332,12 +333,12 @@ match ropt with
   assume (freevars ss_new.(solved_new) `Set.subset` dom pst.pg);
   let pst' : prover_state preamble =
     { pst with remaining_ctxt=remaining_ctxt_new;
-               remaining_ctxt_frame_typing=magic ();
+               remaining_ctxt_frame_typing=RU.magic ();
                ss=ss_new;
                solved=solved_new;
                unsolved=unsolved_new;
                k;
-               goals_inv=magic ();
+               goals_inv=RU.magic ();
                solved_inv=() } in
 
   assume (ss_new `ss_extends` pst.ss);

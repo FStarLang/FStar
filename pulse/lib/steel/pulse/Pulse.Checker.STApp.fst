@@ -35,7 +35,7 @@ let canonicalize_st_typing (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c
     assume (st_equiv_pre c c');
     let st_eq 
       : st_equiv g c c'
-      = ST_VPropEquiv g c c' x (magic ()) (magic()) (magic()) (canon_comp_eq_res g c) (magic()) (magic())
+      = ST_VPropEquiv g c c' x (RU.magic ()) (RU.magic()) (RU.magic()) (canon_comp_eq_res g c) (RU.magic()) (RU.magic())
     in
     T_Equiv _ _ _ _ d st_eq
 

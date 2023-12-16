@@ -14,6 +14,7 @@ open Pulse.Typing.Combinators
 module Metatheory = Pulse.Typing.Metatheory
 open Pulse.Reflection.Util
 open Pulse.Checker.Prover.Base
+module RU = Pulse.RuntimeUtils
 
 let elim_pure_head =
     let elim_pure_explicit_lid = mk_pulse_lib_core_lid "elim_pure_explicit" in
@@ -101,7 +102,7 @@ let elim_pure (#g:env) (#ctxt:term) (ctxt_typing:tot_typing g ctxt tm_vprop)
            ctxt':term &
            tot_typing g' ctxt' tm_vprop &
            continuation_elaborator g ctxt g' ctxt') =
-  let ctxt_emp_typing : tot_typing g (tm_star ctxt tm_emp) tm_vprop = magic () in
+  let ctxt_emp_typing : tot_typing g (tm_star ctxt tm_emp) tm_vprop = RU.magic () in
   let (| g', ctxt', ctxt'_emp_typing, k |) =
     elim_pure_frame ctxt_emp_typing (mk_env (fstar_env g)) in
   let k = k_elab_equiv k (VE_Trans _ _ _ _ (VE_Comm _ _ _) (VE_Unit _ _))
@@ -119,7 +120,7 @@ let elim_pure_pst (#preamble:_) (pst:prover_state preamble)
       #pst.pg
       #(list_as_vprop pst.remaining_ctxt)
       #(preamble.frame * pst.ss.(pst.solved))
-      (magic ())
+      (RU.magic ())
       pst.uvs in
 
   let k
@@ -133,7 +134,7 @@ let elim_pure_pst (#preamble:_) (pst:prover_state preamble)
         pst.pg ((list_as_vprop pst.remaining_ctxt * preamble.frame) * pst.ss.(pst.solved))
         g' ((remaining_ctxt' * preamble.frame) * pst.ss.(pst.solved)) =
     
-    k_elab_equiv k (magic ()) (magic ()) in
+    k_elab_equiv k (RU.magic ()) (RU.magic ()) in
 
   let k_new
     : continuation_elaborator
@@ -146,8 +147,8 @@ let elim_pure_pst (#preamble:_) (pst:prover_state preamble)
   { pst with
     pg = g';
     remaining_ctxt = vprop_as_list remaining_ctxt';
-    remaining_ctxt_frame_typing = magic ();
+    remaining_ctxt_frame_typing = RU.magic ();
     k = k_new;
-    goals_inv = magic ();  // weakening of pst.goals_inv
+    goals_inv = RU.magic ();  // weakening of pst.goals_inv
     solved_inv = ();
   }

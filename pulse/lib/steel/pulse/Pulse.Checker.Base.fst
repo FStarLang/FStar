@@ -85,7 +85,7 @@ let extend_post_hint g p x tx conjunct conjunct_typing =
   in
   let p_post_typing_src''
     : tot_typing g'' (open_term p.post y) tm_vprop
-    = magic() //weaken, rename
+    = RU.magic () //weaken, rename
   in
   let conjunct_typing'
     : tot_typing g' conjunct tm_vprop
@@ -93,7 +93,7 @@ let extend_post_hint g p x tx conjunct conjunct_typing =
   in
   let conjunct_typing''
     : tot_typing g'' (open_term conjunct y) tm_vprop
-    = magic () //weaken
+    = RU.magic () //weaken
   in
   let new_post = tm_star p.post conjunct in
   let new_post_typing
@@ -445,7 +445,7 @@ let st_comp_typing_with_post_hint
     : tot_typing (push_binding g x ppname_default ph.ret_ty)
                  (open_term ph.post x) tm_vprop
     = //weakening: TODO
-      magic ()
+      RU.magic ()
   in
   let ty_typing : universe_of ph.g st.res st.u = ph.ty_typing in
   let ty_typing : universe_of g st.res st.u =
@@ -559,8 +559,8 @@ let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctx
     | Some ctag -> ctag in
   let y_tm = tm_var {nm_index=y;nm_ppname=y_ppname} in
   let d = T_Return g ctag false u ty y_tm post_hint.post x ty_typing
-    (magic ())  // that null_var y is well typed at ty in g, we know since lookup g y == Some ty
-    (magic ())  // typing of (open post x) in (g, x) ... post_hint is well-typed, so should get
+    (RU.magic ())  // that null_var y is well typed at ty in g, we know since lookup g y == Some ty
+    (RU.magic ())  // typing of (open post x) in (g, x) ... post_hint is well-typed, so should get
   in
   let t = wtag (Some ctag) (Tm_Return {ctag=ctag;insert_eq=false;term=y_tm}) in
   let c = comp_return ctag false u ty y_tm post_hint.post x in
@@ -639,10 +639,10 @@ let checker_result_for_st_typing (#g:env) (#ctxt:vprop) (#post_hint:post_hint_op
     : continuation_elaborator
         g (tm_star tm_emp (comp_pre c))
         g' (tm_star ctxt' tm_emp) =
-    continuation_elaborator_with_bind tm_emp d (magic ()) (ppname, x) in
+    continuation_elaborator_with_bind tm_emp d (RU.magic ()) (ppname, x) in
   let k
     : continuation_elaborator g (comp_pre c) g' ctxt' =
-    k_elab_equiv k (magic ()) (magic ()) in
+    k_elab_equiv k (RU.magic ()) (RU.magic ()) in
 
   let _ : squash (checker_res_matches_post_hint g post_hint x (comp_res c) ctxt') =
     match post_hint with
@@ -654,11 +654,12 @@ let checker_result_for_st_typing (#g:env) (#ctxt:vprop) (#post_hint:post_hint_op
   let comp_res_typing, _, f =
     Metatheory.(st_comp_typing_inversion_cofinite (comp_typing_inversion (st_typing_correctness d))) in
 
-  // magic is the typing of comp_res in g'
+  // RU.magic is the typing of comp_res in g'
   // weaken comp_res_typing
 
   assume (~ (x `Set.mem` freevars (comp_post c)));
-  (| x, g', (| comp_u c, comp_res c, magic () |), (| ctxt', f x |), k |)
+  let tt : universe_of _ _ _ = RU.magic () in
+  (| x, g', (| comp_u c, comp_res c, tt |), (| ctxt', f x |), k |)
 #pop-options
 
 module R = FStar.Reflection.V2

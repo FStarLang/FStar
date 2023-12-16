@@ -53,7 +53,24 @@ let debug_subst (s:S.subst_elt list) (t:S.term) (r1:S.term) (r2:S.term) =
     r2
   )
   *)
-  
+
+module P = PulseSyntaxExtension_Env
+
+let forall_lid = PulseSyntaxExtension_Env.pulse_lib_core_lid "op_forall_Star"
+let stick_lid = FStar_Ident.lid_of_path ["Pulse"; "Lib"; "Stick"; "op_At_Equals_Equals_Greater"] P.r_
+let builtin_lids = [
+    FStar_Parser_Const.and_lid;
+    FStar_Parser_Const.or_lid;
+    FStar_Parser_Const.imp_lid;
+    FStar_Parser_Const.iff_lid;
+    FStar_Parser_Const.forall_lid;
+    FStar_Parser_Const.exists_lid;
+    PulseSyntaxExtension_Env.star_lid;
+    PulseSyntaxExtension_Env.exists_lid;
+    forall_lid;
+    stick_lid
+]
+
 let deep_transform_to_unary_applications (t:S.term) =
   FStar_Syntax_Visit.visit_term
     (fun t -> 
@@ -62,10 +79,14 @@ let deep_transform_to_unary_applications (t:S.term) =
       | Tm_app { hd={n=Tm_fvar {fv_qual=Some (Unresolved_constructor _)}} }
       | Tm_app { hd={n=Tm_fvar {fv_qual=Some (Unresolved_projector _)}} } ->
         t
-
-      | Tm_app { hd; args=_::_::_ as args } ->
-        List.fold_left (fun t arg -> { t with n = Tm_app {hd=t; args=[arg]} }) hd args
-
+      | Tm_app { hd; args=_::_::_ as args } -> (
+        match (FStar_Syntax_Util.un_uinst hd).n with
+        | Tm_fvar fv
+          when FStar_Compiler_List.existsb (S.fv_eq_lid fv) builtin_lids ->
+          t
+        | _ -> 
+         List.fold_left (fun t arg -> { t with n = Tm_app {hd=t; args=[arg]} }) hd args
+      )
       | _ -> t)
     t
 
@@ -146,3 +167,5 @@ let get_attributes (s:S.sigelt) (ps:_) =
 
 let must_erase_for_extraction (g:FStar_Reflection_Types.env) (ty:FStar_Syntax_Syntax.term) =
   FStar_TypeChecker_Util.must_erase_for_extraction g ty
+
+let magic_s s = failwith ("Cannot execute magic: " ^ s)

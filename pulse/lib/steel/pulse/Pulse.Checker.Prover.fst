@@ -7,7 +7,7 @@ open Pulse.Typing
 open Pulse.Typing.Combinators
 open Pulse.Checker.Base
 
-
+module RU = Pulse.RuntimeUtils
 module L = FStar.List.Tot
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
@@ -26,14 +26,14 @@ let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
 let unsolved_equiv_pst (#preamble:_) (pst:prover_state preamble) (unsolved':list vprop)
   (d:vprop_equiv (push_env pst.pg pst.uvs) (list_as_vprop pst.unsolved) (list_as_vprop unsolved'))
   : prover_state preamble =
-  { pst with unsolved = unsolved'; goals_inv = magic () }
+  { pst with unsolved = unsolved'; goals_inv = RU.magic () }
 
 let remaining_ctxt_equiv_pst (#preamble:_) (pst:prover_state preamble) (remaining_ctxt':list vprop)
   (d:vprop_equiv pst.pg (list_as_vprop pst.remaining_ctxt) (list_as_vprop remaining_ctxt'))
   : prover_state preamble =
   { pst with remaining_ctxt = remaining_ctxt';
-             remaining_ctxt_frame_typing = magic ();
-             k = k_elab_equiv pst.k (VE_Refl _ _) (magic ()) }
+             remaining_ctxt_frame_typing = RU.magic ();
+             k = k_elab_equiv pst.k (VE_Refl _ _) (RU.magic ()) }
 
 let rec collect_exists (g:env) (l:list vprop)
   : exs:list vprop &
@@ -45,8 +45,9 @@ let rec collect_exists (g:env) (l:list vprop)
   | hd::tl ->
     let (| exs, rest, _ |) = collect_exists g tl in
     match hd.t with
-    | Tm_ExistsSL _ _ _ -> (| hd::exs, rest, magic () |)
-    | _ -> (| exs, hd::rest, magic () |)
+    | Tm_ExistsSL _ _ _ ->
+      (| hd::exs, rest, RU.magic #(vprop_equiv _ _ _) () |)
+    | _ -> (| exs, hd::rest, RU.magic #(vprop_equiv _ _ _) () |)
 
 let rec collect_pures (g:env) (l:list vprop)
   : pures:list vprop &
@@ -58,11 +59,11 @@ let rec collect_pures (g:env) (l:list vprop)
   | hd::tl ->
     let (| pures, rest, _ |) = collect_pures g tl in
     match hd.t with
-    | Tm_Pure _ -> (| hd::pures, rest, magic () |)
-    | _ -> (| pures, hd::rest, magic () |)
+    | Tm_Pure _ -> (| hd::pures, rest, RU.magic #(vprop_equiv _ _ _) () |)
+    | _ -> (| pures, hd::rest, RU.magic #(vprop_equiv _ _ _) () |)
 
 let move_hd_end (g:env) (l:list vprop { Cons? l })
-  : vprop_equiv g (list_as_vprop l) (list_as_vprop (L.tl l @ [L.hd l])) = magic ()
+  : vprop_equiv g (list_as_vprop l) (list_as_vprop (L.tl l @ [L.hd l])) = RU.magic ()
 
 let rec match_q (#preamble:_) (pst:prover_state preamble)
   (q:vprop) (unsolved':list vprop)
@@ -190,9 +191,9 @@ let rec get_q_at_hd (g:env) (l:list vprop) (q:vprop { L.existsb (fun v -> eq_tm 
 
   match l with
   | hd::tl ->
-    if eq_tm hd q then (| tl, magic () |)
+    if eq_tm hd q then (| tl, RU.magic #(vprop_equiv _ _ _) () |)
     else let (| tl', _ |) = get_q_at_hd g tl q in
-         (| hd::tl', magic () |)
+         (| hd::tl', RU.magic #(vprop_equiv _ _ _) () |)
 
 #push-options "--z3rlimit_factor 4"
 let prove
@@ -225,7 +226,7 @@ let prove
     (| g1, nts, [], remaining_ctxt, k_elab_equiv k (VE_Refl _ _) d_eq |)
   end
   else
-    let ctxt_frame_typing : vprop_typing g (ctxt * tm_emp) = magic () in
+    let ctxt_frame_typing : vprop_typing g (ctxt * tm_emp) = RU.magic () in
     let preamble = {
       g0 = g;
       ctxt;
@@ -243,8 +244,8 @@ let prove
       ss = PS.empty;
       solved = tm_emp;
       unsolved = vprop_as_list goals;
-      k = k_elab_equiv (k_elab_unit g ctxt) (magic ()) (magic ());
-      goals_inv = magic ();
+      k = k_elab_equiv (k_elab_unit g ctxt) (RU.magic ()) (RU.magic ());
+      goals_inv = RU.magic ();
       solved_inv = ()
     } in
 
@@ -280,7 +281,7 @@ let prove
     // so we can drop their substitutions from the tail of nts
     assume (PS.nt_subst_term goals nts == PS.nt_subst_term goals nts_uvs);
 
-    (| pst.pg, nts_uvs, nts_uvs_effect_labels, list_as_vprop pst.remaining_ctxt, k_elab_equiv k (magic ()) (magic ()) |)
+    (| pst.pg, nts_uvs, nts_uvs_effect_labels, list_as_vprop pst.remaining_ctxt, k_elab_equiv k (RU.magic ()) (RU.magic ()) |)
 #pop-options
 
 #push-options "--z3rlimit_factor 8 --fuel 0 --ifuel 1 --retry 5"
@@ -296,7 +297,7 @@ let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_v
   let g = push_context g "try_frame_pre" t.range in
 
   let (| g1, nts, effect_labels, remaining_ctxt, k_frame |) =
-    prove #g #_ ctxt_typing uvs #(comp_pre c) (magic ()) in
+    prove #g #_ ctxt_typing uvs #(comp_pre c) (RU.magic ()) in
   // assert (nts == []);
 
   let d : st_typing (push_env g1 uvs) t c =
@@ -329,7 +330,7 @@ let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_v
   let k
     : continuation_elaborator g1 (remaining_ctxt * comp_pre c)
                               g2 ctxt' =
-    continuation_elaborator_with_bind remaining_ctxt d (magic ()) (res_ppname, x) in
+    continuation_elaborator_with_bind remaining_ctxt d (RU.magic #(tot_typing _ _ _) ()) (res_ppname, x) in
 
   let k
     : continuation_elaborator g1 (comp_pre c * remaining_ctxt)
@@ -351,12 +352,12 @@ let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_v
     : vprop_typing g2 (open_term_nv (comp_post c) (res_ppname, x)) =
     f x in
 
-  // the magic is for the ctxt' typing
+  // the RU.magic is for the ctxt' typing
   // see d_post for post typing
   // then the remaining_ctxt typing should come from the prover state
   //   TODO: add it there
   // and then ctxt' is just their `*`
-  (| x, g2, (| comp_u c, ty, d_ty |), (| ctxt', magic () |), k |)
+  (| x, g2, (| comp_u c, ty, d_ty |), (| ctxt', RU.magic #(tot_typing _ _ _) () |), k |)
 #pop-options
 
 let try_frame_pre (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
@@ -401,7 +402,7 @@ let prove_post_hint (#g:env) (#ctxt:vprop)
     then (| x, g2, (| u_ty, ty, ty_typing |), (| ctxt', ctxt'_typing |), k |)
     else
       let (| g3, nts, _, remaining_ctxt, k_post |) =
-        prove #g2 #ctxt' ctxt'_typing (mk_env (fstar_env g2)) #post_hint_opened (magic ()) in
+        prove #g2 #ctxt' ctxt'_typing (mk_env (fstar_env g2)) #post_hint_opened (RU.magic ()) in
           
       assert (nts == []);
       let k_post
@@ -422,7 +423,7 @@ let prove_post_hint (#g:env) (#ctxt:vprop)
       | Some d ->
         let k_post
           : continuation_elaborator g2 ctxt' g3 post_hint_opened =
-          k_elab_equiv k_post (VE_Refl _ _) (magic ()) in
+          k_elab_equiv k_post (VE_Refl _ _) (RU.magic #(vprop_equiv _ _ _) ()) in
         //
         // for the typing of ty in g3,
         // we have typing of ty in g2 above, and g3 `env_extends` g2
@@ -431,4 +432,5 @@ let prove_post_hint (#g:env) (#ctxt:vprop)
         // for the typing of post_hint_opened,
         // again post_hint is well-typed in g, and g3 `env_extends` g
         //
-        (| x, g3, (| u_ty, ty, magic () |), (| post_hint_opened, magic () |), k_elab_trans k k_post |)
+        (| x, g3, (| u_ty, ty, RU.magic #(tot_typing _ _ _) () |),
+                  (| post_hint_opened, RU.magic #(tot_typing _ _ _) () |), k_elab_trans k k_post |)
