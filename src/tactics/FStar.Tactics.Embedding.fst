@@ -180,7 +180,7 @@ let e_proofstate_nbe =
     { NBETerm.em = embed_proofstate
     ; NBETerm.un = unembed_proofstate
     ; NBETerm.typ = (fun () -> mkFV fstar_tactics_proofstate.fv [] [])
-    ; NBETerm.emb_typ = (fun () -> fv_as_emb_typ fstar_tactics_proofstate.fv)
+    ; NBETerm.e_typ = (fun () -> fv_as_emb_typ fstar_tactics_proofstate.fv)
      }
 
 let e_goal_nbe =
@@ -205,7 +205,7 @@ let e_goal_nbe =
     { NBETerm.em = embed_goal
     ; NBETerm.un = unembed_goal
     ; NBETerm.typ = (fun () -> mkFV fstar_tactics_goal.fv [] [])
-    ; NBETerm.emb_typ = (fun () -> fv_as_emb_typ fstar_tactics_goal.fv)
+    ; NBETerm.e_typ = (fun () -> fv_as_emb_typ fstar_tactics_goal.fv)
      }
 
 instance e_exn : embedding exn =
@@ -264,7 +264,7 @@ let e_exn_nbe =
     { NBETerm.em = embed_exn
     ; NBETerm.un = unembed_exn
     ; NBETerm.typ = (fun () -> mkFV fv_exn [] [])
-    ; NBETerm.emb_typ = (fun () -> fv_as_emb_typ fv_exn) }
+    ; NBETerm.e_typ = (fun () -> fv_as_emb_typ fv_exn) }
 
 let e_result (ea : embedding 'a) : Tot _ =
     let embed_result (res:__result 'a) (rng:Range.range) (sh:shadow_term) (cbs:norm_cb) : term =
@@ -336,7 +336,7 @@ let e_result_nbe (ea : NBET.embedding 'a)  =
     { NBETerm.em = embed_result
     ; NBETerm.un = unembed_result
     ; NBETerm.typ = (fun () -> mkFV fstar_tactics_result.fv [] [])
-    ; NBETerm.emb_typ = (fun () -> fv_as_emb_typ fstar_tactics_result.fv) }
+    ; NBETerm.e_typ = (fun () -> fv_as_emb_typ fstar_tactics_result.fv) }
 
 let e_direction =
     let embed_direction (rng:Range.range) (d : direction) : term =
@@ -370,7 +370,7 @@ let e_direction_nbe  =
     { NBETerm.em = embed_direction
     ; NBETerm.un = unembed_direction
     ; NBETerm.typ = (fun () ->mkFV fstar_tactics_direction.fv [] [])
-    ; NBETerm.emb_typ = (fun () -> fv_as_emb_typ fstar_tactics_direction.fv) }
+    ; NBETerm.e_typ = (fun () -> fv_as_emb_typ fstar_tactics_direction.fv) }
 
 let e_ctrl_flag =
     let embed_ctrl_flag (rng:Range.range) (d : ctrl_flag) : term =
@@ -408,7 +408,7 @@ let e_ctrl_flag_nbe  =
     { NBETerm.em = embed_ctrl_flag
     ; NBETerm.un = unembed_ctrl_flag
     ; NBETerm.typ = (fun () -> mkFV fstar_tactics_ctrl_flag.fv [] [])
-    ; NBETerm.emb_typ = (fun () -> fv_as_emb_typ fstar_tactics_ctrl_flag.fv) }
+    ; NBETerm.e_typ = (fun () -> fv_as_emb_typ fstar_tactics_ctrl_flag.fv) }
 
 let e_unfold_side =
   let open FStar.TypeChecker.Core in
@@ -458,7 +458,7 @@ let e_unfold_side_nbe  =
   { NBETerm.em = embed_unfold_side
   ; NBETerm.un = unembed_unfold_side
   ; NBETerm.typ = (fun () -> mkFV fstar_tc_core_unfold_side.fv [] [])
-  ; NBETerm.emb_typ = (fun () -> fv_as_emb_typ fstar_tc_core_unfold_side.fv) }
+  ; NBETerm.e_typ = (fun () -> fv_as_emb_typ fstar_tc_core_unfold_side.fv) }
 
 let e_tot_or_ghost =
   let open FStar.TypeChecker.Core in
@@ -499,7 +499,7 @@ let e_tot_or_ghost_nbe  =
   { NBETerm.em = embed_tot_or_ghost
   ; NBETerm.un = unembed_tot_or_ghost
   ; NBETerm.typ = (fun () -> mkFV fstar_tc_core_tot_or_ghost.fv [] [])
-  ; NBETerm.emb_typ = (fun () -> fv_as_emb_typ fstar_tc_core_tot_or_ghost.fv) }
+  ; NBETerm.e_typ = (fun () -> fv_as_emb_typ fstar_tc_core_tot_or_ghost.fv) }
 
 let t_tref = S.lid_as_fv PC.tref_lid None
   |> S.fv_to_tm
@@ -550,7 +550,7 @@ let e_tref_nbe #a =
     (fun () ->
       let term_t = mkFV (S.lid_as_fv PC.fstar_syntax_syntax_term None) [] [] in
       mkFV (S.lid_as_fv PC.tref_lid None) [U_zero] [NBETerm.as_arg term_t])
-  ; NBETerm.emb_typ = (fun () -> ET_app (PC.tref_lid |> Ident.string_of_lid, [ET_abstract])) }
+  ; NBETerm.e_typ = (fun () -> ET_app (PC.tref_lid |> Ident.string_of_lid, [ET_abstract])) }
 
 let e_guard_policy =
     let embed_guard_policy (rng:Range.range) (p : guard_policy) : term =
@@ -593,4 +593,4 @@ let e_guard_policy_nbe  =
     { NBETerm.em = embed_guard_policy
     ; NBETerm.un = unembed_guard_policy
     ; NBETerm.typ = (fun () -> mkFV fstar_tactics_guard_policy.fv [] [])
-    ; NBETerm.emb_typ = (fun () -> fv_as_emb_typ fstar_tactics_guard_policy.fv) }
+    ; NBETerm.e_typ = (fun () -> fv_as_emb_typ fstar_tactics_guard_policy.fv) }

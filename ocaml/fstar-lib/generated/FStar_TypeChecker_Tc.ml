@@ -4112,7 +4112,14 @@ let (tc_decl :
          FStar_Options.debug_module uu___2 in
        if uu___1
        then
-         let uu___2 = FStar_Syntax_Print.sigelt_to_string_short se in
+         let uu___2 =
+           let uu___3 =
+             let uu___4 =
+               FStar_Ident.string_of_lid env1.FStar_TypeChecker_Env.curmodule in
+             FStar_Options.debug_at_level uu___4 FStar_Options.High in
+           if uu___3
+           then FStar_Syntax_Print.sigelt_to_string se
+           else FStar_Syntax_Print.sigelt_to_string_short se in
          FStar_Compiler_Util.print1 "Processing %s\n" uu___2
        else ());
       (let uu___2 = FStar_TypeChecker_Env.debug env1 FStar_Options.Low in
@@ -4868,7 +4875,7 @@ let (tc_decls :
                ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_Compiler_List.rev_append ses1 []), env1)
-let (uu___909 : unit) =
+let (uu___910 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :

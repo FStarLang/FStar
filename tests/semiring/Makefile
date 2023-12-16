@@ -15,7 +15,7 @@ all: CanonCommSemiring.interpreted CanonCommSemiring.native
 	$(FSTAR) --codegen Plugin --extract $* $*.fst
 	cat $*.ml.fixup >> $*.ml
 
-%.cmxs: %.ml
+%.cmxs: %.ml $(FSTAR_HOME)/bin/fstar.exe
 	$(OCAMLOPT) -shared -package fstar.lib -o $@ $*.ml
 
 # REMARK: --load will compile $*.ml if $*.cmxs does not exist, but we compile it before

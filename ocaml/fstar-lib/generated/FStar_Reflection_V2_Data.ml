@@ -406,14 +406,14 @@ type qualifier =
   | TotalEffect 
   | Logic 
   | Reifiable 
-  | Reflectable of FStar_Ident.lid 
-  | Discriminator of FStar_Ident.lid 
-  | Projector of (FStar_Ident.lid * FStar_Ident.ident) 
+  | Reflectable of name 
+  | Discriminator of name 
+  | Projector of (name * FStar_Ident.ident) 
   | RecordType of (FStar_Ident.ident Prims.list * FStar_Ident.ident
   Prims.list) 
   | RecordConstructor of (FStar_Ident.ident Prims.list * FStar_Ident.ident
   Prims.list) 
-  | Action of FStar_Ident.lid 
+  | Action of name 
   | ExceptionConstructor 
   | HasMaskedEffect 
   | Effect 
@@ -457,18 +457,17 @@ let (uu___is_Reifiable : qualifier -> Prims.bool) =
 let (uu___is_Reflectable : qualifier -> Prims.bool) =
   fun projectee ->
     match projectee with | Reflectable _0 -> true | uu___ -> false
-let (__proj__Reflectable__item___0 : qualifier -> FStar_Ident.lid) =
+let (__proj__Reflectable__item___0 : qualifier -> name) =
   fun projectee -> match projectee with | Reflectable _0 -> _0
 let (uu___is_Discriminator : qualifier -> Prims.bool) =
   fun projectee ->
     match projectee with | Discriminator _0 -> true | uu___ -> false
-let (__proj__Discriminator__item___0 : qualifier -> FStar_Ident.lid) =
+let (__proj__Discriminator__item___0 : qualifier -> name) =
   fun projectee -> match projectee with | Discriminator _0 -> _0
 let (uu___is_Projector : qualifier -> Prims.bool) =
   fun projectee ->
     match projectee with | Projector _0 -> true | uu___ -> false
-let (__proj__Projector__item___0 :
-  qualifier -> (FStar_Ident.lid * FStar_Ident.ident)) =
+let (__proj__Projector__item___0 : qualifier -> (name * FStar_Ident.ident)) =
   fun projectee -> match projectee with | Projector _0 -> _0
 let (uu___is_RecordType : qualifier -> Prims.bool) =
   fun projectee ->
@@ -484,7 +483,7 @@ let (__proj__RecordConstructor__item___0 :
   = fun projectee -> match projectee with | RecordConstructor _0 -> _0
 let (uu___is_Action : qualifier -> Prims.bool) =
   fun projectee -> match projectee with | Action _0 -> true | uu___ -> false
-let (__proj__Action__item___0 : qualifier -> FStar_Ident.lid) =
+let (__proj__Action__item___0 : qualifier -> name) =
   fun projectee -> match projectee with | Action _0 -> _0
 let (uu___is_ExceptionConstructor : qualifier -> Prims.bool) =
   fun projectee ->

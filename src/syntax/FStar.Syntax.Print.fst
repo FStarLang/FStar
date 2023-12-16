@@ -36,6 +36,18 @@ module C          = FStar.Parser.Const
 module SU         = FStar.Syntax.Util
 module Pretty     = FStar.Syntax.Print.Pretty
 
+let fv_qual_to_string fvq =
+  match fvq with
+  | Data_ctor -> "Data_ctor"
+  | Record_projector _ -> "Record_projector _"
+  | Record_ctor _ -> "Record_ctor _"
+  | Unresolved_projector _ -> "Unresolved_projector _"
+  | Unresolved_constructor _ -> "Unresolved_constructor _"
+
+instance showable_fv_qual : showable fv_qual = {
+  show = fv_qual_to_string;
+}
+
 let sli (l:lident) : string =
     if Options.print_real_names()
     then string_of_lid l
@@ -938,14 +950,6 @@ let ctx_uvar_to_string ctx_uvar = ctx_uvar_to_string_aux true ctx_uvar
 
 let ctx_uvar_to_string_no_reason ctx_uvar = ctx_uvar_to_string_aux false ctx_uvar
 
-let fv_qual_to_string fvq =
-  match fvq with
-  | Data_ctor -> "Data_ctor"
-  | Record_projector _ -> "Record_projector _"
-  | Record_ctor _ -> "Record_ctor _"
-  | Unresolved_projector _ -> "Unresolved_projector _"
-  | Unresolved_constructor _ -> "Unresolved_constructor _"
-
 let term_to_doc' dsenv t =
   if Options.ugly ()
   then Pprint.arbitrary_string (term_to_string t)
@@ -1008,3 +1012,5 @@ instance showable_binding = {
 }
 instance showable_pragma = { show = pragma_to_string; }
 instance showable_subst_elt = { show = subst_elt_to_string; }
+instance showable_branch = { show = branch_to_string; }
+instance showable_qualifier = { show = qual_to_string; }

@@ -1,4 +1,17 @@
 open Prims
+let (fv_qual_to_string : FStar_Syntax_Syntax.fv_qual -> Prims.string) =
+  fun fvq ->
+    match fvq with
+    | FStar_Syntax_Syntax.Data_ctor -> "Data_ctor"
+    | FStar_Syntax_Syntax.Record_projector uu___ -> "Record_projector _"
+    | FStar_Syntax_Syntax.Record_ctor uu___ -> "Record_ctor _"
+    | FStar_Syntax_Syntax.Unresolved_projector uu___ ->
+        "Unresolved_projector _"
+    | FStar_Syntax_Syntax.Unresolved_constructor uu___ ->
+        "Unresolved_constructor _"
+let (showable_fv_qual :
+  FStar_Syntax_Syntax.fv_qual FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = fv_qual_to_string }
 let (sli : FStar_Ident.lident -> Prims.string) =
   fun l ->
     let uu___ = FStar_Options.print_real_names () in
@@ -1846,16 +1859,6 @@ let (ctx_uvar_to_string : FStar_Syntax_Syntax.ctx_uvar -> Prims.string) =
 let (ctx_uvar_to_string_no_reason :
   FStar_Syntax_Syntax.ctx_uvar -> Prims.string) =
   fun ctx_uvar -> ctx_uvar_to_string_aux false ctx_uvar
-let (fv_qual_to_string : FStar_Syntax_Syntax.fv_qual -> Prims.string) =
-  fun fvq ->
-    match fvq with
-    | FStar_Syntax_Syntax.Data_ctor -> "Data_ctor"
-    | FStar_Syntax_Syntax.Record_projector uu___ -> "Record_projector _"
-    | FStar_Syntax_Syntax.Record_ctor uu___ -> "Record_ctor _"
-    | FStar_Syntax_Syntax.Unresolved_projector uu___ ->
-        "Unresolved_projector _"
-    | FStar_Syntax_Syntax.Unresolved_constructor uu___ ->
-        "Unresolved_constructor _"
 let (term_to_doc' :
   FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.term -> FStar_Pprint.document)
   =
@@ -1979,3 +1982,8 @@ let (showable_pragma : FStar_Syntax_Syntax.pragma FStar_Class_Show.showable)
 let (showable_subst_elt :
   FStar_Syntax_Syntax.subst_elt FStar_Class_Show.showable) =
   { FStar_Class_Show.show = subst_elt_to_string }
+let (showable_branch : FStar_Syntax_Syntax.branch FStar_Class_Show.showable)
+  = { FStar_Class_Show.show = branch_to_string }
+let (showable_qualifier :
+  FStar_Syntax_Syntax.qualifier FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = qual_to_string }
