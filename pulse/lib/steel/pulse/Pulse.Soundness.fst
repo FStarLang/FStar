@@ -404,6 +404,8 @@ let rec soundness (g:stt_env)
 
     | T_Admit _ _ _ _ -> Admit.admit_soundess d
 
+    | T_Unreachable _ _ _ _ _ -> RU.magic()
+
     | T_Sub _ _ _ _ _ _ -> Sub.sub_soundness d soundness
 
     | T_WithInv _ _ _ _ _ _ _ _ -> RU.magic() // IOU

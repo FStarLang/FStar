@@ -207,6 +207,8 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
     | Tm_Admit { typ; post } ->
       freevars_close_term' typ x i;
       freevars_close_term_opt' post x (i + 1)
+    
+    | Tm_Unreachable -> ()
 
     | Tm_ProofHintWithBinders { binders; hint_type; t } ->
       let n = L.length binders in
@@ -660,7 +662,8 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
     tot_or_ghost_typing_freevars u_typing;
     freevars_array init_t
 
-  | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing) ->
+  | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing)
+  | T_Unreachable _ s _ (STC _ _ x t_typing pre_typing post_typing) _ ->
     tot_or_ghost_typing_freevars t_typing;
     tot_or_ghost_typing_freevars pre_typing;
     tot_or_ghost_typing_freevars post_typing;

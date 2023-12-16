@@ -27,6 +27,7 @@ let pulse_lib_core_lid l = Ident.lid_of_path (["Pulse"; "Lib"; "Core"]@[l]) r_
 let pulse_lib_ref_lid l = Ident.lid_of_path (["Pulse"; "Lib"; "Reference"]@[l]) r_
 let prims_exists_lid = Ident.lid_of_path ["Prims"; "l_Exists"] r_
 let prims_forall_lid = Ident.lid_of_path ["Prims"; "l_Forall"] r_
+let unreachable_lid = pulse_lib_core_lid "unreachable"
 let exists_lid = pulse_lib_core_lid "op_exists_Star"
 let star_lid = pulse_lib_core_lid "op_Star_Star"
 let emp_lid = pulse_lib_core_lid "emp"

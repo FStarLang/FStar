@@ -444,7 +444,7 @@ let rec (check : Pulse_Checker_Base.check_t) =
                    (Obj.magic
                       (FStar_Range.mk_range "Pulse.Checker.fst"
                          (Prims.of_int (141)) (Prims.of_int (55))
-                         (Prims.of_int (265)) (Prims.of_int (50)))))
+                         (Prims.of_int (268)) (Prims.of_int (50)))))
                 (if
                    Pulse_RuntimeUtils.debug_at_level
                      (Pulse_Typing_Env.fstar_env g0) "pulse.checker"
@@ -648,7 +648,7 @@ let rec (check : Pulse_Checker_Base.check_t) =
                               (Obj.magic
                                  (FStar_Range.mk_range "Pulse.Checker.fst"
                                     (Prims.of_int (141)) (Prims.of_int (55))
-                                    (Prims.of_int (265)) (Prims.of_int (50)))))
+                                    (Prims.of_int (268)) (Prims.of_int (50)))))
                            (Obj.magic
                               (Pulse_Checker_Prover_ElimPure.elim_pure g0
                                  pre0 ()))
@@ -665,15 +665,15 @@ let rec (check : Pulse_Checker_Base.check_t) =
                                                    "Pulse.Checker.fst"
                                                    (Prims.of_int (146))
                                                    (Prims.of_int (44))
-                                                   (Prims.of_int (261))
+                                                   (Prims.of_int (264))
                                                    (Prims.of_int (48)))))
                                           (FStar_Sealed.seal
                                              (Obj.magic
                                                 (FStar_Range.mk_range
                                                    "Pulse.Checker.fst"
-                                                   (Prims.of_int (262))
-                                                   (Prims.of_int (4))
                                                    (Prims.of_int (265))
+                                                   (Prims.of_int (4))
+                                                   (Prims.of_int (268))
                                                    (Prims.of_int (50)))))
                                           (Obj.magic
                                              (FStar_Tactics_Effect.tac_bind
@@ -691,7 +691,7 @@ let rec (check : Pulse_Checker_Base.check_t) =
                                                          "Pulse.Checker.fst"
                                                          (Prims.of_int (148))
                                                          (Prims.of_int (4))
-                                                         (Prims.of_int (261))
+                                                         (Prims.of_int (264))
                                                          (Prims.of_int (48)))))
                                                 (FStar_Tactics_Effect.lift_div_tac
                                                    (fun uu___2 ->
@@ -1385,6 +1385,15 @@ let rec (check : Pulse_Checker_Base.check_t) =
                                                           Obj.magic
                                                             (Obj.repr
                                                                (Pulse_Checker_Admit.check
+                                                                  g1 pre ()
+                                                                  post_hint
+                                                                  res_ppname
+                                                                  t))
+                                                      | Pulse_Syntax_Base.Tm_Unreachable
+                                                          ->
+                                                          Obj.magic
+                                                            (Obj.repr
+                                                               (Pulse_Checker_Unreachable.check
                                                                   g1 pre ()
                                                                   post_hint
                                                                   res_ppname
