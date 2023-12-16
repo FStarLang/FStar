@@ -770,7 +770,7 @@ let extract_pulse (g:uenv) (selt:R.sigelt) (p:st_term)
   : T.Tac (either mlmodule string) =
   
   let g = { uenv_inner=g; coreenv=initial_core_env g } in
-  T.print (Printf.sprintf "About to extract:\n%s\n" (st_term_to_string p));
+  // T.print (Printf.sprintf "About to extract:\n%s\n" (st_term_to_string p));
   debug g (fun _ -> Printf.sprintf "About to extract:\n%s\n" (st_term_to_string p));
   let open T in
   try

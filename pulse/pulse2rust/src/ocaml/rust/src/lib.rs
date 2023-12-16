@@ -2118,11 +2118,3 @@ ocaml_export! {
   //   z.to_string().to_owned().to_ocaml(cr)
   // }
 }
-
-#[derive(Clone, Copy)]
-pub enum cell<A: Clone + Copy, B: Clone + Copy> {
-    Clean,
-    Zombie,
-    Used(A, B),
-}
-use crate::cell::*;
