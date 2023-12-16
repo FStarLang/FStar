@@ -171,7 +171,7 @@ let (e_term_aq :
       FStar_TypeChecker_NBETerm.typ =
         (fun uu___ ->
            mkFV FStar_Reflection_V1_Constants.fstar_refl_term_fv [] []);
-      FStar_TypeChecker_NBETerm.emb_typ =
+      FStar_TypeChecker_NBETerm.e_typ =
         (fun uu___ ->
            fv_as_emb_typ FStar_Reflection_V1_Constants.fstar_refl_term_fv)
     }
@@ -2007,6 +2007,8 @@ let (e_sigelt_view :
          FStar_Pervasives_Native.None) in
   mk_emb' embed_sigelt_view unembed_sigelt_view
     FStar_Reflection_V1_Constants.fstar_refl_sigelt_view_fv
+let (e_name : Prims.string Prims.list FStar_TypeChecker_NBETerm.embedding) =
+  FStar_TypeChecker_NBETerm.e_list FStar_TypeChecker_NBETerm.e_string
 let (e_qualifier :
   FStar_Reflection_V1_Data.qualifier FStar_TypeChecker_NBETerm.embedding) =
   let embed cb q =
@@ -2082,7 +2084,7 @@ let (e_qualifier :
     | FStar_Reflection_V1_Data.Reflectable l ->
         let uu___ =
           let uu___1 =
-            let uu___2 = FStar_TypeChecker_NBETerm.embed e_lid cb l in
+            let uu___2 = FStar_TypeChecker_NBETerm.embed e_name cb l in
             FStar_TypeChecker_NBETerm.as_arg uu___2 in
           [uu___1] in
         mkConstruct
@@ -2091,7 +2093,7 @@ let (e_qualifier :
     | FStar_Reflection_V1_Data.Discriminator l ->
         let uu___ =
           let uu___1 =
-            let uu___2 = FStar_TypeChecker_NBETerm.embed e_lid cb l in
+            let uu___2 = FStar_TypeChecker_NBETerm.embed e_name cb l in
             FStar_TypeChecker_NBETerm.as_arg uu___2 in
           [uu___1] in
         mkConstruct
@@ -2100,7 +2102,7 @@ let (e_qualifier :
     | FStar_Reflection_V1_Data.Action l ->
         let uu___ =
           let uu___1 =
-            let uu___2 = FStar_TypeChecker_NBETerm.embed e_lid cb l in
+            let uu___2 = FStar_TypeChecker_NBETerm.embed e_name cb l in
             FStar_TypeChecker_NBETerm.as_arg uu___2 in
           [uu___1] in
         mkConstruct
@@ -2109,7 +2111,7 @@ let (e_qualifier :
     | FStar_Reflection_V1_Data.Projector (l, i) ->
         let uu___ =
           let uu___1 =
-            let uu___2 = FStar_TypeChecker_NBETerm.embed e_lid cb l in
+            let uu___2 = FStar_TypeChecker_NBETerm.embed e_name cb l in
             FStar_TypeChecker_NBETerm.as_arg uu___2 in
           let uu___2 =
             let uu___3 =
@@ -2238,7 +2240,7 @@ let (e_qualifier :
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_V1_Constants.ref_qual_Reflectable.FStar_Reflection_V1_Constants.lid
         ->
-        let uu___1 = FStar_TypeChecker_NBETerm.unembed e_lid cb l in
+        let uu___1 = FStar_TypeChecker_NBETerm.unembed e_name cb l in
         FStar_Compiler_Util.bind_opt uu___1
           (fun l1 ->
              FStar_Pervasives_Native.Some
@@ -2247,7 +2249,7 @@ let (e_qualifier :
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_V1_Constants.ref_qual_Discriminator.FStar_Reflection_V1_Constants.lid
         ->
-        let uu___1 = FStar_TypeChecker_NBETerm.unembed e_lid cb l in
+        let uu___1 = FStar_TypeChecker_NBETerm.unembed e_name cb l in
         FStar_Compiler_Util.bind_opt uu___1
           (fun l1 ->
              FStar_Pervasives_Native.Some
@@ -2256,7 +2258,7 @@ let (e_qualifier :
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_V1_Constants.ref_qual_Action.FStar_Reflection_V1_Constants.lid
         ->
-        let uu___1 = FStar_TypeChecker_NBETerm.unembed e_lid cb l in
+        let uu___1 = FStar_TypeChecker_NBETerm.unembed e_name cb l in
         FStar_Compiler_Util.bind_opt uu___1
           (fun l1 ->
              FStar_Pervasives_Native.Some
@@ -2269,7 +2271,7 @@ let (e_qualifier :
         let uu___2 = FStar_TypeChecker_NBETerm.unembed e_ident cb i in
         FStar_Compiler_Util.bind_opt uu___2
           (fun i1 ->
-             let uu___3 = FStar_TypeChecker_NBETerm.unembed e_lid cb l in
+             let uu___3 = FStar_TypeChecker_NBETerm.unembed e_name cb l in
              FStar_Compiler_Util.bind_opt uu___3
                (fun l1 ->
                   FStar_Pervasives_Native.Some
