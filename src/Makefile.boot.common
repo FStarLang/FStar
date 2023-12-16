@@ -3,7 +3,6 @@
 # Makefiles that include it should define FSTAR_HOME before the include
 
 INCLUDE_PATHS = \
-	../ulib \
 	basic \
 	class \
 	data \
