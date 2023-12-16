@@ -138,6 +138,10 @@ let mk_proj_decl (is_method:bool)
                             (`#(embed_int idx)))))
     }]}]
   in
+  (* Propagate binder attributes, i.e. attributes in the field
+  decl, to the method itself. *)
+  let se_proj = set_sigelt_attrs (field.attrs @ sigelt_attrs se_proj) se_proj in
+
   (* Do we need to set the sigelt's Projector qual? If so,
   here is how to do it, but F* currently rejects tactics
   trying to generate "internal" qualifiers like Projector. However,
