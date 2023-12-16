@@ -618,6 +618,12 @@ let rec (elab_st_typing :
                | Pulse_Syntax_Base.STT_Ghost ->
                    Pulse_Reflection_Util.mk_stt_ghost_admit ru rres rpre
                      rpost1)
+          | Pulse_Typing.T_Unreachable
+              (uu___, uu___1, uu___2, uu___3, uu___4) ->
+              FStar_Reflection_V2_Builtins.pack_ln
+                (FStar_Reflection_V2_Data.Tv_Const
+                   (FStar_Reflection_V2_Data.C_String
+                      "IOU: elab_st_typing of T_Unreachable"))
           | Pulse_Typing.T_WithInv
               (uu___, uu___1, uu___2, uu___3, uu___4, uu___5, uu___6, uu___7)
               ->

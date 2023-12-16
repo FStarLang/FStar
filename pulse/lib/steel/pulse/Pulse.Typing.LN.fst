@@ -289,6 +289,8 @@ let rec open_st_term_ln' (e:st_term)
       open_term_ln' typ x i;
       open_term_ln_opt' post x (i + 1)
 
+    | Tm_Unreachable -> ()
+
     | Tm_ProofHintWithBinders { binders; hint_type; t } ->
       let n = L.length binders in
       open_proof_hint_ln hint_type x (i + n);
@@ -521,7 +523,9 @@ let rec ln_weakening_st (t:st_term) (i j:int)
     | Tm_Admit { typ; post } ->
       ln_weakening typ i j;
       ln_weakening_opt post (i + 1) (j + 1)
-      
+    
+    | Tm_Unreachable -> ()
+
     | Tm_ProofHintWithBinders { binders; hint_type; t } ->
       let n = L.length binders in
       ln_weakening_proof_hint hint_type (i + n) (j + n);
@@ -729,6 +733,8 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv' typ x i;
       open_term_ln_inv_opt' post x (i + 1)
 
+    | Tm_Unreachable -> ()
+
     | Tm_ProofHintWithBinders { binders; hint_type; t } ->
       let n = L.length binders in
       open_proof_hint_ln_inv hint_type x (i + n);
@@ -929,6 +935,8 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
     | Tm_Admit { typ; post } ->
       close_term_ln' typ x i;
       close_term_ln_opt' post x (i + 1)
+
+    | Tm_Unreachable -> ()
 
     | Tm_ProofHintWithBinders { binders; hint_type; t } ->
       let n = L.length binders in
@@ -1247,7 +1255,8 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       tot_or_ghost_typing_ln init_t_typing;
       ln_mk_array init_t (-1)
 
-    | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing) ->
+    | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing)
+    | T_Unreachable _ s _ (STC _ _ x t_typing pre_typing post_typing) _ ->
       tot_or_ghost_typing_ln t_typing;
       tot_or_ghost_typing_ln pre_typing;
       tot_or_ghost_typing_ln post_typing;

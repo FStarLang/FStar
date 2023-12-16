@@ -307,6 +307,8 @@ let rec st_term_to_string' (level:string) (t:st_term)
          | None -> ""
          | Some post -> sprintf " %s" (term_to_string post))
 
+    | Tm_Unreachable -> "unreachable ()"
+
     | Tm_ProofHintWithBinders { binders; hint_type; t} ->
       let with_prefix =
         match binders with
@@ -406,6 +408,7 @@ let tag_of_st_term (t:st_term) =
   | Tm_WithLocalArray _ -> "Tm_WithLocalArray"
   | Tm_Rewrite _ -> "Tm_Rewrite"
   | Tm_Admit _ -> "Tm_Admit"
+  | Tm_Unreachable -> "Tm_Unreachable"
   | Tm_ProofHintWithBinders _ -> "Tm_ProofHintWithBinders"
   | Tm_WithInv _ -> "Tm_WithInv"
 
@@ -429,6 +432,7 @@ let rec print_st_head (t:st_term)
   | Tm_Match _ -> "Match"
   | Tm_While _ -> "While"
   | Tm_Admit _ -> "Admit"
+  | Tm_Unreachable -> "Unreachable"
   | Tm_Par _ -> "Par"
   | Tm_Rewrite _ -> "Rewrite"
   | Tm_WithLocal _ -> "WithLocal"
@@ -457,6 +461,7 @@ let rec print_skel (t:st_term) =
   | Tm_Match _ -> "Match"
   | Tm_While _ -> "While"
   | Tm_Admit _ -> "Admit"
+  | Tm_Unreachable -> "Unreachable"
   | Tm_Par _ -> "Par"
   | Tm_Rewrite _ -> "Rewrite"
   | Tm_WithLocal _ -> "WithLocal"

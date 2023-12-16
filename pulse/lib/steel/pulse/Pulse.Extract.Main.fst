@@ -415,6 +415,9 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
   | Tm_WithInv {body} ->
     simplify_st_term g body
 
+  | Tm_Unreachable ->
+    T.fail "Tm_Unreachable: Should have been eliminated"
+
 and simplify_branch (g:env) (b:branch) : T.Tac branch =
   let pat, body = b in
   let g, _, bs = extend_env_pat g pat in
@@ -502,6 +505,8 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
     | Tm_WithLocalArray { binder; initializer; length; body } ->
       let body = open_erase_close g binder body in
       ret (Tm_WithLocalArray { binder; initializer; length; body })
+
+    | Tm_Unreachable -> p
 
     | _ -> T.fail "Unexpected st term when erasing ghost subterms"
   end
@@ -647,8 +652,12 @@ let rec extract (g:env) (p:st_term)
       | Tm_WithInv { body } ->
         extract g body
     
+      | Tm_Unreachable ->
+        mle_app (mle_name (["Pulse"; "Lib"; "Core"], "unreachable")) [mle_unit], e_tag_impure
+
       | Tm_ProofHintWithBinders { t } -> T.fail "Unexpected constructor: ProofHintWithBinders should have been desugared away"
       | Tm_Admit _ -> T.raise (Extraction_failure (Printf.sprintf "Cannot extract code with admit: %s\n" (Pulse.Syntax.Printer.st_term_to_string p)))
+      
     end
 
 let rec generalize (g:env) (t:R.typ) (e:option st_term)

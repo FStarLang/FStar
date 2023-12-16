@@ -105,10 +105,7 @@ fn intro_is_list_cons (#t:Type0) (x:llist t) (v:node_ptr t) (#node:node t) (#tl:
         ()
 }
 ```
-let elim_false (p:vprop) : stt_ghost unit emp_inames (pure False) (fun _ -> p) = Pulse.Lib.Core.elim_false unit (fun _ -> p)
-let drop (p:vprop) : stt_ghost unit emp_inames p (fun _ -> emp) = admit()
 
-// #push-options "--ext 'pulse:env_on_err'"
 ```pulse
 ghost
 fn cases_of_is_list (#t:Type) (x:llist t) (l:list t)
@@ -124,27 +121,15 @@ fn cases_of_is_list (#t:Type) (x:llist t) (l:list t)
         Cons head tl -> { 
             rewrite (is_list x l) as (is_list x (head::tl));
             elim_is_list_cons x head tl;
-            assert pure (Some? x);
-            match x {
-                None -> {  
-                    elim_false (is_list_cases x l);
-                    with tail. assert(is_list tail tl);
-                    drop (is_list tail tl);
-                    with v. assert (pts_to v (mk_node head tail));
-                    drop (pts_to v (mk_node head tail));
-                }
-                Some v -> { 
-                    with tail. assert (is_list #t tail tl);
-                    with w. assert (pts_to w (mk_node head tail));
-                    rewrite (pts_to w (mk_node head tail)) as
-                            (pts_to v (mk_node head tail));
-                    rewrite (is_list tail tl) as 
-                            (is_list (mk_node head tail).tail tl);
-                    fold (is_list_cases (Some v) l);
-                    rewrite (is_list_cases (Some v) l) as
-                            (is_list_cases x l)
-                }
-            }
+            assert pure (Some? x); //surprising that this is needed
+            let v = Some?.v x;
+            with tail. assert (is_list #t tail tl);
+            with w. assert (pts_to w (mk_node head tail));
+            rewrite each w as v;
+            rewrite each tail as ((mk_node head tail).tail) in (is_list tail tl);
+            fold (is_list_cases (Some v) l);
+            rewrite (is_list_cases (Some v) l) as
+                    (is_list_cases x l)
         }
     }
 }
@@ -285,7 +270,8 @@ fn rec append (#t:Type0) (x y:llist t)
     match node.tail {
     None -> {
         is_list_cases_none node.tail;
-        drop (is_list node.tail tl);
+        rewrite (is_list node.tail tl) as (is_list node.tail []);
+        unfold (is_list node.tail []);
         np := mk_node node.head y;
         rewrite each y as (mk_node node.head y).tail in (is_list y 'l2);
         intro_is_list_cons x np; 
@@ -297,8 +283,6 @@ fn rec append (#t:Type0) (x y:llist t)
     }
 }
 ```
-
-let not_null #t (x:llist t) : bool = Some? x
 
 
 ```pulse
@@ -420,6 +404,10 @@ fn is_last_cell (#t:Type) (x:llist t)
 }
 ```
 
+#push-options " --query_stats --log_queries" // --debug Pulse.Lib.LinkedList --debug_level SMTQuery  --log_queries"
+#restart-solver
+
+
 ```pulse
 fn append_at_last_cell (#t:Type) (x y:llist t)
     requires
@@ -443,13 +431,9 @@ fn append_at_last_cell (#t:Type) (x y:llist t)
             intro_is_list_cons x np; 
         }
         Some vtl -> {
-            //need an easier way to do elim_false
             is_list_cases_some node.tail vtl;
-            intro_is_list_cons node.tail vtl;
-            intro_is_list_cons x np;
-            elim_false (is_list x (List.Tot.append 'l1 'l2));
-            drop (is_list x 'l1);
-            drop (is_list y 'l2)
+            assert (pure False); //adding this somehow seems necessary; weird
+            unreachable ();
         }
     }
 }

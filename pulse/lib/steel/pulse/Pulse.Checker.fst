@@ -252,6 +252,9 @@ let rec check
     | Tm_Admit _ ->
       Admit.check g pre pre_typing post_hint res_ppname t
 
+    | Tm_Unreachable ->
+      Pulse.Checker.Unreachable.check g pre pre_typing post_hint res_ppname t
+
     | Tm_Rewrite _ ->
       Rewrite.check g pre pre_typing post_hint res_ppname t
 

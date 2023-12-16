@@ -272,6 +272,7 @@ type st_term' =
       typ:term;
       post:option term;
     }
+  | Tm_Unreachable
   | Tm_ProofHintWithBinders {
       hint_type:proof_hint_type;
       binders:list binder;
