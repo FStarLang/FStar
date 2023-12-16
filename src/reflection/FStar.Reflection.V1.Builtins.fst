@@ -499,12 +499,12 @@ let rd_to_syntax_qual : RD.qualifier -> qualifier = function
   | RD.TotalEffect -> TotalEffect
   | RD.Logic -> Logic
   | RD.Reifiable -> Reifiable
-  | RD.Reflectable l -> Reflectable l
-  | RD.Discriminator l -> Discriminator l
-  | RD.Projector (l, i) -> Projector (l, pack_ident i)
+  | RD.Reflectable l -> Reflectable (Ident.lid_of_path l Range.dummyRange)
+  | RD.Discriminator l -> Discriminator (Ident.lid_of_path l Range.dummyRange)
+  | RD.Projector (l, i) -> Projector (Ident.lid_of_path l Range.dummyRange, pack_ident i)
   | RD.RecordType (l1, l2) -> RecordType (List.map pack_ident l1, List.map pack_ident l2)
   | RD.RecordConstructor (l1, l2) -> RecordConstructor (List.map pack_ident l1, List.map pack_ident l2)
-  | RD.Action l -> Action l
+  | RD.Action l -> Action (Ident.lid_of_path l Range.dummyRange)
   | RD.ExceptionConstructor -> ExceptionConstructor
   | RD.HasMaskedEffect -> HasMaskedEffect
   | RD.Effect -> S.Effect
@@ -524,12 +524,12 @@ let syntax_to_rd_qual = function
   | TotalEffect -> RD.TotalEffect
   | Logic -> RD.Logic
   | Reifiable -> RD.Reifiable
-  | Reflectable l -> RD.Reflectable l
-  | Discriminator l -> RD.Discriminator l
-  | Projector (l, i) -> RD.Projector (l, inspect_ident i)
+  | Reflectable l -> RD.Reflectable (Ident.path_of_lid l)
+  | Discriminator l -> RD.Discriminator (Ident.path_of_lid l)
+  | Projector (l, i) -> RD.Projector (Ident.path_of_lid l, inspect_ident i)
   | RecordType (l1, l2) -> RD.RecordType (List.map inspect_ident l1, List.map inspect_ident l2)
   | RecordConstructor (l1, l2) -> RD.RecordConstructor (List.map inspect_ident l1, List.map inspect_ident l2)
-  | Action l -> RD.Action l
+  | Action l -> RD.Action (Ident.path_of_lid l)
   | ExceptionConstructor -> RD.ExceptionConstructor
   | HasMaskedEffect -> RD.HasMaskedEffect
   | S.Effect -> RD.Effect
