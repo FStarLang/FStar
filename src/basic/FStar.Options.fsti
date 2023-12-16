@@ -154,6 +154,7 @@ val load_cmxs                   : unit    -> list string
 val legacy_interactive          : unit    -> bool
 val lsp_server                  : unit    -> bool
 val log_queries                 : unit    -> bool
+val log_failing_queries         : unit    -> bool
 val log_types                   : unit    -> bool
 val max_fuel                    : unit    -> int
 val max_ifuel                   : unit    -> int

@@ -191,6 +191,7 @@ let defaults =
       ("load"                         , List []);
       ("load_cmxs"                    , List []);
       ("log_queries"                  , Bool false);
+      ("log_failing_queries"          , Bool false);
       ("log_types"                    , Bool false);
       ("max_fuel"                     , Int 8);
       ("max_ifuel"                    , Int 2);
@@ -380,6 +381,7 @@ let get_lax                     ()      = lookup_opt "lax"                      
 let get_load                    ()      = lookup_opt "load"                     (as_list as_string)
 let get_load_cmxs               ()      = lookup_opt "load_cmxs"                (as_list as_string)
 let get_log_queries             ()      = lookup_opt "log_queries"              as_bool
+let get_log_failing_queries     ()      = lookup_opt "log_failing_queries"      as_bool
 let get_log_types               ()      = lookup_opt "log_types"                as_bool
 let get_max_fuel                ()      = lookup_opt "max_fuel"                 as_int
 let get_max_ifuel               ()      = lookup_opt "max_ifuel"                as_int
@@ -947,7 +949,7 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * Pprint.d
   ( noshort,
     "keep_query_captions",
     BoolStr,
-    text "Retain comments in the logged SMT queries (requires --log_queries; default true)");
+    text "Retain comments in the logged SMT queries (requires --log_queries or --log_failing_queries; default true)");
 
   ( noshort,
     "lax",
@@ -973,6 +975,13 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * Pprint.d
     "log_queries",
     Const (Bool true),
     text "Log the Z3 queries in several queries-*.smt2 files, as we go");
+
+  ( noshort,
+    "log_failing_queries",
+    Const (Bool true),
+    text "As --log_queries, but only save the failing queries. Each query is
+    saved in its own file regardless of whether they were checked during the
+    same invocation. The SMT2 file names begin with \"failedQueries\"");
 
   ( noshort,
     "max_fuel",
@@ -1461,6 +1470,7 @@ let settable = function
     | "load"
     | "load_cmxs"
     | "log_queries"
+    | "log_failing_queries"
     | "log_types"
     | "max_fuel"
     | "max_ifuel"
@@ -1843,8 +1853,11 @@ let load_cmxs                    () = get_load_cmxs                   ()
 let legacy_interactive           () = get_in                          ()
 let lsp_server                   () = get_lsp                         ()
 let log_queries                  () = get_log_queries                 ()
-let keep_query_captions          () = log_queries                     ()
-                                    && get_keep_query_captions        ()
+let log_failing_queries          () = get_log_failing_queries         ()
+let keep_query_captions          () =
+    get_keep_query_captions ()
+    && (log_queries () || log_failing_queries ())
+
 let log_types                    () = get_log_types                   ()
 let max_fuel                     () = get_max_fuel                    ()
 let max_ifuel                    () = get_max_ifuel                   ()

@@ -1967,10 +1967,12 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
     let labels, phi = ErrorReporting.label_goals use_env_msg (Env.get_range tcenv) phi in
     let label_prefix, label_suffix = encode_labels labels in
     let caption =
-        if Options.log_queries ()
-        then [Caption ("Encoding query formula : " ^ (Print.term_to_string q));
-              Caption ("Context: " ^ String.concat "\n" (Errors.get_ctx ()))]
-        else []
+      (* If these options are off, the Captions will be dropped anyway,
+      but by checking here we can skip the printing. *)
+      if Options.log_queries () || Options.log_failing_queries ()
+      then [Caption ("Encoding query formula : " ^ (Print.term_to_string q));
+            Caption ("Context: " ^ String.concat "\n" (Errors.get_ctx ()))]
+      else []
     in
     let query_prelude =
         env_decls
