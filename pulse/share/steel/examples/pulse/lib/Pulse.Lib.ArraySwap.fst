@@ -175,6 +175,7 @@ ensures q
 }
 ```
 
+#push-options "--z3rlimit_factor 4"
 inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
 fn array_swap0
@@ -251,5 +252,6 @@ ensures (
   }
 }
 ```
+#pop-options
 
 let array_swap = array_swap0
