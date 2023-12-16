@@ -8,6 +8,7 @@ open Pulse.Checker.VPropEquiv
 open Pulse.Checker.Prover.Base
 open Pulse.Checker.Base
 
+module RU = Pulse.RuntimeUtils
 module T = FStar.Tactics.V2
 module PS = Pulse.Checker.Prover.Substs
 module Metatheory = Pulse.Typing.Metatheory
@@ -29,7 +30,7 @@ let k_intro_exists (#g:env) (#u:universe) (#b:binder) (#p:vprop)
 
   let c = comp_intro_exists u b p e in
 
-  let t_typing = T_IntroExists g u b p e (magic ()) ex_typing (lift_typing_to_ghost_typing e_typing) in
+  let t_typing = T_IntroExists g u b p e (RU.magic ()) ex_typing (lift_typing_to_ghost_typing e_typing) in
 
   assert (comp_pre c == subst_term p [ DT 0 e ]);
   assert (comp_post c == tm_exists_sl u b p);
@@ -42,7 +43,7 @@ let k_intro_exists (#g:env) (#u:universe) (#b:binder) (#p:vprop)
     : continuation_elaborator
         g (frame * subst_term p [ DT 0 e ])
         (push_binding g x ppname_default (comp_res c)) (tm_exists_sl u b p * frame) =
-    continuation_elaborator_with_bind frame t_typing (magic ()) (ppname, x) in
+    continuation_elaborator_with_bind frame t_typing (RU.magic ()) (ppname, x) in
 
   let k
     : continuation_elaborator
@@ -81,7 +82,7 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
     g0 = pst.pg;
     ctxt = list_as_vprop pst.remaining_ctxt;
     frame = preamble.frame * pst.ss.(pst.solved);
-    ctxt_frame_typing = magic ();
+    ctxt_frame_typing = RU.magic ();
     goals = open_term_nv body px * (list_as_vprop unsolved'); 
   } in
   let k_sub:
@@ -91,7 +92,7 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
     let k = k_elab_unit preamble_sub.g0 (preamble_sub.ctxt * preamble_sub.frame) in
     let k = k_elab_equiv k
       (VE_Refl _ _)
-      (magic () <:
+      (RU.magic () <:
          vprop_equiv
            preamble_sub.g0
            (preamble_sub.ctxt * preamble_sub.frame)
@@ -102,13 +103,13 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
   let pst_sub : prover_state preamble_sub = {
     pg = pst.pg;
     remaining_ctxt = vprop_as_list preamble_sub.ctxt;
-    remaining_ctxt_frame_typing = magic ();
+    remaining_ctxt_frame_typing = RU.magic ();
     uvs = push_binding pst.uvs x b.binder_ppname b.binder_ty;
     ss = pst.ss;
     solved = tm_emp;
     unsolved = (vprop_as_list (open_term_nv body px)) @ unsolved';
     k = k_sub;
-    goals_inv = magic ();
+    goals_inv = RU.magic ();
     solved_inv = ();
   } in
   let pst_sub = prover pst_sub in
@@ -157,7 +158,7 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
     : continuation_elaborator
         preamble_sub.g0 (preamble_sub.ctxt * preamble_sub.frame)
         pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt * preamble_sub.frame) * pst_sub.ss.(preamble_sub.goals)) =
-    k_elab_equiv k_sub (VE_Refl _ _) (magic ()) in
+    k_elab_equiv k_sub (VE_Refl _ _) (RU.magic ()) in
   // substitute preamble_sub.goals
   let k_sub
     : continuation_elaborator
@@ -184,7 +185,7 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
                      preamble_sub.frame *
                      pst_sub.ss.(list_as_vprop unsolved')) *
                     (subst_term (pst_sub.ss.(body)) [DT 0 witness])) =
-    k_elab_equiv k_sub (VE_Refl _ _) (magic ()) in
+    k_elab_equiv k_sub (VE_Refl _ _) (RU.magic ()) in
 
   let k_intro_exists
     : continuation_elaborator
@@ -199,11 +200,11 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
       #u
       #(PS.nt_subst_binder b nt)
       #pst_sub.ss.(body)
-      (magic ())  // typing of tm_exists_sl with pst_sub.ss applied
+      (RU.magic ())  // typing of tm_exists_sl with pst_sub.ss applied
       #witness
-      (magic ())  // witness typing
+      (RU.magic ())  // witness typing
       #_
-      (magic ())  // frame typing
+      (RU.magic ())  // frame typing
   in
   assume (tm_exists_sl u (PS.nt_subst_binder b nt) pst_sub.ss.(body) ==
           pst_sub.ss.(tm_exists_sl u b body));
@@ -232,7 +233,7 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
                     (pst_sub.ss.(pst.solved) *
                      pst_sub.ss.(tm_exists_sl u b body) *
                      pst_sub.ss.(list_as_vprop unsolved'))) =
-     k_elab_equiv k_intro_exists (VE_Refl _ _) (magic ()) in
+     k_elab_equiv k_intro_exists (VE_Refl _ _) (RU.magic ()) in
   assume (pst_sub.ss.(pst.solved) *
           pst_sub.ss.(tm_exists_sl u b body) *
           pst_sub.ss.(list_as_vprop unsolved') ==
@@ -258,7 +259,7 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
         preamble_sub.g0 (preamble_sub.ctxt * preamble_sub.frame)
         pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt * preamble.frame) *
                     (pst_sub.ss.(pst.solved * list_as_vprop pst.unsolved))) =
-    k_elab_equiv k_sub (VE_Refl _ _) (magic ()) in
+    k_elab_equiv k_sub (VE_Refl _ _) (RU.magic ()) in
 
   let k_sub
     : continuation_elaborator
@@ -273,7 +274,7 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
         pst.pg ((list_as_vprop pst.remaining_ctxt * preamble.frame) * pst.ss.(pst.solved))
         pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt * preamble.frame) *
                     (pst_sub.ss.(pst.solved * list_as_vprop pst.unsolved))) =
-    k_elab_equiv k_sub (magic ()) (VE_Refl _ _) in
+    k_elab_equiv k_sub (RU.magic ()) (VE_Refl _ _) in
 
   let k
     : continuation_elaborator
@@ -308,19 +309,19 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
         preamble.g0 (preamble.ctxt * preamble.frame)
         pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt * preamble.frame) *
                     (pst_sub.ss.(preamble.goals))) =
-    k_elab_equiv k (VE_Refl _ _) (magic ()) in
+    k_elab_equiv k (VE_Refl _ _) (RU.magic ()) in
 
   let pst' : prover_state preamble = {
     pg = pst_sub.pg;
     remaining_ctxt = pst_sub.remaining_ctxt;
-    remaining_ctxt_frame_typing = magic ();
+    remaining_ctxt_frame_typing = RU.magic ();
     uvs = pst_sub.uvs;
     ss = pst_sub.ss;
     solved = preamble.goals;
     unsolved = [];
     k;
-    goals_inv = magic ();
-    solved_inv = magic ();
+    goals_inv = RU.magic ();
+    solved_inv = RU.magic ();
   } in
 
   pst'

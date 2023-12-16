@@ -318,7 +318,7 @@ let check
     //
     let (| x, x_ty, pre'', g2, k |) =
       check g1 (tm_star (PS.nt_subst_term v nts) pre')
-              (magic ()) 
+              (RU.magic ()) 
               post_hint res_ppname (PS.nt_subst_st_term body nts) in
     (| x, x_ty, pre'', g2, k_elab_trans k_frame k |)
 

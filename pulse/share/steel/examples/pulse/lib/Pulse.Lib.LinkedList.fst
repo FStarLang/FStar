@@ -1,6 +1,10 @@
 module Pulse.Lib.LinkedList
 open Pulse.Lib.Pervasives
+open Pulse.Lib.Stick.Util
+open FStar.List.Tot
 module T = FStar.Tactics
+module I = Pulse.Lib.Stick.Util
+module FA = Pulse.Lib.Forall.Util
 
 noeq
 type node (t:Type0) = {
@@ -58,24 +62,6 @@ fn intro_is_list_nil (#t:Type0) (x:(x:llist t { x == None }))
     fold (is_list x [])
 }
 ```
-
-module T = FStar.Tactics
-
-let prop_squash_idem (p:prop)
-  : Tot (p == squash p)
-  = admit()
-//   FStar.PropositionalExtensionality.apply p (squash p)
-
-
-#push-options "--no_tactics"
-let rewrite_by (p:vprop) (q:vprop) 
-               (t:unit -> T.Tac unit)
-               (_:unit { T.with_tactic t (vprop_equiv p q) })
-  : stt_ghost unit emp_inames p (fun _ -> q)
-  = let pf : squash (vprop_equiv p q) = T.by_tactic_seman t (vprop_equiv p q) in
-    prop_squash_idem (vprop_equiv p q);
-    rewrite p q (coerce_eq () pf)
-#pop-options
 
 
 let norm_tac (_:unit) : T.Tac unit =
@@ -291,192 +277,28 @@ fn rec append (#t:Type0) (x y:llist t)
     requires is_list x 'l1 ** is_list y 'l2 ** pure (x =!= None)
     ensures is_list x (List.Tot.append 'l1 'l2)
 {
-   match x {
-    None -> { //impossible
-        drop (is_list y 'l2);
-        drop (is_list x 'l1);
-        elim_false (is_list x 'l1)
+    let np = Some?.v x;
+    is_list_cases_some x np;
+    let node = !np;
+    with tail tl. assert (is_list #t tail tl);
+    rewrite each tail as node.tail;
+    match node.tail {
+    None -> {
+        is_list_cases_none node.tail;
+        drop (is_list node.tail tl);
+        np := mk_node node.head y;
+        rewrite each y as (mk_node node.head y).tail in (is_list y 'l2);
+        intro_is_list_cons x np; 
     }
-    Some np -> {
-        is_list_cases_some x np;
-        let node = !np;
-        with tail tl. assert (is_list #t tail tl);
-        rewrite each tail as node.tail;
-        match node.tail {
-            None -> {
-                is_list_cases_none node.tail;
-                drop (is_list node.tail tl);
-                np := mk_node node.head y;
-                rewrite each y as (mk_node node.head y).tail in (is_list y 'l2);
-                intro_is_list_cons x np; 
-            }
-            Some _ -> {
-                append #t node.tail y #tl #'l2;
-                intro_is_list_cons x np;
-            }
-        }
+    Some _ -> {
+        append #t node.tail y #tl #'l2;
+        intro_is_list_cons x np;
     }
-   }
+    }
 }
 ```
 
-open Pulse.Lib.Stick
-
-assume val dbg : vprop
-```pulse
-ghost
-fn yields_idem (p:vprop)
-   requires emp
-   ensures p @==> p
-{
-    ghost fn intro_stick_aux (u:unit)
-    requires emp ** p
-    ensures p
-    { () };
-    Pulse.Lib.Stick.intro_stick _ _ _ intro_stick_aux;
-    fold (p @==> p);
-}
-```
-
-```pulse
-ghost
-fn yields_curry (p q r:vprop)
-   requires (p ** q) @==> r
-   ensures p @==> (q @==> r)
-{
-    ghost fn aux (_:unit)
-    requires ((p ** q) @==> r) ** p
-    ensures q @==> r
-    { 
-        ghost fn aux (_:unit)
-        requires (((p ** q) @==> r) ** p) ** q
-        ensures r
-        { 
-            unfold ((p ** q) @==> r);
-            elim_stick (p ** q) _;
-        };
-        intro_stick _ _ _ aux; 
-        fold (q @==> r);
-    };
-    intro_stick _ _ _ aux;
-    fold (p @==> (q @==> r));
-}
-```
-
-
-```pulse
-ghost
-fn yields_trans (p q r:vprop)
-    requires (p @==> q) ** (q @==> r)
-    ensures p @==> r
-{
-   ghost fn aux (_:unit)
-   requires ((p @==> q) ** (q @==> r)) ** p
-   ensures r
-   { 
-      unfold (p @==> q);
-      elim_stick _ _;
-      
-      unfold (q @==> r);
-      elim_stick _ _;
-   };
-   intro_stick _ _ _ aux;
-   fold (p @==> r);
-}
-```
-
-```pulse
-ghost
-fn yields_comm_l (p q r:vprop)
-   requires (p ** q) @==> r
-   ensures (q ** p) @==> r
-{
-    ghost fn aux (_:unit)
-    requires ((p ** q) @==> r) ** (q ** p)
-    ensures r
-    { 
-        unfold (p ** q) @==> r;
-        elim_stick (p ** q) _;
-    };
-    intro_stick _ _ _ aux; 
-    fold ((q ** p) @==> r);
-}
-```
-
-```pulse
-ghost
-fn yields_assoc_l (p q r s:vprop)
-   requires (p ** (q ** r)) @==> s
-   ensures ((p ** q) ** r) @==> s
-{
-    ghost fn aux (_:unit)
-    requires ((p ** (q ** r)) @==> s) ** ((p ** q) ** r)
-    ensures s
-    { 
-        unfold (p ** (q ** r)) @==> s;
-        elim_stick (p ** (q ** r)) _;
-    };
-    intro_stick _ _ _ aux;
-    fold (((p ** q) ** r) @==> s);
-}
-```
-
-
-```pulse
-ghost
-fn elim_yields () (#p #q:vprop)
-   requires (p @==> q) ** p
-   ensures q
-{
-  unfold (p @==> q);
-  elim_stick #emp_inames p q;
-}
-```
-
-let assume_ (p:vprop) : stt_ghost unit emp_inames emp (fun _ -> p) = admit()
 let not_null #t (x:llist t) : bool = Some? x
-
-```pulse
-ghost
-fn yields_elim (#t:Type) 
-               (v:node_ptr t)
-               (n:node t)
-               (tl:list t)
-    requires 
-        pts_to v n ** is_list n.tail tl
-    ensures 
-        is_list (Some v) (n.head::tl)
-{
-    intro_is_list_cons (Some v) v
-}
-```
-
-```pulse
-ghost
-fn elim_hyp_l (p q r:vprop)
-    requires ((p ** q) @==> r) ** p
-    ensures (q @==> r)
-{
-    yields_curry p q r;
-    unfold (p @==> q @==> r);
-    elim_stick _ _;
-    fold (q @==> r);
-}
-```
-
-```pulse
-ghost
-fn elim_hyp_r (p q r:vprop)
-    requires ((p ** q) @==> r) ** q
-    ensures (p @==> r)
-{
-    yields_comm_l p q r;
-    yields_curry q p r;
-    unfold (q @==> p @==> r);
-    elim_stick _ _;
-    fold (p @==> r);
-}
-```
 
 
 ```pulse
@@ -492,8 +314,39 @@ fn intro_yields_cons (#t:Type)
         is_list n.tail tl **
         (is_list n.tail tl @==> is_list (Some v) (n.head::tl))
 {
+    ghost
+    fn yields_elim (#t:Type) 
+                (v:node_ptr t)
+                (n:node t)
+                (tl:list t)
+        requires 
+            pts_to v n ** is_list n.tail tl
+        ensures 
+            is_list (Some v) (n.head::tl)
+    {
+        intro_is_list_cons (Some v) v
+    };
     intro_stick _ _ _ (fun _ -> yields_elim v n tl);
     with p q. fold (p @==> q)
+}
+```
+
+```pulse
+fn move_next (#t:Type) (x:llist t)
+    requires is_list x 'l ** pure (Some? x)
+    returns y:llist t
+    ensures exists* tl.
+        is_list y tl **
+        (is_list y tl @==> is_list x 'l) **
+        pure (Cons? 'l /\ tl == Cons?.tl 'l)
+{ 
+    let np = Some?.v x;
+    is_list_cases_some x np;
+    let node = !np;
+    with tail tl. assert (is_list #t tail tl);
+    rewrite each tail as node.tail;
+    intro_yields_cons np;
+    node.tail
 }
 ```
 
@@ -506,7 +359,7 @@ fn length_iter (#t:Type) (x: llist t)
 {
     let mut cur = x;
     let mut ctr = 0; 
-    yields_idem (is_list x 'l);
+    I.refl (is_list x 'l);
     while (
         with ll. assert pts_to cur ll;
         let v = !cur; 
@@ -524,37 +377,251 @@ fn length_iter (#t:Type) (x: llist t)
     {
         let n = !ctr;
         let ll = !cur;
-        let node_ptr = Some?.v ll;
         with _ll suffix. assert (is_list #t _ll suffix);
         rewrite each _ll as ll;
-        is_list_cases_some ll node_ptr;
-        let node : node t = !node_ptr;
-        with _node tl. assert (is_list #t _node.tail tl);
-        rewrite (is_list #t _node.tail tl)
-            as  (is_list node.tail tl);
-        intro_yields_cons node_ptr;
-        yields_trans (is_list node.tail tl) (is_list ll suffix) (is_list x 'l);
-        cur := node.tail;
+        let next = move_next ll;
+        with tl. assert (is_list next tl);
+        I.trans (is_list next tl) (is_list ll suffix) (is_list x 'l);
+        cur := next;
         ctr := n + 1;
     };
     with ll _sfx. assert (is_list #t ll _sfx);
     is_list_cases_none ll;
-    elim_yields ();
+    I.elim _ _;
     let n = !ctr;
     n
 }
 ```
 
 ```pulse
-ghost
-fn foo ()
-  requires emp
-  returns y:int
-  ensures emp
+fn is_last_cell (#t:Type) (x:llist t)
+    requires is_list x 'l ** pure (Some? x)
+    returns b:bool
+    ensures is_list x 'l ** pure (b == (List.Tot.length 'l = 1))
 {
-  17
+    let np = Some?.v x;
+    is_list_cases_some x np;
+    let node = !np;
+    with tail tl. assert (is_list #t tail tl);
+    rewrite each tail as node.tail;
+    match node.tail {
+        None -> { 
+            is_list_cases_none node.tail;
+            intro_is_list_cons x np;
+            true
+        }
+        Some vtl -> { 
+            is_list_cases_some node.tail vtl;
+            intro_is_list_cons node.tail vtl;
+            intro_is_list_cons x np;
+            false
+        }
+    }
 }
 ```
+
+```pulse
+fn append_at_last_cell (#t:Type) (x y:llist t)
+    requires
+        is_list x 'l1 **
+        is_list y 'l2 **
+        pure (Some? x /\ List.Tot.length 'l1 == 1)
+    ensures
+        is_list x (List.Tot.append 'l1 'l2)
+{
+    let np = Some?.v x;
+    is_list_cases_some x np;
+    let node = !np;
+    with tail tl. assert (is_list #t tail tl);
+    rewrite each tail as node.tail;
+    match node.tail {
+        None -> {
+            is_list_cases_none node.tail;
+            elim_is_list_nil node.tail;
+            np := mk_node node.head y;
+            rewrite each y as (mk_node node.head y).tail in (is_list y 'l2);
+            intro_is_list_cons x np; 
+        }
+        Some vtl -> {
+            //need an easier way to do elim_false
+            is_list_cases_some node.tail vtl;
+            intro_is_list_cons node.tail vtl;
+            intro_is_list_cons x np;
+            elim_false (is_list x (List.Tot.append 'l1 'l2));
+            drop (is_list x 'l1);
+            drop (is_list y 'l2)
+        }
+    }
+}
+```
+
+//UGLY! workaround for while invariant instantiation hint
+let not_b_if_sfx_1 #t (b:bool) (sfx:list t) : vprop = pure (not b ==> (List.Tot.length sfx = 1))
+
+```pulse
+ghost
+fn intro_not_b_if_sfx_1_true (#t:Type0) (sfx:list t)
+    requires emp
+    ensures not_b_if_sfx_1 true sfx
+{
+    fold (not_b_if_sfx_1 true sfx);
+}
+```
+
+```pulse
+ghost
+fn intro_not_b_if_sfx_1_false (#t:Type0) (sfx:list t)
+    requires pure (List.Tot.length sfx == 1)
+    ensures not_b_if_sfx_1 false sfx
+{
+    fold (not_b_if_sfx_1 false sfx);
+}
+```
+
+```pulse
+ghost
+fn non_empty_list (#t:Type0) (x:llist t)
+    requires is_list x 'l ** pure (Cons? 'l)
+    ensures is_list x 'l ** pure (Some? x)
+{
+    elim_is_list_cons x (Cons?.hd 'l) (Cons?.tl 'l);
+    with v n. assert (pts_to #(node t) v n);
+    with tail tl. assert (is_list #t tail tl);
+    rewrite each tail as n.tail;
+    intro_is_list_cons x v #n #tl;
+}
+```
+
+```pulse
+ghost
+fn forall_intro_is_list_idem (#t:Type) (x:llist t)
+    requires emp
+    ensures forall* l. is_list x l @==> is_list x l
+{
+    intro_forall emp (fun l -> I.refl (is_list x l))
+}
+```
+
+//#push-options "--print_implicits --ugly --print_bound_var_types --print_full_names"// --debug Pulse.Lib.LinkedList --debug_level prover"
+open FStar.List.Tot
+//ugly, workaround for unification under forall
+let something (#a:Type) (x:a) : vprop = emp
+
+//ugly, for admitting equality on forall* 
+let rewrite_tac () = T.tadmit()
+
+```pulse
+fn move_next_forall (#t:Type) (x:llist t)
+    requires is_list x 'l ** pure (Some? x)
+    returns y:llist t
+    ensures exists* hd tl.
+        something hd **
+        is_list y tl **
+        (forall* tl'. is_list y tl' @==> is_list x (hd::tl')) **
+        pure ('l == hd::tl)
+{ 
+    let np = Some?.v x;
+    is_list_cases_some x np;
+    let node = !np;
+    with tail tl. assert (is_list #t tail tl);
+    rewrite each tail as node.tail;
+    ghost fn aux (tl':list t)
+        requires pts_to np node
+        ensures is_list node.tail tl' @==> is_list x (node.head::tl')
+    {
+        ghost fn aux (_:unit)
+        requires pts_to np node ** is_list node.tail tl'
+        ensures is_list x (node.head::tl')
+        {
+            intro_is_list_cons x np;
+        };
+        intro_stick _ _ _ aux;
+        fold (is_list node.tail tl' @==> is_list x (node.head::tl'));
+    };
+    FA.intro _ aux;
+    fold (something node.head);
+    node.tail
+}
+```
+
+```pulse
+fn append_iter (#t:Type) (x y:llist t)
+    requires is_list x 'l1 ** is_list y 'l2 ** pure (Some? x /\ List.Tot.length 'l1 >= 1)
+    ensures is_list x (List.Tot.append 'l1 'l2)
+{
+    let mut cur = x;
+    forall_intro_is_list_idem x;
+    rewrite_by (forall* l. is_list x l @==> is_list x l)
+               (forall* l. is_list x l @==> is_list x ([]@l))
+               norm_tac ();
+    fold (something #(list t) []);
+    intro_not_b_if_sfx_1_true 'l1;
+    while (
+        with _b _sfx. unfold (not_b_if_sfx_1 #t _b _sfx);
+        with pfx. assert (something #(list t) pfx);
+        unfold (something #(list t) pfx);
+        let l = !cur;
+        with _ll sfx. assert (is_list #t _ll sfx);
+        rewrite each _ll as l in (is_list _ll sfx);
+        rewrite_by (forall* sfx'. is_list _ll sfx' @==> is_list x (pfx @ sfx'))
+                   (forall* sfx'. is_list l sfx' @==> is_list x (pfx @ sfx'))
+                   rewrite_tac ();
+        let b = is_last_cell l;
+        if b 
+        { 
+            intro_not_b_if_sfx_1_false sfx;
+            fold (something pfx);
+            false
+        }
+        else 
+        {
+            let next = move_next_forall l;
+            with tl. assert (is_list next tl);
+            with hd. assert (something #t hd);
+            FA.trans_compose 
+                (is_list next) (is_list l) (is_list x)
+                (fun tl -> hd :: tl)
+                (fun tl -> pfx @ tl);
+            List.Tot.Properties.append_assoc pfx [Cons?.hd sfx] tl;
+            rewrite_by (forall* tl. is_list next tl @==> is_list x (pfx @ (hd::tl)))
+                       (forall* tl. is_list next tl @==> is_list x ((pfx@[hd])@tl))
+                       rewrite_tac ();
+            unfold (something #t hd);
+            fold (something #(list t) (pfx@[hd]));
+            cur := next;
+            intro_not_b_if_sfx_1_true tl;
+            non_empty_list next;
+            true
+        }
+    )
+    invariant b.
+    exists* ll pfx sfx.
+        something pfx **
+        pts_to cur ll **
+        is_list ll sfx **
+        (forall* sfx'. is_list ll sfx' @==> is_list x (pfx @ sfx')) **
+        not_b_if_sfx_1 b sfx **
+        pure (List.Tot.length sfx >= 1 /\
+              pfx@sfx == 'l1 /\
+              Some? ll)
+    { () };
+    let last = !cur;
+    with pfx. assert (something #(list t) pfx);
+    with _ll sfx. assert (is_list #t _ll sfx);
+    rewrite each _ll as last in (is_list _ll sfx);
+    rewrite_by (forall* sfx'. is_list _ll sfx' @==> is_list x (pfx @ sfx'))
+               (forall* sfx'. is_list last sfx' @==> is_list x (pfx @ sfx'))
+               rewrite_tac ();
+    with _b _sfx. unfold (not_b_if_sfx_1 #t _b _sfx);
+    assert (pure (List.Tot.length sfx == 1));
+    append_at_last_cell last y;
+    FA.elim_forall_imp (is_list last) (fun sfx' -> is_list x (pfx @ sfx')) (sfx@'l2);
+    List.Tot.Properties.append_assoc pfx sfx 'l2;
+    unfold (something #(list t) pfx);
+    with l. rewrite (is_list x l) as is_list x (List.Tot.append 'l1 'l2);
+}
+```
+
 // let rec take (n:nat) (l:list 't { n < List.Tot.length l })
 //   : list 'tg
 //   = if n = 0 then []

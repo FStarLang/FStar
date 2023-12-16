@@ -210,11 +210,8 @@ let rec (readback_ty :
               | (FStar_Reflection_V2_Data.Tv_UInst (fv, u::[]), a1::a2::[])
                   ->
                   if
-                    ((FStar_Reflection_V2_Builtins.inspect_fv fv) =
-                       Pulse_Reflection_Util.exists_lid)
-                      ||
-                      ((FStar_Reflection_V2_Builtins.inspect_fv fv) =
-                         Pulse_Reflection_Util.forall_lid)
+                    (FStar_Reflection_V2_Builtins.inspect_fv fv) =
+                      Pulse_Reflection_Util.exists_lid
                   then
                     let t1 = FStar_Pervasives_Native.fst a1 in
                     let t2 = FStar_Pervasives_Native.fst a2 in

@@ -10,7 +10,7 @@ open Pulse.Checker.Prover
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 module Metatheory = Pulse.Typing.Metatheory
-
+module RU = Pulse.RuntimeUtils
 #set-options "--z3rlimit 40" // :-(
 
 (* For now we just create a term with the union,
@@ -155,8 +155,8 @@ let match_inames
     else (
       let is = compute_iname_join inames1 inames2 in
       // FIXME: this should come from some meta-theorem, we always have is1 `subset` join is1 is2
-      let tok1 : prop_validity g_then (tm_inames_subset inames1 is) = magic () in
-      let tok2 : prop_validity g_else (tm_inames_subset inames2 is) = magic () in
+      let tok1 : prop_validity g_then (tm_inames_subset inames1 is) = RU.magic () in
+      let tok2 : prop_validity g_else (tm_inames_subset inames2 is) = RU.magic () in
       let e_then_typing = T_Sub _ _ _ _ e_then_typing (STS_AtomicInvs g_then stc_then inames1 is tok1) in
       let e_else_typing = T_Sub _ _ _ _ e_else_typing (STS_AtomicInvs g_else stc_else inames2 is tok2) in
       (| C_STAtomic is stc_then, C_STAtomic is stc_else, e_then_typing, e_else_typing |)
@@ -168,8 +168,8 @@ let match_inames
       (| c_then, c_else, e_then_typing, e_else_typing |)
     else (
       let is = compute_iname_join inames1 inames2 in
-      let tok1 : prop_validity g_then (tm_inames_subset inames1 is) = magic () in
-      let tok2 : prop_validity g_else (tm_inames_subset inames2 is) = magic () in
+      let tok1 : prop_validity g_then (tm_inames_subset inames1 is) = RU.magic () in
+      let tok2 : prop_validity g_else (tm_inames_subset inames2 is) = RU.magic () in
       let e_then_typing = T_Sub _ _ _ _ e_then_typing (STS_GhostInvs g_then stc_then inames1 is tok1) in
       let e_else_typing = T_Sub _ _ _ _ e_else_typing (STS_GhostInvs g_else stc_else inames2 is tok2) in
       (| C_STGhost is stc_then, C_STGhost is stc_else, e_then_typing, e_else_typing |)

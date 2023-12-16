@@ -548,7 +548,7 @@ let tm_inames_subset_typing (g:env) (inames1 inames2 : term) : tot_typing g (tm_
   (* Need to add the typing hypothesis for `inames_subset` to
   the env and a precondition that the inames have type Pulse.Lib.Core.inames in g,
   which the caller should get from an inversion lemma *)
-  magic()
+  RU.magic()
 
 let prop_validity (g:env) (t:term) =
   FTB.prop_validity_token (elab_env g) (elab_term t)
@@ -1200,8 +1200,8 @@ let post_hint_typing (g:env)
   : post_hint_typing_t g p x =
 
   {
-    ty_typing = magic ();
-    post_typing = magic ();
+    ty_typing = RU.magic ();
+    post_typing = RU.magic ();
   }
 
 let comp_post_matches_hint (c:comp_st) (post_hint:option post_hint_t) =

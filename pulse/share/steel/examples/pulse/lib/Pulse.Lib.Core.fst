@@ -6,7 +6,8 @@ open Steel.ST.Effect.Ghost
 open Steel.Memory
 open Steel.ST.Util
 open Steel.ST.Loops
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
+module F = FStar.FunctionalExtensionality
 
 let double_one_half () = ()
 
@@ -29,6 +30,8 @@ let star_def ()
 let pure = pure
 [@@"__reduce__"; "__steel_reduce__"]
 let op_exists_Star = exists_
+[@@"__reduce__"; "__steel_reduce__"]
+let op_forall_Star #a (p:a -> vprop) = forall_ (F.on_dom a p)
 
 let vprop_equiv (p q:vprop) = squash (equiv p q)
 let vprop_post_equiv (#t:Type u#a) (p q: t -> vprop) = forall x. vprop_equiv (p x) (q x)
@@ -85,6 +88,29 @@ let vprop_equiv_cong (p1 p2 p3 p4:vprop)
   = star_congruence p1 p2 p3 p4
 
 let vprop_equiv_ext p1 p2 _ = equiv_refl p1
+
+let vprop_equiv_forall #a (p q:a -> vprop)
+                      (_:squash (F.feq p q))
+: vprop_equiv (op_forall_Star p) (op_forall_Star q)
+= let pf : squash (eq2 #(F.arrow a (fun _ -> vprop)) (F.on_dom a p) (F.on_dom a q)) = F.extensionality _ _ p q in
+  let x : vprop_equiv (op_forall_Star p) (op_forall_Star q) = _ by (
+      T.norm [delta_only [`%op_forall_Star; `%F.on_dom]; unascribe];
+      let bindings = T.cur_vars() in
+      let bindings = List.Tot.rev bindings in
+      match bindings with
+      | hd::_ -> (
+        match T.term_as_formula hd.sort with
+        | T.Comp (T.Eq _) lhs rhs ->
+          T.grewrite lhs rhs;
+          T.mapply (`vprop_equiv_refl);
+          T.exact (T.binding_to_term hd)
+        | _ -> T.fail "Unexpected type of hd"
+      )
+      | _ ->
+        T.fail "empty bindings"
+    ) in
+  x
+
 
 (* Invariants, just reexport *)
 let iname = iname
@@ -374,6 +400,21 @@ let with_invariant_a (#a:Type)
 
 let rewrite p q _ = fun _ -> rewrite_equiv p q
 
+let prop_squash_idem (p:prop)
+  : Tot (squash (p == squash p))
+  = FStar.PropositionalExtensionality.apply p (squash p)
+
+
+#push-options "--no_tactics"
+let rewrite_by (p:vprop) (q:vprop) 
+               (t:unit -> T.Tac unit)
+               (_:unit { T.with_tactic t (vprop_equiv p q) })
+  : stt_ghost unit emp_inames p (fun _ -> q)
+  = let pf : squash (vprop_equiv p q) = T.by_tactic_seman t (vprop_equiv p q) in
+    prop_squash_idem (vprop_equiv p q);
+    rewrite p q (coerce_eq () pf)
+#pop-options
+
 let elim_pure_explicit p = fun _ -> elim_pure p
 let elim_pure _ #p = fun _ -> elim_pure p
 
@@ -385,9 +426,11 @@ let intro_exists #a p e = fun _ -> intro_exists e p
 
 let intro_exists_erased #a p e = intro_exists p (reveal e)
 
+let elim_forall #a = admit()
+let intro_forall #a = admit()
+
 let while_loop inv cond body = fun _ -> while_loop inv cond body
 
-#push-options "--print_full_names"
 val stt_ghost_reveal_aux (a:Type) (x:erased a)
   : stt_ghost a emp_inames Steel.ST.Util.emp (fun y -> Steel.ST.Util.pure (reveal x == y))
 let stt_ghost_reveal_aux a x = fun _ ->
@@ -461,3 +504,13 @@ let elim_false (a:Type) (p:a -> vprop) =
     let x = false_elim #a () in
     Steel.ST.Util.rewrite Steel.ST.Util.emp (p x);
     x
+
+let unreachable (#a:Type) (#p:vprop) (#q:a -> vprop) (_:squash False)
+  : stt_ghost a emp_inames p q
+  = let v = FStar.Pervasives.false_elim #a () in
+    v
+
+let dummy_goal = emp
+let show_proof_state (_:unit)
+  : stt_ghost unit emp_inames dummy_goal (fun _ -> emp)
+  = fun _ -> noop()

@@ -3,6 +3,7 @@ module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
 module L = FStar.List.Tot
 module T = FStar.Tactics.V2
+module RU = Pulse.RuntimeUtils
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Typing
@@ -16,8 +17,8 @@ open Pulse.Elaborate.Core
 let app_typing (g:R.env) (ty1 ty2 f tm : R.term)
        (df : RT.tot_typing g f (simple_arr ty1 ty2))
        (dt : RT.tot_typing g tm ty1)
-  : RT.tot_typing g (R.pack_ln (R.Tv_App f (tm, R.Q_Explicit))) ty2
-  = magic()
+  : GTot (RT.tot_typing g (R.pack_ln (R.Tv_App f (tm, R.Q_Explicit))) ty2)
+  = RU.magic()
 
 let sub_soundness #g #t #c d (cb : soundness_t d) =
   let T_Sub _ e c1 c2 d_t d_sub = d in

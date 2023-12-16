@@ -2,7 +2,7 @@ module Pulse.Typing.Metatheory.Base
 open Pulse.Syntax
 open Pulse.Syntax.Naming
 open Pulse.Typing
-
+module RU = Pulse.RuntimeUtils
 module T = FStar.Tactics.V2
 
 let comp_typing_u (g:env) (c:comp_st) = comp_typing g c (comp_u c)
@@ -87,7 +87,7 @@ let veq_weakening
   (g:env) (g':env { disjoint g g' })
   (#v1 #v2:vprop) (_:vprop_equiv (push_env g g') v1 v2)
   (g1:env { pairwise_disjoint g g1 g' })
-  : vprop_equiv (push_env (push_env g g1) g') v1 v2 = magic ()
+  : vprop_equiv (push_env (push_env g g1) g') v1 v2 = RU.magic ()
 
 let nt (x:var) (t:term) = [ NT x t ]
 
