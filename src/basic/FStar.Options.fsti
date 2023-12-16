@@ -232,6 +232,7 @@ val use_tactics                 : unit    -> bool
 val using_facts_from            : unit    -> list (list string * bool)
 val warn_default_effects        : unit    -> bool
 val with_saved_options          : (unit -> 'a) -> 'a
+val with_options                : string -> (unit -> 'a) -> 'a
 val z3_cliopt                   : unit    -> list string
 val z3_smtopt                   : unit    -> list string
 val z3_refresh                  : unit    -> bool

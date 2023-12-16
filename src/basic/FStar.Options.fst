@@ -2162,6 +2162,10 @@ let set_options s =
     with
     | File_argument s -> Getopt.Error (Util.format1 "File %s is not a valid option" s)
 
+let with_options s f =
+  with_saved_options (fun () ->
+    ignore (set_options s);
+    f ())
 
 let get_vconfig () =
   let vcfg = {
