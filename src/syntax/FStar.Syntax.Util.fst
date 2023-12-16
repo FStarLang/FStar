@@ -1271,8 +1271,9 @@ let attr_eq a a' =
 let attr_substitute =
   mk (Tm_fvar (lid_as_fv PC.attr_substitute_lid None)) Range.dummyRange
 
-let exp_true_bool : term = mk (Tm_constant (Const_bool true)) dummyRange
-let exp_false_bool : term = mk (Tm_constant (Const_bool false)) dummyRange
+let exp_bool (b:bool) : term = mk (Tm_constant (Const_bool b)) dummyRange
+let exp_true_bool : term = exp_bool true
+let exp_false_bool : term = exp_bool false
 let exp_unit : term = mk (Tm_constant (Const_unit)) dummyRange
 (* Makes an (unbounded) integer from its string repr. *)
 let exp_int s : term = mk (Tm_constant (Const_int (s,None))) dummyRange

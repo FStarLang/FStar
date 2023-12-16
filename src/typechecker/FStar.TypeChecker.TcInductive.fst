@@ -1030,6 +1030,10 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
     in
 
     let projectors_ses =
+      if U.has_attribute attrs C.no_auto_projectors_decls_attr
+        || U.has_attribute attrs C.meta_projectors_attr
+      then []
+      else
       fields |> List.mapi (fun i ({binder_bv=x}) ->
           let p = S.range_of_bv x in
           let field_name = U.mk_field_projector_name lid x i in
