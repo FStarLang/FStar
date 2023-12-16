@@ -1553,16 +1553,20 @@ fn to_syn_item(i: &Item) -> syn::Item {
                 variants.push(syn::Variant {
                     attrs: vec![],
                     ident: Ident::new(&v.enum_variant_name, Span::call_site()),
-                    fields: syn::Fields::Unnamed(syn::FieldsUnnamed {
-                        paren_token: syn::token::Paren {
-                            span: proc_macro2::Group::new(
-                                proc_macro2::Delimiter::None,
-                                proc_macro2::TokenStream::new(),
-                            )
-                            .delim_span(),
-                        },
-                        unnamed: fields,
-                    }),
+                    fields: if fields.len() > 0 {
+                        syn::Fields::Unnamed(syn::FieldsUnnamed {
+                            paren_token: syn::token::Paren {
+                                span: proc_macro2::Group::new(
+                                    proc_macro2::Delimiter::None,
+                                    proc_macro2::TokenStream::new(),
+                                )
+                                .delim_span(),
+                            },
+                            unnamed: fields,
+                        })
+                    } else {
+                        syn::Fields::Unit
+                    },
                     discriminant: None,
                 })
             });
