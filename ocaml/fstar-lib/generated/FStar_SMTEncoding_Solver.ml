@@ -1325,6 +1325,34 @@ let (ans_fail : answer) =
     total_ran = (ans_ok.total_ran);
     tried_recovery = (ans_ok.tried_recovery)
   }
+let (uu___548 : answer FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun ans ->
+         let uu___ =
+           FStar_Class_Show.show
+             (FStar_Class_Show.printableshow
+                FStar_Class_Printable.printable_bool) ans.ok in
+         let uu___1 =
+           FStar_Class_Show.show
+             (FStar_Class_Show.printableshow
+                FStar_Class_Printable.printable_int) ans.nsuccess in
+         let uu___2 =
+           FStar_Class_Show.show
+             (FStar_Class_Show.printableshow
+                FStar_Class_Printable.printable_int) ans.lo in
+         let uu___3 =
+           FStar_Class_Show.show
+             (FStar_Class_Show.printableshow
+                FStar_Class_Printable.printable_int) ans.hi in
+         let uu___4 =
+           FStar_Class_Show.show
+             (FStar_Class_Show.printableshow
+                FStar_Class_Printable.printable_bool) ans.tried_recovery in
+         FStar_Compiler_Util.format5
+           "ok=%s nsuccess=%s lo=%s hi=%s tried_recovery=%s" uu___ uu___1
+           uu___2 uu___3 uu___4)
+  }
 let (make_solver_configs :
   Prims.bool ->
     Prims.bool ->
@@ -1849,7 +1877,7 @@ let (maybe_save_failing_query :
   fun env ->
     fun prefix ->
       fun qs ->
-        let uu___ = FStar_Options.proof_recovery () in
+        let uu___ = FStar_Options.log_failing_queries () in
         if uu___
         then
           let mod1 =
@@ -1932,10 +1960,9 @@ let (ask_solver :
                         else
                           (FStar_SMTEncoding_Z3.giveZ3 prefix;
                            (let ans1 = ask_solver_recover configs in
+                            let cfg = FStar_Compiler_List.last configs in
                             if Prims.op_Negation ans1.ok
-                            then
-                              (let uu___4 = FStar_Compiler_List.last configs in
-                               maybe_save_failing_query env prefix uu___4)
+                            then maybe_save_failing_query env prefix cfg
                             else ();
                             ans1)) in
                       (configs, ans)

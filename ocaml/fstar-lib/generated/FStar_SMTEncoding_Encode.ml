@@ -7707,7 +7707,9 @@ let (encode_query :
                                    | (label_prefix, label_suffix) ->
                                        let caption =
                                          let uu___8 =
-                                           FStar_Options.log_queries () in
+                                           (FStar_Options.log_queries ()) ||
+                                             (FStar_Options.log_failing_queries
+                                                ()) in
                                          if uu___8
                                          then
                                            let uu___9 =
