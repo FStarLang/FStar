@@ -784,6 +784,15 @@ let ans_ok : answer = {
 let ans_fail : answer =
   { ans_ok with ok = false; nsuccess = 0 }
 
+instance _ : showable answer = {
+  show = (fun ans -> BU.format5 "ok=%s nsuccess=%s lo=%s hi=%s tried_recovery=%s"
+                            (show ans.ok)
+                            (show ans.nsuccess)
+                            (show ans.lo)
+                            (show ans.hi)
+                            (show ans.tried_recovery));
+}
+
 let make_solver_configs
     (can_split : bool)
     (is_retry : bool)
