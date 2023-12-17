@@ -832,18 +832,32 @@ let reachable_defs_one_mltydecl (t:S.one_mltydecl) : reachable_defs =
 let reachable_defs_mltydecl (t:S.mltydecl) : reachable_defs =
   reachable_defs_list reachable_defs_one_mltydecl t
 
-let reachable_defs_mlmodule1 (m:S.mlmodule1) : reachable_defs =
+let mlmodule1_name (m:S.mlmodule1) : list S.mlsymbol =
   let open S in
   match m with
-  | MLM_Ty t -> reachable_defs_mltydecl t
-  | MLM_Let lb -> reachable_defs_mlletbinding lb
-  | MLM_Exn (_, args) ->
-    reachable_defs_list (fun (_, t) -> reachable_defs_mlty t) args
-  | MLM_Top e -> reachable_defs_expr e
-  | MLM_Loc _ -> empty_defs
+  | MLM_Ty l -> List.map (fun t -> t.tydecl_name) l
+  | MLM_Let (_, lbs) -> List.map (fun lb -> lb.mllb_name) lbs
+  | MLM_Exn (s, _) -> [s]
+  | MLM_Top _
+  | MLM_Loc _ -> []
 
-let reachable_defs_mlmodule (m:S.mlmodule) : reachable_defs =
-  reachable_defs_list reachable_defs_mlmodule1 m
+let reachable_defs_mlmodule1 (m:S.mlmodule1) : reachable_defs =
+  let open S in
+  let defs =
+    match m with
+    | MLM_Ty t -> reachable_defs_mltydecl t
+    | MLM_Let lb -> reachable_defs_mlletbinding lb
+    | MLM_Exn (_, args) ->
+      reachable_defs_list (fun (_, t) -> reachable_defs_mlty t) args
+    | MLM_Top e -> reachable_defs_expr e
+    | MLM_Loc _ -> empty_defs in
+  // print2 "reachable defs for %s are %s\n"
+    // (S.mlmodule1_to_string m)
+    // (Set.elems defs |> String.concat ";");
+  defs
+
+let reachable_defs_decls (decls:S.mlmodule) : reachable_defs =
+  reachable_defs_list reachable_defs_mlmodule1 decls
 
 let decl_reachable (reachable_defs:reachable_defs) (mname:string) (d:S.mlmodule1) : bool =
   let open S in
@@ -873,11 +887,13 @@ let extract_one
     //   (String.concat "\n" (reachable_defs_mlmodule1 d |> Set.elems));
     if not (decl_reachable g.reachable_defs mname d)
     then begin
+      // print1 "decl %s is not reachable\n" (String.concat ";" (mlmodule1_name d));
       // if mname = "Pulse.Lib.HashTable.Type"
       // then print1 "decl %s is not reachable\n" (S.mlmodule1_to_string d);
       items, g
     end
     else
+    // let _ = print1 "decl %s is reachable\n" (String.concat ";" (mlmodule1_name d)) in
     match d with
     | S.MLM_Let (S.NonRec, [{mllb_name}])
       when starts_with mllb_name "explode_ref" ||
@@ -899,14 +915,14 @@ let extract_one
   let s = RustBindings.file_to_rust f in
   s, env
 
-let collect_reachable_defs (files:list string) (roots:list string) : reachable_defs =
-  let files = List.filter (fun x -> List.mem x roots) files in
-  reachable_defs_list (fun f ->
-    let (_, _, decls)  : (list string & list UEnv.binding & S.mlmodule) =
-      match load_value_from_file f with
-      | Some r -> r
-      | None -> failwith "Could not load file" in
-    reachable_defs_mlmodule decls) files
+// let collect_reachable_defs (files:list string) (roots:list string) : reachable_defs =
+//   let files = List.filter (fun x -> List.mem x roots) files in
+//   reachable_defs_list (fun f ->
+//     let (_, _, decls)  : (list string & list UEnv.binding & S.mlmodule) =
+//       match load_value_from_file f with
+//       | Some r -> r
+//       | None -> failwith "Could not load file" in
+//     reachable_defs_mlmodule decls) files
 
 let file_to_module_name (f:string) : string =
   let suffix = ".ast" in
@@ -941,24 +957,63 @@ let rec topsort_all (d:dict) (black:list string)
     then failwith "topsort_all: not all files are reachable";
     topsort_all d black
 
-let extract (files:list string) : unit =
-  // assume the last file is the root
-  let last = List.nth files (List.length files - 1) in
-  let reachable_defs = collect_reachable_defs files [last] in
+let read_all_ast_files (files:list string) : dict =
   let d = smap_create 100 in
-  List.iter (fun f ->
+  files |> List.iter (fun f ->
     let contents  : (list string & list UEnv.binding & S.mlmodule) =
       match load_value_from_file f with
       | Some r -> r
-      | None -> failwith "Could not load file" in
-    smap_add d (file_to_module_name f) contents) files;
-  // print1 "reachable_defs: %s\n"
-  //   (String.concat "\n" (reachable_defs |> Set.elems));
-  let files = topsort_all d [] |> List.rev in
-  print1 "order: %s\n" (String.concat "; " files);
+      | None -> failwith (format1 "Could not load file %s" f) in
+    smap_add d (file_to_module_name f) contents);
+  d
+
+let extract (files:list string) : unit =
+  let d = read_all_ast_files files in
+  //
+  // reversed order in which decls should be emitted,
+  //   i.e., main function first
+  //
+  let all_modules = topsort_all d [] in
+  print1 "order: %s\n" (String.concat "; " all_modules);
+  let root_module::_ = all_modules in
+  let reachable_defs : reachable_defs = empty_defs in
+  let root_decls = smap_try_find d root_module |> must |> (fun (_, _, decls) -> decls) in
+  let reachable_defs =
+    List.fold_left (fun reachable_defs decl ->
+      let nms = mlmodule1_name decl in
+      List.fold_left (fun reachable_defs nm ->
+        Set.union reachable_defs (Set.singleton (root_module ^ "." ^ nm))
+      ) reachable_defs nms
+    ) reachable_defs root_decls
+  in
+  // print1 "Before:%s\n" (String.concat ";" (reachable_defs |> Set.elems));
+  let reachable_defs =
+    List.fold_left (fun reachable_defs m ->
+      let m_decls = smap_try_find d m |> must |> (fun (_, _, decls) -> decls) in
+      let m_decls = List.filter (fun d ->
+        let nms = mlmodule1_name d in
+        List.existsb (fun nm -> Set.mem (m ^ "." ^ nm) reachable_defs) nms
+      ) m_decls in
+      Set.union reachable_defs (reachable_defs_decls m_decls)
+    ) reachable_defs all_modules
+  in
+
+  // // assume the last file is the root
+  // let last = List.nth files (List.length files - 1) in
+  // let reachable_defs = collect_reachable_defs files [last] in
+  // let d = smap_create 100 in
+  // List.iter (fun f ->
+  //   let contents  : (list string & list UEnv.binding & S.mlmodule) =
+  //     match load_value_from_file f with
+  //     | Some r -> r
+  //     | None -> failwith "Could not load file" in
+  //   smap_add d (file_to_module_name f) contents) files;
+  // // print1 "reachable_defs: %s\n"
+  // //   (String.concat "\n" (reachable_defs |> Set.elems));
+  // let files = topsort_all d [] |> List.rev in
   let g = empty_env reachable_defs in
   let s = List.fold_left_map (fun g f ->
     let (_, bs, ds) = smap_try_find d f |> must in
     let s, g = extract_one g f bs ds in
-    g, s) g files |> snd |> String.concat " " in
+    g, s) g (List.rev all_modules) |> snd |> String.concat " " in
   print1 "\n%s\n" s

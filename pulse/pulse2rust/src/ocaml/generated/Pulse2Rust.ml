@@ -1699,21 +1699,39 @@ let (reachable_defs_one_mltydecl :
 let (reachable_defs_mltydecl :
   FStar_Extraction_ML_Syntax.mltydecl -> reachable_defs) =
   fun t -> reachable_defs_list reachable_defs_one_mltydecl t
+let (mlmodule1_name :
+  FStar_Extraction_ML_Syntax.mlmodule1 ->
+    FStar_Extraction_ML_Syntax.mlsymbol Prims.list)
+  =
+  fun m ->
+    match m with
+    | FStar_Extraction_ML_Syntax.MLM_Ty l ->
+        FStar_Compiler_List.map
+          (fun t -> t.FStar_Extraction_ML_Syntax.tydecl_name) l
+    | FStar_Extraction_ML_Syntax.MLM_Let (uu___, lbs) ->
+        FStar_Compiler_List.map
+          (fun lb -> lb.FStar_Extraction_ML_Syntax.mllb_name) lbs
+    | FStar_Extraction_ML_Syntax.MLM_Exn (s, uu___) -> [s]
+    | FStar_Extraction_ML_Syntax.MLM_Top uu___ -> []
+    | FStar_Extraction_ML_Syntax.MLM_Loc uu___ -> []
 let (reachable_defs_mlmodule1 :
   FStar_Extraction_ML_Syntax.mlmodule1 -> reachable_defs) =
   fun m ->
-    match m with
-    | FStar_Extraction_ML_Syntax.MLM_Ty t -> reachable_defs_mltydecl t
-    | FStar_Extraction_ML_Syntax.MLM_Let lb -> reachable_defs_mlletbinding lb
-    | FStar_Extraction_ML_Syntax.MLM_Exn (uu___, args) ->
-        reachable_defs_list
-          (fun uu___1 ->
-             match uu___1 with | (uu___2, t) -> reachable_defs_mlty t) args
-    | FStar_Extraction_ML_Syntax.MLM_Top e -> reachable_defs_expr e
-    | FStar_Extraction_ML_Syntax.MLM_Loc uu___ -> empty_defs
-let (reachable_defs_mlmodule :
+    let defs =
+      match m with
+      | FStar_Extraction_ML_Syntax.MLM_Ty t -> reachable_defs_mltydecl t
+      | FStar_Extraction_ML_Syntax.MLM_Let lb ->
+          reachable_defs_mlletbinding lb
+      | FStar_Extraction_ML_Syntax.MLM_Exn (uu___, args) ->
+          reachable_defs_list
+            (fun uu___1 ->
+               match uu___1 with | (uu___2, t) -> reachable_defs_mlty t) args
+      | FStar_Extraction_ML_Syntax.MLM_Top e -> reachable_defs_expr e
+      | FStar_Extraction_ML_Syntax.MLM_Loc uu___ -> empty_defs in
+    defs
+let (reachable_defs_decls :
   FStar_Extraction_ML_Syntax.mlmodule -> reachable_defs) =
-  fun m -> reachable_defs_list reachable_defs_mlmodule1 m
+  fun decls -> reachable_defs_list reachable_defs_mlmodule1 decls
 let (decl_reachable :
   reachable_defs ->
     Prims.string -> FStar_Extraction_ML_Syntax.mlmodule1 -> Prims.bool)
@@ -1812,24 +1830,6 @@ let (extract_one :
           | (items, env1) ->
               let f = Pulse2Rust_Rust_Syntax.mk_file "a.rs" items in
               let s = RustBindings.file_to_rust f in (s, env1)
-let (collect_reachable_defs :
-  Prims.string Prims.list -> Prims.string Prims.list -> reachable_defs) =
-  fun files ->
-    fun roots ->
-      let files1 =
-        FStar_Compiler_List.filter (fun x -> FStar_Compiler_List.mem x roots)
-          files in
-      reachable_defs_list
-        (fun f ->
-           let uu___ =
-             let uu___1 = FStar_Compiler_Util.load_value_from_file f in
-             match uu___1 with
-             | FStar_Pervasives_Native.Some r -> r
-             | FStar_Pervasives_Native.None ->
-                 FStar_Compiler_Effect.failwith "Could not load file" in
-           match uu___ with
-           | (uu___1, uu___2, decls) ->
-               let uu___3 = uu___ in reachable_defs_mlmodule decls) files1
 let (file_to_module_name : Prims.string -> Prims.string) =
   fun f ->
     let suffix = ".ast" in
@@ -1919,12 +1919,8 @@ let rec (topsort_all :
                   "topsort_all: not all files are reachable"
               else ();
               topsort_all d black1))
-let (extract : Prims.string Prims.list -> unit) =
+let (read_all_ast_files : Prims.string Prims.list -> dict) =
   fun files ->
-    let last =
-      FStar_Compiler_List.nth files
-        ((FStar_Compiler_List.length files) - Prims.int_one) in
-    let reachable_defs1 = collect_reachable_defs files [last] in
     let d = FStar_Compiler_Util.smap_create (Prims.of_int (100)) in
     FStar_Compiler_List.iter
       (fun f ->
@@ -1933,27 +1929,79 @@ let (extract : Prims.string Prims.list -> unit) =
            match uu___1 with
            | FStar_Pervasives_Native.Some r -> r
            | FStar_Pervasives_Native.None ->
-               FStar_Compiler_Effect.failwith "Could not load file" in
+               let uu___2 =
+                 FStar_Compiler_Util.format1 "Could not load file %s" f in
+               FStar_Compiler_Effect.failwith uu___2 in
          let uu___1 = file_to_module_name f in
          FStar_Compiler_Util.smap_add d uu___1 contents) files;
-    (let files1 =
-       let uu___1 = topsort_all d [] in FStar_Compiler_List.rev uu___1 in
-     FStar_Compiler_Util.print1 "order: %s\n"
-       (FStar_Compiler_String.concat "; " files1);
-     (let g = empty_env reachable_defs1 in
-      let s =
-        let uu___2 =
-          let uu___3 =
-            FStar_Compiler_List.fold_left_map
-              (fun g1 ->
-                 fun f ->
-                   let uu___4 =
-                     let uu___5 = FStar_Compiler_Util.smap_try_find d f in
-                     FStar_Compiler_Util.must uu___5 in
-                   match uu___4 with
-                   | (uu___5, bs, ds) ->
-                       let uu___6 = extract_one g1 f bs ds in
-                       (match uu___6 with | (s1, g2) -> (g2, s1))) g files1 in
-          FStar_Pervasives_Native.snd uu___3 in
-        FStar_Compiler_String.concat " " uu___2 in
-      FStar_Compiler_Util.print1 "\n%s\n" s))
+    d
+let (extract : Prims.string Prims.list -> unit) =
+  fun files ->
+    let d = read_all_ast_files files in
+    let all_modules = topsort_all d [] in
+    FStar_Compiler_Util.print1 "order: %s\n"
+      (FStar_Compiler_String.concat "; " all_modules);
+    (let uu___1 = all_modules in
+     match uu___1 with
+     | root_module::uu___2 ->
+         let reachable_defs1 = empty_defs in
+         let root_decls =
+           let uu___3 =
+             let uu___4 = FStar_Compiler_Util.smap_try_find d root_module in
+             FStar_Compiler_Util.must uu___4 in
+           match uu___3 with | (uu___4, uu___5, decls) -> decls in
+         let reachable_defs2 =
+           FStar_Compiler_List.fold_left
+             (fun reachable_defs3 ->
+                fun decl ->
+                  let nms = mlmodule1_name decl in
+                  FStar_Compiler_List.fold_left
+                    (fun reachable_defs4 ->
+                       fun nm ->
+                         let uu___3 =
+                           FStar_Compiler_Set.singleton
+                             FStar_Class_Ord.ord_string
+                             (Prims.strcat root_module (Prims.strcat "." nm)) in
+                         FStar_Compiler_Set.union FStar_Class_Ord.ord_string
+                           reachable_defs4 uu___3) reachable_defs3 nms)
+             reachable_defs1 root_decls in
+         let reachable_defs3 =
+           FStar_Compiler_List.fold_left
+             (fun reachable_defs4 ->
+                fun m ->
+                  let m_decls =
+                    let uu___3 =
+                      let uu___4 = FStar_Compiler_Util.smap_try_find d m in
+                      FStar_Compiler_Util.must uu___4 in
+                    match uu___3 with | (uu___4, uu___5, decls) -> decls in
+                  let m_decls1 =
+                    FStar_Compiler_List.filter
+                      (fun d1 ->
+                         let nms = mlmodule1_name d1 in
+                         FStar_Compiler_List.existsb
+                           (fun nm ->
+                              FStar_Compiler_Set.mem
+                                FStar_Class_Ord.ord_string
+                                (Prims.strcat m (Prims.strcat "." nm))
+                                reachable_defs4) nms) m_decls in
+                  let uu___3 = reachable_defs_decls m_decls1 in
+                  FStar_Compiler_Set.union FStar_Class_Ord.ord_string
+                    reachable_defs4 uu___3) reachable_defs2 all_modules in
+         let g = empty_env reachable_defs3 in
+         let s =
+           let uu___3 =
+             let uu___4 =
+               FStar_Compiler_List.fold_left_map
+                 (fun g1 ->
+                    fun f ->
+                      let uu___5 =
+                        let uu___6 = FStar_Compiler_Util.smap_try_find d f in
+                        FStar_Compiler_Util.must uu___6 in
+                      match uu___5 with
+                      | (uu___6, bs, ds) ->
+                          let uu___7 = extract_one g1 f bs ds in
+                          (match uu___7 with | (s1, g2) -> (g2, s1))) g
+                 (FStar_Compiler_List.rev all_modules) in
+             FStar_Pervasives_Native.snd uu___4 in
+           FStar_Compiler_String.concat " " uu___3 in
+         FStar_Compiler_Util.print1 "\n%s\n" s)
