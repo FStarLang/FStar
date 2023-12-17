@@ -108,44 +108,28 @@ fn intro_is_list_cons (#t:Type0) (x:llist t) (v:node_ptr t) (#node:node t) (#tl:
 
 ```pulse
 ghost
-fn noop (_:unit)
-  requires emp
-  ensures emp
-{
-  ()
-}
-```
-
-#push-options "--ext 'pulse:env_on_err'"
-#push-options "--query_stats --log_queries --fuel 0 --ifuel 1" // --debug Pulse.Lib.LinkedList --debug_level SMTQuery  --log_queries"
-#restart-solver
-
-```pulse
-ghost
-fn cases_of_is_list (#t:Type) (xx:llist t) (l:list t)
-    requires is_list xx l
-    ensures is_list_cases xx l
+fn cases_of_is_list (#t:Type) (x:llist t) (l:list t)
+    requires is_list x l
+    ensures is_list_cases x l
 {
     match l {
-        Nil -> { admit();
-            rewrite (is_list xx l) as (is_list xx []);
-            elim_is_list_nil xx;
-            rewrite (pure (l == [])) as (is_list_cases xx l);
+        Nil -> { 
+            rewrite (is_list x l) as (is_list x []);
+            elim_is_list_nil x;
+            rewrite (pure (l == [])) as (is_list_cases x l);
         }
         Cons head tl -> { 
-            rewrite (is_list xx l) as (is_list xx (head::tl));
-            elim_is_list_cons xx head tl;
-            // show_proof_state();
-            // assert pure (Some? xx); //surprising that this is needed
-            let v = Some?.v xx;
-            admit();
+            rewrite (is_list x l) as (is_list x (head::tl));
+            elim_is_list_cons x head tl;
+            assert pure (Some? x); //surprising that this is needed
+            let v = Some?.v x;
             with tail. assert (is_list #t tail tl);
             with w. assert (pts_to w (mk_node head tail));
             rewrite each w as v;
             rewrite each tail as ((mk_node head tail).tail) in (is_list tail tl);
             fold (is_list_cases (Some v) l);
             rewrite (is_list_cases (Some v) l) as
-                    (is_list_cases xx l)
+                    (is_list_cases x l)
         }
     }
 }
