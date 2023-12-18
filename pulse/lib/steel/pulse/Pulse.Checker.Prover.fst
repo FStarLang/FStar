@@ -23,6 +23,17 @@ module IntroPure = Pulse.Checker.Prover.IntroPure
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
 
+let elim_exists_and_pure (#g:env) (#ctxt:vprop)
+  (ctxt_typing:tot_typing g ctxt tm_vprop)
+  : T.Tac (g':env { env_extends g' g } &
+           ctxt':term &
+           tot_typing g' ctxt' tm_vprop &
+           continuation_elaborator g ctxt g' ctxt') =
+  
+  let (| g1, ctxt1, d1, k1 |) = ElimExists.elim_exists ctxt_typing in
+  let (| g2, ctxt2, d2, k2 |) = ElimPure.elim_pure d1 in
+  (| g2, ctxt2, d2, k_elab_trans k1 k2 |)
+
 let unsolved_equiv_pst (#preamble:_) (pst:prover_state preamble) (unsolved':list vprop)
   (d:vprop_equiv (push_env pst.pg pst.uvs) (list_as_vprop pst.unsolved) (list_as_vprop unsolved'))
   : prover_state preamble =

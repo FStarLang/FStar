@@ -163,19 +163,15 @@ let seq_slice_full
   (s == Seq.slice s 0 (Seq.length s))
 = assert (s `Seq.equal` Seq.slice s 0 (Seq.length s))
 
-```pulse
-ghost
-fn manurewrite
-  (p: vprop)
-  (q: vprop)
-requires p ** pure (p == q)
-ensures q
-{
-  rewrite p as q
-}
-```
+let intro_array_swap_post1 (lb rb mb:SZ.t) (mb':SZ.t)
+  : Lemma (requires SZ.v lb <= SZ.v mb /\ SZ.v mb <= SZ.v rb /\ lb == mb /\ mb' == rb)
+          (ensures array_swap_post lb rb mb mb') = ()
 
-#push-options "--z3rlimit_factor 4"
+let intro_array_swap_post2 (lb rb mb:SZ.t) (mb':SZ.t)
+  : Lemma (requires SZ.v lb <= SZ.v mb /\ SZ.v mb <= SZ.v rb /\ mb == rb /\ mb' == lb)
+          (ensures array_swap_post lb rb mb mb') = ()
+
+#push-options "--fuel 0 --ifuel 0 --split_queries no"
 inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
 fn array_swap0
@@ -207,25 +203,27 @@ ensures (
     with s1' . assert (A.pts_to_range a (SZ.v rb) (SZ.v rb) s1');
     let prf1 : squash (s1' `Seq.equal` s1) = ();
     let prf2 : squash (s2' `Seq.equal` s2) = ();
-    let prf_mb : squash (SZ.v mb == SZ.v lb /\ SZ.v lb + (SZ.v rb - SZ.v mb) == SZ.v rb) = ();
     rewrite (A.pts_to_range a (SZ.v lb) (SZ.v rb) s2')
-      as (A.pts_to_range a (SZ.v lb) (SZ.v rb) s2);
+         as (A.pts_to_range a (SZ.v lb) (SZ.v rb) s2);
     rewrite (A.pts_to_range a (SZ.v rb) (SZ.v rb) s1')
-      as (A.pts_to_range a (SZ.v rb) (SZ.v rb) s1);
+         as (A.pts_to_range a (SZ.v rb) (SZ.v rb) s1);
+    let _p : squash (array_swap_post lb rb mb rb) = intro_array_swap_post1 lb rb mb rb;
     rb
   } else if (mb = rb) {
     let prf_s2 : squash (s2 `Seq.equal` Seq.empty) = ();
     let prf_s : squash (s1 `Seq.equal` s) = ();
     A.pts_to_range_split a (SZ.v lb) (SZ.v lb) (SZ.v rb);
     with s2' . assert (A.pts_to_range a (SZ.v lb) (SZ.v lb) s2');
+    assert (A.pts_to_range a (SZ.v lb) (SZ.v lb) s2');
     with s1' . assert (A.pts_to_range a (SZ.v lb) (SZ.v rb) s1');
+    assert (A.pts_to_range a (SZ.v lb) (SZ.v rb) s1');
     let prf1 : squash (s1' `Seq.equal` s1) = ();
     let prf2 : squash (s2' `Seq.equal` s2) = ();
-    let prf_mb : squash (SZ.v mb == SZ.v rb /\ SZ.v lb + (SZ.v rb - SZ.v mb) == SZ.v lb) = ();
     rewrite (A.pts_to_range a (SZ.v lb) (SZ.v lb) s2')
-      as (A.pts_to_range a (SZ.v lb) (SZ.v lb) s2);
+         as (A.pts_to_range a (SZ.v lb) (SZ.v lb) s2);
     rewrite (A.pts_to_range a (SZ.v lb) (SZ.v rb) s1')
-      as (A.pts_to_range a (SZ.v lb) (SZ.v rb) s1);
+         as (A.pts_to_range a (SZ.v lb) (SZ.v rb) s1);
+    let prf_mb : squash (array_swap_post lb rb mb lb) = intro_array_swap_post2 lb rb mb lb;
     lb
   } else {
     Seq.lemma_split s (SZ.v mb - SZ.v lb);
