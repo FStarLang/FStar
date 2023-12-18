@@ -370,8 +370,8 @@ let (is_arrow :
     | uu___ -> FStar_Pervasives_Native.None
 let (is_eq2 :
   Pulse_Syntax_Base.term ->
-    (Pulse_Syntax_Base.term * Pulse_Syntax_Base.term)
-      FStar_Pervasives_Native.option)
+    (Pulse_Syntax_Base.term * Pulse_Syntax_Base.term *
+      Pulse_Syntax_Base.term) FStar_Pervasives_Native.option)
   =
   fun t ->
     match is_pure_app t with
@@ -383,16 +383,16 @@ let (is_eq2 :
              (match is_pure_app head1 with
               | FStar_Pervasives_Native.Some
                   (head2, FStar_Pervasives_Native.Some
-                   (Pulse_Syntax_Base.Implicit), uu___)
+                   (Pulse_Syntax_Base.Implicit), ty)
                   ->
                   (match is_fvar head2 with
-                   | FStar_Pervasives_Native.Some (l, uu___1) ->
+                   | FStar_Pervasives_Native.Some (l, uu___) ->
                        if
                          (l = ["Pulse"; "Steel"; "Wrapper"; "eq2_prop"]) ||
                            (l = ["Prims"; "eq2"])
-                       then FStar_Pervasives_Native.Some (a1, a2)
+                       then FStar_Pervasives_Native.Some (ty, a1, a2)
                        else FStar_Pervasives_Native.None
-                   | uu___1 -> FStar_Pervasives_Native.None)
+                   | uu___ -> FStar_Pervasives_Native.None)
               | uu___ -> FStar_Pervasives_Native.None)
          | uu___ -> FStar_Pervasives_Native.None)
     | uu___ -> FStar_Pervasives_Native.None

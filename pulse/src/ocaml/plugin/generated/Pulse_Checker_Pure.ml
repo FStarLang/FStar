@@ -488,7 +488,7 @@ let (rtb_core_compute_term_type :
                                          (Prims.of_int (39))
                                          (Prims.of_int (12))
                                          (Prims.of_int (39))
-                                         (Prims.of_int (42)))))
+                                         (Prims.of_int (85)))))
                                 (FStar_Sealed.seal
                                    (Obj.magic
                                       (FStar_Range.mk_range
@@ -498,8 +498,11 @@ let (rtb_core_compute_term_type :
                                          (Prims.of_int (39))
                                          (Prims.of_int (9)))))
                                 (Obj.magic
-                                   (FStar_Tactics_V2_Builtins.core_compute_term_type
-                                      f e))
+                                   (Pulse_RuntimeUtils.with_context
+                                      (Pulse_Typing_Env.get_context g)
+                                      (fun uu___2 ->
+                                         FStar_Tactics_V2_Builtins.core_compute_term_type
+                                           f e)))
                                 (fun res ->
                                    FStar_Tactics_Effect.lift_div_tac
                                      (fun uu___2 -> res)))) uu___1))) uu___)
@@ -659,7 +662,7 @@ let (rtb_tc_term :
                                                     (Prims.of_int (50))
                                                     (Prims.of_int (12))
                                                     (Prims.of_int (50))
-                                                    (Prims.of_int (27)))))
+                                                    (Prims.of_int (70)))))
                                            (FStar_Sealed.seal
                                               (Obj.magic
                                                  (FStar_Range.mk_range
@@ -669,8 +672,12 @@ let (rtb_tc_term :
                                                     (Prims.of_int (50))
                                                     (Prims.of_int (9)))))
                                            (Obj.magic
-                                              (FStar_Tactics_V2_Builtins.tc_term
-                                                 f e1))
+                                              (Pulse_RuntimeUtils.with_context
+                                                 (Pulse_Typing_Env.get_context
+                                                    g)
+                                                 (fun uu___2 ->
+                                                    FStar_Tactics_V2_Builtins.tc_term
+                                                      f e1)))
                                            (fun res ->
                                               FStar_Tactics_Effect.lift_div_tac
                                                 (fun uu___2 -> res)))) uu___1)))
@@ -804,7 +811,7 @@ let (rtb_universe_of :
                                          (Prims.of_int (59))
                                          (Prims.of_int (12))
                                          (Prims.of_int (59))
-                                         (Prims.of_int (31)))))
+                                         (Prims.of_int (74)))))
                                 (FStar_Sealed.seal
                                    (Obj.magic
                                       (FStar_Range.mk_range
@@ -814,7 +821,11 @@ let (rtb_universe_of :
                                          (Prims.of_int (59))
                                          (Prims.of_int (9)))))
                                 (Obj.magic
-                                   (FStar_Tactics_V2_Builtins.universe_of f e))
+                                   (Pulse_RuntimeUtils.with_context
+                                      (Pulse_Typing_Env.get_context g)
+                                      (fun uu___2 ->
+                                         FStar_Tactics_V2_Builtins.universe_of
+                                           f e)))
                                 (fun res ->
                                    FStar_Tactics_Effect.lift_div_tac
                                      (fun uu___2 -> res)))) uu___1))) uu___)
@@ -1137,7 +1148,7 @@ let (rtb_check_subtyping :
                                                                     (Prims.of_int (73))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (73))
-                                                                    (Prims.of_int (50)))))
+                                                                    (Prims.of_int (93)))))
                                                                  (FStar_Sealed.seal
                                                                     (
                                                                     Obj.magic
@@ -1149,9 +1160,14 @@ let (rtb_check_subtyping :
                                                                     (Prims.of_int (9)))))
                                                                  (Obj.magic
                                                                     (
+                                                                    Pulse_RuntimeUtils.with_context
+                                                                    (Pulse_Typing_Env.get_context
+                                                                    g)
+                                                                    (fun
+                                                                    uu___3 ->
                                                                     FStar_Tactics_V2_Builtins.check_subtyping
                                                                     (Pulse_Typing.elab_env
-                                                                    g) e1 e2))
+                                                                    g) e1 e2)))
                                                                  (fun res ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -1261,7 +1277,7 @@ let (rtb_instantiate_implicits :
                                                     (Prims.of_int (82))
                                                     (Prims.of_int (17))
                                                     (Prims.of_int (82))
-                                                    (Prims.of_int (46)))))
+                                                    (Prims.of_int (89)))))
                                            (FStar_Sealed.seal
                                               (Obj.magic
                                                  (FStar_Range.mk_range
@@ -1271,8 +1287,12 @@ let (rtb_instantiate_implicits :
                                                     (Prims.of_int (89))
                                                     (Prims.of_int (12)))))
                                            (Obj.magic
-                                              (FStar_Tactics_V2_Builtins.instantiate_implicits
-                                                 f t1))
+                                              (Pulse_RuntimeUtils.with_context
+                                                 (Pulse_Typing_Env.get_context
+                                                    g)
+                                                 (fun uu___2 ->
+                                                    FStar_Tactics_V2_Builtins.instantiate_implicits
+                                                      f t1)))
                                            (fun uu___2 ->
                                               (fun uu___2 ->
                                                  match uu___2 with
@@ -1594,7 +1614,7 @@ let (rtb_core_check_term :
                                                         (Prims.of_int (99))
                                                         (Prims.of_int (12))
                                                         (Prims.of_int (99))
-                                                        (Prims.of_int (41)))))
+                                                        (Prims.of_int (84)))))
                                                (FStar_Sealed.seal
                                                   (Obj.magic
                                                      (FStar_Range.mk_range
@@ -1604,8 +1624,12 @@ let (rtb_core_check_term :
                                                         (Prims.of_int (99))
                                                         (Prims.of_int (9)))))
                                                (Obj.magic
-                                                  (FStar_Tactics_V2_Builtins.core_check_term
-                                                     f e t eff))
+                                                  (Pulse_RuntimeUtils.with_context
+                                                     (Pulse_Typing_Env.get_context
+                                                        g)
+                                                     (fun uu___3 ->
+                                                        FStar_Tactics_V2_Builtins.core_check_term
+                                                          f e t eff)))
                                                (fun res ->
                                                   FStar_Tactics_Effect.lift_div_tac
                                                     (fun uu___3 -> res))))
@@ -1766,15 +1790,18 @@ let (rtb_core_check_term_at_type :
                           (Obj.magic
                              (FStar_Range.mk_range "Pulse.Checker.Pure.fst"
                                 (Prims.of_int (108)) (Prims.of_int (12))
-                                (Prims.of_int (108)) (Prims.of_int (45)))))
+                                (Prims.of_int (108)) (Prims.of_int (88)))))
                        (FStar_Sealed.seal
                           (Obj.magic
                              (FStar_Range.mk_range "Pulse.Checker.Pure.fst"
                                 (Prims.of_int (108)) (Prims.of_int (6))
                                 (Prims.of_int (108)) (Prims.of_int (9)))))
                        (Obj.magic
-                          (FStar_Tactics_V2_Builtins.core_check_term_at_type
-                             f e t))
+                          (Pulse_RuntimeUtils.with_context
+                             (Pulse_Typing_Env.get_context g)
+                             (fun uu___1 ->
+                                FStar_Tactics_V2_Builtins.core_check_term_at_type
+                                  f e t)))
                        (fun res ->
                           FStar_Tactics_Effect.lift_div_tac
                             (fun uu___1 -> res)))) uu___)
@@ -1938,7 +1965,7 @@ let (rtb_check_prop_validity :
                                                     (Prims.of_int (126))
                                                     (Prims.of_int (20))
                                                     (Prims.of_int (126))
-                                                    (Prims.of_int (48)))))
+                                                    (Prims.of_int (91)))))
                                            (FStar_Sealed.seal
                                               (Obj.magic
                                                  (FStar_Range.mk_range
@@ -1948,8 +1975,12 @@ let (rtb_check_prop_validity :
                                                     (Prims.of_int (129))
                                                     (Prims.of_int (65)))))
                                            (Obj.magic
-                                              (FStar_Tactics_V2_Builtins.check_prop_validity
-                                                 f sp))
+                                              (Pulse_RuntimeUtils.with_context
+                                                 (Pulse_Typing_Env.get_context
+                                                    g)
+                                                 (fun uu___2 ->
+                                                    FStar_Tactics_V2_Builtins.check_prop_validity
+                                                      f sp)))
                                            (fun uu___2 ->
                                               FStar_Tactics_Effect.lift_div_tac
                                                 (fun uu___3 ->
