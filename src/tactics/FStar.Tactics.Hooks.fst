@@ -27,8 +27,7 @@ open FStar.Syntax.Embeddings
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
 open FStar.Tactics.Types
-open FStar.Tactics.V1.Interpreter
-open FStar.Tactics.V2.Interpreter
+open FStar.Tactics.Interpreter
 open FStar.Class.Show
 
 module BU      = FStar.Compiler.Util

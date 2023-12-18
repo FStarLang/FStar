@@ -74,11 +74,17 @@ let qual_id lid id =
 
 let nsstr (l:lid) : string = l.nsstr
 
-(* Showable instances *)
 instance showable_ident = {
   show = string_of_id;
 }
-
 instance showable_lident = {
   show = string_of_lid;
+}
+instance hasrange_ident = {
+  pos = range_of_id;
+  setPos = (fun rng id -> { id with idRange = rng });
+}
+instance hasrange_lident = {
+  pos = (fun lid -> Class.HasRange.pos lid.ident);
+  setPos = (fun rng id -> { id with ident = setPos rng id.ident });
 }

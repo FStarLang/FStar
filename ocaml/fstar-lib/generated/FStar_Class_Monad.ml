@@ -73,6 +73,26 @@ let rec mapM :
                              Obj.magic
                                (return uu___ () (Obj.magic (y :: ys))))
                             uu___3))
+let map_optM :
+  'm .
+    'm monad ->
+      unit ->
+        unit -> (Obj.t -> 'm) -> Obj.t FStar_Pervasives_Native.option -> 'm
+  =
+  fun uu___ ->
+    fun a ->
+      fun b ->
+        fun f ->
+          fun l ->
+            match l with
+            | FStar_Pervasives_Native.None ->
+                return uu___ () (Obj.magic FStar_Pervasives_Native.None)
+            | FStar_Pervasives_Native.Some x ->
+                let uu___1 = f x in
+                op_let_Bang uu___ () () uu___1
+                  (fun x1 ->
+                     return uu___ ()
+                       (Obj.magic (FStar_Pervasives_Native.Some x1)))
 let rec iterM :
   'm . 'm monad -> unit -> (Obj.t -> 'm) -> Obj.t Prims.list -> 'm =
   fun uu___ ->

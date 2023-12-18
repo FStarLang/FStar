@@ -506,27 +506,3 @@ let (ref_qual_HasMaskedEffect : refl_constant) =
   fstar_refl_data_const "HasMaskedEffect"
 let (ref_qual_Effect : refl_constant) = fstar_refl_data_const "Effect"
 let (ref_qual_OnlyName : refl_constant) = fstar_refl_data_const "OnlyName"
-let (ord_Lt_lid : FStar_Ident.lident) =
-  FStar_Ident.lid_of_path ["FStar"; "Order"; "Lt"]
-    FStar_Compiler_Range_Type.dummyRange
-let (ord_Eq_lid : FStar_Ident.lident) =
-  FStar_Ident.lid_of_path ["FStar"; "Order"; "Eq"]
-    FStar_Compiler_Range_Type.dummyRange
-let (ord_Gt_lid : FStar_Ident.lident) =
-  FStar_Ident.lid_of_path ["FStar"; "Order"; "Gt"]
-    FStar_Compiler_Range_Type.dummyRange
-let (ord_Lt : FStar_Syntax_Syntax.term) =
-  FStar_Syntax_Syntax.tdataconstr ord_Lt_lid
-let (ord_Eq : FStar_Syntax_Syntax.term) =
-  FStar_Syntax_Syntax.tdataconstr ord_Eq_lid
-let (ord_Gt : FStar_Syntax_Syntax.term) =
-  FStar_Syntax_Syntax.tdataconstr ord_Gt_lid
-let (ord_Lt_fv : FStar_Syntax_Syntax.fv) =
-  FStar_Syntax_Syntax.lid_as_fv ord_Lt_lid
-    (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor)
-let (ord_Eq_fv : FStar_Syntax_Syntax.fv) =
-  FStar_Syntax_Syntax.lid_as_fv ord_Eq_lid
-    (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor)
-let (ord_Gt_fv : FStar_Syntax_Syntax.fv) =
-  FStar_Syntax_Syntax.lid_as_fv ord_Gt_lid
-    (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor)

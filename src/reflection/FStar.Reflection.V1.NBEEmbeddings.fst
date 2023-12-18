@@ -649,26 +649,6 @@ let e_comp_view =
     in
     mk_emb' embed_comp_view unembed_comp_view fstar_refl_comp_view_fv
 
-
-(* TODO: move to, Syntax.Embeddings or somewhere better even *)
-let e_order =
-    let embed_order cb (o:order) : t =
-        match o with
-        | Lt -> mkConstruct ord_Lt_fv [] []
-        | Eq -> mkConstruct ord_Eq_fv [] []
-        | Gt -> mkConstruct ord_Gt_fv [] []
-    in
-    let unembed_order cb (t:t) : option order =
-        match t.nbe_t with
-        | Construct (fv, _, []) when S.fv_eq_lid fv ord_Lt_lid -> Some Lt
-        | Construct (fv, _, []) when S.fv_eq_lid fv ord_Eq_lid -> Some Eq
-        | Construct (fv, _, []) when S.fv_eq_lid fv ord_Gt_lid -> Some Gt
-        | _ ->
-            Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded order: %s" (t_to_string t)));
-            None
-    in
-    mk_emb' embed_order unembed_order (lid_as_fv PC.order_lid None)
-
 let e_sigelt =
     let embed_sigelt cb (se:sigelt) : t =
         mk_lazy cb se fstar_refl_sigelt Lazy_sigelt

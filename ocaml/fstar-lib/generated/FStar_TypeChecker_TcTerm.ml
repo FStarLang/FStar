@@ -7263,6 +7263,121 @@ and (check_application_args :
                let rec tc_args head_info uu___1 bs args1 =
                  match uu___1 with
                  | (subst, outargs, arg_rets, g, fvs) ->
+                     let instantiate_one_meta_and_go b rest_bs args2 =
+                       let uu___2 = b in
+                       match uu___2 with
+                       | { FStar_Syntax_Syntax.binder_bv = x;
+                           FStar_Syntax_Syntax.binder_qual = qual;
+                           FStar_Syntax_Syntax.binder_positivity = uu___3;
+                           FStar_Syntax_Syntax.binder_attrs = attrs;_} ->
+                           let uu___4 =
+                             match (qual, attrs) with
+                             | (FStar_Pervasives_Native.Some
+                                (FStar_Syntax_Syntax.Meta tau), uu___5) ->
+                                 let tau1 =
+                                   FStar_Syntax_Subst.subst subst tau in
+                                 let uu___6 =
+                                   tc_tactic FStar_Syntax_Syntax.t_unit
+                                     FStar_Syntax_Syntax.t_unit env tau1 in
+                                 (match uu___6 with
+                                  | (tau2, uu___7, g_tau) ->
+                                      ((FStar_Syntax_Syntax.Ctx_uvar_meta_tac
+                                          tau2), g_tau))
+                             | (FStar_Pervasives_Native.Some
+                                (FStar_Syntax_Syntax.Implicit uu___5),
+                                attr::uu___6) ->
+                                 let attr1 =
+                                   FStar_Syntax_Subst.subst subst attr in
+                                 let uu___7 = tc_tot_or_gtot_term env attr1 in
+                                 (match uu___7 with
+                                  | (attr2, uu___8, g_attr) ->
+                                      ((FStar_Syntax_Syntax.Ctx_uvar_meta_attr
+                                          attr2), g_attr))
+                             | uu___5 ->
+                                 FStar_Compiler_Effect.failwith
+                                   "Impossible, match is under a guard" in
+                           (match uu___4 with
+                            | (ctx_uvar_meta, g_tau_or_attr) ->
+                                let t =
+                                  FStar_Syntax_Subst.subst subst
+                                    x.FStar_Syntax_Syntax.sort in
+                                let uu___5 =
+                                  check_no_escape
+                                    (FStar_Pervasives_Native.Some head) env
+                                    fvs t in
+                                (match uu___5 with
+                                 | (t1, g_ex) ->
+                                     let r1 =
+                                       match outargs with
+                                       | [] -> head.FStar_Syntax_Syntax.pos
+                                       | ((t2, uu___6), uu___7, uu___8)::uu___9
+                                           ->
+                                           let uu___10 =
+                                             FStar_Compiler_Range_Type.def_range
+                                               head.FStar_Syntax_Syntax.pos in
+                                           let uu___11 =
+                                             let uu___12 =
+                                               FStar_Compiler_Range_Type.use_range
+                                                 head.FStar_Syntax_Syntax.pos in
+                                             let uu___13 =
+                                               FStar_Compiler_Range_Type.use_range
+                                                 t2.FStar_Syntax_Syntax.pos in
+                                             FStar_Compiler_Range_Ops.union_rng
+                                               uu___12 uu___13 in
+                                           FStar_Compiler_Range_Type.range_of_rng
+                                             uu___10 uu___11 in
+                                     let uu___6 =
+                                       let msg =
+                                         let is_typeclass =
+                                           match ctx_uvar_meta with
+                                           | FStar_Syntax_Syntax.Ctx_uvar_meta_tac
+                                               tau ->
+                                               FStar_Syntax_Util.is_fvar
+                                                 FStar_Parser_Const.tcresolve_lid
+                                                 tau
+                                           | uu___7 -> false in
+                                         if is_typeclass
+                                         then "Typeclass constraint argument"
+                                         else
+                                           "Instantiating meta argument in application" in
+                                       FStar_TypeChecker_Env.new_implicit_var_aux
+                                         msg r1 env t1
+                                         FStar_Syntax_Syntax.Strict
+                                         (FStar_Pervasives_Native.Some
+                                            ctx_uvar_meta) in
+                                     (match uu___6 with
+                                      | (varg, uu___7, implicits) ->
+                                          let subst1 =
+                                            (FStar_Syntax_Syntax.NT (x, varg))
+                                            :: subst in
+                                          let aq =
+                                            let uu___8 =
+                                              FStar_Compiler_List.hd bs in
+                                            FStar_Syntax_Util.aqual_of_binder
+                                              uu___8 in
+                                          let arg = (varg, aq) in
+                                          let guard =
+                                            FStar_Compiler_List.fold_right
+                                              FStar_TypeChecker_Env.conj_guard
+                                              [g_ex; g; g_tau_or_attr]
+                                              implicits in
+                                          let uu___8 =
+                                            let uu___9 =
+                                              let uu___10 =
+                                                let uu___11 =
+                                                  let uu___12 =
+                                                    FStar_Syntax_Syntax.mk_Total
+                                                      t1 in
+                                                  FStar_TypeChecker_Common.lcomp_of_comp
+                                                    uu___12 in
+                                                (arg,
+                                                  FStar_Pervasives_Native.None,
+                                                  uu___11) in
+                                              uu___10 :: outargs in
+                                            (subst1, uu___9, (arg ::
+                                              arg_rets), guard, fvs) in
+                                          tc_args head_info uu___8 rest_bs
+                                            args2))) in
                      (match (bs, args1) with
                       | ({ FStar_Syntax_Syntax.binder_bv = x;
                            FStar_Syntax_Syntax.binder_qual =
@@ -7337,112 +7452,26 @@ and (check_application_args :
                           FStar_TypeChecker_Util.maybe_implicit_with_meta_or_attr
                             qual attrs
                           ->
-                          let uu___5 =
-                            match (qual, attrs) with
-                            | (FStar_Pervasives_Native.Some
-                               (FStar_Syntax_Syntax.Meta tau), uu___6) ->
-                                let tau1 = FStar_Syntax_Subst.subst subst tau in
-                                let uu___7 =
-                                  tc_tactic FStar_Syntax_Syntax.t_unit
-                                    FStar_Syntax_Syntax.t_unit env tau1 in
-                                (match uu___7 with
-                                 | (tau2, uu___8, g_tau) ->
-                                     ((FStar_Syntax_Syntax.Ctx_uvar_meta_tac
-                                         tau2), g_tau))
-                            | (FStar_Pervasives_Native.Some
-                               (FStar_Syntax_Syntax.Implicit uu___6),
-                               attr::uu___7) ->
-                                let attr1 =
-                                  FStar_Syntax_Subst.subst subst attr in
-                                let uu___8 = tc_tot_or_gtot_term env attr1 in
-                                (match uu___8 with
-                                 | (attr2, uu___9, g_attr) ->
-                                     ((FStar_Syntax_Syntax.Ctx_uvar_meta_attr
-                                         attr2), g_attr))
-                            | uu___6 ->
-                                FStar_Compiler_Effect.failwith
-                                  "Impossible, match is under a guard" in
-                          (match uu___5 with
-                           | (ctx_uvar_meta, g_tau_or_attr) ->
-                               let t =
-                                 FStar_Syntax_Subst.subst subst
-                                   x.FStar_Syntax_Syntax.sort in
-                               let uu___6 =
-                                 check_no_escape
-                                   (FStar_Pervasives_Native.Some head) env
-                                   fvs t in
-                               (match uu___6 with
-                                | (t1, g_ex) ->
-                                    let r1 =
-                                      match outargs with
-                                      | [] -> head.FStar_Syntax_Syntax.pos
-                                      | ((t2, uu___7), uu___8, uu___9)::uu___10
-                                          ->
-                                          let uu___11 =
-                                            FStar_Compiler_Range_Type.def_range
-                                              head.FStar_Syntax_Syntax.pos in
-                                          let uu___12 =
-                                            let uu___13 =
-                                              FStar_Compiler_Range_Type.use_range
-                                                head.FStar_Syntax_Syntax.pos in
-                                            let uu___14 =
-                                              FStar_Compiler_Range_Type.use_range
-                                                t2.FStar_Syntax_Syntax.pos in
-                                            FStar_Compiler_Range_Ops.union_rng
-                                              uu___13 uu___14 in
-                                          FStar_Compiler_Range_Type.range_of_rng
-                                            uu___11 uu___12 in
-                                    let uu___7 =
-                                      let msg =
-                                        let is_typeclass =
-                                          match ctx_uvar_meta with
-                                          | FStar_Syntax_Syntax.Ctx_uvar_meta_tac
-                                              tau ->
-                                              FStar_Syntax_Util.is_fvar
-                                                FStar_Parser_Const.tcresolve_lid
-                                                tau
-                                          | uu___8 -> false in
-                                        if is_typeclass
-                                        then "Typeclass constraint argument"
-                                        else
-                                          "Instantiating meta argument in application" in
-                                      FStar_TypeChecker_Env.new_implicit_var_aux
-                                        msg r1 env t1
-                                        FStar_Syntax_Syntax.Strict
-                                        (FStar_Pervasives_Native.Some
-                                           ctx_uvar_meta) in
-                                    (match uu___7 with
-                                     | (varg, uu___8, implicits) ->
-                                         let subst1 =
-                                           (FStar_Syntax_Syntax.NT (x, varg))
-                                           :: subst in
-                                         let aq =
-                                           let uu___9 =
-                                             FStar_Compiler_List.hd bs in
-                                           FStar_Syntax_Util.aqual_of_binder
-                                             uu___9 in
-                                         let arg = (varg, aq) in
-                                         let guard =
-                                           FStar_Compiler_List.fold_right
-                                             FStar_TypeChecker_Env.conj_guard
-                                             [g_ex; g; g_tau_or_attr]
-                                             implicits in
-                                         let uu___9 =
-                                           let uu___10 =
-                                             let uu___11 =
-                                               let uu___12 =
-                                                 let uu___13 =
-                                                   FStar_Syntax_Syntax.mk_Total
-                                                     t1 in
-                                                 FStar_TypeChecker_Common.lcomp_of_comp
-                                                   uu___13 in
-                                               (arg,
-                                                 FStar_Pervasives_Native.None,
-                                                 uu___12) in
-                                             uu___11 :: outargs in
-                                           (subst1, uu___10, (arg ::
-                                             arg_rets), guard, fvs) in
-                                         tc_args head_info uu___9 rest args1)))
+                          let uu___5 = FStar_Compiler_List.hd bs in
+                          instantiate_one_meta_and_go uu___5 rest args1
+                      | ({ FStar_Syntax_Syntax.binder_bv = x;
+                           FStar_Syntax_Syntax.binder_qual =
+                             FStar_Pervasives_Native.Some
+                             (FStar_Syntax_Syntax.Meta tau);
+                           FStar_Syntax_Syntax.binder_positivity = uu___2;
+                           FStar_Syntax_Syntax.binder_attrs = b_attrs;_}::rest,
+                         ({
+                            FStar_Syntax_Syntax.n =
+                              FStar_Syntax_Syntax.Tm_unknown;
+                            FStar_Syntax_Syntax.pos = uu___3;
+                            FStar_Syntax_Syntax.vars = uu___4;
+                            FStar_Syntax_Syntax.hash_code = uu___5;_},
+                          FStar_Pervasives_Native.Some
+                          { FStar_Syntax_Syntax.aqual_implicit = true;
+                            FStar_Syntax_Syntax.aqual_attributes = uu___6;_})::rest')
+                          ->
+                          let uu___7 = FStar_Compiler_List.hd bs in
+                          instantiate_one_meta_and_go uu___7 rest rest'
                       | ({ FStar_Syntax_Syntax.binder_bv = x;
                            FStar_Syntax_Syntax.binder_qual = bqual;
                            FStar_Syntax_Syntax.binder_positivity = uu___2;

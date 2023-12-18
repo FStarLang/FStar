@@ -37,7 +37,7 @@ effect All (a:Type) (pre:all_pre) (post:(h:unit -> Tot (all_post' a (pre h)))) =
 effect ML (a:Type) = ALL a (fun (p:all_post a) (_:unit) -> forall (a:result a) (h:unit). p a h)
 
 assume
-val ref (a:Type0) : Type0
+val ref (a:Type) : Type0
 
 assume
 val (!) (#a:Type) (r:ref a)

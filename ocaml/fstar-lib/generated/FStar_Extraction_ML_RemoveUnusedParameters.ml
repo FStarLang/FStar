@@ -164,7 +164,7 @@ let rec (elim_mlexpr' :
       | FStar_Extraction_ML_Syntax.MLE_Tuple es ->
           let uu___ = FStar_Compiler_List.map (elim_mlexpr env) es in
           FStar_Extraction_ML_Syntax.MLE_Tuple uu___
-      | FStar_Extraction_ML_Syntax.MLE_Record (syms, fields) ->
+      | FStar_Extraction_ML_Syntax.MLE_Record (syms, nm, fields) ->
           let uu___ =
             let uu___1 =
               FStar_Compiler_List.map
@@ -172,7 +172,7 @@ let rec (elim_mlexpr' :
                    match uu___2 with
                    | (s, e1) ->
                        let uu___3 = elim_mlexpr env e1 in (s, uu___3)) fields in
-            (syms, uu___1) in
+            (syms, nm, uu___1) in
           FStar_Extraction_ML_Syntax.MLE_Record uu___
       | FStar_Extraction_ML_Syntax.MLE_Proj (e1, p) ->
           let uu___ = let uu___1 = elim_mlexpr env e1 in (uu___1, p) in

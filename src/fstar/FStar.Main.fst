@@ -241,6 +241,8 @@ let setup_hooks () =
     FStar.Syntax.Syntax.lazy_chooser := Some lazy_chooser;
     FStar.Syntax.Util.tts_f := Some FStar.Syntax.Print.term_to_string;
     FStar.TypeChecker.Normalize.unembed_binder_knot := Some RE.e_binder;
+    List.iter Tactics.Interpreter.register_tactic_primitive_step Tactics.V1.Primops.ops;
+    List.iter Tactics.Interpreter.register_tactic_primitive_step Tactics.V2.Primops.ops;
     ()
 
 let handle_error e =

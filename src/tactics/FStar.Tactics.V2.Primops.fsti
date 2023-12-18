@@ -13,13 +13,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.Tactics.V1.Interpreter
+module FStar.Tactics.V2.Primops
 
-open FStar.Compiler.Effect
-open FStar.Compiler.Range
-open FStar.Syntax.Syntax
-open FStar.Syntax.Embeddings
-open FStar.Tactics.Types
-module Env = FStar.TypeChecker.Env
+open FStar.TypeChecker.Primops.Base
 
-val primitive_steps : unit -> list FStar.TypeChecker.Primops.primitive_step
+val ops : list primitive_step

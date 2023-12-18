@@ -16,13 +16,11 @@
 
 module FStar.Reflection.V2.NBEEmbeddings
 
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.NBETerm
-open FStar.Order
-open FStar.TypeChecker.Env
 open FStar.Reflection.V2.Data
-module O = FStar.Options
 module RD = FStar.Reflection.V2.Data
 
 (* Embeddings *)
@@ -43,7 +41,6 @@ instance val e_pattern       : embedding pattern
 instance val e_branch        : embedding Data.branch
 instance val e_aqualv        : embedding aqualv
 instance val e_argv          : embedding argv
-instance val e_order         : embedding order
 instance val e_sigelt        : embedding sigelt
 instance val e_letbinding    : embedding letbinding
 instance val e_lb_view       : embedding lb_view

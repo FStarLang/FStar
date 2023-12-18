@@ -142,7 +142,7 @@ let rec elim_mlexpr' (env:env_t) (e:mlexpr') =
   | MLE_CTor(l, es) -> MLE_CTor(l, List.map (elim_mlexpr env) es)
   | MLE_Seq es -> MLE_Seq (List.map (elim_mlexpr env) es)
   | MLE_Tuple es -> MLE_Tuple (List.map (elim_mlexpr env) es)
-  | MLE_Record(syms, fields) -> MLE_Record(syms, List.map (fun (s, e) -> s, elim_mlexpr env e) fields)
+  | MLE_Record(syms, nm, fields) -> MLE_Record(syms, nm, List.map (fun (s, e) -> s, elim_mlexpr env e) fields)
   | MLE_Proj (e, p) -> MLE_Proj(elim_mlexpr env e, p)
   | MLE_If(e, e1, e2_opt) -> MLE_If(elim_mlexpr env e, elim_mlexpr env e1, BU.map_opt e2_opt (elim_mlexpr env))
   | MLE_Raise(p, es) -> MLE_Raise (p, List.map (elim_mlexpr env) es)

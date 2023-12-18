@@ -972,7 +972,7 @@ and translate_expr' env e: expr =
   | MLE_Coerce (e, t_from, t_to) ->
       ECast (translate_expr env e, translate_type env t_to)
 
-  | MLE_Record (_, fields) ->
+  | MLE_Record (_, _, fields) ->
       EFlat (assert_lid env e.mlty, List.map (fun (field, expr) ->
         field, translate_expr env expr) fields)
 

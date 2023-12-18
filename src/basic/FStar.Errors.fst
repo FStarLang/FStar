@@ -464,7 +464,14 @@ let lookup err =
   | _ ->
     with_level level
 
+let maybe_add_backtrace (msg : error_message) : error_message =
+  if Options.trace_error () then
+    msg @ [backtrace_doc ()]
+  else
+    msg
+
 let log_issue_ctx r (e, msg) ctx =
+  let msg = maybe_add_backtrace msg in
   match lookup e with
   | (_, CAlwaysError, errno)
   | (_, CError, errno)  ->
@@ -517,10 +524,10 @@ let stop_if_err () =
     then raise Stop
 
 let raise_error_doc (e, msg) r =
-  raise (Error (e, msg, r, error_context.get ()))
+  raise (Error (e, maybe_add_backtrace msg, r, error_context.get ()))
 
 let raise_err_doc (e, msg) =
-  raise (Err (e, msg, error_context.get ()))
+  raise (Err (e, maybe_add_backtrace msg, error_context.get ()))
 
 let raise_error (e, msg) r =
   raise_error_doc (e, mkmsg msg) r

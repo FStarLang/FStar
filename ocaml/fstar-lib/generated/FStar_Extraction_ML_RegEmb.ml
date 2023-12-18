@@ -46,7 +46,14 @@ let (ml_record :
   fun l ->
     fun args ->
       let s = FStar_Ident.path_of_lid l in
-      mk (FStar_Extraction_ML_Syntax.MLE_Record ([], args))
+      let uu___ =
+        let uu___1 =
+          let uu___2 =
+            let uu___3 = FStar_Ident.ident_of_lid l in
+            FStar_Ident.string_of_id uu___3 in
+          ([], uu___2, args) in
+        FStar_Extraction_ML_Syntax.MLE_Record uu___1 in
+      mk uu___
 let (ml_lam :
   FStar_Extraction_ML_Syntax.mlident ->
     FStar_Extraction_ML_Syntax.mlexpr -> FStar_Extraction_ML_Syntax.mlexpr)
@@ -1304,7 +1311,7 @@ let (interpret_plugin_as_term_fun :
               FStar_Extraction_ML_Syntax.with_ty
                 FStar_Extraction_ML_Syntax.MLTY_Top uu___ in
             let mk_tactic_interpretation l arity =
-              if arity > FStar_Tactics_V2_InterpFuns.max_tac_arity
+              if arity > FStar_Tactics_InterpFuns.max_tac_arity
               then
                 FStar_Compiler_Effect.raise
                   (NoEmbedding
@@ -1315,7 +1322,7 @@ let (interpret_plugin_as_term_fun :
                    | SyntaxTerm -> "mk_tactic_interpretation_"
                    | NBETerm -> "mk_nbe_tactic_interpretation_" in
                  as_name1
-                   (["FStar_Tactics_V2_InterpFuns"],
+                   (["FStar_Tactics_InterpFuns"],
                      (Prims.strcat idroot (Prims.string_of_int arity)))) in
             let mk_from_tactic l arity =
               let idroot =

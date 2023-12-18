@@ -429,7 +429,8 @@ type mlexpr' =
   | MLE_CTor of (mlpath * mlexpr Prims.list) 
   | MLE_Seq of mlexpr Prims.list 
   | MLE_Tuple of mlexpr Prims.list 
-  | MLE_Record of (mlsymbol Prims.list * (mlsymbol * mlexpr) Prims.list) 
+  | MLE_Record of (mlsymbol Prims.list * mlsymbol * (mlsymbol * mlexpr)
+  Prims.list) 
   | MLE_Proj of (mlexpr * mlpath) 
   | MLE_If of (mlexpr * mlexpr * mlexpr FStar_Pervasives_Native.option) 
   | MLE_Raise of (mlpath * mlexpr Prims.list) 
@@ -511,8 +512,9 @@ let (uu___is_MLE_Record : mlexpr' -> Prims.bool) =
   fun projectee ->
     match projectee with | MLE_Record _0 -> true | uu___ -> false
 let (__proj__MLE_Record__item___0 :
-  mlexpr' -> (mlsymbol Prims.list * (mlsymbol * mlexpr) Prims.list)) =
-  fun projectee -> match projectee with | MLE_Record _0 -> _0
+  mlexpr' ->
+    (mlsymbol Prims.list * mlsymbol * (mlsymbol * mlexpr) Prims.list))
+  = fun projectee -> match projectee with | MLE_Record _0 -> _0
 let (uu___is_MLE_Proj : mlexpr' -> Prims.bool) =
   fun projectee ->
     match projectee with | MLE_Proj _0 -> true | uu___ -> false
@@ -838,7 +840,7 @@ let rec (mlexpr_to_string : mlexpr -> Prims.string) =
           let uu___1 = FStar_Compiler_List.map mlexpr_to_string es in
           FStar_Compiler_String.concat "; " uu___1 in
         FStar_Compiler_Util.format1 "(MLE_Tuple [%s])" uu___
-    | MLE_Record (p, es) ->
+    | MLE_Record (p, n, es) ->
         let uu___ =
           let uu___1 =
             FStar_Compiler_List.map
@@ -849,7 +851,8 @@ let rec (mlexpr_to_string : mlexpr -> Prims.string) =
                      FStar_Compiler_Util.format2 "(%s, %s)" x uu___3) es in
           FStar_Compiler_String.concat "; " uu___1 in
         FStar_Compiler_Util.format2 "(MLE_Record (%s, [%s]))"
-          (FStar_Compiler_String.concat "; " p) uu___
+          (FStar_Compiler_String.concat "; "
+             (FStar_Compiler_List.op_At p [n])) uu___
     | MLE_Proj (e1, p) ->
         let uu___ = mlexpr_to_string e1 in
         FStar_Compiler_Util.format2 "(MLE_Proj (%s, %s))" uu___

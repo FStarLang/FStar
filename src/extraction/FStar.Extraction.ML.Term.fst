@@ -374,7 +374,7 @@ let rec is_ml_value e =
     | MLE_Fun   _ -> true
     | MLE_CTor (_, exps)
     | MLE_Tuple exps -> BU.for_all is_ml_value exps
-    | MLE_Record (_, fields) -> BU.for_all (fun (_, e) -> is_ml_value e) fields
+    | MLE_Record (_, _, fields) -> BU.for_all (fun (_, e) -> is_ml_value e) fields
     | MLE_TApp (h, _) -> is_ml_value h
     | _ -> false
 
@@ -1149,7 +1149,7 @@ let maybe_eta_data_and_project_record (g:uenv) (qual : option fv_qual) (residual
         let path = List.map string_of_id (ns_of_lid tyname) in
         let fields = record_fields g tyname fields args in
         let path = no_fstar_stubs_ns path in
-        with_ty e.mlty <| MLE_Record(path, fields)
+        with_ty e.mlty <| MLE_Record (path, tyname |> ident_of_lid |> string_of_id, fields)
       | _ -> e
      in
     let resugar_and_maybe_eta qual e =

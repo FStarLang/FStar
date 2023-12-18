@@ -599,9 +599,9 @@ let rec (is_ml_value : FStar_Extraction_ML_Syntax.mlexpr -> Prims.bool) =
         FStar_Compiler_Util.for_all is_ml_value exps
     | FStar_Extraction_ML_Syntax.MLE_Tuple exps ->
         FStar_Compiler_Util.for_all is_ml_value exps
-    | FStar_Extraction_ML_Syntax.MLE_Record (uu___, fields) ->
+    | FStar_Extraction_ML_Syntax.MLE_Record (uu___, uu___1, fields) ->
         FStar_Compiler_Util.for_all
-          (fun uu___1 -> match uu___1 with | (uu___2, e1) -> is_ml_value e1)
+          (fun uu___2 -> match uu___2 with | (uu___3, e1) -> is_ml_value e1)
           fields
     | FStar_Extraction_ML_Syntax.MLE_TApp (h, uu___) -> is_ml_value h
     | uu___ -> false
@@ -1901,9 +1901,15 @@ let (maybe_eta_data_and_project_record :
                   FStar_Compiler_List.map FStar_Ident.string_of_id uu___1 in
                 let fields1 = record_fields g tyname fields args in
                 let path1 = FStar_Extraction_ML_UEnv.no_fstar_stubs_ns path in
+                let uu___1 =
+                  let uu___2 =
+                    let uu___3 =
+                      let uu___4 = FStar_Ident.ident_of_lid tyname in
+                      FStar_Ident.string_of_id uu___4 in
+                    (path1, uu___3, fields1) in
+                  FStar_Extraction_ML_Syntax.MLE_Record uu___2 in
                 FStar_Extraction_ML_Syntax.with_ty
-                  e.FStar_Extraction_ML_Syntax.mlty
-                  (FStar_Extraction_ML_Syntax.MLE_Record (path1, fields1))
+                  e.FStar_Extraction_ML_Syntax.mlty uu___1
             | uu___ -> e in
           let resugar_and_maybe_eta qual1 e =
             let uu___ = eta_args g [] residualType in
