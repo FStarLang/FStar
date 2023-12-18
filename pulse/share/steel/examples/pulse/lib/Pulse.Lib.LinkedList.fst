@@ -435,29 +435,6 @@ ensures
 }
 ```
 
-//UGLY! workaround for while invariant instantiation hint
-let not_b_if_sfx_1 #t (b:bool) (sfx:list t) : vprop = pure (not b ==> (List.Tot.length sfx = 1))
-
-```pulse
-ghost
-fn intro_not_b_if_sfx_1_true (#t:Type0) (sfx:list t)
-    requires emp
-    ensures not_b_if_sfx_1 true sfx
-{
-    fold (not_b_if_sfx_1 true sfx);
-}
-```
-
-```pulse
-ghost
-fn intro_not_b_if_sfx_1_false (#t:Type0) (sfx:list t)
-    requires pure (List.Tot.length sfx == 1)
-    ensures not_b_if_sfx_1 false sfx
-{
-    fold (not_b_if_sfx_1 false sfx);
-}
-```
-
 ```pulse
 ghost
 fn non_empty_list (#t:Type0) (x:llist t)
@@ -534,9 +511,7 @@ ensures is_list x (List.Tot.append 'l1 'l2)
              (forall* l. is_list x l @==> is_list x ([]@l))
               norm_tac ();
   fold (something #(list t) []);
-  intro_not_b_if_sfx_1_true 'l1;
   while (
-    with _b _sfx. unfold (not_b_if_sfx_1 #t _b _sfx);
     with pfx. assert (something #(list t) pfx);
     unfold (something #(list t) pfx);
     let l = !cur;
@@ -548,7 +523,6 @@ ensures is_list x (List.Tot.append 'l1 'l2)
     let b = is_last_cell l;
     if b 
     { 
-      intro_not_b_if_sfx_1_false sfx;
       fold (something pfx);
       false
     }
@@ -568,7 +542,6 @@ ensures is_list x (List.Tot.append 'l1 'l2)
       unfold (something #t hd);
       fold (something #(list t) (pfx@[hd]));
       cur := next;
-      intro_not_b_if_sfx_1_true tl;
       non_empty_list next;
       true
     }
@@ -579,10 +552,11 @@ ensures is_list x (List.Tot.append 'l1 'l2)
       pts_to cur ll **
       is_list ll sfx **
       (forall* sfx'. is_list ll sfx' @==> is_list x (pfx @ sfx')) **
-      not_b_if_sfx_1 b sfx **
-      pure (List.Tot.length sfx >= 1 /\
-            pfx@sfx == 'l1 /\
-            Some? ll)
+      pure (
+        (b==false ==> List.Tot.length sfx == 1) /\
+        List.Tot.length sfx >= 1 /\
+        pfx@sfx == 'l1 /\
+        Some? ll)
   { () };
   let last = !cur;
   with pfx. assert (something #(list t) pfx);
@@ -591,8 +565,7 @@ ensures is_list x (List.Tot.append 'l1 'l2)
   rewrite_by (forall* sfx'. is_list _ll sfx' @==> is_list x (pfx @ sfx'))
               (forall* sfx'. is_list last sfx' @==> is_list x (pfx @ sfx'))
               rewrite_tac ();
-  with _b _sfx. unfold (not_b_if_sfx_1 #t _b _sfx);
-  assert (pure (List.Tot.length sfx == 1));
+//  assert (pure (List.Tot.length sfx == 1));
   append_at_last_cell last y;
   FA.elim_forall_imp (is_list last) (fun sfx' -> is_list x (pfx @ sfx')) (sfx@'l2);
   List.Tot.Properties.append_assoc pfx sfx 'l2;

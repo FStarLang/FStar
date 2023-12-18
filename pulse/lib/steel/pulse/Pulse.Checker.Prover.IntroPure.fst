@@ -72,26 +72,97 @@ module R = FStar.Reflection.V2
 //     else None
 //   | _ -> None
 
-let is_eq2_uvar (uvs:env) (t:term)
-  : option (uv:var { uv `Set.mem` freevars t } & term) =
-  
-  match is_eq2 t with
-  | None -> None
-  | Some (l, r) ->
-    match is_var l with
-    | Some nm ->
-      if Set.mem nm.nm_index (dom uvs)
-      then Some (| nm.nm_index, r |)
-      else None
-    | None ->
-      match is_var r with
+let pure_uv_heuristic_t =
+  uvs:env -> t:term ->
+  T.Tac (option (uv:var { uv `Set.mem` freevars t } & term))
+ 
+let is_eq2_uvar
+: pure_uv_heuristic_t
+= fun (uvs:env) (t:term) ->
+    match is_eq2 t with
+    | None -> None
+    | Some (_, l, r) ->
+      match is_var l with
       | Some nm ->
         if Set.mem nm.nm_index (dom uvs)
-        then Some (| nm.nm_index, l |)
+        then Some (| nm.nm_index, r |)
         else None
-      | _ -> None
+      | None ->
+        match is_var r with
+        | Some nm ->
+          if Set.mem nm.nm_index (dom uvs)
+          then Some (| nm.nm_index, l |)
+          else None
+        | _ -> None
 
 module RF = FStar.Reflection.V2.Formula
+let is_host_var (x:R.term) =
+  match R.inspect_ln x with
+  | R.Tv_Var nv ->
+    let nv_view = R.inspect_namedv nv in
+    Some {nm_index=nv_view.uniq;
+          nm_ppname=mk_ppname (nv_view.ppname) (R.range_of_term x)}
+  | _ -> None
+
+let is_uvar_implication
+: pure_uv_heuristic_t
+= fun (uvs:env) (t:term) ->
+    debug uvs (fun _ -> Printf.sprintf "is_uvar_implication??: %s\n" (P.term_to_string t));
+    match t.t with 
+    | Tm_FStar tt -> (
+      let f = RF.term_as_formula' tt in
+      match f with
+      | RF.Implies t0 t1 -> (
+        debug uvs (fun _ -> Printf.sprintf "is_uvar_implication, LHS=: %s\n" (T.term_to_string t0));
+        match R.inspect_ln t0 with
+        | R.Tv_Unknown -> None
+        | _ -> (
+          let t0 = tm_fstar t0 FStar.Range.range_0 in
+          match is_eq2 t0 with
+          | None -> None
+          | Some (ty, lhs, rhs) ->
+            if eq_tm ty (tm_fstar (`bool) FStar.Range.range_0)
+            then (
+              let try_negated maybe_var other_side
+              : T.Tac  (option (uv:var { uv `Set.mem` freevars t } & term))
+              = match is_var lhs with
+                | None -> None
+                | Some nm ->
+                  if Set.mem nm.nm_index (dom uvs)
+                  then (
+                      match rhs.t with
+                      | Tm_FStar rhs -> 
+                        let rhs = tm_fstar (`(not (`#(rhs)))) FStar.Range.range_0 in
+                        assume (nm.nm_index `Set.mem` freevars t);
+                        Some (| nm.nm_index, rhs |)
+                      | _ -> None
+                  )
+                  else None
+              in
+              match try_negated lhs rhs with
+              | None -> try_negated rhs lhs
+              | x -> x
+            )
+            else None
+          )
+      )
+      | _ -> None
+    )
+    | _ -> None
+
+let pure_uvar_heursitics : pure_uv_heuristic_t
+  = let h = [is_eq2_uvar; is_uvar_implication] in
+    fun (uvs:env) (t:term) ->
+      let rec loop (h:list pure_uv_heuristic_t)
+       : T.Tac (option (uv:var { uv `Set.mem` freevars t } & term)) =
+        match h with
+        | [] -> None
+        | h::hs ->
+          match h uvs t with
+          | None -> loop hs
+          | Some (| uv, e |) -> Some (| uv, e |)
+      in loop h
+
 let rec try_collect_substs (uvs:env) (t:term)
   : T.Tac (ss:PS.ss_t { PS.dom ss `Set.subset` freevars t }) =
   assume (PS.dom PS.empty == Set.empty);
@@ -110,7 +181,7 @@ let rec try_collect_substs (uvs:env) (t:term)
              r
         else PS.empty
       | _ ->
-        match is_eq2_uvar uvs t with
+        match pure_uvar_heursitics uvs t with
         | Some (| uv, e |) ->
           assume (~ (uv `Set.mem` (PS.dom PS.empty)));
           let r = PS.push PS.empty uv e in

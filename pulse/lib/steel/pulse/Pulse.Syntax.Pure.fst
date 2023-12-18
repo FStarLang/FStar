@@ -218,18 +218,18 @@ let is_arrow (t:term) : option (binder & option qualifier & comp) =
   | _ -> None
 
 // TODO: write it better, with pattern matching on reflection syntax
-let is_eq2 (t:term) : option (term & term) =
+let is_eq2 (t:term) : option (term & term & term) =
   match is_pure_app t with
   | Some (head, None, a2) ->
     (match is_pure_app head with
      | Some (head, None, a1) ->
        (match is_pure_app head with
-        | Some (head, Some Implicit, _) ->
+        | Some (head, Some Implicit, ty) ->
           (match is_fvar head with
            | Some (l, _) ->
              if l = ["Pulse"; "Steel"; "Wrapper"; "eq2_prop"] ||
                 l = ["Prims"; "eq2"]
-             then Some (a1, a2)
+             then Some (ty, a1, a2)
              else None
            | _ -> None)
         | _ -> None)
