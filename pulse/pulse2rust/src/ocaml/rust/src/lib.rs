@@ -1402,9 +1402,75 @@ fn to_syn_fn(f: &Fn) -> ItemFn {
     }
 }
 
-fn to_syn_item(i: &Item) -> syn::Item {
+fn derive_clone_copy_attr() -> syn::Attribute {
+    syn::Attribute {
+        pound_token: syn::token::Pound {
+            spans: [Span::call_site()],
+        },
+        style: syn::AttrStyle::Outer,
+        bracket_token: syn::token::Bracket {
+            span: proc_macro2::Group::new(
+                proc_macro2::Delimiter::None,
+                proc_macro2::TokenStream::new(),
+            )
+            .delim_span(),
+        },
+        meta: syn::Meta::List(syn::MetaList {
+            path: to_syn_path(&vec!["derive".to_string()]),
+            delimiter: syn::MacroDelimiter::Paren(syn::token::Paren {
+                span: proc_macro2::Group::new(
+                    proc_macro2::Delimiter::None,
+                    proc_macro2::TokenStream::new(),
+                )
+                .delim_span(),
+            }),
+            tokens: proc_macro2::TokenStream::from_str("Clone, Copy").unwrap(),
+        }),
+    }
+}
+
+fn use_enum_item(i: &Item) -> syn::Item {
     match i {
-        Item::IFn(f) => syn::Item::Fn(to_syn_fn(f)),
+        Item::IEnum(ItemEnum { item_enum_name, .. }) => {
+            let ut = syn::UseTree::Glob(syn::UseGlob {
+                star_token: syn::token::Star {
+                    spans: [Span::call_site()],
+                },
+            });
+            let ut = syn::UseTree::Path(syn::UsePath {
+                ident: Ident::new(&item_enum_name, Span::call_site()),
+                colon2_token: syn::token::PathSep {
+                    spans: [Span::call_site(), Span::call_site()],
+                },
+                tree: Box::new(ut),
+            });
+            let ut = syn::UseTree::Path(syn::UsePath {
+                ident: Ident::new(&"crate", Span::call_site()),
+                colon2_token: syn::token::PathSep {
+                    spans: [Span::call_site(), Span::call_site()],
+                },
+                tree: Box::new(ut),
+            });
+            syn::Item::Use(syn::ItemUse {
+                attrs: vec![],
+                vis: Visibility::Inherited,
+                use_token: syn::token::Use {
+                    span: Span::call_site(),
+                },
+                leading_colon: None,
+                tree: ut,
+                semi_token: syn::token::Semi {
+                    spans: [Span::call_site()],
+                },
+            })
+        }
+        _ => panic!("use_enum_item called with non-enum item"),
+    }
+}
+
+fn to_syn_item(i: &Item) -> Vec<syn::Item> {
+    match i {
+        Item::IFn(f) => vec![syn::Item::Fn(to_syn_fn(f))],
         Item::IStruct(ItemStruct {
             item_struct_name,
             item_struct_generics,
@@ -1435,7 +1501,7 @@ fn to_syn_item(i: &Item) -> syn::Item {
                     ty: to_syn_typ(&ft.field_typ_typ),
                 })
             });
-            syn::Item::Struct(syn::ItemStruct {
+            let item = syn::Item::Struct(syn::ItemStruct {
                 attrs: vec![],
                 vis: syn::Visibility::Public({
                     syn::token::Pub {
@@ -1469,7 +1535,8 @@ fn to_syn_item(i: &Item) -> syn::Item {
                 semi_token: Some(syn::token::Semi {
                     spans: [Span::call_site()],
                 }),
-            })
+            });
+            vec![item]
         }
         Item::IType(ItemType {
             item_type_name,
@@ -1488,7 +1555,7 @@ fn to_syn_item(i: &Item) -> syn::Item {
                     default: None,
                 }))
             });
-            syn::Item::Type(syn::ItemType {
+            let item = syn::Item::Type(syn::ItemType {
                 attrs: vec![],
                 vis: syn::Visibility::Public({
                     syn::token::Pub {
@@ -1516,7 +1583,8 @@ fn to_syn_item(i: &Item) -> syn::Item {
                 semi_token: syn::token::Semi {
                     spans: [Span::call_site()],
                 },
-            })
+            });
+            vec![item]
         }
         Item::IEnum(ItemEnum {
             item_enum_name,
@@ -1570,8 +1638,8 @@ fn to_syn_item(i: &Item) -> syn::Item {
                     discriminant: None,
                 })
             });
-            syn::Item::Enum(syn::ItemEnum {
-                attrs: vec![],
+            let item = syn::Item::Enum(syn::ItemEnum {
+                attrs: vec![derive_clone_copy_attr()],
                 vis: syn::Visibility::Public({
                     syn::token::Pub {
                         span: Span::call_site(),
@@ -1593,38 +1661,42 @@ fn to_syn_item(i: &Item) -> syn::Item {
                 },
                 brace_token: Brace::default(),
                 variants,
-            })
+            });
+            vec![item, use_enum_item(i)]
         }
         Item::IStatic(ItemStatic {
             item_static_name,
             item_static_typ,
             item_static_init,
-        }) => syn::Item::Static(syn::ItemStatic {
-            attrs: vec![],
-            vis: syn::Visibility::Public({
-                syn::token::Pub {
+        }) => {
+            let item = syn::Item::Static(syn::ItemStatic {
+                attrs: vec![],
+                vis: syn::Visibility::Public({
+                    syn::token::Pub {
+                        span: Span::call_site(),
+                    }
+                }),
+                static_token: syn::token::Static {
                     span: Span::call_site(),
-                }
-            }),
-            static_token: syn::token::Static {
-                span: Span::call_site(),
-            },
-            mutability: syn::StaticMutability::Mut(syn::token::Mut {
-                span: Span::call_site(),
-            }),
-            ident: Ident::new(&item_static_name, Span::call_site()),
-            colon_token: Colon {
-                spans: [Span::call_site()],
-            },
-            ty: Box::new(to_syn_typ(&item_static_typ)),
-            eq_token: syn::token::Eq {
-                spans: [Span::call_site()],
-            },
-            expr: Box::new(to_syn_expr(&item_static_init)),
-            semi_token: syn::token::Semi {
-                spans: [Span::call_site()],
-            },
-        }),
+                },
+                mutability: syn::StaticMutability::Mut(syn::token::Mut {
+                    span: Span::call_site(),
+                }),
+                ident: Ident::new(&item_static_name, Span::call_site()),
+                colon_token: Colon {
+                    spans: [Span::call_site()],
+                },
+                ty: Box::new(to_syn_typ(&item_static_typ)),
+                eq_token: syn::token::Eq {
+                    spans: [Span::call_site()],
+                },
+                expr: Box::new(to_syn_expr(&item_static_init)),
+                semi_token: syn::token::Semi {
+                    spans: [Span::call_site()],
+                },
+            });
+            vec![item]
+        }
     }
 }
 
@@ -1632,7 +1704,7 @@ fn to_syn_file(f: &File) -> syn::File {
     syn::File {
         shebang: None,
         attrs: vec![],
-        items: f.file_items.iter().map(to_syn_item).collect(),
+        items: f.file_items.iter().map(to_syn_item).flatten().collect(),
     }
 }
 

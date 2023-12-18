@@ -11,6 +11,13 @@ module PS = Pulse.Checker.Prover.Substs
 include Pulse.Checker.Prover.Base
 include Pulse.Checker.Prover.Util
 
+val elim_exists_and_pure (#g:env) (#ctxt:vprop)
+  (ctxt_typing:tot_typing g ctxt tm_vprop)
+  : T.Tac (g':env { env_extends g' g } &
+           ctxt':term &
+           tot_typing g' ctxt' tm_vprop &
+           continuation_elaborator g ctxt g' ctxt')
+
 val prove
   (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
   (uvs:env { disjoint g uvs })

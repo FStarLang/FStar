@@ -7,6 +7,7 @@ open EngineTypes
 open EngineCore
 open L0Types
 open L0Core
+
 module L = Pulse.Lib.SpinLock
 module A = Pulse.Lib.Array
 module R = Pulse.Lib.Reference
@@ -15,8 +16,10 @@ module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 module HT = Pulse.Lib.HashTable
 module PHT = Pulse.Lib.HashTable.Spec
+
 open Pulse.Lib.BoundedIntegers
 open Pulse.Lib.OnRange
+open Pulse.Lib.HashTable.Type
 
 assume
 val run_stt (#a:Type) (#post:a -> vprop) (f:stt a emp post) : a

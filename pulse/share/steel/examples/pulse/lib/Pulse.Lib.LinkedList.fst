@@ -121,7 +121,6 @@ fn cases_of_is_list (#t:Type) (x:llist t) (l:list t)
         Cons head tl -> { 
             rewrite (is_list x l) as (is_list x (head::tl));
             elim_is_list_cons x head tl;
-            assert pure (Some? x); //surprising that this is needed
             let v = Some?.v x;
             with tail. assert (is_list #t tail tl);
             with w. assert (pts_to w (mk_node head tail));
@@ -431,7 +430,6 @@ ensures
     }
     Some vtl -> {
       is_list_cases_some node.tail vtl;
-      assert (pure False); //adding this somehow seems necessary; weird
       unreachable ();
     }
   }

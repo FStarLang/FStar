@@ -32,8 +32,6 @@ module Par = Pulse.Checker.Par
 module Admit = Pulse.Checker.Admit
 module Return = Pulse.Checker.Return
 module Rewrite = Pulse.Checker.Rewrite
-module ElimPure = Pulse.Checker.Prover.ElimPure
-module ElimExists = Pulse.Checker.Prover.ElimExists
 module WithInv = Pulse.Checker.WithInv
 
 let terms_to_string (t:list term)
@@ -142,7 +140,7 @@ let rec check
               (Pulse.Syntax.Printer.tag_of_st_term t));
 
   let (| g, pre, pre_typing, k_elim_pure |) =
-    Pulse.Checker.Prover.ElimPure.elim_pure pre0_typing in
+    Pulse.Checker.Prover.elim_exists_and_pure pre0_typing in
 
   if RU.debug_at_level (fstar_env g0) "pulse.checker" then
     T.print (Printf.sprintf "After elim_pure{\n\t env=%s\n\tcontext: %s\n}"
