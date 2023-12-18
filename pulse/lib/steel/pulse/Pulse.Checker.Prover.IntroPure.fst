@@ -141,6 +141,15 @@ let intro_pure (#preamble:_) (pst:prover_state preamble)
   assume (ss_new `ss_extends` pst.ss);
 
   let t_ss = ss_new.(t) in
+  let _ = 
+    let fvs = freevars t_ss in
+    if check_disjoint pst.uvs fvs
+    then ()
+    else 
+      fail_doc pst.pg (Some t_ss.range)
+        [Pulse.PP.text "Could not resolve all free variables in the proposition: ";
+         P.term_to_doc t_ss;]
+  in
   let d = core_check_tot_term pst.pg t_ss tm_prop in
   let d_valid = check_prop_validity pst.pg t_ss d in
 
