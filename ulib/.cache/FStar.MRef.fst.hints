@@ -16,7 +16,7 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "0e17302a25d2fd6ca8344d75bb72545f"
+      "69152641f016c1d08e76156540ff0b58"
     ],
     [
       "FStar.MRef.witness_token",
@@ -36,7 +36,7 @@
         "typing_FStar.Monotonic.Heap.sel", "unit_typing"
       ],
       0,
-      "215a07c20cebf15c4ede0e1a25a862d7"
+      "985b711c72755863a4724fd5fa8ad0b3"
     ],
     [
       "FStar.MRef.recall_token",
@@ -55,7 +55,7 @@
         "typing_FStar.Monotonic.Heap.sel", "unit_typing"
       ],
       0,
-      "44ca7ccf1a06b6bd5fff32c4e3544b2e"
+      "eb3bb07a97e9317311f7b693f5b39abe"
     ],
     [
       "FStar.MRef.lemma_functoriality",
@@ -76,7 +76,7 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "82cafc57590273df99b97078f236f99a"
+      "55286b13e0cf29819b86c072dfaf3722"
     ],
     [
       "FStar.MRef.recall",
@@ -90,7 +90,7 @@
         "unit_typing"
       ],
       0,
-      "4b0a3e0f8aaff183e746bfdc09180358"
+      "b75f76bab5dff4135c2811ff1c13860f"
     ],
     [
       "FStar.MRef.witness",
@@ -104,7 +104,7 @@
         "unit_typing"
       ],
       0,
-      "8dfd00101255b0288c81a44c29502cc7"
+      "a2545cae6bd0e9ea18d22ee619842ece"
     ]
   ]
 ]

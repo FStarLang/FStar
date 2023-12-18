@@ -226,7 +226,7 @@ let type_of (e:embedding 'a) : t = e.typ ()
 let set_type (ty:t) (e:embedding 'a) : embedding 'a = { e with typ = (fun () -> ty) }
 
 
-let mk_emb em un typ et = {em = em; un = un; typ = typ; emb_typ=et}
+let mk_emb em un typ et = {em = em; un = un; typ = typ; e_typ=et}
 let mk_emb' em un = mk_emb (fun cbs t -> mk_t <| em cbs t) (fun cbs t -> un cbs t.nbe_t)
 
 
@@ -238,7 +238,7 @@ let embed_as (ea:embedding 'a)
  = mk_emb (fun cbs (x:'b) -> embed ea cbs (ba x))
           (fun cbs t -> BU.map_opt (unembed ea cbs t) ab)
           (fun () -> match ot with | Some t -> t | None -> ea.typ ())
-          ea.emb_typ
+          ea.e_typ
 
 let lid_as_constr (l:lident) (us:list universe) (args:args) : t =
     mkConstruct (lid_as_fv l (Some Data_ctor)) us args
@@ -361,7 +361,7 @@ let e_fsint = embed_as e_int Z.to_int_fs Z.of_int_fs None
 // Embedding at option type
 let e_option (ea : embedding 'a) : Prims.Tot _ =
     let etyp () =
-        ET_app(PC.option_lid |> Ident.string_of_lid, [ea.emb_typ ()])
+        ET_app(PC.option_lid |> Ident.string_of_lid, [ea.e_typ ()])
     in
     let em cb (o:option 'a) : t =
         lazy_embed etyp o (fun () ->
@@ -387,7 +387,7 @@ let e_option (ea : embedding 'a) : Prims.Tot _ =
 // Emdedding tuples
 let e_tuple2 (ea:embedding 'a) (eb:embedding 'b) =
     let etyp () =
-        ET_app(PC.lid_tuple2 |> Ident.string_of_lid, [ea.emb_typ (); eb.emb_typ ()])
+        ET_app(PC.lid_tuple2 |> Ident.string_of_lid, [ea.e_typ (); eb.e_typ ()])
     in
     let em cb (x:'a * 'b) : t =
         lazy_embed etyp x (fun () ->
@@ -413,7 +413,7 @@ let e_tuple2 (ea:embedding 'a) (eb:embedding 'b) =
 
 let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
     let etyp () =
-        ET_app(PC.lid_tuple3 |> Ident.string_of_lid, [ea.emb_typ (); eb.emb_typ (); ec.emb_typ ()])
+        ET_app(PC.lid_tuple3 |> Ident.string_of_lid, [ea.e_typ (); eb.e_typ (); ec.e_typ ()])
     in
     let em cb ((x1, x2, x3):('a * 'b * 'c)) : t =
         lazy_embed etyp (x1, x2, x3) (fun () ->
@@ -440,7 +440,7 @@ let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
 
 let e_either (ea:embedding 'a) (eb:embedding 'b) =
     let etyp () =
-        ET_app(PC.either_lid |> Ident.string_of_lid, [ea.emb_typ (); eb.emb_typ ()])
+        ET_app(PC.either_lid |> Ident.string_of_lid, [ea.e_typ (); eb.e_typ ()])
     in
     let em cb (s:either 'a 'b) : t =
         lazy_embed etyp s (fun () ->
@@ -513,7 +513,7 @@ let e_vconfig : embedding vconfig =
 // Emdedding lists
 let e_list (ea:embedding 'a) =
     let etyp () =
-        ET_app(PC.list_lid |> Ident.string_of_lid, [ea.emb_typ ()])
+        ET_app(PC.list_lid |> Ident.string_of_lid, [ea.e_typ ()])
     in
     let em cb (l:list 'a) : t =
         lazy_embed etyp l (fun () ->
@@ -541,7 +541,7 @@ let e_list (ea:embedding 'a) =
 let e_string_list = e_list e_string
 
 let e_arrow (ea:embedding 'a) (eb:embedding 'b) : Prims.Tot (embedding ('a -> 'b)) =
-    let etyp () = ET_fun(ea.emb_typ (), eb.emb_typ ()) in
+    let etyp () = ET_fun(ea.e_typ (), eb.e_typ ()) in
     let em cb (f : 'a -> 'b) : t =
         lazy_embed etyp f (fun () ->
         mk_t <| Lam ((fun tas -> match unembed ea cb (tas |> List.hd |> fst) with
@@ -648,7 +648,7 @@ let e_norm_step =
 // adds a `seal` marker to the result. The unembedding removes it.
 let e_sealed (ea : embedding 'a) =
     let etyp () =
-        ET_app(PC.sealed_lid |> Ident.string_of_lid, [ea.emb_typ ()])
+        ET_app(PC.sealed_lid |> Ident.string_of_lid, [ea.e_typ ()])
     in
     let em cb (x:'a) : t =
         lazy_embed etyp x (fun () ->

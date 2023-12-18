@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "a9c475a08c1ef5d09e2d602a62972023"
+      "fa40dbe45b9dacd5831201eac5c5b975"
     ],
     [
       "HoareDiv.bind",
@@ -17,20 +17,29 @@
       1,
       [ "@query" ],
       0,
-      "e2a31911139009fc648bcff9717d3d37"
+      "def5851cf9c5e3757cc8e3c55a838ff0"
     ],
     [
       "HoareDiv.subcomp",
       1,
       2,
       1,
-      [ "@query", "equation_HoareDiv.repr" ],
+      [ "@query" ],
       0,
-      "ac892b5d4024cdd519b1d01e53bc9e0d"
+      "9e7e6c45e5911a5cb32aba5bc5caac62"
     ],
     [
       "HoareDiv.HoareDiv",
       1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6bf89a37c86335aacbbf22d887337329"
+    ],
+    [
+      "HoareDiv.HoareDiv",
+      2,
       2,
       1,
       [
@@ -38,19 +47,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "f27b13e37ce33f3187242437f966954f"
-    ],
-    [
-      "HoareDiv.HoareDiv",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "2f253789a26b03cddad52028c595532e"
+      "49ffadcc6131228eaa9af67779e9454a"
     ],
     [
       "HoareDiv.HoareDiv",
@@ -62,7 +59,7 @@
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "27e9fb1b736da499a4c0619d87d9faa5"
+      "d449917935cc40dbc2cbd404a903cd29"
     ],
     [
       "HoareDiv.lift_pure_meff",
@@ -73,8 +70,7 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
         "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
-        "assumption_HoareDiv.WP_pure_monotonic", "eq2-interp",
-        "equation_Prims.l_True", "equation_Prims.logical",
+        "eq2-interp", "equation_Prims.l_True", "equation_Prims.logical",
         "equation_Prims.pure_post", "equation_Prims.pure_post_",
         "function_token_typing_Prims.l_True",
         "interpretation_Tm_abs_2d04d138904bd71a6adce46b0ec78292",
@@ -88,7 +84,7 @@
         "typing_Tm_abs_b66a28ec01f7bbb11191891e2b8510ec"
       ],
       0,
-      "cd2996510bdf9fca1a202a4632720a03"
+      "fb5d62ab822b041f35deb081f04acda6"
     ]
   ]
 ]

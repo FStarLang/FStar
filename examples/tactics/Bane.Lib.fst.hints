@@ -8,14 +8,14 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "data_elim_FStar.Tactics.Result.Success",
+        "data_elim_FStar.Stubs.Tactics.Result.Success",
         "equation_FStar.Pervasives.pattern",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
         "function_token_typing_FStar.Pervasives.pattern",
         "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "da6841a3e78f96cbce438d50ebd67fcc"
+      "5c455dc441938e541618e006a8821904"
     ]
   ]
 ]

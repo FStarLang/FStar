@@ -480,19 +480,20 @@ let e_term_view_aq aq =
 let e_term_view = e_term_view_aq noaqs
 
 (* embeds as a string list *)
-instance e_lid : embedding I.lid =
-    let embed rng lid : term =
-        embed rng (I.path_of_lid lid)
-    in
-    let unembed t : option I.lid =
-        BU.map_opt (unembed t) (fun p -> I.lid_of_path p t.pos)
-    in
-    EMB.mk_emb_full (fun x r _ _ -> embed r x)
-               (fun x _ -> unembed x)
-               (fun () -> t_list_of t_string)
-               I.string_of_lid
-               (fun () -> ET_abstract)
+// instance e_lid : embedding I.lid =
+//     let embed rng lid : term =
+//         embed rng (I.path_of_lid lid)
+//     in
+//     let unembed t : option I.lid =
+//         BU.map_opt (unembed t) (fun p -> I.lid_of_path p t.pos)
+//     in
+//     EMB.mk_emb_full (fun x r _ _ -> embed r x)
+//                (fun x _ -> unembed x)
+//                (fun () -> t_list_of t_string)
+//                I.string_of_lid
+//                (fun () -> ET_abstract)
 
+let e_name = e_list e_string
 
 instance e_bv_view =
     let embed_bv_view (rng:Range.range) (bvv:bv_view) : term =
@@ -757,7 +758,7 @@ let e_qualifier =
                         Range.dummyRange
 
         | RD.Projector (l, i) ->
-            S.mk_Tm_app ref_qual_Projector.t [S.as_arg (embed  rng (l, i))]
+            S.mk_Tm_app ref_qual_Projector.t [S.as_arg (embed rng (l, i))]
                         Range.dummyRange
 
         | RD.RecordType (ids1, ids2) ->

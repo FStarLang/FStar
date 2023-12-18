@@ -784,6 +784,15 @@ let ans_ok : answer = {
 let ans_fail : answer =
   { ans_ok with ok = false; nsuccess = 0 }
 
+instance _ : showable answer = {
+  show = (fun ans -> BU.format5 "ok=%s nsuccess=%s lo=%s hi=%s tried_recovery=%s"
+                            (show ans.ok)
+                            (show ans.nsuccess)
+                            (show ans.lo)
+                            (show ans.hi)
+                            (show ans.tried_recovery));
+}
+
 let make_solver_configs
     (can_split : bool)
     (is_retry : bool)
@@ -1097,7 +1106,7 @@ let ask_solver_recover
 let failing_query_ctr : ref int = BU.mk_ref 0
 
 let maybe_save_failing_query (env:env_t) (prefix:list decl) (qs:query_settings) : unit =
-  if Options.proof_recovery () then (
+  if Options.log_failing_queries () then (
     let mod = show (Env.current_module env) in
     let n = (failing_query_ctr := !failing_query_ctr + 1; !failing_query_ctr) in
     let file_name = BU.format2 "failedQueries-%s-%s.smt2" mod (show n) in
@@ -1153,8 +1162,9 @@ let ask_solver
         // whatever else they encode.
         Z3.giveZ3 prefix;
         let ans = ask_solver_recover configs in
+        let cfg = List.last configs in
         if not ans.ok then
-          maybe_save_failing_query env prefix (List.last configs);
+          maybe_save_failing_query env prefix cfg;
         ans
 
       )

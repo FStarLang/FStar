@@ -1617,6 +1617,26 @@ let (is_false : FStar_Syntax_Syntax.term -> Prims.bool) =
              FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.false_lid
          | uu___2 -> false)
     | uu___1 -> false
+let meas :
+  'a .
+    Prims.string -> 'a FStar_Tactics_Monad.tac -> 'a FStar_Tactics_Monad.tac
+  =
+  fun s ->
+    fun f ->
+      FStar_Tactics_Monad.mk_tac
+        (fun ps ->
+           let uu___ =
+             FStar_Compiler_Util.record_time
+               (fun uu___1 -> FStar_Tactics_Monad.run f ps) in
+           match uu___ with
+           | (r, ms) ->
+               ((let uu___2 =
+                   FStar_Class_Show.show
+                     (FStar_Class_Show.printableshow
+                        FStar_Class_Printable.printable_int) ms in
+                 FStar_Compiler_Util.print2 "++ Tactic %s ran in \t\t%sms\n"
+                   s uu___2);
+                r))
 let (tadmit_t : FStar_Syntax_Syntax.term -> unit FStar_Tactics_Monad.tac) =
   fun t ->
     let uu___ =
@@ -3055,6 +3075,19 @@ let (arrow_one :
           (match uu___1 with
            | (env2, b1::[], c1) ->
                FStar_Pervasives_Native.Some (env2, b1, c1))
+let (arrow_one_whnf :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.term ->
+      (FStar_TypeChecker_Env.env * FStar_Syntax_Syntax.binder *
+        FStar_Syntax_Syntax.comp) FStar_Pervasives_Native.option)
+  =
+  fun env1 ->
+    fun t ->
+      let uu___ = arrow_one env1 t in
+      match uu___ with
+      | FStar_Pervasives_Native.Some r -> FStar_Pervasives_Native.Some r
+      | FStar_Pervasives_Native.None ->
+          let uu___1 = whnf env1 t in arrow_one env1 uu___1
 let (intro :
   unit -> FStar_Reflection_V2_Data.binding FStar_Tactics_Monad.tac) =
   fun uu___ ->
@@ -3067,92 +3100,80 @@ let (intro :
                  let goal = Obj.magic goal in
                  let uu___2 =
                    let uu___3 = FStar_Tactics_Types.goal_env goal in
-                   let uu___4 =
-                     let uu___5 = FStar_Tactics_Types.goal_env goal in
-                     let uu___6 = FStar_Tactics_Types.goal_type goal in
-                     whnf uu___5 uu___6 in
-                   arrow_one uu___3 uu___4 in
+                   let uu___4 = FStar_Tactics_Types.goal_type goal in
+                   arrow_one_whnf uu___3 uu___4 in
                  match uu___2 with
+                 | FStar_Pervasives_Native.Some (uu___3, uu___4, c) when
+                     let uu___5 = FStar_Syntax_Util.is_total_comp c in
+                     Prims.op_Negation uu___5 ->
+                     Obj.magic
+                       (Obj.repr
+                          (FStar_Tactics_Monad.fail "Codomain is effectful"))
                  | FStar_Pervasives_Native.Some (env', b, c) ->
                      Obj.magic
                        (Obj.repr
-                          (let uu___3 =
-                             let uu___4 = FStar_Syntax_Util.is_total_comp c in
-                             Prims.op_Negation uu___4 in
-                           if uu___3
-                           then
-                             Obj.repr
-                               (FStar_Tactics_Monad.fail
-                                  "Codomain is effectful")
-                           else
-                             Obj.repr
-                               (let typ' = FStar_Syntax_Util.comp_result c in
-                                let uu___5 =
-                                  let uu___6 =
-                                    let uu___7 = should_check_goal_uvar goal in
-                                    FStar_Pervasives_Native.Some uu___7 in
-                                  let uu___7 = goal_typedness_deps goal in
-                                  FStar_Tactics_Monad.new_uvar "intro" env'
-                                    typ' uu___6 uu___7 (rangeof goal) in
-                                FStar_Class_Monad.op_let_Bang
-                                  FStar_Tactics_Monad.monad_tac () ()
-                                  (Obj.magic uu___5)
-                                  (fun uu___6 ->
-                                     (fun uu___6 ->
-                                        let uu___6 = Obj.magic uu___6 in
-                                        match uu___6 with
-                                        | (body, ctx_uvar) ->
-                                            let sol =
-                                              let uu___7 =
-                                                let uu___8 =
-                                                  FStar_Syntax_Util.residual_comp_of_comp
-                                                    c in
-                                                FStar_Pervasives_Native.Some
-                                                  uu___8 in
-                                              FStar_Syntax_Util.abs [b] body
-                                                uu___7 in
-                                            let uu___7 =
-                                              set_solution goal sol in
-                                            Obj.magic
-                                              (FStar_Class_Monad.op_let_Bang
-                                                 FStar_Tactics_Monad.monad_tac
-                                                 () () uu___7
-                                                 (fun uu___8 ->
-                                                    (fun uu___8 ->
-                                                       let uu___8 =
-                                                         Obj.magic uu___8 in
-                                                       let g =
-                                                         FStar_Tactics_Types.mk_goal
-                                                           env' ctx_uvar
-                                                           goal.FStar_Tactics_Types.opts
-                                                           goal.FStar_Tactics_Types.is_guard
-                                                           goal.FStar_Tactics_Types.label in
-                                                       let uu___9 =
-                                                         bnorm_and_replace g in
-                                                       Obj.magic
-                                                         (FStar_Class_Monad.op_let_Bang
-                                                            FStar_Tactics_Monad.monad_tac
-                                                            () () uu___9
-                                                            (fun uu___10 ->
-                                                               (fun uu___10
-                                                                  ->
-                                                                  let uu___10
-                                                                    =
-                                                                    Obj.magic
-                                                                    uu___10 in
-                                                                  let uu___11
-                                                                    =
-                                                                    binder_to_binding
-                                                                    b in
-                                                                  Obj.magic
-                                                                    (
-                                                                    FStar_Class_Monad.return
-                                                                    FStar_Tactics_Monad.monad_tac
-                                                                    ()
-                                                                    (Obj.magic
-                                                                    uu___11)))
-                                                                 uu___10)))
-                                                      uu___8))) uu___6))))
+                          (let typ' = FStar_Syntax_Util.comp_result c in
+                           let uu___3 =
+                             let uu___4 =
+                               let uu___5 = should_check_goal_uvar goal in
+                               FStar_Pervasives_Native.Some uu___5 in
+                             let uu___5 = goal_typedness_deps goal in
+                             FStar_Tactics_Monad.new_uvar "intro" env' typ'
+                               uu___4 uu___5 (rangeof goal) in
+                           FStar_Class_Monad.op_let_Bang
+                             FStar_Tactics_Monad.monad_tac () ()
+                             (Obj.magic uu___3)
+                             (fun uu___4 ->
+                                (fun uu___4 ->
+                                   let uu___4 = Obj.magic uu___4 in
+                                   match uu___4 with
+                                   | (body, ctx_uvar) ->
+                                       let sol =
+                                         let uu___5 =
+                                           let uu___6 =
+                                             FStar_Syntax_Util.residual_comp_of_comp
+                                               c in
+                                           FStar_Pervasives_Native.Some
+                                             uu___6 in
+                                         FStar_Syntax_Util.abs [b] body
+                                           uu___5 in
+                                       let uu___5 = set_solution goal sol in
+                                       Obj.magic
+                                         (FStar_Class_Monad.op_let_Bang
+                                            FStar_Tactics_Monad.monad_tac ()
+                                            () uu___5
+                                            (fun uu___6 ->
+                                               (fun uu___6 ->
+                                                  let uu___6 =
+                                                    Obj.magic uu___6 in
+                                                  let g =
+                                                    FStar_Tactics_Types.mk_goal
+                                                      env' ctx_uvar
+                                                      goal.FStar_Tactics_Types.opts
+                                                      goal.FStar_Tactics_Types.is_guard
+                                                      goal.FStar_Tactics_Types.label in
+                                                  let uu___7 =
+                                                    bnorm_and_replace g in
+                                                  Obj.magic
+                                                    (FStar_Class_Monad.op_let_Bang
+                                                       FStar_Tactics_Monad.monad_tac
+                                                       () () uu___7
+                                                       (fun uu___8 ->
+                                                          (fun uu___8 ->
+                                                             let uu___8 =
+                                                               Obj.magic
+                                                                 uu___8 in
+                                                             let uu___9 =
+                                                               binder_to_binding
+                                                                 b in
+                                                             Obj.magic
+                                                               (FStar_Class_Monad.return
+                                                                  FStar_Tactics_Monad.monad_tac
+                                                                  ()
+                                                                  (Obj.magic
+                                                                    uu___9)))
+                                                            uu___8))) uu___6)))
+                                  uu___4)))
                  | FStar_Pervasives_Native.None ->
                      Obj.magic
                        (Obj.repr
@@ -8237,12 +8258,40 @@ let (t_destruct :
                                                                     = mut1;_}
                                                                     ->
                                                                     Obj.repr
-                                                                    (let fv1
+                                                                    (let qual
                                                                     =
+                                                                    let fallback
+                                                                    uu___20 =
+                                                                    FStar_Pervasives_Native.Some
+                                                                    FStar_Syntax_Syntax.Data_ctor in
+                                                                    let qninfo
+                                                                    =
+                                                                    let uu___20
+                                                                    =
+                                                                    FStar_Tactics_Types.goal_env
+                                                                    g in
+                                                                    FStar_TypeChecker_Env.lookup_qname
+                                                                    uu___20
+                                                                    c_lid in
+                                                                    match qninfo
+                                                                    with
+                                                                    | 
+                                                                    FStar_Pervasives_Native.Some
+                                                                    (FStar_Pervasives.Inr
+                                                                    (se2,
+                                                                    _us),
+                                                                    _rng) ->
+                                                                    FStar_Syntax_DsEnv.fv_qual_of_se
+                                                                    se2
+                                                                    | 
+                                                                    uu___20
+                                                                    ->
+                                                                    fallback
+                                                                    () in
+                                                                    let fv1 =
                                                                     FStar_Syntax_Syntax.lid_as_fv
                                                                     c_lid
-                                                                    (FStar_Pervasives_Native.Some
-                                                                    FStar_Syntax_Syntax.Data_ctor) in
+                                                                    qual in
                                                                     let uu___20
                                                                     =
                                                                     failwhen

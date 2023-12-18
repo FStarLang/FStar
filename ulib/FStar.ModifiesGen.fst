@@ -1492,7 +1492,9 @@ let loc_unused_in #al c h =
 
 let loc_regions_unused_in #al c h rs = ()
 
+#push-options "--z3rlimit 20"
 let loc_addresses_unused_in #al c r a h = ()
+#pop-options
 
 let loc_addresses_not_unused_in #al c r a h = ()
 

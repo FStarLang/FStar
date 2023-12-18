@@ -413,19 +413,21 @@ let e_term_view_aq aq =
 
 let e_term_view = e_term_view_aq noaqs
 
+let e_name = e_list e_string
+
 (* embeds as a string list *)
-instance e_lid : embedding I.lid =
-    let embed rng lid : term =
-        embed rng (I.path_of_lid lid)
-    in
-    let uu t _norm : option I.lid =
-        BU.map_opt (try_unembed t) (fun p -> I.lid_of_path p t.pos)
-    in
-    EMB.mk_emb_full (fun x r _ _ -> embed r x)
-               uu
-               (fun () -> t_list_of t_string)
-               I.string_of_lid
-               (fun () -> ET_abstract)
+// instance e_name : embedding I.lid =
+//     let embed rng lid : term =
+//         embed rng (I.path_of_lid lid)
+//     in
+//     let uu t _norm : option I.lid =
+//         BU.map_opt (try_unembed t) (fun p -> I.lid_of_path p t.pos)
+//     in
+//     EMB.mk_emb_full (fun x r _ _ -> embed r x)
+//                uu
+//                (fun () -> t_list_of t_string)
+//                I.string_of_lid
+//                (fun () -> ET_abstract)
 
 
 instance e_namedv_view =
@@ -744,13 +746,13 @@ let e_qualifier =
         | _ when S.fv_eq_lid fv ref_qual_Effect.lid                           -> run args (pure RD.Effect)
         | _ when S.fv_eq_lid fv ref_qual_OnlyName.lid                         -> run args (pure RD.OnlyName)
         | _ when S.fv_eq_lid fv ref_qual_Reflectable.lid ->
-            run args (RD.Reflectable <$$> e_lid)
+            run args (RD.Reflectable <$$> e_name)
         | _ when S.fv_eq_lid fv ref_qual_Discriminator.lid ->
-            run args (RD.Discriminator <$$> e_lid)
+            run args (RD.Discriminator <$$> e_name)
         | _ when S.fv_eq_lid fv ref_qual_Action.lid ->
-            run args (RD.Action <$$> e_lid)
+            run args (RD.Action <$$> e_name)
         | _ when S.fv_eq_lid fv ref_qual_Projector.lid ->
-            run args (RD.Projector <$$> e_tuple2 e_lid e_ident)
+            run args (RD.Projector <$$> e_tuple2 e_name e_ident)
         | _ when S.fv_eq_lid fv ref_qual_RecordType.lid ->
             run args (RD.RecordType <$$> e_tuple2 (e_list e_ident) (e_list e_ident))
         | _ when S.fv_eq_lid fv ref_qual_RecordConstructor.lid ->

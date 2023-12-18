@@ -138,7 +138,7 @@ let e_term_aq aq =
     { NBETerm.em = embed_term
     ; NBETerm.un = unembed_term
     ; NBETerm.typ = (fun () -> mkFV fstar_refl_term_fv [] [])
-    ; NBETerm.emb_typ = (fun () -> fv_as_emb_typ fstar_refl_term_fv )
+    ; NBETerm.e_typ = (fun () -> fv_as_emb_typ fstar_refl_term_fv )
     }
 
 let e_term = e_term_aq (0, [])
@@ -882,6 +882,8 @@ let e_sigelt_view =
     in
     mk_emb' embed_sigelt_view unembed_sigelt_view fstar_refl_sigelt_view_fv
 
+let e_name : embedding name = e_list e_string
+
 let e_qualifier =
     let embed cb (q:RD.qualifier) : t =
         match q with
@@ -903,16 +905,16 @@ let e_qualifier =
         | RD.Effect                           -> mkConstruct ref_qual_Effect.fv [] []
         | RD.OnlyName                         -> mkConstruct ref_qual_OnlyName.fv [] []
         | RD.Reflectable l ->
-            mkConstruct ref_qual_Reflectable.fv [] [as_arg (embed e_lid cb l)]
+            mkConstruct ref_qual_Reflectable.fv [] [as_arg (embed e_name cb l)]
 
         | RD.Discriminator l ->
-            mkConstruct ref_qual_Discriminator.fv [] [as_arg (embed e_lid cb l)]
+            mkConstruct ref_qual_Discriminator.fv [] [as_arg (embed e_name cb l)]
 
         | RD.Action l ->
-            mkConstruct ref_qual_Action.fv [] [as_arg (embed e_lid cb l)]
+            mkConstruct ref_qual_Action.fv [] [as_arg (embed e_name cb l)]
 
         | RD.Projector li ->
-            mkConstruct ref_qual_Projector.fv [] [as_arg (embed (e_tuple2 e_lid e_ident) cb li)]
+            mkConstruct ref_qual_Projector.fv [] [as_arg (embed (e_tuple2 e_name e_ident) cb li)]
 
         | RD.RecordType ids12 ->
             mkConstruct ref_qual_RecordType.fv [] [as_arg (embed (e_tuple2 (e_list e_ident) (e_list e_ident)) cb ids12)]
@@ -941,19 +943,19 @@ let e_qualifier =
         | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_OnlyName.lid -> Some RD.OnlyName
 
         | Construct (fv, [], [(l, _)]) when S.fv_eq_lid fv ref_qual_Reflectable.lid ->
-            BU.bind_opt (unembed e_lid cb l) (fun l ->
+            BU.bind_opt (unembed e_name cb l) (fun l ->
             Some (RD.Reflectable l))
 
         | Construct (fv, [], [(l, _)]) when S.fv_eq_lid fv ref_qual_Discriminator.lid ->
-            BU.bind_opt (unembed e_lid cb l) (fun l ->
+            BU.bind_opt (unembed e_name cb l) (fun l ->
             Some (RD.Discriminator l))
 
         | Construct (fv, [], [(l, _)]) when S.fv_eq_lid fv ref_qual_Action.lid ->
-            BU.bind_opt (unembed e_lid cb l) (fun l ->
+            BU.bind_opt (unembed e_name cb l) (fun l ->
             Some (RD.Action l))
 
         | Construct (fv, [], [(li, _)]) when S.fv_eq_lid fv ref_qual_Projector.lid ->
-            BU.bind_opt (unembed (e_tuple2 e_lid e_ident) cb li) (fun li ->
+            BU.bind_opt (unembed (e_tuple2 e_name e_ident) cb li) (fun li ->
             Some (RD.Projector li))
 
         | Construct (fv, [], [(ids12, _)]) when S.fv_eq_lid fv ref_qual_RecordType.lid ->

@@ -2,15 +2,6 @@
   "7Q\u001fD’óx\"{Œ\u0001&•“\u000b¢",
   [
     [
-      "Normalization.test",
-      1,
-      0,
-      0,
-      [ "@query" ],
-      0,
-      "f00e13c25f620d03054aacedaa467335"
-    ],
-    [
       "Normalization.id",
       1,
       0,
@@ -24,16 +15,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "ba48d6be92f742d12a0f875814eaf8c6"
-    ],
-    [
-      "Normalization.test2",
-      1,
-      0,
-      0,
-      [ "@query" ],
-      0,
-      "e480f372d76892665d4a341731a39e3a"
+      "11b61774649279c8bfb8b7757d2c2b77"
     ],
     [
       "Normalization.pow2_values",
@@ -42,7 +24,7 @@
       0,
       [ "@query" ],
       0,
-      "03a3f5edfb97a37006cffd2811866b70"
+      "f26f4d181e3914706b1561cb2c36cd17"
     ],
     [
       "Normalization.test_sort",
@@ -56,7 +38,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "aacffdfa5a514ef3341383c781df9b5d"
+      "a9b46e3f90f65ad67f5f004b0cb2996d"
     ],
     [
       "Normalization.test_sort1",
@@ -70,7 +52,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "9f5fde239c272594462dfbc897e5104a"
+      "339a34a05c8eef0b26627999fedb9418"
     ],
     [
       "Normalization.f_1529_3",
@@ -82,7 +64,7 @@
         "interpretation_Tm_abs_8284a06c98cf4d08ee876bb3cd7024dc"
       ],
       0,
-      "5c1051b5ff905bb027a987507d58f4a6"
+      "81fd258b5bcfe226e66d621e70fdd1cb"
     ]
   ]
 ]

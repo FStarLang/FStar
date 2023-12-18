@@ -35,20 +35,21 @@ open FStar.TypeChecker
 open FStar.CheckedFiles
 
 (* Module abbreviations for the universal type-checker  *)
-module DsEnv   = FStar.Syntax.DsEnv
-module TcEnv   = FStar.TypeChecker.Env
-module Syntax  = FStar.Syntax.Syntax
-module Util    = FStar.Syntax.Util
-module Desugar = FStar.ToSyntax.ToSyntax
-module SMT     = FStar.SMTEncoding.Solver
-module Const   = FStar.Parser.Const
-module Pars    = FStar.Parser.ParseIt
-module Tc      = FStar.TypeChecker.Tc
-module TcTerm  = FStar.TypeChecker.TcTerm
-module BU      = FStar.Compiler.Util
-module Dep     = FStar.Parser.Dep
-module NBE     = FStar.TypeChecker.NBE
-module Ch      = FStar.CheckedFiles
+module DsEnv    = FStar.Syntax.DsEnv
+module TcEnv    = FStar.TypeChecker.Env
+module Syntax   = FStar.Syntax.Syntax
+module Util     = FStar.Syntax.Util
+module Desugar  = FStar.ToSyntax.ToSyntax
+module SMT      = FStar.SMTEncoding.Solver
+module Const    = FStar.Parser.Const
+module Pars     = FStar.Parser.ParseIt
+module Tc       = FStar.TypeChecker.Tc
+module TcTerm   = FStar.TypeChecker.TcTerm
+module BU       = FStar.Compiler.Util
+module Dep      = FStar.Parser.Dep
+module NBE      = FStar.TypeChecker.NBE
+module Ch       = FStar.CheckedFiles
+module MLSyntax = FStar.Extraction.ML.Syntax
 
 let module_or_interface_name m = m.is_interface, m.name
 
@@ -262,7 +263,7 @@ let load_interface_decls env interface_file_name : TcEnv.env_t =
 (***********************************************************************)
 
 (* Extraction to OCaml, F# or Krml *)
-let emit (mllibs:list (uenv & FStar.Extraction.ML.Syntax.mllib)) =
+let emit dep_graph (mllibs:list (uenv & MLSyntax.mllib)) =
   let opt = Options.codegen () in
   if opt <> None then
     let ext = match opt with
@@ -284,18 +285,20 @@ let emit (mllibs:list (uenv & FStar.Extraction.ML.Syntax.mllib)) =
 
     | Some Options.Extension ->
       //
-      // In the Extension mode, we dump (bindings_of_uenv & ml decls)
+      // In the Extension mode, we dump (list mname & bindings_of_uenv & ml decls)
       //   in the binary format to a file
+      // The first component is the list of dependencies
       //
       List.iter (fun (env, m) ->
-        let FStar.Extraction.ML.Syntax.MLLib ms = m in
+        let MLSyntax.MLLib ms = m in
         List.iter (fun m ->
           let mname, modul, _ = m in
           let filename = String.concat "_" (fst mname @ [snd mname]) in
           match modul with
           | Some (_, decls) ->
-            let bindings = FStar.Extraction.ML.UEnv.bindings_of_uenv env in 
-            save_value_to_file (Options.prepend_output_dir (filename^ext)) (bindings, decls)
+            let bindings = FStar.Extraction.ML.UEnv.bindings_of_uenv env in
+            let deps : list string = Dep.deps_of_modul dep_graph (MLSyntax.string_of_mlpath mname) in
+            save_value_to_file (Options.prepend_output_dir (filename^ext)) (deps, bindings, decls)
           | None ->
             failwith "Unexpected ml modul in Extension extraction mode"
         ) ms
@@ -318,7 +321,7 @@ let tc_one_file
         (fn:string) //file name
         (parsing_data:FStar.Parser.Dep.parsing_data)  //passed by the caller, ONLY for caching purposes at this point
     : tc_result
-    * option FStar.Extraction.ML.Syntax.mllib
+    * option MLSyntax.mllib
     * uenv =
   GenSym.reset_gensym();
 
@@ -530,7 +533,7 @@ let tc_one_file_from_remaining (remaining:list string) (env:uenv)
 
 let rec tc_fold_interleave (deps:FStar.Parser.Dep.deps)  //used to query parsing data
                            (acc:list tc_result &
-                                list (uenv & FStar.Extraction.ML.Syntax.mllib) &  // initial env in which this module is extracted
+                                list (uenv & MLSyntax.mllib) &  // initial env in which this module is extracted
                                 uenv)
                            (remaining:list string) =
   let as_list env mllib =
@@ -561,7 +564,7 @@ let batch_mode_tc filenames dep_graph =
   let env = FStar.Extraction.ML.UEnv.new_uenv (init_env dep_graph) in
   let all_mods, mllibs, env = tc_fold_interleave dep_graph ([], [], env) filenames in
   if FStar.Errors.get_err_count() = 0 then
-    emit mllibs;
+    emit dep_graph mllibs;
   let solver_refresh env =
       snd <|
       with_tcenv_of_env env (fun tcenv ->

@@ -146,12 +146,12 @@ type qualifier =
   | TotalEffect
   | Logic
   | Reifiable
-  | Reflectable of lid
-  | Discriminator of lid
-  | Projector of lid * ident
+  | Reflectable of name
+  | Discriminator of name
+  | Projector of name * ident
   | RecordType of (list ident * list ident)
   | RecordConstructor of (list ident * list ident)
-  | Action of lid
+  | Action of name
   | ExceptionConstructor
   | HasMaskedEffect
   | Effect

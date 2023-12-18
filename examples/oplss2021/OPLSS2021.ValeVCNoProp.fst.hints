@@ -11,7 +11,7 @@
         "data_elim_OPLSS2021.ValeVCNoProp.QProc"
       ],
       0,
-      "b6f0846e4265e2f5cef6372a3d448263"
+      "3cce0fc91aeaf96d6ea7f1fcf1ee2474"
     ],
     [
       "OPLSS2021.ValeVCNoProp.__proj__QSeq__item__c",
@@ -23,7 +23,7 @@
         "refinement_interpretation_Tm_refine_bde8d69bfca323e07f1d84828c8f34e5"
       ],
       0,
-      "0290cd7d8539f4d8256e1cba3290dd6b"
+      "909bb746eb13aa2199474c7da6ef1001"
     ],
     [
       "OPLSS2021.ValeVCNoProp.__proj__QSeq__item__cs",
@@ -35,7 +35,7 @@
         "refinement_interpretation_Tm_refine_bde8d69bfca323e07f1d84828c8f34e5"
       ],
       0,
-      "2bd34cac4923b22abda7999f0bd68cac"
+      "80d2aac207cfbc6ea1dcce2cf9612156"
     ],
     [
       "OPLSS2021.ValeVCNoProp.__proj__QSeq__item__hd",
@@ -48,7 +48,7 @@
         "refinement_interpretation_Tm_refine_bde8d69bfca323e07f1d84828c8f34e5"
       ],
       0,
-      "a0cc2628528438cf6e3195b0ebc67c1b"
+      "600decef5ff9d80424cbf1bd25101727"
     ],
     [
       "OPLSS2021.ValeVCNoProp.__proj__QSeq__item__tl",
@@ -61,7 +61,7 @@
         "refinement_interpretation_Tm_refine_bde8d69bfca323e07f1d84828c8f34e5"
       ],
       0,
-      "14994878f20006dfc6b7f9f4be6768e8"
+      "9b2bad0b0efb1d92005048062c4e3575"
     ],
     [
       "OPLSS2021.ValeVCNoProp.__proj__QLemma__item__cs",
@@ -73,7 +73,7 @@
         "refinement_interpretation_Tm_refine_32c131de72c0dc160585ed06ab3126ff"
       ],
       0,
-      "09419de1051aeaebb5d3f8e8dd78e46c"
+      "8f0ba5d16f9c3a7f70ebd81162a3f864"
     ],
     [
       "OPLSS2021.ValeVCNoProp.__proj__QLemma__item__pre",
@@ -85,7 +85,7 @@
         "refinement_interpretation_Tm_refine_32c131de72c0dc160585ed06ab3126ff"
       ],
       0,
-      "4bc6edb8ac2677bd635867ec4e5b3093"
+      "adb6e2da0bd4dfc0017588abd2573cc7"
     ],
     [
       "OPLSS2021.ValeVCNoProp.__proj__QLemma__item__post",
@@ -97,7 +97,7 @@
         "refinement_interpretation_Tm_refine_32c131de72c0dc160585ed06ab3126ff"
       ],
       0,
-      "30f8d4dcef2f012e827d280edb77242a"
+      "cd85fcf375ab54333e88d19409c780f7"
     ],
     [
       "OPLSS2021.ValeVCNoProp.__proj__QLemma__item___3",
@@ -110,7 +110,7 @@
         "refinement_interpretation_Tm_refine_32c131de72c0dc160585ed06ab3126ff"
       ],
       0,
-      "d9858de48d08e221134ea6a92bdccc39"
+      "3c0d24b8980f04e863a2c912ca0a3ba0"
     ],
     [
       "OPLSS2021.ValeVCNoProp.__proj__QLemma__item___4",
@@ -123,7 +123,7 @@
         "refinement_interpretation_Tm_refine_32c131de72c0dc160585ed06ab3126ff"
       ],
       0,
-      "46b88346b1e617c8205851126e1c9df8"
+      "499d30981a903db6d7cccd8e9871bbd3"
     ],
     [
       "OPLSS2021.ValeVCNoProp.vc_gen",
@@ -149,7 +149,7 @@
         "subterm_ordering_OPLSS2021.ValeVCNoProp.QSeq"
       ],
       0,
-      "8f6227ebf0ab89a0ae2e6d7548f4b355"
+      "91465ed36d38a63c3997fab3f76ed160"
     ],
     [
       "OPLSS2021.ValeVCNoProp.vc_sound",
@@ -182,7 +182,6 @@
         "equality_tok_OPLSS2021.ValeVCNoProp.QEmpty@tok",
         "equation_OPLSS2021.Vale.fuel", "equation_OPLSS2021.Vale.state",
         "equation_OPLSS2021.ValeVCNoProp.t_post", "equation_Prims.nat",
-        "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_OPLSS2021.Vale.eval_code.fuel_instrumented",
         "equation_with_fuel_OPLSS2021.Vale.eval_codes.fuel_instrumented",
         "equation_with_fuel_OPLSS2021.ValeVCNoProp.vc_gen.fuel_instrumented",
@@ -215,7 +214,7 @@
         "typing_tok_OPLSS2021.ValeVCNoProp.QEmpty@tok"
       ],
       0,
-      "3485f77452f1fed1349463c01c527e7a"
+      "ffb866cbcd1dfe9ee88ecb47664babd0"
     ],
     [
       "OPLSS2021.ValeVCNoProp.wp_Move",
@@ -224,7 +223,7 @@
       1,
       [ "@query" ],
       0,
-      "94360f1bb3a7cbb0d38360103e9cb246"
+      "b95f70465bfcf42363cecf4c248b115a"
     ],
     [
       "OPLSS2021.ValeVCNoProp.hasWp_Move",
@@ -241,7 +240,7 @@
         "typing_OPLSS2021.Vale.eval_operand"
       ],
       0,
-      "56b82ca7e1d838dfefbe6f5e67620316"
+      "5c06f84eaf159d4d9d2b522995822949"
     ],
     [
       "OPLSS2021.ValeVCNoProp.wp_Add",
@@ -250,7 +249,7 @@
       1,
       [ "@query" ],
       0,
-      "aa380c1de35ac59e7d6c9317c405be2a"
+      "6a998d148eae48fe230c6ebf7c8e5ae2"
     ],
     [
       "OPLSS2021.ValeVCNoProp.hasWp_Add",
@@ -270,7 +269,7 @@
         "typing_Tm_abs_8faaca484d7f2c70ef2d5458c2bc4e63"
       ],
       0,
-      "9ccff84d2e8ad85e9a2fd30cc07de701"
+      "cffa304b025fe182a5cbb2f76f524b5c"
     ],
     [
       "OPLSS2021.ValeVCNoProp.vc_sound_norm",
@@ -279,7 +278,7 @@
       1,
       [ "@query" ],
       0,
-      "012dad1954c2c5bc8db3611325655826"
+      "c06349d5cd3b62c63b6fa2b5171b3742"
     ],
     [
       "OPLSS2021.ValeVCNoProp.state_eq",
@@ -299,7 +298,7 @@
         "fuel_guarded_inversion_OPLSS2021.Vale.reg", "l_and-interp"
       ],
       0,
-      "333dbaec3b3261002b702e2e32f4a54f"
+      "b97c2b38e89f4a21cb5f4b65190ef8a3"
     ],
     [
       "OPLSS2021.ValeVCNoProp.lemma_Triple_opt",
@@ -311,19 +310,21 @@
         "data_elim_FStar.Pervasives.Native.Mktuple2",
         "equality_tok_OPLSS2021.Vale.Rax@tok",
         "equality_tok_OPLSS2021.Vale.Rbx@tok",
-        "equation_OPLSS2021.Vale.fuel", "equation_OPLSS2021.Vale.pow2_64",
-        "equation_OPLSS2021.Vale.state",
+        "equation_OPLSS2021.Vale.fuel", "equation_OPLSS2021.Vale.nat64",
+        "equation_OPLSS2021.Vale.pow2_64", "equation_OPLSS2021.Vale.state",
         "equation_OPLSS2021.Vale.update_reg",
         "equation_OPLSS2021.Vale.update_state",
         "equation_OPLSS2021.ValeVCNoProp.state_eq", "equation_Prims.nat",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "projection_inverse_BoxInt_proj_0",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_b3c5a7af1b5524553dc82cef72baac45",
+        "refinement_interpretation_Tm_refine_c5c5dd75ebebb1f25581102c583fe79e",
         "typing_OPLSS2021.ValeVCNoProp.state_eq",
         "typing_Tm_abs_8faaca484d7f2c70ef2d5458c2bc4e63"
       ],
       0,
-      "d67eec7759366b89a1f9891cb61425d5"
+      "69eb39b53e786edd78c32d4d6ec14d86"
     ]
   ]
 ]

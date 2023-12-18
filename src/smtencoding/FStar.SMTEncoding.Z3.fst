@@ -603,10 +603,16 @@ let context_profile (theory:list decl) =
 
 let mk_input (fresh : bool) (theory : list decl) : string & option string & option string =
     let ver = Options.z3_version () in
-    let options = "; Z3 invocation started by F*\n" in
-    let options = options ^ "; F* version: " ^ !Options._version ^ " -- hash: " ^ !Options._commit ^ "\n" in
-    let options = options ^ "; Z3 version (according to F*): " ^ Options.z3_version() ^ "\n" in
-    let options = options ^ z3_options ver in
+    let theory =
+      (* Add a caption with some version info. *)
+      ( Caption <|
+          BU.format3 "Z3 invocation started by F*\n\
+                      F* version: %s -- commit hash: %s\n\
+                      Z3 version (according to F*): %s"
+                        (!Options._version) (!Options._commit) ver
+      ) :: theory
+    in
+    let options = z3_options ver in
     let options = options ^ (Options.z3_smtopt() |> String.concat "\n") ^ "\n\n" in
     if Options.print_z3_statistics() then context_profile theory;
     let r, hash =

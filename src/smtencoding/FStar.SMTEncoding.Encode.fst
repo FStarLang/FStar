@@ -31,6 +31,7 @@ open FStar.SMTEncoding
 open FStar.SMTEncoding.Util
 open FStar.SMTEncoding.Env
 open FStar.SMTEncoding.EncodeTerm
+open FStar.Class.Show
 
 module BU     = FStar.Compiler.Util
 module Const  = FStar.Parser.Const
@@ -992,11 +993,7 @@ let encode_top_level_let :
 
 
 let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t * env_t) =
-    let nm =
-        match U.lid_of_sigelt se with
-        | None -> ""
-        | Some l -> (string_of_lid l)
-    in
+    let nm = Print.sigelt_to_string_short se in
     let g, env = Errors.with_ctx (BU.format1 "While encoding top-level declaration `%s`"
                                              (Print.sigelt_to_string_short se))
                    (fun () -> encode_sigelt' env se)
@@ -1879,7 +1876,7 @@ let recover_caching_and_update_env (env:env_t) (decls:decls_t) :decls_t =
 let encode_sig tcenv se =
    let caption decls =
     if Options.log_queries()
-    then Term.Caption ("encoding sigelt " ^ (U.lids_of_sigelt se |> List.map Print.lid_to_string |> String.concat ", "))::decls
+    then Term.Caption ("encoding sigelt " ^ Print.sigelt_to_string_short se)::decls
     else decls in
    if Env.debug tcenv Options.Medium
    then BU.print1 "+++++++++++Encoding sigelt %s\n" (Print.sigelt_to_string se);
@@ -1970,10 +1967,12 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
     let labels, phi = ErrorReporting.label_goals use_env_msg (Env.get_range tcenv) phi in
     let label_prefix, label_suffix = encode_labels labels in
     let caption =
-        if Options.log_queries ()
-        then [Caption ("Encoding query formula : " ^ (Print.term_to_string q));
-              Caption ("Context: " ^ String.concat "\n" (Errors.get_ctx ()))]
-        else []
+      (* If these options are off, the Captions will be dropped anyway,
+      but by checking here we can skip the printing. *)
+      if Options.log_queries () || Options.log_failing_queries ()
+      then [Caption ("Encoding query formula : " ^ (Print.term_to_string q));
+            Caption ("Context: " ^ String.concat "\n" (Errors.get_ctx ()))]
+      else []
     in
     let query_prelude =
         env_decls

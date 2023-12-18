@@ -906,87 +906,98 @@ let (load_interface_decls :
       | FStar_Parser_ParseIt.Term uu___ ->
           FStar_Compiler_Effect.failwith
             "Impossible: parsing a Toplevel always results in an ASTFragment"
-let (emit : (uenv * FStar_Extraction_ML_Syntax.mllib) Prims.list -> unit) =
-  fun mllibs ->
-    let opt = FStar_Options.codegen () in
-    if opt <> FStar_Pervasives_Native.None
-    then
-      let ext =
+let (emit :
+  FStar_Parser_Dep.deps ->
+    (uenv * FStar_Extraction_ML_Syntax.mllib) Prims.list -> unit)
+  =
+  fun dep_graph ->
+    fun mllibs ->
+      let opt = FStar_Options.codegen () in
+      if opt <> FStar_Pervasives_Native.None
+      then
+        let ext =
+          match opt with
+          | FStar_Pervasives_Native.Some (FStar_Options.FSharp) -> ".fs"
+          | FStar_Pervasives_Native.Some (FStar_Options.OCaml) -> ".ml"
+          | FStar_Pervasives_Native.Some (FStar_Options.Plugin) -> ".ml"
+          | FStar_Pervasives_Native.Some (FStar_Options.Krml) -> ".krml"
+          | FStar_Pervasives_Native.Some (FStar_Options.Extension) -> ".ast"
+          | uu___ -> FStar_Compiler_Effect.failwith "Unrecognized option" in
         match opt with
-        | FStar_Pervasives_Native.Some (FStar_Options.FSharp) -> ".fs"
-        | FStar_Pervasives_Native.Some (FStar_Options.OCaml) -> ".ml"
-        | FStar_Pervasives_Native.Some (FStar_Options.Plugin) -> ".ml"
-        | FStar_Pervasives_Native.Some (FStar_Options.Krml) -> ".krml"
-        | FStar_Pervasives_Native.Some (FStar_Options.Extension) -> ".ast"
-        | uu___ -> FStar_Compiler_Effect.failwith "Unrecognized option" in
-      match opt with
-      | FStar_Pervasives_Native.Some (FStar_Options.FSharp) ->
-          let outdir = FStar_Options.output_dir () in
-          let uu___ =
-            FStar_Compiler_List.map FStar_Pervasives_Native.snd mllibs in
-          FStar_Compiler_List.iter
-            (FStar_Extraction_ML_PrintML.print outdir ext) uu___
-      | FStar_Pervasives_Native.Some (FStar_Options.OCaml) ->
-          let outdir = FStar_Options.output_dir () in
-          let uu___ =
-            FStar_Compiler_List.map FStar_Pervasives_Native.snd mllibs in
-          FStar_Compiler_List.iter
-            (FStar_Extraction_ML_PrintML.print outdir ext) uu___
-      | FStar_Pervasives_Native.Some (FStar_Options.Plugin) ->
-          let outdir = FStar_Options.output_dir () in
-          let uu___ =
-            FStar_Compiler_List.map FStar_Pervasives_Native.snd mllibs in
-          FStar_Compiler_List.iter
-            (FStar_Extraction_ML_PrintML.print outdir ext) uu___
-      | FStar_Pervasives_Native.Some (FStar_Options.Extension) ->
-          FStar_Compiler_List.iter
-            (fun uu___ ->
-               match uu___ with
-               | (env, m) ->
-                   let uu___1 = m in
-                   (match uu___1 with
-                    | FStar_Extraction_ML_Syntax.MLLib ms ->
-                        FStar_Compiler_List.iter
-                          (fun m1 ->
-                             let uu___2 = m1 in
-                             match uu___2 with
-                             | (mname, modul, uu___3) ->
-                                 let filename =
-                                   FStar_Compiler_String.concat "_"
-                                     (FStar_Compiler_List.op_At
-                                        (FStar_Pervasives_Native.fst mname)
-                                        [FStar_Pervasives_Native.snd mname]) in
-                                 (match modul with
-                                  | FStar_Pervasives_Native.Some
-                                      (uu___4, decls) ->
-                                      let bindings =
-                                        FStar_Extraction_ML_UEnv.bindings_of_uenv
-                                          env in
-                                      let uu___5 =
-                                        FStar_Options.prepend_output_dir
-                                          (Prims.strcat filename ext) in
-                                      FStar_Compiler_Util.save_value_to_file
-                                        uu___5 (bindings, decls)
-                                  | FStar_Pervasives_Native.None ->
-                                      FStar_Compiler_Effect.failwith
-                                        "Unexpected ml modul in Extension extraction mode"))
-                          ms)) mllibs
-      | FStar_Pervasives_Native.Some (FStar_Options.Krml) ->
-          let programs =
+        | FStar_Pervasives_Native.Some (FStar_Options.FSharp) ->
+            let outdir = FStar_Options.output_dir () in
             let uu___ =
               FStar_Compiler_List.map FStar_Pervasives_Native.snd mllibs in
-            FStar_Compiler_List.collect FStar_Extraction_Krml.translate uu___ in
-          let bin = (FStar_Extraction_Krml.current_version, programs) in
-          (match programs with
-           | (name, uu___)::[] ->
-               let uu___1 =
-                 FStar_Options.prepend_output_dir (Prims.strcat name ext) in
-               FStar_Compiler_Util.save_value_to_file uu___1 bin
-           | uu___ ->
-               let uu___1 = FStar_Options.prepend_output_dir "out.krml" in
-               FStar_Compiler_Util.save_value_to_file uu___1 bin)
-      | uu___ -> FStar_Compiler_Effect.failwith "Unrecognized option"
-    else ()
+            FStar_Compiler_List.iter
+              (FStar_Extraction_ML_PrintML.print outdir ext) uu___
+        | FStar_Pervasives_Native.Some (FStar_Options.OCaml) ->
+            let outdir = FStar_Options.output_dir () in
+            let uu___ =
+              FStar_Compiler_List.map FStar_Pervasives_Native.snd mllibs in
+            FStar_Compiler_List.iter
+              (FStar_Extraction_ML_PrintML.print outdir ext) uu___
+        | FStar_Pervasives_Native.Some (FStar_Options.Plugin) ->
+            let outdir = FStar_Options.output_dir () in
+            let uu___ =
+              FStar_Compiler_List.map FStar_Pervasives_Native.snd mllibs in
+            FStar_Compiler_List.iter
+              (FStar_Extraction_ML_PrintML.print outdir ext) uu___
+        | FStar_Pervasives_Native.Some (FStar_Options.Extension) ->
+            FStar_Compiler_List.iter
+              (fun uu___ ->
+                 match uu___ with
+                 | (env, m) ->
+                     let uu___1 = m in
+                     (match uu___1 with
+                      | FStar_Extraction_ML_Syntax.MLLib ms ->
+                          FStar_Compiler_List.iter
+                            (fun m1 ->
+                               let uu___2 = m1 in
+                               match uu___2 with
+                               | (mname, modul, uu___3) ->
+                                   let filename =
+                                     FStar_Compiler_String.concat "_"
+                                       (FStar_Compiler_List.op_At
+                                          (FStar_Pervasives_Native.fst mname)
+                                          [FStar_Pervasives_Native.snd mname]) in
+                                   (match modul with
+                                    | FStar_Pervasives_Native.Some
+                                        (uu___4, decls) ->
+                                        let bindings =
+                                          FStar_Extraction_ML_UEnv.bindings_of_uenv
+                                            env in
+                                        let deps =
+                                          let uu___5 =
+                                            FStar_Extraction_ML_Syntax.string_of_mlpath
+                                              mname in
+                                          FStar_Parser_Dep.deps_of_modul
+                                            dep_graph uu___5 in
+                                        let uu___5 =
+                                          FStar_Options.prepend_output_dir
+                                            (Prims.strcat filename ext) in
+                                        FStar_Compiler_Util.save_value_to_file
+                                          uu___5 (deps, bindings, decls)
+                                    | FStar_Pervasives_Native.None ->
+                                        FStar_Compiler_Effect.failwith
+                                          "Unexpected ml modul in Extension extraction mode"))
+                            ms)) mllibs
+        | FStar_Pervasives_Native.Some (FStar_Options.Krml) ->
+            let programs =
+              let uu___ =
+                FStar_Compiler_List.map FStar_Pervasives_Native.snd mllibs in
+              FStar_Compiler_List.collect FStar_Extraction_Krml.translate
+                uu___ in
+            let bin = (FStar_Extraction_Krml.current_version, programs) in
+            (match programs with
+             | (name, uu___)::[] ->
+                 let uu___1 =
+                   FStar_Options.prepend_output_dir (Prims.strcat name ext) in
+                 FStar_Compiler_Util.save_value_to_file uu___1 bin
+             | uu___ ->
+                 let uu___1 = FStar_Options.prepend_output_dir "out.krml" in
+                 FStar_Compiler_Util.save_value_to_file uu___1 bin)
+        | uu___ -> FStar_Compiler_Effect.failwith "Unrecognized option"
+      else ()
 let (tc_one_file :
   uenv ->
     Prims.string FStar_Pervasives_Native.option ->
@@ -1394,7 +1405,7 @@ let (batch_mode_tc :
            ((let uu___3 =
                let uu___4 = FStar_Errors.get_err_count () in
                uu___4 = Prims.int_zero in
-             if uu___3 then emit mllibs else ());
+             if uu___3 then emit dep_graph mllibs else ());
             (let solver_refresh env2 =
                let uu___3 =
                  with_tcenv_of_env env2

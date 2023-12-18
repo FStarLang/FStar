@@ -1,0 +1,50 @@
+[
+  "«†{\u0001«bì›¹8¯¤ý\u000eJº",
+  [
+    [
+      "Bug3130e.transitivity",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.List.Tot.Base_interpretation_Tm_arrow_c8126b87a2c25bb477df4a7a6b0eea9e",
+        "bool_inversion", "data_elim_Bug3130e.Mkord_leq",
+        "equation_Bug3130e.leq", "fuel_guarded_inversion_Bug3130e.ord_leq",
+        "interpretation_Tm_abs_9563a090f65b0f80871ba123f9571371",
+        "proj_equation_Bug3130e.Mkord_leq_leq",
+        "token_correspondence_Bug3130e.__proj__Mkord_leq__item__leq",
+        "token_correspondence_Bug3130e.leq"
+      ],
+      0,
+      "e37bb25e863a9703e01d44fb34d3483e"
+    ],
+    [
+      "Bug3130e.transitivity_forall",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_Bug3130e.transitivity" ],
+      0,
+      "e5df40127e4c0071e91f49e24dcf74a6"
+    ],
+    [
+      "Bug3130e.transitivity_forall2",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_Bug3130e.transitivity" ],
+      0,
+      "140a96cffe313ec83431735768d41fa0"
+    ],
+    [
+      "Bug3130e.transitivity_forall3",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_Bug3130e.transitivity" ],
+      0,
+      "99c312452bc5f6d861f3eb9d32d08e12"
+    ]
+  ]
+]

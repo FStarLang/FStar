@@ -11,11 +11,11 @@
         "assumption_OPLSS2021.Vale.reg__uu___haseq",
         "equation_OPLSS2021.Vale.nat64", "equation_Prims.eqtype",
         "function_token_typing_Prims.int",
-        "haseqTm_refine_ed97fa092a651ead6f84d0496731176c",
+        "haseqTm_refine_c5c5dd75ebebb1f25581102c583fe79e",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "f0f53d8d63132b8a1a4a2313bfd7792a"
+      "f366d9a7c78955decec8caa54b013477"
     ],
     [
       "OPLSS2021.Vale.__proj__OReg__item__r",
@@ -27,7 +27,7 @@
         "refinement_interpretation_Tm_refine_767b1c02b1152eda22dfc5f487f5bd48"
       ],
       0,
-      "badd44e324628c3b967a39949636c4f4"
+      "ba2020ba4d7f25bde0367888530d5ef1"
     ],
     [
       "OPLSS2021.Vale.__proj__OConst__item__n",
@@ -39,7 +39,7 @@
         "refinement_interpretation_Tm_refine_31435c1220821636b1b8215c6864737e"
       ],
       0,
-      "6b9b5efce7cc79baf8bdbfce60940485"
+      "3ff738cd5f7ff36a2fe57d7dfa63bc4e"
     ],
     [
       "OPLSS2021.Vale.ins",
@@ -48,7 +48,7 @@
       1,
       [ "@query", "assumption_OPLSS2021.Vale.operand__uu___haseq" ],
       0,
-      "29c99f77376bc9a09bc80cefcc3f3234"
+      "1cf8547f2c0eb4a629725460a95d7f0a"
     ],
     [
       "OPLSS2021.Vale.__proj__Mov64__item__dst",
@@ -60,7 +60,7 @@
         "refinement_interpretation_Tm_refine_1e014b3f2009124f1e9820298621d9cd"
       ],
       0,
-      "2c67c419366bffa8e36a0c9095f8a938"
+      "048da73507a2a732940d78203a5abac8"
     ],
     [
       "OPLSS2021.Vale.__proj__Mov64__item__src",
@@ -72,7 +72,7 @@
         "refinement_interpretation_Tm_refine_1e014b3f2009124f1e9820298621d9cd"
       ],
       0,
-      "814188b272efa7cff092ce36265699cb"
+      "4c139fc53a0f001032e91f0fd1ce31f2"
     ],
     [
       "OPLSS2021.Vale.__proj__Add64__item__dst",
@@ -84,7 +84,7 @@
         "refinement_interpretation_Tm_refine_55376096b1a989ae6a21c8f8034f5071"
       ],
       0,
-      "f3e988ae27753d9478f16ceb3007b28f"
+      "519e2f3b345ff0ff0f5cdecacbb59a7f"
     ],
     [
       "OPLSS2021.Vale.__proj__Add64__item__src",
@@ -96,7 +96,7 @@
         "refinement_interpretation_Tm_refine_55376096b1a989ae6a21c8f8034f5071"
       ],
       0,
-      "ca56dfd11c4d6912ce3cd3f60f6fe3d3"
+      "326ac512bb98758329cb1eb9dbd7a286"
     ],
     [
       "OPLSS2021.Vale.code",
@@ -110,7 +110,7 @@
         "kinding_OPLSS2021.Vale.code@tok"
       ],
       0,
-      "c673bd453651c093d969887732853682"
+      "fb1d198b1c2197ffd952c88a2205c62a"
     ],
     [
       "OPLSS2021.Vale.__proj__Ins__item__ins",
@@ -122,7 +122,7 @@
         "refinement_interpretation_Tm_refine_7e365516ac35fda7226aed28c5e84ab2"
       ],
       0,
-      "00cef7d2f2e85e1e6917df61136273b1"
+      "dbfa87fa1e56bc29e52a3715084b1e98"
     ],
     [
       "OPLSS2021.Vale.__proj__Block__item__block",
@@ -134,7 +134,7 @@
         "refinement_interpretation_Tm_refine_2f37b752c25f2c8afc9b4f05a0d6d39d"
       ],
       0,
-      "58dfe646683de30fe66195e94caeeb1b"
+      "1e796644bc015726f8634a5a3439eb3a"
     ],
     [
       "OPLSS2021.Vale.__proj__WhileLessThan__item__src1",
@@ -146,7 +146,7 @@
         "refinement_interpretation_Tm_refine_1ba7e4fd9b9638abb41d1df94e35f534"
       ],
       0,
-      "30b2d0cfd5aeec8a08ffd0ffd2ff0b9c"
+      "a8d072df5f4051c185ef913be3b65492"
     ],
     [
       "OPLSS2021.Vale.__proj__WhileLessThan__item__src2",
@@ -158,7 +158,7 @@
         "refinement_interpretation_Tm_refine_1ba7e4fd9b9638abb41d1df94e35f534"
       ],
       0,
-      "f728a9c644171ac70666a283b20e53da"
+      "d1c327dc48683733e6d7b10d997d7dbc"
     ],
     [
       "OPLSS2021.Vale.__proj__WhileLessThan__item__whileBody",
@@ -170,7 +170,7 @@
         "refinement_interpretation_Tm_refine_1ba7e4fd9b9638abb41d1df94e35f534"
       ],
       0,
-      "57b2e394731c69ac4ea94957b2639fdf"
+      "f5b4b826c26e92748cd3f0b9c2b02087"
     ],
     [
       "OPLSS2021.Vale.eval_operand",
@@ -185,7 +185,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "71bb5538aa1726ccc1e07710d851fd29"
+      "4b72956b4ffa8b7c6158cf8390275162"
     ],
     [
       "OPLSS2021.Vale.update_reg",
@@ -194,7 +194,7 @@
       1,
       [ "@query", "assumption_OPLSS2021.Vale.reg__uu___haseq" ],
       0,
-      "6e41656fca4b356562f9d62b95e26029"
+      "b44e44c296d1ec19620e9196e155b3dc"
     ],
     [
       "OPLSS2021.Vale.eval_ins",
@@ -210,6 +210,7 @@
         "equation_OPLSS2021.Vale.pow2_64",
         "fuel_guarded_inversion_OPLSS2021.Vale.ins",
         "fuel_guarded_inversion_OPLSS2021.Vale.operand",
+        "primitive_Prims.op_Modulus",
         "proj_equation_OPLSS2021.Vale.Add64_dst",
         "proj_equation_OPLSS2021.Vale.Mov64_dst",
         "projection_inverse_BoxBool_proj_0",
@@ -220,7 +221,7 @@
         "typing_OPLSS2021.Vale.__proj__Mov64__item__dst"
       ],
       0,
-      "0435f82c2f7a1b21c36b732b24396f25"
+      "917e4f5769a6051ab29f7b1d3288cd94"
     ],
     [
       "OPLSS2021.Vale.eval_code",
@@ -237,11 +238,11 @@
         "disc_equation_OPLSS2021.Vale.Ins",
         "disc_equation_OPLSS2021.Vale.WhileLessThan",
         "equation_OPLSS2021.Vale.fuel", "equation_OPLSS2021.Vale.state",
-        "equation_Prims.nat", "equation_Prims.op_Equals_Equals_Equals",
-        "fuel_guarded_inversion_OPLSS2021.Vale.code",
+        "equation_Prims.nat", "fuel_guarded_inversion_OPLSS2021.Vale.code",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "kinding_Tm_arrow_da5b174febdf6335edfee518c5804755",
         "lemma_FStar.Pervasives.invertOption", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
@@ -250,7 +251,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "317d9082304978c12f1e47c301c0cecd"
+      "26e072c1398633c2b71f93dcef3842b3"
     ],
     [
       "OPLSS2021.Vale.eval_code",
@@ -267,7 +268,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "fddc390b2051e71b7b1133f13ead4f3d"
+      "ce97d55928576dd9e11c1449e1db656f"
     ],
     [
       "OPLSS2021.Vale.increase_fuel",
@@ -298,13 +299,14 @@
         "disc_equation_OPLSS2021.Vale.Ins",
         "disc_equation_OPLSS2021.Vale.WhileLessThan",
         "equation_OPLSS2021.Vale.fuel", "equation_OPLSS2021.Vale.state",
-        "equation_Prims.nat", "equation_Prims.op_Equals_Equals_Equals",
+        "equation_Prims.nat",
         "equation_with_fuel_OPLSS2021.Vale.eval_code.fuel_instrumented",
         "fuel_guarded_inversion_OPLSS2021.Vale.code",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing",
         "kinding_Tm_arrow_da5b174febdf6335edfee518c5804755",
         "lemma_FStar.Pervasives.invertOption", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.None_a",
@@ -321,7 +323,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "ca2e23890132e3f3e498f8ac1e097764"
+      "078fd5199fb7056efdf2010fedd1a19f"
     ],
     [
       "OPLSS2021.Vale.increase_fuel",
@@ -347,7 +349,7 @@
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_OPLSS2021.Vale.fuel", "equation_OPLSS2021.Vale.state",
-        "equation_Prims.nat", "equation_Prims.op_Equals_Equals_Equals",
+        "equation_Prims.nat",
         "equation_with_fuel_OPLSS2021.Vale.eval_code.fuel_instrumented",
         "equation_with_fuel_OPLSS2021.Vale.eval_codes.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list", "int_inversion",
@@ -364,7 +366,7 @@
         "subterm_ordering_Prims.Cons", "typing_OPLSS2021.Vale.eval_code"
       ],
       0,
-      "44ad279a89db3cbfa424bdb5097c058a"
+      "61d2bc94f1b511564871457bb8d51987"
     ],
     [
       "OPLSS2021.Vale.lemma_merge",
@@ -400,7 +402,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "04acf5e8709428907600f07a815ac9d7"
+      "70819d64057cbb0aeb6ba8be96562d43"
     ],
     [
       "OPLSS2021.Vale.lemma_Move",
@@ -441,7 +443,7 @@
         "refinement_interpretation_Tm_refine_d2a65690bfafb23b197313a1aed6dc24"
       ],
       0,
-      "b6f761a035592986e72ff196c693dd34"
+      "d205c7e1774bade042266265415cefd0"
     ],
     [
       "OPLSS2021.Vale.lemma_Add",
@@ -468,9 +470,10 @@
         "equation_OPLSS2021.Vale.update_reg",
         "equation_OPLSS2021.Vale.update_state", "equation_Prims.nat",
         "equation_with_fuel_OPLSS2021.Vale.eval_code.fuel_instrumented",
-        "int_typing",
+        "int_inversion", "int_typing",
         "interpretation_Tm_abs_8faaca484d7f2c70ef2d5458c2bc4e63",
-        "primitive_Prims.op_Equality", "proj_equation_OPLSS2021.Vale.OReg_r",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Modulus", "proj_equation_OPLSS2021.Vale.OReg_r",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
@@ -481,12 +484,12 @@
         "projection_inverse_OPLSS2021.Vale.Add64_src",
         "projection_inverse_OPLSS2021.Vale.Ins_ins",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_ec4224478d54f44369614545677b88ac",
-        "refinement_interpretation_Tm_refine_ed97fa092a651ead6f84d0496731176c",
+        "refinement_interpretation_Tm_refine_596d0b7120ea84fca7d381887a528bd9",
+        "refinement_interpretation_Tm_refine_c5c5dd75ebebb1f25581102c583fe79e",
         "typing_OPLSS2021.Vale.eval_operand"
       ],
       0,
-      "3ea34d1b4e3d0fb3554696e2b948fd98"
+      "9ae218ccd87e329c319a9ea48c8c0a37"
     ],
     [
       "OPLSS2021.Vale.lemma_Triple",
@@ -521,7 +524,8 @@
         "equation_with_fuel_OPLSS2021.Vale.eval_codes.fuel_instrumented",
         "int_inversion", "int_typing",
         "interpretation_Tm_abs_8faaca484d7f2c70ef2d5458c2bc4e63",
-        "primitive_Prims.op_Equality", "proj_equation_OPLSS2021.Vale.OReg_r",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Multiply", "proj_equation_OPLSS2021.Vale.OReg_r",
         "proj_equation_Prims.Cons_hd", "proj_equation_Prims.Cons_tl",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
@@ -534,7 +538,7 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "ed31e132d98fbfb061b1beb7493b8e79"
+      "c9158757f0a391011d56d05d96b83a93"
     ]
   ]
 ]

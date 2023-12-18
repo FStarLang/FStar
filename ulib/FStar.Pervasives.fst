@@ -190,6 +190,8 @@ let unused = ()
 
 let no_auto_projectors = ()
 
+let no_auto_projectors_decls = ()
+
 let no_subtyping = ()
 
 let admit_termination = ()

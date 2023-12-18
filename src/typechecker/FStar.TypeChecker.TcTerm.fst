@@ -1608,6 +1608,9 @@ and tc_synth head env args rng =
         raise_error (Errors.Fatal_SynthByTacticError, "synth_by_tactic: bad application") rng
     in
 
+    if Env.debug env <| Options.Other "Tac" then
+      BU.print2 "Processing synth of %s at type %s\n" (show tau) (show atyp);
+
     let typ =
         match atyp with
         | Some t -> t
@@ -4375,6 +4378,7 @@ and check_lbtyp top_level env lb : option typ  (* checked version of lb.lbtyp, i
                                  * list subst_elt (* subtistution of the opened universes               *)
                                  * Env.env      (* env extended with univ_vars                           *)
                                  =
+  Errors.with_ctx "While checking type annotation of a letbinding" (fun () ->
     let t = SS.compress lb.lbtyp in
     match t.n with
         | Tm_unknown ->
@@ -4400,7 +4404,7 @@ and check_lbtyp top_level env lb : option typ  (* checked version of lb.lbtyp, i
                         (Print.term_to_string t);
                let t = norm env1 t in
                Some t, g, univ_vars, univ_opening, Env.set_expected_typ env1 t
-
+  )
 
 and tc_binder env ({binder_bv=x;binder_qual=imp;binder_positivity=pqual;binder_attrs=attrs}) =
     let tu, u = U.type_u () in

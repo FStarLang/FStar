@@ -580,6 +580,14 @@ let is_false t =
     | _ -> false
 ////////////////////////////////////////////////////////////////////
 
+let meas (s:string) (f : tac 'a) : tac 'a =
+  mk_tac (fun ps ->
+    let (r, ms) = BU.record_time (fun () -> Tactics.Monad.run f ps) in
+    BU.print2 "++ Tactic %s ran in \t\t%sms\n" s (show ms);
+    r)
+
+(* Nuclear option to benchmark every primitive. *)
+(* let wrap_err s f = meas s (wrap_err s f) *)
 
 let tadmit_t (t:term) : tac unit = wrap_err "tadmit_t" <| (
   let! ps = get in
@@ -740,6 +748,11 @@ let arrow_one (env:Env.env) (t:term) =
     let env, [b], c = FStar.TypeChecker.Core.open_binders_in_comp env [b] c in
     Some (env, b, c)
 
+let arrow_one_whnf (env:Env.env) (t:term) =
+  match arrow_one env t with
+  | Some r -> Some r
+  | None -> arrow_one env (whnf env t)
+
 (*
   [intro]:
 
@@ -753,54 +766,54 @@ let arrow_one (env:Env.env) (t:term) =
 *)
 let intro () : tac RD.binding = wrap_err "intro" <| (
     let! goal = cur_goal in
-    match arrow_one (goal_env goal) (whnf (goal_env goal) (goal_type goal)) with
+    match arrow_one_whnf (goal_env goal) (goal_type goal) with
+    | Some (_, _, c) when not (U.is_total_comp c) ->
+        fail "Codomain is effectful"
+
     | Some (env', b, c) ->
-        if not (U.is_total_comp c)
-        then fail "Codomain is effectful"
-        else let typ' = U.comp_result c in
-             //BU.print1 "[intro]: current goal is %s" (goal_to_string goal);
-             //BU.print1 "[intro]: current goal witness is %s" (show (goal_witness goal));
-             //BU.print1 "[intro]: with goal type %s" (show (goal_type goal));
-             //BU.print2 "[intro]: with binder = %s, new goal = %s"
-             //         (Print.binders_to_string ", " [b])
-             //         (show typ');
-             let! body, ctx_uvar =
-               new_uvar "intro" env' typ'
-                        (Some (should_check_goal_uvar goal))
-                        (goal_typedness_deps goal)
-                        (rangeof goal) in
-             let sol = U.abs [b] body (Some (U.residual_comp_of_comp c)) in
-             //BU.print1 "[intro]: solution is %s"
-             //           (show sol);
-             //BU.print1 "[intro]: old goal is %s" (goal_to_string goal);
-             //BU.print1 "[intro]: new goal is %s"
-             //           (show ctx_uvar);
-             //ignore (FStar.Options.set_options "--debug_level Rel");
-              (* Suppose if instead of simply assigning `?u` to the lambda term on
-                the RHS, we tried to unify `?u` with the `(fun (x:t) -> ?v @ [NM(x, 0)])`.
+        let typ' = U.comp_result c in
+        //BU.print1 "[intro]: current goal is %s" (goal_to_string goal);
+        //BU.print1 "[intro]: current goal witness is %s" (show (goal_witness goal));
+        //BU.print1 "[intro]: with goal type %s" (show (goal_type goal));
+        //BU.print2 "[intro]: with binder = %s, new goal = %s"
+        //         (Print.binders_to_string ", " [b])
+        //         (show typ');
+        let! body, ctx_uvar =
+          new_uvar "intro" env' typ'
+                   (Some (should_check_goal_uvar goal))
+                   (goal_typedness_deps goal)
+                   (rangeof goal) in
+        let sol = U.abs [b] body (Some (U.residual_comp_of_comp c)) in
+        //BU.print1 "[intro]: solution is %s"
+        //           (show sol);
+        //BU.print1 "[intro]: old goal is %s" (goal_to_string goal);
+        //BU.print1 "[intro]: new goal is %s"
+        //           (show ctx_uvar);
+        //ignore (FStar.Options.set_options "--debug_level Rel");
+         (* Suppose if instead of simply assigning `?u` to the lambda term on
+           the RHS, we tried to unify `?u` with the `(fun (x:t) -> ?v @ [NM(x, 0)])`.
 
-                Then, this would defeat the purpose of the delayed substitution, since
-                the unification engine would solve it by doing something like
+           Then, this would defeat the purpose of the delayed substitution, since
+           the unification engine would solve it by doing something like
 
-                  `(fun (y:t) ->  ?u y)  ~ (fun (x:t) -> ?v @ [NM(x, 0)])`
+             `(fun (y:t) ->  ?u y)  ~ (fun (x:t) -> ?v @ [NM(x, 0)])`
 
-                And then solving
+           And then solving
 
-                  `?u z ~ ?v @ [NT(x, z)]`
+             `?u z ~ ?v @ [NT(x, z)]`
 
-                which would then proceed by solving `?v` to `?w z` and then unifying
-                `?u` and `?w`.
+           which would then proceed by solving `?v` to `?w z` and then unifying
+           `?u` and `?w`.
 
-                I.e., this immediately destroys the nice shape of the next goal.
-             *)
-             set_solution goal sol ;!
-             let g = mk_goal env' ctx_uvar goal.opts goal.is_guard goal.label in
-             bnorm_and_replace g ;!
-             return (binder_to_binding b)
+           I.e., this immediately destroys the nice shape of the next goal.
+        *)
+        set_solution goal sol ;!
+        let g = mk_goal env' ctx_uvar goal.opts goal.is_guard goal.label in
+        bnorm_and_replace g ;!
+        return (binder_to_binding b)
     | None ->
         fail1 "goal is not an arrow (%s)" (tts (goal_env goal) (goal_type goal))
     )
-
 
 // TODO: missing: precedes clause, and somehow disabling fixpoints only as needed
 let intro_rec () : tac (RD.binding & RD.binding) =
@@ -1859,8 +1872,19 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <| (
                     | Sig_datacon {us=c_us; t=c_ty; num_ty_params=nparam; mutuals=mut} ->
                         (* BU.print2 "ty of %s = %s\n" (show c_lid) *)
                         (*                             (show c_ty); *)
-                        let fv = S.lid_as_fv c_lid (Some Data_ctor) in
-
+                        (* Make sure to preserve qualifiers if possible.
+                        This is mostly so we retain Record_projector quals, which
+                        are meaningful for extraction. *)
+                        let qual =
+                          let fallback () = Some Data_ctor in
+                          let qninfo = Env.lookup_qname (goal_env g) c_lid in
+                          match qninfo with
+                          | Some (Inr (se, _us), _rng) ->
+                              Syntax.DsEnv.fv_qual_of_se se
+                          | _ ->
+                              fallback ()
+                        in
+                        let fv = S.lid_as_fv c_lid qual in
 
                         failwhen (List.length a_us <> List.length c_us) "t_us don't match?" ;!
                         let s = Env.mk_univ_subst c_us a_us in

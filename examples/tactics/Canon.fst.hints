@@ -1,6 +1,18 @@
 [
-  " î\n¤;y a•\u007f+™/Í‹V",
+  "™ôõ íêb\f\u001dUÄt¤ûPû",
   [
+    [
+      "Canon.test_neg2",
+      1,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "d3c04149f3c48c4a891fbe98bbe6ccc7"
+    ],
     [
       "Canon.lem1",
       1,
@@ -12,7 +24,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "ec43ae141ff7fba360846c8883749b53"
+      "0819c24b1015e88ad6b1d442577174c5"
     ],
     [
       "Canon.lem8",
@@ -21,7 +33,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "0e4e968c34c49211df049c16e9afb54d"
+      "d4099c18fb2f5ad0385b0ff985edd871"
     ]
   ]
 ]

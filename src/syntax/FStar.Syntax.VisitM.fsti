@@ -13,8 +13,16 @@ val visitM_term
   (t : term)
   : m term
 
+val visitM_term_univs
+  (#m:_) {| monad m |}
+  (vt : term -> m term)
+  (vu : universe -> m universe)
+  (t : term)
+  : m term
+
 val visitM_sigelt
   (#m:_) {| monad m |}
-  (v : term -> m term)
+  (vt : term -> m term)
+  (vu : universe -> m universe)
   (t : sigelt)
   : m sigelt

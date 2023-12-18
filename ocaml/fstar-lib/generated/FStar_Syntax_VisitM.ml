@@ -2190,49 +2190,66 @@ let tie_bu : 'm . 'm FStar_Class_Monad.monad -> 'm lvm -> 'm lvm =
          } in
        FStar_Compiler_Effect.op_Colon_Equals r uu___1);
       FStar_Compiler_Effect.op_Bang r
+let visitM_term_univs :
+  'm .
+    'm FStar_Class_Monad.monad ->
+      (FStar_Syntax_Syntax.term -> 'm) ->
+        (FStar_Syntax_Syntax.universe -> 'm) ->
+          FStar_Syntax_Syntax.term -> 'm
+  =
+  fun md ->
+    fun vt ->
+      fun vu ->
+        fun tm ->
+          let dict =
+            let uu___ =
+              let uu___1 = novfs md in
+              {
+                lvm_monad = (uu___1.lvm_monad);
+                f_term = vt;
+                f_binder = (uu___1.f_binder);
+                f_binding_bv = (uu___1.f_binding_bv);
+                f_br = (uu___1.f_br);
+                f_comp = (uu___1.f_comp);
+                f_residual_comp = (uu___1.f_residual_comp);
+                f_univ = vu
+              } in
+            tie_bu md uu___ in
+          f_term dict tm
 let visitM_term :
   'm .
     'm FStar_Class_Monad.monad ->
       (FStar_Syntax_Syntax.term -> 'm) -> FStar_Syntax_Syntax.term -> 'm
   =
   fun md ->
-    fun f ->
+    fun vt ->
       fun tm ->
-        let dict =
-          let uu___ =
-            let uu___1 = novfs md in
-            {
-              lvm_monad = (uu___1.lvm_monad);
-              f_term = f;
-              f_binder = (uu___1.f_binder);
-              f_binding_bv = (uu___1.f_binding_bv);
-              f_br = (uu___1.f_br);
-              f_comp = (uu___1.f_comp);
-              f_residual_comp = (uu___1.f_residual_comp);
-              f_univ = (uu___1.f_univ)
-            } in
-          tie_bu md uu___ in
-        f_term dict tm
+        visitM_term_univs md vt
+          (fun uu___ -> (Obj.magic (FStar_Class_Monad.return md ())) uu___)
+          tm
 let visitM_sigelt :
   'm .
     'm FStar_Class_Monad.monad ->
-      (FStar_Syntax_Syntax.term -> 'm) -> FStar_Syntax_Syntax.sigelt -> 'm
+      (FStar_Syntax_Syntax.term -> 'm) ->
+        (FStar_Syntax_Syntax.universe -> 'm) ->
+          FStar_Syntax_Syntax.sigelt -> 'm
   =
   fun md ->
-    fun f ->
-      fun tm ->
-        let dict =
-          let uu___ =
-            let uu___1 = novfs md in
-            {
-              lvm_monad = (uu___1.lvm_monad);
-              f_term = f;
-              f_binder = (uu___1.f_binder);
-              f_binding_bv = (uu___1.f_binding_bv);
-              f_br = (uu___1.f_br);
-              f_comp = (uu___1.f_comp);
-              f_residual_comp = (uu___1.f_residual_comp);
-              f_univ = (uu___1.f_univ)
-            } in
-          tie_bu md uu___ in
-        on_sub_sigelt dict tm
+    fun vt ->
+      fun vu ->
+        fun tm ->
+          let dict =
+            let uu___ =
+              let uu___1 = novfs md in
+              {
+                lvm_monad = (uu___1.lvm_monad);
+                f_term = vt;
+                f_binder = (uu___1.f_binder);
+                f_binding_bv = (uu___1.f_binding_bv);
+                f_br = (uu___1.f_br);
+                f_comp = (uu___1.f_comp);
+                f_residual_comp = (uu___1.f_residual_comp);
+                f_univ = vu
+              } in
+            tie_bu md uu___ in
+          on_sub_sigelt dict tm

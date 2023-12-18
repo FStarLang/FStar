@@ -2,22 +2,13 @@
   "\u0006xƒ3¿\u0010\bº´~,5 Y\n:",
   [
     [
-      "Simple.Test.test0",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "caf167eab391719235fc31b522659545"
-    ],
-    [
       "Simple.Test.test1",
       1,
       2,
       1,
       [ "@query", "assumption_Simple.Test.t__uu___haseq" ],
       0,
-      "b51e9231714541dc32d78bf7249a998d"
+      "21b3a054598940da2922d376d2a8754b"
     ],
     [
       "Simple.Test.test2",
@@ -29,7 +20,7 @@
         "assumption_Simple.Test.t__uu___haseq", "kinding_Simple.Test.t@tok"
       ],
       0,
-      "11f3033c30d9d6c4b613a837f445365f"
+      "79c63259e2f3d42cb9e4264757c21958"
     ],
     [
       "Simple.Test.test3",
@@ -41,16 +32,7 @@
         "assumption_Simple.Test.t__uu___haseq", "kinding_Simple.Test.t@tok"
       ],
       0,
-      "7acdcd6c5532cc0f433bc822e111df29"
-    ],
-    [
-      "Simple.Test.test4",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "8a43f4998bf03a697822617b7b5b21ea"
+      "e9dbfe333e78bb457482f6d9968c6dc7"
     ]
   ]
 ]

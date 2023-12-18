@@ -56,6 +56,7 @@ val cache_file_name: (string -> string)
 val parsing_data_of: deps -> string -> parsing_data
 val collect: list string -> (string -> option parsing_data) -> list string * deps
 val deps_of : deps -> string -> list string
+val deps_of_modul : deps -> module_name -> list module_name  // list of modules that this module depends on
 val print : deps -> unit
 val print_digest: list (string * string) -> string
 val module_has_interface: deps -> module_name:Ident.lident -> bool

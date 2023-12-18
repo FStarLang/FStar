@@ -1089,3 +1089,7 @@ let mk_or_l l r = List.fold_right (fun p1 p2 -> mkOr(p1,p2) r) l (mkFalse r)
 
 let mk_haseq t = mk_Valid (mkApp ("Prims.hasEq", [t]) t.rng)
 let dummy_sort = Sort "Dummy_sort"
+
+instance showable_smt_term = {
+  show = print_smt_term;
+}

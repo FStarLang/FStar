@@ -1291,7 +1291,7 @@ let (collect_one :
                  (if tc
                   then
                     add_to_parsing_data
-                      (P_lid FStar_Parser_Const.mk_class_lid)
+                      (P_lid FStar_Parser_Const.tcclass_lid)
                   else ();
                   FStar_Compiler_List.iter collect_tycon ts)
              | FStar_Parser_AST.Exception (uu___1, t) ->
@@ -2236,6 +2236,31 @@ let (deps_of : deps -> Prims.string -> Prims.string Prims.list) =
     fun f ->
       dependences_of deps1.file_system_map deps1.dep_graph
         deps1.cmd_line_files f
+let (deps_of_modul : deps -> module_name -> module_name Prims.list) =
+  fun deps1 ->
+    fun m ->
+      let aux fopt =
+        let uu___ =
+          FStar_Compiler_Util.map_option
+            (fun f ->
+               let uu___1 = deps_of deps1 f in
+               FStar_Compiler_List.map module_name_of_file uu___1) fopt in
+        FStar_Compiler_Util.dflt [] uu___ in
+      let uu___ =
+        let uu___1 =
+          FStar_Compiler_Util.smap_try_find deps1.file_system_map
+            (FStar_Compiler_String.lowercase m) in
+        FStar_Compiler_Util.map_option
+          (fun uu___2 ->
+             match uu___2 with
+             | (intf_opt, impl_opt) ->
+                 let uu___3 =
+                   let uu___4 = aux intf_opt in
+                   let uu___5 = aux impl_opt in
+                   FStar_Compiler_List.op_At uu___4 uu___5 in
+                 FStar_Compiler_Util.remove_dups (fun x -> fun y -> x = y)
+                   uu___3) uu___1 in
+      FStar_Compiler_Util.dflt [] uu___
 let (print_digest : (Prims.string * Prims.string) Prims.list -> Prims.string)
   =
   fun dig ->

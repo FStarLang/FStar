@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_FStar.WellFoundedRelation.default_relation" ],
       0,
-      "4e911baea2bba7f822039d547cd2d758"
+      "2b53e777012d6eeb76ebe2e656a60cfa"
     ],
     [
       "FStar.WellFoundedRelation.default_wfr",
@@ -34,7 +34,7 @@
         "well_founded_ordering_on_codomain_FStar.WellFoundedRelation.AccClassicalIntro"
       ],
       0,
-      "f1b31ffbd5c40d5cb6ca8bc69e12d292"
+      "94cf3401e5f88e3b76f746e9f06640eb"
     ],
     [
       "FStar.WellFoundedRelation.empty_decreaser",
@@ -46,7 +46,7 @@
         "false_interp"
       ],
       0,
-      "5038e7f4a9285d0cbbecfe9e2ada19ae"
+      "6aa7418beb88726f4de5b36a8a0cd5eb"
     ],
     [
       "FStar.WellFoundedRelation.empty_wfr",
@@ -60,7 +60,7 @@
         "projection_inverse_FStar.WellFoundedRelation.Mkwfr_t_relation"
       ],
       0,
-      "5190f01f01699353c6f7bd52a28e8bf8"
+      "a045c943211b83ce67da790831accff3"
     ],
     [
       "FStar.WellFoundedRelation.acc_decreaser",
@@ -84,7 +84,7 @@
         "well_founded_ordering_on_codomain_FStar.WellFounded.AccIntro"
       ],
       0,
-      "2c50f86780d73776e2d2daf7efc537ec"
+      "94bef08cf557513184fc8516ad19a5d1"
     ],
     [
       "FStar.WellFoundedRelation.eta_expand_well_founded",
@@ -94,12 +94,11 @@
       [
         "@query",
         "equation_FStar.WellFounded.Util.lift_binrel_as_well_founded_relation",
-        "equation_Prims.op_Equals_Equals_Equals",
-        "function_token_typing_FStar.WellFounded.Util.lift_binrel_as_well_founded_relation",
-        "token_correspondence_FStar.WellFounded.Util.lift_binrel"
+        "token_correspondence_FStar.WellFounded.Util.lift_binrel",
+        "token_correspondence_FStar.WellFounded.Util.lift_binrel_as_well_founded_relation"
       ],
       0,
-      "216d9f795f054d670b12fd75bb5155ea"
+      "342ddf624a9ce73591d334a006587a45"
     ],
     [
       "FStar.WellFoundedRelation.acc_to_wfr",
@@ -134,7 +133,7 @@
         "well_founded_ordering_on_codomain_FStar.WellFoundedRelation.AccClassicalIntro"
       ],
       0,
-      "887e7b12331af140941b9057ab3ab51b"
+      "0c39f4ed2055ebb72e8fd847bff4f1cd"
     ],
     [
       "FStar.WellFoundedRelation.subrelation_decreaser",
@@ -151,7 +150,7 @@
         "refinement_interpretation_Tm_refine_f86db90ee8ccc3e74f6c29a8f48386c4"
       ],
       0,
-      "1d0415bb1cd68a9390193580b223f309"
+      "f348373bff14ad6b4b884e9d56586dc9"
     ],
     [
       "FStar.WellFoundedRelation.subrelation_to_wfr",
@@ -178,7 +177,7 @@
         "well_founded_ordering_on_codomain_FStar.WellFoundedRelation.AccClassicalIntro"
       ],
       0,
-      "239cb340292b37feb42f948ce09fabf9"
+      "8291636f7bbe2be1d2d4d5f2093ba13a"
     ],
     [
       "FStar.WellFoundedRelation.inverse_image_decreaser",
@@ -197,7 +196,7 @@
         "refinement_interpretation_Tm_refine_affccb777651b70a29d8e0b024a2343c"
       ],
       0,
-      "d6810d48ecf86e3a52f417cb36b84556"
+      "48ec8ea1ab512e2f265f8328740953cd"
     ],
     [
       "FStar.WellFoundedRelation.inverse_image_to_wfr",
@@ -224,7 +223,7 @@
         "well_founded_ordering_on_codomain_FStar.WellFoundedRelation.AccClassicalIntro"
       ],
       0,
-      "38a34c2b82522f523ae710c324bb4f9e"
+      "1d53187427ef6668bf7f00cc145c96c6"
     ],
     [
       "FStar.WellFoundedRelation.lex_nondep_decreaser",
@@ -254,7 +253,7 @@
         "typing_FStar.Pervasives.Native.snd"
       ],
       0,
-      "4b4f7bf16b9c143f73155f7d9d71909c"
+      "ce727f49308f723d0c0e096ee5ebdd20"
     ],
     [
       "FStar.WellFoundedRelation.lex_nondep_wfr",
@@ -279,7 +278,7 @@
         "well_founded_ordering_on_codomain_FStar.WellFoundedRelation.AccClassicalIntro"
       ],
       0,
-      "5121c32794db0f6745b887343e5206eb"
+      "6fe40e44e5d478a47c61a0c6c9039372"
     ],
     [
       "FStar.WellFoundedRelation.lex_dep_relation",
@@ -288,7 +287,7 @@
       1,
       [ "@query" ],
       0,
-      "9e53c665805a4e5e1c2490101489c431"
+      "5f7eb767feb267e5f7d22be94684542e"
     ],
     [
       "FStar.WellFoundedRelation.lex_dep_decreaser",
@@ -320,7 +319,7 @@
         "typing_FStar.Pervasives.dsnd"
       ],
       0,
-      "8daef61e229b19799cb7737f631e45e9"
+      "be4cfef590004baa9a68dd34c3278d37"
     ],
     [
       "FStar.WellFoundedRelation.lex_dep_wfr",
@@ -346,7 +345,7 @@
         "well_founded_ordering_on_codomain_FStar.WellFoundedRelation.AccClassicalIntro"
       ],
       0,
-      "b8efc5d1840d89d64dc42c9db72ed288"
+      "70c283fc1a890a5652e723ee0f19b114"
     ],
     [
       "FStar.WellFoundedRelation.bool_wfr",
@@ -365,7 +364,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "0f3bc6aa04f9ecf0a7fc6de4ebd93fcd"
+      "b95d0ecdba60795c578603a53d9a2d59"
     ],
     [
       "FStar.WellFoundedRelation.option_relation",
@@ -374,7 +373,7 @@
       1,
       [ "@query", "lemma_FStar.Pervasives.invertOption" ],
       0,
-      "c9aadd4c110fa939d4c69580e1cb816d"
+      "77dc022bad083dede526ec3e313dc811"
     ],
     [
       "FStar.WellFoundedRelation.option_wfr",
@@ -421,7 +420,7 @@
         "typing_FStar.WellFoundedRelation.bool_wfr", "unit_typing"
       ],
       0,
-      "66dfa8435792058d9637c4b1e9c2aa71"
+      "aa06ace4c3e769053ed174bf40d1be34"
     ]
   ]
 ]

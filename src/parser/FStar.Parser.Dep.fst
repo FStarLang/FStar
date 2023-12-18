@@ -39,6 +39,8 @@ open FStar.Class.Show
 module Const = FStar.Parser.Const
 module BU = FStar.Compiler.Util
 
+module Set = FStar.Compiler.Set
+
 let profile f c = Profiling.profile f None c
 
 (* Meant to write to a file as an out_channel. If an exception is raised,
@@ -223,11 +225,11 @@ let empty_parsing_data = Mk_pd []
 
 type deps = {
     dep_graph:dependence_graph;                 //dependences of the entire project, not just those reachable from the command line
-    file_system_map:files_for_module_name;      //an abstraction of the file system
-    cmd_line_files:list file_name;             //all command-line files
-    all_files:list file_name;                  //all files
-    interfaces_with_inlining:list module_name; //interfaces that use `inline_for_extraction` require inlining
-    parse_results:smap parsing_data            //map from filenames to parsing_data
+    file_system_map:files_for_module_name;      //an abstraction of the file system, keys are lowercase module names
+    cmd_line_files:list file_name;              //all command-line files
+    all_files:list file_name;                   //all files
+    interfaces_with_inlining:list module_name;  //interfaces that use `inline_for_extraction` require inlining
+    parse_results:smap parsing_data             //map from filenames to parsing_data
                                                 //callers (Universal.fs) use this to get the parsing data for caching purposes
 }
 let deps_try_find (Deps m) k = BU.smap_try_find m k
@@ -824,7 +826,7 @@ let collect_one
         | Tycon (_, tc, ts) ->
             begin
             if tc then
-                add_to_parsing_data (P_lid Const.mk_class_lid);
+                add_to_parsing_data (P_lid Const.tcclass_lid);
             List.iter collect_tycon ts
             end
         | Exception (_, t) ->
@@ -1595,6 +1597,17 @@ let collect (all_cmd_line_files: list file_name)
 let deps_of deps (f:file_name)
     : list file_name =
     dependences_of deps.file_system_map deps.dep_graph deps.cmd_line_files f
+
+let deps_of_modul deps (m:module_name) : list module_name =
+  let aux (fopt:option string) =
+    fopt |> BU.map_option (fun f -> f |> deps_of deps |> List.map module_name_of_file)
+         |> BU.dflt []
+  in
+  m |> String.lowercase
+    |> BU.smap_try_find deps.file_system_map
+    |> BU.map_option (fun (intf_opt, impl_opt) ->
+                      BU.remove_dups (fun x y -> x = y) (aux intf_opt @ aux impl_opt))
+    |> BU.dflt []
 
 (* In public interface *)
 let print_digest (dig:list (string * string)) : string =

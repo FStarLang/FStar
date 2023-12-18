@@ -15,31 +15,11 @@
         "token_correspondence_Prims.op_BarBar"
       ],
       0,
-      "59bc429ea26ab3e5e2279dafbf5b35eb"
+      "8d6b6219ca4d3d383441f2e2a3b4fc29"
     ],
     [
       "Test.ConstantTimeIntegers.test2",
       1,
-      2,
-      1,
-      [
-        "@query", "constructor_distinct_FStar.Integers.Signed",
-        "constructor_distinct_FStar.Integers.Unsigned",
-        "constructor_distinct_FStar.Integers.W128",
-        "constructor_distinct_FStar.Integers.W32",
-        "constructor_distinct_FStar.Integers.Winfinite",
-        "equality_tok_FStar.Integers.W128@tok",
-        "equality_tok_FStar.Integers.W32@tok",
-        "equality_tok_FStar.Integers.Winfinite@tok",
-        "equation_FStar.Integers.width_of_sw",
-        "projection_inverse_FStar.Integers.Unsigned__0"
-      ],
-      0,
-      "354bc41e2dc5ccf7c1647bdb0b426de8"
-    ],
-    [
-      "Test.ConstantTimeIntegers.test2",
-      2,
       2,
       1,
       [
@@ -57,11 +37,11 @@
         "projection_inverse_FStar.Integers.Unsigned__0"
       ],
       0,
-      "631148480a70940e83c59b58456584b6"
+      "cc68c24909f1e6394e4503132fc610b3"
     ],
     [
-      "Test.ConstantTimeIntegers.test3",
-      1,
+      "Test.ConstantTimeIntegers.test2",
+      2,
       2,
       1,
       [
@@ -77,11 +57,11 @@
         "projection_inverse_FStar.Integers.Unsigned__0"
       ],
       0,
-      "cc2a0fa436c1c9acb260fef140310fd1"
+      "7291d0903909450088864ed02343dbc8"
     ],
     [
       "Test.ConstantTimeIntegers.test3",
-      2,
+      1,
       2,
       1,
       [
@@ -99,11 +79,11 @@
         "projection_inverse_FStar.Integers.Unsigned__0"
       ],
       0,
-      "468c11519bc4dc912581bb8742e5fe49"
+      "dd1754918346f4c1cdc81c95ad9f501a"
     ],
     [
-      "Test.ConstantTimeIntegers.test4",
-      1,
+      "Test.ConstantTimeIntegers.test3",
+      2,
       2,
       1,
       [
@@ -119,11 +99,11 @@
         "projection_inverse_FStar.Integers.Unsigned__0"
       ],
       0,
-      "53f34afb248e47ffa6d7dbdba3e192f7"
+      "b71c4f7041d052176488d09e3ba8ea7f"
     ],
     [
       "Test.ConstantTimeIntegers.test4",
-      2,
+      1,
       2,
       1,
       [
@@ -168,7 +148,27 @@
         "typing_Test.ConstantTimeIntegers.two_point_lattice"
       ],
       0,
-      "ef55278afc6c089b69c6d4a67c8fb244"
+      "33caaab65356e5fc5284eda3fea3626d"
+    ],
+    [
+      "Test.ConstantTimeIntegers.test4",
+      2,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_FStar.Integers.Signed",
+        "constructor_distinct_FStar.Integers.Unsigned",
+        "constructor_distinct_FStar.Integers.W128",
+        "constructor_distinct_FStar.Integers.W32",
+        "constructor_distinct_FStar.Integers.Winfinite",
+        "equality_tok_FStar.Integers.W128@tok",
+        "equality_tok_FStar.Integers.W32@tok",
+        "equality_tok_FStar.Integers.Winfinite@tok",
+        "equation_FStar.Integers.width_of_sw",
+        "projection_inverse_FStar.Integers.Unsigned__0"
+      ],
+      0,
+      "8f6fbe5077d72f0dedcdec5bb21f17f4"
     ],
     [
       "Test.ConstantTimeIntegers.hacl_lattice",
@@ -182,7 +182,7 @@
         "unit_inversion"
       ],
       0,
-      "3594ca4347d96757f3f58f710f163fab"
+      "756aa8481e45edd0cbbc39a0976448d7"
     ],
     [
       "Test.ConstantTimeIntegers.s_uint32",
@@ -202,7 +202,7 @@
         "projection_inverse_FStar.Integers.Unsigned__0"
       ],
       0,
-      "d07844e366c1e5f574cddddc56bc07e8"
+      "91e8a6727bfd3836a4b39712a88e7f47"
     ],
     [
       "Test.ConstantTimeIntegers.test5",
@@ -224,7 +224,7 @@
         "projection_inverse_FStar.Integers.Unsigned__0"
       ],
       0,
-      "0554a0db3fd7cef1a81937c30e198bd9"
+      "57a779e1520a1e85568387fd7ae23fdd"
     ],
     [
       "Test.ConstantTimeIntegers.test6",
@@ -244,7 +244,7 @@
         "projection_inverse_FStar.Integers.Unsigned__0"
       ],
       0,
-      "9b53f96e4a7871cd8113c70f8a0db354"
+      "b4987c1dca1098bcecd17aa4bb3b686d"
     ],
     [
       "Test.ConstantTimeIntegers.test6",
@@ -264,7 +264,7 @@
         "projection_inverse_FStar.Integers.Unsigned__0"
       ],
       0,
-      "b71d9ff0953f6d1550712c3a320d4792"
+      "2ebbbe1f861a98be87e4817c9e3b5e72"
     ]
   ]
 ]
