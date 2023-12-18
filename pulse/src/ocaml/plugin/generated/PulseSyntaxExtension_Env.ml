@@ -15,6 +15,7 @@ let (prims_exists_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["Prims"; "l_Exists"] r_
 let (prims_forall_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["Prims"; "l_Forall"] r_
+let (unreachable_lid : FStar_Ident.lident) = pulse_lib_core_lid "unreachable"
 let (exists_lid : FStar_Ident.lident) = pulse_lib_core_lid "op_exists_Star"
 let (star_lid : FStar_Ident.lident) = pulse_lib_core_lid "op_Star_Star"
 let (emp_lid : FStar_Ident.lident) = pulse_lib_core_lid "emp"

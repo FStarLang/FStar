@@ -430,6 +430,7 @@ and st_term' =
   | Tm_WithLocalArray of st_term'__Tm_WithLocalArray__payload 
   | Tm_Rewrite of st_term'__Tm_Rewrite__payload 
   | Tm_Admit of st_term'__Tm_Admit__payload 
+  | Tm_Unreachable 
   | Tm_ProofHintWithBinders of st_term'__Tm_ProofHintWithBinders__payload 
   | Tm_WithInv of st_term'__Tm_WithInv__payload 
 and st_term = {
@@ -464,6 +465,8 @@ let uu___is_Tm_Rewrite uu___ =
   match uu___ with | Tm_Rewrite _ -> true | _ -> false
 let uu___is_Tm_Admit uu___ =
   match uu___ with | Tm_Admit _ -> true | _ -> false
+let uu___is_Tm_Unreachable uu___ =
+  match uu___ with | Tm_Unreachable _ -> true | _ -> false
 let uu___is_Tm_ProofHintWithBinders uu___ =
   match uu___ with | Tm_ProofHintWithBinders _ -> true | _ -> false
 let uu___is_Tm_WithInv uu___ =
@@ -756,6 +759,7 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
          { ctag1 = c2; u1 = u2; typ = t21; post3 = post2;_}) ->
           (((c1 = c2) && (eq_univ u1 u2)) && (eq_tm t11 t21)) &&
             (eq_tm_opt post1 post2)
+      | (Tm_Unreachable, Tm_Unreachable) -> true
       | (Tm_ProofHintWithBinders
          { hint_type = ht1; binders = bs1; t3 = t11;_},
          Tm_ProofHintWithBinders

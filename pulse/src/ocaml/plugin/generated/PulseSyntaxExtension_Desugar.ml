@@ -214,16 +214,25 @@ let (admit_or_return :
       let uu___ = FStar_Syntax_Util.head_and_args_full s in
       match uu___ with
       | (head, args) ->
-          (match head.FStar_Syntax_Syntax.n with
-           | FStar_Syntax_Syntax.Tm_fvar fv ->
-               let uu___1 =
+          (match ((head.FStar_Syntax_Syntax.n), args) with
+           | (FStar_Syntax_Syntax.Tm_fvar fv, uu___1::[]) ->
+               let uu___2 =
                  FStar_Syntax_Syntax.fv_eq_lid fv
                    PulseSyntaxExtension_Env.admit_lid in
-               if uu___1
+               if uu___2
                then
-                 let uu___2 = PulseSyntaxExtension_SyntaxWrapper.tm_admit r in
-                 STTerm uu___2
-               else Return s
+                 let uu___3 = PulseSyntaxExtension_SyntaxWrapper.tm_admit r in
+                 STTerm uu___3
+               else
+                 (let uu___4 =
+                    FStar_Syntax_Syntax.fv_eq_lid fv
+                      PulseSyntaxExtension_Env.unreachable_lid in
+                  if uu___4
+                  then
+                    let uu___5 =
+                      PulseSyntaxExtension_SyntaxWrapper.tm_unreachable r in
+                    STTerm uu___5
+                  else Return s)
            | uu___1 -> Return s)
 let (prepend_ctx_issue :
   FStar_Pprint.document -> FStar_Errors.issue -> FStar_Errors.issue) =

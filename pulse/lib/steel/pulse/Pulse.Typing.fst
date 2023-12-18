@@ -1046,6 +1046,14 @@ type st_typing : env -> st_term -> comp -> Type =
       st_typing g (wtag (Some c) (Tm_Admit { ctag=c; u=s.u; typ=s.res; post=None }))
                   (comp_admit c s)
 
+  | T_Unreachable:
+      g:env ->
+      s:st_comp ->
+      c:ctag ->
+      st_comp_typing g s ->
+      prop_validity g (tm_fstar (`False) FStar.Range.range_0) -> 
+      st_typing g (wtag (Some c) Tm_Unreachable) (comp_admit c s)
+
   (* FAKE: takes an stt sub function, needs to check effects. Also it can be either
   atomic, unobservable, or ghost. *)
   | T_WithInv:

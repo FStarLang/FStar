@@ -254,6 +254,8 @@ let (tm_admit :
               Pulse_Syntax_Base.typ = typ;
               Pulse_Syntax_Base.post3 = post
             }
+let (tm_unreachable : Pulse_Syntax_Base.st_term') =
+  Pulse_Syntax_Base.Tm_Unreachable
 let (with_range :
   Pulse_Syntax_Base.st_term' ->
     Pulse_Syntax_Base.range -> Pulse_Syntax_Base.st_term)

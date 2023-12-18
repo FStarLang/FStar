@@ -22,6 +22,7 @@ let tm_with_local_array binder initializer length body = Tm_WithLocalArray { bin
 let tm_rewrite t1 t2 = Tm_Rewrite { t1; t2 }
 let tm_rename pairs t = Tm_ProofHintWithBinders { hint_type = RENAME { pairs; goal=None}; binders=[]; t}
 let tm_admit ctag u typ post = Tm_Admit { ctag; u; typ; post }
+let tm_unreachable = Tm_Unreachable
 let with_range t r = { term = t; range = r; effect_tag = default_effect_hint }
 let tm_assert_with_binders bs p t = Tm_ProofHintWithBinders { hint_type=ASSERT { p }; binders=bs; t }
 let mk_assert_hint_type p = ASSERT { p }

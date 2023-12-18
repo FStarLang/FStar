@@ -1116,6 +1116,8 @@ type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   Pulse_Syntax_Base.vprop * unit * unit 
   | T_Admit of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_comp *
   Pulse_Syntax_Base.ctag * (unit, unit) st_comp_typing 
+  | T_Unreachable of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_comp *
+  Pulse_Syntax_Base.ctag * (unit, unit) st_comp_typing * unit 
   | T_WithInv of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
   Pulse_Syntax_Base.vprop * unit * unit * Pulse_Syntax_Base.st_term *
   Pulse_Syntax_Base.comp_st * (unit, unit, unit) st_typing 
@@ -1183,6 +1185,8 @@ let uu___is_T_Rewrite uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Rewrite _ -> true | _ -> false
 let uu___is_T_Admit uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Admit _ -> true | _ -> false
+let uu___is_T_Unreachable uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | T_Unreachable _ -> true | _ -> false
 let uu___is_T_WithInv uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_WithInv _ -> true | _ -> false
 let uu___is_PC_Elab uu___3 uu___2 uu___1 uu___ uu___4 =
