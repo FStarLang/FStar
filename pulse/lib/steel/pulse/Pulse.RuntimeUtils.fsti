@@ -3,6 +3,8 @@ open FStar.Tactics
 module T = FStar.Tactics
 type context = FStar.Sealed.Inhabited.sealed #(list (string & option range)) []
 val extend_context (tag:string) (r:option range) (ctx:context) : context
+val with_context (c:context) (f:unit -> T.Tac 'a) : T.Tac 'a
+val print_context (c:context) : T.Tac string
 val debug_at_level_no_module (s:string) : bool
 val debug_at_level (g:env) (s:string) : bool
 val print_exn (e:exn) : string

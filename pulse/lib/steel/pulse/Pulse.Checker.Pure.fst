@@ -36,7 +36,7 @@ let rtb_core_compute_term_type g f e =
     Printf.sprintf "(%s) Calling core_check_term on %s" 
           (T.range_to_string (RU.range_of_term e))
           (T.term_to_string e));
-  let res = RTB.core_compute_term_type f e in
+  let res = RU.with_context (get_context g) (fun _ -> RTB.core_compute_term_type f e) in
   res
 
 let rtb_tc_term g f e =
@@ -47,7 +47,7 @@ let rtb_tc_term g f e =
     Printf.sprintf "(%s) Calling tc_term on %s"
       (T.range_to_string (RU.range_of_term e))
       (T.term_to_string e));
-  let res = RTB.tc_term f e in
+  let res = RU.with_context (get_context g) (fun _ -> RTB.tc_term f e) in
   res
 
 let rtb_universe_of g f e =
@@ -56,7 +56,7 @@ let rtb_universe_of g f e =
     Printf.sprintf "(%s) Calling universe_of on %s"
       (T.range_to_string (RU.range_of_term e))
       (T.term_to_string e));
-  let res = RTB.universe_of f e in
+  let res = RU.with_context (get_context g) (fun _ -> RTB.universe_of f e) in
   res
 
 let rtb_check_subtyping g (t1 t2:term) : Tac (ret_t (subtyping_token g t1 t2)) =
@@ -70,7 +70,7 @@ let rtb_check_subtyping g (t1 t2:term) : Tac (ret_t (subtyping_token g t1 t2)) =
         (T.range_to_string (t2.range))
         (P.term_to_string t1)
         (P.term_to_string t2));
-  let res = RTB.check_subtyping (elab_env g) e1 e2 in
+  let res = RU.with_context (get_context g) (fun _ -> RTB.check_subtyping (elab_env g) e1 e2) in
   res
 
 let rtb_instantiate_implicits g f t =
@@ -79,7 +79,7 @@ let rtb_instantiate_implicits g f t =
                                        (T.term_to_string t));
   (* WARN: unary dependence, see comment in RU *)
   let t = RU.deep_transform_to_unary_applications t in
-  let res, iss = RTB.instantiate_implicits f t in
+  let res, iss = RU.with_context (get_context g) (fun _ -> RTB.instantiate_implicits f t) in
   match res with
   | None ->
     debug g (fun _ -> "Returned from instantiate_implicits: None");
@@ -96,7 +96,7 @@ let rtb_core_check_term g f e eff t =
                 (T.range_to_string (RU.range_of_term e))
                 (T.term_to_string e)
                 (T.term_to_string t));
-  let res = RTB.core_check_term f e t eff in
+  let res = RU.with_context (get_context g) (fun _ -> RTB.core_check_term f e t eff) in
   res
 
 let rtb_core_check_term_at_type g f e t =
@@ -105,7 +105,7 @@ let rtb_core_check_term_at_type g f e t =
                 (T.range_to_string (RU.range_of_term e))
                 (T.term_to_string e)
                 (T.term_to_string t));
-  let res = RTB.core_check_term_at_type f e t in
+  let res = RU.with_context (get_context g) (fun _ -> RTB.core_check_term_at_type f e t) in
   res
 
 let mk_squash t =
@@ -123,7 +123,7 @@ let rtb_check_prop_validity (g:env) (f:_) (p:_) =
           (T.range_to_string (RU.range_of_term p))
           (T.term_to_string p));
   let sp = mk_squash p in
-  let res, issues = RTB.check_prop_validity f sp in
+  let res, issues = RU.with_context (get_context g) (fun _ -> RTB.check_prop_validity f sp) in
   match res with
   | None -> None, issues
   | Some tok -> Some (squash_prop_validity_token f p tok), issues

@@ -1,5 +1,26 @@
 type context = ((string * FStar_Range.range option) list) FStar_Sealed.sealed
 let extend_context (s:string) (r:FStar_Range.range option) (c:context) = (s,r)::c
+module T = FStar_Tactics_Effect
+module TR = FStar_Tactics_Result
+type 'a utac = ('a, unit) T.tac_repr 
+let ctxt_elt_as_string (s, r) =
+    match r with
+    | None -> s
+    | Some r ->
+      "@" ^ FStar_Compiler_Range.string_of_range r ^ ": " ^ s
+let rec print_context (c:context) : string utac =
+  fun ps ->
+    TR.Success (
+      String.concat "\n>" (List.map ctxt_elt_as_string c),
+      ps
+    )
+let rec with_context (c:context) (f: unit -> 'a utac) : 'a utac =
+  fun ps ->
+    match c with
+    | [] -> f () ps
+    | sr::tl ->
+      with_context tl (fun _ ps ->
+      FStar_Errors.with_ctx (ctxt_elt_as_string sr) (fun _ -> f () ps)) ps
 let env_set_context (g:FStar_Reflection_Types.env) (c:context) = g
 let print_exn (e:exn) = Printexc.to_string e
 let debug_at_level_no_module (s:string) = FStar_Options.debug_at_level_no_module (FStar_Options.Other s)
