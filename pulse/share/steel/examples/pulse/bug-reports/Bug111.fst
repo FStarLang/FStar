@@ -58,14 +58,24 @@ ensures q @==> r
 }
 ```
 
-[@@expect_failure]
 ```pulse
 ghost
 fn test_elim_3 (p q r:vprop)
 requires ((p ** q) @==> r) ** p ** q
 ensures r
 {
-    elim _ _;
+    elim (_ ** _) _;
+}
+```
+
+[@@expect_failure]
+```pulse
+ghost
+fn test_elim_3' (p q r:vprop)
+requires ((p ** q) @==> r) ** p ** q
+ensures r
+{
+    elim _ _; //unifier doesn't work when solving uvars to non-atomic vprops
 }
 ```
 
@@ -75,6 +85,6 @@ ghost fn test_elim_4 (p q r:vprop)
 requires (p @==> (q ** r)) ** p
 ensures r ** q
 { 
-    elim _ _;
+    elim _ _; //though it's fine when those solutions do not have to be matched again
 }
 ```

@@ -308,8 +308,7 @@ ensures
   {
     intro_is_list_cons (Some v) v
   };
-  intro_stick _ _ _ (fun _ -> yields_elim v n tl);
-  with p q. fold (p @==> q)
+  I.intro _ _ _ (fun _ -> yields_elim v n tl);
 }
 ```
 
@@ -516,8 +515,7 @@ fn move_next_forall (#t:Type) (x:llist t)
         {
             intro_is_list_cons x np;
         };
-        intro_stick _ _ _ aux;
-        fold (is_list node.tail tl' @==> is_list x (node.head::tl'));
+        I.intro _ _ _ aux;
     };
     FA.intro _ aux;
     fold (something node.head);
