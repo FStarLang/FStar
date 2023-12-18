@@ -502,7 +502,7 @@ fn move_next_forall (#t:Type) (x:llist t)
 
 ```pulse
 fn append_iter (#t:Type) (x y:llist t)
-requires is_list x 'l1 ** is_list y 'l2 ** pure (Some? x /\ List.Tot.length 'l1 >= 1)
+requires is_list x 'l1 ** is_list y 'l2 ** pure (Some? x)
 ensures is_list x (List.Tot.append 'l1 'l2)
 {
   let mut cur = x;
@@ -554,7 +554,6 @@ ensures is_list x (List.Tot.append 'l1 'l2)
       (forall* sfx'. is_list ll sfx' @==> is_list x (pfx @ sfx')) **
       pure (
         (b==false ==> List.Tot.length sfx == 1) /\
-        List.Tot.length sfx >= 1 /\
         pfx@sfx == 'l1 /\
         Some? ll)
   { () };
@@ -565,7 +564,6 @@ ensures is_list x (List.Tot.append 'l1 'l2)
   rewrite_by (forall* sfx'. is_list _ll sfx' @==> is_list x (pfx @ sfx'))
               (forall* sfx'. is_list last sfx' @==> is_list x (pfx @ sfx'))
               rewrite_tac ();
-//  assert (pure (List.Tot.length sfx == 1));
   append_at_last_cell last y;
   FA.elim_forall_imp (is_list last) (fun sfx' -> is_list x (pfx @ sfx')) (sfx@'l2);
   List.Tot.Properties.append_assoc pfx sfx 'l2;
