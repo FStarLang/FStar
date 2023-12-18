@@ -11,6 +11,10 @@ module P = Pulse.Syntax.Printer
 open Pulse.Typing.Combinators
 open Pulse.Typing.Metatheory
 
+let debug (g:env) (f: unit -> T.Tac string) : T.Tac unit =
+  if RU.debug_at_level (fstar_env g) "pulse.checker" then
+    T.print (f())
+
 let format_failed_goal (g:env) (ctxt:list term) (goal:list term) =
   let terms_to_strings (ts:list term)= T.map Pulse.Syntax.Printer.term_to_string ts in
   let numbered_list ss = 

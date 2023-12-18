@@ -12,6 +12,8 @@ module FV = Pulse.Typing.FV
 module RU = Pulse.RuntimeUtils
 module Metatheory = Pulse.Typing.Metatheory
 
+val debug (g:env) (f:unit -> T.Tac string) : T.Tac unit
+
 val format_failed_goal (g:env) (ctxt:list term) (goal:list term) : T.Tac string
 
 val post_typing_as_abstraction

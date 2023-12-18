@@ -61,7 +61,12 @@ let check_core
   assume (open_term (close_term post_opened x) x == post_opened);
   let post = close_term post_opened x in
   let d = T_Return g c use_eq u ty t post x uty d post_typing in
-  prove_post_hint (try_frame_pre ctxt_typing (match_comp_res_with_post_hint d post_hint) res_ppname) post_hint t.range
+  let dd = (match_comp_res_with_post_hint d post_hint) in
+  debug g (fun _ -> 
+    let (| _, c, _ |) = dd in
+    Printf.sprintf "Return comp is: %s"
+      (Pulse.Syntax.Printer.comp_to_string c));
+  prove_post_hint #g (try_frame_pre #g ctxt_typing dd res_ppname) post_hint t.range
 
 let check
   (g:env)

@@ -9,6 +9,7 @@ open Pulse.Checker.Prover
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 module Metatheory = Pulse.Typing.Metatheory
+module RU = Pulse.RuntimeUtils
 
 let while_cond_comp_typing (#g:env) (u:universe) (x:ppname) (ty:term) (inv_body:term)
                            (inv_typing:tot_typing g (tm_exists_sl u (as_binder ty) inv_body) tm_vprop)
@@ -79,6 +80,10 @@ let check
     let while_post_hint : post_hint_for_env g =
       post_hint_from_comp_typing while_body_comp_typing
     in
+    debug g (fun _ -> 
+      Printf.sprintf "while_body post_hint: %s\n"
+        (Pulse.Syntax.Printer.term_to_string while_post_hint.post)
+    );
     let (| body, body_comp, body_typing |) =
       let ppname = mk_ppname_no_range "_while_b" in
       let r = check
