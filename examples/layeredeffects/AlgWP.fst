@@ -279,12 +279,14 @@ let is_ro #a (w : st_wp a) : Type0 =
 let sanity_1 = assert (forall s0 p. quotient_ro read_wp s0 p <==> read_wp s0 p)
 let sanity_2 = assert (forall s0 p s1. p ((), s0) ==> quotient_ro (write_wp s1) s0 p)
 
+#push-options "--z3rlimit 20"
 let rec interp_ro #a (t : rwtree a [Read]) (s0:state)
   : ID5.ID (a & state) (as_pure_wp (quotient_ro (interp_as_wp t) s0))
   = match t with
     | Return x -> (x, s0)
     | Op Read i k -> 
       interp_ro (k s0) s0
+#pop-options
 
 let st_soundness_aux #a #wp (t : repr a [Read; Write] wp)
   : Tot (s0:state -> ID5.ID (a & state) (as_pure_wp (wp s0)))
