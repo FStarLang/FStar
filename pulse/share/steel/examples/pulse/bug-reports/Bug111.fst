@@ -68,3 +68,13 @@ ensures r
     elim _ _;
 }
 ```
+
+
+```pulse
+ghost fn test_elim_4 (p q r:vprop)
+requires (p @==> (q ** r)) ** p
+ensures r ** q
+{ 
+    elim _ _;
+}
+```

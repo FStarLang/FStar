@@ -114,7 +114,9 @@ let apply_impure_function
     let post_hint : post_hint_opt g = post_hint in
     is_arrow_tm_arrow ty_head;
     debug_log g (fun _ ->
-      T.print (Printf.sprintf "st_app, readback comp as %s\n"
+      T.print (Printf.sprintf "st_app, head=%s, arg=%s, readback comp as %s\n"
+                 (P.term_to_string head)
+                 (P.term_to_string arg)
                  (P.comp_to_string comp_typ)));
     
     let allow_ghost = C_STGhost? comp_typ in

@@ -295,6 +295,22 @@ let prove
     (| pst.pg, nts_uvs, nts_uvs_effect_labels, list_as_vprop pst.remaining_ctxt, k_elab_equiv k (RU.magic ()) (RU.magic ()) |)
 #pop-options
 
+let canon_post (c:comp_st) : comp_st =
+  let canon_st_comp_post (c:st_comp) : st_comp =
+    match Pulse.Readback.readback_ty (elab_term c.post) with
+    | None -> c
+    | Some post -> { c with post }
+  in
+  match c with
+  | C_ST s -> C_ST (canon_st_comp_post s)
+  | C_STAtomic i s -> C_STAtomic i (canon_st_comp_post s)
+  | C_STGhost i s -> C_STGhost i (canon_st_comp_post s)
+
+irreducible
+let typing_canon #g #t (#c:comp_st) (d:st_typing g t c) : st_typing g t (canon_post c) =
+  assume false;
+  d
+
 #push-options "--z3rlimit_factor 8 --fuel 0 --ifuel 1 --retry 5"
 let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
   (uvs:env { disjoint g uvs })
@@ -327,6 +343,12 @@ let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_v
            (P.st_term_to_string t)
            (P.term_to_string x_t))
     | Inl d -> d in
+
+  (* shouldn't need this once term becomes a view; currently we sometimes end up with a computation
+     type whose postcondition is Tm_FStar (`(p1 ** p2))) rather than a Tm_Star p1 p2;
+     canon_post normalizes that *)
+  let c = canon_post c in
+  let d = typing_canon d in
 
   let k_frame : continuation_elaborator g ctxt g1 (comp_pre c * remaining_ctxt) = coerce_eq k_frame () in
 
