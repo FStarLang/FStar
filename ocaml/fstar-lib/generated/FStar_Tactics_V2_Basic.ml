@@ -11346,90 +11346,125 @@ let (refl_instantiate_implicits :
                                       (fun uu___7 ->
                                          match uu___7 with
                                          | (uu___8, t1, bv) -> (bv, t1)) l) in
-                             let uu___5 =
-                               let uu___6 = no_univ_uvars_in_term e1 in
-                               Prims.op_Negation uu___6 in
-                             if uu___5
-                             then
-                               let uu___6 =
-                                 let uu___7 =
-                                   let uu___8 =
+                             (dbg_refl g2
+                                (fun uu___6 ->
+                                   let uu___7 =
                                      FStar_Class_Show.show
                                        FStar_Syntax_Print.showable_term e1 in
-                                   FStar_Compiler_Util.format1
-                                     "Elaborated term has unresolved univ uvars: %s"
-                                     uu___8 in
-                                 (FStar_Errors_Codes.Error_UnexpectedUnresolvedUvar,
-                                   uu___7) in
-                               FStar_Errors.raise_error uu___6
-                                 e1.FStar_Syntax_Syntax.pos
-                             else
-                               (let uu___7 =
-                                  let uu___8 = no_univ_uvars_in_term t in
-                                  Prims.op_Negation uu___8 in
-                                if uu___7
-                                then
-                                  let uu___8 =
-                                    let uu___9 =
-                                      let uu___10 =
-                                        FStar_Class_Show.show
-                                          FStar_Syntax_Print.showable_term t in
-                                      FStar_Compiler_Util.format1
-                                        "Inferred type has unresolved univ uvars: %s"
-                                        uu___10 in
-                                    (FStar_Errors_Codes.Error_UnexpectedUnresolvedUvar,
-                                      uu___9) in
-                                  FStar_Errors.raise_error uu___8
-                                    e1.FStar_Syntax_Syntax.pos
-                                else
-                                  (let g3 =
-                                     let uu___9 =
-                                       FStar_Compiler_List.map
-                                         (fun uu___10 ->
-                                            match uu___10 with
-                                            | (bv, t1) ->
-                                                {
-                                                  FStar_Syntax_Syntax.ppname
-                                                    =
-                                                    (bv.FStar_Syntax_Syntax.ppname);
-                                                  FStar_Syntax_Syntax.index =
-                                                    (bv.FStar_Syntax_Syntax.index);
-                                                  FStar_Syntax_Syntax.sort =
-                                                    t1
-                                                }) bvs_and_ts in
-                                     FStar_TypeChecker_Env.push_bvs g2 uu___9 in
-                                   let allow_uvars = false in
-                                   let allow_names = true in
-                                   let e2 =
-                                     FStar_Syntax_Compress.deep_compress
-                                       allow_uvars allow_names e1 in
-                                   let t1 =
-                                     let uu___9 = refl_norm_type g3 t in
-                                     FStar_Syntax_Compress.deep_compress
-                                       allow_uvars allow_names uu___9 in
-                                   let bvs_and_ts1 =
-                                     FStar_Compiler_List.map
-                                       (fun uu___9 ->
-                                          match uu___9 with
-                                          | (bv, t2) ->
-                                              let uu___10 =
-                                                FStar_Syntax_Compress.deep_compress
-                                                  allow_uvars allow_names t2 in
-                                              (bv, uu___10)) bvs_and_ts in
-                                   dbg_refl g3
+                                   let uu___8 =
+                                     FStar_Class_Show.show
+                                       FStar_Syntax_Print.showable_term t in
+                                   FStar_Compiler_Util.format2
+                                     "refl_instantiate_implicits: inferred %s : %s"
+                                     uu___7 uu___8);
+                              (let uu___7 =
+                                 let uu___8 = no_univ_uvars_in_term e1 in
+                                 Prims.op_Negation uu___8 in
+                               if uu___7
+                               then
+                                 let uu___8 =
+                                   let uu___9 =
+                                     let uu___10 =
+                                       FStar_Class_Show.show
+                                         FStar_Syntax_Print.showable_term e1 in
+                                     FStar_Compiler_Util.format1
+                                       "Elaborated term has unresolved univ uvars: %s"
+                                       uu___10 in
+                                   (FStar_Errors_Codes.Error_UnexpectedUnresolvedUvar,
+                                     uu___9) in
+                                 FStar_Errors.raise_error uu___8
+                                   e1.FStar_Syntax_Syntax.pos
+                               else ());
+                              (let uu___8 =
+                                 let uu___9 = no_univ_uvars_in_term t in
+                                 Prims.op_Negation uu___9 in
+                               if uu___8
+                               then
+                                 let uu___9 =
+                                   let uu___10 =
+                                     let uu___11 =
+                                       FStar_Class_Show.show
+                                         FStar_Syntax_Print.showable_term t in
+                                     FStar_Compiler_Util.format1
+                                       "Inferred type has unresolved univ uvars: %s"
+                                       uu___11 in
+                                   (FStar_Errors_Codes.Error_UnexpectedUnresolvedUvar,
+                                     uu___10) in
+                                 FStar_Errors.raise_error uu___9
+                                   e1.FStar_Syntax_Syntax.pos
+                               else ());
+                              FStar_Compiler_List.iter
+                                (fun uu___9 ->
+                                   match uu___9 with
+                                   | (x, t1) ->
+                                       let uu___10 =
+                                         let uu___11 =
+                                           no_univ_uvars_in_term t1 in
+                                         Prims.op_Negation uu___11 in
+                                       if uu___10
+                                       then
+                                         let uu___11 =
+                                           let uu___12 =
+                                             let uu___13 =
+                                               FStar_Class_Show.show
+                                                 FStar_Syntax_Print.showable_bv
+                                                 x in
+                                             let uu___14 =
+                                               FStar_Class_Show.show
+                                                 FStar_Syntax_Print.showable_term
+                                                 t1 in
+                                             FStar_Compiler_Util.format2
+                                               "Inferred type has unresolved univ uvars:  %s:%s"
+                                               uu___13 uu___14 in
+                                           (FStar_Errors_Codes.Error_UnexpectedUnresolvedUvar,
+                                             uu___12) in
+                                         FStar_Errors.raise_error uu___11
+                                           e1.FStar_Syntax_Syntax.pos
+                                       else ()) bvs_and_ts;
+                              (let g3 =
+                                 let uu___9 =
+                                   FStar_Compiler_List.map
                                      (fun uu___10 ->
-                                        let uu___11 =
-                                          FStar_Class_Show.show
-                                            FStar_Syntax_Print.showable_term
-                                            e2 in
-                                        let uu___12 =
-                                          FStar_Class_Show.show
-                                            FStar_Syntax_Print.showable_term
-                                            t1 in
-                                        FStar_Compiler_Util.format2
-                                          "} finished tc with e = %s and t = %s\n"
-                                          uu___11 uu___12);
-                                   ((bvs_and_ts1, e2, t1), [])))))))
+                                        match uu___10 with
+                                        | (bv, t1) ->
+                                            {
+                                              FStar_Syntax_Syntax.ppname =
+                                                (bv.FStar_Syntax_Syntax.ppname);
+                                              FStar_Syntax_Syntax.index =
+                                                (bv.FStar_Syntax_Syntax.index);
+                                              FStar_Syntax_Syntax.sort = t1
+                                            }) bvs_and_ts in
+                                 FStar_TypeChecker_Env.push_bvs g2 uu___9 in
+                               let allow_uvars = false in
+                               let allow_names = true in
+                               let e2 =
+                                 FStar_Syntax_Compress.deep_compress
+                                   allow_uvars allow_names e1 in
+                               let t1 =
+                                 let uu___9 = refl_norm_type g3 t in
+                                 FStar_Syntax_Compress.deep_compress
+                                   allow_uvars allow_names uu___9 in
+                               let bvs_and_ts1 =
+                                 FStar_Compiler_List.map
+                                   (fun uu___9 ->
+                                      match uu___9 with
+                                      | (bv, t2) ->
+                                          let uu___10 =
+                                            FStar_Syntax_Compress.deep_compress
+                                              allow_uvars allow_names t2 in
+                                          (bv, uu___10)) bvs_and_ts in
+                               dbg_refl g3
+                                 (fun uu___10 ->
+                                    let uu___11 =
+                                      FStar_Class_Show.show
+                                        FStar_Syntax_Print.showable_term e2 in
+                                    let uu___12 =
+                                      FStar_Class_Show.show
+                                        FStar_Syntax_Print.showable_term t1 in
+                                    FStar_Compiler_Util.format2
+                                      "} finished tc with e = %s and t = %s\n"
+                                      uu___11 uu___12);
+                               ((bvs_and_ts1, e2, t1), [])))))))
            else
              Obj.magic
                (Obj.repr
