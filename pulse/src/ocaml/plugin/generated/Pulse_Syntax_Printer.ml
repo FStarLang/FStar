@@ -4219,7 +4219,7 @@ let rec (st_term_to_string' :
                           (Obj.magic
                              (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
                                 (Prims.of_int (317)) (Prims.of_int (8))
-                                (Prims.of_int (340)) (Prims.of_int (36)))))
+                                (Prims.of_int (341)) (Prims.of_int (36)))))
                        (match binders with
                         | [] ->
                             Obj.magic
@@ -4294,7 +4294,7 @@ let rec (st_term_to_string' :
                                            "Pulse.Syntax.Printer.fst"
                                            (Prims.of_int (321))
                                            (Prims.of_int (8))
-                                           (Prims.of_int (340))
+                                           (Prims.of_int (341))
                                            (Prims.of_int (36)))))
                                   (FStar_Tactics_Effect.lift_div_tac
                                      (fun uu___ ->
@@ -4317,15 +4317,15 @@ let rec (st_term_to_string' :
                                                       "Pulse.Syntax.Printer.fst"
                                                       (Prims.of_int (323))
                                                       (Prims.of_int (8))
-                                                      (Prims.of_int (337))
-                                                      (Prims.of_int (80)))))
+                                                      (Prims.of_int (338))
+                                                      (Prims.of_int (25)))))
                                              (FStar_Sealed.seal
                                                 (Obj.magic
                                                    (FStar_Range.mk_range
                                                       "Pulse.Syntax.Printer.fst"
                                                       (Prims.of_int (321))
                                                       (Prims.of_int (8))
-                                                      (Prims.of_int (340))
+                                                      (Prims.of_int (341))
                                                       (Prims.of_int (36)))))
                                              (match hint_type with
                                               | Pulse_Syntax_Base.ASSERT
@@ -4333,30 +4333,32 @@ let rec (st_term_to_string' :
                                                     Pulse_Syntax_Base.p = p;_}
                                                   ->
                                                   Obj.magic
-                                                    (FStar_Tactics_Effect.tac_bind
-                                                       (FStar_Sealed.seal
+                                                    (Obj.repr
+                                                       (FStar_Tactics_Effect.tac_bind
+                                                          (FStar_Sealed.seal
+                                                             (Obj.magic
+                                                                (FStar_Range.mk_range
+                                                                   "Pulse.Syntax.Printer.fst"
+                                                                   (Prims.of_int (324))
+                                                                   (Prims.of_int (36))
+                                                                   (Prims.of_int (324))
+                                                                   (Prims.of_int (52)))))
+                                                          (FStar_Sealed.seal
+                                                             (Obj.magic
+                                                                (FStar_Range.mk_range
+                                                                   "Pulse.Syntax.Printer.fst"
+                                                                   (Prims.of_int (324))
+                                                                   (Prims.of_int (26))
+                                                                   (Prims.of_int (324))
+                                                                   (Prims.of_int (52)))))
                                                           (Obj.magic
-                                                             (FStar_Range.mk_range
-                                                                "Pulse.Syntax.Printer.fst"
-                                                                (Prims.of_int (324))
-                                                                (Prims.of_int (36))
-                                                                (Prims.of_int (324))
-                                                                (Prims.of_int (52)))))
-                                                       (FStar_Sealed.seal
-                                                          (Obj.magic
-                                                             (FStar_Range.mk_range
-                                                                "Pulse.Syntax.Printer.fst"
-                                                                (Prims.of_int (324))
-                                                                (Prims.of_int (26))
-                                                                (Prims.of_int (324))
-                                                                (Prims.of_int (52)))))
-                                                       (Obj.magic
-                                                          (term_to_string p))
-                                                       (fun uu___ ->
-                                                          FStar_Tactics_Effect.lift_div_tac
-                                                            (fun uu___1 ->
-                                                               ("assert",
-                                                                 uu___))))
+                                                             (term_to_string
+                                                                p))
+                                                          (fun uu___ ->
+                                                             FStar_Tactics_Effect.lift_div_tac
+                                                               (fun uu___1 ->
+                                                                  ("assert",
+                                                                    uu___)))))
                                               | Pulse_Syntax_Base.UNFOLD
                                                   {
                                                     Pulse_Syntax_Base.names1
@@ -4364,34 +4366,36 @@ let rec (st_term_to_string' :
                                                     Pulse_Syntax_Base.p2 = p;_}
                                                   ->
                                                   Obj.magic
-                                                    (FStar_Tactics_Effect.tac_bind
-                                                       (FStar_Sealed.seal
+                                                    (Obj.repr
+                                                       (FStar_Tactics_Effect.tac_bind
+                                                          (FStar_Sealed.seal
+                                                             (Obj.magic
+                                                                (FStar_Range.mk_range
+                                                                   "Pulse.Syntax.Printer.fst"
+                                                                   (Prims.of_int (325))
+                                                                   (Prims.of_int (77))
+                                                                   (Prims.of_int (325))
+                                                                   (Prims.of_int (93)))))
+                                                          (FStar_Sealed.seal
+                                                             (Obj.magic
+                                                                (FStar_Range.mk_range
+                                                                   "Pulse.Syntax.Printer.fst"
+                                                                   (Prims.of_int (325))
+                                                                   (Prims.of_int (33))
+                                                                   (Prims.of_int (325))
+                                                                   (Prims.of_int (93)))))
                                                           (Obj.magic
-                                                             (FStar_Range.mk_range
-                                                                "Pulse.Syntax.Printer.fst"
-                                                                (Prims.of_int (325))
-                                                                (Prims.of_int (77))
-                                                                (Prims.of_int (325))
-                                                                (Prims.of_int (93)))))
-                                                       (FStar_Sealed.seal
-                                                          (Obj.magic
-                                                             (FStar_Range.mk_range
-                                                                "Pulse.Syntax.Printer.fst"
-                                                                (Prims.of_int (325))
-                                                                (Prims.of_int (33))
-                                                                (Prims.of_int (325))
-                                                                (Prims.of_int (93)))))
-                                                       (Obj.magic
-                                                          (term_to_string p))
-                                                       (fun uu___ ->
-                                                          FStar_Tactics_Effect.lift_div_tac
-                                                            (fun uu___1 ->
-                                                               ((Prims.strcat
-                                                                   "unfold"
-                                                                   (Prims.strcat
+                                                             (term_to_string
+                                                                p))
+                                                          (fun uu___ ->
+                                                             FStar_Tactics_Effect.lift_div_tac
+                                                               (fun uu___1 ->
+                                                                  ((Prims.strcat
+                                                                    "unfold"
+                                                                    (Prims.strcat
                                                                     (names_to_string
                                                                     names) "")),
-                                                                 uu___))))
+                                                                    uu___)))))
                                               | Pulse_Syntax_Base.FOLD
                                                   {
                                                     Pulse_Syntax_Base.names =
@@ -4399,34 +4403,36 @@ let rec (st_term_to_string' :
                                                     Pulse_Syntax_Base.p1 = p;_}
                                                   ->
                                                   Obj.magic
-                                                    (FStar_Tactics_Effect.tac_bind
-                                                       (FStar_Sealed.seal
+                                                    (Obj.repr
+                                                       (FStar_Tactics_Effect.tac_bind
+                                                          (FStar_Sealed.seal
+                                                             (Obj.magic
+                                                                (FStar_Range.mk_range
+                                                                   "Pulse.Syntax.Printer.fst"
+                                                                   (Prims.of_int (326))
+                                                                   (Prims.of_int (73))
+                                                                   (Prims.of_int (326))
+                                                                   (Prims.of_int (89)))))
+                                                          (FStar_Sealed.seal
+                                                             (Obj.magic
+                                                                (FStar_Range.mk_range
+                                                                   "Pulse.Syntax.Printer.fst"
+                                                                   (Prims.of_int (326))
+                                                                   (Prims.of_int (31))
+                                                                   (Prims.of_int (326))
+                                                                   (Prims.of_int (89)))))
                                                           (Obj.magic
-                                                             (FStar_Range.mk_range
-                                                                "Pulse.Syntax.Printer.fst"
-                                                                (Prims.of_int (326))
-                                                                (Prims.of_int (73))
-                                                                (Prims.of_int (326))
-                                                                (Prims.of_int (89)))))
-                                                       (FStar_Sealed.seal
-                                                          (Obj.magic
-                                                             (FStar_Range.mk_range
-                                                                "Pulse.Syntax.Printer.fst"
-                                                                (Prims.of_int (326))
-                                                                (Prims.of_int (31))
-                                                                (Prims.of_int (326))
-                                                                (Prims.of_int (89)))))
-                                                       (Obj.magic
-                                                          (term_to_string p))
-                                                       (fun uu___ ->
-                                                          FStar_Tactics_Effect.lift_div_tac
-                                                            (fun uu___1 ->
-                                                               ((Prims.strcat
-                                                                   "fold"
-                                                                   (Prims.strcat
+                                                             (term_to_string
+                                                                p))
+                                                          (fun uu___ ->
+                                                             FStar_Tactics_Effect.lift_div_tac
+                                                               (fun uu___1 ->
+                                                                  ((Prims.strcat
+                                                                    "fold"
+                                                                    (Prims.strcat
                                                                     (names_to_string
                                                                     names) "")),
-                                                                 uu___))))
+                                                                    uu___)))))
                                               | Pulse_Syntax_Base.RENAME
                                                   {
                                                     Pulse_Syntax_Base.pairs =
@@ -4435,44 +4441,45 @@ let rec (st_term_to_string' :
                                                       goal;_}
                                                   ->
                                                   Obj.magic
-                                                    (FStar_Tactics_Effect.tac_bind
-                                                       (FStar_Sealed.seal
+                                                    (Obj.repr
+                                                       (FStar_Tactics_Effect.tac_bind
+                                                          (FStar_Sealed.seal
+                                                             (Obj.magic
+                                                                (FStar_Range.mk_range
+                                                                   "Pulse.Syntax.Printer.fst"
+                                                                   (Prims.of_int (328))
+                                                                   (Prims.of_int (10))
+                                                                   (Prims.of_int (332))
+                                                                   (Prims.of_int (21)))))
+                                                          (FStar_Sealed.seal
+                                                             (Obj.magic
+                                                                (FStar_Range.mk_range
+                                                                   "Pulse.Syntax.Printer.fst"
+                                                                   (Prims.of_int (328))
+                                                                   (Prims.of_int (10))
+                                                                   (Prims.of_int (335))
+                                                                   (Prims.of_int (60)))))
                                                           (Obj.magic
-                                                             (FStar_Range.mk_range
-                                                                "Pulse.Syntax.Printer.fst"
-                                                                (Prims.of_int (328))
-                                                                (Prims.of_int (10))
-                                                                (Prims.of_int (332))
-                                                                (Prims.of_int (21)))))
-                                                       (FStar_Sealed.seal
-                                                          (Obj.magic
-                                                             (FStar_Range.mk_range
-                                                                "Pulse.Syntax.Printer.fst"
-                                                                (Prims.of_int (328))
-                                                                (Prims.of_int (10))
-                                                                (Prims.of_int (335))
-                                                                (Prims.of_int (60)))))
-                                                       (Obj.magic
-                                                          (FStar_Tactics_Effect.tac_bind
-                                                             (FStar_Sealed.seal
-                                                                (Obj.magic
-                                                                   (FStar_Range.mk_range
+                                                             (FStar_Tactics_Effect.tac_bind
+                                                                (FStar_Sealed.seal
+                                                                   (Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Syntax.Printer.fst"
                                                                     (Prims.of_int (329))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (332))
                                                                     (Prims.of_int (21)))))
-                                                             (FStar_Sealed.seal
-                                                                (Obj.magic
-                                                                   (FStar_Range.mk_range
+                                                                (FStar_Sealed.seal
+                                                                   (Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (31)))))
-                                                             (Obj.magic
-                                                                (FStar_Tactics_Effect.tac_bind
-                                                                   (FStar_Sealed.seal
+                                                                (Obj.magic
+                                                                   (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Syntax.Printer.fst"
@@ -4480,7 +4487,7 @@ let rec (st_term_to_string' :
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (332))
                                                                     (Prims.of_int (20)))))
-                                                                   (FStar_Sealed.seal
+                                                                    (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Syntax.Printer.fst"
@@ -4488,7 +4495,7 @@ let rec (st_term_to_string' :
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (332))
                                                                     (Prims.of_int (21)))))
-                                                                   (Obj.magic
+                                                                    (Obj.magic
                                                                     (FStar_Tactics_Util.map
                                                                     (fun
                                                                     uu___ ->
@@ -4582,27 +4589,27 @@ let rec (st_term_to_string' :
                                                                     uu___1))))
                                                                     uu___1))
                                                                     pairs))
-                                                                   (fun uu___
-                                                                    ->
+                                                                    (fun
+                                                                    uu___ ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___1 ->
                                                                     FStar_String.concat
                                                                     ", "
                                                                     uu___))))
-                                                             (fun uu___ ->
-                                                                FStar_Tactics_Effect.lift_div_tac
-                                                                  (fun uu___1
-                                                                    ->
+                                                                (fun uu___ ->
+                                                                   FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___1 ->
                                                                     Prims.strcat
                                                                     "rewrite each "
                                                                     (Prims.strcat
                                                                     uu___ "")))))
-                                                       (fun uu___ ->
                                                           (fun uu___ ->
-                                                             Obj.magic
-                                                               (FStar_Tactics_Effect.tac_bind
-                                                                  (FStar_Sealed.seal
+                                                             (fun uu___ ->
+                                                                Obj.magic
+                                                                  (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Syntax.Printer.fst"
@@ -4610,7 +4617,7 @@ let rec (st_term_to_string' :
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (335))
                                                                     (Prims.of_int (60)))))
-                                                                  (FStar_Sealed.seal
+                                                                    (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Syntax.Printer.fst"
@@ -4618,10 +4625,10 @@ let rec (st_term_to_string' :
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (335))
                                                                     (Prims.of_int (60)))))
-                                                                  (match goal
-                                                                   with
-                                                                   | 
-                                                                   FStar_Pervasives_Native.None
+                                                                    (match goal
+                                                                    with
+                                                                    | 
+                                                                    FStar_Pervasives_Native.None
                                                                     ->
                                                                     Obj.magic
                                                                     (Obj.repr
@@ -4629,8 +4636,8 @@ let rec (st_term_to_string' :
                                                                     (fun
                                                                     uu___1 ->
                                                                     "")))
-                                                                   | 
-                                                                   FStar_Pervasives_Native.Some
+                                                                    | 
+                                                                    FStar_Pervasives_Native.Some
                                                                     t2 ->
                                                                     Obj.magic
                                                                     (Obj.repr
@@ -4663,14 +4670,14 @@ let rec (st_term_to_string' :
                                                                     " in "
                                                                     (Prims.strcat
                                                                     uu___1 ""))))))
-                                                                  (fun uu___1
-                                                                    ->
+                                                                    (fun
+                                                                    uu___1 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___2 ->
                                                                     (uu___,
                                                                     uu___1)))))
-                                                            uu___))
+                                                               uu___)))
                                               | Pulse_Syntax_Base.REWRITE
                                                   {
                                                     Pulse_Syntax_Base.t1 =
@@ -4678,47 +4685,49 @@ let rec (st_term_to_string' :
                                                     Pulse_Syntax_Base.t2 = t2;_}
                                                   ->
                                                   Obj.magic
-                                                    (FStar_Tactics_Effect.tac_bind
-                                                       (FStar_Sealed.seal
+                                                    (Obj.repr
+                                                       (FStar_Tactics_Effect.tac_bind
+                                                          (FStar_Sealed.seal
+                                                             (Obj.magic
+                                                                (FStar_Range.mk_range
+                                                                   "Pulse.Syntax.Printer.fst"
+                                                                   (Prims.of_int (337))
+                                                                   (Prims.of_int (10))
+                                                                   (Prims.of_int (337))
+                                                                   (Prims.of_int (76)))))
+                                                          (FStar_Sealed.seal
+                                                             (Obj.magic
+                                                                (FStar_Range.mk_range
+                                                                   "Pulse.Syntax.Printer.fst"
+                                                                   (Prims.of_int (337))
+                                                                   (Prims.of_int (10))
+                                                                   (Prims.of_int (337))
+                                                                   (Prims.of_int (80)))))
                                                           (Obj.magic
-                                                             (FStar_Range.mk_range
-                                                                "Pulse.Syntax.Printer.fst"
-                                                                (Prims.of_int (337))
-                                                                (Prims.of_int (10))
-                                                                (Prims.of_int (337))
-                                                                (Prims.of_int (76)))))
-                                                       (FStar_Sealed.seal
-                                                          (Obj.magic
-                                                             (FStar_Range.mk_range
-                                                                "Pulse.Syntax.Printer.fst"
-                                                                (Prims.of_int (337))
-                                                                (Prims.of_int (10))
-                                                                (Prims.of_int (337))
-                                                                (Prims.of_int (80)))))
-                                                       (Obj.magic
-                                                          (FStar_Tactics_Effect.tac_bind
-                                                             (FStar_Sealed.seal
-                                                                (Obj.magic
-                                                                   (FStar_Range.mk_range
+                                                             (FStar_Tactics_Effect.tac_bind
+                                                                (FStar_Sealed.seal
+                                                                   (Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Syntax.Printer.fst"
                                                                     (Prims.of_int (337))
                                                                     (Prims.of_int (57))
                                                                     (Prims.of_int (337))
                                                                     (Prims.of_int (76)))))
-                                                             (FStar_Sealed.seal
-                                                                (Obj.magic
-                                                                   (FStar_Range.mk_range
+                                                                (FStar_Sealed.seal
+                                                                   (Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Syntax.Printer.fst"
                                                                     (Prims.of_int (337))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (337))
                                                                     (Prims.of_int (76)))))
-                                                             (Obj.magic
-                                                                (term_to_string
-                                                                   t2))
-                                                             (fun uu___ ->
+                                                                (Obj.magic
+                                                                   (term_to_string
+                                                                    t2))
                                                                 (fun uu___ ->
-                                                                   Obj.magic
+                                                                   (fun uu___
+                                                                    ->
+                                                                    Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -4778,11 +4787,17 @@ let rec (st_term_to_string' :
                                                                     uu___2 ->
                                                                     uu___1
                                                                     uu___))))
-                                                                  uu___)))
-                                                       (fun uu___ ->
-                                                          FStar_Tactics_Effect.lift_div_tac
-                                                            (fun uu___1 ->
-                                                               (uu___, "")))))
+                                                                    uu___)))
+                                                          (fun uu___ ->
+                                                             FStar_Tactics_Effect.lift_div_tac
+                                                               (fun uu___1 ->
+                                                                  (uu___, "")))))
+                                              | Pulse_Syntax_Base.WILD ->
+                                                  Obj.magic
+                                                    (Obj.repr
+                                                       (FStar_Tactics_Effect.lift_div_tac
+                                                          (fun uu___ ->
+                                                             ("_", "")))))
                                              (fun uu___ ->
                                                 (fun uu___ ->
                                                    match uu___ with
@@ -4793,9 +4808,9 @@ let rec (st_term_to_string' :
                                                                (Obj.magic
                                                                   (FStar_Range.mk_range
                                                                     "Pulse.Syntax.Printer.fst"
-                                                                    (Prims.of_int (340))
+                                                                    (Prims.of_int (341))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (340))
+                                                                    (Prims.of_int (341))
                                                                     (Prims.of_int (36)))))
                                                             (FStar_Sealed.seal
                                                                (Obj.magic
@@ -4838,13 +4853,13 @@ let rec (st_term_to_string' :
                        (FStar_Sealed.seal
                           (Obj.magic
                              (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
-                                (Prims.of_int (346)) (Prims.of_int (8))
-                                (Prims.of_int (346)) (Prims.of_int (40)))))
+                                (Prims.of_int (347)) (Prims.of_int (8))
+                                (Prims.of_int (347)) (Prims.of_int (40)))))
                        (FStar_Sealed.seal
                           (Obj.magic
                              (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
-                                (Prims.of_int (343)) (Prims.of_int (6))
-                                (Prims.of_int (346)) (Prims.of_int (40)))))
+                                (Prims.of_int (344)) (Prims.of_int (6))
+                                (Prims.of_int (347)) (Prims.of_int (40)))))
                        (Obj.magic (term_opt_to_string returns_inv))
                        (fun uu___ ->
                           (fun uu___ ->
@@ -4854,17 +4869,17 @@ let rec (st_term_to_string' :
                                      (Obj.magic
                                         (FStar_Range.mk_range
                                            "Pulse.Syntax.Printer.fst"
-                                           (Prims.of_int (343))
+                                           (Prims.of_int (344))
                                            (Prims.of_int (6))
-                                           (Prims.of_int (346))
+                                           (Prims.of_int (347))
                                            (Prims.of_int (40)))))
                                   (FStar_Sealed.seal
                                      (Obj.magic
                                         (FStar_Range.mk_range
                                            "Pulse.Syntax.Printer.fst"
-                                           (Prims.of_int (343))
+                                           (Prims.of_int (344))
                                            (Prims.of_int (6))
-                                           (Prims.of_int (346))
+                                           (Prims.of_int (347))
                                            (Prims.of_int (40)))))
                                   (Obj.magic
                                      (FStar_Tactics_Effect.tac_bind
@@ -4872,17 +4887,17 @@ let rec (st_term_to_string' :
                                            (Obj.magic
                                               (FStar_Range.mk_range
                                                  "Pulse.Syntax.Printer.fst"
-                                                 (Prims.of_int (345))
+                                                 (Prims.of_int (346))
                                                  (Prims.of_int (8))
-                                                 (Prims.of_int (345))
+                                                 (Prims.of_int (346))
                                                  (Prims.of_int (39)))))
                                         (FStar_Sealed.seal
                                            (Obj.magic
                                               (FStar_Range.mk_range
                                                  "Pulse.Syntax.Printer.fst"
-                                                 (Prims.of_int (343))
+                                                 (Prims.of_int (344))
                                                  (Prims.of_int (6))
-                                                 (Prims.of_int (346))
+                                                 (Prims.of_int (347))
                                                  (Prims.of_int (40)))))
                                         (Obj.magic
                                            (st_term_to_string' level body))
@@ -4894,17 +4909,17 @@ let rec (st_term_to_string' :
                                                       (Obj.magic
                                                          (FStar_Range.mk_range
                                                             "Pulse.Syntax.Printer.fst"
-                                                            (Prims.of_int (343))
+                                                            (Prims.of_int (344))
                                                             (Prims.of_int (6))
-                                                            (Prims.of_int (346))
+                                                            (Prims.of_int (347))
                                                             (Prims.of_int (40)))))
                                                    (FStar_Sealed.seal
                                                       (Obj.magic
                                                          (FStar_Range.mk_range
                                                             "Pulse.Syntax.Printer.fst"
-                                                            (Prims.of_int (343))
+                                                            (Prims.of_int (344))
                                                             (Prims.of_int (6))
-                                                            (Prims.of_int (346))
+                                                            (Prims.of_int (347))
                                                             (Prims.of_int (40)))))
                                                    (Obj.magic
                                                       (FStar_Tactics_Effect.tac_bind
@@ -4912,9 +4927,9 @@ let rec (st_term_to_string' :
                                                             (Obj.magic
                                                                (FStar_Range.mk_range
                                                                   "Pulse.Syntax.Printer.fst"
-                                                                  (Prims.of_int (344))
+                                                                  (Prims.of_int (345))
                                                                   (Prims.of_int (8))
-                                                                  (Prims.of_int (344))
+                                                                  (Prims.of_int (345))
                                                                   (Prims.of_int (29)))))
                                                          (FStar_Sealed.seal
                                                             (Obj.magic
@@ -4969,13 +4984,13 @@ and (branches_to_string :
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
-                            (Prims.of_int (351)) (Prims.of_int (13))
-                            (Prims.of_int (351)) (Prims.of_int (31)))))
+                            (Prims.of_int (352)) (Prims.of_int (13))
+                            (Prims.of_int (352)) (Prims.of_int (31)))))
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
-                            (Prims.of_int (351)) (Prims.of_int (13))
-                            (Prims.of_int (351)) (Prims.of_int (55)))))
+                            (Prims.of_int (352)) (Prims.of_int (13))
+                            (Prims.of_int (352)) (Prims.of_int (55)))))
                    (Obj.magic (branch_to_string b))
                    (fun uu___ ->
                       (fun uu___ ->
@@ -4985,9 +5000,9 @@ and (branches_to_string :
                                  (Obj.magic
                                     (FStar_Range.mk_range
                                        "Pulse.Syntax.Printer.fst"
-                                       (Prims.of_int (351))
+                                       (Prims.of_int (352))
                                        (Prims.of_int (34))
-                                       (Prims.of_int (351))
+                                       (Prims.of_int (352))
                                        (Prims.of_int (55)))))
                               (FStar_Sealed.seal
                                  (Obj.magic
@@ -5010,12 +5025,12 @@ and (branch_to_string :
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
-               (Prims.of_int (354)) (Prims.of_int (17)) (Prims.of_int (354))
+               (Prims.of_int (355)) (Prims.of_int (17)) (Prims.of_int (355))
                (Prims.of_int (19)))))
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
-               (Prims.of_int (353)) (Prims.of_int (35)) (Prims.of_int (357))
+               (Prims.of_int (354)) (Prims.of_int (35)) (Prims.of_int (358))
                (Prims.of_int (29)))))
       (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> br))
       (fun uu___ ->
@@ -5027,13 +5042,13 @@ and (branch_to_string :
                      (FStar_Sealed.seal
                         (Obj.magic
                            (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
-                              (Prims.of_int (357)) (Prims.of_int (4))
-                              (Prims.of_int (357)) (Prims.of_int (29)))))
+                              (Prims.of_int (358)) (Prims.of_int (4))
+                              (Prims.of_int (358)) (Prims.of_int (29)))))
                      (FStar_Sealed.seal
                         (Obj.magic
                            (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
-                              (Prims.of_int (355)) (Prims.of_int (2))
-                              (Prims.of_int (357)) (Prims.of_int (29)))))
+                              (Prims.of_int (356)) (Prims.of_int (2))
+                              (Prims.of_int (358)) (Prims.of_int (29)))))
                      (Obj.magic (st_term_to_string' "" e))
                      (fun uu___1 ->
                         (fun uu___1 ->
@@ -5043,17 +5058,17 @@ and (branch_to_string :
                                    (Obj.magic
                                       (FStar_Range.mk_range
                                          "Pulse.Syntax.Printer.fst"
-                                         (Prims.of_int (355))
+                                         (Prims.of_int (356))
                                          (Prims.of_int (2))
-                                         (Prims.of_int (357))
+                                         (Prims.of_int (358))
                                          (Prims.of_int (29)))))
                                 (FStar_Sealed.seal
                                    (Obj.magic
                                       (FStar_Range.mk_range
                                          "Pulse.Syntax.Printer.fst"
-                                         (Prims.of_int (355))
+                                         (Prims.of_int (356))
                                          (Prims.of_int (2))
-                                         (Prims.of_int (357))
+                                         (Prims.of_int (358))
                                          (Prims.of_int (29)))))
                                 (Obj.magic
                                    (FStar_Tactics_Effect.tac_bind
@@ -5061,9 +5076,9 @@ and (branch_to_string :
                                          (Obj.magic
                                             (FStar_Range.mk_range
                                                "Pulse.Syntax.Printer.fst"
-                                               (Prims.of_int (356))
+                                               (Prims.of_int (357))
                                                (Prims.of_int (4))
-                                               (Prims.of_int (356))
+                                               (Prims.of_int (357))
                                                (Prims.of_int (27)))))
                                       (FStar_Sealed.seal
                                          (Obj.magic
@@ -5101,8 +5116,8 @@ and (pattern_to_string :
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
-                            (Prims.of_int (364)) (Prims.of_int (6))
-                            (Prims.of_int (364)) (Prims.of_int (74)))))
+                            (Prims.of_int (365)) (Prims.of_int (6))
+                            (Prims.of_int (365)) (Prims.of_int (74)))))
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "prims.fst"
@@ -5114,14 +5129,14 @@ and (pattern_to_string :
                             (Obj.magic
                                (FStar_Range.mk_range
                                   "Pulse.Syntax.Printer.fst"
-                                  (Prims.of_int (364)) (Prims.of_int (25))
-                                  (Prims.of_int (364)) (Prims.of_int (73)))))
+                                  (Prims.of_int (365)) (Prims.of_int (25))
+                                  (Prims.of_int (365)) (Prims.of_int (73)))))
                          (FStar_Sealed.seal
                             (Obj.magic
                                (FStar_Range.mk_range
                                   "Pulse.Syntax.Printer.fst"
-                                  (Prims.of_int (364)) (Prims.of_int (6))
-                                  (Prims.of_int (364)) (Prims.of_int (74)))))
+                                  (Prims.of_int (365)) (Prims.of_int (6))
+                                  (Prims.of_int (365)) (Prims.of_int (74)))))
                          (Obj.magic
                             (FStar_Tactics_Util.map
                                (fun uu___ ->
@@ -5219,8 +5234,8 @@ let (tag_of_comp :
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
-                            (Prims.of_int (420)) (Prims.of_int (31))
-                            (Prims.of_int (420)) (Prims.of_int (49)))))
+                            (Prims.of_int (421)) (Prims.of_int (31))
+                            (Prims.of_int (421)) (Prims.of_int (49)))))
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "prims.fst"
@@ -5238,8 +5253,8 @@ let (tag_of_comp :
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
-                            (Prims.of_int (422)) (Prims.of_int (30))
-                            (Prims.of_int (422)) (Prims.of_int (48)))))
+                            (Prims.of_int (423)) (Prims.of_int (30))
+                            (Prims.of_int (423)) (Prims.of_int (48)))))
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "prims.fst"
@@ -5334,8 +5349,8 @@ let (decl_to_string :
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
-                   (Prims.of_int (479)) (Prims.of_int (12))
-                   (Prims.of_int (482)) (Prims.of_int (42)))))
+                   (Prims.of_int (480)) (Prims.of_int (12))
+                   (Prims.of_int (483)) (Prims.of_int (42)))))
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
@@ -5346,8 +5361,8 @@ let (decl_to_string :
                 (FStar_Sealed.seal
                    (Obj.magic
                       (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
-                         (Prims.of_int (480)) (Prims.of_int (5))
-                         (Prims.of_int (482)) (Prims.of_int (42)))))
+                         (Prims.of_int (481)) (Prims.of_int (5))
+                         (Prims.of_int (483)) (Prims.of_int (42)))))
                 (FStar_Sealed.seal
                    (Obj.magic
                       (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
@@ -5358,8 +5373,8 @@ let (decl_to_string :
                       (FStar_Sealed.seal
                          (Obj.magic
                             (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
-                               (Prims.of_int (480)) (Prims.of_int (32))
-                               (Prims.of_int (482)) (Prims.of_int (42)))))
+                               (Prims.of_int (481)) (Prims.of_int (32))
+                               (Prims.of_int (483)) (Prims.of_int (42)))))
                       (FStar_Sealed.seal
                          (Obj.magic
                             (FStar_Range.mk_range "prims.fst"
@@ -5371,8 +5386,8 @@ let (decl_to_string :
                                (Obj.magic
                                   (FStar_Range.mk_range
                                      "Pulse.Syntax.Printer.fst"
-                                     (Prims.of_int (481)) (Prims.of_int (5))
-                                     (Prims.of_int (482)) (Prims.of_int (42)))))
+                                     (Prims.of_int (482)) (Prims.of_int (5))
+                                     (Prims.of_int (483)) (Prims.of_int (42)))))
                             (FStar_Sealed.seal
                                (Obj.magic
                                   (FStar_Range.mk_range "prims.fst"
@@ -5384,17 +5399,17 @@ let (decl_to_string :
                                      (Obj.magic
                                         (FStar_Range.mk_range
                                            "Pulse.Syntax.Printer.fst"
-                                           (Prims.of_int (481))
+                                           (Prims.of_int (482))
                                            (Prims.of_int (5))
-                                           (Prims.of_int (481))
+                                           (Prims.of_int (482))
                                            (Prims.of_int (71)))))
                                   (FStar_Sealed.seal
                                      (Obj.magic
                                         (FStar_Range.mk_range
                                            "Pulse.Syntax.Printer.fst"
-                                           (Prims.of_int (481))
-                                           (Prims.of_int (5))
                                            (Prims.of_int (482))
+                                           (Prims.of_int (5))
+                                           (Prims.of_int (483))
                                            (Prims.of_int (42)))))
                                   (Obj.magic
                                      (FStar_Tactics_Effect.tac_bind
@@ -5402,17 +5417,17 @@ let (decl_to_string :
                                            (Obj.magic
                                               (FStar_Range.mk_range
                                                  "Pulse.Syntax.Printer.fst"
-                                                 (Prims.of_int (481))
+                                                 (Prims.of_int (482))
                                                  (Prims.of_int (23))
-                                                 (Prims.of_int (481))
+                                                 (Prims.of_int (482))
                                                  (Prims.of_int (71)))))
                                         (FStar_Sealed.seal
                                            (Obj.magic
                                               (FStar_Range.mk_range
                                                  "Pulse.Syntax.Printer.fst"
-                                                 (Prims.of_int (481))
+                                                 (Prims.of_int (482))
                                                  (Prims.of_int (5))
-                                                 (Prims.of_int (481))
+                                                 (Prims.of_int (482))
                                                  (Prims.of_int (71)))))
                                         (Obj.magic
                                            (FStar_Tactics_Util.map
@@ -5433,9 +5448,9 @@ let (decl_to_string :
                                                 (Obj.magic
                                                    (FStar_Range.mk_range
                                                       "Pulse.Syntax.Printer.fst"
-                                                      (Prims.of_int (482))
+                                                      (Prims.of_int (483))
                                                       (Prims.of_int (6))
-                                                      (Prims.of_int (482))
+                                                      (Prims.of_int (483))
                                                       (Prims.of_int (42)))))
                                              (FStar_Sealed.seal
                                                 (Obj.magic
@@ -5451,9 +5466,9 @@ let (decl_to_string :
                                                       (Obj.magic
                                                          (FStar_Range.mk_range
                                                             "Pulse.Syntax.Printer.fst"
-                                                            (Prims.of_int (482))
+                                                            (Prims.of_int (483))
                                                             (Prims.of_int (14))
-                                                            (Prims.of_int (482))
+                                                            (Prims.of_int (483))
                                                             (Prims.of_int (42)))))
                                                    (FStar_Sealed.seal
                                                       (Obj.magic
@@ -5469,9 +5484,9 @@ let (decl_to_string :
                                                             (Obj.magic
                                                                (FStar_Range.mk_range
                                                                   "Pulse.Syntax.Printer.fst"
-                                                                  (Prims.of_int (482))
+                                                                  (Prims.of_int (483))
                                                                   (Prims.of_int (14))
-                                                                  (Prims.of_int (482))
+                                                                  (Prims.of_int (483))
                                                                   (Prims.of_int (36)))))
                                                          (FStar_Sealed.seal
                                                             (Obj.magic

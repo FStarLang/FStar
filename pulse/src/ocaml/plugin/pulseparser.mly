@@ -184,9 +184,10 @@ pulseStmtNoSeq:
     { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders (UNFOLD (ns,p)) bs }
   | bs=withBindersOpt FOLD ns=option(names) p=pulseVprop
     { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders (FOLD (ns,p)) bs }
+  | bs=withBinders UNDERSCORE
+    { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders WILD bs }
   | WITH_INVS names=nonempty_list(atomicTerm) r=option(ensuresVprop) LBRACE body=pulseStmt RBRACE
     { PulseSyntaxExtension_Sugar.mk_with_invs names body r }
-
   | f=localFnDecl
     {
       let id, fndecl = f in
@@ -211,9 +212,13 @@ names:
   | LBRACK l=separated_nonempty_list(SEMICOLON, qlident) RBRACK
     { l }
 
-withBindersOpt:
+withBinders:
   | WITH bs=nonempty_list(multiBinder) DOT
     { List.flatten bs }
+
+withBindersOpt:
+  | w=withBinders
+    { w }
   | { [] }
 
 ensuresVprop:

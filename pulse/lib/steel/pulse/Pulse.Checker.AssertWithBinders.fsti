@@ -6,6 +6,11 @@ open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Base
 
+let head_wild (st:st_term) =
+  match st.term with
+  | Tm_ProofHintWithBinders { hint_type = WILD } -> true
+  | _ -> false
+
 val check
   (g:env)
   (pre:term)

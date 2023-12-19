@@ -15,7 +15,7 @@ module P = Pulse.Syntax.Printer
 module N = Pulse.Syntax.Naming
 module PS = Pulse.Checker.Prover.Substs
 module Prover = Pulse.Checker.Prover
-
+open Pulse.Show
 module RU = Pulse.RuntimeUtils
 
 let is_host_term (t:R.term) = not (R.Tv_Unknown? (R.inspect_ln t))
@@ -271,7 +271,44 @@ let rec check_renaming
       { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body } }
   )
 
+let check_wild
+      (g:env)
+      (pre:term)
+      (st:st_term { head_wild st })
+: T.Tac st_term
+= let Tm_ProofHintWithBinders ht = st.term in
+  let { binders=bs; t=body } = ht in
+  match bs with
+  | [] ->
+    fail g (Some st.range) "A wildcard must have at least one binder"
 
+  | _ ->
+    let vprops = Pulse.Typing.Combinators.vprop_as_list pre in
+    let ex, rest = List.Tot.partition (fun (v:vprop) -> Tm_ExistsSL? v.t) vprops in
+    match ex with
+    | []
+    | _::_::_ ->
+      fail g (Some st.range) "Binding names with a wildcard requires exactly one existential quantifier in the goal"
+    | [ex] ->
+      let k = List.Tot.length bs in
+      let rec peel_binders (n:nat) (t:term) : T.Tac st_term =
+        if n = 0
+        then (
+          let ex_body = t in
+          { st with term = Tm_ProofHintWithBinders { ht with hint_type = ASSERT { p = ex_body } }}
+        )
+        else (
+          match t.t with
+          | Tm_ExistsSL u b body -> peel_binders (n-1) body
+          | _ -> 
+            fail g (Some st.range)
+               (Printf.sprintf "Expected an existential quantifier with at least %d binders; but only found %s with %d binders"
+                  k (show ex) (k - n))
+        )
+      in
+      peel_binders k ex
+
+                  
 let check
   (g:env)
   (pre:term)
@@ -288,6 +325,10 @@ let check
   let Tm_ProofHintWithBinders { hint_type; binders=bs; t=body } = st.term in
 
   match hint_type with
+  | WILD ->
+    let st = check_wild g pre st in
+    check g pre pre_typing post_hint res_ppname st
+
   | RENAME { pairs; goal } ->
     let st = check_renaming g pre st in
     check g pre pre_typing post_hint res_ppname st

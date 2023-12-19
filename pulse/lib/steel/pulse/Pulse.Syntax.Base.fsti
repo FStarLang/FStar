@@ -177,6 +177,7 @@ type proof_hint_type =
       t1:vprop;
       t2:vprop;
     }
+  | WILD //with p q r. _
 
 
 noeq

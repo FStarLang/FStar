@@ -335,6 +335,8 @@ let desugar_hint_type (env:env_t) (ht:Sugar.hint_type)
       let! t1 = desugar_vprop env t1 in
       let! t2 = desugar_vprop env t2 in
       return (SW.mk_rewrite_hint_type t1 t2)
+    | WILD ->
+      return (SW.mk_wild_hint_type)
 
 // FIXME
 // should just mimic let resolve_lid

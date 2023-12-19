@@ -106,3 +106,17 @@ ensures emp
     drop (R.pts_to x1 #p1 v1)
 }
 ```
+
+//Now instead of writing out the whole predicate, if there's a unique
+//existential in the environment, you can just bind its witnesses as below
+```pulse
+fn sample7 (x0:R.ref int) (x1:R.ref bool)
+requires exists* p0 p1 v0 v1. R.pts_to x0 #p0 v0 ** R.pts_to x1 #p1 v1
+ensures emp
+{
+    
+    with p0 p1 v0 v1. _;
+    drop (R.pts_to x0 #p0 v0);
+    drop (R.pts_to x1 #p1 v1)
+}
+```

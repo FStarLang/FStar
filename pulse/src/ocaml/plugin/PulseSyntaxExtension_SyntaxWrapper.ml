@@ -150,6 +150,7 @@ let trans_ns = function
 
 type hint_type = Pulse_Syntax_Base.proof_hint_type
 
+let mk_wild_hint_type = Pulse_Syntax_Base.WILD
 let mk_assert_hint_type vp = PSB.mk_assert_hint_type vp
 let mk_unfold_hint_type names vp = PSB.mk_unfold_hint_type names vp
 let mk_fold_hint_type names vp = PSB.mk_fold_hint_type names vp

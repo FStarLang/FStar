@@ -148,6 +148,7 @@ let eq_hint_type (ht1 ht2:proof_hint_type)
     | REWRITE { t1; t2 }, REWRITE { t1=s1; t2=s2 } ->
       eq_tm t1 s1 &&
       eq_tm t2 s2
+    | WILD, WILD -> true
     | _ -> false
 
 let eq_ascription (a1 a2:comp_ascription) 

@@ -127,6 +127,7 @@ let close_open_inverse_proof_hint_type' (ht:proof_hint_type)
     | REWRITE { t1; t2 } ->
       close_open_inverse' t1 x i;
       close_open_inverse' t2 x i
+    | WILD -> ()
 
 let open_ascription' (t:comp_ascription) (v:term) (i:index) : comp_ascription =
   subst_ascription t [DT i v]

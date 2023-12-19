@@ -335,6 +335,7 @@ let rec st_term_to_string' (level:string) (t:st_term)
             | Some t -> sprintf " in %s" (term_to_string t))
         | REWRITE { t1; t2 } ->
           sprintf "rewrite %s as %s" (term_to_string t1) (term_to_string t2), ""
+        | WILD -> "_", ""
       in
       sprintf "%s %s %s; %s" with_prefix ht p
         (st_term_to_string' level t)

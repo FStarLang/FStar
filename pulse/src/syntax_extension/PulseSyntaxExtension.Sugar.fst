@@ -49,6 +49,7 @@ type hint_type =
   | FOLD of option (list lident) & vprop
   | RENAME of list (A.term & A.term) & option vprop
   | REWRITE of vprop & vprop
+  | WILD
 
 type array_init = {
   init : A.term;

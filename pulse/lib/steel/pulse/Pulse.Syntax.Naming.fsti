@@ -72,6 +72,7 @@ let freevars_proof_hint (ht:proof_hint_type) : Set.set var =
     Set.union (freevars_pairs pairs) (freevars_term_opt goal)
   | REWRITE { t1; t2 } ->
     Set.union (freevars t1) (freevars t2)
+  | WILD -> Set.empty
 
 let freevars_ascription (c:comp_ascription) 
   : Set.set var
@@ -232,6 +233,7 @@ let ln_proof_hint' (ht:proof_hint_type) (i:int) : bool =
   | REWRITE { t1; t2 } ->
     ln' t1 i &&
     ln' t2 i
+  | WILD -> true
 
 let rec pattern_shift_n (p:pattern)
   : Tot nat
@@ -514,6 +516,7 @@ let subst_proof_hint (ht:proof_hint_type) (ss:subst)
                                          goal=subst_term_opt goal ss }
     | REWRITE { t1; t2 } -> REWRITE { t1=subst_term t1 ss;
                                       t2=subst_term t2 ss }
+    | WILD -> ht
 
 let open_term_pairs' (t:list (term * term)) (v:term) (i:index) =
   subst_term_pairs t [DT i v]

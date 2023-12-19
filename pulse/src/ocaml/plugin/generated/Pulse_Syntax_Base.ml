@@ -251,6 +251,7 @@ and proof_hint_type =
   | UNFOLD of proof_hint_type__UNFOLD__payload 
   | RENAME of proof_hint_type__RENAME__payload 
   | REWRITE of proof_hint_type__REWRITE__payload 
+  | WILD 
 let (__proj__Mkproof_hint_type__ASSERT__payload__item__p :
   proof_hint_type__ASSERT__payload -> vprop) =
   fun projectee -> match projectee with | { p;_} -> p
@@ -307,6 +308,8 @@ let (uu___is_REWRITE : proof_hint_type -> Prims.bool) =
 let (__proj__REWRITE__item___0 :
   proof_hint_type -> proof_hint_type__REWRITE__payload) =
   fun projectee -> match projectee with | REWRITE _0 -> _0
+let (uu___is_WILD : proof_hint_type -> Prims.bool) =
+  fun projectee -> match projectee with | WILD -> true | uu___ -> false
 type comp_ascription =
   {
   annotated: comp FStar_Pervasives_Native.option ;
@@ -678,6 +681,7 @@ let (eq_hint_type : proof_hint_type -> proof_hint_type -> Prims.bool) =
             && (eq_opt eq_tm p1 p2)
       | (REWRITE { t1; t2;_}, REWRITE { t1 = s1; t2 = s2;_}) ->
           (eq_tm t1 s1) && (eq_tm t2 s2)
+      | (WILD, WILD) -> true
       | uu___ -> false
 let (eq_ascription : comp_ascription -> comp_ascription -> Prims.bool) =
   fun a1 ->

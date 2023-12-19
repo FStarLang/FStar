@@ -86,6 +86,7 @@ let (freevars_proof_hint :
     | Pulse_Syntax_Base.REWRITE
         { Pulse_Syntax_Base.t1 = t1; Pulse_Syntax_Base.t2 = t2;_} ->
         FStar_Set.union (freevars t1) (freevars t2)
+    | Pulse_Syntax_Base.WILD -> FStar_Set.empty ()
 let (freevars_ascription :
   Pulse_Syntax_Base.comp_ascription -> Pulse_Syntax_Base.var FStar_Set.set) =
   fun c ->
@@ -288,6 +289,7 @@ let (ln_proof_hint' :
       | Pulse_Syntax_Base.REWRITE
           { Pulse_Syntax_Base.t1 = t1; Pulse_Syntax_Base.t2 = t2;_} ->
           (ln' t1 i) && (ln' t2 i)
+      | Pulse_Syntax_Base.WILD -> true
 let rec (pattern_shift_n : Pulse_Syntax_Base.pattern -> Prims.nat) =
   fun p ->
     match p with
@@ -716,6 +718,7 @@ let (subst_proof_hint :
               Pulse_Syntax_Base.t1 = (subst_term t1 ss);
               Pulse_Syntax_Base.t2 = (subst_term t2 ss)
             }
+      | Pulse_Syntax_Base.WILD -> ht
 let (open_term_pairs' :
   (Pulse_Syntax_Base.term * Pulse_Syntax_Base.term) Prims.list ->
     Pulse_Syntax_Base.term ->

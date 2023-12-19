@@ -129,139 +129,144 @@ let rec check
   (pre0_typing: tot_typing g0 pre0 tm_vprop)
   (post_hint:post_hint_opt g0)
   (res_ppname:ppname)
-  (t:st_term) : T.Tac (checker_result_t g0 pre0 post_hint) =
+  (t:st_term)
+: T.Tac (checker_result_t g0 pre0 post_hint)
+= if Pulse.Checker.AssertWithBinders.head_wild t
+  then Pulse.Checker.AssertWithBinders.check g0 pre0 pre0_typing post_hint res_ppname t check
+  else (
+    let (| g, pre, pre_typing, k_elim_pure |) = 
+      Pulse.Checker.Prover.elim_exists_and_pure pre0_typing 
+    in
+  
+    if RU.debug_at_level (fstar_env g) "pulse.checker" then
+      T.print (Printf.sprintf "At %s{\nerr context:\n>%s\n\n{\n\tenv=%s\ncontext:\n%s,\n\nst_term: %s}}\n"
+                (T.range_to_string t.range)
+                (RU.print_context (get_context g))
+                (Pulse.Typing.Env.env_to_string g)
+                (Pulse.Syntax.Printer.term_to_string pre)
+                (Pulse.Syntax.Printer.st_term_to_string t));
 
-  let (| g, pre, pre_typing, k_elim_pure |) =
-    Pulse.Checker.Prover.elim_exists_and_pure pre0_typing in
+    let r : checker_result_t g pre post_hint =
+      let g = push_context (P.tag_of_st_term t) t.range g in
+      match t.term with
+      | Tm_Return _ ->
+        Return.check g pre pre_typing post_hint res_ppname t check
+      
+      | Tm_Abs _ ->
+        // let (| t, c, typing |) = Pulse.Checker.Abs.check_abs g t check in
+        // Pulse.Checker.Prover.prove_post_hint (
+        //   Pulse.Checker.Prover.try_frame_pre
+        //     pre_typing
+            
+        // )
+        T.fail "Tm_Abs check should not have been called in the checker"
 
-  if RU.debug_at_level (fstar_env g) "pulse.checker" then
-    T.print (Printf.sprintf "At %s{\nerr context:\n>%s\n\n{\n\tenv=%s\ncontext:\n%s,\n\nst_term: %s}}\n"
-              (T.range_to_string t.range)
-              (RU.print_context (get_context g))
-              (Pulse.Typing.Env.env_to_string g)
-              (Pulse.Syntax.Printer.term_to_string pre)
-              (Pulse.Syntax.Printer.st_term_to_string t));
+      | Tm_STApp _ ->
+        STApp.check g pre pre_typing post_hint res_ppname t
 
-  let r : checker_result_t g pre post_hint =
-    let g = push_context (P.tag_of_st_term t) t.range g in
-    match t.term with
-    | Tm_Return _ ->
-      Return.check g pre pre_typing post_hint res_ppname t check
-    
-    | Tm_Abs _ ->
-      // let (| t, c, typing |) = Pulse.Checker.Abs.check_abs g t check in
-      // Pulse.Checker.Prover.prove_post_hint (
-      //   Pulse.Checker.Prover.try_frame_pre
-      //     pre_typing
-          
-      // )
-      T.fail "Tm_Abs check should not have been called in the checker"
+      | Tm_ElimExists _ ->
+        Exists.check_elim_exists g pre pre_typing post_hint res_ppname t
 
-    | Tm_STApp _ ->
-      STApp.check g pre pre_typing post_hint res_ppname t
+      | Tm_IntroExists { p; witnesses } ->
+        (match instantiate_unknown_witnesses g t with
+        | Some t ->
+          check g pre pre_typing post_hint res_ppname t
+        | None ->
+          match witnesses with
+          | [] -> fail g (Some t.range) "intro exists with empty witnesses"
+          | [_] ->
+            Exists.check_intro_exists g pre pre_typing post_hint res_ppname t None 
+          | _ ->
+            let t = transform_to_unary_intro_exists g p witnesses in
+            check g pre pre_typing post_hint res_ppname t)
+      | Tm_Bind _ ->
+        Bind.check_bind g pre pre_typing post_hint res_ppname t check
 
-    | Tm_ElimExists _ ->
-      Exists.check_elim_exists g pre pre_typing post_hint res_ppname t
+      | Tm_TotBind _ ->
+        Bind.check_tot_bind g pre pre_typing post_hint res_ppname t check
 
-    | Tm_IntroExists { p; witnesses } ->
-      (match instantiate_unknown_witnesses g t with
-       | Some t ->
-         check g pre pre_typing post_hint res_ppname t
-       | None ->
-         match witnesses with
-         | [] -> fail g (Some t.range) "intro exists with empty witnesses"
-         | [_] ->
-           Exists.check_intro_exists g pre pre_typing post_hint res_ppname t None 
-         | _ ->
-           let t = transform_to_unary_intro_exists g p witnesses in
-           check g pre pre_typing post_hint res_ppname t)
-    | Tm_Bind _ ->
-      Bind.check_bind g pre pre_typing post_hint res_ppname t check
+      | Tm_If { b; then_=e1; else_=e2; post=post_if } ->
+        let post =
+          match post_if, post_hint with
+          | None, Some p -> p
+          | Some p, None ->
+            Checker.Base.intro_post_hint g None None p
+          | Some p, Some q ->
+            Pulse.Typing.Env.fail g (Some t.range) 
+              (Printf.sprintf 
+                  "Multiple annotated postconditions---remove one of them.\n\
+                  The context expects the postcondition %s,\n\
+                  but this conditional was annotated with postcondition %s"
+                  (P.term_to_string (q <: post_hint_t).post)
+                  (P.term_to_string p))
+          | _, _ ->
+            Pulse.Typing.Env.fail g (Some t.range) 
+              (Printf.sprintf
+                  "Pulse cannot yet infer a postcondition for a non-tail conditional statement;\n\
+                  Either annotate this `if` with `returns` clause; or rewrite your code to use a tail conditional")
+        in
+        let (| x, t, pre', g1, k |) : checker_result_t g pre (Some post) =
+          If.check g pre pre_typing post res_ppname b e1 e2 check in
+        (| x, t, pre', g1, k |)
 
-    | Tm_TotBind _ ->
-      Bind.check_tot_bind g pre pre_typing post_hint res_ppname t check
+      | Tm_While _ ->
+        While.check g pre pre_typing post_hint res_ppname t check
 
-    | Tm_If { b; then_=e1; else_=e2; post=post_if } ->
-      let post =
-        match post_if, post_hint with
-        | None, Some p -> p
-        | Some p, None ->
-          Checker.Base.intro_post_hint g None None p
-        | Some p, Some q ->
-          Pulse.Typing.Env.fail g (Some t.range) 
-            (Printf.sprintf 
+      | Tm_Match {sc;returns_=post_match;brs} ->
+        // TODO : dedup
+        let post =
+          match post_match, post_hint with
+          | None, Some p -> p
+          | Some p, None ->
+            Checker.Base.intro_post_hint g None None p
+          | Some p, Some q ->
+            Pulse.Typing.Env.fail g (Some t.range)
+              (Printf.sprintf
                 "Multiple annotated postconditions---remove one of them.\n\
-                The context expects the postcondition %s,\n\
-                but this conditional was annotated with postcondition %s"
-                (P.term_to_string (q <: post_hint_t).post)
-                (P.term_to_string p))
-        | _, _ ->
-          Pulse.Typing.Env.fail g (Some t.range) 
-            (Printf.sprintf
+                  The context expects the postcondition %s,\n\
+                  but this conditional was annotated with postcondition %s"
+                  (P.term_to_string (q <: post_hint_t).post)
+                  (P.term_to_string p))
+          | _, _ ->
+            Pulse.Typing.Env.fail g (Some t.range)
+              (Printf.sprintf
                 "Pulse cannot yet infer a postcondition for a non-tail conditional statement;\n\
-                Either annotate this `if` with `returns` clause; or rewrite your code to use a tail conditional")
-      in
-      let (| x, t, pre', g1, k |) : checker_result_t g pre (Some post) =
-        If.check g pre pre_typing post res_ppname b e1 e2 check in
-      (| x, t, pre', g1, k |)
+                  Either annotate this `if` with `returns` clause; or rewrite your code to use a tail conditional")
+        in
+        let (| x, ty, pre', g1, k |) =
+          Match.check g pre pre_typing post res_ppname sc brs check in
+        (| x, ty, pre', g1, k |)
 
-    | Tm_While _ ->
-      While.check g pre pre_typing post_hint res_ppname t check
+      | Tm_ProofHintWithBinders _ ->
+        Pulse.Checker.AssertWithBinders.check g pre pre_typing post_hint res_ppname t check
 
-    | Tm_Match {sc;returns_=post_match;brs} ->
-      // TODO : dedup
-      let post =
-        match post_match, post_hint with
-        | None, Some p -> p
-        | Some p, None ->
-          Checker.Base.intro_post_hint g None None p
-        | Some p, Some q ->
-          Pulse.Typing.Env.fail g (Some t.range)
-            (Printf.sprintf
-               "Multiple annotated postconditions---remove one of them.\n\
-                The context expects the postcondition %s,\n\
-                but this conditional was annotated with postcondition %s"
-                (P.term_to_string (q <: post_hint_t).post)
-                (P.term_to_string p))
-        | _, _ ->
-          Pulse.Typing.Env.fail g (Some t.range)
-            (Printf.sprintf
-               "Pulse cannot yet infer a postcondition for a non-tail conditional statement;\n\
-                Either annotate this `if` with `returns` clause; or rewrite your code to use a tail conditional")
-      in
-      let (| x, ty, pre', g1, k |) =
-        Match.check g pre pre_typing post res_ppname sc brs check in
-      (| x, ty, pre', g1, k |)
+      | Tm_WithLocal _ ->
+        WithLocal.check g pre pre_typing post_hint res_ppname t check
 
-    | Tm_ProofHintWithBinders _ ->
-      Pulse.Checker.AssertWithBinders.check g pre pre_typing post_hint res_ppname t check
+      | Tm_WithLocalArray _ ->
+        WithLocalArray.check g pre pre_typing post_hint res_ppname t check
 
-    | Tm_WithLocal _ ->
-      WithLocal.check g pre pre_typing post_hint res_ppname t check
+      | Tm_Par _ ->
+        Par.check g pre pre_typing post_hint res_ppname t check
 
-    | Tm_WithLocalArray _ ->
-      WithLocalArray.check g pre pre_typing post_hint res_ppname t check
+      | Tm_IntroPure _ -> 
+        Pulse.Checker.IntroPure.check g pre pre_typing post_hint res_ppname t
 
-    | Tm_Par _ ->
-      Par.check g pre pre_typing post_hint res_ppname t check
+      | Tm_Admit _ ->
+        Admit.check g pre pre_typing post_hint res_ppname t
 
-    | Tm_IntroPure _ -> 
-      Pulse.Checker.IntroPure.check g pre pre_typing post_hint res_ppname t
+      | Tm_Unreachable ->
+        Pulse.Checker.Unreachable.check g pre pre_typing post_hint res_ppname t
 
-    | Tm_Admit _ ->
-      Admit.check g pre pre_typing post_hint res_ppname t
+      | Tm_Rewrite _ ->
+        Rewrite.check g pre pre_typing post_hint res_ppname t
 
-    | Tm_Unreachable ->
-      Pulse.Checker.Unreachable.check g pre pre_typing post_hint res_ppname t
+      | Tm_WithInv _ ->
+        WithInv.check g pre pre_typing post_hint res_ppname t check
 
-    | Tm_Rewrite _ ->
-      Rewrite.check g pre pre_typing post_hint res_ppname t
+      | _ -> T.fail "Checker form not implemented"
+    in
 
-    | Tm_WithInv _ ->
-      WithInv.check g pre pre_typing post_hint res_ppname t check
-
-    | _ -> T.fail "Checker form not implemented"
-  in
-
-  let (| x, g1, t, pre', k |) = r in
-  (| x, g1, t, pre', k_elab_trans k_elim_pure k |)
+    let (| x, g1, t, pre', k |) = r in
+    (| x, g1, t, pre', k_elab_trans k_elim_pure k |)
+  )
