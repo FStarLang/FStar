@@ -1,7 +1,7 @@
 module Pulse.Lib.Forall.Util
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Stick.Util
-module I = Pulse.Lib.Stick
+module I = Pulse.Lib.Stick.Util
 
 let intro #a #p = Pulse.Lib.Core.intro_forall #a #p
 let elim #a #p = Pulse.Lib.Core.elim_forall #a #p
@@ -21,15 +21,12 @@ fn trans_compose (#a #b #c:Type0) (p:a -> vprop) (q:b -> vprop) (r:c -> vprop)
         requires ((forall* x. p x @==> q (f x)) ** (forall* x. q x @==> r (g x))) ** p x
         ensures r (g (f x))
         {
-            elim_forall #_ #(fun x -> p x @==> q (f x)) x;
-            unfold (p x @==> q (f x));
-            elim_stick _ _;
-            elim_forall #_ #(fun x -> q x @==> r (g x)) (f x);
-            unfold (q (f x) @==> r (g (f x)));
-            elim_stick _ _;
+            elim #_ #(fun x -> p x @==> q (f x)) x;
+            I.elim _ _;
+            elim #_ #(fun x -> q x @==> r (g x)) (f x);
+            I.elim _ _;
         };
-        intro_stick _ _ _ aux;
-        fold (p x @==> r (g (f x)));
+        I.intro _ _ _ aux;
     };
     intro_forall _ aux
 }
@@ -50,8 +47,7 @@ ghost fn elim_forall_imp (#a:Type0) (p q: a -> vprop) (x:a)
     requires (forall* x. p x @==> q x) ** p x
     ensures q x
 {
-    elim_forall #_ #(fun x -> p x @==> q x) x;
-    unfold (p x @==> q x);
-    elim_stick _ _;
+    elim #_ #(fun x -> p x @==> q x) x;
+    I.elim _ _
 }
 ```

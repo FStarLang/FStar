@@ -60,7 +60,7 @@ fn curry (p q r:vprop)
         requires (((p ** q) @==> r) ** p) ** q
         ensures r
         { 
-            elim (_ ** _) _; //See #111; inference doesn't work when a uvar is solved to a non-atomic vprop
+            elim _ _;
         };
         intro _ _ _ aux;
     };
@@ -96,7 +96,7 @@ fn comm_l (p q r:vprop)
     requires ((p ** q) @==> r) ** (q ** p)
     ensures r
     { 
-        elim (_ ** _) _; //See #111; inference doesn't work when a uvar is solved to a non-atomic vprop
+        elim _ _;
     };
     intro _ _ _ aux;
 }
@@ -128,7 +128,7 @@ fn assoc_l (p q r s:vprop)
     requires ((p ** (q ** r)) @==> s) ** ((p ** q) ** r)
     ensures s
     { 
-        elim (_ ** (_ ** _)) _; //See #111; inference doesn't work when a uvar is solved to a non-atomic vprop
+        elim _ _;
     };
     intro _ _ _ aux;
 }
