@@ -46,7 +46,7 @@ fn trans (#a:Type0) (p q r: a -> vprop)
 ```
 
 ```pulse
-    ghost fn elim_forall_imp (#a:Type0) (p q: a -> vprop) (x:a)
+ghost fn elim_forall_imp (#a:Type0) (p q: a -> vprop) (x:a)
     requires (forall* x. p x @==> q x) ** p x
     ensures q x
 {
