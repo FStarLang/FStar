@@ -478,6 +478,7 @@ then begin
     remaining_ctxt_frame_typing = RU.magic ();
     uvs = pst.uvs;
     ss = pst.ss;
+    nts = None;
     solved = tm_emp;
     unsolved = vprop_as_list q_ss;
     k = k_sub;
@@ -632,6 +633,7 @@ then begin
     remaining_ctxt_frame_typing = RU.magic ();
     uvs = pst_sub.uvs;
     ss = pst_sub.ss;
+    nts = Some (| nt, effect_labels |);
     solved = preamble.goals;
     unsolved = [];
     k;
