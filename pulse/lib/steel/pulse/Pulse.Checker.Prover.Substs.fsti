@@ -13,6 +13,7 @@ module Env = Pulse.Typing.Env
 
 val ss_t : Type0
 
+val ln_ss_t (s:ss_t) : bool
 val as_map (ss:ss_t) : Map.t var term
 
 let dom (ss:ss_t) = Map.domain (as_map ss)

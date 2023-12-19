@@ -156,8 +156,7 @@ let rec readback_ty (t:R.term)
       else aux ()
     | Tv_UInst fv [u], [a1; a2] ->
       if inspect_fv fv = exists_lid 
-      // ||
-      //    inspect_fv fv = forall_lid
+      || inspect_fv fv = forall_lid
       then (
         let t1 : R.term = fst a1 in
         let t2 : R.term = fst a2 in

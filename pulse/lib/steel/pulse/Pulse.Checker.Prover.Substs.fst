@@ -50,6 +50,9 @@ type ss_t = {
   m : m:ss_map { is_dom l m }
 }
 
+let ln_ss_t (s:ss_t) =
+  List.Tot.for_all (fun x -> ln (Map.sel s.m x)) s.l
+
 let as_map (ss:ss_t) = ss.m
 
 let empty = { l = []; m = Map.const_on Set.empty tm_unknown }

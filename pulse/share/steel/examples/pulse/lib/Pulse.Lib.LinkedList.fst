@@ -472,7 +472,6 @@ fn move_next_forall (#t:Type) (x:llist t)
     requires is_list x 'l ** pure (Some? x)
     returns y:llist t
     ensures exists* hd tl.
-        something hd **
         is_list y tl **
         (forall* tl'. is_list y tl' @==> is_list x (hd::tl')) **
         pure ('l == hd::tl)
@@ -495,7 +494,6 @@ fn move_next_forall (#t:Type) (x:llist t)
         I.intro _ _ _ aux;
     };
     FA.intro _ aux;
-    fold (something node.head);
     node.tail
 }
 ```
@@ -510,12 +508,12 @@ ensures is_list x (List.Tot.append 'l1 'l2)
   rewrite_by (forall* l. is_list x l @==> is_list x l)
              (forall* l. is_list x l @==> is_list x ([]@l))
               norm_tac ();
-  fold (something #(list t) []);
   while (
-    with pfx. assert (something #(list t) pfx);
-    unfold (something #(list t) pfx);
     let l = !cur;
     with _ll sfx. assert (is_list #t _ll sfx);
+    with pfx. assert (
+      forall* sfx'. is_list _ll sfx' @==> is_list x (pfx @ sfx')
+    );
     rewrite each _ll as l in (is_list _ll sfx);
     rewrite_by (forall* sfx'. is_list _ll sfx' @==> is_list x (pfx @ sfx'))
                 (forall* sfx'. is_list l sfx' @==> is_list x (pfx @ sfx'))
@@ -523,14 +521,13 @@ ensures is_list x (List.Tot.append 'l1 'l2)
     let b = is_last_cell l;
     if b 
     { 
-      fold (something pfx);
       false
     }
     else 
     {
       let next = move_next_forall l;
       with tl. assert (is_list next tl);
-      with hd. assert (something #t hd);
+      with hd. assert (forall* tl'. is_list next tl' @==> is_list l (hd::tl'));
       FA.trans_compose 
           (is_list next) (is_list l) (is_list x)
           (fun tl -> hd :: tl)
@@ -539,8 +536,6 @@ ensures is_list x (List.Tot.append 'l1 'l2)
       rewrite_by (forall* tl. is_list next tl @==> is_list x (pfx @ (hd::tl)))
                   (forall* tl. is_list next tl @==> is_list x ((pfx@[hd])@tl))
                   rewrite_tac ();
-      unfold (something #t hd);
-      fold (something #(list t) (pfx@[hd]));
       cur := next;
       non_empty_list next;
       true
@@ -548,7 +543,6 @@ ensures is_list x (List.Tot.append 'l1 'l2)
   )
   invariant b.
   exists* ll pfx sfx.
-      something pfx **
       pts_to cur ll **
       is_list ll sfx **
       (forall* sfx'. is_list ll sfx' @==> is_list x (pfx @ sfx')) **
@@ -558,8 +552,10 @@ ensures is_list x (List.Tot.append 'l1 'l2)
         Some? ll)
   { () };
   let last = !cur;
-  with pfx. assert (something #(list t) pfx);
   with _ll sfx. assert (is_list #t _ll sfx);
+  with pfx. assert (
+      (forall* sfx'. is_list _ll sfx' @==> is_list x (pfx @ sfx'))
+  );
   rewrite each _ll as last in (is_list _ll sfx);
   rewrite_by (forall* sfx'. is_list _ll sfx' @==> is_list x (pfx @ sfx'))
               (forall* sfx'. is_list last sfx' @==> is_list x (pfx @ sfx'))
@@ -567,7 +563,6 @@ ensures is_list x (List.Tot.append 'l1 'l2)
   append_at_last_cell last y;
   FA.elim_forall_imp (is_list last) (fun sfx' -> is_list x (pfx @ sfx')) (sfx@'l2);
   List.Tot.Properties.append_assoc pfx sfx 'l2;
-  unfold (something #(list t) pfx);
   with l. rewrite (is_list x l) as is_list x (List.Tot.append 'l1 'l2);
 }
 ```

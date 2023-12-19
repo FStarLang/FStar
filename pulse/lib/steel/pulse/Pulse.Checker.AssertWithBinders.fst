@@ -44,6 +44,7 @@ let infer_binder_types (g:env) (bs:list binder) (v:vprop)
   match bs with
   | [] -> []
   | _ ->
+    let g = push_context g "infer_binder_types" v.range in
     let tv = elab_term v in
     if not (is_host_term tv)
     then fail g (Some v.range)

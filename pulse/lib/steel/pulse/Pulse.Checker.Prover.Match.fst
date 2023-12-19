@@ -148,6 +148,7 @@ let eligible_for_smt_equality (g:env) (t0 t1:term)
       )
       else either_equational ()
     )
+    | Tm_ForallSL _ _ _, Tm_ForallSL _ _ _ -> true
     | _ -> either_equational ()
 
 
@@ -208,11 +209,20 @@ let compose (s0 s1: PS.ss_t)
     ) 
     else None
 
-let rec try_solve_uvars (g:env) (uvs:env { disjoint uvs g })
-  (p q:term)
-  : T.Tac (ss:PS.ss_t { PS.dom ss `Set.subset` freevars q }) =
-  
-  assume (Set.equal (PS.dom PS.empty) Set.empty);
+let maybe_canon_term (x:term) : term = 
+  match readback_ty (elab_term x) with
+  | None -> x
+  | Some x -> x
+
+let rec try_solve_uvars 
+          (g:env) (uvs:env { disjoint uvs g })
+          (p q:term)
+: T.Tac (ss:PS.ss_t { PS.dom ss `Set.subset` freevars q })
+= assume (Set.equal (PS.dom PS.empty) Set.empty);
+  debug_prover g (fun _ ->
+    Printf.sprintf "prover matcher:{\n%s \n=?=\n %s}"
+       (P.term_to_string p)
+       (P.term_to_string q));
   
   if not (contains_uvar q uvs g)
   then PS.empty
@@ -221,44 +231,57 @@ let rec try_solve_uvars (g:env) (uvs:env { disjoint uvs g })
     | Some (u, ty, n), false ->
       let w = mk_hide u ty p in
       assume (~ (PS.contains PS.empty n));
-      let ss = PS.push PS.empty n w in
+      let ss = PS.push PS.empty n (maybe_canon_term w) in
       assume (n `Set.mem` freevars q);
       assume (Set.equal (PS.dom ss) (Set.singleton n));
       ss
-     | _ ->
-       match is_uvar q uvs with
-       | Some n ->
-         let w = p in
-         assume (~ (PS.contains PS.empty n));
-         let ss = PS.push PS.empty n w in
-         assume (n `Set.mem` freevars q);
-         assume (Set.equal (PS.dom ss) (Set.singleton n));
-         debug_prover g (fun _ ->
-           Printf.sprintf "prover matcher: solved uvar %d with %s" n (P.term_to_string w));
-         ss
-       | _ ->
-         match p.t, q.t with
-         | Tm_Pure p1, Tm_Pure q1 ->
-           try_solve_uvars g uvs p1 q1
+    | _ ->
+      match is_uvar q uvs with
+      | Some n ->
+        let w = p in
+        assume (~ (PS.contains PS.empty n));
+        let ss = PS.push PS.empty n (maybe_canon_term w) in
+        assume (n `Set.mem` freevars q);
+        assume (Set.equal (PS.dom ss) (Set.singleton n));
+        debug_prover g (fun _ ->
+          Printf.sprintf "prover matcher: solved uvar %d with %s" n (P.term_to_string w));
+        ss
+ 
+      | _ ->
+        match p.t, q.t with
+        | Tm_Pure p1, Tm_Pure q1 ->
+          try_solve_uvars g uvs p1 q1
 
-         | Tm_Star p1 p2, Tm_Star q1 q2 -> (
-           let ss1 = try_solve_uvars g uvs p1 q1 in
-           let ss2 = try_solve_uvars g uvs p2 q2 in
-           match compose ss1 ss2 with
-           | None -> PS.empty
-           | Some ss -> ss
-         )
-         | _, _ ->
-           match is_pure_app p, is_pure_app q with
-           | Some (head_p, qual_p, arg_p), Some (head_q, qual_q, arg_q) -> (
-             assume ((Set.union (freevars head_q) (freevars arg_q)) `Set.subset` freevars q);
-             let ss_head = try_solve_uvars g uvs head_p head_q in
-             let ss_arg = try_solve_uvars g uvs arg_p arg_q in
-              match compose ss_head ss_arg with
-              | None -> PS.empty
-              | Some ss -> ss
-            )
-           | _, _ -> PS.empty
+        | Tm_Star p1 p2, Tm_Star q1 q2 -> (
+          let ss1 = try_solve_uvars g uvs p1 q1 in
+          let ss2 = try_solve_uvars g uvs p2 q2 in
+          match compose ss1 ss2 with
+          | None -> PS.empty
+          | Some ss -> ss
+        )
+        
+        | Tm_ForallSL u1 b1 body1, Tm_ForallSL u2 b2 body2 -> (
+          let ss1 = try_solve_uvars g uvs b1.binder_ty b2.binder_ty in
+          let ss2 = try_solve_uvars g uvs body1 body2 in
+          if Substs.ln_ss_t ss2
+          then
+            match compose ss1 ss2 with
+            | None -> PS.empty
+            | Some ss -> ss
+          else PS.empty
+        )
+
+        | _, _ ->
+          match is_pure_app p, is_pure_app q with
+          | Some (head_p, qual_p, arg_p), Some (head_q, qual_q, arg_q) -> (
+            assume ((Set.union (freevars head_q) (freevars arg_q)) `Set.subset` freevars q);
+            let ss_head = try_solve_uvars g uvs head_p head_q in
+            let ss_arg = try_solve_uvars g uvs arg_p arg_q in
+            match compose ss_head ss_arg with
+            | None -> PS.empty
+            | Some ss -> ss
+          )
+          | _, _ -> PS.empty
   end
 
 let unify (g:env) (uvs:env { disjoint uvs g})
@@ -267,18 +290,20 @@ let unify (g:env) (uvs:env { disjoint uvs g})
            option (RT.equiv (elab_env g) (elab_term p) (elab_term ss.(q)))) =
 
   let ss = try_solve_uvars g uvs p q in
-  let q = ss.(q) in
-  if eq_tm p q
-  then (| ss, Some (RT.Rel_refl _ _ _) |)
-  else if contains_uvar q uvs g
-  then (| ss, None |)
-  else if eligible_for_smt_equality g p q
-  then let v0 = elab_term p in
-       let v1 = elab_term q in
-       match check_equiv_now (elab_env g) v0 v1 with
-       | Some token, _ -> (| ss, Some (RT.Rel_eq_token _ _ _ (FStar.Squash.return_squash token)) |)
-       | None, _ -> (| ss, None |)
-  else (| ss, None |)
+  match readback_ty (elab_term ss.(q)) with
+  | None -> (| ss, None |)
+  | Some q -> 
+    if eq_tm p q
+    then (| ss, Some (RT.Rel_refl _ _ _) |)
+    else if contains_uvar q uvs g
+    then (| ss, None |)
+    else if eligible_for_smt_equality g p q
+    then let v0 = elab_term p in
+        let v1 = elab_term q in
+        match check_equiv_now (elab_env g) v0 v1 with
+        | Some token, _ -> (| ss, Some (RT.Rel_eq_token _ _ _ (FStar.Squash.return_squash token)) |)
+        | None, _ -> (| ss, None |)
+    else (| ss, None |)
 
 let try_match_pq (g:env) (uvs:env { disjoint uvs g}) (p q:vprop)
   : T.Tac (ss:PS.ss_t { PS.dom ss `Set.subset` freevars q } &

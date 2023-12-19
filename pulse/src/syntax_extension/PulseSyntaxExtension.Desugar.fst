@@ -217,7 +217,18 @@ let rec interpret_vprop_constructors (env:env_t) (v:S.term)
         | _ ->
           return <| as_term v
       )
-      
+
+    | S.Tm_fvar fv, [(l, _)]
+      when S.fv_eq_lid fv forall_lid -> (
+        match (SS.compress l).n with
+        | S.Tm_abs {bs=[b]; body } ->
+          let b = SW.mk_binder b.S.binder_bv.ppname (as_term b.S.binder_bv.sort) in
+          let! body = interpret_vprop_constructors env body in
+          return <| SW.tm_forall b body v.pos
+        | _ ->
+          return <| as_term v
+      )
+
     | S.Tm_fvar fv, [(l, _)]
       when S.fv_eq_lid fv prims_exists_lid
       ||   S.fv_eq_lid fv prims_forall_lid -> (

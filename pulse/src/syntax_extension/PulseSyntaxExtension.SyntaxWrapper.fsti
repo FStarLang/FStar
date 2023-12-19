@@ -36,6 +36,7 @@ val tm_emp (_:range) : term
 val tm_pure (p:term) (_:range) : term
 val tm_star (p0 p1:term) (_:range) : term
 val tm_exists (b:binder) (body:vprop) (_:range)  : term
+val tm_forall (b:binder) (body:vprop) (_:range)  : term
 val tm_arrow (b:binder) (q:FStar.Syntax.Syntax.aqual) (body:comp) (_:range)  : term
 val tm_expr (t:FStar.Syntax.Syntax.term) (_:range) : term
 val tm_unknown (_:range)  : term
