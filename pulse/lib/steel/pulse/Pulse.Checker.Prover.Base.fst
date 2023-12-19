@@ -77,13 +77,12 @@ let elim_one (#g:env)
   
   let ctxt_frame_typing = star_typing_inversion_l ctxt_frame_p_typing in
   let x = fresh (push_env g uvs) in
-  let ppname = mk_ppname_no_range "_pelim" in
   let k =
-    continuation_elaborator_with_bind (tm_star ctxt frame) e1_typing ctxt_frame_p_typing (ppname, x) in
+    continuation_elaborator_with_bind (tm_star ctxt frame) e1_typing ctxt_frame_p_typing (nx, x) in
   let g' = push_binding g x nx (comp_res c1) in
-  let ctxt' = tm_star (open_term_nv (comp_post c1) (v_as_nv x)) ctxt in
+  let ctxt' = tm_star (open_term_nv (comp_post c1) (nx, x)) ctxt in
   let veq
-    : vprop_equiv g' (tm_star (open_term_nv (comp_post c1) (v_as_nv x)) (tm_star ctxt frame))
+    : vprop_equiv g' (tm_star (open_term_nv (comp_post c1) (nx, x)) (tm_star ctxt frame))
                      (tm_star ctxt' frame) = VE_Assoc _ _ _ _ in
   let k
     : continuation_elaborator
@@ -93,7 +92,7 @@ let elim_one (#g:env)
       #g #g'
       #(tm_star (tm_star ctxt frame) p)
       #(tm_star (tm_star ctxt frame) p)
-      #(tm_star (open_term_nv (comp_post c1) (v_as_nv x)) (tm_star ctxt frame))
+      #(tm_star (open_term_nv (comp_post c1) (nx, x)) (tm_star ctxt frame))
       #(tm_star ctxt' frame)
       k (VE_Refl g (tm_star (tm_star ctxt frame) p)) veq in
  
