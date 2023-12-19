@@ -89,11 +89,11 @@ let vprop_equiv_cong (p1 p2 p3 p4:vprop)
 
 let vprop_equiv_ext p1 p2 _ = equiv_refl p1
 
-let vprop_equiv_forall #a (p q:a -> vprop)
+let equiv_forall #a (p q:a -> vprop)
                       (_:squash (F.feq p q))
-: vprop_equiv (op_forall_Star p) (op_forall_Star q)
+: squash (op_forall_Star p == op_forall_Star q)
 = let pf : squash (eq2 #(F.arrow a (fun _ -> vprop)) (F.on_dom a p) (F.on_dom a q)) = F.extensionality _ _ p q in
-  let x : vprop_equiv (op_forall_Star p) (op_forall_Star q) = _ by (
+  let x : squash (op_forall_Star p == op_forall_Star q) = _ by (
       T.norm [delta_only [`%op_forall_Star; `%F.on_dom]; unascribe];
       let bindings = T.cur_vars() in
       let bindings = List.Tot.rev bindings in
@@ -102,7 +102,8 @@ let vprop_equiv_forall #a (p q:a -> vprop)
         match T.term_as_formula hd.sort with
         | T.Comp (T.Eq _) lhs rhs ->
           T.grewrite lhs rhs;
-          T.mapply (`vprop_equiv_refl);
+          T.trefl();
+          // T.mapply (`vprop_equiv_refl);
           T.exact (T.binding_to_term hd)
         | _ -> T.fail "Unexpected type of hd"
       )
@@ -111,6 +112,16 @@ let vprop_equiv_forall #a (p q:a -> vprop)
     ) in
   x
 
+let prop_squash_idem (p:prop)
+  : Tot (squash (p == squash p))
+  = FStar.PropositionalExtensionality.apply p (squash p)
+
+let vprop_equiv_forall #a (p q:a -> vprop)
+                      (_:squash (F.feq p q))
+: vprop_equiv (op_forall_Star p) (op_forall_Star q)
+= let eq = equiv_forall p q () in
+  prop_squash_idem (op_forall_Star p == op_forall_Star q);
+  vprop_equiv_ext (op_forall_Star p) (op_forall_Star q) eq
 
 (* Invariants, just reexport *)
 let iname = iname
@@ -400,9 +411,6 @@ let with_invariant_a (#a:Type)
 
 let rewrite p q _ = fun _ -> rewrite_equiv p q
 
-let prop_squash_idem (p:prop)
-  : Tot (squash (p == squash p))
-  = FStar.PropositionalExtensionality.apply p (squash p)
 
 
 #push-options "--no_tactics"

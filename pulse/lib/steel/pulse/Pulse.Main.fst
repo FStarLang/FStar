@@ -61,6 +61,8 @@ let check_fndecl
     fail g (Some d.range) "main: FnDecl does not have binders";
   let body = mk_abs g bs body comp in
   let rng = body.range in
+  debug_main g (fun _ -> Printf.sprintf "\nbody after mk_abs:\n%s\n" (P.st_term_to_string body));
+
   let (| body, c, t_typing |) = Pulse.Checker.Abs.check_abs g body Pulse.Checker.check in
 
   Pulse.Checker.Prover.debug_prover g

@@ -235,6 +235,10 @@ let rec vprop_equiv_soundness (#g:stt_env) (#v0 #v1:term)
       inst_vprop_equiv_ext (tot_typing_soundness t0_typing)
                            (tot_typing_soundness t1_typing)
                            token
+
+    | VE_Fa _ _ _ _ _ _ _ ->
+      (* see Pulse.Lib.Core.vprop_equiv_forall *)
+      admit()
 #pop-options
 
 let stt_vprop_equiv_is_prop (#g:R.env) (#v0 #v1:R.term)

@@ -11,6 +11,25 @@ open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Pure
 
+assume
+val invert_forall_typing
+        (#g #u #b #body:_)
+        (d:tot_typing g (tm_forall_sl u b body) tm_vprop)
+        (x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars body) })
+  : GTot (
+    tot_typing g b.binder_ty (tm_type u) &
+    tot_typing (push_binding g x ppname_default b.binder_ty) (open_term body x) tm_vprop
+  )
+
+assume
+val construct_forall_typing
+        (#g #u #b #body:_)
+        (x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars body) })
+        (dt:tot_typing g b.binder_ty (tm_type u))
+        (db:tot_typing (push_binding g x ppname_default b.binder_ty) (open_term body x) tm_vprop)
+  : GTot (tot_typing g (tm_forall_sl u b body) tm_vprop)
+   
+
 let rec vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
   : GTot ((tot_typing g t0 tm_vprop -> tot_typing g t1 tm_vprop) &
           (tot_typing g t1 tm_vprop -> tot_typing g t0 tm_vprop))
@@ -90,10 +109,20 @@ let rec vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
       let d1, d2 = vprop_eq_typing_inversion g t0 t1 token in
       (fun _ -> d2),
       (fun _ -> d1)
-
-
+    
+    | VE_Fa g x u b t0 t1 d ->
+      let d0, d1 = vprop_equiv_typing d in
+      (fun fa0_typing ->
+        let b_typing, t0_typing = invert_forall_typing fa0_typing x in
+        let t1_typing = d0 t0_typing in
+        construct_forall_typing #g #u x b_typing t1_typing),
+      (fun fa1_typing ->
+        let b_typing, t1_typing = invert_forall_typing fa1_typing x in
+        let t0_typing = d1 t1_typing in
+        construct_forall_typing #g #u #b #t0 x b_typing t0_typing)
+        
 #push-options "--z3rlimit_factor 8 --ifuel 1 --fuel 2 --query_stats"
-let rec mk_bind (g:env)
+let rec mk_bind (g:env) 
                 (pre:term)
                 (e1:st_term)
                 (e2:st_term)

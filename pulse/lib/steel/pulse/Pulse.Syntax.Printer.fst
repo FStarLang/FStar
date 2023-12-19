@@ -85,7 +85,7 @@ and term_to_string' (level:string) (t:term)
               (term_to_string' (indent level) body)
 
     | Tm_ForallSL u b body ->
-      let bs, body = collect_binders Tm_ExistsSL? t in
+      let bs, body = collect_binders Tm_ForallSL? t in
       sprintf "(forall* %s.\n%s%s)"
               (T.map binder_to_string_paren bs |> String.concat " ")
               level
@@ -129,7 +129,7 @@ and term_to_doc t
               ^/^ term_to_doc body)
 
     | Tm_ForallSL _ _ _ ->
-      let bs, body = collect_binders Tm_ExistsSL? t in
+      let bs, body = collect_binders Tm_ForallSL? t in
       parens (doc_of_string "forall*" ^/^ (separate (doc_of_string " ") (T.map binder_to_doc bs))
               ^^ doc_of_string "."
               ^/^ term_to_doc body)

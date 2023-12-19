@@ -326,6 +326,9 @@ let rec vprop_equiv_freevars (#g:_) (#t0 #t1:_) (v:vprop_equiv g t0 t1)
       let d0, d1 = vprop_eq_typing_inversion _ _ _ token in
       tot_or_ghost_typing_freevars d0;
       tot_or_ghost_typing_freevars d1
+    | VE_Fa g x u b t0 t1 d ->
+      vprop_equiv_freevars d;
+      close_open_inverse t0 x
 
 
 

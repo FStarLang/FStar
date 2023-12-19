@@ -188,14 +188,15 @@ type vprop_equiv : env -> term -> term -> Type =
   //    vprop_equiv f ((x, Inl ty)::g) (open_term t0 x) (open_term t1 x) ->
   //    vprop_equiv f g (tm_exists_sl ty t0) (tm_exists_sl ty t1)
 
-  // | VE_Fa:
-  //    g:env ->
-  //    x:var { None? (lookup_ty g x) } ->
-  //    ty:term ->
-  //    t0:term ->
-  //    t1:term ->
-  //    vprop_equiv f ((x, Inl ty)::g) (open_term t0 x) (open_term t1 x) ->
-  //    vprop_equiv f g (Tm_ForallSL ty t0) (Tm_ForallSL ty t1)
+  | VE_Fa:
+     g:env ->
+     x:var { None? (lookup g x) } ->
+     u:universe ->
+     b:binder ->
+     t0:term { ~(x `Set.mem` freevars t0 ) } ->
+     t1:term { ~(x `Set.mem` freevars t1 ) } ->
+     vprop_equiv (push_binding g x ppname_default b.binder_ty) (open_term t0 x) (open_term t1 x) ->
+     vprop_equiv g (tm_forall_sl u b t0) (tm_forall_sl u b t1)
 
 
 let add_frame (s:comp_st) (frame:term)

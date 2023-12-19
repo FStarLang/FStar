@@ -419,7 +419,7 @@ and (term_to_string' :
                        (FStar_Tactics_Effect.lift_div_tac
                           (fun uu___ ->
                              collect_binders
-                               Pulse_Syntax_Base.uu___is_Tm_ExistsSL t))
+                               Pulse_Syntax_Base.uu___is_Tm_ForallSL t))
                        (fun uu___ ->
                           (fun uu___ ->
                              match uu___ with
@@ -1041,7 +1041,7 @@ and (term_to_doc :
                    (FStar_Tactics_Effect.lift_div_tac
                       (fun uu___3 ->
                          collect_binders
-                           Pulse_Syntax_Base.uu___is_Tm_ExistsSL t))
+                           Pulse_Syntax_Base.uu___is_Tm_ForallSL t))
                    (fun uu___3 ->
                       (fun uu___3 ->
                          match uu___3 with

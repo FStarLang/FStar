@@ -178,7 +178,7 @@ type proof_hint_type =
       t2:vprop;
     }
   | WILD //with p q r. _
-  | SHOW_PROOF_STATE of Range.range
+  | SHOW_PROOF_STATE of range
 
 noeq
 type comp_ascription = {

@@ -1006,6 +1006,22 @@ let rec vprop_equiv_ln (#g:_) (#t0 #t1:_) (v:vprop_equiv g t0 t1)
       let d0, d1 = vprop_eq_typing_inversion _ _ _ token in
       tot_or_ghost_typing_ln d0;
       tot_or_ghost_typing_ln d1
+    | VE_Fa g x u b t0' t1' d ->
+      vprop_equiv_ln d;
+      let xtm = (term_of_nvar (v_as_nv x)) in
+      introduce ln t0 ==> ln t1
+      with _ . (
+        open_term_ln_inv' t0' xtm 0;
+        open_term_ln t0' x;
+        open_term_ln t1' x
+      );
+      introduce ln t1 ==> ln t0
+      with _ . (
+        open_term_ln_inv' t1' xtm 0;
+        open_term_ln t1' x;
+        open_term_ln t0' x
+      )
+      
 
 let st_equiv_ln #g #c1 #c2 (d:st_equiv g c1 c2)
   : Lemma 

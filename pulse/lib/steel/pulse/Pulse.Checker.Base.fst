@@ -627,7 +627,7 @@ let apply_checker_result_k (#g:env) (#ctxt:vprop) (#post_hint:post_hint_for_env 
 
   k (Some post_hint) d
 
-#push-options "--z3rlimit_factor 2 --fuel 0 --ifuel 1"
+#push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1 --query_stats"
 let checker_result_for_st_typing (#g:env) (#ctxt:vprop) (#post_hint:post_hint_opt g)
   (d:st_typing_in_ctxt g ctxt post_hint)
   (ppname:ppname)

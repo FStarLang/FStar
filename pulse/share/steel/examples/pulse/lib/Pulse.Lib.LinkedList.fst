@@ -460,9 +460,6 @@ fn forall_intro_is_list_idem (#t:Type) (x:llist t)
 
 open FStar.List.Tot
 
-//ugly, for admitting equality on forall* 
-let rewrite_tac () = T.tadmit()
-
 ```pulse
 fn move_next_forall (#t:Type) (x:llist t)
     requires is_list x 'l ** pure (Some? x)
@@ -494,6 +491,12 @@ fn move_next_forall (#t:Type) (x:llist t)
 }
 ```
 
+let append_assoc_singleton (l1 l2:list 'a) (x:'a) 
+: Lemma 
+    (ensures l1@(x::l2) == (l1 @ [x])@l2)
+    [SMTPat (l1@(x::l2))]
+= List.Tot.Properties.append_assoc l1 [x] l2
+
 ```pulse
 fn append_iter (#t:Type) (x y:llist t)
 requires is_list x 'l1 ** is_list y 'l2 ** pure (Some? x)
@@ -508,9 +511,8 @@ ensures is_list x ('l1 @ 'l2)
     with _b _ll pfx sfx. _;
     let l = !cur;
     rewrite each _ll as l in (is_list _ll sfx);
-    rewrite_by (forall* sfx'. is_list _ll sfx' @==> is_list x (pfx @ sfx'))
-                (forall* sfx'. is_list l sfx' @==> is_list x (pfx @ sfx'))
-                rewrite_tac ();
+    rewrite (forall* sfx'. is_list _ll sfx' @==> is_list x (pfx @ sfx'))
+         as (forall* sfx'. is_list l sfx' @==> is_list x (pfx @ sfx'));
     let b = is_last_cell l;
     if b 
     { 
@@ -524,10 +526,8 @@ ensures is_list x ('l1 @ 'l2)
           (is_list next) (is_list l) (is_list x)
           (fun tl -> hd :: tl)
           (fun tl -> pfx @ tl);
-      List.Tot.Properties.append_assoc pfx [Cons?.hd sfx] tl;
-      rewrite_by (forall* tl. is_list next tl @==> is_list x (pfx @ (hd::tl)))
-                  (forall* tl. is_list next tl @==> is_list x ((pfx@[hd])@tl))
-                  rewrite_tac ();
+      rewrite (forall* tl. is_list next tl @==> is_list x (pfx@(hd::tl)))
+           as (forall* tl. is_list next tl @==> is_list x ((pfx@[hd])@tl));
       cur := next;
       non_empty_list next;
       true
@@ -546,9 +546,8 @@ ensures is_list x ('l1 @ 'l2)
   with _ll pfx sfx. _;
   let last = !cur;
   rewrite each _ll as last in (is_list _ll sfx);
-  rewrite_by (forall* sfx'. is_list _ll sfx' @==> is_list x (pfx @ sfx'))
-              (forall* sfx'. is_list last sfx' @==> is_list x (pfx @ sfx'))
-              rewrite_tac ();
+  rewrite (forall* sfx'. is_list _ll sfx' @==> is_list x (pfx @ sfx'))
+       as (forall* sfx'. is_list last sfx' @==> is_list x (pfx @ sfx'));
   append_at_last_cell last y;
   FA.elim_forall_imp (is_list last) (fun sfx' -> is_list x (pfx @ sfx')) (sfx@'l2);
   List.Tot.Properties.append_assoc pfx sfx 'l2;
