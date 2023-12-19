@@ -8,6 +8,8 @@ module Cbor = CBOR.Spec
 module A = Pulse.Lib.Array
 module SZ = FStar.SizeT
 
+#push-options "--fuel 2 --ifuel 2"
+
 assume val elim_stick0
   (_: unit)
   (#hyp #concl: vprop)
@@ -656,13 +658,22 @@ let cbor_map_sort_merge_invariant // FIXME: WHY WHY WHY?
         SM.seq_list_match c2 l2 (raw_data_item_map_entry_match full_perm) **
         pure (cbor_map_sort_merge_invariant_prop lo hi l1_0 l2_0 cont i1 i2 res accu l1 l2)
 
-#push-options "--print_implicits --z3rlimit 16"
-
 inline_for_extraction noextract [@@noextract_to "krml"]
 let size_add (x1 x2: SZ.t) (sq: squash (SZ.fits (SZ.v x1 + SZ.v x2))) : Tot SZ.t = x1 `SZ.add` x2
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 let size_eq (x1 x2: SZ.t) : Tot bool = x1 = x2
+
+//
+// Solver has trouble proving these in the middle of cbor_map_sort_merge
+//
+let seq_helper_1 (#a:Type) (s:Seq.seq a) (x:a)
+  : Lemma (requires 0 < Seq.length s /\ Seq.head s == x)
+          (ensures Seq.slice s 0 1 `Seq.equal` Seq.cons x Seq.empty) = ()
+
+let seq_helper_2 (#a:Type) (s:Seq.seq a) (x:a)
+  : Lemma (requires 0 < Seq.length s /\ Seq.head s == x)
+          (ensures s `Seq.equal` Seq.cons x (Seq.tail s)) = ()
 
 ```pulse
 fn cbor_map_sort_merge
@@ -745,7 +756,9 @@ ensures exists* c l .
         fold (raw_data_item_map_entry_match full_perm x1 (List.Tot.hd l1));
         fold (raw_data_item_map_entry_match full_perm x2 (List.Tot.hd l2));
         let prf_c1: squash (c1 `Seq.equal` Seq.cons x1 (Seq.tail c1)) = ();
-        let prf_c2: squash (c2 `Seq.equal` Seq.cons x2 (Seq.tail c2)) = ();
+        let _p : squash (Seq.head c2 == x2) = ();
+        let prf_c2: squash (c2 `Seq.equal` Seq.cons x2 (Seq.tail c2)) =
+          seq_helper_2 c2 x2;
         if (comp = 0s) {
             SM.seq_list_match_cons_intro x1 (List.Tot.hd l1) (Seq.tail c1) (List.Tot.tl l1) (raw_data_item_map_entry_match full_perm);
             SM.seq_list_match_cons_intro x2 (List.Tot.hd l2) (Seq.tail c2) (List.Tot.tl l2) (raw_data_item_map_entry_match full_perm);
@@ -764,7 +777,9 @@ ensures exists* c l .
             let i1' = size_add i1 1sz ();
             pi1 := i1';
             A.pts_to_range_split a (Ghost.reveal (SZ.v gi1)) (SZ.v i1') (Ghost.reveal (SZ.v gi2));
-            let prf_c1 : squash (Seq.slice c1 0 1 `Seq.equal` Seq.cons x1 Seq.empty) = ();
+            let _p : squash (Seq.head c1 == x1) = ();
+            let prf_c1 : squash (Seq.slice c1 0 1 `Seq.equal` Seq.cons x1 Seq.empty) =
+              seq_helper_1 c1 x1;
             rewrite (A.pts_to_range a (Ghost.reveal (SZ.v gi1)) (SZ.v i1') (Seq.slice c1 0 (SZ.v i1' - SZ.v gi1)))
                 as (A.pts_to_range a (SZ.v gi1) (SZ.v i1') (Seq.cons x1 Seq.empty));
             A.pts_to_range_join a (SZ.v lo) (SZ.v gi1) (SZ.v i1');
@@ -830,8 +845,6 @@ ensures exists* c l .
     !pres
 }
 ```
-
-#pop-options
 
 ```pulse
 fn rec cbor_map_sort_aux
