@@ -912,7 +912,7 @@ let rec (prover :
                                                                     (Prims.of_int (143))
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (143))
-                                                                    (Prims.of_int (47)))))
+                                                                    (Prims.of_int (54)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -925,7 +925,7 @@ let rec (prover :
                                                                     (Pulse_Checker_Prover_Match.match_q
                                                                     preamble
                                                                     pst3 q tl
-                                                                    ()))
+                                                                    () prover))
                                                                     (fun
                                                                     uu___9 ->
                                                                     (fun
