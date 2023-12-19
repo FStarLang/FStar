@@ -140,7 +140,7 @@ let rec prover
       match pst.unsolved with
       | {t=Tm_Pure _}::tl -> prove_pures pst
       | q::tl ->
-        let pst_opt = Match.match_q pst q tl () in
+        let pst_opt = Match.match_q pst q tl () prover in
         match pst_opt with
         | None ->
           let open Pprint in
