@@ -878,6 +878,11 @@ type 'preamble1 prover_state =
   remaining_ctxt_frame_typing: unit ;
   uvs: Pulse_Typing_Env.env ;
   ss: Pulse_Checker_Prover_Substs.ss_t ;
+  nts:
+    (Pulse_Checker_Prover_Substs.nt_substs,
+      FStar_TypeChecker_Core.tot_or_ghost Prims.list) Prims.dtuple2
+      FStar_Pervasives_Native.option
+    ;
   solved: Pulse_Syntax_Base.vprop ;
   unsolved: Pulse_Syntax_Base.vprop Prims.list ;
   k: (unit, unit, unit, unit) Pulse_Checker_Base.continuation_elaborator ;
@@ -888,44 +893,56 @@ let (__proj__Mkprover_state__item__pg :
   fun preamble1 ->
     fun projectee ->
       match projectee with
-      | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; solved;
-          unsolved; k; goals_inv; solved_inv;_} -> pg
+      | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; nts;
+          solved; unsolved; k; goals_inv; solved_inv;_} -> pg
 let (__proj__Mkprover_state__item__remaining_ctxt :
   preamble -> unit prover_state -> Pulse_Syntax_Base.vprop Prims.list) =
   fun preamble1 ->
     fun projectee ->
       match projectee with
-      | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; solved;
-          unsolved; k; goals_inv; solved_inv;_} -> remaining_ctxt
+      | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; nts;
+          solved; unsolved; k; goals_inv; solved_inv;_} -> remaining_ctxt
 
 let (__proj__Mkprover_state__item__uvs :
   preamble -> unit prover_state -> Pulse_Typing_Env.env) =
   fun preamble1 ->
     fun projectee ->
       match projectee with
-      | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; solved;
-          unsolved; k; goals_inv; solved_inv;_} -> uvs
+      | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; nts;
+          solved; unsolved; k; goals_inv; solved_inv;_} -> uvs
 let (__proj__Mkprover_state__item__ss :
   preamble -> unit prover_state -> Pulse_Checker_Prover_Substs.ss_t) =
   fun preamble1 ->
     fun projectee ->
       match projectee with
-      | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; solved;
-          unsolved; k; goals_inv; solved_inv;_} -> ss
+      | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; nts;
+          solved; unsolved; k; goals_inv; solved_inv;_} -> ss
+let (__proj__Mkprover_state__item__nts :
+  preamble ->
+    unit prover_state ->
+      (Pulse_Checker_Prover_Substs.nt_substs,
+        FStar_TypeChecker_Core.tot_or_ghost Prims.list) Prims.dtuple2
+        FStar_Pervasives_Native.option)
+  =
+  fun preamble1 ->
+    fun projectee ->
+      match projectee with
+      | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; nts;
+          solved; unsolved; k; goals_inv; solved_inv;_} -> nts
 let (__proj__Mkprover_state__item__solved :
   preamble -> unit prover_state -> Pulse_Syntax_Base.vprop) =
   fun preamble1 ->
     fun projectee ->
       match projectee with
-      | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; solved;
-          unsolved; k; goals_inv; solved_inv;_} -> solved
+      | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; nts;
+          solved; unsolved; k; goals_inv; solved_inv;_} -> solved
 let (__proj__Mkprover_state__item__unsolved :
   preamble -> unit prover_state -> Pulse_Syntax_Base.vprop Prims.list) =
   fun preamble1 ->
     fun projectee ->
       match projectee with
-      | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; solved;
-          unsolved; k; goals_inv; solved_inv;_} -> unsolved
+      | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; nts;
+          solved; unsolved; k; goals_inv; solved_inv;_} -> unsolved
 let (__proj__Mkprover_state__item__k :
   preamble ->
     unit prover_state ->
@@ -934,8 +951,8 @@ let (__proj__Mkprover_state__item__k :
   fun preamble1 ->
     fun projectee ->
       match projectee with
-      | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; solved;
-          unsolved; k; goals_inv; solved_inv;_} -> k
+      | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; nts;
+          solved; unsolved; k; goals_inv; solved_inv;_} -> k
 type ('preamble1, 'st) is_terminal = unit
 let (extend_post_hint_opt_g :
   Pulse_Typing_Env.env ->

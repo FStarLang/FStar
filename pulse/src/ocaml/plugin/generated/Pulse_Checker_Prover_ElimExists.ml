@@ -142,7 +142,7 @@ let (elim_exists_pst :
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "Pulse.Checker.Prover.ElimExists.fst"
-                 (Prims.of_int (60)) (Prims.of_int (74)) (Prims.of_int (98))
+                 (Prims.of_int (60)) (Prims.of_int (74)) (Prims.of_int (99))
                  (Prims.of_int (3)))))
         (Obj.magic
            (elim_exists_frame pst.Pulse_Checker_Prover_Base.pg
@@ -170,6 +170,8 @@ let (elim_exists_pst :
                         (pst.Pulse_Checker_Prover_Base.uvs);
                       Pulse_Checker_Prover_Base.ss =
                         (pst.Pulse_Checker_Prover_Base.ss);
+                      Pulse_Checker_Prover_Base.nts =
+                        FStar_Pervasives_Native.None;
                       Pulse_Checker_Prover_Base.solved =
                         (pst.Pulse_Checker_Prover_Base.solved);
                       Pulse_Checker_Prover_Base.unsolved =

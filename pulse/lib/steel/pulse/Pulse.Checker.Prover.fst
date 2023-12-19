@@ -253,6 +253,7 @@ let prove
       remaining_ctxt_frame_typing = ctxt_frame_typing;
       uvs = uvs;
       ss = PS.empty;
+      nts = None;
       solved = tm_emp;
       unsolved = vprop_as_list goals;
       k = k_elab_equiv (k_elab_unit g ctxt) (RU.magic ()) (RU.magic ());
@@ -268,12 +269,15 @@ let prove
           PS.well_typed_nt_substs pst.pg pst.uvs nts effect_labels /\
           PS.is_permutation nts pst.ss
     } =
-      let r = PS.ss_to_nt_substs pst.pg pst.uvs pst.ss in
-      match r with
-      | Inr msg ->
-        fail pst.pg None
-          (Printf.sprintf "prover error: ill-typed substitutions (%s)" msg)
-      | Inl nts -> nts in
+      match pst.nts with
+      | Some nts -> nts
+      | None ->
+        let r = PS.ss_to_nt_substs pst.pg pst.uvs pst.ss in
+        match r with
+        | Inr msg ->
+          fail pst.pg None
+            (Printf.sprintf "prover error: ill-typed substitutions (%s)" msg)
+        | Inl nts -> nts in
     let nts_uvs, nts_uvs_effect_labels =
       PS.well_typed_nt_substs_prefix pst.pg pst.uvs nts effect_labels uvs in
     let k

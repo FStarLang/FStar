@@ -187,7 +187,7 @@ let (elim_pure_pst :
            (Obj.magic
               (FStar_Range.mk_range "Pulse.Checker.Prover.ElimPure.fst"
                  (Prims.of_int (116)) (Prims.of_int (74))
-                 (Prims.of_int (154)) (Prims.of_int (3)))))
+                 (Prims.of_int (155)) (Prims.of_int (3)))))
         (Obj.magic
            (elim_pure_frame pst.Pulse_Checker_Prover_Base.pg
               (Pulse_Typing_Combinators.list_as_vprop
@@ -214,6 +214,8 @@ let (elim_pure_pst :
                         (pst.Pulse_Checker_Prover_Base.uvs);
                       Pulse_Checker_Prover_Base.ss =
                         (pst.Pulse_Checker_Prover_Base.ss);
+                      Pulse_Checker_Prover_Base.nts =
+                        FStar_Pervasives_Native.None;
                       Pulse_Checker_Prover_Base.solved =
                         (pst.Pulse_Checker_Prover_Base.solved);
                       Pulse_Checker_Prover_Base.unsolved =

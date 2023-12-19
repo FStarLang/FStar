@@ -332,6 +332,7 @@ let intro_pure (#preamble:_) (pst:prover_state preamble)
   assume (freevars ss_new.(solved_new) `Set.subset` dom pst.pg);
 
   let pst_new : prover_state preamble = { pst with ss = ss_new;
+                                                   nts = None;
                                                    solved = solved_new;
                                                    unsolved = unsolved_new;
                                                    k;
