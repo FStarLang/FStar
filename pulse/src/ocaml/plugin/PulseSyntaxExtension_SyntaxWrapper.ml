@@ -50,6 +50,7 @@ let tm_emp r : term = wr r Tm_Emp
 let tm_pure (p:term) r : term = wr r (Tm_Pure p)
 let tm_star (p0:term) (p1:term) r : term = wr r (Tm_Star (p0, p1))
 let tm_exists (b:binder) (body:vprop) r : term = wr r (Tm_ExistsSL (U_unknown, b, body))
+let tm_forall (b:binder) (body:vprop) r : term = wr r (Tm_ForallSL (U_unknown, b, body))
 let map_aqual (q:S.aqual) =
   match q with
   | Some { S.aqual_implicit = true } -> Some Implicit

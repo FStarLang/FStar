@@ -509,6 +509,48 @@ let rec (interpret_vprop_constructors :
                                 (let uu___4 = as_term v in
                                  PulseSyntaxExtension_Err.return uu___4)))
                 | (FStar_Syntax_Syntax.Tm_fvar fv, (l, uu___1)::[]) when
+                    FStar_Syntax_Syntax.fv_eq_lid fv
+                      PulseSyntaxExtension_Env.forall_lid
+                    ->
+                    Obj.magic
+                      (Obj.repr
+                         (let uu___2 =
+                            let uu___3 = FStar_Syntax_Subst.compress l in
+                            uu___3.FStar_Syntax_Syntax.n in
+                          match uu___2 with
+                          | FStar_Syntax_Syntax.Tm_abs
+                              { FStar_Syntax_Syntax.bs = b::[];
+                                FStar_Syntax_Syntax.body = body;
+                                FStar_Syntax_Syntax.rc_opt = uu___3;_}
+                              ->
+                              Obj.repr
+                                (let b1 =
+                                   let uu___4 =
+                                     as_term
+                                       (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
+                                   PulseSyntaxExtension_SyntaxWrapper.mk_binder
+                                     (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.ppname
+                                     uu___4 in
+                                 let uu___4 =
+                                   interpret_vprop_constructors env body in
+                                 FStar_Class_Monad.op_let_Bang
+                                   PulseSyntaxExtension_Err.err_monad () ()
+                                   (Obj.magic uu___4)
+                                   (fun uu___5 ->
+                                      (fun body1 ->
+                                         let body1 = Obj.magic body1 in
+                                         let uu___5 =
+                                           PulseSyntaxExtension_SyntaxWrapper.tm_forall
+                                             b1 body1
+                                             v.FStar_Syntax_Syntax.pos in
+                                         Obj.magic
+                                           (PulseSyntaxExtension_Err.return
+                                              uu___5)) uu___5))
+                          | uu___3 ->
+                              Obj.repr
+                                (let uu___4 = as_term v in
+                                 PulseSyntaxExtension_Err.return uu___4)))
+                | (FStar_Syntax_Syntax.Tm_fvar fv, (l, uu___1)::[]) when
                     (FStar_Syntax_Syntax.fv_eq_lid fv
                        PulseSyntaxExtension_Env.prims_exists_lid)
                       ||
