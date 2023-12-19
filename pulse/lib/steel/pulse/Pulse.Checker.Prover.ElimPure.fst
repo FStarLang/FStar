@@ -148,6 +148,7 @@ let elim_pure_pst (#preamble:_) (pst:prover_state preamble)
     pg = g';
     remaining_ctxt = vprop_as_list remaining_ctxt';
     remaining_ctxt_frame_typing = RU.magic ();
+    nts = None;
     k = k_new;
     goals_inv = RU.magic ();  // weakening of pst.goals_inv
     solved_inv = ();

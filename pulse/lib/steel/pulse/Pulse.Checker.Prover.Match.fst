@@ -381,6 +381,7 @@ match ropt with
     { pst with remaining_ctxt=remaining_ctxt_new;
                remaining_ctxt_frame_typing=RU.magic ();
                ss=ss_new;
+               nts=None;
                solved=solved_new;
                unsolved=unsolved_new;
                k;
