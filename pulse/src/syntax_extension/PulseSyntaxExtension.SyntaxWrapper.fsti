@@ -51,6 +51,7 @@ val is_tm_exists (x:term) : bool
 
 val hint_type : Type0
 val mk_wild_hint_type : hint_type
+val mk_show_proof_state_hint_type (r:range) : hint_type
 val mk_assert_hint_type (vp:vprop) : hint_type
 val mk_unfold_hint_type (l:option (list string)) (vp:vprop) : hint_type
 val mk_fold_hint_type (l:option (list string)) (vp:vprop) : hint_type

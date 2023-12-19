@@ -143,7 +143,8 @@ let open_proof_hint_ln (t:proof_hint_type) (x:term) (i:index)
     | REWRITE { t1; t2 } ->
       open_term_ln' t1 x i;
       open_term_ln' t2 x i
-    | WILD -> ()
+    | WILD
+    | SHOW_PROOF_STATE _ -> ()
 
 let open_pattern'  (p:pattern) (v:term) (i:index) =
   subst_pat p [DT i v]
@@ -448,7 +449,8 @@ let ln_weakening_proof_hint (t:proof_hint_type) (i j:int)
     | REWRITE { t1; t2 } ->
       ln_weakening t1 i j;
       ln_weakening t2 i j
-    | WILD -> ()
+    | WILD
+    | SHOW_PROOF_STATE _ -> ()
 
 let rec ln_weakening_st (t:st_term) (i j:int)
   : Lemma
@@ -653,7 +655,8 @@ let open_proof_hint_ln_inv (ht:proof_hint_type) (x:term { ln x }) (i:index)
     | REWRITE { t1; t2 } ->
       open_term_ln_inv' t1 x i;
       open_term_ln_inv' t2 x i
-    | WILD -> ()
+    | WILD
+    | SHOW_PROOF_STATE _ -> ()
 
 #push-options "--z3rlimit_factor 2 --fuel 2 --ifuel 2"
 let rec open_term_ln_inv_st' (t:st_term)
@@ -860,7 +863,8 @@ let close_proof_hint_ln (ht:proof_hint_type) (v:var) (i:index)
     | REWRITE { t1; t2 } ->
       close_term_ln' t1 v i;
       close_term_ln' t2 v i
-    | WILD -> ()
+    | WILD
+    | SHOW_PROOF_STATE _ -> ()
 
 let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
   : Lemma

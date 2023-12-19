@@ -84,7 +84,7 @@ fn elim_is_list_cons (#t:Type0) (x:llist t) (head:t) (tl:list t)
                     pts_to v (mk_node head tail) **
                     is_list tail tl)
                 norm_tac
-                ()
+                ();
 }
 ```
 

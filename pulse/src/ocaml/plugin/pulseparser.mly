@@ -67,7 +67,7 @@ let mk_fn_decl q id is_rec bs body range =
 
 /* pulse specific tokens; rest are inherited from F* */
 %token MUT FN INVARIANT WHILE REF PARALLEL REWRITE FOLD GHOST ATOMIC EACH
-%token WITH_INVS OPENS
+%token WITH_INVS OPENS  SHOW_PROOF_STATE
 
 %start pulseDecl
 %start peekFnId
@@ -186,6 +186,8 @@ pulseStmtNoSeq:
     { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders (FOLD (ns,p)) bs }
   | bs=withBinders UNDERSCORE
     { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders WILD bs }
+  | SHOW_PROOF_STATE
+    { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders (SHOW_PROOF_STATE (rr $loc)) [] }
   | WITH_INVS names=nonempty_list(atomicTerm) r=option(ensuresVprop) LBRACE body=pulseStmt RBRACE
     { PulseSyntaxExtension_Sugar.mk_with_invs names body r }
   | f=localFnDecl

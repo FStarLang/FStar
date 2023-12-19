@@ -434,7 +434,7 @@ let rec (check : Pulse_Checker_Base.check_t) =
         fun post_hint ->
           fun res_ppname ->
             fun t ->
-              if Pulse_Checker_AssertWithBinders.head_wild t
+              if Pulse_Checker_AssertWithBinders.handle_head_immediately t
               then
                 Pulse_Checker_AssertWithBinders.check g0 pre0 () post_hint
                   res_ppname t check

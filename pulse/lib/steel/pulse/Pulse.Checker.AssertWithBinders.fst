@@ -329,6 +329,14 @@ let check
     let st = check_wild g pre st in
     check g pre pre_typing post_hint res_ppname st
 
+  | SHOW_PROOF_STATE r ->
+    let open FStar.Stubs.Pprint in
+    let open Pulse.PP in
+    let msg = [
+      text "Current context:" ^^
+            indent (pp pre)
+    ] in
+    fail_doc g (Some r) msg
   | RENAME { pairs; goal } ->
     let st = check_renaming g pre st in
     check g pre pre_typing post_hint res_ppname st

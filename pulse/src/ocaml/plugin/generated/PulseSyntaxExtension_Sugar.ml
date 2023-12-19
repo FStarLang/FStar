@@ -116,6 +116,7 @@ type hint_type =
   vprop FStar_Pervasives_Native.option) 
   | REWRITE of (vprop * vprop) 
   | WILD 
+  | SHOW_PROOF_STATE of rng 
 let (uu___is_ASSERT : hint_type -> Prims.bool) =
   fun projectee -> match projectee with | ASSERT _0 -> true | uu___ -> false
 let (__proj__ASSERT__item___0 : hint_type -> vprop) =
@@ -145,6 +146,11 @@ let (__proj__REWRITE__item___0 : hint_type -> (vprop * vprop)) =
   fun projectee -> match projectee with | REWRITE _0 -> _0
 let (uu___is_WILD : hint_type -> Prims.bool) =
   fun projectee -> match projectee with | WILD -> true | uu___ -> false
+let (uu___is_SHOW_PROOF_STATE : hint_type -> Prims.bool) =
+  fun projectee ->
+    match projectee with | SHOW_PROOF_STATE _0 -> true | uu___ -> false
+let (__proj__SHOW_PROOF_STATE__item___0 : hint_type -> rng) =
+  fun projectee -> match projectee with | SHOW_PROOF_STATE _0 -> _0
 type array_init = {
   init: FStar_Parser_AST.term ;
   len: FStar_Parser_AST.term }

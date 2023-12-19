@@ -117,8 +117,9 @@ let freevars_close_proof_hint' (ht:proof_hint_type) (x:var) (i:index)
     | REWRITE { t1; t2 } ->
       freevars_close_term' t1 x i;
       freevars_close_term' t2 x i
-    | WILD -> ()
-    
+    | WILD
+    | SHOW_PROOF_STATE _ -> ()
+
 // Needs a bit more rlimit sometimes. Also splitting is too expensive
 #push-options "--z3rlimit 20 --split_queries no"
 let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)

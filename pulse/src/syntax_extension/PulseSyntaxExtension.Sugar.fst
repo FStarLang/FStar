@@ -50,6 +50,7 @@ type hint_type =
   | RENAME of list (A.term & A.term) & option vprop
   | REWRITE of vprop & vprop
   | WILD
+  | SHOW_PROOF_STATE of rng
 
 type array_init = {
   init : A.term;

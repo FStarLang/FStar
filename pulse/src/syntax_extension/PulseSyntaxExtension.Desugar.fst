@@ -337,6 +337,8 @@ let desugar_hint_type (env:env_t) (ht:Sugar.hint_type)
       return (SW.mk_rewrite_hint_type t1 t2)
     | WILD ->
       return (SW.mk_wild_hint_type)
+    | SHOW_PROOF_STATE r ->
+      return (SW.mk_show_proof_state_hint_type r)
 
 // FIXME
 // should just mimic let resolve_lid

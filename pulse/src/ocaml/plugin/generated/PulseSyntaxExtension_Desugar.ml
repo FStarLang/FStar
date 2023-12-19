@@ -941,8 +941,14 @@ let (desugar_hint_type :
                Obj.magic
                  (Obj.repr
                     (PulseSyntaxExtension_Err.return
-                       PulseSyntaxExtension_SyntaxWrapper.mk_wild_hint_type)))
-        uu___1 uu___
+                       PulseSyntaxExtension_SyntaxWrapper.mk_wild_hint_type))
+           | PulseSyntaxExtension_Sugar.SHOW_PROOF_STATE r ->
+               Obj.magic
+                 (Obj.repr
+                    (let uu___ =
+                       PulseSyntaxExtension_SyntaxWrapper.mk_show_proof_state_hint_type
+                         r in
+                     PulseSyntaxExtension_Err.return uu___))) uu___1 uu___
 let (desugar_datacon :
   PulseSyntaxExtension_Env.env_t ->
     FStar_Ident.lid ->

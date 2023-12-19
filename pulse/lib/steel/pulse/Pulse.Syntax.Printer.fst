@@ -44,14 +44,31 @@ let qual_to_string = function
 
 let indent (level:string) = level ^ "\t"
     
-let rec term_to_string' (level:string) (t:term)
+
+let rec collect_binders (until: term' -> bool) (t:term) : list binder & term =
+  if not (until t.t) then [], t
+  else (
+    match t.t with
+    | Tm_ExistsSL _ b body
+    | Tm_ForallSL _ b body -> 
+      let bs, t = collect_binders until body in
+      b::bs, t
+    | _ -> [], t
+  )
+
+let rec binder_to_string_paren (b:binder)
+  : T.Tac string
+  = sprintf "(%s:%s)" 
+            (T.unseal b.binder_ppname.name)
+            (term_to_string' "" b.binder_ty)
+
+and term_to_string' (level:string) (t:term)
   : T.Tac string
   = match t.t with
     | Tm_Emp -> "emp"
 
     | Tm_Pure p ->
-      sprintf "pure (\n%s%s)" 
-        (indent level)
+      sprintf "pure (%s)" 
         (term_to_string' (indent level) p)
       
     | Tm_Star p1 p2 ->
@@ -60,17 +77,17 @@ let rec term_to_string' (level:string) (t:term)
         level
         (term_to_string' level p2)
                           
-    | Tm_ExistsSL _ b body ->
-      sprintf "(exists (%s:%s).\n%s%s)"
-              (T.unseal b.binder_ppname.name)
-              (term_to_string' (indent level) b.binder_ty)
+    | Tm_ExistsSL _ _ _ ->
+      let bs, body = collect_binders Tm_ExistsSL? t in
+      sprintf "(exists* %s.\n%s%s)"
+              (T.map binder_to_string_paren bs |> String.concat " ")
               level
               (term_to_string' (indent level) body)
 
     | Tm_ForallSL u b body ->
-      sprintf "(forall (%s:%s).\n%s%s)"
-              (T.unseal b.binder_ppname.name)
-              (term_to_string' (indent level) b.binder_ty)
+      let bs, body = collect_binders Tm_ExistsSL? t in
+      sprintf "(forall* %s.\n%s%s)"
+              (T.map binder_to_string_paren bs |> String.concat " ")
               level
               (term_to_string' (indent level) body)
                           
@@ -89,28 +106,31 @@ let rec term_to_string' (level:string) (t:term)
       T.term_to_string t
 let term_to_string t = term_to_string' "" t
 
-let rec term_to_doc t
+let rec binder_to_doc b : T.Tac document =
+  parens (doc_of_string (T.unseal b.binder_ppname.name)
+          ^^ doc_of_string ":"
+          ^^ term_to_doc b.binder_ty)
+
+and term_to_doc t
   : T.Tac document
   = match t.t with
     | Tm_Emp -> doc_of_string "emp"
 
-    | Tm_Pure p -> doc_of_string "pure" ^/^ parens (term_to_doc p)
+    | Tm_Pure p -> doc_of_string "pure" ^^ parens (term_to_doc p)
     | Tm_Star p1 p2 ->
       infix 2 1 (doc_of_string "**")
                 (term_to_doc p1)
                 (term_to_doc p2)
 
-    | Tm_ExistsSL _ b body ->
-      parens (doc_of_string "exists" ^/^ parens (doc_of_string (T.unseal b.binder_ppname.name)
-                                                  ^^ doc_of_string ":"
-                                                  ^^ term_to_doc b.binder_ty)
+    | Tm_ExistsSL _ _ _ ->
+      let bs, body = collect_binders Tm_ExistsSL? t in
+      parens (doc_of_string "exists*" ^/^ (separate (doc_of_string " ") (T.map binder_to_doc bs))
               ^^ doc_of_string "."
               ^/^ term_to_doc body)
 
-    | Tm_ForallSL u b body ->
-      parens (doc_of_string "forall" ^/^ parens (doc_of_string (T.unseal b.binder_ppname.name)
-                                                  ^^ doc_of_string ":"
-                                                  ^^ term_to_doc b.binder_ty)
+    | Tm_ForallSL _ _ _ ->
+      let bs, body = collect_binders Tm_ExistsSL? t in
+      parens (doc_of_string "forall*" ^/^ (separate (doc_of_string " ") (T.map binder_to_doc bs))
               ^^ doc_of_string "."
               ^/^ term_to_doc body)
 
@@ -336,6 +356,7 @@ let rec st_term_to_string' (level:string) (t:st_term)
         | REWRITE { t1; t2 } ->
           sprintf "rewrite %s as %s" (term_to_string t1) (term_to_string t2), ""
         | WILD -> "_", ""
+        | SHOW_PROOF_STATE _ -> "show_proof_state", ""
       in
       sprintf "%s %s %s; %s" with_prefix ht p
         (st_term_to_string' level t)
