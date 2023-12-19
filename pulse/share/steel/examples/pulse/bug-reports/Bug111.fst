@@ -68,7 +68,6 @@ ensures r
 }
 ```
 
-[@@expect_failure]
 ```pulse
 ghost
 fn test_elim_3' (p q r:vprop)

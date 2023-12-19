@@ -39,13 +39,6 @@ let unsolved_equiv_pst (#preamble:_) (pst:prover_state preamble) (unsolved':list
   : prover_state preamble =
   { pst with unsolved = unsolved'; goals_inv = RU.magic () }
 
-let remaining_ctxt_equiv_pst (#preamble:_) (pst:prover_state preamble) (remaining_ctxt':list vprop)
-  (d:vprop_equiv pst.pg (list_as_vprop pst.remaining_ctxt) (list_as_vprop remaining_ctxt'))
-  : prover_state preamble =
-  { pst with remaining_ctxt = remaining_ctxt';
-             remaining_ctxt_frame_typing = RU.magic ();
-             k = k_elab_equiv pst.k (VE_Refl _ _) (RU.magic ()) }
-
 let rec collect_exists (g:env) (l:list vprop)
   : exs:list vprop &
     rest:list vprop &
@@ -72,31 +65,6 @@ let rec collect_pures (g:env) (l:list vprop)
     match hd.t with
     | Tm_Pure _ -> (| hd::pures, rest, RU.magic #(vprop_equiv _ _ _) () |)
     | _ -> (| pures, hd::rest, RU.magic #(vprop_equiv _ _ _) () |)
-
-let move_hd_end (g:env) (l:list vprop { Cons? l })
-  : vprop_equiv g (list_as_vprop l) (list_as_vprop (L.tl l @ [L.hd l])) = RU.magic ()
-
-let rec match_q (#preamble:_) (pst:prover_state preamble)
-  (q:vprop) (unsolved':list vprop)
-  (_:squash (pst.unsolved == q::unsolved'))
-  (i:nat)
-  : T.Tac (option (pst':prover_state preamble { pst' `pst_extends` pst })) =
-
-  if L.length pst.remaining_ctxt = 0
-  then None
-  else if i = L.length pst.remaining_ctxt
-  then None
-  else
-    let p = L.hd pst.remaining_ctxt in
-    let pst_opt =
-      Match.match_step pst p (L.tl pst.remaining_ctxt) q unsolved' () in
-    match pst_opt with
-    | Some pst -> Some pst
-    | None ->
-      let pst =
-        remaining_ctxt_equiv_pst pst (L.tl pst.remaining_ctxt @ [L.hd pst.remaining_ctxt])
-          (move_hd_end pst.pg pst.remaining_ctxt) in
-      match_q pst q unsolved' () (i+1)
 
 let rec prove_pures #preamble (pst:prover_state preamble)
   : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst /\
@@ -172,7 +140,7 @@ let rec prover
       match pst.unsolved with
       | {t=Tm_Pure _}::tl -> prove_pures pst
       | q::tl ->
-        let pst_opt = match_q pst q tl () 0 in
+        let pst_opt = Match.match_q pst q tl () prover in
         match pst_opt with
         | None ->
           let open Pprint in

@@ -14,3 +14,9 @@ val match_step (#preamble:preamble) (pst:prover_state preamble)
   (_:squash (pst.remaining_ctxt == p::remaining_ctxt' /\
              pst.unsolved == q::unsolved'))
 : T.Tac (option (pst':prover_state preamble { pst' `pst_extends` pst }))
+
+val match_q (#preamble:preamble) (pst:prover_state preamble)
+  (q:vprop) (unsolved':list vprop)
+  (_:squash (pst.unsolved == q::unsolved'))
+  (prover:prover_t)
+: T.Tac (option (pst':prover_state preamble { pst' `pst_extends` pst }))

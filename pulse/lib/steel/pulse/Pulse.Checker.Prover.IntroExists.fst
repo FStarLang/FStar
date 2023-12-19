@@ -124,14 +124,17 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
         PS.well_typed_nt_substs pst_sub.pg pst_sub.uvs nts effect_labels /\
         PS.is_permutation nts pst_sub.ss
   } =
-    let r = PS.ss_to_nt_substs pst_sub.pg pst_sub.uvs pst_sub.ss in
-    match r with
-    | Inr msg ->
-      fail pst_sub.pg None
-        (Printf.sprintf
-           "resulted substitution after intro exists protocol is not well-typed: %s"
-           msg)
-    | Inl nt -> nt in
+    match pst_sub.nts with
+    | Some nts -> nts
+    | None ->
+      let r = PS.ss_to_nt_substs pst_sub.pg pst_sub.uvs pst_sub.ss in
+      match r with
+      | Inr msg ->
+        fail pst_sub.pg None
+          (Printf.sprintf
+             "resulted substitution after intro exists protocol is not well-typed: %s"
+             msg)
+      | Inl nt -> nt in
   assert (PS.well_typed_nt_substs pst_sub.pg pst_sub.uvs nt effect_labels);
   let pst_sub_goals_inv
     : vprop_equiv pst_sub.pg
