@@ -1488,7 +1488,7 @@ let (match_step :
                         (FStar_Range.mk_range
                            "Pulse.Checker.Prover.Match.fst"
                            (Prims.of_int (327)) (Prims.of_int (52))
-                           (Prims.of_int (390)) (Prims.of_int (11)))))
+                           (Prims.of_int (391)) (Prims.of_int (11)))))
                   (FStar_Tactics_Effect.lift_div_tac
                      (fun uu___1 ->
                         Pulse_Checker_Prover_Base.op_Array_Access
@@ -1511,7 +1511,7 @@ let (match_step :
                                       "Pulse.Checker.Prover.Match.fst"
                                       (Prims.of_int (327))
                                       (Prims.of_int (52))
-                                      (Prims.of_int (390))
+                                      (Prims.of_int (391))
                                       (Prims.of_int (11)))))
                              (Obj.magic
                                 (try_match_pq
@@ -1537,7 +1537,7 @@ let (match_step :
                                                      "Pulse.Checker.Prover.Match.fst"
                                                      (Prims.of_int (335))
                                                      Prims.int_zero
-                                                     (Prims.of_int (390))
+                                                     (Prims.of_int (391))
                                                      (Prims.of_int (11)))))
                                             (Obj.magic
                                                (Pulse_Checker_Prover_Util.debug_prover
@@ -1690,7 +1690,7 @@ let (match_step :
                                                                  ss_q);
                                                             Pulse_Checker_Prover_Base.nts
                                                               =
-                                                              (pst.Pulse_Checker_Prover_Base.nts);
+                                                              FStar_Pervasives_Native.None;
                                                             Pulse_Checker_Prover_Base.solved
                                                               =
                                                               (Pulse_Checker_Prover_Base.op_Star
