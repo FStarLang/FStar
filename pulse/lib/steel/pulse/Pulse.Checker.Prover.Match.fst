@@ -388,3 +388,42 @@ match ropt with
 
   assume (ss_new `ss_extends` pst.ss);
   Some pst'
+
+let move_hd_end (g:env) (l:list vprop { Cons? l })
+  : vprop_equiv g (list_as_vprop l) (list_as_vprop (L.tl l @ [L.hd l])) = RU.magic ()
+
+let remaining_ctxt_equiv_pst (#preamble:_) (pst:prover_state preamble) (remaining_ctxt':list vprop)
+  (d:vprop_equiv pst.pg (list_as_vprop pst.remaining_ctxt) (list_as_vprop remaining_ctxt'))
+  : prover_state preamble =
+  { pst with remaining_ctxt = remaining_ctxt';
+             remaining_ctxt_frame_typing = RU.magic ();
+             k = k_elab_equiv pst.k (VE_Refl _ _) (RU.magic ()) }
+
+let rec match_q_aux (#preamble:_) (pst:prover_state preamble)
+  (q:vprop) (unsolved':list vprop)
+  (_:squash (pst.unsolved == q::unsolved'))
+  (i:nat)
+  : T.Tac (option (pst':prover_state preamble { pst' `pst_extends` pst })) =
+
+  if L.length pst.remaining_ctxt = 0
+  then None
+  else if i = L.length pst.remaining_ctxt
+  then None
+  else
+    let p = L.hd pst.remaining_ctxt in
+    let pst_opt =
+      match_step pst p (L.tl pst.remaining_ctxt) q unsolved' () in
+    match pst_opt with
+    | Some pst -> Some pst
+    | None ->
+      let pst =
+        remaining_ctxt_equiv_pst pst (L.tl pst.remaining_ctxt @ [L.hd pst.remaining_ctxt])
+          (move_hd_end pst.pg pst.remaining_ctxt) in
+      match_q_aux pst q unsolved' () (i+1)
+
+let match_q (#preamble:preamble) (pst:prover_state preamble)
+  (q:vprop) (unsolved':list vprop)
+  (_:squash (pst.unsolved == q::unsolved'))
+  : T.Tac (option (pst':prover_state preamble { pst' `pst_extends` pst })) =
+
+  match_q_aux pst q unsolved' () 0
