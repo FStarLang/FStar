@@ -1688,6 +1688,9 @@ let (match_step :
                                                               (Pulse_Checker_Prover_Substs.push_ss
                                                                  pst.Pulse_Checker_Prover_Base.ss
                                                                  ss_q);
+                                                            Pulse_Checker_Prover_Base.nts
+                                                              =
+                                                              (pst.Pulse_Checker_Prover_Base.nts);
                                                             Pulse_Checker_Prover_Base.solved
                                                               =
                                                               (Pulse_Checker_Prover_Base.op_Star

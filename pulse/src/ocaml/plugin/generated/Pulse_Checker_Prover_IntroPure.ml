@@ -1508,6 +1508,9 @@ let (intro_pure :
                                                                     (pst.Pulse_Checker_Prover_Base.uvs);
                                                                     Pulse_Checker_Prover_Base.ss
                                                                     = ss_new;
+                                                                    Pulse_Checker_Prover_Base.nts
+                                                                    =
+                                                                    (pst.Pulse_Checker_Prover_Base.nts);
                                                                     Pulse_Checker_Prover_Base.solved
                                                                     =
                                                                     solved_new;

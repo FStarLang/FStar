@@ -170,6 +170,8 @@ let (elim_exists_pst :
                         (pst.Pulse_Checker_Prover_Base.uvs);
                       Pulse_Checker_Prover_Base.ss =
                         (pst.Pulse_Checker_Prover_Base.ss);
+                      Pulse_Checker_Prover_Base.nts =
+                        (pst.Pulse_Checker_Prover_Base.nts);
                       Pulse_Checker_Prover_Base.solved =
                         (pst.Pulse_Checker_Prover_Base.solved);
                       Pulse_Checker_Prover_Base.unsolved =
