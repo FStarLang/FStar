@@ -423,8 +423,10 @@ let rec match_q_aux (#preamble:_) (pst:prover_state preamble)
           (move_hd_end pst.pg pst.remaining_ctxt) in
       match_q_aux pst q unsolved' () (i+1)
 
-// TODO: FIXME: REMOVE
-let canon_q (q:vprop) : Dv (r:vprop { r == q }) =
+//
+// THIS SHOULD GO AWAY SOON
+//
+let ___canon___ (q:vprop) : Dv (r:vprop { r == q }) =
   assume False;
   match Pulse.Readback.readback_ty (elab_term q) with
   | None -> q
@@ -442,11 +444,8 @@ let match_q (#preamble:preamble) (pst:prover_state preamble)
   (prover:prover_t)
 : T.Tac (option (pst':prover_state preamble { pst' `pst_extends` pst })) =
 
-let q = canon_q q in
 let q_ss = pst.ss.(q) in
-
-// TODO: FIXME: REMOVE
-let q_ss = canon_q q_ss in
+let q_ss = ___canon___ q_ss in
 
 if has_structure q_ss
 then begin
@@ -514,24 +513,23 @@ then begin
     (q_ss * (list_as_vprop unsolved'))
     (list_as_vprop [] * pst_sub.solved) = pst_sub.goals_inv in
 
-  //
-  // TODO: FIXME: HERE AND IN INTROEXISTS, WE SEEM TO BE CREATING nt_substs TWICE
-  //       ONCE HERE AND ONCE AT THE TOP OF THE PROVER, THIS IS COSTLY, OPTIMIZE
-  //
   let (| nt, effect_labels |)
     : nts:PS.nt_substs &
       effect_labels:list T.tot_or_ghost {
         PS.well_typed_nt_substs pst_sub.pg pst_sub.uvs nts effect_labels /\
         PS.is_permutation nts pst_sub.ss
   } =
-    let r = PS.ss_to_nt_substs pst_sub.pg pst_sub.uvs pst_sub.ss in
-    match r with
-    | Inr msg ->
-      fail pst_sub.pg None
-        (Printf.sprintf
-           "resulted substitution after match protocol is not well-typed: %s"
-           msg)
-    | Inl nt -> nt in
+    match pst_sub.nts with
+    | Some r -> r
+    | None ->
+      let r = PS.ss_to_nt_substs pst_sub.pg pst_sub.uvs pst_sub.ss in
+      match r with
+      | Inr msg ->
+        fail pst_sub.pg None
+          (Printf.sprintf
+             "resulted substitution after match protocol is not well-typed: %s"
+             msg)
+      | Inl nt -> nt in
   assert (PS.well_typed_nt_substs pst_sub.pg pst_sub.uvs nt effect_labels);
 
   let pst_sub_goals_inv
