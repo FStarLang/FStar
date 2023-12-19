@@ -601,7 +601,8 @@ and desugar_binders (env:env_t) (bs:Sugar.binders)
       : err (env_t & list (qual & ident & SW.term) & list S.bv)
       = match bs with
         | [] -> return (env, [], [])
-        | (aq, b, t)::bs ->
+        | b::bs -> 
+          let (aq, b, t) = destruct_binder b in 
           let! t = desugar_term env t in
           let env, bv = push_bv env b in
           let! env, bs, bvs = aux env bs in
@@ -659,7 +660,8 @@ and desugar_decl (env:env_t)
     let r = range_of_id res.return_name in
     let! env, bs', _ = desugar_binders env bs in
     let! res_t = comp_to_ast_term res in
-    let bs'' = bs |> L.map (fun (q, x, ty) ->
+    let bs'' = bs |> L.map (fun b ->
+      let (q, x, ty) = destruct_binder b in
       A.mk_binder (A.Annotated (x, ty)) r A.Expr q)
     in
     let last = L.last bs'' in

@@ -98,6 +98,18 @@ let resolve_names (env:env_t) (ns:option (list lident))
     | None -> return None
     | Some ns -> let! ns = mapM (resolve_lid env) ns in return (Some ns)
 
+let destruct_binder (b:A.binder)
+: A.aqual & ident & A.term 
+= match b.b with
+  | A.Annotated (x, t)
+  | A.TAnnotated (x, t) ->
+    b.aqual, x, t
+  | A.NoName t ->
+    b.aqual, Ident.id_of_text "_", t
+  | A.Variable x
+  | A.TVariable x ->
+    b.aqual, x, A.mk_term A.Wild (Ident.range_of_id x) A.Un
+
 let rec free_vars_term (env:env_t) (t:A.term) =
   ToSyntax.free_vars false env.tcenv.dsenv t
 
@@ -105,7 +117,8 @@ and free_vars_binders (env:env_t) (bs:Sugar.binders)
   : env_t & list ident
   = match bs with
     | [] -> env, []
-    | (_, x, t)::bs ->
+    | b::bs ->
+      let _, x, t = destruct_binder b in
       let fvs = free_vars_term env t in
       let env', res = free_vars_binders (fst (push_bv env x)) bs in
       env', fvs@res

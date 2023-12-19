@@ -4,17 +4,13 @@ module A = FStar.Parser.AST
 let rng = FStar.Compiler.Range.range
 let dummyRange = FStar.Compiler.Range.dummyRange
 
-type binder = A.aqual & ident & A.term
-
+//Note: We do not yet process binder attributes, like typeclass attributes
+type binder = A.binder
 type binders = list binder
 
 type vprop' =
   | VPropTerm of A.term
-  // | VPropStar of vprop & vprop
-  // | VPropExists {
-  //     binders:binders;
-  //     body:vprop
-  //   }
+
 and vprop = {
   v:vprop';
   vrange:rng

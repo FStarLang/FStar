@@ -2,8 +2,7 @@ open Prims
 type rng = FStar_Compiler_Range_Type.range
 let (dummyRange : FStar_Compiler_Range_Type.range) =
   FStar_Compiler_Range_Type.dummyRange
-type binder =
-  (FStar_Parser_AST.aqual * FStar_Ident.ident * FStar_Parser_AST.term)
+type binder = FStar_Parser_AST.binder
 type binders = binder Prims.list
 type vprop' =
   | VPropTerm of FStar_Parser_AST.term 

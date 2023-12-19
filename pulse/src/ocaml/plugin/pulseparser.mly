@@ -101,7 +101,7 @@ pulseDecl:
 
 pulseBinderList:
   /* |  { [] } We don't yet support nullary functions */
-  | bs=nonempty_list(pulseMultiBinder)
+  | bs=nonempty_list(multiBinder)
     {  bs }
 
 localFnDecl:
@@ -122,13 +122,6 @@ fnBody:
 
   | COLON typ=option(appTerm) EQUALS lambda=pulseLambda
     { Inr (lambda, typ) }
-
-pulseMultiBinder:
-  | LPAREN qual_ids=nonempty_list(q=option(HASH) id=lidentOrUnderscore { (q, id) }) COLON t=appTerm RPAREN
-    { List.map (fun (q, id) -> (as_aqual q, id, t)) qual_ids }
-  | q=option(HASH) id=lidentOrUnderscore
-    { [(as_aqual q, id, mk_term Wild (rr ($loc(id))) Un)] }
-  | LPAREN_RPAREN { [ None, gen (rr $loc), snd default_return ] }
 
 pulseComputationType:
   | REQUIRES t=pulseVprop
@@ -162,9 +155,9 @@ pulseStmtNoSeq:
     }
   | lhs=appTermNoRecordExp COLON_EQUALS a=noSeqTerm
     { PulseSyntaxExtension_Sugar.mk_assignment lhs a }
-  | LET q=option(mutOrRefQualifier) i=lident typOpt=option(preceded(COLON, appTerm)) EQUALS LBRACK_BAR v=noSeqTerm SEMICOLON n=noSeqTerm BAR_RBRACK
+  | LET q=option(mutOrRefQualifier) i=lidentOrUnderscore typOpt=option(preceded(COLON, appTerm)) EQUALS LBRACK_BAR v=noSeqTerm SEMICOLON n=noSeqTerm BAR_RBRACK
     { PulseSyntaxExtension_Sugar.mk_let_binding q i typOpt (Some (Array_initializer { init=v; len=n })) }
-  | LET q=option(mutOrRefQualifier) i=lident typOpt=option(preceded(COLON, appTerm)) EQUALS tm=noSeqTerm
+  | LET q=option(mutOrRefQualifier) i=lidentOrUnderscore typOpt=option(preceded(COLON, appTerm)) EQUALS tm=noSeqTerm
     { PulseSyntaxExtension_Sugar.mk_let_binding q i typOpt (Some (Default_initializer tm)) }
   | LBRACE s=pulseStmt RBRACE
     { PulseSyntaxExtension_Sugar.mk_block s }
@@ -219,7 +212,7 @@ names:
     { l }
 
 withBindersOpt:
-  | WITH bs=nonempty_list(pulseMultiBinder) DOT
+  | WITH bs=nonempty_list(multiBinder) DOT
     { List.flatten bs }
   | { [] }
 

@@ -377,6 +377,30 @@ let (resolve_names :
                                (PulseSyntaxExtension_Err.return
                                   (FStar_Pervasives_Native.Some ns2))) uu___1))))
         uu___1 uu___
+let (destruct_binder :
+  FStar_Parser_AST.binder ->
+    (FStar_Parser_AST.aqual * FStar_Ident.ident * FStar_Parser_AST.term))
+  =
+  fun b ->
+    match b.FStar_Parser_AST.b with
+    | FStar_Parser_AST.Annotated (x, t) -> ((b.FStar_Parser_AST.aqual), x, t)
+    | FStar_Parser_AST.TAnnotated (x, t) ->
+        ((b.FStar_Parser_AST.aqual), x, t)
+    | FStar_Parser_AST.NoName t ->
+        let uu___ = FStar_Ident.id_of_text "_" in
+        ((b.FStar_Parser_AST.aqual), uu___, t)
+    | FStar_Parser_AST.Variable x ->
+        let uu___ =
+          let uu___1 = FStar_Ident.range_of_id x in
+          FStar_Parser_AST.mk_term FStar_Parser_AST.Wild uu___1
+            FStar_Parser_AST.Un in
+        ((b.FStar_Parser_AST.aqual), x, uu___)
+    | FStar_Parser_AST.TVariable x ->
+        let uu___ =
+          let uu___1 = FStar_Ident.range_of_id x in
+          FStar_Parser_AST.mk_term FStar_Parser_AST.Wild uu___1
+            FStar_Parser_AST.Un in
+        ((b.FStar_Parser_AST.aqual), x, uu___)
 let rec (free_vars_term :
   env_t -> FStar_Parser_AST.term -> FStar_Ident.ident Prims.list) =
   fun env ->
@@ -392,15 +416,18 @@ and (free_vars_binders :
     fun bs ->
       match bs with
       | [] -> (env, [])
-      | (uu___, x, t)::bs1 ->
-          let fvs = free_vars_term env t in
-          let uu___1 =
-            let uu___2 =
-              let uu___3 = push_bv env x in
-              FStar_Pervasives_Native.fst uu___3 in
-            free_vars_binders uu___2 bs1 in
-          (match uu___1 with
-           | (env', res) -> (env', (FStar_List_Tot_Base.op_At fvs res)))
+      | b::bs1 ->
+          let uu___ = destruct_binder b in
+          (match uu___ with
+           | (uu___1, x, t) ->
+               let fvs = free_vars_term env t in
+               let uu___2 =
+                 let uu___3 =
+                   let uu___4 = push_bv env x in
+                   FStar_Pervasives_Native.fst uu___4 in
+                 free_vars_binders uu___3 bs1 in
+               (match uu___2 with
+                | (env', res) -> (env', (FStar_List_Tot_Base.op_At fvs res))))
 let (free_vars_vprop :
   env_t -> PulseSyntaxExtension_Sugar.vprop -> FStar_Ident.ident Prims.list)
   =

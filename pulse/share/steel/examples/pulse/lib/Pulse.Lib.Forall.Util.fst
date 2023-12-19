@@ -8,8 +8,8 @@ let elim #a #p = Pulse.Lib.Core.elim_forall #a #p
  
 ```pulse
 ghost
-fn trans_compose (#a #b #c:Type0) (p:(a -> vprop)) (q:(b -> vprop)) (r:(c -> vprop))
-                 (f: (a -> GTot b)) (g: (b -> GTot c))
+fn trans_compose (#a #b #c:Type0) (p:a -> vprop) (q:b -> vprop) (r:c -> vprop)
+                 (f: a -> GTot b) (g: b -> GTot c)
     requires (forall* x. p x @==> q (f x)) ** (forall* x. q x @==> r (g x))
     ensures forall* x. p x @==> r (g (f x))
 {
@@ -37,7 +37,7 @@ fn trans_compose (#a #b #c:Type0) (p:(a -> vprop)) (q:(b -> vprop)) (r:(c -> vpr
 
 ```pulse
 ghost
-fn trans (#a:Type0) (p q r: (a -> vprop))
+fn trans (#a:Type0) (p q r: a -> vprop)
     requires (forall* x. p x @==> q x) ** (forall* x. q x @==> r x)
     ensures forall* x. p x @==> r x
 {
@@ -46,7 +46,7 @@ fn trans (#a:Type0) (p q r: (a -> vprop))
 ```
 
 ```pulse
-ghost fn elim_forall_imp (#a:Type0) (p q: (a -> vprop)) (x:a)
+    ghost fn elim_forall_imp (#a:Type0) (p q: a -> vprop) (x:a)
     requires (forall* x. p x @==> q x) ** p x
     ensures q x
 {
