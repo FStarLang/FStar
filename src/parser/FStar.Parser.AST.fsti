@@ -257,6 +257,8 @@ type modul =
 type file = modul
 type inputFragment = either file (list decl)
 
+val lid_of_modul : modul -> lid
+
 (* Smart constructors *)
 val mk_decl : decl' -> range -> list decoration -> decl
 val mk_binder_with_attrs : binder' -> range -> level -> aqual -> list term -> binder

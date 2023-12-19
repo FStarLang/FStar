@@ -4285,12 +4285,13 @@ let desugar_partial_modul curmod (env:env_t) (m:AST.modul) : env_t * Syntax.modu
   else env, modul
 
 let desugar_modul env (m:AST.modul) : env_t * Syntax.modul =
-  let env, modul, pop_when_done = desugar_modul_common None env m in
-  let env, modul = Env.finish_module_or_interface env modul in
-  if Options.dump_module (string_of_lid modul.name)
-  then BU.print1 "Module after desugaring:\n%s\n" (Print.modul_to_string modul);
-  (if pop_when_done then export_interface modul.name env else env), modul
-
+  Errors.with_ctx ("While desugaring module " ^ Class.Show.show (lid_of_modul m)) (fun () ->
+    let env, modul, pop_when_done = desugar_modul_common None env m in
+    let env, modul = Env.finish_module_or_interface env modul in
+    if Options.dump_module (string_of_lid modul.name)
+    then BU.print1 "Module after desugaring:\n%s\n" (Print.modul_to_string modul);
+    (if pop_when_done then export_interface modul.name env else env), modul
+  )
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //External API for modules
