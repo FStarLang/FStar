@@ -15,6 +15,7 @@
     "by-example",
     "lib",
     "parallel",
+    "parix",
     "dice",
     "dice/cbor",
     "dice/dpe",
