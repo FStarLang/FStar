@@ -718,6 +718,7 @@ binder:
   | tv=tvar { mk_binder (TVariable tv) (rr $loc) Kind None  }
        (* small regression here : fun (=x : t) ... is not accepted anymore *)
 
+%public
 multiBinder:
   | LBRACE_BAR id=lidentOrUnderscore COLON t=simpleArrow BAR_RBRACE
       { let r = rr $loc in
