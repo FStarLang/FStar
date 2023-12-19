@@ -1748,3 +1748,230 @@ let (match_step :
                                                               = ()
                                                           })))) uu___1)))
                        uu___1)
+let (remaining_ctxt_equiv_pst :
+  Pulse_Checker_Prover_Base.preamble ->
+    unit Pulse_Checker_Prover_Base.prover_state ->
+      Pulse_Syntax_Base.vprop Prims.list ->
+        unit -> unit Pulse_Checker_Prover_Base.prover_state)
+  =
+  fun preamble ->
+    fun pst ->
+      fun remaining_ctxt' ->
+        fun d ->
+          {
+            Pulse_Checker_Prover_Base.pg = (pst.Pulse_Checker_Prover_Base.pg);
+            Pulse_Checker_Prover_Base.remaining_ctxt = remaining_ctxt';
+            Pulse_Checker_Prover_Base.remaining_ctxt_frame_typing = ();
+            Pulse_Checker_Prover_Base.uvs =
+              (pst.Pulse_Checker_Prover_Base.uvs);
+            Pulse_Checker_Prover_Base.ss = (pst.Pulse_Checker_Prover_Base.ss);
+            Pulse_Checker_Prover_Base.solved =
+              (pst.Pulse_Checker_Prover_Base.solved);
+            Pulse_Checker_Prover_Base.unsolved =
+              (pst.Pulse_Checker_Prover_Base.unsolved);
+            Pulse_Checker_Prover_Base.k =
+              (Pulse_Checker_Base.k_elab_equiv
+                 preamble.Pulse_Checker_Prover_Base.g0
+                 (Pulse_Checker_Prover_Base.__proj__Mkprover_state__item__pg
+                    preamble pst)
+                 (Pulse_Checker_Prover_Base.op_Star
+                    preamble.Pulse_Checker_Prover_Base.ctxt
+                    preamble.Pulse_Checker_Prover_Base.frame)
+                 (Pulse_Checker_Prover_Base.op_Star
+                    preamble.Pulse_Checker_Prover_Base.ctxt
+                    preamble.Pulse_Checker_Prover_Base.frame)
+                 (Pulse_Checker_Prover_Base.op_Star
+                    (Pulse_Checker_Prover_Base.op_Star
+                       (Pulse_Typing_Combinators.list_as_vprop
+                          (Pulse_Checker_Prover_Base.__proj__Mkprover_state__item__remaining_ctxt
+                             preamble pst))
+                       preamble.Pulse_Checker_Prover_Base.frame)
+                    (Pulse_Checker_Prover_Base.op_Array_Access
+                       (Pulse_Checker_Prover_Base.__proj__Mkprover_state__item__ss
+                          preamble pst)
+                       (Pulse_Checker_Prover_Base.__proj__Mkprover_state__item__solved
+                          preamble pst)))
+                 (Pulse_Checker_Prover_Base.op_Star
+                    (Pulse_Checker_Prover_Base.op_Star
+                       (Pulse_Typing_Combinators.list_as_vprop
+                          remaining_ctxt')
+                       preamble.Pulse_Checker_Prover_Base.frame)
+                    (Pulse_Checker_Prover_Base.op_Array_Access
+                       pst.Pulse_Checker_Prover_Base.ss
+                       pst.Pulse_Checker_Prover_Base.solved))
+                 pst.Pulse_Checker_Prover_Base.k () ());
+            Pulse_Checker_Prover_Base.goals_inv = ();
+            Pulse_Checker_Prover_Base.solved_inv = ()
+          }
+let rec (match_q_aux :
+  Pulse_Checker_Prover_Base.preamble ->
+    unit Pulse_Checker_Prover_Base.prover_state ->
+      Pulse_Syntax_Base.vprop ->
+        Pulse_Syntax_Base.vprop Prims.list ->
+          unit ->
+            Prims.nat ->
+              (unit Pulse_Checker_Prover_Base.prover_state
+                 FStar_Pervasives_Native.option,
+                unit) FStar_Tactics_Effect.tac_repr)
+  =
+  fun uu___5 ->
+    fun uu___4 ->
+      fun uu___3 ->
+        fun uu___2 ->
+          fun uu___1 ->
+            fun uu___ ->
+              (fun preamble ->
+                 fun pst ->
+                   fun q ->
+                     fun unsolved' ->
+                       fun uu___ ->
+                         fun i ->
+                           if
+                             (FStar_List_Tot_Base.length
+                                pst.Pulse_Checker_Prover_Base.remaining_ctxt)
+                               = Prims.int_zero
+                           then
+                             Obj.magic
+                               (Obj.repr
+                                  (FStar_Tactics_Effect.lift_div_tac
+                                     (fun uu___1 ->
+                                        FStar_Pervasives_Native.None)))
+                           else
+                             Obj.magic
+                               (Obj.repr
+                                  (if
+                                     i =
+                                       (FStar_List_Tot_Base.length
+                                          pst.Pulse_Checker_Prover_Base.remaining_ctxt)
+                                   then
+                                     Obj.repr
+                                       (FStar_Tactics_Effect.lift_div_tac
+                                          (fun uu___2 ->
+                                             FStar_Pervasives_Native.None))
+                                   else
+                                     Obj.repr
+                                       (FStar_Tactics_Effect.tac_bind
+                                          (FStar_Sealed.seal
+                                             (Obj.magic
+                                                (FStar_Range.mk_range
+                                                   "Pulse.Checker.Prover.Match.fst"
+                                                   (Prims.of_int (413))
+                                                   (Prims.of_int (12))
+                                                   (Prims.of_int (413))
+                                                   (Prims.of_int (35)))))
+                                          (FStar_Sealed.seal
+                                             (Obj.magic
+                                                (FStar_Range.mk_range
+                                                   "Pulse.Checker.Prover.Match.fst"
+                                                   (Prims.of_int (413))
+                                                   (Prims.of_int (38))
+                                                   (Prims.of_int (422))
+                                                   (Prims.of_int (42)))))
+                                          (FStar_Tactics_Effect.lift_div_tac
+                                             (fun uu___3 ->
+                                                FStar_List_Tot_Base.hd
+                                                  pst.Pulse_Checker_Prover_Base.remaining_ctxt))
+                                          (fun uu___3 ->
+                                             (fun p ->
+                                                Obj.magic
+                                                  (FStar_Tactics_Effect.tac_bind
+                                                     (FStar_Sealed.seal
+                                                        (Obj.magic
+                                                           (FStar_Range.mk_range
+                                                              "Pulse.Checker.Prover.Match.fst"
+                                                              (Prims.of_int (415))
+                                                              (Prims.of_int (6))
+                                                              (Prims.of_int (415))
+                                                              (Prims.of_int (63)))))
+                                                     (FStar_Sealed.seal
+                                                        (Obj.magic
+                                                           (FStar_Range.mk_range
+                                                              "Pulse.Checker.Prover.Match.fst"
+                                                              (Prims.of_int (416))
+                                                              (Prims.of_int (4))
+                                                              (Prims.of_int (422))
+                                                              (Prims.of_int (42)))))
+                                                     (Obj.magic
+                                                        (match_step preamble
+                                                           pst p
+                                                           (FStar_List_Tot_Base.tl
+                                                              pst.Pulse_Checker_Prover_Base.remaining_ctxt)
+                                                           q unsolved' ()))
+                                                     (fun uu___3 ->
+                                                        (fun pst_opt ->
+                                                           match pst_opt with
+                                                           | FStar_Pervasives_Native.Some
+                                                               pst1 ->
+                                                               Obj.magic
+                                                                 (Obj.repr
+                                                                    (
+                                                                    FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___3 ->
+                                                                    FStar_Pervasives_Native.Some
+                                                                    pst1)))
+                                                           | FStar_Pervasives_Native.None
+                                                               ->
+                                                               Obj.magic
+                                                                 (Obj.repr
+                                                                    (
+                                                                    FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Checker.Prover.Match.fst"
+                                                                    (Prims.of_int (420))
+                                                                    (Prims.of_int (8))
+                                                                    (Prims.of_int (421))
+                                                                    (Prims.of_int (49)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Checker.Prover.Match.fst"
+                                                                    (Prims.of_int (422))
+                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (422))
+                                                                    (Prims.of_int (42)))))
+                                                                    (FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___3 ->
+                                                                    remaining_ctxt_equiv_pst
+                                                                    preamble
+                                                                    pst
+                                                                    (FStar_List_Tot_Base.append
+                                                                    (FStar_List_Tot_Base.tl
+                                                                    pst.Pulse_Checker_Prover_Base.remaining_ctxt)
+                                                                    [
+                                                                    FStar_List_Tot_Base.hd
+                                                                    pst.Pulse_Checker_Prover_Base.remaining_ctxt])
+                                                                    ()))
+                                                                    (fun
+                                                                    uu___3 ->
+                                                                    (fun pst1
+                                                                    ->
+                                                                    Obj.magic
+                                                                    (match_q_aux
+                                                                    preamble
+                                                                    pst1 q
+                                                                    unsolved'
+                                                                    ()
+                                                                    (i +
+                                                                    Prims.int_one)))
+                                                                    uu___3))))
+                                                          uu___3))) uu___3)))))
+                uu___5 uu___4 uu___3 uu___2 uu___1 uu___
+let (match_q :
+  Pulse_Checker_Prover_Base.preamble ->
+    unit Pulse_Checker_Prover_Base.prover_state ->
+      Pulse_Syntax_Base.vprop ->
+        Pulse_Syntax_Base.vprop Prims.list ->
+          unit ->
+            (unit Pulse_Checker_Prover_Base.prover_state
+               FStar_Pervasives_Native.option,
+              unit) FStar_Tactics_Effect.tac_repr)
+  =
+  fun preamble ->
+    fun pst ->
+      fun q ->
+        fun unsolved' ->
+          fun uu___ -> match_q_aux preamble pst q unsolved' () Prims.int_zero
