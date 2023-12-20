@@ -257,8 +257,8 @@ fn cons (#t:Type) (v:t) (x:llist t)
 
 ```pulse
 fn rec append (#t:Type0) (x y:llist t)
-requires is_list x 'l1 ** is_list y 'l2 ** pure (x =!= None)
-ensures is_list x (List.Tot.append 'l1 'l2)
+requires is_list x 'l1 ** is_list y 'l2 ** pure (Some? x)
+ensures is_list x ('l1 @ 'l2)
 {
   let np = Some?.v x;
   is_list_cases_some x np;
@@ -554,16 +554,98 @@ ensures is_list x ('l1 @ 'l2)
 }
 ```
 
-// let rec take (n:nat) (l:list 't { n < List.Tot.length l })
-//   : list 'tg
-//   = if n = 0 then []
-//     else List.Tot.hd l :: take (n-1) (List.Tot.tl l)
 
-//  let rec drop (n:nat) (l:list 't { n < List.Tot.length l })
-//   : list 't
-//   = if n = 0 then l
-//     else drop (n-1) (List.Tot.tl l)
-       
+```pulse
+fn detach_next (#t:Type) (x:llist t)
+requires is_list x 'l ** pure (Some? x)
+returns y:llist t
+ensures exists* hd tl.
+    is_list x [hd] **
+    is_list y tl **
+    pure ('l == hd::tl)
+{
+  let v = Some?.v x;
+  is_list_cases_some x v;
+  with node tl. _;
+  let nodev = !v;
+  rewrite each node as nodev;
+  let node' = { nodev with tail = None};
+  intro_is_list_nil node'.tail;
+  v := node';
+  intro_is_list_cons x v;
+  nodev.tail
+}
+```
+
+ ```pulse 
+ fn split (#t:Type0) (x:llist t) (n:nat) (#xl:erased (list t))
+ requires is_list x xl ** pure (Some? x /\ 0 < n /\ n < List.Tot.length xl)
+ returns  y:llist t
+ ensures exists* l1 l2. 
+    is_list x l1 **
+    is_list y l2 **
+    pure (n < List.Tot.length xl /\
+          xl == l1 @ l2 /\
+          List.Tot.length l1 == n)
+ {
+  let mut cur = x;
+  let mut ctr = 0;
+  (* the base case, set up the initial invariant *)
+  forall_intro_is_list_idem x;
+  rewrite (forall* l. is_list x l @==> is_list x l)
+      as  (forall* l. is_list x l @==> is_list x ([]@l));
+  while (
+    with _b _i ll pfx sfx. _;
+    let i = !ctr;
+    if (i = n - 1)
+    {
+      false
+    }
+    else 
+    {
+      let l = !cur;
+      rewrite each ll as l; (* this is a little annoying; rename every occurrence of ll to l *)
+      let next = move_next_forall l;
+      with hd tl. _;
+      (* this is the key induction step *)
+      FA.trans_compose 
+          (is_list next) (is_list l) (is_list x)
+          (fun tl -> hd :: tl)
+          (fun tl -> pfx @ tl);
+      rewrite (forall* tl. is_list next tl @==> is_list x (pfx@(hd::tl)))
+           as (forall* tl. is_list next tl @==> is_list x ((pfx@[hd])@tl));
+      cur := next;
+      ctr := i + 1;
+      List.Tot.append_length pfx [hd];
+      non_empty_list next; (* need to prove Some? next *)
+      true
+    }
+  )
+  invariant b.
+    exists* i ll pfx sfx.
+      pts_to ctr i **
+      pts_to cur ll **
+      is_list ll sfx **
+      (forall* sfx'. is_list ll sfx' @==> is_list x (pfx @ sfx')) **
+      pure (
+         i == List.Tot.length pfx /\
+         i <= n - 1 /\
+         Some? ll /\
+         pfx@sfx == xl /\
+        (b==false ==> i == (n - 1))
+      )
+  { () };
+  with i ll pfx sfx. _;
+  let last = !cur;
+  rewrite each ll as last; (* same as above *)
+  let y = detach_next last;
+  with hd tl. _;
+  FA.elim_forall_imp (is_list last) (fun sfx' -> is_list x (pfx @ sfx')) [hd];
+  List.Tot.append_length pfx [hd];
+  y
+ }
+ ```
+
 // ```pulse
 // fn split (#t:Type) (x:llist t) (n:nat) (#l:(l:erased (list t) { n < List.Tot.length l }))
 //     requires is_list x l
