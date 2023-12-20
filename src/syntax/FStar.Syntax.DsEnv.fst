@@ -27,6 +27,8 @@ open FStar.Syntax.Util
 open FStar.Parser
 open FStar.Ident
 open FStar.Errors
+open FStar.Class.Show
+
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module BU = FStar.Compiler.Util
@@ -1132,9 +1134,14 @@ let check_admits env m =
           | Some ({sigel=Sig_let _}, _)
           | Some ({sigel=Sig_inductive_typ _}, _) -> lids
           | _ ->
-            if not (Options.interactive ()) then
-              FStar.Errors.log_issue (range_of_lid l)
-                (Errors.Error_AdmitWithoutDefinition, (BU.format1 "%s is declared but no definition was found; add an 'assume' if this is intentional" (Ident.string_of_lid l)));
+            if not (Options.interactive ()) then begin
+              let open FStar.Pprint in
+              let open FStar.Class.PP in
+              FStar.Errors.log_issue_doc (range_of_lid l) (Errors.Error_AdmitWithoutDefinition, [
+                 doc_of_string (show l) ^/^ text "is declared but no definition was found";
+                 text "Add an 'assume' if this is intentional"
+              ])
+            end;
             let quals = Assumption :: se.sigquals in
             BU.smap_add (sigmap env) (string_of_lid l) ({ se with sigquals = quals }, false);
             l::lids

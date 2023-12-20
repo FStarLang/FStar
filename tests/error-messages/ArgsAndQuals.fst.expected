@@ -4,7 +4,8 @@
 
 >>]
 * Warning 240 at ArgsAndQuals.fst(23,4-23,9):
-  - ArgsAndQuals.test1 is declared but no definition was found; add an 'assume' if this is intentional
+  - ArgsAndQuals.test1 is declared but no definition was found
+  - Add an 'assume' if this is intentional
 
 Verified module: ArgsAndQuals
 All verification conditions discharged successfully

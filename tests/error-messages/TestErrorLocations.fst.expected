@@ -116,13 +116,16 @@
 
 >>]
 * Warning 240 at TestErrorLocations.fst(46,4-46,9):
-  - TestErrorLocations.test5 is declared but no definition was found; add an 'assume' if this is intentional
+  - TestErrorLocations.test5 is declared but no definition was found
+  - Add an 'assume' if this is intentional
 
 * Warning 240 at TestErrorLocations.fst(56,4-56,9):
-  - TestErrorLocations.test6 is declared but no definition was found; add an 'assume' if this is intentional
+  - TestErrorLocations.test6 is declared but no definition was found
+  - Add an 'assume' if this is intentional
 
 * Warning 240 at TestErrorLocations.fst(60,4-60,9):
-  - TestErrorLocations.test7 is declared but no definition was found; add an 'assume' if this is intentional
+  - TestErrorLocations.test7 is declared but no definition was found
+  - Add an 'assume' if this is intentional
 
 Verified module: TestErrorLocations
 All verification conditions discharged successfully
