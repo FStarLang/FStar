@@ -35,6 +35,7 @@ new val machint (k : machint_kind) : Type0
 
 val mk (#k:_) (i : Z.t) (m : option S.meta_source_info) : machint k // no checks at all, use with care
 val v #k (x : machint k) : Z.t
+val int_to_t #k (i : Z.t) : machint k
 val meta #k (x : machint k) : option S.meta_source_info
 
 (* Make a machint k copying the meta off an existing one *)

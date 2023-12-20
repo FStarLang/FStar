@@ -27,6 +27,9 @@ let bounded_arith_ops_for (k : machint_kind) : mymon unit =
   emit [
     mk1 0 (nm "v") (v #k);
 
+    mk1 0 (nm (if is_unsigned k then "uint_to_t" else "int_to_t")) (int_to_t #k);
+    mk1 0 (nm (if is_unsigned k then "__uint_to_t" else "__int_to_t")) (int_to_t #k);
+
     (* basic ops supported by all *)
     mk2 0 (nm "add") (fun (x y : machint k) -> make_as x (Z.add_big_int (v x) (v y)));
     mk2 0 (nm "sub") (fun (x y : machint k) -> make_as x (Z.sub_big_int (v x) (v y)));

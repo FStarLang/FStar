@@ -92,6 +92,28 @@ type machint (k : machint_kind) = | Mk : Z.t -> option S.meta_source_info -> mac
 let mk #k x m = Mk #k x m
 let v #k (x : machint k) =
   let Mk v _ = x in v
+let int_to_t #k (i : Z.t) : machint k =
+  let meta =
+    (* UInt128 does not have literal syntax,
+    nor can it be embedded as an F* constant. *)
+    if k = UInt128 then None else
+    let signedness =
+      if is_unsigned k
+      then Const.Unsigned
+      else Const.Signed
+    in
+    let width =
+      match k with
+      | Int8 | UInt8 -> Const.Int8
+      | Int16 | UInt16 -> Const.Int16
+      | Int32 | UInt32 -> Const.Int32
+      | Int64 | UInt64 -> Const.Int64
+      | SizeT -> Const.Sizet
+    in
+    (Some (Machine_integer (signedness, width)))
+  in
+  Mk i meta
+
 let meta #k (x : machint k) =
   let Mk _ meta = x in meta
 let make_as #k (x : machint k) (z : Z.t) : machint k =
