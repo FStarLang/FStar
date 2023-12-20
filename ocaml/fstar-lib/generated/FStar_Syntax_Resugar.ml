@@ -2512,7 +2512,8 @@ let (mk_decl :
           FStar_Parser_AST.d = d';
           FStar_Parser_AST.drange = r;
           FStar_Parser_AST.quals = uu___;
-          FStar_Parser_AST.attrs = []
+          FStar_Parser_AST.attrs = [];
+          FStar_Parser_AST.interleaved = false
         }
 let (decl'_to_decl :
   FStar_Syntax_Syntax.sigelt ->

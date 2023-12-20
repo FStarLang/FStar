@@ -825,7 +825,8 @@ and decl =
   d: decl' ;
   drange: FStar_Compiler_Range_Type.range ;
   quals: qualifiers ;
-  attrs: attributes_ }
+  attrs: attributes_ ;
+  interleaved: Prims.bool }
 and effect_decl =
   | DefineEffect of (FStar_Ident.ident * binder Prims.list * term * decl
   Prims.list) 
@@ -923,17 +924,23 @@ let (__proj__DeclSyntaxExtension__item___0 :
       FStar_Compiler_Range_Type.range))
   = fun projectee -> match projectee with | DeclSyntaxExtension _0 -> _0
 let (__proj__Mkdecl__item__d : decl -> decl') =
-  fun projectee -> match projectee with | { d; drange; quals; attrs;_} -> d
+  fun projectee ->
+    match projectee with | { d; drange; quals; attrs; interleaved;_} -> d
 let (__proj__Mkdecl__item__drange : decl -> FStar_Compiler_Range_Type.range)
   =
   fun projectee ->
-    match projectee with | { d; drange; quals; attrs;_} -> drange
+    match projectee with
+    | { d; drange; quals; attrs; interleaved;_} -> drange
 let (__proj__Mkdecl__item__quals : decl -> qualifiers) =
   fun projectee ->
-    match projectee with | { d; drange; quals; attrs;_} -> quals
+    match projectee with | { d; drange; quals; attrs; interleaved;_} -> quals
 let (__proj__Mkdecl__item__attrs : decl -> attributes_) =
   fun projectee ->
-    match projectee with | { d; drange; quals; attrs;_} -> attrs
+    match projectee with | { d; drange; quals; attrs; interleaved;_} -> attrs
+let (__proj__Mkdecl__item__interleaved : decl -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { d; drange; quals; attrs; interleaved;_} -> interleaved
 let (uu___is_DefineEffect : effect_decl -> Prims.bool) =
   fun projectee ->
     match projectee with | DefineEffect _0 -> true | uu___ -> false
@@ -962,6 +969,11 @@ let (__proj__Interface__item___0 :
   fun projectee -> match projectee with | Interface _0 -> _0
 type file = modul
 type inputFragment = (file, decl Prims.list) FStar_Pervasives.either
+let (lid_of_modul : modul -> FStar_Ident.lid) =
+  fun m ->
+    match m with
+    | Module (lid, uu___) -> lid
+    | Interface (lid, uu___, uu___1) -> lid
 let (check_id : FStar_Ident.ident -> unit) =
   fun id ->
     let first_char =
@@ -1023,7 +1035,13 @@ let (mk_decl :
           match d with
           | DeclSyntaxExtension (uu___, uu___1, r1, uu___2) -> r1
           | uu___ -> r in
-        { d; drange = range; quals = qualifiers1; attrs = attributes_2 }
+        {
+          d;
+          drange = range;
+          quals = qualifiers1;
+          attrs = attributes_2;
+          interleaved = false
+        }
 let (mk_binder_with_attrs :
   binder' ->
     FStar_Compiler_Range_Type.range ->
@@ -1531,7 +1549,7 @@ let (as_frag : decl Prims.list -> inputFragment) =
                 (fun uu___3 ->
                    match uu___3 with
                    | { d = TopLevelModule uu___4; drange = r; quals = uu___5;
-                       attrs = uu___6;_} ->
+                       attrs = uu___6; interleaved = uu___7;_} ->
                        FStar_Errors.raise_error
                          (FStar_Errors_Codes.Fatal_UnexpectedModuleDeclaration,
                            "Unexpected module declaration") r

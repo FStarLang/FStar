@@ -44,6 +44,8 @@ let (definition_lids :
              | FStar_Parser_AST.TyconVariant (id, uu___3, uu___4, uu___5) ->
                  let uu___6 = FStar_Ident.lid_of_ids [id] in [uu___6]
              | uu___3 -> []) tys
+    | FStar_Parser_AST.Splice (uu___, ids, uu___1) ->
+        FStar_Compiler_List.map (fun id -> FStar_Ident.lid_of_ids [id]) ids
     | uu___ -> []
 let (is_definition_of :
   FStar_Ident.ident -> FStar_Parser_AST.decl -> Prims.bool) =
@@ -70,7 +72,8 @@ let rec (prefix_with_iface_decls :
           FStar_Parser_AST.drange = (impl1.FStar_Parser_AST.drange);
           FStar_Parser_AST.quals = (impl1.FStar_Parser_AST.quals);
           FStar_Parser_AST.attrs = (karamel_private ::
-            (impl1.FStar_Parser_AST.attrs))
+            (impl1.FStar_Parser_AST.attrs));
+          FStar_Parser_AST.interleaved = (impl1.FStar_Parser_AST.interleaved)
         } in
       match iface with
       | [] ->
@@ -463,6 +466,36 @@ let (initialize_interface :
         | FStar_Pervasives_Native.None ->
             let uu___1 = FStar_Syntax_DsEnv.set_iface_decls env mname decls in
             ((), uu___1)
+let (fixup_interleaved_decls :
+  FStar_Parser_AST.decl Prims.list -> FStar_Parser_AST.decl Prims.list) =
+  fun iface ->
+    let fix1 d =
+      let d1 =
+        if FStar_Parser_AST.uu___is_Splice d.FStar_Parser_AST.d
+        then
+          let uu___ = d.FStar_Parser_AST.d in
+          match uu___ with
+          | FStar_Parser_AST.Splice (is_typed, uu___1, tau) ->
+              {
+                FStar_Parser_AST.d =
+                  (FStar_Parser_AST.Splice (is_typed, [], tau));
+                FStar_Parser_AST.drange = (d.FStar_Parser_AST.drange);
+                FStar_Parser_AST.quals = (d.FStar_Parser_AST.quals);
+                FStar_Parser_AST.attrs = (d.FStar_Parser_AST.attrs);
+                FStar_Parser_AST.interleaved =
+                  (d.FStar_Parser_AST.interleaved)
+              }
+        else d in
+      let d2 =
+        {
+          FStar_Parser_AST.d = (d1.FStar_Parser_AST.d);
+          FStar_Parser_AST.drange = (d1.FStar_Parser_AST.drange);
+          FStar_Parser_AST.quals = (d1.FStar_Parser_AST.quals);
+          FStar_Parser_AST.attrs = (d1.FStar_Parser_AST.attrs);
+          FStar_Parser_AST.interleaved = true
+        } in
+      d2 in
+    FStar_Compiler_List.map fix1 iface
 let (prefix_with_interface_decls :
   FStar_Ident.lident ->
     FStar_Parser_AST.decl ->
@@ -478,12 +511,13 @@ let (prefix_with_interface_decls :
           match uu___1 with
           | FStar_Pervasives_Native.None -> ([impl], env)
           | FStar_Pervasives_Native.Some iface ->
-              let uu___2 = prefix_one_decl mname iface impl in
+              let iface1 = fixup_interleaved_decls iface in
+              let uu___2 = prefix_one_decl mname iface1 impl in
               (match uu___2 with
-               | (iface1, impl1) ->
+               | (iface2, impl1) ->
                    let env1 =
                      let uu___3 = FStar_Syntax_DsEnv.current_module env in
-                     FStar_Syntax_DsEnv.set_iface_decls env uu___3 iface1 in
+                     FStar_Syntax_DsEnv.set_iface_decls env uu___3 iface2 in
                    (impl1, env1)) in
         match uu___ with
         | (decls, env1) ->
@@ -514,20 +548,21 @@ let (interleave_module :
             (match uu___ with
              | FStar_Pervasives_Native.None -> (a, env)
              | FStar_Pervasives_Native.Some iface ->
+                 let iface1 = fixup_interleaved_decls iface in
                  let uu___1 =
                    FStar_Compiler_List.fold_left
                      (fun uu___2 ->
                         fun impl ->
                           match uu___2 with
-                          | (iface1, impls1) ->
-                              let uu___3 = prefix_one_decl l iface1 impl in
+                          | (iface2, impls1) ->
+                              let uu___3 = prefix_one_decl l iface2 impl in
                               (match uu___3 with
-                               | (iface2, impls') ->
-                                   (iface2,
+                               | (iface3, impls') ->
+                                   (iface3,
                                      (FStar_Compiler_List.op_At impls1 impls'))))
-                     (iface, []) impls in
+                     (iface1, []) impls in
                  (match uu___1 with
-                  | (iface1, impls1) ->
+                  | (iface2, impls1) ->
                       let uu___2 =
                         let uu___3 =
                           FStar_Compiler_Util.prefix_until
@@ -538,10 +573,20 @@ let (interleave_module :
                                      uu___5;
                                    FStar_Parser_AST.drange = uu___6;
                                    FStar_Parser_AST.quals = uu___7;
-                                   FStar_Parser_AST.attrs = uu___8;_} -> true
-                               | uu___5 -> false) iface1 in
+                                   FStar_Parser_AST.attrs = uu___8;
+                                   FStar_Parser_AST.interleaved = uu___9;_}
+                                   -> true
+                               | {
+                                   FStar_Parser_AST.d =
+                                     FStar_Parser_AST.Splice uu___5;
+                                   FStar_Parser_AST.drange = uu___6;
+                                   FStar_Parser_AST.quals = uu___7;
+                                   FStar_Parser_AST.attrs = uu___8;
+                                   FStar_Parser_AST.interleaved = uu___9;_}
+                                   -> true
+                               | uu___5 -> false) iface2 in
                         match uu___3 with
-                        | FStar_Pervasives_Native.None -> (iface1, [])
+                        | FStar_Pervasives_Native.None -> (iface2, [])
                         | FStar_Pervasives_Native.Some (lets, one_val, rest)
                             -> (lets, (one_val :: rest)) in
                       (match uu___2 with
