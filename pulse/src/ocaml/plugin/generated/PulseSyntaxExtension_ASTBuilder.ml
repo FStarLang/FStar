@@ -103,7 +103,8 @@ let (extension_parser : FStar_Parser_AST_Util.extension_parser) =
                 FStar_Parser_AST.d = d;
                 FStar_Parser_AST.drange = r;
                 FStar_Parser_AST.quals = [FStar_Parser_AST.Irreducible];
-                FStar_Parser_AST.attrs = [str "uninterpreted_by_smt"]
+                FStar_Parser_AST.attrs = [str "uninterpreted_by_smt"];
+                FStar_Parser_AST.interleaved = false
               } in
             FStar_Pervasives.Inr d1
 let (uu___36 : unit) =
