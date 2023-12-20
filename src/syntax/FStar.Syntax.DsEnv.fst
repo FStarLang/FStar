@@ -1132,7 +1132,10 @@ let check_admits env m =
         // l is already fully qualified, so no name resolution
         begin match BU.smap_try_find (sigmap env) (string_of_lid l) with
           | Some ({sigel=Sig_let _}, _)
-          | Some ({sigel=Sig_inductive_typ _}, _) -> lids
+          | Some ({sigel=Sig_inductive_typ _}, _)
+          | Some ({sigel=Sig_splice _}, _) ->
+            (* ok *)
+            lids
           | _ ->
             if not (Options.interactive ()) then begin
               let open FStar.Pprint in

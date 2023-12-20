@@ -38,7 +38,8 @@ let is_type x d = match d.d with
         tys |> Util.for_some (fun t -> id_of_tycon t = (string_of_id x))
     | _ -> false
 
-//is d of of the form 'let x = ...' or 'type x = ...'
+//is d of of the form 'let x = ...' or 'type x = ...' or 'splice[..., x, ...] tac'
+// returns unqualified lids
 let definition_lids d =
     match d.d with
     | TopLevelLet(_, defs) ->
@@ -50,6 +51,7 @@ let definition_lids d =
                 | TyconVariant(id, _, _, _) ->
                   [Ident.lid_of_ids [id]]
                 | _ -> [])
+    | Splice (_, ids, _) -> List.map (fun id -> Ident.lid_of_ids [id]) ids
     | _ -> []
 
 let is_definition_of x d =
@@ -150,6 +152,7 @@ let rec prefix_with_iface_decls
        //take impl as is, unless it is a
        //       let x (or a `type abbreviation x`)
        //or an  inductive type x
+       //or a splice that defines x
        //in which case prefix it with iface_hd
        let def_ids = definition_lids impl in
        let defines_x = Util.for_some (id_eq_lid x) def_ids in
@@ -393,7 +396,9 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv modul =
                 impls
         in
         let iface_lets, remaining_iface_vals =
-            match FStar.Compiler.Util.prefix_until (function {d=Val _} -> true | _ -> false) iface with
+            match FStar.Compiler.Util.prefix_until (function {d=Val _} -> true
+                                                           | {d=Splice _} -> true
+            | _ -> false) iface with
             | None -> iface, []
             | Some (lets, one_val, rest) -> lets, one_val::rest
         in
