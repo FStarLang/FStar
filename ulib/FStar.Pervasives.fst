@@ -29,6 +29,7 @@ let smt_pat_or _ = ()
 let spinoff p = p
 
 #push-options "--no_tactics"
+let spinoff_eq _ = ()
 let spinoff_equiv _ = ()
 #pop-options
 
