@@ -44,11 +44,23 @@ let sum_perm (p1 p2: perm) : Tot perm =
 let lesser_equal_perm (p1 p2:perm) : GTot bool =
   MkPerm?.v p1 <=.  MkPerm?.v p2
 
+let lesser_perm (p1 p2:perm) : GTot bool =
+  MkPerm?.v p1 <.  MkPerm?.v p2
+
 /// Wrapper around the full permission value
 let full_perm : perm = MkPerm one
+
+/// Complement of a permission
+let comp_perm (p:perm{p `lesser_perm` full_perm}) : GTot perm =
+  MkPerm (1.0R -. MkPerm?.v p)
 
 /// A convenience lemma
 let sum_halves (p:perm)
   : Lemma (sum_perm (half_perm p) (half_perm p) == p)
           [SMTPat (sum_perm (half_perm p) (half_perm p))]
   = assert (forall (r:real). r /. 2.0R +. r /. 2.0R == r)
+
+let sum_comp (p:perm{p `lesser_perm` full_perm})
+  : Lemma (sum_perm p (comp_perm p) == full_perm)
+          [SMTPat (sum_perm p (comp_perm p))]
+  = ()
