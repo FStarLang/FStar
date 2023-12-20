@@ -401,8 +401,6 @@ fn is_last_cell (#t:Type) (x:llist t)
 }
 ```
 
-#push-options " --query_stats --log_queries" // --debug Pulse.Lib.LinkedList --debug_level SMTQuery  --log_queries"
-#restart-solver
 
 
 ```pulse
@@ -577,19 +575,22 @@ ensures exists* hd tl.
 }
 ```
 
+module U32 = FStar.UInt32
+open Pulse.Lib.BoundedIntegers
+#push-options "--fuel 1 --ifuel 1"
  ```pulse 
- fn split (#t:Type0) (x:llist t) (n:nat) (#xl:erased (list t))
- requires is_list x xl ** pure (Some? x /\ 0 < n /\ n < List.Tot.length xl)
+ fn split (#t:Type0) (x:llist t) (n:U32.t) (#xl:erased (list t))
+ requires is_list x xl ** pure (Some? x /\ 0 < v n /\ v n < List.Tot.length xl)
  returns  y:llist t
  ensures exists* l1 l2. 
     is_list x l1 **
     is_list y l2 **
-    pure (n < List.Tot.length xl /\
+    pure (v n < List.Tot.length xl /\
           xl == l1 @ l2 /\
-          List.Tot.length l1 == n)
+          List.Tot.length l1 == v n)
  {
   let mut cur = x;
-  let mut ctr = 0;
+  let mut ctr = 0ul;
   (* the base case, set up the initial invariant *)
   forall_intro_is_list_idem x;
   rewrite (forall* l. is_list x l @==> is_list x l)
@@ -597,7 +598,7 @@ ensures exists* hd tl.
   while (
     with _b _i ll pfx sfx. _;
     let i = !ctr;
-    if (i = n - 1)
+    if (i = n - 1ul)
     {
       false
     }
@@ -615,7 +616,7 @@ ensures exists* hd tl.
       rewrite (forall* tl. is_list next tl @==> is_list x (pfx@(hd::tl)))
            as (forall* tl. is_list next tl @==> is_list x ((pfx@[hd])@tl));
       cur := next;
-      ctr := i + 1;
+      ctr := i + 1ul;
       List.Tot.append_length pfx [hd];
       non_empty_list next; (* need to prove Some? next *)
       true
@@ -628,11 +629,11 @@ ensures exists* hd tl.
       is_list ll sfx **
       (forall* sfx'. is_list ll sfx' @==> is_list x (pfx @ sfx')) **
       pure (
-         i == List.Tot.length pfx /\
-         i <= n - 1 /\
+         v i == List.Tot.length pfx /\
+         i <= n - 1ul /\
          Some? ll /\
          pfx@sfx == xl /\
-        (b==false ==> i == (n - 1))
+        (b==false ==> i == (n - 1ul))
       )
   { () };
   with i ll pfx sfx. _;
@@ -645,13 +646,3 @@ ensures exists* hd tl.
   y
  }
  ```
-
-// ```pulse
-// fn split (#t:Type) (x:llist t) (n:nat) (#l:(l:erased (list t) { n < List.Tot.length l }))
-//     requires is_list x l
-//     returns y:llist t
-//     ensures is_list x (take n l) ** is_list y (drop n l)
-// {
-//     admit()
-// }
-// ```
