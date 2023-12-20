@@ -21,19 +21,21 @@ let pure_str (wp1 wp2 : pure_wp unit)
   : PURE unit wp2
   = f ()
 
-let squash_p_impl_p (p:pure_post unit) : Lemma (squash (p ()) ==> p ()) = ()
+let squash_p_impl_p (p:pure_post unit) : squash (squash (p ()) ==> p ()) = ()
 
 #push-options "--no_tactics" // don't process `with_tactic` markers
 
+let (==>>) = (==>) // Working around #3173 and #3175
+
 let aux2 (p:pure_post unit)
 : Lemma (break_wp p ==> pure_return unit () p)
-= calc (==>) {
+= calc (==>>) {
     break_wp p;
     == {}
     spinoff (squash (p ()));
     ==> { spinoff_equiv (squash (p ())) }
     squash (p ());
-    ==> { _ by (apply (`Squash.join_squash); hyp (nth_var (-1))) } // See #3173
+    ==>> { squash_p_impl_p p }
     p ();
     ==> { () }
     pure_return unit () p;
