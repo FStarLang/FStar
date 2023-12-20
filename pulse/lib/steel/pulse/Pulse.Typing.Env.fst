@@ -197,7 +197,7 @@ let rec diff_names (#a:Type) (l1 l2:list a)
   | _::tl1, _::tl2 -> diff_names tl1 tl2
 
 
-#push-options "--z3rlimit_factor 8"
+#push-options "--z3rlimit_factor 12"
 let diff g1 g2 =
   let g3 = elim_env_extends_tot g1 g2 in
   assert (g1.bs == g3.bs @ g2.bs);
