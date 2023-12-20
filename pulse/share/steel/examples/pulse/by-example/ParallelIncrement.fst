@@ -87,58 +87,52 @@ ensures pts_to x ('i + 2)
           pure (v == 'i + vl + vr))
     );
     ghost
-    fn step_left (v vq:int)
+    fn step
+        (lr:GR.ref int)
+        (b:bool { if b then lr == left else lr == right })
+        (v vq:int)
       requires 
         (exists* (vl vr:int).
             GR.pts_to left #(half_perm full_perm) vl **
             GR.pts_to right #(half_perm full_perm) vr **
             pure (v == 'i + vl + vr)) **
-        GR.pts_to left #(half_perm full_perm) vq **
+        GR.pts_to lr #(half_perm full_perm) vq **
         pts_to x (v + 1)
       ensures
         (exists* (vl vr:int).
             GR.pts_to left #(half_perm full_perm) vl **
             GR.pts_to right #(half_perm full_perm) vr **
             pure (v + 1 == 'i + vl + vr)) **
-        GR.pts_to left #(half_perm full_perm) (vq + 1) **
+        GR.pts_to lr #(half_perm full_perm) (vq + 1) **
         pts_to x (v + 1)
     { 
-      GR.gather left;
-      with _p _v. rewrite (GR.pts_to left #_p _v) as (GR.pts_to left _v);
-      GR.( left := vq + 1 );
-      GR.share left;      
+      if b
+      {
+        with _p _v. rewrite (GR.pts_to lr #_p _v) as (GR.pts_to left #_p _v);
+        GR.gather left;
+        with _p _v. rewrite (GR.pts_to left #_p _v) as (GR.pts_to left _v);
+        GR.( left := vq + 1 );
+        GR.share left;      
+        with _p _v. rewrite (GR.pts_to left #_p _v) as (GR.pts_to lr #_p _v);
+      }
+      else
+      {
+        with _p _v. rewrite (GR.pts_to lr #_p _v) as (GR.pts_to right #_p _v);
+        GR.gather right;
+        with _p _v. rewrite (GR.pts_to right #_p _v) as (GR.pts_to right _v);
+        GR.( right := vq + 1 );
+        GR.share right;      
+        with _p _v. rewrite (GR.pts_to right #_p _v) as (GR.pts_to lr #_p _v);
+      }
     };
 
-    ghost
-    fn step_right (v vq:int)
-      requires 
-        (exists* (vl vr:int).
-            GR.pts_to left #(half_perm full_perm) vl **
-            GR.pts_to right #(half_perm full_perm) vr **
-            pure (v == 'i + vl + vr)) **
-        GR.pts_to right #(half_perm full_perm) vq **
-        pts_to x (v + 1)
-      ensures
-        (exists* (vl vr:int).
-            GR.pts_to left #(half_perm full_perm) vl **
-            GR.pts_to right #(half_perm full_perm) vr **
-            pure (v + 1 == 'i + vl + vr)) **
-        GR.pts_to right #(half_perm full_perm) (vq + 1) **
-        pts_to x (v + 1)
-    { 
-      GR.gather right;
-      with _p _v. rewrite (GR.pts_to right #_p _v) as (GR.pts_to right _v);
-      GR.( right := vq + 1 );
-      GR.share right;      
-    };
-   
     parallel
     requires GR.pts_to left #(half_perm full_perm) 0
          and GR.pts_to right #(half_perm full_perm) 0
     ensures  GR.pts_to left #(half_perm full_perm) 1
          and GR.pts_to right #(half_perm full_perm) 1
-    { increment_f2 x lock step_left }
-    { increment_f2 x lock step_right };
+    { increment_f2 x lock (step left true) }
+    { increment_f2 x lock (step right false) };
 
     L.acquire lock;
     GR.gather left;
