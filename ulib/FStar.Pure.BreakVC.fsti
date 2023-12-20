@@ -1,4 +1,4 @@
-module FStar.Pure.Break
+module FStar.Pure.BreakVC
 
 open FStar.Tactics
 
@@ -18,4 +18,4 @@ let break_wp : pure_wp unit =
   let _ = mono_lem () in
   break_wp'
 
-val break () : PURE unit break_wp
+val break_vc () : PURE unit break_wp
