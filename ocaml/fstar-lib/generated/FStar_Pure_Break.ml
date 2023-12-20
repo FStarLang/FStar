@@ -18,3 +18,4 @@ let (post : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
       (fun uu___1 ->
          (fun uu___1 -> Obj.magic (FStar_Tactics_V2_Derived.trefl ())) uu___1)
 type 'p break_wp = unit FStar_Pervasives.spinoff
+type ('p, 'q) op_Equals_Equals_Greater_Greater = unit
