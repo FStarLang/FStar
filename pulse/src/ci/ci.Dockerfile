@@ -9,7 +9,6 @@ RUN sudo apt-get install -y --no-install-recommends nodejs
 
 # install rust
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-RUN . "$HOME/.cargo/env"
 
 ARG opamthreads=24
 
@@ -45,6 +44,6 @@ RUN eval $(opam env) && \
 # Steel CI proper
 ARG STEEL_NIGHTLY_CI
 ARG OTHERFLAGS=--use_hints
-RUN eval $(opam env) && env STEEL_NIGHTLY_CI="$STEEL_NIGHTLY_CI" make -k -j $opamthreads -C steel/src ci
+RUN eval $(opam env) && . $HOME/.cargo/env && env STEEL_NIGHTLY_CI="$STEEL_NIGHTLY_CI" make -k -j $opamthreads -C steel/src ci
 
 ENV STEEL_HOME $HOME/steel
