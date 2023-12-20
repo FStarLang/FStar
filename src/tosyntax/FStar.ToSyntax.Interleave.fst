@@ -345,6 +345,15 @@ let initialize_interface (mname:Ident.lid) (l:list decl) : E.withenv unit =
     | None ->
       (), E.set_iface_decls env mname decls
 
+let fixup_interleaved_decls (iface : list decl) : list decl =
+  let fix1 (d : decl) : decl =
+    if Splice? d.d
+    then let Splice (is_typed, _, tau) = d.d in
+         { d with d = Splice (is_typed, [], tau) }
+    else d
+  in
+  iface |> List.map fix1
+
 let prefix_with_interface_decls mname (impl:decl) : E.withenv (list decl) =
   fun (env:E.env) ->
     let decls, env = 
@@ -352,6 +361,7 @@ let prefix_with_interface_decls mname (impl:decl) : E.withenv (list decl) =
       | None ->
         [impl], env
       | Some iface ->
+        let iface = fixup_interleaved_decls iface in
         let iface, impl = prefix_one_decl mname iface impl in
         let env = E.set_iface_decls env (E.current_module env) iface in
         impl, env
@@ -369,6 +379,7 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv modul =
       match E.iface_decls env l with
       | None -> a, env
       | Some iface ->
+        let iface = fixup_interleaved_decls iface in
         let iface, impls =
             List.fold_left
                 (fun (iface, impls) impl ->
