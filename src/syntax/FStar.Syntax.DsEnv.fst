@@ -1343,8 +1343,11 @@ let enter_monad_scope env mname =
   | Some mname' -> raise_error (Errors.Fatal_MonadAlreadyDefined, ("Trying to define monad " ^ (string_of_id mname) ^ ", but already in monad scope " ^ (string_of_id mname'))) (range_of_id mname)
   | None -> {env with curmonad = Some mname}
 
-let fail_or env lookup lid = match lookup lid with
+let fail_or env lookup lid =
+  match lookup lid with
+  | Some r -> r
   | None ->
+    (* try to report a nice error *)
     let opened_modules = List.map (fun (lid, _) -> string_of_lid lid) env.modules in
     let msg = Errors.mkmsg (BU.format1 "Identifier not found: [%s]" (string_of_lid lid)) in
     let msg =
@@ -1375,7 +1378,6 @@ let fail_or env lookup lid = match lookup lid with
                                (string_of_id (ident_of_lid lid)))]
     in
     raise_error_doc (Errors.Fatal_IdentifierNotFound, msg) (range_of_lid lid)
-  | Some r -> r
 
 let fail_or2 lookup id = match lookup id with
   | None -> raise_error (Errors.Fatal_IdentifierNotFound, ("Identifier not found [" ^(string_of_id id)^"]")) (range_of_id id)

@@ -32,6 +32,7 @@ open FStar.Syntax.Subst
 open FStar.Syntax.Util
 open FStar.Const
 open FStar.TypeChecker.TcTerm
+open FStar.Class.Show
 
 module S  = FStar.Syntax.Syntax
 module SP  = FStar.Syntax.Print
@@ -870,6 +871,12 @@ let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
               ses
       else ses
     in
+    let ses = ses |> List.map (fun se ->
+      if env.is_iface && Sig_declare_typ? se.sigel
+      then { se with sigquals = Assumption :: (List.filter (fun q -> q <> Irreducible) se.sigquals) }
+      else se)
+    in
+
     let dsenv = List.fold_left DsEnv.push_sigelt_force env.dsenv ses in
     let env = { env with dsenv = dsenv } in
 
@@ -988,7 +995,7 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
   if Env.debug env Options.Low
   then BU.print2
     ">>>>>>>>>>>>>>Adding top-level decl to environment: %s (from_cache:%s)\n"
-    (Print.sigelt_to_string se) (string_of_bool from_cache);
+    (show se) (show from_cache);
 
   match se.sigel with
   | Sig_inductive_typ _
