@@ -347,10 +347,14 @@ let initialize_interface (mname:Ident.lid) (l:list decl) : E.withenv unit =
 
 let fixup_interleaved_decls (iface : list decl) : list decl =
   let fix1 (d : decl) : decl =
-    if Splice? d.d
-    then let Splice (is_typed, _, tau) = d.d in
-         { d with d = Splice (is_typed, [], tau) }
-    else d
+    let d =
+      if Splice? d.d
+      then let Splice (is_typed, _, tau) = d.d in
+           { d with d = Splice (is_typed, [], tau) }
+      else d
+    in
+    let d = { d with interleaved = true } in
+    d
   in
   iface |> List.map fix1
 

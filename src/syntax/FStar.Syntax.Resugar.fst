@@ -1281,6 +1281,7 @@ let mk_decl r q d' =
     quals = List.choose resugar_qualifier q ;
     (* TODO : are these stocked up somewhere ? *)
     attrs = [] ;
+    interleaved = false;
   }
 
 let decl'_to_decl se d' =
