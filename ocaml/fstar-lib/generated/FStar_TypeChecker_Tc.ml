@@ -3476,10 +3476,41 @@ let (tc_decl' :
                               (sp.FStar_Syntax_Syntax.sigopts)
                           }) ses
                    else ses in
+                 let ses2 =
+                   FStar_Compiler_List.map
+                     (fun se3 ->
+                        if
+                          env.FStar_TypeChecker_Env.is_iface &&
+                            (FStar_Syntax_Syntax.uu___is_Sig_declare_typ
+                               se3.FStar_Syntax_Syntax.sigel)
+                        then
+                          let uu___3 =
+                            let uu___4 =
+                              FStar_Compiler_List.filter
+                                (fun q ->
+                                   q <> FStar_Syntax_Syntax.Irreducible)
+                                se3.FStar_Syntax_Syntax.sigquals in
+                            FStar_Syntax_Syntax.Assumption :: uu___4 in
+                          {
+                            FStar_Syntax_Syntax.sigel =
+                              (se3.FStar_Syntax_Syntax.sigel);
+                            FStar_Syntax_Syntax.sigrng =
+                              (se3.FStar_Syntax_Syntax.sigrng);
+                            FStar_Syntax_Syntax.sigquals = uu___3;
+                            FStar_Syntax_Syntax.sigmeta =
+                              (se3.FStar_Syntax_Syntax.sigmeta);
+                            FStar_Syntax_Syntax.sigattrs =
+                              (se3.FStar_Syntax_Syntax.sigattrs);
+                            FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                              (se3.FStar_Syntax_Syntax.sigopens_and_abbrevs);
+                            FStar_Syntax_Syntax.sigopts =
+                              (se3.FStar_Syntax_Syntax.sigopts)
+                          }
+                        else se3) ses1 in
                  let dsenv =
                    FStar_Compiler_List.fold_left
                      FStar_Syntax_DsEnv.push_sigelt_force
-                     env.FStar_TypeChecker_Env.dsenv ses1 in
+                     env.FStar_TypeChecker_Env.dsenv ses2 in
                  let env1 =
                    {
                      FStar_TypeChecker_Env.solver =
@@ -3594,12 +3625,12 @@ let (tc_decl' :
                     let uu___5 =
                       let uu___6 =
                         FStar_Compiler_List.map
-                          FStar_Syntax_Print.sigelt_to_string ses1 in
+                          FStar_Syntax_Print.sigelt_to_string ses2 in
                       FStar_Compiler_String.concat "\n" uu___6 in
                     FStar_Compiler_Util.print1
                       "Splice returned sigelts {\n%s\n}\n" uu___5
                   else ());
-                 ([], ses1, env1)))
+                 ([], ses2, env1)))
            | FStar_Syntax_Syntax.Sig_let
                { FStar_Syntax_Syntax.lbs1 = lbs;
                  FStar_Syntax_Syntax.lids1 = lids;_}
@@ -4149,8 +4180,12 @@ let (add_sigelt_to_env :
         (let uu___1 = FStar_TypeChecker_Env.debug env FStar_Options.Low in
          if uu___1
          then
-           let uu___2 = FStar_Syntax_Print.sigelt_to_string se in
-           let uu___3 = FStar_Compiler_Util.string_of_bool from_cache in
+           let uu___2 =
+             FStar_Class_Show.show FStar_Syntax_Print.showable_sigelt se in
+           let uu___3 =
+             FStar_Class_Show.show
+               (FStar_Class_Show.printableshow
+                  FStar_Class_Printable.printable_bool) from_cache in
            FStar_Compiler_Util.print2
              ">>>>>>>>>>>>>>Adding top-level decl to environment: %s (from_cache:%s)\n"
              uu___2 uu___3
@@ -4875,7 +4910,7 @@ let (tc_decls :
                ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_Compiler_List.rev_append ses1 []), env1)
-let (uu___910 : unit) =
+let (uu___914 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :

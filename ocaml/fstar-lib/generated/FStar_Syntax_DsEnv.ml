@@ -2820,6 +2820,18 @@ let (check_admits :
                            FStar_Syntax_Syntax.sigopts = uu___7;_},
                          uu___8)
                         -> lids
+                    | FStar_Pervasives_Native.Some
+                        ({
+                           FStar_Syntax_Syntax.sigel =
+                             FStar_Syntax_Syntax.Sig_splice uu___1;
+                           FStar_Syntax_Syntax.sigrng = uu___2;
+                           FStar_Syntax_Syntax.sigquals = uu___3;
+                           FStar_Syntax_Syntax.sigmeta = uu___4;
+                           FStar_Syntax_Syntax.sigattrs = uu___5;
+                           FStar_Syntax_Syntax.sigopens_and_abbrevs = uu___6;
+                           FStar_Syntax_Syntax.sigopts = uu___7;_},
+                         uu___8)
+                        -> lids
                     | uu___1 ->
                         ((let uu___3 =
                             let uu___4 = FStar_Options.interactive () in
@@ -2829,13 +2841,25 @@ let (check_admits :
                             let uu___4 = FStar_Ident.range_of_lid l in
                             let uu___5 =
                               let uu___6 =
-                                let uu___7 = FStar_Ident.string_of_lid l in
-                                FStar_Compiler_Util.format1
-                                  "%s is declared but no definition was found; add an 'assume' if this is intentional"
-                                  uu___7 in
+                                let uu___7 =
+                                  let uu___8 =
+                                    let uu___9 =
+                                      FStar_Class_Show.show
+                                        FStar_Ident.showable_lident l in
+                                    FStar_Pprint.doc_of_string uu___9 in
+                                  let uu___9 =
+                                    FStar_Errors_Msg.text
+                                      "is declared but no definition was found" in
+                                  FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                                let uu___8 =
+                                  let uu___9 =
+                                    FStar_Errors_Msg.text
+                                      "Add an 'assume' if this is intentional" in
+                                  [uu___9] in
+                                uu___7 :: uu___8 in
                               (FStar_Errors_Codes.Error_AdmitWithoutDefinition,
                                 uu___6) in
-                            FStar_Errors.log_issue uu___4 uu___5
+                            FStar_Errors.log_issue_doc uu___4 uu___5
                           else ());
                          (let quals = FStar_Syntax_Syntax.Assumption ::
                             (se.FStar_Syntax_Syntax.sigquals) in
@@ -3416,6 +3440,7 @@ let fail_or :
       fun lid ->
         let uu___ = lookup lid in
         match uu___ with
+        | FStar_Pervasives_Native.Some r -> r
         | FStar_Pervasives_Native.None ->
             let opened_modules =
               FStar_Compiler_List.map
@@ -3510,7 +3535,6 @@ let fail_or :
             let uu___1 = FStar_Ident.range_of_lid lid in
             FStar_Errors.raise_error_doc
               (FStar_Errors_Codes.Fatal_IdentifierNotFound, msg1) uu___1
-        | FStar_Pervasives_Native.Some r -> r
 let fail_or2 :
   'a .
     (FStar_Ident.ident -> 'a FStar_Pervasives_Native.option) ->

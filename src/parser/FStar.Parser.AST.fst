@@ -27,6 +27,11 @@ open FStar.Ident
 
 module C = FStar.Parser.Const
 
+let lid_of_modul (m:modul) : lid =
+  match m with
+  | Module(lid, _) -> lid
+  | Interface (lid, _, _) -> lid
+
 let check_id id =
     let first_char = String.substring (string_of_id id) 0 1 in
     if String.lowercase first_char = first_char
@@ -51,7 +56,7 @@ let mk_decl d r decorations =
     | DeclSyntaxExtension(_, _, r, _) -> r
     | _ -> r
   in
-  { d=d; drange=range; quals=qualifiers; attrs=attributes_ }
+  { d=d; drange=range; quals=qualifiers; attrs=attributes_; interleaved=false }
 
 let mk_binder_with_attrs b r l i attrs = {b=b; brange=r; blevel=l; aqual=i; battributes=attrs}
 let mk_binder b r l i = mk_binder_with_attrs b r l i []

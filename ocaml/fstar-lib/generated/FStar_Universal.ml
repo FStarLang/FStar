@@ -765,14 +765,16 @@ let (tc_one_fragment :
               (uu___,
                { FStar_Parser_AST.d = uu___1; FStar_Parser_AST.drange = d;
                  FStar_Parser_AST.quals = uu___2;
-                 FStar_Parser_AST.attrs = uu___3;_}::uu___4)
+                 FStar_Parser_AST.attrs = uu___3;
+                 FStar_Parser_AST.interleaved = uu___4;_}::uu___5)
               -> d
           | FStar_Parser_AST.Interface
               (uu___,
                { FStar_Parser_AST.d = uu___1; FStar_Parser_AST.drange = d;
                  FStar_Parser_AST.quals = uu___2;
-                 FStar_Parser_AST.attrs = uu___3;_}::uu___4,
-               uu___5)
+                 FStar_Parser_AST.attrs = uu___3;
+                 FStar_Parser_AST.interleaved = uu___4;_}::uu___5,
+               uu___6)
               -> d
           | uu___ -> FStar_Compiler_Range_Type.dummyRange in
         let check_module_name_declaration ast_modul =
@@ -823,7 +825,8 @@ let (tc_one_fragment :
                | { FStar_Parser_AST.d = uu___1;
                    FStar_Parser_AST.drange = rng;
                    FStar_Parser_AST.quals = uu___2;
-                   FStar_Parser_AST.attrs = uu___3;_} ->
+                   FStar_Parser_AST.attrs = uu___3;
+                   FStar_Parser_AST.interleaved = uu___4;_} ->
                    FStar_Errors.raise_error
                      (FStar_Errors_Codes.Fatal_ModuleFirstStatement,
                        "First statement must be a module declaration") rng)

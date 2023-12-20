@@ -27,6 +27,8 @@ open FStar.Syntax.Util
 open FStar.Parser
 open FStar.Ident
 open FStar.Errors
+open FStar.Class.Show
+
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module BU = FStar.Compiler.Util
@@ -1130,11 +1132,19 @@ let check_admits env m =
         // l is already fully qualified, so no name resolution
         begin match BU.smap_try_find (sigmap env) (string_of_lid l) with
           | Some ({sigel=Sig_let _}, _)
-          | Some ({sigel=Sig_inductive_typ _}, _) -> lids
+          | Some ({sigel=Sig_inductive_typ _}, _)
+          | Some ({sigel=Sig_splice _}, _) ->
+            (* ok *)
+            lids
           | _ ->
-            if not (Options.interactive ()) then
-              FStar.Errors.log_issue (range_of_lid l)
-                (Errors.Error_AdmitWithoutDefinition, (BU.format1 "%s is declared but no definition was found; add an 'assume' if this is intentional" (Ident.string_of_lid l)));
+            if not (Options.interactive ()) then begin
+              let open FStar.Pprint in
+              let open FStar.Class.PP in
+              FStar.Errors.log_issue_doc (range_of_lid l) (Errors.Error_AdmitWithoutDefinition, [
+                 doc_of_string (show l) ^/^ text "is declared but no definition was found";
+                 text "Add an 'assume' if this is intentional"
+              ])
+            end;
             let quals = Assumption :: se.sigquals in
             BU.smap_add (sigmap env) (string_of_lid l) ({ se with sigquals = quals }, false);
             l::lids
@@ -1336,8 +1346,11 @@ let enter_monad_scope env mname =
   | Some mname' -> raise_error (Errors.Fatal_MonadAlreadyDefined, ("Trying to define monad " ^ (string_of_id mname) ^ ", but already in monad scope " ^ (string_of_id mname'))) (range_of_id mname)
   | None -> {env with curmonad = Some mname}
 
-let fail_or env lookup lid = match lookup lid with
+let fail_or env lookup lid =
+  match lookup lid with
+  | Some r -> r
   | None ->
+    (* try to report a nice error *)
     let opened_modules = List.map (fun (lid, _) -> string_of_lid lid) env.modules in
     let msg = Errors.mkmsg (BU.format1 "Identifier not found: [%s]" (string_of_lid lid)) in
     let msg =
@@ -1368,7 +1381,6 @@ let fail_or env lookup lid = match lookup lid with
                                (string_of_id (ident_of_lid lid)))]
     in
     raise_error_doc (Errors.Fatal_IdentifierNotFound, msg) (range_of_lid lid)
-  | Some r -> r
 
 let fail_or2 lookup id = match lookup id with
   | None -> raise_error (Errors.Fatal_IdentifierNotFound, ("Identifier not found [" ^(string_of_id id)^"]")) (range_of_id id)

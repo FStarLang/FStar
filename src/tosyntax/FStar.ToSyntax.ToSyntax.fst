@@ -4193,6 +4193,11 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
       sigopens_and_abbrevs = opens_and_abbrevs env }]
 
   | Splice (is_typed, ids, t) ->
+    let ids =
+      if d.interleaved
+      then []
+      else ids
+    in
     let t = desugar_term env t in
     let top_attrs = d_attrs in    
     let se = { sigel = Sig_splice {is_typed; lids=List.map (qualify env) ids; tac=t};
@@ -4227,7 +4232,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
       | Inr d' ->
         let quals = d'.quals @ d.quals in
         let attrs = d'.attrs @ d.attrs in
-        desugar_decl_maybe_fail_attr env { d' with quals; attrs; drange=d.drange }
+        desugar_decl_maybe_fail_attr env { d' with quals; attrs; drange=d.drange; interleaved=d.interleaved }
 
 let desugar_decls env decls =
   let env, sigelts =
@@ -4285,12 +4290,13 @@ let desugar_partial_modul curmod (env:env_t) (m:AST.modul) : env_t * Syntax.modu
   else env, modul
 
 let desugar_modul env (m:AST.modul) : env_t * Syntax.modul =
-  let env, modul, pop_when_done = desugar_modul_common None env m in
-  let env, modul = Env.finish_module_or_interface env modul in
-  if Options.dump_module (string_of_lid modul.name)
-  then BU.print1 "Module after desugaring:\n%s\n" (Print.modul_to_string modul);
-  (if pop_when_done then export_interface modul.name env else env), modul
-
+  Errors.with_ctx ("While desugaring module " ^ Class.Show.show (lid_of_modul m)) (fun () ->
+    let env, modul, pop_when_done = desugar_modul_common None env m in
+    let env, modul = Env.finish_module_or_interface env modul in
+    if Options.dump_module (string_of_lid modul.name)
+    then BU.print1 "Module after desugaring:\n%s\n" (Print.modul_to_string modul);
+    (if pop_when_done then export_interface modul.name env else env), modul
+  )
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //External API for modules
