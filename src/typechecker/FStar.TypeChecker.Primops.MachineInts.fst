@@ -41,7 +41,7 @@ let bounded_arith_ops_for (k : machint_kind) : mymon unit =
   (* Unsigned ints have more operators *)
   let sz = width k in
   let modulus = Z.shift_left_big_int Z.one (Z.of_int_fs sz) in
-  let mod x = Z.mod_big_int x modulus in
+  let mod (x : Z.t) : Z.t = Z.mod_big_int x modulus in
   if is_unsigned k then
     emit [
       (* modulo operators *)
@@ -68,9 +68,9 @@ let bounded_arith_ops_for (k : machint_kind) : mymon unit =
   (* Most unsigneds, except SizeT, have underspec ops *)
   if is_unsigned k && k <> SizeT then
     emit [
-      mk2 0 (nm "add_underspec") (fun (x y : machint k) -> make_as x (Z.add_big_int (v x) (v y)));
-      mk2 0 (nm "sub_underspec") (fun (x y : machint k) -> make_as x (Z.sub_big_int (v x) (v y)));
-      mk2 0 (nm "mul_underspec") (fun (x y : machint k) -> make_as x (Z.mult_big_int (v x) (v y)));
+      mk2 0 (nm "add_underspec") (fun (x y : machint k) -> make_as x (mod (Z.add_big_int (v x) (v y))));
+      mk2 0 (nm "sub_underspec") (fun (x y : machint k) -> make_as x (mod (Z.sub_big_int (v x) (v y))));
+      mk2 0 (nm "mul_underspec") (fun (x y : machint k) -> make_as x (mod (Z.mult_big_int (v x) (v y))));
     ]
   else return ();!
 
