@@ -638,59 +638,64 @@ let rec (encode_const :
   =
   fun c ->
     fun env ->
-      match c with
-      | FStar_Const.Const_unit -> (FStar_SMTEncoding_Term.mk_Term_unit, [])
-      | FStar_Const.Const_bool (true) ->
-          let uu___ =
-            FStar_SMTEncoding_Term.boxBool FStar_SMTEncoding_Util.mkTrue in
-          (uu___, [])
-      | FStar_Const.Const_bool (false) ->
-          let uu___ =
-            FStar_SMTEncoding_Term.boxBool FStar_SMTEncoding_Util.mkFalse in
-          (uu___, [])
-      | FStar_Const.Const_char c1 ->
-          let uu___ =
-            let uu___1 =
-              let uu___2 =
-                let uu___3 =
-                  let uu___4 =
-                    FStar_SMTEncoding_Util.mkInteger'
-                      (FStar_Compiler_Util.int_of_char c1) in
-                  FStar_SMTEncoding_Term.boxInt uu___4 in
-                [uu___3] in
-              ("FStar.Char.__char_of_int", uu___2) in
-            FStar_SMTEncoding_Util.mkApp uu___1 in
-          (uu___, [])
-      | FStar_Const.Const_int (i, FStar_Pervasives_Native.None) ->
-          let uu___ =
-            let uu___1 = FStar_SMTEncoding_Util.mkInteger i in
-            FStar_SMTEncoding_Term.boxInt uu___1 in
-          (uu___, [])
-      | FStar_Const.Const_int (repr, FStar_Pervasives_Native.Some sw) ->
-          let syntax_term =
-            FStar_ToSyntax_ToSyntax.desugar_machine_integer
-              (env.FStar_SMTEncoding_Env.tcenv).FStar_TypeChecker_Env.dsenv
-              repr sw FStar_Compiler_Range_Type.dummyRange in
-          encode_term syntax_term env
-      | FStar_Const.Const_string (s, uu___) ->
-          let uu___1 =
-            let uu___2 = FStar_SMTEncoding_Util.mk_String_const s in
-            FStar_SMTEncoding_Term.boxString uu___2 in
-          (uu___1, [])
-      | FStar_Const.Const_range uu___ ->
-          let uu___1 = FStar_SMTEncoding_Term.mk_Range_const () in
-          (uu___1, [])
-      | FStar_Const.Const_effect -> (FStar_SMTEncoding_Term.mk_Term_type, [])
-      | FStar_Const.Const_real r ->
-          let uu___ =
-            let uu___1 = FStar_SMTEncoding_Util.mkReal r in
-            FStar_SMTEncoding_Term.boxReal uu___1 in
-          (uu___, [])
-      | c1 ->
-          let uu___ =
-            let uu___1 = FStar_Syntax_Print.const_to_string c1 in
-            FStar_Compiler_Util.format1 "Unhandled constant: %s" uu___1 in
-          FStar_Compiler_Effect.failwith uu___
+      FStar_Errors.with_ctx "While encoding a constant to SMT"
+        (fun uu___ ->
+           match c with
+           | FStar_Const.Const_unit ->
+               (FStar_SMTEncoding_Term.mk_Term_unit, [])
+           | FStar_Const.Const_bool (true) ->
+               let uu___1 =
+                 FStar_SMTEncoding_Term.boxBool FStar_SMTEncoding_Util.mkTrue in
+               (uu___1, [])
+           | FStar_Const.Const_bool (false) ->
+               let uu___1 =
+                 FStar_SMTEncoding_Term.boxBool
+                   FStar_SMTEncoding_Util.mkFalse in
+               (uu___1, [])
+           | FStar_Const.Const_char c1 ->
+               let uu___1 =
+                 let uu___2 =
+                   let uu___3 =
+                     let uu___4 =
+                       let uu___5 =
+                         FStar_SMTEncoding_Util.mkInteger'
+                           (FStar_Compiler_Util.int_of_char c1) in
+                       FStar_SMTEncoding_Term.boxInt uu___5 in
+                     [uu___4] in
+                   ("FStar.Char.__char_of_int", uu___3) in
+                 FStar_SMTEncoding_Util.mkApp uu___2 in
+               (uu___1, [])
+           | FStar_Const.Const_int (i, FStar_Pervasives_Native.None) ->
+               let uu___1 =
+                 let uu___2 = FStar_SMTEncoding_Util.mkInteger i in
+                 FStar_SMTEncoding_Term.boxInt uu___2 in
+               (uu___1, [])
+           | FStar_Const.Const_int (repr, FStar_Pervasives_Native.Some sw) ->
+               let syntax_term =
+                 FStar_ToSyntax_ToSyntax.desugar_machine_integer
+                   (env.FStar_SMTEncoding_Env.tcenv).FStar_TypeChecker_Env.dsenv
+                   repr sw FStar_Compiler_Range_Type.dummyRange in
+               encode_term syntax_term env
+           | FStar_Const.Const_string (s, uu___1) ->
+               let uu___2 =
+                 let uu___3 = FStar_SMTEncoding_Util.mk_String_const s in
+                 FStar_SMTEncoding_Term.boxString uu___3 in
+               (uu___2, [])
+           | FStar_Const.Const_range uu___1 ->
+               let uu___2 = FStar_SMTEncoding_Term.mk_Range_const () in
+               (uu___2, [])
+           | FStar_Const.Const_effect ->
+               (FStar_SMTEncoding_Term.mk_Term_type, [])
+           | FStar_Const.Const_real r ->
+               let uu___1 =
+                 let uu___2 = FStar_SMTEncoding_Util.mkReal r in
+                 FStar_SMTEncoding_Term.boxReal uu___2 in
+               (uu___1, [])
+           | c1 ->
+               let uu___1 =
+                 let uu___2 = FStar_Syntax_Print.const_to_string c1 in
+                 FStar_Compiler_Util.format1 "Unhandled constant: %s" uu___2 in
+               FStar_Compiler_Effect.failwith uu___1)
 and (encode_binders :
   FStar_SMTEncoding_Term.term FStar_Pervasives_Native.option ->
     FStar_Syntax_Syntax.binders ->
