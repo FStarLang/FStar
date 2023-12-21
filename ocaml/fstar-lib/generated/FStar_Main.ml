@@ -298,6 +298,9 @@ let (lazy_chooser :
           FStar_Syntax_Util.exp_string uu___
 let (setup_hooks : unit -> unit) =
   fun uu___ ->
+    FStar_Compiler_Effect.op_Colon_Equals
+      FStar_Syntax_DsEnv.ugly_sigelt_to_string_hook
+      FStar_Syntax_Print.sigelt_to_string;
     FStar_Errors.set_parse_warn_error FStar_Parser_ParseIt.parse_warn_error;
     FStar_Compiler_Effect.op_Colon_Equals FStar_Syntax_Syntax.lazy_chooser
       (FStar_Pervasives_Native.Some lazy_chooser);

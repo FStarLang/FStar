@@ -339,12 +339,17 @@ let (is_tuple_constructor_lid : FStar_Ident.lident -> Prims.bool) =
       (FStar_Parser_Const.is_dtuple_data_lid' lid)
 let (may_shorten : FStar_Ident.lident -> Prims.bool) =
   fun lid ->
-    let uu___ = FStar_Ident.string_of_lid lid in
-    match uu___ with
-    | "Prims.Nil" -> false
-    | "Prims.Cons" -> false
-    | uu___1 ->
-        let uu___2 = is_tuple_constructor_lid lid in Prims.op_Negation uu___2
+    let uu___ = FStar_Options.print_real_names () in
+    if uu___
+    then false
+    else
+      (let uu___2 = FStar_Ident.string_of_lid lid in
+       match uu___2 with
+       | "Prims.Nil" -> false
+       | "Prims.Cons" -> false
+       | uu___3 ->
+           let uu___4 = is_tuple_constructor_lid lid in
+           Prims.op_Negation uu___4)
 let (maybe_shorten_lid :
   FStar_Syntax_DsEnv.env -> FStar_Ident.lident -> FStar_Ident.lident) =
   fun env ->

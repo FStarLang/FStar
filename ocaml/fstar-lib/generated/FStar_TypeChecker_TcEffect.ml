@@ -6518,25 +6518,57 @@ let (tc_non_layered_eff_decl :
                                        (let uu___12 =
                                           let uu___13 =
                                             let uu___14 =
-                                              FStar_Ident.string_of_lid
-                                                ed.FStar_Syntax_Syntax.mname in
+                                              let uu___15 =
+                                                FStar_Errors_Msg.text
+                                                  "Expected and generalized universes in effect declaration for" in
+                                              let uu___16 =
+                                                let uu___17 =
+                                                  let uu___18 =
+                                                    FStar_Ident.string_of_lid
+                                                      ed.FStar_Syntax_Syntax.mname in
+                                                  FStar_Pprint.doc_of_string
+                                                    uu___18 in
+                                                let uu___18 =
+                                                  FStar_Errors_Msg.text
+                                                    "are different" in
+                                                FStar_Pprint.op_Hat_Slash_Hat
+                                                  uu___17 uu___18 in
+                                              FStar_Pprint.op_Hat_Slash_Hat
+                                                uu___15 uu___16 in
                                             let uu___15 =
-                                              FStar_Compiler_Util.string_of_int
-                                                (FStar_Compiler_List.length
-                                                   ed_univs) in
-                                            let uu___16 =
-                                              FStar_Compiler_Util.string_of_int
-                                                (FStar_Compiler_List.length
-                                                   us) in
-                                            FStar_Compiler_Util.format3
-                                              "Expected and generalized universes in effect declaration for %s are different, expected: %s, but found %s"
-                                              uu___14 uu___15 uu___16 in
+                                              let uu___16 =
+                                                let uu___17 =
+                                                  FStar_Errors_Msg.text
+                                                    "Expected" in
+                                                let uu___18 =
+                                                  let uu___19 =
+                                                    FStar_Class_PP.pp
+                                                      FStar_Class_PP.pp_int
+                                                      (FStar_Compiler_List.length
+                                                         ed_univs) in
+                                                  let uu___20 =
+                                                    let uu___21 =
+                                                      FStar_Errors_Msg.text
+                                                        "but found" in
+                                                    let uu___22 =
+                                                      FStar_Class_PP.pp
+                                                        FStar_Class_PP.pp_int
+                                                        (FStar_Compiler_List.length
+                                                           us) in
+                                                    FStar_Pprint.op_Hat_Slash_Hat
+                                                      uu___21 uu___22 in
+                                                  FStar_Pprint.op_Hat_Slash_Hat
+                                                    uu___19 uu___20 in
+                                                FStar_Pprint.op_Hat_Slash_Hat
+                                                  uu___17 uu___18 in
+                                              [uu___16] in
+                                            uu___14 :: uu___15 in
                                           (FStar_Errors_Codes.Fatal_UnexpectedNumberOfUniverse,
                                             uu___13) in
                                         let uu___13 =
                                           FStar_Ident.range_of_lid
                                             ed.FStar_Syntax_Syntax.mname in
-                                        FStar_Errors.raise_error uu___12
+                                        FStar_Errors.raise_error_doc uu___12
                                           uu___13)))) in
                 match uu___3 with
                 | (us, bs) ->

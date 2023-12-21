@@ -1,4 +1,7 @@
 open Prims
+let (ugly_sigelt_to_string_hook :
+  (FStar_Syntax_Syntax.sigelt -> Prims.string) FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Util.mk_ref (fun uu___ -> "")
 type used_marker = Prims.bool FStar_Compiler_Effect.ref
 type record_or_dc =
   {
@@ -42,6 +45,10 @@ let (__proj__Mkrecord_or_dc__item__is_record : record_or_dc -> Prims.bool) =
     match projectee with
     | { typename; constrname; parms; fields; is_private; is_record;_} ->
         is_record
+let (ugly_sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
+  fun se ->
+    let uu___ = FStar_Compiler_Effect.op_Bang ugly_sigelt_to_string_hook in
+    uu___ se
 type local_binding =
   (FStar_Ident.ident * FStar_Syntax_Syntax.bv * used_marker)
 type rec_binding =
