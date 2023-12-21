@@ -29,6 +29,9 @@ open FStar.Ident
 open FStar.Errors
 open FStar.Class.Show
 
+let ugly_sigelt_to_string_hook : ref (sigelt -> string) = BU.mk_ref (fun _ -> "")
+let ugly_sigelt_to_string (se:sigelt) : string = !ugly_sigelt_to_string_hook se
+
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module BU = FStar.Compiler.Util

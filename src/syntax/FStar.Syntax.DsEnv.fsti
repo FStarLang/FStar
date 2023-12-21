@@ -28,6 +28,9 @@ open FStar.Ident
 module BU = FStar.Compiler.Util
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
+
+val ugly_sigelt_to_string_hook : ref (sigelt -> string)
+
 let open_module_or_namespace = S.open_module_or_namespace
 type used_marker = ref bool
                                         (* opens the whole namespace *)
