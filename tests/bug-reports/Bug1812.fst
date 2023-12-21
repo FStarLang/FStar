@@ -5,8 +5,10 @@ let t = op_any_word
 
 open FStar.Tactics.V2
 
+#set-options "--print_full_names"
+
 let _ =
     assert True
         by (let s = term_to_string (`(op_any_word ())) in
             if s = "Bug1812.op_any_word ()" then ()
-            else fail "wrong")
+            else fail ("wrong: " ^ s))
