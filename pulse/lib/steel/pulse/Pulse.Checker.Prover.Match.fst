@@ -201,14 +201,17 @@ let compose (s0 s1: PS.ss_t)
   : T.Tac 
     (option (s:PS.ss_t {  
       Set.equal (PS.dom s) (Set.union (PS.dom s0) (PS.dom s1))
-     }))
-  = if PS.check_disjoint s0 s1  // TODO: should implement a better compose
-    then (
-      let s = PS.push_ss s0 s1 in
-      assume (Set.equal (PS.dom s) (Set.union (PS.dom s0) (PS.dom s1)));
-      Some s
-    ) 
-    else None
+     })) =
+
+  let s = PS.push_ss s0 (PS.diff s1 s0) in
+  assume (Set.equal (PS.dom s) (Set.union (PS.dom s0) (PS.dom s1)));
+  Some s
+
+  // if PS.check_disjoint s0 s1  // TODO: should implement a better compose
+  //   then let s = PS.push_ss s0 s1 in
+  //        assume (Set.equal (PS.dom s) (Set.union (PS.dom s0) (PS.dom s1)));
+  //        Some s
+  //   else None
 
 let maybe_canon_term (x:term) : term = 
   match readback_ty (elab_term x) with

@@ -86,6 +86,23 @@ let check_disjoint ss1 ss2 =
   admit ();
   not (L.existsb (fun v1 -> L.mem v1 ss2.l) ss1.l)
 
+let rec diff_aux (ss1 ss2:ss_t) (acc:ss_t { Set.disjoint (dom acc) (dom ss2) })
+  : Tot (ss:ss_t { Set.disjoint (dom ss) (dom ss2) }) (decreases L.length ss1.l) =
+  match ss1.l with
+  | [] -> acc
+  | x::l ->
+    if L.mem x ss2.l
+    then let ss1 = { ss1 with l; m = remove_map ss1.m x } in
+         diff_aux ss1 ss2 acc
+    else let acc_l = x::acc.l in
+         let acc_m = Map.upd acc.m x (Map.sel ss1.m x) in
+         assume (no_repeats acc_l /\ is_dom acc_l acc_m);
+         let acc = { l = acc_l; m = acc_m } in
+         let ss1 = { ss1 with l; m = remove_map ss1.m x } in
+         diff_aux ss1 ss2 acc
+
+let diff ss1 ss2 = diff_aux ss1 ss2 empty
+
 #push-options "--warn_error -271"
 let push_as_map (ss1 ss2:ss_t)
   : Lemma (requires Set.disjoint (dom ss1) (dom ss2))
