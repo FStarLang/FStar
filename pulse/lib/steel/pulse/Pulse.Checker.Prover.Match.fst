@@ -197,21 +197,19 @@ let is_reveal (t:term) : bool =
 
 module RT = FStar.Reflection.Typing
 
+//
+// We are not checking if s0 and s1 solve intersection uvars to same terms
+//
+// But that's ok, correctness doesn't rely on it
+//
 let compose (s0 s1: PS.ss_t)
   : T.Tac 
     (option (s:PS.ss_t {  
       Set.equal (PS.dom s) (Set.union (PS.dom s0) (PS.dom s1))
      })) =
-
   let s = PS.push_ss s0 (PS.diff s1 s0) in
   assume (Set.equal (PS.dom s) (Set.union (PS.dom s0) (PS.dom s1)));
   Some s
-
-  // if PS.check_disjoint s0 s1  // TODO: should implement a better compose
-  //   then let s = PS.push_ss s0 s1 in
-  //        assume (Set.equal (PS.dom s) (Set.union (PS.dom s0) (PS.dom s1)));
-  //        Some s
-  //   else None
 
 let maybe_canon_term (x:term) : term = 
   match readback_ty (elab_term x) with
@@ -295,7 +293,6 @@ let unify (g:env) (uvs:env { disjoint uvs g})
 
   let ss = try_solve_uvars g uvs p q in
   let q_ss = readback_ty (elab_term ss.(q)) in
-  T.print ("In unify, post readback q_ss: " ^ (if None? q_ss then "None" else Pulse.Syntax.Printer.term_to_string (Some?.v q_ss)) ^ " and p is " ^ (Pulse.Syntax.Printer.term_to_string p));
   match q_ss with
   | None -> (| ss, None |)
   | Some q -> 
