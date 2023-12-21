@@ -1988,14 +1988,19 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
     match ed_univs with
     | [] -> us, bs  //if no annotated universes, return us, bs
     | _ ->
+      let open FStar.Pprint in
+      let open FStar.Class.PP in
+      let open FStar.Errors.Msg in
       //if ed.univs is already set, it must be the case that us = ed.univs, else error out
-      if List.length ed_univs = List.length us &&
-         List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) ed_univs us
+      if (List.length ed_univs = List.length us &&
+         List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) ed_univs us)
       then us, bs
-      else raise_error (Errors.Fatal_UnexpectedNumberOfUniverse,
-             (BU.format3 "Expected and generalized universes in effect declaration for %s are different, expected: %s, but found %s"
-               (string_of_lid ed.mname) (BU.string_of_int (List.length ed_univs)) (BU.string_of_int (List.length us))))
-             (range_of_lid ed.mname)
+      else raise_error_doc (Errors.Fatal_UnexpectedNumberOfUniverse, [
+             text "Expected and generalized universes in effect declaration for"
+                ^/^ doc_of_string (string_of_lid ed.mname) ^/^ text "are different";
+             text "Expected" ^/^ pp #int (List.length ed_univs) ^/^
+             text "but found" ^/^ pp #int (List.length us)
+           ]) (range_of_lid ed.mname)
   in
 
   //at this points, bs are closed and closed with us also
