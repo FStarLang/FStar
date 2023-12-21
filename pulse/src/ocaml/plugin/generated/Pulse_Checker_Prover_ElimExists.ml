@@ -102,13 +102,13 @@ let (elim_exists :
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "Pulse.Checker.Prover.ElimExists.fst"
-                   (Prims.of_int (53)) (Prims.of_int (4)) (Prims.of_int (53))
+                   (Prims.of_int (69)) (Prims.of_int (4)) (Prims.of_int (69))
                    (Prims.of_int (60)))))
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "Pulse.Checker.Prover.ElimExists.fst"
-                   (Prims.of_int (51)) (Prims.of_int (84))
-                   (Prims.of_int (56)) (Prims.of_int (62)))))
+                   (Prims.of_int (67)) (Prims.of_int (84))
+                   (Prims.of_int (72)) (Prims.of_int (62)))))
           (Obj.magic
              (elim_exists_frame g ctxt Pulse_Syntax_Base.tm_emp ()
                 (Pulse_Typing_Env.mk_env (Pulse_Typing_Env.fstar_env g))))
@@ -137,12 +137,12 @@ let (elim_exists_pst :
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "Pulse.Checker.Prover.ElimExists.fst"
-                 (Prims.of_int (63)) (Prims.of_int (4)) (Prims.of_int (68))
+                 (Prims.of_int (79)) (Prims.of_int (4)) (Prims.of_int (84))
                  (Prims.of_int (13)))))
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "Pulse.Checker.Prover.ElimExists.fst"
-                 (Prims.of_int (60)) (Prims.of_int (74)) (Prims.of_int (99))
+                 (Prims.of_int (76)) (Prims.of_int (74)) (Prims.of_int (115))
                  (Prims.of_int (3)))))
         (Obj.magic
            (elim_exists_frame pst.Pulse_Checker_Prover_Base.pg

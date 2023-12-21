@@ -24,9 +24,9 @@ let rec (print_st_typing :
                                   (Obj.magic
                                      (FStar_Range.mk_range
                                         "Pulse.Typing.Printer.fst"
-                                        (Prims.of_int (12))
+                                        (Prims.of_int (28))
                                         (Prims.of_int (38))
-                                        (Prims.of_int (12))
+                                        (Prims.of_int (28))
                                         (Prims.of_int (67)))))
                                (FStar_Sealed.seal
                                   (Obj.magic
@@ -74,9 +74,9 @@ let rec (print_st_typing :
                                   (Obj.magic
                                      (FStar_Range.mk_range
                                         "Pulse.Typing.Printer.fst"
-                                        (Prims.of_int (21))
+                                        (Prims.of_int (37))
                                         (Prims.of_int (35))
-                                        (Prims.of_int (21))
+                                        (Prims.of_int (37))
                                         (Prims.of_int (54)))))
                                (FStar_Sealed.seal
                                   (Obj.magic
@@ -102,17 +102,17 @@ let rec (print_st_typing :
                                   (Obj.magic
                                      (FStar_Range.mk_range
                                         "Pulse.Typing.Printer.fst"
-                                        (Prims.of_int (24))
+                                        (Prims.of_int (40))
                                         (Prims.of_int (59))
-                                        (Prims.of_int (24))
+                                        (Prims.of_int (40))
                                         (Prims.of_int (79)))))
                                (FStar_Sealed.seal
                                   (Obj.magic
                                      (FStar_Range.mk_range
                                         "Pulse.Typing.Printer.fst"
-                                        (Prims.of_int (24))
+                                        (Prims.of_int (40))
                                         (Prims.of_int (6))
-                                        (Prims.of_int (24))
+                                        (Prims.of_int (40))
                                         (Prims.of_int (79)))))
                                (Obj.magic
                                   (print_st_typing
@@ -130,17 +130,17 @@ let rec (print_st_typing :
                                              (Obj.magic
                                                 (FStar_Range.mk_range
                                                    "Pulse.Typing.Printer.fst"
-                                                   (Prims.of_int (24))
+                                                   (Prims.of_int (40))
                                                    (Prims.of_int (6))
-                                                   (Prims.of_int (24))
+                                                   (Prims.of_int (40))
                                                    (Prims.of_int (79)))))
                                           (FStar_Sealed.seal
                                              (Obj.magic
                                                 (FStar_Range.mk_range
                                                    "Pulse.Typing.Printer.fst"
-                                                   (Prims.of_int (24))
+                                                   (Prims.of_int (40))
                                                    (Prims.of_int (6))
-                                                   (Prims.of_int (24))
+                                                   (Prims.of_int (40))
                                                    (Prims.of_int (79)))))
                                           (Obj.magic
                                              (FStar_Tactics_Effect.tac_bind
@@ -148,9 +148,9 @@ let rec (print_st_typing :
                                                    (Obj.magic
                                                       (FStar_Range.mk_range
                                                          "Pulse.Typing.Printer.fst"
-                                                         (Prims.of_int (24))
+                                                         (Prims.of_int (40))
                                                          (Prims.of_int (38))
-                                                         (Prims.of_int (24))
+                                                         (Prims.of_int (40))
                                                          (Prims.of_int (58)))))
                                                 (FStar_Sealed.seal
                                                    (Obj.magic
@@ -187,9 +187,9 @@ let rec (print_st_typing :
                                   (Obj.magic
                                      (FStar_Range.mk_range
                                         "Pulse.Typing.Printer.fst"
-                                        (Prims.of_int (27))
+                                        (Prims.of_int (43))
                                         (Prims.of_int (38))
-                                        (Prims.of_int (27))
+                                        (Prims.of_int (43))
                                         (Prims.of_int (57)))))
                                (FStar_Sealed.seal
                                   (Obj.magic
@@ -217,17 +217,17 @@ let rec (print_st_typing :
                                   (Obj.magic
                                      (FStar_Range.mk_range
                                         "Pulse.Typing.Printer.fst"
-                                        (Prims.of_int (30))
+                                        (Prims.of_int (46))
                                         (Prims.of_int (83))
-                                        (Prims.of_int (30))
+                                        (Prims.of_int (46))
                                         (Prims.of_int (105)))))
                                (FStar_Sealed.seal
                                   (Obj.magic
                                      (FStar_Range.mk_range
                                         "Pulse.Typing.Printer.fst"
-                                        (Prims.of_int (30))
+                                        (Prims.of_int (46))
                                         (Prims.of_int (6))
-                                        (Prims.of_int (30))
+                                        (Prims.of_int (46))
                                         (Prims.of_int (105)))))
                                (Obj.magic (print_st_typing g1 e c1 body))
                                (fun uu___1 ->
@@ -238,17 +238,17 @@ let rec (print_st_typing :
                                              (Obj.magic
                                                 (FStar_Range.mk_range
                                                    "Pulse.Typing.Printer.fst"
-                                                   (Prims.of_int (30))
+                                                   (Prims.of_int (46))
                                                    (Prims.of_int (6))
-                                                   (Prims.of_int (30))
+                                                   (Prims.of_int (46))
                                                    (Prims.of_int (105)))))
                                           (FStar_Sealed.seal
                                              (Obj.magic
                                                 (FStar_Range.mk_range
                                                    "Pulse.Typing.Printer.fst"
-                                                   (Prims.of_int (30))
+                                                   (Prims.of_int (46))
                                                    (Prims.of_int (6))
-                                                   (Prims.of_int (30))
+                                                   (Prims.of_int (46))
                                                    (Prims.of_int (105)))))
                                           (Obj.magic
                                              (FStar_Tactics_Effect.tac_bind
@@ -256,9 +256,9 @@ let rec (print_st_typing :
                                                    (Obj.magic
                                                       (FStar_Range.mk_range
                                                          "Pulse.Typing.Printer.fst"
-                                                         (Prims.of_int (30))
+                                                         (Prims.of_int (46))
                                                          (Prims.of_int (39))
-                                                         (Prims.of_int (30))
+                                                         (Prims.of_int (46))
                                                          (Prims.of_int (82)))))
                                                 (FStar_Sealed.seal
                                                    (Obj.magic
@@ -310,9 +310,9 @@ let rec (print_st_typing :
                                   (Obj.magic
                                      (FStar_Range.mk_range
                                         "Pulse.Typing.Printer.fst"
-                                        (Prims.of_int (40))
+                                        (Prims.of_int (56))
                                         (Prims.of_int (9))
-                                        (Prims.of_int (40))
+                                        (Prims.of_int (56))
                                         (Prims.of_int (28)))))
                                (FStar_Sealed.seal
                                   (Obj.magic
