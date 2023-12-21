@@ -21,6 +21,7 @@ val fstar_env (g:env) : RT.fstar_top_env
 // most recent binding at the head of the list
 //
 val bindings (g:env) : env_bindings
+val bindings_with_ppname (g:env) : T.Tac (list (ppname & var & typ))
 
 val as_map (g:env) : Map.t var typ
 

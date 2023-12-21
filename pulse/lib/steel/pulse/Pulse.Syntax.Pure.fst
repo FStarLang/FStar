@@ -190,7 +190,7 @@ let is_fvar_app (t:term) : option (R.name &
 let is_arrow (t:term) : option (binder & option qualifier & comp) =
   match t.t with
   | Tm_FStar host_term ->
-    begin match R.inspect_ln host_term with
+    begin match R.inspect_ln_unascribe host_term with
           | R.Tv_Arrow b c ->
             let {ppname;qual;sort} = R.inspect_binder b in
             begin match qual with
@@ -209,6 +209,20 @@ let is_arrow (t:term) : option (binder & option qualifier & comp) =
                                    binder_ppname=mk_ppname ppname (T.range_of_term host_term)},
                                   q,
                                   c)
+                          | R.C_Eff _ eff_name result _ _ ->
+                            if eff_name = ["Prims"; "Tot"]
+                            then
+                              let? binder_ty = readback_ty sort in
+                              let? c =
+                                match readback_comp result with
+                                | Some c -> Some c <: option Pulse.Syntax.Base.comp
+                                | None -> None in
+                              Some ({binder_ty;
+                                     binder_ppname=mk_ppname ppname (T.range_of_term host_term)},
+                                    q,
+                                    c)
+
+                            else None
                           | _ -> None
                     end
             end

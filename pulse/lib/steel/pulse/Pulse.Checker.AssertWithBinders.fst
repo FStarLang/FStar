@@ -15,6 +15,7 @@ module P = Pulse.Syntax.Printer
 module N = Pulse.Syntax.Naming
 module PS = Pulse.Checker.Prover.Substs
 module Prover = Pulse.Checker.Prover
+module Env = Pulse.Typing.Env
 open Pulse.Show
 module RU = Pulse.RuntimeUtils
 
@@ -89,13 +90,26 @@ let rec open_binders (g:env) (bs:list binder) (uvs:env { disjoint uvs g }) (v:te
     let body = subst_st_term body (shift_subst_n (L.length bs) ss) in
     open_binders g bs (push_binding uvs x b.binder_ppname b.binder_ty) v body
 
-let close_binders (bs:list (var & typ)) (t:term) : term =
-  let r = L.fold_right (fun (x, _) (n, t) ->
-    let ss = [ ND x 0 ] in
-    n + 1,
-    subst_term t (shift_subst_n n ss)
-  ) bs (0, t) in
-  snd r
+let closing (bs:list (ppname & var & typ)) : subst =
+  L.fold_right (fun (_, x, _) (n, ss) ->
+    n+1,
+    (ND x n)::ss
+  ) bs (0, []) |> snd
+
+let rec close_binders (bs:list (ppname & var & typ)) : list binder =
+  admit ();
+  match bs with
+  | [] -> []
+  | (name, x, t)::bs ->
+    let bs = L.mapi (fun n (n1, x1, t1) -> n1, x1, subst_term t1 [ND x n]) bs in
+    let b = {binder_ppname=name; binder_ty = t} in
+    b::(close_binders bs)
+
+let close_term (bs:list (ppname & var & typ)) (t:term) : term =
+  bs |> closing |> subst_term t
+
+let close_st_term (bs:list (ppname & var & typ)) (t:st_term) : st_term =
+  bs |> closing |> subst_st_term t
 
 let unfold_defs (g:env) (defs:option (list string)) (t:term) 
   : T.Tac term
@@ -170,7 +184,6 @@ let visit_and_rewrite (p: (R.term & R.term)) (t:term) : T.Tac term =
     
 let visit_and_rewrite_conjuncts (p: (R.term & R.term)) (tms:list term) : T.Tac (list term) =
   T.map (visit_and_rewrite p) tms
-
 
 let visit_and_rewrite_conjuncts_all (p: list (R.term & R.term)) (goal:term) : T.Tac (term & term) =
   let tms = Pulse.Typing.Combinators.vprop_as_list goal in
@@ -308,7 +321,21 @@ let check_wild
       in
       peel_binders k ex
 
-                  
+let rec add_rem_uvs (g:env) (t:typ) (uvs:env { Env.disjoint g uvs }) (v:vprop)
+  : T.Tac (uvs:env { Env.disjoint g uvs } & vprop) =
+  T.print ("Adding rem uvs with " ^ (Pulse.Syntax.Printer.term_to_string t ^ "\n"));
+  match is_arrow t with
+  | None ->
+    T.print "not an arrow\n";
+    (| uvs, v |)
+  | Some (b, qopt, c) ->
+    T.print "is an arrow\n";
+    let x = fresh (push_env g uvs) in
+    let ct = open_comp_nv c (b.binder_ppname, x) in
+    let uvs = Env.push_binding uvs x b.binder_ppname b.binder_ty in
+    let v = tm_pureapp v qopt (tm_var {nm_index = x; nm_ppname = b.binder_ppname}) in 
+    add_rem_uvs g (comp_res ct) uvs v
+
 let check
   (g:env)
   (pre:term)
@@ -375,10 +402,20 @@ let check
 
   | UNFOLD { names; p=v }
   | FOLD { names; p=v } ->
-    let bs = infer_binder_types g bs v in
-    let (| uvs, v_opened, body_opened |) = open_binders g bs (mk_env (fstar_env g)) v body in
+
+    let (| uvs, v_opened, body_opened |) =
+      let bs = infer_binder_types g bs v in
+      open_binders g bs (mk_env (fstar_env g)) v body in
+
     check_unfoldable g v;
-    let v_opened, _ = PC.instantiate_term_implicits (push_env g uvs) v_opened in
+
+    let v_opened, t_rem = PC.instantiate_term_implicits (push_env g uvs) v_opened in
+
+    let uvs, v_opened =
+      let (| uvs_rem, v_opened |) =
+        add_rem_uvs (push_env g uvs) t_rem (mk_env (fstar_env g)) v_opened in
+      push_env uvs uvs_rem, v_opened in
+
     let lhs, rhs =
       match hint_type with      
       | UNFOLD _ ->
@@ -387,8 +424,12 @@ let check
       | FOLD { names=ns } -> 
         unfold_defs (push_env g uvs) ns v_opened,
         v_opened in
-    let uvs_bs = L.rev (bindings uvs) in
-    let lhs, rhs = close_binders uvs_bs lhs, close_binders uvs_bs rhs in
+
+    let uvs_bs = L.rev (bindings_with_ppname uvs) in
+    let lhs = close_term uvs_bs lhs in
+    let rhs = close_term uvs_bs rhs in
+    let body = close_st_term uvs_bs body_opened in
+    let bs = close_binders uvs_bs in
     let rw = { term = Tm_Rewrite { t1 = lhs;
                                    t2 = rhs };
                range = st.range;

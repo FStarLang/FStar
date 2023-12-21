@@ -291,7 +291,9 @@ let unify (g:env) (uvs:env { disjoint uvs g})
            option (RT.equiv (elab_env g) (elab_term p) (elab_term ss.(q)))) =
 
   let ss = try_solve_uvars g uvs p q in
-  match readback_ty (elab_term ss.(q)) with
+  let q_ss = readback_ty (elab_term ss.(q)) in
+  T.print ("In unify, post readback q_ss: " ^ (if None? q_ss then "None" else Pulse.Syntax.Printer.term_to_string (Some?.v q_ss)) ^ " and p is " ^ (Pulse.Syntax.Printer.term_to_string p));
+  match q_ss with
   | None -> (| ss, None |)
   | Some q -> 
     if eq_tm p q

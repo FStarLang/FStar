@@ -34,6 +34,15 @@ let fstar_env g = RU.env_set_context g.f g.ctxt
 
 let bindings g = g.bs
 
+let rec bindings_with_ppname_aux (bs:list (var & typ)) (names:list ppname)
+  : T.Tac (list (ppname & var & typ)) =
+
+  match bs, names with
+  | [], [] -> []
+  | (x, t)::bs, n::names -> (n, x, t)::(bindings_with_ppname_aux bs names)
+  | _ -> T.fail "impossible! env bs and names have different lengths"
+let bindings_with_ppname g = bindings_with_ppname_aux g.bs g.names  
+
 let as_map g = g.m
 
 let bindings_as_map _ = ()
