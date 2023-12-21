@@ -444,11 +444,13 @@ let (bounded_arith_ops_for :
                                     fun y ->
                                       let uu___9 =
                                         let uu___10 =
-                                          FStar_Compiler_MachineInts.v k x in
-                                        let uu___11 =
-                                          FStar_Compiler_MachineInts.v k y in
-                                        FStar_BigInt.add_big_int uu___10
-                                          uu___11 in
+                                          let uu___11 =
+                                            FStar_Compiler_MachineInts.v k x in
+                                          let uu___12 =
+                                            FStar_Compiler_MachineInts.v k y in
+                                          FStar_BigInt.add_big_int uu___11
+                                            uu___12 in
+                                        mod1 uu___10 in
                                       FStar_Compiler_MachineInts.make_as k x
                                         uu___9) in
                              let uu___8 =
@@ -466,11 +468,15 @@ let (bounded_arith_ops_for :
                                       fun y ->
                                         let uu___11 =
                                           let uu___12 =
-                                            FStar_Compiler_MachineInts.v k x in
-                                          let uu___13 =
-                                            FStar_Compiler_MachineInts.v k y in
-                                          FStar_BigInt.sub_big_int uu___12
-                                            uu___13 in
+                                            let uu___13 =
+                                              FStar_Compiler_MachineInts.v k
+                                                x in
+                                            let uu___14 =
+                                              FStar_Compiler_MachineInts.v k
+                                                y in
+                                            FStar_BigInt.sub_big_int uu___13
+                                              uu___14 in
+                                          mod1 uu___12 in
                                         FStar_Compiler_MachineInts.make_as k
                                           x uu___11) in
                                let uu___10 =
@@ -491,13 +497,15 @@ let (bounded_arith_ops_for :
                                         fun y ->
                                           let uu___13 =
                                             let uu___14 =
-                                              FStar_Compiler_MachineInts.v k
-                                                x in
-                                            let uu___15 =
-                                              FStar_Compiler_MachineInts.v k
-                                                y in
-                                            FStar_BigInt.mult_big_int uu___14
-                                              uu___15 in
+                                              let uu___15 =
+                                                FStar_Compiler_MachineInts.v
+                                                  k x in
+                                              let uu___16 =
+                                                FStar_Compiler_MachineInts.v
+                                                  k y in
+                                              FStar_BigInt.mult_big_int
+                                                uu___15 uu___16 in
+                                            mod1 uu___14 in
                                           FStar_Compiler_MachineInts.make_as
                                             k x uu___13) in
                                  [uu___11] in
