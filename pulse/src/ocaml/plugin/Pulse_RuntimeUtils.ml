@@ -38,9 +38,10 @@ let union_ranges (r0:FStar_Range.range) (r1:FStar_Range.range) = FStar_Compiler_
 let range_of_term (t:FStar_Syntax_Syntax.term) = t.FStar_Syntax_Syntax.pos
 let unfold_def (g:FStar_Reflection_Types.env) (head:string) (names:string list) (t:FStar_Syntax_Syntax.term) : FStar_Syntax_Syntax.term option =
     let open FStar_TypeChecker_Env in
-    Some (FStar_TypeChecker_Normalize.normalize
+    let r = Some (FStar_TypeChecker_Normalize.normalize
             [Beta; Iota;
-             UnfoldOnly (FStar_Ident.lid_of_str head::List.map FStar_Ident.lid_of_str names)] g t)
+             UnfoldOnly (FStar_Ident.lid_of_str head::List.map FStar_Ident.lid_of_str names)] g t) in
+    r
 let env_set_range (e:FStar_Reflection_Types.env) (r:FStar_Range.range) =
    FStar_TypeChecker_Env.set_range e r
 

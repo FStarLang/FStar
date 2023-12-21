@@ -66,8 +66,8 @@ let showable_option :
                           (FStar_Sealed.seal
                              (Obj.magic
                                 (FStar_Range.mk_range "Pulse.Show.fst"
-                                   (Prims.of_int (31)) (Prims.of_int (39))
-                                   (Prims.of_int (31)) (Prims.of_int (45)))))
+                                   (Prims.of_int (47)) (Prims.of_int (39))
+                                   (Prims.of_int (47)) (Prims.of_int (45)))))
                           (FStar_Sealed.seal
                              (Obj.magic
                                 (FStar_Range.mk_range "prims.fst"
@@ -112,8 +112,8 @@ let (uu___35 : Pulse_Typing.post_hint_t tac_showable) =
          FStar_Tactics_Effect.tac_bind
            (FStar_Sealed.seal
               (Obj.magic
-                 (FStar_Range.mk_range "Pulse.Show.fst" (Prims.of_int (58))
-                    (Prims.of_int (6)) (Prims.of_int (63)) (Prims.of_int (7)))))
+                 (FStar_Range.mk_range "Pulse.Show.fst" (Prims.of_int (74))
+                    (Prims.of_int (6)) (Prims.of_int (79)) (Prims.of_int (7)))))
            (FStar_Sealed.seal
               (Obj.magic
                  (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
@@ -124,8 +124,8 @@ let (uu___35 : Pulse_Typing.post_hint_t tac_showable) =
                  (FStar_Sealed.seal
                     (Obj.magic
                        (FStar_Range.mk_range "Pulse.Show.fst"
-                          (Prims.of_int (58)) (Prims.of_int (15))
-                          (Prims.of_int (63)) (Prims.of_int (7)))))
+                          (Prims.of_int (74)) (Prims.of_int (15))
+                          (Prims.of_int (79)) (Prims.of_int (7)))))
                  (FStar_Sealed.seal
                     (Obj.magic
                        (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
@@ -136,13 +136,13 @@ let (uu___35 : Pulse_Typing.post_hint_t tac_showable) =
                        (FStar_Sealed.seal
                           (Obj.magic
                              (FStar_Range.mk_range "Pulse.Show.fst"
-                                (Prims.of_int (58)) (Prims.of_int (15))
-                                (Prims.of_int (58)) (Prims.of_int (23)))))
+                                (Prims.of_int (74)) (Prims.of_int (15))
+                                (Prims.of_int (74)) (Prims.of_int (23)))))
                        (FStar_Sealed.seal
                           (Obj.magic
                              (FStar_Range.mk_range "Pulse.Show.fst"
-                                (Prims.of_int (58)) (Prims.of_int (15))
-                                (Prims.of_int (63)) (Prims.of_int (7)))))
+                                (Prims.of_int (74)) (Prims.of_int (15))
+                                (Prims.of_int (79)) (Prims.of_int (7)))))
                        (Obj.magic (show uu___34 h.Pulse_Typing.g))
                        (fun uu___ ->
                           (fun uu___ ->
@@ -152,9 +152,9 @@ let (uu___35 : Pulse_Typing.post_hint_t tac_showable) =
                                      (Obj.magic
                                         (FStar_Range.mk_range
                                            "Pulse.Show.fst"
-                                           (Prims.of_int (58))
+                                           (Prims.of_int (74))
                                            (Prims.of_int (26))
-                                           (Prims.of_int (63))
+                                           (Prims.of_int (79))
                                            (Prims.of_int (7)))))
                                   (FStar_Sealed.seal
                                      (Obj.magic
@@ -169,9 +169,9 @@ let (uu___35 : Pulse_Typing.post_hint_t tac_showable) =
                                            (Obj.magic
                                               (FStar_Range.mk_range
                                                  "Pulse.Show.fst"
-                                                 (Prims.of_int (59))
+                                                 (Prims.of_int (75))
                                                  (Prims.of_int (6))
-                                                 (Prims.of_int (63))
+                                                 (Prims.of_int (79))
                                                  (Prims.of_int (7)))))
                                         (FStar_Sealed.seal
                                            (Obj.magic
@@ -187,9 +187,9 @@ let (uu___35 : Pulse_Typing.post_hint_t tac_showable) =
                                                  (Obj.magic
                                                     (FStar_Range.mk_range
                                                        "Pulse.Show.fst"
-                                                       (Prims.of_int (59))
+                                                       (Prims.of_int (75))
                                                        (Prims.of_int (23))
-                                                       (Prims.of_int (63))
+                                                       (Prims.of_int (79))
                                                        (Prims.of_int (7)))))
                                               (FStar_Sealed.seal
                                                  (Obj.magic
@@ -205,17 +205,17 @@ let (uu___35 : Pulse_Typing.post_hint_t tac_showable) =
                                                        (Obj.magic
                                                           (FStar_Range.mk_range
                                                              "Pulse.Show.fst"
-                                                             (Prims.of_int (59))
+                                                             (Prims.of_int (75))
                                                              (Prims.of_int (23))
-                                                             (Prims.of_int (59))
+                                                             (Prims.of_int (75))
                                                              (Prims.of_int (39)))))
                                                     (FStar_Sealed.seal
                                                        (Obj.magic
                                                           (FStar_Range.mk_range
                                                              "Pulse.Show.fst"
-                                                             (Prims.of_int (59))
+                                                             (Prims.of_int (75))
                                                              (Prims.of_int (23))
-                                                             (Prims.of_int (63))
+                                                             (Prims.of_int (79))
                                                              (Prims.of_int (7)))))
                                                     (Obj.magic
                                                        (show
@@ -230,9 +230,9 @@ let (uu___35 : Pulse_Typing.post_hint_t tac_showable) =
                                                                   (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Show.fst"
-                                                                    (Prims.of_int (59))
+                                                                    (Prims.of_int (75))
                                                                     (Prims.of_int (42))
-                                                                    (Prims.of_int (63))
+                                                                    (Prims.of_int (79))
                                                                     (Prims.of_int (7)))))
                                                                (FStar_Sealed.seal
                                                                   (Obj.magic
@@ -248,9 +248,9 @@ let (uu___35 : Pulse_Typing.post_hint_t tac_showable) =
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Show.fst"
-                                                                    (Prims.of_int (60))
+                                                                    (Prims.of_int (76))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (63))
+                                                                    (Prims.of_int (79))
                                                                     (Prims.of_int (7)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -266,9 +266,9 @@ let (uu___35 : Pulse_Typing.post_hint_t tac_showable) =
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Show.fst"
-                                                                    (Prims.of_int (60))
+                                                                    (Prims.of_int (76))
                                                                     (Prims.of_int (20))
-                                                                    (Prims.of_int (63))
+                                                                    (Prims.of_int (79))
                                                                     (Prims.of_int (7)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -284,17 +284,17 @@ let (uu___35 : Pulse_Typing.post_hint_t tac_showable) =
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Show.fst"
-                                                                    (Prims.of_int (60))
+                                                                    (Prims.of_int (76))
                                                                     (Prims.of_int (20))
-                                                                    (Prims.of_int (60))
+                                                                    (Prims.of_int (76))
                                                                     (Prims.of_int (33)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Show.fst"
-                                                                    (Prims.of_int (60))
+                                                                    (Prims.of_int (76))
                                                                     (Prims.of_int (20))
-                                                                    (Prims.of_int (63))
+                                                                    (Prims.of_int (79))
                                                                     (Prims.of_int (7)))))
                                                                     (Obj.magic
                                                                     (show
@@ -310,9 +310,9 @@ let (uu___35 : Pulse_Typing.post_hint_t tac_showable) =
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Show.fst"
-                                                                    (Prims.of_int (60))
+                                                                    (Prims.of_int (76))
                                                                     (Prims.of_int (36))
-                                                                    (Prims.of_int (63))
+                                                                    (Prims.of_int (79))
                                                                     (Prims.of_int (7)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -328,9 +328,9 @@ let (uu___35 : Pulse_Typing.post_hint_t tac_showable) =
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Show.fst"
-                                                                    (Prims.of_int (61))
+                                                                    (Prims.of_int (77))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (63))
+                                                                    (Prims.of_int (79))
                                                                     (Prims.of_int (7)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -346,9 +346,9 @@ let (uu___35 : Pulse_Typing.post_hint_t tac_showable) =
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Show.fst"
-                                                                    (Prims.of_int (61))
+                                                                    (Prims.of_int (77))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (63))
+                                                                    (Prims.of_int (79))
                                                                     (Prims.of_int (7)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -364,17 +364,17 @@ let (uu___35 : Pulse_Typing.post_hint_t tac_showable) =
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Show.fst"
-                                                                    (Prims.of_int (61))
+                                                                    (Prims.of_int (77))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (61))
+                                                                    (Prims.of_int (77))
                                                                     (Prims.of_int (23)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Show.fst"
-                                                                    (Prims.of_int (61))
+                                                                    (Prims.of_int (77))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (63))
+                                                                    (Prims.of_int (79))
                                                                     (Prims.of_int (7)))))
                                                                     (Obj.magic
                                                                     (show
@@ -390,9 +390,9 @@ let (uu___35 : Pulse_Typing.post_hint_t tac_showable) =
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Show.fst"
-                                                                    (Prims.of_int (61))
+                                                                    (Prims.of_int (77))
                                                                     (Prims.of_int (26))
-                                                                    (Prims.of_int (63))
+                                                                    (Prims.of_int (79))
                                                                     (Prims.of_int (7)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -408,9 +408,9 @@ let (uu___35 : Pulse_Typing.post_hint_t tac_showable) =
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Show.fst"
-                                                                    (Prims.of_int (62))
+                                                                    (Prims.of_int (78))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (63))
+                                                                    (Prims.of_int (79))
                                                                     (Prims.of_int (7)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -426,9 +426,9 @@ let (uu___35 : Pulse_Typing.post_hint_t tac_showable) =
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Show.fst"
-                                                                    (Prims.of_int (62))
+                                                                    (Prims.of_int (78))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (63))
+                                                                    (Prims.of_int (79))
                                                                     (Prims.of_int (7)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -444,9 +444,9 @@ let (uu___35 : Pulse_Typing.post_hint_t tac_showable) =
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Show.fst"
-                                                                    (Prims.of_int (62))
+                                                                    (Prims.of_int (78))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (62))
+                                                                    (Prims.of_int (78))
                                                                     (Prims.of_int (29)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic

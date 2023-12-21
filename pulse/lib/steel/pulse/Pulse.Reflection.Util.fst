@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Reflection.Util
 
 module R = FStar.Reflection.V2
@@ -34,6 +50,7 @@ let szv_fv = R.pack_fv szv_lid
 let szv_tm = R.pack_ln (R.Tv_FVar szv_fv)
 let seq_lid = ["FStar"; "Seq"; "Base"; "seq"]
 let seq_create_lid = ["FStar"; "Seq"; "Base"; "create"]
+let tot_lid = ["Prims"; "Tot"]
 
 
 (* The "plicities" *)

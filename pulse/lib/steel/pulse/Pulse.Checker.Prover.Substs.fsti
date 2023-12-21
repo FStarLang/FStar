@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Checker.Prover.Substs
 
 open FStar.List.Tot
@@ -27,6 +43,7 @@ val push (ss:ss_t) (x:var { ~ (contains ss x) }) (t:term) : ss_t
 val push_ss (ss1:ss_t) (ss2:ss_t { Set.disjoint (dom ss1) (dom ss2) }) : ss_t
 
 val check_disjoint (ss1 ss2:ss_t) : b:bool { b ==> Set.disjoint (dom ss1) (dom ss2) }
+val diff (ss1 ss2:ss_t) : ss:ss_t { Set.disjoint (dom ss) (dom ss2) }
 
 val push_as_map (ss1 ss2:ss_t)
   : Lemma (requires Set.disjoint (dom ss1) (dom ss2))

@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Domains
 
 open Steel.Memory
@@ -117,7 +133,7 @@ fn acquire_queue_lock
   ensures (exists* vq vc. HR.pts_to (get_queue p) vq ** pts_to (get_counter p) vc)
 {
   Lock.acquire (get_lock p);
-  unfold (inv_task_queue (get_queue p) (get_counter p));
+  unfold inv_task_queue;
   ()
 }
 ```
@@ -130,7 +146,7 @@ fn release_queue_lock
   requires (exists* vq vc. HR.pts_to (get_queue p) vq ** pts_to (get_counter p) vc)
   ensures emp
 {
-  fold (inv_task_queue (get_queue p) (get_counter p));
+  fold inv_task_queue;
   Lock.release (get_lock p);
   ()
 }
@@ -352,7 +368,7 @@ fn init_par_env' (_: unit)
   // creating parallel env
   let work_queue = higher_alloc empty_task_queue;
   let counter = alloc 0;
-  fold (inv_task_queue work_queue counter);
+  fold inv_task_queue;
   assert (inv_task_queue work_queue counter);
   let lock = Lock.new_lock (inv_task_queue work_queue counter);
   let p = mk_par_env work_queue counter lock;

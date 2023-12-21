@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Checker.Prover.Substs
 
 open FStar.List.Tot
@@ -85,6 +101,23 @@ let rec push_ss (ss1:ss_t) (ss2:ss_t { Set.disjoint (dom ss1) (dom ss2) })
 let check_disjoint ss1 ss2 =
   admit ();
   not (L.existsb (fun v1 -> L.mem v1 ss2.l) ss1.l)
+
+let rec diff_aux (ss1 ss2:ss_t) (acc:ss_t { Set.disjoint (dom acc) (dom ss2) })
+  : Tot (ss:ss_t { Set.disjoint (dom ss) (dom ss2) }) (decreases L.length ss1.l) =
+  match ss1.l with
+  | [] -> acc
+  | x::l ->
+    if L.mem x ss2.l
+    then let ss1 = { ss1 with l; m = remove_map ss1.m x } in
+         diff_aux ss1 ss2 acc
+    else let acc_l = x::acc.l in
+         let acc_m = Map.upd acc.m x (Map.sel ss1.m x) in
+         assume (no_repeats acc_l /\ is_dom acc_l acc_m);
+         let acc = { l = acc_l; m = acc_m } in
+         let ss1 = { ss1 with l; m = remove_map ss1.m x } in
+         diff_aux ss1 ss2 acc
+
+let diff ss1 ss2 = diff_aux ss1 ss2 empty
 
 #push-options "--warn_error -271"
 let push_as_map (ss1 ss2:ss_t)

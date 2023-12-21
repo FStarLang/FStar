@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 (**
   * This is a port of Zeta.Steel.HashAccumulator to Pulse
   *
@@ -281,8 +297,8 @@ fn reclaim (#h:hash_value_t) (s:ha)
     requires ha_val s h
     ensures emp
 {
-    unfold (ha_val s h);
-    unfold (ha_val_core s.core h);
+    unfold ha_val;
+    unfold ha_val_core;
     free s.core.ctr;
     A.free s.core.acc;
     A.free s.tmp;
@@ -350,8 +366,8 @@ fn aggregate (b1 b2: ha_core)
     ha_val_core b1 (if ok then aggregate_hashes 'h1 'h2 else 'h1) **
     ha_val_core b2 'h2
 {
-  unfold (ha_val_core b1 'h1);
-  unfold (ha_val_core b2 'h2);
+  unfold ha_val_core;
+  unfold ha_val_core;
   let ctr1 = !b1.ctr;
   let ctr2 = !b2.ctr;
   match (safe_add ctr1 ctr2) {
@@ -383,8 +399,8 @@ fn compare (b1 b2:ha)
     ha_val b2 'h2 **
     pure (b <==> ('h1 == 'h2))
 { 
-  unfold (ha_val b1 'h1); unfold (ha_val_core b1.core 'h1);
-  unfold (ha_val b2 'h2); unfold (ha_val_core b2.core 'h2);
+  unfold ha_val; unfold ha_val_core;
+  unfold ha_val; unfold ha_val_core;
   let ctr1 = !b1.core.ctr;
   let ctr2 = !b2.core.ctr;
   if (ctr1 <> ctr2)
@@ -422,7 +438,7 @@ fn add (ha:ha) (input:hashable_buffer) (l:(l:SZ.t {SZ.v l <= blake2_max_input_le
     A.pts_to input #p s
 { 
    let mut ctr = 1ul;
-   unfold (ha_val ha 'h);
+   unfold ha_val;
    A.pts_to_len input;
    blake2b 32sz ha.tmp l input 0sz ha.dummy;
    let ha' = package_core ha.tmp ctr;

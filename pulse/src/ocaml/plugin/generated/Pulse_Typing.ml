@@ -21,21 +21,21 @@ let (debug_log :
                          (FStar_Sealed.seal
                             (Obj.magic
                                (FStar_Range.mk_range "Pulse.Typing.fst"
-                                  (Prims.of_int (16)) (Prims.of_int (15))
-                                  (Prims.of_int (16)) (Prims.of_int (64)))))
+                                  (Prims.of_int (32)) (Prims.of_int (15))
+                                  (Prims.of_int (32)) (Prims.of_int (64)))))
                          (FStar_Sealed.seal
                             (Obj.magic
                                (FStar_Range.mk_range "Pulse.Typing.fst"
-                                  (Prims.of_int (16)) (Prims.of_int (7))
-                                  (Prims.of_int (16)) (Prims.of_int (64)))))
+                                  (Prims.of_int (32)) (Prims.of_int (7))
+                                  (Prims.of_int (32)) (Prims.of_int (64)))))
                          (Obj.magic
                             (FStar_Tactics_Effect.tac_bind
                                (FStar_Sealed.seal
                                   (Obj.magic
                                      (FStar_Range.mk_range "Pulse.Typing.fst"
-                                        (Prims.of_int (16))
+                                        (Prims.of_int (32))
                                         (Prims.of_int (57))
-                                        (Prims.of_int (16))
+                                        (Prims.of_int (32))
                                         (Prims.of_int (63)))))
                                (FStar_Sealed.seal
                                   (Obj.magic

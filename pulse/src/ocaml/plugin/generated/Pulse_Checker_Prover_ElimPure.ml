@@ -146,13 +146,13 @@ let (elim_pure :
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "Pulse.Checker.Prover.ElimPure.fst"
-                   (Prims.of_int (107)) (Prims.of_int (4))
-                   (Prims.of_int (107)) (Prims.of_int (58)))))
+                   (Prims.of_int (123)) (Prims.of_int (4))
+                   (Prims.of_int (123)) (Prims.of_int (58)))))
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "Pulse.Checker.Prover.ElimPure.fst"
-                   (Prims.of_int (105)) (Prims.of_int (84))
-                   (Prims.of_int (110)) (Prims.of_int (62)))))
+                   (Prims.of_int (121)) (Prims.of_int (84))
+                   (Prims.of_int (126)) (Prims.of_int (62)))))
           (Obj.magic
              (elim_pure_frame g ctxt Pulse_Syntax_Base.tm_emp ()
                 (Pulse_Typing_Env.mk_env (Pulse_Typing_Env.fstar_env g))))
@@ -181,13 +181,13 @@ let (elim_pure_pst :
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "Pulse.Checker.Prover.ElimPure.fst"
-                 (Prims.of_int (119)) (Prims.of_int (4)) (Prims.of_int (124))
+                 (Prims.of_int (135)) (Prims.of_int (4)) (Prims.of_int (140))
                  (Prims.of_int (13)))))
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "Pulse.Checker.Prover.ElimPure.fst"
-                 (Prims.of_int (116)) (Prims.of_int (74))
-                 (Prims.of_int (155)) (Prims.of_int (3)))))
+                 (Prims.of_int (132)) (Prims.of_int (74))
+                 (Prims.of_int (171)) (Prims.of_int (3)))))
         (Obj.magic
            (elim_pure_frame pst.Pulse_Checker_Prover_Base.pg
               (Pulse_Typing_Combinators.list_as_vprop

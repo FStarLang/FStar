@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Lib.Par.Pledge
 
 open Pulse.Lib.Pervasives
@@ -30,7 +46,7 @@ fn __return_pledge (os:inames) (f v : vprop)
 {
   intro_stick #os f (f ** v) v (return_pledge_aux os f v);
   fold (op_At_Equals_Equals_Greater #os f (f ** v)); // :-(
-  fold (pledge os f v);
+  fold pledge;
 }
 ```
 let return_pledge = __return_pledge
@@ -57,7 +73,7 @@ fn __make_pledge (os:inames) (f v extra : vprop)
 {
   intro_stick #os f (f ** v) extra (make_pledge_aux os f v extra k);
   fold (op_At_Equals_Equals_Greater #os f (f ** v)); // :-(
-  fold (pledge os f v);
+  fold pledge;
 }
 ```
 let make_pledge os f v extra k = __make_pledge os f v extra k
@@ -69,7 +85,7 @@ fn __redeem_pledge (os : inames) (f v : vprop)
   ensures f ** v
   opens os
 {
-  unfold (pledge os f v);
+  unfold pledge;
   unfold (op_At_Equals_Equals_Greater #os f (f ** v)); // :-(
   elim_stick #os f (f ** v);
 }
@@ -192,10 +208,10 @@ fn __elim_l (#os0:inames) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool)
 {
   open Pulse.Lib.GhostReference;
   with_invariants i {
-    unfold (inv_p os0 f v1 v2 r1 r2);
+    unfold inv_p;
     with bb1 bb2.
       assert (inv_p' os0 f v1 v2 r1 r2 bb1 bb2);
-    unfold (inv_p' os0 f v1 v2 r1 r2 bb1 bb2);
+    unfold inv_p';
     let b1 = !r1;
     let b2 = !r2;
 
@@ -266,7 +282,7 @@ fn __elim_l (#os0:inames) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool)
       share2 r1;
 
       fold (inv_p' os0 f v1 v2 r1 r2 true false);
-      fold (inv_p os0 f v1 v2 r1 r2);
+      fold inv_p;
       assert (f ** v1 ** inv_p os0 f v1 v2 r1 r2);
       drop_ (pts_to r1 #one_half true);
       ()
@@ -320,7 +336,7 @@ fn __split_pledge (#os:inames) (#f:vprop) (v1:vprop) (v2:vprop)
       | true, true -> emp));
 
   fold (inv_p' os f v1 v2 r1 r2 false false);
-  fold (inv_p os f v1 v2 r1 r2);
+  fold inv_p;
 
   let i = new_invariant_ghost (inv_p os f v1 v2 r1 r2);
 

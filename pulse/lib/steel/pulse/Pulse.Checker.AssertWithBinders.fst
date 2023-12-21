@@ -1,5 +1,20 @@
-module Pulse.Checker.AssertWithBinders
+(*
+   Copyright 2023 Microsoft Research
 
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
+module Pulse.Checker.AssertWithBinders
 
 open Pulse.Syntax
 open Pulse.Typing
@@ -15,6 +30,7 @@ module P = Pulse.Syntax.Printer
 module N = Pulse.Syntax.Naming
 module PS = Pulse.Checker.Prover.Substs
 module Prover = Pulse.Checker.Prover
+module Env = Pulse.Typing.Env
 open Pulse.Show
 module RU = Pulse.RuntimeUtils
 
@@ -89,13 +105,23 @@ let rec open_binders (g:env) (bs:list binder) (uvs:env { disjoint uvs g }) (v:te
     let body = subst_st_term body (shift_subst_n (L.length bs) ss) in
     open_binders g bs (push_binding uvs x b.binder_ppname b.binder_ty) v body
 
-let close_binders (bs:list (var & typ)) (t:term) : term =
-  let r = L.fold_right (fun (x, _) (n, t) ->
-    let ss = [ ND x 0 ] in
-    n + 1,
-    subst_term t (shift_subst_n n ss)
-  ) bs (0, t) in
-  snd r
+let closing (bs:list (ppname & var & typ)) : subst =
+  L.fold_right (fun (_, x, _) (n, ss) ->
+    n+1,
+    (ND x n)::ss
+  ) bs (0, []) |> snd
+
+let rec close_binders (bs:list (ppname & var & typ))
+  : Tot (list binder) (decreases L.length bs) =
+  match bs with
+  | [] -> []
+  | (name, x, t)::bs ->
+    let bss = L.mapi (fun n (n1, x1, t1) ->
+      assume (n >= 0);
+      n1, x1, subst_term t1 [ND x n]) bs in
+    let b = {binder_ppname=name; binder_ty = t} in
+    assume (L.length bss == L.length bs);
+    b::(close_binders bss)
 
 let unfold_defs (g:env) (defs:option (list string)) (t:term) 
   : T.Tac term
@@ -171,7 +197,6 @@ let visit_and_rewrite (p: (R.term & R.term)) (t:term) : T.Tac term =
 let visit_and_rewrite_conjuncts (p: (R.term & R.term)) (tms:list term) : T.Tac (list term) =
   T.map (visit_and_rewrite p) tms
 
-
 let visit_and_rewrite_conjuncts_all (p: list (R.term & R.term)) (goal:term) : T.Tac (term & term) =
   let tms = Pulse.Typing.Combinators.vprop_as_list goal in
   let tms' = T.fold_left (fun tms p -> visit_and_rewrite_conjuncts p tms) tms p in
@@ -234,7 +259,7 @@ let rewrite_all (g:env) (p: list (term & term)) (t:term) : T.Tac (term & term) =
     debug_log g (fun _ -> Printf.sprintf "Rewrote %s to %s" (P.term_to_string lhs) (P.term_to_string rhs));
     lhs, rhs
 
-let rec check_renaming 
+let check_renaming 
     (g:env)
     (pre:term)
     (st:st_term { 
@@ -308,7 +333,21 @@ let check_wild
       in
       peel_binders k ex
 
-                  
+//
+// v is a partially applied vprop with type t
+// add uvars for the remaining arguments
+//
+let rec add_rem_uvs (g:env) (t:typ) (uvs:env { Env.disjoint g uvs }) (v:vprop)
+  : T.Tac (uvs:env { Env.disjoint g uvs } & vprop) =
+  match is_arrow t with
+  | None -> (| uvs, v |)
+  | Some (b, qopt, c) ->
+    let x = fresh (push_env g uvs) in
+    let ct = open_comp_nv c (b.binder_ppname, x) in
+    let uvs = Env.push_binding uvs x b.binder_ppname b.binder_ty in
+    let v = tm_pureapp v qopt (tm_var {nm_index = x; nm_ppname = b.binder_ppname}) in 
+    add_rem_uvs g (comp_res ct) uvs v
+
 let check
   (g:env)
   (pre:term)
@@ -375,10 +414,20 @@ let check
 
   | UNFOLD { names; p=v }
   | FOLD { names; p=v } ->
-    let bs = infer_binder_types g bs v in
-    let (| uvs, v_opened, body_opened |) = open_binders g bs (mk_env (fstar_env g)) v body in
+
+    let (| uvs, v_opened, body_opened |) =
+      let bs = infer_binder_types g bs v in
+      open_binders g bs (mk_env (fstar_env g)) v body in
+
     check_unfoldable g v;
-    let v_opened, _ = PC.instantiate_term_implicits (push_env g uvs) v_opened in
+
+    let v_opened, t_rem = PC.instantiate_term_implicits (push_env g uvs) v_opened in
+
+    let uvs, v_opened =
+      let (| uvs_rem, v_opened |) =
+        add_rem_uvs (push_env g uvs) t_rem (mk_env (fstar_env g)) v_opened in
+      push_env uvs uvs_rem, v_opened in
+
     let lhs, rhs =
       match hint_type with      
       | UNFOLD _ ->
@@ -387,8 +436,13 @@ let check
       | FOLD { names=ns } -> 
         unfold_defs (push_env g uvs) ns v_opened,
         v_opened in
-    let uvs_bs = L.rev (bindings uvs) in
-    let lhs, rhs = close_binders uvs_bs lhs, close_binders uvs_bs rhs in
+
+    let uvs_bs = uvs |> bindings_with_ppname |> L.rev in
+    let uvs_closing = uvs_bs |> closing in
+    let lhs = subst_term lhs uvs_closing in
+    let rhs = subst_term rhs uvs_closing in
+    let body = subst_st_term body_opened uvs_closing in
+    let bs = close_binders uvs_bs in
     let rw = { term = Tm_Rewrite { t1 = lhs;
                                    t2 = rhs };
                range = st.range;

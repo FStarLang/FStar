@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Syntax.Pure
 
 module R = FStar.Reflection.V2
@@ -180,17 +196,10 @@ let is_fvar_app (t:term) : option (R.name &
        | None -> None)
     | _ -> None
 
-    // | Tm_PureApp head q arg ->
-    //   begin match is_fvar head with
-    //         | Some (l, us) -> Some (l, us, q, Some arg)
-    //         | None -> None
-    //   end
-    // | _ -> None
-
 let is_arrow (t:term) : option (binder & option qualifier & comp) =
   match t.t with
   | Tm_FStar host_term ->
-    begin match R.inspect_ln host_term with
+    begin match R.inspect_ln_unascribe host_term with
           | R.Tv_Arrow b c ->
             let {ppname;qual;sort} = R.inspect_binder b in
             begin match qual with
@@ -198,17 +207,26 @@ let is_arrow (t:term) : option (binder & option qualifier & comp) =
                   | _ ->
                     let q = readback_qual qual in
                     let c_view = R.inspect_comp c in
+                    let ret (c_t:R.typ) =
+                      let? binder_ty = readback_ty sort in
+                      let? c =
+                        match readback_comp c_t with
+                        | Some c -> Some c <: option Pulse.Syntax.Base.comp
+                        | None -> None in
+                      Some ({binder_ty;
+                             binder_ppname=mk_ppname ppname (T.range_of_term host_term)},
+                            q,
+                            c) in
+                      
                     begin match c_view with
-                          | R.C_Total c_t ->
-                            let? binder_ty = readback_ty sort in
-                            let? c =
-                              match readback_comp c_t with
-                              | Some c -> Some c <: option Pulse.Syntax.Base.comp
-                              | None -> None in
-                            Some ({binder_ty;
-                                   binder_ppname=mk_ppname ppname (T.range_of_term host_term)},
-                                  q,
-                                  c)
+                          | R.C_Total c_t -> ret c_t
+                          | R.C_Eff _ eff_name c_t _ _ ->
+                            //
+                            // Consider Tot effect with decreases also
+                            //
+                            if eff_name = tot_lid
+                            then ret c_t
+                            else None
                           | _ -> None
                     end
             end
