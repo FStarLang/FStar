@@ -334,79 +334,25 @@ ensures qpred ('i + 1)
  
 ```
 
-
-assume
-val token : Type0
-
-assume
-val cancellable (t:token) (v:vprop) : vprop
-
-assume
-val active
-     (p:perm) 
-     (c:token)
- : vprop
-
-assume
-val take (#p #t:_) (v:vprop) :
-  stt_ghost unit emp_inames
-    (cancellable t v ** active p t)
-    (fun _ -> v ** active p t)
-
-assume
-val restore (#p #t:_) (v:vprop) :
-  stt_ghost unit emp_inames
-    (v ** active p t)
-    (fun _ -> cancellable t v ** active p t)
-    
-
-assume
-val cancel (#t:_) (v:vprop) :
-  stt_ghost unit emp_inames
-    (cancellable t v ** active full_perm t)
-    (fun _ -> cancellable t v ** v)
-
-assume
-val create (v:vprop) :
-  stt_ghost (erased token) emp_inames v 
-          (fun t -> cancellable t v ** active full_perm t)
-
-assume
-val share (#p:_) (t:_) :
-  stt_ghost unit emp_inames
-    (active p t)
-    (fun _ -> active (half_perm p) t ** active (half_perm p) t)
-
-assume
-val gather (#p:_) (t:_) :
-  stt_ghost unit emp_inames
-    (active (half_perm p) t ** active (half_perm p) t)
-    (fun _ -> active p t)
- 
- assume
- val cancel_inv (#t #v:_) (i:inv (cancellable t v)) :
-  stt_ghost unit emp_inames
-    (active full_perm t)
-    (fun _ -> v)
-
+module C = Pulse.Lib.CancellableInvariant
 
 ```pulse
 fn atomic_increment_f6
         (x: ref int)
-        (#p:_) (#t:erased token)
+        (#p:_) (#t:erased C.token)
         (#pred #qpred: int -> vprop)
-        (l:inv (cancellable t (exists* v. pts_to x v ** pred v)))
+        (l:inv (C.cancellable t (exists* v. pts_to x v ** pred v)))
         (f: (v:int -> vq:int -> stt_ghost unit emp_inames 
                   (pred v ** qpred vq ** pts_to x (v + 1))
                   (fun _ -> pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))))
-requires qpred 'i ** active p t
-ensures qpred ('i + 1) ** active p t
+requires qpred 'i ** C.active p t
+ensures qpred ('i + 1) ** C.active p t
 {
   with_invariants l {
-    take _;
+    C.take _;
     atomic_increment x;
     f _ 'i;
-    restore (exists* v. pts_to x v ** pred v)
+    C.restore (exists* v. pts_to x v ** pred v)
   }
 }
 ```
@@ -422,7 +368,7 @@ ensures pts_to x ('i + 2)
     let right = GR.alloc #int 0;
     GR.share left;
     GR.share right;
-    let tok = create (
+    let tok = C.create2 (
       exists* (v:int).
           pts_to x v **
           (exists* (vl vr:int).
@@ -431,8 +377,8 @@ ensures pts_to x ('i + 2)
             pure (v == 'i + vl + vr))
 
     );
-    share tok; 
-    let inv = new_invariant' (cancellable tok _);
+    C.share tok; 
+    let inv = new_invariant' (C.cancellable tok _);
     ghost
     fn step
         (lr:GR.ref int)
@@ -475,18 +421,18 @@ ensures pts_to x ('i + 2)
 
     parallel
     requires GR.pts_to left #(half_perm full_perm) 0 **
-             active (half_perm full_perm) tok
+             C.active (half_perm full_perm) tok
          and GR.pts_to right #(half_perm full_perm) 0 **
-             active (half_perm full_perm) tok
+             C.active (half_perm full_perm) tok
     ensures  GR.pts_to left #(half_perm full_perm) 1 **
-             active (half_perm full_perm) tok
+             C.active (half_perm full_perm) tok
          and GR.pts_to right #(half_perm full_perm) 1 **
-             active (half_perm full_perm) tok
+             C.active (half_perm full_perm) tok
     { atomic_increment_f6 x inv (step left true) }
     { atomic_increment_f6 x inv (step right false) };
 
-    gather tok;
-    cancel_inv inv;
+    C.gather tok;
+    C.cancel_inv inv;
     GR.gather left;
     GR.gather right;
     with _p _v. rewrite (GR.pts_to left #_p _v) as (GR.pts_to left _v);
