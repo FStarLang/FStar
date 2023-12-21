@@ -51,7 +51,7 @@ fn async_fill
   // Very nice!
   let v : a = f ();
   r := Some v;
-  fold ref_solves_post r post;
+  fold ref_solves_post;
   ()
 }
 ```
@@ -100,14 +100,14 @@ fn __await
 {
   let r = fst h;
   let th = snd h;
-  unfold async_joinable h;
+  unfold async_joinable;
   assert (joinable th);
   join th; (* join the thread *)
   assert (done th);
   rewrite (done th) as (done (snd h));
   redeem_pledge emp_inames (done (snd h)) (ref_solves_post r post);
   assert (ref_solves_post r post);
-  unfold ref_solves_post r post;
+  unfold ref_solves_post;
   with vv. assert (pts_to r (Some vv));
   drop_ (done th);
   

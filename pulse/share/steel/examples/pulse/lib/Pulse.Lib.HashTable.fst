@@ -467,7 +467,7 @@ fn delete (#kt:eqtype) (#vt:Type0)
   rewrite (exploded_vp r ht (tfst res) (tsnd res) (tthd res))
        as (exploded_vp r ht r_sz r_hashf r_contents);
   
-  unfold (exploded_vp r ht r_sz r_hashf r_contents);
+  unfold exploded_vp;
   let sz = !r_sz;
   let hash = ref_apply r_hashf k;
   rewrite (pts_to r_sz sz) as (pts_to r_sz ht.sz);

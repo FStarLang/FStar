@@ -62,8 +62,8 @@ fn __return_pledge (f v : vprop)
      ensures pledge f v
 {
   P.return_pledge emp_inames f v;
-  fold (P.pledge_any f v);
-  fold (pledge f v);
+  fold P.pledge_any;
+  fold pledge;
 }
 ```
 let return_pledge = __return_pledge
@@ -76,8 +76,8 @@ fn __make_pledge (#os:inames) (f v extra : vprop)
   ensures pledge f v
 {
   P.make_pledge os f v extra k;
-  fold (P.pledge_any f v);
-  fold (pledge f v);
+  fold P.pledge_any;
+  fold pledge;
 }
 ```
 let make_pledge #os f v extra k = __make_pledge #os f v extra k
@@ -128,8 +128,8 @@ fn __bind_pledge (#os : inames) (#f #v1 #v2 : vprop)
   
   P.bind_pledge #invs #f #v1 #v2 extra k';
 
-  fold (P.pledge_any f v2);
-  fold (pledge f v2);
+  fold P.pledge_any;
+  fold pledge;
 }
 ```
 let bind_pledge #os #f #v1 #v2 extra k = __bind_pledge #os #f #v1 #v2 extra k
@@ -153,10 +153,10 @@ fn __join_pledge (#f v1 v2 : vprop)
   requires pledge f v1 ** pledge f v2
   ensures pledge f (v1 ** v2)
 {
-  unfold (pledge f v1);
-  unfold (pledge f v2);
-  unfold (P.pledge_any f v1);
-  unfold (P.pledge_any f v2);
+  unfold pledge;
+  unfold pledge;
+  unfold P.pledge_any;
+  unfold P.pledge_any;
   
   with is1. assert (P.pledge is1 f v1);
   with is2. assert (P.pledge is2 f v2);
@@ -168,8 +168,8 @@ fn __join_pledge (#f v1 v2 : vprop)
 
   P.join_pledge #is #f v1 v2;
 
-  fold (P.pledge_any f (v1 ** v2));
-  fold (pledge f (v1 ** v2));
+  fold P.pledge_any;
+  fold pledge;
 }
 ```
 let join_pledge = __join_pledge
@@ -180,17 +180,17 @@ fn __split_pledge (#f v1 v2 : vprop)
   requires pledge f (v1 ** v2)
   ensures pledge f v1 ** pledge f v2
 {
-  unfold (pledge f (v1 ** v2));
-  unfold (P.pledge_any f (v1 ** v2));
+  unfold pledge;
+  unfold P.pledge_any;
   
   with is. assert (P.pledge is f (v1 ** v2));
   
   P.split_pledge #is #f v1 v2;
 
-  fold (P.pledge_any f v1);
-  fold (P.pledge_any f v2);
-  fold (pledge f v1);
-  fold (pledge f v2);
+  fold P.pledge_any;
+  fold P.pledge_any;
+  fold pledge;
+  fold pledge;
 }
 ```
 let split_pledge = __split_pledge
@@ -202,8 +202,8 @@ fn __rewrite_pledge (#os : inames) (#f : vprop) (v1 v2 : vprop)
    requires pledge f v1
     ensures pledge f v2
 {
-  unfold (pledge f v1);
-  unfold (P.pledge_any f v1);
+  unfold pledge;
+  unfold P.pledge_any;
   with is. assert (P.pledge is f v1);
   
   let invs = join_inames is os;
@@ -216,8 +216,8 @@ fn __rewrite_pledge (#os : inames) (#f : vprop) (v1 v2 : vprop)
     admit();
   P.rewrite_pledge #invs #f v1 v2 k';
 
-  fold (P.pledge_any f v2);
-  fold (pledge f v2);
+  fold P.pledge_any;
+  fold pledge;
 }
 ```
 let rewrite_pledge = __rewrite_pledge
