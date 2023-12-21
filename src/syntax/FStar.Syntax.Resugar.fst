@@ -213,6 +213,8 @@ let is_tuple_constructor_lid lid =
   || C.is_dtuple_data_lid' lid
 
 let may_shorten lid =
+  if Options.print_real_names () then false
+  else
   match string_of_lid lid with
   | "Prims.Nil"
   | "Prims.Cons" -> false
