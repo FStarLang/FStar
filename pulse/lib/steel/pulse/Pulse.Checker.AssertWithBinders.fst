@@ -1,6 +1,5 @@
 module Pulse.Checker.AssertWithBinders
 
-
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Base
@@ -96,20 +95,17 @@ let closing (bs:list (ppname & var & typ)) : subst =
     (ND x n)::ss
   ) bs (0, []) |> snd
 
-let rec close_binders (bs:list (ppname & var & typ)) : list binder =
-  admit ();
+let rec close_binders (bs:list (ppname & var & typ))
+  : Tot (list binder) (decreases L.length bs) =
   match bs with
   | [] -> []
   | (name, x, t)::bs ->
-    let bs = L.mapi (fun n (n1, x1, t1) -> n1, x1, subst_term t1 [ND x n]) bs in
+    let bss = L.mapi (fun n (n1, x1, t1) ->
+      assume (n >= 0);
+      n1, x1, subst_term t1 [ND x n]) bs in
     let b = {binder_ppname=name; binder_ty = t} in
-    b::(close_binders bs)
-
-let close_term (bs:list (ppname & var & typ)) (t:term) : term =
-  bs |> closing |> subst_term t
-
-let close_st_term (bs:list (ppname & var & typ)) (t:st_term) : st_term =
-  bs |> closing |> subst_st_term t
+    assume (L.length bss == L.length bs);
+    b::(close_binders bss)
 
 let unfold_defs (g:env) (defs:option (list string)) (t:term) 
   : T.Tac term
@@ -247,7 +243,7 @@ let rewrite_all (g:env) (p: list (term & term)) (t:term) : T.Tac (term & term) =
     debug_log g (fun _ -> Printf.sprintf "Rewrote %s to %s" (P.term_to_string lhs) (P.term_to_string rhs));
     lhs, rhs
 
-let rec check_renaming 
+let check_renaming 
     (g:env)
     (pre:term)
     (st:st_term { 
@@ -321,15 +317,15 @@ let check_wild
       in
       peel_binders k ex
 
+//
+// v is a partially applied vprop with type t
+// add uvars for the remaining arguments
+//
 let rec add_rem_uvs (g:env) (t:typ) (uvs:env { Env.disjoint g uvs }) (v:vprop)
   : T.Tac (uvs:env { Env.disjoint g uvs } & vprop) =
-  T.print ("Adding rem uvs with " ^ (Pulse.Syntax.Printer.term_to_string t ^ "\n"));
   match is_arrow t with
-  | None ->
-    T.print "not an arrow\n";
-    (| uvs, v |)
+  | None -> (| uvs, v |)
   | Some (b, qopt, c) ->
-    T.print "is an arrow\n";
     let x = fresh (push_env g uvs) in
     let ct = open_comp_nv c (b.binder_ppname, x) in
     let uvs = Env.push_binding uvs x b.binder_ppname b.binder_ty in
@@ -425,10 +421,11 @@ let check
         unfold_defs (push_env g uvs) ns v_opened,
         v_opened in
 
-    let uvs_bs = L.rev (bindings_with_ppname uvs) in
-    let lhs = close_term uvs_bs lhs in
-    let rhs = close_term uvs_bs rhs in
-    let body = close_st_term uvs_bs body_opened in
+    let uvs_bs = uvs |> bindings_with_ppname |> L.rev in
+    let uvs_closing = uvs_bs |> closing in
+    let lhs = subst_term lhs uvs_closing in
+    let rhs = subst_term rhs uvs_closing in
+    let body = subst_st_term body_opened uvs_closing in
     let bs = close_binders uvs_bs in
     let rw = { term = Tm_Rewrite { t1 = lhs;
                                    t2 = rhs };
