@@ -17,8 +17,6 @@ and node_ptr (t:Type0) = ref (node t)
 //A nullable pointer to a node
 and llist (t:Type0) = option (node_ptr t)
 
-let mk_node #t (hd:t) (tl:llist t) : Tot (node t)
-  = {head=hd; tail=tl}
 
 let rec is_list #t (x:llist t) (l:list t)
   : Tot vprop (decreases l)
@@ -27,7 +25,7 @@ let rec is_list #t (x:llist t) (l:list t)
     | head::tl -> 
       exists* (v:node_ptr t) (tail:llist t).
         pure (x == Some v) **
-        pts_to v (mk_node head tail) **
+        pts_to v { head; tail } **
         is_list tail tl
     
 
@@ -71,17 +69,18 @@ let norm_tac (_:unit) : T.Tac unit =
 ghost
 fn elim_is_list_cons (#t:Type0) (x:llist t) (head:t) (tl:list t)
   requires is_list x (head::tl)
-  ensures exists* (v:node_ptr t) (tail:llist t).
-            pure (x == Some v) **
-            pts_to v (mk_node head tail) **
-            is_list tail tl
+  ensures (
+    exists* (v:node_ptr t) (tail:llist t).
+      pure (x == Some v) **
+      pts_to v { head; tail } **
+      is_list tail tl)
 {
 
     rewrite_by (is_list x (head::tl))
                (exists* (v:node_ptr t)
                         (tail:llist t).
                     pure (x == Some v) **
-                    pts_to v (mk_node head tail) **
+                    pts_to v { head; tail } **
                     is_list tail tl)
                 norm_tac
                 ();
@@ -94,11 +93,11 @@ fn intro_is_list_cons (#t:Type0) (x:llist t) (v:node_ptr t) (#node:node t) (#tl:
     requires pts_to v node ** is_list node.tail tl ** pure (x == Some v)
     ensures is_list x (node.head::tl)
 {
-    rewrite (pts_to v node) as (pts_to v (mk_node node.head node.tail));
+    rewrite (pts_to v node) as (pts_to v { head=node.head; tail=node.tail });
     rewrite_by
          (exists* (v:node_ptr t) (tail:llist t).
                 pure (x == Some v) **
-                pts_to v (mk_node node.head tail) **
+                pts_to v { head=node.head; tail } **
                 is_list tail tl)
         (is_list x (node.head::tl))
         norm_tac
@@ -124,7 +123,7 @@ fn cases_of_is_list (#t:Type) (x:llist t) (l:list t)
             with w tail. _;
             let v = Some?.v x;
             rewrite each w as v;
-            rewrite each tail as ((mk_node head tail).tail) in (is_list tail tl);
+            rewrite each tail as (({ head; tail }).tail) in (is_list tail tl);
             fold (is_list_cases (Some v) l);
             rewrite (is_list_cases (Some v) l) as
                     (is_list_cases x l)
@@ -248,8 +247,8 @@ fn cons (#t:Type) (v:t) (x:llist t)
     returns y:llist t
     ensures is_list y (v::'l)
 {
-    let y = alloc (mk_node v x);
-    rewrite each x as (mk_node v x).tail in (is_list x 'l);
+    let y = alloc { head=v; tail=x };
+    rewrite each x as ({head=v; tail=x}).tail in (is_list x 'l);
     intro_is_list_cons (Some y) y;
     Some y
 }
@@ -269,8 +268,8 @@ ensures is_list x ('l1 @ 'l2)
     None -> {
       is_list_cases_none node.tail;
       elim_is_list_nil node.tail;
-      np := mk_node node.head y;
-      rewrite each y as (mk_node node.head y).tail in (is_list y 'l2);
+      np := { node with tail = y };
+      rewrite each y as ({ node with tail = y }).tail in (is_list y 'l2);
       intro_is_list_cons x np; 
     }
     Some _ -> {
@@ -421,8 +420,8 @@ ensures
     None -> {
       is_list_cases_none node.tail;
       elim_is_list_nil node.tail;
-      np := mk_node node.head y;
-      rewrite each y as (mk_node node.head y).tail in (is_list y 'l2);
+      np := { node with tail = y };
+      rewrite each y as ({node with tail = y}).tail in (is_list y 'l2);
       intro_is_list_cons x np; 
     }
     Some vtl -> {
@@ -495,6 +494,8 @@ let append_assoc_singleton (l1 l2:list 'a) (x:'a)
     (ensures l1@(x::l2) == (l1 @ [x])@l2)
     [SMTPat (l1@(x::l2))]
 = List.Tot.Properties.append_assoc l1 [x] l2
+
+let trigger (x:'a) : vprop = emp
 
 ```pulse
 fn append_iter (#t:Type) (x y:llist t)
@@ -580,13 +581,12 @@ open Pulse.Lib.BoundedIntegers
 #push-options "--fuel 1 --ifuel 1"
  ```pulse 
  fn split (#t:Type0) (x:llist t) (n:U32.t) (#xl:erased (list t))
- requires is_list x xl ** pure (Some? x /\ 0 < v n /\ v n < List.Tot.length xl)
+ requires is_list x xl ** pure (Some? x /\ 0 < v n /\ v n <= List.Tot.length xl)
  returns  y:llist t
  ensures exists* l1 l2. 
     is_list x l1 **
     is_list y l2 **
-    pure (v n < List.Tot.length xl /\
-          xl == l1 @ l2 /\
+    pure (xl == l1 @ l2 /\
           List.Tot.length l1 == v n)
  {
   let mut cur = x;
@@ -646,3 +646,39 @@ open Pulse.Lib.BoundedIntegers
   y
  }
  ```
+
+```pulse
+fn insert (#kk:Type0) (x:llist kk) (item:kk) (pos:U32.t) (#xl:erased (list kk))
+requires is_list x xl ** pure (Some? x /\ 0 < v pos /\ v pos < List.Tot.length xl)
+ensures exists* l0 l1.
+  is_list x (l0 @ item :: l1) **
+  pure (
+      xl == l0 @ l1 /\
+      List.Tot.length l0 == v pos
+    )
+{
+  let y = split x pos;
+  with l0 l1. _;
+  let z = cons item y;
+  append x z;
+  with m. rewrite (is_list x m) as (is_list x (l0 @ item :: l1));
+}
+```
+
+```pulse
+fn delete (#kk:Type0) (x:llist kk) (item:kk) (pos:U32.t) (#xl:erased (list kk))
+requires is_list x xl ** pure (Some? x /\ 0 < v pos /\ v pos < List.Tot.length xl)
+ensures exists* l0 l1.
+  is_list x (l0 @ item :: l1) **
+  pure (
+      xl == l0 @ l1 /\
+      List.Tot.length l0 == v pos
+    )
+{
+  let y = split x pos;
+  with l0 l1. _;
+  let z = cons item y;
+  append x z;
+  with m. rewrite (is_list x m) as (is_list x (l0 @ item :: l1));
+}
+```
