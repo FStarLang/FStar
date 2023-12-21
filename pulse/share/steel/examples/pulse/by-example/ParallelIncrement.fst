@@ -3,6 +3,7 @@ open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
 module L = Pulse.Lib.SpinLock
 module GR = Pulse.Lib.GhostReference
+module R = Pulse.Lib.Reference
 ```pulse
 fn increment (x: ref nat)
              (l:L.lock (exists* v. pts_to x #one_half v))
@@ -11,10 +12,10 @@ ensures pts_to x #one_half ('i + 1)
  {
     let v = !x;
     L.acquire l;
-    gather x;
+    R.gather x;
     with p _v. rewrite (pts_to x #p _v) as (pts_to x _v);
     x := (v + 1);
-    share x;
+    R.share x;
     with p _v. rewrite (pts_to x #p _v) as (pts_to x #one_half _v);
     L.release l;
     with p _v. rewrite (pts_to x #p _v) as (pts_to x #one_half _v);
@@ -35,10 +36,10 @@ ensures pts_to x #one_half ('i + 1) ** qpred ('i + 1)
     let vx = !x;
     rewrite (qpred 'i) as (qpred vx);
     L.acquire l;
-    gather x;
+    R.gather x;
     with p v. rewrite (pts_to x #p v) as (pts_to x v);
     x := (vx + 1);
-    share x;
+    R.share x;
     with p _v. rewrite (pts_to x #p _v) as (pts_to x #one_half _v);
     with _v. rewrite (pred _v) as (pred vx);
     f vx;
