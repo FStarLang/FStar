@@ -24,41 +24,31 @@ let (bounded_arith_ops_for :
             (FStar_Compiler_MachineInts.v k) in
         let uu___3 =
           let uu___4 =
-            let uu___5 = nm "add" in
-            FStar_TypeChecker_Primops_Base.mk2 Prims.int_zero uu___5
+            let uu___5 =
+              let uu___6 =
+                let uu___7 = FStar_Compiler_MachineInts.is_unsigned k in
+                if uu___7 then "uint_to_t" else "int_to_t" in
+              nm uu___6 in
+            FStar_TypeChecker_Primops_Base.mk1 Prims.int_zero uu___5
+              FStar_Syntax_Embeddings.e_int FStar_TypeChecker_NBETerm.e_int
               (FStar_Compiler_MachineInts.e_machint k)
               (FStar_Compiler_MachineInts.nbe_machint k)
-              (FStar_Compiler_MachineInts.e_machint k)
-              (FStar_Compiler_MachineInts.nbe_machint k)
-              (FStar_Compiler_MachineInts.e_machint k)
-              (FStar_Compiler_MachineInts.nbe_machint k)
-              (fun x ->
-                 fun y ->
-                   let uu___6 =
-                     let uu___7 = FStar_Compiler_MachineInts.v k x in
-                     let uu___8 = FStar_Compiler_MachineInts.v k y in
-                     FStar_BigInt.add_big_int uu___7 uu___8 in
-                   FStar_Compiler_MachineInts.make_as k x uu___6) in
+              (FStar_Compiler_MachineInts.int_to_t k) in
           let uu___5 =
             let uu___6 =
-              let uu___7 = nm "sub" in
-              FStar_TypeChecker_Primops_Base.mk2 Prims.int_zero uu___7
+              let uu___7 =
+                let uu___8 =
+                  let uu___9 = FStar_Compiler_MachineInts.is_unsigned k in
+                  if uu___9 then "__uint_to_t" else "__int_to_t" in
+                nm uu___8 in
+              FStar_TypeChecker_Primops_Base.mk1 Prims.int_zero uu___7
+                FStar_Syntax_Embeddings.e_int FStar_TypeChecker_NBETerm.e_int
                 (FStar_Compiler_MachineInts.e_machint k)
                 (FStar_Compiler_MachineInts.nbe_machint k)
-                (FStar_Compiler_MachineInts.e_machint k)
-                (FStar_Compiler_MachineInts.nbe_machint k)
-                (FStar_Compiler_MachineInts.e_machint k)
-                (FStar_Compiler_MachineInts.nbe_machint k)
-                (fun x ->
-                   fun y ->
-                     let uu___8 =
-                       let uu___9 = FStar_Compiler_MachineInts.v k x in
-                       let uu___10 = FStar_Compiler_MachineInts.v k y in
-                       FStar_BigInt.sub_big_int uu___9 uu___10 in
-                     FStar_Compiler_MachineInts.make_as k x uu___8) in
+                (FStar_Compiler_MachineInts.int_to_t k) in
             let uu___7 =
               let uu___8 =
-                let uu___9 = nm "mul" in
+                let uu___9 = nm "add" in
                 FStar_TypeChecker_Primops_Base.mk2 Prims.int_zero uu___9
                   (FStar_Compiler_MachineInts.e_machint k)
                   (FStar_Compiler_MachineInts.nbe_machint k)
@@ -71,41 +61,45 @@ let (bounded_arith_ops_for :
                        let uu___10 =
                          let uu___11 = FStar_Compiler_MachineInts.v k x in
                          let uu___12 = FStar_Compiler_MachineInts.v k y in
-                         FStar_BigInt.mult_big_int uu___11 uu___12 in
+                         FStar_BigInt.add_big_int uu___11 uu___12 in
                        FStar_Compiler_MachineInts.make_as k x uu___10) in
               let uu___9 =
                 let uu___10 =
-                  let uu___11 = nm "gt" in
+                  let uu___11 = nm "sub" in
                   FStar_TypeChecker_Primops_Base.mk2 Prims.int_zero uu___11
                     (FStar_Compiler_MachineInts.e_machint k)
                     (FStar_Compiler_MachineInts.nbe_machint k)
                     (FStar_Compiler_MachineInts.e_machint k)
                     (FStar_Compiler_MachineInts.nbe_machint k)
-                    FStar_Syntax_Embeddings.e_bool
-                    FStar_TypeChecker_NBETerm.e_bool
+                    (FStar_Compiler_MachineInts.e_machint k)
+                    (FStar_Compiler_MachineInts.nbe_machint k)
                     (fun x ->
                        fun y ->
-                         let uu___12 = FStar_Compiler_MachineInts.v k x in
-                         let uu___13 = FStar_Compiler_MachineInts.v k y in
-                         FStar_BigInt.gt_big_int uu___12 uu___13) in
+                         let uu___12 =
+                           let uu___13 = FStar_Compiler_MachineInts.v k x in
+                           let uu___14 = FStar_Compiler_MachineInts.v k y in
+                           FStar_BigInt.sub_big_int uu___13 uu___14 in
+                         FStar_Compiler_MachineInts.make_as k x uu___12) in
                 let uu___11 =
                   let uu___12 =
-                    let uu___13 = nm "gte" in
+                    let uu___13 = nm "mul" in
                     FStar_TypeChecker_Primops_Base.mk2 Prims.int_zero uu___13
                       (FStar_Compiler_MachineInts.e_machint k)
                       (FStar_Compiler_MachineInts.nbe_machint k)
                       (FStar_Compiler_MachineInts.e_machint k)
                       (FStar_Compiler_MachineInts.nbe_machint k)
-                      FStar_Syntax_Embeddings.e_bool
-                      FStar_TypeChecker_NBETerm.e_bool
+                      (FStar_Compiler_MachineInts.e_machint k)
+                      (FStar_Compiler_MachineInts.nbe_machint k)
                       (fun x ->
                          fun y ->
-                           let uu___14 = FStar_Compiler_MachineInts.v k x in
-                           let uu___15 = FStar_Compiler_MachineInts.v k y in
-                           FStar_BigInt.ge_big_int uu___14 uu___15) in
+                           let uu___14 =
+                             let uu___15 = FStar_Compiler_MachineInts.v k x in
+                             let uu___16 = FStar_Compiler_MachineInts.v k y in
+                             FStar_BigInt.mult_big_int uu___15 uu___16 in
+                           FStar_Compiler_MachineInts.make_as k x uu___14) in
                   let uu___13 =
                     let uu___14 =
-                      let uu___15 = nm "lt" in
+                      let uu___15 = nm "gt" in
                       FStar_TypeChecker_Primops_Base.mk2 Prims.int_zero
                         uu___15 (FStar_Compiler_MachineInts.e_machint k)
                         (FStar_Compiler_MachineInts.nbe_machint k)
@@ -117,10 +111,10 @@ let (bounded_arith_ops_for :
                            fun y ->
                              let uu___16 = FStar_Compiler_MachineInts.v k x in
                              let uu___17 = FStar_Compiler_MachineInts.v k y in
-                             FStar_BigInt.lt_big_int uu___16 uu___17) in
+                             FStar_BigInt.gt_big_int uu___16 uu___17) in
                     let uu___15 =
                       let uu___16 =
-                        let uu___17 = nm "lte" in
+                        let uu___17 = nm "gte" in
                         FStar_TypeChecker_Primops_Base.mk2 Prims.int_zero
                           uu___17 (FStar_Compiler_MachineInts.e_machint k)
                           (FStar_Compiler_MachineInts.nbe_machint k)
@@ -132,8 +126,45 @@ let (bounded_arith_ops_for :
                              fun y ->
                                let uu___18 = FStar_Compiler_MachineInts.v k x in
                                let uu___19 = FStar_Compiler_MachineInts.v k y in
-                               FStar_BigInt.le_big_int uu___18 uu___19) in
-                      [uu___16] in
+                               FStar_BigInt.ge_big_int uu___18 uu___19) in
+                      let uu___17 =
+                        let uu___18 =
+                          let uu___19 = nm "lt" in
+                          FStar_TypeChecker_Primops_Base.mk2 Prims.int_zero
+                            uu___19 (FStar_Compiler_MachineInts.e_machint k)
+                            (FStar_Compiler_MachineInts.nbe_machint k)
+                            (FStar_Compiler_MachineInts.e_machint k)
+                            (FStar_Compiler_MachineInts.nbe_machint k)
+                            FStar_Syntax_Embeddings.e_bool
+                            FStar_TypeChecker_NBETerm.e_bool
+                            (fun x ->
+                               fun y ->
+                                 let uu___20 =
+                                   FStar_Compiler_MachineInts.v k x in
+                                 let uu___21 =
+                                   FStar_Compiler_MachineInts.v k y in
+                                 FStar_BigInt.lt_big_int uu___20 uu___21) in
+                        let uu___19 =
+                          let uu___20 =
+                            let uu___21 = nm "lte" in
+                            FStar_TypeChecker_Primops_Base.mk2 Prims.int_zero
+                              uu___21
+                              (FStar_Compiler_MachineInts.e_machint k)
+                              (FStar_Compiler_MachineInts.nbe_machint k)
+                              (FStar_Compiler_MachineInts.e_machint k)
+                              (FStar_Compiler_MachineInts.nbe_machint k)
+                              FStar_Syntax_Embeddings.e_bool
+                              FStar_TypeChecker_NBETerm.e_bool
+                              (fun x ->
+                                 fun y ->
+                                   let uu___22 =
+                                     FStar_Compiler_MachineInts.v k x in
+                                   let uu___23 =
+                                     FStar_Compiler_MachineInts.v k y in
+                                   FStar_BigInt.le_big_int uu___22 uu___23) in
+                          [uu___20] in
+                        uu___18 :: uu___19 in
+                      uu___16 :: uu___17 in
                     uu___14 :: uu___15 in
                   uu___12 :: uu___13 in
                 uu___10 :: uu___11 in

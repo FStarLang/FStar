@@ -139,6 +139,30 @@ let (mk :
   = fun k -> fun x -> fun m -> Mk (x, m)
 let (v : machint_kind -> unit machint -> FStar_BigInt.t) =
   fun k -> fun x -> let uu___ = x in match uu___ with | Mk (v1, uu___1) -> v1
+let (int_to_t : machint_kind -> FStar_BigInt.t -> unit machint) =
+  fun k ->
+    fun i ->
+      let meta =
+        if k = UInt128
+        then FStar_Pervasives_Native.None
+        else
+          (let signedness =
+             let uu___1 = is_unsigned k in
+             if uu___1 then FStar_Const.Unsigned else FStar_Const.Signed in
+           let width1 =
+             match k with
+             | Int8 -> FStar_Const.Int8
+             | UInt8 -> FStar_Const.Int8
+             | Int16 -> FStar_Const.Int16
+             | UInt16 -> FStar_Const.Int16
+             | Int32 -> FStar_Const.Int32
+             | UInt32 -> FStar_Const.Int32
+             | Int64 -> FStar_Const.Int64
+             | UInt64 -> FStar_Const.Int64
+             | SizeT -> FStar_Const.Sizet in
+           FStar_Pervasives_Native.Some
+             (FStar_Syntax_Syntax.Machine_integer (signedness, width1))) in
+      Mk (i, meta)
 let (meta :
   machint_kind ->
     unit machint ->
@@ -191,11 +215,11 @@ let (e_machint :
               FStar_Syntax_Embeddings_Base.embed
                 FStar_Syntax_Embeddings.e_int i in
             uu___1 rng FStar_Pervasives_Native.None cb in
-          let int_to_t = int_to_t_for k in
+          let int_to_t1 = int_to_t_for k in
           let t =
             let uu___1 =
               let uu___2 = FStar_Syntax_Syntax.as_arg it in [uu___2] in
-            FStar_Syntax_Syntax.mk_Tm_app int_to_t uu___1 rng in
+            FStar_Syntax_Syntax.mk_Tm_app int_to_t1 uu___1 rng in
           with_meta_ds rng t m in
     let un uu___1 uu___ =
       (fun t ->
@@ -277,7 +301,7 @@ let (nbe_machint :
           let it =
             FStar_TypeChecker_NBETerm.embed FStar_TypeChecker_NBETerm.e_int
               cbs i in
-          let int_to_t args =
+          let int_to_t1 args =
             let uu___1 =
               let uu___2 =
                 let uu___3 =
@@ -290,7 +314,7 @@ let (nbe_machint :
           let t =
             let uu___1 =
               let uu___2 = FStar_TypeChecker_NBETerm.as_arg it in [uu___2] in
-            int_to_t uu___1 in
+            int_to_t1 uu___1 in
           with_meta_ds t m in
     let un uu___1 uu___ =
       (fun cbs ->
