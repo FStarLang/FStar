@@ -8,7 +8,7 @@ include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
 MODULES=$(wildcard Test*.fst)
 
-all: $(patsubst %.fst,%.run,$(MODULES))
+all: $(patsubst %.fst,%.run,$(MODULES)) out/BigList.memcheck
 
 accept: $(patsubst %.fst,%.run-accept,$(MODULES))
 
@@ -31,6 +31,13 @@ accept: $(patsubst %.fst,%.run-accept,$(MODULES))
 
 out:
 	mkdir -p out
+
+# Test that this file does not use much memory (currently 580MB),
+# we give it 1.5GB
+out/BigList.memcheck: BigList.fst
+	$(call msg, "MEMCHECK", $<)
+	$(Q)( ulimit -v 1500000 && $(FSTAR) $(SIL) BigList.fst )
+	$(Q)touch $@
 
 clean:
 	rm -rf out
