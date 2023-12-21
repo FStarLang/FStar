@@ -57,7 +57,7 @@ let extension_parser
                       r
         in
         let d = Splice (true, [Ident.id_of_text id], splicer) in
-        let d = { d; drange = r; quals = [ Irreducible ]; attrs = [str "uninterpreted_by_smt"]  } in
+        let d = { d; drange = r; quals = [ Irreducible ]; attrs = [str "uninterpreted_by_smt"]; interleaved = false  } in
         Inr d
 
 #push-options "--warn_error -272" //intentional top-level effect
