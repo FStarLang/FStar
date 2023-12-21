@@ -180,13 +180,6 @@ let is_fvar_app (t:term) : option (R.name &
        | None -> None)
     | _ -> None
 
-    // | Tm_PureApp head q arg ->
-    //   begin match is_fvar head with
-    //         | Some (l, us) -> Some (l, us, q, Some arg)
-    //         | None -> None
-    //   end
-    // | _ -> None
-
 let is_arrow (t:term) : option (binder & option qualifier & comp) =
   match t.t with
   | Tm_FStar host_term ->
@@ -198,30 +191,25 @@ let is_arrow (t:term) : option (binder & option qualifier & comp) =
                   | _ ->
                     let q = readback_qual qual in
                     let c_view = R.inspect_comp c in
+                    let ret (c_t:R.typ) =
+                      let? binder_ty = readback_ty sort in
+                      let? c =
+                        match readback_comp c_t with
+                        | Some c -> Some c <: option Pulse.Syntax.Base.comp
+                        | None -> None in
+                      Some ({binder_ty;
+                             binder_ppname=mk_ppname ppname (T.range_of_term host_term)},
+                            q,
+                            c) in
+                      
                     begin match c_view with
-                          | R.C_Total c_t ->
-                            let? binder_ty = readback_ty sort in
-                            let? c =
-                              match readback_comp c_t with
-                              | Some c -> Some c <: option Pulse.Syntax.Base.comp
-                              | None -> None in
-                            Some ({binder_ty;
-                                   binder_ppname=mk_ppname ppname (T.range_of_term host_term)},
-                                  q,
-                                  c)
-                          | R.C_Eff _ eff_name result _ _ ->
-                            if eff_name = ["Prims"; "Tot"]
-                            then
-                              let? binder_ty = readback_ty sort in
-                              let? c =
-                                match readback_comp result with
-                                | Some c -> Some c <: option Pulse.Syntax.Base.comp
-                                | None -> None in
-                              Some ({binder_ty;
-                                     binder_ppname=mk_ppname ppname (T.range_of_term host_term)},
-                                    q,
-                                    c)
-
+                          | R.C_Total c_t -> ret c_t
+                          | R.C_Eff _ eff_name c_t _ _ ->
+                            //
+                            // Consider Tot effect with decreases also
+                            //
+                            if eff_name = tot_lid
+                            then ret c_t
                             else None
                           | _ -> None
                     end

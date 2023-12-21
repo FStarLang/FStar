@@ -34,6 +34,7 @@ let szv_fv = R.pack_fv szv_lid
 let szv_tm = R.pack_ln (R.Tv_FVar szv_fv)
 let seq_lid = ["FStar"; "Seq"; "Base"; "seq"]
 let seq_create_lid = ["FStar"; "Seq"; "Base"; "create"]
+let tot_lid = ["Prims"; "Tot"]
 
 
 (* The "plicities" *)
