@@ -26,6 +26,9 @@ let bounded_arith_ops_for (k : machint_kind) : mymon unit =
   (* Operators common to all *)
   emit [
     mk1 0 (nm "v") (v #k);
+    mk1 0 (nm (if is_unsigned k
+               then "uint_to_t"
+               else "int_to_t")) (int_to_t #k);
 
     (* basic ops supported by all *)
     mk2 0 (nm "add") (fun (x y : machint k) -> make_as x (Z.add_big_int (v x) (v y)));
@@ -39,7 +42,7 @@ let bounded_arith_ops_for (k : machint_kind) : mymon unit =
   ];!
 
   (* Unsigned ints have more operators *)
-  let sz = width k in
+  let sz = widthn k in
   let modulus = Z.shift_left_big_int Z.one (Z.of_int_fs sz) in
   let mod (x : Z.t) : Z.t = Z.mod_big_int x modulus in
   if is_unsigned k then
@@ -90,5 +93,5 @@ let ops : list primitive_step =
    emit [
         (* Single extra op that returns a U32 *)
         mk1 0 PC.char_u32_of_char (fun (c : char) -> let n = Compiler.Util.int_of_char c |> Z.of_int_fs in
-                                                        MachineInts.mk #UInt32 n None);
+                                                        MachineInts.mk #UInt32 n);
    ])

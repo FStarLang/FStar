@@ -356,7 +356,7 @@ let rec encode_const c env =
     | Const_char c -> mkApp("FStar.Char.__char_of_int", [boxInt (mkInteger' (BU.int_of_char c))]), []
     | Const_int (i, None)  -> boxInt (mkInteger i), []
     | Const_int (repr, Some sw) ->
-      let syntax_term = FStar.ToSyntax.ToSyntax.desugar_machine_integer env.tcenv.dsenv repr sw Range.dummyRange in
+      let syntax_term = FStar.ToSyntax.ToSyntax.unfold_machine_integer env.tcenv.dsenv repr sw Range.dummyRange in
       encode_term syntax_term env
     | Const_string(s, _) -> Term.boxString <| mk_String_const s, []
     | Const_range _ -> mk_Range_const (), []
@@ -367,8 +367,8 @@ let rec encode_const c env =
 and encode_binders (fuel_opt:option term) (bs:Syntax.binders) (env:env_t) :
                             (list fv                       (* translated bound variables *)
                             * list term                    (* guards *)
-                            * env_t                         (* extended context *)
-                            * decls_t                       (* top-level decls to be emitted *)
+                            * env_t                        (* extended context *)
+                            * decls_t                      (* top-level decls to be emitted *)
                             * list bv)                     (* names *) =
 
     if Env.debug env.tcenv Options.Medium then BU.print1 "Encoding binders %s\n" (Print.binders_to_string ", " bs);

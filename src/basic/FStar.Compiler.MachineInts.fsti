@@ -27,15 +27,15 @@ val all_machint_kinds : list machint_kind
 
 val is_unsigned (k : machint_kind) : bool
 val is_signed (k : machint_kind) : bool
-val width (k : machint_kind) : int
+val widthn (k : machint_kind) : int
 val module_name_for (k:machint_kind) : string 
 val mask (k:machint_kind) : Z.t
 
 new val machint (k : machint_kind) : Type0
 
-val mk (#k:_) (i : Z.t) (m : option S.meta_source_info) : machint k // no checks at all, use with care
+val mk (#k:_) (i : Z.t) : machint k // no checks at all, use with care
 val v #k (x : machint k) : Z.t
-val meta #k (x : machint k) : option S.meta_source_info
+val int_to_t #k (i : Z.t) : machint k
 
 (* Make a machint k copying the meta off an existing one *)
 val make_as #k (x : machint k) (z : Z.t) : machint k

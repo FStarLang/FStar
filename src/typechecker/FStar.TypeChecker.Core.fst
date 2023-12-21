@@ -1600,7 +1600,7 @@ and check_pat (g:env) (p:pat) (t_sc:typ) : result (binders & universes) =
     let e =
       match c with
       | FStar.Const.Const_int(repr, Some sw) ->
-        FStar.ToSyntax.ToSyntax.desugar_machine_integer g.tcenv.dsenv repr sw p.p
+        FStar.ToSyntax.ToSyntax.unfold_machine_integer g.tcenv.dsenv repr sw p.p
       | _ ->
         mk (Tm_constant c) p.p in
     let! _, t_const = check "pat_const" g e in
