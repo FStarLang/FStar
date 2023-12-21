@@ -344,6 +344,7 @@ let is_BitVector_primitive head args =
     | _ -> false
 
 let rec encode_const c env =
+  Errors.with_ctx "While encoding a constant to SMT" (fun () ->
     match c with
     | Const_unit -> mk_Term_unit, []
     | Const_bool true -> boxBool mkTrue, []
@@ -358,7 +359,7 @@ let rec encode_const c env =
     | Const_effect -> mk_Term_type, []
     | Const_real r -> boxReal (mkReal r), []
     | c -> failwith (BU.format1 "Unhandled constant: %s" (Print.const_to_string c))
-
+  )
 and encode_binders (fuel_opt:option term) (bs:Syntax.binders) (env:env_t) :
                             (list fv                       (* translated bound variables *)
                             * list term                    (* guards *)
