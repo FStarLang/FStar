@@ -39,7 +39,9 @@ let int2bv_nat (#n: pos) (num: nat): Tot (bv_t n) = U.to_vec (num % pow2 n)
 let int2bv_nat_lemma (#n: pos) (num: uint_t n)
     : Lemma
       (ensures (int2bv_nat #n num == int2bv #n num)) =
-  assert (num < pow2 n /\ num % pow2 n = num)
+  assert (num < pow2 n);
+  FStar.Math.Lemmas.modulo_lemma num (pow2 n);
+  assert (num % pow2 n = num)
 
 let list2bv #n l = S.seq_of_list l
 let bv2list #n s = S.seq_to_list s
