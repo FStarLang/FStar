@@ -25,6 +25,7 @@ open FStar.Getopt
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 open FStar.Syntax.DsEnv
+open FStar.Class.Show
 
 (* Module abbreviations for the universal type-checker  *)
 module Syntax  = FStar.Syntax.Syntax
@@ -39,7 +40,7 @@ module Dep     = FStar.Parser.Dep
  * detect when loading the cache that the version number is same
  * It needs to be kept in sync with prims.fst
  *)
-let cache_version_number = 63
+let cache_version_number = 64
 
 (*
  * Abbreviation for what we store in the checked files (stages as described below)
@@ -93,6 +94,12 @@ type tc_result_t =
   | Unknown
   | Invalid of string  //reason why this is invalid
   | Valid   of string  //digest of the checked file
+
+instance _ : showable tc_result_t = {
+  show = (function Unknown   -> "Unknown"
+                 | Invalid s -> "Invalid " ^ show s
+                 | Valid   s -> "Valid " ^ show s);
+}
 
 (*
  * The cache of checked files

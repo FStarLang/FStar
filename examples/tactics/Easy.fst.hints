@@ -7,11 +7,11 @@
       2,
       1,
       [
-        "@query", "primitive_Prims.op_Addition",
-        "projection_inverse_BoxInt_proj_0"
+        "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "a7979648348b7474e0352819898199fa"
+      "de23c104f6f0eda230aaac918e2b44c5"
     ],
     [
       "Easy.plus_comm",
@@ -20,7 +20,7 @@
       1,
       [ "@query", "primitive_Prims.op_Addition" ],
       0,
-      "697bb2e6180d2a34d7d47581ef20325e"
+      "59171f1d1fb29cc7aa8e6e3856523ec7"
     ]
   ]
 ]

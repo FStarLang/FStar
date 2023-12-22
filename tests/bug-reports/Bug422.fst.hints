@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "1c8f25f6a24c2629a0cf124df9326e07"
+      "0e40b245f5b97120a3f824d86a4fcfd3"
     ],
     [
       "Bug422.fails",
@@ -46,7 +46,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "695a34d24fc30f119dbee11e72a1a4b8"
+      "54a6e2c042e0e7376086cb15ba5ff6df"
     ],
     [
       "Bug422.box'",
@@ -58,7 +58,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "bd4c371abe48a11102ccd69efeec8a4a"
+      "ebbf33a099a52acf5308f2ddbcde129a"
     ],
     [
       "Bug422.__proj__Box'__item__v",
@@ -70,7 +70,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "a5b7ef2f27a4975bb631dc51a513de99"
+      "8fd3dd6c7f928274eabeacd2b781ba03"
     ],
     [
       "Bug422.__proj__Box'__item__v",
@@ -82,7 +82,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "afb088c80af956946109553f578c4e0b"
+      "428e302861178702340f8492da1070a1"
     ],
     [
       "Bug422.works",
@@ -98,7 +98,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "6c4a7c11ce28b3b094545ced1367ec2b"
+      "dbc7f97ff04f5f8f1cc46ccc6ed23ab3"
     ],
     [
       "Bug422.works",
@@ -106,34 +106,34 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "equation_Bug422.lint",
+        "@MaxIFuel_assumption", "@query", "equation_Bug422.lint",
         "equation_Bug422.sixty_four", "equation_FStar.Heap.ref",
+        "equation_FStar.Heap.trivial_preorder",
         "equation_FStar.Monotonic.Heap.modifies",
         "equation_FStar.Monotonic.Heap.modifies_t", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Bug422.sixty_four",
-        "function_token_typing_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "int_inversion",
+        "equation_Prims.nat", "equation_Prims.pos",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
         "lemma_FStar.Monotonic.Heap.lemma_contains_upd_modifies",
         "lemma_FStar.Monotonic.Heap.lemma_sel_upd2",
         "lemma_FStar.Set.mem_singleton", "lemma_FStar.Set.mem_union",
         "lemma_FStar.TSet.lemma_mem_tset_of_set",
         "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
-        "proj_equation_Bug422.Box__v", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Bug422_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
-        "refinement_interpretation_Bug422_Tm_refine_afcab39568e77763e21befc04763fdf5",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
-        "typing_Bug422.__proj__Box___item__v", "typing_Bug422.lint",
+        "proj_equation_Bug422.Box__v",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c",
+        "refinement_interpretation_Tm_refine_dfa43c7702fa5f2511a89e6a8373c8b3",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_kinding_Tm_refine_c1424615841f28cac7fc34e92b7ff33c",
+        "typing_Bug422.__proj__Box___item__v",
         "typing_FStar.Heap.trivial_preorder",
         "typing_FStar.Monotonic.Heap.addr_of", "typing_FStar.Set.empty",
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "244ca981aa3b937503b7320f6e4b93c4"
+      "1c5aebcd32dbc97f69e0759c893d0d15"
     ],
     [
       "Bug422.works",
@@ -168,7 +168,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "e4f56a2fe159a2bdeefc66b5b5d3e0a9"
+      "329168fa0b7b97a4ac856c4786cb532b"
     ]
   ]
 ]

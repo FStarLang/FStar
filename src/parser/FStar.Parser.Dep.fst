@@ -34,9 +34,12 @@ open FStar.Const
 open FStar.String
 open FStar.Ident
 open FStar.Errors
+open FStar.Class.Show
 
 module Const = FStar.Parser.Const
 module BU = FStar.Compiler.Util
+
+module Set = FStar.Compiler.Set
 
 let profile f c = Profiling.profile f None c
 
@@ -44,9 +47,12 @@ let profile f c = Profiling.profile f None c
 the file is deleted. *)
 let with_file_outchannel (fn : string) (k : out_channel -> 'a) : 'a =
   let outc = BU.open_file_for_writing fn in
-  (try k outc
-   with | e -> BU.close_out_channel outc; BU.delete_file fn; raise e);
-  BU.close_out_channel outc
+  let r =
+    try k outc
+    with | e -> BU.close_out_channel outc; BU.delete_file fn; raise e
+  in
+  BU.close_out_channel outc;
+  r
 
 (* In case the user passed [--verify_all], we record every single module name we
  * found in the list of modules to be verified.
@@ -141,6 +147,10 @@ let dep_to_string = function
     | PreferInterface f -> "PreferInterface " ^ f
     | UseImplementation f -> "UseImplementation " ^ f
     | FriendImplementation f -> "FriendImplementation " ^ f
+instance showable_dependence : showable dependence = {
+  show = dep_to_string;
+}
+
 type dependences = list dependence
 let empty_dependences = []
 type dep_node = {
@@ -215,11 +225,11 @@ let empty_parsing_data = Mk_pd []
 
 type deps = {
     dep_graph:dependence_graph;                 //dependences of the entire project, not just those reachable from the command line
-    file_system_map:files_for_module_name;      //an abstraction of the file system
-    cmd_line_files:list file_name;             //all command-line files
-    all_files:list file_name;                  //all files
-    interfaces_with_inlining:list module_name; //interfaces that use `inline_for_extraction` require inlining
-    parse_results:smap parsing_data            //map from filenames to parsing_data
+    file_system_map:files_for_module_name;      //an abstraction of the file system, keys are lowercase module names
+    cmd_line_files:list file_name;              //all command-line files
+    all_files:list file_name;                   //all files
+    interfaces_with_inlining:list module_name;  //interfaces that use `inline_for_extraction` require inlining
+    parse_results:smap parsing_data             //map from filenames to parsing_data
                                                 //callers (Universal.fs) use this to get the parsing data for caching purposes
 }
 let deps_try_find (Deps m) k = BU.smap_try_find m k
@@ -763,7 +773,7 @@ let collect_one
   if data_from_cache |> is_some then begin  //we found the parsing data in the checked file
     let deps, has_inline_for_extraction, mo_roots = from_parsing_data (data_from_cache |> must) original_map filename in
     if Options.debug_at_level_no_module (Options.Other "Dep") then
-      BU.print2 "Reading the parsing data for %s from its checked file .. found [%s]\n" filename (List.map dep_to_string deps |> String.concat ", ");
+      BU.print2 "Reading the parsing data for %s from its checked file .. found [%s]\n" filename (show deps);
     data_from_cache |> must,
     deps, has_inline_for_extraction, mo_roots
   end
@@ -816,7 +826,7 @@ let collect_one
         | Tycon (_, tc, ts) ->
             begin
             if tc then
-                add_to_parsing_data (P_lid Const.mk_class_lid);
+                add_to_parsing_data (P_lid Const.tcclass_lid);
             List.iter collect_tycon ts
             end
         | Exception (_, t) ->
@@ -1000,7 +1010,8 @@ let collect_one
               binders;
             collect_term t
         | QForall (binders, (_, ts), t)
-        | QExists (binders, (_, ts), t) ->
+        | QExists (binders, (_, ts), t)
+        | QuantOp (_, binders, (_, ts), t) ->
             collect_binders binders;
             List.iter (List.iter collect_term) ts;
             collect_term t
@@ -1233,8 +1244,7 @@ let topological_dependences_of'
     | White ->
         if Options.debug_at_level_no_module (Options.Other "Dep")
         then BU.print2 "Visiting %s: direct deps are %s\n"
-                filename
-                (String.concat ", " (List.map dep_to_string dep_node.edges));
+                filename (show dep_node.edges);
         (* Unvisited. Compute. *)
         deps_add_dep dep_graph filename ({dep_node with color=Gray});
         let all_friends, all_files =
@@ -1376,6 +1386,15 @@ let topological_dependences_of
     let widened, dep_graph = phase1 file_system_map dep_graph interfaces_needing_inlining for_extraction in
     topological_dependences_of' file_system_map dep_graph interfaces_needing_inlining root_files widened
 
+let all_files_in_include_paths () =
+  let paths = Options.include_path () in
+  List.collect
+    (fun path -> 
+      let files = FStar.Compiler.Util.readdir path in
+      let files = List.filter (fun f -> Util.ends_with f ".fst" || Util.ends_with f ".fsti") files in
+      List.map (fun file -> Util.join_paths path file) files)
+    paths
+
 (** Collect the dependencies for a list of given files.
     And record the entire dependence graph in the memoized state above **)
 (*
@@ -1388,7 +1407,11 @@ let collect (all_cmd_line_files: list file_name)
     : list file_name
     * deps //topologically sorted transitive dependences of all_cmd_line_files
     =
-
+  let all_cmd_line_files =
+    match all_cmd_line_files with
+    | [] -> all_files_in_include_paths ()
+    | _ -> all_cmd_line_files
+  in
   let all_cmd_line_files =
       all_cmd_line_files |> List.map (fun fn ->
         match FStar.Options.find_file fn with
@@ -1574,6 +1597,17 @@ let collect (all_cmd_line_files: list file_name)
 let deps_of deps (f:file_name)
     : list file_name =
     dependences_of deps.file_system_map deps.dep_graph deps.cmd_line_files f
+
+let deps_of_modul deps (m:module_name) : list module_name =
+  let aux (fopt:option string) =
+    fopt |> BU.map_option (fun f -> f |> deps_of deps |> List.map module_name_of_file)
+         |> BU.dflt []
+  in
+  m |> String.lowercase
+    |> BU.smap_try_find deps.file_system_map
+    |> BU.map_option (fun (intf_opt, impl_opt) ->
+                      BU.remove_dups (fun x y -> x = y) (aux intf_opt @ aux impl_opt))
+    |> BU.dflt []
 
 (* In public interface *)
 let print_digest (dig:list (string * string)) : string =
@@ -1944,8 +1978,6 @@ let print_full (outc : out_channel) (deps:deps) : unit =
     print_all "ALL_KRML_FILES" all_krml_files;
 
     FStar.StringBuffer.output_channel outc sb
-
-let coerce #a #b (x : a) : b = x
 
 let do_print (outc : out_channel) (fn : string) deps : unit =
   match Options.dep() with

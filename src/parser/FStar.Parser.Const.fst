@@ -311,6 +311,7 @@ let labeled_lid    = p2l ["FStar"; "Range"; "labeled"]
 let __range_lid    = p2l ["FStar"; "Range"; "__range"]
 let range_lid      = p2l ["FStar"; "Range"; "range"] (* this is a sealed version of the above *)
 let range_0        = p2l ["FStar"; "Range"; "range_0"]
+let mk_range_lid   = p2l ["FStar"; "Range"; "mk_range"]
 
 let guard_free     = pconst "guard_free"
 let inversion_lid  = p2l ["FStar"; "Pervasives"; "inversion"]
@@ -372,6 +373,7 @@ let bind_has_range_args_attr = psconst "bind_has_range_args"
 let primitive_extraction_attr = psconst "primitive_extraction"
 let binder_strictly_positive_attr = psconst "strictly_positive"
 let binder_unused_attr = psconst "unused"
+let no_auto_projectors_decls_attr = psconst "no_auto_projectors_decls"
 let no_auto_projectors_attr = psconst "no_auto_projectors"
 let no_subtping_attr_lid = psconst "no_subtyping"
 let admit_termination_lid = psconst "admit_termination"
@@ -485,6 +487,9 @@ let fstar_stubs_tactics_lid' s : lid = FStar.Ident.lid_of_path (["FStar"; "Stubs
 let fstar_tactics_lid  s = fstar_tactics_lid' [s]
 let tac_lid = fstar_tactics_lid' ["Effect"; "tac"]
 let tactic_lid = fstar_tactics_lid' ["Effect"; "tactic"]
+
+let meta_projectors_attr = fstar_tactics_lid' ["MkProjectors"; "meta_projectors"]
+let mk_projs_lid   = fstar_tactics_lid' ["MkProjectors"; "mk_projs"]
 
 let mk_class_lid   = fstar_tactics_lid' ["Typeclasses"; "mk_class"]
 let tcresolve_lid  = fstar_tactics_lid' ["Typeclasses"; "tcresolve"]

@@ -570,10 +570,10 @@ let lookup (g:env) (e:term) : result (tot_or_ghost & typ) =
      then (
        record_cache_hit();
        // BU.print4 "cache hit\n %s |- %s : %s\nmatching env %s\n"
-       //   (Env.print_gamma g.tcenv.gamma)
+       //   (show g.tcenv.gamma)
        //   (P.term_to_string e)
        //   (P.term_to_string (snd (fst he.he_res)))
-       //   (Env.print_gamma he.he_gamma);
+       //   (show he.he_gamma);
        fun _ -> Inl he.he_res
      )
      else (
@@ -583,7 +583,7 @@ let lookup (g:env) (e:term) : result (tot_or_ghost & typ) =
 
 let check_no_escape (bs:binders) t =
     let xs = FStar.Syntax.Free.names t in
-    if BU.for_all (fun b -> not (BU.set_mem b.binder_bv xs)) bs
+    if BU.for_all (fun b -> not (Set.mem b.binder_bv xs)) bs
     then return ()
     else fail "Name escapes its scope"
 
@@ -1870,7 +1870,7 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
             (BU.string_of_int (get_goal_ctr()))
             (P.term_to_string guard0)
             (P.term_to_string guard);
-          let guard_names = Syntax.Free.names guard |> BU.set_elements in
+          let guard_names = Syntax.Free.names guard |> Set.elems in
           match List.tryFind (fun bv -> List.for_all (fun binding_env ->
             match binding_env with
             | Binding_var bv_env -> not (S.bv_eq bv_env bv)

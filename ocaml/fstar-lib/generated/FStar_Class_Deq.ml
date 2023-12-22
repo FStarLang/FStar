@@ -19,6 +19,8 @@ let (deq_int : Prims.int deq) =
 let (deq_bool : Prims.bool deq) =
   { op_Equals_Question = (fun x -> fun y -> x = y) }
 let (deq_unit : unit deq) = { op_Equals_Question = (fun x -> fun y -> true) }
+let (deq_string : Prims.string deq) =
+  { op_Equals_Question = (fun x -> fun y -> x = y) }
 let deq_option : 'a . 'a deq -> 'a FStar_Pervasives_Native.option deq =
   fun uu___ ->
     {

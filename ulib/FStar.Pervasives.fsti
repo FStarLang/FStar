@@ -118,6 +118,8 @@ effect Lemma (a: eqtype_u) (pre: Type) (post: (squash pre -> Type)) (pats: list 
     spawned off into a separate SMT query *)
 val spinoff (p: Type0) : Type0
 
+val spinoff_eq (p:Type0) : Lemma (spinoff p == p)
+
 val spinoff_equiv (p:Type0) : Lemma (p <==> spinoff p) [SMTPat (spinoff p)]
 
 (** Logically equivalent to assert, but spins off separate query *)
@@ -1178,6 +1180,10 @@ val unused : unit
     in the rest of the program
   *)
 val no_auto_projectors : unit
+
+(** As [no_auto_projectors] but also do not even generate declarations
+    for them. *)
+val no_auto_projectors_decls : unit
 
 (** This attribute can be added to a let definition
     and indicates to the typechecker to typecheck the signature of the definition

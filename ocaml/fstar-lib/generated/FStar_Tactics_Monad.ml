@@ -20,7 +20,8 @@ let (is_goal_safe_as_well_typed : FStar_Tactics_Types.goal -> Prims.bool) =
            match uu___1 with
            | FStar_Pervasives_Native.Some t ->
                let uu___2 = FStar_Syntax_Free.uvars t in
-               FStar_Compiler_Util.set_is_empty uu___2
+               FStar_Compiler_Set.is_empty FStar_Syntax_Free.ord_ctx_uvar
+                 uu___2
            | uu___2 -> false) uu___ in
     all_deps_resolved
 let (register_goal : FStar_Tactics_Types.goal -> unit) =
@@ -151,8 +152,7 @@ let (register_goal : FStar_Tactics_Types.goal -> unit) =
                    (env.FStar_TypeChecker_Env.core_check)
                } in
              (let uu___6 =
-                FStar_Compiler_Effect.op_Less_Bar
-                  (FStar_TypeChecker_Env.debug env1)
+                FStar_TypeChecker_Env.debug env1
                   (FStar_Options.Other "CoreEq") in
               if uu___6
               then
@@ -166,12 +166,10 @@ let (register_goal : FStar_Tactics_Types.goal -> unit) =
               if Prims.op_Negation should_register
               then
                 let uu___7 =
-                  (FStar_Compiler_Effect.op_Less_Bar
-                     (FStar_TypeChecker_Env.debug env1)
+                  (FStar_TypeChecker_Env.debug env1
                      (FStar_Options.Other "Core"))
                     ||
-                    (FStar_Compiler_Effect.op_Less_Bar
-                       (FStar_TypeChecker_Env.debug env1)
+                    (FStar_TypeChecker_Env.debug env1
                        (FStar_Options.Other "RegisterGoal")) in
                 (if uu___7
                  then
@@ -185,12 +183,10 @@ let (register_goal : FStar_Tactics_Types.goal -> unit) =
                  else ())
               else
                 ((let uu___8 =
-                    (FStar_Compiler_Effect.op_Less_Bar
-                       (FStar_TypeChecker_Env.debug env1)
+                    (FStar_TypeChecker_Env.debug env1
                        (FStar_Options.Other "Core"))
                       ||
-                      (FStar_Compiler_Effect.op_Less_Bar
-                         (FStar_TypeChecker_Env.debug env1)
+                      (FStar_TypeChecker_Env.debug env1
                          (FStar_Options.Other "RegisterGoal")) in
                   if uu___8
                   then
@@ -269,9 +265,18 @@ let bind : 'a 'b . 'a tac -> ('a -> 'b tac) -> 'b tac =
                let uu___1 = t2 a1 in run uu___1 q
            | FStar_Tactics_Result.Failed (msg, q) ->
                FStar_Tactics_Result.Failed (msg, q))
-let op_let_Bang : 'a 'b . 'a tac -> ('a -> 'b tac) -> 'b tac =
-  fun t1 -> fun t2 -> bind t1 t2
-let (idtac : unit tac) = ret ()
+let (monad_tac : unit tac FStar_Class_Monad.monad) =
+  {
+    FStar_Class_Monad.return =
+      (fun uu___1 -> fun uu___ -> (fun uu___ -> Obj.magic ret) uu___1 uu___);
+    FStar_Class_Monad.op_let_Bang =
+      (fun uu___3 ->
+         fun uu___2 ->
+           fun uu___1 ->
+             fun uu___ ->
+               (fun uu___1 -> fun uu___ -> Obj.magic bind) uu___3 uu___2
+                 uu___1 uu___)
+  }
 let (set : FStar_Tactics_Types.proofstate -> unit tac) =
   fun ps -> mk_tac (fun uu___ -> FStar_Tactics_Result.Success ((), ps))
 let (get : FStar_Tactics_Types.proofstate tac) =
@@ -290,7 +295,7 @@ let fail : 'a . Prims.string -> 'a tac =
           if uu___1
           then
             FStar_Tactics_Printing.do_dump_proofstate ps
-              (Prims.op_Hat "TACTIC FAILING: " msg)
+              (Prims.strcat "TACTIC FAILING: " msg)
           else ());
          FStar_Tactics_Result.Failed
            ((FStar_Tactics_Common.TacticFailure msg), ps))
@@ -372,24 +377,18 @@ let trytac_exn : 'a . 'a tac -> 'a FStar_Pervasives_Native.option tac =
                    let uu___6 = FStar_Errors_Msg.rendermsg msg in
                    FStar_Compiler_Util.print1 "trytac_exn error: (%s)" uu___6);
               FStar_Tactics_Result.Success (FStar_Pervasives_Native.None, ps)))
-let rec mapM : 'a 'b . ('a -> 'b tac) -> 'a Prims.list -> 'b Prims.list tac =
-  fun f ->
-    fun l ->
-      match l with
-      | [] -> ret []
-      | x::xs ->
-          let uu___ = f x in
-          bind uu___
-            (fun y ->
-               let uu___1 = mapM f xs in
-               bind uu___1 (fun ys -> ret (y :: ys)))
 let rec iter_tac : 'a . ('a -> unit tac) -> 'a Prims.list -> unit tac =
   fun f ->
     fun l ->
       match l with
       | [] -> ret ()
       | hd::tl ->
-          let uu___ = f hd in op_let_Bang uu___ (fun uu___1 -> iter_tac f tl)
+          let uu___ = f hd in
+          FStar_Class_Monad.op_let_Bang monad_tac () () uu___
+            (fun uu___1 ->
+               (fun uu___1 ->
+                  let uu___1 = Obj.magic uu___1 in Obj.magic (iter_tac f tl))
+                 uu___1)
 exception Bad of Prims.string 
 let (uu___is_Bad : Prims.exn -> Prims.bool) =
   fun projectee -> match projectee with | Bad uu___ -> true | uu___ -> false
@@ -440,7 +439,7 @@ let (check_valid_goal : FStar_Tactics_Types.goal -> unit) =
                                let uu___9 =
                                  FStar_Class_Show.show
                                    FStar_Syntax_Print.showable_bv bv in
-                               Prims.op_Hat "bv: " uu___9 in
+                               Prims.strcat "bv: " uu___9 in
                              Bad uu___8 in
                            FStar_Compiler_Effect.raise uu___7
                          else ());
@@ -924,15 +923,29 @@ let wrap_err : 'a . Prims.string -> 'a tac -> 'a tac =
                (FStar_Tactics_Common.TacticFailure msg, q) ->
                FStar_Tactics_Result.Failed
                  ((FStar_Tactics_Common.TacticFailure
-                     (Prims.op_Hat pref (Prims.op_Hat ": " msg))), q)
+                     (Prims.strcat pref (Prims.strcat ": " msg))), q)
            | FStar_Tactics_Result.Failed (e, q) ->
                FStar_Tactics_Result.Failed (e, q))
 let mlog : 'a . (unit -> unit) -> (unit -> 'a tac) -> 'a tac =
-  fun f -> fun cont -> op_let_Bang get (fun ps -> log ps f; cont ())
+  fun uu___1 ->
+    fun uu___ ->
+      (fun f ->
+         fun cont ->
+           Obj.magic
+             (FStar_Class_Monad.op_let_Bang monad_tac () () (Obj.magic get)
+                (fun uu___ ->
+                   (fun ps ->
+                      let ps = Obj.magic ps in log ps f; Obj.magic (cont ()))
+                     uu___))) uu___1 uu___
 let (if_verbose_tac : (unit -> unit tac) -> unit tac) =
   fun f ->
-    op_let_Bang get
-      (fun ps -> if ps.FStar_Tactics_Types.tac_verb_dbg then f () else ret ())
+    FStar_Class_Monad.op_let_Bang monad_tac () () (Obj.magic get)
+      (fun uu___ ->
+         (fun ps ->
+            let ps = Obj.magic ps in
+            if ps.FStar_Tactics_Types.tac_verb_dbg
+            then Obj.magic (f ())
+            else Obj.magic (ret ())) uu___)
 let (if_verbose : (unit -> unit) -> unit tac) =
   fun f -> if_verbose_tac (fun uu___ -> f (); ret ())
 let (compress_implicits : unit tac) =

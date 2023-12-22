@@ -94,12 +94,11 @@ val add_verify_module           : string  -> unit
 
 val set_option_warning_callback : (string -> unit) -> unit
 val desc_of_opt_type            : opt_type -> option string
-val all_specs_with_types        : list (char * string * opt_type * string)
+val all_specs_with_types        : list (char * string * opt_type * Pprint.document)
 val settable                    : string -> bool
 
 val abort_counter : ref int
 
-val __temp_fast_implicits       : unit    -> bool
 val admit_smt_queries           : unit    -> bool
 val set_admit_smt_queries       : bool    -> unit
 val admit_except                : unit    -> option string
@@ -155,6 +154,7 @@ val load_cmxs                   : unit    -> list string
 val legacy_interactive          : unit    -> bool
 val lsp_server                  : unit    -> bool
 val log_queries                 : unit    -> bool
+val log_failing_queries         : unit    -> bool
 val log_types                   : unit    -> bool
 val max_fuel                    : unit    -> int
 val max_ifuel                   : unit    -> int
@@ -233,6 +233,7 @@ val use_tactics                 : unit    -> bool
 val using_facts_from            : unit    -> list (list string * bool)
 val warn_default_effects        : unit    -> bool
 val with_saved_options          : (unit -> 'a) -> 'a
+val with_options                : string -> (unit -> 'a) -> 'a
 val z3_cliopt                   : unit    -> list string
 val z3_smtopt                   : unit    -> list string
 val z3_refresh                  : unit    -> bool

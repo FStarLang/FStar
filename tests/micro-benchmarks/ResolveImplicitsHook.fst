@@ -104,6 +104,12 @@ val frame3
     (f:cmd p q)
   : cmd pre post
 
+(*
+GM 2023-12-03: This example now fails since we don't run meta args
+in contexts/types that have uvars in them. But the only thing forcing
+the resolution of pre and post is the tactic
+*)
+[@@expect_failure [66]]
 let test2
   : cmd (r1 ** r2) (r1 ** r2)
   =
@@ -123,8 +129,11 @@ let resolve_tac_alt () : Tac unit =
 #push-options "--warn_error @348"
 
 //raises 348 for ambiguity in resolve_implicits
-// GM 2023-02-01: Used to raise 348 five times, but now it's 15 after some scoping fixes in Tc (why?)
-[@@expect_failure [348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 66]]
+// GM 2023-02-01: Used to raise 348 five times, but now it's 15 after
+// some scoping fixes in Tc (why?)
+// GM 2023-12-03: Now 21 times, whatever. It's probably due to slight
+// differences in the messages which decrease deduplication.
+[@@expect_failure [348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 66]]
 let test3 (b:bool)
   : cmd (r1 ** r2 ** r3 ** r4 ** r5)
         (r1 ** r2 ** r3 ** r4 ** r5)

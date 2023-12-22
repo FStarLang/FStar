@@ -22,10 +22,33 @@ open FStar.Compiler.List
 open FStar
 open FStar.Compiler
 open FStar.Compiler.Util
+open FStar.Compiler.Set
 open FStar.Syntax
 open FStar.Syntax.Syntax
 module Util = FStar.Compiler.Util
 module UF = FStar.Syntax.Unionfind
+
+open FStar.Class.Ord
+open FStar.Class.Show
+
+let compare_uv uv1 uv2 = UF.uvar_id uv1.ctx_uvar_head - UF.uvar_id uv2.ctx_uvar_head
+let compare_universe_uvar x y = UF.univ_uvar_id x - UF.univ_uvar_id y
+
+instance deq_ctx_uvar : deq ctx_uvar = {
+  (=?) = (fun u v -> UF.uvar_id u.ctx_uvar_head =? UF.uvar_id v.ctx_uvar_head);
+}
+instance ord_ctx_uvar : ord ctx_uvar = {
+  super = Tactics.Typeclasses.solve;
+  cmp = (fun u v -> UF.uvar_id u.ctx_uvar_head `cmp` UF.uvar_id v.ctx_uvar_head);
+}
+instance deq_univ_uvar : deq universe_uvar = {
+  (=?) = (fun u v -> UF.univ_uvar_id u =? UF.univ_uvar_id v);
+}
+instance ord_univ_uvar : ord universe_uvar = {
+  super = Tactics.Typeclasses.solve;
+  cmp = (fun u v -> UF.univ_uvar_id u `cmp` UF.univ_uvar_id v);
+}
+
 let ctx_uvar_typ (u:ctx_uvar) = 
     (UF.find_decoration u.ctx_uvar_head).uvar_decoration_typ
 
@@ -41,6 +64,18 @@ type use_cache_t =
 
 type free_vars_and_fvars = free_vars * set Ident.lident
 
+(* Snoc without duplicates *)
+val snoc : #a:Type -> {| deq a |} -> list a -> a -> list a
+let rec snoc xx y =
+  match xx with
+  | [] -> [y]
+  | x::xx' -> if x =? y then xx
+                        else x :: snoc xx' y
+
+(* Concatenation without duplicates *)
+val (@@) : #a:Type -> {| deq a |} -> list a -> list a -> list a
+let (@@) xs ys = List.fold_left (fun xs y -> snoc xs y) xs ys
+
 let no_free_vars = {
     free_names=[];
     free_uvars=[];
@@ -50,7 +85,7 @@ let no_free_vars = {
 
 let singleton_fvar fv =
     fst no_free_vars,
-    Util.set_add fv.fv_name.v (new_fv_set ())
+    Set.add fv.fv_name.v (new_fv_set ())
 
 let singleton_bv x   = {fst no_free_vars with free_names=[x]}, snd no_free_vars
 let singleton_uv x   = {fst no_free_vars with free_uvars=[x]}, snd no_free_vars
@@ -58,12 +93,12 @@ let singleton_univ x = {fst no_free_vars with free_univs=[x]}, snd no_free_vars
 let singleton_univ_name x = {fst no_free_vars with free_univ_names=[x]}, snd no_free_vars
 
 let union (f1 : free_vars_and_fvars) (f2 : free_vars_and_fvars) = {
-    free_names=(fst f1).free_names @ (fst f2).free_names;
-    free_uvars=(fst f1).free_uvars @ (fst f2).free_uvars;
-    free_univs=(fst f1).free_univs @ (fst f2).free_univs;
-    free_univ_names=(fst f1).free_univ_names @ (fst f2).free_univ_names; //THE ORDER HERE IS IMPORTANT!
+    free_names=(fst f1).free_names @@ (fst f2).free_names;
+    free_uvars=(fst f1).free_uvars @@ (fst f2).free_uvars;
+    free_univs=(fst f1).free_univs @@ (fst f2).free_univs;
+    free_univ_names=(fst f1).free_univ_names @@ (fst f2).free_univ_names; //THE ORDER HERE IS IMPORTANT!
     //We expect the free_univ_names list to be in fifo order to get the right order of universe generalization
-}, Util.set_union (snd f1) (snd f2)
+}, Set.union (snd f1) (snd f2)
 
 let rec free_univs u = match Subst.compress_univ u with
   | U_zero
@@ -259,24 +294,20 @@ and should_invalidate_cache n use_cache =
 
 //note use_cache is set false ONLY for fvars, which is not maintained at each AST node
 //see the comment above
-let compare_uv uv1 uv2 = UF.uvar_id uv1.ctx_uvar_head - UF.uvar_id uv2.ctx_uvar_head
-let new_uv_set () : uvars = Util.new_set compare_uv
+let new_uv_set () : uvars = Set.empty ()
+let new_universe_uvar_set () : set universe_uvar = Set.empty ()
+let empty = Set.empty ()
 
-let compare_universe_uvar x y = UF.univ_uvar_id x - UF.univ_uvar_id y
-let new_universe_uvar_set () : set universe_uvar =
-    Util.new_set compare_universe_uvar
+let names t = Set.from_list (fst (free_names_and_uvars t Def)).free_names
+let uvars t = Set.from_list (fst (free_names_and_uvars t Def)).free_uvars
+let univs t = Set.from_list (fst (free_names_and_uvars t Def)).free_univs
 
-let empty = Util.new_set Syntax.order_bv
-let names t = FStar.Compiler.Util.as_set (fst (free_names_and_uvars t Def)).free_names Syntax.order_bv
-let uvars t = FStar.Compiler.Util.as_set (fst (free_names_and_uvars t Def)).free_uvars compare_uv
-let univs t = FStar.Compiler.Util.as_set (fst (free_names_and_uvars t Def)).free_univs compare_universe_uvar
-let univnames t = FStar.Compiler.Util.as_set (fst (free_names_and_uvars t Def)).free_univ_names Syntax.order_univ_name
-let univnames_comp c = FStar.Compiler.Util.as_set (fst (free_names_and_uvars_comp c Def)).free_univ_names Syntax.order_univ_name
+let univnames t = Set.from_list (fst (free_names_and_uvars t Def)).free_univ_names
+let univnames_comp c = Set.from_list (fst (free_names_and_uvars_comp c Def)).free_univ_names
+
 let fvars t = snd (free_names_and_uvars t NoCache)
 let names_of_binders (bs:binders) =
-  FStar.Compiler.Util.as_set
-    ((fst (free_names_and_uvars_binders bs Def)).free_names)
-    Syntax.order_bv
+  Set.from_list ((fst (free_names_and_uvars_binders bs Def)).free_names)
 
-let uvars_uncached t = FStar.Compiler.Util.as_set (fst (free_names_and_uvars t NoCache)).free_uvars compare_uv
-let uvars_full t = FStar.Compiler.Util.as_set (fst (free_names_and_uvars t Full)).free_uvars compare_uv
+let uvars_uncached t = Set.from_list (fst (free_names_and_uvars t NoCache)).free_uvars
+let uvars_full t = Set.from_list (fst (free_names_and_uvars t Full)).free_uvars

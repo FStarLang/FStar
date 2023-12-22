@@ -75,12 +75,12 @@ let lookup_tyname (env:env_t) (name:mlpath)
   = BU.psmap_try_find env.tydef_map (string_of_mlpath name)
 
 (** Free variables of a type: Computed to check which parameters are used *)
-type var_set = BU.set mlident
-let empty_var_set = BU.new_set (fun x y -> String.compare x y)
+type var_set = Set.set mlident
+let empty_var_set : Set.set string = Set.empty ()
 let rec freevars_of_mlty' (vars:var_set) (t:mlty) =
   match t with
   | MLTY_Var i ->
-    BU.set_add i vars
+    Set.add i vars
   | MLTY_Fun (t0, _, t1) ->
     freevars_of_mlty' (freevars_of_mlty' vars t0) t1
   | MLTY_Named (tys, _)
@@ -142,7 +142,7 @@ let rec elim_mlexpr' (env:env_t) (e:mlexpr') =
   | MLE_CTor(l, es) -> MLE_CTor(l, List.map (elim_mlexpr env) es)
   | MLE_Seq es -> MLE_Seq (List.map (elim_mlexpr env) es)
   | MLE_Tuple es -> MLE_Tuple (List.map (elim_mlexpr env) es)
-  | MLE_Record(syms, fields) -> MLE_Record(syms, List.map (fun (s, e) -> s, elim_mlexpr env e) fields)
+  | MLE_Record(syms, nm, fields) -> MLE_Record(syms, nm, List.map (fun (s, e) -> s, elim_mlexpr env e) fields)
   | MLE_Proj (e, p) -> MLE_Proj(elim_mlexpr env e, p)
   | MLE_If(e, e1, e2_opt) -> MLE_If(elim_mlexpr env e, elim_mlexpr env e1, BU.map_opt e2_opt (elim_mlexpr env))
   | MLE_Raise(p, es) -> MLE_Raise (p, List.map (elim_mlexpr env) es)
@@ -202,7 +202,7 @@ let elim_tydef (env:env_t) name metadata parameters mlty
     let _, parameters, entry =
         List.fold_left
           (fun (i, params, entry) p ->
-             if BU.set_mem p freevars
+             if Set.mem p freevars
              then begin
                if must_eliminate i
                then begin

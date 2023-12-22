@@ -223,8 +223,6 @@ let op_as_term env arity op : option S.term =
     match Ident.string_of_id op with
     | "=" ->
       r C.op_Eq delta_equational
-    // | ":=" ->
-    //   r C.write_lid delta_equational
     | "<" ->
       r C.op_LT delta_equational
     | "<=" ->
@@ -247,18 +245,12 @@ let op_as_term env arity op : option S.term =
       r C.op_Division delta_equational
     | "%" ->
       r C.op_Modulus delta_equational
-    // | "!" ->
-    //   r C.read_lid delta_equational
     | "@" ->
       FStar.Errors.log_issue
         (range_of_id op)
         (FStar.Errors.Warning_DeprecatedGeneric,
          "The operator '@' has been resolved to FStar.List.Tot.append even though FStar.List.Tot is not in scope. Please add an 'open FStar.List.Tot' to stop relying on this deprecated, special treatment of '@'");
       r C.list_tot_append_lid (Delta_equational_at_level 2)
-    // | "|>" ->
-    //   r C.pipe_right_lid delta_equational
-    // | "<|" ->
-    //   r C.pipe_left_lid delta_equational
     | "<>" ->
       r C.op_notEq delta_equational
     | "~"   ->
@@ -445,6 +437,7 @@ and free_vars tvars_only env t = match (unparen t).tm with
   | If _
   | QForall _
   | QExists _
+  | QuantOp _
   | Record _
   | Match _
   | TryWith _
@@ -531,15 +524,15 @@ let rec gather_pattern_bound_vars_maybe_top acc p =
   | PatOp _ -> acc
   | PatApp (phead, pats) -> gather_pattern_bound_vars_from_list (phead::pats)
   | PatTvar (x, _, _)
-  | PatVar (x, _, _) -> set_add x acc
+  | PatVar (x, _, _) -> Set.add x acc
   | PatList pats
   | PatTuple  (pats, _)
   | PatOr pats -> gather_pattern_bound_vars_from_list pats
   | PatRecord guarded_pats -> gather_pattern_bound_vars_from_list (List.map snd guarded_pats)
   | PatAscribed (pat, _) -> gather_pattern_bound_vars_maybe_top acc pat
 
-let gather_pattern_bound_vars : pattern -> set Ident.ident =
-  let acc = new_set (fun id1 id2 -> if (string_of_id id1) = (string_of_id id2) then 0 else 1) in
+let gather_pattern_bound_vars : pattern -> Set.set Ident.ident =
+  let acc = Set.empty () in
   fun p -> gather_pattern_bound_vars_maybe_top acc p
 
 type bnd =
@@ -589,30 +582,43 @@ let mk_ref_assign t1 t2 pos =
  * Collect the explicitly annotated universes in the sigelt, close the sigelt with them, and stash them appropriately in the sigelt
  *)
 let rec generalize_annotated_univs (s:sigelt) :sigelt =
-  let bs_univnames (bs:binders) :BU.set univ_name =
-    bs |> List.fold_left (fun uvs b -> BU.set_union uvs (Free.univnames b.binder_bv.sort)) (BU.new_set Syntax.order_univ_name)
+  (* NB!! Order is very important here, so a definition like
+      type t = Type u#a -> Type u#b
+    gets is two universe parameters in the order in which
+    they appear. So we do not use a set, and instead just use a mutable
+    list that we update as we find universes. We also keep a set of 'seen'
+    universes, whose order we do not care, just for efficiency. *)
+  let vars : ref (list univ_name) = mk_ref [] in
+  let seen : ref (Set.t univ_name) = mk_ref (Set.empty ()) in
+  let reg (u:univ_name) : unit =
+    if not (Set.mem u !seen) then (
+      seen := Set.add u !seen;
+      vars := u::!vars
+    )
   in
-  let empty_set = BU.new_set Syntax.order_univ_name in
+  let get () : list univ_name = List.rev !vars in
+
+  (* Visit the sigelt and rely on side effects to capture all
+  the names. This goes roughly in left-to-right order. *)
+  let _ = Visit.visit_sigelt
+            (fun t -> t)
+            (fun u -> ignore (match u with
+                              | U_name nm -> reg nm
+                              | _ -> ());
+                      u) s
+  in
+  let unames = get () in
 
   match s.sigel with
   | Sig_inductive_typ _
   | Sig_datacon _ -> failwith "Impossible: collect_annotated_universes: bare data/type constructor"
   | Sig_bundle {ses=sigs; lids} ->
-    let uvs = sigs |> List.fold_left (fun uvs se ->
-      let se_univs =
-        match se.sigel with
-        | Sig_inductive_typ {params=bs;t} -> BU.set_union (bs_univnames bs) (Free.univnames t)
-        | Sig_datacon {t} -> Free.univnames t
-        | _ -> failwith "Impossible: collect_annotated_universes: Sig_bundle should not have a non data/type sigelt"
-      in
-      BU.set_union uvs se_univs) empty_set |> BU.set_elements
-    in
-    let usubst = Subst.univ_var_closing uvs in
+    let usubst = Subst.univ_var_closing unames in
     { s with sigel = Sig_bundle {ses=sigs |> List.map (fun se ->
       match se.sigel with
       | Sig_inductive_typ {lid; params=bs; num_uniform_params=num_uniform; t; mutuals=lids1; ds=lids2} ->
         { se with sigel = Sig_inductive_typ {lid;
-                                             us=uvs;
+                                             us=unames;
                                              params=Subst.subst_binders usubst bs;
                                              num_uniform_params=num_uniform;
                                              t=Subst.subst (Subst.shift_subst (List.length bs) usubst) t;
@@ -620,7 +626,7 @@ let rec generalize_annotated_univs (s:sigelt) :sigelt =
                                              ds=lids2} }
       | Sig_datacon {lid;t;ty_lid=tlid;num_ty_params=n;mutuals=lids} ->
         { se with sigel = Sig_datacon {lid;
-                                       us=uvs;
+                                       us=unames;
                                        t=Subst.subst usubst t;
                                        ty_lid=tlid;
                                        num_ty_params=n;
@@ -628,26 +634,18 @@ let rec generalize_annotated_univs (s:sigelt) :sigelt =
       | _ -> failwith "Impossible: collect_annotated_universes: Sig_bundle should not have a non data/type sigelt"
       ); lids} }
   | Sig_declare_typ {lid; t} ->
-    let uvs = Free.univnames t |> BU.set_elements in
-    { s with sigel = Sig_declare_typ {lid; us=uvs; t=Subst.close_univ_vars uvs t} }
+    { s with sigel = Sig_declare_typ {lid; us=unames; t=Subst.close_univ_vars unames t} }
   | Sig_let {lbs=(b, lbs); lids} ->
-    let lb_univnames (lb:letbinding) :BU.set univ_name =
-      BU.set_union (Free.univnames lb.lbtyp)
-                   (Free.univnames lb.lbdef)
-    in
-    let all_lb_univs = lbs |> List.fold_left (fun uvs lb -> BU.set_union uvs (lb_univnames lb)) empty_set |> BU.set_elements in
-    let usubst = Subst.univ_var_closing all_lb_univs in
+    let usubst = Subst.univ_var_closing unames in
     //This respects the invariant enforced by FStar.Syntax.Util.check_mutual_universes
-    { s with sigel = Sig_let {lbs=(b, lbs |> List.map (fun lb -> { lb with lbunivs = all_lb_univs; lbdef = Subst.subst usubst lb.lbdef; lbtyp = Subst.subst usubst lb.lbtyp }));
+    { s with sigel = Sig_let {lbs=(b, lbs |> List.map (fun lb -> { lb with lbunivs = unames; lbdef = Subst.subst usubst lb.lbdef; lbtyp = Subst.subst usubst lb.lbtyp }));
                               lids} }
   | Sig_assume {lid;phi=fml} ->
-    let uvs = Free.univnames fml |> BU.set_elements in
-    { s with sigel = Sig_assume {lid; us=uvs; phi=Subst.close_univ_vars uvs fml} }
+    { s with sigel = Sig_assume {lid; us=unames; phi=Subst.close_univ_vars unames fml} }
   | Sig_effect_abbrev {lid;bs;comp=c;cflags=flags} ->
-    let uvs = BU.set_union (bs_univnames bs) (Free.univnames_comp c) |> BU.set_elements in
-    let usubst = Subst.univ_var_closing uvs in
+    let usubst = Subst.univ_var_closing unames in
     { s with sigel = Sig_effect_abbrev {lid;
-                                        us=uvs;
+                                        us=unames;
                                         bs=Subst.subst_binders usubst bs;
                                         comp=Subst.subst_comp usubst c;
                                         cflags=flags} }
@@ -657,7 +655,21 @@ let rec generalize_annotated_univs (s:sigelt) :sigelt =
                                fail_in_lax=lax;
                                ses=List.map generalize_annotated_univs ses} }
 
-  | Sig_new_effect _
+  (* Works over the signature only *)
+  | Sig_new_effect ed ->
+    let generalize_annotated_univs_signature (s : effect_signature) : effect_signature =
+      match s with
+      | Layered_eff_sig (n, (_, t)) ->
+        let uvs = Free.univnames t |> Set.elems in
+        let usubst = Subst.univ_var_closing uvs in
+        Layered_eff_sig (n, (uvs, Subst.subst usubst t))
+      | WP_eff_sig (_, t) ->
+        let uvs = Free.univnames t |> Set.elems in
+        let usubst = Subst.univ_var_closing uvs in
+        WP_eff_sig (uvs, Subst.subst usubst t)
+    in
+    { s with sigel = Sig_new_effect { ed with signature = generalize_annotated_univs_signature ed.signature } }
+
   | Sig_sub_effect _
   | Sig_polymonadic_bind _
   | Sig_polymonadic_subcomp _
@@ -766,15 +778,15 @@ let check_linear_pattern_variables pats r =
       not wildcards. *)
       if string_of_id x.ppname = Ident.reserved_prefix
       then S.no_names
-      else BU.set_add x S.no_names
+      else Set.add x S.no_names
     | Pat_cons(_, _, pats) ->
       let aux out (p, _) =
           let p_vars = pat_vars p in
-          let intersection = BU.set_intersect p_vars out in
-          if BU.set_is_empty intersection
-          then BU.set_union out p_vars
+          let intersection = Set.inter p_vars out in
+          if Set.is_empty intersection
+          then Set.union out p_vars
           else
-            let duplicate_bv = List.hd (BU.set_elements intersection) in
+            let duplicate_bv = List.hd (Set.elems intersection) in
             raise_error ( Errors.Fatal_NonLinearPatternNotPermitted,
                           BU.format1
                             "Non-linear patterns are not permitted: `%s` appears more than once in this pattern."
@@ -792,9 +804,10 @@ let check_linear_pattern_variables pats r =
   | p::ps ->
     let pvars = pat_vars p in
     let aux p =
-      if BU.set_eq pvars (pat_vars p) then () else
-      let nonlinear_vars = BU.set_symmetric_difference pvars (pat_vars p) in
-      let first_nonlinear_var = List.hd (BU.set_elements nonlinear_vars) in
+      if Set.equal pvars (pat_vars p) then () else
+      let symdiff s1 s2 = Set.union (Set.diff s1 s2) (Set.diff s2 s1) in
+      let nonlinear_vars = symdiff pvars (pat_vars p) in
+      let first_nonlinear_var = List.hd (Set.elems nonlinear_vars) in
       raise_error ( Errors.Fatal_IncoherentPatterns,
                     BU.format1
                       "Patterns in this match are incoherent, variable %s is bound in some but not all patterns."
@@ -1216,6 +1229,12 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
             " in non-universe context")
           top.range
 
+    | Op(s, [f;e]) when Ident.string_of_id s = "<|" ->
+      desugar_term_maybe_top top_level env (mkApp f [e,Nothing] top.range)
+
+    | Op(s, [e;f]) when Ident.string_of_id s = "|>" ->
+      desugar_term_maybe_top top_level env (mkApp f [e,Nothing] top.range)
+
     | Op(s, args) ->
       begin
       match op_as_term env (List.length args) s with
@@ -1394,15 +1413,15 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
     | Abs(binders, body) ->
       (* First of all, forbid definitions such as `f x x = ...` *)
       let bvss = List.map gather_pattern_bound_vars binders in
-      let check_disjoint (sets : list (set ident)) : option ident =
+      let check_disjoint (sets : list (Set.set ident)) : option ident =
         let rec aux acc sets =
             match sets with
             | [] -> None
             | set::sets ->
-                let i = BU.set_intersect acc set in
-                if BU.set_is_empty i
-                then aux (BU.set_union acc set) sets
-                else Some (List.hd (BU.set_elements i))
+                let i = Set.inter acc set in
+                if Set.is_empty i
+                then aux (Set.union acc set) sets
+                else Some (List.hd (Set.elems i))
         in
         aux (S.new_id_set ()) sets
       in
@@ -1930,9 +1949,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let tm = SS.close vt_binders tm in // but we need to close the variables in tm
       let () =
         let fvs = Free.names tm in
-        if not (BU.set_is_empty fvs) then
+        if not (Set.is_empty fvs) then
           raise_error (Errors.Fatal_MissingFieldInRecord,
-                     BU.format1 "Static quotation refers to external variables: %s" (Common.string_of_set Print.nm_to_string fvs))
+                     BU.format1 "Static quotation refers to external variables: %s" (Class.Show.show fvs))
                      (e.range)
       in
 
@@ -2156,13 +2175,13 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
          (forall_elim #a1 #(fun x1 -> forall xs. p[v0/x]) v1
           (forall_elim #a0 #(fun x0 -> forall xs. p) v0 ())))
       *)
-      let mk_forall_elim a p v t =
+      let mk_forall_elim a p v tok =
         let head = S.fv_to_tm (S.lid_and_dd_as_fv C.forall_elim_lid S.delta_equational None) in
         let args = [(a, S.as_aqual_implicit true);
                     (p, S.as_aqual_implicit true);
                     (v, None);
-                    (t, None)] in
-        S.mk_Tm_app head args v.pos
+                    (tok, None)] in
+        S.mk_Tm_app head args tok.pos
       in
       let rec aux bs vs sub token : S.term =
         match bs, vs with
@@ -2181,7 +2200,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
         | _ ->
           raise_error (Fatal_UnexpectedTerm, "Unexpected number of instantiations in _elim_forall_") top.range
       in
-      aux bs vs [] U.exp_unit, noaqs
+      let range = List.fold_right (fun bs r -> Range.union_ranges (S.range_of_bv bs.binder_bv) r) bs p.pos in
+      aux bs vs [] { U.exp_unit with pos = range }, noaqs
 
     | ElimExists (binders, p, q, binder, e) -> (
       let env', bs = desugar_binders env binders in
@@ -2228,7 +2248,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
               (U.abs [b] p None)
               squash_token
               (U.abs [b;b_pf_p] (U.ascribe e (Inl sq_q, None, false)) None)
-              (range_of_bv x)
+              squash_token.pos
 
         | b::bs ->
           let pf_i =
@@ -2250,9 +2270,10 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
             (U.abs [b] (mk_exists bs p) None)
             squash_token
             (U.abs [b; S.mk_binder pf_i] k None)
-            (range_of_bv x)
+            squash_token.pos
       in
-      aux bs U.exp_unit, noaqs
+      let range = List.fold_right (fun bs r -> Range.union_ranges (S.range_of_bv bs.binder_bv) r) bs p.pos in
+      aux bs { U.exp_unit with pos = range }, noaqs
       )
 
     | ElimImplies (p, q, e) ->
@@ -2262,7 +2283,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let head = S.fv_to_tm (S.lid_and_dd_as_fv C.implies_elim_lid S.delta_equational None) in
       let args = [(p, None);
                   (q, None);
-                  (U.exp_unit, None);
+                  ({ U.exp_unit with pos = Range.union_ranges p.pos q.pos }, None);
                   (mk_thunk e, None)] in
       mk_Tm_app head args top.range, noaqs
 
@@ -2279,7 +2300,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let args = [(p, None);
                   (mk_thunk q, None);
                   (r, None);
-                  (U.exp_unit, None);
+                  ({ U.exp_unit with pos = Range.union_ranges p.pos q.pos }, None);
                   (U.abs [x] e1 None, None);
                   (U.abs [extra_binder; y] e2 None, None)] in
       mk_Tm_app head args top.range, noaqs
@@ -2294,7 +2315,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let args = [(p, None);
                   (mk_thunk q, None);
                   (r, None);
-                  (U.exp_unit, None);
+                  ({ U.exp_unit with pos = Range.union_ranges p.pos q.pos }, None);
                   (U.abs [x;y] e None, None)] in
       mk_Tm_app head args top.range, noaqs
 
@@ -2593,7 +2614,7 @@ and desugar_comp r (allow_type_promotion:bool) env t =
 and desugar_formula env (f:term) : S.term =
   let mk t = S.mk t f.range in
   let setpos t = {t with pos=f.range} in
-  let desugar_quant (q:lident) b pats body =
+  let desugar_quant (q_head:S.term) b pats should_wrap_with_pat body =
     let tk = desugar_binder env ({b with blevel=Formula}) in
     let with_pats env (names, pats) body =
       match names, pats with
@@ -2612,7 +2633,9 @@ and desugar_formula env (f:term) : S.term =
           (fun es -> es |> List.map
                   (fun e -> arg_withimp_t Nothing <| desugar_term env e))
         in
-        mk (Tm_meta {tm=body;meta=Meta_pattern (names, pats)})
+        match pats with
+        | [] when not should_wrap_with_pat -> body
+        | _ -> mk (Tm_meta {tm=body;meta=Meta_pattern (names, pats)})
     in
     match tk with
       | Some a, k, _ ->  //AR: ignoring the attributes here
@@ -2621,7 +2644,7 @@ and desugar_formula env (f:term) : S.term =
         let body = desugar_formula env body in
         let body = with_pats env pats body in
         let body = setpos <| no_annot_abs [S.mk_binder a] body in
-        mk <| Tm_app {hd=S.fvar_with_dd (set_lid_range q b.brange) (Delta_constant_at_level 1) None;  //NS delta: wrong?  Delta_constant_at_level 2?
+        mk <| Tm_app {hd=q_head;
                       args=[as_arg body]}
 
       | _ -> failwith "impossible" in
@@ -2643,7 +2666,8 @@ and desugar_formula env (f:term) : S.term =
       mk <| Tm_meta {tm=f; meta=Meta_labeled(l, f.pos, p)}
 
     | QForall([], _, _)
-    | QExists([], _, _) -> failwith "Impossible: Quantifier without binders"
+    | QExists([], _, _)
+    | QuantOp(_, [], _, _) -> failwith "Impossible: Quantifier without binders"
 
     | QForall((_1::_2::_3), pats, body) ->
       let binders = _1::_2::_3 in
@@ -2653,11 +2677,34 @@ and desugar_formula env (f:term) : S.term =
       let binders = _1::_2::_3 in
       desugar_formula env (push_quant (fun x -> QExists x) binders pats body)
 
+    | QuantOp(i, (_1::_2::_3), pats, body) ->
+      let binders = _1::_2::_3 in
+      desugar_formula env (push_quant (fun (x,y,z) -> QuantOp(i, x, y, z)) binders pats body)
+
     | QForall([b], pats, body) ->
-      desugar_quant C.forall_lid b pats body
+      let q = C.forall_lid in
+      let q_head =    //NS delta: wrong?  Delta_constant_at_level 2?
+        S.fvar_with_dd (set_lid_range q b.brange) (Delta_constant_at_level 1) None
+      in
+      desugar_quant q_head b pats true body
 
     | QExists([b], pats, body) ->
-      desugar_quant C.exists_lid b pats body
+      let q = C.exists_lid in
+      let q_head =    //NS delta: wrong?  Delta_constant_at_level 2?
+        S.fvar_with_dd (set_lid_range q b.brange) (Delta_constant_at_level 1) None
+      in
+      desugar_quant q_head b pats true body
+    
+    | QuantOp(i, [b], pats, body) ->
+      let q_head =
+        match op_as_term env 0 i with
+        | None -> 
+          raise_error (Errors.Fatal_VariableNotFound, 
+                       BU.format1 "quantifier operator %s not found" (Ident.string_of_id i)) 
+                      (Ident.range_of_id i)
+        | Some t -> t
+      in
+      desugar_quant q_head b pats false body
 
     | Paren f -> failwith "impossible"
 
@@ -2821,6 +2868,9 @@ let mk_indexed_projector_names iquals fvq attrs env lid (fields:list S.binder) =
 
 let mk_data_projector_names iquals env se : list sigelt =
   match se.sigel with
+  | _ when U.has_attribute se.sigattrs C.no_auto_projectors_decls_attr
+        || U.has_attribute se.sigattrs C.meta_projectors_attr ->
+    []
   | Sig_datacon {lid;t;num_ty_params=n} ->
     let formals, _ = U.arrow_formals t in
     begin match formals with
@@ -3225,7 +3275,7 @@ let parse_attr_with_list warn (at:S.term) (head:lident) : option (list int) * bo
        | [] -> Some [], true
        | [(a1, _)] ->
          begin
-         match EMB.unembed (EMB.e_list EMB.e_int) a1 EMB.id_norm_cb with
+         match EMB.unembed a1 EMB.id_norm_cb with
          | Some es ->
            Some (List.map FStar.BigInt.to_int_fs es), true
          | _ ->
@@ -3728,11 +3778,19 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
      * we traverse the new declarations marked with "Projector", and get
      * the field names. This is pretty ugly. *)
     let mkclass lid =
-        let r = range_of_lid lid in
-        U.abs [S.mk_binder (S.new_bv (Some r) (tun_r r))]
-              (U.mk_app (S.tabbrev C.mk_class_lid)
-                        [S.as_arg (U.exp_string (string_of_lid lid))])
-              None
+      let r = range_of_lid lid in
+      let body =
+      if U.has_attribute d_attrs C.meta_projectors_attr then
+        (* new meta projectors *)
+        U.mk_app (S.tabbrev C.mk_projs_lid)
+                 [S.as_arg (U.exp_bool true);
+                  S.as_arg (U.exp_string (string_of_lid lid))]
+      else
+        (* old mk_class *)
+        U.mk_app (S.tabbrev C.mk_class_lid)
+                 [S.as_arg (U.exp_string (string_of_lid lid))]
+      in
+      U.abs [S.mk_binder (S.new_bv (Some r) (tun_r r))] body None
     in
     let get_meths se =
         let rec get_fname quals =
@@ -3804,7 +3862,10 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
                match se.sigel with
                | Sig_bundle {ses; lids} ->
                  let ses = List.map add_class_attr ses in
-                 { se with sigel = Sig_bundle {ses; lids} }
+                 { se with sigel = Sig_bundle {ses; lids}
+                         ; sigattrs = U.deduplicate_terms
+                                    (S.fvar_with_dd FStar.Parser.Const.tcclass_lid S.delta_constant None
+                                      :: se.sigattrs) }
 
                | Sig_inductive_typ _ ->
                  { se 
@@ -3957,7 +4018,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
       let build_projection (env, ses) id  = build_generic_projection (env, ses) (Some id) in
       let build_coverage_check (env, ses) = build_generic_projection (env, ses) None in
 
-      let bvs = gather_pattern_bound_vars pat |> set_elements in
+      let bvs = gather_pattern_bound_vars pat |> Set.elems in
 
       (* If there are no variables in the pattern (and it is not a
        * wildcard), we should still check to see that it is complete,
@@ -4132,6 +4193,11 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
       sigopens_and_abbrevs = opens_and_abbrevs env }]
 
   | Splice (is_typed, ids, t) ->
+    let ids =
+      if d.interleaved
+      then []
+      else ids
+    in
     let t = desugar_term env t in
     let top_attrs = d_attrs in    
     let se = { sigel = Sig_splice {is_typed; lids=List.map (qualify env) ids; tac=t};
@@ -4166,7 +4232,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
       | Inr d' ->
         let quals = d'.quals @ d.quals in
         let attrs = d'.attrs @ d.attrs in
-        desugar_decl_maybe_fail_attr env { d' with quals; attrs; drange=d.drange }
+        desugar_decl_maybe_fail_attr env { d' with quals; attrs; drange=d.drange; interleaved=d.interleaved }
 
 let desugar_decls env decls =
   let env, sigelts =
@@ -4224,12 +4290,13 @@ let desugar_partial_modul curmod (env:env_t) (m:AST.modul) : env_t * Syntax.modu
   else env, modul
 
 let desugar_modul env (m:AST.modul) : env_t * Syntax.modul =
-  let env, modul, pop_when_done = desugar_modul_common None env m in
-  let env, modul = Env.finish_module_or_interface env modul in
-  if Options.dump_module (string_of_lid modul.name)
-  then BU.print1 "Module after desugaring:\n%s\n" (Print.modul_to_string modul);
-  (if pop_when_done then export_interface modul.name env else env), modul
-
+  Errors.with_ctx ("While desugaring module " ^ Class.Show.show (lid_of_modul m)) (fun () ->
+    let env, modul, pop_when_done = desugar_modul_common None env m in
+    let env, modul = Env.finish_module_or_interface env modul in
+    if Options.dump_module (string_of_lid modul.name)
+    then BU.print1 "Module after desugaring:\n%s\n" (Print.modul_to_string modul);
+    (if pop_when_done then export_interface modul.name env else env), modul
+  )
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //External API for modules

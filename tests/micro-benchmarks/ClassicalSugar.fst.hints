@@ -14,7 +14,7 @@
         "refinement_interpretation_Tm_refine_d1d6314f1eadc65e858ae8863c98b1dc"
       ],
       0,
-      "cd5f89466ee9fb91f0a82100110c6669"
+      "eb0c7c89d1f2d5b7fb694d00923eb04b"
     ],
     [
       "ClassicalSugar.test_elim_exists_2",
@@ -26,7 +26,7 @@
         "refinement_interpretation_Tm_refine_30ea3b86ec6bf1246dbb233c8ef248b6"
       ],
       0,
-      "22ee3c30acc72cbe04826611f3a83cbf"
+      "b37d1a5e306d31db14b5d0a6510f9ee7"
     ],
     [
       "ClassicalSugar.test_elim_exists_3",
@@ -41,7 +41,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "8595b20110ab46d10d34b4c8f8b78cad"
+      "4740e390b236b2c30ff1978ce0ad6c82"
     ],
     [
       "ClassicalSugar.test_elim_forall_1",
@@ -53,7 +53,7 @@
         "refinement_interpretation_Tm_refine_226717771801e984f2f4a6a20e2daf91"
       ],
       0,
-      "32a88afc36575645cd7c61a8ac826a7d"
+      "f3ec1bfdb8418381c62dc5028ff8a296"
     ],
     [
       "ClassicalSugar.test_elim_forall_2",
@@ -65,7 +65,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "5cddf6eeb8828c583c910de7e209ffe2"
+      "9813ca0d818517e338c4f30a7f4885e4"
     ],
     [
       "ClassicalSugar.test_elim_implies_1",
@@ -77,7 +77,7 @@
         "refinement_interpretation_Tm_refine_913239c2cf9dc8a14e1f047e0206138d"
       ],
       0,
-      "c9253d84db9521b152c077bf29280c65"
+      "b32eca16ad017b17dfa064d91533b494"
     ],
     [
       "ClassicalSugar.test_elim_implies_2",
@@ -89,7 +89,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "6cfee3355f6037b5947d8931520d7f11"
+      "df4507e0a74c6836a97a692440044314"
     ],
     [
       "ClassicalSugar.test_elim_or_1",
@@ -101,7 +101,7 @@
         "refinement_interpretation_Tm_refine_fe5dc86c0b5ea8bea91e659ca9e2937e"
       ],
       0,
-      "2d247a3410d574882dbea4becb17fdf6"
+      "45340b3966c48b91a3c1eca64c903e4b"
     ],
     [
       "ClassicalSugar.test_elim_or_2",
@@ -114,7 +114,7 @@
         "refinement_interpretation_Tm_refine_953a6e4e702e848a7213bd619baaa22d"
       ],
       0,
-      "abf8500e3a5e4f268107b777d28cfe33"
+      "c2e4eb488b66060da6986a2e5497a5b2"
     ],
     [
       "ClassicalSugar.test_elim_and_1",
@@ -126,7 +126,7 @@
         "refinement_interpretation_Tm_refine_b88b26704ce5354755b4f9e280b3a2d9"
       ],
       0,
-      "85af9226f3900e9df9d7cf31905e7b06"
+      "87873ecb8f87dd1975737b40e408f7c8"
     ],
     [
       "ClassicalSugar.test_elim_and_2",
@@ -138,7 +138,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "c00621e7052dd652ba1fd1e9ecb11aa3"
+      "29bf164851aff24d75bc6e07f6bfafd5"
     ],
     [
       "ClassicalSugar.test_forall_intro_2",
@@ -150,7 +150,7 @@
         "refinement_interpretation_Tm_refine_573fe6e4f1ba7ae2548033cb6b92d4b3"
       ],
       0,
-      "e10effd62a1a2b607116b7dbcd8a3718"
+      "68fbe02a5acbe507620527e59df0be20"
     ],
     [
       "ClassicalSugar.test_exists_intro_2",
@@ -162,7 +162,7 @@
         "refinement_interpretation_Tm_refine_7b5789257792eca0fcedb42d77c8c85a"
       ],
       0,
-      "284c7c270066825ba225f166d317f6bc"
+      "a58612f9110abdc7a3d8380410ac2193"
     ],
     [
       "ClassicalSugar.test_implies_intro_2",
@@ -175,7 +175,7 @@
         "refinement_interpretation_Tm_refine_913239c2cf9dc8a14e1f047e0206138d"
       ],
       0,
-      "91564c332cbd060cd820b7ac47f7b7ee"
+      "078ee78ff3a687d84c0228682f629fdc"
     ],
     [
       "ClassicalSugar.test_or_intro_left_2",
@@ -184,7 +184,7 @@
       1,
       [ "@query" ],
       0,
-      "b6b100467f4b969befd50be67f7b025a"
+      "945e60c1314973f98a4b4d1aab068056"
     ],
     [
       "ClassicalSugar.test_or_intro_right_2",
@@ -193,7 +193,7 @@
       1,
       [ "@query" ],
       0,
-      "49582967f87ee86afe960fbaa61a22c9"
+      "8d615325863fffff05b8e28d66ed70cf"
     ],
     [
       "ClassicalSugar.test_and_intro_2",
@@ -205,7 +205,7 @@
         "refinement_interpretation_Tm_refine_b88b26704ce5354755b4f9e280b3a2d9"
       ],
       0,
-      "6a5d598549aef854fcd4d0f20c738ca7"
+      "99973364a749ad20a437e0a4edece559"
     ],
     [
       "ClassicalSugar.test_excluded_middle",
@@ -218,7 +218,7 @@
         "refinement_interpretation_Tm_refine_953a6e4e702e848a7213bd619baaa22d"
       ],
       0,
-      "465c96843154de19ca1391adbb3b1604"
+      "e122dd02e474d059dcb8345187104248"
     ],
     [
       "ClassicalSugar.test_forall_implies_2_1",
@@ -231,7 +231,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "33a22880958feb6d1ec3ac7815ffc25a"
+      "622b31157185df50ee5bf03dcc33fdd5"
     ],
     [
       "ClassicalSugar.test_forall_implies_2_2",
@@ -244,7 +244,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "04668d069c5660e0c6eb563b7f1a95e5"
+      "19dfe625d6ffc01997ef88585edb10fd"
     ],
     [
       "ClassicalSugar.test_forall_implies_2_3",
@@ -257,7 +257,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "864babf9e44e9c24cbf8702aa3cdd8a8"
+      "54a75ed99e3c14e0b2897fd995a5b77e"
     ],
     [
       "ClassicalSugar.test_bias_implies",
@@ -274,7 +274,7 @@
         "refinement_interpretation_Tm_refine_985dd1507393b8aad382f3d9b75a36c5"
       ],
       0,
-      "8d9cdcc48e50ee5925c29caa788da12c"
+      "22f98f9e560faf20cb57edd062e52a25"
     ],
     [
       "ClassicalSugar.test_bias_and",
@@ -293,7 +293,7 @@
         "refinement_interpretation_Tm_refine_f003cdd572e39848a577979d59db90a4"
       ],
       0,
-      "a3961f0ad3991aeb528a87c1a74f7303"
+      "0c6ca84f46b540d22e348e66f6761651"
     ],
     [
       "ClassicalSugar.test_bias_or",
@@ -311,7 +311,7 @@
         "refinement_interpretation_Tm_refine_a8b9421949c799363cbb16701b324d79"
       ],
       0,
-      "161202e6170829c86e87a1e21f71cb11"
+      "bb5ca9a04477e8eaffff82a8658f2ebb"
     ],
     [
       "ClassicalSugar.test_bias_or_alt",
@@ -331,7 +331,7 @@
         "refinement_interpretation_Tm_refine_a8b9421949c799363cbb16701b324d79"
       ],
       0,
-      "cbb5951be0bc97aae15f3a93c275c042"
+      "368b7d57fca355bdb6b7ed1261faad04"
     ],
     [
       "ClassicalSugar.admit_implies_elim",
@@ -344,7 +344,7 @@
         "refinement_interpretation_Tm_refine_913239c2cf9dc8a14e1f047e0206138d"
       ],
       0,
-      "f0384cd7ced1787a2ffa86d455fb2ea9"
+      "9637afa5cbc4cb5883d9ded9496ea0cd"
     ],
     [
       "ClassicalSugar.admit_or_intro_left",
@@ -356,7 +356,7 @@
         "refinement_interpretation_Tm_refine_fe5dc86c0b5ea8bea91e659ca9e2937e"
       ],
       0,
-      "722da8d3b6fe071a97b152c96a72b95d"
+      "73c8885833502119b8f855a08d478a36"
     ],
     [
       "ClassicalSugar.admit_or_intro_right",
@@ -368,7 +368,7 @@
         "refinement_interpretation_Tm_refine_fe5dc86c0b5ea8bea91e659ca9e2937e"
       ],
       0,
-      "01228d35e6aa6aa8fefc539a7eaf5a93"
+      "732d6952e4a745707132b991e1e0c0bf"
     ],
     [
       "ClassicalSugar.admit_and_intro",
@@ -380,7 +380,7 @@
         "refinement_interpretation_Tm_refine_b88b26704ce5354755b4f9e280b3a2d9"
       ],
       0,
-      "c5facc5afdc57b96ac3cbcd068b0853e"
+      "5ac5dbe51c70cfc7413ffdf564861296"
     ]
   ]
 ]

@@ -101,8 +101,7 @@ let (label_goals :
               -> true
           | uu___ -> false in
         let is_a_named_continuation lhs =
-          FStar_Compiler_Effect.op_Bar_Greater (conjuncts lhs)
-            (FStar_Compiler_Util.for_some is_guard_free) in
+          FStar_Compiler_Util.for_some is_guard_free (conjuncts lhs) in
         let uu___ =
           match use_env_msg with
           | FStar_Pervasives_Native.None -> (false, "")
@@ -114,8 +113,8 @@ let (label_goals :
               let msg2 =
                 if flag
                 then
-                  Prims.op_Hat "Failed to verify implicit argument: "
-                    (Prims.op_Hat msg_prefix (Prims.op_Hat " :: " msg1))
+                  Prims.strcat "Failed to verify implicit argument: "
+                    (Prims.strcat msg_prefix (Prims.strcat " :: " msg1))
                 else msg1 in
               let rng1 =
                 match ropt with
@@ -137,7 +136,8 @@ let (label_goals :
               | FStar_SMTEncoding_Term.Integer uu___1 -> (labels1, q1)
               | FStar_SMTEncoding_Term.String uu___1 -> (labels1, q1)
               | FStar_SMTEncoding_Term.Real uu___1 -> (labels1, q1)
-              | FStar_SMTEncoding_Term.LblPos uu___1 -> failwith "Impossible"
+              | FStar_SMTEncoding_Term.LblPos uu___1 ->
+                  FStar_Compiler_Effect.failwith "Impossible"
               | FStar_SMTEncoding_Term.Labeled
                   (arg, "Could not prove post-condition", label_range) ->
                   let fallback debug_msg =
@@ -163,10 +163,8 @@ let (label_goals :
                                  let post_name =
                                    let uu___3 =
                                      let uu___4 = FStar_GenSym.next_id () in
-                                     FStar_Compiler_Effect.op_Less_Bar
-                                       FStar_Compiler_Util.string_of_int
-                                       uu___4 in
-                                   Prims.op_Hat "^^post_condition_" uu___3 in
+                                     FStar_Compiler_Util.string_of_int uu___4 in
+                                   Prims.strcat "^^post_condition_" uu___3 in
                                  let names =
                                    let uu___3 =
                                      FStar_SMTEncoding_Term.mk_fv
@@ -179,10 +177,9 @@ let (label_goals :
                                               let uu___7 =
                                                 let uu___8 =
                                                   FStar_GenSym.next_id () in
-                                                FStar_Compiler_Effect.op_Less_Bar
-                                                  FStar_Compiler_Util.string_of_int
+                                                FStar_Compiler_Util.string_of_int
                                                   uu___8 in
-                                              Prims.op_Hat "^^" uu___7 in
+                                              Prims.strcat "^^" uu___7 in
                                             (uu___6, s) in
                                           FStar_SMTEncoding_Term.mk_fv uu___5)
                                        sorts in
@@ -300,13 +297,13 @@ let (label_goals :
                                                                    =
                                                                    FStar_SMTEncoding_Term.print_smt_term
                                                                     post1 in
-                                                                 Prims.op_Hat
+                                                                 Prims.strcat
                                                                    "  ... "
                                                                    uu___13 in
-                                                               Prims.op_Hat
+                                                               Prims.strcat
                                                                  post_name
                                                                  uu___12 in
-                                                             Prims.op_Hat
+                                                             Prims.strcat
                                                                "Ensures clause doesn't match post name:  "
                                                                uu___11 in
                                                            Not_a_wp_implication
@@ -321,13 +318,13 @@ let (label_goals :
                                                               let uu___11 =
                                                                 FStar_SMTEncoding_Term.print_smt_term
                                                                   ens in
-                                                              Prims.op_Hat
+                                                              Prims.strcat
                                                                 "  ... "
                                                                 uu___11 in
-                                                            Prims.op_Hat
+                                                            Prims.strcat
                                                               post_name
                                                               uu___10 in
-                                                          Prims.op_Hat
+                                                          Prims.strcat
                                                             "Ensures clause doesn't have the expected shape for post-condition "
                                                             uu___9 in
                                                         Not_a_wp_implication
@@ -340,7 +337,7 @@ let (label_goals :
                                                 let uu___8 =
                                                   FStar_SMTEncoding_Term.print_smt_term
                                                     lhs1 in
-                                                Prims.op_Hat
+                                                Prims.strcat
                                                   "LHS not a conjunct: "
                                                   uu___8 in
                                               Not_a_wp_implication uu___7 in
@@ -393,9 +390,8 @@ let (label_goals :
                        let new_post_name =
                          let uu___3 =
                            let uu___4 = FStar_GenSym.next_id () in
-                           FStar_Compiler_Effect.op_Less_Bar
-                             FStar_Compiler_Util.string_of_int uu___4 in
-                         Prims.op_Hat "^^post_condition_" uu___3 in
+                           FStar_Compiler_Util.string_of_int uu___4 in
+                         Prims.strcat "^^post_condition_" uu___3 in
                        let names =
                          let uu___3 =
                            FStar_Compiler_List.map
@@ -404,10 +400,9 @@ let (label_goals :
                                   let uu___5 =
                                     let uu___6 =
                                       let uu___7 = FStar_GenSym.next_id () in
-                                      FStar_Compiler_Effect.op_Less_Bar
-                                        FStar_Compiler_Util.string_of_int
+                                      FStar_Compiler_Util.string_of_int
                                         uu___7 in
-                                    Prims.op_Hat "^^" uu___6 in
+                                    Prims.strcat "^^" uu___6 in
                                   (uu___5, s) in
                                 FStar_SMTEncoding_Term.mk_fv uu___4) sorts' in
                          let uu___4 =
@@ -508,9 +503,8 @@ let (label_goals :
                                             (uu___8, rhs2) in
                                           FStar_SMTEncoding_Term.mkImp uu___7
                                             rng in
-                                        FStar_Compiler_Effect.op_Bar_Greater
-                                          uu___6
-                                          (FStar_SMTEncoding_Term.abstr names) in
+                                        FStar_SMTEncoding_Term.abstr names
+                                          uu___6 in
                                       let q2 =
                                         FStar_SMTEncoding_Term.mk
                                           (FStar_SMTEncoding_Term.Quant
@@ -644,70 +638,90 @@ let (label_goals :
                   (match uu___3 with | (lab, q2) -> ((lab :: labels1), q2))
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.RealDiv, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.Add, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.Sub, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.Div, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.Mul, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.Minus, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.Mod, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.BvAnd, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.BvXor, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.BvOr, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.BvAdd, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.BvSub, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.BvShl, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.BvShr, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.BvUdiv, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.BvMod, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.BvMul, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.BvUext uu___1, uu___2) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.BvToNat, uu___1) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.NatToBv uu___1, uu___2) ->
-                  failwith "Impossible: non-propositional term"
+                  FStar_Compiler_Effect.failwith
+                    "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.ITE, uu___1) ->
-                  failwith "Impossible: arity mismatch"
+                  FStar_Compiler_Effect.failwith "Impossible: arity mismatch"
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.Imp, uu___1) ->
-                  failwith "Impossible: arity mismatch"
+                  FStar_Compiler_Effect.failwith "Impossible: arity mismatch"
               | FStar_SMTEncoding_Term.Quant
                   (FStar_SMTEncoding_Term.Forall, pats, iopt, sorts, body) ->
                   let uu___1 =
@@ -773,7 +787,7 @@ let (detail_errors :
                   then
                     FStar_Errors.log_issue r
                       (FStar_Errors_Codes.Warning_HintFailedToReplayProof,
-                        (Prims.op_Hat
+                        (Prims.strcat
                            "Hint failed to replay this sub-proof: " msg1))
                   else
                     (let uu___4 =
@@ -787,28 +801,27 @@ let (detail_errors :
                          uu___5) in
                      FStar_Errors.log_issue r uu___4) in
           let elim labs =
-            FStar_Compiler_Effect.op_Bar_Greater labs
-              (FStar_Compiler_List.map
-                 (fun uu___ ->
-                    match uu___ with
-                    | (l, uu___1, uu___2) ->
-                        let a =
-                          let uu___3 =
-                            let uu___4 =
-                              let uu___5 = FStar_SMTEncoding_Util.mkFreeV l in
-                              (uu___5, FStar_SMTEncoding_Util.mkTrue) in
-                            FStar_SMTEncoding_Util.mkEq uu___4 in
-                          let uu___4 =
-                            let uu___5 = FStar_SMTEncoding_Term.fv_name l in
-                            Prims.op_Hat "@disable_label_" uu___5 in
-                          {
-                            FStar_SMTEncoding_Term.assumption_term = uu___3;
-                            FStar_SMTEncoding_Term.assumption_caption =
-                              (FStar_Pervasives_Native.Some "Disabling label");
-                            FStar_SMTEncoding_Term.assumption_name = uu___4;
-                            FStar_SMTEncoding_Term.assumption_fact_ids = []
-                          } in
-                        FStar_SMTEncoding_Term.Assume a)) in
+            FStar_Compiler_List.map
+              (fun uu___ ->
+                 match uu___ with
+                 | (l, uu___1, uu___2) ->
+                     let a =
+                       let uu___3 =
+                         let uu___4 =
+                           let uu___5 = FStar_SMTEncoding_Util.mkFreeV l in
+                           (uu___5, FStar_SMTEncoding_Util.mkTrue) in
+                         FStar_SMTEncoding_Util.mkEq uu___4 in
+                       let uu___4 =
+                         let uu___5 = FStar_SMTEncoding_Term.fv_name l in
+                         Prims.strcat "@disable_label_" uu___5 in
+                       {
+                         FStar_SMTEncoding_Term.assumption_term = uu___3;
+                         FStar_SMTEncoding_Term.assumption_caption =
+                           (FStar_Pervasives_Native.Some "Disabling label");
+                         FStar_SMTEncoding_Term.assumption_name = uu___4;
+                         FStar_SMTEncoding_Term.assumption_fact_ids = []
+                       } in
+                     FStar_SMTEncoding_Term.Assume a) labs in
           let rec linear_check eliminated errors active =
             FStar_SMTEncoding_Z3.refresh ();
             (match active with
@@ -826,7 +839,7 @@ let (detail_errors :
                        (FStar_Compiler_List.length active) in
                    FStar_Compiler_Util.print1 "%s, " uu___2);
                   (let decls =
-                     FStar_Compiler_Effect.op_Less_Bar elim
+                     elim
                        (FStar_Compiler_List.op_At eliminated
                           (FStar_Compiler_List.op_At errors tl)) in
                    let result = askZ3 decls in
@@ -839,8 +852,7 @@ let (detail_errors :
             (FStar_Options.Int (Prims.of_int (5)));
           (let res = linear_check [] [] all_labels in
            FStar_Compiler_Util.print_string "\n";
-           FStar_Compiler_Effect.op_Bar_Greater res
-             (FStar_Compiler_List.iter print_result);
+           FStar_Compiler_List.iter print_result res;
            (let uu___4 =
               FStar_Compiler_Util.for_all FStar_Pervasives_Native.snd res in
             if uu___4

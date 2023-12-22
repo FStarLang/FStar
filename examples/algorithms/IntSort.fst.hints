@@ -20,7 +20,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "b7f2cfbd2d3a0e72a58f42392e58a33f"
+      "ef59d7c467e894f5ab45fe286ab09f90"
     ],
     [
       "IntSort.test_sorted",
@@ -29,7 +29,7 @@
       1,
       [ "@query" ],
       0,
-      "5a7f7313d20489a01e96d841574757b4"
+      "57475071af329cf8c05dbd01d6d37da3"
     ],
     [
       "IntSort.test_sorted",
@@ -52,7 +52,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b68a1acdc67edfd7c6232463b31d5916"
+      "b1a2e9dd442bf3248ae6f17098caac8b"
     ],
     [
       "IntSort.test_sorted2",
@@ -71,7 +71,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "f0f0c451bbf86e34de71723bda4a72c1"
+      "c5e40c76721fabe1c9af0598942757d2"
     ],
     [
       "IntSort.sorted_smaller",
@@ -91,7 +91,6 @@
         "constructor_distinct_Prims.Nil", "constructor_distinct_Tm_unit",
         "data_typing_intro_Prims.Cons@tok", "disc_equation_Prims.Cons",
         "disc_equation_Prims.Nil", "equation_Prims.eqtype",
-        "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
         "equation_with_fuel_IntSort.sorted.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
@@ -109,7 +108,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "6c26039fc368e84e6726f4328fe53d83"
+      "06687001196af156096b64ece6634197"
     ],
     [
       "IntSort.permutation",
@@ -123,7 +122,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "93a0d93b4b4b4917eb29ce9cf6e205fd"
+      "864ed7de60f74b0157d1ae573f7c1ffa"
     ]
   ]
 ]

@@ -383,7 +383,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
     | MLE_Name path ->
         text (ptsym currentModule path)
 
-    | MLE_Record (path, fields) ->
+    | MLE_Record (path, _, fields) ->
         let for1 (name, e) =
             let doc = doc_of_expr currentModule (min_op_prec, NonAssoc) e in
             reduce1 [text (ptsym currentModule (path, name)); text "="; doc] in

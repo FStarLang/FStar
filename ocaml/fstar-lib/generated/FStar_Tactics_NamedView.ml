@@ -1477,26 +1477,29 @@ let _ =
     "FStar.Tactics.NamedView.inspect_universe" Prims.int_one
     (fun _psc ->
        fun cb ->
+         fun us ->
+           fun args ->
+             FStar_Syntax_Embeddings.debug_wrap
+               "FStar.Tactics.NamedView.inspect_universe"
+               (fun _ ->
+                  (FStar_Syntax_Embeddings.arrow_as_prim_step_1
+                     FStar_Reflection_V2_Embeddings.e_universe
+                     e_named_universe_view inspect_universe Prims.int_zero
+                     (FStar_Ident.lid_of_str
+                        "FStar.Tactics.NamedView.inspect_universe") cb us)
+                    args))
+    (fun cb ->
+       fun us ->
          fun args ->
            FStar_Syntax_Embeddings.debug_wrap
              "FStar.Tactics.NamedView.inspect_universe"
              (fun _ ->
-                (FStar_Syntax_Embeddings.arrow_as_prim_step_1
-                   FStar_Reflection_V2_Embeddings.e_universe
-                   e_named_universe_view inspect_universe Prims.int_zero
+                (FStar_TypeChecker_NBETerm.arrow_as_prim_step_1
+                   FStar_Reflection_V2_NBEEmbeddings.e_universe
+                   (FStar_TypeChecker_NBETerm.e_unsupported ())
+                   inspect_universe Prims.int_zero
                    (FStar_Ident.lid_of_str
-                      "FStar.Tactics.NamedView.inspect_universe") cb) args))
-    (fun cb ->
-       fun args ->
-         FStar_Syntax_Embeddings.debug_wrap
-           "FStar.Tactics.NamedView.inspect_universe"
-           (fun _ ->
-              (FStar_TypeChecker_NBETerm.arrow_as_prim_step_1
-                 FStar_Reflection_V2_NBEEmbeddings.e_universe
-                 (FStar_TypeChecker_NBETerm.e_unsupported ())
-                 inspect_universe Prims.int_zero
-                 (FStar_Ident.lid_of_str
-                    "FStar.Tactics.NamedView.inspect_universe") cb) args))
+                      "FStar.Tactics.NamedView.inspect_universe") cb us) args))
 let (close_universe_view :
   named_universe_view -> FStar_Reflection_V2_Data.universe_view) =
   fun v ->
@@ -1519,27 +1522,29 @@ let _ =
     "FStar.Tactics.NamedView.pack_universe" Prims.int_one
     (fun _psc ->
        fun cb ->
+         fun us ->
+           fun args ->
+             FStar_Syntax_Embeddings.debug_wrap
+               "FStar.Tactics.NamedView.pack_universe"
+               (fun _ ->
+                  (FStar_Syntax_Embeddings.arrow_as_prim_step_1
+                     e_named_universe_view
+                     FStar_Reflection_V2_Embeddings.e_universe pack_universe
+                     Prims.int_zero
+                     (FStar_Ident.lid_of_str
+                        "FStar.Tactics.NamedView.pack_universe") cb us) args))
+    (fun cb ->
+       fun us ->
          fun args ->
            FStar_Syntax_Embeddings.debug_wrap
              "FStar.Tactics.NamedView.pack_universe"
              (fun _ ->
-                (FStar_Syntax_Embeddings.arrow_as_prim_step_1
-                   e_named_universe_view
-                   FStar_Reflection_V2_Embeddings.e_universe pack_universe
+                (FStar_TypeChecker_NBETerm.arrow_as_prim_step_1
+                   (FStar_TypeChecker_NBETerm.e_unsupported ())
+                   FStar_Reflection_V2_NBEEmbeddings.e_universe pack_universe
                    Prims.int_zero
                    (FStar_Ident.lid_of_str
-                      "FStar.Tactics.NamedView.pack_universe") cb) args))
-    (fun cb ->
-       fun args ->
-         FStar_Syntax_Embeddings.debug_wrap
-           "FStar.Tactics.NamedView.pack_universe"
-           (fun _ ->
-              (FStar_TypeChecker_NBETerm.arrow_as_prim_step_1
-                 (FStar_TypeChecker_NBETerm.e_unsupported ())
-                 FStar_Reflection_V2_NBEEmbeddings.e_universe pack_universe
-                 Prims.int_zero
-                 (FStar_Ident.lid_of_str
-                    "FStar.Tactics.NamedView.pack_universe") cb) args))
+                      "FStar.Tactics.NamedView.pack_universe") cb us) args))
 let (__binding_to_binder :
   binding -> FStar_Reflection_Types.binder -> binder) =
   fun bnd ->
@@ -1849,32 +1854,34 @@ let _ =
     (Prims.of_int (2))
     (fun _psc ->
        fun cb ->
+         fun us ->
+           fun args ->
+             FStar_Syntax_Embeddings.debug_wrap
+               "FStar.Tactics.NamedView.close_term"
+               (fun _ ->
+                  (FStar_Syntax_Embeddings.arrow_as_prim_step_2 e_binder
+                     FStar_Reflection_V2_Embeddings.e_term
+                     (FStar_Syntax_Embeddings.e_tuple2
+                        FStar_Reflection_V2_Embeddings.e_binder
+                        FStar_Reflection_V2_Embeddings.e_term) close_term
+                     Prims.int_zero
+                     (FStar_Ident.lid_of_str
+                        "FStar.Tactics.NamedView.close_term") cb us) args))
+    (fun cb ->
+       fun us ->
          fun args ->
            FStar_Syntax_Embeddings.debug_wrap
              "FStar.Tactics.NamedView.close_term"
              (fun _ ->
-                (FStar_Syntax_Embeddings.arrow_as_prim_step_2 e_binder
-                   FStar_Reflection_V2_Embeddings.e_term
-                   (FStar_Syntax_Embeddings.e_tuple2
-                      FStar_Reflection_V2_Embeddings.e_binder
-                      FStar_Reflection_V2_Embeddings.e_term) close_term
+                (FStar_TypeChecker_NBETerm.arrow_as_prim_step_2
+                   (FStar_TypeChecker_NBETerm.e_unsupported ())
+                   FStar_Reflection_V2_NBEEmbeddings.e_term
+                   (FStar_TypeChecker_NBETerm.e_tuple2
+                      FStar_Reflection_V2_NBEEmbeddings.e_binder
+                      FStar_Reflection_V2_NBEEmbeddings.e_term) close_term
                    Prims.int_zero
                    (FStar_Ident.lid_of_str
-                      "FStar.Tactics.NamedView.close_term") cb) args))
-    (fun cb ->
-       fun args ->
-         FStar_Syntax_Embeddings.debug_wrap
-           "FStar.Tactics.NamedView.close_term"
-           (fun _ ->
-              (FStar_TypeChecker_NBETerm.arrow_as_prim_step_2
-                 (FStar_TypeChecker_NBETerm.e_unsupported ())
-                 FStar_Reflection_V2_NBEEmbeddings.e_term
-                 (FStar_TypeChecker_NBETerm.e_tuple2
-                    FStar_Reflection_V2_NBEEmbeddings.e_binder
-                    FStar_Reflection_V2_NBEEmbeddings.e_term) close_term
-                 Prims.int_zero
-                 (FStar_Ident.lid_of_str "FStar.Tactics.NamedView.close_term")
-                 cb) args))
+                      "FStar.Tactics.NamedView.close_term") cb us) args))
 let (close_comp : binder -> comp -> (FStar_Reflection_Types.binder * comp)) =
   fun b ->
     fun t ->
@@ -3037,12 +3044,13 @@ let _ =
     (Prims.of_int (2))
     (fun psc ->
        fun ncb ->
-         fun args ->
-           FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_1
-             "FStar.Tactics.NamedView.inspect (plugin)"
-             (FStar_Tactics_Native.from_tactic_1 inspect)
-             FStar_Reflection_V2_Embeddings.e_term e_named_term_view psc ncb
-             args)
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+               "FStar.Tactics.NamedView.inspect (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 inspect)
+               FStar_Reflection_V2_Embeddings.e_term e_named_term_view psc
+               ncb us args)
 let (pack : named_term_view -> term) =
   fun tv ->
     let tv1 = close_view tv in FStar_Reflection_V2_Builtins.pack_ln tv1
@@ -3051,23 +3059,27 @@ let _ =
     Prims.int_one
     (fun _psc ->
        fun cb ->
+         fun us ->
+           fun args ->
+             FStar_Syntax_Embeddings.debug_wrap
+               "FStar.Tactics.NamedView.pack"
+               (fun _ ->
+                  (FStar_Syntax_Embeddings.arrow_as_prim_step_1
+                     e_named_term_view FStar_Reflection_V2_Embeddings.e_term
+                     pack Prims.int_zero
+                     (FStar_Ident.lid_of_str "FStar.Tactics.NamedView.pack")
+                     cb us) args))
+    (fun cb ->
+       fun us ->
          fun args ->
            FStar_Syntax_Embeddings.debug_wrap "FStar.Tactics.NamedView.pack"
              (fun _ ->
-                (FStar_Syntax_Embeddings.arrow_as_prim_step_1
-                   e_named_term_view FStar_Reflection_V2_Embeddings.e_term
-                   pack Prims.int_zero
-                   (FStar_Ident.lid_of_str "FStar.Tactics.NamedView.pack") cb)
-                  args))
-    (fun cb ->
-       fun args ->
-         FStar_Syntax_Embeddings.debug_wrap "FStar.Tactics.NamedView.pack"
-           (fun _ ->
-              (FStar_TypeChecker_NBETerm.arrow_as_prim_step_1
-                 (FStar_TypeChecker_NBETerm.e_unsupported ())
-                 FStar_Reflection_V2_NBEEmbeddings.e_term pack Prims.int_zero
-                 (FStar_Ident.lid_of_str "FStar.Tactics.NamedView.pack") cb)
-                args))
+                (FStar_TypeChecker_NBETerm.arrow_as_prim_step_1
+                   (FStar_TypeChecker_NBETerm.e_unsupported ())
+                   FStar_Reflection_V2_NBEEmbeddings.e_term pack
+                   Prims.int_zero
+                   (FStar_Ident.lid_of_str "FStar.Tactics.NamedView.pack") cb
+                   us) args))
 let (open_univ_s :
   FStar_Reflection_Types.univ_name Prims.list ->
     ((univ_name Prims.list * FStar_Syntax_Syntax.subst_t), unit)
@@ -3944,12 +3956,13 @@ let _ =
     "FStar.Tactics.NamedView.inspect_sigelt" (Prims.of_int (2))
     (fun psc ->
        fun ncb ->
-         fun args ->
-           FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_1
-             "FStar.Tactics.NamedView.inspect_sigelt (plugin)"
-             (FStar_Tactics_Native.from_tactic_1 inspect_sigelt)
-             FStar_Reflection_V2_Embeddings.e_sigelt e_named_sigelt_view psc
-             ncb args)
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+               "FStar.Tactics.NamedView.inspect_sigelt (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 inspect_sigelt)
+               FStar_Reflection_V2_Embeddings.e_sigelt e_named_sigelt_view
+               psc ncb us args)
 let (pack_sigelt :
   named_sigelt_view ->
     (FStar_Reflection_Types.sigelt, unit) FStar_Tactics_Effect.tac_repr)
@@ -3974,12 +3987,13 @@ let _ =
     (Prims.of_int (2))
     (fun psc ->
        fun ncb ->
-         fun args ->
-           FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_1
-             "FStar.Tactics.NamedView.pack_sigelt (plugin)"
-             (FStar_Tactics_Native.from_tactic_1 pack_sigelt)
-             e_named_sigelt_view FStar_Reflection_V2_Embeddings.e_sigelt psc
-             ncb args)
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+               "FStar.Tactics.NamedView.pack_sigelt (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 pack_sigelt)
+               e_named_sigelt_view FStar_Reflection_V2_Embeddings.e_sigelt
+               psc ncb us args)
 let (tcc :
   FStar_Reflection_Types.env ->
     term -> (comp, unit) FStar_Tactics_Effect.tac_repr)
@@ -4006,13 +4020,14 @@ let _ =
     (Prims.of_int (3))
     (fun psc ->
        fun ncb ->
-         fun args ->
-           FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_2
-             "FStar.Tactics.NamedView.tcc (plugin)"
-             (FStar_Tactics_Native.from_tactic_2 tcc)
-             FStar_Reflection_V2_Embeddings.e_env
-             FStar_Reflection_V2_Embeddings.e_term
-             FStar_Reflection_V2_Embeddings.e_comp_view psc ncb args)
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_2
+               "FStar.Tactics.NamedView.tcc (plugin)"
+               (FStar_Tactics_Native.from_tactic_2 tcc)
+               FStar_Reflection_V2_Embeddings.e_env
+               FStar_Reflection_V2_Embeddings.e_term
+               FStar_Reflection_V2_Embeddings.e_comp_view psc ncb us args)
 let (comp_to_string :
   comp -> (Prims.string, unit) FStar_Tactics_Effect.tac_repr) =
   fun c ->
@@ -4023,12 +4038,13 @@ let _ =
     "FStar.Tactics.NamedView.comp_to_string" (Prims.of_int (2))
     (fun psc ->
        fun ncb ->
-         fun args ->
-           FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_1
-             "FStar.Tactics.NamedView.comp_to_string (plugin)"
-             (FStar_Tactics_Native.from_tactic_1 comp_to_string)
-             FStar_Reflection_V2_Embeddings.e_comp_view
-             FStar_Syntax_Embeddings.e_string psc ncb args)
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+               "FStar.Tactics.NamedView.comp_to_string (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 comp_to_string)
+               FStar_Reflection_V2_Embeddings.e_comp_view
+               FStar_Syntax_Embeddings.e_string psc ncb us args)
 type universe_view = named_universe_view
 type term_view = named_term_view
 type sigelt_view = named_sigelt_view

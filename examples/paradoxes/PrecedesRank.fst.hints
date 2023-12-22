@@ -1,0 +1,89 @@
+[
+  ",ºó^¿«\u001c°›r\u0003úS_Þé",
+  [
+    [
+      "PrecedesRank.pid_ge_n",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_PrecedesRank.pid",
+        "int_inversion",
+        "interpretation_Tm_abs_f8b7175ad4f28c0bc3c11371abe1d18d",
+        "proj_equation_PrecedesRank.Mk_f",
+        "projection_inverse_PrecedesRank.Mk_f",
+        "token_correspondence_PrecedesRank.__proj__Mk__item__f"
+      ],
+      0,
+      "daacf7b6020716b97786433603170b54"
+    ],
+    [
+      "PrecedesRank.rank_n_ge_n",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1", "equation_Prims.nat",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Subtraction", "primitive_Prims.op_disEquality",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "e8a3f97abb4d6d6bb8c1f63b63f853c3"
+    ],
+    [
+      "PrecedesRank.bigrank_n",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_Addition",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "689f0004c4674ea8cebc3e6e834a118e"
+    ],
+    [
+      "PrecedesRank.diag",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "PrecedesRank_interpretation_Tm_arrow_b62b4b876cae10c4c2e392fcd0f00431",
+        "PrecedesRank_pretyping_7f0fff55dd9ab045ef4964fc97f433be",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "data_elim_PrecedesRank.Mkras", "equation_PrecedesRank.bigrank_n",
+        "equation_PrecedesRank.pid",
+        "fuel_guarded_inversion_PrecedesRank.ras",
+        "function_token_typing_Prims.__cache_version_number__",
+        "kinding_PrecedesRank.pack@tok",
+        "proj_equation_PrecedesRank.Mkras_rank",
+        "refinement_interpretation_Tm_refine_a949dfb718b32fd8ed52a101c1bfd3ad",
+        "token_correspondence_PrecedesRank.__proj__Mkras__item__rank",
+        "typing_PrecedesRank.bigrank_n", "typing_PrecedesRank.pid"
+      ],
+      0,
+      "795622aa5c98aad24c1621b8e9dddb88"
+    ],
+    [
+      "PrecedesRank.falso",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "0af2115e6dfeb7593e2ab2f17a7ce9e6"
+    ]
+  ]
+]

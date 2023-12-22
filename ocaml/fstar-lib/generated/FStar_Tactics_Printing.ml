@@ -39,8 +39,8 @@ let (unshadow :
                 FStar_Class_Show.show
                   (FStar_Class_Show.printableshow
                      FStar_Class_Printable.printable_int) i in
-              Prims.op_Hat "'" uu___1 in
-            Prims.op_Hat b uu___ in
+              Prims.strcat "'" uu___1 in
+            Prims.strcat b uu___ in
           let uu___ = f t1 in if uu___ then t1 else aux (i + Prims.int_one) in
         let uu___ = f b in if uu___ then b else aux Prims.int_zero in
       let rec go seen subst bs1 bs' t1 =
@@ -53,7 +53,9 @@ let (unshadow :
               let uu___ = FStar_Syntax_Subst.subst_binders subst [b] in
               match uu___ with
               | b2::[] -> b2
-              | uu___1 -> failwith "impossible: unshadow subst_binders" in
+              | uu___1 ->
+                  FStar_Compiler_Effect.failwith
+                    "impossible: unshadow subst_binders" in
             let uu___ =
               ((b1.FStar_Syntax_Syntax.binder_bv),
                 (b1.FStar_Syntax_Syntax.binder_qual)) in
@@ -123,43 +125,43 @@ let (goal_to_string :
           let maybe_label =
             match g.FStar_Tactics_Types.label with
             | "" -> ""
-            | l -> Prims.op_Hat " (" (Prims.op_Hat l ")") in
+            | l -> Prims.strcat " (" (Prims.strcat l ")") in
           let uu___ =
             let rename_binders subst bs =
-              FStar_Compiler_Effect.op_Bar_Greater bs
-                (FStar_Compiler_List.map
-                   (fun uu___1 ->
-                      let x = uu___1.FStar_Syntax_Syntax.binder_bv in
-                      let y =
-                        let uu___2 = FStar_Syntax_Syntax.bv_to_name x in
-                        FStar_Syntax_Subst.subst subst uu___2 in
-                      let uu___2 =
-                        let uu___3 = FStar_Syntax_Subst.compress y in
-                        uu___3.FStar_Syntax_Syntax.n in
-                      match uu___2 with
-                      | FStar_Syntax_Syntax.Tm_name y1 ->
-                          let uu___3 =
-                            let uu___4 = uu___1.FStar_Syntax_Syntax.binder_bv in
-                            let uu___5 =
-                              FStar_Syntax_Subst.subst subst
-                                x.FStar_Syntax_Syntax.sort in
-                            {
-                              FStar_Syntax_Syntax.ppname =
-                                (uu___4.FStar_Syntax_Syntax.ppname);
-                              FStar_Syntax_Syntax.index =
-                                (uu___4.FStar_Syntax_Syntax.index);
-                              FStar_Syntax_Syntax.sort = uu___5
-                            } in
-                          {
-                            FStar_Syntax_Syntax.binder_bv = uu___3;
-                            FStar_Syntax_Syntax.binder_qual =
-                              (uu___1.FStar_Syntax_Syntax.binder_qual);
-                            FStar_Syntax_Syntax.binder_positivity =
-                              (uu___1.FStar_Syntax_Syntax.binder_positivity);
-                            FStar_Syntax_Syntax.binder_attrs =
-                              (uu___1.FStar_Syntax_Syntax.binder_attrs)
-                          }
-                      | uu___3 -> failwith "Not a renaming")) in
+              FStar_Compiler_List.map
+                (fun uu___1 ->
+                   let x = uu___1.FStar_Syntax_Syntax.binder_bv in
+                   let y =
+                     let uu___2 = FStar_Syntax_Syntax.bv_to_name x in
+                     FStar_Syntax_Subst.subst subst uu___2 in
+                   let uu___2 =
+                     let uu___3 = FStar_Syntax_Subst.compress y in
+                     uu___3.FStar_Syntax_Syntax.n in
+                   match uu___2 with
+                   | FStar_Syntax_Syntax.Tm_name y1 ->
+                       let uu___3 =
+                         let uu___4 = uu___1.FStar_Syntax_Syntax.binder_bv in
+                         let uu___5 =
+                           FStar_Syntax_Subst.subst subst
+                             x.FStar_Syntax_Syntax.sort in
+                         {
+                           FStar_Syntax_Syntax.ppname =
+                             (uu___4.FStar_Syntax_Syntax.ppname);
+                           FStar_Syntax_Syntax.index =
+                             (uu___4.FStar_Syntax_Syntax.index);
+                           FStar_Syntax_Syntax.sort = uu___5
+                         } in
+                       {
+                         FStar_Syntax_Syntax.binder_bv = uu___3;
+                         FStar_Syntax_Syntax.binder_qual =
+                           (uu___1.FStar_Syntax_Syntax.binder_qual);
+                         FStar_Syntax_Syntax.binder_positivity =
+                           (uu___1.FStar_Syntax_Syntax.binder_positivity);
+                         FStar_Syntax_Syntax.binder_attrs =
+                           (uu___1.FStar_Syntax_Syntax.binder_attrs)
+                       }
+                   | uu___3 ->
+                       FStar_Compiler_Effect.failwith "Not a renaming") bs in
             let goal_binders =
               (g.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_binders in
             let goal_ty = FStar_Tactics_Types.goal_type g in
@@ -168,7 +170,7 @@ let (goal_to_string :
             then (goal_binders, goal_ty)
             else
               (let subst =
-                 FStar_TypeChecker_Primops.psc_subst
+                 FStar_TypeChecker_Primops_Base.psc_subst
                    ps.FStar_Tactics_Types.psc in
                let binders = rename_binders subst goal_binders in
                let ty = FStar_Syntax_Subst.subst subst goal_ty in

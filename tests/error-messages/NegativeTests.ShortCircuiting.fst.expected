@@ -15,10 +15,12 @@
 
 >>]
 * Warning 240 at NegativeTests.ShortCircuiting.fst(19,4-19,7):
-  - NegativeTests.ShortCircuiting.bad is declared but no definition was found; add an 'assume' if this is intentional
+  - NegativeTests.ShortCircuiting.bad is declared but no definition was found
+  - Add an 'assume' if this is intentional
 
 * Warning 240 at NegativeTests.ShortCircuiting.fst(23,4-23,6):
-  - NegativeTests.ShortCircuiting.ff is declared but no definition was found; add an 'assume' if this is intentional
+  - NegativeTests.ShortCircuiting.ff is declared but no definition was found
+  - Add an 'assume' if this is intentional
 
 Verified module: NegativeTests.ShortCircuiting
 All verification conditions discharged successfully

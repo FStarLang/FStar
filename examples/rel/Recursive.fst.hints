@@ -16,7 +16,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "1d06268077e2ace7fedd0de1e07c29ae"
+      "ff4a0b9ee2038ddfd4bf3558bc8b758c"
     ],
     [
       "Recursive.fac_mon",
@@ -32,7 +32,7 @@
         "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1", "equation_Prims.nat",
         "equation_with_fuel_Recursive.fac.fuel_instrumented",
         "function_token_typing_Prims.__cache_version_number__",
-        "int_inversion", "primitive_Prims.op_Equality",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
@@ -40,13 +40,12 @@
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Tm_refine_4fa40a2ed3c3117f237e194f5d9fbeb1",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "token_correspondence_Recursive.fac.fuel_instrumented",
-        "well-founded-ordering-on-nat"
+        "refinement_interpretation_Tm_refine_ebf1bd75f4a8e346dc8e321c84517de1",
+        "typing_Recursive.fac", "well-founded-ordering-on-nat"
       ],
       0,
-      "312e0c723b95953111e013510bf9f966"
+      "d0d9abf36be3d09a1f9a70744973ca69"
     ],
     [
       "Recursive.fac_sum",
@@ -62,7 +61,7 @@
         "typing_Recursive.fac"
       ],
       0,
-      "23b8238d5e98d3c86be2c8da33ea95ee"
+      "a48a09c70cd97e6a565625d94974e623"
     ],
     [
       "Recursive.fac_sum_mon",
@@ -70,12 +69,14 @@
       1,
       1,
       [
+        "@MaxFuel_assumption",
         "@fuel_correspondence_Recursive.fac.fuel_instrumented", "@query",
-        "equation_Recursive.fac_sum", "primitive_Prims.op_Addition",
-        "projection_inverse_BoxInt_proj_0"
+        "equation_Recursive.fac_sum",
+        "equation_with_fuel_Recursive.fac.fuel_instrumented",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "18cdd1fc6b47233fdb2a89dc212473a9"
+      "887c7ee46d4d782deb47c1d91c8e92c8"
     ]
   ]
 ]

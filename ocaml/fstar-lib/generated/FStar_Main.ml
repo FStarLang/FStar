@@ -16,24 +16,23 @@ let (finished_message :
         let uu___1 = FStar_Options.silent () in Prims.op_Negation uu___1 in
       if uu___
       then
-        (FStar_Compiler_Effect.op_Bar_Greater fmods
-           (FStar_Compiler_List.iter
-              (fun uu___2 ->
-                 match uu___2 with
-                 | (iface, name) ->
-                     let tag =
-                       if iface then "i'face (or impl+i'face)" else "module" in
-                     let uu___3 =
-                       let uu___4 = FStar_Ident.string_of_lid name in
-                       FStar_Options.should_print_message uu___4 in
-                     if uu___3
-                     then
-                       let uu___4 =
-                         let uu___5 = FStar_Ident.string_of_lid name in
-                         FStar_Compiler_Util.format2 "Verified %s: %s\n" tag
-                           uu___5 in
-                       print_to uu___4
-                     else ()));
+        (FStar_Compiler_List.iter
+           (fun uu___2 ->
+              match uu___2 with
+              | (iface, name) ->
+                  let tag =
+                    if iface then "i'face (or impl+i'face)" else "module" in
+                  let uu___3 =
+                    let uu___4 = FStar_Ident.string_of_lid name in
+                    FStar_Options.should_print_message uu___4 in
+                  if uu___3
+                  then
+                    let uu___4 =
+                      let uu___5 = FStar_Ident.string_of_lid name in
+                      FStar_Compiler_Util.format2 "Verified %s: %s\n" tag
+                        uu___5 in
+                    print_to uu___4
+                  else ()) fmods;
          if errs > Prims.int_zero
          then
            (if errs = Prims.int_one
@@ -52,8 +51,7 @@ let (finished_message :
       else ()
 let (report_errors : (Prims.bool * FStar_Ident.lident) Prims.list -> unit) =
   fun fmods ->
-    (let uu___1 = FStar_Errors.report_all () in
-     FStar_Compiler_Effect.op_Bar_Greater uu___1 (fun uu___2 -> ()));
+    (let uu___1 = FStar_Errors.report_all () in ());
     (let nerrs = FStar_Errors.get_err_count () in
      if nerrs > Prims.int_zero
      then
@@ -64,17 +62,15 @@ let (load_native_tactics : unit -> unit) =
   fun uu___ ->
     let modules_to_load =
       let uu___1 = FStar_Options.load () in
-      FStar_Compiler_Effect.op_Bar_Greater uu___1
-        (FStar_Compiler_List.map FStar_Ident.lid_of_str) in
+      FStar_Compiler_List.map FStar_Ident.lid_of_str uu___1 in
     let cmxs_to_load =
       let uu___1 = FStar_Options.load_cmxs () in
-      FStar_Compiler_Effect.op_Bar_Greater uu___1
-        (FStar_Compiler_List.map FStar_Ident.lid_of_str) in
+      FStar_Compiler_List.map FStar_Ident.lid_of_str uu___1 in
     let ml_module_name m = FStar_Extraction_ML_Util.ml_module_name_of_lid m in
     let ml_file m =
-      let uu___1 = ml_module_name m in Prims.op_Hat uu___1 ".ml" in
+      let uu___1 = ml_module_name m in Prims.strcat uu___1 ".ml" in
     let cmxs_file m =
-      let cmxs = let uu___1 = ml_module_name m in Prims.op_Hat uu___1 ".cmxs" in
+      let cmxs = let uu___1 = ml_module_name m in Prims.strcat uu___1 ".cmxs" in
       let uu___1 = FStar_Options.find_file cmxs in
       match uu___1 with
       | FStar_Pervasives_Native.Some f -> f
@@ -117,9 +113,8 @@ let (load_native_tactics : unit -> unit) =
                        FStar_Errors.raise_err uu___6
                    | FStar_Pervasives_Native.Some f -> f))) in
     let cmxs_files =
-      FStar_Compiler_Effect.op_Bar_Greater
-        (FStar_Compiler_List.op_At modules_to_load cmxs_to_load)
-        (FStar_Compiler_List.map cmxs_file) in
+      FStar_Compiler_List.map cmxs_file
+        (FStar_Compiler_List.op_At modules_to_load cmxs_to_load) in
     (let uu___2 = FStar_Options.debug_any () in
      if uu___2
      then
@@ -185,7 +180,7 @@ let go : 'uuuuu . 'uuuuu -> unit =
                          else FStar_Prettyprint.FromTempToFile in
                        FStar_Prettyprint.generate printing_mode filenames
                      else
-                       failwith
+                       FStar_Compiler_Effect.failwith
                          "You seem to be using the F#-generated version ofthe compiler ; \\o\n                         reindenting is not known to work yet with this version")
                   else
                     (let uu___8 = FStar_Options.lsp_server () in
@@ -238,12 +233,11 @@ let go : 'uuuuu . 'uuuuu -> unit =
                                    | (tcrs, env, cleanup1) ->
                                        ((let uu___16 = cleanup1 env in ());
                                         (let module_names =
-                                           FStar_Compiler_Effect.op_Bar_Greater
-                                             tcrs
-                                             (FStar_Compiler_List.map
-                                                (fun tcr ->
-                                                   FStar_Universal.module_or_interface_name
-                                                     tcr.FStar_CheckedFiles.checked_module)) in
+                                           FStar_Compiler_List.map
+                                             (fun tcr ->
+                                                FStar_Universal.module_or_interface_name
+                                                  tcr.FStar_CheckedFiles.checked_module)
+                                             tcrs in
                                          report_errors module_names;
                                          finished_message module_names
                                            Prims.int_zero))))
@@ -260,7 +254,8 @@ let (lazy_chooser :
   fun k ->
     fun i ->
       match k with
-      | FStar_Syntax_Syntax.BadLazy -> failwith "lazy chooser: got a BadLazy"
+      | FStar_Syntax_Syntax.BadLazy ->
+          FStar_Compiler_Effect.failwith "lazy chooser: got a BadLazy"
       | FStar_Syntax_Syntax.Lazy_bv ->
           FStar_Reflection_V2_Embeddings.unfold_lazy_bv i
       | FStar_Syntax_Syntax.Lazy_namedv ->
@@ -303,6 +298,9 @@ let (lazy_chooser :
           FStar_Syntax_Util.exp_string uu___
 let (setup_hooks : unit -> unit) =
   fun uu___ ->
+    FStar_Compiler_Effect.op_Colon_Equals
+      FStar_Syntax_DsEnv.ugly_sigelt_to_string_hook
+      FStar_Syntax_Print.sigelt_to_string;
     FStar_Errors.set_parse_warn_error FStar_Parser_ParseIt.parse_warn_error;
     FStar_Compiler_Effect.op_Colon_Equals FStar_Syntax_Syntax.lazy_chooser
       (FStar_Pervasives_Native.Some lazy_chooser);
@@ -310,7 +308,13 @@ let (setup_hooks : unit -> unit) =
       (FStar_Pervasives_Native.Some FStar_Syntax_Print.term_to_string);
     FStar_Compiler_Effect.op_Colon_Equals
       FStar_TypeChecker_Normalize.unembed_binder_knot
-      (FStar_Pervasives_Native.Some FStar_Reflection_V2_Embeddings.e_binder)
+      (FStar_Pervasives_Native.Some FStar_Reflection_V2_Embeddings.e_binder);
+    FStar_Compiler_List.iter
+      FStar_Tactics_Interpreter.register_tactic_primitive_step
+      FStar_Tactics_V1_Primops.ops;
+    FStar_Compiler_List.iter
+      FStar_Tactics_Interpreter.register_tactic_primitive_step
+      FStar_Tactics_V2_Primops.ops
 let (handle_error : Prims.exn -> unit) =
   fun e ->
     (let uu___1 = FStar_Errors.handleable e in

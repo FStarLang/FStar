@@ -114,8 +114,9 @@ let rec string_of_dirs
   = match ds with
     | [] -> k ""
     | Lit c :: ds' ->
+      coerce_eq () (
       string_of_dirs ds' (fun res -> k (string_of_char c ^ res))
-      <: normalize_term (dir_type ds')
+      )
     | Arg a :: ds' ->
       fun (x : arg_type a) ->
         string_of_dirs ds' (fun res -> ((k "")
@@ -195,8 +196,8 @@ let no_extensions : extension_parser = fun s -> None
 inline_for_extraction
 let sprintf
     (s:string{normalize_term (b2t (Some? (parse_format_string s no_extensions)))})
-    : normalize_term (dir_type (Some?.v (parse_format_string s no_extensions)))
-    = normalize_term (string_of_dirs (Some?.v (parse_format_string s no_extensions)) (fun s -> s))
+    : norm [unascribe; delta; iota; zeta; primops] (dir_type (Some?.v (parse_format_string s no_extensions)))
+    = norm [unascribe; delta; iota; zeta; primops] (string_of_dirs (Some?.v (parse_format_string s no_extensions)) (fun s -> s))
 
 
 /// `ext_sprintf`: An extensible version of sprintf
@@ -204,5 +205,5 @@ inline_for_extraction
 let ext_sprintf
     (parse_ext: extension_parser)
     (s:string{normalize_term (b2t (Some? (parse_format_string s parse_ext)))})
-    : normalize_term (dir_type (Some?.v (parse_format_string s parse_ext)))
-    = normalize_term (string_of_dirs (Some?.v (parse_format_string s parse_ext)) (fun s -> s))
+    : norm [unascribe; delta; iota; zeta; primops] (dir_type (Some?.v (parse_format_string s parse_ext)))
+    = norm [unascribe; delta; iota; zeta; primops] (string_of_dirs (Some?.v (parse_format_string s parse_ext)) (fun s -> s))

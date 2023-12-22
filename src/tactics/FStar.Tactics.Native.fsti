@@ -24,7 +24,7 @@ module Cfg   = FStar.TypeChecker.Cfg
 module N     = FStar.TypeChecker.Normalize
 module PO    = FStar.TypeChecker.Primops
 
-type itac = PO.psc -> FStar.Syntax.Embeddings.norm_cb -> args -> option term
+type itac = PO.psc -> FStar.Syntax.Embeddings.norm_cb -> universes -> args -> option term
 
 type native_primitive_step =
     { name: FStar.Ident.lid;

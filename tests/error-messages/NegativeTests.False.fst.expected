@@ -21,10 +21,12 @@
 
 >>]
 * Warning 240 at NegativeTests.False.fst(21,4-21,7):
-  - NegativeTests.False.bar is declared but no definition was found; add an 'assume' if this is intentional
+  - NegativeTests.False.bar is declared but no definition was found
+  - Add an 'assume' if this is intentional
 
 * Warning 240 at NegativeTests.False.fst(28,4-28,10):
-  - NegativeTests.False.absurd is declared but no definition was found; add an 'assume' if this is intentional
+  - NegativeTests.False.absurd is declared but no definition was found
+  - Add an 'assume' if this is intentional
 
 Verified module: NegativeTests.False
 All verification conditions discharged successfully

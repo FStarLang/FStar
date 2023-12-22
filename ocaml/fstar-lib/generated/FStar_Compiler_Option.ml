@@ -34,4 +34,5 @@ let get : 'a . 'a FStar_Pervasives_Native.option -> 'a =
   fun uu___ ->
     match uu___ with
     | FStar_Pervasives_Native.Some x -> x
-    | FStar_Pervasives_Native.None -> failwith "empty option"
+    | FStar_Pervasives_Native.None ->
+        FStar_Compiler_Effect.failwith "empty option"

@@ -18,7 +18,7 @@ module IfcRecursiveHeapReify
 open FStar.DM4F.Heap.IntStoreFixed
 open FStar.DM4F.IntStoreFixed
 open Rel
-
+module X = FStar.DM4F.IntStoreFixed
 type label =
 | Low
 | High
@@ -37,7 +37,7 @@ type low_equiv (env:env) (h : rel heap)  =
   if (read hi) > 0 then
   begin
     write hi (read hi - 1);
-    let h = IS?.get () in
+    let h = X.get () in
     p1 lo hi h;
     write lo (read lo - 1)
   end;
@@ -46,20 +46,26 @@ type low_equiv (env:env) (h : rel heap)  =
 
 let p1_r lo (hi:id{lo<>hi}) h = (* normalize_term *) (snd (reify (p1 lo hi h) h))
 
+let nat_of (x:int) : nat = if x < 0 then 0 else x
+
+//inlining this leads to a crash!
+let dec_metric (lo:id) (hi:id{lo<>hi}) (h :rel heap) =
+  nat_of (sel (R?.l h) hi) +
+  nat_of (sel (R?.r h) hi)
+  
 #set-options "--z3rlimit 60"
 
-val ni_p1 (lo:id) (hi:id{lo<>hi}) (env:env) (h :rel heap) :
+let rec ni_p1 (lo:id) (hi:id{lo<>hi}) (env:env) (h :rel heap) :
   Lemma
   (requires (Low? (env lo) /\
             High? (env hi) /\
             low_equiv env h))
   (ensures  (low_equiv env (R (p1_r lo hi (R?.l h)) (p1_r lo hi (R?.r h)))))
-  (decreases (let x = sel (R?.l h) hi in let y =  sel (R?.r h) hi in
-              (if x < 0 then 0 else x) + (if y < 0 then 0 else y)))
-let rec ni_p1 lo hi env h =
+  (decreases (dec_metric lo hi h)) =
   let R hl hr = h in
   let hl' = upd hl hi (sel hl hi - 1) in
   let hr' = upd hr hi (sel hr hi - 1) in
+  
   match sel hl hi <= 0, sel hr hi <= 0 with
   | true , true  -> 
     begin
@@ -107,13 +113,12 @@ let rec ni_p1 lo hi env h =
 
 let op_Star = op_Multiply
 
- val fac (a:id) (n:id{a <> n}): gh:heap ->
-  IntStore unit
+let rec fac (a:id) (n:id{a <> n}) (gh:heap)
+: IntStore unit
   (requires (fun h -> h == gh))
   (ensures  (fun h1 _ h2 -> True))
-  (decreases (let x = sel gh n in if x < 0 then 0 else x))
- let rec fac a n gh =
-  let vn = read n in
+  (decreases (nat_of (sel gh n)))
+= let vn = read n in
   if vn <= 0 then
     write a 1
   else
@@ -123,7 +128,7 @@ let op_Star = op_Multiply
     write a an;
     let n_1 = vn - 1 in
     write n n_1;
-    let h = IS?.get () in
+    let h = X.get () in
     fac a n h
   end
 
@@ -131,16 +136,14 @@ let fac_r a n h = (snd (reify (fac a n h) h))
 
 #set-options "--z3rlimit 40"
 
-val fac_mon (a:id) (n:id{a<>n}) (h:rel heap) :
+let rec fac_mon (a:id) (n:id{a<>n}) (h:rel heap) :
   Lemma
   (requires (sel (R?.l h) n <= sel (R?.r h) n /\
              sel (R?.l h) a <= sel (R?.r h) a /\
              sel (R?.l h) a >= 0 /\
              sel (R?.r h) a >= 0))
   (ensures  (sel (fac_r a n (R?.l h)) a <= sel (fac_r a n (R?.r h)) a))
-  (decreases (let x = sel (R?.l h) n in let y =  sel (R?.r h) n in
-              (if x < 0 then 0 else x) + (if y < 0 then 0 else y)))
-let rec fac_mon a n h =
+  (decreases (dec_metric a n h)) =
   let R hl hr = h in
   let hl'' = upd hl a (sel hl a * sel hl n) in
   let hl' = upd hl'' n (sel hl'' n - 1) in

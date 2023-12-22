@@ -256,6 +256,7 @@ let (labeled_lid : FStar_Ident.lident) = p2l ["FStar"; "Range"; "labeled"]
 let (__range_lid : FStar_Ident.lident) = p2l ["FStar"; "Range"; "__range"]
 let (range_lid : FStar_Ident.lident) = p2l ["FStar"; "Range"; "range"]
 let (range_0 : FStar_Ident.lident) = p2l ["FStar"; "Range"; "range_0"]
+let (mk_range_lid : FStar_Ident.lident) = p2l ["FStar"; "Range"; "mk_range"]
 let (guard_free : FStar_Ident.lident) = pconst "guard_free"
 let (inversion_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "inversion"]
@@ -330,6 +331,8 @@ let (primitive_extraction_attr : FStar_Ident.lident) =
 let (binder_strictly_positive_attr : FStar_Ident.lident) =
   psconst "strictly_positive"
 let (binder_unused_attr : FStar_Ident.lident) = psconst "unused"
+let (no_auto_projectors_decls_attr : FStar_Ident.lident) =
+  psconst "no_auto_projectors_decls"
 let (no_auto_projectors_attr : FStar_Ident.lident) =
   psconst "no_auto_projectors"
 let (no_subtping_attr_lid : FStar_Ident.lident) = psconst "no_subtyping"
@@ -359,13 +362,13 @@ let (const_to_string : FStar_Const.sconst -> Prims.string) =
     | FStar_Const.Const_effect -> "Effect"
     | FStar_Const.Const_unit -> "()"
     | FStar_Const.Const_bool b -> if b then "true" else "false"
-    | FStar_Const.Const_real r -> Prims.op_Hat r "R"
+    | FStar_Const.Const_real r -> Prims.strcat r "R"
     | FStar_Const.Const_string (s, uu___) ->
         FStar_Compiler_Util.format1 "\"%s\"" s
     | FStar_Const.Const_int (x1, uu___) -> x1
     | FStar_Const.Const_char c ->
-        Prims.op_Hat "'"
-          (Prims.op_Hat (FStar_Compiler_Util.string_of_char c) "'")
+        Prims.strcat "'"
+          (Prims.strcat (FStar_Compiler_Util.string_of_char c) "'")
     | FStar_Const.Const_range r -> FStar_Compiler_Range_Ops.string_of_range r
     | FStar_Const.Const_range_of -> "range_of"
     | FStar_Const.Const_set_range_of -> "set_range_of"
@@ -496,6 +499,10 @@ let (fstar_tactics_lid : Prims.string -> FStar_Ident.lid) =
   fun s -> fstar_tactics_lid' [s]
 let (tac_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "tac"]
 let (tactic_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "tactic"]
+let (meta_projectors_attr : FStar_Ident.lid) =
+  fstar_tactics_lid' ["MkProjectors"; "meta_projectors"]
+let (mk_projs_lid : FStar_Ident.lid) =
+  fstar_tactics_lid' ["MkProjectors"; "mk_projs"]
 let (mk_class_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Typeclasses"; "mk_class"]
 let (tcresolve_lid : FStar_Ident.lid) =
@@ -585,7 +592,7 @@ let (implies_elim_lid : FStar_Ident.lid) = classical_sugar_lid "implies_elim"
 let (or_elim_lid : FStar_Ident.lid) = classical_sugar_lid "or_elim"
 let (and_elim_lid : FStar_Ident.lid) = classical_sugar_lid "and_elim"
 let (match_returns_def_name : Prims.string) =
-  Prims.op_Hat FStar_Ident.reserved_prefix "_ret_"
+  Prims.strcat FStar_Ident.reserved_prefix "_ret_"
 let (steel_memory_inv_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["Steel"; "Memory"; "inv"]
     FStar_Compiler_Range_Type.dummyRange

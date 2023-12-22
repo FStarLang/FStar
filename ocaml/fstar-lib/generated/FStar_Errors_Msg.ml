@@ -24,10 +24,9 @@ let (sublist :
         let uu___1 =
           let uu___2 =
             let uu___3 =
-              FStar_Compiler_Effect.op_Bar_Greater ds
-                (FStar_Compiler_List.map
-                   (fun d -> FStar_Pprint.op_Hat_Hat h d)) in
-            FStar_Compiler_Effect.op_Bar_Greater uu___3 vconcat in
+              FStar_Compiler_List.map (fun d -> FStar_Pprint.op_Hat_Hat h d)
+                ds in
+            vconcat uu___3 in
           FStar_Pprint.align uu___2 in
         FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu___1 in
       FStar_Pprint.nest (Prims.of_int (2)) uu___
@@ -43,7 +42,8 @@ let (backtrace_doc : unit -> FStar_Pprint.document) =
   fun uu___ ->
     let s = FStar_Compiler_Util.stack_dump () in
     let uu___1 = text "Stack trace:" in
-    let uu___2 = FStar_Pprint.arbitrary_string s in
+    let uu___2 =
+      FStar_Pprint.arbitrary_string (FStar_Compiler_Util.trim_string s) in
     FStar_Pprint.op_Hat_Slash_Hat uu___1 uu___2
 let (subdoc : FStar_Pprint.document -> FStar_Pprint.document) =
   fun d ->

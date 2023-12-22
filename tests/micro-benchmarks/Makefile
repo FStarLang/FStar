@@ -29,4 +29,4 @@ clean:
 	rm -rf _cache
 	rm -rf _output
 
-.PRECIOUS: *.ml
+.PRECIOUS: %.ml

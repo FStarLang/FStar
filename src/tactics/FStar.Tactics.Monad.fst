@@ -52,7 +52,7 @@ let is_goal_safe_as_well_typed (g:goal) =
       List.for_all 
           (fun uv -> 
             match UF.find uv.ctx_uvar_head with
-            | Some t -> BU.set_is_empty (FStar.Syntax.Free.uvars t)
+            | Some t -> Set.is_empty (FStar.Syntax.Free.uvars t)
             | _ -> false)
           (U.ctx_uvar_typedness_deps uv)
   in
@@ -127,9 +127,10 @@ let bind (t1:tac 'a) (t2:'a -> tac 'b) : tac 'b =
             | Success (a, q)  -> run (t2 a) q
             | Failed (msg, q) -> Failed (msg, q))
 
-let (let!) t1 t2 = bind t1 t2
-
-let idtac : tac unit = ret ()
+instance monad_tac : monad tac = {
+    return   = ret;
+    ( let! ) = bind;
+}
 
 (* Set the current proofstate *)
 let set (ps:proofstate) : tac unit =
@@ -187,14 +188,6 @@ let trytac_exn (t : tac 'a) : tac (option 'a) =
          | Errors.Error (_, msg, _, _) ->
            log ps (fun () -> BU.print1 "trytac_exn error: (%s)" (Errors.rendermsg msg));
            Success (None, ps))
-
-let rec mapM (f : 'a -> tac 'b) (l : list 'a) : tac (list 'b) =
-    match l with
-    | [] -> ret []
-    | x::xs ->
-        bind (f x) (fun y ->
-        bind (mapM f xs) (fun ys ->
-        ret (y::ys)))
 
 let rec iter_tac f l =
   match l with

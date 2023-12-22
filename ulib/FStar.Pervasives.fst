@@ -29,6 +29,7 @@ let smt_pat_or _ = ()
 let spinoff p = p
 
 #push-options "--no_tactics"
+let spinoff_eq _ = ()
 let spinoff_equiv _ = ()
 #pop-options
 
@@ -189,6 +190,8 @@ let strictly_positive = ()
 let unused = ()
 
 let no_auto_projectors = ()
+
+let no_auto_projectors_decls = ()
 
 let no_subtyping = ()
 

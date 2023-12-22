@@ -32,6 +32,7 @@ open FStar.Syntax.Subst
 open FStar.Syntax.Util
 open FStar.Const
 open FStar.TypeChecker.TcTerm
+open FStar.Class.Show
 
 module S  = FStar.Syntax.Syntax
 module SP  = FStar.Syntax.Print
@@ -120,7 +121,10 @@ let tc_decl_attributes env se =
     if lid_exists env PC.attr_substitute_lid
     then ([], se.sigattrs)
     else partition ((=) attr_substitute) se.sigattrs
-  in {se with sigattrs = blacklisted_attrs @ tc_attributes env other_attrs }
+  in
+  let g, other_attrs = tc_attributes env other_attrs in
+  Rel.force_trivial_guard env g;
+  {se with sigattrs = blacklisted_attrs @ other_attrs }
 
 let tc_inductive' env ses quals attrs lids =
     if Env.debug env Options.Low then
@@ -331,7 +335,7 @@ let proc_check_with (attrs:list attribute) (kont : unit -> 'a) : 'a =
   match U.get_attribute PC.check_with_lid attrs with
   | None -> kont ()
   | Some [(a, None)] ->
-    match EMB.unembed EMB.e_vconfig a EMB.id_norm_cb with
+    match EMB.unembed a EMB.id_norm_cb with
     | None -> failwith "nah"
     | Some vcfg ->
     Options.with_saved_options (fun () ->
@@ -600,7 +604,7 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
         then err ("no_subtype annotation on a non-lemma") lb.lbpos
         else let lid_opt =
                    Free.fvars lb.lbtyp
-                   |> BU.set_elements
+                   |> Set.elems
                    |> List.tryFind (fun lid ->
                                    not (lid |> Ident.path_of_lid |> List.hd = "Prims" ||
                                         lid_equals lid PC.pattern_lid)) in
@@ -867,6 +871,12 @@ let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
               ses
       else ses
     in
+    let ses = ses |> List.map (fun se ->
+      if env.is_iface && Sig_declare_typ? se.sigel
+      then { se with sigquals = Assumption :: (List.filter (fun q -> q <> Irreducible) se.sigquals) }
+      else se)
+    in
+
     let dsenv = List.fold_left DsEnv.push_sigelt_force env.dsenv ses in
     let env = { env with dsenv = dsenv } in
 
@@ -960,7 +970,10 @@ let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
 let tc_decl env se: list sigelt * list sigelt * Env.env =
    let env = set_hint_correlator env se in
    if Options.debug_module (string_of_lid env.curmodule) then
-     BU.print1 "Processing %s\n" (Print.sigelt_to_string_short se);
+     BU.print1 "Processing %s\n"
+        (if Options.debug_at_level (string_of_lid env.curmodule) Options.High
+         then Print.sigelt_to_string se
+         else Print.sigelt_to_string_short se);
    if Env.debug env Options.Low then
      BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
    if se.sigmeta.sigmeta_already_checked then
@@ -982,7 +995,7 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
   if Env.debug env Options.Low
   then BU.print2
     ">>>>>>>>>>>>>>Adding top-level decl to environment: %s (from_cache:%s)\n"
-    (Print.sigelt_to_string se) (string_of_bool from_cache);
+    (show se) (show from_cache);
 
   match se.sigel with
   | Sig_inductive_typ _

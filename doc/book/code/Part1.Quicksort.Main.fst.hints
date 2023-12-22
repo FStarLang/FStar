@@ -2,15 +2,6 @@
   "²Á´1;•!*‘öÖ>\u0013¸Ä_",
   [
     [
-      "Part1.Quicksort.Main.string_of_int_list",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "3a37b7e5bb78fc0381af0c1dd270f21a"
-    ],
-    [
       "Part1.Quicksort.Main.main",
       1,
       2,
@@ -23,7 +14,7 @@
         "token_correspondence_Prims.op_LessThanOrEqual"
       ],
       0,
-      "0a9aa468fc7cfc7575d9afd3a940935f"
+      "ddcfccc3d8fa66dce222e7f871fcd2b6"
     ],
     [
       "Part1.Quicksort.Main.uu___5",
@@ -38,7 +29,7 @@
         "token_correspondence_Prims.op_LessThanOrEqual"
       ],
       0,
-      "8eed2d588c48c01b6ca339ec2bbe63b4"
+      "342cce3dae372db9daf1d0248b243264"
     ]
   ]
 ]

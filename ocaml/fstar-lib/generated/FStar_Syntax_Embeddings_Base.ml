@@ -38,33 +38,53 @@ type 'a embedding =
   {
   em: 'a -> embed_t ;
   un: FStar_Syntax_Syntax.term -> 'a unembed_t ;
-  typ: FStar_Syntax_Syntax.typ ;
   print: 'a printer ;
-  emb_typ: FStar_Syntax_Syntax.emb_typ }
+  typ: unit -> FStar_Syntax_Syntax.typ ;
+  e_typ: unit -> FStar_Syntax_Syntax.emb_typ }
 let __proj__Mkembedding__item__em : 'a . 'a embedding -> 'a -> embed_t =
   fun projectee ->
-    match projectee with | { em; un; typ; print; emb_typ;_} -> em
+    match projectee with | { em; un; print; typ; e_typ;_} -> em
 let __proj__Mkembedding__item__un :
   'a . 'a embedding -> FStar_Syntax_Syntax.term -> 'a unembed_t =
   fun projectee ->
-    match projectee with | { em; un; typ; print; emb_typ;_} -> un
-let __proj__Mkembedding__item__typ :
-  'a . 'a embedding -> FStar_Syntax_Syntax.typ =
-  fun projectee ->
-    match projectee with | { em; un; typ; print; emb_typ;_} -> typ
+    match projectee with | { em; un; print; typ; e_typ;_} -> un
 let __proj__Mkembedding__item__print : 'a . 'a embedding -> 'a printer =
   fun projectee ->
-    match projectee with | { em; un; typ; print; emb_typ;_} -> print
-let __proj__Mkembedding__item__emb_typ :
-  'a . 'a embedding -> FStar_Syntax_Syntax.emb_typ =
+    match projectee with | { em; un; print; typ; e_typ;_} -> print
+let __proj__Mkembedding__item__typ :
+  'a . 'a embedding -> unit -> FStar_Syntax_Syntax.typ =
   fun projectee ->
-    match projectee with | { em; un; typ; print; emb_typ;_} -> emb_typ
-let emb_typ_of : 'a . 'a embedding -> FStar_Syntax_Syntax.emb_typ =
-  fun e -> e.emb_typ
+    match projectee with | { em; un; print; typ; e_typ;_} -> typ
+let __proj__Mkembedding__item__e_typ :
+  'a . 'a embedding -> unit -> FStar_Syntax_Syntax.emb_typ =
+  fun projectee ->
+    match projectee with | { em; un; print; typ; e_typ;_} -> e_typ
+let em : 'a . 'a embedding -> 'a -> embed_t =
+  fun projectee ->
+    match projectee with | { em = em1; un; print; typ; e_typ;_} -> em1
+let un : 'a . 'a embedding -> FStar_Syntax_Syntax.term -> 'a unembed_t =
+  fun projectee ->
+    match projectee with | { em = em1; un = un1; print; typ; e_typ;_} -> un1
+let print : 'a . 'a embedding -> 'a printer =
+  fun projectee ->
+    match projectee with
+    | { em = em1; un = un1; print = print1; typ; e_typ;_} -> print1
+let typ : 'a . 'a embedding -> unit -> FStar_Syntax_Syntax.typ =
+  fun projectee ->
+    match projectee with
+    | { em = em1; un = un1; print = print1; typ = typ1; e_typ;_} -> typ1
+let e_typ : 'a . 'a embedding -> unit -> FStar_Syntax_Syntax.emb_typ =
+  fun projectee ->
+    match projectee with
+    | { em = em1; un = un1; print = print1; typ = typ1; e_typ = e_typ1;_} ->
+        e_typ1
+let emb_typ_of : 'a . 'a embedding -> unit -> FStar_Syntax_Syntax.emb_typ =
+  fun e -> fun uu___ -> e.e_typ ()
 let unknown_printer : 'a . FStar_Syntax_Syntax.term -> 'a -> Prims.string =
-  fun typ ->
+  fun typ1 ->
     fun uu___ ->
-      let uu___1 = FStar_Class_Show.show FStar_Syntax_Print.showable_term typ in
+      let uu___1 =
+        FStar_Class_Show.show FStar_Syntax_Print.showable_term typ1 in
       FStar_Compiler_Util.format1 "unknown %s" uu___1
 let (term_as_fv : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.fv) =
   fun t ->
@@ -79,37 +99,47 @@ let (term_as_fv : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.fv) =
             FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
           FStar_Compiler_Util.format1 "Embeddings not defined for type %s"
             uu___3 in
-        failwith uu___2
+        FStar_Compiler_Effect.failwith uu___2
 let mk_emb :
   'a .
     'a raw_embedder ->
       'a raw_unembedder -> FStar_Syntax_Syntax.fv -> 'a embedding
   =
-  fun em ->
-    fun un ->
+  fun em1 ->
+    fun un1 ->
       fun fv ->
-        let typ = FStar_Syntax_Syntax.fv_to_tm fv in
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              let uu___3 = FStar_Syntax_Syntax.lid_of_fv fv in
-              FStar_Compiler_Effect.op_Bar_Greater uu___3
-                FStar_Ident.string_of_lid in
-            (uu___2, []) in
-          FStar_Syntax_Syntax.ET_app uu___1 in
-        { em; un; typ; print = (unknown_printer typ); emb_typ = uu___ }
+        {
+          em = em1;
+          un = un1;
+          print =
+            (fun x ->
+               let typ1 = FStar_Syntax_Syntax.fv_to_tm fv in
+               unknown_printer typ1 x);
+          typ = (fun uu___ -> FStar_Syntax_Syntax.fv_to_tm fv);
+          e_typ =
+            (fun uu___ ->
+               let uu___1 =
+                 let uu___2 =
+                   let uu___3 = FStar_Syntax_Syntax.lid_of_fv fv in
+                   FStar_Ident.string_of_lid uu___3 in
+                 (uu___2, []) in
+               FStar_Syntax_Syntax.ET_app uu___1)
+        }
 let mk_emb_full :
   'a .
     'a raw_embedder ->
       'a raw_unembedder ->
-        FStar_Syntax_Syntax.typ ->
-          ('a -> Prims.string) -> FStar_Syntax_Syntax.emb_typ -> 'a embedding
+        (unit -> FStar_Syntax_Syntax.typ) ->
+          ('a -> Prims.string) ->
+            (unit -> FStar_Syntax_Syntax.emb_typ) -> 'a embedding
   =
-  fun em ->
-    fun un ->
-      fun typ ->
-        fun printer1 ->
-          fun emb_typ -> { em; un; typ; print = printer1; emb_typ }
+  fun em1 ->
+    fun un1 ->
+      fun typ1 ->
+        fun printe ->
+          fun emb_typ ->
+            { em = em1; un = un1; print = printe; typ = typ1; e_typ = emb_typ
+            }
 let rec (unmeta_div_results :
   FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun t ->
@@ -142,7 +172,8 @@ let rec (unmeta_div_results :
           FStar_Syntax_Syntax.eff_opt = uu___2;_}
         -> unmeta_div_results t'
     | uu___1 -> t
-let type_of : 'a . 'a embedding -> FStar_Syntax_Syntax.typ = fun e -> e.typ
+let type_of : 'a . 'a embedding -> FStar_Syntax_Syntax.typ =
+  fun e -> e.typ ()
 let printer_of : 'a . 'a embedding -> 'a printer = fun e -> e.print
 let set_type : 'a . FStar_Syntax_Syntax.typ -> 'a embedding -> 'a embedding =
   fun ty ->
@@ -150,9 +181,9 @@ let set_type : 'a . FStar_Syntax_Syntax.typ -> 'a embedding -> 'a embedding =
       {
         em = (e.em);
         un = (e.un);
-        typ = ty;
         print = (e.print);
-        emb_typ = (e.emb_typ)
+        typ = (fun uu___ -> ty);
+        e_typ = (e.e_typ)
       }
 let embed : 'a . 'a embedding -> 'a -> embed_t = fun e -> e.em
 let try_unembed :
@@ -194,7 +225,7 @@ let unembed :
                    let uu___6 = FStar_Errors_Msg.text "emb_typ = " in
                    let uu___7 =
                      let uu___8 =
-                       let uu___9 = emb_typ_of e in
+                       let uu___9 = emb_typ_of e () in
                        FStar_Class_Show.show
                          FStar_Syntax_Syntax.showable_emb_typ uu___9 in
                      FStar_Pprint.doc_of_string uu___8 in
@@ -224,19 +255,19 @@ let embed_as :
     fun ab ->
       fun ba ->
         fun o ->
-          let uu___ =
-            match o with
-            | FStar_Pervasives_Native.Some t -> t
-            | uu___1 -> type_of ea in
-          mk_emb_full (fun x -> let uu___1 = ba x in embed ea uu___1)
+          mk_emb_full (fun x -> let uu___ = ba x in embed ea uu___)
             (fun t ->
                fun cb ->
-                 let uu___1 = try_unembed ea t cb in
-                 FStar_Compiler_Util.map_opt uu___1 ab) uu___
+                 let uu___ = try_unembed ea t cb in
+                 FStar_Compiler_Util.map_opt uu___ ab)
+            (fun uu___ ->
+               match o with
+               | FStar_Pervasives_Native.Some t -> t
+               | uu___1 -> type_of ea)
             (fun x ->
-               let uu___1 = let uu___2 = ba x in ea.print uu___2 in
-               FStar_Compiler_Util.format1 "(embed_as>> %s)\n" uu___1)
-            ea.emb_typ
+               let uu___ = let uu___1 = ba x in ea.print uu___1 in
+               FStar_Compiler_Util.format1 "(embed_as>> %s)\n" uu___)
+            ea.e_typ
 let e_lazy :
   'a .
     FStar_Syntax_Syntax.lazy_kind -> FStar_Syntax_Syntax.term -> 'a embedding
@@ -272,10 +303,10 @@ let e_lazy :
                 let uu___5 =
                   let uu___6 =
                     FStar_Class_Show.show
-                      FStar_Syntax_Syntax.showable_lazy_kind lkind in
+                      FStar_Syntax_Syntax.showable_lazy_kind k in
                   let uu___7 =
                     FStar_Class_Show.show
-                      FStar_Syntax_Syntax.showable_lazy_kind k in
+                      FStar_Syntax_Syntax.showable_lazy_kind lkind in
                   let uu___8 =
                     FStar_Class_Show.show FStar_Syntax_Print.showable_term t0 in
                   FStar_Compiler_Util.format3
@@ -369,7 +400,7 @@ let lazy_unembed :
                         match res with
                         | FStar_Pervasives_Native.None -> "None"
                         | FStar_Pervasives_Native.Some x2 ->
-                            let uu___8 = pa x2 in Prims.op_Hat "Some " uu___8 in
+                            let uu___8 = pa x2 in Prims.strcat "Some " uu___8 in
                       FStar_Compiler_Util.print3
                         "Unembed cancellation failed\n\t%s <> %s\nvalue is %s\n"
                         uu___5 uu___6 uu___7
@@ -408,7 +439,7 @@ let lazy_unembed :
                       match aopt with
                       | FStar_Pervasives_Native.None -> "None"
                       | FStar_Pervasives_Native.Some a1 ->
-                          let uu___6 = pa a1 in Prims.op_Hat "Some " uu___6 in
+                          let uu___6 = pa a1 in Prims.strcat "Some " uu___6 in
                     FStar_Compiler_Util.print3
                       "Unembedding:\n\temb_typ=%s\n\tterm is %s\n\tvalue is %s\n"
                       uu___3 uu___4 uu___5

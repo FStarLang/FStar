@@ -238,7 +238,8 @@ let lte (a:t) (b:t) : Tot bool = lte #n (v a) (v b)
 inline_for_extraction
 let minus (a:t) = add_mod (lognot a) (uint_to_t 1)
 
-(** The maximum value for this type *)
+(** The maximum shift value for this type, i.e. its width minus one,
+    as an  *)
 inline_for_extraction
 let n_minus_one = uint_to_t (n - 1)
 

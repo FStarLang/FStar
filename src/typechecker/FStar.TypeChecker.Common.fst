@@ -57,6 +57,25 @@ let rec decr_delta_depth = function
     | Delta_equational_at_level i -> Some (Delta_equational_at_level (i - 1))
     | Delta_abstract d            -> decr_delta_depth d
 
+instance showable_guard_formula : showable guard_formula = {
+  show = (function
+          | Trivial      -> "Trivial"
+          | NonTrivial f -> "NonTrivial " ^ show f)
+}
+
+instance showable_deferred_reason : showable deferred_reason = {
+  show = (function
+          | Deferred_univ_constraint -> "Deferred_univ_constraint"
+          | Deferred_occur_check_failed -> "Deferred_occur_check_failed"
+          | Deferred_first_order_heuristic_failed -> "Deferred_first_order_heuristic_failed"
+          | Deferred_flex -> "Deferred_flex"
+          | Deferred_free_names_check_failed -> "Deferred_free_names_check_failed"
+          | Deferred_not_a_pattern -> "Deferred_not_a_pattern"
+          | Deferred_flex_flex_nonpattern -> "Deferred_flex_flex_nonpattern"
+          | Deferred_delay_match_heuristic -> "Deferred_delay_match_heuristic"
+          | Deferred_to_user_tac -> "Deferred_to_user_tac"
+          );
+}
 (***********************************************************************************)
 (* A table of file -> starting row -> starting col -> identifier info              *)
 (* Used to support querying information about an identifier in interactive mode    *)
@@ -163,16 +182,6 @@ let id_info_at_pos (table: id_info_table) (fn:string) (row:int) (col:int) : opti
       if col <= last_col then Some info else None
 
 let check_uvar_ctx_invariant (reason:string) (r:range) (should_check:bool) (g:gamma) (bs:binders) =
-    let print_gamma gamma =
-        (gamma |> List.map (function
-          | Binding_var x -> "Binding_var " ^ (Print.bv_to_string x)
-          | Binding_univ u -> "Binding_univ " ^ (string_of_id u)
-          | Binding_lid (l, _) -> "Binding_lid " ^ (Ident.string_of_lid l)))//  @
-    // (env.gamma_sig |> List.map (fun (ls, _) ->
-    //     "Binding_sig " ^ (ls |> List.map Ident.string_of_lid |> String.concat ", ")
-    // ))
-      |> String.concat "::\n"
-     in
      let fail () =
          failwith (BU.format5
                    "Invariant violation: gamma and binders are out of sync\n\t\
@@ -182,7 +191,7 @@ let check_uvar_ctx_invariant (reason:string) (r:range) (should_check:bool) (g:ga
                                reason
                                (Range.string_of_range r)
                                (if should_check then "true" else "false")
-                               (print_gamma g)
+                               (show g)
                                (FStar.Syntax.Print.binders_to_string ", " bs))
      in
      if not should_check then ()
@@ -221,7 +230,7 @@ let conj_guard_f g1 g2 = match g1, g2 with
   | g, Trivial -> g
   | NonTrivial f1, NonTrivial f2 -> NonTrivial (U.mk_conj f1 f2)
 
-let rec check_trivial t =
+let rec check_trivial (t:term) : guard_formula =
     let hd, args = U.head_and_args (U.unmeta t) in
     match (U.un_uinst (U.unmeta hd)).n, args with
     | Tm_fvar tc, [] 

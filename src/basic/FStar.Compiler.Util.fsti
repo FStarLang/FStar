@@ -35,23 +35,7 @@ val get_file_last_modification_time: string -> time
 val string_of_time: time -> string
 
 (* generic utils *)
-(* Functional sets *)
-type set 'a
-val as_set : list 'a -> ('a -> 'a -> int) -> set 'a
-val set_elements: set 'a -> list 'a
-val new_set: ('a -> 'a -> int) -> set 'a
-val set_is_empty: set 'a -> bool
-val set_add: 'a -> set 'a -> set 'a
-val set_remove: 'a -> set 'a -> set 'a
-val set_mem: 'a -> set 'a -> bool
-val set_union: set 'a -> set 'a -> set 'a
-val set_intersect: set 'a -> set 'a -> set 'a
-val set_is_subset_of: set 'a -> set 'a -> bool
-val set_count: set 'a -> int
-val set_difference: set 'a -> set 'a -> set 'a
-val set_symmetric_difference: set 'a -> set 'a -> set 'a
-val set_eq: set 'a -> set 'a -> bool
-
+(* smap: map from string keys *)
 type smap 'value
 val smap_create: int -> smap 'value
 val smap_clear:smap 'value -> unit
@@ -170,7 +154,7 @@ val print_any : 'a -> unit
 val strcat : string -> string -> string
 val concat_l : string -> list string -> string
 
-val write_file: string -> string -> unit
+val write_file: fn:string -> contents:string -> unit
 val copy_file: string -> string -> unit
 val delete_file: string -> unit
 val file_get_contents: string -> string
@@ -311,17 +295,6 @@ val decr: ref int -> unit
 val geq: int -> int -> Tot bool
 val for_range: int -> int -> (int -> unit) -> unit
 
-(* A simple state monad *)
-type state 's 'a = ('s -> 'a * 's) (* not relying on definition *)
-val get: state 's 's
-val put: 's -> state 's unit
-val upd: ('s -> 's) -> state 's unit
-val ret: 'a -> state 's 'a
-val bind: state 's 'a -> ('a -> state 's 'b) -> state 's 'b
-val stmap: list 'a -> ('a -> state 's 'b) -> state 's (list 'b)
-val stiter: list 'a -> ('a -> state 's unit) -> state 's unit
-val stfold: 'b -> list 'a -> ('b -> 'a -> state 's 'b) -> state 's 'b
-val run_st: 's -> state 's 'a -> ('a * 's)
 val mk_ref: 'a -> ref 'a
 
 val get_exec_dir: unit -> string

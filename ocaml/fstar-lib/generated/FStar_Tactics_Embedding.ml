@@ -7,7 +7,7 @@ let (fstar_stubs_tactics_lid' : Prims.string Prims.list -> FStar_Ident.lid) =
 let (lid_as_tm : FStar_Ident.lident -> FStar_Syntax_Syntax.term) =
   fun l ->
     let uu___ = FStar_Syntax_Syntax.lid_as_fv l FStar_Pervasives_Native.None in
-    FStar_Compiler_Effect.op_Bar_Greater uu___ FStar_Syntax_Syntax.fv_to_tm
+    FStar_Syntax_Syntax.fv_to_tm uu___
 let (mk_tactic_lid_as_term : Prims.string -> FStar_Syntax_Syntax.term) =
   fun s -> let uu___ = fstar_tactics_lid' ["Effect"; s] in lid_as_tm uu___
 type tac_constant =
@@ -123,24 +123,24 @@ let mk_emb :
           (fun x -> fun r -> fun _topt -> fun _norm -> em r x)
           (fun x -> fun _norm -> un x) uu___
 let embed :
-  'uuuuu .
-    'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
-      FStar_Compiler_Range_Type.range -> 'uuuuu -> FStar_Syntax_Syntax.term
+  'a .
+    'a FStar_Syntax_Embeddings_Base.embedding ->
+      FStar_Compiler_Range_Type.range -> 'a -> FStar_Syntax_Syntax.term
   =
-  fun e ->
+  fun uu___ ->
     fun r ->
       fun x ->
-        let uu___ = FStar_Syntax_Embeddings_Base.embed e x in
-        uu___ r FStar_Pervasives_Native.None
+        let uu___1 = FStar_Syntax_Embeddings_Base.embed uu___ x in
+        uu___1 r FStar_Pervasives_Native.None
           FStar_Syntax_Embeddings_Base.id_norm_cb
 let unembed' :
-  'uuuuu .
-    'uuuuu FStar_Syntax_Embeddings_Base.embedding ->
-      FStar_Syntax_Syntax.term -> 'uuuuu FStar_Pervasives_Native.option
+  'a .
+    'a FStar_Syntax_Embeddings_Base.embedding ->
+      FStar_Syntax_Syntax.term -> 'a FStar_Pervasives_Native.option
   =
-  fun e ->
+  fun uu___ ->
     fun x ->
-      FStar_Syntax_Embeddings_Base.unembed e x
+      FStar_Syntax_Embeddings_Base.unembed uu___ x
         FStar_Syntax_Embeddings_Base.id_norm_cb
 let (t_result_of :
   FStar_Syntax_Syntax.term ->
@@ -222,7 +222,7 @@ let (e_proofstate_nbe :
     let thunk =
       FStar_Thunk.mk
         (fun uu___ ->
-           FStar_Compiler_Effect.op_Less_Bar FStar_TypeChecker_NBETerm.mk_t
+           FStar_TypeChecker_NBETerm.mk_t
              (FStar_TypeChecker_NBETerm.Constant
                 (FStar_TypeChecker_NBETerm.String
                    ("(((proofstate.nbe)))",
@@ -241,8 +241,7 @@ let (e_proofstate_nbe :
          uu___3)
         ->
         let uu___4 = FStar_Compiler_Dyn.undyn b in
-        FStar_Compiler_Effect.op_Less_Bar
-          (fun uu___5 -> FStar_Pervasives_Native.Some uu___5) uu___4
+        FStar_Pervasives_Native.Some uu___4
     | uu___1 ->
         ((let uu___3 =
             FStar_Compiler_Effect.op_Bang FStar_Options.debug_embedding in
@@ -258,13 +257,13 @@ let (e_proofstate_nbe :
               uu___4
           else ());
          FStar_Pervasives_Native.None) in
-  let uu___ = mkFV fstar_tactics_proofstate.fv [] [] in
-  let uu___1 = fv_as_emb_typ fstar_tactics_proofstate.fv in
   {
     FStar_TypeChecker_NBETerm.em = embed_proofstate;
     FStar_TypeChecker_NBETerm.un = unembed_proofstate;
-    FStar_TypeChecker_NBETerm.typ = uu___;
-    FStar_TypeChecker_NBETerm.emb_typ = uu___1
+    FStar_TypeChecker_NBETerm.typ =
+      (fun uu___ -> mkFV fstar_tactics_proofstate.fv [] []);
+    FStar_TypeChecker_NBETerm.e_typ =
+      (fun uu___ -> fv_as_emb_typ fstar_tactics_proofstate.fv)
   }
 let (e_goal_nbe :
   FStar_Tactics_Types.goal FStar_TypeChecker_NBETerm.embedding) =
@@ -280,11 +279,11 @@ let (e_goal_nbe :
     let thunk =
       FStar_Thunk.mk
         (fun uu___ ->
-           FStar_Compiler_Effect.op_Less_Bar FStar_TypeChecker_NBETerm.mk_t
+           FStar_TypeChecker_NBETerm.mk_t
              (FStar_TypeChecker_NBETerm.Constant
                 (FStar_TypeChecker_NBETerm.String
                    ("(((goal.nbe)))", FStar_Compiler_Range_Type.dummyRange)))) in
-    FStar_Compiler_Effect.op_Less_Bar FStar_TypeChecker_NBETerm.mk_t
+    FStar_TypeChecker_NBETerm.mk_t
       (FStar_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl li), thunk)) in
   let unembed_goal _cb t =
     let uu___ = FStar_TypeChecker_NBETerm.nbe_t_of_t t in
@@ -298,8 +297,7 @@ let (e_goal_nbe :
          uu___3)
         ->
         let uu___4 = FStar_Compiler_Dyn.undyn b in
-        FStar_Compiler_Effect.op_Less_Bar
-          (fun uu___5 -> FStar_Pervasives_Native.Some uu___5) uu___4
+        FStar_Pervasives_Native.Some uu___4
     | uu___1 ->
         ((let uu___3 =
             FStar_Compiler_Effect.op_Bang FStar_Options.debug_embedding in
@@ -315,13 +313,13 @@ let (e_goal_nbe :
               uu___4
           else ());
          FStar_Pervasives_Native.None) in
-  let uu___ = mkFV fstar_tactics_goal.fv [] [] in
-  let uu___1 = fv_as_emb_typ fstar_tactics_goal.fv in
   {
     FStar_TypeChecker_NBETerm.em = embed_goal;
     FStar_TypeChecker_NBETerm.un = unembed_goal;
-    FStar_TypeChecker_NBETerm.typ = uu___;
-    FStar_TypeChecker_NBETerm.emb_typ = uu___1
+    FStar_TypeChecker_NBETerm.typ =
+      (fun uu___ -> mkFV fstar_tactics_goal.fv [] []);
+    FStar_TypeChecker_NBETerm.e_typ =
+      (fun uu___ -> fv_as_emb_typ fstar_tactics_goal.fv)
   }
 let (e_exn : Prims.exn FStar_Syntax_Embeddings_Base.embedding) =
   let embed_exn e rng uu___ uu___1 =
@@ -344,7 +342,7 @@ let (e_exn : Prims.exn FStar_Syntax_Embeddings_Base.embedding) =
     | e1 ->
         let s =
           let uu___2 = FStar_Compiler_Util.message_of_exn e1 in
-          Prims.op_Hat "uncaught exception: " uu___2 in
+          Prims.strcat "uncaught exception: " uu___2 in
         let uu___2 =
           let uu___3 =
             let uu___4 = embed FStar_Syntax_Embeddings.e_string rng s in
@@ -363,15 +361,15 @@ let (e_exn : Prims.exn FStar_Syntax_Embeddings_Base.embedding) =
              FStar_Pervasives_Native.Some
                (FStar_Tactics_Common.TacticFailure s1))
     | uu___2 -> FStar_Pervasives_Native.Some (FStar_Tactics_Common.EExn t) in
-  let uu___ =
-    let uu___1 =
-      let uu___2 =
-        FStar_Class_Show.show FStar_Ident.showable_lident
-          FStar_Parser_Const.exn_lid in
-      (uu___2, []) in
-    FStar_Syntax_Syntax.ET_app uu___1 in
   FStar_Syntax_Embeddings_Base.mk_emb_full embed_exn unembed_exn
-    FStar_Syntax_Syntax.t_exn (fun uu___1 -> "(exn)") uu___
+    (fun uu___ -> FStar_Syntax_Syntax.t_exn) (fun uu___ -> "(exn)")
+    (fun uu___ ->
+       let uu___1 =
+         let uu___2 =
+           FStar_Class_Show.show FStar_Ident.showable_lident
+             FStar_Parser_Const.exn_lid in
+         (uu___2, []) in
+       FStar_Syntax_Syntax.ET_app uu___1)
 let (e_exn_nbe : Prims.exn FStar_TypeChecker_NBETerm.embedding) =
   let embed_exn cb e =
     match e with
@@ -388,7 +386,7 @@ let (e_exn_nbe : Prims.exn FStar_TypeChecker_NBETerm.embedding) =
         let uu___1 =
           let uu___2 = FStar_Compiler_Util.message_of_exn e in
           FStar_Compiler_Util.format1 "cannot embed exn (NBE) : %s" uu___2 in
-        failwith uu___1 in
+        FStar_Compiler_Effect.failwith uu___1 in
   let unembed_exn cb t =
     let uu___ = FStar_TypeChecker_NBETerm.nbe_t_of_t t in
     match uu___ with
@@ -403,13 +401,11 @@ let (e_exn_nbe : Prims.exn FStar_TypeChecker_NBETerm.embedding) =
                (FStar_Tactics_Common.TacticFailure s1))
     | uu___1 -> FStar_Pervasives_Native.None in
   let fv_exn = FStar_Syntax_Syntax.fvconst FStar_Parser_Const.exn_lid in
-  let uu___ = mkFV fv_exn [] [] in
-  let uu___1 = fv_as_emb_typ fv_exn in
   {
     FStar_TypeChecker_NBETerm.em = embed_exn;
     FStar_TypeChecker_NBETerm.un = unembed_exn;
-    FStar_TypeChecker_NBETerm.typ = uu___;
-    FStar_TypeChecker_NBETerm.emb_typ = uu___1
+    FStar_TypeChecker_NBETerm.typ = (fun uu___ -> mkFV fv_exn [] []);
+    FStar_TypeChecker_NBETerm.e_typ = (fun uu___ -> fv_as_emb_typ fv_exn)
   }
 let e_result :
   'a .
@@ -417,48 +413,48 @@ let e_result :
       'a FStar_Tactics_Result.__result FStar_Syntax_Embeddings_Base.embedding
   =
   fun ea ->
-    let embed_result res rng uu___ uu___1 =
+    let embed_result res rng sh cbs =
       match res with
       | FStar_Tactics_Result.Success (a1, ps) ->
-          let uu___2 =
+          let uu___ =
             FStar_Syntax_Syntax.mk_Tm_uinst fstar_tactics_Success.t
               [FStar_Syntax_Syntax.U_zero] in
-          let uu___3 =
-            let uu___4 =
-              let uu___5 = FStar_Syntax_Embeddings_Base.type_of ea in
-              FStar_Syntax_Syntax.iarg uu___5 in
-            let uu___5 =
-              let uu___6 =
-                let uu___7 = embed ea rng a1 in
-                FStar_Syntax_Syntax.as_arg uu___7 in
-              let uu___7 =
-                let uu___8 =
-                  let uu___9 = embed e_proofstate rng ps in
-                  FStar_Syntax_Syntax.as_arg uu___9 in
-                [uu___8] in
-              uu___6 :: uu___7 in
-            uu___4 :: uu___5 in
-          FStar_Syntax_Syntax.mk_Tm_app uu___2 uu___3 rng
+          let uu___1 =
+            let uu___2 =
+              let uu___3 = FStar_Syntax_Embeddings_Base.type_of ea in
+              FStar_Syntax_Syntax.iarg uu___3 in
+            let uu___3 =
+              let uu___4 =
+                let uu___5 = embed ea rng a1 in
+                FStar_Syntax_Syntax.as_arg uu___5 in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 = embed e_proofstate rng ps in
+                  FStar_Syntax_Syntax.as_arg uu___7 in
+                [uu___6] in
+              uu___4 :: uu___5 in
+            uu___2 :: uu___3 in
+          FStar_Syntax_Syntax.mk_Tm_app uu___ uu___1 rng
       | FStar_Tactics_Result.Failed (e, ps) ->
-          let uu___2 =
+          let uu___ =
             FStar_Syntax_Syntax.mk_Tm_uinst fstar_tactics_Failed.t
               [FStar_Syntax_Syntax.U_zero] in
-          let uu___3 =
-            let uu___4 =
-              let uu___5 = FStar_Syntax_Embeddings_Base.type_of ea in
-              FStar_Syntax_Syntax.iarg uu___5 in
-            let uu___5 =
-              let uu___6 =
-                let uu___7 = embed e_exn rng e in
-                FStar_Syntax_Syntax.as_arg uu___7 in
-              let uu___7 =
-                let uu___8 =
-                  let uu___9 = embed e_proofstate rng ps in
-                  FStar_Syntax_Syntax.as_arg uu___9 in
-                [uu___8] in
-              uu___6 :: uu___7 in
-            uu___4 :: uu___5 in
-          FStar_Syntax_Syntax.mk_Tm_app uu___2 uu___3 rng in
+          let uu___1 =
+            let uu___2 =
+              let uu___3 = FStar_Syntax_Embeddings_Base.type_of ea in
+              FStar_Syntax_Syntax.iarg uu___3 in
+            let uu___3 =
+              let uu___4 =
+                let uu___5 = embed e_exn rng e in
+                FStar_Syntax_Syntax.as_arg uu___5 in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 = embed e_proofstate rng ps in
+                  FStar_Syntax_Syntax.as_arg uu___7 in
+                [uu___6] in
+              uu___4 :: uu___5 in
+            uu___2 :: uu___3 in
+          FStar_Syntax_Syntax.mk_Tm_app uu___ uu___1 rng in
     let unembed_result t uu___ =
       let uu___1 = hd'_and_args t in
       match uu___1 with
@@ -483,20 +479,20 @@ let e_result :
                     FStar_Pervasives_Native.Some
                       (FStar_Tactics_Result.Failed (e1, ps1))))
       | uu___2 -> FStar_Pervasives_Native.None in
-    let uu___ =
-      let uu___1 = FStar_Syntax_Embeddings_Base.type_of ea in
-      t_result_of uu___1 in
-    let uu___1 =
-      let uu___2 =
-        let uu___3 =
-          FStar_Class_Show.show FStar_Ident.showable_lident
-            fstar_tactics_result.lid in
-        let uu___4 =
-          let uu___5 = FStar_Syntax_Embeddings_Base.emb_typ_of ea in [uu___5] in
-        (uu___3, uu___4) in
-      FStar_Syntax_Syntax.ET_app uu___2 in
     FStar_Syntax_Embeddings_Base.mk_emb_full embed_result unembed_result
-      uu___ (fun uu___2 -> "") uu___1
+      (fun uu___ ->
+         let uu___1 = FStar_Syntax_Embeddings_Base.type_of ea in
+         t_result_of uu___1) (fun uu___ -> "")
+      (fun uu___ ->
+         let uu___1 =
+           let uu___2 =
+             FStar_Class_Show.show FStar_Ident.showable_lident
+               fstar_tactics_result.lid in
+           let uu___3 =
+             let uu___4 = FStar_Syntax_Embeddings_Base.emb_typ_of ea () in
+             [uu___4] in
+           (uu___2, uu___3) in
+         FStar_Syntax_Syntax.ET_app uu___1)
 let e_result_nbe :
   'a .
     'a FStar_TypeChecker_NBETerm.embedding ->
@@ -571,13 +567,13 @@ let e_result_nbe :
                     FStar_Pervasives_Native.Some
                       (FStar_Tactics_Result.Failed (e1, ps1))))
       | uu___1 -> FStar_Pervasives_Native.None in
-    let uu___ = mkFV fstar_tactics_result.fv [] [] in
-    let uu___1 = fv_as_emb_typ fstar_tactics_result.fv in
     {
       FStar_TypeChecker_NBETerm.em = embed_result;
       FStar_TypeChecker_NBETerm.un = unembed_result;
-      FStar_TypeChecker_NBETerm.typ = uu___;
-      FStar_TypeChecker_NBETerm.emb_typ = uu___1
+      FStar_TypeChecker_NBETerm.typ =
+        (fun uu___ -> mkFV fstar_tactics_result.fv [] []);
+      FStar_TypeChecker_NBETerm.e_typ =
+        (fun uu___ -> fv_as_emb_typ fstar_tactics_result.fv)
     }
 let (e_direction :
   FStar_Tactics_Types.direction FStar_Syntax_Embeddings_Base.embedding) =
@@ -630,13 +626,13 @@ let (e_direction_nbe :
               uu___4
           else ());
          FStar_Pervasives_Native.None) in
-  let uu___ = mkFV fstar_tactics_direction.fv [] [] in
-  let uu___1 = fv_as_emb_typ fstar_tactics_direction.fv in
   {
     FStar_TypeChecker_NBETerm.em = embed_direction;
     FStar_TypeChecker_NBETerm.un = unembed_direction;
-    FStar_TypeChecker_NBETerm.typ = uu___;
-    FStar_TypeChecker_NBETerm.emb_typ = uu___1
+    FStar_TypeChecker_NBETerm.typ =
+      (fun uu___ -> mkFV fstar_tactics_direction.fv [] []);
+    FStar_TypeChecker_NBETerm.e_typ =
+      (fun uu___ -> fv_as_emb_typ fstar_tactics_direction.fv)
   }
 let (e_ctrl_flag :
   FStar_Tactics_Types.ctrl_flag FStar_Syntax_Embeddings_Base.embedding) =
@@ -696,13 +692,13 @@ let (e_ctrl_flag_nbe :
               uu___4
           else ());
          FStar_Pervasives_Native.None) in
-  let uu___ = mkFV fstar_tactics_ctrl_flag.fv [] [] in
-  let uu___1 = fv_as_emb_typ fstar_tactics_ctrl_flag.fv in
   {
     FStar_TypeChecker_NBETerm.em = embed_ctrl_flag;
     FStar_TypeChecker_NBETerm.un = unembed_ctrl_flag;
-    FStar_TypeChecker_NBETerm.typ = uu___;
-    FStar_TypeChecker_NBETerm.emb_typ = uu___1
+    FStar_TypeChecker_NBETerm.typ =
+      (fun uu___ -> mkFV fstar_tactics_ctrl_flag.fv [] []);
+    FStar_TypeChecker_NBETerm.e_typ =
+      (fun uu___ -> fv_as_emb_typ fstar_tactics_ctrl_flag.fv)
   }
 let (e_unfold_side :
   FStar_TypeChecker_Core.side FStar_Syntax_Embeddings_Base.embedding) =
@@ -775,13 +771,13 @@ let (e_unfold_side_nbe :
               uu___4
           else ());
          FStar_Pervasives_Native.None) in
-  let uu___ = mkFV fstar_tc_core_unfold_side.fv [] [] in
-  let uu___1 = fv_as_emb_typ fstar_tc_core_unfold_side.fv in
   {
     FStar_TypeChecker_NBETerm.em = embed_unfold_side;
     FStar_TypeChecker_NBETerm.un = unembed_unfold_side;
-    FStar_TypeChecker_NBETerm.typ = uu___;
-    FStar_TypeChecker_NBETerm.emb_typ = uu___1
+    FStar_TypeChecker_NBETerm.typ =
+      (fun uu___ -> mkFV fstar_tc_core_unfold_side.fv [] []);
+    FStar_TypeChecker_NBETerm.e_typ =
+      (fun uu___ -> fv_as_emb_typ fstar_tc_core_unfold_side.fv)
   }
 let (e_tot_or_ghost :
   FStar_TypeChecker_Core.tot_or_ghost FStar_Syntax_Embeddings_Base.embedding)
@@ -839,13 +835,13 @@ let (e_tot_or_ghost_nbe :
               uu___4
           else ());
          FStar_Pervasives_Native.None) in
-  let uu___ = mkFV fstar_tc_core_tot_or_ghost.fv [] [] in
-  let uu___1 = fv_as_emb_typ fstar_tc_core_tot_or_ghost.fv in
   {
     FStar_TypeChecker_NBETerm.em = embed_tot_or_ghost;
     FStar_TypeChecker_NBETerm.un = unembed_tot_or_ghost;
-    FStar_TypeChecker_NBETerm.typ = uu___;
-    FStar_TypeChecker_NBETerm.emb_typ = uu___1
+    FStar_TypeChecker_NBETerm.typ =
+      (fun uu___ -> mkFV fstar_tc_core_tot_or_ghost.fv [] []);
+    FStar_TypeChecker_NBETerm.e_typ =
+      (fun uu___ -> fv_as_emb_typ fstar_tc_core_tot_or_ghost.fv)
   }
 let (t_tref : FStar_Syntax_Syntax.term) =
   let uu___ =
@@ -853,18 +849,13 @@ let (t_tref : FStar_Syntax_Syntax.term) =
       let uu___2 =
         FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.tref_lid
           FStar_Pervasives_Native.None in
-      FStar_Compiler_Effect.op_Bar_Greater uu___2
-        FStar_Syntax_Syntax.fv_to_tm in
-    FStar_Compiler_Effect.op_Bar_Greater uu___1
-      (fun tm ->
-         FStar_Syntax_Syntax.mk_Tm_uinst tm [FStar_Syntax_Syntax.U_zero]) in
-  FStar_Compiler_Effect.op_Bar_Greater uu___
-    (fun head ->
-       let uu___1 =
-         let uu___2 = FStar_Syntax_Syntax.iarg FStar_Syntax_Syntax.t_term in
-         [uu___2] in
-       FStar_Syntax_Syntax.mk_Tm_app head uu___1
-         FStar_Compiler_Range_Type.dummyRange)
+      FStar_Syntax_Syntax.fv_to_tm uu___2 in
+    FStar_Syntax_Syntax.mk_Tm_uinst uu___1 [FStar_Syntax_Syntax.U_zero] in
+  let uu___1 =
+    let uu___2 = FStar_Syntax_Syntax.iarg FStar_Syntax_Syntax.t_term in
+    [uu___2] in
+  FStar_Syntax_Syntax.mk_Tm_app uu___ uu___1
+    FStar_Compiler_Range_Type.dummyRange
 let e_tref :
   'a .
     unit ->
@@ -888,15 +879,13 @@ let e_tref :
           let uu___5 = FStar_Compiler_Dyn.undyn blob in
           FStar_Pervasives_Native.Some uu___5
       | uu___3 -> FStar_Pervasives_Native.None in
-    let uu___1 =
-      let uu___2 =
-        let uu___3 =
-          FStar_Compiler_Effect.op_Bar_Greater FStar_Parser_Const.tref_lid
-            FStar_Ident.string_of_lid in
-        (uu___3, [FStar_Syntax_Syntax.ET_abstract]) in
-      FStar_Syntax_Syntax.ET_app uu___2 in
-    FStar_Syntax_Embeddings_Base.mk_emb_full em un t_tref (fun i -> "tref")
-      uu___1
+    FStar_Syntax_Embeddings_Base.mk_emb_full em un (fun uu___1 -> t_tref)
+      (fun i -> "tref")
+      (fun uu___1 ->
+         let uu___2 =
+           let uu___3 = FStar_Ident.string_of_lid FStar_Parser_Const.tref_lid in
+           (uu___3, [FStar_Syntax_Syntax.ET_abstract]) in
+         FStar_Syntax_Syntax.ET_app uu___2)
 let e_tref_nbe :
   'a .
     unit -> 'a FStar_Tactics_Types.tref FStar_TypeChecker_NBETerm.embedding
@@ -914,7 +903,7 @@ let e_tref_nbe :
       let thunk =
         FStar_Thunk.mk
           (fun uu___1 ->
-             FStar_Compiler_Effect.op_Less_Bar FStar_TypeChecker_NBETerm.mk_t
+             FStar_TypeChecker_NBETerm.mk_t
                (FStar_TypeChecker_NBETerm.Constant
                   (FStar_TypeChecker_NBETerm.String
                      ("(((tref.nbe)))", FStar_Compiler_Range_Type.dummyRange)))) in
@@ -932,8 +921,7 @@ let e_tref_nbe :
            uu___4)
           ->
           let uu___5 = FStar_Compiler_Dyn.undyn b in
-          FStar_Compiler_Effect.op_Less_Bar
-            (fun uu___6 -> FStar_Pervasives_Native.Some uu___6) uu___5
+          FStar_Pervasives_Native.Some uu___5
       | uu___2 ->
           ((let uu___4 =
               FStar_Compiler_Effect.op_Bang FStar_Options.debug_embedding in
@@ -949,31 +937,30 @@ let e_tref_nbe :
                 uu___5
             else ());
            FStar_Pervasives_Native.None) in
-    let uu___1 =
-      let term_t =
-        let uu___2 =
-          FStar_Syntax_Syntax.lid_as_fv
-            FStar_Parser_Const.fstar_syntax_syntax_term
-            FStar_Pervasives_Native.None in
-        mkFV uu___2 [] [] in
-      let uu___2 =
-        FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.tref_lid
-          FStar_Pervasives_Native.None in
-      let uu___3 =
-        let uu___4 = FStar_TypeChecker_NBETerm.as_arg term_t in [uu___4] in
-      mkFV uu___2 [FStar_Syntax_Syntax.U_zero] uu___3 in
-    let uu___2 =
-      let uu___3 =
-        let uu___4 =
-          FStar_Compiler_Effect.op_Bar_Greater FStar_Parser_Const.tref_lid
-            FStar_Ident.string_of_lid in
-        (uu___4, [FStar_Syntax_Syntax.ET_abstract]) in
-      FStar_Syntax_Syntax.ET_app uu___3 in
     {
       FStar_TypeChecker_NBETerm.em = embed_tref;
       FStar_TypeChecker_NBETerm.un = unembed_tref;
-      FStar_TypeChecker_NBETerm.typ = uu___1;
-      FStar_TypeChecker_NBETerm.emb_typ = uu___2
+      FStar_TypeChecker_NBETerm.typ =
+        (fun uu___1 ->
+           let term_t =
+             let uu___2 =
+               FStar_Syntax_Syntax.lid_as_fv
+                 FStar_Parser_Const.fstar_syntax_syntax_term
+                 FStar_Pervasives_Native.None in
+             mkFV uu___2 [] [] in
+           let uu___2 =
+             FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.tref_lid
+               FStar_Pervasives_Native.None in
+           let uu___3 =
+             let uu___4 = FStar_TypeChecker_NBETerm.as_arg term_t in [uu___4] in
+           mkFV uu___2 [FStar_Syntax_Syntax.U_zero] uu___3);
+      FStar_TypeChecker_NBETerm.e_typ =
+        (fun uu___1 ->
+           let uu___2 =
+             let uu___3 =
+               FStar_Ident.string_of_lid FStar_Parser_Const.tref_lid in
+             (uu___3, [FStar_Syntax_Syntax.ET_abstract]) in
+           FStar_Syntax_Syntax.ET_app uu___2)
     }
 let (e_guard_policy :
   FStar_Tactics_Types.guard_policy FStar_Syntax_Embeddings_Base.embedding) =
@@ -1035,11 +1022,11 @@ let (e_guard_policy_nbe :
         FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Drop.lid ->
         FStar_Pervasives_Native.Some FStar_Tactics_Types.Drop
     | uu___1 -> FStar_Pervasives_Native.None in
-  let uu___ = mkFV fstar_tactics_guard_policy.fv [] [] in
-  let uu___1 = fv_as_emb_typ fstar_tactics_guard_policy.fv in
   {
     FStar_TypeChecker_NBETerm.em = embed_guard_policy;
     FStar_TypeChecker_NBETerm.un = unembed_guard_policy;
-    FStar_TypeChecker_NBETerm.typ = uu___;
-    FStar_TypeChecker_NBETerm.emb_typ = uu___1
+    FStar_TypeChecker_NBETerm.typ =
+      (fun uu___ -> mkFV fstar_tactics_guard_policy.fv [] []);
+    FStar_TypeChecker_NBETerm.e_typ =
+      (fun uu___ -> fv_as_emb_typ fstar_tactics_guard_policy.fv)
   }

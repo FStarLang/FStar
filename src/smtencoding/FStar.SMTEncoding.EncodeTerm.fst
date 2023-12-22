@@ -221,8 +221,8 @@ let check_pattern_vars env vars pats =
     match pats with
     | [] -> ()
     | hd::tl ->
-        let pat_vars = List.fold_left (fun out x -> BU.set_union out (Free.names x)) (Free.names hd) tl in
-        match vars |> BU.find_opt (fun ({binder_bv=b}) -> not(BU.set_mem b pat_vars)) with
+        let pat_vars = List.fold_left (fun out x -> Set.union out (Free.names x)) (Free.names hd) tl in
+        match vars |> BU.find_opt (fun ({binder_bv=b}) -> not(Set.mem b pat_vars)) with
         | None -> ()
         | Some ({binder_bv=x}) ->
         let pos = List.fold_left (fun out t -> Range.union_ranges out t.pos) hd.pos tl in
@@ -348,6 +348,7 @@ let is_BitVector_primitive head args =
     | _ -> false
 
 let rec encode_const c env =
+  Errors.with_ctx "While encoding a constant to SMT" (fun () ->
     match c with
     | Const_unit -> mk_Term_unit, []
     | Const_bool true -> boxBool mkTrue, []
@@ -362,7 +363,7 @@ let rec encode_const c env =
     | Const_effect -> mk_Term_type, []
     | Const_real r -> boxReal (mkReal r), []
     | c -> failwith (BU.format1 "Unhandled constant: %s" (Print.const_to_string c))
-
+  )
 and encode_binders (fuel_opt:option term) (bs:Syntax.binders) (env:env_t) :
                             (list fv                       (* translated bound variables *)
                             * list term                    (* guards *)
@@ -648,7 +649,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         // They should be equivalent to a fully spelled out view.
         //
         // Actual encoding: `q ~> pack qv where qv is the view of q
-        let tv = EMB.embed RE.e_term_view (R.inspect_ln qt) t.pos None EMB.id_norm_cb in
+        let tv = EMB.embed (R.inspect_ln qt) t.pos None EMB.id_norm_cb in
         if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
             BU.print2 ">> Inspected (%s) ~> (%s)\n" (Print.term_to_string t0)
                                                     (Print.term_to_string tv);
@@ -834,7 +835,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              issue #3028 *)
              let env0 = env in
              let fstar_fvs, (env, fv_decls, fv_vars, fv_tms, fv_guards) =
-               let fvs = Free.names t0 |> BU.set_elements in
+               let fvs = Free.names t0 |> Set.elems in
 
                let getfreeV (t:term) : fv =
                  match t.tm with
@@ -1203,7 +1204,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               (* We need to compute all free variables of this lambda
               expression and parametrize the encoding wrt to them. See
               issue #3028 *)
-              let fvs = Free.names t0 |> BU.set_elements in
+              let fvs = Free.names t0 |> Set.elems in
               let tms = List.map (lookup_term_var env) fvs in
               (List.map (fun _ -> Term_sort) fvs <: list sort),
               tms
@@ -1589,8 +1590,8 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
               encode_formula phi env
 
             | Tm_fvar fv, [(r, _); (msg, _); (phi, _)] when S.fv_eq_lid fv Const.labeled_lid -> //interpret (labeled r msg t) as Tm_meta(t, Meta_labeled(msg, r, false)
-              begin match SE.try_unembed SE.e_range r SE.id_norm_cb,
-                          SE.try_unembed SE.e_string msg SE.id_norm_cb with
+              begin match SE.try_unembed r SE.id_norm_cb,
+                          SE.try_unembed msg SE.id_norm_cb with
               | Some r, Some s ->
                 let phi = S.mk (Tm_meta {tm=phi; meta=Meta_labeled(s, r, false)}) r in
                 fallback phi

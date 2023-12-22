@@ -493,12 +493,12 @@ let rd_to_syntax_qual : RD.qualifier -> qualifier = function
   | RD.TotalEffect -> TotalEffect
   | RD.Logic -> Logic
   | RD.Reifiable -> Reifiable
-  | RD.Reflectable l -> Reflectable l
-  | RD.Discriminator l -> Discriminator l
-  | RD.Projector (l, i) -> Projector (l, i)
+  | RD.Reflectable l -> Reflectable (Ident.lid_of_path l Range.dummyRange)
+  | RD.Discriminator l -> Discriminator (Ident.lid_of_path l Range.dummyRange)
+  | RD.Projector (l, i) -> Projector (Ident.lid_of_path l Range.dummyRange, i)
   | RD.RecordType (l1, l2) -> RecordType (l1, l2)
   | RD.RecordConstructor (l1, l2) -> RecordConstructor (l1, l2)
-  | RD.Action l -> Action l
+  | RD.Action l -> Action (Ident.lid_of_path l Range.dummyRange)
   | RD.ExceptionConstructor -> ExceptionConstructor
   | RD.HasMaskedEffect -> HasMaskedEffect
   | RD.Effect -> S.Effect
@@ -518,12 +518,12 @@ let syntax_to_rd_qual = function
   | TotalEffect -> RD.TotalEffect
   | Logic -> RD.Logic
   | Reifiable -> RD.Reifiable
-  | Reflectable l -> RD.Reflectable l
-  | Discriminator l -> RD.Discriminator l
-  | Projector (l, i) -> RD.Projector (l, i)
+  | Reflectable l -> RD.Reflectable (Ident.path_of_lid l)
+  | Discriminator l -> RD.Discriminator (Ident.path_of_lid l)
+  | Projector (l, i) -> RD.Projector (Ident.path_of_lid l, i)
   | RecordType (l1, l2) -> RD.RecordType (l1, l2)
   | RecordConstructor (l1, l2) -> RD.RecordConstructor (l1, l2)
-  | Action l -> RD.Action l
+  | Action l -> RD.Action (Ident.path_of_lid l)
   | ExceptionConstructor -> RD.ExceptionConstructor
   | HasMaskedEffect -> RD.HasMaskedEffect
   | S.Effect -> RD.Effect
@@ -544,7 +544,7 @@ let set_sigelt_quals (quals : list RD.qualifier) (se : sigelt) : sigelt =
 let sigelt_opts (se : sigelt) : option vconfig = se.sigopts
 
 let embed_vconfig (vcfg : vconfig) : term =
-  EMB.embed EMB.e_vconfig vcfg Range.dummyRange None EMB.id_norm_cb
+  EMB.embed vcfg Range.dummyRange None EMB.id_norm_cb
 
 let inspect_sigelt (se : sigelt) : sigelt_view =
     match se.sigel with

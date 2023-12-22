@@ -23,8 +23,7 @@ let (try_convert_file_name_to_mixed : Prims.string -> Prims.string) =
             let uu___1 =
               FStar_Compiler_Util.run_process label "cygpath" ["-m"; s]
                 FStar_Pervasives_Native.None in
-            FStar_Compiler_Effect.op_Bar_Greater uu___1
-              FStar_Compiler_Util.trim_string in
+            FStar_Compiler_Util.trim_string uu___1 in
           (FStar_Compiler_Util.smap_add cache s out; out)
     else s
 let snapshot :
@@ -52,7 +51,7 @@ let rollback :
       fun depth ->
         let rec aux n =
           if n <= Prims.int_zero
-          then failwith "Too many pops"
+          then FStar_Compiler_Effect.failwith "Too many pops"
           else
             if n = Prims.int_one
             then pop ()
@@ -68,7 +67,7 @@ let rollback :
 let raise_failed_assertion : 'uuuuu . Prims.string -> 'uuuuu =
   fun msg ->
     let uu___ = FStar_Compiler_Util.format1 "Assertion failed: %s" msg in
-    failwith uu___
+    FStar_Compiler_Effect.failwith uu___
 let (runtime_assert : Prims.bool -> Prims.string -> unit) =
   fun b ->
     fun msg -> if Prims.op_Negation b then raise_failed_assertion msg else ()
@@ -100,25 +99,6 @@ let string_of_list' :
   'uuuuu .
     unit -> ('uuuuu -> Prims.string) -> 'uuuuu Prims.list -> Prims.string
   = fun uu___ -> __string_of_list "; "
-let string_of_set :
-  'a . ('a -> Prims.string) -> 'a FStar_Compiler_Util.set -> Prims.string =
-  fun f ->
-    fun l ->
-      let uu___ = FStar_Compiler_Util.set_elements l in
-      match uu___ with
-      | [] -> "{}"
-      | x::xs ->
-          let strb = FStar_Compiler_Util.new_string_builder () in
-          (FStar_Compiler_Util.string_builder_append strb "{";
-           (let uu___3 = f x in
-            FStar_Compiler_Util.string_builder_append strb uu___3);
-           FStar_Compiler_List.iter
-             (fun x1 ->
-                FStar_Compiler_Util.string_builder_append strb ", ";
-                (let uu___5 = f x1 in
-                 FStar_Compiler_Util.string_builder_append strb uu___5)) xs;
-           FStar_Compiler_Util.string_builder_append strb "}";
-           FStar_Compiler_Util.string_of_string_builder strb)
 let list_of_option : 'a . 'a FStar_Pervasives_Native.option -> 'a Prims.list
   =
   fun o ->
@@ -135,7 +115,7 @@ let string_of_option :
       match uu___ with
       | FStar_Pervasives_Native.None -> "None"
       | FStar_Pervasives_Native.Some x ->
-          let uu___1 = f x in Prims.op_Hat "Some " uu___1
+          let uu___1 = f x in Prims.strcat "Some " uu___1
 let tabulate : 'a . Prims.int -> (Prims.int -> 'a) -> 'a Prims.list =
   fun n ->
     fun f ->
@@ -167,14 +147,8 @@ let max_suffix :
         | [] -> (acc, [])
         | x::xs2 when f x -> aux (x :: acc) xs2
         | x::xs2 -> (acc, (x :: xs2)) in
-      let uu___ =
-        let uu___1 =
-          FStar_Compiler_Effect.op_Bar_Greater xs FStar_Compiler_List.rev in
-        FStar_Compiler_Effect.op_Bar_Greater uu___1 (aux []) in
-      FStar_Compiler_Effect.op_Bar_Greater uu___
-        (fun uu___1 ->
-           match uu___1 with
-           | (xs1, ys) -> ((FStar_Compiler_List.rev ys), xs1))
+      let uu___ = aux [] (FStar_Compiler_List.rev xs) in
+      match uu___ with | (xs1, ys) -> ((FStar_Compiler_List.rev ys), xs1)
 let rec eq_list :
   'a .
     ('a -> 'a -> Prims.bool) -> 'a Prims.list -> 'a Prims.list -> Prims.bool

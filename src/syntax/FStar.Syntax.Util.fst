@@ -104,7 +104,7 @@ let null_binders_of_tks (tks:list (typ * bqual)) : binders =
 let binders_of_tks (tks:list (typ * bqual)) : binders =
     tks |> List.map (fun (t, imp) -> mk_binder_with_attrs (new_bv (Some t.pos) t) imp None [])
 
-let binders_of_freevars fvs = U.set_elements fvs |> List.map mk_binder
+let binders_of_freevars fvs = Set.elems fvs |> List.map mk_binder
 
 let mk_subst s = [s]
 
@@ -510,18 +510,25 @@ let injectives =
      "FStar.Int16.int_to_t";
      "FStar.Int32.int_to_t";
      "FStar.Int64.int_to_t";
+     "FStar.Int128.int_to_t";
      "FStar.UInt8.uint_to_t";
      "FStar.UInt16.uint_to_t";
      "FStar.UInt32.uint_to_t";
      "FStar.UInt64.uint_to_t";
+     "FStar.UInt128.uint_to_t";
+     "FStar.SizeT.uint_to_t";
      "FStar.Int8.__int_to_t";
      "FStar.Int16.__int_to_t";
      "FStar.Int32.__int_to_t";
      "FStar.Int64.__int_to_t";
+     "FStar.Int128.__int_to_t";
      "FStar.UInt8.__uint_to_t";
      "FStar.UInt16.__uint_to_t";
      "FStar.UInt32.__uint_to_t";
-     "FStar.UInt64.__uint_to_t"]
+     "FStar.UInt64.__uint_to_t";
+     "FStar.UInt128.__uint_to_t";
+     "FStar.SizeT.__uint_to_t";
+     ]
 
 // Compose two eq_result injectively, as in a pair
 let eq_inj r s =
@@ -1104,11 +1111,11 @@ let let_rec_arity (lb:letbinding) : int * option (list bool) =
          match d with
          | Decreases_lex l ->
            l |> List.fold_left (fun s t ->
-             set_union s (FStar.Syntax.Free.names t)) (new_set Syntax.order_bv)
+             Set.union s (FStar.Syntax.Free.names t)) (Set.empty ())
          | Decreases_wf (rel, e) ->
-           set_union (FStar.Syntax.Free.names rel) (FStar.Syntax.Free.names e) in
+           Set.union (FStar.Syntax.Free.names rel) (FStar.Syntax.Free.names e) in
        Common.tabulate n_univs (fun _ -> false)
-       @ (bs |> List.map (fun b -> U.set_mem b.binder_bv d_bvs)))
+       @ (bs |> List.map (fun b -> Set.mem b.binder_bv d_bvs)))
 
 let abs_formals_maybe_unascribe_body maybe_unascribe t =
     let subst_lcomp_opt s l = match l with
@@ -1264,8 +1271,9 @@ let attr_eq a a' =
 let attr_substitute =
   mk (Tm_fvar (lid_as_fv PC.attr_substitute_lid None)) Range.dummyRange
 
-let exp_true_bool : term = mk (Tm_constant (Const_bool true)) dummyRange
-let exp_false_bool : term = mk (Tm_constant (Const_bool false)) dummyRange
+let exp_bool (b:bool) : term = mk (Tm_constant (Const_bool b)) dummyRange
+let exp_true_bool : term = exp_bool true
+let exp_false_bool : term = exp_bool false
 let exp_unit : term = mk (Tm_constant (Const_unit)) dummyRange
 (* Makes an (unbounded) integer from its string repr. *)
 let exp_int s : term = mk (Tm_constant (Const_int (s,None))) dummyRange
@@ -1447,7 +1455,7 @@ let un_squash t =
                     | _ -> failwith "impossible"
             in
             // A bit paranoid, but need this check for terms like `u:unit{u == ()}`
-            if set_mem b.binder_bv (Free.names p)
+            if Set.mem b.binder_bv (Free.names p)
             then None
             else Some p
         | _ -> None
@@ -1519,7 +1527,7 @@ let arrow_one (t:typ) : option (binder * comp) =
     Some (b, c))
 
 let is_free_in (bv:bv) (t:term) : bool =
-    U.set_mem bv (FStar.Syntax.Free.names t)
+    Set.mem bv (FStar.Syntax.Free.names t)
 
 (**************************************************************************************)
 (* Destructing a type as a formula *)
@@ -1560,7 +1568,7 @@ let destruct_typ_as_formula f : option connective =
       | Tm_meta {tm=t; meta=Meta_monadic_lift _} -> unmeta_monadic t
       | _ -> f in
     let lookup_arity_lid table target_lid args =
-        let arg_len = List.length args in
+        let arg_len : int = List.length args in
         let aux (arity, lids) =
             if arg_len = arity
             then U.find_map lids

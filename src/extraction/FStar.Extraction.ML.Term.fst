@@ -374,7 +374,7 @@ let rec is_ml_value e =
     | MLE_Fun   _ -> true
     | MLE_CTor (_, exps)
     | MLE_Tuple exps -> BU.for_all is_ml_value exps
-    | MLE_Record (_, fields) -> BU.for_all (fun (_, e) -> is_ml_value e) fields
+    | MLE_Record (_, _, fields) -> BU.for_all (fun (_, e) -> is_ml_value e) fields
     | MLE_TApp (h, _) -> is_ml_value h
     | _ -> false
 
@@ -1149,7 +1149,7 @@ let maybe_eta_data_and_project_record (g:uenv) (qual : option fv_qual) (residual
         let path = List.map string_of_id (ns_of_lid tyname) in
         let fields = record_fields g tyname fields args in
         let path = no_fstar_stubs_ns path in
-        with_ty e.mlty <| MLE_Record(path, fields)
+        with_ty e.mlty <| MLE_Record (path, tyname |> ident_of_lid |> string_of_id, fields)
       | _ -> e
      in
     let resugar_and_maybe_eta qual e =
@@ -1416,7 +1416,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
             if bv.index < shift then
               (* just a local bvar *)
               let tv' = RD.Tv_BVar bv in
-              let tv = EMB.embed RE.e_term_view tv' t.pos None EMB.id_norm_cb in
+              let tv = EMB.embed tv' t.pos None EMB.id_norm_cb in
               let t = U.mk_app (RC.refl_constant_term RC.fstar_refl_pack_ln) [S.as_arg tv] in
               term_as_mlexpr g t
             else
@@ -1425,7 +1425,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
 
           | tv ->
             (* Else, just embed recursively. *)
-            let tv = EMB.embed (RE.e_term_view_aq (shift, aqs)) tv t.pos None EMB.id_norm_cb in
+            let tv = EMB.embed #_ #(RE.e_term_view_aq (shift, aqs)) tv t.pos None EMB.id_norm_cb in
             let t = U.mk_app (RC.refl_constant_term RC.fstar_refl_pack_ln) [S.as_arg tv] in
             term_as_mlexpr g t
           end
@@ -1879,25 +1879,23 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                     //            BU.print1 "!!!!!!!About to normalize: %s\n" (Print.term_to_string lb.lbdef);
                     //            Options.set_option "debug_level" (Options.List [Options.String "Norm"; Options.String "Extraction"]));
                     let lbdef =
-                        if Options.ml_ish()
-                        then lb.lbdef
-                        else let norm_call () =
-                                 Profiling.profile
-                                   (fun () ->
-                                     N.normalize (Env.PureSubtermsWithinComputations::Env.Reify::extraction_norm_steps) tcenv lb.lbdef)
-                                   (Some (Ident.string_of_lid (Env.current_module tcenv)))
-                                   "FStar.Extraction.ML.Term.normalize_lb_def"
+                        let norm_call () =
+                            Profiling.profile
+                              (fun () ->
+                                N.normalize (Env.PureSubtermsWithinComputations::Env.Reify::extraction_norm_steps) tcenv lb.lbdef)
+                              (Some (Ident.string_of_lid (Env.current_module tcenv)))
+                              "FStar.Extraction.ML.Term.normalize_lb_def"
+                        in
+                        if TcEnv.debug tcenv <| Options.Other "Extraction"
+                        || TcEnv.debug tcenv <| Options.Other "ExtractNorm"
+                        then let _ = BU.print2 "Starting to normalize top-level let %s = %s\n"
+                                       (Print.lbname_to_string lb.lbname)
+                                       (Print.term_to_string lb.lbdef)
                              in
-                             if TcEnv.debug tcenv <| Options.Other "Extraction"
-                             || TcEnv.debug tcenv <| Options.Other "ExtractNorm"
-                             then let _ = BU.print2 "Starting to normalize top-level let %s = %s\n"
-                                            (Print.lbname_to_string lb.lbname)
-                                            (Print.term_to_string lb.lbdef)
-                                  in
-                                  let a = norm_call() in
-                                  BU.print1 "Normalized to %s\n" (Print.term_to_string a);
-                                  a
-                             else norm_call ()
+                             let a = norm_call() in
+                             BU.print1 "Normalized to %s\n" (Print.term_to_string a);
+                             a
+                        else norm_call ()
                     in
                     {lb with lbdef=lbdef})
             else lbs

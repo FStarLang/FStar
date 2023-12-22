@@ -163,6 +163,7 @@ let tcresolve () : Tac unit =
     // So intro if that's the case
     // Not using intros () directly, since that unfolds aggressively if the term is not an arrow
     // TODO: Should we..?  Why wouldn't the head always be an FV?
+    let w = cur_witness () in
     maybe_intros ();
 
     // Fetch a list of all instances in scope right now.
@@ -170,7 +171,8 @@ let tcresolve () : Tac unit =
     // stored.
     let glb = lookup_attr (`tcinstance) (cur_env ()) in
     try
-      tcresolve' [] glb 16
+      tcresolve' [] glb 16;
+      debug (fun () -> "Solved to:\n\t" ^ term_to_string w)
     with
     | NoInst ->
       fail ("Could not solve constraint " ^ term_to_string (cur_goal ()))
@@ -197,20 +199,11 @@ let rec last (l : list 'a) : Tac 'a =
 private
 let filter_no_method_binders (bs:binders)
   : binders
-  = let has_no_method_attr (b:binder)
-      : bool
-      = let attrs = b.attrs in
-        let is_no_method (t:term)
-          : bool
-          = match inspect_ln t with
-            | Reflection.V2.Tv_FVar fv  ->
-              let n = flatten_name (inspect_fv fv) in
-              n = `%no_method
-            | _ -> false
-        in
-        L.existsb is_no_method attrs
+  = let open FStar.Reflection.V2.TermEq in
+    let has_no_method_attr (b:binder) : bool =
+      L.existsb (term_eq (`no_method)) b.attrs
     in
-    L.filter (fun b -> not (has_no_method_attr b)) bs
+    bs |> L.filter (fun b -> not (has_no_method_attr b))
 
 private
 let binder_set_meta (b : binder) (t : term) : binder =
@@ -226,84 +219,86 @@ let mk_class (nm:string) : Tac decls =
     let sv = inspect_sigelt se in
     guard (Sg_Inductive? sv);
     let Sg_Inductive {nm=name;univs=us;params;typ=ity;ctors} = sv in
-    (* print ("params = " ^ Tactics.Util.string_of_list binder_to_string params); *)
-    (* print ("got it, name = " ^ implode_qn name); *)
-    (* print ("got it, ity = " ^ term_to_string ity); *)
+    debug (fun () -> "params = " ^ Tactics.Util.string_of_list binder_to_string params);
+    debug (fun () -> "got it, name = " ^ implode_qn name);
+    debug (fun () -> "got it, ity = " ^ term_to_string ity);
     let ctor_name = last name in
     // Must have a single constructor
     guard (L.length ctors = 1);
     let [(c_name, ty)] = ctors in
-    (* print ("got ctor " ^ implode_qn c_name ^ " of type " ^ term_to_string ty); *)
+    debug (fun () -> "got ctor " ^ implode_qn c_name ^ " of type " ^ term_to_string ty);
     let bs, cod = collect_arr_bs ty in
     let r = inspect_comp cod in
     guard (C_Total? r);
     let C_Total cod = r in (* must be total *)
 
-    (* print ("params = " ^ Tactics.Util.string_of_list binder_to_string params); *)
-    (* print ("n_params = " ^ string_of_int (List.Tot.Base.length params)); *)
-    (* print ("n_univs = " ^ string_of_int (List.Tot.Base.length us)); *)
-    (* print ("cod = " ^ term_to_string cod); *)
+    debug (fun () -> "params = " ^ Tactics.Util.string_of_list binder_to_string params);
+    debug (fun () -> "n_params = " ^ string_of_int (List.Tot.Base.length params));
+    debug (fun () -> "n_univs = " ^ string_of_int (List.Tot.Base.length us));
+    debug (fun () -> "cod = " ^ term_to_string cod);
 
     (* print ("n_bs = " ^ string_of_int (List.Tot.Base.length bs)); *)
 
     let base : string = "__proj__Mk" ^ ctor_name ^ "__item__" in
 
     (* Make a sigelt for each method *)
-    Tactics.Util.map (fun (b:binder) ->
-                  let s = name_of_binder b in
-                  let ns = cur_module () in
-                  let sfv = pack_fv (ns @ [s]) in
-                  let dbv = fresh_namedv_named "d" in
-                  let tcr = (`tcresolve) in
-                  let tcdict = {
-                    ppname = seal "dict";
-                    sort   = cod;
-                    uniq   = fresh();
-                    qual   = Q_Meta tcr;
-                    attrs  = [];
-                  } in
-                  let proj_name = cur_module () @ [base ^ s] in
-                  let proj = pack (Tv_FVar (pack_fv proj_name)) in
+    filter_no_method_binders bs
+    |> Tactics.Util.map (fun (b:binder) ->
+      let s = name_of_binder b in
+      debug (fun () -> "processing method " ^ s);
+      let ns = cur_module () in
+      let sfv = pack_fv (ns @ [s]) in
+      let dbv = fresh_namedv_named "d" in
+      let tcr = (`tcresolve) in
+      let tcdict = {
+        ppname = seal "dict";
+        sort   = cod;
+        uniq   = fresh();
+        qual   = Q_Meta tcr;
+        attrs  = [];
+      } in
+      let proj_name = cur_module () @ [base ^ s] in
+      let proj = pack (Tv_FVar (pack_fv proj_name)) in
 
-                  let proj_lb =
-                    match lookup_typ (top_env ()) proj_name with
-                    | None -> fail "mk_class: proj not found?"
-                    | Some se ->
-                      match inspect_sigelt se with
-                      | Sg_Let {lbs} -> lookup_lb lbs proj_name
-                      | _ -> fail "mk_class: proj not Sg_Let?"
-                  in
-                  (* print ("proj_ty = " ^ term_to_string proj_lb.lb_typ); *)
+      let proj_lb =
+        match lookup_typ (top_env ()) proj_name with
+        | None -> fail "mk_class: proj not found?"
+        | Some se ->
+          match inspect_sigelt se with
+          | Sg_Let {lbs} -> lookup_lb lbs proj_name
+          | _ -> fail "mk_class: proj not Sg_Let?"
+      in
+      (* print ("proj_ty = " ^ term_to_string proj_lb.lb_typ); *)
 
-                  let ty =
-                    let bs, cod = collect_arr_bs proj_lb.lb_typ in
-                    let ps, bs = List.Tot.Base.splitAt (List.Tot.Base.length params) bs in
-                    match bs with
-                    | [] -> fail "mk_class: impossible, no binders"
-                    | b1::bs' ->
-                        let b1 = binder_set_meta b1 tcr in
-                        mk_arr (ps@(b1::bs')) cod
-                  in
-                  let def =
-                    let bs, body = collect_abs proj_lb.lb_def in
-                    let ps, bs = List.Tot.Base.splitAt (List.Tot.Base.length params) bs in
-                    match bs with
-                    | [] -> fail "mk_class: impossible, no binders"
-                    | b1::bs' ->
-                        let b1 = binder_set_meta b1 tcr in
-                        mk_abs (ps@(b1::bs')) body
-                  in
-                  (* print ("def = " ^ term_to_string def); *)
-                  (* print ("ty  = " ^ term_to_string ty); *)
+      let ty =
+        let bs, cod = collect_arr_bs proj_lb.lb_typ in
+        let ps, bs = List.Tot.Base.splitAt (List.Tot.Base.length params) bs in
+        match bs with
+        | [] -> fail "mk_class: impossible, no binders"
+        | b1::bs' ->
+            let b1 = binder_set_meta b1 tcr in
+            mk_arr (ps@(b1::bs')) cod
+      in
+      let def =
+        let bs, body = collect_abs proj_lb.lb_def in
+        let ps, bs = List.Tot.Base.splitAt (List.Tot.Base.length params) bs in
+        match bs with
+        | [] -> fail "mk_class: impossible, no binders"
+        | b1::bs' ->
+            let b1 = binder_set_meta b1 tcr in
+            mk_abs (ps@(b1::bs')) body
+      in
+      debug (fun () -> "def = " ^ term_to_string def);
+      debug (fun () -> "ty  = " ^ term_to_string ty);
 
-                  let ty : term = ty in
-                  let def : term = def in
-                  let sfv : fv = sfv in
+      let ty : term = ty in
+      let def : term = def in
+      let sfv : fv = sfv in
 
-                  let lb = { lb_fv=sfv; lb_us=proj_lb.lb_us; lb_typ=ty; lb_def=def } in
-                  let se = pack_sigelt (Sg_Let {isrec=false; lbs=[lb]}) in
-                  let se = set_sigelt_quals to_propagate se in
-                  let se = set_sigelt_attrs b.attrs se in
-                  (* print ("trying to return : " ^ term_to_string (quote se)); *)
-                  se
-    ) (filter_no_method_binders bs)
+      let lb = { lb_fv=sfv; lb_us=proj_lb.lb_us; lb_typ=ty; lb_def=def } in
+      let se = pack_sigelt (Sg_Let {isrec=false; lbs=[lb]}) in
+      let se = set_sigelt_quals to_propagate se in
+      let se = set_sigelt_attrs b.attrs se in
+      //debug (fun () -> "trying to return : " ^ term_to_string (quote se));
+      se
+    )

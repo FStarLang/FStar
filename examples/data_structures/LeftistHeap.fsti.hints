@@ -12,7 +12,6 @@
         "binder_x_374b44ccfcb77ed85d505dbc44265913_3",
         "binder_x_f0062e810d23900aea914a963397c69a_1",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_Prims.eqtype", "equation_Prims.op_Equals_Equals_Equals",
         "fuel_guarded_inversion_LeftistHeap.ordered",
         "fuel_guarded_inversion_Prims.list",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
@@ -24,7 +23,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "2167155ca6a8bb9863f44dc0982cfdb4"
+      "ff7620ef55ccda0474153a1fdff4b6ba"
     ],
     [
       "LeftistHeap.sorted",
@@ -34,13 +33,10 @@
       [
         "@MaxIFuel_assumption", "@query",
         "binder_x_374b44ccfcb77ed85d505dbc44265913_2",
-        "binder_x_f0062e810d23900aea914a963397c69a_1",
-        "equation_Prims.eqtype", "equation_Prims.op_Equals_Equals_Equals",
-        "fuel_guarded_inversion_LeftistHeap.ordered",
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "a42b1c63ea36e36ec6fbf6216e30e43a"
+      "538b3b1ec9320577f6ae9ba858517413"
     ],
     [
       "LeftistHeap.empty",
@@ -53,7 +49,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "4f055883beaf70637c041b84f3a91a3a"
+      "c4d587d46795e2c66bab7498bf30568f"
     ],
     [
       "LeftistHeap.isEmpty",
@@ -66,7 +62,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "87e9b8c3533462ff78d533a52edfdf0e"
+      "2cbfd816a8708ebf4e5d837a57e691a0"
     ],
     [
       "LeftistHeap.singleton",
@@ -79,7 +75,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "58c7c5be8f559b8c48e6a55c07aa2597"
+      "616674d996aab73ebdb95d5e2c65b1ff"
     ],
     [
       "LeftistHeap.merge_heaps",
@@ -92,7 +88,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "ae34ee2888b65971242c12b0414de595"
+      "3536d9fb713f504c0e336f5f222ebd3b"
     ],
     [
       "LeftistHeap.insert",
@@ -105,7 +101,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "5c50b33ab8ae9e60c586cf48acab73d2"
+      "1f2d53dc9bbe6175ba9890fc4d78431f"
     ],
     [
       "LeftistHeap.get_min",
@@ -123,7 +119,7 @@
         "typing_LeftistHeap.isEmpty"
       ],
       0,
-      "da2250218384ea590291d8b91dcec0ba"
+      "b19496a68708beebde8433d7b25da870"
     ],
     [
       "LeftistHeap.delete_min",
@@ -144,7 +140,7 @@
         "typing_LeftistHeap.isEmpty", "typing_LeftistHeap.to_list"
       ],
       0,
-      "d9b5e61e412e32e3d1c82c5e65f45b64"
+      "72834e54f719f1a534dcd4bb83560630"
     ]
   ]
 ]

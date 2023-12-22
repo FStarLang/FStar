@@ -76,17 +76,16 @@ let close_guard_implicits env solve_deferred (xs:binders) (g:guard_t) : guard_t 
 
 let check_uvars r t =
   let uvs = Free.uvars t in
-  if not (BU.set_is_empty uvs)
-  then
-    let us = List.map (fun u -> Print.uvar_to_string u.ctx_uvar_head) (BU.set_elements uvs) |> String.concat ", " in
+  if not (Set.is_empty uvs) then begin
     (* ignoring the hide_uvar_nums and print_implicits flags here *)
     Options.push();
     Options.set_option "hide_uvar_nums" (Options.Bool false);
     Options.set_option "print_implicits" (Options.Bool true);
     Errors.log_issue r
       (Errors.Error_UncontrainedUnificationVar, (BU.format2 "Unconstrained unification variables %s in type signature %s; \
-       please add an annotation" us (Print.term_to_string t)));
+       please add an annotation" (Class.Show.show uvs) (Class.Show.show t)));
     Options.pop()
+  end
 
 (************************************************************************)
 (* Extracting annotations, notably the decreases clause, for a recursive definion *)
@@ -2378,7 +2377,7 @@ let rec check_erased (env:Env.env) (t:term) : isErased =
             |> check_erased
                 (br_body
                  |> Free.names
-                 |> BU.set_elements
+                 |> Set.elems // GGG: bad, order-depending
                  |> Env.push_bvs env) with
           | No -> No
           | _ -> Maybe) No
@@ -2883,13 +2882,21 @@ let maybe_instantiate (env:Env.env) e t =
                       let t = SS.subst subst x.sort in
                       let meta_t =
                         match qual, attrs with
-                        | Some (Meta tau), _ ->
-                          Ctx_uvar_meta_tac (mkdyn env, tau)
-                        | _, attr::_ ->
-                          Ctx_uvar_meta_attr attr
+                        | Some (Meta tau), _ -> Ctx_uvar_meta_tac tau
+                        | _, attr::_ -> Ctx_uvar_meta_attr attr
                         | _ -> failwith "Impossible, match is under a guard, did not expect this case"
                       in
-                      let v, _, g = Env.new_implicit_var_aux "Instantiation of meta argument"
+                      let msg =
+                        let is_typeclass =
+                          match meta_t with
+                          | Ctx_uvar_meta_tac tau -> U.is_fvar C.tcresolve_lid tau
+                          | _ -> false
+                        in
+                        if is_typeclass
+                        then "Typeclass constraint argument"
+                        else "Instantiation of meta argument"
+                      in
+                      let v, _, g = Env.new_implicit_var_aux msg
                                                              e.pos env t Strict
                                                              (Some meta_t) in
                       if Env.debug env Options.High then
@@ -3072,7 +3079,7 @@ let short_circuit (head:term) (seen_args:args) : guard_formula =
     let short_bin_op f : args -> guard_formula = function
         | [] -> (* no args seen yet *) Trivial
         | [(fst, _)] -> f fst
-        | _ -> failwith "Unexpexted args to binary operator" in
+        | _ -> failwith "Unexpected args to binary operator" in
 
     let op_and_e e = U.b2t e   |> NonTrivial in
     let op_or_e e  = U.mk_neg (U.b2t e) |> NonTrivial in

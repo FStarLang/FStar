@@ -333,7 +333,7 @@ let (pop_repl :
     fun st ->
       let uu___ = FStar_Compiler_Effect.op_Bang repl_stack in
       match uu___ with
-      | [] -> failwith "Too many pops"
+      | [] -> FStar_Compiler_Effect.failwith "Too many pops"
       | (depth, (uu___1, st'))::stack_tl ->
           let env =
             rollback_env
@@ -354,10 +354,8 @@ let (tc_one :
     fun intf_opt ->
       fun modf ->
         let parse_data =
-          let uu___ =
-            let uu___1 = FStar_TypeChecker_Env.dep_graph env in
-            FStar_Parser_Dep.parsing_data_of uu___1 in
-          FStar_Compiler_Effect.op_Bar_Greater modf uu___ in
+          let uu___ = FStar_TypeChecker_Env.dep_graph env in
+          FStar_Parser_Dep.parsing_data_of uu___ modf in
         let uu___ =
           FStar_Universal.tc_one_file_for_ide env intf_opt modf parse_data in
         match uu___ with | (uu___1, env1) -> env1
@@ -854,7 +852,7 @@ let (add_module_completions :
              let uu___1 =
                FStar_Compiler_String.substring str Prims.int_one
                  ((FStar_Compiler_String.length str) - Prims.int_one) in
-             Prims.op_Hat (FStar_Compiler_String.uppercase first) uu___1) in
+             Prims.strcat (FStar_Compiler_String.uppercase first) uu___1) in
         let mods = FStar_Parser_Dep.build_inclusion_candidates_list () in
         let loaded_mods_set =
           let uu___ = FStar_Compiler_Util.psmap_empty () in

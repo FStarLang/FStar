@@ -8,16 +8,15 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0", "equation_Prims.nat",
-        "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "b26857a5ce1938967a4184c1335579ad"
+      "d24b270271db25ca2610796394485bd7"
     ],
     [
       "OPLSS2021.Factorial.factorial_increasing",
@@ -33,16 +32,16 @@
         "equation_with_fuel_OPLSS2021.Factorial.factorial.fuel_instrumented",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "token_correspondence_OPLSS2021.Factorial.factorial.fuel_instrumented",
         "typing_OPLSS2021.Factorial.factorial",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "b888e2fe08100c6e31ac573714f40e0e"
+      "df110d4b047bed94d961e9e9825850c7"
     ],
     [
       "OPLSS2021.Factorial.factorial_increasing_lemma",
@@ -58,7 +57,8 @@
         "equation_with_fuel_OPLSS2021.Factorial.factorial.fuel_instrumented",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
@@ -66,7 +66,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "562f5554b06646e0bc72b123cae58002"
+      "7073e3d432551b0d1d01b6d6e736e2ef"
     ]
   ]
 ]

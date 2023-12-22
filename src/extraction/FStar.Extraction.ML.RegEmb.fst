@@ -70,7 +70,7 @@ let ml_record : Ident.lid -> list (string & mlexpr) -> mlexpr =
   fun l args ->
     let s = Ident.path_of_lid l in
     // [] -> assuming same module
-    mk (MLE_Record ([], args))
+    mk (MLE_Record ([], l |> Ident.ident_of_lid |> Ident.string_of_id, args))
 
 let ml_lam nm e =
     mk <| MLE_Fun ([(nm, MLTY_Top)], e)
@@ -353,7 +353,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
                      [with_ty MLTY_Top <| MLE_Const (MLC_String (Ident.string_of_lid fv_lid))])
     in
     let mk_tactic_interpretation l arity =
-      if arity > FStar.Tactics.V2.InterpFuns.max_tac_arity then
+      if arity > FStar.Tactics.InterpFuns.max_tac_arity then
         raise (NoEmbedding("tactic plugins can only take up to 20 arguments"))
       else
       let idroot =
@@ -361,7 +361,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
         | SyntaxTerm -> "mk_tactic_interpretation_"
         | NBETerm    -> "mk_nbe_tactic_interpretation_"
       in
-      as_name (["FStar_Tactics_V2_InterpFuns"], idroot^string_of_int arity)
+      as_name (["FStar_Tactics_InterpFuns"], idroot^string_of_int arity)
     in
     let mk_from_tactic l arity =
       let idroot =
@@ -503,17 +503,19 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
           if U.is_pure_comp c
           then begin
             let cb = str_to_name "cb" in
+            let us = str_to_name "us" in
             let embed_fun_N = mk_arrow_as_prim_step loc non_tvar_arity in
             let args = arg_unembeddings
                     @ [res_embedding;
                        lid_to_name fv_lid;
                        with_ty MLTY_Top <| MLE_Const (MLC_Int(string_of_int tvar_arity, None));
                        fv_lid_embedded;
-                       cb]
+                       cb;
+                       us]
             in
             let fun_embedding = mk <| MLE_App(embed_fun_N, args) in
             let tabs = abstract_tvars tvar_names fun_embedding in
-            let cb_tabs = ml_lam "cb" tabs in
+            let cb_tabs = ml_lam "cb" (ml_lam "us" tabs) in
             ((if loc = NBETerm then cb_tabs else ml_lam "_psc" cb_tabs),
              arity,
              true)
@@ -527,6 +529,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
             in
             let psc = str_to_name "psc" in
             let ncb = str_to_name "ncb" in
+            let us = str_to_name "us" in
             let all_args = str_to_name "args" in
             let args =
                 [mk <| MLE_Const (MLC_String (Ident.string_of_lid fv_lid ^ " (plugin)"))] @
@@ -534,13 +537,14 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
                 arg_unembeddings @
                 [res_embedding;
                  psc;
-                 ncb] in
+                 ncb;
+                 us] in
             let tabs =
               match tvar_names with
               | [] -> ml_lam "args" (mk <| MLE_App (h, args@[all_args]))
               | _ -> abstract_tvars tvar_names (mk <| MLE_App (h, args))
             in
-            (ml_lam "psc" (ml_lam "ncb" tabs),
+            (ml_lam "psc" (ml_lam "ncb" (ml_lam "us" tabs)),
              arity + 1,
              false)
           end
@@ -799,7 +803,7 @@ let maybe_register_plugin (g:uenv) (se:sigelt) : list mlmodule1 =
       else match args with
       | [(a, _)] ->
          (* Try to unembed the argument as an int, warn if not possible. *)
-         let nopt = EMB.unembed EMB.e_fsint a EMB.id_norm_cb in
+         let nopt = EMB.unembed a EMB.id_norm_cb in
          Some nopt
       | _ -> Some None
     )

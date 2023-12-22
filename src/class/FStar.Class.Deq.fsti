@@ -8,9 +8,10 @@ class deq (a:Type) = {
 
 val (<>?) : #a:Type -> {| deq a |} -> a -> a -> bool
 
-instance val deq_int : deq int
-instance val deq_bool : deq bool
-instance val deq_unit : deq unit
+instance val deq_int    : deq int
+instance val deq_bool   : deq bool
+instance val deq_unit   : deq unit
+instance val deq_string : deq string
 
 instance val deq_option
    (_ : deq 'a)

@@ -84,8 +84,8 @@ let (as_query :
                let uu___2 =
                  let uu___3 =
                    let uu___4 = FStar_Compiler_Util.string_of_int i in
-                   Prims.op_Hat "." uu___4 in
-                 Prims.op_Hat qid_prefix uu___3 in
+                   Prims.strcat "." uu___4 in
+                 Prims.strcat qid_prefix uu___3 in
                {
                  FStar_Interactive_Ide_Types.qq = q;
                  FStar_Interactive_Ide_Types.qid = uu___2
@@ -513,7 +513,8 @@ let (run_full_buffer :
                        log_syntax_issues (FStar_Pervasives_Native.Some err)
                      else ();
                      ([], []))
-                | uu___ -> failwith "Unexpected parse result" in
+                | uu___ ->
+                    FStar_Compiler_Effect.failwith "Unexpected parse result" in
               qs
 let (format_code :
   FStar_Interactive_Ide_Types.repl_state ->
@@ -548,11 +549,8 @@ let (format_code :
           (match uu___ with
            | (formatted_code_rev, leftover_comments) ->
                let code1 =
-                 let uu___1 =
-                   FStar_Compiler_Effect.op_Bar_Greater formatted_code_rev
-                     FStar_Compiler_List.rev in
-                 FStar_Compiler_Effect.op_Bar_Greater uu___1
-                   (FStar_Compiler_String.concat "\n\n") in
+                 FStar_Compiler_String.concat "\n\n"
+                   (FStar_Compiler_List.rev formatted_code_rev) in
                let formatted_code =
                  match leftover_comments with
                  | [] -> code1
@@ -562,8 +560,8 @@ let (format_code :
                          leftover_comments in
                      let uu___2 =
                        let uu___3 = doc_to_string doc in
-                       Prims.op_Hat "\n\n" uu___3 in
-                     Prims.op_Hat code1 uu___2 in
+                       Prims.strcat "\n\n" uu___3 in
+                     Prims.strcat code1 uu___2 in
                FStar_Pervasives.Inl formatted_code)
       | FStar_Parser_ParseIt.IncrementalFragment
           (uu___, uu___1, FStar_Pervasives_Native.Some err) ->
@@ -572,4 +570,4 @@ let (format_code :
       | FStar_Parser_ParseIt.ParseError err ->
           let uu___ = let uu___1 = syntax_issue err in [uu___1] in
           FStar_Pervasives.Inr uu___
-      | uu___ -> failwith "Unexpected parse result"
+      | uu___ -> FStar_Compiler_Effect.failwith "Unexpected parse result"

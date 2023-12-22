@@ -35,6 +35,8 @@ open FStar.Const
 open FStar.Compiler.Dyn
 open FStar.TypeChecker.Rel
 
+open FStar.Class.Show
+
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module TcComm = FStar.TypeChecker.Common
@@ -91,7 +93,7 @@ let check_no_escape (head_opt : option term)
     let rec aux try_norm t =
       let t = if try_norm then norm env t else t in
       let fvs' = Free.names t in
-      match List.tryFind (fun x -> BU.set_mem x fvs') fvs with
+      match List.tryFind (fun x -> Set.mem x fvs') fvs with
       | None -> t, Env.trivial_guard
       | Some x ->
         (* some variable x seems to escape, try normalizing if we haven't *)
@@ -385,14 +387,14 @@ let print_expected_ty env = BU.print1 "%s\n" (print_expected_ty_str env)
 
 (* andlist: whether we're inside an SMTPatOr and we should take the
  * intersection of the sub-variables instead of the union. *)
-let rec get_pat_vars' all (andlist : bool) (pats:term) :set bv =
+let rec get_pat_vars' all (andlist : bool) (pats:term) : Set.t bv =
   let pats = unmeta pats in
   let head, args = head_and_args pats in
   match (un_uinst head).n, args with
   | Tm_fvar fv, _ when fv_eq_lid fv Const.nil_lid ->
       if andlist
-      then BU.as_set all Syntax.order_bv
-      else BU.new_set Syntax.order_bv
+      then Set.from_list all
+      else Set.empty ()
 
   | Tm_fvar fv, [(_, Some ({ aqual_implicit = true })); (hd, None); (tl, None)] when fv_eq_lid fv Const.cons_lid ->
       (* The head is not under the scope of the SMTPatOr, consider
@@ -402,8 +404,8 @@ let rec get_pat_vars' all (andlist : bool) (pats:term) :set bv =
       let tlvs = get_pat_vars' all andlist tl in
 
       if andlist
-      then BU.set_intersect hdvs tlvs
-      else BU.set_union     hdvs tlvs
+      then Set.inter hdvs tlvs
+      else Set.union hdvs tlvs
 
   | Tm_fvar fv, [(_, Some ({ aqual_implicit = true })); (pat, None)] when fv_eq_lid fv Const.smtpat_lid ->
       Free.names pat
@@ -411,14 +413,13 @@ let rec get_pat_vars' all (andlist : bool) (pats:term) :set bv =
   | Tm_fvar fv, [(subpats, None)] when fv_eq_lid fv Const.smtpatOr_lid ->
       get_pat_vars' all true subpats
 
-  | _ ->
-      BU.new_set Syntax.order_bv
+  | _ -> Set.empty ()
 
 let get_pat_vars all pats = get_pat_vars' all false pats
 
 let check_pat_fvs rng env pats bs =
     let pat_vars = get_pat_vars (List.map (fun b -> b.binder_bv) bs) (N.normalize [Env.Beta] env pats) in
-    begin match bs |> BU.find_opt (fun ({binder_bv=b}) -> not(BU.set_mem b pat_vars)) with
+    begin match bs |> BU.find_opt (fun ({binder_bv=b}) -> not(Set.mem b pat_vars)) with
         | None -> ()
         | Some ({binder_bv=x}) ->
           Errors.log_issue rng
@@ -737,7 +738,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   def_check_scoped e.pos "tc_maybe_toplevel_term.entry" env e;
   let top = SS.compress e in
   if debug env Options.Medium then
-    BU.print3 "Typechecking %s (%s): %s\n" (Range.string_of_range <| Env.get_range env) (Print.tag_of_term top) (Print.term_to_string top);
+    BU.print3 "Typechecking %s (%s): %s\n"  (show <| Env.get_range env) (Print.tag_of_term top) (show top);
   match top.n with
   | Tm_delayed _ -> failwith "Impossible"
   | Tm_bvar _ -> failwith "Impossible: tc_maybe_toplevel_term: not LN"
@@ -1128,7 +1129,16 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
              | _ -> failwith "Impossible"
         else None, args
       in
-      base_term, List.zip uc.uc_fields (List.map fst fields)
+      if List.length uc.uc_fields <> List.length fields
+      then raise_error
+            (Errors.Fatal_IdentifierNotFound,
+             BU.format2 "Could not resolve constructor; expected %s fields but only found %s"
+                              (show <| List.length uc.uc_fields)
+                              (show <| List.length fields))
+             top.pos
+      else (
+        base_term, List.zip uc.uc_fields (List.map fst fields)
+      )
     in
     let (rdc, constrname, constructor), topt =
       match Env.expected_typ env with
@@ -1597,6 +1607,9 @@ and tc_synth head env args rng =
     | _ ->
         raise_error (Errors.Fatal_SynthByTacticError, "synth_by_tactic: bad application") rng
     in
+
+    if Env.debug env <| Options.Other "Tac" then
+      BU.print2 "Processing synth of %s at type %s\n" (show tau) (show atyp);
 
     let typ =
         match atyp with
@@ -2237,7 +2250,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
           (match topt with
            | None -> "None"
            | Some (t, use_eq) -> Print.term_to_string t ^ ", use_eq = " ^ string_of_bool use_eq)
-          (if env.top_level then "true" else "false");
+          (show env.top_level);
 
     let tfun_opt, bs, letrec_binders, c_opt, envbody, body, g_env =
       tc_abs_expected_function_typ env bs topt body in
@@ -2330,23 +2343,24 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     then BU.print1 "tc_abs: guard_body: %s\n"
            (Rel.guard_to_string env guard_body);
 
-    let guard = if env.top_level
-                || not (Options.should_verify (string_of_lid env.curmodule))
-                then begin
-                  if env.lax ||
-                     env.phase1
-                  then Env.conj_guard (Rel.discharge_guard env g_env)
-                                      (Rel.discharge_guard envbody guard_body)
-                  else
-                    let g_env, g_env_logical = TcComm.split_guard g_env in
-                    let guard_body, guard_body_logical = TcComm.split_guard guard_body in
-                    Rel.force_trivial_guard env (Env.conj_guard g_env guard_body);
-                    Rel.force_trivial_guard env g_env_logical;
-                    Rel.force_trivial_guard envbody guard_body_logical;
-                    Env.trivial_guard
-                end
-                else let guard = Env.conj_guard g_env (Env.close_guard envbody (bs@letrec_binders) guard_body) in
-                     guard in
+    let guard_body =
+      (* If we were checking a top-level definition, which may be a let rec,
+      we must discharge this the guard of the body here, as it is
+      only typeable in the extended environment which contains the Binding_lids.
+      Closing the guard (below) won't help with that. *)
+      if env.top_level then (
+        if Env.debug env <| Options.Medium then
+          BU.print1 "tc_abs: FORCING guard_body: %s\n" (Rel.guard_to_string env guard_body);
+        Rel.discharge_guard envbody guard_body
+      ) else (
+        guard_body
+      )
+    in
+
+    let guard =
+        let guard_body = Env.close_guard envbody (bs@letrec_binders) guard_body in
+        Env.conj_guard g_env guard_body
+    in
 
     let guard = TcUtil.close_guard_implicits env false bs guard in //TODO: this is a noop w.r.t scoping; remove it and the eager_subtyping flag
     let tfun_computed = U.arrow bs cbody in
@@ -2705,6 +2719,60 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                      fvs)     (* unsubstituted formals, to check that they do not occur free elsewhere in the type of f *)
                      bs       (* formal parameters *)
                      args     (* remaining actual arguments *) : (term * lcomp * guard_t) =
+
+        (* We follow the exact same procedure as for instantiating an implicit,
+         * except that we keep track of the (uvar, env, metaprogram) pair in the environment
+         * so we can later come back to the implicit and, if it wasn't solved by unification,
+         * run the metaprogram on it.
+         *
+         * Why don't we run the metaprogram here? At this stage, it's very likely that `t`
+         * is full of unresolved uvars, and it wouldn't be a whole lot useful to try
+         * to find an instance for it. We might not even be able to, since instances
+         * are for concrete types.
+         *)
+        let instantiate_one_meta_and_go b rest_bs args =
+          let {binder_bv=x;binder_qual=qual;binder_attrs=attrs} = b in
+          let ctx_uvar_meta, g_tau_or_attr =
+              match qual, attrs with
+              | Some (Meta tau), _ ->
+                let tau = SS.subst subst tau in
+                let tau, _, g_tau = tc_tactic t_unit t_unit env tau in
+                Ctx_uvar_meta_tac tau, g_tau
+              | Some (Implicit _), attr::_ ->
+                let attr = SS.subst subst attr in
+                let attr, _, g_attr = tc_tot_or_gtot_term env attr in
+                Ctx_uvar_meta_attr attr, g_attr
+              | _ -> failwith "Impossible, match is under a guard"
+          in
+          let t = SS.subst subst x.sort in
+          let t, g_ex = check_no_escape (Some head) env fvs t in
+          let r = match outargs with
+                  | [] -> head.pos
+                  | ((t, _), _, _)::_ ->
+                      Range.range_of_rng (Range.def_range head.pos)
+                                        (Range.union_rng (Range.use_range head.pos)
+                                                          (Range.use_range t.pos))
+          in
+          let varg, _, implicits =
+            let msg =
+              let is_typeclass =
+                match ctx_uvar_meta with
+                | Ctx_uvar_meta_tac tau -> U.is_fvar Const.tcresolve_lid tau
+                | _ -> false
+              in
+              if is_typeclass
+              then "Typeclass constraint argument"
+              else "Instantiating meta argument in application"
+            in
+            Env.new_implicit_var_aux msg r env t Strict (Some ctx_uvar_meta)
+          in
+          let subst = NT(x, varg)::subst in
+          let aq = U.aqual_of_binder (List.hd bs) in
+          let arg = varg, aq in
+          let guard = List.fold_right Env.conj_guard [g_ex; g; g_tau_or_attr] implicits in
+          tc_args head_info (subst, (arg, None, S.mk_Total t |> TcComm.lcomp_of_comp)::outargs, arg::arg_rets, guard, fvs) rest_bs args
+        in
+
         match bs, args with
         | ({binder_bv=x;binder_qual=Some (Implicit _);binder_attrs=[]})::rest,
           (_, None)::_ -> (* instantiate an implicit arg that's not associated with a tactic, i.e. no Meta or attrs *)
@@ -2732,46 +2800,13 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
 
         | ({binder_bv=x;binder_qual=qual;binder_attrs=attrs})::rest,
           (_, None)::_
-          when (TcUtil.maybe_implicit_with_meta_or_attr qual attrs) -> (* instantiate a meta arg *)
-            (* We follow the exact same procedure as for instantiating an implicit,
-             * except that we keep track of the (uvar, env, metaprogram) pair in the environment
-             * so we can later come back to the implicit and, if it wasn't solved by unification,
-             * run the metaprogram on it.
-             *
-             * Why don't we run the metaprogram here? At this stage, it's very likely that `t`
-             * is full of unresolved uvars, and it wouldn't be a whole lot useful to try
-             * to find an instance for it. We might not even be able to, since instances
-             * are for concrete types.
-             *)
-            let ctx_uvar_meta, g_tau_or_attr =
-                match qual, attrs with
-                | Some (Meta tau), _ ->
-                  let tau = SS.subst subst tau in
-                  let tau, _, g_tau = tc_tactic t_unit t_unit env tau in
-                  Ctx_uvar_meta_tac (mkdyn env, tau), g_tau
-                | Some (Implicit _), attr::_ ->
-                  let attr = SS.subst subst attr in
-                  let attr, _, g_attr = tc_tot_or_gtot_term env attr in
-                  Ctx_uvar_meta_attr attr, g_attr
-                | _ -> failwith "Impossible, match is under a guard"
-            in
-            let t = SS.subst subst x.sort in
-            let t, g_ex = check_no_escape (Some head) env fvs t in
-            let r = match outargs with
-                    | [] -> head.pos
-                    | ((t, _), _, _)::_ ->
-                        Range.range_of_rng (Range.def_range head.pos)
-                                           (Range.union_rng (Range.use_range head.pos)
-                                                            (Range.use_range t.pos))
-            in
-            let varg, _, implicits =
-              Env.new_implicit_var_aux "Instantiating meta argument in application" r env t Strict (Some ctx_uvar_meta)
-            in
-            let subst = NT(x, varg)::subst in
-            let aq = U.aqual_of_binder (List.hd bs) in
-            let arg = varg, aq in
-            let guard = List.fold_right Env.conj_guard [g_ex; g; g_tau_or_attr] implicits in
-            tc_args head_info (subst, (arg, None, S.mk_Total t |> TcComm.lcomp_of_comp)::outargs, arg::arg_rets, guard, fvs) rest args
+            when (TcUtil.maybe_implicit_with_meta_or_attr qual attrs) -> (* instantiate a meta arg *)
+          instantiate_one_meta_and_go (List.hd bs) rest args
+
+        (* User provided a _ for a meta arg, keep the meta for the unknown. *)
+        | ({binder_bv=x;binder_qual=Some (Meta tau);binder_attrs=b_attrs})::rest,
+          ({n = Tm_unknown}, Some {aqual_implicit=true})::rest' ->
+          instantiate_one_meta_and_go (List.hd bs) rest rest' (* NB: rest' instead of args, we consume the _ *)
 
         | ({binder_bv=x;binder_qual=bqual;binder_attrs=b_attrs})::rest, (e, aq)::rest' -> (* a concrete argument *)
             let aq = check_expected_aqual_for_binder aq (List.hd bs) e.pos in
@@ -4111,14 +4146,14 @@ and check_inner_let_rec env top =
           let cres =
             if cres.eff_name |> Env.norm_eff_name env
                              |> Env.is_layered_effect env
-            then let bvss = BU.as_set bvs S.order_bv in
+            then let bvss = Set.from_list bvs in
                  TcComm.apply_lcomp
                    (fun c ->
                     if (c |> U.comp_effect_args
                           |> List.existsb (fun (t, _) ->
                               t |> Free.names
-                                |> BU.set_intersect bvss
-                                |> set_is_empty
+                                |> Set.inter bvss
+                                |> Set.is_empty
                                 |> not))
                     then raise_error (Errors.Fatal_EscapedBoundVar,
                            "One of the inner let recs escapes in the \
@@ -4343,6 +4378,7 @@ and check_lbtyp top_level env lb : option typ  (* checked version of lb.lbtyp, i
                                  * list subst_elt (* subtistution of the opened universes               *)
                                  * Env.env      (* env extended with univ_vars                           *)
                                  =
+  Errors.with_ctx "While checking type annotation of a letbinding" (fun () ->
     let t = SS.compress lb.lbtyp in
     match t.n with
         | Tm_unknown ->
@@ -4368,7 +4404,7 @@ and check_lbtyp top_level env lb : option typ  (* checked version of lb.lbtyp, i
                         (Print.term_to_string t);
                let t = norm env1 t in
                Some t, g, univ_vars, univ_opening, Env.set_expected_typ env1 t
-
+  )
 
 and tc_binder env ({binder_bv=x;binder_qual=imp;binder_positivity=pqual;binder_attrs=attrs}) =
     let tu, u = U.type_u () in
@@ -4385,7 +4421,8 @@ and tc_binder env ({binder_bv=x;binder_qual=imp;binder_positivity=pqual;binder_a
           Some (Meta tau), g
         | _ -> imp, Env.trivial_guard
     in
-    let attrs = tc_attributes env attrs in
+    let g_attrs, attrs = tc_attributes env attrs in
+    let g = Env.conj_guard g g_attrs in
     check_erasable_binder_attributes env attrs t;
     let x = S.mk_binder_with_attrs ({x with sort=t}) imp pqual attrs in
     if Env.debug env Options.High
@@ -4454,8 +4491,13 @@ and tc_trivial_guard env t =
   Rel.force_trivial_guard env g;
   t,c
 
-and tc_attributes env attrs =
-  List.map (fun attr -> fst (tc_trivial_guard env attr)) attrs
+and tc_attributes (env:env_t) (attrs : list term) : guard_t * list term =
+  List.fold_left
+    (fun (g, attrs) attr ->
+        let attr', _, g' = tc_tot_or_gtot_term env attr in
+        Env.conj_guard g g', attr' :: attrs)
+    (Env.trivial_guard, [])
+    (List.rev attrs)
 
 let tc_check_trivial_guard env t k =
   let t, _, g = tc_check_tot_or_gtot_term env t k "" in
@@ -4815,8 +4857,20 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
   | Tm_meta {tm=t} -> __typeof_tot_or_gtot_term_fastpath env t must_tot
 
   | Tm_match {rc_opt=Some rc} -> rc.residual_typ
-  | Tm_match _
-  | Tm_let _
+
+  | Tm_let {lbs=(false, [lb]); body} ->
+    let x = BU.left lb.lbname in
+    let xb, body = SS.open_term [S.mk_binder x] body in
+    let xbinder = List.hd xb in
+    let x = xbinder.binder_bv in
+    let env_x = Env.push_bv env x in
+    let t = __typeof_tot_or_gtot_term_fastpath env_x body must_tot in
+    bind_opt t (fun t ->
+      let t = FStar.Syntax.Subst.close xb t in
+      Some t)
+
+  | Tm_match _ -> None //unelaborated matches
+  | Tm_let _ -> None //recursive lets
   | Tm_unknown
   | _ -> failwith ("Impossible! (" ^ (Print.tag_of_term t) ^ ")")
 

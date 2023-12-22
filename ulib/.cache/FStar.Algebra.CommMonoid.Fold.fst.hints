@@ -28,7 +28,7 @@
         "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19"
       ],
       0,
-      "07e35566d34e6b51f30c16d4dbacc53d"
+      "b6b877080f26a19b9ed479c4eb9d1ae3"
     ],
     [
       "FStar.Algebra.CommMonoid.Fold.fold",
@@ -54,7 +54,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "328d9450642a2467562d34520e0b5605"
+      "ff8765666b066216660698f577deb016"
     ],
     [
       "FStar.Algebra.CommMonoid.Fold.fold_equality",
@@ -97,7 +97,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "5eda9930a59b840f9fa73b79857966f4"
+      "1623268447ebf930a0edc0b1d4f78762"
     ],
     [
       "FStar.Algebra.CommMonoid.Fold.fold_singleton_lemma",
@@ -115,7 +115,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "dd96c81e3b7b3d417164e94c8e1aca3b"
+      "5403d3ff5ba7df6acc4985a6cd877d87"
     ],
     [
       "FStar.Algebra.CommMonoid.Fold.fold_singleton_lemma",
@@ -144,7 +144,7 @@
         "refinement_interpretation_Tm_refine_25948cf2cb84e8edfffe30eaf3d63408"
       ],
       0,
-      "dab456661e88c26da4bdb23a1c83436e"
+      "8c6475610e173b466e4683eb69584877"
     ],
     [
       "FStar.Algebra.CommMonoid.Fold.fold_snoc_decomposition",
@@ -171,7 +171,7 @@
         "refinement_interpretation_Tm_refine_25948cf2cb84e8edfffe30eaf3d63408"
       ],
       0,
-      "5f602b6c61fb51e6856540617965200b"
+      "1ce83064d9c2756e92fe5ac06b715068"
     ],
     [
       "FStar.Algebra.CommMonoid.Fold.fold_snoc_decomposition",
@@ -198,7 +198,7 @@
         "refinement_interpretation_Tm_refine_25948cf2cb84e8edfffe30eaf3d63408"
       ],
       0,
-      "316c140c64536ffac91bee3b4bd5e6b9"
+      "3d440c6bd9c4b29a482ed1b3fec40ee8"
     ],
     [
       "FStar.Algebra.CommMonoid.Fold.fold_equals_seq_foldm",
@@ -219,28 +219,26 @@
         "refinement_interpretation_Tm_refine_25948cf2cb84e8edfffe30eaf3d63408"
       ],
       0,
-      "dd31a584b49ab44b52ecd487afbe2ca2"
+      "599a20a1a33ad2898ad94840277a8733"
     ],
     [
       "FStar.Algebra.CommMonoid.Fold.fold_equals_seq_foldm",
       2,
       2,
-      1,
+      2,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.Algebra.CommMonoid.Fold.fold.fuel_instrumented",
-        "@fuel_correspondence_FStar.Seq.Properties.foldr_snoc.fuel_instrumented",
         "@fuel_irrelevance_FStar.Algebra.CommMonoid.Fold.fold.fuel_instrumented",
-        "@fuel_irrelevance_FStar.Seq.Properties.foldr_snoc.fuel_instrumented",
         "@query",
-        "FStar.Algebra.CommMonoid.Equiv_interpretation_Tm_arrow_72ac2ec523211f8603e00b25deb1543b",
-        "FStar.Algebra.CommMonoid.Fold_interpretation_Tm_arrow_083b4c538a6b11e763ca49735524c053",
+        "FStar.Algebra.CommMonoid.Fold_interpretation_Tm_arrow_004ab0dcd999a4ca656ba6752a7ca202",
         "FStar.Algebra.CommMonoid.Fold_interpretation_Tm_arrow_60656de9a5bc42352d608af673e1a3e9",
-        "FStar.Algebra.CommMonoid.Fold_interpretation_Tm_arrow_e7d3e73d18aa458931049152ac401210",
-        "FStar.Algebra.CommMonoid.Fold_interpretation_Tm_arrow_ef6b26184b4381c2e1f4e80e68bc4c6e",
-        "FStar.Algebra.CommMonoid.Fold_interpretation_Tm_arrow_ef77b31984da8a7c57d57134fa0c17e7",
-        "FStar.List.Tot.Base_interpretation_Tm_arrow_3c1d21b8f6dcc5e202b4ff1cafbaba81",
+        "FStar.Algebra.CommMonoid.Fold_interpretation_Tm_arrow_75b0350bde6f6ce9778608fc7d59ac98",
+        "FStar.Algebra.CommMonoid.Fold_interpretation_Tm_arrow_7e9c8688d2daa31ebffbccf539a6daab",
+        "FStar.Algebra.CommMonoid.Fold_interpretation_Tm_arrow_ba307904070a147e96aa959822fa976c",
+        "FStar.Algebra.CommMonoid.Fold_interpretation_Tm_arrow_cdfe0c618647212ef2e9549abb9712fb",
         "FStar.Seq.Base_interpretation_Tm_arrow_44bb45ed5c2534b346e0f58ea5033251",
+        "FStar.Seq.Permutation_interpretation_Tm_arrow_ef77b31984da8a7c57d57134fa0c17e7",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_39288767bd645baaad3cfe226f55ca24_3",
         "binder_x_64adf08d2b2db30b4ad332da089b0fde_5",
@@ -248,32 +246,23 @@
         "binder_x_ae567c2fb75be05905677af440075565_4",
         "binder_x_c62704c83d41fe4a341065c81536a843_2",
         "binder_x_fe28d8bcde588226b4e538b35321de05_1",
-        "data_elim_FStar.Algebra.CommMonoid.Equiv.CM",
-        "equation_FStar.Algebra.CommMonoid.Fold.init_func_from_expr",
         "equation_FStar.IntegerIntervals.closed_interval_size",
-        "equation_FStar.IntegerIntervals.counter_for",
         "equation_FStar.IntegerIntervals.greater_than",
         "equation_FStar.IntegerIntervals.ifrom_ito",
-        "equation_FStar.IntegerIntervals.interval",
         "equation_FStar.IntegerIntervals.interval_condition",
         "equation_FStar.IntegerIntervals.interval_size",
         "equation_FStar.IntegerIntervals.not_less_than",
-        "equation_FStar.IntegerIntervals.under",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd",
-        "equation_FStar.Seq.Permutation.foldm_snoc",
+        "equation_FStar.Seq.Permutation.init_func_from_expr",
         "equation_FStar.Seq.Properties.snoc",
         "equation_FStar.Seq.Properties.split",
         "equation_FStar.Seq.Properties.un_snoc", "equation_Prims.nat",
         "equation_with_fuel_FStar.Algebra.CommMonoid.Fold.fold.fuel_instrumented",
-        "equation_with_fuel_FStar.Seq.Properties.foldr_snoc.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Algebra.CommMonoid.Equiv.cm",
         "fuel_guarded_inversion_FStar.Algebra.CommMonoid.Equiv.equiv",
-        "function_token_typing_FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__mult",
         "function_token_typing_Prims.__cache_version_number__",
-        "int_inversion", "int_typing",
-        "interpretation_Tm_abs_aa596cdfe1f87b30697e767d9faf69ab",
-        "lemma_FStar.Seq.Base.init_index_",
+        "int_inversion", "int_typing", "lemma_FStar.Seq.Base.init_index_",
         "lemma_FStar.Seq.Base.lemma_create_len",
         "lemma_FStar.Seq.Base.lemma_eq_intro",
         "lemma_FStar.Seq.Base.lemma_index_create",
@@ -285,32 +274,31 @@
         "primitive_Prims.op_GreaterThanOrEqual",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
-        "proj_equation_FStar.Algebra.CommMonoid.Equiv.CM_mult",
-        "proj_equation_FStar.Algebra.CommMonoid.Equiv.CM_unit",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_Tm_refine_0558aec95819f41538d6290a1688dcd4",
         "refinement_interpretation_Tm_refine_17631fa6304dcc08d028bd475a6dd078",
         "refinement_interpretation_Tm_refine_25948cf2cb84e8edfffe30eaf3d63408",
-        "refinement_interpretation_Tm_refine_326609114723d6f4fc42ad41c843745e",
         "refinement_interpretation_Tm_refine_35a0739c434508f48d0bb1d5cd5df9e8",
+        "refinement_interpretation_Tm_refine_52faba732a2dd727d9c7ffd1ac5b283b",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_ab56f5ef13a94da150b81f6bf6347085",
+        "refinement_interpretation_Tm_refine_abca3049a96ec90a7b5c28fbbae3c526",
         "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c",
         "refinement_interpretation_Tm_refine_d3d07693cd71377864ef84dc97d10ec1",
         "refinement_interpretation_Tm_refine_d83f8da8ef6c1cb9f71d1465c1bb1c55",
-        "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19",
-        "typing_FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__unit",
+        "token_correspondence_FStar.Seq.Permutation.init_func_from_expr",
         "typing_FStar.IntegerIntervals.closed_interval_size",
-        "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___2",
-        "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.length",
-        "typing_FStar.Seq.Base.seq",
-        "typing_Tm_abs_aa596cdfe1f87b30697e767d9faf69ab",
+        "typing_FStar.Pervasives.Native.snd", "typing_FStar.Seq.Base.create",
+        "typing_FStar.Seq.Base.length", "typing_FStar.Seq.Base.seq",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "c84fe0c2eb731d95c93eb3669277d223"
+      "65f41850d39023ccd895ebf7344eac0b"
     ],
     [
       "FStar.Algebra.CommMonoid.Fold.fold_equals_seq_foldm",
@@ -392,7 +380,7 @@
         "typing_FStar.Seq.Base.seq", "well-founded-ordering-on-nat"
       ],
       0,
-      "f96d86d7e9e16a2a664fefbf91b36e52"
+      "2bd19dce908a9476c7c6b3bf49aaa688"
     ],
     [
       "FStar.Algebra.CommMonoid.Fold.fold_offset_irrelevance_lemma",
@@ -418,7 +406,7 @@
         "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19"
       ],
       0,
-      "ae14a72f64bf1d6c7d668ebb8da2a38b"
+      "987847248e51c4a49c28b355d640917a"
     ],
     [
       "FStar.Algebra.CommMonoid.Fold.fold_offset_irrelevance_lemma",
@@ -426,24 +414,53 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.Algebra.CommMonoid.Fold.fold.fuel_instrumented",
+        "@fuel_irrelevance_FStar.Algebra.CommMonoid.Fold.fold.fuel_instrumented",
+        "@query",
+        "FStar.Algebra.CommMonoid.Fold_interpretation_Tm_arrow_290c793558102c1b4ad9614d3c547411",
+        "FStar.Algebra.CommMonoid.Fold_interpretation_Tm_arrow_60656de9a5bc42352d608af673e1a3e9",
+        "FStar.Seq.Permutation_interpretation_Tm_arrow_ef77b31984da8a7c57d57134fa0c17e7",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_22ecdb31f02f9285a5b3f8046ab07263_9",
+        "binder_x_39288767bd645baaad3cfe226f55ca24_3",
+        "binder_x_542ae837e29cce06af7feab4f366c1fd_8",
+        "binder_x_64adf08d2b2db30b4ad332da089b0fde_5",
+        "binder_x_6e68e21135f969c6162d82802c49e4a2_6",
+        "binder_x_ae567c2fb75be05905677af440075565_4",
+        "binder_x_ae567c2fb75be05905677af440075565_7",
+        "binder_x_c62704c83d41fe4a341065c81536a843_2",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_1", "bool_inversion",
+        "bool_typing",
         "equation_FStar.IntegerIntervals.closed_interval_size",
         "equation_FStar.IntegerIntervals.greater_than",
         "equation_FStar.IntegerIntervals.interval",
         "equation_FStar.IntegerIntervals.interval_condition",
         "equation_FStar.IntegerIntervals.interval_size",
         "equation_FStar.IntegerIntervals.not_less_than",
-        "equation_FStar.IntegerIntervals.under", "int_inversion",
+        "equation_FStar.IntegerIntervals.under", "equation_Prims.nat",
+        "equation_with_fuel_FStar.Algebra.CommMonoid.Fold.fold.fuel_instrumented",
+        "fuel_guarded_inversion_FStar.Algebra.CommMonoid.Equiv.cm",
+        "fuel_guarded_inversion_FStar.Algebra.CommMonoid.Equiv.equiv",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing",
+        "l_quant_interp_4a5f90b7130905d7bd9ab1ce0207e35c",
         "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_GreaterThan",
+        "primitive_Prims.op_GreaterThanOrEqual",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_25948cf2cb84e8edfffe30eaf3d63408",
-        "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19"
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19",
+        "typing_FStar.IntegerIntervals.closed_interval_size",
+        "typing_FStar.IntegerIntervals.interval_condition", "unit_inversion",
+        "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "9d59c5ca7f331c82b1dd666e74dbedd6"
+      "083b464e6342349d6a4eada1f9dc7033"
     ],
     [
       "FStar.Algebra.CommMonoid.Fold.fold_offset_irrelevance_lemma",
@@ -497,7 +514,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "b16520d4ed97f9c3971fe244ed19eae2"
+      "fa044f5ec8a3f5b329f434d6537d496d"
     ],
     [
       "FStar.Algebra.CommMonoid.Fold.fold_offset_elimination_lemma",
@@ -523,7 +540,7 @@
         "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19"
       ],
       0,
-      "dc0a88214222cfff3c448d874a487228"
+      "6d3319fb7770a67f7e7b8146f43bdd6b"
     ],
     [
       "FStar.Algebra.CommMonoid.Fold.fold_offset_elimination_lemma",
@@ -551,7 +568,7 @@
         "typing_FStar.IntegerIntervals.closed_interval_size"
       ],
       0,
-      "0c8275206930e395d6b5d262fc109b12"
+      "233608186bbf97639c21c45ccc4daa55"
     ]
   ]
 ]

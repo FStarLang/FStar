@@ -32,12 +32,9 @@ module I       = FStar.Ident
 module NBETerm = FStar.TypeChecker.NBETerm
 module O       = FStar.Options
 module PC      = FStar.Parser.Const
-module Print   = FStar.Syntax.Print
 module Range   = FStar.Compiler.Range
-module RD      = FStar.Reflection.V2.Data
 module S       = FStar.Syntax.Syntax // TODO: remove, it's open
 module SS      = FStar.Syntax.Subst
-module Thunk   = FStar.Thunk
 module U       = FStar.Syntax.Util
 module Z       = FStar.BigInt
 
@@ -62,7 +59,7 @@ let mkConstruct fv us ts = mkConstruct fv (List.rev us) (List.rev ts)
 (* ^ We still need to match on them in reverse order though, so this is pretty dumb *)
 
 let fv_as_emb_typ fv = S.ET_app (FStar.Ident.string_of_lid fv.fv_name.v, [])
-let mk_emb' x y fv = mk_emb x y (mkFV fv [] []) (fv_as_emb_typ fv)
+let mk_emb' x y fv = mk_emb x y (fun () -> mkFV fv [] []) (fun () -> fv_as_emb_typ fv)
 
 let mk_lazy cb obj ty kind =
     let li = {
@@ -134,14 +131,15 @@ let e_term_aq aq =
         match t.nbe_t with
         | NBETerm.Quote (tm, qi) ->
             (* Just reuse the code from Reflection *)
-            Syntax.Embeddings.unembed (Reflection.V2.Embeddings.e_term_aq (0, [])) (S.mk (Tm_quoted (tm, qi)) Range.dummyRange) Syntax.Embeddings.id_norm_cb
+            Syntax.Embeddings.unembed #_ #(Reflection.V2.Embeddings.e_term_aq (0, [])) (S.mk (Tm_quoted (tm, qi)) Range.dummyRange) Syntax.Embeddings.id_norm_cb
         | _ ->
             None
     in
     { NBETerm.em = embed_term
     ; NBETerm.un = unembed_term
-    ; NBETerm.typ = mkFV fstar_refl_term_fv [] []
-    ; NBETerm.emb_typ = fv_as_emb_typ fstar_refl_term_fv }
+    ; NBETerm.typ = (fun () -> mkFV fstar_refl_term_fv [] [])
+    ; NBETerm.e_typ = (fun () -> fv_as_emb_typ fstar_refl_term_fv )
+    }
 
 let e_term = e_term_aq (0, [])
 
@@ -165,8 +163,8 @@ let e_aqualv =
             None
     in
     mk_emb embed_aqualv unembed_aqualv
-        (mkConstruct fstar_refl_aqualv_fv [] [])
-        (fv_as_emb_typ fstar_refl_aqualv_fv)
+        (fun () -> mkConstruct fstar_refl_aqualv_fv [] [])
+        (fun () -> fv_as_emb_typ fstar_refl_aqualv_fv)
 
 let e_binders = e_list e_binder
 
@@ -762,26 +760,6 @@ let e_comp_view =
     in
     mk_emb' embed_comp_view unembed_comp_view fstar_refl_comp_view_fv
 
-
-(* TODO: move to, Syntax.Embeddings or somewhere better even *)
-let e_order =
-    let embed_order cb (o:order) : t =
-        match o with
-        | Lt -> mkConstruct ord_Lt_fv [] []
-        | Eq -> mkConstruct ord_Eq_fv [] []
-        | Gt -> mkConstruct ord_Gt_fv [] []
-    in
-    let unembed_order cb (t:t) : option order =
-        match t.nbe_t with
-        | Construct (fv, _, []) when S.fv_eq_lid fv ord_Lt_lid -> Some Lt
-        | Construct (fv, _, []) when S.fv_eq_lid fv ord_Eq_lid -> Some Eq
-        | Construct (fv, _, []) when S.fv_eq_lid fv ord_Gt_lid -> Some Gt
-        | _ ->
-            Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded order: %s" (t_to_string t)));
-            None
-    in
-    mk_emb' embed_order unembed_order (lid_as_fv PC.order_lid None)
-
 let e_sigelt =
     let embed_sigelt cb (se:sigelt) : t =
         mk_lazy cb se fstar_refl_sigelt Lazy_sigelt
@@ -833,8 +811,8 @@ let e_lid : embedding I.lid =
         BU.map_opt (unembed e_string_list cb t) (fun p -> I.lid_of_path p Range.dummyRange)
     in
     mk_emb embed unembed
-        (mkConstruct fstar_refl_aqualv_fv [] [])
-        (fv_as_emb_typ fstar_refl_aqualv_fv)
+        (fun () -> mkConstruct fstar_refl_aqualv_fv [] [])
+        (fun () -> fv_as_emb_typ fstar_refl_aqualv_fv)
 
 let e_letbinding =
     let embed_letbinding cb (lb:letbinding) : t =
@@ -904,6 +882,8 @@ let e_sigelt_view =
     in
     mk_emb' embed_sigelt_view unembed_sigelt_view fstar_refl_sigelt_view_fv
 
+let e_name : embedding name = e_list e_string
+
 let e_qualifier =
     let embed cb (q:RD.qualifier) : t =
         match q with
@@ -925,16 +905,16 @@ let e_qualifier =
         | RD.Effect                           -> mkConstruct ref_qual_Effect.fv [] []
         | RD.OnlyName                         -> mkConstruct ref_qual_OnlyName.fv [] []
         | RD.Reflectable l ->
-            mkConstruct ref_qual_Reflectable.fv [] [as_arg (embed e_lid cb l)]
+            mkConstruct ref_qual_Reflectable.fv [] [as_arg (embed e_name cb l)]
 
         | RD.Discriminator l ->
-            mkConstruct ref_qual_Discriminator.fv [] [as_arg (embed e_lid cb l)]
+            mkConstruct ref_qual_Discriminator.fv [] [as_arg (embed e_name cb l)]
 
         | RD.Action l ->
-            mkConstruct ref_qual_Action.fv [] [as_arg (embed e_lid cb l)]
+            mkConstruct ref_qual_Action.fv [] [as_arg (embed e_name cb l)]
 
         | RD.Projector li ->
-            mkConstruct ref_qual_Projector.fv [] [as_arg (embed (e_tuple2 e_lid e_ident) cb li)]
+            mkConstruct ref_qual_Projector.fv [] [as_arg (embed (e_tuple2 e_name e_ident) cb li)]
 
         | RD.RecordType ids12 ->
             mkConstruct ref_qual_RecordType.fv [] [as_arg (embed (e_tuple2 (e_list e_ident) (e_list e_ident)) cb ids12)]
@@ -963,19 +943,19 @@ let e_qualifier =
         | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_OnlyName.lid -> Some RD.OnlyName
 
         | Construct (fv, [], [(l, _)]) when S.fv_eq_lid fv ref_qual_Reflectable.lid ->
-            BU.bind_opt (unembed e_lid cb l) (fun l ->
+            BU.bind_opt (unembed e_name cb l) (fun l ->
             Some (RD.Reflectable l))
 
         | Construct (fv, [], [(l, _)]) when S.fv_eq_lid fv ref_qual_Discriminator.lid ->
-            BU.bind_opt (unembed e_lid cb l) (fun l ->
+            BU.bind_opt (unembed e_name cb l) (fun l ->
             Some (RD.Discriminator l))
 
         | Construct (fv, [], [(l, _)]) when S.fv_eq_lid fv ref_qual_Action.lid ->
-            BU.bind_opt (unembed e_lid cb l) (fun l ->
+            BU.bind_opt (unembed e_name cb l) (fun l ->
             Some (RD.Action l))
 
         | Construct (fv, [], [(li, _)]) when S.fv_eq_lid fv ref_qual_Projector.lid ->
-            BU.bind_opt (unembed (e_tuple2 e_lid e_ident) cb li) (fun li ->
+            BU.bind_opt (unembed (e_tuple2 e_name e_ident) cb li) (fun li ->
             Some (RD.Projector li))
 
         | Construct (fv, [], [(ids12, _)]) when S.fv_eq_lid fv ref_qual_RecordType.lid ->
@@ -991,8 +971,8 @@ let e_qualifier =
             None
     in
     mk_emb embed unembed
-        (mkConstruct fstar_refl_qualifier_fv [] [])
-        (fv_as_emb_typ fstar_refl_qualifier_fv)
+        (fun () -> mkConstruct fstar_refl_qualifier_fv [] [])
+        (fun () -> fv_as_emb_typ fstar_refl_qualifier_fv)
 
 let e_qualifiers = e_list e_qualifier
 

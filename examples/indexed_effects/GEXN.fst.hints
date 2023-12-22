@@ -7,22 +7,23 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_string",
+        "@MaxIFuel_assumption", "@query",
         "disc_equation_FStar.Pervasives.Inl",
-        "disc_equation_FStar.Pervasives.Inr", "equation_GEXN.exn",
-        "fuel_guarded_inversion_FStar.Pervasives.either"
+        "disc_equation_FStar.Pervasives.Inr",
+        "fuel_guarded_inversion_FStar.Pervasives.either",
+        "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "7c60e183bb8805ddfca9ea75515ad1c0"
+      "36e45b5ae49953585a397ec6a57547b7"
     ],
     [
       "GEXN.raise",
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_string", "equation_GEXN.exn" ],
+      [ "@query", "equation_GEXN.exn" ],
       0,
-      "e14ef5de5dd7e228122606357063c115"
+      "68836a4e4acacf58749898dbfb7268d6"
     ]
   ]
 ]

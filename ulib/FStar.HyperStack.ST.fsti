@@ -597,3 +597,10 @@ val ralloc_drgn_mm (#a:Type) (#rel:preorder a) (d:drgn) (init:a)
     HS.is_mm r /\
     ralloc_post (rid_of_drgn d) init m0 r m1)
 
+
+(* This causes the verification conditition for the continuation
+of the call to this function to be done in a separate Z3 query. *)
+inline_for_extraction
+let break_vc ()
+  : STATE unit (fun p h -> spinoff (squash (p () h)))
+  = ()

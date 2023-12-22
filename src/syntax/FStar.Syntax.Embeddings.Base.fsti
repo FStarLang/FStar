@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2014 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +21,7 @@ open FStar.Compiler
 open FStar.Compiler.Effect
 open FStar.Pervasives
 open FStar.Syntax.Syntax
+module S = FStar.Syntax.Syntax
 
 module Range = FStar.Compiler.Range
 
@@ -48,16 +49,20 @@ val id_norm_cb : norm_cb
 exception Embedding_failure
 exception Unembedding_failure
 
+[@@Tactics.Typeclasses.tcclass]
 val embedding (a:Type0) : Type0
-val emb_typ_of: embedding 'a -> emb_typ
+
+// FIXME: unit to trigger instantiation
+val emb_typ_of: a:Type -> {|embedding a|} -> unit -> emb_typ
+
 val term_as_fv: term -> fv //partial!
 val mk_emb : raw_embedder 'a -> raw_unembedder 'a -> fv -> embedding 'a
 val mk_emb_full: raw_embedder 'a
               -> raw_unembedder 'a
-              -> typ
+              -> (unit -> S.typ)
               -> ('a -> string)
-              -> emb_typ
-              -> embedding 'a
+              -> (unit -> emb_typ)
+              -> Tot (embedding 'a)
 
 
 (*
@@ -70,19 +75,19 @@ val mk_emb_full: raw_embedder 'a
  * warning, and should be used only where we really expect to always be
  * able to unembed.
  *)
-val embed        : embedding 'a -> 'a -> embed_t
-val try_unembed  : embedding 'a -> term -> norm_cb -> option 'a
-val unembed      : embedding 'a -> term -> norm_cb -> option 'a
+val embed        : {| embedding 'a |} -> 'a -> embed_t
+val try_unembed  : {| embedding 'a |} -> term -> norm_cb -> option 'a
+val unembed      : {| embedding 'a |} -> term -> norm_cb -> option 'a
 
-val type_of      : embedding 'a -> typ
+val type_of      : embedding 'a -> S.typ
 val printer_of   : embedding 'a -> printer 'a
-val set_type     : typ -> embedding 'a -> embedding 'a
+val set_type     : S.typ -> embedding 'a -> embedding 'a
 
 val embed_as     : embedding 'a ->
                    ('a -> 'b) ->
                    ('b -> 'a) ->
-                   option typ -> (* optionally change the type *)
-                   embedding 'b
+                   option S.typ -> (* optionally change the type *)
+                   Tot (embedding 'b)
 
 (* Construct a simple lazy embedding as a blob. *)
 val e_lazy        : lazy_kind ->

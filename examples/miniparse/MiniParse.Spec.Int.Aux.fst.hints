@@ -25,7 +25,7 @@
         "typing_FStar.Int.Cast.uint8_to_uint16", "typing_FStar.UInt8.v"
       ],
       0,
-      "fd8602b8129080c880457d0d7a191f93"
+      "b67d54156e4638d679f9363fde8058fa"
     ],
     [
       "MiniParse.Spec.Int.Aux.encode_u16",
@@ -34,7 +34,7 @@
       1,
       [ "@query" ],
       0,
-      "0795c51895380cbbb480514c89e02da2"
+      "bf0cd24d00c2a8d58351e5c0cfcd23d2"
     ],
     [
       "MiniParse.Spec.Int.Aux.encode_u16_decode_u16",
@@ -79,7 +79,7 @@
         "typing_Prims.pow2"
       ],
       0,
-      "3f80a834cf7494db9fb60eef8fa38cea"
+      "d203f6d0b4874fcf1926ad69ef5fbf85"
     ],
     [
       "MiniParse.Spec.Int.Aux.decode_u16_encode_u16",
@@ -127,7 +127,7 @@
         "typing_MiniParse.Spec.Int.Aux.encode_u16", "typing_Prims.pow2"
       ],
       0,
-      "6681e0f7ad5d2744838028ee0a689a98"
+      "c37ec8019ce49ad149121611c6f05f97"
     ]
   ]
 ]

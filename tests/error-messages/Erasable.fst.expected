@@ -29,10 +29,12 @@
 
 >>]
 * Warning 240 at Erasable.fst(49,4-49,11):
-  - Erasable.e_nat_2 is declared but no definition was found; add an 'assume' if this is intentional
+  - Erasable.e_nat_2 is declared but no definition was found
+  - Add an 'assume' if this is intentional
 
 * Warning 240 at Erasable.fst(56,4-56,11):
-  - Erasable.e_nat_3 is declared but no definition was found; add an 'assume' if this is intentional
+  - Erasable.e_nat_3 is declared but no definition was found
+  - Add an 'assume' if this is intentional
 
 Verified module: Erasable
 All verification conditions discharged successfully

@@ -69,6 +69,7 @@ type term' =
   | Sum       of list (either binder term) * term (* dependent tuple *)
   | QForall   of list binder * patterns * term
   | QExists   of list binder * patterns * term
+  | QuantOp   of ident * list binder * patterns * term
   | Refine    of binder * term
   | NamedTyp  of ident * term
   | Paren     of term
@@ -243,7 +244,8 @@ and decl = {
   d:decl';
   drange:range;
   quals: qualifiers;
-  attrs: attributes_
+  attrs: attributes_;
+  interleaved: bool;
 }
 and effect_decl =
   (* KM : Is there really need of the generality of decl here instead of e.g. lid * term ? *)
@@ -255,6 +257,8 @@ type modul =
   | Interface of lid * list decl * bool (* flag to mark admitted interfaces *)
 type file = modul
 type inputFragment = either file (list decl)
+
+val lid_of_modul : modul -> lid
 
 (* Smart constructors *)
 val mk_decl : decl' -> range -> list decoration -> decl

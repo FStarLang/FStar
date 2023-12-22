@@ -79,15 +79,13 @@ let (symlookup :
               let uu___ =
                 FStar_Syntax_DsEnv.resolve_to_fully_qualified_name
                   tcenv.FStar_TypeChecker_Env.dsenv lid in
-              FStar_Compiler_Effect.op_Less_Bar
-                (FStar_Compiler_Util.dflt lid) uu___ in
+              FStar_Compiler_Util.dflt lid uu___ in
             let uu___ = FStar_TypeChecker_Env.try_lookup_lid tcenv lid1 in
-            FStar_Compiler_Effect.op_Bar_Greater uu___
-              (FStar_Compiler_Util.map_option
-                 (fun uu___1 ->
-                    match uu___1 with
-                    | ((uu___2, typ), r) ->
-                        ((FStar_Pervasives.Inr lid1), typ, r))) in
+            FStar_Compiler_Util.map_option
+              (fun uu___1 ->
+                 match uu___1 with
+                 | ((uu___2, typ), r) ->
+                     ((FStar_Pervasives.Inr lid1), typ, r)) uu___ in
           let docs_of_lid lid = FStar_Pervasives_Native.None in
           let def_of_lid lid =
             let uu___ = FStar_TypeChecker_Env.lookup_qname tcenv lid in
@@ -173,7 +171,7 @@ let mod_filter :
             let uu___3 =
               let uu___4 =
                 let uu___5 = FStar_Interactive_CompletionTable.mod_name md in
-                Prims.op_Hat uu___5 "." in
+                Prims.strcat uu___5 "." in
               {
                 FStar_Interactive_CompletionTable.mod_name = uu___4;
                 FStar_Interactive_CompletionTable.mod_path =

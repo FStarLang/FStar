@@ -19,6 +19,7 @@ open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 open FStar.Tactics.Result
 open FStar.Tactics.Types
+open FStar.Class.Monad
 
 module Range = FStar.Compiler.Range
 module BU    = FStar.Compiler.Util
@@ -27,28 +28,19 @@ module O     = FStar.Options
 (* Type of tactics *)
 val tac (a:Type0) : Type0
 
+instance val monad_tac : monad tac
+
 (* Simply unpack and run *)
 val run : tac 'a -> proofstate -> __result 'a
 
 (* Run, but catch exceptions as errors within the monad *)
 val run_safe : tac 'a -> proofstate -> __result 'a
 
-(* Monadic return *)
-val ret : 'a -> tac 'a
-
-(* Monadic bind *)
-val bind : tac 'a -> ('a -> tac 'b) -> tac 'b
-
-val (let!) (t:tac 'a) (k:('a -> tac 'b)) : tac 'b
-
 (* Get current proofstate *)
 val get : tac proofstate
 
 (* Get first goal *)
 val cur_goal : tac goal
-
-(* idtac: do nothing *)
-val idtac : tac unit
 
 (* Raise an exception *)
 val traise : exn -> tac 'a
@@ -68,9 +60,6 @@ val trytac : tac 'a -> tac (option 'a)
 
 (* As [trytac], but also catches exceptions and turns them into [None]. *)
 val trytac_exn : tac 'a -> tac (option 'a)
-
-(* Good old mapM *)
-val mapM : ('a -> tac 'b) -> list 'a -> tac (list 'b)
 
 (* iter combinator *)
 val iter_tac (f: 'a -> tac unit) (l:list 'a) : tac unit

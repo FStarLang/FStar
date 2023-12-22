@@ -24,7 +24,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.mem"
       ],
       0,
-      "f6fe3c6d6001779a154e7907ed82b887"
+      "85a745466f3411b3351da621411dcb69"
     ],
     [
       "Bug463b.eq1",
@@ -50,7 +50,7 @@
         "typing_FStar.List.Tot.Base.mem"
       ],
       0,
-      "80bd5b02a8427949306f6cbe248be2a2"
+      "51e227003041a7319e9b5be6daeeda17"
     ],
     [
       "Bug463b.eq1",
@@ -77,7 +77,7 @@
         "typing_FStar.List.Tot.Base.mem"
       ],
       0,
-      "2304476b0e236fcc9498fbea679551ef"
+      "308d31a77f179ab9674120e238f528b4"
     ],
     [
       "Bug463b.eq2",
@@ -98,7 +98,7 @@
         "typing_Bug463b.move_refinement"
       ],
       0,
-      "3ea3f5a059ffede885c999254940ddc1"
+      "70b4412432fe0c12dbb564fda21098c0"
     ],
     [
       "Bug463b.lemma_move_refinement_length",
@@ -112,25 +112,11 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "94187d1ff53f2f4aec5424a6d242af63"
+      "959292c39b26edb9daf72b023a05c921"
     ],
     [
       "Bug463b.lemma_move_refinement_length",
       2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "17ccbbd774a9ccb1e78299c3752743d9"
-    ],
-    [
-      "Bug463b.lemma_move_refinement_length",
-      3,
       2,
       1,
       [
@@ -155,7 +141,22 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.mem"
       ],
       0,
-      "8938bb7f3ba89ad9f65d20634bca4325"
+      "a1f5b05c6e725eed99d9dc99d873a0aa"
+    ],
+    [
+      "Bug463b.lemma_move_refinement_length",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_86d621b1b1e1a3e5c461c5f432047bba"
+      ],
+      0,
+      "c084b76ccc1de5397b3809d566ffcf51"
     ]
   ]
 ]

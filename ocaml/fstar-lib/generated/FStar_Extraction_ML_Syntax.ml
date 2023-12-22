@@ -429,7 +429,8 @@ type mlexpr' =
   | MLE_CTor of (mlpath * mlexpr Prims.list) 
   | MLE_Seq of mlexpr Prims.list 
   | MLE_Tuple of mlexpr Prims.list 
-  | MLE_Record of (mlsymbol Prims.list * (mlsymbol * mlexpr) Prims.list) 
+  | MLE_Record of (mlsymbol Prims.list * mlsymbol * (mlsymbol * mlexpr)
+  Prims.list) 
   | MLE_Proj of (mlexpr * mlpath) 
   | MLE_If of (mlexpr * mlexpr * mlexpr FStar_Pervasives_Native.option) 
   | MLE_Raise of (mlpath * mlexpr Prims.list) 
@@ -511,8 +512,9 @@ let (uu___is_MLE_Record : mlexpr' -> Prims.bool) =
   fun projectee ->
     match projectee with | MLE_Record _0 -> true | uu___ -> false
 let (__proj__MLE_Record__item___0 :
-  mlexpr' -> (mlsymbol Prims.list * (mlsymbol * mlexpr) Prims.list)) =
-  fun projectee -> match projectee with | MLE_Record _0 -> _0
+  mlexpr' ->
+    (mlsymbol Prims.list * mlsymbol * (mlsymbol * mlexpr) Prims.list))
+  = fun projectee -> match projectee with | MLE_Record _0 -> _0
 let (uu___is_MLE_Proj : mlexpr' -> Prims.bool) =
   fun projectee ->
     match projectee with | MLE_Proj _0 -> true | uu___ -> false
@@ -733,14 +735,18 @@ let (pop_unit : mltyscheme -> mltyscheme) =
          | MLTY_Fun (l, E_PURE, t) ->
              if l = ml_unit_ty
              then (vs, t)
-             else failwith "unexpected: pop_unit: domain was not unit"
-         | uu___1 -> failwith "unexpected: pop_unit: not a function type")
+             else
+               FStar_Compiler_Effect.failwith
+                 "unexpected: pop_unit: domain was not unit"
+         | uu___1 ->
+             FStar_Compiler_Effect.failwith
+               "unexpected: pop_unit: not a function type")
 let (mlpath_to_string :
   (Prims.string Prims.list * Prims.string) -> Prims.string) =
   fun mlp ->
-    Prims.op_Hat
+    Prims.strcat
       (FStar_Compiler_String.concat "." (FStar_Pervasives_Native.fst mlp))
-      (Prims.op_Hat "." (FStar_Pervasives_Native.snd mlp))
+      (Prims.strcat "." (FStar_Pervasives_Native.snd mlp))
 let rec (mlty_to_string : mlty -> Prims.string) =
   fun t ->
     match t with
@@ -834,7 +840,7 @@ let rec (mlexpr_to_string : mlexpr -> Prims.string) =
           let uu___1 = FStar_Compiler_List.map mlexpr_to_string es in
           FStar_Compiler_String.concat "; " uu___1 in
         FStar_Compiler_Util.format1 "(MLE_Tuple [%s])" uu___
-    | MLE_Record (p, es) ->
+    | MLE_Record (p, n, es) ->
         let uu___ =
           let uu___1 =
             FStar_Compiler_List.map
@@ -845,7 +851,8 @@ let rec (mlexpr_to_string : mlexpr -> Prims.string) =
                      FStar_Compiler_Util.format2 "(%s, %s)" x uu___3) es in
           FStar_Compiler_String.concat "; " uu___1 in
         FStar_Compiler_Util.format2 "(MLE_Record (%s, [%s]))"
-          (FStar_Compiler_String.concat "; " p) uu___
+          (FStar_Compiler_String.concat "; "
+             (FStar_Compiler_List.op_At p [n])) uu___
     | MLE_Proj (e1, p) ->
         let uu___ = mlexpr_to_string e1 in
         FStar_Compiler_Util.format2 "(MLE_Proj (%s, %s))" uu___
@@ -1021,8 +1028,7 @@ let (mlmodule1_to_string : mlmodule1 -> Prims.string) =
     | MLM_Ty d ->
         let uu___ =
           let uu___1 = FStar_Compiler_List.map one_mltydecl_to_string d in
-          FStar_Compiler_Effect.op_Bar_Greater uu___1
-            (FStar_Compiler_String.concat "; ") in
+          FStar_Compiler_String.concat "; " uu___1 in
         FStar_Compiler_Util.format1 "MLM_Ty [%s]" uu___
     | MLM_Let l ->
         let uu___ = mlletbinding_to_string l in
@@ -1046,6 +1052,5 @@ let (mlmodule_to_string : mlmodule -> Prims.string) =
   fun m ->
     let uu___ =
       let uu___1 = FStar_Compiler_List.map mlmodule1_to_string m in
-      FStar_Compiler_Effect.op_Bar_Greater uu___1
-        (FStar_Compiler_String.concat ";\n") in
+      FStar_Compiler_String.concat ";\n" uu___1 in
     FStar_Compiler_Util.format1 "[ %s ]" uu___

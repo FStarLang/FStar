@@ -26,6 +26,7 @@ open FStar.Compiler.Util
 open FStar.Const
 open FStar.Compiler.List
 open FStar.Parser.AST
+open FStar.Class.Monad
 
 module I = FStar.Ident
 module S  = FStar.Syntax.Syntax
@@ -212,6 +213,8 @@ let is_tuple_constructor_lid lid =
   || C.is_dtuple_data_lid' lid
 
 let may_shorten lid =
+  if Options.print_real_names () then false
+  else
   match string_of_lid lid with
   | "Prims.Nil"
   | "Prims.Cons" -> false
@@ -224,24 +227,30 @@ let maybe_shorten_fv env fv : lident =
   let lid = fv.fv_name.v in
   maybe_shorten_lid env lid
 
-let serialize_machine_integer_desc (s,w) =
-  BU.format3 "FStar.%sInt%s.__%sint_to_t"
-    (match s with
-     | Unsigned -> "U"
-     | Signed -> "")
-    (match w with
-     | Int8 -> "8"
-     | Int16 -> "16"
-     | Int32 -> "32"
-     | Int64 -> "64")
-    (match s with
-     | Unsigned -> "u"
-     | Signed -> "")
+(* Sizet handled below *)
+let serialize_machine_integer_desc (s,w) : list string =
+  let sU = match s with | Unsigned -> "U" | Signed -> "" in
+  let sW =
+    match w with
+    | Int8 -> "8"
+    | Int16 -> "16"
+    | Int32 -> "32"
+    | Int64 -> "64"
+  in
+  let su = match s with | Unsigned -> "u" | Signed -> "" in
+  [ BU.format3 "FStar.%sInt%s.__%sint_to_t" sU sW su;
+    BU.format3 "FStar.%sInt%s.%sint_to_t" sU sW su ]
 
 let parse_machine_integer_desc =
   let signs = [Unsigned; Signed] in
   let widths = [Int8; Int16; Int32; Int64] in
-  let descs = List.collect (fun s -> List.map (fun w -> (s, w), serialize_machine_integer_desc (s, w)) widths) signs in
+  let descs =
+    ((Unsigned, Sizet), "FStar.SizeT.__uint_to_t") ::
+    (let! s = signs in
+     let! w = widths in
+     let! desc = serialize_machine_integer_desc (s, w) in
+     [((s, w), desc)])
+  in
   fun (fv:fv) ->
     List.tryFind (fun (_, d) -> d = Ident.string_of_lid (lid_of_fv fv)) descs
 
@@ -553,12 +562,16 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
             && Options.print_implicits () ->
           resugar_as_app e args
 
-        | Some (op, _) when op = "forall" || op = "exists" ->
+        | Some (op, _) 
+          when starts_with op "forall"
+            || starts_with op "exists" ->
           (* desugared from QForall(binders * patterns * body) to Tm_app(forall, Tm_abs(binders, Tm_meta(body, meta_pattern(list args)*)
-          let rec uncurry xs pats (t:A.term) = match t.tm with
+          let rec uncurry xs pats (t:A.term) flavor_matches =
+            match t.tm with
             | A.QExists(xs', (_, pats'), body)
-            | A.QForall(xs', (_, pats'), body) ->
-                uncurry (xs@xs') (pats@pats') body
+            | A.QForall(xs', (_, pats'), body)
+            | A.QuantOp(_, xs', (_, pats'), body) when flavor_matches t ->
+                uncurry (xs@xs') (pats@pats') body flavor_matches
             | _ ->
                 xs, pats, t
           in
@@ -585,11 +598,27 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
                     pats, body
                   | _ -> [], resugar_term' env body
                 in
-                let xs, pats, body = uncurry xs pats body in
+                let decompile_op op =
+                   match FStar.Parser.AST.string_to_op op with
+                   | None -> op
+                  | Some (op, _) -> op
+                in
+                let flavor_matches t =
+                  match t.tm, op with
+                  | A.QExists _, "exists"
+                  | A.QForall _, "forall" -> true
+                  | A.QuantOp(id, _, _, _), _ ->
+                    Ident.string_of_id id = op
+                  | _ -> false
+                in
+                let xs, pats, body = uncurry xs pats body flavor_matches in
+                let binders = A.idents_of_binders xs t.pos in
                 if op = "forall"
-                then mk (A.QForall(xs, (A.idents_of_binders xs t.pos, pats), body))
-                else mk (A.QExists(xs, (A.idents_of_binders xs t.pos, pats), body))
-
+                then mk (A.QForall(xs, (binders, pats), body))
+                else if op = "exists"
+                then mk (A.QExists(xs, (binders, pats), body))
+                else mk (A.QuantOp(Ident.id_of_text op, xs, (binders, pats), body))
+                 
             | _ ->
               (*forall added by typechecker.normalize doesn't not have Tm_abs as body*)
               (*TODO:  should we resugar them back as forall/exists or just as the term of the body *)
@@ -1028,9 +1057,9 @@ and resugar_binder' env (b:S.binder) r : option A.binder =
         A.mk_binder (A.Annotated (bv_as_unique_ident b.binder_bv, e)) r A.Type_level imp
   end
 
-and resugar_bv_as_pat' env (v: S.bv) aqual (body_bv: BU.set bv) typ_opt =
+and resugar_bv_as_pat' env (v: S.bv) aqual (body_bv: Set.set bv) typ_opt =
   let mk a = A.mk_pattern a (S.range_of_bv v) in
-  let used = BU.set_mem v body_bv in
+  let used = Set.mem v body_bv in
   let pat =
     mk (if used
         then A.PatVar (bv_as_unique_ident v, aqual, [])
@@ -1046,7 +1075,7 @@ and resugar_bv_as_pat env (x:S.bv) qual body_bv: option A.pattern =
    (resugar_bqual env qual)
    (fun bq -> resugar_bv_as_pat' env x bq body_bv (Some <| SS.compress x.sort))
 
-and resugar_pat' env (p:S.pat) (branch_bv: set bv) : A.pattern =
+and resugar_pat' env (p:S.pat) (branch_bv: Set.set bv) : A.pattern =
   (* We lose information when desugar PatAscribed to able to resugar it back *)
   let mk a = A.mk_pattern a p.p in
   let to_arg_qual bopt = // FIXME do (Some false) and None mean the same thing?
@@ -1057,7 +1086,7 @@ and resugar_pat' env (p:S.pat) (branch_bv: set bv) : A.pattern =
       //FIXME
              let might_be_used =
                match pattern.v with
-               | Pat_var bv -> Util.set_mem bv branch_bv
+               | Pat_var bv -> Set.mem bv branch_bv
                | _ -> true in
              is_implicit && might_be_used) args) in
   let resugar_plain_pat_cons' fv args =
@@ -1254,6 +1283,7 @@ let mk_decl r q d' =
     quals = List.choose resugar_qualifier q ;
     (* TODO : are these stocked up somewhere ? *)
     attrs = [] ;
+    interleaved = false;
   }
 
 let decl'_to_decl se d' =
@@ -1477,7 +1507,7 @@ let resugar_sigelt se : option A.decl =
 let resugar_comp (c:S.comp) : A.term =
   noenv resugar_comp' c
 
-let resugar_pat (p:S.pat) (branch_bv: set bv) : A.pattern =
+let resugar_pat (p:S.pat) (branch_bv: Set.set bv) : A.pattern =
   noenv resugar_pat' p branch_bv
 
 let resugar_binder (b:S.binder) r : option A.binder =

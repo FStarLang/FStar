@@ -89,16 +89,22 @@ val term_to_doc           : term -> Pprint.document
 val comp_to_doc           : comp -> Pprint.document
 val sigelt_to_doc         : sigelt -> Pprint.document
 
-instance val pretty_term     : pretty term
-instance val pretty_univ     : pretty universe
-instance val pretty_comp     : pretty comp
-instance val pretty_sigelt   : pretty sigelt
+instance val pretty_term        : pretty term
+instance val pretty_univ        : pretty universe
+instance val pretty_comp        : pretty comp
+instance val pretty_sigelt      : pretty sigelt
 
-instance val showable_term   : showable term
-instance val showable_univ   : showable universe
-instance val showable_comp   : showable comp
-instance val showable_sigelt : showable sigelt
-instance val showable_bv     : showable bv
-instance val showable_binder : showable binder
-instance val showable_uvar   : showable uvar
-instance val showable_ctxu   : showable ctx_uvar
+instance val showable_term      : showable term
+instance val showable_univ      : showable universe
+instance val showable_comp      : showable comp
+instance val showable_sigelt    : showable sigelt
+instance val showable_args      : showable args
+instance val showable_bv        : showable bv
+instance val showable_binder    : showable binder
+instance val showable_uvar      : showable uvar
+instance val showable_ctxu      : showable ctx_uvar
+instance val showable_binding   : showable binding
+instance val showable_pragma    : showable pragma
+instance val showable_subst_elt : showable subst_elt
+instance val showable_branch    : showable branch
+instance val showable_qualifier : showable qualifier

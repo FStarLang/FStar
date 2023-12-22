@@ -65,32 +65,6 @@ let (uu___is_ET_app : emb_typ -> Prims.bool) =
 let (__proj__ET_app__item___0 :
   emb_typ -> (Prims.string * emb_typ Prims.list)) =
   fun projectee -> match projectee with | ET_app _0 -> _0
-let rec (emb_typ_to_string : emb_typ -> Prims.string) =
-  fun uu___ ->
-    match uu___ with
-    | ET_abstract -> "abstract"
-    | ET_app (h, []) -> h
-    | ET_app (h, args) ->
-        let uu___1 =
-          let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                let uu___5 = FStar_Compiler_List.map emb_typ_to_string args in
-                FStar_Compiler_Effect.op_Bar_Greater uu___5
-                  (FStar_Compiler_String.concat " ") in
-              Prims.op_Hat uu___4 ")" in
-            Prims.op_Hat " " uu___3 in
-          Prims.op_Hat h uu___2 in
-        Prims.op_Hat "(" uu___1
-    | ET_fun (a, b) ->
-        let uu___1 =
-          let uu___2 = emb_typ_to_string a in
-          let uu___3 =
-            let uu___4 = emb_typ_to_string b in Prims.op_Hat ") -> " uu___4 in
-          Prims.op_Hat uu___2 uu___3 in
-        Prims.op_Hat "(" uu___1
-let (showable_emb_typ : emb_typ FStar_Class_Show.showable) =
-  { FStar_Class_Show.show = emb_typ_to_string }
 type version = {
   major: Prims.int ;
   minor: Prims.int }[@@deriving yojson,show]
@@ -185,21 +159,6 @@ let (uu___is_Delta_abstract : delta_depth -> Prims.bool) =
     match projectee with | Delta_abstract _0 -> true | uu___ -> false
 let (__proj__Delta_abstract__item___0 : delta_depth -> delta_depth) =
   fun projectee -> match projectee with | Delta_abstract _0 -> _0
-let rec (delta_depth_to_string : delta_depth -> Prims.string) =
-  fun uu___ ->
-    match uu___ with
-    | Delta_constant_at_level i ->
-        let uu___1 = FStar_Compiler_Util.string_of_int i in
-        Prims.op_Hat "Delta_constant_at_level " uu___1
-    | Delta_equational_at_level i ->
-        let uu___1 = FStar_Compiler_Util.string_of_int i in
-        Prims.op_Hat "Delta_equational_at_level " uu___1
-    | Delta_abstract d ->
-        let uu___1 =
-          let uu___2 = delta_depth_to_string d in Prims.op_Hat uu___2 ")" in
-        Prims.op_Hat "Delta_abstract (" uu___1
-let (showable_delta_depth : delta_depth FStar_Class_Show.showable) =
-  { FStar_Class_Show.show = delta_depth_to_string }
 type should_check_uvar =
   | Allow_unresolved of Prims.string 
   | Allow_untyped of Prims.string 
@@ -316,7 +275,7 @@ and ctx_uvar =
   ctx_uvar_range: FStar_Compiler_Range_Type.range ;
   ctx_uvar_meta: ctx_uvar_meta_t FStar_Pervasives_Native.option }
 and ctx_uvar_meta_t =
-  | Ctx_uvar_meta_tac of (FStar_Compiler_Dyn.dyn * term' syntax) 
+  | Ctx_uvar_meta_tac of term' syntax 
   | Ctx_uvar_meta_attr of term' syntax 
 and uvar_decoration =
   {
@@ -684,8 +643,7 @@ let (__proj__Mkctx_uvar__item__ctx_uvar_meta :
 let (uu___is_Ctx_uvar_meta_tac : ctx_uvar_meta_t -> Prims.bool) =
   fun projectee ->
     match projectee with | Ctx_uvar_meta_tac _0 -> true | uu___ -> false
-let (__proj__Ctx_uvar_meta_tac__item___0 :
-  ctx_uvar_meta_t -> (FStar_Compiler_Dyn.dyn * term' syntax)) =
+let (__proj__Ctx_uvar_meta_tac__item___0 : ctx_uvar_meta_t -> term' syntax) =
   fun projectee -> match projectee with | Ctx_uvar_meta_tac _0 -> _0
 let (uu___is_Ctx_uvar_meta_attr : ctx_uvar_meta_t -> Prims.bool) =
   fun projectee ->
@@ -1170,7 +1128,7 @@ type term = term' syntax
 type uvar =
   ((term' syntax FStar_Pervasives_Native.option * uvar_decoration)
     FStar_Unionfind.p_uvar * version * FStar_Compiler_Range_Type.range)
-type uvars = ctx_uvar FStar_Compiler_Util.set
+type uvars = ctx_uvar FStar_Compiler_Set.t
 type comp = comp' syntax
 type ascription =
   ((term' syntax, comp' syntax) FStar_Pervasives.either * term' syntax
@@ -1191,7 +1149,7 @@ type args =
 type binders = binder Prims.list
 type lbname = (bv, fv) FStar_Pervasives.either
 type letbindings = (Prims.bool * letbinding Prims.list)
-type freenames = bv FStar_Compiler_Util.set
+type freenames = bv FStar_Compiler_Set.t
 type attribute = term' syntax
 type tscheme = (univ_name Prims.list * term' syntax)
 type gamma = binding Prims.list
@@ -1304,6 +1262,58 @@ let (uu___is_OnlyName : qualifier -> Prims.bool) =
 let (uu___is_InternalAssumption : qualifier -> Prims.bool) =
   fun projectee ->
     match projectee with | InternalAssumption -> true | uu___ -> false
+let rec (emb_typ_to_string : emb_typ -> Prims.string) =
+  fun uu___ ->
+    match uu___ with
+    | ET_abstract -> "abstract"
+    | ET_app (h, []) -> h
+    | ET_app (h, args1) ->
+        let uu___1 =
+          let uu___2 =
+            let uu___3 =
+              let uu___4 =
+                let uu___5 = FStar_Compiler_List.map emb_typ_to_string args1 in
+                FStar_Compiler_String.concat " " uu___5 in
+              Prims.strcat uu___4 ")" in
+            Prims.strcat " " uu___3 in
+          Prims.strcat h uu___2 in
+        Prims.strcat "(" uu___1
+    | ET_fun (a, b) ->
+        let uu___1 =
+          let uu___2 = emb_typ_to_string a in
+          let uu___3 =
+            let uu___4 = emb_typ_to_string b in Prims.strcat ") -> " uu___4 in
+          Prims.strcat uu___2 uu___3 in
+        Prims.strcat "(" uu___1
+let (showable_emb_typ : emb_typ FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = emb_typ_to_string }
+let rec (delta_depth_to_string : delta_depth -> Prims.string) =
+  fun uu___ ->
+    match uu___ with
+    | Delta_constant_at_level i ->
+        let uu___1 = FStar_Compiler_Util.string_of_int i in
+        Prims.strcat "Delta_constant_at_level " uu___1
+    | Delta_equational_at_level i ->
+        let uu___1 = FStar_Compiler_Util.string_of_int i in
+        Prims.strcat "Delta_equational_at_level " uu___1
+    | Delta_abstract d ->
+        let uu___1 =
+          let uu___2 = delta_depth_to_string d in Prims.strcat uu___2 ")" in
+        Prims.strcat "Delta_abstract (" uu___1
+let (showable_delta_depth : delta_depth FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = delta_depth_to_string }
+let (showable_should_check_uvar :
+  should_check_uvar FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | Allow_unresolved s -> Prims.strcat "Allow_unresolved " s
+         | Allow_untyped s -> Prims.strcat "Allow_untyped " s
+         | Allow_ghost s -> Prims.strcat "Allow_ghost " s
+         | Strict -> "Strict"
+         | Already_checked -> "Already_checked")
+  }
 let (lazy_chooser :
   (lazy_kind -> lazyinfo -> term) FStar_Pervasives_Native.option
     FStar_Compiler_Effect.ref)
@@ -2259,7 +2269,76 @@ let (lookup_aq : bv -> antiquotations -> term) =
                       - Prims.int_one)
                      - bv1.index)
                     + (FStar_Pervasives_Native.fst aq))) ()
-      with | uu___ -> failwith "antiquotation out of bounds"
+      with
+      | uu___ -> FStar_Compiler_Effect.failwith "antiquotation out of bounds"
+let deq_instance_from_cmp :
+  'uuuuu .
+    ('uuuuu -> 'uuuuu -> FStar_Compiler_Order.order) ->
+      'uuuuu FStar_Class_Deq.deq
+  =
+  fun f ->
+    {
+      FStar_Class_Deq.op_Equals_Question =
+        (fun x -> fun y -> let uu___ = f x y in FStar_Compiler_Order.eq uu___)
+    }
+let ord_instance_from_cmp :
+  'uuuuu .
+    ('uuuuu -> 'uuuuu -> FStar_Compiler_Order.order) ->
+      'uuuuu FStar_Class_Ord.ord
+  =
+  fun f ->
+    {
+      FStar_Class_Ord.super = (deq_instance_from_cmp f);
+      FStar_Class_Ord.cmp = f
+    }
+let (order_univ_name : univ_name -> univ_name -> Prims.int) =
+  fun x ->
+    fun y ->
+      let uu___ = FStar_Ident.string_of_id x in
+      let uu___1 = FStar_Ident.string_of_id y in
+      FStar_Compiler_String.compare uu___ uu___1
+let (deq_bv : bv FStar_Class_Deq.deq) =
+  deq_instance_from_cmp
+    (fun x ->
+       fun y ->
+         let uu___ = order_bv x y in
+         FStar_Compiler_Order.order_from_int uu___)
+let (deq_ident : FStar_Ident.ident FStar_Class_Deq.deq) =
+  deq_instance_from_cmp
+    (fun x ->
+       fun y ->
+         let uu___ = order_ident x y in
+         FStar_Compiler_Order.order_from_int uu___)
+let (deq_fv : FStar_Ident.lident FStar_Class_Deq.deq) =
+  deq_instance_from_cmp
+    (fun x ->
+       fun y ->
+         let uu___ = order_fv x y in
+         FStar_Compiler_Order.order_from_int uu___)
+let (deq_univ_name : univ_name FStar_Class_Deq.deq) =
+  deq_instance_from_cmp
+    (fun x ->
+       fun y ->
+         let uu___ = order_univ_name x y in
+         FStar_Compiler_Order.order_from_int uu___)
+let (ord_bv : bv FStar_Class_Ord.ord) =
+  ord_instance_from_cmp
+    (fun x ->
+       fun y ->
+         let uu___ = order_bv x y in
+         FStar_Compiler_Order.order_from_int uu___)
+let (ord_ident : FStar_Ident.ident FStar_Class_Ord.ord) =
+  ord_instance_from_cmp
+    (fun x ->
+       fun y ->
+         let uu___ = order_ident x y in
+         FStar_Compiler_Order.order_from_int uu___)
+let (ord_fv : FStar_Ident.lident FStar_Class_Ord.ord) =
+  ord_instance_from_cmp
+    (fun x ->
+       fun y ->
+         let uu___ = order_fv x y in
+         FStar_Compiler_Order.order_from_int uu___)
 let syn :
   'uuuuu 'uuuuu1 'uuuuu2 .
     'uuuuu -> 'uuuuu1 -> ('uuuuu1 -> 'uuuuu -> 'uuuuu2) -> 'uuuuu2
@@ -2272,31 +2351,24 @@ let mk_uvs :
   'uuuuu .
     unit -> 'uuuuu FStar_Pervasives_Native.option FStar_Compiler_Effect.ref
   = fun uu___ -> FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None
-let (new_bv_set : unit -> bv FStar_Compiler_Util.set) =
-  fun uu___ -> FStar_Compiler_Util.new_set order_bv
-let (new_id_set : unit -> FStar_Ident.ident FStar_Compiler_Util.set) =
-  fun uu___ -> FStar_Compiler_Util.new_set order_ident
-let (new_fv_set : unit -> FStar_Ident.lident FStar_Compiler_Util.set) =
-  fun uu___ -> FStar_Compiler_Util.new_set order_fv
-let (order_univ_name : univ_name -> univ_name -> Prims.int) =
-  fun x ->
-    fun y ->
-      let uu___ = FStar_Ident.string_of_id x in
-      let uu___1 = FStar_Ident.string_of_id y in
-      FStar_Compiler_String.compare uu___ uu___1
-let (new_universe_names_set : unit -> univ_name FStar_Compiler_Util.set) =
-  fun uu___ -> FStar_Compiler_Util.new_set order_univ_name
+let (new_bv_set : unit -> bv FStar_Compiler_Set.t) =
+  fun uu___ -> FStar_Compiler_Set.empty ord_bv ()
+let (new_id_set : unit -> FStar_Ident.ident FStar_Compiler_Set.t) =
+  fun uu___ -> FStar_Compiler_Set.empty ord_ident ()
+let (new_fv_set : unit -> FStar_Ident.lident FStar_Compiler_Set.t) =
+  fun uu___ -> FStar_Compiler_Set.empty ord_fv ()
+let (new_universe_names_set : unit -> univ_name FStar_Compiler_Set.t) =
+  fun uu___ -> FStar_Compiler_Set.empty ord_ident ()
 type path = Prims.string Prims.list
 type subst_t = subst_elt Prims.list
 let (no_names : freenames) = new_bv_set ()
-let (no_fvars : FStar_Ident.lident FStar_Compiler_Util.set) = new_fv_set ()
-let (no_universe_names : univ_name FStar_Compiler_Util.set) =
+let (no_fvars : FStar_Ident.lident FStar_Compiler_Set.t) = new_fv_set ()
+let (no_universe_names : univ_name FStar_Compiler_Set.t) =
   new_universe_names_set ()
 let (freenames_of_list : bv Prims.list -> freenames) =
-  fun l ->
-    FStar_Compiler_List.fold_right FStar_Compiler_Util.set_add l no_names
+  fun l -> FStar_Compiler_Set.addn ord_bv l no_names
 let (list_of_freenames : freenames -> bv Prims.list) =
-  fun fvs -> FStar_Compiler_Util.set_elements fvs
+  fun fvs -> FStar_Compiler_Set.elems ord_bv fvs
 let mk : 'a . 'a -> FStar_Compiler_Range_Type.range -> 'a syntax =
   fun t ->
     fun r ->
@@ -2308,9 +2380,7 @@ let (bv_to_tm : bv -> term) =
 let (bv_to_name : bv -> term) =
   fun bv1 -> let uu___ = range_of_bv bv1 in mk (Tm_name bv1) uu___
 let (binders_to_names : binders -> term Prims.list) =
-  fun bs ->
-    FStar_Compiler_Effect.op_Bar_Greater bs
-      (FStar_Compiler_List.map (fun b -> bv_to_name b.binder_bv))
+  fun bs -> FStar_Compiler_List.map (fun b -> bv_to_name b.binder_bv) bs
 let (mk_Tm_app : term -> args -> FStar_Compiler_Range_Type.range -> term) =
   fun t1 ->
     fun args1 ->
@@ -2324,7 +2394,8 @@ let (mk_Tm_uinst : term -> universes -> term) =
       match t.n with
       | Tm_fvar uu___ ->
           (match us with | [] -> t | us1 -> mk (Tm_uinst (t, us1)) t.pos)
-      | uu___ -> failwith "Unexpected universe instantiation"
+      | uu___ ->
+          FStar_Compiler_Effect.failwith "Unexpected universe instantiation"
 let (extend_app_n : term -> args -> FStar_Compiler_Range_Type.range -> term)
   =
   fun t ->
@@ -2502,16 +2573,13 @@ let (is_top_level : letbinding Prims.list -> Prims.bool) =
 let (freenames_of_binders : binders -> freenames) =
   fun bs ->
     FStar_Compiler_List.fold_right
-      (fun b -> fun out -> FStar_Compiler_Util.set_add b.binder_bv out) bs
+      (fun b -> fun out -> FStar_Compiler_Set.add ord_bv b.binder_bv out) bs
       no_names
 let (binders_of_list : bv Prims.list -> binders) =
-  fun fvs ->
-    FStar_Compiler_Effect.op_Bar_Greater fvs
-      (FStar_Compiler_List.map (fun t -> mk_binder t))
+  fun fvs -> FStar_Compiler_List.map (fun t -> mk_binder t) fvs
 let (binders_of_freenames : freenames -> binders) =
   fun fvs ->
-    let uu___ = FStar_Compiler_Util.set_elements fvs in
-    FStar_Compiler_Effect.op_Bar_Greater uu___ binders_of_list
+    let uu___ = FStar_Compiler_Set.elems ord_bv fvs in binders_of_list uu___
 let (is_bqual_implicit : bqual -> Prims.bool) =
   fun uu___ ->
     match uu___ with
@@ -2553,8 +2621,7 @@ let (pat_bvs : pat -> bv Prims.list) =
             (fun b1 ->
                fun uu___2 -> match uu___2 with | (p2, uu___3) -> aux b1 p2) b
             pats in
-    let uu___ = aux [] p in
-    FStar_Compiler_Effect.op_Less_Bar FStar_Compiler_List.rev uu___
+    let uu___ = aux [] p in FStar_Compiler_List.rev uu___
 let (freshen_binder : binder -> binder) =
   fun b ->
     let uu___ = freshen_bv b.binder_bv in
@@ -2572,7 +2639,7 @@ let (new_univ_name :
     let uu___ =
       let uu___1 =
         let uu___2 = FStar_Compiler_Util.string_of_int id in
-        Prims.op_Hat FStar_Ident.reserved_prefix uu___2 in
+        Prims.strcat FStar_Ident.reserved_prefix uu___2 in
       (uu___1, (range_of_ropt ropt)) in
     FStar_Ident.mk_ident uu___
 let (lbname_eq :
@@ -2805,26 +2872,27 @@ let (t_sealed_of : term -> term) =
       mk_Tm_uinst uu___1 [U_zero] in
     let uu___1 = let uu___2 = as_arg t in [uu___2] in
     mk_Tm_app uu___ uu___1 FStar_Compiler_Range_Type.dummyRange
+let (t_erased_of : term -> term) =
+  fun t ->
+    let uu___ =
+      let uu___1 = tabbrev FStar_Parser_Const.erased_lid in
+      mk_Tm_uinst uu___1 [U_zero] in
+    let uu___1 = let uu___2 = as_arg t in [uu___2] in
+    mk_Tm_app uu___ uu___1 FStar_Compiler_Range_Type.dummyRange
 let (unit_const_with_range : FStar_Compiler_Range_Type.range -> term) =
   fun r -> mk (Tm_constant FStar_Const.Const_unit) r
 let (unit_const : term) =
   unit_const_with_range FStar_Compiler_Range_Type.dummyRange
 let has_range_syntax : 'a . unit -> 'a syntax FStar_Class_HasRange.hasRange =
   fun uu___ ->
-    (fun uu___ ->
-       Obj.magic
-         {
-           FStar_Class_HasRange.pos = (fun t -> t.pos);
-           FStar_Class_HasRange.setPos =
-             (fun r ->
-                fun t ->
-                  {
-                    n = (t.n);
-                    pos = r;
-                    vars = (t.vars);
-                    hash_code = (t.hash_code)
-                  })
-         }) uu___
+    {
+      FStar_Class_HasRange.pos = (fun t -> t.pos);
+      FStar_Class_HasRange.setPos =
+        (fun r ->
+           fun t ->
+             { n = (t.n); pos = r; vars = (t.vars); hash_code = (t.hash_code)
+             })
+    }
 let has_range_withinfo :
   'a . unit -> 'a withinfo_t FStar_Class_HasRange.hasRange =
   fun uu___ ->
@@ -2847,6 +2915,36 @@ let (has_range_sigelt : sigelt FStar_Class_HasRange.hasRange) =
              sigopens_and_abbrevs = (t.sigopens_and_abbrevs);
              sigopts = (t.sigopts)
            })
+  }
+let (showable_lazy_kind : lazy_kind FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | BadLazy -> "BadLazy"
+         | Lazy_bv -> "Lazy_bv"
+         | Lazy_namedv -> "Lazy_namedv"
+         | Lazy_binder -> "Lazy_binder"
+         | Lazy_optionstate -> "Lazy_optionstate"
+         | Lazy_fvar -> "Lazy_fvar"
+         | Lazy_comp -> "Lazy_comp"
+         | Lazy_env -> "Lazy_env"
+         | Lazy_proofstate -> "Lazy_proofstate"
+         | Lazy_goal -> "Lazy_goal"
+         | Lazy_sigelt -> "Lazy_sigelt"
+         | Lazy_letbinding -> "Lazy_letbinding"
+         | Lazy_uvar -> "Lazy_uvar"
+         | Lazy_universe -> "Lazy_universe"
+         | Lazy_universe_uvar -> "Lazy_universe_uvar"
+         | Lazy_issue -> "Lazy_issue"
+         | Lazy_doc -> "Lazy_doc"
+         | Lazy_ident -> "Lazy_ident"
+         | Lazy_tref -> "Lazy_tref"
+         | Lazy_embedding uu___1 -> "Lazy_embedding _"
+         | Lazy_extension s -> Prims.strcat "Lazy_extension " s
+         | uu___1 ->
+             FStar_Compiler_Effect.failwith
+               "FIXME! lazy_kind_to_string must be complete")
   }
 let (deq_lazy_kind : lazy_kind FStar_Class_Deq.deq) =
   {
@@ -2876,33 +2974,5 @@ let (deq_lazy_kind : lazy_kind FStar_Class_Deq.deq) =
            | (Lazy_extension s, Lazy_extension t) -> s = t
            | (Lazy_embedding uu___, uu___1) -> false
            | (uu___, Lazy_embedding uu___1) -> false
-           | uu___ -> failwith "FIXME! eq_lazy_kind must be complete")
-  }
-let (showable_lazy_kind : lazy_kind FStar_Class_Show.showable) =
-  {
-    FStar_Class_Show.show =
-      (fun uu___ ->
-         match uu___ with
-         | BadLazy -> "BadLazy"
-         | Lazy_bv -> "Lazy_bv"
-         | Lazy_namedv -> "Lazy_namedv"
-         | Lazy_binder -> "Lazy_binder"
-         | Lazy_optionstate -> "Lazy_optionstate"
-         | Lazy_fvar -> "Lazy_fvar"
-         | Lazy_comp -> "Lazy_comp"
-         | Lazy_env -> "Lazy_env"
-         | Lazy_proofstate -> "Lazy_proofstate"
-         | Lazy_goal -> "Lazy_goal"
-         | Lazy_sigelt -> "Lazy_sigelt"
-         | Lazy_letbinding -> "Lazy_letbinding"
-         | Lazy_uvar -> "Lazy_uvar"
-         | Lazy_universe -> "Lazy_universe"
-         | Lazy_universe_uvar -> "Lazy_universe_uvar"
-         | Lazy_issue -> "Lazy_issue"
-         | Lazy_doc -> "Lazy_doc"
-         | Lazy_ident -> "Lazy_ident"
-         | Lazy_tref -> "Lazy_tref"
-         | Lazy_embedding uu___1 -> "Lazy_embedding _"
-         | Lazy_extension s -> Prims.op_Hat "Lazy_extension " s
-         | uu___1 -> failwith "FIXME! lazy_kind_to_string must be complete")
+           | uu___ -> false)
   }

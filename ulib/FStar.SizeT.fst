@@ -21,6 +21,7 @@ let fits_at_least_16 _ = ()
 let v x =
   U64.v x
 
+irreducible
 let uint_to_t x =
   U64.uint_to_t x
 

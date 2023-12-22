@@ -24,37 +24,35 @@ open FStar.Reflection.V1.Data
 module O = FStar.Options
 module RD = FStar.Reflection.V1.Data
 
-(* Embeddings *)
+(* Embeddings. We mark the ones proper to this module as instances *)
 val e_bv            : embedding bv
 val e_binder        : embedding binder
-val e_binder_view   : embedding binder_view
+instance val e_binder_view   : embedding binder_view
 val e_binders       : embedding binders
 val e_term          : embedding term
-val e_term_view     : embedding term_view
+instance val e_term_view     : embedding term_view
 val e_fv            : embedding fv
 val e_comp          : embedding comp
-val e_comp_view     : embedding comp_view
-val e_const         : embedding vconst
+instance val e_comp_view     : embedding comp_view
+instance val e_const         : embedding vconst
 val e_env           : embedding FStar.TypeChecker.Env.env
-val e_pattern       : embedding pattern
-val e_branch        : embedding Data.branch
-val e_aqualv        : embedding aqualv
-val e_argv          : embedding argv
-val e_order         : embedding order
+instance val e_pattern       : embedding pattern
+instance val e_branch        : embedding Data.branch
+instance val e_aqualv        : embedding aqualv
+instance val e_argv          : embedding argv
 val e_sigelt        : embedding sigelt
 val e_letbinding    : embedding letbinding
 val e_lb_view       : embedding lb_view
-val e_sigelt_view   : embedding sigelt_view
-val e_bv_view       : embedding bv_view
+instance val e_sigelt_view   : embedding sigelt_view
+instance val e_bv_view       : embedding bv_view
 val e_attribute     : embedding attribute
 val e_attributes    : embedding (list attribute) (* This seems rather silly, but `attributes` is a keyword *)
-val e_qualifier     : embedding RD.qualifier
+instance val e_qualifier     : embedding RD.qualifier
 val e_qualifiers    : embedding (list RD.qualifier)
 val e_ident         : embedding RD.ident (* NOT FStar.Ident.ident *)
 val e_univ_name     : embedding RD.univ_name (* NOT Syntax.univ_name *)
-val e_univ_names    : embedding (list RD.univ_name) (* NOT Syntax.univ_name *)
 val e_universe      : embedding universe
-val e_universe_view : embedding universe_view
+instance val e_universe_view : embedding universe_view
 
 (* Useful for embedding antiquoted terms. They are only used for the embedding part,
  * so this is a bit hackish. *)

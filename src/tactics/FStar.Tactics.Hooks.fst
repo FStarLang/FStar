@@ -27,8 +27,7 @@ open FStar.Syntax.Embeddings
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
 open FStar.Tactics.Types
-open FStar.Tactics.V1.Interpreter
-open FStar.Tactics.V2.Interpreter
+open FStar.Tactics.Interpreter
 open FStar.Class.Show
 
 module BU      = FStar.Compiler.Util
@@ -296,7 +295,10 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
         let (_, p', gs') = explode rp in
         Dual ({t with n = tn}, p', gs@gs')
 
-let preprocess (env:Env.env) (goal:term) : list (Env.env * term * O.optionstate) =
+let preprocess (env:Env.env) (goal:term)
+  : bool & list (Env.env * term * O.optionstate)
+    (* bool=true iff any tactic actually ran *)
+=
   Errors.with_ctx "While preprocessing VC with a tactic" (fun () ->
     tacdbg := Env.debug env (O.Other "Tac");
     if !tacdbg then
@@ -305,10 +307,10 @@ let preprocess (env:Env.env) (goal:term) : list (Env.env * term * O.optionstate)
                         (show goal);
     let initial = (1, []) in
     // This match should never fail
-    let (t', gs) =
+    let did_anything, (t', gs) =
         match traverse by_tactic_interp Pos env goal with
-        | Unchanged t' -> (t', [])
-        | Simplified (t', gs) -> (t', gs)
+        | Unchanged t' -> false, (t', [])
+        | Simplified (t', gs) -> true, (t', gs)
         | _ -> failwith "preprocess: impossible, traverse returned a Dual"
     in
     if !tacdbg then
@@ -334,7 +336,7 @@ let preprocess (env:Env.env) (goal:term) : list (Env.env * term * O.optionstate)
     let (_, gs) = s in
     let gs = List.rev gs in (* Return new VCs in same order as goals *)
     // Use default opts for main goal
-    (env, t', O.peek ()) :: gs
+    did_anything, (env, t', O.peek ()) :: gs
   )
 
 let rec traverse_for_spinoff

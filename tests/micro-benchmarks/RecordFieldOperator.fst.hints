@@ -1,15 +1,6 @@
 [
-  "\r\u0016≥ü)A…ïçø¯ıÁÊ.\u001a",
+  "Ø-'ë¿^\u0002Y‡\f—ı≠\u0010j\u0007",
   [
-    [
-      "RecordFieldOperator.uu___8",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "12c6d2e6b6402347e4dadbaafca4ff55"
-    ],
     [
       "RecordFieldOperator.uu___9",
       1,
@@ -25,16 +16,29 @@
         "typing_Tm_abs_b7bd7ca32453cd32f19493f86c11906d"
       ],
       0,
-      "6b1ac1cba6f528ed99c0f8c03e309dca"
+      "5d7abb03b728002ce14bafef5f6d980f"
     ],
     [
       "RecordFieldOperator.uu___24",
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "RecordFieldOperator_interpretation_Tm_arrow_72ac2ec523211f8603e00b25deb1543b",
+        "data_elim_RecordFieldOperator.MkhasPlus",
+        "equation_RecordFieldOperator.intHasPlus",
+        "equation_RecordFieldOperator.op_Plus", "int_inversion",
+        "int_typing",
+        "interpretation_Tm_abs_6d8aefb3f511fbf6b8395455a5d9e2fa",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_RecordFieldOperator.MkhasPlus_op_Plus",
+        "token_correspondence_Prims.op_Addition",
+        "token_correspondence_RecordFieldOperator.op_Plus",
+        "typing_RecordFieldOperator.intHasPlus"
+      ],
       0,
-      "a7dbb0a0e44819998a7ffc07695fbc90"
+      "d82182d7d03b1a788b3610454d94e3af"
     ],
     [
       "RecordFieldOperator.uu___48",
@@ -43,7 +47,7 @@
       1,
       [ "@query", "lemma_FStar.Pervasives.invertOption" ],
       0,
-      "ff6b390208ff6229dcb18569e6c8461c"
+      "6312bb5b05133131b48be63d5f82ffa3"
     ]
   ]
 ]

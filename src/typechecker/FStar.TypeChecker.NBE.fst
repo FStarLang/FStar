@@ -46,6 +46,8 @@ module FC = FStar.Const
 module EMB = FStar.Syntax.Embeddings
 module PC = FStar.Parser.Const
 
+open FStar.Class.Show
+
 (* Broadly, the algorithm implemented here is inspired by
 
    Full Reduction at Full Throttle:
@@ -878,8 +880,7 @@ and translate_fv (cfg: config) (bs:list t) (fvar:fv): t =
                         iapp = iapp cfg;
                         translate = translate cfg bs;
                       } in
-                      debug (fun () -> BU.print1 "Caling primop with args = [%s]\n"
-                                    (List.map (fun (x, _) -> t_to_string x) args' |> String.concat "; "));
+                      debug (fun () -> BU.print1 "Caling primop with args = [%s]\n" (show args'));
                       let univs, rest = List.span (function ({nbe_t=Univ _ }, _) -> true | _ -> false) args' in
                       let univs = List.map (function ({nbe_t=Univ u}, _) -> u | _ -> failwith "Impossible") univs in
                       match prim_step.interpretation_nbe callbacks univs rest with
@@ -1062,8 +1063,8 @@ and translate_monadic (m, ty) cfg bs e : t =
        in
        let maybe_range_arg =
            if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
-           then [translate cfg [] (PO.embed_simple EMB.e_range lb.lbpos lb.lbpos), None;
-                 translate cfg [] (PO.embed_simple EMB.e_range body.pos body.pos), None]
+           then [translate cfg [] (PO.embed_simple lb.lbpos lb.lbpos), None;
+                 translate cfg [] (PO.embed_simple body.pos body.pos), None]
            else []
        in
        let t =
@@ -1215,7 +1216,7 @@ and readback (cfg:config) (x:t) : term =
     | Constant (Int i) -> with_range (U.exp_int (Z.string_of_big_int i))
     | Constant (String (s, r)) -> mk (S.Tm_constant (C.Const_string (s, r)))
     | Constant (Char c) -> with_range (U.exp_char c)
-    | Constant (Range r) -> PO.embed_simple EMB.e_range x.nbe_r r
+    | Constant (Range r) -> PO.embed_simple x.nbe_r r
     | Constant (SConst c) -> mk (S.Tm_constant c)
 
     | Meta(t, m) ->

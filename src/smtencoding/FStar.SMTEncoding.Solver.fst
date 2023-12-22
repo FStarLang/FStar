@@ -259,11 +259,25 @@ let filter_assertions (e:env) (qsettings:option query_settings) (core:Z3.unsat_c
   let (theory, b, _, _) = filter_assertions_with_stats e core theory in
   theory, b
 
+(* Translation from F* rlimit units to Z3 rlimit units.
+
+This used to be defined as exactly 544656 since that roughtly
+corresponded to 5 seconds in some "blessed" setting. But rlimit units
+are only very roughly correlated to time, and having this very non-round
+number makes reading SMT query dumps pretty confusing. So, for new
+solvers, we now just make it 500k. *)
+let convert_rlimit (r : int) : int =
+  let open FStar.Mul in
+  if Misc.version_ge (Options.z3_version ()) "4.12.3" then
+    500000 * r
+  else
+    544656 * r
+
 //surround the query with fuel options and various diagnostics
 let with_fuel_and_diagnostics settings label_assumptions =
     let n = settings.query_fuel in
     let i = settings.query_ifuel in
-    let rlimit = settings.query_rlimit in
+    let rlimit = convert_rlimit settings.query_rlimit in
     [  //fuel and ifuel settings
         Term.Caption (BU.format2 "<fuel='%s' ifuel='%s'>"
                         (string_of_int n)
@@ -510,9 +524,6 @@ let errors_to_report (tried_recovery : bool) (settings : query_settings) : list 
 let report_errors tried_recovery qry_settings =
     FStar.Errors.add_errors (errors_to_report tried_recovery qry_settings)
 
-(* Translation from F* rlimit to Z3 rlimit *)
-let rlimit_conversion_factor = 544656
-
 let query_info settings z3result =
     let process_unsat_core (core:unsat_core) =
         (* A generic accumulator of unique strings,
@@ -654,7 +665,7 @@ let query_info settings z3result =
                 show z3result.z3result_time;
                 show settings.query_fuel;
                 show settings.query_ifuel;
-                show (settings.query_rlimit / rlimit_conversion_factor);
+                show (settings.query_rlimit);
                 stats
              ];
         if Options.print_z3_statistics () then process_unsat_core core;
@@ -773,6 +784,15 @@ let ans_ok : answer = {
 let ans_fail : answer =
   { ans_ok with ok = false; nsuccess = 0 }
 
+instance _ : showable answer = {
+  show = (fun ans -> BU.format5 "ok=%s nsuccess=%s lo=%s hi=%s tried_recovery=%s"
+                            (show ans.ok)
+                            (show ans.nsuccess)
+                            (show ans.lo)
+                            (show ans.hi)
+                            (show ans.tried_recovery));
+}
+
 let make_solver_configs
     (can_split : bool)
     (is_retry : bool)
@@ -793,7 +813,7 @@ let make_solver_configs
         in
         let rlimit =
             let open FStar.Mul in
-            Options.z3_rlimit_factor () * Options.z3_rlimit () * rlimit_conversion_factor
+            Options.z3_rlimit_factor () * Options.z3_rlimit ()
         in
         let next_hint = get_hint_for qname index in
         let default_settings = {
@@ -876,7 +896,7 @@ let __ask_solver
                   (with_fuel_and_diagnostics config [])
                   (BU.format2 "(%s, %s)" config.query_name (string_of_int config.query_index))
                   (Some (Z3.mk_fresh_scope()))
-                  (used_hint config)
+                  (used_hint config) // hint queries run in a fresh solver
     in
 
     fold_queries configs check_one_config process_result
@@ -1006,6 +1026,22 @@ let ask_solver_quake
     ; tried_recovery      = false (* possibly set by caller *)
     }
 
+(* A very simple command language for recovering, though keep in
+mind its execution is stateful in the sense that anything after a
+(RestartSolver h) will run in the new solver instance. *)
+type recovery_hammer =
+  | IncreaseRLimit of (*factor : *)int
+  | RestartAnd of recovery_hammer
+
+let rec pp_hammer (h : recovery_hammer) : Pprint.document =
+  let open FStar.Errors.Msg in
+  let open FStar.Pprint in
+  match h with
+  | IncreaseRLimit factor ->
+    text "increasing its rlimit by" ^/^ pp factor ^^ doc_of_string "x"
+  | RestartAnd h ->
+    text "restarting the solver and" ^/^ pp_hammer h
+
 (* If --proof_recovery is on, then we retry the query multiple
 times, increasing rlimits, until we get a success. If not, we just
 call ask_solver_quake. *)
@@ -1013,47 +1049,78 @@ let ask_solver_recover
     (configs : list query_settings)
  : answer
  =
- let open FStar.Pprint in
- let open FStar.Errors.Msg in
- let open FStar.Class.PP in
- if Options.proof_recovery () then (
-   let r = ask_solver_quake configs in
-   if r.ok then r else (
-     let last_cfg = List.last configs in
-     Errors.diag_doc last_cfg.query_range [
-       text "This query failed to be solved. Will now retry with higher rlimits due to --proof_recovery.";
-     ];
+  let open FStar.Pprint in
+  let open FStar.Errors.Msg in
+  let open FStar.Class.PP in
+  if Options.proof_recovery () then (
+    let r = ask_solver_quake configs in
+    if r.ok then r else (
+      let restarted = BU.mk_ref false in
+      let cfg = List.last configs in
 
-     let try_factor (n:int) : answer =
-       let open FStar.Mul in
-       Errors.diag_doc last_cfg.query_range [
-         text "Retrying query with rlimit factor" ^/^ pp n;
-       ];
-       let cfg = { last_cfg with query_rlimit = n * last_cfg.query_rlimit } in
-       ask_solver_quake [cfg]
-     in
+      Errors.diag_doc cfg.query_range [
+        text "This query failed to be solved. Will now retry with higher rlimits due to --proof_recovery.";
+      ];
 
-     let rec aux (factors : list int) : answer =
-       match factors with
-       | [] ->
-         { r with tried_recovery = true }
-       | n::ns ->
-         let r = try_factor n in
-         if r.ok then (
-           Errors.log_issue_doc last_cfg.query_range (Errors.Warning_ProofRecovery, [
-              text "This query succeeded after increasing its rlimit by" ^/^
-                   pp n ^^ doc_of_string "x";
-              text "Increase the rlimit in the file or simplify the proof. \
-                    This is only succeeding due to --proof_recovery being given."
-              ]);
-           r
-         ) else
-           aux ns
-     in
-     aux [2;4;8]
-   )
- ) else
-   ask_solver_quake configs
+      let try_factor (n:int) : answer =
+        let open FStar.Mul in
+        Errors.diag_doc cfg.query_range [text "Retrying query with rlimit factor" ^/^ pp n];
+        let cfg = { cfg with query_rlimit = n * cfg.query_rlimit } in
+        ask_solver_quake [cfg]
+      in
+
+      let rec try_hammer (h : recovery_hammer) : answer =
+        match h with
+        | IncreaseRLimit factor -> try_factor factor
+        | RestartAnd h ->
+          Errors.diag_doc cfg.query_range [text "Trying a solver restart"];
+          cfg.query_env.solver.refresh();
+          try_hammer h
+      in
+
+      let rec aux (hammers : list recovery_hammer) : answer =
+        match hammers with
+        | [] -> { r with tried_recovery = true }
+        | h::hs ->
+          let r = try_hammer h in
+          if r.ok then (
+            Errors.log_issue_doc cfg.query_range (Errors.Warning_ProofRecovery, [
+               text "This query succeeded after " ^/^ pp_hammer h;
+               text "Increase the rlimit in the file or simplify the proof. \
+                     This is only succeeding due to --proof_recovery being given."
+               ]);
+            r
+          ) else
+            aux hs
+      in
+      aux [
+        IncreaseRLimit 2;
+        IncreaseRLimit 4;
+        IncreaseRLimit 8;
+        RestartAnd (IncreaseRLimit 8);
+      ]
+    )
+  ) else
+    ask_solver_quake configs
+
+let failing_query_ctr : ref int = BU.mk_ref 0
+
+let maybe_save_failing_query (env:env_t) (prefix:list decl) (qs:query_settings) : unit =
+  if Options.log_failing_queries () then (
+    let mod = show (Env.current_module env) in
+    let n = (failing_query_ctr := !failing_query_ctr + 1; !failing_query_ctr) in
+    let file_name = BU.format2 "failedQueries-%s-%s.smt2" mod (show n) in
+    let query_str = Z3.ask_text
+                            qs.query_range
+                            (filter_assertions qs.query_env None qs.query_hint)
+                            qs.query_hash
+                            qs.query_all_labels
+                            (with_fuel_and_diagnostics qs [])
+                            (BU.format2 "(%s, %s)" qs.query_name (string_of_int qs.query_index))
+    in
+    write_file file_name query_str;
+    ()
+  )
 
 let ask_solver
     (can_split : bool)
@@ -1094,7 +1161,12 @@ let ask_solver
         // once for every VC. Every actual query will push and pop
         // whatever else they encode.
         Z3.giveZ3 prefix;
-        ask_solver_recover configs
+        let ans = ask_solver_recover configs in
+        let cfg = List.last configs in
+        if not ans.ok then
+          maybe_save_failing_query env prefix cfg;
+        ans
+
       )
     in
     configs, ans
@@ -1337,11 +1409,12 @@ let solve use_env_msg tcenv q : unit =
     if Options.no_smt () then
         let open FStar.Errors.Msg in
         let open FStar.Pprint in
+        let open FStar.Class.PP in
         FStar.TypeChecker.Err.log_issue
           tcenv tcenv.range
             (Errors.Error_NoSMTButNeeded,
              [text "A query could not be solved internally, and --no_smt was given.";
-              text "Query = " ^/^ FStar.Syntax.Print.Pretty.term_to_doc q])
+              text "Query = " ^/^ pp q])
     else
     Profiling.profile
       (fun () -> do_solve_maybe_split use_env_msg tcenv q)
@@ -1387,7 +1460,7 @@ let solver = {
     encode_sig=Encode.encode_sig;
 
     (* These three to be overriden by FStar.Universal.init_env *)
-    preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
+    preprocess=(fun e g -> (false, [e,g, FStar.Options.peek ()]));
     spinoff_strictly_positive_goals = None;
     handle_smt_goal=(fun e g -> [e,g]);
 
@@ -1404,7 +1477,7 @@ let dummy = {
     snapshot=(fun _ -> (0, 0, 0), ());
     rollback=(fun _ _ -> ());
     encode_sig=(fun _ _ -> ());
-    preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
+    preprocess=(fun e g -> (false, [e,g, FStar.Options.peek ()]));
     spinoff_strictly_positive_goals = None;
     handle_smt_goal=(fun e g -> [e,g]);
     solve=(fun _ _ _ -> ());

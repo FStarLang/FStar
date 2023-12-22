@@ -95,7 +95,7 @@ let map_opt (f:'a -> Tac 'b) (x:option 'a) : Tac (option 'b) =
   | Some x -> Some (f x)
 
 (** Apply a given tactic [t] repeatedly [n] times and return the results. *)
-let rec repeatn (#a:Type) (n : int) (t : unit -> Tac a) : Tac (list a) =
+let rec repeatn (#a:Type) (n : int) (t : unit -> Tac a) : Tac (l:list a{n < 0 \/ length l == n}) =
     if n <= 0
     then []
     else t () :: repeatn (n - 1) t

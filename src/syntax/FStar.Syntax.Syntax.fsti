@@ -30,6 +30,7 @@ open FStar.VConfig
 include FStar.Class.HasRange
 open FStar.Class.Show
 open FStar.Class.Deq
+open FStar.Class.Ord
 
 (* Objects with metadata *)
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
@@ -65,8 +66,6 @@ type emb_typ =
   | ET_abstract
   | ET_fun  of emb_typ * emb_typ
   | ET_app  of string * list emb_typ
-
-instance val showable_emb_typ : showable emb_typ
 
 //versioning for unification variables
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
@@ -112,7 +111,6 @@ type delta_depth =
   | Delta_equational_at_level of int  //level 0 is a symbol that may be equated to another by extensional reasoning, n > 0 can be unfolded n times to a Delta_equational_at_level 0 term
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
 
-instance val showable_delta_depth : showable delta_depth
 
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type should_check_uvar =
@@ -187,7 +185,7 @@ and ctx_uvar = {                                                 (* (G |- ?u : t
   ctx_uvar_meta: option ctx_uvar_meta_t;
 }
 and ctx_uvar_meta_t =
-  | Ctx_uvar_meta_tac of dyn * term (* the dyn is an FStar.TypeChecker.Env.env *)
+  | Ctx_uvar_meta_tac of term
   | Ctx_uvar_meta_attr of term (* An attribute associated with an implicit argument using the #[@@...] notation *)
 and ctx_uvar_and_subst = ctx_uvar * subst_ts
 
@@ -198,7 +196,7 @@ and uvar_decoration = {
 }
 
 and uvar = Unionfind.p_uvar (option term * uvar_decoration) * version * Range.range
-and uvars = set ctx_uvar
+and uvars = Set.t ctx_uvar
 and match_returns_ascription = binder * ascription               (* as x returns C|t *)
 and branch = pat * option term * term                           (* optional when clause in each branch *)
 and ascription = either term comp * option term * bool        (* e <: t [by tac] or e <: C [by tac] *)
@@ -358,7 +356,7 @@ and subst_elt =
    | NT of bv  * term                          (* NT x t: replace a local name with a term t                                 *)
    | UN of int * universe                      (* UN u v: replace universes variable u with universe term v                  *)
    | UD of univ_name * int                     (* UD x i: replace universe name x with de Bruijn index i                     *)
-and freenames = set bv
+and freenames = Set.t bv
 and syntax 'a = {
     n:'a;
     pos:Range.range;
@@ -752,10 +750,10 @@ val lookup_aq : bv -> antiquotations -> term
 
 // This is set in FStar.Main.main, where all modules are in-scope.
 val lazy_chooser : ref (option (lazy_kind -> lazyinfo -> term))
-val new_bv_set: unit -> set bv
-val new_id_set: unit -> set ident
-val new_fv_set: unit -> set lident
-val new_universe_names_set: unit -> set univ_name
+val new_bv_set: unit -> Set.t bv
+val new_id_set: unit -> Set.t ident
+val new_fv_set: unit -> Set.t lident
+val new_universe_names_set: unit -> Set.t univ_name
 
 val mod_name: modul -> lident
 
@@ -806,8 +804,8 @@ val is_teff:  term -> bool
 val is_type:  term -> bool
 
 val no_names:          freenames
-val no_universe_names: set univ_name
-val no_fvars:          set lident
+val no_universe_names: Set.t univ_name
+val no_fvars:          Set.t lident
 
 val freenames_of_list:    list bv -> freenames
 val freenames_of_binders: binders -> freenames
@@ -894,13 +892,27 @@ val t_tuple2_of     : term -> term -> term
 val t_tuple3_of     : term -> term -> term -> term
 val t_either_of     : term -> term -> term
 val t_sealed_of     : term -> term
+val t_erased_of     : term -> term
 
 val unit_const_with_range : Range.range -> term
 val unit_const            : term
 
-instance val has_range_syntax #a : Tot (hasRange (syntax a))
-instance val has_range_withinfo #a : Tot (hasRange (withinfo_t a))
+instance val has_range_syntax #a : unit -> Tot (hasRange (syntax a))
+instance val has_range_withinfo #a : unit -> Tot (hasRange (withinfo_t a))
 instance val has_range_sigelt : hasRange sigelt
 
-instance val deq_lazy_kind : deq lazy_kind
+instance val showable_emb_typ : showable emb_typ
+instance val showable_delta_depth : showable delta_depth
+instance val showable_should_check_uvar : showable should_check_uvar
+
 instance val showable_lazy_kind : showable lazy_kind
+
+instance val deq_lazy_kind : deq lazy_kind
+instance val deq_bv         : deq bv
+instance val deq_ident      : deq ident
+instance val deq_fv         : deq lident
+instance val deq_univ_name  : deq univ_name
+
+instance val ord_bv         : ord bv
+instance val ord_ident      : ord ident
+instance val ord_fv         : ord lident

@@ -31,29 +31,3 @@ intersect-ocaml: out IntervalIntersect.fst
 
 out:
 	mkdir -p out
-
-# $ ocaml
-#         OCaml version 4.03.0
-
-# # #use "topfind";;
-# - : unit = ()
-# Findlib has been successfully loaded. Additional directives:
-#   #require "package";;      to load a package
-#   #list;;                   to list the available packages
-#   #camlp4o;;                to load camlp4 (standard syntax)
-#   #camlp4r;;                to load camlp4 (revised syntax)
-#   #predicates "p,q,...";;   to set these predicates
-#   Topfind.reset();;         to force that packages will be reloaded
-#   #thread;;                 to enable threads
-
-# - : unit = ()
-# # #require "unix";;
-# /Users/jonathan/.opam/4.03.0/lib/ocaml/unix.cma: loaded
-# # #require "zarith";;
-# /Users/jonathan/.opam/4.03.0/lib/zarith: added to search path
-# /Users/jonathan/.opam/4.03.0/lib/zarith/zarith.cma: loaded
-# # #require "stdint";;
-# /Users/jonathan/.opam/4.03.0/lib/bytes: added to search path
-# /Users/jonathan/.opam/4.03.0/lib/stdint: added to search path
-# /Users/jonathan/.opam/4.03.0/lib/stdint/stdint.cma: loaded
-# # #require "batteries";;

@@ -71,8 +71,8 @@ let (mk_ss_lid_as_term : Prims.string -> FStar_Syntax_Syntax.term) =
 let (mk_inspect_pack_pair : Prims.string -> (refl_constant * refl_constant))
   =
   fun s ->
-    let inspect_lid = fstar_refl_builtins_lid (Prims.op_Hat "inspect" s) in
-    let pack_lid = fstar_refl_builtins_lid (Prims.op_Hat "pack" s) in
+    let inspect_lid = fstar_refl_builtins_lid (Prims.strcat "inspect" s) in
+    let pack_lid = fstar_refl_builtins_lid (Prims.strcat "pack" s) in
     let inspect_fv =
       FStar_Syntax_Syntax.lid_as_fv inspect_lid FStar_Pervasives_Native.None in
     let pack_fv =
@@ -506,27 +506,3 @@ let (ref_qual_HasMaskedEffect : refl_constant) =
   fstar_refl_data_const "HasMaskedEffect"
 let (ref_qual_Effect : refl_constant) = fstar_refl_data_const "Effect"
 let (ref_qual_OnlyName : refl_constant) = fstar_refl_data_const "OnlyName"
-let (ord_Lt_lid : FStar_Ident.lident) =
-  FStar_Ident.lid_of_path ["FStar"; "Order"; "Lt"]
-    FStar_Compiler_Range_Type.dummyRange
-let (ord_Eq_lid : FStar_Ident.lident) =
-  FStar_Ident.lid_of_path ["FStar"; "Order"; "Eq"]
-    FStar_Compiler_Range_Type.dummyRange
-let (ord_Gt_lid : FStar_Ident.lident) =
-  FStar_Ident.lid_of_path ["FStar"; "Order"; "Gt"]
-    FStar_Compiler_Range_Type.dummyRange
-let (ord_Lt : FStar_Syntax_Syntax.term) =
-  FStar_Syntax_Syntax.tdataconstr ord_Lt_lid
-let (ord_Eq : FStar_Syntax_Syntax.term) =
-  FStar_Syntax_Syntax.tdataconstr ord_Eq_lid
-let (ord_Gt : FStar_Syntax_Syntax.term) =
-  FStar_Syntax_Syntax.tdataconstr ord_Gt_lid
-let (ord_Lt_fv : FStar_Syntax_Syntax.fv) =
-  FStar_Syntax_Syntax.lid_as_fv ord_Lt_lid
-    (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor)
-let (ord_Eq_fv : FStar_Syntax_Syntax.fv) =
-  FStar_Syntax_Syntax.lid_as_fv ord_Eq_lid
-    (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor)
-let (ord_Gt_fv : FStar_Syntax_Syntax.fv) =
-  FStar_Syntax_Syntax.lid_as_fv ord_Gt_lid
-    (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor)

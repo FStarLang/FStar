@@ -2,6 +2,7 @@ module FStar.Class.Show
 
 open FStar.Compiler.Effect
 open FStar.Class.Printable
+module BU = FStar.Compiler.Util
 
 class showable (a:Type) = {
   show : a -> ML string;
