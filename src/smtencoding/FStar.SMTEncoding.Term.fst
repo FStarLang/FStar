@@ -52,7 +52,7 @@ F* would encode this to SMT as (roughly)
 ```
 (declare-fun n () Term)
 (assert (HasType n u32))
-(assert (n = U32.uint_to_to 0))
+(assert (n = U32.uint_to_t 0))
 ```
 
 i.e., ground facts about the `n`'s typing and definition would be
