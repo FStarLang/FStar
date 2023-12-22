@@ -25,14 +25,14 @@ requires
 ensures
     v ** active p t ** active full_perm t
 {
-    unfold cancellable t v;
+    unfold cancellable;
     with b. _;
-    unfold active p t;
+    unfold active;
     GR.pts_to_injective_eq t;
     rewrite each b as true;
-    unfold (maybe true v);
-    fold (active p t);
-    fold (active full_perm t);
+    unfold maybe;
+    fold active;
+    fold active;
 }
 ```
 
@@ -45,9 +45,9 @@ requires
 ensures
     cancellable t v
 {
-    unfold (active full_perm t);
+    unfold active;
     fold (maybe true v);
-    fold (cancellable t v);
+    fold cancellable;
 }
 ```
 
@@ -60,12 +60,12 @@ requires
 ensures 
     cancellable t v ** v
 {
-    unfold cancellable t v;
+    unfold cancellable;
     with b. _;
-    unfold active full_perm t;
+    unfold active;
     GR.pts_to_injective_eq t;
     rewrite each b as true;
-    unfold (maybe true v);
+    unfold maybe;
     GR.gather t;
     with _p _q. rewrite (GR.pts_to t #_p _q) as (GR.pts_to t _q);
     GR.( t := false );
@@ -73,7 +73,7 @@ ensures
     GR.share t;
     drop_ (GR.pts_to t #(half_perm full_perm) _);
     fold (maybe false v);
-    fold (cancellable t v);
+    fold cancellable;
 }
 ```
 
@@ -87,8 +87,7 @@ ensures cancellable t v ** active full_perm t
     let t = GR.alloc true;
     fold (maybe true v);
     GR.share t;
-    fold (cancellable t v);
-    fold (active full_perm t);
+    fold cancellable; fold active;
     t
 }
 ```
@@ -114,10 +113,9 @@ requires
 ensures 
     active (half_perm p) t ** active (half_perm p) t
 {
-    unfold active p t;
+    unfold active;
     GR.share t;
-    fold (active (half_perm p) t);
-    fold (active (half_perm p) t);
+    fold active; fold active;
 }
 ```
 
@@ -130,11 +128,10 @@ requires
     active (half_perm p) t
 ensures active p t
 {
-    unfold (active (half_perm p) t);
-    unfold (active (half_perm p) t);
+    unfold active; unfold active;
     GR.gather t;
     with _p _v. rewrite (GR.pts_to t #_p _v) as (GR.pts_to t #(half_perm p) _v);
-    fold (active p t);
+    fold active;
 }
 ```
 
