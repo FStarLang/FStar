@@ -25,7 +25,7 @@ class graded_monad (#index:Type) {| monoid index |}
 {
   return : #a:Type -> x:a -> m one a;
   
-  bind   : #a:Type -> #b:Type -> #ia:index -> #ib:index ->
+   ( let+ )   : #a:Type -> #b:Type -> #ia:index -> #ib:index ->
            m ia a -> 
            (a -> m ib b) ->
            m (op ia ib) b
@@ -51,7 +51,7 @@ let count_bind (#s:Type) (#a:Type) (#b:Type) (#ia:nat) (#ib:nat)
 instance count_st_graded (s:Type) : graded_monad (count_st s) =
 { 
   return = count_return #s;
-  bind = count_bind #s;
+  ( let+ ) = count_bind #s;
 }
 
 // A write-counting grade monad
@@ -61,12 +61,12 @@ let put #s (x:s) : count_st s 1 unit = fun _ -> (), x, 1
 
 //SNIPPET_START: test$
 let test #s =
-  x <-- get #s ;
+  let+ x = get #s in
   put x
 
 //F* + SMT automatically proves that the index simplifies to 2
 let test2 #s : count_st s 2 unit =
-  x <-- get #s;
-  put x;;
+  let+ x = get in
+  put x ;+
   put x
 //SNIPPET_END: test$

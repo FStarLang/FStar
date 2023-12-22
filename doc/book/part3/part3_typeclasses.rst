@@ -493,32 +493,41 @@ In :ref:`a previous chapter <Part2_par>`, we introduced syntactic
 sugar for monadic computations. In particular, F*'s syntax supports
 the following:
 
-* Instead of writing ``bind f (fun x -> e)`` you can write ``x <-- f; e``.
+* Instead of writing ``bind f (fun x -> e)`` you can define a custom
+  ``let!``-operator and write ``let! x = f in e``.
 
-* And, instead of writing ``bind f (fun _ -> e)``  you can write ``f;; e``.
+* And, instead of writing ``bind f (fun _ -> e)`` you can write
+  ``f ;! e``.
 
 Now, if we can overload the symbol ``bind`` to work with any monad,
 then the syntactic sugar described above would work for all of
 them. This is accomplished as follows.
 
-We define a typeclass ``monad``, with two methods ``return`` and
-``bind``.
+We define a typeclass ``monad``, with two methods ``return`` and ``(
+let! )``.
 
 .. literalinclude:: ../code/MonadFunctorInference.fst
    :language: fstar
    :start-after: //SNIPPET_START: monad$
    :end-before: //SNIPPET_END: monad$
 
-Doing so introduces ``return`` and ``bind`` into scope at the
+Doing so introduces ``return`` and ``( let! )`` into scope at the
 following types:
 
 .. code-block:: fstar
 
    let return #m {| d : monad m |} #a (x:a) : m a = d.return x
-   let bind #m {| d : monad m |} #a #b (f:m a) (g: a -> m b) : m b = d.bind f g
+   let ( let! ) #m {| d : monad m |} #a #b (f:m a) (g: a -> m b) : m b = d.bind f g
 
-That is, we now have ``bind`` in scope at a type general enough to use
-with any monad instance.
+That is, we now have ``( let! )`` in scope at a type general enough to
+use with any monad instance.
+
+.. note::
+
+   There is nothing specific about ``let!``; F* allows you to add a
+   suffix of operator characters to the ``let``-token. See this file
+   for more examples of `monadic let operators
+   <https://github.com/FStarLang/FStar/blob/master/examples/misc/MonadicLetBindings.fst>`_
 
 The type ``st s`` is a state monad parameterized by the state ``s``,
 and ``st s`` is an instance of a ``monad``.
@@ -529,8 +538,8 @@ and ``st s`` is an instance of a ``monad``.
    :end-before: //SNIPPET_END: st$
 
 With some basic actions ``get`` and ``put`` to read and write the
-state, we can implement ``st`` computations in a style resembling
-Haskell's do-notation.
+state, we can implement ``st`` computations with a syntax similar to
+normal, direct-style code.
 
 .. literalinclude:: ../code/MonadFunctorInference.fst
    :language: fstar
@@ -545,10 +554,10 @@ a simple proof that ``get_put`` is ``noop``.
    :start-after: //SNIPPET_START: get_put$
    :end-before: //SNIPPET_END: get_put$
 
-Now, the nice thing is that since ``bind`` is monad polymorphic, we
-can define other monad instances and still use the ``bind`` syntactic
-sugar to build computations in those monads. Here's an example with
-the ``option`` monad, for computations that may fail.
+Now, the nice thing is that since ``( let! )`` is monad polymorphic,
+we can define other monad instances and still use the syntactic sugar
+to build computations in those monads. Here's an example with the
+``option`` monad, for computations that may fail.
 
 .. literalinclude:: ../code/MonadFunctorInference.fst
    :language: fstar
@@ -583,12 +592,12 @@ the definitions you need.
 
 --------------------------------------------------------------------------------
 
-Beyond Monads with Do-notation
-------------------------------
+Beyond Monads with Let Operators
+--------------------------------
 
 Many monad-like structures have been proposed to structure effectful
 computations. Each of these structures can be captured as a typeclass
-and used with F*'s syntactic sugar for ``bind``.
+and used with F*'s syntactic sugar for let operators.
 
 As an example, we look at *graded monads*, a construction studied by
 Shin-Ya Katsumata and others, `in several papers
@@ -618,19 +627,18 @@ two operations:
   * a ``return``, similar to the ``return`` of a monad, but whose
     index is the unit element of the monoid
 
-  * a ``bind``, similar to the ``bind`` of a monad, but whose action
-    on the indexes corresponds to the binary operator of the indexing
-    monoid.
+  * a ``( let+ )``, similar to the ``( let! )`` of a monad, but whose
+    action on the indexes corresponds to the binary operator of the
+    indexing monoid.
 
 .. literalinclude:: ../code/GradedMonad.fst
    :language: fstar
    :start-after: //SNIPPET_START: graded_monad$
    :end-before: //SNIPPET_END: graded_monad$
 
-With this class, we have overloaded the ``bind`` syntactic sugar to
-work with all graded monads. For instance, here's a graded state
-monad, ``count_st`` whose index counts the number of ``put``
-operations.
+With this class, we have overloaded ``( let+ )`` to work with all
+graded monads. For instance, here's a graded state monad, ``count_st``
+whose index counts the number of ``put`` operations.
 
 .. literalinclude:: ../code/GradedMonad.fst
    :language: fstar
@@ -646,12 +654,12 @@ easily.
    :end-before: //SNIPPET_END: test$
 
 F* infers the typeclass instantiations and the type of ``test`` to be
-``count_st s #monoid_nat_plus (op 0 1) unit``.
+``count_st s (op #monoid_nat_plus 0 1) unit``.
 
-In ``test2``, F* infers the type ``count_st s #monoid_nat_plus (op 0 (op 1
-1)) unit``, and then automatically proves that this type is equivalent
-to the user annotation ``count_st s #monoid_nat_plus 2 unit``, using
-the definition of ``monoid_nat_plus``.
+In ``test2``, F* infers the type ``count_st s (op #monoid_nat_plus 0
+(op #monoid_nat_plus 1 1)) unit``, and then automatically proves that
+this type is equivalent to the user annotation ``count_st s 2 unit``,
+using the definition of ``monoid_nat_plus``.
 
 Summary
 -------
