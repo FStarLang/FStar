@@ -59,7 +59,8 @@ type op =
   | BvAdd
   | BvSub
   | BvShl
-  | BvShr
+  | BvShr (* logical shift right *)
+  | BvAshr (* arithmetic shift right *)
   | BvUdiv
   | BvMod
   | BvMul
@@ -245,6 +246,7 @@ val mkBvUlt   : ((term * term) -> Range.range -> term)
 val mkBvUext  : (int -> term -> Range.range -> term)
 val mkBvShl   : (int -> (term * term) -> Range.range -> term)
 val mkBvShr   : (int -> (term * term) -> Range.range -> term)
+val mkBvAshr  : (int -> (term * term) -> Range.range -> term)
 val mkBvUdiv  : (int -> (term * term) -> Range.range -> term)
 val mkBvMod   : (int -> (term * term) -> Range.range -> term)
 val mkBvMul   : (int -> (term * term) -> Range.range -> term)
