@@ -63,7 +63,7 @@ let conj_elim_sugar_1 #p #q (pf_pq:squash (p /\ q))
 let conj_elim_sugar_2 #p #q (pf_pq:squash (p /\ q))
   : squash p
   = eliminate p /\ q
-    returns p
+    returns q
     with pf_p pf_q. pf_q
 //SNIPPET_END: conj_elim_sugar$
 
@@ -206,6 +206,27 @@ let forall_elim_2 (#t0:Type)
   = eliminate forall x0 x1. q x0 x1
     with v0 v1
 //SNIPPET_END: forall_elim_sugar$
+
+let forall_elim_2_desugar
+                  (#t0:Type)
+                  (#t1:t0 -> Type)
+                  (#q: (x0:t0 -> x1:t1 x0 -> Type))
+                  (f : squash (forall x0 x1. q x0 x1))
+                  (v0: t0)
+                  (v1: t1 v0)
+  : squash (q v0 v1) 
+  =
+//SNIPPET_START: forall_elim_2_desugar$  
+   FStar.Classical.Sugar.forall_elim
+           #(t1 v0)
+           #(fun x1 -> q v0 x1)
+           v1
+           (FStar.Classical.Sugar.forall_elim
+              #t0
+              #(fun x0 -> forall (x1: t1 x0). q x0 x1)
+              v0
+              ())
+//SNIPPET_END: forall_elim_2_desugar$
 
 //SNIPPET_START: dtuple2_intro$
 let dtuple2_intro (x:int) (y:int { y > x })
