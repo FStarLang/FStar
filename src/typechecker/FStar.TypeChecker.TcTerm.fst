@@ -1863,7 +1863,8 @@ and tc_constant (env:env_t) r (c:sconst) : typ =
           | Unsigned, Int8 -> Const.uint8_lid
           | Unsigned, Int16 -> Const.uint16_lid
           | Unsigned, Int32 -> Const.uint32_lid
-          | Unsigned, Int64 -> Const.uint64_lid)
+          | Unsigned, Int64 -> Const.uint64_lid
+          | Unsigned, Sizet -> Const.sizet_lid)
       | Const_string _ -> t_string
       | Const_real _ -> t_real
       | Const_char _ ->
