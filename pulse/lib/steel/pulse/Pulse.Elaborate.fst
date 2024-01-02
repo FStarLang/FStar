@@ -78,7 +78,7 @@ let elab_comp_open_commute' (c:comp) (v:term) (n:index)
       elab_open_commute' s.res v n;
       elab_open_commute' s.pre v n;
       elab_open_commute' s.post v (n + 1)
-    | C_STAtomic inames s
+    | C_STAtomic inames _ s
     | C_STGhost inames s ->
       elab_open_commute' inames v n;
       elab_open_commute' s.res v n;
@@ -123,7 +123,7 @@ let elab_comp_close_commute' (c:comp) (v:var) (n:index)
       elab_close_commute' s.res v n;
       elab_close_commute' s.pre v n;
       elab_close_commute' s.post v (n + 1)
-   | C_STAtomic inames s
+   | C_STAtomic inames _ s
    | C_STGhost inames s ->
       elab_close_commute' inames v n;
       elab_close_commute' s.res v n;
@@ -174,7 +174,7 @@ let elab_ln_comp (c:comp) (i:int)
     elab_ln st.res i;
     elab_ln st.pre i;
     elab_ln st.post (i + 1)
-  | C_STAtomic inames st
+  | C_STAtomic inames _ st
   | C_STGhost inames st ->
     elab_ln inames i;
     elab_ln st.res i;
@@ -210,7 +210,7 @@ let elab_freevars_comp_eq (c:comp)
     elab_freevars_eq st.res;
     elab_freevars_eq st.pre;
     elab_freevars_eq st.post
-  | C_STAtomic inames st
+  | C_STAtomic inames _ st
   | C_STGhost inames st ->
     elab_freevars_eq inames;
     elab_freevars_eq st.res;

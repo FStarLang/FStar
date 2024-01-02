@@ -256,7 +256,6 @@ val cas (r:ref int) (u v:int) (#i:erased int)
       cond b (pts_to r v ** pure (reveal i == u)) 
              (pts_to r i))
 
-let trigger (x:'a) = emp
 
 ```pulse
 fn atomic_increment_f5
@@ -282,18 +281,16 @@ ensures qpred ('i + 1)
   returns v:int
   ensures emp
   {
-    0
-    //This doesn't work at the return type, complaining that it should be non-informative
-    // with_invariants l {
-        // elim_inv ();
-        // with i. _;
-        // share x;
-        // let v = atomic_read x;
-        // gather x;
-        // with _p. rewrite (pts_to x #_p v) as (pts_to x i);
-        // intro_inv ();
-        // v
-    // }
+    with_invariants l {
+        elim_inv ();
+        with i. _;
+        share x;
+        let v = atomic_read x;
+        gather x;
+        with _p. rewrite (pts_to x #_p v) as (pts_to x i);
+        intro_inv ();
+        v
+    }
   };
   let mut continue = true;
   fold (cond true (qpred 'i) (qpred ('i + 1)));

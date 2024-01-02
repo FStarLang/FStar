@@ -61,14 +61,14 @@ let check (g:env)
     | C_ST st -> 
       let stc = check_st_comp st in
       CT_ST _ _ stc
-    | C_STAtomic i st -> 
+    | C_STAtomic i obs st -> 
       let stc = check_st_comp st in
       let (| ty, i_typing |) = core_compute_tot_term_type g i in
       if not (eq_tm ty tm_inames)
       then fail g None
              (Printf.sprintf "check_comp: type of inames term %s is %s, expected %s"
                 (P.term_to_string i) (P.term_to_string ty) (P.term_to_string tm_inames))
-      else CT_STAtomic _ _ _ i_typing stc
+      else CT_STAtomic _ _ obs _ i_typing stc
     | C_STGhost i st -> 
       let stc = check_st_comp st in
       let (| ty, i_typing |) = core_compute_tot_term_type g i in

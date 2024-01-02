@@ -67,7 +67,7 @@ let try_readback_st_comp
               Some (c <: c:Pulse.Syntax.Base.comp{ elab_comp c == t })
             | _ -> None)
          | _ -> None
-    else if fv_lid = stt_atomic_lid || fv_lid = stt_ghost_lid
+    else if fv_lid = stt_atomic_lid || fv_lid = stt_unobservable_lid || fv_lid = stt_ghost_lid
     then match args with
          | [res; opened; pre; post] ->
            (match inspect_ln (fst post) with
@@ -81,8 +81,14 @@ let try_readback_st_comp
               let? post' = readback_ty body in
               if fv_lid = stt_atomic_lid
               then begin
-                assume (t == mk_stt_atomic_comp u (fst res) (fst opened) (fst pre) (mk_abs (fst res) R.Q_Explicit body));
-                let c = C_STAtomic opened' ({u; res=res'; pre=pre';post=post'}) in
+                assume (t == mk_stt_atomic_comp true u (fst res) (fst opened) (fst pre) (mk_abs (fst res) R.Q_Explicit body));
+                let c = C_STAtomic opened' Observable ({u; res=res'; pre=pre';post=post'}) in
+                Some (c <: c:Pulse.Syntax.Base.comp { elab_comp c == t })
+              end
+              else if fv_lid = stt_unobservable_lid
+              then begin
+                assume (t == mk_stt_atomic_comp false u (fst res) (fst opened) (fst pre) (mk_abs (fst res) R.Q_Explicit body));
+                let c = C_STAtomic opened' Unobservable ({u; res=res'; pre=pre';post=post'}) in
                 Some (c <: c:Pulse.Syntax.Base.comp { elab_comp c == t })
               end
               else begin

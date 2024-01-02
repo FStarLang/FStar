@@ -16,9 +16,9 @@ let (admit_comp_typing :
       match c with
       | Pulse_Syntax_Base.C_ST st ->
           Pulse_Typing.CT_ST (g, st, (admit_st_comp_typing g st))
-      | Pulse_Syntax_Base.C_STAtomic (inames, st) ->
+      | Pulse_Syntax_Base.C_STAtomic (inames, obs, st) ->
           Pulse_Typing.CT_STAtomic
-            (g, inames, st, (), (admit_st_comp_typing g st))
+            (g, inames, obs, st, (), (admit_st_comp_typing g st))
       | Pulse_Syntax_Base.C_STGhost (inames, st) ->
           Pulse_Typing.CT_STGhost
             (g, inames, st, (), (admit_st_comp_typing g st))
@@ -56,7 +56,8 @@ let (comp_typing_inversion :
       fun ct ->
         match ct with
         | Pulse_Typing.CT_ST (uu___, uu___1, st) -> st
-        | Pulse_Typing.CT_STAtomic (uu___, uu___1, uu___2, uu___3, st) -> st
+        | Pulse_Typing.CT_STAtomic
+            (uu___, uu___1, uu___2, uu___3, uu___4, st) -> st
         | Pulse_Typing.CT_STGhost (uu___, uu___1, uu___2, uu___3, st) -> st
 let (st_comp_typing_inversion_cofinite :
   Pulse_Typing_Env.env ->
@@ -272,8 +273,10 @@ let rec (st_sub_weakening :
                       (st_sub_weakening g g' uu___2 uu___3 dr g1))
               | Pulse_Typing.STS_GhostInvs (uu___, stc, is1, is2, tok) ->
                   Pulse_Typing.STS_GhostInvs (g'', stc, is1, is2, ())
-              | Pulse_Typing.STS_AtomicInvs (uu___, stc, is1, is2, tok) ->
-                  Pulse_Typing.STS_AtomicInvs (g'', stc, is1, is2, ())
+              | Pulse_Typing.STS_AtomicInvs
+                  (uu___, stc, is1, is2, o1, o2, tok) ->
+                  Pulse_Typing.STS_AtomicInvs
+                    (g'', stc, is1, is2, o1, o2, ())
 let (st_comp_typing_weakening :
   Pulse_Typing_Env.env ->
     Pulse_Typing_Env.env ->
@@ -317,12 +320,13 @@ let (comp_typing_weakening :
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), uu___1,
                       (st_comp_typing_weakening g g' uu___1 d1 g1))
-              | Pulse_Typing.CT_STAtomic (uu___, inames, uu___1, uu___2, d1)
-                  ->
+              | Pulse_Typing.CT_STAtomic
+                  (uu___, inames, obs, uu___1, uu___2, d1) ->
                   Pulse_Typing.CT_STAtomic
                     ((Pulse_Typing_Env.push_env
-                        (Pulse_Typing_Env.push_env g g1) g'), inames, uu___1,
-                      (), (st_comp_typing_weakening g g' uu___1 d1 g1))
+                        (Pulse_Typing_Env.push_env g g1) g'), inames, obs,
+                      uu___1, (),
+                      (st_comp_typing_weakening g g' uu___1 d1 g1))
               | Pulse_Typing.CT_STGhost (uu___, inames, uu___1, uu___2, d1)
                   ->
                   Pulse_Typing.CT_STGhost
@@ -878,11 +882,11 @@ let (comp_typing_subst :
                             (Pulse_Syntax_Naming.subst_st_comp s (nt x e)),
                             (st_comp_typing_subst g x t g' e () s d_s))
                     | Pulse_Typing.CT_STAtomic
-                        (uu___, inames, s, uu___1, d_s) ->
+                        (uu___, inames, obs, s, uu___1, d_s) ->
                         Pulse_Typing.CT_STAtomic
                           ((Pulse_Typing_Env.push_env g
                               (Pulse_Typing_Env.subst_env g' (nt x e))),
-                            inames,
+                            inames, obs,
                             (Pulse_Syntax_Naming.subst_st_comp s (nt x e)),
                             (), (st_comp_typing_subst g x t g' e () s d_s))
                     | Pulse_Typing.CT_STGhost (uu___, inames, s, uu___1, d_s)

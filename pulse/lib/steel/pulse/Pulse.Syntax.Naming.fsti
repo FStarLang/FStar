@@ -57,7 +57,7 @@ let freevars_comp (c:comp) : Tot (Set.set var) (decreases c) =
   match c with
   | C_Tot t -> freevars t
   | C_ST s -> freevars_st_comp s
-  | C_STAtomic inames s
+  | C_STAtomic inames _ s
   | C_STGhost inames s ->
     freevars inames `Set.union` freevars_st_comp s
 
@@ -219,7 +219,7 @@ let ln_c' (c:comp) (i:int)
   = match c with
     | C_Tot t -> ln' t i
     | C_ST s -> ln_st_comp s i
-    | C_STAtomic inames s
+    | C_STAtomic inames _ s
     | C_STGhost inames s ->
       ln' inames i &&
       ln_st_comp s i
@@ -483,8 +483,8 @@ let subst_comp (c:comp) (ss:subst)
 
     | C_ST s -> C_ST (subst_st_comp s ss)
 
-    | C_STAtomic inames s ->
-      C_STAtomic (subst_term inames ss)
+    | C_STAtomic inames obs s ->
+      C_STAtomic (subst_term inames ss) obs
                  (subst_st_comp s ss)
 
     | C_STGhost inames s ->

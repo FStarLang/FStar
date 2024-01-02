@@ -51,7 +51,7 @@ let lift_atomic_to_st
          (ensures fun (| c', _ |) ->
              st_comp_of_comp c' == st_comp_of_comp c /\
              ctag_of_comp_st c' == STT)
-= let C_STAtomic _ c_st = c in
+= let C_STAtomic _ _ c_st = c in
   let c' = C_ST c_st in
   let d' : st_typing g e c' =
     T_Lift g e c c' d (Lift_STAtomic_ST g c)
@@ -71,7 +71,7 @@ let lift_ghost_to_atomic
              C_STGhost?.inames c == C_STAtomic?.inames c')
 = let C_STGhost inames c_st = c in
   let w = get_non_informative_witness g (comp_u c) (comp_res c) in
-  let c' = C_STAtomic inames c_st in
+  let c' = C_STAtomic inames Unobservable c_st in
   let d' : st_typing g e c' =
     T_Lift g e c c' d (Lift_STGhost_STAtomic g c w)
   in
@@ -100,24 +100,24 @@ let lift_if_branches
 = let g = g_then in
   match c_then, c_else with
   | C_STGhost _ _, C_STGhost _ _ 
-  | C_STAtomic _ _, C_STAtomic _ _
+  | C_STAtomic _ _ _, C_STAtomic _ _ _
   | C_ST _, C_ST _ ->
     (* Nothing to do *)
     (| c_then, c_else, e_then_typing, e_else_typing |)
 
-  | C_STAtomic _ _ , C_ST _ ->
+  | C_STAtomic _ _ _ , C_ST _ ->
     let (| c_then', e_then_typing' |) = lift_atomic_to_st g_then e_then c_then e_then_typing in
     (| c_then', c_else, e_then_typing', e_else_typing |)
 
-  | C_ST _, C_STAtomic _ _ ->
+  | C_ST _, C_STAtomic _ _ _ ->
     let (| c_else', e_else_typing' |) = lift_atomic_to_st g_else e_else c_else e_else_typing in
     (| c_then, c_else', e_then_typing, e_else_typing' |)
 
-  | C_STGhost _ _, C_STAtomic _ _ ->
+  | C_STGhost _ _, C_STAtomic _ _ _ ->
     let (| c_then', e_then_typing' |) = lift_ghost_to_atomic g_then e_then c_then e_then_typing in
     (| c_then', c_else, e_then_typing', e_else_typing |)
 
-  | C_STAtomic _ _, C_STGhost _ _ ->
+  | C_STAtomic _ _ _, C_STGhost _ _ ->
     let (| c_else', e_else_typing' |) = lift_ghost_to_atomic g_else e_else c_else e_else_typing in
     (| c_then, c_else', e_then_typing, e_else_typing' |)
 
@@ -134,8 +134,14 @@ let lift_if_branches
 let inames_of_comp (c:comp_st) : term =
   match c with
   | C_ST _ -> tm_emp_inames
-  | C_STAtomic inames _ -> inames
+  | C_STAtomic inames _ _ -> inames
   | C_STGhost inames _ -> inames
+
+let obs_of_comp (c:comp_st) : observability =
+  match c with
+  | C_ST _ -> Observable
+  | C_STAtomic _ obs _ -> obs
+  | C_STGhost _ _ -> Unobservable
 
 (* Takes the two branches, with already matched effect,
 and matches their invariants (unless C_ST) *)
@@ -158,14 +164,15 @@ let match_inames
             st_comp_of_comp c_else' == st_comp_of_comp c_else /\
             ctag_of_comp_st c_then' == ctag_of_comp_st c_then /\
             ctag_of_comp_st c_else' == ctag_of_comp_st c_else /\
-            inames_of_comp c_then' == inames_of_comp c_else'
+            inames_of_comp c_then' == inames_of_comp c_else' /\
+            obs_of_comp c_then' == obs_of_comp c_else'
          )
 = match c_then, c_else with
   | C_ST _, C_ST _ ->
     (| c_then, c_else, e_then_typing, e_else_typing |)
 
-  | C_STAtomic inames1 stc_then, C_STAtomic inames2 stc_else ->
-    if eq_tm inames1 inames2 then
+  | C_STAtomic inames1 obs1 stc_then, C_STAtomic inames2 obs2 stc_else ->
+    if eq_tm inames1 inames2 && obs1 = obs2 then
       (* easy case; an optimization *)
       (| c_then, c_else, e_then_typing, e_else_typing |)
     else (
@@ -173,9 +180,9 @@ let match_inames
       // FIXME: this should come from some meta-theorem, we always have is1 `subset` join is1 is2
       let tok1 : prop_validity g_then (tm_inames_subset inames1 is) = RU.magic () in
       let tok2 : prop_validity g_else (tm_inames_subset inames2 is) = RU.magic () in
-      let e_then_typing = T_Sub _ _ _ _ e_then_typing (STS_AtomicInvs g_then stc_then inames1 is tok1) in
-      let e_else_typing = T_Sub _ _ _ _ e_else_typing (STS_AtomicInvs g_else stc_else inames2 is tok2) in
-      (| C_STAtomic is stc_then, C_STAtomic is stc_else, e_then_typing, e_else_typing |)
+      let e_then_typing = T_Sub _ _ _ _ e_then_typing (STS_AtomicInvs g_then stc_then inames1 is obs1 (join_obs obs1 obs2) tok1) in
+      let e_else_typing = T_Sub _ _ _ _ e_else_typing (STS_AtomicInvs g_else stc_else inames2 is obs2 (join_obs obs1 obs2) tok2) in
+      (| C_STAtomic is _ stc_then, C_STAtomic is _ stc_else, e_then_typing, e_else_typing |)
     )
 
   | C_STGhost inames1 stc_then, C_STGhost inames2 stc_else ->

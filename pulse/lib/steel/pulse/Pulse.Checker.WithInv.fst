@@ -145,7 +145,7 @@ let check
   let post_p'_typing = Pulse.Checker.Base.post_typing_as_abstraction (E post_p'_typing_src) in
   let ctag_hint' =
     if None? post.ctag_hint || post.ctag_hint = Some STT then
-      Some STT_Ghost
+      Some STT_Atomic
     else
       post.ctag_hint
   in
@@ -185,13 +185,14 @@ let check
 
   let c_out : comp_st =
     match c_body with
-    | C_ST st -> 
+    | C_ST _
+    | C_STGhost _ _  -> 
       let open Pulse.PP in
       fail_doc g (Some body_range)
         [text "This computation is not atomic nor ghost. \
-               `with_invariants` blocks can only contain ghost or atomic computations."]
-    | C_STAtomic inames st -> C_STAtomic (add_iname inames inv_tm) (st_comp_remove_inv inv_p st)
-    | C_STGhost inames st -> C_STGhost (add_iname inames inv_tm) (st_comp_remove_inv inv_p st)
+               `with_invariants` blocks can only contain atomic computations."]
+    | C_STAtomic inames obs st -> C_STAtomic (add_iname inames inv_tm) Observable (st_comp_remove_inv inv_p st)
+  //  | C_STGhost inames st -> C_STAtomic (add_iname inames inv_tm) Observable (st_comp_remove_inv inv_p st)
   in
   assume (add_inv c_out inv_p == c_body);
 

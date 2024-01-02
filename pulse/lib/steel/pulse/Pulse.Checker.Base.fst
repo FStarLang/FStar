@@ -148,7 +148,7 @@ let comp_st_with_post (c:comp_st) (post:term)
   match c with
   | C_ST st -> C_ST { st with post }
   | C_STGhost i st -> C_STGhost i { st with post }
-  | C_STAtomic i st -> C_STAtomic i {st with post}
+  | C_STAtomic i obs st -> C_STAtomic i obs {st with post}
 
 let ve_unit_r g (p:term) : vprop_equiv g (tm_star p tm_emp) p = 
   VE_Trans _ _ _ _ (VE_Comm _ _ _) (VE_Unit _ _)
@@ -226,7 +226,7 @@ let comp_with_pre (c:comp_st) (pre:term) =
   match c with
   | C_ST st -> C_ST { st with pre }
   | C_STGhost i st -> C_STGhost i { st with pre }
-  | C_STAtomic i st -> C_STAtomic i {st with pre}
+  | C_STAtomic i obs st -> C_STAtomic i obs {st with pre}
 
 
 let st_equiv_pre (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
@@ -294,6 +294,7 @@ let k_elab_equiv
   k
 
 #push-options "--query_stats --fuel 2 --ifuel 2 --split_queries no --z3rlimit_factor 20"
+open Pulse.PP
 let continuation_elaborator_with_bind (#g:env) (ctxt:term)
   (#c1:comp{stateful_comp c1})
   (#e1:st_term)
@@ -317,6 +318,10 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
   in
   let (| c1, e1_typing |) =
     apply_frame ctxt_pre1_typing e1_typing framing_token in
+  info_doc g (Some e1.range) [
+    (doc_of_string "kelab_bind: after apply_frame");
+    prefix 4 1 (doc_of_string "c1 = ") (pp #comp c1)
+  ];
   let (| u_of_1, pre_typing, _, _ |) =
     Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness e1_typing))) in
   let b = res1 in
@@ -344,6 +349,13 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
     else (
       let t_typing, post_typing =
         Pulse.Typing.Combinators.bind_res_and_post_typing g (st_comp_of_comp c2) x post_hint in
+      info_doc g (Some e1.range) [
+        (doc_of_string "kelab_bind: before mk_bind");
+        prefix 4 1 (doc_of_string "c1 = ") (pp #comp c1);
+        prefix 4 1 (doc_of_string "e2 = ") (doc_of_string <| Pulse.Syntax.Printer.st_term_to_string e2);
+        prefix 4 1 (doc_of_string "c2 = ") (pp #comp c2);
+      ];
+      let g = push_context g "mk_bind" e1.range in
       let (| e, c, e_typing |) =
         Pulse.Typing.Combinators.mk_bind
           g (tm_star ctxt pre1) 
@@ -353,6 +365,10 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
           t_typing
           post_typing
       in
+      info_doc g (Some e1.range) [
+        (doc_of_string "kelab_bind: after mk_bind");
+        prefix 4 1 (doc_of_string "c = ") (pp #comp c)
+      ];
       (| e, c, e_typing |)
     )
   in
@@ -500,10 +516,10 @@ let continuation_elaborator_with_bind_fn (#g:env) (#ctxt:term)
         let stc = st_comp_typing_with_post_hint ctxt_typing post_hint c2 in
         CT_ST _ _ stc
       
-      | C_STAtomic i st -> 
+      | C_STAtomic i obs st -> 
         let stc = st_comp_typing_with_post_hint ctxt_typing post_hint c2 in
         let i_typing = CP.core_check_term g i T.E_Total tm_inames in
-        CT_STAtomic _ _ _ i_typing stc
+        CT_STAtomic _ _ obs _ i_typing stc
 
       | C_STGhost i st -> 
         let stc = st_comp_typing_with_post_hint ctxt_typing post_hint c2 in
@@ -548,12 +564,12 @@ let intro_comp_typing (g:env)
     | C_ST st -> 
       let stc = intro_st_comp_typing st in
       CT_ST _ _ stc
-    | C_STAtomic i st -> 
+    | C_STAtomic i obs st -> 
       let stc = intro_st_comp_typing st in
       let (| ty, i_typing |) = CP.core_compute_tot_term_type g i in
       if not (eq_tm ty tm_inames)
       then fail g None (Printf.sprintf "ill-typed inames term %s" (P.term_to_string i))
-      else CT_STAtomic _ _ _ i_typing stc
+      else CT_STAtomic _ _ obs _ i_typing stc
     | C_STGhost i st -> 
       let stc = intro_st_comp_typing st in
       let (| ty, i_typing |) = CP.core_compute_tot_term_type g i in
@@ -638,6 +654,12 @@ let apply_checker_result_k (#g:env) (#ctxt:vprop) (#post_hint:post_hint_for_env 
 
   let (| u_ty_y, d_ty_y |) = Pulse.Checker.Pure.check_universe g1 ty_y in
 
+  info_doc g (Some res_ppname.range) 
+    [
+      prefix 4 1 (doc_of_string "apply_checker_result_k, returning ") (doc_of_string (T.unseal res_ppname.name));
+      prefix 4 1 (doc_of_string "ty_y = ") (pp ty_y);
+      prefix 4 1 (doc_of_string "post_hint = ") (pp #post_hint_t post_hint)
+    ];
   let d : st_typing_in_ctxt g1 pre' (Some post_hint) =
     return_in_ctxt g1 y res_ppname u_ty_y ty_y pre' d_ty_y (Some post_hint) in
 
@@ -700,7 +722,7 @@ let rec is_stateful_arrow (g:env) (c:option comp) (args:list T.argv) (out:list T
     | None -> None
     | Some (C_ST _)
     | Some (C_STGhost _ _)
-    | Some (C_STAtomic _ _) -> (
+    | Some (C_STAtomic _ _ _) -> (
       match args, out with
       | [], hd::tl -> Some (List.rev tl, hd)
       | _ -> None //leftover or not enough args

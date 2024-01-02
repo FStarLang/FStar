@@ -140,11 +140,15 @@ type st_comp = { (* ST pre (x:res) post ... x is free in post *)
   post:vprop
 }
 
+type observability =
+  | Observable
+  | Unobservable
+
 noeq
 type comp =
   | C_Tot      : term -> comp
   | C_ST       : st_comp -> comp
-  | C_STAtomic : inames:term -> st_comp -> comp
+  | C_STAtomic : inames:term -> obs:observability -> st_comp -> comp
   | C_STGhost  : inames:term -> st_comp -> comp
 
 
@@ -169,7 +173,7 @@ let as_effect_hint (c:ctag) : effect_hint = FStar.Sealed.seal (Some c)
 let ctag_of_comp_st (c:comp_st) : ctag =
   match c with
   | C_ST _ -> STT
-  | C_STAtomic _ _ -> STT_Atomic
+  | C_STAtomic _ _ _ -> STT_Atomic
   | C_STGhost _ _ -> STT_Ghost
 
 noeq
@@ -358,7 +362,7 @@ let comp_res (c:comp) : term =
   match c with
   | C_Tot ty -> ty
   | C_ST s
-  | C_STAtomic _ s
+  | C_STAtomic _ _ s
   | C_STGhost _ s -> s.res
 
 let stateful_comp (c:comp) =
@@ -367,36 +371,24 @@ let stateful_comp (c:comp) =
 let st_comp_of_comp (c:comp{stateful_comp c}) : st_comp =
   match c with
   | C_ST s
-  | C_STAtomic _ s
+  | C_STAtomic _ _ s
   | C_STGhost _ s -> s
 
 let with_st_comp (c:comp{stateful_comp c}) (s:st_comp) : comp =
   match c with
   | C_ST _ -> C_ST s
-  | C_STAtomic inames _ -> C_STAtomic inames s
+  | C_STAtomic inames obs _ -> C_STAtomic inames obs s
   | C_STGhost inames _ -> C_STGhost inames s
 
-let comp_u (c:comp { stateful_comp c }) =
-  match c with
-  | C_ST s
-  | C_STAtomic _ s
-  | C_STGhost _ s -> s.u
+let comp_u (c:comp { stateful_comp c }) = (st_comp_of_comp c).u
 
-let comp_pre (c:comp { stateful_comp c }) =
-  match c with
-  | C_ST s
-  | C_STAtomic _ s
-  | C_STGhost _ s -> s.pre
+let comp_pre (c:comp { stateful_comp c }) = (st_comp_of_comp c).pre
 
-let comp_post (c:comp { stateful_comp c }) =
-  match c with
-  | C_ST s
-  | C_STAtomic _ s
-  | C_STGhost _ s -> s.post
+let comp_post (c:comp { stateful_comp c }) = (st_comp_of_comp c).post
 
 let comp_inames (c:comp { C_STAtomic? c \/ C_STGhost? c }) : term =
   match c with
-  | C_STAtomic inames _
+  | C_STAtomic inames _ _
   | C_STGhost inames _ -> inames
 
 let nvar = ppname & var 

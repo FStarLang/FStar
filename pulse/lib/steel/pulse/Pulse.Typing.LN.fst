@@ -96,7 +96,7 @@ let open_comp_ln' (c:comp)
       open_term_ln' s.pre x i;      
       open_term_ln' s.post x (i + 1)
 
-    | C_STAtomic n s
+    | C_STAtomic n _ s
     | C_STGhost n s ->    
       open_term_ln' n x i;    
       open_term_ln' s.res x i;
@@ -410,7 +410,7 @@ let ln_weakening_comp (c:comp) (i j:int)
       ln_weakening s.pre i j;      
       ln_weakening s.post (i + 1) (j + 1)
 
-    | C_STAtomic n s
+    | C_STAtomic n _ s
     | C_STGhost n s ->    
       ln_weakening n i j;    
       ln_weakening s.res i j;
@@ -611,7 +611,7 @@ let open_comp_ln_inv' (c:comp)
       open_term_ln_inv' s.pre x i;      
       open_term_ln_inv' s.post x (i + 1)
 
-    | C_STAtomic n s
+    | C_STAtomic n _ s
     | C_STGhost n s ->    
       open_term_ln_inv' n x i;    
       open_term_ln_inv' s.res x i;
@@ -821,7 +821,7 @@ let close_comp_ln' (c:comp)
       close_term_ln' s.pre x i;      
       close_term_ln' s.post x (i + 1)
 
-    | C_STAtomic n s
+    | C_STAtomic n _ s
     | C_STGhost n s ->    
       close_term_ln' n x i;    
       close_term_ln' s.res x i;
@@ -1076,7 +1076,7 @@ let rec st_sub_ln #g #c1 #c2 (d:st_sub g c1 c2)
       (* This should be easy-ish to prove, since is2 is a subterm *)
       assume (ln (tm_inames_subset is1 is2) ==> ln is2)
 
-    | STS_AtomicInvs g stc is1 is2 tok ->
+    | STS_AtomicInvs g stc is1 is2 _ _ tok ->
       prop_valid_must_be_ln g (tm_inames_subset is1 is2) tok;
       assume (ln (tm_inames_subset is1 is2) ==> ln is2)
 
@@ -1101,7 +1101,7 @@ let comp_typing_ln (#g:_) (#c:_) (#u:_) (d:comp_typing g c u)
   match d with
   | CT_Tot _ _ _ t_typing -> tot_or_ghost_typing_ln t_typing
   | CT_ST _ _ st_typing -> st_comp_typing_ln st_typing
-  | CT_STAtomic _ _ _ inames_typing st_typing
+  | CT_STAtomic _ _ _ _ inames_typing st_typing
   | CT_STGhost _ _ _ inames_typing st_typing ->
     tot_or_ghost_typing_ln inames_typing;
     st_comp_typing_ln st_typing

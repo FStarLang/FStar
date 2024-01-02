@@ -79,7 +79,7 @@ let freevars_close_comp (c:comp)
       freevars_close_term' s.pre x i;      
       freevars_close_term' s.post x (i + 1)
 
-    | C_STAtomic n s
+    | C_STAtomic n _ s
     | C_STGhost n s ->    
       freevars_close_term' n x i;    
       freevars_close_term' s.res x i;
@@ -317,7 +317,7 @@ let bind_comp_freevars (#g:_) (#x:_) (#c1 #c2 #c:_)
               freevars_comp c2 `Set.subset` (Set.union (vars_of_env g) (Set.singleton x)))
     (ensures freevars_comp c `Set.subset` vars_of_env g)
   = match d with
-    | Bind_comp _ _ _ _ dt _ _ 
+    | Bind_comp _ _ _ _ dt _ _
     | Bind_comp_ghost_l _ _ _ _ _ dt _ _ 
     | Bind_comp_ghost_r _ _ _ _ _ dt _ _ -> tot_or_ghost_typing_freevars dt
 
@@ -390,7 +390,7 @@ let rec st_sub_freevars #g (#c1 #c2:_)
     assume (freevars is2 `Set.subset` freevars (tm_inames_subset is1 is2));
     prop_validity_fv g (tm_inames_subset is1 is2)
 
-  | STS_AtomicInvs _ _ is1 is2 tok ->
+  | STS_AtomicInvs _ _ is1 is2 _ _ tok ->
     assume (freevars is2 `Set.subset` freevars (tm_inames_subset is1 is2));
     prop_validity_fv g (tm_inames_subset is1 is2)
 
@@ -421,7 +421,7 @@ let comp_typing_freevars  (#g:_) (#c:_) (#u:_)
     | CT_ST _ _ dst -> 
       st_comp_typing_freevars dst
 
-    | CT_STAtomic _ _ _ it dst -> 
+    | CT_STAtomic _ _ _ _ it dst -> 
       tot_or_ghost_typing_freevars it;
       st_comp_typing_freevars dst
 

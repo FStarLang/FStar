@@ -1928,8 +1928,8 @@ let (canon_post : Pulse_Syntax_Base.comp_st -> Pulse_Syntax_Base.comp_st) =
     match c with
     | Pulse_Syntax_Base.C_ST s ->
         Pulse_Syntax_Base.C_ST (canon_st_comp_post s)
-    | Pulse_Syntax_Base.C_STAtomic (i, s) ->
-        Pulse_Syntax_Base.C_STAtomic (i, (canon_st_comp_post s))
+    | Pulse_Syntax_Base.C_STAtomic (i, obs, s) ->
+        Pulse_Syntax_Base.C_STAtomic (i, obs, (canon_st_comp_post s))
     | Pulse_Syntax_Base.C_STGhost (i, s) ->
         Pulse_Syntax_Base.C_STGhost (i, (canon_st_comp_post s))
 let (typing_canon :

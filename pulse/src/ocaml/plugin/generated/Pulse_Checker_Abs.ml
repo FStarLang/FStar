@@ -45,7 +45,7 @@ let (range_of_comp : Pulse_Syntax_Base.comp -> FStar_Range.range) =
     match c with
     | Pulse_Syntax_Base.C_Tot t -> t.Pulse_Syntax_Base.range1
     | Pulse_Syntax_Base.C_ST st -> range_of_st_comp st
-    | Pulse_Syntax_Base.C_STAtomic (uu___, st) -> range_of_st_comp st
+    | Pulse_Syntax_Base.C_STAtomic (uu___, uu___1, st) -> range_of_st_comp st
     | Pulse_Syntax_Base.C_STGhost (uu___, st) -> range_of_st_comp st
 let rec (arrow_of_abs :
   Pulse_Typing_Env.env ->
@@ -1630,8 +1630,10 @@ let (check_effect_annotation :
                                 Obj.repr
                                   (FStar_Tactics_Effect.lift_div_tac
                                      (fun uu___2 -> nop))
-                            | (Pulse_Syntax_Base.C_STAtomic (i, c1),
-                               Pulse_Syntax_Base.C_STAtomic (j, c2)) ->
+                            | (Pulse_Syntax_Base.C_STAtomic
+                               (i, Pulse_Syntax_Base.Observable, c1),
+                               Pulse_Syntax_Base.C_STAtomic
+                               (j, Pulse_Syntax_Base.Observable, c2)) ->
                                 Obj.repr
                                   (if Pulse_Syntax_Base.eq_tm i j
                                    then
@@ -1991,11 +1993,15 @@ let (check_effect_annotation :
                                                                     j, i, ())
                                                                     | Pulse_Syntax_Base.C_STAtomic
                                                                     (uu___3,
+                                                                    obs,
                                                                     uu___4)
                                                                     ->
                                                                     Pulse_Typing.STS_AtomicInvs
                                                                     (g, c2,
-                                                                    j, i, ()))))))))
+                                                                    j, i,
+                                                                    Pulse_Syntax_Base.Observable,
+                                                                    Pulse_Syntax_Base.Observable,
+                                                                    ()))))))))
                                                                     uu___1)))
                                                                     uu___1)))
                                                           uu___1))) uu___1)))
@@ -2360,11 +2366,15 @@ let (check_effect_annotation :
                                                                     j, i, ())
                                                                     | Pulse_Syntax_Base.C_STAtomic
                                                                     (uu___3,
+                                                                    obs,
                                                                     uu___4)
                                                                     ->
                                                                     Pulse_Typing.STS_AtomicInvs
                                                                     (g, c2,
-                                                                    j, i, ()))))))))
+                                                                    j, i,
+                                                                    Pulse_Syntax_Base.Observable,
+                                                                    Pulse_Syntax_Base.Observable,
+                                                                    ()))))))))
                                                                     uu___1)))
                                                                     uu___1)))
                                                           uu___1))) uu___1)))

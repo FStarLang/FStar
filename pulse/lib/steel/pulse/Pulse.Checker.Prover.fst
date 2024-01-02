@@ -291,7 +291,7 @@ let canon_post (c:comp_st) : comp_st =
   in
   match c with
   | C_ST s -> C_ST (canon_st_comp_post s)
-  | C_STAtomic i s -> C_STAtomic i (canon_st_comp_post s)
+  | C_STAtomic i obs s -> C_STAtomic i obs (canon_st_comp_post s)
   | C_STGhost i s -> C_STGhost i (canon_st_comp_post s)
 
 irreducible

@@ -32,8 +32,8 @@ let admit_comp_typing (g:env) (c:comp_st)
   = match c with
     | C_ST st ->
       CT_ST g st (admit_st_comp_typing g st)
-    | C_STAtomic inames st ->
-      CT_STAtomic g inames st (admit()) (admit_st_comp_typing g st)
+    | C_STAtomic inames obs st ->
+      CT_STAtomic g inames obs st (admit()) (admit_st_comp_typing g st)
     | C_STGhost inames st ->
       CT_STGhost g inames st (admit()) (admit_st_comp_typing g st)      
 
@@ -57,7 +57,7 @@ let add_frame_well_typed (#g:env) (#c:comp_st) (ct:comp_typing_u g c)
 let comp_typing_inversion #g #c ct = 
   match ct with
   | CT_ST _ _ st
-  | CT_STAtomic _ _ _ _ st 
+  | CT_STAtomic _ _ _ _ _ st 
   | CT_STGhost _ _ _ _ st   -> st
 
 let st_comp_typing_inversion_cofinite (#g:env) (#st:_) (ct:st_comp_typing g st) = 
@@ -168,9 +168,9 @@ let rec st_sub_weakening (g:env) (g':env { disjoint g g' })
   | STS_GhostInvs _ stc is1 is2 tok ->
     let tok : prop_validity g'' (tm_inames_subset is1 is2) = prop_validity_token_weakening tok g'' in
     STS_GhostInvs g'' stc is1 is2 tok
-  | STS_AtomicInvs _ stc is1 is2 tok ->
+  | STS_AtomicInvs _ stc is1 is2 o1 o2 tok ->
     let tok : prop_validity g'' (tm_inames_subset is1 is2) = prop_validity_token_weakening tok g'' in
-    STS_AtomicInvs g'' stc is1 is2 tok
+    STS_AtomicInvs g'' stc is1 is2 o1 o2 tok
 
 let st_comp_typing_weakening (g:env) (g':env { disjoint g g' })
   (#s:st_comp) (d:st_comp_typing (push_env g g') s)
@@ -189,8 +189,8 @@ let comp_typing_weakening (g:env) (g':env { disjoint g g' })
   match d with
   | CT_Tot _ t u _ -> CT_Tot _ t u (RU.magic ())
   | CT_ST _ _ d -> CT_ST _ _ (st_comp_typing_weakening g g' d g1)
-  | CT_STAtomic _ inames _ _ d ->
-    CT_STAtomic _ inames _ (RU.magic ()) (st_comp_typing_weakening g g' d g1)
+  | CT_STAtomic _ inames obs _ _ d ->
+    CT_STAtomic _ inames obs _ (RU.magic ()) (st_comp_typing_weakening g g' d g1)
   | CT_STGhost _ inames _ _ d ->
     CT_STGhost _ inames _ (RU.magic ()) (st_comp_typing_weakening g g' d g1)
 
@@ -625,8 +625,8 @@ let comp_typing_subst (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (sin
     CT_Tot _ (subst_term t (nt x e)) u (RU.magic ())
   | CT_ST _ s d_s ->
     CT_ST _ (subst_st_comp s (nt x e)) (st_comp_typing_subst g x t g' e_typing d_s)
-  | CT_STAtomic _ inames s _ d_s ->
-    CT_STAtomic _ inames (subst_st_comp s (nt x e)) (RU.magic ()) (st_comp_typing_subst g x t g' e_typing d_s)
+  | CT_STAtomic _ inames obs s _ d_s ->
+    CT_STAtomic _ inames obs (subst_st_comp s (nt x e)) (RU.magic ()) (st_comp_typing_subst g x t g' e_typing d_s)
   | CT_STGhost _ inames s _ d_s ->
     CT_STGhost _ inames (subst_st_comp s (nt x e)) (RU.magic ()) (st_comp_typing_subst g x t g' e_typing d_s)
   
