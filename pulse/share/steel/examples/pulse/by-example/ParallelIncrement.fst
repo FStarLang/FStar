@@ -225,10 +225,10 @@ ensures qpred ('i + 1)
 ```
 
 assume
-val atomic_read (r:ref int) (#i:erased int)
+val atomic_read (r:ref int) (#p:_) (#i:erased int)
   : stt_atomic int emp_inames 
-    (pts_to r #(half_perm full_perm) i)
-    (fun v -> pts_to r #(half_perm full_perm) v ** pure (reveal i == v))
+    (pts_to r #p i)
+    (fun v -> pts_to r #p v ** pure (reveal i == v))
 
 let cond b (p q:vprop) = if b then p else q
 assume
@@ -284,10 +284,8 @@ ensures qpred ('i + 1)
     with_invariants l {
         elim_inv ();
         with i. _;
-        share x;
         let v = atomic_read x;
-        gather x;
-        with _p. rewrite (pts_to x #_p v) as (pts_to x i);
+        rewrite (pts_to x v) as (pts_to x i);
         intro_inv ();
         v
     }
@@ -331,7 +329,7 @@ ensures qpred ('i + 1)
       };
     continue := next
   };
-  with p q. unfold (cond false p q);
+  unfold cond;
 }
  
 ```

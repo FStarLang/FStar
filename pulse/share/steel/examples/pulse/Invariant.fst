@@ -86,7 +86,7 @@ fn test2 ()
 
 // FIXME: crashes
  ```pulse
- ghost
+ atomic
  fn t0 () (i:inv emp)
    requires emp
    ensures emp
@@ -117,7 +117,7 @@ fn basic_ghost ()
 (* Using invariants while claiming not to. *)
 [@@expect_failure]
 ```pulse
-ghost
+atomic
 fn t1 ()
   requires emp
   ensures emp
@@ -131,7 +131,7 @@ fn t1 ()
 
 (* Overclaiming, OK *)
 ```pulse
-ghost
+atomic
 fn t3 ()
   requires emp
   ensures emp
@@ -151,7 +151,9 @@ fn t2 ()
   ensures emp
 {
   let j = new_invariant' emp;
-  with_invariants j ensures emp {
+  with_invariants j 
+    returns _:unit
+    ensures emp {
     ()
   };
   123

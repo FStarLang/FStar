@@ -45,7 +45,7 @@ fn __return_pledge (os:inames) (f v : vprop)
   ensures pledge os f v
 {
   intro_stick #os f (f ** v) v (return_pledge_aux os f v);
-  fold (op_At_Equals_Equals_Greater #os f (f ** v)); // :-(
+  fold ((@==>) #os f (f ** v));
   fold pledge;
 }
 ```
@@ -72,7 +72,7 @@ fn __make_pledge (os:inames) (f v extra : vprop)
   ensures pledge os f v
 {
   intro_stick #os f (f ** v) extra (make_pledge_aux os f v extra k);
-  fold (op_At_Equals_Equals_Greater #os f (f ** v)); // :-(
+  fold ((@==>) #os f (f ** v));
   fold pledge;
 }
 ```
@@ -86,7 +86,7 @@ fn __redeem_pledge (os : inames) (f v : vprop)
   opens os
 {
   unfold pledge;
-  unfold (op_At_Equals_Equals_Greater #os f (f ** v)); // :-(
+  unfold ((@==>) #os f (f ** v));
   elim_stick #os f (f ** v);
 }
 ```
