@@ -1650,6 +1650,45 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     =
                                                                     let uu___200
                                                                     =
+                                                                    let uu___201
+                                                                    =
+                                                                    e_ret_t
+                                                                    (FStar_Syntax_Embeddings.e_list
+                                                                    (FStar_Syntax_Embeddings.e_tuple2
+                                                                    FStar_Reflection_V2_Embeddings.e_namedv
+                                                                    FStar_Reflection_V2_Embeddings.e_term)) in
+                                                                    let uu___202
+                                                                    =
+                                                                    nbe_e_ret_t
+                                                                    (FStar_TypeChecker_NBETerm.e_list
+                                                                    (FStar_TypeChecker_NBETerm.e_tuple2
+                                                                    FStar_Reflection_V2_NBEEmbeddings.e_namedv
+                                                                    FStar_Reflection_V2_NBEEmbeddings.e_term)) in
+                                                                    FStar_Tactics_InterpFuns.mk_tac_step_4
+                                                                    Prims.int_zero
+                                                                    "try_unify"
+                                                                    FStar_Reflection_V2_Embeddings.e_env
+                                                                    (FStar_Syntax_Embeddings.e_list
+                                                                    (FStar_Syntax_Embeddings.e_tuple2
+                                                                    FStar_Reflection_V2_Embeddings.e_namedv
+                                                                    FStar_Reflection_V2_Embeddings.e_term))
+                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___201
+                                                                    FStar_Reflection_V2_NBEEmbeddings.e_env
+                                                                    (FStar_TypeChecker_NBETerm.e_list
+                                                                    (FStar_TypeChecker_NBETerm.e_tuple2
+                                                                    FStar_Reflection_V2_NBEEmbeddings.e_namedv
+                                                                    FStar_Reflection_V2_NBEEmbeddings.e_term))
+                                                                    FStar_Reflection_V2_NBEEmbeddings.e_term
+                                                                    FStar_Reflection_V2_NBEEmbeddings.e_term
+                                                                    uu___202
+                                                                    FStar_Tactics_V2_Basic.refl_try_unify
+                                                                    FStar_Tactics_V2_Basic.refl_try_unify in
+                                                                    let uu___201
+                                                                    =
+                                                                    let uu___202
+                                                                    =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_3
                                                                     Prims.int_zero
                                                                     "maybe_relate_after_unfolding"
@@ -1671,9 +1710,9 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     FStar_TypeChecker_NBETerm.e_issue))
                                                                     FStar_Tactics_V2_Basic.refl_maybe_relate_after_unfolding
                                                                     FStar_Tactics_V2_Basic.refl_maybe_relate_after_unfolding in
-                                                                    let uu___201
+                                                                    let uu___203
                                                                     =
-                                                                    let uu___202
+                                                                    let uu___204
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
@@ -1694,9 +1733,9 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     FStar_TypeChecker_NBETerm.e_issue))
                                                                     FStar_Tactics_V2_Basic.refl_maybe_unfold_head
                                                                     FStar_Tactics_V2_Basic.refl_maybe_unfold_head in
-                                                                    let uu___203
+                                                                    let uu___205
                                                                     =
-                                                                    let uu___204
+                                                                    let uu___206
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
@@ -1709,9 +1748,9 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_env
                                                                     FStar_Tactics_V2_Basic.push_open_namespace
                                                                     FStar_Tactics_V2_Basic.push_open_namespace in
-                                                                    let uu___205
+                                                                    let uu___207
                                                                     =
-                                                                    let uu___206
+                                                                    let uu___208
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_3
                                                                     Prims.int_zero
@@ -1726,9 +1765,9 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_env
                                                                     FStar_Tactics_V2_Basic.push_module_abbrev
                                                                     FStar_Tactics_V2_Basic.push_module_abbrev in
-                                                                    let uu___207
+                                                                    let uu___209
                                                                     =
-                                                                    let uu___208
+                                                                    let uu___210
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
@@ -1749,9 +1788,9 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_fv)))
                                                                     FStar_Tactics_V2_Basic.resolve_name
                                                                     FStar_Tactics_V2_Basic.resolve_name in
-                                                                    let uu___209
+                                                                    let uu___211
                                                                     =
-                                                                    let uu___210
+                                                                    let uu___212
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -1764,7 +1803,10 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                     FStar_Tactics_V2_Basic.log_issues
                                                                     FStar_Tactics_V2_Basic.log_issues in
-                                                                    [uu___210] in
+                                                                    [uu___212] in
+                                                                    uu___210
+                                                                    ::
+                                                                    uu___211 in
                                                                     uu___208
                                                                     ::
                                                                     uu___209 in

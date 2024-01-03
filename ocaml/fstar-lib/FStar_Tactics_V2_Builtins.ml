@@ -155,6 +155,7 @@ let tc_term                      = from_tac_2 "B.refl_tc_term" B.refl_tc_term
 let universe_of                  = from_tac_2 "B.refl_universe_of" B.refl_universe_of
 let check_prop_validity          = from_tac_2 "B.refl_check_prop_validity" B.refl_check_prop_validity
 let instantiate_implicits        = from_tac_2 "B.refl_instantiate_implicits" B.refl_instantiate_implicits
+let try_unify                    = from_tac_4 "B.refl_try_unify" B.refl_try_unify
 let maybe_relate_after_unfolding = from_tac_3 "B.refl_maybe_relate_after_unfolding" B.refl_maybe_relate_after_unfolding
 let maybe_unfold_head            = from_tac_2 "B.refl_maybe_unfold_head" B.refl_maybe_unfold_head
 let push_open_namespace          = from_tac_2 "B.push_open_namespace" B.push_open_namespace
