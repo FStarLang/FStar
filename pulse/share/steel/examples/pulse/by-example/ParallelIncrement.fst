@@ -293,6 +293,34 @@ ensures qpred ('i + 1)
     }
   };
   let mut continue = true;
+  fn while_body ()
+  requires
+    cond true (qpred 'i) (qpred ('i + 1))
+  returns b1:bool
+  ensures
+    cond b1 (qpred 'i) (qpred ('i + 1))
+  {
+    let v = read ();
+    with_invariants l {
+      elim_inv ();
+      let b = cas x v (v + 1);
+      if b
+      {
+        elim_cond_true b _ _;
+        elim_cond_true true _ _;
+        f _ _;
+        intro_cond_false (qpred 'i) (qpred ('i + 1));
+        intro_inv ();
+        false
+      }
+      else
+      {
+        with p q. rewrite (cond b p q) as q;
+        intro_inv ();
+        true
+      }
+    }
+  };
   fold (cond true (qpred 'i) (qpred ('i + 1)));
   while (
     with _b. _;
@@ -305,7 +333,12 @@ ensures qpred ('i + 1)
     cond b (qpred 'i) (qpred ('i + 1))
   {
     let v = read ();
-    with_invariants l {
+    let next = 
+      with_invariants l
+      returns b1:bool
+      ensures cond b1 (qpred 'i) (qpred ('i + 1))
+          ** pts_to continue true
+      {
         elim_inv ();
         let b = cas x v (v + 1);
         if b
@@ -313,18 +346,18 @@ ensures qpred ('i + 1)
           elim_cond_true b _ _;
           elim_cond_true true _ _;
           f _ _;
-          // continue := false; //local variable assignment is considered non-atomic
           intro_cond_false (qpred 'i) (qpred ('i + 1));
           intro_inv ();
-          // show_proof_state; //the proof is done here, except for the assignment to continue
-          admit()
+          false
         }
         else
         {
           with p q. rewrite (cond b p q) as q;
           intro_inv ();
+          true
         }
-    }
+      };
+    continue := next
   };
   with p q. unfold (cond false p q);
 }

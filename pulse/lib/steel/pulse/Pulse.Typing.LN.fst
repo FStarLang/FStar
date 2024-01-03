@@ -314,9 +314,14 @@ let rec open_st_term_ln' (e:st_term)
       open_proof_hint_ln hint_type x (i + n);
       open_st_term_ln' t x (i + n)
 
-    | Tm_WithInv { name; body } ->
+    | Tm_WithInv { name; body; returns_inv } ->
       open_term_ln' name x i;
-      open_st_term_ln' body x i
+      open_st_term_ln' body x i;
+      match returns_inv with
+      | None -> ()
+      | Some (b, r) ->
+        open_term_ln' b.binder_ty x i;
+        open_term_ln' r x (i + 1)
 
 // The Tm_Match? and __brs_of conditions are to prove that the ln_branches' below
 // satisfies the termination refinment.
@@ -551,9 +556,14 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       ln_weakening_proof_hint hint_type (i + n) (j + n);
       ln_weakening_st t (i + n) (j + n)
 
-    | Tm_WithInv { name; body } ->
+    | Tm_WithInv { name; body; returns_inv } ->
       ln_weakening name i j;
-      ln_weakening_st body i j
+      ln_weakening_st body i j;
+      match returns_inv with
+      | None -> ()
+      | Some (b, r) ->
+        ln_weakening b.binder_ty i j;
+        ln_weakening r (i + 1) (j + 1)
 
 assume
 val r_open_term_ln_inv' (e:R.term) (x:R.term { RT.ln x }) (i:index)
@@ -762,9 +772,14 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_proof_hint_ln_inv hint_type x (i + n);
       open_term_ln_inv_st' t x (i + n)
 
-    | Tm_WithInv { name; body } ->
+    | Tm_WithInv { name; body; returns_inv } ->
       open_term_ln_inv' name x i;
-      open_term_ln_inv_st' body x i
+      open_term_ln_inv_st' body x i;
+      match returns_inv with
+      | None -> ()
+      | Some (b, r) ->
+        open_term_ln_inv' b.binder_ty x i;
+        open_term_ln_inv' r x (i + 1)
 
 #pop-options
 
@@ -882,6 +897,7 @@ let close_proof_hint_ln (ht:proof_hint_type) (v:var) (i:index)
     | WILD
     | SHOW_PROOF_STATE _ -> ()
 
+#push-options "--query_stats --fuel 2 --ifuel 2 --z3rlimit_factor 2"
 let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
   : Lemma
     (requires ln_st' t (i - 1))
@@ -967,10 +983,15 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_proof_hint_ln hint_type x (i + n);
       close_st_term_ln' t x (i + n)
       
-    | Tm_WithInv { name; body } ->
+    | Tm_WithInv { name; body; returns_inv } ->
       close_term_ln' name x i;
-      close_st_term_ln' body x i
-
+      close_st_term_ln' body x i;
+      match returns_inv with
+      | None -> ()
+      | Some (ret_ty, returns_inv) ->
+        close_term_ln' ret_ty.binder_ty x i;
+        close_term_ln' returns_inv x (i + 1)
+#pop-options
 let close_comp_ln (c:comp) (v:var)
   : Lemma 
     (requires ln_c c)

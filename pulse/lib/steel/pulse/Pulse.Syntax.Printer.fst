@@ -388,7 +388,12 @@ let rec st_term_to_string' (level:string) (t:st_term)
       sprintf "with_inv %s %s %s"
         (term_to_string name)
         (st_term_to_string' level body)
-        (term_opt_to_string returns_inv)
+        (match returns_inv with
+         | None -> ""
+         | Some (b, t) ->
+          sprintf "\nreturns %s\nensures %s"
+            (binder_to_string b)
+            (term_to_string t))
 
 and branches_to_string brs : T.Tac _ =
   match brs with

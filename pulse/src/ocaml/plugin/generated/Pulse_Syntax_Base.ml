@@ -434,7 +434,7 @@ and st_term'__Tm_WithInv__payload =
   {
   name1: term ;
   body6: st_term ;
-  returns_inv: vprop FStar_Pervasives_Native.option }
+  returns_inv: (binder * vprop) FStar_Pervasives_Native.option }
 and st_term' =
   | Tm_Return of st_term'__Tm_Return__payload 
   | Tm_Abs of st_term'__Tm_Abs__payload 
@@ -792,8 +792,15 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
             (eq_st_term t11 t21)
       | (Tm_WithInv { name1; body6 = body1; returns_inv = r1;_}, Tm_WithInv
          { name1 = name2; body6 = body2; returns_inv = r2;_}) ->
-          ((eq_tm name1 name2) && (eq_tm_opt r1 r2)) &&
-            (eq_st_term body1 body2)
+          ((eq_tm name1 name2) &&
+             (eq_opt
+                (fun uu___ ->
+                   fun uu___1 ->
+                     match (uu___, uu___1) with
+                     | ((b1, r11), (b2, r21)) ->
+                         (eq_tm b1.binder_ty b2.binder_ty) && (eq_tm r11 r21))
+                r1 r2))
+            && (eq_st_term body1 body2)
       | uu___ -> false
 and (eq_branch : (pattern * st_term) -> (pattern * st_term) -> Prims.bool) =
   fun b1 ->

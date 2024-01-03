@@ -254,9 +254,13 @@ let rec close_open_inverse_st'  (t:st_term)
       
     | Tm_WithInv { name; body; returns_inv } ->
       close_open_inverse' name x i;
-      close_open_inverse_opt' returns_inv x i;
-      close_open_inverse_st' body x i
-
+      close_open_inverse_st' body x i;
+      match returns_inv with
+      | None -> ()
+      | Some (b, r) ->
+        close_open_inverse' b.binder_ty x i;
+        close_open_inverse' r x (i + 1)
+   
 let close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )
   : Lemma (ensures close_term (open_term t x) x == t)
           (decreases t)

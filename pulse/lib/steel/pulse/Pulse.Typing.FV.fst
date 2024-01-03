@@ -235,8 +235,12 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
 
     | Tm_WithInv { name; body; returns_inv } ->
       freevars_close_term' name x i;
-      freevars_close_term_opt' returns_inv x i;
-      freevars_close_st_term' body x i
+      freevars_close_st_term' body x i;
+      match returns_inv with
+      | None -> ()
+      | Some (b, r) ->
+        freevars_close_term' b.binder_ty x i;
+        freevars_close_term' r x (i + 1)
 #pop-options
 
 let freevars_close_term (e:term) (x:var) (i:index)

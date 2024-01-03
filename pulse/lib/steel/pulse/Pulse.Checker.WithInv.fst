@@ -31,12 +31,12 @@ module MT = Pulse.Typing.Metatheory
 
 let rt_recheck (gg:env) (#g:T.env) (#e:T.term) (#ty: T.typ) () : T.Tac (RT.tot_typing g e ty) =
   let open Pulse.PP in
-  info_doc gg (Some (T.range_of_term e)) [
-    doc_of_string "Re-checking" ^/^
-      pp e ^/^
-    doc_of_string "at type" ^/^
-      pp ty
-   ];
+  // info_doc gg (Some (T.range_of_term e)) [
+  //   doc_of_string "Re-checking" ^/^
+  //     pp e ^/^
+  //   doc_of_string "at type" ^/^
+  //     pp ty
+  //  ];
   match T.core_check_term g e ty T.E_Total with
   | Some tok, _ -> RT.T_Token _ _ _ ()
   | None, _ -> T.fail "Checker.WithInv: rt_recheck failed" // fixme add a range
@@ -77,19 +77,23 @@ let check
   let post : post_hint_t =
     match returns_inv, post_hint with
     | None, Some p -> p
-    | Some p, None ->
-      Pulse.Checker.Base.intro_post_hint g None None p
-    | Some p, Some q ->
-      fail g (Some t.range) "Fatal: multiple posts hint on with_invariant"
+    | Some (b, p), None ->
+      Pulse.Checker.Base.intro_post_hint g None (Some b.binder_ty) p
+    | Some (_, p), Some q ->
+      let open Pulse.PP in
+      fail_doc g (Some t.range) 
+      [ doc_of_string "Fatal: multiple annotated postconditions on with_invariant";
+        prefix 4 1 (text "First postcondition:") (pp p);
+        prefix 4 1 (text "Second postcondition:") (pp q) ]
     | _, _ ->
       fail g (Some t.range) "Fatal: no post hint on with_invariant"
   in
   let post_hint = Some post in
 
-  info_doc g (Some t.range) [
-    let open Pulse.PP in
-    prefix 4 1 (doc_of_string "Checker.WithInv: using post_hint =") (pp post_hint)
-  ];
+  // info_doc g (Some t.range) [
+  //   let open Pulse.PP in
+  //   prefix 4 1 (doc_of_string "Checker.WithInv: using post_hint =") (pp post_hint)
+  // ];
 
   (* FIXME: should check `inv_tm` at expected type `inv ?u`, and then
   we obtain vprop from u. If so the whole block below should not be
@@ -169,10 +173,10 @@ let check
     apply_checker_result_k r ppname
   in
   
-  (let open Pulse.PP in
-   info_doc g (Some body_range) [
-     text "Checked body at comp type:" ^/^ arbitrary_string (P.comp_to_string c_body)
-   ]);
+  // (let open Pulse.PP in
+  //  info_doc g (Some body_range) [
+  //    text "Checked body at comp type:" ^/^ arbitrary_string (P.comp_to_string c_body)
+  //  ]);
 
   let add_iname (inames:term) (i:term) : T.Tac term =
     let a = elab_term inames in

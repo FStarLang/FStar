@@ -318,10 +318,6 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
   in
   let (| c1, e1_typing |) =
     apply_frame ctxt_pre1_typing e1_typing framing_token in
-  info_doc g (Some e1.range) [
-    (doc_of_string "kelab_bind: after apply_frame");
-    prefix 4 1 (doc_of_string "c1 = ") (pp #comp c1)
-  ];
   let (| u_of_1, pre_typing, _, _ |) =
     Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness e1_typing))) in
   let b = res1 in
@@ -349,12 +345,6 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
     else (
       let t_typing, post_typing =
         Pulse.Typing.Combinators.bind_res_and_post_typing g (st_comp_of_comp c2) x post_hint in
-      info_doc g (Some e1.range) [
-        (doc_of_string "kelab_bind: before mk_bind");
-        prefix 4 1 (doc_of_string "c1 = ") (pp #comp c1);
-        prefix 4 1 (doc_of_string "e2 = ") (doc_of_string <| Pulse.Syntax.Printer.st_term_to_string e2);
-        prefix 4 1 (doc_of_string "c2 = ") (pp #comp c2);
-      ];
       let g = push_context g "mk_bind" e1.range in
       let (| e, c, e_typing |) =
         Pulse.Typing.Combinators.mk_bind
@@ -365,10 +355,6 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
           t_typing
           post_typing
       in
-      info_doc g (Some e1.range) [
-        (doc_of_string "kelab_bind: after mk_bind");
-        prefix 4 1 (doc_of_string "c = ") (pp #comp c)
-      ];
       (| e, c, e_typing |)
     )
   in
@@ -654,12 +640,6 @@ let apply_checker_result_k (#g:env) (#ctxt:vprop) (#post_hint:post_hint_for_env 
 
   let (| u_ty_y, d_ty_y |) = Pulse.Checker.Pure.check_universe g1 ty_y in
 
-  info_doc g (Some res_ppname.range) 
-    [
-      prefix 4 1 (doc_of_string "apply_checker_result_k, returning ") (doc_of_string (T.unseal res_ppname.name));
-      prefix 4 1 (doc_of_string "ty_y = ") (pp ty_y);
-      prefix 4 1 (doc_of_string "post_hint = ") (pp #post_hint_t post_hint)
-    ];
   let d : st_typing_in_ctxt g1 pre' (Some post_hint) =
     return_in_ctxt g1 y res_ppname u_ty_y ty_y pre' d_ty_y (Some post_hint) in
 
