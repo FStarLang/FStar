@@ -214,93 +214,54 @@ let is_reveal (t:term) : bool =
 module RT = FStar.Reflection.Typing
 
 //
-// We are not checking if s0 and s1 solve intersection uvars to same terms
+// Call into the F* unifier to solve for uvs by unifying p and q
 //
-// But that's ok, correctness doesn't rely on it
-//
-let compose (s0 s1: PS.ss_t)
-  : T.Tac 
-    (option (s:PS.ss_t {  
-      Set.equal (PS.dom s) (Set.union (PS.dom s0) (PS.dom s1))
-     })) =
-  let s = PS.push_ss s0 (PS.diff s1 s0) in
-  assume (Set.equal (PS.dom s) (Set.union (PS.dom s0) (PS.dom s1)));
-  Some s
+let try_solve_uvars (g:env) (uvs:env { disjoint uvs g }) (p q:term)
+  : T.Tac (ss:PS.ss_t { PS.dom ss `Set.subset` freevars q }) =
 
-let maybe_canon_term (x:term) : term = 
-  match readback_ty (elab_term x) with
-  | None -> x
-  | Some x -> x
+  let uvs = uvs
+    |> bindings_with_ppname
+    |> L.rev
+    |> L.map (fun (({name}, x, t):(ppname & _ & _)) ->
+         let nv_view = {
+           R.uniq = x;
+           R.sort = elab_term t;
+           R.ppname = name;
+         } in
+         let nv = R.pack_namedv nv_view in
+         nv, elab_term t
+       ) in
 
-let rec try_solve_uvars 
-          (g:env) (uvs:env { disjoint uvs g })
-          (p q:term)
-: T.Tac (ss:PS.ss_t { PS.dom ss `Set.subset` freevars q })
-= assume (Set.equal (PS.dom PS.empty) Set.empty);
-  debug_prover g (fun _ ->
-    Printf.sprintf "prover matcher:{\n%s \n=?=\n %s}"
-       (P.term_to_string p)
-       (P.term_to_string q));
-  
-  if not (contains_uvar q uvs g)
-  then PS.empty
-  else begin
-    match is_reveal_uvar q uvs, is_reveal p with
-    | Some (u, ty, n), false ->
-      let w = mk_hide u ty p in
-      assume (~ (PS.contains PS.empty n));
-      let ss = PS.push PS.empty n (maybe_canon_term w) in
-      assume (n `Set.mem` freevars q);
-      assume (Set.equal (PS.dom ss) (Set.singleton n));
-      ss
-    | _ ->
-      match is_uvar q uvs with
-      | Some n ->
-        let w = p in
-        assume (~ (PS.contains PS.empty n));
-        let ss = PS.push PS.empty n (maybe_canon_term w) in
-        assume (n `Set.mem` freevars q);
-        assume (Set.equal (PS.dom ss) (Set.singleton n));
-        debug_prover g (fun _ ->
-          Printf.sprintf "prover matcher: solved uvar %d with %s" n (P.term_to_string w));
-        ss
- 
-      | _ ->
-        match p.t, q.t with
-        | Tm_Pure p1, Tm_Pure q1 ->
-          try_solve_uvars g uvs p1 q1
+  let l, issues = RU.with_context (get_context g) (fun _ ->
+    T.try_unify (elab_env g) uvs (elab_term p) (elab_term q))
+  in
 
-        | Tm_Star p1 p2, Tm_Star q1 q2 -> (
-          let ss1 = try_solve_uvars g uvs p1 q1 in
-          let ss2 = try_solve_uvars g uvs p2 q2 in
-          match compose ss1 ss2 with
-          | None -> PS.empty
-          | Some ss -> ss
-        )
-        
-        | Tm_ForallSL u1 b1 body1, Tm_ForallSL u2 b2 body2 -> (
-          let ss1 = try_solve_uvars g uvs b1.binder_ty b2.binder_ty in
-          let ss2 = try_solve_uvars g uvs body1 body2 in
-          if Substs.ln_ss_t ss2
-          then
-            match compose ss1 ss2 with
-            | None -> PS.empty
-            | Some ss -> ss
-          else PS.empty
-        )
+  T.log_issues issues;
 
-        | _, _ ->
-          match is_pure_app p, is_pure_app q with
-          | Some (head_p, qual_p, arg_p), Some (head_q, qual_q, arg_q) -> (
-            assume ((Set.union (freevars head_q) (freevars arg_q)) `Set.subset` freevars q);
-            let ss_head = try_solve_uvars g uvs head_p head_q in
-            let ss_arg = try_solve_uvars g uvs arg_p arg_q in
-            match compose ss_head ss_arg with
-            | None -> PS.empty
-            | Some ss -> ss
-          )
-          | _, _ -> PS.empty
-  end
+  // build ss
+  let ss = PS.empty in
+  assume (PS.dom ss `Set.subset` freevars q);
+  match l with
+  | None -> ss
+  | Some l ->
+    let q_names = freevars q in
+    L.fold_left (fun (ss:(ss:PS.ss_t { PS.dom ss `Set.subset` freevars q })) (x, t) ->
+      let nv_view = R.inspect_namedv x in
+      let topt = readback_ty t in
+      match topt with
+      | Some t ->
+        if Set.mem nv_view.uniq q_names &&
+           not (Set.mem nv_view.uniq (PS.dom ss))
+        then begin
+          let ss_new = PS.push ss nv_view.uniq t in
+          assert (nv_view.uniq `Set.mem` freevars q);
+          assert (PS.dom ss `Set.subset` freevars q);
+          assume (PS.dom ss_new `Set.subset` freevars q);
+          ss_new
+        end
+        else ss
+      | None -> ss
+    ) ss l
 
 let unify (g:env) (uvs:env { disjoint uvs g})
   (p q:term)
