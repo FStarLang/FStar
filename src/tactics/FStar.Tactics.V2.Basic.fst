@@ -2685,27 +2685,47 @@ let refl_try_unify (g:env) (uvs:list (bv & typ)) (t0 t1:term)
                            (show t1)
                            (show uvs));
     let g = Env.set_range g t0.pos in
+    //
+    // create uvars for the bvs in uvs,
+    //   and maintain a mapping from uvars to bvs in tbl
+    // we apply substitutions to uvs accordingly (replacing uvs names with newly created uvars)
+    //
     let guard_uvs, ss, tbl = List.fold_left (fun (guard_uvs, ss, tbl) (bv, t) ->
       let t = SS.subst ss t in
       let uv_t, [ctx_u, _], guard_uv =
-        Env.new_implicit_var_aux "" t0.pos g t (Allow_untyped "") None in
+        // the API doesn't promise well-typedness of the solutions
+        let reason = BU.format1 "refl_try_unify for %s" (show bv) in
+        let should_check_uvar = Allow_untyped "refl_try_unify" in
+        Env.new_implicit_var_aux reason t0.pos g t should_check_uvar None in
       let uv_id = Syntax.Unionfind.uvar_unique_id ctx_u.ctx_uvar_head in
       Env.conj_guard guard_uvs guard_uv,
       (NT (bv, uv_t))::ss,
       BU.pimap_add tbl uv_id (ctx_u.ctx_uvar_head, bv)
     ) (Env.trivial_guard, [], (BU.pimap_empty ())) uvs in
     let t0, t1 = SS.subst ss t0, SS.subst ss t1 in
-    let guard_opt = Rel.try_teq true {g with phase1=true; lax=true} t0 t1 in
+    let g = { g with phase1=true; lax=true } in
+    let guard_eq =
+      let smt_ok = true in
+      Rel.try_teq smt_ok g t0 t1 in
     let l =
-      match guard_opt with
-      | None -> []
+      match guard_eq with
+      | None -> []  // could not unify
       | Some guard ->
         let guard = Env.conj_guard guard_uvs guard in
         let guard = guard |> Rel.solve_deferred_constraints g |> Rel.resolve_implicits g in
+
+        //
+        // if there is some unresolved implicit that was not part of uvs,
+        //   e.g., created as part of Rel.try_teq, return []
+        //
         let b = List.existsb (fun {imp_uvar = {ctx_uvar_head = (uv, _, _)}} ->
           BU.pimap_try_find tbl (Unionfind.puf_unique_id uv) = None) guard.implicits in
         if b then []
         else
+          //
+          // iterate over the tbl
+          // return uvs that could be solved fully
+          //
           BU.pimap_fold tbl (fun id (uvar, bv) l ->
             match Syntax.Unionfind.find uvar with
             | Some t ->

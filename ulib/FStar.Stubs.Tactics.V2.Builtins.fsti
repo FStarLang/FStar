@@ -546,6 +546,23 @@ val check_match_complete (g:env) (sc:term) (t:typ) (pats:list pattern)
 val instantiate_implicits (g:env) (t:term)
   : Tac (ret_t (list (namedv & typ) & term & typ))
 
+//
+// Tries to find substitutions for the names in uvs
+//   by unifying t0 and t1
+//
+// Internally, it creates fresh unification variables for uvs,
+//   substitutes them in t0 and t1,
+//   and tries to unify them
+//
+// The returned list contains uvs that could be solved
+//
+// uvs names are oldest binding first (i.e., most recent binding at the end of the list)
+//
+// and under the environment (g, (rev uvs)), t0 and t1 should be well-typed
+//
+// The API does not provide any guarantees, the caller should typecheck
+//   that the solutions are well-typed
+//
 val try_unify (g:env) (uvs:list (namedv & typ)) (t0 t1:term)
   : Tac (ret_t (list (namedv & term)))
 
