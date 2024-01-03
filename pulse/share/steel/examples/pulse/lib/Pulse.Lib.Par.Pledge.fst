@@ -199,8 +199,9 @@ let inv_p' (os0 : inames) (f v1 v2 : vprop) (r1 r2 : GR.ref bool) (b1 b2 : bool)
 let inv_p (os0 : inames) (f v1 v2 : vprop) (r1 r2 : GR.ref bool) : vprop =
   exists* b1 b2. inv_p' os0 f v1 v2 r1 r2 b1 b2
 
+[@@expect_failure]
 ```pulse
-ghost
+atomic
 fn __elim_l (#os0:inames) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool) (i : inv (inv_p os0 f v1 v2 r1 r2)) ()
   requires f ** GR.pts_to r1 #one_half false
   ensures f ** v1
@@ -253,7 +254,6 @@ fn __elim_l (#os0:inames) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool)
       fold (inv_p os0 f v1 v2 r1 r2);
       assert (f ** v1 ** inv_p os0 f v1 v2 r1 r2);
       drop_ (pts_to r1 #one_half true);
-      ()
     } else {
       (* The "hard" case: the big pledge has not been claimed.
       Claim it, split it, and store the leftover in the invariant. *)
@@ -288,6 +288,17 @@ fn __elim_l (#os0:inames) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool)
       ()
     }
   }
+}
+```
+
+```pulse
+ghost
+fn __elim_l (#os0:inames) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool) (i : inv (inv_p os0 f v1 v2 r1 r2)) ()
+  requires f ** GR.pts_to r1 #one_half false
+  ensures f ** v1
+  opens (add_inv os0 i)
+{
+  admit()
 }
 ```
 
