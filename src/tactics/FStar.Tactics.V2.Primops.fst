@@ -254,6 +254,10 @@ let ops = [
     #_ #_ #(e_ret_t (e_tuple3 (e_list (e_tuple2 RE.e_namedv solve)) solve solve))
     #_ #_ #(nbe_e_ret_t (NBET.e_tuple3 (NBET.e_list (NBET.e_tuple2 NRE.e_namedv solve)) solve solve))
     refl_instantiate_implicits refl_instantiate_implicits;
+  mk_tac_step_4 0 "try_unify"
+    #RE.e_env #(e_list (e_tuple2 RE.e_namedv RE.e_term)) #RE.e_term #RE.e_term #(e_ret_t (e_list (e_tuple2 RE.e_namedv RE.e_term)))
+    #NRE.e_env #(NBET.e_list (NBET.e_tuple2 NRE.e_namedv NRE.e_term)) #NRE.e_term #NRE.e_term #(nbe_e_ret_t (NBET.e_list (NBET.e_tuple2 NRE.e_namedv NRE.e_term)))
+    refl_try_unify refl_try_unify;
   mk_tac_step_3 0 "maybe_relate_after_unfolding" refl_maybe_relate_after_unfolding refl_maybe_relate_after_unfolding;
   mk_tac_step_2 0 "maybe_unfold_head" refl_maybe_unfold_head refl_maybe_unfold_head;
   mk_tac_step_2 0 "push_open_namespace" push_open_namespace push_open_namespace;

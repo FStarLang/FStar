@@ -2672,6 +2672,57 @@ let refl_instantiate_implicits (g:env) (e:term)
   )
   else return (None, [unexpected_uvars_issue (Env.get_range g)])
 
+let refl_try_unify (g:env) (uvs:list (bv & typ)) (t0 t1:term)
+  : tac (option (list (bv & term)) & issues) =
+
+  if no_uvars_in_g g &&
+     no_uvars_in_term t0 &&
+     no_uvars_in_term t1 &&
+     List.for_all no_uvars_in_term (List.map snd uvs)
+  then refl_typing_builtin_wrapper "refl_try_unify" (fun _ ->
+    dbg_refl g (fun _ -> BU.format3 "refl_try_unify %s and %s, with uvs: %s {\n"
+                           (show t0)
+                           (show t1)
+                           (show uvs));
+    let g = Env.set_range g t0.pos in
+    let guard_uvs, ss, tbl = List.fold_left (fun (guard_uvs, ss, tbl) (bv, t) ->
+      let t = SS.subst ss t in
+      let uv_t, [ctx_u, _], guard_uv =
+        Env.new_implicit_var_aux "" t0.pos g t (Allow_untyped "") None in
+      let uv_id = Syntax.Unionfind.uvar_unique_id ctx_u.ctx_uvar_head in
+      Env.conj_guard guard_uvs guard_uv,
+      (NT (bv, uv_t))::ss,
+      BU.pimap_add tbl uv_id (ctx_u.ctx_uvar_head, bv)
+    ) (Env.trivial_guard, [], (BU.pimap_empty ())) uvs in
+    let t0, t1 = SS.subst ss t0, SS.subst ss t1 in
+    let guard_opt = Rel.try_teq true {g with phase1=true; lax=true} t0 t1 in
+    let l =
+      match guard_opt with
+      | None -> []
+      | Some guard ->
+        let guard = Env.conj_guard guard_uvs guard in
+        let guard = guard |> Rel.solve_deferred_constraints g |> Rel.resolve_implicits g in
+        let b = List.existsb (fun {imp_uvar = {ctx_uvar_head = (uv, _, _)}} ->
+          BU.pimap_try_find tbl (Unionfind.puf_unique_id uv) = None) guard.implicits in
+        if b then []
+        else
+          BU.pimap_fold tbl (fun id (uvar, bv) l ->
+            match Syntax.Unionfind.find uvar with
+            | Some t ->
+              let allow_uvars = true in
+              let allow_names = true in
+              let t = SC.deep_compress allow_uvars allow_names t in
+              if t |> Syntax.Free.uvars_full |> Set.is_empty
+              then (bv, t)::l
+              else l
+            | None -> l
+          ) [] in
+    dbg_refl g (fun _ -> BU.format1 "} refl_try_unify, substitution is: %s\n" (show l));
+    l, [] 
+  )
+  else return (None, [unexpected_uvars_issue (Env.get_range g)])
+
+
 let refl_maybe_relate_after_unfolding (g:env) (t0 t1:typ)
   : tac (option Core.side & issues) =
 

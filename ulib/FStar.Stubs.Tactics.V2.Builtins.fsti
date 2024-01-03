@@ -546,6 +546,9 @@ val check_match_complete (g:env) (sc:term) (t:typ) (pats:list pattern)
 val instantiate_implicits (g:env) (t:term)
   : Tac (ret_t (list (namedv & typ) & term & typ))
 
+val try_unify (g:env) (uvs:list (namedv & typ)) (t0 t1:term)
+  : Tac (ret_t (list (namedv & term)))
+
 val maybe_relate_after_unfolding (g:env) (t1 t2:term)
   : Tac (ret_t unfold_side)
 
