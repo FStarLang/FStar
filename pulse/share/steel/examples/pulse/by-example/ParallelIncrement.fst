@@ -293,34 +293,6 @@ ensures qpred ('i + 1)
     }
   };
   let mut continue = true;
-  fn while_body ()
-  requires
-    cond true (qpred 'i) (qpred ('i + 1))
-  returns b1:bool
-  ensures
-    cond b1 (qpred 'i) (qpred ('i + 1))
-  {
-    let v = read ();
-    with_invariants l {
-      elim_inv ();
-      let b = cas x v (v + 1);
-      if b
-      {
-        elim_cond_true b _ _;
-        elim_cond_true true _ _;
-        f _ _;
-        intro_cond_false (qpred 'i) (qpred ('i + 1));
-        intro_inv ();
-        false
-      }
-      else
-      {
-        with p q. rewrite (cond b p q) as q;
-        intro_inv ();
-        true
-      }
-    }
-  };
   fold (cond true (qpred 'i) (qpred ('i + 1)));
   while (
     with _b. _;

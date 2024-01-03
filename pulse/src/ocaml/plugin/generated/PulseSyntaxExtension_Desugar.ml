@@ -1959,6 +1959,9 @@ and (desugar_bind :
                         (fun uu___1 ->
                            (fun annot ->
                               let annot = Obj.magic annot in
+                              let b =
+                                PulseSyntaxExtension_SyntaxWrapper.mk_binder
+                                  lb.PulseSyntaxExtension_Sugar.id annot in
                               let uu___1 =
                                 let uu___2 =
                                   PulseSyntaxExtension_Env.push_bv env
@@ -2062,10 +2065,6 @@ and (desugar_bind :
                                                                     =
                                                                     Obj.magic
                                                                     lam1 in
-                                                                    let b =
-                                                                    PulseSyntaxExtension_SyntaxWrapper.mk_binder
-                                                                    lb.PulseSyntaxExtension_Sugar.id
-                                                                    annot in
                                                                     let uu___3
                                                                     =
                                                                     mk_bind b
@@ -2099,10 +2098,6 @@ and (desugar_bind :
                                                                     let s1 =
                                                                     Obj.magic
                                                                     s1 in
-                                                                    let b =
-                                                                    PulseSyntaxExtension_SyntaxWrapper.mk_binder
-                                                                    lb.PulseSyntaxExtension_Sugar.id
-                                                                    annot in
                                                                     let t =
                                                                     let uu___3
                                                                     =
@@ -2146,15 +2141,19 @@ and (desugar_bind :
                                                                     let s =
                                                                     Obj.magic
                                                                     s in
+                                                                    let uu___3
+                                                                    =
+                                                                    mk_bind b
+                                                                    s s21 r in
                                                                     Obj.magic
                                                                     (PulseSyntaxExtension_Err.return
-                                                                    s))
+                                                                    uu___3))
                                                                     uu___3)))
                                                    | FStar_Pervasives_Native.Some
                                                        (PulseSyntaxExtension_Sugar.MUT)
                                                        ->
                                                        Obj.repr
-                                                         (let b =
+                                                         (let b1 =
                                                             PulseSyntaxExtension_SyntaxWrapper.mk_binder
                                                               lb.PulseSyntaxExtension_Sugar.id
                                                               annot in
@@ -2203,7 +2202,7 @@ and (desugar_bind :
                                                                     let uu___4
                                                                     =
                                                                     PulseSyntaxExtension_SyntaxWrapper.tm_let_mut_array
-                                                                    b init1
+                                                                    b1 init1
                                                                     len1 s21
                                                                     r in
                                                                     Obj.magic
@@ -2231,8 +2230,8 @@ and (desugar_bind :
                                                                     let uu___3
                                                                     =
                                                                     PulseSyntaxExtension_SyntaxWrapper.tm_let_mut
-                                                                    b e12 s21
-                                                                    r in
+                                                                    b1 e12
+                                                                    s21 r in
                                                                     Obj.magic
                                                                     (PulseSyntaxExtension_Err.return
                                                                     uu___3))
@@ -2241,7 +2240,7 @@ and (desugar_bind :
                                                        (PulseSyntaxExtension_Sugar.REF)
                                                        ->
                                                        Obj.repr
-                                                         (let b =
+                                                         (let b1 =
                                                             PulseSyntaxExtension_SyntaxWrapper.mk_binder
                                                               lb.PulseSyntaxExtension_Sugar.id
                                                               annot in
@@ -2290,7 +2289,7 @@ and (desugar_bind :
                                                                     let uu___4
                                                                     =
                                                                     PulseSyntaxExtension_SyntaxWrapper.tm_let_mut_array
-                                                                    b init1
+                                                                    b1 init1
                                                                     len1 s21
                                                                     r in
                                                                     Obj.magic
@@ -2318,8 +2317,8 @@ and (desugar_bind :
                                                                     let uu___3
                                                                     =
                                                                     PulseSyntaxExtension_SyntaxWrapper.tm_let_mut
-                                                                    b e12 s21
-                                                                    r in
+                                                                    b1 e12
+                                                                    s21 r in
                                                                     Obj.magic
                                                                     (PulseSyntaxExtension_Err.return
                                                                     uu___3))

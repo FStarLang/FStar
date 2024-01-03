@@ -104,3 +104,18 @@ ensures emp
     }
 }
 ```
+
+```pulse
+fn test_invariant_annot (x:ref U32.t) (i:inv (pts_to x 0ul)) (y:ref U32.t)
+requires pts_to y 'w
+ensures pts_to y 0ul
+{
+    let n = 
+        with_invariants i
+        returns x:U32.t
+        ensures pure (x == 0ul) ** pts_to y 'w {
+            read_atomic x
+        };
+    y := n;
+}
+```

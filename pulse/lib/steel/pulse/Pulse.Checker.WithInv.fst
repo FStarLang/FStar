@@ -210,8 +210,8 @@ let check
     T_WithInv g inv_tm inv_p inv_p_typing inv_tm_typing body c_out body_typing
   in
 
-  info g (Some body_range)
-    (Printf.sprintf "Returning comp type %s"
-        (P.comp_to_string c_out));
+  // info g (Some body_range)
+  //   (Printf.sprintf "Returning comp type %s"
+  //       (P.comp_to_string c_out));
 
   checker_result_for_st_typing (| tm, c_out, d |)  res_ppname
