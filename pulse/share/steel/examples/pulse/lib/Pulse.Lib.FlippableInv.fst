@@ -56,7 +56,7 @@ let iname_of #p (f : finv p) : erased iname = name_of_inv f.i
 
 ```pulse
 atomic
-fn flip_on (#p:vprop) (fi : finv p)
+fn _flip_on (#p:vprop) (fi : finv p)
    requires off fi ** p
    ensures on fi
    opens add_iname emp_inames (iname_of fi)
@@ -80,10 +80,11 @@ fn flip_on (#p:vprop) (fi : finv p)
   }
 }
 ```
+let flip_on = _flip_on
 
 ```pulse
 atomic
-fn flip_off (#p:vprop) (fi : finv p)
+fn _flip_off (#p:vprop) (fi : finv p)
    requires on fi
    ensures off fi ** p
    opens add_iname emp_inames (iname_of fi)
@@ -107,3 +108,4 @@ fn flip_off (#p:vprop) (fi : finv p)
   }
 }
 ```
+let flip_off = _flip_off
