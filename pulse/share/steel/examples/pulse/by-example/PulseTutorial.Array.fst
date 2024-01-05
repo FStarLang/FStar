@@ -6,10 +6,10 @@ open Pulse.Lib.Array
 module SZ = FStar.SizeT
 
 ```pulse //readi$
-fn read_i #t (arr:array t) (#s:erased (Seq.seq t)) (i:SZ.t { SZ.v i < Seq.length s })
-  requires pts_to arr s
+fn read_i #t (arr:array t) (#p:perm) (#s:erased (Seq.seq t)) (i:SZ.t { SZ.v i < Seq.length s })
+  requires pts_to arr #p s
   returns x:t
-  ensures pts_to arr s ** pure (x == Seq.index s (SZ.v i))
+  ensures pts_to arr #p s ** pure (x == Seq.index s (SZ.v i))
 {
   arr.(i)
 }
@@ -27,7 +27,7 @@ fn write_i #t (arr:array t) (#s:erased (Seq.seq t)) (x:t) (i:SZ.t { SZ.v i < Seq
 //writeipbegin$
 [@@ expect_failure]
 ```pulse
-fn write_ip #t (arr:array t) (#p:perm) (#s:_) (x:t) (i:SZ.t { SZ.v i < Seq.length s })
+fn write_ip #t (arr:array t) (#p:perm) (#s:erased _) (x:t) (i:SZ.t { SZ.v i < Seq.length s })
   requires pts_to arr #p s
   ensures pts_to arr #p (Seq.upd s (SZ.v i) x)
 {
@@ -40,9 +40,9 @@ module A = Pulse.Lib.Array
 module R = Pulse.Lib.Reference
 open FStar.SizeT
 
-//comparesigbegin$
 ```pulse
-fn compare (#t:eqtype) (a1 a2:A.array t) (l:SZ.t) 
+//comparesigbegin$
+fn compare (#t:eqtype) #p1 #p2 (a1 a2:A.array t) (l:SZ.t) 
   requires (
     A.pts_to a1 #p1 's1 **
     A.pts_to a2 #p2 's2 **
@@ -128,8 +128,8 @@ fn copy #t (a1 a2:A.array t) (l:SZ.t)
 }
 ```
 
-//copy2sigbegin$
 ```pulse
+//copy2sigbegin$
 fn copy2 #t (a1 a2:A.array t) (l:SZ.t)
   requires (
     A.pts_to a1 's1 **
@@ -167,9 +167,9 @@ fn copy2 #t (a1 a2:A.array t) (l:SZ.t)
   };
   //copy2rewriting$
   // after the loop
-  with s1. assert (pts_to a1 s1);
-  assert (pure (Seq.equal s1 's2));
-  rewrite (pts_to a1 s1) as (pts_to a1 's2)
+  with v1 s1. _; //bind existentially bound witnesses from the invariant
+  Seq.lemma_eq_elim s1 's2; //call an F* lemma to prove that s1 == 's2
+  ()
   //copy2rewritingend$
 }
 ```
