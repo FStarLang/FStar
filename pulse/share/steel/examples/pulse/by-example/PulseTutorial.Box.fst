@@ -1,62 +1,59 @@
 module PulseTutorial.Box
 open Pulse.Lib.Pervasives
-open Pulse.Lib.Box
+module Box = Pulse.Lib.Box
 
-open Pulse.Lib.Box
-
-```pulse //new_heap_ref
+```pulse //new_heap_ref$
 fn new_heap_ref (#a:Type) (v:a)
 requires emp
-returns r:box a
-ensures pts_to r v
+returns r:Box.box a
+ensures Box.pts_to r v
 {
-    alloc v
+    Box.alloc v
 }
 ```
 
-```pulse //swap
-fn swap (#a:Type) (r0 r1:box a)
-requires pts_to r0 'v0 ** pts_to r1 'v1
-ensures pts_to r0 'v1 ** pts_to r1 'v0
-{
-    let v0 = !r0;
-    let v1 = !r1;
-    r0 := v1;
-    r1 := v0;
-}
-```
-
-```pulse //last_value_of
-fn last_value_of (#a:Type) (r:box a)
-requires pts_to r 'v
+```pulse //last_value_of$
+fn last_value_of #a (r:Box.box a)
+requires Box.pts_to r 'v
 returns v:a
-ensures emp ** pure (v == 'v)
+ensures pure (v == 'v)
 {
+    open Box;
     let v = !r;
     free r;
     v
 }
 ```
 
-```pulse //last_value_of_alt
-fn last_value_of_alt (#a:Type) (r:box a)
+```pulse
+fn incr (r:ref int)
 requires pts_to r 'v
-returns v:(x:a { x == 'v} )
-ensures emp 
+ensures pts_to r ('v + 1)
 {
     let v = !r;
-    free r;
-    v
+    r := v + 1
+}
+```
+
+```pulse //incr_box$
+fn incr_box (r:Box.box int)
+requires Box.pts_to r 'v
+ensures Box.pts_to r ('v + 1)
+{
+    Box.to_ref_pts_to r;     //Box.pts_to (box_to_ref r) 'v
+    incr (Box.box_to_ref r); //pts_to (box_to_ref r) ('v + 1)
+    Box.to_box_pts_to r      //Box.pts_to r ('v + 1)
 }
 ```
 
 
 ```pulse //copy_free_box
-fn copy_free_box (#a:Type) (r:box a)
-requires pts_to r 'v
-returns r':box a
-ensures pts_to r' 'v
+fn copy_free_box (#a:Type) (r:Box.box a)
+requires Box.pts_to r 'v
+returns r':Box.box a
+ensures Box.pts_to r' 'v
 {
+    open Box;
     let v = !r;
     free r;
     alloc v
@@ -64,46 +61,13 @@ ensures pts_to r' 'v
 ```
 
 
-```pulse //new_heap_box_explicit_perm
-fn new_heap_box_explicit_perm (#a:Type) (v:a)
-requires emp
-returns r:box a
-ensures pts_to r #full_perm v
+```pulse //copy_box$
+fn copy_box #a #p (r:Box.box a)
+requires Box.pts_to r #p 'v
+returns s:Box.box a
+ensures Box.pts_to s 'v ** Box.pts_to r #p 'v
 {
-    alloc v
-}
-```
-
-```pulse //share_box
-fn share_box (#a:Type) (r:box a)
-requires pts_to r #p 'v
-ensures pts_to r #(half_perm p) 'v ** pts_to r #(half_perm p) 'v
-{
-    share r;
-}
-```
-
-```pulse //alias_box
-fn alias_box (#a:Type) (r:box a)
-requires pts_to r #p 'v
-returns s:box a
-ensures
-    pts_to r #(half_perm p) 'v **
-    pts_to s #(half_perm p) 'v **
-    pure (r == s)
-{
-    share r;
-    r
-}
-```
-
-
-```pulse //copy_box
-fn copy_box (#a:Type) (r:box a)
-requires pts_to r #p 'v
-returns s:box a
-ensures pts_to s 'v ** pts_to r #p 'v
-{
+    open Box;
     let v = !r;
     alloc v
 }

@@ -81,3 +81,7 @@ fn ref_apply (#a #b:Type) (r:ref (a -> b)) (x:a) (#f:erased (a -> b))
 let tfst (x:'a & 'b & 'c) : 'a = Mktuple3?._1 x
 let tsnd (x:'a & 'b & 'c) : 'b = Mktuple3?._2 x
 let tthd (x:'a & 'b & 'c) : 'c = Mktuple3?._3 x
+
+// some convenience functions
+module T = FStar.Tactics
+let default_arg (t:T.term) = T.exact t

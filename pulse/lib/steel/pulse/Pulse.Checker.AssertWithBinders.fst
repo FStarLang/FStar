@@ -375,7 +375,7 @@ let check
       text "Current context:" ^^
             indent (pp pre)
     ] in
-    fail_doc g (Some r) msg
+    fail_doc_env true g (Some r) msg
   | RENAME { pairs; goal } ->
     let st = check_renaming g pre st in
     check g pre pre_typing post_hint res_ppname st
