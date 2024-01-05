@@ -431,8 +431,7 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
   | Tm_WithInv {body} ->
     simplify_st_term g body
 
-  | Tm_Unreachable ->
-    T.fail "Tm_Unreachable: Should have been eliminated"
+  | Tm_Unreachable -> e
 
 and simplify_branch (g:env) (b:branch) : T.Tac branch =
   let pat, body = b in
