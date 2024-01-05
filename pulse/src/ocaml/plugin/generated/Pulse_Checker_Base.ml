@@ -1321,13 +1321,13 @@ let (continuation_elaborator_with_let :
                                                                   (Prims.of_int (378))
                                                                   (Prims.of_int (2))
                                                                   (Prims.of_int (383))
-                                                                  (Prims.of_int (34)))))
+                                                                  (Prims.of_int (31)))))
                                                          (FStar_Sealed.seal
                                                             (Obj.magic
                                                                (FStar_Range.mk_range
                                                                   "Pulse.Checker.Base.fst"
                                                                   (Prims.of_int (383))
-                                                                  (Prims.of_int (35))
+                                                                  (Prims.of_int (32))
                                                                   (Prims.of_int (426))
                                                                   (Prims.of_int (15)))))
                                                          (if
@@ -1349,7 +1349,7 @@ let (continuation_elaborator_with_let :
                                                                     (Prims.of_int (381))
                                                                     (Prims.of_int (9))
                                                                     (Prims.of_int (383))
-                                                                    (Prims.of_int (34)))))
+                                                                    (Prims.of_int (31)))))
                                                                     (
                                                                     FStar_Sealed.seal
                                                                     (Obj.magic
@@ -1358,7 +1358,7 @@ let (continuation_elaborator_with_let :
                                                                     (Prims.of_int (380))
                                                                     (Prims.of_int (7))
                                                                     (Prims.of_int (383))
-                                                                    (Prims.of_int (34)))))
+                                                                    (Prims.of_int (31)))))
                                                                     (
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1369,7 +1369,7 @@ let (continuation_elaborator_with_let :
                                                                     (Prims.of_int (383))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (383))
-                                                                    (Prims.of_int (33)))))
+                                                                    (Prims.of_int (30)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -1377,9 +1377,9 @@ let (continuation_elaborator_with_let :
                                                                     (Prims.of_int (381))
                                                                     (Prims.of_int (9))
                                                                     (Prims.of_int (383))
-                                                                    (Prims.of_int (34)))))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Syntax_Printer.comp_to_string
+                                                                    (Pulse_Syntax_Printer.tag_of_comp
                                                                     c2))
                                                                     (fun
                                                                     uu___2 ->
@@ -1394,7 +1394,7 @@ let (continuation_elaborator_with_let :
                                                                     (Prims.of_int (381))
                                                                     (Prims.of_int (9))
                                                                     (Prims.of_int (383))
-                                                                    (Prims.of_int (34)))))
+                                                                    (Prims.of_int (31)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -1402,7 +1402,7 @@ let (continuation_elaborator_with_let :
                                                                     (Prims.of_int (381))
                                                                     (Prims.of_int (9))
                                                                     (Prims.of_int (383))
-                                                                    (Prims.of_int (34)))))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -1486,7 +1486,7 @@ let (continuation_elaborator_with_let :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Base.fst"
                                                                     (Prims.of_int (383))
-                                                                    (Prims.of_int (35))
+                                                                    (Prims.of_int (32))
                                                                     (Prims.of_int (426))
                                                                     (Prims.of_int (15)))))
                                                                     (

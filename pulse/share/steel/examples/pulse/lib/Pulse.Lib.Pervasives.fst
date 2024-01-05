@@ -85,3 +85,25 @@ let tthd (x:'a & 'b & 'c) : 'c = Mktuple3?._3 x
 // some convenience functions
 module T = FStar.Tactics
 let default_arg (t:T.term) = T.exact t
+
+```pulse
+ghost
+fn call_ghost 
+      (#a:Type0)
+      (#b: a -> Type0)
+      (#pre: a -> vprop)
+      (#post: (x:a -> b x -> vprop))
+      (f:(x:a -> stt_ghost (b x) emp_inames (pre x) (fun y -> post x y)))
+      (x:a)
+requires pre x
+returns y:erased (b x)
+ensures post x y
+{
+  let y = f x;
+  rewrite (post x y) as (post x (reveal (hide y)));
+  hide y
+}
+```
+
+let vprop_equiv_norm (_:unit) : T.Tac unit =
+    T.mapply (`vprop_equiv_refl)

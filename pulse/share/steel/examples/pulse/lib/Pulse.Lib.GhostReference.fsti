@@ -23,7 +23,11 @@ open FStar.Ghost
 [@@erasable]
 val ref (a:Type u#0) : Type u#0
 
-val pts_to (#a:Type) (r:ref a) (#[exact (`full_perm)]p:perm) (n:a) : vprop
+val pts_to (#a:Type)
+           (r:ref a)
+           (#[exact (`full_perm)] [@@@equate_by_smt] p:perm)
+           ([@@@equate_by_smt] n:a)
+: vprop
 
 val alloc (#a:Type) (x:a)
   : stt_ghost (ref a) emp_inames emp (fun r -> pts_to r x)
