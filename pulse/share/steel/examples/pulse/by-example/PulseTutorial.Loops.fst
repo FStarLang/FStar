@@ -154,9 +154,78 @@ ensures pure ((n * (n + 1) / 2) == z)
 #pop-options
 //SNIPPET_END: isum$
 
+//fib$
 let rec fib (n:nat) : nat =
   if n <= 1 then 1
   else fib (n - 1) + fib (n - 2)
+//fib$
+
+```pulse //fib_rec$
+fn rec fib_rec (n:pos) (out:ref (nat & nat))
+requires
+    pts_to out 'v
+ensures
+    exists* v.
+        pts_to out v **
+        pure (
+          fst v == fib (n - 1) /\
+          snd v == fib n 
+        )
+{
+  if ((n = 1))
+  {
+    //type inference in Pulse doesn't work well here:
+    //it picks (1, 1) to have type (int & int)
+    //so we have to annotate
+    out := ((1 <: nat), (1 <: nat)); 
+  }
+  else
+  {
+    fib_rec (n - 1) out;
+    let v = !out;
+    out := (snd v, fst v + snd v);
+  }
+}
+```
+
+```pulse //fib_loop$
+fn fib_loop (k:pos)
+  requires emp
+  returns r:nat
+  ensures pure (r == fib k)
+{
+  let mut i : nat = 1;
+  let mut j : nat = 1;
+  let mut ctr : nat = 1;
+  while (
+    let c = !ctr;
+    (c < k)
+  )
+  invariant b . 
+    exists* vi vj vctr. 
+        pts_to i vi **
+        pts_to j vj **
+        pts_to ctr vctr **
+        pure (
+            1 <= vctr /\
+            vctr <= k /\
+            vi == fib (vctr - 1) /\
+            vj == fib vctr /\
+            b == (vctr < k)
+        )
+  {
+      let vi = !i;
+      let vj = !j;
+      let c = !ctr;
+      ctr := c + 1;
+      i := vj;
+      j := vi + vj;
+  };
+  !j
+}
+```
+
+
 
 let rec fib_mono (n:nat) (m:nat { m <= n})
   : Lemma
