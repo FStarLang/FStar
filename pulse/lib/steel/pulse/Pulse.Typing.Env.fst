@@ -388,11 +388,15 @@ let get_range (g:env) (r:option range) : T.Tac range =
       then range_of_env g
       else r
 
-let fail_doc (#a:Type) (g:env) (r:option range) (msg:list Pprint.document) =
+let fail_doc_env (#a:Type) (with_env:bool) (g:env) (r:option range) (msg:list Pprint.document) =
   let r = get_range g r in
   let msg =
     let indent d = nest 2 (hardline ^^ align d) in
-    if Pulse.Config.debug_flag "env_on_err"
+    let with_env =
+      if with_env then true
+      else Pulse.Config.debug_flag "env_on_err"
+    in
+    if with_env
     then msg @ [doc_of_string "In typing environment:" ^^ indent (env_to_doc g)]
     else msg
   in

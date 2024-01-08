@@ -198,8 +198,13 @@ val env_to_string (g:env) : T.Tac string
 val env_to_doc (g:env) : T.Tac FStar.Stubs.Pprint.document
 val get_range (g:env) (r:option range) : T.Tac range
 
-val fail_doc (#a:Type) (g:env) (r:option range) (msg:list Pprint.document)
+val fail_doc_env (#a:Type) (with_env:bool)
+                 (g:env) (r:option range) (msg:list Pprint.document)
   : T.TacH a (requires fun _ -> True) (ensures fun _ r -> FStar.Tactics.Result.Failed? r)
+
+let fail_doc (#a:Type) (g:env) (r:option range) (msg:list Pprint.document)
+  : T.TacH a (requires fun _ -> True) (ensures fun _ r -> FStar.Tactics.Result.Failed? r)
+  = fail_doc_env false g r msg
 
 val warn_doc (g:env) (r:option range) (msg:list Pprint.document)
   : T.Tac unit

@@ -88,6 +88,24 @@ val free
         (ensures fun _ ->
             emp)
 
+val share
+  (#a:Type)
+  (arr:array a)
+  (#s:Ghost.erased (Seq.seq a))
+  (#p:perm)
+  : stt_ghost unit emp_inames
+      (requires pts_to arr #p s)
+      (ensures fun _ -> pts_to arr #(half_perm p) s ** pts_to arr #(half_perm p) s)
+
+val gather
+  (#a:Type)
+  (arr:array a)
+  (#s0 #s1:Ghost.erased (Seq.seq a))
+  (#p0 #p1:perm)
+  : stt_ghost unit emp_inames
+      (requires pts_to arr #p0 s0 ** pts_to arr #p1 s1)
+      (ensures fun _ -> pts_to arr #(sum_perm p0 p1) s0 ** pure (s0 == s1))
+
 val pts_to_range
   (#a:Type u#0)
   (x:array a)

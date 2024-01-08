@@ -382,7 +382,7 @@ let continuation_elaborator_with_let (#g:env) (#ctxt:term)
   then fail g (Some e1.range)
          (Printf.sprintf "Cannot bind ghost expression %s with %s computation"
             (P.term_to_string e1)
-            (P.comp_to_string c2));
+            (P.tag_of_comp c2));
   let ppname, x = x in
   let e2_closed = close_st_term e2 x in
   assume (open_st_term (close_st_term e2 x) x == e2);

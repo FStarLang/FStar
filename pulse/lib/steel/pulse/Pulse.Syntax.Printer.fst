@@ -467,11 +467,11 @@ let tag_of_comp (c:comp) : T.Tac string =
   | C_Tot _ -> "Total"
   | C_ST _ -> "ST"
   | C_STAtomic i Observable _ ->
-    Printf.sprintf "Atomic %s" (term_to_string i)
+    "Atomic"
   | C_STAtomic i Unobservable _ ->
-    Printf.sprintf "Unobservable %s" (term_to_string i)
+    "Unobservable"
   | C_STGhost i _ ->
-    Printf.sprintf "Ghost %s" (term_to_string i)
+    "Ghost" 
     
 let rec print_st_head (t:st_term)
   : Tot string (decreases t) =
