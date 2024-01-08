@@ -199,94 +199,100 @@ let inv_p' (os0 : inames) (f v1 v2 : vprop) (r1 r2 : GR.ref bool) (b1 b2 : bool)
 let inv_p (os0 : inames) (f v1 v2 : vprop) (r1 r2 : GR.ref bool) : vprop =
   exists* b1 b2. inv_p' os0 f v1 v2 r1 r2 b1 b2
 
-[@@expect_failure]
 ```pulse
 atomic
-fn __elim_l (#os0:inames) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool) (i : inv (inv_p os0 f v1 v2 r1 r2)) ()
+fn __elim_l_atomic (#os0:inames) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool) (i : inv (inv_p os0 f v1 v2 r1 r2)) ()
   requires f ** GR.pts_to r1 #one_half false
   ensures f ** v1
   opens (add_inv os0 i)
 {
   open Pulse.Lib.GhostReference;
   with_invariants i {
-    unfold inv_p;
-    with bb1 bb2.
-      assert (inv_p' os0 f v1 v2 r1 r2 bb1 bb2);
-    unfold inv_p';
-    let b1 = !r1;
-    let b2 = !r2;
+    ghost
+    fn thunk ()
+    requires f ** GR.pts_to r1 #one_half false ** inv_p os0 f v1 v2 r1 r2
+    ensures (f ** v1 ** inv_p os0 f v1 v2 r1 r2)
+    opens os0
+    {
+      unfold inv_p;
+      with bb1 bb2.
+        assert (inv_p' os0 f v1 v2 r1 r2 bb1 bb2);
+      unfold inv_p';
+      let b1 = !r1;
+      let b2 = !r2;
 
-    assert (pure (b1 == bb1));
-    assert (pure (b2 == bb2));
+      assert (pure (b1 == bb1));
+      assert (pure (b2 == bb2));
 
-    gather2 r1;
+      gather2 r1;
+      let b1 : bool = stt_ghost_reveal _ b1;
+      let b2 : bool = stt_ghost_reveal _ b2;
 
-    let b1 : bool = stt_ghost_reveal _ b1;
-    let b2 : bool = stt_ghost_reveal _ b2;
+      if b2 {
+        (* The "easy" case: the big pledge has already been claimed
+        by the other subpledge, so we just extract our resource. *)
+        assert (pts_to r1 false);
+        r1 := true;
+        rewrite emp ** (match false, true with
+                  | false, false -> pledge os0 f (v1 ** v2)
+                  | false, true -> v1
+                  | true, false -> v2
+                  | true, true -> emp)
+            as (match true, true with
+                  | false, false -> pledge os0 f (v1 ** v2)
+                  | false, true -> v1
+                  | true, false -> v2
+                  | true, true -> emp) ** v1;
 
-    if b2 {
-      (* The "easy" case: the big pledge has already been claimed
-      by the other subpledge, so we just extract our resource. *)
-      assert (pts_to r1 false);
-      r1 := true;
-      rewrite emp ** (match false, true with
-                 | false, false -> pledge os0 f (v1 ** v2)
-                 | false, true -> v1
-                 | true, false -> v2
-                 | true, true -> emp)
-           as (match true, true with
-                 | false, false -> pledge os0 f (v1 ** v2)
-                 | false, true -> v1
-                 | true, false -> v2
-                 | true, true -> emp) ** v1;
+        (* I don't understand why this remains in the ctx, but get rid
+        of it as it's just emp *)
+        rewrite (match true, true with
+                  | false, false -> pledge os0 f (v1 ** v2)
+                  | false, true -> v1
+                  | true, false -> v2
+                  | true, true -> emp)
+            as emp;
 
-      (* I don't understand why this remains in the ctx, but get rid
-      of it as it's just emp *)
-      rewrite (match true, true with
-                 | false, false -> pledge os0 f (v1 ** v2)
-                 | false, true -> v1
-                 | true, false -> v2
-                 | true, true -> emp)
-           as emp;
+        share2 #_ r1;
+        fold (inv_p' os0 f v1 v2 r1 r2 true true);
+        fold (inv_p os0 f v1 v2 r1 r2);
+        assert (f ** v1 ** inv_p os0 f v1 v2 r1 r2);
+        drop_ (pts_to r1 #one_half true);
+      } else {
+        (* The "hard" case: the big pledge has not been claimed.
+        Claim it, split it, and store the leftover in the invariant. *)
+        assert (pts_to r1 false);
 
-      share2 #_ r1;
-      fold (inv_p' os0 f v1 v2 r1 r2 true true);
-      fold (inv_p os0 f v1 v2 r1 r2);
-      assert (f ** v1 ** inv_p os0 f v1 v2 r1 r2);
-      drop_ (pts_to r1 #one_half true);
-    } else {
-      (* The "hard" case: the big pledge has not been claimed.
-      Claim it, split it, and store the leftover in the invariant. *)
-      assert (pts_to r1 false);
+        rewrite (match false, false with
+                  | false, false -> pledge os0 f (v1 ** v2)
+                  | false, true -> v1
+                  | true, false -> v2
+                  | true, true -> emp)
+            as pledge os0 f (v1 ** v2);
 
-      rewrite (match false, false with
-                 | false, false -> pledge os0 f (v1 ** v2)
-                 | false, true -> v1
-                 | true, false -> v2
-                 | true, true -> emp)
-           as pledge os0 f (v1 ** v2);
+        redeem_pledge os0 f (v1 ** v2);
 
-      redeem_pledge os0 f (v1 ** v2);
+        assert (f ** v1 ** v2);
 
-      assert (f ** v1 ** v2);
+        r1 := true;
 
-      r1 := true;
+        rewrite v2
+            as (match true, false with
+                  | false, false -> pledge os0 f (v1 ** v2)
+                  | false, true -> v1
+                  | true, false -> v2
+                  | true, true -> emp);
 
-      rewrite v2
-           as (match true, false with
-                 | false, false -> pledge os0 f (v1 ** v2)
-                 | false, true -> v1
-                 | true, false -> v2
-                 | true, true -> emp);
+        share2 r1;
 
-      share2 r1;
-
-      fold (inv_p' os0 f v1 v2 r1 r2 true false);
-      fold inv_p;
-      assert (f ** v1 ** inv_p os0 f v1 v2 r1 r2);
-      drop_ (pts_to r1 #one_half true);
-      ()
-    }
+        fold (inv_p' os0 f v1 v2 r1 r2 true false);
+        fold inv_p;
+        assert (f ** v1 ** inv_p os0 f v1 v2 r1 r2);
+        drop_ (pts_to r1 #one_half true);
+        ()
+      }
+    };
+    thunk ()
   }
 }
 ```
