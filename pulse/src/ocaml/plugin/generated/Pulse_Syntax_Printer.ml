@@ -5535,76 +5535,18 @@ let (tag_of_comp :
   =
   fun uu___ ->
     (fun c ->
-       match c with
-       | Pulse_Syntax_Base.C_Tot uu___ ->
-           Obj.magic
-             (Obj.repr
-                (FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> "Total")))
-       | Pulse_Syntax_Base.C_ST uu___ ->
-           Obj.magic
-             (Obj.repr
-                (FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> "ST")))
-       | Pulse_Syntax_Base.C_STAtomic
-           (i, Pulse_Syntax_Base.Observable, uu___) ->
-           Obj.magic
-             (Obj.repr
-                (FStar_Tactics_Effect.tac_bind
-                   (FStar_Sealed.seal
-                      (Obj.magic
-                         (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
-                            (Prims.of_int (470)) (Prims.of_int (31))
-                            (Prims.of_int (470)) (Prims.of_int (49)))))
-                   (FStar_Sealed.seal
-                      (Obj.magic
-                         (FStar_Range.mk_range "prims.fst"
-                            (Prims.of_int (590)) (Prims.of_int (19))
-                            (Prims.of_int (590)) (Prims.of_int (31)))))
-                   (Obj.magic (term_to_string i))
-                   (fun uu___1 ->
-                      FStar_Tactics_Effect.lift_div_tac
-                        (fun uu___2 ->
-                           Prims.strcat "Atomic " (Prims.strcat uu___1 "")))))
-       | Pulse_Syntax_Base.C_STAtomic
-           (i, Pulse_Syntax_Base.Unobservable, uu___) ->
-           Obj.magic
-             (Obj.repr
-                (FStar_Tactics_Effect.tac_bind
-                   (FStar_Sealed.seal
-                      (Obj.magic
-                         (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
-                            (Prims.of_int (472)) (Prims.of_int (37))
-                            (Prims.of_int (472)) (Prims.of_int (55)))))
-                   (FStar_Sealed.seal
-                      (Obj.magic
-                         (FStar_Range.mk_range "prims.fst"
-                            (Prims.of_int (590)) (Prims.of_int (19))
-                            (Prims.of_int (590)) (Prims.of_int (31)))))
-                   (Obj.magic (term_to_string i))
-                   (fun uu___1 ->
-                      FStar_Tactics_Effect.lift_div_tac
-                        (fun uu___2 ->
-                           Prims.strcat "Unobservable "
-                             (Prims.strcat uu___1 "")))))
-       | Pulse_Syntax_Base.C_STGhost (i, uu___) ->
-           Obj.magic
-             (Obj.repr
-                (FStar_Tactics_Effect.tac_bind
-                   (FStar_Sealed.seal
-                      (Obj.magic
-                         (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
-                            (Prims.of_int (474)) (Prims.of_int (30))
-                            (Prims.of_int (474)) (Prims.of_int (48)))))
-                   (FStar_Sealed.seal
-                      (Obj.magic
-                         (FStar_Range.mk_range "prims.fst"
-                            (Prims.of_int (590)) (Prims.of_int (19))
-                            (Prims.of_int (590)) (Prims.of_int (31)))))
-                   (Obj.magic (term_to_string i))
-                   (fun uu___1 ->
-                      FStar_Tactics_Effect.lift_div_tac
-                        (fun uu___2 ->
-                           Prims.strcat "Ghost " (Prims.strcat uu___1 ""))))))
-      uu___
+       Obj.magic
+         (FStar_Tactics_Effect.lift_div_tac
+            (fun uu___ ->
+               match c with
+               | Pulse_Syntax_Base.C_Tot uu___1 -> "Total"
+               | Pulse_Syntax_Base.C_ST uu___1 -> "ST"
+               | Pulse_Syntax_Base.C_STAtomic
+                   (i, Pulse_Syntax_Base.Observable, uu___1) -> "Atomic"
+               | Pulse_Syntax_Base.C_STAtomic
+                   (i, Pulse_Syntax_Base.Unobservable, uu___1) ->
+                   "Unobservable"
+               | Pulse_Syntax_Base.C_STGhost (i, uu___1) -> "Ghost"))) uu___
 let rec (print_st_head : Pulse_Syntax_Base.st_term -> Prims.string) =
   fun t ->
     match t.Pulse_Syntax_Base.term1 with
