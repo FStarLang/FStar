@@ -141,6 +141,7 @@ type st_comp = { (* ST pre (x:res) post ... x is free in post *)
 }
 
 type observability =
+  | Neutral
   | Observable
   | Unobservable
 

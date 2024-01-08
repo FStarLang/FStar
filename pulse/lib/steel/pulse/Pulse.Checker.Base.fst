@@ -346,6 +346,12 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
       let t_typing, post_typing =
         Pulse.Typing.Combinators.bind_res_and_post_typing g (st_comp_of_comp c2) x post_hint in
       let g = push_context g "mk_bind" e1.range in
+      info_doc g None
+        [prefix 4 1 (doc_of_string "mk_bind e1 = ") (doc_of_string (Pulse.Syntax.Printer.st_term_to_string e1));
+         prefix 4 1 (doc_of_string "mk_bind c1 = ") (pp #comp c1);
+         prefix 4 1 (doc_of_string "mk_bind e2 = ") (doc_of_string (Pulse.Syntax.Printer.st_term_to_string e2));
+         prefix 4 1 (doc_of_string "mk_bind c2 = ") (pp #comp c2)]
+      ;
       let (| e, c, e_typing |) =
         Pulse.Typing.Combinators.mk_bind
           g (tm_star ctxt pre1) 

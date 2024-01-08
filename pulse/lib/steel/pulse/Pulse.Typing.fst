@@ -96,7 +96,7 @@ let comp_return (c:ctag) (use_eq:bool) (u:universe) (t:term) (e:term) (post:term
   | STT ->
     C_ST { u; res = t; pre = open_term' post e 0; post = post_maybe_eq }
   | STT_Atomic ->
-    C_STAtomic tm_emp_inames Unobservable
+    C_STAtomic tm_emp_inames Neutral
       { u; res = t; pre = open_term' post e 0; post = post_maybe_eq }
   | STT_Ghost ->
     C_STGhost tm_emp_inames
@@ -256,6 +256,8 @@ let bind_comp_pre (x:var) (c1 c2:comp_st)
 
 let join_obs (o1 o2:observability) : observability =
   match o1, o2 with
+  | Neutral, o
+  | o, Neutral -> o
   | Observable, _ -> Observable
   | _, Observable -> Observable
   | Unobservable, Unobservable -> Unobservable
@@ -285,6 +287,7 @@ let bind_comp_ghost_l_out (c1:comp_st) (c2:comp_st{bind_comp_ghost_l_compatible 
   : comp_st
   = let s : st_comp = {u=comp_u c2; res=comp_res c2; pre=comp_pre c1; post=comp_post c2} in
     match c1, c2 with
+    | C_STGhost _ _, C_STAtomic inames Neutral _ -> C_STGhost inames s
     | C_STGhost _ _, C_STAtomic inames obs _ -> C_STAtomic inames obs s
   
 let bind_comp_ghost_r_compatible (c1 c2:comp_st)
@@ -303,6 +306,7 @@ let bind_comp_ghost_r_out (c1:comp_st) (c2:comp_st{bind_comp_ghost_r_compatible 
   : comp_st
   = let s : st_comp = {u=comp_u c2; res=comp_res c2; pre=comp_pre c1; post=comp_post c2} in
     match c1, c2 with
+    | C_STAtomic inames Neutral _, C_STGhost _ _ -> C_STGhost inames s
     | C_STAtomic inames obs _, C_STGhost _ _ -> C_STAtomic inames obs s
 
 let st_equiv_pre (c1 c2:comp_st)
@@ -609,7 +613,7 @@ type st_equiv : env -> comp -> comp -> Type =
       Ghost.erased (RT.equiv (elab_env g) (elab_term t1) (elab_term t2)) ->
       st_equiv g (C_Tot t1) (C_Tot t2)
 
-let sub_observability (o1 o2:observability) = o1 == o2 \/ o2 == Observable
+let sub_observability (o1 o2:observability) = o1 == Neutral \/ o1 == o2 \/ o2 == Observable
 
 [@@ no_auto_projectors]
 noeq
@@ -659,6 +663,11 @@ type lift_comp : env -> comp -> comp -> Type =
       c:comp_st{C_STGhost? c} ->
       non_informative_c:non_informative_c g c ->
       lift_comp g c (C_STAtomic (comp_inames c) Unobservable (st_comp_of_comp c))
+
+  | Lift_Neutral_STGhost:
+      g:env ->
+      c:comp_st{C_STAtomic? c /\ C_STAtomic?.obs c == Neutral } ->
+      lift_comp g c (C_STGhost (comp_inames c) (st_comp_of_comp c))
 
 let wr (ct:comp_st) (t:st_term') : st_term = { term = t; range = FStar.Range.range_0; effect_tag = as_effect_hint (ctag_of_comp_st ct) }
 let wtag (ct:option ctag)  (t:st_term') : st_term = { term = t; range = FStar.Range.range_0; effect_tag = FStar.Sealed.seal ct }

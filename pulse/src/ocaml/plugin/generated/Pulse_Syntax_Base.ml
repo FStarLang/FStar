@@ -146,8 +146,11 @@ let (__proj__Mkst_comp__item__pre : st_comp -> vprop) =
 let (__proj__Mkst_comp__item__post : st_comp -> vprop) =
   fun projectee -> match projectee with | { u; res; pre; post;_} -> post
 type observability =
+  | Neutral 
   | Observable 
   | Unobservable 
+let (uu___is_Neutral : observability -> Prims.bool) =
+  fun projectee -> match projectee with | Neutral -> true | uu___ -> false
 let (uu___is_Observable : observability -> Prims.bool) =
   fun projectee -> match projectee with | Observable -> true | uu___ -> false
 let (uu___is_Unobservable : observability -> Prims.bool) =

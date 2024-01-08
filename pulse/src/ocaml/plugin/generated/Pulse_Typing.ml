@@ -237,7 +237,7 @@ let (comp_return :
                 | Pulse_Syntax_Base.STT_Atomic ->
                     Pulse_Syntax_Base.C_STAtomic
                       (Pulse_Syntax_Base.tm_emp_inames,
-                        Pulse_Syntax_Base.Unobservable,
+                        Pulse_Syntax_Base.Neutral,
                         {
                           Pulse_Syntax_Base.u = u;
                           Pulse_Syntax_Base.res = t;
@@ -330,6 +330,8 @@ let (join_obs :
   fun o1 ->
     fun o2 ->
       match (o1, o2) with
+      | (Pulse_Syntax_Base.Neutral, o) -> o
+      | (o, Pulse_Syntax_Base.Neutral) -> o
       | (Pulse_Syntax_Base.Observable, uu___) -> Pulse_Syntax_Base.Observable
       | (uu___, Pulse_Syntax_Base.Observable) -> Pulse_Syntax_Base.Observable
       | (Pulse_Syntax_Base.Unobservable, Pulse_Syntax_Base.Unobservable) ->
@@ -373,6 +375,10 @@ let (bind_comp_ghost_l_out :
         } in
       match (c1, c2) with
       | (Pulse_Syntax_Base.C_STGhost (uu___, uu___1),
+         Pulse_Syntax_Base.C_STAtomic
+         (inames, Pulse_Syntax_Base.Neutral, uu___2)) ->
+          Pulse_Syntax_Base.C_STGhost (inames, s)
+      | (Pulse_Syntax_Base.C_STGhost (uu___, uu___1),
          Pulse_Syntax_Base.C_STAtomic (inames, obs, uu___2)) ->
           Pulse_Syntax_Base.C_STAtomic (inames, obs, s)
 type ('c1, 'c2) bind_comp_ghost_r_compatible = Obj.t
@@ -391,6 +397,10 @@ let (bind_comp_ghost_r_out :
           Pulse_Syntax_Base.post = (Pulse_Syntax_Base.comp_post c2)
         } in
       match (c1, c2) with
+      | (Pulse_Syntax_Base.C_STAtomic
+         (inames, Pulse_Syntax_Base.Neutral, uu___),
+         Pulse_Syntax_Base.C_STGhost (uu___1, uu___2)) ->
+          Pulse_Syntax_Base.C_STGhost (inames, s)
       | (Pulse_Syntax_Base.C_STAtomic (inames, obs, uu___),
          Pulse_Syntax_Base.C_STGhost (uu___1, uu___2)) ->
           Pulse_Syntax_Base.C_STAtomic (inames, obs, s)
