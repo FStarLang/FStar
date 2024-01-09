@@ -46,6 +46,7 @@ enum BinOp {
     Rem,
     And,
     Or,
+    Mul,
 }
 
 enum UnOp {
@@ -334,6 +335,7 @@ impl_from_ocaml_variant! {
       BinOp::Rem,
       BinOp::And,
       BinOp::Or,
+      BinOp::Mul
   }
 }
 
@@ -706,6 +708,9 @@ fn to_syn_binop(op: &BinOp) -> syn::BinOp {
         }),
         BinOp::Or => syn::BinOp::Or(syn::token::OrOr {
             spans: [Span::call_site(), Span::call_site()],
+        }),
+        BinOp::Mul => syn::BinOp::Mul(syn::token::Star {
+            spans: [Span::call_site()],
         }),
     }
 }
@@ -1732,6 +1737,7 @@ impl fmt::Display for BinOp {
             BinOp::Rem => "%",
             BinOp::And => "&&",
             BinOp::Or => "||",
+            BinOp::Mul => "*",
         };
         write!(f, "{}", s)
     }
@@ -2193,4 +2199,70 @@ ocaml_export! {
   //   };
   //   z.to_string().to_owned().to_ocaml(cr)
   // }
+}
+
+pub fn majority<A: Clone + Copy + PartialEq>(
+    p: (),
+    s: (),
+    votes: &mut [A],
+    len: usize,
+) -> std::option::Option<A> {
+    let mut i = 1;
+    let mut k = 1;
+    let votes_0 = votes[0];
+    let mut cand = votes_0;
+    while {
+        let vi = i;
+        vi < len
+    } {
+        let vi = i;
+        let vk = k;
+        let vcand = cand;
+        let votes_i = votes[vi];
+        if vk == 0 {
+            cand = votes_i;
+            k = 1;
+            i = vi + 1
+        } else if votes_i == vcand {
+            k = vk + 1;
+            i = vi + 1
+        } else {
+            k = vk - 1;
+            i = vi + 1
+        };
+    }
+    let vk = k;
+    let vcand = cand;
+    let _bind_c = if vk == 0 {
+        None
+    } else if len < 2 * vk {
+        Some(vcand)
+    } else {
+        i = 0;
+        k = 0;
+        while {
+            let vi = i;
+            vi < len
+        } {
+            let vi = i;
+            let vk1 = k;
+            let votes_i = votes[vi];
+            if votes_i == vcand {
+                k = vk1 + 1;
+                i = vi + 1
+            } else {
+                i = vi + 1
+            };
+        }
+        let vk1 = k;
+        if len < 2 * vk1 {
+            Some(vcand)
+        } else {
+            None
+        }
+    };
+    let cand1 = _bind_c;
+    let k1 = cand1;
+    let i1 = k1;
+    i1
 }

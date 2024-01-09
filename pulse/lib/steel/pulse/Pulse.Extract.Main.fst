@@ -390,18 +390,16 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
     then simplify_st_term g head
     else if is_internal_binder &&
             Some? (is_return head)
-    then (
-        let Some head = is_return head in
-        simplify_st_term g (LN.subst_st_term body [LN.DT 0 head])
-    )    
-    else (
+    then let Some head = is_return head in
+         simplify_st_term g (LN.subst_st_term body [LN.DT 0 head])
+    else begin
       match simplify_nested_let e binder head body with
       | Some e -> simplify_st_term g e
       | None ->        
-       let head = simplify_st_term g head in
-       let body = with_open binder body in
-       ret (Tm_Bind { binder; head; body })
-    )
+        let head = simplify_st_term g head in
+        let body = with_open binder body in
+        ret (Tm_Bind { binder; head; body })
+    end
 
   | Tm_TotBind { binder; head; body } ->
     ret (Tm_TotBind { binder; head; body = with_open binder body })
