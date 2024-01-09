@@ -26,13 +26,27 @@ open Pulse.Lib.Core
   - precondition and postcondition
 *)
 
-let my_list : list int = [1;2;3]
+//SNIPPET_START: five
+let fstar_five : int = 5
 
 ```pulse
 fn five ()
   requires emp
   returns n:int
   ensures pure (n == 5)
+{ 
+  fstar_five
+}
+```
+
+let pulse_five_in_fstar = five ()
+//SNIPPET_END: five
+
+```pulse
+fn five_alt ()
+  requires emp
+  returns n:(n:int { n == 5 })
+  ensures emp
 { 
   5
 }

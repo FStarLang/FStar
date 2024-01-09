@@ -88,7 +88,35 @@ let free'
         S.elim_pure (is_full_array a);
         A.free a; ()
 let free = free'
-    
+
+let share
+  (#a:Type)
+  (arr:array a)
+  (#s:Ghost.erased (Seq.seq a))
+  (#p:perm)
+  : stt_ghost unit emp_inames
+      (requires pts_to arr #p s)
+      (ensures fun _ -> pts_to arr #(half_perm p) s ** pts_to arr #(half_perm p) s) =
+
+  fun _ ->
+  A.share arr p (half_perm p) (half_perm p);
+  ()
+
+let gather
+  (#a:Type)
+  (arr:array a)
+  (#s0 #s1:Ghost.erased (Seq.seq a))
+  (#p0 #p1:perm)
+  : stt_ghost unit emp_inames
+      (requires pts_to arr #p0 s0 `S.star` pts_to arr #p1 s1)
+      (ensures fun _ -> pts_to arr #(sum_perm p0 p1) s0 `S.star` S.pure (s0 == s1)) =
+  
+  fun _ ->
+  A.gather #_ #_ arr #(reveal s0) p0 #(reveal s1) p1;
+  S.intro_pure (s0 == s1);
+  ()
+
+
 //[@@"__reduce__"; "__steel_reduce__"]
 let pts_to_range #a (r:array a) (i j: nat) (#[exact (`full_perm)] p:perm) (v:FStar.Seq.seq a) = A.pts_to_range r i j p v
 

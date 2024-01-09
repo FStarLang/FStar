@@ -31,6 +31,8 @@ let alloc x n = A.alloc x n
 let op_Array_Access v i = A.op_Array_Access v i
 let op_Array_Assignment v i x = A.op_Array_Assignment v i x
 let free v = A.free v
+let share v = A.share v
+let gather v = A.gather v
 
 let vec_to_array v = v
 let to_array_pts_to v #p #s =
