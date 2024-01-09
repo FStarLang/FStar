@@ -67,3 +67,29 @@ ghost fn elim_forall_imp (#a:Type0) (p q: a -> vprop) (x:a)
     I.elim _ _
 }
 ```
+
+```pulse
+ghost
+fn intro_forall_imp (#a:Type0) (p q: a -> vprop) (r:vprop)
+    (elim: (u:a -> stt_ghost unit emp_inames 
+                        (r ** p u)
+                        (fun _ -> q u)))
+requires r
+ensures forall* x. p x @==> q x
+{
+    ghost fn aux (x:a)
+    requires r
+    ensures p x @==> q x
+    {
+        ghost
+        fn aux ()
+        requires r ** p x 
+        ensures q x
+        {
+            elim x;
+        };
+        I.intro _ _ _ aux;
+    };
+    intro _ aux
+}
+```
