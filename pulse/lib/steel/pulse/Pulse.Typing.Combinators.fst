@@ -138,6 +138,158 @@ let rec vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
         construct_forall_typing #g #u #b #t0 x b_typing t0_typing)
         
 #push-options "--z3rlimit_factor 8 --ifuel 1 --fuel 2 --query_stats"
+
+let bind_t (case_c1 case_c2:comp_st -> bool) =
+      (g:env) ->
+      (pre:term) ->
+      (e1:st_term) ->
+      (e2:st_term) ->
+      (c1:comp_st{ case_c1 c1 }) ->
+      (c2:comp_st{ case_c2 c2 }) ->
+      (px:nvar { ~ (Set.mem (snd px) (dom g)) }) ->
+      (d_e1:st_typing g e1 c1) ->
+      (d_c1res:tot_typing g (comp_res c1) (tm_type (comp_u c1))) ->
+      (d_e2:st_typing (push_binding g (snd px) (fst px) (comp_res c1)) (open_st_term_nv e2 px) c2) ->
+      (res_typing:universe_of g (comp_res c2) (comp_u c2)) ->
+      (post_typing:tot_typing (push_binding g (snd px) (fst px) (comp_res c2))
+                              (open_term_nv (comp_post c2) px)
+                                      tm_vprop) ->
+    T.TacH (t:st_term &
+            c:comp_st { st_comp_of_comp c == st_comp_with_pre (st_comp_of_comp c2) pre } &
+            st_typing g t c)
+           (requires fun _ ->
+              let _, x = px in
+              comp_pre c1 == pre /\
+              None? (lookup g x) /\
+              (~(x `Set.mem` freevars_st e2)) /\
+              open_term (comp_post c1) x == comp_pre c2 /\
+              (~ (x `Set.mem` freevars (comp_post c2))))
+           (ensures fun _ _ -> True)
+
+let mk_bind_st_st
+  : bind_t C_ST? C_ST?
+  = fun g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing ->
+      let _, x = px in
+      let b = nvar_as_binder px (comp_res c1) in
+      let bc = Bind_comp g x c1 c2 res_typing x post_typing in
+      (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
+
+let inames_of (c:comp_st) : term =
+  match c with
+  | C_ST _ -> tm_emp_inames
+  | C_STGhost inames _ -> inames
+  | C_STAtomic inames _ _ -> inames
+
+let with_inames (c:comp_st) (i:term) =
+  match c with
+  | C_ST _ -> c
+  | C_STGhost _ sc -> C_STGhost i sc
+  | C_STAtomic _ obs sc -> C_STAtomic i obs sc
+
+let weaken_comp_inames (#g:env) (#e:st_term) (#c:comp_st) (d_e:st_typing g e c) (new_inames:term)
+  : T.Tac (c':comp_st { with_inames c new_inames == c' } &
+           st_typing g e c')
+  = match c with
+    | C_ST _ -> (| c, d_e |)
+
+    | C_STGhost inames sc ->
+      let d_e = T_Sub _ _ _ _ d_e (STS_GhostInvs _ sc inames new_inames (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
+      (| with_inames c new_inames, d_e |)
+  
+    | C_STAtomic inames obs sc ->
+      let d_e = T_Sub _ _ _ _ d_e (STS_AtomicInvs _ sc inames new_inames obs obs (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
+      (| with_inames c new_inames, d_e |)
+          
+ let mk_bind_ghost_atomic
+  : bind_t C_STGhost? C_STAtomic? 
+  = fun g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing ->
+      let _, x = px in
+      let b = nvar_as_binder px (comp_res c1) in
+      let inames1 = inames_of c1 in
+      let inames2 = inames_of c2 in
+      let w = get_non_informative_witness g (comp_u c1) (comp_res c1) in
+      if eq_tm inames1 inames2
+      then begin
+        let bc = Bind_comp_ghost_l g x c1 c2 w res_typing x post_typing in
+        (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
+      end
+      else begin
+          let new_inames = tm_join_inames inames1 inames2 in
+          let (| c1, d_e1 |) = weaken_comp_inames d_e1 new_inames in
+          let (| c2, d_e2 |) = weaken_comp_inames d_e2 new_inames in
+          let bc = Bind_comp_ghost_l g x c1 c2 w res_typing x post_typing in
+          (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
+      end 
+
+ let mk_bind_atomic_ghost
+  : bind_t C_STAtomic? C_STGhost? 
+  = fun g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing ->
+      let _, x = px in
+      let b = nvar_as_binder px (comp_res c1) in
+      let inames1 = inames_of c1 in
+      let inames2 = inames_of c2 in
+      let w = get_non_informative_witness g (comp_u c2) (comp_res c2) in
+      if eq_tm inames1 inames2
+      then begin
+        let bc = Bind_comp_ghost_r g x c1 c2 w res_typing x post_typing in
+        (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
+      end
+      else begin
+          let new_inames = tm_join_inames inames1 inames2 in
+          let (| c1, d_e1 |) = weaken_comp_inames d_e1 new_inames in
+          let (| c2, d_e2 |) = weaken_comp_inames d_e2 new_inames in
+          let bc = Bind_comp_ghost_r g x c1 c2 w res_typing x post_typing in
+          (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
+      end 
+
+let mk_bind_ghost_ghost
+  : bind_t C_STGhost? C_STGhost?
+  = fun g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing ->
+      let _, x = px in
+      let b = nvar_as_binder px (comp_res c1) in
+      let inames1 = inames_of c1 in
+      let inames2 = inames_of c2 in
+      if eq_tm inames1 inames2
+      then begin
+        let bc = Bind_comp g x c1 c2 res_typing x post_typing in
+        (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
+      end else begin
+        let new_inames = tm_join_inames inames1 inames2 in
+        let (| c1, d_e1 |) = weaken_comp_inames d_e1 new_inames in
+        let (| c2, d_e2 |) = weaken_comp_inames d_e2 new_inames in
+        let bc = Bind_comp g x c1 c2 res_typing x post_typing in
+        (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
+      end  
+
+#push-options "--query_stats"
+let mk_bind_atomic_atomic
+  : bind_t C_STAtomic? C_STAtomic?
+  = fun g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing ->
+      let _, x = px in
+      let b = nvar_as_binder px (comp_res c1) in
+      let C_STAtomic inames1 obs1 sc1 = c1 in
+      let C_STAtomic inames2 obs2 sc2 = c2 in
+      if at_most_one_observable obs1 obs2
+      then (
+        if eq_tm inames1 inames2
+        then begin
+          let bc = Bind_comp g x c1 c2 res_typing x post_typing in
+          (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
+        end else begin
+          let new_inames = tm_join_inames inames1 inames2 in
+          let d_e1 = T_Sub _ _ _ _ d_e1 (STS_AtomicInvs _ sc1 inames1 new_inames obs1 obs1 (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
+          let d_e2 = T_Sub _ _ _ _ d_e2 (STS_AtomicInvs _ sc2 inames2 new_inames obs2 obs2 (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
+          let c1 = C_STAtomic new_inames obs1 sc1 in
+          let c2 = C_STAtomic new_inames obs2 sc2 in
+          let bc = Bind_comp g x c1 c2 res_typing x post_typing in
+          (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
+        end 
+      )
+      else (
+        T.fail "Should have been handled separately"
+      )
+
+
 let rec mk_bind (g:env) 
                 (pre:term)
                 (e1:st_term)
@@ -167,82 +319,52 @@ let rec mk_bind (g:env)
   let b = nvar_as_binder px (comp_res c1) in
   match c1, c2 with
   | C_ST _, C_ST _ ->
-    let bc = Bind_comp g x c1 c2 res_typing x post_typing in
-    (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
-  | C_STGhost inames1 sc1, C_STGhost inames2 sc2 ->
-    if eq_tm inames1 inames2
-    then begin
-      let bc = Bind_comp g x c1 c2 res_typing x post_typing in
-      (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
-    end else begin
-      let new_inames = tm_join_inames inames1 inames2 in
-      let d_e1 = T_Sub _ _ _ _ d_e1 (STS_GhostInvs _ sc1 inames1 new_inames (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
-      let d_e2 = T_Sub _ _ _ _ d_e2 (STS_GhostInvs _ sc2 inames2 new_inames (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
-      let c1 = C_STGhost new_inames sc1 in
-      let c2 = C_STGhost new_inames sc2 in
-      let bc = Bind_comp g x c1 c2 res_typing x post_typing in
-      (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
-    end
-  | C_STAtomic inames _, C_ST _ ->
-    begin
+    mk_bind_st_st g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing
+  | C_STGhost _ _, C_STGhost _ _ ->
+    mk_bind_ghost_ghost g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing
+  | C_STAtomic inames1 obs1 sc1, C_STAtomic inames2 obs2 sc2 ->
+    if at_most_one_observable obs1 obs2
+    then (
+      mk_bind_atomic_atomic g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing
+    )
+    else (
       let c1lifted = C_ST (st_comp_of_comp c1) in
       let d_e1 : st_typing g e1 c1lifted =
         T_Lift _ _ _ c1lifted d_e1 (Lift_STAtomic_ST _ c1) in
-      let bc = Bind_comp g x c1lifted c2 res_typing x post_typing in
-      (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
-    end
-  | C_STGhost inames1 _, C_STAtomic inames2 _ ->
-    if eq_tm inames1 inames2
-    then begin
-      let w = get_non_informative_witness g (comp_u c1) (comp_res c1) in
-      let bc = Bind_comp_ghost_l g x c1 c2 w res_typing x post_typing in
-      (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
-    end
-    else fail g None "Cannot compose ghost and atomic with different opened invariants" // FIXME
-  | C_STAtomic inames1 _, C_STGhost inames2 _ ->
-    if eq_tm inames1 inames2
-    then begin
-      let w = get_non_informative_witness g (comp_u c2) (comp_res c2) in
-      let bc = Bind_comp_ghost_r g x c1 c2 w res_typing x post_typing in
-      (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
-    end
-    else fail g None "Cannot compose atomic and ghost with different opened invariants"
-  | C_ST _, C_STAtomic inames _ ->
-    if eq_tm inames tm_emp_inames
-    then begin
-      let c2lifted = C_ST (st_comp_of_comp c2) in
-      let g' = push_binding g x (fst px) (comp_res c1) in
-      let d_e2 : st_typing g' (open_st_term_nv e2 px) c2lifted =
-        T_Lift _ _ _ c2lifted d_e2 (Lift_STAtomic_ST _ c2) in
-      let bc = Bind_comp g x c1 c2lifted res_typing x post_typing in
-      (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
-    end
-    else fail g None "Cannot compose stt with atomic with non-emp opened invariants"
+      mk_bind g pre e1 e2 c1lifted c2 px d_e1 d_c1res d_e2 res_typing post_typing
+    )
+  | C_STAtomic inames _ _, C_ST _ ->
+    let c1lifted = C_ST (st_comp_of_comp c1) in
+    let d_e1 : st_typing g e1 c1lifted =
+     T_Lift _ _ _ c1lifted d_e1 (Lift_STAtomic_ST _ c1) in
+    mk_bind g pre e1 e2 c1lifted c2 px d_e1 d_c1res d_e2 res_typing post_typing
+  | C_STGhost _ _, C_STAtomic _ _ _ ->
+    mk_bind_ghost_atomic g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing
+  | C_STAtomic inames1 _ _, C_STGhost inames2 _ ->
+    mk_bind_atomic_ghost g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing
+  | C_ST _, C_STAtomic inames _ _ ->
+    let c2lifted = C_ST (st_comp_of_comp c2) in
+    let g' = push_binding g x (fst px) (comp_res c1) in
+    let d_e2 : st_typing g' (open_st_term_nv e2 px) c2lifted =
+      T_Lift _ _ _ c2lifted d_e2 (Lift_STAtomic_ST _ c2) in
+    let bc = Bind_comp g x c1 c2lifted res_typing x post_typing in
+    (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
   | C_STGhost inames _, C_ST _ ->
     begin
       let w = get_non_informative_witness g (comp_u c1) (comp_res c1) in
-      let c1lifted = C_STAtomic inames (st_comp_of_comp c1) in
+      let c1lifted = C_STAtomic inames Unobservable (st_comp_of_comp c1) in
       let d_e1 : st_typing g e1 c1lifted =
         T_Lift _ _ _ c1lifted d_e1 (Lift_STGhost_STAtomic g c1 w) in
       mk_bind g pre e1 e2 c1lifted c2 px d_e1 d_c1res d_e2 res_typing post_typing
     end
   | C_ST _, C_STGhost inames _ ->
-    if eq_tm inames tm_emp_inames
-    then begin
-      let g' = push_binding g x (fst px) (comp_res c1) in
-      let w = get_non_informative_witness g' (comp_u c2) (comp_res c2) in
-      let c2lifted = C_STAtomic inames (st_comp_of_comp c2) in
-      let d_e2 : st_typing g' (open_st_term_nv e2 px) c2lifted =
-        T_Lift _ _ _ c2lifted d_e2 (Lift_STGhost_STAtomic g' c2 w) in
-      let (| t, c, d |) = mk_bind g pre e1 e2 c1 c2lifted px d_e1 d_c1res d_e2 res_typing post_typing in
-      (| t, c, d |)
-    end
-    else fail g None "Cannot compose stt with ghost with non-emp opened invariants"
-  | C_STAtomic inames _, C_STAtomic _ _ ->
-    let c1lifted = C_ST (st_comp_of_comp c1) in
-    let d_e1 : st_typing g e1 c1lifted =
-      T_Lift _ _ _ c1lifted d_e1 (Lift_STAtomic_ST _ c1) in
-    mk_bind g pre e1 e2 c1lifted c2 px d_e1 d_c1res d_e2 res_typing post_typing
+    let g' = push_binding g x (fst px) (comp_res c1) in
+    let w = get_non_informative_witness g' (comp_u c2) (comp_res c2) in
+    let c2lifted = C_STAtomic inames Unobservable (st_comp_of_comp c2) in
+    let d_e2 : st_typing g' (open_st_term_nv e2 px) c2lifted =
+      T_Lift _ _ _ c2lifted d_e2 (Lift_STGhost_STAtomic g' c2 w) in
+    let (| t, c, d |) = mk_bind g pre e1 e2 c1 c2lifted px d_e1 d_c1res d_e2 res_typing post_typing in
+    (| t, c, d |)
   | _, _ -> fail g None "bind either not implemented (e.g. ghost) or not possible"
 #pop-options
 

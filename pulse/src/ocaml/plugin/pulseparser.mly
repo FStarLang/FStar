@@ -157,14 +157,10 @@ pulseStmtNoSeq:
     { PulseSyntaxExtension_Sugar.mk_assignment lhs a }
   | LET q=option(mutOrRefQualifier) i=lidentOrUnderscore typOpt=option(preceded(COLON, appTerm)) EQUALS LBRACK_BAR v=noSeqTerm SEMICOLON n=noSeqTerm BAR_RBRACK
     { PulseSyntaxExtension_Sugar.mk_let_binding q i typOpt (Some (Array_initializer { init=v; len=n })) }
-  | LET q=option(mutOrRefQualifier) i=lidentOrUnderscore typOpt=option(preceded(COLON, appTerm)) EQUALS tm=noSeqTerm
-    { PulseSyntaxExtension_Sugar.mk_let_binding q i typOpt (Some (Default_initializer tm)) }
-  | LBRACE s=pulseStmt RBRACE
-    { PulseSyntaxExtension_Sugar.mk_block s }
-  | s=ifStmt
+  | LET q=option(mutOrRefQualifier) i=lidentOrUnderscore typOpt=option(preceded(COLON, appTerm)) EQUALS init=bindableTerm
+    { PulseSyntaxExtension_Sugar.mk_let_binding q i typOpt (Some init) }
+  | s=pulseBindableTerm
     { s }
-  | MATCH tm=appTermNoRecordExp c=option(ensuresVprop) LBRACE brs=list(pulseMatchBranch) RBRACE
-    { PulseSyntaxExtension_Sugar.mk_match tm c brs }
   | WHILE LPAREN tm=pulseStmt RPAREN INVARIANT i=lident DOT v=pulseVprop LBRACE body=pulseStmt RBRACE
     { PulseSyntaxExtension_Sugar.mk_while tm i v body }
   | INTRO p=pulseVprop WITH ws=nonempty_list(indexingTerm)
@@ -188,14 +184,28 @@ pulseStmtNoSeq:
     { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders WILD bs }
   | SHOW_PROOF_STATE
     { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders (SHOW_PROOF_STATE (rr $loc)) [] }
-  | WITH_INVS names=nonempty_list(atomicTerm) r=option(ensuresVprop) LBRACE body=pulseStmt RBRACE
-    { PulseSyntaxExtension_Sugar.mk_with_invs names body r }
   | f=localFnDecl
     {
       let id, fndecl = f in
       PulseSyntaxExtension_Sugar.mk_let_binding None id None (Some (Lambda_initializer fndecl))
     }
+  | p=ifStmt { p }
+  | p=matchStmt { p }
+  | LBRACE s=pulseStmt RBRACE
+    { PulseSyntaxExtension_Sugar.mk_block s }
 
+matchStmt:
+  | MATCH tm=appTermNoRecordExp c=option(ensuresVprop) LBRACE brs=list(pulseMatchBranch) RBRACE
+    { PulseSyntaxExtension_Sugar.mk_match tm c brs }
+
+bindableTerm:
+  | p=pulseBindableTerm { let p = PulseSyntaxExtension_Sugar.mk_stmt p (rr $loc) in Stmt_initializer p }
+  | s=noSeqTerm { Default_initializer s }
+  
+pulseBindableTerm:
+  | WITH_INVS names=nonempty_list(atomicTerm) r=option(ensuresVprop) LBRACE body=pulseStmt RBRACE
+    { PulseSyntaxExtension_Sugar.mk_with_invs names body r }
+  
 pulseLambda:
   | bs=pulseBinderList
     ascription=option(pulseComputationType)
@@ -224,8 +234,8 @@ withBindersOpt:
   | { [] }
 
 ensuresVprop:
-  | ENSURES s=pulseVprop
-    { s }
+  | ret=option(RETURNS i=lidentOrUnderscore COLON r=term { (i, r) }) ENSURES s=pulseVprop
+    { ret, s }
 
 pulseMatchBranch:
   | pat=pulsePattern RARROW LBRACE e=pulseStmt RBRACE

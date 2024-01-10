@@ -34,7 +34,7 @@ let (freevars_comp :
     match c with
     | Pulse_Syntax_Base.C_Tot t -> freevars t
     | Pulse_Syntax_Base.C_ST s -> freevars_st_comp s
-    | Pulse_Syntax_Base.C_STAtomic (inames, s) ->
+    | Pulse_Syntax_Base.C_STAtomic (inames, uu___, s) ->
         FStar_Set.union (freevars inames) (freevars_st_comp s)
     | Pulse_Syntax_Base.C_STGhost (inames, s) ->
         FStar_Set.union (freevars inames) (freevars_st_comp s)
@@ -202,7 +202,12 @@ let rec (freevars_st :
           Pulse_Syntax_Base.returns_inv = returns_inv;_}
         ->
         FStar_Set.union (FStar_Set.union (freevars name) (freevars_st body))
-          (freevars_term_opt returns_inv)
+          (freevars_opt
+             (fun uu___ ->
+                match uu___ with
+                | (b, r) ->
+                    FStar_Set.union (freevars b.Pulse_Syntax_Base.binder_ty)
+                      (freevars r)) returns_inv)
 and (freevars_branches :
   (Pulse_Syntax_Base.pattern * Pulse_Syntax_Base.st_term) Prims.list ->
     Pulse_Syntax_Base.var FStar_Set.set)
@@ -243,7 +248,7 @@ let (ln_c' : Pulse_Syntax_Base.comp -> Prims.int -> Prims.bool) =
       match c with
       | Pulse_Syntax_Base.C_Tot t -> ln' t i
       | Pulse_Syntax_Base.C_ST s -> ln_st_comp s i
-      | Pulse_Syntax_Base.C_STAtomic (inames, s) ->
+      | Pulse_Syntax_Base.C_STAtomic (inames, uu___, s) ->
           (ln' inames i) && (ln_st_comp s i)
       | Pulse_Syntax_Base.C_STGhost (inames, s) ->
           (ln' inames i) && (ln_st_comp s i)
@@ -439,8 +444,16 @@ let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
           (ln_proof_hint' hint_type (i + n)) && (ln_st' t1 (i + n))
       | Pulse_Syntax_Base.Tm_WithInv
           { Pulse_Syntax_Base.name1 = name; Pulse_Syntax_Base.body6 = body;
-            Pulse_Syntax_Base.returns_inv = uu___;_}
-          -> (ln' name i) && (ln_st' body i)
+            Pulse_Syntax_Base.returns_inv = returns_inv;_}
+          ->
+          ((ln' name i) && (ln_st' body i)) &&
+            (ln_opt'
+               (fun uu___ ->
+                  fun i1 ->
+                    match uu___ with
+                    | (b, r) ->
+                        (ln' b.Pulse_Syntax_Base.binder_ty i1) &&
+                          (ln' r (i1 + Prims.int_one))) returns_inv i)
 and (ln_branch' :
   (Pulse_Syntax_Base.pattern * Pulse_Syntax_Base.st_term) ->
     Prims.int -> Prims.bool)
@@ -607,9 +620,9 @@ let (subst_comp : Pulse_Syntax_Base.comp -> subst -> Pulse_Syntax_Base.comp)
           Pulse_Syntax_Base.C_Tot (subst_term t ss)
       | Pulse_Syntax_Base.C_ST s ->
           Pulse_Syntax_Base.C_ST (subst_st_comp s ss)
-      | Pulse_Syntax_Base.C_STAtomic (inames, s) ->
+      | Pulse_Syntax_Base.C_STAtomic (inames, obs, s) ->
           Pulse_Syntax_Base.C_STAtomic
-            ((subst_term inames ss), (subst_st_comp s ss))
+            ((subst_term inames ss), obs, (subst_st_comp s ss))
       | Pulse_Syntax_Base.C_STGhost (inames, s) ->
           Pulse_Syntax_Base.C_STGhost
             ((subst_term inames ss), (subst_st_comp s ss))
@@ -1004,7 +1017,12 @@ let rec (subst_st_term :
             ->
             let name1 = subst_term name ss in
             let body1 = subst_st_term body ss in
-            let returns_inv1 = subst_term_opt returns_inv ss in
+            let returns_inv1 =
+              match returns_inv with
+              | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+              | FStar_Pervasives_Native.Some (b, r) ->
+                  FStar_Pervasives_Native.Some
+                    ((subst_binder b ss), (subst_term r (shift_subst ss))) in
             Pulse_Syntax_Base.Tm_WithInv
               {
                 Pulse_Syntax_Base.name1 = name1;

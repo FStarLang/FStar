@@ -413,18 +413,21 @@ let __with_invariant_g (#a:Type)
 
 let with_invariant_g = __with_invariant_g
 
-let with_invariant_a (#a:Type)
+let __with_invariant_a (#a:Type)
                    (#fp:vprop)
                    (#fp':a -> vprop)
-                   (#opened_invariants:inames)
+                   (#f_opens:inames)
                    (#p:vprop)
-                   (i:inv p{not (mem_inv opened_invariants i)})
-                   ($f:unit -> stt_atomic a (add_inv opened_invariants i) 
+                   (i:inv p{not (mem_inv f_opens i)})
+                   ($f:unit -> stt_atomic a f_opens
                                             (p ** fp)
                                             (fun x -> p ** fp' x))
-  : stt_atomic a opened_invariants fp fp'
-  = admit()
+  : stt_atomic a (add_inv f_opens i) fp fp'
+  = fun #ictx () ->
+      let ictx' : inames_disj f_opens = add_inv ictx i in
+      Steel.ST.Util.with_invariant i (f () #ictx')
 
+let with_invariant_a = __with_invariant_a
 let rewrite p q _ = fun _ -> rewrite_equiv p q
 
 

@@ -122,10 +122,11 @@ let elab_comp (c:comp)
       let u, res, pre, post = elab_st_comp c in
       mk_stt_comp u res pre (mk_abs res R.Q_Explicit post)
 
-    | C_STAtomic inames c ->
+    | C_STAtomic inames obs c ->
       let inames = elab_term inames in
       let u, res, pre, post = elab_st_comp c in
-      mk_stt_atomic_comp u res inames pre (mk_abs res R.Q_Explicit post)
+      let post = mk_abs res R.Q_Explicit post in
+      mk_stt_atomic_comp (obs=Observable) u res inames pre post
 
     | C_STGhost inames c ->
       let inames = elab_term inames in
@@ -148,26 +149,33 @@ let elab_stt_equiv (g:R.env) (c:comp{C_ST? c}) (pre:R.term) (post:R.term)
     (comp_u c)
     (elab_term (comp_res c))
     _ _ _ _ _ (RT.Rel_refl _ _ _) eq_pre eq_post
-
+#push-options "--query_stats"
 let elab_statomic_equiv (g:R.env) (c:comp{C_STAtomic? c}) (pre:R.term) (post:R.term)
   (eq_pre:RT.equiv g pre (elab_term (comp_pre c)))
   (eq_post:RT.equiv g post
                     (mk_abs (elab_term (comp_res c)) R.Q_Explicit (elab_term (comp_post c))))
   : RT.equiv g
-      (let C_STAtomic inames {u;res} = c in
-       mk_stt_atomic_comp u
+      (let C_STAtomic inames obs {u;res} = c in
+       mk_stt_atomic_comp (obs=Observable) u
                           (elab_term res)
                           (elab_term inames)
                           pre
                           post)
       (elab_comp c) =
   
-  let C_STAtomic inames _ = c in
-  mk_stt_atomic_comp_equiv _
-    (comp_u c)
-    (elab_term (comp_res c))
-    (elab_term inames)
-    _ _ _ _ eq_pre eq_post
+  let C_STAtomic inames obs {u;res} = c in
+  let c' =
+    mk_stt_atomic_comp (obs=Observable) u
+                       (elab_term res)
+                       (elab_term inames)
+                       pre
+                       post
+  in
+    mk_stt_atomic_comp_equiv _ (obs=Observable)
+      (comp_u c)
+      (elab_term (comp_res c))
+      (elab_term inames)
+      _ _ _ _ eq_pre eq_post
 
 let elab_stghost_equiv (g:R.env) (c:comp{C_STGhost? c}) (pre:R.term) (post:R.term)
   (eq_pre:RT.equiv g pre (elab_term (comp_pre c)))

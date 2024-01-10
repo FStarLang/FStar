@@ -83,7 +83,7 @@ let ghost_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp =
    C_STGhost (inames, mk_st_comp pre ret post)
 
 let atomic_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp =
-   C_STAtomic (inames, mk_st_comp pre ret post)
+   C_STAtomic (inames, Observable, mk_st_comp pre ret post)
 
 module PSB = Pulse_Syntax_Builder
 type constant = Pulse_Syntax_Base.constant
@@ -163,7 +163,7 @@ let tm_proof_hint_with_binders (ht:_) (binders: binder list)  (s:st_term) r : st
                                              binders;
                                              t3=s }) r)
 
-let tm_with_inv (name:term) (body:st_term) (returns_inv:vprop option) r : st_term =
+let tm_with_inv (name:term) (body:st_term) returns_inv r : st_term =
   PSB.(with_range (tm_with_inv name body returns_inv) r)
 
 let tm_par p1 p2 q1 q2 b1 b2 r : st_term =
@@ -187,21 +187,21 @@ let close_comp t v = Pulse_Syntax_Naming.close_comp t v
 let comp_pre c =
   match c with
    | C_ST st
-   | C_STAtomic (_, st)
+   | C_STAtomic (_, _, st)
    | C_STGhost (_, st) -> st.pre
    | _ -> Pulse_Syntax_Base.tm_emp
 
 let comp_res c =
   match c with
    | C_ST st
-   | C_STAtomic (_, st)
+   | C_STAtomic (_, _, st)
    | C_STGhost (_, st) -> st.res
    | C_Tot t -> t
 
 let comp_post c =
   match c with
    | C_ST st
-   | C_STAtomic (_, st)
+   | C_STAtomic (_, _, st)
    | C_STGhost (_, st) -> st.post
    | _ -> Pulse_Syntax_Base.tm_emp
 

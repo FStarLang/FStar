@@ -31,12 +31,12 @@ module MT = Pulse.Typing.Metatheory
 
 let rt_recheck (gg:env) (#g:T.env) (#e:T.term) (#ty: T.typ) () : T.Tac (RT.tot_typing g e ty) =
   let open Pulse.PP in
-  info_doc gg (Some (T.range_of_term e)) [
-    doc_of_string "Re-checking" ^/^
-      pp e ^/^
-    doc_of_string "at type" ^/^
-      pp ty
-   ];
+  // info_doc gg (Some (T.range_of_term e)) [
+  //   doc_of_string "Re-checking" ^/^
+  //     pp e ^/^
+  //   doc_of_string "at type" ^/^
+  //     pp ty
+  //  ];
   match T.core_check_term g e ty T.E_Total with
   | Some tok, _ -> RT.T_Token _ _ _ ()
   | None, _ -> T.fail "Checker.WithInv: rt_recheck failed" // fixme add a range
@@ -77,19 +77,23 @@ let check
   let post : post_hint_t =
     match returns_inv, post_hint with
     | None, Some p -> p
-    | Some p, None ->
-      Pulse.Checker.Base.intro_post_hint g None None p
-    | Some p, Some q ->
-      fail g (Some t.range) "Fatal: multiple posts hint on with_invariant"
+    | Some (b, p), None ->
+      Pulse.Checker.Base.intro_post_hint g None (Some b.binder_ty) p
+    | Some (_, p), Some q ->
+      let open Pulse.PP in
+      fail_doc g (Some t.range) 
+      [ doc_of_string "Fatal: multiple annotated postconditions on with_invariant";
+        prefix 4 1 (text "First postcondition:") (pp p);
+        prefix 4 1 (text "Second postcondition:") (pp q) ]
     | _, _ ->
       fail g (Some t.range) "Fatal: no post hint on with_invariant"
   in
   let post_hint = Some post in
 
-  info_doc g (Some t.range) [
-    let open Pulse.PP in
-    prefix 4 1 (doc_of_string "Checker.WithInv: using post_hint =") (pp post_hint)
-  ];
+  // info_doc g (Some t.range) [
+  //   let open Pulse.PP in
+  //   prefix 4 1 (doc_of_string "Checker.WithInv: using post_hint =") (pp post_hint)
+  // ];
 
   (* FIXME: should check `inv_tm` at expected type `inv ?u`, and then
   we obtain vprop from u. If so the whole block below should not be
@@ -144,10 +148,10 @@ let check
   in
   let post_p'_typing = Pulse.Checker.Base.post_typing_as_abstraction (E post_p'_typing_src) in
   let ctag_hint' =
-    if None? post.ctag_hint || post.ctag_hint = Some STT then
-      Some STT_Ghost
-    else
-      post.ctag_hint
+    // if None? post.ctag_hint || post.ctag_hint = Some STT then
+      Some STT_Atomic
+    // else
+    //   post.ctag_hint
   in
 
 
@@ -169,10 +173,10 @@ let check
     apply_checker_result_k r ppname
   in
   
-  (let open Pulse.PP in
-   info_doc g (Some body_range) [
-     text "Checked body at comp type:" ^/^ arbitrary_string (P.comp_to_string c_body)
-   ]);
+  // (let open Pulse.PP in
+  //  info_doc g (Some body_range) [
+  //    text "Checked body at comp type:" ^/^ arbitrary_string (P.comp_to_string c_body)
+  //  ]);
 
   let add_iname (inames:term) (i:term) : T.Tac term =
     let a = elab_term inames in
@@ -185,13 +189,15 @@ let check
 
   let c_out : comp_st =
     match c_body with
-    | C_ST st -> 
+    | C_ST _
+    | C_STGhost _ _  -> 
       let open Pulse.PP in
       fail_doc g (Some body_range)
         [text "This computation is not atomic nor ghost. \
-               `with_invariants` blocks can only contain ghost or atomic computations."]
-    | C_STAtomic inames st -> C_STAtomic (add_iname inames inv_tm) (st_comp_remove_inv inv_p st)
-    | C_STGhost inames st -> C_STGhost (add_iname inames inv_tm) (st_comp_remove_inv inv_p st)
+               `with_invariants` blocks can only contain atomic computations.";
+         prefix 4 1 (text "Computed type:") (arbitrary_string (P.comp_to_string c_body))]
+    | C_STAtomic inames obs st -> C_STAtomic (add_iname inames inv_tm) Observable (st_comp_remove_inv inv_p st)
+  //  | C_STGhost inames st -> C_STAtomic (add_iname inames inv_tm) Observable (st_comp_remove_inv inv_p st)
   in
   assume (add_inv c_out inv_p == c_body);
 
@@ -205,8 +211,8 @@ let check
     T_WithInv g inv_tm inv_p inv_p_typing inv_tm_typing body c_out body_typing
   in
 
-  info g (Some body_range)
-    (Printf.sprintf "Returning comp type %s"
-        (P.comp_to_string c_out));
+  // info g (Some body_range)
+  //   (Printf.sprintf "Returning comp type %s"
+  //       (P.comp_to_string c_out));
 
   checker_result_for_st_typing (| tm, c_out, d |)  res_ppname

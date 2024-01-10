@@ -417,7 +417,7 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       let! join_vprop =
         match join_vprop with
         | None -> return None
-        | Some t -> 
+        | Some (None, t) -> 
           let! vp = desugar_vprop env t in
           return (Some vp)
       in
@@ -433,7 +433,7 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
 
     | Match { head; returns_annot; branches } ->
       let! head = desugar_term env head in
-      let! returns_annot = map_err_opt (desugar_vprop env) returns_annot in
+      let! returns_annot = map_err_opt (fun (_, t) -> desugar_vprop env t) returns_annot in
       let! branches = branches |> mapM (desugar_branch env) in
       return (SW.tm_match head returns_annot branches s.range)
 
@@ -477,7 +477,21 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       let! n1 = tosyntax env n1 in
       let! names = names |> mapM (tosyntax env) in
       let! body = desugar_stmt env body in
-      let! returns_ = map_err_opt (desugar_vprop env) returns_ in
+      let! returns_ = 
+        match returns_ with
+        | None -> return None
+        | Some (None, v) -> 
+          let! v = desugar_vprop env v in
+          let b = SW.mk_binder (Ident.id_of_text "_") (SW.tm_unknown s.range) in
+          return (Some (b, v))
+        | Some (Some (x, t), v) ->
+          let! t = desugar_term env t in
+          let env, bv = push_bv env x in
+          let! v = desugar_vprop env v in
+          let v = SW.close_term v bv.index in
+          let b = SW.mk_binder x t in
+          return (Some (b, v))
+      in
       (* the returns_ goes only to the outermost with_inv *)
       let tt = L.fold_right (fun nm body -> let nm : term = tm_expr nm s.range in SW.tm_with_inv nm body None s.range) names body in
       let n1 : term = tm_expr n1 s.range in
@@ -528,6 +542,7 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
   : err SW.st_term
   = let open Sugar in
     let! annot = desugar_term_opt env lb.typ in
+    let b = SW.mk_binder lb.id annot in
     let! s2 = 
       let env, bv = push_bv env lb.id in        
       let! s2 = desugar_stmt env s2 in
@@ -559,7 +574,6 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
             }
           in
           let! lam = desugar_lambda env lam in
-          let b = SW.mk_binder lb.id annot in
           return <| mk_bind b lam s2 r
 
         | Sugar.Lambda_initializer _ -> 
@@ -567,7 +581,6 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
 
         | Default_initializer e1 ->
           let! s1 = tosyntax env e1 in
-          let b = SW.mk_binder lb.id annot in
           let t =
             match admit_or_return env s1 with
             | STTerm s1 ->
@@ -576,6 +589,10 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
               mk_totbind b (as_term s1) s2 r
           in
           return t
+        
+        | Stmt_initializer e ->
+          let! s = desugar_stmt env e in
+          return (mk_bind b s s2 r)
       )
       | Some MUT //these are handled the same for now
       | Some REF ->
