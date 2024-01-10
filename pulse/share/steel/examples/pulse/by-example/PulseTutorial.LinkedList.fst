@@ -217,18 +217,16 @@ ensures is_list x 'l ** pure (n == k + List.Tot.length 'l)
 module I = Pulse.Lib.Stick.Util
 open I
 
-```pulse
+```pulse //tail_for_cons$
 ghost
-fn list_cons_if_list_tail (#t:Type) 
-                          (v:node_ptr t)
-                          (tl:erased (list t))
+fn tail_for_cons (#t:Type) (v:node_ptr t) (#n:node t) (tl:erased (list t))
 requires 
   pts_to v n
 ensures 
   (is_list n.tail tl @==> is_list (Some v) (n.head::tl))
 {
   ghost
-  fn yields_elim ()
+  fn aux ()
   requires 
     pts_to v n ** is_list n.tail tl
   ensures 
@@ -236,50 +234,52 @@ ensures
   {
     intro_is_list_cons (Some v) v
   };
-  I.intro _ _ _ yields_elim;
+  I.intro _ _ _ aux;
 }
 ```
 
 
-```pulse
-fn move_next (#t:Type) (x:llist t)
-    requires is_list x 'l ** pure (Some? x)
-    returns y:llist t
-    ensures exists* tl.
-        is_list y tl **
-        (is_list y tl @==> is_list x 'l) **
-        pure (Cons? 'l /\ tl == Cons?.tl 'l)
+```pulse //tail$
+fn tail (#t:Type) (x:llist t)
+requires is_list x 'l ** pure (Some? x)
+returns y:llist t
+ensures exists* tl.
+    is_list y tl **
+    (is_list y tl @==> is_list x 'l) **
+    pure (Cons? 'l /\ tl == Cons?.tl 'l)
 { 
     let np = Some?.v x;
     is_list_case_some x np;
-    let node = !np;
-    with tail tl. assert (is_list #t tail tl);
-    rewrite each tail as node.tail;
-    list_cons_if_list_tail np tl;
-    node.tail
+    with node tl. _;
+    let nd = !np;
+    rewrite each node.tail as nd.tail;
+    tail_for_cons np tl;
+    nd.tail
 }
 ```
 
-module GR = Pulse.Lib.GhostReference
-open Pulse.Lib.Forall.Util
-let can_update (x:GR.ref int) = 
-  forall* v. pts_to x #half_perm v @==>
-             pts_to x #half_perm (v + 1)
-
 ```pulse
+fn op_Bang_Bang (#a:Type) (r:ref a)
+requires pts_to r #p 'v
+returns v:a
+ensures pts_to r #p 'v ** pure (v == 'v)
+{ !r }
+```
+
+```pulse //length_iter$
 fn length_iter (#t:Type) (x: llist t)
-    requires is_list x 'l
-    returns n:nat
-    ensures is_list x 'l ** pure (n == List.Tot.length 'l)
+requires is_list x 'l
+returns n:nat
+ensures is_list x 'l ** pure (n == List.Tot.length 'l)
 {
   open I;
   let mut cur = x;
   let mut ctr = 0; 
-  I.refl (is_list x 'l);
+  I.refl (is_list x 'l); //initialize the trade for the invariant
   while (
-    with _b _n ll _sfx. _; 
-    let v = !cur; 
-    rewrite (pts_to cur v) as (pts_to cur ll);
+    with _b _n _ll _sfx. _; // bind the existential variables in the invariant ...
+    let v = !cur;           // !cur transformts pts_to x _ll into pts_to x v
+    rewrite each _ll as v;  // rewrite the rest of the context to use v instead of _ll
     Some? v
   )
   invariant b.  
@@ -287,23 +287,23 @@ fn length_iter (#t:Type) (x: llist t)
     pts_to ctr n **
     pts_to cur ll **
     is_list ll suffix **
-    (is_list ll suffix @==> is_list x 'l) **
-    pure (n == List.Tot.length 'l - List.Tot.length suffix) **
-    pure (b == (Some? ll))
+    pure (n == List.Tot.length 'l - List.Tot.length suffix /\
+          b == (Some? ll)) **
+    (is_list ll suffix @==> is_list x 'l)
   {
-    with _n _ll suffix. _;
+    with _n _ll _suffix. _; //bind existential variables in the invariant
     let n = !ctr;
     let ll = !cur;
-    rewrite each _ll as ll;
-    let next = move_next ll;
-    with tl. assert (is_list next tl);
-    I.trans (is_list next tl) (is_list ll suffix) (is_list x 'l);
+    rewrite each _ll as ll; //again, rewrite the context to use ll instead of _ll
+    let next = tail ll;     //tail gives us back a trade
+    with tl. _;
+    I.trans (is_list next tl) _ _; //extend the trade, transittively
     cur := next;
     ctr := n + 1;
   };
   with _n ll _sfx. _;
-  is_list_cases_none ll;
-  I.elim _ _;
+  is_list_case_none ll; //this tells us that suffix=[]; so n == List.Tot.length 'l
+  I.elim _ _;           //regain ownership of x, giving up ll
   let n = !ctr;
   n
 }
