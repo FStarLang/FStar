@@ -258,6 +258,8 @@ ensures exists* tl.
 }
 ```
 
+//a variant of (!) that doesn't change the pts_to assertion
+//try using (!!) below
 ```pulse
 fn op_Bang_Bang (#a:Type) (r:ref a)
 requires pts_to r #p 'v
@@ -306,5 +308,182 @@ ensures is_list x 'l ** pure (n == List.Tot.length 'l)
   I.elim _ _;           //regain ownership of x, giving up ll
   let n = !ctr;
   n
+}
+```
+
+```pulse //append$
+fn rec append (#t:Type0) (x y:llist t)
+requires is_list x 'l1 ** is_list y 'l2 ** pure (Some? x)
+ensures is_list x ('l1 @ 'l2)
+{
+  let np = Some?.v x;
+  is_list_case_some x np;
+  with _node _tl. _;
+  let node = !np;
+  rewrite each _node.tail as node.tail;
+  match node.tail {
+    None -> {
+      is_list_case_none node.tail;
+      elim_is_list_nil node.tail;
+      np := { node with tail = y };
+      rewrite each y as ({ node with tail = y }).tail in (is_list y 'l2);
+      intro_is_list_cons x np; 
+    }
+    Some _ -> {
+      append #t node.tail y;
+      intro_is_list_cons x np;
+    }
+  }
+}
+```
+
+
+```pulse //tail_alt$
+fn tail_alt (#t:Type) (x:llist t)
+requires is_list x 'l ** pure (Some? x)
+returns y:llist t
+ensures exists* hd tl.
+  is_list y tl **
+  (forall* tl'. is_list y tl' @==> is_list x (hd::tl')) **
+  pure ('l == hd::tl)
+{ 
+  let np = Some?.v x;
+  is_list_case_some x np;
+  with _node _tl. _;
+  let node = !np;
+  rewrite each _node.tail as node.tail;
+  ghost
+  fn aux (tl':list t)
+    requires pts_to np node ** is_list node.tail tl'
+    ensures is_list x (node.head::tl')
+  {
+    intro_is_list_cons x np;
+  };
+  FA.intro_forall_imp _ _ _ aux;
+  node.tail
+}
+```
+
+```pulse
+fn is_last_cell (#t:Type) (x:llist t)
+requires is_list x 'l ** pure (Some? x)
+returns b:bool
+ensures is_list x 'l ** pure (b == (List.Tot.length 'l = 1))
+{
+  let np = Some?.v x;
+  is_list_case_some x np;
+  with _node _tl. _;
+  let node = !np;
+  rewrite each _node.tail as node.tail;
+  match node.tail {
+    None -> { 
+      is_list_case_none node.tail;
+      intro_is_list_cons x np;
+      true
+    }
+    Some vtl -> { 
+      is_list_case_some node.tail vtl;
+      intro_is_list_cons node.tail vtl;
+      intro_is_list_cons x np;
+      false
+    }
+  }
+}
+```
+
+
+```pulse //append_at_last_cell$
+fn append_at_last_cell (#t:Type) (x y:llist t)
+requires
+  is_list x 'l1 **
+  is_list y 'l2 **
+  pure (Some? x /\ List.Tot.length 'l1 == 1)
+ensures
+  is_list x (List.Tot.append 'l1 'l2)
+{
+  let np = Some?.v x;
+  is_list_case_some x np;
+  with _node _tl. _;
+  elim_is_list_nil _node.tail;
+  let node = !np;
+  np := { node with tail = y };
+  rewrite each y as ({node with tail = y}).tail in (is_list y 'l2);
+  intro_is_list_cons x np; 
+}
+```
+
+```pulse //non_empty_list$
+ghost
+fn non_empty_list (#t:Type0) (x:llist t)
+requires is_list x 'l ** pure (Cons? 'l)
+ensures is_list x 'l ** pure (Some? x)
+{
+    elim_is_list_cons x _ (Cons?.hd 'l) (Cons?.tl 'l);
+    with v tail. _;
+    with n tl. assert (pts_to v n ** is_list tail tl);
+    rewrite each tail as n.tail;
+    intro_is_list_cons x v #n #tl;
+}
+```
+
+
+```pulse //append_iter$
+fn append_iter (#t:Type) (x y:llist t)
+requires is_list x 'l1 ** is_list y 'l2 ** pure (Some? x)
+ensures is_list x ('l1 @ 'l2)
+{
+  let mut cur = x;
+  //the base case, set up the initial invariant
+  FA.intro emp (fun l -> I.refl (is_list x l));
+  rewrite (forall* l. is_list x l @==> is_list x l)
+      as  (forall* l. is_list x l @==> is_list x ([]@l));
+  while (
+    with _b ll pfx sfx. _;
+    let l = !cur;
+    rewrite each ll as l;
+    let b = is_last_cell l; //check if we are at the last cell
+    if b 
+    { 
+      false //yes, break out of the loop
+    }
+    else 
+    {
+      let next = tail_alt l;
+      with hd tl. _;
+      (* this is the key induction step *)
+      FA.trans_compose 
+          (is_list next) (is_list l) (is_list x)
+          (fun tl -> hd :: tl)
+          (fun tl -> pfx @ tl);
+      //Use F* sugar for classical connectives to introduce a property
+      //needed for the next rewrite
+      (introduce forall tl. pfx @ (hd :: tl) == (pfx @ [hd]) @ tl
+       with List.Tot.Properties.append_assoc pfx [hd] tl);
+      rewrite (forall* tl. is_list next tl @==> is_list x (pfx@(hd::tl)))
+           as (forall* tl. is_list next tl @==> is_list x ((pfx@[hd])@tl));
+      cur := next;
+      non_empty_list next; //need to prove that Some? next, for the invariant
+      true
+    }
+  )
+  invariant b.
+  exists* ll pfx sfx.
+    pts_to cur ll **   //cur holds the pointer to the current head of the traversal, ll
+    is_list ll sfx **  //ll points to some suffix of the original list, since `pfx@sfx = 'l1` below
+    //the main bit: whatever ll points to `sfx'`, trade it for x pointing to the concatenation ``pfx @ sfx'`` 
+    (forall* sfx'. is_list ll sfx' @==> is_list x (pfx @ sfx')) ** 
+    pure (
+      (b==false ==> List.Tot.length sfx == 1) /\ //the loop ends when we reach the last cell
+      pfx@sfx == 'l1 /\ //sfx is really the suffix
+      Some? ll          //and the current list is always non-null
+    )
+  { () };
+  with ll pfx sfx. _;
+  let last = !cur;
+  rewrite each ll as last;
+  append_at_last_cell last y;
+  FA.elim_forall_imp (is_list last) (fun sfx' -> is_list x (pfx @ sfx')) (sfx@'l2);
+  List.Tot.Properties.append_assoc pfx sfx 'l2;
+  ()
 }
 ```
