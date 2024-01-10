@@ -67,6 +67,13 @@ pub fn majority<A: Clone + Copy + PartialEq>(
 //majorityrustend$
 
 //majorityrusttest$
+#[derive(Copy, Clone, PartialEq, Debug)]
+enum Candidate {
+    A,
+    B,
+    C,
+}
+
 #[test]
 fn test() {
     let mut votes = [0, 1, 0, 0, 0, 1];
@@ -74,7 +81,11 @@ fn test() {
     assert_eq!(winner, Some(0));
 
     let mut str_votes = ["a", "b", "a", "a", "c"];
-    let str_winnder = majority((), (), &mut str_votes, 5);
-    assert_eq!(str_winnder, Some("a"));
+    let str_winner = majority((), (), &mut str_votes, 5);
+    assert_eq!(str_winner, Some("a"));
+
+    let mut cand_votes = [Candidate::A, Candidate::B, Candidate::C, Candidate::B];
+    let cand_winner = majority((), (), &mut cand_votes, 4);
+    assert_eq!(cand_winner, None);
 }
 //majorityrusttestend$

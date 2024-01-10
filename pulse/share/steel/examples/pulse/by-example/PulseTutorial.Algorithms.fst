@@ -26,6 +26,8 @@ module SZ = FStar.SizeT
 module G = FStar.Ghost
 module R = Pulse.Lib.Reference
 
+#set-options "--z3rlimit_factor 2"
+
 let count_until (#a:eqtype) (x:a) (s:Seq.seq a) (j:nat { j <= Seq.length s }) : GTot nat =
   Seq.count x (Seq.slice s 0 j)
 
@@ -50,7 +52,6 @@ let no_majority (#a:eqtype) (s:Seq.seq a) = forall (x:a). 2 * count x s <= Seq.l
 
 let has_majority_in (#a:eqtype) (x:a) (s:Seq.seq a) = Seq.length s < 2 * count x s
 
-#push-options "--z3rlimit_factor 2"
 ```pulse
 fn majority (#a:eqtype) #p (#s:G.erased _) (votes:array a) (len:SZ.t { SZ.v len == Seq.length s })
   requires pts_to votes #p s ** pure (0 < SZ.v len /\ SZ.fits (2 * SZ.v len))
@@ -64,6 +65,7 @@ fn majority (#a:eqtype) #p (#s:G.erased _) (votes:array a) (len:SZ.t { SZ.v len 
   let votes_0 = votes.(0sz);
   let mut cand = votes_0;
   assert (pure (count_until votes_0 s 1 == 1));
+//majorityphase1$
   while (
     let vi = !i;
     (vi <^ len)
@@ -75,11 +77,14 @@ fn majority (#a:eqtype) #p (#s:G.erased _) (votes:array a) (len:SZ.t { SZ.v len 
        R.pts_to k vk       **
        R.pts_to cand vcand **
        pure (
-         SZ.v vi <= Seq.length s /\
-         0 <= SZ.v vk /\ SZ.v vk <= count_until vcand s (SZ.v vi) /\
-         2 * (count_until vcand s (SZ.v vi) - SZ.v vk) <= SZ.v vi - SZ.v vk /\
-         (forall (vcand':a). vcand' =!= vcand ==> 2 * count_until vcand' s (SZ.v vi) <= SZ.v vi - SZ.v vk) /\
-         b == (SZ.v vi < SZ.v len)))
+         v vi <= Seq.length s /\
+         // v is a spec function that returns nat representation of an FStar.SizeT
+         0 <= v vk /\ v vk <= count_until vcand s (v vi) /\
+         // constraint for the current candidate,
+         2 * (count_until vcand s (v vi) - v vk) <= v vi - v vk /\
+         // constraint for the rest of the candidates
+         (forall (vcand':a). vcand' =!= vcand ==> 2 * count_until vcand' s (v vi) <= v vi - v vk) /\
+         b == (v vi < v len)))
   {
     let vi = !i;
     let vk = !k;
@@ -98,7 +103,7 @@ fn majority (#a:eqtype) #p (#s:G.erased _) (votes:array a) (len:SZ.t { SZ.v len 
       i := vi +^ 1sz
     }
   };
-
+//majorityphase1end$
   let vk = !k;
   let vcand = !cand;
   if (vk = 0sz) {
@@ -142,4 +147,3 @@ fn majority (#a:eqtype) #p (#s:G.erased _) (votes:array a) (len:SZ.t { SZ.v len 
   }
 }
 ```
-#pop-options
