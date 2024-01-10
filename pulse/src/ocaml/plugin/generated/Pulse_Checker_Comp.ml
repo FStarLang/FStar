@@ -405,7 +405,7 @@ let (check :
                                        FStar_Tactics_Effect.lift_div_tac
                                          (fun uu___ ->
                                             Pulse_Typing.CT_ST (g1, st, stc))))
-                           | Pulse_Syntax_Base.C_STAtomic (i, st) ->
+                           | Pulse_Syntax_Base.C_STAtomic (i, obs, st) ->
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
                                     (FStar_Sealed.seal
@@ -423,7 +423,7 @@ let (check :
                                              (Prims.of_int (65))
                                              (Prims.of_int (35))
                                              (Prims.of_int (71))
-                                             (Prims.of_int (41)))))
+                                             (Prims.of_int (45)))))
                                     (Obj.magic (check_st_comp st))
                                     (fun uu___ ->
                                        (fun stc ->
@@ -444,7 +444,7 @@ let (check :
                                                         (Prims.of_int (65))
                                                         (Prims.of_int (35))
                                                         (Prims.of_int (71))
-                                                        (Prims.of_int (41)))))
+                                                        (Prims.of_int (45)))))
                                                (Obj.magic
                                                   (Pulse_Checker_Pure.core_compute_tot_term_type
                                                      g1 i))
@@ -638,8 +638,8 @@ let (check :
                                                                     uu___2 ->
                                                                     Pulse_Typing.CT_STAtomic
                                                                     (g1, i,
-                                                                    st, (),
-                                                                    stc)))))
+                                                                    obs, st,
+                                                                    (), stc)))))
                                                     uu___))) uu___))
                            | Pulse_Syntax_Base.C_STGhost (i, st) ->
                                Obj.magic

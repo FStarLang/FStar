@@ -165,12 +165,17 @@ let mk_stt_comp (u:R.universe) (res pre post:R.term) : Tot R.term =
 let stt_atomic_lid = mk_pulse_lib_core_lid "stt_atomic"
 let stt_atomic_fv = R.pack_fv stt_atomic_lid
 let stt_atomic_tm = R.pack_ln (R.Tv_FVar stt_atomic_fv)
-let mk_stt_atomic_comp (u:R.universe) (a inames pre post:R.term) =
-  let t = R.pack_ln (R.Tv_UInst stt_atomic_fv [u]) in
+let stt_unobservable_lid = mk_pulse_lib_core_lid "stt_unobservable"
+let stt_unobservable_fv = R.pack_fv stt_unobservable_lid
+let stt_unobservable_tm = R.pack_ln (R.Tv_FVar stt_unobservable_fv)
+let mk_stt_atomic_comp (obs:bool) (u:R.universe) (a inames pre post:R.term) =
+  let head = if obs then stt_atomic_fv else stt_unobservable_fv in
+  let t = R.pack_ln (R.Tv_UInst head [u]) in
   let t = R.pack_ln (R.Tv_App t (a, R.Q_Explicit)) in
   let t = R.pack_ln (R.Tv_App t (inames, R.Q_Explicit)) in
   let t = R.pack_ln (R.Tv_App t (pre, R.Q_Explicit)) in
   R.pack_ln (R.Tv_App t (post, R.Q_Explicit))
+
 
 let stt_ghost_lid = mk_pulse_lib_core_lid "stt_ghost"
 let stt_ghost_fv = R.pack_fv stt_ghost_lid
@@ -629,11 +634,11 @@ let mk_stt_comp_equiv (g:R.env) (u:R.universe) (res1 pre1 post1 res2 pre2 post2:
                (mk_stt_comp u res2 pre2 post2)
   = admit ()
 
-let mk_stt_atomic_comp_equiv (g:R.env) (u:R.universe) (res inames pre1 post1 pre2 post2:R.term)
+let mk_stt_atomic_comp_equiv (g:R.env) obs (u:R.universe) (res inames pre1 post1 pre2 post2:R.term)
   (pre_eq:RT.equiv g pre1 pre2)
   (post_eq:RT.equiv g post1 post2)
-  : RT.equiv g (mk_stt_atomic_comp u res inames pre1 post1)
-               (mk_stt_atomic_comp u res inames pre2 post2)
+  : RT.equiv g (mk_stt_atomic_comp obs u res inames pre1 post1)
+               (mk_stt_atomic_comp obs u res inames pre2 post2)
   = admit ()
 
 let mk_stt_ghost_comp_equiv (g:R.env) (u:R.universe) (res inames pre1 post1 pre2 post2:R.term)

@@ -73,6 +73,7 @@ type array_init = {
   len : A.term;
 }
 
+let ensures_vprop = option (ident & A.term) & vprop
 
 type stmt' =
   | Open of lident
@@ -105,14 +106,14 @@ type stmt' =
     
   | If {
       head:A.term;
-      join_vprop:option vprop;
+      join_vprop:option ensures_vprop;
       then_:stmt;
       else_opt:option stmt;
     }
 
   | Match {
       head:A.term;
-      returns_annot:option vprop;
+      returns_annot:option ensures_vprop;
       branches:list (A.pattern & stmt);
     }
 
@@ -155,7 +156,7 @@ type stmt' =
   | WithInvariants {
       names : list A.term;
       body  : stmt;
-      returns_ : option vprop;
+      returns_ : option ensures_vprop;
     }
 
 and stmt = {
@@ -184,6 +185,7 @@ and let_init =
   | Array_initializer of array_init
   | Default_initializer of A.term
   | Lambda_initializer of fn_decl
+  | Stmt_initializer of stmt
 
 type decl =
   | FnDecl of fn_decl

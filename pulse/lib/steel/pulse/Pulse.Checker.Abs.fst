@@ -46,7 +46,7 @@ let range_of_comp (c:comp) =
   match c with
   | C_Tot t -> t.range
   | C_ST st -> range_of_st_comp st
-  | C_STAtomic _ st -> range_of_st_comp st
+  | C_STAtomic _ _ st -> range_of_st_comp st
   | C_STGhost _ st -> range_of_st_comp st
 
 let rec arrow_of_abs (env:_) (prog:st_term { Tm_Abs? prog.term })
@@ -206,7 +206,7 @@ let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac 
     | C_Tot _, C_Tot _ -> nop
     | C_ST _, C_ST _ -> nop
 
-    | C_STAtomic i c1, C_STAtomic j c2
+    | C_STAtomic i Observable c1, C_STAtomic j Observable c2
     | C_STGhost i c1, C_STGhost j c2 ->
       // This should be true since we used the annotated computation type
       // to check the body of the function, but this fact is not exposed
@@ -238,7 +238,7 @@ let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac 
       let d_sub : st_sub g c_computed c =
         match c_computed with
         | C_STGhost _ _ -> STS_GhostInvs g c2 j i tok
-        | C_STAtomic _ _ -> STS_AtomicInvs g c2 j i tok
+        | C_STAtomic _ obs _ -> STS_AtomicInvs g c2 j i Observable Observable tok
       in
       (| c, d_sub |)
 

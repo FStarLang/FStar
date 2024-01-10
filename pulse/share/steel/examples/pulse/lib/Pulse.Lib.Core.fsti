@@ -361,13 +361,13 @@ inline_for_extraction
 val with_invariant_a (#a:Type)
                    (#fp:vprop)
                    (#fp':a -> vprop)
-                   (#opened_invariants:inames)
+                   (#f_opens:inames)
                    (#p:vprop)
-                   (i:inv p{not (mem_inv opened_invariants i)})
-                   ($f:unit -> stt_atomic a (add_inv opened_invariants i) 
+                   (i:inv p{not (mem_inv f_opens i)})
+                   ($f:unit -> stt_atomic a f_opens
                                             (p ** fp)
                                             (fun x -> p ** fp' x))
-  : stt_atomic a opened_invariants fp fp'
+  : stt_atomic a (add_inv f_opens i) fp fp'
 
 inline_for_extraction
 let unit_non_informative : non_informative_witness unit =

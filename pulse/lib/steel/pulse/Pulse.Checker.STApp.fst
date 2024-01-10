@@ -27,6 +27,7 @@ module FV = Pulse.Typing.FV
 module RU = Pulse.RuntimeUtils
 module P = Pulse.Syntax.Printer
 module Prover = Pulse.Checker.Prover
+open Pulse.Show
 
 let debug_log (g:env) (f:unit -> T.Tac unit) : T.Tac unit = if RU.debug_at_level (fstar_env g) "st_app" then f () else ()
 
@@ -71,7 +72,7 @@ let rec intro_uvars_for_logical_implicits (g:env) (uvs:env { disjoint g uvs }) (
     begin
       match c_rest with
        | C_ST _
-       | C_STAtomic _ _
+       | C_STAtomic _ _ _
        | C_STGhost _ _ ->
          (| uvs', push_env g uvs', {term=Tm_STApp {head=t;arg_qual=Some Implicit;arg=null_var x};
                                     range=t.range;
@@ -105,7 +106,7 @@ let instantiate_implicits (g:env) (t:st_term { Tm_STApp? t.term })
     | _ ->
       fail g (Some t.range)
         (Printf.sprintf "check_stapp.instantiate_implicits: expected an application term, found: %s"
-           (P.term_to_string t))
+           (show t))
 
 #push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 1"
 let apply_impure_function 
@@ -156,7 +157,7 @@ let apply_impure_function
       let (| t, c, d |) : (t:st_term & c:comp_st & st_typing g t c) =
         match comp_typ with
         | C_ST res
-        | C_STAtomic _ res ->
+        | C_STAtomic _ _ res ->
           // ST application
           let d : st_typing _ _ (open_comp_with comp_typ arg) =
             T_STApp g head formal qual comp_typ arg dhead darg in
@@ -197,9 +198,13 @@ let apply_impure_function
           (| t, c, d |)
         | _ ->
           fail g (Some range)
-            "Expected an effectful application; got a pure term (could it be partially applied by mistake?)" in
-
-        Prover.prove_post_hint (Prover.try_frame_pre_uvs ctxt_typing uvs (match_comp_res_with_post_hint d post_hint) res_ppname) post_hint range
+            "Expected an effectful application; got a pure term (could it be partially applied by mistake?)"
+      in
+      let (| st', c', st_typing' |) = match_comp_res_with_post_hint d post_hint in
+      debug_log g (fun _ -> T.print (Printf.sprintf "st_app: c' = %s\n"
+                                       (show #comp c')));
+      let framed = Prover.try_frame_pre_uvs ctxt_typing uvs (| st', c', st_typing' |)  res_ppname in
+      Prover.prove_post_hint framed post_hint range
     )
   
 

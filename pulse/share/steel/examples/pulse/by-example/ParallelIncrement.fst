@@ -225,10 +225,10 @@ ensures qpred ('i + 1)
 ```
 
 assume
-val atomic_read (r:ref int) (#i:erased int)
+val atomic_read (r:ref int) (#p:_) (#i:erased int)
   : stt_atomic int emp_inames 
-    (pts_to r #(half_perm full_perm) i)
-    (fun v -> pts_to r #(half_perm full_perm) v ** pure (reveal i == v))
+    (pts_to r #p i)
+    (fun v -> pts_to r #p v ** pure (reveal i == v))
 
 let cond b (p q:vprop) = if b then p else q
 assume
@@ -256,7 +256,6 @@ val cas (r:ref int) (u v:int) (#i:erased int)
       cond b (pts_to r v ** pure (reveal i == u)) 
              (pts_to r i))
 
-let trigger (x:'a) = emp
 
 ```pulse
 fn atomic_increment_f5
@@ -282,18 +281,14 @@ ensures qpred ('i + 1)
   returns v:int
   ensures emp
   {
-    0
-    //This doesn't work at the return type, complaining that it should be non-informative
-    // with_invariants l {
-        // elim_inv ();
-        // with i. _;
-        // share x;
-        // let v = atomic_read x;
-        // gather x;
-        // with _p. rewrite (pts_to x #_p v) as (pts_to x i);
-        // intro_inv ();
-        // v
-    // }
+    with_invariants l {
+        elim_inv ();
+        with i. _;
+        let v = atomic_read x;
+        rewrite (pts_to x v) as (pts_to x i);
+        intro_inv ();
+        v
+    }
   };
   let mut continue = true;
   fold (cond true (qpred 'i) (qpred ('i + 1)));
@@ -308,7 +303,12 @@ ensures qpred ('i + 1)
     cond b (qpred 'i) (qpred ('i + 1))
   {
     let v = read ();
-    with_invariants l {
+    let next = 
+      with_invariants l
+      returns b1:bool
+      ensures cond b1 (qpred 'i) (qpred ('i + 1))
+          ** pts_to continue true
+      {
         elim_inv ();
         let b = cas x v (v + 1);
         if b
@@ -316,20 +316,20 @@ ensures qpred ('i + 1)
           elim_cond_true b _ _;
           elim_cond_true true _ _;
           f _ _;
-          // continue := false; //local variable assignment is considered non-atomic
           intro_cond_false (qpred 'i) (qpred ('i + 1));
           intro_inv ();
-          // show_proof_state; //the proof is done here, except for the assignment to continue
-          admit()
+          false
         }
         else
         {
           with p q. rewrite (cond b p q) as q;
           intro_inv ();
+          true
         }
-    }
+      };
+    continue := next
   };
-  with p q. unfold (cond false p q);
+  unfold cond;
 }
  
 ```

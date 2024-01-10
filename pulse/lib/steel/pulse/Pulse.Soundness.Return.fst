@@ -133,7 +133,7 @@ let return_soundess
       assert (elab_comp c == mk_stt_comp ru rt elab_c_pre elab_c_post);
       elab_stt_equiv _ c _ _ pre_eq post_eq
     | STT_Atomic ->
-      assert (elab_comp c == mk_stt_atomic_comp ru rt emp_inames_tm elab_c_pre elab_c_post);
+      assert (elab_comp c == mk_stt_atomic_comp false ru rt emp_inames_tm elab_c_pre elab_c_post);
       elab_statomic_equiv _ c _ _ pre_eq post_eq
     | STT_Ghost ->
       assert (elab_comp c == mk_stt_ghost_comp ru rt emp_inames_tm elab_c_pre elab_c_post);
