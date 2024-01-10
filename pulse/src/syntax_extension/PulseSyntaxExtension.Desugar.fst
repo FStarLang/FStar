@@ -393,8 +393,20 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       let! array_assignment_lid = resolve_lid env (op_array_assignment_lid s.range) in
       return (stapp_assignment array_assignment_lid [arr;index] value s.range)
     
-    | Sequence { s1={s=Open l}; s2 } ->
-      let env = push_namespace env l in
+    | Sequence { s1={s=Open l; range}; s2 } ->
+      let! env = 
+        try 
+          let env = push_namespace env l in
+          return env
+        with
+          | FStar.Errors.Error(e, msg, r, ctx) ->
+            fail (BU.format2
+            "Failed to open namespace %s; \
+            You may need to bind this namespace outside Pulse for the F* dependency scanner to pick it up, \
+            e.g., write ``module _X = %s`` in F*"
+            (Ident.string_of_lid l)
+            (Ident.string_of_lid l)) range
+      in
       desugar_stmt env s2
 
     | Sequence { s1={s=LetBinding lb}; s2 } ->

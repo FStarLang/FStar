@@ -1145,13 +1145,36 @@ let rec (desugar_stmt :
                    {
                      PulseSyntaxExtension_Sugar.s =
                        PulseSyntaxExtension_Sugar.Open l;
-                     PulseSyntaxExtension_Sugar.range1 = uu___;_};
+                     PulseSyntaxExtension_Sugar.range1 = range;_};
                  PulseSyntaxExtension_Sugar.s2 = s2;_}
                ->
                Obj.magic
                  (Obj.repr
-                    (let env1 = PulseSyntaxExtension_Env.push_namespace env l in
-                     desugar_stmt env1 s2))
+                    (let uu___ =
+                       try
+                         (fun uu___1 ->
+                            match () with
+                            | () ->
+                                let env1 =
+                                  PulseSyntaxExtension_Env.push_namespace env
+                                    l in
+                                PulseSyntaxExtension_Err.return env1) ()
+                       with
+                       | FStar_Errors.Error (e, msg, r, ctx) ->
+                           let uu___2 =
+                             let uu___3 = FStar_Ident.string_of_lid l in
+                             let uu___4 = FStar_Ident.string_of_lid l in
+                             FStar_Compiler_Util.format2
+                               "Failed to open namespace %s; You may need to bind this namespace outside Pulse for the F* dependency scanner to pick it up, e.g., write ``module _X = %s`` in F*"
+                               uu___3 uu___4 in
+                           PulseSyntaxExtension_Err.fail uu___2 range in
+                     FStar_Class_Monad.op_let_Bang
+                       PulseSyntaxExtension_Err.err_monad () ()
+                       (Obj.magic uu___)
+                       (fun uu___1 ->
+                          (fun env1 ->
+                             let env1 = Obj.magic env1 in
+                             Obj.magic (desugar_stmt env1 s2)) uu___1)))
            | PulseSyntaxExtension_Sugar.Sequence
                {
                  PulseSyntaxExtension_Sugar.s1 =
