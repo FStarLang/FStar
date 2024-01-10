@@ -360,49 +360,59 @@ let (is_binop :
           (s = "FStar.UInt32.sub")
       then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Sub
       else
-        if s = "Prims.op_disEquality"
-        then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Ne
+        if
+          (((((s = "Prims.op_Multiply") || (s = "FStar.Mul.op_Star")) ||
+               (s = "FStar.UInt32.mul"))
+              || (s = "FStar.UInt32.op_Star_Hat"))
+             || (s = "FStar.SizeT.mul"))
+            || (s = "FStar.SizeT.op_Star_Hat")
+        then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Mul
         else
-          if
-            ((s = "Prims.op_LessThanOrEqual") || (s = "FStar.UInt32.lte")) ||
-              (s = "FStar.SizeT.lte")
-          then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Le
+          if s = "Prims.op_disEquality"
+          then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Ne
           else
             if
-              ((s = "Prims.op_LessThan") || (s = "FStar.UInt32.lt")) ||
-                (s = "FStar.SizeT.lt")
-            then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Lt
+              ((s = "Prims.op_LessThanOrEqual") || (s = "FStar.UInt32.lte"))
+                || (s = "FStar.SizeT.lte")
+            then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Le
             else
               if
-                ((s = "Prims.op_GreaterThanOrEqual") ||
-                   (s = "FStar.UInt32.gte"))
-                  || (s = "FStar.SizeT.gte")
-              then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Ge
+                ((s = "Prims.op_LessThan") || (s = "FStar.UInt32.lt")) ||
+                  (s = "FStar.SizeT.lt")
+              then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Lt
               else
                 if
-                  ((s = "Prims.op_GreaterThan") || (s = "FStar.UInt32.gt"))
-                    || (s = "FStar.SizeT.gt")
-                then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Gt
+                  ((s = "Prims.op_GreaterThanOrEqual") ||
+                     (s = "FStar.UInt32.gte"))
+                    || (s = "FStar.SizeT.gte")
+                then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Ge
                 else
-                  if s = "Prims.op_Equality"
-                  then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Eq
+                  if
+                    ((s = "Prims.op_GreaterThan") || (s = "FStar.UInt32.gt"))
+                      || (s = "FStar.SizeT.gt")
+                  then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Gt
                   else
-                    if
-                      ((s = "Prims.rem") || (s = "FStar.UInt32.rem")) ||
-                        (s = "FStar.SizeT.rem")
+                    if s = "Prims.op_Equality"
                     then
-                      FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Rem
+                      FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Eq
                     else
-                      if s = "Prims.op_AmpAmp"
+                      if
+                        ((s = "Prims.rem") || (s = "FStar.UInt32.rem")) ||
+                          (s = "FStar.SizeT.rem")
                       then
                         FStar_Pervasives_Native.Some
-                          Pulse2Rust_Rust_Syntax.And
+                          Pulse2Rust_Rust_Syntax.Rem
                       else
-                        if s = "Prims.op_BarBar"
+                        if s = "Prims.op_AmpAmp"
                         then
                           FStar_Pervasives_Native.Some
-                            Pulse2Rust_Rust_Syntax.Or
-                        else FStar_Pervasives_Native.None
+                            Pulse2Rust_Rust_Syntax.And
+                        else
+                          if s = "Prims.op_BarBar"
+                          then
+                            FStar_Pervasives_Native.Some
+                              Pulse2Rust_Rust_Syntax.Or
+                          else FStar_Pervasives_Native.None
 let (extract_mlconstant_to_lit :
   FStar_Extraction_ML_Syntax.mlconstant -> Pulse2Rust_Rust_Syntax.lit) =
   fun c ->
@@ -1935,7 +1945,7 @@ let (read_all_ast_files : Prims.string Prims.list -> dict) =
          let uu___1 = file_to_module_name f in
          FStar_Compiler_Util.smap_add d uu___1 contents) files;
     d
-let (extract : Prims.string Prims.list -> unit) =
+let (extract : Prims.string Prims.list -> Prims.string) =
   fun files ->
     let d = read_all_ast_files files in
     let all_modules = topsort_all d [] in
@@ -2004,4 +2014,4 @@ let (extract : Prims.string Prims.list -> unit) =
                  (FStar_Compiler_List.rev all_modules) in
              FStar_Pervasives_Native.snd uu___4 in
            FStar_Compiler_String.concat " " uu___3 in
-         FStar_Compiler_Util.print1 "\n%s\n" s)
+         s)
