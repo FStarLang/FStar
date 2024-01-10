@@ -299,7 +299,7 @@ ensures is_list x 'l ** pure (n == List.Tot.length 'l)
     rewrite each _ll as ll; //again, rewrite the context to use ll instead of _ll
     let next = tail ll;     //tail gives us back a trade
     with tl. _;
-    I.trans (is_list next tl) _ _; //extend the trade, transittively
+    I.trans (is_list next tl) _ _; //extend the trade, transitively
     cur := next;
     ctr := n + 1;
   };
