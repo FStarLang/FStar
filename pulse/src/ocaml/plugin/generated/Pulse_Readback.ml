@@ -78,8 +78,9 @@ let (try_readback_st_comp :
                   | uu___1 -> FStar_Pervasives_Native.None)
                else
                  if
-                   (fv_lid = Pulse_Reflection_Util.stt_atomic_lid) ||
-                     (fv_lid = Pulse_Reflection_Util.stt_ghost_lid)
+                   ((fv_lid = Pulse_Reflection_Util.stt_atomic_lid) ||
+                      (fv_lid = Pulse_Reflection_Util.stt_unobservable_lid))
+                     || (fv_lid = Pulse_Reflection_Util.stt_ghost_lid)
                  then
                    (match args with
                     | res::opened::pre::post::[] ->
@@ -119,6 +120,7 @@ let (try_readback_st_comp :
                                                         let c =
                                                           Pulse_Syntax_Base.C_STAtomic
                                                             (opened',
+                                                              Pulse_Syntax_Base.Observable,
                                                               {
                                                                 Pulse_Syntax_Base.u
                                                                   = u;
@@ -132,21 +134,42 @@ let (try_readback_st_comp :
                                                         FStar_Pervasives_Native.Some
                                                           c
                                                       else
-                                                        (let c =
-                                                           Pulse_Syntax_Base.C_STGhost
-                                                             (opened',
-                                                               {
-                                                                 Pulse_Syntax_Base.u
-                                                                   = u;
-                                                                 Pulse_Syntax_Base.res
-                                                                   = res';
-                                                                 Pulse_Syntax_Base.pre
-                                                                   = pre';
-                                                                 Pulse_Syntax_Base.post
-                                                                   = post'
-                                                               }) in
-                                                         FStar_Pervasives_Native.Some
-                                                           c))))))
+                                                        if
+                                                          fv_lid =
+                                                            Pulse_Reflection_Util.stt_unobservable_lid
+                                                        then
+                                                          (let c =
+                                                             Pulse_Syntax_Base.C_STAtomic
+                                                               (opened',
+                                                                 Pulse_Syntax_Base.Unobservable,
+                                                                 {
+                                                                   Pulse_Syntax_Base.u
+                                                                    = u;
+                                                                   Pulse_Syntax_Base.res
+                                                                    = res';
+                                                                   Pulse_Syntax_Base.pre
+                                                                    = pre';
+                                                                   Pulse_Syntax_Base.post
+                                                                    = post'
+                                                                 }) in
+                                                           FStar_Pervasives_Native.Some
+                                                             c)
+                                                        else
+                                                          (let c =
+                                                             Pulse_Syntax_Base.C_STGhost
+                                                               (opened',
+                                                                 {
+                                                                   Pulse_Syntax_Base.u
+                                                                    = u;
+                                                                   Pulse_Syntax_Base.res
+                                                                    = res';
+                                                                   Pulse_Syntax_Base.pre
+                                                                    = pre';
+                                                                   Pulse_Syntax_Base.post
+                                                                    = post'
+                                                                 }) in
+                                                           FStar_Pervasives_Native.Some
+                                                             c))))))
                          | uu___2 -> FStar_Pervasives_Native.None)
                     | uu___2 -> FStar_Pervasives_Native.None)
                  else FStar_Pervasives_Native.None

@@ -148,7 +148,7 @@ let comp_st_with_post (c:comp_st) (post:term)
   match c with
   | C_ST st -> C_ST { st with post }
   | C_STGhost i st -> C_STGhost i { st with post }
-  | C_STAtomic i st -> C_STAtomic i {st with post}
+  | C_STAtomic i obs st -> C_STAtomic i obs {st with post}
 
 let ve_unit_r g (p:term) : vprop_equiv g (tm_star p tm_emp) p = 
   VE_Trans _ _ _ _ (VE_Comm _ _ _) (VE_Unit _ _)
@@ -226,7 +226,7 @@ let comp_with_pre (c:comp_st) (pre:term) =
   match c with
   | C_ST st -> C_ST { st with pre }
   | C_STGhost i st -> C_STGhost i { st with pre }
-  | C_STAtomic i st -> C_STAtomic i {st with pre}
+  | C_STAtomic i obs st -> C_STAtomic i obs {st with pre}
 
 
 let st_equiv_pre (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
@@ -294,6 +294,7 @@ let k_elab_equiv
   k
 
 #push-options "--query_stats --fuel 2 --ifuel 2 --split_queries no --z3rlimit_factor 20"
+open Pulse.PP
 let continuation_elaborator_with_bind (#g:env) (ctxt:term)
   (#c1:comp{stateful_comp c1})
   (#e1:st_term)
@@ -344,6 +345,7 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
     else (
       let t_typing, post_typing =
         Pulse.Typing.Combinators.bind_res_and_post_typing g (st_comp_of_comp c2) x post_hint in
+      let g = push_context g "mk_bind" e1.range in
       let (| e, c, e_typing |) =
         Pulse.Typing.Combinators.mk_bind
           g (tm_star ctxt pre1) 
@@ -500,10 +502,10 @@ let continuation_elaborator_with_bind_fn (#g:env) (#ctxt:term)
         let stc = st_comp_typing_with_post_hint ctxt_typing post_hint c2 in
         CT_ST _ _ stc
       
-      | C_STAtomic i st -> 
+      | C_STAtomic i obs st -> 
         let stc = st_comp_typing_with_post_hint ctxt_typing post_hint c2 in
         let i_typing = CP.core_check_term g i T.E_Total tm_inames in
-        CT_STAtomic _ _ _ i_typing stc
+        CT_STAtomic _ _ obs _ i_typing stc
 
       | C_STGhost i st -> 
         let stc = st_comp_typing_with_post_hint ctxt_typing post_hint c2 in
@@ -548,12 +550,12 @@ let intro_comp_typing (g:env)
     | C_ST st -> 
       let stc = intro_st_comp_typing st in
       CT_ST _ _ stc
-    | C_STAtomic i st -> 
+    | C_STAtomic i obs st -> 
       let stc = intro_st_comp_typing st in
       let (| ty, i_typing |) = CP.core_compute_tot_term_type g i in
       if not (eq_tm ty tm_inames)
       then fail g None (Printf.sprintf "ill-typed inames term %s" (P.term_to_string i))
-      else CT_STAtomic _ _ _ i_typing stc
+      else CT_STAtomic _ _ obs _ i_typing stc
     | C_STGhost i st -> 
       let stc = intro_st_comp_typing st in
       let (| ty, i_typing |) = CP.core_compute_tot_term_type g i in
@@ -700,7 +702,7 @@ let rec is_stateful_arrow (g:env) (c:option comp) (args:list T.argv) (out:list T
     | None -> None
     | Some (C_ST _)
     | Some (C_STGhost _ _)
-    | Some (C_STAtomic _ _) -> (
+    | Some (C_STAtomic _ _ _) -> (
       match args, out with
       | [], hd::tl -> Some (List.rev tl, hd)
       | _ -> None //leftover or not enough args

@@ -57,7 +57,7 @@ let freevars_comp (c:comp) : Tot (Set.set var) (decreases c) =
   match c with
   | C_Tot t -> freevars t
   | C_ST s -> freevars_st_comp s
-  | C_STAtomic inames s
+  | C_STAtomic inames _ s
   | C_STGhost inames s ->
     freevars inames `Set.union` freevars_st_comp s
 
@@ -171,12 +171,17 @@ let rec freevars_st (t:st_term)
 
     | Tm_WithInv { name; body; returns_inv } ->
       Set.union (Set.union (freevars name) (freevars_st body))
-                (freevars_term_opt returns_inv)
+                (freevars_opt 
+                  (fun (b, r) ->
+                    (Set.union (freevars b.binder_ty) 
+                               (freevars r)))
+                  returns_inv)
 
 and freevars_branches (t:list (pattern & st_term)) : Set.set var =
   match t with
   | [] -> Set.empty
   | (_, b)::tl -> freevars_st b `Set.union` freevars_branches tl
+
 
 let rec ln' (t:term) (i:int) : Tot bool (decreases t) =
   match t.t with
@@ -219,7 +224,7 @@ let ln_c' (c:comp) (i:int)
   = match c with
     | C_Tot t -> ln' t i
     | C_ST s -> ln_st_comp s i
-    | C_STAtomic inames s
+    | C_STAtomic inames _ s
     | C_STGhost inames s ->
       ln' inames i &&
       ln_st_comp s i
@@ -380,9 +385,14 @@ let rec ln_st' (t:st_term) (i:int)
       ln_proof_hint' hint_type (i + n) &&
       ln_st' t (i + n)
 
-    | Tm_WithInv { name; body } ->
+    | Tm_WithInv { name; body; returns_inv } ->
       ln' name i &&
-      ln_st' body i
+      ln_st' body i &&
+      ln_opt'
+        (fun (b, r) i ->
+          ln' b.binder_ty i &&
+          ln' r (i + 1))
+        returns_inv i
 
 and ln_branch' (b : pattern & st_term) (i:int) : Tot bool (decreases b) =
   let (p, e) = b in
@@ -483,8 +493,8 @@ let subst_comp (c:comp) (ss:subst)
 
     | C_ST s -> C_ST (subst_st_comp s ss)
 
-    | C_STAtomic inames s ->
-      C_STAtomic (subst_term inames ss)
+    | C_STAtomic inames obs s ->
+      C_STAtomic (subst_term inames ss) obs
                  (subst_st_comp s ss)
 
     | C_STGhost inames s ->
@@ -679,7 +689,13 @@ let rec subst_st_term (t:st_term) (ss:subst)
     | Tm_WithInv { name; body; returns_inv } ->
       let name = subst_term name ss in
       let body = subst_st_term body ss in
-      let returns_inv = subst_term_opt returns_inv ss in
+      let returns_inv =
+        match returns_inv with
+        | None -> None
+        | Some (b, r) ->
+          Some (subst_binder b ss, 
+                subst_term r (shift_subst ss))
+      in
       Tm_WithInv { name; body; returns_inv }
 
     in

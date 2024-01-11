@@ -234,6 +234,7 @@ let rec ss_comp_commutes (c:comp) (ss:ss_t)
               (C_Tot? c ==> r == C_Tot (ss_term (comp_res c) ss)) /\
               (C_ST? c ==> r == C_ST (ss_st_comp (st_comp_of_comp c) ss)) /\
               (C_STAtomic? c ==> r == C_STAtomic (ss_term (comp_inames c) ss)
+                                                 (C_STAtomic?.obs c)
                                                  (ss_st_comp (st_comp_of_comp c) ss)) /\
               (C_STGhost? c ==> r == C_STGhost (ss_term (comp_inames c) ss)
                                                (ss_st_comp (st_comp_of_comp c) ss))))
@@ -261,6 +262,7 @@ let rec nt_subst_comp_commutes (c:comp) (nts:nt_substs)
               (C_Tot? c ==> r == C_Tot (nt_subst_term (comp_res c) nts)) /\
               (C_ST? c ==> r == C_ST (nt_subst_st_comp (st_comp_of_comp c) nts)) /\
               (C_STAtomic? c ==> r == C_STAtomic (nt_subst_term (comp_inames c) nts)
+                                                 (C_STAtomic?.obs c)
                                                  (nt_subst_st_comp (st_comp_of_comp c) nts)) /\
               (C_STGhost? c ==> r == C_STGhost (nt_subst_term (comp_inames c) nts)
                                                (nt_subst_st_comp (st_comp_of_comp c) nts))))

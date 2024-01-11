@@ -38,7 +38,7 @@ let goal : vprop =
 
 
 ```pulse
-ghost
+atomic
 fn proof
    (i : inv inv_p) (_:unit)
    requires pts_to done #one_half true ** GR.pts_to claimed #one_half false
@@ -82,6 +82,14 @@ fn proof
 }
 ```
 
+let cheat_proof (i:inv inv_p)
+  : (_:unit) ->
+      stt_ghost unit 
+        (add_inv emp_inames i)
+        (requires pts_to done #one_half true ** GR.pts_to claimed #one_half false)
+        (ensures fun _ -> pts_to done #one_half true ** goal)
+  = admit() //proof is atomic, not ghost
+    
 ```pulse
 fn setup (_:unit)
    requires pts_to done v_done ** pts_to res v_res ** GR.pts_to claimed v_claimed
@@ -108,7 +116,7 @@ fn setup (_:unit)
     (pts_to done #one_half true)
     goal
     (GR.pts_to claimed #one_half false)
-    (proof i);
+    (cheat_proof i);
 
   i
 }

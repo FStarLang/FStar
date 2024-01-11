@@ -69,7 +69,10 @@ let eq_comp (c1 c2:comp)
       eq_tm t1 t2
     | C_ST s1, C_ST s2 ->
       eq_st_comp s1 s2
-    | C_STAtomic i1 s1, C_STAtomic i2 s2
+    | C_STAtomic i1 o1 s1, C_STAtomic i2 o2 s2 ->
+      eq_tm i1 i2 &&
+      o1 = o2 &&
+      eq_st_comp s1 s2
     | C_STGhost i1 s1, C_STGhost i2 s2 ->
       eq_tm i1 i2 &&
       eq_st_comp s1 s2
@@ -284,7 +287,8 @@ let rec eq_st_term (t1 t2:st_term)
     | Tm_WithInv {name=name1; returns_inv=r1; body=body1},
       Tm_WithInv {name=name2; returns_inv=r2; body=body2} ->
       eq_tm name1 name2 &&
-      eq_tm_opt r1 r2 &&
+      eq_opt (fun (b1, r1) (b2, r2) -> eq_tm b1.binder_ty b2.binder_ty && eq_tm r1 r2)
+             r1 r2 &&
       eq_st_term body1 body2
 
     | _ -> false

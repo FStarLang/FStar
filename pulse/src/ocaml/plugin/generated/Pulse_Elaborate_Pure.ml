@@ -167,14 +167,16 @@ let (elab_comp : Pulse_Syntax_Base.comp -> FStar_Reflection_Types.term) =
              Pulse_Reflection_Util.mk_stt_comp u res pre
                (Pulse_Reflection_Util.mk_abs res
                   FStar_Reflection_V2_Data.Q_Explicit post))
-    | Pulse_Syntax_Base.C_STAtomic (inames, c1) ->
+    | Pulse_Syntax_Base.C_STAtomic (inames, obs, c1) ->
         let inames1 = elab_term inames in
         let uu___ = elab_st_comp c1 in
         (match uu___ with
          | (u, res, pre, post) ->
-             Pulse_Reflection_Util.mk_stt_atomic_comp u res inames1 pre
-               (Pulse_Reflection_Util.mk_abs res
-                  FStar_Reflection_V2_Data.Q_Explicit post))
+             let post1 =
+               Pulse_Reflection_Util.mk_abs res
+                 FStar_Reflection_V2_Data.Q_Explicit post in
+             Pulse_Reflection_Util.mk_stt_atomic_comp
+               (obs = Pulse_Syntax_Base.Observable) u res inames1 pre post1)
     | Pulse_Syntax_Base.C_STGhost (inames, c1) ->
         let inames1 = elab_term inames in
         let uu___ = elab_st_comp c1 in
@@ -227,8 +229,18 @@ let (elab_statomic_equiv :
             fun eq_post ->
               let uu___ = c in
               match uu___ with
-              | Pulse_Syntax_Base.C_STAtomic (inames, uu___1) ->
+              | Pulse_Syntax_Base.C_STAtomic
+                  (inames, obs,
+                   { Pulse_Syntax_Base.u = u; Pulse_Syntax_Base.res = res;
+                     Pulse_Syntax_Base.pre = uu___1;
+                     Pulse_Syntax_Base.post = uu___2;_})
+                  ->
+                  let c' =
+                    Pulse_Reflection_Util.mk_stt_atomic_comp
+                      (obs = Pulse_Syntax_Base.Observable) u (elab_term res)
+                      (elab_term inames) pre post in
                   Pulse_Reflection_Util.mk_stt_atomic_comp_equiv g
+                    (obs = Pulse_Syntax_Base.Observable)
                     (Pulse_Syntax_Base.comp_u c)
                     (elab_term (Pulse_Syntax_Base.comp_res c))
                     (elab_term inames) pre post

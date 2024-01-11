@@ -137,7 +137,7 @@ ensures active p t
 
  
 ```pulse
-ghost
+atomic
 fn cancel_inv (#t #v:_) (i:inv (cancellable t v))
 requires
     active full_perm t

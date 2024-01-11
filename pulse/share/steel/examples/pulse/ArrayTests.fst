@@ -207,20 +207,20 @@ fn read_at_offset_refine_poly (#t:Type0) (#p:perm) (#s:Ghost.erased (Seq.seq t))
    x
 } 
 ```
-//Error message is poor as usual
-//But, this type is genuinely incorrect, since the return type does not assume
+//Error message is correctly localizded to Seq.index in the return type
+//This type is genuinely incorrect, since the return type does not assume
 //the validity of the pure conjuncts in the requires
 //so the sequence indexing there cannot be proven to be safe
 //Maybe we should find a way to allow the pure conjuncts to be assumed in the returns
 //Megan correctly remarks that this is unintuitive ... let's see if we can fix it
 [@@expect_failure]
 ```pulse
-fn read_at_offset_refine (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq U32.t))
-   requires (A.pts_to a p s ** pure (US.v i < A.length a))
+fn read_at_offset_refine_fail (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq U32.t))
+   requires (A.pts_to a #p s ** pure (US.v i < A.length a))
    returns x: (x:U32.t { Seq.length s == A.length a /\
                          x == Seq.index s (US.v i)})
    ensures (
-      A.pts_to a p s
+      A.pts_to a #p s
    )
 { 
    let x = test_array_access a i;
@@ -277,6 +277,9 @@ let sorted (s0 s:Seq.seq U32.t) : GTot _ =
    (forall (i:nat). i < Seq.length s - 1 ==> U32.v (Seq.index s i) <= U32.v (Seq.index s (i + 1))) /\
    (forall (i:nat). i < Seq.length s0 ==> (exists (j:nat). j < Seq.length s /\ U32.v (Seq.index s0 i) == U32.v (Seq.index s j)))
 
+let permutation (s:Seq.seq U32.t) (l:list U32.t) =
+   (forall (i:nat). i < Seq.length s ==> 
+      (exists (j:nat). j < List.Tot.length l /\ U32.v (Seq.index s i) == U32.v (List.Tot.index l j)))
 
 open FStar.UInt32
 // #push-options "--query_stats"
@@ -356,6 +359,7 @@ fn sort3_alt (a:array U32.t)
    let mut z = a.(2sz);
    let vx = !x;
    let vy = !y;
+   let vz = !z;
    if (vy <^ vx) 
    {
       x := vy;
@@ -364,10 +368,23 @@ fn sort3_alt (a:array U32.t)
    let vx = !x;
    let vz = !z;
    if (vz <^ vx)
+   ensures
+      exists* vx vy vz.
+        A.pts_to a s **
+        pts_to x vx **
+        pts_to y vy **
+        pts_to z vz **
+        pure (vz <= vx ** vx <= vy ** permutation s [vx;vy;vz])
    {
       x := vz;
       z := vx;
+   }
+   else if (vz <^ vy)
+   {  
+      y := vz;
+      z := vy;
    };
+   admit();
    let vy = !y;
    let vz = !z;
    if (vz <^ vy)

@@ -158,6 +158,9 @@ let (__proj__Mkarray_init__item__init : array_init -> FStar_Parser_AST.term)
   = fun projectee -> match projectee with | { init; len;_} -> init
 let (__proj__Mkarray_init__item__len : array_init -> FStar_Parser_AST.term) =
   fun projectee -> match projectee with | { init; len;_} -> len
+type ensures_vprop =
+  ((FStar_Ident.ident * FStar_Parser_AST.term) FStar_Pervasives_Native.option
+    * vprop)
 type stmt'__Expr__payload = {
   e: FStar_Parser_AST.term }
 and stmt'__Assignment__payload =
@@ -180,13 +183,13 @@ and stmt'__Block__payload = {
 and stmt'__If__payload =
   {
   head1: FStar_Parser_AST.term ;
-  join_vprop: vprop FStar_Pervasives_Native.option ;
+  join_vprop: ensures_vprop FStar_Pervasives_Native.option ;
   then_: stmt ;
   else_opt: stmt FStar_Pervasives_Native.option }
 and stmt'__Match__payload =
   {
   head2: FStar_Parser_AST.term ;
-  returns_annot: vprop FStar_Pervasives_Native.option ;
+  returns_annot: ensures_vprop FStar_Pervasives_Native.option ;
   branches: (FStar_Parser_AST.pattern * stmt) Prims.list }
 and stmt'__While__payload =
   {
@@ -220,7 +223,7 @@ and stmt'__WithInvariants__payload =
   {
   names: FStar_Parser_AST.term Prims.list ;
   body1: stmt ;
-  returns_: vprop FStar_Pervasives_Native.option }
+  returns_: ensures_vprop FStar_Pervasives_Native.option }
 and stmt' =
   | Open of FStar_Ident.lident 
   | Expr of stmt'__Expr__payload 
@@ -262,6 +265,7 @@ and let_init =
   | Array_initializer of array_init 
   | Default_initializer of FStar_Parser_AST.term 
   | Lambda_initializer of fn_decl 
+  | Stmt_initializer of stmt 
 let (__proj__Mkstmt'__Expr__payload__item__e :
   stmt'__Expr__payload -> FStar_Parser_AST.term) =
   fun projectee -> match projectee with | { e;_} -> e
@@ -310,7 +314,7 @@ let (__proj__Mkstmt'__If__payload__item__head :
     match projectee with
     | { head1 = head; join_vprop; then_; else_opt;_} -> head
 let (__proj__Mkstmt'__If__payload__item__join_vprop :
-  stmt'__If__payload -> vprop FStar_Pervasives_Native.option) =
+  stmt'__If__payload -> ensures_vprop FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with
     | { head1 = head; join_vprop; then_; else_opt;_} -> join_vprop
@@ -329,7 +333,7 @@ let (__proj__Mkstmt'__Match__payload__item__head :
   fun projectee ->
     match projectee with | { head2 = head; returns_annot; branches;_} -> head
 let (__proj__Mkstmt'__Match__payload__item__returns_annot :
-  stmt'__Match__payload -> vprop FStar_Pervasives_Native.option) =
+  stmt'__Match__payload -> ensures_vprop FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with
     | { head2 = head; returns_annot; branches;_} -> returns_annot
@@ -411,7 +415,9 @@ let (__proj__Mkstmt'__WithInvariants__payload__item__body :
   fun projectee ->
     match projectee with | { names; body1 = body; returns_;_} -> body
 let (__proj__Mkstmt'__WithInvariants__payload__item__returns_ :
-  stmt'__WithInvariants__payload -> vprop FStar_Pervasives_Native.option) =
+  stmt'__WithInvariants__payload ->
+    ensures_vprop FStar_Pervasives_Native.option)
+  =
   fun projectee ->
     match projectee with | { names; body1 = body; returns_;_} -> returns_
 let (uu___is_Open : stmt' -> Prims.bool) =
@@ -563,6 +569,11 @@ let (uu___is_Lambda_initializer : let_init -> Prims.bool) =
     match projectee with | Lambda_initializer _0 -> true | uu___ -> false
 let (__proj__Lambda_initializer__item___0 : let_init -> fn_decl) =
   fun projectee -> match projectee with | Lambda_initializer _0 -> _0
+let (uu___is_Stmt_initializer : let_init -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Stmt_initializer _0 -> true | uu___ -> false
+let (__proj__Stmt_initializer__item___0 : let_init -> stmt) =
+  fun projectee -> match projectee with | Stmt_initializer _0 -> _0
 type decl =
   | FnDecl of fn_decl 
 let (uu___is_FnDecl : decl -> Prims.bool) = fun projectee -> true
@@ -614,7 +625,7 @@ let (mk_let_binding :
 let (mk_block : stmt -> stmt') = fun stmt1 -> Block { stmt = stmt1 }
 let (mk_if :
   FStar_Parser_AST.term ->
-    vprop FStar_Pervasives_Native.option ->
+    ensures_vprop FStar_Pervasives_Native.option ->
       stmt -> stmt FStar_Pervasives_Native.option -> stmt')
   =
   fun head ->
@@ -623,7 +634,7 @@ let (mk_if :
         fun else_opt -> If { head1 = head; join_vprop; then_; else_opt }
 let (mk_match :
   FStar_Parser_AST.term ->
-    vprop FStar_Pervasives_Native.option ->
+    ensures_vprop FStar_Pervasives_Native.option ->
       (FStar_Parser_AST.pattern * stmt) Prims.list -> stmt')
   =
   fun head ->
@@ -686,7 +697,7 @@ let (mk_lambda :
           { binders1 = bs; ascription; body2 = body; range2 = range }
 let (mk_with_invs :
   FStar_Parser_AST.term Prims.list ->
-    stmt -> vprop FStar_Pervasives_Native.option -> stmt')
+    stmt -> ensures_vprop FStar_Pervasives_Native.option -> stmt')
   =
   fun names ->
     fun body ->
