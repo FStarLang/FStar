@@ -1,3 +1,6 @@
+pub fn read(p: (), s: (), arr: &mut [u32], len: usize, i: usize) -> u32 {
+    arr[i]
+}
 //majorityrust$
 pub fn majority<A: Clone + Copy + PartialEq>(
     p: (),
@@ -65,6 +68,11 @@ pub fn majority<A: Clone + Copy + PartialEq>(
     i1
 }
 //majorityrustend$
+
+pub type u32_t = u32;
+pub fn majority_mono(p: (), s: (), votes: &mut [u32_t], len: usize) -> std::option::Option<u32_t> {
+    majority((), (), votes, len)
+}
 
 //majorityrusttest$
 #[derive(Copy, Clone, PartialEq, Debug)]
