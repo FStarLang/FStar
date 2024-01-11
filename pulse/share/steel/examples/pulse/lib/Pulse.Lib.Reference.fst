@@ -112,6 +112,37 @@ let write_atomic (r:ref U32.t) (x:U32.t) (#n:erased U32.t)
       R.atomic_write_u32 r x;
       S.return ()
 
+let cas_u32 (#uses:inames)
+        (v:Ghost.erased U32.t)
+        (r:ref U32.t)
+        (v_old v_new:U32.t)
+  : STAtomicT (b:bool{b <==> (Ghost.reveal v == v_old)})
+      uses
+      (R.pts_to r full_perm v)
+      (fun b -> cond b (R.pts_to r full_perm v_new) (R.pts_to r full_perm v))
+  = R.cas_u32 #uses v r v_old v_new
+  
+let cas (r:ref U32.t)
+        (u v:U32.t)
+        (#i:erased U32.t)
+  = fun #ictx _ ->
+      let b = cas_u32 #ictx i r u v in
+      if b
+      then (
+        S.rewrite (cond b _ _)
+                  (R.pts_to r full_perm v);
+        S.intro_pure (reveal i == u);
+        S.rewrite (R.pts_to r full_perm v `star` pure (reveal i == u))
+                  (cond b (pts_to r #full_perm v ** pure (reveal i == u))
+                          (pts_to r #full_perm i));
+        S.return b
+      )
+      else (
+        S.rewrite (cond b _ _)
+                  (cond b (R.pts_to r full_perm v ** pure (reveal i == u)) (R.pts_to r full_perm i));       
+        S.return b
+      )
+
 let with_local #a init #pre #ret_t #post body =
   fun _ -> 
     let body (r:R.ref a) 
@@ -142,3 +173,14 @@ let pts_to_injective_eq (#a:Type0)
       (R.pts_to r p v0 `S.star` R.pts_to r q v1)
       (fun _ -> R.pts_to r p v0 `S.star` R.pts_to r q v0 `S.star` S.pure (v0 == v1))
     = fun #ictx _ -> let _ = R.pts_to_injective_eq #a #ictx #p #q #v0 #v1 r in ()
+
+let pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
+  : stt_ghost unit emp_inames
+      (pts_to r #p v)
+      (fun _ -> pts_to r #p v ** pure (p `lesser_equal_perm` full_perm))
+  = fun #ictx _ ->
+       let _ = R.pts_to_perm #a #ictx #p #v r in
+       S.intro_pure (p `lesser_equal_perm` full_perm);
+       S.rewrite (pts_to r #p v `star` pure (p `lesser_equal_perm` full_perm))
+                 (pts_to r #p v ** pure (p `lesser_equal_perm` full_perm));
+       ()
