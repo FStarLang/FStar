@@ -144,6 +144,68 @@ let (string_as_term : Prims.string -> FStar_Reflection_Types.term) =
     FStar_Reflection_V2_Builtins.pack_ln
       (FStar_Reflection_V2_Data.Tv_Const
          (FStar_Reflection_V2_Data.C_String s))
+let (freshen_binder :
+  FStar_Tactics_NamedView.binder -> FStar_Tactics_NamedView.binder) =
+  fun b ->
+    {
+      FStar_Tactics_NamedView.uniq =
+        ((Prims.of_int (10000)) + b.FStar_Tactics_NamedView.uniq);
+      FStar_Tactics_NamedView.ppname =
+        (FStar_Sealed.map_seal b.FStar_Tactics_NamedView.ppname
+           (fun s -> Prims.strcat s "'"));
+      FStar_Tactics_NamedView.sort = (b.FStar_Tactics_NamedView.sort);
+      FStar_Tactics_NamedView.qual = (b.FStar_Tactics_NamedView.qual);
+      FStar_Tactics_NamedView.attrs = (b.FStar_Tactics_NamedView.attrs)
+    }
+let (subst_binder_typ :
+  FStar_Syntax_Syntax.subst_t ->
+    FStar_Tactics_NamedView.binder -> FStar_Tactics_NamedView.binder)
+  =
+  fun s ->
+    fun b ->
+      {
+        FStar_Tactics_NamedView.uniq = (b.FStar_Tactics_NamedView.uniq);
+        FStar_Tactics_NamedView.ppname = (b.FStar_Tactics_NamedView.ppname);
+        FStar_Tactics_NamedView.sort =
+          (FStar_Reflection_V2_Builtins.subst_term s
+             b.FStar_Tactics_NamedView.sort);
+        FStar_Tactics_NamedView.qual = (b.FStar_Tactics_NamedView.qual);
+        FStar_Tactics_NamedView.attrs = (b.FStar_Tactics_NamedView.attrs)
+      }
+let rec (freshen_binders :
+  FStar_Tactics_NamedView.binders -> FStar_Tactics_NamedView.binders) =
+  fun bs ->
+    match bs with
+    | [] -> []
+    | b::bs1 ->
+        let b' = freshen_binder b in
+        let bs2 =
+          FStar_List_Tot_Base.map
+            (subst_binder_typ
+               [FStar_Syntax_Syntax.NT
+                  ((FStar_Reflection_V2_Builtins.pack_namedv
+                      (FStar_Tactics_V2_SyntaxCoercions.binder_to_namedv b)),
+                    (FStar_Tactics_V2_SyntaxCoercions.binder_to_term b'))])
+            bs1 in
+        b' :: (freshen_binders bs2)
+let (elab_b :
+  (Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option *
+    Pulse_Syntax_Base.binder * Pulse_Syntax_Base.bv) ->
+    FStar_Tactics_NamedView.binder)
+  =
+  fun qbv ->
+    let uu___ = qbv in
+    match uu___ with
+    | (q, b, bv) ->
+        {
+          FStar_Tactics_NamedView.uniq = (bv.Pulse_Syntax_Base.bv_index);
+          FStar_Tactics_NamedView.ppname =
+            ((b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name);
+          FStar_Tactics_NamedView.sort =
+            (Pulse_Elaborate_Pure.elab_term b.Pulse_Syntax_Base.binder_ty);
+          FStar_Tactics_NamedView.qual = (Pulse_Elaborate_Pure.elab_qual q);
+          FStar_Tactics_NamedView.attrs = []
+        }
 let (add_knot :
   Pulse_Typing_Env.env ->
     FStar_Range.range ->
@@ -157,12 +219,12 @@ let (add_knot :
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "Pulse.Recursion.fst"
-                   (Prims.of_int (60)) (Prims.of_int (51))
-                   (Prims.of_int (60)) (Prims.of_int (54)))))
+                   (Prims.of_int (86)) (Prims.of_int (51))
+                   (Prims.of_int (86)) (Prims.of_int (54)))))
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "Pulse.Recursion.fst"
-                   (Prims.of_int (59)) Prims.int_one (Prims.of_int (193))
+                   (Prims.of_int (85)) Prims.int_one (Prims.of_int (205))
                    (Prims.of_int (3)))))
           (FStar_Tactics_Effect.lift_div_tac
              (fun uu___ -> d.Pulse_Syntax_Base.d))
@@ -182,13 +244,13 @@ let (add_knot :
                          (FStar_Sealed.seal
                             (Obj.magic
                                (FStar_Range.mk_range "Pulse.Recursion.fst"
-                                  (Prims.of_int (61)) (Prims.of_int (2))
-                                  (Prims.of_int (62)) (Prims.of_int (62)))))
+                                  (Prims.of_int (87)) (Prims.of_int (2))
+                                  (Prims.of_int (88)) (Prims.of_int (62)))))
                          (FStar_Sealed.seal
                             (Obj.magic
                                (FStar_Range.mk_range "Pulse.Recursion.fst"
-                                  (Prims.of_int (62)) (Prims.of_int (63))
-                                  (Prims.of_int (193)) (Prims.of_int (3)))))
+                                  (Prims.of_int (88)) (Prims.of_int (63))
+                                  (Prims.of_int (205)) (Prims.of_int (3)))))
                          (if Prims.uu___is_Nil bs
                           then
                             Obj.magic
@@ -210,17 +272,17 @@ let (add_knot :
                                        (Obj.magic
                                           (FStar_Range.mk_range
                                              "Pulse.Recursion.fst"
-                                             (Prims.of_int (64))
+                                             (Prims.of_int (90))
                                              (Prims.of_int (14))
-                                             (Prims.of_int (64))
+                                             (Prims.of_int (90))
                                              (Prims.of_int (28)))))
                                     (FStar_Sealed.seal
                                        (Obj.magic
                                           (FStar_Range.mk_range
                                              "Pulse.Recursion.fst"
-                                             (Prims.of_int (64))
-                                             (Prims.of_int (31))
-                                             (Prims.of_int (193))
+                                             (Prims.of_int (91))
+                                             (Prims.of_int (2))
+                                             (Prims.of_int (205))
                                              (Prims.of_int (3)))))
                                     (FStar_Tactics_Effect.lift_div_tac
                                        (fun uu___2 ->
@@ -233,155 +295,105 @@ let (add_knot :
                                                   (Obj.magic
                                                      (FStar_Range.mk_range
                                                         "Pulse.Recursion.fst"
-                                                        (Prims.of_int (65))
-                                                        (Prims.of_int (84))
-                                                        (Prims.of_int (73))
-                                                        (Prims.of_int (5)))))
+                                                        (Prims.of_int (91))
+                                                        (Prims.of_int (2))
+                                                        (Prims.of_int (93))
+                                                        (Prims.of_int (73)))))
                                                (FStar_Sealed.seal
                                                   (Obj.magic
                                                      (FStar_Range.mk_range
                                                         "Pulse.Recursion.fst"
-                                                        (Prims.of_int (75))
-                                                        (Prims.of_int (2))
-                                                        (Prims.of_int (193))
+                                                        (Prims.of_int (93))
+                                                        (Prims.of_int (74))
+                                                        (Prims.of_int (205))
                                                         (Prims.of_int (3)))))
-                                               (FStar_Tactics_Effect.lift_div_tac
-                                                  (fun uu___2 ->
-                                                     fun qbv ->
-                                                       match qbv with
-                                                       | (q, b, bv) ->
-                                                           {
-                                                             FStar_Tactics_NamedView.uniq
-                                                               =
-                                                               (bv.Pulse_Syntax_Base.bv_index);
-                                                             FStar_Tactics_NamedView.ppname
-                                                               =
-                                                               ((b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name);
-                                                             FStar_Tactics_NamedView.sort
-                                                               =
-                                                               (Pulse_Elaborate_Pure.elab_term
-                                                                  b.Pulse_Syntax_Base.binder_ty);
-                                                             FStar_Tactics_NamedView.qual
-                                                               =
-                                                               (Pulse_Elaborate_Pure.elab_qual
-                                                                  q);
-                                                             FStar_Tactics_NamedView.attrs
-                                                               = []
-                                                           }))
+                                               (Obj.magic
+                                                  (debug_main g
+                                                     (fun uu___2 ->
+                                                        FStar_Tactics_Effect.tac_bind
+                                                          (FStar_Sealed.seal
+                                                             (Obj.magic
+                                                                (FStar_Range.mk_range
+                                                                   "Pulse.Recursion.fst"
+                                                                   (Prims.of_int (93))
+                                                                   (Prims.of_int (14))
+                                                                   (Prims.of_int (93))
+                                                                   (Prims.of_int (72)))))
+                                                          (FStar_Sealed.seal
+                                                             (Obj.magic
+                                                                (FStar_Range.mk_range
+                                                                   "prims.fst"
+                                                                   (Prims.of_int (590))
+                                                                   (Prims.of_int (19))
+                                                                   (Prims.of_int (590))
+                                                                   (Prims.of_int (31)))))
+                                                          (Obj.magic
+                                                             (FStar_Tactics_Util.string_of_list
+                                                                (fun uu___3
+                                                                   ->
+                                                                   match uu___3
+                                                                   with
+                                                                   | 
+                                                                   (uu___4,
+                                                                    b,
+                                                                    uu___5)
+                                                                    ->
+                                                                    Pulse_Syntax_Printer.binder_to_string
+                                                                    b) bs))
+                                                          (fun uu___3 ->
+                                                             FStar_Tactics_Effect.lift_div_tac
+                                                               (fun uu___4 ->
+                                                                  Prims.strcat
+                                                                    "add_knot: bs = "
+                                                                    (
+                                                                    Prims.strcat
+                                                                    uu___3
+                                                                    "\n"))))))
                                                (fun uu___2 ->
-                                                  (fun elab_b ->
+                                                  (fun uu___2 ->
                                                      Obj.magic
                                                        (FStar_Tactics_Effect.tac_bind
                                                           (FStar_Sealed.seal
                                                              (Obj.magic
                                                                 (FStar_Range.mk_range
                                                                    "Pulse.Recursion.fst"
-                                                                   (Prims.of_int (75))
-                                                                   (Prims.of_int (2))
-                                                                   (Prims.of_int (77))
-                                                                   (Prims.of_int (73)))))
+                                                                   (Prims.of_int (127))
+                                                                   (Prims.of_int (19))
+                                                                   (Prims.of_int (127))
+                                                                   (Prims.of_int (31)))))
                                                           (FStar_Sealed.seal
                                                              (Obj.magic
                                                                 (FStar_Range.mk_range
                                                                    "Pulse.Recursion.fst"
-                                                                   (Prims.of_int (77))
+                                                                   (Prims.of_int (93))
                                                                    (Prims.of_int (74))
-                                                                   (Prims.of_int (193))
+                                                                   (Prims.of_int (205))
                                                                    (Prims.of_int (3)))))
                                                           (Obj.magic
-                                                             (debug_main g
-                                                                (fun uu___2
-                                                                   ->
-                                                                   FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (77))
-                                                                    (Prims.of_int (14))
-                                                                    (Prims.of_int (77))
-                                                                    (Prims.of_int (72)))))
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "prims.fst"
-                                                                    (Prims.of_int (590))
-                                                                    (Prims.of_int (19))
-                                                                    (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))))
-                                                                    (Obj.magic
-                                                                    (FStar_Tactics_Util.string_of_list
-                                                                    (fun
-                                                                    uu___3 ->
-                                                                    match uu___3
-                                                                    with
-                                                                    | 
-                                                                    (uu___4,
-                                                                    b,
-                                                                    uu___5)
-                                                                    ->
-                                                                    Pulse_Syntax_Printer.binder_to_string
-                                                                    b) bs))
-                                                                    (fun
-                                                                    uu___3 ->
-                                                                    FStar_Tactics_Effect.lift_div_tac
-                                                                    (fun
-                                                                    uu___4 ->
-                                                                    Prims.strcat
-                                                                    "add_knot: bs = "
-                                                                    (Prims.strcat
-                                                                    uu___3
-                                                                    "\n"))))))
-                                                          (fun uu___2 ->
-                                                             (fun uu___2 ->
-                                                                Obj.magic
-                                                                  (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (111))
-                                                                    (Prims.of_int (19))
-                                                                    (Prims.of_int (111))
-                                                                    (Prims.of_int (31)))))
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (77))
-                                                                    (Prims.of_int (74))
-                                                                    (Prims.of_int (193))
-                                                                    (Prims.of_int (3)))))
-                                                                    (Obj.magic
-                                                                    (splitlast
-                                                                    bs))
-                                                                    (fun
-                                                                    uu___3 ->
-                                                                    (fun
-                                                                    uu___3 ->
-                                                                    match uu___3
-                                                                    with
-                                                                    | 
-                                                                    (bs1,
-                                                                    b_knot)
-                                                                    ->
+                                                             (splitlast bs))
+                                                          (fun uu___3 ->
+                                                             (fun uu___3 ->
+                                                                match uu___3
+                                                                with
+                                                                | (bs1,
+                                                                   b_knot) ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (113))
+                                                                    (Prims.of_int (129))
                                                                     (Prims.of_int (14))
-                                                                    (Prims.of_int (113))
+                                                                    (Prims.of_int (129))
                                                                     (Prims.of_int (36)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (113))
+                                                                    (Prims.of_int (129))
                                                                     (Prims.of_int (39))
-                                                                    (Prims.of_int (193))
+                                                                    (Prims.of_int (205))
                                                                     (Prims.of_int (3)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -399,73 +411,22 @@ let (add_knot :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (115))
-                                                                    (Prims.of_int (6))
-                                                                    (Prims.of_int (116))
-                                                                    (Prims.of_int (58)))))
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (117))
-                                                                    (Prims.of_int (4))
-                                                                    (Prims.of_int (193))
-                                                                    (Prims.of_int (3)))))
-                                                                    (FStar_Tactics_Effect.lift_div_tac
-                                                                    (fun
-                                                                    uu___4 ->
-                                                                    fun b ->
-                                                                    {
-                                                                    FStar_Tactics_NamedView.uniq
-                                                                    =
-                                                                    ((Prims.of_int (10000))
-                                                                    +
-                                                                    b.FStar_Tactics_NamedView.uniq);
-                                                                    FStar_Tactics_NamedView.ppname
-                                                                    =
-                                                                    (FStar_Sealed.map_seal
-                                                                    b.FStar_Tactics_NamedView.ppname
-                                                                    (fun s ->
-                                                                    Prims.strcat
-                                                                    s "'"));
-                                                                    FStar_Tactics_NamedView.sort
-                                                                    =
-                                                                    (b.FStar_Tactics_NamedView.sort);
-                                                                    FStar_Tactics_NamedView.qual
-                                                                    =
-                                                                    (b.FStar_Tactics_NamedView.qual);
-                                                                    FStar_Tactics_NamedView.attrs
-                                                                    =
-                                                                    (b.FStar_Tactics_NamedView.attrs)
-                                                                    }))
-                                                                    (fun
-                                                                    uu___4 ->
-                                                                    (fun
-                                                                    freshen_binder
-                                                                    ->
-                                                                    Obj.magic
-                                                                    (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (118))
+                                                                    (Prims.of_int (130))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (118))
-                                                                    (Prims.of_int (37)))))
+                                                                    (Prims.of_int (130))
+                                                                    (Prims.of_int (34)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (118))
-                                                                    (Prims.of_int (40))
-                                                                    (Prims.of_int (193))
+                                                                    (Prims.of_int (130))
+                                                                    (Prims.of_int (37))
+                                                                    (Prims.of_int (205))
                                                                     (Prims.of_int (3)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___4 ->
-                                                                    FStar_List_Tot_Base.map
-                                                                    freshen_binder
+                                                                    freshen_binders
                                                                     r_bs0))
                                                                     (fun
                                                                     uu___4 ->
@@ -477,17 +438,17 @@ let (add_knot :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (120))
+                                                                    (Prims.of_int (132))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (124))
+                                                                    (Prims.of_int (136))
                                                                     (Prims.of_int (5)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (125))
+                                                                    (Prims.of_int (137))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (193))
+                                                                    (Prims.of_int (205))
                                                                     (Prims.of_int (3)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -517,17 +478,17 @@ let (add_knot :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (126))
+                                                                    (Prims.of_int (138))
                                                                     (Prims.of_int (20))
-                                                                    (Prims.of_int (128))
+                                                                    (Prims.of_int (140))
                                                                     (Prims.of_int (59)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (128))
+                                                                    (Prims.of_int (140))
                                                                     (Prims.of_int (62))
-                                                                    (Prims.of_int (193))
+                                                                    (Prims.of_int (205))
                                                                     (Prims.of_int (3)))))
                                                                     (Obj.magic
                                                                     (map2
@@ -562,17 +523,17 @@ let (add_knot :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (131))
+                                                                    (Prims.of_int (143))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (162))
+                                                                    (Prims.of_int (174))
                                                                     (Prims.of_int (10)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (163))
+                                                                    (Prims.of_int (175))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (193))
+                                                                    (Prims.of_int (205))
                                                                     (Prims.of_int (3)))))
                                                                     (if
                                                                     (Pulse_Syntax_Base.uu___is_C_STAtomic
@@ -587,17 +548,17 @@ let (add_knot :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (132))
+                                                                    (Prims.of_int (144))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (137))
+                                                                    (Prims.of_int (149))
                                                                     (Prims.of_int (7)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (137))
+                                                                    (Prims.of_int (149))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (160))
+                                                                    (Prims.of_int (172))
                                                                     (Prims.of_int (19)))))
                                                                     (if
                                                                     FStar_Pervasives_Native.uu___is_None
@@ -629,17 +590,17 @@ let (add_knot :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (138))
+                                                                    (Prims.of_int (150))
                                                                     (Prims.of_int (23))
-                                                                    (Prims.of_int (138))
+                                                                    (Prims.of_int (150))
                                                                     (Prims.of_int (37)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (137))
+                                                                    (Prims.of_int (149))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (160))
+                                                                    (Prims.of_int (172))
                                                                     (Prims.of_int (19)))))
                                                                     (Obj.magic
                                                                     (splitlast
@@ -753,17 +714,17 @@ let (add_knot :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (164))
+                                                                    (Prims.of_int (176))
                                                                     (Prims.of_int (14))
-                                                                    (Prims.of_int (164))
+                                                                    (Prims.of_int (176))
                                                                     (Prims.of_int (44)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (164))
+                                                                    (Prims.of_int (176))
                                                                     (Prims.of_int (47))
-                                                                    (Prims.of_int (193))
+                                                                    (Prims.of_int (205))
                                                                     (Prims.of_int (3)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -781,17 +742,17 @@ let (add_knot :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (165))
+                                                                    (Prims.of_int (177))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (165))
+                                                                    (Prims.of_int (177))
                                                                     (Prims.of_int (65)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (171))
+                                                                    (Prims.of_int (183))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (193))
+                                                                    (Prims.of_int (205))
                                                                     (Prims.of_int (3)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_V2_SyntaxHelpers.mk_tot_arr
@@ -807,17 +768,17 @@ let (add_knot :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (171))
+                                                                    (Prims.of_int (183))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (172))
+                                                                    (Prims.of_int (184))
                                                                     (Prims.of_int (66)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (191))
+                                                                    (Prims.of_int (203))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (192))
+                                                                    (Prims.of_int (204))
                                                                     (Prims.of_int (65)))))
                                                                     (if
                                                                     FStar_Reflection_V2_Data.uu___is_Tv_Unknown
@@ -915,9 +876,7 @@ let (add_knot :
                                                                     uu___4)))
                                                                     uu___4)))
                                                                     uu___4)))
-                                                                    uu___4)))
-                                                                    uu___3)))
-                                                               uu___2)))
+                                                               uu___3)))
                                                     uu___2))) uu___2)))
                               uu___1))) uu___)
 let (tie_knot :
@@ -942,25 +901,25 @@ let (tie_knot :
                   (FStar_Sealed.seal
                      (Obj.magic
                         (FStar_Range.mk_range "Pulse.Recursion.fst"
-                           (Prims.of_int (200)) (Prims.of_int (18))
-                           (Prims.of_int (207)) (Prims.of_int (15)))))
+                           (Prims.of_int (212)) (Prims.of_int (18))
+                           (Prims.of_int (219)) (Prims.of_int (15)))))
                   (FStar_Sealed.seal
                      (Obj.magic
                         (FStar_Range.mk_range "Pulse.Recursion.fst"
-                           (Prims.of_int (208)) (Prims.of_int (4))
-                           (Prims.of_int (214)) (Prims.of_int (22)))))
+                           (Prims.of_int (220)) (Prims.of_int (4))
+                           (Prims.of_int (226)) (Prims.of_int (22)))))
                   (Obj.magic
                      (FStar_Tactics_Effect.tac_bind
                         (FStar_Sealed.seal
                            (Obj.magic
                               (FStar_Range.mk_range "Pulse.Recursion.fst"
-                                 (Prims.of_int (203)) (Prims.of_int (16))
-                                 (Prims.of_int (203)) (Prims.of_int (36)))))
+                                 (Prims.of_int (215)) (Prims.of_int (16))
+                                 (Prims.of_int (215)) (Prims.of_int (36)))))
                         (FStar_Sealed.seal
                            (Obj.magic
                               (FStar_Range.mk_range "Pulse.Recursion.fst"
-                                 (Prims.of_int (200)) (Prims.of_int (18))
-                                 (Prims.of_int (207)) (Prims.of_int (15)))))
+                                 (Prims.of_int (212)) (Prims.of_int (18))
+                                 (Prims.of_int (219)) (Prims.of_int (15)))))
                         (Obj.magic
                            (FStar_Tactics_V2_SyntaxHelpers.collect_arr_bs
                               r_typ))
@@ -974,17 +933,17 @@ let (tie_knot :
                                           (Obj.magic
                                              (FStar_Range.mk_range
                                                 "Pulse.Recursion.fst"
-                                                (Prims.of_int (204))
+                                                (Prims.of_int (216))
                                                 (Prims.of_int (4))
-                                                (Prims.of_int (204))
+                                                (Prims.of_int (216))
                                                 (Prims.of_int (64)))))
                                        (FStar_Sealed.seal
                                           (Obj.magic
                                              (FStar_Range.mk_range
                                                 "Pulse.Recursion.fst"
-                                                (Prims.of_int (204))
+                                                (Prims.of_int (216))
                                                 (Prims.of_int (65))
-                                                (Prims.of_int (207))
+                                                (Prims.of_int (219))
                                                 (Prims.of_int (15)))))
                                        (if Prims.uu___is_Nil bs
                                         then
@@ -1007,17 +966,17 @@ let (tie_knot :
                                                      (Obj.magic
                                                         (FStar_Range.mk_range
                                                            "Pulse.Recursion.fst"
-                                                           (Prims.of_int (205))
+                                                           (Prims.of_int (217))
                                                            (Prims.of_int (13))
-                                                           (Prims.of_int (205))
+                                                           (Prims.of_int (217))
                                                            (Prims.of_int (20)))))
                                                   (FStar_Sealed.seal
                                                      (Obj.magic
                                                         (FStar_Range.mk_range
                                                            "Pulse.Recursion.fst"
-                                                           (Prims.of_int (206))
+                                                           (Prims.of_int (218))
                                                            (Prims.of_int (4))
-                                                           (Prims.of_int (207))
+                                                           (Prims.of_int (219))
                                                            (Prims.of_int (15)))))
                                                   (FStar_Tactics_Effect.lift_div_tac
                                                      (fun uu___2 ->
@@ -1031,17 +990,17 @@ let (tie_knot :
                                                                 (Obj.magic
                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (206))
+                                                                    (Prims.of_int (218))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (206))
+                                                                    (Prims.of_int (218))
                                                                     (Prims.of_int (64)))))
                                                              (FStar_Sealed.seal
                                                                 (Obj.magic
                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (207))
+                                                                    (Prims.of_int (219))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (207))
+                                                                    (Prims.of_int (219))
                                                                     (Prims.of_int (15)))))
                                                              (if
                                                                 Prims.uu___is_Nil
@@ -1078,16 +1037,16 @@ let (tie_knot :
                                 (Obj.magic
                                    (FStar_Range.mk_range
                                       "Pulse.Recursion.fst"
-                                      (Prims.of_int (211))
+                                      (Prims.of_int (223))
                                       (Prims.of_int (21))
-                                      (Prims.of_int (211))
+                                      (Prims.of_int (223))
                                       (Prims.of_int (86)))))
                              (FStar_Sealed.seal
                                 (Obj.magic
                                    (FStar_Range.mk_range
                                       "Pulse.Recursion.fst"
-                                      (Prims.of_int (208)) (Prims.of_int (4))
-                                      (Prims.of_int (214))
+                                      (Prims.of_int (220)) (Prims.of_int (4))
+                                      (Prims.of_int (226))
                                       (Prims.of_int (22)))))
                              (Obj.magic
                                 (FStar_Reflection_Typing.mk_unchecked_let
