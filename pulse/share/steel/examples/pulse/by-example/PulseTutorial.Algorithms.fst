@@ -31,11 +31,6 @@ module R = Pulse.Lib.Reference
 let count_until (#a:eqtype) (x:a) (s:Seq.seq a) (j:nat { j <= Seq.length s }) : GTot nat =
   Seq.count x (Seq.slice s 0 j)
 
-let count_len (#a:eqtype) (x:a) (s:Seq.seq a) (j:nat { j <= Seq.length s })
-  : Lemma (ensures count_until x s j <= j)
-          [SMTPat (count_until x s j)] =
-  admit ()
-
 let count_until_next (#a:eqtype) (x:a) (s:Seq.seq a) (j:nat { j < Seq.length s })
   : Lemma
       (ensures count_until (Seq.index s j) s (j + 1) == count_until (Seq.index s j) s j + 1 /\
@@ -44,6 +39,17 @@ let count_until_next (#a:eqtype) (x:a) (s:Seq.seq a) (j:nat { j < Seq.length s }
   let sj = Seq.create 1 (Seq.index s j) in
   assert (Seq.equal (Seq.slice s 0 (j + 1)) (Seq.append s_0_j sj));
   Seq.lemma_append_count s_0_j sj
+
+let rec count_len (#a:eqtype) (x:a) (s:Seq.seq a) (j:nat { j <= Seq.length s })
+  : Lemma (requires True)
+          (ensures count_until x s j <= j)
+          (decreases j)
+          [SMTPat (count_until x s j)] =
+  if j = 0 then ()
+  else begin
+    count_len x (Seq.slice s 0 (j - 1)) (j - 1);
+    count_until_next x s (j - 1)
+  end
 
 //majorityspec$
 let count (#a:eqtype) (x:a) (s:Seq.seq a) = Seq.count x s
