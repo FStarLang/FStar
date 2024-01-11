@@ -53,6 +53,32 @@ let debug_main g (s: unit -> Tac string) : Tac unit =
 let string_as_term (s:string) : R.term =
   R.pack_ln (R.Tv_Const (C_String s))
 
+let freshen_binder (b:T.binder) : T.binder =
+  { b with uniq = 10000 + b.uniq
+         ; ppname = map_seal b.ppname (fun s -> s ^ "'") }
+
+let subst_binder_typ (s : FStar.Stubs.Syntax.Syntax.subst_t) (b : Tactics.NamedView.binder) : Tactics.NamedView.binder =
+  { b with sort = FStar.Stubs.Reflection.V2.Builtins.subst_term s b.sort }
+
+let rec freshen_binders (bs:binders) : Tot binders (decreases length bs) =
+  match bs with
+  | [] -> []
+  | b::bs ->
+    let b' = freshen_binder b in
+    let bs = map (subst_binder_typ [Stubs.Syntax.Syntax.NT (binder_to_namedv b |> FStar.Stubs.Reflection.V2.Builtins.pack_namedv)
+                                                           (binder_to_term b')]) bs in
+    b' :: freshen_binders bs
+
+let elab_b (qbv : option qualifier & binder & bv) : Tot Tactics.NamedView.binder =
+  let q, b, bv = qbv in
+  {
+    uniq = bv.bv_index;
+    ppname = b.binder_ppname.name;
+    sort = elab_term b.binder_ty;
+    qual = elab_qual q;
+    attrs = [];
+  }
+
 let add_knot (g : env) (rng : R.range)
              (d : decl{FnDecl? d.d})
 : Tac decl
@@ -62,16 +88,6 @@ let add_knot (g : env) (rng : R.range)
     fail g (Some d.range) "main: FnDecl does not have binders";
   (* NB: bs and comp are open *)
   let r_res = elab_comp comp in
-  let elab_b (qbv : option qualifier & binder & bv) : Tot Tactics.NamedView.binder =
-    let q, b, bv = qbv in
-    {
-      uniq = bv.bv_index;
-      ppname = b.binder_ppname.name;
-      sort = elab_term b.binder_ty;
-      qual = elab_qual q;
-      attrs = [];
-    }
-  in
   debug_main g
     (fun _ -> Printf.sprintf "add_knot: bs = %s\n"
               (string_of_list (fun (_, b,_) -> P.binder_to_string b) bs));
@@ -111,11 +127,7 @@ let add_knot (g : env) (rng : R.range)
   let bs, b_knot = splitlast bs in
   (* freshen *)
   let r_bs0 = List.Tot.map elab_b bs in
-  let freshen_binder (b:T.binder) : T.binder =
-    { b with uniq = 10000 + b.uniq
-           ; ppname = map_seal b.ppname (fun s -> s ^ "'") }
-  in
-  let r_bs = map freshen_binder r_bs0 in
+  let r_bs = freshen_binders r_bs0 in
   let binder_to_r_namedv (b:T.binder) : R.namedv =
     R.pack_namedv {
       uniq = b.uniq;

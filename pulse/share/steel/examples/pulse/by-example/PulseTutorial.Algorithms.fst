@@ -28,29 +28,50 @@ module R = Pulse.Lib.Reference
 
 #set-options "--z3rlimit_factor 2"
 
+```pulse
+fn read #p (#s:erased _) (arr:array UInt32.t) (len:SZ.t) (i:SZ.t { v len == Seq.length s /\ v i < v len })
+  requires pts_to arr #p s
+  returns x:UInt32.t
+  ensures pts_to arr #p s ** pure (x == Seq.index s (v i))
+{
+  arr.(i)
+}
+```
+
 let count_until (#a:eqtype) (x:a) (s:Seq.seq a) (j:nat { j <= Seq.length s }) : GTot nat =
   Seq.count x (Seq.slice s 0 j)
 
-let count_len (#a:eqtype) (x:a) (s:Seq.seq a) (j:nat { j <= Seq.length s })
-  : Lemma (ensures count_until x s j <= j)
-          [SMTPat (count_until x s j)] =
-  admit ()
-
+//countlemma$
 let count_until_next (#a:eqtype) (x:a) (s:Seq.seq a) (j:nat { j < Seq.length s })
   : Lemma
       (ensures count_until (Seq.index s j) s (j + 1) == count_until (Seq.index s j) s j + 1 /\
-               (forall (y:a). y =!= Seq.index s j ==> count_until y s (j + 1) == count_until y s j)) =
-  let s_0_j = Seq.slice s 0 j in
-  let sj = Seq.create 1 (Seq.index s j) in
-  assert (Seq.equal (Seq.slice s 0 (j + 1)) (Seq.append s_0_j sj));
-  Seq.lemma_append_count s_0_j sj
+               (forall (y:a). y =!= Seq.index s j ==> count_until y s (j + 1) == count_until y s j))
+   
+//countlemmaend$
+  = let s_0_j = Seq.slice s 0 j in
+    let sj = Seq.create 1 (Seq.index s j) in
+    assert (Seq.equal (Seq.slice s 0 (j + 1)) (Seq.append s_0_j sj));
+    Seq.lemma_append_count s_0_j sj
+
+let rec count_len (#a:eqtype) (x:a) (s:Seq.seq a) (j:nat { j <= Seq.length s })
+  : Lemma (requires True)
+          (ensures count_until x s j <= j)
+          (decreases j)
+          [SMTPat (count_until x s j)] =
+  if j = 0 then ()
+  else begin
+    count_len x (Seq.slice s 0 (j - 1)) (j - 1);
+    count_until_next x s (j - 1)
+  end
 
 //majorityspec$
-let count (#a:eqtype) (x:a) (s:Seq.seq a) = Seq.count x s
+let count (#a:eqtype) (x:a) (s:Seq.seq a) : GTot nat = Seq.count x s
 
-let no_majority (#a:eqtype) (s:Seq.seq a) = forall (x:a). 2 * count x s <= Seq.length s
-
+noextract
 let has_majority_in (#a:eqtype) (x:a) (s:Seq.seq a) = Seq.length s < 2 * count x s
+
+noextract
+let no_majority (#a:eqtype) (s:Seq.seq a) = forall (x:a). ~(x `has_majority_in` s)
 
 ```pulse
 fn majority (#a:eqtype) #p (#s:G.erased _) (votes:array a) (len:SZ.t { SZ.v len == Seq.length s })
@@ -59,13 +80,14 @@ fn majority (#a:eqtype) #p (#s:G.erased _) (votes:array a) (len:SZ.t { SZ.v len 
   ensures pts_to votes #p s **
           pure ((x == None ==> no_majority s) /\ (Some? x ==> (Some?.v x) `has_majority_in` s))
 //majorityspecend$
+//majorityphase1$
 {
   let mut i = 1sz;
   let mut k = 1sz;
   let votes_0 = votes.(0sz);
   let mut cand = votes_0;
   assert (pure (count_until votes_0 s 1 == 1));
-//majorityphase1$
+  // while loop for phase 1
   while (
     let vi = !i;
     (vi <^ len)
@@ -90,6 +112,8 @@ fn majority (#a:eqtype) #p (#s:G.erased _) (votes:array a) (len:SZ.t { SZ.v len 
     let vk = !k;
     let vcand = !cand;
     let votes_i = votes.(vi);
+    // count_until_next is a lemma that captures the behavior of
+    // count when the sequence index is incremented
     count_until_next vcand s (SZ.v vi);
     if (vk = 0sz) {
       cand := votes_i;
@@ -103,9 +127,9 @@ fn majority (#a:eqtype) #p (#s:G.erased _) (votes:array a) (len:SZ.t { SZ.v len 
       i := vi +^ 1sz
     }
   };
-//majorityphase1end$
   let vk = !k;
   let vcand = !cand;
+  // a couple of optimizations
   if (vk = 0sz) {
     None #a
   } else if (len <^ 2sz *^ vk) {
@@ -113,6 +137,7 @@ fn majority (#a:eqtype) #p (#s:G.erased _) (votes:array a) (len:SZ.t { SZ.v len 
   } else {
     i := 0sz;
     k := 0sz;
+    // while loop for phase 2
     while (
       let vi = !i;
       (vi <^ len)
@@ -146,4 +171,20 @@ fn majority (#a:eqtype) #p (#s:G.erased _) (votes:array a) (len:SZ.t { SZ.v len 
     }
   }
 }
+//majorityphase1end$
+```
+
+type u32_t = FStar.UInt32.t
+
+```pulse
+//majoritymono$
+fn majority_mono #p (#s:G.erased _) (votes:array u32_t) (len:SZ.t { SZ.v len == Seq.length s })
+  requires pts_to votes #p s ** pure (0 < SZ.v len /\ SZ.fits (2 * SZ.v len))
+  returns x:option u32_t
+  ensures pts_to votes #p s **
+          pure ((x == None ==> no_majority s) /\ (Some? x ==> (Some?.v x) `has_majority_in` s))
+{
+  majority #u32_t #p #s votes len
+}
+//majoritymonoend$
 ```
