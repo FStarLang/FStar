@@ -34,25 +34,6 @@ ensures emp
 ```
 
 
-```pulse
-ghost
-fn elim_cond_true (b:bool) (p q:vprop)
-requires (cond b p q ** pure (b == true))
-ensures p
-{
-  rewrite (cond b p q) as p;
-}  
-```
-
-```pulse
-ghost
-fn elim_cond_false b p q
-requires (cond b p q ** pure (b == false))
-ensures q
-{
-  rewrite (cond b p q) as q;
-}  
-```
 
 ```pulse
 //acquire_sig$
