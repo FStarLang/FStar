@@ -5,6 +5,7 @@ set -x
 
 # build a F* package
 [[ -n "$FSTAR_HOME" ]]
+old_FSTAR_HOME="$FSTAR_HOME"
 fstar_package_dir=$FSTAR_HOME/src/ocaml-output/fstar
 rm -rf "$fstar_package_dir"
 make -C "$FSTAR_HOME" package "$@"
@@ -16,11 +17,15 @@ export STEEL_HOME=$(cd `dirname $0`/../.. && pwd)
 export FSTAR_HOME="$fstar_package_dir"
 OTHERFLAGS='--admit_smt_queries true' make -C "$STEEL_HOME" "$@"
 make -C "$STEEL_HOME"/share/steel/examples/pulse lib "$@"
+mkdir -p "$old_FSTAR_HOME"/src/.cache.boot
+FSTAR_HOME="$old_FSTAR_HOME" make -C "$STEEL_HOME"/pulse2rust "$@"
 
 # install Steel into the package directory
 export PREFIX="$FSTAR_HOME"
 make -C "$STEEL_HOME" install "$@"
 make -C "$STEEL_HOME"/share/steel/examples/pulse install-lib "$@"
+mkdir -p "$PREFIX"/pulse2rust
+cp "$STEEL_HOME"/pulse2rust/main.exe "$PREFIX"/pulse2rust/
 
 # create the archive package
 cd `dirname $0`
