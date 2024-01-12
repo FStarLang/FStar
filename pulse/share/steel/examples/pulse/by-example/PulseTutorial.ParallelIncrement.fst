@@ -6,12 +6,16 @@ module GR = Pulse.Lib.GhostReference
 module R = Pulse.Lib.Reference
 
 //lock_inv$
+let contributions (left right: GR.ref int) (i v:int)=
+  exists* (vl vr:int).
+    GR.pts_to left #one_half vl **
+    GR.pts_to right #one_half vr **
+    pure (v == i + vl + vr)
+
 let lock_inv (x:ref int) (init:int) (l r:GR.ref int) =
-    exists* v vl vr. 
-        pts_to x v **
-        GR.pts_to l #one_half vl **
-        GR.pts_to r #one_half vr **
-        pure (v == init + vl + vr)
+  exists* v. 
+    pts_to x v **
+    contributions l r init v
 //lock_inv$
 
 ```pulse //incr_left
@@ -25,11 +29,13 @@ ensures  GR.pts_to left #one_half ('vl + 1)
 {
   L.acquire lock;
   unfold lock_inv;
+  unfold contributions;
   let v = !x;
   x := v + 1;
   GR.gather left;
   GR.write left ('vl + 1);
   GR.share left;
+  fold (contributions left right i (v + 1));
   fold (lock_inv x i left right);
   L.release lock
 }
@@ -46,11 +52,13 @@ ensures  GR.pts_to right #one_half ('vl + 1)
 {
   L.acquire lock;
   unfold lock_inv;
+  unfold contributions;
   let v = !x;
   x := v + 1;
   GR.gather right;
   GR.write right ('vl + 1);
   GR.share right;
+  fold (contributions left right i (v + 1));
   fold (lock_inv x i left right);
   L.release lock
 }
@@ -82,12 +90,14 @@ ensures  pts_to x ('i + 2)
   let right = GR.alloc 0;
   GR.share left;
   GR.share right;
+  fold (contributions left right 'i 'i);
   fold (lock_inv x 'i left right);
   let lock = L.new_lock (lock_inv x 'i left right);
   par (fun _ -> incr_left x lock)
       (fun _ -> incr_right x lock);
   L.acquire lock;
   unfold lock_inv;
+  unfold contributions;
   GR.gather left;
   GR.gather right;
   GR.free left;
@@ -124,7 +134,6 @@ ensures qpred ('i + 1)
 
 //At the call-site, we instantiate incr twice, with different
 //ghost steps
-
 ```pulse //add_v2
 fn add2_v2 (x: ref int)
 requires pts_to x 'i
@@ -134,13 +143,10 @@ ensures pts_to x ('i + 2)
     let right = GR.alloc 0;
     GR.share left;
     GR.share right;
+    fold (contributions left right 'i 'i);
     let lock = L.new_lock (
       exists* (v:int).
-        pts_to x v **
-        (exists* (vl vr:int).
-          GR.pts_to left #one_half vl **
-          GR.pts_to right #one_half vr **
-          pure (v == 'i + vl + vr))
+        pts_to x v ** contributions left right 'i v
     );
     ghost
     fn step
@@ -148,20 +154,15 @@ ensures pts_to x ('i + 2)
         (b:bool { if b then lr == left else lr == right })
         (v vq:int)
       requires 
-        (exists* (vl vr:int).
-            GR.pts_to left #one_half vl **
-            GR.pts_to right #one_half vr **
-            pure (v == 'i + vl + vr)) **
+        contributions left right 'i v **
         GR.pts_to lr #one_half vq **
         pts_to x (v + 1)
       ensures
-        (exists* (vl vr:int).
-            GR.pts_to left #one_half vl **
-            GR.pts_to right #one_half vr **
-            pure (v + 1 == 'i + vl + vr)) **
+        contributions left right 'i (v + 1) **
         GR.pts_to lr #one_half (vq + 1) **
         pts_to x (v + 1)
     { 
+      unfold contributions;
       if b
       {
         with _p _v. rewrite (GR.pts_to lr #_p _v) as (GR.pts_to left #_p _v);
@@ -169,6 +170,7 @@ ensures pts_to x ('i + 2)
         GR.write left (vq + 1);
         GR.share left;      
         with _p _v. rewrite (GR.pts_to left #_p _v) as (GR.pts_to lr #_p _v);
+        fold (contributions left right 'i (v + 1));
       }
       else
       {
@@ -177,6 +179,7 @@ ensures pts_to x ('i + 2)
         GR.write right (vq + 1);
         GR.share right;      
         with _p _v. rewrite (GR.pts_to right #_p _v) as (GR.pts_to lr #_p _v);
+        fold (contributions left right 'i (v + 1));
       }
     };
 
@@ -184,6 +187,7 @@ ensures pts_to x ('i + 2)
         (fun _ -> incr x lock (step right false));
 
     L.acquire lock; //we leak the lock here, but we can do better, below
+    unfold contributions;
     GR.gather left;
     GR.gather right;
     GR.free left;
@@ -292,7 +296,8 @@ ensures qpred ('i + 1) ** C.active p t
 }
 ```
 
-```pulse //add3_v3$
+
+```pulse //add2_v3$
 fn add2_v3 (x: ref int)
 requires pts_to x 'i
 ensures pts_to x ('i + 2)
@@ -301,14 +306,11 @@ ensures pts_to x ('i + 2)
     let right = GR.alloc 0;
     GR.share left;
     GR.share right;
+    fold (contributions left right 'i 'i);
     let tok = C.create2 (
       exists* (v:int).
           pts_to x v **
-          (exists* (vl vr:int).
-            GR.pts_to left #one_half vl **
-            GR.pts_to right #one_half vr **
-            pure (v == 'i + vl + vr))
-
+          contributions left right 'i v
     );
     C.share tok; 
     let inv = new_invariant (C.cancellable tok _);
@@ -318,35 +320,32 @@ ensures pts_to x ('i + 2)
         (b:bool { if b then lr == left else lr == right })
         (v vq:int)
       requires 
-        (exists* (vl vr:int).
-            GR.pts_to left #one_half vl **
-            GR.pts_to right #one_half vr **
-            pure (v == 'i + vl + vr)) **
+        contributions left right 'i v **
         GR.pts_to lr #one_half vq **
         pts_to x (v + 1)
       ensures
-        (exists* (vl vr:int).
-            GR.pts_to left #one_half vl **
-            GR.pts_to right #one_half vr **
-            pure (v + 1 == 'i + vl + vr)) **
+        contributions left right 'i (v + 1) **
         GR.pts_to lr #one_half (vq + 1) **
         pts_to x (v + 1)
     { 
+      unfold contributions;
       if b
       {
         with _p _v. rewrite (GR.pts_to lr #_p _v) as (GR.pts_to left #_p _v);
         GR.gather left;
-        GR.( left := vq + 1 );
+        GR.write left (vq + 1);
         GR.share left;      
         with _p _v. rewrite (GR.pts_to left #_p _v) as (GR.pts_to lr #_p _v);
+        fold (contributions left right 'i (v + 1));
       }
       else
       {
         with _p _v. rewrite (GR.pts_to lr #_p _v) as (GR.pts_to right #_p _v);
         GR.gather right;
-        GR.( right := vq + 1 );
+        GR.write right (vq + 1);
         GR.share right;      
         with _p _v. rewrite (GR.pts_to right #_p _v) as (GR.pts_to lr #_p _v);
+        fold (contributions left right 'i (v + 1));
       }
     };
 
@@ -355,6 +354,7 @@ ensures pts_to x ('i + 2)
 
     C.gather tok;
     C.cancel_inv inv;
+    unfold contributions;
     GR.gather left;
     GR.gather right;
     GR.free left;
