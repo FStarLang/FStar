@@ -625,7 +625,8 @@ let rec (elab_st_typing :
                    (FStar_Reflection_V2_Data.C_String
                       "IOU: elab_st_typing of T_Unreachable"))
           | Pulse_Typing.T_WithInv
-              (uu___, uu___1, uu___2, uu___3, uu___4, uu___5, uu___6, uu___7)
+              (uu___, uu___1, uu___2, uu___3, uu___4, uu___5, uu___6, uu___7,
+               uu___8)
               ->
               FStar_Reflection_V2_Builtins.pack_ln
                 (FStar_Reflection_V2_Data.Tv_Const

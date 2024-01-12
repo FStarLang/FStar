@@ -221,7 +221,7 @@ fn is_empty (#t:Type) (x:llist t)
 
 ```pulse
 fn rec length (#t:Type0) (x:llist t)
-              (l:erased (list t))
+              (#l:erased (list t))
     requires is_list x l
     returns n:nat
     ensures is_list x l ** pure (n == List.Tot.length l)
@@ -233,10 +233,10 @@ fn rec length (#t:Type0) (x:llist t)
     }
     Some vl -> {
         is_list_cases_some x vl;
-        with tail tl. assert (is_list #t tail tl);
+        with _node _tl. _;
         let node = !vl;
-        rewrite each tail as node.tail; 
-        let n = length #t node.tail tl;
+        rewrite each _node as node;
+        let n = length node.tail;
         intro_is_list_cons x vl;
         (1 + n)
     }
@@ -277,9 +277,9 @@ ensures is_list x ('l1 @ 'l2)
 {
   let np = Some?.v x;
   is_list_cases_some x np;
+  with _node _tl. _;
   let node = !np;
-  with tail tl. assert (is_list #t tail tl);
-  rewrite each tail as node.tail;
+  rewrite each _node as node;
   match node.tail {
     None -> {
       is_list_cases_none node.tail;
@@ -289,14 +289,12 @@ ensures is_list x ('l1 @ 'l2)
       intro_is_list_cons x np; 
     }
     Some _ -> {
-      append #t node.tail y;
+      append node.tail y;
       intro_is_list_cons x np;
     }
   }
 }
 ```
-
-
 
 ```pulse
 ghost
@@ -338,15 +336,14 @@ fn move_next (#t:Type) (x:llist t)
 { 
     let np = Some?.v x;
     is_list_cases_some x np;
+    with _node _tl. _;
     let node = !np;
-    with tail tl. assert (is_list #t tail tl);
-    rewrite each tail as node.tail;
+    rewrite each _node as node;
     intro_yields_cons np;
     node.tail
 }
 ```
 
-#push-options "--ext 'pulse:env_on_err'"
 ```pulse
 fn length_iter (#t:Type) (x: llist t)
     requires is_list x 'l
@@ -357,9 +354,7 @@ fn length_iter (#t:Type) (x: llist t)
   let mut ctr = 0; 
   I.refl (is_list x 'l);
   while (
-    with _b _n ll _sfx. _; 
     let v = !cur; 
-    rewrite (pts_to cur v) as (pts_to cur ll);
     Some? v
   )
   invariant b.  
@@ -397,9 +392,9 @@ fn is_last_cell (#t:Type) (x:llist t)
 {
   let np = Some?.v x;
   is_list_cases_some x np;
+  with _node _tl. _;
   let node = !np;
-  with tail tl. assert (is_list #t tail tl);
-  rewrite each tail as node.tail;
+  rewrite each _node as node;
   match node.tail {
     None -> { 
       is_list_cases_none node.tail;
@@ -429,9 +424,9 @@ ensures
 {
   let np = Some?.v x;
   is_list_cases_some x np;
+  with _node _tl. _;
   let node = !np;
-  with tail tl. assert (is_list #t tail tl);
-  rewrite each tail as node.tail;
+  rewrite each _node as node;
   match node.tail {
     None -> {
       is_list_cases_none node.tail;

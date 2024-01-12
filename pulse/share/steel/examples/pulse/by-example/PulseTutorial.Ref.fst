@@ -45,7 +45,7 @@ ensures pts_to r0 'v1 ** pts_to r1 'v0
 fn value_of (#a:Type) (r:ref a)
 requires pts_to r 'v
 returns v:a
-ensures pts_to r v ** pure (v == 'v)
+ensures pts_to r 'v ** pure (v == 'v)
 {
     !r;
 }
@@ -56,7 +56,7 @@ ensures pts_to r v ** pure (v == 'v)
 fn value_of_explicit (#a:Type) (r:ref a) (#w:erased a)
 requires pts_to r w
 returns v:a
-ensures pts_to r v ** pure (v == reveal w)
+ensures pts_to r w ** pure (v == reveal w)
 {
     !r;
 }
@@ -67,7 +67,7 @@ ensures pts_to r v ** pure (v == reveal w)
 fn value_of_explicit_fail (#a:Type) (r:ref a) (#w:erased a)
 requires pts_to r w
 returns v:a
-ensures pts_to r v ** pure (v == reveal w)
+ensures pts_to r w ** pure (v == reveal w)
 {
     reveal w
 }
@@ -160,7 +160,7 @@ ensures pts_to r #full_perm v
 fn value_of_perm #a #p (r:ref a)
 requires pts_to r #p 'v
 returns v:a
-ensures pts_to r #p v ** pure (v == 'v)
+ensures pts_to r #p 'v ** pure (v == 'v)
 {
     !r;
 }
@@ -200,6 +200,17 @@ ensures
     pure ('v0 == 'v1)
 {
     gather r;
+}
+```
+
+```pulse
+fn max_perm #a (r:ref a) #p anything
+requires pts_to r #p 'v ** pure (not (p `lesser_equal_perm` full_perm))
+returns _:squash False
+ensures anything
+{
+    pts_to_perm_bound r;
+    unreachable();
 }
 ```
 

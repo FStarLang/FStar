@@ -28,7 +28,10 @@ module R = Pulse.Lib.Reference
 
 val box ([@@@strictly_positive] a:Type0) : Type0
 
-val pts_to (#a:Type0) (b:box a) (#[T.exact (`full_perm)]p:perm) (v:a) : vprop
+val pts_to (#a:Type0) 
+           (b:box a)
+           (#[T.exact (`full_perm)] [@@@equate_by_smt] p:perm)
+           ([@@@equate_by_smt] v:a) : vprop
 
 val alloc (#a:Type0) (x:a)
   : stt (box a) emp (fun b -> pts_to b x)
@@ -36,7 +39,7 @@ val alloc (#a:Type0) (x:a)
 val ( ! ) (#a:Type0) (b:box a) (#v:erased a) (#p:perm)
   : stt a
       (pts_to b #p v)
-      (fun x -> pts_to b #p x ** pure (eq2 #a (reveal v) x))
+      (fun x -> pts_to b #p v ** pure (eq2 #a (reveal v) x))
 
 val ( := ) (#a:Type0) (b:box a) (x:a) (#v:erased a)
   : stt unit

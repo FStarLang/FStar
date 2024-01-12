@@ -424,7 +424,7 @@ let rec soundness (g:stt_env)
 
     | T_Sub _ _ _ _ _ _ -> Sub.sub_soundness d soundness
 
-    | T_WithInv _ _ _ _ _ _ _ _ -> RU.magic() // IOU
+    | T_WithInv _ _ _ _ _ _ _ _ _ -> RU.magic() // IOU
 #pop-options
 
 let soundness_lemma

@@ -202,7 +202,7 @@ let inv_p (os0 : inames) (f v1 v2 : vprop) (r1 r2 : GR.ref bool) : vprop =
 ```pulse
 atomic
 fn __elim_l_atomic (#os0:inames) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool) (i : inv (inv_p os0 f v1 v2 r1 r2)) ()
-  requires f ** GR.pts_to r1 #one_half false
+  requires f ** GR.pts_to r1 #one_half false ** pure (not (mem_inv os0 i))
   ensures f ** v1
   opens (add_inv os0 i)
 {
