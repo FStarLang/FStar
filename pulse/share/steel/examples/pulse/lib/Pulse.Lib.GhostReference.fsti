@@ -37,10 +37,14 @@ val ( ! ) (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
         (pts_to r #p n)
         (fun x -> pts_to r #p n ** pure (n == x))
 
+let read = ( ! )
+
 val ( := ) (#a:Type) (r:ref a) (x:erased a) (#n:erased a)
   : stt_ghost unit emp_inames
         (pts_to r n) 
         (fun _ -> pts_to r x)
+
+let write = ( := )
 
 val free (#a:Type) (r:ref a) (#n:erased a)
   : stt_ghost unit emp_inames (pts_to r n) (fun _ -> emp)

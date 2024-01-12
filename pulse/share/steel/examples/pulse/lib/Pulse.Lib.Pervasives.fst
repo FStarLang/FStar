@@ -107,3 +107,43 @@ ensures post x y
 
 let vprop_equiv_norm (_:unit) : T.Tac unit =
     T.mapply (`vprop_equiv_refl)
+
+```pulse
+ghost
+fn elim_cond_true (b:bool) (p q:vprop)
+requires (cond b p q ** pure (b == true))
+ensures p
+{
+  rewrite (cond b p q) as p;
+}  
+```
+
+```pulse
+ghost
+fn elim_cond_false b p q
+requires (cond b p q ** pure (b == false))
+ensures q
+{
+  rewrite (cond b p q) as q;
+}  
+```
+
+```pulse
+ghost
+fn intro_cond_true (p q:vprop)
+requires p
+ensures cond true p q
+{
+  fold (cond true p q);
+}
+```
+
+```pulse
+ghost
+fn intro_cond_false (p q:vprop)
+requires q
+ensures cond false p q
+{
+  fold (cond false p q);
+}
+```

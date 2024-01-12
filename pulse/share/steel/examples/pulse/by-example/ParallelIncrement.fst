@@ -230,29 +230,12 @@ ensures qpred ('i + 1)
 }
 ```
 
+
 assume
 val atomic_read (r:ref int) (#p:_) (#i:erased int)
   : stt_atomic int emp_inames 
     (pts_to r #p i)
     (fun v -> pts_to r #p v ** pure (reveal i == v))
-
-let cond b (p q:vprop) = if b then p else q
-assume
-val elim_cond_true (b:bool) (p q:vprop)
-  : stt_ghost unit emp_inames 
-    (cond b p q ** pure (b == true))
-    (fun _ -> p)
-
-assume
-val elim_cond_false (b:bool) (p q:vprop)
-  : stt_ghost unit emp_inames 
-    (cond b p q ** pure (b == false))
-    (fun _ -> q)
-
-assume
-val intro_cond_false (p q:vprop)
-  : stt_ghost unit emp_inames 
-    q (fun _ -> cond false p q)
 
 assume
 val cas (r:ref int) (u v:int) (#i:erased int)
