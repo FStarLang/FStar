@@ -3,6 +3,9 @@
 set -e
 set -x
 
+cp0=$(which gcp >/dev/null 2>&1 && echo gcp || echo cp)
+cp="$cp0 --preserve=mode,timestamps"
+
 # make sure the package has not already been built
 cd $(cd `dirname $0` && pwd)
 [[ ! -e steel ]]
@@ -19,6 +22,14 @@ fstar_package_dir=$FSTAR_HOME/src/ocaml-output/fstar
 rm -rf "$fstar_package_dir"
 Z3_LICENSE=$(pwd)/LICENSE-z3.txt make -C "$FSTAR_HOME" package "$@"
 
+# build Karamel and add it to the package
+[[ -n "$KRML_HOME" ]]
+make -C "$KRML_HOME" "$@"
+$cp -L $KRML_HOME/krml $fstar_package_dir/bin/krml$exe
+$cp -r $KRML_HOME/krmllib $fstar_package_dir/
+$cp -r $KRML_HOME/include $fstar_package_dir/
+$cp -r $KRML_HOME/misc $fstar_package_dir/
+
 # assume current directory is $STEEL_HOME/src/ci
 export STEEL_HOME=$(cd ../.. && pwd)
 
@@ -34,7 +45,7 @@ export PREFIX="$FSTAR_HOME"
 make -C "$STEEL_HOME" install "$@"
 make -C "$STEEL_HOME"/share/steel/examples/pulse install-lib "$@"
 mkdir -p "$PREFIX"/pulse2rust
-cp "$STEEL_HOME"/pulse2rust/main.exe "$PREFIX"/pulse2rust/
+$cp "$STEEL_HOME"/pulse2rust/main.exe "$PREFIX"/pulse2rust/
 
 # create the archive package
 mv "$PREFIX" steel
