@@ -14,12 +14,13 @@ export STEEL_HOME=$(cd `dirname $0`/../.. && pwd)
 
 # use the package to build Steel
 export FSTAR_HOME="$fstar_package_dir"
-export OTHERFLAGS='--admit_smt_queries true'
-make -C "$STEEL_HOME" "$@"
+OTHERFLAGS='--admit_smt_queries true' make -C "$STEEL_HOME" "$@"
+make -C "$STEEL_HOME"/share/steel/examples/pulse lib "$@"
 
 # install Steel into the package directory
 export PREFIX="$FSTAR_HOME"
 make -C "$STEEL_HOME" install "$@"
+make -C "$STEEL_HOME"/share/steel/examples/pulse install-lib "$@"
 
 # create the archive package
 cd `dirname $0`
