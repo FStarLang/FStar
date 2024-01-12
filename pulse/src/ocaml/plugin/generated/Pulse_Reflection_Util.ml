@@ -2176,3 +2176,34 @@ let (mk_opaque_let :
                                      (FStar_Reflection_V2_Builtins.pack_ln
                                         FStar_Reflection_V2_Data.Tv_Unknown)
                                  }]))), FStar_Pervasives_Native.None)))
+let (mk_mem_inv :
+  FStar_Reflection_Types.term ->
+    FStar_Reflection_Types.term ->
+      FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+  =
+  fun invP ->
+    fun inames ->
+      fun inv ->
+        let mem_inv_tm = mk_pulse_lib_core_lid "mem_inv" in
+        let t =
+          FStar_Reflection_V2_Builtins.pack_ln
+            (FStar_Reflection_V2_Data.Tv_FVar
+               (FStar_Reflection_V2_Builtins.pack_fv mem_inv_tm)) in
+        FStar_Reflection_V2_Derived.mk_app t [im invP; ex inames; ex inv]
+let (inv_disjointness_goal :
+  FStar_Tactics_NamedView.term ->
+    FStar_Tactics_NamedView.term ->
+      FStar_Tactics_NamedView.term -> FStar_Reflection_Types.term)
+  =
+  fun inv_p ->
+    fun inames ->
+      fun inv ->
+        let p = mk_mem_inv inv_p inames inv in
+        let u0 =
+          FStar_Reflection_V2_Builtins.pack_universe
+            FStar_Reflection_V2_Data.Uv_Zero in
+        let p1 = mk_reveal u0 bool_tm p in
+        mk_eq2 u0 bool_tm
+          (FStar_Reflection_V2_Builtins.pack_ln
+             (FStar_Reflection_V2_Data.Tv_Const
+                FStar_Reflection_V2_Data.C_False)) p1

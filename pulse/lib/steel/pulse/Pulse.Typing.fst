@@ -232,6 +232,15 @@ let add_inv (s:comp_st) (v:vprop)
   (* TODO: this is pretty correct as it is, it's just missing
   adding the invariant name to the comp type. And maybe check that
   it's only atomic/ghost. *)
+let add_iname (s:comp_st) (inv_vprop inv_tm:term) =
+  let add_inv_tm (inames:term) = 
+    tm_fstar (Pulse.Reflection.Util.add_inv_tm (elab_term inv_vprop) (elab_term inames) (elab_term inv_tm))
+              inames.range
+  in
+  match s with
+  | C_ST _ -> s
+  | C_STAtomic inames obs s -> C_STAtomic (add_inv_tm inames) obs s
+  | C_STGhost inames s -> C_STGhost (add_inv_tm inames) s
 
 let at_most_one_observable o1 o2 =
   match o1, o2 with
@@ -772,6 +781,10 @@ let readback_binding b =
 let non_informative (g:env) (c:comp) =
   my_erased (RT.non_informative (elab_env g) (elab_comp c))
 
+let inv_disjointness (inv_p inames inv:term) = 
+  let g = Pulse.Reflection.Util.inv_disjointness_goal (elab_term inv_p) (elab_term inames) (elab_term inv) in 
+  tm_fstar g inv.range
+
 [@@ no_auto_projectors]
 noeq
 type st_typing : env -> st_term -> comp -> Type =
@@ -1096,7 +1109,9 @@ type st_typing : env -> st_term -> comp -> Type =
       body : st_term ->
       c : comp_st { C_STAtomic? c } ->
       body_typing : st_typing g body (add_frame c inv_vprop) ->
-      st_typing g (wtag (Some STT_Atomic) (Tm_WithInv {name=inv_tm; body; returns_inv=None})) c
+      inv_disjointness_token:prop_validity g (inv_disjointness inv_vprop (comp_inames c) inv_tm) ->
+      st_typing g (wtag (Some STT_Atomic) (Tm_WithInv {name=inv_tm; body; returns_inv=None}))
+                  (add_iname c inv_vprop inv_tm)
 
 and pats_complete : env -> term -> typ -> list R.pattern -> Type0 =
   // just check the elaborated term with the core tc

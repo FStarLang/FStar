@@ -46,7 +46,8 @@ ensures  pts_to x 'v ** pts_to x 'u ** pure False
 }
 ```
 
- //double_open_bad$
+//double_open_bad$
+[@@expect_failure]
 ```pulse
 fn double_open_bad (r:ref U32.t) (i:inv (owns r))
 requires emp

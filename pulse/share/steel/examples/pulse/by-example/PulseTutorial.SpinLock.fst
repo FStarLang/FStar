@@ -88,7 +88,7 @@ ensures p
       }
     };
   if b { rewrite (maybe b p) as p; }
-  else { rewrite (maybe b p) as emp; acquire #p l }
+  else { rewrite (maybe b p) as emp; acquire l }
 }
 ```
 

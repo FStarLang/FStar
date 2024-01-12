@@ -182,7 +182,7 @@ ensures is_list x 'l ** pure (n == List.Tot.length 'l)
       with _node _tl. _;
       let node = !vl;
       rewrite each _node.tail as node.tail; 
-      let n = length #t node.tail;
+      let n = length node.tail;
       intro_is_list_cons x vl;
       (1 + n)
     }
@@ -206,7 +206,7 @@ ensures is_list x 'l ** pure (n == k + List.Tot.length 'l)
       with tail tl. assert (is_list #t tail tl);
       let n = !vl;
       rewrite each tail as n.tail; 
-      let n = length_tail #t n.tail (1 + k);
+      let n = length_tail n.tail (1 + k);
       intro_is_list_cons x vl;
       n
     }
@@ -330,7 +330,7 @@ ensures is_list x ('l1 @ 'l2)
       intro_is_list_cons x np; 
     }
     Some _ -> {
-      append #t node.tail y;
+      append node.tail y;
       intro_is_list_cons x np;
     }
   }

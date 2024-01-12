@@ -492,11 +492,12 @@ let rec st_typing_weakening g g' t c d g1
   | T_Unreachable _ s c d_s tok ->
     T_Unreachable _ s c (st_comp_typing_weakening g g' d_s g1) (RU.magic())//weaken tok
 
-  | T_WithInv  _ _ _ p_typing inv_typing _ _ body_typing ->
+  | T_WithInv  _ _ _ p_typing inv_typing _ _ body_typing tok ->
     T_WithInv _ _ _ (tot_typing_weakening g g' _ _ p_typing g1)
                     (tot_typing_weakening g g' _ _ inv_typing g1)
                     _ _
                     (st_typing_weakening g g' _ _ body_typing g1)
+                    (prop_validity_token_weakening tok _)
 #pop-options
 
 #push-options "--admit_smt_queries true"

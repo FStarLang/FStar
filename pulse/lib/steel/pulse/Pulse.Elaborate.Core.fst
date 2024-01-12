@@ -333,7 +333,7 @@ let rec elab_st_typing (#g:env)
     | T_Unreachable _ _ _ _ _ ->
       `("IOU: elab_st_typing of T_Unreachable")
 
-    | T_WithInv _ _ _ _ _ _ _ _ ->
+    | T_WithInv _ _ _ _ _ _ _ _ _ ->
       `("IOU: elab_st_typing of T_WithInv")
 
 and elab_br (#g:env)
