@@ -53,5 +53,5 @@ rm -rf steel/share/fstar
 if [[ "$OS" = Windows_NT ]] ; then
   zip -r -9 steel.zip steel
 else
-  tar czf steel.tgz steel
+  tar czf steel.tar.gz steel
 fi
