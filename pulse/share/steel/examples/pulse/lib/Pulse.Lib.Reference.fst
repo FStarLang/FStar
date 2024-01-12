@@ -34,7 +34,7 @@ let alloc #a x =
 let read (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
   : stt a
         (R.pts_to r p n)
-        (fun x -> R.pts_to r p x `star` S.pure (reveal n == x))
+        (fun x -> R.pts_to r p n `star` S.pure (reveal n == x))
   = fun _ ->
         let v = R.read r in
         S.return v

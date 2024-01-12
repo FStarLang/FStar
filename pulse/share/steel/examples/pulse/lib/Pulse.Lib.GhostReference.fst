@@ -37,7 +37,7 @@ let alloc #a = alloc' #a
 let read (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
   : stt_ghost (erased a) emp_inames
         (R.pts_to r p n)
-        (fun x -> R.pts_to r p x `S.star` S.pure (n == x))
+        (fun x -> R.pts_to r p n `S.star` S.pure (n == x))
   = fun _ ->
         let v = R.read r in
          v
