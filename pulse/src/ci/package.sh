@@ -3,15 +3,24 @@
 set -e
 set -x
 
+# make sure the package has not already been built
+cd $(cd `dirname $0` && pwd)
+[[ ! -e steel ]]
+
+# download the z3 license file
+if ! [[ -f LICENSE-z3.txt ]] ; then
+    curl -o LICENSE-z3.txt https://raw.githubusercontent.com/Z3Prover/z3/master/LICENSE.txt
+fi
+
 # build a F* package
 [[ -n "$FSTAR_HOME" ]]
 old_FSTAR_HOME="$FSTAR_HOME"
 fstar_package_dir=$FSTAR_HOME/src/ocaml-output/fstar
 rm -rf "$fstar_package_dir"
-make -C "$FSTAR_HOME" package "$@"
+Z3_LICENSE=$(pwd)/LICENSE-z3.txt make -C "$FSTAR_HOME" package "$@"
 
 # assume current directory is $STEEL_HOME/src/ci
-export STEEL_HOME=$(cd `dirname $0`/../.. && pwd)
+export STEEL_HOME=$(cd ../.. && pwd)
 
 # use the package to build Steel
 export FSTAR_HOME="$fstar_package_dir"
@@ -28,8 +37,6 @@ mkdir -p "$PREFIX"/pulse2rust
 cp "$STEEL_HOME"/pulse2rust/main.exe "$PREFIX"/pulse2rust/
 
 # create the archive package
-cd `dirname $0`
-[[ ! -e steel ]]
 mv "$PREFIX" steel
 rm -rf steel/share/fstar
 if [[ "$OS" = Windows_NT ]] ; then
