@@ -181,7 +181,7 @@ ensures is_list x 'l ** pure (n == List.Tot.length 'l)
       is_list_case_some x vl;
       with _node _tl. _;
       let node = !vl;
-      rewrite each _node.tail as node.tail; 
+      rewrite each _node as node;
       let n = length node.tail;
       intro_is_list_cons x vl;
       (1 + n)
@@ -203,9 +203,9 @@ ensures is_list x 'l ** pure (n == k + List.Tot.length 'l)
     }
     Some vl -> {
       is_list_case_some x vl;
-      with tail tl. assert (is_list #t tail tl);
+      with _node _tl. _;
       let n = !vl;
-      rewrite each tail as n.tail; 
+      rewrite each _node as n;
       let n = length_tail n.tail (1 + k);
       intro_is_list_cons x vl;
       n
@@ -252,20 +252,10 @@ ensures exists* tl.
     is_list_case_some x np;
     with node tl. _;
     let nd = !np;
-    rewrite each node.tail as nd.tail;
+    rewrite each node as nd;
     tail_for_cons np tl;
     nd.tail
 }
-```
-
-//a variant of (!) that doesn't change the pts_to assertion
-//try using (!!) below
-```pulse
-fn op_Bang_Bang (#a:Type) (r:ref a)
-requires pts_to r #p 'v
-returns v:a
-ensures pts_to r #p 'v ** pure (v == 'v)
-{ !r }
 ```
 
 ```pulse //length_iter$
@@ -279,9 +269,7 @@ ensures is_list x 'l ** pure (n == List.Tot.length 'l)
   let mut ctr = 0; 
   I.refl (is_list x 'l); //initialize the trade for the invariant
   while (
-    with _b _n _ll _sfx. _; // bind the existential variables in the invariant ...
-    let v = !cur;           // !cur transformts pts_to x _ll into pts_to x v
-    rewrite each _ll as v;  // rewrite the rest of the context to use v instead of _ll
+    let v = !cur;
     Some? v
   )
   invariant b.  
@@ -320,7 +308,7 @@ ensures is_list x ('l1 @ 'l2)
   is_list_case_some x np;
   with _node _tl. _;
   let node = !np;
-  rewrite each _node.tail as node.tail;
+  rewrite each _node as node;
   match node.tail {
     None -> {
       is_list_case_none node.tail;
@@ -351,7 +339,7 @@ ensures exists* hd tl.
   is_list_case_some x np;
   with _node _tl. _;
   let node = !np;
-  rewrite each _node.tail as node.tail;
+  rewrite each _node as node;
   ghost
   fn aux (tl':list t)
     requires pts_to np node ** is_list node.tail tl'
@@ -374,7 +362,7 @@ ensures is_list x 'l ** pure (b == (List.Tot.length 'l = 1))
   is_list_case_some x np;
   with _node _tl. _;
   let node = !np;
-  rewrite each _node.tail as node.tail;
+  rewrite each _node as node;
   match node.tail {
     None -> { 
       is_list_case_none node.tail;

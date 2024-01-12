@@ -76,6 +76,8 @@ type ctr = {
     destroy: i:erased int -> stt unit (inv i) (fun _ -> emp)
 }
 //ctr$
+let next c = c.next
+let destroy c = c.destroy
 
 ```pulse //new_counter$
 fn new_counter ()
@@ -106,16 +108,27 @@ ensures c.inv 0
 }
 ```
 
+```pulse
+fn return (#a:Type0) (x:a)
+requires emp
+returns y:a
+ensures pure (x == y)
+{
+    x
+}
+```
+
+
 ```pulse //test_counter$
 fn test_counter ()
 requires emp
 ensures emp
 {
     let c = new_counter ();
-    let x = apply c.next _; //FIXME: Shouldn't need the apply wrapper
+    let x = next c _; //FIXME: Should be able to write c.next
     assert pure (x == 0);
-    let x = apply c.next _;
+    let x = next c _;
     assert pure (x == 1);
-    apply c.destroy _;
+    destroy c _;
 }
 ```

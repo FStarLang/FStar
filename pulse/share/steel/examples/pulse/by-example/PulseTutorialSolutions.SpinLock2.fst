@@ -129,9 +129,7 @@ ensures p ** locked l
   let mut acquired = false;
   fold (maybe false (p ** locked l));
   while (
-    with _b _v. _;
     let v = !acquired;
-    rewrite each _v as v;
     not v
   )
   invariant b.
