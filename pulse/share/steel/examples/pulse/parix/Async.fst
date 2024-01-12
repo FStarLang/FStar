@@ -41,17 +41,6 @@ let asynch (a:Type0) (post : a -> vprop) : Type0 =
 let async_joinable #a #post h =
   joinable (snd h) ** pledge emp_inames (done (snd h)) (ref_solves_post (fst h) post)
 
-// val async
-//   (#a : Type0)
-//   (#pre : vprop)
-//   (#post : a -> vprop)
-//   (f : unit -> stt a pre post)
-//   : stt (asynch a post) pre (fun h -> async_joinable h)
-// let async #a #pre #post f =
-//   bind_stt (alloc None) (fun h ->
-//   let th = fork (fun () -> bind_stt (f ()) (fun (x:a) -> h := Some a)) in
-//   (| h, th |))
-
 ```pulse
 fn async_fill
   (#a : Type0)
@@ -83,17 +72,9 @@ fn __async
   ensures async_joinable h
 {
   let r = alloc (None #a);
-//   let th = fork #(pre ** pts_to r None) #(exists_ (fun (v:a) -> pts_to r (Some v) ** post v))
-//              (fun () -> async_fill #a #pre #post f r ());
-
-  // let k
-  //   : (unit -> stt u#0 unit (pre ** pts_to u#0 #(option u#0 a) r #full_perm (None u#0 #a))
-  //                           (fun () -> ref_solves_post #a r post))
-  //   = (fun () -> async_fill #a #pre #post f r ());
-  // let th = fork #(pre ** pts_to r None) #(ref_solves_post r post)
+  assume_ (pure (post == (fun x -> post x))); // Crucial for the call below to work, review
   let th = fork #(pre ** pts_to r None) #(ref_solves_post r post)
-                (fun () -> magic()); // FIXME... it's the thing above (or below)
-                // (async_fill #a #pre #post f r);
+                (async_fill #a #pre #post f r);
   let res = ( r, th );
   
   assert (joinable th);
