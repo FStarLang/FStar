@@ -153,11 +153,13 @@ val atomic_increment (r:ref int) (#i:erased int)
      
 module F = Pulse.Lib.FlippableInv
 
+let test #p (l:inv p) = assert (not (mem_inv emp_inames l))
+let pts_to_refine #a (x:ref a) (p:a -> vprop) = exists* v. pts_to x v ** p v 
 ```pulse
 fn atomic_increment_f2
         (x: ref int)
         (#pred #qpred: int -> vprop)
-        (l:inv (exists* v. pts_to x v ** pred v))
+        (l:inv (pts_to_refine x pred))
         (f: (v:int -> vq:int -> stt_ghost unit emp_inames 
                   (pred v ** qpred vq ** pts_to x (v + 1))
                   (fun _ -> pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))))
@@ -165,9 +167,11 @@ requires qpred 'i
 ensures qpred ('i + 1)
 {
   with_invariants l {
+    unfold pts_to_refine;
     with v. _;
     atomic_increment x;
     f v 'i;
+    fold pts_to_refine;
   }
 }
 ```
@@ -179,7 +183,7 @@ module I = Pulse.Lib.Stick.Util
 fn atomic_increment_f3
         (x: ref int)
         (#pred #qpred: int -> vprop)
-        (l:inv (exists* v. pts_to x v ** pred v))
+        (l:inv (pts_to_refine x pred))
 requires
   qpred 'i **
   (forall* v vq.
@@ -188,6 +192,7 @@ requires
 ensures qpred ('i + 1)
 {
   with_invariants l {
+    unfold pts_to_refine;
     with v. _;
     atomic_increment x;
     FA.elim #_ #(fun v -> forall* vq. (pred v ** qpred vq ** pts_to x (v + 1)) @==>
@@ -196,6 +201,7 @@ ensures qpred ('i + 1)
     FA.elim #_ #(fun vq -> (pred v ** qpred vq ** pts_to x (v + 1)) @==>
                            (pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))) 'i;
     I.elim _ _;
+    fold pts_to_refine;
   }
 }
 ```
