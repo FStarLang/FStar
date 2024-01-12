@@ -49,7 +49,8 @@ $cp "$STEEL_HOME"/pulse2rust/main.exe "$PREFIX"/pulse2rust/
 
 # create the archive package
 mv "$PREFIX" steel
-rm -rf steel/share/fstar
+rm -rf steel/share/fstar steel/INSTALL.md steel/README.md steel/version.txt
+$cp package-README.md steel/README.md
 if [[ "$OS" = Windows_NT ]] ; then
   zip -r -9 steel.zip steel
 else
