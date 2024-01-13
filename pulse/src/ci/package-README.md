@@ -3,7 +3,7 @@
 ## Contents of this package
 
 This binary package contains z3 4.8.5, F*, Karamel, Steel, Pulse, and
-Pulse2Rust:
+(except on Windows) Pulse2Rust:
 
 * in `bin`: the executables for z3, F* and Karamel
 
@@ -36,7 +36,8 @@ Pulse2Rust:
   * in `lib`: the Pulse user library files (namespace `Pulse.Lib`)
   * in `_output/cache`: the corresponding `.checked` files
 
-* in `pulse2rust`: the executable for Pulse2Rust.
+* in `pulse2rust`: the executable for Pulse2Rust. (Absent from the
+  Windows binary package)
 
 ## Using Steel and Pulse
 
