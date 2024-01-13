@@ -168,7 +168,7 @@ let sorted (s: Seq.seq int)
 
 let to_nat (x: int{x >= 0}): nat = x
 
-#push-options "--z3rlimit 30"
+#push-options "--z3rlimit 50"
 
 (* Proof below is flaky for whatever reason on 4.8.5, but not
 4.12.3. Use this for now. *)
@@ -279,7 +279,7 @@ let transfer_smaller_slice (s: Seq.seq int) (l: nat) (r: nat{l <= r /\ r <= Seq.
     (ensures smaller_than (Seq.slice s l r) rb)
 = ()
 
-#push-options "--z3rlimit 30"
+#push-options "--z3rlimit 50"
 ```pulse
 fn partition_wrapper (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi - 1})) (n: nat) (lb rb: int) (#s0: Ghost.erased (Seq.seq int))
   requires (
