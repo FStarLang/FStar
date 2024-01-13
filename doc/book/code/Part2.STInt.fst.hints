@@ -22,7 +22,7 @@
         "token_correspondence_Part2.STInt.op_let_Bang"
       ],
       0,
-      "70b6abcf3babf1aa584e67f04fdebce5"
+      "0043ad7327d877ebdaab4ab3a55de84c"
     ],
     [
       "Part2.STInt.right_identity",
@@ -46,7 +46,7 @@
         "token_correspondence_Part2.STInt.op_let_Bang"
       ],
       0,
-      "d136b7888be008aa4bf9f827c1de4e68"
+      "4c8dcfebcec3f896976179d4c84646ec"
     ],
     [
       "Part2.STInt.associativity",
@@ -64,7 +64,7 @@
         "token_correspondence_Part2.STInt.op_let_Bang"
       ],
       0,
-      "1a13ba0ebbfae59c1c3bc79321865ce4"
+      "4583ebc9284cb94927f63539b6409e4c"
     ],
     [
       "Part2.STInt.redundant_read_elim",
@@ -85,7 +85,7 @@
         "token_correspondence_Part2.STInt.op_let_Bang"
       ],
       0,
-      "4a2ed243f85015b75de531aeb126d7ec"
+      "62e7ea44047b7fdc4a754bd45d603b60"
     ],
     [
       "Part2.STInt.redundant_write_elim",
@@ -103,7 +103,7 @@
         "token_correspondence_Part2.STInt.op_let_Bang"
       ],
       0,
-      "4871dad54495f761aaa3d2087bbd707a"
+      "e03c68f61e51ad3ddbeac0cc49c10b39"
     ],
     [
       "Part2.STInt.read_write_noop",
@@ -127,7 +127,7 @@
         "token_correspondence_Part2.STInt.op_let_Bang"
       ],
       0,
-      "6134761d33f4404367a406bdb1d45289"
+      "65ac9503a9fbd5034dcd7aa31dbfd58c"
     ]
   ]
 ]

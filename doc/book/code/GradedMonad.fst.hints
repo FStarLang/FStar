@@ -1,5 +1,5 @@
 [
-  "Ï®1\bŒŸßÔQsVPº\u0001ˆ|",
+  "§|\u001b\në<~\u001e:1$µmô÷°",
   [
     [
       "GradedMonad.monoid_nat_plus",
@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "9c88f4524ba31a5a8b7d1c728c96dbfe"
+      "5a666af78f62fee0d61c876830edaa54"
     ],
     [
       "GradedMonad.count_bind",
@@ -25,7 +25,7 @@
         "refinement_interpretation_Tm_refine_a44985b7c511fba5ee2addbf6c22f4fa"
       ],
       0,
-      "0ce6dff6b2937c9afd73228a7d36e9af"
+      "e8cb126f3e895431d167b5315c917beb"
     ]
   ]
 ]

@@ -15,7 +15,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "2d1dea66dbda80525a643f561433ece8"
+      "76b2cf13286d3a8897bd095cd29c25eb"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.simpl_ex2",
@@ -30,7 +30,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "51e46bf081260032672886704e49f03c"
+      "dc0559548f8651a2a575ade352b66491"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.ci_ex1",
@@ -48,7 +48,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "fc85897b21225ed34a4a40759b5f11dc"
+      "1a3186291c81acdf88d5674e1dce1e4f"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.ci_ex2",
@@ -57,7 +57,7 @@
       0,
       [ "@query" ],
       0,
-      "209759a08b3b6b1dc4fa451697582662"
+      "fc2bceaf36f2190de1a56276ded7ba50"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.ci_ex3",
@@ -70,7 +70,7 @@
         "primitive_Prims.op_Addition"
       ],
       0,
-      "609de696a25728f7a2157ffca4d042b3"
+      "6d7e1fb9446c28db3cb3a66c886d970e"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.ci_ex4",
@@ -83,7 +83,7 @@
         "refinement_interpretation_Tm_refine_c60d276dd0e4be790a2120a44d571d0d"
       ],
       0,
-      "c496a725f6fd04df627efda9ab3bf9c4"
+      "91c1c14b3999c09252a91d74a032a34b"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.split_ex1",
@@ -102,7 +102,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "1e70cacdbc51ff5db2f41120662b97c6"
+      "c9ff82c975a460c5e1a8086dbf325c5a"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.ut_ex1",
@@ -121,7 +121,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "7ade056fe4f7314d0c95d299f594c654"
+      "3c951f58db1f5c0365d7afac39d9ed0f"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.ut_ex2",
@@ -130,7 +130,7 @@
       0,
       [ "@query" ],
       0,
-      "40e374181672e4dab0676ed33cd5a916"
+      "c637f397b55072c810afbf0362b54f55"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.cc_ex1",
@@ -144,7 +144,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "df8910f6c98ff21f34b5ec6a6ab8b6c1"
+      "80968f1725f6aeb4a2e2196dadd555d3"
     ],
     [
       "FStar.InteractiveHelpers.Tutorial.ts_ex1",
@@ -160,7 +160,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "83132cf71515c33147efedc8690c7c25"
+      "23136f7d165a8864cd62d625a2e8c162"
     ]
   ]
 ]
