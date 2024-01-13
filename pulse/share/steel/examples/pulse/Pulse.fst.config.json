@@ -6,7 +6,9 @@
     "--cache_dir",
     "_output/cache",
     "--using_facts_from",
-    "* -FStar.Tactics -FStar.Reflection"
+    "* -FStar.Tactics -FStar.Reflection",
+    "--warn_error", 
+    "-249"
   ],
   "include_dirs": [
     "../../../../lib/steel/pulse",

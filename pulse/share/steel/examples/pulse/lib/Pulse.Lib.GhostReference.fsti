@@ -32,15 +32,23 @@ val pts_to (#a:Type)
 val alloc (#a:Type) (x:a)
   : stt_ghost (ref a) emp_inames emp (fun r -> pts_to r x)
   
+val read (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
+  : stt_ghost (erased a) emp_inames
+        (pts_to r #p n)
+        (fun x -> pts_to r #p n ** pure (n == x))
+
 val ( ! ) (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
   : stt_ghost (erased a) emp_inames
         (pts_to r #p n)
         (fun x -> pts_to r #p n ** pure (n == x))
 
+
 val ( := ) (#a:Type) (r:ref a) (x:erased a) (#n:erased a)
   : stt_ghost unit emp_inames
         (pts_to r n) 
         (fun _ -> pts_to r x)
+
+let write = ( := )
 
 val free (#a:Type) (r:ref a) (#n:erased a)
   : stt_ghost unit emp_inames (pts_to r n) (fun _ -> emp)

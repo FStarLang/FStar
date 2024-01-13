@@ -1,5 +1,7 @@
 open Prims
 let read p s arr len i = Pulse_Lib_Array_Core.op_Array_Access arr i () ()
+
+//majorityocaml$
 let majority p s votes len =
   let i = Pulse_Lib_Reference.alloc (FStar_SizeT.uint_to_t Prims.int_one) in
   let k = Pulse_Lib_Reference.alloc (FStar_SizeT.uint_to_t Prims.int_one) in
@@ -83,5 +85,6 @@ let majority p s votes len =
          then FStar_Pervasives_Native.Some vcand
          else FStar_Pervasives_Native.None) in
   let cand1 = _bind_c in let k1 = cand1 in let i1 = k1 in i1
+//majorityocamlend$
 type u32_t = FStar_UInt32.t
 let majority_mono p s votes len = majority () () votes len
