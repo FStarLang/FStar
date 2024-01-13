@@ -129,7 +129,7 @@ ensures  pts_to x ('i + 2)
 /////////////////////////////////////////////////////////////////////////
 
 //Parameterize incr by the ghost steps it needs to take
-//give it an abstract spec in terms of some call-provided qpred
+//give it an abstract spec in terms of some call-provided aspec
 ```pulse //incr$
 fn incr (x: ref int)
         (#refine #aspec: int -> vprop)
@@ -224,6 +224,7 @@ ensures pts_to x ('i + 2)
 
 // Doing this with int instead of U32, just to keep it a bit simpler
 // assuming atomic_read and cas on int
+//atomic_primitives$
 assume
 val atomic_read (r:ref int) (#p:_) (#i:erased int)
   : stt_atomic int emp_inames 
@@ -237,40 +238,46 @@ val cas (r:ref int) (u v:int) (#i:erased int)
     (fun b ->
       cond b (pts_to r v ** pure (reveal i == u)) 
              (pts_to r i))
+//atomic_primitives$
 
 //This provides a way to allocate an invariant
 //and then discard it
 module C = Pulse.Lib.CancellableInvariant
 
-```pulse //incr_atomic$
+```pulse //incr_atomic_spec$
 fn incr_atomic
         (x: ref int)
         (#p:perm)
         (#t:erased C.token)
-        (#pred #qpred: int -> vprop)
-        (l:inv (C.cancellable t (exists* v. pts_to x v ** pred v)))
+        (#refine #aspec: int -> vprop)
+        (l:inv (C.cancellable t (exists* v. pts_to x v ** refine v)))
         (f: (v:int -> vq:int -> stt_ghost unit emp_inames 
-                  (pred v ** qpred vq ** pts_to x (v + 1))
-                  (fun _ -> pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))))
-requires qpred 'i ** C.active p t
-ensures qpred ('i + 1) ** C.active p t
+                  (refine v ** aspec vq ** pts_to x (v + 1))
+                  (fun _ -> refine (v + 1) ** aspec (vq + 1) ** pts_to x (v + 1))))
+requires aspec 'i ** C.active p t
+ensures aspec ('i + 1) ** C.active p t
+//incr_atomic_body$
 {
+  //incr_atomic_body_read$
+  atomic
   fn read ()
   requires C.active p t
   returns v:int
   ensures C.active p t
+  opens (add_inv emp_inames l)
   {
     with_invariants l
     {
         C.take _;
-        with _v. _;
         let v = atomic_read x;
-        C.restore (exists* v. pts_to x v ** pred v);
+        C.restore (exists* v. pts_to x v ** refine v);
         v
     }
   };
+  //incr_atomic_body_read$
+  //incr_atomic_body_loop$
   let mut continue = true;
-  fold (cond true (qpred 'i) (qpred ('i + 1)));
+  fold (cond true (aspec 'i) (aspec ('i + 1)));
   while (
     with _b. _;
     let b = !continue;
@@ -280,13 +287,13 @@ ensures qpred ('i + 1) ** C.active p t
   invariant b.
     pts_to continue b **
     C.active p t **
-    cond b (qpred 'i) (qpred ('i + 1))
+    cond b (aspec 'i) (aspec ('i + 1))
   {
     let v = read ();
     let next = 
       with_invariants l
       returns b1:bool
-      ensures cond b1 (qpred 'i) (qpred ('i + 1))
+      ensures cond b1 (aspec 'i) (aspec ('i + 1))
           ** pts_to continue true
           ** C.active p t
       {
@@ -297,19 +304,20 @@ ensures qpred ('i + 1) ** C.active p t
           elim_cond_true b _ _;
           elim_cond_true true _ _;
           f _ _;
-          intro_cond_false (qpred 'i) (qpred ('i + 1));
-          C.restore (exists* v. pts_to x v ** pred v);
+          intro_cond_false (aspec 'i) (aspec ('i + 1));
+          C.restore (exists* v. pts_to x v ** refine v);
           false
         }
         else
         {
           with p q. rewrite (cond b p q) as q;
-          C.restore (exists* v. pts_to x v ** pred v);
+          C.restore (exists* v. pts_to x v ** refine v);
           true
         }
       };
     continue := next
   };
+  //incr_atomic_body_loop$
   unfold cond;
 }
 ```
