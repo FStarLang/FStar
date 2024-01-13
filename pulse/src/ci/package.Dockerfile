@@ -1,7 +1,7 @@
 # This Dockerfile should be run from the root Steel directory
 
 ARG ocaml_version=4.12
-FROM ocaml/opam:ubuntu-22.04-ocaml-$ocaml_version
+FROM ocaml/opam:ubuntu-20.04-ocaml-$ocaml_version
 
 # CI dependencies for the Wasm11 test: node.js
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
