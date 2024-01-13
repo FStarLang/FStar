@@ -5,6 +5,41 @@ module L = Pulse.Lib.SpinLock
 module GR = Pulse.Lib.GhostReference
 module R = Pulse.Lib.Reference
 
+```pulse //par$
+fn par (#pf #pg #qf #qg:_)
+       (f: unit -> stt unit pf (fun _ -> qf))
+       (g: unit -> stt unit pg (fun _ -> qg))
+requires pf ** pg
+ensures qf ** qg
+{
+  parallel 
+  requires pf and pg
+  ensures qf and qg
+  { f () }
+  { g () };
+  ()
+}
+```
+
+```pulse //attempt$
+fn attempt (x:ref int)
+requires pts_to x 'i
+ensures emp
+{
+  let l = L.new_lock (exists* v. pts_to x v);
+  fn incr ()
+  requires emp
+  ensures emp
+  {
+    L.acquire l;
+    let v = !x;
+    x := v + 1;
+    L.release l
+  };
+  par incr incr
+}
+```
+
 //lock_inv$
 let contributions (left right: GR.ref int) (i v:int)=
   exists* (vl vr:int).
@@ -12,13 +47,13 @@ let contributions (left right: GR.ref int) (i v:int)=
     GR.pts_to right #one_half vr **
     pure (v == i + vl + vr)
 
-let lock_inv (x:ref int) (init:int) (l r:GR.ref int) =
+let lock_inv (x:ref int) (init:int) (left right:GR.ref int) =
   exists* v. 
     pts_to x v **
-    contributions l r init v
+    contributions left right init v
 //lock_inv$
 
-```pulse //incr_left
+```pulse //incr_left$
 fn incr_left (x:ref int)
              (#left:GR.ref int)
              (#right:GR.ref int)
@@ -36,7 +71,7 @@ ensures  GR.pts_to left #one_half ('vl + 1)
   GR.write left ('vl + 1);
   GR.share left;
   fold (contributions left right i (v + 1));
-  fold (lock_inv x i left right);
+  fold lock_inv;
   L.release lock
 }
 ```
@@ -63,23 +98,6 @@ ensures  GR.pts_to right #one_half ('vl + 1)
   L.release lock
 }
 ```
-
-```pulse //par$
-fn par (#pf #pg #qf #qg:_)
-       (f: unit -> stt unit pf (fun _ -> qf))
-       (g: unit -> stt unit pg (fun _ -> qg))
-requires pf ** pg
-ensures qf ** qg
-{
-  parallel 
-  requires pf and pg
-  ensures qf and qg
-  { f () }
-  { g () };
-  ()
-}
-```
-
 
 ```pulse //add2$
 fn add2 (x:ref int)
@@ -114,27 +132,28 @@ ensures  pts_to x ('i + 2)
 //give it an abstract spec in terms of some call-provided qpred
 ```pulse //incr$
 fn incr (x: ref int)
-        (#pred #qpred: int -> vprop)
-        (l:L.lock (exists* v. pts_to x v ** pred v))
-        (f: (v:int -> vq:int -> stt_ghost unit emp_inames 
-               (pred v ** qpred vq ** pts_to x (v + 1))
-               (fun _ -> pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))))
-requires qpred 'i
-ensures qpred ('i + 1)
+        (#refine #aspec: int -> vprop)
+        (l:L.lock (exists* v. pts_to x v ** refine v))
+        (ghost_steps: 
+          (v:int -> vq:int -> stt_ghost unit emp_inames 
+               (refine v ** aspec vq ** pts_to x (v + 1))
+               (fun _ -> refine (v + 1) ** aspec (vq + 1) ** pts_to x (v + 1))))
+requires aspec 'i
+ensures aspec ('i + 1)
  {
     L.acquire l;
     with _v. _;
     let vx = !x;
     rewrite each _v as vx;
     x := vx + 1;
-    f vx 'i;
+    ghost_steps vx 'i;
     L.release l;
 }
 ```
 
 //At the call-site, we instantiate incr twice, with different
 //ghost steps
-```pulse //add_v2
+```pulse //add2_v2$
 fn add2_v2 (x: ref int)
 requires pts_to x 'i
 ensures pts_to x ('i + 2)
@@ -196,7 +215,6 @@ ensures pts_to x ('i + 2)
 ```
 
 //Note, rather than using two ghost references and duplicating code
-//in the branches of the ghost step, we could also use a PCM of fractional
 //monoids and use just a single piece of ghost state. But, that's for another
 //chapter
 
