@@ -1,0 +1,66 @@
+[
+  "ÞÎßúÎ>\u001e›Gñ\u001fmù|(Ö",
+  [
+    [
+      "FStar.Pure.BreakVC.mono_lem",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "521b2a528783e358e42c95f0d52607a5"
+    ],
+    [
+      "FStar.Pure.BreakVC.mono_lem",
+      2,
+      2,
+      1,
+      [ "@query", "unit_typing" ],
+      0,
+      "61ab4ac8281e28cb6818eb0ed27183ce"
+    ],
+    [
+      "FStar.Pure.BreakVC.break_wp",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ad650ce7368b2f1ee753e405cdeb9828"
+    ],
+    [
+      "FStar.Pure.BreakVC.squash_p_impl_p",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "792555c872347233f5efff6039290d6c"
+    ],
+    [
+      "FStar.Pure.BreakVC.aux2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Pure.BreakVC.op_Equals_Equals_Greater_Greater",
+        "equation_Prims.squash",
+        "l_quant_interp_19108486a61e8c99648dd590efce18ff",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "unit_typing"
+      ],
+      0,
+      "af440eff1df6da94205cbcbf3a9409dc"
+    ],
+    [
+      "FStar.Pure.BreakVC.break_vc",
+      1,
+      2,
+      1,
+      [ "@MaxIFuel_assumption", "@query", "unit_inversion" ],
+      0,
+      "d474160419628d4348e4860df4ce9b72"
+    ]
+  ]
+]
