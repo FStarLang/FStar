@@ -33,7 +33,12 @@ if ! [[ -f LICENSE-z3.txt ]] ; then
 fi
 
 # build a F* package
-[[ -n "$FSTAR_HOME" ]]
+if [[ -z "$FSTAR_HOME" ]] ; then
+   if ! [[ -d FStar ]] ; then
+       git clone https://github.com/FStarLang/FStar
+   fi
+   FSTAR_HOME=$(pwd)/FStar
+fi
 export FSTAR_HOME=$(fixpath "$FSTAR_HOME")
 old_FSTAR_HOME="$FSTAR_HOME"
 fstar_package_dir=$(fixpath "$FSTAR_HOME"/src/ocaml-output/fstar)
@@ -41,7 +46,12 @@ rm -rf "$fstar_package_dir"
 Z3_LICENSE=$(pwd)/LICENSE-z3.txt make -C "$FSTAR_HOME" package "$@"
 
 # build Karamel and add it to the package
-[[ -n "$KRML_HOME" ]]
+if [[ -z "$KRML_HOME" ]] ; then
+    if ! [[ -d karamel ]] ; then
+        git clone https://github.com/FStarLang/karamel
+    fi
+    KRML_HOME=$(pwd)/karamel
+fi
 export KRML_HOME=$(fixpath "$KRML_HOME")
 make -C "$KRML_HOME" minimal "$@"
 OTHERFLAGS='--admit_smt_queries true' make -C "$KRML_HOME"/krmllib verify-all "$@"
