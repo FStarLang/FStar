@@ -52,7 +52,7 @@ fn incr_explicit_i (x:ref int) (i:erased int)
 requires pts_to x i
 ensures pts_to x (i + 1)
 {
-    let v = !x;q
+    let v = !x;
     x := v + 1;
 }
 ```
