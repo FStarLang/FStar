@@ -21,6 +21,40 @@ ensures qf ** qg
 }
 ```
 
+```pulse
+fn incr2 (x y:ref int)
+requires pts_to x 'i ** pts_to y 'j
+ensures pts_to x ('i + 1) ** pts_to y ('j + 1)
+{
+  fn incr (x:ref int) (#i:erased int)
+  requires pts_to x i
+  ensures pts_to x (i + 1)
+  {
+    let v = !x;
+    x := v + 1;
+  };
+  par (fun _ -> incr x) (fun _ -> incr y);
+}
+```
+
+
+[@@expect_failure]
+```pulse
+fn attempt0 (x:ref int)
+requires pts_to x 'i
+ensures pts_to x ('i + 2)
+{
+  fn incr (#i:erased int)
+  requires pts_to x i
+  ensures pts_to x (i + 1)
+  {
+    let v = !x;
+    x := v + 1;
+  };
+  par (fun _ -> incr) (fun _ -> incr);
+}
+```
+
 ```pulse //attempt$
 fn attempt (x:ref int)
 requires pts_to x 'i

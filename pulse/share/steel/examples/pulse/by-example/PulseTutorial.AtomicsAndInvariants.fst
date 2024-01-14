@@ -27,7 +27,7 @@ ensures emp
 opens (singleton i)
 {
   with_invariants i {    //owns r
-     unfold owns;        //ghost step;  exists* u. pts_to r u
+     showunfold owns;        //ghost step;  exists* u. pts_to r u
      write_atomic r v;   //atomic step; pts_to r v
      fold owns;          //ghost step;  owns r
   }

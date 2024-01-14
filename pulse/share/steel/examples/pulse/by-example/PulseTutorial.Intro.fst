@@ -35,6 +35,7 @@ ensures q ** s
 }
 ```
 
+let incr_functional (x:int) = x + 1
 
 ```pulse //incr
 fn incr (x:ref int)
@@ -51,7 +52,7 @@ fn incr_explicit_i (x:ref int) (i:erased int)
 requires pts_to x i
 ensures pts_to x (i + 1)
 {
-    let v = !x;
+    let v = !x;q
     x := v + 1;
 }
 ```
