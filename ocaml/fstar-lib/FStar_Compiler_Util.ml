@@ -854,7 +854,15 @@ let file_get_lines f =
   close_in ic;
   List.rev l
 let concat_dir_filename d f = Filename.concat d f
-let mkdir clean nm =
+
+let slash_code : int =
+  BatUChar.code (BatUChar.of_char '/')
+
+let path_parent (fn : string) : string =
+    let cs = FStar_String.split [slash_code] fn in
+    FStar_String.concat "/" (FStar_List.init cs)
+
+let rec __mkdir clean mkparents nm =
   let remove_all_in_dir nm =
     let open Sys in
     Array.iter remove (Array.map (concat_dir_filename nm) (readdir nm)) in
@@ -862,9 +870,18 @@ let mkdir clean nm =
   (match Sys.os_type with
   | "Unix" -> ignore (umask 0o002)
   | _ -> (* unimplemented*) ());
-  try mkdir nm 0o777
-  with Unix_error (EEXIST,_,_) ->
+  try Unix.mkdir nm 0o777
+  with
+  | Unix_error (EEXIST, _, _) ->
     if clean then remove_all_in_dir nm
+
+  (* failed due to existing directory, mkparents is true, and nm has a slash:
+      attempt to recursively create parent and retry. *)
+  | Unix_error (ENOENT, _, _) when mkparents && FStar_String.index_of nm slash_code <> (Z.of_int (-1)) ->
+    __mkdir false true (path_parent nm);
+    Unix.mkdir nm 0o777
+
+let mkdir = __mkdir
 
 let for_range lo hi f =
   for i = Z.to_int lo to Z.to_int hi do

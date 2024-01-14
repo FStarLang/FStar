@@ -159,7 +159,14 @@ val copy_file: string -> string -> unit
 val delete_file: string -> unit
 val file_get_contents: string -> string
 val file_get_lines: string -> list string
-val mkdir: bool-> string -> unit (* [mkdir clean d] a new dir with user read/write; else delete content of [d] if it exists && clean *)
+
+(** [mkdir clean mkparents d] a new dir with user read/write.
+If clean is set and the directory exists, its contents are deleted and nothing else is done.
+If clean is not set and the directory exists, do nothing.
+If mkparents is true, the needed parents of the path will be created too, as mkdir -p does.
+*)
+val mkdir: bool-> bool -> string -> unit
+
 val concat_dir_filename: string -> string -> string
 
 type stream_reader
