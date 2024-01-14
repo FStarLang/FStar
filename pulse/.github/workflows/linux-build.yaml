@@ -4,14 +4,22 @@ on:
 jobs:
   build:
     runs-on: [self-hosted, linux, X64]
-    defaults:
-      run:
-        # Setting the default shell to bash. This is not only more standard,
-        # but also makes sure that we run with -o pipefail, so we can safely
-        # pipe data (such as | tee LOG) without missing out on failures
-        # and getting false positives. If you want to change the default shell,
-        # keep in mind you need a way to handle this.
-        shell: bash
     steps:
       - name: Check out repo        
         uses: actions/checkout@v2
+      - name: Identify the base FStar branch and the notification channel
+        run: |
+          echo "FSTAR_BRANCH=$(jq -c -r '.BranchName' .docker/build/config.json)" >> $GITHUB_ENV
+      - name: Build Steel and its dependencies
+        run: |
+          ci_docker_image_tag=steel:local-binary-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
+          docker buildx build --secret id=DZOMO_GITHUB_TOKEN -t $ci_docker_image_tag -f src/ci/package.Dockerfile --build-arg FSTAR_BRANCH=$FSTAR_BRANCH --build-arg CI_BRANCH=$GITHUB_REF_NAME .
+          docker run $ci_docker_image_tag /bin/bash -c 'cat $STEEL_HOME/src/ci/steel.tar.gz || true' > steel.tar.gz
+          gunzip steel.tar.gz
+        env:
+          DZOMO_GITHUB_TOKEN: ${{ secrets.DZOMO_GITHUB_TOKEN }}
+      - name: Archive Steel package
+        uses: actions/upload-artifact@v3
+        with:
+          name: steel.tar
+          path: steel.tar

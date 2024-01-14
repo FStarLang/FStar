@@ -7,7 +7,7 @@
   (no-infer
    (progn
     (run cargo build)
-    (run cp target/debug/deps/librustast_bindings.a ./librustast_bindings.a)
+    (run cp target/debug/librustast_bindings.a ./librustast_bindings.a)
    ))))
 
 (executable
