@@ -7,7 +7,7 @@ authors = ["Aseem Rastogi"]
 edition = "2018"
 
 [lib]
-crate-type = ["staticlib", "cdylib"]
+crate-type = ["staticlib"]
 path = "rust/src/lib.rs"
 
 [dependencies]
