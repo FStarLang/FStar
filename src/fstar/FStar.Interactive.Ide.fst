@@ -1142,6 +1142,10 @@ let rec run_query st (q: query) : (query_status * list json) * either repl_state
     let res = fold_query validate_and_run_query queries st in
     write_full_buffer_fragment_progress FullBufferFinished;
     res
+  | IgnoreErrors qq ->
+    (match run_query st { q with qq = qq } with
+    | (QueryNOK, _), st -> (QueryOK, []), st
+    | result -> result)
   | AutoComplete (search_term, context) ->
     as_json_list (run_autocomplete st search_term context)
   | Lookup (symbol, context, pos_opt, rq_info, symrange) ->

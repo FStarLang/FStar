@@ -129,6 +129,8 @@ type query' =
 // FullBuffer: To check the full contents of a document.
 // FStar.Interactive.Incremental parses it into chunks and turns this into several Push queries
 | FullBuffer of string & full_buffer_request_kind & bool //bool is with_symbol
+// Used internally by full-buffer for eager lookup queries
+| IgnoreErrors of query'
 // Callback: This is an internal query, it cannot be raised by a client.
 // It is useful to inject operations into the query stream.
 // e.g., Incremental uses it print progress messages to the client in between
@@ -240,7 +242,7 @@ let push_query_to_string pq =
      string_of_bool pq.push_peek_only;
      code_or_decl]
 
-let query_to_string q = match q.qq with
+let rec query_to_string q = match q.qq with
 | Exit -> "Exit"
 | DescribeProtocol -> "DescribeProtocol"
 | DescribeRepl -> "DescribeRepl"
@@ -263,18 +265,20 @@ let query_to_string q = match q.qq with
 | GenericError _ -> "GenericError"
 | ProtocolViolation _ -> "ProtocolViolation"
 | FullBuffer _ -> "FullBuffer"
+| IgnoreErrors qq -> "IgnoreErrors (" ^ query_to_string { q with qq = qq } ^ ")"
 | Callback _ -> "Callback"
 | Format _ -> "Format"
 | RestartSolver -> "RestartSolver"
 | Cancel _ -> "Cancel"
 
-let query_needs_current_module = function
+let rec query_needs_current_module = function
   | Exit | DescribeProtocol | DescribeRepl | Segment _
   | Pop | Push { push_peek_only = false } | VfsAdd _
   | GenericError _ | ProtocolViolation _
   | PushPartialCheckedFile _
   | FullBuffer _ | Callback _ | Format _ | RestartSolver | Cancel _ -> false
   | Push _ | AutoComplete _ | Lookup _ | Compute _ | Search _ -> true
+  | IgnoreErrors q -> query_needs_current_module q
 
 let interactive_protocol_vernum = 2
 

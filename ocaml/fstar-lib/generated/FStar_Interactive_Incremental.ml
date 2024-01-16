@@ -104,22 +104,24 @@ let (dump_symbols_for_lid :
     let position = ("<input>", start_line, start_col) in
     let uu___ =
       let uu___1 =
-        let uu___2 = FStar_Ident.string_of_lid l in
-        (uu___2, FStar_Interactive_Ide_Types.LKCode,
-          (FStar_Pervasives_Native.Some position),
-          ["type"; "documentation"; "defined-at"],
-          (FStar_Pervasives_Native.Some
-             (FStar_Json.JsonAssoc
-                [("fname", (FStar_Json.JsonStr "<input>"));
-                ("beg",
-                  (FStar_Json.JsonList
-                     [FStar_Json.JsonInt start_line;
-                     FStar_Json.JsonInt start_col]));
-                ("end",
-                  (FStar_Json.JsonList
-                     [FStar_Json.JsonInt end_line;
-                     FStar_Json.JsonInt end_col]))]))) in
-      FStar_Interactive_Ide_Types.Lookup uu___1 in
+        let uu___2 =
+          let uu___3 = FStar_Ident.string_of_lid l in
+          (uu___3, FStar_Interactive_Ide_Types.LKCode,
+            (FStar_Pervasives_Native.Some position),
+            ["type"; "documentation"; "defined-at"],
+            (FStar_Pervasives_Native.Some
+               (FStar_Json.JsonAssoc
+                  [("fname", (FStar_Json.JsonStr "<input>"));
+                  ("beg",
+                    (FStar_Json.JsonList
+                       [FStar_Json.JsonInt start_line;
+                       FStar_Json.JsonInt start_col]));
+                  ("end",
+                    (FStar_Json.JsonList
+                       [FStar_Json.JsonInt end_line;
+                       FStar_Json.JsonInt end_col]))]))) in
+        FStar_Interactive_Ide_Types.Lookup uu___2 in
+      FStar_Interactive_Ide_Types.IgnoreErrors uu___1 in
     as_query uu___
 let (dump_symbols :
   FStar_Parser_AST.decl -> FStar_Interactive_Ide_Types.query Prims.list qst)

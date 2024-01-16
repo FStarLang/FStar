@@ -2861,6 +2861,18 @@ let rec (run_query :
                   write_full_buffer_fragment_progress
                     FStar_Interactive_Incremental.FullBufferFinished;
                   res))))
+      | FStar_Interactive_Ide_Types.IgnoreErrors qq ->
+          let uu___ =
+            run_query st
+              {
+                FStar_Interactive_Ide_Types.qq = qq;
+                FStar_Interactive_Ide_Types.qid =
+                  (q.FStar_Interactive_Ide_Types.qid)
+              } in
+          (match uu___ with
+           | ((FStar_Interactive_Ide_Types.QueryNOK, uu___1), st1) ->
+               ((FStar_Interactive_Ide_Types.QueryOK, []), st1)
+           | result -> result)
       | FStar_Interactive_Ide_Types.AutoComplete (search_term1, context) ->
           let uu___ = run_autocomplete st search_term1 context in
           as_json_list uu___
