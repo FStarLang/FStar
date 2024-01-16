@@ -48,7 +48,7 @@
         "typing_tok_FStar.Pointer.Base.TInt@tok"
       ],
       0,
-      "7d9d4552ad0ecbbf44ee48fd48e41c07"
+      "f9c4c6696c83b98810023fc0ba7be1bb"
     ],
     [
       "Test.colored_object_struct",
@@ -102,7 +102,7 @@
         "typing_FStar.List.Tot.Base.noRepeats", "typing_Test.point_struct"
       ],
       0,
-      "de669361c747546f5659325ee6095462"
+      "d409c179bd7de073ae1cc6380fc083b3"
     ],
     [
       "Test.write_struct_field",
@@ -133,7 +133,7 @@
         "token_correspondence_FStar.Pointer.Base.type_of_struct_field_"
       ],
       0,
-      "e287f8f22ca3d8c58f597cb102cda089"
+      "e73ee9b07836241a880f655bcc10d3bb"
     ],
     [
       "Test.flip",
@@ -222,7 +222,7 @@
         "typing_Test.point_struct", "typing_Test.point_t"
       ],
       0,
-      "05e251681357f95a8b8bedb385d08fb1"
+      "07936b1a5dbddbf03754c84a60a38997"
     ],
     [
       "Test.flip'",
@@ -311,7 +311,7 @@
         "typing_Test.point_struct", "typing_Test.point_t"
       ],
       0,
-      "27d3637b23791a517cf84867caef16a7"
+      "3d44a73b62919e6329a4009f651939a5"
     ]
   ]
 ]

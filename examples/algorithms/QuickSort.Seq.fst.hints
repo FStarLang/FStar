@@ -8,7 +8,7 @@
       0,
       [ "@query" ],
       0,
-      "52a0b8151f3e54761526aa66db073d22"
+      "58c6a988aad42f4d938a45dc082b6f46"
     ],
     [
       "QuickSort.Seq.partition",
@@ -75,7 +75,7 @@
         "typing_FStar.Seq.Properties.count", "well-founded-ordering-on-nat"
       ],
       0,
-      "c65d15f5a3c8fe0b78eb7755e7715a26"
+      "1d41d0b0da3cdf51dcb5f73fed06db84"
     ],
     [
       "QuickSort.Seq.partition",
@@ -84,7 +84,7 @@
       0,
       [ "@query" ],
       0,
-      "b03dd712771da9b1ea77f6ae70bcf25f"
+      "e8060d3bcaf536797f082105b6cb9356"
     ],
     [
       "QuickSort.Seq.sort",
@@ -144,7 +144,7 @@
         "typing_FStar.Seq.Properties.mem", "well-founded-ordering-on-nat"
       ],
       0,
-      "a2f28f016c2ffbde936a82a45ce5e94d"
+      "d6d39e71d74b55b53b8854fd91d6e29b"
     ]
   ]
 ]

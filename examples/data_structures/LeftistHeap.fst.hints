@@ -23,7 +23,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "69a992adbedd67ad16924f759dee6c66"
+      "547ad3997a9a3d7dfe8361f853734e9e"
     ],
     [
       "LeftistHeap.sorted",
@@ -36,7 +36,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "7af417c561421690b4cda1cf70e00a6f"
+      "ebfc2029960717cd771a83cefb285f6a"
     ],
     [
       "LeftistHeap.transitivity",
@@ -53,7 +53,7 @@
         "token_correspondence_LeftistHeap.leq"
       ],
       0,
-      "4ecfbda4657052a98b2538593f52b863"
+      "4aa4b66f9e716aac727ecd9d6bb03b73"
     ],
     [
       "LeftistHeap.reflexivity",
@@ -70,7 +70,7 @@
         "token_correspondence_LeftistHeap.leq"
       ],
       0,
-      "392f6dcc2ff7fc037c79ebfa09c90fa4"
+      "04f2984f70a585be5603f48451587fe4"
     ],
     [
       "LeftistHeap.antisymmetry",
@@ -87,7 +87,7 @@
         "token_correspondence_LeftistHeap.leq"
       ],
       0,
-      "f5b40307b3f50c4226b40ab90f990b0b"
+      "018ae59dabb096bca6b628dc2bc8f118"
     ],
     [
       "LeftistHeap.total_order",
@@ -104,7 +104,7 @@
         "token_correspondence_LeftistHeap.leq"
       ],
       0,
-      "ae60b4c545b368c8bb8ae7ca4768e5db"
+      "7fd8a3b746e419b1794d0aee265ea3a8"
     ],
     [
       "LeftistHeap.ints_leq",
@@ -113,7 +113,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "int_inversion" ],
       0,
-      "67114e99aad11f91912edbd5880bd50d"
+      "5f2fd05dcea1fe163ebddae4b664be11"
     ],
     [
       "LeftistHeap.nats_leq",
@@ -128,7 +128,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "fdba486a2cd3ce462c0a9677b068a4dd"
+      "d9b21f381fd6a1ae4dc72ed4acc1a525"
     ],
     [
       "LeftistHeap.count",
@@ -147,7 +147,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "15fe6d8b89b13b048c38a1c7983e904e"
+      "25f0c4b6d3c3424aab5efed962507f95"
     ],
     [
       "LeftistHeap.lower_bounded",
@@ -164,7 +164,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c6946b04e186a1b23b5a8968fd285d76"
+      "762fe126a068e736af0e5d8657ad17a7"
     ],
     [
       "LeftistHeap.lower_bounded_trans",
@@ -199,7 +199,7 @@
         "typing_LeftistHeap.lower_bounded"
       ],
       0,
-      "9658206965b8789715ed6d103ece075a"
+      "235ce83a7e36693ebb76e5651944782a"
     ],
     [
       "LeftistHeap.sorted_then_lower_bounded",
@@ -240,7 +240,7 @@
         "typing_LeftistHeap.lower_bounded", "typing_LeftistHeap.sorted"
       ],
       0,
-      "f71aa93a1cec3dacca23e76139d744e0"
+      "096d25d5291b4df3fb6e4f2343891b88"
     ],
     [
       "LeftistHeap.lower_bounded_and_count",
@@ -280,7 +280,7 @@
         "typing_LeftistHeap.lower_bounded", "unit_inversion", "unit_typing"
       ],
       0,
-      "65cac4c125fd8c71542b290a03070eb6"
+      "c14272775a16570fb21aa97c550e71cf"
     ],
     [
       "LeftistHeap.injectivity_count_sorted",
@@ -294,7 +294,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "7061dd023a50b354097674d3013d6785"
+      "a5eed54cf50f2117ae1e44ced8def8ea"
     ],
     [
       "LeftistHeap.injectivity_count_sorted",
@@ -308,7 +308,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "03b5de46d44b165ae16d93f24514de17"
+      "779a0e0c6adbf0e98f61702b8720d4c2"
     ],
     [
       "LeftistHeap.injectivity_count_sorted",
@@ -323,7 +323,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "c2b6e96537b81d07960d246658c66f54"
+      "1f1e7799746f040578182b27b0b51ca7"
     ],
     [
       "LeftistHeap.injectivity_count_sorted",
@@ -337,7 +337,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "fdbbe14bcbc803f8a319d4aa90cf5f30"
+      "69ac4e0daba99b547ab616c26c4857f9"
     ],
     [
       "LeftistHeap.injectivity_count_sorted",
@@ -349,7 +349,7 @@
         "refinement_interpretation_Tm_refine_0d9f94422821299632eb46bc1af4f8ef"
       ],
       0,
-      "09efae27d74b053d013a5e6bad3b0e7f"
+      "32e5c5db6e8537865de993c3504683e1"
     ],
     [
       "LeftistHeap.injectivity_count_sorted",
@@ -380,7 +380,7 @@
         "token_correspondence_LeftistHeap.count.fuel_instrumented"
       ],
       0,
-      "3a40a3bf3ca6f2603ff52096bbfe66ee"
+      "e9d6932e9be35cf6da336599cbf9d58a"
     ],
     [
       "LeftistHeap.injectivity_count_sorted",
@@ -394,7 +394,7 @@
         "refinement_interpretation_Tm_refine_a7f5be2562c0b20fa34b05d9da74fd79"
       ],
       0,
-      "636f3ba8667f8c7d1b7d92c0c46422af"
+      "65bf3ba118b96d7630fe26d7ca8ca899"
     ],
     [
       "LeftistHeap.injectivity_count_sorted",
@@ -409,7 +409,7 @@
         "refinement_interpretation_Tm_refine_a7f5be2562c0b20fa34b05d9da74fd79"
       ],
       0,
-      "482bdf14a9bd4d6bfebf4909814f8747"
+      "e795cfb4b29d654f0e5d90f1978b1224"
     ],
     [
       "LeftistHeap.injectivity_count_sorted",
@@ -421,7 +421,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "0e5e1a2fece2c9901b86ff8463a1d417"
+      "b3b33a4ac8611f2829f20e69e43a9cd6"
     ],
     [
       "LeftistHeap.injectivity_count_sorted",
@@ -435,7 +435,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "235db13ed5076af6539d17815a19bd5e"
+      "a11ed087a47d9a7180a3c6431a5f33a6"
     ],
     [
       "LeftistHeap.injectivity_count_sorted",
@@ -447,7 +447,7 @@
         "refinement_interpretation_Tm_refine_0d9f94422821299632eb46bc1af4f8ef"
       ],
       0,
-      "1c7683bd5123b55e3dbaaefea4a4252e"
+      "682009b83f8c55486f88de80f9af4e31"
     ],
     [
       "LeftistHeap.injectivity_count_sorted",
@@ -474,7 +474,7 @@
         "token_correspondence_LeftistHeap.count.fuel_instrumented"
       ],
       0,
-      "3b47760926053b68fea23592c2b960bc"
+      "1b68dd92979bd068dfd60207c22daeee"
     ],
     [
       "LeftistHeap.injectivity_count_sorted",
@@ -488,7 +488,7 @@
         "refinement_interpretation_Tm_refine_a7f5be2562c0b20fa34b05d9da74fd79"
       ],
       0,
-      "090f7fcffc44a5ea43add193f5dc9bd0"
+      "8a9d40b18d57e9865f08a90091a03af7"
     ],
     [
       "LeftistHeap.injectivity_count_sorted",
@@ -503,7 +503,7 @@
         "refinement_interpretation_Tm_refine_a7f5be2562c0b20fa34b05d9da74fd79"
       ],
       0,
-      "f8202305b9e4812ce6c8b4c37f6e7b50"
+      "99638a761f203f75977b3039ce099285"
     ],
     [
       "LeftistHeap.injectivity_count_sorted",
@@ -515,7 +515,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "9837c700d9d8562912692237e9e85b46"
+      "d5cb953d95000fe153eefe90e78d8161"
     ],
     [
       "LeftistHeap.injectivity_count_sorted",
@@ -524,7 +524,7 @@
       1,
       [ "@query", "b2t_def" ],
       0,
-      "5e3a2619dc391eed74cfc840569f6e86"
+      "8944a4007a294c76602047fbf90ee216"
     ],
     [
       "LeftistHeap.injectivity_count_sorted",
@@ -533,7 +533,7 @@
       1,
       [ "@query", "b2t_def" ],
       0,
-      "81ad8f417e4768f64a3f6fa252890c51"
+      "4a81dbb9142b1e58b042b72df54cccb6"
     ],
     [
       "LeftistHeap.injectivity_count_sorted",
@@ -549,7 +549,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "81f5128300d7d84ad0e797a112b0d76b"
+      "18bfe899251456bd90bb9861d6b43dcf"
     ],
     [
       "LeftistHeap.injectivity_count_sorted",
@@ -579,7 +579,7 @@
         "typing_LeftistHeap.count"
       ],
       0,
-      "c964379493ec20822d34cc8e962c865e"
+      "52ecf946a4ace725c2f291612899cf8a"
     ],
     [
       "LeftistHeap.injectivity_count_sorted",
@@ -607,7 +607,7 @@
         "typing_LeftistHeap.sorted"
       ],
       0,
-      "3d3da1cdc988fdb19546c630b639ab2e"
+      "22219056e5075d45c08f86548feffbfe"
     ],
     [
       "LeftistHeap.injectivity_count_sorted",
@@ -636,7 +636,7 @@
         "typing_LeftistHeap.sorted"
       ],
       0,
-      "a77e52f5bdcbedcb6ceb2a094aa8fb44"
+      "1c3f0c39a5ab2dbdb933061650eabb85"
     ],
     [
       "LeftistHeap.injectivity_count_sorted",
@@ -654,7 +654,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "5b77e0f08817aa73c99dd0f639e2108d"
+      "3cbc24b3d4eeafc5daac16788fb67dcc"
     ],
     [
       "LeftistHeap.injectivity_count_sorted",
@@ -690,7 +690,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "3073eb0d952641639dc868b8b9367c62"
+      "ec3bc4fd42c71b7c6cf35f4c341673c5"
     ],
     [
       "LeftistHeap.injectivity_count_sorted",
@@ -704,7 +704,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "550fbb52715bede155ee86177cf69f79"
+      "8221fffe324a86a69ba42b58c552fb9b"
     ],
     [
       "LeftistHeap.injectivity_count_sorted",
@@ -718,7 +718,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b3944bc2925e1328ad7fed69214c161b"
+      "fc7654b109b599655e1656dfe4f43529"
     ],
     [
       "LeftistHeap.injectivity_count_sorted",
@@ -731,7 +731,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "97d142450a68dabc3ccc894aadc1e751"
+      "8d006b018c1470d25d5ccbb4c1964406"
     ],
     [
       "LeftistHeap.merge_count",
@@ -775,7 +775,7 @@
         "typing_LeftistHeap.merge", "unit_inversion", "unit_typing"
       ],
       0,
-      "7fc0fe443aad2b11f8319b1156a63317"
+      "29c075a8b2e005f2d2d3dfad0727fe7a"
     ],
     [
       "LeftistHeap.sorted_merge",
@@ -816,7 +816,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "10695fe9d8bbd5904f834258a65ea7de"
+      "86740aa6768bca88bfa95c4481b1d8f7"
     ],
     [
       "LeftistHeap.merge_lower_bounded",
@@ -857,7 +857,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "602950f2f6a7f8a7c6f14db467930dfe"
+      "d4cab00bf9eea9810d69ac0ef0dca5fa"
     ],
     [
       "LeftistHeap.heap",
@@ -871,7 +871,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "5d6c3643a58ef53b9e97bb046fa02f34"
+      "7bf3a4d0a554aa72bd7a396a44c8fda3"
     ],
     [
       "LeftistHeap.__proj__Node__item__key",
@@ -883,7 +883,7 @@
         "refinement_interpretation_Tm_refine_24fc79973b38ca9a10812bfc6d1e3bf6"
       ],
       0,
-      "448826ea26bf487308e08ea65d16b398"
+      "77e1e932921ceeb1381f7b5a192e60dd"
     ],
     [
       "LeftistHeap.__proj__Node__item__left",
@@ -895,7 +895,7 @@
         "refinement_interpretation_Tm_refine_24fc79973b38ca9a10812bfc6d1e3bf6"
       ],
       0,
-      "848790b4ed7351e6d8c82252ea693630"
+      "a2fc5a39b629e299dc6998f8966f8823"
     ],
     [
       "LeftistHeap.__proj__Node__item__right",
@@ -907,7 +907,7 @@
         "refinement_interpretation_Tm_refine_24fc79973b38ca9a10812bfc6d1e3bf6"
       ],
       0,
-      "8583847d34b6f784218ad8e9c444be94"
+      "85b1553ea7a749055f1119e985197d7d"
     ],
     [
       "LeftistHeap.__proj__Node__item__rank",
@@ -919,7 +919,7 @@
         "refinement_interpretation_Tm_refine_24fc79973b38ca9a10812bfc6d1e3bf6"
       ],
       0,
-      "9752687ac4cbb61aefd7c31854df3bb2"
+      "55be87c16373ccc6172dc1075f837638"
     ],
     [
       "LeftistHeap.size",
@@ -937,7 +937,7 @@
         "subterm_ordering_LeftistHeap.Node"
       ],
       0,
-      "1f8891ea406148202c5bd149464e2001"
+      "8181cc1fe77dca4ccccdf12fc0be4a28"
     ],
     [
       "LeftistHeap.lower_bounded_heap",
@@ -955,7 +955,7 @@
         "subterm_ordering_LeftistHeap.Node"
       ],
       0,
-      "99d2c2721083e189bbbf47d06ad49915"
+      "9285c755e3c264e9e0ba6958ffc9d2bb"
     ],
     [
       "LeftistHeap.heap_property",
@@ -969,7 +969,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "2d27c62d1dce6d64af1141c55aabc9ca"
+      "19c511af3d20931d2eea250b20e9eb70"
     ],
     [
       "LeftistHeap.count_heap",
@@ -990,7 +990,7 @@
         "subterm_ordering_LeftistHeap.Node"
       ],
       0,
-      "7f84c8a986fd2dc7c2247a95bfbc3325"
+      "5a65e75fb6c0ffd43e6107e427ceb7a5"
     ],
     [
       "LeftistHeap.to_list_aux",
@@ -1008,7 +1008,7 @@
         "subterm_ordering_LeftistHeap.Node"
       ],
       0,
-      "2ba2013ab083eb089230c870d7d4ea6d"
+      "724c3064ebce9fe128e366d278f424a4"
     ],
     [
       "LeftistHeap.to_list_aux_lower_bounded",
@@ -1059,7 +1059,7 @@
         "typing_LeftistHeap.to_list_aux"
       ],
       0,
-      "5f48d9f88903ac04d9215a8c5cacf234"
+      "b5926844bd737970e1418af5338b4cdd"
     ],
     [
       "LeftistHeap.heap_property_then_sorted",
@@ -1114,7 +1114,7 @@
         "typing_LeftistHeap.to_list_aux"
       ],
       0,
-      "93f133de46f4f88253f2d7edf1a03c10"
+      "9b8f66d7ee4c9af1d088228a237bea3d"
     ],
     [
       "LeftistHeap.count_list_heap",
@@ -1164,7 +1164,7 @@
         "typing_LeftistHeap.count_heap", "typing_LeftistHeap.to_list_aux"
       ],
       0,
-      "03bd2802791cf16b30bf3350ad47430c"
+      "ca46addea9b30b9775d3caee201cac6c"
     ],
     [
       "LeftistHeap.count_list_heap",
@@ -1178,7 +1178,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "a96c083a81ca45438c8ba83195ba486c"
+      "e35e323440307dcf86bcac97e92f5a7e"
     ],
     [
       "LeftistHeap.rank",
@@ -1192,7 +1192,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "555d993f41de8ea803a47c52457c6bef"
+      "34a8284272bd9cf46e50ca86673749af"
     ],
     [
       "LeftistHeap.merge_heaps_aux",
@@ -1243,7 +1243,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "ce953737a847cb64f0e5960f8d6a9a12"
+      "46ecc1f6f4e7a2b49301cc7695cd1df2"
     ],
     [
       "LeftistHeap.heap_property_merge",
@@ -1302,7 +1302,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "3ccf985ed8c2a99f57a2b66dd84b11d9"
+      "a3d6ceca4efebc8e32eaf18fd35f9515"
     ],
     [
       "LeftistHeap.count_merge_aux",
@@ -1361,7 +1361,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "91a813ca64e1466ba565dce4813dad71"
+      "ba728f99ade6cc988d309af09b47a724"
     ],
     [
       "LeftistHeap.merge_heap_charact",
@@ -1384,7 +1384,7 @@
         "typing_LeftistHeap.to_list_aux"
       ],
       0,
-      "aa82223b1e93a531dee4792aaf8c9798"
+      "4936d783b4619cfde2d88ae66caf2b80"
     ],
     [
       "LeftistHeap.leftist_property",
@@ -1400,7 +1400,7 @@
         "subterm_ordering_LeftistHeap.Node"
       ],
       0,
-      "eb2cb14d63e43ae352a02bef0735378b"
+      "9fe196ecfe7a7e6e18340f83fd5a1031"
     ],
     [
       "LeftistHeap.compute_rank",
@@ -1416,7 +1416,7 @@
         "subterm_ordering_LeftistHeap.Node"
       ],
       0,
-      "2ceb42b3059f2c5510253de0c5d15a14"
+      "c69110a27a79fff2fa9991ad770aeb74"
     ],
     [
       "LeftistHeap.correct_ranks",
@@ -1432,7 +1432,7 @@
         "subterm_ordering_LeftistHeap.Node"
       ],
       0,
-      "147ac74d6a4ef6e7ffc03e61e4e89223"
+      "e934f82c4a30ee1e2e8da28a498b4485"
     ],
     [
       "LeftistHeap.correct_ranks_merge",
@@ -1497,7 +1497,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "476f20fc33041c4c0e221e4518b336ad"
+      "eef9b7dd196eea06b975346e83067db8"
     ],
     [
       "LeftistHeap.leftist_property_merge",
@@ -1556,7 +1556,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "53f1dde1b97df87eeac5be557ecb4fa1"
+      "2b4881b17e490c1009e3badbfd8a4af7"
     ],
     [
       "LeftistHeap.leftist",
@@ -1569,7 +1569,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "aa27192e14add8e3c87a3ac542795a12"
+      "e9058b81c6cf4cf41fc955f1abd3a013"
     ],
     [
       "LeftistHeap.to_list",
@@ -1581,7 +1581,7 @@
         "refinement_interpretation_Tm_refine_20ddcddf14e217b7652cadf2ea46a085"
       ],
       0,
-      "ec8ed8fbc41d862fe693bd0a4a904bf4"
+      "c907d9a8336622d65ab893b14e108840"
     ],
     [
       "LeftistHeap.empty",
@@ -1594,7 +1594,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "f58d3a40a06be8fcb8565b5ec02695e0"
+      "84a574f5110ab55258d8b4115d45060d"
     ],
     [
       "LeftistHeap.empty",
@@ -1621,7 +1621,7 @@
         "true_interp"
       ],
       0,
-      "06760eaa69ab018902c4c96bb0a41013"
+      "3d9ba38ef998a22ce07459dcc80f5d09"
     ],
     [
       "LeftistHeap.isEmpty",
@@ -1634,7 +1634,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "ffa5c8dae439ccd4f5b2b51d1a102c40"
+      "06363cf62e08d592796723bcb049deed"
     ],
     [
       "LeftistHeap.isEmpty",
@@ -1656,7 +1656,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "9490bedc833dde0b7c27caa53cc735fe"
+      "bcd900fe702cdc41b7125c0f89ca15ae"
     ],
     [
       "LeftistHeap.singleton",
@@ -1669,7 +1669,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "9ca0d45cf40a725cec687e2571bef014"
+      "a9eda12b042fdb9a7e079f5d88261ee8"
     ],
     [
       "LeftistHeap.singleton",
@@ -1724,7 +1724,7 @@
         "typing_LeftistHeap.compute_rank"
       ],
       0,
-      "81a38761cec6fc2266b9eb11dc834f4d"
+      "42ddb9a4ca7ac624ac8dbdaec2ad719c"
     ],
     [
       "LeftistHeap.merge_heaps",
@@ -1737,7 +1737,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "5725c812df4c5be5898ed5fde4a952b1"
+      "f88f8b50d4140d751e737e352d4bde0d"
     ],
     [
       "LeftistHeap.merge_heaps",
@@ -1753,7 +1753,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "f2a46ef22bb06565ca12070556de70e7"
+      "36c8c1a3a362584c22ba5dcbd968780e"
     ],
     [
       "LeftistHeap.insert",
@@ -1766,7 +1766,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "eaf7b47522c55be4f153ddf368b13719"
+      "8a848c9234afc2a71b91bcc4681eba73"
     ],
     [
       "LeftistHeap.insert",
@@ -1783,7 +1783,7 @@
         "typing_LeftistHeap.singleton"
       ],
       0,
-      "e35e2668b6d0faa52704ee5ada1d3c9a"
+      "98ecebf4e92e5166fd19648bbc83d26f"
     ],
     [
       "LeftistHeap.get_min",
@@ -1802,7 +1802,7 @@
         "typing_LeftistHeap.isEmpty"
       ],
       0,
-      "a83e8472231e00ad88251a792b432d94"
+      "333b2d533c01da7f10ebcd65619437b6"
     ],
     [
       "LeftistHeap.get_min",
@@ -1834,7 +1834,7 @@
         "typing_LeftistHeap.leftist_property"
       ],
       0,
-      "3d496b213da217a7065d52dbab5a99cb"
+      "184760b3ad97ea7706c177c4772b74a1"
     ],
     [
       "LeftistHeap.delete_min",
@@ -1865,7 +1865,7 @@
         "typing_LeftistHeap.leftist_property"
       ],
       0,
-      "6b59c9c26b6f485629bbbe4fe3a4576b"
+      "8d4234e749978e389182cf92b4154728"
     ],
     [
       "LeftistHeap.delete_min",
@@ -1912,7 +1912,7 @@
         "typing_LeftistHeap.lower_bounded_heap"
       ],
       0,
-      "ef29f23a50dcdd29f3a3110f41e3f503"
+      "b368d0fad6b58841a35b2d040d3ae83b"
     ]
   ]
 ]

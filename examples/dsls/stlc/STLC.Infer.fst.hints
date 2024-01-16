@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_67dd0c8a36eaf642ae0fc764a3b385e4"
       ],
       0,
-      "41281f71c3e9454502061c62383731d1"
+      "bc830218a5b79a330657cca4a7d98014"
     ],
     [
       "STLC.Infer.__proj__EVar__item___0",
@@ -23,7 +23,7 @@
         "refinement_interpretation_Tm_refine_10f5db85a110b66ccb5055c6ad6b968a"
       ],
       0,
-      "03e9d9b640638465a39a0baef91e79ef"
+      "6471f6048e5c8c2980696291dbf0ac75"
     ],
     [
       "STLC.Infer.__proj__ELam__item___0",
@@ -35,7 +35,7 @@
         "refinement_interpretation_Tm_refine_77e8f911aba7f63a6e07ac80f3ab2530"
       ],
       0,
-      "752a973bcaf9674d1c7195b7dc3fa882"
+      "1062d513fb008a1fae47a0fcf6aa9ae7"
     ],
     [
       "STLC.Infer.__proj__ELam__item___1",
@@ -47,7 +47,7 @@
         "refinement_interpretation_Tm_refine_77e8f911aba7f63a6e07ac80f3ab2530"
       ],
       0,
-      "94591af8565c3756c4e397be8bb9bfaa"
+      "bd518f9cf96ddb277772dec373d0a866"
     ],
     [
       "STLC.Infer.__proj__EApp__item___0",
@@ -59,7 +59,7 @@
         "refinement_interpretation_Tm_refine_ab6d475508fc8c19b7a29918cef42c03"
       ],
       0,
-      "2f3ab2fd2d3729978d4db1ed6bb6f2c1"
+      "3f9e9f5903aa318e86ea52d3f6b38ee2"
     ],
     [
       "STLC.Infer.__proj__EApp__item___1",
@@ -71,7 +71,7 @@
         "refinement_interpretation_Tm_refine_ab6d475508fc8c19b7a29918cef42c03"
       ],
       0,
-      "0c79059609c1f61e714021f18d26cfd6"
+      "5494681785519ea7a974c502cf7ed330"
     ],
     [
       "STLC.Infer.open_exp'",
@@ -97,7 +97,7 @@
         "subterm_ordering_STLC.Infer.ELam"
       ],
       0,
-      "6fe894e30946967b2d3c4d1ee3147f5f"
+      "85c0d97c9df0d742e51c764b0e129e83"
     ],
     [
       "STLC.Infer.close_exp'",
@@ -123,7 +123,7 @@
         "subterm_ordering_STLC.Infer.ELam"
       ],
       0,
-      "2292bd80c8af6171bc55b23a48c3db94"
+      "e6cc5c7250e626546d0b80dfb83ea326"
     ],
     [
       "STLC.Infer.infer",
@@ -140,7 +140,7 @@
         "projection_inverse_BoxBool_proj_0", "typing_STLC.Core.lookup"
       ],
       0,
-      "fe1133f53ff86eff846b07ac0ecdeed6"
+      "63f0ab466b0382634f3b7a137f2fba20"
     ],
     [
       "STLC.Infer.elab_core",
@@ -155,7 +155,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "3f40e005d9849a2f70b8e393b12584c1"
+      "2e0d59d5cd1fc1b14c7d67cee5dd1c6d"
     ]
   ]
 ]

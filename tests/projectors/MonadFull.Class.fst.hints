@@ -1,0 +1,22 @@
+[
+  "8Ì\u000b ó\u001b€gÎU\rh\u001e‘¼ò",
+  [
+    [
+      "MonadFull.Class.test",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_MonadFull.Class.bind",
+        "equation_MonadFull.Class.return",
+        "fuel_guarded_inversion_MonadFull.Class.monad",
+        "interpretation_Tm_abs_0e0118ea919415a9d0f2ad39a014ac49",
+        "interpretation_Tm_abs_81a344c76be5119d83c28a952f047e07",
+        "token_correspondence_MonadFull.Class.bind",
+        "token_correspondence_MonadFull.Class.return"
+      ],
+      0,
+      "0a708c8fd7a9ade9a93805240de0526c"
+    ]
+  ]
+]

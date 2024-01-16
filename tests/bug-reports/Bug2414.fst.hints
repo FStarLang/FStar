@@ -17,7 +17,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "263f9c7c5e7c535ccd5371ce3de00d94"
+      "585f4925cd6a7b1ec119ad84dc683a5b"
     ],
     [
       "Bug2414.sorted",
@@ -37,7 +37,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "276e2b6bec695552bf432676720e8651"
+      "96ff3ccd28b9990e21f8e85e44f3206a"
     ],
     [
       "Bug2414.mem",
@@ -53,7 +53,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "06a712f825277dc7124f35f63da6951e"
+      "3b077d776377e28433a386d66e16a423"
     ]
   ]
 ]
