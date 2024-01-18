@@ -38,9 +38,9 @@ let ens_t (s:Type) (a:Type) = s -> a -> s -> prop
 
 assume
 val bind
-      (#a:Type)
-      (#b:Type)
-      (#s:Type u#2)
+      (#s:Type u#s)
+      (#a:Type u#a)
+      (#b:Type u#b)
       (#rel:preorder s)
       (#req_f:req_t s)
       (#ens_f:ens_t s a)
@@ -55,9 +55,9 @@ val bind
 
 assume
 val weaken
-      (#a:Type)
-      (#s:Type u#2)
+      (#s:Type u#s)
       (#rel:preorder s)
+      (#a:Type u#a)
       (#req_f:req_t s)
       (#ens_f:ens_t s a)
       (#req_g:req_t s)
@@ -98,9 +98,9 @@ let is_unit #a (x:a) (f:a -> a -> a) =
  *  - [laws] state that {pred, emp, star} are a commutative monoid
  *)
 noeq
-type state : Type u#3 = {
-  s:Type u#2;
-  pred:Type u#2;
+type state : Type u#(s + 1) = {
+  s:Type u#s;
+  pred:Type u#s;
   emp: pred;
   star: pred -> pred -> pred;
   interp: pred -> s -> prop;
@@ -121,11 +121,11 @@ let post (s:state) a = a -> s.pred
  *  Also see: https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/views.pdf
  *)
 
-let nmst_p (st:state) (a:Type u#a) (pre:st.pred) (post:post st a) =
+let nmst_p (st:state u#s) (a:Type u#a) (pre:st.pred) (post:post st a) =
   nmst st.evolves a (st.interp pre) (fun _ x s1 -> st.interp (post x) s1)
 
 noeq
-type action (st:state) (a:Type u#2) = {
+type action (st:state u#s) (a:Type u#s) = {
   pre: st.pred;
   post: post st a;
   step: (
@@ -147,7 +147,7 @@ type action (st:state) (a:Type u#2) = {
  *)
 
 noeq
-type m (#st:state) : (a:Type u#a) -> st.pred -> post st a -> Type =
+type m (#st:state u#s) : (a:Type u#a) -> st.pred -> post st a -> Type =
   | Ret:
       #a:Type u#a ->
       #post:(a -> st.pred) ->
@@ -190,7 +190,7 @@ type m (#st:state) : (a:Type u#a) -> st.pred -> post st a -> Type =
  *    - frame: a framed assertion to carry through the proof
  *)
 noeq
-type step_result (#st:state) a (q:post st a) (frame:st.pred) =
+type step_result (#st:state u#s) (a:Type u#a) (q:post st a) (frame:st.pred) =
   | Step: next:_ -> //precondition of the reduct
           m a next q -> //the reduct
           // state:st.s {st.interp (p `st.star` frame) state} -> //the next state, satisfying the precondition of the reduct
@@ -204,9 +204,9 @@ open FStar.Preorder
  *
  *)
 let rec step 
-    (#st:state)
+    (#st:state u#s)
     (#p:st.pred)
-    (#a:Type)
+    (#a:Type u#a)
     (#q:post st a)
     (f:m a p q)
     (frame:st.pred)
@@ -218,7 +218,8 @@ let rec step
 = match f with
   | Ret x -> 
     let n
-     : nmst st.evolves 
+     : nmst
+            st.evolves 
             (step_result a q frame)
             (fun _ -> True)
             (fun s0 v s1 -> Step (q x) (Ret x) == v /\ s0 == s1) 
@@ -271,7 +272,7 @@ let rec step
     in
     weaken <| bind (flip()) (fun b -> if b then go_left else go_right)
 
-let rec run (#st:state) #pre #a #post (f:m a pre post)
+let rec run (#st:state u#s) #pre (#a:Type u#a) #post (f:m a pre post)
   : Dv (nmst_p st a pre post)
   = match f with
     | Ret x -> 
