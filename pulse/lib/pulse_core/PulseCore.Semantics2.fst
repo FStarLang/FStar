@@ -192,7 +192,7 @@ type m (#st:state u#s) : (a:Type u#a) -> st.pred -> post st a -> Type =
 noeq
 type step_result (#st:state u#s) (a:Type u#a) (q:post st a) (frame:st.pred) =
   | Step: next:_ -> //precondition of the reduct
-          m a next q -> //the reduct
+          m:m a next q -> //the reduct
           // state:st.s {st.interp (p `st.star` frame) state} -> //the next state, satisfying the precondition of the reduct
           step_result a q frame
 
@@ -217,15 +217,7 @@ let rec step
       (decreases f)
 = match f with
   | Ret x -> 
-    let n
-     : nmst
-            st.evolves 
-            (step_result a q frame)
-            (fun _ -> True)
-            (fun s0 v s1 -> Step (q x) (Ret x) == v /\ s0 == s1) 
-     = return (Step (q x) (Ret x))
-    in
-    weaken n
+    weaken <| return <| Step (q x) (Ret x)
   | Act f k ->
     let k (x:_) 
     : Dv (nmst_p st (step_result a q frame)
@@ -234,44 +226,25 @@ let rec step
     = let n : m a (f.post x) q = k x in
       weaken (return (Step _ n))
     in
-    let n = bind (f.step frame) k in
-    weaken n
+    weaken <| bind (f.step frame) k
   | Par #_ #pre0 #post0 (Ret x0) #pre1 #post1 (Ret x1) #a #post k ->
     weaken <| return <| Step _ k
   | Par #_ #pre0 #post0 m0 #pre1 #post1 m1 #a #post k ->
-    let go_left
+    let choose (b:bool)
     : nmst_p st
         (step_result a q frame)
         (p `st.star` frame)
         (fun x -> (Step?.next x `st.star` frame))
-    = let k (x:step_result (U.raise_t unit) (fun _ -> post0) (pre1 `st.star` frame))
-       : Dv (nmst_p st 
-              (step_result a q frame)
-              (Step?.next x `st.star` (pre1 `st.star` frame))   
-              (fun y -> Step?.next y `st.star` frame))
-       = let Step pre0' m0' = x in
-         weaken <| return <| Step _ <| Par m0' m1 k
-      in
-      weaken <| bind (step m0 (pre1 `st.star` frame)) k
+    = if b
+      then weaken <| 
+           bind (step m0 (pre1 `st.star` frame))
+                (fun x -> return <| Step _ <| Par (Step?.m x) m1 k)
+      else weaken <| 
+           bind (step m1 (pre0 `st.star` frame))
+                (fun x -> return <| Step _ <| Par m0 (Step?.m x) k) 
     in
-    let go_right
-    : nmst_p st
-          (step_result a q frame)
-          (p `st.star` frame)
-          (fun x -> (Step?.next x `st.star` frame))
-    = let k (x:step_result (U.raise_t unit)
-               (fun _ -> post1) (pre0 `st.star` frame))
-       : Dv (nmst_p st 
-              (step_result a q frame)
-              (Step?.next x `st.star` (pre0 `st.star` frame))   
-              (fun y -> Step?.next y `st.star` frame))
-       = let Step pre1' m1' = x in
-         weaken <| return <| Step _ <| Par m0 m1' k
-      in
-      weaken <| bind (step m1 (pre0 `st.star` frame)) k
-    in
-    weaken <| bind (flip()) (fun b -> if b then go_left else go_right)
-
+    weaken <| bind (flip()) choose 
+    
 let rec run (#st:state u#s) #pre (#a:Type u#a) #post (f:m a pre post)
   : Dv (nmst_p st a pre post)
   = match f with
@@ -285,69 +258,12 @@ let rec run (#st:state u#s) #pre (#a:Type u#a) #post (f:m a pre post)
       in
       weaken <| bind (step f st.emp) k
  
-(*)
-  = match f with
-    | Ret x ->
-        //Nothing to do, just return
-        Step (post x) (Ret x) state i
-
-    | Act act1 k ->
-        //Evaluate the action and return the continuation as the reduct
-        let (| b, state' |) = act1.sem frame state in
-        Step (act1.post b) (k b) state' i
-
-    | Par pre0 post0 (Ret x0)
-          pre1 post1 (Ret x1)
-          k ->
-        //If both sides of a `Par` have returned
-        //then step to the continuation
-        Step (post0 `c.star` post1) k state i
-
-    | Par pre0 post0 m0
-          pre1 post1 m1
-          k ->
-        //Otherwise, sample a boolean and choose to go left or right to pick
-        //the next command to reduce
-        //The two sides are symmetric
-        if bools i
-        then let Step pre0' m0' state' j =
-                 //Notice that, inductively, we instantiate the frame extending
-                 //it to include the precondition of the other side of the par
-                 step (i + 1) m0 (pre1 `c.star` frame) state in
-             Step (pre0' `c.star` pre1) (Par pre0' post0 m0' pre1 post1 m1 k) state' j
-        else let Step pre1' m1' state' j =
-                 step (i + 1) m1 (pre0 `c.star` frame) state in
-             Step (pre0 `c.star` pre1') (Par pre0 post0 m0 pre1' post1 m1' k) state' j
-
-(**
- * [run i f state]: Top-level driver that repeatedly invokes [step]
- *
- * The type of [run] is the main theorem. It states that it is sound
- * to interpret the indices of `m` as a Hoare triple in a
- * partial-correctness semantics
- *
- *)
-let rec run #s #c (i:nat) #pre #a #post (f:m a pre post) (state:s)
-  : Div (a & s)
-    (requires
-      c.interp pre state)
-    (ensures fun (x, state') ->
-      c.interp (post x) state')
-  = match f with
-    | Ret x -> x, state
-    | _ ->
-      let Step pre' f' state' j = step i f c.emp state in
-      run j f' state'
-
-/// eff is a dependent parameterized monad. We give a return and bind
-/// for it, though we don't prove the monad laws
 
 (** [return]: easy, just use Ret *)
-let return #s (#c:comm_monoid s) #a (x:a) (post:a -> c.r)
+let ret (#st:state u#s) (#a:Type u#a) (x:a) (post:post st a)
   : m a (post x) post
   = Ret x
 
-module U = FStar.Universe
 // let raise_action 
 //     (#s:Type u#s)
 //     (#c:comm_monoid s)
@@ -363,10 +279,9 @@ module U = FStar.Universe
 //    }
 
 let act
-    (#s:Type u#s)
-    (#c:comm_monoid s)
+    (#st:state u#s)
     (#t:Type u#s)
-    (a:action c t)
+    (a:action st t)
 : m t a.pre a.post
 = Act a Ret
 
@@ -374,34 +289,31 @@ let act
  * [bind]: sequential composition works by pushing `g` into the continuation
  * at each node, finally applying it at the terminal `Ret`
  *)
-let rec bind (#s:Type u#s)
-             (#c:comm_monoid s)
-             (#a:Type u#a)
-             (#b:Type u#b)
-             (#p:c.r)
-             (#q:a -> c.r)
-             (#r:b -> c.r)
-             (f:m a p q)
-             (g: (x:a -> Dv (m b (q x) r)))
+let rec mbind
+     (#st:state u#s)
+     (#a:Type u#a)
+     (#b:Type u#b)
+     (#p:st.pred)
+     (#q:post st a)
+     (#r:post st b)
+     (f:m a p q)
+     (g: (x:a -> Dv (m b (q x) r)))
   : Dv (m b p r)
   = match f with
     | Ret x -> g x
     | Act act k ->
-      Act act (fun x -> bind (k x) g)
-    | Par pre0 post0 ml
-          pre1 post1 mr
-          k ->
-      let k : m b (post0 `c.star` post1) r = bind k g in
+      Act act (fun x -> mbind (k x) g)
+    | Par #_ #pre0 #post0 ml
+             #pre1 #post1 mr
+             #postk k ->
+      let k : m b (post0 `st.star` post1) r = mbind k g in
       let ml' : m (U.raise_t u#0 u#b unit) pre0 (fun _ -> post0) =
-         bind ml (fun _ -> Ret (U.raise_val u#0 u#b ()))
+         mbind ml (fun _ -> Ret (U.raise_val u#0 u#b ()))
       in
       let mr' : m (U.raise_t u#0 u#b unit) pre1 (fun _ -> post1) =
-         bind mr (fun _ -> Ret (U.raise_val u#0 u#b ()))
+         mbind mr (fun _ -> Ret (U.raise_val u#0 u#b ()))
       in
-      Par #s #c pre0 post0 ml'
-                pre1 post1 mr'
-                #b #r k
-
+      Par ml' mr' k
 (* Next, a main property of this semantics is that it supports the
    frame rule. Here's a proof of it *)
 
@@ -409,54 +321,46 @@ let rec bind (#s:Type u#s)
 ///
 /// --- That's not so hard, since we specifically required actions to
 ///     be frameable
-let frame_action (#s:Type) (#c:comm_monoid s) (#a:Type) (f:action c a) (fr:c.r)
-  : g:action c a { g.post == (fun x -> f.post x `c.star` fr) /\
-                   g.pre == f.pre `c.star` fr }
-  = let pre = f.pre `c.star` fr in
-    let post x = f.post x `c.star` fr in
-    let sem (frame:c.r) (s0:s{c.interp (c.star pre frame) s0})
-      : (x:a & s1:s{c.interp (post x `c.star` frame) s1})
-      = let (| x, s1 |) = f.sem (fr `c.star` frame) s0 in
-        (| x, s1 |)
-    in
-    { pre = pre;
-      post = post;
-      sem = sem }
+let frame_action (#st:state u#s) (#a:Type) 
+                 (f:action st a) (frame:st.pred)
+: g:action st a { g.post == (fun x -> f.post x `st.star` frame) /\
+                  g.pre == f.pre `st.star` frame }
+= 
+  // let pre = f.pre `st.star` frame in
+  // let post x = f.post x `st.star` frame in
+  let step (fr:st.pred) 
+    : nmst_p st a 
+      ((f.pre `st.star` frame) `st.star` fr)
+      (fun x -> (f.post x `st.star` frame) `st.star` fr)
+    = f.step (frame `st.star` fr)
+  in
+  { pre = _; post = _; step }
 
 /// Now, to prove that computations can be framed, we'll just thread
 /// the frame through the entire computation, passing it over every
 /// frameable action
-let rec frame (#s:Type u#s)
-              (#c:comm_monoid s)
+let rec frame (#st:state u#s)
               (#a:Type u#a)
-              (#p:c.r)
-              (#q:a -> c.r)
-              (fr:c.r)
+              (#p:st.pred)
+              (#q:post st a)
+              (fr:st.pred)
               (f:m a p q)
-   : Dv (m a (p `c.star` fr) (fun x -> q x `c.star` fr))
+   : Dv (m a (p `st.star` fr) (fun x -> q x `st.star` fr))
    = match f with
      | Ret x -> Ret x
      | Act f k ->
        Act (frame_action f fr) (fun x -> frame fr (k x))
-     | Par pre0 post0 m0 pre1 post1 m1 k ->
-       Par (pre0 `c.star` fr) (post0 `c.star` fr) (frame fr m0)
-           pre1 post1 m1
-           (frame fr k)
+     | Par m0 m1 k ->
+       Par (frame fr m0) m1 (frame fr k)
 
 (**
  * [par]: Parallel composition
  * Works by just using the `Par` node and `Ret` as its continuation
  **)
-let par #s (#c:comm_monoid s)
+let par (#st:state u#s)
         #p0 #q0 (m0:m unit p0 (fun _ -> q0))
         #p1 #q1 (m1:m unit p1 (fun _ -> q1))
- : Dv (m unit (p0 `c.star` p1) (fun _ -> q0 `c.star` q1))
- = let m0' : m (U.raise_t unit) p0 (fun _ -> q0) =
-       bind m0 (fun _ -> Ret (U.raise_val u#0 u#0 ()))
-   in
-   let m1' : m (U.raise_t unit) p1 (fun _ -> q1) =
-     bind m1 (fun _ -> Ret (U.raise_val u#0 u#0 ()))
-   in
-   Par p0 q0 m0'
-       p1 q1 m1'
-       (Ret ())
+ : Dv (m unit (p0 `st.star` p1) (fun _ -> q0 `st.star` q1))
+ = let m0' = mbind m0 (fun _ -> Ret (U.raise_val u#0 u#0 ())) in
+   let m1' = mbind m1 (fun _ -> Ret (U.raise_val u#0 u#0 ())) in
+   Par m0' m1' (Ret ())
