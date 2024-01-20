@@ -141,7 +141,7 @@ let mem_action_as_action
 : action a except req ens
 = fun frame ->
     let thunk
-      : unit -> MstTot a except req ens frame (fun _ -> True) (fun _ _ _ -> True)
+      : unit -> MstTot a except req ens frame
       = fun _ -> act frame
     in
     MST.of_msttotal _ _ _ _ thunk
@@ -162,9 +162,7 @@ let action_as_mem_action
                     interp ((pre `star` locks_invariant except s0) `star` frame) s0)
                 (fun s0 x s1 ->
                     inames_ok except s1 /\
-                    interp ((post x `star` locks_invariant except s1) `star` frame) s1 /\
-                    (forall (f_frame:mprop frame). f_frame (core_mem s0) == f_frame (core_mem s1)))
-      = magic() //MST.weaken (act frame)
+                    interp ((post x `star` locks_invariant except s1) `star` frame) s1)
+      = MST.weaken (act frame)
     in
     MST.to_msttotal _ _ _ _ m
-    // MST.to_msttotal _ _ _ _ m

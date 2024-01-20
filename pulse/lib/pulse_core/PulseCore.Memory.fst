@@ -717,7 +717,7 @@ let lift_tot_action_nf #a #e #fp #fp' ($f:tot_action_nf_except e fp a fp')
 let lift_tot_action #a #e #fp #fp'
   ($f:tot_action_nf_except e fp a fp')
   (frame:slprop)
-  : MstTot a e fp fp' frame (fun _ -> True) (fun _ _ _ -> True)
+  : MstTot a e fp fp' frame 
   = let m0 = MSTTotal.get #(full_mem) #_ () in
     ac_reasoning_for_m_frame_preserving fp frame (locks_invariant e m0) m0;
     assert (interp (fp `star` frame `star` locks_invariant e m0) m0);
@@ -782,7 +782,7 @@ let lift_heap_action_with_frame
 let lift_tot_action_with_frame #a #e #fp #fp'
   ($f:tot_action_with_frame_except e fp a fp')
   (frame:slprop)
-  : MstTot a e fp fp' frame (fun _ -> True) (fun _ _ _ -> True)
+  : MstTot a e fp fp' frame
   = let m0 = MSTTotal.get () in
     assert (inames_ok e m0);
     ac_reasoning_for_m_frame_preserving fp frame (locks_invariant e m0) m0;
@@ -1058,8 +1058,6 @@ let witness (#a:Type) (#pcm:pcm a)
   : MstTot (witnessed r fact) e
            (pts_to r v)
            (fun _ -> pts_to r v) frame
-           (fun _ -> True)
-           (fun _ _ _ -> True)
   = let m0 = MSTTotal.get () in
     let _ : unit = 
       let hr : H.ref a pcm = r in
@@ -1229,7 +1227,7 @@ let rec recall_all (ctx:list pre_inv)
       recall_all tl
 
 let fresh_invariant (e:inames) (p:slprop) (ctx:list pre_inv) (frame:slprop)
-  : MstTot (i:inv p { not (mem_inv e i) /\ fresh_wrt ctx (name_of_inv i)}) e p (fun _ -> emp) frame (fun _ -> True) (fun _ _ _ -> True)
+  : MstTot (i:inv p { not (mem_inv e i) /\ fresh_wrt ctx (name_of_inv i)}) e p (fun _ -> emp) frame
   = let m0 = MSTTotal.get () in
     recall_all ctx;
     ac_reasoning_for_m_frame_preserving p frame (locks_invariant e m0) m0;
@@ -1246,7 +1244,7 @@ let fresh_invariant (e:inames) (p:slprop) (ctx:list pre_inv) (frame:slprop)
     (| hide i, w0, w |)
 
 let new_invariant (e:inames) (p:slprop) (frame:slprop)
-  : MstTot (inv p) e p (fun _ -> emp) frame (fun _ -> True) (fun _ _ _ -> True)
+  : MstTot (inv p) e p (fun _ -> emp) frame
   = fresh_invariant e p [] frame
 
 let rearrange_invariant (p q r : slprop) (q0 q1:slprop)
@@ -1395,7 +1393,7 @@ let with_invariant (#a:Type)
                    (i:inv p{not (mem_inv opened_invariants i)})
                    (f:action_except a (add_inv opened_invariants i) (p `star` fp) (fun x -> p `star` fp' x))
                    (frame:slprop)
-  : MstTot a opened_invariants fp fp' frame (fun _ -> True) (fun _ _ _ -> True)
+  : MstTot a opened_invariants fp fp' frame
   = let m0 = MSTTotal.get () in
     MSTTotal.recall _ mem_evolves (iname_for_p_mem (name_of_inv i) p) (token_of_inv i);
     assert (iname_for_p (name_of_inv i) p m0.locks);
@@ -1459,13 +1457,10 @@ let frame (#a:Type)
           (#opened_invariants:inames)
           (#pre:slprop)
           (#post:a -> slprop)
-          (#req:mprop pre)
-          (#ens:mprop2 pre post)
           (frame:slprop)
-          ($f:action_except_full a opened_invariants pre post req ens)
+          ($f:action_except a opened_invariants pre post)
           (frame0:slprop)
   : MstTot a opened_invariants (pre `star` frame) (fun x -> post x `star` frame) frame0
-           req ens
   = let m0 : full_mem = MSTTotal.get () in
     equiv_pqrs_p_qr_s pre frame frame0 (linv opened_invariants m0);
     assert (interp (pre `star` frame `star` frame0 `star` linv opened_invariants m0) m0);

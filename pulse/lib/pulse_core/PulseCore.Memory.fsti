@@ -388,31 +388,18 @@ effect MstTot
   (expects:slprop u#1)
   (provides: a -> slprop u#1)
   (frame:slprop u#1)
-  (pre:mprop expects)
-  (post:mprop2 expects provides)
   = MSTTotal.MSTATETOT a (full_mem u#1) mem_evolves
     (requires fun m0 ->
         inames_ok except m0 /\
-        interp (expects `star` frame `star` locks_invariant except m0) m0 /\
-        pre (core_mem m0))
+        interp (expects `star` frame `star` locks_invariant except m0) m0)
     (ensures fun m0 x m1 ->
         inames_ok except m1 /\
         interp (expects `star` frame `star` locks_invariant except m0) m0 /\  //TODO: fix the effect so as not to repeat this
-        interp (provides x `star` frame `star` locks_invariant except m1) m1 /\
-        post (core_mem m0) x (core_mem m1) /\
-        (forall (f_frame:mprop frame). f_frame (core_mem m0) == f_frame (core_mem m1)))
+        interp (provides x `star` frame `star` locks_invariant except m1) m1)
 
 (** An action is just a thunked computation in [MstTot] that takes a frame as argument *)
 let action_except (a:Type u#a) (except:inames) (expects:slprop) (provides: a -> slprop) =
-  frame:slprop -> MstTot a except expects provides frame (fun _ -> True) (fun _ _ _ -> True)
-
-let action_except_full (a:Type u#a)
-  (except:inames)
-  (expects:slprop)
-  (provides: a -> slprop)
-  (req:mprop expects)
-  (ens:mprop2 expects provides)
-= frame:slprop -> MstTot a except expects provides frame req ens
+  frame:slprop -> MstTot a except expects provides frame
 
 val sel_action (#a:Type u#1) (#pcm:_) (e:inames) (r:ref a pcm) (v0:erased a)
   : action_except (v:a{compatible pcm v0 v}) e (pts_to r v0) (fun _ -> pts_to r v0)
@@ -544,11 +531,9 @@ val frame (#a:Type)
           (#opened_invariants:inames)
           (#pre:slprop)
           (#post:a -> slprop)
-          (#req:mprop pre)
-          (#ens:mprop2 pre post)
           (frame:slprop)
-          ($f:action_except_full a opened_invariants pre post req ens)
-  : action_except_full a opened_invariants (pre `star` frame) (fun x -> post x `star` frame) req ens
+          ($f:action_except a opened_invariants pre post)
+  : action_except a opened_invariants (pre `star` frame) (fun x -> post x `star` frame)
 
 val change_slprop (#opened_invariants:inames)
                   (p q:slprop)
