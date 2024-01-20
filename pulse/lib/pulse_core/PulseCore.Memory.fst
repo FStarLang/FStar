@@ -13,123 +13,70 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Pulse.Memory
+module PulseCore.Memory
+open FStar.Ghost
+open FStar.PCM
+module M_ = Pulse.NondeterministicMonotonicStateMonad
 module F = FStar.FunctionalExtensionality
 open FStar.FunctionalExtensionality
-open FStar.PCM
 module H = Pulse.Heap
 
 noeq
-type higher_store : Type u#(a+2) = {
-  ctr:nat;
-  invariants: list (H.slprop u#a);
-  higher_heap: H.heap u#(a + 1)
-}
+type lock_state : Type u#(a + 1) =
+  | Invariant : inv:H.slprop u#a -> lock_state
 
-#push-options "--print_universes"
+let lock_store : Type u#(a+1) = list (lock_state u#a)
 
 noeq
-type mem : Type u#(a + 2) =
+type mem : Type u#(a + 1) =
   {
     ctr: nat;
     heap: H.heap u#a;
-    higher_store: higher_store u#a
+    locks: lock_store u#a;
   }
 
 let heap_of_mem (x:mem) : H.heap = x.heap
-let empty_higher_store = {
-  invariants = [];
-  ctr = 0;
-  higher_heap = H.empty_heap
-}
 
 let mem_of_heap (h:H.heap) : mem = {
   ctr = 0;
   heap = h;
-  higher_store = empty_higher_store;
+  locks = []
 }
 
-let mem_set_heap (m:mem) (h:H.heap) : mem = { m with heap = h }
+let mem_set_heap (m:mem) (h:H.heap) : mem = {
+  ctr = m.ctr;
+  heap = h;
+  locks = m.locks;
+}
 
 let core_mem (m:mem) : mem = mem_of_heap (heap_of_mem m)
 
 let core_mem_invol m = ()
 
-let higher_store_disjoint (h0 h1:higher_store u#a)
-: prop
-= h0.ctr == h1.ctr /\
-  H.disjoint h0.higher_heap h1.higher_heap /\
-  h0.invariants == h1.invariants
-
 let disjoint (m0 m1:mem u#h)
   : prop
   = m0.ctr == m1.ctr /\
     H.disjoint m0.heap m1.heap /\
-    higher_store_disjoint m0.higher_store m1.higher_store
+    m0.locks == m1.locks
 
 let disjoint_sym m0 m1 = ()
 
-let higher_store_join (h0:higher_store) (h1:higher_store { higher_store_disjoint h0 h1})
-: higher_store
-= { ctr = h0.ctr;
-    invariants = h0.invariants;
-    higher_heap = H.join h0.higher_heap h1.higher_heap }
-
-let join (m0:mem) (m1:mem { disjoint m0 m1 }) = {
+let join m0 m1 = {
   ctr = m0.ctr;
   heap = H.join m0.heap m1.heap;
-  higher_store = higher_store_join m0.higher_store m1.higher_store
+  locks = m0.locks
 }
 
 let join_commutative m0 m1 =
-  H.join_commutative m0.heap m1.heap;
-  H.join_commutative m0.higher_store.higher_heap m1.higher_store.higher_heap
+  H.join_commutative m0.heap m1.heap
 
 let disjoint_join m0 m1 m2 =
-  H.disjoint_join m0.heap m1.heap m2.heap;
-  H.disjoint_join m0.higher_store.higher_heap m1.higher_store.higher_heap m2.higher_store.higher_heap
+  H.disjoint_join m0.heap m1.heap m2.heap
 
 let join_associative m0 m1 m2 =
-  H.join_associative m0.heap m1.heap m2.heap;
-  H.join_associative m0.higher_store.higher_heap m1.higher_store.higher_heap m2.higher_store.higher_heap
+  H.join_associative m0.heap m1.heap m2.heap
 
-let inv_list : Type u#(a + 1) = list (H.slprop u#a)
-
-let higher_heap_predicate : Type u#(a + 2) = H.slprop u#(a + 1)
-let inv_predicate : Type u#(a + 1) = inv_list u#a -> prop
-
-noeq
-type higher_store_predicate : Type u#(a + 2)= {
-  inv_predicate: inv_predicate u#a;
-  higher_heap_predicate: higher_heap_predicate u#a
-}
-(*
-i ~> p  = 
-    { heap_predicate = emp;
-      higher_store_predicate = fun h -> { inv_predicate = fun invs -> List.index invs i == Some p;
-                                          higher_heap_predicate = emp }}
-*)
-
-noeq
-type slprop : Type u#(a + 2) = {
-  heap_predicate : H.slprop u#a;
-  higher_store_predicate : higher_store_predicate u#a;
-}
-
-exists* (x:t). 
-  pts_to v x ** i ~> (f x)
-
-
-(exists* (x:t). 
-  pts_to v x) ** 
-  
-(exists* x ~> i ~> (f x))
-
-
-exists* (a:Type) (fun (x:t) -> slprop) : slprop = {
-
-
-}
+let slprop = H.slprop
 
 let interp p m = H.interp p m.heap
 
@@ -144,7 +91,7 @@ let slprop_extensionality p q =
       assert (interp p m <==> interp q m)
   in
   assert (forall h. H.interp p h <==> H.interp q h);
-  Steel.Heap.slprop_extensionality p q
+  Pulse.Heap.slprop_extensionality p q
 
 let reveal_equiv p1 p2 = ()
 
@@ -403,7 +350,7 @@ let locks_invariant (e:inames) (m:mem u#a) : slprop u#a =
 
 let full_mem_pred (m:mem) = H.full_heap_pred (heap_of_mem m)
 
-(***** Following lemmas are needed in Steel.Effect *****)
+(***** Following lemmas are needed in Pulse.Effect *****)
 
 let core_mem_interp (hp:slprop u#a) (m:mem u#a) = ()
 
@@ -1537,7 +1484,7 @@ let change_slprop (#opened_invariants:inames)
               (ensures H.interp q h)
       = proof (mem_of_heap h)
     in
-    lift_tot_action (lift_heap_action opened_invariants (Steel.Heap.change_slprop p q proof))
+    lift_tot_action (lift_heap_action opened_invariants (H.change_slprop p q proof))
 
 (* This module reuses is_frame_monotonic from Heap, but does not expose that
 to clients, so we need this lemma to typecheck witness_h_exists below. *)

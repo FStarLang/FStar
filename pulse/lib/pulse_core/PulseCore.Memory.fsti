@@ -13,9 +13,10 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Pulse.Memory
+module PulseCore.Memory
 open FStar.Ghost
 open FStar.PCM
+module M_ = Pulse.NondeterministicMonotonicStateMonad
 
 /// Building up on `Steel.Heap`, this module adds memory invariants to the heap to expose the
 /// final interface for Steel's PCM-based memory model.
@@ -23,7 +24,7 @@ open FStar.PCM
 (**** Basic memory properties *)
 
 (** Abstract type of memories *)
-val mem  : Type u#(a + 2)
+val mem  : Type u#(a + 1)
 
 (**
   The memory is built on top of the heap, adding on the memory invariants. However, some of the
@@ -82,7 +83,7 @@ val join_associative (m0 m1 m2:mem)
 
 (** The type of separation logic propositions. Based on Steel.Heap.slprop *)
 [@@erasable]
-val slprop : Type u#(a + 2)
+val slprop : Type u#(a + 1)
 
 (** Interpreting mem assertions as memory predicates *)
 val interp (p:slprop u#a) (m:mem u#a) : prop
@@ -300,7 +301,7 @@ let mem_prop_is_affine
 = (forall m . f m <==> f (core_mem m)) /\
   (forall (m0: hmem sl) m1 . (disjoint m0 m1 /\ interp sl (join m0 m1)) ==> (f m0 <==> f (join m0 m1)))
 
-let a_mem_prop (sl: slprop u#a) : Type u#(a+2) = (f: (hmem sl -> Tot prop) { mem_prop_is_affine sl f })
+let a_mem_prop (sl: slprop u#a) : Type u#(a+1) = (f: (hmem sl -> Tot prop) { mem_prop_is_affine sl f })
 
 val refine_slprop
   (sl: slprop u#a)
@@ -374,8 +375,6 @@ let mprop2 (#a:Type u#b) (fp_pre:slprop u#a) (fp_post:a -> slprop u#a) =
   The preorder along which the memory evolves with every update. See [Steel.Heap.heap_evolves]
 *)
 val mem_evolves : FStar.Preorder.preorder full_mem
-
-(*
 
 (**
   To guarantee that the memory always evolve according to frame-preserving updates,
@@ -628,4 +627,3 @@ val star_is_witinv_right (#a:Type)
   : Lemma (requires (is_witness_invariant g))
           (ensures  (is_witness_invariant (fun x -> f x `star` g x)))
           //[SMTPat   (is_witness_invariant (fun x -> f x `star` g x))]
-*)

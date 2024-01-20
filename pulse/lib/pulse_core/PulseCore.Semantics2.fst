@@ -53,7 +53,7 @@ type state : Type u#(s + 1) = {
   emp: pred;
   star: pred -> pred -> pred;
   interp: pred -> s -> prop;
-  evolves: FStar.Preorder.preorder s;
+  evolves: FStar.Preorder.preorder (s:s { is_full_mem s });
   invariant: s -> pred;
   laws: squash (associative star /\ commutative star /\ is_unit emp star)
 }
