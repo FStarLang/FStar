@@ -1,6 +1,6 @@
 module Pulse.MonotonicStateMonad
 open FStar.Preorder
-
+module M = FStar.MSTTotal
 
 val mst (#s:Type u#s)
         (rel:FStar.Preorder.preorder s)
@@ -9,6 +9,15 @@ val mst (#s:Type u#s)
         (post:s -> a -> s -> prop)
 : Type u#(max a s)
 
+val of_msttotal (#s:Type u#2) (rel:FStar.Preorder.preorder s)
+                (a:Type u#a) (pre:s -> prop) (post:s -> a -> s -> prop)
+                (f:unit -> M.MSTATETOT a s rel pre post)
+: mst rel a pre post
+
+val to_msttotal (#s:Type u#2) (rel:FStar.Preorder.preorder s)
+                (a:Type u#a) (pre:s -> prop) (post:s -> a -> s -> prop)
+                (f:mst rel a pre post)
+: M.MSTATETOT a s rel pre post
 
 val return (#s:Type u#s)
            (#rel:preorder s)

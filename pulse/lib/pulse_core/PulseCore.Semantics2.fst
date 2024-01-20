@@ -1,5 +1,5 @@
 (*
-   Copyright 2019-2021 Microsoft Research
+   Copyright 2024 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
 *)
 module PulseCore.Semantics2
 module U = FStar.Universe
+module M = Pulse.MonotonicStateMonad
+module NM = Pulse.NondeterministicMonotonicStateMonad 
 open Pulse.NondeterministicMonotonicStateMonad
 open FStar.Preorder
 
@@ -64,9 +66,22 @@ let full_mem (st:state u#s) : Type u#s = m:st.s { st.is_full_mem m }
 let post (s:state) a = a -> s.pred
 
 (** We interpret computations into the nmst monad,
-    for nondeterministic, monotonic-state transfomers.
+    for partial, nondeterministic, monotonic-state transfomers.
     nmst_sep provides separation-logic specifications for those computations.
- **)   
+    mst_sep is analogous, except computation in mst_sep are also total
+ **)
+let mst_sep_aux (st:state u#s)
+                (aux:full_mem st -> prop) 
+                (inv:full_mem st -> st.pred)
+                (a:Type u#a)
+                (pre:st.pred)
+                (post:post st a) =
+  M.mst #(full_mem st) st.evolves a 
+    (fun s0 -> aux s0 /\ st.interp (pre `st.star` inv s0) s0 )
+    (fun _ x s1 -> aux s1 /\ st.interp (post x `st.star` inv s1) s1)
+     
+let mst_sep st a pre post = mst_sep_aux st (fun _ -> True) st.invariant a pre post
+
 let nmst_sep (st:state u#s) (a:Type u#a) (pre:st.pred) (post:post st a) =
   nmst #(full_mem st) st.evolves a 
     (fun s0 -> st.interp (pre `st.star` st.invariant s0) s0 )
@@ -88,7 +103,7 @@ type action (st:state u#s) (a:Type u#a) = {
   post: post st a;
   step: (
     frame:st.pred ->
-    nmst_sep st a (st.star pre frame) (fun x -> st.star (post x) frame)
+    mst_sep st a (st.star pre frame) (fun x -> st.star (post x) frame)
   )
  }
   
@@ -179,7 +194,7 @@ let rec step
     = let n : m a (f.post x) q = k x in
       weaken (return (Step _ n))
     in
-    weaken <| bind (f.step frame) k
+    weaken <| bind (lift <| f.step frame) k
   | Par #_ #pre0 #post0 (Ret x0) #pre1 #post1 (Ret x1) #a #post k ->
     weaken <| return <| Step _ k
   | Par #_ #pre0 #post0 m0 #pre1 #post1 m1 #a #post k ->
@@ -229,7 +244,9 @@ let raise_action
       pre = a.pre;
       post = (fun (x:U.raise_t u#0 u#s t) -> a.post (U.downgrade_val x));
       step = (fun frame ->
-               weaken <| bind (a.step frame) (fun x -> return <| U.raise_val u#0 u#s x))
+               M.weaken <|
+               M.bind (a.step frame) <|
+               (fun x -> M.return <| U.raise_val u#0 u#s x))
    }
 
 let act
@@ -281,7 +298,7 @@ let frame_action (#st:state u#s) (#a:Type u#s)
 : g:action st a { g.post == (fun x -> f.post x `st.star` frame) /\
                   g.pre == f.pre `st.star` frame }
 = let step (fr:st.pred) 
-    : nmst_sep st a 
+    : mst_sep st a 
       ((f.pre `st.star` frame) `st.star` fr)
       (fun x -> (f.post x `st.star` frame) `st.star` fr)
     = f.step (frame `st.star` fr)

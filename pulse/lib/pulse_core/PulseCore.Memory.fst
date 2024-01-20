@@ -515,7 +515,7 @@ let preserves_frame (e:inames) (pre post:slprop) (m0 m1:mem) =
   This is a version of MstTot with frame quantified, as part of preserves_frame
 *)
 effect MstTotNF (a:Type u#a) (except:inames) (expects:slprop u#1) (provides: a -> slprop u#1) =
-  NMSTTotal.NMSTATETOT a (full_mem u#1) mem_evolves
+  MSTTotal.MSTATETOT a (full_mem u#1) mem_evolves
     (requires fun m0 ->
         inames_ok except m0 /\
         interp (expects `star` locks_invariant except m0) m0)
@@ -586,6 +586,7 @@ let hheap_of_hmem #fp #e (m:hmem_with_inv_except e fp)
     H.pure_interp (heap_ctr_valid m.ctr (heap_of_mem m)) h;
     h
 
+module Heap = Pulse.Heap
 let hmem_of_hheap #e (#fp0 #fp1:slprop) (m:hmem_with_inv_except e fp0)
                   (h:H.full_hheap (fp1 `star` linv e m) {
                        h `Heap.free_above_addr` m.ctr
@@ -702,7 +703,7 @@ let frame_preserving_respects_preorder #a #e #fp #fp' ($f:tot_action_nf_except e
 
 let lift_tot_action_nf #a #e #fp #fp' ($f:tot_action_nf_except e fp a fp')
   : MstTotNF a e fp fp'
-  = let m0 = NMSTTotal.get () in
+  = let m0 = MSTTotal.get () in
     let m0' : hmem_with_inv_except e fp = m0 in
     let r = f m0' in
     let (| x, m1 |) = r in
@@ -710,14 +711,14 @@ let lift_tot_action_nf #a #e #fp #fp' ($f:tot_action_nf_except e fp a fp')
     assert (is_frame_preserving f);
     assert (m1 == dsnd (f m0));
     frame_preserving_respects_preorder f m0;
-    NMSTTotal.put #_ #(mem_evolves) m1;
+    MSTTotal.put #_ #(mem_evolves) m1;
     x
 
 let lift_tot_action #a #e #fp #fp'
   ($f:tot_action_nf_except e fp a fp')
   (frame:slprop)
   : MstTot a e fp fp' frame (fun _ -> True) (fun _ _ _ -> True)
-  = let m0 = NMSTTotal.get #(full_mem) #_ () in
+  = let m0 = MSTTotal.get #(full_mem) #_ () in
     ac_reasoning_for_m_frame_preserving fp frame (locks_invariant e m0) m0;
     assert (interp (fp `star` frame `star` locks_invariant e m0) m0);
     assert (interp (fp `star` locks_invariant e m0) m0);
@@ -782,7 +783,7 @@ let lift_tot_action_with_frame #a #e #fp #fp'
   ($f:tot_action_with_frame_except e fp a fp')
   (frame:slprop)
   : MstTot a e fp fp' frame (fun _ -> True) (fun _ _ _ -> True)
-  = let m0 = NMSTTotal.get () in
+  = let m0 = MSTTotal.get () in
     assert (inames_ok e m0);
     ac_reasoning_for_m_frame_preserving fp frame (locks_invariant e m0) m0;
     assert (interp (fp `star` frame `star` locks_invariant e m0) m0);
@@ -794,7 +795,7 @@ let lift_tot_action_with_frame #a #e #fp #fp'
     assert (interp (fp' x `star` frame `star` locks_invariant e m1) m1);
     assert (interp (fp' x `star` locks_invariant e m1) m1);
     let m1' : hmem_with_inv_except e (fp' x) = m1 in
-    NMSTTotal.put #_ #(mem_evolves) m1;
+    MSTTotal.put #_ #(mem_evolves) m1;
     x
 
 let sel_action #a #pcm e r v0
@@ -1059,7 +1060,7 @@ let witness (#a:Type) (#pcm:pcm a)
            (fun _ -> pts_to r v) frame
            (fun _ -> True)
            (fun _ _ _ -> True)
-  = let m0 = NMSTTotal.get () in
+  = let m0 = MSTTotal.get () in
     let _ : unit = 
       let hr : H.ref a pcm = r in
       let v' = H.sel_v hr v (heap_of_mem m0) in
@@ -1070,7 +1071,7 @@ let witness (#a:Type) (#pcm:pcm a)
       witnessed_ref_stability r fact;
       assert (FStar.Preorder.stable (witnessed_ref r fact) mem_evolves)
     in
-    let w = NMSTTotal.witness _ mem_evolves (witnessed_ref r fact) in
+    let w = MSTTotal.witness _ mem_evolves (witnessed_ref r fact) in
     w
 
 let recall (#a:Type u#1) (#pcm:pcm a) (#fact:property a)
@@ -1079,8 +1080,8 @@ let recall (#a:Type u#1) (#pcm:pcm a) (#fact:property a)
            (v:Ghost.erased a)
            (w:witnessed r fact)
            (frame:slprop)
-  = let m0 = NMSTTotal.get () in
-    NMSTTotal.recall _ mem_evolves (witnessed_ref r fact) w;
+  = let m0 = MSTTotal.get () in
+    MSTTotal.recall _ mem_evolves (witnessed_ref r fact) w;
     let hr : H.ref a pcm = r in
     assert (witnessed_ref r fact m0);
     let v1 = H.sel_v hr v (heap_of_mem m0) in
@@ -1216,7 +1217,7 @@ let pre_inv_of_inv #p (i:inv p) = let (|i, w, _|) = i in (|i,w|)
 let name_of_pre_inv (i:pre_inv) = dfst i
 
 let rec recall_all (ctx:list pre_inv)
-  : NMSTTotal.NMSTATETOT unit (full_mem u#1) mem_evolves
+  : MSTTotal.MSTATETOT unit (full_mem u#1) mem_evolves
     (requires fun _ -> True)
     (ensures fun m0 _ m1 -> m0==m1 /\ (forall i. i `List.Tot.memP` ctx ==> name_is_ok (name_of_pre_inv i) m0))
   = match ctx with
@@ -1224,12 +1225,12 @@ let rec recall_all (ctx:list pre_inv)
     | hd::tl ->
       let (| q, i |) = hd in
       let i : W.witnessed full_mem mem_evolves (name_is_ok q) = i in
-      NMSTTotal.recall _ mem_evolves (name_is_ok q) i;
+      MSTTotal.recall _ mem_evolves (name_is_ok q) i;
       recall_all tl
 
 let fresh_invariant (e:inames) (p:slprop) (ctx:list pre_inv) (frame:slprop)
   : MstTot (i:inv p { not (mem_inv e i) /\ fresh_wrt ctx (name_of_inv i)}) e p (fun _ -> emp) frame (fun _ -> True) (fun _ _ _ -> True)
-  = let m0 = NMSTTotal.get () in
+  = let m0 = MSTTotal.get () in
     recall_all ctx;
     ac_reasoning_for_m_frame_preserving p frame (locks_invariant e m0) m0;
     assert (interp (p `star` locks_invariant e m0) m0);
@@ -1238,10 +1239,10 @@ let fresh_invariant (e:inames) (p:slprop) (ctx:list pre_inv) (frame:slprop)
     assert (i == List.Tot.length m0.locks);
     assert (not (Set.mem i e));
     assert (mem_evolves m0 m1);
-    NMSTTotal.put #full_mem #mem_evolves m1;
+    MSTTotal.put #full_mem #mem_evolves m1;
     iname_for_p_stable i p;
-    let w  = NMSTTotal.witness full_mem mem_evolves (iname_for_p_mem i p) in
-    let w0 = NMSTTotal.witness full_mem mem_evolves (name_is_ok i) in
+    let w  = MSTTotal.witness full_mem mem_evolves (iname_for_p_mem i p) in
+    let w0 = MSTTotal.witness full_mem mem_evolves (name_is_ok i) in
     (| hide i, w0, w |)
 
 let new_invariant (e:inames) (p:slprop) (frame:slprop)
@@ -1395,8 +1396,8 @@ let with_invariant (#a:Type)
                    (f:action_except a (add_inv opened_invariants i) (p `star` fp) (fun x -> p `star` fp' x))
                    (frame:slprop)
   : MstTot a opened_invariants fp fp' frame (fun _ -> True) (fun _ _ _ -> True)
-  = let m0 = NMSTTotal.get () in
-    NMSTTotal.recall _ mem_evolves (iname_for_p_mem (name_of_inv i) p) (token_of_inv i);
+  = let m0 = MSTTotal.get () in
+    MSTTotal.recall _ mem_evolves (iname_for_p_mem (name_of_inv i) p) (token_of_inv i);
     assert (iname_for_p (name_of_inv i) p m0.locks);
 
     assert (interp (fp `star` frame `star` locks_invariant opened_invariants m0) m0);
@@ -1419,14 +1420,14 @@ let with_invariant (#a:Type)
     assert (interp (p `star` fp `star` frame `star` locks_invariant (set_add (name_of_inv i) opened_invariants) m0) m0);
 
     let r = f frame in
-    let m1 : full_mem = NMSTTotal.get () in
+    let m1 : full_mem = MSTTotal.get () in
 
     assert (interp (p `star` fp' r `star` frame `star` locks_invariant (set_add (name_of_inv i) opened_invariants) m1) m1);
     assert (interp (p `star` fp' r `star` frame `star`
       (lock_store_invariant (set_add (name_of_inv i) opened_invariants) m1.locks `star`
        ctr_validity m1.ctr (heap_of_mem m1))) m1);
 
-    NMSTTotal.recall _ mem_evolves (iname_for_p_mem (name_of_inv i) p) (token_of_inv i);
+    MSTTotal.recall _ mem_evolves (iname_for_p_mem (name_of_inv i) p) (token_of_inv i);
 
     move_invariant opened_invariants m1.locks p (name_of_inv i);
     assert (lock_store_invariant opened_invariants m1.locks `equiv`
@@ -1465,12 +1466,12 @@ let frame (#a:Type)
           (frame0:slprop)
   : MstTot a opened_invariants (pre `star` frame) (fun x -> post x `star` frame) frame0
            req ens
-  = let m0 : full_mem = NMSTTotal.get () in
+  = let m0 : full_mem = MSTTotal.get () in
     equiv_pqrs_p_qr_s pre frame frame0 (linv opened_invariants m0);
     assert (interp (pre `star` frame `star` frame0 `star` linv opened_invariants m0) m0);
     assert (interp (pre `star` (frame `star` frame0) `star` linv opened_invariants m0) m0);
     let x = f (frame `star` frame0) in
-    let m1 : full_mem = NMSTTotal.get () in
+    let m1 : full_mem = MSTTotal.get () in
     equiv_pqrs_p_qr_s (post x) frame frame0 (linv opened_invariants m1);
     assert (interp (post x `star` (frame `star` frame0) `star` linv opened_invariants m1) m1);
     assert (interp (post x `star` frame `star` frame0 `star` linv opened_invariants m1) m1);

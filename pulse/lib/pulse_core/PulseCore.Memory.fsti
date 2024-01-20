@@ -353,7 +353,7 @@ val elim_h_exists (#a:_) (p:a -> slprop) (m:mem)
 
 (**** Actions *)
 
-/// Note, at this point, using the NMSTTotal effect constrains the mem to be
+/// Note, at this point, using the MSTTotal effect constrains the mem to be
 /// in universe 2, rather than being universe polymorphic
 
 (** A memory predicate that depends only on fp *)
@@ -379,7 +379,7 @@ val mem_evolves : FStar.Preorder.preorder full_mem
 (**
   To guarantee that the memory always evolve according to frame-preserving updates,
   we encode it into the [MstTot] effect build on top of the non-deterministic state total
-  effect NMSTATETOT. The effect is indexed by [except], which is the set of invariants that
+  effect MSTATETOT. The effect is indexed by [except], which is the set of invariants that
   are currently opened.
 *)
 effect MstTot
@@ -390,7 +390,7 @@ effect MstTot
   (frame:slprop u#1)
   (pre:mprop expects)
   (post:mprop2 expects provides)
-  = NMSTTotal.NMSTATETOT a (full_mem u#1) mem_evolves
+  = MSTTotal.MSTATETOT a (full_mem u#1) mem_evolves
     (requires fun m0 ->
         inames_ok except m0 /\
         interp (expects `star` frame `star` locks_invariant except m0) m0 /\
