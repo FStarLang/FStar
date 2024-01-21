@@ -85,6 +85,7 @@ let action
     (except:inames)
     (pre:slprop)
     (post:a -> slprop)
+: Type u#(max a 2)
 = frame:slprop ->
   Sem.mst_sep_aux u#2 u#a state
     (inames_ok except)
@@ -113,7 +114,6 @@ let bind_action
 
 let frame_action
      (#a:Type u#a)
-     (#b:Type u#b)
      (#except:inames)
      (#pre #post #frame:_)
      (f:action a except pre post)
@@ -150,7 +150,7 @@ let action_as_mem_action
         (a:Type u#a)
         (except:inames)
         (pre:slprop)
-        (post: a -> slprop)
+        (post: a -> slprop) 
         (act:action a except pre post)
 : Mem.action_except a except pre post
 = fun frame ->

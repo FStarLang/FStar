@@ -48,7 +48,8 @@ let is_unit #a (x:a) (f:a -> a -> a) =
  *  - [laws] state that {pred, emp, star} are a commutative monoid
  *)
 noeq
-type state : Type u#(s + 1) = {
+type state : Type u#(max (s + 1) (act + 1)) = {
+  max_act:Type u#act;
   s:Type u#s;
   is_full_mem: s -> prop;
   pred:Type u#s;
@@ -60,7 +61,7 @@ type state : Type u#(s + 1) = {
   laws: squash (associative star /\ commutative star /\ is_unit emp star)
 }
 
-let full_mem (st:state u#s) : Type u#s = m:st.s { st.is_full_mem m }
+let full_mem (st:state u#s u#act) : Type u#s = m:st.s { st.is_full_mem m }
 
 (** [post a c] is a postcondition on [a]-typed result *)
 let post (s:state) a = a -> s.pred
@@ -70,7 +71,7 @@ let post (s:state) a = a -> s.pred
     nmst_sep provides separation-logic specifications for those computations.
     mst_sep is analogous, except computation in mst_sep are also total
  **)
-let mst_sep_aux (st:state u#s)
+let mst_sep_aux (st:state u#s u#act)
                 (aux:full_mem st -> prop) 
                 (inv:full_mem st -> st.pred)
                 (a:Type u#a)
@@ -82,7 +83,7 @@ let mst_sep_aux (st:state u#s)
      
 let mst_sep st a pre post = mst_sep_aux st (fun _ -> True) st.invariant a pre post
 
-let nmst_sep (st:state u#s) (a:Type u#a) (pre:st.pred) (post:post st a) =
+let nmst_sep (st:state u#s u#act) (a:Type u#a) (pre:st.pred) (post:post st a) =
   nmst #(full_mem st) st.evolves a 
     (fun s0 -> st.interp (pre `st.star` st.invariant s0) s0 )
     (fun _ x s1 -> st.interp (post x `st.star` st.invariant s1) s1)
@@ -98,7 +99,7 @@ let nmst_sep (st:state u#s) (a:Type u#a) (pre:st.pred) (post:post st a) =
  *  Also see: https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/views.pdf
  *)
 noeq
-type action (st:state u#s) (a:Type u#a) = {
+type action (st:state u#s u#act) (a:Type u#a) : Type u#(max a s) = {
   pre: st.pred;
   post: post st a;
   step: (
@@ -115,11 +116,11 @@ type action (st:state u#s) (a:Type u#a) = {
  *  pre- and post-conditions so that we can do proofs
  *  intrinsically.
  *
- *  Universe-polymorphic in both the state and result type
+ *  Universe-polymorphic im both the state and result type
  *
  *)
 noeq
-type m (#st:state u#s) : (a:Type u#a) -> st.pred -> post st a -> Type =
+type m (#st:state u#s u#act) : (a:Type u#a) -> st.pred -> post st a -> Type u#(max (act + 1) s (a + 1)) =
   | Ret:
       #a:Type u#a ->
       #post:(a -> st.pred) ->
@@ -128,22 +129,21 @@ type m (#st:state u#s) : (a:Type u#a) -> st.pred -> post st a -> Type =
   | Act:
       #a:Type u#a ->
       #post:(a -> st.pred) ->
-      #b:Type u#s ->
+      #b:Type u#act ->
       f:action st b ->
       k:(x:b -> Dv (m a (f.post x) post)) ->
       m a f.pre post
   | Par:
       #pre0:_ ->
       #post0:_ ->
-      m0: m (U.raise_t unit) pre0 (fun _ -> post0) ->
+      m0:m (U.raise_t unit) pre0 (fun _ -> post0) ->
       #pre1:_ ->
       #post1:_ ->
-      m1: m (U.raise_t unit) pre1 (fun _ -> post1) ->
+      m1:m (U.raise_t unit) pre1 (fun _ -> post1) ->
       #a:_ ->
       #post:_ ->
       k:m a (st.star post0 post1) post ->
       m a (st.star pre0 pre1) post
-
 
 /// The semantics comes in two levels:
 ///
@@ -162,7 +162,7 @@ type m (#st:state u#s) : (a:Type u#a) -> st.pred -> post st a -> Type =
  *    - frame: a framed assertion to carry through the proof
  *)
 noeq
-type step_result (#st:state u#s) (a:Type u#a) (q:post st a) (frame:st.pred) =
+type step_result (#st:state u#s u#act) (a:Type u#a) (q:post st a) (frame:st.pred) =
   | Step: next:_ -> //precondition of the reduct
           m:m a next q -> //the reduct
           step_result a q frame
@@ -172,7 +172,7 @@ type step_result (#st:state u#s) (a:Type u#a) (q:post st a) (frame:st.pred) =
  * the assertion [frame]
  *)
 let rec step 
-    (#st:state u#s)
+    (#st:state u#s u#act)
     (#p:st.pred)
     (#a:Type u#a)
     (#q:post st a)
@@ -216,7 +216,11 @@ let rec step
 (** The main partial correctness result:
  *    m computations can be interpreted into nmst_sep computations 
  *)    
-let rec run (#st:state u#s) #pre (#a:Type u#a) #post (f:m a pre post)
+let rec run (#st:state u#s u#act) 
+            (#pre:st.pred)
+            (#a:Type u#a) 
+            (#post:a -> st.pred)
+            (f:m a pre post)
 : Dv (nmst_sep st a pre post)
 = match f with
   | Ret x -> 
@@ -231,27 +235,27 @@ let rec run (#st:state u#s) #pre (#a:Type u#a) #post (f:m a pre post)
  
 
 (** [return]: easy, just use Ret *)
-let ret (#st:state u#s) (#a:Type u#a) (x:a) (post:post st a)
+let ret (#st:state u#s u#act) (#a:Type u#a) (x:a) (post:post st a)
   : m a (post x) post
   = Ret x
 
 let raise_action 
-    (#st:state u#s)
+    (#st:state u#s u#act)
     (#t:Type0)
     (a:action st t)
- : action st (U.raise_t u#0 u#s t)
+ : action st (U.raise_t u#0 u#act t)
  = {
       pre = a.pre;
-      post = (fun (x:U.raise_t u#0 u#s t) -> a.post (U.downgrade_val x));
+      post = (fun (x:U.raise_t u#0 u#act t) -> a.post (U.downgrade_val x));
       step = (fun frame ->
                M.weaken <|
                M.bind (a.step frame) <|
-               (fun x -> M.return <| U.raise_val u#0 u#s x))
+               (fun x -> M.return <| U.raise_val u#0 u#act x))
    }
 
 let act
-    (#st:state u#s)
-    (#t:Type u#s)
+    (#st:state u#s u#act)
+    (#t:Type u#act)
     (a:action st t)
 : m t a.pre a.post
 = Act a Ret
@@ -261,7 +265,7 @@ let act
  * at each node, finally applying it at the terminal `Ret`
  *)
 let rec mbind
-     (#st:state u#s)
+     (#st:state u#s u#act)
      (#a:Type u#a)
      (#b:Type u#b)
      (#p:st.pred)
@@ -286,6 +290,17 @@ let rec mbind
       in
       Par ml' mr' k
 
+let act_as_m
+    (#st:state u#s u#act)
+    (#t:Type u#0)
+    (a:action st t)
+: Dv (m t a.pre a.post)
+= let k (x:U.raise_t u#0 u#act t)
+    : Dv (m t (a.post (U.downgrade_val x)) a.post) 
+    = Ret (U.downgrade_val x)
+  in
+  mbind (act (raise_action a)) k
+
 (* Next, a main property of this semantics is that it supports the
    frame rule. Here's a proof of it *)
 
@@ -293,7 +308,7 @@ let rec mbind
 ///
 /// --- That's not so hard, since we specifically required actions to
 ///     be frameable
-let frame_action (#st:state u#s) (#a:Type u#s) 
+let frame_action (#st:state u#s u#act) (#a:Type u#act) 
                  (f:action st a) (frame:st.pred)
 : g:action st a { g.post == (fun x -> f.post x `st.star` frame) /\
                   g.pre == f.pre `st.star` frame }
@@ -308,7 +323,7 @@ let frame_action (#st:state u#s) (#a:Type u#s)
 /// Now, to prove that computations can be framed, we'll just thread
 /// the frame through the entire computation, passing it over every
 /// frameable action
-let rec frame (#st:state u#s)
+let rec frame (#st:state u#s u#act)
               (#a:Type u#a)
               (#p:st.pred)
               (#q:post st a)
@@ -326,7 +341,7 @@ let rec frame (#st:state u#s)
  * [par]: Parallel composition
  * Works by just using the `Par` node and `Ret` as its continuation
  **)
-let par (#st:state u#s)
+let par (#st:state u#s u#act)
         #p0 #q0 (m0:m unit p0 (fun _ -> q0))
         #p1 #q1 (m1:m unit p1 (fun _ -> q1))
  : Dv (m unit (p0 `st.star` p1) (fun _ -> q0 `st.star` q1))

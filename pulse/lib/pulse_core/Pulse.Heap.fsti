@@ -661,6 +661,9 @@ val lift_h_exists (#a:_) (p:a -> slprop)
 val elim_pure (p:prop)
   : action (pure p) (u:unit{p}) (fun _ -> emp)
 
+val intro_pure (p:prop) (_:squash p)
+  : action emp unit (fun _ -> pure p)
+
 val pts_to_evolve (#a:Type u#a) (#pcm:_) (r:ref a pcm) (x y : a) (h:heap)
   : Lemma (requires (interp (pts_to r x) h /\ compatible pcm y x))
           (ensures  (interp (pts_to r y) h))

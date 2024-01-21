@@ -561,6 +561,9 @@ val lift_h_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
 val elim_pure (#opened_invariants:_) (p:prop)
   : action_except (u:unit{p}) opened_invariants (pure p) (fun _ -> emp)
 
+val intro_pure (#opened_invariants:_) (p:prop) (_:squash p)
+  : action_except unit opened_invariants emp (fun _ -> pure p)
+
 val pts_to_join (#a:Type) (#pcm:pcm a) (r:ref a pcm) (x y : a) (m:mem) :
   Lemma (requires (interp (pts_to r x) m /\ interp (pts_to r y) m))
         (ensures (joinable pcm x y))

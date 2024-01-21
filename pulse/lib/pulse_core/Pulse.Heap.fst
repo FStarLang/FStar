@@ -1267,6 +1267,14 @@ let elim_pure (p:prop)
     in
     refined_pre_action_as_action f
 
+let intro_pure (p:prop) (_:squash p)
+: action emp unit (fun _ -> pure p)
+= let f
+    : refined_pre_action emp unit (fun _ -> pure p)
+    = fun h -> (| (), h |)
+  in
+  refined_pre_action_as_action f
+
 let pts_to_evolve (#a:Type u#a) (#pcm:_) (r:ref a pcm) (x y : a) (h:heap)
   : Lemma (requires (interp (pts_to r x) h /\ compatible pcm y x))
           (ensures  (interp (pts_to r y) h))
