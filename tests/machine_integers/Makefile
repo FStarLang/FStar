@@ -15,6 +15,7 @@ accept: $(patsubst %.fst,%.run-accept,$(MODULES))
 %.exe: %.fst | out
 	$(call msg, "BUILD", $(notdir $@))
 	$(eval B := $(patsubst %.exe,%,$@))
+	rm -f "out/${B}.ml"
 	$(Q)$(FSTAR) $(SIL) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml --extract '${B}' '${B}.fst'
 	$(Q)/bin/echo -e '\n\nlet _ = main ()\n' >> out/${B}.ml
 	$(Q)$(OCAMLOPT) out/${B}.ml -o $@
