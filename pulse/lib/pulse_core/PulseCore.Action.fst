@@ -2,29 +2,124 @@ module PulseCore.Action
 module Sem = PulseCore.Semantics2
 module Mem = PulseCore.Memory
 module I = PulseCore.InstantiatedSemantics
+friend PulseCore.InstantiatedSemantics
+open FStar.PCM
+open FStar.Ghost
 open Mem
 open I
 
-let inames = Ghost.erased (FStar.Set.set iname)
-let emp_inames : inames = Ghost.hide Set.empty
+//////////////////////////////////////////////////////
+// An abstraction on top of memory actions
+//////////////////////////////////////////////////////
 
-let join_inames (is1 is2 : inames) : inames =
-  Set.union is1 is2
+(* The type of atomic actions *)
+module M = Pulse.MonotonicStateMonad
+let action
+    (a:Type u#a)
+    (except:inames)
+    (pre:slprop)
+    (post:a -> slprop)
+: Type u#(max a 2)
+= frame:slprop ->
+  Sem.mst_sep_aux state
+    (inames_ok except)
+    (state0 except).invariant
+    a 
+    (pre `star` frame)
+    (fun x -> post x `star` frame)
 
-let inames_subset (is1 is2 : inames) : Type0 =
-  Set.subset is1 is2
+let return_action
+    (#a:Type u#a)
+    (#except:inames)
+    (#post:a -> slprop)
+    (x:a)
+: action a except (post x) post
+= fun frame -> M.weaken (M.return x)
 
-let (/!) (is1 is2 : inames) : Type0 =
-  Set.disjoint is1 is2
+let bind_action
+     (#a:Type u#a)
+     (#b:Type u#b)
+     (#except:inames)
+     (#pre1 #post1 #post2:_)
+     (f:action a except pre1 post1)
+     (g:(x:a -> action b except (post1 x) post2))
+: action b except pre1 post2
+= fun frame -> M.weaken (M.bind (f frame) (fun x -> g x frame))
 
-unfold
-let inames_disj (ictx:inames) : Type = is:inames{is /! ictx}
+let frame_action
+     (#a:Type u#a)
+     (#except:inames)
+     (#pre #post #frame:_)
+     (f:action a except pre post)
+: action a except (pre `star` frame) (fun x -> post x `star` frame)
+= fun frame' -> f (frame `star` frame')
+
+let stt_of_action (#a:Type u#100) #pre #post (m:action a Set.empty pre post)
+: stt a pre post
+= let step (frame:slprop)
+    : Sem.mst_sep state a (pre `star` frame) (fun x -> post x `star` frame)
+    = M.weaken (m frame)
+  in
+  let action : Sem.action state a = {pre=pre; post=post; step} in
+  let m : Sem.m a pre post = Sem.act action in
+  fun _ -> m
+
+let stt_of_action0 (#a:Type u#0) #pre #post (m:action a Set.empty pre post)
+: stt a pre post
+= let step (frame:slprop)
+    : Sem.mst_sep state a (pre `star` frame) (fun x -> post x `star` frame)
+    = M.weaken (m frame)
+  in
+  let action : Sem.action state a = {pre=pre; post=post; step} in
+  fun _ -> Sem.act_as_m action
+  
+let mem_action_as_action
+        (a:Type u#a)
+        (except:inames)
+        (req:slprop)
+        (ens: a -> slprop)
+        (act:Mem.action_except a except req ens)
+: action a except req ens
+= fun frame ->
+    let thunk
+      : unit -> MstTot a except req ens frame
+      = fun _ -> act frame
+    in
+    M.of_msttotal _ _ _ _ thunk
+
+let action_as_mem_action
+        (a:Type u#a)
+        (except:inames)
+        (pre:slprop)
+        (post: a -> slprop) 
+        (act:action a except pre post)
+: Mem.action_except a except pre post
+= fun frame ->
+    let m
+      : M.mst state.evolves
+                a 
+                (fun s0 -> 
+                    inames_ok except s0 /\
+                    interp ((pre `star` locks_invariant except s0) `star` frame) s0)
+                (fun s0 x s1 ->
+                    inames_ok except s1 /\
+                    interp ((post x `star` locks_invariant except s1) `star` frame) s1)
+      = M.weaken (act frame)
+    in
+    M.to_msttotal _ _ _ _ m
+
+//////////////////////////////////////////////////////
+// Next, reversing the polarity of the inames index
+//////////////////////////////////////////////////////
+
+let iname = iname
 
 let act 
     (a:Type u#a)
     (opens:inames)
     (pre:slprop)
     (post:a -> slprop)
+: Type u#(max a 2)
 = #ictx:inames_disj opens ->
    action a ictx pre post
 
@@ -53,10 +148,31 @@ let frame
 : act a opens (pre `star` frame) (fun x -> post x `star` frame)
 = fun #ictx -> frame_action (f #ictx)
 
-let lift (#a:Type u#2) #opens #pre #post
+let weaken 
+    (#a:Type)
+    (#pre:slprop)
+    (#post:a -> slprop)
+    (#opens opens':inames)
+    (f:act a opens pre post)
+: act a (Set.union opens opens') pre post
+= f
+
+let lift (#a:Type u#100) #opens #pre #post
          (m:act a opens pre post)
 : stt a pre post
 = stt_of_action (m #emp_inames)
+
+let lift0 (#a:Type u#0) #opens #pre #post
+          (m:act a opens pre post)
+: stt a pre post
+= stt_of_action0 (m #emp_inames)
+
+///////////////////////////////////////////////////////
+// invariants
+///////////////////////////////////////////////////////
+
+let inv = inv
+let name_of_inv = name_of_inv
 
 let new_invariant (p:slprop)
 : act (inv p) emp_inames p (fun _ -> emp)
@@ -73,28 +189,18 @@ let with_invariant
     (f:unit -> act a f_opens (p `star` fp) (fun x -> p `star` fp' x))
 : act a (add_inv f_opens i) fp fp'
 = fun #ictx ->
-    let ictx' = add_inv ictx i in
+    let ictx' = Mem.add_inv ictx i in
     let f = action_as_mem_action _ _ _ _ (f () #ictx') in
     let m = with_invariant i f in
     mem_action_as_action _ _ _ _ m
 
-let weaken 
-    (#a:Type)
-    (#pre:slprop)
-    (#post:a -> slprop)
-    (#opens opens':inames)
-    (f:act a opens pre post)
-: act a (Set.union opens opens') pre post
-= f
 
 ///////////////////////////////////////////////////////////////////
 // Core operations on references
 ///////////////////////////////////////////////////////////////////
-open FStar.PCM
-open FStar.Ghost
 
 let ref (a:Type u#a) (p:pcm a) = ref a p
-
+let pts_to = pts_to
 let alloc
     (#a:Type u#1)
     (#pcm:pcm a)
@@ -152,6 +258,7 @@ let gather
     (fun _ -> pts_to r (op pcm v0 v1))
 = fun #ictx -> mem_action_as_action _ _ _ _ (gather_action ictx r v0 v1)
 
+let witnessed = witnessed
 let witness
     (#a:Type)
     (#pcm:pcm a)
@@ -189,3 +296,31 @@ let elim_pure (p:prop)
 ///////////////////////////////////////////////////////////////////
 // exists*
 ///////////////////////////////////////////////////////////////////
+module F = FStar.FunctionalExtensionality
+let exists_equiv (#a:_) (#p:a -> slprop)
+  : squash (op_exists_Star p == (exists* x. p x))
+  = let pf = I.slprop_equiv_exists p (fun x -> p x) () in
+    let pf = FStar.Squash.return_squash pf in
+    I.slprop_equiv_elim (op_exists_Star p) (exists* x. p x)
+
+let thunk (p:slprop) = fun (_:unit) -> p
+
+let intro_exists' (#a:Type u#a) (p:a -> slprop) (x:erased a)
+: act unit emp_inames (p x) (thunk (op_exists_Star p))
+= fun #ictx -> mem_action_as_action _ _ _ _ (intro_exists #ictx (F.on_dom a p) x)
+
+let intro_exists'' (#a:Type u#a) (p:a -> slprop) (x:erased a)
+: act unit emp_inames (p x) (thunk (exists* x. p x))
+= coerce_eq (exists_equiv #a #p) (intro_exists' #a p x)
+
+let intro_exists (#a:Type u#a) (p:a -> slprop) (x:erased a)
+: act unit emp_inames (p x) (fun _ -> exists* x. p x)
+= intro_exists'' p x
+
+let elim_exists' (#a:Type u#a) (p:a -> slprop)
+: act (erased a) emp_inames (op_exists_Star p) (fun x -> p x)
+= fun #ictx -> mem_action_as_action _ _ _ _ (witness_h_exists #ictx (F.on_dom a p))
+
+let elim_exists (#a:Type u#a) (p:a -> slprop)
+: act (erased a) emp_inames (exists* x. p x) (fun x -> p x)
+= coerce_eq (exists_equiv #a #p) (elim_exists' #a p)

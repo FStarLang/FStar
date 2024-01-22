@@ -553,6 +553,11 @@ val witness_h_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
            (h_exists p)
            (fun x -> p x)
 
+val intro_exists (#opened_invariants:_) (#a:_) (p:a -> slprop) (x:erased a)
+  : action_except unit opened_invariants
+           (p x)
+           (fun _ -> h_exists p)
+
 val lift_h_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
   : action_except unit opened_invariants
            (h_exists p)

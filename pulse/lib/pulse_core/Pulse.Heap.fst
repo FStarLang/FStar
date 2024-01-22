@@ -1243,6 +1243,11 @@ let witness_h_exists #a p =
     (fun x -> interp (p x `star` frame) h0) in
   (| w, h0 |)
 
+let intro_exists #a p x =
+  fun frame h0 ->
+    intro_h_exists (reveal x) p h0;
+    (| (), h0 |)
+    
 let lift_h_exists (#a:_) (p:a -> slprop)
   : action (h_exists p) unit
            (fun _a -> h_exists #(U.raise_t a) (U.lift_dom p))
