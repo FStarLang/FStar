@@ -501,7 +501,7 @@ val elim_false (a:Type) (p:a -> vprop)
 //Core PCM references
 ////////////////////////////////////////////////////////
 open FStar.PCM
-val pcm_ref (#[@@@unused] a:Type u#a) (p:FStar.PCM.pcm a) : Type0
+val pcm_ref (#[@@@unused] a:Type u#a) ([@@@unused] p:FStar.PCM.pcm a) : Type0
 val pcm_pts_to (#a:Type u#1) (#p:pcm a) (r:pcm_ref p) (v:a) : vprop
 
 val alloc

@@ -30,12 +30,12 @@ val alloc (#a:Type) (x:a)
 val ( ! ) (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
   : stt a
         (pts_to r #p n)
-        (fun x -> pts_to r #p x ** pure (reveal n == x))
+        (fun x -> pts_to r #p n ** pure (reveal n == x))
 
 val ( := ) (#a:Type) (r:ref a) (x:a) (#n:erased a)
   : stt unit
         (pts_to r n)
-        (fun _ -> pts_to r (hide x))
+        (fun _ -> pts_to r x)
 
 val free (#a:Type) (r:ref a) (#n:erased a)
   : stt unit (pts_to r n) (fun _ -> emp)
