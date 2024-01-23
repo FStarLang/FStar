@@ -60,11 +60,29 @@ val weaken
     (f:act a opens pre post)
 : act a (Set.union opens opens') pre post
 
+val sub 
+    (#a:Type)
+    (#pre:slprop)
+    (#post:a -> slprop)
+    (#opens:inames)
+    (pre':slprop { slprop_equiv pre pre' })
+    (post':a -> slprop { forall x. slprop_equiv (post x) (post' x) })
+    (f:act a opens pre post)
+: act a opens pre' post'
+
 val lift (#a:Type u#100) #opens (#pre:slprop) (#post:a -> slprop)
          (m:act a opens pre post)
 : I.stt a pre post
 
 val lift0 (#a:Type u#0) #opens #pre #post
+          (m:act a opens pre post)
+: I.stt a pre post
+
+val lift1 (#a:Type u#1) #opens #pre #post
+          (m:act a opens pre post)
+: I.stt a pre post
+
+val lift2 (#a:Type u#2) #opens #pre #post
           (m:act a opens pre post)
 : I.stt a pre post
 
@@ -81,6 +99,7 @@ let mem_inv (#p:_) (opens:inames) (i:inv p)
 = Set.mem (name_of_inv i) opens
 
 let add_inv (#p:_) (opens:inames) (i:inv p)
+: inames
 = Set.union (Set.singleton (name_of_inv i)) opens
 
 val new_invariant (p:slprop)
@@ -189,6 +208,9 @@ val recall
 ///////////////////////////////////////////////////////////////////
 // pure
 ///////////////////////////////////////////////////////////////////
+val pure_true ()
+: slprop_equiv (pure True) emp
+
 val intro_pure (p:prop) (pf:squash p)
 : act unit emp_inames emp (fun _ -> pure p)
 

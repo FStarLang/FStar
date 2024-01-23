@@ -168,6 +168,11 @@ let intro_emp m = H.intro_emp (heap_of_mem m)
 
 let pure_equiv p q = H.pure_equiv p q
 let pure_interp q m = H.pure_interp q (heap_of_mem m)
+let pure_true_emp () : Lemma (pure True `equiv` emp) =
+  FStar.Classical.forall_intro (pure_interp True);
+  FStar.Classical.forall_intro intro_emp;
+  slprop_extensionality (pure True) emp
+
 let pure_star_interp p q m = H.pure_star_interp p q (heap_of_mem m)
 
 ////////////////////////////////////////////////////////////////////////////////

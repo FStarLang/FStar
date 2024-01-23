@@ -162,6 +162,9 @@ val pure_equiv (p q:prop)
 val pure_interp (q:prop) (m:mem)
    : Lemma (interp (pure q) m <==> q)
 
+val pure_true_emp (_:unit)
+  : Lemma (pure True `equiv` emp)
+
 (** A helper lemma for interpreting a pure proposition with another [slprop] *)
 val pure_star_interp (p:slprop u#a) (q:prop) (m:mem)
    : Lemma (interp (p `star` pure q) m <==>

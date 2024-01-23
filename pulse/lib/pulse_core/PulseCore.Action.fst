@@ -71,8 +71,26 @@ let stt_of_action0 (#a:Type u#0) #pre #post (m:action a Set.empty pre post)
     = M.weaken (m frame)
   in
   let action : Sem.action state a = {pre=pre; post=post; step} in
-  fun _ -> Sem.act_as_m action
+  fun _ -> Sem.act_as_m0 action
   
+let stt_of_action1 (#a:Type u#1) #pre #post (m:action a Set.empty pre post)
+: stt a pre post
+= let step (frame:slprop)
+    : Sem.mst_sep state a (pre `star` frame) (fun x -> post x `star` frame)
+    = M.weaken (m frame)
+  in
+  let action : Sem.action state a = {pre=pre; post=post; step} in
+  fun _ -> Sem.act_as_m1 u#2 u#100 action
+
+let stt_of_action2 (#a:Type u#2) #pre #post (m:action a Set.empty pre post)
+: stt a pre post
+= let step (frame:slprop)
+    : Sem.mst_sep state a (pre `star` frame) (fun x -> post x `star` frame)
+    = M.weaken (m frame)
+  in
+  let action : Sem.action state a = {pre=pre; post=post; step} in
+  fun _ -> Sem.act_as_m2 u#2 u#100 action
+   
 let mem_action_as_action
         (a:Type u#a)
         (except:inames)
@@ -157,6 +175,20 @@ let weaken
 : act a (Set.union opens opens') pre post
 = f
 
+let sub 
+    (#a:Type)
+    (#pre:slprop)
+    (#post:a -> slprop)
+    (#opens:inames)
+    (pre':slprop { slprop_equiv pre pre' })
+    (post':a -> slprop { forall x. slprop_equiv (post x) (post' x) })
+    (f:act a opens pre post)
+: act a opens pre' post'
+= I.slprop_equiv_elim pre pre';
+  introduce forall x. post x == post' x
+  with I.slprop_equiv_elim (post x) (post' x);
+  f
+
 let lift (#a:Type u#100) #opens #pre #post
          (m:act a opens pre post)
 : stt a pre post
@@ -167,6 +199,15 @@ let lift0 (#a:Type u#0) #opens #pre #post
 : stt a pre post
 = stt_of_action0 (m #emp_inames)
 
+let lift1 (#a:Type u#1) #opens #pre #post
+          (m:act a opens pre post)
+: stt a pre post
+= stt_of_action1 (m #emp_inames)
+
+let lift2 (#a:Type u#2) #opens #pre #post
+          (m:act a opens pre post)
+: stt a pre post
+= stt_of_action2 (m #emp_inames)
 ///////////////////////////////////////////////////////
 // invariants
 ///////////////////////////////////////////////////////
@@ -285,6 +326,11 @@ let recall
 ///////////////////////////////////////////////////////////////////
 // pure
 ///////////////////////////////////////////////////////////////////
+let pure_true ()
+= Mem.pure_true_emp ();
+  slprop_equiv_elim (pure True) emp;
+  coerce_eq () <| slprop_equiv_refl (pure True)
+
 let intro_pure (p:prop) (pf:squash p)
 : act unit emp_inames emp (fun _ -> pure p)
 = fun #ictx -> mem_action_as_action _ _ _ _ (intro_pure #ictx p pf)

@@ -50,3 +50,27 @@ val frame
   (frame:slprop)
   (e:stt a pre post)
 : stt a (pre ** frame) (fun x -> post x ** frame)
+
+let slprop_post_equiv #a (p q:a -> slprop)
+: prop
+= forall x. slprop_equiv (p x) (q x)
+
+val conv (#a:Type u#a)
+         (pre1:slprop)
+         (pre2:slprop)
+         (post1:a -> slprop)
+         (post2:a -> slprop)
+         (pf1:slprop_equiv pre1 pre2)
+         (pf2:slprop_post_equiv post1 post2)
+: Lemma (stt a pre1 post1 == stt a pre2 post2)
+
+val sub (#a:Type u#a)
+        (#pre1:slprop)
+        (pre2:slprop)
+        (#post1:a -> slprop)
+        (post2:a -> slprop)
+        (pf1:slprop_equiv pre1 pre2)
+        (pf2:slprop_post_equiv post1 post2)
+        (e:stt a pre1 post1)
+: stt a pre2 post2
+

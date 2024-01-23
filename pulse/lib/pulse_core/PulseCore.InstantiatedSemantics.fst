@@ -111,15 +111,16 @@ let slprop_equiv_exists
   unsquash x
 
 (* The type of general-purpose computations *)
+let lower (t:Type u#a) : Type0 = unit -> Dv t
 let stt (a:Type u#a) 
         (pre:slprop)
         (post:a -> slprop)
 : Type0
-= unit -> Dv (Sem.m u#2 u#100 u#a #state a pre post)
+= lower (Sem.m u#2 u#100 u#a #state a pre (F.on_dom a post))
 
 let return (#a:Type u#a) (x:a) (p:a -> slprop)
 : stt a (p x) p
-= fun _ -> Sem.ret x p
+= fun _ -> Sem.ret x (F.on_dom a p)
 
 let bind
     (#a:Type u#a) (#b:Type u#b)
@@ -137,3 +138,27 @@ let frame
 : stt a (pre `star` frame) (fun x -> post x `star` frame)
 = fun _ -> Sem.frame frame (e())
 
+let conv (#a:Type u#a)
+         (pre1:slprop)
+         (pre2:slprop)
+         (post1:a -> slprop)
+         (post2:a -> slprop)
+         (pf1:slprop_equiv pre1 pre2)
+         (pf2:slprop_post_equiv post1 post2)
+: Lemma (stt a pre1 post1 == stt a pre2 post2)
+= slprop_equiv_elim pre1 pre2;
+  introduce forall x. post1 x == post2 x
+  with slprop_equiv_elim (post1 x) (post2 x);
+  Sem.conv #state a #pre1 #(F.on_dom _ post1) (F.on_dom _ post2);
+  ()
+
+let sub (#a:Type u#a)
+        (#pre1:slprop)
+        (pre2:slprop)
+        (#post1:a -> slprop)
+        (post2:a -> slprop)
+        (pf1:slprop_equiv pre1 pre2)
+        (pf2:slprop_post_equiv post1 post2)
+        (e:stt a pre1 post1)
+: stt a pre2 post2
+= coerce_eq (conv pre1 pre2 post1 post2 pf1 pf2) e
