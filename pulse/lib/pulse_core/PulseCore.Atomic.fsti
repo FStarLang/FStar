@@ -163,7 +163,46 @@ val frame_ghost
     (frame:slprop)
     (e:stt_ghost a opens pre post)
 : stt_ghost a opens (pre ** frame) (fun x -> post x ** frame)
- 
+
+val sub_ghost
+    (#a:Type u#a)
+    (#opens:inames)
+    (#pre1:slprop)
+    (pre2:slprop)
+    (#post1:a -> slprop)
+    (post2:a -> slprop)
+    (pf1 : slprop_equiv pre1 pre2)
+    (pf2 : slprop_post_equiv post1 post2)
+    (e:stt_ghost a opens pre1 post1)
+: stt_ghost a opens pre2 post2
+
+val sub_invs_stt_ghost
+    (#a:Type u#a)
+    (#opens1 #opens2:inames)
+    (#pre:slprop)
+    (#post:a -> slprop)
+    (e:stt_ghost a opens1 pre post)
+    (_ : squash (inames_subset opens1 opens2))
+: stt_ghost a opens2 pre post
+
+val noop (p:slprop)
+: stt_ghost unit emp_inames p (fun _ -> p)
+
+val intro_pure (p:prop) (pf:squash p)
+: stt_ghost unit emp_inames emp (fun _ -> pure p)
+
+val elim_pure (p:prop)
+: stt_ghost (squash p) emp_inames (pure p) (fun _ -> emp)
+
+val intro_exists (#a:Type u#a) (p:a -> slprop) (x:erased a)
+: stt_ghost unit emp_inames (p x) (fun _ -> exists* x. p x)
+
+val elim_exists (#a:Type u#a) (p:a -> slprop)
+: stt_ghost (erased a) emp_inames (exists* x. p x) (fun x -> p x)
+
+val ghost_reveal (a:Type) (x:erased a)
+  : stt_ghost a emp_inames emp (fun y -> pure (reveal x == y))
+
 //////////////////////////////////////////////////////////////////
 
 val new_invariant
@@ -276,7 +315,7 @@ val recall
 // References
 ////////////////////////////////////////////////////////////////////////
 [@@erasable]
-val ghost_ref (#a:Type u#a) (p:pcm a) : Type0
+val ghost_ref (#[@@@unused] a:Type u#a) (p:pcm a) : Type0
 val ghost_pts_to (#a:Type u#1) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop 
 
 val ghost_alloc

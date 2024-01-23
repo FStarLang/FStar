@@ -13,6 +13,7 @@
   "include_dirs": [
     "../../../../lib/steel/pulse",
     "../../../../lib/steel",
+    "../../../../lib/pulse_core",
     "bug-reports",
     "by-example",
     "lib",

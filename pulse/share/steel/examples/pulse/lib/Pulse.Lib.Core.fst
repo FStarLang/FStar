@@ -13,124 +13,91 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-
 module Pulse.Lib.Core
-
-open Steel.ST.Effect
-open Steel.ST.Effect.Atomic
-open Steel.ST.Effect.Ghost
-open Steel.Memory
-open Steel.ST.Util
-open Steel.ST.Loops
+module I = PulseCore.InstantiatedSemantics
+module A = PulseCore.Atomic
 module T = FStar.Tactics.V2
 module F = FStar.FunctionalExtensionality
+open PulseCore.InstantiatedSemantics
 
 let double_one_half () = ()
-
 let equate_by_smt = ()
-
-let vprop = vprop
-
-[@@"__reduce__"; "__steel_reduce__"]
+let vprop = slprop
 let emp = emp
-
-[@@"__reduce__"; "__steel_reduce__"]
-let op_Star_Star = star
-
-let star_def ()
-  : Lemma ( ( ** ) == star )
-  = assert ( ( ** ) == star )
-        by (T.trefl())
-
-[@@"__reduce__"; "__steel_reduce__"]
+let op_Star_Star = op_Star_Star
 let pure = pure
-[@@"__reduce__"; "__steel_reduce__"]
-let op_exists_Star = exists_
-[@@"__reduce__"; "__steel_reduce__"]
-let op_forall_Star #a (p:a -> vprop) = forall_ (F.on_dom a p)
+let op_exists_Star = op_exists_Star
+let op_forall_Star #a (p:a -> vprop) = admit() 
+let vprop_equiv = slprop_equiv
+let vprop_post_equiv = slprop_post_equiv
+let prop_squash_idem (p:prop)
+  : Tot (squash (squash p == p))
+  = FStar.PropositionalExtensionality.apply p (squash p)
 
-let vprop_equiv (p q:vprop) = squash (equiv p q)
-let vprop_post_equiv (#t:Type u#a) (p q: t -> vprop) = forall x. vprop_equiv (p x) (q x)
-  
 let intro_vprop_post_equiv
        (#t:Type u#a) 
        (p q: t -> vprop)
        (pf: (x:t -> vprop_equiv (p x) (q x)))
   : vprop_post_equiv p q
-  = let pf = 
+  = let pf : squash (forall x. vprop_equiv (p x) (q x)) = 
         introduce forall x. vprop_equiv (p x) (q x)
-        with pf x
+        with FStar.Squash.return_squash (pf x)
     in
-    FStar.Squash.join_squash pf
-       
+    coerce_eq (prop_squash_idem _) pf
+
 let elim_vprop_post_equiv (#t:Type u#a)
                           (p q: t -> vprop) 
                           (pf:vprop_post_equiv p q)
                           (x:t) 
-    : vprop_equiv (p x) (q x)
-    = let pf : squash (vprop_equiv (p x) (q x))
-             = eliminate forall x. vprop_equiv (p x) (q x) with x
-      in
-      FStar.Squash.join_squash pf
+: vprop_equiv (p x) (q x)
+= let pf
+    : squash (vprop_equiv (p x) (q x))
+    = eliminate forall x. vprop_equiv (p x) (q x) with x
+  in
+  coerce_eq (prop_squash_idem _) pf
 
 let vprop_equiv_refl (v0:vprop) 
   : vprop_equiv v0 v0
-  = equiv_refl v0
+  = slprop_equiv_refl v0
 
-let vprop_equiv_sym (v0 v1:vprop) (_:vprop_equiv v0 v1)
+let vprop_equiv_sym (v0 v1:vprop) (p:vprop_equiv v0 v1)
   : vprop_equiv v1 v0
-  = equiv_sym v0 v1
+  = slprop_equiv_elim v0 v1; p
 
-let vprop_equiv_trans (v0 v1 v2:vprop) (_:vprop_equiv v0 v1) (_:vprop_equiv v1 v2)
+let vprop_equiv_trans
+      (v0 v1 v2:vprop)
+      (p:vprop_equiv v0 v1)
+      (q:vprop_equiv v1 v2)
   : vprop_equiv v0 v2
-  = equiv_trans v0 v1 v2
+  = slprop_equiv_elim v0 v1;
+    slprop_equiv_elim v1 v2;
+    p
 
 let vprop_equiv_unit (x:vprop)
   : vprop_equiv (emp ** x) x
-  = cm_identity x
+  = slprop_equiv_unit x
 
 let vprop_equiv_comm (p1 p2:vprop)
   : vprop_equiv (p1 ** p2) (p2 ** p1)
-  = star_commutative p1 p2
+  = slprop_equiv_comm p1 p2
 
 let vprop_equiv_assoc (p1 p2 p3:vprop)
   : vprop_equiv ((p1 ** p2) ** p3) (p1 ** (p2 ** p3))
-  = star_associative p1 p2 p3
+  = slprop_equiv_assoc p1 p2 p3
 
 let vprop_equiv_cong (p1 p2 p3 p4:vprop)
-                     (_: vprop_equiv p1 p3)
-                     (_: vprop_equiv p2 p4)
+                     (f: vprop_equiv p1 p3)
+                     (g: vprop_equiv p2 p4)
   : vprop_equiv (p1 ** p2) (p3 ** p4)
-  = star_congruence p1 p2 p3 p4
+  = slprop_equiv_elim p1 p3;
+    slprop_equiv_elim p2 p4;
+    vprop_equiv_refl _
 
-let vprop_equiv_ext p1 p2 _ = equiv_refl p1
+let vprop_equiv_ext p1 p2 _ = vprop_equiv_refl p1
 
-let equiv_forall #a (p q:a -> vprop)
-                      (_:squash (F.feq p q))
+let equiv_forall #a (p q:a -> vprop) (_:squash (F.feq p q))
 : squash (op_forall_Star p == op_forall_Star q)
-= let pf : squash (eq2 #(F.arrow a (fun _ -> vprop)) (F.on_dom a p) (F.on_dom a q)) = F.extensionality _ _ p q in
-  let x : squash (op_forall_Star p == op_forall_Star q) = _ by (
-      T.norm [delta_only [`%op_forall_Star; `%F.on_dom]; unascribe];
-      let bindings = T.cur_vars() in
-      let bindings = List.Tot.rev bindings in
-      match bindings with
-      | hd::_ -> (
-        match T.term_as_formula hd.sort with
-        | T.Comp (T.Eq _) lhs rhs ->
-          T.grewrite lhs rhs;
-          T.trefl();
-          // T.mapply (`vprop_equiv_refl);
-          T.exact (T.binding_to_term hd)
-        | _ -> T.fail "Unexpected type of hd"
-      )
-      | _ ->
-        T.fail "empty bindings"
-    ) in
-  x
-
-let prop_squash_idem (p:prop)
-  : Tot (squash (p == squash p))
-  = FStar.PropositionalExtensionality.apply p (squash p)
+= admit()
 
 let vprop_equiv_forall #a (p q:a -> vprop)
                       (_:squash (F.feq p q))
@@ -140,297 +107,101 @@ let vprop_equiv_forall #a (p q:a -> vprop)
   vprop_equiv_ext (op_forall_Star p) (op_forall_Star q) eq
 
 (* Invariants, just reexport *)
-let iname = iname
+module Act = PulseCore.Action
+let iname = Act.iname
 
 let join_sub _ _ = ()
 let join_emp is =
   Set.lemma_equal_intro (join_inames is emp_inames) (reveal is);
   Set.lemma_equal_intro (join_inames emp_inames is) (reveal is)
 
-let inv = inv
-let name_of_inv = name_of_inv
+let inv = Act.inv
+let name_of_inv = Act.name_of_inv
 
 let add_already_there i is = Set.lemma_equal_intro (add_inv is i) is
 
-// inline_for_extraction
-type stt (a:Type u#a) (pre:vprop) (post:a -> vprop) = unit -> STT a pre post
+let stt (a:Type u#a) (pre:vprop) (post:a -> vprop)
+   = stt a pre post
 
-let mk_stt #a #pre #post e = e
+let inames_disj = Act.inames_disj
 
-let reveal_stt #a #pre #post e = e
-
-(** Set lemmas **)
-
-// let set_sub (#a:eqtype) (s1 s2 : Set.set a) : Set.set a =
-//   s1 `Set.intersect` (Set.complement s2)
-
-// let comp_comp (#a:eqtype) (s : Set.set a)
-//   : Lemma (Set.complement (Set.complement s) == s)
-//           [SMTPat (Set.complement (Set.complement s))]
-//   = Set.lemma_equal_intro (Set.complement (Set.complement s)) s
-
-// let s_minus_s (#a:eqtype) (s : Set.set a)
-//   : Lemma (set_sub s s == Set.empty)
-//           [SMTPat (set_sub s s)]
-//   = Set.lemma_equal_intro (set_sub s s) Set.empty
-
-(** / Set lemmas **)
-
-
-(* NOTE: invariants
-
- These three definitions represent functions (boundedly) parametric
- over the set of opened invariants. The `opens` argument is "positive"
- or covariant wrt inclusion, which means that a `stt_ghost unit emp_inames ...`
- has the most general, least restrictive, set of invariants. Morally this
- is just taking the complement, but that does not work for technical reasons.
-
-*)
-unfold
-let inames_disj (ictx:inames) : Type = is:inames{is /! ictx}
-
-// inline_for_extraction
 type stt_unobservable (a:Type u#a) (opens:inames) (pre:vprop) (post:a -> vprop) =
-  (#ictx : inames_disj opens) ->
-  unit -> 
-  STAtomicUT a ictx pre post
+  A.stt_atomic a #A.Unobservable opens pre post
 
-//inline_for_extraction
 type stt_atomic (a:Type u#a) (opens:inames) (pre:vprop) (post:a -> vprop) =
-  (#ictx : inames_disj opens) ->
-  unit -> 
-  STAtomicT a ictx pre post
+  A.stt_atomic a #A.Observable opens pre post
  
-//inline_for_extraction
 type stt_ghost (a:Type u#a) (opens:inames) (pre:vprop) (post:a -> vprop) =
-  (#ictx : inames_disj opens) ->
-  unit -> 
-  STGhostT a ictx pre post
+  A.stt_ghost a opens pre post
+ 
+let return_stt (#a:Type u#a) (x:a) (p:a -> vprop) = admit() //I.return x p
+let return (#a:Type u#a) (x:a) (p:a -> vprop) = I.return x p
+let return_stt_ghost (#a:Type u#a) (x:a) (p:a -> vprop) = A.return_ghost x p
+let return_stt_ghost_noeq (#a:Type u#a) (x:a) (p:a -> vprop) = admit() 
+let bind_stt = I.bind
 
-inline_for_extraction
-let return_stt (#a:Type u#a) (x:a) (p:a -> vprop) =
-  fun _ ->
-    intro_pure (x == x);
-    rewrite (p x `star` pure (x == x))
-            (p x ** pure (x == x));
-    return x
-    
+let lift_stt_atomic0 #a #opens #pre #post e =
+  A.(lift_atomic0 #_ #Observable #opens #pre #post e)
+let lift_stt_atomic1 #a #opens #pre #post e =
+  A.(lift_atomic1 #_ #Observable #opens #pre #post e)
+let lift_stt_atomic2 #a #opens #pre #post e =
+  A.(lift_atomic2 #_ #Observable #opens #pre #post e)
 
-inline_for_extraction
-let return (#a:Type u#a) (x:a) (p:a -> vprop) =
-  fun _ -> return x
-
-
-inline_for_extraction
-let return_stt_ghost (#a:Type u#a) (x:a) (p:a -> vprop) =
-  fun _ ->
-    intro_pure (x == x);
-    rewrite (p x `star` pure (x == x))
-            (p x ** pure (x == x));
-    x
-
-
-inline_for_extraction
-let return_stt_ghost_noeq (#a:Type u#a) (x:a) (p:a -> vprop) =
-  fun _ ->
-    let _ = noop() in x
-
-inline_for_extraction
-let bind_stt (#a:Type u#a) (#b:Type u#b) (#pre1:vprop) (#post1:a -> vprop) (#post2:b -> vprop)
-  (e1:stt a pre1 post1)
-  (e2:(x:a -> stt b (post1 x) post2))
-
-  : stt b pre1 post2 =
-
-  fun _ ->
-  let x = e1 () in
-  e2 x ()
-
-inline_for_extraction
-let lift_stt_atomic #a #opens #pre #post e = fun _ -> e #emp_inames ()
-
-inline_for_extraction
-let bind_sttg #a #b #opened #pre1 #post1 #post2 e1 e2 =
-  fun _ ->
-  let x = e1 () in
-  e2 x ()
+let bind_sttg = A.bind_ghost
 
 let bind_stt_atomic_ghost #a #b #opens #pre1 #post1 #post2 e1 e2 reveal_b =
-  fun _ ->
-  let x = e1 () in
-  let y =
-    let y = e2 x () in
-    rewrite (post2 y) (post2 (reveal_b (Ghost.hide y)));
-    Ghost.hide y
-  in
-  Steel.ST.Util.return #b (reveal_b y)
+  A.bind_atomic e1 (fun x -> A.lift_ghost (e2 x) reveal_b)
 
 let bind_stt_ghost_atomic #a #b #opened #pre1 #post1 #post2 e1 e2 reveal_a =
-  fun _ ->
-  let x =
-    let x = e1 () in
-    rewrite (post1 x) (post1 (reveal_a (Ghost.hide x)));
-    Ghost.hide x in
-  e2 (reveal_a x) ()
+  A.bind_atomic (A.lift_ghost e1 reveal_a) e2
 
-inline_for_extraction
+#push-options "--print_implicits"
 let lift_stt_ghost #a #opened #pre #post e reveal_a =
-  fun _ ->
-  let x =
-    let y = e () in
-    rewrite (post y) (post (reveal_a (Ghost.hide y)));
-    Ghost.hide y in
-  Steel.ST.Util.return (reveal_a x)
+  admit() //A.lift_ghost e reveal_a; coerce Unobservable to Observable
 
-inline_for_extraction
-let frame_stt (#a:Type u#a) (#pre:vprop) (#post:a -> vprop) (frame:vprop) (e:stt a pre post)
-  : stt a (pre ** frame) (fun x -> post x ** frame) =
-  fun _ ->
-    rewrite (pre ** frame) (pre `star` frame);
-    let x = e () in
-    rewrite (post x `star` frame) (post x ** frame);
-    Steel.ST.Util.return x
+let frame_stt = I.frame
     
-let frame_stt_atomic #a #opened #pre #post frame e = 
-  fun _ ->
-    rewrite (pre ** frame) (pre `star` frame);
-    let x = e () in
-    rewrite (post x `star` frame) (post x ** frame);
-    Steel.ST.Util.return x    
+let frame_stt_atomic frame e = A.frame_atomic frame e
     
-let frame_stt_ghost #a #opened #pre #post frame e = 
-  fun _ -> 
-    rewrite (pre ** frame) (pre `star` frame);
-    let x = e () in
-    rewrite (post x `star` frame) (post x ** frame);
-    x    
+let frame_stt_ghost = A.frame_ghost
 
-inline_for_extraction
-let sub_stt (#a:Type u#a)
-            (#pre1:vprop)
-            (pre2:vprop)
-            (#post1:a -> vprop)
-            (post2:a -> vprop)
-            (pf1 : vprop_equiv pre1 pre2)
-            (pf2 : vprop_post_equiv post1 post2)
-            (e:stt a pre1 post1)
-  : stt a pre2 post2 =
-  fun _ ->
-    rewrite_equiv pre2 pre1;
-    let x = e () in
-    [@inline_let]    
-    let pf : vprop_equiv (post1 x) (post2 x) = 
-      elim_vprop_post_equiv post1 post2 pf2 x
-    in
-    rewrite_equiv (post1 x) (post2 x);
-    Steel.ST.Util.return x
+let sub_stt = I.sub
 
-inline_for_extraction
-let sub_stt_atomic #a #opened #pre1 pre2 #post1 post2 pf1 pf2 e =
-  fun _ ->
-  rewrite_equiv pre2 pre1;
-  let x = e () in
-  [@inline_let]    
-  let pf : vprop_equiv (post1 x) (post2 x) = 
-    elim_vprop_post_equiv post1 post2 pf2 x
-  in
-  rewrite_equiv (post1 x) (post2 x);
-  Steel.ST.Util.return x
+let sub_stt_atomic pre2 post2 pf1 pf2 e =
+   A.sub_atomic pre2 post2 pf1 pf2 e
 
-(* Trivial to subtype the invariants, as the restriction on ictx becomes weaker. *)
-inline_for_extraction
-let sub_invs_stt_atomic #a #opens1 #opens2 #pre #post e _ = e
+let sub_invs_stt_atomic e pf =  A.sub_invs_stt_atomic e pf
 
-inline_for_extraction
-let sub_stt_ghost #a #opened #pre1 pre2 #post1 post2 pf1 pf2 e =
-  fun _ ->
-  rewrite_equiv pre2 pre1;
-  let x = e () in
-  [@inline_let]    
-  let pf : vprop_equiv (post1 x) (post2 x) = 
-    elim_vprop_post_equiv post1 post2 pf2 x
-  in
-  rewrite_equiv (post1 x) (post2 x);
-  x
+let sub_stt_ghost = A.sub_ghost
 
-inline_for_extraction
-let sub_invs_stt_ghost #a #opens1 #opens2 #pre #post e _ = e
+let sub_invs_stt_ghost = A.sub_invs_stt_ghost
 
-(* odd workaround for definition below *)
-// let thunk #a #r #opens #pre (#post : (x:a -> r x -> vprop))
-//   ($f : (x:a -> STAtomicUT (r x) opens (pre x) (post x)))
-//   : (x:a -> stt_unobservable (r x) opens (pre x) (post x))
-//   = fun x () -> f x
+let return_stt_unobservable #a x p = A.return_atomic x p
 
-// val noop (#opened:inames) ()
-//   : STGhostT unit opened emp (fun _ -> emp)
-// let noop #opened () =
-//   return_stt_ghost_noeq () (fun _ -> emp) () #opened
+let return_stt_unobservable_noeq #a x (p:(a -> vprop)) = admit()
 
-let return_stt_unobservable #a x p
-: stt_unobservable a emp_inames (p x) (fun r -> p r ** pure (r == x))
-=
-  fun _ ->
-    intro_pure (x == x);
-    rewrite (p x `star` pure (x == x))
-            (p x ** pure (x == x));
-    Steel.ST.Util.return x
+let new_invariant p = A.new_invariant p
 
-let return_stt_unobservable_noeq #a x (p:(a -> vprop))
-: stt_unobservable a emp_inames (p x) p
-= fun _ ->
-    Steel.ST.Util.return x
+let new_invariant' p = admit()
 
-let __new_invariant (p:vprop)
-  : stt_unobservable (inv p) emp_inames p (fun _ -> Steel.Effect.Common.emp)
-  = fun () -> Steel.ST.Util.new_invariant p
- 
- let new_invariant p = __new_invariant p
-
-let __new_invariant' (p:vprop)
-  : stt_atomic (inv p) emp_inames p (fun _ -> Steel.Effect.Common.emp)
-  = fun () -> Steel.ST.Util.new_invariant p
-
- let new_invariant' p = __new_invariant' p
-
-(* WARNING: this definition is *extremely* brittle. If you try to edit
-it and find weird failures of things that "should" work, consider that
-1) unfolding can make a difference to the steel tactic (e.g. star vs ** )
-2) raising guards can change the effect names
-3) implicit hide/reveals can confuse the checker
-4) eta expansion may make a difference. *)
-let __with_invariant_g (#a:Type)
+let with_invariant_g (#a:Type)
                      (#fp:vprop)
-                     (#fp':erased a -> vprop)
+                     (#fp':a -> vprop)
                      (#f_opens:inames)
                      (#p:vprop)
+                     (pf:non_informative_witness a)
                      (i:inv p{not (mem_inv f_opens i)})
-                     ($f: unit -> stt_ghost a f_opens (p `star` fp) (fun x -> p `star` fp' x))
-   : stt_unobservable (erased a) (add_inv f_opens i) fp fp'
-   = fun #ictx () ->
-       let ictx' : inames_disj f_opens = add_inv ictx i in
-       Steel.ST.Util.with_invariant_g i (f () #ictx')
+                     ($f: unit -> stt_ghost a f_opens (p ** fp) (fun x -> p ** fp' x))
+: stt_unobservable a (add_inv f_opens i) fp fp'
+= let f = fun _ -> A.lift_ghost (f ()) pf in
+  A.with_invariant i f
 
-let with_invariant_g = __with_invariant_g
+let with_invariant_a i f = A.with_invariant i f
 
-let __with_invariant_a (#a:Type)
-                   (#fp:vprop)
-                   (#fp':a -> vprop)
-                   (#f_opens:inames)
-                   (#p:vprop)
-                   (i:inv p{not (mem_inv f_opens i)})
-                   ($f:unit -> stt_atomic a f_opens
-                                            (p ** fp)
-                                            (fun x -> p ** fp' x))
-  : stt_atomic a (add_inv f_opens i) fp fp'
-  = fun #ictx () ->
-      let ictx' : inames_disj f_opens = add_inv ictx i in
-      Steel.ST.Util.with_invariant i (f () #ictx')
-
-let with_invariant_a = __with_invariant_a
-let rewrite p q _ = fun _ -> rewrite_equiv p q
-
-
+let rewrite p q (pf:vprop_equiv p q)
+  : stt_ghost unit emp_inames p (fun _ -> q)
+  = slprop_equiv_elim p q;
+    A.noop q
 
 #push-options "--no_tactics"
 let rewrite_by (p:vprop) (q:vprop) 
@@ -442,97 +213,91 @@ let rewrite_by (p:vprop) (q:vprop)
     rewrite p q (coerce_eq () pf)
 #pop-options
 
-let elim_pure_explicit p = fun _ -> elim_pure p
-let elim_pure _ #p = fun _ -> elim_pure p
-
-let intro_pure p _ = fun _ -> let x = intro_pure p in x
-
-let elim_exists #a p = fun _ -> elim_exists ()
-
-let intro_exists #a p e = fun _ -> intro_exists e p
-
-let intro_exists_erased #a p e = intro_exists p (reveal e)
+let elim_pure_explicit p = A.elim_pure p
+let elim_pure _ #p = A.elim_pure p
+let intro_pure p _ = A.intro_pure p ()
+let elim_exists #a p = A.elim_exists p
+let intro_exists #a p e = A.intro_exists p e
+let intro_exists_erased #a p e = A.intro_exists p e
 
 let elim_forall #a = admit()
 let intro_forall #a = admit()
 
-let while_loop inv cond body = fun _ -> while_loop inv cond body
+let while_loop inv cond body = admit()
 
-val stt_ghost_reveal_aux (a:Type) (x:erased a)
-  : stt_ghost a emp_inames Steel.ST.Util.emp (fun y -> Steel.ST.Util.pure (reveal x == y))
-let stt_ghost_reveal_aux a x = fun _ ->
-  noop(); reveal x
-
-
-let stt_ghost_reveal a x = 
-  fun _ -> 
-    let y = stt_ghost_reveal_aux a x () in y
-
+let stt_ghost_reveal a x = A.ghost_reveal a x
 let stt_admit _ _ _ = admit ()
 let stt_atomic_admit _ _ _ = admit ()
 let stt_ghost_admit _ _ _ = admit ()
 
-
-let stt_ghost_ni (#a:Type) (#p:vprop) (#q:a -> vprop)
-  : non_informative_witness (stt_ghost a emp_inames p q)
-  = fun x -> reveal x
-
-let ghost_app (#a:Type) (#b:a -> Type) 
-              ($f: (x:a -> b x))
-              (y:erased a)
-              ($w:(x:erased a -> non_informative_witness (b (reveal x))))
-  : b (reveal y)
-  = w y (hide (f (reveal y)))
-
-
-let ghost_app2 (#a:Type) (#b:a -> Type) (#p:a -> vprop) (#q: (x:a -> b x -> vprop))
-              (f: (x:a -> stt_ghost (b x) emp_inames (p x) (q x)))
-              (y:erased a)
-  : stt_ghost (b (reveal y)) emp_inames (p (reveal y)) (q (reveal y))
-  = ghost_app f y (fun _ -> stt_ghost_ni)
-
-let stt_par #aL #aR #preL #postL #preR #postR
-            f g
-  = fun _ -> 
-     Steel.ST.Util.rewrite (preL ** preR) (preL `star` preR);
-     let x = par f g in
-     Steel.ST.Util.rewrite (postL (fst x) `star` postR (snd x))
-             (postL (fst x) ** postR (snd x));
-     Steel.ST.Util.return x
-
-// let with_local #a init #pre #ret_t #post body =
-//   fun _ -> 
-//     let body (r:R.ref a) 
-//       : STT ret_t
-//         (pre `star` R.pts_to r init)
-//         (fun v -> post v `star` exists_ (R.pts_to r))
-//       = Steel.ST.Util.rewrite
-//                 (pre `star` R.pts_to r init)
-//                 (pre ** R.pts_to r init);
-//         let v = body r () in
-//         Steel.ST.Util.rewrite
-//                 (post v ** exists_ (R.pts_to r))
-//                 (post v `star` exists_ (R.pts_to r));
-//         Steel.ST.Util.return v
-//     in
-//     let v = R.with_local init body in
-//     Steel.ST.Util.return v    
+let stt_par = I.par
     
-    
-
-let assert_ (p:vprop) = fun _ -> noop()
-
-let assume_ (p:vprop) = fun _ -> admit_()
-let drop_ (p:vprop) = fun _ -> let x = drop p in x 
-
-let elim_false (a:Type) (p:a -> vprop) =
-  fun _ ->
-    let _ = Steel.ST.Util.elim_pure False in
-    let x = false_elim #a () in
-    Steel.ST.Util.rewrite Steel.ST.Util.emp (p x);
-    x
+let assert_ (p:vprop) = A.noop p
+let assume_ (p:vprop) = admit()
+let drop_ (p:vprop) = admit()
 
 let unreachable (#a:Type) (#p:vprop) (#q:a -> vprop) (_:squash False)
   : stt_ghost a emp_inames p q
   = let v = FStar.Pervasives.false_elim #a () in
-    v
+    let m = A.return_ghost v q in
+    coerce_eq () m
+
+let elim_false (a:Type) (p:a -> vprop) =
+  A.bind_ghost
+    (A.noop (pure False))
+    (fun _ -> A.bind_ghost (A.elim_pure False) unreachable )
+
+//////////////////////////////////////////////////////////////////////////
+// References
+//////////////////////////////////////////////////////////////////////////
+let pcm_ref #a p = PulseCore.Action.ref a p
+
+let pcm_pts_to (#a:Type u#1) (#p:pcm a) (r:pcm_ref p) (v:a) =
+  PulseCore.Action.pts_to r v
+
+let alloc
+    (#a:Type u#1)
+    (#pcm:pcm a)
+    (x:a{compatible pcm x x /\ pcm.refine x})
+: stt (pcm_ref pcm)
+    emp
+    (fun r -> pcm_pts_to r x)
+= A.lift_atomic0 (A.alloc #a #pcm x)
+
+let read
+    (#a:Type)
+    (#p:pcm a)
+    (r:pcm_ref p)
+    (x:erased a)
+    (f:(v:a{compatible p x v}
+        -> GTot (y:a{compatible p y v /\
+                     FStar.PCM.frame_compatible p x v y})))
+: stt (v:a{compatible p x v /\ p.refine v})
+    (pcm_pts_to r x)
+    (fun v -> pcm_pts_to r (f v))
+= A.lift_atomic1 (A.read r x f)
+
+let write
+    (#a:Type)
+    (#p:pcm a)
+    (r:pcm_ref p)
+    (x y:Ghost.erased a)
+    (f:FStar.PCM.frame_preserving_upd p x y)
+: stt unit
+    (pcm_pts_to r x)
+    (fun _ -> pcm_pts_to r y)
+= A.lift_atomic0 (A.write r x y f)
+
+let share = A.share
+let gather = A.gather
+
+////////////////////////////////////////////////////////
+// ghost refs
+////////////////////////////////////////////////////////
+let ghost_pcm_ref #a p = A.ghost_ref #a p
+let ghost_pcm_pts_to #a #p r v = A.ghost_pts_to #a #p r v
+let ghost_alloc = A.ghost_alloc
+let ghost_read = A.ghost_read
+let ghost_write = A.ghost_write
+let ghost_share = A.ghost_share
+let ghost_gather = A.ghost_gather

@@ -118,7 +118,7 @@ val with_invariant
 ////////////////////////////////////////////////////////////////////////
 // References
 ////////////////////////////////////////////////////////////////////////
-val ref (a:Type u#a) (p:pcm a) : Type u#0
+val ref ([@@@unused] a:Type u#a) (p:pcm a) : Type u#0
 val pts_to (#a:Type u#1) (#p:pcm a) (r:ref a p) (v:a) : slprop
 
 val alloc

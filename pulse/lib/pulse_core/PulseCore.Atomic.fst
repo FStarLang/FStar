@@ -167,6 +167,50 @@ let frame_ghost
 : stt_ghost a opens (pre ** frame) (fun x -> post x ** frame)
 = Ghost.hide (A.frame (Ghost.reveal e))
  
+let sub_ghost pre2 post2 pf1 pf2 e
+= Ghost.hide (A.sub pre2 post2 e)
+
+let sub_invs_stt_ghost
+    (#a:Type u#a)
+    (#opens1 #opens2:inames)
+    (#pre:slprop)
+    (#post:a -> slprop)
+    (e:stt_ghost a opens1 pre post)
+    (pf : squash (inames_subset opens1 opens2))
+: stt_ghost a opens2 pre post
+= Ghost.hide (sub_invs_stt_atomic #a #Unobservable e pf)
+
+let noop (p:slprop)
+: stt_ghost unit emp_inames p (fun _ -> p)
+= Ghost.hide (A.return #_ #(fun _ -> p) ())
+
+let intro_pure (p:prop) (pf:squash p)
+: stt_ghost unit emp_inames emp (fun _ -> pure p)
+= Ghost.hide (A.intro_pure p pf)
+
+let elim_pure (p:prop)
+: stt_ghost (squash p) emp_inames (pure p) (fun _ -> emp)
+= Ghost.hide (A.elim_pure p)
+
+let intro_exists (#a:Type u#a) (p:a -> slprop) (x:erased a)
+: stt_ghost unit emp_inames (p x) (fun _ -> exists* x. p x)
+= Ghost.hide (A.intro_exists p x)
+
+let elim_exists (#a:Type u#a) (p:a -> slprop)
+: stt_ghost (erased a) emp_inames (exists* x. p x) (fun x -> p x)
+= Ghost.hide (A.elim_exists p)
+
+let ghost_reveal (a:Type) (x:erased a)
+: stt_ghost a emp_inames emp (fun y -> pure (reveal x == y))
+= let m
+    : stt_ghost a emp_inames
+        (pure (reveal x == reveal x))
+        (fun y -> pure (reveal x == y))
+    = Ghost.hide (A.return #_ #(fun y -> pure (reveal x == y)) (reveal x))
+  in
+  pure_trivial (reveal x == reveal x) ();
+  m
+
 let new_invariant
     (p:slprop)
 : stt_atomic (inv p) #Unobservable emp_inames p (fun _ -> emp)

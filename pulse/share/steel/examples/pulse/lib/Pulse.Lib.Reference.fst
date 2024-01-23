@@ -15,172 +15,207 @@
 *)
 
 module Pulse.Lib.Reference
-friend Pulse.Lib.Core
-open Steel.ST.Util
 open Pulse.Lib.Core
-module R = Steel.ST.Reference
-module S = Steel.ST.Util
-let ref = R.ref
+open Pulse.Main
+module H = Pulse.Lib.HigherReference
+module U = FStar.Universe
+let ref a = H.ref (U.raise_t a)
 
-[@@"__reduce__";"__steel_reduce__"]
-let pts_to #a (r:ref a) (#[exact (`full_perm)] p:perm) (v:a) = R.pts_to r p v
+let pts_to
+    (#a:Type u#0)
+    (r:ref a)
+    (#[exact (`full_perm)] [@@@equate_by_smt] p:perm)
+    ([@@@equate_by_smt] v:a)
+  = H.pts_to r #p (U.raise_val v)
 
-let alloc #a x =
-    fun _ -> 
-        let r = R.alloc x in
-        S.return r
+```pulse
+fn alloc' (#a:Type u#0) (v:a)
+requires emp
+returns r:ref a
+ensures pts_to r v
+{
+  let r = H.alloc (U.raise_val v);
+  fold (pts_to r #full_perm v);
+  r
+}
+```
+let alloc = alloc'
 
-
-let read (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
-  : stt a
-        (R.pts_to r p n)
-        (fun x -> R.pts_to r p n `star` S.pure (reveal n == x))
-  = fun _ ->
-        let v = R.read r in
-        S.return v
-
-module T = FStar.Tactics
+```pulse
+fn read (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
+requires pts_to r #p n
+returns x:a
+ensures pts_to r #p n ** pure (eq2 #a (reveal n) x)
+{
+  unfold (pts_to r #p n);
+  let k = H.( !r );
+  fold (pts_to r #p n);
+  U.downgrade_val k
+}
+```
 let ( ! ) #a = read #a
 
-let ( := ) (#a:Type) (r:ref a) (x:a) (#n:erased a)
-  : stt unit
-        (pts_to r #full_perm n) 
-        (fun _ -> pts_to r #full_perm (hide x))
-   = fun _ ->
-        R.write r x;
-        S.return ()
+```pulse
+fn write (#a:Type) (r:ref a) (x:a) (#n:erased a)
+requires pts_to r #full_perm n
+ensures pts_to r #full_perm x
+{
+  unfold (pts_to r #full_perm n);
+  H.(r := (U.raise_val x));
+  fold (pts_to r #full_perm x)
+}
+```
+let ( := ) #a r x #n = write #a r x #n
 
-let free #a (r:ref a) (#n:erased a)
-    = fun _ ->
-        R.free r;
-        S.return ()
+```pulse
+fn free' #a (r:ref a) (#n:erased a)
+requires pts_to r #full_perm n
+ensures emp
+{
+  unfold (pts_to r #full_perm n);
+  H.free r;
+}
+```
+let free = free'
 
-let share #a r #v #p
-  = fun _ -> R.share r; ()
+```pulse
+ghost
+fn share' (#a:Type) (r:ref a) (#v:erased a) (#p:perm)
+requires pts_to r #p v
+ensures pts_to r #(half_perm p) v ** pts_to r #(half_perm p) v
+{
+  unfold pts_to r #p v;
+  H.share r;
+  fold pts_to r #(half_perm p) v;
+  fold pts_to r #(half_perm p) v
+}
+```
+let share = share'
 
-let gather (#a:Type) (r:R.ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
-  : stt_ghost unit emp_inames
-      (R.pts_to r p0 x0 `S.star` R.pts_to r p1 x1)
-      (fun _ -> R.pts_to r (sum_perm p0 p1) x0 `S.star` S.pure (x0 == x1))
-  = fun _ -> R.gather p1 r; ()
+```pulse
+ghost
+fn raise_inj (a:Type u#0) (x0 x1:a)
+requires pure (U.raise_val u#0 u#1 x0 == U.raise_val u#0 u#1 x1)
+ensures pure (x0 == x1)
+{
+  assert pure (U.downgrade_val (U.raise_val u#0 u#1 x0) == x0);
+  assert pure (U.downgrade_val (U.raise_val u#0 u#1 x1) == x1);
+}
+```
+
+```pulse
+ghost
+fn gather' (#a:Type) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
+requires pts_to r #p0 x0 ** pts_to r #p1 x1
+ensures pts_to r #(sum_perm p0 p1) x0 ** pure (x0 == x1)
+{
+  unfold pts_to r #p0 x0;
+  unfold pts_to r #p1 x1;
+  H.gather r;
+  fold (pts_to r #(sum_perm p1 p0) x0);
+  let qq = sum_perm p0 p1; //hack! prevent the unifier from structurally matching sum_perm p0 p1 with sum_perm p1 p0
+  rewrite (pts_to r #(sum_perm p1 p0) x0)
+       as (pts_to r #qq x0);
+  raise_inj a x0 x1;
+}
+```
+let gather = gather'
 
 let share2 (#a:Type) (r:ref a) (#v:erased a)
-  : stt_ghost unit emp_inames
-      (pts_to r v)
-      (fun _ -> pts_to r #one_half v ** pts_to r #one_half v)
-  = share #a r #v
-
-let gather2' (#a:Type) (r:ref a) (#x0 #x1:erased a)
-  : stt_ghost unit emp_inames
-      (pts_to r #one_half x0 ** pts_to r #one_half x1)
-      (fun () -> pts_to r #(sum_perm one_half one_half) x0 ** pure (x0 == x1))
-  = gather r
+: stt_ghost unit emp_inames
+  (pts_to r v)
+  (fun _ -> pts_to r #one_half v ** pts_to r #one_half v)
+= share #a r #v
 
 let gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a)
-  : Tot (stt_ghost unit emp_inames
-           (pts_to r #one_half x0 ** pts_to r #one_half x1)
-           (fun _ -> pts_to r #full_perm x0 ** pure (x0 == x1)))
-=
-  assert (
-    stt_ghost unit emp_inames
+: stt_ghost unit emp_inames
       (pts_to r #one_half x0 ** pts_to r #one_half x1)
-      (fun () -> pts_to r #(sum_perm one_half one_half) x0 ** pure (x0 == x1))
-    ==
-    stt_ghost unit emp_inames
-      (pts_to r #one_half x0 ** pts_to r #one_half x1)
-      (fun () -> pts_to r #full_perm x0 ** pure (x0 == x1))
-  ) by (l_to_r [`double_one_half]);
-  (* NB: I'm surprised this works without extensionality and a restricted_t... bug? *)
-  coerce_eq () (gather2' #a r #x0 #x1 <: stt_ghost _ _ _ _)
+      (fun () -> pts_to r x0  ** pure (x0 == x1))
+= gather r
 
-let read_atomic_alt (r:ref U32.t) (#n:erased U32.t) (#p:perm)
- : stt_atomic U32.t emp_inames
-    (R.pts_to r p n)
-    (fun x -> R.pts_to r p n `star` S.pure (reveal n == x))
-  = fun _ ->
-      let x = R.atomic_read_u32 r in
-      S.intro_pure (reveal n == x);
-      S.return x
 
-let read_atomic = read_atomic_alt
+let read_atomic (r:ref U32.t) (#n:erased U32.t) (#p:perm)
+: stt_atomic U32.t emp_inames
+    (pts_to r #p n)
+    (fun x -> pts_to r #p n ** pure (reveal n == x))
+= admit()
 
 let write_atomic (r:ref U32.t) (x:U32.t) (#n:erased U32.t)
-  : stt_atomic unit emp_inames
-    (R.pts_to r full_perm n)
-    (fun _ -> R.pts_to r full_perm (hide x))
-  = fun _ ->
-      R.atomic_write_u32 r x;
-      S.return ()
+= admit()
 
-let cas_u32 (#uses:inames)
-        (v:Ghost.erased U32.t)
-        (r:ref U32.t)
-        (v_old v_new:U32.t)
-  : STAtomicT (b:bool{b <==> (Ghost.reveal v == v_old)})
-      uses
-      (R.pts_to r full_perm v)
-      (fun b -> cond b (R.pts_to r full_perm v_new) (R.pts_to r full_perm v))
-  = R.cas_u32 #uses v r v_old v_new
-  
 let cas (r:ref U32.t)
         (u v:U32.t)
         (#i:erased U32.t)
-  = fun #ictx _ ->
-      let b = cas_u32 #ictx i r u v in
-      if b
-      then (
-        S.rewrite (cond b _ _)
-                  (R.pts_to r full_perm v);
-        S.intro_pure (reveal i == u);
-        S.rewrite (R.pts_to r full_perm v `star` pure (reveal i == u))
-                  (cond b (pts_to r #full_perm v ** pure (reveal i == u))
-                          (pts_to r #full_perm i));
-        S.return b
-      )
-      else (
-        S.rewrite (cond b _ _)
-                  (cond b (R.pts_to r full_perm v ** pure (reveal i == u)) (R.pts_to r full_perm i));       
-        S.return b
-      )
+= admit()
 
-let with_local #a init #pre #ret_t #post body =
-  fun _ -> 
-    let body (r:R.ref a) 
-      : STT ret_t
-        (pre `star` R.pts_to r full_perm init)
-        (fun v -> post v `star` exists_ (R.pts_to r full_perm))
-      = S.rewrite
-                (pre `star` R.pts_to r full_perm init)
-                (pre ** R.pts_to r full_perm init);
-        let v = body r () in
-        S.assert_ (post v ** exists_ (pts_to #a r #full_perm));
-        S.rewrite (post v ** exists_ (pts_to #a r #full_perm))
-                  (post v `star` exists_ (pts_to #a r #full_perm));
-        let w = S.elim_exists () in
-        S.rewrite (pts_to #a r #full_perm w)
-                  (R.pts_to #a r full_perm w);
-        S.intro_exists_erased w (R.pts_to #a r full_perm);
-        S.return v
-    in
-    let v = R.with_local init body in
-    S.return v    
+```pulse
+fn
+raise_exists (#a:Type u#0) (frame:vprop) (p: U.raise_t u#0 u#1 a -> vprop)
+requires frame ** (exists* (x:a). p (U.raise_val x))
+ensures frame ** (exists* (x:U.raise_t a). p x)
+{
+  ()
+}
+```
 
-let pts_to_injective_eq (#a:Type0)
-                         (#p #q:perm)
-                         (#v0 #v1:a)
-                         (r:R.ref a)
-  : stt_ghost unit emp_inames
-      (R.pts_to r p v0 `S.star` R.pts_to r q v1)
-      (fun _ -> R.pts_to r p v0 `S.star` R.pts_to r q v0 `S.star` S.pure (v0 == v1))
-    = fun #ictx _ -> let _ = R.pts_to_injective_eq #a #ictx #p #q #v0 #v1 r in ()
+let with_local
+    (#a:Type0)
+    (init:a)
+    (#pre:vprop)
+    (#ret_t:Type)
+    (#post:ret_t -> vprop)
+    (body:(r:ref a) -> stt ret_t (pre ** pts_to r init)
+                                 (fun v -> post v ** op_exists_Star (pts_to r #full_perm)))
+: stt ret_t pre post
+= let body (r:H.ref (U.raise_t a))
+    : stt ret_t (pre ** H.pts_to r #full_perm (U.raise_val init))
+                (fun v -> post v ** (exists* (x:U.raise_t a). H.pts_to r #full_perm x)) 
+    = let m
+        : stt ret_t (pre ** H.pts_to r #full_perm (U.raise_val init))
+                    (fun v -> post v ** (exists* (x:a). H.pts_to r #full_perm (U.raise_val x)))
+        = body r
+      in
+      let m0 (v:ret_t)
+        : stt ret_t 
+            (post v ** (exists* (x:a). H.pts_to r #full_perm (U.raise_val x)))
+            (fun v -> post v ** (exists* (x:U.raise_t a). H.pts_to r #full_perm x))
+        = bind_stt (raise_exists (post v) (H.pts_to r #full_perm))
+                   (fun _ -> return v (fun v -> post v ** (exists* (x:U.raise_t a). H.pts_to r #full_perm x)))
+      in
+      bind_stt m m0
+  in
+  H.with_local (U.raise_val init) body
 
-let pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
-  : stt_ghost unit emp_inames
-      (pts_to r #p v)
-      (fun _ -> pts_to r #p v ** pure (p `lesser_equal_perm` full_perm))
-  = fun #ictx _ ->
-       let _ = R.pts_to_perm #a #ictx #p #v r in
-       S.intro_pure (p `lesser_equal_perm` full_perm);
-       S.rewrite (pts_to r #p v `star` pure (p `lesser_equal_perm` full_perm))
-                 (pts_to r #p v ** pure (p `lesser_equal_perm` full_perm));
-       ()
+```pulse
+ghost
+fn pts_to_injective_eq'
+  (#a:Type0)
+  (#p #q:perm)
+  (#v0 #v1:a)
+  (r:ref a)
+requires
+  pts_to r #p v0 ** pts_to r #q v1
+ensures
+  pts_to r #p v0 ** pts_to r #q v1 ** pure (v0 == v1)
+{
+  unfold pts_to r #p v0;
+  unfold pts_to r #q v1;
+  H.pts_to_injective_eq r;
+  fold pts_to r #p v0;
+  fold pts_to r #q v1;
+  raise_inj _ v0 v1;
+}
+```
+let pts_to_injective_eq = pts_to_injective_eq'
+
+```pulse
+ghost
+fn pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
+requires pts_to r #p v
+ensures pts_to r #p v ** pure (p `lesser_equal_perm` full_perm)
+{
+  unfold pts_to r #p v;
+  H.pts_to_perm_bound r;
+  fold pts_to r #p v;
+}
+```
