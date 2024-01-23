@@ -1,4 +1,4 @@
-module Pulse.MonotonicStateMonad
+module PulseCore.MonotonicStateMonad
 open FStar.Preorder
 module M = FStar.MSTTotal
 let mst (#s:Type u#s)

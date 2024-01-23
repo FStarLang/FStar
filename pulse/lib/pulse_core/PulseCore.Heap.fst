@@ -13,11 +13,12 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Pulse.Heap
+module PulseCore.Heap
 module F = FStar.FunctionalExtensionality
 open FStar.FunctionalExtensionality
 open FStar.PCM
-module Frac = Steel.FractionalPermission
+module Frac = PulseCore.FractionalPermission
+module PP = PulseCore.Preorder
 
 #set-options "--fuel 1 --ifuel 1"
 
@@ -667,7 +668,6 @@ let weaken (p q r:slprop) (h:heap u#a) = ()
 ////////////////////////////////////////////////////////////////////////////////
 // Actions:
 ////////////////////////////////////////////////////////////////////////////////
-module PP = Steel.Preorder
 
 let full_heap_pred h =
   forall a. contains_addr h a ==>

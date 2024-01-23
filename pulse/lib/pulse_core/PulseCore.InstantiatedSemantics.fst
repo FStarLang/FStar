@@ -3,7 +3,7 @@ module Sem = PulseCore.Semantics2
 module Mem = PulseCore.Memory
 module U = FStar.Universe
 module F = FStar.FunctionalExtensionality
-open Mem
+open PulseCore.Memory
 
 let laws ()
 : squash (

@@ -2,18 +2,19 @@ module PulseCore.Action
 module Sem = PulseCore.Semantics2
 module Mem = PulseCore.Memory
 module I = PulseCore.InstantiatedSemantics
+module M = PulseCore.MonotonicStateMonad
+module F = FStar.FunctionalExtensionality
 friend PulseCore.InstantiatedSemantics
 open FStar.PCM
 open FStar.Ghost
-open Mem
-open I
+open PulseCore.Memory
+open PulseCore.InstantiatedSemantics
 
 //////////////////////////////////////////////////////
 // An abstraction on top of memory actions
 //////////////////////////////////////////////////////
 
 (* The type of atomic actions *)
-module M = Pulse.MonotonicStateMonad
 let action
     (a:Type u#a)
     (except:inames)
@@ -60,8 +61,8 @@ let stt_of_action (#a:Type u#100) #pre #post (m:action a Set.empty pre post)
     : Sem.mst_sep state a (pre `star` frame) (fun x -> post x `star` frame)
     = M.weaken (m frame)
   in
-  let action : Sem.action state a = {pre=pre; post=post; step} in
-  let m : Sem.m a pre post = Sem.act action in
+  let action : Sem.action state a = {pre=pre; post=F.on_dom _ post; step} in
+  let m : Sem.m a pre _ = Sem.act action in
   fun _ -> m
 
 let stt_of_action0 (#a:Type u#0) #pre #post (m:action a Set.empty pre post)
@@ -70,7 +71,7 @@ let stt_of_action0 (#a:Type u#0) #pre #post (m:action a Set.empty pre post)
     : Sem.mst_sep state a (pre `star` frame) (fun x -> post x `star` frame)
     = M.weaken (m frame)
   in
-  let action : Sem.action state a = {pre=pre; post=post; step} in
+  let action : Sem.action state a = {pre=pre; post=F.on_dom _ post; step} in
   fun _ -> Sem.act_as_m0 action
   
 let stt_of_action1 (#a:Type u#1) #pre #post (m:action a Set.empty pre post)
@@ -79,7 +80,7 @@ let stt_of_action1 (#a:Type u#1) #pre #post (m:action a Set.empty pre post)
     : Sem.mst_sep state a (pre `star` frame) (fun x -> post x `star` frame)
     = M.weaken (m frame)
   in
-  let action : Sem.action state a = {pre=pre; post=post; step} in
+  let action : Sem.action state a = {pre=pre; post=F.on_dom _ post; step} in
   fun _ -> Sem.act_as_m1 u#2 u#100 action
 
 let stt_of_action2 (#a:Type u#2) #pre #post (m:action a Set.empty pre post)
@@ -88,7 +89,7 @@ let stt_of_action2 (#a:Type u#2) #pre #post (m:action a Set.empty pre post)
     : Sem.mst_sep state a (pre `star` frame) (fun x -> post x `star` frame)
     = M.weaken (m frame)
   in
-  let action : Sem.action state a = {pre=pre; post=post; step} in
+  let action : Sem.action state a = {pre=pre; post=F.on_dom _ post; step} in
   fun _ -> Sem.act_as_m2 u#2 u#100 action
    
 let mem_action_as_action

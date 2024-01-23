@@ -16,10 +16,12 @@
 module PulseCore.Memory
 open FStar.Ghost
 open FStar.PCM
-module M_ = Pulse.NondeterministicMonotonicStateMonad
+module M_ = PulseCore.NondeterministicMonotonicStateMonad
 module F = FStar.FunctionalExtensionality
 open FStar.FunctionalExtensionality
-module H = Pulse.Heap
+module H = PulseCore.Heap
+module PP = PulseCore.Preorder
+
 
 noeq
 type lock_state : Type u#(a + 1) =
@@ -91,7 +93,7 @@ let slprop_extensionality p q =
       assert (interp p m <==> interp q m)
   in
   assert (forall h. H.interp p h <==> H.interp q h);
-  Pulse.Heap.slprop_extensionality p q
+  H.slprop_extensionality p q
 
 let reveal_equiv p1 p2 = ()
 
@@ -501,8 +503,6 @@ let elim_h_exists (#a:_) (p:a -> slprop) (m:mem) = H.elim_h_exists p (heap_of_me
 ////////////////////////////////////////////////////////////////////////////////
 // Preorders and effects
 ////////////////////////////////////////////////////////////////////////////////
-module PP = Steel.Preorder
-
 let mem_evolves =
   fun (m0 m1:full_mem) ->
     H.heap_evolves (heap_of_mem m0) (heap_of_mem m1) /\
@@ -591,7 +591,7 @@ let hheap_of_hmem #fp #e (m:hmem_with_inv_except e fp)
     H.pure_interp (heap_ctr_valid m.ctr (heap_of_mem m)) h;
     h
 
-module Heap = Pulse.Heap
+module Heap = PulseCore.Heap
 let hmem_of_hheap #e (#fp0 #fp1:slprop) (m:hmem_with_inv_except e fp0)
                   (h:H.full_hheap (fp1 `star` linv e m) {
                        h `Heap.free_above_addr` m.ctr
@@ -960,7 +960,7 @@ let witnessed_ref #a #pcm (r:ref a pcm) (fact:property a) (m:full_mem)
 
 let witnessed_ref_stability #a #pcm (r:ref a pcm) (fact:property a)
   : Lemma
-    (requires FStar.Preorder.stable fact (Steel.Preorder.preorder_of_pcm pcm))
+    (requires FStar.Preorder.stable fact (PP.preorder_of_pcm pcm))
     (ensures FStar.Preorder.stable (witnessed_ref r fact) mem_evolves)
   = H.witnessed_ref_stability #a #pcm r fact
 

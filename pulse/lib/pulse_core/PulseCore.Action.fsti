@@ -1,7 +1,7 @@
 module PulseCore.Action
 module I = PulseCore.InstantiatedSemantics
-module SP = Steel.Preorder
-open I
+module PP = PulseCore.Preorder
+open PulseCore.InstantiatedSemantics
 open FStar.PCM
 open FStar.Ghost
 
@@ -181,7 +181,7 @@ val witnessed (#a:Type u#1)
 
 let stable_property (#a:Type) (pcm:pcm a)
   = fact:property a {
-       FStar.Preorder.stable fact (Steel.Preorder.preorder_of_pcm pcm)
+       FStar.Preorder.stable fact (PP.preorder_of_pcm pcm)
     }
 
 val witness

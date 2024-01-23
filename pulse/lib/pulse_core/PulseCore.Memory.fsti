@@ -16,7 +16,8 @@
 module PulseCore.Memory
 open FStar.Ghost
 open FStar.PCM
-module M_ = Pulse.NondeterministicMonotonicStateMonad
+module M_ = PulseCore.NondeterministicMonotonicStateMonad
+module PP = PulseCore.Preorder
 
 /// Building up on `Steel.Heap`, this module adds memory invariants to the heap to expose the
 /// final interface for Steel's PCM-based memory model.
@@ -469,7 +470,7 @@ val witnessed (#a:Type u#1)
 
 let stable_property (#a:Type) (pcm:pcm a)
   = fact:property a {
-       FStar.Preorder.stable fact (Steel.Preorder.preorder_of_pcm pcm)
+       FStar.Preorder.stable fact (PP.preorder_of_pcm pcm)
     }
 
 val witness (#a:Type) (#pcm:pcm a)

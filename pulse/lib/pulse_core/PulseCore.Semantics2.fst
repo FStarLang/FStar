@@ -15,11 +15,11 @@
 *)
 module PulseCore.Semantics2
 module U = FStar.Universe
-module M = Pulse.MonotonicStateMonad
-module NM = Pulse.NondeterministicMonotonicStateMonad 
+module M = PulseCore.MonotonicStateMonad
+module NM = PulseCore.NondeterministicMonotonicStateMonad 
 module F = FStar.FunctionalExtensionality
 open FStar.FunctionalExtensionality
-open Pulse.NondeterministicMonotonicStateMonad
+open PulseCore.NondeterministicMonotonicStateMonad
 open FStar.Preorder
 
 /// We start by defining some basic notions for a commutative monoid.

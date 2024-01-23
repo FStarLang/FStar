@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Pulse.Heap
+module PulseCore.Heap
 open FStar.Ghost
 open FStar.PCM
 
@@ -515,7 +515,7 @@ let witnessed_ref (#a:Type u#a)
 
 val witnessed_ref_stability (#a:Type) (#pcm:pcm a) (r:ref a pcm) (fact:a -> prop)
   : Lemma
-    (requires FStar.Preorder.stable fact (Steel.Preorder.preorder_of_pcm pcm))
+    (requires FStar.Preorder.stable fact (PulseCore.Preorder.preorder_of_pcm pcm))
     (ensures FStar.Preorder.stable (witnessed_ref r fact) heap_evolves)
 
 (**

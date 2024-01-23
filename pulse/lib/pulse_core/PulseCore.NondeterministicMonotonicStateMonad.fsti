@@ -1,7 +1,7 @@
-module Pulse.NondeterministicMonotonicStateMonad
+module PulseCore.NondeterministicMonotonicStateMonad
 open FStar.Preorder
-open Pulse.MonotonicStateMonad
-module M = Pulse.MonotonicStateMonad
+open PulseCore.MonotonicStateMonad
+module M = PulseCore.MonotonicStateMonad
 
 val nmst (#s:Type u#s)
          (rel:FStar.Preorder.preorder s)

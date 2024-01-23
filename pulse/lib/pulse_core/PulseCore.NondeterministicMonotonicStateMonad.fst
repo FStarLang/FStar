@@ -1,7 +1,7 @@
-module Pulse.NondeterministicMonotonicStateMonad
+module PulseCore.NondeterministicMonotonicStateMonad
 open FStar.Preorder
-friend Pulse.MonotonicStateMonad
-module M = Pulse.MonotonicStateMonad
+friend PulseCore.MonotonicStateMonad
+module M = PulseCore.MonotonicStateMonad
 #push-options "--print_universes"
 
 let tape = nat -> bool
