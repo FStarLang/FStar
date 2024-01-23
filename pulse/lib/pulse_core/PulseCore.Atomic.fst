@@ -185,3 +185,70 @@ let with_invariant
                             (fun x -> p ** fp' x))
 : stt_atomic a #obs (add_inv f_opens i) fp fp'
 = A.with_invariant i f
+
+let alloc = A.alloc
+let read = A.read
+let write = A.write
+let share #a #pcm r v0 v1 = Ghost.hide (A.share r v0 v1)
+let gather #a #pcm r v0 v1 = Ghost.hide (A.gather r v0 v1)
+let witness #a #pcm r f v pf = Ghost.hide (A.witness r f v pf)
+let recall #a #pcm #fact r v w = Ghost.hide (A.recall r v w)
+
+let ghost_ref #a p = Ghost.erased (ref a p)
+let ghost_pts_to #a #p r v = pts_to r v
+let hide_ghost #a #opens #pre #post 
+              (f:stt_ghost a opens pre post)
+: stt_ghost (erased a) opens pre (fun x -> post (reveal x))
+= let f = Ghost.reveal f in
+  Ghost.hide <|
+  A.bind f
+  (fun (r:a) ->
+    assert (Set.equal (Set.union emp_inames opens) opens);
+    A.weaken opens <|
+    A.return #(erased a) #(fun (x:erased a) -> post (reveal x))
+       (hide r))
+
+let ghost_alloc #a #pcm x = hide_ghost (Ghost.hide <| A.alloc #a x)
+let ghost_read
+    (#a:Type)
+    (#p:pcm a)
+    (r:ghost_ref p)
+    (x:erased a)
+    (f:(v:a{compatible p x v}
+        -> GTot (y:a{compatible p y v /\
+                     FStar.PCM.frame_compatible p x v y})))
+: stt_ghost (erased (v:a{compatible p x v /\ p.refine v}))
+    emp_inames
+    (ghost_pts_to r x)
+    (fun v -> ghost_pts_to r (f v))
+= hide_ghost <| Ghost.hide <|A.read r x f
+
+let ghost_write r x y f = Ghost.hide (A.write r x y f)
+
+let ghost_share r v0 v1 = Ghost.hide (A.share r v0 v1)
+let ghost_gather r v0 v1 = Ghost.hide (A.gather r v0 v1) 
+
+let ghost_witnessed 
+    (#a:Type u#1) 
+    (#p:pcm a)
+    (r:ghost_ref p)
+    (f:property a)
+= witnessed (reveal r) f
+
+let ghost_witness
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ghost_ref pcm)
+    (fact:stable_property pcm)
+    (v:Ghost.erased a)
+    (pf:squash (forall z. compatible pcm v z ==> fact z))
+= Ghost.hide (A.witness r fact v pf)
+
+let ghost_recall
+    (#a:Type u#1)
+    (#pcm:pcm a)
+    (#fact:property a)
+    (r:ghost_ref pcm)
+    (v:Ghost.erased a)
+    (w:ghost_witnessed r fact)
+= Ghost.hide (A.recall r v w)
