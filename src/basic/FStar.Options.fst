@@ -618,7 +618,7 @@ let arg_spec_of_opt_type opt_name typ : opt_variant option_val =
 
 let pp_validate_dir p =
   let pp = as_string p in
-  mkdir false pp;
+  mkdir (*clean=*)false (*mkparents=*)true pp;
   p
 
 let pp_lowercase s =

@@ -988,7 +988,7 @@ let (arg_spec_of_opt_type :
       | FStar_Pervasives_Native.Some desc ->
           let desc1 = wrap desc in FStar_Getopt.OneArg (parser, desc1)
 let (pp_validate_dir : option_val -> option_val) =
-  fun p -> let pp = as_string p in FStar_Compiler_Util.mkdir false pp; p
+  fun p -> let pp = as_string p in FStar_Compiler_Util.mkdir false true pp; p
 let (pp_lowercase : option_val -> option_val) =
   fun s ->
     let uu___ =
