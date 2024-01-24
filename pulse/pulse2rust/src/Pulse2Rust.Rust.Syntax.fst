@@ -147,6 +147,12 @@ let mk_expr_struct (path:list string) (fields:list (string & expr)) : expr =
 
 let mk_expr_tuple (l:list expr) : expr = Expr_tuple l
 
+let mk_mem_replace (e:expr) (new_v:expr) : expr =
+  let is_mut = true in
+  mk_call
+    (Expr_path ["std"; "mem"; "replace"])
+    [mk_reference_expr is_mut e; new_v]
+
 let mk_scalar_fn_arg (name:string) (t:typ) =
   Fn_arg_pat {
     pat_typ_pat = Pat_ident {
