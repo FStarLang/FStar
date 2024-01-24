@@ -972,12 +972,16 @@ let uu___is_STS_AtomicInvs uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | STS_AtomicInvs _ -> true | _ -> false
 type ('dummyV0, 'dummyV1, 'dummyV2) lift_comp =
   | Lift_STAtomic_ST of Pulse_Typing_Env.env * Pulse_Syntax_Base.comp_st 
-  | Lift_STGhost_STAtomic of Pulse_Typing_Env.env * Pulse_Syntax_Base.comp_st
-  * (unit, unit) non_informative_c 
+  | Lift_STUnobservable_STAtomic of Pulse_Typing_Env.env *
+  Pulse_Syntax_Base.comp_st 
+  | Lift_STGhost_STUnobservable of Pulse_Typing_Env.env *
+  Pulse_Syntax_Base.comp_st * (unit, unit) non_informative_c 
 let uu___is_Lift_STAtomic_ST uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | Lift_STAtomic_ST _ -> true | _ -> false
-let uu___is_Lift_STGhost_STAtomic uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | Lift_STGhost_STAtomic _ -> true | _ -> false
+let uu___is_Lift_STUnobservable_STAtomic uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | Lift_STUnobservable_STAtomic _ -> true | _ -> false
+let uu___is_Lift_STGhost_STUnobservable uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | Lift_STGhost_STUnobservable _ -> true | _ -> false
 let (wr :
   Pulse_Syntax_Base.comp_st ->
     Pulse_Syntax_Base.st_term' -> Pulse_Syntax_Base.st_term)

@@ -24,6 +24,8 @@ let (pure_lid : FStar_Ident.lident) = pulse_lib_core_lid "pure"
 let (stt_lid : FStar_Ident.lident) = pulse_lib_core_lid "stt"
 let (assign_lid : FStar_Ident.lident) = pulse_lib_ref_lid "op_Colon_Equals"
 let (stt_ghost_lid : FStar_Ident.lident) = pulse_lib_core_lid "stt_ghost"
+let (stt_unobservable_lid : FStar_Ident.lident) =
+  pulse_lib_core_lid "stt_unobservable"
 let (stt_atomic_lid : FStar_Ident.lident) = pulse_lib_core_lid "stt_atomic"
 let (op_colon_equals_lid :
   FStar_Compiler_Range_Type.range -> FStar_Ident.lident) =

@@ -81,7 +81,7 @@ let (lift_ghost_to_atomic :
                                                (inames,
                                                  Pulse_Syntax_Base.Unobservable,
                                                  c_st)), d,
-                                            (Pulse_Typing.Lift_STGhost_STAtomic
+                                            (Pulse_Typing.Lift_STGhost_STUnobservable
                                                (g, c, w))))))))) uu___)
 let (lift_if_branches :
   Pulse_Typing_Env.env ->
