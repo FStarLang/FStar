@@ -138,7 +138,7 @@ type pht_t (kt:eqtype) (vt:Type) = {
   repr : repr_t kt vt;
   inv : squash (pht_models spec repr /\ US.fits repr.sz);
 }
-  
+
 let upd_ #kt #vt (repr : repr_t kt vt) idx k v : repr_t kt vt =
  { repr with seq=Seq.upd repr.seq idx (Used k v) }
 
@@ -677,12 +677,29 @@ let lookup_index #kt #vt (ht : pht_t kt vt) (k : kt)
 =
   lookup_repr_index ht.repr k
 
+// let lookup_index_us #kt #vt (ht : pht_t kt vt) (k : kt)
+// : option (vt & US.t)
+// = let o = lookup_repr_index ht.repr k in
+//   match o with
+//   | Some (v,i) -> Some (v, US.uint_to_t i)
+//   | None -> None
+
 let lookup_index_us #kt #vt (ht : pht_t kt vt) (k : kt)
-: option (vt & US.t)
+: option US.t
 = let o = lookup_repr_index ht.repr k in
   match o with
-  | Some (v,i) -> Some (v, US.uint_to_t i)
+  | Some (_, i) -> Some (US.uint_to_t i)
   | None -> None
+
+#push-options "--print_implicits --ugly"
+let upd_pht (#kt:eqtype) (#vt:Type) (pht:pht_t kt vt) idx (k:kt) (v:vt)
+  (_:squash (lookup_index_us pht k == Some idx)) : pht_t kt vt =
+  let spec' = Ghost.hide (pht.spec ++ (k, v)) in
+  let repr' = upd_ pht.repr (US.v idx) k v in
+  admit ();
+  { pht with spec = spec';
+             repr = repr';
+             inv = () }
 
 let eliminate_strong_all_used_not_by #kt #vt (r:repr_t kt vt) (k:kt) (i:nat{i < r.sz})
   : Lemma 
