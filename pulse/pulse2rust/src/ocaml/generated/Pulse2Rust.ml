@@ -909,6 +909,27 @@ and (extract_mlexpr :
                 uu___2::[]);
              FStar_Extraction_ML_Syntax.mlty = uu___3;
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
+           e_v::e_i::e_x::uu___5)
+          when
+          let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___6 = "Pulse.Lib.Vec.replace" ->
+          let e_v1 = extract_mlexpr g e_v in
+          let e_i1 = extract_mlexpr g e_i in
+          let e_x1 = extract_mlexpr g e_x in
+          let uu___6 = Pulse2Rust_Rust_Syntax.mk_expr_index e_v1 e_i1 in
+          Pulse2Rust_Rust_Syntax.mk_mem_replace uu___6 e_x1
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                uu___2::[]);
+             FStar_Extraction_ML_Syntax.mlty = uu___3;
+             FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e1::[])
           when
           let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
@@ -1049,6 +1070,20 @@ and (extract_mlexpr :
             Pulse2Rust_Rust_Syntax.mk_expr_path_singl
               Pulse2Rust_Rust_Syntax.panic_fn in
           Pulse2Rust_Rust_Syntax.mk_call uu___6 []
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_Name p;
+             FStar_Extraction_ML_Syntax.mlty = uu___;
+             FStar_Extraction_ML_Syntax.loc = uu___1;_},
+           uu___2)
+          when
+          let uu___3 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___3 = "failwith" ->
+          let uu___3 =
+            Pulse2Rust_Rust_Syntax.mk_expr_path_singl
+              Pulse2Rust_Rust_Syntax.panic_fn in
+          Pulse2Rust_Rust_Syntax.mk_call uu___3 []
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =

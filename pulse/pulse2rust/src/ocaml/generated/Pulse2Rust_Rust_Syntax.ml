@@ -923,6 +923,12 @@ let (mk_expr_struct :
         { expr_struct_path = path; expr_struct_fields = uu___1 } in
       Expr_struct uu___
 let (mk_expr_tuple : expr Prims.list -> expr) = fun l -> Expr_tuple l
+let (mk_mem_replace : expr -> expr -> expr) =
+  fun e ->
+    fun new_v ->
+      let is_mut = true in
+      let uu___ = let uu___1 = mk_reference_expr is_mut e in [uu___1; new_v] in
+      mk_call (Expr_path ["std"; "mem"; "replace"]) uu___
 let (mk_scalar_fn_arg : Prims.string -> typ -> fn_arg) =
   fun name ->
     fun t ->
