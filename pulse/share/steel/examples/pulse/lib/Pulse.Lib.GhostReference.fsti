@@ -17,7 +17,7 @@
 module Pulse.Lib.GhostReference
 open FStar.Tactics
 open Pulse.Lib.Core
-open Steel.FractionalPermission
+open PulseCore.FractionalPermission
 open FStar.Ghost
 
 [@@erasable]

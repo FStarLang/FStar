@@ -17,7 +17,7 @@
 module Pulse.Lib.Box
 
 open FStar.Ghost
-open Steel.FractionalPermission
+open PulseCore.FractionalPermission
 
 open Pulse.Lib.Core
 
@@ -88,7 +88,7 @@ val pts_to_injective_eq (#a:_)
                         (r:box a)
   : stt_ghost unit emp_inames
       (pts_to r #p v0 ** pts_to r #q v1)
-      (fun _ -> pts_to r #p v0 ** pts_to r #q v0 ** pure (v0 == v1))
+      (fun _ -> pts_to r #p v0 ** pts_to r #q v1 ** pure (v0 == v1))
 
 val box_to_ref  (#a:Type0) (b:box a) : R.ref a
 

@@ -650,7 +650,7 @@ let mk_stt_ghost_comp_equiv (g:R.env) (u:R.universe) (res inames pre1 post1 pre2
 
 let ref_lid = mk_pulse_lib_reference_lid "ref"
 let pts_to_lid = mk_pulse_lib_reference_lid "pts_to"
-let full_perm_lid = ["Steel"; "FractionalPermission"; "full_perm"]
+let full_perm_lid = ["PulseCore"; "FractionalPermission"; "full_perm"]
 
 let mk_ref (a:R.term) : R.term =
   let open R in

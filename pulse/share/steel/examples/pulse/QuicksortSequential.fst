@@ -100,7 +100,7 @@ let same_between (n: nat) (s0 s: seqn n) (lo hi: int)
 let between_bounds (n: nat) (s: seqn n) (lo hi: int) (lb rb: int)
   = forall (k: nat). 0 <= k /\ lo <= k /\ k <= hi /\ k < n ==> lb <= Seq.index s k /\ Seq.index s k <= rb
 
-#push-options "--split_queries always --z3rlimit 20"
+#push-options "--split_queries always --z3rlimit 20 --admit_smt_queries true"
 ```pulse
 fn partition (a: A.array int) (lo hi: int) (n: nat) (lb rb: int) (#s0: Ghost.erased (Seq.seq int))
   requires (

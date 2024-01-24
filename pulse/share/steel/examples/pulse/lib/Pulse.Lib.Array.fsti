@@ -17,7 +17,7 @@
 module Pulse.Lib.Array
 open Pulse.Lib.Core
 include Pulse.Lib.Array.Core
-open Steel.FractionalPermission
+open PulseCore.FractionalPermission
 open FStar.Ghost
 include Pulse.Lib.Array.Core
 module SZ = FStar.SizeT

@@ -1894,7 +1894,7 @@ let (ref_lid : Prims.string Prims.list) = mk_pulse_lib_reference_lid "ref"
 let (pts_to_lid : Prims.string Prims.list) =
   mk_pulse_lib_reference_lid "pts_to"
 let (full_perm_lid : Prims.string Prims.list) =
-  ["Steel"; "FractionalPermission"; "full_perm"]
+  ["PulseCore"; "FractionalPermission"; "full_perm"]
 let (mk_ref : FStar_Reflection_Types.term -> FStar_Reflection_Types.term) =
   fun a ->
     let t =

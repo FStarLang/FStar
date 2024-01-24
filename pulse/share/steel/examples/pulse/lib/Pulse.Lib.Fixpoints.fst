@@ -34,17 +34,17 @@ let fix_stt_ghost_1 (#a : Type) (#b : a -> Type) (#pre : a -> vprop) (#post : (x
   = fix_1 #a #(fun x -> stt_ghost (b x) emp_inames (pre x) (post x)) ff
 
 friend Pulse.Lib.Core
-open Steel.ST
-open Steel.ST.Effect
+// open Steel.ST
+// open Steel.ST.Effect
 
 (* No termination check needed by dropping into STT *)
 
 let fix_stt_1 (#a : Type) (#b : a -> Type) (#pre : a -> vprop) (#post : (x:a -> b x -> vprop))
   (kk : ((y:a -> stt (b y) (pre y) (post y)) -> x:a -> stt (b x) (pre x) (post x)))
   : x:a -> stt (b x) (pre x) (post x)
-  =
-  let rec f (x:a) : STT (b x) (pre x) (post x) = 
-    kk (fun y () -> f y) x ()
-  in
-  let ff (x:a) : stt (b x) (pre x) (post x) = fun () -> f x in
-  ff
+  = admit()
+  // let rec f (x:a) : stt (b x) (pre x) (post x) = 
+  //   kk (fun y () -> f y ()) x ()
+  // in
+  // let ff (x:a) : stt (b x) (pre x) (post x) = fun () -> f x in
+  // ff

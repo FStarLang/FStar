@@ -210,7 +210,7 @@ let pts_to_injective_eq = pts_to_injective_eq'
 
 ```pulse
 ghost
-fn pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
+fn pts_to_perm_bound' (#a:_) (#p:_) (r:ref a) (#v:a)
 requires pts_to r #p v
 ensures pts_to r #p v ** pure (p `lesser_equal_perm` full_perm)
 {
@@ -219,3 +219,5 @@ ensures pts_to r #p v ** pure (p `lesser_equal_perm` full_perm)
   fold pts_to r #p v;
 }
 ```
+let pts_to_perm_bound = pts_to_perm_bound'
+
