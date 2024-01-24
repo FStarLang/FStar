@@ -131,3 +131,9 @@ val vec_ref_write (#a:Type0) (r:R.ref (vec a))
   : stt unit
     (requires R.pts_to r v ** pts_to v s)
     (ensures fun _ -> R.pts_to r v ** pts_to v (Seq.upd s (SZ.v i) x))
+
+val replace (#a:Type0) (v:vec a) (i:SZ.t) (x:a)
+  (#s:erased (Seq.seq a) { SZ.v i < Seq.length s})
+  : stt a
+    (requires pts_to v s)
+    (ensures fun res -> pts_to v (Seq.upd s (SZ.v i) x) ** pure (res == Seq.index s (SZ.v i)))

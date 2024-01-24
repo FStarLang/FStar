@@ -82,3 +82,18 @@ fn vec_ref_write' (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
 ```
 
 let vec_ref_write = vec_ref_write'
+
+```pulse
+fn replace' (#a:Type0) (v:vec a) (i:SZ.t) (x:a)
+  (#s:(s:erased (Seq.seq a) { SZ.v i < Seq.length s }))
+  requires pts_to v s
+  returns res:a
+  ensures pts_to v (Seq.upd s (SZ.v i) x) ** pure (res == Seq.index s (SZ.v i))
+{
+  let y = op_Array_Access v i;
+  op_Array_Assignment v i x;
+  y
+}
+```
+
+let replace = replace'
