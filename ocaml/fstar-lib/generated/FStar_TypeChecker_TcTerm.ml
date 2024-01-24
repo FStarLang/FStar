@@ -4877,6 +4877,8 @@ and (tc_constant :
                      FStar_Parser_Const.uint32_lid
                  | (FStar_Const.Unsigned, FStar_Const.Int64) ->
                      FStar_Parser_Const.uint64_lid
+                 | (FStar_Const.Unsigned, FStar_Const.Int128) ->
+                     FStar_Parser_Const.uint128_lid
                  | (FStar_Const.Unsigned, FStar_Const.Sizet) ->
                      FStar_Parser_Const.sizet_lid)
           | FStar_Const.Const_string uu___ -> FStar_Syntax_Syntax.t_string
