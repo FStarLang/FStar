@@ -17,7 +17,7 @@
 module Pulse.Lib.Array.Core
 open FStar.Tactics.V2
 open Pulse.Lib.Core
-open Steel.FractionalPermission
+open PulseCore.FractionalPermission
 open FStar.Ghost
 module SZ = FStar.SizeT
 module Seq = FStar.Seq
