@@ -436,9 +436,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     let n = String.length "explode_ref_" in
     let rname = String.substring (snd p) n (String.length (snd p) - n) in
     let flds = psmap_try_find g.record_field_names rname in
-    // print2 "record flds is None: %s for %s\n" (if flds = None then "yes" else "no") rname;
     let flds = flds |> must in
-    // print_string "passed\n";
     let e = extract_mlexpr g e in
     let es = flds |> List.map (fun f -> mk_reference_expr true (mk_expr_field e f)) in
     mk_expr_tuple es
@@ -500,6 +498,14 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     let e3 = extract_mlexpr g e3 in
     mk_assign (mk_expr_index e1 e2) e3
 
+  | S.MLE_App ({ expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, e_v::e_i::e_x::_)
+    when S.string_of_mlpath p = "Pulse.Lib.Vec.replace" ->
+
+    let e_v = extract_mlexpr g e_v in
+    let e_i = extract_mlexpr g e_i in
+    let e_x = extract_mlexpr g e_x in
+    mk_mem_replace (mk_expr_index e_v e_i) e_x
+
     //
     // vec_as_array e extracted to &mut e
     //
@@ -541,6 +547,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     Expr_while {expr_while_cond; expr_while_body}
 
   | S.MLE_App ({ expr=S.MLE_TApp ({ expr=S.MLE_Name p }, _) }, _)
+  | S.MLE_App ({expr=S.MLE_Name p}, _)
     when S.string_of_mlpath p = "failwith" ->
     mk_call (mk_expr_path_singl panic_fn) []
 
