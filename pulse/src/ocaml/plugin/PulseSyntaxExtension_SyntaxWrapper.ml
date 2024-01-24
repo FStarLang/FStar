@@ -82,6 +82,9 @@ let mk_comp (pre:term) (ret:binder) (post:term) : comp =
 let ghost_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp =
    C_STGhost (inames, mk_st_comp pre ret post)
 
+let unobservable_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp =
+   C_STAtomic (inames, Unobservable, mk_st_comp pre ret post)
+
 let atomic_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp =
    C_STAtomic (inames, Observable, mk_st_comp pre ret post)
 
