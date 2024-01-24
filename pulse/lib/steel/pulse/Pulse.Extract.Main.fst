@@ -521,6 +521,8 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
 
     | Tm_Unreachable -> p
 
+    | Tm_Admit _ -> p
+
     | _ -> T.fail "Unexpected st term when erasing ghost subterms"
   end
 
@@ -669,7 +671,9 @@ let rec extract (g:env) (p:st_term)
         mle_app (mle_name (["Pulse"; "Lib"; "Core"], "unreachable")) [mle_unit], e_tag_impure
 
       | Tm_ProofHintWithBinders { t } -> T.fail "Unexpected constructor: ProofHintWithBinders should have been desugared away"
-      | Tm_Admit _ -> T.raise (Extraction_failure (Printf.sprintf "Cannot extract code with admit: %s\n" (Pulse.Syntax.Printer.st_term_to_string p)))
+      | Tm_Admit _ ->
+        mle_app (mle_name ([], "failwith")) [mle_unit], e_tag_impure
+        // T.raise (Extraction_failure (Printf.sprintf "Cannot extract code with admit: %s\n" (Pulse.Syntax.Printer.st_term_to_string p)))
       
     end
 
