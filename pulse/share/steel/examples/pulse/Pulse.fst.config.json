@@ -16,6 +16,7 @@
     "bug-reports",
     "by-example",
     "lib",
+    "lib/pledge",
     "parallel",
     "parix",
     "dice",
