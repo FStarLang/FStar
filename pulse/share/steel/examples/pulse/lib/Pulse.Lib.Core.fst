@@ -27,7 +27,6 @@ let emp = emp
 let op_Star_Star = op_Star_Star
 let pure = pure
 let op_exists_Star = op_exists_Star
-let op_forall_Star #a (p:a -> vprop) = admit() 
 let vprop_equiv = slprop_equiv
 let vprop_post_equiv = slprop_post_equiv
 let prop_squash_idem (p:prop)
@@ -94,17 +93,6 @@ let vprop_equiv_cong (p1 p2 p3 p4:vprop)
     vprop_equiv_refl _
 
 let vprop_equiv_ext p1 p2 _ = vprop_equiv_refl p1
-
-let equiv_forall #a (p q:a -> vprop) (_:squash (F.feq p q))
-: squash (op_forall_Star p == op_forall_Star q)
-= admit()
-
-let vprop_equiv_forall #a (p q:a -> vprop)
-                      (_:squash (F.feq p q))
-: vprop_equiv (op_forall_Star p) (op_forall_Star q)
-= let eq = equiv_forall p q () in
-  prop_squash_idem (op_forall_Star p == op_forall_Star q);
-  vprop_equiv_ext (op_forall_Star p) (op_forall_Star q) eq
 
 (* Invariants, just reexport *)
 module Act = PulseCore.Action

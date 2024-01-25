@@ -98,7 +98,10 @@ let mk_star (l r:R.term) : R.term =
 
 let pure_lid = mk_pulse_lib_core_lid "pure"
 let exists_lid = mk_pulse_lib_core_lid "op_exists_Star"
-let forall_lid = mk_pulse_lib_core_lid "op_forall_Star"
+let pulse_lib_forall = ["Pulse"; "Lib"; "Forall"]
+let mk_pulse_lib_forall_lid s = pulse_lib_forall@[s]
+
+let forall_lid = mk_pulse_lib_forall_lid "op_forall_Star"
 let args_of (tms:list R.term) =
   List.Tot.map (fun x -> x, R.Q_Explicit) tms
 

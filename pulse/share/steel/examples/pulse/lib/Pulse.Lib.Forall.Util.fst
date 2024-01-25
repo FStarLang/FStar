@@ -17,10 +17,11 @@
 module Pulse.Lib.Forall.Util
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Stick.Util
+include Pulse.Lib.Forall
 module I = Pulse.Lib.Stick.Util
 
-let intro #a #p = Pulse.Lib.Core.intro_forall #a #p
-let elim #a #p = Pulse.Lib.Core.elim_forall #a #p
+let intro #a #p = Pulse.Lib.Forall.intro_forall #a #p
+let elim #a #p = Pulse.Lib.Forall.elim_forall #a #p
  
 ```pulse
 ghost

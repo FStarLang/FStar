@@ -1,6 +1,7 @@
 module Pulse.Lib.Forall
 open Pulse.Main
 open Pulse.Lib.Core
+module F = FStar.FunctionalExtensionality
 
 let token (v:vprop) = v
 
@@ -10,11 +11,12 @@ let universal_quantifier #a (v:vprop) (p: a -> vprop) =
 let is_forall #a (v:vprop) (p:a -> vprop) =
   squash (universal_quantifier #a v p)
 
-let ( forall* ) (#a:Type u#a) (p: a -> vprop)
+let uquant (#a:Type u#a) (p: a -> vprop)
 : vprop
 = exists* (v:vprop).
     pure (is_forall v p) **
     token v
+let ( forall* ) (#a:Type u#a) (p:a -> vprop) = uquant #a (F.on_dom a p)
 
 let extract_q #a (v:vprop) (p:a -> vprop) (pf:squash (is_forall v p))
 : universal_quantifier #a v p
@@ -58,11 +60,12 @@ requires forall* (x:a). p x
 ensures p x
 {
     unfold (forall* x. p x);
+    unfold (uquant #a (F.on_dom a (fun x -> p x)));
     with v. assert (token v);
     unfold token;
-    let f = return (extract_q (Ghost.reveal v) (fun x -> p x) ());
+    let f = return (extract_q (Ghost.reveal v) (F.on_dom a (fun x -> p x)) ());
     f x;
-    rewrite ((fun x -> p x) x) as (p x);
+    rewrite ((F.on_dom a (fun x -> p x)) x) as (p x);
 }
 ```
 
@@ -124,4 +127,5 @@ let vprop_equiv_forall
     (p q: a -> vprop)
     (_:squash (forall x. p x == q x))
 : vprop_equiv (op_forall_Star p) (op_forall_Star q)
-= admit()
+= FStar.FunctionalExtensionality.extensionality _ _ p q;
+  vprop_equiv_refl (op_forall_Star p)

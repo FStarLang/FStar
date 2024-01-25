@@ -17,6 +17,7 @@
 module Pulse.Lib.Pervasives
 include Pulse.Main
 include Pulse.Lib.Core
+include Pulse.Lib.Forall
 include Pulse.Lib.Array
 include Pulse.Lib.Reference
 include PulseCore.FractionalPermission
