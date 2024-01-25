@@ -140,6 +140,7 @@ let destruct_q_conn t =
 
 let rec destruct_sq_forall t =
     let! t = U.un_squash t in
+    let t = U.unmeta t in
     match U.arrow_one t with
     | Some (b, c) ->
         if not (U.is_tot_or_gtot_comp c)
@@ -157,6 +158,7 @@ let rec destruct_sq_forall t =
     | _ -> None
 and destruct_sq_exists t =
     let! t = U.un_squash t in
+    let t = U.unmeta t in
     let hd, args = U.head_and_args_full t in
     match (U.un_uinst hd).n, args with
     | Tm_fvar fv, [(a1, _); (a2, _)]
