@@ -470,9 +470,11 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
     | Tm_abs {bs=[]} -> failwith "Impossible: abstraction with no binders"
 
     | Tm_abs {bs=xs; body; rc_opt=resc} ->
-      mk_t <| Lam ((fun ys -> translate cfg (List.append (List.map fst ys) bs) body),
-                  Inl (bs, xs, resc),
-                  List.length xs)
+      mk_t <| Lam {
+        interp = (fun ys -> translate cfg (List.append (List.map fst ys) bs) body);
+        shape = Lam_bs (bs, xs, resc);
+        arity = List.length xs;
+      }
 
     | Tm_fvar fvar ->
       begin
@@ -718,26 +720,31 @@ and iapp (cfg : config) (f:t) (args:args) : t =
   // meta and lazy nodes shouldn't block reduction
   let mk t = mk_rt f.nbe_r t in
   match (unlazy_unmeta f).nbe_t with
-  | Lam (f, binders, n) ->
+  | Lam {interp=f; shape; arity=n} ->
     let m = List.length args in
     if m < n then
       // partial application
       let arg_values_rev = List.rev args in
-      let binders =
-        match binders with
-        | Inr raw_args ->
+      let shape =
+        match shape with
+        | Lam_args raw_args ->
           let _, raw_args = List.splitAt m raw_args in
-          Inr raw_args
+          Lam_args raw_args
 
-        | Inl (ctx, xs, rc) ->
+        | Lam_bs (ctx, xs, rc) ->
           let _, xs = List.splitAt m xs in
           let ctx = List.append (List.map fst arg_values_rev) ctx in
-          Inl (ctx, xs, rc)
+          Lam_bs (ctx, xs, rc)
+
+        | Lam_primop (f, args_acc) ->
+          Lam_primop (f, args_acc @ args)
       in
       mk <|
-      Lam((fun l -> f (List.append l arg_values_rev)),
-          binders,
-          n - m)
+      Lam {
+        interp = (fun l -> f (List.append l arg_values_rev));
+        shape = shape;
+        arity = n-m;
+      }
     else if m = n then
       // full application
       let arg_values_rev = List.rev args in
@@ -874,7 +881,8 @@ and translate_fv (cfg: config) (bs:list t) (fvar:fv): t =
        | Some prim_step when prim_step.strong_reduction_ok (* TODO : || not cfg.strong *) ->
          let arity = prim_step.arity + prim_step.univ_arity in
          debug (fun () -> BU.print1 "Found a primop %s\n" (P.fv_to_string fvar));
-         mk_t <| Lam ((fun args_rev ->
+         mk_t <| Lam {
+           interp = (fun args_rev ->
                       let args' = List.rev args_rev in
                       let callbacks = {
                         iapp = iapp cfg;
@@ -889,10 +897,10 @@ and translate_fv (cfg: config) (bs:list t) (fvar:fv): t =
                         x
                       | None ->
                         debug (fun () -> BU.print1 "Primitive operator %s failed\n" (P.fv_to_string fvar));
-                        iapp cfg (mkFV fvar [] []) args'),
-                     (let f (_:int) = S.mk_binder (S.new_bv None S.t_unit) in
-                      Inl ([], FStar.Common.tabulate arity f, None)),
-                     arity)
+                        iapp cfg (mkFV fvar [] []) args');
+            shape = Lam_primop (fvar, []);
+            arity = arity;
+          }
 
        | Some _ -> debug (fun () -> BU.print1 "(2) Decided to not unfold %s\n" (P.fv_to_string fvar)); mkFV fvar [] []
        | _      -> debug (fun () -> BU.print1 "(3) Decided to not unfold %s\n" (P.fv_to_string fvar)); mkFV fvar [] []
@@ -1225,47 +1233,52 @@ and readback (cfg:config) (x:t) : term =
     | Type_t u ->
       mk (Tm_type u)
 
-    | Lam (f, binders, arity) ->
-      let binders, accus_rev, rc =
-        match binders with
-        | Inl (ctx, binders, rc) ->
-          let ctx, binders_rev, accus_rev =
-            List.fold_left
-              (fun (ctx, binders_rev, accus_rev) b ->
-                let x = b.binder_bv in
-                let tnorm = readback cfg (translate cfg ctx x.sort) in
-                let x = { S.freshen_bv x with sort = tnorm } in
-                let ax = mkAccuVar x in
-                let ctx = ax :: ctx in
-                ctx, ({b with binder_bv=x})::binders_rev, (ax, U.aqual_of_binder b)::accus_rev)
-              (ctx, [], [])
-              binders
-          in
-          let rc =
-            match rc with
-            | None -> None
-            | Some rc ->
-              Some (readback_residual_comp cfg (translate_residual_comp cfg ctx rc))
-          in
-          List.rev binders_rev,
-          accus_rev,
-          rc
-        | Inr args ->
-          let binders, accus =
-            List.fold_right
-              (fun (t, aq) (binders, accus) ->
-               let bqual, battrs = U.bqual_and_attrs_of_aqual aq in
-               let pqual, battrs = U.parse_positivity_attributes battrs in
-               let x = S.new_bv None (readback cfg t) in
-               (S.mk_binder_with_attrs x bqual pqual battrs)::binders,
-               (mkAccuVar x, aq) :: accus)
-              args
-              ([],[])
-          in
-          binders, List.rev accus, None
-      in
-      let body = readback cfg (f accus_rev) in
-      with_range (U.abs binders body rc)
+    | Lam {interp=f; shape; arity} ->
+      begin match shape with
+      | Lam_bs (ctx, binders, rc) ->
+        let ctx, binders_rev, accus_rev =
+          List.fold_left
+            (fun (ctx, binders_rev, accus_rev) b ->
+              let x = b.binder_bv in
+              let tnorm = readback cfg (translate cfg ctx x.sort) in
+              let x = { S.freshen_bv x with sort = tnorm } in
+              let ax = mkAccuVar x in
+              let ctx = ax :: ctx in
+              ctx, ({b with binder_bv=x})::binders_rev, (ax, U.aqual_of_binder b)::accus_rev)
+            (ctx, [], [])
+            binders
+        in
+        let rc =
+          match rc with
+          | None -> None
+          | Some rc ->
+            Some (readback_residual_comp cfg (translate_residual_comp cfg ctx rc))
+        in
+        let binders = List.rev binders_rev in
+        let body = readback cfg (f accus_rev) in
+        with_range (U.abs binders body rc)
+
+      | Lam_args args ->
+        let binders, accus_rev =
+          List.fold_right
+            (fun (t, aq) (binders, accus) ->
+              let bqual, battrs = U.bqual_and_attrs_of_aqual aq in
+              let pqual, battrs = U.parse_positivity_attributes battrs in
+              let x = S.new_bv None (readback cfg t) in
+              (S.mk_binder_with_attrs x bqual pqual battrs)::binders,
+              (mkAccuVar x, aq) :: accus)
+            args
+            ([], [])
+        in
+        let accus = List.rev accus_rev in
+        let rc = None in
+        let body = readback cfg (f accus_rev) in
+        with_range (U.abs binders body rc)
+
+      | Lam_primop (fv, args) ->
+        let body = U.mk_app (S.mk (Tm_fvar fv) (S.range_of_fv fv)) (readback_args cfg args) in
+        with_range body
+      end
 
     | Refinement (f, targ) ->
       if cfg.core_cfg.steps.for_extraction

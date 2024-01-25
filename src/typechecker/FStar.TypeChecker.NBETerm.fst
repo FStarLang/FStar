@@ -166,7 +166,7 @@ let constant_to_string (c: constant) =
 
 let rec t_to_string (x:t) =
   match x.nbe_t with
-  | Lam (b, _, arity) -> BU.format1 "Lam (_, %s args)"  (BU.string_of_int arity)
+  | Lam {interp=b; arity} -> BU.format1 "Lam (_, %s args)"  (BU.string_of_int arity)
   | Accu (a, l) ->
     "Accu (" ^ (atom_to_string a) ^ ") (" ^
     (String.concat "; " (List.map (fun x -> t_to_string (fst x)) l)) ^ ")"
@@ -544,11 +544,13 @@ let e_arrow (ea:embedding 'a) (eb:embedding 'b) : Prims.Tot (embedding ('a -> 'b
     let etyp () = ET_fun(ea.e_typ (), eb.e_typ ()) in
     let em cb (f : 'a -> 'b) : t =
         lazy_embed etyp f (fun () ->
-        mk_t <| Lam ((fun tas -> match unembed ea cb (tas |> List.hd |> fst) with
+        mk_t <| Lam {
+          interp = (fun tas -> match unembed ea cb (tas |> List.hd |> fst) with
                              | Some a -> embed eb cb (f a)
-                             | None -> failwith "cannot unembed function argument"),
-               Inr [as_arg (type_of eb)],
-               1))
+                             | None -> failwith "cannot unembed function argument");
+          shape = Lam_args [as_arg (type_of eb)];
+          arity = 1;
+        })
     in
     let un cb (lam : t) : option ('a -> 'b) =
         let k (lam:t) : option ('a -> 'b) =
