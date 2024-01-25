@@ -2274,6 +2274,7 @@ and norm_cb cfg : EMB.norm_cb = function
 (* The boolean indicates whether further normalization is required. *)
 (*******************************************************************)
 and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term & bool =
+    let open FStar.Syntax.Formula in
     let tm, renorm = reduce_primops (norm_cb cfg) cfg env tm in
     if not <| cfg.steps.simplify then tm, renorm
     else
@@ -2325,13 +2326,14 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term & bool
     //  3)  forall p. (forall j1 j2 ... jn. p j1 j2 ... jn)    ==> E[p]    ~>    E[(fun j1 j2 ... jn -> True)]
     //  4)  forall p. (forall j1 j2 ... jn. ~(p j1 j2 ... jn)) ==> E[p]    ~>    E[(fun j1 j2 ... jn -> False)]
     let is_quantified_const (bv:bv) (phi : term) : option term =
-        match U.destruct_typ_as_formula phi with
+        let open FStar.Syntax.Formula in
+        match destruct_typ_as_formula phi with
         | Some (BaseConn (lid, [(p, _); (q, _)])) when Ident.lid_equals lid PC.imp_lid ->
             if cfg.debug.wpe then
                 BU.print2 "WPE> p = (%s); q = (%s)\n"
                         (Print.term_to_string p)
                         (Print.term_to_string q);
-            begin match U.destruct_typ_as_formula p with
+            begin match destruct_typ_as_formula p with
             // Case 1)
             | None -> begin match (SS.compress p).n with
                       | Tm_bvar bv' when S.bv_eq bv bv' ->
@@ -2352,7 +2354,7 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term & bool
                 end
 
             | Some (QAll (bs, pats, phi)) ->
-                begin match U.destruct_typ_as_formula phi with
+                begin match destruct_typ_as_formula phi with
                 | None ->
                     begin match is_applied_maybe_squashed bs phi with
                     // Case 3)
@@ -2384,7 +2386,7 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term & bool
         | _ -> None
     in
     let is_forall_const (phi : term) : option term =
-        match U.destruct_typ_as_formula phi with
+        match destruct_typ_as_formula phi with
         | Some (QAll ([b], _, phi')) ->
             if cfg.debug.wpe then
                 BU.print2 "WPE> QAll [%s] %s\n" (Print.bv_to_string b.binder_bv) (Print.term_to_string phi');

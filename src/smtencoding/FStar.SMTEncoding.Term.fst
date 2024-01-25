@@ -1098,3 +1098,7 @@ let dummy_sort = Sort "Dummy_sort"
 instance showable_smt_term = {
   show = print_smt_term;
 }
+
+instance showable_decl = {
+  show = declToSmt_no_caps "";
+}

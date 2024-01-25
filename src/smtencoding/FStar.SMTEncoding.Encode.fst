@@ -1945,7 +1945,7 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
             | S.Binding_var x::rest ->
                 let out, rest = aux rest in
                 let t =
-                    match (FStar.Syntax.Util.destruct_typ_as_formula x.sort) with
+                    match (Syntax.Formula.destruct_typ_as_formula x.sort) with
                     | Some _ ->
                       U.refine (S.new_bv None t_unit) x.sort
                       //add a squash to trigger the shallow embedding,

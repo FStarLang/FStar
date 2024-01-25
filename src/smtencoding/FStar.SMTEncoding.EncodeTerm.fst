@@ -47,6 +47,8 @@ module SS     = FStar.Syntax.Subst
 module TcUtil = FStar.TypeChecker.Util
 module U      = FStar.Syntax.Util
 
+open FStar.Class.Show
+
 (*---------------------------------------------------------------------------------*)
 (*  <Utilities> *)
 
@@ -1010,7 +1012,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             when
              (S.fv_eq_lid fv Const.squash_lid
               || S.fv_eq_lid fv Const.auto_squash_lid)
-              && Option.isSome (U.destruct_typ_as_formula arg) ->
+              && Option.isSome (Syntax.Formula.destruct_typ_as_formula arg) ->
           let dummy = S.new_bv None t_unit in
           let t = U.refine dummy arg in (* so that `squash f`, when f is a formula, benefits from shallow embedding *)
           encode_term t env
@@ -1646,21 +1648,22 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
     debug phi;
 
     let phi = U.unascribe phi in
-    match U.destruct_typ_as_formula phi with
+    let open FStar.Syntax.Formula in
+    match destruct_typ_as_formula phi with
         | None -> fallback phi
 
-        | Some (U.BaseConn(op, arms)) ->
+        | Some (BaseConn(op, arms)) ->
           (match connectives |> List.tryFind (fun (l, _) -> lid_equals op l) with
              | None -> fallback phi
              | Some (_, f) -> f phi.pos arms)
 
-        | Some (U.QAll(vars, pats, body)) ->
+        | Some (QAll(vars, pats, body)) ->
           pats |> List.iter (check_pattern_vars env vars);
           let vars, pats, guard, body, decls = encode_q_body env vars pats body in
           let tm = mkForall phi.pos (pats, vars, mkImp(guard, body)) in
           tm, decls
 
-        | Some (U.QEx(vars, pats, body)) ->
+        | Some (QEx(vars, pats, body)) ->
           pats |> List.iter (check_pattern_vars env vars);
           let vars, pats, guard, body, decls = encode_q_body env vars pats body in
           mkExists phi.pos (pats, vars, mkAnd(guard, body)), decls

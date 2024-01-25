@@ -19,6 +19,7 @@ module FStar.SMTEncoding.Term
 open FStar.Compiler
 open FStar.Compiler.Effect
 open FStar.Compiler.Util
+open FStar.Class.Show
 
 module S = FStar.Syntax.Syntax
 
@@ -320,3 +321,4 @@ val print_smt_term_list_list: list (list term) -> string
 val dummy_sort : sort
 
 instance val showable_smt_term : Class.Show.showable term
+instance val showable_decl : showable decl
