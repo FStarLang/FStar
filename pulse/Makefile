@@ -117,4 +117,6 @@ boot:
 	+$(MAKE) verify-pulse
 	+$(MAKE) -C src extract-pulse-plugin
 	+$(MAKE) ocaml
-  
+
+ci:
+	+$(MAKE) -C src ci
