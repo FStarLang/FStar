@@ -305,7 +305,8 @@ let rec (destruct_sq_forall :
             (fun uu___1 ->
                (fun t1 ->
                   let t1 = Obj.magic t1 in
-                  let uu___1 = FStar_Syntax_Util.arrow_one t1 in
+                  let t2 = FStar_Syntax_Util.unmeta t1 in
+                  let uu___1 = FStar_Syntax_Util.arrow_one t2 in
                   match uu___1 with
                   | FStar_Pervasives_Native.Some (b, c) ->
                       let uu___2 =
@@ -355,7 +356,8 @@ and (destruct_sq_exists :
             (fun uu___1 ->
                (fun t1 ->
                   let t1 = Obj.magic t1 in
-                  let uu___1 = FStar_Syntax_Util.head_and_args_full t1 in
+                  let t2 = FStar_Syntax_Util.unmeta t1 in
+                  let uu___1 = FStar_Syntax_Util.head_and_args_full t2 in
                   match uu___1 with
                   | (hd, args) ->
                       let uu___2 =
