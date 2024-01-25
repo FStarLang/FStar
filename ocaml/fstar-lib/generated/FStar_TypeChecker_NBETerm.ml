@@ -51,12 +51,19 @@ type atom =
   | UnreducedLetRec of ((var * t * t) Prims.list * t *
   FStar_Syntax_Syntax.letbinding Prims.list) 
   | UVar of FStar_Syntax_Syntax.term FStar_Thunk.t 
+and lam_shape =
+  | Lam_bs of (t Prims.list * FStar_Syntax_Syntax.binders *
+  FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option) 
+  | Lam_args of (t * FStar_Syntax_Syntax.aqual) Prims.list 
+  | Lam_primop of (FStar_Syntax_Syntax.fv * (t * FStar_Syntax_Syntax.aqual)
+  Prims.list) 
+and t'__Lam__payload =
+  {
+  interp: (t * FStar_Syntax_Syntax.aqual) Prims.list -> t ;
+  shape: lam_shape ;
+  arity: Prims.int }
 and t' =
-  | Lam of (((t * FStar_Syntax_Syntax.aqual) Prims.list -> t) *
-  ((t Prims.list * FStar_Syntax_Syntax.binders *
-     FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option),
-  (t * FStar_Syntax_Syntax.aqual) Prims.list) FStar_Pervasives.either *
-  Prims.int) 
+  | Lam of t'__Lam__payload 
   | Accu of (atom * (t * FStar_Syntax_Syntax.aqual) Prims.list) 
   | Construct of (FStar_Syntax_Syntax.fv * FStar_Syntax_Syntax.universe
   Prims.list * (t * FStar_Syntax_Syntax.aqual) Prims.list) 
@@ -150,16 +157,39 @@ let (uu___is_UVar : atom -> Prims.bool) =
   fun projectee -> match projectee with | UVar _0 -> true | uu___ -> false
 let (__proj__UVar__item___0 : atom -> FStar_Syntax_Syntax.term FStar_Thunk.t)
   = fun projectee -> match projectee with | UVar _0 -> _0
+let (uu___is_Lam_bs : lam_shape -> Prims.bool) =
+  fun projectee -> match projectee with | Lam_bs _0 -> true | uu___ -> false
+let (__proj__Lam_bs__item___0 :
+  lam_shape ->
+    (t Prims.list * FStar_Syntax_Syntax.binders *
+      FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option))
+  = fun projectee -> match projectee with | Lam_bs _0 -> _0
+let (uu___is_Lam_args : lam_shape -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Lam_args _0 -> true | uu___ -> false
+let (__proj__Lam_args__item___0 :
+  lam_shape -> (t * FStar_Syntax_Syntax.aqual) Prims.list) =
+  fun projectee -> match projectee with | Lam_args _0 -> _0
+let (uu___is_Lam_primop : lam_shape -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Lam_primop _0 -> true | uu___ -> false
+let (__proj__Lam_primop__item___0 :
+  lam_shape ->
+    (FStar_Syntax_Syntax.fv * (t * FStar_Syntax_Syntax.aqual) Prims.list))
+  = fun projectee -> match projectee with | Lam_primop _0 -> _0
+let (__proj__Mkt'__Lam__payload__item__interp :
+  t'__Lam__payload -> (t * FStar_Syntax_Syntax.aqual) Prims.list -> t) =
+  fun projectee -> match projectee with | { interp; shape; arity;_} -> interp
+let (__proj__Mkt'__Lam__payload__item__shape : t'__Lam__payload -> lam_shape)
+  =
+  fun projectee -> match projectee with | { interp; shape; arity;_} -> shape
+let (__proj__Mkt'__Lam__payload__item__arity : t'__Lam__payload -> Prims.int)
+  =
+  fun projectee -> match projectee with | { interp; shape; arity;_} -> arity
 let (uu___is_Lam : t' -> Prims.bool) =
   fun projectee -> match projectee with | Lam _0 -> true | uu___ -> false
-let (__proj__Lam__item___0 :
-  t' ->
-    (((t * FStar_Syntax_Syntax.aqual) Prims.list -> t) *
-      ((t Prims.list * FStar_Syntax_Syntax.binders *
-         FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option),
-      (t * FStar_Syntax_Syntax.aqual) Prims.list) FStar_Pervasives.either *
-      Prims.int))
-  = fun projectee -> match projectee with | Lam _0 -> _0
+let (__proj__Lam__item___0 : t' -> t'__Lam__payload) =
+  fun projectee -> match projectee with | Lam _0 -> _0
 let (uu___is_Accu : t' -> Prims.bool) =
   fun projectee -> match projectee with | Accu _0 -> true | uu___ -> false
 let (__proj__Accu__item___0 :
@@ -523,7 +553,7 @@ let (constant_to_string : constant -> Prims.string) =
 let rec (t_to_string : t -> Prims.string) =
   fun x ->
     match x.nbe_t with
-    | Lam (b, uu___, arity) ->
+    | Lam { interp = b; shape = uu___; arity;_} ->
         let uu___1 = FStar_Compiler_Util.string_of_int arity in
         FStar_Compiler_Util.format1 "Lam (_, %s args)" uu___1
     | Accu (a, l) ->
@@ -1426,20 +1456,24 @@ let e_arrow : 'a 'b . 'a embedding -> 'b embedding -> ('a -> 'b) embedding =
                    let uu___4 =
                      let uu___5 = let uu___6 = type_of eb in as_arg uu___6 in
                      [uu___5] in
-                   FStar_Pervasives.Inr uu___4 in
-                 ((fun tas ->
-                     let uu___4 =
-                       let uu___5 =
-                         let uu___6 = FStar_Compiler_List.hd tas in
-                         FStar_Pervasives_Native.fst uu___6 in
-                       unembed ea cb uu___5 in
-                     match uu___4 with
-                     | FStar_Pervasives_Native.Some a1 ->
-                         let uu___5 = f a1 in embed eb cb uu___5
-                     | FStar_Pervasives_Native.None ->
-                         FStar_Compiler_Effect.failwith
-                           "cannot unembed function argument"), uu___3,
-                   Prims.int_one) in
+                   Lam_args uu___4 in
+                 {
+                   interp =
+                     (fun tas ->
+                        let uu___4 =
+                          let uu___5 =
+                            let uu___6 = FStar_Compiler_List.hd tas in
+                            FStar_Pervasives_Native.fst uu___6 in
+                          unembed ea cb uu___5 in
+                        match uu___4 with
+                        | FStar_Pervasives_Native.Some a1 ->
+                            let uu___5 = f a1 in embed eb cb uu___5
+                        | FStar_Pervasives_Native.None ->
+                            FStar_Compiler_Effect.failwith
+                              "cannot unembed function argument");
+                   shape = uu___3;
+                   arity = Prims.int_one
+                 } in
                Lam uu___2 in
              mk_t uu___1) in
       let un1 cb lam =
