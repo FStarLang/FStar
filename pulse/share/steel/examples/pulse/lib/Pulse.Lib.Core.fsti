@@ -243,9 +243,14 @@ val bind_stt_ghost_atomic
   : stt_atomic b opens pre1 post2
 
 inline_for_extraction
-val lift_stt_ghost (#a:Type u#a) (#opens:inames) (#pre:vprop) (#post:a -> vprop)
+val lift_ghost_unobservable (#a:Type u#a) (#opens:inames) (#pre:vprop) (#post:a -> vprop)
   (e:stt_ghost a opens pre post)
   (reveal_a:(x:Ghost.erased a -> y:a{y == Ghost.reveal x}))
+  : stt_unobservable a opens pre post
+
+inline_for_extraction
+val lift_unobservable_atomic (#a:Type u#a) (#opens:inames) (#pre:vprop) (#post:a -> vprop)
+  (e:stt_unobservable a opens pre post)
   : stt_atomic a opens pre post
 
 inline_for_extraction

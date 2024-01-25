@@ -326,8 +326,7 @@ let rec mk_bind (g:env)
     if at_most_one_observable obs1 obs2
     then (
       mk_bind_atomic_atomic g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing
-    )
-    else (
+    ) else (
       let c1lifted = C_ST (st_comp_of_comp c1) in
       let d_e1 : st_typing g e1 c1lifted =
         T_Lift _ _ _ c1lifted d_e1 (Lift_STAtomic_ST _ c1) in
@@ -340,8 +339,13 @@ let rec mk_bind (g:env)
     mk_bind g pre e1 e2 c1lifted c2 px d_e1 d_c1res d_e2 res_typing post_typing
   | C_STGhost _ _, C_STAtomic _ _ _ ->
     mk_bind_ghost_atomic g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing
+
   | C_STAtomic inames1 _ _, C_STGhost inames2 _ ->
     mk_bind_atomic_ghost g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing
+
+  | C_STAtomic inames1 _ _, C_STGhost inames2 _ ->
+    mk_bind_atomic_ghost g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing
+
   | C_ST _, C_STAtomic inames _ _ ->
     let c2lifted = C_ST (st_comp_of_comp c2) in
     let g' = push_binding g x (fst px) (comp_res c1) in
@@ -354,7 +358,7 @@ let rec mk_bind (g:env)
       let w = get_non_informative_witness g (comp_u c1) (comp_res c1) in
       let c1lifted = C_STAtomic inames Unobservable (st_comp_of_comp c1) in
       let d_e1 : st_typing g e1 c1lifted =
-        T_Lift _ _ _ c1lifted d_e1 (Lift_STGhost_STAtomic g c1 w) in
+        T_Lift _ _ _ c1lifted d_e1 (Lift_STGhost_STUnobservable g c1 w) in
       mk_bind g pre e1 e2 c1lifted c2 px d_e1 d_c1res d_e2 res_typing post_typing
     end
   | C_ST _, C_STGhost inames _ ->
@@ -362,7 +366,7 @@ let rec mk_bind (g:env)
     let w = get_non_informative_witness g' (comp_u c2) (comp_res c2) in
     let c2lifted = C_STAtomic inames Unobservable (st_comp_of_comp c2) in
     let d_e2 : st_typing g' (open_st_term_nv e2 px) c2lifted =
-      T_Lift _ _ _ c2lifted d_e2 (Lift_STGhost_STAtomic g' c2 w) in
+      T_Lift _ _ _ c2lifted d_e2 (Lift_STGhost_STUnobservable g' c2 w) in
     let (| t, c, d |) = mk_bind g pre e1 e2 c1 c2lifted px d_e1 d_c1res d_e2 res_typing post_typing in
     (| t, c, d |)
   | _, _ -> fail g None "bind either not implemented (e.g. ghost) or not possible"

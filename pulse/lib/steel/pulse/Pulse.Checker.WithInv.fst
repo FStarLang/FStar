@@ -216,7 +216,7 @@ let check
   let tm : st_term =
     { term = Tm_WithInv {name=inv_tm; body; returns_inv = None};
       range = t.range;
-      effect_tag = Sealed.seal (Some STT_Atomic) } // fix
+      effect_tag = Sealed.seal ctag_hint' }
   in
 
   let tok = check_iname_disjoint g inv_tm_range inv_p (comp_inames c_body) { inv_tm with range = inv_tm_range } in

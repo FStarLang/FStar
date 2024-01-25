@@ -128,8 +128,9 @@ let lift_comp_weakening (g:env) (g':env { disjoint g g'})
   
   match d with
   | Lift_STAtomic_ST _ c -> Lift_STAtomic_ST _ c
-  | Lift_STGhost_STAtomic _ c non_informative_c ->
-    Lift_STGhost_STAtomic _ c (non_informative_c_weakening g g' g1 _ non_informative_c)
+  | Lift_STGhost_STUnobservable _ c non_informative_c ->
+    Lift_STGhost_STUnobservable _ c (non_informative_c_weakening g g' g1 _ non_informative_c)
+  | Lift_STUnobservable_STAtomic _ c -> Lift_STUnobservable_STAtomic _ c
 
 #push-options "--admit_smt_queries true"
 let st_equiv_weakening (g:env) (g':env { disjoint g g' })
@@ -541,9 +542,12 @@ let lift_comp_subst
   | Lift_STAtomic_ST _ c ->
     Lift_STAtomic_ST _ (subst_comp c ss)
 
-  | Lift_STGhost_STAtomic _ c d_non_informative ->
-    Lift_STGhost_STAtomic _ (subst_comp c ss)
+  | Lift_STGhost_STUnobservable _ c d_non_informative ->
+    Lift_STGhost_STUnobservable _ (subst_comp c ss)
       (non_informative_c_subst g x t g' e_typing _ d_non_informative)
+
+  | Lift_STUnobservable_STAtomic _ c ->
+    Lift_STUnobservable_STAtomic _ (subst_comp c ss)
 
 let bind_comp_subst
   (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (singleton_env (fstar_env g) x t) g' })

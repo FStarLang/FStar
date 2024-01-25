@@ -74,13 +74,18 @@ let lift_soundness
   LN.st_typing_ln e_typing;
   match lc with
   | Lift_STAtomic_ST _ _ ->
-    Lift.elab_lift_stt_atomic_typing g
+    Lift.elab_lift_stt_atomic_st_typing g
       c1 c2 _ (soundness _ _ _ e_typing) lc
-  | Lift_STGhost_STAtomic _ _ w ->
+
+  | Lift_STGhost_STUnobservable _ _ w ->
     let (| reveal_a, reveal_a_typing |) = w in
-    Lift.elab_lift_stt_ghost_typing g
+    Lift.elab_lift_stt_ghost_unobservable_typing g
       c1 c2 _ (soundness _ _ _ e_typing) lc
       _ (tot_typing_soundness reveal_a_typing)
+
+  | Lift_STUnobservable_STAtomic _ _ ->
+    Lift.elab_lift_stt_unobservable_atomic_typing g
+      c1 c2 _ (soundness _ _ _ e_typing) lc
 
 let frame_soundness
   (g:stt_env)

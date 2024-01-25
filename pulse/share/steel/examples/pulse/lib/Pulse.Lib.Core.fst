@@ -274,13 +274,21 @@ let bind_stt_ghost_atomic #a #b #opened #pre1 #post1 #post2 e1 e2 reveal_a =
   e2 (reveal_a x) ()
 
 inline_for_extraction
-let lift_stt_ghost #a #opened #pre #post e reveal_a =
+let lift_ghost_unobservable #a #opened #pre #post e reveal_a =
   fun _ ->
   let x =
     let y = e () in
     rewrite (post y) (post (reveal_a (Ghost.hide y)));
     Ghost.hide y in
   Steel.ST.Util.return (reveal_a x)
+
+inline_for_extraction
+let lift_unobservable_atomic #a #opened #pre #post e =
+  fun _ ->
+  let x =
+    let y = e () in
+    y in
+  Steel.ST.Util.return x
 
 inline_for_extraction
 let frame_stt (#a:Type u#a) (#pre:vprop) (#post:a -> vprop) (frame:vprop) (e:stt a pre post)
