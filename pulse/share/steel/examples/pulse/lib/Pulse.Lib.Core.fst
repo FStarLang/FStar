@@ -170,7 +170,8 @@ let sub_stt = I.sub
 let sub_stt_atomic pre2 post2 pf1 pf2 e =
    A.sub_atomic pre2 post2 pf1 pf2 e
 
-let sub_invs_stt_atomic e pf =  A.sub_invs_stt_atomic e pf
+let sub_invs_stt_atomic e pf = A.sub_invs_stt_atomic e pf
+let sub_invs_stt_unobservable e pf = A.sub_invs_stt_atomic e pf
 
 let sub_stt_ghost = A.sub_ghost
 

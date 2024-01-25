@@ -14,16 +14,16 @@
    limitations under the License.
 *)
 
-module Pulse.Lib.GhostReference
+module Pulse.Lib.HigherGhostReference
 open FStar.Tactics
 open Pulse.Lib.Core
 open PulseCore.FractionalPermission
 open FStar.Ghost
 
 [@@erasable]
-val ref ([@@@unused] a:Type u#0) : Type u#0
-
-val gref_non_informative (a:Type0) : non_informative_witness (ref a)
+val ref ([@@@unused] a:Type u#1) : Type u#0
+      
+val gref_non_informative (a:Type u#1) : non_informative_witness (ref a)
 
 val pts_to (#a:Type)
            (r:ref a)

@@ -330,6 +330,15 @@ val sub_invs_stt_atomic
   (_ : squash (inames_subset opens1 opens2))
   : stt_atomic a opens2 pre post
 
+val sub_invs_stt_unobservable
+  (#a:Type u#a)
+  (#opens1 #opens2:inames)
+  (#pre:vprop)
+  (#post:a -> vprop)
+  (e:stt_unobservable a opens1 pre post)
+  (_ : squash (inames_subset opens1 opens2))
+  : stt_unobservable a opens2 pre post
+
 inline_for_extraction
 val sub_stt_ghost
   (#a:Type u#a)
@@ -559,7 +568,7 @@ val gather
 /////////////////////////////////////////////////////////////////////////
 
 [@@erasable]
-val ghost_pcm_ref (#[@@@unused] a:Type u#a) (p:FStar.PCM.pcm a) : Type0
+val ghost_pcm_ref (#[@@@unused] a:Type u#a) ([@@@unused] p:FStar.PCM.pcm a) : Type0
 val ghost_pcm_pts_to (#a:Type u#1) (#p:pcm a) (r:ghost_pcm_ref p) (v:a) : vprop
 
 val ghost_alloc

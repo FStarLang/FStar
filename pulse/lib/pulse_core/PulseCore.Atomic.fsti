@@ -315,7 +315,7 @@ val recall
 // References
 ////////////////////////////////////////////////////////////////////////
 [@@erasable]
-val ghost_ref (#[@@@unused] a:Type u#a) (p:pcm a) : Type0
+val ghost_ref (#[@@@unused] a:Type u#a) ([@@@unused]p:pcm a) : Type0
 val ghost_pts_to (#a:Type u#1) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop 
 
 val ghost_alloc
