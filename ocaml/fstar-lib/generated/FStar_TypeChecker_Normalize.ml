@@ -5944,9 +5944,11 @@ and (maybe_simplify_aux :
                              is_applied bs t'
                          | uu___6 -> is_applied bs t)) in
                  let is_quantified_const bv phi =
-                   let uu___2 = FStar_Syntax_Util.destruct_typ_as_formula phi in
+                   let uu___2 =
+                     FStar_Syntax_Formula.destruct_typ_as_formula phi in
                    match uu___2 with
-                   | FStar_Pervasives_Native.Some (FStar_Syntax_Util.BaseConn
+                   | FStar_Pervasives_Native.Some
+                       (FStar_Syntax_Formula.BaseConn
                        (lid, (p, uu___3)::(q, uu___4)::[])) when
                        FStar_Ident.lid_equals lid FStar_Parser_Const.imp_lid
                        ->
@@ -5959,7 +5961,7 @@ and (maybe_simplify_aux :
                              "WPE> p = (%s); q = (%s)\n" uu___6 uu___7)
                         else ();
                         (let uu___6 =
-                           FStar_Syntax_Util.destruct_typ_as_formula p in
+                           FStar_Syntax_Formula.destruct_typ_as_formula p in
                          match uu___6 with
                          | FStar_Pervasives_Native.None ->
                              let uu___7 =
@@ -5981,7 +5983,7 @@ and (maybe_simplify_aux :
                                     FStar_Pervasives_Native.Some uu___9))
                               | uu___8 -> FStar_Pervasives_Native.None)
                          | FStar_Pervasives_Native.Some
-                             (FStar_Syntax_Util.BaseConn
+                             (FStar_Syntax_Formula.BaseConn
                              (lid1, (p1, uu___7)::[])) when
                              FStar_Ident.lid_equals lid1
                                FStar_Parser_Const.not_lid
@@ -6005,9 +6007,10 @@ and (maybe_simplify_aux :
                                     FStar_Pervasives_Native.Some uu___10))
                               | uu___9 -> FStar_Pervasives_Native.None)
                          | FStar_Pervasives_Native.Some
-                             (FStar_Syntax_Util.QAll (bs, pats, phi1)) ->
+                             (FStar_Syntax_Formula.QAll (bs, pats, phi1)) ->
                              let uu___7 =
-                               FStar_Syntax_Util.destruct_typ_as_formula phi1 in
+                               FStar_Syntax_Formula.destruct_typ_as_formula
+                                 phi1 in
                              (match uu___7 with
                               | FStar_Pervasives_Native.None ->
                                   let uu___8 =
@@ -6034,7 +6037,7 @@ and (maybe_simplify_aux :
                                          FStar_Pervasives_Native.Some uu___10))
                                    | uu___9 -> FStar_Pervasives_Native.None)
                               | FStar_Pervasives_Native.Some
-                                  (FStar_Syntax_Util.BaseConn
+                                  (FStar_Syntax_Formula.BaseConn
                                   (lid1, (p1, uu___8)::[])) when
                                   FStar_Ident.lid_equals lid1
                                     FStar_Parser_Const.not_lid
@@ -6066,9 +6069,10 @@ and (maybe_simplify_aux :
                          | uu___7 -> FStar_Pervasives_Native.None))
                    | uu___3 -> FStar_Pervasives_Native.None in
                  let is_forall_const phi =
-                   let uu___2 = FStar_Syntax_Util.destruct_typ_as_formula phi in
+                   let uu___2 =
+                     FStar_Syntax_Formula.destruct_typ_as_formula phi in
                    match uu___2 with
-                   | FStar_Pervasives_Native.Some (FStar_Syntax_Util.QAll
+                   | FStar_Pervasives_Native.Some (FStar_Syntax_Formula.QAll
                        (b::[], uu___3, phi')) ->
                        (if
                           (cfg.FStar_TypeChecker_Cfg.debug).FStar_TypeChecker_Cfg.wpe

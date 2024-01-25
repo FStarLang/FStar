@@ -1193,11 +1193,11 @@ let (gen_wps_for_free :
                             mk_rel FStar_Syntax_Util.mk_iff
                               k.FStar_Syntax_Syntax.sort k_tm uu___4 in
                           let uu___4 =
-                            FStar_Syntax_Util.destruct_typ_as_formula eq in
+                            FStar_Syntax_Formula.destruct_typ_as_formula eq in
                           match uu___4 with
                           | FStar_Pervasives_Native.Some
-                              (FStar_Syntax_Util.QAll (binders1, [], body))
-                              ->
+                              (FStar_Syntax_Formula.QAll
+                              (binders1, [], body)) ->
                               let k_app =
                                 let uu___5 = args_of_binders binders1 in
                                 FStar_Syntax_Util.mk_app k_tm uu___5 in
