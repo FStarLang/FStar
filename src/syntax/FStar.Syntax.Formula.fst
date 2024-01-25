@@ -94,6 +94,7 @@ let destruct_base_conn t =
 
 let destruct_sq_base_conn t =
     let! t = U.un_squash t in
+    let t = U.unmeta t in
     let hd, args = U.head_and_args_full t in
     match (U.un_uinst hd).n with
     | Tm_fvar fv -> lookup_arity_lid destruct_sq_base_table fv.fv_name.v args
