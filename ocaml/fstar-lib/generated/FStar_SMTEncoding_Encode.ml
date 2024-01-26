@@ -7629,7 +7629,7 @@ let (encode_query :
                        | (out, rest1) ->
                            let t =
                              let uu___4 =
-                               FStar_Syntax_Util.destruct_typ_as_formula
+                               FStar_Syntax_Formula.destruct_typ_as_formula
                                  x.FStar_Syntax_Syntax.sort in
                              match uu___4 with
                              | FStar_Pervasives_Native.Some uu___5 ->

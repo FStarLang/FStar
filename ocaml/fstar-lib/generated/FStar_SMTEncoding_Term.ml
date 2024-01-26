@@ -2328,3 +2328,5 @@ let (mk_haseq : term -> term) =
 let (dummy_sort : sort) = Sort "Dummy_sort"
 let (showable_smt_term : term FStar_Class_Show.showable) =
   { FStar_Class_Show.show = print_smt_term }
+let (showable_decl : decl FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = (declToSmt_no_caps "") }
