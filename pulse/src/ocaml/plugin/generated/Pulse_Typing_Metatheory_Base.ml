@@ -205,13 +205,17 @@ let (lift_comp_weakening :
                   Pulse_Typing.Lift_STAtomic_ST
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), c)
-              | Pulse_Typing.Lift_STGhost_STAtomic
+              | Pulse_Typing.Lift_STGhost_STUnobservable
                   (uu___, c, non_informative_c) ->
-                  Pulse_Typing.Lift_STGhost_STAtomic
+                  Pulse_Typing.Lift_STGhost_STUnobservable
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), c,
                       (non_informative_c_weakening g g' g1 c
                          non_informative_c))
+              | Pulse_Typing.Lift_STUnobservable_STAtomic (uu___, c) ->
+                  Pulse_Typing.Lift_STUnobservable_STAtomic
+                    ((Pulse_Typing_Env.push_env
+                        (Pulse_Typing_Env.push_env g g1) g'), c)
 let (st_equiv_weakening :
   Pulse_Typing_Env.env ->
     Pulse_Typing_Env.env ->
@@ -713,14 +717,19 @@ let (lift_comp_subst :
                           ((Pulse_Typing_Env.push_env g
                               (Pulse_Typing_Env.subst_env g' (nt x e))),
                             (Pulse_Syntax_Naming.subst_comp c ss))
-                    | Pulse_Typing.Lift_STGhost_STAtomic
+                    | Pulse_Typing.Lift_STGhost_STUnobservable
                         (uu___, c, d_non_informative) ->
-                        Pulse_Typing.Lift_STGhost_STAtomic
+                        Pulse_Typing.Lift_STGhost_STUnobservable
                           ((Pulse_Typing_Env.push_env g
                               (Pulse_Typing_Env.subst_env g' (nt x e))),
                             (Pulse_Syntax_Naming.subst_comp c ss),
                             (non_informative_c_subst g x t g' e () c
                                d_non_informative))
+                    | Pulse_Typing.Lift_STUnobservable_STAtomic (uu___, c) ->
+                        Pulse_Typing.Lift_STUnobservable_STAtomic
+                          ((Pulse_Typing_Env.push_env g
+                              (Pulse_Typing_Env.subst_env g' (nt x e))),
+                            (Pulse_Syntax_Naming.subst_comp c ss))
 let (bind_comp_subst :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.var ->

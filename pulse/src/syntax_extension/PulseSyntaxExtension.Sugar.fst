@@ -37,6 +37,7 @@ let as_vprop (v:vprop') (r:rng) = { v; vrange=r}
 type st_comp_tag = 
   | ST
   | STAtomic
+  | STUnobservable
   | STGhost
 
 type computation_type = {

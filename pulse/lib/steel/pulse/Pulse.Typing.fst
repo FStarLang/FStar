@@ -663,7 +663,14 @@ type lift_comp : env -> comp -> comp -> Type =
       c:comp_st{C_STAtomic? c} -> // Note: we no longer require an empty set of invariants, due to the positive view
       lift_comp g c (C_ST (st_comp_of_comp c))
 
-  | Lift_STGhost_STAtomic :
+  | Lift_STUnobservable_STAtomic :
+      g:env ->
+      c:comp_st{C_STAtomic? c /\ C_STAtomic?.obs c == Unobservable} ->
+      lift_comp g
+        (C_STAtomic (comp_inames c) Unobservable (st_comp_of_comp c))
+        (C_STAtomic (comp_inames c) Observable (st_comp_of_comp c))
+
+  | Lift_STGhost_STUnobservable :
       g:env ->
       c:comp_st{C_STGhost? c} ->
       non_informative_c:non_informative_c g c ->

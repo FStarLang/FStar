@@ -168,10 +168,10 @@ let check
   in
   let post_p'_typing = Pulse.Checker.Base.post_typing_as_abstraction (E post_p'_typing_src) in
   let ctag_hint' =
-    // if None? post.ctag_hint || post.ctag_hint = Some STT then
+    if None? post.ctag_hint || post.ctag_hint = Some STT then
       Some STT_Atomic
-    // else
-    //   post.ctag_hint
+    else
+      post.ctag_hint
   in
 
 
@@ -208,7 +208,7 @@ let check
                `with_invariants` blocks can only contain atomic computations.";
          prefix 4 1 (text "Computed type:") (arbitrary_string (P.comp_to_string c_body))]
     | C_STAtomic inames obs st ->
-      C_STAtomic inames Observable (st_comp_remove_inv inv_p st)
+      C_STAtomic inames obs (st_comp_remove_inv inv_p st)
   //  | C_STGhost inames st -> C_STAtomic (add_iname inames inv_tm) Observable (st_comp_remove_inv inv_p st)
   in
   assume (add_inv c_out inv_p == c_body);
@@ -216,7 +216,7 @@ let check
   let tm : st_term =
     { term = Tm_WithInv {name=inv_tm; body; returns_inv = None};
       range = t.range;
-      effect_tag = Sealed.seal (Some STT_Atomic) } // fix
+      effect_tag = Sealed.seal ctag_hint' }
   in
 
   let tok = check_iname_disjoint g inv_tm_range inv_p (comp_inames c_body) { inv_tm with range = inv_tm_range } in
