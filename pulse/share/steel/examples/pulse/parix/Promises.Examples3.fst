@@ -84,7 +84,7 @@ fn proof
 
 let cheat_proof (i:inv inv_p)
   : (_:unit) ->
-      stt_ghost unit 
+      stt_unobservable unit
         (add_inv emp_inames i)
         (requires pts_to done #one_half true ** GR.pts_to claimed #one_half false)
         (ensures fun _ -> pts_to done #one_half true ** goal)
