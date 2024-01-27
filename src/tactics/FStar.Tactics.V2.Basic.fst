@@ -194,8 +194,9 @@ let fail3 msg x y z = fail (BU.format3 msg x y z)
 let fail4 msg x y z w = fail (BU.format4 msg x y z w)
 
 let destruct_eq' (typ : typ) : option (term * term) =
-    match U.destruct_typ_as_formula typ with
-    | Some (U.BaseConn(l, [_; (e1, None); (e2, None)]))
+    let open FStar.Syntax.Formula in
+    match destruct_typ_as_formula typ with
+    | Some (BaseConn(l, [_; (e1, None); (e2, None)]))
       when Ident.lid_equals l PC.eq2_lid
       ||   Ident.lid_equals l PC.c_eq2_lid
       ->

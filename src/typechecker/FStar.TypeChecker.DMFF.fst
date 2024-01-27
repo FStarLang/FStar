@@ -428,11 +428,12 @@ let gen_wps_for_free
     // forall k: post a
     let k = S.gen_bv "k" None post.binder_bv.sort in
     let equiv =
+      let open FStar.Syntax.Formula in
         let k_tm = S.bv_to_name k in
         let eq = mk_rel U.mk_iff k.sort
                           k_tm
                           (S.bv_to_name post.binder_bv) in
-        match U.destruct_typ_as_formula eq with
+        match destruct_typ_as_formula eq with
         | Some (QAll (binders, [], body)) ->
           let k_app = U.mk_app k_tm (args_of_binders binders) in
           let guard_free =  S.fv_to_tm (S.lid_and_dd_as_fv PC.guard_free delta_constant None) in

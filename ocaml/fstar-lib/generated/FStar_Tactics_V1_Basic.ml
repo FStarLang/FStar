@@ -338,9 +338,9 @@ let (destruct_eq' :
       FStar_Pervasives_Native.option)
   =
   fun typ ->
-    let uu___ = FStar_Syntax_Util.destruct_typ_as_formula typ in
+    let uu___ = FStar_Syntax_Formula.destruct_typ_as_formula typ in
     match uu___ with
-    | FStar_Pervasives_Native.Some (FStar_Syntax_Util.BaseConn
+    | FStar_Pervasives_Native.Some (FStar_Syntax_Formula.BaseConn
         (l,
          uu___1::(e1, FStar_Pervasives_Native.None)::(e2,
                                                       FStar_Pervasives_Native.None)::[]))

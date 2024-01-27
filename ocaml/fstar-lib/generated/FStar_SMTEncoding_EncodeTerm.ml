@@ -2241,7 +2241,7 @@ and (encode_term :
                                      FStar_Parser_Const.auto_squash_lid))
                                  &&
                                  (let uu___7 =
-                                    FStar_Syntax_Util.destruct_typ_as_formula
+                                    FStar_Syntax_Formula.destruct_typ_as_formula
                                       arg in
                                   FStar_Compiler_Option.isSome uu___7)
                                ->
@@ -2267,7 +2267,7 @@ and (encode_term :
                                      FStar_Parser_Const.auto_squash_lid))
                                  &&
                                  (let uu___11 =
-                                    FStar_Syntax_Util.destruct_typ_as_formula
+                                    FStar_Syntax_Formula.destruct_typ_as_formula
                                       arg in
                                   FStar_Compiler_Option.isSome uu___11)
                                ->
@@ -3802,11 +3802,11 @@ and (encode_formula :
                            (FStar_Compiler_List.op_At decls' decls''))))) in
       debug phi;
       (let phi1 = FStar_Syntax_Util.unascribe phi in
-       let uu___1 = FStar_Syntax_Util.destruct_typ_as_formula phi1 in
+       let uu___1 = FStar_Syntax_Formula.destruct_typ_as_formula phi1 in
        match uu___1 with
        | FStar_Pervasives_Native.None -> fallback phi1
-       | FStar_Pervasives_Native.Some (FStar_Syntax_Util.BaseConn (op, arms))
-           ->
+       | FStar_Pervasives_Native.Some (FStar_Syntax_Formula.BaseConn
+           (op, arms)) ->
            let uu___2 =
              FStar_Compiler_List.tryFind
                (fun uu___3 ->
@@ -3816,7 +3816,7 @@ and (encode_formula :
             | FStar_Pervasives_Native.None -> fallback phi1
             | FStar_Pervasives_Native.Some (uu___3, f) ->
                 f phi1.FStar_Syntax_Syntax.pos arms)
-       | FStar_Pervasives_Native.Some (FStar_Syntax_Util.QAll
+       | FStar_Pervasives_Native.Some (FStar_Syntax_Formula.QAll
            (vars, pats, body)) ->
            (FStar_Compiler_List.iter (check_pattern_vars env vars) pats;
             (let uu___3 = encode_q_body env vars pats body in
@@ -3829,7 +3829,7 @@ and (encode_formula :
                    FStar_SMTEncoding_Term.mkForall
                      phi1.FStar_Syntax_Syntax.pos uu___4 in
                  (tm, decls)))
-       | FStar_Pervasives_Native.Some (FStar_Syntax_Util.QEx
+       | FStar_Pervasives_Native.Some (FStar_Syntax_Formula.QEx
            (vars, pats, body)) ->
            (FStar_Compiler_List.iter (check_pattern_vars env vars) pats;
             (let uu___3 = encode_q_body env vars pats body in
