@@ -105,13 +105,26 @@ type atom
         list letbinding
   | UVar of Thunk.t S.term
 
-and t'
-  =
-  | Lam of (list (t * aqual) -> t)  //these expect their arguments in binder order (optimized for convenience beta reduction)
-                                   //we also maintain aquals so as to reconstruct the application properly for implicits
-        * either (list t * binders * option S.residual_comp) (list arg) //a context, binders and residual_comp for readback
-                                                                        //or a list of arguments, for primitive unembeddings
-        * int  // arity
+and lam_shape =
+  // a context, binders and residual_comp for readback
+  | Lam_bs of (list t & binders & option S.residual_comp)
+
+  // or a list of arguments, for primitive unembeddings (see e_arrow)
+  | Lam_args of (list arg)
+
+  // or a partially applied primop
+  | Lam_primop of (S.fv & list arg)
+
+and t' =
+  | Lam {
+    interp : list (t * aqual) -> t;
+    //these expect their arguments in binder order (optimized for convenience beta reduction)
+    //we also maintain aquals so as to reconstruct the application properly for implicits
+
+    shape : lam_shape;
+    arity : int;
+  }
+
   | Accu of atom * args
   | Construct of fv * list universe * args
   | FV of fv * list universe * args //universes and args in reverse order
