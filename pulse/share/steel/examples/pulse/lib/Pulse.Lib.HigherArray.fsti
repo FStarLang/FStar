@@ -121,7 +121,7 @@ val pts_to_range_prop
 : stt_ghost unit emp_inames
     (pts_to_range a i j #p s)
     (fun _ -> pts_to_range a i j #p s ** pure (
-      (i <= j /\ j <= length a /\ Seq.length s == j - i)
+      (i <= j /\ j <= length a /\ eq2 #nat (Seq.length s) (j - i))
     ))
 
 val pts_to_range_intro

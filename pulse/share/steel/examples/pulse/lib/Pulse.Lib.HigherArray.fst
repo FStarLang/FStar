@@ -440,3 +440,216 @@ ensures pts_to arr #(sum_perm p0 p1) s0 ** pure (s0 == s1)
 }
 ```
 let gather = gather'
+
+let ptr_shift
+  (#elt: Type)
+  (p: ptr elt)
+  (off: SZ.t {offset p + SZ.v off <= base_len (base p)})
+: ptr elt
+= {
+    base_len = p.base_len;
+    base = p.base;
+    offset = p.offset + SZ.v off;
+  }
+
+let split_l
+    (#elt: Type)
+    (a: array elt)
+    (i: Ghost.erased SZ.t {SZ.v i <= length a})
+: array elt
+= (| ptr_of a, Ghost.hide (SZ.v i) |)
+
+let split_r 
+  (#elt: Type)
+  (a: array elt)
+  (i: SZ.t {SZ.v i <= length a})
+: array elt
+= (| ptr_shift (ptr_of a) i, Ghost.hide (length a - SZ.v i) |)
+
+let array_slice
+  (#elt: Type)
+  (a: array elt)
+  (i:nat) (j: nat {i <= j /\ j <= length a})
+: GTot (array elt)
+= split_l (split_r a (SZ.uint_to_t i)) (SZ.uint_to_t (j - i))
+
+let in_bounds (i j:nat) (s:array 'a) = squash (i <= j /\ j <= length s)
+```pulse
+ghost
+fn elim_in_bounds (#elt:Type) (#i #j:nat) (s:array elt) (p:in_bounds i j s)
+requires emp
+ensures pure (i <= j /\ j <= length s)
+{
+  ()
+}
+```
+
+let token (x:'a) = emp
+
+let pts_to_range
+  (#a:Type)
+  (x:array a)
+  ([@@@ equate_by_smt] i:nat)
+  ([@@@ equate_by_smt] j: nat)
+  (#[exact (`full_perm)] p:perm)
+  ([@@@ equate_by_smt] s: Seq.seq a)
+: vprop
+= exists* (q:in_bounds i j x). pts_to (array_slice x i j) #p s ** token q
+
+#push-options "--print_implicits"
+```pulse
+ghost
+fn pts_to_range_prop'
+  (#elt: Type)
+  (a: array elt)
+  (#i #j: nat)
+  (#p: perm)
+  (#s: Seq.seq elt)
+requires pts_to_range a i j #p s
+ensures pts_to_range a i j #p s ** pure (
+      (i <= j /\ j <= length a /\ Seq.length s == j - i)
+    )
+{
+  unfold pts_to_range a i j #p s;
+  with q. assert (token #(in_bounds i j a) q);
+  elim_in_bounds a q;
+  pts_to_len (array_slice a i j);
+  fold pts_to_range a i j #p s;
+}
+```
+let pts_to_range_prop = pts_to_range_prop'
+
+```pulse
+ghost
+fn pts_to_range_intro'
+  (#elt: Type)
+  (a: array elt)
+  (p: perm)
+  (s: Seq.seq elt)
+requires pts_to a #p s
+ensures pts_to_range a 0 (length a) #p s
+{
+  rewrite each a as (array_slice a 0 (length a));
+  let q : in_bounds 0 (length a) a = ();
+  fold (token #(in_bounds 0 (length a) a) q);
+  fold (pts_to_range a 0 (length a) #p s);
+}
+```
+let pts_to_range_intro = pts_to_range_intro'
+
+
+```pulse
+ghost
+fn pts_to_range_elim'
+  (#elt: Type)
+  (a: array elt)
+  (p: perm)
+  (s: Seq.seq elt)
+requires pts_to_range a 0 (length a) #p s
+ensures pts_to a #p s
+{
+  unfold (pts_to_range a 0 (length a) #p s);
+  unfold (token #(in_bounds 0 (length a) a) _);
+  rewrite each (array_slice a 0 (length a)) as a;
+}
+```
+let pts_to_range_elim = pts_to_range_elim'
+
+```pulse
+ghost
+fn ghost_split
+  (#elt: Type)
+  (#x: Seq.seq elt)
+  (#p: perm)
+  (a: array elt)
+  (i: SZ.t {SZ.v i <= length a})
+requires pts_to a #p x
+returns _: squash (SZ.v i <= length a /\ SZ.v i <= Seq.length x)
+ensures
+  pts_to (split_l a i) #p (Seq.slice x 0 (SZ.v i)) **
+  pts_to (split_r a i) #p (Seq.slice x (SZ.v i) (Seq.length x)) **
+  pure (x `Seq.equal` Seq.append (Seq.slice x 0 (SZ.v i)) (Seq.slice x (SZ.v i) (Seq.length x)))
+{
+ admit()
+}
+```
+
+let vprop_equiv_refl_eq (v0 v1:vprop) (_:squash (v0 == v1)) : vprop_equiv v0 v1 = 
+  vprop_equiv_refl v0
+
+let equiv () : FStar.Tactics.Tac unit =
+  let open FStar.Tactics in
+  mapply (`vprop_equiv_refl_eq);
+  smt()
+
+```pulse
+ghost
+fn split_l_slice #elt
+     (a: array elt)
+     (i m j: nat)
+     (#s:_)
+     (_:squash (i <= m /\ m <= j /\ j <= length a))
+requires pts_to (split_l (array_slice a i j) (SZ.uint_to_t (m - i))) #p s
+ensures  pts_to (array_slice a i m) #p s
+{
+  rewrite_by (pts_to (split_l (array_slice a i j) (SZ.uint_to_t (m - i))) #p s)
+             (pts_to (array_slice a i m) #p s)
+             equiv ();
+}
+```
+
+```pulse
+ghost
+fn split_r_slice #elt
+     (a: array elt)
+     (i m j: nat)
+     (#s:_)
+     (_:squash (i <= m /\ m <= j /\ j <= length a))
+requires pts_to (split_r (array_slice a i j) (SZ.uint_to_t (m - i))) #p s
+ensures pts_to (array_slice a m j) #p s
+{
+  assert pure ((split_r (array_slice a i j) (SZ.uint_to_t (m - i))) == (array_slice a m j));
+  rewrite each (split_r (array_slice a i j) (SZ.uint_to_t (m - i))) as (array_slice a m j);
+}
+```
+
+#push-options "--query_stats"
+```pulse
+ghost
+fn pts_to_range_split''
+  (#elt: Type)
+  (a: array elt)
+  (i m j: nat)
+  (#p: perm)
+  (#s: Seq.seq elt)
+requires
+  pts_to_range a i j #p s **
+  pure (i <= m /\ m <= j)
+ensures
+  exists* s1 s2.
+    pts_to_range a i m #p s1 **
+    pts_to_range a m j #p s2 **
+    pure (
+      i <= m /\ m <= j /\ j <= length a /\
+      Seq.length s == j - i /\
+      s1 `Seq.equal` Seq.slice s 0 (m - i) /\
+      s2 `Seq.equal` Seq.slice s (m - i) (Seq.length s) /\
+      s `Seq.equal` Seq.append s1 s2
+    )
+{
+  pts_to_range_prop a;
+  unfold pts_to_range a i j #p s;
+  unfold (token #(in_bounds i j a) _);
+  let mi = m - i;
+  ghost_split (array_slice a i j) (SZ.uint_to_t (m - i));
+  split_l_slice a i m j ();
+  split_r_slice a i m j ();
+  let q1 : in_bounds i m a = ();
+  let q2 : in_bounds m j a = ();
+  fold (token #(in_bounds i m a) q1);
+  fold (token #(in_bounds m j a) q2);
+  fold (pts_to_range a i m #p (Seq.slice s 0 mi));
+  fold (pts_to_range a m j #p (Seq.slice s mi (Seq.length s)));
+  // show_proof_state;
+}
+```
