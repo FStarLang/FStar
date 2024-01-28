@@ -456,15 +456,15 @@ let ptr_shift
 let split_l'
     (#elt: Type)
     (a: array elt)
-    (i: nat {i <= length a})
+    (i: erased nat {i <= length a})
 : array elt
-= { p = ptr_of a; length=Ghost.hide i }
+= { p = ptr_of a; length=i }
 
 irreducible
 let split_l
   (#elt: Type)
   (a: array elt)
-  (i: nat {i <= length a})
+  (i: erased nat {i <= length a})
 : x:array elt { x == split_l' a i }
 = split_l' a i
 
@@ -808,3 +808,78 @@ ensures pts_to_range a i j #p (s1 `Seq.append` s2)
 }
 ```
 let pts_to_range_join = pts_to_range_join'
+
+irreducible
+let array_slice_impl
+  (#elt: Type)
+  (a: array elt)
+  (i: SZ.t)
+  (j: Ghost.erased nat)
+  (sq: squash (SZ.v i <= j /\ j <= length a))
+: x:array elt { x == array_slice a (SZ.v i) j }
+= split_l (split_r a (SZ.v i)) (Ghost.hide (j - SZ.v i))
+
+```pulse
+fn pts_to_range_index'
+  (#t: Type)
+  (a: array t)
+  (i: SZ.t)
+  (#l: Ghost.erased nat{l <= SZ.v i})
+  (#r: Ghost.erased nat{SZ.v i < r})
+  (#s: Ghost.erased (Seq.seq t))
+  (#p: perm)
+requires pts_to_range a l r #p s
+returns res:t
+ensures
+  pts_to_range a l r #p s **
+  pure (eq2 #int (Seq.length s) (r - l) /\
+        res == Seq.index s (SZ.v i - l))
+{
+  pts_to_range_split a l (SZ.v i) r;
+  with s1 s2. _;
+  unfold pts_to_range a (SZ.v i) r #p s2;
+  unfold (token #(in_bounds (SZ.v i) r a) _);
+  let a' = array_slice_impl a i r ();
+  rewrite each (array_slice a (SZ.v i) r) as a';
+  let res = read a' 0sz;
+  rewrite each a' as (array_slice a (SZ.v i) r);
+  pts_to_range_intro_ij a _ _ (SZ.v i) r ();
+  pts_to_range_join a l (SZ.v i) r;
+  res
+}
+```
+let pts_to_range_index = pts_to_range_index'
+
+```pulse
+fn pts_to_range_upd'
+  (#t: Type)
+  (a: array t)
+  (i: SZ.t)
+  (v: t)
+  (#l: Ghost.erased nat{l <= SZ.v i})
+  (#r: Ghost.erased nat{SZ.v i < r})
+  (#s0: Ghost.erased (Seq.seq t))
+requires pts_to_range a l r #full_perm s0
+ensures
+  exists* s.
+    pts_to_range a l r s **
+    pure (
+        eq2 #int (Seq.length s0) (r - l) /\
+        s == Seq.upd s0 (SZ.v i - l) v
+    )
+{
+  pts_to_range_split a l (SZ.v i) r;
+  with s1 s2. _;
+  unfold pts_to_range a (SZ.v i) r #full_perm s2;
+  unfold (token #(in_bounds (SZ.v i) r a) _);
+  let a' = array_slice_impl a i r ();
+  rewrite each (array_slice a (SZ.v i) r) as a';
+  write a' 0sz v;
+  rewrite each a' as (array_slice a (SZ.v i) r);
+  pts_to_range_intro_ij a _ _ (SZ.v i) r ();
+  pts_to_range_join a l (SZ.v i) r;
+  with w. assert (pts_to_range a l r w);
+  assert pure (w `Seq.equal` Seq.upd s0 (SZ.v i - l) v);
+}
+```
+let pts_to_range_upd = pts_to_range_upd'

@@ -209,17 +209,3 @@ val pts_to_range_upd
         pure(
           Seq.length s0 == r - l /\ s == Seq.upd s0 (SZ.v i - l) v
         ))
-
-val with_local
-  (#a:Type)
-  (init:a)
-  (len:SZ.t)
-  (#pre:vprop)
-  (ret_t:Type)
-  (#post:ret_t -> vprop)
-  (body:(arr:array a) -> stt ret_t (pre **
-                                    (pts_to arr (Seq.create (SZ.v len) init) **
-                                     (pure (is_full_array arr) **
-                                      pure (length arr == SZ.v len))))
-                                   (fun r -> post r ** (exists* v. pts_to arr v)))
-  : stt ret_t pre post
