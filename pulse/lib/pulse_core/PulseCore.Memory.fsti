@@ -490,6 +490,15 @@ val recall (#a:Type u#1) (#pcm:pcm a) (#fact:property a)
                   (pts_to r v)
                   (fun v1 -> pts_to r v `star` pure (fact v1))
 
+val pts_to_not_null_action 
+      (#a:Type u#1) (#pcm:pcm a)
+      (e:inames)
+      (r:erased (ref a pcm))
+      (v:Ghost.erased a)
+: action_except (squash (not (is_null r))) e
+    (pts_to r v)
+    (fun _ -> pts_to r v)
+
 (**** Invariants *)
 
 (**[i : inv p] is an invariant whose content is [p] *)

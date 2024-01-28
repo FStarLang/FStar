@@ -590,6 +590,16 @@ val gather_action
   (v1:FStar.Ghost.erased a)
   : action (pts_to r v0 `star` pts_to r v1) (_:unit{composable pcm v0 v1}) (fun _ -> pts_to r (op pcm v0 v1))
 
+val pts_to_not_null_action 
+      (#a:Type u#a)
+      (#pcm:pcm a)
+      (r:erased (ref a pcm))
+      (v:Ghost.erased a)
+: action 
+    (pts_to r v)
+    (squash (not (is_null r)))
+    (fun _ -> pts_to r v)
+
 (** Allocating is a pseudo action here, the context needs to provide a fresh address *)
 val extend
   (#a:Type u#a)

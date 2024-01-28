@@ -1212,6 +1212,16 @@ let name_is_ok (i:iname) (m0:full_mem u#1) : prop = i < List.Tot.length m0.locks
 
 let witnessed_name_is_ok (i:iname) = W.witnessed full_mem mem_evolves (name_is_ok i)
 
+let pts_to_not_null_action
+      (#a:Type u#1) (#pcm:pcm a)
+      (e:inames)
+      (r:erased (ref a pcm))
+      (v:Ghost.erased a)
+: action_except (squash (not (is_null r))) e
+    (pts_to r v)
+    (fun _ -> pts_to r v)
+= lift_tot_action (lift_heap_action e (H.pts_to_not_null_action #a #pcm r v))
+
 let pre_inv = i:erased iname & witnessed_name_is_ok i
 
 let inv (p:slprop u#1) = i:erased iname & witnessed_name_is_ok i & (i >--> p)
