@@ -707,3 +707,104 @@ ensures
 }
 ```
 let pts_to_range_split = pts_to_range_split'
+
+
+let mk_carrier_merge
+  (#elt: Type)
+  (len: nat)
+  (offset: nat)
+  (s1 s2: Seq.seq elt)
+  (p: perm)
+  (_:squash (
+    offset + Seq.length s1 + Seq.length s2 <= len
+  ))
+: squash (
+    let c1 = mk_carrier len offset s1 p in
+    let c2 = mk_carrier len (offset + Seq.length s1) s2 p in
+      composable c1 c2 /\
+      mk_carrier len offset (s1 `Seq.append` s2) p `Map.equal` (c1 `compose` c2)
+  )
+= ()
+
+let adjacent (#elt: Type) (a1 a2: array elt) : Tot prop =
+  base (ptr_of a1) == base (ptr_of a2) /\
+  offset (ptr_of a1) + (length a1) == offset (ptr_of a2)
+
+let merge' (#elt: Type) (a1: array elt) (a2:array elt { adjacent a1 a2 })
+= { p = ptr_of a1; length=Ghost.hide (length a1 + length a2) }
+
+irreducible
+let merge #elt a1 a2
+: i:array elt{ i == merge' a1 a2 } 
+= merge' a1 a2
+
+```pulse
+ghost
+fn ghost_join
+  (#elt: Type)
+  (#x1 #x2: Seq.seq elt)
+  (#p: perm)
+  (a1 a2: array elt)
+  (h: squash (adjacent a1 a2))
+requires pts_to a1 #p x1 ** pts_to a2 #p x2
+ensures pts_to (merge a1 a2) #p (x1 `Seq.append` x2)
+{
+  unfold pts_to a1 #p x1;
+  unfold pts_to a2 #p x2;
+  use_squash (mk_carrier_merge (SZ.v (ptr_of a1).base_len) ((ptr_of a1).offset) x1 x2 p ());
+  with w. rewrite 
+          pcm_pts_to (ptr_of a2).base w
+      as  pcm_pts_to (ptr_of a1).base (mk_carrier (SZ.v (ptr_of a1).base_len) ((ptr_of a1).offset + Seq.length x1) x2 p);
+  Pulse.Lib.Core.gather (ptr_of a1).base
+    (mk_carrier (SZ.v (ptr_of a1).base_len) ((ptr_of a1).offset) x1 (p))
+    (mk_carrier (SZ.v (ptr_of a1).base_len) ((ptr_of a1).offset + Seq.length x1) x2 (p));
+  with w. rewrite
+          pcm_pts_to (ptr_of a1).base w
+      as  pcm_pts_to (ptr_of (merge a1 a2)).base (mk_carrier (SZ.v (ptr_of (merge a1 a2)).base_len) ((ptr_of (merge a1 a2)).offset) (x1 `Seq.append` x2) (p));
+  fold (pts_to (merge a1 a2) #p (Seq.append x1 x2));
+}
+```
+
+```pulse
+ghost
+fn pts_to_range_intro_ij
+  (#elt: Type)
+  (a: array elt)
+  (p: perm)
+  (s: Seq.seq elt)
+  (i j: nat)
+  (_:squash (i <= j /\ j <= length a))
+requires pts_to (array_slice a i j) #p s
+ensures pts_to_range a i j #p s
+{
+  let q : in_bounds i j a = ();
+  fold (token #(in_bounds i j a) q);
+  fold (pts_to_range a i j #p s);
+}
+```
+
+```pulse
+ghost
+fn pts_to_range_join'
+  (#elt: Type)
+  (a: array elt)
+  (i m j: nat)
+  (#p: perm)
+  (#s1 #s2: Seq.seq elt)
+requires
+  pts_to_range a i m #p s1 ** pts_to_range a m j #p s2
+ensures pts_to_range a i j #p (s1 `Seq.append` s2)
+{
+  pts_to_range_prop a #i #m;
+  pts_to_range_prop a #m #j;
+  unfold pts_to_range a i m #p s1;
+  unfold pts_to_range a m j #p s2;
+  ghost_join (array_slice a i m) (array_slice a m j) ();
+  rewrite each (merge (array_slice a i m) (array_slice a m j))
+            as (array_slice a i j);
+  pts_to_range_intro_ij a _ _ i j ();
+  unfold (token #(in_bounds i m a) _);
+  unfold (token #(in_bounds m j a) _);
+}
+```
+let pts_to_range_join = pts_to_range_join'
