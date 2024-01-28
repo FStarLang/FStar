@@ -119,7 +119,19 @@ val with_invariant
 // References
 ////////////////////////////////////////////////////////////////////////
 val ref ([@@@unused] a:Type u#a) ([@@@unused] p:pcm a) : Type u#0
+
+val ref_null (#a:Type u#a) (p:pcm a) : ref a p
+
+val is_ref_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p)
+: b:bool { b <==> r == ref_null p }
+
 val pts_to (#a:Type u#1) (#p:pcm a) (r:ref a p) (v:a) : slprop
+
+val pts_to_not_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p) (v:a)
+: act (squash (not (is_ref_null r)))
+            emp_inames 
+            (pts_to r v)
+            (fun _ -> pts_to r v)
 
 val alloc
     (#a:Type u#1)

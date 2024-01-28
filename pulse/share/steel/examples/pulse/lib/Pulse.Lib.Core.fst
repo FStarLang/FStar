@@ -244,6 +244,10 @@ let pcm_ref #a p = PulseCore.Action.ref a p
 let pcm_pts_to (#a:Type u#1) (#p:pcm a) (r:pcm_ref p) (v:a) =
   PulseCore.Action.pts_to r v
 
+let pcm_ref_null #a p = PulseCore.Action.ref_null #a p
+let is_pcm_ref_null #a #p r = PulseCore.Action.is_ref_null #a #p r
+let pts_to_not_null #a #p r v = A.pts_to_not_null #a #p r v
+
 let alloc
     (#a:Type u#1)
     (#pcm:pcm a)

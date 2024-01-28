@@ -28,16 +28,6 @@ module PM = Pulse.Lib.PCM.Map
 open Pulse.Lib.PCM.Array
 module PA = Pulse.Lib.PCM.Array
 
-assume
-val pcm_ref_null (#a:Type) (p:FStar.PCM.pcm a) : pcm_ref p
-
-assume
-val is_pcm_ref_null (#a:Type) (#p:FStar.PCM.pcm a) (r:pcm_ref p) : b:bool { b <==> r == pcm_ref_null p }
-
-assume
-val pts_to_not_null (#a:Type) (#p:FStar.PCM.pcm a) (r:pcm_ref p) (v:a)
-: stt_ghost unit emp_inames (pcm_pts_to r v) (fun _ -> pcm_pts_to r v ** pure (not (is_pcm_ref_null r)))
-
 
 /// An abstract type to represent a base array (whole allocation
 /// unit), exposed for proof purposes only
@@ -410,15 +400,15 @@ let mk_carrier_valid_sum_perm
     assert (Frac.composable (Map.sel c1 offset) (Map.sel c2 offset) <==> valid_perm len offset (Seq.length s) (sum_perm p1 p2))
   else ()
 
-  ```pulse
-  ghost
-  fn of_squash (#p:prop) (s:squash p)
-  requires emp
-  ensures pure p
-  {
-    ()
-  }
-  ```
+```pulse
+ghost
+fn of_squash (#p:prop) (s:squash p)
+requires emp
+ensures pure p
+{
+  ()
+}
+```
 
 ```pulse
 ghost

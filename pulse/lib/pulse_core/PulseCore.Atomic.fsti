@@ -228,6 +228,16 @@ val with_invariant
 open FStar.PCM
 module PP = PulseCore.Preorder
 
+val pts_to_not_null
+    (#a:Type u#1)
+    (#p:FStar.PCM.pcm a)
+    (r:ref a p)
+    (v:a)
+: stt_ghost (squash (not (is_ref_null r)))
+    emp_inames 
+    (pts_to r v)
+    (fun _ -> pts_to r v)
+
 val alloc
     (#a:Type u#1)
     (#pcm:pcm a)

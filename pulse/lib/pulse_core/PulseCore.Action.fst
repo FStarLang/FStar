@@ -242,7 +242,12 @@ let with_invariant
 ///////////////////////////////////////////////////////////////////
 
 let ref (a:Type u#a) (p:pcm a) = ref a p
+let ref_null (#a:Type u#a) (p:pcm a) = core_ref_null
+let is_ref_null (#a:Type u#a) (#p:pcm a) (r:ref a p) = core_ref_is_null r
 let pts_to = pts_to
+let pts_to_not_null #a #p r v =
+    fun #ictx -> mem_action_as_action _ _ _ _ (pts_to_not_null_action ictx r v)
+
 let alloc
     (#a:Type u#1)
     (#pcm:pcm a)

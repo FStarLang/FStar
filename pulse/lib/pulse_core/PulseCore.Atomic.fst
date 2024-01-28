@@ -230,6 +230,7 @@ let with_invariant
 : stt_atomic a #obs (add_inv f_opens i) fp fp'
 = A.with_invariant i f
 
+let pts_to_not_null #a #p r v = Ghost.hide (A.pts_to_not_null #a #p r v)
 let alloc = A.alloc
 let read = A.read
 let write = A.write

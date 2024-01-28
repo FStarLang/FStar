@@ -497,6 +497,14 @@ val elim_false (a:Type) (p:a -> vprop)
 open FStar.PCM
 val pcm_ref (#[@@@unused] a:Type u#a) ([@@@unused] p:FStar.PCM.pcm a) : Type0
 val pcm_pts_to (#a:Type u#1) (#p:pcm a) (r:pcm_ref p) (v:a) : vprop
+val pcm_ref_null (#a:Type) (p:FStar.PCM.pcm a) : pcm_ref p
+val is_pcm_ref_null (#a:Type) (#p:FStar.PCM.pcm a) (r:pcm_ref p) : b:bool { b <==> r == pcm_ref_null p }
+val pts_to_not_null (#a:Type) (#p:FStar.PCM.pcm a) (r:pcm_ref p) (v:a)
+: stt_ghost (squash (not (is_pcm_ref_null r)))
+            emp_inames
+            (pcm_pts_to r v)
+            (fun _ -> pcm_pts_to r v)
+
 
 val alloc
     (#a:Type u#1)
