@@ -12,6 +12,7 @@
     "share/steel/examples/pulse/bug-reports",
     "share/steel/examples/pulse/by-example",
     "share/steel/examples/pulse/lib",
+    "share/steel/examples/pulse/class",
     "share/steel/examples/pulse/parallel",
     "share/steel/examples/pulse/parix",
     "share/steel/examples/pulse/dice",

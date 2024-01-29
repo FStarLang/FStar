@@ -18,6 +18,9 @@ module Pulse.Lib.Par.Pledge
 
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Trade
+module GR = Pulse.Lib.GhostReference
+open Pulse.Class.PtsTo
+
 
 assume
 val unobservable_reveal_bool
@@ -189,8 +192,6 @@ fn __join_pledge (#os:inames) (#f v1 v2 : vprop)
 let join_pledge = __join_pledge
 
 (* A big chunk follows for split_pledge *)
-
-module GR = Pulse.Lib.GhostReference
 
 let inv_p' (os0 : inames) (f v1 v2 : vprop) (r1 r2 : GR.ref bool) (b1 b2 : bool) =
      GR.pts_to r1 #one_half b1
