@@ -300,6 +300,15 @@ val sub_stt (#a:Type u#a)
             (e:stt a pre1 post1)
   : stt a pre2 post2
 
+val conv_stt (#a:Type u#a)
+            (#pre1:vprop)
+            (#pre2:vprop)
+            (#post1:a -> vprop)
+            (#post2:a -> vprop)
+            (pf1 : vprop_equiv pre1 pre2)
+            (pf2 : vprop_post_equiv post1 post2)
+: Lemma (stt a pre1 post1 == stt a pre2 post2)
+
 inline_for_extraction
 val sub_stt_atomic
   (#a:Type u#a)
@@ -436,12 +445,6 @@ val intro_exists (#a:Type) (p:a -> vprop) (e:a)
 
 val intro_exists_erased (#a:Type) (p:a -> vprop) (e:erased a)
   : stt_ghost unit emp_inames (p (reveal e)) (fun _ -> exists* x. p x)
-
-val while_loop
-  (inv:bool -> vprop)
-  (cond:stt bool (op_exists_Star inv) inv)
-  (body:stt unit (inv true) (fun _ -> op_exists_Star inv))
-  : stt unit (op_exists_Star inv) (fun _ -> inv false)
 
 val stt_ghost_reveal (a:Type) (x:erased a)
   : stt_ghost a emp_inames emp (fun y -> pure (reveal x == y))

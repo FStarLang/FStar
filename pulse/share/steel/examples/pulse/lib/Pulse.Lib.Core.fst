@@ -156,6 +156,8 @@ let frame_stt_ghost = A.frame_ghost
 
 let sub_stt = I.sub
 
+let conv_stt pf1 pf2 = I.conv #_ _ _ _ _ pf1 pf2
+
 let sub_stt_atomic pre2 post2 pf1 pf2 e =
    A.sub_atomic pre2 post2 pf1 pf2 e
 
@@ -205,8 +207,6 @@ let intro_pure p _ = A.intro_pure p ()
 let elim_exists #a p = A.elim_exists p
 let intro_exists #a p e = A.intro_exists p e
 let intro_exists_erased #a p e = A.intro_exists p e
-
-let while_loop inv cond body = admit()
 
 let stt_ghost_reveal a x = A.ghost_reveal a x
 let stt_admit _ _ _ = admit () //intentional
