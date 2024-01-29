@@ -1297,3 +1297,10 @@ let pts_to_evolve (#a:Type u#a) (#pcm:_) (r:ref a pcm) (x y : a) (h:heap)
           (ensures  (interp (pts_to r y) h))
   = let Ref a' pcm' _ v' = (select_addr h (Addr?._0 r)) in
     compatible_trans pcm y x v'
+
+let drop p
+= let f
+    : refined_pre_action p unit (fun _ -> emp)
+    = fun h -> (| (), h |)
+  in
+  refined_pre_action_as_action f

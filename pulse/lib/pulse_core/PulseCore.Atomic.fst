@@ -64,6 +64,15 @@ let bind_atomic
     (e2:(x:a -> stt_atomic b #obs2 opens (post1 x) post2))
 = A.bind e1 e2
 
+let lift_unobservable
+    (#a:Type u#a)
+    (#obs:_)
+    (#opens:inames)
+    (#pre:slprop)
+    (#post:a -> slprop)
+    (e:stt_atomic a #obs opens pre post)
+= e
+
 let lift_atomic0
     (#a:Type u#0)
     (#obs:_)

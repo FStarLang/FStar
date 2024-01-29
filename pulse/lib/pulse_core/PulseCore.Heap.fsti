@@ -680,3 +680,6 @@ val intro_pure (p:prop) (_:squash p)
 val pts_to_evolve (#a:Type u#a) (#pcm:_) (r:ref a pcm) (x y : a) (h:heap)
   : Lemma (requires (interp (pts_to r x) h /\ compatible pcm y x))
           (ensures  (interp (pts_to r y) h))
+
+val drop (p:slprop)
+  : action p unit (fun _ -> emp)

@@ -52,6 +52,15 @@ val bind_atomic
     (e2:(x:a -> stt_atomic b #obs2 opens (post1 x) post2))
 : stt_atomic b #(join_obs obs1 obs2) opens pre1 post2
 
+val lift_unobservable 
+    (#a:Type u#a)
+    (#obs:_)
+    (#opens:inames)
+    (#pre:slprop)
+    (#post:a -> slprop)
+    (e1:stt_atomic a #obs opens pre post)
+: stt_atomic a #Observable opens pre post
+
 val lift_atomic0
     (#a:Type u#0)
     (#obs:_)

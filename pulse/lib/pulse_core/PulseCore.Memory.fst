@@ -53,36 +53,70 @@ let mem_set_heap (m:mem) (h:H.heap) : mem = {
 
 let core_mem (m:mem) : mem = mem_of_heap (heap_of_mem m)
 
+val core_mem_invol (m: mem u#a) : Lemma
+  (core_mem (core_mem m) == core_mem m)
+  [SMTPat (core_mem (core_mem m))]
 let core_mem_invol m = ()
 
+(** A predicate describing non-overlapping memories. Based on [Steel.Heap.disjoint] *)
 let disjoint (m0 m1:mem u#h)
   : prop
   = m0.ctr == m1.ctr /\
     H.disjoint m0.heap m1.heap /\
     m0.locks == m1.locks
 
-let disjoint_sym m0 m1 = ()
+(** Disjointness is symmetric *)
+let disjoint_sym (m0 m1:mem u#h)
+  : Lemma (disjoint m0 m1 <==> disjoint m1 m0)
+          [SMTPat (disjoint m0 m1)]
+  = ()
 
-let join m0 m1 = {
+(** Disjoint memories can be combined. Based on [Steel.Heap.join] *)
+let join (m0:mem u#h) (m1:mem u#h{disjoint m0 m1}) : mem u#h
+= {
   ctr = m0.ctr;
   heap = H.join m0.heap m1.heap;
   locks = m0.locks
-}
+  }
 
-let join_commutative m0 m1 =
-  H.join_commutative m0.heap m1.heap
+(** Join is commutative *)
+let join_commutative (m0 m1:mem)
+  : Lemma
+    (requires
+      disjoint m0 m1)
+    (ensures
+      (disjoint m0 m1 /\
+       disjoint m1 m0 /\
+       join m0 m1 == join m1 m0))
+  = H.join_commutative m0.heap m1.heap
 
-let disjoint_join m0 m1 m2 =
-  H.disjoint_join m0.heap m1.heap m2.heap
+(** Disjointness distributes over join *)
+let disjoint_join (m0 m1 m2:mem)
+  : Lemma (disjoint m1 m2 /\
+           disjoint m0 (join m1 m2) ==>
+           disjoint m0 m1 /\
+           disjoint m0 m2 /\
+           disjoint (join m0 m1) m2 /\
+           disjoint (join m0 m2) m1)
+  = H.disjoint_join m0.heap m1.heap m2.heap
 
-let join_associative m0 m1 m2 =
-  H.join_associative m0.heap m1.heap m2.heap
+(** Join is associative *)
+let join_associative (m0 m1 m2:mem)
+  : Lemma
+    (requires
+      disjoint m1 m2 /\
+      disjoint m0 (join m1 m2))
+    (ensures
+      (disjoint_join m0 m1 m2;
+       join m0 (join m1 m2) == join (join m0 m1) m2))
+  = H.join_associative m0.heap m1.heap m2.heap
 
 let slprop = H.slprop
 
 let interp p m = H.interp p m.heap
 
 let equiv p1 p2 = forall m. interp p1 m <==> interp p2 m
+
 
 let slprop_extensionality p q =
   assert (forall m. interp p m <==> interp q m);
@@ -95,7 +129,12 @@ let slprop_extensionality p q =
   assert (forall h. H.interp p h <==> H.interp q h);
   H.slprop_extensionality p q
 
+val reveal_equiv (p1 p2:slprop u#a) : Lemma
+  (ensures (forall m. interp p1 m <==> interp p2 m) <==> p1 `equiv` p2)
+  [SMTPat (p1 `equiv` p2)]
 let reveal_equiv p1 p2 = ()
+
+let slprop_equiv_refl p = ()
 
 let core_ref = H.core_ref
 let core_ref_null = H.core_ref_null
@@ -166,14 +205,22 @@ let equiv_extensional_on_star (p1 p2 p3:slprop u#a) =
 
 let emp_unit p = H.emp_unit p
 
+
+val intro_emp (m:mem) : Lemma (interp emp m)
 let intro_emp m = H.intro_emp (heap_of_mem m)
 
 let pure_equiv p q = H.pure_equiv p q
+val pure_interp (q:prop) (m:mem) : Lemma (interp (pure q) m <==> q)
 let pure_interp q m = H.pure_interp q (heap_of_mem m)
 let pure_true_emp () : Lemma (pure True `equiv` emp) =
   FStar.Classical.forall_intro (pure_interp True);
   FStar.Classical.forall_intro intro_emp;
   slprop_extensionality (pure True) emp
+
+(** A helper lemma for interpreting a pure proposition with another [slprop] *)
+val pure_star_interp (p:slprop u#a) (q:prop) (m:mem)
+   : Lemma (interp (p `star` pure q) m <==>
+            interp (p `star` emp) m /\ q)
 
 let pure_star_interp p q m = H.pure_star_interp p q (heap_of_mem m)
 
@@ -181,6 +228,36 @@ let pure_star_interp p q m = H.pure_star_interp p q (heap_of_mem m)
 //pts_to
 ////////////////////////////////////////////////////////////////////////////////
 
+(** [ptr r] asserts that the reference [r] points to a value *)
+let ptr (#a: Type u#a) (#pcm: pcm a) (r:ref a pcm) =
+    h_exists (pts_to r)
+
+(** Injectivity-like lemma for [pts_to], see [Steel.Heap] for more explanations *)
+val pts_to_compatible
+  (#a:Type u#a)
+  (#pcm:pcm a)
+  (x:ref a pcm)
+  (v0 v1:a)
+  (m:mem u#a)
+    : Lemma
+      (interp (pts_to x v0 `star` pts_to x v1) m <==>
+       composable pcm v0 v1 /\ interp (pts_to x (op pcm v0 v1)) m)
+
+val pts_to_compatible_equiv (#a:Type)
+                            (#pcm:_)
+                            (x:ref a pcm)
+                            (v0:a)
+                            (v1:a{composable pcm v0 v1})
+  : Lemma (equiv (pts_to x v0 `star` pts_to x v1)
+                 (pts_to x (op pcm v0 v1)))
+
+val pts_to_not_null (#a:Type u#a)
+                    (#pcm:_)
+                    (x:ref a pcm)
+                    (v:a)
+                    (m:mem u#a)
+  : Lemma (requires interp (pts_to x v) m)
+          (ensures x =!= null)
 let pts_to_compatible #a #pcm x v0 v1 m
   = H.pts_to_compatible #a #pcm x v0 v1 (heap_of_mem m)
 let pts_to_compatible_equiv #a #pcm x v0 v1
@@ -191,6 +268,28 @@ let pts_to_not_null #a #pcm x v m
 ////////////////////////////////////////////////////////////////////////////////
 // star
 ////////////////////////////////////////////////////////////////////////////////
+(** A common abbreviation: memories validating [p] *)
+let hmem (p:slprop u#a) = m:mem u#a {interp p m}
+
+val intro_star (p q:slprop) (mp:hmem p) (mq:hmem q)
+  : Lemma
+    (requires
+      disjoint mp mq)
+    (ensures
+      interp (p `star` q) (join mp mq))
+
+val elim_star (p q:slprop) (m:hmem (p `star` q))
+  : Lemma
+    (requires
+      interp (p `star` q) m)
+    (ensures exists ml mr.
+      disjoint ml mr /\ m == join ml mr /\ interp p ml /\ interp q mr)
+
+val interp_star
+  (p q: slprop)
+  (m: mem)
+: Lemma
+  (interp (p `star` q) m <==> (exists (mp: mem) (mq: mem) . disjoint mp mq /\ interp p mp /\ interp q mq /\ join mp mq == m))
 
 let intro_star p q mp mq =
   H.intro_star p q (heap_of_mem mp) (heap_of_mem mq)
@@ -248,6 +347,10 @@ let star_associative (p1 p2 p3:slprop) =
 let star_congruence (p1 p2 p3 p4:slprop) =
   equiv_heap_iff_equiv_forall ();
   H.star_congruence p1 p2 p3 p4
+
+
+val affine_star (p q:slprop) (m:mem)
+  : Lemma ((interp (p `star` q) m ==> interp p m /\ interp q m))
 
 let affine_star (p q:slprop) (m:mem) =
   H.affine_star p q (heap_of_mem m)
@@ -357,7 +460,47 @@ let locks_invariant (e:inames) (m:mem u#a) : slprop u#a =
 
 let full_mem_pred (m:mem) = H.full_heap_pred (heap_of_mem m)
 
-(***** Following lemmas are needed in Pulse.Effect *****)
+(** Memory refined with invariants and a footprint *)
+let hmem_with_inv_except (e:inames) (fp:slprop u#a) =
+  m:full_mem{inames_ok e m /\ interp (fp `star` locks_invariant e m) m}
+
+(** Memory refined with just a footprint and no invariants  *)
+let hmem_with_inv (fp:slprop u#a) = hmem_with_inv_except S.empty fp
+
+
+(** Any separation logic proposition valid over [m] is also valid on [core_mem m] *)
+val core_mem_interp (hp:slprop u#a) (m:mem u#a)
+    : Lemma
+      (requires True)
+      (ensures (interp hp (core_mem m) <==> interp hp m))
+      [SMTPat (interp hp (core_mem m))]
+
+(** Interpretation is an affine heap proposition. See [Steel.Heap.interp_depends_only_on] *)
+val interp_depends_only_on (hp:slprop u#a)
+    : Lemma
+      (forall (m0:hmem hp) (m1:mem u#a{disjoint m0 m1}).
+        interp hp m0 <==> interp hp (join m0 m1))
+
+(** This adds a SMT trigger to the [Steel.Heap.affine_star] lemma *)
+let affine_star_smt (p q:slprop u#a) (m:mem u#a)
+    : Lemma (interp (p `star` q) m ==> interp p m /\ interp q m)
+      [SMTPat (interp (p `star` q) m)]
+    = affine_star p q m
+
+let mem_prop_is_affine
+  (sl: slprop u#a)
+  (f: (hmem sl -> Tot prop))
+: Tot prop
+= (forall m . f m <==> f (core_mem m)) /\
+  (forall (m0: hmem sl) m1 . (disjoint m0 m1 /\ interp sl (join m0 m1)) ==> (f m0 <==> f (join m0 m1)))
+
+let a_mem_prop (sl: slprop u#a) : Type u#(a+1) = (f: (hmem sl -> Tot prop) { mem_prop_is_affine sl f })
+
+val refine_slprop
+  (sl: slprop u#a)
+  (f: a_mem_prop sl)
+: Tot (slprop u#a)
+
 
 let core_mem_interp (hp:slprop u#a) (m:mem u#a) = ()
 
@@ -384,6 +527,14 @@ let a_mem_prop_as_a_heap_prop
   g
 
 let refine_slprop sl f = H.as_slprop (a_mem_prop_as_a_heap_prop sl f)
+
+val interp_refine_slprop
+  (sl: slprop u#a)
+  (f: a_mem_prop sl)
+  (m: mem u#a)
+: Lemma
+  (interp (refine_slprop sl f) m <==> (interp sl m /\ f m))
+  [SMTPat (interp (refine_slprop sl f) m)]
 
 let interp_refine_slprop sl f m =
   assert ((interp sl m /\ f m) <==> interp sl (core_mem m) /\ f (core_mem m))
@@ -458,6 +609,12 @@ let sdep
   dep_hprop_is_affine s f;
   H.as_slprop (dep_hprop s f)
 
+let dep_slprop_is_affine
+  (s: slprop)
+  (f: (hmem s -> Tot slprop))
+: Tot prop
+= (forall (h: hmem s) . f h `equiv`  f (core_mem h))
+
 let interp_sdep
   (s: slprop)
   (f: (hmem s -> Tot slprop))
@@ -489,6 +646,13 @@ let interp_sdep
   ));
   ()
 
+(** See [Steel.Heap.h_exists_cong] *)
+val h_exists_cong (#a:Type) (p q : a -> slprop)
+    : Lemma
+      (requires (forall x. p x `equiv` q x))
+      (ensures (h_exists p `equiv` h_exists q))
+
+
 let h_exists_cong (#a:Type) (p q : a -> slprop)
     : Lemma
       (requires (forall x. p x `equiv` q x))
@@ -496,7 +660,14 @@ let h_exists_cong (#a:Type) (p q : a -> slprop)
     = equiv_heap_iff_equiv_forall ();
       H.h_exists_cong p q
 
+(** Introducing [h_exists] by presenting a witness *)
+val intro_h_exists (#a:_) (x:a) (p:a -> slprop) (m:mem)
+  : Lemma (interp (p x) m ==> interp (h_exists p) m)
+
 let intro_h_exists #a x p m = H.intro_h_exists x p (heap_of_mem m)
+
+val elim_h_exists (#a:_) (p:a -> slprop) (m:mem)
+  : Lemma (interp (h_exists p) m ==> (exists x. interp (p x) m))
 
 let elim_h_exists (#a:_) (p:a -> slprop) (m:mem) = H.elim_h_exists p (heap_of_mem m)
 
@@ -508,6 +679,22 @@ let mem_evolves =
     H.heap_evolves (heap_of_mem m0) (heap_of_mem m1) /\
     m0.ctr <= m1.ctr /\
     lock_store_evolves m0.locks m1.locks
+
+
+(** A memory predicate that depends only on fp *)
+let mprop (fp:slprop u#a) =
+  q:(mem u#a -> prop){
+    forall (m0:mem{interp fp m0}) (m1:mem{disjoint m0 m1}).
+      q m0 <==> q (join m0 m1)}
+
+let mprop2 (#a:Type u#b) (fp_pre:slprop u#a) (fp_post:a -> slprop u#a) =
+  q:(mem u#a -> a -> mem u#a -> prop){
+    // can join any disjoint mem to the pre-mem and q is still valid
+    (forall (x:a) (m0:mem{interp fp_pre m0}) (m_post:mem{interp (fp_post x) m_post}) (m1:mem{disjoint m0 m1}).
+      q m0 x m_post <==> q (join m0 m1) x m_post) /\
+    // can join any mem to the post-mem and q is still valid
+    (forall (x:a) (m_pre:mem{interp fp_pre m_pre}) (m0:mem{interp (fp_post x) m0}) (m1:mem{disjoint m0 m1}).
+      q m_pre x m0 <==> q m_pre x (join m0 m1))}
 
 (** See [Steel.Heap.is_frame_preserving]. We add in [lock_invariants] now *)
 let preserves_frame (e:inames) (pre post:slprop) (m0 m1:mem) =
@@ -1487,6 +1674,11 @@ let frame (#a:Type)
     assert (interp (post x `star` frame `star` frame0 `star` linv opened_invariants m1) m1);
     x
 
+val change_slprop (#opened_invariants:inames)
+                  (p q:slprop)
+                  (proof: (m:mem -> Lemma (requires interp p m) (ensures interp q m)))
+  : action_except unit opened_invariants p (fun _ -> q)
+
 let change_slprop (#opened_invariants:inames)
                   (p q:slprop)
                   (proof: (m:mem -> Lemma (requires interp p m) (ensures interp q m)))
@@ -1496,6 +1688,13 @@ let change_slprop (#opened_invariants:inames)
       = proof (mem_of_heap h)
     in
     lift_tot_action (lift_heap_action opened_invariants (H.change_slprop p q proof))
+
+
+let is_frame_monotonic #a (p : a -> slprop) : prop =
+  forall x y m frame. interp (p x `star` frame) m /\ interp (p y) m ==> interp (p y `star` frame) m
+
+let is_witness_invariant #a (p : a -> slprop) =
+  forall x y m. interp (p x) m /\ interp (p y) m ==> x == y
 
 (* This module reuses is_frame_monotonic from Heap, but does not expose that
 to clients, so we need this lemma to typecheck witness_h_exists below. *)
@@ -1530,6 +1729,8 @@ let elim_pure #opened_invariants p = lift_tot_action (lift_heap_action opened_in
 
 let intro_pure #opened_invariants p pf = lift_tot_action (lift_heap_action opened_invariants (H.intro_pure p pf))
 
+let drop #o p = lift_tot_action (lift_heap_action o (H.drop p))
+(*
 let pts_to_join (#a:Type) (#pcm:pcm a) (r:ref a pcm) (x y : a) (m:mem) :
   Lemma (requires (interp (pts_to r x) m /\ interp (pts_to r y) m))
         (ensures (joinable pcm x y)) =
@@ -1631,3 +1832,4 @@ let star_is_witinv_right (#a:Type)
   : Lemma (requires (is_witness_invariant g))
           (ensures  (is_witness_invariant (fun x -> f x `star` g x)))
   = ()
+*)

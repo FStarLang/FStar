@@ -36,50 +36,6 @@ val mem  : Type u#(a + 1)
 *)
 val core_mem (m:mem u#a) : mem u#a
 
-val core_mem_invol (m: mem u#a) : Lemma
-  (core_mem (core_mem m) == core_mem m)
-  [SMTPat (core_mem (core_mem m))]
-
-(** A predicate describing non-overlapping memories. Based on [Steel.Heap.disjoint] *)
-val disjoint (m0 m1:mem u#h) : prop
-
-(** Disjointness is symmetric *)
-val disjoint_sym (m0 m1:mem u#h)
-  : Lemma (disjoint m0 m1 <==> disjoint m1 m0)
-          [SMTPat (disjoint m0 m1)]
-
-(** Disjoint memories can be combined. Based on [Steel.Heap.join] *)
-val join (m0:mem u#h) (m1:mem u#h{disjoint m0 m1}) : mem u#h
-
-(** Join is commutative *)
-val join_commutative (m0 m1:mem)
-  : Lemma
-    (requires
-      disjoint m0 m1)
-    (ensures
-      (disjoint m0 m1 /\
-       disjoint m1 m0 /\
-       join m0 m1 == join m1 m0))
-
-(** Disjointness distributes over join *)
-val disjoint_join (m0 m1 m2:mem)
-  : Lemma (disjoint m1 m2 /\
-           disjoint m0 (join m1 m2) ==>
-           disjoint m0 m1 /\
-           disjoint m0 m2 /\
-           disjoint (join m0 m1) m2 /\
-           disjoint (join m0 m2) m1)
-
-(** Join is associative *)
-val join_associative (m0 m1 m2:mem)
-  : Lemma
-    (requires
-      disjoint m1 m2 /\
-      disjoint m0 (join m1 m2))
-    (ensures
-      (disjoint_join m0 m1 m2;
-       join m0 (join m1 m2) == join (join m0 m1) m2))
-
 (**** Separation logic *)
 
 (** The type of separation logic propositions. Based on Steel.Heap.slprop *)
@@ -89,8 +45,6 @@ val slprop : Type u#(a + 1)
 (** Interpreting mem assertions as memory predicates *)
 val interp (p:slprop u#a) (m:mem u#a) : prop
 
-(** A common abbreviation: memories validating [p] *)
-let hmem (p:slprop u#a) = m:mem u#a {interp p m}
 
 (** Equivalence relation on slprops is just equivalence of their interpretations *)
 val equiv (p1 p2:slprop u#a) : prop
@@ -98,19 +52,16 @@ val equiv (p1 p2:slprop u#a) : prop
 (**
   An extensional equivalence principle for slprop
  *)
+
 val slprop_extensionality (p q:slprop)
   : Lemma
     (requires p `equiv` q)
     (ensures p == q)
 
-val reveal_equiv (p1 p2:slprop u#a) : Lemma
-  (ensures (forall m. interp p1 m <==> interp p2 m) <==> p1 `equiv` p2)
-  [SMTPat (p1 `equiv` p2)]
-
-(** Implication of slprops *)
-let slimp (p1 p2 : slprop) : prop =
-  forall m. interp p1 m ==> interp p2 m
-
+val slprop_equiv_refl (p:slprop)
+  : Lemma (p `equiv` p)
+          [SMTPat (equiv p p)]
+          
 (** A memory maps a [ref]erence to its associated value *)
 val core_ref : Type u#0
 
@@ -134,12 +85,8 @@ let is_null (#a:Type u#a) (#pcm:pcm a) (r:ref a pcm) : (b:bool{b <==> r == null}
 val emp : slprop u#a
 val pure (p:prop) : slprop u#a
 val pts_to (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v:a) : slprop u#a
-val h_and (p1 p2:slprop u#a) : slprop u#a
-val h_or  (p1 p2:slprop u#a) : slprop u#a
 val star  (p1 p2:slprop u#a) : slprop u#a
-val wand  (p1 p2:slprop u#a) : slprop u#a
 val h_exists (#a:Type u#b) (f: (a -> slprop u#a)) : slprop u#a
-val h_forall (#a:Type u#b) (f: (a -> slprop u#a)) : slprop u#a
 
 (***** Properties of separation logic equivalence *)
 
@@ -152,82 +99,17 @@ val equiv_extensional_on_star (p1 p2 p3:slprop)
 val emp_unit (p:slprop)
   : Lemma (p `equiv` (p `star` emp))
 
-val intro_emp (m:mem)
-  : Lemma (interp emp m)
 
 (** Equivalence of pure propositions is the equivalence of the underlying propositions *)
 val pure_equiv (p q:prop)
   : Lemma ((p <==> q) ==> (pure p `equiv` pure q))
 
 (** And the interpretation of pure propositions is their underlying propositions *)
-val pure_interp (q:prop) (m:mem)
-   : Lemma (interp (pure q) m <==> q)
 
 val pure_true_emp (_:unit)
   : Lemma (pure True `equiv` emp)
 
-(** A helper lemma for interpreting a pure proposition with another [slprop] *)
-val pure_star_interp (p:slprop u#a) (q:prop) (m:mem)
-   : Lemma (interp (p `star` pure q) m <==>
-            interp (p `star` emp) m /\ q)
-
-(***** Properties of [pts_to] *)
-
-(** [ptr r] asserts that the reference [r] points to a value *)
-let ptr (#a: Type u#a) (#pcm: pcm a) (r:ref a pcm) =
-    h_exists (pts_to r)
-
-(** Injectivity-like lemma for [pts_to], see [Steel.Heap] for more explanations *)
-val pts_to_compatible
-  (#a:Type u#a)
-  (#pcm:pcm a)
-  (x:ref a pcm)
-  (v0 v1:a)
-  (m:mem u#a)
-    : Lemma
-      (interp (pts_to x v0 `star` pts_to x v1) m <==>
-       composable pcm v0 v1 /\ interp (pts_to x (op pcm v0 v1)) m)
-
-val pts_to_compatible_equiv (#a:Type)
-                            (#pcm:_)
-                            (x:ref a pcm)
-                            (v0:a)
-                            (v1:a{composable pcm v0 v1})
-  : Lemma (equiv (pts_to x v0 `star` pts_to x v1)
-                 (pts_to x (op pcm v0 v1)))
-
-val pts_to_not_null (#a:Type u#a)
-                    (#pcm:_)
-                    (x:ref a pcm)
-                    (v:a)
-                    (m:mem u#a)
-  : Lemma (requires interp (pts_to x v) m)
-          (ensures x =!= null)
-
 (***** Properties of the separating conjunction *)
-
-/// See [Steel.Memory.Heap] for more explanations
-
-val intro_star (p q:slprop) (mp:hmem p) (mq:hmem q)
-  : Lemma
-    (requires
-      disjoint mp mq)
-    (ensures
-      interp (p `star` q) (join mp mq))
-
-val elim_star (p q:slprop) (m:hmem (p `star` q))
-  : Lemma
-    (requires
-      interp (p `star` q) m)
-    (ensures exists ml mr.
-      disjoint ml mr /\ m == join ml mr /\ interp p ml /\ interp q mr)
-
-val interp_star
-  (p q: slprop)
-  (m: mem)
-: Lemma
-  (interp (p `star` q) m <==> (exists (mp: mem) (mq: mem) . disjoint mp mq /\ interp p mp /\ interp q mq /\ join mp mq == m))
-
 val star_commutative (p1 p2:slprop)
   : Lemma ((p1 `star` p2) `equiv` (p2 `star` p1))
 
@@ -239,9 +121,6 @@ val star_associative (p1 p2 p3:slprop)
 val star_congruence (p1 p2 p3 p4:slprop)
   : Lemma (requires p1 `equiv` p3 /\ p2 `equiv` p4)
           (ensures (p1 `star` p2) `equiv` (p3 `star` p4))
-
-val affine_star (p q:slprop) (m:mem)
-  : Lemma ((interp (p `star` q) m ==> interp p m /\ interp q m))
 
 (**** Memory invariants *)
 
@@ -269,111 +148,10 @@ val locks_invariant (e:inames) (m:mem u#a) : slprop u#a
 val full_mem_pred: mem -> prop
 let full_mem = m:mem{full_mem_pred m}
 
-(** Memory refined with invariants and a footprint *)
-let hmem_with_inv_except (e:inames) (fp:slprop u#a) =
-  m:full_mem{inames_ok e m /\ interp (fp `star` locks_invariant e m) m}
-
-(** Memory refined with just a footprint and no invariants  *)
-let hmem_with_inv (fp:slprop u#a) = hmem_with_inv_except S.empty fp
-
-/// The following lemmas are needed in `Steel.Effect`
-
-
-(** Any separation logic proposition valid over [m] is also valid on [core_mem m] *)
-val core_mem_interp (hp:slprop u#a) (m:mem u#a)
-    : Lemma
-      (requires True)
-      (ensures (interp hp (core_mem m) <==> interp hp m))
-      [SMTPat (interp hp (core_mem m))]
-
-(** Interpretation is an affine heap proposition. See [Steel.Heap.interp_depends_only_on] *)
-val interp_depends_only_on (hp:slprop u#a)
-    : Lemma
-      (forall (m0:hmem hp) (m1:mem u#a{disjoint m0 m1}).
-        interp hp m0 <==> interp hp (join m0 m1))
-
-(** This adds a SMT trigger to the [Steel.Heap.affine_star] lemma *)
-let affine_star_smt (p q:slprop u#a) (m:mem u#a)
-    : Lemma (interp (p `star` q) m ==> interp p m /\ interp q m)
-      [SMTPat (interp (p `star` q) m)]
-    = affine_star p q m
-
-let mem_prop_is_affine
-  (sl: slprop u#a)
-  (f: (hmem sl -> Tot prop))
-: Tot prop
-= (forall m . f m <==> f (core_mem m)) /\
-  (forall (m0: hmem sl) m1 . (disjoint m0 m1 /\ interp sl (join m0 m1)) ==> (f m0 <==> f (join m0 m1)))
-
-let a_mem_prop (sl: slprop u#a) : Type u#(a+1) = (f: (hmem sl -> Tot prop) { mem_prop_is_affine sl f })
-
-val refine_slprop
-  (sl: slprop u#a)
-  (f: a_mem_prop sl)
-: Tot (slprop u#a)
-
-val interp_refine_slprop
-  (sl: slprop u#a)
-  (f: a_mem_prop sl)
-  (m: mem u#a)
-: Lemma
-  (interp (refine_slprop sl f) m <==> (interp sl m /\ f m))
-  [SMTPat (interp (refine_slprop sl f) m)]
-
-val sdep
-  (s: slprop u#a)
-  (f: (hmem s -> Tot (slprop u#a)))
-: Tot (slprop u#a)
-
-let dep_slprop_is_affine
-  (s: slprop)
-  (f: (hmem s -> Tot slprop))
-: Tot prop
-= (forall (h: hmem s) . f h `equiv`  f (core_mem h))
-
-val interp_sdep
-  (s: slprop)
-  (f: (hmem s -> Tot slprop))
-  (m: mem)
-: Lemma
-  (requires (dep_slprop_is_affine s f))
-  (ensures (
-    interp (sdep s f) m <==> (exists m1 m2 . interp s m1 /\ interp (f m1) m2 /\ disjoint m1 m2 /\ join m1 m2 == m)
-  ))
-  [SMTPat (interp (sdep s f) m)]
-
-(** See [Steel.Heap.h_exists_cong] *)
-val h_exists_cong (#a:Type) (p q : a -> slprop)
-    : Lemma
-      (requires (forall x. p x `equiv` q x))
-      (ensures (h_exists p `equiv` h_exists q))
-
-(** Introducing [h_exists] by presenting a witness *)
-val intro_h_exists (#a:_) (x:a) (p:a -> slprop) (m:mem)
-  : Lemma (interp (p x) m ==> interp (h_exists p) m)
-
-val elim_h_exists (#a:_) (p:a -> slprop) (m:mem)
-  : Lemma (interp (h_exists p) m ==> (exists x. interp (p x) m))
-
 (**** Actions *)
 
 /// Note, at this point, using the MSTTotal effect constrains the mem to be
 /// in universe 2, rather than being universe polymorphic
-
-(** A memory predicate that depends only on fp *)
-let mprop (fp:slprop u#a) =
-  q:(mem u#a -> prop){
-    forall (m0:mem{interp fp m0}) (m1:mem{disjoint m0 m1}).
-      q m0 <==> q (join m0 m1)}
-
-let mprop2 (#a:Type u#b) (fp_pre:slprop u#a) (fp_post:a -> slprop u#a) =
-  q:(mem u#a -> a -> mem u#a -> prop){
-    // can join any disjoint mem to the pre-mem and q is still valid
-    (forall (x:a) (m0:mem{interp fp_pre m0}) (m_post:mem{interp (fp_post x) m_post}) (m1:mem{disjoint m0 m1}).
-      q m0 x m_post <==> q (join m0 m1) x m_post) /\
-    // can join any mem to the post-mem and q is still valid
-    (forall (x:a) (m_pre:mem{interp fp_pre m_pre}) (m0:mem{interp (fp_post x) m0}) (m1:mem{disjoint m0 m1}).
-      q m_pre x m0 <==> q m_pre x (join m0 m1))}
 
 (**
   The preorder along which the memory evolves with every update. See [Steel.Heap.heap_evolves]
@@ -548,18 +326,7 @@ val frame (#a:Type)
           ($f:action_except a opened_invariants pre post)
   : action_except a opened_invariants (pre `star` frame) (fun x -> post x `star` frame)
 
-val change_slprop (#opened_invariants:inames)
-                  (p q:slprop)
-                  (proof: (m:mem -> Lemma (requires interp p m) (ensures interp q m)))
-  : action_except unit opened_invariants p (fun _ -> q)
-
 module U = FStar.Universe
-
-let is_frame_monotonic #a (p : a -> slprop) : prop =
-  forall x y m frame. interp (p x `star` frame) m /\ interp (p y) m ==> interp (p y `star` frame) m
-
-let is_witness_invariant #a (p : a -> slprop) =
-  forall x y m. interp (p x) m /\ interp (p y) m ==> x == y
 
 val witness_h_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
   : action_except (erased a) opened_invariants
@@ -582,54 +349,5 @@ val elim_pure (#opened_invariants:_) (p:prop)
 val intro_pure (#opened_invariants:_) (p:prop) (_:squash p)
   : action_except unit opened_invariants emp (fun _ -> pure p)
 
-val pts_to_join (#a:Type) (#pcm:pcm a) (r:ref a pcm) (x y : a) (m:mem) :
-  Lemma (requires (interp (pts_to r x) m /\ interp (pts_to r y) m))
-        (ensures (joinable pcm x y))
-
-val pts_to_evolve (#a:Type u#a) (#pcm:_) (r:ref a pcm) (x y : a) (m:mem) :
-  Lemma (requires (interp (pts_to r x) m /\ compatible pcm y x))
-        (ensures  (interp (pts_to r y) m))
-
-val id_elim_star (p q:slprop) (m:mem)
-  : Pure (erased mem & erased mem)
-         (requires (interp (p `star` q) m))
-         (ensures (fun (ml, mr) -> disjoint ml mr
-                              /\ m == join ml mr
-                              /\ interp p ml
-                              /\ interp q mr))
-
-val id_elim_exists (#a:Type) (p : a -> slprop) (m:mem)
-  : Pure (erased a)
-         (requires (interp (h_exists p) m))
-         (ensures (fun x -> interp (p x) m))
-
-
-val slimp_star (p q r s : slprop)
-  : Lemma (requires (slimp p q /\ slimp r s))
-          (ensures (slimp (p `star` r) (q `star` s)))
-
-val elim_wi (#a:Type) (p : a -> slprop{is_witness_invariant p}) (x y : a) (m : mem)
-  : Lemma (requires (interp (p x) m /\ interp (p y) m))
-          (ensures (x == y))
-
-val witinv_framon (#a:Type) (p : a -> slprop)
-  : Lemma (is_witness_invariant p ==> is_frame_monotonic p)
-          [SMTPatOr [[SMTPat (is_witness_invariant p)]; [SMTPat (is_frame_monotonic p)]]]
-
-val star_is_frame_monotonic (#a:Type)
-    (f g : a -> slprop)
-  : Lemma (requires (is_frame_monotonic f /\ is_frame_monotonic g))
-          (ensures (is_frame_monotonic (fun x -> f x `star` g x)))
-          //[SMTPat (is_frame_monotonic (fun x -> f x `star` g x))]
-
-val star_is_witinv_left (#a:Type)
-    (f g : a -> slprop)
-  : Lemma (requires (is_witness_invariant f))
-          (ensures  (is_witness_invariant (fun x -> f x `star` g x)))
-          //[SMTPat   (is_witness_invariant (fun x -> f x `star` g x))]
-
-val star_is_witinv_right (#a:Type)
-    (f g : a -> slprop)
-  : Lemma (requires (is_witness_invariant g))
-          (ensures  (is_witness_invariant (fun x -> f x `star` g x)))
-          //[SMTPat   (is_witness_invariant (fun x -> f x `star` g x))]
+val drop (#opened_invariants:_) (p:slprop)
+  : action_except unit opened_invariants p (fun _ -> emp)
