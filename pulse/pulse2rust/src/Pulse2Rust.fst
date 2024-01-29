@@ -303,7 +303,6 @@ let extract_mlconstant_to_lit (c:S.mlconstant) : lit =
   | S.MLC_String s -> Lit_string s
   | _ -> fail_nyi (format1 "mlconstant_to_lit %s" (S.mlconstant_to_string c))
 
-
 let rec extract_mlpattern_to_pat (g:env) (p:S.mlpattern) : env & pat =
   match p with
   | S.MLP_Wild -> g, Pat_wild
@@ -924,10 +923,20 @@ let extract_one
     end
     else
     // let _ = print1 "decl %s is reachable\n" (String.concat ";" (mlmodule1_name d)) in
+    //
+    // NOTE: Rust extraction of discriminators doesn't work for unit variants
+    //       (i.e. variants that do not have payloads)
+    //       Because we always have a wild card argument to these patterns in discriminator body
+    //       In OCaml it works fine.
+    //       In Rust it is an error
+    //       Should fix it in a better way
+    //       For now, just not extracting them ... that too with a hack on names
+    //
     match d with
     | S.MLM_Let (S.NonRec, [{mllb_name}])
       when starts_with mllb_name "explode_ref" ||
-           starts_with mllb_name "unexplode_ref" -> items, g
+           starts_with mllb_name "unexplode_ref" ||
+           starts_with mllb_name "uu___is_" -> items, g
     | S.MLM_Let lb ->
       let f, g = extract_top_level_lb g lb in
       // print_string "Extracted to:\n";
