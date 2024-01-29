@@ -39,6 +39,12 @@ val return_atomic
     (p:a -> slprop)
 : stt_atomic a #Unobservable emp_inames (p x) (fun r -> p r ** pure (r == x))
 
+val return_atomic_noeq
+    (#a:Type u#a)
+    (x:a)
+    (p:a -> slprop)
+: stt_atomic a #Unobservable emp_inames (p x) p
+
 val bind_atomic
     (#a:Type u#a)
     (#b:Type u#b)
@@ -140,6 +146,12 @@ val return_ghost
     (x:a)
     (p:a -> slprop)
 : stt_ghost a emp_inames (p x) (fun r -> p r ** pure (r == x))
+
+val return_ghost_noeq
+    (#a:Type u#a)
+    (x:a)
+    (p:a -> slprop)
+: stt_ghost a emp_inames (p x) p
 
 val bind_ghost
     (#a:Type u#a)
@@ -423,3 +435,6 @@ val ghost_recall
     emp_inames
     (ghost_pts_to r v)
     (fun v1 -> ghost_pts_to r v ** pure (fact v1))
+
+val drop (p:slprop)
+: stt_ghost unit emp_inames p (fun _ -> emp)

@@ -17,6 +17,7 @@
 module Pulse.Lib.Core
 open FStar.Ghost
 open PulseCore.FractionalPermission
+open FStar.PCM
 module U32 = FStar.UInt32
 module G = FStar.Ghost
 module Set = FStar.Set
@@ -176,21 +177,11 @@ val stt_ghost (a:Type u#a) (opens:inames) (pre:vprop) (post:a -> vprop) : Type u
 //   once we have support for bind etc.
 //
 
-inline_for_extraction
-val return_stt (#a:Type u#a) (x:a) (p:a -> vprop)
-  : stt a (p x) (fun r -> p r ** pure (r == x))
-
-inline_for_extraction
 val return (#a:Type u#a) (x:a) (p:a -> vprop)
   : stt a (p x) p
 
-inline_for_extraction
 val return_stt_ghost (#a:Type u#a) (x:a) (p:a -> vprop)
   : stt_ghost a emp_inames (p x) (fun r -> p r ** pure (r == x))
-
-inline_for_extraction
-val return_stt_ghost_noeq (#a:Type u#a) (x:a) (p:a -> vprop)
-  : stt_ghost a emp_inames (p x) p
 
 // Return in ghost?
 
@@ -369,10 +360,6 @@ val return_stt_unobservable (#a:Type u#a) (x:a) (p:a -> vprop)
   : stt_unobservable a emp_inames (p x) (fun r -> p r ** pure (r == x))
 
 inline_for_extraction
-val return_stt_unobservable_noeq (#a:Type u#a) (x:a) (p:a -> vprop)
-  : stt_unobservable a emp_inames (p x) p
-
-inline_for_extraction
 val new_invariant (p:vprop) : stt_unobservable (inv p) emp_inames p (fun _ -> emp)
 
 inline_for_extraction
@@ -425,8 +412,6 @@ val rewrite_by (p:vprop) (q:vprop)
                (t:unit -> T.Tac unit)
                (_:unit { T.with_tactic t (vprop_equiv p q) })
   : stt_ghost unit emp_inames p (fun _ -> q)
-
-open FStar.Ghost
 
 val elim_pure_explicit (p:prop)
   : stt_ghost (squash p) emp_inames
@@ -496,7 +481,6 @@ val elim_false (a:Type) (p:a -> vprop)
 ////////////////////////////////////////////////////////
 //Core PCM references
 ////////////////////////////////////////////////////////
-open FStar.PCM
 val pcm_ref (#[@@@unused] a:Type u#a) ([@@@unused] p:FStar.PCM.pcm a) : Type0
 val pcm_pts_to (#a:Type u#1) (#p:pcm a) (r:pcm_ref p) (v:a) : vprop
 val pcm_ref_null (#a:Type) (p:FStar.PCM.pcm a) : pcm_ref p
@@ -617,3 +601,14 @@ val ghost_gather
     emp_inames
     (ghost_pcm_pts_to r v0 ** ghost_pcm_pts_to r v1)
     (fun _ -> ghost_pcm_pts_to r (op pcm v0 v1))
+
+// Some variants of return
+
+val return_stt (#a:Type u#a) (x:a) (p:a -> vprop)
+  : stt a (p x) (fun r -> p r ** pure (r == x))
+
+val return_stt_ghost_noeq (#a:Type u#a) (x:a) (p:a -> vprop)
+  : stt_ghost a emp_inames (p x) p
+
+val return_stt_unobservable_noeq (#a:Type u#a) (x:a) (p:a -> vprop)
+  : stt_unobservable a emp_inames (p x) p

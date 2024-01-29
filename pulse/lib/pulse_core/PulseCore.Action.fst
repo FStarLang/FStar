@@ -376,3 +376,6 @@ let elim_exists' (#a:Type u#a) (p:a -> slprop)
 let elim_exists (#a:Type u#a) (p:a -> slprop)
 : act (erased a) emp_inames (exists* x. p x) (fun x -> p x)
 = coerce_eq (exists_equiv #a #p) (elim_exists' #a p)
+
+let drop p
+= fun #ictx -> mem_action_as_action _ _ _ _ (drop #ictx p)

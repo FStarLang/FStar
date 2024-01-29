@@ -123,10 +123,8 @@ type stt_atomic (a:Type u#a) (opens:inames) (pre:vprop) (post:a -> vprop) =
 type stt_ghost (a:Type u#a) (opens:inames) (pre:vprop) (post:a -> vprop) =
   A.stt_ghost a opens pre post
  
-let return_stt (#a:Type u#a) (x:a) (p:a -> vprop) = admit() //I.return x p
 let return (#a:Type u#a) (x:a) (p:a -> vprop) = I.return x p
 let return_stt_ghost (#a:Type u#a) (x:a) (p:a -> vprop) = A.return_ghost x p
-let return_stt_ghost_noeq (#a:Type u#a) (x:a) (p:a -> vprop) = admit() 
 let bind_stt = I.bind
 
 let lift_stt_atomic0 #a #opens #pre #post e =
@@ -169,8 +167,6 @@ let sub_stt_ghost = A.sub_ghost
 let sub_invs_stt_ghost = A.sub_invs_stt_ghost
 
 let return_stt_unobservable #a x p = A.return_atomic x p
-
-let return_stt_unobservable_noeq #a x (p:(a -> vprop)) = admit()
 
 let new_invariant p = A.new_invariant p
 
@@ -221,7 +217,7 @@ let stt_par = I.par
     
 let assert_ (p:vprop) = A.noop p
 let assume_ (p:vprop) = admit() //intentional
-let drop_ (p:vprop) = admit()
+let drop_ (p:vprop) = A.drop p
 
 let unreachable (#a:Type) (#p:vprop) (#q:a -> vprop) (_:squash False)
   : stt_ghost a emp_inames p q
@@ -292,3 +288,35 @@ let ghost_read = A.ghost_read
 let ghost_write = A.ghost_write
 let ghost_share = A.ghost_share
 let ghost_gather = A.ghost_gather
+
+let return_stt_alt (#a:Type u#a) (x:a) (p:a -> vprop)
+: stt a (p x ** pure (x == x)) (fun v -> p v ** pure (v == x))
+= return x (fun v -> p v ** pure (v == x))
+
+let refl_stt (#a:Type u#a) (x:a)
+: stt unit emp (fun _ -> pure (x == x))
+= let m : stt_ghost unit emp_inames emp (fun _ -> pure (x == x)) = intro_pure (x == x) () in
+  let m : stt_unobservable unit emp_inames emp (fun _ -> pure (x == x)) = lift_ghost_unobservable m unit_non_informative in
+  lift_stt_atomic0 (lift_unobservable_atomic m)
+
+let frame_flip (#pre #a #post:_) (frame:slprop) (e:stt a pre post)
+: stt a (pre ** frame) (fun x -> frame ** post x)
+= let i
+  : vprop_post_equiv (fun x -> post x ** frame) (fun x -> frame ** post x)
+  = intro_vprop_post_equiv _ _ (fun x -> vprop_equiv_comm (post x) frame)
+  in
+  sub_stt _ _ (vprop_equiv_refl _) i (frame_stt frame e)
+
+let return_stt_a (#a:Type u#a) (x:a) (p:a -> vprop)
+: stt unit (p x) (fun _ -> p x ** pure (x == x))
+= elim_vprop_equiv (vprop_equiv_comm (p x) emp);
+  elim_vprop_equiv (vprop_equiv_unit (p x));
+  frame_flip (p x) (refl_stt x)
+
+let return_stt (#a:Type u#a) (x:a) (p:a -> vprop)
+: stt a (p x) (fun v -> p v ** pure (v == x))
+= bind_stt (return_stt_a x p) (fun _ -> return_stt_alt x p)
+
+let return_stt_ghost_noeq (#a:Type u#a) (x:a) (p:a -> vprop) = A.return_ghost_noeq x p
+
+let return_stt_unobservable_noeq #a x (p:(a -> vprop)) = A.return_atomic_noeq x p

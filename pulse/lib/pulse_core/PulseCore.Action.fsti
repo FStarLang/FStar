@@ -237,3 +237,9 @@ val intro_exists (#a:Type u#a) (p:a -> slprop) (x:erased a)
 
 val elim_exists (#a:Type u#a) (p:a -> slprop)
 : act (erased a) emp_inames (exists* x. p x) (fun x -> p x)
+
+///////////////////////////////////////////////////////////////////
+// Other utils
+///////////////////////////////////////////////////////////////////
+val drop (p:slprop)
+: act unit emp_inames p (fun _ -> emp)

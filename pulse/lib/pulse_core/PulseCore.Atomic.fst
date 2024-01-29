@@ -51,6 +51,8 @@ let return_atomic #a x post
   pure_trivial (x == x) ();
   coerce_eq () (return_atomic' #a x post)
 
+let return_atomic_noeq #a x post = A.return #a #post x
+
 let bind_atomic
     (#a:Type u#a)
     (#b:Type u#b)
@@ -142,6 +144,7 @@ let sub_invs_stt_atomic
 
 let stt_ghost a opens pre post = Ghost.erased (act a opens pre post)
 let return_ghost #a x p = Ghost.hide (return_atomic #a x p)
+let return_ghost_noeq #a x p = Ghost.hide (A.return #_ #p x)
 let bind_ghost
     (#a:Type u#a)
     (#b:Type u#b)
@@ -306,3 +309,5 @@ let ghost_recall
     (v:Ghost.erased a)
     (w:ghost_witnessed r fact)
 = Ghost.hide (A.recall r v w)
+
+let drop p = Ghost.hide (A.drop p)
