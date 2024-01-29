@@ -760,8 +760,7 @@ let mk_mem_inv (invP inames inv:R.term) : R.term =
 
 let inv_disjointness_goal (inv_p:T.term) (inames:T.term) (inv:T.term) 
 : R.term 
-= let open Pulse.Reflection.Util in
-  let p = mk_mem_inv inv_p inames inv in
+= let p = mk_mem_inv inv_p inames inv in
   let u0 = R.pack_universe R.Uv_Zero in
   let p = mk_reveal u0 bool_tm p in
   mk_eq2 u0 bool_tm (`false) p
