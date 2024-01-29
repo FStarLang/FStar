@@ -2213,15 +2213,15 @@ ocaml_export! {
 
 // static OBJ: Mutex<S> = new_mutex();
 
-struct engine_context_t {
+pub struct engine_context_t {
     uds: Box<u8>,
 }
 
-struct l0_context_t {
+pub struct l0_context_t {
     cdi: Box<u8>,
 }
 
-struct l1_context_t {
+pub struct l1_context_t {
     deviceID_priv: Box<u8>,
     deviceID_pub: Box<u8>,
     aliasKey_priv: Box<u8>,
@@ -2230,7 +2230,7 @@ struct l1_context_t {
     deviceIDCSR: Box<u8>,
 }
 
-enum context_t {
+pub enum context_t {
     Engine_context(engine_context_t),
     L0_context(l0_context_t),
     L1_context(l1_context_t),
