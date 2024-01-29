@@ -60,8 +60,8 @@ val emp : vprop
 val ( ** ) (p q:vprop) : vprop
 val pure (p:prop) : vprop
 val ( exists* ) (#a:Type) (p:a -> vprop) : vprop
-// val ( forall* ) (#a:Type) (p:a -> vprop) : vprop
 val vprop_equiv (p q:vprop) : prop
+val elim_vprop_equiv (#p #q:_) (_:vprop_equiv p q) : squash (p == q)
 val vprop_post_equiv (#t:Type u#a) (p q: t -> vprop) : prop
 
 val intro_vprop_post_equiv
@@ -374,9 +374,6 @@ val return_stt_unobservable_noeq (#a:Type u#a) (x:a) (p:a -> vprop)
 
 inline_for_extraction
 val new_invariant (p:vprop) : stt_unobservable (inv p) emp_inames p (fun _ -> emp)
-
-inline_for_extraction
-val new_invariant' (p:vprop) : stt_atomic (inv p) emp_inames p (fun _ -> emp)
 
 inline_for_extraction
 val with_invariant_g (#a:Type)

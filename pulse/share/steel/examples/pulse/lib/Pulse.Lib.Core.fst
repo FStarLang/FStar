@@ -28,6 +28,7 @@ let op_Star_Star = op_Star_Star
 let pure = pure
 let op_exists_Star = op_exists_Star
 let vprop_equiv = slprop_equiv
+let elim_vprop_equiv #p #q pf = slprop_equiv_elim p q
 let vprop_post_equiv = slprop_post_equiv
 let prop_squash_idem (p:prop)
   : Tot (squash (squash p == p))
@@ -143,8 +144,11 @@ let bind_stt_atomic_ghost #a #b #opens #pre1 #post1 #post2 e1 e2 reveal_b =
 let bind_stt_ghost_atomic #a #b #opened #pre1 #post1 #post2 e1 e2 reveal_a =
   A.bind_atomic (A.lift_ghost e1 reveal_a) e2
 
-let lift_stt_ghost #a #opened #pre #post e reveal_a =
-  admit() //A.lift_ghost e reveal_a; coerce Unobservable to Observable
+let lift_ghost_unobservable #a #opened #pre #post e reveal_a =
+  A.lift_ghost e reveal_a
+
+let lift_unobservable_atomic #a #opens #pre #post e =
+  A.lift_unobservable e
 
 let frame_stt = I.frame
     
@@ -169,8 +173,6 @@ let return_stt_unobservable #a x p = A.return_atomic x p
 let return_stt_unobservable_noeq #a x (p:(a -> vprop)) = admit()
 
 let new_invariant p = A.new_invariant p
-
-let new_invariant' p = admit()
 
 let with_invariant_g (#a:Type)
                      (#fp:vprop)
@@ -208,20 +210,17 @@ let elim_exists #a p = A.elim_exists p
 let intro_exists #a p e = A.intro_exists p e
 let intro_exists_erased #a p e = A.intro_exists p e
 
-let elim_forall #a = admit()
-let intro_forall #a = admit()
-
 let while_loop inv cond body = admit()
 
 let stt_ghost_reveal a x = A.ghost_reveal a x
-let stt_admit _ _ _ = admit ()
-let stt_atomic_admit _ _ _ = admit ()
-let stt_ghost_admit _ _ _ = admit ()
+let stt_admit _ _ _ = admit () //intentional
+let stt_atomic_admit _ _ _ = admit () //intentional
+let stt_ghost_admit _ _ _ = admit () //intentional
 
 let stt_par = I.par
     
 let assert_ (p:vprop) = A.noop p
-let assume_ (p:vprop) = admit()
+let assume_ (p:vprop) = admit() //intentional
 let drop_ (p:vprop) = admit()
 
 let unreachable (#a:Type) (#p:vprop) (#q:a -> vprop) (_:squash False)
