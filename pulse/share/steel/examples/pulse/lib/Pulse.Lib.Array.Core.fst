@@ -155,26 +155,12 @@ let raise_seq_inv (#elt:Type0) (x:FStar.Seq.seq elt)
                  `Seq.equal` x)
         [SMTPat (raise_seq x)]
 = ()
-// let lhs = downgrade_seq (raise_seq x) in
-//   FStar.Seq.map_seq_len U.downgrade_val (raise_seq x);
-//   introduce forall (i:nat { i < Seq.length x }).
-//               Seq.index lhs i == Seq.index x i
-//   with (
-//     FStar.Seq.map_seq_index U.downgrade_val (raise_seq x) i
-//   )
 
 let downgrade_seq_inv (#elt:Type0) (x:FStar.Seq.seq (U.raise_t u#0 u#1 elt))
 : Lemma (ensures raise_seq (downgrade_seq x)
                  `Seq.equal` x)
         [SMTPat (downgrade_seq x)]
 = ()
-// let lhs = raise_seq (downgrade_seq x) in
-//   FStar.Seq.map_seq_len U.downgrade_val x;
-//   introduce forall (i:nat { i < Seq.length x }).
-//               Seq.index lhs i == Seq.index x i
-//   with (
-//     FStar.Seq.map_seq_index U.downgrade_val x i
-//   )
 
 ```pulse
 ghost
@@ -349,4 +335,67 @@ ensures
 ```
 let pts_to_range_upd = pts_to_range_upd'
 
-let with_local #a = admit()
+let with_pre (pre:vprop) (#a:Type) (#post:a -> vprop)(m:stt a emp post)
+: stt a pre (fun v -> pre ** post v)
+= let m1 = frame_stt pre m in
+  let pf_post : vprop_post_equiv (fun r -> post r ** pre) (fun r -> pre ** post r)
+    = intro_vprop_post_equiv _ _ (fun r -> vprop_equiv_comm (post r) pre)
+  in
+  sub_stt _ _ (vprop_equiv_unit pre) pf_post m1
+
+```pulse
+fn alloc_with_pre
+    (#a:Type u#0)
+    (init:a)
+    (len:SZ.t)
+    (pre:vprop)
+requires pre
+returns arr:array a
+ensures (pre **
+         (pts_to arr (Seq.create (SZ.v len) init) ** (
+          pure (is_full_array arr) **
+          pure (length arr == SZ.v len)))) **
+        pure (is_full_array arr)
+{
+  alloc init len
+}
+```
+
+```pulse
+fn free_with_post (#a:Type u#0) (arr:array a) (post:vprop)
+requires (post ** (exists* v. pts_to arr v)) ** pure (is_full_array arr)
+ensures post
+{
+  free arr  
+}
+```
+
+(* this is universe-polymorphic in ret_t; so can't define it in Pulse yet *)
+let with_local'
+    (#a:Type u#0)
+    (init:a)
+    (len:SZ.t)
+    (#pre:vprop)
+    (ret_t:Type u#a)
+    (#post:ret_t -> vprop) 
+      (body:(arr:array a) -> stt ret_t (pre **
+                                    (pts_to arr (Seq.create (SZ.v len) init) ** (
+                                     pure (is_full_array arr) **
+                                     pure (length arr == SZ.v len))))
+                                   (fun r -> post r ** (exists* v. pts_to arr v)))
+
+: stt ret_t pre post
+= let m1 = alloc_with_pre init len pre in
+   let body (arr:array a)
+    : stt ret_t 
+         ((pre ** 
+          (pts_to arr (Seq.create (SZ.v len) init) ** (
+           pure (is_full_array arr) **
+           pure (length arr == SZ.v len)))) **
+         pure (is_full_array arr))
+        post
+    = bind_stt (frame_stt (pure (is_full_array arr)) (body arr)) (fun r -> bind_stt (free_with_post arr (post r)) (fun _ -> Pulse.Lib.Core.return r post))
+  in
+  bind_stt m1 body
+
+let with_local = with_local'
