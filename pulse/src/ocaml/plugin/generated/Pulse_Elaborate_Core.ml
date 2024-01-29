@@ -192,13 +192,13 @@ let (elab_lift :
                      FStar_Reflection_V2_Data.Q_Explicit
                      (Pulse_Elaborate_Pure.elab_term
                         (Pulse_Syntax_Base.comp_post c1))) e
-            | Pulse_Typing.Lift_STGhost_STAtomic
+            | Pulse_Typing.Lift_STGhost_STUnobservable
                 (uu___, uu___1, Prims.Mkdtuple2 (reveal_a, reveal_a_typing))
                 ->
                 let t =
                   Pulse_Elaborate_Pure.elab_term
                     (Pulse_Syntax_Base.comp_res c1) in
-                Pulse_Reflection_Util.mk_lift_ghost_atomic
+                Pulse_Reflection_Util.mk_lift_ghost_unobservable
                   (Pulse_Syntax_Base.comp_u c1) t
                   (Pulse_Elaborate_Pure.elab_term
                      (Pulse_Syntax_Base.comp_inames c1))
@@ -209,6 +209,20 @@ let (elab_lift :
                      (Pulse_Elaborate_Pure.elab_term
                         (Pulse_Syntax_Base.comp_post c1))) e
                   (Pulse_Elaborate_Pure.elab_term reveal_a)
+            | Pulse_Typing.Lift_STUnobservable_STAtomic (uu___, uu___1) ->
+                let t =
+                  Pulse_Elaborate_Pure.elab_term
+                    (Pulse_Syntax_Base.comp_res c1) in
+                Pulse_Reflection_Util.mk_lift_unobservable_atomic
+                  (Pulse_Syntax_Base.comp_u c1) t
+                  (Pulse_Elaborate_Pure.elab_term
+                     (Pulse_Syntax_Base.comp_inames c1))
+                  (Pulse_Elaborate_Pure.elab_term
+                     (Pulse_Syntax_Base.comp_pre c1))
+                  (Pulse_Reflection_Util.mk_abs t
+                     FStar_Reflection_V2_Data.Q_Explicit
+                     (Pulse_Elaborate_Pure.elab_term
+                        (Pulse_Syntax_Base.comp_post c1))) e
 let (intro_pure_tm : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.st_term) =
   fun p ->
     Pulse_Typing.wtag

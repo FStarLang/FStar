@@ -73,7 +73,7 @@ let lift_ghost_to_atomic
   let w = get_non_informative_witness g (comp_u c) (comp_res c) in
   let c' = C_STAtomic inames Unobservable c_st in
   let d' : st_typing g e c' =
-    T_Lift g e c c' d (Lift_STGhost_STAtomic g c w)
+    T_Lift g e c c' d (Lift_STGhost_STUnobservable g c w)
   in
   (| c', d' |)
 

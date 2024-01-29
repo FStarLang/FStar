@@ -143,7 +143,6 @@ let bind_stt_atomic_ghost #a #b #opens #pre1 #post1 #post2 e1 e2 reveal_b =
 let bind_stt_ghost_atomic #a #b #opened #pre1 #post1 #post2 e1 e2 reveal_a =
   A.bind_atomic (A.lift_ghost e1 reveal_a) e2
 
-#push-options "--print_implicits"
 let lift_stt_ghost #a #opened #pre #post e reveal_a =
   admit() //A.lift_ghost e reveal_a; coerce Unobservable to Observable
 

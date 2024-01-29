@@ -23,7 +23,7 @@ open FStar.Real
 open Pulse.Lib.Par.Pledge
 
 ```pulse
-ghost
+unobservable
 fn aux_squash_pledge (f v : vprop) (_:unit)
   requires f ** pledge emp_inames f (pledge emp_inames f v)
   ensures f ** v
@@ -114,7 +114,7 @@ let p_combine_equiv p1 p2 i j = magic()
 let rewrite_ = Pulse.Lib.Core.rewrite
 
 ```pulse
-ghost
+unobservable
 fn p_join (p : (nat->vprop)) (i j k : nat) (_ : squash (i <= j /\ j <= k))
   requires range p i j ** range p j k
   ensures range p i k
@@ -124,7 +124,7 @@ fn p_join (p : (nat->vprop)) (i j k : nat) (_ : squash (i <= j /\ j <= k))
 ```
 
 ```pulse
-ghost
+unobservable
 fn p_split (p : (nat->vprop)) (i j k : nat) (_ : squash (i <= j /\ j <= k))
   requires range p i k
   ensures range p i j ** range p j k
