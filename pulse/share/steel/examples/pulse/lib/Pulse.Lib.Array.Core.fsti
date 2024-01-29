@@ -194,13 +194,9 @@ val pts_to_range_upd
   (v: t)
   (#l: Ghost.erased nat{l <= SZ.v i})
   (#r: Ghost.erased nat{SZ.v i < r})
-  //(#s: Ghost.erased (Seq.seq t) {US.v i < Seq.length s})
   (#s0: Ghost.erased (Seq.seq t))
 : stt unit
-    //(requires A.pts_to a full_perm s)
     (requires pts_to_range a l r s0)
-    //(ensures fun _ -> A.pts_to_range a l r full_perm (Seq.upd s0 (US.v i - l) v))
-    //(ensures fun _ -> pure (Seq.length s0 == r - l) `star` A.pts_to a full_perm (Seq.upd s0 (US.v i - l) v))
     (ensures fun _ ->
       exists* s.
         pts_to_range a l r s **
