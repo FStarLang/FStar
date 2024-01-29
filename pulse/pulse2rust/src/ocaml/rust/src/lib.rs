@@ -2200,3 +2200,38 @@ ocaml_export! {
   //   z.to_string().to_owned().to_ocaml(cr)
   // }
 }
+
+// use std::sync::Mutex;
+// struct S {
+//     v: Vec<i32>,
+//     f: u32,
+// }
+
+// const fn new_mutex() -> Mutex<S> {
+//     Mutex::new(S { v: vec![], f: 0 })
+// }
+
+// static OBJ: Mutex<S> = new_mutex();
+
+struct engine_context_t {
+    uds: Box<u8>,
+}
+
+struct l0_context_t {
+    cdi: Box<u8>,
+}
+
+struct l1_context_t {
+    deviceID_priv: Box<u8>,
+    deviceID_pub: Box<u8>,
+    aliasKey_priv: Box<u8>,
+    aliasKey_pub: Box<u8>,
+    aliasKeyCRT: Box<u8>,
+    deviceIDCSR: Box<u8>,
+}
+
+enum context_t {
+    Engine_context(engine_context_t),
+    L0_context(l0_context_t),
+    L1_context(l1_context_t),
+}
