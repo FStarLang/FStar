@@ -21,16 +21,13 @@ open Pulse.Lib.Trade
 module GR = Pulse.Lib.GhostReference
 open Pulse.Class.PtsTo
 
-
 assume
 val unobservable_reveal_bool
     (b : erased bool)
 : stt_unobservable bool emp_inames emp (fun b' -> pure (reveal b == b'))
 
-(* A pledge is just a magic stick that preserves the antecedent. *)
-(* TODO: can this really be a ghost step? would we ever need to allocate invariants
-to redeem? We only need to allocate in split_pledge so far, but that's an operation
-that happens outside of the internal ghost step. *)
+(* A pledge is just a trade that preserves the antecedent. It is an unobservable
+step under the hood. *)
 let pledge opens f v = (==>*) #opens f (f ** v)
 
 let pledge_sub_inv (os1:inames) (os2:inames{inames_subset os1 os2}) (f:vprop) (v:vprop)
@@ -296,6 +293,15 @@ fn __elim_l (#os0:inames) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool)
 }
 ```
 
+
+open FStar.Tactics.V2
+
+let vprop_equiv_refl_eq (v1 v2 : vprop) (_ : squash (v1 == v2)) : vprop_equiv v1 v2 =
+  vprop_equiv_refl v1
+
+let __tac () : Tac unit =
+  apply (`vprop_equiv_refl_eq)
+
 ```pulse
 unobservable
 fn flip_invp
@@ -309,42 +315,22 @@ fn flip_invp
 
   unfold inv_p';
 
-  assume_ (pure (pledge os0 f (v1 ** v2) == pledge os0 f (v2 ** v1)));
+  (* This will be true with PulseCore. *)
+  assume_ (pure (v1 ** v2 == v2 ** v1));
 
-  // This currently fails, as it simply goes to the unifier/SMT
-  // and it will not solve these problems. Also, we need to commute
-  // the star within the pledge goal, which we cannot do without
-  // another step, but that step can only be done if we are in the false-false case.
-  // This last point may change when moving to PulseCore, as there commuting
-  // a star is a provable equality.
-
-  // rewrite
-  //    (match b1, b2 with
-  //     | false, false -> pledge os0 f (v1 ** v2)
-  //     | false, true -> v1
-  //     | true, false -> v2
-  //     | true, true -> emp)
-  // as
-  //    (match b2, b1 with
-  //     | false, false -> pledge os0 f (v2 ** v1)
-  //     | false, true -> v2
-  //     | true, false -> v1
-  //     | true, true -> emp)
-  //     ;
-
-  // hacking the rewrite for now
-  drop_
+  rewrite_by
      (match b1, b2 with
       | false, false -> pledge os0 f (v1 ** v2)
       | false, true -> v1
       | true, false -> v2
-      | true, true -> emp);
-  assume_
+      | true, true -> emp)
      (match b2, b1 with
       | false, false -> pledge os0 f (v2 ** v1)
       | false, true -> v2
       | true, false -> v1
-      | true, true -> emp);
+      | true, true -> emp)
+    __tac
+    ();
 
   fold (inv_p' os0 f v2 v1 r2 r1 b2 b1);
   fold inv_p;
