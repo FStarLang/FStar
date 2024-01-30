@@ -25,22 +25,28 @@ type seq (a:Type u#a) :Type u#a =
 
 let length #_ s = List.length (MkSeq?.l s)
 
+let seq_to_list #_ s =
+  match s with
+  | MkSeq l -> l
+
+let seq_of_list #_ l = MkSeq l
+
 let index #_ s i = List.index (MkSeq?.l s) i
 
-let cons (#a:Type) (x:a) (s:seq a) : Tot (seq a) = MkSeq (x::(MkSeq?.l s))
+let _cons (#a:Type) (x:a) (s:seq a) : Tot (seq a) = MkSeq (x::(MkSeq?.l s))
 
 let hd (#a:Type) (s:seq a{length s > 0}) : Tot a = List.hd (MkSeq?.l s)
 
 let tl (#a:Type) (s:seq a{length s > 0}) : Tot (seq a) = MkSeq (List.tl (MkSeq?.l s))
 
-let rec create #_ len v = if len = 0 then MkSeq [] else cons v (create (len - 1) v)
+let rec create #_ len v = if len = 0 then MkSeq [] else _cons v (create (len - 1) v)
 
 private let rec init_aux' (#a:Type) (len:nat) (k:nat{k < len}) (contents: (i:nat{i < len} -> Tot a))
     : Tot (seq a)
       (decreases (len - k))
   = if k + 1 = len
     then MkSeq [contents k]
-    else cons (contents k) (init_aux' len (k+1) contents)
+    else _cons (contents k) (init_aux' len (k+1) contents)
 
 let init_aux = init_aux'
 
@@ -51,7 +57,7 @@ private let rec init_aux_ghost' (#a:Type) (len:nat) (k:nat{k < len}) (contents:(
       (decreases (len - k))
   = if k + 1 = len
     then MkSeq [contents k]
-    else cons (contents k) (init_aux_ghost' len (k+1) contents)
+    else _cons (contents k) (init_aux_ghost' len (k+1) contents)
 
 let init_aux_ghost = init_aux_ghost'
 
@@ -64,7 +70,7 @@ let lemma_empty #_ _ = ()
 private let rec upd' (#a:Type) (s:seq a) (n:nat{n < length s}) (v:a)
     : Tot (seq a)
       (decreases (length s))
-  = if n = 0 then cons v (tl s) else cons (hd s) (upd' (tl s) (n - 1) v)
+  = if n = 0 then _cons v (tl s) else _cons (hd s) (upd' (tl s) (n - 1) v)
 
 let upd = upd'
 
@@ -75,9 +81,14 @@ private let rec slice' (#a:Type) (s:seq a) (i:nat) (j:nat{i <= j && j <= length 
       (decreases (length s))
   =  if i > 0 then slice' #a (tl s) (i - 1) (j - 1)
      else if j = 0 then MkSeq []
-          else cons (hd s) (slice' #a (tl s) i (j - 1))
+          else _cons (hd s) (slice' #a (tl s) i (j - 1))
 
 let slice = slice'
+
+let lemma_seq_of_seq_to_list #_ s = ()
+let lemma_seq_to_seq_of_list #_ s = ()
+let lemma_seq_of_list_cons #_ x l = ()
+let lemma_seq_to_list_cons #_ x s = ()
 
 let rec lemma_create_len #_ n i = if n = 0 then () else lemma_create_len (n - 1) i
 
