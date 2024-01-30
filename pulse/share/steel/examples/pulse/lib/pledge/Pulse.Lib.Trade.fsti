@@ -17,44 +17,53 @@
 module Pulse.Lib.Trade
 
 open Pulse.Lib.Core
+open Pulse.Lib.Pervasives
+open Pulse.Lib.InvList
 module T = FStar.Tactics
 
 val trade :
-  (#[T.exact (`emp_inames)] is:inames) ->
+  (#[T.exact (`[])] is : invlist) ->
   (hyp : vprop) ->
   (concl : vprop) ->
   vprop
 
 let ( ==>* ) :
-  (#[T.exact (`emp_inames)] is:inames) ->
+  (#[T.exact (`[])] is : invlist) ->
   (hyp : vprop) ->
   (concl : vprop) ->
   vprop
   = fun #is -> trade #is
 
 val intro_trade
-  (#[T.exact (`emp_inames)] is : inames)
+  (#[T.exact (`[])] is : invlist)
   (hyp concl: vprop)
-  (v: vprop)
+  (extra: vprop)
   (f_elim: unit -> (
-    stt_unobservable unit is
-    (v ** hyp)
-    (fun _ -> concl)
+    stt_ghost unit emp_inames
+    (invlist_v is ** extra ** hyp)
+    (fun _ -> invlist_v is ** concl)
   ))
 : stt_ghost unit emp_inames
-    v
+    extra
     (fun _ -> trade #is hyp concl)
 
-val elim_trade
-  (#[T.exact (`emp_inames)] is: inames)
+val elim_trade_ghost
+  (#[T.exact (`[])] is : invlist)
   (hyp concl: vprop)
-: stt_unobservable unit is
+: stt_ghost unit emp_inames
+    (invlist_v is ** (trade #is hyp concl) ** hyp)
+    (fun _ -> invlist_v is ** concl)
+
+val elim_trade
+  (#[T.exact (`[])] is : invlist)
+  (hyp concl: vprop)
+: stt_unobservable unit (invlist_names is)
     ((trade #is hyp concl) ** hyp)
     (fun _ -> concl)
 
 val trade_sub_inv
-  (#os1 : inames)
-  (#os2 : inames{inames_subset os1 os2})
+  (#os1 : invlist)
+  (#os2 : invlist{invlist_sub os1 os2})
   (hyp concl: vprop)
 : stt_ghost unit emp_inames
     (trade #os1 hyp concl)

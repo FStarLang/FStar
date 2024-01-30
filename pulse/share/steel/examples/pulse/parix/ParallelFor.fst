@@ -21,26 +21,27 @@ open Pulse.Lib.Fixpoints
 open TaskPool
 open FStar.Real
 open Pulse.Lib.Par.Pledge
+open Pulse.Lib.InvList
 
 ```pulse
-unobservable
+ghost
 fn aux_squash_pledge (f v : vprop) (_:unit)
-  requires f ** pledge emp_inames f (pledge emp_inames f v)
-  ensures f ** v
+  requires invlist_v [] ** (f ** pledge [] f (pledge [] f v))
+  ensures  invlist_v [] ** (f ** v)
 {
-  redeem_pledge emp_inames f (pledge emp_inames f v);
-  redeem_pledge emp_inames f v
+  redeem_pledge_ghost [] f (pledge [] f v);
+  redeem_pledge_ghost [] f v;
 }
 ```
 
 ```pulse
 ghost
 fn squash_pledge (f v : vprop)
-  requires pledge emp_inames f (pledge emp_inames f v)
-  ensures pledge emp_inames f v
+  requires pledge [] f (pledge [] f v)
+  ensures pledge [] f v
 {
-  make_pledge emp_inames f v
-   (pledge emp_inames f (pledge emp_inames f v))
+  make_pledge [] f v
+   (pledge [] f (pledge [] f v))
    (aux_squash_pledge f v)
 }
 ```
@@ -114,10 +115,10 @@ let p_combine_equiv p1 p2 i j = magic()
 let rewrite_ = Pulse.Lib.Core.rewrite
 
 ```pulse
-unobservable
+ghost
 fn p_join (p : (nat->vprop)) (i j k : nat) (_ : squash (i <= j /\ j <= k))
-  requires range p i j ** range p j k
-  ensures range p i k
+  requires invlist_v [] ** (range p i j ** range p j k)
+  ensures  invlist_v [] ** range p i k
 {
   rewrite_ _ _ (p_join_equiv p i j k ())
 }
@@ -246,7 +247,7 @@ val gspawn_
   (#e : perm)
   (p:pool) (f : unit -> stt unit pre (fun _ -> post))
   : stt unit (pool_alive #e p ** pre)
-             (fun prom -> pool_alive #e p ** pledge emp_inames (pool_done p) post)
+             (fun prom -> pool_alive #e p ** pledge [] (pool_done p) post)
 let gspawn_ p f = TaskPool.spawn_ p f
 
 ```pulse
@@ -258,7 +259,7 @@ fn spawned_f_i
   (f : (i:nat -> stt unit (pre i) (fun () -> post i)))
   (i:nat)
   requires emp ** (pre i ** pool_alive #e p)
-  ensures emp ** (pledge emp_inames (pool_done p) (post i) ** pool_alive #e p)
+  ensures emp ** (pledge [] (pool_done p) (post i) ** pool_alive #e p)
 {
   gspawn_ #(pre i) #(post i) #e p (fun () -> f i)
 }
@@ -271,19 +272,19 @@ fn __redeem_range
   (f : vprop)
   (kk : (
     (n:nat) ->
-    stt unit (f ** range (fun i -> pledge emp_inames f (p i)) 0 n)
+    stt unit (f ** range (fun i -> pledge [] f (p i)) 0 n)
              (fun _ -> f ** range p 0 n)
   ))
   (n : nat)
-  requires f ** range (fun i -> pledge emp_inames f (p i)) 0 n
+  requires f ** range (fun i -> pledge [] f (p i)) 0 n
   ensures f ** range p 0 n
 {
   if (n = 0) {
-    rewrite (range (fun i -> pledge emp_inames f (p i)) 0 n) as emp;
+    rewrite (range (fun i -> pledge [] f (p i)) 0 n) as emp;
     rewrite emp as range p 0 n;
     ()
   } else {
-    p_split_last (fun i -> pledge emp_inames f (p i)) n ();
+    p_split_last (fun i -> pledge [] f (p i)) n ();
     redeem_pledge _ f (p (n-1));
     kk (n-1);
     p_join_last p n ();
@@ -296,7 +297,7 @@ let redeem_range :
   (p : (nat -> vprop)) ->
   (f : vprop) ->
     (n:nat) ->
-    stt unit (f ** range (fun i -> pledge emp_inames f (p i)) 0 n)
+    stt unit (f ** range (fun i -> pledge [] f (p i)) 0 n)
              (fun _ -> f ** range p 0 n)
   =
   fun p f -> fix_stt_1 (__redeem_range p f)
@@ -322,12 +323,12 @@ parallel_for
 
   simple_for
     (fun i -> pre i ** pool_alive #(div_perm full_perm n) p)
-    (fun i -> pledge emp_inames (pool_done p) (post i) ** pool_alive #(div_perm full_perm n) p)
+    (fun i -> pledge [] (pool_done p) (post i) ** pool_alive #(div_perm full_perm n) p)
     emp // Alternative: pass pool_alive p here and forget about the n-way split. See below.
     (spawned_f_i p pre post (div_perm full_perm n) f)
     n;
     
-  p_uncombine (fun i -> pledge emp_inames (pool_done p) (post i)) (fun i -> pool_alive #(div_perm full_perm n) p) 0 n;
+  p_uncombine (fun i -> pledge [] (pool_done p) (post i)) (fun i -> pool_alive #(div_perm full_perm n) p) 0 n;
   unfrac_n n p full_perm;
   teardown_pool p;
   
@@ -348,7 +349,7 @@ fn spawned_f_i_alt
   (f : (i:nat -> stt unit (pre i) (fun () -> post i)))
   (i:nat)
   requires pool_alive p ** pre i
-  ensures pool_alive p ** pledge emp_inames (pool_done p) (post i)
+  ensures pool_alive p ** pledge [] (pool_done p) (post i)
 {
   gspawn_ #(pre i) #(post i) #full_perm p (fun () -> f i)
 }
@@ -370,7 +371,7 @@ parallel_for_alt
 
   simple_for
     pre
-    (fun i -> pledge emp_inames (pool_done p) (post i))
+    (fun i -> pledge [] (pool_done p) (post i))
     (pool_alive p)
     (spawned_f_i_alt p pre post f)
     n;
@@ -520,7 +521,7 @@ fn h_for_task__
   (lo hi : nat)
   (_:unit)
   requires pool_alive #e p ** range pre lo hi
-  ensures pledge emp_inames (pool_done p) (range post lo hi)
+  ensures pledge [] (pool_done p) (range post lo hi)
 {
   admit()
 }
@@ -536,7 +537,7 @@ fn h_for_task
   (lo hi : nat)
   (_:unit)
   requires pool_alive #e p ** range pre lo hi
-  ensures pledge emp_inames (pool_done p) (range post lo hi)
+  ensures pledge [] (pool_done p) (range post lo hi)
 {
   if (hi - lo < 100) {
     (* Too small, just run sequentially *)
@@ -544,7 +545,7 @@ fn h_for_task
     for_loop pre post emp
              (fun i -> frame_stt_left emp (f i)) lo hi;
 
-    return_pledge emp_inames (pool_done p) (range post lo hi)
+    return_pledge [] (pool_done p) (range post lo hi)
   } else {
     let mid = (hi+lo)/2;
     assert (pure (lo <= mid /\ mid <= hi));
@@ -555,31 +556,35 @@ fn h_for_task
     p_split pre lo mid hi ();
 
     gspawn_ #(pool_alive #(half_perm (half_perm e)) p ** range pre lo mid)
-            #(pledge emp_inames (pool_done p) (range post lo mid))
+            #(pledge [] (pool_done p) (range post lo mid))
             #(half_perm e)
             p
             (h_for_task__ p (half_perm (half_perm e)) pre post f lo mid);
 
     gspawn_ #(pool_alive #(half_perm (half_perm e)) p ** range pre mid hi)
-            #(pledge emp_inames (pool_done p) (range post mid hi))
+            #(pledge [] (pool_done p) (range post mid hi))
             #(half_perm e)
             p
             (h_for_task__ p (half_perm (half_perm e)) pre post f mid hi);
 
-    (* We get this complicated pledge emp_inames from the spawns above. We can
+    (* We get this complicated pledge [] from the spawns above. We can
     massage it before even waiting. *)
-    assert (pledge emp_inames (pool_done p) (pledge emp_inames (pool_done p) (range post lo mid)));
-    assert (pledge emp_inames (pool_done p) (pledge emp_inames (pool_done p) (range post mid hi)));
+    assert (pledge [] (pool_done p) (pledge [] (pool_done p) (range post lo mid)));
+    assert (pledge [] (pool_done p) (pledge [] (pool_done p) (range post mid hi)));
 
     squash_pledge (pool_done p) (range post lo mid);
     squash_pledge (pool_done p) (range post mid hi);
 
-    join_pledge #emp_inames #(pool_done p) (range post lo mid) (range post mid hi);
-    rewrite_pledge #emp_inames #(pool_done p) (range post lo mid ** range post mid hi) (range post lo hi)
-        (fun () -> p_join post lo mid hi ());
+    join_pledge #[] #(pool_done p) (range post lo mid) (range post mid hi);
+    rewrite_pledge
+      #[]
+      #(pool_done p)
+      (range post lo mid ** range post mid hi)
+      (range post lo hi)
+      (p_join post lo mid hi);
 
     (* Better *)
-    assert (pledge emp_inames (pool_done p) (range post lo hi));
+    assert (pledge [] (pool_done p) (range post lo hi));
 
     drop_ (pool_alive #(half_perm e) p);
 
@@ -589,7 +594,7 @@ fn h_for_task
 ```
 
 (* Assuming a wait that only needs epsilon permission. We would actually
-need one that takes epsilon permission + a pledge emp_inames for (1-e), or something
+need one that takes epsilon permission + a pledge [] for (1-e), or something
 similar. Otherwise we cannot rule out some other thread holding permission
 to the task pool, and we would not be allowed to free it. *)
 assume
@@ -621,22 +626,22 @@ parallel_for_hier
 
 
     gspawn_ #(pool_alive #one_half p ** range pre 0 n)
-            #(pledge emp_inames (pool_done p) (range post 0 n))
+            #(pledge [] (pool_done p) (range post 0 n))
             #one_half
             p
             (h_for_task p one_half pre post f 0 n);
 
-    (* We get this complicated pledge emp_inames from the spawn above. We can
+    (* We get this complicated pledge [] from the spawn above. We can
     massage it before even waiting. *)
-    assert (pledge emp_inames (pool_done p) (pledge emp_inames (pool_done p) (range post 0 n)));
+    assert (pledge [] (pool_done p) (pledge [] (pool_done p) (range post 0 n)));
 
     squash_pledge (pool_done p) (range post 0 n);
 
-    assert (pledge emp_inames (pool_done p) (range post 0 n));
+    assert (pledge [] (pool_done p) (range post 0 n));
 
     wait_pool p one_half;
 
-    redeem_pledge emp_inames (pool_done p) (range post 0 n);
+    redeem_pledge [] (pool_done p) (range post 0 n);
 
     drop_ (pool_done p);
   } else {
@@ -648,7 +653,7 @@ parallel_for_hier
 
     assert (pool_done p);
 
-    redeem_pledge emp_inames (pool_done p) (range post 0 n);
+    redeem_pledge [] (pool_done p) (range post 0 n);
 
     drop_ (pool_done p);
   }
