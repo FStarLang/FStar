@@ -49,3 +49,6 @@ val with_invlist_ghost (#pre : vprop) (#post : vprop)
 
 let invlist_sub (is1 is2 : invlist) : prop =
   inames_subset (invlist_names is1) (invlist_names is2)
+
+(* FIXME: invlist should be made erasable *)
+val invlist_reveal (is : erased invlist) : (is':invlist{reveal is == is'})

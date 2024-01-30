@@ -78,3 +78,5 @@ fn __with_invlist_ghost (#pre : vprop) (#post : vprop)
 }
 ```
 let with_invlist_ghost = __with_invlist_ghost
+
+let invlist_reveal = admit()

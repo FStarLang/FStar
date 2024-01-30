@@ -21,9 +21,6 @@ open Pulse.Lib.InvList
 
 val pledge (is:invlist) (f:vprop) (v:vprop) : vprop
 
-let pledge_any (f:vprop) (v:vprop) : vprop =
-  exists* is. pledge is f v
-
 (* A ghost step to rewrite the context, running under invlist is. *)
 let ustep (is:invlist) (p q : vprop)
   = unit -> stt_ghost unit emp_inames (invlist_v is ** p) (fun _ -> invlist_v is ** q)

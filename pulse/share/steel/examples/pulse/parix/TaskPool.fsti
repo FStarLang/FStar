@@ -50,7 +50,7 @@ val spawn
   ($f : unit -> stt a pre (fun (x:a) -> post x))
   : stt (task_handle p a post)
         (pool_alive #e p ** pre)
-        (fun th -> pool_alive #e p ** joinable th ** pledge emp_inames (joined th) (handle_solved th))
+        (fun th -> pool_alive #e p ** joinable th ** pledge [] (joined th) (handle_solved th))
 
 (* Spawn of a unit-returning task with no intention to join, simpler. *)
 val spawn_
@@ -58,7 +58,7 @@ val spawn_
   (#pre #post : _)
   (p:pool) (f : unit -> stt unit pre (fun _ -> post))
   : stt unit (pool_alive #e p ** pre)
-             (fun prom -> pool_alive #e p ** pledge emp_inames (pool_done p) post)
+             (fun prom -> pool_alive #e p ** pledge [] (pool_done p) post)
 
 (* If the pool is done, all pending joinable threads must be done *)
 val must_be_done
