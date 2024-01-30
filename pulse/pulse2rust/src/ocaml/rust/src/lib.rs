@@ -211,6 +211,7 @@ enum Pat {
     PLit(Lit),
     PStruct(PatStruct),
     PTuple(Vec<Pat>),
+    PTyp(Box<PatTyp>),
 }
 
 struct LocalStmt {
@@ -561,6 +562,7 @@ impl_from_ocaml_variant! {
     Pat::PLit (payload:Lit),
     Pat::PStruct (payload:PatStruct),
     Pat::PTuple (payload:OCamlList<Pat>),
+    Pat::PTyp (payload:PatTyp),
   }
 }
 
@@ -1179,6 +1181,14 @@ fn to_syn_pat(p: &Pat) -> syn::Pat {
                 elems: spats,
             })
         }
+        Pat::PTyp(p) => syn::Pat::Type(syn::PatType {
+            attrs: vec![],
+            pat: Box::new(to_syn_pat(&p.pat_typ_pat)),
+            colon_token: Colon {
+                spans: [Span::call_site()],
+            },
+            ty: Box::new(to_syn_typ(&p.pat_typ_typ)),
+        }),
     }
 }
 
@@ -1857,6 +1867,7 @@ impl fmt::Display for Pat {
                     .collect::<Vec<_>>()
                     .join(",")
             ),
+            Pat::PTyp(p) => write!(f, "{}:{}", p.pat_typ_pat, p.pat_typ_typ),
         }
     }
 }
@@ -2619,4 +2630,53 @@ pub fn insert_dpe<KT: PartialEq + Copy, VT>(
 }
 pub fn safe_add(i: u32, j: u32) -> std::option::Option<u32> {
     panic!()
+}
+pub fn open_session_aux(st: global_state_t) -> (global_state_t, std::option::Option<sid_t>) {
+    let ctr = st.session_id_counter;
+    let tbl = st.session_table;
+    let opt_inc = safe_add(ctr, 1);
+    match opt_inc {
+        None => {
+            let st1 = global_state_t {
+                session_id_counter: ctr,
+                session_table: tbl,
+            };
+            let res = (st1, None);
+            res
+        }
+        Some(next_sid) => {
+            let res = insert_dpe(tbl, next_sid, session_state::SessionStart, ());
+            if res.1 {
+                let st1 = global_state_t {
+                    session_id_counter: next_sid,
+                    session_table: res.0,
+                };
+                panic!()
+            } else {
+                let st1 = global_state_t {
+                    session_id_counter: ctr,
+                    session_table: res.0,
+                };
+                let res1 = (st1, None);
+                res1
+            }
+        }
+    }
+}
+pub fn open_session(uu___: ()) -> std::option::Option<sid_t> {
+    let r: &mut std::option::Option<global_state_t> = &mut global_state.lock().unwrap();
+    let st_opt = std::mem::replace(r, None);
+    match st_opt {
+        None => {
+            let st = mk_global_state(());
+            let res = open_session_aux(st);
+            *r = Some(res.0);
+            res.1
+        }
+        Some(st) => {
+            let res = open_session_aux(st);
+            *r = Some(res.0);
+            res.1
+        }
+    }
 }

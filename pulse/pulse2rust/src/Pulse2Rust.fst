@@ -507,7 +507,8 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     let e_v = extract_mlexpr g e_v in
     let e_i = extract_mlexpr g e_i in
     let e_x = extract_mlexpr g e_x in
-    mk_mem_replace (mk_expr_index e_v e_i) e_x
+    let is_mut = true in
+    mk_mem_replace (mk_reference_expr is_mut (mk_expr_index e_v e_i)) e_x
 
   | S.MLE_App ({ expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, e_r::e_x::_)
     when S.string_of_mlpath p = "Pulse.Lib.Reference.replace" ->
@@ -649,10 +650,17 @@ and extract_mlexpr_to_stmts (g:env) (e:S.mlexpr) : list stmt =
         extract_mlexpr_to_stmts g e
       | _ ->
         let is_mut, ty, init = lb_init_and_def g lb in
+        let topt =
+          match lb.mllb_def.expr with
+          | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, _::e::_)
+            when S.string_of_mlpath p = "Pulse.Lib.Mutex.lock" ->
+            Some ty
+          | _ -> None in 
         let s = mk_local_stmt
           (match lb.mllb_tysc with
            | Some (_, S.MLTY_Erased) -> None
            | _ -> Some (varname lb.mllb_name))
+          topt
           is_mut
           init in
         s::(extract_mlexpr_to_stmts (push_local g lb.mllb_name ty is_mut) e)

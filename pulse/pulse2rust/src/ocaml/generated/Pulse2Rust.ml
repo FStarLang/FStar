@@ -924,7 +924,10 @@ and (extract_mlexpr :
           let e_v1 = extract_mlexpr g e_v in
           let e_i1 = extract_mlexpr g e_i in
           let e_x1 = extract_mlexpr g e_x in
-          let uu___6 = Pulse2Rust_Rust_Syntax.mk_expr_index e_v1 e_i1 in
+          let is_mut = true in
+          let uu___6 =
+            let uu___7 = Pulse2Rust_Rust_Syntax.mk_expr_index e_v1 e_i1 in
+            Pulse2Rust_Rust_Syntax.mk_reference_expr is_mut uu___7 in
           Pulse2Rust_Rust_Syntax.mk_mem_replace uu___6 e_x1
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -1360,6 +1363,28 @@ and (extract_mlexpr_to_stmts :
                let uu___1 = lb_init_and_def g lb in
                (match uu___1 with
                 | (is_mut, ty, init) ->
+                    let topt =
+                      match (lb.FStar_Extraction_ML_Syntax.mllb_def).FStar_Extraction_ML_Syntax.expr
+                      with
+                      | FStar_Extraction_ML_Syntax.MLE_App
+                          ({
+                             FStar_Extraction_ML_Syntax.expr =
+                               FStar_Extraction_ML_Syntax.MLE_TApp
+                               ({
+                                  FStar_Extraction_ML_Syntax.expr =
+                                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                                  FStar_Extraction_ML_Syntax.mlty = uu___2;
+                                  FStar_Extraction_ML_Syntax.loc = uu___3;_},
+                                uu___4::[]);
+                             FStar_Extraction_ML_Syntax.mlty = uu___5;
+                             FStar_Extraction_ML_Syntax.loc = uu___6;_},
+                           uu___7::e2::uu___8)
+                          when
+                          let uu___9 =
+                            FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                          uu___9 = "Pulse.Lib.Mutex.lock" ->
+                          FStar_Pervasives_Native.Some ty
+                      | uu___2 -> FStar_Pervasives_Native.None in
                     let s =
                       let uu___2 =
                         match lb.FStar_Extraction_ML_Syntax.mllb_tysc with
@@ -1370,7 +1395,8 @@ and (extract_mlexpr_to_stmts :
                             let uu___4 =
                               varname lb.FStar_Extraction_ML_Syntax.mllb_name in
                             FStar_Pervasives_Native.Some uu___4 in
-                      Pulse2Rust_Rust_Syntax.mk_local_stmt uu___2 is_mut init in
+                      Pulse2Rust_Rust_Syntax.mk_local_stmt uu___2 topt is_mut
+                        init in
                     let uu___2 =
                       let uu___3 =
                         push_local g lb.FStar_Extraction_ML_Syntax.mllb_name
