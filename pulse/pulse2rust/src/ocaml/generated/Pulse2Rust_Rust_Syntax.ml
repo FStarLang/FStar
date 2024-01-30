@@ -196,6 +196,7 @@ type expr =
   | Expr_field of expr_field 
   | Expr_struct of expr_struct 
   | Expr_tuple of expr Prims.list 
+  | Expr_method_call of expr_method_call 
 and expr_bin =
   {
   expr_bin_left: expr ;
@@ -246,6 +247,11 @@ and expr_struct =
 and field_val = {
   field_val_name: Prims.string ;
   field_val_expr: expr }
+and expr_method_call =
+  {
+  expr_method_call_receiver: expr ;
+  expr_method_call_name: Prims.string ;
+  expr_method_call_args: expr Prims.list }
 and local_stmt =
   {
   local_stmt_pat: pat FStar_Pervasives_Native.option ;
@@ -332,6 +338,11 @@ let (uu___is_Expr_tuple : expr -> Prims.bool) =
     match projectee with | Expr_tuple _0 -> true | uu___ -> false
 let (__proj__Expr_tuple__item___0 : expr -> expr Prims.list) =
   fun projectee -> match projectee with | Expr_tuple _0 -> _0
+let (uu___is_Expr_method_call : expr -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Expr_method_call _0 -> true | uu___ -> false
+let (__proj__Expr_method_call__item___0 : expr -> expr_method_call) =
+  fun projectee -> match projectee with | Expr_method_call _0 -> _0
 let (__proj__Mkexpr_bin__item__expr_bin_left : expr_bin -> expr) =
   fun projectee ->
     match projectee with
@@ -467,6 +478,24 @@ let (__proj__Mkfield_val__item__field_val_expr : field_val -> expr) =
   fun projectee ->
     match projectee with
     | { field_val_name; field_val_expr;_} -> field_val_expr
+let (__proj__Mkexpr_method_call__item__expr_method_call_receiver :
+  expr_method_call -> expr) =
+  fun projectee ->
+    match projectee with
+    | { expr_method_call_receiver; expr_method_call_name;
+        expr_method_call_args;_} -> expr_method_call_receiver
+let (__proj__Mkexpr_method_call__item__expr_method_call_name :
+  expr_method_call -> Prims.string) =
+  fun projectee ->
+    match projectee with
+    | { expr_method_call_receiver; expr_method_call_name;
+        expr_method_call_args;_} -> expr_method_call_name
+let (__proj__Mkexpr_method_call__item__expr_method_call_args :
+  expr_method_call -> expr Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { expr_method_call_receiver; expr_method_call_name;
+        expr_method_call_args;_} -> expr_method_call_args
 let (__proj__Mklocal_stmt__item__local_stmt_pat :
   local_stmt -> pat FStar_Pervasives_Native.option) =
   fun projectee ->
@@ -936,8 +965,23 @@ let (mk_mem_replace : expr -> expr -> expr) =
       let is_mut = true in
       let uu___ = let uu___1 = mk_reference_expr is_mut e in [uu___1; new_v] in
       mk_call (Expr_path ["std"; "mem"; "replace"]) uu___
+let (mk_method_call : expr -> Prims.string -> expr Prims.list -> expr) =
+  fun receiver ->
+    fun name ->
+      fun args ->
+        Expr_method_call
+          {
+            expr_method_call_receiver = receiver;
+            expr_method_call_name = name;
+            expr_method_call_args = args
+          }
 let (mk_new_mutex : expr -> expr) =
   fun e -> mk_call (Expr_path ["std"; "sync"; "Mutex"; "new"]) [e]
+let (mk_lock_mutex : expr -> expr) =
+  fun e ->
+    let e_lock = mk_method_call e "lock" [] in
+    let e_lock_unwrap = mk_method_call e_lock "unwrap" [] in
+    let is_mut = true in mk_reference_expr is_mut e_lock_unwrap
 let (mk_scalar_fn_arg : Prims.string -> typ -> fn_arg) =
   fun name ->
     fun t ->

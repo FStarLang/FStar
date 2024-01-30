@@ -99,6 +99,7 @@ type expr =
   | Expr_field of expr_field
   | Expr_struct of expr_struct
   | Expr_tuple of list expr
+  | Expr_method_call of expr_method_call
 
 and expr_bin = {
   expr_bin_left : expr;
@@ -171,6 +172,12 @@ and expr_struct = {
 and field_val = {
   field_val_name : string;
   field_val_expr : expr;
+}
+
+and expr_method_call = {
+  expr_method_call_receiver : expr;
+  expr_method_call_name : string;
+  expr_method_call_args : list expr;
 }
 
 and local_stmt = {
@@ -321,7 +328,10 @@ val mk_expr_field_unnamed (base:expr) (i:int) : expr
 val mk_expr_struct (path:list string) (fields:list (string & expr)) : expr
 val mk_expr_tuple (l:list expr) : expr
 val mk_mem_replace (e:expr) (new_v:expr) : expr
+val mk_method_call (receiver:expr) (name:string) (args:list expr) : expr
+
 val mk_new_mutex (e:expr) : expr
+val mk_lock_mutex (e:expr) : expr
 
 val mk_local_stmt (name:option string) (is_mut:bool) (init:expr) : stmt
 val mk_scalar_fn_arg (name:string) (t:typ) : fn_arg

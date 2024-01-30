@@ -126,6 +126,12 @@ struct ExprStruct {
     expr_struct_fields: Vec<FieldVal>,
 }
 
+struct ExprMethodCall {
+    expr_method_call_receiver: Box<Expr>,
+    expr_method_call_name: String,
+    expr_method_call_args: Vec<Expr>,
+}
+
 enum Expr {
     EBinOp(ExprBin),
     EPath(Vec<String>),
@@ -143,6 +149,7 @@ enum Expr {
     EField(ExprField),
     EStruct(ExprStruct),
     ETuple(Vec<Expr>),
+    EMethodCall(ExprMethodCall),
 }
 
 struct TypeReference {
@@ -363,6 +370,7 @@ impl_from_ocaml_variant! {
     Expr::EField (payload:ExprField),
     Expr::EStruct (payload:ExprStruct),
     Expr::ETuple (payload:OCamlList<Expr>),
+    Expr::EMethodCall (payload:ExprMethodCall),
   }
 }
 
@@ -464,6 +472,14 @@ impl_from_ocaml_record! {
   ExprStruct {
     expr_struct_path: OCamlList<String>,
     expr_struct_fields: OCamlList<FieldVal>,
+  }
+}
+
+impl_from_ocaml_record! {
+  ExprMethodCall {
+    expr_method_call_receiver: Expr,
+    expr_method_call_name: String,
+    expr_method_call_args: OCamlList<Expr>,
   }
 }
 
@@ -1054,6 +1070,27 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
                 exprs
             },
         }),
+        Expr::EMethodCall(ExprMethodCall {
+            expr_method_call_receiver,
+            expr_method_call_name,
+            expr_method_call_args,
+        }) => {
+            let mut args: Punctuated<syn::Expr, Comma> = Punctuated::new();
+            expr_method_call_args
+                .iter()
+                .for_each(|a| args.push(to_syn_expr(a)));
+            syn::Expr::MethodCall(syn::ExprMethodCall {
+                attrs: vec![],
+                receiver: Box::new(to_syn_expr(expr_method_call_receiver)),
+                dot_token: syn::token::Dot {
+                    spans: [Span::call_site()],
+                },
+                method: Ident::new(&expr_method_call_name, Span::call_site()),
+                turbofish: None,
+                paren_token: Paren::default(),
+                args,
+            })
+        }
     }
 }
 
@@ -1685,9 +1722,10 @@ fn to_syn_item(i: &Item) -> Vec<syn::Item> {
                 static_token: syn::token::Static {
                     span: Span::call_site(),
                 },
-                mutability: syn::StaticMutability::Mut(syn::token::Mut {
-                    span: Span::call_site(),
-                }),
+                mutability: syn::StaticMutability::None,
+                // mutability: syn::StaticMutability::Mut(syn::token::Mut {
+                //     span: Span::call_site(),
+                // }),
                 ident: Ident::new(&item_static_name, Span::call_site()),
                 colon_token: Colon {
                     spans: [Span::call_site()],
@@ -1937,6 +1975,21 @@ impl fmt::Display for Expr {
                 f,
                 "({})",
                 es.iter()
+                    .map(|e| e.to_string())
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            Expr::EMethodCall(ExprMethodCall {
+                expr_method_call_receiver,
+                expr_method_call_name,
+                expr_method_call_args,
+            }) => write!(
+                f,
+                "{}.{}({})",
+                expr_method_call_receiver,
+                expr_method_call_name,
+                expr_method_call_args
+                    .iter()
                     .map(|e| e.to_string())
                     .collect::<Vec<_>>()
                     .join(",")
@@ -2240,3 +2293,330 @@ pub enum context_t {
 // pub fn test(mut m: std::sync::Mutex<u32>) {
 //     let r: &mut u32 = &mut m.lock().unwrap();
 // }
+
+pub enum cell<KT, VT> {
+    Clean,
+    Zombie,
+    Used(KT, VT),
+}
+use crate::cell::*;
+pub type pos_us = usize;
+pub struct ht_t<KEYT, VALT> {
+    sz: pos_us,
+    hashf: fn(KEYT) -> usize,
+    contents: std::vec::Vec<cell<KEYT, VALT>>,
+}
+pub fn mk_used_cell<A, B>(k: A, v: B) -> cell<A, B> {
+    cell::Used(k, v)
+}
+pub fn mk_ht<K, V>(
+    sz: pos_us,
+    hashf: fn(K) -> usize,
+    contents: std::vec::Vec<cell<K, V>>,
+) -> ht_t<K, V> {
+    ht_t {
+        sz: sz,
+        hashf: hashf,
+        contents: contents,
+    }
+}
+pub fn alloc<K, V>(hashf: fn(K) -> usize, l: pos_us) -> ht_t<K, V> {
+    let mut contents = Vec::new();
+    let ht = mk_ht(l, hashf, contents);
+    ht
+}
+pub fn sz_add(x: usize, y: usize) -> std::option::Option<usize> {
+    match x <= 0xffff {
+        true => match y <= 0xffff - x {
+            true => Some(x + y),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+pub fn size_t_mod(x: usize, y: usize) -> usize {
+    x % y
+}
+pub fn lookup<KT: PartialEq + Copy, VT>(
+    pht: (),
+    ht: ht_t<KT, VT>,
+    k: KT,
+) -> (ht_t<KT, VT>, bool, std::option::Option<usize>) {
+    let hashf = ht.hashf;
+    let mut contents = ht.contents;
+    let cidx = size_t_mod(hashf(k), ht.sz);
+    let mut off = 0;
+    let mut cont = true;
+    let mut err = false;
+    let mut ret = None;
+    while {
+        let voff = off;
+        let vcont = cont;
+        let verr = err;
+        voff <= ht.sz && vcont == true && verr == false
+    } {
+        let voff = off;
+        if voff == ht.sz {
+            cont = false;
+        } else {
+            let opt_sum = sz_add(cidx, voff);
+            match opt_sum {
+                Some(sum) => {
+                    let idx = size_t_mod(sum, ht.sz);
+                    let c = std::mem::replace(&mut contents[idx], cell::Zombie);
+                    match c {
+                        Used(k_, v_) => {
+                            if k_ == k {
+                                cont = false;
+                                ret = Some(idx);
+                                let uu___2 =
+                                    std::mem::replace(&mut contents[idx], cell::Used(k_, v_));
+                            } else {
+                                off = voff + 1;
+                                let uu___1 =
+                                    std::mem::replace(&mut contents[idx], cell::Used(k_, v_));
+                            }
+                        }
+                        Clean => {
+                            cont = false;
+                            let uu___1 = std::mem::replace(&mut contents[idx], c);
+                        }
+                        Zombie => {
+                            off = voff + 1;
+                            let uu___1 = std::mem::replace(&mut contents[idx], c);
+                        }
+                    }
+                }
+                None => err = true,
+            }
+        };
+    }
+    let verr = err;
+    let o = ret;
+    let vcontents = contents;
+    let ht1 = mk_ht(ht.sz, ht.hashf, vcontents);
+    let _bind_c = if verr {
+        let res = (ht1, false, o);
+        panic!()
+    } else {
+        let res = (ht1, true, o);
+        panic!()
+    };
+    let ret1 = _bind_c;
+    let err1 = ret1;
+    let cont1 = err1;
+    let off1 = cont1;
+    let contents1 = off1;
+    contents1
+}
+pub fn insert<KT: PartialEq + Copy, VT>(
+    ht: ht_t<KT, VT>,
+    k: KT,
+    v: VT,
+    pht: (),
+) -> (ht_t<KT, VT>, bool) {
+    let hashf = ht.hashf;
+    let mut contents = ht.contents;
+    let cidx = size_t_mod(hashf(k), ht.sz);
+    let mut off = 0;
+    let mut cont = true;
+    let mut err = false;
+    let mut idx = 0;
+    while {
+        let vcont = cont;
+        let verr = err;
+        vcont == true && verr == false
+    } {
+        let voff = off;
+        if voff == ht.sz {
+            cont = false;
+        } else {
+            let opt_sum = sz_add(cidx, voff);
+            match opt_sum {
+                Some(sum) => {
+                    let vidx = size_t_mod(sum, ht.sz);
+                    let c = std::mem::replace(&mut contents[vidx], cell::Zombie);
+                    match c {
+                        Used(k_, v_) => {
+                            if k_ == k {
+                                contents[vidx] = cell::Used(k_, v_);
+                                cont = false;
+                                idx = vidx;
+                            } else {
+                                contents[vidx] = cell::Used(k_, v_);
+                                off = voff + 1
+                            }
+                        }
+                        Clean => {
+                            contents[vidx] = cell::Clean;
+                            cont = false;
+                            idx = vidx;
+                        }
+                        Zombie => {
+                            let vcontents = contents;
+                            let ht1 = ht_t {
+                                sz: ht.sz,
+                                hashf: hashf,
+                                contents: vcontents,
+                            };
+                            let res = lookup((), ht1, k);
+                            contents = res.0.contents;
+                            if res.1 {
+                                let o = res.2;
+                                match o {
+                                    Some(p) => {
+                                        contents[p] = cell::Zombie;
+                                        cont = false;
+                                        idx = vidx;
+                                    }
+                                    None => {
+                                        cont = false;
+                                        idx = vidx;
+                                    }
+                                }
+                            } else {
+                                err = true
+                            }
+                        }
+                    }
+                }
+                None => err = true,
+            }
+        };
+    }
+    let vcont = cont;
+    let verr = err;
+    let vidx = idx;
+    let _bind_c = if vcont == false && verr == false {
+        contents[vidx] = mk_used_cell(k, v);
+        let vcontents = contents;
+        let ht1 = mk_ht(ht.sz, hashf, vcontents);
+        let res = (ht1, true);
+        panic!()
+    } else {
+        let vcontents = contents;
+        let ht1 = mk_ht(ht.sz, hashf, vcontents);
+        let res = (ht1, false);
+        panic!()
+    };
+    let idx1 = _bind_c;
+    let err1 = idx1;
+    let cont1 = err1;
+    let off1 = cont1;
+    let contents1 = off1;
+    contents1
+}
+pub fn is_used<K: PartialEq + Copy, V>(c: cell<K, V>) -> (bool, cell<K, V>) {
+    match c {
+        Used(_, _) => (true, c),
+        _ => (false, c),
+    }
+}
+pub fn not_full<KT: PartialEq + Copy, VT>(ht: ht_t<KT, VT>, pht: ()) -> (ht_t<KT, VT>, bool) {
+    let hashf = ht.hashf;
+    let mut contents = ht.contents;
+    let mut i = 0;
+    while {
+        let vi = i;
+        if vi < ht.sz {
+            let c = std::mem::replace(&mut contents[vi], cell::Zombie);
+            let b = is_used(c);
+            let uu___ = std::mem::replace(&mut contents[vi], b.1);
+            b.0
+        } else {
+            false
+        }
+    } {
+        let vi = i;
+        i = vi + 1;
+    }
+    let vi = i;
+    let res = vi < ht.sz;
+    let vcontents = contents;
+    let ht1 = mk_ht(ht.sz, hashf, vcontents);
+    let b = (ht1, res);
+    let _bind_c = panic!();
+    let i1 = _bind_c;
+    let contents1 = i1;
+    contents1
+}
+pub type ctxt_hndl_t = u32;
+pub type sid_t = u32;
+pub struct session_state__Available__payload {
+    handle: ctxt_hndl_t,
+    context: context_t,
+}
+pub enum session_state {
+    SessionStart,
+    Available(session_state__Available__payload),
+    InUse,
+    SessionClosed,
+    SessionError,
+}
+use crate::session_state::*;
+pub fn mk_available(hndl: ctxt_hndl_t, ctxt: context_t) -> session_state {
+    session_state::Available(session_state__Available__payload {
+        handle: hndl,
+        context: ctxt,
+    })
+}
+pub fn mk_available_payload(
+    handle: ctxt_hndl_t,
+    context: context_t,
+) -> session_state__Available__payload {
+    session_state__Available__payload {
+        handle: handle,
+        context: context,
+    }
+}
+pub fn intro_session_state_perm_available(
+    ctxt: context_t,
+    hndl: ctxt_hndl_t,
+    __repr: (),
+) -> session_state {
+    session_state::Available(mk_available_payload(hndl, ctxt))
+}
+pub struct global_state_t {
+    session_id_counter: sid_t,
+    session_table: ht_t<sid_t, session_state>,
+}
+pub fn sid_hash(uu___: sid_t) -> usize {
+    panic!()
+}
+pub const fn initialize_global_state(
+    uu___: (),
+) -> std::sync::Mutex<std::option::Option<global_state_t>> {
+    let res = None;
+    std::sync::Mutex::new(res)
+}
+pub static global_state: std::sync::Mutex<std::option::Option<global_state_t>> =
+    initialize_global_state(());
+pub fn mk_global_state(uu___: ()) -> global_state_t {
+    let session_table = alloc(sid_hash, 256);
+    let st = global_state_t {
+        session_id_counter: 0,
+        session_table: session_table,
+    };
+    st
+}
+pub fn alloc_global_state(r: &mut std::option::Option<global_state_t>) -> () {
+    let st = mk_global_state(());
+    *r = Some(st)
+}
+pub fn insert_dpe<KT: PartialEq + Copy, VT>(
+    ht: ht_t<KT, VT>,
+    k: KT,
+    v: VT,
+    pht: (),
+) -> (ht_t<KT, VT>, bool) {
+    let b = not_full(ht, ());
+    if b.1 {
+        insert(b.0, k, v, ())
+    } else {
+        let res = (b.0, false);
+        res
+    }
+}
+pub fn safe_add(i: u32, j: u32) -> std::option::Option<u32> {
+    panic!()
+}

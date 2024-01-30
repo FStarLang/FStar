@@ -415,7 +415,7 @@ fn open_session_aux (st:global_state_t)
       fold (global_state_mutex_pred (Some st));
       let res = (st, None #sid_t);
       rewrite (global_state_mutex_pred (Some st)) as (global_state_mutex_pred (Some (fst res)));
-      (st, None #sid_t)
+      res
     }
     Some next_sid -> {
       let res = insert_dpe tbl next_sid SessionStart;
@@ -435,7 +435,7 @@ fn open_session_aux (st:global_state_t)
         fold (global_state_mutex_pred (Some st));
         let res = (st, None #sid_t);
         rewrite (global_state_mutex_pred (Some st)) as (global_state_mutex_pred (Some (fst res)));
-        (st, None #sid_t)
+        res
       }
     }
   }

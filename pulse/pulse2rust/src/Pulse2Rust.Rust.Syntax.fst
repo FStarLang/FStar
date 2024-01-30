@@ -160,10 +160,23 @@ let mk_mem_replace (e:expr) (new_v:expr) : expr =
     (Expr_path ["std"; "mem"; "replace"])
     [mk_reference_expr is_mut e; new_v]
 
+let mk_method_call (receiver:expr) (name:string) (args:list expr) : expr =
+  Expr_method_call {
+    expr_method_call_receiver = receiver;
+    expr_method_call_name = name;
+    expr_method_call_args = args;
+  }
+
 let mk_new_mutex (e:expr) =
   mk_call
     (Expr_path ["std"; "sync"; "Mutex"; "new"])
     [e]
+
+let mk_lock_mutex (e:expr) : expr =
+  let e_lock = mk_method_call e "lock" [] in
+  let e_lock_unwrap = mk_method_call e_lock "unwrap" [] in
+  let is_mut = true in
+  mk_reference_expr is_mut e_lock_unwrap
 
 let mk_scalar_fn_arg (name:string) (t:typ) =
   Fn_arg_pat {

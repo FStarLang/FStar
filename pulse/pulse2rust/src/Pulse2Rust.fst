@@ -509,6 +509,11 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     let e_x = extract_mlexpr g e_x in
     mk_mem_replace (mk_expr_index e_v e_i) e_x
 
+  | S.MLE_App ({ expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, e_r::e_x::_)
+    when S.string_of_mlpath p = "Pulse.Lib.Reference.replace" ->
+   
+    mk_mem_replace (extract_mlexpr g e_r) (extract_mlexpr g e_x)
+
     //
     // vec_as_array e extracted to &mut e
     //
@@ -542,6 +547,10 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     when S.string_of_mlpath p = "Pulse.Lib.Mutex.new_mutex" ->
     let e = extract_mlexpr g e in
     mk_new_mutex e
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, _::e::_)
+    when S.string_of_mlpath p = "Pulse.Lib.Mutex.lock" ->
+    let e = extract_mlexpr g e in
+    mk_lock_mutex e
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2])
     when S.string_of_mlpath p = "Pulse.Lib.Array.Core.free" ->
@@ -635,7 +644,8 @@ and extract_mlexpr_to_stmts (g:env) (e:S.mlexpr) : list stmt =
     begin
       match lb.mllb_def.expr with
       | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, _)
-        when starts_with (snd p) "unexplode_ref" ->
+        when starts_with (snd p) "unexplode_ref" ||
+             S.mlpath_to_string p = "Pulse.Lib.Mutex.unlock" ->
         extract_mlexpr_to_stmts g e
       | _ ->
         let is_mut, ty, init = lb_init_and_def g lb in
