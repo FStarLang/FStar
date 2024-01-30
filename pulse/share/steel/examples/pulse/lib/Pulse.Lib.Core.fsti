@@ -615,3 +615,10 @@ val return_stt_ghost_noeq (#a:Type u#a) (x:a) (p:a -> vprop)
 
 val return_stt_unobservable_noeq (#a:Type u#a) (x:a) (p:a -> vprop)
   : stt_unobservable a emp_inames (p x) p
+
+// Finally, a big escape hatch for introducing architecture/backend-specific
+// atomic operations from proven stt specifications
+[@@warn_on_use "as_atomic is a an assumption"]
+val as_atomic (#a:Type u#0) (pre:vprop) (post:a -> vprop)
+              (pf:stt a pre post)
+  : stt_atomic a emp_inames pre post

@@ -320,3 +320,5 @@ let return_stt (#a:Type u#a) (x:a) (p:a -> vprop)
 let return_stt_ghost_noeq (#a:Type u#a) (x:a) (p:a -> vprop) = A.return_ghost_noeq x p
 
 let return_stt_unobservable_noeq #a x (p:(a -> vprop)) = A.return_atomic_noeq x p
+
+let as_atomic #a pre post (e:stt a pre post) = admit() //intentional
