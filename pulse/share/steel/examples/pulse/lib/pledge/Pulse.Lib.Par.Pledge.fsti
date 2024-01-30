@@ -17,66 +17,67 @@
 module Pulse.Lib.Par.Pledge
 
 open Pulse.Lib.Pervasives
+open Pulse.Lib.InvList
 
-val pledge (opens:inames) (f:vprop) (v:vprop) : vprop
+val pledge (is:invlist) (f:vprop) (v:vprop) : vprop
 
-let pledge_any (f:vprop) (v:vprop) : vprop =
-  exists* is. pledge is f v
-
-(* An unobservable step to rewrite the context. *)
-let ustep (opens:inames) (p q : vprop)
-  = unit -> stt_unobservable unit opens p (fun _ -> q)
+(* A ghost step to rewrite the context, running under invlist is. *)
+let ustep (is:invlist) (p q : vprop)
+  = unit -> stt_ghost unit emp_inames (invlist_v is ** p) (fun _ -> invlist_v is ** q)
 
 unfold
 let pledge0 (f:vprop) (v:vprop) : vprop =
-  pledge emp_inames f v
+  pledge [] f v
 
-val pledge_sub_inv (os1:inames) (os2:inames{inames_subset os1 os2}) (f:vprop) (v:vprop)
+val pledge_sub_inv (os1:invlist) (os2:invlist{invlist_sub os1 os2}) (f:vprop) (v:vprop)
   : stt_ghost unit emp_inames (pledge os1 f v) (fun _ -> pledge os2 f v)
 
 (* Anything that holds now holds in the future too. *)
-val return_pledge (os:inames) (f:vprop) (v:vprop)
-  : stt_ghost unit emp_inames v (fun _ -> pledge os f v)
+val return_pledge (is:invlist) (f:vprop) (v:vprop)
+  : stt_ghost unit emp_inames v (fun _ -> pledge is f v)
 
-val make_pledge (opens:inames) (f:vprop) (v:vprop) (extra:vprop)
-  ($k : ustep opens (f ** extra) (f ** v))
-  : stt_ghost unit emp_inames extra (fun _ -> pledge opens f v)
+val make_pledge (is:invlist) (f:vprop) (v:vprop) (extra:vprop)
+  ($k : ustep is (f ** extra) (f ** v))
+  : stt_ghost unit emp_inames extra (fun _ -> pledge is f v)
 
-val redeem_pledge (opens:inames) (f:vprop) (v:vprop)
-  : stt_unobservable unit opens (f ** pledge opens f v) (fun () -> f ** v)
+val redeem_pledge_ghost (is:invlist) (f:vprop) (v:vprop)
+  : stt_ghost unit emp_inames (invlist_v is ** f ** pledge is f v) (fun () -> invlist_v is ** f ** v)
+  
+val redeem_pledge (is:invlist) (f:vprop) (v:vprop)
+  : stt_unobservable unit (invlist_names is) (f ** pledge is f v) (fun () -> f ** v)
 
 // Unclear how useful/convenient this is
-val bind_pledge (#os:inames) (#f:vprop) (#v1:vprop) (#v2:vprop)
+val bind_pledge (#is:invlist) (#f:vprop) (#v1:vprop) (#v2:vprop)
         (extra : vprop)
-        (k : ustep os (f ** extra ** v1) (f ** pledge os f v2))
-  : stt_ghost unit emp_inames (pledge os f v1 ** extra) (fun () -> pledge os f v2)
+        (k : ustep is (f ** extra ** v1) (f ** pledge is f v2))
+  : stt_ghost unit emp_inames (pledge is f v1 ** extra) (fun () -> pledge is f v2)
 
 (* Weaker variant, the proof does not use f. It's implemented
 by framing k with f and then using the above combinator. Exposing
 only in case it's useful for inference. *)
-val bind_pledge' (#os:inames) (#f:vprop) (#v1:vprop) (#v2:vprop)
+val bind_pledge' (#is:invlist) (#f:vprop) (#v1:vprop) (#v2:vprop)
         (extra : vprop)
-        (k : ustep os (extra ** v1) (pledge os f v2))
-  : stt_ghost unit emp_inames (pledge os f v1 ** extra) (fun () -> pledge os f v2)
+        (k : ustep is (extra ** v1) (pledge is f v2))
+  : stt_ghost unit emp_inames (pledge is f v1 ** extra) (fun () -> pledge is f v2)
 
-val join_pledge (#opens:inames) (#f:vprop) (v1:vprop) (v2:vprop)
+val join_pledge (#is:invlist) (#f:vprop) (v1:vprop) (v2:vprop)
   : stt_ghost unit
               emp_inames
-              (pledge opens f v1 ** pledge opens f v2)
-              (fun () -> pledge opens f (v1 ** v2))
+              (pledge is f v1 ** pledge is f v2)
+              (fun () -> pledge is f (v1 ** v2))
 
 // NB: This must be an unobservable step, and not ghost,
 // as it allocates an invariant.
-val split_pledge (#os:inames) (#f:vprop) (v1:vprop) (v2:vprop)
-  : stt_unobservable (erased iname)
+val split_pledge (#is:invlist) (#f:vprop) (v1:vprop) (v2:vprop)
+  : stt_unobservable (pi:(p:vprop & inv p){not (mem_inv (invlist_names is) (dsnd pi))})
               emp_inames
-              (pledge os f (v1 ** v2))
-              (fun i -> pledge (add_iname os i) f v1 ** pledge (add_iname os i) f v2)
+              (pledge is f (v1 ** v2))
+              (fun pi -> pledge (pi :: is) f v1 ** pledge (pi :: is) f v2)
 
 // TODO: write a variant that assumes f too
-val rewrite_pledge (#opens:inames) (#f:vprop) (v1 : vprop) (v2 : vprop)
-  (k : ustep opens v1 v2)
+val rewrite_pledge (#is:invlist) (#f:vprop) (v1 : vprop) (v2 : vprop)
+  (k : ustep is v1 v2)
   : stt_ghost unit
               emp_inames
-              (pledge opens f v1)
-              (fun _ -> pledge opens f v2)
+              (pledge is f v1)
+              (fun _ -> pledge is f v2)
