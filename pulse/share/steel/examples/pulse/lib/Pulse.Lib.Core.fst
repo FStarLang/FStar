@@ -158,6 +158,8 @@ let sub_stt = I.sub
 
 let conv_stt pf1 pf2 = I.conv #_ _ _ _ _ pf1 pf2
 
+let hide_div = I.hide_div
+
 let sub_stt_atomic pre2 post2 pf1 pf2 e =
    A.sub_atomic pre2 post2 pf1 pf2 e
 

@@ -309,6 +309,9 @@ val conv_stt (#a:Type u#a)
             (pf2 : vprop_post_equiv post1 post2)
 : Lemma (stt a pre1 post1 == stt a pre2 post2)
 
+val hide_div #a #pre #post (f:unit -> Dv (stt a pre post))
+: stt a pre post
+
 inline_for_extraction
 val sub_stt_atomic
   (#a:Type u#a)
