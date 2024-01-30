@@ -17,6 +17,10 @@
 module Pulse.Lib.Stick
 open Pulse.Lib.Pervasives
 
+(* This is shows that trades can be implemented in unobservable, with a specialized
+   indefinite description axiom. But, this will soon be superseded by an implementation
+   from Guido that defines trades in a more general form. *)
+   
 let implication opens p q =
   unit -> stt_unobservable unit opens p (fun _ -> q)
 
@@ -27,7 +31,7 @@ assume
 val indefinite_description_implication
   (#opens: inames) (#p #q:vprop)
   (_:squash (is_implication opens p q))
-: unit -> stt_ghost unit opens p (fun _ -> q) //implication opens p q
+: unit -> stt_unobservable unit opens p (fun _ -> q)
 
 let token (v:vprop) = v
 
@@ -36,7 +40,7 @@ let trade #opens (p q:vprop)
 = exists* (v:vprop). token v ** pure (is_implication opens (v ** p) q)
 
 ```pulse
-ghost
+unobservable
 fn return (#a:Type u#2) (x:a)
 requires emp
 returns v:a
@@ -47,7 +51,7 @@ ensures pure (v == x)
 ```
 
 ```pulse
-ghost //this should be unobservable, but we don't have a way to annotate that yet
+unobservable
 fn elim_trade #is (hyp concl: vprop)
 requires trade #is hyp concl ** hyp
 ensures concl
