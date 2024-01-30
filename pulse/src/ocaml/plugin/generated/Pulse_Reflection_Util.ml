@@ -719,7 +719,7 @@ let (mk_intro_exists_erased :
             (FStar_Reflection_V2_Data.Tv_App
                (t2, (e, FStar_Reflection_V2_Data.Q_Explicit)))
 let (while_lid : Prims.string Prims.list) =
-  mk_pulse_lib_core_lid "while_loop"
+  ["Pulse"; "Lib"; "WhileLoop"; "while_loop"]
 let (mk_while :
   FStar_Reflection_Types.term ->
     FStar_Reflection_Types.term ->
