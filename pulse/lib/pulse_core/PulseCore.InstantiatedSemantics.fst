@@ -1,5 +1,5 @@
 module PulseCore.InstantiatedSemantics
-module Sem = PulseCore.Semantics2
+module Sem = PulseCore.Semantics
 module Mem = PulseCore.Memory
 module U = FStar.Universe
 module F = FStar.FunctionalExtensionality

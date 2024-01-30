@@ -1,5 +1,5 @@
 module PulseCore.Action
-module Sem = PulseCore.Semantics2
+module Sem = PulseCore.Semantics
 module Mem = PulseCore.Memory
 module I = PulseCore.InstantiatedSemantics
 module M = PulseCore.MonotonicStateMonad

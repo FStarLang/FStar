@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module PulseCore.Semantics2
+module PulseCore.Semantics
 module U = FStar.Universe
 module M = PulseCore.MonotonicStateMonad
 module NM = PulseCore.NondeterministicMonotonicStateMonad 
