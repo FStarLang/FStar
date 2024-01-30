@@ -44,13 +44,3 @@ let bind f g =
 let weaken f = fun () s t c -> f () s t c
 
 let flip _ = fun () s t c -> (t c, s, c + 1)
-
-let get _ = fun () s t c -> (s, s, c)
-
-let put v = fun () s t c -> ((), v, c)
-
-let witnessed p = unit
-let witness p = fun () s t c -> (), s, c
-let recall p w = fun () s t c ->
-    assume (p s);
-    (), s, c
