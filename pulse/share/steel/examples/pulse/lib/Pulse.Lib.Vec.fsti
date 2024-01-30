@@ -17,7 +17,7 @@
 module Pulse.Lib.Vec
 
 open FStar.Ghost
-open Steel.FractionalPermission
+open PulseCore.FractionalPermission
 open Pulse.Lib.Core
 
 module SZ = FStar.SizeT

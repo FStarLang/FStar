@@ -66,7 +66,7 @@ fn package (r:ref int)
    returns i : inv (pts_to r 123)
    ensures emp
 {
-  let i : inv (pts_to r 123) = new_invariant' (pts_to r 123);
+  let i : inv (pts_to r 123) = new_invariant (pts_to r 123);
   i
 }
 ```
@@ -165,7 +165,7 @@ fn t2 ()
   returns _:int
   ensures emp
 {
-  let j = new_invariant' emp;
+  let j = new_invariant emp;
   with_invariants j 
     returns _:unit
     ensures emp {

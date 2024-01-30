@@ -6,6 +6,7 @@
   ],
   "include_dirs": [
     "lib/steel",
+    "lib/pulse_core",
     "lib/steel/pulse",
     "share/steel/examples/steel",
     "share/steel/examples/pulse",

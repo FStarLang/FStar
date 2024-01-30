@@ -165,8 +165,11 @@ let (mk_star :
 let (pure_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "pure"
 let (exists_lid : Prims.string Prims.list) =
   mk_pulse_lib_core_lid "op_exists_Star"
+let (pulse_lib_forall : Prims.string Prims.list) = ["Pulse"; "Lib"; "Forall"]
+let (mk_pulse_lib_forall_lid : Prims.string -> Prims.string Prims.list) =
+  fun s -> FStar_List_Tot_Base.op_At pulse_lib_forall [s]
 let (forall_lid : Prims.string Prims.list) =
-  mk_pulse_lib_core_lid "op_forall_Star"
+  mk_pulse_lib_forall_lid "op_forall_Star"
 let (args_of :
   FStar_Reflection_Types.term Prims.list ->
     (FStar_Reflection_Types.term * FStar_Reflection_V2_Data.aqualv)
@@ -716,7 +719,7 @@ let (mk_intro_exists_erased :
             (FStar_Reflection_V2_Data.Tv_App
                (t2, (e, FStar_Reflection_V2_Data.Q_Explicit)))
 let (while_lid : Prims.string Prims.list) =
-  mk_pulse_lib_core_lid "while_loop"
+  ["Pulse"; "Lib"; "WhileLoop"; "while_loop"]
 let (mk_while :
   FStar_Reflection_Types.term ->
     FStar_Reflection_Types.term ->
@@ -1932,7 +1935,7 @@ let (ref_lid : Prims.string Prims.list) = mk_pulse_lib_reference_lid "ref"
 let (pts_to_lid : Prims.string Prims.list) =
   mk_pulse_lib_reference_lid "pts_to"
 let (full_perm_lid : Prims.string Prims.list) =
-  ["Steel"; "FractionalPermission"; "full_perm"]
+  ["PulseCore"; "FractionalPermission"; "full_perm"]
 let (mk_ref : FStar_Reflection_Types.term -> FStar_Reflection_Types.term) =
   fun a ->
     let t =
@@ -2156,39 +2159,39 @@ let (mk_opaque_let :
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "Pulse.Reflection.Util.fst"
-                     (Prims.of_int (745)) (Prims.of_int (11))
-                     (Prims.of_int (745)) (Prims.of_int (45)))))
+                     (Prims.of_int (748)) (Prims.of_int (11))
+                     (Prims.of_int (748)) (Prims.of_int (45)))))
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "Pulse.Reflection.Util.fst"
-                     (Prims.of_int (745)) (Prims.of_int (48))
-                     (Prims.of_int (751)) (Prims.of_int (18)))))
+                     (Prims.of_int (748)) (Prims.of_int (48))
+                     (Prims.of_int (754)) (Prims.of_int (18)))))
             (Obj.magic
                (FStar_Tactics_Effect.tac_bind
                   (FStar_Sealed.seal
                      (Obj.magic
                         (FStar_Range.mk_range "Pulse.Reflection.Util.fst"
-                           (Prims.of_int (745)) (Prims.of_int (21))
-                           (Prims.of_int (745)) (Prims.of_int (45)))))
+                           (Prims.of_int (748)) (Prims.of_int (21))
+                           (Prims.of_int (748)) (Prims.of_int (45)))))
                   (FStar_Sealed.seal
                      (Obj.magic
                         (FStar_Range.mk_range "Pulse.Reflection.Util.fst"
-                           (Prims.of_int (745)) (Prims.of_int (11))
-                           (Prims.of_int (745)) (Prims.of_int (45)))))
+                           (Prims.of_int (748)) (Prims.of_int (11))
+                           (Prims.of_int (748)) (Prims.of_int (45)))))
                   (Obj.magic
                      (FStar_Tactics_Effect.tac_bind
                         (FStar_Sealed.seal
                            (Obj.magic
                               (FStar_Range.mk_range
                                  "Pulse.Reflection.Util.fst"
-                                 (Prims.of_int (745)) (Prims.of_int (22))
-                                 (Prims.of_int (745)) (Prims.of_int (37)))))
+                                 (Prims.of_int (748)) (Prims.of_int (22))
+                                 (Prims.of_int (748)) (Prims.of_int (37)))))
                         (FStar_Sealed.seal
                            (Obj.magic
                               (FStar_Range.mk_range
                                  "Pulse.Reflection.Util.fst"
-                                 (Prims.of_int (745)) (Prims.of_int (21))
-                                 (Prims.of_int (745)) (Prims.of_int (45)))))
+                                 (Prims.of_int (748)) (Prims.of_int (21))
+                                 (Prims.of_int (748)) (Prims.of_int (45)))))
                         (Obj.magic (FStar_Tactics_V2_Derived.cur_module ()))
                         (fun uu___ ->
                            FStar_Tactics_Effect.lift_div_tac

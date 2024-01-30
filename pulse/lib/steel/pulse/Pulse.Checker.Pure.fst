@@ -468,8 +468,11 @@ let check_vprop_with_core (g:env)
   
 let pulse_lib_gref = ["Pulse"; "Lib"; "GhostReference"]
 let mk_pulse_lib_gref_lid s = pulse_lib_gref@[s]
-
 let gref_lid = mk_pulse_lib_gref_lid "ref"
+
+let pulse_lib_higher_gref = ["Pulse"; "Lib"; "HigherGhostReference"]
+let mk_pulse_lib_higher_gref_lid s = pulse_lib_higher_gref@[s]
+let higher_gref_lid = mk_pulse_lib_higher_gref_lid "ref"
 
 let get_non_informative_witness g u t
   : T.Tac (non_informative_t g u t)
@@ -501,6 +504,11 @@ let get_non_informative_witness g u t
         else if l = gref_lid && Some? arg_opt
         then Some (tm_pureapp
                      (tm_uinst (as_fv (mk_pulse_lib_gref_lid "gref_non_informative")) us)
+                     None
+                     (Some?.v arg_opt))
+        else if l = higher_gref_lid && Some? arg_opt
+        then Some (tm_pureapp
+                     (tm_uinst (as_fv (mk_pulse_lib_higher_gref_lid "gref_non_informative")) us)
                      None
                      (Some?.v arg_opt))
         else None

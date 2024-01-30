@@ -17,9 +17,10 @@
 module Pulse.Lib.Pervasives
 include Pulse.Main
 include Pulse.Lib.Core
+include Pulse.Lib.Forall
 include Pulse.Lib.Array
 include Pulse.Lib.Reference
-include Steel.FractionalPermission
+include PulseCore.FractionalPermission
 include FStar.Ghost
 
 (* Pulse will currently not recognize calls to anything other than

@@ -112,7 +112,7 @@ fn setup (_:unit)
        
   fold inv_p;
   
-  let i = new_invariant' inv_p;
+  let i = new_invariant inv_p;
   
   make_pledge
     (add_one (|inv_p, i|) [])

@@ -17,11 +17,11 @@
 module Pulse.Lib.Reference
 open FStar.Tactics
 open Pulse.Lib.Core
-open Steel.FractionalPermission
+open PulseCore.FractionalPermission
 open FStar.Ghost
 module U32 = FStar.UInt32
 
-val ref ([@@@strictly_positive] a:Type u#0) : Type u#0
+val ref ([@@@unused] a:Type u#0) : Type u#0
 
 val pts_to
     (#a:Type) (r:ref a) 
@@ -106,7 +106,7 @@ val pts_to_injective_eq (#a:_)
                         (r:ref a)
   : stt_ghost unit emp_inames
       (pts_to r #p v0 ** pts_to r #q v1)
-      (fun _ -> pts_to r #p v0 ** pts_to r #q v0 ** pure (v0 == v1))
+      (fun _ -> pts_to r #p v0 ** pts_to r #q v1 ** pure (v0 == v1))
 
 val pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
   : stt_ghost unit emp_inames
