@@ -45,6 +45,13 @@ let mk_vec_typ (t:typ) : typ =
     { typ_path_segment_name = "Vec"; typ_path_segment_generic_args = [t] };
   ]
 
+let mk_mutex_typ (t:typ) : typ =
+  Typ_path [
+    { typ_path_segment_name = "std"; typ_path_segment_generic_args = [] };
+    { typ_path_segment_name = "sync"; typ_path_segment_generic_args = [] };
+    { typ_path_segment_name = "Mutex"; typ_path_segment_generic_args = [t] };
+  ]
+
 let mk_option_typ (t:typ) : typ =
   Typ_path [
     { typ_path_segment_name = "std"; typ_path_segment_generic_args = [] };
@@ -152,6 +159,11 @@ let mk_mem_replace (e:expr) (new_v:expr) : expr =
   mk_call
     (Expr_path ["std"; "mem"; "replace"])
     [mk_reference_expr is_mut e; new_v]
+
+let mk_new_mutex (e:expr) =
+  mk_call
+    (Expr_path ["std"; "sync"; "Mutex"; "new"])
+    [e]
 
 let mk_scalar_fn_arg (name:string) (t:typ) =
   Fn_arg_pat {

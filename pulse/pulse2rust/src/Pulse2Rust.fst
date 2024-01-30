@@ -181,6 +181,9 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
   | S.MLTY_Named ([arg], p)
     when S.string_of_mlpath p = "Pulse.Lib.Vec.vec" ->
     arg |> extract_mlty g |> mk_vec_typ
+  | S.MLTY_Named (arg::_, p)
+    when S.string_of_mlpath p = "Pulse.Lib.Mutex.mutex" ->
+    arg |> extract_mlty g |> mk_mutex_typ
   | S.MLTY_Named ([arg], p)
     when S.string_of_mlpath p = "FStar.Pervasives.Native.option" ->
     arg |> extract_mlty g |> mk_option_typ
@@ -498,7 +501,8 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     mk_assign (mk_expr_index e1 e2) e3
 
   | S.MLE_App ({ expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, e_v::e_i::e_x::_)
-    when S.string_of_mlpath p = "Pulse.Lib.Vec.replace" ->
+    when S.string_of_mlpath p = "Pulse.Lib.Vec.replace" ||
+         S.string_of_mlpath p = "Pulse.Lib.Vec.replace_ref" ->
 
     let e_v = extract_mlexpr g e_v in
     let e_i = extract_mlexpr g e_i in
@@ -534,6 +538,11 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     let e = extract_mlexpr g e in
     mk_call (mk_expr_path_singl "drop") [e]
 
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, _::e::_)
+    when S.string_of_mlpath p = "Pulse.Lib.Mutex.new_mutex" ->
+    let e = extract_mlexpr g e in
+    mk_new_mutex e
+
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2])
     when S.string_of_mlpath p = "Pulse.Lib.Array.Core.free" ->
 
@@ -544,6 +553,10 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     let expr_while_cond = extract_mlexpr g cond in
     let expr_while_body = extract_mlexpr_to_stmts g body in
     Expr_while {expr_while_cond; expr_while_body}
+
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, _::e::_)
+    when S.string_of_mlpath p = "Pulse.Lib.Core.run_stt" ->
+    extract_mlexpr g e
 
   | S.MLE_App ({ expr=S.MLE_TApp ({ expr=S.MLE_Name p }, _) }, _)
   | S.MLE_App ({expr=S.MLE_Name p}, _)
@@ -936,7 +949,8 @@ let extract_one
     | S.MLM_Let (S.NonRec, [{mllb_name}])
       when starts_with mllb_name "explode_ref" ||
            starts_with mllb_name "unexplode_ref" ||
-           starts_with mllb_name "uu___is_" -> items, g
+           starts_with mllb_name "uu___is_" ||
+           starts_with mllb_name "__proj__" -> items, g
     | S.MLM_Let lb ->
       let f, g = extract_top_level_lb g lb in
       // print_string "Extracted to:\n";

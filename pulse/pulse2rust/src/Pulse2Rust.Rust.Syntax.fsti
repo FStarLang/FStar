@@ -289,6 +289,7 @@ val mk_ref_typ (is_mut:bool) (t:typ) : typ
 val mk_box_typ (t:typ) : typ
 val mk_slice_typ (t:typ) : typ
 val mk_vec_typ (t:typ) : typ
+val mk_mutex_typ (t:typ) : typ
 val mk_option_typ (t:typ) : typ
 val mk_array_typ (t:typ) (len:expr) : typ
 val mk_named_typ (s:string) (generic_args:list typ) : typ
@@ -320,6 +321,7 @@ val mk_expr_field_unnamed (base:expr) (i:int) : expr
 val mk_expr_struct (path:list string) (fields:list (string & expr)) : expr
 val mk_expr_tuple (l:list expr) : expr
 val mk_mem_replace (e:expr) (new_v:expr) : expr
+val mk_new_mutex (e:expr) : expr
 
 val mk_local_stmt (name:option string) (is_mut:bool) (init:expr) : stmt
 val mk_scalar_fn_arg (name:string) (t:typ) : fn_arg

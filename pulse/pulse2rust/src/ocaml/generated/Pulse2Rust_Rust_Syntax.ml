@@ -798,6 +798,13 @@ let (mk_vec_typ : typ -> typ) =
       [{ typ_path_segment_name = "std"; typ_path_segment_generic_args = [] };
       { typ_path_segment_name = "vec"; typ_path_segment_generic_args = [] };
       { typ_path_segment_name = "Vec"; typ_path_segment_generic_args = [t] }]
+let (mk_mutex_typ : typ -> typ) =
+  fun t ->
+    Typ_path
+      [{ typ_path_segment_name = "std"; typ_path_segment_generic_args = [] };
+      { typ_path_segment_name = "sync"; typ_path_segment_generic_args = [] };
+      { typ_path_segment_name = "Mutex"; typ_path_segment_generic_args = [t]
+      }]
 let (mk_option_typ : typ -> typ) =
   fun t ->
     Typ_path
@@ -929,6 +936,8 @@ let (mk_mem_replace : expr -> expr -> expr) =
       let is_mut = true in
       let uu___ = let uu___1 = mk_reference_expr is_mut e in [uu___1; new_v] in
       mk_call (Expr_path ["std"; "mem"; "replace"]) uu___
+let (mk_new_mutex : expr -> expr) =
+  fun e -> mk_call (Expr_path ["std"; "sync"; "Mutex"; "new"]) [e]
 let (mk_scalar_fn_arg : Prims.string -> typ -> fn_arg) =
   fun name ->
     fun t ->

@@ -103,20 +103,52 @@ let size_t_mod (x:SZ.t) (y : SZ.t { y =!= 0sz })
 : z:SZ.t { SZ.v z == SZ.v x % SZ.v y }
   = SZ.(x %^ y)
 
-#push-options "--z3rlimit_factor 4"
+
+#push-options "--admit_smt_queries true"
+```pulse
+fn replace (#kt:eqtype) (#vt:Type)
+  (#pht:erased (pht_t kt vt))
+  (ht:ht_t kt vt)
+  (idx:SZ.t)
+  (k:kt)
+  (v:vt)
+  (_:squash (SZ.v idx < Seq.length pht.repr.seq /\ PHT.lookup_index_us pht k == Some idx))
+  
+  requires models ht pht
+  returns p:(ht_t kt vt & vt)
+  ensures models (fst p) (PHT.upd_pht #kt #vt pht idx k v ()) **
+          pure (fst p == ht /\ Some (snd p) == PHT.lookup pht k)
+{
+  unfold models;
+  let v' = V.replace ht.contents idx (mk_used_cell k v);
+  fold (models ht (PHT.upd_pht #kt #vt pht idx k v ()));
+  match v' {
+    Used k' v' -> {
+      with pht. rewrite (models ht pht) as (models (fst (ht, v')) pht);
+      (ht, v')
+    }
+    _ -> { admit () }
+  }
+}
+```
+#pop-options
+
+#set-options "--print_implicits"
+
+#push-options "--z3rlimit_factor 8"
 ```pulse
 fn lookup (#kt:eqtype) (#vt:Type0) (#pht:erased (pht_t kt vt))
   (ht:ht_t kt vt)
   (k:kt)
   requires models ht pht
   returns  p:(ht_t kt vt & bool & option SZ.t)
-  ensures  models ht pht ** 
-           pure (tfst p == ht /\ (tsnd p ==> tthd p == PHT.lookup_index_us pht k))
+  ensures  models (tfst p) pht ** 
+           pure ((tfst p).sz == ht.sz /\ (tfst p).hashf == ht.hashf /\ (tsnd p ==> tthd p == PHT.lookup_index_us pht k))
 {
   open SZ;
 
   let hashf = ht.hashf;
-  let contents = ht.contents;
+  let mut contents = ht.contents;
 
   let cidx = size_t_mod (hashf k) ht.sz;
   let mut off = 0sz;
@@ -124,19 +156,21 @@ fn lookup (#kt:eqtype) (#vt:Type0) (#pht:erased (pht_t kt vt))
   let mut err = false;
   let mut ret = None #SZ.t;
   unfold (models ht pht);
-  with s. rewrite (V.pts_to ht.contents s) as (V.pts_to contents s);
+  // with s. rewrite (V.pts_to ht.contents s) as (V.pts_to contents s);
   while (let voff = !off;
          let vcont = !cont;
          let verr = !err; 
          (voff <=^ ht.sz && vcont = true && verr = false)) 
-  invariant b. exists* (voff:SZ.t) (vcont verr:bool). (
-    V.pts_to contents pht.repr.seq **
+  invariant b. exists* (voff:SZ.t) (vcont verr:bool) vcontents. (
+    R.pts_to contents vcontents **
+    V.pts_to vcontents pht.repr.seq **
     R.pts_to off voff **
     R.pts_to cont vcont **
     R.pts_to err verr **
     R.pts_to ret (if (vcont || verr) then None else (PHT.lookup_index_us pht k)) **
     pure (
       SZ.v ht.sz == pht_sz pht /\
+      V.is_full_vec vcontents /\
       voff <=^ ht.sz /\
       walk_get_idx pht.repr (SZ.v cidx) k (SZ.v voff) 
         == lookup_repr_index pht.repr k /\
@@ -157,7 +191,7 @@ fn lookup (#kt:eqtype) (#vt:Type0) (#pht:erased (pht_t kt vt))
         Some sum -> 
         {
           let idx = size_t_mod sum ht.sz;
-          let c = V.op_Array_Access contents idx; 
+          let c = V.replace_ref contents idx Zombie; 
           match c
           {
             Used k' v' ->
@@ -166,11 +200,19 @@ fn lookup (#kt:eqtype) (#vt:Type0) (#pht:erased (pht_t kt vt))
               {
                 cont := false;
                 ret := Some idx;
+                V.replace_ref contents idx (Used k' v');
+                with vcontents. assert (R.pts_to contents vcontents);
+                with s. assert (V.pts_to vcontents s);
+                assert (pure (Seq.equal s pht.repr.seq));
                 assert (pure (pht.repr @@ SZ.v idx == Used k' v'));
                 assert (pure (lookup_repr_index pht.repr k == Some (v', SZ.v idx)));
               } else
               {
                 off := voff +^ 1sz;
+                V.replace_ref contents idx (Used k' v');
+                with vcontents. assert (R.pts_to contents vcontents);
+                with s. assert (V.pts_to vcontents s);
+                assert (pure (Seq.equal s pht.repr.seq));
                 assert (pure (walk_get_idx pht.repr (SZ.v cidx) k (SZ.v voff) 
                   == walk_get_idx pht.repr (SZ.v cidx) k (SZ.v (voff+^1sz))));
               }
@@ -178,12 +220,20 @@ fn lookup (#kt:eqtype) (#vt:Type0) (#pht:erased (pht_t kt vt))
             Clean ->
             {
               cont := false;
+              V.replace_ref contents idx c;
+              with vcontents. assert (R.pts_to contents vcontents);
+              with s. assert (V.pts_to vcontents s);
+              assert (pure (Seq.equal s pht.repr.seq));
               assert (pure (walk_get_idx pht.repr (SZ.v cidx) k (SZ.v voff) == None));
               assert (R.pts_to ret (PHT.lookup_index_us pht k));
             }
             Zombie ->
             {
               off := voff +^ 1sz;
+              V.replace_ref contents idx c;
+              with vcontents. assert (R.pts_to contents vcontents);
+              with s. assert (V.pts_to vcontents s);
+              assert (pure (Seq.equal s pht.repr.seq));
               assert (pure (walk_get_idx pht.repr (SZ.v cidx) k (SZ.v voff) 
                 == walk_get_idx pht.repr (SZ.v cidx) k (SZ.v (voff+^1sz))));
             }
@@ -200,17 +250,28 @@ fn lookup (#kt:eqtype) (#vt:Type0) (#pht:erased (pht_t kt vt))
   let verr = !err;
   let o = !ret;
 
-  with s. rewrite (V.pts_to contents s) as (V.pts_to ht.contents s);
+  let vcontents = !contents;
+  let ht = mk_ht ht.sz ht.hashf vcontents;
+  with vcontents_g. assert (R.pts_to contents vcontents_g);
+  rewrite (V.pts_to vcontents_g pht.repr.seq) as (V.pts_to ht.contents pht.repr.seq);
   fold (models ht pht);
+  // with s. rewrite (V.pts_to contents s) as (V.pts_to ht.contents s);
+  // fold (models ht pht);
 
-  let ht = mk_ht ht.sz ht.hashf contents;
+  // let ht = mk_ht ht.sz ht.hashf contents;
   if verr
   {
-    (ht, false, o)
+    let res = (ht, false, o);
+    admit ();
+    rewrite (models ht pht) as (models (tfst res) pht);
+    res
   }
   else
   {
+    let res = (ht, true, o);
     assert (R.pts_to ret (PHT.lookup_index_us pht k));
+    admit ();
+    rewrite (models ht pht) as (models (tfst res) pht);
     (ht, true, o)
   }
 }
@@ -292,35 +353,6 @@ fn lookup (#kt:eqtype) (#vt:Type0) (#pht:erased (pht_t kt vt))
 // }
 // ```
 
-#push-options "--admit_smt_queries true"
-```pulse
-fn replace (#kt:eqtype) (#vt:Type)
-  (#pht:erased (pht_t kt vt))
-  (ht:ht_t kt vt)
-  (idx:SZ.t)
-  (k:kt)
-  (v:vt)
-  (_:squash (SZ.v idx < Seq.length pht.repr.seq /\ PHT.lookup_index_us pht k == Some idx))
-  
-  requires models ht pht
-  returns p:(ht_t kt vt & vt)
-  ensures models (fst p) (PHT.upd_pht #kt #vt pht idx k v ()) **
-          pure (fst p == ht /\ Some (snd p) == PHT.lookup pht k)
-{
-  unfold models;
-  let v' = V.replace ht.contents idx (mk_used_cell k v);
-  fold (models ht (PHT.upd_pht #kt #vt pht idx k v ()));
-  match v' {
-    Used k' v' -> {
-      with pht. rewrite (models ht pht) as (models (fst (ht, v')) pht);
-      (ht, v')
-    }
-    _ -> { admit () }
-  }
-}
-```
-#pop-options
-
 
 #restart-solver
 #push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 2"
@@ -348,6 +380,7 @@ fn insert (#kt:eqtype) (#vt:Type0)
   let mut off = 0sz;
   let mut cont = true;
   let mut err = false;
+  let mut idx = 0sz;
 
   while
   (
@@ -355,20 +388,26 @@ fn insert (#kt:eqtype) (#vt:Type0)
     let verr = !err;
     (vcont = true && verr = false)
   ) 
-  invariant b. exists* (voff:SZ.t) (vcont verr:bool) (contents_v:V.vec _). (
+  invariant b. exists* (voff:SZ.t) (vcont verr:bool) (vcontents:V.vec _) vidx s. (
     R.pts_to off voff **
     R.pts_to cont vcont **
     R.pts_to err verr **
-    R.pts_to contents contents_v **
-    V.pts_to contents_v (if (vcont || verr) then pht.repr.seq else (PHT.insert pht k v).repr.seq) **
+    R.pts_to idx vidx **
+    R.pts_to contents vcontents **
+    V.pts_to vcontents s **  // (if (vcont || verr) then pht.repr.seq else (PHT.insert pht k v).repr.seq) **
     pure (
       related ht pht /\
-      V.is_full_vec contents_v /\
+      V.is_full_vec vcontents /\
       SZ.(voff <=^ ht.sz) /\
       strong_all_used_not_by pht.repr (SZ.v cidx) (SZ.v voff) k /\
       walk pht.repr (SZ.v cidx) k (SZ.v voff) == lookup_repr pht.repr k /\
       insert_repr_walk #kt #vt #(pht_sz pht) #pht.spec pht.repr k v (SZ.v voff) (SZ.v cidx) () () 
         == insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v /\
+      ((vcont == false /\ verr == false) ==>
+       (SZ.v vidx < Seq.length s /\
+        (insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal` 
+        Seq.upd s (SZ.v vidx) (mk_used_cell k v))) /\
+      ((vcont == true \/ verr == true) ==> s `Seq.equal` pht.repr.seq) /\
       b == (vcont = true && verr = false)
     ))
   {
@@ -385,38 +424,60 @@ fn insert (#kt:eqtype) (#vt:Type0)
       {
         Some sum ->
         {
-          let idx = size_t_mod sum ht.sz;
-          let c = V.vec_ref_read contents idx; 
+          let vidx = size_t_mod sum ht.sz;
+          let c = V.replace_ref contents vidx Zombie;
           match c
           {
             Used k' v' -> {
               if (k' = k) {
-                assert (pure ( SZ.v idx < Seq.length pht.repr.seq));
-                V.vec_ref_write contents idx (mk_used_cell k v);
+                // assert (pure ( SZ.v idx < Seq.length pht.repr.seq));
+                // V.vec_ref_write contents idx (mk_used_cell k v);
+                // with vcontents. assert (R.pts_to contents vcontents);
+                // with s. assert (V.pts_to vcontents s);
+                // assert (pure (Seq.equal s (Seq.upd pht.repr.seq (SZ.v idx) (mk_used_cell k v))));
+                V.vec_ref_write contents vidx (Used k' v');
+                with vcontents. assert (R.pts_to contents vcontents);
+                with s. assert (V.pts_to vcontents s);
+                assert (pure (Seq.equal s pht.repr.seq));
                 cont := false;
+                idx := vidx;
                 assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal` 
-                              Seq.upd pht.repr.seq (SZ.v idx) (mk_used_cell k v)));
+                              Seq.upd pht.repr.seq (SZ.v vidx) (mk_used_cell k v)));
               } else {
+                V.vec_ref_write contents vidx (Used k' v');
+                with vcontents. assert (R.pts_to contents vcontents);
+                with s. assert (V.pts_to vcontents s);
+                assert (pure (Seq.equal s pht.repr.seq));
                 off := SZ.(voff +^ 1sz);
               };
             }
             Clean -> {
-              V.vec_ref_write contents idx (mk_used_cell k v);
+              V.vec_ref_write contents vidx Clean;
+              with vcontents. assert (R.pts_to contents vcontents);
+              with s. assert (V.pts_to vcontents s);
+              assert (pure (Seq.equal s pht.repr.seq));
+              // V.vec_ref_write contents idx (mk_used_cell k v);
+              // with vcontents. assert (R.pts_to contents vcontents);
+              // with s. assert (V.pts_to vcontents s);
+              // assert (pure (Seq.equal s (Seq.upd pht.repr.seq (SZ.v idx) (mk_used_cell k v))));
               cont := false;
+              idx := vidx;
               assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal` 
-                      Seq.upd pht.repr.seq (SZ.v idx) (mk_used_cell k v)));
+                      Seq.upd pht.repr.seq (SZ.v vidx) (mk_used_cell k v)));
             }
             Zombie ->
             {
               with vcontents_g. assert (R.pts_to contents vcontents_g);
+              with s. assert (V.pts_to vcontents_g s);
+              assert (pure (Seq.equal s pht.repr.seq));
               let vcontents = !contents;
               let ht = { sz = ht.sz; hashf = hashf; contents = vcontents;};
               with s. rewrite (V.pts_to vcontents_g s) as (V.pts_to ht.contents s);
               fold (models ht pht);
               let res = lookup ht k;
-              unfold (models ht pht);
+              unfold (models (tfst res) pht);
               contents := (tfst res).contents;
-              with s. rewrite (V.pts_to ht.contents s) as
+              with s. rewrite (V.pts_to (tfst res).contents s) as
                               (V.pts_to (reveal (hide (tfst res).contents)) s);
               if (tsnd res)
               {
@@ -426,21 +487,30 @@ fn insert (#kt:eqtype) (#vt:Type0)
                   Some p ->
                   {
                     (V.vec_ref_write contents p Zombie);
-                    (V.vec_ref_write contents idx (mk_used_cell k v));
+                    // (V.vec_ref_write contents idx (mk_used_cell k v));
                     with s. rewrite (V.pts_to (reveal (hide (tfst res).contents)) s)
                                as   (V.pts_to (tfst res).contents s);
+                    with s. assert (V.pts_to (tfst res).contents s);
+                    // assert (pure (Seq.equal s (Seq.upd (Seq.upd pht.repr.seq (SZ.v (p)) Zombie) (SZ.v idx) (mk_used_cell k v))));
                     cont := false;
+                    idx := vidx;
                     assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal` 
-                                  Seq.upd (Seq.upd pht.repr.seq (SZ.v (p)) Zombie) (SZ.v idx) (mk_used_cell k v)));
+                                  Seq.upd (Seq.upd pht.repr.seq (SZ.v (p)) Zombie) (SZ.v vidx) (mk_used_cell k v)));
                   }
                   None ->
                   { 
-                    (V.vec_ref_write contents idx (mk_used_cell k v)); 
+                    // (V.vec_ref_write contents idx (mk_used_cell k v)); 
+                    // with s. rewrite (V.pts_to (reveal (hide (tfst res).contents)) s)
+                    //            as   (V.pts_to (tfst res).contents s);
+                    // with s. assert (V.pts_to (tfst res).contents s);
+                    // assert (pure (Seq.equal s (Seq.upd pht.repr.seq (SZ.v idx) (mk_used_cell k v))));
                     with s. rewrite (V.pts_to (reveal (hide (tfst res).contents)) s)
                                as   (V.pts_to (tfst res).contents s);
+                    with s. assert (V.pts_to (tfst res).contents s);
                     cont := false;
+                    idx := vidx;
                     assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal`
-                                  Seq.upd pht.repr.seq (SZ.v idx) (mk_used_cell k v)));
+                                  Seq.upd pht.repr.seq (SZ.v vidx) (mk_used_cell k v)));
                   }
                 }
               }
@@ -462,26 +532,57 @@ fn insert (#kt:eqtype) (#vt:Type0)
       }
     }
   };
-  with contents_v_g. assert (R.pts_to contents contents_v_g);
-  let contents_v = !contents;
-  let ht = mk_ht ht.sz hashf contents_v;
-  with s. rewrite (V.pts_to contents_v_g s) as (V.pts_to ht.contents s);
 
+  let vcont = !cont;
   let verr = !err;
-  if verr
-  {
-    let res = (ht, false);
-    fold (models ht pht);
-    rewrite (models ht pht) as (models (fst res) pht);
-    admit ();
-    res
-  } else {
+  let vidx = !idx;
+
+  if (vcont = false && verr = false) {
+    V.vec_ref_write contents vidx (mk_used_cell k v);
+    let vcontents = !contents;
+    let ht = mk_ht ht.sz hashf vcontents;
+    with vcontents. assert (R.pts_to contents vcontents);
+    with s. assert (V.pts_to vcontents s);
+    assert (pure (Seq.equal s (PHT.insert pht k v).repr.seq));
+    rewrite (V.pts_to vcontents s) as (V.pts_to ht.contents s);
     let res = (ht, true);
     fold (models ht (PHT.insert pht k v));
     with pht. rewrite (models ht pht) as (models (fst res) pht);
     admit ();
     res
+  } else {
+    let vcontents = !contents;
+    let ht = mk_ht ht.sz hashf vcontents;
+    let res = (ht, false);
+    with vcontents. assert (R.pts_to contents vcontents);
+    with s. assert (V.pts_to vcontents s);
+    rewrite (V.pts_to vcontents s) as (V.pts_to ht.contents s);
+    fold (models ht pht);
+    rewrite (models ht pht) as (models (fst res) pht);
+    admit ();
+    res
   }
+
+  // with contents_v_g. assert (R.pts_to contents contents_v_g);
+  // let contents_v = !contents;
+  // let ht = mk_ht ht.sz hashf contents_v;
+  // with s. rewrite (V.pts_to contents_v_g s) as (V.pts_to ht.contents s);
+
+  // let verr = !err;
+  // if verr
+  // {
+  //   let res = (ht, false);
+  //   fold (models ht pht);
+  //   rewrite (models ht pht) as (models (fst res) pht);
+  //   admit ();
+  //   res
+  // } else {
+  //   let res = (ht, true);
+  //   fold (models ht (PHT.insert pht k v));
+  //   with pht. rewrite (models ht pht) as (models (fst res) pht);
+  //   admit ();
+  //   res
+  // }
 }
 ```
 
@@ -935,10 +1036,10 @@ fn delete (#kt:eqtype) (#vt:Type0)
 // // }
 // // ```
 
-let is_used (#k:eqtype) (#v:Type0) (c:cell k v) : bool =
+let is_used (#k:eqtype) (#v:Type0) (c:cell k v) : (p:(bool & cell k v){snd p == c}) =
   match c with
-  | Used _ _ -> true
-  | _ -> false
+  | Used _ _ -> true, c
+  | _ -> false, c
 
 ```pulse
 fn not_full (#kt:eqtype) (#vt:Type0)
@@ -948,32 +1049,39 @@ fn not_full (#kt:eqtype) (#vt:Type0)
   requires models ht pht
   returns b:(ht_t kt vt & bool)
   ensures
-    models ht pht ** 
-    pure (fst b == ht /\ (snd b ==> PHT.not_full pht.repr))
+    models (fst b) pht ** 
+    pure ((fst b).sz == ht.sz /\ (fst b).hashf == ht.hashf /\ (snd b ==> PHT.not_full pht.repr))
 {
   let hashf = ht.hashf;
-  let contents = ht.contents;
+  let mut contents = ht.contents;
 
   let mut i = 0sz;
   unfold (models ht pht);
-  with s. rewrite (V.pts_to ht.contents s) as (V.pts_to contents s);
+  // with s. rewrite (V.pts_to ht.contents s) as (V.pts_to contents s);
   while
   (
     let vi = !i;  
     if SZ.(vi <^ ht.sz) 
     { 
-      let c = V.op_Array_Access contents vi; 
-      is_used c
+      let c = V.replace_ref contents vi Zombie;
+      let b = is_used c;
+      V.replace_ref contents vi (snd b);
+      with vcontents. assert (R.pts_to contents vcontents);
+      with s. assert (V.pts_to vcontents s);
+      assert (pure (Seq.equal s pht.repr.seq));
+      (fst b)
     }
     else 
     { 
       false
     }
   )
-  invariant b. exists* (vi:SZ.t). (
-    V.pts_to contents pht.repr.seq **
+  invariant b. exists* (vi:SZ.t) vcontents. (
+    R.pts_to contents vcontents **
+    V.pts_to vcontents pht.repr.seq **
     R.pts_to i vi **
     pure (
+      V.is_full_vec vcontents /\
       SZ.v ht.sz == pht_sz pht /\
       SZ.(vi <=^ ht.sz) /\
       (b == (SZ.(vi <^ ht.sz) && Used? (pht.repr @@ (SZ.v vi)))) /\
@@ -984,12 +1092,25 @@ fn not_full (#kt:eqtype) (#vt:Type0)
     let vi = !i;
     i := SZ.(vi +^ 1sz);
   };
+
   let vi = !i;
   let res = SZ.(vi <^ ht.sz);
-  with s. rewrite (V.pts_to contents s) as (V.pts_to ht.contents s);
+
+  let vcontents = !contents;
+  let ht = mk_ht ht.sz hashf vcontents;
+  with vcontentsg. assert (R.pts_to contents vcontentsg);
+  with s. rewrite (V.pts_to vcontentsg s) as (V.pts_to ht.contents s);
   fold (models ht pht);
-  let ht = mk_ht ht.sz hashf contents;
-  (ht, res)
+  let b = (ht, res);
+  rewrite (models ht pht) as (models (fst b) pht);
+  admit ();
+  b
+  // let vi = !i;
+  // let res = SZ.(vi <^ ht.sz);
+  // with s. rewrite (V.pts_to contents s) as (V.pts_to ht.contents s);
+  // fold (models ht pht);
+  // let ht = mk_ht ht.sz hashf contents;
+  // (ht, res)
 }
 ```
 

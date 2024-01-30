@@ -476,3 +476,5 @@ val elim_false (a:Type) (p:a -> vprop)
 let eq2_prop (#a:Type) (x:a) (y:a) : prop = x == y
 val unreachable (#a:Type) (#p:vprop) (#q:a -> vprop) (_:squash False)
   : stt_ghost a emp_inames p q
+
+val run_stt (#a:Type) (#post:a -> vprop) (f:stt a emp post) : a

@@ -258,6 +258,11 @@ let rec (extract_mlty :
           uu___ = "Pulse.Lib.Vec.vec" ->
           let uu___ = extract_mlty g arg in
           Pulse2Rust_Rust_Syntax.mk_vec_typ uu___
+      | FStar_Extraction_ML_Syntax.MLTY_Named (arg::uu___, p) when
+          let uu___1 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___1 = "Pulse.Lib.Mutex.mutex" ->
+          let uu___1 = extract_mlty g arg in
+          Pulse2Rust_Rust_Syntax.mk_mutex_typ uu___1
       | FStar_Extraction_ML_Syntax.MLTY_Named (arg::[], p) when
           let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
           uu___ = "FStar.Pervasives.Native.option" ->
@@ -911,8 +916,11 @@ and (extract_mlexpr :
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e_v::e_i::e_x::uu___5)
           when
-          let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___6 = "Pulse.Lib.Vec.replace" ->
+          (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___6 = "Pulse.Lib.Vec.replace") ||
+            (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___6 = "Pulse.Lib.Vec.replace_ref")
+          ->
           let e_v1 = extract_mlexpr g e_v in
           let e_i1 = extract_mlexpr g e_i in
           let e_x1 = extract_mlexpr g e_x in
@@ -1013,6 +1021,24 @@ and (extract_mlexpr :
                 uu___2::[]);
              FStar_Extraction_ML_Syntax.mlty = uu___3;
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
+           uu___5::e1::uu___6)
+          when
+          let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___7 = "Pulse.Lib.Mutex.new_mutex" ->
+          let e2 = extract_mlexpr g e1 in
+          Pulse2Rust_Rust_Syntax.mk_new_mutex e2
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                uu___2::[]);
+             FStar_Extraction_ML_Syntax.mlty = uu___3;
+             FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e1::e2::[])
           when
           let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
@@ -1050,6 +1076,22 @@ and (extract_mlexpr :
               Pulse2Rust_Rust_Syntax.expr_while_cond = expr_while_cond;
               Pulse2Rust_Rust_Syntax.expr_while_body = expr_while_body
             }
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                uu___2);
+             FStar_Extraction_ML_Syntax.mlty = uu___3;
+             FStar_Extraction_ML_Syntax.loc = uu___4;_},
+           uu___5::e1::uu___6)
+          when
+          let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___7 = "Pulse.Lib.Core.run_stt" -> extract_mlexpr g e1
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
@@ -1843,11 +1885,17 @@ let (extract_one :
                                  FStar_Extraction_ML_Syntax.print_typ =
                                    uu___8;_}::[])
                               when
-                              (FStar_Compiler_Util.starts_with mllb_name
-                                 "explode_ref")
+                              (((FStar_Compiler_Util.starts_with mllb_name
+                                   "explode_ref")
+                                  ||
+                                  (FStar_Compiler_Util.starts_with mllb_name
+                                     "unexplode_ref"))
+                                 ||
+                                 (FStar_Compiler_Util.starts_with mllb_name
+                                    "uu___is_"))
                                 ||
                                 (FStar_Compiler_Util.starts_with mllb_name
-                                   "unexplode_ref")
+                                   "__proj__")
                               -> (items, g1)
                           | FStar_Extraction_ML_Syntax.MLM_Let lb ->
                               let uu___4 = extract_top_level_lb g1 lb in

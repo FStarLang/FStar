@@ -17,15 +17,17 @@
 module Pulse.Lib.Mutex
 open Pulse.Lib.Core
 
+open Pulse.Lib.Reference
 open Pulse.Lib.SpinLock
-open Pulse.Lib.Box
+
+module B = Pulse.Lib.Box
 
 open Pulse.Main
 
 noeq
 type mutex (#a:Type0) (p:a -> vprop) : Type0 = {
-  r:box a;
-  l:lock (exists* v. pts_to r v ** p v)
+  r:B.box a;
+  l:lock (exists* v. B.pts_to r v ** p v)
 }
 
 ```pulse
@@ -34,8 +36,8 @@ fn new_mutex' (#a:Type0) (p:a -> vprop) (x:a)
   returns m:mutex p
   ensures emp
 {
-  let r = alloc x;
-  let l = new_lock (exists* v. pts_to r v ** p v);
+  let r = B.alloc x;
+  let l = new_lock (exists* v. B.pts_to r v ** p v);
   let m = {r; l};
   m
 }
@@ -43,30 +45,32 @@ fn new_mutex' (#a:Type0) (p:a -> vprop) (x:a)
 
 let new_mutex = new_mutex'
 
-let belongs_to_mutex (#a:Type0) (#p:a -> vprop) (r:box a) (m:mutex p) : vprop =
-  pure (r == m.r)
+let belongs_to_mutex (#a:Type0) (#p:a -> vprop) (r:ref a) (m:mutex p) : vprop =
+  pure (r == B.box_to_ref m.r)
 
 ```pulse
 fn lock' (#a:Type0) (#p:a -> vprop) (m:mutex p)
   requires emp
-  returns r:box a
+  returns r:ref a
   ensures r `belongs_to_mutex` m ** (exists* v. pts_to r v ** p v)
 {
   acquire m.l;
-  fold (belongs_to_mutex m.r m);
-  m.r
+  B.to_ref_pts_to m.r;
+  fold (belongs_to_mutex (B.box_to_ref m.r) m);
+  B.box_to_ref m.r
 } 
 ```
 
 let lock = lock'
 
 ```pulse
-fn unlock' (#a:Type0) (#p:a -> vprop) (m:mutex p) (r:box a)
+fn unlock' (#a:Type0) (#p:a -> vprop) (m:mutex p) (r:ref a)
   requires r `belongs_to_mutex` m ** (exists* v. pts_to r v ** p v)
   ensures emp
 {
   unfold (belongs_to_mutex r m);
-  with v. rewrite (pts_to r v) as (pts_to m.r v);
+  with v. rewrite (pts_to r v) as (pts_to (B.box_to_ref m.r) v);
+  B.to_box_pts_to m.r;
   release m.l;
 }
 ```

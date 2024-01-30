@@ -1331,24 +1331,24 @@ fn to_syn_fn_arg(a: &FnArg) -> syn::FnArg {
 
 fn generic_param_bounds() -> Punctuated<syn::TypeParamBound, syn::token::Plus> {
     let mut bounds = Punctuated::new();
-    ["Clone", "Copy", "PartialEq"].iter().for_each(|s| {
-        bounds.push(syn::TypeParamBound::Trait(syn::TraitBound {
-            paren_token: None,
-            modifier: syn::TraitBoundModifier::None,
-            lifetimes: None,
-            path: syn::Path {
-                leading_colon: None,
-                segments: {
-                    let mut segs = Punctuated::new();
-                    segs.push(syn::PathSegment {
-                        ident: Ident::new(s, Span::call_site()),
-                        arguments: syn::PathArguments::None,
-                    });
-                    segs
-                },
-            },
-        }));
-    });
+    // ["Clone", "Copy", "PartialEq"].iter().for_each(|s| {
+    //     bounds.push(syn::TypeParamBound::Trait(syn::TraitBound {
+    //         paren_token: None,
+    //         modifier: syn::TraitBoundModifier::None,
+    //         lifetimes: None,
+    //         path: syn::Path {
+    //             leading_colon: None,
+    //             segments: {
+    //                 let mut segs = Punctuated::new();
+    //                 segs.push(syn::PathSegment {
+    //                     ident: Ident::new(s, Span::call_site()),
+    //                     arguments: syn::PathArguments::None,
+    //                 });
+    //                 segs
+    //             },
+    //         },
+    //     }));
+    // });
     bounds
 }
 
@@ -1644,7 +1644,8 @@ fn to_syn_item(i: &Item) -> Vec<syn::Item> {
                 })
             });
             let item = syn::Item::Enum(syn::ItemEnum {
-                attrs: vec![derive_clone_copy_attr()],
+                // attrs: vec![derive_clone_copy_attr()],
+                attrs: vec![],
                 vis: syn::Visibility::Public({
                     syn::token::Pub {
                         span: Span::call_site(),
