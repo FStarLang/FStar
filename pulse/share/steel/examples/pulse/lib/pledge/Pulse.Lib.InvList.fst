@@ -2,9 +2,6 @@ module Pulse.Lib.InvList
 
 open Pulse.Lib.Pervasives
 
-let add_one (p:vprop) (i : inv p) (is : invlist{not (mem_inv (invlist_names is) i)}) : invlist =
-  (| p, i |) :: is
-
 ```pulse
 unobservable
 fn __shift_invlist_one
@@ -14,7 +11,7 @@ fn __shift_invlist_one
   (is : invlist{not (mem_inv (invlist_names is) i)})
   (#pre:vprop)
   (#post : a -> vprop)
-  (f : unit -> stt_unobservable a emp_inames (invlist_v (add_one p i is) ** pre) (fun v -> invlist_v (add_one p i is) ** post v))
+  (f : unit -> stt_unobservable a emp_inames (invlist_v (add_one (| p, i |) is) ** pre) (fun v -> invlist_v (add_one (| p, i |) is) ** post v))
   (_:unit)
   requires invlist_v is ** (p ** pre)
   returns v:a
@@ -23,10 +20,10 @@ fn __shift_invlist_one
   rewrite
     (p ** invlist_v is)
   as
-    (invlist_v (add_one p i is));
+    (invlist_v (add_one (|p, i|) is));
   let v = f ();
   rewrite
-    (invlist_v (add_one p i is))
+    (invlist_v (add_one (|p, i|) is))
   as
     (p ** invlist_v is);
   v
@@ -67,3 +64,17 @@ fn rec __with_invlist (#a:Type0) (#pre : vprop) (#post : a -> vprop)
 }
 ```
 let with_invlist = __with_invlist
+
+```pulse
+unobservable
+fn __with_invlist_ghost (#pre : vprop) (#post : vprop)
+  (is : invlist)
+  (f : unit -> stt_ghost unit emp_inames (invlist_v is ** pre) (fun _ -> invlist_v is ** post))
+  requires pre
+  ensures post
+  opens (invlist_names is)
+{
+  with_invlist is (fun () -> lift_ghost_unobservable (f ()) (fun _ -> ()))
+}
+```
+let with_invlist_ghost = __with_invlist_ghost

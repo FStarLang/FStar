@@ -21,49 +21,41 @@ open Pulse.Lib.Trade
 module GR = Pulse.Lib.GhostReference
 open Pulse.Class.PtsTo
 
-assume
-val unobservable_reveal_bool
-    (b : erased bool)
-: stt_unobservable bool emp_inames emp (fun b' -> pure (reveal b == b'))
-
-(* A pledge is just a trade that preserves the antecedent. It is an unobservable
-step under the hood. *)
 let pledge opens f v = (==>*) #opens f (f ** v)
 
-let pledge_sub_inv (os1:inames) (os2:inames{inames_subset os1 os2}) (f:vprop) (v:vprop)
+let pledge_sub_inv os1 os2 (f:vprop) (v:vprop)
   : stt_ghost unit emp_inames (pledge os1 f v) (fun _ -> pledge os2 f v)
   = trade_sub_inv _ _
 
 ```pulse
-unobservable
-fn return_pledge_aux (os:inames) (f v : vprop) ()
-    requires (v ** f)
-    ensures (f ** v)
-    opens os
+ghost
+fn return_pledge_aux (is:invlist) (f v : vprop) ()
+    requires invlist_v is ** v ** f
+    ensures invlist_v is ** (f ** v)
 { () }
 ```
 
 ```pulse
 ghost
-fn __return_pledge (os:inames) (f v : vprop)
+fn __return_pledge (is:invlist) (f v : vprop)
   requires v
-  ensures pledge os f v
+  ensures pledge is f v
 {
-  intro_trade #os f (f ** v) v (return_pledge_aux os f v);
-  fold ((==>*) #os f (f ** v));
+  intro_trade #is f (f ** v) v (return_pledge_aux is f v);
+  fold ((==>*) #is f (f ** v));
   fold pledge;
 }
 ```
 let return_pledge = __return_pledge
 
 ```pulse
-unobservable
-fn make_pledge_aux (os:inames) (f v extra : vprop)
-                 (k : ustep os (f ** extra) (f ** v))
-                 ()
-    requires extra ** f
-    ensures f ** v
-    opens os
+ghost
+fn make_pledge_aux
+  (is:invlist) (f v extra : vprop)
+  (k : ustep is (f ** extra) (f ** v))
+  ()
+  requires (invlist_v is ** extra) ** f
+  ensures invlist_v is ** (f ** v)
 { 
   k ();
 }
@@ -71,46 +63,59 @@ fn make_pledge_aux (os:inames) (f v extra : vprop)
 
 ```pulse
 ghost
-fn __make_pledge (os:inames) (f v extra : vprop)
-                 (k : ustep os (f ** extra) (f ** v))
+fn __make_pledge
+  (is:invlist) (f v extra : vprop)
+  (k : ustep is (f ** extra) (f ** v))
   requires extra
-  ensures pledge os f v
+  ensures pledge is f v
 {
-  intro_trade #os f (f ** v) extra (make_pledge_aux os f v extra k);
-  fold ((==>*) #os f (f ** v));
+  intro_trade #is f (f ** v) extra (make_pledge_aux is f v extra k);
+  fold ((==>*) #is f (f ** v));
   fold pledge;
 }
 ```
 let make_pledge os f v extra k = __make_pledge os f v extra k
 
 ```pulse
-unobservable
-fn __redeem_pledge (os : inames) (f v : vprop)
-  requires f ** pledge os f v
-  ensures f ** v
-  opens os
+ghost
+fn __redeem_pledge_ghost (is : invlist) (f v : vprop)
+  requires invlist_v is ** f ** pledge is f v
+  ensures invlist_v is ** f ** v
 {
   unfold pledge;
-  unfold ((==>*) #os f (f ** v));
-  elim_trade #os f (f ** v);
+  unfold ((==>*) #is f (f ** v));
+  elim_trade_ghost #is f (f ** v);
+}
+```
+let redeem_pledge_ghost = __redeem_pledge_ghost
+
+```pulse
+unobservable
+fn __redeem_pledge (is : invlist) (f v : vprop)
+  requires f ** pledge is f v
+  ensures f ** v
+  opens invlist_names is
+{
+  unfold pledge;
+  unfold ((==>*) #is f (f ** v));
+  elim_trade #is f (f ** v);
 }
 ```
 let redeem_pledge = __redeem_pledge
 
 ```pulse
-unobservable
+ghost
 fn bind_pledge_aux
-  (os : inames)
+  (is : invlist)
   (f v1 v2 extra : vprop)
-  (k : ustep os (f ** extra ** v1) (f ** pledge os f v2))
+  (k : ustep is (f ** extra ** v1) (f ** pledge is f v2))
   ()
-  requires f  ** (extra ** pledge os f v1)
-  ensures f ** v2
-  opens os
+  requires invlist_v is ** (f ** (extra ** pledge is f v1))
+  ensures  invlist_v is ** (f ** v2)
 {
-  redeem_pledge os f v1;
+  redeem_pledge_ghost is f v1;
   k ();
-  redeem_pledge os f v2
+  redeem_pledge_ghost is f v2
 }
 ```
 
@@ -120,30 +125,29 @@ same deadline. *)
 ```pulse
 ghost
 fn __bind_pledge
-  (#os : inames)
+  (#is : invlist)
   (#f #v1 #v2 : vprop)
   (extra : vprop)
-  (k : ustep os (f ** extra ** v1) (f ** pledge os f v2))
-  requires pledge os f v1 ** extra
-  ensures pledge os f v2
+  (k : ustep is (f ** extra ** v1) (f ** pledge is f v2))
+  requires pledge is f v1 ** extra
+  ensures pledge is f v2
 {
-  make_pledge os f v2 (extra ** pledge os f v1) (bind_pledge_aux os f v1 v2 extra k);
+  make_pledge is f v2 (extra ** pledge is f v1) (bind_pledge_aux is f v1 v2 extra k);
 }
 ```
 let bind_pledge #os #f #v1 #v2 extra k = __bind_pledge #os #f #v1 #v2 extra k
 
 ```pulse
 // just frames f to the left
-unobservable
+ghost
 fn __bind_pledge'_aux
-  (os : inames)
+  (is : invlist)
   (f v1 v2 : vprop)
   (extra : vprop)
-  (k : ustep os (extra ** v1) (pledge os f v2))
+  (k : ustep is (extra ** v1) (pledge is f v2))
   ()
-  requires f ** extra ** v1
-  ensures f ** pledge os f v2
-  opens os
+  requires invlist_v is ** (f ** extra ** v1)
+  ensures  invlist_v is ** (f ** pledge is f v2)
 {
   k();
 }
@@ -152,63 +156,64 @@ fn __bind_pledge'_aux
 ```pulse
 ghost
 fn __bind_pledge'
-  (#os : inames)
+  (#is : invlist)
   (#f #v1 #v2 : vprop)
   (extra : vprop)
-  (k : ustep os (extra ** v1) (pledge os f v2))
-  requires pledge os f v1 ** extra
-  ensures pledge os f v2
+  (k : ustep is (extra ** v1) (pledge is f v2))
+  requires pledge is f v1 ** extra
+  ensures pledge is f v2
 {
-  bind_pledge #os #f #v1 #v2 extra (__bind_pledge'_aux os f v1 v2 extra k)
+  bind_pledge #is #f #v1 #v2 extra (__bind_pledge'_aux is f v1 v2 extra k)
 }
 ```
 let bind_pledge' = __bind_pledge'
 
 ```pulse
-unobservable
-fn __join_pledge_aux (os:inames) (f v1 v2 : vprop) ()
-  requires f ** (pledge os f v1 ** pledge os f v2)
-  ensures f ** (v1 ** v2)
-  opens os
+ghost
+fn __join_pledge_aux
+  (is:invlist) (f v1 v2 : vprop) ()
+  requires invlist_v is ** (f ** (pledge is f v1 ** pledge is f v2))
+  ensures  invlist_v is ** (f ** (v1 ** v2))
 {
-  redeem_pledge os f v1;
-  redeem_pledge os f v2
+  redeem_pledge_ghost is f v1;
+  redeem_pledge_ghost is f v2
 }
 ```
 
 ```pulse
 ghost
-fn __join_pledge (#os:inames) (#f v1 v2 : vprop)
-  requires pledge os f v1 ** pledge os f v2
-  ensures pledge os f (v1 ** v2)
+fn __join_pledge
+  (#is:invlist) (#f v1 v2 : vprop)
+  requires pledge is f v1 ** pledge is f v2
+  ensures pledge is f (v1 ** v2)
 {
   (* Copilot wrote this!!! *)
-  make_pledge os f (v1 ** v2) (pledge os f v1 ** pledge os f v2) (__join_pledge_aux os f v1 v2)
+  make_pledge is f (v1 ** v2) (pledge is f v1 ** pledge is f v2) (__join_pledge_aux is f v1 v2)
 }
 ```
 let join_pledge = __join_pledge
 
 (* A big chunk follows for split_pledge *)
 
-let inv_p' (os0 : inames) (f v1 v2 : vprop) (r1 r2 : GR.ref bool) (b1 b2 : bool) =
+let inv_p' (is:invlist) (f v1 v2 : vprop) (r1 r2 : GR.ref bool) (b1 b2 : bool) =
      GR.pts_to r1 #one_half b1
   ** GR.pts_to r2 #one_half b2
   ** (match b1, b2 with
-      | false, false -> pledge os0 f (v1 ** v2)
+      | false, false -> pledge is f (v1 ** v2)
       | false, true -> v1
       | true, false -> v2
       | true, true -> emp)
 
-let inv_p (os0 : inames) (f v1 v2 : vprop) (r1 r2 : GR.ref bool) : vprop =
-  exists* b1 b2. inv_p' os0 f v1 v2 r1 r2 b1 b2
+let inv_p (is:invlist) (f v1 v2 : vprop) (r1 r2 : GR.ref bool) : vprop =
+  exists* b1 b2. inv_p' is f v1 v2 r1 r2 b1 b2
 
 ```pulse
-unobservable
-fn elim_body (#os0:inames) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool)
-             ()
-  requires inv_p os0 f v1 v2 r1 r2 ** f ** GR.pts_to r1 #one_half false
-  ensures  inv_p os0 f v1 v2 r1 r2 ** f ** v1
-  opens os0
+ghost
+fn elim_body_l
+  (#is:invlist) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool)
+  ()
+  requires (inv_p is f v1 v2 r1 r2 ** invlist_v is) ** (f ** GR.pts_to r1 #one_half false)
+  ensures  (inv_p is f v1 v2 r1 r2 ** invlist_v is) ** (f ** v1)
 {
   open Pulse.Lib.GhostReference;
   unfold inv_p;
@@ -218,22 +223,22 @@ fn elim_body (#os0:inames) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool
 
   let b1 = !r1;
   let b2 = !r2;
-
-  let b1 : bool = unobservable_reveal_bool b1;
-  let b2 : bool = unobservable_reveal_bool b2;
-
+  
+  let b1 : bool = reveal b1;
+  let b2 : bool = reveal b2;
+  
   if b2 {
     (* The "easy" case: the big pledge has already been claimed
     by the other subpledge, so we just extract our resource. *)
     assert (pts_to r1 false);
     r1 := true;
     rewrite emp ** (match false, true with
-              | false, false -> pledge os0 f (v1 ** v2)
+              | false, false -> pledge is f (v1 ** v2)
               | false, true -> v1
               | true, false -> v2
               | true, true -> emp)
         as (match true, true with
-              | false, false -> pledge os0 f (v1 ** v2)
+              | false, false -> pledge is f (v1 ** v2)
               | false, true -> v1
               | true, false -> v2
               | true, true -> emp) ** v1;
@@ -241,16 +246,16 @@ fn elim_body (#os0:inames) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool
     (* This should just disappear when we start normalizing
     the context. *)
     rewrite (match true, true with
-              | false, false -> pledge os0 f (v1 ** v2)
+              | false, false -> pledge is f (v1 ** v2)
               | false, true -> v1
               | true, false -> v2
               | true, true -> emp)
         as emp;
 
     share2 #_ r1;
-    fold (inv_p' os0 f v1 v2 r1 r2 true true);
+    fold (inv_p' is f v1 v2 r1 r2 true true);
     fold inv_p;
-    assert (f ** v1 ** inv_p os0 f v1 v2 r1 r2);
+    assert (f ** v1 ** inv_p is f v1 v2 r1 r2);
     drop_ (pts_to r1 #one_half true);
   } else {
     (* The "hard" case: the big pledge has not been claimed.
@@ -258,40 +263,40 @@ fn elim_body (#os0:inames) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool
     assert (pts_to r1 false);
 
     rewrite (match false, false with
-              | false, false -> pledge os0 f (v1 ** v2)
+              | false, false -> pledge is f (v1 ** v2)
               | false, true -> v1
               | true, false -> v2
               | true, true -> emp)
-        as pledge os0 f (v1 ** v2);
+        as pledge is f (v1 ** v2);
 
-    redeem_pledge os0 f (v1 ** v2);
+    redeem_pledge_ghost is f (v1 ** v2);
 
     r1 := true;
 
     share2 r1;
 
-    fold (inv_p' os0 f v1 v2 r1 r2 true false);
+    fold (inv_p' is f v1 v2 r1 r2 true false);
     fold inv_p;
-    assert (f ** v1 ** inv_p os0 f v1 v2 r1 r2);
+    assert (f ** v1 ** inv_p is f v1 v2 r1 r2);
     drop_ (pts_to r1 #one_half true)
   }
 }
 ```
 
-```pulse
-unobservable
-fn __elim_l (#os0:inames) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool)
-            (i : inv (inv_p os0 f v1 v2 r1 r2){not (mem_inv os0 i)})
-            ()
-  requires f ** GR.pts_to r1 #one_half false
-  ensures f ** v1
-  opens (add_inv os0 i)
-{
-  with_invariants (i <: inv _) {
-    elim_body #os0 #f v1 v2 r1 r2 ();
-  }
-}
-```
+// ```pulse
+// unobservable
+// fn __elim_l (#is:invlist) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool)
+//             (i : inv (inv_p is f v1 v2 r1 r2){not (mem_inv (invlist_names is) i)})
+//             ()
+//   requires f ** GR.pts_to r1 #one_half false
+//   ensures  f ** v1
+//   opens (add_inv (invlist_names is) i)
+// {
+//   with_invariants (i <: inv _) {
+//     with_invlist_ghost is (elim_body_l #is #f v1 v2 r1 r2);
+//   }
+// }
+// ```
 
 
 open FStar.Tactics.V2
@@ -303,15 +308,15 @@ let __tac () : Tac unit =
   apply (`vprop_equiv_refl_eq)
 
 ```pulse
-unobservable
+ghost
 fn flip_invp
-  (os0:inames) (f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool)
-  requires inv_p os0 f v1 v2 r1 r2
-  ensures  inv_p os0 f v2 v1 r2 r1
+  (is:invlist) (f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool)
+  requires inv_p is f v1 v2 r1 r2
+  ensures  inv_p is f v2 v1 r2 r1
 {
   unfold inv_p;
 
-  with b1 b2. assert (inv_p' os0 f v1 v2 r1 r2 b1 b2);
+  with b1 b2. assert (inv_p' is f v1 v2 r1 r2 b1 b2);
 
   unfold inv_p';
 
@@ -320,82 +325,99 @@ fn flip_invp
 
   rewrite_by
      (match b1, b2 with
-      | false, false -> pledge os0 f (v1 ** v2)
+      | false, false -> pledge is f (v1 ** v2)
       | false, true -> v1
       | true, false -> v2
       | true, true -> emp)
      (match b2, b1 with
-      | false, false -> pledge os0 f (v2 ** v1)
+      | false, false -> pledge is f (v2 ** v1)
       | false, true -> v2
       | true, false -> v1
       | true, true -> emp)
     __tac
     ();
 
-  fold (inv_p' os0 f v2 v1 r2 r1 b2 b1);
+  fold (inv_p' is f v2 v1 r2 r1 b2 b1);
   fold inv_p;
 }
 ```
 
 ```pulse
-unobservable
-fn __elim_r (#os0:inames) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool)
-            (i : inv (inv_p os0 f v1 v2 r1 r2){not (mem_inv os0 i)})
-            ()
-  requires f ** GR.pts_to r2 #one_half false
-  ensures f ** v2
-  opens (add_inv os0 i)
+ghost
+fn elim_body_r
+  (#is:invlist) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool)
+  ()
+  requires (inv_p is f v1 v2 r1 r2 ** invlist_v is) ** (f ** GR.pts_to r2 #one_half false)
+  ensures  (inv_p is f v1 v2 r1 r2 ** invlist_v is) ** (f ** v2)
 {
-  with_invariants (i <: inv _) {
-    flip_invp os0 f v1 v2 r1 r2;
-    elim_body #os0 #f v2 v1 r2 r1 ();
-    flip_invp os0 f v2 v1 r2 r1;
-  }
+  flip_invp is f v1 v2 r1 r2;
+  elim_body_l #is #f v2 v1 r2 r1 ();
+  flip_invp is f v2 v1 r2 r1;
 }
 ```
 
+// ```pulse
+// unobservable
+// fn __elim_r (#is:invlist) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool)
+//             (i : inv (inv_p is f v1 v2 r1 r2){not (mem_inv (invlist_names is) i)})
+//             ()
+//   requires f ** GR.pts_to r2 #one_half false
+//   ensures  f ** v2
+//   opens (add_inv (invlist_names is) i)
+// {
+//   with_invariants (i <: inv _) {
+//     with_invlist_ghost is (elim_body_r #is #f v1 v2 r1 r2);
+//   }
+// }
+// ```
+
+#set-options "--debug Pulse.Lib.Par.Pledge --debug_level SMTQuery --print_implicits --print_universes"
+
+let split_ret (is:invlist) = xi:invlist_elem {not (mem_inv (invlist_names is) (dsnd xi))}
+
 ```pulse
 unobservable
-fn __split_pledge (#os:inames) (#f:vprop) (v1:vprop) (v2:vprop)
-  requires pledge os f (v1 ** v2)
-  returns i:(erased iname)
-  ensures pledge (add_iname os i) f v1 ** pledge (add_iname os i) f v2
+fn __split_pledge (#is:invlist) (#f:vprop) (v1:vprop) (v2:vprop)
+  requires pledge is f (v1 ** v2)
+  returns r : (e : invlist_elem { not (mem_inv (invlist_names is) (dsnd e)) })
+  ensures pledge (add_one r is) f v1 ** pledge (add_one r is) f v2
 {
-   let r1 = GR.alloc false;
-   let r2 = GR.alloc false;
-   GR.share2 r1;
-   GR.share2 r2;
-
-  fold (inv_p' os f v1 v2 r1 r2 false false);
+  let r1 = GR.alloc false;
+  let r2 = GR.alloc false;
+  GR.share2 r1;
+  GR.share2 r2;
+  
+  fold (inv_p' is f v1 v2 r1 r2 false false);
   fold inv_p;
 
-  let i = new_invariant (inv_p os f v1 v2 r1 r2);
-
+  let i = new_invariant (inv_p is f v1 v2 r1 r2);
   // FIXME: should follow from freshness
-  assume_ (pure (not (mem_inv os i)));
+  assume_ (pure (not (mem_inv (invlist_names is) i)));
+  
+  let pi : invlist_elem = Mkdtuple2 #vprop #(fun p -> inv p) (inv_p is f v1 v2 r1 r2) i;
+
+  let is' : invlist = add_one pi is;
 
   make_pledge
-    (add_inv os i)
+    is'
     f
     v1
     (GR.pts_to r1 #one_half false)
-    (__elim_l #os #f v1 v2 r1 r2 i);
+    (elim_body_l #is #f v1 v2 r1 r2);
 
   make_pledge
-    (add_inv os i)
+    is'
     f
     v2
     (GR.pts_to r2 #one_half false)
-    (__elim_r #os #f v1 v2 r1 r2 i);
-
-  let iname = hide (name_of_inv i);
+    (elim_body_r #is #f v1 v2 r1 r2);
 
   rewrite each
-    add_inv os i
+    is'
   as
-    add_iname os iname;
-  
-  iname
+    add_one pi is;
+
+  pi
 }
 ```
 let split_pledge = __split_pledge
@@ -403,27 +425,26 @@ let split_pledge = __split_pledge
 (* /split_pledge *)
 
 ```pulse
-unobservable
-fn __rewrite_pledge_aux (os:inames) (f v1 v2 : vprop)
-      (k : ustep os v1 v2)
+ghost
+fn __rewrite_pledge_aux (is:invlist) (f v1 v2 : vprop)
+      (k : ustep is v1 v2)
       ()
-  requires (f ** emp) ** v1
-  ensures  f ** pledge os f v2
-  opens os
+  requires invlist_v is ** ((f ** emp) ** v1)
+  ensures  invlist_v is ** (f ** pledge is f v2)
 { 
   k ();
-  return_pledge os f v2;
+  return_pledge is f v2;
 }
 ```
 
 ```pulse
 ghost
-fn __rewrite_pledge (#os:inames) (#f v1 v2 : vprop)
-      (k : ustep os v1 v2)
-  requires pledge os f v1
-  ensures  pledge os f v2
+fn __rewrite_pledge (#is:invlist) (#f v1 v2 : vprop)
+      (k : ustep is v1 v2)
+  requires pledge is f v1
+  ensures  pledge is f v2
 {
-  bind_pledge emp (__rewrite_pledge_aux os f v1 v2 k)
+  bind_pledge emp (__rewrite_pledge_aux is f v1 v2 k)
 }
 ```
 let rewrite_pledge = __rewrite_pledge

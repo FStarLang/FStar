@@ -63,7 +63,7 @@ val elim_trade
 
 val trade_sub_inv
   (#os1 : invlist)
-  (#os2 : invlist{inames_subset (invlist_names os1) (invlist_names os2)})
+  (#os2 : invlist{invlist_sub os1 os2})
   (hyp concl: vprop)
 : stt_ghost unit emp_inames
     (trade #os1 hyp concl)

@@ -121,7 +121,7 @@ let elim_trade #is = __elim_trade #is
 ghost
 fn __trade_sub_inv
   (#os1 : invlist)
-  (#os2 : invlist{inames_subset (invlist_names os1) (invlist_names os2)})
+  (#os2 : invlist{invlist_sub os1 os2})
   (hyp concl: vprop)
   requires trade #os1 hyp concl
   ensures trade #os2 hyp concl
