@@ -54,6 +54,23 @@ let intro_trade #is = __intro_trade #is
 let sqeq (p : Type) (_ : squash p) : erased p =
   FStar.IndefiniteDescription.elim_squash #p ()
 
+let psquash (a:Type u#a) : prop = squash a
+
+```pulse
+ghost
+fn pextract (a:Type u#2) (_:squash a)
+requires emp
+returns i:a
+ensures emp
+{
+  let pf = elim_pure_explicit (psquash a);
+  let pf : squash a = FStar.Squash.join_squash pf;
+  let i = sqeq a pf;
+  let i = reveal i;
+  i
+}
+```
+
 ```pulse
 ghost
 fn __elim_trade_ghost
@@ -67,16 +84,16 @@ fn __elim_trade_ghost
   with extra. assert (extra ** trade_elim_exists is hyp extra concl);
   
   unfold (trade_elim_exists is hyp extra concl);
-  
-  // assert pure (squash (trade_elim_t is hyp (reveal extra) concl));
-  
-  // assert (pure (squash (trade_elim_t is hyp (reveal extra) concl)));
 
-  // let f = elim_ghost (trade_elim_t is hyp (reveal extra) concl);
+  let pf : squash (psquash (trade_elim_t is hyp (reveal extra) concl)) =
+    elim_pure_explicit (psquash (trade_elim_t is hyp (reveal extra) concl));
+
+  let pf : squash (trade_elim_t is hyp (reveal extra) concl) =
+    FStar.Squash.join_squash pf;
+
+  let f = pextract (trade_elim_t is hyp (reveal extra) concl) pf;
   
-  // f();
-  
-  admit();
+  f();
 }
 ```
 let elim_trade_ghost #is = __elim_trade_ghost #is
@@ -93,15 +110,6 @@ fn elim_trade_helper
   elim_trade_ghost #is hyp concl;
 }
 ```
-
-// val elim_trade
-//   (#[T.exact (`[])] is : invlist)
-//   (hyp concl: vprop)
-// : stt_unobservable unit (invlist_names is)
-//     ((trade #is hyp concl) ** hyp)
-//     (fun _ -> concl)
-
-#set-options "--log_failing_queries"
 
 ```pulse
 unobservable
@@ -126,6 +134,9 @@ fn __trade_sub_inv
   requires trade #os1 hyp concl
   ensures trade #os2 hyp concl
 {
+  (* TODO: this should follow from the fact that,
+  if is1 is a subset of is2, then invlist_v is1 is a "sub vprop" of invlist_v is2,
+  and we can just frame the rest. I don't expect any surprises (fingers crossed) *)
   admit()
 }
 ```
