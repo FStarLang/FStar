@@ -367,7 +367,7 @@ ensures pts_to x ('i + 2)
 
     );
     C.share tok; 
-    let inv = new_invariant' (C.cancellable tok _);
+    let inv = new_invariant (C.cancellable tok _);
     ghost
     fn step
         (lr:GR.ref int)

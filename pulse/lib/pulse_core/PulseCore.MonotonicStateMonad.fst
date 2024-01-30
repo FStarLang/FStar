@@ -14,7 +14,7 @@ let mst (#s:Type u#s)
         }
     )
 
-assume
+assume (* to interoperate with a definition of a similar module in FStar.MSTTotal *)
 val reify_ (#s:Type u#2) (#rel:FStar.Preorder.preorder s)
            (#a:Type u#a) (#pre:s -> prop) (#post:s -> a -> s -> prop)
            ($f:unit -> M.MSTATETOT a s rel pre post)
