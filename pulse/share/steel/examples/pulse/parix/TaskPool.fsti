@@ -50,7 +50,7 @@ val spawn
   ($f : unit -> stt a pre (fun (x:a) -> post x))
   : stt (task_handle p a post)
         (pool_alive #e p ** pre)
-        (fun th -> pool_alive #e p ** joinable th ** pledge [] (joined th) (handle_solved th))
+        (fun th -> pool_alive #e p ** joinable th)
 
 (* Spawn of a unit-returning task with no intention to join, simpler. *)
 val spawn_
@@ -82,12 +82,19 @@ val extract
   (th : task_handle p a post)
   : stt a (handle_solved th) (fun x -> post x)
   
-val split_alive
+val share_alive
   (p:pool)
   (e:perm)
   : stt_ghost unit emp_inames
               (pool_alive #e p)
               (fun () -> pool_alive #(half_perm e) p ** pool_alive #(half_perm e) p)
+
+val gather_alive
+  (p:pool)
+  (e:perm)
+  : stt_ghost unit emp_inames
+              (pool_alive #(half_perm e) p ** pool_alive #(half_perm e) p)
+              (fun () -> pool_alive #e p)
 
 val join
   (#p:pool)
