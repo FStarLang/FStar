@@ -2236,3 +2236,7 @@ pub enum context_t {
     L0_context(l0_context_t),
     L1_context(l1_context_t),
 }
+
+// pub fn test(mut m: std::sync::Mutex<u32>) {
+//     let r: &mut u32 = &mut m.lock().unwrap();
+// }

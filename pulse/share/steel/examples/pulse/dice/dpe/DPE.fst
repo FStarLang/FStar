@@ -33,7 +33,7 @@ module U32 = FStar.UInt32
 module HT = Pulse.Lib.HashTable
 module PHT = Pulse.Lib.HashTable.Spec
 
-open Pulse.Lib.BoundedIntegers
+// open Pulse.Lib.BoundedIntegers
 open Pulse.Lib.OnRange
 open Pulse.Lib.HashTable.Type
 
@@ -180,11 +180,11 @@ fn initialize_global_state ()
 
 let global_state : mutex global_state_mutex_pred = run_stt (initialize_global_state ())
 
-#push-options "--ext 'pulse:env_on_err' --print_implicits --warn_error -342"
 ```pulse
-fn alloc_global_state (r:ref (option global_state_t))
-  requires pts_to r None
-  ensures exists* gst. pts_to r (Some gst) ** global_state_mutex_pred (Some gst)
+fn mk_global_state ()
+  requires emp
+  returns st:global_state_t
+  ensures global_state_mutex_pred (Some st)
 {
   let session_table = HT.alloc #sid_t #session_state sid_hash 256sz;
   let st = {
@@ -195,6 +195,17 @@ fn alloc_global_state (r:ref (option global_state_t))
   rewrite (models session_table pht) as (models st.session_table pht);
   Pulse.Lib.OnRange.on_range_empty #emp_inames (session_perm pht) 0;
   fold (global_state_mutex_pred (Some st));
+  st
+}
+```
+
+#push-options "--ext 'pulse:env_on_err' --print_implicits --warn_error -342"
+```pulse
+fn alloc_global_state (r:ref (option global_state_t))
+  requires pts_to r None
+  ensures exists* gst. pts_to r (Some gst) ** global_state_mutex_pred (Some gst)
+{
+  let st = mk_global_state ();
   r := Some st;
 }
 ```
@@ -353,7 +364,6 @@ fn insert_dpe (#kt:eqtype) (#vt:Type0)
             else pht'==pht))
 {
   let b = not_full ht;
-  rewrite (models ht pht) as (models (fst b) pht);
   if snd b
   {
     // rewrite (models ht pht) as (models (fst b) pht);
@@ -375,53 +385,171 @@ fn insert_dpe (#kt:eqtype) (#vt:Type0)
   ID or None upon failure
   NOTE: Current implementation disregards session protocol 
 *)
+
+assume val safe_add (i j:U32.t)
+  : Pure (option U32.t)
+         (requires True)
+         (ensures fun r -> Some? r ==> U32.v (Some?.v r) == U32.v i + U32.v j)
+
+#push-options "--z3rlimit_factor 4"
+```pulse
+fn open_session_aux (st:global_state_t)
+  requires global_state_mutex_pred (Some st)
+  returns b:(global_state_t & option sid_t)
+  ensures global_state_mutex_pred (Some (fst b))
+{
+  unfold (global_state_mutex_pred (Some st));
+  let ctr = st.session_id_counter;
+  let tbl = st.session_table;
+  with stm. rewrite (models st.session_table stm) as (models tbl stm);
+  with stm. rewrite (on_range (session_perm stm) 0 (U32.v st.session_id_counter))
+                 as (on_range (session_perm stm) 0 (U32.v ctr));
+  let opt_inc = ctr `safe_add` 1ul;
+  with pht0. assert (models tbl pht0);
+  match opt_inc {
+    None -> {
+      let st = { session_id_counter = ctr; session_table = tbl };
+      with stm. rewrite (models tbl stm) as (models st.session_table stm);
+      with stm. rewrite (on_range (session_perm stm) 0 (U32.v ctr))
+                     as (on_range (session_perm stm) 0 (U32.v st.session_id_counter));
+      fold (global_state_mutex_pred (Some st));
+      let res = (st, None #sid_t);
+      rewrite (global_state_mutex_pred (Some st)) as (global_state_mutex_pred (Some (fst res)));
+      (st, None #sid_t)
+    }
+    Some next_sid -> {
+      let res = insert_dpe tbl next_sid SessionStart;
+      if snd res {
+        let st = { session_id_counter = next_sid; session_table = fst res };
+        with pht. assert (models (fst res) pht);
+        rewrite (models (fst res) pht) as (models st.session_table pht);
+        frame_session_perm_on_range pht0 pht 0 (U32.v ctr);
+        admit ();
+        (st, Some next_sid)
+      } else {
+        let st = { session_id_counter = ctr; session_table = fst res };
+        with stm. rewrite (models (fst res) stm) as (models st.session_table stm);
+        with stm1. assert (models st.session_table stm1);
+        with stm. rewrite (on_range (session_perm stm) 0 (U32.v ctr))
+                       as (on_range (session_perm stm1) 0 (U32.v st.session_id_counter));
+        fold (global_state_mutex_pred (Some st));
+        let res = (st, None #sid_t);
+        rewrite (global_state_mutex_pred (Some st)) as (global_state_mutex_pred (Some (fst res)));
+        (st, None #sid_t)
+      }
+    }
+  }
+
+  // with ht. assert (pts_to global_state.session_table ht);
+  // with pht0. assert (models ht pht0);
+  // with i j. assert (on_range (session_perm pht0) i j);
+  // let sid = !global_state.session_id_counter;
+  // assert pure (U32.v sid == j);
+  // let opt_inc = sid `safe_add` 1ul;
+  // match opt_inc
+  // {
+  //   None -> 
+  //   {
+  //     fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
+  //     L.release global_state.lock;
+  //     None #sid_t
+  //   }
+  //   Some next_sid ->
+  //   {
+  //     let r = insert global_state.session_table sid SessionStart;
+  //     if r 
+  //     {
+  //       global_state.session_id_counter := next_sid;
+  //       with pht1. assert (models ht pht1);
+  //       frame_session_perm_on_range pht0 pht1 i j;
+  //       rewrite emp as (session_perm pht1 j);
+  //       Pulse.Lib.OnRange.on_range_snoc #emp_inames () #(session_perm pht1);
+  //       fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
+  //       L.release global_state.lock;
+  //       Some sid
+  //     } 
+  //     else
+  //     {
+  //       with pht1. rewrite (models ht pht1)
+  //                       as (models ht pht0);
+  //       // ERROR - insert failed
+  //       fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
+  //       L.release global_state.lock;
+  //       None #sid_t
+  //     }
+  //   }
+  // } 
+}
+```
+#pop-options
+
 ```pulse
 fn open_session ()
   requires emp
   returns _:option sid_t
   ensures emp
 {
-  L.acquire global_state.lock;
-  unfold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
-  with ht. assert (pts_to global_state.session_table ht);
-  with pht0. assert (models ht pht0);
-  with i j. assert (on_range (session_perm pht0) i j);
-  let sid = !global_state.session_id_counter;
-  assert pure (U32.v sid == j);
-  let opt_inc = sid `safe_add` 1ul;
-  match opt_inc
-  {
-    None -> 
-    {
-      fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
-      L.release global_state.lock;
-      None #sid_t
+  let r = lock global_state;
+  let st_opt = R.replace r None;
+
+  match st_opt {
+    None -> {
+      rewrite (global_state_mutex_pred None) as emp;
+      let st = mk_global_state ();
+      let res = open_session_aux st;
+      r := Some (fst res);
+      unlock global_state r;
+      (snd res)
     }
-    Some next_sid ->
-    {
-      let r = insert global_state.session_table sid SessionStart;
-      if r 
-      {
-        global_state.session_id_counter := next_sid;
-        with pht1. assert (models ht pht1);
-        frame_session_perm_on_range pht0 pht1 i j;
-        rewrite emp as (session_perm pht1 j);
-        Pulse.Lib.OnRange.on_range_snoc #emp_inames () #(session_perm pht1);
-        fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
-        L.release global_state.lock;
-        Some sid
-      } 
-      else
-      {
-        with pht1. rewrite (models ht pht1)
-                        as (models ht pht0);
-        // ERROR - insert failed
-        fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
-        L.release global_state.lock;
-        None #sid_t
-      }
+    Some st -> {
+      let res = open_session_aux st;
+      r := Some (fst res);
+      unlock global_state r;
+      (snd res)
     }
   }
+
+  // L.acquire global_state.lock;
+  // unfold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
+  // with ht. assert (pts_to global_state.session_table ht);
+  // with pht0. assert (models ht pht0);
+  // with i j. assert (on_range (session_perm pht0) i j);
+  // let sid = !global_state.session_id_counter;
+  // assert pure (U32.v sid == j);
+  // let opt_inc = sid `safe_add` 1ul;
+  // match opt_inc
+  // {
+  //   None -> 
+  //   {
+  //     fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
+  //     L.release global_state.lock;
+  //     None #sid_t
+  //   }
+  //   Some next_sid ->
+  //   {
+  //     let r = insert global_state.session_table sid SessionStart;
+  //     if r 
+  //     {
+  //       global_state.session_id_counter := next_sid;
+  //       with pht1. assert (models ht pht1);
+  //       frame_session_perm_on_range pht0 pht1 i j;
+  //       rewrite emp as (session_perm pht1 j);
+  //       Pulse.Lib.OnRange.on_range_snoc #emp_inames () #(session_perm pht1);
+  //       fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
+  //       L.release global_state.lock;
+  //       Some sid
+  //     } 
+  //     else
+  //     {
+  //       with pht1. rewrite (models ht pht1)
+  //                       as (models ht pht0);
+  //       // ERROR - insert failed
+  //       fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
+  //       L.release global_state.lock;
+  //       None #sid_t
+  //     }
+  //   }
+  // }
 }
 ```
 // let open_session = open_session'

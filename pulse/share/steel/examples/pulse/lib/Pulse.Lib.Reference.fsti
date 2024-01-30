@@ -112,3 +112,8 @@ val pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
   : stt_ghost unit emp_inames
       (pts_to r #p v)
       (fun _ -> pts_to r #p v ** pure (p `lesser_equal_perm` full_perm))
+
+val replace (#a:Type0) (r:ref a) (x:a) (#v:erased a)
+  : stt a
+      (pts_to r v)
+      (fun res -> pts_to r x ** pure (res == reveal v))
