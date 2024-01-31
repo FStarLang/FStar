@@ -2279,26 +2279,72 @@ ocaml_export! {
 // static OBJ: Mutex<S> = new_mutex();
 
 pub struct engine_context_t {
-    uds: Box<u8>,
+    uds: Vec<u8>,
 }
 
 pub struct l0_context_t {
-    cdi: Box<u8>,
+    cdi: Vec<u8>,
 }
 
 pub struct l1_context_t {
-    deviceID_priv: Box<u8>,
-    deviceID_pub: Box<u8>,
-    aliasKey_priv: Box<u8>,
-    aliasKey_pub: Box<u8>,
-    aliasKeyCRT: Box<u8>,
-    deviceIDCSR: Box<u8>,
+    deviceID_priv: Vec<u8>,
+    deviceID_pub: Vec<u8>,
+    aliasKey_priv: Vec<u8>,
+    aliasKey_pub: Vec<u8>,
+    aliasKeyCRT: Vec<u8>,
+    deviceIDCSR: Vec<u8>,
 }
 
 pub enum context_t {
     Engine_context(engine_context_t),
     L0_context(l0_context_t),
     L1_context(l1_context_t),
+}
+use crate::context_t::*;
+static uds_len: usize = 32;
+static dice_digest_len: usize = 32;
+static v32us: usize = 32;
+
+pub fn memcpy(len: usize, v_dst: &mut [u8], v_src: &mut [u8], p: (), uds_bytes: (), m: ()) -> () {
+    panic!()
+}
+
+pub fn mk_engine_context_t(uds_buf: Vec<u8>) -> engine_context_t {
+    engine_context_t { uds: uds_buf }
+}
+
+pub fn mk_context_t_engine(engine_context: engine_context_t) -> context_t {
+    context_t::Engine_context(engine_context)
+}
+
+pub fn mk_l0_context_t(cdi_buf: Vec<u8>) -> l0_context_t {
+    l0_context_t { cdi: cdi_buf }
+}
+
+pub fn mk_context_t_l0(l0_context: l0_context_t) -> context_t {
+    context_t::L0_context(l0_context)
+}
+
+pub fn mk_l1_context_t(
+    deviceID_priv_buf: Vec<u8>,
+    deviceID_pub_buf: Vec<u8>,
+    aliasKey_priv_buf: Vec<u8>,
+    aliasKey_pub_buf: Vec<u8>,
+    aliasKeyCRT_buf: Vec<u8>,
+    deviceIDCSR_buf: Vec<u8>,
+) -> l1_context_t {
+    l1_context_t {
+        deviceID_priv: deviceID_priv_buf,
+        deviceID_pub: deviceID_pub_buf,
+        aliasKey_priv: aliasKey_priv_buf,
+        aliasKey_pub: aliasKey_pub_buf,
+        aliasKeyCRT: aliasKeyCRT_buf,
+        deviceIDCSR: deviceIDCSR_buf,
+    }
+}
+
+pub fn mk_context_t_l1(l1_context: l1_context_t) -> context_t {
+    context_t::L1_context(l1_context)
 }
 
 // pub fn test(mut m: std::sync::Mutex<u32>) {
@@ -2347,6 +2393,33 @@ pub fn sz_add(x: usize, y: usize) -> std::option::Option<usize> {
 }
 pub fn size_t_mod(x: usize, y: usize) -> usize {
     x % y
+}
+pub fn replace<KT: PartialEq + Copy, VT>(
+    pht: (),
+    ht: ht_t<KT, VT>,
+    idx: usize,
+    k: KT,
+    v: VT,
+    uu___: (),
+) -> (ht_t<KT, VT>, VT) {
+    let hashf = ht.hashf;
+    let mut contents = ht.contents;
+    let v_ = std::mem::replace(&mut contents[idx], mk_used_cell(k, v));
+    let vcontents = contents;
+    let ht1 = ht_t {
+        sz: ht.sz,
+        hashf: hashf,
+        contents: vcontents,
+    };
+    let _bind_c = match v_ {
+        Used(k_, v_1) => {
+            let res = (ht1, v_1);
+            panic!()
+        }
+        _ => panic!(),
+    };
+    let contents1 = _bind_c;
+    contents1
 }
 pub fn lookup<KT: PartialEq + Copy, VT>(
     pht: (),
@@ -2678,5 +2751,188 @@ pub fn open_session(uu___: ()) -> std::option::Option<sid_t> {
             *r = Some(res.0);
             res.1
         }
+    }
+}
+
+pub fn destroy_ctxt(ctxt: context_t, repr: ()) -> () {
+    match ctxt {
+        Engine_context(c) => drop(c.uds),
+        L0_context(c) => drop(c.cdi),
+        L1_context(c) => {
+            drop(c.deviceID_priv);
+            drop(c.deviceID_pub);
+            drop(c.aliasKey_priv);
+            drop(c.aliasKey_pub);
+            drop(c.aliasKeyCRT);
+            drop(c.deviceIDCSR)
+        }
+    }
+}
+pub fn return_none<A>(p: ()) -> std::option::Option<A> {
+    None
+}
+pub fn dflt<A>(x: std::option::Option<A>, y: A) -> A {
+    match x {
+        Some(v) => v,
+        _ => y,
+    }
+}
+pub fn take_session_state(
+    sid: sid_t,
+    replace_with: session_state,
+) -> std::option::Option<session_state> {
+    let r: &mut std::option::Option<global_state_t> = &mut global_state.lock().unwrap();
+    let st_opt = std::mem::replace(r, None);
+    match st_opt {
+        None => None,
+        Some(st) => {
+            let ctr = st.session_id_counter;
+            let tbl = st.session_table;
+            if sid < ctr {
+                let ss = lookup((), tbl, sid);
+                if ss.1 {
+                    match ss.2 {
+                        Some(idx) => {
+                            let ok = replace((), ss.0, idx, sid, replace_with, ());
+                            let st1 = global_state_t {
+                                session_id_counter: ctr,
+                                session_table: ok.0,
+                            };
+                            *r = Some(st1);
+                            panic!()
+                        }
+                        None => {
+                            let st1 = global_state_t {
+                                session_id_counter: ctr,
+                                session_table: ss.0,
+                            };
+                            *r = Some(st1);
+                            None
+                        }
+                    }
+                } else {
+                    let st1 = global_state_t {
+                        session_id_counter: ctr,
+                        session_table: ss.0,
+                    };
+                    *r = Some(st1);
+                    None
+                }
+            } else {
+                let st1 = global_state_t {
+                    session_id_counter: ctr,
+                    session_table: tbl,
+                };
+                *r = Some(st1);
+                None
+            }
+        }
+    }
+}
+pub fn destroy_session_state(st: session_state) -> () {
+    match st {
+        Available(st1) => destroy_ctxt(st1.context, ()),
+        _ => (),
+    }
+}
+pub fn init_engine_ctxt(uds: &mut [u8], p: (), uds_bytes: ()) -> context_t {
+    let mut uds_buf = vec![0; uds_len];
+    memcpy(uds_len, uds, &mut uds_buf, (), (), ());
+    let engine_context = mk_engine_context_t(uds_buf);
+    let ctxt = mk_context_t_engine(engine_context);
+    ctxt
+}
+pub fn init_l0_ctxt(cdi: &mut [u8], engine_repr: (), s: (), uds_bytes: (), uu___: ()) -> context_t {
+    let mut cdi_buf = vec![0; dice_digest_len];
+    memcpy(dice_digest_len, cdi, &mut cdi_buf, (), (), ());
+    let l0_context = mk_l0_context_t(cdi_buf);
+    let ctxt = mk_context_t_l0(l0_context);
+    ctxt
+}
+pub fn init_l1_ctxt(
+    deviceIDCSR_len: usize,
+    aliasKeyCRT_len: usize,
+    deviceID_priv: &mut [u8],
+    deviceID_pub: &mut [u8],
+    aliasKey_priv: &mut [u8],
+    aliasKey_pub: &mut [u8],
+    deviceIDCSR: &mut [u8],
+    aliasKeyCRT: &mut [u8],
+    deviceID_label_len: (),
+    aliasKey_label_len: (),
+    cdi: (),
+    repr: (),
+    deviceIDCSR_ingredients: (),
+    aliasKeyCRT_ingredients: (),
+    deviceID_priv0: (),
+    deviceID_pub0: (),
+    aliasKey_priv0: (),
+    aliasKey_pub0: (),
+    deviceIDCSR0: (),
+    aliasKeyCRT0: (),
+) -> context_t {
+    let mut deviceID_pub_buf = vec![0; v32us];
+    let mut deviceID_priv_buf = vec![0; v32us];
+    let mut aliasKey_priv_buf = vec![0; v32us];
+    let mut aliasKey_pub_buf = vec![0; v32us];
+    let mut deviceIDCSR_buf = vec![0; deviceIDCSR_len];
+    let mut aliasKeyCRT_buf = vec![0; aliasKeyCRT_len];
+    memcpy(v32us, deviceID_priv, &mut deviceID_priv_buf, (), (), ());
+    memcpy(v32us, deviceID_pub, &mut deviceID_pub_buf, (), (), ());
+    memcpy(v32us, aliasKey_priv, &mut aliasKey_priv_buf, (), (), ());
+    memcpy(v32us, aliasKey_pub, &mut aliasKey_pub_buf, (), (), ());
+    memcpy(
+        deviceIDCSR_len,
+        deviceIDCSR,
+        &mut deviceIDCSR_buf,
+        (),
+        (),
+        (),
+    );
+    memcpy(
+        aliasKeyCRT_len,
+        aliasKeyCRT,
+        &mut aliasKeyCRT_buf,
+        (),
+        (),
+        (),
+    );
+    let l1_context = mk_l1_context_t(
+        deviceID_priv_buf,
+        deviceID_pub_buf,
+        aliasKey_priv_buf,
+        aliasKey_pub_buf,
+        aliasKeyCRT_buf,
+        deviceIDCSR_buf,
+    );
+    let ctxt = mk_context_t_l1(l1_context);
+    ctxt
+}
+pub fn prng(uu___: ()) -> u32 {
+    panic!()
+}
+pub fn initialize_context(
+    p: (),
+    uds_bytes: (),
+    sid: sid_t,
+    uds: &mut [u8],
+) -> std::option::Option<ctxt_hndl_t> {
+    let st = take_session_state(sid, session_state::InUse);
+    match st {
+        None => None,
+        Some(st1) => match st1 {
+            SessionStart => {
+                let ctxt = init_engine_ctxt(uds, (), ());
+                let ctxt_hndl = prng(());
+                let st_ = intro_session_state_perm_available(ctxt, ctxt_hndl, ());
+                let st__ = take_session_state(sid, st_);
+                Some(ctxt_hndl)
+            }
+            _ => {
+                destroy_session_state(st1);
+                let st_ = take_session_state(sid, session_state::SessionError);
+                None
+            }
+        },
     }
 }

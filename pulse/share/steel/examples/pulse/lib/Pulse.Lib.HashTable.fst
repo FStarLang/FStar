@@ -104,7 +104,7 @@ let size_t_mod (x:SZ.t) (y : SZ.t { y =!= 0sz })
   = SZ.(x %^ y)
 
 
-#push-options "--admit_smt_queries true"
+// #push-options "--admit_smt_queries true"
 ```pulse
 fn replace (#kt:eqtype) (#vt:Type)
   (#pht:erased (pht_t kt vt))
@@ -117,21 +117,35 @@ fn replace (#kt:eqtype) (#vt:Type)
   requires models ht pht
   returns p:(ht_t kt vt & vt)
   ensures models (fst p) (PHT.upd_pht #kt #vt pht idx k v ()) **
-          pure (fst p == ht /\ Some (snd p) == PHT.lookup pht k)
+          pure ((fst p).sz == ht.sz /\ (fst p).hashf == ht.hashf /\ Some (snd p) == PHT.lookup pht k)
 {
+  let hashf = ht.hashf;
+  let mut contents = ht.contents;
   unfold models;
-  let v' = V.replace ht.contents idx (mk_used_cell k v);
-  fold (models ht (PHT.upd_pht #kt #vt pht idx k v ()));
+  assert (R.pts_to contents ht.contents);
+  rewrite (R.pts_to contents ht.contents) as (R.pts_to contents (reveal (hide ht.contents)));
+  rewrite (V.pts_to ht.contents pht.repr.seq) as (V.pts_to (reveal (hide ht.contents)) pht.repr.seq);
+  // show_proof_state;
+  // with s. rewrite (V.pts_to ht.contents s) as (V.pts_to vcontents s);
+  // show_proof_state;
+  let v' = V.replace_ref contents idx (mk_used_cell k v);
+  let vcontents = !contents;
+  let ht1 = { sz = ht.sz; hashf = hashf; contents = vcontents };
+  with s. rewrite (V.pts_to (reveal (hide ht.contents)) s) as (V.pts_to ht1.contents s);
+  fold (models ht1 (PHT.upd_pht #kt #vt pht idx k v ()));
+  assert (pure (Used? v'));
   match v' {
     Used k' v' -> {
-      with pht. rewrite (models ht pht) as (models (fst (ht, v')) pht);
-      (ht, v')
+      let res = (ht1, v');
+      with pht. rewrite (models ht1 pht) as (models (fst res) pht);
+      admit ();
+      res
     }
     _ -> { admit () }
   }
 }
 ```
-#pop-options
+// #pop-options
 
 #set-options "--print_implicits"
 

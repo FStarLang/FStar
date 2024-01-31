@@ -144,3 +144,11 @@ val replace_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
   : stt a
     (requires R.pts_to r v ** pts_to v s)
     (ensures fun res -> R.pts_to r v ** pts_to v (Seq.upd s (SZ.v i) x) ** pure (res == Seq.index s (SZ.v i)))
+
+val copy (#a:Type0) (v_dst v_src:vec a) (len:SZ.t)
+  (#p_src:perm)
+  (#s_src:erased (Seq.seq a) { SZ.v len == Seq.length s_src })
+  (#s_dst:erased (Seq.seq a) { Seq.length s_dst == Seq.length s_dst })
+  : stt unit
+      (requires pts_to v_src #p_src s_src ** pts_to v_dst s_dst)
+      (ensures fun _ -> pts_to v_src #p_src s_src ** pts_to v_dst s_src)

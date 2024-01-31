@@ -560,150 +560,243 @@ fn open_session ()
 //   match r with
 //   | Engine_context_repr uds_bytes -> uds_bytes
 
+module V = Pulse.Lib.Vec
 
-// ```pulse 
-// fn destroy_ctxt (ctxt:context_t) (#repr:erased context_repr_t)
-//   requires context_perm ctxt repr
-//   ensures emp
-// {
-//   match ctxt
-//   {
-//     Engine_context c ->
-//     {
-//       rewrite each ctxt as (Engine_context c);
-//       let uds = get_engine_context_perm c repr;
-//       unfold (engine_context_perm c uds);
-//       A.zeroize uds_len c.uds;
-//       A.free c.uds;
-//     }
-//     L0_context c ->
-//     {
-//       rewrite each ctxt as (L0_context c);
-//       let r = get_l0_context_perm c repr;
-//       unfold (l0_context_perm c r);
-//       with s. assert (A.pts_to c.cdi s);
-//       A.zeroize dice_digest_len c.cdi;
-//       A.free c.cdi;
-//     }
-//     L1_context c ->
-//     {
-//       rewrite each ctxt as (L1_context c);
-//       let r = get_l1_context_perm c repr;
-//       unfold (l1_context_perm c r);
-//       A.free c.deviceID_priv;
-//       A.free c.deviceID_pub;
-//       A.free c.aliasKey_priv;
-//       A.free c.aliasKey_pub;
-//       A.free c.aliasKeyCRT;
-//       A.free c.deviceIDCSR;
-//     }
-//   }
-// }
-// ```
+```pulse 
+fn destroy_ctxt (ctxt:context_t) (#repr:erased context_repr_t)
+  requires context_perm ctxt repr
+  ensures emp
+{
+  match ctxt
+  {
+    Engine_context c ->
+    {
+      rewrite each ctxt as (Engine_context c);
+      let uds = get_engine_context_perm c repr;
+      unfold (engine_context_perm c uds);
+      // A.zeroize uds_len c.uds;
+      V.free c.uds;
+    }
+    L0_context c ->
+    {
+      rewrite each ctxt as (L0_context c);
+      let r = get_l0_context_perm c repr;
+      unfold (l0_context_perm c r);
+      // with s. assert (V.pts_to c.cdi s);
+      // A.zeroize dice_digest_len c.cdi;
+      V.free c.cdi;
+    }
+    L1_context c ->
+    {
+      rewrite each ctxt as (L1_context c);
+      let r = get_l1_context_perm c repr;
+      unfold (l1_context_perm c r);
+      V.free c.deviceID_priv;
+      V.free c.deviceID_pub;
+      V.free c.aliasKey_priv;
+      V.free c.aliasKey_pub;
+      V.free c.aliasKeyCRT;
+      V.free c.deviceIDCSR;
+    }
+  }
+}
+```
 
-// let opt #a (p:a -> vprop) (x:option a) : vprop =
-//   match x with
-//   | None -> emp
-//   | Some x -> p x
+let opt #a (p:a -> vprop) (x:option a) : vprop =
+  match x with
+  | None -> emp
+  | Some x -> p x
 
 // let available_session_state_perm (s:session_state) =
 //   session_state_perm s ** pure (Available? s)
 
-// ```pulse
-// fn return_none (a:Type0) (#p:(a -> vprop))
-//   requires emp
-//   returns o:option a
-//   ensures opt p o
-// {
-//   rewrite emp as (opt p (None #a));
-//   None #a
-// }
-// ```
+```pulse
+fn return_none (a:Type0) (#p:(a -> vprop))
+  requires emp
+  returns o:option a
+  ensures opt p o
+{
+  rewrite emp as (opt p (None #a));
+  None #a
+}
+```
 
-// let dflt #a (x:option a) (y:a) =
-//   match x with
-//   | Some v -> v
-//   | _ -> y
+let dflt #a (x:option a) (y:a) =
+  match x with
+  | Some v -> v
+  | _ -> y
 
-// ```pulse
-// fn take_session_state (sid:sid_t) (replace:session_state)
-//    requires session_state_perm replace
-//    returns r:option session_state
-//    ensures session_state_perm (dflt r replace)
-//   {
-//     L.acquire global_state.lock;
-//     unfold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
-//     let max_sid = !global_state.session_id_counter;
-//     if U32.(sid < max_sid)
-//     {
-//       with stm. assert (on_range (session_perm stm) 0 (U32.v max_sid));
-//       with ht. assert (pts_to global_state.session_table ht);
-//       assert (models ht stm);
-//       let ss = HT.lookup global_state.session_table sid;
-//       assert (models ht stm);
-//       if fst ss
-//       {
-//         match snd ss 
-//         {
-//           Some st ->
-//           {
-//             let ok = insert global_state.session_table sid replace;
-//             if ok
-//             {
-//               Pulse.Lib.OnRange.on_range_get #emp_inames (U32.v sid);
-//               rewrite (session_perm stm (U32.v sid))
-//                    as (session_state_perm st);
-//               with stm'. assert (models ht stm');
-//               frame_session_perm_on_range stm stm' 0 (U32.v sid);
-//               // with stm0. assert (on_range (session_perm stm0) 
-//               //                             (U32.v sid `Prims.op_Addition` 1)
-//               //                             (U32.v max_sid));
-//               frame_session_perm_on_range stm stm' (U32.v sid `Prims.op_Addition` 1) (U32.v max_sid);
-//               rewrite (session_state_perm replace)
-//                   as  (session_perm stm' (U32.v sid));
-//               Pulse.Lib.OnRange.on_range_put #emp_inames 
-//                     0 (U32.v sid) (U32.v max_sid)
-//                     #(session_perm stm');
-//               fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
-//               L.release global_state.lock;
-//               Some st
-//             }
-//             else
-//             {
-//               assert (models ht stm);
-//               fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
-//               L.release global_state.lock;
-//               None #session_state
-//               // return_none session_state #(session_state_perm)
-//             }
-//           }
+#push-options "--z3rlimit_factor 4"
+```pulse
+fn take_session_state (sid:sid_t) (replace_with:session_state)
+   requires session_state_perm replace_with
+   returns r:option session_state
+   ensures session_state_perm (dflt r replace_with)
+  {
+    let r = lock global_state;
+    let st_opt = R.replace r None;
 
-//           None -> 
-//           {
-//             fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
-//             L.release global_state.lock;
-//             None #session_state
-//             // return_none session_state #(session_state_perm)
-//           }
-//         }
-//       }
-//       else 
-//       {
-//         fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
-//         L.release global_state.lock;
-//         None #session_state
-//         // return_none session_state #(session_state_perm)
-//       }
-//     }
-//     else
-//     {
-//       fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
-//       L.release global_state.lock;
-//       None #session_state
-//       // return_none session_state #(session_state_perm)
-//     }
-//   }
-//   ```
+    match st_opt {
+      None -> {
+        unlock global_state r;
+        None #session_state
+      }
+      Some st -> {
+        unfold (global_state_mutex_pred (Some st));
+        let ctr = st.session_id_counter;
+        let tbl = st.session_table;
+        if UInt32.lt sid ctr {
+          with stm. assert (models st.session_table stm);
+          rewrite (models st.session_table stm) as (models tbl stm);
+          assert (on_range (session_perm stm) 0 (U32.v st.session_id_counter));
+          rewrite (on_range (session_perm stm) 0 (U32.v st.session_id_counter))
+               as (on_range (session_perm stm) 0 (U32.v ctr));
+          let ss = HT.lookup tbl sid;
+          assert (models (tfst ss) stm);
+          if tsnd ss {
+            match tthd ss {
+              Some idx -> {
+                let ok = HT.replace #_ #_ #stm (tfst ss) idx sid replace_with ();
+                Pulse.Lib.OnRange.on_range_get #emp_inames (U32.v sid);
+                let st1 = { session_id_counter = ctr; session_table = fst ok };
+                r := Some st1;
+                admit ();
+                unlock global_state r;
+                Some (snd ok)
+                // let ok = insert global_state.session_table sid replace;
+                // if ok {
+                //   Pulse.Lib.OnRange.on_range_get #emp_inames (U32.v sid);
+                //   rewrite (session_perm stm (U32.v sid))
+                //        as (session_state_perm st);
+                //   with stm'. assert (models ht stm');
+                //   frame_session_perm_on_range stm stm' 0 (U32.v sid);
+                //   // with stm0. assert (on_range (session_perm stm0) 
+                //   //                             (U32.v sid `Prims.op_Addition` 1)
+                //   //                             (U32.v max_sid));
+                //   frame_session_perm_on_range stm stm' (U32.v sid `Prims.op_Addition` 1) (U32.v max_sid);
+                //   rewrite (session_state_perm replace)
+                //       as  (session_perm stm' (U32.v sid));
+                //   Pulse.Lib.OnRange.on_range_put #emp_inames 
+                //         0 (U32.v sid) (U32.v max_sid)
+                //         #(session_perm stm');
+                //   fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
+                //   L.release global_state.lock;
+                //   Some st
+                // } else {
+                //   assert (models ht stm);
+                //   fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
+                //   L.release global_state.lock;
+                //   None #session_state
+                //   // return_none session_state #(session_state_perm)
+                // }
+              }
+              None ->  {
+                let st1 = { session_id_counter = ctr; session_table = tfst ss };
+                rewrite (models (tfst ss) stm) as (models st1.session_table stm);
+                rewrite (on_range (session_perm stm) 0 (U32.v ctr))
+                     as (on_range (session_perm stm) 0 (U32.v st1.session_id_counter));
+                fold (global_state_mutex_pred (Some st1));
+                r := Some st1;
+                unlock global_state r;
+                None #session_state
+              }
+            }
+          } else  {
+            let st1 = { session_id_counter = ctr; session_table = tfst ss };
+            rewrite (models (tfst ss) stm) as (models st1.session_table stm);
+            rewrite (on_range (session_perm stm) 0 (U32.v ctr))
+                 as (on_range (session_perm stm) 0 (U32.v st1.session_id_counter));
+            fold (global_state_mutex_pred (Some st1));
+            r := Some st1;
+            unlock global_state r;
+            None #session_state
+          }
+        } else {
+          let st1 = { session_id_counter = ctr; session_table = tbl };
+          with stm. rewrite (models st.session_table stm) as (models st1.session_table stm);
+          with stm. rewrite (on_range (session_perm stm) 0 (U32.v st.session_id_counter))
+                         as (on_range (session_perm stm) 0 (U32.v st1.session_id_counter));
+          fold (global_state_mutex_pred (Some st1));
+          r := Some st1;
+          unlock global_state r;
+          None #session_state
+        }
+      }
+    }
+
+  //   L.acquire global_state.lock;
+  //   unfold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
+  //   let max_sid = !global_state.session_id_counter;
+  //   if U32.(sid < max_sid)
+  //   {
+  //     with stm. assert (on_range (session_perm stm) 0 (U32.v max_sid));
+  //     with ht. assert (pts_to global_state.session_table ht);
+  //     assert (models ht stm);
+  //     let ss = HT.lookup global_state.session_table sid;
+  //     assert (models ht stm);
+  //     if fst ss
+  //     {
+  //       match snd ss 
+  //       {
+  //         Some st ->
+  //         {
+  //           let ok = insert global_state.session_table sid replace;
+  //           if ok
+  //           {
+  //             Pulse.Lib.OnRange.on_range_get #emp_inames (U32.v sid);
+  //             rewrite (session_perm stm (U32.v sid))
+  //                  as (session_state_perm st);
+  //             with stm'. assert (models ht stm');
+  //             frame_session_perm_on_range stm stm' 0 (U32.v sid);
+  //             // with stm0. assert (on_range (session_perm stm0) 
+  //             //                             (U32.v sid `Prims.op_Addition` 1)
+  //             //                             (U32.v max_sid));
+  //             frame_session_perm_on_range stm stm' (U32.v sid `Prims.op_Addition` 1) (U32.v max_sid);
+  //             rewrite (session_state_perm replace)
+  //                 as  (session_perm stm' (U32.v sid));
+  //             Pulse.Lib.OnRange.on_range_put #emp_inames 
+  //                   0 (U32.v sid) (U32.v max_sid)
+  //                   #(session_perm stm');
+  //             fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
+  //             L.release global_state.lock;
+  //             Some st
+  //           }
+  //           else
+  //           {
+  //             assert (models ht stm);
+  //             fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
+  //             L.release global_state.lock;
+  //             None #session_state
+  //             // return_none session_state #(session_state_perm)
+  //           }
+  //         }
+
+  //         None -> 
+  //         {
+  //           fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
+  //           L.release global_state.lock;
+  //           None #session_state
+  //           // return_none session_state #(session_state_perm)
+  //         }
+  //       }
+  //     }
+  //     else 
+  //     {
+  //       fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
+  //       L.release global_state.lock;
+  //       None #session_state
+  //       // return_none session_state #(session_state_perm)
+  //     }
+  //   }
+  //   else
+  //   {
+  //     fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
+  //     L.release global_state.lock;
+  //     None #session_state
+  //     // return_none session_state #(session_state_perm)
+  //   }
+  }
+  ```
 
 // // ```pulse 
 // // fn destroy_locked_ctxt (locked_ctxt:locked_context_t)
@@ -793,22 +886,36 @@ fn open_session ()
 // }
 // ```
 
-// ```pulse
-// fn destroy_session_state (st:session_state)
-//   requires session_state_perm st
-//   ensures emp
-// {
-//   if not (Available? st)
-//   {
-//     rewrite (session_state_perm st) as emp
-//   }
-//   else 
-//   {
-//     elim_session_state_perm_available st;
-//     destroy_ctxt (ctxt_of st);
-//   }
-// }
-// ```
+
+#push-options "--admit_smt_queries true"
+```pulse
+fn destroy_session_state (st:session_state)
+  requires session_state_perm st
+  ensures emp
+{
+  match st {
+    Available st1 -> {
+      elim_session_state_perm_available st;
+      with e. rewrite (context_perm (ctxt_of st) e) as (context_perm st1.context e);
+      destroy_ctxt st1.context;
+    }
+    _ -> {
+      rewrite (session_state_perm st) as emp
+    }
+  }
+
+  // if not (Available? st)
+  // {
+  //   rewrite (session_state_perm st) as emp
+  // }
+  // else 
+  // {
+  //   elim_session_state_perm_available st;
+  //   destroy_ctxt (ctxt_of st);
+  // }
+}
+```
+#pop-options
 
 // (* 
 //   CloseSession: Part of DPE API 
@@ -849,202 +956,260 @@ fn open_session ()
 // // TODO: 
 // let prng () : U32.t = admit()
 
-// ```pulse
-// fn init_engine_ctxt (uds:A.larray U8.t (US.v uds_len))
-//                     (#p:perm)
-//                     (#uds_bytes:Ghost.erased (Seq.seq U8.t))
-//   requires A.pts_to uds #p uds_bytes
-//   returns ctxt:context_t
-//   ensures A.pts_to uds #p uds_bytes **
-//           context_perm ctxt (Engine_context_repr uds_bytes)
-// { 
-//   let uds_buf = A.alloc 0uy uds_len;
-//   memcpy uds_len uds uds_buf;
-//   let engine_context = mk_engine_context_t uds_buf;
 
-//   rewrite each uds_buf as (engine_context.uds);
-//   fold (engine_context_perm engine_context uds_bytes);
+module V = Pulse.Lib.Vec
 
-//   let ctxt = mk_context_t_engine engine_context;
-//   rewrite (engine_context_perm engine_context uds_bytes) 
-//     as (context_perm ctxt (Engine_context_repr uds_bytes));
-//   ctxt
-// }
-// ```
+```pulse
+fn init_engine_ctxt
+  (uds:A.array U8.t { A.length uds == US.v uds_len })
+  (#p:perm)
+  (#uds_bytes:Ghost.erased (Seq.seq U8.t))
+  requires A.pts_to uds #p uds_bytes
+  returns ctxt:context_t
+  ensures A.pts_to uds #p uds_bytes **
+          context_perm ctxt (Engine_context_repr uds_bytes)
+{ 
+  let uds_buf = V.alloc 0uy uds_len;
+  A.pts_to_len uds;
+  V.pts_to_len uds_buf;
 
-// ```pulse
-// fn init_l0_ctxt (cdi:A.larray U8.t (US.v dice_digest_len))  
-//                 (#engine_repr:erased engine_record_repr)
-//                 (#s:erased (Seq.seq U8.t))
-//                 (#uds_bytes:erased (Seq.seq U8.t))
-//                 (_:squash(cdi_functional_correctness s uds_bytes engine_repr
-//                       /\ l0_is_authentic engine_repr))
-//   requires A.pts_to cdi s
-//         ** pure (A.is_full_array cdi)
-//   returns ctxt:context_t
-//   ensures exists* repr.
-//     context_perm ctxt repr **
-//     pure (repr == L0_context_repr (mk_l0_context_repr_t uds_bytes s engine_repr))
-// {
-//   let cdi_buf = A.alloc 0uy dice_digest_len;
-//   memcpy dice_digest_len cdi cdi_buf;
-//   A.zeroize dice_digest_len cdi;
-//   A.free cdi;
+  // V.to_array_pts_to uds;
+  V.to_array_pts_to uds_buf;
+  A.memcpy uds_len uds (V.vec_to_array uds_buf);
+  // V.to_vec_pts_to uds;
+  V.to_vec_pts_to uds_buf;
 
-//   let l0_context = mk_l0_context_t cdi_buf;
-//   let l0_context_repr = hide (mk_l0_context_repr_t uds_bytes s engine_repr);
-//   rewrite each cdi_buf as (l0_context.cdi);
-//   fold (l0_context_perm l0_context l0_context_repr);
+  let engine_context = mk_engine_context_t uds_buf;
 
-//   let ctxt = mk_context_t_l0 l0_context;
-//   let repr = mk_context_repr_t_l0 l0_context_repr;
-//   rewrite (l0_context_perm l0_context l0_context_repr) 
-//     as (context_perm ctxt repr);
+  rewrite each uds_buf as (engine_context.uds);
+  fold (engine_context_perm engine_context uds_bytes);
 
-//   ctxt
-// }
-// ```
+  let ctxt = mk_context_t_engine engine_context;
+  rewrite (engine_context_perm engine_context uds_bytes) 
+       as (context_perm ctxt (Engine_context_repr uds_bytes));
+  ctxt
+}
+```
 
-// ```pulse
-// fn init_l1_ctxt (deviceIDCSR_len: US.t) (aliasKeyCRT_len: US.t) 
-//                 (deviceID_priv: A.larray U8.t (US.v v32us)) (deviceID_pub: A.larray U8.t (US.v v32us))
-//                 (aliasKey_priv: A.larray U8.t (US.v v32us)) (aliasKey_pub: A.larray U8.t (US.v v32us)) 
-//                 (deviceIDCSR: A.larray U8.t (US.v deviceIDCSR_len)) (aliasKeyCRT: A.larray U8.t (US.v aliasKeyCRT_len))
-//                 (deviceID_label_len aliasKey_label_len: erased hkdf_lbl_len)
-//                 (cdi:erased (Seq.seq U8.t))
-//                 (repr:erased l0_record_repr_t)
-//                 (deviceIDCSR_ingredients:erased deviceIDCSR_ingredients_t)
-//                 (aliasKeyCRT_ingredients:erased aliasKeyCRT_ingredients_t)
-//                 (#deviceID_priv0 #deviceID_pub0 #aliasKey_priv0 #aliasKey_pub0
-//                  #deviceIDCSR0 #aliasKeyCRT0:erased (Seq.seq U8.t))
+```pulse
+fn init_l0_ctxt
+  (cdi:A.array U8.t { A.length cdi == US.v dice_digest_len })
+  (#engine_repr:erased engine_record_repr)
+  (#s:erased (Seq.seq U8.t))
+  (#uds_bytes:erased (Seq.seq U8.t))
+  (_:squash(cdi_functional_correctness s uds_bytes engine_repr /\
+            l0_is_authentic engine_repr))
+  requires A.pts_to cdi s
+        ** pure (A.is_full_array cdi)
+  returns ctxt:context_t
+  ensures
+    A.pts_to cdi s **
+    (exists* repr.
+     context_perm ctxt repr **
+     pure (repr == L0_context_repr (mk_l0_context_repr_t uds_bytes s engine_repr)))
+{
+  let cdi_buf = V.alloc 0uy dice_digest_len;
+  A.pts_to_len cdi;
+  V.pts_to_len cdi_buf;
+
+  // V.to_array_pts_to cdi;
+  V.to_array_pts_to cdi_buf;
+  A.memcpy dice_digest_len cdi (V.vec_to_array cdi_buf);
+  // V.to_vec_pts_to cdi;
+  V.to_vec_pts_to cdi_buf;
+  
+  // A.zeroize dice_digest_len cdi;
+  // V.free cdi;
+
+  let l0_context = mk_l0_context_t cdi_buf;
+  let l0_context_repr = hide (mk_l0_context_repr_t uds_bytes s engine_repr);
+  rewrite each cdi_buf as (l0_context.cdi);
+  fold (l0_context_perm l0_context l0_context_repr);
+
+  let ctxt = mk_context_t_l0 l0_context;
+  let repr = mk_context_repr_t_l0 l0_context_repr;
+  rewrite (l0_context_perm l0_context l0_context_repr) 
+    as (context_perm ctxt repr);
+
+  ctxt
+}
+```
+
+```pulse
+fn init_l1_ctxt (deviceIDCSR_len: US.t) (aliasKeyCRT_len: US.t) 
+                (deviceID_priv: A.larray U8.t (US.v v32us)) (deviceID_pub: A.larray U8.t (US.v v32us))
+                (aliasKey_priv: A.larray U8.t (US.v v32us)) (aliasKey_pub: A.larray U8.t (US.v v32us)) 
+                (deviceIDCSR: A.larray U8.t (US.v deviceIDCSR_len)) (aliasKeyCRT: A.larray U8.t (US.v aliasKeyCRT_len))
+                (deviceID_label_len aliasKey_label_len: erased hkdf_lbl_len)
+                (cdi:erased (Seq.seq U8.t))
+                (repr:erased l0_record_repr_t)
+                (deviceIDCSR_ingredients:erased deviceIDCSR_ingredients_t)
+                (aliasKeyCRT_ingredients:erased aliasKeyCRT_ingredients_t)
+                (#deviceID_priv0 #deviceID_pub0 #aliasKey_priv0 #aliasKey_pub0
+                 #deviceIDCSR0 #aliasKeyCRT0:erased (Seq.seq U8.t))
               
-//   requires A.pts_to deviceID_priv deviceID_priv0 ** 
-//            A.pts_to deviceID_pub deviceID_pub0 ** 
-//            A.pts_to aliasKey_priv aliasKey_priv0 ** 
-//            A.pts_to aliasKey_pub aliasKey_pub0 ** 
-//            A.pts_to deviceIDCSR deviceIDCSR0 **
-//            A.pts_to aliasKeyCRT aliasKeyCRT0 **
-//            pure (
-//             valid_hkdf_ikm_len dice_digest_len
-//                        /\ aliasKey_functional_correctness
-//                             dice_hash_alg dice_digest_len cdi repr.fwid
-//                             aliasKey_label_len repr.aliasKey_label 
-//                             aliasKey_pub0 aliasKey_priv0
-//                        /\ deviceIDCSR_functional_correctness 
-//                             dice_hash_alg dice_digest_len cdi
-//                             deviceID_label_len repr.deviceID_label deviceIDCSR_ingredients 
-//                             deviceIDCSR_len deviceIDCSR0 
-//                        /\ aliasKeyCRT_functional_correctness 
-//                             dice_hash_alg dice_digest_len cdi repr.fwid
-//                             deviceID_label_len repr.deviceID_label aliasKeyCRT_ingredients 
-//                             aliasKeyCRT_len aliasKeyCRT0 aliasKey_pub0
-//            )
-//   returns ctxt:context_t
-//   ensures 
-//     A.pts_to deviceID_priv deviceID_priv0 ** 
-//     A.pts_to deviceID_pub deviceID_pub0 **
-//     A.pts_to aliasKey_priv aliasKey_priv0 ** 
-//     A.pts_to aliasKey_pub aliasKey_pub0 ** 
-//     A.pts_to deviceIDCSR deviceIDCSR0 **
-//     A.pts_to aliasKeyCRT aliasKeyCRT0 **
-//     (exists* l1repr. 
-//       context_perm ctxt l1repr **
-//       pure (l1repr ==
-//             L1_context_repr (mk_l1_context_repr_t 
-//                               deviceID_label_len aliasKey_label_len deviceID_priv0 deviceID_pub0
-//                               aliasKey_priv0 aliasKey_pub0 aliasKeyCRT_len aliasKeyCRT0 deviceIDCSR_len
-//                               deviceIDCSR0 cdi repr deviceIDCSR_ingredients aliasKeyCRT_ingredients))
-//     )
+  requires A.pts_to deviceID_priv deviceID_priv0 ** 
+           A.pts_to deviceID_pub deviceID_pub0 ** 
+           A.pts_to aliasKey_priv aliasKey_priv0 ** 
+           A.pts_to aliasKey_pub aliasKey_pub0 ** 
+           A.pts_to deviceIDCSR deviceIDCSR0 **
+           A.pts_to aliasKeyCRT aliasKeyCRT0 **
+           pure (
+            valid_hkdf_ikm_len dice_digest_len
+                       /\ aliasKey_functional_correctness
+                            dice_hash_alg dice_digest_len cdi repr.fwid
+                            aliasKey_label_len repr.aliasKey_label 
+                            aliasKey_pub0 aliasKey_priv0
+                       /\ deviceIDCSR_functional_correctness 
+                            dice_hash_alg dice_digest_len cdi
+                            deviceID_label_len repr.deviceID_label deviceIDCSR_ingredients 
+                            deviceIDCSR_len deviceIDCSR0 
+                       /\ aliasKeyCRT_functional_correctness 
+                            dice_hash_alg dice_digest_len cdi repr.fwid
+                            deviceID_label_len repr.deviceID_label aliasKeyCRT_ingredients 
+                            aliasKeyCRT_len aliasKeyCRT0 aliasKey_pub0
+           )
+  returns ctxt:context_t
+  ensures 
+    A.pts_to deviceID_priv deviceID_priv0 ** 
+    A.pts_to deviceID_pub deviceID_pub0 **
+    A.pts_to aliasKey_priv aliasKey_priv0 ** 
+    A.pts_to aliasKey_pub aliasKey_pub0 ** 
+    A.pts_to deviceIDCSR deviceIDCSR0 **
+    A.pts_to aliasKeyCRT aliasKeyCRT0 **
+    (exists* l1repr. 
+      context_perm ctxt l1repr **
+      pure (l1repr ==
+            L1_context_repr (mk_l1_context_repr_t 
+                              deviceID_label_len aliasKey_label_len deviceID_priv0 deviceID_pub0
+                              aliasKey_priv0 aliasKey_pub0 aliasKeyCRT_len aliasKeyCRT0 deviceIDCSR_len
+                              deviceIDCSR0 cdi repr deviceIDCSR_ingredients aliasKeyCRT_ingredients))
+    )
 
-// {
-//   let deviceID_pub_buf = A.alloc 0uy v32us;
-//   let deviceID_priv_buf = A.alloc 0uy v32us;
-//   let aliasKey_priv_buf = A.alloc 0uy v32us;
-//   let aliasKey_pub_buf = A.alloc 0uy v32us;
-//   let deviceIDCSR_buf = A.alloc 0uy deviceIDCSR_len;
-//   let aliasKeyCRT_buf = A.alloc 0uy aliasKeyCRT_len;
-//   memcpy v32us deviceID_priv deviceID_priv_buf;
-//   memcpy v32us deviceID_pub deviceID_pub_buf;
-//   memcpy v32us aliasKey_priv aliasKey_priv_buf;
-//   memcpy v32us aliasKey_pub aliasKey_pub_buf;
-//   memcpy deviceIDCSR_len deviceIDCSR deviceIDCSR_buf;
-//   memcpy aliasKeyCRT_len aliasKeyCRT aliasKeyCRT_buf;
+{
+  let deviceID_pub_buf = V.alloc 0uy v32us;
+  let deviceID_priv_buf = V.alloc 0uy v32us;
+  let aliasKey_priv_buf = V.alloc 0uy v32us;
+  let aliasKey_pub_buf = V.alloc 0uy v32us;
+  let deviceIDCSR_buf = V.alloc 0uy deviceIDCSR_len;
+  let aliasKeyCRT_buf = V.alloc 0uy aliasKeyCRT_len;
 
-//   let l1_context = mk_l1_context_t 
-//     deviceID_priv_buf deviceID_pub_buf aliasKey_priv_buf aliasKey_pub_buf 
-//     aliasKeyCRT_buf deviceIDCSR_buf;
-//   let l1_context_repr = hide (mk_l1_context_repr_t 
-//     deviceID_label_len aliasKey_label_len deviceID_priv0 deviceID_pub0
-//     aliasKey_priv0 aliasKey_pub0 aliasKeyCRT_len aliasKeyCRT0 deviceIDCSR_len
-//     deviceIDCSR0 cdi repr deviceIDCSR_ingredients aliasKeyCRT_ingredients);
+  V.to_array_pts_to deviceID_pub_buf;
+  V.to_array_pts_to deviceID_priv_buf;
+  V.to_array_pts_to aliasKey_priv_buf;
+  V.to_array_pts_to aliasKey_pub_buf;
+  V.to_array_pts_to deviceIDCSR_buf;
+  V.to_array_pts_to aliasKeyCRT_buf;
+  memcpy v32us deviceID_priv (V.vec_to_array deviceID_priv_buf);
+  memcpy v32us deviceID_pub (V.vec_to_array deviceID_pub_buf);
+  memcpy v32us aliasKey_priv (V.vec_to_array aliasKey_priv_buf);
+  memcpy v32us aliasKey_pub (V.vec_to_array aliasKey_pub_buf);
+  memcpy deviceIDCSR_len deviceIDCSR (V.vec_to_array deviceIDCSR_buf);
+  memcpy aliasKeyCRT_len aliasKeyCRT (V.vec_to_array aliasKeyCRT_buf);
+  V.to_vec_pts_to deviceID_pub_buf;
+  V.to_vec_pts_to deviceID_priv_buf;
+  V.to_vec_pts_to aliasKey_priv_buf;
+  V.to_vec_pts_to aliasKey_pub_buf;
+  V.to_vec_pts_to deviceIDCSR_buf;
+  V.to_vec_pts_to aliasKeyCRT_buf;
 
-//   rewrite each deviceID_priv_buf  as l1_context.deviceID_priv,
-//           deviceID_pub_buf  as l1_context.deviceID_pub,
-//           aliasKey_priv_buf as l1_context.aliasKey_priv,
-//           aliasKey_pub_buf  as l1_context.aliasKey_pub,
-//           deviceIDCSR_buf   as l1_context.deviceIDCSR,
-//           aliasKeyCRT_buf   as l1_context.aliasKeyCRT;
+  let l1_context = mk_l1_context_t 
+    deviceID_priv_buf deviceID_pub_buf aliasKey_priv_buf aliasKey_pub_buf 
+    aliasKeyCRT_buf deviceIDCSR_buf;
+  let l1_context_repr = hide (mk_l1_context_repr_t 
+    deviceID_label_len aliasKey_label_len deviceID_priv0 deviceID_pub0
+    aliasKey_priv0 aliasKey_pub0 aliasKeyCRT_len aliasKeyCRT0 deviceIDCSR_len
+    deviceIDCSR0 cdi repr deviceIDCSR_ingredients aliasKeyCRT_ingredients);
 
-//   fold (l1_context_perm l1_context l1_context_repr);
+  rewrite each deviceID_priv_buf  as l1_context.deviceID_priv,
+          deviceID_pub_buf  as l1_context.deviceID_pub,
+          aliasKey_priv_buf as l1_context.aliasKey_priv,
+          aliasKey_pub_buf  as l1_context.aliasKey_pub,
+          deviceIDCSR_buf   as l1_context.deviceIDCSR,
+          aliasKeyCRT_buf   as l1_context.aliasKeyCRT;
 
-//   let ctxt = mk_context_t_l1 l1_context;
-//   let repr = mk_context_repr_t_l1 l1_context_repr;
-//   rewrite (l1_context_perm l1_context l1_context_repr) as (context_perm ctxt repr);
-//   ctxt  
-// }
-// ```
+  fold (l1_context_perm l1_context l1_context_repr);
 
-// (*
-//   InitializeContext: Part of DPE API 
-//   Create a context in the initial state (engine context) and store the context
-//   in the current session's context table. Return the context handle upon
-//   success and None upon failure. 
-// *)
-// ```pulse
-// fn initialize_context'
-//   (#p:perm) (#uds_bytes:Ghost.erased (Seq.seq U8.t))
-//   (sid:sid_t) (uds:A.larray U8.t (US.v uds_len)) 
+  let ctxt = mk_context_t_l1 l1_context;
+  let repr = mk_context_repr_t_l1 l1_context_repr;
+  rewrite (l1_context_perm l1_context l1_context_repr) as (context_perm ctxt repr);
+  ctxt  
+}
+```
+
+assume val prng () : U32.t
+
+(*
+  InitializeContext: Part of DPE API 
+  Create a context in the initial state (engine context) and store the context
+  in the current session's context table. Return the context handle upon
+  success and None upon failure. 
+*)
+```pulse
+fn initialize_context
+  (#p:perm) (#uds_bytes:Ghost.erased (Seq.seq U8.t))
+  (sid:sid_t) (uds:A.larray U8.t (US.v uds_len)) 
                        
-//   requires A.pts_to uds #p uds_bytes
-//   returns _:option ctxt_hndl_t
-//   ensures A.pts_to uds #p uds_bytes
-// {
-//   rewrite emp as (session_state_perm InUse);
-//   let st = take_session_state sid InUse;
-//   match st 
-//   {
-//     None ->
-//     {
-//       with s. rewrite (session_state_perm s) as emp;
-//       None #ctxt_hndl_t
-//     }
+  requires A.pts_to uds #p uds_bytes
+  returns _:option ctxt_hndl_t
+  ensures A.pts_to uds #p uds_bytes
+{
+  rewrite emp as (session_state_perm InUse);
+  let st = take_session_state sid InUse;
+  match st
+  {
+    None ->
+    {
+      with s. rewrite (session_state_perm s) as emp;
+      None #ctxt_hndl_t
+    }
     
-//     Some st ->
-//     {
-//       if SessionStart? st 
-//       {
-//         rewrite (session_state_perm st) as emp;
-//         let ctxt = init_engine_ctxt uds;
-//         let ctxt_hndl = prng ();
-//         let st' = intro_session_state_perm_available ctxt ctxt_hndl;
-//         let st'' = take_session_state sid st';
-//         //TODO: prove that st'' is InUse
-//         drop_ (session_state_perm (dflt st'' st'));
-//         Some ctxt_hndl
-//       }
-//       else //session error
-//       {
-//         destroy_session_state st;
-//         rewrite emp as (session_state_perm SessionError);
-//         let st' = take_session_state sid SessionError;
-//         //TODO: prove st' is InUse
-//         drop_ (session_state_perm (dflt st' SessionError));
-//         None #ctxt_hndl_t
-//       }
-//     }
-//   }
-// }
-// ```
+    Some st ->
+    {
+      match st {
+        SessionStart -> {
+          rewrite (session_state_perm st) as emp;
+          let ctxt = init_engine_ctxt uds;
+          let ctxt_hndl = prng ();
+          let st' = intro_session_state_perm_available ctxt ctxt_hndl;
+          let st'' = take_session_state sid st';
+          //TODO: prove that st'' is InUse
+          drop_ (session_state_perm (dflt st'' st'));
+          Some ctxt_hndl
+        }
+        _ -> {
+          destroy_session_state st;
+          rewrite emp as (session_state_perm SessionError);
+          let st' = take_session_state sid SessionError;
+          //TODO: prove st' is InUse
+          drop_ (session_state_perm (dflt st' SessionError));
+          None #ctxt_hndl_t
+        }
+      }
+      // if SessionStart? st 
+      // {
+      //   rewrite (session_state_perm st) as emp;
+      //   let ctxt = init_engine_ctxt uds;
+      //   let ctxt_hndl = prng ();
+      //   let st' = intro_session_state_perm_available ctxt ctxt_hndl;
+      //   let st'' = take_session_state sid st';
+      //   //TODO: prove that st'' is InUse
+      //   drop_ (session_state_perm (dflt st'' st'));
+      //   Some ctxt_hndl
+      // }
+      // else //session error
+      // {
+      //   destroy_session_state st;
+      //   rewrite emp as (session_state_perm SessionError);
+      //   let st' = take_session_state sid SessionError;
+      //   //TODO: prove st' is InUse
+      //   drop_ (session_state_perm (dflt st' SessionError));
+      //   None #ctxt_hndl_t
+      // }
+    }
+  }
+}
+```
 
 // let initialize_context = initialize_context'
 
