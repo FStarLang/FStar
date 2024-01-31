@@ -44,7 +44,7 @@ let return_atomic' #a x post
 = A.return #a #(fun r -> post r ** pure (r == x)) x
 
 let return_atomic #a x post
-: stt_atomic a #Unobservable emp_inames
+: stt_atomic a #Neutral emp_inames
       (post x)
       (fun r -> post r ** pure (r == x))
 = emp_unit_r (post x);
@@ -66,9 +66,9 @@ let bind_atomic
     (e2:(x:a -> stt_atomic b #obs2 opens (post1 x) post2))
 = A.bind e1 e2
 
-let lift_unobservable
+let lift_observability
     (#a:Type u#a)
-    (#obs:_)
+    (#obs #obs':_)
     (#opens:inames)
     (#pre:slprop)
     (#post:a -> slprop)
@@ -142,80 +142,75 @@ let sub_invs_stt_atomic
 = assert (Set.equal (Set.union opens1 opens2) opens2);
   A.weaken opens2 e
 
-let stt_ghost a opens pre post = Ghost.erased (act a opens pre post)
+let stt_ghost a pre post = Ghost.erased (act a emp_inames pre post)
 let return_ghost #a x p = Ghost.hide (return_atomic #a x p)
 let return_ghost_noeq #a x p = Ghost.hide (A.return #_ #p x)
 let bind_ghost
     (#a:Type u#a)
     (#b:Type u#b)
-    (#opens:inames)
     (#pre1:slprop)
     (#post1:a -> slprop)
     (#post2:b -> slprop)
-    (e1:stt_ghost a opens pre1 post1)
-    (e2:(x:a -> stt_ghost b opens (post1 x) post2))
-: stt_ghost b opens pre1 post2
+    (e1:stt_ghost a pre1 post1)
+    (e2:(x:a -> stt_ghost b (post1 x) post2))
+: stt_ghost b  pre1 post2
 = let e1 = Ghost.reveal e1 in
   let e2 = FStar.Ghost.Pull.pull (fun (x:a) -> Ghost.reveal (e2 x)) in
   Ghost.hide (A.bind e1 e2)
 
-let lift_ghost
+let lift_ghost_neutral
     (#a:Type u#a)
-    (#opens:inames)
     (#pre:slprop)
     (#post:a -> slprop)
-    (e:stt_ghost a opens pre post)
+    (e:stt_ghost a pre post)
     (reveal_a:non_informative_witness a)
-: stt_atomic a #Unobservable opens pre post
+: stt_atomic a #Neutral emp_inames pre post
 = admit() //This is the main axiom about ghost computations; in Steel, this axiom is implemented within the effect system
+
+let lift_neutral_ghost
+    (#a:Type u#a)
+    (#pre:slprop)
+    (#post:a -> slprop)
+    (e:stt_atomic a #Neutral emp_inames pre post)
+: stt_ghost a pre post
+= Ghost.hide e
 
 let frame_ghost
     (#a:Type u#a)
-    (#opens:inames)
     (#pre:slprop)
     (#post:a -> slprop)
     (frame:slprop)
-    (e:stt_ghost a opens pre post)
-: stt_ghost a opens (pre ** frame) (fun x -> post x ** frame)
+    (e:stt_ghost a pre post)
+: stt_ghost a (pre ** frame) (fun x -> post x ** frame)
 = Ghost.hide (A.frame (Ghost.reveal e))
  
 let sub_ghost pre2 post2 pf1 pf2 e
 = Ghost.hide (A.sub pre2 post2 e)
 
-let sub_invs_stt_ghost
-    (#a:Type u#a)
-    (#opens1 #opens2:inames)
-    (#pre:slprop)
-    (#post:a -> slprop)
-    (e:stt_ghost a opens1 pre post)
-    (pf : squash (inames_subset opens1 opens2))
-: stt_ghost a opens2 pre post
-= Ghost.hide (sub_invs_stt_atomic #a #Unobservable e pf)
-
 let noop (p:slprop)
-: stt_ghost unit emp_inames p (fun _ -> p)
+: stt_ghost unit p (fun _ -> p)
 = Ghost.hide (A.return #_ #(fun _ -> p) ())
 
 let intro_pure (p:prop) (pf:squash p)
-: stt_ghost unit emp_inames emp (fun _ -> pure p)
+: stt_ghost unit emp (fun _ -> pure p)
 = Ghost.hide (A.intro_pure p pf)
 
 let elim_pure (p:prop)
-: stt_ghost (squash p) emp_inames (pure p) (fun _ -> emp)
+: stt_ghost (squash p) (pure p) (fun _ -> emp)
 = Ghost.hide (A.elim_pure p)
 
 let intro_exists (#a:Type u#a) (p:a -> slprop) (x:erased a)
-: stt_ghost unit emp_inames (p x) (fun _ -> exists* x. p x)
+: stt_ghost unit (p x) (fun _ -> exists* x. p x)
 = Ghost.hide (A.intro_exists p x)
 
 let elim_exists (#a:Type u#a) (p:a -> slprop)
-: stt_ghost (erased a) emp_inames (exists* x. p x) (fun x -> p x)
+: stt_ghost (erased a) (exists* x. p x) (fun x -> p x)
 = Ghost.hide (A.elim_exists p)
 
 let ghost_reveal (a:Type) (x:erased a)
-: stt_ghost a emp_inames emp (fun y -> pure (reveal x == y))
+: stt_ghost a emp (fun y -> pure (reveal x == y))
 = let m
-    : stt_ghost a emp_inames
+    : stt_ghost a
         (pure (reveal x == reveal x))
         (fun y -> pure (reveal x == y))
     = Ghost.hide (A.return #_ #(fun y -> pure (reveal x == y)) (reveal x))
@@ -253,15 +248,13 @@ let recall #a #pcm #fact r v w = Ghost.hide (A.recall r v w)
 
 let ghost_ref #a p = Ghost.erased (ref a p)
 let ghost_pts_to #a #p r v = pts_to r v
-let hide_ghost #a #opens #pre #post 
-              (f:stt_ghost a opens pre post)
-: stt_ghost (erased a) opens pre (fun x -> post (reveal x))
+let hide_ghost #a #pre #post 
+              (f:stt_ghost a pre post)
+: stt_ghost (erased a) pre (fun x -> post (reveal x))
 = let f = Ghost.reveal f in
   Ghost.hide <|
   A.bind f
   (fun (r:a) ->
-    assert (Set.equal (Set.union emp_inames opens) opens);
-    A.weaken opens <|
     A.return #(erased a) #(fun (x:erased a) -> post (reveal x))
        (hide r))
 
@@ -275,7 +268,6 @@ let ghost_read
         -> GTot (y:a{compatible p y v /\
                      FStar.PCM.frame_compatible p x v y})))
 : stt_ghost (erased (v:a{compatible p x v /\ p.refine v}))
-    emp_inames
     (ghost_pts_to r x)
     (fun v -> ghost_pts_to r (f v))
 = hide_ghost <| Ghost.hide <|A.read r x f
