@@ -205,13 +205,17 @@ let (lift_comp_weakening :
                   Pulse_Typing.Lift_STAtomic_ST
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), c)
-              | Pulse_Typing.Lift_STGhost_STAtomic
+              | Pulse_Typing.Lift_STGhost_STUnobservable
                   (uu___, c, non_informative_c) ->
-                  Pulse_Typing.Lift_STGhost_STAtomic
+                  Pulse_Typing.Lift_STGhost_STUnobservable
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), c,
                       (non_informative_c_weakening g g' g1 c
                          non_informative_c))
+              | Pulse_Typing.Lift_STUnobservable_STAtomic (uu___, c) ->
+                  Pulse_Typing.Lift_STUnobservable_STAtomic
+                    ((Pulse_Typing_Env.push_env
+                        (Pulse_Typing_Env.push_env g g1) g'), c)
 let (st_equiv_weakening :
   Pulse_Typing_Env.env ->
     Pulse_Typing_Env.env ->
@@ -623,7 +627,7 @@ let rec (st_typing_weakening :
                       (st_comp_typing_weakening g g' s d_s g1), ())
               | Pulse_Typing.T_WithInv
                   (uu___, uu___1, uu___2, p_typing, inv_typing, uu___3,
-                   uu___4, body_typing)
+                   uu___4, body_typing, tok)
                   ->
                   Pulse_Typing.T_WithInv
                     ((Pulse_Typing_Env.push_env
@@ -631,7 +635,7 @@ let rec (st_typing_weakening :
                       (), (), uu___3, uu___4,
                       (st_typing_weakening g g' uu___3
                          (Pulse_Typing.add_frame uu___4 uu___2) body_typing
-                         g1))
+                         g1), ())
 let (nt :
   Pulse_Syntax_Base.var ->
     Pulse_Syntax_Base.term -> Pulse_Syntax_Naming.subst_elt Prims.list)
@@ -713,14 +717,19 @@ let (lift_comp_subst :
                           ((Pulse_Typing_Env.push_env g
                               (Pulse_Typing_Env.subst_env g' (nt x e))),
                             (Pulse_Syntax_Naming.subst_comp c ss))
-                    | Pulse_Typing.Lift_STGhost_STAtomic
+                    | Pulse_Typing.Lift_STGhost_STUnobservable
                         (uu___, c, d_non_informative) ->
-                        Pulse_Typing.Lift_STGhost_STAtomic
+                        Pulse_Typing.Lift_STGhost_STUnobservable
                           ((Pulse_Typing_Env.push_env g
                               (Pulse_Typing_Env.subst_env g' (nt x e))),
                             (Pulse_Syntax_Naming.subst_comp c ss),
                             (non_informative_c_subst g x t g' e () c
                                d_non_informative))
+                    | Pulse_Typing.Lift_STUnobservable_STAtomic (uu___, c) ->
+                        Pulse_Typing.Lift_STUnobservable_STAtomic
+                          ((Pulse_Typing_Env.push_env g
+                              (Pulse_Typing_Env.subst_env g' (nt x e))),
+                            (Pulse_Syntax_Naming.subst_comp c ss))
 let (bind_comp_subst :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.var ->

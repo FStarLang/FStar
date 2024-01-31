@@ -70,6 +70,26 @@ let (comp_to_ast_term :
              FStar_Parser_AST.mk_term
                (FStar_Parser_AST.App (h1, is, FStar_Parser_AST.Nothing)) r
                FStar_Parser_AST.Expr
+         | PulseSyntaxExtension_Sugar.STUnobservable ->
+             let is =
+               let uu___ =
+                 let uu___1 =
+                   FStar_Ident.lid_of_str "Pulse.Lib.Core.emp_inames" in
+                 FStar_Parser_AST.Var uu___1 in
+               FStar_Parser_AST.mk_term uu___ r FStar_Parser_AST.Expr in
+             let h =
+               FStar_Parser_AST.mk_term
+                 (FStar_Parser_AST.Var
+                    PulseSyntaxExtension_Env.stt_unobservable_lid) r
+                 FStar_Parser_AST.Expr in
+             let h1 =
+               FStar_Parser_AST.mk_term
+                 (FStar_Parser_AST.App
+                    (h, return_ty, FStar_Parser_AST.Nothing)) r
+                 FStar_Parser_AST.Expr in
+             FStar_Parser_AST.mk_term
+               (FStar_Parser_AST.App (h1, is, FStar_Parser_AST.Nothing)) r
+               FStar_Parser_AST.Expr
          | PulseSyntaxExtension_Sugar.STGhost ->
              let is =
                let uu___ =
@@ -717,6 +737,24 @@ let (desugar_computation_type :
                                                                     post1 in
                                                                     PulseSyntaxExtension_Err.return
                                                                     uu___5))
+                                                           | PulseSyntaxExtension_Sugar.STUnobservable
+                                                               ->
+                                                               Obj.magic
+                                                                 (Obj.repr
+                                                                    (
+                                                                    let uu___5
+                                                                    =
+                                                                    let uu___6
+                                                                    =
+                                                                    PulseSyntaxExtension_SyntaxWrapper.mk_binder
+                                                                    c.PulseSyntaxExtension_Sugar.return_name
+                                                                    ret1 in
+                                                                    PulseSyntaxExtension_SyntaxWrapper.unobservable_comp
+                                                                    opens pre
+                                                                    uu___6
+                                                                    post1 in
+                                                                    PulseSyntaxExtension_Err.return
+                                                                    uu___5))
                                                            | PulseSyntaxExtension_Sugar.STGhost
                                                                ->
                                                                Obj.magic
@@ -1145,13 +1183,36 @@ let rec (desugar_stmt :
                    {
                      PulseSyntaxExtension_Sugar.s =
                        PulseSyntaxExtension_Sugar.Open l;
-                     PulseSyntaxExtension_Sugar.range1 = uu___;_};
+                     PulseSyntaxExtension_Sugar.range1 = range;_};
                  PulseSyntaxExtension_Sugar.s2 = s2;_}
                ->
                Obj.magic
                  (Obj.repr
-                    (let env1 = PulseSyntaxExtension_Env.push_namespace env l in
-                     desugar_stmt env1 s2))
+                    (let uu___ =
+                       try
+                         (fun uu___1 ->
+                            match () with
+                            | () ->
+                                let env1 =
+                                  PulseSyntaxExtension_Env.push_namespace env
+                                    l in
+                                PulseSyntaxExtension_Err.return env1) ()
+                       with
+                       | FStar_Errors.Error (e, msg, r, ctx) ->
+                           let uu___2 =
+                             let uu___3 = FStar_Ident.string_of_lid l in
+                             let uu___4 = FStar_Ident.string_of_lid l in
+                             FStar_Compiler_Util.format2
+                               "Failed to open namespace %s; You may need to bind this namespace outside Pulse for the F* dependency scanner to pick it up, e.g., write ``module _X = %s`` in F*"
+                               uu___3 uu___4 in
+                           PulseSyntaxExtension_Err.fail uu___2 range in
+                     FStar_Class_Monad.op_let_Bang
+                       PulseSyntaxExtension_Err.err_monad () ()
+                       (Obj.magic uu___)
+                       (fun uu___1 ->
+                          (fun env1 ->
+                             let env1 = Obj.magic env1 in
+                             Obj.magic (desugar_stmt env1 s2)) uu___1)))
            | PulseSyntaxExtension_Sugar.Sequence
                {
                  PulseSyntaxExtension_Sugar.s1 =

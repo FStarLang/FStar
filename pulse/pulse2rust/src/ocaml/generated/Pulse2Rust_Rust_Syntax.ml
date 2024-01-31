@@ -67,6 +67,7 @@ type binop =
   | Rem 
   | And 
   | Or 
+  | Mul 
 let (uu___is_Add : binop -> Prims.bool) =
   fun projectee -> match projectee with | Add -> true | uu___ -> false
 let (uu___is_Sub : binop -> Prims.bool) =
@@ -89,6 +90,8 @@ let (uu___is_And : binop -> Prims.bool) =
   fun projectee -> match projectee with | And -> true | uu___ -> false
 let (uu___is_Or : binop -> Prims.bool) =
   fun projectee -> match projectee with | Or -> true | uu___ -> false
+let (uu___is_Mul : binop -> Prims.bool) =
+  fun projectee -> match projectee with | Mul -> true | uu___ -> false
 type unop =
   | Deref 
 let (uu___is_Deref : unop -> Prims.bool) = fun projectee -> true

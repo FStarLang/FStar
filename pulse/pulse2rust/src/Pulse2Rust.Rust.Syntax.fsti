@@ -48,6 +48,7 @@ type binop =
   | Rem
   | And
   | Or
+  | Mul
 
 type unop =
   | Deref

@@ -245,6 +245,13 @@ let is_binop (s:string) : option binop =
           s = "FStar.SizeT.sub" ||
           s = "FStar.UInt32.sub"
   then Some Sub
+  else if s = "Prims.op_Multiply" ||
+          s = "FStar.Mul.op_Star" ||
+          s = "FStar.UInt32.mul" ||
+          s = "FStar.UInt32.op_Star_Hat" ||
+          s = "FStar.SizeT.mul" ||
+          s = "FStar.SizeT.op_Star_Hat"
+  then Some Mul
   else if s = "Prims.op_disEquality"
   then Some Ne
   else if s = "Prims.op_LessThanOrEqual" ||
@@ -983,7 +990,7 @@ let read_all_ast_files (files:list string) : dict =
     smap_add d (file_to_module_name f) contents);
   d
 
-let extract (files:list string) : unit =
+let extract (files:list string) : string =
   let d = read_all_ast_files files in
   //
   // reversed order in which decls should be emitted,
@@ -1032,4 +1039,4 @@ let extract (files:list string) : unit =
     let (_, bs, ds) = smap_try_find d f |> must in
     let s, g = extract_one g f bs ds in
     g, s) g (List.rev all_modules) |> snd |> String.concat " " in
-  print1 "\n%s\n" s
+  s

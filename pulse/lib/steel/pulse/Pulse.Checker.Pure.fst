@@ -132,14 +132,20 @@ let squash_prop_validity_token f p (t:prop_validity_token f (mk_squash p))
   : prop_validity_token f p
   = admit(); t
 
-let rtb_check_prop_validity (g:env) (f:_) (p:_) = 
+let rtb_check_prop_validity (g:env) (sync:bool) (f:_) (p:_) = 
   check_ln g "rtb_check_prop_validity" p;
   debug g (fun _ -> 
     Printf.sprintf "(%s) Calling check_prop_validity on %s"
           (T.range_to_string (RU.range_of_term p))
           (T.term_to_string p));
   let sp = mk_squash p in
-  let res, issues = RU.with_context (get_context g) (fun _ -> RTB.check_prop_validity f sp) in
+  let res, issues = 
+    RU.with_context (get_context g) 
+    (fun _ -> 
+      if sync
+      then T.with_policy T.SMTSync (fun _ -> RTB.check_prop_validity f sp)
+      else RTB.check_prop_validity f sp)
+  in
   match res with
   | None -> None, issues
   | Some tok -> Some (squash_prop_validity_token f p tok), issues
@@ -462,8 +468,11 @@ let check_vprop_with_core (g:env)
   
 let pulse_lib_gref = ["Pulse"; "Lib"; "GhostReference"]
 let mk_pulse_lib_gref_lid s = pulse_lib_gref@[s]
-
 let gref_lid = mk_pulse_lib_gref_lid "ref"
+
+let pulse_lib_higher_gref = ["Pulse"; "Lib"; "HigherGhostReference"]
+let mk_pulse_lib_higher_gref_lid s = pulse_lib_higher_gref@[s]
+let higher_gref_lid = mk_pulse_lib_higher_gref_lid "ref"
 
 let try_get_non_informative_witness g u t
   : T.Tac (option (non_informative_t g u t))
@@ -488,6 +497,11 @@ let try_get_non_informative_witness g u t
         else if l = gref_lid && Some? arg_opt
         then Some (tm_pureapp
                      (tm_uinst (as_fv (mk_pulse_lib_gref_lid "gref_non_informative")) us)
+                     None
+                     (Some?.v arg_opt))
+        else if l = higher_gref_lid && Some? arg_opt
+        then Some (tm_pureapp
+                     (tm_uinst (as_fv (mk_pulse_lib_higher_gref_lid "gref_non_informative")) us)
                      None
                      (Some?.v arg_opt))
         else None
@@ -519,12 +533,12 @@ let get_non_informative_witness g u t
 
 let try_check_prop_validity (g:env) (p:term) (_:tot_typing g p tm_prop)
   : T.Tac (option (Pulse.Typing.prop_validity g p))
-  = let t_opt, issues = rtb_check_prop_validity g (elab_env g) (elab_term p) in
+  = let t_opt, issues = rtb_check_prop_validity g true (elab_env g) (elab_term p) in
     t_opt
 
 let check_prop_validity (g:env) (p:term) (_:tot_typing g p tm_prop)
   : T.Tac (Pulse.Typing.prop_validity g p)
-  = let t_opt, issues = rtb_check_prop_validity g (elab_env g) (elab_term p) in
+  = let t_opt, issues = rtb_check_prop_validity g false (elab_env g) (elab_term p) in
     T.log_issues issues;
     match t_opt with
     | None -> 

@@ -17,9 +17,10 @@
 module Pulse.Lib.Pervasives
 include Pulse.Main
 include Pulse.Lib.Core
+include Pulse.Lib.Forall
 include Pulse.Lib.Array
 include Pulse.Lib.Reference
-include Steel.FractionalPermission
+include PulseCore.FractionalPermission
 include FStar.Ghost
 
 (* Pulse will currently not recognize calls to anything other than
@@ -81,3 +82,69 @@ fn ref_apply (#a #b:Type) (r:ref (a -> b)) (x:a) (#f:erased (a -> b))
 let tfst (x:'a & 'b & 'c) : 'a = Mktuple3?._1 x
 let tsnd (x:'a & 'b & 'c) : 'b = Mktuple3?._2 x
 let tthd (x:'a & 'b & 'c) : 'c = Mktuple3?._3 x
+
+// some convenience functions
+module T = FStar.Tactics
+let default_arg (t:T.term) = T.exact t
+
+```pulse
+ghost
+fn call_ghost 
+      (#a:Type0)
+      (#b: a -> Type0)
+      (#pre: a -> vprop)
+      (#post: (x:a -> b x -> vprop))
+      (f:(x:a -> stt_ghost (b x) emp_inames (pre x) (fun y -> post x y)))
+      (x:a)
+requires pre x
+returns y:erased (b x)
+ensures post x y
+{
+  let y = f x;
+  rewrite (post x y) as (post x (reveal (hide y)));
+  hide y
+}
+```
+
+let vprop_equiv_norm (_:unit) : T.Tac unit =
+    T.mapply (`vprop_equiv_refl)
+
+```pulse
+ghost
+fn elim_cond_true (b:bool) (p q:vprop)
+requires (cond b p q ** pure (b == true))
+ensures p
+{
+  rewrite (cond b p q) as p;
+}  
+```
+
+```pulse
+ghost
+fn elim_cond_false b p q
+requires (cond b p q ** pure (b == false))
+ensures q
+{
+  rewrite (cond b p q) as q;
+}  
+```
+
+```pulse
+ghost
+fn intro_cond_true (p q:vprop)
+requires p
+ensures cond true p q
+{
+  fold (cond true p q);
+}
+```
+
+```pulse
+ghost
+fn intro_cond_false (p q:vprop)
+requires q
+ensures cond false p q
+{
+  fold (cond false p q);
+}
+```

@@ -57,8 +57,27 @@ let st_comp_remove_inv (inv:vprop) (c:st_comp) : T.Tac st_comp =
   { c with pre = term_remove_inv inv c.pre
          ; post = term_remove_inv inv c.post }
 
-#push-options "--z3rlimit 50 --query_stats --split_queries no --max_fuel 2 --max_ifuel 1"
-
+#push-options "--z3rlimit 50 --query_stats --split_queries no --max_fuel 2 --max_ifuel 1"  
+let check_iname_disjoint (g:env) (r:range) (inv_p inames inv:term)
+: T.Tac (Pulse.Typing.prop_validity g (inv_disjointness inv_p inames inv))
+= let goal = inv_disjointness inv_p inames inv in
+  let (| tag, goal_typing |) =
+    Pulse.Checker.Pure.core_check_term_at_type g goal tm_prop
+  in
+  if tag <> T.E_Total
+  then T.fail "Impossible: prop typing is always total"
+  else (
+    let tok = Pulse.Checker.Pure.try_check_prop_validity g goal goal_typing in
+    match tok with
+    | None ->
+      fail_doc g (Some r) [
+        Pulse.PP.text "Failed to prove that an invariant is not recursively opened:";
+        Pulse.PP.prefix 4 1 (Pulse.PP.text "The set of invariant names: ") (Pulse.PP.pp inames);
+        Pulse.PP.prefix 4 1 (Pulse.PP.text "may contain the invariant: ") (Pulse.PP.pp inv);
+      ]
+    | Some tok -> tok
+  )
+ 
 let check
   (g:env)
   (pre:term)
@@ -73,6 +92,7 @@ let check
   (* Checking the body seems to change its range, so store the original one
   for better errors. *)
   let body_range = body.range in
+  let inv_tm_range = inv_tm.range in
 
   let post : post_hint_t =
     match returns_inv, post_hint with
@@ -148,10 +168,10 @@ let check
   in
   let post_p'_typing = Pulse.Checker.Base.post_typing_as_abstraction (E post_p'_typing_src) in
   let ctag_hint' =
-    // if None? post.ctag_hint || post.ctag_hint = Some STT then
+    if None? post.ctag_hint || post.ctag_hint = Some STT then
       Some STT_Atomic
-    // else
-    //   post.ctag_hint
+    else
+      post.ctag_hint
   in
 
 
@@ -178,15 +198,6 @@ let check
   //    text "Checked body at comp type:" ^/^ arbitrary_string (P.comp_to_string c_body)
   //  ]);
 
-  let add_iname (inames:term) (i:term) : T.Tac term =
-    let a = elab_term inames in
-    let b = elab_term i in
-    let inv_p = elab_term inv_p in
-    let inv_tm = (Pulse.Reflection.Util.add_inv_tm inv_p a b) in
-    assume (not_tv_unknown inv_tm);
-    with_range (Tm_FStar inv_tm) (T.range_of_term a)
-  in
-
   let c_out : comp_st =
     match c_body with
     | C_ST _
@@ -196,7 +207,8 @@ let check
         [text "This computation is not atomic nor ghost. \
                `with_invariants` blocks can only contain atomic computations.";
          prefix 4 1 (text "Computed type:") (arbitrary_string (P.comp_to_string c_body))]
-    | C_STAtomic inames obs st -> C_STAtomic (add_iname inames inv_tm) Observable (st_comp_remove_inv inv_p st)
+    | C_STAtomic inames obs st ->
+      C_STAtomic inames obs (st_comp_remove_inv inv_p st)
   //  | C_STGhost inames st -> C_STAtomic (add_iname inames inv_tm) Observable (st_comp_remove_inv inv_p st)
   in
   assume (add_inv c_out inv_p == c_body);
@@ -204,15 +216,14 @@ let check
   let tm : st_term =
     { term = Tm_WithInv {name=inv_tm; body; returns_inv = None};
       range = t.range;
-      effect_tag = Sealed.seal (Some STT_Atomic) } // fix
+      effect_tag = Sealed.seal ctag_hint' }
   in
 
-  let d : st_typing g tm c_out =
-    T_WithInv g inv_tm inv_p inv_p_typing inv_tm_typing body c_out body_typing
-  in
-
+  let tok = check_iname_disjoint g inv_tm_range inv_p (comp_inames c_body) { inv_tm with range = inv_tm_range } in
+    
+  let d = T_WithInv g inv_tm inv_p inv_p_typing inv_tm_typing body c_out body_typing tok in
   // info g (Some body_range)
   //   (Printf.sprintf "Returning comp type %s"
   //       (P.comp_to_string c_out));
 
-  checker_result_for_st_typing (| tm, c_out, d |)  res_ppname
+  checker_result_for_st_typing (| tm, _, d |)  res_ppname

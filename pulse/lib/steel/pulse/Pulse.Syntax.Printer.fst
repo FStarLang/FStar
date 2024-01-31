@@ -469,7 +469,7 @@ let tag_of_comp (c:comp) : T.Tac string =
   | C_STAtomic i obs _ ->
     Printf.sprintf "%s %s" (observability_to_string obs) (term_to_string i)
   | C_STGhost i _ ->
-    Printf.sprintf "Ghost %s" (term_to_string i)
+    "Ghost" 
     
 let rec print_st_head (t:st_term)
   : Tot string (decreases t) =

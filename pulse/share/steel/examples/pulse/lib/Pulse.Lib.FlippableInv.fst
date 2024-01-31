@@ -42,7 +42,7 @@ fn __mk_finv (p:vprop)
    rewrite emp
         as (if false then p else emp);
    fold finv_p p r;
-   let i = new_invariant' (finv_p p r);
+   let i = new_invariant (finv_p p r);
    let fi = Mkfinv r i; // See #121
    rewrite (GR.pts_to r #one_half false)
         as (GR.pts_to fi.r #one_half false);

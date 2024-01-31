@@ -52,6 +52,7 @@ let pure_lid = pulse_lib_core_lid "pure"
 let stt_lid = pulse_lib_core_lid "stt"
 let assign_lid = pulse_lib_ref_lid "op_Colon_Equals"
 let stt_ghost_lid = pulse_lib_core_lid "stt_ghost"
+let stt_unobservable_lid = pulse_lib_core_lid "stt_unobservable"
 let stt_atomic_lid = pulse_lib_core_lid "stt_atomic"
 let op_colon_equals_lid r = Ident.lid_of_path ["op_Colon_Equals"] r
 let op_array_assignment_lid r = Ident.lid_of_path ["op_Array_Assignment"] r

@@ -17,7 +17,7 @@
 module Pulse.Lib.Array.Core
 open FStar.Tactics.V2
 open Pulse.Lib.Core
-open Steel.FractionalPermission
+open PulseCore.FractionalPermission
 open FStar.Ghost
 module SZ = FStar.SizeT
 module Seq = FStar.Seq
@@ -87,6 +87,24 @@ val free
             pure (is_full_array a))
         (ensures fun _ ->
             emp)
+
+val share
+  (#a:Type)
+  (arr:array a)
+  (#s:Ghost.erased (Seq.seq a))
+  (#p:perm)
+  : stt_ghost unit emp_inames
+      (requires pts_to arr #p s)
+      (ensures fun _ -> pts_to arr #(half_perm p) s ** pts_to arr #(half_perm p) s)
+
+val gather
+  (#a:Type)
+  (arr:array a)
+  (#s0 #s1:Ghost.erased (Seq.seq a))
+  (#p0 #p1:perm)
+  : stt_ghost unit emp_inames
+      (requires pts_to arr #p0 s0 ** pts_to arr #p1 s1)
+      (ensures fun _ -> pts_to arr #(sum_perm p0 p1) s0 ** pure (s0 == s1))
 
 val pts_to_range
   (#a:Type u#0)
@@ -176,13 +194,9 @@ val pts_to_range_upd
   (v: t)
   (#l: Ghost.erased nat{l <= SZ.v i})
   (#r: Ghost.erased nat{SZ.v i < r})
-  //(#s: Ghost.erased (Seq.seq t) {US.v i < Seq.length s})
   (#s0: Ghost.erased (Seq.seq t))
 : stt unit
-    //(requires A.pts_to a full_perm s)
     (requires pts_to_range a l r s0)
-    //(ensures fun _ -> A.pts_to_range a l r full_perm (Seq.upd s0 (US.v i - l) v))
-    //(ensures fun _ -> pure (Seq.length s0 == r - l) `star` A.pts_to a full_perm (Seq.upd s0 (US.v i - l) v))
     (ensures fun _ ->
       exists* s.
         pts_to_range a l r s **

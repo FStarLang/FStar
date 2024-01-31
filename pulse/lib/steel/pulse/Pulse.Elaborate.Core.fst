@@ -120,9 +120,9 @@ let elab_lift #g #c1 #c2 (d:lift_comp g c1 c2) (e:R.term)
         (mk_abs t R.Q_Explicit (elab_term (comp_post c1)))
         e
         
-    | Lift_STGhost_STAtomic _ _ (| reveal_a, reveal_a_typing |) ->
+    | Lift_STGhost_STUnobservable _ _ (| reveal_a, reveal_a_typing |) ->
       let t = elab_term (comp_res c1) in
-      mk_lift_ghost_atomic
+      mk_lift_ghost_unobservable
         (comp_u c1)
         t
         (elab_term (comp_inames c1))
@@ -130,6 +130,16 @@ let elab_lift #g #c1 #c2 (d:lift_comp g c1 c2) (e:R.term)
         (mk_abs t R.Q_Explicit (elab_term (comp_post c1)))
         e
         (elab_term reveal_a)
+
+    | Lift_STUnobservable_STAtomic _ _ ->
+      let t = elab_term (comp_res c1) in
+      mk_lift_unobservable_atomic
+        (comp_u c1)
+        t
+        (elab_term (comp_inames c1))
+        (elab_term (comp_pre c1))
+        (mk_abs t R.Q_Explicit (elab_term (comp_post c1)))
+        e
 
 let intro_pure_tm (p:term) =
   let open Pulse.Reflection.Util in
@@ -333,7 +343,7 @@ let rec elab_st_typing (#g:env)
     | T_Unreachable _ _ _ _ _ ->
       `("IOU: elab_st_typing of T_Unreachable")
 
-    | T_WithInv _ _ _ _ _ _ _ _ ->
+    | T_WithInv _ _ _ _ _ _ _ _ _ ->
       `("IOU: elab_st_typing of T_WithInv")
 
 and elab_br (#g:env)

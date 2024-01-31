@@ -5418,22 +5418,7 @@ let (tag_of_comp :
        | Pulse_Syntax_Base.C_STGhost (i, uu___) ->
            Obj.magic
              (Obj.repr
-                (FStar_Tactics_Effect.tac_bind
-                   (FStar_Sealed.seal
-                      (Obj.magic
-                         (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
-                            (Prims.of_int (472)) (Prims.of_int (30))
-                            (Prims.of_int (472)) (Prims.of_int (48)))))
-                   (FStar_Sealed.seal
-                      (Obj.magic
-                         (FStar_Range.mk_range "prims.fst"
-                            (Prims.of_int (590)) (Prims.of_int (19))
-                            (Prims.of_int (590)) (Prims.of_int (31)))))
-                   (Obj.magic (term_to_string i))
-                   (fun uu___1 ->
-                      FStar_Tactics_Effect.lift_div_tac
-                        (fun uu___2 ->
-                           Prims.strcat "Ghost " (Prims.strcat uu___1 ""))))))
+                (FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> "Ghost"))))
       uu___
 let rec (print_st_head : Pulse_Syntax_Base.st_term -> Prims.string) =
   fun t ->

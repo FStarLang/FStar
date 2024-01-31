@@ -17,10 +17,11 @@
 module Pulse.Lib.Forall.Util
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Stick.Util
+include Pulse.Lib.Forall
 module I = Pulse.Lib.Stick.Util
 
-let intro #a #p = Pulse.Lib.Core.intro_forall #a #p
-let elim #a #p = Pulse.Lib.Core.elim_forall #a #p
+let intro #a #p = Pulse.Lib.Forall.intro_forall #a #p
+let elim #a #p = Pulse.Lib.Forall.elim_forall #a #p
  
 ```pulse
 ghost
@@ -65,5 +66,31 @@ ghost fn elim_forall_imp (#a:Type0) (p q: a -> vprop) (x:a)
 {
     elim #_ #(fun x -> p x @==> q x) x;
     I.elim _ _
+}
+```
+
+```pulse
+ghost
+fn intro_forall_imp (#a:Type0) (p q: a -> vprop) (r:vprop)
+    (elim: (u:a -> stt_ghost unit emp_inames 
+                        (r ** p u)
+                        (fun _ -> q u)))
+requires r
+ensures forall* x. p x @==> q x
+{
+    ghost fn aux (x:a)
+    requires r
+    ensures p x @==> q x
+    {
+        ghost
+        fn aux ()
+        requires r ** p x 
+        ensures q x
+        {
+            elim x;
+        };
+        I.intro _ _ _ aux;
+    };
+    intro _ aux
 }
 ```

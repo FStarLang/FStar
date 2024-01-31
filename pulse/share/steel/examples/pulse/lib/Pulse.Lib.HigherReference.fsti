@@ -16,11 +16,11 @@
 
 module Pulse.Lib.HigherReference
 open Pulse.Lib.Core
-open Steel.FractionalPermission
+open PulseCore.FractionalPermission
 open FStar.Ghost
 module U32 = FStar.UInt32
 module T = FStar.Tactics
-val ref (a:Type u#1) : Type u#0
+val ref ([@@@unused]a:Type u#1) : Type u#0
 
 val pts_to (#a:Type) (r:ref a) (#[T.exact (`full_perm)] p:perm) (n:a) : vprop
 
@@ -30,12 +30,12 @@ val alloc (#a:Type) (x:a)
 val ( ! ) (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
   : stt a
         (pts_to r #p n)
-        (fun x -> pts_to r #p x ** pure (reveal n == x))
+        (fun x -> pts_to r #p n ** pure (reveal n == x))
 
 val ( := ) (#a:Type) (r:ref a) (x:a) (#n:erased a)
   : stt unit
         (pts_to r n)
-        (fun _ -> pts_to r (hide x))
+        (fun _ -> pts_to r x)
 
 val free (#a:Type) (r:ref a) (#n:erased a)
   : stt unit (pts_to r n) (fun _ -> emp)
@@ -70,7 +70,7 @@ val with_local
   (#ret_t:Type)
   (#post:ret_t -> vprop)
   (body:(r:ref a) -> stt ret_t (pre ** pts_to r init)
-                               (fun v -> post v ** op_exists_Star (pts_to r)))
+                               (fun v -> post v ** (exists* (x:a). pts_to r x)))
   : stt ret_t pre post
 
 val pts_to_injective_eq (#a:_)
@@ -79,4 +79,9 @@ val pts_to_injective_eq (#a:_)
                         (r:ref a)
   : stt_ghost unit emp_inames
       (pts_to r #p v0 ** pts_to r #q v1)
-      (fun _ -> pts_to r #p v0 ** pts_to r #q v0 ** pure (v0 == v1))
+      (fun _ -> pts_to r #p v0 ** pts_to r #q v1 ** pure (v0 == v1))
+
+val pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
+  : stt_ghost unit emp_inames
+      (pts_to r #p v)
+      (fun _ -> pts_to r #p v ** pure (p `lesser_equal_perm` full_perm))

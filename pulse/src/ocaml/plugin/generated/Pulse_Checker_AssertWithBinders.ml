@@ -3760,7 +3760,7 @@ let (check :
                                                           (Prims.of_int (378))
                                                           (Prims.of_int (4))
                                                           (Prims.of_int (378))
-                                                          (Prims.of_int (27)))))
+                                                          (Prims.of_int (36)))))
                                                  (Obj.magic
                                                     (FStar_Tactics_Effect.tac_bind
                                                        (FStar_Sealed.seal
@@ -3841,8 +3841,8 @@ let (check :
                                                  (fun uu___1 ->
                                                     (fun msg ->
                                                        Obj.magic
-                                                         (Pulse_Typing_Env.fail_doc
-                                                            g1
+                                                         (Pulse_Typing_Env.fail_doc_env
+                                                            true g1
                                                             (FStar_Pervasives_Native.Some
                                                                r) msg))
                                                       uu___1))

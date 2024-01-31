@@ -18,6 +18,7 @@ module Promises.Examples3
 
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Par.Pledge
+open Pulse.Lib.InvList
 module GR = Pulse.Lib.GhostReference
 
 assume val done : ref bool
@@ -84,17 +85,19 @@ fn proof
 
 let cheat_proof (i:inv inv_p)
   : (_:unit) ->
-      stt_ghost unit 
-        (add_inv emp_inames i)
-        (requires pts_to done #one_half true ** GR.pts_to claimed #one_half false)
-        (ensures fun _ -> pts_to done #one_half true ** goal)
+      stt_ghost unit
+        emp_inames
+        (requires         invlist_v [(| _, i |)] ** (pts_to done #one_half true ** GR.pts_to claimed #one_half false))
+        (ensures fun _ -> invlist_v [(| _, i |)] ** (pts_to done #one_half true ** goal))
   = admit() //proof is atomic, not ghost
-    
+
+#set-options "--debug Promises.Examples3 --debug_level SMTQuery"
+
 ```pulse
 fn setup (_:unit)
    requires pts_to done v_done ** pts_to res v_res ** GR.pts_to claimed v_claimed
    returns i:inv inv_p
-   ensures pts_to done #one_half false ** pledge (add_inv emp_inames i) (pts_to done #one_half true) goal
+   ensures pts_to done #one_half false ** pledge (add_one (|inv_p, i|) []) (pts_to done #one_half true) goal
 {
   done := false;
   res := None;
@@ -109,10 +112,10 @@ fn setup (_:unit)
        
   fold inv_p;
   
-  let i = new_invariant' inv_p;
+  let i = new_invariant inv_p;
   
   make_pledge
-    (add_inv emp_inames i)
+    (add_one (|inv_p, i|) [])
     (pts_to done #one_half true)
     goal
     (GR.pts_to claimed #one_half false)

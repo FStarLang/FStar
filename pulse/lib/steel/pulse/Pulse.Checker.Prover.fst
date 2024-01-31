@@ -162,7 +162,6 @@ let rec prover
           let open Pprint in
           let open Pulse.PP in
           let msg = [
-            text "Error in proving precondition";
             text "Cannot prove:" ^^
                 indent (pp q);
             text "In the context:" ^^

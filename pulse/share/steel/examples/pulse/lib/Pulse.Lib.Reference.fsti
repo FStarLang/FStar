@@ -17,27 +17,33 @@
 module Pulse.Lib.Reference
 open FStar.Tactics
 open Pulse.Lib.Core
-open Steel.FractionalPermission
+open PulseCore.FractionalPermission
 open FStar.Ghost
 module U32 = FStar.UInt32
 
-val ref ([@@@strictly_positive] a:Type u#0) : Type u#0
+val ref ([@@@unused] a:Type u#0) : Type u#0
 
-val pts_to (#a:Type) (r:ref a) (#[exact (`full_perm)]p:perm) (n:a) : vprop
+val pts_to
+    (#a:Type) (r:ref a) 
+    (#[exact (`full_perm)] [@@@equate_by_smt] p:perm)
+    ([@@@equate_by_smt] n:a)
+  : vprop
 
+[@@deprecated "Reference.alloc is unsound; use Box.alloc instead"]
 val alloc (#a:Type) (x:a)
   : stt (ref a) emp (fun r -> pts_to r x)
   
 val ( ! ) (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
   : stt a
         (pts_to r #p n)
-        (fun x -> pts_to r #p x ** pure (reveal n == x))
+        (fun x -> pts_to r #p n ** pure (reveal n == x))
 
 val ( := ) (#a:Type) (r:ref a) (x:a) (#n:erased a)
   : stt unit
         (pts_to r n) 
         (fun _ -> pts_to r (hide x))
 
+[@@deprecated "Reference.free is unsound; use Box.free instead"]
 val free (#a:Type) (r:ref a) (#n:erased a)
   : stt unit (pts_to r n) (fun _ -> emp)
 
@@ -74,6 +80,15 @@ val write_atomic (r:ref U32.t) (x:U32.t) (#n:erased U32.t)
         (pts_to r n) 
         (fun _ -> pts_to r (hide x))
 
+let cond b (p q:vprop) = if b then p else q
+
+val cas (r:ref U32.t) (u v:U32.t) (#i:erased U32.t)
+  : stt_atomic bool emp_inames 
+    (pts_to r i)
+    (fun b ->
+      cond b (pts_to r v ** pure (reveal i == u)) 
+             (pts_to r i))
+
 val with_local
   (#a:Type0)
   (init:a)
@@ -91,4 +106,9 @@ val pts_to_injective_eq (#a:_)
                         (r:ref a)
   : stt_ghost unit emp_inames
       (pts_to r #p v0 ** pts_to r #q v1)
-      (fun _ -> pts_to r #p v0 ** pts_to r #q v0 ** pure (v0 == v1))
+      (fun _ -> pts_to r #p v0 ** pts_to r #q v1 ** pure (v0 == v1))
+
+val pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
+  : stt_ghost unit emp_inames
+      (pts_to r #p v)
+      (fun _ -> pts_to r #p v ** pure (p `lesser_equal_perm` full_perm))

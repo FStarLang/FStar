@@ -39,18 +39,7 @@ let asynch (a:Type0) (post : a -> vprop) : Type0 =
   ref (option a) & thread
 
 let async_joinable #a #post h =
-  joinable (snd h) ** pledge emp_inames (done (snd h)) (ref_solves_post (fst h) post)
-
-// val async
-//   (#a : Type0)
-//   (#pre : vprop)
-//   (#post : a -> vprop)
-//   (f : unit -> stt a pre post)
-//   : stt (asynch a post) pre (fun h -> async_joinable h)
-// let async #a #pre #post f =
-//   bind_stt (alloc None) (fun h ->
-//   let th = fork (fun () -> bind_stt (f ()) (fun (x:a) -> h := Some a)) in
-//   (| h, th |))
+  joinable (snd h) ** pledge [] (done (snd h)) (ref_solves_post (fst h) post)
 
 ```pulse
 fn async_fill
@@ -83,22 +72,14 @@ fn __async
   ensures async_joinable h
 {
   let r = alloc (None #a);
-//   let th = fork #(pre ** pts_to r None) #(exists_ (fun (v:a) -> pts_to r (Some v) ** post v))
-//              (fun () -> async_fill #a #pre #post f r ());
-
-  // let k
-  //   : (unit -> stt u#0 unit (pre ** pts_to u#0 #(option u#0 a) r #full_perm (None u#0 #a))
-  //                           (fun () -> ref_solves_post #a r post))
-  //   = (fun () -> async_fill #a #pre #post f r ());
-  // let th = fork #(pre ** pts_to r None) #(ref_solves_post r post)
+  assume_ (pure (post == (fun x -> post x))); // Crucial for the call below to work, review
   let th = fork #(pre ** pts_to r None) #(ref_solves_post r post)
-                (fun () -> magic()); // FIXME... it's the thing above (or below)
-                // (async_fill #a #pre #post f r);
+                (async_fill #a #pre #post f r);
   let res = ( r, th );
   
   assert (joinable th);
-  assert (pledge emp_inames (done th) (ref_solves_post r post));
-  rewrite (joinable th ** pledge emp_inames (done th) (ref_solves_post r post))
+  assert (pledge [] (done th) (ref_solves_post r post));
+  rewrite (joinable th ** pledge [] (done th) (ref_solves_post r post))
        as (async_joinable #_ #post res);
   res
 }
@@ -121,7 +102,7 @@ fn __await
   join th; (* join the thread *)
   assert (done th);
   rewrite (done th) as (done (snd h));
-  redeem_pledge emp_inames (done (snd h)) (ref_solves_post r post);
+  redeem_pledge [] (done (snd h)) (ref_solves_post r post);
   assert (ref_solves_post r post);
   unfold ref_solves_post;
   with vv. assert (pts_to r (Some vv));

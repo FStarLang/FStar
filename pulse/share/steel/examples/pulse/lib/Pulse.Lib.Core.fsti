@@ -16,7 +16,8 @@
 
 module Pulse.Lib.Core
 open FStar.Ghost
-open Steel.FractionalPermission
+open PulseCore.FractionalPermission
+open FStar.PCM
 module U32 = FStar.UInt32
 module G = FStar.Ghost
 module Set = FStar.Set
@@ -60,8 +61,8 @@ val emp : vprop
 val ( ** ) (p q:vprop) : vprop
 val pure (p:prop) : vprop
 val ( exists* ) (#a:Type) (p:a -> vprop) : vprop
-val ( forall* ) (#a:Type) (p:a -> vprop) : vprop
 val vprop_equiv (p q:vprop) : prop
+val elim_vprop_equiv (#p #q:_) (_:vprop_equiv p q) : squash (p == q)
 val vprop_post_equiv (#t:Type u#a) (p q: t -> vprop) : prop
 
 val intro_vprop_post_equiv
@@ -99,9 +100,6 @@ val vprop_equiv_cong (p1 p2 p3 p4:vprop)
 
 val vprop_equiv_ext (p1 p2:vprop) (_:p1 == p2)
   : vprop_equiv p1 p2
-
-val vprop_equiv_forall (#a:Type) (p q: a -> vprop) (_:squash (forall x. p x == q x))
-  : vprop_equiv (op_forall_Star p) (op_forall_Star q)
 
 (***** end vprop_equiv *****)
 
@@ -179,21 +177,11 @@ val stt_ghost (a:Type u#a) (opens:inames) (pre:vprop) (post:a -> vprop) : Type u
 //   once we have support for bind etc.
 //
 
-inline_for_extraction
-val return_stt (#a:Type u#a) (x:a) (p:a -> vprop)
-  : stt a (p x) (fun r -> p r ** pure (r == x))
-
-inline_for_extraction
 val return (#a:Type u#a) (x:a) (p:a -> vprop)
   : stt a (p x) p
 
-inline_for_extraction
 val return_stt_ghost (#a:Type u#a) (x:a) (p:a -> vprop)
   : stt_ghost a emp_inames (p x) (fun r -> p r ** pure (r == x))
-
-inline_for_extraction
-val return_stt_ghost_noeq (#a:Type u#a) (x:a) (p:a -> vprop)
-  : stt_ghost a emp_inames (p x) p
 
 // Return in ghost?
 
@@ -206,7 +194,29 @@ val bind_stt
   : stt b pre1 post2
 
 inline_for_extraction
-val lift_stt_atomic (#a:Type u#a) (#opens:inames) (#pre:vprop) (#post:a -> vprop)
+val lift_stt_atomic0
+  (#a:Type u#0)
+  (#opens:inames)
+  (#pre:vprop)
+  (#post:a -> vprop)
+  (e:stt_atomic a opens pre post)
+  : stt a pre post
+
+inline_for_extraction
+val lift_stt_atomic1
+  (#a:Type u#1)
+  (#opens:inames)
+  (#pre:vprop)
+  (#post:a -> vprop)
+  (e:stt_atomic a opens pre post)
+  : stt a pre post
+
+inline_for_extraction
+val lift_stt_atomic2
+  (#a:Type u#2)
+  (#opens:inames)
+  (#pre:vprop)
+  (#post:a -> vprop)
   (e:stt_atomic a opens pre post)
   : stt a pre post
 
@@ -243,9 +253,14 @@ val bind_stt_ghost_atomic
   : stt_atomic b opens pre1 post2
 
 inline_for_extraction
-val lift_stt_ghost (#a:Type u#a) (#opens:inames) (#pre:vprop) (#post:a -> vprop)
+val lift_ghost_unobservable (#a:Type u#a) (#opens:inames) (#pre:vprop) (#post:a -> vprop)
   (e:stt_ghost a opens pre post)
   (reveal_a:(x:Ghost.erased a -> y:a{y == Ghost.reveal x}))
+  : stt_unobservable a opens pre post
+
+inline_for_extraction
+val lift_unobservable_atomic (#a:Type u#a) (#opens:inames) (#pre:vprop) (#post:a -> vprop)
+  (e:stt_unobservable a opens pre post)
   : stt_atomic a opens pre post
 
 inline_for_extraction
@@ -285,6 +300,18 @@ val sub_stt (#a:Type u#a)
             (e:stt a pre1 post1)
   : stt a pre2 post2
 
+val conv_stt (#a:Type u#a)
+            (#pre1:vprop)
+            (#pre2:vprop)
+            (#post1:a -> vprop)
+            (#post2:a -> vprop)
+            (pf1 : vprop_equiv pre1 pre2)
+            (pf2 : vprop_post_equiv post1 post2)
+: Lemma (stt a pre1 post1 == stt a pre2 post2)
+
+val hide_div #a #pre #post (f:unit -> Dv (stt a pre post))
+: stt a pre post
+
 inline_for_extraction
 val sub_stt_atomic
   (#a:Type u#a)
@@ -307,6 +334,15 @@ val sub_invs_stt_atomic
   (e:stt_atomic a opens1 pre post)
   (_ : squash (inames_subset opens1 opens2))
   : stt_atomic a opens2 pre post
+
+val sub_invs_stt_unobservable
+  (#a:Type u#a)
+  (#opens1 #opens2:inames)
+  (#pre:vprop)
+  (#post:a -> vprop)
+  (e:stt_unobservable a opens1 pre post)
+  (_ : squash (inames_subset opens1 opens2))
+  : stt_unobservable a opens2 pre post
 
 inline_for_extraction
 val sub_stt_ghost
@@ -336,26 +372,20 @@ val return_stt_unobservable (#a:Type u#a) (x:a) (p:a -> vprop)
   : stt_unobservable a emp_inames (p x) (fun r -> p r ** pure (r == x))
 
 inline_for_extraction
-val return_stt_unobservable_noeq (#a:Type u#a) (x:a) (p:a -> vprop)
-  : stt_unobservable a emp_inames (p x) p
-
-inline_for_extraction
 val new_invariant (p:vprop) : stt_unobservable (inv p) emp_inames p (fun _ -> emp)
-
-inline_for_extraction
-val new_invariant' (p:vprop) : stt_atomic (inv p) emp_inames p (fun _ -> emp)
 
 inline_for_extraction
 val with_invariant_g (#a:Type)
                    (#fp:vprop)
-                   (#fp':erased a -> vprop)
+                   (#fp':a -> vprop)
                    (#f_opens:inames)
                    (#p:vprop)
+                   (_:non_informative_witness a)
                    (i:inv p{not (mem_inv f_opens i)})
                    ($f:unit -> stt_ghost a f_opens
                                             (p ** fp)
                                             (fun x -> p ** fp' x))
-  : stt_unobservable (erased a) (add_inv f_opens i) fp fp'
+  : stt_unobservable a (add_inv f_opens i) fp fp'
 
 inline_for_extraction
 val with_invariant_a (#a:Type)
@@ -395,8 +425,6 @@ val rewrite_by (p:vprop) (q:vprop)
                (_:unit { T.with_tactic t (vprop_equiv p q) })
   : stt_ghost unit emp_inames p (fun _ -> q)
 
-open FStar.Ghost
-
 val elim_pure_explicit (p:prop)
   : stt_ghost (squash p) emp_inames
               (pure p)
@@ -413,31 +441,13 @@ val intro_pure (p:prop) (_:squash p)
               (fun _ -> pure p)
 
 val elim_exists (#a:Type) (p:a -> vprop)
-  : stt_ghost (erased a) emp_inames (op_exists_Star p) (fun x -> p (reveal x))
+  : stt_ghost (erased a) emp_inames (exists* x. p x) (fun x -> p (reveal x))
 
 val intro_exists (#a:Type) (p:a -> vprop) (e:a)
-  : stt_ghost unit emp_inames (p e) (fun _ -> op_exists_Star p)
+  : stt_ghost unit emp_inames (p e) (fun _ -> exists* x. p x)
 
 val intro_exists_erased (#a:Type) (p:a -> vprop) (e:erased a)
-  : stt_ghost unit emp_inames (p (reveal e)) (fun _ -> op_exists_Star p)
-
-val elim_forall (#a:Type) (#p:a->vprop) (x:a)
-: stt_ghost unit emp_inames
-    (forall* x. p x)
-    (fun _ -> p x)
-
-val intro_forall (#a:Type) (#p:a->vprop)
-    (v:vprop)
-    (f_elim : (x:a -> stt_ghost unit emp_inames v (fun _ -> p x)))
-: stt_ghost unit emp_inames
-    v
-    (fun _ -> forall* x. p x)
-
-val while_loop
-  (inv:bool -> vprop)
-  (cond:stt bool (op_exists_Star inv) inv)
-  (body:stt unit (inv true) (fun _ -> op_exists_Star inv))
-  : stt unit (op_exists_Star inv) (fun _ -> inv false)
+  : stt_ghost unit emp_inames (p (reveal e)) (fun _ -> exists* x. p x)
 
 val stt_ghost_reveal (a:Type) (x:erased a)
   : stt_ghost a emp_inames emp (fun y -> pure (reveal x == y))
@@ -447,17 +457,15 @@ val stt_atomic_admit (a:Type) (p:vprop) (q:a -> vprop) : stt_atomic a emp_inames
 val stt_ghost_admit (a:Type) (p:vprop) (q:a -> vprop) : stt_ghost a emp_inames p q
 
 val stt_par
-  (#aL:Type u#a)
-  (#aR:Type u#a)
   (#preL:vprop)
-  (#postL:aL -> vprop) 
+  (#postL:vprop) 
   (#preR:vprop)
-  (#postR:aR -> vprop)
-  (f:stt aL preL postL)
-  (g:stt aR preR postR)
-  : stt (aL & aR)
+  (#postR:vprop)
+  (f:stt unit preL (fun _ -> postL))
+  (g:stt unit preR (fun _ -> postR))
+  : stt unit
         (preL ** preR)
-        (fun x -> postL (fst x) ** postR (snd x))
+        (fun _ -> postL ** postR)
 
 
 val assert_ (p:vprop)
@@ -470,9 +478,150 @@ val assume_ (p:vprop)
 val drop_ (p:vprop) 
   : stt_ghost unit emp_inames p (fun _ -> emp)
 
+val unreachable (#a:Type) (#p:vprop) (#q:a -> vprop) (_:squash False)
+  : stt_ghost a emp_inames p q
+
 val elim_false (a:Type) (p:a -> vprop)
   : stt_ghost a emp_inames (pure False) p
 
-let eq2_prop (#a:Type) (x:a) (y:a) : prop = x == y
-val unreachable (#a:Type) (#p:vprop) (#q:a -> vprop) (_:squash False)
-  : stt_ghost a emp_inames p q
+////////////////////////////////////////////////////////
+//Core PCM references
+////////////////////////////////////////////////////////
+val pcm_ref (#[@@@unused] a:Type u#a) ([@@@unused] p:FStar.PCM.pcm a) : Type0
+val pcm_pts_to (#a:Type u#1) (#p:pcm a) (r:pcm_ref p) (v:a) : vprop
+val pcm_ref_null (#a:Type) (p:FStar.PCM.pcm a) : pcm_ref p
+val is_pcm_ref_null (#a:Type) (#p:FStar.PCM.pcm a) (r:pcm_ref p) : b:bool { b <==> r == pcm_ref_null p }
+val pts_to_not_null (#a:Type) (#p:FStar.PCM.pcm a) (r:pcm_ref p) (v:a)
+: stt_ghost (squash (not (is_pcm_ref_null r)))
+            emp_inames
+            (pcm_pts_to r v)
+            (fun _ -> pcm_pts_to r v)
+
+
+val alloc
+    (#a:Type u#1)
+    (#pcm:pcm a)
+    (x:a{compatible pcm x x /\ pcm.refine x})
+: stt (pcm_ref pcm)
+    emp
+    (fun r -> pcm_pts_to r x)
+
+val read
+    (#a:Type)
+    (#p:pcm a)
+    (r:pcm_ref p)
+    (x:erased a)
+    (f:(v:a{compatible p x v}
+        -> GTot (y:a{compatible p y v /\
+                     FStar.PCM.frame_compatible p x v y})))
+: stt (v:a{compatible p x v /\ p.refine v})
+    (pcm_pts_to r x)
+    (fun v -> pcm_pts_to r (f v))
+
+val write
+    (#a:Type)
+    (#p:pcm a)
+    (r:pcm_ref p)
+    (x y:Ghost.erased a)
+    (f:FStar.PCM.frame_preserving_upd p x y)
+: stt unit
+    (pcm_pts_to r x)
+    (fun _ -> pcm_pts_to r y)
+
+val share
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:pcm_ref pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+: stt_ghost unit
+    emp_inames
+    (pcm_pts_to r (v0 `op pcm` v1))
+    (fun _ -> pcm_pts_to r v0 ** pcm_pts_to r v1)
+
+val gather
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:pcm_ref pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a)
+: stt_ghost (squash (composable pcm v0 v1))
+    emp_inames
+    (pcm_pts_to r v0 ** pcm_pts_to r v1)
+    (fun _ -> pcm_pts_to r (op pcm v0 v1))
+
+/////////////////////////////////////////////////////////////////////////
+
+[@@erasable]
+val ghost_pcm_ref (#[@@@unused] a:Type u#a) ([@@@unused] p:FStar.PCM.pcm a) : Type0
+val ghost_pcm_pts_to (#a:Type u#1) (#p:pcm a) (r:ghost_pcm_ref p) (v:a) : vprop
+
+val ghost_alloc
+    (#a:Type u#1)
+    (#pcm:pcm a)
+    (x:erased a{compatible pcm x x /\ pcm.refine x})
+: stt_ghost (ghost_pcm_ref pcm) emp_inames
+    emp
+    (fun r -> ghost_pcm_pts_to r x)
+
+val ghost_read
+    (#a:Type)
+    (#p:pcm a)
+    (r:ghost_pcm_ref p)
+    (x:erased a)
+    (f:(v:a{compatible p x v}
+        -> GTot (y:a{compatible p y v /\
+                     FStar.PCM.frame_compatible p x v y})))
+: stt_ghost (erased (v:a{compatible p x v /\ p.refine v})) emp_inames
+    (ghost_pcm_pts_to r x)
+    (fun v -> ghost_pcm_pts_to r (f v))
+
+val ghost_write
+    (#a:Type)
+    (#p:pcm a)
+    (r:ghost_pcm_ref p)
+    (x y:Ghost.erased a)
+    (f:FStar.PCM.frame_preserving_upd p x y)
+: stt_ghost unit emp_inames
+    (ghost_pcm_pts_to r x)
+    (fun _ -> ghost_pcm_pts_to r y)
+
+val ghost_share
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ghost_pcm_ref pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+: stt_ghost unit
+    emp_inames
+    (ghost_pcm_pts_to r (v0 `op pcm` v1))
+    (fun _ -> ghost_pcm_pts_to r v0 ** ghost_pcm_pts_to r v1)
+
+val ghost_gather
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ghost_pcm_ref pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a)
+: stt_ghost (squash (composable pcm v0 v1))
+    emp_inames
+    (ghost_pcm_pts_to r v0 ** ghost_pcm_pts_to r v1)
+    (fun _ -> ghost_pcm_pts_to r (op pcm v0 v1))
+
+// Some variants of return
+
+val return_stt (#a:Type u#a) (x:a) (p:a -> vprop)
+  : stt a (p x) (fun r -> p r ** pure (r == x))
+
+val return_stt_ghost_noeq (#a:Type u#a) (x:a) (p:a -> vprop)
+  : stt_ghost a emp_inames (p x) p
+
+val return_stt_unobservable_noeq (#a:Type u#a) (x:a) (p:a -> vprop)
+  : stt_unobservable a emp_inames (p x) p
+
+// Finally, a big escape hatch for introducing architecture/backend-specific
+// atomic operations from proven stt specifications
+[@@warn_on_use "as_atomic is a an assumption"]
+val as_atomic (#a:Type u#0) (pre:vprop) (post:a -> vprop)
+              (pf:stt a pre post)
+  : stt_atomic a emp_inames pre post

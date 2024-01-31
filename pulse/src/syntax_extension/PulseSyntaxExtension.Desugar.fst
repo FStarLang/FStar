@@ -76,6 +76,12 @@ let comp_to_ast_term (c:Sugar.computation_type) : err A.term =
       let h = mk_term (Var stt_atomic_lid) r Expr in
       let h = mk_term (App (h, return_ty, Nothing)) r Expr in
       mk_term (App (h, is, Nothing)) r Expr
+    | Sugar.STUnobservable ->
+      (* hack for now *)
+      let is = mk_term (Var (Ident.lid_of_str "Pulse.Lib.Core.emp_inames")) r Expr in
+      let h = mk_term (Var stt_unobservable_lid) r Expr in
+      let h = mk_term (App (h, return_ty, Nothing)) r Expr in
+      mk_term (App (h, is, Nothing)) r Expr
     | Sugar.STGhost ->
       (* hack for now *)
       let is = mk_term (Var (Ident.lid_of_str "Pulse.Lib.Core.emp_inames")) r Expr in
@@ -298,6 +304,8 @@ let desugar_computation_type (env:env_t) (c:Sugar.computation_type)
       return SW.(mk_comp pre (mk_binder c.return_name ret) post)
     | Sugar.STAtomic ->
       return SW.(atomic_comp opens pre (mk_binder c.return_name ret) post)
+    | Sugar.STUnobservable ->
+      return SW.(unobservable_comp opens pre (mk_binder c.return_name ret) post)
     | Sugar.STGhost ->
       return SW.(ghost_comp opens pre (mk_binder c.return_name ret) post)
 
@@ -393,8 +401,20 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       let! array_assignment_lid = resolve_lid env (op_array_assignment_lid s.range) in
       return (stapp_assignment array_assignment_lid [arr;index] value s.range)
     
-    | Sequence { s1={s=Open l}; s2 } ->
-      let env = push_namespace env l in
+    | Sequence { s1={s=Open l; range}; s2 } ->
+      let! env = 
+        try 
+          let env = push_namespace env l in
+          return env
+        with
+          | FStar.Errors.Error(e, msg, r, ctx) ->
+            fail (BU.format2
+            "Failed to open namespace %s; \
+            You may need to bind this namespace outside Pulse for the F* dependency scanner to pick it up, \
+            e.g., write ``module _X = %s`` in F*"
+            (Ident.string_of_lid l)
+            (Ident.string_of_lid l)) range
+      in
       desugar_stmt env s2
 
     | Sequence { s1={s=LetBinding lb}; s2 } ->

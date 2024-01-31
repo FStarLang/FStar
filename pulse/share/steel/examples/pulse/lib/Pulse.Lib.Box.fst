@@ -26,7 +26,13 @@ let alloc x = R.alloc x
 let op_Bang b = R.op_Bang b 
 let op_Colon_Equals b x = R.op_Colon_Equals b x
 let free b = R.free b
-
+let share b = R.share b
+let gather b = R.gather b
+let share2 b = R.share2 b
+let gather2 b = R.gather2 b
+let read_atomic b = R.read_atomic b
+let write_atomic b x = R.write_atomic b x
+let pts_to_injective_eq b = R.pts_to_injective_eq b
 let box_to_ref b = b
 
 let to_ref_pts_to #a b #p #v =

@@ -28,7 +28,7 @@ open Pulse.Soundness.Common
 
 (*** Soundness of lift elaboration *)
 
-val elab_lift_stt_atomic_typing
+val elab_lift_stt_atomic_st_typing
       (g:stt_env)
       (c1 c2:ln_comp)
       (e:R.term)
@@ -38,7 +38,7 @@ val elab_lift_stt_atomic_typing
           (requires Lift_STAtomic_ST? lc)
           (ensures fun _ -> True)
 
-val elab_lift_stt_ghost_typing
+val elab_lift_stt_ghost_unobservable_typing
       (g:stt_env)
       (c1 c2:ln_comp)
       (e:R.term)
@@ -49,5 +49,15 @@ val elab_lift_stt_ghost_typing
                                      (non_informative_witness_rt (comp_u c1)
                                                                  (elab_term (comp_res c1))))
     : Ghost (RT.tot_typing (elab_env g) (elab_lift lc e) (elab_comp c2))
-          (requires Lift_STGhost_STAtomic? lc)
+          (requires Lift_STGhost_STUnobservable? lc)
+          (ensures fun _ -> True)
+
+val elab_lift_stt_unobservable_atomic_typing
+      (g:stt_env)
+      (c1 c2:ln_comp)
+      (e:R.term)
+      (e_typing:RT.tot_typing (elab_env g) e (elab_comp c1))
+      (lc:lift_comp g c1 c2)
+    : Ghost (RT.tot_typing (elab_env g) (elab_lift lc e) (elab_comp c2))
+          (requires Lift_STUnobservable_STAtomic? lc)
           (ensures fun _ -> True)

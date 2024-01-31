@@ -16,13 +16,13 @@
 
 module Domains
 
-open Steel.Memory
-open Steel.ST.Effect
-open Steel.ST.Util
+// open Steel.Memory
+// open Steel.ST.Effect
+// open Steel.ST.Util
 
 module Lock = Pulse.Lib.SpinLock
 open Pulse.Lib.Pervasives
-open Pulse.Lib.Core
+open Pulse.Lib.Pervasives
 module HR = Pulse.Lib.HigherReference
 
 
@@ -313,7 +313,7 @@ fn worker' //(#q: HR.ref task_queue) (#c: ref int) (l: Lock.lock (inv_task_queue
   ensures emp
 {
 
-  let r_working = alloc #bool true;
+  let mut r_working = true;
   
   while (let working = !r_working; working)
     invariant b. (exists* w. pts_to r_working w ** pure (b == w))
@@ -349,7 +349,6 @@ fn worker' //(#q: HR.ref task_queue) (#c: ref int) (l: Lock.lock (inv_task_queue
       ()
     }
   };
-  free_ref r_working;
   ()
 }
 ```
