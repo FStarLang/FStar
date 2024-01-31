@@ -2936,3 +2936,66 @@ pub fn initialize_context(
         },
     }
 }
+
+pub fn rotate_context_handle(
+    sid: sid_t,
+    ctxt_hndl: ctxt_hndl_t,
+) -> std::option::Option<ctxt_hndl_t> {
+    let st = take_session_state(sid, session_state::InUse);
+    match st {
+        None => None,
+        Some(st1) => match st1 {
+            InUse => None,
+            Available(st11) => {
+                let new_ctxt_hndl = prng(());
+                let st_ = intro_session_state_perm_available(st11.context, new_ctxt_hndl, ());
+                let st__ = take_session_state(sid, st_);
+                Some(new_ctxt_hndl)
+            }
+            _ => panic!(),
+        },
+    }
+}
+type record_t = u32;
+pub fn derive_child_from_context(
+    context: context_t,
+    record: record_t,
+    p: (),
+    record_repr: (),
+    context_repr: (),
+) -> (context_t, std::option::Option<context_t>) {
+    panic!()
+}
+pub fn derive_child(
+    sid: sid_t,
+    ctxt_hndl: ctxt_hndl_t,
+    record: record_t,
+    repr: (),
+    p: (),
+) -> std::option::Option<ctxt_hndl_t> {
+    let st = take_session_state(sid, session_state::InUse);
+    match st {
+        None => None,
+        Some(st1) => match st1 {
+            InUse => None,
+            Available(st11) => {
+                let next_ctxt = derive_child_from_context(st11.context, record, (), (), ());
+                destroy_ctxt(next_ctxt.0, ());
+                match next_ctxt.1 {
+                    None => {
+                        let st_ = take_session_state(sid, session_state::SessionError);
+                        None
+                    }
+                    Some(next_ctxt1) => {
+                        let next_ctxt_hndl = prng(());
+                        let st_ =
+                            intro_session_state_perm_available(next_ctxt1, next_ctxt_hndl, ());
+                        let st__ = take_session_state(sid, st_);
+                        Some(next_ctxt_hndl)
+                    }
+                }
+            }
+            _ => panic!(),
+        },
+    }
+}

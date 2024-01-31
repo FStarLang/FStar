@@ -1213,63 +1213,90 @@ fn initialize_context
 
 // let initialize_context = initialize_context'
 
-// (*
-//   RotateContextHandle: Part of DPE API 
-//   Invalidate the current context handle and replace it with a new context
-//   handle. Return the context handle upon success and None upon failure.
-// *)
-// ```pulse
-// fn rotate_context_handle' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
-//   requires emp
-//   returns _:option ctxt_hndl_t
-//   ensures emp
-// {
-//   rewrite emp as (session_state_perm InUse);
-//   let st = take_session_state sid InUse;
-//   match st 
-//   {
-//     None ->
-//     {
-//       with s. rewrite (session_state_perm s) as emp;
-//       None #ctxt_hndl_t
-//     }
+(*
+  RotateContextHandle: Part of DPE API 
+  Invalidate the current context handle and replace it with a new context
+  handle. Return the context handle upon success and None upon failure.
+*)
+```pulse
+fn rotate_context_handle (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
+  requires emp
+  returns _:option ctxt_hndl_t
+  ensures emp
+{
+  rewrite emp as (session_state_perm InUse);
+  let st = take_session_state sid InUse;
+  match st 
+  {
+    None ->
+    {
+      with s. rewrite (session_state_perm s) as emp;
+      None #ctxt_hndl_t
+    }
 
-//     Some st ->
-//     {
-//       if InUse? st
-//       { //block concurrent access
-//         rewrite (session_state_perm st) as emp;
-//         None #ctxt_hndl_t
-//       }
-//       else if not (Available? st)
-//       { //session error
-//         rewrite (session_state_perm st) as emp;
-//         rewrite emp as (session_state_perm SessionError);
-//         let st' = take_session_state sid SessionError;
-//         //TODO: prove st' is InUse
-//         drop_ (session_state_perm (dflt st' SessionError));
-//         None #ctxt_hndl_t
-//       }
-//       else 
-//       {
-//         let new_ctxt_hndl = prng ();
-//         elim_session_state_perm_available st;
-//         let st' = intro_session_state_perm_available (ctxt_of st) new_ctxt_hndl;
-//         let st'' = take_session_state sid st';
-//         //TODO: prove st'' is InUse
-//         drop_ (session_state_perm (dflt st'' st'));
-//         Some new_ctxt_hndl
-//       }      
-//     }
-//   }
-// }
-// ```
+    Some st ->
+    {
+      match st {
+        InUse -> {
+          rewrite (session_state_perm st) as emp;
+          None #ctxt_hndl_t
+        }
+        Available st1 -> {
+          let new_ctxt_hndl = prng ();
+          elim_session_state_perm_available st;
+          with e. rewrite (context_perm (ctxt_of st) e) as (context_perm st1.context e);
+          let st' = intro_session_state_perm_available st1.context new_ctxt_hndl;
+          let st'' = take_session_state sid st';
+          //TODO: prove st'' is InUse
+          drop_ (session_state_perm (dflt st'' st'));
+          Some new_ctxt_hndl
+        }
+        _ -> {
+          //session error
+          // assert (pure (~ (Available? st || InUse? st)));  // This is not provable?
+          admit ()
+          // rewrite (session_state_perm st) as emp;
+          // rewrite emp as (session_state_perm SessionError);
+          // let st' = take_session_state sid SessionError;
+          // //TODO: prove st' is InUse
+          // drop_ (session_state_perm (dflt st' SessionError));
+          // None #ctxt_hndl_t
+        }
+      }
+    //   if InUse? st
+    //   { //block concurrent access
+    //     rewrite (session_state_perm st) as emp;
+    //     None #ctxt_hndl_t
+    //   }
+    //   else if not (Available? st)
+    //   { //session error
+    //     rewrite (session_state_perm st) as emp;
+    //     rewrite emp as (session_state_perm SessionError);
+    //     let st' = take_session_state sid SessionError;
+    //     //TODO: prove st' is InUse
+    //     drop_ (session_state_perm (dflt st' SessionError));
+    //     None #ctxt_hndl_t
+    //   }
+    //   else 
+    //   {
+    //     let new_ctxt_hndl = prng ();
+    //     elim_session_state_perm_available st;
+    //     let st' = intro_session_state_perm_available (ctxt_of st) new_ctxt_hndl;
+    //     let st'' = take_session_state sid st';
+    //     //TODO: prove st'' is InUse
+    //     drop_ (session_state_perm (dflt st'' st'));
+    //     Some new_ctxt_hndl
+    //   }      
+    }
+  }
+}
+```
 // let rotate_context_handle = rotate_context_handle'
 
-// let maybe_context_perm (o:option context_t) =
-//   match o with
-//   | None -> emp
-//   | _ -> exists* repr. context_perm (Some?.v o) repr
+let maybe_context_perm (o:option context_t) =
+  match o with
+  | None -> emp
+  | _ -> exists* repr. context_perm (Some?.v o) repr
 
 // ```pulse
 // fn intro_maybe_context_perm (c:context_t)
@@ -1284,16 +1311,16 @@ fn initialize_context
 // }
 // ```
 
-// ```pulse
-// ghost
-// fn elim_maybe_context_perm (c:context_t)
-//   requires maybe_context_perm (Some c)
-//   ensures exists* repr. context_perm c repr
-// {
-//   unfold (maybe_context_perm (Some c));
-//   with x y. rewrite (context_perm x y) as (context_perm c y)
-// }
-// ```
+```pulse
+ghost
+fn elim_maybe_context_perm (c:context_t)
+  requires maybe_context_perm (Some c)
+  ensures exists* repr. context_perm c repr
+{
+  unfold (maybe_context_perm (Some c));
+  with x y. rewrite (context_perm x y) as (context_perm c y)
+}
+```
 
 // ```pulse
 // fn derive_child_from_context
@@ -1432,77 +1459,143 @@ fn initialize_context
 // ```
 
 
-// (*
-//   DeriveChild: Part of DPE API 
-//   Execute the DICE layer associated with the current context and produce a 
-//   new context. Destroy the current context in the current session's context table 
-//   and store the new context in the table. Return the new context handle upon
-//   success and None upon failure. 
-// *)
-// ```pulse
-// fn derive_child' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t)
-//                  (#repr:erased repr_t) (#p:perm)
-//   requires record_perm record p repr
-//   returns _:option ctxt_hndl_t
-//   ensures record_perm record p repr
-// {
-//   rewrite emp as (session_state_perm InUse);
-//   let st = take_session_state sid InUse;
-//   match st 
-//   {
-//     None ->
-//     {
-//       with s. rewrite (session_state_perm s) as emp;
-//       None #ctxt_hndl_t
-//     }
+assume val derive_child_from_context (context:context_t) (record:record_t) p
+  (#record_repr: erased repr_t) (#context_repr:erased (context_repr_t))
+  : stt (context_t & option context_t)
+        (requires record_perm record p record_repr **
+                  context_perm context context_repr)
+        (ensures fun res -> record_perm record p record_repr **
+                            context_perm (fst res) context_repr **
+                            maybe_context_perm (snd res))
 
-//     Some st ->
-//     {
-//       if InUse? st
-//       { //block concurrent access
-//         rewrite (session_state_perm st) as emp;
-//         None #ctxt_hndl_t
-//       }
-//       else if not (Available? st)
-//       { //session error
-//         rewrite (session_state_perm st) as emp;
-//         rewrite emp as (session_state_perm SessionError);
-//         let st' = take_session_state sid SessionError;
-//         //TODO: prove st' is InUse
-//         drop_ (session_state_perm (dflt st' SessionError));
-//         None #ctxt_hndl_t
-//       }
-//       else 
-//       {
-//         elim_session_state_perm_available st;
-//         let next_ctxt = derive_child_from_context (ctxt_of st) record;
-//         destroy_ctxt (ctxt_of st);
-//         match next_ctxt
-//         {
-//           None ->
-//           {
-//             rewrite emp as (session_state_perm SessionError);
-//             rewrite (maybe_context_perm next_ctxt) as emp;
-//             let st' = take_session_state sid SessionError;
-//             //TODO: prove st' is InUse
-//             drop_ (session_state_perm (dflt st' SessionError));
-//             None #ctxt_hndl_t
-//           }
 
-//           Some next_ctxt ->
-//           {
-//             elim_maybe_context_perm next_ctxt;
-//             let next_ctxt_hndl = prng();
-//             let st' = intro_session_state_perm_available next_ctxt next_ctxt_hndl;
-//             let st'' = take_session_state sid st';
-//             //TODO: prove st'' is InUse
-//             drop_ (session_state_perm (dflt st'' st'));
-//             Some next_ctxt_hndl
-//           }
-//         }
-//       }
-//     }
-//   }
-// }
-// ```
+
+(*
+  DeriveChild: Part of DPE API 
+  Execute the DICE layer associated with the current context and produce a 
+  new context. Destroy the current context in the current session's context table 
+  and store the new context in the table. Return the new context handle upon
+  success and None upon failure. 
+*)
+```pulse
+fn derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t)
+                (#repr:erased repr_t) (#p:perm)
+  requires record_perm record p repr
+  returns _:option ctxt_hndl_t
+  ensures record_perm record p repr
+{
+  rewrite emp as (session_state_perm InUse);
+  let st = take_session_state sid InUse;
+  match st
+  {
+    None ->
+    {
+      with s. rewrite (session_state_perm s) as emp;
+      None #ctxt_hndl_t
+    }
+
+    Some st ->
+    {
+      match st {
+        InUse -> {
+          //block concurrent access
+          rewrite (session_state_perm st) as emp;
+          None #ctxt_hndl_t
+        }
+        Available st1 -> {
+          elim_session_state_perm_available st;
+          with e. rewrite (context_perm (ctxt_of st) e) as (context_perm st1.context e);
+          let next_ctxt = derive_child_from_context st1.context record p;
+          destroy_ctxt (fst next_ctxt);
+          match snd next_ctxt {
+            None -> {
+              rewrite emp as (session_state_perm SessionError);
+              rewrite (maybe_context_perm (snd next_ctxt)) as emp;
+              let st' = take_session_state sid SessionError;
+              //TODO: prove st' is InUse
+              drop_ (session_state_perm (dflt st' SessionError));
+              None #ctxt_hndl_t
+            }
+            Some next_ctxt -> {
+              elim_maybe_context_perm next_ctxt;
+              let next_ctxt_hndl = prng();
+              let st' = intro_session_state_perm_available next_ctxt next_ctxt_hndl;
+              let st'' = take_session_state sid st';
+              //TODO: prove st'' is InUse
+              drop_ (session_state_perm (dflt st'' st'));
+              Some next_ctxt_hndl
+            }
+          }
+          // destroy_ctxt (ctxt_of st);
+          // match next_ctxt {
+          //   None -> {
+          //     rewrite emp as (session_state_perm SessionError);
+          //     rewrite (maybe_context_perm next_ctxt) as emp;
+          //     let st' = take_session_state sid SessionError;
+          //     //TODO: prove st' is InUse
+          //     drop_ (session_state_perm (dflt st' SessionError));
+          //     None #ctxt_hndl_t
+          //   }
+          //   Some next_ctxt -> {
+          //     elim_maybe_context_perm next_ctxt;
+          //     let next_ctxt_hndl = prng();
+          //     let st' = intro_session_state_perm_available next_ctxt next_ctxt_hndl;
+          //     let st'' = take_session_state sid st';
+          //     //TODO: prove st'' is InUse
+          //     drop_ (session_state_perm (dflt st'' st'));
+          //     Some next_ctxt_hndl
+          //   }
+          // }
+        }
+        _ -> {
+          admit ()
+        }
+      }
+      // if InUse? st
+      // { //block concurrent access
+      //   rewrite (session_state_perm st) as emp;
+      //   None #ctxt_hndl_t
+      // }
+      // else if not (Available? st)
+      // { //session error
+      //   rewrite (session_state_perm st) as emp;
+      //   rewrite emp as (session_state_perm SessionError);
+      //   let st' = take_session_state sid SessionError;
+      //   //TODO: prove st' is InUse
+      //   drop_ (session_state_perm (dflt st' SessionError));
+      //   None #ctxt_hndl_t
+      // }
+      // else 
+      // {
+      //   elim_session_state_perm_available st;
+      //   let next_ctxt = derive_child_from_context (ctxt_of st) record;
+      //   destroy_ctxt (ctxt_of st);
+      //   match next_ctxt
+      //   {
+      //     None ->
+      //     {
+      //       rewrite emp as (session_state_perm SessionError);
+      //       rewrite (maybe_context_perm next_ctxt) as emp;
+      //       let st' = take_session_state sid SessionError;
+      //       //TODO: prove st' is InUse
+      //       drop_ (session_state_perm (dflt st' SessionError));
+      //       None #ctxt_hndl_t
+      //     }
+
+      //     Some next_ctxt ->
+      //     {
+      //       elim_maybe_context_perm next_ctxt;
+      //       let next_ctxt_hndl = prng();
+      //       let st' = intro_session_state_perm_available next_ctxt next_ctxt_hndl;
+      //       let st'' = take_session_state sid st';
+      //       //TODO: prove st'' is InUse
+      //       drop_ (session_state_perm (dflt st'' st'));
+      //       Some next_ctxt_hndl
+      //     }
+      //   }
+      // }
+    }
+  }
+}
+```
 // let derive_child = derive_child'
