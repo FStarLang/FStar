@@ -1135,7 +1135,7 @@ and (extract_mlexpr :
            uu___5::e1::uu___6)
           when
           let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___7 = "Pulse.Lib.Core.run_stt" -> extract_mlexpr g e1
+          uu___7 = "DPE.run_stt" -> extract_mlexpr g e1
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
