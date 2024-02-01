@@ -14,7 +14,6 @@ ensures emp ** pts_to x 1ul
 }
 ```
 
-[@@expect_failure] //returns in Unobservable; need to weaken to observable
 ```pulse
 atomic
 fn return_atomic2 ()

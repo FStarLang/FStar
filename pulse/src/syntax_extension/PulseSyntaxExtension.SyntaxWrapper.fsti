@@ -61,6 +61,7 @@ val tm_add_inv : i:term -> is:term -> range -> term
 val mk_tot (t:term) : comp
 val mk_comp (pre:term) (ret:binder) (post:term) : comp
 val ghost_comp (opens:term) (pre:term) (ret:binder) (post:term) : comp
+val unobservable_comp (opens:term) (pre:term) (ret:binder) (post:term) : comp
 val atomic_comp (opens:term) (pre:term) (ret:binder) (post:term) : comp
 
 val is_tm_exists (x:term) : bool
@@ -101,7 +102,7 @@ val tm_protect (s:st_term) : st_term
 val tm_par (p1:term) (p2:term) (q1:term) (q2:term) (b1:st_term) (b2:st_term) (_:range) : st_term
 val tm_rewrite (p1:term) (p2:term) (_:range) : st_term
 val tm_rename (pairs:list (term & term)) (_:range) : st_term
-val tm_admit (_:range) : st_term
+val tm_admit (post:option term) (_:range) : st_term
 val tm_unreachable (_:range) : st_term
 val tm_proof_hint_with_binders (_:hint_type) (_:list binder) (body:st_term) (_:range) : st_term
 val tm_with_inv (iname:term) (body:st_term) (returns_:option (binder & term)) (_:range) : st_term

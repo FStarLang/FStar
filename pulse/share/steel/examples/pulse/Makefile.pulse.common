@@ -31,14 +31,14 @@ WARN_ERROR=
 
 SMT_OPTIONS?=
 OTHERFLAGS+=$(WARN_ERROR) $(SMT_OPTIONS)
-ALREADY_CACHED_LIST ?= Prims,FStar,Steel,Pulse,-Pulse.Lib
+ALREADY_CACHED_LIST ?= Prims,FStar,Steel,Pulse,-Pulse.Lib,-Pulse.Class
 ALREADY_CACHED = --already_cached $(ALREADY_CACHED_LIST)
 
 # A place to put all build artifacts
 OUTPUT_DIRECTORY ?= _output
 CACHE_DIRECTORY = $(OUTPUT_DIRECTORY)/cache
 
-INCLUDE_PATHS+=$(OUTPUT_DIRECTORY) $(SRC_DIRS) $(STEEL_HOME)/lib/steel $(STEEL_HOME)/lib/steel/pulse
+INCLUDE_PATHS+=$(OUTPUT_DIRECTORY) $(SRC_DIRS) $(STEEL_HOME)/lib/steel $(STEEL_HOME)/lib/steel/pulse $(STEEL_HOME)/lib/pulse_core
 
 FSTAR_OPTIONS=--odir $(OUTPUT_DIRECTORY) \
 		 $(OTHERFLAGS) \

@@ -98,7 +98,10 @@ let mk_star (l r:R.term) : R.term =
 
 let pure_lid = mk_pulse_lib_core_lid "pure"
 let exists_lid = mk_pulse_lib_core_lid "op_exists_Star"
-let forall_lid = mk_pulse_lib_core_lid "op_forall_Star"
+let pulse_lib_forall = ["Pulse"; "Lib"; "Forall"]
+let mk_pulse_lib_forall_lid s = pulse_lib_forall@[s]
+
+let forall_lid = mk_pulse_lib_forall_lid "op_forall_Star"
 let args_of (tms:list R.term) =
   List.Tot.map (fun x -> x, R.Q_Explicit) tms
 
@@ -265,7 +268,7 @@ let mk_intro_exists_erased (u:R.universe) (a p:R.term) (e:R.term) : R.term =
   let t = R.pack_ln (R.Tv_App t (p, R.Q_Explicit)) in
   R.pack_ln (R.Tv_App t (e, R.Q_Explicit))
 
-let while_lid = mk_pulse_lib_core_lid "while_loop"
+let while_lid = ["Pulse"; "Lib"; "WhileLoop"; "while_loop"]
 
 let mk_while (inv cond body:R.term) : R.term =
   let t = R.pack_ln (R.Tv_FVar (R.pack_fv while_lid)) in
@@ -371,10 +374,10 @@ let mk_lift_atomic_stt (u:R.universe) (a pre post e:R.term)  =
   let t = pack_ln (R.Tv_App t (post, Q_Implicit)) in
   pack_ln (R.Tv_App t (e, Q_Explicit))
 
-// Wrapper.lift_stt_ghost<u> #a #opened #pre #post e reveal_a
-let mk_lift_ghost_atomic (u:R.universe) (a opened pre post e reveal_a:R.term) =
+// Wrapper.lift_ghost_unobservable<u> #a #opened #pre #post e reveal_a
+let mk_lift_ghost_unobservable (u:R.universe) (a opened pre post e reveal_a:R.term) =
   let open R in
-  let lid = mk_pulse_lib_core_lid "lift_stt_ghost" in
+  let lid = mk_pulse_lib_core_lid "lift_ghost_unobservable" in
   let t = pack_ln (R.Tv_UInst (R.pack_fv lid) [u]) in
   let t = pack_ln (R.Tv_App t (a, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (opened, Q_Implicit)) in
@@ -382,6 +385,17 @@ let mk_lift_ghost_atomic (u:R.universe) (a opened pre post e reveal_a:R.term) =
   let t = pack_ln (R.Tv_App t (post, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (e, Q_Explicit)) in
   pack_ln (R.Tv_App t (reveal_a, Q_Explicit))
+
+// Wrapper.lift_ghost_unobservable<u> #a #opened #pre #post e
+let mk_lift_unobservable_atomic (u:R.universe) (a opened pre post e : R.term) =
+  let open R in
+  let lid = mk_pulse_lib_core_lid "lift_unobservable_atomic" in
+  let t = pack_ln (R.Tv_UInst (R.pack_fv lid) [u]) in
+  let t = pack_ln (R.Tv_App t (a, Q_Implicit)) in
+  let t = pack_ln (R.Tv_App t (opened, Q_Implicit)) in
+  let t = pack_ln (R.Tv_App t (pre, Q_Implicit)) in
+  let t = pack_ln (R.Tv_App t (post, Q_Implicit)) in
+  pack_ln (R.Tv_App t (e, Q_Explicit))
 
 // Wrapper.bind_stt<u1, u2> #a #b #pre1 #post1 #post2 e1 e2
 let mk_bind_stt
@@ -650,7 +664,7 @@ let mk_stt_ghost_comp_equiv (g:R.env) (u:R.universe) (res inames pre1 post1 pre2
 
 let ref_lid = mk_pulse_lib_reference_lid "ref"
 let pts_to_lid = mk_pulse_lib_reference_lid "pts_to"
-let full_perm_lid = ["Steel"; "FractionalPermission"; "full_perm"]
+let full_perm_lid = ["PulseCore"; "FractionalPermission"; "full_perm"]
 
 let mk_ref (a:R.term) : R.term =
   let open R in
@@ -746,8 +760,7 @@ let mk_mem_inv (invP inames inv:R.term) : R.term =
 
 let inv_disjointness_goal (inv_p:T.term) (inames:T.term) (inv:T.term) 
 : R.term 
-= let open Pulse.Reflection.Util in
-  let p = mk_mem_inv inv_p inames inv in
+= let p = mk_mem_inv inv_p inames inv in
   let u0 = R.pack_universe R.Uv_Zero in
   let p = mk_reveal u0 bool_tm p in
   mk_eq2 u0 bool_tm (`false) p

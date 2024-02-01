@@ -1403,10 +1403,10 @@ let (check :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.WithInv.fst"
-                                                                    (Prims.of_int (172))
-                                                                    (Prims.of_int (6))
-                                                                    (Prims.of_int (172))
-                                                                    (Prims.of_int (21)))))
+                                                                    (Prims.of_int (171))
+                                                                    (Prims.of_int (4))
+                                                                    (Prims.of_int (174))
+                                                                    (Prims.of_int (20)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -1418,8 +1418,19 @@ let (check :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___3 ->
+                                                                    if
+                                                                    (FStar_Pervasives_Native.uu___is_None
+                                                                    post.Pulse_Typing.ctag_hint)
+                                                                    ||
+                                                                    (post.Pulse_Typing.ctag_hint
+                                                                    =
+                                                                    (FStar_Pervasives_Native.Some
+                                                                    Pulse_Syntax_Base.STT))
+                                                                    then
                                                                     FStar_Pervasives_Native.Some
-                                                                    Pulse_Syntax_Base.STT_Atomic))
+                                                                    Pulse_Syntax_Base.STT_Atomic
+                                                                    else
+                                                                    post.Pulse_Typing.ctag_hint))
                                                                     (fun
                                                                     uu___3 ->
                                                                     (fun
@@ -1601,7 +1612,7 @@ let (check :
                                                                     (Prims.of_int (202))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (211))
-                                                                    (Prims.of_int (64)))))
+                                                                    (Prims.of_int (57)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -1904,9 +1915,9 @@ let (check :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.WithInv.fst"
                                                                     (Prims.of_int (211))
-                                                                    (Prims.of_int (35))
+                                                                    (Prims.of_int (28))
                                                                     (Prims.of_int (211))
-                                                                    (Prims.of_int (64)))))
+                                                                    (Prims.of_int (57)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -1914,7 +1925,7 @@ let (check :
                                                                     (Prims.of_int (211))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (211))
-                                                                    (Prims.of_int (64)))))
+                                                                    (Prims.of_int (57)))))
                                                                     (Obj.magic
                                                                     (st_comp_remove_inv
                                                                     inv_p st))
@@ -1925,7 +1936,7 @@ let (check :
                                                                     uu___5 ->
                                                                     Pulse_Syntax_Base.C_STAtomic
                                                                     (inames,
-                                                                    Pulse_Syntax_Base.Observable,
+                                                                    obs,
                                                                     uu___4)))))
                                                                     (fun
                                                                     uu___4 ->
@@ -1940,7 +1951,7 @@ let (check :
                                                                     (Prims.of_int (217))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (219))
-                                                                    (Prims.of_int (48)))))
+                                                                    (Prims.of_int (41)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -1971,8 +1982,7 @@ let (check :
                                                                     Pulse_Syntax_Base.effect_tag
                                                                     =
                                                                     (FStar_Sealed.seal
-                                                                    (FStar_Pervasives_Native.Some
-                                                                    Pulse_Syntax_Base.STT_Atomic))
+                                                                    ctag_hint')
                                                                     }))
                                                                     (fun
                                                                     uu___4 ->

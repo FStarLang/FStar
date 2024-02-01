@@ -24,6 +24,7 @@ module Invariant
 // #set-options "--trace_error"
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Reference
+open Pulse.Lib
 
 let test (i:inv emp) = assert (
   (add_inv emp_inames i)
@@ -31,15 +32,31 @@ let test (i:inv emp) = assert (
   ((join_inames (((add_inv #emp) emp_inames) i)) emp_inames)
 )
 
-// Atomic doesn't really work yet
-[@@expect_failure]
+assume
+val atomic_write_int (r : ref int) (v : int) :
+  stt_atomic unit emp_inames (exists* v0. pts_to r v0) (fun _ -> pts_to r v)
+
 ```pulse
 atomic
-fn zero (r : ref int)
+fn test_atomic (r : ref int)
   requires pts_to r 'v
   ensures pts_to r 0
 {
-  r := 0;
+  atomic_write_int r 0;
+}
+```
+
+assume
+val unobservable_write_int (r : ref int) (v : int) :
+  stt_unobservable unit emp_inames (exists* v0. pts_to r v0) (fun _ -> pts_to r v)
+
+```pulse
+unobservable
+fn test_unobservable (r : ref int)
+  requires pts_to r 'v
+  ensures pts_to r 0
+{
+  unobservable_write_int r 0;
 }
 ```
 
@@ -49,7 +66,7 @@ fn package (r:ref int)
    returns i : inv (pts_to r 123)
    ensures emp
 {
-  let i : inv (pts_to r 123) = new_invariant' (pts_to r 123);
+  let i : inv (pts_to r 123) = new_invariant (pts_to r 123);
   i
 }
 ```
@@ -59,17 +76,15 @@ fn package (r:ref int)
 ```pulse
 fn test2 ()
   requires emp
-  returns v:(v:int{v == 2})
   ensures emp
 {
-  let r = alloc 123;
-  let i = package r;
-  with_invariants i ensures pure True {
+  let r = alloc #int 123;
+  let i : inv (pts_to r 123) = package r;
+  with_invariants i {
     r := 124;
     r := 123;
     ()
-  };
-  2
+  }
 }
 ```
 
@@ -150,7 +165,7 @@ fn t2 ()
   returns _:int
   ensures emp
 {
-  let j = new_invariant' emp;
+  let j = new_invariant emp;
   with_invariants j 
     returns _:unit
     ensures emp {

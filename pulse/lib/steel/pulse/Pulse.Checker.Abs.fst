@@ -32,6 +32,7 @@ module RU = Pulse.RuntimeUtils
 module Env = Pulse.Typing.Env
 module U = Pulse.Syntax.Pure
 
+open Pulse.Show
 
 let debug_abs g (s: unit -> T.Tac string) : T.Tac unit =
   if RU.debug_at_level (fstar_env g) "pulse.abs"
@@ -197,6 +198,25 @@ let preprocess_abs
                  (Printf.sprintf "Expected an arrow type as an annotation, got %s"
                           (P.term_to_string annot))
 
+let sub_effect_comp g r (asc:comp_ascription) (c_computed:comp) : T.Tac (option (c2:comp & lift_comp g c_computed c2)) =
+  let nop = None in
+  match asc.elaborated with
+  | None -> nop
+  | Some c ->
+    match c_computed, c with
+    | C_Tot t1, C_Tot t2 -> nop
+    | C_ST _, C_ST _ -> nop
+    | C_STAtomic i Observable c1, C_STAtomic j Observable c2 -> nop
+    | C_STAtomic i Unobservable c1, C_STAtomic j Unobservable c2 -> nop
+    | C_STGhost i c1, C_STGhost j c2 -> nop
+
+    | C_STAtomic i Unobservable c1, C_STAtomic _ Observable _ ->
+      let lift = Lift_STUnobservable_STAtomic g c_computed in
+      Some (| C_STAtomic i Observable c1, lift |)
+
+    (* FIXME: more lifts here *) 
+    | _ -> nop
+
 let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac (c2:comp & st_sub g c_computed c2) =
   let nop = (| c_computed, STS_Refl _ _ |) in
   match asc.elaborated with
@@ -207,6 +227,7 @@ let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac 
     | C_ST _, C_ST _ -> nop
 
     | C_STAtomic i Observable c1, C_STAtomic j Observable c2
+    | C_STAtomic i Unobservable c1, C_STAtomic j Unobservable c2
     | C_STGhost i c1, C_STGhost j c2 ->
       // This should be true since we used the annotated computation type
       // to check the body of the function, but this fact is not exposed
@@ -238,7 +259,7 @@ let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac 
       let d_sub : st_sub g c_computed c =
         match c_computed with
         | C_STGhost _ _ -> STS_GhostInvs g c2 j i tok
-        | C_STAtomic _ obs _ -> STS_AtomicInvs g c2 j i Observable Observable tok
+        | C_STAtomic _ obs _ -> STS_AtomicInvs g c2 j i obs obs tok
       in
       (| c, d_sub |)
 
@@ -307,6 +328,15 @@ let rec check_abs_core
       (* Check the opened body *)
       let (| body, c_body, body_typing |) = check_abs_core g' body_opened check in
 
+      (* First lift into annotated effect *)
+      let (| c_body, body_typing |) : ( c_body:comp & st_typing g' body c_body ) =
+        match sub_effect_comp g' body.range asc c_body with
+        | None -> (| c_body, body_typing |)
+        | Some (| c_body, lift |) ->
+          let body_typing = T_Lift _ _ _ _ body_typing lift in
+          (| c_body, body_typing |)
+      in
+
       (* Check if it matches annotation (if any, likely not), and adjust derivation
       if needed. Currently this only subtypes the invariants. *)
       let (| c_body, d_sub |) = check_effect_annotation g' body.range asc c_body in
@@ -369,6 +399,16 @@ let rec check_abs_core
         apply_checker_result_k #_ #_ #(Some?.v post) r ppname_ret in
 
       let c_opened : comp_ascription = { annotated = None; elaborated = Some (open_comp_nv elab_c px) } in
+
+      (* First lift into annotated effect *)
+      let (| c_body, body_typing |) : ( c_body:comp & st_typing g' body c_body ) =
+        match sub_effect_comp g' body.range c_opened c_body with
+        | None -> (| c_body, body_typing |)
+        | Some (| c_body, lift |) ->
+          let body_typing = T_Lift _ _ _ _ body_typing lift in
+          (| c_body, body_typing |)
+      in
+
       let (| c_body, d_sub |) = check_effect_annotation g' body.range c_opened c_body in
       let body_typing = T_Sub _ _ _ _ body_typing d_sub in
 
