@@ -14,7 +14,7 @@ open Pulse.Lib.Par.Pledge
 ```pulse
 fn
 rec
-msort_par
+t_msort_par
   (p : pool)
   (f : perm)
   (a : array int)
@@ -38,8 +38,8 @@ msort_par
     
     share_alive p f;
 
-    let h = spawn p #(half_perm f) (fun () -> msort_par p (half_perm f) a lo mid s1);
-    msort_par p (half_perm f) a mid hi s2;
+    let h = spawn p #(half_perm f) (fun () -> t_msort_par p (half_perm f) a lo mid s1);
+    t_msort_par p (half_perm f) a mid hi s2;
     join h;
     
     gather_alive p f;
