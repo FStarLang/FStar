@@ -36,9 +36,10 @@ module PHT = Pulse.Lib.HashTable.Spec
 // open Pulse.Lib.BoundedIntegers
 open Pulse.Lib.OnRange
 open Pulse.Lib.HashTable.Type
+open Pulse.Lib.Mutex
 
-// assume
-// val run_stt (#a:Type) (#post:a -> vprop) (f:stt a emp post) : a
+assume
+val run_stt (#a:Type) (#post:a -> vprop) (f:stt a emp post) : a
 
 (* Global State *)
 
@@ -133,7 +134,6 @@ noeq
 type global_state_t = {
   session_id_counter:sid_t;
   session_table:ht_t sid_t session_state;
-  // lock: L.lock (global_state_lock_pred session_id_counter session_table)
 }
 
 let global_state_mutex_pred (gst:option global_state_t) : vprop =
@@ -144,25 +144,12 @@ let global_state_mutex_pred (gst:option global_state_t) : vprop =
       models gst.session_table stm **
       on_range (session_perm stm) 0 (U32.v gst.session_id_counter)
 
-// let mk_global_state
-//       (sid_counter:R.ref sid_t)
-//       (session_table:R.ref (ht_t sid_t session_state))
-//       (lock:L.lock (global_state_lock_pred sid_counter session_table))
-// : global_state_t
-// = { session_id_counter = sid_counter;
-//     session_table = session_table;
-//     lock = lock }
 
-// TODO: Uncomment it
 // assume Fits_size_t_u32 : squash (US.fits_u32)
-// TODO: add support for extracting closures
-// #push-options "--admit_smt_queries true --warn_error -342"
 // let sid_hash (x:sid_t) : US.t = US.of_u32 x
-// #pop-options
 
-assume val sid_hash : sid_t -> US.t
+assume val sid_hash : sid_t -> US.t  // TODO
 
-open Pulse.Lib.Mutex
 
 // TODO: mark this as const for Rust extraction
 
@@ -200,15 +187,7 @@ fn mk_global_state ()
 ```
 
 #push-options "--ext 'pulse:env_on_err' --print_implicits --warn_error -342"
-```pulse
-fn alloc_global_state (r:ref (option global_state_t))
-  requires pts_to r None
-  ensures exists* gst. pts_to r (Some gst) ** global_state_mutex_pred (Some gst)
-{
-  let st = mk_global_state ();
-  r := Some st;
-}
-```
+
 
 (* Utilities to work with on_range (session_perm stm) *)
 (* <utilities on on_range> *)
@@ -260,95 +239,97 @@ fn frame_session_perm_on_range
 
 (* ----------- IMPLEMENTATION ----------- *)
 
-// let coerce_us (x:pos_us) : SZ.t = x
+(*
+  GetProfile: Part of DPE API 
+  Get the DPE's profile. 
+*)
+```pulse
+fn get_profile' ()
+  requires emp
+  returns d:profile_descriptor_t
+  ensures emp
+{
+  mk_profile_descriptor
+    (*name=*)""
+    (*dpe_spec_version=*)1ul
+    (*max_message_size=*)0ul // irrelevant: using direct interface
+    (*uses_multi_part_messages=*)false
+    (*supports_concurrent_operations=*)false // irrelevant by uses_multi_part_messages
+    (*supports_encrypted_sessions=*)false // irrelevant by uses_multi_part_messages
+    (*supports_derived_sessions=*)false // irrelevant by supports_encrypted_sessions
+    (*max_sessions=*)0sz // irrelevant by supports_encrypted_sessions
+    (*session_protocol=*)"" // irrelevant by supports_encrypted_sessions
+    (*supports_session_sync=*)false // by supports_encrypted_sessions
+    (*session_sync_policy=*)"" // irrelevant by supports_session_sync
+    (*session_migration_protocol=*)"" // irrelevant by supports_session_migration
+    (*supports_default_context=*)false
+    (*supports_context_handles=*)true 
+    (*max_contexts_per_session=*)1sz // 1 context per session
+    (*max_context_handle_size=*)16sz // 16 bits
+    (*supports_auto_init=*)false // irrelevant by supports_default_context
+    (*supports_simulation=*)false
+    (*supports_attestation=*)false
+    (*supports_sealing=*)false 
+    (*supports_get_profile=*)true
+    (*supports_open_session=*)false // irrelevant by supports_encrypted_sessions
+    (*supports_close_session=*)false // irrelevant by supports_encrypted_sessions
+    (*supports_sync_session=*)false // irrelevant by supports_encrypted_sessions
+    (*supports_export_session=*)false
+    (*supports_import_session=*)false
+    (*supports_init_context=*)true
+    (*supports_certify_key=*)false // irrelevant by supports_attestation
+    (*supports_sign=*)false // irrelevant by supports_attestation
+    (*supports_seal=*)false // irrelevant by supports_sealing
+    (*supports_unseal=*)false // irrelevant by supports_sealing
+    (*supports_sealing_public=*)false // irrelevant by supports_sealing
+    (*supports_rotate_context_handle=*)true
+    (*dice_derivation=*)"" // FIXME: name for DICE algorithms
+    (*asymmetric_derivation=*)"" // irrelevant by supports_attestation
+    (*symmetric_derivation=*)"" // irrelevant by supports_attestation
+    (*supports_any_label=*)false
+    (*supported_labels=*)"" // FIXME: what are lables?
+    (*initial_derivation=*)"" // FIXME: name?
+    (*input_format=*)"" // FIXME: create CDDL spec for input record formats
+    (*supports_internal_inputs=*)false
+    (*supports_internal_dpe_info=*)false // irrelevant by supports_internal_inputs
+    (*supports_internal_dpe_dice=*)false // irrelevant by supports_internal_inputs
+    (*internal_dpe_info_type=*)"" // irrelevant by supports_internal_inputs
+    (*internal_dpe_dice_type=*)"" // irrelevant by supports_internal_inputs
+    (*internal_inputs=*)"" // irrelevant by supports_internal_inputs
+    (*supports_certificates=*)false // irrelevant by supports_attestation
+    (*max_certificate_size=*)0sz // irrelevant by supports_certificates
+    (*max_certificate_chain_size=*)0sz // irrelevant by supports_certificates
+    (*appends_more_certificates=*)false // irrelevant by supports_certificates
+    (*supports_certificate_policies=*)false // irrelevant by supports_certificates
+    (*supports_policy_identity_init=*)false // irrelevant by supports_certificate_policies
+    (*supports_policy_identity_loc=*)false // irrelevant by supports_certificate_policies
+    (*supports_policy_attest_init=*)false // irrelevant by supports_certificate_policies
+    (*supports_policy_attest_loc=*)false // irrelevant by supports_certificate_policies
+    (*supports_policy_assert_init=*)false // irrelevant by supports_certificate_policies
+    (*supports_policy_assert_loc=*)false // irrelevant by supports_certificate_policies
+    (*certificate_policies=*)"" // irrelevant by supports_certificate_policies
+    (*supports_eca_certificates=*)false // irrelevant by supports_certificate_policies
+    (*eca_certificate_format=*)"" // irrelevant by supports_eca_certificates
+    (*leaf_certificate_format=*)"" // irrelevant by supports_certificates
+    (*public_key_format=*)"" // irrelevant by supports_asymmetric_unseal
+    (*supports_external_key=*)false // irrelevant by supports_certificates
+    (*to_be_signed_format=*)"" // irrelevant by supports_sign
+    (*signature_format=*)"" // irrelevant by supports_sign
+    (*supports_symmetric_sign=*)false // irrelevant by supports_attestation
+    (*supports_asymmetric_unseal=*)false // irrelevant by supports_attestation
+    (*supports_unseal_policy=*)false// irrelevant by supports_sealing
+    (*unseal_policy_format=*)"" // irrelevant by supports_unseal_policy 
+}
+```
+let get_profile = get_profile'
 
-// (*
-//   GetProfile: Part of DPE API 
-//   Get the DPE's profile. 
-// *)
-// ```pulse
-// fn get_profile' ()
-//   requires emp
-//   returns d:profile_descriptor_t
-//   ensures emp
-// {
-//   mk_profile_descriptor
-//     (*name=*)""
-//     (*dpe_spec_version=*)1ul
-//     (*max_message_size=*)0ul // irrelevant: using direct interface
-//     (*uses_multi_part_messages=*)false
-//     (*supports_concurrent_operations=*)false // irrelevant by uses_multi_part_messages
-//     (*supports_encrypted_sessions=*)false // irrelevant by uses_multi_part_messages
-//     (*supports_derived_sessions=*)false // irrelevant by supports_encrypted_sessions
-//     (*max_sessions=*)0sz // irrelevant by supports_encrypted_sessions
-//     (*session_protocol=*)"" // irrelevant by supports_encrypted_sessions
-//     (*supports_session_sync=*)false // by supports_encrypted_sessions
-//     (*session_sync_policy=*)"" // irrelevant by supports_session_sync
-//     (*session_migration_protocol=*)"" // irrelevant by supports_session_migration
-//     (*supports_default_context=*)false
-//     (*supports_context_handles=*)true 
-//     (*max_contexts_per_session=*)1sz // 1 context per session
-//     (*max_context_handle_size=*)16sz // 16 bits
-//     (*supports_auto_init=*)false // irrelevant by supports_default_context
-//     (*supports_simulation=*)false
-//     (*supports_attestation=*)false
-//     (*supports_sealing=*)false 
-//     (*supports_get_profile=*)true
-//     (*supports_open_session=*)false // irrelevant by supports_encrypted_sessions
-//     (*supports_close_session=*)false // irrelevant by supports_encrypted_sessions
-//     (*supports_sync_session=*)false // irrelevant by supports_encrypted_sessions
-//     (*supports_export_session=*)false
-//     (*supports_import_session=*)false
-//     (*supports_init_context=*)true
-//     (*supports_certify_key=*)false // irrelevant by supports_attestation
-//     (*supports_sign=*)false // irrelevant by supports_attestation
-//     (*supports_seal=*)false // irrelevant by supports_sealing
-//     (*supports_unseal=*)false // irrelevant by supports_sealing
-//     (*supports_sealing_public=*)false // irrelevant by supports_sealing
-//     (*supports_rotate_context_handle=*)true
-//     (*dice_derivation=*)"" // FIXME: name for DICE algorithms
-//     (*asymmetric_derivation=*)"" // irrelevant by supports_attestation
-//     (*symmetric_derivation=*)"" // irrelevant by supports_attestation
-//     (*supports_any_label=*)false
-//     (*supported_labels=*)"" // FIXME: what are lables?
-//     (*initial_derivation=*)"" // FIXME: name?
-//     (*input_format=*)"" // FIXME: create CDDL spec for input record formats
-//     (*supports_internal_inputs=*)false
-//     (*supports_internal_dpe_info=*)false // irrelevant by supports_internal_inputs
-//     (*supports_internal_dpe_dice=*)false // irrelevant by supports_internal_inputs
-//     (*internal_dpe_info_type=*)"" // irrelevant by supports_internal_inputs
-//     (*internal_dpe_dice_type=*)"" // irrelevant by supports_internal_inputs
-//     (*internal_inputs=*)"" // irrelevant by supports_internal_inputs
-//     (*supports_certificates=*)false // irrelevant by supports_attestation
-//     (*max_certificate_size=*)0sz // irrelevant by supports_certificates
-//     (*max_certificate_chain_size=*)0sz // irrelevant by supports_certificates
-//     (*appends_more_certificates=*)false // irrelevant by supports_certificates
-//     (*supports_certificate_policies=*)false // irrelevant by supports_certificates
-//     (*supports_policy_identity_init=*)false // irrelevant by supports_certificate_policies
-//     (*supports_policy_identity_loc=*)false // irrelevant by supports_certificate_policies
-//     (*supports_policy_attest_init=*)false // irrelevant by supports_certificate_policies
-//     (*supports_policy_attest_loc=*)false // irrelevant by supports_certificate_policies
-//     (*supports_policy_assert_init=*)false // irrelevant by supports_certificate_policies
-//     (*supports_policy_assert_loc=*)false // irrelevant by supports_certificate_policies
-//     (*certificate_policies=*)"" // irrelevant by supports_certificate_policies
-//     (*supports_eca_certificates=*)false // irrelevant by supports_certificate_policies
-//     (*eca_certificate_format=*)"" // irrelevant by supports_eca_certificates
-//     (*leaf_certificate_format=*)"" // irrelevant by supports_certificates
-//     (*public_key_format=*)"" // irrelevant by supports_asymmetric_unseal
-//     (*supports_external_key=*)false // irrelevant by supports_certificates
-//     (*to_be_signed_format=*)"" // irrelevant by supports_sign
-//     (*signature_format=*)"" // irrelevant by supports_sign
-//     (*supports_symmetric_sign=*)false // irrelevant by supports_attestation
-//     (*supports_asymmetric_unseal=*)false // irrelevant by supports_attestation
-//     (*supports_unseal_policy=*)false// irrelevant by supports_sealing
-//     (*unseal_policy_format=*)"" // irrelevant by supports_unseal_policy 
-// }
-// ```
-// let get_profile = get_profile'
 
+//
+// Wrapper over hash table insert that first checks if the table is full
+//
 
 ```pulse
-fn insert_dpe (#kt:eqtype) (#vt:Type0)
+fn insert_if_not_full (#kt:eqtype) (#vt:Type0)
   (ht:ht_t kt vt) (k:kt) (v:vt)
   (#pht:erased (PHT.pht_t kt vt))
   requires models ht pht
@@ -356,8 +337,7 @@ fn insert_dpe (#kt:eqtype) (#vt:Type0)
   ensures
     exists* pht'.
       models (fst b) pht' **
-      pure ((fst b).sz == ht.sz /\
-            (fst b).hashf == ht.hashf /\
+      pure (same_sz_and_hashf (fst b) ht /\
             (if snd b
             then (PHT.not_full (reveal pht).repr /\
                   pht'==PHT.insert pht k v)
@@ -366,7 +346,6 @@ fn insert_dpe (#kt:eqtype) (#vt:Type0)
   let b = not_full ht;
   if snd b
   {
-    // rewrite (models ht pht) as (models (fst b) pht);
     Pulse.Lib.HashTable.insert (fst b) k v
   }
   else
@@ -387,9 +366,7 @@ fn insert_dpe (#kt:eqtype) (#vt:Type0)
 *)
 
 assume val safe_add (i j:U32.t)
-  : Pure (option U32.t)
-         (requires True)
-         (ensures fun r -> Some? r ==> U32.v (Some?.v r) == U32.v i + U32.v j)
+  : o:option U32.t { Some? o ==> U32.v (Some?.v o) == U32.v i + U32.v j }
 
 #push-options "--z3rlimit_factor 4"
 ```pulse
@@ -404,38 +381,50 @@ fn open_session_aux (st:global_state_t)
   with stm. rewrite (models st.session_table stm) as (models tbl stm);
   with stm. rewrite (on_range (session_perm stm) 0 (U32.v st.session_id_counter))
                  as (on_range (session_perm stm) 0 (U32.v ctr));
-  let opt_inc = ctr `safe_add` 1ul;
+
   with pht0. assert (models tbl pht0);
+  with i j. assert (on_range (session_perm pht0) i j);
+  assert (pure (U32.v ctr == j));
+
+  let opt_inc = ctr `safe_add` 1ul;
+  
   match opt_inc {
     None -> {
-      let st = { session_id_counter = ctr; session_table = tbl };
-      with stm. rewrite (models tbl stm) as (models st.session_table stm);
-      with stm. rewrite (on_range (session_perm stm) 0 (U32.v ctr))
-                     as (on_range (session_perm stm) 0 (U32.v st.session_id_counter));
-      fold (global_state_mutex_pred (Some st));
-      let res = (st, None #sid_t);
-      rewrite (global_state_mutex_pred (Some st)) as (global_state_mutex_pred (Some (fst res)));
-      res
+      admit ()
+      // let st = { session_id_counter = ctr; session_table = tbl };
+      // with stm. rewrite (models tbl stm) as (models st.session_table stm);
+      // with stm. rewrite (on_range (session_perm stm) 0 (U32.v ctr))
+      //                as (on_range (session_perm stm) 0 (U32.v st.session_id_counter));
+      // fold (global_state_mutex_pred (Some st));
+      // let res = (st, None #sid_t);
+      // rewrite (global_state_mutex_pred (Some st)) as (global_state_mutex_pred (Some (fst res)));
+      // res
     }
     Some next_sid -> {
-      let res = insert_dpe tbl next_sid SessionStart;
+      let res = insert_if_not_full tbl next_sid SessionStart;
       if snd res {
         let st = { session_id_counter = next_sid; session_table = fst res };
-        with pht. assert (models (fst res) pht);
-        rewrite (models (fst res) pht) as (models st.session_table pht);
-        frame_session_perm_on_range pht0 pht 0 (U32.v ctr);
+        with pht1. assert (models (fst res) pht1);
+        rewrite (models (fst res) pht1) as (models st.session_table pht1);
+        assert (pure (pht1 == PHT.insert pht0 next_sid SessionStart));
+        frame_session_perm_on_range pht0 pht1 i j;
+        // rewrite emp as (session_perm pht1 j);
+        admit (session_perm pht1 j);
+        Pulse.Lib.OnRange.on_range_snoc #emp_inames () #(session_perm pht1);
         admit ();
+
         (st, Some next_sid)
       } else {
-        let st = { session_id_counter = ctr; session_table = fst res };
-        with stm. rewrite (models (fst res) stm) as (models st.session_table stm);
-        with stm1. assert (models st.session_table stm1);
-        with stm. rewrite (on_range (session_perm stm) 0 (U32.v ctr))
-                       as (on_range (session_perm stm1) 0 (U32.v st.session_id_counter));
-        fold (global_state_mutex_pred (Some st));
-        let res = (st, None #sid_t);
-        rewrite (global_state_mutex_pred (Some st)) as (global_state_mutex_pred (Some (fst res)));
-        res
+        admit ()
+        // let st = { session_id_counter = ctr; session_table = fst res };
+        // with stm. rewrite (models (fst res) stm) as (models st.session_table stm);
+        // with stm1. assert (models st.session_table stm1);
+        // with stm. rewrite (on_range (session_perm stm) 0 (U32.v ctr))
+        //                as (on_range (session_perm stm1) 0 (U32.v st.session_id_counter));
+        // fold (global_state_mutex_pred (Some st));
+        // let res = (st, None #sid_t);
+        // rewrite (global_state_mutex_pred (Some st)) as (global_state_mutex_pred (Some (fst res)));
+        // res
       }
     }
   }

@@ -691,16 +691,15 @@ let lookup_index_us #kt #vt (ht : pht_t kt vt) (k : kt)
   | Some (_, i) -> Some (US.uint_to_t i)
   | None -> None
 
-#push-options "--print_implicits --ugly"
 let upd_pht (#kt:eqtype) (#vt:Type) (pht:pht_t kt vt) idx (k:kt) (v:vt)
   (_:squash (lookup_index_us pht k == Some idx)) : pht_t kt vt =
   let spec' = Ghost.hide (pht.spec ++ (k, v)) in
   let repr' = upd_ pht.repr (US.v idx) k v in
-  admit ();
   { pht with spec = spec';
              repr = repr';
-             inv = () }
+             inv = magic () }  // TODO: FIXME
 
+#push-options "--z3rlimit_factor 2"
 let eliminate_strong_all_used_not_by #kt #vt (r:repr_t kt vt) (k:kt) (i:nat{i < r.sz})
   : Lemma 
     (requires strong_all_used_not_by r (canonical_index k r) r.sz k)
@@ -722,7 +721,8 @@ let eliminate_strong_all_used_not_by #kt #vt (r:repr_t kt vt) (k:kt) (i:nat{i < 
         assert (Used? (r @@ ((j + 0) % r.sz)))
       )
     )
-    
+#pop-options
+
 let full_not_full #kt #vt (r:repr_t kt vt) (k:kt)
   : Lemma 
     (requires

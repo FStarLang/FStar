@@ -18,6 +18,7 @@ module L0Core
 open L0Types
 open Pulse.Lib.Pervasives
 module A = Pulse.Lib.Array
+module V = Pulse.Lib.Vec
 module U8 = FStar.UInt8
 module SZ = FStar.SizeT
 open HACL
