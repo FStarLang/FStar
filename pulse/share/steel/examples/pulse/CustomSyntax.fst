@@ -462,3 +462,12 @@ fn test_admit4 ()
   0
 }
 ```
+
+```pulse
+fn test_admit5 ()
+  requires p1
+  ensures p1 ** q1
+{
+  admit q1
+}
+```
