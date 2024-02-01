@@ -695,9 +695,12 @@ let upd_pht (#kt:eqtype) (#vt:Type) (pht:pht_t kt vt) idx (k:kt) (v:vt)
   (_:squash (lookup_index_us pht k == Some idx)) : pht_t kt vt =
   let spec' = Ghost.hide (pht.spec ++ (k, v)) in
   let repr' = upd_ pht.repr (US.v idx) k v in
+  assert (US.fits repr'.sz);
+  assume (unique_keys spec' repr');
+  assume (spec_submap_repr spec' repr');
   { pht with spec = spec';
              repr = repr';
-             inv = magic () }  // TODO: FIXME
+             inv = () }
 
 #push-options "--z3rlimit_factor 2"
 let eliminate_strong_all_used_not_by #kt #vt (r:repr_t kt vt) (k:kt) (i:nat{i < r.sz})
