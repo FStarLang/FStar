@@ -39,6 +39,7 @@ let between_bounds (s: Seq.seq int) (lb rb: int)
 let sorted (s: Seq.seq int)
   = forall (i j: nat). i <= j /\ j < Seq.length s ==> Seq.index s i <= Seq.index s j
 
+#push-options "--retry 5"
 let lemma_sorted_append
   (s1 s2 : Seq.seq int)
   (l1 r1 l2 r2 : int)
@@ -59,6 +60,7 @@ let lemma_sorted_append_squash
               r1 <= l2))
     : squash (sorted (Seq.append s1 s2) /\ between_bounds (Seq.append s1 s2) l1 r2)
   = ()
+#pop-options
 
 let to_nat (x: int{x >= 0}): nat = x
 (** Permutation reasoning **)
