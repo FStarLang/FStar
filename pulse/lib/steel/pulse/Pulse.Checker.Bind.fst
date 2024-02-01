@@ -83,8 +83,17 @@ let check_bind
   then fail g (Some t.range) "check_bind: post hint is not set, please add an annotation";
 
   let Tm_Bind { binder; head=e1; body=e2 } = t.term in
-  if Tm_Admit? e1.term
-  then ( //Discard the continuation if the head is an admit
+  let discard_continuation =
+    match e1.term with
+    | Tm_Admit { post = None } ->
+      //
+      // Discard the continuation if the head is an admit
+      //   with no post specified
+      //
+      true
+    | _ -> false in
+  if discard_continuation
+  then (
     check g ctxt ctxt_typing post_hint res_ppname e1
   )
   else if Tm_Abs? e1.term
