@@ -247,7 +247,7 @@ fn frame_session_perm_on_range
   Get the DPE's profile. 
 *)
 ```pulse
-fn get_profile' ()
+fn get_profile ()
   requires emp
   returns d:profile_descriptor_t
   ensures emp
@@ -324,7 +324,7 @@ fn get_profile' ()
     (*unseal_policy_format=*)"" // irrelevant by supports_unseal_policy 
 }
 ```
-let get_profile = get_profile'
+// let get_profile = get_profile'
 
 
 //
@@ -670,34 +670,36 @@ fn destroy_context (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
     {
       with s. rewrite (session_state_perm s)
                    as (session_state_perm st);
-      if not (Available? st)
-      {
-        rewrite (session_state_perm st) as emp;
-        rewrite emp as (session_state_perm SessionError);
-        let st' = take_session_state sid SessionError;
-        //TODO: Fix this by proving that st' must be present and InUse
-        drop_ (session_state_perm (dflt st' SessionError));
-        false
-      }
-      else if (ctxt_hndl = hndl_of st)
-      {
-        elim_session_state_perm_available st;
-        destroy_ctxt (ctxt_of st);
-        //reset the session to the start state
-        rewrite emp as (session_state_perm SessionStart);
-        let st' = take_session_state sid SessionStart;
-        //TODO: Fix this by proving that st' must be present and InUse
-        drop_ (session_state_perm (dflt st' SessionStart));
-        true
-      }
-      else
-      {
-        //context handle mismatch; put back st
-        //and return false
-        let st' = take_session_state sid st;
-        //TODO: Fix this by proving that st' must be present and InUse
-        drop_ (session_state_perm (dflt st' st));
-        false
+      match st {
+        Available st1 -> {
+          if (ctxt_hndl = st1.handle) {
+            elim_session_state_perm_available st;
+            with e. rewrite (context_perm (ctxt_of st) e) as (context_perm st1.context e);
+            destroy_ctxt (st1.context);
+            //reset the session to the start state
+            rewrite emp as (session_state_perm SessionStart);
+            let st' = take_session_state sid SessionStart;
+            //TODO: Fix this by proving that st' must be present and InUse
+            drop_ (session_state_perm (dflt st' SessionStart));
+            true
+          } else {
+            //context handle mismatch; put back st
+            //and return false
+            let st' = take_session_state sid (Available st1);
+            //TODO: Fix this by proving that st' must be present and InUse
+            drop_ (session_state_perm (dflt st' st));
+            false
+          }
+        }
+        _ -> {
+          admit (pure (~ (Available? st)));
+          rewrite (session_state_perm st) as emp;
+          rewrite emp as (session_state_perm SessionError);
+          let st' = take_session_state sid SessionError;
+          //TODO: Fix this by proving that st' must be present and InUse
+          drop_ (session_state_perm (dflt st' SessionError));
+          false
+        }
       }
     }
   }

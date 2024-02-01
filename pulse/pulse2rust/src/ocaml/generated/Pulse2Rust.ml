@@ -874,7 +874,7 @@ and (extract_mlexpr :
               uu___7 = "Pulse.Lib.Vec.op_Array_Access"))
             ||
             (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___7 = "Pulse.Lib.Vec.vec_ref_read")
+             uu___7 = "Pulse.Lib.Vec.read_ref")
           ->
           let uu___7 = extract_mlexpr g e1 in
           let uu___8 = extract_mlexpr g i in
@@ -899,7 +899,7 @@ and (extract_mlexpr :
               uu___6 = "Pulse.Lib.Vec.op_Array_Assignment"))
             ||
             (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___6 = "Pulse.Lib.Vec.vec_ref_write")
+             uu___6 = "Pulse.Lib.Vec.write_ref")
           ->
           let e11 = extract_mlexpr g e1 in
           let e21 = extract_mlexpr g e2 in
@@ -921,9 +921,9 @@ and (extract_mlexpr :
            e_v::e_i::e_x::uu___5)
           when
           (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-           uu___6 = "Pulse.Lib.Vec.replace") ||
+           uu___6 = "Pulse.Lib.Vec.replace_i") ||
             (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___6 = "Pulse.Lib.Vec.replace_ref")
+             uu___6 = "Pulse.Lib.Vec.replace_i_ref")
           ->
           let e_v1 = extract_mlexpr g e_v in
           let e_i1 = extract_mlexpr g e_i in
@@ -1150,8 +1150,11 @@ and (extract_mlexpr :
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            uu___5)
           when
-          let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___6 = "failwith" ->
+          (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___6 = "failwith") ||
+            (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___6 = "Pulse.Lib.Core.unreachable")
+          ->
           let uu___6 =
             Pulse2Rust_Rust_Syntax.mk_expr_path_singl
               Pulse2Rust_Rust_Syntax.panic_fn in
@@ -1164,8 +1167,11 @@ and (extract_mlexpr :
              FStar_Extraction_ML_Syntax.loc = uu___1;_},
            uu___2)
           when
-          let uu___3 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___3 = "failwith" ->
+          (let uu___3 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___3 = "failwith") ||
+            (let uu___3 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___3 = "Pulse.Lib.Core.unreachable")
+          ->
           let uu___3 =
             Pulse2Rust_Rust_Syntax.mk_expr_path_singl
               Pulse2Rust_Rust_Syntax.panic_fn in

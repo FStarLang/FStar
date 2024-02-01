@@ -488,14 +488,14 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e; i; _; _])
     when S.string_of_mlpath p = "Pulse.Lib.Array.Core.op_Array_Access" ||
          S.string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Access" ||
-         S.string_of_mlpath p = "Pulse.Lib.Vec.vec_ref_read" ->
+         S.string_of_mlpath p = "Pulse.Lib.Vec.read_ref" ->
 
     mk_expr_index (extract_mlexpr g e) (extract_mlexpr g i)
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, e1::e2::e3::_)
     when S.string_of_mlpath p = "Pulse.Lib.Array.Core.op_Array_Assignment" ||
          S.string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Assignment" ||
-         S.string_of_mlpath p = "Pulse.Lib.Vec.vec_ref_write" ->
+         S.string_of_mlpath p = "Pulse.Lib.Vec.write_ref" ->
 
     let e1 = extract_mlexpr g e1 in
     let e2 = extract_mlexpr g e2 in
@@ -503,8 +503,8 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     mk_assign (mk_expr_index e1 e2) e3
 
   | S.MLE_App ({ expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, e_v::e_i::e_x::_)
-    when S.string_of_mlpath p = "Pulse.Lib.Vec.replace" ||
-         S.string_of_mlpath p = "Pulse.Lib.Vec.replace_ref" ->
+    when S.string_of_mlpath p = "Pulse.Lib.Vec.replace_i" ||
+         S.string_of_mlpath p = "Pulse.Lib.Vec.replace_i_ref" ->
 
     let e_v = extract_mlexpr g e_v in
     let e_i = extract_mlexpr g e_i in
@@ -567,12 +567,13 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     Expr_while {expr_while_cond; expr_while_body}
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, _::e::_)
-    when S.string_of_mlpath p = "Pulse.Lib.Core.run_stt" ->
+    when S.string_of_mlpath p = "DPE.run_stt" ->  // TODO: FIXME
     extract_mlexpr g e
 
   | S.MLE_App ({ expr=S.MLE_TApp ({ expr=S.MLE_Name p }, _) }, _)
   | S.MLE_App ({expr=S.MLE_Name p}, _)
-    when S.string_of_mlpath p = "failwith" ->
+    when S.string_of_mlpath p = "failwith" ||
+         S.string_of_mlpath p = "Pulse.Lib.Core.unreachable" ->
     mk_call (mk_expr_path_singl panic_fn) []
 
   | S.MLE_App ({expr=S.MLE_Name p}, [e1; e2])
