@@ -530,7 +530,18 @@ let dflt #a (x:option a) (y:a) =
   | Some v -> v
   | _ -> y
 
-#push-options "--z3rlimit_factor 4"
+```pulse
+ghost
+fn take_session_state_aux #stm #sid v
+  requires pure (session_perm stm (U32.v sid) == session_state_perm v) **
+           session_perm stm (U32.v sid)
+  ensures session_state_perm v
+{
+  rewrite (session_perm stm (U32.v sid)) as (session_state_perm v);
+}
+```
+
+#push-options "--z3rlimit_factor 2"
 ```pulse
 fn take_session_state (sid:sid_t) (replace_with:session_state)
    requires session_state_perm replace_with
@@ -567,13 +578,7 @@ fn take_session_state (sid:sid_t) (replace_with:session_state)
                 assert (pure (Some (snd ok) == PHT.lookup stm (UInt32.uint_to_t (U32.v sid))));
                 assert (pure (UInt.fits (U32.v sid) 32));
                 assert (pure (session_perm stm (U32.v sid) == session_state_perm (snd ok)));
-
-                // TODO: why does this fail, see the assert above
-                // rewrite (session_perm stm (U32.v sid))
-                //      as (session_state_perm (snd ok));
-                drop_ (session_perm stm (U32.v sid));
-                admit (session_state_perm (snd ok));
-
+                take_session_state_aux (snd ok);
                 with stm'. assert (models (fst ok) stm');
                 frame_session_perm_on_range stm stm' 0 (U32.v sid);
                 frame_session_perm_on_range stm stm' (U32.v sid `Prims.op_Addition` 1) (U32.v ctr);
