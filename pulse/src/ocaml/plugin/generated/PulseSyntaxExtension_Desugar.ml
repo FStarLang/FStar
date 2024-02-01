@@ -235,13 +235,21 @@ let (admit_or_return :
       match uu___ with
       | (head, args) ->
           (match ((head.FStar_Syntax_Syntax.n), args) with
-           | (FStar_Syntax_Syntax.Tm_fvar fv, uu___1::[]) ->
+           | (FStar_Syntax_Syntax.Tm_fvar fv, (e, uu___1)::[]) ->
                let uu___2 =
                  FStar_Syntax_Syntax.fv_eq_lid fv
                    PulseSyntaxExtension_Env.admit_lid in
                if uu___2
                then
-                 let uu___3 = PulseSyntaxExtension_SyntaxWrapper.tm_admit r in
+                 let post =
+                   match e.FStar_Syntax_Syntax.n with
+                   | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_unit)
+                       -> FStar_Pervasives_Native.None
+                   | uu___3 ->
+                       let uu___4 = as_term e in
+                       FStar_Pervasives_Native.Some uu___4 in
+                 let uu___3 =
+                   PulseSyntaxExtension_SyntaxWrapper.tm_admit post r in
                  STTerm uu___3
                else
                  (let uu___4 =
