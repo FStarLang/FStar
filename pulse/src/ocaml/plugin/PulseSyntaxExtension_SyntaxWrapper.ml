@@ -178,8 +178,8 @@ let tm_rewrite p1 p2 r : st_term =
 let tm_rename ps r : st_term = failwith ""
 (*  PSB.(with_range (tm_rename ps) r) *)
 
-let tm_admit r : st_term =
-  PSB.(with_range (tm_admit STT u_zero (tm_unknown r) None) r)
+let tm_admit post_opt r : st_term =
+  PSB.(with_range (tm_admit STT u_zero (tm_unknown r) post_opt) r)
 let tm_unreachable r : st_term =
   PSB.(with_range (tm_unreachable) r)
   
