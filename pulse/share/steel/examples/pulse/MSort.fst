@@ -2,7 +2,6 @@ module MSort
 
 open FStar.Ghost
 open Pulse.Lib.Pervasives
-open TaskPool
 module A = Pulse.Lib.Array
 module S = FStar.Seq
 module SZ = FStar.SizeT
@@ -98,8 +97,6 @@ merge_impl
 
   pts_to_range_join a (SZ.v lo) (SZ.v mid) (SZ.v hi);
   
-  admit();
-
   while (
     let vi = !i;
     let vj = !j;
