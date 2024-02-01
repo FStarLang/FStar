@@ -57,11 +57,16 @@ fn join_alive_pledge (p:T.pool) (f:perm)
 }
 ```
 
-(* NOTE: This is still a sketch as it is not spawning any of the sub tasks, but instead
-just calling sequentially. Already, however, pledge arithmetic is quite a big part
-of this proof. Spawning a subtask will require the use of split for permission
-accounting and complicate things further due to the extra invariant, unless we use
-the simple interface instead. *)
+(* FIXME! *)
+assume
+val split_pledge (#is:invlist) (#f:vprop) (v1:vprop) (v2:vprop)
+  : stt_unobservable unit
+              emp_inames
+              (pledge is f (v1 ** v2))
+              (fun () -> pledge is f v1 ** pledge is f v2)
+
+(* NOTE: This is still a sketch as it is using the preceding simple version of split_pledge,
+which does not return the new iname. *)
 ```pulse
 fn rec t_quicksort
   (p : T.pool)
@@ -87,11 +92,28 @@ fn rec t_quicksort
     with s3. assert (A.pts_to_range a r._2 hi s3);
 
     T.share_alive p f;
+    T.share_alive p (half_perm f);
 
-    t_quicksort p (half_perm f) a lo r._1 lb pivot;
-    t_quicksort p (half_perm f) a r._2 hi pivot rb;
+    T.spawn_ p #(half_perm f) (fun () -> t_quicksort p (half_perm (half_perm f)) a lo r._1 lb pivot);
+    t_quicksort p (half_perm (half_perm f)) a r._2 hi pivot rb;
+
+    // From the spawn, we get back a nested pledge.
+    assert (pledge [] (T.pool_done p) (
+                pledge [] (T.pool_done p) (T.pool_alive #(half_perm (half_perm f)) p) **
+                pledge [] (T.pool_done p) (quicksort_post a lo r._1 s1 lb pivot)));
+
+    split_pledge #[] #(T.pool_done p)
+                (pledge [] (T.pool_done p) (T.pool_alive #(half_perm (half_perm f)) p))
+                (pledge [] (T.pool_done p) (quicksort_post a lo r._1 s1 lb pivot));
+
+    (* pledge arith for permissions *)
+    squash_pledge [] (T.pool_done p) (T.pool_alive #(half_perm (half_perm f)) p);
+    return_pledge [] (T.pool_done p) (T.pool_alive #(half_perm f) p);
+    join_alive_pledge p (half_perm f);
+    join_alive_pledge p f;
     
-    (* pledge arith *)
+    (* pledge arith for post *)
+    squash_pledge [] (T.pool_done p) (quicksort_post a lo r._1 s1 lb pivot);
     return_pledge [] (T.pool_done p) (A.pts_to_range a r._1 r._2 s2);
     join_pledge #[] #(T.pool_done p)
       (A.pts_to_range a r._1 r._2 s2)
@@ -120,8 +142,6 @@ fn rec t_quicksort
         (quicksort_post a lo hi s0 lb rb)
         rewrite_pf;
 
-    join_alive_pledge p f;
-
     ()
   } else {
     return_pledge [] (T.pool_done p)
@@ -129,5 +149,34 @@ fn rec t_quicksort
     return_pledge [] (T.pool_done p)
       (T.pool_alive #f p);
   }
+}
+```
+
+#set-options "--print_full_names"
+
+```pulse
+fn rec quicksort
+  (a: A.array int)
+  (lo: nat) (hi:(hi:int{-1 <= hi - 1 /\ lo <= hi}))
+  (lb rb: int)
+  (#s0: Ghost.erased (Seq.seq int))
+  requires
+    A.pts_to_range a lo hi s0 **
+    pure (pure_pre_quicksort a lo hi lb rb s0)
+  ensures
+    quicksort_post a lo hi s0 lb rb
+{
+  assume_ (pure (comp_perm (half_perm full_perm) == half_perm full_perm));
+
+  let p = T.setup_pool 8;
+  T.share_alive p full_perm;
+  t_quicksort p (half_perm full_perm) a lo hi lb rb #s0;
+  rewrite
+    pledge [] (T.pool_done p) (T.pool_alive #(half_perm full_perm) p)
+  as
+    pledge [] (T.pool_done p) (T.pool_alive #(comp_perm (half_perm full_perm)) p);
+  T.teardown_pool' p (half_perm full_perm);
+  redeem_pledge [] (T.pool_done p) (quicksort_post a lo hi s0 lb rb);
+  drop_ (T.pool_done p);
 }
 ```

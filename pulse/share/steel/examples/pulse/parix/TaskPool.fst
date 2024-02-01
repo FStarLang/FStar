@@ -36,9 +36,9 @@ let joined   #p #a #post th = magic ()
 
 let handle_solved #p #a #post th = magic()
 
-let spawn #a #pre #post #e = magic ()
+let spawn #a #pre #post p #e = magic ()
 
-let spawn_ #pre #post #e = magic ()
+let spawn_ #pre #post p #e = magic ()
 
 let must_be_done = magic ()
 
@@ -64,7 +64,8 @@ fn __extract
 
 let extract = __extract
 
-let split_alive _ _ = admit()
+let share_alive _ _ = admit()
+let gather_alive _ _ = admit()
 
 ```pulse
 fn __join
@@ -86,3 +87,5 @@ let teardown_pool
   (p:pool)
   : stt unit (pool_alive p) (fun _ -> pool_done p)
   = magic ()
+
+let teardown_pool' p e = magic ()

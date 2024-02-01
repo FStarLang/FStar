@@ -45,8 +45,8 @@ even if that modifies it. How to model this under the hood? *)
 val spawn
   (#a : Type0)
   (#pre : vprop) (#post : a -> vprop)
-  (#[T.exact (`full_perm)]e : perm)
-  (p:pool)
+  (p : pool)
+  (#[T.exact (`full_perm)] e : perm)
   ($f : unit -> stt a pre (fun (x:a) -> post x))
   : stt (task_handle p a post)
         (pool_alive #e p ** pre)
@@ -54,9 +54,10 @@ val spawn
 
 (* Spawn of a unit-returning task with no intention to join, simpler. *)
 val spawn_
-  (#[T.exact (`full_perm)]e : perm)
   (#pre #post : _)
-  (p:pool) (f : unit -> stt unit pre (fun _ -> post))
+  (p:pool)
+  (#[T.exact (`full_perm)] e : perm)
+  (f : unit -> stt unit pre (fun _ -> post))
   : stt unit (pool_alive #e p ** pre)
              (fun prom -> pool_alive #e p ** pledge [] (pool_done p) post)
 
@@ -110,3 +111,8 @@ val join
 val teardown_pool
   (p:pool)
   : stt unit (pool_alive #full_perm p) (fun _ -> pool_done p)
+
+val teardown_pool'
+  (p:pool) (f:perm{f `lesser_perm` full_perm})
+  : stt unit (pool_alive #f p ** pledge [] (pool_done p) (pool_alive #(comp_perm f) p))
+             (fun _ -> pool_done p)
