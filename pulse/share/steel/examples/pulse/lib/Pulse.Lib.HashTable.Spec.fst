@@ -81,6 +81,33 @@ let rec walk_get_idx #kt #vt (repr : repr_t kt vt) (idx:nat) (k:kt) (off:nat{off
   | Zombie ->
     walk_get_idx repr idx k (off + 1)
 
+let rec walk_get_idx_upd #kt #vt (repr1 repr2:repr_t kt vt) (idx:nat) (k:kt) (off:nat{off <= repr1.sz})
+  (idx':nat { idx' < repr1.sz /\ Used? (repr1 @@ idx') })
+  (v:vt)
+  : Lemma
+      (requires (let Used k' v' = repr1 @@ idx' in
+                 repr2 == { repr1 with seq = Seq.upd repr1.seq idx' (Used k' v) }))
+      (ensures (let Used k' v' = repr1 @@ idx' in
+                let o1 = walk_get_idx repr1 idx k off in
+                let o2 = walk_get_idx repr2 idx k off in
+                match o1, o2 with
+                | None, None -> True
+                | Some (_, i1), Some (v2, i2) ->
+                  i1 == i2 /\ Seq.index repr2.seq i2 == Used k v2
+                | _ -> False))
+      (decreases repr1.sz - off) =
+  
+  if off = repr1.sz then ()
+  else
+    let idx'' = (idx + off) % repr1.sz in
+    match repr1 @@ idx'' with
+    | Clean -> ()
+    | Used k' v' ->
+      if k' = k then ()
+      else walk_get_idx_upd repr1 repr2 idx k (off+1) idx' v
+    | Zombie -> walk_get_idx_upd repr1 repr2 idx k (off+1) idx' v
+
+
 // perform a walk from idx but do not return idx' where k was found
 let walk #kt #vt (repr : repr_t kt vt) (idx:nat) (k : kt) (off:nat{off <= repr.sz}) : option vt
   = match walk_get_idx repr idx k off with 
@@ -695,9 +722,16 @@ let upd_pht (#kt:eqtype) (#vt:Type) (pht:pht_t kt vt) idx (k:kt) (v:vt)
   (_:squash (lookup_index_us pht k == Some idx)) : pht_t kt vt =
   let spec' = Ghost.hide (pht.spec ++ (k, v)) in
   let repr' = upd_ pht.repr (US.v idx) k v in
-  assert (US.fits repr'.sz);
-  assume (unique_keys spec' repr');
-  assume (spec_submap_repr spec' repr');
+
+  let Used k v' = pht.repr @@ US.v idx in
+
+  let cidx = canonical_index #kt #vt k pht.repr in
+  walk_get_idx_upd pht.repr repr' cidx k 0 (US.v idx) v;
+  assert (lookup_repr_index repr' k == Some (v, US.v idx));
+
+  introduce forall (k':kt { k' =!= k }). lookup_repr repr' k' == lookup_repr pht.repr k'
+  with  lemma_used_upd_lookup_walk #_ #_ #pht.repr.sz pht.spec spec' pht.repr repr' (US.v idx) k k' v v';
+
   { pht with spec = spec';
              repr = repr';
              inv = () }
