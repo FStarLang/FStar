@@ -74,6 +74,11 @@ and pat_struct = {
   pat_struct_fields : list field_pat;
 }
 
+and pat_typ = {
+  pat_typ_pat : pat;
+  pat_typ_typ : typ
+}
+
 and pat =
   | Pat_ident of pat_ident
   | Pat_tuple_struct of pat_tuple_struct
@@ -81,8 +86,9 @@ and pat =
   | Pat_lit of lit
   | Pat_struct of pat_struct
   | Pat_tuple of list pat
+  | Pat_typ of pat_typ
 
-type expr =
+and expr =
   | Expr_binop of expr_bin
   | Expr_path of list string
   | Expr_call of expr_call
@@ -99,6 +105,7 @@ type expr =
   | Expr_field of expr_field
   | Expr_struct of expr_struct
   | Expr_tuple of list expr
+  | Expr_method_call of expr_method_call
 
 and expr_bin = {
   expr_bin_left : expr;
@@ -173,6 +180,12 @@ and field_val = {
   field_val_expr : expr;
 }
 
+and expr_method_call = {
+  expr_method_call_receiver : expr;
+  expr_method_call_name : string;
+  expr_method_call_args : list expr;
+}
+
 and local_stmt = {
   local_stmt_pat : option pat;
   local_stmt_init : option expr;
@@ -182,7 +195,7 @@ and stmt =
   | Stmt_local of local_stmt
   | Stmt_expr of expr
 
-type typ =
+and typ =
   | Typ_path of list typ_path_segment
   | Typ_reference of typ_reference
   | Typ_slice of typ
@@ -210,11 +223,6 @@ and typ_array = {
 and typ_fn = {
   typ_fn_args : list typ;
   typ_fn_ret : typ;
-}
-
-type pat_typ = {
-  pat_typ_pat : pat;
-  pat_typ_typ : typ
 }
 
 type fn_arg =
@@ -289,6 +297,7 @@ val mk_ref_typ (is_mut:bool) (t:typ) : typ
 val mk_box_typ (t:typ) : typ
 val mk_slice_typ (t:typ) : typ
 val mk_vec_typ (t:typ) : typ
+val mk_mutex_typ (t:typ) : typ
 val mk_option_typ (t:typ) : typ
 val mk_array_typ (t:typ) (len:expr) : typ
 val mk_named_typ (s:string) (generic_args:list typ) : typ
@@ -319,8 +328,13 @@ val mk_expr_field (base:expr) (f:string) : expr
 val mk_expr_field_unnamed (base:expr) (i:int) : expr
 val mk_expr_struct (path:list string) (fields:list (string & expr)) : expr
 val mk_expr_tuple (l:list expr) : expr
+val mk_mem_replace (e:expr) (new_v:expr) : expr
+val mk_method_call (receiver:expr) (name:string) (args:list expr) : expr
 
-val mk_local_stmt (name:option string) (is_mut:bool) (init:expr) : stmt
+val mk_new_mutex (e:expr) : expr
+val mk_lock_mutex (e:expr) : expr
+
+val mk_local_stmt (name:option string) (t:option typ) (is_mut:bool) (init:expr) : stmt
 val mk_scalar_fn_arg (name:string) (t:typ) : fn_arg
 val mk_ref_fn_arg (name:string) (is_mut:bool) (t:typ) : fn_arg
 val mk_fn_signature (fn_name:string) (fn_generics:list string) (fn_args:list fn_arg) (fn_ret_t:typ) : fn_signature

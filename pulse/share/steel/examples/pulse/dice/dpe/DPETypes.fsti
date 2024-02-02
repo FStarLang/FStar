@@ -125,22 +125,27 @@ let mk_profile_descriptor
   supports_policy_assert_init; supports_policy_assert_loc; certificate_policies; supports_eca_certificates; eca_certificate_format; leaf_certificate_format; public_key_format; 
   supports_external_key; to_be_signed_format; signature_format; supports_symmetric_sign; supports_asymmetric_unseal; supports_unseal_policy; unseal_policy_format;}
 
+module V = Pulse.Lib.Vec
+
+// TODO: move to Pulse.Lib.Vec
+type lvec (a:Type) (n:nat) = v:V.vec a { V.length v == n }
+
 (* Engine Context *)
 noeq
 type engine_context_t = { 
-  uds: A.larray U8.t (SZ.v uds_len); 
+  uds: lvec U8.t (SZ.v uds_len); 
 }
 
 let engine_context_perm (c:engine_context_t) (uds_bytes:Seq.seq U8.t) : vprop
-  = A.pts_to c.uds uds_bytes ** 
-    pure (A.is_full_array c.uds)
+  = V.pts_to c.uds uds_bytes ** 
+    pure (V.is_full_vec c.uds)
 
 let mk_engine_context_t uds : engine_context_t = {uds}
 
 (* L0 Context *)
 noeq
 type l0_context_t = { 
-  cdi:A.larray U8.t (SZ.v dice_digest_len); 
+  cdi : lvec U8.t (SZ.v dice_digest_len); 
 }
 
 let mk_l0_context_t cdi : l0_context_t = {cdi}
@@ -159,20 +164,19 @@ let mk_l0_context_repr_t
 = {uds; cdi; repr}
 
 let l0_context_perm (c:l0_context_t) (r:l0_context_repr_t): vprop
-  = A.pts_to c.cdi r.cdi **
-    pure (A.is_full_array c.cdi
+  = V.pts_to c.cdi r.cdi **
+    pure (V.is_full_vec c.cdi
        /\ cdi_functional_correctness r.cdi r.uds r.repr
        /\ l0_is_authentic r.repr)
 
-
 (* L1 Context *)
 noeq
-type l1_context_t = { deviceID_priv: A.larray U8.t (SZ.v v32us);
-                      deviceID_pub: A.larray U8.t (SZ.v v32us);   
-                      aliasKey_priv: A.larray U8.t (SZ.v v32us);
-                      aliasKey_pub: A.larray U8.t (SZ.v v32us);
-                      aliasKeyCRT: A.array U8.t;
-                      deviceIDCSR: A.array U8.t; }
+type l1_context_t = { deviceID_priv: lvec U8.t (SZ.v v32us);
+                      deviceID_pub: lvec U8.t (SZ.v v32us);   
+                      aliasKey_priv: lvec U8.t (SZ.v v32us);
+                      aliasKey_pub: lvec U8.t (SZ.v v32us);
+                      aliasKeyCRT: V.vec U8.t;
+                      deviceIDCSR: V.vec U8.t; }
 
 let mk_l1_context_t deviceID_priv deviceID_pub aliasKey_priv aliasKey_pub aliasKeyCRT deviceIDCSR 
 : l1_context_t
@@ -218,12 +222,12 @@ let mk_l1_context_repr_t
 
 let l1_context_perm (c:l1_context_t) (r:l1_context_repr_t)
   : vprop
-  = A.pts_to c.deviceID_priv r.deviceID_priv **
-    A.pts_to c.deviceID_pub r.deviceID_pub **
-    A.pts_to c.aliasKey_priv r.aliasKey_priv **
-    A.pts_to c.aliasKey_pub r.aliasKey_pub **
-    A.pts_to c.aliasKeyCRT r.aliasKeyCRT **
-    A.pts_to c.deviceIDCSR r.deviceIDCSR **
+  = V.pts_to c.deviceID_priv r.deviceID_priv **
+    V.pts_to c.deviceID_pub r.deviceID_pub **
+    V.pts_to c.aliasKey_priv r.aliasKey_priv **
+    V.pts_to c.aliasKey_pub r.aliasKey_pub **
+    V.pts_to c.aliasKeyCRT r.aliasKeyCRT **
+    V.pts_to c.deviceIDCSR r.deviceIDCSR **
     pure (valid_hkdf_ikm_len dice_digest_len
        /\ aliasKey_functional_correctness
             dice_hash_alg dice_digest_len r.cdi r.repr.fwid
@@ -237,12 +241,12 @@ let l1_context_perm (c:l1_context_t) (r:l1_context_repr_t)
             dice_hash_alg dice_digest_len r.cdi r.repr.fwid
             r.deviceID_label_len r.repr.deviceID_label r.aliasKeyCRT_ingredients 
             r.aliasKeyCRT_len r.aliasKeyCRT r.aliasKey_pub
-       /\ A.is_full_array c.deviceID_priv
-       /\ A.is_full_array c.deviceID_pub
-       /\ A.is_full_array c.aliasKey_priv
-       /\ A.is_full_array c.aliasKey_pub
-       /\ A.is_full_array c.aliasKeyCRT
-       /\ A.is_full_array c.deviceIDCSR)  
+       /\ V.is_full_vec c.deviceID_priv
+       /\ V.is_full_vec c.deviceID_pub
+       /\ V.is_full_vec c.aliasKey_priv
+       /\ V.is_full_vec c.aliasKey_pub
+       /\ V.is_full_vec c.aliasKeyCRT
+       /\ V.is_full_vec c.deviceIDCSR)  
 
 (* Generic Context *)
 // unlike record_t (below), we require full permission on the resources inside

@@ -45,7 +45,7 @@ let to_vec_pts_to v #p #s =
           (vprop_equiv_refl _)
 
 ```pulse
-fn vec_ref_read' (#a:Type0) (r:R.ref (vec a)) (i:SZ.t)
+fn read_ref' (#a:Type0) (r:R.ref (vec a)) (i:SZ.t)
   (#v:erased (vec a))
   (#s:(s:erased (Seq.seq a) { SZ.v i < Seq.length s }))
   requires R.pts_to r v ** pts_to v s
@@ -62,10 +62,10 @@ fn vec_ref_read' (#a:Type0) (r:R.ref (vec a)) (i:SZ.t)
 }
 ```
 
-let vec_ref_read = vec_ref_read'
+let read_ref = read_ref'
 
 ```pulse
-fn vec_ref_write' (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
+fn write_ref' (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
   (#v:erased (vec a))
   (#s:(s:erased (Seq.seq a) { SZ.v i < Seq.length s }))
   requires R.pts_to r v ** pts_to v s
@@ -81,4 +81,41 @@ fn vec_ref_write' (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
 }
 ```
 
-let vec_ref_write = vec_ref_write'
+let write_ref = write_ref'
+
+```pulse
+fn replace_i' (#a:Type0) (v:vec a) (i:SZ.t) (x:a)
+  (#s:(s:erased (Seq.seq a) { SZ.v i < Seq.length s }))
+  requires pts_to v s
+  returns res:a
+  ensures pts_to v (Seq.upd s (SZ.v i) x) ** pure (res == Seq.index s (SZ.v i))
+{
+  let y = op_Array_Access v i;
+  op_Array_Assignment v i x;
+  y
+}
+```
+
+let replace_i = replace_i'
+
+```pulse
+fn replace_i_ref' (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
+  (#v:erased (vec a))
+  (#s:erased (Seq.seq a) { SZ.v i < Seq.length s })
+  requires R.pts_to r v ** pts_to v s
+  returns res:a
+  ensures R.pts_to r v ** pts_to v (Seq.upd s (SZ.v i) x) ** pure (res == Seq.index s (SZ.v i))
+{
+  let vc = !r;
+  rewrite (pts_to v s)
+       as (pts_to vc s);
+  let y = op_Array_Access vc i;
+  op_Array_Assignment vc i x;
+  with #s. assert (pts_to vc s);
+  rewrite (pts_to vc s)
+       as (pts_to v s);
+  y
+}
+```
+
+let replace_i_ref = replace_i_ref'

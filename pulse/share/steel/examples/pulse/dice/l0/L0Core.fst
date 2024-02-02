@@ -18,7 +18,7 @@ module L0Core
 open Pulse.Lib.Pervasives
 open Pulse.Lib.BoundedIntegers
 module R = Pulse.Lib.Reference
-module A = Pulse.Lib.Array
+module V = Pulse.Lib.Vec
 module US = FStar.SizeT
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
@@ -368,13 +368,19 @@ fn l0_main'
   unfold (l0_record_perm record p repr);
   dice_digest_len_is_hkdf_ikm;
 
+  V.to_array_pts_to record.deviceID_label;
   derive_DeviceID dice_hash_alg 
     deviceID_pub deviceID_priv cdi 
-    record.deviceID_label_len record.deviceID_label;
+    record.deviceID_label_len (V.vec_to_array record.deviceID_label);
+  V.to_vec_pts_to record.deviceID_label;
 
+  V.to_array_pts_to record.fwid;
+  V.to_array_pts_to record.aliasKey_label;
   derive_AliasKey dice_hash_alg
     aliasKey_pub aliasKey_priv cdi 
-    record.fwid record.aliasKey_label_len record.aliasKey_label;
+    (V.vec_to_array record.fwid) record.aliasKey_label_len (V.vec_to_array record.aliasKey_label);
+  V.to_vec_pts_to record.fwid;
+  V.to_vec_pts_to record.aliasKey_label;
   
   let mut authKeyID = [| 0uy; dice_digest_len |];
   derive_AuthKeyID dice_hash_alg
@@ -391,18 +397,21 @@ fn l0_main'
     record.deviceIDCSR_ingredients;
 
   let mut aliasKeyTBS = [| 0uy; aliasKeyTBS_len |];
-  create_aliasKeyTBS record.fwid authKeyID
+
+  V.to_array_pts_to record.fwid;
+  create_aliasKeyTBS (V.vec_to_array record.fwid) authKeyID
     deviceID_pub aliasKey_pub
     aliasKeyTBS_len aliasKeyTBS
     record.aliasKeyCRT_ingredients;
+  V.to_vec_pts_to record.fwid;
 
   sign_and_finalize_aliasKeyCRT deviceID_priv 
     aliasKeyTBS_len aliasKeyTBS
     aliasKeyCRT_len aliasKeyCRT
     record.aliasKeyCRT_ingredients;
   
-  // with s3. assert (A.pts_to deviceIDCRI s3);
-  // with s4. assert (A.pts_to aliasKeyTBS s4);
+  // // with s3. assert (A.pts_to deviceIDCRI s3);
+  // // with s4. assert (A.pts_to aliasKeyTBS s4);
 
   fold l0_record_perm record p repr;
 }

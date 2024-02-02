@@ -31,6 +31,8 @@ val vec ([@@@strictly_positive] a:Type0) : Type u#0
 
 val length (#a:Type0) (v:vec a) : GTot nat
 
+type lvec (a:Type0) (n:nat) = v:vec a { length v == n }
+
 val is_full_vec (#a:Type0) (v:vec a) : prop
 
 val pts_to (#a:Type0) (v:vec a) (#[T.exact (`full_perm)] p:perm) (s:Seq.seq a) : vprop
@@ -115,7 +117,7 @@ val to_vec_pts_to (#a:Type0) (v:vec a) (#p:perm) (#s:Seq.seq a)
       (A.pts_to (vec_to_array v) #p s)
       (fun _ → pts_to v #p s)
 
-val vec_ref_read (#a:Type0) (r:R.ref (vec a))
+val read_ref (#a:Type0) (r:R.ref (vec a))
   (i:SZ.t)
   (#v:erased (vec a))
   (#s:erased (Seq.seq a) { SZ.v i < Seq.length s})
@@ -123,7 +125,7 @@ val vec_ref_read (#a:Type0) (r:R.ref (vec a))
     (requires R.pts_to r v ** pts_to v s)
     (ensures fun res -> R.pts_to r v ** pts_to v s ** pure (res == Seq.index s (SZ.v i)))
 
-val vec_ref_write (#a:Type0) (r:R.ref (vec a))
+val write_ref (#a:Type0) (r:R.ref (vec a))
   (i:SZ.t)
   (x:a)
   (#v:erased (vec a))
@@ -131,3 +133,16 @@ val vec_ref_write (#a:Type0) (r:R.ref (vec a))
   : stt unit
     (requires R.pts_to r v ** pts_to v s)
     (ensures fun _ -> R.pts_to r v ** pts_to v (Seq.upd s (SZ.v i) x))
+
+val replace_i (#a:Type0) (v:vec a) (i:SZ.t) (x:a)
+  (#s:erased (Seq.seq a) { SZ.v i < Seq.length s})
+  : stt a
+    (requires pts_to v s)
+    (ensures fun res -> pts_to v (Seq.upd s (SZ.v i) x) ** pure (res == Seq.index s (SZ.v i)))
+
+val replace_i_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
+  (#v:erased (vec a))
+  (#s:erased (Seq.seq a) { SZ.v i < Seq.length s})
+  : stt a
+    (requires R.pts_to r v ** pts_to v s)
+    (ensures fun res -> R.pts_to r v ** pts_to v (Seq.upd s (SZ.v i) x) ** pure (res == Seq.index s (SZ.v i)))

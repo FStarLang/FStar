@@ -25,7 +25,7 @@ open HACL
 val l0_is_authentic (repr:engine_record_repr) : prop
 val cdi_functional_correctness (c0:Seq.seq U8.t) (uds_bytes:Seq.seq U8.t) (repr:engine_record_repr) : prop 
 
-val engine_main (cdi:cdi_t) (uds:A.larray U8.t (SZ.v uds_len)) (record:engine_record_t)
+val engine_main (cdi:A.larray U8.t (SZ.v (digest_len dice_hash_alg))) (uds:A.larray U8.t (SZ.v uds_len)) (record:engine_record_t)
                 (#c0:Ghost.erased (Seq.seq U8.t))
                 (#repr:Ghost.erased engine_record_repr)
                 (#uds_perm #p:perm)
