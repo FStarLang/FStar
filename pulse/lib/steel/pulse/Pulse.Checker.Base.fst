@@ -147,7 +147,7 @@ let comp_st_with_post (c:comp_st) (post:term)
   : c':comp_st { st_comp_of_comp c' == ({ st_comp_of_comp c with post} <: st_comp) } =
   match c with
   | C_ST st -> C_ST { st with post }
-  | C_STGhost i st -> C_STGhost i { st with post }
+  | C_STGhost st -> C_STGhost { st with post }
   | C_STAtomic i obs st -> C_STAtomic i obs {st with post}
 
 let ve_unit_r g (p:term) : vprop_equiv g (tm_star p tm_emp) p = 
@@ -225,7 +225,7 @@ let vprop_equiv_typing_bk (#g:env) (#ctxt:_) (ctxt_typing:tot_typing g ctxt tm_v
 let comp_with_pre (c:comp_st) (pre:term) =
   match c with
   | C_ST st -> C_ST { st with pre }
-  | C_STGhost i st -> C_STGhost i { st with pre }
+  | C_STGhost st -> C_STGhost { st with pre }
   | C_STAtomic i obs st -> C_STAtomic i obs {st with pre}
 
 
@@ -502,7 +502,7 @@ let continuation_elaborator_with_bind_fn (#g:env) (#ctxt:term)
     assume (open_st_term (close_st_term e2 x) x == e2);
     let e = wr c2 (Tm_Bind {binder=b; head=e1; body=e2_closed}) in
     let (| u, c1_typing |) = Pulse.Typing.Metatheory.Base.st_typing_correctness_ctot e1_typing in
-    let c2_typing : comp_typing g c2 (comp_u c2) =
+    let c2_typing : comp_typing g c2 (universe_of_comp c2) =
       match c2 with
       | C_ST st -> 
         let stc = st_comp_typing_with_post_hint ctxt_typing post_hint c2 in
@@ -513,10 +513,9 @@ let continuation_elaborator_with_bind_fn (#g:env) (#ctxt:term)
         let i_typing = CP.core_check_term g i T.E_Total tm_inames in
         CT_STAtomic _ _ obs _ i_typing stc
 
-      | C_STGhost i st -> 
+      | C_STGhost st -> 
         let stc = st_comp_typing_with_post_hint ctxt_typing post_hint c2 in
-        let i_typing = CP.core_check_term g i T.E_Total tm_inames in
-        CT_STGhost _ _ _ i_typing stc
+        CT_STGhost _ _ stc
     in
     let d : st_typing g e c2 =
         T_BindFn g e1 e2_closed c1 c2 b x e1_typing u c1_typing d2 c2_typing
@@ -544,7 +543,7 @@ let intro_comp_typing (g:env)
                       (res_typing:universe_of g (comp_res c) (comp_u c))
                       (x:var { fresh_wrt x g (freevars (comp_post c)) })
                       (post_typing:tot_typing (push_binding g x ppname_default (comp_res c)) (open_term (comp_post c) x) tm_vprop)
-  : T.Tac (comp_typing g c (comp_u c))
+  : T.Tac (comp_typing g c (universe_of_comp c))
   = let intro_st_comp_typing (st:st_comp { comp_u c == st.u /\
                                            comp_pre c == st.pre /\
                                            comp_res c == st.res /\
@@ -562,12 +561,9 @@ let intro_comp_typing (g:env)
       if not (eq_tm ty tm_inames)
       then fail g None (Printf.sprintf "ill-typed inames term %s" (P.term_to_string i))
       else CT_STAtomic _ _ obs _ i_typing stc
-    | C_STGhost i st -> 
+    | C_STGhost st -> 
       let stc = intro_st_comp_typing st in
-      let (| ty, i_typing |) = CP.core_compute_tot_term_type g i in
-      if not (eq_tm ty tm_inames)
-      then fail g None (Printf.sprintf "ill-typed inames term %s" (P.term_to_string i))
-      else CT_STGhost _ _ _ i_typing stc
+      CT_STGhost _ _ stc
 
 let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctxt:vprop)
   (ty_typing:universe_of g ty u)
@@ -707,7 +703,7 @@ let rec is_stateful_arrow (g:env) (c:option comp) (args:list T.argv) (out:list T
     match c with
     | None -> None
     | Some (C_ST _)
-    | Some (C_STGhost _ _)
+    | Some (C_STGhost _)
     | Some (C_STAtomic _ _ _) -> (
       match args, out with
       | [], hd::tl -> Some (List.rev tl, hd)

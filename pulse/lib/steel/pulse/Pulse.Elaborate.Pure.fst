@@ -33,6 +33,13 @@ let elab_qual = function
   | None -> R.Q_Explicit
   | Some Implicit -> R.Q_Implicit
 
+let elab_observability =
+  let open R in
+  function
+  | Neutral ->  pack_ln (Tv_FVar (pack_fv neutral_lid))
+  | Unobservable -> pack_ln (Tv_FVar (pack_fv unobservable_lid))
+  | Observable ->  pack_ln (Tv_FVar (pack_fv observable_lid))
+  
 let rec elab_term (top:term)
   : R.term
   = let open R in
@@ -126,12 +133,11 @@ let elab_comp (c:comp)
       let inames = elab_term inames in
       let u, res, pre, post = elab_st_comp c in
       let post = mk_abs res R.Q_Explicit post in
-      mk_stt_atomic_comp (obs=Observable) u res inames pre post
+      mk_stt_atomic_comp (elab_observability obs) u res inames pre post
 
-    | C_STGhost inames c ->
-      let inames = elab_term inames in
+    | C_STGhost c ->
       let u, res, pre, post = elab_st_comp c in
-      mk_stt_ghost_comp u res inames pre (mk_abs res R.Q_Explicit post)
+      mk_stt_ghost_comp u res pre (mk_abs res R.Q_Explicit post)
 
 let elab_stt_equiv (g:R.env) (c:comp{C_ST? c}) (pre:R.term) (post:R.term)
   (eq_pre:RT.equiv g pre (elab_term (comp_pre c)))
@@ -156,7 +162,7 @@ let elab_statomic_equiv (g:R.env) (c:comp{C_STAtomic? c}) (pre:R.term) (post:R.t
                     (mk_abs (elab_term (comp_res c)) R.Q_Explicit (elab_term (comp_post c))))
   : RT.equiv g
       (let C_STAtomic inames obs {u;res} = c in
-       mk_stt_atomic_comp (obs=Observable) u
+       mk_stt_atomic_comp (elab_observability obs) u
                           (elab_term res)
                           (elab_term inames)
                           pre
@@ -165,13 +171,13 @@ let elab_statomic_equiv (g:R.env) (c:comp{C_STAtomic? c}) (pre:R.term) (post:R.t
   
   let C_STAtomic inames obs {u;res} = c in
   let c' =
-    mk_stt_atomic_comp (obs=Observable) u
+    mk_stt_atomic_comp (elab_observability obs) u
                        (elab_term res)
                        (elab_term inames)
                        pre
                        post
   in
-    mk_stt_atomic_comp_equiv _ (obs=Observable)
+    mk_stt_atomic_comp_equiv _ (elab_observability obs)
       (comp_u c)
       (elab_term (comp_res c))
       (elab_term inames)
@@ -182,17 +188,15 @@ let elab_stghost_equiv (g:R.env) (c:comp{C_STGhost? c}) (pre:R.term) (post:R.ter
   (eq_post:RT.equiv g post
                     (mk_abs (elab_term (comp_res c)) R.Q_Explicit (elab_term (comp_post c))))
   : RT.equiv g
-      (let C_STGhost inames {u;res} = c in
+      (let C_STGhost {u;res} = c in
        mk_stt_ghost_comp u
                          (elab_term res)
-                         (elab_term inames)
                          pre
                          post)
       (elab_comp c) =
   
-  let C_STGhost inames _ = c in
+  let C_STGhost _ = c in
   mk_stt_ghost_comp_equiv _
     (comp_u c)
     (elab_term (comp_res c))
-    (elab_term inames)
     _ _ _ _ eq_pre eq_post

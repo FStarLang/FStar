@@ -358,10 +358,10 @@ let comp_post_type (c:comp_st) : R.term =
 
 assume
 val inversion_of_stt_typing (g:env) (c:comp_st)
-                            (u:R.universe)
+                            (#u:R.universe)
                             // _ |- stt u#u t pre (fun (x:t) -> post) : Type _ 
                             (_:RT.tot_typing (elab_env g) (elab_comp c) (RT.tm_type u))
-  : GTot ( // _ |- t : Type u#u
+  : GTot (x:( // _ |- t : Type u#u
           RT.tot_typing (elab_env g)
                         (elab_term (comp_res c))
                         (RT.tm_type (comp_u c)) &
@@ -372,7 +372,7 @@ val inversion_of_stt_typing (g:env) (c:comp_st)
           // _ |- (fun (x:t) -> post) : t -> vprop
           RT.tot_typing (elab_env g)
                         (elab_comp_post c)
-                        (elab_term (tm_arrow (null_binder (comp_res c)) None (C_Tot tm_vprop))))
+                        (elab_term (tm_arrow (null_binder (comp_res c)) None (C_Tot tm_vprop)))){ u == universe_of_comp c })
 
 let soundness_t (d:'a) = 
     g:stt_env ->

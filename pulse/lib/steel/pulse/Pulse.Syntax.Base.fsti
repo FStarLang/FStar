@@ -19,10 +19,8 @@ module RTB = FStar.Reflection.Typing.Builtins
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
 module RU = Pulse.RuntimeUtils
-open FStar.List.Tot
-
-
 module T = FStar.Tactics.V2
+open FStar.List.Tot
 
 type constant = R.vconst
 
@@ -150,7 +148,7 @@ type comp =
   | C_Tot      : term -> comp
   | C_ST       : st_comp -> comp
   | C_STAtomic : inames:term -> obs:observability -> st_comp -> comp
-  | C_STGhost  : inames:term -> st_comp -> comp
+  | C_STGhost  : st_comp -> comp
 
 
 let comp_st = c:comp {not (C_Tot? c) }
@@ -175,7 +173,7 @@ let ctag_of_comp_st (c:comp_st) : ctag =
   match c with
   | C_ST _ -> STT
   | C_STAtomic _ _ _ -> STT_Atomic
-  | C_STGhost _ _ -> STT_Ghost
+  | C_STGhost _ -> STT_Ghost
 
 noeq
 type proof_hint_type =
@@ -364,7 +362,7 @@ let comp_res (c:comp) : term =
   | C_Tot ty -> ty
   | C_ST s
   | C_STAtomic _ _ s
-  | C_STGhost _ s -> s.res
+  | C_STGhost s -> s.res
 
 let stateful_comp (c:comp) =
   C_ST? c || C_STAtomic? c || C_STGhost? c
@@ -373,24 +371,28 @@ let st_comp_of_comp (c:comp{stateful_comp c}) : st_comp =
   match c with
   | C_ST s
   | C_STAtomic _ _ s
-  | C_STGhost _ s -> s
+  | C_STGhost s -> s
 
 let with_st_comp (c:comp{stateful_comp c}) (s:st_comp) : comp =
   match c with
   | C_ST _ -> C_ST s
   | C_STAtomic inames obs _ -> C_STAtomic inames obs s
-  | C_STGhost inames _ -> C_STGhost inames s
+  | C_STGhost _ -> C_STGhost s
 
 let comp_u (c:comp { stateful_comp c }) = (st_comp_of_comp c).u
+
+let universe_of_comp (c:comp_st) =
+  match c with
+  | C_ST _ -> RT.u_zero
+  | _ -> Pulse.Soundness.STT.u_max_two (comp_u c)
 
 let comp_pre (c:comp { stateful_comp c }) = (st_comp_of_comp c).pre
 
 let comp_post (c:comp { stateful_comp c }) = (st_comp_of_comp c).post
 
-let comp_inames (c:comp { C_STAtomic? c \/ C_STGhost? c }) : term =
+let comp_inames (c:comp { C_STAtomic? c }) : term =
   match c with
-  | C_STAtomic inames _ _
-  | C_STGhost inames _ -> inames
+  | C_STAtomic inames _ _ -> inames
 
 let nvar = ppname & var 
 let v_as_nv x : nvar = ppname_default, x

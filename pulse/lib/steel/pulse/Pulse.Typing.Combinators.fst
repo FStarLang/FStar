@@ -176,90 +176,43 @@ let mk_bind_st_st
 
 let inames_of (c:comp_st) : term =
   match c with
-  | C_ST _ -> tm_emp_inames
-  | C_STGhost inames _ -> inames
+  | C_ST _ 
+  | C_STGhost _ -> tm_emp_inames
   | C_STAtomic inames _ _ -> inames
 
 let with_inames (c:comp_st) (i:term) =
   match c with
   | C_ST _ -> c
-  | C_STGhost _ sc -> C_STGhost i sc
+  | C_STGhost sc -> C_STGhost sc
   | C_STAtomic _ obs sc -> C_STAtomic i obs sc
 
 let weaken_comp_inames (#g:env) (#e:st_term) (#c:comp_st) (d_e:st_typing g e c) (new_inames:term)
   : T.Tac (c':comp_st { with_inames c new_inames == c' } &
            st_typing g e c')
   = match c with
-    | C_ST _ -> (| c, d_e |)
+    | C_ST _
+    | C_STGhost _ -> (| c, d_e |)
 
-    | C_STGhost inames sc ->
-      let d_e = T_Sub _ _ _ _ d_e (STS_GhostInvs _ sc inames new_inames (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
-      (| with_inames c new_inames, d_e |)
-  
     | C_STAtomic inames obs sc ->
       let d_e = T_Sub _ _ _ _ d_e (STS_AtomicInvs _ sc inames new_inames obs obs (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
       (| with_inames c new_inames, d_e |)
-          
- let mk_bind_ghost_atomic
-  : bind_t C_STGhost? C_STAtomic? 
-  = fun g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing ->
-      let _, x = px in
-      let b = nvar_as_binder px (comp_res c1) in
-      let inames1 = inames_of c1 in
-      let inames2 = inames_of c2 in
-      let w = get_non_informative_witness g (comp_u c1) (comp_res c1) in
-      if eq_tm inames1 inames2
-      then begin
-        let bc = Bind_comp_ghost_l g x c1 c2 w res_typing x post_typing in
-        (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
-      end
-      else begin
-          let new_inames = tm_join_inames inames1 inames2 in
-          let (| c1, d_e1 |) = weaken_comp_inames d_e1 new_inames in
-          let (| c2, d_e2 |) = weaken_comp_inames d_e2 new_inames in
-          let bc = Bind_comp_ghost_l g x c1 c2 w res_typing x post_typing in
-          (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
-      end 
 
- let mk_bind_atomic_ghost
-  : bind_t C_STAtomic? C_STGhost? 
-  = fun g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing ->
-      let _, x = px in
-      let b = nvar_as_binder px (comp_res c1) in
-      let inames1 = inames_of c1 in
-      let inames2 = inames_of c2 in
-      let w = get_non_informative_witness g (comp_u c2) (comp_res c2) in
-      if eq_tm inames1 inames2
-      then begin
-        let bc = Bind_comp_ghost_r g x c1 c2 w res_typing x post_typing in
-        (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
-      end
-      else begin
-          let new_inames = tm_join_inames inames1 inames2 in
-          let (| c1, d_e1 |) = weaken_comp_inames d_e1 new_inames in
-          let (| c2, d_e2 |) = weaken_comp_inames d_e2 new_inames in
-          let bc = Bind_comp_ghost_r g x c1 c2 w res_typing x post_typing in
-          (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
-      end 
+let st_ghost_as_atomic (c:comp_st { C_STGhost? c }) = 
+  C_STAtomic tm_emp_inames Neutral (st_comp_of_comp c)
+
+let lift_ghost_atomic (#g:env) (#e:st_term) (#c:comp_st { C_STGhost? c }) (d:st_typing g e c)
+: T.Tac (st_typing g e (st_ghost_as_atomic c))
+= let w = get_non_informative_witness g (comp_u c) (comp_res c) in
+  let d = T_Lift _ _ _ _ d (Lift_Ghost_Neutral _ c w) in
+  d
 
 let mk_bind_ghost_ghost
   : bind_t C_STGhost? C_STGhost?
   = fun g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing ->
       let _, x = px in
       let b = nvar_as_binder px (comp_res c1) in
-      let inames1 = inames_of c1 in
-      let inames2 = inames_of c2 in
-      if eq_tm inames1 inames2
-      then begin
-        let bc = Bind_comp g x c1 c2 res_typing x post_typing in
-        (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
-      end else begin
-        let new_inames = tm_join_inames inames1 inames2 in
-        let (| c1, d_e1 |) = weaken_comp_inames d_e1 new_inames in
-        let (| c2, d_e2 |) = weaken_comp_inames d_e2 new_inames in
-        let bc = Bind_comp g x c1 c2 res_typing x post_typing in
-        (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
-      end  
+      let bc = Bind_comp g x c1 c2 res_typing x post_typing in
+      (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
 
 #push-options "--query_stats"
 let mk_bind_atomic_atomic
@@ -320,56 +273,41 @@ let rec mk_bind (g:env)
   match c1, c2 with
   | C_ST _, C_ST _ ->
     mk_bind_st_st g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing
-  | C_STGhost _ _, C_STGhost _ _ ->
+
+  | C_STGhost _, C_STGhost _ ->
     mk_bind_ghost_ghost g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing
+
   | C_STAtomic inames1 obs1 sc1, C_STAtomic inames2 obs2 sc2 ->
     if at_most_one_observable obs1 obs2
     then (
       mk_bind_atomic_atomic g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing
-    ) else (
-      let c1lifted = C_ST (st_comp_of_comp c1) in
-      let d_e1 : st_typing g e1 c1lifted =
-        T_Lift _ _ _ c1lifted d_e1 (Lift_STAtomic_ST _ c1) in
-      mk_bind g pre e1 e2 c1lifted c2 px d_e1 d_c1res d_e2 res_typing post_typing
+    ) 
+    else (
+      let d_e1 = T_Lift _ _ _ _ d_e1 (Lift_STAtomic_ST _ c1) in
+      mk_bind g pre e1 e2 _ c2 px d_e1 d_c1res d_e2 res_typing post_typing
     )
+
   | C_STAtomic inames _ _, C_ST _ ->
-    let c1lifted = C_ST (st_comp_of_comp c1) in
-    let d_e1 : st_typing g e1 c1lifted =
-     T_Lift _ _ _ c1lifted d_e1 (Lift_STAtomic_ST _ c1) in
-    mk_bind g pre e1 e2 c1lifted c2 px d_e1 d_c1res d_e2 res_typing post_typing
-  | C_STGhost _ _, C_STAtomic _ _ _ ->
-    mk_bind_ghost_atomic g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing
-
-  | C_STAtomic inames1 _ _, C_STGhost inames2 _ ->
-    mk_bind_atomic_ghost g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing
-
-  | C_STAtomic inames1 _ _, C_STGhost inames2 _ ->
-    mk_bind_atomic_ghost g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing
+    let d_e1 = T_Lift _ _ _ _ d_e1 (Lift_STAtomic_ST _ c1) in
+    mk_bind g pre e1 e2 _ c2 px d_e1 d_c1res d_e2 res_typing post_typing
 
   | C_ST _, C_STAtomic inames _ _ ->
-    let c2lifted = C_ST (st_comp_of_comp c2) in
-    let g' = push_binding g x (fst px) (comp_res c1) in
-    let d_e2 : st_typing g' (open_st_term_nv e2 px) c2lifted =
-      T_Lift _ _ _ c2lifted d_e2 (Lift_STAtomic_ST _ c2) in
-    let bc = Bind_comp g x c1 c2lifted res_typing x post_typing in
-    (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
-  | C_STGhost inames _, C_ST _ ->
-    begin
-      let w = get_non_informative_witness g (comp_u c1) (comp_res c1) in
-      let c1lifted = C_STAtomic inames Unobservable (st_comp_of_comp c1) in
-      let d_e1 : st_typing g e1 c1lifted =
-        T_Lift _ _ _ c1lifted d_e1 (Lift_STGhost_STUnobservable g c1 w) in
-      mk_bind g pre e1 e2 c1lifted c2 px d_e1 d_c1res d_e2 res_typing post_typing
-    end
-  | C_ST _, C_STGhost inames _ ->
-    let g' = push_binding g x (fst px) (comp_res c1) in
-    let w = get_non_informative_witness g' (comp_u c2) (comp_res c2) in
-    let c2lifted = C_STAtomic inames Unobservable (st_comp_of_comp c2) in
-    let d_e2 : st_typing g' (open_st_term_nv e2 px) c2lifted =
-      T_Lift _ _ _ c2lifted d_e2 (Lift_STGhost_STUnobservable g' c2 w) in
-    let (| t, c, d |) = mk_bind g pre e1 e2 c1 c2lifted px d_e1 d_c1res d_e2 res_typing post_typing in
+    let d_e2  = T_Lift _ _ _ _ d_e2 (Lift_STAtomic_ST _ c2) in
+    let (| t, c, d |) = mk_bind g pre e1 e2 _ _ px d_e1 d_c1res d_e2 res_typing post_typing in
     (| t, c, d |)
-  | _, _ -> fail g None "bind either not implemented (e.g. ghost) or not possible"
+
+  | C_STGhost _, C_ST _
+  | C_STGhost _, C_STAtomic _ _ _ ->
+    let d_e1 = lift_ghost_atomic d_e1 in
+    mk_bind g pre e1 e2 _ c2 px d_e1 d_c1res d_e2 res_typing post_typing
+
+  | C_ST _, C_STGhost _
+  | C_STAtomic _ _ _, C_STGhost _ ->
+    let d_e2 = lift_ghost_atomic d_e2 in
+    let (| t, c, d |) = mk_bind g pre e1 e2 _ _ px d_e1 d_c1res d_e2 res_typing post_typing in
+    (| t, c, d |)
+
+
 #pop-options
 
 

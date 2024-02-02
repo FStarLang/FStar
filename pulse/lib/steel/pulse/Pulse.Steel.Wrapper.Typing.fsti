@@ -65,8 +65,9 @@ val return_stt_noeq_typing
             (mk_stt_return_noeq u a x p)
             (return_stt_noeq_comp u a x p))
 
+let neutral_fv = pack_ln (Tv_FVar (pack_fv neutral_lid))
 let return_stt_atomic_comp (u:universe) (a:term) (e:term) (p:term) (x:var) : term =
-  mk_stt_atomic_comp false u a emp_inames_tm
+  mk_stt_atomic_comp neutral_fv u a emp_inames_tm
     (pack_ln (Tv_App p (e, Q_Explicit)))
     (return_post_with_eq u a e p x)
 
@@ -86,7 +87,7 @@ val return_stt_atomic_typing
             (return_stt_atomic_comp u a e p x))
 
 let return_stt_atomic_noeq_comp (u:universe) (a:term) (x:term) (p:term) : term =
-  mk_stt_atomic_comp false u a emp_inames_tm (pack_ln (Tv_App p (x, Q_Explicit))) p
+  mk_stt_atomic_comp neutral_fv u a emp_inames_tm (pack_ln (Tv_App p (x, Q_Explicit))) p
 
 val return_stt_atomic_noeq_typing
   (#g:env)
@@ -103,7 +104,7 @@ val return_stt_atomic_noeq_typing
             (return_stt_atomic_noeq_comp u a x p))
 
 let return_stt_ghost_comp (u:universe) (a:term) (e:term) (p:term) (x:var) : term =
-  mk_stt_ghost_comp u a emp_inames_tm
+  mk_stt_ghost_comp u a
     (pack_ln (Tv_App p (e, Q_Explicit)))
     (return_post_with_eq u a e p x)
 
@@ -123,7 +124,7 @@ val return_stt_ghost_typing
             (return_stt_ghost_comp u a e p x))
 
 let return_stt_ghost_noeq_comp (u:universe) (a:term) (x:term) (p:term) : term =
-  mk_stt_ghost_comp u a emp_inames_tm (pack_ln (Tv_App p (x, Q_Explicit))) p
+  mk_stt_ghost_comp u a (pack_ln (Tv_App p (x, Q_Explicit))) p
 
 val return_stt_ghost_noeq_typing
   (#g:env)
@@ -244,8 +245,7 @@ val elim_exists_typing
             (mk_elim_exists u a p)
             (mk_stt_ghost_comp
                u
-               (mk_erased u a) 
-               emp_inames_tm
+               (mk_erased u a)
                (mk_exists u a p)
                (elim_exists_post u a p x)))
 
@@ -269,7 +269,7 @@ val intro_exists_typing
   (e_typing:RT.ghost_typing g e a)
   : GTot (RT.tot_typing g
             (mk_intro_exists u a p e)
-            (mk_stt_ghost_comp uzero unit_tm emp_inames_tm
+            (mk_stt_ghost_comp uzero unit_tm
                (pack_ln (Tv_App p (e, Q_Explicit)))
                (mk_abs unit_tm Q_Explicit (mk_exists u a p))))
 
@@ -309,7 +309,7 @@ val stt_atomic_admit_typing
 
   : GTot (RT.tot_typing g
             (mk_stt_atomic_admit u a p q)
-            (mk_stt_atomic_comp false u a emp_inames_tm p q))
+            (mk_stt_atomic_comp neutral_fv u a emp_inames_tm p q))
 
 val stt_ghost_admit_typing
   (#g:env)
@@ -323,7 +323,7 @@ val stt_ghost_admit_typing
 
   : GTot (RT.tot_typing g
             (mk_stt_ghost_admit u a p q)
-            (mk_stt_ghost_comp u a emp_inames_tm p q))
+            (mk_stt_ghost_comp u a p q))
 
 val rewrite_typing
   (#g:env)
@@ -338,7 +338,6 @@ val rewrite_typing
               (mk_stt_ghost_comp
               uzero
               unit_tm
-              emp_inames_tm
               p
               (mk_abs unit_tm Q_Explicit q)))
 

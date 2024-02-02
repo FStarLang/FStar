@@ -74,13 +74,13 @@ let freevars_close_comp (c:comp)
     | C_Tot t ->
       freevars_close_term' t x i
 
-    | C_ST s ->
+    | C_ST s
+    | C_STGhost s ->    
       freevars_close_term' s.res x i;
       freevars_close_term' s.pre x i;      
       freevars_close_term' s.post x (i + 1)
 
-    | C_STAtomic n _ s
-    | C_STGhost n s ->    
+    | C_STAtomic n _ s ->
       freevars_close_term' n x i;    
       freevars_close_term' s.res x i;
       freevars_close_term' s.pre x i;      
@@ -321,9 +321,7 @@ let bind_comp_freevars (#g:_) (#x:_) (#c1 #c2 #c:_)
               freevars_comp c2 `Set.subset` (Set.union (vars_of_env g) (Set.singleton x)))
     (ensures freevars_comp c `Set.subset` vars_of_env g)
   = match d with
-    | Bind_comp _ _ _ _ dt _ _
-    | Bind_comp_ghost_l _ _ _ _ _ dt _ _ 
-    | Bind_comp_ghost_r _ _ _ _ _ dt _ _ -> tot_or_ghost_typing_freevars dt
+    | Bind_comp _ _ _ _ dt _ _ -> tot_or_ghost_typing_freevars dt
 
 let rec vprop_equiv_freevars (#g:_) (#t0 #t1:_) (v:vprop_equiv g t0 t1)
   : Lemma (ensures (freevars t0 `Set.subset` vars_of_env g) <==>
@@ -389,11 +387,6 @@ let rec st_sub_freevars #g (#c1 #c2:_)
   | STS_Trans _ _ _ _ d1 d2 ->
     st_sub_freevars d1;
     st_sub_freevars d2
-  | STS_GhostInvs _ _ is1 is2 tok ->
-    (* This should follow from being a subterm *)
-    assume (freevars is2 `Set.subset` freevars (tm_inames_subset is1 is2));
-    prop_validity_fv g (tm_inames_subset is1 is2)
-
   | STS_AtomicInvs _ _ is1 is2 _ _ tok ->
     assume (freevars is2 `Set.subset` freevars (tm_inames_subset is1 is2));
     prop_validity_fv g (tm_inames_subset is1 is2)
@@ -429,8 +422,7 @@ let comp_typing_freevars  (#g:_) (#c:_) (#u:_)
       tot_or_ghost_typing_freevars it;
       st_comp_typing_freevars dst
 
-    | CT_STGhost _ _ _ it dst -> 
-      tot_or_ghost_typing_freevars it;
+    | CT_STGhost _ _ dst -> 
       st_comp_typing_freevars dst
 
 let freevars_open_st_term_inv (e:st_term) 
@@ -563,7 +555,7 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
     freevars_open_st_term_inv e2 x;
     freevars_close_comp c2 x 0
 
-  | T_If _ _b e1 e2 _c _u hyp tb d1 d2 (E ct) ->
+  | T_If _ _b e1 e2 _c hyp tb d1 d2 (E ct) ->
     assert (t.term == (Tm_If { b = _b; then_=e1; else_=e2; post=None }));
     calc (Set.subset) {
       freevars_st t;
