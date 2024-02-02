@@ -17,8 +17,7 @@ let rec find :
         (let uu___1 = find x (FStar_Seq_Properties.tail s) in
          match uu___1 with
          | (pfx, sfx) ->
-             ((FStar_Seq_Properties.cons (FStar_Seq_Properties.head s) pfx),
-               sfx))
+             ((FStar_Seq_Base.cons (FStar_Seq_Properties.head s) pfx), sfx))
 let adapt_index_fun :
   'a .
     'a FStar_Seq_Base.seq ->
