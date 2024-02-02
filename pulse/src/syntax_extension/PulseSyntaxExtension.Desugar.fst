@@ -140,15 +140,9 @@ let admit_or_return (env:env_t) (s:S.term)
   = let r = s.pos in
     let head, args = U.head_and_args_full s in
     match head.n, args with
-    | S.Tm_fvar fv, [e, _] -> (
+    | S.Tm_fvar fv, [_] -> (
       if S.fv_eq_lid fv admit_lid
-      then begin
-        let post =
-          match S.(e.n) with
-          | S.Tm_constant (FStar.Const.Const_unit) -> None
-          | _ -> Some (as_term e) in
-        STTerm (SW.tm_admit post r)
-      end
+      then STTerm (SW.tm_admit r)
       else if S.fv_eq_lid fv unreachable_lid
       then STTerm (SW.tm_unreachable r) 
       else Return s
