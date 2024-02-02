@@ -698,7 +698,7 @@ fn destroy_context (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
           }
         }
         _ -> {
-          admit (pure (~ (Available? st)));
+          assume_ (pure (~ (Available? st)));
           rewrite (session_state_perm st) as emp;
           rewrite emp as (session_state_perm SessionError);
           let st' = take_session_state sid SessionError;
@@ -727,7 +727,7 @@ fn destroy_session_state (st:session_state)
       destroy_ctxt st1.context;
     }
     _ -> {
-      admit (pure (~ (Available? st)));
+      assume_ (pure (~ (Available? st)));
       rewrite (session_state_perm st) as emp
     }
   }
@@ -1043,7 +1043,7 @@ fn rotate_context_handle (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
         }
         _ -> {
           //session error
-          admit (pure (~ (Available? st || InUse? st)));
+          assume_ (pure (~ (Available? st || InUse? st)));
           rewrite (session_state_perm st) as emp;
           rewrite emp as (session_state_perm SessionError);
           let st' = take_session_state sid SessionError;
@@ -1312,7 +1312,7 @@ fn derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t)
           }
         }
         _ -> {
-          admit (pure (~ (Available? st || InUse? st)));
+          assume_ (pure (~ (Available? st || InUse? st)));
           rewrite (session_state_perm st) as emp;
           rewrite emp as (session_state_perm SessionError);
           let st' = take_session_state sid SessionError;
