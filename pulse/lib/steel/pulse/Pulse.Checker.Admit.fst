@@ -25,7 +25,14 @@ open Pulse.Checker.Base
 open Pulse.Checker.Prover
 
 module P = Pulse.Syntax.Printer
-module RU = Pulse.Reflection.Util
+
+let post_hint_compatible (p:option post_hint_t) (x:var) (t:term) (u:universe) (post:vprop) =
+  match p with
+  | None -> True
+  | Some p ->
+    p.post== close_term post x /\
+    p.u == u /\
+    p.ret_ty == t
 
 let check_core
   (g:env)
@@ -47,18 +54,19 @@ let check_core
     : (t:term &
        u:universe &
        universe_of g t u &
-       post:vprop &
+       post:vprop { post_hint_compatible post_hint x t u post } &
        tot_typing (push_binding g x (fst px) t) post tm_vprop)
     = match post, post_hint with
       | None, None ->
         fail g None "could not find a post annotation on admit, please add one"
+
+      | Some post1, Some post2 ->
+        fail g None
+          (Printf.sprintf "found two post annotations on admit: %s and %s, please remove one"
+             (P.term_to_string post1)
+             (P.term_to_string post2.post))
       
-        //
-        // If there is a post annoatation on admit, pick that
-        //   plus make the return type as unit
-        //
       | Some post, _ ->
-        let t : term = { t = Tm_FStar RU.unit_tm; range = t.range } in
         let (| u, t_typing |) = check_universe g t in    
         let post_opened = open_term_nv post px in      
         let (| post, post_typing |) = 
@@ -100,3 +108,7 @@ let check
       check_core g pre pre_typing post_hint res_ppname ({ t with term=Tm_Admit {r with ctag=ct}})
     | _ ->
       check_core g pre pre_typing post_hint res_ppname t
+
+
+
+ 
