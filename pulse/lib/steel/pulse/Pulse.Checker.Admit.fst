@@ -40,7 +40,6 @@ let check_core
   let g = Pulse.Typing.Env.push_context g "check_admit" t.range in
 
   let Tm_Admit { ctag = c; typ=t; post } = t.term in
-  let has_annotated_post = Some? post in
 
   let x = fresh g in
   let px = v_as_nv x in
@@ -80,22 +79,10 @@ let check_core
   in
   let (| t, u, t_typing, post_opened, post_typing |) = res in
   let post = close_term post_opened x in
+  let s : st_comp = {u;res=t;pre;post} in
+
   assume (open_term (close_term post_opened x) x == post_opened);
-
-  let (| _s, ds |) : s:st_comp & st_comp_typing g s =
-    //
-    // if admit has annotated post, set its pre to emp
-    //
-    let (| pre, pre_typing |) : pre:vprop & tot_typing g pre tm_vprop =
-      if has_annotated_post then (| tm_emp, magic () |)
-      else (| pre, pre_typing |) in
-
-    let s : st_comp = {u;res=t;pre;post} in
-    let ds : st_comp_typing g s = STC _ s x t_typing pre_typing post_typing in
-
-    (| s, ds |) in
-
-  let d = T_Admit _ _ c ds in
+  let d = T_Admit _ _ c (STC _ s x t_typing pre_typing post_typing) in
   prove_post_hint (try_frame_pre pre_typing (match_comp_res_with_post_hint d post_hint) res_ppname) post_hint t.range
 
 let check
