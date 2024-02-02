@@ -550,8 +550,8 @@ fn h_for_task
     let mid = (hi+lo)/2;
     assert (pure (lo <= mid /\ mid <= hi));
 
-    split_alive p e;
-    split_alive p (half_perm e);
+    share_alive p e;
+    share_alive p (half_perm e);
 
     p_split pre lo mid hi ();
 
@@ -618,7 +618,7 @@ parallel_for_hier
   if (false) { // Checking that both branches would work
     (* Spawning the first task: useless! Just call it! *)
     assert (pool_alive #full_perm p);
-    split_alive p full_perm;
+    share_alive p full_perm;
 
     rewrite (pool_alive #(half_perm full_perm) p ** pool_alive #(half_perm full_perm) p)
         as (pool_alive #one_half p ** pool_alive #one_half p);
@@ -646,7 +646,7 @@ parallel_for_hier
     drop_ (pool_done p);
   } else {
     (* Directly calling is much easier, and actually better all around. *)
-    split_alive p full_perm;
+    share_alive p full_perm;
     h_for_task p (half_perm full_perm) pre post f 0 n ();
 
     wait_pool p (half_perm full_perm);
