@@ -277,44 +277,6 @@ let bind_comp_out (c1:comp_st) (c2:comp_st{bind_comp_compatible c1 c2})
       C_STAtomic inames (join_obs obs1 obs2) s
     | C_ST _, C_ST _ -> C_ST s
 
-// let bind_comp_ghost_l_compatible (c1 c2:comp_st)
-//   : prop
-//   = match c1, c2 with
-//     | C_STGhost inames1 _, C_STAtomic inames2 _ _ -> inames1 == inames2
-//     | _, _ -> False
-
-// let bind_comp_ghost_l_pre (x:var) (c1 c2:comp_st)
-//   : prop
-//   = open_term (comp_post c1) x == comp_pre c2 /\
-//     (~ (x `Set.mem` freevars (comp_post c2))) /\  //x doesn't escape in the result type
-//     bind_comp_ghost_l_compatible c1 c2
-
-// let bind_comp_ghost_l_out (c1:comp_st) (c2:comp_st{bind_comp_ghost_l_compatible c1 c2})
-//   : comp_st
-//   = let s : st_comp = {u=comp_u c2; res=comp_res c2; pre=comp_pre c1; post=comp_post c2} in
-//     match c1, c2 with
-//     | C_STGhost _ _, C_STAtomic inames Neutral _ -> C_STGhost inames s
-//     | C_STGhost _ _, C_STAtomic inames obs _ -> C_STAtomic inames obs s
-  
-// let bind_comp_ghost_r_compatible (c1 c2:comp_st)
-//   : prop
-//   = match c1, c2 with
-//     | C_STAtomic inames1 _ _, C_STGhost inames2 _ -> inames1 == inames2
-//     | _, _ -> False
-
-// let bind_comp_ghost_r_pre (x:var) (c1 c2:comp_st)
-//   : prop
-//   = open_term (comp_post c1) x == comp_pre c2 /\
-//     (~ (x `Set.mem` freevars (comp_post c2))) /\  //x doesn't escape in the result type
-//     bind_comp_ghost_r_compatible c1 c2
-
-// let bind_comp_ghost_r_out (c1:comp_st) (c2:comp_st{bind_comp_ghost_r_compatible c1 c2})
-//   : comp_st
-//   = let s : st_comp = {u=comp_u c2; res=comp_res c2; pre=comp_pre c1; post=comp_post c2} in
-//     match c1, c2 with
-//     | C_STAtomic inames Neutral _, C_STGhost _ _ -> C_STGhost inames s
-//     | C_STAtomic inames obs _, C_STGhost _ _ -> C_STAtomic inames obs s
-
 let st_equiv_pre (c1 c2:comp_st)
   : prop
   = comp_u c1 == comp_u c2 /\

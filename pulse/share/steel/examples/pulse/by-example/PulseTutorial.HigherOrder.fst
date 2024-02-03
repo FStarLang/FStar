@@ -43,30 +43,11 @@ fn id ()
 
 let id_t_a (a:Type0) = x:a -> stt a emp (fun _ -> emp)
 
-[@@expect_failure] //FIXME! This should work!
 ```pulse
 fn id_a (a:Type0)
 : id_t_a a 
 = (x:a) { x }
 ```
-
-```pulse
-fn id_a (a:Type0)
-requires emp
-returns f:id_t_a a 
-ensures emp
-{
-  fn aux (x:a)
-  requires emp
-  returns y:a
-  ensures emp 
-  { 
-    x 
-};
-  aux
-}
-```
-
 
 //ctr$
 noeq
