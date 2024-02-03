@@ -65,6 +65,9 @@ val join_pledge (#is:invlist) (#f:vprop) (v1:vprop) (v2:vprop)
               (pledge is f v1 ** pledge is f v2)
               (fun () -> pledge is f (v1 ** v2))
 
+val squash_pledge (is:invlist) (f:vprop) (v1:vprop)
+  : stt_ghost unit (pledge is f (pledge is f v1)) (fun () -> pledge is f v1)
+
 // NB: This must be an unobservable step, and not ghost,
 // as it allocates an invariant.
 val split_pledge (#is:invlist) (#f:vprop) (v1:vprop) (v2:vprop)

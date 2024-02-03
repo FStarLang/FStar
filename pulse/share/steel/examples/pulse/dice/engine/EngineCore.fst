@@ -18,6 +18,7 @@ module EngineCore
 open Pulse.Lib.Pervasives
 module R = Pulse.Lib.Reference
 module A = Pulse.Lib.Array
+module V = Pulse.Lib.Vec
 module US = FStar.SizeT
 module U8 = FStar.UInt8
 open EngineTypes
@@ -50,18 +51,31 @@ fn authenticate_l0_image (record:engine_record_t) (#repr:Ghost.erased engine_rec
 {
   unfold (engine_record_perm record p repr);
 
+  V.to_array_pts_to record.l0_image_auth_pubkey;
+  V.to_array_pts_to record.l0_image_header;
+  V.to_array_pts_to record.l0_image_header_sig;  
   let valid_header_sig = ed25519_verify
-                          record.l0_image_auth_pubkey
-                          record.l0_image_header record.l0_image_header_size
-                          record.l0_image_header_sig;
+                          (V.vec_to_array record.l0_image_auth_pubkey)
+                          (V.vec_to_array record.l0_image_header)
+                          record.l0_image_header_size
+                          (V.vec_to_array record.l0_image_header_sig);
+  V.to_vec_pts_to record.l0_image_auth_pubkey;
+  V.to_vec_pts_to record.l0_image_header;
+  V.to_vec_pts_to record.l0_image_header_sig;
   
   let mut b = false;
   if valid_header_sig
   {
     let mut hash_buf = [| 0uy; dice_digest_len |];
-    hacl_hash dice_hash_alg record.l0_binary_size record.l0_binary hash_buf;
-    let res = compare dice_digest_len hash_buf record.l0_binary_hash;
-    // with s. assert (A.pts_to hash_buf s);
+
+    V.to_array_pts_to record.l0_binary;
+    hacl_hash dice_hash_alg record.l0_binary_size (V.vec_to_array record.l0_binary) hash_buf;
+    V.to_vec_pts_to record.l0_binary;
+
+    V.to_array_pts_to record.l0_binary_hash;
+    let res = compare dice_digest_len hash_buf (V.vec_to_array record.l0_binary_hash);
+    V.to_vec_pts_to record.l0_binary_hash;
+
     fold (engine_record_perm record p repr);
     res
   }
@@ -74,8 +88,12 @@ fn authenticate_l0_image (record:engine_record_t) (#repr:Ghost.erased engine_rec
 ```
 
 ```pulse
-fn compute_cdi (cdi:cdi_t) (uds:A.larray U8.t (US.v uds_len)) (record:engine_record_t) 
-               (#uds_perm #p:perm) (#uds_bytes:Ghost.erased (Seq.seq U8.t))
+fn compute_cdi
+  (cdi:A.larray U8.t (SZ.v (digest_len dice_hash_alg)))
+  (uds:A.larray U8.t (US.v uds_len))
+  (record:engine_record_t)
+  (#uds_perm #p:perm)
+  (#uds_bytes:Ghost.erased (Seq.seq U8.t))
   requires A.pts_to uds #uds_perm uds_bytes
         ** A.pts_to cdi 'c0
         ** engine_record_perm record p 'repr
@@ -91,7 +109,11 @@ fn compute_cdi (cdi:cdi_t) (uds:A.larray U8.t (US.v uds_len)) (record:engine_rec
   hacl_hash dice_hash_alg uds_len uds uds_digest;
 
   unfold engine_record_perm record p 'repr;
-  hacl_hash dice_hash_alg record.l0_binary_size record.l0_binary l0_digest;
+
+  V.to_array_pts_to record.l0_binary;
+  hacl_hash dice_hash_alg record.l0_binary_size (V.vec_to_array record.l0_binary) l0_digest;
+  V.to_vec_pts_to record.l0_binary;
+
   fold engine_record_perm record p 'repr;
 
   dice_digest_len_is_hashable;
@@ -103,10 +125,12 @@ fn compute_cdi (cdi:cdi_t) (uds:A.larray U8.t (US.v uds_len)) (record:engine_rec
 ```
 
 ```pulse
-fn engine_main' (cdi:cdi_t) (uds:A.larray U8.t (US.v uds_len)) (record:engine_record_t)
-                (#c0:Ghost.erased (Seq.seq U8.t))
-                (#repr:Ghost.erased engine_record_repr)
-                (#uds_perm #p:perm) (#uds_bytes:Ghost.erased (Seq.seq U8.t))
+fn engine_main'
+  (cdi:A.larray U8.t (SZ.v (digest_len dice_hash_alg)))
+  (uds:A.larray U8.t (US.v uds_len)) (record:engine_record_t)
+  (#c0:Ghost.erased (Seq.seq U8.t))
+  (#repr:Ghost.erased engine_record_repr)
+  (#uds_perm #p:perm) (#uds_bytes:Ghost.erased (Seq.seq U8.t))
   requires engine_record_perm record p repr **
            A.pts_to uds #uds_perm uds_bytes **
            A.pts_to cdi c0

@@ -146,6 +146,8 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
   match t with
   | S.MLTY_Var s -> mk_scalar_typ (tyvar_of s)
   | S.MLTY_Named ([], p)
+    when S.string_of_mlpath p = "FStar.UInt8.t" -> mk_scalar_typ "u8"
+  | S.MLTY_Named ([], p)
     when S.string_of_mlpath p = "FStar.UInt32.t" -> mk_scalar_typ "u32"
   | S.MLTY_Named ([], p)
     when S.string_of_mlpath p = "FStar.Int32.t" -> mk_scalar_typ "i32"
@@ -181,6 +183,9 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
   | S.MLTY_Named ([arg], p)
     when S.string_of_mlpath p = "Pulse.Lib.Vec.vec" ->
     arg |> extract_mlty g |> mk_vec_typ
+  | S.MLTY_Named (arg::_, p)
+    when S.string_of_mlpath p = "Pulse.Lib.Mutex.mutex" ->
+    arg |> extract_mlty g |> mk_mutex_typ
   | S.MLTY_Named ([arg], p)
     when S.string_of_mlpath p = "FStar.Pervasives.Native.option" ->
     arg |> extract_mlty g |> mk_option_typ
@@ -302,7 +307,6 @@ let extract_mlconstant_to_lit (c:S.mlconstant) : lit =
   | S.MLC_Bool b -> Lit_bool b
   | S.MLC_String s -> Lit_string s
   | _ -> fail_nyi (format1 "mlconstant_to_lit %s" (S.mlconstant_to_string c))
-
 
 let rec extract_mlpattern_to_pat (g:env) (p:S.mlpattern) : env & pat =
   match p with
@@ -436,9 +440,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     let n = String.length "explode_ref_" in
     let rname = String.substring (snd p) n (String.length (snd p) - n) in
     let flds = psmap_try_find g.record_field_names rname in
-    // print2 "record flds is None: %s for %s\n" (if flds = None then "yes" else "no") rname;
     let flds = flds |> must in
-    // print_string "passed\n";
     let e = extract_mlexpr g e in
     let es = flds |> List.map (fun f -> mk_reference_expr true (mk_expr_field e f)) in
     mk_expr_tuple es
@@ -486,19 +488,34 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e; i; _; _])
     when S.string_of_mlpath p = "Pulse.Lib.Array.Core.op_Array_Access" ||
          S.string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Access" ||
-         S.string_of_mlpath p = "Pulse.Lib.Vec.vec_ref_read" ->
+         S.string_of_mlpath p = "Pulse.Lib.Vec.read_ref" ->
 
     mk_expr_index (extract_mlexpr g e) (extract_mlexpr g i)
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, e1::e2::e3::_)
     when S.string_of_mlpath p = "Pulse.Lib.Array.Core.op_Array_Assignment" ||
          S.string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Assignment" ||
-         S.string_of_mlpath p = "Pulse.Lib.Vec.vec_ref_write" ->
+         S.string_of_mlpath p = "Pulse.Lib.Vec.write_ref" ->
 
     let e1 = extract_mlexpr g e1 in
     let e2 = extract_mlexpr g e2 in
     let e3 = extract_mlexpr g e3 in
     mk_assign (mk_expr_index e1 e2) e3
+
+  | S.MLE_App ({ expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, e_v::e_i::e_x::_)
+    when S.string_of_mlpath p = "Pulse.Lib.Vec.replace_i" ||
+         S.string_of_mlpath p = "Pulse.Lib.Vec.replace_i_ref" ->
+
+    let e_v = extract_mlexpr g e_v in
+    let e_i = extract_mlexpr g e_i in
+    let e_x = extract_mlexpr g e_x in
+    let is_mut = true in
+    mk_mem_replace (mk_reference_expr is_mut (mk_expr_index e_v e_i)) e_x
+
+  | S.MLE_App ({ expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, e_r::e_x::_)
+    when S.string_of_mlpath p = "Pulse.Lib.Reference.replace" ->
+   
+    mk_mem_replace (extract_mlexpr g e_r) (extract_mlexpr g e_x)
 
     //
     // vec_as_array e extracted to &mut e
@@ -529,6 +546,15 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     let e = extract_mlexpr g e in
     mk_call (mk_expr_path_singl "drop") [e]
 
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, _::e::_)
+    when S.string_of_mlpath p = "Pulse.Lib.Mutex.new_mutex" ->
+    let e = extract_mlexpr g e in
+    mk_new_mutex e
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, _::e::_)
+    when S.string_of_mlpath p = "Pulse.Lib.Mutex.lock" ->
+    let e = extract_mlexpr g e in
+    mk_lock_mutex e
+
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2])
     when S.string_of_mlpath p = "Pulse.Lib.Array.Core.free" ->
 
@@ -540,8 +566,14 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     let expr_while_body = extract_mlexpr_to_stmts g body in
     Expr_while {expr_while_cond; expr_while_body}
 
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, _::e::_)
+    when S.string_of_mlpath p = "DPE.run_stt" ->  // TODO: FIXME
+    extract_mlexpr g e
+
   | S.MLE_App ({ expr=S.MLE_TApp ({ expr=S.MLE_Name p }, _) }, _)
-    when S.string_of_mlpath p = "failwith" ->
+  | S.MLE_App ({expr=S.MLE_Name p}, _)
+    when S.string_of_mlpath p = "failwith" ||
+         S.string_of_mlpath p = "Pulse.Lib.Core.unreachable" ->
     mk_call (mk_expr_path_singl panic_fn) []
 
   | S.MLE_App ({expr=S.MLE_Name p}, [e1; e2])
@@ -616,14 +648,22 @@ and extract_mlexpr_to_stmts (g:env) (e:S.mlexpr) : list stmt =
     begin
       match lb.mllb_def.expr with
       | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, _)
-        when starts_with (snd p) "unexplode_ref" ->
+        when starts_with (snd p) "unexplode_ref" ||
+             S.mlpath_to_string p = "Pulse.Lib.Mutex.unlock" ->
         extract_mlexpr_to_stmts g e
       | _ ->
         let is_mut, ty, init = lb_init_and_def g lb in
+        let topt =
+          match lb.mllb_def.expr with
+          | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, _::e::_)
+            when S.string_of_mlpath p = "Pulse.Lib.Mutex.lock" ->
+            Some ty
+          | _ -> None in 
         let s = mk_local_stmt
           (match lb.mllb_tysc with
            | Some (_, S.MLTY_Erased) -> None
            | _ -> Some (varname lb.mllb_name))
+          topt
           is_mut
           init in
         s::(extract_mlexpr_to_stmts (push_local g lb.mllb_name ty is_mut) e)
@@ -917,10 +957,21 @@ let extract_one
     end
     else
     // let _ = print1 "decl %s is reachable\n" (String.concat ";" (mlmodule1_name d)) in
+    //
+    // NOTE: Rust extraction of discriminators doesn't work for unit variants
+    //       (i.e. variants that do not have payloads)
+    //       Because we always have a wild card argument to these patterns in discriminator body
+    //       In OCaml it works fine.
+    //       In Rust it is an error
+    //       Should fix it in a better way
+    //       For now, just not extracting them ... that too with a hack on names
+    //
     match d with
     | S.MLM_Let (S.NonRec, [{mllb_name}])
       when starts_with mllb_name "explode_ref" ||
-           starts_with mllb_name "unexplode_ref" -> items, g
+           starts_with mllb_name "unexplode_ref" ||
+           starts_with mllb_name "uu___is_" ||
+           starts_with mllb_name "__proj__" -> items, g
     | S.MLM_Let lb ->
       let f, g = extract_top_level_lb g lb in
       // print_string "Extracted to:\n";

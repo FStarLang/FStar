@@ -45,6 +45,13 @@ let mk_vec_typ (t:typ) : typ =
     { typ_path_segment_name = "Vec"; typ_path_segment_generic_args = [t] };
   ]
 
+let mk_mutex_typ (t:typ) : typ =
+  Typ_path [
+    { typ_path_segment_name = "std"; typ_path_segment_generic_args = [] };
+    { typ_path_segment_name = "sync"; typ_path_segment_generic_args = [] };
+    { typ_path_segment_name = "Mutex"; typ_path_segment_generic_args = [t] };
+  ]
+
 let mk_option_typ (t:typ) : typ =
   Typ_path [
     { typ_path_segment_name = "std"; typ_path_segment_generic_args = [] };
@@ -147,6 +154,29 @@ let mk_expr_struct (path:list string) (fields:list (string & expr)) : expr =
 
 let mk_expr_tuple (l:list expr) : expr = Expr_tuple l
 
+let mk_mem_replace (e:expr) (new_v:expr) : expr =
+  mk_call
+    (Expr_path ["std"; "mem"; "replace"])
+    [e; new_v]
+
+let mk_method_call (receiver:expr) (name:string) (args:list expr) : expr =
+  Expr_method_call {
+    expr_method_call_receiver = receiver;
+    expr_method_call_name = name;
+    expr_method_call_args = args;
+  }
+
+let mk_new_mutex (e:expr) =
+  mk_call
+    (Expr_path ["std"; "sync"; "Mutex"; "new"])
+    [e]
+
+let mk_lock_mutex (e:expr) : expr =
+  let e_lock = mk_method_call e "lock" [] in
+  let e_lock_unwrap = mk_method_call e_lock "unwrap" [] in
+  let is_mut = true in
+  mk_reference_expr is_mut e_lock_unwrap
+
 let mk_scalar_fn_arg (name:string) (t:typ) =
   Fn_arg_pat {
     pat_typ_pat = Pat_ident {
@@ -171,12 +201,16 @@ let mk_fn_signature (fn_name:string) (fn_generics:list string) (fn_args:list fn_
   let fn_generics = L.map Generic_type_param fn_generics in
   { fn_name; fn_generics; fn_args; fn_ret_t }
 
-let mk_local_stmt (name:option string) (is_mut:bool) (init:expr) =
+let mk_local_stmt (name:option string) (t:option typ) (is_mut:bool) (init:expr) =
   Stmt_local {
     local_stmt_pat =
       (match name with
        | None -> None
-       | Some name -> Some (Pat_ident { pat_name = name; by_ref = false; is_mut }));
+       | Some name ->
+         let p = Pat_ident { pat_name = name; by_ref = false; is_mut } in
+         match t with
+         | None -> Some p
+         | Some t -> Some (Pat_typ { pat_typ_pat = p; pat_typ_typ = t }));
     local_stmt_init = Some init
   }
 

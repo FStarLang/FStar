@@ -246,3 +246,16 @@ ensures pts_to r #p v ** pure (p `lesser_equal_perm` full_perm)
 ```
 let pts_to_perm_bound = pts_to_perm_bound'
 
+```pulse
+fn replace' (#a:Type0) (r:ref a) (x:a) (#v:erased a)
+  requires pts_to r v
+  returns y:a
+  ensures pts_to r x ** pure (y == reveal v)
+{
+  let y = !r;
+  r := x;
+  y
+}
+```
+
+let replace = replace'

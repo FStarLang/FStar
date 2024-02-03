@@ -193,6 +193,30 @@ fn __join_pledge
 ```
 let join_pledge = __join_pledge
 
+```pulse
+ghost
+fn __squash_pledge_aux
+  (is:invlist) (f v1 : vprop) ()
+  requires invlist_v is ** (f ** (pledge is f (pledge is f v1)))
+  ensures  invlist_v is ** (f ** v1)
+{
+  redeem_pledge_ghost is f (pledge is f v1);
+  redeem_pledge_ghost is f v1
+}
+```
+
+```pulse
+ghost
+fn __squash_pledge
+  (is:invlist) (f v1 : vprop)
+  requires pledge is f (pledge is f v1)
+  ensures pledge is f v1
+{
+  make_pledge is f v1 (pledge is f (pledge is f v1)) (__squash_pledge_aux is f v1)
+}
+```
+let squash_pledge = __squash_pledge
+
 (* A big chunk follows for split_pledge *)
 
 let inv_p' (is:invlist) (f v1 v2 : vprop) (r1 r2 : GR.ref bool) (b1 b2 : bool) =

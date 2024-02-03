@@ -646,4 +646,4 @@ val ghost_gather
 [@@warn_on_use "as_atomic is a an assumption"]
 val as_atomic (#a:Type u#0) (pre:vprop) (post:a -> vprop)
               (pf:stt a pre post)
-: stt_atomic a #Observable emp_inames pre post
+: stt_atomic a emp_inames pre post
