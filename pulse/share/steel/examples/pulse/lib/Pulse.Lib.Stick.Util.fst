@@ -24,7 +24,7 @@ fn intro
   (hyp concl: vprop)
   (v: vprop)
   (f_elim: (unit -> (
-    stt_ghost unit emp_inames
+    stt_ghost unit
     (v ** hyp)
     (fun _ -> concl)
   )))
@@ -43,7 +43,7 @@ fn elim (p q:vprop)
    ensures q
 {
   unfold (p @==> q);
-  elim_stick #emp_inames p q;
+  elim_stick p q;
 }
 ```
 

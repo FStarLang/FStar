@@ -98,7 +98,7 @@ let elab_frame_typing (g:stt_env)
     assume (RT.lookup_fvar_uinst rg frame_fv [u] == Some (frame_type u));
     let head_typing : RT.tot_typing _ _ (frame_type u) = RT.T_UInst rg frame_fv [u] in
     let (| _, c_typing |) = RT.type_correctness _ _ _ e_typing in
-    let t_typing, pre_typing, post_typing = inversion_of_stt_typing _ _ _ c_typing in
+    let t_typing, pre_typing, post_typing = inversion_of_stt_typing _ _ c_typing in
     let t = elab_term (comp_res c) in
     let t_typing : RT.tot_typing rg t (RT.tm_type u) = t_typing in
     let d : RT.tot_typing (elab_env g)

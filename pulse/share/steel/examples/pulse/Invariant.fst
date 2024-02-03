@@ -48,7 +48,7 @@ fn test_atomic (r : ref int)
 
 assume
 val unobservable_write_int (r : ref int) (v : int) :
-  stt_unobservable unit emp_inames (exists* v0. pts_to r v0) (fun _ -> pts_to r v)
+  stt_atomic unit #Unobservable emp_inames (exists* v0. pts_to r v0) (fun _ -> pts_to r v)
 
 ```pulse
 unobservable

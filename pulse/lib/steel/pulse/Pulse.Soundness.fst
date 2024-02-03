@@ -62,6 +62,7 @@ let tabs_t (d:'a) =
             (mk_abs_with_name ppname.name (elab_term ty) (elab_qual q) (RT.close_term (elab_st_typing body_typing) x))
             (elab_term (tm_arrow {binder_ty=ty;binder_ppname=ppname} q (close_comp c x))))
 
+#push-options "--z3rlimit_factor 4 --split_queries no"
 let lift_soundness
   (g:stt_env)
   (t:st_term)
@@ -77,15 +78,20 @@ let lift_soundness
     Lift.elab_lift_stt_atomic_st_typing g
       c1 c2 _ (soundness _ _ _ e_typing) lc
 
-  | Lift_STGhost_STUnobservable _ _ w ->
+  | Lift_Ghost_Neutral _ _ w ->
     let (| reveal_a, reveal_a_typing |) = w in
-    Lift.elab_lift_stt_ghost_unobservable_typing g
+    Lift.elab_lift_ghost_neutral_typing g
       c1 c2 _ (soundness _ _ _ e_typing) lc
       _ (tot_typing_soundness reveal_a_typing)
 
-  | Lift_STUnobservable_STAtomic _ _ ->
-    Lift.elab_lift_stt_unobservable_atomic_typing g
+  | Lift_Neutral_Ghost _ _ ->
+    Lift.elab_lift_neutral_ghost_typing g
       c1 c2 _ (soundness _ _ _ e_typing) lc
+
+  | Lift_Observability _ _ _ ->
+    Lift.elab_lift_observability_typing g
+      c1 c2 _ (soundness _ _ _ e_typing) lc
+#pop-options
 
 let frame_soundness
   (g:stt_env)
@@ -258,21 +264,6 @@ let bind_soundness
          Bind.elab_bind_typing g _ _ _ x _ r1_typing _ r2_typing bc 
                                (tot_typing_soundness t2_typing)
                                (mk_t_abs_tot _ ppname_default t2_typing post2_typing)
-                               
-    | Bind_comp_ghost_l _ _ _ _ (| reveal_a, reveal_a_typing |) t2_typing y post2_typing ->
-         Bind.elab_bind_ghost_l_typing g _ _ _ x _ r1_typing
-           _ r2_typing bc
-           (tot_typing_soundness t2_typing)
-           (mk_t_abs_tot _ ppname_default t2_typing post2_typing)
-           (elab_term reveal_a)
-           (tot_typing_soundness reveal_a_typing)
-    | Bind_comp_ghost_r _ _ _ _ (| reveal_b, reveal_b_typing |) t2_typing y post2_typing ->
-         Bind.elab_bind_ghost_r_typing g _ _ _ x _ r1_typing
-           _ r2_typing bc
-           (tot_typing_soundness t2_typing)
-           (mk_t_abs_tot _ ppname_default t2_typing post2_typing)
-           (elab_term reveal_b)
-           (tot_typing_soundness reveal_b_typing)
 #pop-options
 
 #push-options "--z3rlimit_factor 4 --fuel 4 --ifuel 2"
@@ -291,7 +282,7 @@ let if_soundness
                         (elab_st_typing d)
                         (elab_comp c)) =
 
-  let T_If _ b e1 e2  _ u_c hyp b_typing e1_typing e2_typing (E c_typing) = d in
+  let T_If _ b e1 e2  _ hyp b_typing e1_typing e2_typing (E c_typing) = d in
   let rb_typing : RT.tot_typing (elab_env g)
                                 (elab_term b)
                                 RT.bool_ty =
@@ -385,9 +376,9 @@ let rec soundness (g:stt_env)
       stequiv_soundness _ _ _ d soundness
 
     | T_Return _ _ _ _ _ _ _ _ _ _ _ ->
-      Return.return_soundess d
+      Return.return_soundness d
 
-    | T_If _ _ _ _ _ _ _ _ _ _ _->
+    | T_If _ _ _ _ _ _ _ _ _ _->
       let ct_soundness g c uc (d':_ {d' << d}) =
         Comp.comp_typing_soundness g c uc d'
       in

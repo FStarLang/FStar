@@ -23,7 +23,7 @@ fn apply_ghost
          (#b:a -> Type0)
          (#pre:a -> vprop)
          (#post: (x:a -> b x -> vprop))
-         (f: (x:a -> stt_ghost (b x) emp_inames (pre x) (fun y -> post x y)))
+         (f: (x:a -> stt_ghost (b x) (pre x) (fun y -> post x y)))
          (x:a)
 requires pre x
 returns y:b x

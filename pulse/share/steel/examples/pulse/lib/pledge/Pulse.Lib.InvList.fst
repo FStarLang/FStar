@@ -11,7 +11,7 @@ fn __shift_invlist_one
   (is : invlist{not (mem_inv (invlist_names is) i)})
   (#pre:vprop)
   (#post : a -> vprop)
-  (f : unit -> stt_unobservable a emp_inames (invlist_v (add_one (| p, i |) is) ** pre) (fun v -> invlist_v (add_one (| p, i |) is) ** post v))
+  (f : unit -> stt_atomic a #Unobservable emp_inames (invlist_v (add_one (| p, i |) is) ** pre) (fun v -> invlist_v (add_one (| p, i |) is) ** post v))
   (_:unit)
   requires invlist_v is ** (p ** pre)
   returns v:a
@@ -35,7 +35,7 @@ let shift_invlist_one = __shift_invlist_one
 unobservable
 fn rec __with_invlist (#a:Type0) (#pre : vprop) (#post : a -> vprop)
   (is : invlist)
-  (f : unit -> stt_unobservable a emp_inames (invlist_v is ** pre) (fun v -> invlist_v is ** post v))
+  (f : unit -> stt_atomic a #Unobservable emp_inames (invlist_v is ** pre) (fun v -> invlist_v is ** post v))
   requires pre
   returns v:a
   ensures post v
@@ -54,7 +54,8 @@ fn rec __with_invlist (#a:Type0) (#pre : vprop) (#post : a -> vprop)
       let i : inv p = dsnd h;
       with_invariants (i <: inv p) {
         assert (p ** pre);
-        let fw : (unit -> stt_unobservable a emp_inames (invlist_v t ** (p ** pre)) (fun v -> invlist_v t ** (p ** post v))) = shift_invlist_one #a p i t #pre #post f;
+        let fw : (unit -> stt_atomic a #Unobservable emp_inames (invlist_v t ** (p ** pre))
+                (fun v -> invlist_v t ** (p ** post v))) = shift_invlist_one #a p i t #pre #post f;
         let v = __with_invlist #a #(p ** pre) #(fun v -> p ** post v) t fw;
         assert (p ** post v);
         v
@@ -65,16 +66,20 @@ fn rec __with_invlist (#a:Type0) (#pre : vprop) (#post : a -> vprop)
 ```
 let with_invlist = __with_invlist
 
+let lift_ghost_unobservable #pre #post (f:stt_ghost unit pre post) 
+  : stt_atomic unit #Unobservable emp_inames pre post
+  = lift_observability #_ #_ #Unobservable (lift_ghost_neutral f unit_non_informative)
+
 ```pulse
 unobservable
 fn __with_invlist_ghost (#pre : vprop) (#post : vprop)
   (is : invlist)
-  (f : unit -> stt_ghost unit emp_inames (invlist_v is ** pre) (fun _ -> invlist_v is ** post))
+  (f : unit -> stt_ghost unit (invlist_v is ** pre) (fun _ -> invlist_v is ** post))
   requires pre
   ensures post
   opens (invlist_names is)
 {
-  with_invlist is (fun () -> lift_ghost_unobservable (f ()) (fun _ -> ()))
+  with_invlist is (fun () -> lift_ghost_unobservable (f ()));
 }
 ```
 let with_invlist_ghost = __with_invlist_ghost

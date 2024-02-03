@@ -184,7 +184,7 @@ fn mk_global_state ()
   };
   with pht. assert (models session_table pht);
   rewrite (models session_table pht) as (models st.session_table pht);
-  Pulse.Lib.OnRange.on_range_empty #emp_inames (session_perm pht) 0;
+  Pulse.Lib.OnRange.on_range_empty (session_perm pht) 0;
   fold (global_state_mutex_pred (Some st));
   st
 }
@@ -230,7 +230,7 @@ fn frame_session_perm_on_range
   ensures
     on_range (session_perm stm1) i j
 {
-  Pulse.Lib.OnRange.on_range_weaken #emp_inames
+  Pulse.Lib.OnRange.on_range_weaken
     (session_perm stm0)
     (session_perm stm1)
     i j
@@ -411,7 +411,7 @@ fn open_session_aux (st:global_state_t)
         rewrite (models (fst res) pht1) as (models st.session_table pht1);
         frame_session_perm_on_range pht0 pht1 i j;
         rewrite emp as (session_perm pht1 j);
-        Pulse.Lib.OnRange.on_range_snoc #emp_inames () #(session_perm pht1);
+        Pulse.Lib.OnRange.on_range_snoc () #(session_perm pht1);
         fold (global_state_mutex_pred (Some st));
         let res = (st, Some next_sid);
         rewrite (global_state_mutex_pred (Some st)) as (global_state_mutex_pred (Some (fst res)));
@@ -572,7 +572,7 @@ fn take_session_state (sid:sid_t) (replace_with:session_state)
             match tthd ss {
               Some idx -> {
                 let ok = HT.replace #_ #_ #stm (tfst ss) idx sid replace_with ();
-                Pulse.Lib.OnRange.on_range_get #emp_inames (U32.v sid);
+                Pulse.Lib.OnRange.on_range_get (U32.v sid);
                 let st1 = { session_id_counter = ctr; session_table = fst ok };
                 assert (session_perm stm (U32.v sid));
                 assert (pure (Some (snd ok) == PHT.lookup stm (UInt32.uint_to_t (U32.v sid))));
@@ -586,7 +586,7 @@ fn take_session_state (sid:sid_t) (replace_with:session_state)
                 rewrite (session_state_perm replace_with)
                     as  (session_perm stm' (U32.v sid));
 
-                Pulse.Lib.OnRange.on_range_put #emp_inames 
+                Pulse.Lib.OnRange.on_range_put 
                   0 (U32.v sid) (U32.v ctr)
                   #(session_perm stm');
 

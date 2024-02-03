@@ -1764,9 +1764,7 @@ let (check :
                                                                     uu___5))
                                                                     | 
                                                                     Pulse_Syntax_Base.C_STGhost
-                                                                    (uu___4,
-                                                                    uu___5)
-                                                                    ->
+                                                                    uu___4 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -1861,48 +1859,48 @@ let (check :
                                                                     (Pulse_Syntax_Printer.comp_to_string
                                                                     c_body))
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___5 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___6 ->
                                                                     FStar_Pprint.arbitrary_string
-                                                                    uu___6))))
+                                                                    uu___5))))
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___5 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___6 ->
                                                                     FStar_Pprint.prefix
                                                                     (Prims.of_int (4))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
                                                                     "Computed type:")
-                                                                    uu___6))))
+                                                                    uu___5))))
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___5 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___7 ->
-                                                                    [uu___6]))))
-                                                                    (fun
                                                                     uu___6 ->
+                                                                    [uu___5]))))
+                                                                    (fun
+                                                                    uu___5 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___6 ->
                                                                     (Pulse_PP.text
                                                                     "This computation is not atomic nor ghost. `with_invariants` blocks can only contain atomic computations.")
-                                                                    :: uu___6))))
+                                                                    :: uu___5))))
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___5 ->
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___5 ->
                                                                     Obj.magic
                                                                     (Pulse_Typing_Env.fail_doc
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
                                                                     body_range)
-                                                                    uu___6))
-                                                                    uu___6))
+                                                                    uu___5))
+                                                                    uu___5))
                                                                     | 
                                                                     Pulse_Syntax_Base.C_STAtomic
                                                                     (inames,
@@ -2064,7 +2062,7 @@ let (check :
                                                                     post_hint
                                                                     (FStar_Pervasives.Mkdtuple3
                                                                     (tm,
-                                                                    (Pulse_Typing.add_iname
+                                                                    (Pulse_Typing.add_iname_at_least_unobservable
                                                                     c_out
                                                                     inv_p
                                                                     inv_tm1),

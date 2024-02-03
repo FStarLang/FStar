@@ -31,13 +31,13 @@ assume val with_inv
   (#a:Type0) (#pre : vprop) (#post : (a -> vprop))
   (#p:vprop)
   (i:inv p)
-  ($f : unit -> stt_ghost a emp_inames (p ** pre) (fun r -> p ** post r))
-  : stt_ghost a emp_inames pre post
+  ($f : unit -> stt_ghost a (p ** pre) (fun r -> p ** post r))
+  : stt_ghost a pre post
 
 assume val admit_ghost
   (#a:Type0) (#pre : vprop) (#post : (a -> vprop))
   (_:unit)
-  : stt_ghost a emp_inames pre post
+  : stt_ghost a pre post
 
 type abc = | A | B | C
 

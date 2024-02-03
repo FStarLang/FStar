@@ -201,7 +201,7 @@ let check
   let c_out : comp_st =
     match c_body with
     | C_ST _
-    | C_STGhost _ _  -> 
+    | C_STGhost _  -> 
       let open Pulse.PP in
       fail_doc g (Some body_range)
         [text "This computation is not atomic nor ghost. \

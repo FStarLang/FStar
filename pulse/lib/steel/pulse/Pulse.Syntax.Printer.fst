@@ -173,6 +173,12 @@ let ctag_to_string = function
   | STT_Atomic -> "STAtomic"
   | STT_Ghost -> "STGhost"
 
+let observability_to_string =
+  function
+  | Observable -> "Observable"
+  | Unobservable -> "Unobservable"
+  | Neutral -> "Neutral"
+  
 let comp_to_string (c:comp)
   : T.Tac string
   = match c with
@@ -185,23 +191,16 @@ let comp_to_string (c:comp)
               (term_to_string s.pre)
               (term_to_string s.post)
 
-    | C_STAtomic inames Observable s ->
-      sprintf "stt_atomic %s %s (requires\n%s) (ensures\n%s)"
-              (term_to_string inames)
+    | C_STAtomic inames obs s ->
+      sprintf "stt_atomic %s #%s %s (requires\n%s) (ensures\n%s)"
               (term_to_string s.res)
+              (observability_to_string obs)
+              (term_to_string inames)
               (term_to_string s.pre)
               (term_to_string s.post)
 
-    | C_STAtomic inames Unobservable s ->
-      sprintf "stt_unobservable %s %s (requires\n%s) (ensures\n%s)"
-              (term_to_string inames)
-              (term_to_string s.res)
-              (term_to_string s.pre)
-              (term_to_string s.post)
-
-    | C_STGhost inames s ->
-      sprintf "stt_ghost %s %s (requires\n%s) (ensures\n%s)"
-              (term_to_string inames)
+    | C_STGhost s ->
+      sprintf "stt_ghost %s (requires\n%s) (ensures\n%s)"
               (term_to_string s.res)
               (term_to_string s.pre)
               (term_to_string s.post)
@@ -466,11 +465,9 @@ let tag_of_comp (c:comp) : T.Tac string =
   match c with
   | C_Tot _ -> "Total"
   | C_ST _ -> "ST"
-  | C_STAtomic i Observable _ ->
-    "Atomic"
-  | C_STAtomic i Unobservable _ ->
-    "Unobservable"
-  | C_STGhost i _ ->
+  | C_STAtomic i obs _ ->
+    Printf.sprintf "%s %s" (observability_to_string obs) (term_to_string i)
+  | C_STGhost _ ->
     "Ghost" 
     
 let rec print_st_head (t:st_term)

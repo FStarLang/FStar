@@ -29,20 +29,20 @@ module SZ = FStar.SizeT
 assume val elim_stick0
   (_: unit)
   (#hyp #concl: vprop)
-: stt_ghost unit emp_inames
+: stt_ghost unit
     ((hyp @==> concl) ** hyp)
     (fun _ -> concl)
 
 assume val stick_refl0
     (p: vprop)
-: stt_ghost unit emp_inames
+: stt_ghost unit
     (emp)
     (fun _ -> p @==> p)
 assume
 val stick_consume_l
     (_: unit)
     (#p #q #r: vprop)
-: stt_ghost unit emp_inames
+: stt_ghost unit
     (p ** ((p ** q) @==> r))
     (fun _ -> q @==> r)
 
@@ -50,7 +50,7 @@ assume
 val stick_consume_r
     (_: unit)
     (#q #p #r: vprop)
-: stt_ghost unit emp_inames
+: stt_ghost unit
     (p ** ((q ** p) @==> r))
     (fun _ -> q @==> r)
 
@@ -58,28 +58,28 @@ assume
 val stick_trans
     (_: unit)
     (#p #q #r: vprop)
-: stt_ghost unit emp_inames
+: stt_ghost unit
     ((p @==> q) ** (q @==> r))
     (fun _ -> p @==> r)
 
 assume
 val rewrite_with_implies
     (p q: vprop)
-: stt_ghost unit emp_inames
+: stt_ghost unit
     (p ** pure (p == q))
     (fun _ -> q ** (q @==> p))
 
 assume
 val stick_weaken_hyp_r
     (hl hr #hr' #c: vprop)
-: stt_ghost unit emp_inames
+: stt_ghost unit
     ((hr' @==> hr) ** ((hl ** hr) @==> c))
     (fun _ -> (hl ** hr') @==> c)
 
 assume
 val stick_weaken_hyp_l
     (hl hr #hl' #c: vprop)
-: stt_ghost unit emp_inames
+: stt_ghost unit
     ((hl' @==> hl) ** ((hl ** hr) @==> c))
     (fun _ -> (hl' ** hr) @==> c)
 

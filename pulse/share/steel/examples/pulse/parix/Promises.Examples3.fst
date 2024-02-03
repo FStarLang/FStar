@@ -86,7 +86,6 @@ fn proof
 let cheat_proof (i:inv inv_p)
   : (_:unit) ->
       stt_ghost unit
-        emp_inames
         (requires         invlist_v [(| _, i |)] ** (pts_to done #one_half true ** GR.pts_to claimed #one_half false))
         (ensures fun _ -> invlist_v [(| _, i |)] ** (pts_to done #one_half true ** goal))
   = admit() //proof is atomic, not ghost

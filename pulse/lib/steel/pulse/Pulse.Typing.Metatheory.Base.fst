@@ -34,8 +34,8 @@ let admit_comp_typing (g:env) (c:comp_st)
       CT_ST g st (admit_st_comp_typing g st)
     | C_STAtomic inames obs st ->
       CT_STAtomic g inames obs st (admit()) (admit_st_comp_typing g st)
-    | C_STGhost inames st ->
-      CT_STGhost g inames st (admit()) (admit_st_comp_typing g st)      
+    | C_STGhost st ->
+      CT_STGhost g st (admit_st_comp_typing g st)      
 
 let st_typing_correctness_ctot (#g:env) (#t:st_term) (#c:comp{C_Tot? c}) 
                                (_:st_typing g t c)
@@ -58,7 +58,7 @@ let comp_typing_inversion #g #c ct =
   match ct with
   | CT_ST _ _ st
   | CT_STAtomic _ _ _ _ _ st 
-  | CT_STGhost _ _ _ _ st   -> st
+  | CT_STGhost _ _ st   -> st
 
 let st_comp_typing_inversion_cofinite (#g:env) (#st:_) (ct:st_comp_typing g st) = 
   admit(), admit(), (fun _ -> admit())
@@ -108,18 +108,6 @@ let bind_comp_weakening (g:env) (g':env { disjoint g g' })
     assume (~ (y `Set.mem` (freevars (comp_post c2))));
     Bind_comp _ x c1 c2 (RU.magic ()) y (RU.magic ())
 
-  | Bind_comp_ghost_l _ x c1 c2 n_d _ _ _ ->
-    assume (None? (lookup (push_env g g1) x));
-    let y = fresh (push_env (push_env g g1) g') in
-    assume (~ (y `Set.mem` (freevars (comp_post c2))));
-    Bind_comp_ghost_l _ x c1 c2 (non_informative_c_weakening g g' g1 _ n_d) (RU.magic ()) y (RU.magic ())
-
-  | Bind_comp_ghost_r _ x c1 c2 n_d _ _ _ ->
-    assume (None? (lookup (push_env g g1) x));
-    let y = fresh (push_env (push_env g g1) g') in
-    assume (~ (y `Set.mem` (freevars (comp_post c2))));
-    Bind_comp_ghost_r _ x c1 c2 (non_informative_c_weakening g g' g1 _ n_d) (RU.magic ()) y (RU.magic ())
-  
 let lift_comp_weakening (g:env) (g':env { disjoint g g'})
   (#c1 #c2:comp) (d:lift_comp (push_env g g') c1 c2)
   (g1:env { pairwise_disjoint g g1 g' })
@@ -128,9 +116,10 @@ let lift_comp_weakening (g:env) (g':env { disjoint g g'})
   
   match d with
   | Lift_STAtomic_ST _ c -> Lift_STAtomic_ST _ c
-  | Lift_STGhost_STUnobservable _ c non_informative_c ->
-    Lift_STGhost_STUnobservable _ c (non_informative_c_weakening g g' g1 _ non_informative_c)
-  | Lift_STUnobservable_STAtomic _ c -> Lift_STUnobservable_STAtomic _ c
+  | Lift_Ghost_Neutral _ c non_informative_c ->
+    Lift_Ghost_Neutral _ c (non_informative_c_weakening g g' g1 _ non_informative_c)
+  | Lift_Neutral_Ghost _ c -> Lift_Neutral_Ghost _ c
+  | Lift_Observability _ obs c -> Lift_Observability _ obs c
 
 #push-options "--admit_smt_queries true"
 let st_equiv_weakening (g:env) (g':env { disjoint g g' })
@@ -165,10 +154,6 @@ let rec st_sub_weakening (g:env) (g':env { disjoint g g' })
     STS_Refl _ _
   | STS_Trans _ _ _ _ dl dr ->
     STS_Trans _ _ _ _ (st_sub_weakening g g' dl g1) (st_sub_weakening g g' dr g1)
-
-  | STS_GhostInvs _ stc is1 is2 tok ->
-    let tok : prop_validity g'' (tm_inames_subset is1 is2) = prop_validity_token_weakening tok g'' in
-    STS_GhostInvs g'' stc is1 is2 tok
   | STS_AtomicInvs _ stc is1 is2 o1 o2 tok ->
     let tok : prop_validity g'' (tm_inames_subset is1 is2) = prop_validity_token_weakening tok g'' in
     STS_AtomicInvs g'' stc is1 is2 o1 o2 tok
@@ -192,8 +177,8 @@ let comp_typing_weakening (g:env) (g':env { disjoint g g' })
   | CT_ST _ _ d -> CT_ST _ _ (st_comp_typing_weakening g g' d g1)
   | CT_STAtomic _ inames obs _ _ d ->
     CT_STAtomic _ inames obs _ (RU.magic ()) (st_comp_typing_weakening g g' d g1)
-  | CT_STGhost _ inames _ _ d ->
-    CT_STGhost _ inames _ (RU.magic ()) (st_comp_typing_weakening g g' d g1)
+  | CT_STGhost _ _ d ->
+    CT_STGhost _ _ (st_comp_typing_weakening g g' d g1)
 
 #push-options "--split_queries no --z3rlimit_factor 8 --fuel 1 --ifuel 1"
 let rec st_typing_weakening g g' t c d g1
@@ -349,7 +334,7 @@ let rec st_typing_weakening g g' t c d g1
     T_GhostBind _ e1 e2 t1 c2 b x (RU.magic ()) d_e2 (RU.magic ())
 
 
-  | T_If _ b e1 e2 c uc hyp _ d_e1 d_e2 _ ->
+  | T_If _ b e1 e2 c hyp _ d_e1 d_e2 _ ->
     assume (~ (hyp `Set.mem` dom g'));
     assume (~ (hyp `Set.mem` dom g1));
     let d_e1
@@ -385,7 +370,7 @@ let rec st_typing_weakening g g' t c d g1
       : st_typing (push_binding (push_env (push_env g g1) g') hyp ppname_default (mk_eq2 u0 tm_bool b tm_false))
                   e2 c = d_e2 in
 
-    T_If _ b e1 e2 c uc hyp (RU.magic ()) d_e1 d_e2 (RU.magic ())
+    T_If _ b e1 e2 c hyp (RU.magic ()) d_e1 d_e2 (RU.magic ())
   
   | T_Match _ sc_u sc_ty sc d_sc_ty d_sc c brs d_brs d_pats_complete ->
     admit();
@@ -542,12 +527,15 @@ let lift_comp_subst
   | Lift_STAtomic_ST _ c ->
     Lift_STAtomic_ST _ (subst_comp c ss)
 
-  | Lift_STGhost_STUnobservable _ c d_non_informative ->
-    Lift_STGhost_STUnobservable _ (subst_comp c ss)
+  | Lift_Ghost_Neutral _ c d_non_informative ->
+    Lift_Ghost_Neutral _ (subst_comp c ss)
       (non_informative_c_subst g x t g' e_typing _ d_non_informative)
-
-  | Lift_STUnobservable_STAtomic _ c ->
-    Lift_STUnobservable_STAtomic _ (subst_comp c ss)
+  
+  | Lift_Neutral_Ghost _ c ->
+    Lift_Neutral_Ghost _ (subst_comp c ss)
+  
+  | Lift_Observability _ c o ->
+    Lift_Observability _ (subst_comp c ss) o
 
 let bind_comp_subst
   (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (singleton_env (fstar_env g) x t) g' })
@@ -569,22 +557,7 @@ let bind_comp_subst
                   (RU.magic ())
                   z
                   (RU.magic ())
-  
-  | Bind_comp_ghost_l _ y c1 c2 d_non_informative _ z _ ->
-    Bind_comp_ghost_l _ y (subst_comp c1 ss)
-                          (subst_comp c2 ss)
-                          (non_informative_c_subst g x t g' e_typing _ d_non_informative)
-                          (RU.magic ())
-                          z
-                          (RU.magic ())
 
-  | Bind_comp_ghost_r _ y c1 c2 d_non_informative _ z _ ->
-    Bind_comp_ghost_r _ y (subst_comp c1 ss)
-                          (subst_comp c2 ss)
-                          (non_informative_c_subst g x t g' e_typing _ d_non_informative)
-                          (RU.magic ())
-                          z
-                          (RU.magic ())
 
 let st_equiv_subst (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (singleton_env (fstar_env g) x t) g' })
   (#e:term)
@@ -632,8 +605,8 @@ let comp_typing_subst (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (sin
     CT_ST _ (subst_st_comp s (nt x e)) (st_comp_typing_subst g x t g' e_typing d_s)
   | CT_STAtomic _ inames obs s _ d_s ->
     CT_STAtomic _ inames obs (subst_st_comp s (nt x e)) (RU.magic ()) (st_comp_typing_subst g x t g' e_typing d_s)
-  | CT_STGhost _ inames s _ d_s ->
-    CT_STGhost _ inames (subst_st_comp s (nt x e)) (RU.magic ()) (st_comp_typing_subst g x t g' e_typing d_s)
+  | CT_STGhost _ _ d_s ->
+    CT_STGhost _ _ (st_comp_typing_subst g x t g' e_typing d_s)
   
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b { y == x } = x
@@ -733,12 +706,11 @@ let rec st_typing_subst g x t g' #e #eff e_typing #e1 #c1 e1_typing _
                 (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default t1) e_typing d_e2 (RU.magic ())) ())
                 (RU.magic ())
 
-  | T_If _ b e1 e2 c uc hyp _ d_e1 d_e2 _ ->
+  | T_If _ b e1 e2 c hyp _ d_e1 d_e2 _ ->
     T_If _ (subst_term b ss)
            (subst_st_term e1 ss)
            (subst_st_term e2 ss)
            (subst_comp c ss)
-           uc
            hyp
            (RU.magic ())
            (coerce_eq (st_typing_subst g x t (push_binding g' hyp ppname_default (mk_eq2 u0 tm_bool b tm_true)) e_typing d_e1 (RU.magic ())) ())

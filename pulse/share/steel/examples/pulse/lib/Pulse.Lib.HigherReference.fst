@@ -151,7 +151,7 @@ let with_local
   in
   let body (r:ref a)
     : stt ret_t (pre ** pts_to r init) post
-    = bind_stt (body r) (fun v -> bind_stt (free_with_frame #a r (post v)) (fun _ -> return v post))
+    = bind_stt (body r) (fun v -> bind_stt (free_with_frame #a r (post v)) (fun _ -> return_stt_noeq v post))
   in
   bind_stt m1 body
 

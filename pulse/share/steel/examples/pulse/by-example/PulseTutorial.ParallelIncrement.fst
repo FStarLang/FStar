@@ -169,7 +169,7 @@ fn incr (x: ref int)
         (#refine #aspec: int -> vprop)
         (l:L.lock (exists* v. pts_to x v ** refine v))
         (ghost_steps: 
-          (v:int -> vq:int -> stt_ghost unit emp_inames 
+          (v:int -> vq:int -> stt_ghost unit 
                (refine v ** aspec vq ** pts_to x (v + 1))
                (fun _ -> refine (v + 1) ** aspec (vq + 1) ** pts_to x (v + 1))))
 requires aspec 'i
@@ -285,7 +285,7 @@ fn incr_atomic
         (#t:erased C.token)
         (#refine #aspec: int -> vprop)
         (l:inv (C.cancellable t (exists* v. pts_to x v ** refine v)))
-        (f: (v:int -> vq:int -> stt_ghost unit emp_inames 
+        (f: (v:int -> vq:int -> stt_ghost unit 
                   (refine v ** aspec vq ** pts_to x (v + 1))
                   (fun _ -> refine (v + 1) ** aspec (vq + 1) ** pts_to x (v + 1))))
 requires aspec 'i ** C.active p t

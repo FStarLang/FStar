@@ -39,25 +39,25 @@ val intro_trade
   (hyp concl: vprop)
   (extra: vprop)
   (f_elim: unit -> (
-    stt_ghost unit emp_inames
+    stt_ghost unit
     (invlist_v is ** extra ** hyp)
     (fun _ -> invlist_v is ** concl)
   ))
-: stt_ghost unit emp_inames
+: stt_ghost unit
     extra
     (fun _ -> trade #is hyp concl)
 
 val elim_trade_ghost
   (#[T.exact (`[])] is : invlist)
   (hyp concl: vprop)
-: stt_ghost unit emp_inames
+: stt_ghost unit
     (invlist_v is ** (trade #is hyp concl) ** hyp)
     (fun _ -> invlist_v is ** concl)
 
 val elim_trade
   (#[T.exact (`[])] is : invlist)
   (hyp concl: vprop)
-: stt_unobservable unit (invlist_names is)
+: stt_atomic unit #Unobservable (invlist_names is)
     ((trade #is hyp concl) ** hyp)
     (fun _ -> concl)
 
@@ -65,20 +65,6 @@ val trade_sub_inv
   (#os1 : invlist)
   (#os2 : invlist{invlist_sub os1 os2})
   (hyp concl: vprop)
-: stt_ghost unit emp_inames
+: stt_ghost unit
     (trade #os1 hyp concl)
     (fun _ -> trade #os2 hyp concl)
-
-// val ( forall* ) (#a:Type) (p:a->vprop) : vprop
-
-// val intro_forall (#a:Type) (#p:a->vprop)
-//     (v:vprop)
-//     (f_elim : (x:a -> stt_unobservable unit emp_inames v (fun _ -> p x)))
-// : stt_ghost unit emp_inames
-//     v
-//     (fun _ -> forall* x. p x)
-
-// val elim_forall (#a:Type) (#p:a->vprop) (x:a)
-// : stt_ghost unit emp_inames
-//     (forall* x. p x)
-//     (fun _ -> p x)

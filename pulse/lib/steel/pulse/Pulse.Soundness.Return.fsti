@@ -24,7 +24,7 @@ open Pulse.Soundness.Common
 
 module RT = FStar.Reflection.Typing
 
-val return_soundess
+val return_soundness
   (#g:stt_env)
   (#t:st_term)
   (#c:comp)

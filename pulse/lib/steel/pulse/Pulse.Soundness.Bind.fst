@@ -140,7 +140,7 @@ let elab_bind_typing (g:stt_env)
     assume (RT.lookup_fvar_uinst rg bind_fv [u1; u2] == Some (bind_type u1 u2));
     let head_typing : RT.tot_typing _ _ (bind_type u1 u2) = RT.T_UInst rg bind_fv [u1;u2] in
     let (| _, c1_typing |) = RT.type_correctness _ _ _ r1_typing in
-    let t1_typing, pre_typing, post_typing = inversion_of_stt_typing _ _ _ c1_typing in
+    let t1_typing, pre_typing, post_typing = inversion_of_stt_typing _ _ c1_typing in
     let t1 = (elab_term (comp_res c1)) in
     let t2 = (elab_term (comp_res c2)) in
     let t1_typing : RT.tot_typing rg t1 (RT.tm_type u1) = t1_typing in
@@ -188,14 +188,6 @@ let elab_bind_typing (g:stt_env)
     in
     d
 #pop-options
-
-let elab_bind_ghost_l_typing g c1 c2 c x r1 r1_typing r2 r2_typing bc t2_typing post2_typing
-  reveal_a reveal_a_typing =
-  admit ()
-
-let elab_bind_ghost_r_typing g c1 c2 c x r1 r1_typing r2 r2_typing bc t2_typing post2_typing
-  reveal_b reveal_b_typing =
-  admit ()
 
 let tot_bind_typing #g #t #c d soundness =
   let T_TotBind _ e1 e2 t1 c2 b x e1_typing e2_typing = d in

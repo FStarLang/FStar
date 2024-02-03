@@ -21,6 +21,7 @@ include Pulse.Lib.Forall
 include Pulse.Lib.Array
 include Pulse.Lib.Reference
 include PulseCore.FractionalPermission
+include PulseCore.Observability
 include FStar.Ghost
 
 (* Pulse will currently not recognize calls to anything other than
@@ -32,16 +33,10 @@ val perform
 let perform f = f ()
 
 val perform_ghost
-  (#a #is #pre #post : _)
-  (f : unit -> stt_ghost is a pre post)
-  : stt_ghost is a pre post
+  (#a #pre #post : _)
+  (f : unit -> stt_ghost a pre post)
+  : stt_ghost a pre post
 let perform_ghost f = f ()
-
-val perform_atomic
-  (#a #is #pre #post : _)
-  (f : unit -> stt_atomic is a pre post)
-  : stt_atomic is a pre post
-let perform_atomic f = f ()
 
 (* TEMPORARY! REMOVE! *)
 let inames_ext (is1 is2 : inames)
@@ -94,7 +89,7 @@ fn call_ghost
       (#b: a -> Type0)
       (#pre: a -> vprop)
       (#post: (x:a -> b x -> vprop))
-      (f:(x:a -> stt_ghost (b x) emp_inames (pre x) (fun y -> post x y)))
+      (f:(x:a -> stt_ghost (b x) (pre x) (fun y -> post x y)))
       (x:a)
 requires pre x
 returns y:erased (b x)

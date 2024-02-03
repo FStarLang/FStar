@@ -1,5 +1,4 @@
 open Prims
-type ('g, 'c) comp_typing_u = (unit, unit, unit) Pulse_Typing.comp_typing
 let (admit_st_comp_typing :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_comp -> (unit, unit) Pulse_Typing.st_comp_typing)
@@ -9,7 +8,7 @@ let (admit_st_comp_typing :
       Pulse_Typing.STC (g, st, (Pulse_Typing_Env.fresh g), (), (), ())
 let (admit_comp_typing :
   Pulse_Typing_Env.env ->
-    Pulse_Syntax_Base.comp_st -> (unit, unit) comp_typing_u)
+    Pulse_Syntax_Base.comp_st -> (unit, unit) Pulse_Typing.comp_typing_u)
   =
   fun g ->
     fun c ->
@@ -19,9 +18,8 @@ let (admit_comp_typing :
       | Pulse_Syntax_Base.C_STAtomic (inames, obs, st) ->
           Pulse_Typing.CT_STAtomic
             (g, inames, obs, st, (), (admit_st_comp_typing g st))
-      | Pulse_Syntax_Base.C_STGhost (inames, st) ->
-          Pulse_Typing.CT_STGhost
-            (g, inames, st, (), (admit_st_comp_typing g st))
+      | Pulse_Syntax_Base.C_STGhost st ->
+          Pulse_Typing.CT_STGhost (g, st, (admit_st_comp_typing g st))
 let (st_typing_correctness_ctot :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_term ->
@@ -34,13 +32,14 @@ let (st_typing_correctness :
     Pulse_Syntax_Base.st_term ->
       Pulse_Syntax_Base.comp_st ->
         (unit, unit, unit) Pulse_Typing.st_typing ->
-          (unit, unit) comp_typing_u)
+          (unit, unit) Pulse_Typing.comp_typing_u)
   = fun g -> fun t -> fun c -> fun uu___ -> admit_comp_typing g c
 let (add_frame_well_typed :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.comp_st ->
-      (unit, unit) comp_typing_u ->
-        Pulse_Syntax_Base.term -> unit -> (unit, unit) comp_typing_u)
+      (unit, unit) Pulse_Typing.comp_typing_u ->
+        Pulse_Syntax_Base.term ->
+          unit -> (unit, unit) Pulse_Typing.comp_typing_u)
   =
   fun g ->
     fun c ->
@@ -49,7 +48,8 @@ let (add_frame_well_typed :
 let (comp_typing_inversion :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.comp_st ->
-      (unit, unit) comp_typing_u -> (unit, unit) Pulse_Typing.st_comp_typing)
+      (unit, unit) Pulse_Typing.comp_typing_u ->
+        (unit, unit) Pulse_Typing.st_comp_typing)
   =
   fun g ->
     fun c ->
@@ -58,7 +58,7 @@ let (comp_typing_inversion :
         | Pulse_Typing.CT_ST (uu___, uu___1, st) -> st
         | Pulse_Typing.CT_STAtomic
             (uu___, uu___1, uu___2, uu___3, uu___4, st) -> st
-        | Pulse_Typing.CT_STGhost (uu___, uu___1, uu___2, uu___3, st) -> st
+        | Pulse_Typing.CT_STGhost (uu___, uu___1, st) -> st
 let (st_comp_typing_inversion_cofinite :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_comp ->
@@ -164,28 +164,6 @@ let (bind_comp_weakening :
                         ((Pulse_Typing_Env.push_env
                             (Pulse_Typing_Env.push_env g g1) g'), x1, c11,
                           c21, (), y, ())
-                  | Pulse_Typing.Bind_comp_ghost_l
-                      (uu___, x1, c11, c21, n_d, uu___1, uu___2, uu___3) ->
-                      let y =
-                        Pulse_Typing_Env.fresh
-                          (Pulse_Typing_Env.push_env
-                             (Pulse_Typing_Env.push_env g g1) g') in
-                      Pulse_Typing.Bind_comp_ghost_l
-                        ((Pulse_Typing_Env.push_env
-                            (Pulse_Typing_Env.push_env g g1) g'), x1, c11,
-                          c21, (non_informative_c_weakening g g' g1 c11 n_d),
-                          (), y, ())
-                  | Pulse_Typing.Bind_comp_ghost_r
-                      (uu___, x1, c11, c21, n_d, uu___1, uu___2, uu___3) ->
-                      let y =
-                        Pulse_Typing_Env.fresh
-                          (Pulse_Typing_Env.push_env
-                             (Pulse_Typing_Env.push_env g g1) g') in
-                      Pulse_Typing.Bind_comp_ghost_r
-                        ((Pulse_Typing_Env.push_env
-                            (Pulse_Typing_Env.push_env g g1) g'), x1, c11,
-                          c21, (non_informative_c_weakening g g' g1 c21 n_d),
-                          (), y, ())
 let (lift_comp_weakening :
   Pulse_Typing_Env.env ->
     Pulse_Typing_Env.env ->
@@ -205,17 +183,21 @@ let (lift_comp_weakening :
                   Pulse_Typing.Lift_STAtomic_ST
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), c)
-              | Pulse_Typing.Lift_STGhost_STUnobservable
-                  (uu___, c, non_informative_c) ->
-                  Pulse_Typing.Lift_STGhost_STUnobservable
+              | Pulse_Typing.Lift_Ghost_Neutral (uu___, c, non_informative_c)
+                  ->
+                  Pulse_Typing.Lift_Ghost_Neutral
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), c,
                       (non_informative_c_weakening g g' g1 c
                          non_informative_c))
-              | Pulse_Typing.Lift_STUnobservable_STAtomic (uu___, c) ->
-                  Pulse_Typing.Lift_STUnobservable_STAtomic
+              | Pulse_Typing.Lift_Neutral_Ghost (uu___, c) ->
+                  Pulse_Typing.Lift_Neutral_Ghost
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), c)
+              | Pulse_Typing.Lift_Observability (uu___, obs, c) ->
+                  Pulse_Typing.Lift_Observability
+                    ((Pulse_Typing_Env.push_env
+                        (Pulse_Typing_Env.push_env g g1) g'), obs, c)
 let (st_equiv_weakening :
   Pulse_Typing_Env.env ->
     Pulse_Typing_Env.env ->
@@ -275,8 +257,6 @@ let rec (st_sub_weakening :
                         (Pulse_Typing_Env.push_env g g1) g'), uu___1, uu___2,
                       uu___3, (st_sub_weakening g g' uu___1 uu___2 dl g1),
                       (st_sub_weakening g g' uu___2 uu___3 dr g1))
-              | Pulse_Typing.STS_GhostInvs (uu___, stc, is1, is2, tok) ->
-                  Pulse_Typing.STS_GhostInvs (g'', stc, is1, is2, ())
               | Pulse_Typing.STS_AtomicInvs
                   (uu___, stc, is1, is2, o1, o2, tok) ->
                   Pulse_Typing.STS_AtomicInvs
@@ -331,12 +311,11 @@ let (comp_typing_weakening :
                         (Pulse_Typing_Env.push_env g g1) g'), inames, obs,
                       uu___1, (),
                       (st_comp_typing_weakening g g' uu___1 d1 g1))
-              | Pulse_Typing.CT_STGhost (uu___, inames, uu___1, uu___2, d1)
-                  ->
+              | Pulse_Typing.CT_STGhost (uu___, uu___1, d1) ->
                   Pulse_Typing.CT_STGhost
                     ((Pulse_Typing_Env.push_env
-                        (Pulse_Typing_Env.push_env g g1) g'), inames, uu___1,
-                      (), (st_comp_typing_weakening g g' uu___1 d1 g1))
+                        (Pulse_Typing_Env.push_env g g1) g'), uu___1,
+                      (st_comp_typing_weakening g g' uu___1 d1 g1))
 let rec (st_typing_weakening :
   Pulse_Typing_Env.env ->
     Pulse_Typing_Env.env ->
@@ -435,7 +414,7 @@ let rec (st_typing_weakening :
                   let d_e24 = d_e23 in
                   let c2_typing1 =
                     comp_typing_weakening g g' c2
-                      (Pulse_Syntax_Base.comp_u c2) c2_typing g1 in
+                      (Pulse_Syntax_Base.universe_of_comp c2) c2_typing g1 in
                   Pulse_Typing.T_BindFn
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), e1, e2, c1, c2,
@@ -471,8 +450,7 @@ let rec (st_typing_weakening :
                         (Pulse_Typing_Env.push_env g g1) g'), e1, e2, t1, c2,
                       b, x, (), d_e24, ())
               | Pulse_Typing.T_If
-                  (uu___, b, e1, e2, c1, uc, hyp, uu___1, d_e1, d_e2, uu___2)
-                  ->
+                  (uu___, b, e1, e2, c1, hyp, uu___1, d_e1, d_e2, uu___2) ->
                   let d_e11 = d_e1 in
                   let d_e12 = d_e11 in
                   let d_e13 =
@@ -496,7 +474,7 @@ let rec (st_typing_weakening :
                   Pulse_Typing.T_If
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), b, e1, e2, c1,
-                      uc, hyp, (), d_e14, d_e24, ())
+                      hyp, (), d_e14, d_e24, ())
               | Pulse_Typing.T_Match
                   (uu___, sc_u, sc_ty, sc, d_sc_ty, d_sc, c1, brs, d_brs,
                    d_pats_complete)
@@ -562,9 +540,9 @@ let rec (st_typing_weakening :
                         (Pulse_Typing_Env.push_env g g1) g'), eL, cL, eR, cR,
                       x,
                       (comp_typing_weakening g g' cL
-                         (Pulse_Syntax_Base.comp_u cL) cL_typing g1),
+                         (Pulse_Syntax_Base.universe_of_comp cL) cL_typing g1),
                       (comp_typing_weakening g g' cR
-                         (Pulse_Syntax_Base.comp_u cR) cR_typing g1),
+                         (Pulse_Syntax_Base.universe_of_comp cR) cR_typing g1),
                       (st_typing_weakening g g' eL cL eL_typing g1),
                       (st_typing_weakening g g' eR cR eR_typing g1))
               | Pulse_Typing.T_WithLocal
@@ -588,7 +566,8 @@ let rec (st_typing_weakening :
                         (Pulse_Typing_Env.push_env g g1) g'), ppname, init,
                       body, init_t, c1, x, (), (),
                       (comp_typing_weakening g g' c1
-                         (Pulse_Syntax_Base.comp_u c1) d_c g1), d_body4)
+                         (Pulse_Syntax_Base.universe_of_comp c1) d_c g1),
+                      d_body4)
               | Pulse_Typing.T_WithLocalArray
                   (uu___, ppname, init, len, body, init_t, c1, x, uu___1,
                    uu___2, uu___3, d_c, d_body)
@@ -610,7 +589,8 @@ let rec (st_typing_weakening :
                         (Pulse_Typing_Env.push_env g g1) g'), ppname, init,
                       len, body, init_t, c1, x, (), (), (),
                       (comp_typing_weakening g g' c1
-                         (Pulse_Syntax_Base.comp_u c1) d_c g1), d_body4)
+                         (Pulse_Syntax_Base.universe_of_comp c1) d_c g1),
+                      d_body4)
               | Pulse_Typing.T_Rewrite (uu___, p, q, uu___1, uu___2) ->
                   Pulse_Typing.T_Rewrite
                     ((Pulse_Typing_Env.push_env
@@ -717,19 +697,24 @@ let (lift_comp_subst :
                           ((Pulse_Typing_Env.push_env g
                               (Pulse_Typing_Env.subst_env g' (nt x e))),
                             (Pulse_Syntax_Naming.subst_comp c ss))
-                    | Pulse_Typing.Lift_STGhost_STUnobservable
+                    | Pulse_Typing.Lift_Ghost_Neutral
                         (uu___, c, d_non_informative) ->
-                        Pulse_Typing.Lift_STGhost_STUnobservable
+                        Pulse_Typing.Lift_Ghost_Neutral
                           ((Pulse_Typing_Env.push_env g
                               (Pulse_Typing_Env.subst_env g' (nt x e))),
                             (Pulse_Syntax_Naming.subst_comp c ss),
                             (non_informative_c_subst g x t g' e () c
                                d_non_informative))
-                    | Pulse_Typing.Lift_STUnobservable_STAtomic (uu___, c) ->
-                        Pulse_Typing.Lift_STUnobservable_STAtomic
+                    | Pulse_Typing.Lift_Neutral_Ghost (uu___, c) ->
+                        Pulse_Typing.Lift_Neutral_Ghost
                           ((Pulse_Typing_Env.push_env g
                               (Pulse_Typing_Env.subst_env g' (nt x e))),
                             (Pulse_Syntax_Naming.subst_comp c ss))
+                    | Pulse_Typing.Lift_Observability (uu___, c, o) ->
+                        Pulse_Typing.Lift_Observability
+                          ((Pulse_Typing_Env.push_env g
+                              (Pulse_Typing_Env.subst_env g' (nt x e))),
+                            (Pulse_Syntax_Naming.subst_comp c ss), o)
 let (bind_comp_subst :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.var ->
@@ -766,28 +751,6 @@ let (bind_comp_subst :
                                 y1, (Pulse_Syntax_Naming.subst_comp c11 ss),
                                 (Pulse_Syntax_Naming.subst_comp c21 ss), (),
                                 z, ())
-                        | Pulse_Typing.Bind_comp_ghost_l
-                            (uu___, y1, c11, c21, d_non_informative, uu___1,
-                             z, uu___2)
-                            ->
-                            Pulse_Typing.Bind_comp_ghost_l
-                              ((Pulse_Typing_Env.push_env g
-                                  (Pulse_Typing_Env.subst_env g' (nt x e))),
-                                y1, (Pulse_Syntax_Naming.subst_comp c11 ss),
-                                (Pulse_Syntax_Naming.subst_comp c21 ss),
-                                (non_informative_c_subst g x t g' e () c11
-                                   d_non_informative), (), z, ())
-                        | Pulse_Typing.Bind_comp_ghost_r
-                            (uu___, y1, c11, c21, d_non_informative, uu___1,
-                             z, uu___2)
-                            ->
-                            Pulse_Typing.Bind_comp_ghost_r
-                              ((Pulse_Typing_Env.push_env g
-                                  (Pulse_Typing_Env.subst_env g' (nt x e))),
-                                y1, (Pulse_Syntax_Naming.subst_comp c11 ss),
-                                (Pulse_Syntax_Naming.subst_comp c21 ss),
-                                (non_informative_c_subst g x t g' e () c21
-                                   d_non_informative), (), z, ())
 let (st_equiv_subst :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.var ->
@@ -898,14 +861,13 @@ let (comp_typing_subst :
                             inames, obs,
                             (Pulse_Syntax_Naming.subst_st_comp s (nt x e)),
                             (), (st_comp_typing_subst g x t g' e () s d_s))
-                    | Pulse_Typing.CT_STGhost (uu___, inames, s, uu___1, d_s)
-                        ->
+                    | Pulse_Typing.CT_STGhost (uu___, uu___1, d_s) ->
                         Pulse_Typing.CT_STGhost
                           ((Pulse_Typing_Env.push_env g
                               (Pulse_Typing_Env.subst_env g' (nt x e))),
-                            inames,
-                            (Pulse_Syntax_Naming.subst_st_comp s (nt x e)),
-                            (), (st_comp_typing_subst g x t g' e () s d_s))
+                            (Pulse_Syntax_Naming.subst_st_comp uu___1
+                               (nt x e)),
+                            (st_comp_typing_subst g x t g' e () uu___1 d_s))
 let coerce_eq : 'a 'b . 'a -> unit -> 'b =
   fun uu___1 -> fun uu___ -> (fun x -> fun uu___ -> Obj.magic x) uu___1 uu___
 let rec (st_typing_subst :
@@ -1037,7 +999,8 @@ let rec (st_typing_subst :
                                    (Pulse_Typing_Env.push_binding g' y
                                       Pulse_Syntax_Base.ppname_default
                                       (Pulse_Syntax_Base.comp_res c11)) e ()
-                                   c2 (Pulse_Syntax_Base.comp_u c2) d_c2))
+                                   c2 (Pulse_Syntax_Base.universe_of_comp c2)
+                                   d_c2))
                         | Pulse_Typing.T_TotBind
                             (uu___1, e11, e2, t1, c2, b, y, uu___2, d_e2) ->
                             Pulse_Typing.T_TotBind
@@ -1077,8 +1040,8 @@ let rec (st_typing_subst :
                                          (Pulse_Syntax_Base.v_as_nv y)) c2
                                       d_e2 ()) ()), ())
                         | Pulse_Typing.T_If
-                            (uu___1, b, e11, e2, c, uc, hyp, uu___2, d_e1,
-                             d_e2, uu___3)
+                            (uu___1, b, e11, e2, c, hyp, uu___2, d_e1, d_e2,
+                             uu___3)
                             ->
                             Pulse_Typing.T_If
                               ((Pulse_Typing_Env.push_env g
@@ -1086,8 +1049,8 @@ let rec (st_typing_subst :
                                 (Pulse_Syntax_Naming.subst_term b ss),
                                 (Pulse_Syntax_Naming.subst_st_term e11 ss),
                                 (Pulse_Syntax_Naming.subst_st_term e2 ss),
-                                (Pulse_Syntax_Naming.subst_comp c ss), uc,
-                                hyp, (),
+                                (Pulse_Syntax_Naming.subst_comp c ss), hyp,
+                                (),
                                 (coerce_eq
                                    (st_typing_subst g x t
                                       (Pulse_Typing_Env.push_binding g' hyp
@@ -1187,9 +1150,11 @@ let rec (st_typing_subst :
                                 (Pulse_Syntax_Naming.subst_st_term eR ss),
                                 (Pulse_Syntax_Naming.subst_comp cR ss), y,
                                 (comp_typing_subst g x t g' e () cL
-                                   (Pulse_Syntax_Base.comp_u cL) d_cL),
+                                   (Pulse_Syntax_Base.universe_of_comp cL)
+                                   d_cL),
                                 (comp_typing_subst g x t g' e () cR
-                                   (Pulse_Syntax_Base.comp_u cR) d_cR),
+                                   (Pulse_Syntax_Base.universe_of_comp cR)
+                                   d_cR),
                                 (st_typing_subst g x t g' e eff () eL cL d_eL
                                    ()),
                                 (st_typing_subst g x t g' e eff () eR cR d_eR
@@ -1208,7 +1173,7 @@ let rec (st_typing_subst :
                                 (Pulse_Syntax_Naming.subst_comp c ss), y, (),
                                 (),
                                 (comp_typing_subst g x t g' e () c
-                                   (Pulse_Syntax_Base.comp_u c) d_c),
+                                   (Pulse_Syntax_Base.universe_of_comp c) d_c),
                                 (coerce_eq
                                    (st_typing_subst g x t
                                       (Pulse_Typing_Env.push_binding g' y
@@ -1234,7 +1199,7 @@ let rec (st_typing_subst :
                                 (Pulse_Syntax_Naming.subst_comp c ss), y, (),
                                 (), (),
                                 (comp_typing_subst g x t g' e () c
-                                   (Pulse_Syntax_Base.comp_u c) d_c),
+                                   (Pulse_Syntax_Base.universe_of_comp c) d_c),
                                 (coerce_eq
                                    (st_typing_subst g x t
                                       (Pulse_Typing_Env.push_binding g' y

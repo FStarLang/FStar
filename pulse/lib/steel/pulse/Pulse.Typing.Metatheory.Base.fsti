@@ -21,8 +21,6 @@ open Pulse.Typing
 module RU = Pulse.RuntimeUtils
 module T = FStar.Tactics.V2
 
-let comp_typing_u (g:env) (c:comp_st) = comp_typing g c (comp_u c)
-
 val admit_comp_typing (g:env) (c:comp_st)
   : comp_typing_u g c
 

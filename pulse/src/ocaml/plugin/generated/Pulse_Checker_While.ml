@@ -5,7 +5,7 @@ let (while_cond_comp_typing :
       Pulse_Syntax_Base.ppname ->
         Pulse_Syntax_Base.term ->
           Pulse_Syntax_Base.term ->
-            unit -> (unit, unit) Pulse_Typing_Metatheory_Base.comp_typing_u)
+            unit -> (unit, unit) Pulse_Typing.comp_typing_u)
   =
   fun g ->
     fun u ->
@@ -21,7 +21,7 @@ let (while_body_comp_typing :
       Pulse_Syntax_Base.ppname ->
         Pulse_Syntax_Base.term ->
           Pulse_Syntax_Base.term ->
-            unit -> (unit, unit) Pulse_Typing_Metatheory_Base.comp_typing_u)
+            unit -> (unit, unit) Pulse_Typing.comp_typing_u)
   =
   fun g ->
     fun u ->

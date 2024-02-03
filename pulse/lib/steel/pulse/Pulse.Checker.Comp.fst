@@ -26,7 +26,7 @@ module P = Pulse.Syntax.Printer
 let check (g:env) 
           (c:comp_st)
           (pre_typing:tot_typing g (comp_pre c) tm_vprop)
-  : T.Tac (comp_typing g c (comp_u c))
+  : T.Tac (comp_typing g c (universe_of_comp c))
   = let g = Pulse.Typing.Env.push_context_no_range g "check_comp"  in
   
     let check_st_comp (st:st_comp { comp_u c == st.u /\
@@ -69,11 +69,6 @@ let check (g:env)
              (Printf.sprintf "check_comp: type of inames term %s is %s, expected %s"
                 (P.term_to_string i) (P.term_to_string ty) (P.term_to_string tm_inames))
       else CT_STAtomic _ _ obs _ i_typing stc
-    | C_STGhost i st -> 
+    | C_STGhost st -> 
       let stc = check_st_comp st in
-      let (| ty, i_typing |) = core_compute_tot_term_type g i in
-      if not (eq_tm ty tm_inames)
-      then fail g None
-             (Printf.sprintf "check_comp: type of inames term %s is %s, expected %s"
-                (P.term_to_string i) (P.term_to_string ty) (P.term_to_string tm_inames))
-      else CT_STGhost _ _ _ i_typing stc
+      CT_STGhost _ _ stc

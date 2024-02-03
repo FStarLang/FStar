@@ -48,7 +48,7 @@ let range_of_comp (c:comp) =
   | C_Tot t -> t.range
   | C_ST st -> range_of_st_comp st
   | C_STAtomic _ _ st -> range_of_st_comp st
-  | C_STGhost _ st -> range_of_st_comp st
+  | C_STGhost st -> range_of_st_comp st
 
 let rec arrow_of_abs (env:_) (prog:st_term { Tm_Abs? prog.term })
   : T.Tac (term & t:st_term { Tm_Abs? t.term })
@@ -206,13 +206,17 @@ let sub_effect_comp g r (asc:comp_ascription) (c_computed:comp) : T.Tac (option 
     match c_computed, c with
     | C_Tot t1, C_Tot t2 -> nop
     | C_ST _, C_ST _ -> nop
-    | C_STAtomic i Observable c1, C_STAtomic j Observable c2 -> nop
-    | C_STAtomic i Unobservable c1, C_STAtomic j Unobservable c2 -> nop
-    | C_STGhost i c1, C_STGhost j c2 -> nop
-
-    | C_STAtomic i Unobservable c1, C_STAtomic _ Observable _ ->
-      let lift = Lift_STUnobservable_STAtomic g c_computed in
-      Some (| C_STAtomic i Observable c1, lift |)
+    | C_STGhost _, C_STGhost _ -> nop
+    | C_STAtomic i Neutral c1, C_STGhost _ ->
+      let lift = Lift_Neutral_Ghost g c_computed in
+      if eq_tm i tm_emp_inames
+      then Some (| C_STGhost c1, lift |)
+      else None
+    | C_STAtomic i o1 c1, C_STAtomic j o2 c2 ->
+      if sub_observability o1 o2
+      then let lift = Lift_Observability g c_computed o2 in
+           Some (| C_STAtomic i o2 c1, lift |)
+      else nop
 
     (* FIXME: more lifts here *) 
     | _ -> nop
@@ -223,12 +227,12 @@ let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac 
   | None -> nop
   | Some c ->
     match c, c_computed with
-    | C_Tot _, C_Tot _ -> nop
-    | C_ST _, C_ST _ -> nop
+    | C_Tot _, C_Tot _
+    | C_ST _, C_ST _ 
+    | C_STGhost _, C_STGhost _ -> nop
 
     | C_STAtomic i Observable c1, C_STAtomic j Observable c2
-    | C_STAtomic i Unobservable c1, C_STAtomic j Unobservable c2
-    | C_STGhost i c1, C_STGhost j c2 ->
+    | C_STAtomic i Unobservable c1, C_STAtomic j Unobservable c2 ->
       // This should be true since we used the annotated computation type
       // to check the body of the function, but this fact is not exposed
       // by the checker and post hints yet.
@@ -258,7 +262,6 @@ let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac 
 
       let d_sub : st_sub g c_computed c =
         match c_computed with
-        | C_STGhost _ _ -> STS_GhostInvs g c2 j i tok
         | C_STAtomic _ obs _ -> STS_AtomicInvs g c2 j i obs obs tok
       in
       (| c, d_sub |)
@@ -370,7 +373,7 @@ let rec check_abs_core
         | Some c -> 
           c,
           open_term_nv (comp_pre c) px,
-          (if C_ST? c then tm_emp_inames else open_term_nv (comp_inames c) px),
+          (if C_STAtomic? c then open_term_nv (comp_inames c) px else tm_emp_inames),
           Some (open_term_nv (comp_res c) px),
           Some (open_term' (comp_post c) var 1)
       in

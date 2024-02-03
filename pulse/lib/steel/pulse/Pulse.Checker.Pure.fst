@@ -474,16 +474,9 @@ let pulse_lib_higher_gref = ["Pulse"; "Lib"; "HigherGhostReference"]
 let mk_pulse_lib_higher_gref_lid s = pulse_lib_higher_gref@[s]
 let higher_gref_lid = mk_pulse_lib_higher_gref_lid "ref"
 
-let get_non_informative_witness g u t
-  : T.Tac (non_informative_t g u t)
-  = let err () =
-      let open Pulse.PP in
-      fail_doc g (Some t.range) [
-        text "Expected a term with a non-informative (e.g., erased) type; got"
-          ^/^ pp t
-      ]
-    in
-    let eopt =
+let try_get_non_informative_witness g u t
+  : T.Tac (option (non_informative_t g u t))
+  = let eopt =
       let ropt = is_fvar_app t in
       match ropt with
       | Some (l, us, _, arg_opt) ->
@@ -515,13 +508,28 @@ let get_non_informative_witness g u t
       | _ -> None
     in
     match eopt with
-    | None -> err ()
+    | None -> None
     | Some e ->
-      check_term
-        (push_context_no_range g "get_noninformative_witness")
-        e
-        T.E_Total
-        (non_informative_witness_t u t)
+      let tok =
+        check_term
+          (push_context_no_range g "get_noninformative_witness")
+          e
+          T.E_Total
+          (non_informative_witness_t u t)
+      in
+      Some tok
+
+let get_non_informative_witness g u t
+  : T.Tac (non_informative_t g u t)
+  = match try_get_non_informative_witness g u t with
+    | None ->
+      let open Pulse.PP in
+      fail_doc g (Some t.range) [
+        text "Expected a term with a non-informative (e.g., erased) type; got"
+          ^/^ pp t
+      ]
+    | Some e -> e
+    
 
 let try_check_prop_validity (g:env) (p:term) (_:tot_typing g p tm_prop)
   : T.Tac (option (Pulse.Typing.prop_validity g p))

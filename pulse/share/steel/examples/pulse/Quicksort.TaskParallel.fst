@@ -60,7 +60,7 @@ fn join_alive_pledge (p:T.pool) (f:perm)
 (* FIXME! *)
 assume
 val split_pledge (#is:invlist) (#f:vprop) (v1:vprop) (v2:vprop)
-  : stt_unobservable unit
+  : stt_atomic unit #Unobservable
               emp_inames
               (pledge is f (v1 ** v2))
               (fun () -> pledge is f v1 ** pledge is f v2)

@@ -370,6 +370,7 @@ ensures post
 }
 ```
 
+
 (* this is universe-polymorphic in ret_t; so can't define it in Pulse yet *)
 let with_local'
     (#a:Type u#0)
@@ -394,7 +395,12 @@ let with_local'
            pure (length arr == SZ.v len)))) **
          pure (is_full_array arr))
         post
-    = bind_stt (frame_stt (pure (is_full_array arr)) (body arr)) (fun r -> bind_stt (free_with_post arr (post r)) (fun _ -> Pulse.Lib.Core.return r post))
+    = bind_stt
+        (frame_stt (pure (is_full_array arr)) (body arr))
+        (fun r ->
+          bind_stt
+            (free_with_post arr (post r)) 
+            (fun _ -> return_stt_noeq r post))
   in
   bind_stt m1 body
 

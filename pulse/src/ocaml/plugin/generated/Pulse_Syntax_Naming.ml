@@ -34,9 +34,8 @@ let (freevars_comp :
     match c with
     | Pulse_Syntax_Base.C_Tot t -> freevars t
     | Pulse_Syntax_Base.C_ST s -> freevars_st_comp s
+    | Pulse_Syntax_Base.C_STGhost s -> freevars_st_comp s
     | Pulse_Syntax_Base.C_STAtomic (inames, uu___, s) ->
-        FStar_Set.union (freevars inames) (freevars_st_comp s)
-    | Pulse_Syntax_Base.C_STGhost (inames, s) ->
         FStar_Set.union (freevars inames) (freevars_st_comp s)
 let freevars_opt :
   'a .
@@ -248,9 +247,8 @@ let (ln_c' : Pulse_Syntax_Base.comp -> Prims.int -> Prims.bool) =
       match c with
       | Pulse_Syntax_Base.C_Tot t -> ln' t i
       | Pulse_Syntax_Base.C_ST s -> ln_st_comp s i
+      | Pulse_Syntax_Base.C_STGhost s -> ln_st_comp s i
       | Pulse_Syntax_Base.C_STAtomic (inames, uu___, s) ->
-          (ln' inames i) && (ln_st_comp s i)
-      | Pulse_Syntax_Base.C_STGhost (inames, s) ->
           (ln' inames i) && (ln_st_comp s i)
 let ln_opt' :
   'a .
@@ -623,9 +621,8 @@ let (subst_comp : Pulse_Syntax_Base.comp -> subst -> Pulse_Syntax_Base.comp)
       | Pulse_Syntax_Base.C_STAtomic (inames, obs, s) ->
           Pulse_Syntax_Base.C_STAtomic
             ((subst_term inames ss), obs, (subst_st_comp s ss))
-      | Pulse_Syntax_Base.C_STGhost (inames, s) ->
-          Pulse_Syntax_Base.C_STGhost
-            ((subst_term inames ss), (subst_st_comp s ss))
+      | Pulse_Syntax_Base.C_STGhost s ->
+          Pulse_Syntax_Base.C_STGhost (subst_st_comp s ss)
 let (open_comp' :
   Pulse_Syntax_Base.comp ->
     Pulse_Syntax_Base.term ->

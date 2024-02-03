@@ -33,11 +33,10 @@ let elab_frame (c:comp_st) (frame:term) (e:R.term) =
   let post = elab_term (comp_post c) in
   if C_ST? c
   then mk_frame_stt u ty pre (mk_abs ty R.Q_Explicit post) (elab_term frame) e
-  else let opened = elab_term (comp_inames c) in      
-       if C_STAtomic? c
-       then mk_frame_stt_atomic u ty opened pre (mk_abs ty R.Q_Explicit post) (elab_term frame) e
-       else let _ = assert (C_STGhost? c) in
-            mk_frame_stt_ghost u ty opened pre (mk_abs ty R.Q_Explicit post) (elab_term frame) e
+  else if C_STAtomic? c
+  then let opened = elab_term (comp_inames c) in      
+       mk_frame_stt_atomic u ty opened pre (mk_abs ty R.Q_Explicit post) (elab_term frame) e
+  else mk_frame_stt_ghost u ty pre (mk_abs ty R.Q_Explicit post) (elab_term frame) e
 
 let elab_sub (c1 c2:comp_st) (e:R.term) =
   let ty = elab_term (comp_res c1) in
@@ -48,11 +47,10 @@ let elab_sub (c1 c2:comp_st) (e:R.term) =
   let post2 = mk_abs ty R.Q_Explicit (elab_term (comp_post c2)) in
   if C_ST? c1
   then mk_sub_stt u ty pre1 pre2 post1 post2 e
-  else let opened = elab_term (comp_inames c1) in
-       if C_STAtomic? c1
-       then mk_sub_stt_atomic u ty opened pre1 pre2 post1 post2 e
-       else let _ = assert (C_STGhost? c1) in
-            mk_sub_stt_ghost u ty opened pre1 pre2 post1 post2 e
+  else if C_STAtomic? c1
+  then let opened = elab_term (comp_inames c1) in
+       mk_sub_stt_atomic u ty opened pre1 pre2 post1 post2 e
+  else mk_sub_stt_ghost u ty pre1 pre2 post1 post2 e
 
 
 let elab_bind #g #x #c1 #c2 #c
@@ -61,11 +59,9 @@ let elab_bind #g #x #c1 #c2 #c
   : R.term
   = let t1 = elab_term (comp_res c1) in
     let t2 = elab_term (comp_res c2) in
-    match bc with
-    | Bind_comp _ _ _ _ _ _ _ ->
-      if C_ST? c1
-      then
-        mk_bind_stt
+    match c1 with
+    | C_ST _ ->
+      mk_bind_stt
           (comp_u c1)
           (comp_u c2)
           t1 t2
@@ -73,41 +69,29 @@ let elab_bind #g #x #c1 #c2 #c
           (mk_abs t1 R.Q_Explicit (elab_term (comp_post c1)))
           (mk_abs t2 R.Q_Explicit (elab_term (comp_post c2)))
           e1 e2
-      else 
+    | C_STGhost _ ->
         mk_bind_ghost
           (comp_u c1)
           (comp_u c2)
           t1 t2
+          (elab_term (comp_pre c1))
+          (mk_abs t1 R.Q_Explicit (elab_term (comp_post c1)))
+          (mk_abs t2 R.Q_Explicit (elab_term (comp_post c2)))
+          e1 e2
+    | C_STAtomic inames obs1 _ ->
+      let C_STAtomic _ obs2 _ = c2 in      
+      mk_bind_atomic
+          (comp_u c1)
+          (comp_u c2)
+          (elab_observability obs1)
+          (elab_observability obs2)
           (elab_term (comp_inames c1))
+          t1 t2
           (elab_term (comp_pre c1))
           (mk_abs t1 R.Q_Explicit (elab_term (comp_post c1)))
           (mk_abs t2 R.Q_Explicit (elab_term (comp_post c2)))
           e1 e2
   
-    | Bind_comp_ghost_l _ _ _ _ (| reveal_a, reveal_a_typing |) _ _ _ ->
-      mk_bind_ghost_atomic
-        (comp_u c1)
-        (comp_u c2)
-        t1 t2
-        (elab_term (comp_inames c1))
-        (elab_term (comp_pre c1))
-        (mk_abs t1 R.Q_Explicit (elab_term (comp_post c1)))
-        (mk_abs t2 R.Q_Explicit (elab_term (comp_post c2)))
-        e1 e2
-        (elab_term reveal_a)
-
-    | Bind_comp_ghost_r _ _ _ _ (| reveal_b, reveal_b_typing |) _ _ _ ->
-      mk_bind_atomic_ghost
-        (comp_u c1)
-        (comp_u c2)
-        t1 t2
-        (elab_term (comp_inames c1))
-        (elab_term (comp_pre c1))
-        (mk_abs t1 R.Q_Explicit (elab_term (comp_post c1)))
-        (mk_abs t2 R.Q_Explicit (elab_term (comp_post c2)))
-        e1 e2
-        (elab_term reveal_b)
-
 let elab_lift #g #c1 #c2 (d:lift_comp g c1 c2) (e:R.term)
   : Tot R.term
   = match d with
@@ -119,24 +103,34 @@ let elab_lift #g #c1 #c2 (d:lift_comp g c1 c2) (e:R.term)
         t
         (mk_abs t R.Q_Explicit (elab_term (comp_post c1)))
         e
-        
-    | Lift_STGhost_STUnobservable _ _ (| reveal_a, reveal_a_typing |) ->
+
+    | Lift_Observability _ c o2 ->
       let t = elab_term (comp_res c1) in
-      mk_lift_ghost_unobservable
+      mk_lift_observability
+        (comp_u c1)
+        (elab_observability (C_STAtomic?.obs c))
+        (elab_observability o2)
+        (elab_term (comp_inames c1))
+        t
+        (elab_term (comp_pre c1))
+        (mk_abs t R.Q_Explicit (elab_term (comp_post c1)))
+        e
+            
+    | Lift_Ghost_Neutral _ _ (| reveal_a, reveal_a_typing |) ->
+      let t = elab_term (comp_res c1) in
+      mk_lift_ghost_neutral
         (comp_u c1)
         t
-        (elab_term (comp_inames c1))
         (elab_term (comp_pre c1))
         (mk_abs t R.Q_Explicit (elab_term (comp_post c1)))
         e
         (elab_term reveal_a)
 
-    | Lift_STUnobservable_STAtomic _ _ ->
+    | Lift_Neutral_Ghost _ c ->
       let t = elab_term (comp_res c1) in
-      mk_lift_unobservable_atomic
+      mk_lift_neutral_ghost
         (comp_u c1)
         t
-        (elab_term (comp_inames c1))
         (elab_term (comp_pre c1))
         (mk_abs t R.Q_Explicit (elab_term (comp_post c1)))
         e
@@ -241,7 +235,7 @@ let rec elab_st_typing (#g:env)
       let e = elab_st_typing e_typing in
       elab_lift lc e
 
-    | T_If _ b _ _ _ _ _ _ e1_typing e2_typing _c_typing ->
+    | T_If _ b _ _ _ _ _ e1_typing e2_typing _c_typing ->
       let rb = elab_term b in
       let re1 = elab_st_typing e1_typing in
       let re2 = elab_st_typing e2_typing in

@@ -38,7 +38,7 @@ val elab_lift_stt_atomic_st_typing
           (requires Lift_STAtomic_ST? lc)
           (ensures fun _ -> True)
 
-val elab_lift_stt_ghost_unobservable_typing
+val elab_lift_ghost_neutral_typing
       (g:stt_env)
       (c1 c2:ln_comp)
       (e:R.term)
@@ -49,15 +49,26 @@ val elab_lift_stt_ghost_unobservable_typing
                                      (non_informative_witness_rt (comp_u c1)
                                                                  (elab_term (comp_res c1))))
     : Ghost (RT.tot_typing (elab_env g) (elab_lift lc e) (elab_comp c2))
-          (requires Lift_STGhost_STUnobservable? lc)
+          (requires Lift_Ghost_Neutral? lc)
           (ensures fun _ -> True)
 
-val elab_lift_stt_unobservable_atomic_typing
+val elab_lift_neutral_ghost_typing
       (g:stt_env)
       (c1 c2:ln_comp)
       (e:R.term)
       (e_typing:RT.tot_typing (elab_env g) e (elab_comp c1))
       (lc:lift_comp g c1 c2)
     : Ghost (RT.tot_typing (elab_env g) (elab_lift lc e) (elab_comp c2))
-          (requires Lift_STUnobservable_STAtomic? lc)
+          (requires Lift_Neutral_Ghost? lc)
+          (ensures fun _ -> True)
+
+
+val elab_lift_observability_typing
+      (g:stt_env)
+      (c1 c2:ln_comp)
+      (e:R.term)
+      (e_typing:RT.tot_typing (elab_env g) e (elab_comp c1))
+      (lc:lift_comp g c1 c2)
+    : Ghost (RT.tot_typing (elab_env g) (elab_lift lc e) (elab_comp c2))
+          (requires Lift_Observability? lc)
           (ensures fun _ -> True)

@@ -72,7 +72,7 @@ ghost fn elim_forall_imp (#a:Type0) (p q: a -> vprop) (x:a)
 ```pulse
 ghost
 fn intro_forall_imp (#a:Type0) (p q: a -> vprop) (r:vprop)
-    (elim: (u:a -> stt_ghost unit emp_inames 
+    (elim: (u:a -> stt_ghost unit 
                         (r ** p u)
                         (fun _ -> q u)))
 requires r

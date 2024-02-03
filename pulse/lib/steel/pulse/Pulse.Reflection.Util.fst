@@ -22,6 +22,9 @@ module RT = FStar.Reflection.Typing
 module RU = Pulse.RuntimeUtils
 open FStar.List.Tot
 
+let u_two = RT.(u_succ (u_succ u_zero))
+let u_max_two u = (RT.u_max u_two u)
+
 let pulse_lib_core = ["Pulse"; "Lib"; "Core"]
 let mk_pulse_lib_core_lid s = pulse_lib_core@[s]
 
@@ -171,10 +174,11 @@ let stt_atomic_tm = R.pack_ln (R.Tv_FVar stt_atomic_fv)
 let stt_unobservable_lid = mk_pulse_lib_core_lid "stt_unobservable"
 let stt_unobservable_fv = R.pack_fv stt_unobservable_lid
 let stt_unobservable_tm = R.pack_ln (R.Tv_FVar stt_unobservable_fv)
-let mk_stt_atomic_comp (obs:bool) (u:R.universe) (a inames pre post:R.term) =
-  let head = if obs then stt_atomic_fv else stt_unobservable_fv in
+let mk_stt_atomic_comp (obs:R.term) (u:R.universe) (a inames pre post:R.term) =
+  let head = stt_atomic_fv in
   let t = R.pack_ln (R.Tv_UInst head [u]) in
   let t = R.pack_ln (R.Tv_App t (a, R.Q_Explicit)) in
+  let t = R.pack_ln (R.Tv_App t (obs, R.Q_Implicit)) in
   let t = R.pack_ln (R.Tv_App t (inames, R.Q_Explicit)) in
   let t = R.pack_ln (R.Tv_App t (pre, R.Q_Explicit)) in
   R.pack_ln (R.Tv_App t (post, R.Q_Explicit))
@@ -183,22 +187,20 @@ let mk_stt_atomic_comp (obs:bool) (u:R.universe) (a inames pre post:R.term) =
 let stt_ghost_lid = mk_pulse_lib_core_lid "stt_ghost"
 let stt_ghost_fv = R.pack_fv stt_ghost_lid
 let stt_ghost_tm = R.pack_ln (R.Tv_FVar stt_ghost_fv)
-let mk_stt_ghost_comp (u:R.universe) (a inames pre post:R.term) =
+let mk_stt_ghost_comp (u:R.universe) (a pre post:R.term) =
   let t = R.pack_ln (R.Tv_UInst stt_ghost_fv [u]) in
   let t = R.pack_ln (R.Tv_App t (a, R.Q_Explicit)) in
-  let t = R.pack_ln (R.Tv_App t (inames, R.Q_Explicit)) in
   let t = R.pack_ln (R.Tv_App t (pre, R.Q_Explicit)) in
   R.pack_ln (R.Tv_App t (post, R.Q_Explicit))
 
-let mk_stt_ghost_comp_post_equiv (g:R.env) (u:R.universe) (a inames pre post1 post2:R.term)
+let mk_stt_ghost_comp_post_equiv (g:R.env) (u:R.universe) (a pre post1 post2:R.term)
   (posts_equiv:RT.equiv g post1 post2)
-  : RT.equiv g (mk_stt_ghost_comp u a inames pre post1)
-               (mk_stt_ghost_comp u a inames pre post2) =
+  : RT.equiv g (mk_stt_ghost_comp u a pre post1)
+               (mk_stt_ghost_comp u a pre post2) =
   let open R in
   let open RT in
   let t = R.pack_ln (R.Tv_UInst stt_ghost_fv [u]) in
   let t = R.pack_ln (R.Tv_App t (a, R.Q_Explicit)) in
-  let t = R.pack_ln (R.Tv_App t (inames, R.Q_Explicit)) in
   let t = R.pack_ln (R.Tv_App t (pre, R.Q_Explicit)) in
   Rel_ctxt g post1 post2
     (Ctxt_app_arg t Q_Explicit Ctxt_hole)
@@ -374,24 +376,33 @@ let mk_lift_atomic_stt (u:R.universe) (a pre post e:R.term)  =
   let t = pack_ln (R.Tv_App t (post, Q_Implicit)) in
   pack_ln (R.Tv_App t (e, Q_Explicit))
 
-// Wrapper.lift_ghost_unobservable<u> #a #opened #pre #post e reveal_a
-let mk_lift_ghost_unobservable (u:R.universe) (a opened pre post e reveal_a:R.term) =
+let mk_lift_ghost_neutral (u:R.universe) (a pre post e reveal_a:R.term) =
   let open R in
-  let lid = mk_pulse_lib_core_lid "lift_ghost_unobservable" in
+  let lid = mk_pulse_lib_core_lid "lift_ghost_neutral" in
   let t = pack_ln (R.Tv_UInst (R.pack_fv lid) [u]) in
   let t = pack_ln (R.Tv_App t (a, Q_Implicit)) in
-  let t = pack_ln (R.Tv_App t (opened, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (pre, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (post, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (e, Q_Explicit)) in
   pack_ln (R.Tv_App t (reveal_a, Q_Explicit))
 
-// Wrapper.lift_ghost_unobservable<u> #a #opened #pre #post e
-let mk_lift_unobservable_atomic (u:R.universe) (a opened pre post e : R.term) =
+let mk_lift_neutral_ghost (u:R.universe) (a pre post e:R.term) =
   let open R in
-  let lid = mk_pulse_lib_core_lid "lift_unobservable_atomic" in
+  let lid = mk_pulse_lib_core_lid "lift_neutral_ghost" in
   let t = pack_ln (R.Tv_UInst (R.pack_fv lid) [u]) in
   let t = pack_ln (R.Tv_App t (a, Q_Implicit)) in
+  let t = pack_ln (R.Tv_App t (pre, Q_Implicit)) in
+  let t = pack_ln (R.Tv_App t (post, Q_Implicit)) in
+  let t = pack_ln (R.Tv_App t (e, Q_Explicit)) in
+  t
+
+let mk_lift_observability (u:R.universe) (a o1 o2 opened pre post e : R.term) =
+  let open R in
+  let lid = mk_pulse_lib_core_lid "lift_observablility" in
+  let t = pack_ln (R.Tv_UInst (R.pack_fv lid) [u]) in
+  let t = pack_ln (R.Tv_App t (a, Q_Implicit)) in
+  let t = pack_ln (R.Tv_App t (o1, Q_Implicit)) in
+  let t = pack_ln (R.Tv_App t (o2, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (opened, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (pre, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (post, Q_Implicit)) in
@@ -422,55 +433,36 @@ let mk_bind_stt
         [(t1, R.Q_Explicit)])
       [(t2, R.Q_Explicit)]
 
-// Wrapper.bind_sttg<u1, u2> #a #b #opened #pre1 #post1 #post2 e1 e2
 let mk_bind_ghost
   (u1 u2:R.universe)
-  (a b opened pre1 post1 post2 e1 e2:R.term) =
+  (a b pre1 post1 post2 e1 e2:R.term) =
   let open R in
-  let bind_lid = mk_pulse_lib_core_lid "bind_sttg" in
+  let bind_lid = mk_pulse_lib_core_lid "bind_ghost" in
   let t = R.pack_ln (R.Tv_UInst (R.pack_fv bind_lid) [u1;u2]) in
   let t = pack_ln (R.Tv_App t (a, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (b, Q_Implicit)) in
-  let t = pack_ln (R.Tv_App t (opened, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (pre1, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (post1, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (post2, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (e1, Q_Explicit)) in
   pack_ln (R.Tv_App t (e2, Q_Explicit))
 
-// Wrapper.bind_stt_ghost_atomic<u1, u2> #a #b #opened #pre1 #post1 #post2 e1 e2 reveal_a
-let mk_bind_ghost_atomic
+let mk_bind_atomic
   (u1 u2:R.universe)
-  (a b opened pre1 post1 post2 e1 e2 reveal_a:R.term) =
+  (a b obs1 obs2 opens pre1 post1 post2 e1 e2:R.term) =
   let open R in
-  let bind_lid = mk_pulse_lib_core_lid "bind_stt_ghost_atomic" in
+  let bind_lid = mk_pulse_lib_core_lid "bind_atomic" in
   let t = R.pack_ln (R.Tv_UInst (R.pack_fv bind_lid) [u1;u2]) in
   let t = pack_ln (R.Tv_App t (a, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (b, Q_Implicit)) in
-  let t = pack_ln (R.Tv_App t (opened, Q_Implicit)) in
+  let t = pack_ln (R.Tv_App t (obs1, Q_Implicit)) in
+  let t = pack_ln (R.Tv_App t (obs2, Q_Implicit)) in
+  let t = pack_ln (R.Tv_App t (opens, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (pre1, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (post1, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (post2, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (e1, Q_Explicit)) in
-  let t = pack_ln (R.Tv_App t (e2, Q_Explicit)) in
-  pack_ln (R.Tv_App t (reveal_a, Q_Explicit))
-
-// Wrapper.bind_stt_atomic_ghost<u1, u2> #a #b #opened #pre1 #post1 #post2 e1 e2 reveal_b
-let mk_bind_atomic_ghost
-  (u1 u2:R.universe)
-  (a b opened pre1 post1 post2 e1 e2 reveal_b:R.term) =
-  let open R in
-  let bind_lid = mk_pulse_lib_core_lid "bind_stt_atomic_ghost" in
-  let t = R.pack_ln (R.Tv_UInst (R.pack_fv bind_lid) [u1;u2]) in
-  let t = pack_ln (R.Tv_App t (a, Q_Implicit)) in
-  let t = pack_ln (R.Tv_App t (b, Q_Implicit)) in
-  let t = pack_ln (R.Tv_App t (opened, Q_Implicit)) in
-  let t = pack_ln (R.Tv_App t (pre1, Q_Implicit)) in
-  let t = pack_ln (R.Tv_App t (post1, Q_Implicit)) in
-  let t = pack_ln (R.Tv_App t (post2, Q_Implicit)) in
-  let t = pack_ln (R.Tv_App t (e1, Q_Explicit)) in
-  let t = pack_ln (R.Tv_App t (e2, Q_Explicit)) in
-  pack_ln (R.Tv_App t (reveal_b, Q_Explicit))
+  pack_ln (R.Tv_App t (e2, Q_Explicit))
 
 // Wrapper.frame_stt<u> #ty #pre #post frame t
 let mk_frame_stt
@@ -498,7 +490,7 @@ let mk_frame_stt
 // Wrapper.frame_stt_atomic<u> #a #opened #pre #post frame e
 let mk_frame_stt_atomic (u:R.universe) (a opened pre post frame e:R.term)  =
   let open R in
-  let lid = mk_pulse_lib_core_lid "frame_stt_atomic" in
+  let lid = mk_pulse_lib_core_lid "frame_atomic" in
   let t = pack_ln (R.Tv_UInst (R.pack_fv lid) [u]) in
   let t = pack_ln (R.Tv_App t (a, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (opened, Q_Implicit)) in
@@ -508,12 +500,11 @@ let mk_frame_stt_atomic (u:R.universe) (a opened pre post frame e:R.term)  =
   pack_ln (R.Tv_App t (e, Q_Explicit))
 
 // Wrapper.frame_stt_ghost<u> #a #opened #pre #post frame e
-let mk_frame_stt_ghost (u:R.universe) (a opened pre post frame e:R.term)  =
+let mk_frame_stt_ghost (u:R.universe) (a pre post frame e:R.term)  =
   let open R in
-  let lid = mk_pulse_lib_core_lid "frame_stt_ghost" in
+  let lid = mk_pulse_lib_core_lid "frame_ghost" in
   let t = pack_ln (R.Tv_UInst (R.pack_fv lid) [u]) in
   let t = pack_ln (R.Tv_App t (a, Q_Implicit)) in
-  let t = pack_ln (R.Tv_App t (opened, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (pre, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (post, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (frame, Q_Explicit)) in
@@ -550,7 +541,7 @@ let mk_sub_stt
 // Wrapper.sub_stt_atomic<u> #a #opened #pre1 pre2 #post1 post2 () () e
 let mk_sub_stt_atomic (u:R.universe) (a opened pre1 pre2 post1 post2 e:R.term)  =
   let open R in
-  let lid = mk_pulse_lib_core_lid "sub_stt_atomic" in
+  let lid = mk_pulse_lib_core_lid "sub_atomic" in
   let t = pack_ln (R.Tv_UInst (R.pack_fv lid) [u]) in
   let t = pack_ln (R.Tv_App t (a, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (opened, Q_Implicit)) in
@@ -564,7 +555,7 @@ let mk_sub_stt_atomic (u:R.universe) (a opened pre1 pre2 post1 post2 e:R.term)  
 
 let mk_sub_inv_atomic (u:R.universe) (a pre post opens1 opens2 e : R.term) : R.term =
   let open R in
-  let lid = mk_pulse_lib_core_lid "sub_invs_stt_atomic" in
+  let lid = mk_pulse_lib_core_lid "sub_invs_atomic" in
   let head : R.term = pack_ln (R.Tv_UInst (R.pack_fv lid) [u]) in
   R.mk_app head
     [(a, Q_Implicit);
@@ -575,12 +566,11 @@ let mk_sub_inv_atomic (u:R.universe) (a pre post opens1 opens2 e : R.term) : R.t
      (e, Q_Explicit)]
 
 // Wrapper.sub_stt_ghost<u> #a #opened #pre1 pre2 #post1 post2 () () e
-let mk_sub_stt_ghost (u:R.universe) (a opened pre1 pre2 post1 post2 e:R.term)  =
+let mk_sub_stt_ghost (u:R.universe) (a pre1 pre2 post1 post2 e:R.term)  =
   let open R in
-  let lid = mk_pulse_lib_core_lid "sub_stt_ghost" in
+  let lid = mk_pulse_lib_core_lid "sub_ghost" in
   let t = pack_ln (R.Tv_UInst (R.pack_fv lid) [u]) in
   let t = pack_ln (R.Tv_App t (a, Q_Implicit)) in
-  let t = pack_ln (R.Tv_App t (opened, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (pre1, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (pre2, Q_Explicit)) in
   let t = pack_ln (R.Tv_App t (post1, Q_Implicit)) in
@@ -589,21 +579,9 @@ let mk_sub_stt_ghost (u:R.universe) (a opened pre1 pre2 post1 post2 e:R.term)  =
   let t = pack_ln (R.Tv_App t (`(), Q_Explicit)) in
   pack_ln (R.Tv_App t (e, Q_Explicit))
 
-let mk_sub_inv_ghost (u:R.universe) (a pre post opens1 opens2 e : R.term) : R.term =
-  let open R in
-  let lid = mk_pulse_lib_core_lid "sub_invs_stt_ghost" in
-  let head : R.term = pack_ln (R.Tv_UInst (R.pack_fv lid) [u]) in
-  R.mk_app head
-    [(a, Q_Implicit);
-     (opens1, Q_Implicit);
-     (opens2, Q_Implicit);
-     (pre, Q_Implicit);
-     (post, Q_Implicit);
-     (e, Q_Explicit)]
-
 let mk_par (u:R.universe) (aL aR preL postL preR postR eL eR:R.term) =
   let open R in
-  let lid = mk_pulse_lib_core_lid "stt_par" in
+  let lid = mk_pulse_lib_core_lid "par_stt" in
   let t = pack_ln (Tv_UInst (R.pack_fv lid) [u]) in
   let t = pack_ln (Tv_App t (aL, Q_Implicit)) in
   let t = pack_ln (Tv_App t (aR, Q_Implicit)) in
@@ -655,11 +633,11 @@ let mk_stt_atomic_comp_equiv (g:R.env) obs (u:R.universe) (res inames pre1 post1
                (mk_stt_atomic_comp obs u res inames pre2 post2)
   = admit ()
 
-let mk_stt_ghost_comp_equiv (g:R.env) (u:R.universe) (res inames pre1 post1 pre2 post2:R.term)
+let mk_stt_ghost_comp_equiv (g:R.env) (u:R.universe) (res pre1 post1 pre2 post2:R.term)
   (pre_eq:RT.equiv g pre1 pre2)
   (post_eq:RT.equiv g post1 post2)
-  : RT.equiv g (mk_stt_ghost_comp u res inames pre1 post1)
-               (mk_stt_ghost_comp u res inames pre2 post2)
+  : RT.equiv g (mk_stt_ghost_comp u res pre1 post1)
+               (mk_stt_ghost_comp u res pre2 post2)
   = admit ()
 
 let ref_lid = mk_pulse_lib_reference_lid "ref"
@@ -764,3 +742,8 @@ let inv_disjointness_goal (inv_p:T.term) (inames:T.term) (inv:T.term)
   let u0 = R.pack_universe R.Uv_Zero in
   let p = mk_reveal u0 bool_tm p in
   mk_eq2 u0 bool_tm (`false) p
+
+let mk_observability_lid l = ["PulseCore"; "Observability"; l]
+let observable_lid = mk_observability_lid "Observable"
+let unobservable_lid = mk_observability_lid "Unobservable"
+let neutral_lid = mk_observability_lid "Neutral"

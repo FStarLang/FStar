@@ -19,6 +19,8 @@ module A = PulseCore.Atomic
 module T = FStar.Tactics.V2
 module F = FStar.FunctionalExtensionality
 open PulseCore.InstantiatedSemantics
+open PulseCore.FractionalPermission
+open PulseCore.Observability
 
 let double_one_half () = ()
 let equate_by_smt = ()
@@ -109,87 +111,51 @@ let name_of_inv = Act.name_of_inv
 
 let add_already_there i is = Set.lemma_equal_intro (add_inv is i) is
 
-let stt (a:Type u#a) (pre:vprop) (post:a -> vprop)
-   = stt a pre post
-
-let inames_disj = Act.inames_disj
-
-type stt_unobservable (a:Type u#a) (opens:inames) (pre:vprop) (post:a -> vprop) =
-  A.stt_atomic a #A.Unobservable opens pre post
-
-type stt_atomic (a:Type u#a) (opens:inames) (pre:vprop) (post:a -> vprop) =
-  A.stt_atomic a #A.Observable opens pre post
- 
-type stt_ghost (a:Type u#a) (opens:inames) (pre:vprop) (post:a -> vprop) =
-  A.stt_ghost a opens pre post
- 
-let return (#a:Type u#a) (x:a) (p:a -> vprop) = I.return x p
-let return_stt_ghost (#a:Type u#a) (x:a) (p:a -> vprop) = A.return_ghost x p
+////////////////////////////////////////////////////////////////////
+// stt a pre post: The main type of a pulse computation
+////////////////////////////////////////////////////////////////////
+let stt = I.stt
+let return_stt_noeq = I.return
 let bind_stt = I.bind
-
-let lift_stt_atomic0 #a #opens #pre #post e =
-  A.(lift_atomic0 #_ #Observable #opens #pre #post e)
-let lift_stt_atomic1 #a #opens #pre #post e =
-  A.(lift_atomic1 #_ #Observable #opens #pre #post e)
-let lift_stt_atomic2 #a #opens #pre #post e =
-  A.(lift_atomic2 #_ #Observable #opens #pre #post e)
-
-let bind_sttg = A.bind_ghost
-
-let bind_stt_atomic_ghost #a #b #opens #pre1 #post1 #post2 e1 e2 reveal_b =
-  A.bind_atomic e1 (fun x -> A.lift_ghost (e2 x) reveal_b)
-
-let bind_stt_ghost_atomic #a #b #opened #pre1 #post1 #post2 e1 e2 reveal_a =
-  A.bind_atomic (A.lift_ghost e1 reveal_a) e2
-
-let lift_ghost_unobservable #a #opened #pre #post e reveal_a =
-  A.lift_ghost e reveal_a
-
-let lift_unobservable_atomic #a #opens #pre #post e =
-  A.lift_unobservable e
-
 let frame_stt = I.frame
-    
-let frame_stt_atomic frame e = A.frame_atomic frame e
-    
-let frame_stt_ghost = A.frame_ghost
-
+let par_stt = I.par
 let sub_stt = I.sub
-
 let conv_stt pf1 pf2 = I.conv #_ _ _ _ _ pf1 pf2
-
 let hide_div = I.hide_div
 
-let sub_stt_atomic pre2 post2 pf1 pf2 e =
-   A.sub_atomic pre2 post2 pf1 pf2 e
+////////////////////////////////////////////////////////////////////
+// Atomic computations
+////////////////////////////////////////////////////////////////////
+let stt_atomic a #obs inames pre post = A.stt_atomic a #obs inames pre post
+let lift_observability = A.lift_observability
+let return_neutral = A.return_atomic
+let return_neutral_noeq = A.return_atomic_noeq
+let bind_atomic = A.bind_atomic
+let frame_atomic = A.frame_atomic
+let sub_atomic = A.sub_atomic
+let sub_invs_atomic = A.sub_invs_stt_atomic
+let lift_atomic0 = A.lift_atomic0
+let lift_atomic1 = A.lift_atomic1
+let lift_atomic2 = A.lift_atomic2
+let new_invariant = A.new_invariant
+let with_invariant = A.with_invariant
 
-let sub_invs_stt_atomic e pf = A.sub_invs_stt_atomic e pf
-let sub_invs_stt_unobservable e pf = A.sub_invs_stt_atomic e pf
+////////////////////////////////////////////////////////////////////
+// Ghost computations
+////////////////////////////////////////////////////////////////////
+let stt_ghost = A.stt_ghost
+let bind_ghost = A.bind_ghost
+let lift_ghost_neutral = A.lift_ghost_neutral
+let lift_neutral_ghost = A.lift_neutral_ghost
+let frame_ghost = A.frame_ghost
+let sub_ghost = A.sub_ghost
 
-let sub_stt_ghost = A.sub_ghost
-
-let sub_invs_stt_ghost = A.sub_invs_stt_ghost
-
-let return_stt_unobservable #a x p = A.return_atomic x p
-
-let new_invariant p = A.new_invariant p
-
-let with_invariant_g (#a:Type)
-                     (#fp:vprop)
-                     (#fp':a -> vprop)
-                     (#f_opens:inames)
-                     (#p:vprop)
-                     (pf:non_informative_witness a)
-                     (i:inv p{not (mem_inv f_opens i)})
-                     ($f: unit -> stt_ghost a f_opens (p ** fp) (fun x -> p ** fp' x))
-: stt_unobservable a (add_inv f_opens i) fp fp'
-= let f = fun _ -> A.lift_ghost (f ()) pf in
-  A.with_invariant i f
-
-let with_invariant_a i f = A.with_invariant i f
+//////////////////////////////////////////////////////////////////////////
+// Some basic actions and ghost operations
+//////////////////////////////////////////////////////////////////////////
 
 let rewrite p q (pf:vprop_equiv p q)
-  : stt_ghost unit emp_inames p (fun _ -> q)
+  : stt_ghost unit p (fun _ -> q)
   = slprop_equiv_elim p q;
     A.noop q
 
@@ -197,7 +163,7 @@ let rewrite p q (pf:vprop_equiv p q)
 let rewrite_by (p:vprop) (q:vprop) 
                (t:unit -> T.Tac unit)
                (_:unit { T.with_tactic t (vprop_equiv p q) })
-  : stt_ghost unit emp_inames p (fun _ -> q)
+  : stt_ghost unit p (fun _ -> q)
   = let pf : squash (vprop_equiv p q) = T.by_tactic_seman t (vprop_equiv p q) in
     prop_squash_idem (vprop_equiv p q);
     rewrite p q (coerce_eq () pf)
@@ -215,14 +181,13 @@ let stt_admit _ _ _ = admit () //intentional
 let stt_atomic_admit _ _ _ = admit () //intentional
 let stt_ghost_admit _ _ _ = admit () //intentional
 
-let stt_par = I.par
     
 let assert_ (p:vprop) = A.noop p
 let assume_ (p:vprop) = admit() //intentional
 let drop_ (p:vprop) = A.drop p
 
 let unreachable (#a:Type) (#p:vprop) (#q:a -> vprop) (_:squash False)
-  : stt_ghost a emp_inames p q
+  : stt_ghost a p q
   = let v = FStar.Pervasives.false_elim #a () in
     let m = A.return_ghost v q in
     coerce_eq () m
@@ -297,9 +262,9 @@ let return_stt_alt (#a:Type u#a) (x:a) (p:a -> vprop)
 
 let refl_stt (#a:Type u#a) (x:a)
 : stt unit emp (fun _ -> pure (x == x))
-= let m : stt_ghost unit emp_inames emp (fun _ -> pure (x == x)) = intro_pure (x == x) () in
-  let m : stt_unobservable unit emp_inames emp (fun _ -> pure (x == x)) = lift_ghost_unobservable m unit_non_informative in
-  lift_stt_atomic0 (lift_unobservable_atomic m)
+= let m : stt_ghost unit emp (fun _ -> pure (x == x)) = intro_pure (x == x) () in
+  let m : stt_atomic unit #Neutral emp_inames emp (fun _ -> pure (x == x)) = lift_ghost_neutral m unit_non_informative in
+  lift_atomic0 m
 
 let frame_flip (#pre #a #post:_) (frame:slprop) (e:stt a pre post)
 : stt a (pre ** frame) (fun x -> frame ** post x)
@@ -318,9 +283,5 @@ let return_stt_a (#a:Type u#a) (x:a) (p:a -> vprop)
 let return_stt (#a:Type u#a) (x:a) (p:a -> vprop)
 : stt a (p x) (fun v -> p v ** pure (v == x))
 = bind_stt (return_stt_a x p) (fun _ -> return_stt_alt x p)
-
-let return_stt_ghost_noeq (#a:Type u#a) (x:a) (p:a -> vprop) = A.return_ghost_noeq x p
-
-let return_stt_unobservable_noeq #a x (p:(a -> vprop)) = A.return_atomic_noeq x p
 
 let as_atomic #a pre post (e:stt a pre post) = admit() //intentional

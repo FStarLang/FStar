@@ -32,9 +32,9 @@ val stt_typing (#f:RT.fstar_env)//needs to bind stt
                (_:RT.tot_typing f t (RT.tm_type u))
                (_:RT.tot_typing f pre vprop_tm)
                (_:RT.tot_typing f post (post_type t))
-  : GTot (RT.tot_typing f (mk_stt_comp u t pre post) (RT.tm_type u))
+  : GTot (RT.tot_typing f (mk_stt_comp u t pre post) (RT.tm_type RT.u_zero))
 
-val stt_atomic_typing (#obs:bool)
+val stt_atomic_typing (#obs:R.term)
                       (#f:RT.fstar_env)//needs to bind stt
                       (#u:R.universe)
                       (#inames:R.term)
@@ -45,17 +45,14 @@ val stt_atomic_typing (#obs:bool)
                       (_:RT.tot_typing f inames inames_tm)
                       (_:RT.tot_typing f pre vprop_tm)
                       (_:RT.tot_typing f post (post_type t))
-  : GTot (RT.tot_typing f (mk_stt_atomic_comp obs u t inames pre post) (RT.tm_type u))
+  : GTot (RT.tot_typing f (mk_stt_atomic_comp obs u t inames pre post) (RT.tm_type (u_max_two u)))
 
-               
 val stt_ghost_typing (#f:RT.fstar_env)//needs to bind stt
                      (#u:R.universe)
-                     (#inames:R.term)
                      (#t:R.term)
                      (#pre:R.term)
                      (#post:R.term)
                      (_:RT.tot_typing f t (RT.tm_type u))
-                     (_:RT.tot_typing f inames inames_tm)
                      (_:RT.tot_typing f pre vprop_tm)
                      (_:RT.tot_typing f post (post_type t))
-  : GTot (RT.tot_typing f (mk_stt_ghost_comp u t inames pre post) (RT.tm_type u))
+  : GTot (RT.tot_typing f (mk_stt_ghost_comp u t pre post) (RT.tm_type (u_max_two u)))

@@ -27,7 +27,7 @@ ensures pts_to x #one_half ('i + 1)
 fn increment_f (x: ref nat)
                (#pred #qpred: nat -> vprop)
                (l:L.lock (exists* v. pts_to x #one_half v ** pred v))
-               (f: (v:nat -> stt_ghost unit emp_inames 
+               (f: (v:nat -> stt_ghost unit 
                         (pred v ** qpred v ** pts_to x #one_half (v + 1))
                         (fun _ -> pred (v + 1) ** qpred (v + 1) ** pts_to x #one_half (v + 1))))
 requires pts_to x #one_half 'i ** qpred 'i
@@ -53,7 +53,7 @@ ensures pts_to x #one_half ('i + 1) ** qpred ('i + 1)
 fn increment_f2 (x: ref int)
                 (#pred #qpred: int -> vprop)
                 (l:L.lock (exists* v. pts_to x v ** pred v))
-                (f: (v:int -> vq:int -> stt_ghost unit emp_inames 
+                (f: (v:int -> vq:int -> stt_ghost unit 
                         (pred v ** qpred vq ** pts_to x (v + 1))
                         (fun _ -> pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))))
 requires qpred 'i
@@ -160,7 +160,7 @@ fn atomic_increment_f2
         (x: ref int)
         (#pred #qpred: int -> vprop)
         (l:inv (pts_to_refine x pred))
-        (f: (v:int -> vq:int -> stt_ghost unit emp_inames 
+        (f: (v:int -> vq:int -> stt_ghost unit 
                   (pred v ** qpred vq ** pts_to x (v + 1))
                   (fun _ -> pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))))
 requires qpred 'i
@@ -212,7 +212,7 @@ fn atomic_increment_f4
         (#invp : vprop)
         (#pred #qpred: int -> vprop)
         (l:inv invp)
-        (f: (v:int -> vq:int -> stt_ghost unit emp_inames 
+        (f: (v:int -> vq:int -> stt_ghost unit 
                   (pred v ** qpred vq ** pts_to x (v + 1))
                   (fun _ -> pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))))
 requires
@@ -253,13 +253,13 @@ fn atomic_increment_f5
         (#pred #qpred: int -> vprop)
         (l:inv invp)
         (elim_inv: 
-          (_:unit -> stt_ghost unit emp_inames invp (fun _ ->
+          (_:unit -> stt_ghost unit invp (fun _ ->
                     ((exists* v. pts_to x v ** pred v) ** tok))))
         (intro_inv:
-            (_:unit -> stt_ghost unit emp_inames 
+            (_:unit -> stt_ghost unit 
                         ((exists* v. pts_to x v ** pred v) ** tok)
                          (fun _ -> invp)))
-        (f: (v:int -> vq:int -> stt_ghost unit emp_inames 
+        (f: (v:int -> vq:int -> stt_ghost unit 
                   (pred v ** qpred vq ** pts_to x (v + 1))
                   (fun _ -> pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))))
 requires qpred 'i
@@ -331,7 +331,7 @@ fn atomic_increment_f6
         (#p:_) (#t:erased C.token)
         (#pred #qpred: int -> vprop)
         (l:inv (C.cancellable t (exists* v. pts_to x v ** pred v)))
-        (f: (v:int -> vq:int -> stt_ghost unit emp_inames 
+        (f: (v:int -> vq:int -> stt_ghost unit 
                   (pred v ** qpred vq ** pts_to x (v + 1))
                   (fun _ -> pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))))
 requires qpred 'i ** C.active p t

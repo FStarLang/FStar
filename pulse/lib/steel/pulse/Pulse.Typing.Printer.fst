@@ -45,7 +45,7 @@ let rec print_st_typing #g #t #c (d:st_typing g t c)
     | T_Frame g e c frame _ body ->
       Printf.sprintf "(T_Frame %s %s)" (Pulse.Syntax.Printer.term_to_string frame) (print_st_typing body)
 
-    | T_If _ _ _ _ _ _ _ _ _ _ _ ->
+    | T_If _ _ _ _ _ _ _ _ _ _ ->
       "T_If"
 
     | T_Match _ _ _ _ _ _ _ _ _ _ ->

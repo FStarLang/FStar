@@ -42,7 +42,7 @@ val post_typing_as_abstraction
 val intro_post_hint (g:env) (ctag_opt:option ctag) (ret_ty:option term) (post:term)
   : T.Tac (h:post_hint_for_env g{h.ctag_hint == ctag_opt})
 
-val post_hint_from_comp_typing (#g:env) (#c:comp_st) (ct:Metatheory.comp_typing_u g c)
+val post_hint_from_comp_typing (#g:env) (#c:comp_st) (ct:comp_typing_u g c)
   : post_hint_for_env g
 
 val extend_post_hint (g:env) (p:post_hint_for_env g)
@@ -170,7 +170,7 @@ val intro_comp_typing (g:env)
                       (res_typing:universe_of g (comp_res c) (comp_u c))
                       (x:var { fresh_wrt x g (freevars (comp_post c)) })
                       (post_typing:tot_typing (push_binding g x ppname_default (comp_res c)) (open_term (comp_post c) x) tm_vprop)
-  : T.Tac (comp_typing g c (comp_u c))
+  : T.Tac (comp_typing g c (universe_of_comp c))
 
 val match_comp_res_with_post_hint (#g:env) (#t:st_term) (#c:comp_st)
   (d:st_typing g t c)
