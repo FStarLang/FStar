@@ -21,6 +21,14 @@ open Pulse.Lib.Trade
 module GR = Pulse.Lib.GhostReference
 open Pulse.Class.PtsTo
 
+open FStar.Tactics.V2
+
+let vprop_equiv_refl_eq (v1 v2 : vprop) (_ : squash (v1 == v2)) : vprop_equiv v1 v2 =
+  vprop_equiv_refl v1
+
+let __tac () : Tac unit =
+  apply (`vprop_equiv_refl_eq)
+
 let pledge opens f v = (==>*) #opens f (f ** v)
 
 let pledge_sub_inv os1 os2 (f:vprop) (v:vprop)
@@ -307,30 +315,6 @@ fn elim_body_l
 }
 ```
 
-// ```pulse
-// unobservable
-// fn __elim_l (#is:invlist) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool)
-//             (i : inv (inv_p is f v1 v2 r1 r2){not (mem_inv (invlist_names is) i)})
-//             ()
-//   requires f ** GR.pts_to r1 #one_half false
-//   ensures  f ** v1
-//   opens (add_inv (invlist_names is) i)
-// {
-//   with_invariants (i <: inv _) {
-//     with_invlist_ghost is (elim_body_l #is #f v1 v2 r1 r2);
-//   }
-// }
-// ```
-
-
-open FStar.Tactics.V2
-
-let vprop_equiv_refl_eq (v1 v2 : vprop) (_ : squash (v1 == v2)) : vprop_equiv v1 v2 =
-  vprop_equiv_refl v1
-
-let __tac () : Tac unit =
-  apply (`vprop_equiv_refl_eq)
-
 ```pulse
 ghost
 fn flip_invp
@@ -379,23 +363,6 @@ fn elim_body_r
   flip_invp is f v2 v1 r2 r1;
 }
 ```
-
-// ```pulse
-// unobservable
-// fn __elim_r (#is:invlist) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool)
-//             (i : inv (inv_p is f v1 v2 r1 r2){not (mem_inv (invlist_names is) i)})
-//             ()
-//   requires f ** GR.pts_to r2 #one_half false
-//   ensures  f ** v2
-//   opens (add_inv (invlist_names is) i)
-// {
-//   with_invariants (i <: inv _) {
-//     with_invlist_ghost is (elim_body_r #is #f v1 v2 r1 r2);
-//   }
-// }
-// ```
-
-#set-options "--debug Pulse.Lib.Par.Pledge --debug_level SMTQuery --print_implicits --print_universes"
 
 let split_ret (is:invlist) = xi:invlist_elem {not (mem_inv (invlist_names is) (dsnd xi))}
 
