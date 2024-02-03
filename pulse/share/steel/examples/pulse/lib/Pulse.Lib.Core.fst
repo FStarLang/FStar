@@ -115,6 +115,7 @@ let add_already_there i is = Set.lemma_equal_intro (add_inv is i) is
 // stt a pre post: The main type of a pulse computation
 ////////////////////////////////////////////////////////////////////
 let stt = I.stt
+let return_stt_noeq = I.return
 let bind_stt = I.bind
 let frame_stt = I.frame
 let par_stt = I.par
@@ -125,7 +126,7 @@ let hide_div = I.hide_div
 ////////////////////////////////////////////////////////////////////
 // Atomic computations
 ////////////////////////////////////////////////////////////////////
-let stt_atomic = A.stt_atomic
+let stt_atomic a #obs inames pre post = A.stt_atomic a #obs inames pre post
 let lift_observability = A.lift_observability
 let return_neutral = A.return_atomic
 let return_neutral_noeq = A.return_atomic_noeq

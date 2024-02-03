@@ -18,7 +18,7 @@ let (elim_pure_head_ty : FStar_Reflection_Types.term) =
                Pulse_Reflection_Util.emp_lid))) in
   let cod =
     Pulse_Reflection_Util.mk_stt_ghost_comp Pulse_Syntax_Pure.u0 squash_p
-      Pulse_Reflection_Util.emp_inames_tm pure_p post in
+      pure_p post in
   Pulse_Reflection_Util.mk_arrow
     ((FStar_Reflection_V2_Builtins.pack_ln
         (FStar_Reflection_V2_Data.Tv_FVar
@@ -50,7 +50,7 @@ let (elim_pure_comp : Pulse_Syntax_Base.host_term -> Pulse_Syntax_Base.comp)
         Pulse_Syntax_Base.pre = (Pulse_Syntax_Base.tm_pure (tm_fstar p));
         Pulse_Syntax_Base.post = Pulse_Syntax_Base.tm_emp
       } in
-    Pulse_Syntax_Base.C_STGhost (Pulse_Syntax_Base.tm_emp_inames, st)
+    Pulse_Syntax_Base.C_STGhost st
 let (elim_pure_typing :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.host_term ->

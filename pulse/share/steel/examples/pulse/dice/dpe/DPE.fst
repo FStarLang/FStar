@@ -156,7 +156,7 @@ fn alloc_global_state ()
   let session_table_c = HT.alloc #sid_t #session_state sid_hash 256sz;
   with stm. assert (models session_table_c stm);
   let session_table = R.alloc session_table_c;
-  Pulse.Lib.OnRange.on_range_empty #emp_inames (session_perm stm) 0;
+  Pulse.Lib.OnRange.on_range_empty (session_perm stm) 0;
   fold (global_state_lock_pred sid_counter session_table);
   let lock = L.new_lock (global_state_lock_pred sid_counter session_table);
   mk_global_state sid_counter session_table lock
@@ -200,7 +200,7 @@ fn frame_session_perm_on_range
   ensures
     on_range (session_perm stm1) i j
 {
-  Pulse.Lib.OnRange.on_range_weaken #emp_inames
+  Pulse.Lib.OnRange.on_range_weaken
     (session_perm stm0)
     (session_perm stm1)
     i j
@@ -366,7 +366,7 @@ fn open_session' ()
         with pht1. assert (models ht pht1);
         frame_session_perm_on_range pht0 pht1 i j;
         rewrite emp as (session_perm pht1 j);
-        Pulse.Lib.OnRange.on_range_snoc #emp_inames () #(session_perm pht1);
+        Pulse.Lib.OnRange.on_range_snoc () #(session_perm pht1);
         fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
         L.release global_state.lock;
         Some sid
@@ -482,7 +482,7 @@ fn take_session_state (sid:sid_t) (replace:session_state)
             let ok = insert global_state.session_table sid replace;
             if ok
             {
-              Pulse.Lib.OnRange.on_range_get #emp_inames (U32.v sid);
+              Pulse.Lib.OnRange.on_range_get (U32.v sid);
               rewrite (session_perm stm (U32.v sid))
                    as (session_state_perm st);
               with stm'. assert (models ht stm');
@@ -493,7 +493,7 @@ fn take_session_state (sid:sid_t) (replace:session_state)
               frame_session_perm_on_range stm stm' (U32.v sid `Prims.op_Addition` 1) (U32.v max_sid);
               rewrite (session_state_perm replace)
                   as  (session_perm stm' (U32.v sid));
-              Pulse.Lib.OnRange.on_range_put #emp_inames 
+              Pulse.Lib.OnRange.on_range_put 
                     0 (U32.v sid) (U32.v max_sid)
                     #(session_perm stm');
               fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);

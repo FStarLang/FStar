@@ -36,7 +36,7 @@ let rec fib0 (n:nat) : nat =
   else fib0 (n-1) + fib0 (n-2)
 
 let just #a (x:a) : stt a emp (fun _ -> emp) =
-  sub_stt _ _ (magic()) (magic ()) (Pulse.Lib.Core.return x (fun _ -> emp))
+  sub_stt _ _ (magic()) (magic ()) (Pulse.Lib.Core.return_stt_noeq x (fun _ -> emp))
 
 ```pulse
 fn pth (n:pos) ()

@@ -24,7 +24,7 @@ open Pulse.Class.PtsTo
 let pledge opens f v = (==>*) #opens f (f ** v)
 
 let pledge_sub_inv os1 os2 (f:vprop) (v:vprop)
-  : stt_ghost unit emp_inames (pledge os1 f v) (fun _ -> pledge os2 f v)
+  : stt_ghost unit (pledge os1 f v) (fun _ -> pledge os2 f v)
   = trade_sub_inv _ _
 
 ```pulse

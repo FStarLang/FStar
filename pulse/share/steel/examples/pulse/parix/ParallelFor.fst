@@ -416,7 +416,7 @@ fn
 __ffold
   (p : (nat -> vprop))
   (fp : (nat -> vprop))
-  (ss : (i:nat -> stt_ghost unit emp_inames (p i ** fp i) (fun () -> fp (i+1))))
+  (ss : (i:nat -> stt_ghost unit (p i ** fp i) (fun () -> fp (i+1))))
   (n : nat)
   (kk: (
         (i:nat) -> stt unit (pure (i <= n) ** fp i ** range p i n) (fun _ -> fp n)
@@ -441,7 +441,7 @@ __ffold
 let ffold
   (p : (nat -> vprop))
   (fp : (nat -> vprop))
-  (ss : (i:nat -> stt_ghost unit emp_inames (p i ** fp i) (fun () -> fp (i+1))))
+  (ss : (i:nat -> stt_ghost unit (p i ** fp i) (fun () -> fp (i+1))))
   (n:nat)
   : (i:nat) -> stt unit (pure (i <= n) ** fp i ** range p i n) (fun _ -> fp n)
   = fix_stt_1 (__ffold p fp ss n)
@@ -452,7 +452,7 @@ fn
 __funfold
   (p : (nat -> vprop))
   (fp : (nat -> vprop))
-  (ss : (i:nat -> stt_ghost unit emp_inames (fp (i+1)) (fun () -> p i ** fp i)))
+  (ss : (i:nat -> stt_ghost unit (fp (i+1)) (fun () -> p i ** fp i)))
   (kk: (
         (n:nat) -> stt unit (fp n) (fun _ -> fp 0 ** range p 0 n)
   ))
@@ -477,7 +477,7 @@ __funfold
 let funfold
   (p : (nat -> vprop))
   (fp : (nat -> vprop))
-  (ss : (i:nat -> stt_ghost unit emp_inames (fp (i+1)) (fun () -> p i ** fp i)))
+  (ss : (i:nat -> stt_ghost unit (fp (i+1)) (fun () -> p i ** fp i)))
   : (n:nat) -> stt unit (fp n) (fun _ -> fp 0 ** range p 0 n)
   = fix_stt_1 (__funfold p fp ss)
 
@@ -489,8 +489,8 @@ parallel_for_wsr
   (full_pre : (nat -> vprop))
   (full_post : (nat -> vprop))
   (f : (i:nat -> stt unit (pre i) (fun () -> post i)))
-  (unfold_pre : (i:nat -> stt_ghost unit emp_inames (full_pre (i+1)) (fun () -> pre i ** full_pre i)))
-  (fold_post : (i:nat -> stt_ghost unit emp_inames (post i ** full_post i) (fun () -> full_post (i+1))))
+  (unfold_pre : (i:nat -> stt_ghost unit (full_pre (i+1)) (fun () -> pre i ** full_pre i)))
+  (fold_post : (i:nat -> stt_ghost unit (post i ** full_post i) (fun () -> full_post (i+1))))
   (n : pos)
   requires full_pre n ** full_post 0
   ensures full_pre 0 ** full_post n

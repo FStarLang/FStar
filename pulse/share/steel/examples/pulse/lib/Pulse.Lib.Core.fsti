@@ -149,6 +149,12 @@ val add_already_there #p (i : inv p) (is : inames)
 [@@extract_as_impure_effect]
 val stt (a:Type u#a) (pre:vprop) (post:a -> vprop) : Type0
 
+val return_stt_noeq
+    (#a:Type u#a)
+    (x:a)
+    (p:a -> vprop)
+: stt a (p x) p
+
 val bind_stt
   (#a:Type u#a) (#b:Type u#b)
   (#pre1:vprop) (#post1:a -> vprop) (#post2:b -> vprop)
@@ -233,7 +239,7 @@ val hide_div #a #pre #post (f:unit -> Dv (stt a pre post))
 [@@extract_as_impure_effect]
 val stt_atomic
     (a:Type u#a)
-    (#obs:observability)
+    (#[T.exact (`Observable)] obs:observability)
     (opens:inames)
     (pre:vprop)
     (post:a -> vprop)

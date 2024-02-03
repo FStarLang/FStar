@@ -79,15 +79,16 @@ let comp_to_ast_term (c:Sugar.computation_type) : err A.term =
     | Sugar.STUnobservable ->
       (* hack for now *)
       let is = mk_term (Var (Ident.lid_of_str "Pulse.Lib.Core.emp_inames")) r Expr in
-      let h = mk_term (Var stt_unobservable_lid) r Expr in
+      let unobs = mk_term (Var (Ident.lid_of_str "PulseCore.Observability.Unobservable")) r Expr in
+      let h = mk_term (Var stt_atomic_lid) r Expr in
       let h = mk_term (App (h, return_ty, Nothing)) r Expr in
+      let h = mk_term (App (h, unobs, Hash)) r Expr in
       mk_term (App (h, is, Nothing)) r Expr
-    | Sugar.STGhost ->
+   | Sugar.STGhost ->
       (* hack for now *)
-      let is = mk_term (Var (Ident.lid_of_str "Pulse.Lib.Core.emp_inames")) r Expr in
       let h = mk_term (Var stt_ghost_lid) r Expr in
       let h = mk_term (App (h, return_ty, Nothing)) r Expr in
-      mk_term (App (h, is, Nothing)) r Expr
+      h
   in
   let! pre = vprop_to_ast_term c.precondition in
   let! post = vprop_to_ast_term c.postcondition in

@@ -16,6 +16,7 @@
 
 module Pulse.Lib.Reference
 open FStar.Tactics
+open PulseCore.Observability
 open Pulse.Lib.Core
 open PulseCore.FractionalPermission
 open FStar.Ghost
@@ -48,42 +49,42 @@ val free (#a:Type) (r:ref a) (#n:erased a)
   : stt unit (pts_to r n) (fun _ -> emp)
 
 val share (#a:Type) (r:ref a) (#v:erased a) (#p:perm)
-  : stt_ghost unit emp_inames
+  : stt_ghost unit
       (pts_to r #p v)
       (fun _ ->
        pts_to r #(half_perm p) v **
        pts_to r #(half_perm p) v)
 
 val gather (#a:Type) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
-  : stt_ghost unit emp_inames
+  : stt_ghost unit
       (pts_to r #p0 x0 ** pts_to r #p1 x1)
       (fun _ -> pts_to r #(sum_perm p0 p1) x0 ** pure (x0 == x1))
 
 (* Share/gather specialized to half permission *)
 val share2 (#a:Type) (r:ref a) (#v:erased a)
-  : stt_ghost unit emp_inames
+  : stt_ghost unit
       (pts_to r v)
       (fun _ -> pts_to r #one_half v ** pts_to r #one_half v)
 
 val gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a)
-  : stt_ghost unit emp_inames
+  : stt_ghost unit
       (pts_to r #one_half x0 ** pts_to r #one_half x1)
       (fun _ -> pts_to r x0 ** pure (x0 == x1))
 
 val read_atomic (r:ref U32.t) (#n:erased U32.t) (#p:perm)
-  : stt_atomic U32.t emp_inames
+  : stt_atomic U32.t #Observable emp_inames
     (pts_to r #p n)
     (fun x -> pts_to r #p n ** pure (reveal n == x))
 
 val write_atomic (r:ref U32.t) (x:U32.t) (#n:erased U32.t)
-  : stt_atomic unit emp_inames
+  : stt_atomic unit #Observable emp_inames
         (pts_to r n) 
         (fun _ -> pts_to r (hide x))
 
 let cond b (p q:vprop) = if b then p else q
 
 val cas (r:ref U32.t) (u v:U32.t) (#i:erased U32.t)
-  : stt_atomic bool emp_inames 
+  : stt_atomic bool #Observable emp_inames 
     (pts_to r i)
     (fun b ->
       cond b (pts_to r v ** pure (reveal i == u)) 
@@ -104,11 +105,11 @@ val pts_to_injective_eq (#a:_)
                         (#p #q:_)
                         (#v0 #v1:a)
                         (r:ref a)
-  : stt_ghost unit emp_inames
+  : stt_ghost unit
       (pts_to r #p v0 ** pts_to r #q v1)
       (fun _ -> pts_to r #p v0 ** pts_to r #q v1 ** pure (v0 == v1))
 
 val pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
-  : stt_ghost unit emp_inames
+  : stt_ghost unit
       (pts_to r #p v)
       (fun _ -> pts_to r #p v ** pure (p `lesser_equal_perm` full_perm))

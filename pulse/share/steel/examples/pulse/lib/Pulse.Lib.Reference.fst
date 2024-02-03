@@ -122,13 +122,13 @@ ensures pts_to r #(sum_perm p0 p1) x0 ** pure (x0 == x1)
 let gather = gather'
 
 let share2 (#a:Type) (r:ref a) (#v:erased a)
-: stt_ghost unit emp_inames
+: stt_ghost unit
   (pts_to r v)
   (fun _ -> pts_to r #one_half v ** pts_to r #one_half v)
 = share #a r #v
 
 let gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a)
-: stt_ghost unit emp_inames
+: stt_ghost unit
       (pts_to r #one_half x0 ** pts_to r #one_half x1)
       (fun () -> pts_to r x0  ** pure (x0 == x1))
 = gather r
@@ -205,7 +205,7 @@ let with_local
             (post v ** (exists* (x:a). H.pts_to r #full_perm (U.raise_val x)))
             (fun v -> post v ** (exists* (x:U.raise_t a). H.pts_to r #full_perm x))
         = bind_stt (raise_exists (post v) (H.pts_to r #full_perm))
-                   (fun _ -> return v (fun v -> post v ** (exists* (x:U.raise_t a). H.pts_to r #full_perm x)))
+                   (fun _ -> return_stt_noeq v (fun v -> post v ** (exists* (x:U.raise_t a). H.pts_to r #full_perm x)))
       in
       bind_stt m m0
   in

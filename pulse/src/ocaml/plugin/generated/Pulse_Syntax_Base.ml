@@ -160,7 +160,7 @@ type comp =
   | C_Tot of term 
   | C_ST of st_comp 
   | C_STAtomic of term * observability * st_comp 
-  | C_STGhost of term * st_comp 
+  | C_STGhost of st_comp 
 let (uu___is_C_Tot : comp -> Prims.bool) =
   fun projectee -> match projectee with | C_Tot _0 -> true | uu___ -> false
 let (__proj__C_Tot__item___0 : comp -> term) =
@@ -183,11 +183,9 @@ let (__proj__C_STAtomic__item___2 : comp -> st_comp) =
   fun projectee -> match projectee with | C_STAtomic (inames, obs, _2) -> _2
 let (uu___is_C_STGhost : comp -> Prims.bool) =
   fun projectee ->
-    match projectee with | C_STGhost (inames, _1) -> true | uu___ -> false
-let (__proj__C_STGhost__item__inames : comp -> term) =
-  fun projectee -> match projectee with | C_STGhost (inames, _1) -> inames
-let (__proj__C_STGhost__item___1 : comp -> st_comp) =
-  fun projectee -> match projectee with | C_STGhost (inames, _1) -> _1
+    match projectee with | C_STGhost _0 -> true | uu___ -> false
+let (__proj__C_STGhost__item___0 : comp -> st_comp) =
+  fun projectee -> match projectee with | C_STGhost _0 -> _0
 type comp_st = comp
 type pattern =
   | Pat_Cons of fv * (pattern * Prims.bool) Prims.list 
@@ -243,7 +241,7 @@ let (ctag_of_comp_st : comp_st -> ctag) =
     match c with
     | C_ST uu___ -> STT
     | C_STAtomic (uu___, uu___1, uu___2) -> STT_Atomic
-    | C_STGhost (uu___, uu___1) -> STT_Ghost
+    | C_STGhost uu___ -> STT_Ghost
 type proof_hint_type__ASSERT__payload = {
   p: vprop }
 and proof_hint_type__FOLD__payload =
@@ -600,8 +598,7 @@ let (eq_comp : comp -> comp -> Prims.bool) =
       | (C_ST s1, C_ST s2) -> eq_st_comp s1 s2
       | (C_STAtomic (i1, o1, s1), C_STAtomic (i2, o2, s2)) ->
           ((eq_tm i1 i2) && (o1 = o2)) && (eq_st_comp s1 s2)
-      | (C_STGhost (i1, s1), C_STGhost (i2, s2)) ->
-          (eq_tm i1 i2) && (eq_st_comp s1 s2)
+      | (C_STGhost s1, C_STGhost s2) -> eq_st_comp s1 s2
       | uu___ -> false
 let rec eq_list :
   'a .
@@ -820,7 +817,7 @@ let (comp_res : comp -> term) =
     | C_Tot ty -> ty
     | C_ST s -> s.res
     | C_STAtomic (uu___, uu___1, s) -> s.res
-    | C_STGhost (uu___, s) -> s.res
+    | C_STGhost s -> s.res
 let (stateful_comp : comp -> Prims.bool) =
   fun c ->
     ((uu___is_C_ST c) || (uu___is_C_STAtomic c)) || (uu___is_C_STGhost c)
@@ -829,22 +826,24 @@ let (st_comp_of_comp : comp -> st_comp) =
     match c with
     | C_ST s -> s
     | C_STAtomic (uu___, uu___1, s) -> s
-    | C_STGhost (uu___, s) -> s
+    | C_STGhost s -> s
 let (with_st_comp : comp -> st_comp -> comp) =
   fun c ->
     fun s ->
       match c with
       | C_ST uu___ -> C_ST s
       | C_STAtomic (inames, obs, uu___) -> C_STAtomic (inames, obs, s)
-      | C_STGhost (inames, uu___) -> C_STGhost (inames, s)
+      | C_STGhost uu___ -> C_STGhost s
 let (comp_u : comp -> universe) = fun c -> (st_comp_of_comp c).u
+let (universe_of_comp : comp_st -> FStar_Reflection_Types.universe) =
+  fun c ->
+    match c with
+    | C_ST uu___ -> FStar_Reflection_Typing.u_zero
+    | uu___ -> Pulse_Reflection_Util.u_max_two (comp_u c)
 let (comp_pre : comp -> vprop) = fun c -> (st_comp_of_comp c).pre
 let (comp_post : comp -> vprop) = fun c -> (st_comp_of_comp c).post
 let (comp_inames : comp -> term) =
-  fun c ->
-    match c with
-    | C_STAtomic (inames, uu___, uu___1) -> inames
-    | C_STGhost (inames, uu___) -> inames
+  fun c -> match c with | C_STAtomic (inames, uu___, uu___1) -> inames
 type nvar = (ppname * var)
 let (v_as_nv : var -> nvar) = fun x -> (ppname_default, x)
 let (as_binder : term -> binder) =

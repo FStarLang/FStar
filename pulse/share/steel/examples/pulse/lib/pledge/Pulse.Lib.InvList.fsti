@@ -33,19 +33,19 @@ val shift_invlist_one
   (is : invlist{not (mem_inv (invlist_names is) i)})
   (#pre:vprop)
   (#post : a -> vprop)
-  (f : unit -> stt_unobservable a emp_inames (invlist_v ((| p, i |) :: is) ** pre) (fun v -> invlist_v ((| p, i |) :: is) ** post v)) :
-       unit -> stt_unobservable a emp_inames (invlist_v is ** (p ** pre)) (fun v -> invlist_v is ** (p ** post v))
+  (f : unit -> stt_atomic a #Unobservable emp_inames (invlist_v ((| p, i |) :: is) ** pre) (fun v -> invlist_v ((| p, i |) :: is) ** post v)) :
+       unit -> stt_atomic a #Unobservable emp_inames (invlist_v is ** (p ** pre)) (fun v -> invlist_v is ** (p ** post v))
 
 val with_invlist (#a:Type0) (#pre : vprop) (#post : a -> vprop)
   (is : invlist)
-  (f : unit -> stt_unobservable a emp_inames (invlist_v is ** pre) (fun v -> invlist_v is ** post v))
-  : stt_unobservable a (invlist_names is) pre (fun v -> post v)
+  (f : unit -> stt_atomic a #Unobservable emp_inames (invlist_v is ** pre) (fun v -> invlist_v is ** post v))
+  : stt_atomic a #Unobservable (invlist_names is) pre (fun v -> post v)
 
 (* A helper for a ghost-unit function. *)
 val with_invlist_ghost (#pre : vprop) (#post : vprop)
   (is : invlist)
-  (f : unit -> stt_ghost unit emp_inames (invlist_v is ** pre) (fun _ -> invlist_v is ** post))
-  : stt_unobservable unit (invlist_names is) pre (fun _ -> post)
+  (f : unit -> stt_ghost unit (invlist_v is ** pre) (fun _ -> invlist_v is ** post))
+  : stt_atomic unit #Unobservable (invlist_names is) pre (fun _ -> post)
 
 let invlist_sub (is1 is2 : invlist) : prop =
   inames_subset (invlist_names is1) (invlist_names is2)

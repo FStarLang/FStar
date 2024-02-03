@@ -45,7 +45,7 @@ fn elim_implies (#p #q:vprop) ()
 {
   open Pulse.Lib.Stick;
   rewrite (p @==> q) as (stick #emp_inames p q);
-  elim_stick #emp_inames p q;
+  elim_stick p q;
 }
 ```
 

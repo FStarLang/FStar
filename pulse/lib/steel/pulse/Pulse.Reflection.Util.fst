@@ -22,6 +22,9 @@ module RT = FStar.Reflection.Typing
 module RU = Pulse.RuntimeUtils
 open FStar.List.Tot
 
+let u_two = RT.(u_succ (u_succ u_zero))
+let u_max_two u = (RT.u_max u_two u)
+
 let pulse_lib_core = ["Pulse"; "Lib"; "Core"]
 let mk_pulse_lib_core_lid s = pulse_lib_core@[s]
 
@@ -740,7 +743,7 @@ let inv_disjointness_goal (inv_p:T.term) (inames:T.term) (inv:T.term)
   let p = mk_reveal u0 bool_tm p in
   mk_eq2 u0 bool_tm (`false) p
 
-let mk_observability_lid l = ["Pulse"; "Lib"; "Observability"; l]
-let observable_lid = mk_observability_lid "observable"
-let unobservable_lid = mk_observability_lid "unobservable"
-let neutral_lid = mk_observability_lid "neutral"
+let mk_observability_lid l = ["PulseCore"; "Observability"; l]
+let observable_lid = mk_observability_lid "Observable"
+let unobservable_lid = mk_observability_lid "Unobservable"
+let neutral_lid = mk_observability_lid "Neutral"

@@ -22,7 +22,7 @@ open Pulse.Lib.InvList
 module T = FStar.Tactics
 
 let trade_elim_t is hyp extra concl : Type u#2 =
-  unit -> stt_ghost unit emp_inames (invlist_v is ** extra ** hyp) (fun _ -> invlist_v is ** concl)
+  unit -> stt_ghost unit (invlist_v is ** extra ** hyp) (fun _ -> invlist_v is ** concl)
 
 let trade_elim_exists (is:invlist) (hyp extra concl : vprop) : vprop =
   pure (squash (trade_elim_t is hyp extra concl))
@@ -37,7 +37,7 @@ fn __intro_trade
   (hyp concl : vprop)
   (extra : vprop)
   (f_elim: unit -> (
-    stt_ghost unit emp_inames
+    stt_ghost unit
     (invlist_v is ** extra ** hyp)
     (fun _ -> invlist_v is ** concl)
   ))

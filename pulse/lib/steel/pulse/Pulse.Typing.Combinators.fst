@@ -200,12 +200,29 @@ let weaken_comp_inames (#g:env) (#e:st_term) (#c:comp_st) (d_e:st_typing g e c) 
 let st_ghost_as_atomic (c:comp_st { C_STGhost? c }) = 
   C_STAtomic tm_emp_inames Neutral (st_comp_of_comp c)
 
+let try_lift_ghost_atomic (#g:env) (#e:st_term) (#c:comp_st { C_STGhost? c }) (d:st_typing g e c)
+: T.Tac (option (st_typing g e (st_ghost_as_atomic c)))
+= let w = try_get_non_informative_witness g (comp_u c) (comp_res c) in
+  match w with
+  | None -> None
+  | Some w ->
+    let d = T_Lift _ _ _ _ d (Lift_Ghost_Neutral _ c w) in
+    Some d
+
 let lift_ghost_atomic (#g:env) (#e:st_term) (#c:comp_st { C_STGhost? c }) (d:st_typing g e c)
 : T.Tac (st_typing g e (st_ghost_as_atomic c))
-= let w = get_non_informative_witness g (comp_u c) (comp_res c) in
-  let d = T_Lift _ _ _ _ d (Lift_Ghost_Neutral _ c w) in
-  d
-
+= let w = try_lift_ghost_atomic d in
+  match w with
+  | None -> 
+    let open Pulse.PP in
+    let t = comp_res c in
+    fail_doc g (Some t.range) [
+        text "Expected a term with a non-informative (e.g., erased) type; got"
+          ^/^ pp t
+    ]
+  | Some d ->
+    d
+    
 let mk_bind_ghost_ghost
   : bind_t C_STGhost? C_STGhost?
   = fun g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing ->
@@ -295,6 +312,26 @@ let rec mk_bind (g:env)
     let d_e2  = T_Lift _ _ _ _ d_e2 (Lift_STAtomic_ST _ c2) in
     let (| t, c, d |) = mk_bind g pre e1 e2 _ _ px d_e1 d_c1res d_e2 res_typing post_typing in
     (| t, c, d |)
+
+  | C_STGhost _, C_STAtomic _ Neutral _ -> (
+    match try_lift_ghost_atomic d_e1 with
+    | Some d_e1 ->
+      mk_bind g pre e1 e2 _ c2 px d_e1 d_c1res d_e2 res_typing post_typing
+    | None ->
+      let d_e2 = T_Lift _ _ _ _ d_e2 (Lift_Neutral_Ghost _ c2) in
+      let (| t, c, d |) = mk_bind g pre e1 e2 _ _ px d_e1 d_c1res d_e2 res_typing post_typing in
+      (| t, c, d |)
+  )
+
+  | C_STAtomic _ Neutral _, C_STGhost _ -> (
+    match try_lift_ghost_atomic d_e2 with
+    | Some d_e2 ->
+      let (| t, c, d |) = mk_bind g pre e1 e2 _ _ px d_e1 d_c1res d_e2 res_typing post_typing in
+      (| t, c, d |)
+    | None ->
+      let d_e1 = T_Lift _ _ _ _ d_e1 (Lift_Neutral_Ghost _ c1) in
+      mk_bind g pre e1 e2 _ c2 px d_e1 d_c1res d_e2 res_typing post_typing
+  )
 
   | C_STGhost _, C_ST _
   | C_STGhost _, C_STAtomic _ _ _ ->

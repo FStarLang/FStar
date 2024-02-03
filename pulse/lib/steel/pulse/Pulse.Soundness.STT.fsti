@@ -34,8 +34,6 @@ val stt_typing (#f:RT.fstar_env)//needs to bind stt
                (_:RT.tot_typing f post (post_type t))
   : GTot (RT.tot_typing f (mk_stt_comp u t pre post) (RT.tm_type RT.u_zero))
 
-let u_two = RT.(u_succ (u_succ u_zero))
-let u_max_two u = (RT.u_max u_two u)
 val stt_atomic_typing (#obs:R.term)
                       (#f:RT.fstar_env)//needs to bind stt
                       (#u:R.universe)

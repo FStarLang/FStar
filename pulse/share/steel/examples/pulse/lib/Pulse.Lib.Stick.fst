@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.Stick
+open PulseCore.Observability
 open Pulse.Lib.Pervasives
 
 (* This is shows that trades can be implemented in unobservable, with a specialized
@@ -22,7 +23,7 @@ open Pulse.Lib.Pervasives
    from Guido that defines trades in a more general form. *)
    
 let implication opens p q =
-  unit -> stt_unobservable unit opens p (fun _ -> q)
+  unit -> stt_atomic unit #Unobservable opens p (fun _ -> q)
 
 let is_implication opens p q : prop =
   squash (implication opens p q)
@@ -31,7 +32,7 @@ assume
 val indefinite_description_implication
   (#opens: inames) (#p #q:vprop)
   (_:squash (is_implication opens p q))
-: unit -> stt_unobservable unit opens p (fun _ -> q)
+: unit -> stt_atomic unit #Unobservable opens p (fun _ -> q)
 
 let token (v:vprop) = v
 
@@ -72,7 +73,7 @@ fn intro_trade
   (hyp concl: vprop)
   (v: vprop)
   (f_elim: unit -> (
-    stt_unobservable unit is
+    stt_atomic unit #Unobservable is
     (v ** hyp)
     (fun _ -> concl)
   ))
@@ -91,7 +92,7 @@ let sub_inv
     (hyp concl:vprop)
     (f:implication os1 hyp concl)
 : implication os2 hyp concl
-= fun _ -> sub_invs_stt_unobservable (f ()) ()
+= fun _ -> sub_invs_atomic (f ()) ()
 
 let sub_inv_squash
     (os1 : inames) 
@@ -121,6 +122,6 @@ ensures trade #os2 hyp concl
 ```
 
 let stick #is = admit()
-let elim_stick #is = admit()
-let intro_stick #is = admit()
+let elim_stick = admit()
+let intro_stick = admit()
 let stick_sub_inv #os1 #os2 = admit()

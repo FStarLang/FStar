@@ -10,7 +10,7 @@ val elim_forall
     (#a:Type)
     (#p:a->vprop)
     (x:a)
-: stt_ghost unit emp_inames
+: stt_ghost unit
     (forall* x. p x)
     (fun _ -> p x)
 
@@ -18,8 +18,8 @@ val intro_forall
     (#a:Type)
     (#p:a->vprop)
     (v:vprop)
-    (f_elim : (x:a -> stt_ghost unit emp_inames v (fun _ -> p x)))
-: stt_ghost unit emp_inames
+    (f_elim : (x:a -> stt_ghost unit v (fun _ -> p x)))
+: stt_ghost unit
     v
     (fun _ -> forall* x. p x)
 

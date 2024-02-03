@@ -77,26 +77,31 @@ let (comp_to_ast_term :
                    FStar_Ident.lid_of_str "Pulse.Lib.Core.emp_inames" in
                  FStar_Parser_AST.Var uu___1 in
                FStar_Parser_AST.mk_term uu___ r FStar_Parser_AST.Expr in
+             let unobs =
+               let uu___ =
+                 let uu___1 =
+                   FStar_Ident.lid_of_str
+                     "PulseCore.Observability.Unobservable" in
+                 FStar_Parser_AST.Var uu___1 in
+               FStar_Parser_AST.mk_term uu___ r FStar_Parser_AST.Expr in
              let h =
                FStar_Parser_AST.mk_term
                  (FStar_Parser_AST.Var
-                    PulseSyntaxExtension_Env.stt_unobservable_lid) r
+                    PulseSyntaxExtension_Env.stt_atomic_lid) r
                  FStar_Parser_AST.Expr in
              let h1 =
                FStar_Parser_AST.mk_term
                  (FStar_Parser_AST.App
                     (h, return_ty, FStar_Parser_AST.Nothing)) r
                  FStar_Parser_AST.Expr in
+             let h2 =
+               FStar_Parser_AST.mk_term
+                 (FStar_Parser_AST.App (h1, unobs, FStar_Parser_AST.Hash)) r
+                 FStar_Parser_AST.Expr in
              FStar_Parser_AST.mk_term
-               (FStar_Parser_AST.App (h1, is, FStar_Parser_AST.Nothing)) r
+               (FStar_Parser_AST.App (h2, is, FStar_Parser_AST.Nothing)) r
                FStar_Parser_AST.Expr
          | PulseSyntaxExtension_Sugar.STGhost ->
-             let is =
-               let uu___ =
-                 let uu___1 =
-                   FStar_Ident.lid_of_str "Pulse.Lib.Core.emp_inames" in
-                 FStar_Parser_AST.Var uu___1 in
-               FStar_Parser_AST.mk_term uu___ r FStar_Parser_AST.Expr in
              let h =
                FStar_Parser_AST.mk_term
                  (FStar_Parser_AST.Var PulseSyntaxExtension_Env.stt_ghost_lid)
@@ -106,9 +111,7 @@ let (comp_to_ast_term :
                  (FStar_Parser_AST.App
                     (h, return_ty, FStar_Parser_AST.Nothing)) r
                  FStar_Parser_AST.Expr in
-             FStar_Parser_AST.mk_term
-               (FStar_Parser_AST.App (h1, is, FStar_Parser_AST.Nothing)) r
-               FStar_Parser_AST.Expr in
+             h1 in
        let uu___ =
          vprop_to_ast_term c.PulseSyntaxExtension_Sugar.precondition in
        Obj.magic
