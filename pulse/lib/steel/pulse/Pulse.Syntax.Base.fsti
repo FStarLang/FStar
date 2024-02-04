@@ -211,7 +211,7 @@ let empty_ascription = { annotated=None; elaborated=None }
 noeq
 type st_term' =
   | Tm_Return { 
-      ctag:ctag;
+      expected_type:term;
       insert_eq:bool;
       term: term;
     }

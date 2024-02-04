@@ -349,7 +349,7 @@ let (empty_ascription : comp_ascription) =
   }
 type st_term'__Tm_Return__payload =
   {
-  ctag: ctag ;
+  expected_type: term ;
   insert_eq: Prims.bool ;
   term: term }
 and st_term'__Tm_Abs__payload =
@@ -422,7 +422,7 @@ and st_term'__Tm_Rewrite__payload = {
   t21: term }
 and st_term'__Tm_Admit__payload =
   {
-  ctag1: ctag ;
+  ctag: ctag ;
   u1: universe ;
   typ: term ;
   post3: term FStar_Pervasives_Native.option }
@@ -712,9 +712,9 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
   fun t1 ->
     fun t2 ->
       match ((t1.term1), (t2.term1)) with
-      | (Tm_Return { ctag = c1; insert_eq = b1; term = t11;_}, Tm_Return
-         { ctag = c2; insert_eq = b2; term = t21;_}) ->
-          ((c1 = c2) && (b1 = b2)) && (eq_tm t11 t21)
+      | (Tm_Return { expected_type = ty1; insert_eq = b1; term = t11;_},
+         Tm_Return { expected_type = ty2; insert_eq = b2; term = t21;_}) ->
+          ((eq_tm ty1 ty2) && (b1 = b2)) && (eq_tm t11 t21)
       | (Tm_Abs { b = b1; q = o1; ascription = c1; body = t11;_}, Tm_Abs
          { b = b2; q = o2; ascription = c2; body = t21;_}) ->
           (((eq_tm b1.binder_ty b2.binder_ty) && (o1 = o2)) &&
@@ -779,8 +779,8 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
             && (eq_st_term b1 b2)
       | (Tm_Rewrite { t11 = l1; t21 = r1;_}, Tm_Rewrite
          { t11 = l2; t21 = r2;_}) -> (eq_tm l1 l2) && (eq_tm r1 r2)
-      | (Tm_Admit { ctag1 = c1; u1; typ = t11; post3 = post1;_}, Tm_Admit
-         { ctag1 = c2; u1 = u2; typ = t21; post3 = post2;_}) ->
+      | (Tm_Admit { ctag = c1; u1; typ = t11; post3 = post1;_}, Tm_Admit
+         { ctag = c2; u1 = u2; typ = t21; post3 = post2;_}) ->
           (((c1 = c2) && (eq_univ u1 u2)) && (eq_tm t11 t21)) &&
             (eq_tm_opt post1 post2)
       | (Tm_Unreachable, Tm_Unreachable) -> true

@@ -231,7 +231,8 @@ let rec open_st_term_ln' (e:st_term)
     (ensures ln_st' e i)
     (decreases e)
   = match e.term with
-    | Tm_Return { term = e } ->
+    | Tm_Return { expected_type; term = e } ->
+      open_term_ln' expected_type x i;
       open_term_ln' e x i
       
     | Tm_STApp { head=l; arg=r } ->
@@ -479,7 +480,8 @@ let rec ln_weakening_st (t:st_term) (i j:int)
     (ensures ln_st' t j)
     (decreases t)
   = match t.term with
-    | Tm_Return { term } ->
+    | Tm_Return { expected_type; term } ->
+      ln_weakening expected_type i j;
       ln_weakening term i j
 
     | Tm_IntroPure { p }
@@ -693,7 +695,8 @@ let rec open_term_ln_inv_st' (t:st_term)
     (ensures ln_st' (open_st_term' t x i) (i - 1))
     (decreases t)
   = match t.term with
-    | Tm_Return { term } ->
+    | Tm_Return { expected_type; term } ->
+      open_term_ln_inv' expected_type x i;
       open_term_ln_inv' term x i
 
     | Tm_IntroPure { p }
@@ -904,7 +907,8 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
     (ensures ln_st' (close_st_term' t x i) i)
     (decreases t)
   = match t.term with
-    | Tm_Return { term } ->
+    | Tm_Return { expected_type; term } ->
+      close_term_ln' expected_type x i;
       close_term_ln' term x i
 
     | Tm_IntroPure { p }

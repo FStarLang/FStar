@@ -80,19 +80,30 @@ let check_core
   : T.Tac (checker_result_t g ctxt post_hint) =
   
   let g = push_context "check_return" st.range g in
-  let Tm_Return {insert_eq=use_eq; term=t} = st.term in
-  let R c t u ty uty d : result_of_typing g =
+  let Tm_Return {expected_type; insert_eq=use_eq; term=t} = st.term in
+  let return_type
+    : option (ty:term & u:universe & universe_of g ty u) =
     match post_hint with
-    | None ->
-      compute_tot_or_ghost_term_type_and_u g t ctag_ctxt
     | Some post ->
-      let (| c, t, d |) = check_tot_or_ghost_term g t post.ret_ty ctag_ctxt in
       assert (g `env_extends` post.g);
-      let ty_typing : universe_of post.g post.ret_ty post.u =
-        post.ty_typing in
       let ty_typing : universe_of g post.ret_ty post.u =
         Metatheory.tot_typing_weakening_standard post.g post.ty_typing g in
-      R c t post.u post.ret_ty ty_typing d
+      Some (| post.ret_ty, post.u, ty_typing |)
+    | _ ->
+      match expected_type.t with
+      | Tm_Unknown -> None
+      | _ ->
+        let ty, _ = Pulse.Checker.Pure.instantiate_term_implicits g expected_type in
+        let (| u, d |) = check_universe g ty in
+        Some (| ty, u, d |)
+  in
+  let R c t u ty uty d : result_of_typing g =
+    match return_type with
+    | None ->
+      compute_tot_or_ghost_term_type_and_u g t ctag_ctxt
+    | Some (| ret_ty, u, ty_typing |) ->
+      let (| c, t, d |) = check_tot_or_ghost_term g t ret_ty ctag_ctxt in
+      R c t u ret_ty ty_typing d
   in
   let x = fresh g in
   let px = res_ppname, x in

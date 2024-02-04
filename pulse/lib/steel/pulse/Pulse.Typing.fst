@@ -791,7 +791,7 @@ type st_typing : env -> st_term -> comp -> Type =
       universe_of g t u ->
       typing g e (eff_of_ctag c) t ->
       tot_typing (push_binding g x ppname_default t) (open_term post x) tm_vprop ->
-      st_typing g (wtag (Some c) (Tm_Return { ctag=c; insert_eq=use_eq; term=e }))
+      st_typing g (wtag (Some c) (Tm_Return { expected_type=tm_unknown; insert_eq=use_eq; term=e }))
                   (comp_return c use_eq u t e post x)
 
   | T_Lift:

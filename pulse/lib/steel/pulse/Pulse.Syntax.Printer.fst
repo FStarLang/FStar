@@ -218,12 +218,8 @@ let term_list_to_string (sep:string) (t:list term)
 let rec st_term_to_string' (level:string) (t:st_term)
   : T.Tac string
   = match t.term with
-    | Tm_Return { ctag; insert_eq; term } ->
-      sprintf "return_%s%s %s"
-        (match ctag with
-         | STT -> "stt"
-         | STT_Atomic -> "stt_atomic"
-         | STT_Ghost -> "stt_ghost")
+    | Tm_Return { insert_eq; term } ->
+      sprintf "return_%s %s"
         (if insert_eq then "" else "_noeq")
         (term_to_string term)
       

@@ -2430,7 +2430,8 @@ let (return_in_ctxt :
                         Pulse_Typing.wtag (FStar_Pervasives_Native.Some ctag)
                           (Pulse_Syntax_Base.Tm_Return
                              {
-                               Pulse_Syntax_Base.ctag = ctag;
+                               Pulse_Syntax_Base.expected_type =
+                                 Pulse_Syntax_Base.tm_unknown;
                                Pulse_Syntax_Base.insert_eq = false;
                                Pulse_Syntax_Base.term = y_tm
                              }) in

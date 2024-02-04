@@ -586,7 +586,7 @@ let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctx
     (RU.magic ())  // that null_var y is well typed at ty in g, we know since lookup g y == Some ty
     (RU.magic ())  // typing of (open post x) in (g, x) ... post_hint is well-typed, so should get
   in
-  let t = wtag (Some ctag) (Tm_Return {ctag=ctag;insert_eq=false;term=y_tm}) in
+  let t = wtag (Some ctag) (Tm_Return {expected_type=tm_unknown;insert_eq=false;term=y_tm}) in
   let c = comp_return ctag false u ty y_tm post_hint.post x in
   let d : st_typing g t c = d in
 

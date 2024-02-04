@@ -98,10 +98,10 @@ let rec (freevars_st :
   fun t ->
     match t.Pulse_Syntax_Base.term1 with
     | Pulse_Syntax_Base.Tm_Return
-        { Pulse_Syntax_Base.ctag = uu___;
-          Pulse_Syntax_Base.insert_eq = uu___1;
+        { Pulse_Syntax_Base.expected_type = expected_type;
+          Pulse_Syntax_Base.insert_eq = uu___;
           Pulse_Syntax_Base.term = term;_}
-        -> freevars term
+        -> FStar_Set.union (freevars expected_type) (freevars term)
     | Pulse_Syntax_Base.Tm_Abs
         { Pulse_Syntax_Base.b = b; Pulse_Syntax_Base.q = uu___;
           Pulse_Syntax_Base.ascription = ascription;
@@ -188,7 +188,7 @@ let rec (freevars_st :
         { Pulse_Syntax_Base.t11 = t1; Pulse_Syntax_Base.t21 = t2;_} ->
         FStar_Set.union (freevars t1) (freevars t2)
     | Pulse_Syntax_Base.Tm_Admit
-        { Pulse_Syntax_Base.ctag1 = uu___; Pulse_Syntax_Base.u1 = uu___1;
+        { Pulse_Syntax_Base.ctag = uu___; Pulse_Syntax_Base.u1 = uu___1;
           Pulse_Syntax_Base.typ = typ; Pulse_Syntax_Base.post3 = post;_}
         -> FStar_Set.union (freevars typ) (freevars_term_opt post)
     | Pulse_Syntax_Base.Tm_Unreachable -> FStar_Set.empty ()
@@ -341,10 +341,10 @@ let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
     fun i ->
       match t.Pulse_Syntax_Base.term1 with
       | Pulse_Syntax_Base.Tm_Return
-          { Pulse_Syntax_Base.ctag = uu___;
-            Pulse_Syntax_Base.insert_eq = uu___1;
+          { Pulse_Syntax_Base.expected_type = expected_type;
+            Pulse_Syntax_Base.insert_eq = uu___;
             Pulse_Syntax_Base.term = term;_}
-          -> ln' term i
+          -> (ln' expected_type i) && (ln' term i)
       | Pulse_Syntax_Base.Tm_Abs
           { Pulse_Syntax_Base.b = b; Pulse_Syntax_Base.q = uu___;
             Pulse_Syntax_Base.ascription = ascription;
@@ -430,7 +430,7 @@ let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
           { Pulse_Syntax_Base.t11 = t1; Pulse_Syntax_Base.t21 = t2;_} ->
           (ln' t1 i) && (ln' t2 i)
       | Pulse_Syntax_Base.Tm_Admit
-          { Pulse_Syntax_Base.ctag1 = uu___; Pulse_Syntax_Base.u1 = uu___1;
+          { Pulse_Syntax_Base.ctag = uu___; Pulse_Syntax_Base.u1 = uu___1;
             Pulse_Syntax_Base.typ = typ; Pulse_Syntax_Base.post3 = post;_}
           -> (ln' typ i) && (ln_opt' ln' post (i + Prims.int_one))
       | Pulse_Syntax_Base.Tm_Unreachable -> true
@@ -817,13 +817,14 @@ let rec (subst_st_term :
       let t' =
         match t.Pulse_Syntax_Base.term1 with
         | Pulse_Syntax_Base.Tm_Return
-            { Pulse_Syntax_Base.ctag = ctag;
+            { Pulse_Syntax_Base.expected_type = expected_type;
               Pulse_Syntax_Base.insert_eq = insert_eq;
               Pulse_Syntax_Base.term = term;_}
             ->
             Pulse_Syntax_Base.Tm_Return
               {
-                Pulse_Syntax_Base.ctag = ctag;
+                Pulse_Syntax_Base.expected_type =
+                  (subst_term expected_type ss);
                 Pulse_Syntax_Base.insert_eq = insert_eq;
                 Pulse_Syntax_Base.term = (subst_term term ss)
               }
@@ -981,12 +982,12 @@ let rec (subst_st_term :
                 Pulse_Syntax_Base.t21 = (subst_term t2 ss)
               }
         | Pulse_Syntax_Base.Tm_Admit
-            { Pulse_Syntax_Base.ctag1 = ctag; Pulse_Syntax_Base.u1 = u;
+            { Pulse_Syntax_Base.ctag = ctag; Pulse_Syntax_Base.u1 = u;
               Pulse_Syntax_Base.typ = typ; Pulse_Syntax_Base.post3 = post;_}
             ->
             Pulse_Syntax_Base.Tm_Admit
               {
-                Pulse_Syntax_Base.ctag1 = ctag;
+                Pulse_Syntax_Base.ctag = ctag;
                 Pulse_Syntax_Base.u1 = u;
                 Pulse_Syntax_Base.typ = (subst_term typ ss);
                 Pulse_Syntax_Base.post3 =

@@ -99,8 +99,8 @@ let freevars_ascription (c:comp_ascription)
 let rec freevars_st (t:st_term)
   : Set.set var
   = match t.term with
-    | Tm_Return { term } ->
-      freevars term
+    | Tm_Return { expected_type; term } ->
+      Set.union (freevars expected_type) (freevars term)
     | Tm_Abs { b; ascription; body } ->
       Set.union (freevars b.binder_ty) 
                 (Set.union (freevars_st body)
@@ -304,7 +304,8 @@ let ln_ascription' (c:comp_ascription) (i:int)
 let rec ln_st' (t:st_term) (i:int)
   : Tot bool (decreases t)
   = match t.term with
-    | Tm_Return { term } ->
+    | Tm_Return { expected_type; term } ->
+      ln' expected_type i &&
       ln' term i
       
     | Tm_Abs { b; ascription; body } ->
@@ -596,8 +597,10 @@ let rec subst_st_term (t:st_term) (ss:subst)
   : Tot st_term (decreases t)
   = let t' =
     match t.term with
-    | Tm_Return { ctag; insert_eq; term } ->
-      Tm_Return { ctag; insert_eq; term=subst_term term ss }
+    | Tm_Return { expected_type; insert_eq; term } ->
+      Tm_Return { expected_type=subst_term expected_type ss;
+                  insert_eq;
+                  term=subst_term term ss }
 
     | Tm_Abs { b; q; ascription; body } ->
       Tm_Abs { b=subst_binder b ss;

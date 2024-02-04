@@ -457,7 +457,7 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
     close_st_term' e x 0 in
 
   let unit_tm =
-    { p with term = Tm_Return { ctag = STT; insert_eq = false; term = unit_val } }
+    { p with term = Tm_Return { expected_type=tm_unknown; insert_eq = false; term = unit_val } }
   in
   let ret (t:st_term') = { p with term = t } in
   if is_erasable p

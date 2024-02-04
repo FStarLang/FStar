@@ -53,7 +53,7 @@ let (check_core :
                               (fun uu___ ->
                                  match uu___ with
                                  | Pulse_Syntax_Base.Tm_Admit
-                                     { Pulse_Syntax_Base.ctag1 = c;
+                                     { Pulse_Syntax_Base.ctag = c;
                                        Pulse_Syntax_Base.u1 = uu___1;
                                        Pulse_Syntax_Base.typ = t1;
                                        Pulse_Syntax_Base.post3 = post;_}
@@ -594,7 +594,7 @@ let (check_core :
                                                                     c)
                                                                     (Pulse_Syntax_Base.Tm_Admit
                                                                     {
-                                                                    Pulse_Syntax_Base.ctag1
+                                                                    Pulse_Syntax_Base.ctag
                                                                     = c;
                                                                     Pulse_Syntax_Base.u1
                                                                     =
@@ -689,7 +689,7 @@ let (check :
                                       Pulse_Syntax_Base.term1 =
                                         (Pulse_Syntax_Base.Tm_Admit
                                            {
-                                             Pulse_Syntax_Base.ctag1 = ct;
+                                             Pulse_Syntax_Base.ctag = ct;
                                              Pulse_Syntax_Base.u1 =
                                                (r.Pulse_Syntax_Base.u1);
                                              Pulse_Syntax_Base.typ =

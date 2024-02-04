@@ -21,7 +21,7 @@ let pat_var s = Pat_Var s
 let pat_const c = Pat_Constant c
 let pat_cons fv vs = Pat_Cons fv vs
 
-let tm_return ctag insert_eq term = Tm_Return { ctag; insert_eq; term }
+let tm_return expected_type insert_eq term = Tm_Return { expected_type; insert_eq; term }
 let tm_abs b q ascription body = Tm_Abs { b; q; ascription; body }
 let tm_stapp head arg_qual arg = Tm_STApp { head; arg_qual; arg }
 let tm_bind binder head body = Tm_Bind { binder; head; body }

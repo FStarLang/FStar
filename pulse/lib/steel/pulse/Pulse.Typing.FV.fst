@@ -144,7 +144,8 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
              (freevars_st t `set_minus` x)))
     (decreases t)
   = match t.term with
-    | Tm_Return { term } ->
+    | Tm_Return { expected_type; term } ->
+      freevars_close_term' expected_type x i;
       freevars_close_term' term x i
 
     | Tm_STApp { head; arg } ->

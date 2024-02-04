@@ -115,6 +115,7 @@ let check_bind
       end;
       r
     in
+    let g1 = reset_context g1 g in
     let d : st_typing_in_ctxt g1 ctxt' post_hint =
       let ppname = mk_ppname_no_range "_bind_c" in
       let r =
@@ -150,7 +151,7 @@ let check_tot_bind
   )
 
   | None -> (
-    let head = Tm_Return { ctag = STT_Atomic; term = e1; insert_eq = true } in
+    let head = Tm_Return { expected_type = b.binder_ty; term = e1; insert_eq = true } in
     let head = { term = head; range = e1.range; effect_tag = default_effect_hint } in
     let t = { t with term = Tm_Bind { binder=b; head; body=e2 } } in
     check_bind g pre pre_typing post_hint res_ppname t check
