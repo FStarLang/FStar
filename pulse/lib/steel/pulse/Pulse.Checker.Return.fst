@@ -26,6 +26,49 @@ module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 module Metatheory = Pulse.Typing.Metatheory
 
+let check_effect
+    (#g:env) (#e:term) (#eff:T.tot_or_ghost) (#t:term)
+    (d:typing g e eff t)
+    (c:option ctag)
+: T.Tac (c:ctag & e:term & typing g e (eff_of_ctag c) t)
+= match c, eff with
+  | None, T.E_Total -> 
+    (| STT_Atomic, e, d |)
+  | None, T.E_Ghost -> 
+    (| STT_Ghost, e, d |)
+  | Some STT_Ghost, T.E_Total ->
+    (| STT_Atomic, e, d |)
+  | Some STT_Ghost, T.E_Ghost -> 
+    (| STT_Ghost, e, d |)
+  | _, T.E_Total -> 
+    (| STT_Atomic, e, d |)
+  | _ -> 
+    fail g (Some e.range) "Expected a total term, but this term has Ghost effect"
+ 
+
+let check_tot_or_ghost_term (g:env) (e:term) (t:term) (c:option ctag)
+: T.Tac (c:ctag & e:term & typing g e (eff_of_ctag c) t)
+= let (| e, eff, d |) = check_term_at_type g e t in
+  check_effect d c
+  
+noeq
+type result_of_typing (g:env) =
+  | R :
+    c:ctag ->
+    t:term ->
+    u:universe ->
+    ty:term ->
+    universe_of g ty u ->
+    typing g t (eff_of_ctag c) ty ->
+    result_of_typing g
+
+let compute_tot_or_ghost_term_type_and_u (g:env) (e:term) (c:option ctag)
+: T.Tac (result_of_typing g)
+= let (| t, eff, ty, (| u, ud |), d |) = compute_term_type_and_u g e in
+  let (| c, e, d |) = check_effect d c in
+  R c e u ty ud d
+    
+#push-options "--z3rlimit_factor 4"
 let check_core
   (g:env)
   (ctxt:term)
@@ -33,28 +76,24 @@ let check_core
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (st:st_term { Tm_Return? st.term })
+  (ctag_ctxt:option ctag)
   : T.Tac (checker_result_t g ctxt post_hint) =
   
   let g = push_context "check_return" st.range g in
-  let Tm_Return {ctag=c; insert_eq=use_eq; term=t} = st.term in
-  let (| t, u, ty, uty, d |) :
-    t:term &
-    u:universe &
-    ty:term &
-    universe_of g ty u &
-    tot_typing g t ty =
+  let Tm_Return {insert_eq=use_eq; term=t} = st.term in
+  let R c t u ty uty d : result_of_typing g =
     match post_hint with
-    | None -> compute_tot_term_type_and_u g t
+    | None ->
+      compute_tot_or_ghost_term_type_and_u g t ctag_ctxt
     | Some post ->
-      let (| t, d |) = check_tot_term g t post.ret_ty in
+      let (| c, t, d |) = check_tot_or_ghost_term g t post.ret_ty ctag_ctxt in
       assert (g `env_extends` post.g);
       let ty_typing : universe_of post.g post.ret_ty post.u =
         post.ty_typing in
       let ty_typing : universe_of g post.ret_ty post.u =
         Metatheory.tot_typing_weakening_standard post.g post.ty_typing g in
-      (| t, post.u, post.ret_ty, ty_typing, d |)
+      R c t post.u post.ret_ty ty_typing d
   in
-  
   let x = fresh g in
   let px = res_ppname, x in
   let (| post_opened, post_typing |) : t:term & tot_typing (push_binding g x (fst px) ty)  t tm_vprop =
@@ -83,6 +122,7 @@ let check_core
     Printf.sprintf "Return comp is: %s"
       (Pulse.Syntax.Printer.comp_to_string c));
   prove_post_hint #g (try_frame_pre #g ctxt_typing dd res_ppname) post_hint t.range
+#pop-options
 
 let check
   (g:env)
@@ -100,11 +140,9 @@ let check
     
     | None -> (
       match post_hint with
-      | Some { ctag_hint = Some ct } -> (
-        if ct = f.ctag
-        then check_core g ctxt ctxt_typing post_hint res_ppname st
-        else let st = { st with term = Tm_Return { f with ctag=ct }} in
-             check_core g ctxt ctxt_typing post_hint res_ppname st
+      | Some { ctag_hint } -> (
+        check_core g ctxt ctxt_typing post_hint res_ppname st ctag_hint
+        
       )
-      | _ ->  check_core g ctxt ctxt_typing post_hint res_ppname st
+      | _ ->  check_core g ctxt ctxt_typing post_hint res_ppname st None
     )

@@ -725,6 +725,10 @@ let inv_disjointness (inv_p inames inv:term) =
   let g = Pulse.Reflection.Util.inv_disjointness_goal (elab_term inv_p) (elab_term inames) (elab_term inv) in 
   tm_fstar g inv.range
 
+let eff_of_ctag = function
+  | STT_Ghost -> T.E_Ghost
+  | _ -> T.E_Total
+
 [@@ no_auto_projectors]
 noeq
 type st_typing : env -> st_term -> comp -> Type =
@@ -785,7 +789,7 @@ type st_typing : env -> st_term -> comp -> Type =
       post:term ->
       x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars post) } ->
       universe_of g t u ->
-      tot_typing g e t ->
+      typing g e (eff_of_ctag c) t ->
       tot_typing (push_binding g x ppname_default t) (open_term post x) tm_vprop ->
       st_typing g (wtag (Some c) (Tm_Return { ctag=c; insert_eq=use_eq; term=e }))
                   (comp_return c use_eq u t e post x)

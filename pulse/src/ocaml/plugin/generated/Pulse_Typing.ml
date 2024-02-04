@@ -1046,6 +1046,12 @@ let (inv_disjointness :
             (Pulse_Elaborate_Pure.elab_term inames)
             (Pulse_Elaborate_Pure.elab_term inv) in
         Pulse_Syntax_Base.tm_fstar g inv.Pulse_Syntax_Base.range1
+let (eff_of_ctag :
+  Pulse_Syntax_Base.ctag -> FStar_TypeChecker_Core.tot_or_ghost) =
+  fun uu___ ->
+    match uu___ with
+    | Pulse_Syntax_Base.STT_Ghost -> FStar_TypeChecker_Core.E_Ghost
+    | uu___1 -> FStar_TypeChecker_Core.E_Total
 type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   | T_Abs of Pulse_Typing_Env.env * Pulse_Syntax_Base.var *
   Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option *

@@ -106,10 +106,12 @@ requires emp
 ensures emp
 {
     let c = new_counter ();
-    let x = next c _; //FIXME: Should be able to write c.next
+    let next = c.next;
+    let destroy = c.destroy;
+    let x = next _; //FIXME: Should be able to write c.next
     assert pure (x == 0);
-    let x = next c _;
+    let x = next _;
     assert pure (x == 1);
-    destroy c _;
+    destroy _;
 }
 ```

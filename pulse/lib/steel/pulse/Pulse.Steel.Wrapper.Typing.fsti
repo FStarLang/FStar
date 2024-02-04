@@ -116,7 +116,7 @@ val return_stt_ghost_typing
   (#p:term)
   (x:var{None? (RT.lookup_bvar g x)})
   (a_typing:RT.tot_typing g a (pack_ln (Tv_Type u)))
-  (e_typing:RT.tot_typing g e a)
+  (e_typing:RT.ghost_typing g e a)
   (p_typing:RT.tot_typing g p (mk_arrow (a, Q_Explicit) vprop_tm))
 
   : GTot (RT.tot_typing g
@@ -133,7 +133,7 @@ val return_stt_ghost_noeq_typing
   (#x:term)
   (#p:term)
   (a_typing:RT.tot_typing g a (pack_ln (Tv_Type u)))
-  (x_typing:RT.tot_typing g x a)
+  (x_typing:RT.ghost_typing g x a)
   (p_typing:RT.tot_typing g p (mk_arrow (a, Q_Explicit) vprop_tm))
 
   : GTot (RT.tot_typing g
