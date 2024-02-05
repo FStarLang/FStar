@@ -50,5 +50,14 @@ val with_invlist_ghost (#pre : vprop) (#post : vprop)
 let invlist_sub (is1 is2 : invlist) : prop =
   inames_subset (invlist_names is1) (invlist_names is2)
 
-(* FIXME: invlist should be made erasable *)
+(* FIXME: invlist should be made erasable. But, that would not allow us
+to inspect in ghost. Maybe we can have a `uerased` type constructor to represent
+values that can be revealed in unobservable, and which are also erased at runtime.
+Currently, this here is an axiom, and we would be constructing these
+lists at runtime. *)
 val invlist_reveal (is : erased invlist) : (is':invlist{reveal is == is'})
+
+val invlist_sub_split (is1 is2 : invlist) :
+  stt_ghost unit
+    (pure (invlist_sub is1 is2) ** invlist_v is2)
+    (fun _ -> invlist_v is1 ** Pulse.Lib.Priv.Trade0.stick (invlist_v is1) (invlist_v is2))
