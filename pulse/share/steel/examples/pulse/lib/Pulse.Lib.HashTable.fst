@@ -28,6 +28,7 @@ open Pulse.Lib.HashTable.Type
 
 let mk_used_cell (#a:eqtype) #b (k:a) (v:b) : cell a b = Used k v
 
+[@@ Rust_generics_bounds [["Copy"; "PartialEq"]]]
 let mk_ht (#k:eqtype) #v 
           (sz:pos_us) 
           (hashf:k -> SZ.t)
@@ -60,6 +61,7 @@ let models #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt) : vprop =
 
 let pht_sz #k #v (pht:pht_t k v) : GTot pos = pht.repr.sz
 
+[@@ Rust_generics_bounds [["Copy"; "PartialEq"]]]
 ```pulse
 fn alloc (#k:eqtype) (#v:Type0) (hashf:(k -> SZ.t)) (l:pos_us)
   requires emp
@@ -108,6 +110,7 @@ let same_sz_and_hashf (#kt:eqtype) (#vt:Type) (ht1 ht2:ht_t kt vt) : GTot prop =
   ht1.sz == ht2.sz /\
   ht1.hashf == ht2.hashf
 
+[@@ Rust_generics_bounds [["Copy"; "PartialEq"]]]
 ```pulse
 fn replace (#kt:eqtype) (#vt:Type)
   (#pht:erased (pht_t kt vt))
@@ -151,6 +154,7 @@ fn replace (#kt:eqtype) (#vt:Type)
 ```
 
 #push-options "--fuel 1 --ifuel 1"
+[@@ Rust_generics_bounds [["Copy"; "PartialEq"]]]
 ```pulse
 fn lookup (#kt:eqtype) (#vt:Type0) (#pht:erased (pht_t kt vt))
   (ht:ht_t kt vt)
@@ -289,6 +293,7 @@ fn lookup (#kt:eqtype) (#vt:Type0) (#pht:erased (pht_t kt vt))
 
 #restart-solver
 #push-options "--fuel 1 --ifuel 2"
+[@@ Rust_generics_bounds [["Copy"; "PartialEq"]]]
 ```pulse
 fn insert (#kt:eqtype) (#vt:Type0)
            (ht:ht_t kt vt) (k:kt) (v:vt)
@@ -608,6 +613,7 @@ let is_used (#k:eqtype) (#v:Type0) (c:cell k v) : (bool & cell k v) =
   | _ -> false, c
 
 #push-options "--print_implicits"
+[@@ Rust_generics_bounds [["Copy"; "PartialEq"]]]
 ```pulse
 fn not_full (#kt:eqtype) (#vt:Type0)
   (ht:ht_t kt vt)
