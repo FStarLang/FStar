@@ -418,27 +418,63 @@ let const_to_string x = match x with
 (* Tuples  *)
 
 let mk_tuple_lid n r =
-  let t = U.format1 "tuple%s" (U.string_of_int n) in
-  set_lid_range (psnconst t) r
+  let l =
+    if n = 2 then
+      Ident.lid_of_str "FStar.Pervasives.Native.tuple2"
+    else
+      let s = U.format2 "FStar.Tuple%s.tuple%s" (U.string_of_int n) (U.string_of_int n) in
+      Ident.lid_of_str s
+  in
+  set_lid_range l r
 
 let lid_tuple2   = mk_tuple_lid 2 dummyRange
 let lid_tuple3   = mk_tuple_lid 3 dummyRange
 
 let is_tuple_constructor_string (s:string) :bool =
-  U.starts_with s "FStar.Pervasives.Native.tuple"
+  s = "FStar.Pervasives.Native.tuple2" ||
+  s = "FStar.Tuple3.tuple3" ||
+  s = "FStar.Tuple4.tuple4" ||
+  s = "FStar.Tuple5.tuple5" ||
+  s = "FStar.Tuple6.tuple6" ||
+  s = "FStar.Tuple7.tuple7" ||
+  s = "FStar.Tuple8.tuple8" ||
+  s = "FStar.Tuple9.tuple9" ||
+  s = "FStar.Tuple10.tuple10" ||
+  s = "FStar.Tuple11.tuple11" ||
+  s = "FStar.Tuple12.tuple12" ||
+  s = "FStar.Tuple13.tuple13" ||
+  s = "FStar.Tuple14.tuple14"
 
 let is_tuple_constructor_id  id  = is_tuple_constructor_string (string_of_id id)
 let is_tuple_constructor_lid lid = is_tuple_constructor_string (string_of_lid lid)
 
 let mk_tuple_data_lid n r =
-  let t = U.format1 "Mktuple%s" (U.string_of_int n) in
-  set_lid_range (psnconst t) r
+  let l =
+    if n = 2 then
+      Ident.lid_of_str "FStar.Pervasives.Native.Mktuple2"
+    else
+      let s = U.format2 "FStar.Tuple%s.Mktuple%s" (U.string_of_int n) (U.string_of_int n) in
+      Ident.lid_of_str s
+  in
+  set_lid_range l r
 
 let lid_Mktuple2 = mk_tuple_data_lid 2 dummyRange
 let lid_Mktuple3 = mk_tuple_data_lid 3 dummyRange
 
 let is_tuple_datacon_string (s:string) :bool =
-  U.starts_with s "FStar.Pervasives.Native.Mktuple"
+  s = "FStar.Pervasives.Native.Mktuple2" ||
+  s = "FStar.Tuple3.Mktuple3" ||
+  s = "FStar.Tuple4.Mktuple4" ||
+  s = "FStar.Tuple5.Mktuple5" ||
+  s = "FStar.Tuple6.Mktuple6" ||
+  s = "FStar.Tuple7.Mktuple7" ||
+  s = "FStar.Tuple8.Mktuple8" ||
+  s = "FStar.Tuple9.Mktuple9" ||
+  s = "FStar.Tuple10.Mktuple10" ||
+  s = "FStar.Tuple11.Mktuple11" ||
+  s = "FStar.Tuple12.Mktuple12" ||
+  s = "FStar.Tuple13.Mktuple13" ||
+  s = "FStar.Tuple14.Mktuple14"
 
 let is_tuple_datacon_id  id  = is_tuple_datacon_string (string_of_id id)
 let is_tuple_datacon_lid lid = is_tuple_datacon_string (string_of_lid lid)
@@ -452,15 +488,21 @@ let is_tuple_data_lid' f = is_tuple_datacon_string (string_of_lid f)
 (* Dtuples *)
 
 (* dtuple is defined in prims if n = 2, in pervasives otherwise *)
-let mod_prefix_dtuple (n:int) :(string -> lident) =
-  if n = 2 then pconst else psconst
+let mod_prefix_dtuple (n:int) : (string -> lident) =
+  fun s ->
+  if n = 2
+  then pconst s
+  else lid_of_path ["FStar"; "DTuple" ^ string_of_int n; s] dummyRange
 
 let mk_dtuple_lid n r =
   let t = U.format1 "dtuple%s" (U.string_of_int n) in
   set_lid_range ((mod_prefix_dtuple n) t) r
 
 let is_dtuple_constructor_string (s:string) :bool =
-  s = "Prims.dtuple2" || U.starts_with s "FStar.Pervasives.dtuple"
+  s = "Prims.dtuple2" ||
+  s = "FStar.DTuple3.dtuple3" ||
+  s = "FStar.DTuple4.dtuple4" ||
+  s = "FStar.DTuple5.dtuple5"
 
 let is_dtuple_constructor_lid lid = is_dtuple_constructor_string (string_of_lid lid)
 
@@ -469,7 +511,10 @@ let mk_dtuple_data_lid n r =
   set_lid_range ((mod_prefix_dtuple n) t) r
 
 let is_dtuple_datacon_string (s:string) :bool =
-  s = "Prims.Mkdtuple2" || U.starts_with s "FStar.Pervasives.Mkdtuple"
+  s = "Prims.Mkdtuple2" ||
+  s = "FStar.DTuple3.Mkdtuple3" ||
+  s = "FStar.DTuple4.Mkdtuple4" ||
+  s = "FStar.DTuple5.Mkdtuple5"
 
 let is_dtuple_data_lid f n =
   lid_equals f (mk_dtuple_data_lid n dummyRange)
