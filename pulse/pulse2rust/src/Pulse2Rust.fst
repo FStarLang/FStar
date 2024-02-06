@@ -761,7 +761,7 @@ let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : item & env =
   //   push_fv g lb.mllb_name fn_sig
   // end
 
-let extract_struct_defn (g:env) (d:S.one_mltydecl) : item & env =
+let extract_struct_defn (g:env) (_:list S.mlexpr) (d:S.one_mltydecl) : item & env =
   let Some (S.MLTD_Record fts) = d.tydecl_defn in
   // print1 "Adding to record field with %s\n" d.tydecl_name;
   mk_item_struct
@@ -770,20 +770,22 @@ let extract_struct_defn (g:env) (d:S.one_mltydecl) : item & env =
     (List.map (fun (f, t) -> f, extract_mlty g t) fts),
   { g with record_field_names = psmap_add g.record_field_names d.tydecl_name (List.map fst fts) }
 
-let extract_type_abbrev (g:env) (d:S.one_mltydecl) : item & env =
+let extract_type_abbrev (g:env) (_:list S.mlexpr) (d:S.one_mltydecl) : item & env =
   let Some (S.MLTD_Abbrev t) = d.tydecl_defn in
   (mk_item_type d.tydecl_name (List.map tyvar_of d.tydecl_parameters) (extract_mlty g t)),
   g
   
-let extract_enum (g:env) (d:S.one_mltydecl) : item & env =
+let extract_enum (g:env) (mlattrs:list S.mlexpr) (d:S.one_mltydecl) : item & env =
   let Some (S.MLTD_DType cts) = d.tydecl_defn in
+  print1 ("extract_enum: attrs: %s\n")
+         (String.concat ";" (List.map S.mlexpr_to_string mlattrs));
   mk_item_enum
     (d.tydecl_name |> enum_or_struct_name)
     (List.map tyvar_of d.tydecl_parameters)
     (List.map (fun (cname, dts) -> cname, List.map (fun (_, t) -> extract_mlty g t) dts) cts),
   g  // TODO: add it to env if needed later
 
-let extract_mltydecl (g:env) (d:S.mltydecl) : list item & env =
+let extract_mltydecl (g:env) (mlattrs:list S.mlexpr) (d:S.mltydecl) : list item & env =
   List.fold_left (fun (items, g) d ->
     let f =
       match d.S.tydecl_defn with
@@ -792,7 +794,7 @@ let extract_mltydecl (g:env) (d:S.mltydecl) : list item & env =
       | Some (S.MLTD_DType _) -> extract_enum
       | _ -> fail_nyi (format1 "mltydecl %s" (S.one_mltydecl_to_string d))
     in
-    let item, g = f g d in
+    let item, g = f g mlattrs d in
     items@[item], g) ([], g) d
 
 
@@ -989,8 +991,8 @@ let extract_one
       items@[f],
       g
     | S.MLM_Loc _ -> items, g
-    | S.MLM_Ty d ->
-      let d_items, g = extract_mltydecl g d in
+    | S.MLM_Ty td ->
+      let d_items, g = extract_mltydecl g d.S.mlmodule1_attrs td in
       items@d_items, g
     | _ -> fail_nyi (format1 "top level decl %s" (S.mlmodule1_to_string d))
   ) ([], g) decls in

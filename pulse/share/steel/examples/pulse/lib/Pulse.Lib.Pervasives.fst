@@ -146,4 +146,4 @@ ensures cond false p q
 
 type rust_extraction_attr =
   | Rust_const_fn
-  | Rust_generics_bounds : list string -> rust_extraction_attr
+  | Rust_generics_bounds : list (list string) -> rust_extraction_attr

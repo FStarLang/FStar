@@ -1557,126 +1557,141 @@ let (extract_top_level_lb :
                            fail_nyi uu___5)))
 let (extract_struct_defn :
   env ->
-    FStar_Extraction_ML_Syntax.one_mltydecl ->
-      (Pulse2Rust_Rust_Syntax.item * env))
+    FStar_Extraction_ML_Syntax.mlexpr Prims.list ->
+      FStar_Extraction_ML_Syntax.one_mltydecl ->
+        (Pulse2Rust_Rust_Syntax.item * env))
   =
   fun g ->
-    fun d ->
-      let uu___ = d.FStar_Extraction_ML_Syntax.tydecl_defn in
-      match uu___ with
-      | FStar_Pervasives_Native.Some (FStar_Extraction_ML_Syntax.MLTD_Record
-          fts) ->
-          let uu___1 =
+    fun uu___ ->
+      fun d ->
+        let uu___1 = d.FStar_Extraction_ML_Syntax.tydecl_defn in
+        match uu___1 with
+        | FStar_Pervasives_Native.Some
+            (FStar_Extraction_ML_Syntax.MLTD_Record fts) ->
             let uu___2 =
-              enum_or_struct_name d.FStar_Extraction_ML_Syntax.tydecl_name in
-            let uu___3 =
-              FStar_Compiler_List.map tyvar_of
-                d.FStar_Extraction_ML_Syntax.tydecl_parameters in
-            let uu___4 =
-              FStar_Compiler_List.map
-                (fun uu___5 ->
-                   match uu___5 with
-                   | (f, t) -> let uu___6 = extract_mlty g t in (f, uu___6))
-                fts in
-            Pulse2Rust_Rust_Syntax.mk_item_struct uu___2 uu___3 uu___4 in
-          let uu___2 =
+              let uu___3 =
+                enum_or_struct_name d.FStar_Extraction_ML_Syntax.tydecl_name in
+              let uu___4 =
+                FStar_Compiler_List.map tyvar_of
+                  d.FStar_Extraction_ML_Syntax.tydecl_parameters in
+              let uu___5 =
+                FStar_Compiler_List.map
+                  (fun uu___6 ->
+                     match uu___6 with
+                     | (f, t) -> let uu___7 = extract_mlty g t in (f, uu___7))
+                  fts in
+              Pulse2Rust_Rust_Syntax.mk_item_struct uu___3 uu___4 uu___5 in
             let uu___3 =
               let uu___4 =
-                FStar_Compiler_List.map FStar_Pervasives_Native.fst fts in
-              FStar_Compiler_Util.psmap_add g.record_field_names
-                d.FStar_Extraction_ML_Syntax.tydecl_name uu___4 in
-            {
-              fns = (g.fns);
-              statics = (g.statics);
-              gamma = (g.gamma);
-              record_field_names = uu___3;
-              reachable_defs = (g.reachable_defs)
-            } in
-          (uu___1, uu___2)
+                let uu___5 =
+                  FStar_Compiler_List.map FStar_Pervasives_Native.fst fts in
+                FStar_Compiler_Util.psmap_add g.record_field_names
+                  d.FStar_Extraction_ML_Syntax.tydecl_name uu___5 in
+              {
+                fns = (g.fns);
+                statics = (g.statics);
+                gamma = (g.gamma);
+                record_field_names = uu___4;
+                reachable_defs = (g.reachable_defs)
+              } in
+            (uu___2, uu___3)
 let (extract_type_abbrev :
   env ->
-    FStar_Extraction_ML_Syntax.one_mltydecl ->
-      (Pulse2Rust_Rust_Syntax.item * env))
+    FStar_Extraction_ML_Syntax.mlexpr Prims.list ->
+      FStar_Extraction_ML_Syntax.one_mltydecl ->
+        (Pulse2Rust_Rust_Syntax.item * env))
   =
   fun g ->
-    fun d ->
-      let uu___ = d.FStar_Extraction_ML_Syntax.tydecl_defn in
-      match uu___ with
-      | FStar_Pervasives_Native.Some (FStar_Extraction_ML_Syntax.MLTD_Abbrev
-          t) ->
-          let uu___1 =
+    fun uu___ ->
+      fun d ->
+        let uu___1 = d.FStar_Extraction_ML_Syntax.tydecl_defn in
+        match uu___1 with
+        | FStar_Pervasives_Native.Some
+            (FStar_Extraction_ML_Syntax.MLTD_Abbrev t) ->
             let uu___2 =
-              FStar_Compiler_List.map tyvar_of
-                d.FStar_Extraction_ML_Syntax.tydecl_parameters in
-            let uu___3 = extract_mlty g t in
-            Pulse2Rust_Rust_Syntax.mk_item_type
-              d.FStar_Extraction_ML_Syntax.tydecl_name uu___2 uu___3 in
-          (uu___1, g)
+              let uu___3 =
+                FStar_Compiler_List.map tyvar_of
+                  d.FStar_Extraction_ML_Syntax.tydecl_parameters in
+              let uu___4 = extract_mlty g t in
+              Pulse2Rust_Rust_Syntax.mk_item_type
+                d.FStar_Extraction_ML_Syntax.tydecl_name uu___3 uu___4 in
+            (uu___2, g)
 let (extract_enum :
   env ->
-    FStar_Extraction_ML_Syntax.one_mltydecl ->
-      (Pulse2Rust_Rust_Syntax.item * env))
+    FStar_Extraction_ML_Syntax.mlexpr Prims.list ->
+      FStar_Extraction_ML_Syntax.one_mltydecl ->
+        (Pulse2Rust_Rust_Syntax.item * env))
   =
   fun g ->
-    fun d ->
-      let uu___ = d.FStar_Extraction_ML_Syntax.tydecl_defn in
-      match uu___ with
-      | FStar_Pervasives_Native.Some (FStar_Extraction_ML_Syntax.MLTD_DType
-          cts) ->
-          let uu___1 =
-            let uu___2 =
-              enum_or_struct_name d.FStar_Extraction_ML_Syntax.tydecl_name in
-            let uu___3 =
-              FStar_Compiler_List.map tyvar_of
-                d.FStar_Extraction_ML_Syntax.tydecl_parameters in
-            let uu___4 =
-              FStar_Compiler_List.map
-                (fun uu___5 ->
-                   match uu___5 with
-                   | (cname, dts) ->
-                       let uu___6 =
-                         FStar_Compiler_List.map
-                           (fun uu___7 ->
-                              match uu___7 with
-                              | (uu___8, t) -> extract_mlty g t) dts in
-                       (cname, uu___6)) cts in
-            Pulse2Rust_Rust_Syntax.mk_item_enum uu___2 uu___3 uu___4 in
-          (uu___1, g)
+    fun mlattrs ->
+      fun d ->
+        let uu___ = d.FStar_Extraction_ML_Syntax.tydecl_defn in
+        match uu___ with
+        | FStar_Pervasives_Native.Some (FStar_Extraction_ML_Syntax.MLTD_DType
+            cts) ->
+            ((let uu___2 =
+                let uu___3 =
+                  FStar_Compiler_List.map
+                    FStar_Extraction_ML_Syntax.mlexpr_to_string mlattrs in
+                FStar_Compiler_String.concat ";" uu___3 in
+              FStar_Compiler_Util.print1 "extract_enum: attrs: %s\n" uu___2);
+             (let uu___2 =
+                let uu___3 =
+                  enum_or_struct_name
+                    d.FStar_Extraction_ML_Syntax.tydecl_name in
+                let uu___4 =
+                  FStar_Compiler_List.map tyvar_of
+                    d.FStar_Extraction_ML_Syntax.tydecl_parameters in
+                let uu___5 =
+                  FStar_Compiler_List.map
+                    (fun uu___6 ->
+                       match uu___6 with
+                       | (cname, dts) ->
+                           let uu___7 =
+                             FStar_Compiler_List.map
+                               (fun uu___8 ->
+                                  match uu___8 with
+                                  | (uu___9, t) -> extract_mlty g t) dts in
+                           (cname, uu___7)) cts in
+                Pulse2Rust_Rust_Syntax.mk_item_enum uu___3 uu___4 uu___5 in
+              (uu___2, g)))
 let (extract_mltydecl :
   env ->
-    FStar_Extraction_ML_Syntax.mltydecl ->
-      (Pulse2Rust_Rust_Syntax.item Prims.list * env))
+    FStar_Extraction_ML_Syntax.mlexpr Prims.list ->
+      FStar_Extraction_ML_Syntax.mltydecl ->
+        (Pulse2Rust_Rust_Syntax.item Prims.list * env))
   =
   fun g ->
-    fun d ->
-      FStar_Compiler_List.fold_left
-        (fun uu___ ->
-           fun d1 ->
-             match uu___ with
-             | (items, g1) ->
-                 let f =
-                   match d1.FStar_Extraction_ML_Syntax.tydecl_defn with
-                   | FStar_Pervasives_Native.Some
-                       (FStar_Extraction_ML_Syntax.MLTD_Abbrev uu___1) ->
-                       extract_type_abbrev
-                   | FStar_Pervasives_Native.Some
-                       (FStar_Extraction_ML_Syntax.MLTD_Record uu___1) ->
-                       extract_struct_defn
-                   | FStar_Pervasives_Native.Some
-                       (FStar_Extraction_ML_Syntax.MLTD_DType uu___1) ->
-                       extract_enum
-                   | uu___1 ->
-                       let uu___2 =
-                         let uu___3 =
-                           FStar_Extraction_ML_Syntax.one_mltydecl_to_string
-                             d1 in
-                         FStar_Compiler_Util.format1 "mltydecl %s" uu___3 in
-                       fail_nyi uu___2 in
-                 let uu___1 = f g1 d1 in
-                 (match uu___1 with
-                  | (item, g2) ->
-                      ((FStar_Compiler_List.op_At items [item]), g2)))
-        ([], g) d
+    fun mlattrs ->
+      fun d ->
+        FStar_Compiler_List.fold_left
+          (fun uu___ ->
+             fun d1 ->
+               match uu___ with
+               | (items, g1) ->
+                   let f =
+                     match d1.FStar_Extraction_ML_Syntax.tydecl_defn with
+                     | FStar_Pervasives_Native.Some
+                         (FStar_Extraction_ML_Syntax.MLTD_Abbrev uu___1) ->
+                         extract_type_abbrev
+                     | FStar_Pervasives_Native.Some
+                         (FStar_Extraction_ML_Syntax.MLTD_Record uu___1) ->
+                         extract_struct_defn
+                     | FStar_Pervasives_Native.Some
+                         (FStar_Extraction_ML_Syntax.MLTD_DType uu___1) ->
+                         extract_enum
+                     | uu___1 ->
+                         let uu___2 =
+                           let uu___3 =
+                             FStar_Extraction_ML_Syntax.one_mltydecl_to_string
+                               d1 in
+                           FStar_Compiler_Util.format1 "mltydecl %s" uu___3 in
+                         fail_nyi uu___2 in
+                   let uu___1 = f g1 mlattrs d1 in
+                   (match uu___1 with
+                    | (item, g2) ->
+                        ((FStar_Compiler_List.op_At items [item]), g2)))
+          ([], g) d
 let (empty_defs : reachable_defs) =
   FStar_Compiler_Set.empty FStar_Class_Ord.ord_string ()
 let (singleton : FStar_Extraction_ML_Syntax.mlpath -> reachable_defs) =
@@ -2001,8 +2016,11 @@ let (extract_one :
                                      g2))
                           | FStar_Extraction_ML_Syntax.MLM_Loc uu___4 ->
                               (items, g1)
-                          | FStar_Extraction_ML_Syntax.MLM_Ty d1 ->
-                              let uu___4 = extract_mltydecl g1 d1 in
+                          | FStar_Extraction_ML_Syntax.MLM_Ty td ->
+                              let uu___4 =
+                                extract_mltydecl g1
+                                  d.FStar_Extraction_ML_Syntax.mlmodule1_attrs
+                                  td in
                               (match uu___4 with
                                | (d_items, g2) ->
                                    ((FStar_Compiler_List.op_At items d_items),
