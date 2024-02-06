@@ -972,7 +972,7 @@ type st_typing : env -> st_term -> comp -> Type =
       eL:st_term ->
       cL:comp { C_ST? cL } ->
       eR:st_term ->
-      cR:comp { C_ST? cR /\ comp_u cL == comp_u cR } ->
+      cR:comp { C_ST? cR } ->
       x:var { None? (lookup g x) } ->
       // TODO: can comp_typing come from inversion of eL : cL and eR : cR?
       comp_typing_u g cL ->

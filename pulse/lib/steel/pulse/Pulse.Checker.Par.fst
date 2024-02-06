@@ -28,6 +28,7 @@ module P = Pulse.Syntax.Printer
 module RT = FStar.Reflection.Typing
 module MT = Pulse.Typing.Metatheory
 
+#push-options "--z3rlimit_factor 2 --split_queries no"
 let check
   (g:env)
   (pre:term)
@@ -46,31 +47,26 @@ let check
   let (| preR, preR_typing |) =
     check_tot_term g preR tm_vprop in
 
-  let postL_hint = intro_post_hint g None None postL in
+  let postL_hint = intro_post_hint g EffectAnnotSTT None postL in
 
   let (| eL, cL, eL_typing |) =
     let ppname = mk_ppname_no_range "_par_l" in
-    let r = 
-      check g preL preL_typing (Some postL_hint) ppname eL in
-    apply_checker_result_k r ppname in
+    let r = check g preL preL_typing (Some postL_hint) ppname eL in
+    apply_checker_result_k r ppname
+  in
 
-  if C_ST? cL
-  then
-    let cL_typing = MT.st_typing_correctness eL_typing in
-    let postR_hint = intro_post_hint g None None postR in
-    let (| eR, cR, eR_typing |) =
-      let ppname = mk_ppname_no_range "_par_r" in
-      let r =
-        check g preR preR_typing (Some postR_hint) ppname eR  in
-      apply_checker_result_k r ppname in
+  assert (C_ST? cL);
+  let cL_typing = MT.st_typing_correctness eL_typing in
+  let postR_hint = intro_post_hint g EffectAnnotSTT None postR in
+  let (| eR, cR, eR_typing |) =
+    let ppname = mk_ppname_no_range "_par_r" in
+    let r = check g preR preR_typing (Some postR_hint) ppname eR in
+    apply_checker_result_k r ppname
+  in
 
-    if C_ST? cR && eq_univ (comp_u cL) (comp_u cR)
-    then
-      let cR_typing = MT.st_typing_correctness eR_typing in
-      let x = fresh g in
-      let d = T_Par _ _ _ _ _ x cL_typing cR_typing eL_typing eR_typing in
-      prove_post_hint (try_frame_pre pre_typing (match_comp_res_with_post_hint d post_hint) res_ppname) post_hint t.range
-    else fail g (Some eR.range)
-           (Printf.sprintf "check_par: right computation is not stt (%s)" (P.comp_to_string cR))
-  else fail g (Some eL.range)
-           (Printf.sprintf "check_par: left computation is not stt (%s)" (P.comp_to_string cL))
+  assert (C_ST? cR);
+  let cR_typing = MT.st_typing_correctness eR_typing in
+  let x = fresh g in
+  let d = T_Par _ _ _ _ _ x cL_typing cR_typing eL_typing eR_typing in
+  prove_post_hint (try_frame_pre pre_typing (match_comp_res_with_post_hint d post_hint) res_ppname) post_hint t.range
+#pop-options
