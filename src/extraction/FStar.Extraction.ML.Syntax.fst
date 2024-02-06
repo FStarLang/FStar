@@ -152,14 +152,20 @@ type mlletflavor =
   | Rec
   | NonRec
 
-type mlexpr' =
+type mlbinder = {
+  mlbinder_name:mlident;
+  mlbinder_ty:mlty;
+  mlbinder_attrs:list mlattribute;
+}
+
+and mlexpr' =
 | MLE_Const  of mlconstant
 | MLE_Var    of mlident
 | MLE_Name   of mlpath
 | MLE_Let    of mlletbinding * mlexpr //tyscheme for polymorphic recursion
 | MLE_App    of mlexpr * list mlexpr //why are function types curried, but the applications not curried
 | MLE_TApp   of mlexpr * list mlty
-| MLE_Fun    of list (mlident * mlty) * mlexpr
+| MLE_Fun    of list mlbinder * mlexpr
 | MLE_Match  of mlexpr * list mlbranch
 | MLE_Coerce of mlexpr * mlty * mlty
 (* SUGAR *)
@@ -187,11 +193,14 @@ and mllb = {
     mllb_tysc:option mltyscheme; // May be None for top-level bindings only
     mllb_add_unit:bool;
     mllb_def:mlexpr;
+    mllb_attrs:list mlattribute;
     mllb_meta:metadata;
     print_typ:bool;
 }
 
 and mlletbinding = mlletflavor * list mllb
+
+and mlattribute = mlexpr
 
 type mltybody =
 | MLTD_Abbrev of mlty
@@ -213,12 +222,20 @@ type one_mltydecl = {
 
 type mltydecl = list one_mltydecl // each element of this list is one among a collection of mutually defined types
 
-type mlmodule1 =
+type mlmodule1' =
 | MLM_Ty  of mltydecl
 | MLM_Let of mlletbinding
 | MLM_Exn of mlsymbol * list (mlsymbol * mlty)
 | MLM_Top of mlexpr // this seems outdated
 | MLM_Loc of mlloc // Location information; line number + file; only for the OCaml backend
+
+type mlmodule1 = {
+  mlmodule1_m : mlmodule1';
+  mlmodule1_attrs : list mlattribute;
+}
+
+let mk_mlmodule1 m = { mlmodule1_m = m; mlmodule1_attrs = [] }
+let mk_mlmodule1_with_attrs m attrs = { mlmodule1_m = m; mlmodule1_attrs = attrs }
 
 type mlmodule = list mlmodule1
 
@@ -304,8 +321,10 @@ let rec mlexpr_to_string (e:mlexpr) =
     BU.format2 "(MLE_App (%s, [%s]))" (mlexpr_to_string e) (String.concat "; " (List.map mlexpr_to_string es))
   | MLE_TApp (e, ts) ->
     BU.format2 "(MLE_TApp (%s, [%s]))" (mlexpr_to_string e) (String.concat "; " (List.map mlty_to_string ts))
-  | MLE_Fun (xs, e) ->
-    BU.format2 "(MLE_Fun ([%s], %s))" (String.concat "; " (List.map (fun (x, t) -> BU.format2 "(%s, %s)" x (mlty_to_string t)) xs)) (mlexpr_to_string e)
+  | MLE_Fun (bs, e) ->
+    BU.format2 "(MLE_Fun ([%s], %s))"
+      (String.concat "; " (List.map (fun b -> BU.format2 "(%s, %s)" b.mlbinder_name (mlty_to_string b.mlbinder_ty)) bs))
+      (mlexpr_to_string e)
   | MLE_Match (e, bs) ->
     BU.format2 "(MLE_Match (%s, [%s]))" (mlexpr_to_string e) (String.concat "; " (List.map mlbranch_to_string bs))
   | MLE_Coerce (e, t1, t2) ->
@@ -391,7 +410,7 @@ let one_mltydecl_to_string (d:one_mltydecl) : string =
      | Some d -> mltybody_to_string d)
 
 let mlmodule1_to_string (m:mlmodule1) : string =
-  match m with
+  match m.mlmodule1_m with
   | MLM_Ty d -> BU.format1 "MLM_Ty [%s]" (List.map one_mltydecl_to_string d |> String.concat "; ")
   | MLM_Let l -> BU.format1 "MLM_Let %s" (mlletbinding_to_string l)
   | MLM_Exn (s, l) ->

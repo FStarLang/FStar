@@ -326,8 +326,8 @@ let find_t env x =
   with _ ->
     failwith (BU.format1 "Internal error: name not found %s\n" x)
 
-let add_binders env binders =
-  List.fold_left (fun env (name, _) -> extend env name) env binders
+let add_binders env bs =
+  List.fold_left (fun env {mlbinder_name} -> extend env mlbinder_name) env bs
 
 (* Actual translation ********************************************************)
 
@@ -589,11 +589,11 @@ and translate_type' env t: typ =
       
   | t -> translate_type_without_decay env t
 
-and translate_binders env args =
-  List.map (translate_binder env) args
+and translate_binders env bs =
+  List.map (translate_binder env) bs
 
-and translate_binder env (name, typ) =
-  { name = name; typ = translate_type env typ; mut = false }
+and translate_binder env ({mlbinder_name;mlbinder_ty}) =
+  { name = mlbinder_name; typ = translate_type env mlbinder_ty; mut = false }
 
 and translate_expr' env e: expr =
   match e.expr with
@@ -995,9 +995,9 @@ and translate_expr' env e: expr =
   | MLE_CTor ((_, cons), es) ->
       ECons (assert_lid env e.mlty, cons, List.map (translate_expr env) es)
 
-  | MLE_Fun (args, body) ->
-      let binders = translate_binders env args in
-      let env = add_binders env args in
+  | MLE_Fun (bs, body) ->
+      let binders = translate_binders env bs in
+      let env = add_binders env bs in
       EFun (binders, translate_expr env body, translate_type env body.mlty)
 
   | MLE_If (e1, e2, e3) ->
@@ -1168,7 +1168,7 @@ let translate_let' env flavor lb: option decl =
     } when BU.for_some (function Syntax.Assumed -> true | _ -> false) meta ->
       let name = env.module_name, name in
       let arg_names = match e.expr with
-        | MLE_Fun (args, _) -> List.map fst args
+        | MLE_Fun (bs, _) -> List.map (fun {mlbinder_name} -> mlbinder_name) bs
         | _ -> []
       in
       if List.length tvars = 0 then
@@ -1277,7 +1277,7 @@ let translate_let env flavor lb: option decl =
   !ref_translate_let env flavor lb
 
 let translate_decl env d: list decl =
-  match d with
+  match d.mlmodule1_m with
   | MLM_Let (flavor, lbs) ->
       // We don't care about mutual recursion, since every C file will include
       // its own header with the forward declarations.

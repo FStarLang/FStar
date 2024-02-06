@@ -179,7 +179,7 @@ let join r f f' = match f, f' with
 
 let join_l r fs = List.fold_left (join r) E_PURE fs
 
-let mk_ty_fun = List.fold_right (fun (_, t0) t -> MLTY_Fun(t0, E_PURE, t))
+let mk_ty_fun = List.fold_right (fun {mlbinder_ty} t -> MLTY_Fun(mlbinder_ty, E_PURE, t))
 
 (* type_leq is essentially the lifting of the sub-effect relation, eff_leq, into function types.
    type_leq_c is a coercive variant of type_leq, which implements an optimization to erase the bodies of ghost functions.
@@ -364,7 +364,8 @@ let rec eraseTypeDeep unfold_ty (t:mlty) : mlty =
     | _ ->  t
 
 let prims_op_equality = with_ty MLTY_Top <| MLE_Name (["Prims"], "op_Equality")
-let prims_op_amp_amp  = with_ty (mk_ty_fun [("x", ml_bool_ty); ("y", ml_bool_ty)] ml_bool_ty) <| MLE_Name (["Prims"], "op_AmpAmp")
+let prims_op_amp_amp  = with_ty (mk_ty_fun [{mlbinder_name="x";mlbinder_ty=ml_bool_ty;mlbinder_attrs=[]};
+                                            {mlbinder_name="y";mlbinder_ty=ml_bool_ty;mlbinder_attrs=[]}] ml_bool_ty) <| MLE_Name (["Prims"], "op_AmpAmp")
 let conjoin e1 e2 = with_ty ml_bool_ty <| MLE_App(prims_op_amp_amp, [e1;e2])
 let conjoin_opt e1 e2 = match e1, e2 with
     | None, None -> None

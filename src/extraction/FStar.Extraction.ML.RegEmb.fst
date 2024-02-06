@@ -72,8 +72,10 @@ let ml_record : Ident.lid -> list (string & mlexpr) -> mlexpr =
     // [] -> assuming same module
     mk (MLE_Record ([], l |> Ident.ident_of_lid |> Ident.string_of_id, args))
 
+let mk_binder x t = {mlbinder_name=x; mlbinder_ty=t; mlbinder_attrs=[]}
+
 let ml_lam nm e =
-    mk <| MLE_Fun ([(nm, MLTY_Top)], e)
+    mk <| MLE_Fun ([mk_binder nm MLTY_Top ], e)
 
 let ml_none : mlexpr = mk (MLE_Name (["FStar"; "Pervasives"; "Native"], "None"))
 let ml_some : mlexpr = mk (MLE_Name (["FStar"; "Pervasives"; "Native"], "Some"))
@@ -595,7 +597,7 @@ let mk_unembed
       let ret = mk (MLE_App (ml_some, [ret])) in // final return
 
       let body = List.fold_right (fun (v, ty) body ->
-        let body = mk (MLE_Fun ([(v, MLTY_Top)], body)) in
+        let body = mk (MLE_Fun ([mk_binder v MLTY_Top], body)) in
 
         mk (MLE_App (ml_name bind_opt_lid, [
                       mk (MLE_App (ml_name unembed_lid, [embedding_for tcenv mutuals SyntaxTerm [] ty; mk (MLE_Var v)]));
@@ -612,7 +614,7 @@ let mk_unembed
   let branches = List.rev (nomatch :: !e_branches) in
   let sc = mk (MLE_Var arg_v) in
   let def = mk (MLE_Match (sc, branches)) in
-  let lam = mk (MLE_Fun ([arg_v, MLTY_Top], def)) in
+  let lam = mk (MLE_Fun ([mk_binder arg_v MLTY_Top], def)) in
   lam
 
 (* Creates an embedding function for the type *)
@@ -663,7 +665,7 @@ let mk_embed
   let branches = List.rev !e_branches in
   let sc = mk (MLE_Var arg_v) in
   let def = mk (MLE_Match (sc, branches)) in
-  let lam = mk (MLE_Fun ([arg_v, MLTY_Top], def)) in
+  let lam = mk (MLE_Fun ([mk_binder arg_v MLTY_Top], def)) in
   lam
 
 
@@ -689,7 +691,7 @@ let __do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlm
              let h = with_ty MLTY_Top <| MLE_Name register in
              let arity  = MLE_Const (MLC_Int(string_of_int arity, None)) in
              let app = with_ty MLTY_Top <| MLE_App (h, [mk ml_name_str; mk arity] @ args) in
-             [MLM_Top app]
+             [MLM_Top app |> mk_mlmodule1]
          | None -> []
       in
       List.collect mk_registration (snd lbs)
@@ -728,13 +730,14 @@ let __do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlm
                       ml_unembed;
                       ml_embed]))
       in
-      let def = mk (MLE_Fun ([("_", MLTY_Erased)], def)) in // thunk
+      let def = mk (MLE_Fun ([mk_binder "_" MLTY_Erased], def)) in // thunk
       let lb = {
         mllb_name     = "__knot_e_" ^ name;
         mllb_tysc     = None;
         mllb_add_unit = false;
         mllb_def      = def;
         mllb_meta     = [];
+        mllb_attrs    = [];
         print_typ     = false;
       }
       in
@@ -761,14 +764,15 @@ let __do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlm
           mllb_add_unit = false;
           mllb_def      = app;
           mllb_meta     = [];
+          mllb_attrs    = [];
           print_typ     = false;
         }
         in
-        [MLM_Let (NonRec, [lb])]
+        [MLM_Let (NonRec, [lb]) |> mk_mlmodule1]
       )
     in
     // TODO: We always make a let rec, we could check if that's really needed.
-    [MLM_Let (Rec, lbs)] @ unthunking
+    [MLM_Let (Rec, lbs) |> mk_mlmodule1] @ unthunking
 
   | _ -> []
 

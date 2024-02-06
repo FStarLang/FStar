@@ -34,7 +34,7 @@ val eff_leq : f:e_tag -> f':e_tag -> bool
 val eff_to_string : _arg1:e_tag -> string
 val join : r:Range.range -> f:e_tag -> f':e_tag -> e_tag
 val join_l : r:Range.range -> fs:Prims.list e_tag -> e_tag
-val mk_ty_fun : (Prims.list (mlident * mlty) -> mlty -> mlty)
+val mk_ty_fun : (Prims.list mlbinder -> mlty -> mlty)
 type unfold_t = mlty -> option mlty
 val type_leq_c : unfold_ty:unfold_t -> e:option mlexpr -> t:mlty -> t':mlty -> bool * option mlexpr
 val type_leq : g:unfold_t -> t1:mlty -> t2:mlty -> bool
