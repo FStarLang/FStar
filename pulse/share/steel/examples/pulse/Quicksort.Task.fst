@@ -14,16 +14,22 @@
    limitations under the License.
 *)
 
-module QuickSort.TaskParallel
+module QuickSort.Task
+
 open Pulse.Lib.Pervasives
 module A = Pulse.Lib.Array
 module R = Pulse.Lib.Reference
 module SZ = FStar.SizeT
+
 open Pulse.Lib.InvList
 
 module T = TaskPool
-open QuickSortParallel
+open Quicksort.Base
 open Pulse.Lib.Par.Pledge
+
+
+let quicksort_pre a lo hi s0 lb rb : vprop =
+  A.pts_to_range a lo hi s0 ** pure (pure_pre_quicksort a lo hi lb rb s0)
 
 let quicksort_post a lo hi s0 lb rb : vprop =
   exists* s. (A.pts_to_range a lo hi s ** pure (pure_post_quicksort a lo hi lb rb s0 s))
@@ -32,10 +38,10 @@ let quicksort_post a lo hi s0 lb rb : vprop =
 fn rec t_quicksort
   (p : T.pool)
   (f : perm)
-  (a: A.array int)
-  (lo: nat) (hi:(hi:int{-1 <= hi - 1 /\ lo <= hi}))
-  (lb rb: int)
-  (#s0: Ghost.erased (Seq.seq int))
+  (a : A.array int)
+  (lo : nat) (hi : (hi:nat{lo <= hi}))
+  (lb rb : erased int)
+  (#s0 : erased (Seq.seq int))
   requires
     T.pool_alive #f p **
     A.pts_to_range a lo hi s0 **
@@ -61,13 +67,11 @@ fn rec t_quicksort
     T.spawn_ p #(half_perm f) (fun () -> t_quicksort p (half_perm (half_perm f)) a lo r._1 lb pivot);
     
     return_pledge [] (T.pool_done p) (T.pool_alive #(half_perm f) p ** A.pts_to_range a r._1 r._2 s2);
-    squash_pledge [] (T.pool_done p) _;
-    join_pledge #[] #(T.pool_done p) _ _;
-    join_pledge #[] #(T.pool_done p) _ _;
-    
-    ghost fn
-    rewrite_pf
-      (_:unit)
+    squash_pledge _ _ _;
+    join_pledge _ _;
+    join_pledge _ _;
+
+    ghost fn rewrite_pf ()
       requires
         (T.pool_alive #(half_perm (half_perm f)) p ** quicksort_post a lo r._1 s1 lb pivot) **
         (T.pool_alive #(half_perm f) p             ** A.pts_to_range a r._1 r._2 s2) **
@@ -76,11 +80,13 @@ fn rec t_quicksort
         T.pool_alive #f p **
         quicksort_post a lo hi s0 lb rb
     {
+      (* Functional correctness *)
       unfold quicksort_post;
       unfold quicksort_post;
       quicksort_proof a lo r._1 r._2 hi lb rb pivot #s0 s1 s2 s3;
       fold (quicksort_post a lo hi s0 lb rb);
 
+      (* Permission accounting *)
       T.gather_alive p (half_perm f);
       T.gather_alive p f;
     };
@@ -112,10 +118,11 @@ fn rec t_quicksort
 
 ```pulse
 fn rec quicksort
-  (a: A.array int)
-  (lo: nat) (hi:(hi:int{-1 <= hi - 1 /\ lo <= hi}))
-  (lb rb: int)
-  (#s0: Ghost.erased (Seq.seq int))
+  (nthr : pos)
+  (a : A.array int)
+  (lo : nat) (hi : (hi:nat{lo <= hi}))
+  (lb rb : erased int)
+  (#s0 : erased (Seq.seq int))
   requires
     A.pts_to_range a lo hi s0 **
     pure (pure_pre_quicksort a lo hi lb rb s0)
@@ -124,7 +131,7 @@ fn rec quicksort
 {
   assume_ (pure (comp_perm (half_perm full_perm) == half_perm full_perm)); // F* limitation, real arith
 
-  let p = T.setup_pool 8;
+  let p = T.setup_pool nthr;
   T.share_alive p full_perm;
   t_quicksort p (half_perm full_perm) a lo hi lb rb #s0;
 

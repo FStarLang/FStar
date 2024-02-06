@@ -25,7 +25,7 @@ val pool : Type0
 val pool_alive : (#[T.exact (`full_perm)]p : perm) -> pool -> vprop
 val pool_done : pool -> vprop
 
-val setup_pool (n:nat)
+val setup_pool (n:pos)
   : stt pool emp (fun p -> pool_alive #full_perm p)
 
 val task_handle : pool -> a:Type0 -> (a -> vprop) -> Type0
@@ -103,9 +103,6 @@ val join
   (#post : a -> vprop)
   (th : task_handle p a post)
   : stt a (joinable th) (fun x -> post x)
-// let join =
-//   bind_stt (join0 th) (fun () ->
-//   extract th)
 
 (* We must exclusively own the pool in order to terminate it. *)
 val teardown_pool

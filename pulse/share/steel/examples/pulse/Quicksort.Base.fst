@@ -14,12 +14,16 @@
    limitations under the License.
 *)
 
-module QuickSortParallel
+module Quicksort.Base
+
 open Pulse.Lib.Pervasives
 module A = Pulse.Lib.Array
 module R = Pulse.Lib.Reference
-module T = FStar.Tactics
 module SZ = FStar.SizeT
+
+(* Base module with proof of correctness of Quicksort, partition, etc.
+Actual implementations are Quicksort.Sequential, Quicksort.Parallel and
+Quicksort.Task. *)
 
 let nat_smaller (n: nat) = i:nat{i < n}
 let nat_fits = n:nat{SZ.fits n}
@@ -395,7 +399,7 @@ fn partition_wrapper (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi}))
 (** QuickSort **)
 
 unfold
-let pure_pre_quicksort (a: A.array int) (lo: nat) (hi:(hi:int{-1 <= hi - 1 /\ lo <= hi})) (lb rb: int) (s0: Seq.seq int)
+let pure_pre_quicksort (a: A.array int) (lo: nat) (hi:(hi:nat{lo <= hi})) (lb rb: int) (s0: Seq.seq int)
   = hi <= A.length a /\
     between_bounds s0 lb rb /\
     Seq.length s0 = hi - lo /\
@@ -404,7 +408,7 @@ let pure_pre_quicksort (a: A.array int) (lo: nat) (hi:(hi:int{-1 <= hi - 1 /\ lo
     lb <= rb
 
 unfold
-let pure_post_quicksort (a: A.array int) (lo: nat) (hi:(hi:int{-1 <= hi - 1 /\ lo <= hi})) (lb rb: int) (s0 s: Seq.seq int)
+let pure_post_quicksort (a: A.array int) (lo: nat) (hi:(hi:nat{lo <= hi})) (lb rb: int) (s0 s: Seq.seq int)
   = hi <= A.length a /\
     Seq.length s0 = hi - lo /\
     Seq.length s = hi - lo /\
@@ -451,49 +455,8 @@ fn quicksort_proof
 }
 ```
 
-```pulse
-fn rec quicksort (a: A.array int) (lo: nat) (hi:(hi:int{-1 <= hi - 1 /\ lo <= hi})) (lb rb: int) (#s0: Ghost.erased (Seq.seq int))
-  requires A.pts_to_range a lo hi s0 ** pure (pure_pre_quicksort a lo hi lb rb s0)
-  ensures exists* s. (A.pts_to_range a lo hi s ** pure (pure_post_quicksort a lo hi lb rb s0 s))
-{
-  if (lo < hi - 1)
-  {
-    let r = partition_wrapper a lo hi lb rb;
-    let pivot = r._3;
-    with s1. assert (A.pts_to_range a lo r._1 s1);
-    with s2. assert (A.pts_to_range a r._1 r._2 s2);
-    with s3. assert (A.pts_to_range a r._2 hi s3);
+let quicksort_pre a lo hi s0 lb rb : vprop =
+  A.pts_to_range a lo hi s0 ** pure (pure_pre_quicksort a lo hi lb rb s0)
 
-    if (lo + 1000 < hi) // worth parallelizing
-      ensures 
-          (exists* s. (A.pts_to_range a lo r._1 s ** pure (pure_post_quicksort a lo r._1 lb pivot s1 s))) **
-          (exists* s. (A.pts_to_range a r._2 hi s ** pure (pure_post_quicksort a r._2 hi pivot rb s3 s))) **
-          A.pts_to_range a r._1 r._2 s2 **
-          pure (Seq.length s0 == hi - lo
-                /\ lb <= pivot /\ pivot <= rb
-                /\ permutation s0 (Seq.append s1 (Seq.append s2 s3))
-                /\ between_bounds s2 pivot pivot)
-    {
-      parallel
-        requires (A.pts_to_range a lo r._1 s1 ** pure (pure_pre_quicksort a lo r._1 lb pivot s1))
-            and (A.pts_to_range a r._2 hi s3 ** pure (pure_pre_quicksort a r._2 hi pivot rb s3))
-        ensures (exists* s. (A.pts_to_range a lo r._1 s ** pure (pure_post_quicksort a lo r._1 lb pivot s1 s)))
-            and (exists* s. (A.pts_to_range a r._2 hi s ** pure (pure_post_quicksort a r._2 hi pivot rb s3 s)))
-        { quicksort a lo r._1 lb pivot; }
-        { quicksort a r._2 hi pivot rb; };
-      ()
-    } else {
-      // else run sequentially
-      quicksort a lo r._1 lb pivot;
-      quicksort a r._2 hi pivot rb;
-    };
-    
-    with s1'. assert (A.pts_to_range a lo r._1 s1');
-    with s3'. assert (A.pts_to_range a r._2 hi s3');
-    
-    let _ = append_permutations_3_squash s1 s2 s3 s1' s3' ();
-
-    quicksort_proof a lo r._1 r._2 hi lb rb pivot #s0 s1' s2 s3';
-  }
-}
-```
+let quicksort_post a lo hi s0 lb rb : vprop =
+  exists* s. (A.pts_to_range a lo hi s ** pure (pure_post_quicksort a lo hi lb rb s0 s))
