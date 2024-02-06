@@ -22,20 +22,20 @@ open Pulse.Lib.InvList
 module T = FStar.Tactics
 
 val trade :
-  (#[T.exact (`[])] is : invlist) ->
+  (#[T.exact (`invlist_empty)] is : invlist) ->
   (hyp : vprop) ->
   (concl : vprop) ->
   vprop
 
 let ( ==>* ) :
-  (#[T.exact (`[])] is : invlist) ->
+  (#[T.exact (`invlist_empty)] is : invlist) ->
   (hyp : vprop) ->
   (concl : vprop) ->
   vprop
   = fun #is -> trade #is
 
 val intro_trade
-  (#[T.exact (`[])] is : invlist)
+  (#[T.exact (`invlist_empty)] is : invlist)
   (hyp concl: vprop)
   (extra: vprop)
   (f_elim: unit -> (
@@ -48,14 +48,14 @@ val intro_trade
     (fun _ -> trade #is hyp concl)
 
 val elim_trade_ghost
-  (#[T.exact (`[])] is : invlist)
+  (#[T.exact (`invlist_empty)] is : invlist)
   (hyp concl: vprop)
 : stt_ghost unit
     (invlist_v is ** (trade #is hyp concl) ** hyp)
     (fun _ -> invlist_v is ** concl)
 
 val elim_trade
-  (#[T.exact (`[])] is : invlist)
+  (#[T.exact (`invlist_empty)] is : invlist)
   (hyp concl: vprop)
 : stt_atomic unit #Unobservable (invlist_names is)
     ((trade #is hyp concl) ** hyp)

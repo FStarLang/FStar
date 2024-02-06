@@ -132,12 +132,18 @@ fn __trade_sub_inv
   (#os2 : invlist{invlist_sub os1 os2})
   (hyp concl: vprop)
   requires trade #os1 hyp concl
-  ensures trade #os2 hyp concl
+  ensures  trade #os2 hyp concl
 {
-  (* TODO: this should follow from the fact that,
-  if is1 is a subset of is2, then invlist_v is1 is a "sub vprop" of invlist_v is2,
-  and we can just frame the rest. I don't expect any surprises (fingers crossed) *)
-  admit()
+  ghost
+  fn aux (_:unit)
+    requires (invlist_v os2 ** trade #os1 hyp concl) ** hyp
+    ensures  invlist_v os2 ** concl
+  {
+    invlist_sub_split os1 os2;
+    elim_trade_ghost #os1 hyp concl;
+    Pulse.Lib.Priv.Trade0.elim_stick (invlist_v os1) (invlist_v os2);
+  };
+  intro_trade hyp concl (trade #os1 hyp concl) aux;
 }
 ```
 let trade_sub_inv = __trade_sub_inv

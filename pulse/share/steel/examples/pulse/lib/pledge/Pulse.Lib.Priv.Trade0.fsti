@@ -14,7 +14,10 @@
    limitations under the License.
 *)
 
-module Pulse.Lib.Stick
+module Pulse.Lib.Priv.Trade0
+
+(* Do NOT use this module in user code. This is only here for the
+implementation of the InvList. *)
 
 open Pulse.Lib.Core
 
@@ -22,12 +25,6 @@ val stick  :
   (hyp : vprop) ->
   (concl : vprop) ->
   vprop
-
-let ( @==> ) :
-  (hyp : vprop) ->
-  (concl : vprop) ->
-  vprop
-  = stick
 
 val elim_stick
   (hyp concl: vprop)
@@ -46,3 +43,10 @@ val intro_stick
 : stt_ghost unit
     v
     (fun _ -> stick hyp concl)
+
+val frame_stick
+  (hyp concl: vprop)
+  (f: vprop)
+: stt_ghost unit
+    (stick hyp concl)
+    (fun _ -> stick (hyp ** f) (concl ** f))

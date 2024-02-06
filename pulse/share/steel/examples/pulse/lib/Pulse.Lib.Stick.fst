@@ -15,113 +15,25 @@
 *)
 
 module Pulse.Lib.Stick
-open PulseCore.Observability
+
 open Pulse.Lib.Pervasives
+module T = Pulse.Lib.Trade
 
-(* This is shows that trades can be implemented in unobservable, with a specialized
-   indefinite description axiom. But, this will soon be superseded by an implementation
-   from Guido that defines trades in a more general form. *)
-   
-let implication opens p q =
-  unit -> stt_atomic unit #Unobservable opens p (fun _ -> q)
+(* This lemma needed to typecheck the definitions below. *)
+let emp_unit_left (p:vprop)
+  : Lemma (emp ** p == p)
+          [SMTPat (emp ** p)]
+  = elim_vprop_equiv (vprop_equiv_unit p)
 
-let is_implication opens p q : prop =
-  squash (implication opens p q)
+(* This module is just a special case of trades. The tactic
+instantiates the implicit InvList to [] everywhere. We do not
+even need to use the Pulse checker for it. *)
 
-assume
-val indefinite_description_implication
-  (#opens: inames) (#p #q:vprop)
-  (_:squash (is_implication opens p q))
-: unit -> stt_atomic unit #Unobservable opens p (fun _ -> q)
+let stick (p q : vprop) =
+  T.trade p q
 
-let token (v:vprop) = v
+let elim_stick p q =
+  T.elim_trade_ghost p q
 
-let trade #opens (p q:vprop)
-: vprop
-= exists* (v:vprop). token v ** pure (is_implication opens (v ** p) q)
-
-```pulse
-unobservable
-fn return (#a:Type u#2) (x:a)
-requires emp
-returns v:a
-ensures pure (v == x)
-{
-  x
-}
-```
-
-```pulse
-unobservable
-fn elim_trade #is (hyp concl: vprop)
-requires trade #is hyp concl ** hyp
-ensures concl
-opens is
-{
-  unfold (trade #is hyp concl);
-  with v. assert (token v);
-  unfold token;
-  let f = return (indefinite_description_implication #is #(reveal v ** hyp) #concl ());
-  f ();
-}
-```
-
-```pulse
-ghost
-fn intro_trade
-  (#[T.exact (`emp_inames)] is : inames)
-  (hyp concl: vprop)
-  (v: vprop)
-  (f_elim: unit -> (
-    stt_atomic unit #Unobservable is
-    (v ** hyp)
-    (fun _ -> concl)
-  ))
-requires v
-ensures trade #is hyp concl
-{
-  let f = FStar.Squash.return_squash #(implication is (v ** hyp) concl) f_elim;
-  fold (token v);
-  fold (trade #is hyp concl);
-}
-```
-
-let sub_inv
-    (os1 : inames) 
-    (os2 : inames{inames_subset os1 os2})
-    (hyp concl:vprop)
-    (f:implication os1 hyp concl)
-: implication os2 hyp concl
-= fun _ -> sub_invs_atomic (f ()) ()
-
-let sub_inv_squash
-    (os1 : inames) 
-    (os2 : inames{inames_subset os1 os2})
-    (hyp concl:vprop)
-    (f:squash (is_implication os1 hyp concl))
-: squash (is_implication os2 hyp concl)
-= let p : squash (implication os1 hyp concl) = FStar.Squash.join_squash f in
-  FStar.Squash.bind_squash p
-    (fun f ->
-      FStar.Squash.return_squash (sub_inv os1 os2 hyp concl f))
-
-```pulse
-ghost
-fn trade_sub_inv
-  (#os1 : inames)
-  (#os2 : inames{inames_subset os1 os2})
-  (hyp concl: vprop)
-requires trade #os1 hyp concl
-ensures trade #os2 hyp concl
-{
-  unfold trade #os1 hyp concl;
-  with v. assert (token v);
-  let _ = sub_inv_squash os1 os2 (reveal v ** hyp) concl ();
-  fold (trade #os2 hyp concl);
-}
-```
-
-let stick #is = admit()
-let elim_stick = admit()
-let intro_stick = admit()
-let stick_sub_inv #os1 #os2 = admit()
+let intro_stick p q v f =
+  T.intro_trade p q v f
