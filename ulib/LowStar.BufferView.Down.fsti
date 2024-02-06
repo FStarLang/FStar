@@ -15,6 +15,8 @@
 *)
 module LowStar.BufferView.Down
 
+open FStar.DTuple4
+
 (**
  * A "down view" on a buffer allows treating a
  * `Buffer.buffer a` as a
