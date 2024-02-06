@@ -684,6 +684,14 @@ and extract_mlbranch_to_arm (g:env) ((pat, pat_guard, body):S.mlbranch) : arm =
     let arm_body = extract_mlexpr g body in
     mk_arm pat arm_body
 
+let has_rust_const_fn_attribute (lb:S.mllb) : bool =
+  List.existsb (fun attr ->
+    match attr.S.expr with
+    | S.MLE_CTor (p, _)
+      when S.string_of_mlpath p = "Pulse.Lib.Pervasives.Rust_const_fn" -> true
+    | _ -> false
+  ) lb.mllb_attrs
+
 let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : item & env =
   let is_rec, lbs = lbs in
   if is_rec = S.Rec
@@ -693,15 +701,17 @@ let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : item & env =
     
     match lb.mllb_def.expr with
     | S.MLE_Fun (bs, body) ->
-      let arg_names = List.map fst bs in
+      let arg_names = List.map (fun b -> b.S.mlbinder_name) bs in
       let tvars, arg_ts, ret_t =
         match lb.mllb_tysc with
         | Some tsc ->
           let tvars, arg_ts, ret_t = arg_ts_and_ret_t tsc in
           tvars, arg_ts, Some ret_t
         | None ->
-          [], List.map snd bs, None in
-      
+          [], List.map (fun b -> b.S.mlbinder_ty) bs, None in
+
+      print1 "has_rust_const_fn_attribute: %s\n" (string_of_bool (has_rust_const_fn_attribute lb));
+
       let fn_sig, g_body =
         extract_top_level_sig g lb.mllb_name tvars arg_names arg_ts ret_t in
       let fn_body = extract_mlexpr_to_stmts g_body body in
@@ -837,7 +847,7 @@ let rec reachable_defs_expr' (e:S.mlexpr') : reachable_defs =
   | MLE_TApp (e, ts) ->
     Set.union (reachable_defs_expr e) (reachable_defs_list reachable_defs_mlty ts)
   | MLE_Fun (args, e) ->
-    Set.union (reachable_defs_list (fun (_, t) -> reachable_defs_mlty t) args)
+    Set.union (reachable_defs_list (fun b -> reachable_defs_mlty b.S.mlbinder_ty) args)
               (reachable_defs_expr e)
   | MLE_Match (e, bs) ->
     Set.union (reachable_defs_expr e)
@@ -897,7 +907,7 @@ let reachable_defs_mltydecl (t:S.mltydecl) : reachable_defs =
 
 let mlmodule1_name (m:S.mlmodule1) : list S.mlsymbol =
   let open S in
-  match m with
+  match m.mlmodule1_m with
   | MLM_Ty l -> List.map (fun t -> t.tydecl_name) l
   | MLM_Let (_, lbs) -> List.map (fun lb -> lb.mllb_name) lbs
   | MLM_Exn (s, _) -> [s]
@@ -907,7 +917,7 @@ let mlmodule1_name (m:S.mlmodule1) : list S.mlsymbol =
 let reachable_defs_mlmodule1 (m:S.mlmodule1) : reachable_defs =
   let open S in
   let defs =
-    match m with
+    match m.mlmodule1_m with
     | MLM_Ty t -> reachable_defs_mltydecl t
     | MLM_Let lb -> reachable_defs_mlletbinding lb
     | MLM_Exn (_, args) ->
@@ -924,7 +934,7 @@ let reachable_defs_decls (decls:S.mlmodule) : reachable_defs =
 
 let decl_reachable (reachable_defs:reachable_defs) (mname:string) (d:S.mlmodule1) : bool =
   let open S in
-  match d with
+  match d.mlmodule1_m with
   | MLM_Ty t ->
     List.existsb (fun ty_decl ->Set.mem (mname ^ "." ^ ty_decl.tydecl_name) reachable_defs) t
   | MLM_Let (_, lbs) ->
@@ -966,7 +976,7 @@ let extract_one
     //       Should fix it in a better way
     //       For now, just not extracting them ... that too with a hack on names
     //
-    match d with
+    match d.S.mlmodule1_m with
     | S.MLM_Let (S.NonRec, [{mllb_name}])
       when starts_with mllb_name "explode_ref" ||
            starts_with mllb_name "unexplode_ref" ||

@@ -1341,8 +1341,9 @@ and (extract_mlexpr_to_stmts :
                     (FStar_Extraction_ML_Syntax.MLC_Unit);
                   FStar_Extraction_ML_Syntax.mlty = uu___4;
                   FStar_Extraction_ML_Syntax.loc = uu___5;_};
-              FStar_Extraction_ML_Syntax.mllb_meta = uu___6;
-              FStar_Extraction_ML_Syntax.print_typ = uu___7;_}::[]),
+              FStar_Extraction_ML_Syntax.mllb_attrs = uu___6;
+              FStar_Extraction_ML_Syntax.mllb_meta = uu___7;
+              FStar_Extraction_ML_Syntax.print_typ = uu___8;_}::[]),
            e1)
           -> extract_mlexpr_to_stmts g e1
       | FStar_Extraction_ML_Syntax.MLE_Let
@@ -1461,6 +1462,16 @@ and (extract_mlbranch_to_arm :
                 | (g1, pat1) ->
                     let arm_body = extract_mlexpr g1 body in
                     Pulse2Rust_Rust_Syntax.mk_arm pat1 arm_body))
+let (has_rust_const_fn_attribute :
+  FStar_Extraction_ML_Syntax.mllb -> Prims.bool) =
+  fun lb ->
+    FStar_Compiler_List.existsb
+      (fun attr ->
+         match attr.FStar_Extraction_ML_Syntax.expr with
+         | FStar_Extraction_ML_Syntax.MLE_CTor (p, uu___) when
+             let uu___1 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___1 = "Pulse.Lib.Pervasives.Rust_const_fn" -> true
+         | uu___ -> false) lb.FStar_Extraction_ML_Syntax.mllb_attrs
 let (extract_top_level_lb :
   env ->
     FStar_Extraction_ML_Syntax.mlletbinding ->
@@ -1481,8 +1492,9 @@ let (extract_top_level_lb :
                   with
                   | FStar_Extraction_ML_Syntax.MLE_Fun (bs, body) ->
                       let arg_names =
-                        FStar_Compiler_List.map FStar_Pervasives_Native.fst
-                          bs in
+                        FStar_Compiler_List.map
+                          (fun b ->
+                             b.FStar_Extraction_ML_Syntax.mlbinder_name) bs in
                       let uu___3 =
                         match lb.FStar_Extraction_ML_Syntax.mllb_tysc with
                         | FStar_Pervasives_Native.Some tsc ->
@@ -1494,28 +1506,35 @@ let (extract_top_level_lb :
                         | FStar_Pervasives_Native.None ->
                             let uu___4 =
                               FStar_Compiler_List.map
-                                FStar_Pervasives_Native.snd bs in
+                                (fun b ->
+                                   b.FStar_Extraction_ML_Syntax.mlbinder_ty)
+                                bs in
                             ([], uu___4, FStar_Pervasives_Native.None) in
                       (match uu___3 with
                        | (tvars, arg_ts, ret_t) ->
-                           let uu___4 =
-                             extract_top_level_sig g
-                               lb.FStar_Extraction_ML_Syntax.mllb_name tvars
-                               arg_names arg_ts ret_t in
-                           (match uu___4 with
-                            | (fn_sig, g_body) ->
-                                let fn_body =
-                                  extract_mlexpr_to_stmts g_body body in
-                                let uu___5 =
-                                  let uu___6 =
-                                    Pulse2Rust_Rust_Syntax.mk_fn fn_sig
-                                      fn_body in
-                                  Pulse2Rust_Rust_Syntax.Item_fn uu___6 in
-                                let uu___6 =
-                                  push_fn g
-                                    lb.FStar_Extraction_ML_Syntax.mllb_name
-                                    fn_sig in
-                                (uu___5, uu___6)))
+                           ((let uu___5 =
+                               let uu___6 = has_rust_const_fn_attribute lb in
+                               FStar_Compiler_Util.string_of_bool uu___6 in
+                             FStar_Compiler_Util.print1
+                               "has_rust_const_fn_attribute: %s\n" uu___5);
+                            (let uu___5 =
+                               extract_top_level_sig g
+                                 lb.FStar_Extraction_ML_Syntax.mllb_name
+                                 tvars arg_names arg_ts ret_t in
+                             match uu___5 with
+                             | (fn_sig, g_body) ->
+                                 let fn_body =
+                                   extract_mlexpr_to_stmts g_body body in
+                                 let uu___6 =
+                                   let uu___7 =
+                                     Pulse2Rust_Rust_Syntax.mk_fn fn_sig
+                                       fn_body in
+                                   Pulse2Rust_Rust_Syntax.Item_fn uu___7 in
+                                 let uu___7 =
+                                   push_fn g
+                                     lb.FStar_Extraction_ML_Syntax.mllb_name
+                                     fn_sig in
+                                 (uu___6, uu___7))))
                   | uu___3 ->
                       (match lb.FStar_Extraction_ML_Syntax.mllb_tysc with
                        | FStar_Pervasives_Native.Some ([], ty) ->
@@ -1754,8 +1773,9 @@ let rec (reachable_defs_expr' :
     | FStar_Extraction_ML_Syntax.MLE_Fun (args, e1) ->
         let uu___ =
           reachable_defs_list
-            (fun uu___1 ->
-               match uu___1 with | (uu___2, t) -> reachable_defs_mlty t) args in
+            (fun b ->
+               reachable_defs_mlty b.FStar_Extraction_ML_Syntax.mlbinder_ty)
+            args in
         let uu___1 = reachable_defs_expr e1 in
         FStar_Compiler_Set.union FStar_Class_Ord.ord_string uu___ uu___1
     | FStar_Extraction_ML_Syntax.MLE_Match (e1, bs) ->
@@ -1867,7 +1887,7 @@ let (mlmodule1_name :
     FStar_Extraction_ML_Syntax.mlsymbol Prims.list)
   =
   fun m ->
-    match m with
+    match m.FStar_Extraction_ML_Syntax.mlmodule1_m with
     | FStar_Extraction_ML_Syntax.MLM_Ty l ->
         FStar_Compiler_List.map
           (fun t -> t.FStar_Extraction_ML_Syntax.tydecl_name) l
@@ -1881,7 +1901,7 @@ let (reachable_defs_mlmodule1 :
   FStar_Extraction_ML_Syntax.mlmodule1 -> reachable_defs) =
   fun m ->
     let defs =
-      match m with
+      match m.FStar_Extraction_ML_Syntax.mlmodule1_m with
       | FStar_Extraction_ML_Syntax.MLM_Ty t -> reachable_defs_mltydecl t
       | FStar_Extraction_ML_Syntax.MLM_Let lb ->
           reachable_defs_mlletbinding lb
@@ -1902,7 +1922,7 @@ let (decl_reachable :
   fun reachable_defs1 ->
     fun mname ->
       fun d ->
-        match d with
+        match d.FStar_Extraction_ML_Syntax.mlmodule1_m with
         | FStar_Extraction_ML_Syntax.MLM_Ty t ->
             FStar_Compiler_List.existsb
               (fun ty_decl ->
@@ -1945,7 +1965,7 @@ let (extract_one :
                        if uu___2
                        then (items, g1)
                        else
-                         (match d with
+                         (match d.FStar_Extraction_ML_Syntax.mlmodule1_m with
                           | FStar_Extraction_ML_Syntax.MLM_Let
                               (FStar_Extraction_ML_Syntax.NonRec,
                                {
@@ -1956,10 +1976,12 @@ let (extract_one :
                                  FStar_Extraction_ML_Syntax.mllb_add_unit =
                                    uu___5;
                                  FStar_Extraction_ML_Syntax.mllb_def = uu___6;
-                                 FStar_Extraction_ML_Syntax.mllb_meta =
+                                 FStar_Extraction_ML_Syntax.mllb_attrs =
                                    uu___7;
+                                 FStar_Extraction_ML_Syntax.mllb_meta =
+                                   uu___8;
                                  FStar_Extraction_ML_Syntax.print_typ =
-                                   uu___8;_}::[])
+                                   uu___9;_}::[])
                               when
                               (((FStar_Compiler_Util.starts_with mllb_name
                                    "explode_ref")
