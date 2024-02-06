@@ -113,6 +113,7 @@ val teardown_pool
   : stt unit (pool_alive #full_perm p) (fun _ -> pool_done p)
 
 val teardown_pool'
+  (#is : Pulse.Lib.InvList.invlist)
   (p:pool) (f:perm{f `lesser_perm` full_perm})
-  : stt unit (pool_alive #f p ** pledge [] (pool_done p) (pool_alive #(comp_perm f) p))
+  : stt unit (pool_alive #f p ** pledge is (pool_done p) (pool_alive #(comp_perm f) p))
              (fun _ -> pool_done p)
