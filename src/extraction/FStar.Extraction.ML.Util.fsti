@@ -60,3 +60,5 @@ val mlloc_of_range : r:Range.range -> int * string
 val doms_and_cod : t:mlty -> list mlty * mlty
 val argTypes : t:mlty -> list mlty
 val uncurry_mlty_fun : t:mlty -> list mlty * mlty
+
+val list_elements : mlexpr -> option (list mlexpr)

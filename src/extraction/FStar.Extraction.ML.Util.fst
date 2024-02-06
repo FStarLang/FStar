@@ -395,3 +395,14 @@ let rec uncurry_mlty_fun t =
         let args, res = uncurry_mlty_fun b in
         a::args, res
     | _ -> [], t
+
+let list_elements (e:mlexpr) : option (list mlexpr) =
+  let rec list_elements acc e =
+    match e.expr with
+    | MLE_CTor (([ "Prims" ], "Cons" ), [ hd; tl ]) ->
+      list_elements (hd :: acc) tl
+    | MLE_CTor (([ "Prims" ], "Nil" ), []) ->
+      List.rev acc |> Some
+    | _ -> None
+  in
+  list_elements [] e

@@ -331,17 +331,11 @@ let add_binders env bs =
 
 (* Actual translation ********************************************************)
 
-let list_elements e2 =
-  let rec list_elements acc e2 =
-    match e2.expr with
-    | MLE_CTor (([ "Prims" ], "Cons" ), [ hd; tl ]) ->
-        list_elements (hd :: acc) tl
-    | MLE_CTor (([ "Prims" ], "Nil" ), []) ->
-        List.rev acc
-    | _ ->
-        failwith "Argument of FStar.Buffer.createL is not a list literal!"
-  in
-  list_elements [] e2
+let list_elements e =
+  let lopt = FStar.Extraction.ML.Util.list_elements e in
+  match lopt with
+  | None -> failwith "Argument of FStar.Buffer.createL is not a list literal!"
+  | Some l -> l
 
 let translate_flags flags =
   List.choose (function
