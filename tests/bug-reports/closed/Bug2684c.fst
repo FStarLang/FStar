@@ -15,4 +15,4 @@ val a_lemma: #ty:Type0 -> (#[exact (`())] _ : unit) -> #x:nat -> #y:nat_dep x ->
 let rec a_lemma #ty #tc #x #y z =
   let r = a_function z in
   match r with
-  | Mkdtuple3 _ _ _  -> ()
+  | DTuple3.Mk _ _ _  -> ()

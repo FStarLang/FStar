@@ -61,7 +61,7 @@ let printable_either_test_r =  assert(to_string ((fun (i : either int int) -> i)
 
 let printable_char_test =  assert(to_string '?' = "?") by compute()
 
-let printable_tuple3_test =  assert(to_string (Mktuple3 0 1 2)  = "(0, 1, 2)") by compute()
+let printable_tuple3_test =  assert(to_string (Tuple3.Mk 0 1 2)  = "(0, 1, 2)") by compute()
 
 
 (*

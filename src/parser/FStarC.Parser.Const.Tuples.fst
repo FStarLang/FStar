@@ -24,19 +24,19 @@ open FStarC.Class.Show
 // Arity, type constructor, and data constructor for tuples
 private
 let tuple_table : list (int & string & string) = [
-  (2,  "FStar.Pervasives.Native.tuple2", "FStar.Pervasives.Native.Mktuple2");
-  (3,  "FStar.Pervasives.Native.tuple3", "FStar.Pervasives.Native.Mktuple3");
-  (4,  "FStar.Pervasives.Native.tuple4", "FStar.Pervasives.Native.Mktuple4");
-  (5,  "FStar.Pervasives.Native.tuple5", "FStar.Pervasives.Native.Mktuple5");
-  (6,  "FStar.Pervasives.Native.tuple6", "FStar.Pervasives.Native.Mktuple6");
-  (7,  "FStar.Pervasives.Native.tuple7", "FStar.Pervasives.Native.Mktuple7");
-  (8,  "FStar.Pervasives.Native.tuple8", "FStar.Pervasives.Native.Mktuple8");
-  (9,  "FStar.Pervasives.Native.tuple9", "FStar.Pervasives.Native.Mktuple9");
-  (10,  "FStar.Pervasives.Native.tuple10", "FStar.Pervasives.Native.Mktuple10");
-  (11,  "FStar.Pervasives.Native.tuple11", "FStar.Pervasives.Native.Mktuple11");
-  (12,  "FStar.Pervasives.Native.tuple12", "FStar.Pervasives.Native.Mktuple12");
-  (13,  "FStar.Pervasives.Native.tuple13", "FStar.Pervasives.Native.Mktuple13");
-  (14,  "FStar.Pervasives.Native.tuple14", "FStar.Pervasives.Native.Mktuple14");
+  (2,   "FStar.Pervasives.Native.tuple2", "FStar.Pervasives.Native.Mktuple2");
+  (3,   "FStar.Tuple3.t",  "FStar.Tuple3.Mk");
+  (4,   "FStar.Tuple4.t",  "FStar.Tuple4.Mk");
+  (5,   "FStar.Tuple5.t",  "FStar.Tuple5.Mk");
+  (6,   "FStar.Tuple6.t",  "FStar.Tuple6.Mk");
+  (7,   "FStar.Tuple7.t",  "FStar.Tuple7.Mk");
+  (8,   "FStar.Tuple8.t",  "FStar.Tuple8.Mk");
+  (9,   "FStar.Tuple9.t",  "FStar.Tuple9.Mk");
+  (10,  "FStar.Tuple10.t", "FStar.Tuple10.Mk");
+  (11,  "FStar.Tuple11.t", "FStar.Tuple11.Mk");
+  (12,  "FStar.Tuple12.t", "FStar.Tuple12.Mk");
+  (13,  "FStar.Tuple13.t", "FStar.Tuple13.Mk");
+  (14,  "FStar.Tuple14.t", "FStar.Tuple14.Mk");
 ]
 
 let lookup_tuple n =
@@ -80,9 +80,9 @@ let is_tuple_data_lid f n = lid_equals f (mk_tuple_data_lid n dummyRange)
 private
 let dtuple_table : list (int & string & string) = [
   (2, "Prims.dtuple2", "Prims.Mkdtuple2");
-  (3, "FStar.Pervasives.dtuple3", "FStar.Pervasives.Mkdtuple3");
-  (4, "FStar.Pervasives.dtuple4", "FStar.Pervasives.Mkdtuple4");
-  (5, "FStar.Pervasives.dtuple5", "FStar.Pervasives.Mkdtuple5");
+  (3, "FStar.DTuple3.t",  "FStar.DTuple3.Mk");
+  (4, "FStar.DTuple4.t",  "FStar.DTuple4.Mk");
+  (5, "FStar.DTuple5.t",  "FStar.DTuple5.Mk");
 ]
 
 let lookup_dtuple n =

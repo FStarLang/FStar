@@ -1011,7 +1011,7 @@ let mul_wide_high (x y: U64.t) =
     (plh x y + (phl x y + pll_h x y) % pow2 32) / pow2 32
 
 inline_for_extraction noextract
-let mul_wide_impl_t' (x y: U64.t) : Pure (tuple4 U64.t U64.t U64.t U64.t)
+let mul_wide_impl_t' (x y: U64.t) : Pure (U64.t & U64.t & U64.t & U64.t)
   (requires True)
   (ensures (fun r -> let (u1, w3, x', t') = r in
     U64.v u1 == U64.v x % pow2 32 /\
@@ -1123,7 +1123,7 @@ let mul_wide_low_ok (x y: U64.t) :
 
 val product_high32 : x:U64.t -> y:U64.t ->
   Lemma ((U64.v x * U64.v y) / pow2 32 == phh x y * pow2 32 + plh x y + phl x y + pll_h x y)
-#push-options "--z3rlimit 20"
+#push-options "--z3rlimit 40"
 let product_high32 x y =
   Math.pow2_plus 32 32;
   product_expand x y;

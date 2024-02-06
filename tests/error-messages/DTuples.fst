@@ -4,13 +4,13 @@ module DTuples
 let _ = a:int & b:int{a > b} & c:int{c == a+b}
 
 (* Desugared version, resugars to the same *)
-let _ = dtuple3 int
+let _ = DTuple3.t int
                 (fun a -> b:int{a > b})
                 (fun a b -> c:int{c == a+b})
 
 (* This one is resugared properly too, taking z to be the
 name of the component, and of type (b:int{a > b}). *)
-let _ = dtuple3 int
+let _ = DTuple3.t int
                 (fun a -> b:int{a > b})
                 (fun a z -> c:int{c == a+z})
 
@@ -32,10 +32,10 @@ let _ = (int & (int & (int & int)))
 let _ = (int & (int & (int & (int & int))))
 
 (* All of these were terribly broken in master *)
-let _ = tuple4 int bool
-let _ = (tuple4 int bool) string unit
+let _ = Tuple4.t int bool
+let _ = (Tuple4.t int bool) string unit
 
-let _ = dtuple4 int (fun _ -> bool)
+let _ = DTuple4.t int (fun _ -> bool)
 
 let t1 = (1,2,3)
 let t2 = ((1,2),3)
