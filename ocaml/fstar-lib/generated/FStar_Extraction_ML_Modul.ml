@@ -716,10 +716,21 @@ let (gamma_to_string : FStar_Extraction_ML_UEnv.uenv -> Prims.string) =
       let uu___1 = FStar_Compiler_List.map (print_binding cm) gamma in
       FStar_Compiler_String.concat "\n" uu___1 in
     FStar_Compiler_Util.format1 "Gamma = {\n %s }" uu___
+let (extract_attrs :
+  FStar_Extraction_ML_UEnv.uenv ->
+    FStar_Syntax_Syntax.attribute Prims.list ->
+      FStar_Extraction_ML_Syntax.mlattribute Prims.list)
+  =
+  fun env ->
+    fun attrs ->
+      FStar_Compiler_List.map
+        (fun attr ->
+           let uu___ = FStar_Extraction_ML_Term.term_as_mlexpr env attr in
+           match uu___ with | (e, uu___1, uu___2) -> e) attrs
 let (extract_typ_abbrev :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Syntax_Syntax.qualifier Prims.list ->
-      FStar_Syntax_Syntax.term Prims.list ->
+      FStar_Syntax_Syntax.attribute Prims.list ->
         FStar_Syntax_Syntax.letbinding ->
           (env_t * iface * FStar_Extraction_ML_Syntax.mlmodule1 Prims.list))
   =
@@ -847,20 +858,29 @@ let (extract_typ_abbrev :
                                       (FStar_Extraction_ML_Syntax.MLTD_Abbrev
                                          body1))
                                } in
+                             let loc_mlmodule1 =
+                               let uu___4 =
+                                 let uu___5 = FStar_Ident.range_of_lid lid in
+                                 FStar_Extraction_ML_Util.mlloc_of_range
+                                   uu___5 in
+                               FStar_Extraction_ML_Syntax.MLM_Loc uu___4 in
+                             let ty_mlmodule1 =
+                               FStar_Extraction_ML_Syntax.MLM_Ty [td] in
                              let def2 =
                                let uu___4 =
                                  let uu___5 =
-                                   let uu___6 = FStar_Ident.range_of_lid lid in
-                                   FStar_Extraction_ML_Util.mlloc_of_range
-                                     uu___6 in
-                                 FStar_Extraction_ML_Syntax.MLM_Loc uu___5 in
-                               [uu___4;
-                               FStar_Extraction_ML_Syntax.MLM_Ty [td]] in
+                                   let uu___6 = extract_attrs env2 attrs in
+                                   FStar_Extraction_ML_Syntax.mk_mlmodule1_with_attrs
+                                     ty_mlmodule1 uu___6 in
+                                 [uu___5] in
+                               (FStar_Extraction_ML_Syntax.mk_mlmodule1
+                                  loc_mlmodule1)
+                                 :: uu___4 in
                              (env2, iface1, def2))))
 let (extract_let_rec_type :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Syntax_Syntax.qualifier Prims.list ->
-      FStar_Syntax_Syntax.term Prims.list ->
+      FStar_Syntax_Syntax.attribute Prims.list ->
         FStar_Syntax_Syntax.letbinding ->
           (env_t * iface * FStar_Extraction_ML_Syntax.mlmodule1 Prims.list))
   =
@@ -916,13 +936,23 @@ let (extract_let_rec_type :
                               (FStar_Pervasives_Native.Some
                                  (FStar_Extraction_ML_Syntax.MLTD_Abbrev body))
                           } in
+                        let loc_mlmodule1 =
+                          let uu___4 =
+                            let uu___5 = FStar_Ident.range_of_lid lid in
+                            FStar_Extraction_ML_Util.mlloc_of_range uu___5 in
+                          FStar_Extraction_ML_Syntax.MLM_Loc uu___4 in
+                        let td_mlmodule1 =
+                          FStar_Extraction_ML_Syntax.MLM_Ty [td] in
                         let def =
                           let uu___4 =
                             let uu___5 =
-                              let uu___6 = FStar_Ident.range_of_lid lid in
-                              FStar_Extraction_ML_Util.mlloc_of_range uu___6 in
-                            FStar_Extraction_ML_Syntax.MLM_Loc uu___5 in
-                          [uu___4; FStar_Extraction_ML_Syntax.MLM_Ty [td]] in
+                              let uu___6 = extract_attrs env2 attrs in
+                              FStar_Extraction_ML_Syntax.mk_mlmodule1_with_attrs
+                                td_mlmodule1 uu___6 in
+                            [uu___5] in
+                          (FStar_Extraction_ML_Syntax.mk_mlmodule1
+                             loc_mlmodule1)
+                            :: uu___4 in
                         let iface1 = iface_of_tydefs [tydef] in
                         (env2, iface1, def)))
 let (extract_bundle_iface :
@@ -1130,12 +1160,14 @@ let (extract_reifiable_effect :
               FStar_Pervasives_Native.None;
             FStar_Extraction_ML_Syntax.mllb_add_unit = false;
             FStar_Extraction_ML_Syntax.mllb_def = exp;
+            FStar_Extraction_ML_Syntax.mllb_attrs = [];
             FStar_Extraction_ML_Syntax.mllb_meta = [];
             FStar_Extraction_ML_Syntax.print_typ = false
           } in
         ((iface_of_bindings [(fv, exp_binding)]),
-          (FStar_Extraction_ML_Syntax.MLM_Let
-             (FStar_Extraction_ML_Syntax.NonRec, [lb]))) in
+          (FStar_Extraction_ML_Syntax.mk_mlmodule1
+             (FStar_Extraction_ML_Syntax.MLM_Let
+                (FStar_Extraction_ML_Syntax.NonRec, [lb])))) in
       let rec extract_fv tm =
         (let uu___1 =
            let uu___2 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
@@ -2003,6 +2035,7 @@ let (extract_bundle :
                                FStar_Extraction_ML_Syntax.tydecl_defn = tbody
                              } in
                            (env3, td)))) in
+      let mlattrs = extract_attrs env se.FStar_Syntax_Syntax.sigattrs in
       match ((se.FStar_Syntax_Syntax.sigel),
               (se.FStar_Syntax_Syntax.sigquals))
       with
@@ -2028,7 +2061,9 @@ let (extract_bundle :
           let uu___11 = extract_ctor env [] env { dname = l; dtyp = t } in
           (match uu___11 with
            | (env1, ctor) ->
-               (env1, [FStar_Extraction_ML_Syntax.MLM_Exn ctor]))
+               (env1,
+                 [FStar_Extraction_ML_Syntax.mk_mlmodule1_with_attrs
+                    (FStar_Extraction_ML_Syntax.MLM_Exn ctor) mlattrs]))
       | (FStar_Syntax_Syntax.Sig_bundle
          { FStar_Syntax_Syntax.ses = ses; FStar_Syntax_Syntax.lids = uu___;_},
          quals) ->
@@ -2045,7 +2080,9 @@ let (extract_bundle :
                    FStar_Compiler_Util.fold_map extract_one_family env1 ifams in
                  (match uu___4 with
                   | (env2, td) ->
-                      (env2, [FStar_Extraction_ML_Syntax.MLM_Ty td])))
+                      (env2,
+                        [FStar_Extraction_ML_Syntax.mk_mlmodule1_with_attrs
+                           (FStar_Extraction_ML_Syntax.MLM_Ty td) mlattrs])))
       | uu___ ->
           FStar_Compiler_Effect.failwith "Unexpected signature element"
 let (lb_irrelevant : env_t -> FStar_Syntax_Syntax.letbinding -> Prims.bool) =
@@ -2218,12 +2255,16 @@ let rec (extract_sig :
                              let meta =
                                extract_metadata
                                  se1.FStar_Syntax_Syntax.sigattrs in
+                             let mlattrs =
+                               extract_attrs g
+                                 se1.FStar_Syntax_Syntax.sigattrs in
                              FStar_Compiler_List.fold_left
                                (fun uu___8 ->
                                   fun d ->
                                     match uu___8 with
                                     | (g1, decls1) ->
-                                        (match d with
+                                        (match d.FStar_Extraction_ML_Syntax.mlmodule1_m
+                                         with
                                          | FStar_Extraction_ML_Syntax.MLM_Let
                                              (maybe_rec, mllb::[]) ->
                                              let uu___9 =
@@ -2251,6 +2292,8 @@ let rec (extract_sig :
                                                       FStar_Extraction_ML_Syntax.mllb_def
                                                         =
                                                         (mllb.FStar_Extraction_ML_Syntax.mllb_def);
+                                                      FStar_Extraction_ML_Syntax.mllb_attrs
+                                                        = mlattrs;
                                                       FStar_Extraction_ML_Syntax.mllb_meta
                                                         = meta;
                                                       FStar_Extraction_ML_Syntax.print_typ
@@ -2260,9 +2303,11 @@ let rec (extract_sig :
                                                   (g2,
                                                     (FStar_Compiler_List.op_At
                                                        decls1
-                                                       [FStar_Extraction_ML_Syntax.MLM_Let
-                                                          (maybe_rec,
-                                                            [mllb1])])))
+                                                       [FStar_Extraction_ML_Syntax.mk_mlmodule1_with_attrs
+                                                          (FStar_Extraction_ML_Syntax.MLM_Let
+                                                             (maybe_rec,
+                                                               [mllb1]))
+                                                          mlattrs])))
                                          | uu___9 ->
                                              let uu___10 =
                                                let uu___11 =
@@ -2344,9 +2389,13 @@ let rec (extract_sig :
                                let uu___9 =
                                  let uu___10 =
                                    let uu___11 =
-                                     FStar_Extraction_ML_Util.mlloc_of_range
-                                       se1.FStar_Syntax_Syntax.sigrng in
-                                   FStar_Extraction_ML_Syntax.MLM_Loc uu___11 in
+                                     let uu___12 =
+                                       FStar_Extraction_ML_Util.mlloc_of_range
+                                         se1.FStar_Syntax_Syntax.sigrng in
+                                     FStar_Extraction_ML_Syntax.MLM_Loc
+                                       uu___12 in
+                                   FStar_Extraction_ML_Syntax.mk_mlmodule1
+                                     uu___11 in
                                  let uu___11 =
                                    let uu___12 =
                                      FStar_Extraction_ML_Term.ind_discriminator_body
@@ -2651,6 +2700,8 @@ and (extract_sig_let :
                FStar_Extraction_ML_Term.term_as_mlexpr g uu___4 in
              (match uu___3 with
               | (ml_let, uu___4, uu___5) ->
+                  let mlattrs =
+                    extract_attrs g se.FStar_Syntax_Syntax.sigattrs in
                   (match ml_let.FStar_Extraction_ML_Syntax.expr with
                    | FStar_Extraction_ML_Syntax.MLE_Let
                        ((flavor, bindings), uu___6) ->
@@ -2742,6 +2793,8 @@ and (extract_sig_let :
                                              FStar_Extraction_ML_Syntax.mllb_def
                                                =
                                                (ml_lb.FStar_Extraction_ML_Syntax.mllb_def);
+                                             FStar_Extraction_ML_Syntax.mllb_attrs
+                                               = mlattrs;
                                              FStar_Extraction_ML_Syntax.mllb_meta
                                                = meta;
                                              FStar_Extraction_ML_Syntax.print_typ
@@ -2783,6 +2836,9 @@ and (extract_sig_let :
                                                      FStar_Extraction_ML_Syntax.mllb_def
                                                        =
                                                        (ml_lb1.FStar_Extraction_ML_Syntax.mllb_def);
+                                                     FStar_Extraction_ML_Syntax.mllb_attrs
+                                                       =
+                                                       (ml_lb1.FStar_Extraction_ML_Syntax.mllb_attrs);
                                                      FStar_Extraction_ML_Syntax.mllb_meta
                                                        =
                                                        (ml_lb1.FStar_Extraction_ML_Syntax.mllb_meta);
@@ -2811,12 +2867,19 @@ and (extract_sig_let :
                               let uu___9 =
                                 let uu___10 =
                                   let uu___11 =
-                                    FStar_Extraction_ML_Util.mlloc_of_range
-                                      se.FStar_Syntax_Syntax.sigrng in
-                                  FStar_Extraction_ML_Syntax.MLM_Loc uu___11 in
+                                    let uu___12 =
+                                      FStar_Extraction_ML_Util.mlloc_of_range
+                                        se.FStar_Syntax_Syntax.sigrng in
+                                    FStar_Extraction_ML_Syntax.MLM_Loc
+                                      uu___12 in
+                                  FStar_Extraction_ML_Syntax.mk_mlmodule1
+                                    uu___11 in
                                 [uu___10;
-                                FStar_Extraction_ML_Syntax.MLM_Let
-                                  (flavor, (FStar_Compiler_List.rev ml_lbs'))] in
+                                FStar_Extraction_ML_Syntax.mk_mlmodule1_with_attrs
+                                  (FStar_Extraction_ML_Syntax.MLM_Let
+                                     (flavor,
+                                       (FStar_Compiler_List.rev ml_lbs')))
+                                  mlattrs] in
                               let uu___10 =
                                 FStar_Extraction_ML_RegEmb.maybe_register_plugin
                                   g1 se in
