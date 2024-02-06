@@ -178,6 +178,64 @@ let bind_pledge' = __bind_pledge'
 
 ```pulse
 ghost
+fn __rewrite_pledge_full (#is:invlist) (#f v1 v2 : vprop)
+      (k : ustep is (f ** v1) (f ** v2))
+  requires pledge is f v1
+  ensures  pledge is f v2
+{
+  ghost
+  fn aux ()
+    requires invlist_v is ** ((f ** emp) ** v1)
+    ensures  invlist_v is ** (f ** pledge is f v2)
+  {
+    k ();
+    return_pledge is f v2;
+  };
+  bind_pledge emp aux
+}
+```
+let rewrite_pledge_full = __rewrite_pledge_full
+
+```pulse
+ghost
+fn __rewrite_pledge (#is:invlist) (#f v1 v2 : vprop)
+      (k : ustep is v1 v2)
+  requires pledge is f v1
+  ensures  pledge is f v2
+{
+  ghost
+  fn aux ()
+    requires invlist_v is ** (f ** v1)
+    ensures  invlist_v is ** (f ** v2)
+  {
+    k()
+  };
+  rewrite_pledge_full #is #f v1 v2 aux
+}
+```
+let rewrite_pledge = __rewrite_pledge
+
+```pulse
+ghost
+fn __rewrite_pledge0 (#is:invlist) (#f v1 v2 : vprop)
+      (k : ustep0 v1 v2)
+  requires pledge is f v1
+  ensures  pledge is f v2
+{
+  ghost
+  fn aux ()
+    requires invlist_v is ** (f ** v1)
+    ensures  invlist_v is ** (f ** v2)
+  {
+    k()
+  };
+  rewrite_pledge_full #is #f v1 v2 aux
+}
+```
+let rewrite_pledge0 = __rewrite_pledge0
+
+```pulse
+ghost
 fn __join_pledge_aux
   (is:invlist) (f v1 v2 : vprop) ()
   requires invlist_v is ** (f ** (pledge is f v1 ** pledge is f v2))
@@ -225,6 +283,23 @@ fn __squash_pledge
 ```
 let squash_pledge = __squash_pledge
 
+```pulse
+ghost
+fn __squash_pledge'
+  (is1 is2 is :invlist) (f v : vprop)
+  requires pure (invlist_sub is1 is) **
+           pure (invlist_sub is2 is) **
+           pledge is1 f (pledge is2 f v)
+  ensures pledge is f v
+{
+  pledge_sub_inv is1 is f (pledge is2 f v);
+  rewrite_pledge0 #is #f (pledge is2 f v) (pledge is f v)
+    (fun () -> pledge_sub_inv is2 is f v);
+  squash_pledge is f v;
+}
+```
+let squash_pledge' = __squash_pledge'
+
 (* A big chunk follows for split_pledge *)
 
 let inv_p' (is:invlist) (f v1 v2 : vprop) (r1 r2 : GR.ref bool) (b1 b2 : bool) =
@@ -255,10 +330,10 @@ fn elim_body_l
 
   let b1 = !r1;
   let b2 = !r2;
-  
+
   let b1 : bool = reveal b1;
   let b2 : bool = reveal b2;
-  
+
   if b2 {
     (* The "easy" case: the big pledge has already been claimed
     by the other subpledge, so we just extract our resource. *)
@@ -328,8 +403,9 @@ fn flip_invp
 
   unfold inv_p';
 
-  (* This will be true with PulseCore. *)
-  assume_ (pure (v1 ** v2 == v2 ** v1));
+  (* This is now true with PulseCore. *)
+  let _ = elim_vprop_equiv (vprop_equiv_comm v1 v2);
+  assert (pure (v1 ** v2 == v2 ** v1));
 
   rewrite_by
      (match b1, b2 with
@@ -363,8 +439,6 @@ fn elim_body_r
   flip_invp is f v2 v1 r2 r1;
 }
 ```
-
-let split_ret (is:invlist) = xi:invlist_elem {not (mem_inv (invlist_names is) (dsnd xi))}
 
 ```pulse
 unobservable
@@ -414,28 +488,3 @@ fn __split_pledge (#is:invlist) (#f:vprop) (v1:vprop) (v2:vprop)
 let split_pledge = __split_pledge
 
 (* /split_pledge *)
-
-```pulse
-ghost
-fn __rewrite_pledge_aux (is:invlist) (f v1 v2 : vprop)
-      (k : ustep is v1 v2)
-      ()
-  requires invlist_v is ** ((f ** emp) ** v1)
-  ensures  invlist_v is ** (f ** pledge is f v2)
-{ 
-  k ();
-  return_pledge is f v2;
-}
-```
-
-```pulse
-ghost
-fn __rewrite_pledge (#is:invlist) (#f v1 v2 : vprop)
-      (k : ustep is v1 v2)
-  requires pledge is f v1
-  ensures  pledge is f v2
-{
-  bind_pledge emp (__rewrite_pledge_aux is f v1 v2 k)
-}
-```
-let rewrite_pledge = __rewrite_pledge
