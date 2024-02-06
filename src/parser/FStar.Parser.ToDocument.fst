@@ -238,8 +238,8 @@ let matches_var t x =
         | Var y -> (string_of_id x) = string_of_lid y
         | _ -> false
 
-let is_tuple_constructor = C.is_tuple_data_lid'
-let is_dtuple_constructor = C.is_dtuple_data_lid'
+let is_tuple_constructor = C.is_tuple_datacon_lid
+let is_dtuple_constructor = C.is_dtuple_datacon_lid
 
 let is_list_structure cons_lid nil_lid =
   let rec aux e = match e.tm with
