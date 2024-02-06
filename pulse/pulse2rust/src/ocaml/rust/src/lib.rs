@@ -224,8 +224,13 @@ enum Stmt {
     SExpr(Expr),
 }
 
+struct GenericTypeParam {
+    generic_type_param_name: String,
+    generic_type_param_trait_bounds: Vec<Vec<String>>,
+}
+
 enum GenericParam {
-    GenericTypeParam(String),
+    GenTypeParam(GenericTypeParam),
 }
 
 struct PatTyp {
@@ -581,9 +586,16 @@ impl_from_ocaml_variant! {
   }
 }
 
+impl_from_ocaml_record! {
+  GenericTypeParam {
+    generic_type_param_name : String,
+    generic_type_param_trait_bounds : OCamlList<OCamlList<String>>,
+  }
+}
+
 impl_from_ocaml_variant! {
   GenericParam {
-    GenericParam::GenericTypeParam (payload:String),
+    GenericParam::GenTypeParam (payload:GenericTypeParam),
   }
 }
 
@@ -1378,45 +1390,53 @@ fn to_syn_fn_arg(a: &FnArg) -> syn::FnArg {
     })
 }
 
-fn generic_param_bounds() -> Punctuated<syn::TypeParamBound, syn::token::Plus> {
+fn generic_param_bounds(v: &Vec<Vec<String>>) -> Punctuated<syn::TypeParamBound, syn::token::Plus> {
     let mut bounds = Punctuated::new();
-    // ["Clone", "Copy", "PartialEq"].iter().for_each(|s| {
-    //     bounds.push(syn::TypeParamBound::Trait(syn::TraitBound {
-    //         paren_token: None,
-    //         modifier: syn::TraitBoundModifier::None,
-    //         lifetimes: None,
-    //         path: syn::Path {
-    //             leading_colon: None,
-    //             segments: {
-    //                 let mut segs = Punctuated::new();
-    //                 segs.push(syn::PathSegment {
-    //                     ident: Ident::new(s, Span::call_site()),
-    //                     arguments: syn::PathArguments::None,
-    //                 });
-    //                 segs
-    //             },
-    //         },
-    //     }));
-    // });
+    v.iter().for_each(|p| {
+        bounds.push(syn::TypeParamBound::Trait(syn::TraitBound {
+            paren_token: None,
+            modifier: syn::TraitBoundModifier::None,
+            lifetimes: None,
+            path: syn::Path {
+                leading_colon: None,
+                segments: {
+                    let mut segs = Punctuated::new();
+                    p.iter().for_each(|s| {
+                        segs.push(syn::PathSegment {
+                            ident: Ident::new(s, Span::call_site()),
+                            arguments: syn::PathArguments::None,
+                        })
+                    });
+                    segs
+                },
+            },
+        }));
+    });
     bounds
+}
+
+fn generic_params(generics: &Vec<GenericParam>) -> Punctuated<syn::GenericParam, Comma> {
+    let mut syn_generics: Punctuated<syn::GenericParam, Comma> = Punctuated::new();
+    generics.iter().for_each(|g| {
+        let GenericParam::GenTypeParam(g) = g;
+        let p = syn::GenericParam::Type(syn::TypeParam {
+            attrs: vec![],
+            ident: Ident::new(&g.generic_type_param_name, Span::call_site()),
+            colon_token: None,
+            bounds: generic_param_bounds(&g.generic_type_param_trait_bounds),
+            eq_token: None,
+            default: None,
+        });
+        syn_generics.push(p)
+    });
+    syn_generics
 }
 
 fn to_syn_fn_sig(s: &FnSig) -> Signature {
     let mut args: Punctuated<syn::FnArg, Comma> = Punctuated::new();
     s.fn_args.iter().for_each(|a| args.push(to_syn_fn_arg(a)));
 
-    let mut generics: Punctuated<syn::GenericParam, Comma> = Punctuated::new();
-    s.fn_generics.iter().for_each(|g| {
-        let GenericParam::GenericTypeParam(g) = g;
-        generics.push(syn::GenericParam::Type(syn::TypeParam {
-            attrs: vec![],
-            ident: Ident::new(g, Span::call_site()),
-            colon_token: None,
-            bounds: generic_param_bounds(),
-            eq_token: None,
-            default: None,
-        }))
-    });
+    let generics: Punctuated<syn::GenericParam, Comma> = generic_params(&s.fn_generics);
 
     Signature {
         constness: if s.fn_const {
@@ -1536,18 +1556,8 @@ fn to_syn_item(i: &Item) -> Vec<syn::Item> {
             item_struct_generics,
             item_struct_fields,
         }) => {
-            let mut generics: Punctuated<syn::GenericParam, Comma> = Punctuated::new();
-            item_struct_generics.iter().for_each(|s| {
-                let GenericParam::GenericTypeParam(s) = s;
-                generics.push(syn::GenericParam::Type(syn::TypeParam {
-                    attrs: vec![],
-                    ident: Ident::new(s, Span::call_site()),
-                    colon_token: None,
-                    bounds: generic_param_bounds(),
-                    eq_token: None,
-                    default: None,
-                }))
-            });
+            let generics: Punctuated<syn::GenericParam, Comma> =
+                generic_params(&item_struct_generics);
             let mut fields: Punctuated<syn::Field, Comma> = Punctuated::new();
             item_struct_fields.iter().for_each(|ft| {
                 fields.push(syn::Field {
@@ -1603,18 +1613,8 @@ fn to_syn_item(i: &Item) -> Vec<syn::Item> {
             item_type_generics,
             item_type_typ,
         }) => {
-            let mut generics: Punctuated<syn::GenericParam, Comma> = Punctuated::new();
-            item_type_generics.iter().for_each(|s| {
-                let GenericParam::GenericTypeParam(s) = s;
-                generics.push(syn::GenericParam::Type(syn::TypeParam {
-                    attrs: vec![],
-                    ident: Ident::new(s, Span::call_site()),
-                    colon_token: None,
-                    bounds: generic_param_bounds(),
-                    eq_token: None,
-                    default: None,
-                }))
-            });
+            let generics: Punctuated<syn::GenericParam, Comma> =
+                generic_params(&item_type_generics);
             let item = syn::Item::Type(syn::ItemType {
                 attrs: vec![],
                 vis: syn::Visibility::Public({
@@ -1651,18 +1651,8 @@ fn to_syn_item(i: &Item) -> Vec<syn::Item> {
             item_enum_generics,
             item_enum_variants,
         }) => {
-            let mut generics: Punctuated<syn::GenericParam, Comma> = Punctuated::new();
-            item_enum_generics.iter().for_each(|s| {
-                let GenericParam::GenericTypeParam(s) = s;
-                generics.push(syn::GenericParam::Type(syn::TypeParam {
-                    attrs: vec![],
-                    ident: Ident::new(s, Span::call_site()),
-                    colon_token: None,
-                    bounds: generic_param_bounds(),
-                    eq_token: None,
-                    default: None,
-                }))
-            });
+            let generics: Punctuated<syn::GenericParam, Comma> =
+                generic_params(&item_enum_generics);
             let mut variants: Punctuated<syn::Variant, Comma> = Punctuated::new();
             item_enum_variants.iter().for_each(|v| {
                 let mut fields: Punctuated<syn::Field, Comma> = Punctuated::new();

@@ -623,11 +623,28 @@ type fn_arg =
 let (uu___is_Fn_arg_pat : fn_arg -> Prims.bool) = fun projectee -> true
 let (__proj__Fn_arg_pat__item___0 : fn_arg -> pat_typ) =
   fun projectee -> match projectee with | Fn_arg_pat _0 -> _0
+type generic_type_param =
+  {
+  generic_type_param_name: Prims.string ;
+  generic_type_param_trait_bounds: Prims.string Prims.list Prims.list }
+let (__proj__Mkgeneric_type_param__item__generic_type_param_name :
+  generic_type_param -> Prims.string) =
+  fun projectee ->
+    match projectee with
+    | { generic_type_param_name; generic_type_param_trait_bounds;_} ->
+        generic_type_param_name
+let (__proj__Mkgeneric_type_param__item__generic_type_param_trait_bounds :
+  generic_type_param -> Prims.string Prims.list Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { generic_type_param_name; generic_type_param_trait_bounds;_} ->
+        generic_type_param_trait_bounds
 type generic_param =
-  | Generic_type_param of Prims.string 
+  | Generic_type_param of generic_type_param 
 let (uu___is_Generic_type_param : generic_param -> Prims.bool) =
   fun projectee -> true
-let (__proj__Generic_type_param__item___0 : generic_param -> Prims.string) =
+let (__proj__Generic_type_param__item___0 :
+  generic_param -> generic_type_param) =
   fun projectee -> match projectee with | Generic_type_param _0 -> _0
 type fn_signature =
   {
@@ -1008,10 +1025,16 @@ let (mk_ref_fn_arg : Prims.string -> Prims.bool -> typ -> fn_arg) =
               (Pat_ident { pat_name = name; by_ref = true; is_mut });
             pat_typ_typ = t
           }
+let (mk_generic_type_param :
+  Prims.string -> Prims.string Prims.list Prims.list -> generic_type_param) =
+  fun generic_type_param_name ->
+    fun generic_type_param_trait_bounds ->
+      { generic_type_param_name; generic_type_param_trait_bounds }
 let (mk_fn_signature :
   Prims.bool ->
     Prims.string ->
-      Prims.string Prims.list -> fn_arg Prims.list -> typ -> fn_signature)
+      generic_type_param Prims.list ->
+        fn_arg Prims.list -> typ -> fn_signature)
   =
   fun fn_const ->
     fun fn_name ->
@@ -1057,7 +1080,7 @@ let (mk_fn : fn_signature -> stmt Prims.list -> fn) =
   fun fn_sig -> fun fn_body -> { fn_sig; fn_body }
 let (mk_item_struct :
   Prims.string ->
-    Prims.string Prims.list -> (Prims.string * typ) Prims.list -> item)
+    generic_type_param Prims.list -> (Prims.string * typ) Prims.list -> item)
   =
   fun name ->
     fun generics ->
@@ -1078,7 +1101,8 @@ let (mk_item_struct :
             item_struct_fields = uu___2
           } in
         Item_struct uu___
-let (mk_item_type : Prims.string -> Prims.string Prims.list -> typ -> item) =
+let (mk_item_type :
+  Prims.string -> generic_type_param Prims.list -> typ -> item) =
   fun name ->
     fun generics ->
       fun t ->
@@ -1094,7 +1118,7 @@ let (mk_item_type : Prims.string -> Prims.string Prims.list -> typ -> item) =
         Item_type uu___
 let (mk_item_enum :
   Prims.string ->
-    Prims.string Prims.list ->
+    generic_type_param Prims.list ->
       (Prims.string * typ Prims.list) Prims.list -> item)
   =
   fun name ->

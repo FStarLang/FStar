@@ -26,6 +26,7 @@ open Pulse2Rust.Rust.Syntax
 open RustBindings
 
 module S = FStar.Extraction.ML.Syntax
+module EUtil = FStar.Extraction.ML.Util
 
 module UEnv = FStar.Extraction.ML.UEnv
 
@@ -226,7 +227,7 @@ let extract_top_level_sig
   (g:env)
   (fn_const:bool)
   (fn_name:string)
-  (tvars:S.mlidents)
+  (generic_type_params:list generic_type_param)
   (arg_names:list string)
   (arg_ts:list S.mlty)
   (ret_t:option S.mlty)
@@ -236,7 +237,12 @@ let extract_top_level_sig
   let fn_args =
     List.map2 (extract_top_level_fn_arg g) (List.map varname arg_names) arg_ts in
   let fn_ret_t = extract_mltyopt g ret_t in
-  mk_fn_signature fn_const fn_name (List.map tyvar_of tvars) fn_args fn_ret_t,
+  mk_fn_signature
+    fn_const
+    fn_name
+    generic_type_params
+    fn_args
+    fn_ret_t,
   fold_left (fun g (arg_name, arg) -> push_fn_arg g arg_name arg) g (zip arg_names fn_args)
 
 //
@@ -693,6 +699,46 @@ let has_rust_const_fn_attribute (lb:S.mllb) : bool =
     | _ -> false
   ) lb.mllb_attrs
 
+let extract_generic_type_param_trait_bounds_aux (attrs:list S.mlexpr) : list (list (list string)) =
+  let open S in
+  attrs
+  |> List.tryFind (fun attr ->
+       match attr.expr with
+       | MLE_CTor (p, _)
+         when string_of_mlpath p = "Pulse.Lib.Pervasives.Rust_generics_bounds" -> true
+       | _ -> false)
+  |> map_option (fun attr ->
+       let MLE_CTor (p, args) = attr.expr in
+       let Some l = EUtil.list_elements (List.hd args) in
+       l |> List.map (fun tyvar_bounds ->
+              let Some l = EUtil.list_elements tyvar_bounds in
+              l |> List.map (fun e ->
+                     match e.expr with
+                     | MLE_Const (MLC_String s) -> s
+                     | _ -> failwith "unexpected generic type param bounds")
+                |> List.map (fun bound -> FStar.Compiler.Util.split bound "::")))
+  |> dflt []
+
+let expand_list_with (#a:Type) (l:list a) (n:nat) (x:a) : list a =
+  let rec nlist (n:nat) (x:a) : list a =
+    if n = 0 then [] else x::(nlist (n - 1) x) in
+  if n <= List.length l
+  then l
+  else l @ (nlist (n - List.length l) x)
+
+let extract_generic_type_param_trait_bounds (n:nat) (attrs:list S.mlattribute)
+  : list (list (list string)) =
+
+  let l = extract_generic_type_param_trait_bounds_aux attrs in
+  expand_list_with l n []
+
+let extract_generic_type_params (tyvars:list S.mlident) (attrs:list S.mlattribute)
+  : list generic_type_param =
+
+  attrs
+  |> extract_generic_type_param_trait_bounds (List.length tyvars)
+  |> List.map2 (fun tvar bounds -> mk_generic_type_param (tyvar_of tvar) bounds) tyvars  
+
 let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : item & env =
   let is_rec, lbs = lbs in
   if is_rec = S.Rec
@@ -713,7 +759,14 @@ let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : item & env =
 
       let fn_const = has_rust_const_fn_attribute lb in
       let fn_sig, g_body =
-        extract_top_level_sig g fn_const lb.mllb_name tvars arg_names arg_ts ret_t in
+        extract_top_level_sig 
+          g
+          fn_const
+          lb.mllb_name
+          (extract_generic_type_params tvars lb.mllb_attrs)
+          arg_names
+          arg_ts
+          ret_t in
       let fn_body = extract_mlexpr_to_stmts g_body body in
 
       Item_fn (mk_fn fn_sig fn_body),
@@ -761,27 +814,28 @@ let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : item & env =
   //   push_fv g lb.mllb_name fn_sig
   // end
 
-let extract_struct_defn (g:env) (_:list S.mlexpr) (d:S.one_mltydecl) : item & env =
+let extract_struct_defn (g:env) (attrs:list S.mlattribute) (d:S.one_mltydecl) : item & env =
   let Some (S.MLTD_Record fts) = d.tydecl_defn in
   // print1 "Adding to record field with %s\n" d.tydecl_name;
   mk_item_struct
     (d.tydecl_name |> enum_or_struct_name)
-    (List.map tyvar_of d.tydecl_parameters)
+    (extract_generic_type_params d.tydecl_parameters attrs)
     (List.map (fun (f, t) -> f, extract_mlty g t) fts),
   { g with record_field_names = psmap_add g.record_field_names d.tydecl_name (List.map fst fts) }
 
-let extract_type_abbrev (g:env) (_:list S.mlexpr) (d:S.one_mltydecl) : item & env =
+let extract_type_abbrev (g:env) (attrs:list S.mlattribute) (d:S.one_mltydecl) : item & env =
   let Some (S.MLTD_Abbrev t) = d.tydecl_defn in
-  (mk_item_type d.tydecl_name (List.map tyvar_of d.tydecl_parameters) (extract_mlty g t)),
+  mk_item_type
+    d.tydecl_name
+    (extract_generic_type_params d.tydecl_parameters attrs)
+    (extract_mlty g t),
   g
-  
-let extract_enum (g:env) (mlattrs:list S.mlexpr) (d:S.one_mltydecl) : item & env =
+
+let extract_enum (g:env) (attrs:list S.mlattribute) (d:S.one_mltydecl) : item & env =
   let Some (S.MLTD_DType cts) = d.tydecl_defn in
-  print1 ("extract_enum: attrs: %s\n")
-         (String.concat ";" (List.map S.mlexpr_to_string mlattrs));
   mk_item_enum
     (d.tydecl_name |> enum_or_struct_name)
-    (List.map tyvar_of d.tydecl_parameters)
+    (extract_generic_type_params d.tydecl_parameters attrs)
     (List.map (fun (cname, dts) -> cname, List.map (fun (_, t) -> extract_mlty g t) dts) cts),
   g  // TODO: add it to env if needed later
 

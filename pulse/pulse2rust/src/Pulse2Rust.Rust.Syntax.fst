@@ -197,7 +197,12 @@ let mk_ref_fn_arg (name:string) (is_mut:bool) (t:typ) =
     pat_typ_typ = t;
   }
 
-let mk_fn_signature (fn_const:bool) (fn_name:string) (fn_generics:list string) (fn_args:list fn_arg) (fn_ret_t:typ) =
+let mk_generic_type_param
+  (generic_type_param_name:string)
+  (generic_type_param_trait_bounds:list (list string)) : generic_type_param =
+  { generic_type_param_name; generic_type_param_trait_bounds }
+
+let mk_fn_signature (fn_const:bool) (fn_name:string) (fn_generics:list generic_type_param) (fn_args:list fn_arg) (fn_ret_t:typ) =
   let fn_generics = L.map Generic_type_param fn_generics in
   { fn_const; fn_name; fn_generics; fn_args; fn_ret_t }
 
@@ -217,7 +222,7 @@ let mk_local_stmt (name:option string) (t:option typ) (is_mut:bool) (init:expr) 
 let mk_fn (fn_sig:fn_signature) (fn_body:list stmt) =
   { fn_sig; fn_body; }
 
-let mk_item_struct (name:string) (generics:list string) (fields:list (string & typ))
+let mk_item_struct (name:string) (generics:list generic_type_param) (fields:list (string & typ))
   : item =
 
   Item_struct {
@@ -229,14 +234,14 @@ let mk_item_struct (name:string) (generics:list string) (fields:list (string & t
     }) fields;
   }
 
-let mk_item_type (name:string) (generics:list string) (t:typ) : item =
+let mk_item_type (name:string) (generics:list generic_type_param) (t:typ) : item =
   Item_type {
     item_type_name = name;
     item_type_generics = L.map Generic_type_param generics;
     item_type_typ = t;
   }
 
-let mk_item_enum (name:string) (generics:list string) (variants:list (string & list typ))
+let mk_item_enum (name:string) (generics:list generic_type_param) (variants:list (string & list typ))
   : item =
 
   Item_enum {
