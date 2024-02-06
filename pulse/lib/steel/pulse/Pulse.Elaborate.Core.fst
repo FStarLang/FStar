@@ -241,7 +241,7 @@ let rec elab_st_typing (#g:env)
       let re2 = elab_st_typing e2_typing in
       RT.mk_if rb re1 re2
 
-    | T_Match _ _ _ sc _ _ _ _ brty  _ ->
+    | T_Match _ _ _ sc _ _ _ _ _ brty  _ ->
       let sc = elab_term sc in
       let brs = elab_branches brty in
       R.pack_ln (R.Tv_Match sc None brs)

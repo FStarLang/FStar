@@ -176,6 +176,19 @@ let ctag_of_comp_st (c:comp_st) : ctag =
   | C_STGhost _ -> STT_Ghost
 
 noeq
+type effect_annot =
+  | EffectAnnotSTT
+  | EffectAnnotGhost
+  | EffectAnnotAtomic { opens:term }
+
+let effect_annot_of_comp (c:comp_st)
+: effect_annot
+= match c with
+  | C_ST _ -> EffectAnnotSTT
+  | C_STGhost _ -> EffectAnnotGhost
+  | C_STAtomic opens _ _ -> EffectAnnotAtomic { opens }
+
+noeq
 type proof_hint_type =
   | ASSERT {
       p:vprop

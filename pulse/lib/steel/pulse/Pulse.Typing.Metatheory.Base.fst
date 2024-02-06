@@ -372,14 +372,14 @@ let rec st_typing_weakening g g' t c d g1
 
     T_If _ b e1 e2 c hyp (RU.magic ()) d_e1 d_e2 (RU.magic ())
   
-  | T_Match _ sc_u sc_ty sc d_sc_ty d_sc c brs d_brs d_pats_complete ->
+  | T_Match _ sc_u sc_ty sc d_sc_ty d_sc c c_typing brs d_brs d_pats_complete ->
     admit();
     T_Match (push_env (push_env g g1) g')
             sc_u sc_ty sc
             (tot_typing_weakening g g' _ _ d_sc_ty g1)
             (tot_typing_weakening g g' _ _ d_sc g1)
-            c brs
-            d_brs
+            c c_typing 
+            brs d_brs
             d_pats_complete
 
   | T_Frame _ e c frame _ d_e ->

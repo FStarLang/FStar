@@ -67,12 +67,18 @@ instance _ : tac_showable comp = {
 instance _ : tac_showable env = {
   show = env_to_string;
 }
+instance _ : tac_showable observability = {
+  show = (fun o -> observability_to_string o)
+}
+instance _ : tac_showable effect_annot = {
+  show = effect_annot_to_string
+} 
 
 instance _ : tac_showable post_hint_t = {
   show = (fun (h:post_hint_t) ->
     "{" ^
       "g = " ^ show h.g ^ "; " ^
-      "ctag_hint = " ^ show h.ctag_hint ^ "; " ^
+      "effect_annot = " ^ show h.effect_annot ^ "; " ^
       "ret_ty = " ^ show h.ret_ty ^ "; " ^
       "u = " ^ show h.u ^ "; " ^
       "post = " ^ show h.post ^ "; " ^

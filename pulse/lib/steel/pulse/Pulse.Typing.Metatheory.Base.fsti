@@ -35,12 +35,19 @@ val st_typing_correctness_ctot (#g:env) (#t:st_term) (#c:comp{C_Tot? c})
                                (_:st_typing g t c)
   : (u:Ghost.erased universe & universe_of g (comp_res c) u)
 
+let inames_of_comp_st (c:comp_st) =
+  match c with
+  | C_STAtomic _ _ _ -> comp_inames c
+  | _ -> tm_emp_inames
+
+let iname_typing (g:env) (c:comp_st) = tot_typing g (inames_of_comp_st c) tm_inames
+
 val st_typing_correctness (#g:env) (#t:st_term) (#c:comp_st) 
                           (d:st_typing g t c)
   : comp_typing_u g c
   
 val comp_typing_inversion (#g:env) (#c:comp_st) (ct:comp_typing_u g c)
-  : st_comp_typing g (st_comp_of_comp c)
+  : st_comp_typing g (st_comp_of_comp c) & iname_typing g c
 
 val st_comp_typing_inversion_cofinite (#g:env) (#st:_) (ct:st_comp_typing g st)
   : (universe_of g st.res st.u &

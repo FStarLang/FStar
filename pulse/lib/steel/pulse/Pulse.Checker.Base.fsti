@@ -39,8 +39,8 @@ val post_typing_as_abstraction
                              (RT.mk_abs (elab_term ty) T.Q_Explicit (elab_term t))
                              (RT.mk_arrow (elab_term ty) T.Q_Explicit (elab_term tm_vprop)))
 
-val intro_post_hint (g:env) (ctag_opt:option ctag) (ret_ty:option term) (post:term)
-  : T.Tac (h:post_hint_for_env g{h.ctag_hint == ctag_opt})
+val intro_post_hint (g:env) (effect_annot:effect_annot) (ret_ty:option term) (post:term)
+  : T.Tac (h:post_hint_for_env g{h.effect_annot == effect_annot})
 
 val post_hint_from_comp_typing (#g:env) (#c:comp_st) (ct:comp_typing_u g c)
   : post_hint_for_env g
@@ -51,7 +51,8 @@ val extend_post_hint (g:env) (p:post_hint_for_env g)
   : T.Tac (q:post_hint_for_env (push_binding g x ppname_default tx) {
             q.post == tm_star p.post conjunct /\
             q.ret_ty == p.ret_ty /\
-            q.u == p.u
+            q.u == p.u /\
+            q.effect_annot == p.effect_annot
           })
   
 

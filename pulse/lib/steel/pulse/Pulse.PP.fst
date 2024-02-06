@@ -86,6 +86,8 @@ instance _ : printable env = {
   pp = Pulse.Typing.Env.env_to_doc;
 }
 
+instance pp_effect_annot : printable effect_annot = from_show
+
 let pp_record (flds : list (string & document)) : Tac document =
   let flds_doc =
     separate_map (doc_of_string ";") (fun (s, d) -> group (doc_of_string s ^/^ equals ^/^ group d)) flds
@@ -95,7 +97,7 @@ let pp_record (flds : list (string & document)) : Tac document =
 instance _ : printable post_hint_t = {
   pp = (fun (h:post_hint_t) ->
           pp_record [ "g", pp h.g
-                    ; "ctag_hint", pp h.ctag_hint
+                    ; "effect_annot", pp h.effect_annot
                     ; "ret_ty", pp h.ret_ty
                     ; "u", pp h.u
                     ; "post", pp h.post ]);

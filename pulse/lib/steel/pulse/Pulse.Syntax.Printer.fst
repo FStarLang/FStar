@@ -178,6 +178,11 @@ let observability_to_string =
   | Observable -> "Observable"
   | Unobservable -> "Unobservable"
   | Neutral -> "Neutral"
+
+let effect_annot_to_string = function
+  | EffectAnnotSTT -> "stt"
+  | EffectAnnotGhost -> "stt_ghost"
+  | EffectAnnotAtomic { opens } -> sprintf "stt_atomic %s" (term_to_string opens)
   
 let comp_to_string (c:comp)
   : T.Tac string

@@ -48,7 +48,7 @@ let rec print_st_typing #g #t #c (d:st_typing g t c)
     | T_If _ _ _ _ _ _ _ _ _ _ ->
       "T_If"
 
-    | T_Match _ _ _ _ _ _ _ _ _ _ ->
+    | T_Match _ _ _ _ _ _ _ _ _ _ _ ->
       "T_Match"
 
     | T_Equiv g e c c' d eq ->
