@@ -17,6 +17,7 @@
     "bug-reports",
     "by-example",
     "lib",
+    "lib/c",
     "class",
     "lib/pledge",
     "parallel",

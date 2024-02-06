@@ -3,7 +3,7 @@ STEEL_SHARE = ../../
 # the root (../../../..) since the OPAM package will detach the share
 # directory from the rest of the repo.
 
-INCLUDE_DIRS=bug-reports by-example lib class lib/pledge dice/cbor dice/common dice/dpe dice/engine dice/l0 parallel parix .
+INCLUDE_DIRS=bug-reports by-example lib lib/c class lib/pledge dice/cbor dice/common dice/dpe dice/engine dice/l0 parallel parix .
 CACHE_DIR=.cache
 SRC_DIRS=$(addprefix $(STEEL_SHARE)/examples/pulse/, $(INCLUDE_DIRS))
 FSTAR_FILES=$(wildcard $(addsuffix /*.fst, $(SRC_DIRS))) $(wildcard $(addsuffix /*.fsti, $(SRC_DIRS)))
@@ -38,6 +38,11 @@ PULSE_LIB_CHECKED_FILES=$(filter $(CACHE_DIRECTORY)/Pulse.Lib.%,$(ALL_CHECKED_FI
 
 .PHONY: lib
 lib: $(PULSE_LIB_CHECKED_FILES)
+
+PULSE_C_CHECKED_FILES=$(filter $(CACHE_DIRECTORY)/Pulse.C.%,$(ALL_CHECKED_FILES))
+
+.PHONY: c
+c: $(PULSE_C_CHECKED_FILES)
 
 CBOR_CHECKED_FILES=$(filter $(CACHE_DIRECTORY)/CBOR.% $(CACHE_DIRECTORY)/CDDL.% $(CACHE_DIRECTORY)/CDDLExtractionTest.%,$(ALL_CHECKED_FILES))
 
