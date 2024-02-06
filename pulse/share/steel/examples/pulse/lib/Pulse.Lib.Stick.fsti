@@ -17,25 +17,22 @@
 module Pulse.Lib.Stick
 
 open Pulse.Lib.Core
-module T = FStar.Tactics
 
 val stick  :
-  (#[T.exact (`emp_inames)] is:inames) ->
   (hyp : vprop) ->
   (concl : vprop) ->
   vprop
 
 let ( @==> ) :
-  (#[T.exact (`emp_inames)] is:inames) ->
   (hyp : vprop) ->
   (concl : vprop) ->
   vprop
-  = fun #is -> stick #is
+  = stick
 
 val elim_stick
   (hyp concl: vprop)
 : stt_ghost unit
-    ((stick #emp_inames hyp concl) ** hyp)
+    ((stick hyp concl) ** hyp)
     (fun _ -> concl)
 
 val intro_stick
@@ -48,12 +45,4 @@ val intro_stick
   ))
 : stt_ghost unit
     v
-    (fun _ -> stick #emp_inames hyp concl)
-
-val stick_sub_inv
-  (#os1 : inames)
-  (#os2 : inames{inames_subset os1 os2})
-  (hyp concl: vprop)
-: stt_ghost unit
-    (stick #os1 hyp concl)
-    (fun _ -> stick #os2 hyp concl)
+    (fun _ -> stick hyp concl)

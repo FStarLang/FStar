@@ -31,12 +31,6 @@ val dbg : vprop
 
 open Pulse.Lib.Stick
 
-let emp_inames_disjoint (t:inames)
-  : Lemma 
-    (ensures (t /! emp_inames))
-    [SMTPat (Set.disjoint t emp_inames)]
-  = admit()
-
 ```pulse
 ghost
 fn elim_implies (#p #q:vprop) ()
@@ -44,7 +38,7 @@ fn elim_implies (#p #q:vprop) ()
    ensures q
 {
   open Pulse.Lib.Stick;
-  rewrite (p @==> q) as (stick #emp_inames p q);
+  rewrite (p @==> q) as (stick p q);
   elim_stick p q;
 }
 ```

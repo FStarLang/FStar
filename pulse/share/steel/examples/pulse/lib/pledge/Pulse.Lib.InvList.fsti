@@ -18,6 +18,8 @@ let rec invlist_nodups (is : invlist0) : prop =
 let invlist =
   i:invlist0{invlist_nodups i}
 
+let invlist_empty : invlist = []
+
 let add_one (h : invlist_elem) (t : invlist{not (mem_inv (invlist_names t) (dsnd h))}) : invlist =
   h :: t
 
