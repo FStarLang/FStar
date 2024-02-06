@@ -17,6 +17,8 @@ module FStar.Getopt
 open FStar.Compiler.Effect
 open FStar.BaseTypes
 
+open FStar.Tuple3
+
 val noshort : char
 val nolong : string
 type opt_variant 'a =

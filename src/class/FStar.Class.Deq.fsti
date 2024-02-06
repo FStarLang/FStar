@@ -2,6 +2,11 @@ module FStar.Class.Deq
 
 open FStar.Compiler.Effect
 
+open FStar.Tuple3
+open FStar.Tuple4
+open FStar.Tuple5
+open FStar.Tuple6
+
 class deq (a:Type) = {
   (=?) : a -> a -> bool;
 }

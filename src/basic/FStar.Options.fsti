@@ -24,6 +24,8 @@ open FStar.Compiler
 type codegen_t =
     | OCaml | FSharp | Krml | Plugin | Extension
 
+open FStar.Tuple4
+
 //let __test_norm_all = Util.mk_ref false
 
 type split_queries_t = | No | OnFailure | Always
