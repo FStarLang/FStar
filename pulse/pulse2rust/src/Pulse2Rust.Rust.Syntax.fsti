@@ -232,6 +232,7 @@ type generic_param =
   | Generic_type_param of string
 
 type fn_signature = {
+  fn_const : bool;
   fn_name : string;
   fn_generics : list generic_param;
   fn_args : list fn_arg;
@@ -337,7 +338,7 @@ val mk_lock_mutex (e:expr) : expr
 val mk_local_stmt (name:option string) (t:option typ) (is_mut:bool) (init:expr) : stmt
 val mk_scalar_fn_arg (name:string) (t:typ) : fn_arg
 val mk_ref_fn_arg (name:string) (is_mut:bool) (t:typ) : fn_arg
-val mk_fn_signature (fn_name:string) (fn_generics:list string) (fn_args:list fn_arg) (fn_ret_t:typ) : fn_signature
+val mk_fn_signature (fn_const:bool) (fn_name:string) (fn_generics:list string) (fn_args:list fn_arg) (fn_ret_t:typ) : fn_signature
 val mk_fn (fn_sig:fn_signature) (fn_body:list stmt) : fn
 
 val mk_item_struct (name:string) (generics:list string) (fields:list (string & typ))

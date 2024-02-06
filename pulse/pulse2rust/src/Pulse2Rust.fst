@@ -224,6 +224,7 @@ let push_fn_arg (g:env) (arg_name:string) (arg:fn_arg) : env =
 //
 let extract_top_level_sig
   (g:env)
+  (fn_const:bool)
   (fn_name:string)
   (tvars:S.mlidents)
   (arg_names:list string)
@@ -235,7 +236,7 @@ let extract_top_level_sig
   let fn_args =
     List.map2 (extract_top_level_fn_arg g) (List.map varname arg_names) arg_ts in
   let fn_ret_t = extract_mltyopt g ret_t in
-  mk_fn_signature fn_name (List.map tyvar_of tvars) fn_args fn_ret_t,
+  mk_fn_signature fn_const fn_name (List.map tyvar_of tvars) fn_args fn_ret_t,
   fold_left (fun g (arg_name, arg) -> push_fn_arg g arg_name arg) g (zip arg_names fn_args)
 
 //
@@ -710,10 +711,9 @@ let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : item & env =
         | None ->
           [], List.map (fun b -> b.S.mlbinder_ty) bs, None in
 
-      print1 "has_rust_const_fn_attribute: %s\n" (string_of_bool (has_rust_const_fn_attribute lb));
-
+      let fn_const = has_rust_const_fn_attribute lb in
       let fn_sig, g_body =
-        extract_top_level_sig g lb.mllb_name tvars arg_names arg_ts ret_t in
+        extract_top_level_sig g fn_const lb.mllb_name tvars arg_names arg_ts ret_t in
       let fn_body = extract_mlexpr_to_stmts g_body body in
 
       Item_fn (mk_fn fn_sig fn_body),

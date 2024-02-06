@@ -238,6 +238,7 @@ enum FnArg {
 }
 
 struct FnSig {
+    fn_const: bool,
     fn_name: String,
     fn_generics: Vec<GenericParam>,
     fn_args: Vec<FnArg>,
@@ -601,6 +602,7 @@ impl_from_ocaml_variant! {
 
 impl_from_ocaml_record! {
   FnSig {
+    fn_const: bool,
     fn_name : String,
     fn_generics: OCamlList<GenericParam>,
     fn_args : OCamlList<FnArg>,
@@ -1417,7 +1419,13 @@ fn to_syn_fn_sig(s: &FnSig) -> Signature {
     });
 
     Signature {
-        constness: None,
+        constness: if s.fn_const {
+            Some(syn::token::Const {
+                span: Span::call_site(),
+            })
+        } else {
+            None
+        },
         asyncness: None,
         unsafety: None,
         abi: None,

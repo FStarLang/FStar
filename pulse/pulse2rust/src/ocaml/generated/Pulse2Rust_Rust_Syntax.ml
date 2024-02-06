@@ -631,28 +631,33 @@ let (__proj__Generic_type_param__item___0 : generic_param -> Prims.string) =
   fun projectee -> match projectee with | Generic_type_param _0 -> _0
 type fn_signature =
   {
+  fn_const: Prims.bool ;
   fn_name: Prims.string ;
   fn_generics: generic_param Prims.list ;
   fn_args: fn_arg Prims.list ;
   fn_ret_t: typ }
+let (__proj__Mkfn_signature__item__fn_const : fn_signature -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { fn_const; fn_name; fn_generics; fn_args; fn_ret_t;_} -> fn_const
 let (__proj__Mkfn_signature__item__fn_name : fn_signature -> Prims.string) =
   fun projectee ->
     match projectee with
-    | { fn_name; fn_generics; fn_args; fn_ret_t;_} -> fn_name
+    | { fn_const; fn_name; fn_generics; fn_args; fn_ret_t;_} -> fn_name
 let (__proj__Mkfn_signature__item__fn_generics :
   fn_signature -> generic_param Prims.list) =
   fun projectee ->
     match projectee with
-    | { fn_name; fn_generics; fn_args; fn_ret_t;_} -> fn_generics
+    | { fn_const; fn_name; fn_generics; fn_args; fn_ret_t;_} -> fn_generics
 let (__proj__Mkfn_signature__item__fn_args :
   fn_signature -> fn_arg Prims.list) =
   fun projectee ->
     match projectee with
-    | { fn_name; fn_generics; fn_args; fn_ret_t;_} -> fn_args
+    | { fn_const; fn_name; fn_generics; fn_args; fn_ret_t;_} -> fn_args
 let (__proj__Mkfn_signature__item__fn_ret_t : fn_signature -> typ) =
   fun projectee ->
     match projectee with
-    | { fn_name; fn_generics; fn_args; fn_ret_t;_} -> fn_ret_t
+    | { fn_const; fn_name; fn_generics; fn_args; fn_ret_t;_} -> fn_ret_t
 type fn = {
   fn_sig: fn_signature ;
   fn_body: stmt Prims.list }
@@ -1004,17 +1009,25 @@ let (mk_ref_fn_arg : Prims.string -> Prims.bool -> typ -> fn_arg) =
             pat_typ_typ = t
           }
 let (mk_fn_signature :
-  Prims.string ->
-    Prims.string Prims.list -> fn_arg Prims.list -> typ -> fn_signature)
+  Prims.bool ->
+    Prims.string ->
+      Prims.string Prims.list -> fn_arg Prims.list -> typ -> fn_signature)
   =
-  fun fn_name ->
-    fun fn_generics ->
-      fun fn_args ->
-        fun fn_ret_t ->
-          let fn_generics1 =
-            FStar_Compiler_List.map (fun uu___ -> Generic_type_param uu___)
-              fn_generics in
-          { fn_name; fn_generics = fn_generics1; fn_args; fn_ret_t }
+  fun fn_const ->
+    fun fn_name ->
+      fun fn_generics ->
+        fun fn_args ->
+          fun fn_ret_t ->
+            let fn_generics1 =
+              FStar_Compiler_List.map (fun uu___ -> Generic_type_param uu___)
+                fn_generics in
+            {
+              fn_const;
+              fn_name;
+              fn_generics = fn_generics1;
+              fn_args;
+              fn_ret_t
+            }
 let (mk_local_stmt :
   Prims.string FStar_Pervasives_Native.option ->
     typ FStar_Pervasives_Native.option -> Prims.bool -> expr -> stmt)

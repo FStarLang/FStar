@@ -197,9 +197,9 @@ let mk_ref_fn_arg (name:string) (is_mut:bool) (t:typ) =
     pat_typ_typ = t;
   }
 
-let mk_fn_signature (fn_name:string) (fn_generics:list string) (fn_args:list fn_arg) (fn_ret_t:typ) =
+let mk_fn_signature (fn_const:bool) (fn_name:string) (fn_generics:list string) (fn_args:list fn_arg) (fn_ret_t:typ) =
   let fn_generics = L.map Generic_type_param fn_generics in
-  { fn_name; fn_generics; fn_args; fn_ret_t }
+  { fn_const; fn_name; fn_generics; fn_args; fn_ret_t }
 
 let mk_local_stmt (name:option string) (t:option typ) (is_mut:bool) (init:expr) =
   Stmt_local {

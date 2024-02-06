@@ -324,37 +324,39 @@ let (push_fn_arg :
             -> let is_mut = false in push_local g arg_name pat_typ_typ false
 let (extract_top_level_sig :
   env ->
-    Prims.string ->
-      FStar_Extraction_ML_Syntax.mlidents ->
-        Prims.string Prims.list ->
-          FStar_Extraction_ML_Syntax.mlty Prims.list ->
-            FStar_Extraction_ML_Syntax.mlty FStar_Pervasives_Native.option ->
-              (Pulse2Rust_Rust_Syntax.fn_signature * env))
+    Prims.bool ->
+      Prims.string ->
+        FStar_Extraction_ML_Syntax.mlidents ->
+          Prims.string Prims.list ->
+            FStar_Extraction_ML_Syntax.mlty Prims.list ->
+              FStar_Extraction_ML_Syntax.mlty FStar_Pervasives_Native.option
+                -> (Pulse2Rust_Rust_Syntax.fn_signature * env))
   =
   fun g ->
-    fun fn_name ->
-      fun tvars ->
-        fun arg_names ->
-          fun arg_ts ->
-            fun ret_t ->
-              let fn_args =
-                let uu___ = FStar_Compiler_List.map varname arg_names in
-                FStar_Compiler_List.map2 (extract_top_level_fn_arg g) uu___
-                  arg_ts in
-              let fn_ret_t = extract_mltyopt g ret_t in
-              let uu___ =
-                let uu___1 = FStar_Compiler_List.map tyvar_of tvars in
-                Pulse2Rust_Rust_Syntax.mk_fn_signature fn_name uu___1 fn_args
-                  fn_ret_t in
-              let uu___1 =
-                let uu___2 = FStar_Compiler_List.zip arg_names fn_args in
-                FStar_Compiler_List.fold_left
-                  (fun g1 ->
-                     fun uu___3 ->
-                       match uu___3 with
-                       | (arg_name, arg) -> push_fn_arg g1 arg_name arg) g
-                  uu___2 in
-              (uu___, uu___1)
+    fun fn_const ->
+      fun fn_name ->
+        fun tvars ->
+          fun arg_names ->
+            fun arg_ts ->
+              fun ret_t ->
+                let fn_args =
+                  let uu___ = FStar_Compiler_List.map varname arg_names in
+                  FStar_Compiler_List.map2 (extract_top_level_fn_arg g) uu___
+                    arg_ts in
+                let fn_ret_t = extract_mltyopt g ret_t in
+                let uu___ =
+                  let uu___1 = FStar_Compiler_List.map tyvar_of tvars in
+                  Pulse2Rust_Rust_Syntax.mk_fn_signature fn_const fn_name
+                    uu___1 fn_args fn_ret_t in
+                let uu___1 =
+                  let uu___2 = FStar_Compiler_List.zip arg_names fn_args in
+                  FStar_Compiler_List.fold_left
+                    (fun g1 ->
+                       fun uu___3 ->
+                         match uu___3 with
+                         | (arg_name, arg) -> push_fn_arg g1 arg_name arg) g
+                    uu___2 in
+                (uu___, uu___1)
 let (is_binop :
   Prims.string -> Pulse2Rust_Rust_Syntax.binop FStar_Pervasives_Native.option)
   =
@@ -1512,29 +1514,25 @@ let (extract_top_level_lb :
                             ([], uu___4, FStar_Pervasives_Native.None) in
                       (match uu___3 with
                        | (tvars, arg_ts, ret_t) ->
-                           ((let uu___5 =
-                               let uu___6 = has_rust_const_fn_attribute lb in
-                               FStar_Compiler_Util.string_of_bool uu___6 in
-                             FStar_Compiler_Util.print1
-                               "has_rust_const_fn_attribute: %s\n" uu___5);
-                            (let uu___5 =
-                               extract_top_level_sig g
-                                 lb.FStar_Extraction_ML_Syntax.mllb_name
-                                 tvars arg_names arg_ts ret_t in
-                             match uu___5 with
-                             | (fn_sig, g_body) ->
-                                 let fn_body =
-                                   extract_mlexpr_to_stmts g_body body in
-                                 let uu___6 =
-                                   let uu___7 =
-                                     Pulse2Rust_Rust_Syntax.mk_fn fn_sig
-                                       fn_body in
-                                   Pulse2Rust_Rust_Syntax.Item_fn uu___7 in
-                                 let uu___7 =
-                                   push_fn g
-                                     lb.FStar_Extraction_ML_Syntax.mllb_name
-                                     fn_sig in
-                                 (uu___6, uu___7))))
+                           let fn_const = has_rust_const_fn_attribute lb in
+                           let uu___4 =
+                             extract_top_level_sig g fn_const
+                               lb.FStar_Extraction_ML_Syntax.mllb_name tvars
+                               arg_names arg_ts ret_t in
+                           (match uu___4 with
+                            | (fn_sig, g_body) ->
+                                let fn_body =
+                                  extract_mlexpr_to_stmts g_body body in
+                                let uu___5 =
+                                  let uu___6 =
+                                    Pulse2Rust_Rust_Syntax.mk_fn fn_sig
+                                      fn_body in
+                                  Pulse2Rust_Rust_Syntax.Item_fn uu___6 in
+                                let uu___6 =
+                                  push_fn g
+                                    lb.FStar_Extraction_ML_Syntax.mllb_name
+                                    fn_sig in
+                                (uu___5, uu___6)))
                   | uu___3 ->
                       (match lb.FStar_Extraction_ML_Syntax.mllb_tysc with
                        | FStar_Pervasives_Native.Some ([], ty) ->
