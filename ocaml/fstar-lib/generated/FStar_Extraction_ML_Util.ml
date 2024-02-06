@@ -728,3 +728,18 @@ let rec (uncurry_mlty_fun :
         let uu___1 = uncurry_mlty_fun b in
         (match uu___1 with | (args, res) -> ((a :: args), res))
     | uu___ -> ([], t)
+let (list_elements :
+  FStar_Extraction_ML_Syntax.mlexpr ->
+    FStar_Extraction_ML_Syntax.mlexpr Prims.list
+      FStar_Pervasives_Native.option)
+  =
+  fun e ->
+    let rec list_elements1 acc e1 =
+      match e1.FStar_Extraction_ML_Syntax.expr with
+      | FStar_Extraction_ML_Syntax.MLE_CTor
+          (("Prims"::[], "Cons"), hd::tl::[]) ->
+          list_elements1 (hd :: acc) tl
+      | FStar_Extraction_ML_Syntax.MLE_CTor (("Prims"::[], "Nil"), []) ->
+          FStar_Pervasives_Native.Some (FStar_Compiler_List.rev acc)
+      | uu___ -> FStar_Pervasives_Native.None in
+    list_elements1 [] e

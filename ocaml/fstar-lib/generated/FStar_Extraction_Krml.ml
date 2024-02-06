@@ -801,18 +801,13 @@ let (list_elements :
   FStar_Extraction_ML_Syntax.mlexpr ->
     FStar_Extraction_ML_Syntax.mlexpr Prims.list)
   =
-  fun e2 ->
-    let rec list_elements1 acc e21 =
-      match e21.FStar_Extraction_ML_Syntax.expr with
-      | FStar_Extraction_ML_Syntax.MLE_CTor
-          (("Prims"::[], "Cons"), hd::tl::[]) ->
-          list_elements1 (hd :: acc) tl
-      | FStar_Extraction_ML_Syntax.MLE_CTor (("Prims"::[], "Nil"), []) ->
-          FStar_Compiler_List.rev acc
-      | uu___ ->
-          FStar_Compiler_Effect.failwith
-            "Argument of FStar.Buffer.createL is not a list literal!" in
-    list_elements1 [] e2
+  fun e ->
+    let lopt = FStar_Extraction_ML_Util.list_elements e in
+    match lopt with
+    | FStar_Pervasives_Native.None ->
+        FStar_Compiler_Effect.failwith
+          "Argument of FStar.Buffer.createL is not a list literal!"
+    | FStar_Pervasives_Native.Some l -> l
 let (translate_flags :
   FStar_Extraction_ML_Syntax.meta Prims.list -> flag Prims.list) =
   fun flags ->
@@ -3140,7 +3135,7 @@ let (translate : FStar_Extraction_ML_Syntax.mllib -> file Prims.list) =
                      "Unable to translate module: %s because:\n  %s\n" m_name
                      uu___3);
                   FStar_Pervasives_Native.None)) modules
-let (uu___1716 : unit) =
+let (uu___1700 : unit) =
   register_post_translate_type_without_decay translate_type_without_decay';
   register_post_translate_type translate_type';
   register_post_translate_type_decl translate_type_decl';
