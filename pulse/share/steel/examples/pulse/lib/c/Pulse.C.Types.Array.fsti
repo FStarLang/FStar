@@ -216,6 +216,10 @@ let array_len_of (#t: Type) (#td: typedef t) (ar: array_or_null td) : Tot (array
   match ar with
   | (| _, a |) -> a
 
+inline_for_extraction [@@noextract_to "krml"]
+let mk_array_or_null (#t: Type) (#td: typedef t) (a: array_ptr td) (len: array_len_t a) : Tot (array_or_null td) =
+  (| a, len |)
+
 let g_array_is_null (#t: Type) (#td: typedef t) (a: array_or_null td) : GTot bool =
   g_array_ptr_is_null (array_ptr_of a)
 
@@ -228,7 +232,7 @@ let array_ref_of (#t: Type) (#td: typedef t) (ar: array td) : Tot (array_ref td)
 
 inline_for_extraction [@@noextract_to "krml"]
 let mk_array (#t: Type) (#td: typedef t) (a: array_ref td) (len: array_len_t a) : Tot (array td) =
-  (| a, len |)
+  mk_array_or_null a len
 
 let array_length
   (#t: Type)
@@ -264,33 +268,40 @@ val array_ptr_is_null
   (len: array_len_t r)
 // : STAtomicBase bool false opened Unobservable
 : stt bool
-    (array_pts_to_or_null (| r, len |) v)
-    (fun b -> array_pts_to_or_null (| r, len |) v ** pure (
-      b == g_array_is_null (| r, len |)
+    (array_pts_to_or_null (mk_array_or_null r len) v)
+    (fun b -> array_pts_to_or_null (mk_array_or_null r len) v ** pure (
+      b == g_array_is_null (mk_array_or_null r len)
     ))
 
-// inline_for_extraction [@@noextract_to "krml"]
-val array_is_null
+#set-options "--print_implicits"
+
+inline_for_extraction [@@noextract_to "krml"]
+```pulse
+fn array_is_null
   (#t: Type)
 //  (#opened: _)
   (#td: typedef t)
   (#v: Ghost.erased (Seq.seq t))
   (r: array_or_null td)
 // : STAtomicBase bool false opened Unobservable
-: stt bool
+requires
     (array_pts_to_or_null r v)
-    (fun b -> array_pts_to_or_null r v ** pure (
+returns b: bool
+ensures
+    (array_pts_to_or_null r v ** pure (
       b == g_array_is_null r
     ))
-(*
-= let a = array_ptr_of r in
-  let len : array_len_t a = dsnd r in
-  rewrite (array_pts_to_or_null _ _) (array_pts_to_or_null (| a, len |) v);
-  let res = array_ptr_is_null a len in
-  rewrite (array_pts_to_or_null _ _) (array_pts_to_or_null r v);
-  return res
-*)
-
+{
+  let a = array_ptr_of r;
+  let len : array_len_t a = array_len_of r;
+  rewrite (array_pts_to_or_null r v)
+    as (array_pts_to_or_null (mk_array_or_null a len) v);
+  let res = array_ptr_is_null a len;
+  rewrite (array_pts_to_or_null (mk_array_or_null a len) v)
+    as (array_pts_to_or_null r v);
+  res
+}
+```
 val array_pts_to_length
   (#t: Type)
   (#td: typedef t)
@@ -403,8 +414,9 @@ val array_ref_of_base
       array_ref_of_base_post v r a ar
     ))
 
-// inline_for_extraction [@@noextract_to "krml"]
-val array_of_base
+inline_for_extraction [@@noextract_to "krml"]
+```pulse
+fn array_of_base
   (#t: Type)
   (#tn: Type0)
 //  (#opened: _)
@@ -413,17 +425,21 @@ val array_of_base
   (#v: Ghost.erased (base_array_t t tn n))
   (r: ref (base_array0 tn td n))
 // : STAtomicBase (a: array td { has_array_of_base r a }) false opened Unobservable
-: stt (a: array td { has_array_of_base r a })
+requires
     (pts_to r v)
-    (fun a -> array_pts_to a (seq_of_base_array v))
-(*
-= let al = array_ref_of_base r in
-  let _ = elim_exists () in
-  elim_pure _;
-  let a = (| al, Ghost.hide (n <: SZ.t) |) in
-  rewrite (array_pts_to _ _) (array_pts_to _ _);
-  return a
-*)
+returns
+    a: (a: array td { has_array_of_base r a })
+ensures
+    (array_pts_to a (seq_of_base_array v))
+{
+  let al = array_ref_of_base r;
+  with ga . assert (array_pts_to #t #td ga (seq_of_base_array v));
+  let a = mk_array_or_null al (Ghost.hide (n <: SZ.t));
+  rewrite (array_pts_to ga (seq_of_base_array v))
+    as (array_pts_to a (seq_of_base_array v));
+  a
+}
+```
 
 val unarray_of_base
   (#t: Type)
@@ -472,32 +488,35 @@ val array_ptr_alloc
       Ghost.reveal s `Seq.equal` FStar.Seq.create (SZ.v sz) (uninitialized td)
     ))
 
-// inline_for_extraction [@@noextract_to "krml"]
-val array_alloc
+inline_for_extraction [@@noextract_to "krml"]
+```pulse
+fn array_alloc
   (#t: Type)
   (td: typedef t)
   (sz: SZ.t { SZ.v sz > 0 })
-: stt (array_or_null td)
+requires
     emp
-    (fun ar ->
+returns ar: array_or_null td
+ensures
+    (
       freeable_or_null_array ar ** (
       exists* s .
       array_pts_to_or_null ar s ** pure (
       (g_array_is_null ar == false ==> array_length ar == SZ.v sz) /\
       Ghost.reveal s == FStar.Seq.create (SZ.v sz) (uninitialized td)
     )))
-(*
-= let a : array_ptr td = array_ptr_alloc td sz in
-  let ar' : Ghost.erased (array_or_null td) = elim_exists () in
-  let s = elim_exists () in
-  elim_pure _;
-  let len : array_len_t a = dsnd ar' in
-  let ar = (| a, len |) in
-  rewrite (array_pts_to_or_null _ _) (array_pts_to_or_null ar s);
-  rewrite (freeable_or_null_array _) (freeable_or_null_array ar);
-  noop ();
-  return ar
-*)
+{
+  let a : array_ptr td = array_ptr_alloc td sz;
+  with ar' s . assert (freeable_or_null_array ar' ** array_pts_to_or_null #_ #td ar' s);
+  let len: array_len_t a = array_len_of ar';
+  let ar = mk_array_or_null a len;
+  rewrite (array_pts_to_or_null ar' s)
+    as (array_pts_to_or_null ar s);
+  rewrite (freeable_or_null_array ar')
+    as (freeable_or_null_array ar);
+  ar
+}
+```
 
 let full_seq (#t: Type) (td: typedef t) (v: Seq.seq t) : GTot prop =
   forall (i: nat { i < Seq.length v }) . {:pattern (Seq.index v i)} full td (Seq.index v i)
@@ -518,29 +537,31 @@ val array_ref_free
   (a: array_ref td)
   (n: array_len_t a)
 : stt unit
-    (freeable_array (| a, n |) ** array_pts_to (| a, n |) s ** pure (
+    (freeable_array (mk_array a n) ** array_pts_to (mk_array a n) s ** pure (
       full_seq td s
     ))
     (fun _ -> emp)
 
-// inline_for_extraction [@@noextract_to "krml"]
-val array_free
+inline_for_extraction [@@noextract_to "krml"]
+```pulse
+fn array_free
   (#t: Type)
   (#td: typedef t)
   (#s: Ghost.erased (Seq.seq t))
   (a: array td)
-: stt unit
+requires
     (freeable_array a ** array_pts_to a s ** pure (
       full_seq td s
     ))
-    (fun _ -> emp)
-(*
-= let al = array_ptr_of a in
-  let n: array_len_t al = dsnd a in
-  rewrite (freeable_array _) (freeable_array (| al, n |));
-  rewrite (array_pts_to _ _) (array_pts_to (| al, n |) s);
+ensures emp
+{
+  let al = array_ptr_of a;
+  let n: array_len_t al = array_len_of a;
+  rewrite (freeable_array a) as (freeable_array (mk_array al n));
+  rewrite (array_pts_to a s) as (array_pts_to (mk_array al n) s);
   array_ref_free al n
-*)
+}
+```
 
 (*
 val has_array_of_ref
@@ -758,31 +779,36 @@ val array_ref_cell
   (len: array_len_t a)
   (i: SZ.t)
 : stt (r: ref td { SZ.v i < Seq.length s /\ Seq.length s == SZ.v len })
-    (array_pts_to (| a, len |) s ** pure (
+    (array_pts_to (mk_array a len) s ** pure (
       SZ.v i < Seq.length s \/ SZ.v i < SZ.v len
     ))
-    (fun r -> array_pts_to (| a, len |) (Seq.upd s (SZ.v i) (unknown td)) ** pts_to r (Seq.index s (SZ.v i)) ** has_array_cell (| a, len |) i r)
+    (fun r -> array_pts_to (mk_array a len) (Seq.upd s (SZ.v i) (unknown td)) ** pts_to r (Seq.index s (SZ.v i)) ** has_array_cell (mk_array a len) i r)
 
-// inline_for_extraction [@@noextract_to "krml"]
-val array_cell
+inline_for_extraction [@@noextract_to "krml"]
+```pulse
+fn array_cell
   (#t: Type)
   (#td: typedef t)
   (#s: Ghost.erased (Seq.seq t))
   (a: array td)
   (i: SZ.t)
-: stt (r: ref td { SZ.v i < Seq.length s /\ Seq.length s == SZ.v (dsnd a) })
+requires
     (array_pts_to a s ** pure (
       SZ.v i < Seq.length s \/ SZ.v i < SZ.v (dsnd a)
     ))
-    (fun r -> array_pts_to a (Seq.upd s (SZ.v i) (unknown td)) ** pts_to r (Seq.index s (SZ.v i)) ** has_array_cell a i r)
-(*
-= let (| al, len |) = a in
-  rewrite (array_pts_to _ _) (array_pts_to _ s);
-  let r = array_ref_cell al len i in
-  rewrite (array_pts_to _ _) (array_pts_to _ _);
-  rewrite (has_array_cell _ _ _) (has_array_cell a i r);
-  return r
-*)
+returns r: (r: ref td { SZ.v i < Seq.length s /\ Seq.length s == SZ.v (dsnd a) })
+ensures
+    (array_pts_to a (Seq.upd s (SZ.v i) (unknown td)) ** pts_to r (Seq.index s (SZ.v i)) ** has_array_cell a i r)
+{
+  let al = array_ptr_of a;
+  let len = array_len_of a;
+  rewrite (array_pts_to a s) as (array_pts_to (mk_array al len) s);
+  let r = array_ref_cell al len i;
+  rewrite (array_pts_to (mk_array al len) (Seq.upd s (SZ.v i) (unknown td))) as (array_pts_to a (Seq.upd s (SZ.v i) (unknown td)));
+  rewrite (has_array_cell (mk_array al len) i r) as (has_array_cell a i r);
+  r
+}
+```
 
 val unarray_cell
   (#t: Type)
@@ -898,36 +924,43 @@ val array_ref_split
         ar == array_ptr_of (array_split_r (mk_array al len) i)
     ))
 
-// inline_for_extraction [@@noextract_to "krml"]
-val array_split
+inline_for_extraction [@@noextract_to "krml"]
+```pulse
+fn array_split
   (#t: Type)
   (#td: typedef t)
   (#s: Ghost.erased (Seq.seq t))
   (a: array td)
   (i: SZ.t { SZ.v i <= array_length a })
-: stt (array td)
-    (array_pts_to a s)
-    (fun a' -> exists* sl sr .
-      array_pts_to (array_split_l a i) sl **
-      array_pts_to a' sr **
-      pure (
-        array_ref_split_post s a i sl sr /\
-        SZ.v i <= array_length a /\ SZ.v i <= Seq.length s /\
-        a' == array_split_r a i
-    ))
-(*
-= let (| al, len |) = a in
-  rewrite (array_pts_to _ _) (array_pts_to _ s);
-  let ar = array_ref_split al len i in
-  let _ = elim_exists () in
-  let _ = elim_exists () in
-  elim_pure _;
-  [@@inline_let]
-  let a' = mk_array ar (Ghost.hide (len `SZ.sub` i)) in
-  vpattern_rewrite #_ #_ #(array_split_l _ _) (fun a -> array_pts_to a _) (array_split_l a i);
-  vpattern_rewrite #_ #_ #(array_split_r _ _) (fun a -> array_pts_to a _) a';
-  return a'
-*)
+requires
+  (array_pts_to a s)
+returns a': array td
+ensures
+  (exists* sl sr .
+    array_pts_to (array_split_l a i) sl **
+    array_pts_to a' sr **
+    pure (
+      array_ref_split_post s a i sl sr /\
+      SZ.v i <= array_length a /\ SZ.v i <= Seq.length s /\
+      a' == array_split_r a i
+  ))
+{
+  let al = array_ptr_of a;
+  let len = array_len_of a;
+  rewrite (array_pts_to a s) as (array_pts_to (mk_array al len) s);
+  let ar = array_ref_split al len i;
+  with sl sr . assert (
+      array_pts_to (array_split_l (mk_array al len) i) sl **
+      array_pts_to (array_split_r (mk_array al len) i) sr
+  );
+  let a' = mk_array ar (Ghost.hide (len `SZ.sub` i));
+  rewrite (array_pts_to (array_split_l (mk_array al len) i) sl)
+    as (array_pts_to (array_split_l a i) sl);
+  rewrite (array_pts_to (array_split_r (mk_array al len) i) sr)
+    as (array_pts_to a' sr);
+  a'
+}
+```
 
 val array_join
   (#t: Type)
@@ -1053,8 +1086,9 @@ val array_blit_ptr
         array_blit_post v_src v_dst (mk_array src_ptr src_len) idx_src (mk_array dst_ptr dst_len) idx_dst len v_dst'
     ))
 
-// inline_for_extraction [@@noextract_to "krml"]
-val array_blit
+inline_for_extraction [@@noextract_to "krml"]
+```pulse
+fn array_blit
   (#t: Type)
   (#td: typedef t)
   (#v_src: Ghost.erased (Seq.seq t) { full_seq td v_src /\ fractionable_seq td v_src })
@@ -1065,32 +1099,38 @@ val array_blit
   (dst: array td)
   (idx_dst: SZ.t)
   (len: SZ.t)
-: stt (Ghost.erased (Seq.seq t))
+requires
     (array_pts_to src (mk_fraction_seq td v_src p_src) ** array_pts_to dst v_dst ** pure (
         SZ.v idx_src + SZ.v len <= array_length src /\
         SZ.v idx_dst + SZ.v len <= array_length dst
     ))
-    (fun v_dst' -> array_pts_to src (mk_fraction_seq td v_src p_src) **
+returns v_dst': (Ghost.erased (Seq.seq t))
+ensures
+    (array_pts_to src (mk_fraction_seq td v_src p_src) **
       array_pts_to dst v_dst' ** pure (
         array_blit_post v_src v_dst src idx_src dst idx_dst len v_dst'
     ))
-(*
-= [@@inline_let]
-  let p_src = array_ref_of src in
-  let len_src : array_len_t p_src = array_len_of src in
-  vpattern_rewrite #_ #_ #src (fun src -> array_pts_to src _) (mk_array p_src len_src);
-  [@@inline_let]
-  let p_dst = array_ref_of dst in
-  let len_dst : array_len_t p_dst = array_len_of dst in
-  vpattern_rewrite #_ #_ #dst (fun dst -> array_pts_to dst _) (mk_array p_dst len_dst);
-  let v_dst' = array_blit_ptr p_src len_src idx_src p_dst len_dst idx_dst len in
-  vpattern_rewrite #_ #_ #(mk_array p_src _) (fun src -> array_pts_to src _) src;
-  vpattern_rewrite #_ #_ #(mk_array p_dst _) (fun dst -> array_pts_to dst _) dst;
-  return v_dst'
-*)
+{
+  let a_src = array_ref_of src;
+  let len_src : array_len_t a_src = array_len_of src;
+  rewrite (array_pts_to src (mk_fraction_seq td v_src p_src))
+    as (array_pts_to (mk_array a_src len_src) (mk_fraction_seq td v_src p_src));
+  let a_dst = array_ref_of dst;
+  let len_dst : array_len_t a_dst = array_len_of dst;
+  rewrite (array_pts_to dst v_dst)
+    as (array_pts_to (mk_array a_dst len_dst) v_dst);
+  let v_dst' = array_blit_ptr a_src len_src idx_src a_dst len_dst idx_dst len;
+  rewrite (array_pts_to (mk_array a_src len_src) (mk_fraction_seq td v_src p_src))
+    as (array_pts_to src (mk_fraction_seq td v_src p_src));
+  rewrite (array_pts_to (mk_array a_dst len_dst) v_dst')
+    as (array_pts_to dst v_dst');
+  v_dst'
+}
+```
 
-// inline_for_extraction [@@noextract_to "krml"]
-val array_memcpy
+inline_for_extraction [@@noextract_to "krml"]
+```pulse
+fn array_memcpy
   (#t: Type)
   (#td: typedef t)
   (#v_src: Ghost.erased (Seq.seq t) { full_seq td v_src /\ fractionable_seq td v_src })
@@ -1099,11 +1139,13 @@ val array_memcpy
   (src: array td)
   (dst: array td)
   (len: SZ.t { SZ.v len == array_length src /\ array_length src == array_length dst })
-: stt unit
+requires
     (array_pts_to src (mk_fraction_seq td v_src p_src) ** array_pts_to dst v_dst)
-    (fun _ -> array_pts_to src (mk_fraction_seq td v_src p_src) ** array_pts_to dst v_src)
-(*
-= let _ = array_blit src 0sz dst 0sz len in
-  vpattern_rewrite (array_pts_to dst) v_src;
-  return ()
-*)
+ensures
+    (array_pts_to src (mk_fraction_seq td v_src p_src) ** array_pts_to dst v_src)
+{
+  let v_dst' = array_blit src 0sz dst 0sz len;
+  rewrite (array_pts_to dst v_dst')
+    as (array_pts_to dst v_src);
+}
+```

@@ -157,8 +157,8 @@ val struct_field0
     (pts_to r v)
     (fun r' -> has_struct_field r field (coerce_eq () r') ** pts_to r (set sd (Ghost.reveal v) field (unknown (sd.field_desc.fd_typedef field))) ** pts_to #_ #(sd.field_desc.fd_typedef field) (coerce_eq () r') (sd.get (Ghost.reveal v) field))
 
-// inline_for_extraction [@@noextract_to "krml"] // primitive
-val struct_field
+inline_for_extraction [@@noextract_to "krml"] // primitive
+let struct_field
   (#t: Type)
   (#sd: struct_def t)
   (#v: Ghost.erased t)
@@ -166,14 +166,12 @@ val struct_field
   (field: field_t sd.fields)
 : stt (ref #(norm norm_field_steps (sd.field_desc.fd_type field)) (sd.field_desc.fd_typedef field))
     (pts_to r v)
-    (fun r' -> pts_to r (set sd v field (unknown (sd.field_desc.fd_typedef field))) ** pts_to #(norm norm_field_steps (sd.field_desc.fd_type field)) r' (sd.get v field) ** has_struct_field r field r')
-(*
+    (fun r' -> has_struct_field r field r' ** pts_to r (set sd v field (unknown (sd.field_desc.fd_typedef field))) ** pts_to #(norm norm_field_steps (sd.field_desc.fd_type field)) r' (sd.get v field))
 = struct_field0
     (norm norm_field_steps (sd.field_desc.fd_type field))
     r
     field
     (sd.field_desc.fd_typedef field)
-*)
 
 val unstruct_field
   (#t: Type)
@@ -189,7 +187,9 @@ val unstruct_field
     ))
     (fun _ -> has_struct_field r field r' ** pts_to r (set sd v field v'))
 
-val unstruct_field_alt
+```pulse
+ghost
+fn unstruct_field_alt
   (#t: Type)
   (#sd: struct_def t)
   (#v: Ghost.erased t)
@@ -197,17 +197,20 @@ val unstruct_field_alt
   (field: field_t sd.fields)
   (#v': Ghost.erased (sd.field_desc.fd_type field))
   (r': ref (sd.field_desc.fd_typedef field))
-: stt_ghost (Ghost.erased t)
+requires
     (has_struct_field r field r' ** pts_to r v ** pts_to r' v' ** pure (
       sd.get v field == unknown (sd.field_desc.fd_typedef field)
     ))
-    (fun s' -> has_struct_field r field r' ** pts_to r s' ** pure (
+returns s': (Ghost.erased t)
+ensures
+    (has_struct_field r field r' ** pts_to r s' ** pure (
       Ghost.reveal s' == set sd v field v'
     ))
-(*
-= unstruct_field r field r';
-  _
-*)
+{
+  unstruct_field r field r';
+  Ghost.hide (set sd v field v')
+}
+```
 
 val fractionable_struct
   (#t: Type)

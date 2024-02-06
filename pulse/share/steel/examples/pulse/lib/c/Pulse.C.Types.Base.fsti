@@ -98,10 +98,10 @@ let null (#t: Type) (td: typedef t) : Tot (ptr td) = null_gen t
 inline_for_extraction [@@noextract_to "krml"]
 let ref (#t: Type) (td: typedef t) : Tot Type0 = (p: ptr td { ~ (p == null td) })
 
-val pts_to (#t: Type) (#td: typedef t) (r: ref td) (v: Ghost.erased t) : vprop
+val pts_to (#t: Type) (#[@@@equate_by_smt]td: typedef t) (r: ref td) ([@@@equate_by_smt] v: Ghost.erased t) : vprop
 
 let pts_to_or_null
-  (#t: Type) (#td: typedef t) (p: ptr td) (v: Ghost.erased t) : vprop
+  (#t: Type) (#[@@@equate_by_smt]td: typedef t) (p: ptr td) ([@@@equate_by_smt] v: Ghost.erased t) : vprop
 = if FStar.StrongExcludedMiddle.strong_excluded_middle (p == null _)
   then emp
   else pts_to p v
@@ -120,29 +120,41 @@ val is_null
       res == true <==> p == null _
     ))
 
-val assert_null
+```pulse
+ghost
+fn assert_null
   (#t: Type)
   (#td: typedef t)
   (#v: Ghost.erased t)
   (p: ptr td)
-: stt_ghost unit
+requires
     (pts_to_or_null p v ** pure (
       p == null _
     ))
-    (fun _ -> emp)
-// = rewrite (pts_to_or_null p v) emp
+ensures emp
+{
+  rewrite (pts_to_or_null p v) as emp
+}
+```
 
-val assert_not_null
+```pulse
+ghost
+fn assert_not_null
   (#t: Type)
   (#td: typedef t)
   (#v: Ghost.erased t)
   (p: ptr td)
-: stt_ghost (squash (~ (p == null _)))
+requires
     (pts_to_or_null p v ** pure (
       ~ (p == null _)
     ))
-    (fun _ -> pts_to p v)
-// = rewrite (pts_to_or_null p v) (pts_to p v)
+returns _:(squash (~ (p == null _)))
+ensures
+    (pts_to p v)
+{
+  rewrite (pts_to_or_null p v) as (pts_to p v)
+}
+```
 
 [@@noextract_to "krml"] // primitive
 // val void_ptr_of_ptr (#t: Type) (#opened: _) (#td: typedef t) (#v: Ghost.erased t) (x: ptr td) : STAtomicBase void_ptr false opened Unobservable
@@ -152,43 +164,53 @@ val void_ptr_of_ptr (#t: Type) (#td: typedef t) (#v: Ghost.erased t) (x: ptr td)
     y == ghost_void_ptr_of_ptr_gen x
   ))
 
-// [@@noextract_to "krml"] inline_for_extraction
+[@@noextract_to "krml"] inline_for_extraction
 // let void_ptr_of_ref (#t: Type) (#opened: _) (#td: typedef t) (#v: Ghost.erased t) (x: ref td) : STAtomicBase void_ptr false opened Unobservable
-val void_ptr_of_ref (#t: Type) (#td: typedef t) (#v: Ghost.erased t) (x: ref td) : stt void_ptr
+```pulse
+fn void_ptr_of_ref (#t: Type) (#td: typedef t) (#v: Ghost.erased t) (x: ref td)
+requires
   (pts_to x v)
-  (fun y -> pts_to x v ** pure (
+returns y: void_ptr
+ensures
+  (pts_to x v ** pure (
     y == ghost_void_ptr_of_ptr_gen x
   ))
-(*
-= rewrite (pts_to x v) (pts_to_or_null x v);
-  let res = void_ptr_of_ptr x in
-  rewrite (pts_to_or_null x v) (pts_to x v);
-  return res
-*)
+{
+  rewrite (pts_to x v) as (pts_to_or_null x v);
+  let res = void_ptr_of_ptr x;
+  rewrite (pts_to_or_null x v) as (pts_to x v);
+  res
+}
+```
 
 [@@noextract_to "krml"] // primitive
 // val ptr_of_void_ptr (#t: Type) (#opened: _) (#td: typedef t) (#v: Ghost.erased t) (x: void_ptr) : STAtomicBase (ptr td) false opened Unobservable
 val ptr_of_void_ptr (#t: Type) (#td: typedef t) (#v: Ghost.erased t) (x: void_ptr) : stt (ptr td)
-  (pts_to_or_null (ghost_ptr_gen_of_void_ptr x t <: ptr td) v)
+  (pts_to_or_null #t #td (ghost_ptr_gen_of_void_ptr x t) v)
   (fun y -> pts_to_or_null y v ** pure (
     y == ghost_ptr_gen_of_void_ptr x t
   ))
 
-// [@@noextract_to "krml"] inline_for_extraction
+[@@noextract_to "krml"] inline_for_extraction
 // let ref_of_void_ptr (#t: Type) (#opened: _) (#td: typedef t) (#v: Ghost.erased t) (x: void_ptr) (y': Ghost.erased (ref td)) : STAtomicBase (ref td) false opened Unobservable
-val ref_of_void_ptr (#t: Type) (#td: typedef t) (#v: Ghost.erased t) (x: void_ptr) (y': Ghost.erased (ref td)) : stt (ref td)
+```pulse
+fn ref_of_void_ptr (#t: Type) (#td: typedef t) (#v: Ghost.erased t) (x: void_ptr) (y': Ghost.erased (ref td))
+requires
   (pts_to y' v ** pure (
-    Ghost.reveal y' == ghost_ptr_gen_of_void_ptr x t
+    ghost_ptr_gen_of_void_ptr x t == Ghost.reveal y'
   ))
-  (fun y -> pts_to y v ** pure (
-    y == Ghost.reveal y'
+returns y: (ref td)
+ensures
+  (pts_to y v ** pure (
+    Ghost.reveal y' == y
   ))
-(*
-= rewrite (pts_to y' v) (pts_to_or_null (ghost_ptr_gen_of_void_ptr x t <: ptr td) v);
-  let y = ptr_of_void_ptr x in
-  rewrite (pts_to_or_null y v) (pts_to y v);
-  return y
-*)
+{
+  rewrite (pts_to y' v) as (pts_to_or_null #t #td (ghost_ptr_gen_of_void_ptr x t) v);
+  let y = ptr_of_void_ptr #t #td #v x;
+  rewrite (pts_to_or_null y v) as (pts_to y v);
+  y
+}
+```
 
 val ref_equiv
   (#t: Type)

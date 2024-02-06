@@ -418,7 +418,9 @@ val ununion_field
       Ghost.reveal res == union_set_field tn n fields field (coerce_eq () (Ghost.reveal v'))
     ))
 
-val ununion_field_and_drop
+```pulse
+ghost
+fn ununion_field_and_drop
   (#tn: Type0)
   (#tf: Type0)
   (#n: string)
@@ -429,18 +431,21 @@ val ununion_field_and_drop
   (#td': typedef t')
   (#v': Ghost.erased t')
   (r': ref td')
-: stt_ghost (Ghost.erased (union_t0 tn n fields))
+requires
     (has_union_field r field r' ** pts_to r' v')
-    (fun res -> pts_to r res ** pure (
+returns res: Ghost.erased (union_t0 tn n fields)
+ensures
+    (pts_to r res ** pure (
       t' == fields.fd_type field /\
       td' == fields.fd_typedef field /\
       Ghost.reveal res == union_set_field tn n fields field (coerce_eq () (Ghost.reveal v'))
     ))
-(*
-= let res = ununion_field r field r' in
-  drop (has_union_field _ _ _);
+{
+  let res = ununion_field r field r';
+  drop_ (has_union_field r field r');
   res
-*)
+}
+```
 
 // NOTE: we DO NOT support preservation of struct prefixes
 

@@ -31,20 +31,25 @@ val mk_scalar_inj
   (ensures (v1 == v2 /\ p1 == p2))
   [SMTPat [mk_fraction (scalar t) (mk_scalar v1) p1; mk_fraction (scalar t) (mk_scalar v2) p2]]
 
-val scalar_unique
+```pulse
+ghost
+fn scalar_unique
   (#t: Type)
   (v1 v2: t)
   (p1 p2: perm)
   (r: ref (scalar t))
-: stt_ghost unit
+requires
     (pts_to r (mk_fraction (scalar t) (mk_scalar v1) p1) ** pts_to r (mk_fraction (scalar t) (mk_scalar v2) p2))
-    (fun _ -> pts_to r (mk_fraction (scalar t) (mk_scalar v1) p1) ** pts_to r (mk_fraction (scalar t) (mk_scalar v2) p2) ** pure (
+ensures
+    (pts_to r (mk_fraction (scalar t) (mk_scalar v1) p1) ** pts_to r (mk_fraction (scalar t) (mk_scalar v2) p2) ** pure (
       v1 == v2 /\ (p1 `sum_perm` p2) `lesser_equal_perm` full_perm
     ))
-(*
-= fractional_permissions_theorem (mk_scalar v1) (mk_scalar v2) p1 p2 r;
-  mk_scalar_inj v1 v2 full_perm full_perm
-*)
+{
+  fractional_permissions_theorem (mk_scalar v1) (mk_scalar v2) p1 p2 r;
+  let _ = mk_scalar_inj v1 v2 full_perm full_perm;
+  ()
+}
+```
 
 [@@noextract_to "krml"] // primitive
 val read0 (#t: Type) (#v: Ghost.erased t) (#p: perm) (r: ref (scalar t))
@@ -102,33 +107,54 @@ val get_scalar_value_some
   ))
   [SMTPat (get_scalar_value c)]
 
-// inline_for_extraction [@@noextract_to "krml"]
-val read (#t: Type) (#v: Ghost.erased (scalar_t t)) (r: ref (scalar t))
-: stt t
-  (pts_to r v ** pure (
-    exists v0 p . Ghost.reveal v == mk_fraction (scalar t) (mk_scalar v0) p
+let read_prf
+  (#t: Type)
+  (v0: t)
+  (p: perm)
+: Lemma
+  (forall v0' p' . (* {:pattern (mk_fraction (scalar t) (mk_scalar v0) p)} *) mk_fraction (scalar t) (mk_scalar v0') p' == mk_fraction (scalar t) (mk_scalar v0) p ==> (
+    v0' == v0 /\
+    p' == p
   ))
-  (fun v1 -> pts_to r v ** pure (
-    forall v0 p . (* {:pattern (mk_fraction (scalar t) (mk_scalar v0) p)} *) Ghost.reveal v == mk_fraction (scalar t) (mk_scalar v0) p ==> v0 == v1
-  ))
-(*
-= let v0 = FStar.IndefiniteDescription.indefinite_description_tot _ (fun v0 -> exists p . Ghost.reveal v == mk_fraction (scalar t) (mk_scalar v0) p) in
-  let p = FStar.IndefiniteDescription.indefinite_description_tot _ (fun p -> Ghost.reveal v == mk_fraction (scalar t) (mk_scalar (Ghost.reveal v0)) p) in
+= 
   let prf v0' p' : Lemma
-    (requires (Ghost.reveal v == mk_fraction (scalar t) (mk_scalar v0') p'))
+    (requires (mk_fraction (scalar t) (mk_scalar v0') p' == mk_fraction (scalar t) (mk_scalar v0) p))
     (ensures (v0' == Ghost.reveal v0 /\ p' == Ghost.reveal p))
   = mk_scalar_inj (Ghost.reveal v0) v0' p p'
   in
   let prf' v0' p' : Lemma
-    (Ghost.reveal v == mk_fraction (scalar t) (mk_scalar v0') p' ==> (v0' == Ghost.reveal v0 /\ p' == Ghost.reveal p))
+    ((mk_fraction (scalar t) (mk_scalar v0') p' == mk_fraction (scalar t) (mk_scalar v0) p) ==> (v0' == Ghost.reveal v0 /\ p' == Ghost.reveal p))
   = Classical.move_requires (prf v0') p'
   in
-  Classical.forall_intro_2 prf';
-  rewrite (pts_to _ _) (pts_to r (mk_fraction (scalar t) (mk_scalar (Ghost.reveal v0)) p));
-  let v1 = read0 r in
-  rewrite (pts_to _ _) (pts_to r v);
-  return v1
-*)
+  Classical.forall_intro_2 prf'
+
+ // FIXME: FStar.IndefiniteDescription.indefinite_description_tot cannot be called directly from Pulse because of refinements on lambdas!
+let indefinite_description_tot0 (a:Type) (p:(a -> prop)) (q: squash (exists x. p x))
+: Tot (w:Ghost.erased a{ p w })
+= FStar.IndefiniteDescription.indefinite_description_tot a p
+
+inline_for_extraction [@@noextract_to "krml"]
+```pulse
+fn read (#t: Type) (#v: Ghost.erased (scalar_t t)) (r: ref (scalar t))
+requires
+  (pts_to r v ** pure (
+    exists v0 p . Ghost.reveal v == mk_fraction (scalar t) (mk_scalar v0) p
+  ))
+returns v1: t
+ensures
+  (pts_to r v ** pure (
+    forall v0 p . (* {:pattern (mk_fraction (scalar t) (mk_scalar v0) p)} *) Ghost.reveal v == mk_fraction (scalar t) (mk_scalar v0) p ==> v0 == v1
+  ))
+{
+  let v0 = indefinite_description_tot0 t (fun v0 -> exists p . Ghost.reveal v == mk_fraction (scalar t) (mk_scalar v0) p) ();
+  let p = indefinite_description_tot0 perm (fun p -> Ghost.reveal v == mk_fraction (scalar t) (mk_scalar (Ghost.reveal v0)) p) ();
+  let _ = read_prf #t v0 p;
+  rewrite (pts_to r v) as (pts_to r (mk_fraction (scalar t) (mk_scalar (Ghost.reveal v0)) p));
+  let v1 = read0 r;
+  rewrite (pts_to r (mk_fraction (scalar t) (mk_scalar (Ghost.reveal v0)) p)) as (pts_to r v);
+  v1
+}
+```
 
 [@@noextract_to "krml"] // primitive
 val write (#t: Type) (#v: Ghost.erased (scalar_t t)) (r: ref (scalar t)) (v': t)
@@ -136,4 +162,4 @@ val write (#t: Type) (#v: Ghost.erased (scalar_t t)) (r: ref (scalar t)) (v': t)
   (pts_to r v ** pure (
     full (scalar t) v
   ))
-  (fun _ -> pts_to r (mk_fraction (scalar t) (mk_scalar v') full_perm))
+  (fun _ -> pts_to r (mk_scalar v'))

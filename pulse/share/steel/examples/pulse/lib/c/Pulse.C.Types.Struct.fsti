@@ -312,7 +312,9 @@ val unstruct_field
       Ghost.reveal res == struct_set_field field (coerce_eq () (Ghost.reveal v')) v
     ))
 
-val unstruct_field_and_drop
+```pulse
+ghost
+fn unstruct_field_and_drop
   (#tn: Type0)
   (#tf: Type0)
   (#n: string)
@@ -324,22 +326,27 @@ val unstruct_field_and_drop
   (#td': typedef t')
   (#v': Ghost.erased t')
   (r': ref td')
-: stt_ghost (Ghost.erased (struct_t0 tn n fields))
+requires
     (has_struct_field r field r' ** pts_to r v ** pts_to r' v' ** pure (
       struct_get_field v field == unknown (fields.fd_typedef field)
     ))
-    (fun res -> pts_to r res ** pure (
+returns res: (Ghost.erased (struct_t0 tn n fields))
+ensures
+    (pts_to r res ** pure (
       t' == fields.fd_type field /\
       td' == fields.fd_typedef field /\
       Ghost.reveal res == struct_set_field field (coerce_eq () (Ghost.reveal v')) v
     ))
-(*
-= let res = unstruct_field r field r' in
-  drop (has_struct_field _ _ _);
+{
+  let res = unstruct_field r field r';
+  drop_ (has_struct_field r field r');
   res
-*)
+}
+```
 
-val unstruct_field_alt
+```pulse
+ghost
+fn unstruct_field_alt
   (#tn: Type0)
   (#tf: Type0)
   (#n: string)
@@ -349,14 +356,19 @@ val unstruct_field_alt
   (field: field_t fields)
   (#v': Ghost.erased (fields.fd_type field))
   (r': ref (fields.fd_typedef field))
-: stt_ghost (Ghost.erased (struct_t0 tn n fields))
+requires
     (has_struct_field r field r' ** pts_to r v ** pts_to r' v' ** pure (
       struct_get_field v field == unknown (fields.fd_typedef field)
     ))
-    (fun s' -> has_struct_field r field r' ** pts_to r s' ** pure (
+returns s': (Ghost.erased (struct_t0 tn n fields))
+ensures
+    (has_struct_field r field r' ** pts_to r s' ** pure (
       Ghost.reveal s' == struct_set_field field v' v
     ))
-// = unstruct_field r field r'
+{
+  unstruct_field r field r'
+}
+```
 
 val fractionable_struct
   (#tn: Type0)
