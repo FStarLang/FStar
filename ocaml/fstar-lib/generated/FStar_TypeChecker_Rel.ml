@@ -4367,12 +4367,12 @@ let (apply_substitutive_indexed_subcomp :
                                                    (fun uu___7 ->
                                                       fun uu___8 ->
                                                         fun uu___9 ->
-                                                          match (uu___7,
-                                                                  uu___8,
+                                                          match ((uu___7,
+                                                                   uu___8),
                                                                   uu___9)
                                                           with
-                                                          | ((ps, wl1),
-                                                             (t1, uu___10),
+                                                          | (((ps, wl1),
+                                                              (t1, uu___10)),
                                                              (t2, uu___11))
                                                               ->
                                                               let uu___12 =
@@ -4466,12 +4466,12 @@ let (apply_substitutive_indexed_subcomp :
                                                  (fun uu___6 ->
                                                     fun uu___7 ->
                                                       fun uu___8 ->
-                                                        match (uu___6,
-                                                                uu___7,
+                                                        match ((uu___6,
+                                                                 uu___7),
                                                                 uu___8)
                                                         with
-                                                        | ((ps, wl2),
-                                                           (t1, uu___9),
+                                                        | (((ps, wl2),
+                                                            (t1, uu___9)),
                                                            (t2, uu___10)) ->
                                                             let uu___11 =
                                                               sub_prob wl2 t1
@@ -5308,11 +5308,12 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                               (fun uu___10 ->
                                                  fun uu___11 ->
                                                    fun uu___12 ->
-                                                     match (uu___10, uu___11,
+                                                     match ((uu___10,
+                                                              uu___11),
                                                              uu___12)
                                                      with
-                                                     | ((probs, wl4),
-                                                        (a1, uu___13),
+                                                     | (((probs, wl4),
+                                                         (a1, uu___13)),
                                                         (a2, uu___14)) ->
                                                          let uu___15 =
                                                            eq_prob a1 a2 wl4 in
@@ -7206,13 +7207,13 @@ and (solve_t_flex_rigid_eq :
                                                       (fun uu___16 ->
                                                          fun uu___17 ->
                                                            fun uu___18 ->
-                                                             match (uu___16,
-                                                                    uu___17,
+                                                             match ((uu___16,
+                                                                    uu___17),
                                                                     uu___18)
                                                              with
-                                                             | ((probs, wl5),
-                                                                (arg_lhs,
-                                                                 uu___19),
+                                                             | (((probs, wl5),
+                                                                 (arg_lhs,
+                                                                  uu___19)),
                                                                 (arg_rhs,
                                                                  uu___20)) ->
                                                                  let uu___21
@@ -12197,8 +12198,8 @@ and (solve_c :
                            (fun uu___7 ->
                               fun uu___8 ->
                                 fun uu___9 ->
-                                  match (uu___7, uu___8, uu___9) with
-                                  | ((a1, uu___10), (a2, uu___11),
+                                  match ((uu___7, uu___8), uu___9) with
+                                  | (((a1, uu___10), (a2, uu___11)),
                                      (arg_sub_probs, wl3)) ->
                                       let uu___12 =
                                         sub_prob wl3 a1
@@ -12477,8 +12478,8 @@ and (solve_c :
                              (fun uu___9 ->
                                 fun uu___10 ->
                                   fun uu___11 ->
-                                    match (uu___9, uu___10, uu___11) with
-                                    | ((a1, uu___12), (a2, uu___13),
+                                    match ((uu___9, uu___10), uu___11) with
+                                    | (((a1, uu___12), (a2, uu___13)),
                                        (is_sub_probs, wl2)) ->
                                         let uu___14 = is_uvar a1 in
                                         if uu___14

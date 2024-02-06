@@ -9319,8 +9319,7 @@ let rec (elim_uvars :
         let uu___ =
           FStar_Compiler_List.map (elim_uvars_aux_t env1 [] [])
             s.FStar_Syntax_Syntax.sigattrs in
-        FStar_Compiler_List.map
-          FStar_Pervasives_Native.__proj__Mktuple3__item___3 uu___ in
+        FStar_Compiler_List.map FStar_Tuple3.__proj__Mktuple3__item___3 uu___ in
       let s1 =
         {
           FStar_Syntax_Syntax.sigel = (s.FStar_Syntax_Syntax.sigel);

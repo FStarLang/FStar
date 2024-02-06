@@ -22,7 +22,7 @@ let __proj__BufferView__item__v :
   fun projectee -> match projectee with | BufferView (buf, v) -> v
 type 'dest buffer =
   (unit, unit, unit, (Obj.t, Obj.t, Obj.t, 'dest) buffer_view)
-    FStar_Pervasives.dtuple4
+    FStar_DTuple4.dtuple4
 type ('dest, 'b) as_buffer_t =
   (unit, unit, unit) LowStar_Monotonic_Buffer.mbuffer
 let as_buffer : 'b . 'b buffer -> ('b, unit) as_buffer_t =
@@ -30,13 +30,13 @@ let as_buffer : 'b . 'b buffer -> ('b, unit) as_buffer_t =
     (fun v ->
        Obj.magic
          (__proj__BufferView__item__buf
-            (FStar_Pervasives.__proj__Mkdtuple4__item___4 v))) uu___
+            (FStar_DTuple4.__proj__Mkdtuple4__item___4 v))) uu___
 let get_view : 'b . 'b buffer -> (unit, 'b) view =
   fun uu___ ->
     (fun v ->
        Obj.magic
          (__proj__BufferView__item__v
-            (FStar_Pervasives.__proj__Mkdtuple4__item___4 v))) uu___
+            (FStar_DTuple4.__proj__Mkdtuple4__item___4 v))) uu___
 type ('b, 'h, 'vb) live =
   (unit, unit, unit, unit, unit) LowStar_Monotonic_Buffer.live
 type ('b, 'vb, 'h, 'hu) modifies =

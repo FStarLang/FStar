@@ -370,9 +370,9 @@ let (matches_var : FStar_Parser_AST.term -> FStar_Ident.ident -> Prims.bool)
           let uu___1 = FStar_Ident.string_of_lid y in uu___ = uu___1
       | uu___ -> false
 let (is_tuple_constructor : FStar_Ident.lident -> Prims.bool) =
-  FStar_Parser_Const.is_tuple_data_lid'
+  FStar_Parser_Const.is_tuple_datacon_lid
 let (is_dtuple_constructor : FStar_Ident.lident -> Prims.bool) =
-  FStar_Parser_Const.is_dtuple_data_lid'
+  FStar_Parser_Const.is_dtuple_datacon_lid
 let (is_list_structure :
   FStar_Ident.lident ->
     FStar_Ident.lident -> FStar_Parser_AST.term -> Prims.bool)

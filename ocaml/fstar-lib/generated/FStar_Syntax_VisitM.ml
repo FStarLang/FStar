@@ -1388,8 +1388,7 @@ let mapTuple3 :
           fun t ->
             let uu___1 =
               let uu___2 =
-                let uu___3 =
-                  f1 (FStar_Pervasives_Native.__proj__Mktuple3__item___1 t) in
+                let uu___3 = f1 (FStar_Tuple3.__proj__Mktuple3__item___1 t) in
                 FStar_Class_Monad.op_Less_Dollar_Greater uu___ () ()
                   (fun uu___4 ->
                      (fun uu___4 ->
@@ -1398,12 +1397,10 @@ let mapTuple3 :
                           (fun uu___5 ->
                              fun uu___6 -> (uu___4, uu___5, uu___6))) uu___4)
                   uu___3 in
-              let uu___3 =
-                g (FStar_Pervasives_Native.__proj__Mktuple3__item___2 t) in
+              let uu___3 = g (FStar_Tuple3.__proj__Mktuple3__item___2 t) in
               FStar_Class_Monad.op_Less_Star_Greater uu___ () () uu___2
                 uu___3 in
-            let uu___2 =
-              h (FStar_Pervasives_Native.__proj__Mktuple3__item___3 t) in
+            let uu___2 = h (FStar_Tuple3.__proj__Mktuple3__item___3 t) in
             FStar_Class_Monad.op_Less_Star_Greater uu___ () () uu___1 uu___2
 let on_sub_layered_eff_combinators :
   'm . 'm lvm -> FStar_Syntax_Syntax.layered_eff_combinators -> 'm =
