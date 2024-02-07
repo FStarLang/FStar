@@ -431,7 +431,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
         match e.expr, args with
         | MLE_Name p, [
             ({ expr = MLE_Fun ([ _ ], scrutinee) });
-            ({ expr = MLE_Fun ([ (arg, _) ], possible_match)})
+            ({ expr = MLE_Fun ([ {mlbinder_name=arg} ], possible_match)})
           ] when (string_of_mlpath p = "FStar.Compiler.Effect.try_with" ||
                   string_of_mlpath p = "FStar.All.try_with") ->
             let branches =
@@ -477,7 +477,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
                           (match xt with | Some xxt -> reduce1 [text " : "; doc_of_mltype currentModule outer xxt] | _ -> text "");
                           text ")"]
             else text x in
-        let ids  = List.map (fun (x ,xt) -> bvar_annot x (Some xt)) ids in
+        let ids  = List.map (fun {mlbinder_name=x;mlbinder_ty=xt} -> bvar_annot x (Some xt)) ids in
         let body = doc_of_expr currentModule (min_op_prec, NonAssoc) body in
         let doc  = reduce1 [text "fun"; reduce1 ids; text "->"; body] in
         parens doc
@@ -743,7 +743,7 @@ and doc_of_sig (currentModule : mlsymbol) (s : mlsig) =
 
 (* -------------------------------------------------------------------- *)
 let doc_of_mod1 (currentModule : mlsymbol) (m : mlmodule1) =
-    match m with
+    match m.mlmodule1_m with
     | MLM_Exn (x, []) ->
         reduce1 [text "exception"; text x]
 
@@ -772,7 +772,7 @@ let doc_of_mod1 (currentModule : mlsymbol) (m : mlmodule1) =
 let doc_of_mod (currentModule : mlsymbol) (m : mlmodule) =
     let docs = List.map (fun x ->
         let doc = doc_of_mod1 currentModule x in
-        [doc; (match x with | MLM_Loc _ -> empty | _ -> hardline); hardline]) m in
+        [doc; (match x.mlmodule1_m with | MLM_Loc _ -> empty | _ -> hardline); hardline]) m in
     reduce (List.flatten docs)
 
 (* -------------------------------------------------------------------- *)

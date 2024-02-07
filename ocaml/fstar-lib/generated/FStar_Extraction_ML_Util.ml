@@ -303,17 +303,18 @@ let (join_l :
       FStar_Compiler_List.fold_left (join r)
         FStar_Extraction_ML_Syntax.E_PURE fs
 let (mk_ty_fun :
-  (FStar_Extraction_ML_Syntax.mlident * FStar_Extraction_ML_Syntax.mlty)
-    Prims.list ->
+  FStar_Extraction_ML_Syntax.mlbinder Prims.list ->
     FStar_Extraction_ML_Syntax.mlty -> FStar_Extraction_ML_Syntax.mlty)
   =
   FStar_Compiler_List.fold_right
     (fun uu___ ->
        fun t ->
          match uu___ with
-         | (uu___1, t0) ->
+         | { FStar_Extraction_ML_Syntax.mlbinder_name = uu___1;
+             FStar_Extraction_ML_Syntax.mlbinder_ty = mlbinder_ty;
+             FStar_Extraction_ML_Syntax.mlbinder_attrs = uu___2;_} ->
              FStar_Extraction_ML_Syntax.MLTY_Fun
-               (t0, FStar_Extraction_ML_Syntax.E_PURE, t))
+               (mlbinder_ty, FStar_Extraction_ML_Syntax.E_PURE, t))
 type unfold_t =
   FStar_Extraction_ML_Syntax.mlty ->
     FStar_Extraction_ML_Syntax.mlty FStar_Pervasives_Native.option
@@ -656,9 +657,18 @@ let (prims_op_equality : FStar_Extraction_ML_Syntax.mlexpr) =
 let (prims_op_amp_amp : FStar_Extraction_ML_Syntax.mlexpr) =
   let uu___ =
     mk_ty_fun
-      [("x", FStar_Extraction_ML_Syntax.ml_bool_ty);
-      ("y", FStar_Extraction_ML_Syntax.ml_bool_ty)]
-      FStar_Extraction_ML_Syntax.ml_bool_ty in
+      [{
+         FStar_Extraction_ML_Syntax.mlbinder_name = "x";
+         FStar_Extraction_ML_Syntax.mlbinder_ty =
+           FStar_Extraction_ML_Syntax.ml_bool_ty;
+         FStar_Extraction_ML_Syntax.mlbinder_attrs = []
+       };
+      {
+        FStar_Extraction_ML_Syntax.mlbinder_name = "y";
+        FStar_Extraction_ML_Syntax.mlbinder_ty =
+          FStar_Extraction_ML_Syntax.ml_bool_ty;
+        FStar_Extraction_ML_Syntax.mlbinder_attrs = []
+      }] FStar_Extraction_ML_Syntax.ml_bool_ty in
   FStar_Extraction_ML_Syntax.with_ty uu___
     (FStar_Extraction_ML_Syntax.MLE_Name (["Prims"], "op_AmpAmp"))
 let (conjoin :
@@ -718,3 +728,18 @@ let rec (uncurry_mlty_fun :
         let uu___1 = uncurry_mlty_fun b in
         (match uu___1 with | (args, res) -> ((a :: args), res))
     | uu___ -> ([], t)
+let (list_elements :
+  FStar_Extraction_ML_Syntax.mlexpr ->
+    FStar_Extraction_ML_Syntax.mlexpr Prims.list
+      FStar_Pervasives_Native.option)
+  =
+  fun e ->
+    let rec list_elements1 acc e1 =
+      match e1.FStar_Extraction_ML_Syntax.expr with
+      | FStar_Extraction_ML_Syntax.MLE_CTor
+          (("Prims"::[], "Cons"), hd::tl::[]) ->
+          list_elements1 (hd :: acc) tl
+      | FStar_Extraction_ML_Syntax.MLE_CTor (("Prims"::[], "Nil"), []) ->
+          FStar_Pervasives_Native.Some (FStar_Compiler_List.rev acc)
+      | uu___ -> FStar_Pervasives_Native.None in
+    list_elements1 [] e

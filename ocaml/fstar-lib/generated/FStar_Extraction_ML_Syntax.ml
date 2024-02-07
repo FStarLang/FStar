@@ -415,14 +415,19 @@ let (uu___is_Rec : mlletflavor -> Prims.bool) =
   fun projectee -> match projectee with | Rec -> true | uu___ -> false
 let (uu___is_NonRec : mlletflavor -> Prims.bool) =
   fun projectee -> match projectee with | NonRec -> true | uu___ -> false
-type mlexpr' =
+type mlbinder =
+  {
+  mlbinder_name: mlident ;
+  mlbinder_ty: mlty ;
+  mlbinder_attrs: mlexpr Prims.list }
+and mlexpr' =
   | MLE_Const of mlconstant 
   | MLE_Var of mlident 
   | MLE_Name of mlpath 
   | MLE_Let of ((mlletflavor * mllb Prims.list) * mlexpr) 
   | MLE_App of (mlexpr * mlexpr Prims.list) 
   | MLE_TApp of (mlexpr * mlty Prims.list) 
-  | MLE_Fun of ((mlident * mlty) Prims.list * mlexpr) 
+  | MLE_Fun of (mlbinder Prims.list * mlexpr) 
   | MLE_Match of (mlexpr * (mlpattern * mlexpr FStar_Pervasives_Native.option
   * mlexpr) Prims.list) 
   | MLE_Coerce of (mlexpr * mlty * mlty) 
@@ -446,8 +451,22 @@ and mllb =
   mllb_tysc: mltyscheme FStar_Pervasives_Native.option ;
   mllb_add_unit: Prims.bool ;
   mllb_def: mlexpr ;
+  mllb_attrs: mlexpr Prims.list ;
   mllb_meta: metadata ;
   print_typ: Prims.bool }
+let (__proj__Mkmlbinder__item__mlbinder_name : mlbinder -> mlident) =
+  fun projectee ->
+    match projectee with
+    | { mlbinder_name; mlbinder_ty; mlbinder_attrs;_} -> mlbinder_name
+let (__proj__Mkmlbinder__item__mlbinder_ty : mlbinder -> mlty) =
+  fun projectee ->
+    match projectee with
+    | { mlbinder_name; mlbinder_ty; mlbinder_attrs;_} -> mlbinder_ty
+let (__proj__Mkmlbinder__item__mlbinder_attrs :
+  mlbinder -> mlexpr Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { mlbinder_name; mlbinder_ty; mlbinder_attrs;_} -> mlbinder_attrs
 let (uu___is_MLE_Const : mlexpr' -> Prims.bool) =
   fun projectee ->
     match projectee with | MLE_Const _0 -> true | uu___ -> false
@@ -478,8 +497,7 @@ let (__proj__MLE_TApp__item___0 : mlexpr' -> (mlexpr * mlty Prims.list)) =
   fun projectee -> match projectee with | MLE_TApp _0 -> _0
 let (uu___is_MLE_Fun : mlexpr' -> Prims.bool) =
   fun projectee -> match projectee with | MLE_Fun _0 -> true | uu___ -> false
-let (__proj__MLE_Fun__item___0 :
-  mlexpr' -> ((mlident * mlty) Prims.list * mlexpr)) =
+let (__proj__MLE_Fun__item___0 : mlexpr' -> (mlbinder Prims.list * mlexpr)) =
   fun projectee -> match projectee with | MLE_Fun _0 -> _0
 let (uu___is_MLE_Match : mlexpr' -> Prims.bool) =
   fun projectee ->
@@ -548,36 +566,42 @@ let (__proj__Mkmlexpr__item__loc : mlexpr -> mlloc) =
 let (__proj__Mkmllb__item__mllb_name : mllb -> mlident) =
   fun projectee ->
     match projectee with
-    | { mllb_name; mllb_tysc; mllb_add_unit; mllb_def; mllb_meta;
+    | { mllb_name; mllb_tysc; mllb_add_unit; mllb_def; mllb_attrs; mllb_meta;
         print_typ;_} -> mllb_name
 let (__proj__Mkmllb__item__mllb_tysc :
   mllb -> mltyscheme FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with
-    | { mllb_name; mllb_tysc; mllb_add_unit; mllb_def; mllb_meta;
+    | { mllb_name; mllb_tysc; mllb_add_unit; mllb_def; mllb_attrs; mllb_meta;
         print_typ;_} -> mllb_tysc
 let (__proj__Mkmllb__item__mllb_add_unit : mllb -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { mllb_name; mllb_tysc; mllb_add_unit; mllb_def; mllb_meta;
+    | { mllb_name; mllb_tysc; mllb_add_unit; mllb_def; mllb_attrs; mllb_meta;
         print_typ;_} -> mllb_add_unit
 let (__proj__Mkmllb__item__mllb_def : mllb -> mlexpr) =
   fun projectee ->
     match projectee with
-    | { mllb_name; mllb_tysc; mllb_add_unit; mllb_def; mllb_meta;
+    | { mllb_name; mllb_tysc; mllb_add_unit; mllb_def; mllb_attrs; mllb_meta;
         print_typ;_} -> mllb_def
+let (__proj__Mkmllb__item__mllb_attrs : mllb -> mlexpr Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { mllb_name; mllb_tysc; mllb_add_unit; mllb_def; mllb_attrs; mllb_meta;
+        print_typ;_} -> mllb_attrs
 let (__proj__Mkmllb__item__mllb_meta : mllb -> metadata) =
   fun projectee ->
     match projectee with
-    | { mllb_name; mllb_tysc; mllb_add_unit; mllb_def; mllb_meta;
+    | { mllb_name; mllb_tysc; mllb_add_unit; mllb_def; mllb_attrs; mllb_meta;
         print_typ;_} -> mllb_meta
 let (__proj__Mkmllb__item__print_typ : mllb -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { mllb_name; mllb_tysc; mllb_add_unit; mllb_def; mllb_meta;
+    | { mllb_name; mllb_tysc; mllb_add_unit; mllb_def; mllb_attrs; mllb_meta;
         print_typ;_} -> print_typ
 type mlbranch = (mlpattern * mlexpr FStar_Pervasives_Native.option * mlexpr)
 type mlletbinding = (mlletflavor * mllb Prims.list)
+type mlattribute = mlexpr
 type mltybody =
   | MLTD_Abbrev of mlty 
   | MLTD_Record of (mlsymbol * mlty) Prims.list 
@@ -642,33 +666,50 @@ let (__proj__Mkone_mltydecl__item__tydecl_defn :
     | { tydecl_assumed; tydecl_name; tydecl_ignored; tydecl_parameters;
         tydecl_meta; tydecl_defn;_} -> tydecl_defn
 type mltydecl = one_mltydecl Prims.list
-type mlmodule1 =
+type mlmodule1' =
   | MLM_Ty of mltydecl 
   | MLM_Let of mlletbinding 
   | MLM_Exn of (mlsymbol * (mlsymbol * mlty) Prims.list) 
   | MLM_Top of mlexpr 
   | MLM_Loc of mlloc 
-let (uu___is_MLM_Ty : mlmodule1 -> Prims.bool) =
+let (uu___is_MLM_Ty : mlmodule1' -> Prims.bool) =
   fun projectee -> match projectee with | MLM_Ty _0 -> true | uu___ -> false
-let (__proj__MLM_Ty__item___0 : mlmodule1 -> mltydecl) =
+let (__proj__MLM_Ty__item___0 : mlmodule1' -> mltydecl) =
   fun projectee -> match projectee with | MLM_Ty _0 -> _0
-let (uu___is_MLM_Let : mlmodule1 -> Prims.bool) =
+let (uu___is_MLM_Let : mlmodule1' -> Prims.bool) =
   fun projectee -> match projectee with | MLM_Let _0 -> true | uu___ -> false
-let (__proj__MLM_Let__item___0 : mlmodule1 -> mlletbinding) =
+let (__proj__MLM_Let__item___0 : mlmodule1' -> mlletbinding) =
   fun projectee -> match projectee with | MLM_Let _0 -> _0
-let (uu___is_MLM_Exn : mlmodule1 -> Prims.bool) =
+let (uu___is_MLM_Exn : mlmodule1' -> Prims.bool) =
   fun projectee -> match projectee with | MLM_Exn _0 -> true | uu___ -> false
 let (__proj__MLM_Exn__item___0 :
-  mlmodule1 -> (mlsymbol * (mlsymbol * mlty) Prims.list)) =
+  mlmodule1' -> (mlsymbol * (mlsymbol * mlty) Prims.list)) =
   fun projectee -> match projectee with | MLM_Exn _0 -> _0
-let (uu___is_MLM_Top : mlmodule1 -> Prims.bool) =
+let (uu___is_MLM_Top : mlmodule1' -> Prims.bool) =
   fun projectee -> match projectee with | MLM_Top _0 -> true | uu___ -> false
-let (__proj__MLM_Top__item___0 : mlmodule1 -> mlexpr) =
+let (__proj__MLM_Top__item___0 : mlmodule1' -> mlexpr) =
   fun projectee -> match projectee with | MLM_Top _0 -> _0
-let (uu___is_MLM_Loc : mlmodule1 -> Prims.bool) =
+let (uu___is_MLM_Loc : mlmodule1' -> Prims.bool) =
   fun projectee -> match projectee with | MLM_Loc _0 -> true | uu___ -> false
-let (__proj__MLM_Loc__item___0 : mlmodule1 -> mlloc) =
+let (__proj__MLM_Loc__item___0 : mlmodule1' -> mlloc) =
   fun projectee -> match projectee with | MLM_Loc _0 -> _0
+type mlmodule1 =
+  {
+  mlmodule1_m: mlmodule1' ;
+  mlmodule1_attrs: mlattribute Prims.list }
+let (__proj__Mkmlmodule1__item__mlmodule1_m : mlmodule1 -> mlmodule1') =
+  fun projectee ->
+    match projectee with | { mlmodule1_m; mlmodule1_attrs;_} -> mlmodule1_m
+let (__proj__Mkmlmodule1__item__mlmodule1_attrs :
+  mlmodule1 -> mlattribute Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { mlmodule1_m; mlmodule1_attrs;_} -> mlmodule1_attrs
+let (mk_mlmodule1 : mlmodule1' -> mlmodule1) =
+  fun m -> { mlmodule1_m = m; mlmodule1_attrs = [] }
+let (mk_mlmodule1_with_attrs :
+  mlmodule1' -> mlattribute Prims.list -> mlmodule1) =
+  fun m -> fun attrs -> { mlmodule1_m = m; mlmodule1_attrs = attrs }
 type mlmodule = mlmodule1 Prims.list
 type mlsig1 =
   | MLS_Mod of (mlsymbol * mlsig1 Prims.list) 
@@ -800,15 +841,14 @@ let rec (mlexpr_to_string : mlexpr -> Prims.string) =
           let uu___2 = FStar_Compiler_List.map mlty_to_string ts in
           FStar_Compiler_String.concat "; " uu___2 in
         FStar_Compiler_Util.format2 "(MLE_TApp (%s, [%s]))" uu___ uu___1
-    | MLE_Fun (xs, e1) ->
+    | MLE_Fun (bs, e1) ->
         let uu___ =
           let uu___1 =
             FStar_Compiler_List.map
-              (fun uu___2 ->
-                 match uu___2 with
-                 | (x, t) ->
-                     let uu___3 = mlty_to_string t in
-                     FStar_Compiler_Util.format2 "(%s, %s)" x uu___3) xs in
+              (fun b ->
+                 let uu___2 = mlty_to_string b.mlbinder_ty in
+                 FStar_Compiler_Util.format2 "(%s, %s)" b.mlbinder_name
+                   uu___2) bs in
           FStar_Compiler_String.concat "; " uu___1 in
         let uu___1 = mlexpr_to_string e1 in
         FStar_Compiler_Util.format2 "(MLE_Fun ([%s], %s))" uu___ uu___1
@@ -1024,7 +1064,7 @@ let (one_mltydecl_to_string : one_mltydecl -> Prims.string) =
       uu___
 let (mlmodule1_to_string : mlmodule1 -> Prims.string) =
   fun m ->
-    match m with
+    match m.mlmodule1_m with
     | MLM_Ty d ->
         let uu___ =
           let uu___1 = FStar_Compiler_List.map one_mltydecl_to_string d in

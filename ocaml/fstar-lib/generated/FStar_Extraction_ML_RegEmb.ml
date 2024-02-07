@@ -54,6 +54,17 @@ let (ml_record :
           ([], uu___2, args) in
         FStar_Extraction_ML_Syntax.MLE_Record uu___1 in
       mk uu___
+let (mk_binder :
+  FStar_Extraction_ML_Syntax.mlident ->
+    FStar_Extraction_ML_Syntax.mlty -> FStar_Extraction_ML_Syntax.mlbinder)
+  =
+  fun x ->
+    fun t ->
+      {
+        FStar_Extraction_ML_Syntax.mlbinder_name = x;
+        FStar_Extraction_ML_Syntax.mlbinder_ty = t;
+        FStar_Extraction_ML_Syntax.mlbinder_attrs = []
+      }
 let (ml_lam :
   FStar_Extraction_ML_Syntax.mlident ->
     FStar_Extraction_ML_Syntax.mlexpr -> FStar_Extraction_ML_Syntax.mlexpr)
@@ -62,7 +73,7 @@ let (ml_lam :
     fun e ->
       mk
         (FStar_Extraction_ML_Syntax.MLE_Fun
-           ([(nm, FStar_Extraction_ML_Syntax.MLTY_Top)], e))
+           ([mk_binder nm FStar_Extraction_ML_Syntax.MLTY_Top], e))
 let (ml_none : FStar_Extraction_ML_Syntax.mlexpr) =
   mk
     (FStar_Extraction_ML_Syntax.MLE_Name
@@ -1747,8 +1758,8 @@ let (mk_unembed :
                                      let body2 =
                                        mk
                                          (FStar_Extraction_ML_Syntax.MLE_Fun
-                                            ([(v,
-                                                FStar_Extraction_ML_Syntax.MLTY_Top)],
+                                            ([mk_binder v
+                                                FStar_Extraction_ML_Syntax.MLTY_Top],
                                               body1)) in
                                      let uu___4 =
                                        let uu___5 =
@@ -1801,7 +1812,8 @@ let (mk_unembed :
            let lam =
              mk
                (FStar_Extraction_ML_Syntax.MLE_Fun
-                  ([(arg_v, FStar_Extraction_ML_Syntax.MLTY_Top)], def)) in
+                  ([mk_binder arg_v FStar_Extraction_ML_Syntax.MLTY_Top],
+                    def)) in
            lam)
 let (mk_embed :
   FStar_TypeChecker_Env.env ->
@@ -1953,7 +1965,8 @@ let (mk_embed :
            let lam =
              mk
                (FStar_Extraction_ML_Syntax.MLE_Fun
-                  ([(arg_v, FStar_Extraction_ML_Syntax.MLTY_Top)], def)) in
+                  ([mk_binder arg_v FStar_Extraction_ML_Syntax.MLTY_Top],
+                    def)) in
            lam)
 let (__do_handle_plugin :
   FStar_Extraction_ML_UEnv.uenv ->
@@ -2012,7 +2025,8 @@ let (__do_handle_plugin :
                               (h,
                                 (FStar_Compiler_List.op_At
                                    [mk ml_name_str; mk arity1] args))) in
-                       [FStar_Extraction_ML_Syntax.MLM_Top app])
+                       [FStar_Extraction_ML_Syntax.mk_mlmodule1
+                          (FStar_Extraction_ML_Syntax.MLM_Top app)])
               | FStar_Pervasives_Native.None -> [] in
             FStar_Compiler_List.collect mk_registration
               (FStar_Pervasives_Native.snd lbs)
@@ -2116,8 +2130,8 @@ let (__do_handle_plugin :
                     let def1 =
                       mk
                         (FStar_Extraction_ML_Syntax.MLE_Fun
-                           ([("_", FStar_Extraction_ML_Syntax.MLTY_Erased)],
-                             def)) in
+                           ([mk_binder "_"
+                               FStar_Extraction_ML_Syntax.MLTY_Erased], def)) in
                     let lb =
                       {
                         FStar_Extraction_ML_Syntax.mllb_name =
@@ -2126,6 +2140,7 @@ let (__do_handle_plugin :
                           FStar_Pervasives_Native.None;
                         FStar_Extraction_ML_Syntax.mllb_add_unit = false;
                         FStar_Extraction_ML_Syntax.mllb_def = def1;
+                        FStar_Extraction_ML_Syntax.mllb_attrs = [];
                         FStar_Extraction_ML_Syntax.mllb_meta = [];
                         FStar_Extraction_ML_Syntax.print_typ = false
                       } in
@@ -2179,15 +2194,18 @@ let (__do_handle_plugin :
                          FStar_Pervasives_Native.None;
                        FStar_Extraction_ML_Syntax.mllb_add_unit = false;
                        FStar_Extraction_ML_Syntax.mllb_def = app;
+                       FStar_Extraction_ML_Syntax.mllb_attrs = [];
                        FStar_Extraction_ML_Syntax.mllb_meta = [];
                        FStar_Extraction_ML_Syntax.print_typ = false
                      } in
-                   [FStar_Extraction_ML_Syntax.MLM_Let
-                      (FStar_Extraction_ML_Syntax.NonRec, [lb])])
+                   [FStar_Extraction_ML_Syntax.mk_mlmodule1
+                      (FStar_Extraction_ML_Syntax.MLM_Let
+                         (FStar_Extraction_ML_Syntax.NonRec, [lb]))])
                 mutual_sigelts in
             FStar_Compiler_List.op_At
-              [FStar_Extraction_ML_Syntax.MLM_Let
-                 (FStar_Extraction_ML_Syntax.Rec, lbs)] unthunking
+              [FStar_Extraction_ML_Syntax.mk_mlmodule1
+                 (FStar_Extraction_ML_Syntax.MLM_Let
+                    (FStar_Extraction_ML_Syntax.Rec, lbs))] unthunking
         | uu___ -> []
 let (do_handle_plugin :
   FStar_Extraction_ML_UEnv.uenv ->
