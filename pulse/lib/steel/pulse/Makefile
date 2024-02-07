@@ -14,8 +14,6 @@ include ../runlim.mk
 
 MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(FSTAR_OPTIONS)
 
-Pulse.Steel.Wrapper.fst.checked: FSTAR_OPTIONS+=--load_cmxs steel
-
 %.checked:
 	$(call msg, "CHECK", $(basename $(notdir $@)))
 	@# You can debug with --debug $(basename $(notdir $<))
