@@ -3746,9 +3746,8 @@ let rec (check_abs_core :
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "post_hint_typing"
                                                                     range g')
-                                                                    (FStar_Pervasives_Native.Some
-                                                                    (Pulse_Syntax_Base.ctag_of_comp_st
-                                                                    elab_c))
+                                                                    (Pulse_Syntax_Base.effect_annot_of_comp
+                                                                    elab_c)
                                                                     ret_ty
                                                                     post))
                                                                     (fun

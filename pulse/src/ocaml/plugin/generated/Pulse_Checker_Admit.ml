@@ -663,7 +663,7 @@ let (check :
                    (Obj.magic
                       (FStar_Range.mk_range "Pulse.Checker.Admit.fst"
                          (Prims.of_int (105)) (Prims.of_int (3))
-                         (Prims.of_int (110)) (Prims.of_int (56)))))
+                         (Prims.of_int (111)) (Prims.of_int (56)))))
                 (FStar_Tactics_Effect.lift_div_tac
                    (fun uu___ -> t.Pulse_Syntax_Base.term1))
                 (fun uu___ ->
@@ -671,37 +671,56 @@ let (check :
                       match uu___ with
                       | Pulse_Syntax_Base.Tm_Admit r ->
                           (match post_hint with
-                           | FStar_Pervasives_Native.Some
-                               { Pulse_Typing.g = uu___1;
-                                 Pulse_Typing.ctag_hint =
-                                   FStar_Pervasives_Native.Some ct;
-                                 Pulse_Typing.ret_ty = uu___2;
-                                 Pulse_Typing.u = uu___3;
-                                 Pulse_Typing.ty_typing = uu___4;
-                                 Pulse_Typing.post = uu___5;
-                                 Pulse_Typing.x = uu___6;
-                                 Pulse_Typing.post_typing_src = uu___7;
-                                 Pulse_Typing.post_typing = uu___8;_}
-                               ->
+                           | FStar_Pervasives_Native.Some p ->
                                Obj.magic
-                                 (check_core g pre () post_hint res_ppname
-                                    {
-                                      Pulse_Syntax_Base.term1 =
-                                        (Pulse_Syntax_Base.Tm_Admit
-                                           {
-                                             Pulse_Syntax_Base.ctag = ct;
-                                             Pulse_Syntax_Base.u1 =
-                                               (r.Pulse_Syntax_Base.u1);
-                                             Pulse_Syntax_Base.typ =
-                                               (r.Pulse_Syntax_Base.typ);
-                                             Pulse_Syntax_Base.post3 =
-                                               (r.Pulse_Syntax_Base.post3)
-                                           });
-                                      Pulse_Syntax_Base.range2 =
-                                        (t.Pulse_Syntax_Base.range2);
-                                      Pulse_Syntax_Base.effect_tag =
-                                        (t.Pulse_Syntax_Base.effect_tag)
-                                    })
+                                 (FStar_Tactics_Effect.tac_bind
+                                    (FStar_Sealed.seal
+                                       (Obj.magic
+                                          (FStar_Range.mk_range
+                                             "Pulse.Checker.Admit.fst"
+                                             (Prims.of_int (108))
+                                             (Prims.of_int (15))
+                                             (Prims.of_int (108))
+                                             (Prims.of_int (50)))))
+                                    (FStar_Sealed.seal
+                                       (Obj.magic
+                                          (FStar_Range.mk_range
+                                             "Pulse.Checker.Admit.fst"
+                                             (Prims.of_int (109))
+                                             (Prims.of_int (6))
+                                             (Prims.of_int (109))
+                                             (Prims.of_int (97)))))
+                                    (FStar_Tactics_Effect.lift_div_tac
+                                       (fun uu___1 ->
+                                          Pulse_Syntax_Base.ctag_of_effect_annot
+                                            p.Pulse_Typing.effect_annot))
+                                    (fun uu___1 ->
+                                       (fun ct ->
+                                          Obj.magic
+                                            (check_core g pre () post_hint
+                                               res_ppname
+                                               {
+                                                 Pulse_Syntax_Base.term1 =
+                                                   (Pulse_Syntax_Base.Tm_Admit
+                                                      {
+                                                        Pulse_Syntax_Base.ctag
+                                                          = ct;
+                                                        Pulse_Syntax_Base.u1
+                                                          =
+                                                          (r.Pulse_Syntax_Base.u1);
+                                                        Pulse_Syntax_Base.typ
+                                                          =
+                                                          (r.Pulse_Syntax_Base.typ);
+                                                        Pulse_Syntax_Base.post3
+                                                          =
+                                                          (r.Pulse_Syntax_Base.post3)
+                                                      });
+                                                 Pulse_Syntax_Base.range2 =
+                                                   (t.Pulse_Syntax_Base.range2);
+                                                 Pulse_Syntax_Base.effect_tag
+                                                   =
+                                                   (t.Pulse_Syntax_Base.effect_tag)
+                                               })) uu___1))
                            | uu___1 ->
                                Obj.magic
                                  (check_core g pre () post_hint res_ppname t)))

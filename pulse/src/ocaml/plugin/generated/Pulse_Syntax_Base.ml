@@ -242,6 +242,39 @@ let (ctag_of_comp_st : comp_st -> ctag) =
     | C_ST uu___ -> STT
     | C_STAtomic (uu___, uu___1, uu___2) -> STT_Atomic
     | C_STGhost uu___ -> STT_Ghost
+type effect_annot__EffectAnnotAtomic__payload = {
+  opens: term }
+and effect_annot =
+  | EffectAnnotSTT 
+  | EffectAnnotGhost 
+  | EffectAnnotAtomic of effect_annot__EffectAnnotAtomic__payload 
+let (__proj__Mkeffect_annot__EffectAnnotAtomic__payload__item__opens :
+  effect_annot__EffectAnnotAtomic__payload -> term) =
+  fun projectee -> match projectee with | { opens;_} -> opens
+let (uu___is_EffectAnnotSTT : effect_annot -> Prims.bool) =
+  fun projectee ->
+    match projectee with | EffectAnnotSTT -> true | uu___ -> false
+let (uu___is_EffectAnnotGhost : effect_annot -> Prims.bool) =
+  fun projectee ->
+    match projectee with | EffectAnnotGhost -> true | uu___ -> false
+let (uu___is_EffectAnnotAtomic : effect_annot -> Prims.bool) =
+  fun projectee ->
+    match projectee with | EffectAnnotAtomic _0 -> true | uu___ -> false
+let (__proj__EffectAnnotAtomic__item___0 :
+  effect_annot -> effect_annot__EffectAnnotAtomic__payload) =
+  fun projectee -> match projectee with | EffectAnnotAtomic _0 -> _0
+let (effect_annot_of_comp : comp_st -> effect_annot) =
+  fun c ->
+    match c with
+    | C_ST uu___ -> EffectAnnotSTT
+    | C_STGhost uu___ -> EffectAnnotGhost
+    | C_STAtomic (opens, uu___, uu___1) -> EffectAnnotAtomic { opens }
+let (ctag_of_effect_annot : effect_annot -> ctag) =
+  fun uu___ ->
+    match uu___ with
+    | EffectAnnotSTT -> STT
+    | EffectAnnotGhost -> STT_Ghost
+    | uu___1 -> STT_Atomic
 type proof_hint_type__ASSERT__payload = {
   p: vprop }
 and proof_hint_type__FOLD__payload =

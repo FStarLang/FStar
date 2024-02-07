@@ -971,26 +971,14 @@ let (check :
                                                 res_ppname st_app)
                                        | FStar_Pervasives_Native.None ->
                                            (match post_hint with
-                                            | FStar_Pervasives_Native.Some
-                                                { Pulse_Typing.g = uu___2;
-                                                  Pulse_Typing.ctag_hint =
-                                                    ctag_hint;
-                                                  Pulse_Typing.ret_ty =
-                                                    uu___3;
-                                                  Pulse_Typing.u = uu___4;
-                                                  Pulse_Typing.ty_typing =
-                                                    uu___5;
-                                                  Pulse_Typing.post = uu___6;
-                                                  Pulse_Typing.x = uu___7;
-                                                  Pulse_Typing.post_typing_src
-                                                    = uu___8;
-                                                  Pulse_Typing.post_typing =
-                                                    uu___9;_}
+                                            | FStar_Pervasives_Native.Some p
                                                 ->
                                                 Obj.magic
                                                   (check_core g ctxt ()
                                                      post_hint res_ppname st
-                                                     ctag_hint)
+                                                     (FStar_Pervasives_Native.Some
+                                                        (Pulse_Syntax_Base.ctag_of_effect_annot
+                                                           p.Pulse_Typing.effect_annot)))
                                             | uu___2 ->
                                                 Obj.magic
                                                   (check_core g ctxt ()
