@@ -351,17 +351,14 @@ let join_branches (#g #pre #post_hint #sc_u #sc_ty #sc:_)
     match c with
     | C_ST _ 
     | C_STGhost _ ->
-      let rec aux (checked_brs : list (check_branches_aux_t #g pre post_hint sc_u sc_ty sc))
-        : T.Tac (list (br:branch & br_typing g sc_u sc_ty sc (fst br) (snd br) c))
-        = match checked_brs with
-          | [] -> []
-          | checked_br::rest -> 
-            let (| br, c', d |) = checked_br in
-            assert (c == c');
-            let rest = aux rest in
-            (|br, d|)::rest
+      let rest = 
+        List.Tot.map 
+          #(check_branches_aux_t #g pre post_hint sc_u sc_ty sc)
+          #(br:branch & br_typing g sc_u sc_ty sc (fst br) (snd br) c)
+          (fun (| br, c', d |) -> (| br, d |))
+          checked_brs
       in
-      (| c, ((| br, d |) :: aux rest) |)
+      (| c, ((| br, d |) :: rest) |)
     | C_STAtomic i obs stc ->
       let max_obs = max_obs (List.Tot.map Mkdtuple3?._2 rest) obs in
       let c = C_STAtomic i max_obs stc in
