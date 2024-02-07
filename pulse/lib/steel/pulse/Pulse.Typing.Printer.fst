@@ -39,9 +39,6 @@ let rec print_st_typing #g #t #c (d:st_typing g t c)
     | T_Bind g e1 e2 c1 c2 b x c d1 _ d2 _ ->
       Printf.sprintf "(T_Bind %s %s)" (print_st_typing d1) (print_st_typing d2)
 
-    | T_TotBind g e1 e2 t1 c2 b x _ d ->
-      Printf.sprintf "(T_TotBind %s)" (print_st_typing d)
-
     | T_Frame g e c frame _ body ->
       Printf.sprintf "(T_Frame %s %s)" (Pulse.Syntax.Printer.term_to_string frame) (print_st_typing body)
 

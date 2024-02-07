@@ -188,35 +188,6 @@ let elab_bind_typing (g:stt_env)
     in
     d
 #pop-options
-
-let tot_bind_typing #g #t #c d soundness =
-  let T_TotBind _ e1 e2 t1 c2 b x e1_typing e2_typing = d in
-
-  let g_x = push_binding g x ppname_default t1 in
-
-  let re1 = elab_term e1 in
-  let rt1 = elab_term t1 in
-  let re2 = elab_st_typing e2_typing in
-
-  let re1_typing : RT.tot_typing (elab_env g) re1 rt1 =
-    tot_typing_soundness e1_typing in
-  
-  let re2_typing : RT.tot_typing (elab_env g_x) re2 (elab_comp c2) =
-    soundness g_x (open_st_term_nv e2 (v_as_nv x)) c2 e2_typing in
-
-  RT.well_typed_terms_are_ln _ _ _ re2_typing;
-  calc (==) {
-    RT.open_term (RT.close_term re2 x) x;
-       (==) { RT.open_term_spec (RT.close_term re2 x) x }
-    RT.subst_term (RT.close_term re2 x) (RT.open_with_var x 0);
-       (==) { RT.close_term_spec re2 x }
-    RT.subst_term (RT.subst_term re2 [ RT.ND x 0 ]) (RT.open_with_var x 0);
-       (==) { RT.open_close_inverse' 0 re2 x }
-    re2;
-  };
-
-  RT.T_Let _ x re1 rt1 (RT.close_term re2 x) (elab_comp c2) T.E_Total RT.pp_name_default re1_typing re2_typing
-
 //
 // We have G |- e1 : Ghost t    -- (1)
 //         G,x:t |- e2 : Total c2    -- (2)
