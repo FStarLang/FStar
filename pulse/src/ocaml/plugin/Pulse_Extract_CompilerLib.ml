@@ -17,20 +17,30 @@ type mlsymbol = ML.mlsymbol
 type mlident  = ML.mlident
 type mlpath   = ML.mlpath
 type mltyscheme = ML.mltyscheme
-
+type mlbinder = ML.mlbinder
 
 type mllb = ML.mllb
 
-let mk_mllb (mllb_name:mlident)
-            (mllb_tysc:mltyscheme)
-            (mllb_def:mlexpr)
+let mk_mllb_with_attrs
+  (mllb_name:mlident)
+  (mllb_tysc:mltyscheme)
+  (mllb_def:mlexpr)
+  (mllb_attrs:mlexpr list)
   : mllb 
   = { mllb_name;
       mllb_tysc=Some mllb_tysc;
       mllb_add_unit=false;
       mllb_def;
       mllb_meta=[];
+      mllb_attrs;
       print_typ=false }
+
+
+let mk_mllb (mllb_name:mlident)
+            (mllb_tysc:mltyscheme)
+            (mllb_def:mlexpr)
+  : mllb 
+  = mk_mllb_with_attrs mllb_name mllb_tysc mllb_def []
 
 let mk_mut_mllb
   (mllb_name:mlident)
@@ -42,6 +52,7 @@ let mk_mut_mllb
     mllb_add_unit=false;
     mllb_def;
     mllb_meta=[Mutable];
+    mllb_attrs=[];
     print_typ=false }
 
 type mlletbinding = ML.mlletbinding
@@ -76,13 +87,20 @@ let mle_app (x:mlexpr) (args:mlexpr list) : mlexpr =
 
 let mle_tapp (x:mlexpr) (args:mlty list) : mlexpr =
     as_expr (ML.MLE_TApp(x, args))
-    
+
+let mk_binders (bs:(mlident * mlty) list) : mlbinder list =
+  List.map (fun (x, t) -> {
+    ML.mlbinder_name=x;
+    ML.mlbinder_ty=t;
+    ML.mlbinder_attrs=[]
+  }) bs
+
 let mle_fun (formals:(mlident * mlty) list) (body:mlexpr) : mlexpr =
    match body.expr with
    | ML.MLE_Fun(formals', body) -> 
-     as_expr (ML.MLE_Fun(formals@formals', body))
+     as_expr (ML.MLE_Fun((mk_binders formals)@formals', body))
    | _ ->
-     as_expr (ML.MLE_Fun (formals, body))
+     as_expr (ML.MLE_Fun (mk_binders formals, body))
 
 let mle_if g t e = as_expr (ML.MLE_If (g, t, e))
 
@@ -141,8 +159,13 @@ let sigelt_extension_data (e:S.sigelt) : Pulse_Syntax_Base.st_term option =
 type mlmodule1= ML.mlmodule1
 type mlmodule = ML.mlmodule
 
+let mlm_let_with_attrs (is_rec:bool) (lbs:mllb list) (attrs:mlexpr list) : mlmodule1 =
+  ML.mk_mlmodule1_with_attrs
+    (ML.MLM_Let ((if is_rec then ML.Rec else ML.NonRec), lbs))
+    attrs
+
 let mlm_let (is_rec:bool) (lbs:mllb list) : mlmodule1 =
-  ML.MLM_Let ((if is_rec then ML.Rec else ML.NonRec), lbs)
+  mlm_let_with_attrs is_rec lbs []
 
 let is_type (g:uenv) (t:S.typ) = MLTerm.is_arity g t
 

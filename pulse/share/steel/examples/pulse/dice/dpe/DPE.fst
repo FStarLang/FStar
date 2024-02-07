@@ -154,9 +154,7 @@ let global_state_mutex_pred (gst:option global_state_t) : vprop =
 
 assume val sid_hash : sid_t -> SZ.t  // TODO
 
-
-// TODO: mark this as const for Rust extraction
-
+[@@ Rust_const_fn]
 ```pulse
 fn initialize_global_state ()
   requires emp
@@ -330,8 +328,10 @@ fn get_profile ()
 
 //
 // Wrapper over hash table insert that first checks if the table is full
+// Move to hashtable?
 //
 
+[@@ Rust_generics_bounds [["Copy"; "PartialEq"]]]
 ```pulse
 fn insert_if_not_full (#kt:eqtype) (#vt:Type0)
   (ht:ht_t kt vt) (k:kt) (v:vt)
