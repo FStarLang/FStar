@@ -1,11 +1,11 @@
-STEEL_SHARE = ../../
+PULSE_SHARE = ../../
 # ^ This must point to /steel/share. But we cannot rely on going via
 # the root (../../../..) since the OPAM package will detach the share
 # directory from the rest of the repo.
 
 INCLUDE_DIRS=bug-reports by-example lib lib/c class lib/pledge dice/cbor dice/common dice/dpe dice/engine dice/l0 parallel parix c .
 CACHE_DIR=.cache
-SRC_DIRS=$(addprefix $(STEEL_SHARE)/examples/pulse/, $(INCLUDE_DIRS))
+SRC_DIRS=$(addprefix $(PULSE_SHARE)/examples/pulse/, $(INCLUDE_DIRS))
 FSTAR_FILES=$(wildcard $(addsuffix /*.fst, $(SRC_DIRS))) $(wildcard $(addsuffix /*.fsti, $(SRC_DIRS)))
 
 all: verify test
@@ -61,11 +61,11 @@ cbor: lib $(CBOR_CHECKED_FILES)
 
 PREFIX ?= /usr/local
 ifeq ($(OS),Windows_NT)
-  STEEL_INSTALL_PREFIX=$(shell cygpath -m $(PREFIX))
+  PULSE_INSTALL_PREFIX=$(shell cygpath -m $(PREFIX))
 else
-  STEEL_INSTALL_PREFIX=$(PREFIX)
+  PULSE_INSTALL_PREFIX=$(PREFIX)
 endif
-export STEEL_INSTALL_PREFIX
+export PULSE_INSTALL_PREFIX
 
 ifeq (,$(INSTALL))
   INSTALL := $(shell ginstall --version 2>/dev/null | cut -c -8 | head -n 1)
@@ -80,6 +80,6 @@ endif
 .PHONY: install-lib %.install
 
 %.install: %
-	$(INSTALL) -m 644 -D $< $(STEEL_INSTALL_PREFIX)/share/steel/examples/pulse/$<
+	$(INSTALL) -m 644 -D $< $(PULSE_INSTALL_PREFIX)/share/steel/examples/pulse/$<
 
 install-lib: $(addsuffix .install,$(PULSE_LIB_CHECKED_FILES) $(wildcard lib/*.fst lib/*.fsti))

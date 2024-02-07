@@ -1,6 +1,6 @@
 TARGETS :=
 
-ifneq (,$(STEEL_NIGHTLY_CI))
+ifneq (,$(PULSE_NIGHTLY_CI))
 TARGETS += steelc
 endif
 

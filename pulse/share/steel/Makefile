@@ -10,6 +10,6 @@ $(TARGETS): %:
 .PHONY: install %.install
 
 %.install: %
-	$(INSTALL) -m 644 -D $< $(STEEL_INSTALL_PREFIX)/share/steel/$<
+	$(INSTALL) -m 644 -D $< $(PULSE_INSTALL_PREFIX)/share/steel/$<
 
 install: $(addsuffix .install,Makefile.include)

@@ -139,7 +139,7 @@ need to depend on the location of Steel.
 Finally, you can run `make -j -C src ci` to re-extract, recompile and
 re-test everything. This rule also checks that the re-extracted
 snapshot is no newer than the current snapshot. If the
-`STEEL_NIGHTLY_CI` environment variable is set to a nonempty value,
+`PULSE_NIGHTLY_CI` environment variable is set to a nonempty value,
 then this rule also includes the proofs from `src/proofs`, so it will
 take time and memory. If you have Docker, you can run the `ci` rule
 with `docker build -f src/ci/ci.Dockerfile .` which will also

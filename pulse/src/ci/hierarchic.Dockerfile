@@ -22,8 +22,8 @@ RUN mkdir -p $HOME/steel_tools && \
     env OTHERFLAGS='--admit_smt_queries true' make -C $KRML_HOME -j $opamthreads
 
 # Steel CI proper
-ARG STEEL_NIGHTLY_CI
+ARG PULSE_NIGHTLY_CI
 ARG OTHERFLAGS=--use_hints
-RUN eval $(opam env) && env STEEL_NIGHTLY_CI="$STEEL_NIGHTLY_CI" make -k -j $opamthreads -C $HOME/steel/src ci
+RUN eval $(opam env) && env PULSE_NIGHTLY_CI="$PULSE_NIGHTLY_CI" make -k -j $opamthreads -C $HOME/steel/src ci
 
-ENV STEEL_HOME $HOME/steel
+ENV PULSE_HOME $HOME/steel

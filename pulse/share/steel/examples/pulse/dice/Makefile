@@ -1,5 +1,5 @@
 PULSE_EXAMPLES_ROOT = ..
-STEEL_HOME = ../../../../..
+PULSE_HOME = ../../../../..
 
 INCLUDE_DIRS=lib dice/common dice/dpe dice/engine dice/l0 dice/cbor .
 SRC_DIRS=$(addprefix $(PULSE_EXAMPLES_ROOT)/, $(INCLUDE_DIRS))

@@ -14,7 +14,7 @@ jobs:
         run: |
           ci_docker_image_tag=steel:local-binary-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
           docker buildx build --secret id=DZOMO_GITHUB_TOKEN -t $ci_docker_image_tag -f src/ci/package.Dockerfile --build-arg FSTAR_BRANCH=$FSTAR_BRANCH --build-arg CI_BRANCH=$GITHUB_REF_NAME .
-          docker run $ci_docker_image_tag /bin/bash -c 'cat $STEEL_HOME/src/ci/steel.tar.gz || true' > steel.tar.gz
+          docker run $ci_docker_image_tag /bin/bash -c 'cat $PULSE_HOME/src/ci/steel.tar.gz || true' > steel.tar.gz
           gunzip steel.tar.gz
         env:
           DZOMO_GITHUB_TOKEN: ${{ secrets.DZOMO_GITHUB_TOKEN }}

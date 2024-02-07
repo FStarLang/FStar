@@ -49,7 +49,7 @@ plugin loaded.
 
 1. Make sure the `bin` subdirectory is in your `PATH`.
 
-2. Define the `STEEL_HOME` environment variable to the root directory
+2. Define the `PULSE_HOME` environment variable to the root directory
    of this package.
 
 3. (Optional) In your Makefile, define the following variables with `+=` or `:=` :
@@ -59,8 +59,8 @@ plugin loaded.
    * `FSTAR_OPTIONS`: additional options to pass to F*. While
      `Makefile.include` is already configured to use Steel, you need
      to add more options if you need Pulse and/or SteelC:
-     * if you want to use Pulse, add `--include $STEEL_HOME/lib/steel/pulse`
-     * if you want to use SteelC, add `--include $STEEL_HOME/lib/steel/c`
+     * if you want to use Pulse, add `--include $PULSE_HOME/lib/steel/pulse`
+     * if you want to use SteelC, add `--include $PULSE_HOME/lib/steel/c`
    * `FSTAR_DEP_OPTIONS`: additional options to pass to F* to compute
      dependencies (in addition to `FSTAR_OPTIONS`), such as `--extract`
    * `FSTAR_ML_CODEGEN`: useful only if you want to extract OCaml
@@ -68,7 +68,7 @@ plugin loaded.
      `Plugin`. Otherwise, it is set by default to `OCaml`.
 
 4. After those variable definitions, insert `include
-   $STEEL_HOME/share/steel/Makefile.include` to your Makefile.
+   $PULSE_HOME/share/steel/Makefile.include` to your Makefile.
 
 5. In your project directory, run `make -j verify`
 
@@ -79,6 +79,6 @@ Pulse-based project, you now need to pass new options to your Makefile
 to use Steel from this repository, as described in this section.
 
 To call F* with Steel or Pulse, pass the following options to F*:
-* in all cases, `--include $STEEL_HOME/lib/steel --load_cmxs steel`
-* if you want to use Pulse, add `--include $STEEL_HOME/lib/steel/pulse`
-* if you want to use SteelC, add `--include $STEEL_HOME/lib/steel/c`
+* in all cases, `--include $PULSE_HOME/lib/steel --load_cmxs steel`
+* if you want to use Pulse, add `--include $PULSE_HOME/lib/steel/pulse`
+* if you want to use SteelC, add `--include $PULSE_HOME/lib/steel/c`

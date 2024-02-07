@@ -42,8 +42,8 @@ RUN eval $(opam env) && \
     env OTHERFLAGS='--admit_smt_queries true' make -C $FSTAR_HOME -j $opamthreads bootstrap
 
 # Steel CI proper
-ARG STEEL_NIGHTLY_CI
+ARG PULSE_NIGHTLY_CI
 ARG OTHERFLAGS=--use_hints
-RUN eval $(opam env) && . $HOME/.cargo/env && env STEEL_NIGHTLY_CI="$STEEL_NIGHTLY_CI" make -k -j $opamthreads -C steel/src ci
+RUN eval $(opam env) && . $HOME/.cargo/env && env PULSE_NIGHTLY_CI="$PULSE_NIGHTLY_CI" make -k -j $opamthreads -C steel/src ci
 
-ENV STEEL_HOME $HOME/steel
+ENV PULSE_HOME $HOME/steel

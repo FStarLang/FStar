@@ -22,4 +22,4 @@ ARG OTHERFLAGS=--use_hints
 RUN cp -p -r steel/share/steel /tmp/steel-share && \
     rm -rf steel /tmp/steel-share/Makefile.include && \
     eval $(opam env) && \
-    env STEEL_HOME=$(opam config var prefix) make -j $opamthreads -k -C /tmp/steel-share
+    env PULSE_HOME=$(opam config var prefix) make -j $opamthreads -k -C /tmp/steel-share

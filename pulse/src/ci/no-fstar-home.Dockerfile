@@ -37,6 +37,6 @@ RUN sudo apt-get update && sudo apt-get install --yes --no-install-recommends \
 ENV PATH=$HOME/FStar/bin:$PATH
 
 # Steel CI proper
-ARG STEEL_NIGHTLY_CI
+ARG PULSE_NIGHTLY_CI
 ARG OTHERFLAGS=--use_hints
-RUN eval $(opam env) && env STEEL_NIGHTLY_CI="$STEEL_NIGHTLY_CI" make -k -j $opamthreads -C steel test
+RUN eval $(opam env) && env PULSE_NIGHTLY_CI="$PULSE_NIGHTLY_CI" make -k -j $opamthreads -C steel test

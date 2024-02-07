@@ -1,5 +1,5 @@
 FSTAR_HOME ?= $(realpath $(dir $(shell which fstar.exe))/..)
-STEEL_HOME ?= ../../../..
+PULSE_HOME ?= ../../../..
 
 
 # List the files that should be verified by verify-extra and verify-all
@@ -38,7 +38,7 @@ ALREADY_CACHED = --already_cached $(ALREADY_CACHED_LIST)
 OUTPUT_DIRECTORY ?= _output
 CACHE_DIRECTORY = $(OUTPUT_DIRECTORY)/cache
 
-INCLUDE_PATHS+=$(OUTPUT_DIRECTORY) $(SRC_DIRS) $(STEEL_HOME)/lib/steel $(STEEL_HOME)/lib/steel/pulse $(STEEL_HOME)/lib/pulse_core
+INCLUDE_PATHS+=$(OUTPUT_DIRECTORY) $(SRC_DIRS) $(PULSE_HOME)/lib/steel $(PULSE_HOME)/lib/steel/pulse $(PULSE_HOME)/lib/pulse_core
 
 FSTAR_OPTIONS=--odir $(OUTPUT_DIRECTORY) \
 		 $(OTHERFLAGS) \

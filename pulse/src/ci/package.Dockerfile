@@ -59,4 +59,4 @@ RUN eval $(opam env) && \
 # Produce the binary package
 RUN eval $(opam env) && . $HOME/.cargo/env && steel/src/ci/package.sh -j $opamthreads
 
-ENV STEEL_HOME $HOME/steel
+ENV PULSE_HOME $HOME/steel

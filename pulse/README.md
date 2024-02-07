@@ -114,7 +114,7 @@ plugin loaded.
    installed (or to the F* source tree), so that the F* executable
    should be in `$FSTAR_HOME/bin/fstar.exe`.
 
-2. Define the `STEEL_HOME` environment variable. This should be one of the following:
+2. Define the `PULSE_HOME` environment variable. This should be one of the following:
    * If used directly from source: The root directory of your clone of the Steel repository
    * If installed with `make install`: The PREFIX directory used when installing Steel
    * If installed with `opam`: The prefix directory of the opam
@@ -127,8 +127,8 @@ plugin loaded.
    * `FSTAR_OPTIONS`: additional options to pass to F*. While
      `Makefile.include` is already configured to use Steel, you need
      to add more options if you need Pulse and/or SteelC:
-     * if you want to use Pulse, add `--include $STEEL_HOME/lib/steel/pulse`
-     * if you want to use SteelC, add `--include $STEEL_HOME/lib/steel/c`
+     * if you want to use Pulse, add `--include $PULSE_HOME/lib/steel/pulse`
+     * if you want to use SteelC, add `--include $PULSE_HOME/lib/steel/c`
    * `FSTAR_DEP_OPTIONS`: additional options to pass to F* to compute
      dependencies (in addition to `FSTAR_OPTIONS`), such as `--extract`
    * `FSTAR_ML_CODEGEN`: useful only if you want to extract OCaml
@@ -136,7 +136,7 @@ plugin loaded.
      `Plugin`. Otherwise, it is set by default to `OCaml`.
 
 4. After those variable definitions, insert `include
-   $STEEL_HOME/share/steel/Makefile.include` to your Makefile.
+   $PULSE_HOME/share/steel/Makefile.include` to your Makefile.
 
 5. In your project directory, run `make -j verify`
 
@@ -150,9 +150,9 @@ To call F* with Steel:
 
 1. Make sure F* and Steel are properly located, following steps 1 and 2 above.
 2. Pass the following options to F*:
-   * in all cases, `--include $STEEL_HOME/lib/steel --load_cmxs steel`
-   * if you want to use Pulse, add `--include $STEEL_HOME/lib/steel/pulse`
-   * if you want to use SteelC, add `--include $STEEL_HOME/lib/steel/c`
+   * in all cases, `--include $PULSE_HOME/lib/steel --load_cmxs steel`
+   * if you want to use Pulse, add `--include $PULSE_HOME/lib/steel/pulse`
+   * if you want to use SteelC, add `--include $PULSE_HOME/lib/steel/c`
 
 TODO: we should distribute a binary package with the Steel plugin
 statically linked in fstar.exe. In that case, the `--load_cmxs steel`
@@ -170,7 +170,7 @@ TODO: add instructions to extract code. Meanwhile, see:
   example. This example has both a `Makefile` to extract the Steel
   code to C, and a `dune` file to compile the extracted OCaml
   code. Most notably, to compile and run OCaml code extracted from
-  Steel, `$STEEL_HOME/lib` has to be added to `OCAMLPATH` (which is
+  Steel, `$PULSE_HOME/lib` has to be added to `OCAMLPATH` (which is
   already the case by default with opam, if the opam environment is
   properly set up with `eval $(opam env)`), and the `steel.runtime`
   package has to be used.
