@@ -46,6 +46,6 @@ install: install-pulse
 .PHONY: %.install
 
 %.install: %
-	$(INSTALL) -m 644 -D $< $(STEEL_INSTALL_PREFIX)/lib/steel/pulse/$<
+	$(INSTALL) -m 644 -D $< $(PULSE_INSTALL_PREFIX)/lib/steel/pulse/$<
 
 install-pulse: $(addsuffix .install,$(wildcard *.fst *.fsti *.checked))
