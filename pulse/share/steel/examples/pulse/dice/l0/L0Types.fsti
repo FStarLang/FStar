@@ -29,11 +29,11 @@ val x509_serialNumber_t : Type0
 
 val deviceIDCRI_t : Type0
 
-val deviceIDCSR_t (len: US.t) : Type0
+val deviceIDCSR_t : Type0
 
 val aliasKeyTBS_t : Type0
 
-val aliasKeyCRT_t (len: US.t) : Type0
+val aliasKeyCRT_t : Type0
 
 noeq
 type deviceIDCSR_ingredients_t = {

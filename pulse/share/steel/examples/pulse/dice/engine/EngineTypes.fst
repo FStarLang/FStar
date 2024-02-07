@@ -20,4 +20,4 @@ let uds_is_enabled : vprop
 = admit()
 
 let uds_len : hashable_len 
-= admit()
+= assume (is_hashable_len 1sz); 1sz

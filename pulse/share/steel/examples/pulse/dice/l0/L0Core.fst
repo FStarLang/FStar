@@ -30,13 +30,13 @@ open HACL
 ```pulse
 fn create_deviceIDCRI
   (#pub_perm:perm)
-  (#pub #_buf:erased (Seq.seq U8.t))
+  (#pub_seq #_buf:erased (Seq.seq U8.t))
   (deviceID_pub: A.larray U8.t (US.v v32us))
   (deviceIDCRI_len: US.t)
   (deviceIDCRI_buf: A.larray U8.t (US.v deviceIDCRI_len))
   (deviceIDCSR_ingredients: deviceIDCSR_ingredients_t)
   requires 
-    A.pts_to deviceID_pub #pub_perm pub **
+    A.pts_to deviceID_pub #pub_perm pub_seq **
     A.pts_to deviceIDCRI_buf _buf **
     pure (
       deviceIDCRI_len == len_of_deviceIDCRI 
@@ -47,7 +47,7 @@ fn create_deviceIDCRI
     )
   ensures
     exists* (buf:Seq.seq U8.t).
-      A.pts_to deviceID_pub #pub_perm pub **
+      A.pts_to deviceID_pub #pub_perm pub_seq **
       A.pts_to deviceIDCRI_buf buf **
       pure (
         buf `Seq.equal`
@@ -58,7 +58,7 @@ fn create_deviceIDCRI
               deviceIDCSR_ingredients.s_org
               deviceIDCSR_ingredients.s_country
               deviceIDCSR_ingredients.ku
-              pub) 
+              pub_seq) 
             deviceIDCRI_len)
       )
 {
@@ -69,7 +69,7 @@ fn create_deviceIDCRI
                       deviceIDCSR_ingredients.s_country
                       deviceIDCSR_ingredients.ku
                       deviceID_pub;
-  serialize_deviceIDCRI deviceIDCRI deviceIDCRI_len deviceIDCRI_buf;
+  serialize_deviceIDCRI deviceIDCRI deviceIDCRI_len deviceIDCRI_buf
 }
 ```
 
@@ -77,30 +77,30 @@ fn create_deviceIDCRI
 ```pulse
 fn sign_and_finalize_deviceIDCSR
   (#priv_perm:perm)
-  (#priv #_cri_buf #_csr_buf:erased (Seq.seq U8.t))
+  (#priv_seq #_cri_buf #_csr_buf:erased (Seq.seq U8.t))
   (deviceID_priv: A.larray U8.t (US.v v32us))
   (deviceIDCRI_len: US.t)
   (deviceIDCRI_buf: A.larray U8.t (US.v deviceIDCRI_len))
   (deviceIDCSR_len: US.t)
   (deviceIDCSR_buf: A.larray U8.t (US.v deviceIDCSR_len))
-  (deviceIDCSR_ingredients: deviceIDCSR_ingredients_t)
+  (deviceIDCSR_ingredients: erased deviceIDCSR_ingredients_t)
   requires (
-    A.pts_to deviceID_priv #priv_perm priv **
+    A.pts_to deviceID_priv #priv_perm priv_seq **
     A.pts_to deviceIDCRI_buf _cri_buf **
     A.pts_to deviceIDCSR_buf _csr_buf **
     pure (
       deviceIDCRI_len == len_of_deviceIDCRI 
-                          deviceIDCSR_ingredients.version
-                          deviceIDCSR_ingredients.s_common
-                          deviceIDCSR_ingredients.s_org
-                          deviceIDCSR_ingredients.s_country /\
+                          (reveal deviceIDCSR_ingredients).version
+                          (reveal deviceIDCSR_ingredients).s_common
+                          (reveal deviceIDCSR_ingredients).s_org
+                          (reveal deviceIDCSR_ingredients).s_country /\
       0 < US.v deviceIDCRI_len /\ 
       valid_deviceIDCSR_ingredients deviceIDCRI_len /\
       deviceIDCSR_len == length_of_deviceIDCSR deviceIDCRI_len
     ))
   ensures (
     exists* (csr_buf:Seq.seq U8.t).
-    A.pts_to deviceID_priv #priv_perm priv **
+    A.pts_to deviceID_priv #priv_perm priv_seq **
     A.pts_to deviceIDCRI_buf _cri_buf **
     A.pts_to deviceIDCSR_buf csr_buf **
     pure (
@@ -112,19 +112,19 @@ fn sign_and_finalize_deviceIDCSR
             deviceIDCRI_len
             _cri_buf
             (spec_ed25519_sign
-              priv
+              priv_seq
               _cri_buf)))
     ))
 {
-  let mut deviceIDCRI_sig = [| 0uy; deviceIDCRI_len |];
-
-  ed25519_sign deviceIDCRI_sig deviceID_priv deviceIDCRI_len deviceIDCRI_buf;
-
+  let deviceIDCRI_sig = V.alloc 0uy deviceIDCRI_len;
+  V.to_array_pts_to deviceIDCRI_sig;
+  ed25519_sign (V.vec_to_array deviceIDCRI_sig) deviceID_priv deviceIDCRI_len deviceIDCRI_buf;
   let deviceIDCSR = x509_get_deviceIDCSR
                       deviceIDCRI_len
                       deviceIDCRI_buf
-                      deviceIDCRI_sig;
-                    
+                      (V.vec_to_array deviceIDCRI_sig);
+  V.to_vec_pts_to deviceIDCRI_sig;
+  V.free deviceIDCRI_sig;
   serialize_deviceIDCSR deviceIDCRI_len deviceIDCSR deviceIDCSR_len deviceIDCSR_buf;
 }
 ```
@@ -180,41 +180,41 @@ fn create_aliasKeyTBS
                       deviceID_pub
                       aliasKey_pub;
 
-  serialize_aliasKeyTBS aliasKeyTBS aliasKeyTBS_len aliasKeyTBS_buf;
+  serialize_aliasKeyTBS aliasKeyTBS aliasKeyTBS_len aliasKeyTBS_buf
 }
 ```
 
 ```pulse
 fn sign_and_finalize_aliasKeyCRT
   (#priv_perm:perm)
-  (#priv #_tbs_buf #_crt_buf:erased (Seq.seq U8.t))
+  (#priv_seq #_tbs_buf #_crt_buf:erased (Seq.seq U8.t))
   (deviceID_priv: A.larray U8.t (US.v v32us))
   (aliasKeyTBS_len: US.t)
   (aliasKeyTBS_buf: A.larray U8.t (US.v aliasKeyTBS_len))
   (aliasKeyCRT_len: US.t)
   (aliasKeyCRT_buf: A.larray U8.t (US.v aliasKeyCRT_len))
-  (aliasKeyCRT_ingredients: aliasKeyCRT_ingredients_t)
+  (aliasKeyCRT_ingredients: erased aliasKeyCRT_ingredients_t)
   requires (
-    A.pts_to deviceID_priv #priv_perm priv **
+    A.pts_to deviceID_priv #priv_perm priv_seq **
     A.pts_to aliasKeyTBS_buf _tbs_buf **
     A.pts_to aliasKeyCRT_buf _crt_buf **
     pure (
       aliasKeyTBS_len == len_of_aliasKeyTBS
-                          aliasKeyCRT_ingredients.serialNumber
-                          aliasKeyCRT_ingredients.i_common
-                          aliasKeyCRT_ingredients.i_org
-                          aliasKeyCRT_ingredients.i_country
-                          aliasKeyCRT_ingredients.s_common
-                          aliasKeyCRT_ingredients.s_org
-                          aliasKeyCRT_ingredients.s_country
-                          aliasKeyCRT_ingredients.l0_version /\
+                          (reveal aliasKeyCRT_ingredients).serialNumber
+                          (reveal aliasKeyCRT_ingredients).i_common
+                          (reveal aliasKeyCRT_ingredients).i_org
+                          (reveal aliasKeyCRT_ingredients).i_country
+                          (reveal aliasKeyCRT_ingredients).s_common
+                          (reveal aliasKeyCRT_ingredients).s_org
+                          (reveal aliasKeyCRT_ingredients).s_country
+                          (reveal aliasKeyCRT_ingredients).l0_version /\
       0 < US.v aliasKeyTBS_len /\ 
       valid_aliasKeyCRT_ingredients aliasKeyTBS_len /\
       aliasKeyCRT_len == length_of_aliasKeyCRT aliasKeyTBS_len
     ))
   ensures (
     exists* (crt_buf:Seq.seq U8.t). 
-    A.pts_to deviceID_priv #priv_perm priv **
+    A.pts_to deviceID_priv #priv_perm priv_seq **
     A.pts_to aliasKeyTBS_buf _tbs_buf **
     A.pts_to aliasKeyCRT_buf crt_buf **
     pure (
@@ -226,18 +226,22 @@ fn sign_and_finalize_aliasKeyCRT
             aliasKeyTBS_len
             _tbs_buf
             (spec_ed25519_sign
-              priv
+              priv_seq
               _tbs_buf)))
     ))
 {
-  let mut aliasKeyTBS_sig = [| 0uy; aliasKeyTBS_len |];
+  let aliasKeyTBS_sig = V.alloc 0uy aliasKeyTBS_len;
+  V.to_array_pts_to aliasKeyTBS_sig;
 
-  ed25519_sign aliasKeyTBS_sig deviceID_priv aliasKeyTBS_len aliasKeyTBS_buf;
+  ed25519_sign (V.vec_to_array aliasKeyTBS_sig) deviceID_priv aliasKeyTBS_len aliasKeyTBS_buf;
 
   let aliasKeyCRT = x509_get_aliasKeyCRT
                       aliasKeyTBS_len
                       aliasKeyTBS_buf
-                      aliasKeyTBS_sig;
+                      (V.vec_to_array aliasKeyTBS_sig);
+
+  V.to_vec_pts_to aliasKeyTBS_sig;
+  V.free aliasKeyTBS_sig;
                     
   serialize_aliasKeyCRT aliasKeyTBS_len aliasKeyCRT aliasKeyCRT_len aliasKeyCRT_buf;
 }
@@ -245,10 +249,12 @@ fn sign_and_finalize_aliasKeyCRT
 
 (* pre / post conditions for l0 *)
 
+noextract
 let aliasKey_functional_correctness alg dig_len cdi fwid aliasKey_label_len aliasKey_label 
                   aliasKey_pub aliasKey_priv 
   = (aliasKey_pub, aliasKey_priv) == derive_AliasKey_spec alg dig_len cdi fwid aliasKey_label_len aliasKey_label
 
+noextract
 let deviceIDCSR_functional_correctness alg dig_len cdi deviceID_label_len deviceID_label 
                     deviceIDCSR_ingredients deviceIDCSR_len deviceIDCSR_buf
   = let (deviceID_pub, deviceID_priv) = (derive_DeviceID_spec alg dig_len cdi deviceID_label_len deviceID_label) in 
@@ -277,6 +283,7 @@ let deviceIDCSR_functional_correctness alg dig_len cdi deviceID_label_len device
             deviceID_priv
             deviceIDCRI_buf)))
 
+noextract
 let aliasKeyCRT_functional_correctness alg dig_len cdi fwid deviceID_label_len deviceID_label
                      aliasKeyCRT_ingredients aliasKeyCRT_len aliasKeyCRT_buf aliasKey_pub
   = let (deviceID_pub, deviceID_priv) = (derive_DeviceID_spec alg dig_len cdi deviceID_label_len deviceID_label) in 
@@ -309,7 +316,7 @@ let aliasKeyCRT_functional_correctness alg dig_len cdi fwid deviceID_label_len d
             aliasKeyTBS_buf)))
 
 ```pulse
-fn l0_main'
+fn l0_main_aux
   (cdi: A.larray U8.t (US.v dice_digest_len))
   (deviceID_pub: A.larray U8.t (US.v v32us))
   (deviceID_priv: A.larray U8.t (US.v v32us))
@@ -366,7 +373,6 @@ fn l0_main'
       ))))
 {
   unfold (l0_record_perm record p repr);
-  dice_digest_len_is_hkdf_ikm;
 
   V.to_array_pts_to record.deviceID_label;
   derive_DeviceID dice_hash_alg 
@@ -382,38 +388,50 @@ fn l0_main'
   V.to_vec_pts_to record.fwid;
   V.to_vec_pts_to record.aliasKey_label;
   
-  let mut authKeyID = [| 0uy; dice_digest_len |];
+  let authKeyID = V.alloc 0uy dice_digest_len;
+  V.to_array_pts_to authKeyID;
+  
   derive_AuthKeyID dice_hash_alg
-    authKeyID deviceID_pub;
+    (V.vec_to_array authKeyID) deviceID_pub;
 
-  let mut deviceIDCRI = [| 0uy; deviceIDCRI_len |];
+  let deviceIDCRI = V.alloc 0uy deviceIDCRI_len;
+  V.to_array_pts_to deviceIDCRI;
+
   create_deviceIDCRI deviceID_pub
-    deviceIDCRI_len deviceIDCRI
+    deviceIDCRI_len (V.vec_to_array deviceIDCRI)
     record.deviceIDCSR_ingredients;
   
   sign_and_finalize_deviceIDCSR deviceID_priv 
-    deviceIDCRI_len deviceIDCRI
+    deviceIDCRI_len (V.vec_to_array deviceIDCRI)
     deviceIDCSR_len deviceIDCSR
     record.deviceIDCSR_ingredients;
 
-  let mut aliasKeyTBS = [| 0uy; aliasKeyTBS_len |];
+  let aliasKeyTBS = V.alloc 0uy aliasKeyTBS_len;
+  V.to_array_pts_to aliasKeyTBS;
 
   V.to_array_pts_to record.fwid;
-  create_aliasKeyTBS (V.vec_to_array record.fwid) authKeyID
+  create_aliasKeyTBS (V.vec_to_array record.fwid) (V.vec_to_array authKeyID)
     deviceID_pub aliasKey_pub
-    aliasKeyTBS_len aliasKeyTBS
+    aliasKeyTBS_len (V.vec_to_array aliasKeyTBS)
     record.aliasKeyCRT_ingredients;
   V.to_vec_pts_to record.fwid;
 
   sign_and_finalize_aliasKeyCRT deviceID_priv 
-    aliasKeyTBS_len aliasKeyTBS
+    aliasKeyTBS_len (V.vec_to_array aliasKeyTBS)
     aliasKeyCRT_len aliasKeyCRT
     record.aliasKeyCRT_ingredients;
   
+  V.to_vec_pts_to authKeyID;
+  V.free authKeyID;
+  V.to_vec_pts_to deviceIDCRI;
+  V.free deviceIDCRI;
+  V.to_vec_pts_to aliasKeyTBS;
+  V.free aliasKeyTBS;
+
   // // with s3. assert (A.pts_to deviceIDCRI s3);
   // // with s4. assert (A.pts_to aliasKeyTBS s4);
 
   fold l0_record_perm record p repr;
 }
 ```
-let l0_main = l0_main'
+let l0_main = l0_main_aux
