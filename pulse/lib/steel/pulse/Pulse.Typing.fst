@@ -833,20 +833,6 @@ type st_typing : env -> st_term -> comp -> Type =
       comp_typing_u g c2 ->
       st_typing g (wr c2 (Tm_Bind { binder=b; head=e1; body=e2 })) c2
 
-  | T_GhostBind:  // see the comment on T_STGhostApp regarding the non-informative judgment
-      g:env ->
-      e1:term ->
-      e2:st_term ->
-      t1:term ->
-      c2:comp_st ->
-      b:binder { b.binder_ty == t1 } ->
-      x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars_st e2) } ->
-      ghost_typing g e1 t1 ->
-      st_typing (push_binding g x ppname_default t1) (open_st_term_nv e2 (v_as_nv x)) c2 ->
-      non_informative (push_binding g x ppname_default t1) c2 ->
-      st_typing g (wr c2 (Tm_TotBind { binder = b; head = e1; body = e2 }))
-                  (open_comp_with (close_comp c2 x) e1)
-
   | T_If:
       g:env ->
       b:term -> 
