@@ -2271,7 +2271,7 @@ let (is_return :
   fun e ->
     match e.Pulse_Syntax_Base.term1 with
     | Pulse_Syntax_Base.Tm_Return
-        { Pulse_Syntax_Base.ctag = uu___;
+        { Pulse_Syntax_Base.expected_type = uu___;
           Pulse_Syntax_Base.insert_eq = uu___1;
           Pulse_Syntax_Base.term = term;_}
         -> FStar_Pervasives_Native.Some term
@@ -3568,7 +3568,7 @@ let rec (erase_ghost_subterms :
                                                   (Prims.of_int (460))
                                                   (Prims.of_int (6))
                                                   (Prims.of_int (460))
-                                                  (Prims.of_int (80)))))
+                                                  (Prims.of_int (94)))))
                                          (FStar_Sealed.seal
                                             (Obj.magic
                                                (FStar_Range.mk_range
@@ -3583,9 +3583,9 @@ let rec (erase_ghost_subterms :
                                                  Pulse_Syntax_Base.term1 =
                                                    (Pulse_Syntax_Base.Tm_Return
                                                       {
-                                                        Pulse_Syntax_Base.ctag
+                                                        Pulse_Syntax_Base.expected_type
                                                           =
-                                                          Pulse_Syntax_Base.STT;
+                                                          Pulse_Syntax_Base.tm_unknown;
                                                         Pulse_Syntax_Base.insert_eq
                                                           = false;
                                                         Pulse_Syntax_Base.term
@@ -4813,8 +4813,8 @@ let rec (extract :
                                                           uu___4))
                                             | Pulse_Syntax_Base.Tm_Return
                                                 {
-                                                  Pulse_Syntax_Base.ctag =
-                                                    uu___3;
+                                                  Pulse_Syntax_Base.expected_type
+                                                    = uu___3;
                                                   Pulse_Syntax_Base.insert_eq
                                                     = uu___4;
                                                   Pulse_Syntax_Base.term =

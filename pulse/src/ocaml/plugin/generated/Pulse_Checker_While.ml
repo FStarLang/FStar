@@ -404,7 +404,7 @@ let (check :
                                                                     (Prims.of_int (73))
                                                                     (Prims.of_int (16))
                                                                     (Prims.of_int (73))
-                                                                    (Prims.of_int (87)))))
+                                                                    (Prims.of_int (94)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -424,6 +424,7 @@ let (check :
                                                                     (Pulse_Syntax_Base.st_comp_of_comp
                                                                     (Pulse_Typing.comp_while_cond
                                                                     nm inv1))
+                                                                    (FStar_Pervasives_Native.fst
                                                                     (Pulse_Typing_Metatheory_Base.comp_typing_inversion
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "invariant"
@@ -431,7 +432,7 @@ let (check :
                                                                     inv) g1)
                                                                     (Pulse_Typing.comp_while_cond
                                                                     nm inv1)
-                                                                    while_cond_comp_typing1)))
+                                                                    while_cond_comp_typing1))))
                                                                     (fun
                                                                     uu___5 ->
                                                                     (fun
@@ -632,7 +633,7 @@ let (check :
                                                                     (Prims.of_int (94))
                                                                     (Prims.of_int (18))
                                                                     (Prims.of_int (94))
-                                                                    (Prims.of_int (89)))))
+                                                                    (Prims.of_int (96)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -652,6 +653,7 @@ let (check :
                                                                     (Pulse_Syntax_Base.st_comp_of_comp
                                                                     (Pulse_Typing.comp_while_body
                                                                     nm inv1))
+                                                                    (FStar_Pervasives_Native.fst
                                                                     (Pulse_Typing_Metatheory_Base.comp_typing_inversion
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "invariant"
@@ -659,7 +661,7 @@ let (check :
                                                                     inv) g1)
                                                                     (Pulse_Typing.comp_while_body
                                                                     nm inv1)
-                                                                    while_body_comp_typing1)))
+                                                                    while_body_comp_typing1))))
                                                                     (fun
                                                                     uu___7 ->
                                                                     (fun

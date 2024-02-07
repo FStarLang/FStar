@@ -117,8 +117,7 @@ fn test2 ()
 assume val i : inv emp
 assume val i2 : inv emp
 
-// Fails since it gets promoted to non-ghost, fix
-[@@expect_failure]
+
 ```pulse
 ghost
 fn basic_ghost ()

@@ -296,12 +296,12 @@ let rec (print_st_typing :
                                (fun uu___10 -> "T_If")))
                    | Pulse_Typing.T_Match
                        (uu___, uu___1, uu___2, uu___3, uu___4, uu___5,
-                        uu___6, uu___7, uu___8, uu___9)
+                        uu___6, uu___7, uu___8, uu___9, uu___10)
                        ->
                        Obj.magic
                          (Obj.repr
                             (FStar_Tactics_Effect.lift_div_tac
-                               (fun uu___10 -> "T_Match")))
+                               (fun uu___11 -> "T_Match")))
                    | Pulse_Typing.T_Equiv (g1, e, c1, c', d1, eq) ->
                        Obj.magic
                          (Obj.repr

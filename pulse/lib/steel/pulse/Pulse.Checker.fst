@@ -206,7 +206,9 @@ let rec check
           match post_if, post_hint with
           | None, Some p -> p
           | Some p, None ->
-            Checker.Base.intro_post_hint g None None p
+            //We set the computation type to be STT in this case
+            //We might allow the post_if annotation to also set the effect tag
+            Checker.Base.intro_post_hint g EffectAnnotSTT None p
           | Some p, Some q ->
             Pulse.Typing.Env.fail g (Some t.range) 
               (Printf.sprintf 
@@ -234,7 +236,8 @@ let rec check
           match post_match, post_hint with
           | None, Some p -> p
           | Some p, None ->
-            Checker.Base.intro_post_hint g None None p
+            //See same remark in the If case
+            Checker.Base.intro_post_hint g EffectAnnotSTT None p
           | Some p, Some q ->
             Pulse.Typing.Env.fail g (Some t.range)
               (Printf.sprintf

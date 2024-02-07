@@ -300,7 +300,7 @@ let rec subst_env (en:env) (ss:subst)
 
 let push_context g ctx r = { g with ctxt = Pulse.RuntimeUtils.extend_context ctx (Some r) g.ctxt }
 let push_context_no_range g ctx = { g with ctxt = Pulse.RuntimeUtils.extend_context ctx None g.ctxt }
-
+let reset_context g g' = { g with ctxt = g'.ctxt }
 let get_context g = g.ctxt
 
 let range_of_env (g:env) = 

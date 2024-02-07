@@ -439,11 +439,11 @@ let rec (elab_st_typing :
               FStar_Reflection_Typing.mk_if rb re1 re2
           | Pulse_Typing.T_Match
               (uu___, uu___1, uu___2, sc, uu___3, uu___4, uu___5, uu___6,
-               brty, uu___7)
+               uu___7, brty, uu___8)
               ->
               let sc1 = Pulse_Elaborate_Pure.elab_term sc in
               let brs =
-                elab_branches uu___ uu___5 uu___1 uu___2 sc uu___6 brty in
+                elab_branches uu___ uu___5 uu___1 uu___2 sc uu___7 brty in
               FStar_Reflection_V2_Builtins.pack_ln
                 (FStar_Reflection_V2_Data.Tv_Match
                    (sc1, FStar_Pervasives_Native.None, brs))

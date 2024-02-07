@@ -54,12 +54,14 @@ let add_frame_well_typed (#g:env) (#c:comp_st) (ct:comp_typing_u g c)
   : comp_typing_u g (add_frame c f)
   = admit_comp_typing _ _
 
+let emp_inames_typing (g:env) : tot_typing g tm_emp_inames tm_inames = RU.magic()
+
 let comp_typing_inversion #g #c ct = 
   match ct with
   | CT_ST _ _ st
-  | CT_STAtomic _ _ _ _ _ st 
-  | CT_STGhost _ _ st   -> st
-
+  | CT_STGhost _ _ st -> st, emp_inames_typing g
+  | CT_STAtomic _ _ _ _ it st -> st, it
+ 
 let st_comp_typing_inversion_cofinite (#g:env) (#st:_) (ct:st_comp_typing g st) = 
   admit(), admit(), (fun _ -> admit())
 
@@ -372,14 +374,14 @@ let rec st_typing_weakening g g' t c d g1
 
     T_If _ b e1 e2 c hyp (RU.magic ()) d_e1 d_e2 (RU.magic ())
   
-  | T_Match _ sc_u sc_ty sc d_sc_ty d_sc c brs d_brs d_pats_complete ->
+  | T_Match _ sc_u sc_ty sc d_sc_ty d_sc c c_typing brs d_brs d_pats_complete ->
     admit();
     T_Match (push_env (push_env g g1) g')
             sc_u sc_ty sc
             (tot_typing_weakening g g' _ _ d_sc_ty g1)
             (tot_typing_weakening g g' _ _ d_sc g1)
-            c brs
-            d_brs
+            c c_typing 
+            brs d_brs
             d_pats_complete
 
   | T_Frame _ e c frame _ d_e ->
@@ -717,7 +719,7 @@ let rec st_typing_subst g x t g' #e #eff e_typing #e1 #c1 e1_typing _
            (coerce_eq (st_typing_subst g x t (push_binding g' hyp ppname_default (mk_eq2 u0 tm_bool b tm_false)) e_typing d_e2 (RU.magic ())) ())
            (RU.magic ())
 
-  | T_Match _ sc_u sc_ty sc _ty_typing _sc_typing c brs brs_typing pats_complete ->
+  | T_Match _ sc_u sc_ty sc _ty_typing _sc_typing c c_typing brs brs_typing pats_complete ->
     Pervasives.coerce_eq (RU.magic ()) e1_typing
 
   | T_Frame _ e c frame _ d_e ->

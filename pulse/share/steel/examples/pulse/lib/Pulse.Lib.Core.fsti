@@ -129,7 +129,8 @@ let mem_inv (#p:vprop) (e:inames) (i:inv p) : erased bool = mem_iname e (name_of
 
 let add_iname (e:inames) (i:iname) : inames = Set.union (Set.singleton i) (reveal e)
 let add_inv (#p:vprop) (e:inames) (i:inv p) : inames = add_iname e (name_of_inv i)
-
+let remove_inv (#p:vprop) (e:inames) (i:inv p) : inames = Set.remove (name_of_inv i) e
+let all_inames : inames = Set.complement Set.empty
 (* Useful for reasoning about inames equalities. TODO: We need a decent
 set of patterns. *)
 val add_already_there #p (i : inv p) (is : inames)

@@ -1046,6 +1046,12 @@ let (inv_disjointness :
             (Pulse_Elaborate_Pure.elab_term inames)
             (Pulse_Elaborate_Pure.elab_term inv) in
         Pulse_Syntax_Base.tm_fstar g inv.Pulse_Syntax_Base.range1
+let (eff_of_ctag :
+  Pulse_Syntax_Base.ctag -> FStar_TypeChecker_Core.tot_or_ghost) =
+  fun uu___ ->
+    match uu___ with
+    | Pulse_Syntax_Base.STT_Ghost -> FStar_TypeChecker_Core.E_Ghost
+    | uu___1 -> FStar_TypeChecker_Core.E_Total
 type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   | T_Abs of Pulse_Typing_Env.env * Pulse_Syntax_Base.var *
   Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option *
@@ -1092,7 +1098,7 @@ type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   unit) st_typing * (unit, unit, unit) st_typing * unit 
   | T_Match of Pulse_Typing_Env.env * Pulse_Syntax_Base.universe *
   Pulse_Syntax_Base.typ * Pulse_Syntax_Base.term * unit * unit *
-  Pulse_Syntax_Base.comp_st * (Pulse_Syntax_Base.pattern *
+  Pulse_Syntax_Base.comp_st * unit * (Pulse_Syntax_Base.pattern *
   Pulse_Syntax_Base.st_term) Prims.list * (unit, unit, unit, unit, unit,
   unit) brs_typing * (unit, unit, unit, unit) pats_complete 
   | T_Frame of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_term *
@@ -1219,10 +1225,12 @@ let uu___is_TBR uu___6 uu___5 uu___4 uu___3 uu___2 uu___1 uu___ uu___7 =
 
 
 type ('x, 'g, 'vars) fresh_wrt = unit
+type ('g, 'e) effect_annot_typing = Obj.t
 type post_hint_t =
   {
   g: Pulse_Typing_Env.env ;
-  ctag_hint: Pulse_Syntax_Base.ctag FStar_Pervasives_Native.option ;
+  effect_annot: Pulse_Syntax_Base.effect_annot ;
+  effect_annot_typing: Obj.t ;
   ret_ty: Pulse_Syntax_Base.term ;
   u: Pulse_Syntax_Base.universe ;
   ty_typing: unit ;
@@ -1233,51 +1241,80 @@ type post_hint_t =
 let (__proj__Mkpost_hint_t__item__g : post_hint_t -> Pulse_Typing_Env.env) =
   fun projectee ->
     match projectee with
-    | { g; ctag_hint; ret_ty; u; ty_typing; post; x; post_typing_src;
-        post_typing;_} -> g
-let (__proj__Mkpost_hint_t__item__ctag_hint :
-  post_hint_t -> Pulse_Syntax_Base.ctag FStar_Pervasives_Native.option) =
+    | { g; effect_annot; effect_annot_typing = effect_annot_typing1; 
+        ret_ty; u; ty_typing; post; x; post_typing_src; post_typing;_} -> g
+let (__proj__Mkpost_hint_t__item__effect_annot :
+  post_hint_t -> Pulse_Syntax_Base.effect_annot) =
   fun projectee ->
     match projectee with
-    | { g; ctag_hint; ret_ty; u; ty_typing; post; x; post_typing_src;
-        post_typing;_} -> ctag_hint
+    | { g; effect_annot; effect_annot_typing = effect_annot_typing1; 
+        ret_ty; u; ty_typing; post; x; post_typing_src; post_typing;_} ->
+        effect_annot
+let (__proj__Mkpost_hint_t__item__effect_annot_typing : post_hint_t -> Obj.t)
+  =
+  fun projectee ->
+    match projectee with
+    | { g; effect_annot; effect_annot_typing = effect_annot_typing1; 
+        ret_ty; u; ty_typing; post; x; post_typing_src; post_typing;_} ->
+        effect_annot_typing1
 let (__proj__Mkpost_hint_t__item__ret_ty :
   post_hint_t -> Pulse_Syntax_Base.term) =
   fun projectee ->
     match projectee with
-    | { g; ctag_hint; ret_ty; u; ty_typing; post; x; post_typing_src;
-        post_typing;_} -> ret_ty
+    | { g; effect_annot; effect_annot_typing = effect_annot_typing1; 
+        ret_ty; u; ty_typing; post; x; post_typing_src; post_typing;_} ->
+        ret_ty
 let (__proj__Mkpost_hint_t__item__u :
   post_hint_t -> Pulse_Syntax_Base.universe) =
   fun projectee ->
     match projectee with
-    | { g; ctag_hint; ret_ty; u; ty_typing; post; x; post_typing_src;
-        post_typing;_} -> u
+    | { g; effect_annot; effect_annot_typing = effect_annot_typing1; 
+        ret_ty; u; ty_typing; post; x; post_typing_src; post_typing;_} -> u
 
 let (__proj__Mkpost_hint_t__item__post :
   post_hint_t -> Pulse_Syntax_Base.term) =
   fun projectee ->
     match projectee with
-    | { g; ctag_hint; ret_ty; u; ty_typing; post; x; post_typing_src;
-        post_typing;_} -> post
+    | { g; effect_annot; effect_annot_typing = effect_annot_typing1; 
+        ret_ty; u; ty_typing; post; x; post_typing_src; post_typing;_} ->
+        post
 let (__proj__Mkpost_hint_t__item__x : post_hint_t -> Pulse_Syntax_Base.var) =
   fun projectee ->
     match projectee with
-    | { g; ctag_hint; ret_ty; u; ty_typing; post; x; post_typing_src;
-        post_typing;_} -> x
+    | { g; effect_annot; effect_annot_typing = effect_annot_typing1; 
+        ret_ty; u; ty_typing; post; x; post_typing_src; post_typing;_} -> x
 
 type ('g, 'p) post_hint_for_env_p = unit
 type 'g post_hint_for_env = post_hint_t
 type 'g post_hint_opt = post_hint_t FStar_Pervasives_Native.option
 type ('g, 'p, 'x) post_hint_typing_t =
   {
+  effect_annot_typing1: Obj.t ;
   ty_typing1: unit ;
   post_typing1: unit }
+let (__proj__Mkpost_hint_typing_t__item__effect_annot_typing :
+  Pulse_Typing_Env.env ->
+    post_hint_t ->
+      Pulse_Syntax_Base.var -> (unit, unit, unit) post_hint_typing_t -> Obj.t)
+  =
+  fun g ->
+    fun p ->
+      fun x ->
+        fun projectee ->
+          match projectee with
+          | { effect_annot_typing1; ty_typing1 = ty_typing;
+              post_typing1 = post_typing;_} -> effect_annot_typing1
 
 
 let (post_hint_typing :
   Pulse_Typing_Env.env ->
     unit post_hint_for_env ->
       Pulse_Syntax_Base.var -> (unit, unit, unit) post_hint_typing_t)
-  = fun g -> fun p -> fun x -> { ty_typing1 = (); post_typing1 = () }
+  =
+  fun g ->
+    fun p ->
+      fun x ->
+        let effect_annot_typing1 = Obj.repr () in
+        { effect_annot_typing1; ty_typing1 = (); post_typing1 = () }
+type ('c, 'effectuannot) effect_annot_matches = Obj.t
 type ('c, 'postuhint) comp_post_matches_hint = Obj.t

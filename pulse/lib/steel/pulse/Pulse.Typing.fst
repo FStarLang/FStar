@@ -725,6 +725,10 @@ let inv_disjointness (inv_p inames inv:term) =
   let g = Pulse.Reflection.Util.inv_disjointness_goal (elab_term inv_p) (elab_term inames) (elab_term inv) in 
   tm_fstar g inv.range
 
+let eff_of_ctag = function
+  | STT_Ghost -> T.E_Ghost
+  | _ -> T.E_Total
+
 [@@ no_auto_projectors]
 noeq
 type st_typing : env -> st_term -> comp -> Type =
@@ -785,9 +789,9 @@ type st_typing : env -> st_term -> comp -> Type =
       post:term ->
       x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars post) } ->
       universe_of g t u ->
-      tot_typing g e t ->
+      typing g e (eff_of_ctag c) t ->
       tot_typing (push_binding g x ppname_default t) (open_term post x) tm_vprop ->
-      st_typing g (wtag (Some c) (Tm_Return { ctag=c; insert_eq=use_eq; term=e }))
+      st_typing g (wtag (Some c) (Tm_Return { expected_type=tm_unknown; insert_eq=use_eq; term=e }))
                   (comp_return c use_eq u t e post x)
 
   | T_Lift:
@@ -884,6 +888,7 @@ type st_typing : env -> st_term -> comp -> Type =
       tot_typing g sc_ty (tm_type sc_u) ->
       tot_typing g sc sc_ty ->
       c:comp_st ->
+      my_erased (comp_typing_u g c) ->
       brs:list (pattern & st_term) ->
       brs_typing g sc_u sc_ty sc brs c ->
       pats_complete g sc sc_ty (L.map (fun (p, _) -> elab_pat p) brs) ->
@@ -1150,10 +1155,19 @@ let emp_typing (#g:_)
 let fresh_wrt (x:var) (g:env) (vars:_) = 
     None? (lookup g x) /\  ~(x `Set.mem` vars)
 
+
+let effect_annot_typing (g:env) (e:effect_annot) =
+  match e with
+  | EffectAnnotAtomic { opens } ->
+    tot_typing g opens tm_inames
+  | _ ->
+    unit
+
 noeq
 type post_hint_t = {
   g:env;
-  ctag_hint:option ctag;
+  effect_annot:effect_annot;
+  effect_annot_typing:effect_annot_typing g effect_annot;
   ret_ty:term;
   u:universe;
   ty_typing:universe_of g ret_ty u;
@@ -1180,6 +1194,7 @@ let post_hint_opt (g:env) = o:option post_hint_t { None? o \/ post_hint_for_env_
 
 noeq
 type post_hint_typing_t (g:env) (p:post_hint_t) (x:var { ~ (Set.mem x (dom g)) }) = {
+  effect_annot_typing:effect_annot_typing g p.effect_annot;
   ty_typing:universe_of g p.ret_ty p.u;
   post_typing:tot_typing (push_binding g x ppname_default p.ret_ty) (open_term p.post x) tm_vprop
 }
@@ -1189,12 +1204,28 @@ irreducible
 let post_hint_typing (g:env)
                      (p:post_hint_for_env g)
                      (x:var { fresh_wrt x g (freevars p.post) })
-  : post_hint_typing_t g p x =
-
+  : post_hint_typing_t g p x
+  = let effect_annot_typing : effect_annot_typing g p.effect_annot = 
+      match p.effect_annot with
+      | EffectAnnotAtomic { opens } ->
+        let opens_typing : tot_typing g opens tm_inames = RU.magic () in //weakening
+        opens_typing
+      | _ ->
+        ()
+    in
   {
-    ty_typing = RU.magic ();
+    effect_annot_typing;
+    ty_typing = RU.magic (); //weakening
     post_typing = RU.magic ();
   }
+
+let effect_annot_matches c (effect_annot:effect_annot) : prop =
+  match c, effect_annot with
+  | C_ST _, EffectAnnotSTT
+  | C_STGhost _, EffectAnnotGhost -> True
+  | C_STAtomic inames' _ _, EffectAnnotAtomic { opens } ->
+    inames' == opens
+  | _ -> False
 
 let comp_post_matches_hint (c:comp_st) (post_hint:option post_hint_t) =
   match post_hint with
@@ -1202,4 +1233,5 @@ let comp_post_matches_hint (c:comp_st) (post_hint:option post_hint_t) =
   | Some post_hint ->
     comp_res c == post_hint.ret_ty /\
     comp_u c == post_hint.u /\
-    comp_post c == post_hint.post
+    comp_post c == post_hint.post /\
+    effect_annot_matches c post_hint.effect_annot

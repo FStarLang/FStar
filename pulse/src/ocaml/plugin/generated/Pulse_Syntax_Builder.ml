@@ -11,15 +11,15 @@ let (pat_cons :
       Pulse_Syntax_Base.pattern)
   = fun fv -> fun vs -> Pulse_Syntax_Base.Pat_Cons (fv, vs)
 let (tm_return :
-  Pulse_Syntax_Base.ctag ->
+  Pulse_Syntax_Base.term ->
     Prims.bool -> Pulse_Syntax_Base.term -> Pulse_Syntax_Base.st_term')
   =
-  fun ctag ->
+  fun expected_type ->
     fun insert_eq ->
       fun term ->
         Pulse_Syntax_Base.Tm_Return
           {
-            Pulse_Syntax_Base.ctag = ctag;
+            Pulse_Syntax_Base.expected_type = expected_type;
             Pulse_Syntax_Base.insert_eq = insert_eq;
             Pulse_Syntax_Base.term = term
           }
@@ -249,7 +249,7 @@ let (tm_admit :
         fun post ->
           Pulse_Syntax_Base.Tm_Admit
             {
-              Pulse_Syntax_Base.ctag1 = ctag;
+              Pulse_Syntax_Base.ctag = ctag;
               Pulse_Syntax_Base.u1 = u;
               Pulse_Syntax_Base.typ = typ;
               Pulse_Syntax_Base.post3 = post

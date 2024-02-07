@@ -70,7 +70,7 @@ let check
 
   let while_cond_comp_typing = while_cond_comp_typing u nm ty inv inv_typing in
   let (| res_typing, cond_pre_typing, x, post_typing |) =
-    Metatheory.(st_comp_typing_inversion (comp_typing_inversion while_cond_comp_typing))
+    Metatheory.(st_comp_typing_inversion (fst <| comp_typing_inversion while_cond_comp_typing))
   in
   let while_cond_hint : post_hint_for_env g =
     post_hint_from_comp_typing while_cond_comp_typing
@@ -91,7 +91,7 @@ let check
   then begin
     let while_body_comp_typing = while_body_comp_typing u nm ty inv inv_typing in
     let (| res_typing, body_pre_typing, x, post_typing |) = 
-      Metatheory.(st_comp_typing_inversion (comp_typing_inversion while_body_comp_typing))
+      Metatheory.(st_comp_typing_inversion (fst <| comp_typing_inversion while_body_comp_typing))
     in
     let while_post_hint : post_hint_for_env g =
       post_hint_from_comp_typing while_body_comp_typing

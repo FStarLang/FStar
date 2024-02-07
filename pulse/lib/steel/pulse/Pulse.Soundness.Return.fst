@@ -29,7 +29,7 @@ module PReflUtil = Pulse.Reflection.Util
 module WT = Pulse.Steel.Wrapper.Typing
 module LN = Pulse.Typing.LN
 
-#push-options "--z3rlimit_factor 4 --fuel 8 --ifuel 2"
+#push-options "--z3rlimit_factor 8 --split_queries no --fuel 4 --ifuel 2"
 let return_soundness
   (#g:stt_env)
   (#t:st_term)
@@ -47,8 +47,10 @@ let return_soundness
   let rpost_abs = mk_abs rt R.Q_Explicit rpost in
   let rt_typing : RT.tot_typing _ rt (R.pack_ln (R.Tv_Type ru)) =
     tot_typing_soundness t_typing in
-  let re_typing : RT.tot_typing _ re rt =
-    tot_typing_soundness e_typing in
+  let re_typing : RT.typing _ re (eff_of_ctag ctag, rt) =
+    match ctag with
+    | STT_Ghost -> ghost_typing_soundness e_typing
+    | _ -> tot_typing_soundness e_typing in
   let rpost_abs_typing
     : RT.tot_typing _ rpost_abs
                       (mk_arrow (rt, R.Q_Explicit) vprop_tm) =

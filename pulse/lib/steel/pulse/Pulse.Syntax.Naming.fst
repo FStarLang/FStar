@@ -168,7 +168,8 @@ let rec close_open_inverse_st'  (t:st_term)
   : Lemma (ensures close_st_term' (open_st_term' t (U.term_of_no_name_var x) i) x i == t)
           (decreases t)
   = match t.term with
-    | Tm_Return { term = t } ->
+    | Tm_Return { expected_type; term = t } ->
+      close_open_inverse' expected_type x i;
       close_open_inverse' t x i
 
     | Tm_ElimExists { p } ->

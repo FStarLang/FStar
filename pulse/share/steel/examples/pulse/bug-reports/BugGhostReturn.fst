@@ -18,7 +18,6 @@ ensures pure (p x)
 }
 ```
 
-[@@expect_failure]
 ```pulse
 ghost
 fn use_some_lemma_ghost (#a:Type u#0) (x:a)
