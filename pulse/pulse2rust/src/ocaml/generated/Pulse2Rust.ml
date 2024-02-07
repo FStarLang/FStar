@@ -2178,7 +2178,10 @@ let rec (topsort :
                let uu___2 =
                  FStar_Compiler_List.filter
                    (fun g -> Prims.op_Negation (g = root)) grey2 in
-               (uu___2, (root :: black1)))
+               (uu___2,
+                 (if FStar_Compiler_List.mem root black1
+                  then black1
+                  else root :: black1)))
 let rec (topsort_all :
   dict -> Prims.string Prims.list -> Prims.string Prims.list) =
   fun d ->

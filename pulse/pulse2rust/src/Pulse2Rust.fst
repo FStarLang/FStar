@@ -1082,7 +1082,8 @@ let rec topsort (d:dict) (grey:list string) (black:list string) (root:string)
   let deps = deps |> List.filter (fun f -> not (List.mem f black)) in
   let grey, black = List.fold_left (fun (grey, black) dep ->
     topsort d grey black dep) (grey, black) deps in
-  List.filter (fun g -> not (g = root)) grey, root::black
+  List.filter (fun g -> not (g = root)) grey,
+  (if List.mem root black then black else root::black)
 
 let rec topsort_all (d:dict) (black:list string)
   : list string =
