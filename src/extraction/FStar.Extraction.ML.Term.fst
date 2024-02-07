@@ -447,6 +447,11 @@ let fresh_mlidents (ts:list mlty) (g:uenv) : list (mlident * mlty) * uenv =
    in
    vs_ts, g
 
+let fresh_binders (ts:list mlty) (g:uenv) : list mlbinder * uenv =
+  let vs_ts, g = fresh_mlidents ts g in
+  List.map (fun (v, t) -> {mlbinder_name=v; mlbinder_ty=t; mlbinder_attrs=[]}) vs_ts,
+  g
+
 //instantiate_maybe_partial:
 //  When `e` has polymorphic type `s`
 //  and isn't instantiated in F* (e.g., because of first-class polymorphism)
@@ -492,7 +497,7 @@ let instantiate_maybe_partial (g:uenv) (e:mlexpr) (s:mltyscheme) (tyargs:list ml
           ts
           extra_tyargs
       in
-      let vs_ts, g = fresh_mlidents extra_tyargs g in
+      let vs_ts, g = fresh_binders extra_tyargs g in
       let f = with_ty t <| MLE_Fun (vs_ts, tapp) in
       (f, E_PURE, t)
     else failwith "Impossible: instantiate_maybe_partial called with too many arguments"
@@ -503,8 +508,8 @@ let eta_expand (g:uenv) (t : mlty) (e : mlexpr) : mlexpr =
     if ts = []
     then e
     else // just quit if this is not a function type
-      let vs_ts, g = fresh_mlidents ts g in
-      let vs_es = List.map (fun (v, t) -> with_ty t (MLE_Var v)) vs_ts in
+      let vs_ts, g = fresh_binders ts g in
+      let vs_es = List.map (fun {mlbinder_name=v; mlbinder_ty=t} -> with_ty t (MLE_Var v)) vs_ts in
       let body = with_ty r <| MLE_App (e, vs_es) in
       with_ty t <| MLE_Fun (vs_ts, body)
 
@@ -526,7 +531,7 @@ let default_value_for_ty (g:uenv) (t : mlty) : mlexpr  =
     in
     if ts = []
     then body r
-    else let vs_ts, g = fresh_mlidents ts g in
+    else let vs_ts, g = fresh_binders ts g in
          with_ty t <| MLE_Fun (vs_ts, body r)
 
 let maybe_eta_expand_coercion g expect e =
@@ -582,14 +587,15 @@ let apply_coercion pos (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
           then with_ty expect (mk_fun arg body)
           else let lb =
                     { mllb_meta = [];
-                      mllb_name = fst arg;
+                      mllb_attrs = [];
+                      mllb_name = arg.mlbinder_name;
                       mllb_tysc = Some ([], t0);
                       mllb_add_unit = false;
-                      mllb_def = with_ty t0 (MLE_Coerce(with_ty s0 <| MLE_Var (fst arg), s0, t0));
+                      mllb_def = with_ty t0 (MLE_Coerce(with_ty s0 <| MLE_Var arg.mlbinder_name, s0, t0));
                       print_typ=false }
                 in
                 let body = with_ty s1 <| MLE_Let((NonRec, [lb]), body) in
-                with_ty expect (mk_fun (fst arg, s0) body)
+                with_ty expect (mk_fun {mlbinder_name=arg.mlbinder_name;mlbinder_ty=s0;mlbinder_attrs=[]} body)
 
         | MLE_Let(lbs, body), _, _ ->
           with_ty expect <| (MLE_Let(lbs, aux body ty expect))
@@ -1161,7 +1167,7 @@ let maybe_eta_data_and_project_record (g:uenv) (qual : option fv_qual) (residual
           match e.expr with
           | MLE_CTor(head, args) ->
             let body = Util.resugar_exp <| (as_record qual <| (with_ty tres <| MLE_CTor(head, args@eargs))) in
-            with_ty e.mlty <| MLE_Fun(binders, body)
+            with_ty e.mlty <| MLE_Fun(List.map (fun (x,t) -> {mlbinder_name=x;mlbinder_ty=t;mlbinder_attrs=[]}) binders, body)
           | _ -> failwith "Impossible: Not a constructor"
     in
     match mlAppExpr.expr, qual with
@@ -1541,6 +1547,11 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
         | Tm_abs {bs;body;rc_opt=rcopt} (* the annotated computation type of the body *) ->
           let bs, body = SS.open_term bs body in
           let ml_bs, env = binders_as_ml_binders g bs in
+          let ml_bs = List.map2 (fun (x,t) b -> {
+            mlbinder_name=x;
+            mlbinder_ty=t;
+            mlbinder_attrs=List.map (fun attr -> let e, _, _ = term_as_mlexpr env attr in e) b.binder_attrs;
+          }) ml_bs bs in
           let body =
             match rcopt with
             | Some rc ->
@@ -1548,7 +1559,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
             | None -> debug g (fun () -> BU.print1 "No computation type for: %s\n" (Print.term_to_string body)); body in
           let ml_body, f, t = term_as_mlexpr env body in
           let f, tfun = List.fold_right
-            (fun (_, targ) (f, t) -> E_PURE, MLTY_Fun (targ, f, t))
+            (fun {mlbinder_ty=targ} (f, t) -> E_PURE, MLTY_Fun (targ, f, t))
             ml_bs (f, t) in
           with_ty tfun <| MLE_Fun(ml_bs, ml_body), f, tfun
 
@@ -1912,7 +1923,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                   | E_ERASABLE, MLTY_Erased -> [Erased]
                   | _ -> []
               in
-              f, {mllb_meta = meta; mllb_name=nm; mllb_tysc=Some polytype; mllb_add_unit=add_unit; mllb_def=e; print_typ=true}
+              f, {mllb_meta = meta; mllb_attrs = []; mllb_name=nm; mllb_tysc=Some polytype; mllb_add_unit=add_unit; mllb_def=e; print_typ=true}
           in
           let lbs = extract_lb_sig g (is_rec, lbs) in
 
@@ -2059,8 +2070,11 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1
     // polymorphic value to make sure that the type is not printed.
     let disc_ty = MLTY_Top in
     let discrBody =
+        let bs =
+          wildcards @ [(mlid, targ)]
+          |> List.map (fun (x,t) -> {mlbinder_name=x;mlbinder_ty=t;mlbinder_attrs=[]}) in
         with_ty disc_ty <|
-            MLE_Fun(wildcards @ [(mlid, targ)],
+            MLE_Fun(bs,
                     with_ty ml_bool_ty <|
                         (MLE_Match(with_ty targ <| MLE_Name([], mlid),
                                     // Note: it is legal in OCaml to write [Foo _] for a constructor with zero arguments, so don't bother.
@@ -2075,8 +2089,9 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1
     let _, name = mlpath_of_lident env discName in
     MLM_Let (NonRec,
             [{ mllb_meta=[];
+               mllb_attrs=[];
                mllb_name=name;
                mllb_tysc=None;
                mllb_add_unit=false;
                mllb_def=discrBody;
-               print_typ=false}] )
+               print_typ=false}] ) |> mk_mlmodule1
