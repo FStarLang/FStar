@@ -903,10 +903,11 @@ let (steel_translate_let : FStar_Extraction_Krml.translate_let_t) =
                    l::[]);
                 FStar_Extraction_ML_Syntax.mlty = uu___6;
                 FStar_Extraction_ML_Syntax.loc = uu___7;_};
+            FStar_Extraction_ML_Syntax.mllb_attrs = uu___8;
             FStar_Extraction_ML_Syntax.mllb_meta = meta;
-            FStar_Extraction_ML_Syntax.print_typ = uu___8;_} when
-            let uu___9 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-            uu___9 = "Steel.TLArray.create" ->
+            FStar_Extraction_ML_Syntax.print_typ = uu___9;_} when
+            let uu___10 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___10 = "Steel.TLArray.create" ->
             if
               FStar_Compiler_List.mem FStar_Extraction_ML_Syntax.NoExtract
                 meta
@@ -921,14 +922,14 @@ let (steel_translate_let : FStar_Extraction_Krml.translate_let_t) =
                let t1 = FStar_Extraction_Krml.translate_type env1 t in
                let name1 = ((env1.FStar_Extraction_Krml.module_name), name) in
                try
-                 (fun uu___10 ->
+                 (fun uu___11 ->
                     match () with
                     | () ->
                         let expr =
-                          let uu___11 = FStar_Extraction_Krml.list_elements l in
+                          let uu___12 = FStar_Extraction_Krml.list_elements l in
                           FStar_Compiler_List.map
                             (FStar_Extraction_Krml.translate_expr env1)
-                            uu___11 in
+                            uu___12 in
                         FStar_Pervasives_Native.Some
                           (FStar_Extraction_Krml.DGlobal
                              (meta1, name1,
@@ -937,19 +938,19 @@ let (steel_translate_let : FStar_Extraction_Krml.translate_let_t) =
                                   (FStar_Extraction_Krml.Eternal, expr)))))
                    ()
                with
-               | uu___10 ->
-                   ((let uu___12 =
-                       let uu___13 =
-                         let uu___14 =
+               | uu___11 ->
+                   ((let uu___13 =
+                       let uu___14 =
+                         let uu___15 =
                            FStar_Extraction_ML_Syntax.string_of_mlpath name1 in
-                         let uu___15 = FStar_Compiler_Util.print_exn uu___10 in
+                         let uu___16 = FStar_Compiler_Util.print_exn uu___11 in
                          FStar_Compiler_Util.format2
-                           "Error extracting %s to KaRaMeL (%s)\n" uu___14
-                           uu___15 in
+                           "Error extracting %s to KaRaMeL (%s)\n" uu___15
+                           uu___16 in
                        (FStar_Errors_Codes.Warning_DefinitionNotTranslated,
-                         uu___13) in
+                         uu___14) in
                      FStar_Errors.log_issue
-                       FStar_Compiler_Range_Type.dummyRange uu___12);
+                       FStar_Compiler_Range_Type.dummyRange uu___13);
                     FStar_Pervasives_Native.Some
                       (FStar_Extraction_Krml.DGlobal
                          (meta1, name1, (FStar_Compiler_List.length tvars),

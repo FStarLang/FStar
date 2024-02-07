@@ -224,8 +224,13 @@ enum Stmt {
     SExpr(Expr),
 }
 
+struct GenericTypeParam {
+    generic_type_param_name: String,
+    generic_type_param_trait_bounds: Vec<Vec<String>>,
+}
+
 enum GenericParam {
-    GenericTypeParam(String),
+    GenTypeParam(GenericTypeParam),
 }
 
 struct PatTyp {
@@ -238,6 +243,7 @@ enum FnArg {
 }
 
 struct FnSig {
+    fn_const: bool,
     fn_name: String,
     fn_generics: Vec<GenericParam>,
     fn_args: Vec<FnArg>,
@@ -580,9 +586,16 @@ impl_from_ocaml_variant! {
   }
 }
 
+impl_from_ocaml_record! {
+  GenericTypeParam {
+    generic_type_param_name : String,
+    generic_type_param_trait_bounds : OCamlList<OCamlList<String>>,
+  }
+}
+
 impl_from_ocaml_variant! {
   GenericParam {
-    GenericParam::GenericTypeParam (payload:String),
+    GenericParam::GenTypeParam (payload:GenericTypeParam),
   }
 }
 
@@ -601,6 +614,7 @@ impl_from_ocaml_variant! {
 
 impl_from_ocaml_record! {
   FnSig {
+    fn_const: bool,
     fn_name : String,
     fn_generics: OCamlList<GenericParam>,
     fn_args : OCamlList<FnArg>,
@@ -1376,48 +1390,62 @@ fn to_syn_fn_arg(a: &FnArg) -> syn::FnArg {
     })
 }
 
-fn generic_param_bounds() -> Punctuated<syn::TypeParamBound, syn::token::Plus> {
+fn generic_param_bounds(v: &Vec<Vec<String>>) -> Punctuated<syn::TypeParamBound, syn::token::Plus> {
     let mut bounds = Punctuated::new();
-    // ["Clone", "Copy", "PartialEq"].iter().for_each(|s| {
-    //     bounds.push(syn::TypeParamBound::Trait(syn::TraitBound {
-    //         paren_token: None,
-    //         modifier: syn::TraitBoundModifier::None,
-    //         lifetimes: None,
-    //         path: syn::Path {
-    //             leading_colon: None,
-    //             segments: {
-    //                 let mut segs = Punctuated::new();
-    //                 segs.push(syn::PathSegment {
-    //                     ident: Ident::new(s, Span::call_site()),
-    //                     arguments: syn::PathArguments::None,
-    //                 });
-    //                 segs
-    //             },
-    //         },
-    //     }));
-    // });
+    v.iter().for_each(|p| {
+        bounds.push(syn::TypeParamBound::Trait(syn::TraitBound {
+            paren_token: None,
+            modifier: syn::TraitBoundModifier::None,
+            lifetimes: None,
+            path: syn::Path {
+                leading_colon: None,
+                segments: {
+                    let mut segs = Punctuated::new();
+                    p.iter().for_each(|s| {
+                        segs.push(syn::PathSegment {
+                            ident: Ident::new(s, Span::call_site()),
+                            arguments: syn::PathArguments::None,
+                        })
+                    });
+                    segs
+                },
+            },
+        }));
+    });
     bounds
+}
+
+fn generic_params(generics: &Vec<GenericParam>) -> Punctuated<syn::GenericParam, Comma> {
+    let mut syn_generics: Punctuated<syn::GenericParam, Comma> = Punctuated::new();
+    generics.iter().for_each(|g| {
+        let GenericParam::GenTypeParam(g) = g;
+        let p = syn::GenericParam::Type(syn::TypeParam {
+            attrs: vec![],
+            ident: Ident::new(&g.generic_type_param_name, Span::call_site()),
+            colon_token: None,
+            bounds: generic_param_bounds(&g.generic_type_param_trait_bounds),
+            eq_token: None,
+            default: None,
+        });
+        syn_generics.push(p)
+    });
+    syn_generics
 }
 
 fn to_syn_fn_sig(s: &FnSig) -> Signature {
     let mut args: Punctuated<syn::FnArg, Comma> = Punctuated::new();
     s.fn_args.iter().for_each(|a| args.push(to_syn_fn_arg(a)));
 
-    let mut generics: Punctuated<syn::GenericParam, Comma> = Punctuated::new();
-    s.fn_generics.iter().for_each(|g| {
-        let GenericParam::GenericTypeParam(g) = g;
-        generics.push(syn::GenericParam::Type(syn::TypeParam {
-            attrs: vec![],
-            ident: Ident::new(g, Span::call_site()),
-            colon_token: None,
-            bounds: generic_param_bounds(),
-            eq_token: None,
-            default: None,
-        }))
-    });
+    let generics: Punctuated<syn::GenericParam, Comma> = generic_params(&s.fn_generics);
 
     Signature {
-        constness: None,
+        constness: if s.fn_const {
+            Some(syn::token::Const {
+                span: Span::call_site(),
+            })
+        } else {
+            None
+        },
         asyncness: None,
         unsafety: None,
         abi: None,
@@ -1528,18 +1556,8 @@ fn to_syn_item(i: &Item) -> Vec<syn::Item> {
             item_struct_generics,
             item_struct_fields,
         }) => {
-            let mut generics: Punctuated<syn::GenericParam, Comma> = Punctuated::new();
-            item_struct_generics.iter().for_each(|s| {
-                let GenericParam::GenericTypeParam(s) = s;
-                generics.push(syn::GenericParam::Type(syn::TypeParam {
-                    attrs: vec![],
-                    ident: Ident::new(s, Span::call_site()),
-                    colon_token: None,
-                    bounds: generic_param_bounds(),
-                    eq_token: None,
-                    default: None,
-                }))
-            });
+            let generics: Punctuated<syn::GenericParam, Comma> =
+                generic_params(&item_struct_generics);
             let mut fields: Punctuated<syn::Field, Comma> = Punctuated::new();
             item_struct_fields.iter().for_each(|ft| {
                 fields.push(syn::Field {
@@ -1595,18 +1613,8 @@ fn to_syn_item(i: &Item) -> Vec<syn::Item> {
             item_type_generics,
             item_type_typ,
         }) => {
-            let mut generics: Punctuated<syn::GenericParam, Comma> = Punctuated::new();
-            item_type_generics.iter().for_each(|s| {
-                let GenericParam::GenericTypeParam(s) = s;
-                generics.push(syn::GenericParam::Type(syn::TypeParam {
-                    attrs: vec![],
-                    ident: Ident::new(s, Span::call_site()),
-                    colon_token: None,
-                    bounds: generic_param_bounds(),
-                    eq_token: None,
-                    default: None,
-                }))
-            });
+            let generics: Punctuated<syn::GenericParam, Comma> =
+                generic_params(&item_type_generics);
             let item = syn::Item::Type(syn::ItemType {
                 attrs: vec![],
                 vis: syn::Visibility::Public({
@@ -1643,18 +1651,8 @@ fn to_syn_item(i: &Item) -> Vec<syn::Item> {
             item_enum_generics,
             item_enum_variants,
         }) => {
-            let mut generics: Punctuated<syn::GenericParam, Comma> = Punctuated::new();
-            item_enum_generics.iter().for_each(|s| {
-                let GenericParam::GenericTypeParam(s) = s;
-                generics.push(syn::GenericParam::Type(syn::TypeParam {
-                    attrs: vec![],
-                    ident: Ident::new(s, Span::call_site()),
-                    colon_token: None,
-                    bounds: generic_param_bounds(),
-                    eq_token: None,
-                    default: None,
-                }))
-            });
+            let generics: Punctuated<syn::GenericParam, Comma> =
+                generic_params(&item_enum_generics);
             let mut variants: Punctuated<syn::Variant, Comma> = Punctuated::new();
             item_enum_variants.iter().for_each(|v| {
                 let mut fields: Punctuated<syn::Field, Comma> = Punctuated::new();
@@ -2346,656 +2344,3 @@ pub fn mk_l1_context_t(
 pub fn mk_context_t_l1(l1_context: l1_context_t) -> context_t {
     context_t::L1_context(l1_context)
 }
-
-// pub fn test(mut m: std::sync::Mutex<u32>) {
-//     let r: &mut u32 = &mut m.lock().unwrap();
-// }
-
-// pub enum cell<KT, VT> {
-//     Clean,
-//     Zombie,
-//     Used(KT, VT),
-// }
-// use crate::cell::*;
-// pub type pos_us = usize;
-// pub struct ht_t<KEYT, VALT> {
-//     sz: pos_us,
-//     hashf: fn(KEYT) -> usize,
-//     contents: std::vec::Vec<cell<KEYT, VALT>>,
-// }
-// pub fn mk_used_cell<A, B>(k: A, v: B) -> cell<A, B> {
-//     cell::Used(k, v)
-// }
-// pub fn mk_ht<K, V>(
-//     sz: pos_us,
-//     hashf: fn(K) -> usize,
-//     contents: std::vec::Vec<cell<K, V>>,
-// ) -> ht_t<K, V> {
-//     ht_t {
-//         sz: sz,
-//         hashf: hashf,
-//         contents: contents,
-//     }
-// }
-// pub fn alloc<K, V>(hashf: fn(K) -> usize, l: pos_us) -> ht_t<K, V> {
-//     let mut contents = Vec::new();
-//     let ht = mk_ht(l, hashf, contents);
-//     ht
-// }
-// pub fn sz_add(x: usize, y: usize) -> std::option::Option<usize> {
-//     match x <= 0xffff {
-//         true => match y <= 0xffff - x {
-//             true => Some(x + y),
-//             _ => None,
-//         },
-//         _ => None,
-//     }
-// }
-// pub fn size_t_mod(x: usize, y: usize) -> usize {
-//     x % y
-// }
-// pub fn replace<KT: PartialEq + Copy, VT>(
-//     pht: (),
-//     ht: ht_t<KT, VT>,
-//     idx: usize,
-//     k: KT,
-//     v: VT,
-//     uu___: (),
-// ) -> (ht_t<KT, VT>, VT) {
-//     let hashf = ht.hashf;
-//     let mut contents = ht.contents;
-//     let v_ = std::mem::replace(&mut contents[idx], mk_used_cell(k, v));
-//     let vcontents = contents;
-//     let ht1 = ht_t {
-//         sz: ht.sz,
-//         hashf: hashf,
-//         contents: vcontents,
-//     };
-//     let _bind_c = match v_ {
-//         Used(k_, v_1) => {
-//             let res = (ht1, v_1);
-//             panic!()
-//         }
-//         _ => panic!(),
-//     };
-//     let contents1 = _bind_c;
-//     contents1
-// }
-// pub fn lookup<KT: PartialEq + Copy, VT>(
-//     pht: (),
-//     ht: ht_t<KT, VT>,
-//     k: KT,
-// ) -> (ht_t<KT, VT>, bool, std::option::Option<usize>) {
-//     let hashf = ht.hashf;
-//     let mut contents = ht.contents;
-//     let cidx = size_t_mod(hashf(k), ht.sz);
-//     let mut off = 0;
-//     let mut cont = true;
-//     let mut err = false;
-//     let mut ret = None;
-//     while {
-//         let voff = off;
-//         let vcont = cont;
-//         let verr = err;
-//         voff <= ht.sz && vcont == true && verr == false
-//     } {
-//         let voff = off;
-//         if voff == ht.sz {
-//             cont = false;
-//         } else {
-//             let opt_sum = sz_add(cidx, voff);
-//             match opt_sum {
-//                 Some(sum) => {
-//                     let idx = size_t_mod(sum, ht.sz);
-//                     let c = std::mem::replace(&mut contents[idx], cell::Zombie);
-//                     match c {
-//                         Used(k_, v_) => {
-//                             if k_ == k {
-//                                 cont = false;
-//                                 ret = Some(idx);
-//                                 let uu___2 =
-//                                     std::mem::replace(&mut contents[idx], cell::Used(k_, v_));
-//                             } else {
-//                                 off = voff + 1;
-//                                 let uu___1 =
-//                                     std::mem::replace(&mut contents[idx], cell::Used(k_, v_));
-//                             }
-//                         }
-//                         Clean => {
-//                             cont = false;
-//                             let uu___1 = std::mem::replace(&mut contents[idx], c);
-//                         }
-//                         Zombie => {
-//                             off = voff + 1;
-//                             let uu___1 = std::mem::replace(&mut contents[idx], c);
-//                         }
-//                     }
-//                 }
-//                 None => err = true,
-//             }
-//         };
-//     }
-//     let verr = err;
-//     let o = ret;
-//     let vcontents = contents;
-//     let ht1 = mk_ht(ht.sz, ht.hashf, vcontents);
-//     let _bind_c = if verr {
-//         let res = (ht1, false, o);
-//         panic!()
-//     } else {
-//         let res = (ht1, true, o);
-//         panic!()
-//     };
-//     let ret1 = _bind_c;
-//     let err1 = ret1;
-//     let cont1 = err1;
-//     let off1 = cont1;
-//     let contents1 = off1;
-//     contents1
-// }
-// pub fn insert<KT: PartialEq + Copy, VT>(
-//     ht: ht_t<KT, VT>,
-//     k: KT,
-//     v: VT,
-//     pht: (),
-// ) -> (ht_t<KT, VT>, bool) {
-//     let hashf = ht.hashf;
-//     let mut contents = ht.contents;
-//     let cidx = size_t_mod(hashf(k), ht.sz);
-//     let mut off = 0;
-//     let mut cont = true;
-//     let mut err = false;
-//     let mut idx = 0;
-//     while {
-//         let vcont = cont;
-//         let verr = err;
-//         vcont == true && verr == false
-//     } {
-//         let voff = off;
-//         if voff == ht.sz {
-//             cont = false;
-//         } else {
-//             let opt_sum = sz_add(cidx, voff);
-//             match opt_sum {
-//                 Some(sum) => {
-//                     let vidx = size_t_mod(sum, ht.sz);
-//                     let c = std::mem::replace(&mut contents[vidx], cell::Zombie);
-//                     match c {
-//                         Used(k_, v_) => {
-//                             if k_ == k {
-//                                 contents[vidx] = cell::Used(k_, v_);
-//                                 cont = false;
-//                                 idx = vidx;
-//                             } else {
-//                                 contents[vidx] = cell::Used(k_, v_);
-//                                 off = voff + 1
-//                             }
-//                         }
-//                         Clean => {
-//                             contents[vidx] = cell::Clean;
-//                             cont = false;
-//                             idx = vidx;
-//                         }
-//                         Zombie => {
-//                             let vcontents = contents;
-//                             let ht1 = ht_t {
-//                                 sz: ht.sz,
-//                                 hashf: hashf,
-//                                 contents: vcontents,
-//                             };
-//                             let res = lookup((), ht1, k);
-//                             contents = res.0.contents;
-//                             if res.1 {
-//                                 let o = res.2;
-//                                 match o {
-//                                     Some(p) => {
-//                                         contents[p] = cell::Zombie;
-//                                         cont = false;
-//                                         idx = vidx;
-//                                     }
-//                                     None => {
-//                                         cont = false;
-//                                         idx = vidx;
-//                                     }
-//                                 }
-//                             } else {
-//                                 err = true
-//                             }
-//                         }
-//                     }
-//                 }
-//                 None => err = true,
-//             }
-//         };
-//     }
-//     let vcont = cont;
-//     let verr = err;
-//     let vidx = idx;
-//     let _bind_c = if vcont == false && verr == false {
-//         contents[vidx] = mk_used_cell(k, v);
-//         let vcontents = contents;
-//         let ht1 = mk_ht(ht.sz, hashf, vcontents);
-//         let res = (ht1, true);
-//         panic!()
-//     } else {
-//         let vcontents = contents;
-//         let ht1 = mk_ht(ht.sz, hashf, vcontents);
-//         let res = (ht1, false);
-//         panic!()
-//     };
-//     let idx1 = _bind_c;
-//     let err1 = idx1;
-//     let cont1 = err1;
-//     let off1 = cont1;
-//     let contents1 = off1;
-//     contents1
-// }
-// pub fn is_used<K: PartialEq + Copy, V>(c: cell<K, V>) -> (bool, cell<K, V>) {
-//     match c {
-//         Used(_, _) => (true, c),
-//         _ => (false, c),
-//     }
-// }
-// pub fn not_full<KT: PartialEq + Copy, VT>(ht: ht_t<KT, VT>, pht: ()) -> (ht_t<KT, VT>, bool) {
-//     let hashf = ht.hashf;
-//     let mut contents = ht.contents;
-//     let mut i = 0;
-//     while {
-//         let vi = i;
-//         if vi < ht.sz {
-//             let c = std::mem::replace(&mut contents[vi], cell::Zombie);
-//             let b = is_used(c);
-//             let uu___ = std::mem::replace(&mut contents[vi], b.1);
-//             b.0
-//         } else {
-//             false
-//         }
-//     } {
-//         let vi = i;
-//         i = vi + 1;
-//     }
-//     let vi = i;
-//     let res = vi < ht.sz;
-//     let vcontents = contents;
-//     let ht1 = mk_ht(ht.sz, hashf, vcontents);
-//     let b = (ht1, res);
-//     let _bind_c = panic!();
-//     let i1 = _bind_c;
-//     let contents1 = i1;
-//     contents1
-// }
-// pub type ctxt_hndl_t = u32;
-// pub type sid_t = u32;
-// pub struct session_state__Available__payload {
-//     handle: ctxt_hndl_t,
-//     context: context_t,
-// }
-// pub enum session_state {
-//     SessionStart,
-//     Available(session_state__Available__payload),
-//     InUse,
-//     SessionClosed,
-//     SessionError,
-// }
-// use crate::session_state::*;
-// pub fn mk_available(hndl: ctxt_hndl_t, ctxt: context_t) -> session_state {
-//     session_state::Available(session_state__Available__payload {
-//         handle: hndl,
-//         context: ctxt,
-//     })
-// }
-// pub fn mk_available_payload(
-//     handle: ctxt_hndl_t,
-//     context: context_t,
-// ) -> session_state__Available__payload {
-//     session_state__Available__payload {
-//         handle: handle,
-//         context: context,
-//     }
-// }
-// pub fn intro_session_state_perm_available(
-//     ctxt: context_t,
-//     hndl: ctxt_hndl_t,
-//     __repr: (),
-// ) -> session_state {
-//     session_state::Available(mk_available_payload(hndl, ctxt))
-// }
-// pub struct global_state_t {
-//     session_id_counter: sid_t,
-//     session_table: ht_t<sid_t, session_state>,
-// }
-// pub fn sid_hash(uu___: sid_t) -> usize {
-//     panic!()
-// }
-// pub const fn initialize_global_state(
-//     uu___: (),
-// ) -> std::sync::Mutex<std::option::Option<global_state_t>> {
-//     let res = None;
-//     std::sync::Mutex::new(res)
-// }
-// pub static global_state: std::sync::Mutex<std::option::Option<global_state_t>> =
-//     initialize_global_state(());
-// pub fn mk_global_state(uu___: ()) -> global_state_t {
-//     let session_table = alloc(sid_hash, 256);
-//     let st = global_state_t {
-//         session_id_counter: 0,
-//         session_table: session_table,
-//     };
-//     st
-// }
-// pub fn alloc_global_state(r: &mut std::option::Option<global_state_t>) -> () {
-//     let st = mk_global_state(());
-//     *r = Some(st)
-// }
-// pub fn insert_dpe<KT: PartialEq + Copy, VT>(
-//     ht: ht_t<KT, VT>,
-//     k: KT,
-//     v: VT,
-//     pht: (),
-// ) -> (ht_t<KT, VT>, bool) {
-//     let b = not_full(ht, ());
-//     if b.1 {
-//         insert(b.0, k, v, ())
-//     } else {
-//         let res = (b.0, false);
-//         res
-//     }
-// }
-// pub fn safe_add(i: u32, j: u32) -> std::option::Option<u32> {
-//     panic!()
-// }
-// pub fn open_session_aux(st: global_state_t) -> (global_state_t, std::option::Option<sid_t>) {
-//     let ctr = st.session_id_counter;
-//     let tbl = st.session_table;
-//     let opt_inc = safe_add(ctr, 1);
-//     match opt_inc {
-//         None => {
-//             let st1 = global_state_t {
-//                 session_id_counter: ctr,
-//                 session_table: tbl,
-//             };
-//             let res = (st1, None);
-//             res
-//         }
-//         Some(next_sid) => {
-//             let res = insert_dpe(tbl, next_sid, session_state::SessionStart, ());
-//             if res.1 {
-//                 let st1 = global_state_t {
-//                     session_id_counter: next_sid,
-//                     session_table: res.0,
-//                 };
-//                 panic!()
-//             } else {
-//                 let st1 = global_state_t {
-//                     session_id_counter: ctr,
-//                     session_table: res.0,
-//                 };
-//                 let res1 = (st1, None);
-//                 res1
-//             }
-//         }
-//     }
-// }
-// pub fn open_session(uu___: ()) -> std::option::Option<sid_t> {
-//     let r: &mut std::option::Option<global_state_t> = &mut global_state.lock().unwrap();
-//     let st_opt = std::mem::replace(r, None);
-//     match st_opt {
-//         None => {
-//             let st = mk_global_state(());
-//             let res = open_session_aux(st);
-//             *r = Some(res.0);
-//             res.1
-//         }
-//         Some(st) => {
-//             let res = open_session_aux(st);
-//             *r = Some(res.0);
-//             res.1
-//         }
-//     }
-// }
-
-// pub fn destroy_ctxt(ctxt: context_t, repr: ()) -> () {
-//     match ctxt {
-//         Engine_context(c) => drop(c.uds),
-//         L0_context(c) => drop(c.cdi),
-//         L1_context(c) => {
-//             drop(c.deviceID_priv);
-//             drop(c.deviceID_pub);
-//             drop(c.aliasKey_priv);
-//             drop(c.aliasKey_pub);
-//             drop(c.aliasKeyCRT);
-//             drop(c.deviceIDCSR)
-//         }
-//     }
-// }
-// pub fn return_none<A>(p: ()) -> std::option::Option<A> {
-//     None
-// }
-// pub fn dflt<A>(x: std::option::Option<A>, y: A) -> A {
-//     match x {
-//         Some(v) => v,
-//         _ => y,
-//     }
-// }
-// pub fn take_session_state(
-//     sid: sid_t,
-//     replace_with: session_state,
-// ) -> std::option::Option<session_state> {
-//     let r: &mut std::option::Option<global_state_t> = &mut global_state.lock().unwrap();
-//     let st_opt = std::mem::replace(r, None);
-//     match st_opt {
-//         None => None,
-//         Some(st) => {
-//             let ctr = st.session_id_counter;
-//             let tbl = st.session_table;
-//             if sid < ctr {
-//                 let ss = lookup((), tbl, sid);
-//                 if ss.1 {
-//                     match ss.2 {
-//                         Some(idx) => {
-//                             let ok = replace((), ss.0, idx, sid, replace_with, ());
-//                             let st1 = global_state_t {
-//                                 session_id_counter: ctr,
-//                                 session_table: ok.0,
-//                             };
-//                             *r = Some(st1);
-//                             panic!()
-//                         }
-//                         None => {
-//                             let st1 = global_state_t {
-//                                 session_id_counter: ctr,
-//                                 session_table: ss.0,
-//                             };
-//                             *r = Some(st1);
-//                             None
-//                         }
-//                     }
-//                 } else {
-//                     let st1 = global_state_t {
-//                         session_id_counter: ctr,
-//                         session_table: ss.0,
-//                     };
-//                     *r = Some(st1);
-//                     None
-//                 }
-//             } else {
-//                 let st1 = global_state_t {
-//                     session_id_counter: ctr,
-//                     session_table: tbl,
-//                 };
-//                 *r = Some(st1);
-//                 None
-//             }
-//         }
-//     }
-// }
-// pub fn destroy_session_state(st: session_state) -> () {
-//     match st {
-//         Available(st1) => destroy_ctxt(st1.context, ()),
-//         _ => (),
-//     }
-// }
-// pub fn init_engine_ctxt(uds: &mut [u8], p: (), uds_bytes: ()) -> context_t {
-//     let mut uds_buf = vec![0; uds_len];
-//     memcpy(uds_len, uds, &mut uds_buf, (), (), ());
-//     let engine_context = mk_engine_context_t(uds_buf);
-//     let ctxt = mk_context_t_engine(engine_context);
-//     ctxt
-// }
-// pub fn init_l0_ctxt(cdi: &mut [u8], engine_repr: (), s: (), uds_bytes: (), uu___: ()) -> context_t {
-//     let mut cdi_buf = vec![0; dice_digest_len];
-//     memcpy(dice_digest_len, cdi, &mut cdi_buf, (), (), ());
-//     let l0_context = mk_l0_context_t(cdi_buf);
-//     let ctxt = mk_context_t_l0(l0_context);
-//     ctxt
-// }
-// pub fn init_l1_ctxt(
-//     deviceIDCSR_len: usize,
-//     aliasKeyCRT_len: usize,
-//     deviceID_priv: &mut [u8],
-//     deviceID_pub: &mut [u8],
-//     aliasKey_priv: &mut [u8],
-//     aliasKey_pub: &mut [u8],
-//     deviceIDCSR: &mut [u8],
-//     aliasKeyCRT: &mut [u8],
-//     deviceID_label_len: (),
-//     aliasKey_label_len: (),
-//     cdi: (),
-//     repr: (),
-//     deviceIDCSR_ingredients: (),
-//     aliasKeyCRT_ingredients: (),
-//     deviceID_priv0: (),
-//     deviceID_pub0: (),
-//     aliasKey_priv0: (),
-//     aliasKey_pub0: (),
-//     deviceIDCSR0: (),
-//     aliasKeyCRT0: (),
-// ) -> context_t {
-//     let mut deviceID_pub_buf = vec![0; v32us];
-//     let mut deviceID_priv_buf = vec![0; v32us];
-//     let mut aliasKey_priv_buf = vec![0; v32us];
-//     let mut aliasKey_pub_buf = vec![0; v32us];
-//     let mut deviceIDCSR_buf = vec![0; deviceIDCSR_len];
-//     let mut aliasKeyCRT_buf = vec![0; aliasKeyCRT_len];
-//     memcpy(v32us, deviceID_priv, &mut deviceID_priv_buf, (), (), ());
-//     memcpy(v32us, deviceID_pub, &mut deviceID_pub_buf, (), (), ());
-//     memcpy(v32us, aliasKey_priv, &mut aliasKey_priv_buf, (), (), ());
-//     memcpy(v32us, aliasKey_pub, &mut aliasKey_pub_buf, (), (), ());
-//     memcpy(
-//         deviceIDCSR_len,
-//         deviceIDCSR,
-//         &mut deviceIDCSR_buf,
-//         (),
-//         (),
-//         (),
-//     );
-//     memcpy(
-//         aliasKeyCRT_len,
-//         aliasKeyCRT,
-//         &mut aliasKeyCRT_buf,
-//         (),
-//         (),
-//         (),
-//     );
-//     let l1_context = mk_l1_context_t(
-//         deviceID_priv_buf,
-//         deviceID_pub_buf,
-//         aliasKey_priv_buf,
-//         aliasKey_pub_buf,
-//         aliasKeyCRT_buf,
-//         deviceIDCSR_buf,
-//     );
-//     let ctxt = mk_context_t_l1(l1_context);
-//     ctxt
-// }
-// pub fn prng(uu___: ()) -> u32 {
-//     panic!()
-// }
-// pub fn initialize_context(
-//     p: (),
-//     uds_bytes: (),
-//     sid: sid_t,
-//     uds: &mut [u8],
-// ) -> std::option::Option<ctxt_hndl_t> {
-//     let st = take_session_state(sid, session_state::InUse);
-//     match st {
-//         None => None,
-//         Some(st1) => match st1 {
-//             SessionStart => {
-//                 let ctxt = init_engine_ctxt(uds, (), ());
-//                 let ctxt_hndl = prng(());
-//                 let st_ = intro_session_state_perm_available(ctxt, ctxt_hndl, ());
-//                 let st__ = take_session_state(sid, st_);
-//                 Some(ctxt_hndl)
-//             }
-//             _ => {
-//                 destroy_session_state(st1);
-//                 let st_ = take_session_state(sid, session_state::SessionError);
-//                 None
-//             }
-//         },
-//     }
-// }
-
-// pub fn rotate_context_handle(
-//     sid: sid_t,
-//     ctxt_hndl: ctxt_hndl_t,
-// ) -> std::option::Option<ctxt_hndl_t> {
-//     let st = take_session_state(sid, session_state::InUse);
-//     match st {
-//         None => None,
-//         Some(st1) => match st1 {
-//             InUse => None,
-//             Available(st11) => {
-//                 let new_ctxt_hndl = prng(());
-//                 let st_ = intro_session_state_perm_available(st11.context, new_ctxt_hndl, ());
-//                 let st__ = take_session_state(sid, st_);
-//                 Some(new_ctxt_hndl)
-//             }
-//             _ => panic!(),
-//         },
-//     }
-// }
-// type record_t = u32;
-// pub fn derive_child_from_context(
-//     context: context_t,
-//     record: record_t,
-//     p: (),
-//     record_repr: (),
-//     context_repr: (),
-// ) -> (context_t, std::option::Option<context_t>) {
-//     panic!()
-// }
-// pub fn derive_child(
-//     sid: sid_t,
-//     ctxt_hndl: ctxt_hndl_t,
-//     record: record_t,
-//     repr: (),
-//     p: (),
-// ) -> std::option::Option<ctxt_hndl_t> {
-//     let st = take_session_state(sid, session_state::InUse);
-//     match st {
-//         None => None,
-//         Some(st1) => match st1 {
-//             InUse => None,
-//             Available(st11) => {
-//                 let next_ctxt = derive_child_from_context(st11.context, record, (), (), ());
-//                 destroy_ctxt(next_ctxt.0, ());
-//                 match next_ctxt.1 {
-//                     None => {
-//                         let st_ = take_session_state(sid, session_state::SessionError);
-//                         None
-//                     }
-//                     Some(next_ctxt1) => {
-//                         let next_ctxt_hndl = prng(());
-//                         let st_ =
-//                             intro_session_state_perm_available(next_ctxt1, next_ctxt_hndl, ());
-//                         let st__ = take_session_state(sid, st_);
-//                         Some(next_ctxt_hndl)
-//                     }
-//                 }
-//             }
-//             _ => panic!(),
-//         },
-//     }
-// }

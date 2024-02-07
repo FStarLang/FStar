@@ -24,6 +24,8 @@ val pledge (is:invlist) (f:vprop) (v:vprop) : vprop
 (* A ghost step to rewrite the context, running under invlist is. *)
 let ustep (is:invlist) (p q : vprop)
   = unit -> stt_ghost unit (invlist_v is ** p) (fun _ -> invlist_v is ** q)
+let ustep0 (p q : vprop)
+  = unit -> stt_ghost unit p (fun _ -> q)
 
 unfold
 let pledge0 (f:vprop) (v:vprop) : vprop =
@@ -60,6 +62,24 @@ val bind_pledge' (#is:invlist) (#f:vprop) (#v1:vprop) (#v2:vprop)
         (k : ustep is (extra ** v1) (pledge is f v2))
   : stt_ghost unit (pledge is f v1 ** extra) (fun () -> pledge is f v2)
 
+val rewrite_pledge_full (#is:invlist) (#f:vprop) (v1 : vprop) (v2 : vprop)
+  (k : ustep is (f ** v1) (f ** v2))
+  : stt_ghost unit
+              (pledge is f v1)
+              (fun _ -> pledge is f v2)
+
+val rewrite_pledge (#is:invlist) (#f:vprop) (v1 : vprop) (v2 : vprop)
+  (k : ustep is v1 v2)
+  : stt_ghost unit
+              (pledge is f v1)
+              (fun _ -> pledge is f v2)
+
+val rewrite_pledge0 (#is:invlist) (#f:vprop) (v1 : vprop) (v2 : vprop)
+  (k : ustep0 v1 v2)
+  : stt_ghost unit
+              (pledge is f v1)
+              (fun _ -> pledge is f v2)
+
 val join_pledge (#is:invlist) (#f:vprop) (v1:vprop) (v2:vprop)
   : stt_ghost unit          
               (pledge is f v1 ** pledge is f v2)
@@ -68,17 +88,19 @@ val join_pledge (#is:invlist) (#f:vprop) (v1:vprop) (v2:vprop)
 val squash_pledge (is:invlist) (f:vprop) (v1:vprop)
   : stt_ghost unit (pledge is f (pledge is f v1)) (fun () -> pledge is f v1)
 
+(* Heterogenous variant. Takes the result invlist as an arg since we don't have
+a join defined yet. *)
+val squash_pledge' (is1 is2 is : invlist) (f:vprop) (v1:vprop)
+  : stt_ghost unit
+       (pure (invlist_sub is1 is) **
+        pure (invlist_sub is2 is) **
+        pledge is1 f (pledge is2 f v1))
+       (fun () -> pledge is f v1)
+
 // NB: This must be an unobservable step, and not ghost,
 // as it allocates an invariant.
 val split_pledge (#is:invlist) (#f:vprop) (v1:vprop) (v2:vprop)
-  : stt_atomic (pi:(p:vprop & inv p){not (mem_inv (invlist_names is) (dsnd pi))})
+  : stt_atomic (pi:invlist_elem{not (mem_inv (invlist_names is) (dsnd pi))})
               #Unobservable emp_inames             
               (pledge is f (v1 ** v2))
-              (fun pi -> pledge (pi :: is) f v1 ** pledge (pi :: is) f v2)
-
-// TODO: write a variant that assumes f too
-val rewrite_pledge (#is:invlist) (#f:vprop) (v1 : vprop) (v2 : vprop)
-  (k : ustep is v1 v2)
-  : stt_ghost unit             
-              (pledge is f v1)
-              (fun _ -> pledge is f v2)
+              (fun pi -> pledge (add_one pi is) f v1 ** pledge (add_one pi is) f v2)

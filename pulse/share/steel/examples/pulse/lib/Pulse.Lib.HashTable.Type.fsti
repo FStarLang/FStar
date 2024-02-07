@@ -25,7 +25,7 @@ open Pulse.Lib.HashTable.Spec
 
 type pos_us = n:SZ.t{SZ.v n > 0}
 
-[@@ no_auto_projectors]
+[@@ no_auto_projectors; Rust_generics_bounds [["Copy"; "PartialEq"]] ]
 noeq
 type ht_t (keyt:eqtype) (valt:Type) = {
   sz : pos_us;

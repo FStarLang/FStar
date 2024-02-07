@@ -46,7 +46,7 @@ let name = ppname & nat
 let topenv_of_env (g:env) = E.fstar_env g.coreenv
 let tcenv_of_env (g:env) = Pulse.Typing.elab_env g.coreenv
 let uenv_of_env (g:env) = set_tcenv g.uenv_inner (tcenv_of_env g)
-  
+
 let debug (g:env) (f: unit -> T.Tac string)
   : T.Tac unit
   = if RU.debug_at_level (E.fstar_env g.coreenv) "pulse_extraction"
@@ -790,12 +790,15 @@ let extract_recursive_knot (g:env) (p:st_term)
     debug_ g (fun _ -> Printf.sprintf "Extracted term (%s): %s\n" fv_name (mlexpr_to_string tm));
     let mllb = mk_mllb fv_name (tys, mlty) tm in
     Inl [mlm_let true [mllb]]
-  
 
-let extract_pulse (g:uenv) (selt:R.sigelt) (p:st_term)
+let extract_attrs (g:uenv) (se:R.sigelt) : T.Tac (list mlexpr) =
+  se |> RU.get_attributes
+     |> T.map (fun t -> let mlattr, _, _ = ECL.term_as_mlexpr g t in mlattr)
+
+let extract_pulse (uenv:uenv) (selt:R.sigelt) (p:st_term)
   : T.Tac (either mlmodule string) =
   
-  let g = { uenv_inner=g; coreenv=initial_core_env g } in
+  let g = { uenv_inner=uenv; coreenv=initial_core_env uenv } in
   // T.print (Printf.sprintf "About to extract:\n%s\n" (st_term_to_string p));
   debug g (fun _ -> Printf.sprintf "About to extract:\n%s\n" (st_term_to_string p));
   let open T in
@@ -821,8 +824,9 @@ let extract_pulse (g:uenv) (selt:R.sigelt) (p:st_term)
           let tm, tag = extract g p in
           let fv_name = FStar.List.Tot.last fv_name in
           debug_ g (fun _ -> Printf.sprintf "Extracted term (%s): %s\n" fv_name (mlexpr_to_string tm));
-          let mllb = mk_mllb fv_name (tys, mlty) tm in
-          Inl [mlm_let false [mllb]]
+          let attrs = extract_attrs uenv selt in
+          let mllb = mk_mllb_with_attrs fv_name (tys, mlty) tm attrs in
+          Inl [mlm_let_with_attrs false [mllb] attrs]
       )
     )
     | _ -> T.raise (Extraction_failure "Unexpected sigelt")

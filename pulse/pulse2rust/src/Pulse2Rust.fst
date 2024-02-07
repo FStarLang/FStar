@@ -26,6 +26,7 @@ open Pulse2Rust.Rust.Syntax
 open RustBindings
 
 module S = FStar.Extraction.ML.Syntax
+module EUtil = FStar.Extraction.ML.Util
 
 module UEnv = FStar.Extraction.ML.UEnv
 
@@ -224,8 +225,9 @@ let push_fn_arg (g:env) (arg_name:string) (arg:fn_arg) : env =
 //
 let extract_top_level_sig
   (g:env)
+  (fn_const:bool)
   (fn_name:string)
-  (tvars:S.mlidents)
+  (generic_type_params:list generic_type_param)
   (arg_names:list string)
   (arg_ts:list S.mlty)
   (ret_t:option S.mlty)
@@ -235,7 +237,12 @@ let extract_top_level_sig
   let fn_args =
     List.map2 (extract_top_level_fn_arg g) (List.map varname arg_names) arg_ts in
   let fn_ret_t = extract_mltyopt g ret_t in
-  mk_fn_signature fn_name (List.map tyvar_of tvars) fn_args fn_ret_t,
+  mk_fn_signature
+    fn_const
+    fn_name
+    generic_type_params
+    fn_args
+    fn_ret_t,
   fold_left (fun g (arg_name, arg) -> push_fn_arg g arg_name arg) g (zip arg_names fn_args)
 
 //
@@ -684,6 +691,54 @@ and extract_mlbranch_to_arm (g:env) ((pat, pat_guard, body):S.mlbranch) : arm =
     let arm_body = extract_mlexpr g body in
     mk_arm pat arm_body
 
+let has_rust_const_fn_attribute (lb:S.mllb) : bool =
+  List.existsb (fun attr ->
+    match attr.S.expr with
+    | S.MLE_CTor (p, _)
+      when S.string_of_mlpath p = "Pulse.Lib.Pervasives.Rust_const_fn" -> true
+    | _ -> false
+  ) lb.mllb_attrs
+
+let extract_generic_type_param_trait_bounds_aux (attrs:list S.mlexpr) : list (list (list string)) =
+  let open S in
+  attrs
+  |> List.tryFind (fun attr ->
+       match attr.expr with
+       | MLE_CTor (p, _)
+         when string_of_mlpath p = "Pulse.Lib.Pervasives.Rust_generics_bounds" -> true
+       | _ -> false)
+  |> map_option (fun attr ->
+       let MLE_CTor (p, args) = attr.expr in
+       let Some l = EUtil.list_elements (List.hd args) in
+       l |> List.map (fun tyvar_bounds ->
+              let Some l = EUtil.list_elements tyvar_bounds in
+              l |> List.map (fun e ->
+                     match e.expr with
+                     | MLE_Const (MLC_String s) -> s
+                     | _ -> failwith "unexpected generic type param bounds")
+                |> List.map (fun bound -> FStar.Compiler.Util.split bound "::")))
+  |> dflt []
+
+let expand_list_with (#a:Type) (l:list a) (n:nat) (x:a) : list a =
+  let rec nlist (n:nat) (x:a) : list a =
+    if n = 0 then [] else x::(nlist (n - 1) x) in
+  if n <= List.length l
+  then l
+  else l @ (nlist (n - List.length l) x)
+
+let extract_generic_type_param_trait_bounds (n:nat) (attrs:list S.mlattribute)
+  : list (list (list string)) =
+
+  let l = extract_generic_type_param_trait_bounds_aux attrs in
+  expand_list_with l n []
+
+let extract_generic_type_params (tyvars:list S.mlident) (attrs:list S.mlattribute)
+  : list generic_type_param =
+
+  attrs
+  |> extract_generic_type_param_trait_bounds (List.length tyvars)
+  |> List.map2 (fun tvar bounds -> mk_generic_type_param (tyvar_of tvar) bounds) tyvars  
+
 let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : item & env =
   let is_rec, lbs = lbs in
   if is_rec = S.Rec
@@ -693,17 +748,25 @@ let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : item & env =
     
     match lb.mllb_def.expr with
     | S.MLE_Fun (bs, body) ->
-      let arg_names = List.map fst bs in
+      let arg_names = List.map (fun b -> b.S.mlbinder_name) bs in
       let tvars, arg_ts, ret_t =
         match lb.mllb_tysc with
         | Some tsc ->
           let tvars, arg_ts, ret_t = arg_ts_and_ret_t tsc in
           tvars, arg_ts, Some ret_t
         | None ->
-          [], List.map snd bs, None in
-      
+          [], List.map (fun b -> b.S.mlbinder_ty) bs, None in
+
+      let fn_const = has_rust_const_fn_attribute lb in
       let fn_sig, g_body =
-        extract_top_level_sig g lb.mllb_name tvars arg_names arg_ts ret_t in
+        extract_top_level_sig 
+          g
+          fn_const
+          lb.mllb_name
+          (extract_generic_type_params tvars lb.mllb_attrs)
+          arg_names
+          arg_ts
+          ret_t in
       let fn_body = extract_mlexpr_to_stmts g_body body in
 
       Item_fn (mk_fn fn_sig fn_body),
@@ -751,29 +814,32 @@ let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : item & env =
   //   push_fv g lb.mllb_name fn_sig
   // end
 
-let extract_struct_defn (g:env) (d:S.one_mltydecl) : item & env =
+let extract_struct_defn (g:env) (attrs:list S.mlattribute) (d:S.one_mltydecl) : item & env =
   let Some (S.MLTD_Record fts) = d.tydecl_defn in
   // print1 "Adding to record field with %s\n" d.tydecl_name;
   mk_item_struct
     (d.tydecl_name |> enum_or_struct_name)
-    (List.map tyvar_of d.tydecl_parameters)
+    (extract_generic_type_params d.tydecl_parameters attrs)
     (List.map (fun (f, t) -> f, extract_mlty g t) fts),
   { g with record_field_names = psmap_add g.record_field_names d.tydecl_name (List.map fst fts) }
 
-let extract_type_abbrev (g:env) (d:S.one_mltydecl) : item & env =
+let extract_type_abbrev (g:env) (attrs:list S.mlattribute) (d:S.one_mltydecl) : item & env =
   let Some (S.MLTD_Abbrev t) = d.tydecl_defn in
-  (mk_item_type d.tydecl_name (List.map tyvar_of d.tydecl_parameters) (extract_mlty g t)),
+  mk_item_type
+    d.tydecl_name
+    (extract_generic_type_params d.tydecl_parameters attrs)
+    (extract_mlty g t),
   g
-  
-let extract_enum (g:env) (d:S.one_mltydecl) : item & env =
+
+let extract_enum (g:env) (attrs:list S.mlattribute) (d:S.one_mltydecl) : item & env =
   let Some (S.MLTD_DType cts) = d.tydecl_defn in
   mk_item_enum
     (d.tydecl_name |> enum_or_struct_name)
-    (List.map tyvar_of d.tydecl_parameters)
+    (extract_generic_type_params d.tydecl_parameters attrs)
     (List.map (fun (cname, dts) -> cname, List.map (fun (_, t) -> extract_mlty g t) dts) cts),
   g  // TODO: add it to env if needed later
 
-let extract_mltydecl (g:env) (d:S.mltydecl) : list item & env =
+let extract_mltydecl (g:env) (mlattrs:list S.mlexpr) (d:S.mltydecl) : list item & env =
   List.fold_left (fun (items, g) d ->
     let f =
       match d.S.tydecl_defn with
@@ -782,7 +848,7 @@ let extract_mltydecl (g:env) (d:S.mltydecl) : list item & env =
       | Some (S.MLTD_DType _) -> extract_enum
       | _ -> fail_nyi (format1 "mltydecl %s" (S.one_mltydecl_to_string d))
     in
-    let item, g = f g d in
+    let item, g = f g mlattrs d in
     items@[item], g) ([], g) d
 
 
@@ -837,7 +903,7 @@ let rec reachable_defs_expr' (e:S.mlexpr') : reachable_defs =
   | MLE_TApp (e, ts) ->
     Set.union (reachable_defs_expr e) (reachable_defs_list reachable_defs_mlty ts)
   | MLE_Fun (args, e) ->
-    Set.union (reachable_defs_list (fun (_, t) -> reachable_defs_mlty t) args)
+    Set.union (reachable_defs_list (fun b -> reachable_defs_mlty b.S.mlbinder_ty) args)
               (reachable_defs_expr e)
   | MLE_Match (e, bs) ->
     Set.union (reachable_defs_expr e)
@@ -897,7 +963,7 @@ let reachable_defs_mltydecl (t:S.mltydecl) : reachable_defs =
 
 let mlmodule1_name (m:S.mlmodule1) : list S.mlsymbol =
   let open S in
-  match m with
+  match m.mlmodule1_m with
   | MLM_Ty l -> List.map (fun t -> t.tydecl_name) l
   | MLM_Let (_, lbs) -> List.map (fun lb -> lb.mllb_name) lbs
   | MLM_Exn (s, _) -> [s]
@@ -907,7 +973,7 @@ let mlmodule1_name (m:S.mlmodule1) : list S.mlsymbol =
 let reachable_defs_mlmodule1 (m:S.mlmodule1) : reachable_defs =
   let open S in
   let defs =
-    match m with
+    match m.mlmodule1_m with
     | MLM_Ty t -> reachable_defs_mltydecl t
     | MLM_Let lb -> reachable_defs_mlletbinding lb
     | MLM_Exn (_, args) ->
@@ -924,7 +990,7 @@ let reachable_defs_decls (decls:S.mlmodule) : reachable_defs =
 
 let decl_reachable (reachable_defs:reachable_defs) (mname:string) (d:S.mlmodule1) : bool =
   let open S in
-  match d with
+  match d.mlmodule1_m with
   | MLM_Ty t ->
     List.existsb (fun ty_decl ->Set.mem (mname ^ "." ^ ty_decl.tydecl_name) reachable_defs) t
   | MLM_Let (_, lbs) ->
@@ -966,7 +1032,7 @@ let extract_one
     //       Should fix it in a better way
     //       For now, just not extracting them ... that too with a hack on names
     //
-    match d with
+    match d.S.mlmodule1_m with
     | S.MLM_Let (S.NonRec, [{mllb_name}])
       when starts_with mllb_name "explode_ref" ||
            starts_with mllb_name "unexplode_ref" ||
@@ -979,8 +1045,8 @@ let extract_one
       items@[f],
       g
     | S.MLM_Loc _ -> items, g
-    | S.MLM_Ty d ->
-      let d_items, g = extract_mltydecl g d in
+    | S.MLM_Ty td ->
+      let d_items, g = extract_mltydecl g d.S.mlmodule1_attrs td in
       items@d_items, g
     | _ -> fail_nyi (format1 "top level decl %s" (S.mlmodule1_to_string d))
   ) ([], g) decls in

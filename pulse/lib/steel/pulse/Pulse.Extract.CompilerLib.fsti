@@ -32,6 +32,12 @@ type mltyscheme = list mlident * mlty   //forall a1..an. t  (the list of binders
 
 val mllb : Type0
 
+val mk_mllb_with_attrs
+  (mllb_name:mlident)
+  (mllb_tysc:mltyscheme)
+  (mllb_def:mlexpr)
+  (mllb_attrs:list mlexpr) : mllb
+
 val mk_mllb (mllb_name:mlident)
             (mllb_tysc:mltyscheme)
             (mllb_def:mlexpr) : mllb
@@ -85,6 +91,7 @@ val sigelt_extension_data (e:T.sigelt) : option st_term
 val mlmodule1 : Type0
 type mlmodule = list mlmodule1
 
+val mlm_let_with_attrs (is_rec:bool) (lbs:list mllb) (mlattrs:list mlexpr) : mlmodule1
 val mlm_let (is_rec:bool) (lbs:list mllb) : mlmodule1
 val is_type (g:uenv) (t:R.typ) : Dv bool
 val extend_ty (g:uenv) (a:R.namedv) : Dv uenv
