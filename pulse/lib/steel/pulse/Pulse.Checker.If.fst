@@ -82,24 +82,9 @@ let check
   let (| e1, c1, e1_typing |) = check_branch tm_true e1 true in
   let (| e2, c2, e2_typing |) = check_branch tm_false e2 false in    
   let (| c, e1_typing, e2_typing |) =
-    J.join_comps _ _ _ e1_typing _ _ _ e2_typing in
+    J.join_comps _ _ _ e1_typing _ _ _ e2_typing post_hint in
 
-  let c_typing = 
-    let x = fresh g in
-    if x `Set.mem` freevars post //exclude this
-    then fail g None "Impossible: check_if: unexpected freevar in post, please file a bug-report"
-    else if not (eq_tm (comp_res c) post_hint.ret_ty &&
-                 eq_univ (comp_u c) post_hint.u &&
-                 eq_tm (comp_post c) post_hint.post) //exclude by check' strengthening
-    then fail g None
-           (Printf.sprintf "check_if: computation type after combining branches does not match post hint,\
-                            computed: (%s, %s, %s), expected (%s, %s, %s)"
-              (P.univ_to_string (comp_u c)) (P.term_to_string (comp_res c)) (P.term_to_string (comp_post c))
-              (P.univ_to_string post_hint.u) (P.term_to_string post_hint.ret_ty) (P.term_to_string post_hint.post))
-    else
-        let post_typing = post_hint_typing g post_hint x in
-        intro_comp_typing g c pre_typing post_typing.ty_typing x post_typing.post_typing
-  in
+  let c_typing = comp_typing_from_post_hint c pre_typing post_hint in
 
   let d : st_typing_in_ctxt g pre (Some post_hint) =
     (| _, c, T_If g b e1 e2 c hyp b_typing e1_typing e2_typing (E c_typing) |) in

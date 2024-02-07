@@ -37,15 +37,12 @@ let check
   (res_ppname:ppname)
   (t:st_term{Tm_Par? t.term})
   (check:check_t)
-  : T.Tac (checker_result_t g pre post_hint) =
-
-  let g = push_context "check_par" t.range g in
+: T.Tac (checker_result_t g pre post_hint)
+= let g = push_context "check_par" t.range g in
   let Tm_Par {pre1=preL; body1=eL; post1=postL;
               pre2=preR; body2=eR; post2=postR} = t.term in
-  let (| preL, preL_typing |) =
-    check_tot_term g preL tm_vprop in
-  let (| preR, preR_typing |) =
-    check_tot_term g preR tm_vprop in
+  let (| preL, preL_typing |) = check_tot_term g preL tm_vprop in
+  let (| preR, preR_typing |) = check_tot_term g preR tm_vprop in
 
   let postL_hint = intro_post_hint g EffectAnnotSTT None postL in
 
@@ -54,19 +51,18 @@ let check
     let r = check g preL preL_typing (Some postL_hint) ppname eL in
     apply_checker_result_k r ppname
   in
-
-  assert (C_ST? cL);
   let cL_typing = MT.st_typing_correctness eL_typing in
+
   let postR_hint = intro_post_hint g EffectAnnotSTT None postR in
   let (| eR, cR, eR_typing |) =
     let ppname = mk_ppname_no_range "_par_r" in
     let r = check g preR preR_typing (Some postR_hint) ppname eR in
     apply_checker_result_k r ppname
   in
-
-  assert (C_ST? cR);
   let cR_typing = MT.st_typing_correctness eR_typing in
+  
   let x = fresh g in
+  assume (comp_u cL == comp_u cR);
   let d = T_Par _ _ _ _ _ x cL_typing cR_typing eL_typing eR_typing in
   prove_post_hint (try_frame_pre pre_typing (match_comp_res_with_post_hint d post_hint) res_ppname) post_hint t.range
 #pop-options

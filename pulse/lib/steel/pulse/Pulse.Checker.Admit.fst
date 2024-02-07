@@ -104,7 +104,8 @@ let check
   : T.Tac (checker_result_t g pre post_hint) 
   = let Tm_Admit r = t.term in
     match post_hint with
-    | Some { ctag_hint=Some ct } ->
+    | Some p ->
+      let ct = ctag_of_effect_annot p.effect_annot in
       check_core g pre pre_typing post_hint res_ppname ({ t with term=Tm_Admit {r with ctag=ct}})
     | _ ->
       check_core g pre pre_typing post_hint res_ppname t

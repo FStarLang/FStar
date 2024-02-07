@@ -44,7 +44,7 @@ let rt_recheck (gg:env) (#g:T.env) (#e:T.term) (#ty: T.typ) () : T.Tac (RT.tot_t
 let recheck (#g:env) (#e:term) (#ty: typ) () : T.Tac (tot_typing g e ty) =
   core_check_tot_term g e ty
 
-let term_remove_inv (inv:vprop) (tm:term) : T.Tac term =
+let term_remove_inv (inv:vprop) (tm:term) : T.Tac (tm':term { tm_star tm' inv == tm}) =
   match tm.t with
   | Tm_Star tm inv' ->
     if eq_tm inv inv' then tm
@@ -53,7 +53,7 @@ let term_remove_inv (inv:vprop) (tm:term) : T.Tac term =
   | _ ->
     T.fail "term_remove_inv: not a star?"
 
-let st_comp_remove_inv (inv:vprop) (c:st_comp) : T.Tac st_comp =
+let st_comp_remove_inv (inv:vprop) (c:st_comp) : T.Tac (s:st_comp { add_frame (C_ST s) inv == (C_ST c) }) =
   { c with pre = term_remove_inv inv c.pre
          ; post = term_remove_inv inv c.post }
 
@@ -78,6 +78,50 @@ let check_iname_disjoint (g:env) (r:range) (inv_p inames inv:term)
     | Some tok -> tok
   )
  
+#push-options "--ifuel 2 --fuel 8"
+let remove_iname (inv_p inames inv:term)
+: term
+= tm_fstar 
+    (Pulse.Reflection.Util.remove_inv_tm
+      (elab_term inv_p)
+      (elab_term inames)
+      (elab_term inv))
+  inames.range
+let add_iname (inv_p inames inv:term)
+: term
+= tm_fstar 
+    (Pulse.Reflection.Util.add_inv_tm
+      (elab_term inv_p)
+      (elab_term inames)
+      (elab_term inv))
+  inames.range
+#pop-options
+
+module RU = Pulse.RuntimeUtils
+let remove_iname_typing
+    (g:env) (#inv_p #inames #inv:term)
+    (_:tot_typing g inv_p tm_vprop)
+    (_:tot_typing g inames tm_inames)
+    (_:tot_typing g inv (tm_inv inv_p))
+: tot_typing g (remove_iname inv_p inames inv) tm_inames
+= RU.magic()
+
+let disjointness_remove_i_i (g:env) (inv_p inames inv:term)
+: T.Tac (Pulse.Typing.prop_validity g 
+            (inv_disjointness inv_p (remove_iname inv_p inames inv) inv))
+= RU.magic()
+
+
+let add_remove_inverse (g:env) (inv_p inames inv:term)
+: T.Tac 
+    (prop_validity g 
+        (tm_inames_subset 
+            (add_iname inv_p
+              (remove_iname inv_p inames inv)
+              inv)
+            inames))
+= RU.magic()
+
 let check
   (g:env)
   (pre:term)
@@ -93,22 +137,6 @@ let check
   for better errors. *)
   let body_range = body.range in
   let inv_tm_range = inv_tm.range in
-
-  let post : post_hint_t =
-    match returns_inv, post_hint with
-    | None, Some p -> p
-    | Some (b, p), None ->
-      Pulse.Checker.Base.intro_post_hint g None (Some b.binder_ty) p
-    | Some (_, p), Some q ->
-      let open Pulse.PP in
-      fail_doc g (Some t.range) 
-      [ doc_of_string "Fatal: multiple annotated postconditions on with_invariant";
-        prefix 4 1 (text "First postcondition:") (pp p);
-        prefix 4 1 (text "Second postcondition:") (pp q) ]
-    | _, _ ->
-      fail g (Some t.range) "Fatal: no post hint on with_invariant"
-  in
-  let post_hint = Some post in
 
   // info_doc g (Some t.range) [
   //   let open Pulse.PP in
@@ -129,7 +157,7 @@ let check
     | Tm_Inv p -> p
     | Tm_FStar _ -> begin
       (* FIXME: should unrefine... meh *)
-      let ropt = Pulse.Syntax.Pure.is_fvar_app inv_tm in
+      let ropt = Pulse.Syntax.Pure.is_fvar_app inv_tm_ty in
       match ropt with
       | Some (lid, _, _, Some tm) -> 
         if lid = ["Pulse"; "Lib"; "Core"; "inv" ]
@@ -144,7 +172,7 @@ let check
   in
   
   (* FIXME: This is bogus for the Tm_FStar case!!! *)
-  assume (tm_inv inv_p == inv_tm);
+  assume (tm_inv inv_p == inv_tm_ty);
 
   (* Can this come from some inversion instead? *)
   let inv_p_typing : tot_typing g inv_p tm_vprop = recheck () in
@@ -152,6 +180,21 @@ let check
   (* pre'/post' are extended with inv_p *)
   let pre' : vprop = tm_star pre inv_p in
   let pre'_typing : tot_typing g pre' tm_vprop = recheck () in
+  let post : post_hint_t =
+    match returns_inv, post_hint with
+    | None, Some p -> p
+    | Some (b, p), None ->
+      Pulse.Checker.Base.intro_post_hint g EffectAnnotSTT (Some b.binder_ty) p
+    | Some (_, p), Some q ->
+      let open Pulse.PP in
+      fail_doc g (Some t.range) 
+      [ doc_of_string "Fatal: multiple annotated postconditions on with_invariant";
+        prefix 4 1 (text "First postcondition:") (pp p);
+        prefix 4 1 (text "Second postcondition:") (pp q) ]
+    | _, _ ->
+      fail g (Some t.range) "Fatal: no post hint on with_invariant"
+  in
+
   let post_p' : vprop = tm_star post.post inv_p in
   let elab_ret_ty = elab_term post.ret_ty in
   let x = fresh g in
@@ -166,64 +209,60 @@ let check
                     (elab_term tm_vprop)
     = rt_recheck g' #r_g' ()
   in
-  let post_p'_typing = Pulse.Checker.Base.post_typing_as_abstraction (E post_p'_typing_src) in
-  let ctag_hint' =
-    if None? post.ctag_hint || post.ctag_hint = Some STT then
-      Some STT_Atomic
-    else
-      post.ctag_hint
-  in
+  let post_p'_typing = Pulse.Checker.Base.post_typing_as_abstraction #g #_ #post.ret_ty #post_p' (E post_p'_typing_src) in
+  (* the post hint for the body, extended with inv_p, removing the name of invariant *)
+  begin
+  match post.effect_annot with
+  | EffectAnnotGhost -> 
+    let open Pulse.PP in
+    fail_doc g (Some t.range) 
+    [ doc_of_string "Cannot open invariants in a 'ghost' context" ]
 
-
-  (* the post hint for the body, extended with inv_p *)
-  let post' : post_hint_for_env g = { post with
-    g = g;
-    ty_typing = recheck (); // Pulse.Typing.Metatheory.tot_typing_weakening _ _ _ _ post.ty_typing _;
-    post = post_p';
-    x;
-    post_typing_src=E post_p'_typing_src;
-    post_typing = post_p'_typing;
-    ctag_hint = ctag_hint';
-  }
-  in
-
-  let (| body, c_body, body_typing |) =
-    let ppname = mk_ppname_no_range "with_inv_body" in
-    let r = check g pre' pre'_typing (Some post') ppname body in
-    apply_checker_result_k r ppname
-  in
-  
-  // (let open Pulse.PP in
-  //  info_doc g (Some body_range) [
-  //    text "Checked body at comp type:" ^/^ arbitrary_string (P.comp_to_string c_body)
-  //  ]);
-
-  let c_out : comp_st =
-    match c_body with
-    | C_ST _
-    | C_STGhost _  -> 
-      let open Pulse.PP in
-      fail_doc g (Some body_range)
-        [text "This computation is not atomic nor ghost. \
-               `with_invariants` blocks can only contain atomic computations.";
-         prefix 4 1 (text "Computed type:") (arbitrary_string (P.comp_to_string c_body))]
-    | C_STAtomic inames obs st ->
-      C_STAtomic inames obs (st_comp_remove_inv inv_p st)
-  //  | C_STGhost inames st -> C_STAtomic (add_iname inames inv_tm) Observable (st_comp_remove_inv inv_p st)
-  in
-  assume (add_inv c_out inv_p == c_body);
-
-  let tm : st_term =
-    { term = Tm_WithInv {name=inv_tm; body; returns_inv = None};
-      range = t.range;
-      effect_tag = Sealed.seal ctag_hint' }
-  in
-
-  let tok = check_iname_disjoint g inv_tm_range inv_p (comp_inames c_body) { inv_tm with range = inv_tm_range } in
+  | EffectAnnotSTT ->
+    T.fail "Not yet handling inference of with_invariants in an stt context"
     
-  let d = T_WithInv g inv_tm inv_p inv_p_typing inv_tm_typing body c_out body_typing tok in
-  // info g (Some body_range)
-  //   (Printf.sprintf "Returning comp type %s"
-  //       (P.comp_to_string c_out));
-
-  checker_result_for_st_typing (| tm, _, d |)  res_ppname
+  | EffectAnnotAtomic { opens } ->
+    let opens_remove_i = remove_iname inv_p opens inv_tm in
+    let effect_annot = EffectAnnotAtomic { opens=opens_remove_i } in
+    let opens_typing : tot_typing g opens tm_inames = 
+      (post_hint_typing g post (fresh g)).effect_annot_typing
+    in 
+    let effect_annot_typing
+      : effect_annot_typing g effect_annot
+      = remove_iname_typing g #inv_p #opens #inv_tm inv_p_typing opens_typing inv_tm_typing
+    in
+    let post' : post_hint_for_env g =  { post with
+      effect_annot;
+      effect_annot_typing;
+      g;
+      ty_typing = recheck (); // Pulse.Typing.Metatheory.tot_typing_weakening _ _ _ _ post.ty_typing _;
+      post = post_p';
+      x;
+      post_typing_src=E post_p'_typing_src;
+      post_typing = post_p'_typing;
+    } in
+    let (| body, c_body, body_typing |) =
+      let ppname = mk_ppname_no_range "with_inv_body" in
+      let r = check g pre' pre'_typing (Some post') ppname body in
+      apply_checker_result_k r ppname
+    in
+    let C_STAtomic inames obs st = c_body in
+    assert (inames == opens_remove_i);
+    let c_out = C_STAtomic inames obs (st_comp_remove_inv inv_p st) in
+    assert (add_inv c_out inv_p == c_body);
+    let tok = disjointness_remove_i_i g inv_p opens inv_tm in
+    let tm : st_term =
+      { term = Tm_WithInv {name=inv_tm; body; returns_inv = None};
+        range = t.range;
+        effect_tag = Sealed.seal (Some <| ctag_of_effect_annot post.effect_annot) }
+    in
+      
+    let d = T_WithInv g inv_tm inv_p inv_p_typing inv_tm_typing body c_out body_typing tok in
+    let c_out = add_iname_at_least_unobservable c_out inv_p inv_tm in
+    let C_STAtomic add_inv obs' st = c_out in
+    let tok : prop_validity g (tm_inames_subset add_inv opens) =
+      add_remove_inverse g inv_p opens inv_tm
+    in
+    let d = T_Sub _ _ _ _ d (STS_AtomicInvs _ st _ _ obs' obs' tok) in
+    checker_result_for_st_typing (| tm, _, d |)  res_ppname
+    end

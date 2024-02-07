@@ -46,11 +46,7 @@ let check
     if x `Set.mem` freevars post.post
     then fail g None "Impossible: unexpected freevar clash in Tm_Unreachable, please file a bug-report"
     else
-        let ctag =
-            match post.ctag_hint with
-            | None -> STT
-            | Some ctag -> ctag
-        in
+        let ctag = ctag_of_effect_annot post.effect_annot in
         let post_typing_rec = post_hint_typing g post x in
         let post_opened = open_term_nv post.post px in              
         assume (close_term post_opened x == post.post);

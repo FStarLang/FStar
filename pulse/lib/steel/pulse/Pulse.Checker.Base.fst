@@ -53,6 +53,32 @@ let format_failed_goal (g:env) (ctxt:list term) (goal:list term) =
 let mk_arrow ty t = RT.mk_arrow (elab_term ty) T.Q_Explicit (elab_term t)
 let mk_abs ty t = RT.(mk_abs (elab_term ty) T.Q_Explicit (elab_term t))
 
+let intro_comp_typing (g:env) 
+                      (c:comp_st)
+                      (pre_typing:tot_typing g (comp_pre c) tm_vprop)
+                      (i_typing:effect_annot_typing g (effect_annot_of_comp c))
+                      (res_typing:universe_of g (comp_res c) (comp_u c))
+                      (x:var { fresh_wrt x g (freevars (comp_post c)) })
+                      (post_typing:tot_typing (push_binding g x ppname_default (comp_res c)) (open_term (comp_post c) x) tm_vprop)
+  : T.Tac (comp_typing g c (universe_of_comp c))
+  = let intro_st_comp_typing (st:st_comp { comp_u c == st.u /\
+                                           comp_pre c == st.pre /\
+                                           comp_res c == st.res /\
+                                           comp_post c == st.post } )
+      : T.Tac (st_comp_typing g st)
+      = STC g st x res_typing pre_typing post_typing
+    in
+    match c with
+    | C_ST st -> 
+      let stc = intro_st_comp_typing st in
+      CT_ST _ _ stc
+    | C_STAtomic i obs st -> 
+      let stc = intro_st_comp_typing st in
+      CT_STAtomic _ i obs _ i_typing stc
+    | C_STGhost st -> 
+      let stc = intro_st_comp_typing st in
+      CT_STGhost _ _ stc
+
 irreducible
 let post_typing_as_abstraction
   (#g:env) (#x:var) (#ty:term) (#t:term { fresh_wrt x g (freevars t) })
@@ -115,6 +141,22 @@ let post_hint_from_comp_typing #g #c ct =
       post_typing=post_typing_as_abstraction post_typing }
   in
   p
+
+let comp_typing_from_post_hint
+    (#g: env)
+    (c: comp_st)
+    (pre_typing: tot_typing g (comp_pre c) tm_vprop)
+    (p:post_hint_for_env g { comp_post_matches_hint c (Some p) })
+: T.Tac (comp_typing_u g c)
+= let x = fresh g in
+  if x `Set.mem` freevars p.post //exclude this
+  then fail g None "Impossible: unexpected freevar in post, please file a bug-report"
+  else let post_typing = post_hint_typing g p x in
+       intro_comp_typing g c pre_typing
+        post_typing.effect_annot_typing
+        post_typing.ty_typing 
+        x post_typing.post_typing
+
 
 let extend_post_hint g p x tx conjunct conjunct_typing =
   let g' = push_binding g x ppname_default tx in
@@ -563,33 +605,7 @@ let rec check_equiv_emp (g:env) (vp:term)
        | _, _ -> None)
      | _ -> None
 
-let intro_comp_typing (g:env) 
-                      (c:comp_st)
-                      (pre_typing:tot_typing g (comp_pre c) tm_vprop)
-                      (res_typing:universe_of g (comp_res c) (comp_u c))
-                      (x:var { fresh_wrt x g (freevars (comp_post c)) })
-                      (post_typing:tot_typing (push_binding g x ppname_default (comp_res c)) (open_term (comp_post c) x) tm_vprop)
-  : T.Tac (comp_typing g c (universe_of_comp c))
-  = let intro_st_comp_typing (st:st_comp { comp_u c == st.u /\
-                                           comp_pre c == st.pre /\
-                                           comp_res c == st.res /\
-                                           comp_post c == st.post } )
-      : T.Tac (st_comp_typing g st)
-      = STC g st x res_typing pre_typing post_typing
-    in
-    match c with
-    | C_ST st -> 
-      let stc = intro_st_comp_typing st in
-      CT_ST _ _ stc
-    | C_STAtomic i obs st -> 
-      let stc = intro_st_comp_typing st in
-      let (| ty, i_typing |) = CP.core_compute_tot_term_type g i in
-      if not (eq_tm ty tm_inames)
-      then fail g None (Printf.sprintf "ill-typed inames term %s" (P.term_to_string i))
-      else CT_STAtomic _ _ obs _ i_typing stc
-    | C_STGhost st -> 
-      let stc = intro_st_comp_typing st in
-      CT_STGhost _ _ stc
+
 
 let emp_inames_included (g:env) (i:term) (_:tot_typing g i tm_inames)
 : prop_validity g (tm_inames_subset tm_emp_inames i)

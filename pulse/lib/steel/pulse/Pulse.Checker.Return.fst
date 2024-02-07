@@ -151,8 +151,8 @@ let check
     
     | None -> (
       match post_hint with
-      | Some { ctag_hint } -> (
-        check_core g ctxt ctxt_typing post_hint res_ppname st ctag_hint
+      | Some p -> (
+        check_core g ctxt ctxt_typing post_hint res_ppname st (Some <| ctag_of_effect_annot p.effect_annot)
         
       )
       | _ ->  check_core g ctxt ctxt_typing post_hint res_ppname st None

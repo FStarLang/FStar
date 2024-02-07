@@ -361,7 +361,7 @@ let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_v
 
   let comp_res_typing_in_g1, _, f =
     Metatheory.st_comp_typing_inversion_cofinite
-      (Metatheory.comp_typing_inversion (Metatheory.st_typing_correctness d)) in
+      (fst <| Metatheory.comp_typing_inversion (Metatheory.st_typing_correctness d)) in
 
   let d_ty
     : universe_of g2 ty (comp_u c) =

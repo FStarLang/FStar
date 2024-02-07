@@ -188,6 +188,12 @@ let effect_annot_of_comp (c:comp_st)
   | C_STGhost _ -> EffectAnnotGhost
   | C_STAtomic opens _ _ -> EffectAnnotAtomic { opens }
 
+let ctag_of_effect_annot =
+  function
+  | EffectAnnotSTT -> STT
+  | EffectAnnotGhost -> STT_Ghost
+  | _ -> STT_Atomic
+
 noeq
 type proof_hint_type =
   | ASSERT {

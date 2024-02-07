@@ -396,7 +396,7 @@ let rec check_abs_core
             : post_hint_t
             = Pulse.Checker.Base.intro_post_hint
                   (push_context "post_hint_typing" range g')
-                  (Some (ctag_of_comp_st elab_c))
+                  (effect_annot_of_comp elab_c)
                   ret_ty
                   post
           in

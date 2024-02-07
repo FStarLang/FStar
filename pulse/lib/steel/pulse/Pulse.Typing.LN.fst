@@ -1245,7 +1245,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       st_typing_ln d1;
       st_typing_ln d2
 
-    | T_Match _ _ _ sc _ scd c _ _ _ ->
+    | T_Match _ _ _ sc _ scd c _ _ _ _ ->
       tot_or_ghost_typing_ln scd;
       admit ()
 

@@ -32,6 +32,15 @@ val debug (g:env) (f:unit -> T.Tac string) : T.Tac unit
 
 val format_failed_goal (g:env) (ctxt:list term) (goal:list term) : T.Tac string
 
+val intro_comp_typing (g:env) 
+                      (c:comp_st)
+                      (pre_typing:tot_typing g (comp_pre c) tm_vprop)
+                      (iname_typing:effect_annot_typing g (effect_annot_of_comp c))
+                      (res_typing:universe_of g (comp_res c) (comp_u c))
+                      (x:var { fresh_wrt x g (freevars (comp_post c)) })
+                      (post_typing:tot_typing (push_binding g x ppname_default (comp_res c)) (open_term (comp_post c) x) tm_vprop)
+  : T.Tac (comp_typing g c (universe_of_comp c))
+
 val post_typing_as_abstraction
   (#g:env) (#x:var) (#ty:term) (#t:term { fresh_wrt x g (freevars t) })
   (_:tot_typing (push_binding g x ppname_default ty) (open_term t x) tm_vprop)
@@ -44,6 +53,13 @@ val intro_post_hint (g:env) (effect_annot:effect_annot) (ret_ty:option term) (po
 
 val post_hint_from_comp_typing (#g:env) (#c:comp_st) (ct:comp_typing_u g c)
   : post_hint_for_env g
+
+val comp_typing_from_post_hint
+    (#g: env)
+    (c: comp_st)
+    (pre_typing: tot_typing g (comp_pre c) tm_vprop)
+    (p:post_hint_for_env g { comp_post_matches_hint c (Some p) })
+: T.Tac (comp_typing_u g c)
 
 val extend_post_hint (g:env) (p:post_hint_for_env g)
                      (x:var{ None? (lookup g x) }) (tx:term)
@@ -165,14 +181,6 @@ type check_t =
   t:st_term ->
   T.Tac (checker_result_t g ctxt post_hint)
   
-val intro_comp_typing (g:env) 
-                      (c:comp_st)
-                      (pre_typing:tot_typing g (comp_pre c) tm_vprop)
-                      (res_typing:universe_of g (comp_res c) (comp_u c))
-                      (x:var { fresh_wrt x g (freevars (comp_post c)) })
-                      (post_typing:tot_typing (push_binding g x ppname_default (comp_res c)) (open_term (comp_post c) x) tm_vprop)
-  : T.Tac (comp_typing g c (universe_of_comp c))
-
 val match_comp_res_with_post_hint (#g:env) (#t:st_term) (#c:comp_st)
   (d:st_typing g t c)
   (post_hint:post_hint_opt g)
