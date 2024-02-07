@@ -18,6 +18,10 @@ extract_c: _output/cache/ExtractionTest.fst.checked
 	$(FSTAR) --odir _output --codegen krml ExtractionTest.fst --extract ExtractionTest
 	$(FSTAR_HOME)/../karamel/krml -bundle ExtractionTest=* -skip-compilation _output/ExtractionTest.krml -tmpdir _output
 
+extract_pulse_c: _output/cache/PulsePointStruct.fst.checked
+	$(FSTAR) --odir _output --codegen krml PulsePointStruct.fst --extract PulsePointStruct
+	$(FSTAR_HOME)/../karamel/krml -bundle PulsePointStruct=* -skip-linking _output/PulsePointStruct.krml -tmpdir _output
+
 #	$(FSTAR) --codegen krml Demo.MultiplyByRepeatedAddition.fst --extract '* -Pulse.Lib.Core'
 #	$(FSTAR_HOME)/../karamel/krml -bundle Demo.MultiplyByRepeatedAddition=* -skip-compilation _output/out.krml
 
@@ -28,7 +32,9 @@ else
 test-cbor:
 endif
 
-test: test-cbor
+test: test-cbor extract_pulse_c
+
+.PHONY: extract_pulse_c
 
 .PHONY: test test-cbor test-cbor-raw
 
