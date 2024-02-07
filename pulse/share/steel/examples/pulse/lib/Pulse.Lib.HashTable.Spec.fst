@@ -22,6 +22,10 @@ let unreachable #a (_:squash False) : a =
 
 open FStar.Ghost
 
+[@@ Pulse.Lib.Pervasives.Rust_derive "Clone";
+    Pulse.Lib.Pervasives.Rust_generics_bounds [["PartialEq"; "Copy"; "Clone"];
+                                               ["Clone"]]
+]
 noeq
 type cell (kt : eqtype) (vt : Type) =
   | Clean

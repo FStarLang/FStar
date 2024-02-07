@@ -156,14 +156,8 @@ val dice_hash_alg : alg_t
 
 let dice_digest_len : hashable_len = assume (is_hashable_len (digest_len dice_hash_alg)); digest_len dice_hash_alg
 
-assume 
-val dice_digest_len_is_hashable 
-  : is_hashable_len dice_digest_len
+assume Dice_digest_len_is_hashable : is_hashable_len dice_digest_len
 
-assume 
-val dice_digest_len_is_hkdf_ikm
-  : valid_hkdf_ikm_len dice_digest_len
+assume Dice_digest_len_is_hkdf_ikm : valid_hkdf_ikm_len dice_digest_len
 
-assume
-val is_hashable_len_32
-  : is_hashable_len v32us
+assume Is_hashable_len_32 : is_hashable_len v32us

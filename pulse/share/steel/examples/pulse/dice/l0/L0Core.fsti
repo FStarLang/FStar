@@ -26,6 +26,7 @@ open X509
 
 // Needs to be exposed so that the caller of l0_main can prove that they
 // computed deviceIDCSR_len correctly
+noextract
 let deviceIDCSR_pre
   (deviceIDCSR: deviceIDCSR_ingredients_t) 
   (deviceIDCRI_len: SZ.t) 
@@ -41,6 +42,7 @@ let deviceIDCSR_pre
 
 // Needs to be exposed so that the caller of l0_main can prove that they
 // computed aliasKeyCRT_len correctly
+noextract
 let aliasKeyCRT_pre
   (aliasKeyCRT:aliasKeyCRT_ingredients_t) 
   (aliasKeyTBS_len:SZ.t) 
@@ -58,6 +60,7 @@ let aliasKeyCRT_pre
     valid_aliasKeyCRT_ingredients aliasKeyTBS_len /\
     aliasKeyCRT_len == length_of_aliasKeyCRT aliasKeyTBS_len
 
+noextract
 val aliasKey_functional_correctness 
   (alg:alg_t)
   (dig_len:hkdf_ikm_len)
@@ -69,6 +72,7 @@ val aliasKey_functional_correctness
   (aliasKey_priv:Seq.seq U8.t)
   : prop
 
+noextract
 val deviceIDCSR_functional_correctness
   (alg:alg_t)
   (dig_len:hkdf_ikm_len)
@@ -80,6 +84,7 @@ val deviceIDCSR_functional_correctness
   (deviceIDCSR_buf: Seq.seq U8.t)
   : prop
 
+noextract
 val aliasKeyCRT_functional_correctness
   (alg:alg_t)
   (dig_len:hkdf_ikm_len)

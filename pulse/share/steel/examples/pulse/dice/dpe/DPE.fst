@@ -49,6 +49,7 @@ let ctxt_hndl_t = U32.t
 
 type sid_t : eqtype = U32.t
 
+[@@ Rust_derive "Clone"]
 noeq
 type session_state =
   | SessionStart
@@ -331,7 +332,8 @@ fn get_profile ()
 // Move to hashtable?
 //
 
-[@@ Rust_generics_bounds [["Copy"; "PartialEq"]]]
+[@@ Rust_generics_bounds [["Copy"; "PartialEq"; "Clone"];
+                          ["Clone"]]]
 ```pulse
 fn insert_if_not_full (#kt:eqtype) (#vt:Type0)
   (ht:ht_t kt vt) (k:kt) (v:vt)
@@ -1098,11 +1100,11 @@ fn derive_child_from_context
   requires
     record_perm record p record_repr **
     context_perm context context_repr
-  returns res:(context_t & option context_t)
+  returns res:(context_t & record_t & option context_t)
   ensures
-    record_perm record p record_repr **
-    context_perm (fst res) context_repr **
-    maybe_context_perm (snd res)
+    record_perm (tsnd res) p record_repr **
+    context_perm (tfst res) context_repr **
+    maybe_context_perm (tthd res)
 {
   match context
   {
@@ -1110,9 +1112,10 @@ fn derive_child_from_context
     {
       if not (Engine_record? record)
       { //illegal argument; reject
-        let res = (context, None #context_t);
-        rewrite emp as (maybe_context_perm (snd res));
-        rewrite (context_perm context context_repr) as (context_perm (fst res) context_repr);
+        let res = (context, record, None #context_t);
+        rewrite emp as (maybe_context_perm (tthd res));
+        rewrite (context_perm context context_repr) as (context_perm (tfst res) context_repr);
+        rewrite (record_perm record p record_repr) as (record_perm (tsnd res) p record_repr);
         res
       }
       else
@@ -1137,31 +1140,32 @@ fn derive_child_from_context
             fold (engine_context_perm c uds);
             rewrite (engine_context_perm c uds)
                  as (context_perm context context_repr);
-            match ret 
+            match snd ret
             {
               DICE_SUCCESS ->
               {
                 let l0_ctxt = init_l0_ctxt cdi #r0 #s #uds ();
-                rewrite (engine_record_perm r p r0)
-                     as (record_perm record p record_repr);
                 let l0_ctxt_opt = intro_maybe_context_perm l0_ctxt;
-                let res = (context, l0_ctxt_opt);
+                let res = (context, Engine_record (fst ret), l0_ctxt_opt);
                 rewrite (maybe_context_perm l0_ctxt_opt)
-                     as (maybe_context_perm (snd res));
+                     as (maybe_context_perm (tthd res));
                 rewrite (context_perm context context_repr)
-                     as (context_perm (fst res) context_repr);
+                     as (context_perm (tfst res) context_repr);
+                rewrite (engine_record_perm (fst ret) p r0)
+                     as (record_perm (tsnd res) p record_repr);
+
                 res
               }
 
               DICE_ERROR ->
               {
-                // A.zeroize dice_digest_len cdi;
-                rewrite (engine_record_perm r p r0)
-                     as (record_perm record p record_repr);
-                let res = (context, None #context_t);
-                rewrite emp as (maybe_context_perm (snd res));
+                A.zeroize dice_digest_len cdi;
+                let res = (context, Engine_record (fst ret), None #context_t);
+                rewrite emp as (maybe_context_perm (tthd res));
                 rewrite (context_perm context context_repr)
-                     as (context_perm (fst res) context_repr);
+                     as (context_perm (tfst res) context_repr);
+                rewrite (engine_record_perm (fst ret) p r0)
+                     as (record_perm (tsnd res) p record_repr);
                 res
               }
             }
@@ -1173,10 +1177,11 @@ fn derive_child_from_context
     {
       if not (L0_record? record)
       { //illegal argument; reject
-        let res = (context, None #context_t);
-        rewrite emp as (maybe_context_perm (snd res));
+        let res = (context, record, None #context_t);
+        rewrite emp as (maybe_context_perm (tthd res));
         rewrite (context_perm context context_repr)
-             as (context_perm (fst res) context_repr);
+             as (context_perm (tfst res) context_repr);
+        rewrite (record_perm record p record_repr) as (record_perm (tsnd res) p record_repr);
         res
       }
       else
@@ -1232,10 +1237,12 @@ fn derive_child_from_context
                         (hide r.deviceID_label_len)
                         (hide r.aliasKey_label_len) s r0 (hide idcsr_ing) (hide akcrt_ing);
             let l1_context_opt = intro_maybe_context_perm l1_context; 
-            let res = (context, l1_context_opt);
+            let res = (context, record, l1_context_opt);
             rewrite (maybe_context_perm l1_context_opt)
-                 as (maybe_context_perm (snd res));
-            rewrite (context_perm context context_repr) as (context_perm (fst res) context_repr);
+                 as (maybe_context_perm (tthd res));
+            rewrite (context_perm context context_repr) as (context_perm (tfst res) context_repr);
+            rewrite (record_perm record p record_repr)
+                 as (record_perm (tsnd res) p record_repr);
             res
           }
         }
@@ -1244,10 +1251,11 @@ fn derive_child_from_context
     L1_context _ ->
     {
       // ERROR - cannot invoke DeriveChild with L1 context
-      let res = (context, None #context_t);
-      rewrite emp as (maybe_context_perm (snd res));
+      let res = (context, record, None #context_t);
+      rewrite emp as (maybe_context_perm (tthd res));
       rewrite (context_perm context context_repr)
-           as (context_perm (fst res) context_repr);
+           as (context_perm (tfst res) context_repr);
+      rewrite (record_perm record p record_repr) as (record_perm (tsnd res) p record_repr);
       res
     }
   }
@@ -1265,8 +1273,8 @@ fn derive_child_from_context
 fn derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t)
                 (#repr:erased repr_t) (#p:perm)
   requires record_perm record p repr
-  returns _:option ctxt_hndl_t
-  ensures record_perm record p repr
+  returns res:(record_t & option ctxt_hndl_t)
+  ensures record_perm (fst res) p repr
 {
   rewrite emp as (session_state_perm InUse);
   let st = take_session_state sid InUse;
@@ -1275,7 +1283,10 @@ fn derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t)
     None ->
     {
       with s. rewrite (session_state_perm s) as emp;
-      None #ctxt_hndl_t
+      let res = (record, None #ctxt_hndl_t);
+      rewrite (record_perm record p repr)
+           as (record_perm (fst res) p repr);
+      res
     }
 
     Some st ->
@@ -1284,30 +1295,39 @@ fn derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t)
         InUse -> {
           //block concurrent access
           rewrite (session_state_perm st) as emp;
-          None #ctxt_hndl_t
+          let res = (record, None #ctxt_hndl_t);
+          rewrite (record_perm record p repr)
+               as (record_perm (fst res) p repr);
+          res
         }
         Available st1 -> {
           elim_session_state_perm_available st;
           with e. rewrite (context_perm (ctxt_of st) e) as (context_perm st1.context e);
           let next_ctxt = derive_child_from_context st1.context record p;
-          destroy_ctxt (fst next_ctxt);
-          match snd next_ctxt {
+          destroy_ctxt (tfst next_ctxt);
+          match tthd next_ctxt {
             None -> {
               rewrite emp as (session_state_perm SessionError);
-              rewrite (maybe_context_perm (snd next_ctxt)) as emp;
+              rewrite (maybe_context_perm (tthd next_ctxt)) as emp;
               let st' = take_session_state sid SessionError;
               //TODO: prove st' is InUse
               drop_ (session_state_perm (dflt st' SessionError));
-              None #ctxt_hndl_t
+              let res = (tsnd next_ctxt, None #ctxt_hndl_t);
+              rewrite (record_perm (tsnd next_ctxt) p repr)
+                   as (record_perm (fst res) p repr);
+              res
             }
-            Some next_ctxt -> {
-              elim_maybe_context_perm next_ctxt;
+            Some next_ctxt1 -> {
+              elim_maybe_context_perm next_ctxt1;
               let next_ctxt_hndl = prng();
-              let st' = intro_session_state_perm_available next_ctxt next_ctxt_hndl;
+              let st' = intro_session_state_perm_available next_ctxt1 next_ctxt_hndl;
               let st'' = take_session_state sid st';
               //TODO: prove st'' is InUse
               drop_ (session_state_perm (dflt st'' st'));
-              Some next_ctxt_hndl
+              let res = (tsnd next_ctxt, Some (next_ctxt_hndl <: ctxt_hndl_t));
+              rewrite (record_perm (tsnd next_ctxt) p repr)
+                   as (record_perm (fst res) p repr);
+              res
             }
           }
         }
@@ -1318,7 +1338,10 @@ fn derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t)
           let st' = take_session_state sid SessionError;
           //TODO: prove st' is InUse
           drop_ (session_state_perm (dflt st' SessionError));
-          None #ctxt_hndl_t
+          let res = (record, None #ctxt_hndl_t);
+          rewrite (record_perm record p repr)
+               as (record_perm (fst res) p repr);
+          res
         }
       }
     }

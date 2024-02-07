@@ -155,6 +155,8 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
   | S.MLTY_Named ([], p)
     when S.string_of_mlpath p = "FStar.UInt64.t" -> mk_scalar_typ "u64"
   | S.MLTY_Named ([], p)
+    when S.string_of_mlpath p = "Prims.string" -> mk_scalar_typ "String"
+  | S.MLTY_Named ([], p)
     when S.string_of_mlpath p = "FStar.Int64.t" ||
          S.string_of_mlpath p = "Prims.int"     ||
          S.string_of_mlpath p = "Prims.nat" -> mk_scalar_typ "i64"  // TODO: int to int64, nat to int64, FIX
@@ -814,10 +816,23 @@ let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : item & env =
   //   push_fv g lb.mllb_name fn_sig
   // end
 
+let has_rust_derive_attr (attrs:list S.mlattribute) : option attribute =
+  attrs
+    |> List.tryFind (fun attr ->
+       match attr.S.expr with
+       | S.MLE_CTor (p, _)
+         when S.string_of_mlpath p = "Pulse.Lib.Pervasives.Rust_derive" -> true
+       | _ -> false)
+    |> map_option (fun attr ->
+       let S.MLE_CTor (p, arg::_) = attr.S.expr in
+       let S.MLE_Const (S.MLC_String s) = arg.S.expr in
+       mk_derive_attr s)
+
 let extract_struct_defn (g:env) (attrs:list S.mlattribute) (d:S.one_mltydecl) : item & env =
   let Some (S.MLTD_Record fts) = d.tydecl_defn in
   // print1 "Adding to record field with %s\n" d.tydecl_name;
   mk_item_struct
+    (attrs |> has_rust_derive_attr |> map_option (fun a -> [a]) |> dflt [])
     (d.tydecl_name |> enum_or_struct_name)
     (extract_generic_type_params d.tydecl_parameters attrs)
     (List.map (fun (f, t) -> f, extract_mlty g t) fts),
@@ -833,7 +848,9 @@ let extract_type_abbrev (g:env) (attrs:list S.mlattribute) (d:S.one_mltydecl) : 
 
 let extract_enum (g:env) (attrs:list S.mlattribute) (d:S.one_mltydecl) : item & env =
   let Some (S.MLTD_DType cts) = d.tydecl_defn in
+  // print1 "enum attrs: %s\n" (String.concat ";" (List.map S.mlexpr_to_string attrs));
   mk_item_enum
+    (attrs |> has_rust_derive_attr |> map_option (fun a -> [a]) |> dflt [])
     (d.tydecl_name |> enum_or_struct_name)
     (extract_generic_type_params d.tydecl_parameters attrs)
     (List.map (fun (cname, dts) -> cname, List.map (fun (_, t) -> extract_mlty g t) dts) cts),
@@ -1082,7 +1099,8 @@ let rec topsort (d:dict) (grey:list string) (black:list string) (root:string)
   let deps = deps |> List.filter (fun f -> not (List.mem f black)) in
   let grey, black = List.fold_left (fun (grey, black) dep ->
     topsort d grey black dep) (grey, black) deps in
-  List.filter (fun g -> not (g = root)) grey, root::black
+  List.filter (fun g -> not (g = root)) grey,
+  (if List.mem root black then black else root::black)
 
 let rec topsort_all (d:dict) (black:list string)
   : list string =

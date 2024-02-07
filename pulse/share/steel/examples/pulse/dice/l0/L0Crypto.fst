@@ -25,28 +25,30 @@ module U32 = FStar.UInt32
 open HACL
 open L0Types
 
-assume 
-val deviceid_len_is_valid' (len:US.t)
-  : valid_hkdf_lbl_len len
-
-let deviceid_len_is_valid = deviceid_len_is_valid'
+module V = Pulse.Lib.Vec
 
 assume 
-val aliaskey_len_is_valid' (len:US.t)
+val deviceid_len_is_valid_aux (len:US.t)
   : valid_hkdf_lbl_len len
-let aliaskey_len_is_valid = aliaskey_len_is_valid'
+
+let deviceid_len_is_valid = deviceid_len_is_valid_aux
+
+assume 
+val aliaskey_len_is_valid_aux (len:US.t)
+  : valid_hkdf_lbl_len len
+let aliaskey_len_is_valid = aliaskey_len_is_valid_aux
 
 assume
-val derive_key_pair_spec'
+val derive_key_pair_spec_aux
   (ikm_len: hkdf_ikm_len)
   (ikm: Seq.seq U8.t)
   (lbl_len: hkdf_lbl_len)
   (lbl: Seq.seq U8.t)
   : GTot (Seq.seq U8.t & Seq.seq U8.t)
-let derive_key_pair_spec = derive_key_pair_spec'
+let derive_key_pair_spec = derive_key_pair_spec_aux
 
 assume
-val derive_key_pair'
+val derive_key_pair_aux
   (pub : A.larray U8.t (US.v v32us))
   (priv: A.larray U8.t (US.v v32us))
   (ikm_len: hkdf_ikm_len) 
@@ -99,10 +101,10 @@ val derive_key_pair'
 //   admit()
 // }
 // ```
-let derive_key_pair = derive_key_pair'
+let derive_key_pair = derive_key_pair_aux
 
 ```pulse 
-fn derive_DeviceID'
+fn derive_DeviceID_aux
   (alg:alg_t)
   (deviceID_pub:A.larray U8.t (US.v v32us))
   (deviceID_priv:A.larray U8.t (US.v v32us))
@@ -132,19 +134,24 @@ fn derive_DeviceID'
       ))
   )
 {
-  let mut cdigest = [| 0uy; digest_len alg |];
-  hacl_hash alg dice_digest_len cdi cdigest;
+  let cdigest = V.alloc 0uy (digest_len alg);
+  V.to_array_pts_to cdigest;
+
+  hacl_hash alg dice_digest_len cdi (V.vec_to_array cdigest);
 
   derive_key_pair
     deviceID_pub deviceID_priv
-    (digest_len alg) cdigest
+    (digest_len alg) (V.vec_to_array cdigest)
     deviceID_label_len deviceID_label;
+  
+  V.to_vec_pts_to cdigest;
+  V.free cdigest
 }
 ```
-let derive_DeviceID = derive_DeviceID'
+let derive_DeviceID = derive_DeviceID_aux
 
 ```pulse 
-fn derive_AliasKey'
+fn derive_AliasKey_aux
   (alg:alg_t)
   (aliasKey_pub: A.larray U8.t (US.v v32us))
   (aliasKey_priv: A.larray U8.t (US.v v32us))
@@ -178,24 +185,31 @@ fn derive_AliasKey'
       ))
   )
 {
-  let mut cdigest = [| 0uy; digest_len alg |];
-  let mut adigest = [| 0uy; digest_len alg |];
+  let cdigest = V.alloc 0uy (digest_len alg);
+  let adigest = V.alloc 0uy (digest_len alg);
 
-  hacl_hash alg dice_digest_len cdi cdigest;
-  is_hashable_len_32;
-  hacl_hmac alg adigest cdigest (digest_len alg) fwid v32us;
+  V.to_array_pts_to cdigest;
+  V.to_array_pts_to adigest;
+
+  hacl_hash alg dice_digest_len cdi (V.vec_to_array cdigest);
+  hacl_hmac alg (V.vec_to_array adigest) (V.vec_to_array cdigest) (digest_len alg) fwid v32us;
 
   derive_key_pair
     aliasKey_pub aliasKey_priv
-    (digest_len alg) adigest
+    (digest_len alg) (V.vec_to_array adigest)
     aliasKey_label_len aliasKey_label;
+
+  V.to_vec_pts_to cdigest;
+  V.to_vec_pts_to adigest;
+  V.free cdigest;
+  V.free adigest
 }
 ```
-let derive_AliasKey = derive_AliasKey'
+let derive_AliasKey = derive_AliasKey_aux
 
 
 ```pulse 
-fn derive_AuthKeyID'
+fn derive_AuthKeyID_aux
   (alg:alg_t)
   (authKeyID: A.larray U8.t (US.v (digest_len alg)))
   (deviceID_pub: A.larray U8.t (US.v v32us))
@@ -210,8 +224,7 @@ fn derive_AuthKeyID'
       A.pts_to authKeyID authKeyID1 **
       pure (Seq.equal (derive_AuthKeyID_spec alg deviceID_pub0) authKeyID1))
 {
-  is_hashable_len_32;
   hacl_hash alg v32us deviceID_pub authKeyID;
 }
 ```
-let derive_AuthKeyID = derive_AuthKeyID'
+let derive_AuthKeyID = derive_AuthKeyID_aux

@@ -31,6 +31,7 @@ val vec ([@@@strictly_positive] a:Type0) : Type u#0
 
 val length (#a:Type0) (v:vec a) : GTot nat
 
+inline_for_extraction
 type lvec (a:Type0) (n:nat) = v:vec a { length v == n }
 
 val is_full_vec (#a:Type0) (v:vec a) : prop

@@ -260,7 +260,12 @@ struct FieldTyp {
     field_typ_typ: Typ,
 }
 
+enum Attribute {
+    AttrDerive(String),
+}
+
 struct ItemStruct {
+    item_struct_attrs: Vec<Attribute>,
     item_struct_name: String,
     item_struct_generics: Vec<GenericParam>,
     item_struct_fields: Vec<FieldTyp>,
@@ -278,6 +283,7 @@ struct EnumVariant {
 }
 
 struct ItemEnum {
+    item_enum_attrs: Vec<Attribute>,
     item_enum_name: String,
     item_enum_generics: Vec<GenericParam>,
     item_enum_variants: Vec<EnumVariant>,
@@ -636,8 +642,15 @@ impl_from_ocaml_record! {
   }
 }
 
+impl_from_ocaml_variant! {
+  Attribute {
+    Attribute::AttrDerive (payload:String),
+  }
+}
+
 impl_from_ocaml_record! {
   ItemStruct {
+    item_struct_attrs : OCamlList<Attribute>,
     item_struct_name : String,
     item_struct_generics : OCamlList<GenericParam>,
     item_struct_fields : OCamlList<FieldTyp>,
@@ -661,6 +674,7 @@ impl_from_ocaml_record! {
 
 impl_from_ocaml_record! {
   ItemEnum {
+    item_enum_attrs: OCamlList<Attribute>,
     item_enum_name : String,
     item_enum_generics : OCamlList<GenericParam>,
     item_enum_variants : OCamlList<EnumVariant>,
@@ -1482,7 +1496,8 @@ fn to_syn_fn(f: &Fn) -> ItemFn {
     }
 }
 
-fn derive_clone_copy_attr() -> syn::Attribute {
+fn to_syn_attr(attr: &Attribute) -> syn::Attribute {
+    let Attribute::AttrDerive(s) = attr;
     syn::Attribute {
         pound_token: syn::token::Pound {
             spans: [Span::call_site()],
@@ -1504,7 +1519,7 @@ fn derive_clone_copy_attr() -> syn::Attribute {
                 )
                 .delim_span(),
             }),
-            tokens: proc_macro2::TokenStream::from_str("Clone, Copy").unwrap(),
+            tokens: proc_macro2::TokenStream::from_str(s).unwrap(),
         }),
     }
 }
@@ -1552,6 +1567,7 @@ fn to_syn_item(i: &Item) -> Vec<syn::Item> {
     match i {
         Item::IFn(f) => vec![syn::Item::Fn(to_syn_fn(f))],
         Item::IStruct(ItemStruct {
+            item_struct_attrs,
             item_struct_name,
             item_struct_generics,
             item_struct_fields,
@@ -1572,7 +1588,7 @@ fn to_syn_item(i: &Item) -> Vec<syn::Item> {
                 })
             });
             let item = syn::Item::Struct(syn::ItemStruct {
-                attrs: vec![],
+                attrs: item_struct_attrs.iter().map(to_syn_attr).collect(),
                 vis: syn::Visibility::Public({
                     syn::token::Pub {
                         span: Span::call_site(),
@@ -1647,6 +1663,7 @@ fn to_syn_item(i: &Item) -> Vec<syn::Item> {
             vec![item]
         }
         Item::IEnum(ItemEnum {
+            item_enum_attrs,
             item_enum_name,
             item_enum_generics,
             item_enum_variants,
@@ -1689,8 +1706,7 @@ fn to_syn_item(i: &Item) -> Vec<syn::Item> {
                 })
             });
             let item = syn::Item::Enum(syn::ItemEnum {
-                // attrs: vec![derive_clone_copy_attr()],
-                attrs: vec![],
+                attrs: item_enum_attrs.iter().map(to_syn_attr).collect(),
                 vis: syn::Visibility::Public({
                     syn::token::Pub {
                         span: Span::call_site(),
@@ -2276,71 +2292,195 @@ ocaml_export! {
 
 // static OBJ: Mutex<S> = new_mutex();
 
-pub struct engine_context_t {
-    uds: Vec<u8>,
-}
+// type hashable_len = usize;
+// type signable_len = usize;
+// type hkdf_lbl_len = usize;
+// type alg_t = ();
 
-pub struct l0_context_t {
-    cdi: Vec<u8>,
-}
+// pub const dice_digest_len: usize = 32;
 
-pub struct l1_context_t {
-    deviceID_priv: Vec<u8>,
-    deviceID_pub: Vec<u8>,
-    aliasKey_priv: Vec<u8>,
-    aliasKey_pub: Vec<u8>,
-    aliasKeyCRT: Vec<u8>,
-    deviceIDCSR: Vec<u8>,
-}
+// pub const dice_hash_alg: () = ();
 
-pub enum context_t {
-    Engine_context(engine_context_t),
-    L0_context(l0_context_t),
-    L1_context(l1_context_t),
-}
-use crate::context_t::*;
-static uds_len: usize = 32;
-static dice_digest_len: usize = 32;
-static v32us: usize = 32;
+// pub fn ed25519_verify(
+//     pubk: &mut [u8],
+//     hdr: &mut [u8],
+//     hdr_len: signable_len,
+//     sig: &mut [u8],
+//     ppubk: (),
+//     phdr: (),
+//     psig: (),
+//     pubk_seq: (),
+//     hdr_seq: (),
+//     sig_seq: (),
+// ) -> bool {
+//     panic!()
+// }
 
-pub fn memcpy(len: usize, v_dst: &mut [u8], v_src: &mut [u8], p: (), uds_bytes: (), m: ()) -> () {
-    panic!()
-}
+// pub fn hacl_hash(
+//     alg: (),
+//     src_len: hashable_len,
+//     src: &mut [u8],
+//     dst: &mut [u8],
+//     psrc: (),
+//     src_seq: (),
+//     dst_seq: (),
+// ) -> () {
+//     panic!()
+// }
 
-pub fn mk_engine_context_t(uds_buf: Vec<u8>) -> engine_context_t {
-    engine_context_t { uds: uds_buf }
-}
+// pub fn compare(
+//     len: usize,
+//     a: &mut [u8],
+//     b: &mut [u8],
+//     p: (),
+//     a_seq: (),
+//     b_seq: (),
+//     __c0: (),
+// ) -> bool {
+//     panic!()
+// }
 
-pub fn mk_context_t_engine(engine_context: engine_context_t) -> context_t {
-    context_t::Engine_context(engine_context)
-}
+// pub fn hacl_hmac(
+//     alg: (),
+//     dst: &mut [u8],
+//     key: &mut [u8],
+//     key_len: hashable_len,
+//     msg: &mut [u8],
+//     msg_len: hashable_len,
+//     pkey: (),
+//     pmsg: (),
+//     dst_seq: (),
+//     key_seq: (),
+//     msg_seq: (),
+// ) -> () {
+//     panic!()
+// }
 
-pub fn mk_l0_context_t(cdi_buf: Vec<u8>) -> l0_context_t {
-    l0_context_t { cdi: cdi_buf }
-}
+// pub fn x509_get_deviceIDCRI(
+//     version: x509_version_t,
+//     s_common: String,
+//     s_org: String,
+//     s_country: String,
+//     ku: u32,
+//     deviceID_pub: &mut [u8],
+//     pub_perm: (),
+//     deviceID_pub0: (),
+// ) -> deviceIDCRI_t {
+//     panic!()
+// }
 
-pub fn mk_context_t_l0(l0_context: l0_context_t) -> context_t {
-    context_t::L0_context(l0_context)
-}
+// pub fn serialize_deviceIDCRI(
+//     deviceIDCRI: deviceIDCRI_t,
+//     deviceIDCRI_len: usize,
+//     deviceIDCRI_buf: &mut [u8],
+//     deviceIDCRI_buf0: (),
+// ) -> () {
+//     panic!()
+// }
 
-pub fn mk_l1_context_t(
-    deviceID_priv_buf: Vec<u8>,
-    deviceID_pub_buf: Vec<u8>,
-    aliasKey_priv_buf: Vec<u8>,
-    aliasKey_pub_buf: Vec<u8>,
-    aliasKeyCRT_buf: Vec<u8>,
-    deviceIDCSR_buf: Vec<u8>,
-) -> l1_context_t {
-    l1_context_t {
-        deviceID_priv: deviceID_priv_buf,
-        deviceID_pub: deviceID_pub_buf,
-        aliasKey_priv: aliasKey_priv_buf,
-        aliasKey_pub: aliasKey_pub_buf,
-        aliasKeyCRT: aliasKeyCRT_buf,
-        deviceIDCSR: deviceIDCSR_buf,
-    }
-}
+// pub fn x509_get_deviceIDCSR(
+//     deviceIDCRI_len: usize,
+//     deviceIDCRI_buf: &mut [u8],
+//     deviceIDCRI_sig: &mut [u8],
+//     buf_perm: (),
+//     sig_perm: (),
+//     buf: (),
+//     sig: (),
+// ) -> deviceIDCSR_t {
+//     panic!()
+// }
 
-pub fn mk_context_t_l1(l1_context: l1_context_t) -> context_t {
-    context_t::L1_context(l1_context)
-}
+// pub fn ed25519_sign(
+//     buf: &mut [u8],
+//     privk: &mut [u8],
+//     len: usize,
+//     msg: &mut [u8],
+//     pprivk: (),
+//     pmsg: (),
+//     buf0: (),
+//     privk_seq: (),
+//     msg_seq: (),
+// ) -> () {
+//     panic!()
+// }
+
+// pub fn serialize_deviceIDCSR(
+//     deviceIDCRI_len: usize,
+//     deviceIDCSR: deviceIDCSR_t,
+//     deviceIDCSR_len: usize,
+//     deviceIDCSR_buf: &mut [u8],
+//     _buf: (),
+// ) -> () {
+//     panic!()
+// }
+
+// pub fn x509_get_aliasKeyTBS(
+//     aliasKeyCRT_ingredients: aliasKeyCRT_ingredients_t,
+//     fwid: &mut [u8],
+//     deviceID_pub: &mut [u8],
+//     aliasKey_pub: &mut [u8],
+//     fwid_perm: (),
+//     deviceID_perm: (),
+//     aliasKey_perm: (),
+//     fwid0: (),
+//     deviceID0: (),
+//     aliasKey0: (),
+// ) -> aliasKeyTBS_t {
+//     panic!()
+// }
+
+// pub fn serialize_aliasKeyTBS(
+//     aliasKeyTBS: aliasKeyTBS_t,
+//     aliasKeyTBS_len: usize,
+//     aliasKeyTBS_buf: &mut [u8],
+//     aliasKeyTBS_buf0: (),
+// ) -> () {
+//     panic!()
+// }
+
+// pub fn x509_get_aliasKeyCRT(
+//     aliasKeyTBS_len: usize,
+//     aliasKeyTBS_buf: &mut [u8],
+//     aliasKeyTBS_sig: &mut [u8],
+//     buf_perm: (),
+//     sig_perm: (),
+//     buf: (),
+//     sig: (),
+// ) -> aliasKeyCRT_t {
+//     panic!()
+// }
+
+// pub fn serialize_aliasKeyCRT(
+//     aliasKeyTBS_len: usize,
+//     aliasKeyCRT: aliasKeyCRT_t,
+//     aliasKeyCRT_len: usize,
+//     aliasKeyCRT_buf: &mut [u8],
+//     _buf: (),
+// ) -> () {
+//     panic!()
+// }
+
+// pub fn digest_len(alg: alg_t) -> usize {
+//     panic!()
+// }
+
+// pub const v32us: usize = 32;
+
+// pub fn derive_key_pair(
+//     pubk: &mut [u8],
+//     privk: &mut [u8],
+//     ikm_len: usize,
+//     ikm: &mut [u8],
+//     lbl_len: hkdf_lbl_len,
+//     lbl: &mut [u8],
+//     ikm_perm: (),
+//     lbl_perm: (),
+//     pub_seq: (),
+//     priv_seq: (),
+//     ikm_seq: (),
+//     lbl_seq: (),
+// ) -> () {
+//     panic!()
+// }
+
+//////////////////////////////

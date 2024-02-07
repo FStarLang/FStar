@@ -43,10 +43,10 @@ let cdi_functional_correctness (c0:Seq.seq U8.t) (uds_bytes:Seq.seq U8.t) (repr:
 ```pulse
 fn authenticate_l0_image (record:engine_record_t) (#repr:Ghost.erased engine_record_repr) (#p:perm)
     requires engine_record_perm record p repr
-    returns b:bool
+    returns b:(engine_record_t & bool)
     ensures (
-        engine_record_perm record p repr **
-        pure (b ==> l0_is_authentic repr)
+        engine_record_perm (fst b) p repr **
+        pure (snd b ==> l0_is_authentic repr)
     )
 {
   unfold (engine_record_perm record p repr);
@@ -77,12 +77,18 @@ fn authenticate_l0_image (record:engine_record_t) (#repr:Ghost.erased engine_rec
     V.to_vec_pts_to record.l0_binary_hash;
 
     fold (engine_record_perm record p repr);
+    let res = (record, res);
+    rewrite (engine_record_perm record p repr) as
+            (engine_record_perm (fst res) p repr);
     res
   }
   else
   {
     fold (engine_record_perm record p repr);
-    false
+    let res = (record, false);
+    rewrite (engine_record_perm record p repr) as
+            (engine_record_perm (fst res) p repr);
+    res
   };
 }
 ```
@@ -97,6 +103,7 @@ fn compute_cdi
   requires A.pts_to uds #uds_perm uds_bytes
         ** A.pts_to cdi 'c0
         ** engine_record_perm record p 'repr
+  returns record:engine_record_t
   ensures engine_record_perm record p 'repr
        ** A.pts_to uds #uds_perm uds_bytes
        ** (exists* (c1:Seq.seq U8.t). 
@@ -116,16 +123,16 @@ fn compute_cdi
 
   fold engine_record_perm record p 'repr;
 
-  dice_digest_len_is_hashable;
-
   hacl_hmac dice_hash_alg cdi 
     uds_digest dice_digest_len
     l0_digest dice_digest_len;
+  
+  record
 }
 ```
 
 ```pulse
-fn engine_main'
+fn engine_main_aux
   (cdi:A.larray U8.t (SZ.v (digest_len dice_hash_alg)))
   (uds:A.larray U8.t (US.v uds_len)) (record:engine_record_t)
   (#c0:Ghost.erased (Seq.seq U8.t))
@@ -134,23 +141,29 @@ fn engine_main'
   requires engine_record_perm record p repr **
            A.pts_to uds #uds_perm uds_bytes **
            A.pts_to cdi c0
-  returns  r:dice_return_code
-  ensures  engine_record_perm record p repr **
+  returns  r:(engine_record_t & dice_return_code)
+  ensures  engine_record_perm (fst r) p repr **
            A.pts_to uds #uds_perm uds_bytes **
           (exists* (c1:Seq.seq U8.t).
              A.pts_to cdi c1 **
-             pure (r = DICE_SUCCESS ==> l0_is_authentic repr /\ cdi_functional_correctness c1 uds_bytes repr))
+             pure (snd r = DICE_SUCCESS ==> l0_is_authentic repr /\ cdi_functional_correctness c1 uds_bytes repr))
 {
   let b = authenticate_l0_image record;
-  if b 
+  if snd b 
   {
-    compute_cdi cdi uds record;
-    DICE_SUCCESS
+    let record = compute_cdi cdi uds (fst b);
+    let res = (record, DICE_SUCCESS);
+    rewrite (engine_record_perm record p repr) as
+            (engine_record_perm (fst res) p repr);
+    res
   }
   else
-  { 
-    DICE_ERROR
+  {
+    let res = (fst b, DICE_ERROR);
+    rewrite (engine_record_perm (fst b) p repr) as
+            (engine_record_perm (fst res) p repr);
+    res    
   }
 }
 ```
-let engine_main = engine_main'
+let engine_main = engine_main_aux
