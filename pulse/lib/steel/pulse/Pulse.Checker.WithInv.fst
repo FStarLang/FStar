@@ -106,13 +106,31 @@ let remove_iname_typing
 : tot_typing g (remove_iname inv_p inames inv) tm_inames
 = RU.magic()
 
+let add_iname_typing
+    (g:env) (#inv_p #inames #inv:term)
+    (_:tot_typing g inv_p tm_vprop)
+    (_:tot_typing g inames tm_inames)
+    (_:tot_typing g inv (tm_inv inv_p))
+: tot_typing g (add_iname inv_p inames inv) tm_inames
+= RU.magic()
+
+let tm_inames_subset_typing
+    (g:env) (#i #j:term)
+    (_:tot_typing g i tm_inames)
+    (_:tot_typing g j tm_inames)
+: tot_typing g (tm_inames_subset i j) tm_prop
+= RU.magic()
+
 let disjointness_remove_i_i (g:env) (inv_p inames inv:term)
 : T.Tac (Pulse.Typing.prop_validity g 
             (inv_disjointness inv_p (remove_iname inv_p inames inv) inv))
 = RU.magic()
 
-
-let add_remove_inverse (g:env) (inv_p inames inv:term)
+let add_remove_inverse (g:env)
+     (inv_p inames inv:term)
+     (inv_p_typing:tot_typing g inv_p tm_vprop)
+     (inames_typing:tot_typing g inames tm_inames)
+     (inv_typing:tot_typing g inv (tm_inv inv_p))
 : T.Tac 
     (prop_validity g 
         (tm_inames_subset 
@@ -120,7 +138,33 @@ let add_remove_inverse (g:env) (inv_p inames inv:term)
               (remove_iname inv_p inames inv)
               inv)
             inames))
-= RU.magic()
+= let typing
+  : tot_typing g 
+          (tm_inames_subset 
+              (add_iname inv_p
+                (remove_iname inv_p inames inv)
+                inv)
+              inames)
+          tm_prop
+  = let remove_typing = remove_iname_typing g inv_p_typing inames_typing inv_typing in
+    let add_typing = add_iname_typing g inv_p_typing remove_typing inv_typing in
+    tm_inames_subset_typing g 
+      add_typing
+      inames_typing
+  in
+  match Pulse.Checker.Pure.try_check_prop_validity g _ typing with
+  | None -> 
+    let open Pulse.PP in
+    fail_doc g None [
+      Pulse.PP.text "Failed to prove that only the following invariants are opened";
+      prefix 4 1 (text "Inferred the following invariants were opened: ") 
+        (pp (add_iname inv_p
+              (remove_iname inv_p inames inv)
+            inv)) ^/^
+      prefix 4 1 (text "But expected to only open: ") (pp inames)
+    ]
+      
+  | Some tok -> tok
 
 let check
   (g:env)
@@ -262,6 +306,9 @@ let check
     let C_STAtomic add_inv obs' st = c_out in
     let tok : prop_validity g (tm_inames_subset add_inv opens) =
       add_remove_inverse g inv_p opens inv_tm
+          inv_p_typing
+          opens_typing
+          inv_tm_typing
     in
     let d = T_Sub _ _ _ _ d (STS_AtomicInvs _ st _ _ obs' obs' tok) in
     checker_result_for_st_typing (| tm, _, d |)  res_ppname
