@@ -49,6 +49,7 @@ let ctxt_hndl_t = U32.t
 
 type sid_t : eqtype = U32.t
 
+[@@ Rust_derive "Clone"]
 noeq
 type session_state =
   | SessionStart
@@ -331,7 +332,8 @@ fn get_profile ()
 // Move to hashtable?
 //
 
-[@@ Rust_generics_bounds [["Copy"; "PartialEq"]]]
+[@@ Rust_generics_bounds [["Copy"; "PartialEq"; "Clone"];
+                          ["Clone"]]]
 ```pulse
 fn insert_if_not_full (#kt:eqtype) (#vt:Type0)
   (ht:ht_t kt vt) (k:kt) (v:vt)
