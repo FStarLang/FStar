@@ -1644,6 +1644,29 @@ let (extract_top_level_lb :
                                "top level lb def with either no tysc or generics %s"
                                uu___6 in
                            fail_nyi uu___5)))
+let (has_rust_derive_attr :
+  FStar_Extraction_ML_Syntax.mlattribute Prims.list ->
+    Pulse2Rust_Rust_Syntax.attribute FStar_Pervasives_Native.option)
+  =
+  fun attrs ->
+    let uu___ =
+      FStar_Compiler_List.tryFind
+        (fun attr ->
+           match attr.FStar_Extraction_ML_Syntax.expr with
+           | FStar_Extraction_ML_Syntax.MLE_CTor (p, uu___1) when
+               let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+               uu___2 = "Pulse.Lib.Pervasives.Rust_derive" -> true
+           | uu___1 -> false) attrs in
+    FStar_Compiler_Util.map_option
+      (fun attr ->
+         let uu___1 = attr.FStar_Extraction_ML_Syntax.expr in
+         match uu___1 with
+         | FStar_Extraction_ML_Syntax.MLE_CTor (p, arg::uu___2) ->
+             let uu___3 = arg.FStar_Extraction_ML_Syntax.expr in
+             (match uu___3 with
+              | FStar_Extraction_ML_Syntax.MLE_Const
+                  (FStar_Extraction_ML_Syntax.MLC_String s) ->
+                  Pulse2Rust_Rust_Syntax.mk_derive_attr s)) uu___
 let (extract_struct_defn :
   env ->
     FStar_Extraction_ML_Syntax.mlattribute Prims.list ->
@@ -1659,17 +1682,23 @@ let (extract_struct_defn :
             (FStar_Extraction_ML_Syntax.MLTD_Record fts) ->
             let uu___1 =
               let uu___2 =
-                enum_or_struct_name d.FStar_Extraction_ML_Syntax.tydecl_name in
+                let uu___3 =
+                  let uu___4 = has_rust_derive_attr attrs in
+                  FStar_Compiler_Util.map_option (fun a -> [a]) uu___4 in
+                FStar_Compiler_Util.dflt [] uu___3 in
               let uu___3 =
+                enum_or_struct_name d.FStar_Extraction_ML_Syntax.tydecl_name in
+              let uu___4 =
                 extract_generic_type_params
                   d.FStar_Extraction_ML_Syntax.tydecl_parameters attrs in
-              let uu___4 =
+              let uu___5 =
                 FStar_Compiler_List.map
-                  (fun uu___5 ->
-                     match uu___5 with
-                     | (f, t) -> let uu___6 = extract_mlty g t in (f, uu___6))
+                  (fun uu___6 ->
+                     match uu___6 with
+                     | (f, t) -> let uu___7 = extract_mlty g t in (f, uu___7))
                   fts in
-              Pulse2Rust_Rust_Syntax.mk_item_struct uu___2 uu___3 uu___4 in
+              Pulse2Rust_Rust_Syntax.mk_item_struct uu___2 uu___3 uu___4
+                uu___5 in
             let uu___2 =
               let uu___3 =
                 let uu___4 =
@@ -1720,22 +1749,27 @@ let (extract_enum :
             cts) ->
             let uu___1 =
               let uu___2 =
-                enum_or_struct_name d.FStar_Extraction_ML_Syntax.tydecl_name in
+                let uu___3 =
+                  let uu___4 = has_rust_derive_attr attrs in
+                  FStar_Compiler_Util.map_option (fun a -> [a]) uu___4 in
+                FStar_Compiler_Util.dflt [] uu___3 in
               let uu___3 =
+                enum_or_struct_name d.FStar_Extraction_ML_Syntax.tydecl_name in
+              let uu___4 =
                 extract_generic_type_params
                   d.FStar_Extraction_ML_Syntax.tydecl_parameters attrs in
-              let uu___4 =
+              let uu___5 =
                 FStar_Compiler_List.map
-                  (fun uu___5 ->
-                     match uu___5 with
+                  (fun uu___6 ->
+                     match uu___6 with
                      | (cname, dts) ->
-                         let uu___6 =
+                         let uu___7 =
                            FStar_Compiler_List.map
-                             (fun uu___7 ->
-                                match uu___7 with
-                                | (uu___8, t) -> extract_mlty g t) dts in
-                         (cname, uu___6)) cts in
-              Pulse2Rust_Rust_Syntax.mk_item_enum uu___2 uu___3 uu___4 in
+                             (fun uu___8 ->
+                                match uu___8 with
+                                | (uu___9, t) -> extract_mlty g t) dts in
+                         (cname, uu___7)) cts in
+              Pulse2Rust_Rust_Syntax.mk_item_enum uu___2 uu___3 uu___4 uu___5 in
             (uu___1, g)
 let (extract_mltydecl :
   env ->

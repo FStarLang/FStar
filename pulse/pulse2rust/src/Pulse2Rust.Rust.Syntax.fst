@@ -222,10 +222,13 @@ let mk_local_stmt (name:option string) (t:option typ) (is_mut:bool) (init:expr) 
 let mk_fn (fn_sig:fn_signature) (fn_body:list stmt) =
   { fn_sig; fn_body; }
 
-let mk_item_struct (name:string) (generics:list generic_type_param) (fields:list (string & typ))
+let mk_derive_attr (s:string) : attribute = Attr_derive s
+
+let mk_item_struct (attrs:list attribute) (name:string) (generics:list generic_type_param) (fields:list (string & typ))
   : item =
 
   Item_struct {
+    item_struct_attrs = attrs;
     item_struct_name = name;
     item_struct_generics = L.map Generic_type_param generics;
     item_struct_fields = L.map (fun (f, t) -> {
@@ -241,10 +244,11 @@ let mk_item_type (name:string) (generics:list generic_type_param) (t:typ) : item
     item_type_typ = t;
   }
 
-let mk_item_enum (name:string) (generics:list generic_type_param) (variants:list (string & list typ))
+let mk_item_enum (attrs:list attribute) (name:string) (generics:list generic_type_param) (variants:list (string & list typ))
   : item =
 
   Item_enum {
+    item_enum_attrs = attrs;
     item_enum_name = name;
     item_enum_generics = L.map Generic_type_param generics;
     item_enum_variants = L.map (fun (v, typs) -> {

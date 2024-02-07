@@ -260,7 +260,12 @@ struct FieldTyp {
     field_typ_typ: Typ,
 }
 
+enum Attribute {
+    AttrDerive(String),
+}
+
 struct ItemStruct {
+    item_struct_attrs: Vec<Attribute>,
     item_struct_name: String,
     item_struct_generics: Vec<GenericParam>,
     item_struct_fields: Vec<FieldTyp>,
@@ -278,6 +283,7 @@ struct EnumVariant {
 }
 
 struct ItemEnum {
+    item_enum_attrs: Vec<Attribute>,
     item_enum_name: String,
     item_enum_generics: Vec<GenericParam>,
     item_enum_variants: Vec<EnumVariant>,
@@ -636,8 +642,15 @@ impl_from_ocaml_record! {
   }
 }
 
+impl_from_ocaml_variant! {
+  Attribute {
+    Attribute::AttrDerive (payload:String),
+  }
+}
+
 impl_from_ocaml_record! {
   ItemStruct {
+    item_struct_attrs : OCamlList<Attribute>,
     item_struct_name : String,
     item_struct_generics : OCamlList<GenericParam>,
     item_struct_fields : OCamlList<FieldTyp>,
@@ -661,6 +674,7 @@ impl_from_ocaml_record! {
 
 impl_from_ocaml_record! {
   ItemEnum {
+    item_enum_attrs: OCamlList<Attribute>,
     item_enum_name : String,
     item_enum_generics : OCamlList<GenericParam>,
     item_enum_variants : OCamlList<EnumVariant>,
@@ -1482,7 +1496,8 @@ fn to_syn_fn(f: &Fn) -> ItemFn {
     }
 }
 
-fn derive_clone_copy_attr() -> syn::Attribute {
+fn to_syn_attr(attr: &Attribute) -> syn::Attribute {
+    let Attribute::AttrDerive(s) = attr;
     syn::Attribute {
         pound_token: syn::token::Pound {
             spans: [Span::call_site()],
@@ -1504,7 +1519,7 @@ fn derive_clone_copy_attr() -> syn::Attribute {
                 )
                 .delim_span(),
             }),
-            tokens: proc_macro2::TokenStream::from_str("Clone, Copy").unwrap(),
+            tokens: proc_macro2::TokenStream::from_str(s).unwrap(),
         }),
     }
 }
@@ -1552,6 +1567,7 @@ fn to_syn_item(i: &Item) -> Vec<syn::Item> {
     match i {
         Item::IFn(f) => vec![syn::Item::Fn(to_syn_fn(f))],
         Item::IStruct(ItemStruct {
+            item_struct_attrs,
             item_struct_name,
             item_struct_generics,
             item_struct_fields,
@@ -1572,7 +1588,7 @@ fn to_syn_item(i: &Item) -> Vec<syn::Item> {
                 })
             });
             let item = syn::Item::Struct(syn::ItemStruct {
-                attrs: vec![],
+                attrs: item_struct_attrs.iter().map(to_syn_attr).collect(),
                 vis: syn::Visibility::Public({
                     syn::token::Pub {
                         span: Span::call_site(),
@@ -1647,6 +1663,7 @@ fn to_syn_item(i: &Item) -> Vec<syn::Item> {
             vec![item]
         }
         Item::IEnum(ItemEnum {
+            item_enum_attrs,
             item_enum_name,
             item_enum_generics,
             item_enum_variants,
@@ -1689,8 +1706,7 @@ fn to_syn_item(i: &Item) -> Vec<syn::Item> {
                 })
             });
             let item = syn::Item::Enum(syn::ItemEnum {
-                // attrs: vec![derive_clone_copy_attr()],
-                attrs: vec![],
+                attrs: item_enum_attrs.iter().map(to_syn_attr).collect(),
                 vis: syn::Visibility::Public({
                     syn::token::Pub {
                         span: Span::call_site(),

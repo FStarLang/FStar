@@ -693,29 +693,41 @@ let (__proj__Mkfield_typ__item__field_typ_typ : field_typ -> typ) =
   fun projectee ->
     match projectee with
     | { field_typ_name; field_typ_typ;_} -> field_typ_typ
+type attribute =
+  | Attr_derive of Prims.string 
+let (uu___is_Attr_derive : attribute -> Prims.bool) = fun projectee -> true
+let (__proj__Attr_derive__item___0 : attribute -> Prims.string) =
+  fun projectee -> match projectee with | Attr_derive _0 -> _0
 type item_struct =
   {
+  item_struct_attrs: attribute Prims.list ;
   item_struct_name: Prims.string ;
   item_struct_generics: generic_param Prims.list ;
   item_struct_fields: field_typ Prims.list }
+let (__proj__Mkitem_struct__item__item_struct_attrs :
+  item_struct -> attribute Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { item_struct_attrs; item_struct_name; item_struct_generics;
+        item_struct_fields;_} -> item_struct_attrs
 let (__proj__Mkitem_struct__item__item_struct_name :
   item_struct -> Prims.string) =
   fun projectee ->
     match projectee with
-    | { item_struct_name; item_struct_generics; item_struct_fields;_} ->
-        item_struct_name
+    | { item_struct_attrs; item_struct_name; item_struct_generics;
+        item_struct_fields;_} -> item_struct_name
 let (__proj__Mkitem_struct__item__item_struct_generics :
   item_struct -> generic_param Prims.list) =
   fun projectee ->
     match projectee with
-    | { item_struct_name; item_struct_generics; item_struct_fields;_} ->
-        item_struct_generics
+    | { item_struct_attrs; item_struct_name; item_struct_generics;
+        item_struct_fields;_} -> item_struct_generics
 let (__proj__Mkitem_struct__item__item_struct_fields :
   item_struct -> field_typ Prims.list) =
   fun projectee ->
     match projectee with
-    | { item_struct_name; item_struct_generics; item_struct_fields;_} ->
-        item_struct_fields
+    | { item_struct_attrs; item_struct_name; item_struct_generics;
+        item_struct_fields;_} -> item_struct_fields
 type item_type =
   {
   item_type_name: Prims.string ;
@@ -752,26 +764,33 @@ let (__proj__Mkenum_variant__item__enum_variant_fields :
     | { enum_variant_name; enum_variant_fields;_} -> enum_variant_fields
 type item_enum =
   {
+  item_enum_attrs: attribute Prims.list ;
   item_enum_name: Prims.string ;
   item_enum_generics: generic_param Prims.list ;
   item_enum_variants: enum_variant Prims.list }
+let (__proj__Mkitem_enum__item__item_enum_attrs :
+  item_enum -> attribute Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { item_enum_attrs; item_enum_name; item_enum_generics;
+        item_enum_variants;_} -> item_enum_attrs
 let (__proj__Mkitem_enum__item__item_enum_name : item_enum -> Prims.string) =
   fun projectee ->
     match projectee with
-    | { item_enum_name; item_enum_generics; item_enum_variants;_} ->
-        item_enum_name
+    | { item_enum_attrs; item_enum_name; item_enum_generics;
+        item_enum_variants;_} -> item_enum_name
 let (__proj__Mkitem_enum__item__item_enum_generics :
   item_enum -> generic_param Prims.list) =
   fun projectee ->
     match projectee with
-    | { item_enum_name; item_enum_generics; item_enum_variants;_} ->
-        item_enum_generics
+    | { item_enum_attrs; item_enum_name; item_enum_generics;
+        item_enum_variants;_} -> item_enum_generics
 let (__proj__Mkitem_enum__item__item_enum_variants :
   item_enum -> enum_variant Prims.list) =
   fun projectee ->
     match projectee with
-    | { item_enum_name; item_enum_generics; item_enum_variants;_} ->
-        item_enum_variants
+    | { item_enum_attrs; item_enum_name; item_enum_generics;
+        item_enum_variants;_} -> item_enum_variants
 type item_static =
   {
   item_static_name: Prims.string ;
@@ -1078,29 +1097,34 @@ let (mk_local_stmt :
             }
 let (mk_fn : fn_signature -> stmt Prims.list -> fn) =
   fun fn_sig -> fun fn_body -> { fn_sig; fn_body }
+let (mk_derive_attr : Prims.string -> attribute) = fun s -> Attr_derive s
 let (mk_item_struct :
-  Prims.string ->
-    generic_type_param Prims.list -> (Prims.string * typ) Prims.list -> item)
+  attribute Prims.list ->
+    Prims.string ->
+      generic_type_param Prims.list ->
+        (Prims.string * typ) Prims.list -> item)
   =
-  fun name ->
-    fun generics ->
-      fun fields ->
-        let uu___ =
-          let uu___1 =
-            FStar_Compiler_List.map (fun uu___2 -> Generic_type_param uu___2)
-              generics in
-          let uu___2 =
-            FStar_Compiler_List.map
-              (fun uu___3 ->
-                 match uu___3 with
-                 | (f, t) -> { field_typ_name = f; field_typ_typ = t })
-              fields in
-          {
-            item_struct_name = name;
-            item_struct_generics = uu___1;
-            item_struct_fields = uu___2
-          } in
-        Item_struct uu___
+  fun attrs ->
+    fun name ->
+      fun generics ->
+        fun fields ->
+          let uu___ =
+            let uu___1 =
+              FStar_Compiler_List.map
+                (fun uu___2 -> Generic_type_param uu___2) generics in
+            let uu___2 =
+              FStar_Compiler_List.map
+                (fun uu___3 ->
+                   match uu___3 with
+                   | (f, t) -> { field_typ_name = f; field_typ_typ = t })
+                fields in
+            {
+              item_struct_attrs = attrs;
+              item_struct_name = name;
+              item_struct_generics = uu___1;
+              item_struct_fields = uu___2
+            } in
+          Item_struct uu___
 let (mk_item_type :
   Prims.string -> generic_type_param Prims.list -> typ -> item) =
   fun name ->
@@ -1117,30 +1141,33 @@ let (mk_item_type :
           } in
         Item_type uu___
 let (mk_item_enum :
-  Prims.string ->
-    generic_type_param Prims.list ->
-      (Prims.string * typ Prims.list) Prims.list -> item)
+  attribute Prims.list ->
+    Prims.string ->
+      generic_type_param Prims.list ->
+        (Prims.string * typ Prims.list) Prims.list -> item)
   =
-  fun name ->
-    fun generics ->
-      fun variants ->
-        let uu___ =
-          let uu___1 =
-            FStar_Compiler_List.map (fun uu___2 -> Generic_type_param uu___2)
-              generics in
-          let uu___2 =
-            FStar_Compiler_List.map
-              (fun uu___3 ->
-                 match uu___3 with
-                 | (v, typs) ->
-                     { enum_variant_name = v; enum_variant_fields = typs })
-              variants in
-          {
-            item_enum_name = name;
-            item_enum_generics = uu___1;
-            item_enum_variants = uu___2
-          } in
-        Item_enum uu___
+  fun attrs ->
+    fun name ->
+      fun generics ->
+        fun variants ->
+          let uu___ =
+            let uu___1 =
+              FStar_Compiler_List.map
+                (fun uu___2 -> Generic_type_param uu___2) generics in
+            let uu___2 =
+              FStar_Compiler_List.map
+                (fun uu___3 ->
+                   match uu___3 with
+                   | (v, typs) ->
+                       { enum_variant_name = v; enum_variant_fields = typs })
+                variants in
+            {
+              item_enum_attrs = attrs;
+              item_enum_name = name;
+              item_enum_generics = uu___1;
+              item_enum_variants = uu___2
+            } in
+          Item_enum uu___
 let (mk_item_static : Prims.string -> typ -> expr -> item) =
   fun name ->
     fun t ->
