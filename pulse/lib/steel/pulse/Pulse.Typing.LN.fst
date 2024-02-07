@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Typing.LN
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
@@ -46,9 +62,13 @@ let rec open_term_ln' (e:term)
     | Tm_EmpInames
     | Tm_Unknown -> ()
 
+    | Tm_Inv p ->
+      open_term_ln' p x i
+
     | Tm_Pure p ->
       open_term_ln' p x i
 
+    | Tm_AddInv l r
     | Tm_Star l r ->
       open_term_ln' l x i;
       open_term_ln' r x i
@@ -71,13 +91,13 @@ let open_comp_ln' (c:comp)
     | C_Tot t ->
       open_term_ln' t x i
 
-    | C_ST s ->
+    | C_ST s
+    | C_STGhost s ->
       open_term_ln' s.res x i;
       open_term_ln' s.pre x i;      
       open_term_ln' s.post x (i + 1)
 
-    | C_STAtomic n s
-    | C_STGhost n s ->    
+    | C_STAtomic n _ s ->    
       open_term_ln' n x i;    
       open_term_ln' s.res x i;
       open_term_ln' s.pre x i;      
@@ -85,8 +105,8 @@ let open_comp_ln' (c:comp)
 
 let open_term_ln_opt' (t:option term) (x:term) (i:index)
   : Lemma
-    (requires ln_opt' (open_term_opt' t x i) (i - 1))
-    (ensures ln_opt' t i)
+    (requires ln_opt' ln' (open_term_opt' t x i) (i - 1))
+    (ensures ln_opt' ln' t i)
     (decreases t)
   = match t with
     | None -> ()
@@ -139,7 +159,70 @@ let open_proof_hint_ln (t:proof_hint_type) (x:term) (i:index)
     | REWRITE { t1; t2 } ->
       open_term_ln' t1 x i;
       open_term_ln' t2 x i
+    | WILD
+    | SHOW_PROOF_STATE _ -> ()
 
+let open_pattern'  (p:pattern) (v:term) (i:index) =
+  subst_pat p [DT i v]
+let close_pattern' (p:pattern) (x:var) (i:index) =
+  subst_pat p [ND x i]
+let open_pattern_args' (ps:list (pattern & bool)) (v:term) (i:index) =
+  subst_pat_args ps [DT i v]
+let close_pattern_args' (ps:list (pattern & bool)) (x:var) (i:index) =
+  subst_pat_args ps [ND x i]
+
+let rec pattern_shift_subst_invariant (p:pattern) (s:subst)
+  : Lemma
+    (ensures pattern_shift_n p == pattern_shift_n (subst_pat p s))
+    [SMTPat (pattern_shift_n (subst_pat p s))]
+  = match p with
+    | Pat_Cons _ subpats -> admit()
+    | _ -> ()
+and pattern_args_shift_subst_invariant (ps:list (pattern & bool)) (s:subst)
+  : Lemma
+    (ensures pattern_args_shift_n ps == pattern_args_shift_n (subst_pat_args ps s))
+  = match ps with
+    | [] -> ()
+    | (hd, _)::tl ->
+      pattern_shift_subst_invariant hd s;
+      pattern_args_shift_subst_invariant tl (shift_subst_n (pattern_shift_n hd) s)
+
+let rec open_pattern_ln (p:pattern) (x:term) (i:index)
+  : Lemma 
+    (requires ln_pattern' (open_pattern' p x i) (i - 1))
+    (ensures ln_pattern' p i)
+    (decreases p)
+  = match p with
+    | Pat_Constant _
+    | Pat_Var _ _
+    | Pat_Dot_Term None -> ()
+    | Pat_Dot_Term (Some e) ->
+      open_term_ln' e x i
+    | Pat_Cons _ subpats ->
+      open_pattern_args_ln subpats x i
+
+and open_pattern_args_ln (pats:list (pattern & bool)) (x:term) (i:index)
+  : Lemma 
+    (requires ln_pattern_args' (open_pattern_args' pats x i) (i - 1))
+    (ensures ln_pattern_args' pats i)
+    (decreases pats)
+  = match pats with
+    | [] -> ()
+    | (hd, b)::tl ->
+      open_pattern_ln hd x i;
+      open_pattern_args_ln tl x (i + pattern_shift_n hd)
+
+let map_opt_lemma_2 ($f: (x:'a -> y:'b -> z:'c -> Lemma (requires 'p x y z) (ensures 'q x y z)))
+                    (x:option 'a) 
+                    (y:'b)
+                    (z:'c)
+   : Lemma (requires Some? x ==> 'p (Some?.v x) y z)
+           (ensures Some? x ==> 'q (Some?.v x) y z)
+   = match x with
+     | None -> ()
+     | Some x -> f x y z
+
+#push-options "--z3rlimit 20"
 let rec open_st_term_ln' (e:st_term)
                          (x:term)
                          (i:index)
@@ -148,7 +231,8 @@ let rec open_st_term_ln' (e:st_term)
     (ensures ln_st' e i)
     (decreases e)
   = match e.term with
-    | Tm_Return { term = e } ->
+    | Tm_Return { expected_type; term = e } ->
+      open_term_ln' expected_type x i;
       open_term_ln' e x i
       
     | Tm_STApp { head=l; arg=r } ->
@@ -157,7 +241,8 @@ let rec open_st_term_ln' (e:st_term)
 
     | Tm_Abs { b; ascription=c; body } ->
       open_term_ln' b.binder_ty x i;
-      open_comp_ln' c x (i + 1);
+      map_opt_lemma_2 open_comp_ln' c.annotated x (i + 1);
+      map_opt_lemma_2 open_comp_ln' c.elaborated x (i + 1);
       open_st_term_ln' body x (i + 1)
       
     | Tm_Bind { binder; head; body } ->
@@ -212,19 +297,39 @@ let rec open_st_term_ln' (e:st_term)
       open_term_ln' binder.binder_ty x i;
       open_term_ln' initializer x i;
       open_st_term_ln' body x (i + 1)
+    
+    | Tm_WithLocalArray { binder; initializer; length; body } ->
+      open_term_ln' binder.binder_ty x i;
+      open_term_ln' initializer x i;
+      open_term_ln' length x i;
+      open_st_term_ln' body x (i + 1)
 
     | Tm_Admit { typ; post } ->
       open_term_ln' typ x i;
       open_term_ln_opt' post x (i + 1)
+
+    | Tm_Unreachable -> ()
 
     | Tm_ProofHintWithBinders { binders; hint_type; t } ->
       let n = L.length binders in
       open_proof_hint_ln hint_type x (i + n);
       open_st_term_ln' t x (i + n)
 
+    | Tm_WithInv { name; body; returns_inv } ->
+      open_term_ln' name x i;
+      open_st_term_ln' body x i;
+      match returns_inv with
+      | None -> ()
+      | Some (b, r) ->
+        open_term_ln' b.binder_ty x i;
+        open_term_ln' r x (i + 1)
+
 // The Tm_Match? and __brs_of conditions are to prove that the ln_branches' below
 // satisfies the termination refinment.
-and open_branches_ln' (t:st_term{Tm_Match? t.term}) (brs:list branch{brs << t /\ __brs_of t == brs}) (x:term) (i:index)
+and open_branches_ln' (t:st_term{Tm_Match? t.term})
+                      (brs:list branch{brs << t /\ __brs_of t == brs})
+                      (x:term)
+                      (i:index)
   : Lemma 
     (requires (
       assert (subst_branches t [DT i x] brs == __brs_of (subst_st_term t [DT i x])); // hint
@@ -243,11 +348,8 @@ and open_branch_ln' (br : branch) (x:term) (i:index)
     (requires ln_branch' (subst_branch [DT i x] br) (i - 1))
     (ensures ln_branch' br i)
   = let (p, e) = br in
-    match p with
-    | Pat_Constant _ -> open_st_term_ln' e x i
-    | Pat_Dot_Term _ -> open_st_term_ln' e x i
-    | Pat_Var v -> open_st_term_ln' e x (i+1)
-    | Pat_Cons _ subpats -> open_st_term_ln' e x (i + L.length subpats)
+    open_pattern_ln p x i;
+    open_st_term_ln' e x (i + pattern_shift_n p)
 
 let open_term_ln (e:term) (v:var)
   : Lemma 
@@ -281,10 +383,13 @@ let rec ln_weakening (e:term) (i j:int)
     | Tm_Inames
     | Tm_EmpInames
     | Tm_Unknown -> ()
+    | Tm_Inv p ->
+      ln_weakening p i j
     | Tm_Pure p ->
       ln_weakening p i j
       
     // | Tm_PureApp l _ r
+    | Tm_AddInv l r
     | Tm_Star l r ->
       ln_weakening l i j;
       ln_weakening r i j
@@ -296,6 +401,7 @@ let rec ln_weakening (e:term) (i j:int)
 
     | Tm_FStar t ->
       r_ln_weakening t i j
+#pop-options
 
 let ln_weakening_comp (c:comp) (i j:int)
   : Lemma 
@@ -305,13 +411,13 @@ let ln_weakening_comp (c:comp) (i j:int)
     | C_Tot t ->
       ln_weakening t i j
 
-    | C_ST s ->
+    | C_ST s
+    | C_STGhost s ->
       ln_weakening s.res i j;
       ln_weakening s.pre i j;      
       ln_weakening s.post (i + 1) (j + 1)
 
-    | C_STAtomic n s
-    | C_STGhost n s ->    
+    | C_STAtomic n _ s ->    
       ln_weakening n i j;    
       ln_weakening s.res i j;
       ln_weakening s.pre i j;      
@@ -319,8 +425,8 @@ let ln_weakening_comp (c:comp) (i j:int)
 
 let ln_weakening_opt (t:option term) (i j:int)
   : Lemma
-    (requires ln_opt' t i /\ i <= j)
-    (ensures ln_opt' t j)
+    (requires ln_opt' ln' t i /\ i <= j)
+    (ensures ln_opt' ln' t j)
     (decreases t)
   = match t with
     | None -> ()
@@ -365,6 +471,8 @@ let ln_weakening_proof_hint (t:proof_hint_type) (i j:int)
     | REWRITE { t1; t2 } ->
       ln_weakening t1 i j;
       ln_weakening t2 i j
+    | WILD
+    | SHOW_PROOF_STATE _ -> ()
 
 let rec ln_weakening_st (t:st_term) (i j:int)
   : Lemma
@@ -372,7 +480,8 @@ let rec ln_weakening_st (t:st_term) (i j:int)
     (ensures ln_st' t j)
     (decreases t)
   = match t.term with
-    | Tm_Return { term } ->
+    | Tm_Return { expected_type; term } ->
+      ln_weakening expected_type i j;
       ln_weakening term i j
 
     | Tm_IntroPure { p }
@@ -413,7 +522,8 @@ let rec ln_weakening_st (t:st_term) (i j:int)
 
     | Tm_Abs { b; ascription=c; body } ->
       ln_weakening b.binder_ty i j;
-      ln_weakening_comp c (i + 1) (j + 1);
+      map_opt_lemma_2 ln_weakening_comp c.annotated (i + 1) (j + 1);
+      map_opt_lemma_2 ln_weakening_comp c.elaborated (i + 1) (j + 1);
       ln_weakening_st body (i + 1) (j + 1)
 
     | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
@@ -432,14 +542,30 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       ln_weakening initializer i j;
       ln_weakening_st body (i + 1) (j + 1)
 
+    | Tm_WithLocalArray { initializer; length; body } ->
+      ln_weakening initializer i j;
+      ln_weakening length i j;
+      ln_weakening_st body (i + 1) (j + 1)
+   
     | Tm_Admit { typ; post } ->
       ln_weakening typ i j;
       ln_weakening_opt post (i + 1) (j + 1)
-      
+    
+    | Tm_Unreachable -> ()
+
     | Tm_ProofHintWithBinders { binders; hint_type; t } ->
       let n = L.length binders in
       ln_weakening_proof_hint hint_type (i + n) (j + n);
       ln_weakening_st t (i + n) (j + n)
+
+    | Tm_WithInv { name; body; returns_inv } ->
+      ln_weakening name i j;
+      ln_weakening_st body i j;
+      match returns_inv with
+      | None -> ()
+      | Some (b, r) ->
+        ln_weakening b.binder_ty i j;
+        ln_weakening r (i + 1) (j + 1)
 
 assume
 val r_open_term_ln_inv' (e:R.term) (x:R.term { RT.ln x }) (i:index)
@@ -462,10 +588,13 @@ let rec open_term_ln_inv' (e:term)
     | Tm_Unknown ->
       ln_weakening x (-1) (i - 1)
 
+    | Tm_Inv p ->
+      open_term_ln_inv' p x i
     | Tm_Pure p ->
       open_term_ln_inv' p x i
 
     // | Tm_PureApp l _ r
+    | Tm_AddInv l r
     | Tm_Star l r ->
       open_term_ln_inv' l x i;
       open_term_ln_inv' r x i
@@ -489,13 +618,13 @@ let open_comp_ln_inv' (c:comp)
     | C_Tot t ->
       open_term_ln_inv' t x i
 
-    | C_ST s ->
+    | C_ST s
+    | C_STGhost s ->
       open_term_ln_inv' s.res x i;
       open_term_ln_inv' s.pre x i;      
       open_term_ln_inv' s.post x (i + 1)
 
-    | C_STAtomic n s
-    | C_STGhost n s ->    
+    | C_STAtomic n _ s ->    
       open_term_ln_inv' n x i;    
       open_term_ln_inv' s.res x i;
       open_term_ln_inv' s.pre x i;      
@@ -505,8 +634,8 @@ let open_term_ln_inv_opt' (t:option term)
                           (x:term { ln x })
                           (i:index)
   : Lemma
-    (requires ln_opt' t i)
-    (ensures ln_opt' (open_term_opt' t x i) (i - 1))
+    (requires ln_opt' ln' t i)
+    (ensures ln_opt' ln' (open_term_opt' t x i) (i - 1))
     (decreases t)
   = match t with
     | None -> ()
@@ -554,6 +683,8 @@ let open_proof_hint_ln_inv (ht:proof_hint_type) (x:term { ln x }) (i:index)
     | REWRITE { t1; t2 } ->
       open_term_ln_inv' t1 x i;
       open_term_ln_inv' t2 x i
+    | WILD
+    | SHOW_PROOF_STATE _ -> ()
 
 #push-options "--z3rlimit_factor 2 --fuel 2 --ifuel 2"
 let rec open_term_ln_inv_st' (t:st_term)
@@ -564,7 +695,8 @@ let rec open_term_ln_inv_st' (t:st_term)
     (ensures ln_st' (open_st_term' t x i) (i - 1))
     (decreases t)
   = match t.term with
-    | Tm_Return { term } ->
+    | Tm_Return { expected_type; term } ->
+      open_term_ln_inv' expected_type x i;
       open_term_ln_inv' term x i
 
     | Tm_IntroPure { p }
@@ -605,7 +737,8 @@ let rec open_term_ln_inv_st' (t:st_term)
 
     | Tm_Abs { b; ascription=c; body } ->
       open_term_ln_inv' b.binder_ty x i;
-      open_comp_ln_inv' c x (i + 1);
+      map_opt_lemma_2 open_comp_ln_inv' c.annotated x (i + 1);
+      map_opt_lemma_2 open_comp_ln_inv' c.elaborated x (i + 1);
       open_term_ln_inv_st' body x (i + 1)
 
     | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
@@ -625,14 +758,31 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv' initializer x i;
       open_term_ln_inv_st' body x (i + 1)
 
+    | Tm_WithLocalArray { binder; initializer; length; body } ->
+      open_term_ln_inv' binder.binder_ty x i;
+      open_term_ln_inv' initializer x i;
+      open_term_ln_inv' length x i;
+      open_term_ln_inv_st' body x (i + 1)
+
     | Tm_Admit { typ; post } ->
       open_term_ln_inv' typ x i;
       open_term_ln_inv_opt' post x (i + 1)
+
+    | Tm_Unreachable -> ()
 
     | Tm_ProofHintWithBinders { binders; hint_type; t } ->
       let n = L.length binders in
       open_proof_hint_ln_inv hint_type x (i + n);
       open_term_ln_inv_st' t x (i + n)
+
+    | Tm_WithInv { name; body; returns_inv } ->
+      open_term_ln_inv' name x i;
+      open_term_ln_inv_st' body x i;
+      match returns_inv with
+      | None -> ()
+      | Some (b, r) ->
+        open_term_ln_inv' b.binder_ty x i;
+        open_term_ln_inv' r x (i + 1)
 
 #pop-options
 
@@ -656,9 +806,12 @@ let rec close_term_ln' (e:term)
     | Tm_EmpInames
     | Tm_Unknown -> ()
 
+    | Tm_Inv p ->
+      close_term_ln' p x i
     | Tm_Pure p ->
       close_term_ln' p x i
 
+    | Tm_AddInv l r
     | Tm_Star l r ->
       close_term_ln' l x i;
       close_term_ln' r x i
@@ -681,13 +834,13 @@ let close_comp_ln' (c:comp)
     | C_Tot t ->
       close_term_ln' t x i
 
-    | C_ST s ->
+    | C_ST s
+    | C_STGhost s ->
       close_term_ln' s.res x i;
       close_term_ln' s.pre x i;      
       close_term_ln' s.post x (i + 1)
 
-    | C_STAtomic n s
-    | C_STGhost n s ->    
+    | C_STAtomic n _ s ->    
       close_term_ln' n x i;    
       close_term_ln' s.res x i;
       close_term_ln' s.pre x i;      
@@ -695,13 +848,12 @@ let close_comp_ln' (c:comp)
 
 let close_term_ln_opt' (t:option term) (x:var) (i:index)
   : Lemma
-    (requires ln_opt' t (i - 1))
-    (ensures ln_opt' (close_term_opt' t x i) i)
+    (requires ln_opt' ln' t (i - 1))
+    (ensures ln_opt' ln' (close_term_opt' t x i) i)
     (decreases t)
   = match t with
     | None -> ()
     | Some t -> close_term_ln' t x i
-
 
 let rec close_term_ln_list' (t:list term) (x:var) (i:index)
   : Lemma
@@ -745,14 +897,18 @@ let close_proof_hint_ln (ht:proof_hint_type) (v:var) (i:index)
     | REWRITE { t1; t2 } ->
       close_term_ln' t1 v i;
       close_term_ln' t2 v i
+    | WILD
+    | SHOW_PROOF_STATE _ -> ()
 
+#push-options "--query_stats --fuel 2 --ifuel 2 --z3rlimit_factor 2"
 let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
   : Lemma
     (requires ln_st' t (i - 1))
     (ensures ln_st' (close_st_term' t x i) i)
     (decreases t)
   = match t.term with
-    | Tm_Return { term } ->
+    | Tm_Return { expected_type; term } ->
+      close_term_ln' expected_type x i;
       close_term_ln' term x i
 
     | Tm_IntroPure { p }
@@ -793,7 +949,8 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
 
     | Tm_Abs { b; ascription=c; body } ->
       close_term_ln' b.binder_ty x i;
-      close_comp_ln' c x (i + 1);
+      map_opt_lemma_2 close_comp_ln' c.annotated x (i + 1);
+      map_opt_lemma_2 close_comp_ln' c.elaborated x (i + 1);
       close_st_term_ln' body x (i + 1)
 
     | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
@@ -813,15 +970,32 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_term_ln' initializer x i;
       close_st_term_ln' body x (i + 1)
 
+    | Tm_WithLocalArray { binder; initializer; length; body } ->
+      close_term_ln' binder.binder_ty x i;
+      close_term_ln' initializer x i;
+      close_term_ln' length x i;
+      close_st_term_ln' body x (i + 1)
+
     | Tm_Admit { typ; post } ->
       close_term_ln' typ x i;
       close_term_ln_opt' post x (i + 1)
+
+    | Tm_Unreachable -> ()
 
     | Tm_ProofHintWithBinders { binders; hint_type; t } ->
       let n = L.length binders in
       close_proof_hint_ln hint_type x (i + n);
       close_st_term_ln' t x (i + n)
       
+    | Tm_WithInv { name; body; returns_inv } ->
+      close_term_ln' name x i;
+      close_st_term_ln' body x i;
+      match returns_inv with
+      | None -> ()
+      | Some (ret_ty, returns_inv) ->
+        close_term_ln' ret_ty.binder_ty x i;
+        close_term_ln' returns_inv x (i + 1)
+#pop-options
 let close_comp_ln (c:comp) (v:var)
   : Lemma 
     (requires ln_c c)
@@ -873,18 +1047,59 @@ let rec vprop_equiv_ln (#g:_) (#t0 #t1:_) (v:vprop_equiv g t0 t1)
       let d0, d1 = vprop_eq_typing_inversion _ _ _ token in
       tot_or_ghost_typing_ln d0;
       tot_or_ghost_typing_ln d1
+    | VE_Fa g x u b t0' t1' d ->
+      vprop_equiv_ln d;
+      let xtm = (term_of_nvar (v_as_nv x)) in
+      introduce ln t0 ==> ln t1
+      with _ . (
+        open_term_ln_inv' t0' xtm 0;
+        open_term_ln t0' x;
+        open_term_ln t1' x
+      );
+      introduce ln t1 ==> ln t0
+      with _ . (
+        open_term_ln_inv' t1' xtm 0;
+        open_term_ln t1' x;
+        open_term_ln t0' x
+      )
+      
 
 let st_equiv_ln #g #c1 #c2 (d:st_equiv g c1 c2)
   : Lemma 
     (requires ln_c c1)
     (ensures ln_c c2)
-  = let ST_VPropEquiv _ _ _ x (E dpre) _dres _dpost eq_res eq_pre eq_post = d in
-    vprop_equiv_ln eq_pre;
-    open_term_ln_inv' (comp_post c1) (term_of_no_name_var x) 0;
-    vprop_equiv_ln eq_post;
-    rt_equiv_ln _ _ _ eq_res;
-    elab_ln_inverse (comp_res c2);
-    open_term_ln' (comp_post c2) (term_of_no_name_var x) 0
+  = match d with
+    | ST_VPropEquiv _ _ _ x (E dpre) _dres _dpost eq_res eq_pre eq_post ->
+      vprop_equiv_ln eq_pre;
+      open_term_ln_inv' (comp_post c1) (term_of_no_name_var x) 0;
+      vprop_equiv_ln eq_post;
+      rt_equiv_ln _ _ _ eq_res;
+      elab_ln_inverse (comp_res c2);
+      open_term_ln' (comp_post c2) (term_of_no_name_var x) 0
+
+    | ST_TotEquiv g t1 t2 u t1_typing eq ->
+      let t2_typing = Pulse.Typing.Metatheory.Base.rt_equiv_typing eq t1_typing._0 in
+      tot_or_ghost_typing_ln (E (Ghost.reveal t2_typing))
+    
+let prop_valid_must_be_ln (g:env) (t:term) (d:prop_validity g t)
+  : Lemma (ensures ln t) =
+  admit()
+
+let rec st_sub_ln #g #c1 #c2 (d:st_sub g c1 c2)
+  : Lemma
+    (requires ln_c c1)
+    (ensures ln_c c2)
+    (decreases d)
+  = match d with
+    | STS_Refl _ _ -> ()
+
+    | STS_Trans _ _ _ _ d1 d2 ->
+      st_sub_ln d1;
+      st_sub_ln d2
+
+    | STS_AtomicInvs g stc is1 is2 _ _ tok ->
+      prop_valid_must_be_ln g (tm_inames_subset is1 is2) tok;
+      assume (ln (tm_inames_subset is1 is2) ==> ln is2)
 
 let bind_comp_ln #g #x #c1 #c2 #c (d:bind_comp g x c1 c2 c)
   : Lemma 
@@ -906,9 +1121,9 @@ let comp_typing_ln (#g:_) (#c:_) (#u:_) (d:comp_typing g c u)
 
   match d with
   | CT_Tot _ _ _ t_typing -> tot_or_ghost_typing_ln t_typing
-  | CT_ST _ _ st_typing -> st_comp_typing_ln st_typing
-  | CT_STAtomic _ _ _ inames_typing st_typing
-  | CT_STGhost _ _ _ inames_typing st_typing ->
+  | CT_ST _ _ st_typing
+  | CT_STGhost _ _ st_typing -> st_comp_typing_ln st_typing
+  | CT_STAtomic _ _ _ _ inames_typing st_typing ->
     tot_or_ghost_typing_ln inames_typing;
     st_comp_typing_ln st_typing
 
@@ -955,6 +1170,12 @@ let ln_mk_ref (t:term) (n:int)
       (ensures ln' (mk_ref t) n) =
   admit ()
 
+let ln_mk_array (t:term) (n:int)
+  : Lemma
+      (requires ln' t n)
+      (ensures ln' (mk_array t) n) =
+  admit ()
+
 #push-options "--z3rlimit_factor 12 --fuel 4 --ifuel 1 --query_stats"
 let rec st_typing_ln (#g:_) (#t:_) (#c:_)
                      (d:st_typing g t c)
@@ -994,10 +1215,10 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       then ()
       else begin
         // Add some lemmas about ln' of tm_pureapp etc.
-        assume (ln' (mk_eq2_prop u t (null_var x) e) (-1));
+        assume (ln' (mk_eq2 u t (null_var x) e) (-1));
         let e = tm_star
           (open_term' post (null_var x) 0)
-          (tm_pure (mk_eq2_prop u t (null_var x) e)) in
+          (tm_pure (mk_eq2 u t (null_var x) e)) in
         close_term_ln' e x 0
       end
 
@@ -1008,17 +1229,23 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       open_st_term_ln e2 x;
       bind_comp_ln bc
 
+    | T_BindFn _g _e1 e2 _c1 _c2 _b x d1 _u dc1 d2 c ->
+      st_typing_ln d1;
+      tot_or_ghost_typing_ln dc1;
+      st_typing_ln d2;
+      open_st_term_ln e2 x;
+      comp_typing_ln c
 
     | T_TotBind _ _ _ _ _ _ _ _ _
     | T_GhostBind _ _ _ _ _ _ _ _ _ _ ->
       st_typing_ln_tot_or_ghost_bind d st_typing_ln
 
-    | T_If _ _ _ _ _ _ _ tb d1 d2 _ ->
+    | T_If _ _ _ _ _ _ tb d1 d2 _ ->
       tot_or_ghost_typing_ln tb;
       st_typing_ln d1;
       st_typing_ln d2
 
-    | T_Match _ _ _ sc _ scd c _ _ _ ->
+    | T_Match _ _ _ sc _ scd c _ _ _ _ ->
       tot_or_ghost_typing_ln scd;
       admit ()
 
@@ -1072,7 +1299,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       tot_or_ghost_typing_ln p_typing;
       vprop_equiv_ln equiv_p_q
 
-    | T_WithLocal g init body init_t c x init_typing init_t_typing c_typing body_typing ->
+    | T_WithLocal g _ init body init_t c x init_typing init_t_typing c_typing body_typing ->
       tot_or_ghost_typing_ln init_typing;
       st_typing_ln body_typing;
       open_st_term_ln' body (null_var x) 0;
@@ -1080,9 +1307,27 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       tot_or_ghost_typing_ln init_t_typing;
       ln_mk_ref init_t (-1)
 
-    | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing) ->
+    | T_WithLocalArray g _ init len body init_t c x init_typing len_typing init_t_typing c_typing body_typing ->
+      tot_or_ghost_typing_ln init_typing;
+      tot_or_ghost_typing_ln len_typing;
+      st_typing_ln body_typing;
+      open_st_term_ln' body (null_var x) 0;
+      comp_typing_ln c_typing;
+      tot_or_ghost_typing_ln init_t_typing;
+      ln_mk_array init_t (-1)
+
+    | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing)
+    | T_Unreachable _ s _ (STC _ _ x t_typing pre_typing post_typing) _ ->
       tot_or_ghost_typing_ln t_typing;
       tot_or_ghost_typing_ln pre_typing;
       tot_or_ghost_typing_ln post_typing;
       open_term_ln' s.post (term_of_no_name_var x) 0
+
+    | T_Sub _ e c c' d d_sub ->
+      st_typing_ln d;
+      st_sub_ln d_sub
+
+    | T_WithInv _ _ _ _ _ _ _ _ _ ->
+      admit() // IOU
+
 #pop-options

@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Lib.Array
 module PM = Pulse.Main
 open Pulse.Lib.Core
@@ -6,7 +22,7 @@ open Pulse.Lib.Array.Core
 open FStar.Ghost
 module US = FStar.SizeT
 module U8 = FStar.UInt8
-open Pulse.Class.BoundedIntegers
+open Pulse.Lib.BoundedIntegers
 module A = Pulse.Lib.Array.Core
 module R = Pulse.Lib.Reference
 
@@ -28,7 +44,7 @@ fn compare' (#t:eqtype) (l:US.t) (a1 a2:larray t (US.v l))
       let v2 = a2.(vi); 
       (v1 = v2) } 
     else { false } )
-  invariant b. exists (vi:US.t). ( 
+  invariant b. exists* (vi:US.t). ( 
     R.pts_to i vi **
     A.pts_to a1 #p1 's1 **
     A.pts_to a2 #p2 's2 **
@@ -58,7 +74,7 @@ fn memcpy' (#t:eqtype) (l:US.t) (src dst:larray t (US.v l))
   pts_to_len dst #full_perm #dst0;
   let mut i = 0sz;
   while (let vi = !i; (vi < l) )
-  invariant b. exists (vi:US.t) (s:Seq.seq t). ( 
+  invariant b. exists* (vi:US.t) (s:Seq.seq t). ( 
     R.pts_to i vi **
     A.pts_to src #p src0 **
     A.pts_to dst s **
@@ -83,14 +99,14 @@ let memcpy = memcpy'
 ```pulse
 fn fill' (#t:Type0) (l:US.t) (a:larray t (US.v l)) (v:t)
   requires A.pts_to a 's
-  ensures exists (s:Seq.seq t).
+  ensures exists* (s:Seq.seq t).
     A.pts_to a s **
     pure (s `Seq.equal` Seq.create (US.v l) v)
 {
   pts_to_len a #full_perm #'s;
   let mut i = 0sz;
   while (let vi = !i; (vi < l))
-  invariant b. exists (vi:US.t) (s:Seq.seq t). ( 
+  invariant b. exists* (vi:US.t) (s:Seq.seq t). ( 
     R.pts_to i vi **
     A.pts_to a s **
     pure (vi <= l
@@ -109,7 +125,7 @@ let fill = fill'
 ```pulse
 fn zeroize' (l:US.t) (a:larray U8.t (US.v l))
   requires A.pts_to a 's
-  ensures exists (s:Seq.seq U8.t).
+  ensures exists* (s:Seq.seq U8.t).
     A.pts_to a s **
     pure (s `Seq.equal` Seq.create (US.v l) 0uy)
 {

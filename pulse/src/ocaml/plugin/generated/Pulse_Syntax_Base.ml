@@ -59,8 +59,10 @@ type term' =
   | Tm_ExistsSL of universe * binder * term 
   | Tm_ForallSL of universe * binder * term 
   | Tm_VProp 
+  | Tm_Inv of term 
   | Tm_Inames 
   | Tm_EmpInames 
+  | Tm_AddInv of term * term 
   | Tm_FStar of host_term 
   | Tm_Unknown 
 and binder = {
@@ -78,10 +80,13 @@ let uu___is_Tm_ForallSL uu___ =
   match uu___ with | Tm_ForallSL _ -> true | _ -> false
 let uu___is_Tm_VProp uu___ =
   match uu___ with | Tm_VProp _ -> true | _ -> false
+let uu___is_Tm_Inv uu___ = match uu___ with | Tm_Inv _ -> true | _ -> false
 let uu___is_Tm_Inames uu___ =
   match uu___ with | Tm_Inames _ -> true | _ -> false
 let uu___is_Tm_EmpInames uu___ =
   match uu___ with | Tm_EmpInames _ -> true | _ -> false
+let uu___is_Tm_AddInv uu___ =
+  match uu___ with | Tm_AddInv _ -> true | _ -> false
 let uu___is_Tm_FStar uu___ =
   match uu___ with | Tm_FStar _ -> true | _ -> false
 let uu___is_Tm_Unknown uu___ =
@@ -94,6 +99,8 @@ let (tm_fstar : host_term -> range -> term) =
 let (with_range : term' -> range -> term) =
   fun t -> fun r -> { t; range1 = r }
 let (tm_vprop : term) = with_range Tm_VProp FStar_Range.range_0
+let (tm_inv : term -> term) =
+  fun p -> with_range (Tm_Inv p) FStar_Range.range_0
 let (tm_inames : term) = with_range Tm_Inames FStar_Range.range_0
 let (tm_emp : term) = with_range Tm_Emp FStar_Range.range_0
 let (tm_emp_inames : term) = with_range Tm_EmpInames FStar_Range.range_0
@@ -138,11 +145,22 @@ let (__proj__Mkst_comp__item__pre : st_comp -> vprop) =
   fun projectee -> match projectee with | { u; res; pre; post;_} -> pre
 let (__proj__Mkst_comp__item__post : st_comp -> vprop) =
   fun projectee -> match projectee with | { u; res; pre; post;_} -> post
+type observability =
+  | Neutral 
+  | Observable 
+  | Unobservable 
+let (uu___is_Neutral : observability -> Prims.bool) =
+  fun projectee -> match projectee with | Neutral -> true | uu___ -> false
+let (uu___is_Observable : observability -> Prims.bool) =
+  fun projectee -> match projectee with | Observable -> true | uu___ -> false
+let (uu___is_Unobservable : observability -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Unobservable -> true | uu___ -> false
 type comp =
   | C_Tot of term 
   | C_ST of st_comp 
-  | C_STAtomic of term * st_comp 
-  | C_STGhost of term * st_comp 
+  | C_STAtomic of term * observability * st_comp 
+  | C_STGhost of st_comp 
 let (uu___is_C_Tot : comp -> Prims.bool) =
   fun projectee -> match projectee with | C_Tot _0 -> true | uu___ -> false
 let (__proj__C_Tot__item___0 : comp -> term) =
@@ -153,23 +171,27 @@ let (__proj__C_ST__item___0 : comp -> st_comp) =
   fun projectee -> match projectee with | C_ST _0 -> _0
 let (uu___is_C_STAtomic : comp -> Prims.bool) =
   fun projectee ->
-    match projectee with | C_STAtomic (_0, _1) -> true | uu___ -> false
-let (__proj__C_STAtomic__item___0 : comp -> term) =
-  fun projectee -> match projectee with | C_STAtomic (_0, _1) -> _0
-let (__proj__C_STAtomic__item___1 : comp -> st_comp) =
-  fun projectee -> match projectee with | C_STAtomic (_0, _1) -> _1
+    match projectee with
+    | C_STAtomic (inames, obs, _2) -> true
+    | uu___ -> false
+let (__proj__C_STAtomic__item__inames : comp -> term) =
+  fun projectee ->
+    match projectee with | C_STAtomic (inames, obs, _2) -> inames
+let (__proj__C_STAtomic__item__obs : comp -> observability) =
+  fun projectee -> match projectee with | C_STAtomic (inames, obs, _2) -> obs
+let (__proj__C_STAtomic__item___2 : comp -> st_comp) =
+  fun projectee -> match projectee with | C_STAtomic (inames, obs, _2) -> _2
 let (uu___is_C_STGhost : comp -> Prims.bool) =
   fun projectee ->
-    match projectee with | C_STGhost (_0, _1) -> true | uu___ -> false
-let (__proj__C_STGhost__item___0 : comp -> term) =
-  fun projectee -> match projectee with | C_STGhost (_0, _1) -> _0
-let (__proj__C_STGhost__item___1 : comp -> st_comp) =
-  fun projectee -> match projectee with | C_STGhost (_0, _1) -> _1
+    match projectee with | C_STGhost _0 -> true | uu___ -> false
+let (__proj__C_STGhost__item___0 : comp -> st_comp) =
+  fun projectee -> match projectee with | C_STGhost _0 -> _0
 type comp_st = comp
 type pattern =
   | Pat_Cons of fv * (pattern * Prims.bool) Prims.list 
   | Pat_Constant of constant 
-  | Pat_Var of FStar_Reflection_Typing.pp_name_t 
+  | Pat_Var of FStar_Reflection_Typing.pp_name_t *
+  FStar_Reflection_Typing.sort_t 
   | Pat_Dot_Term of term FStar_Pervasives_Native.option 
 let (uu___is_Pat_Cons : pattern -> Prims.bool) =
   fun projectee ->
@@ -185,10 +207,13 @@ let (uu___is_Pat_Constant : pattern -> Prims.bool) =
 let (__proj__Pat_Constant__item___0 : pattern -> constant) =
   fun projectee -> match projectee with | Pat_Constant _0 -> _0
 let (uu___is_Pat_Var : pattern -> Prims.bool) =
-  fun projectee -> match projectee with | Pat_Var _0 -> true | uu___ -> false
+  fun projectee ->
+    match projectee with | Pat_Var (_0, ty) -> true | uu___ -> false
 let (__proj__Pat_Var__item___0 :
   pattern -> FStar_Reflection_Typing.pp_name_t) =
-  fun projectee -> match projectee with | Pat_Var _0 -> _0
+  fun projectee -> match projectee with | Pat_Var (_0, ty) -> _0
+let (__proj__Pat_Var__item__ty : pattern -> FStar_Reflection_Typing.sort_t) =
+  fun projectee -> match projectee with | Pat_Var (_0, ty) -> ty
 let (uu___is_Pat_Dot_Term : pattern -> Prims.bool) =
   fun projectee ->
     match projectee with | Pat_Dot_Term _0 -> true | uu___ -> false
@@ -215,8 +240,41 @@ let (ctag_of_comp_st : comp_st -> ctag) =
   fun c ->
     match c with
     | C_ST uu___ -> STT
-    | C_STAtomic (uu___, uu___1) -> STT_Atomic
-    | C_STGhost (uu___, uu___1) -> STT_Ghost
+    | C_STAtomic (uu___, uu___1, uu___2) -> STT_Atomic
+    | C_STGhost uu___ -> STT_Ghost
+type effect_annot__EffectAnnotAtomic__payload = {
+  opens: term }
+and effect_annot =
+  | EffectAnnotSTT 
+  | EffectAnnotGhost 
+  | EffectAnnotAtomic of effect_annot__EffectAnnotAtomic__payload 
+let (__proj__Mkeffect_annot__EffectAnnotAtomic__payload__item__opens :
+  effect_annot__EffectAnnotAtomic__payload -> term) =
+  fun projectee -> match projectee with | { opens;_} -> opens
+let (uu___is_EffectAnnotSTT : effect_annot -> Prims.bool) =
+  fun projectee ->
+    match projectee with | EffectAnnotSTT -> true | uu___ -> false
+let (uu___is_EffectAnnotGhost : effect_annot -> Prims.bool) =
+  fun projectee ->
+    match projectee with | EffectAnnotGhost -> true | uu___ -> false
+let (uu___is_EffectAnnotAtomic : effect_annot -> Prims.bool) =
+  fun projectee ->
+    match projectee with | EffectAnnotAtomic _0 -> true | uu___ -> false
+let (__proj__EffectAnnotAtomic__item___0 :
+  effect_annot -> effect_annot__EffectAnnotAtomic__payload) =
+  fun projectee -> match projectee with | EffectAnnotAtomic _0 -> _0
+let (effect_annot_of_comp : comp_st -> effect_annot) =
+  fun c ->
+    match c with
+    | C_ST uu___ -> EffectAnnotSTT
+    | C_STGhost uu___ -> EffectAnnotGhost
+    | C_STAtomic (opens, uu___, uu___1) -> EffectAnnotAtomic { opens }
+let (ctag_of_effect_annot : effect_annot -> ctag) =
+  fun uu___ ->
+    match uu___ with
+    | EffectAnnotSTT -> STT
+    | EffectAnnotGhost -> STT_Ghost
+    | uu___1 -> STT_Atomic
 type proof_hint_type__ASSERT__payload = {
   p: vprop }
 and proof_hint_type__FOLD__payload =
@@ -240,6 +298,8 @@ and proof_hint_type =
   | UNFOLD of proof_hint_type__UNFOLD__payload 
   | RENAME of proof_hint_type__RENAME__payload 
   | REWRITE of proof_hint_type__REWRITE__payload 
+  | WILD 
+  | SHOW_PROOF_STATE of range 
 let (__proj__Mkproof_hint_type__ASSERT__payload__item__p :
   proof_hint_type__ASSERT__payload -> vprop) =
   fun projectee -> match projectee with | { p;_} -> p
@@ -296,16 +356,40 @@ let (uu___is_REWRITE : proof_hint_type -> Prims.bool) =
 let (__proj__REWRITE__item___0 :
   proof_hint_type -> proof_hint_type__REWRITE__payload) =
   fun projectee -> match projectee with | REWRITE _0 -> _0
+let (uu___is_WILD : proof_hint_type -> Prims.bool) =
+  fun projectee -> match projectee with | WILD -> true | uu___ -> false
+let (uu___is_SHOW_PROOF_STATE : proof_hint_type -> Prims.bool) =
+  fun projectee ->
+    match projectee with | SHOW_PROOF_STATE _0 -> true | uu___ -> false
+let (__proj__SHOW_PROOF_STATE__item___0 : proof_hint_type -> range) =
+  fun projectee -> match projectee with | SHOW_PROOF_STATE _0 -> _0
+type comp_ascription =
+  {
+  annotated: comp FStar_Pervasives_Native.option ;
+  elaborated: comp FStar_Pervasives_Native.option }
+let (__proj__Mkcomp_ascription__item__annotated :
+  comp_ascription -> comp FStar_Pervasives_Native.option) =
+  fun projectee ->
+    match projectee with | { annotated; elaborated;_} -> annotated
+let (__proj__Mkcomp_ascription__item__elaborated :
+  comp_ascription -> comp FStar_Pervasives_Native.option) =
+  fun projectee ->
+    match projectee with | { annotated; elaborated;_} -> elaborated
+let (empty_ascription : comp_ascription) =
+  {
+    annotated = FStar_Pervasives_Native.None;
+    elaborated = FStar_Pervasives_Native.None
+  }
 type st_term'__Tm_Return__payload =
   {
-  ctag: ctag ;
+  expected_type: term ;
   insert_eq: Prims.bool ;
   term: term }
 and st_term'__Tm_Abs__payload =
   {
   b: binder ;
   q: qualifier FStar_Pervasives_Native.option ;
-  ascription: comp ;
+  ascription: comp_ascription ;
   body: st_term }
 and st_term'__Tm_STApp__payload =
   {
@@ -360,12 +444,18 @@ and st_term'__Tm_WithLocal__payload =
   binder2: binder ;
   initializer1: term ;
   body4: st_term }
+and st_term'__Tm_WithLocalArray__payload =
+  {
+  binder3: binder ;
+  initializer2: term ;
+  length: term ;
+  body5: st_term }
 and st_term'__Tm_Rewrite__payload = {
   t11: term ;
   t21: term }
 and st_term'__Tm_Admit__payload =
   {
-  ctag1: ctag ;
+  ctag: ctag ;
   u1: universe ;
   typ: term ;
   post3: term FStar_Pervasives_Native.option }
@@ -374,6 +464,11 @@ and st_term'__Tm_ProofHintWithBinders__payload =
   hint_type: proof_hint_type ;
   binders: binder Prims.list ;
   t3: st_term }
+and st_term'__Tm_WithInv__payload =
+  {
+  name1: term ;
+  body6: st_term ;
+  returns_inv: (binder * vprop) FStar_Pervasives_Native.option }
 and st_term' =
   | Tm_Return of st_term'__Tm_Return__payload 
   | Tm_Abs of st_term'__Tm_Abs__payload 
@@ -388,9 +483,12 @@ and st_term' =
   | Tm_While of st_term'__Tm_While__payload 
   | Tm_Par of st_term'__Tm_Par__payload 
   | Tm_WithLocal of st_term'__Tm_WithLocal__payload 
+  | Tm_WithLocalArray of st_term'__Tm_WithLocalArray__payload 
   | Tm_Rewrite of st_term'__Tm_Rewrite__payload 
   | Tm_Admit of st_term'__Tm_Admit__payload 
+  | Tm_Unreachable 
   | Tm_ProofHintWithBinders of st_term'__Tm_ProofHintWithBinders__payload 
+  | Tm_WithInv of st_term'__Tm_WithInv__payload 
 and st_term = {
   term1: st_term' ;
   range2: range ;
@@ -417,13 +515,71 @@ let uu___is_Tm_While uu___ =
 let uu___is_Tm_Par uu___ = match uu___ with | Tm_Par _ -> true | _ -> false
 let uu___is_Tm_WithLocal uu___ =
   match uu___ with | Tm_WithLocal _ -> true | _ -> false
+let uu___is_Tm_WithLocalArray uu___ =
+  match uu___ with | Tm_WithLocalArray _ -> true | _ -> false
 let uu___is_Tm_Rewrite uu___ =
   match uu___ with | Tm_Rewrite _ -> true | _ -> false
 let uu___is_Tm_Admit uu___ =
   match uu___ with | Tm_Admit _ -> true | _ -> false
+let uu___is_Tm_Unreachable uu___ =
+  match uu___ with | Tm_Unreachable _ -> true | _ -> false
 let uu___is_Tm_ProofHintWithBinders uu___ =
   match uu___ with | Tm_ProofHintWithBinders _ -> true | _ -> false
+let uu___is_Tm_WithInv uu___ =
+  match uu___ with | Tm_WithInv _ -> true | _ -> false
 type branch = (pattern * st_term)
+type decl'__FnDecl__payload =
+  {
+  id: FStar_Reflection_Types.ident ;
+  isrec: Prims.bool ;
+  bs: (qualifier FStar_Pervasives_Native.option * binder * bv) Prims.list ;
+  comp: comp ;
+  meas: term FStar_Pervasives_Native.option ;
+  body7: st_term }
+and decl' =
+  | FnDecl of decl'__FnDecl__payload 
+and decl = {
+  d: decl' ;
+  range3: range }
+let (__proj__Mkdecl'__FnDecl__payload__item__id :
+  decl'__FnDecl__payload -> FStar_Reflection_Types.ident) =
+  fun projectee ->
+    match projectee with
+    | { id; isrec; bs; comp = comp1; meas; body7 = body;_} -> id
+let (__proj__Mkdecl'__FnDecl__payload__item__isrec :
+  decl'__FnDecl__payload -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { id; isrec; bs; comp = comp1; meas; body7 = body;_} -> isrec
+let (__proj__Mkdecl'__FnDecl__payload__item__bs :
+  decl'__FnDecl__payload ->
+    (qualifier FStar_Pervasives_Native.option * binder * bv) Prims.list)
+  =
+  fun projectee ->
+    match projectee with
+    | { id; isrec; bs; comp = comp1; meas; body7 = body;_} -> bs
+let (__proj__Mkdecl'__FnDecl__payload__item__comp :
+  decl'__FnDecl__payload -> comp) =
+  fun projectee ->
+    match projectee with
+    | { id; isrec; bs; comp = comp1; meas; body7 = body;_} -> comp1
+let (__proj__Mkdecl'__FnDecl__payload__item__meas :
+  decl'__FnDecl__payload -> term FStar_Pervasives_Native.option) =
+  fun projectee ->
+    match projectee with
+    | { id; isrec; bs; comp = comp1; meas; body7 = body;_} -> meas
+let (__proj__Mkdecl'__FnDecl__payload__item__body :
+  decl'__FnDecl__payload -> st_term) =
+  fun projectee ->
+    match projectee with
+    | { id; isrec; bs; comp = comp1; meas; body7 = body;_} -> body
+let (uu___is_FnDecl : decl' -> Prims.bool) = fun projectee -> true
+let (__proj__FnDecl__item___0 : decl' -> decl'__FnDecl__payload) =
+  fun projectee -> match projectee with | FnDecl _0 -> _0
+let (__proj__Mkdecl__item__d : decl -> decl') =
+  fun projectee -> match projectee with | { d; range3 = range1;_} -> d
+let (__proj__Mkdecl__item__range : decl -> range) =
+  fun projectee -> match projectee with | { d; range3 = range1;_} -> range1
 let (null_binder : term -> binder) =
   fun t -> { binder_ty = t; binder_ppname = ppname_default }
 let (mk_binder : Prims.string -> range -> term -> binder) =
@@ -448,6 +604,7 @@ let rec (eq_tm : term -> term -> Prims.bool) =
       | (Tm_Unknown, Tm_Unknown) -> true
       | (Tm_Star (l1, r1), Tm_Star (l2, r2)) ->
           (eq_tm l1 l2) && (eq_tm r1 r2)
+      | (Tm_Inv p1, Tm_Inv p2) -> eq_tm p1 p2
       | (Tm_Pure p1, Tm_Pure p2) -> eq_tm p1 p2
       | (Tm_ExistsSL (u1, t11, b1), Tm_ExistsSL (u2, t21, b2)) ->
           ((eq_univ u1 u2) && (eq_tm t11.binder_ty t21.binder_ty)) &&
@@ -457,6 +614,8 @@ let rec (eq_tm : term -> term -> Prims.bool) =
             (eq_tm b1 b2)
       | (Tm_FStar t11, Tm_FStar t21) ->
           FStar_Reflection_V2_TermEq.term_eq_dec t11 t21
+      | (Tm_AddInv (i1, is1), Tm_AddInv (i2, is2)) ->
+          (eq_tm i1 i2) && (eq_tm is1 is2)
       | uu___ -> false
 let (eq_st_comp : st_comp -> st_comp -> Prims.bool) =
   fun s1 ->
@@ -470,10 +629,9 @@ let (eq_comp : comp -> comp -> Prims.bool) =
       match (c1, c2) with
       | (C_Tot t1, C_Tot t2) -> eq_tm t1 t2
       | (C_ST s1, C_ST s2) -> eq_st_comp s1 s2
-      | (C_STAtomic (i1, s1), C_STAtomic (i2, s2)) ->
-          (eq_tm i1 i2) && (eq_st_comp s1 s2)
-      | (C_STGhost (i1, s1), C_STGhost (i2, s2)) ->
-          (eq_tm i1 i2) && (eq_st_comp s1 s2)
+      | (C_STAtomic (i1, o1, s1), C_STAtomic (i2, o2, s2)) ->
+          ((eq_tm i1 i2) && (o1 = o2)) && (eq_st_comp s1 s2)
+      | (C_STGhost s1, C_STGhost s2) -> eq_st_comp s1 s2
       | uu___ -> false
 let rec eq_list :
   'a .
@@ -541,7 +699,7 @@ let rec (eq_pattern : pattern -> pattern -> Prims.bool) =
       | (Pat_Cons (f1, vs1), Pat_Cons (f2, vs2)) ->
           (f1.fv_name = f2.fv_name) && (eq_list_dec p1 p2 eq_sub_pat vs1 vs2)
       | (Pat_Constant c1, Pat_Constant c2) -> fstar_const_eq c1 c2
-      | (Pat_Var uu___, Pat_Var uu___1) -> true
+      | (Pat_Var (uu___, uu___1), Pat_Var (uu___2, uu___3)) -> true
       | (Pat_Dot_Term to1, Pat_Dot_Term to2) -> eq_opt eq_tm to1 to2
       | uu___ -> false
 and (eq_sub_pat :
@@ -575,18 +733,25 @@ let (eq_hint_type : proof_hint_type -> proof_hint_type -> Prims.bool) =
             && (eq_opt eq_tm p1 p2)
       | (REWRITE { t1; t2;_}, REWRITE { t1 = s1; t2 = s2;_}) ->
           (eq_tm t1 s1) && (eq_tm t2 s2)
+      | (WILD, WILD) -> true
+      | (SHOW_PROOF_STATE uu___, SHOW_PROOF_STATE uu___1) -> true
       | uu___ -> false
+let (eq_ascription : comp_ascription -> comp_ascription -> Prims.bool) =
+  fun a1 ->
+    fun a2 ->
+      (eq_opt eq_comp a1.elaborated a2.elaborated) &&
+        (eq_opt eq_comp a1.annotated a2.annotated)
 let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
   fun t1 ->
     fun t2 ->
       match ((t1.term1), (t2.term1)) with
-      | (Tm_Return { ctag = c1; insert_eq = b1; term = t11;_}, Tm_Return
-         { ctag = c2; insert_eq = b2; term = t21;_}) ->
-          ((c1 = c2) && (b1 = b2)) && (eq_tm t11 t21)
+      | (Tm_Return { expected_type = ty1; insert_eq = b1; term = t11;_},
+         Tm_Return { expected_type = ty2; insert_eq = b2; term = t21;_}) ->
+          ((eq_tm ty1 ty2) && (b1 = b2)) && (eq_tm t11 t21)
       | (Tm_Abs { b = b1; q = o1; ascription = c1; body = t11;_}, Tm_Abs
          { b = b2; q = o2; ascription = c2; body = t21;_}) ->
           (((eq_tm b1.binder_ty b2.binder_ty) && (o1 = o2)) &&
-             (eq_comp c1 c2))
+             (eq_ascription c1 c2))
             && (eq_st_term t11 t21)
       | (Tm_STApp { head = h1; arg_qual = o1; arg = t11;_}, Tm_STApp
          { head = h2; arg_qual = o2; arg = t21;_}) ->
@@ -638,18 +803,37 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
          Tm_WithLocal { binder2 = x2; initializer1 = e2; body4 = b2;_}) ->
           ((eq_tm x1.binder_ty x2.binder_ty) && (eq_tm e1 e2)) &&
             (eq_st_term b1 b2)
+      | (Tm_WithLocalArray
+         { binder3 = x1; initializer2 = e1; length = n1; body5 = b1;_},
+         Tm_WithLocalArray
+         { binder3 = x2; initializer2 = e2; length = n2; body5 = b2;_}) ->
+          (((eq_tm x1.binder_ty x2.binder_ty) && (eq_tm e1 e2)) &&
+             (eq_tm n1 n2))
+            && (eq_st_term b1 b2)
       | (Tm_Rewrite { t11 = l1; t21 = r1;_}, Tm_Rewrite
          { t11 = l2; t21 = r2;_}) -> (eq_tm l1 l2) && (eq_tm r1 r2)
-      | (Tm_Admit { ctag1 = c1; u1; typ = t11; post3 = post1;_}, Tm_Admit
-         { ctag1 = c2; u1 = u2; typ = t21; post3 = post2;_}) ->
+      | (Tm_Admit { ctag = c1; u1; typ = t11; post3 = post1;_}, Tm_Admit
+         { ctag = c2; u1 = u2; typ = t21; post3 = post2;_}) ->
           (((c1 = c2) && (eq_univ u1 u2)) && (eq_tm t11 t21)) &&
             (eq_tm_opt post1 post2)
+      | (Tm_Unreachable, Tm_Unreachable) -> true
       | (Tm_ProofHintWithBinders
          { hint_type = ht1; binders = bs1; t3 = t11;_},
          Tm_ProofHintWithBinders
          { hint_type = ht2; binders = bs2; t3 = t21;_}) ->
           ((eq_hint_type ht1 ht2) && (eq_list eq_binder bs1 bs2)) &&
             (eq_st_term t11 t21)
+      | (Tm_WithInv { name1; body6 = body1; returns_inv = r1;_}, Tm_WithInv
+         { name1 = name2; body6 = body2; returns_inv = r2;_}) ->
+          ((eq_tm name1 name2) &&
+             (eq_opt
+                (fun uu___ ->
+                   fun uu___1 ->
+                     match (uu___, uu___1) with
+                     | ((b1, r11), (b2, r21)) ->
+                         (eq_tm b1.binder_ty b2.binder_ty) && (eq_tm r11 r21))
+                r1 r2))
+            && (eq_st_term body1 body2)
       | uu___ -> false
 and (eq_branch : (pattern * st_term) -> (pattern * st_term) -> Prims.bool) =
   fun b1 ->
@@ -665,8 +849,8 @@ let (comp_res : comp -> term) =
     match c with
     | C_Tot ty -> ty
     | C_ST s -> s.res
-    | C_STAtomic (uu___, s) -> s.res
-    | C_STGhost (uu___, s) -> s.res
+    | C_STAtomic (uu___, uu___1, s) -> s.res
+    | C_STGhost s -> s.res
 let (stateful_comp : comp -> Prims.bool) =
   fun c ->
     ((uu___is_C_ST c) || (uu___is_C_STAtomic c)) || (uu___is_C_STGhost c)
@@ -674,38 +858,25 @@ let (st_comp_of_comp : comp -> st_comp) =
   fun c ->
     match c with
     | C_ST s -> s
-    | C_STAtomic (uu___, s) -> s
-    | C_STGhost (uu___, s) -> s
+    | C_STAtomic (uu___, uu___1, s) -> s
+    | C_STGhost s -> s
 let (with_st_comp : comp -> st_comp -> comp) =
   fun c ->
     fun s ->
       match c with
       | C_ST uu___ -> C_ST s
-      | C_STAtomic (inames, uu___) -> C_STAtomic (inames, s)
-      | C_STGhost (inames, uu___) -> C_STGhost (inames, s)
-let (comp_u : comp -> universe) =
+      | C_STAtomic (inames, obs, uu___) -> C_STAtomic (inames, obs, s)
+      | C_STGhost uu___ -> C_STGhost s
+let (comp_u : comp -> universe) = fun c -> (st_comp_of_comp c).u
+let (universe_of_comp : comp_st -> FStar_Reflection_Types.universe) =
   fun c ->
     match c with
-    | C_ST s -> s.u
-    | C_STAtomic (uu___, s) -> s.u
-    | C_STGhost (uu___, s) -> s.u
-let (comp_pre : comp -> vprop) =
-  fun c ->
-    match c with
-    | C_ST s -> s.pre
-    | C_STAtomic (uu___, s) -> s.pre
-    | C_STGhost (uu___, s) -> s.pre
-let (comp_post : comp -> vprop) =
-  fun c ->
-    match c with
-    | C_ST s -> s.post
-    | C_STAtomic (uu___, s) -> s.post
-    | C_STGhost (uu___, s) -> s.post
+    | C_ST uu___ -> FStar_Reflection_Typing.u_zero
+    | uu___ -> Pulse_Reflection_Util.u_max_two (comp_u c)
+let (comp_pre : comp -> vprop) = fun c -> (st_comp_of_comp c).pre
+let (comp_post : comp -> vprop) = fun c -> (st_comp_of_comp c).post
 let (comp_inames : comp -> term) =
-  fun c ->
-    match c with
-    | C_STAtomic (inames, uu___) -> inames
-    | C_STGhost (inames, uu___) -> inames
+  fun c -> match c with | C_STAtomic (inames, uu___, uu___1) -> inames
 type nvar = (ppname * var)
 let (v_as_nv : var -> nvar) = fun x -> (ppname_default, x)
 let (as_binder : term -> binder) =

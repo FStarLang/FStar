@@ -209,7 +209,8 @@ let ghost_split
   rewrite
     (pts_to a _ _)
     (H.pts_to a p (seq_map raise x));
-  H.ghost_split a i;
+  let _ = H.ghost_split a i in
+  //H.ghost_split a i;
   assert (seq_map raise (Seq.slice x 0 (US.v i)) `Seq.equal` Seq.slice (seq_map raise x) 0 (US.v i));
   rewrite
     (H.pts_to (H.split_l a i) _ _)
@@ -553,3 +554,170 @@ let ptrdiff #_ #p0 #p1 #s0 #s1 a0 a1 =
     (H.pts_to a0 _ _)
     (pts_to a0 _ _);
   return res
+
+let array_slice
+  (#elt: Type0)
+  (a: array elt)
+  (i j: nat)
+  (sq: squash (i <= j /\ j <= length a))
+: Ghost (array elt)
+    (requires True)
+    (ensures (fun a' -> length a' == j - i))
+= length_fits a;
+  split_l (split_r a (US.uint_to_t i)) (US.uint_to_t (j - i))
+
+[@@__reduce__]
+let pts_to_range_body
+  (#elt: Type0) (a: array elt) (i j: nat)
+  (p: P.perm)
+  (s: Seq.seq elt)
+  (sq: squash (i <= j /\ j <= length a))
+: Tot vprop
+= pts_to (array_slice a i j sq) p s
+
+let pts_to_range
+  (#elt: Type0) (a: array elt) (i j: nat)
+  (p: P.perm)
+  ([@@@ smt_fallback ] s: Seq.seq elt)
+: Tot vprop
+= exists_ (pts_to_range_body a i j p s)
+
+let pts_to_range_intro'
+  (#opened: _)
+  (#elt: Type0) (a: array elt) (i j: nat)
+  (p: P.perm)
+  (a': array elt)
+  (s: Seq.seq elt)
+: STGhost unit opened
+    (pts_to a' p s)
+    (fun _ -> pts_to_range a i j p s)
+    (i <= j /\ j <= length a /\
+      a' == array_slice a i j ()
+    )
+    (fun _ -> True)
+= let sq : squash (i <= j /\ j <= length a) = () in
+  rewrite (pts_to a' p s) (pts_to (array_slice a i j sq) p s);
+  rewrite (exists_ (pts_to_range_body a i j p s)) (pts_to_range a i j p s)
+
+let pts_to_range_elim'
+  (#opened: _)
+  (#elt: Type0) (a: array elt) (i j: nat)
+  (p: P.perm)
+  (s: Seq.seq elt)
+: STGhost (Ghost.erased (array elt)) opened
+    (pts_to_range a i j p s)
+    (fun a' -> pts_to a' p s)
+    True
+    (fun a' -> i <= j /\ j <= length a /\
+      Ghost.reveal a' == array_slice a i j ()
+    )
+= rewrite (pts_to_range a i j p s) (exists_ (pts_to_range_body a i j p s));
+  let _ = elim_exists () in
+  vpattern_replace_erased (fun a' -> pts_to a' p s)
+
+let pts_to_range_prop
+  a i j p s
+= let a' = pts_to_range_elim' a i j p s in
+  pts_to_length a' s;
+  pts_to_range_intro' a i j p a' s
+
+let pts_to_range_intro
+  a p s
+= ptr_shift_zero (ptr_of a);
+  pts_to_range_intro' a 0 (length a) p a s
+
+let pts_to_range_elim
+  a p s
+= ptr_shift_zero (ptr_of a);
+  let a' = pts_to_range_elim' a 0 (length a) p s in
+  vpattern_rewrite (fun a' -> pts_to a' _ _) a
+
+let pts_to_range_split
+  #_ #_ #p #s a i m j
+= length_fits a;
+  pts_to_range_prop a i j p s;
+  let a' = pts_to_range_elim' a i j p s in
+  let mi = US.uint_to_t (m - i) in
+  ptr_shift_add (ptr_of a) (US.uint_to_t i) mi;
+  let _ = ghost_split a' mi in
+  pts_to_range_intro' a m j p (split_r a' mi) _;
+  pts_to_range_intro' a i m p (split_l a' mi) _;
+  noop ()
+
+let pts_to_range_join
+  #_ #_ #p #s1 #s2 a i m j
+= length_fits a;
+  pts_to_range_prop a i m p s1;
+  pts_to_range_prop a m j p s2;
+  let a1 = pts_to_range_elim' a i m p s1 in
+  let a2 = pts_to_range_elim' a m j p s2 in
+  ghost_join a1 a2 ();
+  pts_to_range_intro' a i j p _ _
+
+inline_for_extraction
+[@@noextract_to "krml"]
+let array_slice_impl
+  (#elt: Type0)
+  (a: array elt)
+  (i: US.t)
+  (j: Ghost.erased nat)
+  (sq: squash (US.v i <= j /\ j <= length a))
+: Pure (array elt)
+    (requires True)
+    (ensures (fun a' -> a' == array_slice a (US.v i) j sq))
+= length_fits a;
+  split_l (split_r a i) (US.uint_to_t (j - US.v i))
+
+let pts_to_range_index
+  #elt #p #s a i m j
+= pts_to_range_split a i (US.v m) j;
+  let s1 = elim_exists () in
+  let s2 = elim_exists () in
+  elim_pure _;
+  let ga' = pts_to_range_elim' a (US.v m) j p s2 in
+  let a' = array_slice_impl a m j () in
+  vpattern_rewrite #_ #(array elt) #ga' (fun ga' -> pts_to ga' _ _) a';
+  let res = index a' 0sz in
+  pts_to_range_intro' a (US.v m) j p a' s2;
+  pts_to_range_join a i (US.v m) j;
+  vpattern_rewrite (pts_to_range a i j p) (Ghost.reveal s);
+  return res
+
+inline_for_extraction
+[@@noextract_to "krml"]
+let upd'
+  (#t: Type)
+  (a: array t)
+  (#s: Ghost.erased (Seq.seq t))
+  (i: US.t)
+  (v: t)
+: ST (Ghost.erased (Seq.seq t))
+    (pts_to a P.full_perm s)
+    (fun res -> pts_to a P.full_perm res)
+    (US.v i < Seq.length s)
+    (fun res ->
+      US.v i < Seq.length s /\
+      Ghost.reveal res == Seq.upd s (US.v i) v
+    )
+= upd a i v;
+  vpattern_replace_erased (pts_to a P.full_perm)
+
+let pts_to_range_upd
+  #elt #s a i m j x
+= length_fits a;
+  pts_to_range_prop a i j full_perm s;
+  pts_to_range_split a i (US.v m) j;
+  let s1 = elim_exists () in
+  let s2 = elim_exists () in
+  elim_pure _;
+  let ga' = pts_to_range_elim' a (US.v m) j full_perm s2 in
+  let a' = array_slice_impl a m j () in
+  vpattern_rewrite #_ #(array elt) #ga' (fun ga' -> pts_to ga' _ _) a';
+  pts_to_length a' s2;
+  let s2' = upd' a' 0sz x in
+  pts_to_range_intro' a (US.v m) j full_perm a' s2';
+  pts_to_range_join a i (US.v m) j;
+  let s' = vpattern_replace_erased (pts_to_range a i j full_perm) in
+  assert (Ghost.reveal s' `Seq.equal` Seq.upd s (US.v m - i) x);
+  noop ();
+  return s'

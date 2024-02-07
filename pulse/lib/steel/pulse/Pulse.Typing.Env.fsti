@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Typing.Env
 
 open FStar.List.Tot
@@ -21,6 +37,7 @@ val fstar_env (g:env) : RT.fstar_top_env
 // most recent binding at the head of the list
 //
 val bindings (g:env) : env_bindings
+val bindings_with_ppname (g:env) : T.Tac (list (ppname & var & typ))
 
 val as_map (g:env) : Map.t var typ
 
@@ -172,6 +189,7 @@ val subst_env (en:env) (ss:subst)
 
 val push_context (g:env) (ctx:string) (r:range) : g':env { g' == g }
 val push_context_no_range (g:env) (ctx:string) : g':env { g' == g }
+val reset_context (g:env) (use_context_from:env) : g':env{ g' == g}
 val get_context (g:env) : Pulse.RuntimeUtils.context
 val range_of_env (g:env) : T.Tac range
 val print_context (g:env) : T.Tac string
@@ -181,8 +199,13 @@ val env_to_string (g:env) : T.Tac string
 val env_to_doc (g:env) : T.Tac FStar.Stubs.Pprint.document
 val get_range (g:env) (r:option range) : T.Tac range
 
-val fail_doc (#a:Type) (g:env) (r:option range) (msg:list Pprint.document)
+val fail_doc_env (#a:Type) (with_env:bool)
+                 (g:env) (r:option range) (msg:list Pprint.document)
   : T.TacH a (requires fun _ -> True) (ensures fun _ r -> FStar.Tactics.Result.Failed? r)
+
+let fail_doc (#a:Type) (g:env) (r:option range) (msg:list Pprint.document)
+  : T.TacH a (requires fun _ -> True) (ensures fun _ r -> FStar.Tactics.Result.Failed? r)
+  = fail_doc_env false g r msg
 
 val warn_doc (g:env) (r:option range) (msg:list Pprint.document)
   : T.Tac unit

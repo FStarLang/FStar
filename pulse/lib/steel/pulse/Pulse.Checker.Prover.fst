@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Checker.Prover
 
 open FStar.List.Tot
@@ -7,7 +23,7 @@ open Pulse.Typing
 open Pulse.Typing.Combinators
 open Pulse.Checker.Base
 
-
+module RU = Pulse.RuntimeUtils
 module L = FStar.List.Tot
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
@@ -23,17 +39,21 @@ module IntroPure = Pulse.Checker.Prover.IntroPure
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
 
+let elim_exists_and_pure (#g:env) (#ctxt:vprop)
+  (ctxt_typing:tot_typing g ctxt tm_vprop)
+  : T.Tac (g':env { env_extends g' g } &
+           ctxt':term &
+           tot_typing g' ctxt' tm_vprop &
+           continuation_elaborator g ctxt g' ctxt') =
+  
+  let (| g1, ctxt1, d1, k1 |) = ElimExists.elim_exists ctxt_typing in
+  let (| g2, ctxt2, d2, k2 |) = ElimPure.elim_pure d1 in
+  (| g2, ctxt2, d2, k_elab_trans k1 k2 |)
+
 let unsolved_equiv_pst (#preamble:_) (pst:prover_state preamble) (unsolved':list vprop)
   (d:vprop_equiv (push_env pst.pg pst.uvs) (list_as_vprop pst.unsolved) (list_as_vprop unsolved'))
   : prover_state preamble =
-  { pst with unsolved = unsolved'; goals_inv = magic () }
-
-let remaining_ctxt_equiv_pst (#preamble:_) (pst:prover_state preamble) (remaining_ctxt':list vprop)
-  (d:vprop_equiv pst.pg (list_as_vprop pst.remaining_ctxt) (list_as_vprop remaining_ctxt'))
-  : prover_state preamble =
-  { pst with remaining_ctxt = remaining_ctxt';
-             remaining_ctxt_frame_typing = magic ();
-             k = k_elab_equiv pst.k (VE_Refl _ _) (magic ()) }
+  { pst with unsolved = unsolved'; goals_inv = RU.magic () }
 
 let rec collect_exists (g:env) (l:list vprop)
   : exs:list vprop &
@@ -45,8 +65,9 @@ let rec collect_exists (g:env) (l:list vprop)
   | hd::tl ->
     let (| exs, rest, _ |) = collect_exists g tl in
     match hd.t with
-    | Tm_ExistsSL _ _ _ -> (| hd::exs, rest, magic () |)
-    | _ -> (| exs, hd::rest, magic () |)
+    | Tm_ExistsSL _ _ _ ->
+      (| hd::exs, rest, RU.magic #(vprop_equiv _ _ _) () |)
+    | _ -> (| exs, hd::rest, RU.magic #(vprop_equiv _ _ _) () |)
 
 let rec collect_pures (g:env) (l:list vprop)
   : pures:list vprop &
@@ -58,33 +79,8 @@ let rec collect_pures (g:env) (l:list vprop)
   | hd::tl ->
     let (| pures, rest, _ |) = collect_pures g tl in
     match hd.t with
-    | Tm_Pure _ -> (| hd::pures, rest, magic () |)
-    | _ -> (| pures, hd::rest, magic () |)
-
-let move_hd_end (g:env) (l:list vprop { Cons? l })
-  : vprop_equiv g (list_as_vprop l) (list_as_vprop (L.tl l @ [L.hd l])) = magic ()
-
-let rec match_q (#preamble:_) (pst:prover_state preamble)
-  (q:vprop) (unsolved':list vprop)
-  (_:squash (pst.unsolved == q::unsolved'))
-  (i:nat)
-  : T.Tac (option (pst':prover_state preamble { pst' `pst_extends` pst })) =
-
-  if L.length pst.remaining_ctxt = 0
-  then None
-  else if i = L.length pst.remaining_ctxt
-  then None
-  else
-    let p = L.hd pst.remaining_ctxt in
-    let pst_opt =
-      Match.match_step pst p (L.tl pst.remaining_ctxt) q unsolved' () in
-    match pst_opt with
-    | Some pst -> Some pst
-    | None ->
-      let pst =
-        remaining_ctxt_equiv_pst pst (L.tl pst.remaining_ctxt @ [L.hd pst.remaining_ctxt])
-          (move_hd_end pst.pg pst.remaining_ctxt) in
-      match_q pst q unsolved' () (i+1)
+    | Tm_Pure _ -> (| hd::pures, rest, RU.magic #(vprop_equiv _ _ _) () |)
+    | _ -> (| pures, hd::rest, RU.magic #(vprop_equiv _ _ _) () |)
 
 let rec prove_pures #preamble (pst:prover_state preamble)
   : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst /\
@@ -160,13 +156,12 @@ let rec prover
       match pst.unsolved with
       | {t=Tm_Pure _}::tl -> prove_pures pst
       | q::tl ->
-        let pst_opt = match_q pst q tl () 0 in
+        let pst_opt = Match.match_q pst q tl () prover in
         match pst_opt with
         | None ->
           let open Pprint in
           let open Pulse.PP in
           let msg = [
-            text "Error in proving precondition";
             text "Cannot prove:" ^^
                 indent (pp q);
             text "In the context:" ^^
@@ -190,9 +185,9 @@ let rec get_q_at_hd (g:env) (l:list vprop) (q:vprop { L.existsb (fun v -> eq_tm 
 
   match l with
   | hd::tl ->
-    if eq_tm hd q then (| tl, magic () |)
+    if eq_tm hd q then (| tl, RU.magic #(vprop_equiv _ _ _) () |)
     else let (| tl', _ |) = get_q_at_hd g tl q in
-         (| hd::tl', magic () |)
+         (| hd::tl', RU.magic #(vprop_equiv _ _ _) () |)
 
 #push-options "--z3rlimit_factor 4"
 let prove
@@ -201,7 +196,8 @@ let prove
   (#goals:vprop) (goals_typing:vprop_typing (push_env g uvs) goals)
 
   : T.Tac (g1 : env { g1 `env_extends` g /\ disjoint g1 uvs } &
-           nts : PS.nt_substs { PS.well_typed_nt_substs g1 uvs nts } &
+           nts : PS.nt_substs &
+           effect_labels:list T.tot_or_ghost { PS.well_typed_nt_substs g1 uvs nts effect_labels } &
            remaining_ctxt : vprop &
            continuation_elaborator g ctxt g1 ((PS.nt_subst_term goals nts) * remaining_ctxt)) =
 
@@ -221,10 +217,10 @@ let prove
     assume (list_as_vprop (vprop_as_list ctxt) == ctxt);
     let d_eq
       : vprop_equiv g ctxt ((PS.nt_subst_term goals nts) * remaining_ctxt) = coerce_eq d_eq () in
-    (| g1, nts, remaining_ctxt, k_elab_equiv k (VE_Refl _ _) d_eq |)
+    (| g1, nts, [], remaining_ctxt, k_elab_equiv k (VE_Refl _ _) d_eq |)
   end
   else
-    let ctxt_frame_typing : vprop_typing g (ctxt * tm_emp) = magic () in
+    let ctxt_frame_typing : vprop_typing g (ctxt * tm_emp) = RU.magic () in
     let preamble = {
       g0 = g;
       ctxt;
@@ -240,24 +236,33 @@ let prove
       remaining_ctxt_frame_typing = ctxt_frame_typing;
       uvs = uvs;
       ss = PS.empty;
+      nts = None;
       solved = tm_emp;
       unsolved = vprop_as_list goals;
-      k = k_elab_equiv (k_elab_unit g ctxt) (magic ()) (magic ());
-      goals_inv = magic ();
+      k = k_elab_equiv (k_elab_unit g ctxt) (RU.magic ()) (RU.magic ());
+      goals_inv = RU.magic ();
       solved_inv = ()
     } in
 
     let pst = prover pst0 in
 
-    let nts : nts:PS.nt_substs { PS.well_typed_nt_substs pst.pg pst.uvs nts /\
-                                 PS.is_permutation nts pst.ss } =
-      let r = PS.ss_to_nt_substs pst.pg pst.uvs pst.ss in
-      match r with
-      | Inr msg ->
-        fail pst.pg None
-          (Printf.sprintf "prover error: ill-typed substitutions (%s)" msg)
-      | Inl nts -> nts in
-    let nts_uvs = PS.well_typed_nt_substs_prefix pst.pg pst.uvs nts uvs in
+    let (| nts, effect_labels |)
+      : nts:PS.nt_substs &
+        effect_labels:list T.tot_or_ghost {
+          PS.well_typed_nt_substs pst.pg pst.uvs nts effect_labels /\
+          PS.is_permutation nts pst.ss
+    } =
+      match pst.nts with
+      | Some nts -> nts
+      | None ->
+        let r = PS.ss_to_nt_substs pst.pg pst.uvs pst.ss in
+        match r with
+        | Inr msg ->
+          fail pst.pg None
+            (Printf.sprintf "prover error: ill-typed substitutions (%s)" msg)
+        | Inl nts -> nts in
+    let nts_uvs, nts_uvs_effect_labels =
+      PS.well_typed_nt_substs_prefix pst.pg pst.uvs nts effect_labels uvs in
     let k
       : continuation_elaborator
           g (ctxt * tm_emp)
@@ -267,15 +272,31 @@ let prove
       : vprop_equiv (push_env pst.pg pst.uvs) goals (list_as_vprop [] * pst.solved) = pst.goals_inv in
     let goals_inv
       : vprop_equiv pst.pg (PS.nt_subst_term goals nts) (PS.nt_subst_term (list_as_vprop [] * pst.solved) nts) =
-      PS.vprop_equiv_nt_substs_derived pst.pg pst.uvs goals_inv nts in
+      PS.vprop_equiv_nt_substs_derived pst.pg pst.uvs goals_inv nts effect_labels in
   
     // goals is well-typed in initial g + uvs
     // so any of the remaining uvs in pst.uvs should not be in goals
     // so we can drop their substitutions from the tail of nts
     assume (PS.nt_subst_term goals nts == PS.nt_subst_term goals nts_uvs);
 
-    (| pst.pg, nts_uvs, list_as_vprop pst.remaining_ctxt, k_elab_equiv k (magic ()) (magic ()) |)
+    (| pst.pg, nts_uvs, nts_uvs_effect_labels, list_as_vprop pst.remaining_ctxt, k_elab_equiv k (RU.magic ()) (RU.magic ()) |)
 #pop-options
+
+let canon_post (c:comp_st) : comp_st =
+  let canon_st_comp_post (c:st_comp) : st_comp =
+    match Pulse.Readback.readback_ty (elab_term c.post) with
+    | None -> c
+    | Some post -> { c with post }
+  in
+  match c with
+  | C_ST s -> C_ST (canon_st_comp_post s)
+  | C_STAtomic i obs s -> C_STAtomic i obs (canon_st_comp_post s)
+  | C_STGhost s -> C_STGhost (canon_st_comp_post s)
+
+irreducible
+let typing_canon #g #t (#c:comp_st) (d:st_typing g t c) : st_typing g t (canon_post c) =
+  assume false;
+  d
 
 #push-options "--z3rlimit_factor 8 --fuel 0 --ifuel 1 --retry 5"
 let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
@@ -289,8 +310,8 @@ let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_v
 
   let g = push_context g "try_frame_pre" t.range in
 
-  let (| g1, nts, remaining_ctxt, k_frame |) =
-    prove #g #_ ctxt_typing uvs #(comp_pre c) (magic ()) in
+  let (| g1, nts, effect_labels, remaining_ctxt, k_frame |) =
+    prove #g #_ ctxt_typing uvs #(comp_pre c) (RU.magic ()) in
   // assert (nts == []);
 
   let d : st_typing (push_env g1 uvs) t c =
@@ -301,7 +322,20 @@ let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_v
   let c = PS.nt_subst_comp c nts in
 
   let d : st_typing g1 t c =
-    PS.st_typing_nt_substs_derived g1 uvs d nts in
+    let r = PS.st_typing_nt_substs_derived g1 uvs d nts effect_labels in
+    match r with
+    | Inr (x, x_t) ->
+      fail g1 (Some t.range)
+        (Printf.sprintf "prover error: for term %s, implicit solution %s has ghost effect"
+           (P.st_term_to_string t)
+           (P.term_to_string x_t))
+    | Inl d -> d in
+
+  (* shouldn't need this once term becomes a view; currently we sometimes end up with a computation
+     type whose postcondition is Tm_FStar (`(p1 ** p2))) rather than a Tm_Star p1 p2;
+     canon_post normalizes that *)
+  let c = canon_post c in
+  let d = typing_canon d in
 
   let k_frame : continuation_elaborator g ctxt g1 (comp_pre c * remaining_ctxt) = coerce_eq k_frame () in
 
@@ -316,7 +350,7 @@ let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_v
   let k
     : continuation_elaborator g1 (remaining_ctxt * comp_pre c)
                               g2 ctxt' =
-    continuation_elaborator_with_bind remaining_ctxt d (magic ()) (res_ppname, x) in
+    continuation_elaborator_with_bind remaining_ctxt d (RU.magic #(tot_typing _ _ _) ()) (res_ppname, x) in
 
   let k
     : continuation_elaborator g1 (comp_pre c * remaining_ctxt)
@@ -327,7 +361,7 @@ let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_v
 
   let comp_res_typing_in_g1, _, f =
     Metatheory.st_comp_typing_inversion_cofinite
-      (Metatheory.comp_typing_inversion (Metatheory.st_typing_correctness d)) in
+      (fst <| Metatheory.comp_typing_inversion (Metatheory.st_typing_correctness d)) in
 
   let d_ty
     : universe_of g2 ty (comp_u c) =
@@ -338,12 +372,12 @@ let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_v
     : vprop_typing g2 (open_term_nv (comp_post c) (res_ppname, x)) =
     f x in
 
-  // the magic is for the ctxt' typing
+  // the RU.magic is for the ctxt' typing
   // see d_post for post typing
   // then the remaining_ctxt typing should come from the prover state
   //   TODO: add it there
   // and then ctxt' is just their `*`
-  (| x, g2, (| comp_u c, ty, d_ty |), (| ctxt', magic () |), k |)
+  (| x, g2, (| comp_u c, ty, d_ty |), (| ctxt', RU.magic #(tot_typing _ _ _) () |), k |)
 #pop-options
 
 let try_frame_pre (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
@@ -387,8 +421,8 @@ let prove_post_hint (#g:env) (#ctxt:vprop)
     else if eq_tm post_hint_opened ctxt'
     then (| x, g2, (| u_ty, ty, ty_typing |), (| ctxt', ctxt'_typing |), k |)
     else
-      let (| g3, nts, remaining_ctxt, k_post |) =
-        prove #g2 #ctxt' ctxt'_typing (mk_env (fstar_env g2)) #post_hint_opened (magic ()) in
+      let (| g3, nts, _, remaining_ctxt, k_post |) =
+        prove #g2 #ctxt' ctxt'_typing (mk_env (fstar_env g2)) #post_hint_opened (RU.magic ()) in
           
       assert (nts == []);
       let k_post
@@ -409,7 +443,7 @@ let prove_post_hint (#g:env) (#ctxt:vprop)
       | Some d ->
         let k_post
           : continuation_elaborator g2 ctxt' g3 post_hint_opened =
-          k_elab_equiv k_post (VE_Refl _ _) (magic ()) in
+          k_elab_equiv k_post (VE_Refl _ _) (RU.magic #(vprop_equiv _ _ _) ()) in
         //
         // for the typing of ty in g3,
         // we have typing of ty in g2 above, and g3 `env_extends` g2
@@ -418,4 +452,5 @@ let prove_post_hint (#g:env) (#ctxt:vprop)
         // for the typing of post_hint_opened,
         // again post_hint is well-typed in g, and g3 `env_extends` g
         //
-        (| x, g3, (| u_ty, ty, magic () |), (| post_hint_opened, magic () |), k_elab_trans k k_post |)
+        (| x, g3, (| u_ty, ty, RU.magic #(tot_typing _ _ _) () |),
+                  (| post_hint_opened, RU.magic #(tot_typing _ _ _) () |), k_elab_trans k k_post |)

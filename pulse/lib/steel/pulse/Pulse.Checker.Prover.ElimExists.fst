@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Checker.Prover.ElimExists
 
 open Pulse.Syntax
@@ -5,6 +21,7 @@ open Pulse.Typing
 open Pulse.Typing.Combinators
 
 module T = FStar.Tactics.V2
+module RU = Pulse.RuntimeUtils
 
 open Pulse.Checker.VPropEquiv
 
@@ -26,7 +43,7 @@ let mk (#g:env) (#v:vprop) (v_typing:tot_typing g v tm_vprop)
     let x = fresh g in
     let c = Pulse.Typing.comp_elim_exists u t p (nm, x) in
     let tm_typing : st_typing g _ c =
-        T_ElimExists g (comp_u c) t p x (magic()) (magic())
+        T_ElimExists g (comp_u c) t p x (RU.magic()) (RU.magic())
     in
     Some (| nm, _, c, tm_typing |)
   | _ -> None
@@ -47,7 +64,7 @@ let elim_exists (#g:env) (#ctxt:term)
            tot_typing g' ctxt' tm_vprop &
            continuation_elaborator g ctxt g' ctxt') =
 
-  let ctxt_emp_typing : tot_typing g (tm_star ctxt tm_emp) tm_vprop = magic () in
+  let ctxt_emp_typing : tot_typing g (tm_star ctxt tm_emp) tm_vprop = RU.magic () in
   let (| g', ctxt', ctxt'_emp_typing, k |) =
     elim_exists_frame ctxt_emp_typing (mk_env (fstar_env g)) in
   let k = k_elab_equiv k (VE_Trans _ _ _ _ (VE_Comm _ _ _) (VE_Unit _ _))
@@ -63,7 +80,7 @@ let elim_exists_pst (#preamble:_) (pst:prover_state preamble)
       #pst.pg
       #(list_as_vprop pst.remaining_ctxt)
       #(preamble.frame * pst.ss.(pst.solved))
-      (magic ())
+      (RU.magic ())
       pst.uvs in
 
   let k
@@ -77,7 +94,7 @@ let elim_exists_pst (#preamble:_) (pst:prover_state preamble)
         pst.pg ((list_as_vprop pst.remaining_ctxt * preamble.frame) * pst.ss.(pst.solved))
         g' ((remaining_ctxt' * preamble.frame) * pst.ss.(pst.solved)) =
     
-    k_elab_equiv k (magic ()) (magic ()) in
+    k_elab_equiv k (RU.magic ()) (RU.magic ()) in
 
   let k_new
     : continuation_elaborator
@@ -90,8 +107,9 @@ let elim_exists_pst (#preamble:_) (pst:prover_state preamble)
   { pst with
     pg = g';
     remaining_ctxt = vprop_as_list remaining_ctxt';
-    remaining_ctxt_frame_typing = magic ();
+    remaining_ctxt_frame_typing = RU.magic ();
+    nts = None;
     k = k_new;
-    goals_inv = magic ();  // weakening of pst.goals_inv
+    goals_inv = RU.magic ();  // weakening of pst.goals_inv
     solved_inv = ()
   }

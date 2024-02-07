@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module ArrayTests
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
@@ -7,11 +23,10 @@ module R = Pulse.Lib.Reference
 
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 
-let elseq (a:Type) (l:nat) = s:Ghost.erased (Seq.seq a) { Seq.length s == l }
+let some_f (x:'a) : GTot _ = ()
 
 ```pulse
-fn compare (#t:eqtype) (l:US.t) (a1 a2:A.larray t (US.v l))
-           (#p1 #p2:perm) (#s1 #s2:elseq t (US.v l))
+fn compare (#t:eqtype) (#p1 #p2:perm) (l:US.t) (#s1 #s2:elseq t l) (a1 a2:A.larray t (US.v l))
   requires (
     A.pts_to a1 #p1 s1 **
     A.pts_to a2 #p2 s2
@@ -25,7 +40,7 @@ fn compare (#t:eqtype) (l:US.t) (a1 a2:A.larray t (US.v l))
 {
   let mut i = 0sz;
   while (let vi = !i; if US.(vi <^ l) { let v1 = a1.(vi); let v2 = a2.(vi); (v1 = v2) } else { false } )
-  invariant b. exists (vi:US.t). ( 
+  invariant b. exists* (vi:US.t). ( 
     R.pts_to i vi **
     A.pts_to a1 #p1 s1 **
     A.pts_to a2 #p2 s2 **
@@ -51,14 +66,14 @@ fn fill_array (#t:Type0) (l:US.t) (a:(a:A.array t{ US.v l == A.length a })) (v:t
               (#s:(s:Ghost.erased (Seq.seq t) { Seq.length s == US.v l }))
    requires (A.pts_to a s)
    ensures 
-      exists (s:Seq.seq t). (
+      exists* (s:Seq.seq t). (
          A.pts_to a s **
          pure (s `Seq.equal` Seq.create (US.v l) v)
       )
 {
    let mut i = 0sz;
    while (let vi = !i; US.(vi <^ l))
-   invariant b. exists (s:Seq.seq t) (vi:US.t). ( 
+   invariant b. exists* (s:Seq.seq t) (vi:US.t). (
       A.pts_to a s **
       R.pts_to i vi **
       pure ((b == US.(vi <^ l)) /\
@@ -92,7 +107,7 @@ fn array_of_zeroes (n:US.t)
 
 //this is not a recommended way to do this, since s is not erased, but it works
 ```pulse
-fn read_at_offset_0 (#t:Type0) (a:array t) (i:US.t) (#p:perm) (#s:Seq.seq t)
+fn read_at_offset_0 (#t:Type0) (#p:perm) (#s:Seq.seq t) (a:array t) (i:US.t)
    requires (A.pts_to a #p s **
              pure (US.v i < Seq.length s))
    returns x:t
@@ -109,7 +124,7 @@ fn read_at_offset_0 (#t:Type0) (a:array t) (i:US.t) (#p:perm) (#s:Seq.seq t)
 ```
 
 ```pulse
-fn read_at_offset_poly (#t:Type0) (a:array t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq t))
+fn read_at_offset_poly (#t:Type0) (#p:perm) (#s:Ghost.erased (Seq.seq t)) (a:array t) (i:US.t)
    requires (A.pts_to a #p s **
              pure (US.v i < Seq.length s))
    returns x:t
@@ -143,10 +158,10 @@ fn read_at_offset (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq U
 assume
 val test_array_access
   (#t: Type)
+  (#p: perm)
   (a: A.array t)
   (i: US.t)
   (#s: Ghost.erased (Seq.seq t) {US.v i < A.length a \/ US.v i < Seq.length s})
-  (#p: perm)
 : stt t
     (requires
       A.pts_to a #p s)
@@ -157,7 +172,7 @@ val test_array_access
             res == Seq.index s (US.v i)))
 
 ```pulse
-fn read_at_offset_refine (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq U32.t))
+fn read_at_offset_refine (#p:perm) (#s:Ghost.erased (Seq.seq U32.t)) (a:array U32.t) (i:US.t) 
    requires (A.pts_to a #p s **
              pure (US.v i < A.length a \/ US.v i < Seq.length s))
    returns x:U32.t
@@ -176,7 +191,7 @@ fn read_at_offset_refine (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erased (Se
 
 
 ```pulse
-fn read_at_offset_refine_poly (#t:Type0) (a:array t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq t))
+fn read_at_offset_refine_poly (#t:Type0) (#p:perm) (#s:Ghost.erased (Seq.seq t)) (a:array t) (i:US.t) 
    requires (A.pts_to a #p s **
              pure (US.v i < A.length a \/ US.v i < Seq.length s))
    returns x:t
@@ -192,20 +207,20 @@ fn read_at_offset_refine_poly (#t:Type0) (a:array t) (i:US.t) (#p:perm) (#s:Ghos
    x
 } 
 ```
-//Error message is poor as usual
-//But, this type is genuinely incorrect, since the return type does not assume
+//Error message is correctly localizded to Seq.index in the return type
+//This type is genuinely incorrect, since the return type does not assume
 //the validity of the pure conjuncts in the requires
 //so the sequence indexing there cannot be proven to be safe
 //Maybe we should find a way to allow the pure conjuncts to be assumed in the returns
 //Megan correctly remarks that this is unintuitive ... let's see if we can fix it
 [@@expect_failure]
 ```pulse
-fn read_at_offset_refine (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq U32.t))
-   requires (A.pts_to a p s ** pure (US.v i < A.length a))
+fn read_at_offset_refine_fail (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq U32.t))
+   requires (A.pts_to a #p s ** pure (US.v i < A.length a))
    returns x: (x:U32.t { Seq.length s == A.length a /\
                          x == Seq.index s (US.v i)})
    ensures (
-      A.pts_to a p s
+      A.pts_to a #p s
    )
 { 
    let x = test_array_access a i;
@@ -257,10 +272,14 @@ fn write_at_offset (#t:Type0) (a:array t) (i:US.t) (v:t)
 }
 ```
 
-let sorted (s0 s:Seq.seq U32.t) =
+noextract
+let sorted (s0 s:Seq.seq U32.t) : GTot _ =
    (forall (i:nat). i < Seq.length s - 1 ==> U32.v (Seq.index s i) <= U32.v (Seq.index s (i + 1))) /\
    (forall (i:nat). i < Seq.length s0 ==> (exists (j:nat). j < Seq.length s /\ U32.v (Seq.index s0 i) == U32.v (Seq.index s j)))
 
+let permutation (s:Seq.seq U32.t) (l:list U32.t) =
+   (forall (i:nat). i < Seq.length s ==> 
+      (exists (j:nat). j < List.Tot.length l /\ U32.v (Seq.index s i) == U32.v (List.Tot.index l j)))
 
 open FStar.UInt32
 // #push-options "--query_stats"
@@ -270,7 +289,7 @@ fn sort3 (a:array U32.t)
          (#s:(s:Ghost.erased (Seq.seq U32.t) {Seq.length s == 3}))
    requires (A.pts_to a s)
    ensures 
-      exists s'. (
+      exists* s'. (
          A.pts_to a s' **
          pure (sorted s s')
       )
@@ -330,7 +349,7 @@ fn sort3_alt (a:array U32.t)
              (#s:(s:Ghost.erased (Seq.seq U32.t) {Seq.length s == 3}))
    requires (A.pts_to a s)
    ensures 
-      exists s'. (
+      exists* s'. (
          A.pts_to a s' **
          pure (sorted s s')
       )
@@ -340,6 +359,7 @@ fn sort3_alt (a:array U32.t)
    let mut z = a.(2sz);
    let vx = !x;
    let vy = !y;
+   let vz = !z;
    if (vy <^ vx) 
    {
       x := vy;
@@ -348,10 +368,23 @@ fn sort3_alt (a:array U32.t)
    let vx = !x;
    let vz = !z;
    if (vz <^ vx)
+   ensures
+      exists* vx vy vz.
+        A.pts_to a s **
+        pts_to x vx **
+        pts_to y vy **
+        pts_to z vz **
+        pure (vz <= vx ** vx <= vy ** permutation s [vx;vy;vz])
    {
       x := vz;
       z := vx;
+   }
+   else if (vz <^ vy)
+   {  
+      y := vz;
+      z := vy;
    };
+   admit();
    let vy = !y;
    let vz = !z;
    if (vz <^ vy)
@@ -366,3 +399,83 @@ fn sort3_alt (a:array U32.t)
 }
 ```
 
+```pulse
+fn test_local_array0 ()
+  requires emp
+  returns  b:bool
+  ensures  pure (b)
+{
+  let mut a1 = [| 0; 2sz |];
+  let a2 = A.alloc 0 2sz;
+  let b = compare 2sz a1 a2;
+  A.free a2;
+  b
+}
+```
+
+```pulse
+fn test_local_array1 ()
+  requires emp
+  returns  i:int
+  ensures  pure (i == 3)
+{
+  let mut a = [| 1; 2sz |];
+  fill_array 2sz a 2;
+  fill_array 2sz a 3;
+  read_at_offset_refine_poly a 1sz
+}
+```
+
+[@@ expect_failure]  // cannot call free on a local array
+```pulse
+fn test_local_array2 ()
+  requires emp
+  ensures  emp
+{
+  let mut a = [| 1; 2sz |];
+  A.free a
+}
+```
+
+[@@ expect_failure]  // cannot return a local array
+```pulse
+fn test_local_array3 ()
+  requires emp
+  returns  a:array int
+  ensures  (
+    A.pts_to a (Seq.create (US.v 2sz) 0)
+  )
+{
+  let mut a = [| 0; 2sz |];
+  a
+}
+```
+
+[@@ expect_failure]  // immutable local arrays are not yet supported
+```pulse
+fn test_local_array4 ()
+  requires emp
+  ensures  emp
+{
+  let a = [| 0; 2sz |];
+  ()
+}
+```
+
+```pulse
+fn test_array_swap
+  (a: A.array U32.t)
+  (#s: Ghost.erased (Seq.seq U32.t))
+requires
+  A.pts_to a s ** pure (A.length a == 2)
+ensures exists* s' .
+  A.pts_to a s'
+{
+  A.pts_to_len a;
+  A.pts_to_range_intro a full_perm s;
+  A.pts_to_range_upd a 1sz 42ul;
+  A.pts_to_range_upd a 1sz 42ul;
+  A.pts_to_range_elim a _ _;
+  ()
+}
+```

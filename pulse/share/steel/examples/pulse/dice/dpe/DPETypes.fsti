@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module DPETypes
 open Pulse.Lib.Pervasives
 open HACL
@@ -109,52 +125,58 @@ let mk_profile_descriptor
   supports_policy_assert_init; supports_policy_assert_loc; certificate_policies; supports_eca_certificates; eca_certificate_format; leaf_certificate_format; public_key_format; 
   supports_external_key; to_be_signed_format; signature_format; supports_symmetric_sign; supports_asymmetric_unseal; supports_unseal_policy; unseal_policy_format;}
 
+module V = Pulse.Lib.Vec
+
+// TODO: move to Pulse.Lib.Vec
+type lvec (a:Type) (n:nat) = v:V.vec a { V.length v == n }
+
 (* Engine Context *)
 noeq
 type engine_context_t = { 
-  uds: A.larray U8.t (SZ.v uds_len); 
+  uds: lvec U8.t (SZ.v uds_len); 
 }
 
-let engine_context_perm (c:engine_context_t) : vprop
-  = A.pts_to c.uds uds_bytes ** 
-    pure (A.is_full_array c.uds)
+let engine_context_perm (c:engine_context_t) (uds_bytes:Seq.seq U8.t) : vprop
+  = V.pts_to c.uds uds_bytes ** 
+    pure (V.is_full_vec c.uds)
 
 let mk_engine_context_t uds : engine_context_t = {uds}
 
 (* L0 Context *)
 noeq
 type l0_context_t = { 
-  cdi:A.larray U8.t (SZ.v dice_digest_len); 
+  cdi : lvec U8.t (SZ.v dice_digest_len); 
 }
 
 let mk_l0_context_t cdi : l0_context_t = {cdi}
 
 type l0_context_repr_t = {
+  uds:Seq.seq U8.t;
   cdi:Seq.seq U8.t;
   repr:engine_record_repr;
 }
 
 let mk_l0_context_repr_t
+  (uds:Seq.seq U8.t)
   (cdi:Seq.seq U8.t)
   (repr:engine_record_repr) 
 : GTot l0_context_repr_t 
-= {cdi; repr}
+= {uds; cdi; repr}
 
 let l0_context_perm (c:l0_context_t) (r:l0_context_repr_t): vprop
-  = A.pts_to c.cdi r.cdi **
-    pure (A.is_full_array c.cdi
-       /\ cdi_functional_correctness r.cdi r.repr
+  = V.pts_to c.cdi r.cdi **
+    pure (V.is_full_vec c.cdi
+       /\ cdi_functional_correctness r.cdi r.uds r.repr
        /\ l0_is_authentic r.repr)
-
 
 (* L1 Context *)
 noeq
-type l1_context_t = { deviceID_priv: A.larray U8.t (SZ.v v32us);
-                      deviceID_pub: A.larray U8.t (SZ.v v32us);   
-                      aliasKey_priv: A.larray U8.t (SZ.v v32us);
-                      aliasKey_pub: A.larray U8.t (SZ.v v32us);
-                      aliasKeyCRT: A.array U8.t;
-                      deviceIDCSR: A.array U8.t; }
+type l1_context_t = { deviceID_priv: lvec U8.t (SZ.v v32us);
+                      deviceID_pub: lvec U8.t (SZ.v v32us);   
+                      aliasKey_priv: lvec U8.t (SZ.v v32us);
+                      aliasKey_pub: lvec U8.t (SZ.v v32us);
+                      aliasKeyCRT: V.vec U8.t;
+                      deviceIDCSR: V.vec U8.t; }
 
 let mk_l1_context_t deviceID_priv deviceID_pub aliasKey_priv aliasKey_pub aliasKeyCRT deviceIDCSR 
 : l1_context_t
@@ -200,12 +222,12 @@ let mk_l1_context_repr_t
 
 let l1_context_perm (c:l1_context_t) (r:l1_context_repr_t)
   : vprop
-  = A.pts_to c.deviceID_priv r.deviceID_priv **
-    A.pts_to c.deviceID_pub r.deviceID_pub **
-    A.pts_to c.aliasKey_priv r.aliasKey_priv **
-    A.pts_to c.aliasKey_pub r.aliasKey_pub **
-    A.pts_to c.aliasKeyCRT r.aliasKeyCRT **
-    A.pts_to c.deviceIDCSR r.deviceIDCSR **
+  = V.pts_to c.deviceID_priv r.deviceID_priv **
+    V.pts_to c.deviceID_pub r.deviceID_pub **
+    V.pts_to c.aliasKey_priv r.aliasKey_priv **
+    V.pts_to c.aliasKey_pub r.aliasKey_pub **
+    V.pts_to c.aliasKeyCRT r.aliasKeyCRT **
+    V.pts_to c.deviceIDCSR r.deviceIDCSR **
     pure (valid_hkdf_ikm_len dice_digest_len
        /\ aliasKey_functional_correctness
             dice_hash_alg dice_digest_len r.cdi r.repr.fwid
@@ -219,12 +241,12 @@ let l1_context_perm (c:l1_context_t) (r:l1_context_repr_t)
             dice_hash_alg dice_digest_len r.cdi r.repr.fwid
             r.deviceID_label_len r.repr.deviceID_label r.aliasKeyCRT_ingredients 
             r.aliasKeyCRT_len r.aliasKeyCRT r.aliasKey_pub
-       /\ A.is_full_array c.deviceID_priv
-       /\ A.is_full_array c.deviceID_pub
-       /\ A.is_full_array c.aliasKey_priv
-       /\ A.is_full_array c.aliasKey_pub
-       /\ A.is_full_array c.aliasKeyCRT
-       /\ A.is_full_array c.deviceIDCSR)  
+       /\ V.is_full_vec c.deviceID_priv
+       /\ V.is_full_vec c.deviceID_pub
+       /\ V.is_full_vec c.aliasKey_priv
+       /\ V.is_full_vec c.aliasKey_pub
+       /\ V.is_full_vec c.aliasKeyCRT
+       /\ V.is_full_vec c.deviceIDCSR)  
 
 (* Generic Context *)
 // unlike record_t (below), we require full permission on the resources inside
@@ -242,7 +264,7 @@ let mk_context_t_l1 c = L1_context c
 
 noeq
 type context_repr_t = 
-  | Engine_context_repr : context_repr_t
+  | Engine_context_repr : uds:Seq.seq U8.t -> context_repr_t
   | L0_context_repr     : r:l0_context_repr_t -> context_repr_t
   | L1_context_repr     : r:l1_context_repr_t -> context_repr_t
 
@@ -253,7 +275,11 @@ let mk_context_repr_t_l1 (r:erased l1_context_repr_t)
 
 let context_perm (context:context_t) (repr:context_repr_t): vprop = 
   match context with
-  | Engine_context c -> engine_context_perm c
+  | Engine_context c -> (
+    match repr with
+    | Engine_context_repr uds -> engine_context_perm c uds
+    | _ -> pure False
+  )
   | L0_context c -> (
     match repr with 
     | L0_context_repr r -> l0_context_perm c r
@@ -280,6 +306,37 @@ fn elim_false (#a:Type0) (p: (a -> vprop))
 
 ```pulse
 ghost
+fn get_engine_context_perm (c:engine_context_t) (repr:erased context_repr_t)
+  requires context_perm (Engine_context c) repr
+  returns uds:Ghost.erased (Seq.seq U8.t)
+  ensures engine_context_perm c uds ** pure (repr == Engine_context_repr uds)
+{
+  let repr = reveal repr;
+  match repr {
+    Engine_context_repr uds -> {
+      rewrite (context_perm (Engine_context c) repr)
+          as  (engine_context_perm c uds);
+      hide uds
+    } 
+    L0_context_repr r0 -> {
+      rewrite (context_perm (Engine_context c) repr)
+          as  (pure False);
+      let x = elim_false (engine_context_perm c);
+      hide x
+    }
+    L1_context_repr _ -> {
+      rewrite (context_perm (Engine_context c) repr)
+          as  (pure False);
+      let x = elim_false (engine_context_perm c);
+      hide x
+    }
+  }
+}
+```
+
+
+```pulse
+ghost
 fn get_l0_context_perm (r:l0_context_t) (repr':erased context_repr_t)
   requires context_perm (L0_context r) repr'
   returns r0:erased l0_context_repr_t
@@ -287,7 +344,7 @@ fn get_l0_context_perm (r:l0_context_t) (repr':erased context_repr_t)
 {
   let repr = reveal repr';
   match repr {
-    Engine_context_repr -> {
+    Engine_context_repr uds -> {
       rewrite (context_perm (L0_context r) repr)
           as  (pure False);
       let x = elim_false (l0_context_perm r);
@@ -317,7 +374,7 @@ fn get_l1_context_perm (r:l1_context_t) (repr':erased context_repr_t)
 {
   let repr = reveal repr';
   match repr {
-    Engine_context_repr -> {
+    Engine_context_repr uds -> {
       rewrite (context_perm (L1_context r) repr)
           as  (pure False);
       let x = elim_false (l1_context_perm r);
@@ -356,16 +413,16 @@ type repr_t =
   | Engine_repr : r:engine_record_repr -> repr_t
   | L0_repr     : r:l0_record_repr_t -> repr_t
 
-let record_perm (record:record_t) (repr:repr_t) (p:perm) : vprop = 
+let record_perm (record:record_t) (p:perm) (repr:repr_t)  : vprop = 
   match record with
   | Engine_record r -> (
     match repr with 
-    | Engine_repr r0 -> engine_record_perm r r0 p
+    | Engine_repr r0 -> engine_record_perm r p r0
     | _ -> pure False
   )
   | L0_record r -> (
     match repr with
-    | L0_repr r0 -> l0_record_perm r r0 p
+    | L0_repr r0 -> l0_record_perm r p r0
     | _ -> pure False
   )
 
@@ -373,24 +430,22 @@ let record_perm (record:record_t) (repr:repr_t) (p:perm) : vprop =
 ```pulse
 ghost
 fn get_engine_record_perm (r:engine_record_t) (repr':erased repr_t) (p:perm)
-  requires record_perm (Engine_record r) repr' p
+  requires record_perm (Engine_record r) p repr'
   returns r0:erased engine_record_repr
-  ensures engine_record_perm r r0 p ** pure (reveal repr' == Engine_repr r0)
+  ensures engine_record_perm r p r0 ** pure (reveal repr' == Engine_repr r0)
 {
   let repr = reveal repr';
   match repr {
     Engine_repr r0 -> {
-      admit() // FIXME
-      // rewrite (record_perm (Engine_record r) repr p)
-      //     as  (engine_record_perm r r0 p);
-      // hide r0
+      rewrite (record_perm (Engine_record r) p (reveal repr))
+          as  (engine_record_perm r p r0);
+      hide r0
     }
     L0_repr _ -> {
-      admit() // FIXME
-      // rewrite (record_perm (Engine_record r) repr p)
-      //     as  (pure False);
-      // let x = elim_false (engine_record_perm r p);
-      // hide x
+      rewrite (record_perm (Engine_record r) p repr)
+          as  (pure False);
+      let x = elim_false #engine_record_repr (engine_record_perm r p);
+      hide x
     }
   }
 }
@@ -399,25 +454,23 @@ fn get_engine_record_perm (r:engine_record_t) (repr':erased repr_t) (p:perm)
 ```pulse
 ghost
 fn get_l0_record_perm (r:l0_record_t) (repr':erased repr_t) (p:perm)
-  requires record_perm (L0_record r) repr' p
+  requires record_perm (L0_record r) p repr'
   returns r0:erased l0_record_repr_t
-  ensures l0_record_perm r r0 p ** pure (reveal repr' == L0_repr r0)
+  ensures l0_record_perm r p r0 ** pure (reveal repr' == L0_repr r0)
 {
   let repr = reveal repr';
   match repr {
-    Engine_repr _ -> {
-      admit() // FIXME
-      // rewrite (record_perm (L0_record r) repr p)
-      //     as  (pure False);
-      // let x = elim_false (l0_record_perm r);
-      // hide x
+    Engine_repr rr -> {
+      rewrite (record_perm (L0_record r) p repr)
+          as  (pure False);
+      let x = elim_false #l0_record_repr_t (l0_record_perm r p);
+      hide x
     }
     L0_repr r0 -> {
-      admit() // FIXME
-      // rewrite (record_perm (L0_record r) repr p)
-      //     as  (l0_record_perm r r0 p);
-      // hide r0
-    }
+      rewrite (record_perm (L0_record r) p repr)
+          as  (l0_record_perm r p r0);
+      hide r0
+   }
   }
 }
 ```

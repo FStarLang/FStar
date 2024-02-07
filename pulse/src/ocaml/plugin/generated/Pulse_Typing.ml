@@ -21,21 +21,21 @@ let (debug_log :
                          (FStar_Sealed.seal
                             (Obj.magic
                                (FStar_Range.mk_range "Pulse.Typing.fst"
-                                  (Prims.of_int (16)) (Prims.of_int (15))
-                                  (Prims.of_int (16)) (Prims.of_int (64)))))
+                                  (Prims.of_int (32)) (Prims.of_int (15))
+                                  (Prims.of_int (32)) (Prims.of_int (64)))))
                          (FStar_Sealed.seal
                             (Obj.magic
                                (FStar_Range.mk_range "Pulse.Typing.fst"
-                                  (Prims.of_int (16)) (Prims.of_int (7))
-                                  (Prims.of_int (16)) (Prims.of_int (64)))))
+                                  (Prims.of_int (32)) (Prims.of_int (7))
+                                  (Prims.of_int (32)) (Prims.of_int (64)))))
                          (Obj.magic
                             (FStar_Tactics_Effect.tac_bind
                                (FStar_Sealed.seal
                                   (Obj.magic
                                      (FStar_Range.mk_range "Pulse.Typing.fst"
-                                        (Prims.of_int (16))
+                                        (Prims.of_int (32))
                                         (Prims.of_int (57))
-                                        (Prims.of_int (16))
+                                        (Prims.of_int (32))
                                         (Prims.of_int (63)))))
                                (FStar_Sealed.seal
                                   (Obj.magic
@@ -71,6 +71,12 @@ let (tm_bool : Pulse_Syntax_Base.term) =
 let (tm_int : Pulse_Syntax_Base.term) =
   Pulse_Syntax_Pure.tm_fvar
     (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.int_lid)
+let (tm_nat : Pulse_Syntax_Base.term) =
+  Pulse_Syntax_Pure.tm_fvar
+    (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.nat_lid)
+let (tm_szt : Pulse_Syntax_Base.term) =
+  Pulse_Syntax_Pure.tm_fvar
+    (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.szt_lid)
 let (tm_true : Pulse_Syntax_Base.term) =
   Pulse_Syntax_Pure.tm_constant FStar_Reflection_V2_Data.C_True
 let (tm_false : Pulse_Syntax_Base.term) =
@@ -156,26 +162,6 @@ let (mk_sq_eq2 :
             (Pulse_Syntax_Pure.tm_uinst
                (Pulse_Syntax_Base.as_fv FStar_Reflection_Const.squash_qn) 
                [u]) FStar_Pervasives_Native.None eq
-let (mk_eq2_prop :
-  Pulse_Syntax_Base.universe ->
-    Pulse_Syntax_Base.term ->
-      Pulse_Syntax_Base.term ->
-        Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
-  =
-  fun u ->
-    fun t ->
-      fun e0 ->
-        fun e1 ->
-          Pulse_Syntax_Pure.tm_pureapp
-            (Pulse_Syntax_Pure.tm_pureapp
-               (Pulse_Syntax_Pure.tm_pureapp
-                  (Pulse_Syntax_Pure.tm_uinst
-                     (Pulse_Syntax_Base.as_fv
-                        (Pulse_Reflection_Util.mk_pulse_lib_core_lid
-                           "eq2_prop")) [u])
-                  (FStar_Pervasives_Native.Some Pulse_Syntax_Base.Implicit) t)
-               FStar_Pervasives_Native.None e0) FStar_Pervasives_Native.None
-            e1
 let (mk_vprop_eq :
   Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
   =
@@ -234,7 +220,7 @@ let (comp_return :
                     let post2 =
                       Pulse_Syntax_Base.tm_star post1
                         (Pulse_Syntax_Base.tm_pure
-                           (mk_eq2_prop u t (Pulse_Syntax_Pure.null_var x) e)) in
+                           (mk_eq2 u t (Pulse_Syntax_Pure.null_var x) e)) in
                     Pulse_Syntax_Naming.close_term post2 x
                   else post in
                 match c with
@@ -251,6 +237,7 @@ let (comp_return :
                 | Pulse_Syntax_Base.STT_Atomic ->
                     Pulse_Syntax_Base.C_STAtomic
                       (Pulse_Syntax_Base.tm_emp_inames,
+                        Pulse_Syntax_Base.Neutral,
                         {
                           Pulse_Syntax_Base.u = u;
                           Pulse_Syntax_Base.res = t;
@@ -261,15 +248,14 @@ let (comp_return :
                         })
                 | Pulse_Syntax_Base.STT_Ghost ->
                     Pulse_Syntax_Base.C_STGhost
-                      (Pulse_Syntax_Base.tm_emp_inames,
-                        {
-                          Pulse_Syntax_Base.u = u;
-                          Pulse_Syntax_Base.res = t;
-                          Pulse_Syntax_Base.pre =
-                            (Pulse_Syntax_Naming.open_term' post e
-                               Prims.int_zero);
-                          Pulse_Syntax_Base.post = post_maybe_eq
-                        })
+                      {
+                        Pulse_Syntax_Base.u = u;
+                        Pulse_Syntax_Base.res = t;
+                        Pulse_Syntax_Base.pre =
+                          (Pulse_Syntax_Naming.open_term' post e
+                             Prims.int_zero);
+                        Pulse_Syntax_Base.post = post_maybe_eq
+                      }
 let (extend_env_l :
   FStar_Reflection_Types.env ->
     Pulse_Typing_Env.env_bindings -> FStar_Reflection_Types.env)
@@ -317,10 +303,57 @@ let (add_frame :
         } in
       match s with
       | Pulse_Syntax_Base.C_ST s1 -> Pulse_Syntax_Base.C_ST (add_frame_s s1)
-      | Pulse_Syntax_Base.C_STAtomic (inames, s1) ->
-          Pulse_Syntax_Base.C_STAtomic (inames, (add_frame_s s1))
-      | Pulse_Syntax_Base.C_STGhost (inames, s1) ->
-          Pulse_Syntax_Base.C_STGhost (inames, (add_frame_s s1))
+      | Pulse_Syntax_Base.C_STAtomic (inames, obs, s1) ->
+          Pulse_Syntax_Base.C_STAtomic (inames, obs, (add_frame_s s1))
+      | Pulse_Syntax_Base.C_STGhost s1 ->
+          Pulse_Syntax_Base.C_STGhost (add_frame_s s1)
+let (add_inv :
+  Pulse_Syntax_Base.comp_st ->
+    Pulse_Syntax_Base.vprop -> Pulse_Syntax_Base.comp_st)
+  = fun s -> fun v -> add_frame s v
+let (at_most_one_observable :
+  Pulse_Syntax_Base.observability ->
+    Pulse_Syntax_Base.observability -> Prims.bool)
+  =
+  fun o1 ->
+    fun o2 ->
+      match (o1, o2) with
+      | (Pulse_Syntax_Base.Observable, Pulse_Syntax_Base.Observable) -> false
+      | uu___ -> true
+let (join_obs :
+  Pulse_Syntax_Base.observability ->
+    Pulse_Syntax_Base.observability -> Pulse_Syntax_Base.observability)
+  =
+  fun o1 ->
+    fun o2 ->
+      match (o1, o2) with
+      | (Pulse_Syntax_Base.Neutral, o) -> o
+      | (o, Pulse_Syntax_Base.Neutral) -> o
+      | (Pulse_Syntax_Base.Observable, uu___) -> Pulse_Syntax_Base.Observable
+      | (uu___, Pulse_Syntax_Base.Observable) -> Pulse_Syntax_Base.Observable
+      | (Pulse_Syntax_Base.Unobservable, Pulse_Syntax_Base.Unobservable) ->
+          Pulse_Syntax_Base.Unobservable
+let (add_iname_at_least_unobservable :
+  Pulse_Syntax_Base.comp_st ->
+    Pulse_Syntax_Base.term ->
+      Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp)
+  =
+  fun s ->
+    fun inv_vprop ->
+      fun inv_tm ->
+        let add_inv_tm inames =
+          Pulse_Syntax_Base.tm_fstar
+            (Pulse_Reflection_Util.add_inv_tm
+               (Pulse_Elaborate_Pure.elab_term inv_vprop)
+               (Pulse_Elaborate_Pure.elab_term inames)
+               (Pulse_Elaborate_Pure.elab_term inv_tm))
+            inames.Pulse_Syntax_Base.range1 in
+        let uu___ = s in
+        match uu___ with
+        | Pulse_Syntax_Base.C_STAtomic (inames, obs, s1) ->
+            Pulse_Syntax_Base.C_STAtomic
+              ((add_inv_tm inames),
+                (join_obs obs Pulse_Syntax_Base.Unobservable), s1)
 type ('c1, 'c2) bind_comp_compatible = Obj.t
 type ('x, 'c1, 'c2) bind_comp_pre = unit
 let (bind_comp_out :
@@ -337,49 +370,13 @@ let (bind_comp_out :
           Pulse_Syntax_Base.post = (Pulse_Syntax_Base.comp_post c2)
         } in
       match (c1, c2) with
-      | (Pulse_Syntax_Base.C_STGhost (inames, uu___),
-         Pulse_Syntax_Base.C_STGhost (uu___1, uu___2)) ->
-          Pulse_Syntax_Base.C_STGhost (inames, s)
+      | (Pulse_Syntax_Base.C_STGhost uu___, Pulse_Syntax_Base.C_STGhost
+         uu___1) -> Pulse_Syntax_Base.C_STGhost s
+      | (Pulse_Syntax_Base.C_STAtomic (inames, obs1, uu___),
+         Pulse_Syntax_Base.C_STAtomic (uu___1, obs2, uu___2)) ->
+          Pulse_Syntax_Base.C_STAtomic (inames, (join_obs obs1 obs2), s)
       | (Pulse_Syntax_Base.C_ST uu___, Pulse_Syntax_Base.C_ST uu___1) ->
           Pulse_Syntax_Base.C_ST s
-type ('c1, 'c2) bind_comp_ghost_l_compatible = Obj.t
-type ('x, 'c1, 'c2) bind_comp_ghost_l_pre = unit
-let (bind_comp_ghost_l_out :
-  Pulse_Syntax_Base.comp_st ->
-    Pulse_Syntax_Base.comp_st -> Pulse_Syntax_Base.comp_st)
-  =
-  fun c1 ->
-    fun c2 ->
-      let s =
-        {
-          Pulse_Syntax_Base.u = (Pulse_Syntax_Base.comp_u c2);
-          Pulse_Syntax_Base.res = (Pulse_Syntax_Base.comp_res c2);
-          Pulse_Syntax_Base.pre = (Pulse_Syntax_Base.comp_pre c1);
-          Pulse_Syntax_Base.post = (Pulse_Syntax_Base.comp_post c2)
-        } in
-      match (c1, c2) with
-      | (Pulse_Syntax_Base.C_STGhost (inames, uu___),
-         Pulse_Syntax_Base.C_STAtomic (uu___1, uu___2)) ->
-          Pulse_Syntax_Base.C_STAtomic (inames, s)
-type ('c1, 'c2) bind_comp_ghost_r_compatible = Obj.t
-type ('x, 'c1, 'c2) bind_comp_ghost_r_pre = unit
-let (bind_comp_ghost_r_out :
-  Pulse_Syntax_Base.comp_st ->
-    Pulse_Syntax_Base.comp_st -> Pulse_Syntax_Base.comp_st)
-  =
-  fun c1 ->
-    fun c2 ->
-      let s =
-        {
-          Pulse_Syntax_Base.u = (Pulse_Syntax_Base.comp_u c2);
-          Pulse_Syntax_Base.res = (Pulse_Syntax_Base.comp_res c2);
-          Pulse_Syntax_Base.pre = (Pulse_Syntax_Base.comp_pre c1);
-          Pulse_Syntax_Base.post = (Pulse_Syntax_Base.comp_post c2)
-        } in
-      match (c1, c2) with
-      | (Pulse_Syntax_Base.C_STAtomic (inames, uu___),
-         Pulse_Syntax_Base.C_STGhost (uu___1, uu___2)) ->
-          Pulse_Syntax_Base.C_STAtomic (inames, s)
 type ('c1, 'c2) st_equiv_pre = unit
 let (non_informative_witness_t :
   Pulse_Syntax_Base.universe ->
@@ -418,25 +415,23 @@ let (comp_elim_exists :
       fun p ->
         fun x ->
           Pulse_Syntax_Base.C_STGhost
-            (Pulse_Syntax_Base.tm_emp_inames,
-              {
-                Pulse_Syntax_Base.u = u;
-                Pulse_Syntax_Base.res = (mk_erased u t);
-                Pulse_Syntax_Base.pre =
-                  (Pulse_Syntax_Base.tm_exists_sl u
-                     (Pulse_Syntax_Base.as_binder t) p);
-                Pulse_Syntax_Base.post = (elim_exists_post u t p x)
-              })
+            {
+              Pulse_Syntax_Base.u = u;
+              Pulse_Syntax_Base.res = (mk_erased u t);
+              Pulse_Syntax_Base.pre =
+                (Pulse_Syntax_Base.tm_exists_sl u
+                   (Pulse_Syntax_Base.as_binder t) p);
+              Pulse_Syntax_Base.post = (elim_exists_post u t p x)
+            }
 let (comp_intro_pure : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp) =
   fun p ->
     Pulse_Syntax_Base.C_STGhost
-      (Pulse_Syntax_Base.tm_emp_inames,
-        {
-          Pulse_Syntax_Base.u = Pulse_Syntax_Pure.u_zero;
-          Pulse_Syntax_Base.res = tm_unit;
-          Pulse_Syntax_Base.pre = Pulse_Syntax_Base.tm_emp;
-          Pulse_Syntax_Base.post = (Pulse_Syntax_Base.tm_pure p)
-        })
+      {
+        Pulse_Syntax_Base.u = Pulse_Syntax_Pure.u_zero;
+        Pulse_Syntax_Base.res = tm_unit;
+        Pulse_Syntax_Base.pre = Pulse_Syntax_Base.tm_emp;
+        Pulse_Syntax_Base.post = (Pulse_Syntax_Base.tm_pure p)
+      }
 let (named_binder :
   Pulse_Syntax_Base.ppname ->
     Pulse_Syntax_Base.term -> Pulse_Syntax_Base.binder)
@@ -456,15 +451,13 @@ let (comp_intro_exists :
       fun p ->
         fun e ->
           Pulse_Syntax_Base.C_STGhost
-            (Pulse_Syntax_Base.tm_emp_inames,
-              {
-                Pulse_Syntax_Base.u = Pulse_Syntax_Pure.u0;
-                Pulse_Syntax_Base.res = tm_unit;
-                Pulse_Syntax_Base.pre =
-                  (Pulse_Syntax_Naming.open_term' p e Prims.int_zero);
-                Pulse_Syntax_Base.post =
-                  (Pulse_Syntax_Base.tm_exists_sl u b p)
-              })
+            {
+              Pulse_Syntax_Base.u = Pulse_Syntax_Pure.u0;
+              Pulse_Syntax_Base.res = tm_unit;
+              Pulse_Syntax_Base.pre =
+                (Pulse_Syntax_Naming.open_term' p e Prims.int_zero);
+              Pulse_Syntax_Base.post = (Pulse_Syntax_Base.tm_exists_sl u b p)
+            }
 let (comp_intro_exists_erased :
   Pulse_Syntax_Base.universe ->
     Pulse_Syntax_Base.binder ->
@@ -476,17 +469,15 @@ let (comp_intro_exists_erased :
       fun p ->
         fun e ->
           Pulse_Syntax_Base.C_STGhost
-            (Pulse_Syntax_Base.tm_emp_inames,
-              {
-                Pulse_Syntax_Base.u = Pulse_Syntax_Pure.u0;
-                Pulse_Syntax_Base.res = tm_unit;
-                Pulse_Syntax_Base.pre =
-                  (Pulse_Syntax_Naming.open_term' p
-                     (mk_reveal u b.Pulse_Syntax_Base.binder_ty e)
-                     Prims.int_zero);
-                Pulse_Syntax_Base.post =
-                  (Pulse_Syntax_Base.tm_exists_sl u b p)
-              })
+            {
+              Pulse_Syntax_Base.u = Pulse_Syntax_Pure.u0;
+              Pulse_Syntax_Base.res = tm_unit;
+              Pulse_Syntax_Base.pre =
+                (Pulse_Syntax_Naming.open_term' p
+                   (mk_reveal u b.Pulse_Syntax_Base.binder_ty e)
+                   Prims.int_zero);
+              Pulse_Syntax_Base.post = (Pulse_Syntax_Base.tm_exists_sl u b p)
+            }
 let (comp_while_cond :
   Pulse_Syntax_Base.ppname ->
     Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp)
@@ -686,6 +677,138 @@ let (comp_withlocal_body :
                 (comp_withlocal_body_post (Pulse_Syntax_Base.comp_post c)
                    init_t r1)
             }
+let (mk_array : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term) =
+  fun a ->
+    Pulse_Syntax_Pure.tm_pureapp
+      (Pulse_Syntax_Pure.tm_fvar
+         (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.array_lid))
+      FStar_Pervasives_Native.None a
+let (mk_array_length :
+  Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
+  =
+  fun a ->
+    fun arr ->
+      let t =
+        Pulse_Syntax_Pure.tm_fvar
+          (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.array_length_lid) in
+      let t1 =
+        Pulse_Syntax_Pure.tm_pureapp t
+          (FStar_Pervasives_Native.Some Pulse_Syntax_Base.Implicit) a in
+      Pulse_Syntax_Pure.tm_pureapp t1 FStar_Pervasives_Native.None arr
+let (mk_array_pts_to :
+  Pulse_Syntax_Base.term ->
+    Pulse_Syntax_Base.term ->
+      Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
+  =
+  fun a ->
+    fun arr ->
+      fun v ->
+        let t =
+          Pulse_Syntax_Pure.tm_fvar
+            (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.array_pts_to_lid) in
+        let t1 =
+          Pulse_Syntax_Pure.tm_pureapp t
+            (FStar_Pervasives_Native.Some Pulse_Syntax_Base.Implicit) a in
+        let t2 =
+          Pulse_Syntax_Pure.tm_pureapp t1 FStar_Pervasives_Native.None arr in
+        let t3 =
+          Pulse_Syntax_Pure.tm_pureapp t2
+            (FStar_Pervasives_Native.Some Pulse_Syntax_Base.Implicit)
+            (Pulse_Syntax_Pure.tm_fvar
+               (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.full_perm_lid)) in
+        Pulse_Syntax_Pure.tm_pureapp t3 FStar_Pervasives_Native.None v
+let (mk_seq_create :
+  Pulse_Syntax_Base.universe ->
+    Pulse_Syntax_Base.term ->
+      Pulse_Syntax_Base.term ->
+        Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
+  =
+  fun u ->
+    fun a ->
+      fun len ->
+        fun v ->
+          let t =
+            Pulse_Syntax_Pure.tm_uinst
+              (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.seq_create_lid)
+              [u] in
+          let t1 =
+            Pulse_Syntax_Pure.tm_pureapp t
+              (FStar_Pervasives_Native.Some Pulse_Syntax_Base.Implicit) a in
+          let t2 =
+            Pulse_Syntax_Pure.tm_pureapp t1 FStar_Pervasives_Native.None len in
+          Pulse_Syntax_Pure.tm_pureapp t2 FStar_Pervasives_Native.None v
+let (mk_szv : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term) =
+  fun n ->
+    let t =
+      Pulse_Syntax_Pure.tm_fvar
+        (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.szv_lid) in
+    Pulse_Syntax_Pure.tm_pureapp t FStar_Pervasives_Native.None n
+let (comp_withlocal_array_body_pre :
+  Pulse_Syntax_Base.vprop ->
+    Pulse_Syntax_Base.term ->
+      Pulse_Syntax_Base.term ->
+        Pulse_Syntax_Base.term ->
+          Pulse_Syntax_Base.term -> Pulse_Syntax_Base.vprop)
+  =
+  fun pre ->
+    fun a ->
+      fun arr ->
+        fun init ->
+          fun len ->
+            Pulse_Syntax_Base.tm_star pre
+              (Pulse_Syntax_Base.tm_star
+                 (mk_array_pts_to a arr
+                    (mk_seq_create Pulse_Syntax_Pure.u0 a (mk_szv len) init))
+                 (Pulse_Syntax_Base.tm_pure
+                    (mk_eq2 Pulse_Syntax_Pure.u0 tm_nat
+                       (mk_array_length a arr) (mk_szv len))))
+let (mk_seq :
+  Pulse_Syntax_Base.universe ->
+    Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
+  =
+  fun u ->
+    fun a ->
+      let t =
+        Pulse_Syntax_Pure.tm_uinst
+          (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.seq_lid) [u] in
+      Pulse_Syntax_Pure.tm_pureapp t FStar_Pervasives_Native.None a
+let (comp_withlocal_array_body_post :
+  Pulse_Syntax_Base.term ->
+    Pulse_Syntax_Base.term ->
+      Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
+  =
+  fun post ->
+    fun a ->
+      fun arr ->
+        Pulse_Syntax_Base.tm_star post
+          (Pulse_Syntax_Base.tm_exists_sl Pulse_Syntax_Pure.u0
+             (Pulse_Syntax_Base.as_binder (mk_seq Pulse_Syntax_Pure.u0 a))
+             (mk_array_pts_to a arr
+                (Pulse_Syntax_Pure.null_bvar Prims.int_zero)))
+let (comp_withlocal_array_body :
+  Pulse_Syntax_Base.var ->
+    Pulse_Syntax_Base.term ->
+      Pulse_Syntax_Base.term ->
+        Pulse_Syntax_Base.term ->
+          Pulse_Syntax_Base.comp -> Pulse_Syntax_Base.comp)
+  =
+  fun arr ->
+    fun a ->
+      fun init ->
+        fun len ->
+          fun c ->
+            let arr1 = Pulse_Syntax_Pure.null_var arr in
+            Pulse_Syntax_Base.C_ST
+              {
+                Pulse_Syntax_Base.u = (Pulse_Syntax_Base.comp_u c);
+                Pulse_Syntax_Base.res = (Pulse_Syntax_Base.comp_res c);
+                Pulse_Syntax_Base.pre =
+                  (comp_withlocal_array_body_pre
+                     (Pulse_Syntax_Base.comp_pre c) a arr1 init len);
+                Pulse_Syntax_Base.post =
+                  (comp_withlocal_array_body_post
+                     (Pulse_Syntax_Base.comp_post c) a arr1)
+              }
 let (comp_rewrite :
   Pulse_Syntax_Base.vprop ->
     Pulse_Syntax_Base.vprop -> Pulse_Syntax_Base.comp)
@@ -693,13 +816,12 @@ let (comp_rewrite :
   fun p ->
     fun q ->
       Pulse_Syntax_Base.C_STGhost
-        (Pulse_Syntax_Base.tm_emp_inames,
-          {
-            Pulse_Syntax_Base.u = Pulse_Syntax_Pure.u0;
-            Pulse_Syntax_Base.res = tm_unit;
-            Pulse_Syntax_Base.pre = p;
-            Pulse_Syntax_Base.post = q
-          })
+        {
+          Pulse_Syntax_Base.u = Pulse_Syntax_Pure.u0;
+          Pulse_Syntax_Base.res = tm_unit;
+          Pulse_Syntax_Base.pre = p;
+          Pulse_Syntax_Base.post = q
+        }
 let (comp_admit :
   Pulse_Syntax_Base.ctag ->
     Pulse_Syntax_Base.st_comp -> Pulse_Syntax_Base.comp)
@@ -709,9 +831,9 @@ let (comp_admit :
       match c with
       | Pulse_Syntax_Base.STT -> Pulse_Syntax_Base.C_ST s
       | Pulse_Syntax_Base.STT_Atomic ->
-          Pulse_Syntax_Base.C_STAtomic (Pulse_Syntax_Base.tm_emp_inames, s)
-      | Pulse_Syntax_Base.STT_Ghost ->
-          Pulse_Syntax_Base.C_STGhost (Pulse_Syntax_Base.tm_emp_inames, s)
+          Pulse_Syntax_Base.C_STAtomic
+            (Pulse_Syntax_Base.tm_emp_inames, Pulse_Syntax_Base.Neutral, s)
+      | Pulse_Syntax_Base.STT_Ghost -> Pulse_Syntax_Base.C_STGhost s
 type ('g, 'e, 'eff, 't) typing = unit
 type ('g, 'e, 't) tot_typing = unit
 type ('g, 'e, 't) ghost_typing = unit
@@ -726,36 +848,99 @@ let (as_binder : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.binder) =
       Pulse_Syntax_Base.binder_ty = t;
       Pulse_Syntax_Base.binder_ppname = Pulse_Syntax_Base.ppname_default
     }
+let (tm_join_inames :
+  Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
+  =
+  fun inames1 ->
+    fun inames2 ->
+      if Pulse_Syntax_Base.eq_tm inames1 Pulse_Syntax_Base.tm_emp_inames
+      then inames2
+      else
+        if Pulse_Syntax_Base.eq_tm inames2 Pulse_Syntax_Base.tm_emp_inames
+        then inames1
+        else
+          if Pulse_Syntax_Base.eq_tm inames1 inames2
+          then inames1
+          else
+            (let inames11 = Pulse_Elaborate_Pure.elab_term inames1 in
+             let inames21 = Pulse_Elaborate_Pure.elab_term inames2 in
+             let join_lid =
+               Pulse_Reflection_Util.mk_pulse_lib_core_lid "join_inames" in
+             let join =
+               FStar_Reflection_V2_Builtins.pack_ln
+                 (FStar_Reflection_V2_Data.Tv_FVar
+                    (FStar_Reflection_V2_Builtins.pack_fv join_lid)) in
+             Pulse_Syntax_Base.with_range
+               (Pulse_Syntax_Base.Tm_FStar
+                  (FStar_Reflection_V2_Derived.mk_e_app join
+                     [inames11; inames21]))
+               (FStar_Reflection_V2_Builtins.range_of_term inames11))
+let (tm_inames_subset :
+  Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
+  =
+  fun inames1 ->
+    fun inames2 ->
+      let inames11 = Pulse_Elaborate_Pure.elab_term inames1 in
+      let inames21 = Pulse_Elaborate_Pure.elab_term inames2 in
+      let join_lid =
+        Pulse_Reflection_Util.mk_pulse_lib_core_lid "inames_subset" in
+      let join =
+        FStar_Reflection_V2_Builtins.pack_ln
+          (FStar_Reflection_V2_Data.Tv_FVar
+             (FStar_Reflection_V2_Builtins.pack_fv join_lid)) in
+      Pulse_Syntax_Base.with_range
+        (Pulse_Syntax_Base.Tm_FStar
+           (FStar_Reflection_V2_Derived.mk_e_app join [inames11; inames21]))
+        (FStar_Reflection_V2_Builtins.range_of_term inames11)
+
+type ('g, 't) prop_validity = unit
 type ('dummyV0, 'dummyV1, 'dummyV2) st_equiv =
   | ST_VPropEquiv of Pulse_Typing_Env.env * Pulse_Syntax_Base.comp_st *
   Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.var * unit * unit * unit *
   (unit, unit, unit) FStar_Reflection_Typing.equiv * unit * unit 
+  | ST_TotEquiv of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
+  Pulse_Syntax_Base.term * Pulse_Syntax_Base.universe * unit * unit 
 let uu___is_ST_VPropEquiv uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | ST_VPropEquiv _ -> true | _ -> false
-type ('dummyV0, 'dummyV1, 'dummyV2, 'dummyV3, 'dummyV4) bind_comp =
-  | Bind_comp of Pulse_Typing_Env.env * Pulse_Syntax_Base.var *
-  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.comp_st * unit *
-  Pulse_Syntax_Base.var * unit 
-  | Bind_comp_ghost_l of Pulse_Typing_Env.env * Pulse_Syntax_Base.var *
-  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.comp_st * (unit, unit)
-  non_informative_c * unit * Pulse_Syntax_Base.var * unit 
-  | Bind_comp_ghost_r of Pulse_Typing_Env.env * Pulse_Syntax_Base.var *
-  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.comp_st * (unit, unit)
-  non_informative_c * unit * Pulse_Syntax_Base.var * unit 
-let uu___is_Bind_comp uu___4 uu___3 uu___2 uu___1 uu___ uu___5 =
-  match uu___5 with | Bind_comp _ -> true | _ -> false
-let uu___is_Bind_comp_ghost_l uu___4 uu___3 uu___2 uu___1 uu___ uu___5 =
-  match uu___5 with | Bind_comp_ghost_l _ -> true | _ -> false
-let uu___is_Bind_comp_ghost_r uu___4 uu___3 uu___2 uu___1 uu___ uu___5 =
-  match uu___5 with | Bind_comp_ghost_r _ -> true | _ -> false
+let uu___is_ST_TotEquiv uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | ST_TotEquiv _ -> true | _ -> false
+let (sub_observability :
+  Pulse_Syntax_Base.observability ->
+    Pulse_Syntax_Base.observability -> Prims.bool)
+  =
+  fun o1 ->
+    fun o2 ->
+      ((o1 = Pulse_Syntax_Base.Neutral) || (o1 = o2)) ||
+        (o2 = Pulse_Syntax_Base.Observable)
+type ('dummyV0, 'dummyV1, 'dummyV2) st_sub =
+  | STS_Refl of Pulse_Typing_Env.env * Pulse_Syntax_Base.comp 
+  | STS_Trans of Pulse_Typing_Env.env * Pulse_Syntax_Base.comp *
+  Pulse_Syntax_Base.comp * Pulse_Syntax_Base.comp * (unit, unit, unit) st_sub
+  * (unit, unit, unit) st_sub 
+  | STS_AtomicInvs of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_comp *
+  Pulse_Syntax_Base.term * Pulse_Syntax_Base.term *
+  Pulse_Syntax_Base.observability * Pulse_Syntax_Base.observability * unit 
+let uu___is_STS_Refl uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | STS_Refl _ -> true | _ -> false
+let uu___is_STS_Trans uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | STS_Trans _ -> true | _ -> false
+let uu___is_STS_AtomicInvs uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | STS_AtomicInvs _ -> true | _ -> false
 type ('dummyV0, 'dummyV1, 'dummyV2) lift_comp =
   | Lift_STAtomic_ST of Pulse_Typing_Env.env * Pulse_Syntax_Base.comp_st 
-  | Lift_STGhost_STAtomic of Pulse_Typing_Env.env * Pulse_Syntax_Base.comp_st
-  * (unit, unit) non_informative_c 
+  | Lift_Observability of Pulse_Typing_Env.env * Pulse_Syntax_Base.comp_st *
+  Pulse_Syntax_Base.observability 
+  | Lift_Ghost_Neutral of Pulse_Typing_Env.env * Pulse_Syntax_Base.comp_st *
+  (unit, unit) non_informative_c 
+  | Lift_Neutral_Ghost of Pulse_Typing_Env.env * Pulse_Syntax_Base.comp_st 
 let uu___is_Lift_STAtomic_ST uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | Lift_STAtomic_ST _ -> true | _ -> false
-let uu___is_Lift_STGhost_STAtomic uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | Lift_STGhost_STAtomic _ -> true | _ -> false
+let uu___is_Lift_Observability uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | Lift_Observability _ -> true | _ -> false
+let uu___is_Lift_Ghost_Neutral uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | Lift_Ghost_Neutral _ -> true | _ -> false
+let uu___is_Lift_Neutral_Ghost uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | Lift_Neutral_Ghost _ -> true | _ -> false
 let (wr :
   Pulse_Syntax_Base.comp_st ->
     Pulse_Syntax_Base.st_term' -> Pulse_Syntax_Base.st_term)
@@ -785,6 +970,12 @@ type ('dummyV0, 'dummyV1) st_comp_typing =
   Pulse_Syntax_Base.var * unit * unit * unit 
 let uu___is_STC uu___1 uu___ uu___2 =
   match uu___2 with | STC _ -> true | _ -> false
+type ('dummyV0, 'dummyV1, 'dummyV2, 'dummyV3, 'dummyV4) bind_comp =
+  | Bind_comp of Pulse_Typing_Env.env * Pulse_Syntax_Base.var *
+  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.comp_st * unit *
+  Pulse_Syntax_Base.var * unit 
+let uu___is_Bind_comp uu___4 uu___3 uu___2 uu___1 uu___ uu___5 =
+  match uu___5 with | Bind_comp _ -> true | _ -> false
 let (tr_binding :
   (Pulse_Syntax_Base.var * Pulse_Syntax_Base.typ) ->
     FStar_Reflection_V2_Data.binding)
@@ -809,9 +1000,10 @@ type ('dummyV0, 'dummyV1, 'dummyV2) comp_typing =
   | CT_ST of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_comp * (unit, 
   unit) st_comp_typing 
   | CT_STAtomic of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
-  Pulse_Syntax_Base.st_comp * unit * (unit, unit) st_comp_typing 
-  | CT_STGhost of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
-  Pulse_Syntax_Base.st_comp * unit * (unit, unit) st_comp_typing 
+  Pulse_Syntax_Base.observability * Pulse_Syntax_Base.st_comp * unit * (
+  unit, unit) st_comp_typing 
+  | CT_STGhost of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_comp * (
+  unit, unit) st_comp_typing 
 let uu___is_CT_Tot uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | CT_Tot _ -> true | _ -> false
 let uu___is_CT_ST uu___2 uu___1 uu___ uu___3 =
@@ -820,8 +1012,7 @@ let uu___is_CT_STAtomic uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | CT_STAtomic _ -> true | _ -> false
 let uu___is_CT_STGhost uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | CT_STGhost _ -> true | _ -> false
-type ('g, 't) prop_validity =
-  (unit, unit) FStar_Tactics_V2_Builtins.prop_validity_token
+type ('e, 'c) comp_typing_u = (unit, unit, unit) comp_typing
 type ('g, 't1, 't2) subtyping_token =
   (unit, unit, unit) FStar_Tactics_Types.subtyping_token
 let (readback_binding :
@@ -841,6 +1032,26 @@ let (readback_binding :
           } in
         ((b.FStar_Reflection_V2_Data.uniq1), sort)
 type ('g, 'c) non_informative = unit
+let (inv_disjointness :
+  Pulse_Syntax_Base.term ->
+    Pulse_Syntax_Base.term ->
+      Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
+  =
+  fun inv_p ->
+    fun inames ->
+      fun inv ->
+        let g =
+          Pulse_Reflection_Util.inv_disjointness_goal
+            (Pulse_Elaborate_Pure.elab_term inv_p)
+            (Pulse_Elaborate_Pure.elab_term inames)
+            (Pulse_Elaborate_Pure.elab_term inv) in
+        Pulse_Syntax_Base.tm_fstar g inv.Pulse_Syntax_Base.range1
+let (eff_of_ctag :
+  Pulse_Syntax_Base.ctag -> FStar_TypeChecker_Core.tot_or_ghost) =
+  fun uu___ ->
+    match uu___ with
+    | Pulse_Syntax_Base.STT_Ghost -> FStar_TypeChecker_Core.E_Ghost
+    | uu___1 -> FStar_TypeChecker_Core.E_Total
 type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   | T_Abs of Pulse_Typing_Env.env * Pulse_Syntax_Base.var *
   Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option *
@@ -868,6 +1079,11 @@ type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   Pulse_Syntax_Base.var * Pulse_Syntax_Base.comp * (unit, unit, unit)
   st_typing * unit * (unit, unit, unit) st_typing * (unit, unit, unit, 
   unit, unit) bind_comp 
+  | T_BindFn of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_term *
+  Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.comp *
+  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.binder *
+  Pulse_Syntax_Base.var * (unit, unit, unit) st_typing * unit * unit * (
+  unit, unit, unit) st_typing * (unit, unit) comp_typing_u 
   | T_TotBind of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
   Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.term *
   Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.binder *
@@ -878,12 +1094,11 @@ type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   Pulse_Syntax_Base.var * unit * (unit, unit, unit) st_typing * unit 
   | T_If of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
   Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.st_term *
-  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.universe *
-  Pulse_Syntax_Base.var * unit * (unit, unit, unit) st_typing * (unit, 
-  unit, unit) st_typing * unit 
+  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.var * unit * (unit, unit,
+  unit) st_typing * (unit, unit, unit) st_typing * unit 
   | T_Match of Pulse_Typing_Env.env * Pulse_Syntax_Base.universe *
   Pulse_Syntax_Base.typ * Pulse_Syntax_Base.term * unit * unit *
-  Pulse_Syntax_Base.comp_st * (Pulse_Syntax_Base.pattern *
+  Pulse_Syntax_Base.comp_st * unit * (Pulse_Syntax_Base.pattern *
   Pulse_Syntax_Base.st_term) Prims.list * (unit, unit, unit, unit, unit,
   unit) brs_typing * (unit, unit, unit, unit) pats_complete 
   | T_Frame of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_term *
@@ -892,8 +1107,11 @@ type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   | T_Equiv of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_term *
   Pulse_Syntax_Base.comp * Pulse_Syntax_Base.comp * (unit, unit, unit)
   st_typing * (unit, unit, unit) st_equiv 
+  | T_Sub of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_term *
+  Pulse_Syntax_Base.comp * Pulse_Syntax_Base.comp * (unit, unit, unit)
+  st_typing * (unit, unit, unit) st_sub 
   | T_IntroPure of Pulse_Typing_Env.env * Pulse_Syntax_Base.term * unit *
-  (unit, unit) prop_validity 
+  unit 
   | T_ElimExists of Pulse_Typing_Env.env * Pulse_Syntax_Base.universe *
   Pulse_Syntax_Base.term * Pulse_Syntax_Base.term * Pulse_Syntax_Base.var *
   unit * unit 
@@ -905,17 +1123,27 @@ type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   unit, unit) st_typing * (unit, unit, unit) st_typing 
   | T_Par of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_term *
   Pulse_Syntax_Base.comp * Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.comp
-  * Pulse_Syntax_Base.var * (unit, unit, unit) comp_typing * (unit, unit,
-  unit) comp_typing * (unit, unit, unit) st_typing * (unit, unit, unit)
+  * Pulse_Syntax_Base.var * (unit, unit) comp_typing_u * (unit, unit)
+  comp_typing_u * (unit, unit, unit) st_typing * (unit, unit, unit) st_typing
+  
+  | T_WithLocal of Pulse_Typing_Env.env * Pulse_Syntax_Base.ppname *
+  Pulse_Syntax_Base.term * Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.term
+  * Pulse_Syntax_Base.comp * Pulse_Syntax_Base.var * unit * unit * (unit,
+  unit) comp_typing_u * (unit, unit, unit) st_typing 
+  | T_WithLocalArray of Pulse_Typing_Env.env * Pulse_Syntax_Base.ppname *
+  Pulse_Syntax_Base.term * Pulse_Syntax_Base.term * Pulse_Syntax_Base.st_term
+  * Pulse_Syntax_Base.term * Pulse_Syntax_Base.comp * Pulse_Syntax_Base.var *
+  unit * unit * unit * (unit, unit) comp_typing_u * (unit, unit, unit)
   st_typing 
-  | T_WithLocal of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
-  Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.term * Pulse_Syntax_Base.comp
-  * Pulse_Syntax_Base.var * unit * unit * (unit, unit, unit) comp_typing *
-  (unit, unit, unit) st_typing 
   | T_Rewrite of Pulse_Typing_Env.env * Pulse_Syntax_Base.vprop *
   Pulse_Syntax_Base.vprop * unit * unit 
   | T_Admit of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_comp *
   Pulse_Syntax_Base.ctag * (unit, unit) st_comp_typing 
+  | T_Unreachable of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_comp *
+  Pulse_Syntax_Base.ctag * (unit, unit) st_comp_typing * unit 
+  | T_WithInv of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
+  Pulse_Syntax_Base.vprop * unit * unit * Pulse_Syntax_Base.st_term *
+  Pulse_Syntax_Base.comp_st * (unit, unit, unit) st_typing * unit 
 and ('dummyV0, 'dummyV1, 'dummyV2, 'dummyV3) pats_complete =
   | PC_Elab of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
   Pulse_Syntax_Base.typ * FStar_Reflection_V2_Data.pattern Prims.list *
@@ -946,6 +1174,8 @@ let uu___is_T_Lift uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Lift _ -> true | _ -> false
 let uu___is_T_Bind uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Bind _ -> true | _ -> false
+let uu___is_T_BindFn uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | T_BindFn _ -> true | _ -> false
 let uu___is_T_TotBind uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_TotBind _ -> true | _ -> false
 let uu___is_T_GhostBind uu___2 uu___1 uu___ uu___3 =
@@ -958,6 +1188,8 @@ let uu___is_T_Frame uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Frame _ -> true | _ -> false
 let uu___is_T_Equiv uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Equiv _ -> true | _ -> false
+let uu___is_T_Sub uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | T_Sub _ -> true | _ -> false
 let uu___is_T_IntroPure uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_IntroPure _ -> true | _ -> false
 let uu___is_T_ElimExists uu___2 uu___1 uu___ uu___3 =
@@ -970,10 +1202,16 @@ let uu___is_T_Par uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Par _ -> true | _ -> false
 let uu___is_T_WithLocal uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_WithLocal _ -> true | _ -> false
+let uu___is_T_WithLocalArray uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | T_WithLocalArray _ -> true | _ -> false
 let uu___is_T_Rewrite uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Rewrite _ -> true | _ -> false
 let uu___is_T_Admit uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Admit _ -> true | _ -> false
+let uu___is_T_Unreachable uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | T_Unreachable _ -> true | _ -> false
+let uu___is_T_WithInv uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | T_WithInv _ -> true | _ -> false
 let uu___is_PC_Elab uu___3 uu___2 uu___1 uu___ uu___4 =
   match uu___4 with | PC_Elab _ -> true | _ -> false
 let uu___is_TBRS_0 uu___5 uu___4 uu___3 uu___2 uu___1 uu___ uu___6 =
@@ -986,53 +1224,97 @@ let uu___is_TBR uu___6 uu___5 uu___4 uu___3 uu___2 uu___1 uu___ uu___7 =
 
 
 
+type ('x, 'g, 'vars) fresh_wrt = unit
+type ('g, 'e) effect_annot_typing = Obj.t
 type post_hint_t =
   {
   g: Pulse_Typing_Env.env ;
-  ctag_hint: Pulse_Syntax_Base.ctag FStar_Pervasives_Native.option ;
+  effect_annot: Pulse_Syntax_Base.effect_annot ;
+  effect_annot_typing: Obj.t ;
   ret_ty: Pulse_Syntax_Base.term ;
   u: Pulse_Syntax_Base.universe ;
   ty_typing: unit ;
   post: Pulse_Syntax_Base.term ;
+  x: Pulse_Syntax_Base.var ;
+  post_typing_src: unit ;
   post_typing: unit }
 let (__proj__Mkpost_hint_t__item__g : post_hint_t -> Pulse_Typing_Env.env) =
   fun projectee ->
     match projectee with
-    | { g; ctag_hint; ret_ty; u; ty_typing; post; post_typing;_} -> g
-let (__proj__Mkpost_hint_t__item__ctag_hint :
-  post_hint_t -> Pulse_Syntax_Base.ctag FStar_Pervasives_Native.option) =
+    | { g; effect_annot; effect_annot_typing = effect_annot_typing1; 
+        ret_ty; u; ty_typing; post; x; post_typing_src; post_typing;_} -> g
+let (__proj__Mkpost_hint_t__item__effect_annot :
+  post_hint_t -> Pulse_Syntax_Base.effect_annot) =
   fun projectee ->
     match projectee with
-    | { g; ctag_hint; ret_ty; u; ty_typing; post; post_typing;_} -> ctag_hint
+    | { g; effect_annot; effect_annot_typing = effect_annot_typing1; 
+        ret_ty; u; ty_typing; post; x; post_typing_src; post_typing;_} ->
+        effect_annot
+let (__proj__Mkpost_hint_t__item__effect_annot_typing : post_hint_t -> Obj.t)
+  =
+  fun projectee ->
+    match projectee with
+    | { g; effect_annot; effect_annot_typing = effect_annot_typing1; 
+        ret_ty; u; ty_typing; post; x; post_typing_src; post_typing;_} ->
+        effect_annot_typing1
 let (__proj__Mkpost_hint_t__item__ret_ty :
   post_hint_t -> Pulse_Syntax_Base.term) =
   fun projectee ->
     match projectee with
-    | { g; ctag_hint; ret_ty; u; ty_typing; post; post_typing;_} -> ret_ty
+    | { g; effect_annot; effect_annot_typing = effect_annot_typing1; 
+        ret_ty; u; ty_typing; post; x; post_typing_src; post_typing;_} ->
+        ret_ty
 let (__proj__Mkpost_hint_t__item__u :
   post_hint_t -> Pulse_Syntax_Base.universe) =
   fun projectee ->
     match projectee with
-    | { g; ctag_hint; ret_ty; u; ty_typing; post; post_typing;_} -> u
+    | { g; effect_annot; effect_annot_typing = effect_annot_typing1; 
+        ret_ty; u; ty_typing; post; x; post_typing_src; post_typing;_} -> u
 
 let (__proj__Mkpost_hint_t__item__post :
   post_hint_t -> Pulse_Syntax_Base.term) =
   fun projectee ->
     match projectee with
-    | { g; ctag_hint; ret_ty; u; ty_typing; post; post_typing;_} -> post
+    | { g; effect_annot; effect_annot_typing = effect_annot_typing1; 
+        ret_ty; u; ty_typing; post; x; post_typing_src; post_typing;_} ->
+        post
+let (__proj__Mkpost_hint_t__item__x : post_hint_t -> Pulse_Syntax_Base.var) =
+  fun projectee ->
+    match projectee with
+    | { g; effect_annot; effect_annot_typing = effect_annot_typing1; 
+        ret_ty; u; ty_typing; post; x; post_typing_src; post_typing;_} -> x
+
 type ('g, 'p) post_hint_for_env_p = unit
 type 'g post_hint_for_env = post_hint_t
 type 'g post_hint_opt = post_hint_t FStar_Pervasives_Native.option
 type ('g, 'p, 'x) post_hint_typing_t =
   {
+  effect_annot_typing1: Obj.t ;
   ty_typing1: unit ;
   post_typing1: unit }
+let (__proj__Mkpost_hint_typing_t__item__effect_annot_typing :
+  Pulse_Typing_Env.env ->
+    post_hint_t ->
+      Pulse_Syntax_Base.var -> (unit, unit, unit) post_hint_typing_t -> Obj.t)
+  =
+  fun g ->
+    fun p ->
+      fun x ->
+        fun projectee ->
+          match projectee with
+          | { effect_annot_typing1; ty_typing1 = ty_typing;
+              post_typing1 = post_typing;_} -> effect_annot_typing1
 
 
-type ('x, 'g, 'vars) fresh_wrt = unit
 let (post_hint_typing :
   Pulse_Typing_Env.env ->
     unit post_hint_for_env ->
       Pulse_Syntax_Base.var -> (unit, unit, unit) post_hint_typing_t)
-  = fun g -> fun p -> fun x -> { ty_typing1 = (); post_typing1 = () }
+  =
+  fun g ->
+    fun p ->
+      fun x ->
+        let effect_annot_typing1 = Obj.repr () in
+        { effect_annot_typing1; ty_typing1 = (); post_typing1 = () }
+type ('c, 'effectuannot) effect_annot_matches = Obj.t
 type ('c, 'postuhint) comp_post_matches_hint = Obj.t

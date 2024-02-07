@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Soundness.Frame
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
@@ -82,7 +98,7 @@ let elab_frame_typing (g:stt_env)
     assume (RT.lookup_fvar_uinst rg frame_fv [u] == Some (frame_type u));
     let head_typing : RT.tot_typing _ _ (frame_type u) = RT.T_UInst rg frame_fv [u] in
     let (| _, c_typing |) = RT.type_correctness _ _ _ e_typing in
-    let t_typing, pre_typing, post_typing = inversion_of_stt_typing _ _ _ c_typing in
+    let t_typing, pre_typing, post_typing = inversion_of_stt_typing _ _ c_typing in
     let t = elab_term (comp_res c) in
     let t_typing : RT.tot_typing rg t (RT.tm_type u) = t_typing in
     let d : RT.tot_typing (elab_env g)

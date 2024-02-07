@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Elaborate
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
@@ -38,8 +54,11 @@ let rec elab_open_commute' (e:term)
     // | Tm_PureApp e1 _ e2 ->
     //   elab_open_commute' e1 v n;
     //   elab_open_commute' e2 v n
+    | Tm_Inv p ->
+      elab_open_commute' p v n
     | Tm_Pure p ->
       elab_open_commute' p v n
+    | Tm_AddInv e1 e2
     | Tm_Star e1 e2 ->
       elab_open_commute' e1 v n;
       elab_open_commute' e2 v n
@@ -55,12 +74,12 @@ let elab_comp_open_commute' (c:comp) (v:term) (n:index)
               elab_comp (open_comp' c v n))
   = match c with
     | C_Tot t -> elab_open_commute' t v n
-    | C_ST s -> 
+    | C_ST s
+    | C_STGhost s -> 
       elab_open_commute' s.res v n;
       elab_open_commute' s.pre v n;
       elab_open_commute' s.post v (n + 1)
-    | C_STAtomic inames s
-    | C_STGhost inames s ->
+    | C_STAtomic inames _ s ->
       elab_open_commute' inames v n;
       elab_open_commute' s.res v n;
       elab_open_commute' s.pre v n;
@@ -79,8 +98,11 @@ let rec elab_close_commute' (e:term)
     | Tm_EmpInames
     | Tm_VProp
     | Tm_Unknown -> ()
+    | Tm_Inv p ->
+      elab_close_commute' p v n
     | Tm_Pure p ->
       elab_close_commute' p v n
+    | Tm_AddInv e1 e2
     | Tm_Star e1 e2 ->
       elab_close_commute' e1 v n;
       elab_close_commute' e2 v n
@@ -97,12 +119,12 @@ let elab_comp_close_commute' (c:comp) (v:var) (n:index)
           (decreases c)
   = match c with
     | C_Tot t -> elab_close_commute' t v n
-    | C_ST s -> 
+    | C_ST s
+    | C_STGhost s  -> 
       elab_close_commute' s.res v n;
       elab_close_commute' s.pre v n;
       elab_close_commute' s.post v (n + 1)
-   | C_STAtomic inames s
-   | C_STGhost inames s ->
+    | C_STAtomic inames _ s ->
       elab_close_commute' inames v n;
       elab_close_commute' s.res v n;
       elab_close_commute' s.pre v n;
@@ -126,7 +148,9 @@ let elab_comp_open_commute (c:comp) (x:term)
 let rec elab_ln t i =
   match t.t with
   | Tm_Emp -> ()
+  | Tm_Inv p -> elab_ln p i
   | Tm_Pure t -> elab_ln t i
+  | Tm_AddInv l r
   | Tm_Star l r ->
     elab_ln l i;
     elab_ln r i
@@ -146,12 +170,12 @@ let elab_ln_comp (c:comp) (i:int)
 
   match c with
   | C_Tot t -> elab_ln t i
-  | C_ST st ->
+  | C_ST st
+  | C_STGhost st ->
     elab_ln st.res i;
     elab_ln st.pre i;
     elab_ln st.post (i + 1)
-  | C_STAtomic inames st
-  | C_STGhost inames st ->
+  | C_STAtomic inames _ st ->
     elab_ln inames i;
     elab_ln st.res i;
     elab_ln st.pre i;
@@ -161,7 +185,9 @@ let rec elab_freevars_eq (e:term)
   : Lemma (Set.equal (freevars e) (RT.freevars (elab_term e))) =
   match e.t with
   | Tm_Emp -> ()
+  | Tm_Inv p -> elab_freevars_eq p
   | Tm_Pure t -> elab_freevars_eq t
+  | Tm_AddInv l r
   | Tm_Star l r ->
     elab_freevars_eq l;
     elab_freevars_eq r
@@ -180,12 +206,12 @@ let elab_freevars_comp_eq (c:comp)
 
   match c with
   | C_Tot t -> elab_freevars_eq t
-  | C_ST st ->
+  | C_ST st
+  | C_STGhost st ->
     elab_freevars_eq st.res;
     elab_freevars_eq st.pre;
     elab_freevars_eq st.post
-  | C_STAtomic inames st
-  | C_STGhost inames st ->
+  | C_STAtomic inames _ st ->
     elab_freevars_eq inames;
     elab_freevars_eq st.res;
     elab_freevars_eq st.pre;

@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Records
 open Pulse.Lib.Pervasives
 module R = Pulse.Lib.Reference
@@ -21,16 +37,13 @@ let rec_perm (r:rec2) (v:rec_repr)
   = R.pts_to r.r1 v.v1 **
     R.pts_to r.r2 v.v2
 
-//Using record syntax directly in Pulse vprops
-//leads to strange type inference errors
-let mk_rec_repr (v1 v2:U8.t) = { v1=v1; v2=v2 }
-
 
 // When defining a predicate like rec_perm relating 
 // a record and a record_repr, it's convenient to define
 // a ghost function to fold the predicate.
 // Eventually, it would be nice to auto-generate this 
 // ghost function from the predicate definition.
+// #push-options "--debug Records --debug_level Extreme"
 ```pulse
 ghost
 fn fold_rec_perm (r:rec2) (#v1 #v2:erased U8.t)
@@ -38,9 +51,9 @@ fn fold_rec_perm (r:rec2) (#v1 #v2:erased U8.t)
     R.pts_to r.r1 v1 **
     R.pts_to r.r2 v2
   ensures
-    rec_perm r (mk_rec_repr v1 v2)
+    (rec_perm r {v1; v2})
 {
-  fold (rec_perm r (mk_rec_repr v1 v2))
+  fold (rec_perm r {v1; v2})
 }
 ```
 
@@ -48,7 +61,7 @@ fn fold_rec_perm (r:rec2) (#v1 #v2:erased U8.t)
 ```pulse
 fn mutate_r2 (r:rec2) (#v:Ghost.erased rec_repr)
   requires rec_perm r v
-  ensures exists (v_:rec_repr) .
+  ensures exists* (v_:rec_repr) .
     rec_perm r v_ ** pure (v_.v2 == 0uy /\ v_.v1 == v.v1)
 {
   unfold (rec_perm r v); //1. unfolding the predicate
@@ -58,17 +71,15 @@ fn mutate_r2 (r:rec2) (#v:Ghost.erased rec_repr)
 }
 ```
 
-let mk_rec2 r1 r2 = { r1=r1; r2=r2 }
-
 ```pulse
 fn alloc_rec (v1 v2:U8.t)
   requires emp
   returns r:rec2
-  ensures rec_perm r (mk_rec_repr v1 v2)
+  ensures (rec_perm r {v1; v2})
 {
   let r1 = alloc #U8.t v1;
   let r2 = alloc #U8.t v2; 
-  let r = mk_rec2 r1 r2;
+  let r = { r1; r2 };
   (* Unfortunately, these two rewrites are still needed
      to "rename" r1 and r2 as r.r1 and r.r2 *)
   rewrite (R.pts_to r1 v1)
@@ -85,11 +96,11 @@ fn alloc_rec (v1 v2:U8.t)
 fn alloc_rec_alt (v1 v2:U8.t)
   requires emp
   returns r:rec2
-  ensures rec_perm r (mk_rec_repr v1 v2)
+  ensures (rec_perm r {v1; v2})
 {
   let r1 = alloc v1;
   let r2 = alloc v2; 
-  let r = mk_rec2 r1 r2;
+  let r = { r1; r2 };
   rewrite each r1 as r.r1, r2 as r.r2;
   fold_rec_perm r;
   r
@@ -101,11 +112,11 @@ fn alloc_rec_alt (v1 v2:U8.t)
 fn alloc_rec_alt_alt (v1 v2:U8.t)
   requires emp
   returns r:rec2
-  ensures rec_perm r (mk_rec_repr v1 v2)
+  ensures (rec_perm r {v1; v2})
 {
   let r1 = alloc v1;
   let r2 = alloc v2; 
-  let r = mk_rec2 r1 r2;
+  let r = { r1; r2 };
   with w1 w2.
     rewrite each r1 as r.r1, r2 as r.r2 in 
       (R.pts_to r1 w1 ** R.pts_to r2 w2);
@@ -130,7 +141,7 @@ ensures R.pts_to x y ** pure (y==z)
 ```pulse
 fn unfold_and_fold_manually (r:rec2) (#v:Ghost.erased rec_repr)
   requires rec_perm r v
-  ensures exists (v_:rec_repr) . rec_perm r v_
+  ensures exists* (v_:rec_repr) . rec_perm r v_
 {
   rewrite (rec_perm r v)
     as (R.pts_to r.r1 v.v1 **
@@ -144,26 +155,21 @@ fn unfold_and_fold_manually (r:rec2) (#v:Ghost.erased rec_repr)
 }
 ```
 
-//Syntax for a field update on v1
-let rec_repr_with_v2 (v:rec_repr) (v2:U8.t) = { v1=v.v1; v2=v2 }
-
-
 ```pulse
 fn explicit_unfold_witness_taking_and_fold (r:rec2) (#v:Ghost.erased rec_repr)
   requires rec_perm r v
-  ensures exists (v_:rec_repr) . rec_perm r v_
+  ensures exists* (v_:rec_repr) . rec_perm r v_
 {
   rewrite (rec_perm r v)
     as (R.pts_to r.r1 v.v1 **
         R.pts_to r.r2 v.v2);
 
   r.r2 := 0uy;
-  let v2_ = get_witness(r.r2);
-
+  let v2 = get_witness(r.r2);
 
   rewrite (R.pts_to r.r1 v.v1 **
-           R.pts_to r.r2 v2_)
-    as    (rec_perm r (rec_repr_with_v2 v v2_));
+           R.pts_to r.r2 v2)
+    as    (rec_perm r {v with v2});
   ()
 }
 ```
@@ -171,17 +177,17 @@ fn explicit_unfold_witness_taking_and_fold (r:rec2) (#v:Ghost.erased rec_repr)
 ```pulse
 fn explicit_unfold_slightly_better_witness_taking_and_fold (r:rec2) (#v:Ghost.erased rec_repr)
   requires rec_perm r v
-  ensures exists (v_:rec_repr) . rec_perm r v_
+  ensures exists* (v_:rec_repr) . rec_perm r v_
 {
   rewrite (rec_perm r v)
     as (R.pts_to r.r1 v.v1 **
         R.pts_to r.r2 v.v2);
 
   r.r2 := 0uy;
-  with v2_. 
+  with v2. 
    rewrite (R.pts_to r.r1 v.v1 **
-            R.pts_to r.r2 v2_)
-    as    (rec_perm r (rec_repr_with_v2 v v2_));
+            R.pts_to r.r2 v2)
+    as    (rec_perm r {v with v2});
 
   ()
 }

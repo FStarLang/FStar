@@ -1,5 +1,6 @@
 *~
 *.checked
+*.checked.lax
 .depend*
 *.cm*
 lib/steel/*.a
@@ -11,6 +12,7 @@ lib/steel/META
 lib/steel/dune-package
 *.krml
 *.o
+LICENSE-z3.txt
 
 # Created by CI
 BUILDLOG

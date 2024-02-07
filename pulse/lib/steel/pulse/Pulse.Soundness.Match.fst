@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Soundness.Match
 
 open Pulse.Soundness.Common
@@ -6,6 +22,7 @@ open Pulse.Syntax.Pure
 open Pulse.Typing
 open Pulse.Elaborate.Core
 open Pulse.Elaborate.Pure
+module RU = Pulse.RuntimeUtils
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
 module T = FStar.Tactics.V2
@@ -44,7 +61,7 @@ let match_soundness
                         (elab_st_typing d)
                         (elab_comp c))
   =
-  let T_Match _g sc_u sc_ty sc (E sc_ty_d) (E sc_d) _c brs brs_ty brs_complete = d in
+  let T_Match _g sc_u sc_ty sc (E sc_ty_d) (E sc_d) _c _ctyping brs brs_ty brs_complete = d in
 
   let sc_e_ty : R.typ = elab_term sc_ty in
   let sc_e_ty_t : RT.typing (elab_env g) sc_e_ty (T.E_Total, RT.tm_type sc_u) = sc_ty_d in
@@ -58,7 +75,7 @@ let match_soundness
   let rcty = (T.E_Total, elab_comp c) in
   let PC_Elab _ _ _ _ bnds _ = brs_complete in
   let brs_e_ty : RT.branches_typing (elab_env g) sc_u sc_e_ty sc_e rcty brs_e bnds =
-    magic ()
+    RU.magic ()
   in
   let brs_complete
      : RT.match_is_complete (elab_env g) (elab_term sc) (elab_term sc_ty) (List.Tot.map fst brs_e) bnds

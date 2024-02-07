@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module AuxPredicate
 open Pulse.Lib.Pervasives
 module R = Pulse.Lib.Reference
@@ -10,10 +26,10 @@ module R = Pulse.Lib.Reference
 // Defining a vprop using F* syntax. We do not yet allow
 // writing Pulse syntax for vprops in predicates 
 let my_inv (b:bool) (r:R.ref int) : vprop
-  = exists_ (fun v -> 
+  = exists* v.
       R.pts_to r v ** 
       pure ( (v==0 \/ v == 1) /\ b == (v = 0) )
-    )
+    
 
 
 ```pulse
@@ -82,7 +98,7 @@ fn invar_introduces_ghost_alt (r:R.ref int)
 
   while (let vr = !r; (vr = 0))
   invariant b. 
-    exists v.
+    exists* v.
       R.pts_to r v **
       pure ( (v==0 \/ v == 1) /\ b == (v = 0) )
   {
@@ -96,13 +112,13 @@ fn invar_introduces_ghost_alt (r:R.ref int)
 ```pulse
 fn exists_introduces_ghost (r:R.ref int)
   requires R.pts_to r 0
-  ensures exists v. R.pts_to r v ** pure (v == 0 \/ v == 1)
+  ensures exists* v. R.pts_to r v ** pure (v == 0 \/ v == 1)
 {
   r := 0;
 
   fold (my_inv true r);
 
-  introduce exists b. (my_inv b r) with _; 
+  introduce exists* b. (my_inv b r) with _; 
   // once you hide the witness in the existential
   // you lose knowledge about it, i.e., we do not know that r = 0
   with b. unfold (my_inv b r)

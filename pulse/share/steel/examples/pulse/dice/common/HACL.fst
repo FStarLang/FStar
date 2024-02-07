@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module HACL
 open Pulse.Lib.Pervasives
 module R = Pulse.Lib.Reference
@@ -127,11 +143,11 @@ val ed25519_sign
     (A.pts_to buf buf0 **
      A.pts_to privk #pprivk privk_seq **
      A.pts_to msg #pmsg msg_seq)
-    (fun _ -> exists_ (fun (buf1:Seq.seq U8.t) ->
-      A.pts_to buf buf1 **
+    (fun _ -> exists* (buf1:Seq.seq U8.t).
+      A.pts_to buf buf1 ** 
       A.pts_to privk #pprivk privk_seq **
       A.pts_to msg #pmsg msg_seq **
-      pure (buf1 `Seq.equal` spec_ed25519_sign privk_seq msg_seq)))
+      pure (buf1 `Seq.equal` spec_ed25519_sign privk_seq msg_seq))
 
 (* DICE hash constants *)
 
@@ -140,14 +156,8 @@ val dice_hash_alg : alg_t
 
 let dice_digest_len : hashable_len = assume (is_hashable_len (digest_len dice_hash_alg)); digest_len dice_hash_alg
 
-assume 
-val dice_digest_len_is_hashable 
-  : is_hashable_len dice_digest_len
+assume Dice_digest_len_is_hashable : is_hashable_len dice_digest_len
 
-assume 
-val dice_digest_len_is_hkdf_ikm
-  : valid_hkdf_ikm_len dice_digest_len
+assume Dice_digest_len_is_hkdf_ikm : valid_hkdf_ikm_len dice_digest_len
 
-assume
-val is_hashable_len_32
-  : is_hashable_len v32us
+assume Is_hashable_len_32 : is_hashable_len v32us

@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Syntax.Base
 module RTB = FStar.Reflection.Typing.Builtins
 module RT = FStar.Reflection.Typing
@@ -21,6 +37,8 @@ let rec eq_tm (t1 t2:term)
     | Tm_Star l1 r1, Tm_Star l2 r2 ->
       eq_tm l1 l2 &&
       eq_tm r1 r2
+    | Tm_Inv p1, Tm_Inv p2 ->
+      eq_tm p1 p2
     | Tm_Pure p1, Tm_Pure p2 ->
       eq_tm p1 p2
     | Tm_ExistsSL u1 t1 b1, Tm_ExistsSL u2 t2 b2
@@ -33,6 +51,8 @@ let rec eq_tm (t1 t2:term)
       assume (faithful t1);
       assume (faithful t2);
       term_eq_dec t1 t2
+    | Tm_AddInv i1 is1, Tm_AddInv i2 is2 ->
+      eq_tm i1 i2 && eq_tm is1 is2
     | _ -> false
 
 let eq_st_comp (s1 s2:st_comp)  
@@ -49,9 +69,11 @@ let eq_comp (c1 c2:comp)
       eq_tm t1 t2
     | C_ST s1, C_ST s2 ->
       eq_st_comp s1 s2
-    | C_STAtomic i1 s1, C_STAtomic i2 s2
-    | C_STGhost i1 s1, C_STGhost i2 s2 ->
+    | C_STAtomic i1 o1 s1, C_STAtomic i2 o2 s2 ->
       eq_tm i1 i2 &&
+      o1 = o2 &&
+      eq_st_comp s1 s2
+    | C_STGhost s1, C_STGhost s2 ->
       eq_st_comp s1 s2
     | _ -> false
 
@@ -118,7 +140,7 @@ let rec eq_pattern (p1 p2 : pattern) : b:bool{ b <==> (p1 == p2) } =
   | Pat_Constant c1, Pat_Constant c2 ->
     fstar_const_eq c1 c2
 
-  | Pat_Var _, Pat_Var _ -> true
+  | Pat_Var _ _, Pat_Var _ _ -> true
   
   | Pat_Dot_Term to1, Pat_Dot_Term to2 -> eq_opt eq_tm to1 to2
 
@@ -144,14 +166,22 @@ let eq_hint_type (ht1 ht2:proof_hint_type)
     | REWRITE { t1; t2 }, REWRITE { t1=s1; t2=s2 } ->
       eq_tm t1 s1 &&
       eq_tm t2 s2
+    | WILD, WILD
+    | SHOW_PROOF_STATE _, SHOW_PROOF_STATE _ -> true
     | _ -> false
+
+let eq_ascription (a1 a2:comp_ascription) 
+ : b:bool { b <==> (a1 == a2) }
+ = eq_opt eq_comp a1.elaborated a2.elaborated &&
+   eq_opt eq_comp a1.annotated a2.annotated
+
 
 let rec eq_st_term (t1 t2:st_term) 
   : b:bool { b <==> (t1 == t2) }
   = match t1.term, t2.term with
-    | Tm_Return {ctag=c1; insert_eq=b1; term=t1}, 
-      Tm_Return {ctag=c2; insert_eq=b2; term=t2} ->
-      c1 = c2 &&
+    | Tm_Return {expected_type=ty1; insert_eq=b1; term=t1}, 
+      Tm_Return {expected_type=ty2; insert_eq=b2; term=t2} ->
+      eq_tm ty1 ty2 &&
       b1 = b2 &&
       eq_tm t1 t2
 
@@ -159,7 +189,7 @@ let rec eq_st_term (t1 t2:st_term)
       Tm_Abs { b=b2; q=o2; ascription=c2; body=t2 } ->
       eq_tm b1.binder_ty b2.binder_ty &&
       o1=o2 &&
-      eq_comp c1 c2 &&
+      eq_ascription c1 c2 &&
       eq_st_term t1 t2
   
     | Tm_STApp { head=h1; arg_qual=o1; arg=t1},
@@ -226,6 +256,13 @@ let rec eq_st_term (t1 t2:st_term)
       eq_tm e1 e2 &&
       eq_st_term b1 b2
 
+    | Tm_WithLocalArray { binder=x1; initializer=e1; length=n1; body=b1 },
+      Tm_WithLocalArray { binder=x2; initializer=e2; length=n2; body=b2 } ->
+      eq_tm x1.binder_ty x2.binder_ty &&
+      eq_tm e1 e2 &&
+      eq_tm n1 n2 &&
+      eq_st_term b1 b2
+
     | Tm_Rewrite { t1=l1; t2=r1 },
       Tm_Rewrite { t1=l2; t2=r2 } ->
       eq_tm l1 l2 &&
@@ -238,11 +275,20 @@ let rec eq_st_term (t1 t2:st_term)
       eq_tm t1 t2 &&
       eq_tm_opt post1 post2
       
+    | Tm_Unreachable, Tm_Unreachable -> true
+    
     | Tm_ProofHintWithBinders { hint_type=ht1; binders=bs1; t=t1 },
       Tm_ProofHintWithBinders { hint_type=ht2; binders=bs2; t=t2 } ->
       eq_hint_type ht1 ht2 &&
       eq_list eq_binder bs1 bs2 &&
       eq_st_term t1 t2
+
+    | Tm_WithInv {name=name1; returns_inv=r1; body=body1},
+      Tm_WithInv {name=name2; returns_inv=r2; body=body2} ->
+      eq_tm name1 name2 &&
+      eq_opt (fun (b1, r1) (b2, r2) -> eq_tm b1.binder_ty b2.binder_ty && eq_tm r1 r2)
+             r1 r2 &&
+      eq_st_term body1 body2
 
     | _ -> false
 
@@ -251,4 +297,3 @@ and eq_branch (b1 b2 : pattern & st_term)
   = let (p1, e1) = b1 in
     let (p2, e2) = b2 in
     eq_pattern p1 p2 && eq_st_term e1 e2
-

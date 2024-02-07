@@ -1,10 +1,26 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Checker.Prover.Base
 
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Base
 open Pulse.Typing.Combinators
-
+module RU = Pulse.RuntimeUtils
 module T = FStar.Tactics.V2
 module PS = Pulse.Checker.Prover.Substs
 
@@ -25,7 +41,7 @@ let rec canon_right_aux (g:env) (vps:list vprop) (f:vprop -> T.Tac bool)
     if f hd
     then begin
       let (| vps', fvps, _ |) = canon_right_aux g rest f in
-      let v_eq = magic () in
+      let v_eq = RU.magic #(vprop_equiv _ _ _) () in
       // let v_eq
       //   : vprop_equiv g (list_as_vprop vps)
       //                   (list_as_vprop (hd :: (vps' @ fvps)))
@@ -44,7 +60,7 @@ let rec canon_right_aux (g:env) (vps:list vprop) (f:vprop -> T.Tac bool)
     end
     else begin
       let (| vps', pures, _ |) = canon_right_aux g rest f in
-      let v_eq = magic () in //list_as_vprop_ctx g [hd] _ _ _ (VE_Refl _ _) v_eq in
+      let v_eq = RU.magic #(vprop_equiv _ _ _ ) () in //list_as_vprop_ctx g [hd] _ _ _ (VE_Refl _ _) v_eq in
       (| hd::vps', pures, v_eq |)
     end
 
@@ -58,7 +74,7 @@ let canon_right (#g:env) (#ctxt:term) (#frame:term)
            continuation_elaborator g (tm_star ctxt frame) g (tm_star ctxt' frame))
   = let (| vps', pures, veq |) = canon_right_aux g (vprop_as_list ctxt) f in
     let veq : vprop_equiv g ctxt (list_as_vprop' (list_as_vprop vps') pures)
-      = magic () in
+      = RU.magic () in
     let veq : vprop_equiv g (tm_star ctxt frame) (tm_star (list_as_vprop' (list_as_vprop vps') pures) frame)
       = VE_Ctxt _ _ _ _ _ veq (VE_Refl _ _) in
     (| _, VP.vprop_equiv_typing_fwd ctxt_frame_typing veq, k_elab_equiv (k_elab_unit _ _) (VE_Refl _ _) veq |)
@@ -77,13 +93,12 @@ let elim_one (#g:env)
   
   let ctxt_frame_typing = star_typing_inversion_l ctxt_frame_p_typing in
   let x = fresh (push_env g uvs) in
-  let ppname = mk_ppname_no_range "_pelim" in
   let k =
-    continuation_elaborator_with_bind (tm_star ctxt frame) e1_typing ctxt_frame_p_typing (ppname, x) in
+    continuation_elaborator_with_bind (tm_star ctxt frame) e1_typing ctxt_frame_p_typing (nx, x) in
   let g' = push_binding g x nx (comp_res c1) in
-  let ctxt' = tm_star (open_term_nv (comp_post c1) (v_as_nv x)) ctxt in
+  let ctxt' = tm_star (open_term_nv (comp_post c1) (nx, x)) ctxt in
   let veq
-    : vprop_equiv g' (tm_star (open_term_nv (comp_post c1) (v_as_nv x)) (tm_star ctxt frame))
+    : vprop_equiv g' (tm_star (open_term_nv (comp_post c1) (nx, x)) (tm_star ctxt frame))
                      (tm_star ctxt' frame) = VE_Assoc _ _ _ _ in
   let k
     : continuation_elaborator
@@ -93,11 +108,11 @@ let elim_one (#g:env)
       #g #g'
       #(tm_star (tm_star ctxt frame) p)
       #(tm_star (tm_star ctxt frame) p)
-      #(tm_star (open_term_nv (comp_post c1) (v_as_nv x)) (tm_star ctxt frame))
+      #(tm_star (open_term_nv (comp_post c1) (nx, x)) (tm_star ctxt frame))
       #(tm_star ctxt' frame)
       k (VE_Refl g (tm_star (tm_star ctxt frame) p)) veq in
  
-  let ctxt'_frame_typing : tot_typing g' (tm_star ctxt' frame) tm_vprop = magic () in
+  let ctxt'_frame_typing : tot_typing g' (tm_star ctxt' frame) tm_vprop = RU.magic () in
   env_extends_push g x ppname_default (comp_res c1);
   (| g', ctxt', ctxt'_frame_typing, k |)
 
@@ -119,7 +134,7 @@ let rec elim_all (#g:env)
        then match mk #_ #p p_typing with
             | Some (| nx, e1, c1, e1_typing |) ->
               let (| g', _, ctxt_typing', k |) =
-                elim_one ctxt' frame p (magic ()) nx e1 c1 e1_typing uvs in
+                elim_one ctxt' frame p (RU.magic ()) nx e1 c1 e1_typing uvs in
               let k
                 : continuation_elaborator g (tm_star (tm_star ctxt' frame) p)
                                           g' (tm_star _ frame) = k in
@@ -127,7 +142,7 @@ let rec elim_all (#g:env)
                 : continuation_elaborator g (tm_star (tm_star ctxt' p) frame)
                                           g' (tm_star _ frame) =
                 k_elab_equiv k
-                  (magic ()) (VE_Refl _ _) in
+                  (RU.magic ()) (VE_Refl _ _) in
               let _, (| g'', ctxt'', ctxt_typing'', k' |) =
                 elim_all #g' f mk ctxt_typing' uvs in
               true, (| g'', ctxt'', ctxt_typing'', k_elab_trans k k' |)

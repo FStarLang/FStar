@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Readback
 module R = FStar.Reflection.V2
 open Pulse.Syntax.Base
@@ -12,6 +28,20 @@ let (let?) (f:option 'a) (g:'a -> option 'b) : option 'b =
   | None -> None
   | Some x -> g x
 
+let readback_observability (t:R.term)
+: option (obs:observability { elab_observability obs == t })
+= let open R in
+  match inspect_ln t with
+  | R.Tv_FVar fv ->
+    let fv_lid = inspect_fv fv in
+    if fv_lid = observable_lid
+    then Some Observable
+    else if fv_lid = unobservable_lid
+    then Some Unobservable
+    else if fv_lid = neutral_lid
+    then Some Neutral
+    else None
+  | _ -> None
 
 #push-options "--z3rlimit_factor 20"
 // TODO: FIXME: may be mark as opaque_to_smt
@@ -51,31 +81,40 @@ let try_readback_st_comp
               Some (c <: c:Pulse.Syntax.Base.comp{ elab_comp c == t })
             | _ -> None)
          | _ -> None
-    else if fv_lid = stt_atomic_lid || fv_lid = stt_ghost_lid
+    else if fv_lid = stt_atomic_lid
     then match args with
-         | [res; opened; pre; post] ->
+         | [res; obs; opened; pre; post] ->
            (match inspect_ln (fst post) with
             | Tv_Abs b body ->
               let { qual=aq; attrs=attrs }
                   = inspect_binder b
               in    
               let? res' = readback_ty (fst res) in
+              let? obs' = readback_observability (fst obs) in
               let? opened' = readback_ty (fst opened) in
               let? pre' = readback_ty (fst pre) in
               let? post' = readback_ty body in
-              if fv_lid = stt_atomic_lid
-              then begin
-                assume (t == mk_stt_atomic_comp u (fst res) (fst opened) (fst pre) (mk_abs (fst res) R.Q_Explicit body));
-                let c = C_STAtomic opened' ({u; res=res'; pre=pre';post=post'}) in
-                Some (c <: c:Pulse.Syntax.Base.comp { elab_comp c == t })
-              end
-              else begin
-                assume (t == mk_stt_ghost_comp u (fst res) (fst opened) (fst pre) (mk_abs (fst res) R.Q_Explicit body));
-                let c = C_STGhost opened' ({u; res=res'; pre=pre';post=post'}) in
-                Some (c <: c:Pulse.Syntax.Base.comp { elab_comp c == t })
-              end
+              assume (t == mk_stt_atomic_comp (fst obs) u (fst res) (fst opened) (fst pre) (mk_abs (fst res) R.Q_Explicit body));
+              let c = C_STAtomic opened' obs' ({u; res=res'; pre=pre';post=post'}) in
+              Some (c <: c:Pulse.Syntax.Base.comp { elab_comp c == t })
             | _ -> None)
          | _ -> None
+    else if fv_lid = stt_ghost_lid
+    then match args with
+         | [res; pre; post] ->
+           (match inspect_ln (fst post) with
+            | Tv_Abs b body ->
+              let { qual=aq; attrs=attrs }
+                  = inspect_binder b
+              in    
+              let? res' = readback_ty (fst res) in
+              let? pre' = readback_ty (fst pre) in
+              let? post' = readback_ty body in
+              assume (t == mk_stt_ghost_comp u (fst res) (fst pre) (mk_abs (fst res) R.Q_Explicit body));
+              let c = C_STGhost ({u; res=res'; pre=pre';post=post'}) in
+              Some (c <: c:Pulse.Syntax.Base.comp { elab_comp c == t })
+            | _ -> None)
+         | _ -> None    
     else None  
   | _ -> None
 #pop-options
@@ -155,8 +194,8 @@ let rec readback_ty (t:R.term)
       )
       else aux ()
     | Tv_UInst fv [u], [a1; a2] ->
-      if inspect_fv fv = exists_lid ||
-         inspect_fv fv = forall_lid
+      if inspect_fv fv = exists_lid 
+      || inspect_fv fv = forall_lid
       then (
         let t1 : R.term = fst a1 in
         let t2 : R.term = fst a2 in
@@ -180,6 +219,12 @@ let rec readback_ty (t:R.term)
         let t1 : R.term = fst a in
         let? t1 = readback_ty t1 in
         return (Tm_Pure t1)
+      )
+      else if inspect_fv fv = inv_lid
+      then (
+        let t1 : R.term = fst a in
+        let? t1 = readback_ty t1 in
+        return (Tm_Inv t1)
       )
       else aux ()
     | _ -> aux ()

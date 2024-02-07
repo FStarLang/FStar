@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Checker.If
 
 open Pulse.Syntax
@@ -10,80 +26,11 @@ open Pulse.Checker.Prover
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 module Metatheory = Pulse.Typing.Metatheory
+module RU = Pulse.RuntimeUtils
+module J = Pulse.JoinComp
 
-#push-options "--z3rlimit_factor 12 --fuel 0 --ifuel 1"
-let rec combine_if_branches
-  (g_then:env)
-  (e_then:st_term)
-  (c_then:comp_st)
-  (e_then_typing:st_typing g_then e_then c_then)
-  (g_else:env)
-  (e_else:st_term)
-  (c_else:comp_st)
-  (e_else_typing:st_typing g_else e_else c_else)
-  : T.TacH (c:comp_st{st_comp_of_comp c == st_comp_of_comp c_then} &
-            st_typing g_then e_then c &
-            st_typing g_else e_else c)
-           (requires fun _ ->
-              comp_pre c_then == comp_pre c_else)
-           (ensures fun _ _ -> True) =
-  let g = g_then in
-  if eq_st_comp (st_comp_of_comp c_then) (st_comp_of_comp c_else)
-  then begin
-    match c_then, c_else with
-    | C_ST _, C_ST _ -> (| c_then, e_then_typing, e_else_typing |)
-    | C_STAtomic inames1 _, C_STAtomic inames2 _
-    | C_STGhost inames1 _, C_STGhost inames2 _ ->
-      if eq_tm inames1 inames2
-      then (| c_then, e_then_typing, e_else_typing |)
-      else fail g None
-             (Printf.sprintf "Cannot combine then and else branches (different inames %s and %s)"
-                (P.term_to_string inames1)
-                (P.term_to_string inames2))
-    | C_ST _, C_STAtomic inames _ ->
-      if eq_tm inames tm_emp_inames
-      then begin
-        let e_else_typing =
-          T_Lift g_else e_else c_else c_then e_else_typing
-            (Lift_STAtomic_ST g_else c_else) in
-        (| c_then, e_then_typing, e_else_typing |)
-      end
-      else fail g None
-             (Printf.sprintf "Cannot lift STAtomic else branch to match ST then branch, inames %s not empty"
-                (P.term_to_string inames))
-    | C_STAtomic inames _, C_ST _ ->
-      if eq_tm inames tm_emp_inames
-      then begin
-        let e_then_typing =
-          T_Lift g_then e_then c_then c_else e_then_typing
-            (Lift_STAtomic_ST g_then c_then) in
-        (| c_else, e_then_typing, e_else_typing |)
-      end
-      else fail g None
-             (Printf.sprintf "Cannot lift STAtomic then branch to match ST else branch, inames %s not empty"
-                (P.term_to_string inames))
-    | C_STGhost _ _, _ ->
-      let w = get_non_informative_witness g_then (comp_u c_then) (comp_res c_then) in
-      let e_then_typing =
-        T_Lift _ _ _ _ e_then_typing (Lift_STGhost_STAtomic _ _ w) in
-      let (| c, e1_typing, e2_typing |) =
-        combine_if_branches _ _ _ e_then_typing _ _ _ e_else_typing in
-      (| c, e1_typing, e2_typing |)
-    | _, C_STGhost _ _ ->
-      let w = get_non_informative_witness g_else (comp_u c_else) (comp_res c_else) in
-      let e_else_typing =
-        T_Lift _ _ _ _ e_else_typing (Lift_STGhost_STAtomic _ _ w) in
-      combine_if_branches _ _ _ e_then_typing _ _ _ e_else_typing
-    | _, _ ->
-      fail g None
-         (Printf.sprintf "Cannot combine then and else branches (incompatible effects %s and %s resp.)"
-            (P.ctag_to_string (ctag_of_comp_st c_then))
-            (P.ctag_to_string (ctag_of_comp_st c_else)))
-  end
-  else fail g None "Cannot combine then and else branches (different st_comp)"
-#pop-options
+#set-options "--z3rlimit 40"
 
-#push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1"
 let check
   (g:env)
   (pre:term)
@@ -98,7 +45,7 @@ let check
   let g = Pulse.Typing.Env.push_context g "check_if" e1.range in
 
   let (| b, b_typing |) =
-    check_tot_term_with_expected_type g b tm_bool in
+    check_tot_term g b tm_bool in
 
   let post = post_hint.post in
   let hyp = fresh g in
@@ -135,26 +82,11 @@ let check
   let (| e1, c1, e1_typing |) = check_branch tm_true e1 true in
   let (| e2, c2, e2_typing |) = check_branch tm_false e2 false in    
   let (| c, e1_typing, e2_typing |) =
-    combine_if_branches _ _ _ e1_typing _ _ _ e2_typing in
+    J.join_comps _ _ _ e1_typing _ _ _ e2_typing post_hint in
 
-  let c_typing = 
-    let x = fresh g in
-    if x `Set.mem` freevars post //exclude this
-    then fail g None "Impossible: check_if: unexpected freevar in post, please file a bug-report"
-    else if not (eq_tm (comp_res c) post_hint.ret_ty &&
-                 eq_univ (comp_u c) post_hint.u &&
-                 eq_tm (comp_post c) post_hint.post) //exclude by check' strengthening
-    then fail g None
-           (Printf.sprintf "check_if: computation type after combining branches does not match post hint,\
-                            computed: (%s, %s, %s), expected (%s, %s, %s)"
-              (P.univ_to_string (comp_u c)) (P.term_to_string (comp_res c)) (P.term_to_string (comp_post c))
-              (P.univ_to_string post_hint.u) (P.term_to_string post_hint.ret_ty) (P.term_to_string post_hint.post))
-    else
-        let post_typing = post_hint_typing g post_hint x in
-        intro_comp_typing g c pre_typing post_typing.ty_typing x post_typing.post_typing
-  in
+  let c_typing = comp_typing_from_post_hint c pre_typing post_hint in
 
   let d : st_typing_in_ctxt g pre (Some post_hint) =
-    (| _, c, T_If g b e1 e2 c _ hyp b_typing e1_typing e2_typing (E c_typing) |) in
+    (| _, c, T_If g b e1 e2 c hyp b_typing e1_typing e2_typing (E c_typing) |) in
 
   checker_result_for_st_typing d res_ppname

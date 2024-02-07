@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Soundness.Comp
 
 open Pulse.Syntax
@@ -58,13 +74,12 @@ let comp_typing_soundness (g:stt_env)
       let res_typing, pre_typing, post_typing = stc_soundness d_st in
       STT.stt_typing res_typing pre_typing post_typing
 
-    | CT_STAtomic _ i st d_i d_st -> 
+    | CT_STAtomic _ i obs st d_i d_st -> 
       let i_typing = tot_typing_soundness d_i in
       let res_typing, pre_typing, post_typing = stc_soundness d_st in
-      STT.stt_atomic_typing res_typing i_typing pre_typing post_typing
+      STT.stt_atomic_typing #(elab_observability obs) res_typing i_typing pre_typing post_typing
 
-    | CT_STGhost _ i st d_i d_st -> 
-      let i_typing = tot_typing_soundness d_i in
+    | CT_STGhost _ st d_st -> 
       let res_typing, pre_typing, post_typing = stc_soundness d_st in
-      STT.stt_ghost_typing res_typing i_typing pre_typing post_typing
+      STT.stt_ghost_typing res_typing pre_typing post_typing
 #pop-options

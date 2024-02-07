@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Checker.Comp
 
 open Pulse.Syntax
@@ -10,7 +26,7 @@ module P = Pulse.Syntax.Printer
 let check (g:env) 
           (c:comp_st)
           (pre_typing:tot_typing g (comp_pre c) tm_vprop)
-  : T.Tac (comp_typing g c (comp_u c))
+  : T.Tac (comp_typing g c (universe_of_comp c))
   = let g = Pulse.Typing.Env.push_context_no_range g "check_comp"  in
   
     let check_st_comp (st:st_comp { comp_u c == st.u /\
@@ -31,7 +47,7 @@ let check (g:env)
           let px = v_as_nv x in
           assume (~(x `Set.mem` freevars (comp_post c)));
           let gx = push_binding g x (fst px) st.res in
-          let (| ty, post_typing |) = core_check_tot_term gx (open_term_nv (comp_post c) px) in
+          let (| ty, post_typing |) = core_compute_tot_term_type gx (open_term_nv (comp_post c) px) in
           if not (eq_tm ty tm_vprop)
           then fail g None
                  (Printf.sprintf "check_comp: ill-typed postcondition %s" (P.term_to_string (comp_post c)))
@@ -45,19 +61,14 @@ let check (g:env)
     | C_ST st -> 
       let stc = check_st_comp st in
       CT_ST _ _ stc
-    | C_STAtomic i st -> 
+    | C_STAtomic i obs st -> 
       let stc = check_st_comp st in
-      let (| ty, i_typing |) = core_check_tot_term g i in
+      let (| ty, i_typing |) = core_compute_tot_term_type g i in
       if not (eq_tm ty tm_inames)
       then fail g None
              (Printf.sprintf "check_comp: type of inames term %s is %s, expected %s"
                 (P.term_to_string i) (P.term_to_string ty) (P.term_to_string tm_inames))
-      else CT_STAtomic _ _ _ i_typing stc
-    | C_STGhost i st -> 
+      else CT_STAtomic _ _ obs _ i_typing stc
+    | C_STGhost st -> 
       let stc = check_st_comp st in
-      let (| ty, i_typing |) = core_check_tot_term g i in
-      if not (eq_tm ty tm_inames)
-      then fail g None
-             (Printf.sprintf "check_comp: type of inames term %s is %s, expected %s"
-                (P.term_to_string i) (P.term_to_string ty) (P.term_to_string tm_inames))
-      else CT_STGhost _ _ _ i_typing stc
+      CT_STGhost _ _ stc

@@ -1,7 +1,24 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module L0Core
 open L0Types
 open Pulse.Lib.Pervasives
 module A = Pulse.Lib.Array
+module V = Pulse.Lib.Vec
 module U8 = FStar.UInt8
 module SZ = FStar.SizeT
 open HACL
@@ -9,6 +26,7 @@ open X509
 
 // Needs to be exposed so that the caller of l0_main can prove that they
 // computed deviceIDCSR_len correctly
+noextract
 let deviceIDCSR_pre
   (deviceIDCSR: deviceIDCSR_ingredients_t) 
   (deviceIDCRI_len: SZ.t) 
@@ -24,6 +42,7 @@ let deviceIDCSR_pre
 
 // Needs to be exposed so that the caller of l0_main can prove that they
 // computed aliasKeyCRT_len correctly
+noextract
 let aliasKeyCRT_pre
   (aliasKeyCRT:aliasKeyCRT_ingredients_t) 
   (aliasKeyTBS_len:SZ.t) 
@@ -41,6 +60,7 @@ let aliasKeyCRT_pre
     valid_aliasKeyCRT_ingredients aliasKeyTBS_len /\
     aliasKeyCRT_len == length_of_aliasKeyCRT aliasKeyTBS_len
 
+noextract
 val aliasKey_functional_correctness 
   (alg:alg_t)
   (dig_len:hkdf_ikm_len)
@@ -52,6 +72,7 @@ val aliasKey_functional_correctness
   (aliasKey_priv:Seq.seq U8.t)
   : prop
 
+noextract
 val deviceIDCSR_functional_correctness
   (alg:alg_t)
   (dig_len:hkdf_ikm_len)
@@ -63,6 +84,7 @@ val deviceIDCSR_functional_correctness
   (deviceIDCSR_buf: Seq.seq U8.t)
   : prop
 
+noextract
 val aliasKeyCRT_functional_correctness
   (alg:alg_t)
   (dig_len:hkdf_ikm_len)
@@ -90,9 +112,9 @@ val l0_main
   (deviceIDCSR: A.larray U8.t (SZ.v deviceIDCSR_len))
   (record: l0_record_t)
   (#repr: erased l0_record_repr_t)
-  (#cdi0 #deviceID_pub0 #deviceID_priv0 #aliasKey_pub0 #aliasKey_priv0 #aliasKeyCRT0 #deviceIDCSR0: Seq.seq U8.t)
+  (#cdi0 #deviceID_pub0 #deviceID_priv0 #aliasKey_pub0 #aliasKey_priv0 #aliasKeyCRT0 #deviceIDCSR0: erased (Seq.seq U8.t))
   (#cdi_perm #p:perm)
-  : stt unit (l0_record_perm record repr p **
+  : stt unit (l0_record_perm record p repr **
               A.pts_to cdi #cdi_perm cdi0 **
               A.pts_to deviceID_pub deviceID_pub0 **
               A.pts_to deviceID_priv deviceID_priv0 **
@@ -103,14 +125,14 @@ val l0_main
               pure (deviceIDCSR_pre record.deviceIDCSR_ingredients deviceIDCRI_len deviceIDCSR_len
                  /\ aliasKeyCRT_pre record.aliasKeyCRT_ingredients aliasKeyTBS_len aliasKeyCRT_len))
              (fun _ -> 
-              l0_record_perm record repr p **
+              l0_record_perm record p repr **
               A.pts_to cdi #cdi_perm cdi0 **
-              exists_ (fun (deviceID_pub1:Seq.seq U8.t) ->
-              exists_ (fun (deviceID_priv1:Seq.seq U8.t) -> 
-              exists_ (fun (aliasKey_pub1:Seq.seq U8.t) ->
-              exists_ (fun (aliasKey_priv1:Seq.seq U8.t) ->
-              exists_ (fun (aliasKeyCRT1:Seq.seq U8.t) ->
-              exists_ (fun (deviceIDCSR1:Seq.seq U8.t) ->
+              (exists* (deviceID_pub1
+                        deviceID_priv1
+                        aliasKey_pub1
+                        aliasKey_priv1
+                        aliasKeyCRT1
+                        deviceIDCSR1:Seq.seq U8.t).
                 A.pts_to deviceID_pub deviceID_pub1 **
                 A.pts_to deviceID_priv deviceID_priv1 **
                 A.pts_to aliasKey_pub aliasKey_pub1 **
@@ -130,4 +152,4 @@ val l0_main
                   aliasKeyCRT_functional_correctness 
                     dice_hash_alg dice_digest_len cdi0 repr.fwid
                     record.deviceID_label_len repr.deviceID_label record.aliasKeyCRT_ingredients 
-                    aliasKeyCRT_len aliasKeyCRT1 aliasKey_pub1))))))))
+                    aliasKeyCRT_len aliasKeyCRT1 aliasKey_pub1)))

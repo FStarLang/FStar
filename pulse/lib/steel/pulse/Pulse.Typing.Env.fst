@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Typing.Env
 
 open Pulse.Syntax
@@ -30,9 +46,18 @@ type env = {
   ctxt: Pulse.RuntimeUtils.context
 }
 
-let fstar_env g = g.f
+let fstar_env g = RU.env_set_context g.f g.ctxt
 
 let bindings g = g.bs
+
+let rec bindings_with_ppname_aux (bs:list (var & typ)) (names:list ppname)
+  : T.Tac (list (ppname & var & typ)) =
+
+  match bs, names with
+  | [], [] -> []
+  | (x, t)::bs, n::names -> (n, x, t)::(bindings_with_ppname_aux bs names)
+  | _ -> T.fail "impossible! env bs and names have different lengths"
+let bindings_with_ppname g = bindings_with_ppname_aux g.bs g.names  
 
 let as_map g = g.m
 
@@ -197,7 +222,7 @@ let rec diff_names (#a:Type) (l1 l2:list a)
   | _::tl1, _::tl2 -> diff_names tl1 tl2
 
 
-#push-options "--z3rlimit_factor 4"
+#push-options "--z3rlimit_factor 12"
 let diff g1 g2 =
   let g3 = elim_env_extends_tot g1 g2 in
   assert (g1.bs == g3.bs @ g2.bs);
@@ -275,7 +300,7 @@ let rec subst_env (en:env) (ss:subst)
 
 let push_context g ctx r = { g with ctxt = Pulse.RuntimeUtils.extend_context ctx (Some r) g.ctxt }
 let push_context_no_range g ctx = { g with ctxt = Pulse.RuntimeUtils.extend_context ctx None g.ctxt }
-
+let reset_context g g' = { g with ctxt = g'.ctxt }
 let get_context g = g.ctxt
 
 let range_of_env (g:env) = 
@@ -363,11 +388,15 @@ let get_range (g:env) (r:option range) : T.Tac range =
       then range_of_env g
       else r
 
-let fail_doc (#a:Type) (g:env) (r:option range) (msg:list Pprint.document) =
+let fail_doc_env (#a:Type) (with_env:bool) (g:env) (r:option range) (msg:list Pprint.document) =
   let r = get_range g r in
   let msg =
     let indent d = nest 2 (hardline ^^ align d) in
-    if Pulse.Config.debug_flag "env_on_err"
+    let with_env =
+      if with_env then true
+      else Pulse.Config.debug_flag "env_on_err"
+    in
+    if with_env
     then msg @ [doc_of_string "In typing environment:" ^^ indent (env_to_doc g)]
     else msg
   in

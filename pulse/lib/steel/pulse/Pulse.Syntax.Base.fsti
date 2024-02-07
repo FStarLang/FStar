@@ -1,12 +1,26 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Syntax.Base
 module RTB = FStar.Reflection.Typing.Builtins
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
 module RU = Pulse.RuntimeUtils
-open FStar.List.Tot
-
-
 module T = FStar.Tactics.V2
+open FStar.List.Tot
 
 type constant = R.vconst
 
@@ -60,6 +74,7 @@ type nm = {
 type qualifier =
   | Implicit
 
+
 noeq
 type fv = {
   fv_name : R.name;
@@ -80,8 +95,10 @@ type term' =
   | Tm_ExistsSL   : u:universe -> b:binder -> body:vprop -> term'
   | Tm_ForallSL   : u:universe -> b:binder -> body:vprop -> term'
   | Tm_VProp      : term'
+  | Tm_Inv        : vprop -> term'
   | Tm_Inames     : term'  // type inames
   | Tm_EmpInames  : term'
+  | Tm_AddInv     : i:term -> is:term -> term'
   | Tm_FStar      : host_term -> term'
   | Tm_Unknown    : term'
 
@@ -103,6 +120,7 @@ let term_range (t:term) = t.range
 let tm_fstar (t:host_term) (r:range) : term = { t = Tm_FStar t; range=r }
 let with_range (t:term') (r:range) = { t; range=r }
 let tm_vprop = with_range Tm_VProp FStar.Range.range_0
+let tm_inv p = with_range (Tm_Inv p) FStar.Range.range_0
 let tm_inames = with_range Tm_Inames FStar.Range.range_0
 let tm_emp = with_range Tm_Emp FStar.Range.range_0
 let tm_emp_inames = with_range Tm_EmpInames FStar.Range.range_0
@@ -120,12 +138,17 @@ type st_comp = { (* ST pre (x:res) post ... x is free in post *)
   post:vprop
 }
 
+type observability =
+  | Neutral
+  | Observable
+  | Unobservable
+
 noeq
 type comp =
   | C_Tot      : term -> comp
   | C_ST       : st_comp -> comp
-  | C_STAtomic : term -> st_comp -> comp  // inames
-  | C_STGhost  : term -> st_comp -> comp  // inames
+  | C_STAtomic : inames:term -> obs:observability -> st_comp -> comp
+  | C_STGhost  : st_comp -> comp
 
 
 let comp_st = c:comp {not (C_Tot? c) }
@@ -134,7 +157,7 @@ noeq
 type pattern =
   | Pat_Cons     : fv -> list (pattern & bool) -> pattern
   | Pat_Constant : constant -> pattern
-  | Pat_Var      : RT.pp_name_t -> pattern
+  | Pat_Var      : RT.pp_name_t -> ty:RT.sort_t -> pattern
   | Pat_Dot_Term : option term -> pattern
 
 type ctag =
@@ -149,8 +172,27 @@ let as_effect_hint (c:ctag) : effect_hint = FStar.Sealed.seal (Some c)
 let ctag_of_comp_st (c:comp_st) : ctag =
   match c with
   | C_ST _ -> STT
-  | C_STAtomic _ _ -> STT_Atomic
-  | C_STGhost _ _ -> STT_Ghost
+  | C_STAtomic _ _ _ -> STT_Atomic
+  | C_STGhost _ -> STT_Ghost
+
+noeq
+type effect_annot =
+  | EffectAnnotSTT
+  | EffectAnnotGhost
+  | EffectAnnotAtomic { opens:term }
+
+let effect_annot_of_comp (c:comp_st)
+: effect_annot
+= match c with
+  | C_ST _ -> EffectAnnotSTT
+  | C_STGhost _ -> EffectAnnotGhost
+  | C_STAtomic opens _ _ -> EffectAnnotAtomic { opens }
+
+let ctag_of_effect_annot =
+  function
+  | EffectAnnotSTT -> STT
+  | EffectAnnotGhost -> STT_Ghost
+  | _ -> STT_Atomic
 
 noeq
 type proof_hint_type =
@@ -173,21 +215,29 @@ type proof_hint_type =
       t1:vprop;
       t2:vprop;
     }
+  | WILD //with p q r. _
+  | SHOW_PROOF_STATE of range //print the proof state and exit
 
+noeq
+type comp_ascription = {
+  annotated:option comp;
+  elaborated:option comp
+}
+let empty_ascription = { annotated=None; elaborated=None }  
 
 (* terms with STT types *)
 [@@ no_auto_projectors]
 noeq
 type st_term' =
   | Tm_Return { 
-      ctag:ctag;
+      expected_type:term;
       insert_eq:bool;
       term: term;
     }
   | Tm_Abs {
       b:binder;
       q:option qualifier;
-      ascription: comp;
+      ascription: comp_ascription;
       body:st_term;
     }
   | Tm_STApp {
@@ -204,7 +254,7 @@ type st_term' =
       binder:binder;
       head:term;
       body:st_term;
-    } 
+    }
   | Tm_If {
       b:term;
       then_:st_term;
@@ -245,6 +295,12 @@ type st_term' =
       initializer:term;
       body:st_term;
     }
+  | Tm_WithLocalArray {
+      binder:binder;
+      initializer:term;
+      length:term;
+      body:st_term;
+    }
   | Tm_Rewrite {
       t1:term;
       t2:term;
@@ -255,11 +311,17 @@ type st_term' =
       typ:term;
       post:option term;
     }
+  | Tm_Unreachable
   | Tm_ProofHintWithBinders {
       hint_type:proof_hint_type;
       binders:list binder;
       t:st_term
   }
+  | Tm_WithInv {
+      name : term; // invariant name is an F* term that is an Tm_fvar or Tm_name
+      body : st_term;
+      returns_inv : option (binder & vprop);
+    }
 
 and st_term = {
     term : st_term';
@@ -269,6 +331,23 @@ and st_term = {
 
 and branch = pattern & st_term
 
+noeq
+type decl' =
+  | FnDecl {
+      (* A function declaration, currently the only Pulse
+      top-level decl. This will be mostly checked as a nested
+      Tm_Abs with bs and body, especially if non-recursive. *)
+      id : R.ident;
+      isrec : bool;
+      bs : list (option qualifier & binder & bv);
+      comp : comp; (* bs in scope *)
+      meas : (meas:option term{Some? meas ==> isrec}); (* bs in scope *)
+      body : st_term; (* bs in scope *)
+  }
+and decl = {
+  d : decl';
+  range : range;
+}
 
 let null_binder (t:term) : binder =
   {binder_ty=t;binder_ppname=ppname_default}
@@ -301,8 +380,8 @@ let comp_res (c:comp) : term =
   match c with
   | C_Tot ty -> ty
   | C_ST s
-  | C_STAtomic _ s
-  | C_STGhost _ s -> s.res
+  | C_STAtomic _ _ s
+  | C_STGhost s -> s.res
 
 let stateful_comp (c:comp) =
   C_ST? c || C_STAtomic? c || C_STGhost? c
@@ -310,37 +389,29 @@ let stateful_comp (c:comp) =
 let st_comp_of_comp (c:comp{stateful_comp c}) : st_comp =
   match c with
   | C_ST s
-  | C_STAtomic _ s
-  | C_STGhost _ s -> s
+  | C_STAtomic _ _ s
+  | C_STGhost s -> s
 
 let with_st_comp (c:comp{stateful_comp c}) (s:st_comp) : comp =
   match c with
   | C_ST _ -> C_ST s
-  | C_STAtomic inames _ -> C_STAtomic inames s
-  | C_STGhost inames _ -> C_STGhost inames s
+  | C_STAtomic inames obs _ -> C_STAtomic inames obs s
+  | C_STGhost _ -> C_STGhost s
 
-let comp_u (c:comp { stateful_comp c }) =
-  match c with
-  | C_ST s
-  | C_STAtomic _ s
-  | C_STGhost _ s -> s.u
+let comp_u (c:comp { stateful_comp c }) = (st_comp_of_comp c).u
 
-let comp_pre (c:comp { stateful_comp c }) =
+let universe_of_comp (c:comp_st) =
   match c with
-  | C_ST s
-  | C_STAtomic _ s
-  | C_STGhost _ s -> s.pre
+  | C_ST _ -> RT.u_zero
+  | _ -> Pulse.Reflection.Util.u_max_two (comp_u c)
 
-let comp_post (c:comp { stateful_comp c }) =
-  match c with
-  | C_ST s
-  | C_STAtomic _ s
-  | C_STGhost _ s -> s.post
+let comp_pre (c:comp { stateful_comp c }) = (st_comp_of_comp c).pre
 
-let comp_inames (c:comp { C_STAtomic? c \/ C_STGhost? c }) : term =
+let comp_post (c:comp { stateful_comp c }) = (st_comp_of_comp c).post
+
+let comp_inames (c:comp { C_STAtomic? c }) : term =
   match c with
-  | C_STAtomic inames _
-  | C_STGhost inames _ -> inames
+  | C_STAtomic inames _ _ -> inames
 
 let nvar = ppname & var 
 let v_as_nv x : nvar = ppname_default, x

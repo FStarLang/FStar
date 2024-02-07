@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Syntax.Printer
 open FStar.Printf
 open Pulse.Syntax.Base
@@ -44,14 +60,31 @@ let qual_to_string = function
 
 let indent (level:string) = level ^ "\t"
     
-let rec term_to_string' (level:string) (t:term)
+
+let rec collect_binders (until: term' -> bool) (t:term) : list binder & term =
+  if not (until t.t) then [], t
+  else (
+    match t.t with
+    | Tm_ExistsSL _ b body
+    | Tm_ForallSL _ b body -> 
+      let bs, t = collect_binders until body in
+      b::bs, t
+    | _ -> [], t
+  )
+
+let rec binder_to_string_paren (b:binder)
+  : T.Tac string
+  = sprintf "(%s:%s)" 
+            (T.unseal b.binder_ppname.name)
+            (term_to_string' "" b.binder_ty)
+
+and term_to_string' (level:string) (t:term)
   : T.Tac string
   = match t.t with
     | Tm_Emp -> "emp"
 
     | Tm_Pure p ->
-      sprintf "pure (\n%s%s)" 
-        (indent level)
+      sprintf "pure (%s)" 
         (term_to_string' (indent level) p)
       
     | Tm_Star p1 p2 ->
@@ -60,17 +93,17 @@ let rec term_to_string' (level:string) (t:term)
         level
         (term_to_string' level p2)
                           
-    | Tm_ExistsSL _ b body ->
-      sprintf "(exists (%s:%s).\n%s%s)"
-              (T.unseal b.binder_ppname.name)
-              (term_to_string' (indent level) b.binder_ty)
+    | Tm_ExistsSL _ _ _ ->
+      let bs, body = collect_binders Tm_ExistsSL? t in
+      sprintf "(exists* %s.\n%s%s)"
+              (T.map binder_to_string_paren bs |> String.concat " ")
               level
               (term_to_string' (indent level) body)
 
     | Tm_ForallSL u b body ->
-      sprintf "(forall (%s:%s).\n%s%s)"
-              (T.unseal b.binder_ppname.name)
-              (term_to_string' (indent level) b.binder_ty)
+      let bs, body = collect_binders Tm_ForallSL? t in
+      sprintf "(forall* %s.\n%s%s)"
+              (T.map binder_to_string_paren bs |> String.concat " ")
               level
               (term_to_string' (indent level) body)
                           
@@ -78,38 +111,52 @@ let rec term_to_string' (level:string) (t:term)
     | Tm_Inames -> "inames"
     | Tm_EmpInames -> "emp_inames"
     | Tm_Unknown -> "_"
+    | Tm_AddInv i is ->
+      sprintf "add_inv %s %s"
+        (term_to_string' level i)
+        (term_to_string' level is)
+    | Tm_Inv i ->
+      sprintf "inv %s"
+        (term_to_string' level i)
     | Tm_FStar t ->
       T.term_to_string t
 let term_to_string t = term_to_string' "" t
 
-let rec term_to_doc t
+let rec binder_to_doc b : T.Tac document =
+  parens (doc_of_string (T.unseal b.binder_ppname.name)
+          ^^ doc_of_string ":"
+          ^^ term_to_doc b.binder_ty)
+
+and term_to_doc t
   : T.Tac document
   = match t.t with
     | Tm_Emp -> doc_of_string "emp"
 
-    | Tm_Pure p -> doc_of_string "pure" ^/^ parens (term_to_doc p)
+    | Tm_Pure p -> doc_of_string "pure" ^^ parens (term_to_doc p)
     | Tm_Star p1 p2 ->
       infix 2 1 (doc_of_string "**")
                 (term_to_doc p1)
                 (term_to_doc p2)
 
-    | Tm_ExistsSL _ b body ->
-      parens (doc_of_string "exists" ^/^ parens (doc_of_string (T.unseal b.binder_ppname.name)
-                                                  ^^ doc_of_string ":"
-                                                  ^^ term_to_doc b.binder_ty)
+    | Tm_ExistsSL _ _ _ ->
+      let bs, body = collect_binders Tm_ExistsSL? t in
+      parens (doc_of_string "exists*" ^/^ (separate (doc_of_string " ") (T.map binder_to_doc bs))
               ^^ doc_of_string "."
               ^/^ term_to_doc body)
 
-    | Tm_ForallSL u b body ->
-      parens (doc_of_string "forall" ^/^ parens (doc_of_string (T.unseal b.binder_ppname.name)
-                                                  ^^ doc_of_string ":"
-                                                  ^^ term_to_doc b.binder_ty)
+    | Tm_ForallSL _ _ _ ->
+      let bs, body = collect_binders Tm_ForallSL? t in
+      parens (doc_of_string "forall*" ^/^ (separate (doc_of_string " ") (T.map binder_to_doc bs))
               ^^ doc_of_string "."
               ^/^ term_to_doc body)
 
     | Tm_VProp -> doc_of_string "vprop"
     | Tm_Inames -> doc_of_string "inames"
     | Tm_EmpInames -> doc_of_string "emp_inames"
+    | Tm_AddInv i is ->
+      doc_of_string "add_inv" ^/^ parens (term_to_doc i ^^ doc_of_string "," ^^ term_to_doc is)
+    | Tm_Inv i ->
+      doc_of_string "inv" ^/^ parens (term_to_doc i)
     | Tm_Unknown -> doc_of_string "_"
     | Tm_FStar t ->
       // Should call term_to_doc when available
@@ -126,6 +173,17 @@ let ctag_to_string = function
   | STT_Atomic -> "STAtomic"
   | STT_Ghost -> "STGhost"
 
+let observability_to_string =
+  function
+  | Observable -> "Observable"
+  | Unobservable -> "Unobservable"
+  | Neutral -> "Neutral"
+
+let effect_annot_to_string = function
+  | EffectAnnotSTT -> "stt"
+  | EffectAnnotGhost -> "stt_ghost"
+  | EffectAnnotAtomic { opens } -> sprintf "stt_atomic %s" (term_to_string opens)
+  
 let comp_to_string (c:comp)
   : T.Tac string
   = match c with
@@ -138,16 +196,16 @@ let comp_to_string (c:comp)
               (term_to_string s.pre)
               (term_to_string s.post)
 
-    | C_STAtomic inames s ->
-      sprintf "stt_atomic %s %s (requires\n%s) (ensures\n%s)"
-              (term_to_string inames)
+    | C_STAtomic inames obs s ->
+      sprintf "stt_atomic %s #%s %s (requires\n%s) (ensures\n%s)"
               (term_to_string s.res)
+              (observability_to_string obs)
+              (term_to_string inames)
               (term_to_string s.pre)
               (term_to_string s.post)
 
-    | C_STGhost inames s ->
-      sprintf "stt_atomic %s %s (requires\n%s) (ensures\n%s)"
-              (term_to_string inames)
+    | C_STGhost s ->
+      sprintf "stt_ghost %s (requires\n%s) (ensures\n%s)"
               (term_to_string s.res)
               (term_to_string s.pre)
               (term_to_string s.post)
@@ -165,12 +223,8 @@ let term_list_to_string (sep:string) (t:list term)
 let rec st_term_to_string' (level:string) (t:st_term)
   : T.Tac string
   = match t.term with
-    | Tm_Return { ctag; insert_eq; term } ->
-      sprintf "return_%s%s %s"
-        (match ctag with
-         | STT -> "stt"
-         | STT_Atomic -> "stt_atomic"
-         | STT_Ghost -> "stt_ghost")
+    | Tm_Return { insert_eq; term } ->
+      sprintf "return_%s %s"
         (if insert_eq then "" else "_noeq")
         (term_to_string term)
       
@@ -203,12 +257,13 @@ let rec st_term_to_string' (level:string) (t:st_term)
         (st_term_to_string' level body)
   
     | Tm_Abs { b; q; ascription=c; body } ->
-      sprintf "(fun (%s%s)\n%s\n {\n%s%s\n}"
+      sprintf "(fun (%s%s)\n%s\n ({\n%s%s\n}%s)"
               (qual_to_string q)
               (binder_to_string b)
-              (comp_to_string c)
+              (match c.annotated with | None -> "" | Some c -> comp_to_string c)
               (indent level)
               (st_term_to_string' (indent level) body)
+              (match c.elaborated with | None -> "" | Some c -> " <: " ^ comp_to_string c)
 
     | Tm_If { b; then_; else_ } ->
       sprintf "if (%s)\n%s{\n%s%s\n%s}\n%selse\n%s{\n%s%s\n%s}"
@@ -275,6 +330,14 @@ let rec st_term_to_string' (level:string) (t:st_term)
         level
         (st_term_to_string' level body)
 
+    | Tm_WithLocalArray { binder; initializer; length; body } ->
+      sprintf "let mut %s = [| %s; %s |]\n%s%s"
+        (binder_to_string binder)
+        (term_to_string initializer)
+        (term_to_string length)
+        level
+        (st_term_to_string' level body)
+
     | Tm_Admit { ctag; u; typ; post } ->
       sprintf "%s<%s> %s%s"
         (match ctag with
@@ -286,6 +349,8 @@ let rec st_term_to_string' (level:string) (t:st_term)
         (match post with
          | None -> ""
          | Some post -> sprintf " %s" (term_to_string post))
+
+    | Tm_Unreachable -> "unreachable ()"
 
     | Tm_ProofHintWithBinders { binders; hint_type; t} ->
       let with_prefix =
@@ -313,9 +378,22 @@ let rec st_term_to_string' (level:string) (t:st_term)
             | Some t -> sprintf " in %s" (term_to_string t))
         | REWRITE { t1; t2 } ->
           sprintf "rewrite %s as %s" (term_to_string t1) (term_to_string t2), ""
+        | WILD -> "_", ""
+        | SHOW_PROOF_STATE _ -> "show_proof_state", ""
       in
       sprintf "%s %s %s; %s" with_prefix ht p
         (st_term_to_string' level t)
+        
+    | Tm_WithInv { name; body; returns_inv } ->
+      sprintf "with_inv %s %s %s"
+        (term_to_string name)
+        (st_term_to_string' level body)
+        (match returns_inv with
+         | None -> ""
+         | Some (b, t) ->
+          sprintf "\nreturns %s\nensures %s"
+            (binder_to_string b)
+            (term_to_string t))
 
 and branches_to_string brs : T.Tac _ =
   match brs with
@@ -324,7 +402,26 @@ and branches_to_string brs : T.Tac _ =
 
 and branch_to_string br : T.Tac _ =
   let (pat, e) = br in
-  st_term_to_string' "" e
+  Printf.sprintf "{ %s -> %s }"
+    (pattern_to_string pat)
+    (st_term_to_string' "" e)
+
+and pattern_to_string (p:pattern) : T.Tac string = 
+  match p with
+  | Pat_Cons fv pats ->
+    Printf.sprintf "(%s %s)"
+      (String.concat "." fv.fv_name) 
+      (String.concat " " (T.map (fun (p, _) -> pattern_to_string p) pats))
+  | Pat_Constant c ->
+    "<constant>"
+  | Pat_Var x _ ->
+    T.unseal x
+  | Pat_Dot_Term None ->
+    ""
+  | Pat_Dot_Term (Some t) ->
+    Printf.sprintf "(.??)" //%s)" (term_to_string t)
+    
+
 
 let st_term_to_string t = st_term_to_string' "" t
 
@@ -340,6 +437,8 @@ let tag_of_term (t:term) =
   | Tm_EmpInames -> "Tm_EmpInames"
   | Tm_Unknown -> "Tm_Unknown"
   | Tm_FStar _ -> "Tm_FStar"
+  | Tm_AddInv _ _ -> "Tm_AddInv"
+  | Tm_Inv _ -> "Tm_Inv"
 
 let tag_of_st_term (t:st_term) =
   match t.term with
@@ -356,18 +455,21 @@ let tag_of_st_term (t:st_term) =
   | Tm_While _ -> "Tm_While"
   | Tm_Par _ -> "Tm_Par"
   | Tm_WithLocal _ -> "Tm_WithLocal"
+  | Tm_WithLocalArray _ -> "Tm_WithLocalArray"
   | Tm_Rewrite _ -> "Tm_Rewrite"
   | Tm_Admit _ -> "Tm_Admit"
+  | Tm_Unreachable -> "Tm_Unreachable"
   | Tm_ProofHintWithBinders _ -> "Tm_ProofHintWithBinders"
+  | Tm_WithInv _ -> "Tm_WithInv"
 
 let tag_of_comp (c:comp) : T.Tac string =
   match c with
   | C_Tot _ -> "Total"
   | C_ST _ -> "ST"
-  | C_STAtomic i _ ->
-    Printf.sprintf "Atomic %s" (term_to_string i)
-  | C_STGhost i _ ->
-    Printf.sprintf "Ghost %s" (term_to_string i)
+  | C_STAtomic i obs _ ->
+    Printf.sprintf "%s %s" (observability_to_string obs) (term_to_string i)
+  | C_STGhost _ ->
+    "Ghost" 
     
 let rec print_st_head (t:st_term)
   : Tot string (decreases t) =
@@ -380,14 +482,17 @@ let rec print_st_head (t:st_term)
   | Tm_Match _ -> "Match"
   | Tm_While _ -> "While"
   | Tm_Admit _ -> "Admit"
+  | Tm_Unreachable -> "Unreachable"
   | Tm_Par _ -> "Par"
   | Tm_Rewrite _ -> "Rewrite"
   | Tm_WithLocal _ -> "WithLocal"
+  | Tm_WithLocalArray _ -> "WithLocalArray"
   | Tm_STApp { head = p } -> print_head p
   | Tm_IntroPure _ -> "IntroPure"
   | Tm_IntroExists _ -> "IntroExists"
   | Tm_ElimExists _ -> "ElimExists"  
   | Tm_ProofHintWithBinders _ -> "AssertWithBinders"
+  | Tm_WithInv _ -> "WithInv"
 and print_head (t:term) =
   match t with
   // | Tm_FVar fv
@@ -406,11 +511,22 @@ let rec print_skel (t:st_term) =
   | Tm_Match _ -> "Match"
   | Tm_While _ -> "While"
   | Tm_Admit _ -> "Admit"
+  | Tm_Unreachable -> "Unreachable"
   | Tm_Par _ -> "Par"
   | Tm_Rewrite _ -> "Rewrite"
   | Tm_WithLocal _ -> "WithLocal"
+  | Tm_WithLocalArray _ -> "WithLocalArray"
   | Tm_STApp { head = p } -> print_head p
   | Tm_IntroPure _ -> "IntroPure"
   | Tm_IntroExists _ -> "IntroExists"
   | Tm_ElimExists _ -> "ElimExists"
   | Tm_ProofHintWithBinders _ -> "AssertWithBinders"
+  | Tm_WithInv _ -> "WithInv"
+
+let decl_to_string (d:decl) : T.Tac string =
+  match d.d with
+  | FnDecl {id; isrec; bs; body} ->
+    "fn " ^ (if isrec then "rec " else "") ^
+     fst (R.inspect_ident id) ^ " " ^ 
+     String.concat " " (T.map (fun (_, b, _) -> binder_to_string b) bs) ^
+      " { " ^ st_term_to_string body ^ "}"

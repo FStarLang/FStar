@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Soundness
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
@@ -19,12 +35,14 @@ module While = Pulse.Soundness.While
 module Admit = Pulse.Soundness.Admit
 module Par = Pulse.Soundness.Par
 module WithLocal = Pulse.Soundness.WithLocal
+module WithLocalArray = Pulse.Soundness.WithLocalArray
 module Rewrite = Pulse.Soundness.Rewrite
 module Comp = Pulse.Soundness.Comp
 module LN = Pulse.Typing.LN
 module FV = Pulse.Typing.FV
 module STT = Pulse.Soundness.STT
-
+module Sub = Pulse.Soundness.Sub
+module RU = Pulse.RuntimeUtils
 module Typing = Pulse.Typing
 module EPure = Pulse.Elaborate.Pure
 module WT= Pulse.Steel.Wrapper.Typing
@@ -44,6 +62,7 @@ let tabs_t (d:'a) =
             (mk_abs_with_name ppname.name (elab_term ty) (elab_qual q) (RT.close_term (elab_st_typing body_typing) x))
             (elab_term (tm_arrow {binder_ty=ty;binder_ppname=ppname} q (close_comp c x))))
 
+#push-options "--z3rlimit_factor 4 --split_queries no"
 let lift_soundness
   (g:stt_env)
   (t:st_term)
@@ -56,13 +75,23 @@ let lift_soundness
   LN.st_typing_ln e_typing;
   match lc with
   | Lift_STAtomic_ST _ _ ->
-    Lift.elab_lift_stt_atomic_typing g
+    Lift.elab_lift_stt_atomic_st_typing g
       c1 c2 _ (soundness _ _ _ e_typing) lc
-  | Lift_STGhost_STAtomic _ _ w ->
+
+  | Lift_Ghost_Neutral _ _ w ->
     let (| reveal_a, reveal_a_typing |) = w in
-    Lift.elab_lift_stt_ghost_typing g
+    Lift.elab_lift_ghost_neutral_typing g
       c1 c2 _ (soundness _ _ _ e_typing) lc
       _ (tot_typing_soundness reveal_a_typing)
+
+  | Lift_Neutral_Ghost _ _ ->
+    Lift.elab_lift_neutral_ghost_typing g
+      c1 c2 _ (soundness _ _ _ e_typing) lc
+
+  | Lift_Observability _ _ _ ->
+    Lift.elab_lift_observability_typing g
+      c1 c2 _ (soundness _ _ _ e_typing) lc
+#pop-options
 
 let frame_soundness
   (g:stt_env)
@@ -179,7 +208,7 @@ let stghostapp_soundness
 
   // TODO: substitution lemma in RT for non_informative judgment
   let d_non_info
-    : RT.non_informative (elab_env g) (elab_comp (open_comp_with res arg)) = magic () in
+    : RT.non_informative (elab_env g) (elab_comp (open_comp_with res arg)) = RU.magic () in
 
   RT.T_Sub _ _ _ _ d (RT.Relc_ghost_total _ _ d_non_info)
 
@@ -194,8 +223,16 @@ let stequiv_soundness
   let T_Equiv _ e c c' e_typing equiv = d in
   LN.st_typing_ln d;
   LN.st_typing_ln e_typing;
-  let r_e_typing = soundness _ _ _ e_typing in 
-  STEquiv.st_equiv_soundness _ _ _ equiv _ r_e_typing
+  let r_e_typing = soundness _ _ _ e_typing in
+  match equiv with
+  | ST_TotEquiv _ t1 t2 _ _ eq ->
+    let r_e_typing : RT.tot_typing (elab_env g) (elab_st_typing e_typing) (elab_term t1) = 
+        r_e_typing
+    in
+    let eq = RT.Rel_equiv _ _ _ RT.R_Sub eq in
+    RT.T_Sub _ _ _ _ r_e_typing (RT.Relc_typ _ _ _ _ _ eq)
+  | _ ->  
+    STEquiv.st_equiv_soundness _ _ _ equiv _ r_e_typing
 
 
 #push-options "--query_stats --fuel 2 --ifuel 2 --z3rlimit_factor 30"
@@ -227,21 +264,6 @@ let bind_soundness
          Bind.elab_bind_typing g _ _ _ x _ r1_typing _ r2_typing bc 
                                (tot_typing_soundness t2_typing)
                                (mk_t_abs_tot _ ppname_default t2_typing post2_typing)
-                               
-    | Bind_comp_ghost_l _ _ _ _ (| reveal_a, reveal_a_typing |) t2_typing y post2_typing ->
-         Bind.elab_bind_ghost_l_typing g _ _ _ x _ r1_typing
-           _ r2_typing bc
-           (tot_typing_soundness t2_typing)
-           (mk_t_abs_tot _ ppname_default t2_typing post2_typing)
-           (elab_term reveal_a)
-           (tot_typing_soundness reveal_a_typing)
-    | Bind_comp_ghost_r _ _ _ _ (| reveal_b, reveal_b_typing |) t2_typing y post2_typing ->
-         Bind.elab_bind_ghost_r_typing g _ _ _ x _ r1_typing
-           _ r2_typing bc
-           (tot_typing_soundness t2_typing)
-           (mk_t_abs_tot _ ppname_default t2_typing post2_typing)
-           (elab_term reveal_b)
-           (tot_typing_soundness reveal_b_typing)
 #pop-options
 
 #push-options "--z3rlimit_factor 4 --fuel 4 --ifuel 2"
@@ -260,7 +282,7 @@ let if_soundness
                         (elab_st_typing d)
                         (elab_comp c)) =
 
-  let T_If _ b e1 e2  _ u_c hyp b_typing e1_typing e2_typing (E c_typing) = d in
+  let T_If _ b e1 e2  _ hyp b_typing e1_typing e2_typing (E c_typing) = d in
   let rb_typing : RT.tot_typing (elab_env g)
                                 (elab_term b)
                                 RT.bool_ty =
@@ -341,6 +363,9 @@ let rec soundness (g:stt_env)
     | T_Bind _ _e1 _e2 _c1 _c2 _b _x _c _e1_typing _t_typing _e2_typing _bc ->
       bind_soundness d soundness mk_t_abs
 
+    | T_BindFn _ _ _ _ _ _ _ _ _ _ _ _ ->
+      Bind.bind_fn_typing d soundness
+
     | T_TotBind _ _ _ _ _ _ _ _ _ ->
       Bind.tot_bind_typing d soundness
 
@@ -351,15 +376,15 @@ let rec soundness (g:stt_env)
       stequiv_soundness _ _ _ d soundness
 
     | T_Return _ _ _ _ _ _ _ _ _ _ _ ->
-      Return.return_soundess d
+      Return.return_soundness d
 
-    | T_If _ _ _ _ _ _ _ _ _ _ _->
+    | T_If _ _ _ _ _ _ _ _ _ _->
       let ct_soundness g c uc (d':_ {d' << d}) =
         Comp.comp_typing_soundness g c uc d'
       in
       if_soundness _ _ _ d soundness ct_soundness
 
-    | T_Match _ _ _ _ _ _ _ _ _ _->
+    | T_Match _ _ _ _ _ _ _ _ _ _ _ ->
       let ct_soundness g c uc (d':_ {d' << d}) =
         Comp.comp_typing_soundness g c uc d'
       in
@@ -380,13 +405,22 @@ let rec soundness (g:stt_env)
     | T_Par _ _ _ _ _ _ _ _ _ _ ->
       Par.par_soundness d soundness
 
-    | T_WithLocal _ _ _ _ _ _ _ _ _ _ ->
+    | T_WithLocal _ _ _ _ _ _ _ _ _ _ _ ->
       WithLocal.withlocal_soundness d soundness
+
+    | T_WithLocalArray _ _ _ _ _ _ _ _ _ _ _ _ _ ->
+      WithLocalArray.withlocalarray_soundness d soundness
 
     | T_Rewrite _ _ _ _ _ ->
       Rewrite.rewrite_soundness d
 
     | T_Admit _ _ _ _ -> Admit.admit_soundess d
+
+    | T_Unreachable _ _ _ _ _ -> RU.magic()
+
+    | T_Sub _ _ _ _ _ _ -> Sub.sub_soundness d soundness
+
+    | T_WithInv _ _ _ _ _ _ _ _ _ -> RU.magic() // IOU
 #pop-options
 
 let soundness_lemma

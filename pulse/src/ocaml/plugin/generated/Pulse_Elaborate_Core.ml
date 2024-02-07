@@ -21,19 +21,20 @@ let (elab_frame :
                FStar_Reflection_V2_Data.Q_Explicit post)
             (Pulse_Elaborate_Pure.elab_term frame) e
         else
-          (let opened =
-             Pulse_Elaborate_Pure.elab_term (Pulse_Syntax_Base.comp_inames c) in
-           if Pulse_Syntax_Base.uu___is_C_STAtomic c
-           then
+          if Pulse_Syntax_Base.uu___is_C_STAtomic c
+          then
+            (let opened =
+               Pulse_Elaborate_Pure.elab_term
+                 (Pulse_Syntax_Base.comp_inames c) in
              Pulse_Reflection_Util.mk_frame_stt_atomic u ty opened pre
                (Pulse_Reflection_Util.mk_abs ty
                   FStar_Reflection_V2_Data.Q_Explicit post)
-               (Pulse_Elaborate_Pure.elab_term frame) e
-           else
-             Pulse_Reflection_Util.mk_frame_stt_ghost u ty opened pre
-               (Pulse_Reflection_Util.mk_abs ty
-                  FStar_Reflection_V2_Data.Q_Explicit post)
                (Pulse_Elaborate_Pure.elab_term frame) e)
+          else
+            Pulse_Reflection_Util.mk_frame_stt_ghost u ty pre
+              (Pulse_Reflection_Util.mk_abs ty
+                 FStar_Reflection_V2_Data.Q_Explicit post)
+              (Pulse_Elaborate_Pure.elab_term frame) e
 let (elab_sub :
   Pulse_Syntax_Base.comp_st ->
     Pulse_Syntax_Base.comp_st ->
@@ -58,16 +59,16 @@ let (elab_sub :
         if Pulse_Syntax_Base.uu___is_C_ST c1
         then Pulse_Reflection_Util.mk_sub_stt u ty pre1 pre2 post1 post2 e
         else
-          (let opened =
-             Pulse_Elaborate_Pure.elab_term
-               (Pulse_Syntax_Base.comp_inames c1) in
-           if Pulse_Syntax_Base.uu___is_C_STAtomic c1
-           then
+          if Pulse_Syntax_Base.uu___is_C_STAtomic c1
+          then
+            (let opened =
+               Pulse_Elaborate_Pure.elab_term
+                 (Pulse_Syntax_Base.comp_inames c1) in
              Pulse_Reflection_Util.mk_sub_stt_atomic u ty opened pre1 pre2
-               post1 post2 e
-           else
-             Pulse_Reflection_Util.mk_sub_stt_ghost u ty opened pre1 pre2
                post1 post2 e)
+          else
+            Pulse_Reflection_Util.mk_sub_stt_ghost u ty pre1 pre2 post1 post2
+              e
 let (elab_bind :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.var ->
@@ -92,50 +93,11 @@ let (elab_bind :
                   let t2 =
                     Pulse_Elaborate_Pure.elab_term
                       (Pulse_Syntax_Base.comp_res c2) in
-                  match bc with
-                  | Pulse_Typing.Bind_comp
-                      (uu___, uu___1, uu___2, uu___3, uu___4, uu___5, uu___6)
-                      ->
-                      if Pulse_Syntax_Base.uu___is_C_ST c1
-                      then
-                        Pulse_Reflection_Util.mk_bind_stt
-                          (Pulse_Syntax_Base.comp_u c1)
-                          (Pulse_Syntax_Base.comp_u c2) t1 t2
-                          (Pulse_Elaborate_Pure.elab_term
-                             (Pulse_Syntax_Base.comp_pre c1))
-                          (Pulse_Reflection_Util.mk_abs t1
-                             FStar_Reflection_V2_Data.Q_Explicit
-                             (Pulse_Elaborate_Pure.elab_term
-                                (Pulse_Syntax_Base.comp_post c1)))
-                          (Pulse_Reflection_Util.mk_abs t2
-                             FStar_Reflection_V2_Data.Q_Explicit
-                             (Pulse_Elaborate_Pure.elab_term
-                                (Pulse_Syntax_Base.comp_post c2))) e1 e2
-                      else
-                        Pulse_Reflection_Util.mk_bind_ghost
-                          (Pulse_Syntax_Base.comp_u c1)
-                          (Pulse_Syntax_Base.comp_u c2) t1 t2
-                          (Pulse_Elaborate_Pure.elab_term
-                             (Pulse_Syntax_Base.comp_inames c1))
-                          (Pulse_Elaborate_Pure.elab_term
-                             (Pulse_Syntax_Base.comp_pre c1))
-                          (Pulse_Reflection_Util.mk_abs t1
-                             FStar_Reflection_V2_Data.Q_Explicit
-                             (Pulse_Elaborate_Pure.elab_term
-                                (Pulse_Syntax_Base.comp_post c1)))
-                          (Pulse_Reflection_Util.mk_abs t2
-                             FStar_Reflection_V2_Data.Q_Explicit
-                             (Pulse_Elaborate_Pure.elab_term
-                                (Pulse_Syntax_Base.comp_post c2))) e1 e2
-                  | Pulse_Typing.Bind_comp_ghost_l
-                      (uu___, uu___1, uu___2, uu___3, Prims.Mkdtuple2
-                       (reveal_a, reveal_a_typing), uu___4, uu___5, uu___6)
-                      ->
-                      Pulse_Reflection_Util.mk_bind_ghost_atomic
+                  match c1 with
+                  | Pulse_Syntax_Base.C_ST uu___ ->
+                      Pulse_Reflection_Util.mk_bind_stt
                         (Pulse_Syntax_Base.comp_u c1)
                         (Pulse_Syntax_Base.comp_u c2) t1 t2
-                        (Pulse_Elaborate_Pure.elab_term
-                           (Pulse_Syntax_Base.comp_inames c1))
                         (Pulse_Elaborate_Pure.elab_term
                            (Pulse_Syntax_Base.comp_pre c1))
                         (Pulse_Reflection_Util.mk_abs t1
@@ -146,16 +108,10 @@ let (elab_bind :
                            FStar_Reflection_V2_Data.Q_Explicit
                            (Pulse_Elaborate_Pure.elab_term
                               (Pulse_Syntax_Base.comp_post c2))) e1 e2
-                        (Pulse_Elaborate_Pure.elab_term reveal_a)
-                  | Pulse_Typing.Bind_comp_ghost_r
-                      (uu___, uu___1, uu___2, uu___3, Prims.Mkdtuple2
-                       (reveal_b, reveal_b_typing), uu___4, uu___5, uu___6)
-                      ->
-                      Pulse_Reflection_Util.mk_bind_atomic_ghost
+                  | Pulse_Syntax_Base.C_STGhost uu___ ->
+                      Pulse_Reflection_Util.mk_bind_ghost
                         (Pulse_Syntax_Base.comp_u c1)
                         (Pulse_Syntax_Base.comp_u c2) t1 t2
-                        (Pulse_Elaborate_Pure.elab_term
-                           (Pulse_Syntax_Base.comp_inames c1))
                         (Pulse_Elaborate_Pure.elab_term
                            (Pulse_Syntax_Base.comp_pre c1))
                         (Pulse_Reflection_Util.mk_abs t1
@@ -166,7 +122,28 @@ let (elab_bind :
                            FStar_Reflection_V2_Data.Q_Explicit
                            (Pulse_Elaborate_Pure.elab_term
                               (Pulse_Syntax_Base.comp_post c2))) e1 e2
-                        (Pulse_Elaborate_Pure.elab_term reveal_b)
+                  | Pulse_Syntax_Base.C_STAtomic (inames, obs1, uu___) ->
+                      let uu___1 = c2 in
+                      (match uu___1 with
+                       | Pulse_Syntax_Base.C_STAtomic (uu___2, obs2, uu___3)
+                           ->
+                           Pulse_Reflection_Util.mk_bind_atomic
+                             (Pulse_Syntax_Base.comp_u c1)
+                             (Pulse_Syntax_Base.comp_u c2)
+                             (Pulse_Elaborate_Pure.elab_observability obs1)
+                             (Pulse_Elaborate_Pure.elab_observability obs2)
+                             (Pulse_Elaborate_Pure.elab_term
+                                (Pulse_Syntax_Base.comp_inames c1)) t1 t2
+                             (Pulse_Elaborate_Pure.elab_term
+                                (Pulse_Syntax_Base.comp_pre c1))
+                             (Pulse_Reflection_Util.mk_abs t1
+                                FStar_Reflection_V2_Data.Q_Explicit
+                                (Pulse_Elaborate_Pure.elab_term
+                                   (Pulse_Syntax_Base.comp_post c1)))
+                             (Pulse_Reflection_Util.mk_abs t2
+                                FStar_Reflection_V2_Data.Q_Explicit
+                                (Pulse_Elaborate_Pure.elab_term
+                                   (Pulse_Syntax_Base.comp_post c2))) e1 e2)
 let (elab_lift :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.comp ->
@@ -192,16 +169,31 @@ let (elab_lift :
                      FStar_Reflection_V2_Data.Q_Explicit
                      (Pulse_Elaborate_Pure.elab_term
                         (Pulse_Syntax_Base.comp_post c1))) e
-            | Pulse_Typing.Lift_STGhost_STAtomic
+            | Pulse_Typing.Lift_Observability (uu___, c, o2) ->
+                let t =
+                  Pulse_Elaborate_Pure.elab_term
+                    (Pulse_Syntax_Base.comp_res c1) in
+                Pulse_Reflection_Util.mk_lift_observability
+                  (Pulse_Syntax_Base.comp_u c1)
+                  (Pulse_Elaborate_Pure.elab_observability
+                     (Pulse_Syntax_Base.__proj__C_STAtomic__item__obs c))
+                  (Pulse_Elaborate_Pure.elab_observability o2)
+                  (Pulse_Elaborate_Pure.elab_term
+                     (Pulse_Syntax_Base.comp_inames c1)) t
+                  (Pulse_Elaborate_Pure.elab_term
+                     (Pulse_Syntax_Base.comp_pre c1))
+                  (Pulse_Reflection_Util.mk_abs t
+                     FStar_Reflection_V2_Data.Q_Explicit
+                     (Pulse_Elaborate_Pure.elab_term
+                        (Pulse_Syntax_Base.comp_post c1))) e
+            | Pulse_Typing.Lift_Ghost_Neutral
                 (uu___, uu___1, Prims.Mkdtuple2 (reveal_a, reveal_a_typing))
                 ->
                 let t =
                   Pulse_Elaborate_Pure.elab_term
                     (Pulse_Syntax_Base.comp_res c1) in
-                Pulse_Reflection_Util.mk_lift_ghost_atomic
+                Pulse_Reflection_Util.mk_lift_ghost_neutral
                   (Pulse_Syntax_Base.comp_u c1) t
-                  (Pulse_Elaborate_Pure.elab_term
-                     (Pulse_Syntax_Base.comp_inames c1))
                   (Pulse_Elaborate_Pure.elab_term
                      (Pulse_Syntax_Base.comp_pre c1))
                   (Pulse_Reflection_Util.mk_abs t
@@ -209,6 +201,18 @@ let (elab_lift :
                      (Pulse_Elaborate_Pure.elab_term
                         (Pulse_Syntax_Base.comp_post c1))) e
                   (Pulse_Elaborate_Pure.elab_term reveal_a)
+            | Pulse_Typing.Lift_Neutral_Ghost (uu___, c) ->
+                let t =
+                  Pulse_Elaborate_Pure.elab_term
+                    (Pulse_Syntax_Base.comp_res c1) in
+                Pulse_Reflection_Util.mk_lift_neutral_ghost
+                  (Pulse_Syntax_Base.comp_u c1) t
+                  (Pulse_Elaborate_Pure.elab_term
+                     (Pulse_Syntax_Base.comp_pre c1))
+                  (Pulse_Reflection_Util.mk_abs t
+                     FStar_Reflection_V2_Data.Q_Explicit
+                     (Pulse_Elaborate_Pure.elab_term
+                        (Pulse_Syntax_Base.comp_post c1))) e
 let (intro_pure_tm : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.st_term) =
   fun p ->
     Pulse_Typing.wtag
@@ -228,6 +232,37 @@ let (intro_pure_tm : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.st_term) =
                    (FStar_Reflection_V2_Data.Tv_Const
                       FStar_Reflection_V2_Data.C_Unit)) FStar_Range.range_0)
          })
+let (simple_arr :
+  FStar_Reflection_Types.term ->
+    FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+  =
+  fun t1 ->
+    fun t2 ->
+      let b =
+        FStar_Reflection_V2_Builtins.pack_binder
+          {
+            FStar_Reflection_V2_Data.sort2 = t1;
+            FStar_Reflection_V2_Data.qual =
+              FStar_Reflection_V2_Data.Q_Explicit;
+            FStar_Reflection_V2_Data.attrs = [];
+            FStar_Reflection_V2_Data.ppname2 = (FStar_Sealed.seal "x")
+          } in
+      FStar_Reflection_V2_Builtins.pack_ln
+        (FStar_Reflection_V2_Data.Tv_Arrow
+           (b,
+             (FStar_Reflection_V2_Builtins.pack_comp
+                (FStar_Reflection_V2_Data.C_Total t2))))
+let (elab_st_sub :
+  Pulse_Typing_Env.env ->
+    Pulse_Syntax_Base.comp ->
+      Pulse_Syntax_Base.comp ->
+        (unit, unit, unit) Pulse_Typing.st_sub ->
+          (FStar_Reflection_Types.term,
+            (unit, unit, unit) FStar_Reflection_Typing.tot_typing)
+            Prims.dtuple2)
+  =
+  fun g ->
+    fun c1 -> fun c2 -> fun d_sub -> Pulse_RuntimeUtils.magic_s "elab_st_sub"
 let rec (elab_st_typing :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_term ->
@@ -316,6 +351,24 @@ let rec (elab_st_typing :
                    (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name
                    ty1 FStar_Reflection_V2_Data.Q_Explicit
                    (FStar_Reflection_Typing.close_term e21 x))
+          | Pulse_Typing.T_BindFn
+              (uu___, uu___1, uu___2, c1, c2, b, x, e1_typing, _u, t_typing,
+               e2_typing, c2_typing)
+              ->
+              let e1 = elab_st_typing uu___ uu___1 c1 e1_typing in
+              let e2 =
+                elab_st_typing
+                  (Pulse_Typing_Env.push_binding uu___ x
+                     Pulse_Syntax_Base.ppname_default
+                     (Pulse_Syntax_Base.comp_res c1))
+                  (Pulse_Syntax_Naming.open_st_term_nv uu___2
+                     ((b.Pulse_Syntax_Base.binder_ppname), x)) c2 e2_typing in
+              let ty1 =
+                Pulse_Elaborate_Pure.elab_term
+                  (Pulse_Syntax_Base.comp_res c1) in
+              FStar_Reflection_Typing.mk_let
+                FStar_Reflection_Typing.pp_name_default e1 ty1
+                (FStar_Reflection_Typing.close_term e2 x)
           | Pulse_Typing.T_TotBind
               (uu___, e1, e2, t1, uu___1, uu___2, x, uu___3, e2_typing) ->
               let re1 = Pulse_Elaborate_Pure.elab_term e1 in
@@ -348,27 +401,37 @@ let rec (elab_st_typing :
               (uu___, uu___1, c1, frame, _frame_typing, e_typing) ->
               let e = elab_st_typing uu___ uu___1 c1 e_typing in
               elab_frame c1 frame e
+          | Pulse_Typing.T_Equiv
+              (uu___, uu___1, c1, c2, e_typing, Pulse_Typing.ST_TotEquiv
+               (uu___2, uu___3, uu___4, uu___5, uu___6, uu___7))
+              -> let e = elab_st_typing uu___ uu___1 c1 e_typing in e
           | Pulse_Typing.T_Equiv (uu___, uu___1, c1, c2, e_typing, uu___2) ->
               let e = elab_st_typing uu___ uu___1 c1 e_typing in
               elab_sub c1 c2 e
+          | Pulse_Typing.T_Sub (uu___, uu___1, c1, c2, e_typing, d_sub) ->
+              let e = elab_st_typing uu___ uu___1 c1 e_typing in
+              let uu___2 = elab_st_sub uu___ c1 c2 d_sub in
+              (match uu___2 with
+               | Prims.Mkdtuple2 (coercion, uu___3) ->
+                   FStar_Reflection_V2_Derived.mk_e_app coercion [e])
           | Pulse_Typing.T_Lift (uu___, uu___1, c1, c2, e_typing, lc) ->
               let e = elab_st_typing uu___ uu___1 c1 e_typing in
               elab_lift uu___ c1 c2 lc e
           | Pulse_Typing.T_If
-              (uu___, b, uu___1, uu___2, uu___3, uu___4, uu___5, uu___6,
-               e1_typing, e2_typing, _c_typing)
+              (uu___, b, uu___1, uu___2, uu___3, uu___4, uu___5, e1_typing,
+               e2_typing, _c_typing)
               ->
               let rb = Pulse_Elaborate_Pure.elab_term b in
               let re1 =
                 elab_st_typing
-                  (Pulse_Typing_Env.push_binding uu___ uu___5
+                  (Pulse_Typing_Env.push_binding uu___ uu___4
                      Pulse_Syntax_Base.ppname_default
                      (Pulse_Typing.mk_eq2 Pulse_Syntax_Pure.u0
                         Pulse_Typing.tm_bool b Pulse_Typing.tm_true)) uu___1
                   uu___3 e1_typing in
               let re2 =
                 elab_st_typing
-                  (Pulse_Typing_Env.push_binding uu___ uu___5
+                  (Pulse_Typing_Env.push_binding uu___ uu___4
                      Pulse_Syntax_Base.ppname_default
                      (Pulse_Typing.mk_eq2 Pulse_Syntax_Pure.u0
                         Pulse_Typing.tm_bool b Pulse_Typing.tm_false)) uu___2
@@ -376,11 +439,11 @@ let rec (elab_st_typing :
               FStar_Reflection_Typing.mk_if rb re1 re2
           | Pulse_Typing.T_Match
               (uu___, uu___1, uu___2, sc, uu___3, uu___4, uu___5, uu___6,
-               brty, uu___7)
+               uu___7, brty, uu___8)
               ->
               let sc1 = Pulse_Elaborate_Pure.elab_term sc in
               let brs =
-                elab_branches uu___ uu___5 uu___1 uu___2 sc uu___6 brty in
+                elab_branches uu___ uu___5 uu___1 uu___2 sc uu___7 brty in
               FStar_Reflection_V2_Builtins.pack_ln
                 (FStar_Reflection_V2_Data.Tv_Match
                    (sc1, FStar_Pervasives_Native.None, brs))
@@ -468,8 +531,8 @@ let rec (elab_st_typing :
               let rq = Pulse_Elaborate_Pure.elab_term q in
               Pulse_Reflection_Util.mk_rewrite rp rq
           | Pulse_Typing.T_WithLocal
-              (uu___, init, uu___1, init_t, c1, x, uu___2, uu___3, uu___4,
-               body_typing)
+              (uu___, uu___1, init, uu___2, init_t, c1, x, uu___3, uu___4,
+               uu___5, body_typing)
               ->
               let rret_u = Pulse_Syntax_Base.comp_u c1 in
               let ra = Pulse_Elaborate_Pure.elab_term init_t in
@@ -490,7 +553,7 @@ let rec (elab_st_typing :
                   (Pulse_Typing_Env.push_binding uu___ x
                      Pulse_Syntax_Base.ppname_default
                      (Pulse_Typing.mk_ref init_t))
-                  (Pulse_Syntax_Naming.open_st_term_nv uu___1
+                  (Pulse_Syntax_Naming.open_st_term_nv uu___2
                      (Pulse_Syntax_Base.v_as_nv x))
                   (Pulse_Typing.comp_withlocal_body x init_t init c1)
                   body_typing in
@@ -501,6 +564,41 @@ let rec (elab_st_typing :
                   FStar_Reflection_V2_Data.Q_Explicit rbody1 in
               Pulse_Reflection_Util.mk_withlocal rret_u ra rinit rpre rret_t
                 rpost rbody2
+          | Pulse_Typing.T_WithLocalArray
+              (uu___, uu___1, init, len, uu___2, init_t, c1, x, uu___3,
+               uu___4, uu___5, uu___6, body_typing)
+              ->
+              let rret_u = Pulse_Syntax_Base.comp_u c1 in
+              let ra = Pulse_Elaborate_Pure.elab_term init_t in
+              let rinit = Pulse_Elaborate_Pure.elab_term init in
+              let rlen = Pulse_Elaborate_Pure.elab_term len in
+              let rret_t =
+                Pulse_Elaborate_Pure.elab_term
+                  (Pulse_Syntax_Base.comp_res c1) in
+              let rpre =
+                Pulse_Elaborate_Pure.elab_term
+                  (Pulse_Syntax_Base.comp_pre c1) in
+              let rpost =
+                Pulse_Reflection_Util.mk_abs rret_t
+                  FStar_Reflection_V2_Data.Q_Explicit
+                  (Pulse_Elaborate_Pure.elab_term
+                     (Pulse_Syntax_Base.comp_post c1)) in
+              let rbody =
+                elab_st_typing
+                  (Pulse_Typing_Env.push_binding uu___ x
+                     Pulse_Syntax_Base.ppname_default
+                     (Pulse_Typing.mk_array init_t))
+                  (Pulse_Syntax_Naming.open_st_term_nv uu___2
+                     (Pulse_Syntax_Base.v_as_nv x))
+                  (Pulse_Typing.comp_withlocal_array_body x init_t init len
+                     c1) body_typing in
+              let rbody1 = FStar_Reflection_Typing.close_term rbody x in
+              let rbody2 =
+                Pulse_Reflection_Util.mk_abs
+                  (Pulse_Reflection_Util.mk_array ra)
+                  FStar_Reflection_V2_Data.Q_Explicit rbody1 in
+              Pulse_Reflection_Util.mk_withlocalarray rret_u ra rinit rlen
+                rpre rret_t rpost rbody2
           | Pulse_Typing.T_Admit
               (uu___,
                { Pulse_Syntax_Base.u = u; Pulse_Syntax_Base.res = res;
@@ -524,6 +622,20 @@ let rec (elab_st_typing :
                | Pulse_Syntax_Base.STT_Ghost ->
                    Pulse_Reflection_Util.mk_stt_ghost_admit ru rres rpre
                      rpost1)
+          | Pulse_Typing.T_Unreachable
+              (uu___, uu___1, uu___2, uu___3, uu___4) ->
+              FStar_Reflection_V2_Builtins.pack_ln
+                (FStar_Reflection_V2_Data.Tv_Const
+                   (FStar_Reflection_V2_Data.C_String
+                      "IOU: elab_st_typing of T_Unreachable"))
+          | Pulse_Typing.T_WithInv
+              (uu___, uu___1, uu___2, uu___3, uu___4, uu___5, uu___6, uu___7,
+               uu___8)
+              ->
+              FStar_Reflection_V2_Builtins.pack_ln
+                (FStar_Reflection_V2_Data.Tv_Const
+                   (FStar_Reflection_V2_Data.C_String
+                      "IOU: elab_st_typing of T_WithInv"))
 and (elab_br :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.comp_st ->

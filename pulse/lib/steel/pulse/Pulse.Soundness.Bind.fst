@@ -1,8 +1,25 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Soundness.Bind
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
 module L = FStar.List.Tot
 module T = FStar.Tactics.V2
+module RU = Pulse.RuntimeUtils
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Typing
@@ -123,7 +140,7 @@ let elab_bind_typing (g:stt_env)
     assume (RT.lookup_fvar_uinst rg bind_fv [u1; u2] == Some (bind_type u1 u2));
     let head_typing : RT.tot_typing _ _ (bind_type u1 u2) = RT.T_UInst rg bind_fv [u1;u2] in
     let (| _, c1_typing |) = RT.type_correctness _ _ _ r1_typing in
-    let t1_typing, pre_typing, post_typing = inversion_of_stt_typing _ _ _ c1_typing in
+    let t1_typing, pre_typing, post_typing = inversion_of_stt_typing _ _ c1_typing in
     let t1 = (elab_term (comp_res c1)) in
     let t2 = (elab_term (comp_res c2)) in
     let t1_typing : RT.tot_typing rg t1 (RT.tm_type u1) = t1_typing in
@@ -171,14 +188,6 @@ let elab_bind_typing (g:stt_env)
     in
     d
 #pop-options
-
-let elab_bind_ghost_l_typing g c1 c2 c x r1 r1_typing r2 r2_typing bc t2_typing post2_typing
-  reveal_a reveal_a_typing =
-  admit ()
-
-let elab_bind_ghost_r_typing g c1 c2 c x r1 r1_typing r2 r2_typing bc t2_typing post2_typing
-  reveal_b reveal_b_typing =
-  admit ()
 
 let tot_bind_typing #g #t #c d soundness =
   let T_TotBind _ e1 e2 t1 c2 b x e1_typing e2_typing = d in
@@ -274,6 +283,50 @@ let ghost_bind_typing #g #t #c d soundness =
 
   // substitution lemma using d_non_info and the calc proof above
   let d_non_info
-    : RT.non_informative (elab_env g) (elab_comp c) = magic () in
+    : RT.non_informative (elab_env g) (elab_comp c) = RU.magic () in
 
   RT.T_Sub _ _ _ _ d (RT.Relc_ghost_total _ _ d_non_info)
+
+#push-options "--query_stats --z3rlimit_factor 4 --split_queries no"
+
+assume
+val open_close_inverse_t (e:R.term { RT.ln e }) (x:var) (t:R.term)
+  : Lemma (RT.open_with (RT.close_term e x) t == e)
+
+let bind_fn_typing #g #t #c d soundness =
+  let T_BindFn _ e1 e2 c1 c2 b x e1_typing u t1_typing e2_typing c2_typing = d in
+  let t1 = comp_res c1 in
+  let g_x = push_binding g x ppname_default t1 in
+
+  let re1 = elab_st_typing e1_typing in
+  let rt1 = elab_term t1 in
+  let re2 = elab_st_typing e2_typing in
+
+  let re1_typing : RT.tot_typing (elab_env g) re1 rt1 =
+    soundness g e1 c1 e1_typing in
+  
+  let re2_typing : RT.tot_typing (elab_env g_x) re2 (elab_comp c2) =
+    soundness g_x (open_st_term_nv e2 (v_as_nv x)) c2 e2_typing in
+
+  RT.well_typed_terms_are_ln _ _ _ re2_typing;
+  calc (==) {
+    RT.open_term (RT.close_term re2 x) x;
+       (==) { RT.open_term_spec (RT.close_term re2 x) x }
+    RT.subst_term (RT.close_term re2 x) (RT.open_with_var x 0);
+       (==) { RT.close_term_spec re2 x }
+    RT.subst_term (RT.subst_term re2 [ RT.ND x 0 ]) (RT.open_with_var x 0);
+       (==) { RT.open_close_inverse' 0 re2 x }
+    re2;
+  };
+  let elab_t = RT.mk_let RT.pp_name_default re1 rt1 (RT.close_term re2 x) in
+  let res
+    : RT.tot_typing (elab_env g) elab_t (RT.open_with (RT.close_term (elab_comp c2) x) re1)
+    = RT.T_Let (elab_env g) x re1 rt1 (RT.close_term re2 x) (elab_comp c2) T.E_Total RT.pp_name_default re1_typing re2_typing in
+  Pulse.Typing.LN.comp_typing_ln c2_typing;
+  Pulse.Elaborate.elab_ln_comp c (-1);
+  assert (RT.ln (elab_comp c2));
+  open_close_inverse_t (elab_comp c2) x re1;
+  assert (RT.open_with (RT.close_term (elab_comp c2) x) re1 == elab_comp c2); 
+  res
+  
+

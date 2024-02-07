@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Syntax.Naming
 module RTB = FStar.Reflection.Typing.Builtins
 module RT = FStar.Reflection.Typing
@@ -40,6 +56,9 @@ let rec close_open_inverse' (t:term)
     | Tm_EmpInames
     | Tm_Unknown -> ()
     
+    | Tm_Inv p ->
+      close_open_inverse' p x i
+
     | Tm_Pure p ->
       close_open_inverse' p x i
 
@@ -55,6 +74,10 @@ let rec close_open_inverse' (t:term)
     | Tm_FStar t ->
       RT.close_open_inverse' i t x
 
+    | Tm_AddInv n is ->
+      close_open_inverse' n  x i;
+      close_open_inverse' is x i
+
 let close_open_inverse_comp' (c:comp)
                              (x:var { ~(x `Set.mem` freevars_comp c) } )
                              (i:index)
@@ -63,13 +86,13 @@ let close_open_inverse_comp' (c:comp)
     | C_Tot t ->
       close_open_inverse' t x i
 
-    | C_ST s ->
+    | C_ST s 
+    | C_STGhost s -> 
       close_open_inverse' s.res x i;
       close_open_inverse' s.pre x i;      
       close_open_inverse' s.post x (i + 1)
 
-    | C_STAtomic n s
-    | C_STGhost n s ->    
+    | C_STAtomic n _ s ->    
       close_open_inverse' n x i;    
       close_open_inverse' s.res x i;
       close_open_inverse' s.pre x i;      
@@ -120,15 +143,33 @@ let close_open_inverse_proof_hint_type' (ht:proof_hint_type)
     | REWRITE { t1; t2 } ->
       close_open_inverse' t1 x i;
       close_open_inverse' t2 x i
+    | WILD
+    | SHOW_PROOF_STATE _ -> ()
 
+let open_ascription' (t:comp_ascription) (v:term) (i:index) : comp_ascription =
+  subst_ascription t [DT i v]
+let close_ascription' (t:comp_ascription) (x:var) (i:index) : comp_ascription =
+  subst_ascription t [ND x i]
 
+let close_open_inverse_ascription' (t:comp_ascription)
+                                   (x:var { ~(x `Set.mem` freevars_ascription t) } )
+                                   (i:index)
+  : Lemma (ensures close_ascription' (open_ascription' t (U.term_of_no_name_var x) i) x i == t)
+  = (match t.annotated with
+     | None -> ()
+     | Some c -> close_open_inverse_comp' c x i);
+    (match t.elaborated with
+     | None -> ()
+     | Some c -> close_open_inverse_comp' c x i)
+          
 let rec close_open_inverse_st'  (t:st_term) 
                                 (x:var { ~(x `Set.mem` freevars_st t) } )
                                 (i:index)
   : Lemma (ensures close_st_term' (open_st_term' t (U.term_of_no_name_var x) i) x i == t)
           (decreases t)
   = match t.term with
-    | Tm_Return { term = t } ->
+    | Tm_Return { expected_type; term = t } ->
+      close_open_inverse' expected_type x i;
       close_open_inverse' t x i
 
     | Tm_ElimExists { p } ->
@@ -136,8 +177,8 @@ let rec close_open_inverse_st'  (t:st_term)
 
     | Tm_Abs { b; ascription; body } ->
       close_open_inverse' b.binder_ty x i;
-      close_open_inverse_st' body x (i + 1);
-      close_open_inverse_comp' ascription x (i + 1)
+      close_open_inverse_st' body x (i + 1); 
+      close_open_inverse_ascription' ascription x (i + 1)
 
     | Tm_Bind { binder; head; body } ->
       close_open_inverse' binder.binder_ty x i;
@@ -191,6 +232,12 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse' initializer x i;
       close_open_inverse_st' body x (i + 1)
 
+    | Tm_WithLocalArray { binder; initializer; length; body } ->
+      close_open_inverse' binder.binder_ty x i; 
+      close_open_inverse' initializer x i;
+      close_open_inverse' length x i;
+      close_open_inverse_st' body x (i + 1)
+
     | Tm_Rewrite { t1; t2 } ->
       close_open_inverse' t1 x i;
       close_open_inverse' t2 x i
@@ -199,11 +246,22 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse' typ x i;
       close_open_inverse_opt' post x (i + 1)
 
+    | Tm_Unreachable -> ()
+    
     | Tm_ProofHintWithBinders { binders; hint_type; t} ->
       let n = L.length binders in
       close_open_inverse_proof_hint_type' hint_type x (i + n);
       close_open_inverse_st' t x (i + n)
       
+    | Tm_WithInv { name; body; returns_inv } ->
+      close_open_inverse' name x i;
+      close_open_inverse_st' body x i;
+      match returns_inv with
+      | None -> ()
+      | Some (b, r) ->
+        close_open_inverse' b.binder_ty x i;
+        close_open_inverse' r x (i + 1)
+   
 let close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )
   : Lemma (ensures close_term (open_term t x) x == t)
           (decreases t)
@@ -225,6 +283,7 @@ let rec open_with_gt_ln (e:term) (i:int) (t:term) (j:nat)
   | Tm_Inames
   | Tm_EmpInames
   | Tm_Unknown -> ()
+  | Tm_Inv p -> open_with_gt_ln p i t j
   | Tm_Pure p -> open_with_gt_ln p i t j
   | Tm_Star e1 e2 ->
     open_with_gt_ln e1 i t j;
@@ -234,6 +293,9 @@ let rec open_with_gt_ln (e:term) (i:int) (t:term) (j:nat)
     open_with_gt_ln t1.binder_ty i t j;
     open_with_gt_ln body (i + 1) t (j + 1)
   | Tm_FStar _ -> admit()
+  | Tm_AddInv e1 e2 ->
+    open_with_gt_ln e1 i t j;
+    open_with_gt_ln e2 i t j
 
 let open_with_gt_ln_st (s:st_comp) (i:int) (t:term) (j:nat)
   : Lemma (requires ln_st_comp s i /\ i < j)
@@ -248,9 +310,9 @@ let open_with_gt_ln_comp (c:comp) (i:int) (t:term) (j:nat)
           (ensures open_comp' c t j == c) =
   match c with
   | C_Tot t1 -> open_with_gt_ln t1 i t j
-  | C_ST s -> open_with_gt_ln_st s i t j
-  | C_STAtomic inames s
-  | C_STGhost inames s ->
+  | C_ST s
+  | C_STGhost s -> open_with_gt_ln_st s i t j
+  | C_STAtomic inames _ s ->
     open_with_gt_ln inames i t j;
     open_with_gt_ln_st s i t j
 
@@ -269,12 +331,16 @@ let rec close_with_non_freevar (e:term) (x:var) (i:nat)
   | Tm_Star t1 t2 ->
     close_with_non_freevar t1 x i;
     close_with_non_freevar t2 x i
+  | Tm_Inv p -> close_with_non_freevar p x i
   | Tm_Pure p -> close_with_non_freevar p x i
   | Tm_ExistsSL _ t1 body
   | Tm_ForallSL _ t1 body ->
     close_with_non_freevar t1.binder_ty x i;
     close_with_non_freevar body x (i + 1)
   | Tm_FStar _ -> admit()
+  | Tm_AddInv t1 t2 ->
+    close_with_non_freevar t1 x i;
+    close_with_non_freevar t2 x i
 
 let close_with_non_freevar_st (s:st_comp) (x:var) (i:nat)
   : Lemma
@@ -291,9 +357,10 @@ let close_comp_with_non_free_var (c:comp) (x:var) (i:nat)
     (ensures close_comp' c x i == c) =
   match c with
   | C_Tot t1 -> close_with_non_freevar t1 x i
-  | C_ST s -> close_with_non_freevar_st s x i
-  | C_STAtomic inames s
-  | C_STGhost inames s ->
+  | C_ST s 
+  | C_STGhost s ->
+    close_with_non_freevar_st s x i
+  | C_STAtomic inames _ s ->
     close_with_non_freevar inames x i;
     close_with_non_freevar_st s x i
 

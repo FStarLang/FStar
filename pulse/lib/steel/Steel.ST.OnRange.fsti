@@ -87,6 +87,25 @@ let on_range_uncons
 = on_range_split p i j k;
   on_range_singleton_elim p i j
 
+let on_range_cons_with_implies
+  (#opened: _)
+  (p: (nat -> vprop))
+  (i j k: nat)
+: STGhost unit opened
+    (p i `star` on_range p j k)
+    (fun _ -> on_range p i k `star`
+      (on_range p i k @==> (p i `star` on_range p j k))
+    )
+    (j == i + 1)
+    (fun _ -> True)
+= on_range_le p j k;
+  on_range_cons p i j k;
+  intro_implies
+    (on_range p i k)
+    (p i `star` on_range p j k)
+    emp
+    (fun _ -> on_range_uncons p i j k)
+
 let on_range_snoc
   (#opened: _)
   (p: (nat -> vprop))
@@ -111,6 +130,26 @@ let on_range_unsnoc
     (fun _ -> True)
 = on_range_split p i j k;
   on_range_singleton_elim p j k
+
+let on_range_snoc_with_implies
+  (#opened: _)
+  (p: (nat -> vprop))
+  (i j j' k: nat)
+: STGhost unit opened
+    (on_range p i j `star` p j')
+    (fun _ -> on_range p i k `star` (on_range p i k `implies_` (on_range p i j `star` p j')))
+    (j' == j /\ k == j + 1)
+    (fun _ -> True)
+= on_range_le p i j;
+  on_range_snoc p i j j' k;
+  intro_implies
+    (on_range p i k)
+    (on_range p i j `star` p j')
+    emp
+    (fun _ ->
+      on_range_unsnoc p i j k;
+      rewrite (p j) (p j')
+    )
 
 let on_range_get
   (#opened: _)

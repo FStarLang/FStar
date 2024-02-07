@@ -19,6 +19,25 @@ let (elab_qual :
     | FStar_Pervasives_Native.None -> FStar_Reflection_V2_Data.Q_Explicit
     | FStar_Pervasives_Native.Some (Pulse_Syntax_Base.Implicit) ->
         FStar_Reflection_V2_Data.Q_Implicit
+let (elab_observability :
+  Pulse_Syntax_Base.observability -> FStar_Reflection_Types.term) =
+  fun uu___ ->
+    match uu___ with
+    | Pulse_Syntax_Base.Neutral ->
+        FStar_Reflection_V2_Builtins.pack_ln
+          (FStar_Reflection_V2_Data.Tv_FVar
+             (FStar_Reflection_V2_Builtins.pack_fv
+                Pulse_Reflection_Util.neutral_lid))
+    | Pulse_Syntax_Base.Unobservable ->
+        FStar_Reflection_V2_Builtins.pack_ln
+          (FStar_Reflection_V2_Data.Tv_FVar
+             (FStar_Reflection_V2_Builtins.pack_fv
+                Pulse_Reflection_Util.unobservable_lid))
+    | Pulse_Syntax_Base.Observable ->
+        FStar_Reflection_V2_Builtins.pack_ln
+          (FStar_Reflection_V2_Data.Tv_FVar
+             (FStar_Reflection_V2_Builtins.pack_fv
+                Pulse_Reflection_Util.observable_lid))
 let rec (elab_term : Pulse_Syntax_Base.term -> FStar_Reflection_Types.term) =
   fun top ->
     let w t' = Pulse_RuntimeUtils.set_range t' top.Pulse_Syntax_Base.range1 in
@@ -35,6 +54,17 @@ let rec (elab_term : Pulse_Syntax_Base.term -> FStar_Reflection_Types.term) =
              (FStar_Reflection_V2_Data.Tv_FVar
                 (FStar_Reflection_V2_Builtins.pack_fv
                    Pulse_Reflection_Util.emp_lid)))
+    | Pulse_Syntax_Base.Tm_Inv p ->
+        let p1 = elab_term p in
+        let head =
+          FStar_Reflection_V2_Builtins.pack_ln
+            (FStar_Reflection_V2_Data.Tv_FVar
+               (FStar_Reflection_V2_Builtins.pack_fv
+                  Pulse_Reflection_Util.inv_lid)) in
+        w
+          (FStar_Reflection_V2_Builtins.pack_ln
+             (FStar_Reflection_V2_Data.Tv_App
+                (head, (p1, FStar_Reflection_V2_Data.Q_Explicit))))
     | Pulse_Syntax_Base.Tm_Pure p ->
         let p1 = elab_term p in
         let head =
@@ -94,6 +124,13 @@ let rec (elab_term : Pulse_Syntax_Base.term -> FStar_Reflection_Types.term) =
                 (FStar_Reflection_V2_Builtins.pack_fv
                    Pulse_Reflection_Util.inames_lid)))
     | Pulse_Syntax_Base.Tm_EmpInames -> w Pulse_Reflection_Util.emp_inames_tm
+    | Pulse_Syntax_Base.Tm_AddInv (i, is) ->
+        let i1 = elab_term i in
+        let is1 = elab_term is in
+        w
+          (Pulse_Reflection_Util.add_inv_tm
+             (FStar_Reflection_V2_Builtins.pack_ln
+                FStar_Reflection_V2_Data.Tv_Unknown) is1 i1)
     | Pulse_Syntax_Base.Tm_Unknown ->
         w
           (FStar_Reflection_V2_Builtins.pack_ln
@@ -107,11 +144,9 @@ let rec (elab_pat :
     match p with
     | Pulse_Syntax_Base.Pat_Constant c ->
         FStar_Reflection_V2_Data.Pat_Constant c
-    | Pulse_Syntax_Base.Pat_Var v ->
+    | Pulse_Syntax_Base.Pat_Var (v, ty) ->
         FStar_Reflection_V2_Data.Pat_Var
-          ((FStar_Sealed.seal
-              (FStar_Reflection_V2_Builtins.pack_ln
-                 FStar_Reflection_V2_Data.Tv_Unknown)), v)
+          (FStar_Reflection_Typing.sort_default, v)
     | Pulse_Syntax_Base.Pat_Cons (fv, vs) ->
         FStar_Reflection_V2_Data.Pat_Cons
           ((elab_fv fv), FStar_Pervasives_Native.None,
@@ -151,20 +186,21 @@ let (elab_comp : Pulse_Syntax_Base.comp -> FStar_Reflection_Types.term) =
              Pulse_Reflection_Util.mk_stt_comp u res pre
                (Pulse_Reflection_Util.mk_abs res
                   FStar_Reflection_V2_Data.Q_Explicit post))
-    | Pulse_Syntax_Base.C_STAtomic (inames, c1) ->
+    | Pulse_Syntax_Base.C_STAtomic (inames, obs, c1) ->
         let inames1 = elab_term inames in
         let uu___ = elab_st_comp c1 in
         (match uu___ with
          | (u, res, pre, post) ->
-             Pulse_Reflection_Util.mk_stt_atomic_comp u res inames1 pre
-               (Pulse_Reflection_Util.mk_abs res
-                  FStar_Reflection_V2_Data.Q_Explicit post))
-    | Pulse_Syntax_Base.C_STGhost (inames, c1) ->
-        let inames1 = elab_term inames in
+             let post1 =
+               Pulse_Reflection_Util.mk_abs res
+                 FStar_Reflection_V2_Data.Q_Explicit post in
+             Pulse_Reflection_Util.mk_stt_atomic_comp
+               (elab_observability obs) u res inames1 pre post1)
+    | Pulse_Syntax_Base.C_STGhost c1 ->
         let uu___ = elab_st_comp c1 in
         (match uu___ with
          | (u, res, pre, post) ->
-             Pulse_Reflection_Util.mk_stt_ghost_comp u res inames1 pre
+             Pulse_Reflection_Util.mk_stt_ghost_comp u res pre
                (Pulse_Reflection_Util.mk_abs res
                   FStar_Reflection_V2_Data.Q_Explicit post))
 let (elab_stt_equiv :
@@ -211,9 +247,18 @@ let (elab_statomic_equiv :
             fun eq_post ->
               let uu___ = c in
               match uu___ with
-              | Pulse_Syntax_Base.C_STAtomic (inames, uu___1) ->
+              | Pulse_Syntax_Base.C_STAtomic
+                  (inames, obs,
+                   { Pulse_Syntax_Base.u = u; Pulse_Syntax_Base.res = res;
+                     Pulse_Syntax_Base.pre = uu___1;
+                     Pulse_Syntax_Base.post = uu___2;_})
+                  ->
+                  let c' =
+                    Pulse_Reflection_Util.mk_stt_atomic_comp
+                      (elab_observability obs) u (elab_term res)
+                      (elab_term inames) pre post in
                   Pulse_Reflection_Util.mk_stt_atomic_comp_equiv g
-                    (Pulse_Syntax_Base.comp_u c)
+                    (elab_observability obs) (Pulse_Syntax_Base.comp_u c)
                     (elab_term (Pulse_Syntax_Base.comp_res c))
                     (elab_term inames) pre post
                     (elab_term (Pulse_Syntax_Base.comp_pre c))
@@ -239,11 +284,10 @@ let (elab_stghost_equiv :
             fun eq_post ->
               let uu___ = c in
               match uu___ with
-              | Pulse_Syntax_Base.C_STGhost (inames, uu___1) ->
+              | Pulse_Syntax_Base.C_STGhost uu___1 ->
                   Pulse_Reflection_Util.mk_stt_ghost_comp_equiv g
                     (Pulse_Syntax_Base.comp_u c)
-                    (elab_term (Pulse_Syntax_Base.comp_res c))
-                    (elab_term inames) pre post
+                    (elab_term (Pulse_Syntax_Base.comp_res c)) pre post
                     (elab_term (Pulse_Syntax_Base.comp_pre c))
                     (Pulse_Reflection_Util.mk_abs
                        (elab_term (Pulse_Syntax_Base.comp_res c))

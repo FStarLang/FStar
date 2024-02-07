@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Typing.Combinators
 
 module RT = FStar.Reflection.Typing
@@ -10,6 +26,25 @@ open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Pure
+
+assume
+val invert_forall_typing
+        (#g #u #b #body:_)
+        (d:tot_typing g (tm_forall_sl u b body) tm_vprop)
+        (x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars body) })
+  : GTot (
+    tot_typing g b.binder_ty (tm_type u) &
+    tot_typing (push_binding g x ppname_default b.binder_ty) (open_term body x) tm_vprop
+  )
+
+assume
+val construct_forall_typing
+        (#g #u #b #body:_)
+        (x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars body) })
+        (dt:tot_typing g b.binder_ty (tm_type u))
+        (db:tot_typing (push_binding g x ppname_default b.binder_ty) (open_term body x) tm_vprop)
+  : GTot (tot_typing g (tm_forall_sl u b body) tm_vprop)
+   
 
 let rec vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
   : GTot ((tot_typing g t0 tm_vprop -> tot_typing g t1 tm_vprop) &
@@ -90,10 +125,152 @@ let rec vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
       let d1, d2 = vprop_eq_typing_inversion g t0 t1 token in
       (fun _ -> d2),
       (fun _ -> d1)
-
-
+    
+    | VE_Fa g x u b t0 t1 d ->
+      let d0, d1 = vprop_equiv_typing d in
+      (fun fa0_typing ->
+        let b_typing, t0_typing = invert_forall_typing fa0_typing x in
+        let t1_typing = d0 t0_typing in
+        construct_forall_typing #g #u x b_typing t1_typing),
+      (fun fa1_typing ->
+        let b_typing, t1_typing = invert_forall_typing fa1_typing x in
+        let t0_typing = d1 t1_typing in
+        construct_forall_typing #g #u #b #t0 x b_typing t0_typing)
+        
 #push-options "--z3rlimit_factor 8 --ifuel 1 --fuel 2 --query_stats"
-let rec mk_bind (g:env)
+
+let bind_t (case_c1 case_c2:comp_st -> bool) =
+      (g:env) ->
+      (pre:term) ->
+      (e1:st_term) ->
+      (e2:st_term) ->
+      (c1:comp_st{ case_c1 c1 }) ->
+      (c2:comp_st{ case_c2 c2 }) ->
+      (px:nvar { ~ (Set.mem (snd px) (dom g)) }) ->
+      (d_e1:st_typing g e1 c1) ->
+      (d_c1res:tot_typing g (comp_res c1) (tm_type (comp_u c1))) ->
+      (d_e2:st_typing (push_binding g (snd px) (fst px) (comp_res c1)) (open_st_term_nv e2 px) c2) ->
+      (res_typing:universe_of g (comp_res c2) (comp_u c2)) ->
+      (post_typing:tot_typing (push_binding g (snd px) (fst px) (comp_res c2))
+                              (open_term_nv (comp_post c2) px)
+                                      tm_vprop) ->
+      (bias_towards_continuation:bool) ->
+    T.TacH (t:st_term &
+            c:comp_st { st_comp_of_comp c == st_comp_with_pre (st_comp_of_comp c2) pre  /\
+                        (bias_towards_continuation ==> effect_annot_of_comp c == effect_annot_of_comp c2) } &
+            st_typing g t c)
+           (requires fun _ ->
+              let _, x = px in
+              comp_pre c1 == pre /\
+              None? (lookup g x) /\
+              (~(x `Set.mem` freevars_st e2)) /\
+              open_term (comp_post c1) x == comp_pre c2 /\
+              (~ (x `Set.mem` freevars (comp_post c2))))
+           (ensures fun _ _ -> True)
+
+let mk_bind_st_st
+  : bind_t C_ST? C_ST?
+  = fun g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing _ ->
+      let _, x = px in
+      let b = nvar_as_binder px (comp_res c1) in
+      let bc = Bind_comp g x c1 c2 res_typing x post_typing in
+      (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
+
+let inames_of (c:comp_st) : term =
+  match c with
+  | C_ST _ 
+  | C_STGhost _ -> tm_emp_inames
+  | C_STAtomic inames _ _ -> inames
+
+let with_inames (c:comp_st) (i:term) =
+  match c with
+  | C_ST _ -> c
+  | C_STGhost sc -> C_STGhost sc
+  | C_STAtomic _ obs sc -> C_STAtomic i obs sc
+
+let weaken_comp_inames (#g:env) (#e:st_term) (#c:comp_st) (d_e:st_typing g e c) (new_inames:term)
+  : T.Tac (c':comp_st { with_inames c new_inames == c' } &
+           st_typing g e c')
+  = match c with
+    | C_ST _
+    | C_STGhost _ -> (| c, d_e |)
+
+    | C_STAtomic inames obs sc ->
+      let d_e = T_Sub _ _ _ _ d_e (STS_AtomicInvs _ sc inames new_inames obs obs (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
+      (| with_inames c new_inames, d_e |)
+
+let st_ghost_as_atomic (c:comp_st { C_STGhost? c }) = 
+  C_STAtomic tm_emp_inames Neutral (st_comp_of_comp c)
+
+let try_lift_ghost_atomic (#g:env) (#e:st_term) (#c:comp_st { C_STGhost? c }) (d:st_typing g e c)
+: T.Tac (option (st_typing g e (st_ghost_as_atomic c)))
+= let w = try_get_non_informative_witness g (comp_u c) (comp_res c) in
+  match w with
+  | None -> None
+  | Some w ->
+    let d = T_Lift _ _ _ _ d (Lift_Ghost_Neutral _ c w) in
+    Some d
+
+let lift_ghost_atomic (#g:env) (#e:st_term) (#c:comp_st { C_STGhost? c }) (d:st_typing g e c)
+: T.Tac (st_typing g e (st_ghost_as_atomic c))
+= let w = try_lift_ghost_atomic d in
+  match w with
+  | None -> 
+    let open Pulse.PP in
+    let t = comp_res c in
+    fail_doc g (Some t.range) [
+        text "Expected a term with a non-informative (e.g., erased) type; got"
+          ^/^ pp t
+    ]
+  | Some d ->
+    d
+    
+let mk_bind_ghost_ghost
+  : bind_t C_STGhost? C_STGhost?
+  = fun g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing _ ->
+      let _, x = px in
+      let b = nvar_as_binder px (comp_res c1) in
+      let bc = Bind_comp g x c1 c2 res_typing x post_typing in
+      (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
+
+#push-options "--query_stats"
+let mk_bind_atomic_atomic
+  : bind_t C_STAtomic? C_STAtomic?
+  = fun g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing bias_k ->
+      let _, x = px in
+      let b = nvar_as_binder px (comp_res c1) in
+      let C_STAtomic inames1 obs1 sc1 = c1 in
+      let C_STAtomic inames2 obs2 sc2 = c2 in
+      if at_most_one_observable obs1 obs2
+      then (
+        if eq_tm inames1 inames2
+        then begin
+          let bc = Bind_comp g x c1 c2 res_typing x post_typing in
+          (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
+        end
+        else if bias_k
+        then (
+          let d_e1 = T_Sub _ _ _ _ d_e1 (STS_AtomicInvs _ sc1 inames1 inames2 obs1 obs1 (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
+          let c1 = C_STAtomic inames2 obs1 sc1 in
+          let bc = Bind_comp g x c1 c2 res_typing x post_typing in
+          (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
+        )
+        else begin
+          let new_inames = tm_join_inames inames1 inames2 in
+          let d_e1 = T_Sub _ _ _ _ d_e1 (STS_AtomicInvs _ sc1 inames1 new_inames obs1 obs1 (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
+          let d_e2 = T_Sub _ _ _ _ d_e2 (STS_AtomicInvs _ sc2 inames2 new_inames obs2 obs2 (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
+          let c1 = C_STAtomic new_inames obs1 sc1 in
+          let c2 = C_STAtomic new_inames obs2 sc2 in
+          let bc = Bind_comp g x c1 c2 res_typing x post_typing in
+          (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
+        end 
+      )
+      else (
+        T.fail "Should have been handled separately"
+      )
+
+
+let rec mk_bind (g:env) 
                 (pre:term)
                 (e1:st_term)
                 (e2:st_term)
@@ -107,8 +284,11 @@ let rec mk_bind (g:env)
                 (post_typing:tot_typing (push_binding g (snd px) (fst px) (comp_res c2))
                                         (open_term_nv (comp_post c2) px)
                                         tm_vprop)
+                (bias_towards_continuation:bool)
   : T.TacH (t:st_term &
-            c:comp_st { st_comp_of_comp c == st_comp_with_pre (st_comp_of_comp c2) pre } &
+            c:comp_st {
+              st_comp_of_comp c == st_comp_with_pre (st_comp_of_comp c2) pre /\
+              (bias_towards_continuation ==> effect_annot_of_comp c == effect_annot_of_comp c2) } &
             st_typing g t c)
            (requires fun _ ->
               let _, x = px in
@@ -120,94 +300,97 @@ let rec mk_bind (g:env)
            (ensures fun _ _ -> True) =
   let _, x = px in
   let b = nvar_as_binder px (comp_res c1) in
+  let fail_bias (#a:Type) tag
+  : T.TacH a (requires fun _ -> True) (ensures fun _ r -> FStar.Tactics.Result.Failed? r)
+  = let open Pulse.PP in
+    fail_doc g (Some e1.range)
+      [text "Cannot compose computations in this " ^/^ text tag ^/^ text " block:";
+       prefix 4 1 (text "This computation has effect: ") (pp (effect_annot_of_comp c1));
+       prefix 4 1 (text "The continuation has effect: ") (pp (effect_annot_of_comp c2))]
+  in
   match c1, c2 with
   | C_ST _, C_ST _ ->
-    let bc = Bind_comp g x c1 c2 res_typing x post_typing in
-    (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
-  | C_STGhost inames1 _, C_STGhost inames2 _ ->
-    if eq_tm inames1 inames2
-    then begin
-      let bc = Bind_comp g x c1 c2 res_typing x post_typing in
-      (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
-    end
-    else fail g None "Cannot compose two stghost computations with different opened invariants"
-  | C_STAtomic inames _, C_ST _ ->
-    if eq_tm inames tm_emp_inames
-    then begin
-      let c1lifted = C_ST (st_comp_of_comp c1) in
-      let d_e1 : st_typing g e1 c1lifted =
-        T_Lift _ _ _ c1lifted d_e1 (Lift_STAtomic_ST _ c1) in
-      let bc = Bind_comp g x c1lifted c2 res_typing x post_typing in
-      (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
-    end
-    else fail g None "Cannot compose atomic with non-emp opened invariants with stt"
-  | C_STGhost inames1 _, C_STAtomic inames2 _ ->
-    if eq_tm inames1 inames2
-    then begin
-      let w = get_non_informative_witness g (comp_u c1) (comp_res c1) in
-      let bc = Bind_comp_ghost_l g x c1 c2 w res_typing x post_typing in
-      (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
-    end
-    else fail g None "Cannot compose ghost and atomic with different opened invariants"
-  | C_STAtomic inames1 _, C_STGhost inames2 _ ->
-    if eq_tm inames1 inames2
-    then begin
-      let w = get_non_informative_witness g (comp_u c2) (comp_res c2) in
-      let bc = Bind_comp_ghost_r g x c1 c2 w res_typing x post_typing in
-      (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
-    end
-    else fail g None "Cannot compose atomic and ghost with different opened invariants"
-  | C_ST _, C_STAtomic inames _ ->
-    if eq_tm inames tm_emp_inames
-    then begin
-      let c2lifted = C_ST (st_comp_of_comp c2) in
-      let g' = push_binding g x (fst px) (comp_res c1) in
-      let d_e2 : st_typing g' (open_st_term_nv e2 px) c2lifted =
-        T_Lift _ _ _ c2lifted d_e2 (Lift_STAtomic_ST _ c2) in
-      let bc = Bind_comp g x c1 c2lifted res_typing x post_typing in
-      (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
-    end
-    else fail g None "Cannot compose stt with atomic with non-emp opened invariants"
-  | C_STGhost inames _, C_ST _ ->
-    if eq_tm inames tm_emp_inames
-    then begin
-      let w = get_non_informative_witness g (comp_u c1) (comp_res c1) in
-      let c1lifted = C_STAtomic inames (st_comp_of_comp c1) in
-      let d_e1 : st_typing g e1 c1lifted =
-        T_Lift _ _ _ c1lifted d_e1 (Lift_STGhost_STAtomic g c1 w) in
-      mk_bind g pre e1 e2 c1lifted c2 px d_e1 d_c1res d_e2 res_typing post_typing
-    end
-    else fail g None "Cannot compose ghost with stt with non-emp opened invariants"
-  | C_ST _, C_STGhost inames _ ->
-    if eq_tm inames tm_emp_inames
-    then begin
-      let g' = push_binding g x (fst px) (comp_res c1) in
-      let w = get_non_informative_witness g' (comp_u c2) (comp_res c2) in
-      let c2lifted = C_STAtomic inames (st_comp_of_comp c2) in
-      let d_e2 : st_typing g' (open_st_term_nv e2 px) c2lifted =
-        T_Lift _ _ _ c2lifted d_e2 (Lift_STGhost_STAtomic g' c2 w) in
-      let (| t, c, d |) = mk_bind g pre e1 e2 c1 c2lifted px d_e1 d_c1res d_e2 res_typing post_typing in
+    mk_bind_st_st g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing bias_towards_continuation
+
+  | C_STGhost _, C_STGhost _ ->
+    mk_bind_ghost_ghost g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing bias_towards_continuation
+
+  | C_STAtomic inames1 obs1 sc1, C_STAtomic inames2 obs2 sc2 ->
+    if at_most_one_observable obs1 obs2
+    then (
+      mk_bind_atomic_atomic g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing bias_towards_continuation
+    ) 
+    else if bias_towards_continuation
+    then fail_bias "atomic"
+    else (
+      let d_e1 = T_Lift _ _ _ _ d_e1 (Lift_STAtomic_ST _ c1) in
+      mk_bind g pre e1 e2 _ c2 px d_e1 d_c1res d_e2 res_typing post_typing bias_towards_continuation
+    )
+
+  | C_STAtomic inames _ _, C_ST _ ->
+    let d_e1 = T_Lift _ _ _ _ d_e1 (Lift_STAtomic_ST _ c1) in
+    mk_bind g pre e1 e2 _ c2 px d_e1 d_c1res d_e2 res_typing post_typing bias_towards_continuation
+
+  | C_ST _, C_STAtomic inames _ _ ->
+    if bias_towards_continuation
+    then fail_bias "atomic"
+    else (
+      let d_e2  = T_Lift _ _ _ _ d_e2 (Lift_STAtomic_ST _ c2) in
+      let (| t, c, d |) = mk_bind g pre e1 e2 _ _ px d_e1 d_c1res d_e2 res_typing post_typing bias_towards_continuation in
       (| t, c, d |)
-    end
-    else fail g None "Cannot compose stt with ghost with non-emp opened invariants"
-  | C_STAtomic inames _, C_STAtomic _ _ ->
-    if eq_tm inames tm_emp_inames
-    then begin
-      let c1lifted = C_ST (st_comp_of_comp c1) in
-      let d_e1 : st_typing g e1 c1lifted =
-        T_Lift _ _ _ c1lifted d_e1 (Lift_STAtomic_ST _ c1) in
-      mk_bind g pre e1 e2 c1lifted c2 px d_e1 d_c1res d_e2 res_typing post_typing
-    end
-    else fail g None "Cannot compose statomics with non-emp opened invariants"
-  | _, _ -> fail g None "bind either not implemented (e.g. ghost) or not possible"
+    )
+
+  | C_STGhost _, C_STAtomic _ Neutral _ -> (
+    match try_lift_ghost_atomic d_e1 with
+    | Some d_e1 ->
+      mk_bind g pre e1 e2 _ c2 px d_e1 d_c1res d_e2 res_typing post_typing bias_towards_continuation
+    | None ->
+      if bias_towards_continuation
+      then fail_bias "atomic"
+      else (
+        let d_e2 = T_Lift _ _ _ _ d_e2 (Lift_Neutral_Ghost _ c2) in
+        let (| t, c, d |) = mk_bind g pre e1 e2 _ _ px d_e1 d_c1res d_e2 res_typing post_typing bias_towards_continuation in
+        (| t, c, d |)
+      )
+  )
+
+  | C_STAtomic _ Neutral _, C_STGhost _ -> (
+    if bias_towards_continuation
+    then (
+      let d_e1 = T_Lift _ _ _ _ d_e1 (Lift_Neutral_Ghost _ c1) in
+      mk_bind g pre e1 e2 _ c2 px d_e1 d_c1res d_e2 res_typing post_typing bias_towards_continuation
+    )
+    else (
+      match try_lift_ghost_atomic d_e2 with
+      | Some d_e2 ->
+        let (| t, c, d |) = mk_bind g pre e1 e2 _ _ px d_e1 d_c1res d_e2 res_typing post_typing bias_towards_continuation in
+        (| t, c, d |)
+      | None ->
+        let d_e1 = T_Lift _ _ _ _ d_e1 (Lift_Neutral_Ghost _ c1) in
+        mk_bind g pre e1 e2 _ c2 px d_e1 d_c1res d_e2 res_typing post_typing bias_towards_continuation
+    )
+  )
+
+  | C_STGhost _, C_ST _
+  | C_STGhost _, C_STAtomic _ _ _ ->
+    let d_e1 = lift_ghost_atomic d_e1 in
+    mk_bind g pre e1 e2 _ c2 px d_e1 d_c1res d_e2 res_typing post_typing bias_towards_continuation
+
+  | C_ST _, C_STGhost _
+  | C_STAtomic _ _ _, C_STGhost _ ->
+    if bias_towards_continuation
+    then fail_bias "ghost"
+    else (
+      let d_e2 = lift_ghost_atomic d_e2 in
+      let (| t, c, d |) = mk_bind g pre e1 e2 _ _ px d_e1 d_c1res d_e2 res_typing post_typing bias_towards_continuation in
+      (| t, c, d |)
+    )
+
 #pop-options
 
-
-let bind_res_and_post_typing (g:env) (s2:st_comp) (x:var { fresh_wrt x g (freevars s2.post) })
-                             (post_hint:post_hint_opt g { comp_post_matches_hint (C_ST s2) post_hint })
-  : T.Tac (universe_of g s2.res s2.u &
-           tot_typing (push_binding g x ppname_default s2.res) (open_term_nv s2.post (v_as_nv x)) tm_vprop)
-  = match post_hint with
+let bind_res_and_post_typing g c2 x post_hint 
+  = let s2 = st_comp_of_comp c2 in
+    match post_hint with
     | None -> 
       (* We're inferring a post, so these checks are unavoidable *)
       (* since we need to type the result in a smaller env g *)          
@@ -265,7 +448,7 @@ let apply_frame (#g:env)
     let c'' = c' `with_st_comp` s'' in
     assert (comp_post c' == comp_post c'');
     let ve: vprop_equiv g (comp_pre c') (comp_pre c'') = ve in    
-    let st_typing = Metatheory.comp_typing_inversion c'_typing in
+    let st_typing = fst <| Metatheory.comp_typing_inversion c'_typing in
     let (| res_typing, pre_typing, x, post_typing |) = Metatheory.st_comp_typing_inversion st_typing in
     let st_equiv = ST_VPropEquiv g c' c'' x pre_typing res_typing post_typing (RT.Rel_refl _ _ _) ve (VE_Refl _ _) in
     let t_typing = T_Equiv _ _ _ _ t_typing st_equiv in

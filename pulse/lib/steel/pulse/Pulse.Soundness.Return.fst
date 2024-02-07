@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Soundness.Return
 
 open Pulse.Syntax
@@ -13,8 +29,8 @@ module PReflUtil = Pulse.Reflection.Util
 module WT = Pulse.Steel.Wrapper.Typing
 module LN = Pulse.Typing.LN
 
-#push-options "--z3rlimit_factor 4 --fuel 8 --ifuel 2"
-let return_soundess
+#push-options "--z3rlimit_factor 8 --split_queries no --fuel 4 --ifuel 2"
+let return_soundness
   (#g:stt_env)
   (#t:st_term)
   (#c:comp)
@@ -31,8 +47,10 @@ let return_soundess
   let rpost_abs = mk_abs rt R.Q_Explicit rpost in
   let rt_typing : RT.tot_typing _ rt (R.pack_ln (R.Tv_Type ru)) =
     tot_typing_soundness t_typing in
-  let re_typing : RT.tot_typing _ re rt =
-    tot_typing_soundness e_typing in
+  let re_typing : RT.typing _ re (eff_of_ctag ctag, rt) =
+    match ctag with
+    | STT_Ghost -> ghost_typing_soundness e_typing
+    | _ -> tot_typing_soundness e_typing in
   let rpost_abs_typing
     : RT.tot_typing _ rpost_abs
                       (mk_arrow (rt, R.Q_Explicit) vprop_tm) =
@@ -84,9 +102,9 @@ let return_soundess
                    (elab_comp c)) =
     
     assert (elab_term (close_term' (tm_star (open_term' post (null_var x) 0)
-                                            (tm_pure (mk_eq2_prop u t (null_var x) e))) x 0) ==
+                                            (tm_pure (mk_eq2 u t (null_var x) e))) x 0) ==
             RT.subst_term (elab_term (tm_star (open_term' post (null_var x) 0)
-                                              (tm_pure (mk_eq2_prop u t (null_var x) e))))
+                                              (tm_pure (mk_eq2 u t (null_var x) e))))
                           [ RT. ND x 0 ]);
     let elab_c_post =
       mk_abs rt R.Q_Explicit
@@ -117,10 +135,10 @@ let return_soundess
       assert (elab_comp c == mk_stt_comp ru rt elab_c_pre elab_c_post);
       elab_stt_equiv _ c _ _ pre_eq post_eq
     | STT_Atomic ->
-      assert (elab_comp c == mk_stt_atomic_comp ru rt emp_inames_tm elab_c_pre elab_c_post);
+      assert (elab_comp c == mk_stt_atomic_comp Pulse.Steel.Wrapper.Typing.neutral_fv ru rt emp_inames_tm elab_c_pre elab_c_post);
       elab_statomic_equiv _ c _ _ pre_eq post_eq
     | STT_Ghost ->
-      assert (elab_comp c == mk_stt_ghost_comp ru rt emp_inames_tm elab_c_pre elab_c_post);
+      assert (elab_comp c == mk_stt_ghost_comp ru rt elab_c_pre elab_c_post);
       elab_stghost_equiv _ c _ _ pre_eq post_eq
   in
   match ctag, use_eq with

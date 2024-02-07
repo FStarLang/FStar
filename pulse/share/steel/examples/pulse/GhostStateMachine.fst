@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module GhostStateMachine
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Reference
@@ -56,11 +72,10 @@ noeq
 type locked_state_t = 
 { h:handle_t; 
   ph:pure_handle_t; 
-  lk:lock (exists_ (fun s ->
-      exists_ (fun ps -> 
+  lk:lock (exists* s ps. 
           handle_has_state h s **
           pure_handle_has_state ph ps **
-          pure (states_correspond s ps))));}
+          pure (states_correspond s ps));}
 let mk_locked_st h ph lk = {h; ph; lk;}
 
 assume
@@ -71,10 +86,10 @@ val some_payload : payload_t
 // TODO: init establishes the global state, so we cannot reference global state
 // before this function. the next and close signatures reference the global state,
 // so we can't include the API before the implementation of init
-val init (_:unit) : stt locked_state_t emp (fun st -> pure_handle_has_state st.ph Init)
+val init () : stt locked_state_t emp (fun st -> pure_handle_has_state st.ph Init)
 
 ```pulse
-fn init' (_:unit)
+fn init' ()
   requires emp
   returns st:locked_state_t
   ensures pure_handle_has_state st.ph Init
@@ -82,16 +97,15 @@ fn init' (_:unit)
   let ph = alloc Init;
   let h = alloc CInit;
 
-  share2 #pure_st_t #emp_inames ph #Init;
+  share2 #pure_st_t ph #Init;
   fold pure_handle_has_state ph Init;
   fold pure_handle_has_state ph Init;
   fold handle_has_state h CInit;
 
-  let lk = new_lock (exists_ (fun s ->
-                     exists_ (fun ps -> 
+  let lk = new_lock (exists* s ps.
                         handle_has_state h s **
                         pure_handle_has_state ph ps **
-                        pure (states_correspond s ps))));
+                        pure (states_correspond s ps));
 
   let locked_st = mk_locked_st h ph lk;
   rewrite (pure_handle_has_state ph Init)
@@ -104,10 +118,10 @@ let init = init'
 
 let global_locked_state : locked_state_t = run_stt (init' ())
 
-val next (_:unit) : stt unit (pure_handle_has_state global_locked_state.ph Init) (fun st -> pure_handle_has_state global_locked_state.ph Next)
+val next () : stt unit (pure_handle_has_state global_locked_state.ph Init) (fun st -> pure_handle_has_state global_locked_state.ph Next)
 
 ```pulse
-fn next' (_:unit)
+fn next' ()
   requires pure_handle_has_state global_locked_state.ph Init
   ensures pure_handle_has_state global_locked_state.ph Next
 {
@@ -121,13 +135,13 @@ fn next' (_:unit)
   pts_to_injective_eq #pure_st_t #one_half #one_half #Init #ps global_locked_state.ph;
   rewrite (pts_to global_locked_state.ph #one_half ps)
        as (pts_to global_locked_state.ph #one_half Init);
-  gather2 #pure_st_t #emp_inames global_locked_state.ph #Init;
+  gather2 #pure_st_t global_locked_state.ph #Init;
 
   let st = CNext some_payload;
   global_locked_state.h := st;
   global_locked_state.ph := Next;
 
-  share2 #pure_st_t #emp_inames global_locked_state.ph #Next;
+  share2 #pure_st_t global_locked_state.ph #Next;
   fold pure_handle_has_state global_locked_state.ph Next;
   fold pure_handle_has_state global_locked_state.ph Next;
   fold handle_has_state global_locked_state.h st;
@@ -137,10 +151,10 @@ fn next' (_:unit)
 ```
 let next = next'
 
-val close (_:unit) : stt unit (pure_handle_has_state global_locked_state.ph Next) (fun st -> pure_handle_has_state global_locked_state.ph Final)
+val close () : stt unit (pure_handle_has_state global_locked_state.ph Next) (fun st -> pure_handle_has_state global_locked_state.ph Final)
 
 ```pulse
-fn close' (_:unit)
+fn close' ()
   requires pure_handle_has_state global_locked_state.ph Next
   ensures pure_handle_has_state global_locked_state.ph Final
 {
@@ -154,13 +168,13 @@ fn close' (_:unit)
   pts_to_injective_eq #pure_st_t #one_half #one_half #Next #ps global_locked_state.ph;
   rewrite (pts_to global_locked_state.ph #one_half ps)
        as (pts_to global_locked_state.ph #one_half Next);
-  gather2 #pure_st_t #emp_inames global_locked_state.ph #Next;
+  gather2 #pure_st_t global_locked_state.ph #Next;
 
   let st = CFinal some_payload;
   global_locked_state.h := st;
   global_locked_state.ph := Final;
 
-  share2 #pure_st_t #emp_inames global_locked_state.ph #Final;
+  share2 #pure_st_t global_locked_state.ph #Final;
   fold pure_handle_has_state global_locked_state.ph Final;
   fold pure_handle_has_state global_locked_state.ph Final;
   fold handle_has_state global_locked_state.h st;

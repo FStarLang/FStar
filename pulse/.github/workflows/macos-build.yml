@@ -1,0 +1,36 @@
+name: Build Steel Binaries for MacOS
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  build:
+
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout Steel
+      uses: actions/checkout@v3
+      with:
+        path: steel
+    - name: Checkout everest
+      uses: actions/checkout@v3
+      with:
+        repository: project-everest/everest
+        path: steel/.github/everest
+    - name: Install .NET SDK
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '6.0.x'
+    - name: Setup dependencies
+      run: ./steel/.github/setup-macos.sh
+    - name: Package Steel
+      run: |
+        source steel/.github/env.sh
+        steel/src/ci/package.sh -j
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: steel-Darwin_x86_64.tar.gz
+        path: steel/src/ci/steel.tar.gz

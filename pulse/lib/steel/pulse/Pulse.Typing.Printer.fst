@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Typing.Printer
 module T = FStar.Tactics
 open Pulse.Syntax.Printer
@@ -29,10 +45,10 @@ let rec print_st_typing #g #t #c (d:st_typing g t c)
     | T_Frame g e c frame _ body ->
       Printf.sprintf "(T_Frame %s %s)" (Pulse.Syntax.Printer.term_to_string frame) (print_st_typing body)
 
-    | T_If _ _ _ _ _ _ _ _ _ _ _ ->
+    | T_If _ _ _ _ _ _ _ _ _ _ ->
       "T_If"
 
-    | T_Match _ _ _ _ _ _ _ _ _ _ ->
+    | T_Match _ _ _ _ _ _ _ _ _ _ _ ->
       "T_Match"
 
     | T_Equiv g e c c' d eq ->

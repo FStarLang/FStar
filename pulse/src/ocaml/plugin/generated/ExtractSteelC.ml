@@ -24,7 +24,7 @@ let (char_of_typechar :
           if FStar_Compiler_Util.starts_with p1 "Steel.C.Typestring.c"
           then
             (let uu___1 =
-               FStar_String.get p1
+               FStar_Compiler_String.get p1
                  (FStar_String.strlen "Steel.C.Typestring.c") in
              FStar_Pervasives_Native.Some uu___1)
           else FStar_Pervasives_Native.None
@@ -50,7 +50,8 @@ let (string_of_typestring :
                opt_bind uu___1
                  (fun s' ->
                     let uu___2 =
-                      let uu___3 = FStar_String.make Prims.int_one c' in
+                      let uu___3 =
+                        FStar_Compiler_String.make Prims.int_one c' in
                       uu___3 :: s' in
                     FStar_Pervasives_Native.Some uu___2))
       | uu___ -> FStar_Pervasives_Native.None in
@@ -144,10 +145,8 @@ let (my_types_without_decay : unit -> unit) =
                  FStar_Compiler_Util.print1 "Converting %s to TAny" uu___2);
                 FStar_Extraction_Krml.TAny)
            | FStar_Extraction_ML_Syntax.MLTY_Named (t1::n::s::[], p) when
-               false ||
-                 (let uu___1 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-                  uu___1 = "Steel.ST.C.Types.Array.base_array_t")
-               ->
+               let uu___1 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+               uu___1 = "Steel.ST.C.Types.Array.base_array_t" ->
                let uu___1 =
                  let uu___2 =
                    FStar_Extraction_Krml.translate_type_without_decay env t1 in
@@ -171,10 +170,8 @@ let (my_types : unit -> unit) =
            match t with
            | FStar_Extraction_ML_Syntax.MLTY_Named
                (t1::uu___1::uu___2::[], p) when
-               false ||
-                 (let uu___3 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-                  uu___3 = "Steel.ST.C.Types.Array.base_array_t")
-               ->
+               let uu___3 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+               uu___3 = "Steel.ST.C.Types.Array.base_array_t" ->
                let uu___3 =
                  FStar_Extraction_Krml.translate_type_without_decay env t1 in
                FStar_Extraction_Krml.TBuf uu___3
@@ -318,10 +315,8 @@ let (my_exprs : unit -> unit) =
                   FStar_Extraction_ML_Syntax.loc = uu___4;_},
                 uu___5)
                when
-               (false ||
-                  (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-                   uu___6 = "Steel.ST.C.Types.Base.null_gen"))
-                 ||
+               (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                uu___6 = "Steel.ST.C.Types.Base.null_gen") ||
                  (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
                   uu___6 = "Steel.ST.C.Types.Array.null_array_ptr")
                ->
@@ -638,16 +633,13 @@ let (parse_steel_c_fields :
       let rec go fields1 =
         match fields1 with
         | FStar_Extraction_ML_Syntax.MLTY_Named ([], p) when
-            false ||
-              (let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-               uu___ = "Steel.ST.C.Types.Fields.field_t_nil")
-            -> FStar_Pervasives_Native.Some []
+            let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___ = "Steel.ST.C.Types.Fields.field_t_nil" ->
+            FStar_Pervasives_Native.Some []
         | FStar_Extraction_ML_Syntax.MLTY_Named (field::t::fields2::[], p)
             when
-            false ||
-              (let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-               uu___ = "Steel.ST.C.Types.Fields.field_t_cons")
-            ->
+            let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___ = "Steel.ST.C.Types.Fields.field_t_cons" ->
             let uu___ = string_of_typestring field in
             opt_bind uu___
               (fun field1 ->

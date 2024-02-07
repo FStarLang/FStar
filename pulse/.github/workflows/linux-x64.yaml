@@ -33,6 +33,10 @@ jobs:
         run: |
           ci_docker_image_tag=steel:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
           docker build -t $ci_docker_image_tag -f src/ci/$CI_FLAVOR.Dockerfile --build-arg FSTAR_BRANCH=$FSTAR_BRANCH . |& tee BUILDLOG
+          if ! { echo $GITHUB_REF_NAME | grep '/' ; } ; then
+             docker tag $ci_docker_image_tag steel:local-branch-$GITHUB_REF_NAME
+          fi
+          docker tag $ci_docker_image_tag steel:local-commit-$GITHUB_SHA
       - name: Compute elapsed time
         if: ${{ always() }}
         run: |
@@ -59,7 +63,10 @@ jobs:
           # Just outputs to the github snippet. Could be part of slack message.
           # This command never triggers a failure, if we did not find anything
           # with grep then we just no-op
-          if grep -C10 -E ' \*\*\* |\(Error' BUILDLOG > BUILDLOG_ERRORS; then
+          .scripts/fstar_errs.sh BUILDLOG > BUILDLOG_ERRORS || true
+          # attach Make error lines, with context
+          grep -C10 -E ' \*\*\* ' BUILDLOG >> BUILDLOG_ERRORS || true
+          if [ -s BUILDLOG_ERRORS ]; then # if file not empty, report
             ERRORS_URL=$(.scripts/sprang BUILDLOG_ERRORS)
             ERRORS_MSG=" <$ERRORS_URL|(Error summary)>"
             echo "ERRORS_MSG=$ERRORS_MSG" >> $GITHUB_ENV

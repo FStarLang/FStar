@@ -4,7 +4,7 @@
 
    Warning: 5 states have shift/reduce conflicts.
    Warning: 6 shift/reduce conflicts were arbitrarily resolved.
-   Warning: 222 end-of-stream conflicts were arbitrarily resolved.
+   Warning: 221 end-of-stream conflicts were arbitrarily resolved.
 
  If you're editing this file, be sure to not increase the warnings,
  except if you have a really good reason.
@@ -86,13 +86,19 @@ let parse_extension_blob (extension_name:string)
 %token <string> AND_OP
 %token <string> MATCH_OP
 %token <string> IF_OP
+%token <bool> EXISTS
+%token <string> EXISTS_OP
+%token <bool> FORALL
+%token <string> FORALL_OP
+
+
 /* [SEMICOLON_OP] encodes either:
 - [;;], which used to be SEMICOLON_SEMICOLON, or
 - [;<OP>], with <OP> a sequence of [op_char] (see FStar_Parser_LexFStar).
 */
 %token <string option> SEMICOLON_OP
 
-%token FORALL EXISTS ASSUME NEW LOGIC ATTRIBUTES
+%token ASSUME NEW LOGIC ATTRIBUTES
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE UNFOLD INLINE_FOR_EXTRACTION
 %token NOEXTRACT
 %token NOEQUALITY UNOPTEQUALITY PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS PRAGMA_PUSH_OPTIONS PRAGMA_POP_OPTIONS PRAGMA_RESTART_SOLVER PRAGMA_PRINT_EFFECTS_GRAPH
@@ -112,7 +118,8 @@ let parse_extension_blob (extension_name:string)
 %token DOT_LENS_PAREN_LEFT DOT_LPAREN DOT_LBRACK_BAR LBRACK LBRACK_BAR LBRACE_BAR LBRACE BANG_LBRACE
 %token BAR_RBRACK BAR_RBRACE UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
-%token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN PIPE_RIGHT
+%token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN
+%token PIPE_LEFT PIPE_RIGHT
 %token NEW_EFFECT SUB_EFFECT LAYERED_EFFECT POLYMONADIC_BIND POLYMONADIC_SUBCOMP SPLICE SPLICET SQUIGGLY_RARROW TOTAL
 %token REQUIRES ENSURES DECREASES LBRACE_COLON_WELL_FOUNDED
 %token MINUS COLON_EQUALS QUOTE BACKTICK_AT BACKTICK_HASH
@@ -138,6 +145,7 @@ let parse_extension_blob (extension_name:string)
 %left     OPINFIX0c EQUALS
 %left     OPINFIX0d
 %left     PIPE_RIGHT
+%right    PIPE_LEFT
 %right    OPINFIX1
 %left     OPINFIX2 MINUS QUOTE
 %left     OPINFIX3
@@ -283,6 +291,21 @@ typeclassDecl:
         let lbs = focusLetBindings [lb] r in (* lbs is a singleton really *)
         let d = TopLevelLet(q, lbs) in
 
+        (* Slapping a `tcinstance` attribute to it *)
+        let at = mk_term (Var tcinstance_lid) r Type_level in
+
+        (d, [at])
+      }
+
+  | INSTANCE VAL lid=lidentOrOperator bs=binders COLON t=typ
+      {
+        (* Some duplication from rawDecl... *)
+        let r = rr $loc in
+        let t = match bs with
+          | [] -> t
+          | bs -> mk_term (Product(bs, t)) (rr2 $loc(bs) $loc(t)) Type_level
+        in
+        let d = Val(lid, t) in
         (* Slapping a `tcinstance` attribute to it *)
         let at = mk_term (Var tcinstance_lid) r Type_level in
 
@@ -695,6 +718,7 @@ binder:
   | tv=tvar { mk_binder (TVariable tv) (rr $loc) Kind None  }
        (* small regression here : fun (=x : t) ... is not accepted anymore *)
 
+%public
 multiBinder:
   | LBRACE_BAR id=lidentOrUnderscore COLON t=simpleArrow BAR_RBRACE
       { let r = rr $loc in
@@ -713,6 +737,13 @@ multiBinder:
        List.map (fun ((q, attrs), x) ->
          mkRefinedBinder x t should_bind_var r (rr $loc) q attrs) qual_ids
      }
+
+  | LPAREN_RPAREN
+    {
+      let r = rr $loc in
+      let unit_t = mk_term (Var (lid_of_ids [(mk_ident("unit", r))])) r Un in
+      [mk_binder (Annotated (gen r, unit_t)) r Un None]
+    }
 
   | b=binder { [b] }
 
@@ -1036,10 +1067,11 @@ calcStep:
          CalcStep (rel, justif, next)
      }
 
-typ:
-  | t=simpleTerm { t }
+%public
+typX(X,Y):
+  | t=Y { t }
 
-  | q=quantifier bs=binders DOT trigger=trigger e=noSeqTerm
+  | q=quantifier bs=binders DOT trigger=trigger e=X
       {
         match bs with
         | [] ->
@@ -1049,9 +1081,22 @@ typ:
           mk_term (q (bs, (idents, trigger), e)) (rr2 $loc(q) $loc(e)) Formula
       }
 
+typ:
+  | t=typX(noSeqTerm,simpleTerm) { t }
+
 %inline quantifier:
   | FORALL { fun x -> QForall x }
   | EXISTS { fun x -> QExists x}
+  | op=FORALL_OP
+    { 
+      let op = mk_ident("forall" ^ op, rr $loc(op)) in
+      fun (x,y,z) -> QuantOp (op, x, y, z)
+    }
+  | op=EXISTS_OP
+    { 
+      let op = mk_ident("exists" ^ op, rr $loc(op)) in
+      fun (x,y,z) -> QuantOp (op, x, y, z)
+    }
 
 trigger:
   |   { [] }
@@ -1154,6 +1199,8 @@ tmTuple:
       }
 
 
+
+%public
 tmEqWith(X):
   | e1=tmEqWith(X) tok=EQUALS e2=tmEqWith(X)
       { mk_term (Op(mk_ident("=", rr $loc(tok)), [e1; e2])) (rr $loc) Un}
@@ -1161,8 +1208,14 @@ tmEqWith(X):
   (* see https:/ /github.com/fsprojects/FsLexYacc/issues/39 *)
   | e1=tmEqWith(X) tok=COLON_EQUALS e2=tmEqWith(X)
       { mk_term (Op(mk_ident(":=", rr $loc(tok)), [e1; e2])) (rr $loc) Un}
-  | e1=tmEqWith(X) tok=PIPE_RIGHT e2=tmEqWith(X)
-      { mk_term (Op(mk_ident("|>", rr $loc(tok)), [e1; e2])) (rr $loc) Un}
+
+ | e1=tmEqWith(X) op=PIPE_LEFT e2=tmEqWith(X)
+      { mk_term (Op(mk_ident("<|", rr $loc(op)), [e1; e2])) (rr $loc) Un}
+
+ | e1=tmEqWith(X) op=PIPE_RIGHT e2=tmEqWith(X)
+      { mk_term (Op(mk_ident("|>", rr $loc(op)), [e1; e2])) (rr $loc) Un}
+
+
   | e1=tmEqWith(X) op=operatorInfix0ad12 e2=tmEqWith(X)
       { mk_term (Op(op, [e1; e2])) (rr2 $loc(e1) $loc(e2)) Un}
   | e1=tmEqWith(X) tok=MINUS e2=tmEqWith(X)
@@ -1229,7 +1282,6 @@ binop_name:
   | o=CONJUNCTION            { mk_ident ("/\\", rr $loc) }
   | o=DISJUNCTION            { mk_ident ("\\/", rr $loc) }
   | o=IFF                    { mk_ident ("<==>", rr $loc) }
-  | o=PIPE_RIGHT             { mk_ident ("|>", rr $loc) }
   | o=COLON_EQUALS           { mk_ident (":=", rr $loc) }
   | o=COLON_COLON            { mk_ident ("::", rr $loc) }
   | o=OP_MIXFIX_ASSIGNMENT   { mk_ident (o, rr $loc) }
@@ -1363,12 +1415,6 @@ projectionLHS:
           | None -> e
           | Some (level, t) -> mk_term (Ascribed(e,{t with level=level},None,false)) (rr2 $loc($1) $loc($4)) level
         in mk_term (Paren e1) (rr2 $loc($1) $loc($4)) (e.level)
-      }
-  | LBRACK_BAR es=semiColonTermList BAR_RBRACK
-      {
-        let l = mkConsList (rr2 $loc($1) $loc($3)) es in
-        let pos = (rr2 $loc($1) $loc($3)) in
-        mkExplicitApp (mk_term (Var (array_of_list_lid)) pos Expr) [l] pos
       }
   | LBRACK es=semiColonTermList RBRACK
       { mkConsList (rr2 $loc($1) $loc($3)) es }
@@ -1525,6 +1571,11 @@ string:
   | op=TILDE        { mk_ident (op, rr $loc) }
   | op=and_op       {op}
   | op=let_op       {op}
+  | op=quantifier_op {op}
+
+%inline quantifier_op:
+  | op=EXISTS_OP    { mk_ident ("exists" ^ op, rr $loc) }
+  | op=FORALL_OP    { mk_ident ("forall" ^ op, rr $loc) }
 
 %inline and_op:
   | op=AND_OP { mk_ident ("and" ^ op, rr $loc) }

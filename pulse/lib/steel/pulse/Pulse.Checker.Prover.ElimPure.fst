@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Checker.Prover.ElimPure
 
 module RT = FStar.Reflection.Typing
@@ -14,6 +30,7 @@ open Pulse.Typing.Combinators
 module Metatheory = Pulse.Typing.Metatheory
 open Pulse.Reflection.Util
 open Pulse.Checker.Prover.Base
+module RU = Pulse.RuntimeUtils
 
 let elim_pure_head =
     let elim_pure_explicit_lid = mk_pulse_lib_core_lid "elim_pure_explicit" in
@@ -27,7 +44,7 @@ let elim_pure_head_ty =
     let post =
       mk_abs squash_p R.Q_Explicit (R.pack_ln (R.Tv_FVar (R.pack_fv emp_lid)))
     in
-    let cod = mk_stt_ghost_comp u0 squash_p emp_inames_tm pure_p post in
+    let cod = mk_stt_ghost_comp u0 squash_p pure_p post in
     mk_arrow
       (R.pack_ln (R.Tv_FVar (R.pack_fv R.prop_qn)), R.Q_Explicit)
       cod
@@ -58,7 +75,7 @@ let elim_pure_comp (p:host_term) =
         pre=tm_pure (tm_fstar p);
         post=tm_emp
     } in
-    C_STGhost tm_emp_inames st
+    C_STGhost st
 
 #push-options "--admit_smt_queries true"    
 let elim_pure_typing (g:env) (p:host_term)
@@ -101,7 +118,7 @@ let elim_pure (#g:env) (#ctxt:term) (ctxt_typing:tot_typing g ctxt tm_vprop)
            ctxt':term &
            tot_typing g' ctxt' tm_vprop &
            continuation_elaborator g ctxt g' ctxt') =
-  let ctxt_emp_typing : tot_typing g (tm_star ctxt tm_emp) tm_vprop = magic () in
+  let ctxt_emp_typing : tot_typing g (tm_star ctxt tm_emp) tm_vprop = RU.magic () in
   let (| g', ctxt', ctxt'_emp_typing, k |) =
     elim_pure_frame ctxt_emp_typing (mk_env (fstar_env g)) in
   let k = k_elab_equiv k (VE_Trans _ _ _ _ (VE_Comm _ _ _) (VE_Unit _ _))
@@ -119,7 +136,7 @@ let elim_pure_pst (#preamble:_) (pst:prover_state preamble)
       #pst.pg
       #(list_as_vprop pst.remaining_ctxt)
       #(preamble.frame * pst.ss.(pst.solved))
-      (magic ())
+      (RU.magic ())
       pst.uvs in
 
   let k
@@ -133,7 +150,7 @@ let elim_pure_pst (#preamble:_) (pst:prover_state preamble)
         pst.pg ((list_as_vprop pst.remaining_ctxt * preamble.frame) * pst.ss.(pst.solved))
         g' ((remaining_ctxt' * preamble.frame) * pst.ss.(pst.solved)) =
     
-    k_elab_equiv k (magic ()) (magic ()) in
+    k_elab_equiv k (RU.magic ()) (RU.magic ()) in
 
   let k_new
     : continuation_elaborator
@@ -146,8 +163,9 @@ let elim_pure_pst (#preamble:_) (pst:prover_state preamble)
   { pst with
     pg = g';
     remaining_ctxt = vprop_as_list remaining_ctxt';
-    remaining_ctxt_frame_typing = magic ();
+    remaining_ctxt_frame_typing = RU.magic ();
+    nts = None;
     k = k_new;
-    goals_inv = magic ();  // weakening of pst.goals_inv
+    goals_inv = RU.magic ();  // weakening of pst.goals_inv
     solved_inv = ();
   }

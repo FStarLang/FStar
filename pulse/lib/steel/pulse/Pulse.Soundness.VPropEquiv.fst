@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Soundness.VPropEquiv
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
@@ -235,6 +251,10 @@ let rec vprop_equiv_soundness (#g:stt_env) (#v0 #v1:term)
       inst_vprop_equiv_ext (tot_typing_soundness t0_typing)
                            (tot_typing_soundness t1_typing)
                            token
+
+    | VE_Fa _ _ _ _ _ _ _ ->
+      (* see Pulse.Lib.Core.vprop_equiv_forall *)
+      admit()
 #pop-options
 
 let stt_vprop_equiv_is_prop (#g:R.env) (#v0 #v1:R.term)

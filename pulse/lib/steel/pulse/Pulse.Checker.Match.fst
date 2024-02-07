@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Checker.Match
 
 open Pulse.Common
@@ -11,6 +27,7 @@ module T = FStar.Tactics.V2
 module L = FStar.List.Tot.Base
 module R = FStar.Reflection.V2
 module RT = FStar.Reflection.Typing
+module RU = Pulse.RuntimeUtils
 
 let rec readback_pat (p : R.pattern) : option pattern =
   match p with
@@ -23,13 +40,14 @@ let rec readback_pat (p : R.pattern) : option pattern =
     Some (Pat_Constant c)
 
   | R.Pat_Var st nm ->
-    Some (Pat_Var nm)
+    Some (Pat_Var nm (RU.map_seal st RU.deep_compress))
     
   | R.Pat_Dot_Term None -> Some (Pat_Dot_Term None)
   | R.Pat_Dot_Term (Some t) ->
     if R.Tv_Unknown? (R.inspect_ln t)
     then None
     else
+      let t = RU.deep_compress t in
       let t = tm_fstar t Range.range_0 in
       Some (Pat_Dot_Term (Some t))
 
@@ -145,7 +163,7 @@ let rec elab_readback_pat_x (rp : R.pattern) (p : pattern)
     ()
 
   | R.Pat_Constant _, Pat_Constant _ -> ()
-  | R.Pat_Var st nm, Pat_Var _ ->
+  | R.Pat_Var st nm, Pat_Var _ _ ->
     Sealed.sealed_singl st (Sealed.seal RT.tun);
     ()
   | _ -> ()
@@ -240,6 +258,113 @@ let check_branch
   let br_d : br_typing g sc_u sc_ty sc p (close_st_term_n e (L.map fst pulse_bs)) c = TBR g sc_u sc_ty sc c p e bs () () () hyp_var e_d in
   (| p, close_st_term_n e (L.map fst pulse_bs), c, br_d |)
 
+
+let check_branches_aux_t 
+        (#g:env)
+        (pre:term)
+        (post_hint:post_hint_for_env g)
+        (sc_u : universe)
+        (sc_ty : typ)
+        (sc : term)
+= (br:branch
+   & c:comp_st{comp_pre c == pre /\ comp_post_matches_hint c (Some post_hint)}
+   & br_typing g sc_u sc_ty sc (fst br) (snd br) c)
+
+let check_branches_aux
+        (g:env)
+        (pre:term)
+        (pre_typing: tot_typing g pre tm_vprop)
+        (post_hint:post_hint_for_env g)
+        (check:check_t)
+        (sc_u : universe)
+        (sc_ty : typ)
+        (sc : term)
+        (brs0:list branch)
+        (bnds: list (R.pattern & list R.binding){L.length brs0 == L.length bnds})
+: T.Tac (brs:list (check_branches_aux_t pre post_hint sc_u sc_ty sc)
+          {
+            samepats brs0 (L.map Mkdtuple3?._1 brs)
+          })
+= if L.isEmpty brs0 then fail g None "empty match";
+  let tr1 (b: branch) (pbs:R.pattern & list R.binding)
+    : T.Tac (check_branches_aux_t pre post_hint sc_u sc_ty sc)
+    = let (_, e) = b in
+      let (p, bs) = pbs in
+      let (| p, e, c, d |) = check_branch g pre pre_typing post_hint check sc_u sc_ty sc p e bs in
+      (| (p,e), c, d |)
+  in
+  let r = zipWith tr1 brs0 bnds in
+  assume (samepats brs0 (L.map Mkdtuple3?._1 r));
+  r
+
+let comp_observability (c:comp_st) =
+  match c with
+  | C_ST _ -> Observable
+  | C_STGhost _ -> Unobservable
+  | C_STAtomic _ obs _ -> obs
+
+let weaken_branch_observability 
+      (obs:observability)
+      (#g #pre:_) (#post_hint:post_hint_for_env g) 
+      (#sc_u #sc_ty #sc:_)
+      (c:comp_st{
+          C_STAtomic? c /\
+          comp_pre c == pre /\
+          comp_post_matches_hint c (Some post_hint) /\
+          comp_observability c == obs
+        })
+      (checked_br : check_branches_aux_t #g pre post_hint sc_u sc_ty sc)
+: T.Tac (br:branch & br_typing g sc_u sc_ty sc (fst br) (snd br) c)
+= let (| br, c0, typing |) = checked_br in
+  let C_STAtomic i obs' st = c0 in
+  if not (sub_observability obs' obs)
+  then T.fail "Cannot weaken observability"
+  else (
+     let TBR g sc_u sc_ty sc c p e bs p1 p2 p3 hyp st_typing = typing in
+     let st_typing = T_Lift _ _ _ _ st_typing (Lift_Observability _ c obs) in
+     let d = TBR g sc_u sc_ty sc _ p e bs p1 p2 p3 hyp st_typing in
+    (| br, d |)
+  )
+
+let rec max_obs 
+    (checked_brs : list comp_st)
+    (obs:observability)
+: observability
+= match checked_brs with
+  | [] -> obs
+  | c'::rest -> 
+    match c' with
+    | C_ST _
+    | C_STGhost _ ->
+      max_obs rest obs
+    | C_STAtomic _ obs' _ ->
+      max_obs rest (join_obs obs obs')
+
+let join_branches (#g #pre #post_hint #sc_u #sc_ty #sc:_)
+                  (checked_brs : list (check_branches_aux_t #g pre post_hint sc_u sc_ty sc))
+: T.Tac (c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c (Some post_hint) } &
+         list (br:branch & br_typing g sc_u sc_ty sc (fst br) (snd br) c))
+= match checked_brs with
+  | [] -> T.fail "Impossible: empty match"
+  | checked_br::rest ->
+    let (| br, c, d |) = checked_br in
+    match c with
+    | C_ST _ 
+    | C_STGhost _ ->
+      let rest = 
+        List.Tot.map 
+          #(check_branches_aux_t #g pre post_hint sc_u sc_ty sc)
+          #(br:branch & br_typing g sc_u sc_ty sc (fst br) (snd br) c)
+          (fun (| br, c', d |) -> (| br, d |))
+          checked_brs
+      in
+      (| c, ((| br, d |) :: rest) |)
+    | C_STAtomic i obs stc ->
+      let max_obs = max_obs (List.Tot.map Mkdtuple3?._2 rest) obs in
+      let c = C_STAtomic i max_obs stc in
+      let checked_brs = T.map (weaken_branch_observability max_obs c) checked_brs in
+      (| c, checked_brs |)
+      
 let check_branches
         (g:env)
         (pre:term)
@@ -251,41 +376,21 @@ let check_branches
         (sc : term)
         (brs0:list branch)
         (bnds: list (R.pattern & list R.binding){L.length brs0 == L.length bnds})
-  : T.Tac (brs:list branch
-           & c:comp_st{comp_pre c == pre /\ comp_post_matches_hint c (Some post_hint)}
-           & brs_typing g sc_u sc_ty sc brs c)
-= if L.isEmpty brs0 then fail g None "empty match";
-  let (_, e0)::rest = brs0 in
-  let (p0, bnds0)::bnds = bnds in
-  let (| p0, e0, c0, d0 |) = check_branch g pre pre_typing post_hint check sc_u sc_ty sc p0 e0 bnds0 in
-  let brs_d
-    : (brs_d:list (br:branch & br_typing g sc_u sc_ty sc (fst br) (snd br) c0){samepats brs0 (L.map dfst brs_d)})
-  =
-    let tr1 (b: branch) (pbs:R.pattern & list R.binding)
-      : T.Tac (br:branch & br_typing g sc_u sc_ty sc (fst br) (snd br) c0)
-    =
-      let (_, e) = b in
-      let (p, bs) = pbs in
-      let (| p, e, c, d |) = check_branch g pre pre_typing post_hint check sc_u sc_ty sc p e bs in
-      assume (c == c0); // FIXME: join and weaken
-      (| (p,e), d |)
-    in
-    let r = zipWith tr1 rest bnds in
-    assume (samepats (L.map dfst r) brs0);
-    r
-  in
-  let brs = List.Tot.map dfst brs_d in
-  let _ = List.Tot.Properties.append_l_nil brs in // odd
+: T.Tac (brs:list branch
+         & c:comp_st{comp_pre c == pre /\ comp_post_matches_hint c (Some post_hint)}
+         & brs_typing g sc_u sc_ty sc brs c)
+= let checked_brs = check_branches_aux g pre pre_typing post_hint check sc_u sc_ty sc brs0 bnds in
+  let (| c0, checked_brs |) = join_branches checked_brs in
+  let brs = List.Tot.map dfst checked_brs in
   let d : brs_typing g sc_u sc_ty sc brs c0 =
     let rec aux (brs : list (br:branch & br_typing g sc_u sc_ty sc (fst br) (snd br) c0))
-               : brs_typing g sc_u sc_ty sc (List.Tot.map dfst brs) c0
-    =
-      match brs with
-      | [] -> TBRS_0 c0
-      | (|(p,e), d|)::rest ->
-        TBRS_1 c0 p e d (List.Tot.map dfst rest) (aux rest)
+      : brs_typing g sc_u sc_ty sc (List.Tot.map dfst brs) c0
+      = match brs with
+        | [] -> TBRS_0 c0
+        | (|(p,e), d|)::rest ->
+          TBRS_1 c0 p e d (List.Tot.map dfst rest) (aux rest)
     in
-    aux brs_d
+    aux checked_brs
   in
   (| brs, c0, d |)
 
@@ -307,7 +412,7 @@ let check
   let orig_brs = brs in
   let nbr = L.length brs in
 
-  let (| sc, sc_u, sc_ty, sc_ty_typing, sc_typing |) = check_tot_term_and_type g sc in
+  let (| sc, sc_u, sc_ty, sc_ty_typing, sc_typing |) = compute_tot_term_type_and_u g sc in
   let elab_pats = L.map elab_pat (L.map fst brs) in
 
   assertby (L.length elab_pats == L.length brs) (fun () ->
@@ -347,6 +452,6 @@ let check
   
   (* Provable *)
   assume (L.map (fun (p, _) -> elab_pat p) brs == elab_pats');
-
-  let d = T_Match g sc_u sc_ty sc sc_ty_typing sc_typing c brs brs_d complete_d in
+  let c_typing = comp_typing_from_post_hint c pre_typing post_hint in
+  let d = T_Match g sc_u sc_ty sc sc_ty_typing sc_typing c (E c_typing) brs brs_d complete_d in
   checker_result_for_st_typing (| _, _, d |) res_ppname

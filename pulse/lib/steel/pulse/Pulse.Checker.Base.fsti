@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Checker.Base
 
 module RT = FStar.Reflection.Typing
@@ -12,13 +28,49 @@ module FV = Pulse.Typing.FV
 module RU = Pulse.RuntimeUtils
 module Metatheory = Pulse.Typing.Metatheory
 
+val debug (g:env) (f:unit -> T.Tac string) : T.Tac unit
+
 val format_failed_goal (g:env) (ctxt:list term) (goal:list term) : T.Tac string
 
-val intro_post_hint (g:env) (ctag_opt:option ctag) (ret_ty:option term) (post:term)
-  : T.Tac (post_hint_for_env g)
+val intro_comp_typing (g:env) 
+                      (c:comp_st)
+                      (pre_typing:tot_typing g (comp_pre c) tm_vprop)
+                      (iname_typing:effect_annot_typing g (effect_annot_of_comp c))
+                      (res_typing:universe_of g (comp_res c) (comp_u c))
+                      (x:var { fresh_wrt x g (freevars (comp_post c)) })
+                      (post_typing:tot_typing (push_binding g x ppname_default (comp_res c)) (open_term (comp_post c) x) tm_vprop)
+  : T.Tac (comp_typing g c (universe_of_comp c))
 
-val post_hint_from_comp_typing (#g:env) (#c:comp_st) (ct:Metatheory.comp_typing_u g c)
+val post_typing_as_abstraction
+  (#g:env) (#x:var) (#ty:term) (#t:term { fresh_wrt x g (freevars t) })
+  (_:tot_typing (push_binding g x ppname_default ty) (open_term t x) tm_vprop)
+  : FStar.Ghost.erased (RT.tot_typing (elab_env g)
+                             (RT.mk_abs (elab_term ty) T.Q_Explicit (elab_term t))
+                             (RT.mk_arrow (elab_term ty) T.Q_Explicit (elab_term tm_vprop)))
+
+val intro_post_hint (g:env) (effect_annot:effect_annot) (ret_ty:option term) (post:term)
+  : T.Tac (h:post_hint_for_env g{h.effect_annot == effect_annot})
+
+val post_hint_from_comp_typing (#g:env) (#c:comp_st) (ct:comp_typing_u g c)
   : post_hint_for_env g
+
+val comp_typing_from_post_hint
+    (#g: env)
+    (c: comp_st)
+    (pre_typing: tot_typing g (comp_pre c) tm_vprop)
+    (p:post_hint_for_env g { comp_post_matches_hint c (Some p) })
+: T.Tac (comp_typing_u g c)
+
+val extend_post_hint (g:env) (p:post_hint_for_env g)
+                     (x:var{ None? (lookup g x) }) (tx:term)
+                     (conjunct:term) (_:tot_typing (push_binding g x ppname_default tx) conjunct tm_vprop)
+  : T.Tac (q:post_hint_for_env (push_binding g x ppname_default tx) {
+            q.post == tm_star p.post conjunct /\
+            q.ret_ty == p.ret_ty /\
+            q.u == p.u /\
+            q.effect_annot == p.effect_annot
+          })
+  
 
 type continuation_elaborator
   (g:env)                         (ctxt:vprop)
@@ -71,6 +123,17 @@ val continuation_elaborator_with_let (#g:env) (#ctxt:term)
            g ctxt
            (push_binding g (snd x) ppname_default t1) ctxt)
 
+val continuation_elaborator_with_bind_fn (#g:env) (#ctxt:term)
+  (ctxt_typing:tot_typing g ctxt tm_vprop)
+  (#e1:st_term)
+  (#c1:comp { C_Tot? c1 })
+  (b:binder{b.binder_ty == comp_res c1})
+  (e1_typing:st_typing g e1 c1)
+  (x:nvar { None? (lookup g (snd x)) })
+: T.Tac (continuation_elaborator
+          g ctxt
+          (push_binding g (snd x) ppname_default (comp_res c1)) ctxt)
+
 val check_equiv_emp (g:env) (vp:term)
   : option (vprop_equiv g vp tm_emp)
 
@@ -118,14 +181,6 @@ type check_t =
   t:st_term ->
   T.Tac (checker_result_t g ctxt post_hint)
   
-val intro_comp_typing (g:env) 
-                      (c:comp_st)
-                      (pre_typing:tot_typing g (comp_pre c) tm_vprop)
-                      (res_typing:universe_of g (comp_res c) (comp_u c))
-                      (x:var { fresh_wrt x g (freevars (comp_post c)) })
-                      (post_typing:tot_typing (push_binding g x ppname_default (comp_res c)) (open_term (comp_post c) x) tm_vprop)
-  : T.Tac (comp_typing g c (comp_u c))
-
 val match_comp_res_with_post_hint (#g:env) (#t:st_term) (#c:comp_st)
   (d:st_typing g t c)
   (post_hint:post_hint_opt g)
@@ -142,3 +197,30 @@ val checker_result_for_st_typing (#g:env) (#ctxt:vprop) (#post_hint:post_hint_op
   (d:st_typing_in_ctxt g ctxt post_hint)
   (ppname:ppname)
   : T.Tac (checker_result_t g ctxt post_hint)
+
+val is_stateful_application (g:env) (e:term) 
+  : T.Tac (option st_term)
+
+val norm_typing
+      (g:env) (e:term) (eff:_) (t0:term)
+      (d:typing g e eff t0)
+      (steps:list norm_step)
+  : T.Tac (t':term & typing g e eff t')
+
+val norm_typing_inverse
+      (g:env) (e:term) (eff:_) (t0:term)
+      (d:typing g e eff t0)
+      (t1:term)
+      (#u:_)
+      (d1:tot_typing g t1 (tm_type u))
+      (steps:list norm_step)
+  : T.Tac (option (typing g e eff t1))
+
+val norm_st_typing_inverse
+      (#g:env) (#e:st_term) (#t0:term)
+      (d:st_typing g e (C_Tot t0))
+      (#u:_)
+      (t1:term)
+      (d1:tot_typing g t1 (tm_type u))
+      (steps:list norm_step)
+  : T.Tac (option (st_typing g e (C_Tot t1)))

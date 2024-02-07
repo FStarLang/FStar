@@ -30,7 +30,7 @@ let weaken #o p q l =
   coerce_ghost (fun () -> SEA.rewrite_slprop p q l)
 
 let rewrite #o p q =
-  weaken p q (fun _ -> ()); ()
+  weaken p q (fun _ -> ())
 
 let rewrite_with_tactic #opened p q =
   weaken p q (fun _ -> reveal_equiv p q)

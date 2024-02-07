@@ -1,44 +1,39 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Lib.Stick
 
-open Pulse.Lib.Core
-friend Pulse.Lib.Core
-open Steel.ST.Util
+open Pulse.Lib.Pervasives
+module T = Pulse.Lib.Trade
 
-[@@"__reduce__"; "__steel_reduce__"]
-let stick #is = implies_ #is
+(* This lemma needed to typecheck the definitions below. *)
+let emp_unit_left (p:vprop)
+  : Lemma (emp ** p == p)
+          [SMTPat (emp ** p)]
+  = elim_vprop_equiv (vprop_equiv_unit p)
 
-(* Using this indirection as Steel tactic relies on 'star' instead of ** *)
-val __elim_stick
-  (#opened : inames)
-  (#is: inames{opened /! is})
-  (hyp concl: vprop)
-: stt_ghost unit opened
-    ((stick #is hyp concl) `star` hyp)
-    (fun _ -> concl)
+(* This module is just a special case of trades. The tactic
+instantiates the implicit InvList to [] everywhere. We do not
+even need to use the Pulse checker for it. *)
 
-let __elim_stick #opened #is hyp concl =
-  fun _ -> elim_implies_gen #opened #is hyp concl
+let stick (p q : vprop) =
+  T.trade p q
 
-let elim_stick #opened #is = __elim_stick #opened #is
+let elim_stick p q =
+  T.elim_trade_ghost p q
 
-(* Using this indirection as Steel tactic relies on 'star' instead of ** *)
-val __intro_stick
-  (#opens: inames)
-  (#is : inames)
-  (hyp concl: vprop)
-  (v: vprop)
-  (f_elim: (
-    (opens': inames{opens' /! is}) ->
-    stt_ghost unit opens'
-    (v `star` hyp)
-    (fun _ -> concl)
-  ))
-: stt_ghost unit opens
-    v
-    (fun _ -> (@==>) #is hyp concl)
-
-let __intro_stick #opens #is hyp concl v f_elim =
-  fun _ -> intro_implies_gen #opens #is hyp concl v
-               (fun opens' -> f_elim opens' ())
-
-let intro_stick #opened #is = __intro_stick #opened #is
+let intro_stick p q v f =
+  T.intro_trade p q v f

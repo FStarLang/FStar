@@ -26,7 +26,7 @@ let char_of_typechar (t: mlty): option char =
     if p = "Steel.C.Typestring.cdot" then
       Some '.'
     else if BU.starts_with p "Steel.C.Typestring.c" then
-      Some (FStar.String.get p (FStar.String.strlen "Steel.C.Typestring.c"))
+      Some (FStar.Compiler.String.get p (FStar.String.strlen "Steel.C.Typestring.c"))
     else
       None
 

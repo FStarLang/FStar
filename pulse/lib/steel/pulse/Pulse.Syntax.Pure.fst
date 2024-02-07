@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Syntax.Pure
 
 module R = FStar.Reflection.V2
@@ -64,6 +80,21 @@ let tm_pureapp (head:term) (q:option qualifier) (arg:term) : term =
   tm_fstar (R.mk_app (elab_term head) [(elab_term arg, elab_qual q)])
            FStar.Range.range_0
 
+let tm_pureabs (ppname:R.ppname_t) (ty : term) (q : option qualifier) (body:term) : term =
+  let open R in
+  let open T in
+  let b : T.binder = {
+      uniq = 0;
+      ppname = ppname;
+      sort = elab_term ty;
+      qual = elab_qual q;
+      attrs = [];
+  }
+  in
+  let r = pack (Tv_Abs b (elab_term body)) in
+  assume (~(R.Tv_Unknown? (R.inspect_ln r))); // NamedView API doesn't ensure this, it should
+  tm_fstar r FStar.Range.range_0
+
 let tm_arrow (b:binder) (q:option qualifier) (c:comp) : term =
   tm_fstar (mk_arrow_with_name b.binder_ppname.name (elab_term b.binder_ty, elab_qual q)
                                                     (elab_comp c))
@@ -85,6 +116,18 @@ let term_of_nvar (x:nvar) : term =
   tm_var { nm_index=snd x; nm_ppname=fst x}
 let term_of_no_name_var (x:var) : term =
   term_of_nvar (v_as_nv x)
+
+let is_bvar (t:term) : option nat =
+  let open R in
+  match t.t with
+  | Tm_FStar host_term ->
+    begin match R.inspect_ln host_term with
+          | R.Tv_BVar bv ->
+            let bv_view = R.inspect_bv bv in
+            Some bv_view.index
+          | _ -> None
+    end
+  | _ -> None
 
 let is_var (t:term) : option nm =
   let open R in
@@ -153,17 +196,10 @@ let is_fvar_app (t:term) : option (R.name &
        | None -> None)
     | _ -> None
 
-    // | Tm_PureApp head q arg ->
-    //   begin match is_fvar head with
-    //         | Some (l, us) -> Some (l, us, q, Some arg)
-    //         | None -> None
-    //   end
-    // | _ -> None
-
 let is_arrow (t:term) : option (binder & option qualifier & comp) =
   match t.t with
   | Tm_FStar host_term ->
-    begin match R.inspect_ln host_term with
+    begin match R.inspect_ln_unascribe host_term with
           | R.Tv_Arrow b c ->
             let {ppname;qual;sort} = R.inspect_binder b in
             begin match qual with
@@ -171,17 +207,26 @@ let is_arrow (t:term) : option (binder & option qualifier & comp) =
                   | _ ->
                     let q = readback_qual qual in
                     let c_view = R.inspect_comp c in
+                    let ret (c_t:R.typ) =
+                      let? binder_ty = readback_ty sort in
+                      let? c =
+                        match readback_comp c_t with
+                        | Some c -> Some c <: option Pulse.Syntax.Base.comp
+                        | None -> None in
+                      Some ({binder_ty;
+                             binder_ppname=mk_ppname ppname (T.range_of_term host_term)},
+                            q,
+                            c) in
+                      
                     begin match c_view with
-                          | R.C_Total c_t ->
-                            let? binder_ty = readback_ty sort in
-                            let? c =
-                              match readback_comp c_t with
-                              | Some c -> Some c <: option Pulse.Syntax.Base.comp
-                              | None -> None in
-                            Some ({binder_ty;
-                                   binder_ppname=mk_ppname ppname (T.range_of_term host_term)},
-                                  q,
-                                  c)
+                          | R.C_Total c_t -> ret c_t
+                          | R.C_Eff _ eff_name c_t _ _ ->
+                            //
+                            // Consider Tot effect with decreases also
+                            //
+                            if eff_name = tot_lid
+                            then ret c_t
+                            else None
                           | _ -> None
                     end
             end
@@ -191,18 +236,18 @@ let is_arrow (t:term) : option (binder & option qualifier & comp) =
   | _ -> None
 
 // TODO: write it better, with pattern matching on reflection syntax
-let is_eq2 (t:term) : option (term & term) =
+let is_eq2 (t:term) : option (term & term & term) =
   match is_pure_app t with
   | Some (head, None, a2) ->
     (match is_pure_app head with
      | Some (head, None, a1) ->
        (match is_pure_app head with
-        | Some (head, Some Implicit, _) ->
+        | Some (head, Some Implicit, ty) ->
           (match is_fvar head with
            | Some (l, _) ->
              if l = ["Pulse"; "Steel"; "Wrapper"; "eq2_prop"] ||
                 l = ["Prims"; "eq2"]
-             then Some (a1, a2)
+             then Some (ty, a1, a2)
              else None
            | _ -> None)
         | _ -> None)

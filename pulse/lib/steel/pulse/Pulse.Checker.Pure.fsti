@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Checker.Pure
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
@@ -17,35 +33,41 @@ let push_context (ctx:string) (r:range) (g:env) : (g':env { g == g' })
 val instantiate_term_implicits (g:env) (t:term)
   : T.Tac (term & term)
 
+val instantiate_term_implicits_uvs (g:env) (t:term)
+  : T.Tac (uvs:env { disjoint g uvs } & term & term)  // uvs
+
 val check_universe (g:env) (t:term)
   : T.Tac (u:universe & universe_of g t u)
 
-val check_term (g:env) (t:term)
+val compute_term_type (g:env) (t:term)
   : T.Tac (t:term &
            eff:T.tot_or_ghost &
            ty:term &
            typing g t eff ty)
 
-val check_term_and_type (g:env) (t:term)
+val compute_term_type_and_u (g:env) (t:term)
   : T.Tac (t:term  &
            eff:T.tot_or_ghost &
            ty:term &
            (u:universe & universe_of g ty u) &
            typing g t eff ty)
 
-val check_term_with_expected_type_and_effect (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
+val check_term (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
   : T.Tac (e:term & typing g e eff t)
 
-val check_term_with_expected_type (g:env) (e:term) (t:term)
+val check_term_at_type (g:env) (e:term) (t:term)
   : T.Tac (e:term & eff:T.tot_or_ghost & typing g e eff t)
 
-val core_check_term (g:env) (t:term)
+val core_compute_term_type (g:env) (t:term)
   : T.Tac (eff:T.tot_or_ghost &
            ty:term &
            typing g t eff ty)
 
-val core_check_term_with_expected_type (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
+val core_check_term (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
   : T.Tac (typing g e eff t)
+
+val core_check_term_at_type (g:env) (e:term) (t:term)
+  : T.Tac (eff:T.tot_or_ghost & typing g e eff t)
 
 val check_vprop (g:env)
                 (t:term)
@@ -55,31 +77,37 @@ val check_vprop_with_core (g:env)
                           (t:term)
   : T.Tac (tot_typing g t tm_vprop)
 
+val try_get_non_informative_witness (g:env) (u:universe) (t:term)
+  : T.Tac (option (non_informative_t g u t))
+
 val get_non_informative_witness (g:env) (u:universe) (t:term)
   : T.Tac (non_informative_t g u t)
+
+val try_check_prop_validity (g:env) (p:term) (_:tot_typing g p tm_prop)
+  : T.Tac (option (Pulse.Typing.prop_validity g p))
 
 val check_prop_validity (g:env) (p:term) (_:tot_typing g p tm_prop)
   : T.Tac (Pulse.Typing.prop_validity g p)
 
-val check_tot_term (g:env) (t:term)
+val compute_tot_term_type (g:env) (t:term)
   : T.Tac (t:term & ty:typ & tot_typing g t ty)
 
-val check_tot_term_and_type (g:env) (t:term)
+val compute_tot_term_type_and_u (g:env) (t:term)
   : T.Tac (t:term &
            u:universe &
            ty:typ &
            universe_of g ty u &
            tot_typing g t ty)
 
-val check_tot_term_with_expected_type (g:env) (e:term) (t:term)
+val check_tot_term (g:env) (e:term) (t:term)
   : T.Tac (e:term &
            tot_typing g e t)
 
-val core_check_tot_term (g:env) (t:term)
+val core_compute_tot_term_type (g:env) (t:term)
   : T.Tac (ty:typ &
            tot_typing g t ty)
 
-val core_check_tot_term_with_expected_type (g:env) (e:term) (t:typ)
+val core_check_tot_term (g:env) (e:term) (t:typ)
   : T.Tac (tot_typing g e t)
 
 val is_non_informative (g:env) (c:comp)

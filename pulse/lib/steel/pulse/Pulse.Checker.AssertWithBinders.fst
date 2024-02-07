@@ -1,5 +1,20 @@
-module Pulse.Checker.AssertWithBinders
+(*
+   Copyright 2023 Microsoft Research
 
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
+module Pulse.Checker.AssertWithBinders
 
 open Pulse.Syntax
 open Pulse.Typing
@@ -15,7 +30,8 @@ module P = Pulse.Syntax.Printer
 module N = Pulse.Syntax.Naming
 module PS = Pulse.Checker.Prover.Substs
 module Prover = Pulse.Checker.Prover
-
+module Env = Pulse.Typing.Env
+open Pulse.Show
 module RU = Pulse.RuntimeUtils
 
 let is_host_term (t:R.term) = not (R.Tv_Unknown? (R.inspect_ln t))
@@ -44,6 +60,7 @@ let infer_binder_types (g:env) (bs:list binder) (v:vprop)
   match bs with
   | [] -> []
   | _ ->
+    let g = push_context g "infer_binder_types" v.range in
     let tv = elab_term v in
     if not (is_host_term tv)
     then fail g (Some v.range)
@@ -88,13 +105,23 @@ let rec open_binders (g:env) (bs:list binder) (uvs:env { disjoint uvs g }) (v:te
     let body = subst_st_term body (shift_subst_n (L.length bs) ss) in
     open_binders g bs (push_binding uvs x b.binder_ppname b.binder_ty) v body
 
-let close_binders (bs:list (var & typ)) (t:term) : term =
-  let r = L.fold_right (fun (x, _) (n, t) ->
-    let ss = [ ND x 0 ] in
-    n + 1,
-    subst_term t (shift_subst_n n ss)
-  ) bs (0, t) in
-  snd r
+let closing (bs:list (ppname & var & typ)) : subst =
+  L.fold_right (fun (_, x, _) (n, ss) ->
+    n+1,
+    (ND x n)::ss
+  ) bs (0, []) |> snd
+
+let rec close_binders (bs:list (ppname & var & typ))
+  : Tot (list binder) (decreases L.length bs) =
+  match bs with
+  | [] -> []
+  | (name, x, t)::bs ->
+    let bss = L.mapi (fun n (n1, x1, t1) ->
+      assume (n >= 0);
+      n1, x1, subst_term t1 [ND x n]) bs in
+    let b = {binder_ppname=name; binder_ty = t} in
+    assume (L.length bss == L.length bs);
+    b::(close_binders bss)
 
 let unfold_defs (g:env) (defs:option (list string)) (t:term) 
   : T.Tac term
@@ -150,7 +177,12 @@ let visit_and_rewrite (p: (R.term & R.term)) (t:term) : T.Tac term =
       | Tm_VProp
       | Tm_Inames
       | Tm_EmpInames
+      | Tm_Inames
       | Tm_Unknown  -> t
+      | Tm_Inv i ->
+        { t with t = Tm_Inv (aux i) }
+      | Tm_AddInv i is ->
+        { t with t = Tm_AddInv (aux i) (aux is) }
       | Tm_Pure p -> { t with t = Tm_Pure (aux p) }
       | Tm_Star l r ->  { t with t = Tm_Star (aux l) (aux r) }
       | Tm_ExistsSL u b body -> { t with t = Tm_ExistsSL u { b with binder_ty=aux b.binder_ty} (aux body) }
@@ -164,7 +196,6 @@ let visit_and_rewrite (p: (R.term & R.term)) (t:term) : T.Tac term =
     
 let visit_and_rewrite_conjuncts (p: (R.term & R.term)) (tms:list term) : T.Tac (list term) =
   T.map (visit_and_rewrite p) tms
-
 
 let visit_and_rewrite_conjuncts_all (p: list (R.term & R.term)) (goal:term) : T.Tac (term & term) =
   let tms = Pulse.Typing.Combinators.vprop_as_list goal in
@@ -228,7 +259,7 @@ let rewrite_all (g:env) (p: list (term & term)) (t:term) : T.Tac (term & term) =
     debug_log g (fun _ -> Printf.sprintf "Rewrote %s to %s" (P.term_to_string lhs) (P.term_to_string rhs));
     lhs, rhs
 
-let rec check_renaming 
+let check_renaming 
     (g:env)
     (pre:term)
     (st:st_term { 
@@ -265,6 +296,57 @@ let rec check_renaming
       { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body } }
   )
 
+let check_wild
+      (g:env)
+      (pre:term)
+      (st:st_term { head_wild st })
+: T.Tac st_term
+= let Tm_ProofHintWithBinders ht = st.term in
+  let { binders=bs; t=body } = ht in
+  match bs with
+  | [] ->
+    fail g (Some st.range) "A wildcard must have at least one binder"
+
+  | _ ->
+    let vprops = Pulse.Typing.Combinators.vprop_as_list pre in
+    let ex, rest = List.Tot.partition (fun (v:vprop) -> Tm_ExistsSL? v.t) vprops in
+    match ex with
+    | []
+    | _::_::_ ->
+      fail g (Some st.range) "Binding names with a wildcard requires exactly one existential quantifier in the goal"
+    | [ex] ->
+      let k = List.Tot.length bs in
+      let rec peel_binders (n:nat) (t:term) : T.Tac st_term =
+        if n = 0
+        then (
+          let ex_body = t in
+          { st with term = Tm_ProofHintWithBinders { ht with hint_type = ASSERT { p = ex_body } }}
+        )
+        else (
+          match t.t with
+          | Tm_ExistsSL u b body -> peel_binders (n-1) body
+          | _ -> 
+            fail g (Some st.range)
+               (Printf.sprintf "Expected an existential quantifier with at least %d binders; but only found %s with %d binders"
+                  k (show ex) (k - n))
+        )
+      in
+      peel_binders k ex
+
+//
+// v is a partially applied vprop with type t
+// add uvars for the remaining arguments
+//
+let rec add_rem_uvs (g:env) (t:typ) (uvs:env { Env.disjoint g uvs }) (v:vprop)
+  : T.Tac (uvs:env { Env.disjoint g uvs } & vprop) =
+  match is_arrow t with
+  | None -> (| uvs, v |)
+  | Some (b, qopt, c) ->
+    let x = fresh (push_env g uvs) in
+    let ct = open_comp_nv c (b.binder_ppname, x) in
+    let uvs = Env.push_binding uvs x b.binder_ppname b.binder_ty in
+    let v = tm_pureapp v qopt (tm_var {nm_index = x; nm_ppname = b.binder_ppname}) in 
+    add_rem_uvs g (comp_res ct) uvs v
 
 let check
   (g:env)
@@ -282,6 +364,18 @@ let check
   let Tm_ProofHintWithBinders { hint_type; binders=bs; t=body } = st.term in
 
   match hint_type with
+  | WILD ->
+    let st = check_wild g pre st in
+    check g pre pre_typing post_hint res_ppname st
+
+  | SHOW_PROOF_STATE r ->
+    let open FStar.Stubs.Pprint in
+    let open Pulse.PP in
+    let msg = [
+      text "Current context:" ^^
+            indent (pp pre)
+    ] in
+    fail_doc_env true g (Some r) msg
   | RENAME { pairs; goal } ->
     let st = check_renaming g pre st in
     check g pre pre_typing post_hint res_ppname st
@@ -304,20 +398,36 @@ let check
     let (| uvs, v_opened, body_opened |) = open_binders g bs (mk_env (fstar_env g)) v body in
     let v, body = v_opened, body_opened in
     let (| v, d |) = PC.check_vprop (push_env g uvs) v in
-    let (| g1, nts, pre', k_frame |) = Prover.prove pre_typing uvs d in
+    let (| g1, nts, _, pre', k_frame |) = Prover.prove pre_typing uvs d in
+    //
+    // No need to check effect labels for the uvs solution here,
+    //   since we are checking the substituted body anyway,
+    //   if some of them are ghost when they shouldn't be,
+    //   it will get caught
+    //
     let (| x, x_ty, pre'', g2, k |) =
       check g1 (tm_star (PS.nt_subst_term v nts) pre')
-              (magic ()) 
+              (RU.magic ()) 
               post_hint res_ppname (PS.nt_subst_st_term body nts) in
     (| x, x_ty, pre'', g2, k_elab_trans k_frame k |)
 
 
   | UNFOLD { names; p=v }
   | FOLD { names; p=v } ->
-    let bs = infer_binder_types g bs v in
-    let (| uvs, v_opened, body_opened |) = open_binders g bs (mk_env (fstar_env g)) v body in
+
+    let (| uvs, v_opened, body_opened |) =
+      let bs = infer_binder_types g bs v in
+      open_binders g bs (mk_env (fstar_env g)) v body in
+
     check_unfoldable g v;
-    let v_opened, _ = PC.instantiate_term_implicits (push_env g uvs) v_opened in
+
+    let v_opened, t_rem = PC.instantiate_term_implicits (push_env g uvs) v_opened in
+
+    let uvs, v_opened =
+      let (| uvs_rem, v_opened |) =
+        add_rem_uvs (push_env g uvs) t_rem (mk_env (fstar_env g)) v_opened in
+      push_env uvs uvs_rem, v_opened in
+
     let lhs, rhs =
       match hint_type with      
       | UNFOLD _ ->
@@ -326,8 +436,13 @@ let check
       | FOLD { names=ns } -> 
         unfold_defs (push_env g uvs) ns v_opened,
         v_opened in
-    let uvs_bs = L.rev (bindings uvs) in
-    let lhs, rhs = close_binders uvs_bs lhs, close_binders uvs_bs rhs in
+
+    let uvs_bs = uvs |> bindings_with_ppname |> L.rev in
+    let uvs_closing = uvs_bs |> closing in
+    let lhs = subst_term lhs uvs_closing in
+    let rhs = subst_term rhs uvs_closing in
+    let body = subst_st_term body_opened uvs_closing in
+    let bs = close_binders uvs_bs in
     let rw = { term = Tm_Rewrite { t1 = lhs;
                                    t2 = rhs };
                range = st.range;

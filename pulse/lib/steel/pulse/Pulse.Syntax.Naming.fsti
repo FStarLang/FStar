@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Syntax.Naming
 
 open FStar.List.Tot
@@ -9,7 +25,7 @@ module L = FStar.List.Tot
 module R = FStar.Reflection
 module RTB = FStar.Reflection.Typing.Builtins
 module RT = FStar.Reflection.Typing
-
+module RU = Pulse.RuntimeUtils
 module U = Pulse.Syntax.Pure
 module E = Pulse.Elaborate.Pure
 
@@ -21,6 +37,7 @@ let rec freevars (t:term)
     | Tm_Inames
     | Tm_EmpInames
     | Tm_Unknown -> Set.empty
+    | Tm_Inv p -> freevars p
     | Tm_Star t1 t2 ->
       Set.union (freevars t1) (freevars t2)
     | Tm_ExistsSL _ t1 t2
@@ -28,6 +45,7 @@ let rec freevars (t:term)
       Set.union (freevars t1.binder_ty) (freevars t2)
     | Tm_Pure p -> freevars p
     | Tm_FStar t -> RT.freevars t
+    | Tm_AddInv i is -> Set.union (freevars i) (freevars is)
 
 let freevars_st_comp (s:st_comp) : Set.set var =
   freevars s.res `Set.union`
@@ -38,9 +56,9 @@ let freevars_st_comp (s:st_comp) : Set.set var =
 let freevars_comp (c:comp) : Tot (Set.set var) (decreases c) =
   match c with
   | C_Tot t -> freevars t
-  | C_ST s -> freevars_st_comp s
-  | C_STAtomic inames s
-  | C_STGhost inames s ->
+  | C_ST s
+  | C_STGhost s -> freevars_st_comp s
+  | C_STAtomic inames _ s ->
     freevars inames `Set.union` freevars_st_comp s
 
 let freevars_opt (f: 'a -> Set.set var) (x:option 'a) : Set.set var =
@@ -70,16 +88,23 @@ let freevars_proof_hint (ht:proof_hint_type) : Set.set var =
     Set.union (freevars_pairs pairs) (freevars_term_opt goal)
   | REWRITE { t1; t2 } ->
     Set.union (freevars t1) (freevars t2)
+  | WILD
+  | SHOW_PROOF_STATE _ -> Set.empty
+
+let freevars_ascription (c:comp_ascription) 
+  : Set.set var
+  = Set.union (freevars_opt freevars_comp c.elaborated)
+              (freevars_opt freevars_comp c.annotated)
 
 let rec freevars_st (t:st_term)
   : Set.set var
   = match t.term with
-    | Tm_Return { term } ->
-      freevars term
+    | Tm_Return { expected_type; term } ->
+      Set.union (freevars expected_type) (freevars term)
     | Tm_Abs { b; ascription; body } ->
       Set.union (freevars b.binder_ty) 
                 (Set.union (freevars_st body)
-                           (freevars_comp ascription))
+                           (freevars_ascription ascription))
     | Tm_STApp { head; arg } ->
       Set.union (freevars head) (freevars arg)
     | Tm_Bind { binder; head; body } ->
@@ -125,6 +150,12 @@ let rec freevars_st (t:st_term)
                 (Set.union (freevars initializer)
                            (freevars_st body))
 
+    | Tm_WithLocalArray { binder; initializer; length; body } ->
+      Set.union (freevars binder.binder_ty)
+                (Set.union (freevars initializer)
+                           (Set.union (freevars length)
+                                      (freevars_st body)))
+
     | Tm_Rewrite { t1; t2 } ->
       Set.union (freevars t1) (freevars t2)
 
@@ -132,13 +163,25 @@ let rec freevars_st (t:st_term)
       Set.union (freevars typ)
                 (freevars_term_opt post)
 
+    | Tm_Unreachable ->
+      Set.empty
+
     | Tm_ProofHintWithBinders { binders; hint_type; t } ->
       Set.union (freevars_proof_hint hint_type) (freevars_st t)
+
+    | Tm_WithInv { name; body; returns_inv } ->
+      Set.union (Set.union (freevars name) (freevars_st body))
+                (freevars_opt 
+                  (fun (b, r) ->
+                    (Set.union (freevars b.binder_ty) 
+                               (freevars r)))
+                  returns_inv)
 
 and freevars_branches (t:list (pattern & st_term)) : Set.set var =
   match t with
   | [] -> Set.empty
   | (_, b)::tl -> freevars_st b `Set.union` freevars_branches tl
+
 
 let rec ln' (t:term) (i:int) : Tot bool (decreases t) =
   match t.t with
@@ -147,6 +190,8 @@ let rec ln' (t:term) (i:int) : Tot bool (decreases t) =
   | Tm_Inames
   | Tm_EmpInames
   | Tm_Unknown -> true
+
+  | Tm_Inv p -> ln' p i
 
   | Tm_Star t1 t2 ->
     ln' t1 i &&
@@ -163,6 +208,11 @@ let rec ln' (t:term) (i:int) : Tot bool (decreases t) =
   | Tm_FStar t ->
     RT.ln' t i
 
+  | Tm_AddInv x is ->
+    ln' x i &&
+    ln' is i
+
+
 let ln_st_comp (s:st_comp) (i:int) : bool =
   ln' s.res i &&
   ln' s.pre i &&
@@ -173,16 +223,16 @@ let ln_c' (c:comp) (i:int)
   : bool
   = match c with
     | C_Tot t -> ln' t i
-    | C_ST s -> ln_st_comp s i
-    | C_STAtomic inames s
-    | C_STGhost inames s ->
+    | C_ST s
+    | C_STGhost s -> ln_st_comp s i
+    | C_STAtomic inames _ s ->
       ln' inames i &&
       ln_st_comp s i
 
-let ln_opt' (t:option term) (i:int) : bool =
+let ln_opt' (f: ('a -> int -> bool)) (t:option 'a) (i:int) : bool =
   match t with
   | None -> true
-  | Some t -> ln' t i
+  | Some t -> f t i
 
 let rec ln_list' (t:list term) (i:int) : bool =
   match t with
@@ -201,21 +251,67 @@ let ln_proof_hint' (ht:proof_hint_type) (i:int) : bool =
   | FOLD   { p } -> ln' p i
   | RENAME { pairs; goal } ->
     ln_terms' pairs i &&
-    ln_opt' goal i
+    ln_opt' ln' goal i
   | REWRITE { t1; t2 } ->
     ln' t1 i &&
     ln' t2 i
+  | WILD
+  | SHOW_PROOF_STATE _ -> true
+
+let rec pattern_shift_n (p:pattern)
+  : Tot nat
+  = match p with
+    | Pat_Constant _ 
+    | Pat_Dot_Term _ -> 
+      0
+    | Pat_Var _ _ ->
+      1
+    | Pat_Cons fv l ->
+      pattern_args_shift_n l
+and pattern_args_shift_n (ps:list (pattern & bool))
+  : Tot nat
+  = match ps with
+    | [] -> 0
+    | (p, _)::tl ->
+      pattern_shift_n p + pattern_args_shift_n tl
+
+let rec ln_pattern' (p : pattern) (i:int)
+  : Tot bool (decreases p)
+  = match p with
+    | Pat_Constant _ 
+    | Pat_Var _ _ 
+    | Pat_Dot_Term None ->
+      true
+    | Pat_Dot_Term (Some e) ->
+      ln' e i
+    | Pat_Cons fv l ->
+      ln_pattern_args' l i
+ 
+and ln_pattern_args' (p:list (pattern & bool)) (i:int)
+  : Tot bool (decreases p)
+  = match p with
+    | [] ->
+      true
+    | (p, _)::tl ->
+      ln_pattern' p i &&
+      ln_pattern_args' tl (i + pattern_shift_n p)
+
+let ln_ascription' (c:comp_ascription) (i:int)
+  : bool
+  = ln_opt' ln_c' c.elaborated i &&
+    ln_opt' ln_c' c.annotated i
 
 let rec ln_st' (t:st_term) (i:int)
   : Tot bool (decreases t)
   = match t.term with
-    | Tm_Return { term } ->
+    | Tm_Return { expected_type; term } ->
+      ln' expected_type i &&
       ln' term i
       
     | Tm_Abs { b; ascription; body } ->
       ln' b.binder_ty i &&
       ln_st' body (i + 1) &&
-      ln_c' ascription (i + 1)
+      ln_ascription' ascription (i + 1)
 
     | Tm_STApp { head; arg } ->
       ln' head i &&
@@ -235,11 +331,11 @@ let rec ln_st' (t:st_term) (i:int)
       ln' b i &&
       ln_st' then_ i &&
       ln_st' else_ i &&
-      ln_opt' post (i + 1)
+      ln_opt' ln' post (i + 1)
   
     | Tm_Match {sc; returns_; brs } ->
       ln' sc i &&
-      ln_opt' returns_ i &&
+      ln_opt' ln' returns_ i &&
       ln_branches' t brs i
 
     | Tm_IntroPure { p }
@@ -268,28 +364,42 @@ let rec ln_st' (t:st_term) (i:int)
       ln' initializer i &&
       ln_st' body (i + 1)
 
+    | Tm_WithLocalArray { binder; initializer; length; body } ->
+      ln' binder.binder_ty i &&
+      ln' initializer i &&
+      ln' length i &&
+      ln_st' body (i + 1)
+
     | Tm_Rewrite { t1; t2 } ->
       ln' t1 i &&
       ln' t2 i
 
     | Tm_Admit { typ; post } ->
       ln' typ i &&
-      ln_opt' post (i + 1)
+      ln_opt' ln' post (i + 1)
+
+    | Tm_Unreachable ->
+      true
 
     | Tm_ProofHintWithBinders { binders; hint_type; t } ->
       let n = L.length binders in
       ln_proof_hint' hint_type (i + n) &&
       ln_st' t (i + n)
 
+    | Tm_WithInv { name; body; returns_inv } ->
+      ln' name i &&
+      ln_st' body i &&
+      ln_opt'
+        (fun (b, r) i ->
+          ln' b.binder_ty i &&
+          ln' r (i + 1))
+        returns_inv i
+
 and ln_branch' (b : pattern & st_term) (i:int) : Tot bool (decreases b) =
   let (p, e) = b in
-  match p with
-  | Pat_Cons fv l -> ln_st' e (i + length l)
-  | Pat_Constant _ -> ln_st' e i
-  | Pat_Var _ -> ln_st' e (i+1)
-  | Pat_Dot_Term None -> ln_st' e i
-  | Pat_Dot_Term (Some e) -> false // FIXME come back to this
-
+  ln_pattern' p i &&
+  ln_st' e (i + pattern_shift_n p)
+  
 and ln_branches' (t:st_term) (brs : list branch{brs << t}) (i:int) : Tot bool (decreases brs) =
   for_all_dec t brs (fun b -> ln_branch' b i)
 
@@ -337,6 +447,9 @@ let rec subst_term (t:term) (ss:subst)
     | Tm_Inames
     | Tm_EmpInames
     | Tm_Unknown -> t
+
+    | Tm_Inv p ->
+      w (Tm_Inv (subst_term p ss))
                  
     | Tm_Pure p ->
       w (Tm_Pure (subst_term p ss))
@@ -355,6 +468,10 @@ let rec subst_term (t:term) (ss:subst)
     
     | Tm_FStar t ->
       w (Tm_FStar (subst_host_term t ss))
+
+    | Tm_AddInv i is ->
+      w (Tm_AddInv (subst_term i ss)
+                   (subst_term is ss))
 
 let open_term' (t:term) (v:term) (i:index) =
   subst_term t [ DT i v ]
@@ -377,13 +494,12 @@ let subst_comp (c:comp) (ss:subst)
 
     | C_ST s -> C_ST (subst_st_comp s ss)
 
-    | C_STAtomic inames s ->
-      C_STAtomic (subst_term inames ss)
+    | C_STAtomic inames obs s ->
+      C_STAtomic (subst_term inames ss) obs
                  (subst_st_comp s ss)
 
-    | C_STGhost inames s ->
-      C_STGhost (subst_term inames ss)
-                (subst_st_comp s ss)
+    | C_STGhost s ->
+      C_STGhost (subst_st_comp s ss)
 
 let open_comp' (c:comp) (v:term) (i:index) : comp =
   subst_comp c [ DT i v ]
@@ -428,6 +544,8 @@ let subst_proof_hint (ht:proof_hint_type) (ss:subst)
                                          goal=subst_term_opt goal ss }
     | REWRITE { t1; t2 } -> REWRITE { t1=subst_term t1 ss;
                                       t2=subst_term t2 ss }
+    | WILD
+    | SHOW_PROOF_STATE _ -> ht
 
 let open_term_pairs' (t:list (term * term)) (v:term) (i:index) =
   subst_term_pairs t [DT i v]
@@ -441,18 +559,53 @@ let open_proof_hint'  (ht:proof_hint_type) (v:term) (i:index) =
 let close_proof_hint' (ht:proof_hint_type) (x:var) (i:index) =
   subst_proof_hint ht [ND x i]
 
+let rec subst_pat (p:pattern) (ss:subst)
+  : Tot pattern (decreases p)
+  = match p with
+    | Pat_Constant _
+    | Pat_Dot_Term None ->
+      p
+    | Pat_Var n t -> 
+      let t = RU.map_seal t (fun t -> RT.subst_term t (rt_subst ss)) in
+      Pat_Var n t
+    | Pat_Dot_Term (Some e) ->
+      Pat_Dot_Term (Some (subst_term e ss))
+    | Pat_Cons d args ->
+      let args = subst_pat_args args ss in
+      Pat_Cons d args
+and subst_pat_args (args:list (pattern & bool)) (ss:subst)
+  : Tot (list (pattern & bool)) (decreases args)
+  = match args with
+    | [] -> []
+    | (arg, b)::tl ->
+      let arg' = subst_pat arg ss in
+      let tl = subst_pat_args tl (shift_subst_n (pattern_shift_n arg) ss) in
+      (arg', b)::tl
+
+let map2_opt (f: 'a -> 'b -> 'c) (x:option 'a) (y:'b)
+  : option 'c
+  = match x with
+    | None -> None
+    | Some x -> Some (f x y)
+
+let subst_ascription (c:comp_ascription) (ss:subst)
+  : comp_ascription
+  = { elaborated = map2_opt subst_comp c.elaborated ss;
+       annotated = map2_opt subst_comp c.annotated ss }
 
 let rec subst_st_term (t:st_term) (ss:subst)
   : Tot st_term (decreases t)
   = let t' =
     match t.term with
-    | Tm_Return { ctag; insert_eq; term } ->
-      Tm_Return { ctag; insert_eq; term=subst_term term ss }
+    | Tm_Return { expected_type; insert_eq; term } ->
+      Tm_Return { expected_type=subst_term expected_type ss;
+                  insert_eq;
+                  term=subst_term term ss }
 
     | Tm_Abs { b; q; ascription; body } ->
       Tm_Abs { b=subst_binder b ss;
                q;
-               ascription=subst_comp ascription (shift_subst ss);
+               ascription=subst_ascription ascription (shift_subst ss);
                body=subst_st_term body (shift_subst ss) }
 
     | Tm_STApp { head; arg_qual; arg } ->
@@ -510,6 +663,12 @@ let rec subst_st_term (t:st_term) (ss:subst)
                      initializer = subst_term initializer ss;
                      body = subst_st_term body (shift_subst ss) }
 
+    | Tm_WithLocalArray { binder; initializer; length; body } ->
+      Tm_WithLocalArray { binder = subst_binder binder ss;
+                          initializer = subst_term initializer ss;
+                          length = subst_term length ss;
+                          body = subst_st_term body (shift_subst ss) }
+
     | Tm_Rewrite { t1; t2 } ->
       Tm_Rewrite { t1 = subst_term t1 ss;
                    t2 = subst_term t2 ss }
@@ -520,12 +679,27 @@ let rec subst_st_term (t:st_term) (ss:subst)
                  typ=subst_term typ ss;
                  post=subst_term_opt post (shift_subst ss) }
 
+    | Tm_Unreachable -> Tm_Unreachable
+    
     | Tm_ProofHintWithBinders { hint_type; binders; t} ->
       let n = L.length binders in
       let ss = shift_subst_n n ss in
       Tm_ProofHintWithBinders { binders;
                                 hint_type=subst_proof_hint hint_type ss; 
                                 t = subst_st_term t ss }
+
+    | Tm_WithInv { name; body; returns_inv } ->
+      let name = subst_term name ss in
+      let body = subst_st_term body ss in
+      let returns_inv =
+        match returns_inv with
+        | None -> None
+        | Some (b, r) ->
+          Some (subst_binder b ss, 
+                subst_term r (shift_subst ss))
+      in
+      Tm_WithInv { name; body; returns_inv }
+
     in
     { t with term = t' }
 
@@ -535,15 +709,8 @@ and subst_branches (t:st_term) (ss:subst) (brs : list branch{brs << t})
 
 and subst_branch (ss:subst) (b : pattern & st_term) : Tot (pattern & st_term) (decreases b) =
   let (p, e) = b in
-  let pat_n_binders (p:pattern) : nat =
-    match p with
-    | Pat_Constant _ -> 0
-    | Pat_Var _ -> 1
-    | Pat_Cons _ args -> L.length args
-    | Pat_Dot_Term _ -> 0
-  in
-  let nn = pat_n_binders p in
-  let ss = shift_subst_n nn ss in
+  let p = subst_pat p ss in
+  let ss = shift_subst_n (pattern_shift_n p) ss in
   p, subst_st_term e ss
 
 
@@ -565,6 +732,9 @@ let open_st_term t v : GTot st_term =
     open_st_term_nv t (v_as_nv v)
 
 let open_comp_with (c:comp) (x:term) = open_comp' c x 0
+
+let open_comp_nv c nv =
+    open_comp' c (U.term_of_nvar nv) 0
 
 let close_term' (t:term) (v:var) (i:index) : term =
   subst_term t [ ND v i ]

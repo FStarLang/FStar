@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Fibonacci
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
@@ -14,7 +30,7 @@ let rec fib_mono (n:nat) (m:nat { m <= n})
     else fib_mono (n - 1) m
 
 open FStar.UInt32
-open Pulse.Class.BoundedIntegers
+open Pulse.Lib.BoundedIntegers
 
 
 ```pulse
@@ -28,7 +44,7 @@ fn fibonacci (k:pos)
   let mut ctr = 1;
   while ((ctr < k))
   invariant b . 
-    exists vi vj vctr. 
+    exists* vi vj vctr. 
     pts_to i vi **
     pts_to j vj **
     pts_to ctr vctr **
@@ -58,7 +74,7 @@ fn fibonacci32 (k:U32.t)
   let mut ctr = 1ul;
   while ((ctr < k))
   invariant b . 
-    exists vi vj vctr. 
+    exists* vi vj vctr. 
      pts_to i vi **
      pts_to j vj **
      pts_to ctr vctr **
@@ -88,7 +104,7 @@ fn fibo (n:pos)
   let mut j = 1;
   let mut ctr = 1;
   while ((ctr < n))
-  invariant b . exists vi vj vctr. (
+  invariant b . exists* vi vj vctr. (
      pts_to i vi **
      pts_to j vj **
      pts_to ctr vctr **
@@ -118,7 +134,7 @@ fn fibo2 (n:pos)
   let mut j : nat = 1;
   let mut ctr : nat = 1;
   while ((ctr < n))
-  invariant b . exists vi vj vctr. (
+  invariant b . exists* vi vj vctr. (
      pts_to i vi **
      pts_to j vj **
      pts_to ctr vctr **     
@@ -148,7 +164,7 @@ fn fibo3 (n:pos)
   let mut j : nat = 1;
   let mut ctr : nat = 1;
   while ((ctr < n))
-  invariant b . exists vi vj vctr. (
+  invariant b . exists* vi vj vctr. (
      pts_to i vi **
      pts_to j vj **
      pts_to ctr vctr **     

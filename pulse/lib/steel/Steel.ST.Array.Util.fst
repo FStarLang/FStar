@@ -65,6 +65,7 @@ let array_literal_loop_body
         (fun _ -> exists_ (array_literal_inv n arr f (US.v i + 1)))
   = fun i ->
     let s = elim_exists () in
+    ();
     A.pts_to_length arr s;
     elim_pure (array_literal_inv_pure n f (US.v i) s);
 

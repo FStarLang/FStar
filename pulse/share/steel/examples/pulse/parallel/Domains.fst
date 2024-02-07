@@ -1,12 +1,28 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Domains
 
-open Steel.Memory
-open Steel.ST.Effect
-open Steel.ST.Util
+// open Steel.Memory
+// open Steel.ST.Effect
+// open Steel.ST.Util
 
 module Lock = Pulse.Lib.SpinLock
 open Pulse.Lib.Pervasives
-open Pulse.Lib.Core
+open Pulse.Lib.Pervasives
 module HR = Pulse.Lib.HigherReference
 
 
@@ -42,7 +58,7 @@ let task_elem = (
   & p: (a -> prop) // postcondition about the return value
   & (unit_emp_stt_pure_pure a p) // the computation
   & r: ref (option a) // the reference where we put the result of the computation
-  & Lock.lock (exists_ (fun v -> pts_to r v ** pure (maybe_sat p v)))
+  & Lock.lock (exists* v. pts_to r v ** pure (maybe_sat p v))
 )
 // depends negatively on par_env
 
@@ -53,9 +69,9 @@ let inv_task_queue
   (q: HR.ref task_queue) // the task queue
   (c: ref int) // a counter of how many tasks are currently being performed
   : vprop
-= (exists_ (fun vq -> exists_ (fun vc ->
+= exists* vq vc.
     HR.pts_to q vq **
-    pts_to c vc)))
+    pts_to c vc
 // depends postivitely on task_queue
 // depends negatively on par_env
 
@@ -83,7 +99,7 @@ val higher_alloc (#a:Type) (x:a)
 
 assume
 val higher_free (#a:Type) (r: HR.ref a)
-  : stt unit (exists_ (fun v -> HR.pts_to r v)) (fun _ -> emp)
+  : stt unit (exists* v. HR.pts_to r v) (fun _ -> emp)
 
 assume
 val higher_read (#a:Type)
@@ -114,10 +130,10 @@ fn acquire_queue_lock
   //(#q: HR.ref task_queue) (#c: ref int)
   //(l: Lock.lock (inv_task_queue q c))
   requires emp
-  ensures (exists vq vc. HR.pts_to (get_queue p) vq ** pts_to (get_counter p) vc)
+  ensures (exists* vq vc. HR.pts_to (get_queue p) vq ** pts_to (get_counter p) vc)
 {
   Lock.acquire (get_lock p);
-  unfold (inv_task_queue (get_queue p) (get_counter p));
+  unfold inv_task_queue;
   ()
 }
 ```
@@ -127,23 +143,26 @@ fn release_queue_lock
   //(#q: HR.ref task_queue) (#c: ref int)
   //(l: Lock.lock (inv_task_queue q c))
   (p: par_env)
-  requires (exists vq vc. HR.pts_to (get_queue p) vq ** pts_to (get_counter p) vc)
+  requires (exists* vq vc. HR.pts_to (get_queue p) vq ** pts_to (get_counter p) vc)
   ensures emp
 {
-  fold (inv_task_queue (get_queue p) (get_counter p));
+  fold inv_task_queue;
   Lock.release (get_lock p);
   ()
 }
 ```
 
 let ref_ownership r: vprop
-  = exists_ (fun v -> pts_to r v)
+  = exists* v. pts_to r v
 
 
 let pure_handler #a (post: a -> prop)
-  = (res: ref (option a) & Lock.lock (exists_ (fun v -> pts_to res v ** pure (maybe_sat post v))))
+  = (res: ref (option a) & Lock.lock (exists* v. pts_to res v ** pure (maybe_sat post v)))
 
-let mk_pure_handler #a (p: a -> prop) (r: ref (option a)) (l: Lock.lock (exists_ (fun v -> pts_to r v ** pure (maybe_sat p v))))
+let mk_pure_handler #a 
+      (p: a -> prop)
+      (r: ref (option a)) 
+      (l: Lock.lock (exists* v. pts_to r v ** pure (maybe_sat p v)))
  : pure_handler p //(res: ref (option a) & Lock.lock (exists_ (fun v -> pts_to res v ** pure (maybe_sat p v))))
 = (| r, l |)
 
@@ -162,7 +181,7 @@ fn spawn_emp'
  ensures emp
 {
   let res = Pulse.Lib.Reference.alloc #(option a) None;
-  let l_res = Lock.new_lock (exists_ (fun v -> pts_to res v ** pure (maybe_sat post v)));
+  let l_res = Lock.new_lock (exists* v. pts_to res v ** pure (maybe_sat post v));
   let task = create_task_elem #a post (f p) res l_res;
 
   acquire_queue_lock p;
@@ -198,7 +217,7 @@ let half = half_perm
 assume val free_ref (#a:Type) (r: ref a)
  //(x:a)
   : stt unit
-  (exists_ (fun v -> pts_to r v))
+  (exists* v. pts_to r v)
   (fun _ -> emp)
   
 
@@ -217,7 +236,7 @@ fn join_emp'
 {
   let r = Pulse.Lib.Reference.alloc #(option a) None;
   while (let res = !r; None? res)
-    invariant b. (exists res. pts_to r res ** pure (b == None? res)
+    invariant b. (exists* res. pts_to r res ** pure (b == None? res)
     ** pure (maybe_sat post res))
   {
     Lock.acquire h._2;
@@ -294,10 +313,10 @@ fn worker' //(#q: HR.ref task_queue) (#c: ref int) (l: Lock.lock (inv_task_queue
   ensures emp
 {
 
-  let r_working = alloc #bool true;
+  let mut r_working = true;
   
   while (let working = !r_working; working)
-    invariant b. (exists w. pts_to r_working w ** pure (b == w))
+    invariant b. (exists* w. pts_to r_working w ** pure (b == w))
   {
     acquire_queue_lock p;
 
@@ -330,7 +349,6 @@ fn worker' //(#q: HR.ref task_queue) (#c: ref int) (l: Lock.lock (inv_task_queue
       ()
     }
   };
-  free_ref r_working;
   ()
 }
 ```
@@ -349,7 +367,7 @@ fn init_par_env' (_: unit)
   // creating parallel env
   let work_queue = higher_alloc empty_task_queue;
   let counter = alloc 0;
-  fold (inv_task_queue work_queue counter);
+  fold inv_task_queue;
   assert (inv_task_queue work_queue counter);
   let lock = Lock.new_lock (inv_task_queue work_queue counter);
   let p = mk_par_env work_queue counter lock;

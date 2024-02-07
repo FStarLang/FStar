@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module X509
 open Pulse.Lib.Pervasives
 module R = Pulse.Lib.Reference
@@ -64,13 +80,13 @@ assume
 val spec_serialize_deviceIDCSR 
   (deviceIDCRI_len: US.t)
   (deviceIDCSR_len: US.t)
-  (deviceIDCSR: deviceIDCSR_t deviceIDCRI_len)
+  (deviceIDCSR: deviceIDCSR_t)
   : GTot (Seq.seq U8.t)
 
 assume
 val serialize_deviceIDCSR 
   (deviceIDCRI_len: US.t)
-  (deviceIDCSR: deviceIDCSR_t deviceIDCRI_len)
+  (deviceIDCSR: deviceIDCSR_t)
   (deviceIDCSR_len: US.t)
   (deviceIDCSR_buf: A.larray U8.t (US.v deviceIDCSR_len))
   (#_buf:erased (Seq.seq U8.t))
@@ -103,13 +119,13 @@ assume
 val spec_serialize_aliasKeyCRT
   (aliasKeyTBS_len: US.t)
   (aliasKeyCRT_len: US.t)
-  (aliasKeyCRT: aliasKeyCRT_t aliasKeyTBS_len)
+  (aliasKeyCRT: aliasKeyCRT_t)
   : GTot (Seq.seq U8.t)
 
 assume  
 val serialize_aliasKeyCRT
   (aliasKeyTBS_len: US.t)
-  (aliasKeyCRT: aliasKeyCRT_t aliasKeyTBS_len)
+  (aliasKeyCRT: aliasKeyCRT_t)
   (aliasKeyCRT_len: US.t)
   (aliasKeyCRT_buf: A.larray U8.t (US.v aliasKeyCRT_len))
   (#_buf:erased (Seq.seq U8.t))
@@ -127,7 +143,7 @@ val spec_x509_get_deviceIDCSR
   (deviceIDCRI_len: US.t)
   (deviceIDCRI_buf: Seq.seq U8.t)
   (deviceIDCRI_sig: Seq.seq U8.t)
-  : GTot (deviceIDCSR_t deviceIDCRI_len)
+  : GTot deviceIDCSR_t
 
 assume 
 val x509_get_deviceIDCSR
@@ -136,7 +152,7 @@ val x509_get_deviceIDCSR
   (deviceIDCRI_sig: A.array U8.t)
   (#buf_perm #sig_perm:perm)
   (#buf #sig:erased (Seq.seq U8.t))
-  : stt (deviceIDCSR_t deviceIDCRI_len)
+  : stt deviceIDCSR_t
     (A.pts_to deviceIDCRI_buf #buf_perm buf **
      A.pts_to deviceIDCRI_sig #sig_perm sig)
      (fun res -> 
@@ -207,7 +223,7 @@ val spec_x509_get_aliasKeyCRT
   (aliasKeyTBS_len: US.t)
   (aliasKeyTBS_buf: Seq.seq U8.t)
   (aliasKeyTBS_sig: Seq.seq U8.t)
-  : GTot (aliasKeyCRT_t aliasKeyTBS_len)
+  : GTot (aliasKeyCRT_t)
 
 assume 
 val x509_get_aliasKeyCRT
@@ -216,7 +232,7 @@ val x509_get_aliasKeyCRT
   (aliasKeyTBS_sig: A.array U8.t)
   (#buf_perm #sig_perm:perm)
   (#buf #sig:erased (Seq.seq U8.t))
-  : stt (aliasKeyCRT_t aliasKeyTBS_len)
+  : stt (aliasKeyCRT_t)
     (A.pts_to aliasKeyTBS_buf #buf_perm buf **
      A.pts_to aliasKeyTBS_sig #sig_perm sig)
      (fun res -> 

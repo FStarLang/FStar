@@ -517,6 +517,19 @@ let rewrite_with_implies
     rewrite q p
   )
 
+let rewrite_with_implies_with_tactic
+  (#opened: _)
+  (p q: vprop)
+: STGhost unit opened
+    p
+    (fun _ -> q `star` (q @==> p))
+    (requires FStar.Tactics.with_tactic init_resolve_tac (squash (p `equiv` q)))
+    (fun _ -> True)
+= rewrite_equiv p q;
+  intro_implies q p emp (fun _ ->
+    rewrite_equiv q p
+  )
+
 let vpattern_rewrite_with_implies
   (#opened: _)
   (#a: Type)
@@ -587,6 +600,73 @@ let implies_reg_r
     (fun _ -> (q `star` p) @==> (r `star` p))
 = implies_with_tactic p p;
   implies_join q r p p
+
+let implies_trans_l1
+  (#opened: _)
+  (p q1 q2 r: vprop)
+: STGhostT unit opened
+    ((p @==> q1) `star` ((q1 `star` q2) @==> r))
+    (fun _ -> (p `star` q2) @==> r)
+= implies_reg_r p q1 q2;
+  implies_trans (p `star` q2) (q1 `star` q2) r
+
+let implies_trans_r1
+  (#opened: _)
+  (q1 p q2 r: vprop)
+: STGhostT unit opened
+    ((p @==> q2) `star` ((q1 `star` q2) @==> r))
+    (fun _ -> (q1 `star` p) @==> r)
+= implies_reg_l q1 p q2;
+  implies_trans (q1 `star` p) (q1 `star` q2) r
+
+let implies_trans_l2
+  (#opened: _)
+  (p q1 q2 r1: vprop)
+: STGhostT unit opened
+    ((p @==> (q1 `star` q2)) `star` (q1 @==> r1))
+    (fun _ -> p @==> (r1 `star` q2))
+= implies_reg_r q1 r1 q2;
+  implies_trans p (q1 `star` q2) (r1 `star` q2)
+
+let implies_trans_r2
+  (#opened: _)
+  (p q1 q2 r2: vprop)
+: STGhostT unit opened
+    ((p @==> (q1 `star` q2)) `star` (q2 @==> r2))
+    (fun _ -> p @==> (q1 `star` r2))
+= implies_reg_l q1 q2 r2;
+  implies_trans p (q1 `star` q2) (q1 `star` r2)
+
+let implies_swap_r
+  (#opened: _)
+  (p q1 q2: vprop)
+: STGhostT unit opened
+  (p @==> (q1 `star` q2))
+  (fun _ -> p @==> (q2 `star` q1))
+= implies_with_tactic (q1 `star` q2) (q2 `star` q1);
+  implies_trans p (q1 `star` q2) (q2 `star` q1)
+
+let implies_consumes_l
+  (#opened: _)
+  (p q r: vprop)
+: STGhostT unit opened
+    (p `star` ((p `star` q) `implies_` r))
+    (fun _ -> q `implies_` r)
+= intro_implies
+    q
+    r
+    (p `star` ((p `star` q) `implies_` r))
+    (fun _ -> elim_implies (p `star` q) r)
+
+let implies_consumes_r
+  (#opened: _)
+  (p q r: vprop)
+: STGhostT unit opened
+    (q `star` ((p `star` q) `implies_` r))
+    (fun _ -> p `implies_` r)
+= implies_with_tactic (q `star` p) (p `star` q);
+  implies_trans (q `star` p) (p `star` q) r;
+  implies_consumes_l q p r
 
 /// The magic wand is a implies (but not the converse)
 

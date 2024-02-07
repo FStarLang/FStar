@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Typing.Combinators
 
 module L = FStar.List.Tot
@@ -29,8 +45,10 @@ val mk_bind (g:env)
             (post_typing:tot_typing (push_binding g (snd px) (fst px) (comp_res c2))
                                      (open_term_nv (comp_post c2) px)
                                      tm_vprop)
+            (bias_towards_continuation:bool)
   : T.TacH (t:st_term &
-            c:comp_st { st_comp_of_comp c == st_comp_with_pre (st_comp_of_comp c2) pre } &
+            c:comp_st { st_comp_of_comp c == st_comp_with_pre (st_comp_of_comp c2) pre /\
+                        (bias_towards_continuation ==> effect_annot_of_comp c == effect_annot_of_comp c2) } &
             st_typing g t c)
            (requires fun _ ->
               let _, x = px in
@@ -42,10 +60,10 @@ val mk_bind (g:env)
            (ensures fun _ _ -> True)
 
 
-val bind_res_and_post_typing (g:env) (s2:st_comp) (x:var { fresh_wrt x g (freevars s2.post) })
-                             (post_hint:post_hint_opt g { comp_post_matches_hint (C_ST s2) post_hint })
-  : T.Tac (universe_of g s2.res s2.u &
-           tot_typing (push_binding g x ppname_default s2.res) (open_term_nv s2.post (v_as_nv x)) tm_vprop)
+val bind_res_and_post_typing (g:env) (s2:comp_st) (x:var { fresh_wrt x g (freevars (comp_post s2)) })
+                             (post_hint:post_hint_opt g { comp_post_matches_hint s2 post_hint })
+  : T.Tac (universe_of g (comp_res s2) (comp_u s2) &
+           tot_typing (push_binding g x ppname_default (comp_res s2)) (open_term_nv (comp_post s2) (v_as_nv x)) tm_vprop)
 
 val add_frame (#g:env) (#t:st_term) (#c:comp_st) (t_typing:st_typing g t c)
   (#frame:vprop)
@@ -91,4 +109,5 @@ let rec list_as_vprop (vps:list term)
   : term
   = match vps with
     | [] -> tm_emp
+    | [hd] -> hd
     | hd::tl -> tm_star hd (list_as_vprop tl)

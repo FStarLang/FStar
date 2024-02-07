@@ -1,7 +1,23 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Fibo32
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
-#push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
+#push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --fuel 2 --ifuel 2"
 
 
 let rec fib (n:nat) : nat =
@@ -14,9 +30,9 @@ let rec fib_mono (n:nat) (m:nat { m <= n})
   = if n = m then ()
     else fib_mono (n - 1) m
 
-open Pulse.Class.BoundedIntegers
+open Pulse.Lib.BoundedIntegers
 
-
+#push-options "--z3rlimit_factor 4"
 ```pulse
 fn fibo32 (k:U32.t) (_:squash(0ul < k /\ fits #U32.t (fib (v k))))
   requires emp
@@ -27,7 +43,7 @@ fn fibo32 (k:U32.t) (_:squash(0ul < k /\ fits #U32.t (fib (v k))))
   let mut j = 1ul;
   let mut ctr = 1ul;
   while (let vctr = !ctr; (vctr < k))
-  invariant b . exists vi vj vctr. (
+  invariant b . exists* vi vj vctr. (
      pts_to i vi **
      pts_to j vj **
      pts_to ctr vctr **     

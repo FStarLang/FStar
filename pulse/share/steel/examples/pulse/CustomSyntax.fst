@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module CustomSyntax
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
@@ -14,8 +30,8 @@ fn unfold_test (r:ref U32.t)
   requires folded_pts_to r 'n
   ensures folded_pts_to r 'n
 {
-  with n. unfold (folded_pts_to r n);
-  with n. fold (folded_pts_to r n)
+  unfold folded_pts_to;
+  fold folded_pts_to
 }
 ```
 
@@ -72,8 +88,8 @@ fn call_swap2 (r1 r2:ref U32.t)
 
 
 ```pulse
-fn swap_with_elim_pure (r1 r2:ref U32.t) 
-                       (#n1 #n2:erased U32.t)
+fn swap_with_elim_pure (#n1 #n2:erased U32.t)
+                       (r1 r2:ref U32.t)
    requires
       pts_to r1 n1 **
       pts_to r2 n2
@@ -127,32 +143,32 @@ fn if_example (r:ref U32.t)
 ghost
 fn elim_intro_exists2 (r:ref U32.t)
    requires 
-     exists n. pts_to r n
+     exists* n. pts_to r n
    ensures 
-     exists n. pts_to r n
+     exists* n. pts_to r n
 {
-  introduce exists n. pts_to r n with _
+  introduce exists* n. pts_to r n with _
 }
 ```
 
 assume
 val pred (b:bool) : vprop
 assume
-val read_pred (_:unit) (#b:erased bool)
+val read_pred () (#b:erased bool)
     : stt bool (pred b) (fun r -> pred r)
 
 ```pulse
 fn while_test_alt (r:ref U32.t)
   requires 
-    exists b n.
+    exists* b n.
       (pts_to r n  **
        pred b)
   ensures 
-    exists n. (pts_to r n  **
+    exists* n. (pts_to r n  **
               pred false)
 {
   while (read_pred ())
-  invariant b . exists n. (pts_to r n  ** pred b)
+  invariant b . exists* n. (pts_to r n  ** pred b)
   {
     ()
   }
@@ -162,8 +178,8 @@ fn while_test_alt (r:ref U32.t)
 ```pulse
 fn infer_read_ex (r:ref U32.t)
   requires
-    exists n. pts_to r n
-  ensures exists n. pts_to r n
+    exists* n. pts_to r n
+  ensures exists* n. pts_to r n
 {
   let x = !r;
   ()
@@ -173,13 +189,13 @@ fn infer_read_ex (r:ref U32.t)
 
 ```pulse
 fn while_count2 (r:ref U32.t)
-  requires exists (n:U32.t). (pts_to r n)
+  requires exists* (n:U32.t). (pts_to r n)
   ensures (pts_to r 10ul)
 {
   open FStar.UInt32;
   while (let x = !r; (x <> 10ul))
   invariant b. 
-    exists n. (pts_to r n  **
+    exists* n. (pts_to r n  **
           pure (b == (n <> 10ul)))
   {
     let x = !r;
@@ -255,7 +271,7 @@ fn count_local (r:ref int) (n:int)
   let mut i = 0;
   while
     (let m = !i; (m <> n))
-  invariant b. exists m. 
+  invariant b. exists* m. 
     (pts_to i m  **
      pure (b == (m <> n)))
   {
@@ -268,20 +284,21 @@ fn count_local (r:ref int) (n:int)
 ```
 
 
-let rec sum_spec (n:nat) : nat =
+let rec sum_spec (n:nat) : GTot nat =
   if n = 0 then 0 else n + sum_spec (n - 1)
 
- 
+noextract
+inline_for_extraction
 let zero : nat = 0
 
 ```pulse
 fn sum (r:ref nat) (n:nat)
-   requires exists i. (pts_to r i)
+   requires exists* i. (pts_to r i)
    ensures (pts_to r (sum_spec n))
 {
    let mut i = zero;
    let mut sum = zero;
-   introduce exists b m s. (
+   introduce exists* b m s. (
      pts_to i m  **
      pts_to sum s  **
      pure (s == sum_spec m /\
@@ -289,7 +306,7 @@ fn sum (r:ref nat) (n:nat)
    with (zero <> n);
         
    while (let m = !i; (m <> n))
-   invariant b . exists m s. (
+   invariant b . exists* m s. (
      pts_to i m  **
      pts_to sum s  **
      pure (s == sum_spec m /\
@@ -299,7 +316,7 @@ fn sum (r:ref nat) (n:nat)
      let s = !sum;
      i := (m + 1);
      sum := s + m + 1;
-     introduce exists b m s. (
+     introduce exists* b m s. (
        pts_to i m  **
        pts_to sum s  **
        pure (s == sum_spec m /\
@@ -308,22 +325,22 @@ fn sum (r:ref nat) (n:nat)
    };
    let s = !sum;
    r := s;
-   introduce exists m. (pts_to i m) 
+   introduce exists* m. (pts_to i m) 
    with _;
-   introduce exists s. (pts_to sum s)
+   introduce exists* s. (pts_to sum s)
    with _
 }
 ```
 
 ```pulse
 fn sum2 (r:ref nat) (n:nat)
-   requires exists i. pts_to r i
+   requires exists* i. pts_to r i
    ensures pts_to r (sum_spec n)
 {
    let mut i = zero;
    let mut sum = zero;
    while (let m = !i; (m <> n))
-   invariant b . exists m s.
+   invariant b . exists* m s.
      pts_to i m  **
      pts_to sum s **
      pure (s == sum_spec m /\ b == (m <> n))
@@ -342,16 +359,16 @@ fn sum2 (r:ref nat) (n:nat)
 
 ```pulse
 fn if_then_else_in_specs (r:ref U32.t)
-  requires `@(if true
+  requires (if true
               then pts_to r 0ul
               else pts_to r 1ul)
-  ensures  `@(if true
+  ensures  (if true
               then pts_to r 1ul
               else pts_to r 0ul)
 {
   // need this for typechecking !r on the next line,
   //   with inference of implicits
-  rewrite `@(if true then pts_to r 0ul else pts_to r 1ul)
+  rewrite (if true then pts_to r 0ul else pts_to r 1ul)
        as (pts_to r 0ul);
   let x = !r;
   r := U32.add x 1ul
@@ -386,8 +403,7 @@ fn incr (x:nat)
   requires emp
   returns r : (r:nat { r > x })
   ensures emp
-{
-  let y = x + 1;
+{  let y = x + 1;
   ( y <: r:nat { r > x } )
 }
 ```

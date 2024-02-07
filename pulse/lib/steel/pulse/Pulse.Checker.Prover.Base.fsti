@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Checker.Prover.Base
 
 open Pulse.Syntax
@@ -58,7 +74,8 @@ let op_Array_Access (ss:PS.ss_t) (t:term) =
 
 let op_Star = tm_star
 
-noeq type prover_state (preamble:preamble) = {
+noeq
+type prover_state (preamble:preamble) = {
   pg : g:env { g `env_extends` preamble.g0 };
 
   remaining_ctxt : list vprop;
@@ -66,6 +83,17 @@ noeq type prover_state (preamble:preamble) = {
 
   uvs : uvs:env { disjoint uvs pg };
   ss : PS.ss_t;
+
+  //
+  // these are the typed ss
+  // sometimes a step in the prover (e.g., intro exists) may compute these
+  // in such cases, the prover doesn't need to compute again
+  // so we cache them here
+  //
+  nts : option (nts:PS.nt_substs & effect_labels:list T.tot_or_ghost {
+    PS.well_typed_nt_substs pg uvs nts effect_labels /\
+    PS.is_permutation nts ss
+  });
 
   solved : vprop;
   unsolved : list vprop;

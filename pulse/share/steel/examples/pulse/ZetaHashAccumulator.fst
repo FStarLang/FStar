@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 (**
   * This is a port of Zeta.Steel.HashAccumulator to Pulse
   *
@@ -29,7 +45,7 @@ module SZ = FStar.SizeT
 module A = Pulse.Lib.Array
 module U64 = FStar.UInt64
 module Cast = FStar.Int.Cast
-open Pulse.Class.BoundedIntegers
+open Pulse.Lib.BoundedIntegers
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 #push-options "--fuel 0 --ifuel 0"
 
@@ -120,7 +136,7 @@ val blake2b:
   -> d:A.array U8.t { SZ.v ll ≤ A.length d}
   -> kk: SZ.t { kk == 0sz }                        //We do not use blake2 in keyed mode
   -> _dummy: A.array U8.t // this really should be a NULL, but krml doesn't extract Steel's null pointers yet
-  -> #sout:Ghost.erased (Seq.seq U8.t)
+  -> #sout:Ghost.erased (Seq.lseq U8.t 32)
   -> #p:perm
   -> #sd:Ghost.erased (Seq.seq U8.t) { Seq.length sd == SZ.v ll}
   -> stt unit
@@ -128,41 +144,6 @@ val blake2b:
     (λ _ → A.pts_to output (blake_spec (Seq.slice sd 0 (SZ.v ll)))
            **
            A.pts_to d #p sd)
-
-
-// We also don't yet expose a ghost lemma relating the length of a sequence
-// to its underlying array. So assuming it here for now.
-assume
-val array_pts_to_len (#t:Type0) (a:A.array t) (#p:perm) (#x:Seq.seq t)
-    : stt_ghost unit emp_inames
-          (A.pts_to a #p x)
-          (fun _ -> A.pts_to a #p x ** pure (A.length a == Seq.length x))
-
-// // Array compare is implemented in other Pulse array modules, but this is not
-
-
-// // yet in a standard place in the library. So, I just assume it here.
-// ```pulse
-// fn array_compare (#t:eqtype) (l:SZ.t) (a1 a2:A.larray t (SZ.v l))
-//   requires (
-//     A.pts_to a1 #p1 's1 **
-//     A.pts_to a2 #p2 's2
-//   )
-//   returns res:bool
-//   ensures (
-//     A.pts_to a1 #p1 's1 **
-//     A.pts_to a2 #p2 's2 **
-//     (pure (res <==> Seq.equal 's1 's2))
-//   )
-// {
-//   array_pts_to_len a1;
-//   array_pts_to_len a2;
-//   Pulse.Lib.Array.compare l a1 a2 
-//             #p1 #p2
-//             #(hide #(elseq t l) (reveal 's1))
-//             #(hide #(elseq t l) (reveal 's2));
-// }
-// ```
 
 (***************************************************************)
 (* Pulse *)
@@ -182,10 +163,6 @@ type ha_core = {
   ctr: ref U32.t;
 }
 
-// Pulse syntax does not currently allow using record syntax
-// So, we define a wrapper for constructing a record
-let mk_ha_core acc ctr = { acc; ctr }
-
 // The representation predicate for ha_core ties it to a hash_value_t
 // An interesting bit is that at the spec level, a hash_value_t's counter
 // is just a nat. But, at the implementation level, it is a U32.t, 
@@ -195,7 +172,7 @@ let mk_ha_core acc ctr = { acc; ctr }
 let ha_val_core (core:ha_core) (h:hash_value_t) 
   : vprop
   = A.pts_to core.acc (fst h) **
-    exists_ (λ (n:U32.t) →
+    (exists* (n:U32.t).
       pure (U32.v n == snd h) **
       pts_to core.ctr n)
 
@@ -204,7 +181,7 @@ let ha_val_core (core:ha_core) (h:hash_value_t)
 // ha_val_core using Pulse's primitive `fold` operation
 ```pulse
 ghost
-fn fold_ha_val_core (h:ha_core) (#acc:Seq.lseq U8.t 32)
+fn fold_ha_val_core (#acc:Seq.lseq U8.t 32) (h:ha_core)
   requires
    A.pts_to h.acc acc **
    pts_to h.ctr n
@@ -218,15 +195,14 @@ fn fold_ha_val_core (h:ha_core) (#acc:Seq.lseq U8.t 32)
 // This too is a bit of boilerplate. It use fold_ha_val_core, but also 
 // creates and returns a new ha_core value
 ```pulse
-fn package_core (acc:hash_value_buf) (ctr:ref U32.t) 
-                (#vacc:erased (Seq.lseq U8.t 32))
+fn package_core (#vacc:erased (Seq.lseq U8.t 32)) (acc:hash_value_buf) (ctr:ref U32.t)
   requires A.pts_to acc vacc **
            pts_to ctr 'vctr 
   returns h:ha_core
   ensures ha_val_core h (reveal vacc, U32.v 'vctr) **
-          pure (h == mk_ha_core acc ctr)
+          pure (h == { acc; ctr } )
 {
-   let core = mk_ha_core acc ctr;
+   let core = { acc; ctr };
    rewrite each acc as core.acc, ctr as core.ctr;
    fold_ha_val_core core;
    core
@@ -248,12 +224,10 @@ type ha = {
 
 // Again, we play the same game as with ha_core
 
-let mk_ha core tmp dummy = { core; tmp; dummy }
-
 // A representation predicate for ha, encapsulating an ha_val_core
 let ha_val (h:ha) (s:hash_value_t) =
   ha_val_core h.core s **
-  exists_ (fun s -> A.pts_to h.tmp s) **
+  (exists* (s:Seq.lseq U8.t 32). A.pts_to h.tmp s) **
   A.pts_to h.dummy (Seq.create 1 0uy)
 
 // A ghost function to package up a ha_val predicate
@@ -262,7 +236,7 @@ let ha_val (h:ha) (s:hash_value_t) =
 // But, this version is more convenient to use in a manual setting.
 ```pulse
 ghost
-fn fold_ha_val (h:ha) (#acc #s:Seq.lseq U8.t 32)
+fn fold_ha_val (#acc #s:Seq.lseq U8.t 32) (h:ha)
   requires
    A.pts_to h.core.acc acc **
    pts_to h.core.ctr n **
@@ -280,18 +254,19 @@ fn fold_ha_val (h:ha) (#acc #s:Seq.lseq U8.t 32)
 // Again, if we were to do generate this, then the first two conjuncts
 // and acc, ctr arguments would be replaced by ha_core/ha_val_core
 ```pulse
-fn package (acc:hash_value_buf) (ctr:ref U32.t) (tmp:hash_value_buf) (dummy:dummy_buf)
-           (#vacc:erased (Seq.lseq U8.t 32))
-           (#vtmp:erased (Seq.lseq U8.t 32))
+fn package
+  (#vacc:erased (Seq.lseq U8.t 32))
+  (#vtmp:erased (Seq.lseq U8.t 32))
+  (acc:hash_value_buf) (ctr:ref U32.t) (tmp:hash_value_buf) (dummy:dummy_buf)
   requires A.pts_to acc vacc **
            pts_to ctr 'vctr **
            A.pts_to tmp vtmp **
            A.pts_to dummy (Seq.create 1 0uy)
   returns h:ha
   ensures ha_val h (reveal vacc, U32.v 'vctr) **
-          pure (h == mk_ha (mk_ha_core acc ctr) tmp dummy)
+          pure (h == { core={acc;ctr}; tmp; dummy })
 {
-   let ha = mk_ha (mk_ha_core acc ctr) tmp dummy;
+   let ha = { core={acc;ctr}; tmp; dummy };
    rewrite each acc as ha.core.acc, ctr as ha.core.ctr,
           tmp as ha.tmp, dummy as ha.dummy;
    fold_ha_val ha;
@@ -303,7 +278,7 @@ fn package (acc:hash_value_buf) (ctr:ref U32.t) (tmp:hash_value_buf) (dummy:dumm
 
 // Allocting a new instance of ha
 ```pulse
-fn create (_:unit)
+fn create ()
     requires emp
     returns h:ha
     ensures ha_val h initial_hash
@@ -318,12 +293,12 @@ fn create (_:unit)
 
 // Free'ing an ha
 ```pulse
-fn reclaim (s:ha) (#h:hash_value_t) 
+fn reclaim (#h:hash_value_t) (s:ha)
     requires ha_val s h
     ensures emp
 {
-    unfold (ha_val s h);
-    unfold (ha_val_core s.core h);
+    unfold ha_val;
+    unfold ha_val_core;
     free s.core.ctr;
     A.free s.core.acc;
     A.free s.tmp;
@@ -347,8 +322,8 @@ fn reclaim (s:ha) (#h:hash_value_t)
 // I should try that again and open issues. 
 #push-options "--retry 2 --ext 'pulse:rvalues'" // GM: Part of this VC fails on batch mode, not on ide...
 ```pulse
-fn aggregate_raw_hashes (b1 b2: hash_value_buf)
-                        (#s1 #s2:e_raw_hash_value_t)
+fn aggregate_raw_hashes (#s1 #s2:e_raw_hash_value_t)
+                        (b1 b2: hash_value_buf)
   requires 
     A.pts_to b1 s1 **
     A.pts_to b2 s2
@@ -360,7 +335,7 @@ fn aggregate_raw_hashes (b1 b2: hash_value_buf)
     assert (pure (s1 `Seq.equal` xor_bytes_pfx s1 s2 0));
     while ((i < 32sz))
     invariant b.
-        exists wi.
+        exists* wi.
             pts_to i wi **
             A.pts_to b1 (xor_bytes_pfx s1 s2 (v wi)) **
             A.pts_to b2 s2 **
@@ -391,8 +366,8 @@ fn aggregate (b1 b2: ha_core)
     ha_val_core b1 (if ok then aggregate_hashes 'h1 'h2 else 'h1) **
     ha_val_core b2 'h2
 {
-  unfold (ha_val_core b1 'h1);
-  unfold (ha_val_core b2 'h2);
+  unfold ha_val_core;
+  unfold ha_val_core;
   let ctr1 = !b1.ctr;
   let ctr2 = !b2.ctr;
   match (safe_add ctr1 ctr2) {
@@ -424,8 +399,8 @@ fn compare (b1 b2:ha)
     ha_val b2 'h2 **
     pure (b <==> ('h1 == 'h2))
 { 
-  unfold (ha_val b1 'h1); unfold (ha_val_core b1.core 'h1);
-  unfold (ha_val b2 'h2); unfold (ha_val_core b2.core 'h2);
+  unfold ha_val; unfold ha_val_core;
+  unfold ha_val; unfold ha_val_core;
   let ctr1 = !b1.core.ctr;
   let ctr2 = !b2.core.ctr;
   if (ctr1 <> ctr2)
@@ -452,8 +427,8 @@ fn compare (b1 b2:ha)
 // And then aggregate these two ha_cores into the first one
 // And then to repackage it as an ha
 ```pulse
-fn add (ha:ha) (input:hashable_buffer) (l:SZ.t)
-       (#s:(s:erased bytes {SZ.v l <= Seq.length s /\  SZ.v l <= blake2_max_input_length}))
+fn add (ha:ha) (input:hashable_buffer) (l:(l:SZ.t {SZ.v l <= blake2_max_input_length}))
+       (#s:(s:erased bytes {Seq.length s == SZ.v l}))
   requires
     ha_val ha 'h **
     A.pts_to input #p s
@@ -463,8 +438,8 @@ fn add (ha:ha) (input:hashable_buffer) (l:SZ.t)
     A.pts_to input #p s
 { 
    let mut ctr = 1ul;
-   unfold (ha_val ha 'h);
-   array_pts_to_len input;
+   unfold ha_val;
+   A.pts_to_len input;
    blake2b 32sz ha.tmp l input 0sz ha.dummy;
    let ha' = package_core ha.tmp ctr;
    let v = aggregate ha.core ha';

@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module RecordOfArrays
 open Pulse.Lib.Pervasives
 module R = Pulse.Lib.Reference
@@ -45,7 +61,7 @@ fn fold_rec_array_perm (r:rec_array) (#v1 #v2:erased (Seq.seq U8.t))
 ```pulse
 fn mutate_r2 (r:rec_array) (#v:(v:Ghost.erased rec_array_repr { Seq.length v.v2 > 0 }))
   requires rec_array_perm r v
-  ensures exists (v_:rec_array_repr) .
+  ensures exists* (v_:rec_array_repr) .
     rec_array_perm r v_ ** pure (v_.v2 `Seq.equal` Seq.upd v.v2 0 0uy /\ v_.v1 == v.v1)
 {
   unfold (rec_array_perm r v); //1. unfolding the predicate
@@ -75,7 +91,7 @@ fn mutate_rec_get_witness (l:US.t) (r:rec_array) (#v:Ghost.erased rec_array_repr
     rec_array_perm r v **
     pure (US.v l > 0 /\ A.length r.r2 == (US.v l) /\ Seq.length v.v2 == (US.v l))
   )
-  ensures exists v_.
+  ensures exists* v_.
     rec_array_perm r v_ **
     pure (Seq.length v.v2 > 0 /\ v_.v2 `Seq.equal` Seq.upd v.v2 0 0uy /\ v_.v1 == v.v1)
 {
