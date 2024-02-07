@@ -155,6 +155,8 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
   | S.MLTY_Named ([], p)
     when S.string_of_mlpath p = "FStar.UInt64.t" -> mk_scalar_typ "u64"
   | S.MLTY_Named ([], p)
+    when S.string_of_mlpath p = "Prims.string" -> mk_scalar_typ "String"
+  | S.MLTY_Named ([], p)
     when S.string_of_mlpath p = "FStar.Int64.t" ||
          S.string_of_mlpath p = "Prims.int"     ||
          S.string_of_mlpath p = "Prims.nat" -> mk_scalar_typ "i64"  // TODO: int to int64, nat to int64, FIX

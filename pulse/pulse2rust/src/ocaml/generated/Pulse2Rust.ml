@@ -215,6 +215,10 @@ let rec (extract_mlty :
           uu___ = "FStar.UInt64.t" ->
           Pulse2Rust_Rust_Syntax.mk_scalar_typ "u64"
       | FStar_Extraction_ML_Syntax.MLTY_Named ([], p) when
+          let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___ = "Prims.string" ->
+          Pulse2Rust_Rust_Syntax.mk_scalar_typ "String"
+      | FStar_Extraction_ML_Syntax.MLTY_Named ([], p) when
           ((let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
             uu___ = "FStar.Int64.t") ||
              (let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
