@@ -404,6 +404,25 @@ let intro_h_exists #a x p h = ()
 
 let elim_h_exists #a p h = ()
 
+let intro_h_forall (#a:_) (p:a -> slprop) (h:heap) = ()
+
+let elim_h_forall (#a:_) (p:a -> slprop) (h:heap) (x:a) = ()
+
+(** Introducing [h_and] by proving both sides *)
+let intro_h_and (p q: slprop) (h:heap) = ()
+
+let elim_h_and (p q: slprop) (h:heap) = ()
+
+let intro_h_or_left (p q: slprop) (h:heap) = ()
+
+let intro_h_or_right (p q: slprop) (h:heap) = ()
+
+let elim_h_or (p q: slprop) (h:heap) = ()
+
+let intro_wand (p1 p2: slprop u#a) (h:heap) = ()
+
+let elim_wand (p1 p2: slprop u#a) (h:heap) (h1:heap) = ()
+
 let interp_depends_only_on (hp:slprop u#a) = emp_unit hp
 
 ////////////////////////////////////////////////////////////////////////////////
