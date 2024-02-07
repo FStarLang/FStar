@@ -155,6 +155,7 @@ let mk_stt_ghost_admit (u:R.universe) (t pre post:R.term) : R.term =
   pack_ln (Tv_App t (post, Q_Explicit))
 
 let emp_inames_lid = mk_pulse_lib_core_lid "emp_inames"
+let all_inames_lid = mk_pulse_lib_core_lid "all_inames"
 let add_inv_lid = mk_pulse_lib_core_lid "add_inv"
 let remove_inv_lid = mk_pulse_lib_core_lid "remove_inv"
 let elim_pure_lid = mk_pulse_lib_core_lid "elim_pure"
@@ -290,6 +291,7 @@ let vprop_eq_tm t1 t2 =
   t
 
 let emp_inames_tm : R.term = R.pack_ln (R.Tv_FVar (R.pack_fv emp_inames_lid))
+let all_inames_tm : R.term = R.pack_ln (R.Tv_FVar (R.pack_fv all_inames_lid))
 
 let add_inv_tm (p is i : R.term) : R.term =
   let h = R.pack_ln (R.Tv_FVar (R.pack_fv add_inv_lid)) in

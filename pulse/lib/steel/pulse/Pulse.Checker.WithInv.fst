@@ -98,6 +98,12 @@ let add_iname (inv_p inames inv:term)
 #pop-options
 
 module RU = Pulse.RuntimeUtils
+let all_inames =
+  tm_fstar Pulse.Reflection.Util.all_inames_tm FStar.Range.range_0
+let all_inames_typing (g:env)
+: tot_typing g all_inames tm_inames
+= RU.magic()
+
 let remove_iname_typing
     (g:env) (#inv_p #inames #inv:term)
     (_:tot_typing g inv_p tm_vprop)
@@ -166,6 +172,7 @@ let add_remove_inverse (g:env)
       
   | Some tok -> tok
 
+#push-options "--z3rlimit_factor 4 --split_queries no"
 let check
   (g:env)
   (pre:term)
@@ -174,56 +181,8 @@ let check
   (res_ppname:ppname)
   (t:st_term{Tm_WithInv? t.term})
   (check:check_t)
-  : T.Tac (checker_result_t g pre post_hint) =
-  let Tm_WithInv {name=inv_tm; returns_inv; body} = t.term in
-
-  (* Checking the body seems to change its range, so store the original one
-  for better errors. *)
-  let body_range = body.range in
-  let inv_tm_range = inv_tm.range in
-
-  // info_doc g (Some t.range) [
-  //   let open Pulse.PP in
-  //   prefix 4 1 (doc_of_string "Checker.WithInv: using post_hint =") (pp post_hint)
-  // ];
-
-  (* FIXME: should check `inv_tm` at expected type `inv ?u`, and then
-  we obtain vprop from u. If so the whole block below should not be
-  needed. *)
-  let (| inv_tm, eff, inv_tm_ty, inv_tm_typing |) = compute_term_type g inv_tm in
-
-  if eff <> T.E_Total then
-    fail g (Some inv_tm.range) "Ghost effect on inv?";
-
-  (* Check the term without an expected type, and check that it's Tm_Inv p *)
-  let inv_p =
-    match inv_tm_ty.t with
-    | Tm_Inv p -> p
-    | Tm_FStar _ -> begin
-      (* FIXME: should unrefine... meh *)
-      let ropt = Pulse.Syntax.Pure.is_fvar_app inv_tm_ty in
-      match ropt with
-      | Some (lid, _, _, Some tm) -> 
-        if lid = ["Pulse"; "Lib"; "Core"; "inv" ]
-        then tm
-        else fail g (Some inv_tm.range)
-                  (Printf.sprintf "Does not have invariant type (%s)" (P.term_to_string inv_tm_ty))
-      | _ -> fail g (Some inv_tm.range)
-                  (Printf.sprintf "Does not have invariant type (%s)" (P.term_to_string inv_tm_ty))
-    end
-    | _ -> fail g (Some inv_tm.range)
-                (Printf.sprintf "Does not have invariant type (%s)" (P.term_to_string inv_tm_ty))
-  in
-  
-  (* FIXME: This is bogus for the Tm_FStar case!!! *)
-  assume (tm_inv inv_p == inv_tm_ty);
-
-  (* Can this come from some inversion instead? *)
-  let inv_p_typing : tot_typing g inv_p tm_vprop = recheck () in
-
-  (* pre'/post' are extended with inv_p *)
-  let pre' : vprop = tm_star pre inv_p in
-  let pre'_typing : tot_typing g pre' tm_vprop = recheck () in
+: T.Tac (checker_result_t g pre post_hint)
+= let Tm_WithInv {name=inv_tm; returns_inv; body} = t.term in
   let post : post_hint_t =
     match returns_inv, post_hint with
     | None, Some p -> p
@@ -232,45 +191,94 @@ let check
     | Some (_, p), Some q ->
       let open Pulse.PP in
       fail_doc g (Some t.range) 
-      [ doc_of_string "Fatal: multiple annotated postconditions on with_invariant";
-        prefix 4 1 (text "First postcondition:") (pp p);
-        prefix 4 1 (text "Second postcondition:") (pp q) ]
+        [ doc_of_string "Fatal: multiple annotated postconditions on with_invariant";
+          prefix 4 1 (text "First postcondition:") (pp p);
+          prefix 4 1 (text "Second postcondition:") (pp q) ]
     | _, _ ->
       fail g (Some t.range) "Fatal: no post hint on with_invariant"
   in
-
-  let post_p' : vprop = tm_star post.post inv_p in
-  let elab_ret_ty = elab_term post.ret_ty in
-  let x = fresh g in
-  assume (fresh_wrt x g (freevars post_p'));
-  // Pulse.Typing.FV.freevars_close_term post_p' x 0;
-  // let post_p' = close_term post_p' x in
-  let g' = (push_binding g x ppname_default post.ret_ty) in
-  let r_g' = elab_env g' in
-  let post_p'_typing_src
-    : RT.tot_typing r_g'
-                    (elab_term (open_term_nv post_p' (v_as_nv x)))
-                    (elab_term tm_vprop)
-    = rt_recheck g' #r_g' ()
-  in
-  let post_p'_typing = Pulse.Checker.Base.post_typing_as_abstraction #g #_ #post.ret_ty #post_p' (E post_p'_typing_src) in
-  (* the post hint for the body, extended with inv_p, removing the name of invariant *)
-  begin
   match post.effect_annot with
   | EffectAnnotGhost -> 
     let open Pulse.PP in
     fail_doc g (Some t.range) 
     [ doc_of_string "Cannot open invariants in a 'ghost' context" ]
 
-  | EffectAnnotSTT ->
-    T.fail "Not yet handling inference of with_invariants in an stt context"
+  | _ ->
+    (* Checking the body seems to change its range, so store the original one
+    for better errors. *)
+    let body_range = body.range in
+    let inv_tm_range = inv_tm.range in
+
+    // info_doc g (Some t.range) [
+    //   let open Pulse.PP in
+    //   prefix 4 1 (doc_of_string "Checker.WithInv: using post_hint =") (pp post_hint)
+    // ];
+
+    (* FIXME: should check `inv_tm` at expected type `inv ?u`, and then
+    we obtain vprop from u. If so the whole block below should not be
+    needed. *)
+    let (| inv_tm, eff, inv_tm_ty, inv_tm_typing |) = compute_term_type g inv_tm in
+
+    if eff <> T.E_Total then
+      fail g (Some inv_tm.range) "Ghost effect on inv?";
+
+    (* Check the term without an expected type, and check that it's Tm_Inv p *)
+    let inv_p =
+      match inv_tm_ty.t with
+      | Tm_Inv p -> p
+      | Tm_FStar _ -> begin
+        (* FIXME: should unrefine... meh *)
+        let ropt = Pulse.Syntax.Pure.is_fvar_app inv_tm_ty in
+        match ropt with
+        | Some (lid, _, _, Some tm) -> 
+          if lid = ["Pulse"; "Lib"; "Core"; "inv" ]
+          then tm
+          else fail g (Some inv_tm.range)
+                    (Printf.sprintf "Does not have invariant type (%s)" (P.term_to_string inv_tm_ty))
+        | _ -> fail g (Some inv_tm.range)
+                    (Printf.sprintf "Does not have invariant type (%s)" (P.term_to_string inv_tm_ty))
+      end
+      | _ -> fail g (Some inv_tm.range)
+                  (Printf.sprintf "Does not have invariant type (%s)" (P.term_to_string inv_tm_ty))
+    in
     
-  | EffectAnnotAtomic { opens } ->
+    (* FIXME: This is bogus for the Tm_FStar case!!! *)
+    assume (tm_inv inv_p == inv_tm_ty);
+
+    (* Can this come from some inversion instead? *)
+    let inv_p_typing : tot_typing g inv_p tm_vprop = recheck () in
+
+    (* pre'/post' are extended with inv_p *)
+    let pre' : vprop = tm_star pre inv_p in
+    let pre'_typing : tot_typing g pre' tm_vprop = recheck () in
+
+    let post_p' : vprop = tm_star post.post inv_p in
+    let elab_ret_ty = elab_term post.ret_ty in
+    let x = fresh g in
+    assume (fresh_wrt x g (freevars post_p'));
+    // Pulse.Typing.FV.freevars_close_term post_p' x 0;
+    // let post_p' = close_term post_p' x in
+    let g' = (push_binding g x ppname_default post.ret_ty) in
+    let r_g' = elab_env g' in
+    let post_p'_typing_src
+      : RT.tot_typing r_g'
+                      (elab_term (open_term_nv post_p' (v_as_nv x)))
+                      (elab_term tm_vprop)
+      = rt_recheck g' #r_g' ()
+    in
+    let post_p'_typing = Pulse.Checker.Base.post_typing_as_abstraction #g #_ #post.ret_ty #post_p' (E post_p'_typing_src) in
+    (* the post hint for the body, extended with inv_p, removing the name of invariant *)
+  begin
+    let (| opens, opens_typing |) 
+      : t:term & tot_typing g t tm_inames 
+      = match post.effect_annot with
+        | EffectAnnotSTT ->
+          (| all_inames, all_inames_typing g |)
+        | EffectAnnotAtomic { opens } ->
+          (| opens, (post_hint_typing g post x).effect_annot_typing |)
+    in
     let opens_remove_i = remove_iname inv_p opens inv_tm in
     let effect_annot = EffectAnnotAtomic { opens=opens_remove_i } in
-    let opens_typing : tot_typing g opens tm_inames = 
-      (post_hint_typing g post (fresh g)).effect_annot_typing
-    in 
     let effect_annot_typing
       : effect_annot_typing g effect_annot
       = remove_iname_typing g #inv_p #opens #inv_tm inv_p_typing opens_typing inv_tm_typing
@@ -303,13 +311,19 @@ let check
       
     let d = T_WithInv g inv_tm inv_p inv_p_typing inv_tm_typing body c_out body_typing tok in
     let c_out = add_iname_at_least_unobservable c_out inv_p inv_tm in
-    let C_STAtomic add_inv obs' st = c_out in
-    let tok : prop_validity g (tm_inames_subset add_inv opens) =
-      add_remove_inverse g inv_p opens inv_tm
-          inv_p_typing
-          opens_typing
-          inv_tm_typing
-    in
-    let d = T_Sub _ _ _ _ d (STS_AtomicInvs _ st _ _ obs' obs' tok) in
-    checker_result_for_st_typing (| tm, _, d |)  res_ppname
+    match post.effect_annot with
+    | EffectAnnotAtomic _ -> 
+      let C_STAtomic add_inv obs' st = c_out in
+      let tok : prop_validity g (tm_inames_subset add_inv opens) =
+        add_remove_inverse g inv_p opens inv_tm
+            inv_p_typing
+            opens_typing
+            inv_tm_typing
+      in
+      let d = T_Sub _ _ _ _ d (STS_AtomicInvs _ st _ _ obs' obs' tok) in
+      checker_result_for_st_typing (| tm, _, d |) res_ppname
+    | EffectAnnotSTT ->
+      let d = T_Lift _ _ _ _ d (Lift_STAtomic_ST _ c_out) in
+      checker_result_for_st_typing (| tm, _, d |) res_ppname
     end
+#pop-options
