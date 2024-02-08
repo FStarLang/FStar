@@ -31,7 +31,7 @@ WARN_ERROR=
 
 SMT_OPTIONS?=
 OTHERFLAGS+=$(WARN_ERROR) $(SMT_OPTIONS)
-ALREADY_CACHED_LIST ?= Prims,FStar,Steel,Pulse,-Pulse.Lib,-Pulse.C,-Pulse.Class
+ALREADY_CACHED_LIST ?= Prims,FStar,Pulse,-Pulse.Lib,-Pulse.C,-Pulse.Class
 ALREADY_CACHED = --already_cached $(ALREADY_CACHED_LIST)
 
 # A place to put all build artifacts

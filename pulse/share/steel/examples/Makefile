@@ -1,4 +1,4 @@
-TARGETS=steel pulse steelc
+TARGETS=pulse
 
 all: $(TARGETS)
 

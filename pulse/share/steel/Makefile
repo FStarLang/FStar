@@ -1,4 +1,4 @@
-TARGETS=examples tests tutorial
+TARGETS=examples
 
 all: $(TARGETS)
 

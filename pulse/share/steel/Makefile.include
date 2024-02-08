@@ -1,5 +1,5 @@
 ifeq (,$(PULSE_HOME))
-	$(error PULSE_HOME should be defined in the enclosing Makefile as the prefix directory where Steel was installed, or the root directory of its source repository)
+	$(error PULSE_HOME should be defined in the enclosing Makefile as the prefix directory where Pulse was installed, or the root directory of its source repository)
 endif
 
 ifneq (,$(FSTAR_HOME))
@@ -8,7 +8,7 @@ else
   FSTAR=fstar.exe
 endif
 
-# Add Steel to the OCaml (ocamlfind) search path
+# Add Pulse to the OCaml (ocamlfind) search path
 ifeq ($(OS),Windows_NT)
   OCAMLPATH := $(shell cygpath -m $(PULSE_HOME)/lib);$(OCAMLPATH)
 else
@@ -37,7 +37,7 @@ export OCAMLPATH
 
 FSTAR_FILES += $(filter-out $(EXCLUDE_FILES),$(wildcard *.fst *.fsti))
 ADDITIONAL_INCLUDES ?= 
-FSTAR_OPTIONS += $(OTHERFLAGS) --cmi --cache_checked_modules --warn_error @241 --already_cached 'Prims,FStar,LowStar,Steel,C' --include $(PULSE_HOME)/lib/steel $(ADDITIONAL_INCLUDES) --load_cmxs steel
+FSTAR_OPTIONS += $(OTHERFLAGS) --cmi --cache_checked_modules --warn_error @241 --already_cached 'Prims,FStar,LowStar,C' --include $(PULSE_HOME)/lib/steel $(ADDITIONAL_INCLUDES) --load_cmxs steel
 
 COMPAT_INDEXED_EFFECTS?=--compat_pre_typed_indexed_effects
 
