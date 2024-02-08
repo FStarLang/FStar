@@ -46,15 +46,19 @@ ocaml:
 	cd src/ocaml && dune install --prefix=$(PULSE_HOME)
 
 .PHONY: verify-pulse
-verify-pulse: ocaml
+verify-pulse:
 	+$(MAKE) -C lib/pulse
 
 .PHONY: verify-pulse-core
 verify-pulse-core: 
 	+$(MAKE) -C lib/pulse/core pulse_core
 
+.PHONY: verify-pulse-lib
+verify-pulse-lib: ocaml verify-pulse verify-pulse-core
+	+$(MAKE) -C lib/pulse/lib
+
 .PHONY: verify
-verify: verify-pulse verify-pulse-core
+verify: verify-pulse-lib
 
 clean: clean_ocaml
 	+$(MAKE) -C lib/pulse clean ; true

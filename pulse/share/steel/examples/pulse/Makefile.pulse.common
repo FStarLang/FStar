@@ -31,21 +31,22 @@ WARN_ERROR=
 
 SMT_OPTIONS?=
 OTHERFLAGS+=$(WARN_ERROR) $(SMT_OPTIONS)
-ALREADY_CACHED_LIST ?= Prims,FStar,Pulse,-Pulse.Lib,-Pulse.C,-Pulse.Class
+ALREADY_CACHED_LIST ?= Prims,FStar,Pulse,-Pulse.C
 ALREADY_CACHED = --already_cached $(ALREADY_CACHED_LIST)
 
 # A place to put all build artifacts
 OUTPUT_DIRECTORY ?= _output
 CACHE_DIRECTORY = $(OUTPUT_DIRECTORY)/cache
 
-INCLUDE_PATHS+=$(OUTPUT_DIRECTORY) $(SRC_DIRS) $(PULSE_HOME)/lib/pulse $(PULSE_HOME)/lib/pulse $(PULSE_HOME)/lib/pulse/core
+# FIXME: do we still need separate subdirectories for pledges, classes?
+INCLUDE_PATHS+=$(OUTPUT_DIRECTORY) $(SRC_DIRS) $(PULSE_HOME)/lib/pulse $(PULSE_HOME)/lib/pulse/lib $(PULSE_HOME)/lib/pulse/lib/class $(PULSE_HOME)/lib/pulse/lib/pledge $(PULSE_HOME)/lib/pulse/core
 
 FSTAR_OPTIONS=--odir $(OUTPUT_DIRECTORY) \
 		 $(OTHERFLAGS) \
 		 --cache_dir $(CACHE_DIRECTORY) \
 	         $(addprefix --include , $(INCLUDE_PATHS)) \
 		 --cache_checked_modules \
- 		 --load_cmxs pulse
+		 --load_cmxs pulse
 
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(FSTAR_OPTIONS) $(ALREADY_CACHED)
 

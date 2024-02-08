@@ -6,7 +6,7 @@ PULSE_EXAMPLES_ROOT = ../..
 PULSE_HOME = $(PULSE_EXAMPLES_ROOT)/../../../../
 
 # The INCLUDE_DIRS are relative to PULSE_EXAMPLES_ROOT
-INCLUDE_DIRS=lib lib/pledge _output/cache dice/cbor/extern
+INCLUDE_DIRS=_output/cache dice/cbor/extern
 SRC_DIRS=$(addprefix $(PULSE_EXAMPLES_ROOT)/, $(INCLUDE_DIRS))
 FSTAR_FILES=$(wildcard CDDLExtractionTest.*.fst) # but I still need to enumerate them in the Karamel bundle
 OTHERFLAGS += --cmi --already_cached '*,-CBOR.Pulse.Type'

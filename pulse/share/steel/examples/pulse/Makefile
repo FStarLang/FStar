@@ -3,7 +3,7 @@ PULSE_SHARE = ../../
 # the root (../../../..) since the OPAM package will detach the share
 # directory from the rest of the repo.
 
-INCLUDE_DIRS=bug-reports by-example lib lib/c class lib/pledge dice/cbor dice/common dice/dpe dice/engine dice/l0 parallel parix c .
+INCLUDE_DIRS=bug-reports by-example lib/c dice/cbor dice/common dice/dpe dice/engine dice/l0 parallel parix c .
 CACHE_DIR=.cache
 SRC_DIRS=$(addprefix $(PULSE_SHARE)/examples/pulse/, $(INCLUDE_DIRS))
 FSTAR_FILES=$(wildcard $(addsuffix /*.fst, $(SRC_DIRS))) $(wildcard $(addsuffix /*.fsti, $(SRC_DIRS)))
@@ -44,11 +44,6 @@ test: test-cbor extract_pulse_c
 
 include Makefile.pulse.common
 
-PULSE_LIB_CHECKED_FILES=$(filter $(CACHE_DIRECTORY)/Pulse.Lib.%,$(ALL_CHECKED_FILES))
-
-.PHONY: lib
-lib: $(PULSE_LIB_CHECKED_FILES)
-
 PULSE_C_CHECKED_FILES=$(filter $(CACHE_DIRECTORY)/Pulse.C.%,$(ALL_CHECKED_FILES))
 
 .PHONY: c
@@ -57,7 +52,7 @@ c: $(PULSE_C_CHECKED_FILES)
 CBOR_CHECKED_FILES=$(filter $(CACHE_DIRECTORY)/CBOR.% $(CACHE_DIRECTORY)/CDDL.% $(CACHE_DIRECTORY)/CDDLExtractionTest.%,$(ALL_CHECKED_FILES))
 
 .PHONY: cbor
-cbor: lib $(CBOR_CHECKED_FILES)
+cbor: $(CBOR_CHECKED_FILES)
 
 PREFIX ?= /usr/local
 ifeq ($(OS),Windows_NT)
@@ -76,10 +71,3 @@ ifeq (,$(INSTALL))
   endif
   export INSTALL
 endif
-
-.PHONY: install-lib %.install
-
-%.install: %
-	$(INSTALL) -m 644 -D $< $(PULSE_INSTALL_PREFIX)/share/steel/examples/pulse/$<
-
-install-lib: $(addsuffix .install,$(PULSE_LIB_CHECKED_FILES) $(wildcard lib/*.fst lib/*.fsti))

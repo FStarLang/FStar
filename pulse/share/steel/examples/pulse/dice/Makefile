@@ -1,7 +1,7 @@
 PULSE_EXAMPLES_ROOT = ..
 PULSE_HOME = ../../../../..
 
-INCLUDE_DIRS=lib dice/common dice/dpe dice/engine dice/l0 dice/cbor .
+INCLUDE_DIRS=dice/common dice/dpe dice/engine dice/l0 dice/cbor .
 SRC_DIRS=$(addprefix $(PULSE_EXAMPLES_ROOT)/, $(INCLUDE_DIRS))
 FSTAR_FILES=../dice/dpe/DPE.fst
 #/Pulse.Lib.HashTable.fst
@@ -12,7 +12,7 @@ all: verify extract_all
 extract:
 #	$(FSTAR) --odir _output --codegen OCaml CustomSyntax.fst --extract CustomSyntax
 	$(FSTAR) --odir _output --codegen OCaml ExtractionTest.fst --extract ExtractionTest
-	
+
 extract_c:
 	$(FSTAR) --codegen krml Demo.MultiplyByRepeatedAddition.fst --extract '* -Pulse.Lib.Core'
 	$(FSTAR_HOME)/../karamel/krml -bundle Demo.MultiplyByRepeatedAddition=* -skip-compilation _output/out.krml
