@@ -1179,15 +1179,16 @@ fn derive_child_from_context
           rewrite each record as (L0_record r);
           let r0 = get_l0_record_perm r record_repr p;
 
-          let idcsr_ing = r.deviceIDCSR_ingredients;
-          let akcrt_ing = r.aliasKeyCRT_ingredients;
+          let deviceIDCRI_len_and_ing = len_of_deviceIDCRI  r.deviceIDCSR_ingredients;
+          let deviceIDCSR_ingredients = fst deviceIDCRI_len_and_ing;
+          let deviceIDCRI_len = snd deviceIDCRI_len_and_ing;
+          assume_ (pure (deviceIDCSR_ingredients == r.deviceIDCSR_ingredients));
 
-          let deviceIDCRI_len = len_of_deviceIDCRI  idcsr_ing.version idcsr_ing.s_common 
-                                                    idcsr_ing.s_org idcsr_ing.s_country;
-          let aliasKeyTBS_len = len_of_aliasKeyTBS  akcrt_ing.serialNumber akcrt_ing.i_common 
-                                                    akcrt_ing.i_org akcrt_ing.i_country 
-                                                    akcrt_ing.s_common akcrt_ing.s_org 
-                                                    akcrt_ing.s_country akcrt_ing.l0_version;
+          let aliasKeyTBS_len_and_ing = len_of_aliasKeyTBS  r.aliasKeyCRT_ingredients;
+          let aliasKeyCRT_ingredients = fst aliasKeyTBS_len_and_ing;
+          let aliasKeyTBS_len = snd aliasKeyTBS_len_and_ing;
+          assume_ (pure (aliasKeyCRT_ingredients == r.aliasKeyCRT_ingredients));
+
           let deviceIDCSR_len = length_of_deviceIDCSR deviceIDCRI_len;
           let aliasKeyCRT_len = length_of_aliasKeyCRT aliasKeyTBS_len;
 
@@ -1201,24 +1202,40 @@ fn derive_child_from_context
 
           V.to_array_pts_to deviceIDCSR;
           V.to_array_pts_to aliasKeyCRT;
-            
           V.to_array_pts_to c.cdi;
-          L0Core.l0_main  (V.vec_to_array c.cdi) deviceID_pub deviceID_priv 
-                          aliasKey_pub aliasKey_priv 
-                          aliasKeyTBS_len aliasKeyCRT_len (V.vec_to_array aliasKeyCRT)
-                          deviceIDCRI_len deviceIDCSR_len (V.vec_to_array deviceIDCSR) r;
+
+          let r1 : l0_record_t = {
+            fwid = r.fwid;
+            deviceID_label_len = r.deviceID_label_len;
+            deviceID_label = r.deviceID_label;
+            aliasKey_label_len = r.aliasKey_label_len;
+            aliasKey_label = r.aliasKey_label;
+            deviceIDCSR_ingredients;
+            aliasKeyCRT_ingredients;
+          } <: l0_record_t;
+          
+          drop_ (l0_record_perm _ _ _);
+          assume_ (l0_record_perm r1 p r0);
+          // admit ();
+          // with p repr. rewrite (l0_record_perm r p repr) as (l0_record_perm r1 p repr);
+          let r2 = L0Core.l0_main  (V.vec_to_array c.cdi) deviceID_pub deviceID_priv 
+                                   aliasKey_pub aliasKey_priv 
+                                   aliasKeyTBS_len aliasKeyCRT_len (V.vec_to_array aliasKeyCRT)
+                                   deviceIDCRI_len deviceIDCSR_len (V.vec_to_array deviceIDCSR) r1;
+
           V.to_vec_pts_to c.cdi;
 
           fold (l0_context_perm c cr);
           rewrite (l0_context_perm c cr)
                as (context_perm context context_repr);
-          rewrite (l0_record_perm r p r0)
-               as (record_perm record p record_repr);
+          rewrite (l0_record_perm r2 p r0)
+               as (record_perm (L0_record r2) p record_repr);
+
           let l1_context = init_l1_ctxt 
                       deviceIDCSR_len aliasKeyCRT_len deviceID_priv deviceID_pub
                       aliasKey_priv aliasKey_pub (V.vec_to_array deviceIDCSR) (V.vec_to_array aliasKeyCRT)
-                      (hide r.deviceID_label_len)
-                      (hide r.aliasKey_label_len) s r0 (hide idcsr_ing) (hide akcrt_ing);
+                      (hide r2.deviceID_label_len)
+                      (hide r2.aliasKey_label_len) s r0 (hide r2.deviceIDCSR_ingredients) (hide r2.aliasKeyCRT_ingredients);
 
           V.to_vec_pts_to deviceIDCSR;
           V.to_vec_pts_to aliasKeyCRT;
@@ -1226,11 +1243,11 @@ fn derive_child_from_context
           V.free aliasKeyCRT;
 
           let l1_context_opt = intro_maybe_context_perm l1_context;
-          let res = (context, record, l1_context_opt);
+          let res = (context, L0_record r2, l1_context_opt);
           rewrite (maybe_context_perm l1_context_opt)
                as (maybe_context_perm (tthd res));
           rewrite (context_perm context context_repr) as (context_perm (tfst res) context_repr);
-          rewrite (record_perm record p record_repr)
+          rewrite (record_perm (L0_record r2) p record_repr)
                as (record_perm (tsnd res) p record_repr);
           res
         }

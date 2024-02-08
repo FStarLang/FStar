@@ -37,24 +37,12 @@ assume
 val length_of_aliasKeyCRT (len: US.t) : US.t 
 
 assume
-val len_of_deviceIDCRI
-  (version: x509_version_t)
-  (s_common: string)
-  (s_org: string)
-  (s_country: string)
-  : v:US.t{0 < US.v v /\ valid_deviceIDCSR_ingredients v}
+val len_of_deviceIDCRI (x:deviceIDCSR_ingredients_t)
+  : deviceIDCSR_ingredients_t & v:US.t{0 < US.v v /\ valid_deviceIDCSR_ingredients v}
 
 assume
-val len_of_aliasKeyTBS
-  (serialNumber  : x509_serialNumber_t)
-  (i_common      : string)
-  (i_org         : string)
-  (i_country     : string)
-  (s_common      : string)
-  (s_org         : string)
-  (s_country     : string)
-  (l0_version    : U32.t)
-  : v:US.t{0 < US.v v /\ valid_aliasKeyCRT_ingredients v}
+val len_of_aliasKeyTBS (x:aliasKeyCRT_ingredients_t)
+  : aliasKeyCRT_ingredients_t & v:US.t{0 < US.v v /\ valid_aliasKeyCRT_ingredients v}
 
 (* Serialize Functions *)
 

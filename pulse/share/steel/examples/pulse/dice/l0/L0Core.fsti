@@ -31,11 +31,7 @@ let deviceIDCSR_pre
   (deviceIDCSR: deviceIDCSR_ingredients_t) 
   (deviceIDCRI_len: SZ.t) 
   (deviceIDCSR_len: SZ.t) 
-  = deviceIDCRI_len == len_of_deviceIDCRI
-                        deviceIDCSR.version
-                        deviceIDCSR.s_common
-                        deviceIDCSR.s_org
-                        deviceIDCSR.s_country /\
+  = deviceIDCRI_len == snd (len_of_deviceIDCRI deviceIDCSR) /\
     0 < SZ.v deviceIDCRI_len /\ 
     valid_deviceIDCSR_ingredients deviceIDCRI_len /\
     deviceIDCSR_len == length_of_deviceIDCSR deviceIDCRI_len
@@ -47,15 +43,7 @@ let aliasKeyCRT_pre
   (aliasKeyCRT:aliasKeyCRT_ingredients_t) 
   (aliasKeyTBS_len:SZ.t) 
   (aliasKeyCRT_len:SZ.t) 
-  = aliasKeyTBS_len == len_of_aliasKeyTBS
-                        aliasKeyCRT.serialNumber
-                        aliasKeyCRT.i_common
-                        aliasKeyCRT.i_org
-                        aliasKeyCRT.i_country
-                        aliasKeyCRT.s_common
-                        aliasKeyCRT.s_org
-                        aliasKeyCRT.s_country
-                        aliasKeyCRT.l0_version /\
+  = aliasKeyTBS_len == snd (len_of_aliasKeyTBS aliasKeyCRT) /\
     0 < SZ.v aliasKeyTBS_len /\ 
     valid_aliasKeyCRT_ingredients aliasKeyTBS_len /\
     aliasKeyCRT_len == length_of_aliasKeyCRT aliasKeyTBS_len
@@ -114,7 +102,8 @@ val l0_main
   (#repr: erased l0_record_repr_t)
   (#cdi0 #deviceID_pub0 #deviceID_priv0 #aliasKey_pub0 #aliasKey_priv0 #aliasKeyCRT0 #deviceIDCSR0: erased (Seq.seq U8.t))
   (#cdi_perm #p:perm)
-  : stt unit (l0_record_perm record p repr **
+  : stt l0_record_t
+             (l0_record_perm record p repr **
               A.pts_to cdi #cdi_perm cdi0 **
               A.pts_to deviceID_pub deviceID_pub0 **
               A.pts_to deviceID_priv deviceID_priv0 **
@@ -124,7 +113,7 @@ val l0_main
               A.pts_to deviceIDCSR deviceIDCSR0 **
               pure (deviceIDCSR_pre record.deviceIDCSR_ingredients deviceIDCRI_len deviceIDCSR_len
                  /\ aliasKeyCRT_pre record.aliasKeyCRT_ingredients aliasKeyTBS_len aliasKeyCRT_len))
-             (fun _ -> 
+             (fun record -> 
               l0_record_perm record p repr **
               A.pts_to cdi #cdi_perm cdi0 **
               (exists* (deviceID_pub1
