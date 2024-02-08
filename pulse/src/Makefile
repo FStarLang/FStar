@@ -13,15 +13,11 @@ build:
 # Extraction rules assume that a snapshot has already been compiled.
 
 .PHONY: extract-ocaml
-extract-ocaml: extract-steel-plugin extract-extraction extract-syntax-extension extract-pulse-plugin
-
-.PHONY: extract-steel-plugin
-extract-steel-plugin:
-	+$(MAKE) -C ocaml/plugin -f extract-steel.Makefile
+extract-ocaml: extract-extraction extract-syntax-extension extract-pulse-plugin
 
 .PHONY: extract-pulse-plugin
 extract-pulse-plugin:
-	+$(MAKE) -C ocaml/plugin -f extract-pulse.Makefile
+	+$(MAKE) -C checker extract
 
 .PHONY: extract-extraction
 extract-extraction:
@@ -32,12 +28,8 @@ extract-extraction:
 extract-syntax-extension:
 	+$(MAKE) -C syntax_extension
 
-.PHONY: extract-c
-extract-c:
-	+$(MAKE) -C c extract
-
 .PHONY: extract
-extract: extract-ocaml extract-c
+extract: extract-ocaml
 
 .PHONY: boot
 boot:
@@ -46,7 +38,7 @@ boot:
 
 .PHONY: clean-snapshot
 clean-snapshot:
-	rm -rf ocaml/*/generated ../include/steel/Steel_SpinLock.h
+	rm -rf ocaml/*/generated
 	rm -f ocaml/plugin/FStar_Parser_Parse.mly
 
 .PHONY: full-boot
