@@ -51,7 +51,7 @@ verify-pulse: ocaml
 
 .PHONY: verify-pulse-core
 verify-pulse-core: 
-	+$(MAKE) -C lib/pulse_core pulse_core
+	+$(MAKE) -C lib/pulse/core pulse_core
 
 .PHONY: verify
 verify: verify-pulse verify-pulse-core

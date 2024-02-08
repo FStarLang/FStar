@@ -12,7 +12,7 @@ FSTAR_OPTIONS=$(OTHERFLAGS) --cache_checked_modules --warn_error @241 --already_
 
 MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(FSTAR_OPTIONS)
 
-include ../pulse/runlim.mk
+include ../runlim.mk
 
 %.checked:
 	$(call msg, "CHECK", $(basename $(notdir $@)))

@@ -13,7 +13,7 @@
   "include_dirs": [
     "../../../../lib/pulse",
     "../../../../lib/pulse",
-    "../../../../lib/pulse_core",
+    "../../../../lib/pulse/core",
     "bug-reports",
     "by-example",
     "lib",
