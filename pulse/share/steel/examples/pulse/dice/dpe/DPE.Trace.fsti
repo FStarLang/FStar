@@ -109,7 +109,7 @@ let carrier = FRAP.knowledge degenerate_anchor
 let trace_pcm
   : FStar.PCM.pcm carrier
   = FRAP.pcm #trace #trace_preorder #degenerate_anchor
-module PM = Steel.PCMMap
+module PM = Pulse.Lib.PCMMap
 let session_trace_pcm : PCM.pcm (PM.map sid_t carrier) = PM.pointwise sid_t trace_pcm
 // let trace_ref = 
 // let snapshot_value (t:trace) = (None, None), 
