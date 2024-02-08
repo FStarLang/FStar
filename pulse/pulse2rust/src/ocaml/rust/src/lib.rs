@@ -2292,195 +2292,2054 @@ ocaml_export! {
 
 // static OBJ: Mutex<S> = new_mutex();
 
-// type hashable_len = usize;
-// type signable_len = usize;
-// type hkdf_lbl_len = usize;
-// type alg_t = ();
+type hashable_len = usize;
+type signable_len = usize;
+type hkdf_lbl_len = usize;
+type hkdf_ikm_len = usize;
+type alg_t = ();
 
-// pub const dice_digest_len: usize = 32;
+pub const dice_digest_len: usize = 32;
 
-// pub const dice_hash_alg: () = ();
+pub const dice_hash_alg: () = ();
 
-// pub fn ed25519_verify(
-//     pubk: &mut [u8],
-//     hdr: &mut [u8],
-//     hdr_len: signable_len,
-//     sig: &mut [u8],
-//     ppubk: (),
-//     phdr: (),
-//     psig: (),
-//     pubk_seq: (),
-//     hdr_seq: (),
-//     sig_seq: (),
-// ) -> bool {
-//     panic!()
-// }
+pub fn ed25519_verify(
+    pubk: &mut [u8],
+    hdr: &mut [u8],
+    hdr_len: signable_len,
+    sig: &mut [u8],
+    ppubk: (),
+    phdr: (),
+    psig: (),
+    pubk_seq: (),
+    hdr_seq: (),
+    sig_seq: (),
+) -> bool {
+    panic!()
+}
 
-// pub fn hacl_hash(
-//     alg: (),
-//     src_len: hashable_len,
-//     src: &mut [u8],
-//     dst: &mut [u8],
-//     psrc: (),
-//     src_seq: (),
-//     dst_seq: (),
-// ) -> () {
-//     panic!()
-// }
+pub fn hacl_hash(
+    alg: (),
+    src_len: hashable_len,
+    src: &mut [u8],
+    dst: &mut [u8],
+    psrc: (),
+    src_seq: (),
+    dst_seq: (),
+) -> () {
+    panic!()
+}
 
-// pub fn compare(
-//     len: usize,
-//     a: &mut [u8],
-//     b: &mut [u8],
-//     p: (),
-//     a_seq: (),
-//     b_seq: (),
-//     __c0: (),
-// ) -> bool {
-//     panic!()
-// }
+pub fn compare(
+    len: usize,
+    a: &mut [u8],
+    b: &mut [u8],
+    p: (),
+    a_seq: (),
+    b_seq: (),
+    __c0: (),
+) -> bool {
+    panic!()
+}
 
-// pub fn hacl_hmac(
-//     alg: (),
-//     dst: &mut [u8],
-//     key: &mut [u8],
-//     key_len: hashable_len,
-//     msg: &mut [u8],
-//     msg_len: hashable_len,
-//     pkey: (),
-//     pmsg: (),
-//     dst_seq: (),
-//     key_seq: (),
-//     msg_seq: (),
-// ) -> () {
-//     panic!()
-// }
+pub fn memcpy<A>(l: usize, src: &mut [A], dst: &mut [A], p: (), src0: (), dst0: ()) -> () {
+    panic!()
+}
 
-// pub fn x509_get_deviceIDCRI(
-//     version: x509_version_t,
-//     s_common: String,
-//     s_org: String,
-//     s_country: String,
-//     ku: u32,
-//     deviceID_pub: &mut [u8],
-//     pub_perm: (),
-//     deviceID_pub0: (),
-// ) -> deviceIDCRI_t {
-//     panic!()
-// }
+pub fn zeroize(len: usize, src: &mut [u8], s: ()) -> () {
+    panic!()
+}
 
-// pub fn serialize_deviceIDCRI(
-//     deviceIDCRI: deviceIDCRI_t,
-//     deviceIDCRI_len: usize,
-//     deviceIDCRI_buf: &mut [u8],
-//     deviceIDCRI_buf0: (),
-// ) -> () {
-//     panic!()
-// }
+pub fn hacl_hmac(
+    alg: (),
+    dst: &mut [u8],
+    key: &mut [u8],
+    key_len: hashable_len,
+    msg: &mut [u8],
+    msg_len: hashable_len,
+    pkey: (),
+    pmsg: (),
+    dst_seq: (),
+    key_seq: (),
+    msg_seq: (),
+) -> () {
+    panic!()
+}
 
-// pub fn x509_get_deviceIDCSR(
-//     deviceIDCRI_len: usize,
-//     deviceIDCRI_buf: &mut [u8],
-//     deviceIDCRI_sig: &mut [u8],
-//     buf_perm: (),
-//     sig_perm: (),
-//     buf: (),
-//     sig: (),
-// ) -> deviceIDCSR_t {
-//     panic!()
-// }
+pub fn x509_get_deviceIDCRI(
+    version: x509_version_t,
+    s_common: String,
+    s_org: String,
+    s_country: String,
+    ku: u32,
+    deviceID_pub: &mut [u8],
+    pub_perm: (),
+    deviceID_pub0: (),
+) -> deviceIDCRI_t {
+    panic!()
+}
 
-// pub fn ed25519_sign(
-//     buf: &mut [u8],
-//     privk: &mut [u8],
-//     len: usize,
-//     msg: &mut [u8],
-//     pprivk: (),
-//     pmsg: (),
-//     buf0: (),
-//     privk_seq: (),
-//     msg_seq: (),
-// ) -> () {
-//     panic!()
-// }
+pub fn serialize_deviceIDCRI(
+    deviceIDCRI: deviceIDCRI_t,
+    deviceIDCRI_len: usize,
+    deviceIDCRI_buf: &mut [u8],
+    deviceIDCRI_buf0: (),
+) -> () {
+    panic!()
+}
 
-// pub fn serialize_deviceIDCSR(
-//     deviceIDCRI_len: usize,
-//     deviceIDCSR: deviceIDCSR_t,
-//     deviceIDCSR_len: usize,
-//     deviceIDCSR_buf: &mut [u8],
-//     _buf: (),
-// ) -> () {
-//     panic!()
-// }
+pub fn x509_get_deviceIDCSR(
+    deviceIDCRI_len: usize,
+    deviceIDCRI_buf: &mut [u8],
+    deviceIDCRI_sig: &mut [u8],
+    buf_perm: (),
+    sig_perm: (),
+    buf: (),
+    sig: (),
+) -> deviceIDCSR_t {
+    panic!()
+}
 
-// pub fn x509_get_aliasKeyTBS(
-//     aliasKeyCRT_ingredients: aliasKeyCRT_ingredients_t,
-//     fwid: &mut [u8],
-//     deviceID_pub: &mut [u8],
-//     aliasKey_pub: &mut [u8],
-//     fwid_perm: (),
-//     deviceID_perm: (),
-//     aliasKey_perm: (),
-//     fwid0: (),
-//     deviceID0: (),
-//     aliasKey0: (),
-// ) -> aliasKeyTBS_t {
-//     panic!()
-// }
+pub fn ed25519_sign(
+    buf: &mut [u8],
+    privk: &mut [u8],
+    len: usize,
+    msg: &mut [u8],
+    pprivk: (),
+    pmsg: (),
+    buf0: (),
+    privk_seq: (),
+    msg_seq: (),
+) -> () {
+    panic!()
+}
 
-// pub fn serialize_aliasKeyTBS(
-//     aliasKeyTBS: aliasKeyTBS_t,
-//     aliasKeyTBS_len: usize,
-//     aliasKeyTBS_buf: &mut [u8],
-//     aliasKeyTBS_buf0: (),
-// ) -> () {
-//     panic!()
-// }
+pub fn serialize_deviceIDCSR(
+    deviceIDCRI_len: usize,
+    deviceIDCSR: deviceIDCSR_t,
+    deviceIDCSR_len: usize,
+    deviceIDCSR_buf: &mut [u8],
+    _buf: (),
+) -> () {
+    panic!()
+}
 
-// pub fn x509_get_aliasKeyCRT(
-//     aliasKeyTBS_len: usize,
-//     aliasKeyTBS_buf: &mut [u8],
-//     aliasKeyTBS_sig: &mut [u8],
-//     buf_perm: (),
-//     sig_perm: (),
-//     buf: (),
-//     sig: (),
-// ) -> aliasKeyCRT_t {
-//     panic!()
-// }
+pub fn x509_get_aliasKeyTBS(
+    aliasKeyCRT_ingredients: aliasKeyCRT_ingredients_t,
+    fwid: &mut [u8],
+    deviceID_pub: &mut [u8],
+    aliasKey_pub: &mut [u8],
+    fwid_perm: (),
+    deviceID_perm: (),
+    aliasKey_perm: (),
+    fwid0: (),
+    deviceID0: (),
+    aliasKey0: (),
+) -> aliasKeyTBS_t {
+    panic!()
+}
 
-// pub fn serialize_aliasKeyCRT(
-//     aliasKeyTBS_len: usize,
-//     aliasKeyCRT: aliasKeyCRT_t,
-//     aliasKeyCRT_len: usize,
-//     aliasKeyCRT_buf: &mut [u8],
-//     _buf: (),
-// ) -> () {
-//     panic!()
-// }
+pub fn serialize_aliasKeyTBS(
+    aliasKeyTBS: aliasKeyTBS_t,
+    aliasKeyTBS_len: usize,
+    aliasKeyTBS_buf: &mut [u8],
+    aliasKeyTBS_buf0: (),
+) -> () {
+    panic!()
+}
 
-// pub fn digest_len(alg: alg_t) -> usize {
-//     panic!()
-// }
+pub fn x509_get_aliasKeyCRT(
+    aliasKeyTBS_len: usize,
+    aliasKeyTBS_buf: &mut [u8],
+    aliasKeyTBS_sig: &mut [u8],
+    buf_perm: (),
+    sig_perm: (),
+    buf: (),
+    sig: (),
+) -> aliasKeyCRT_t {
+    panic!()
+}
 
-// pub const v32us: usize = 32;
+pub fn serialize_aliasKeyCRT(
+    aliasKeyTBS_len: usize,
+    aliasKeyCRT: aliasKeyCRT_t,
+    aliasKeyCRT_len: usize,
+    aliasKeyCRT_buf: &mut [u8],
+    _buf: (),
+) -> () {
+    panic!()
+}
 
-// pub fn derive_key_pair(
-//     pubk: &mut [u8],
-//     privk: &mut [u8],
-//     ikm_len: usize,
-//     ikm: &mut [u8],
-//     lbl_len: hkdf_lbl_len,
-//     lbl: &mut [u8],
-//     ikm_perm: (),
-//     lbl_perm: (),
-//     pub_seq: (),
-//     priv_seq: (),
-//     ikm_seq: (),
-//     lbl_seq: (),
-// ) -> () {
-//     panic!()
-// }
+pub fn digest_len(alg: alg_t) -> usize {
+    panic!()
+}
+
+pub const v32us: usize = 32;
 
 //////////////////////////////
+
+pub static uds_len: hashable_len = 1;
+pub enum dice_return_code {
+    DICE_SUCCESS,
+    DICE_ERROR,
+}
+use crate::dice_return_code::*;
+pub struct engine_record_t {
+    l0_image_header_size: signable_len,
+    l0_image_header: std::vec::Vec<u8>,
+    l0_image_header_sig: std::vec::Vec<u8>,
+    l0_binary_size: hashable_len,
+    l0_binary: std::vec::Vec<u8>,
+    l0_binary_hash: std::vec::Vec<u8>,
+    l0_image_auth_pubkey: std::vec::Vec<u8>,
+}
+pub fn authenticate_l0_image(
+    mut record: engine_record_t,
+    repr: (),
+    p: (),
+) -> (engine_record_t, bool) {
+    let valid_header_sig = ed25519_verify(
+        &mut record.l0_image_auth_pubkey,
+        &mut record.l0_image_header,
+        record.l0_image_header_size,
+        &mut record.l0_image_header_sig,
+        (),
+        (),
+        (),
+        (),
+        (),
+        (),
+    );
+    let mut b = false;
+    let b1 = if valid_header_sig {
+        let hash_buf = &mut [0; dice_digest_len];
+        hacl_hash(
+            dice_hash_alg,
+            record.l0_binary_size,
+            &mut record.l0_binary,
+            hash_buf,
+            (),
+            (),
+            (),
+        );
+        let res = compare(
+            dice_digest_len,
+            hash_buf,
+            &mut record.l0_binary_hash,
+            (),
+            (),
+            (),
+            (),
+        );
+        let res1 = (record, res);
+        let hash_buf1 = res1;
+        hash_buf1
+    } else {
+        let res = (record, false);
+        res
+    };
+    b1
+}
+pub fn compute_cdi(
+    cdi: &mut [u8],
+    uds: &mut [u8],
+    mut record: engine_record_t,
+    uds_perm: (),
+    p: (),
+    uds_bytes: (),
+    __c0: (),
+    __repr: (),
+) -> engine_record_t {
+    let uds_digest = &mut [0; dice_digest_len];
+    let l0_digest = &mut [0; dice_digest_len];
+    hacl_hash(dice_hash_alg, uds_len, uds, uds_digest, (), (), ());
+    hacl_hash(
+        dice_hash_alg,
+        record.l0_binary_size,
+        &mut record.l0_binary,
+        l0_digest,
+        (),
+        (),
+        (),
+    );
+    hacl_hmac(
+        dice_hash_alg,
+        cdi,
+        uds_digest,
+        dice_digest_len,
+        l0_digest,
+        dice_digest_len,
+        (),
+        (),
+        (),
+        (),
+        (),
+    );
+    let l0_digest1 = record;
+    let uds_digest1 = l0_digest1;
+    uds_digest1
+}
+pub fn engine_main_aux(
+    cdi: &mut [u8],
+    uds: &mut [u8],
+    mut record: engine_record_t,
+    c0: (),
+    repr: (),
+    uds_perm: (),
+    p: (),
+    uds_bytes: (),
+) -> (engine_record_t, dice_return_code) {
+    let b = authenticate_l0_image(record, (), ());
+    if b.1 {
+        let record1 = compute_cdi(cdi, uds, b.0, (), (), (), (), ());
+        let res = (record1, dice_return_code::DICE_SUCCESS);
+        res
+    } else {
+        let res = (b.0, dice_return_code::DICE_ERROR);
+        res
+    }
+}
+pub static engine_main: fn(
+    &mut [u8],
+    &mut [u8],
+    engine_record_t,
+    (),
+    (),
+    (),
+    (),
+    (),
+) -> (engine_record_t, dice_return_code) = engine_main_aux;
+pub type x509_version_t = u32;
+pub type x509_serialNumber_t = u32;
+pub type deviceIDCRI_t = u32;
+pub type deviceIDCSR_t = u32;
+pub type aliasKeyTBS_t = u32;
+pub type aliasKeyCRT_t = u32;
+pub struct deviceIDCSR_ingredients_t {
+    ku: u32,
+    version: x509_version_t,
+    s_common: String,
+    s_org: String,
+    s_country: String,
+}
+pub struct aliasKeyCRT_ingredients_t {
+    version1: x509_version_t,
+    serialNumber: x509_serialNumber_t,
+    i_common: String,
+    i_org: String,
+    i_country: String,
+    notBefore: usize,
+    notAfter: usize,
+    s_common1: String,
+    s_org1: String,
+    s_country1: String,
+    ku1: u32,
+    l0_version: u32,
+}
+pub struct l0_record_t {
+    fwid: std::vec::Vec<u8>,
+    deviceID_label_len: hkdf_lbl_len,
+    deviceID_label: std::vec::Vec<u8>,
+    aliasKey_label_len: hkdf_lbl_len,
+    aliasKey_label: std::vec::Vec<u8>,
+    deviceIDCSR_ingredients: deviceIDCSR_ingredients_t,
+    aliasKeyCRT_ingredients: aliasKeyCRT_ingredients_t,
+}
+pub fn derive_key_pair_aux(
+    pubk: &mut [u8],
+    privk: &mut [u8],
+    ikm_len: hkdf_ikm_len,
+    ikm: &mut [u8],
+    lbl_len: hkdf_lbl_len,
+    lbl: &mut [u8],
+    ikm_perm: (),
+    lbl_perm: (),
+    _pub_seq: (),
+    _priv_seq: (),
+    ikm_seq: (),
+    lbl_seq: (),
+) -> () {
+    panic!()
+}
+pub static derive_key_pair: fn(
+    &mut [u8],
+    &mut [u8],
+    hkdf_ikm_len,
+    &mut [u8],
+    hkdf_lbl_len,
+    &mut [u8],
+    (),
+    (),
+    (),
+    (),
+    (),
+    (),
+) -> () = derive_key_pair_aux;
+pub fn derive_DeviceID_aux(
+    alg: alg_t,
+    deviceID_pub: &mut [u8],
+    deviceID_priv: &mut [u8],
+    cdi: &mut [u8],
+    deviceID_label_len: hkdf_lbl_len,
+    deviceID_label: &mut [u8],
+    cdi0: (),
+    deviceID_label0: (),
+    deviceID_pub0: (),
+    deviceID_priv0: (),
+    cdi_perm: (),
+    p: (),
+) -> () {
+    let mut cdigest = vec![0; digest_len(alg)];
+    hacl_hash(alg, dice_digest_len, cdi, &mut cdigest, (), (), ());
+    derive_key_pair(
+        deviceID_pub,
+        deviceID_priv,
+        digest_len(alg),
+        &mut cdigest,
+        deviceID_label_len,
+        deviceID_label,
+        (),
+        (),
+        (),
+        (),
+        (),
+        (),
+    );
+    drop(cdigest)
+}
+pub static derive_DeviceID: fn(
+    alg_t,
+    &mut [u8],
+    &mut [u8],
+    &mut [u8],
+    hkdf_lbl_len,
+    &mut [u8],
+    (),
+    (),
+    (),
+    (),
+    (),
+    (),
+) -> () = derive_DeviceID_aux;
+pub fn derive_AliasKey_aux(
+    alg: alg_t,
+    aliasKey_pub: &mut [u8],
+    aliasKey_priv: &mut [u8],
+    cdi: &mut [u8],
+    fwid: &mut [u8],
+    aliasKey_label_len: hkdf_lbl_len,
+    aliasKey_label: &mut [u8],
+    cdi0: (),
+    fwid0: (),
+    aliasKey_label0: (),
+    aliasKey_pub0: (),
+    aliasKey_priv0: (),
+    cdi_perm: (),
+    p: (),
+) -> () {
+    let mut cdigest = vec![0; digest_len(alg)];
+    let mut adigest = vec![0; digest_len(alg)];
+    hacl_hash(alg, dice_digest_len, cdi, &mut cdigest, (), (), ());
+    hacl_hmac(
+        alg,
+        &mut adigest,
+        &mut cdigest,
+        digest_len(alg),
+        fwid,
+        v32us,
+        (),
+        (),
+        (),
+        (),
+        (),
+    );
+    derive_key_pair(
+        aliasKey_pub,
+        aliasKey_priv,
+        digest_len(alg),
+        &mut adigest,
+        aliasKey_label_len,
+        aliasKey_label,
+        (),
+        (),
+        (),
+        (),
+        (),
+        (),
+    );
+    drop(cdigest);
+    drop(adigest)
+}
+pub static derive_AliasKey: fn(
+    alg_t,
+    &mut [u8],
+    &mut [u8],
+    &mut [u8],
+    &mut [u8],
+    hkdf_lbl_len,
+    &mut [u8],
+    (),
+    (),
+    (),
+    (),
+    (),
+    (),
+    (),
+) -> () = derive_AliasKey_aux;
+pub fn derive_AuthKeyID_aux(
+    alg: alg_t,
+    authKeyID: &mut [u8],
+    deviceID_pub: &mut [u8],
+    authKeyID0: (),
+    deviceID_pub0: (),
+    p: (),
+) -> () {
+    hacl_hash(alg, v32us, deviceID_pub, authKeyID, (), (), ())
+}
+pub static derive_AuthKeyID: fn(alg_t, &mut [u8], &mut [u8], (), (), ()) -> () =
+    derive_AuthKeyID_aux;
+pub fn create_deviceIDCRI(
+    pub_perm: (),
+    pub_seq: (),
+    _buf: (),
+    deviceID_pub: &mut [u8],
+    deviceIDCRI_len: usize,
+    deviceIDCRI_buf: &mut [u8],
+    deviceIDCSR_ingredients: deviceIDCSR_ingredients_t,
+) -> () {
+    let deviceIDCRI = x509_get_deviceIDCRI(
+        deviceIDCSR_ingredients.version,
+        deviceIDCSR_ingredients.s_common,
+        deviceIDCSR_ingredients.s_org,
+        deviceIDCSR_ingredients.s_country,
+        deviceIDCSR_ingredients.ku,
+        deviceID_pub,
+        (),
+        (),
+    );
+    serialize_deviceIDCRI(deviceIDCRI, deviceIDCRI_len, deviceIDCRI_buf, ())
+}
+pub fn sign_and_finalize_deviceIDCSR(
+    priv_perm: (),
+    priv_seq: (),
+    _cri_buf: (),
+    _csr_buf: (),
+    deviceID_priv: &mut [u8],
+    deviceIDCRI_len: usize,
+    deviceIDCRI_buf: &mut [u8],
+    deviceIDCSR_len: usize,
+    deviceIDCSR_buf: &mut [u8],
+    deviceIDCSR_ingredients: (),
+) -> () {
+    let mut deviceIDCRI_sig = vec![0; deviceIDCRI_len];
+    ed25519_sign(
+        &mut deviceIDCRI_sig,
+        deviceID_priv,
+        deviceIDCRI_len,
+        deviceIDCRI_buf,
+        (),
+        (),
+        (),
+        (),
+        (),
+    );
+    let deviceIDCSR = x509_get_deviceIDCSR(
+        deviceIDCRI_len,
+        deviceIDCRI_buf,
+        &mut deviceIDCRI_sig,
+        (),
+        (),
+        (),
+        (),
+    );
+    drop(deviceIDCRI_sig);
+    serialize_deviceIDCSR(
+        deviceIDCRI_len,
+        deviceIDCSR,
+        deviceIDCSR_len,
+        deviceIDCSR_buf,
+        (),
+    )
+}
+pub fn create_aliasKeyTBS(
+    fwid_perm: (),
+    authKey_perm: (),
+    device_perm: (),
+    aliasKey_perm: (),
+    fwid0: (),
+    authKeyID0: (),
+    deviceID_pub0: (),
+    aliasKey_pub0: (),
+    _buf: (),
+    fwid: &mut [u8],
+    authKeyID: &mut [u8],
+    deviceID_pub: &mut [u8],
+    aliasKey_pub: &mut [u8],
+    aliasKeyTBS_len: usize,
+    aliasKeyTBS_buf: &mut [u8],
+    aliasKeyCRT_ingredients: aliasKeyCRT_ingredients_t,
+) -> () {
+    let aliasKeyTBS = x509_get_aliasKeyTBS(
+        aliasKeyCRT_ingredients,
+        fwid,
+        deviceID_pub,
+        aliasKey_pub,
+        (),
+        (),
+        (),
+        (),
+        (),
+        (),
+    );
+    serialize_aliasKeyTBS(aliasKeyTBS, aliasKeyTBS_len, aliasKeyTBS_buf, ())
+}
+pub fn sign_and_finalize_aliasKeyCRT(
+    priv_perm: (),
+    priv_seq: (),
+    _tbs_buf: (),
+    _crt_buf: (),
+    deviceID_priv: &mut [u8],
+    aliasKeyTBS_len: usize,
+    aliasKeyTBS_buf: &mut [u8],
+    aliasKeyCRT_len: usize,
+    aliasKeyCRT_buf: &mut [u8],
+    aliasKeyCRT_ingredients: (),
+) -> () {
+    let mut aliasKeyTBS_sig = vec![0; aliasKeyTBS_len];
+    ed25519_sign(
+        &mut aliasKeyTBS_sig,
+        deviceID_priv,
+        aliasKeyTBS_len,
+        aliasKeyTBS_buf,
+        (),
+        (),
+        (),
+        (),
+        (),
+    );
+    let aliasKeyCRT = x509_get_aliasKeyCRT(
+        aliasKeyTBS_len,
+        aliasKeyTBS_buf,
+        &mut aliasKeyTBS_sig,
+        (),
+        (),
+        (),
+        (),
+    );
+    drop(aliasKeyTBS_sig);
+    serialize_aliasKeyCRT(
+        aliasKeyTBS_len,
+        aliasKeyCRT,
+        aliasKeyCRT_len,
+        aliasKeyCRT_buf,
+        (),
+    )
+}
+pub fn l0_main_aux(
+    cdi: &mut [u8],
+    deviceID_pub: &mut [u8],
+    deviceID_priv: &mut [u8],
+    aliasKey_pub: &mut [u8],
+    aliasKey_priv: &mut [u8],
+    aliasKeyTBS_len: usize,
+    aliasKeyCRT_len: usize,
+    aliasKeyCRT: &mut [u8],
+    deviceIDCRI_len: usize,
+    deviceIDCSR_len: usize,
+    deviceIDCSR: &mut [u8],
+    mut record: l0_record_t,
+    repr: (),
+    cdi0: (),
+    deviceID_pub0: (),
+    deviceID_priv0: (),
+    aliasKey_pub0: (),
+    aliasKey_priv0: (),
+    aliasKeyCRT0: (),
+    deviceIDCSR0: (),
+    cdi_perm: (),
+    p: (),
+) -> () {
+    derive_DeviceID(
+        dice_hash_alg,
+        deviceID_pub,
+        deviceID_priv,
+        cdi,
+        record.deviceID_label_len,
+        &mut record.deviceID_label,
+        (),
+        (),
+        (),
+        (),
+        (),
+        (),
+    );
+    derive_AliasKey(
+        dice_hash_alg,
+        aliasKey_pub,
+        aliasKey_priv,
+        cdi,
+        &mut record.fwid,
+        record.aliasKey_label_len,
+        &mut record.aliasKey_label,
+        (),
+        (),
+        (),
+        (),
+        (),
+        (),
+        (),
+    );
+    let mut authKeyID = vec![0; dice_digest_len];
+    derive_AuthKeyID(dice_hash_alg, &mut authKeyID, deviceID_pub, (), (), ());
+    let mut deviceIDCRI = vec![0; deviceIDCRI_len];
+    create_deviceIDCRI(
+        (),
+        (),
+        (),
+        deviceID_pub,
+        deviceIDCRI_len,
+        &mut deviceIDCRI,
+        record.deviceIDCSR_ingredients,
+    );
+    sign_and_finalize_deviceIDCSR(
+        (),
+        (),
+        (),
+        (),
+        deviceID_priv,
+        deviceIDCRI_len,
+        &mut deviceIDCRI,
+        deviceIDCSR_len,
+        deviceIDCSR,
+        (),
+    );
+    let mut aliasKeyTBS = vec![0; aliasKeyTBS_len];
+    create_aliasKeyTBS(
+        (),
+        (),
+        (),
+        (),
+        (),
+        (),
+        (),
+        (),
+        (),
+        &mut record.fwid,
+        &mut authKeyID,
+        deviceID_pub,
+        aliasKey_pub,
+        aliasKeyTBS_len,
+        &mut aliasKeyTBS,
+        record.aliasKeyCRT_ingredients,
+    );
+    sign_and_finalize_aliasKeyCRT(
+        (),
+        (),
+        (),
+        (),
+        deviceID_priv,
+        aliasKeyTBS_len,
+        &mut aliasKeyTBS,
+        aliasKeyCRT_len,
+        aliasKeyCRT,
+        (),
+    );
+    drop(authKeyID);
+    drop(deviceIDCRI);
+    drop(aliasKeyTBS);
+}
+pub static l0_main: fn(
+    &mut [u8],
+    &mut [u8],
+    &mut [u8],
+    &mut [u8],
+    &mut [u8],
+    usize,
+    usize,
+    &mut [u8],
+    usize,
+    usize,
+    &mut [u8],
+    l0_record_t,
+    (),
+    (),
+    (),
+    (),
+    (),
+    (),
+    (),
+    (),
+    (),
+    (),
+) -> () = l0_main_aux;
+pub struct profile_descriptor_t {
+    name: String,
+    dpe_spec_version: u32,
+    max_message_size: u32,
+    uses_multi_part_messages: bool,
+    supports_concurrent_operations: bool,
+    supports_encrypted_sessions: bool,
+    supports_derived_sessions: bool,
+    max_sessions: usize,
+    session_protocol: String,
+    supports_session_sync: bool,
+    session_sync_policy: String,
+    session_migration_protocol: String,
+    supports_default_context: bool,
+    supports_context_handles: bool,
+    max_contexts_per_session: usize,
+    max_context_handle_size: usize,
+    supports_auto_init: bool,
+    supports_simulation: bool,
+    supports_attestation: bool,
+    supports_sealing: bool,
+    supports_get_profile: bool,
+    supports_open_session: bool,
+    supports_close_session: bool,
+    supports_sync_session: bool,
+    supports_export_session: bool,
+    supports_import_session: bool,
+    supports_init_context: bool,
+    supports_certify_key: bool,
+    supports_sign: bool,
+    supports_seal: bool,
+    supports_unseal: bool,
+    supports_sealing_public: bool,
+    supports_rotate_context_handle: bool,
+    dice_derivation: String,
+    asymmetric_derivation: String,
+    symmetric_derivation: String,
+    supports_any_label: bool,
+    supported_labels: String,
+    initial_derivation: String,
+    input_format: String,
+    supports_internal_inputs: bool,
+    supports_internal_dpe_info: bool,
+    supports_internal_dpe_dice: bool,
+    internal_dpe_info_type: String,
+    internal_dpe_dice_type: String,
+    internal_inputs: String,
+    supports_certificates: bool,
+    max_certificate_size: usize,
+    max_certificate_chain_size: usize,
+    appends_more_certificates: bool,
+    supports_certificate_policies: bool,
+    supports_policy_identity_init: bool,
+    supports_policy_identity_loc: bool,
+    supports_policy_attest_init: bool,
+    supports_policy_attest_loc: bool,
+    supports_policy_assert_init: bool,
+    supports_policy_assert_loc: bool,
+    certificate_policies: String,
+    supports_eca_certificates: bool,
+    eca_certificate_format: String,
+    leaf_certificate_format: String,
+    public_key_format: String,
+    supports_external_key: bool,
+    to_be_signed_format: String,
+    signature_format: String,
+    supports_symmetric_sign: bool,
+    supports_asymmetric_unseal: bool,
+    supports_unseal_policy: bool,
+    unseal_policy_format: String,
+}
+pub fn mk_profile_descriptor(
+    name: String,
+    dpe_spec_version: u32,
+    max_message_size: u32,
+    uses_multi_part_messages: bool,
+    supports_concurrent_operations: bool,
+    supports_encrypted_sessions: bool,
+    supports_derived_sessions: bool,
+    max_sessions: usize,
+    session_protocol: String,
+    supports_session_sync: bool,
+    session_sync_policy: String,
+    session_migration_protocol: String,
+    supports_default_context: bool,
+    supports_context_handles: bool,
+    max_contexts_per_session: usize,
+    max_context_handle_size: usize,
+    supports_auto_init: bool,
+    supports_simulation: bool,
+    supports_attestation: bool,
+    supports_sealing: bool,
+    supports_get_profile: bool,
+    supports_open_session: bool,
+    supports_close_session: bool,
+    supports_sync_session: bool,
+    supports_export_session: bool,
+    supports_import_session: bool,
+    supports_init_context: bool,
+    supports_certify_key: bool,
+    supports_sign: bool,
+    supports_seal: bool,
+    supports_unseal: bool,
+    supports_sealing_public: bool,
+    supports_rotate_context_handle: bool,
+    dice_derivation: String,
+    asymmetric_derivation: String,
+    symmetric_derivation: String,
+    supports_any_label: bool,
+    supported_labels: String,
+    initial_derivation: String,
+    input_format: String,
+    supports_internal_inputs: bool,
+    supports_internal_dpe_info: bool,
+    supports_internal_dpe_dice: bool,
+    internal_dpe_info_type: String,
+    internal_dpe_dice_type: String,
+    internal_inputs: String,
+    supports_certificates: bool,
+    max_certificate_size: usize,
+    max_certificate_chain_size: usize,
+    appends_more_certificates: bool,
+    supports_certificate_policies: bool,
+    supports_policy_identity_init: bool,
+    supports_policy_identity_loc: bool,
+    supports_policy_attest_init: bool,
+    supports_policy_attest_loc: bool,
+    supports_policy_assert_init: bool,
+    supports_policy_assert_loc: bool,
+    certificate_policies: String,
+    supports_eca_certificates: bool,
+    eca_certificate_format: String,
+    leaf_certificate_format: String,
+    public_key_format: String,
+    supports_external_key: bool,
+    to_be_signed_format: String,
+    signature_format: String,
+    supports_symmetric_sign: bool,
+    supports_asymmetric_unseal: bool,
+    supports_unseal_policy: bool,
+    unseal_policy_format: String,
+) -> profile_descriptor_t {
+    profile_descriptor_t {
+        name: name,
+        dpe_spec_version: dpe_spec_version,
+        max_message_size: max_message_size,
+        uses_multi_part_messages: uses_multi_part_messages,
+        supports_concurrent_operations: supports_concurrent_operations,
+        supports_encrypted_sessions: supports_encrypted_sessions,
+        supports_derived_sessions: supports_derived_sessions,
+        max_sessions: max_sessions,
+        session_protocol: session_protocol,
+        supports_session_sync: supports_session_sync,
+        session_sync_policy: session_sync_policy,
+        session_migration_protocol: session_migration_protocol,
+        supports_default_context: supports_default_context,
+        supports_context_handles: supports_context_handles,
+        max_contexts_per_session: max_contexts_per_session,
+        max_context_handle_size: max_context_handle_size,
+        supports_auto_init: supports_auto_init,
+        supports_simulation: supports_simulation,
+        supports_attestation: supports_attestation,
+        supports_sealing: supports_sealing,
+        supports_get_profile: supports_get_profile,
+        supports_open_session: supports_open_session,
+        supports_close_session: supports_close_session,
+        supports_sync_session: supports_sync_session,
+        supports_export_session: supports_export_session,
+        supports_import_session: supports_import_session,
+        supports_init_context: supports_init_context,
+        supports_certify_key: supports_certify_key,
+        supports_sign: supports_sign,
+        supports_seal: supports_seal,
+        supports_unseal: supports_unseal,
+        supports_sealing_public: supports_sealing_public,
+        supports_rotate_context_handle: supports_rotate_context_handle,
+        dice_derivation: dice_derivation,
+        asymmetric_derivation: asymmetric_derivation,
+        symmetric_derivation: symmetric_derivation,
+        supports_any_label: supports_any_label,
+        supported_labels: supported_labels,
+        initial_derivation: initial_derivation,
+        input_format: input_format,
+        supports_internal_inputs: supports_internal_inputs,
+        supports_internal_dpe_info: supports_internal_dpe_info,
+        supports_internal_dpe_dice: supports_internal_dpe_dice,
+        internal_dpe_info_type: internal_dpe_info_type,
+        internal_dpe_dice_type: internal_dpe_dice_type,
+        internal_inputs: internal_inputs,
+        supports_certificates: supports_certificates,
+        max_certificate_size: max_certificate_size,
+        max_certificate_chain_size: max_certificate_chain_size,
+        appends_more_certificates: appends_more_certificates,
+        supports_certificate_policies: supports_certificate_policies,
+        supports_policy_identity_init: supports_policy_identity_init,
+        supports_policy_identity_loc: supports_policy_identity_loc,
+        supports_policy_attest_init: supports_policy_attest_init,
+        supports_policy_attest_loc: supports_policy_attest_loc,
+        supports_policy_assert_init: supports_policy_assert_init,
+        supports_policy_assert_loc: supports_policy_assert_loc,
+        certificate_policies: certificate_policies,
+        supports_eca_certificates: supports_eca_certificates,
+        eca_certificate_format: eca_certificate_format,
+        leaf_certificate_format: leaf_certificate_format,
+        public_key_format: public_key_format,
+        supports_external_key: supports_external_key,
+        to_be_signed_format: to_be_signed_format,
+        signature_format: signature_format,
+        supports_symmetric_sign: supports_symmetric_sign,
+        supports_asymmetric_unseal: supports_asymmetric_unseal,
+        supports_unseal_policy: supports_unseal_policy,
+        unseal_policy_format: unseal_policy_format,
+    }
+}
+
+#[derive(Clone)]
+pub struct engine_context_t {
+    uds: std::vec::Vec<u8>,
+}
+pub fn mk_engine_context_t(uds: std::vec::Vec<u8>) -> engine_context_t {
+    engine_context_t { uds: uds }
+}
+
+#[derive(Clone)]
+pub struct l0_context_t {
+    cdi: std::vec::Vec<u8>,
+}
+pub fn mk_l0_context_t(cdi: std::vec::Vec<u8>) -> l0_context_t {
+    l0_context_t { cdi: cdi }
+}
+
+#[derive(Clone)]
+pub struct l1_context_t {
+    deviceID_priv: std::vec::Vec<u8>,
+    deviceID_pub: std::vec::Vec<u8>,
+    aliasKey_priv: std::vec::Vec<u8>,
+    aliasKey_pub: std::vec::Vec<u8>,
+    aliasKeyCRT: std::vec::Vec<u8>,
+    deviceIDCSR: std::vec::Vec<u8>,
+}
+pub fn mk_l1_context_t(
+    deviceID_priv: std::vec::Vec<u8>,
+    deviceID_pub: std::vec::Vec<u8>,
+    aliasKey_priv: std::vec::Vec<u8>,
+    aliasKey_pub: std::vec::Vec<u8>,
+    aliasKeyCRT: std::vec::Vec<u8>,
+    deviceIDCSR: std::vec::Vec<u8>,
+) -> l1_context_t {
+    l1_context_t {
+        deviceID_priv: deviceID_priv,
+        deviceID_pub: deviceID_pub,
+        aliasKey_priv: aliasKey_priv,
+        aliasKey_pub: aliasKey_pub,
+        aliasKeyCRT: aliasKeyCRT,
+        deviceIDCSR: deviceIDCSR,
+    }
+}
+
+#[derive(Clone)]
+pub enum context_t {
+    Engine_context(engine_context_t),
+    L0_context(l0_context_t),
+    L1_context(l1_context_t),
+}
+use crate::context_t::*;
+pub fn mk_context_t_engine(c: engine_context_t) -> context_t {
+    context_t::Engine_context(c)
+}
+pub fn mk_context_t_l0(c: l0_context_t) -> context_t {
+    context_t::L0_context(c)
+}
+pub fn mk_context_t_l1(c: l1_context_t) -> context_t {
+    context_t::L1_context(c)
+}
+pub enum record_t {
+    Engine_record(engine_record_t),
+    L0_record(l0_record_t),
+}
+use crate::record_t::*;
+#[derive(Clone)]
+pub enum cell<KT: PartialEq + Copy + Clone, VT: Clone> {
+    Clean,
+    Zombie,
+    Used(KT, VT),
+}
+use crate::cell::*;
+pub type pos_us = usize;
+pub struct ht_t<KEYT: Copy + PartialEq + Clone, VALT: Clone> {
+    sz: pos_us,
+    hashf: fn(KEYT) -> usize,
+    contents: std::vec::Vec<cell<KEYT, VALT>>,
+}
+pub fn mk_used_cell<A: Copy + PartialEq + Clone, B: Clone>(k: A, v: B) -> cell<A, B> {
+    cell::Used(k, v)
+}
+pub fn mk_ht<K: Copy + PartialEq + Clone, V: Clone>(
+    sz: pos_us,
+    hashf: fn(K) -> usize,
+    contents: std::vec::Vec<cell<K, V>>,
+) -> ht_t<K, V> {
+    ht_t {
+        sz: sz,
+        hashf: hashf,
+        contents: contents,
+    }
+}
+pub fn alloc<K: Copy + PartialEq + Clone, V: Clone>(
+    hashf: fn(K) -> usize,
+    l: pos_us,
+) -> ht_t<K, V> {
+    let mut contents = vec![cell::Clean; l];
+    let ht = mk_ht(l, hashf, contents);
+    ht
+}
+pub fn sz_add(x: usize, y: usize) -> std::option::Option<usize> {
+    match x <= 0xffff {
+        true => match y <= 0xffff - x {
+            true => Some(x + y),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+pub fn size_t_mod(x: usize, y: usize) -> usize {
+    x % y
+}
+pub fn replace<KT: Copy + PartialEq + Clone, VT: Clone>(
+    pht: (),
+    ht: ht_t<KT, VT>,
+    idx: usize,
+    k: KT,
+    v: VT,
+    uu___: (),
+) -> (ht_t<KT, VT>, VT) {
+    let hashf = ht.hashf;
+    let mut contents = ht.contents;
+    let v_ = std::mem::replace(&mut contents[idx], mk_used_cell(k, v));
+    let vcontents = contents;
+    let ht1 = mk_ht(ht.sz, hashf, vcontents);
+    let _bind_c = match v_ {
+        Used(k_, v_1) => {
+            let res = (ht1, v_1);
+            res
+        }
+        Used(k_, v_1) => {
+            let res = (ht1, v_1);
+            res
+        }
+        Clean => panic!(),
+        Zombie => panic!(),
+    };
+    let contents1 = _bind_c;
+    contents1
+}
+pub fn lookup<KT: Copy + PartialEq + Clone, VT: Clone>(
+    pht: (),
+    ht: ht_t<KT, VT>,
+    k: KT,
+) -> (ht_t<KT, VT>, bool, std::option::Option<usize>) {
+    let hashf = ht.hashf;
+    let mut contents = ht.contents;
+    let cidx = size_t_mod(hashf(k), ht.sz);
+    let mut off = 0;
+    let mut cont = true;
+    let mut err = false;
+    let mut ret = None;
+    while {
+        let voff = off;
+        let vcont = cont;
+        let verr = err;
+        voff <= ht.sz && vcont == true && verr == false
+    } {
+        let voff = off;
+        if voff == ht.sz {
+            cont = false;
+        } else {
+            let opt_sum = sz_add(cidx, voff);
+            match opt_sum {
+                Some(sum) => {
+                    let idx = size_t_mod(sum, ht.sz);
+                    let c = std::mem::replace(&mut contents[idx], cell::Zombie);
+                    match c {
+                        Used(k_, v_) => {
+                            if k_ == k {
+                                cont = false;
+                                ret = Some(idx);
+                                let uu___2 =
+                                    std::mem::replace(&mut contents[idx], cell::Used(k_, v_));
+                            } else {
+                                off = voff + 1;
+                                let uu___1 =
+                                    std::mem::replace(&mut contents[idx], cell::Used(k_, v_));
+                            }
+                        }
+                        Used(k_, v_) => {
+                            if k_ == k {
+                                cont = false;
+                                ret = Some(idx);
+                                let uu___2 =
+                                    std::mem::replace(&mut contents[idx], cell::Used(k_, v_));
+                            } else {
+                                off = voff + 1;
+                                let uu___1 =
+                                    std::mem::replace(&mut contents[idx], cell::Used(k_, v_));
+                            }
+                        }
+                        Clean => {
+                            cont = false;
+                            let uu___1 = std::mem::replace(&mut contents[idx], c);
+                        }
+                        Zombie => {
+                            off = voff + 1;
+                            let uu___1 = std::mem::replace(&mut contents[idx], c);
+                        }
+                    }
+                }
+                Some(sum) => {
+                    let idx = size_t_mod(sum, ht.sz);
+                    let c = std::mem::replace(&mut contents[idx], cell::Zombie);
+                    match c {
+                        Used(k_, v_) => {
+                            if k_ == k {
+                                cont = false;
+                                ret = Some(idx);
+                                let uu___2 =
+                                    std::mem::replace(&mut contents[idx], cell::Used(k_, v_));
+                            } else {
+                                off = voff + 1;
+                                let uu___1 =
+                                    std::mem::replace(&mut contents[idx], cell::Used(k_, v_));
+                            }
+                        }
+                        Used(k_, v_) => {
+                            if k_ == k {
+                                cont = false;
+                                ret = Some(idx);
+                                let uu___2 =
+                                    std::mem::replace(&mut contents[idx], cell::Used(k_, v_));
+                            } else {
+                                off = voff + 1;
+                                let uu___1 =
+                                    std::mem::replace(&mut contents[idx], cell::Used(k_, v_));
+                            }
+                        }
+                        Clean => {
+                            cont = false;
+                            let uu___1 = std::mem::replace(&mut contents[idx], c);
+                        }
+                        Zombie => {
+                            off = voff + 1;
+                            let uu___1 = std::mem::replace(&mut contents[idx], c);
+                        }
+                    }
+                }
+                None => err = true,
+            }
+        };
+    }
+    let verr = err;
+    let o = ret;
+    let vcontents = contents;
+    let ht1 = mk_ht(ht.sz, ht.hashf, vcontents);
+    let _bind_c = if verr {
+        let res = (ht1, false, o);
+        res
+    } else {
+        let res = (ht1, true, o);
+        res
+    };
+    let ret1 = _bind_c;
+    let err1 = ret1;
+    let cont1 = err1;
+    let off1 = cont1;
+    let contents1 = off1;
+    contents1
+}
+pub fn insert<KT: Copy + PartialEq + Clone, VT: Clone>(
+    ht: ht_t<KT, VT>,
+    k: KT,
+    v: VT,
+    pht: (),
+) -> (ht_t<KT, VT>, bool) {
+    let hashf = ht.hashf;
+    let mut contents = ht.contents;
+    let cidx = size_t_mod(hashf(k), ht.sz);
+    let mut off = 0;
+    let mut cont = true;
+    let mut err = false;
+    let mut idx = 0;
+    while {
+        let vcont = cont;
+        let verr = err;
+        vcont == true && verr == false
+    } {
+        let voff = off;
+        if voff == ht.sz {
+            cont = false;
+        } else {
+            let opt_sum = sz_add(cidx, voff);
+            match opt_sum {
+                Some(sum) => {
+                    let vidx = size_t_mod(sum, ht.sz);
+                    let c = std::mem::replace(&mut contents[vidx], cell::Zombie);
+                    match c {
+                        Used(k_, v_) => {
+                            if k_ == k {
+                                contents[vidx] = cell::Used(k_, v_);
+                                cont = false;
+                                idx = vidx;
+                            } else {
+                                contents[vidx] = cell::Used(k_, v_);
+                                off = voff + 1
+                            }
+                        }
+                        Used(k_, v_) => {
+                            if k_ == k {
+                                contents[vidx] = cell::Used(k_, v_);
+                                cont = false;
+                                idx = vidx;
+                            } else {
+                                contents[vidx] = cell::Used(k_, v_);
+                                off = voff + 1
+                            }
+                        }
+                        Clean => {
+                            contents[vidx] = cell::Clean;
+                            cont = false;
+                            idx = vidx;
+                        }
+                        Zombie => {
+                            let vcontents = contents;
+                            let ht1 = ht_t {
+                                sz: ht.sz,
+                                hashf: hashf,
+                                contents: vcontents,
+                            };
+                            let res = lookup((), ht1, k);
+                            contents = res.0.contents;
+                            if res.1 {
+                                let o = res.2;
+                                match o {
+                                    Some(p) => {
+                                        contents[p] = cell::Zombie;
+                                        cont = false;
+                                        idx = vidx;
+                                    }
+                                    Some(p) => {
+                                        contents[p] = cell::Zombie;
+                                        cont = false;
+                                        idx = vidx;
+                                    }
+                                    None => {
+                                        cont = false;
+                                        idx = vidx;
+                                    }
+                                }
+                            } else {
+                                err = true
+                            }
+                        }
+                    }
+                }
+                Some(sum) => {
+                    let vidx = size_t_mod(sum, ht.sz);
+                    let c = std::mem::replace(&mut contents[vidx], cell::Zombie);
+                    match c {
+                        Used(k_, v_) => {
+                            if k_ == k {
+                                contents[vidx] = cell::Used(k_, v_);
+                                cont = false;
+                                idx = vidx;
+                            } else {
+                                contents[vidx] = cell::Used(k_, v_);
+                                off = voff + 1
+                            }
+                        }
+                        Used(k_, v_) => {
+                            if k_ == k {
+                                contents[vidx] = cell::Used(k_, v_);
+                                cont = false;
+                                idx = vidx;
+                            } else {
+                                contents[vidx] = cell::Used(k_, v_);
+                                off = voff + 1
+                            }
+                        }
+                        Clean => {
+                            contents[vidx] = cell::Clean;
+                            cont = false;
+                            idx = vidx;
+                        }
+                        Zombie => {
+                            let vcontents = contents;
+                            let ht1 = ht_t {
+                                sz: ht.sz,
+                                hashf: hashf,
+                                contents: vcontents,
+                            };
+                            let res = lookup((), ht1, k);
+                            contents = res.0.contents;
+                            if res.1 {
+                                let o = res.2;
+                                match o {
+                                    Some(p) => {
+                                        contents[p] = cell::Zombie;
+                                        cont = false;
+                                        idx = vidx;
+                                    }
+                                    Some(p) => {
+                                        contents[p] = cell::Zombie;
+                                        cont = false;
+                                        idx = vidx;
+                                    }
+                                    None => {
+                                        cont = false;
+                                        idx = vidx;
+                                    }
+                                }
+                            } else {
+                                err = true
+                            }
+                        }
+                    }
+                }
+                None => err = true,
+            }
+        };
+    }
+    let vcont = cont;
+    let verr = err;
+    let vidx = idx;
+    let _bind_c = if vcont == false && verr == false {
+        contents[vidx] = mk_used_cell(k, v);
+        let vcontents = contents;
+        let ht1 = mk_ht(ht.sz, hashf, vcontents);
+        let res = (ht1, true);
+        res
+    } else {
+        let vcontents = contents;
+        let ht1 = mk_ht(ht.sz, hashf, vcontents);
+        let res = (ht1, false);
+        res
+    };
+    let idx1 = _bind_c;
+    let err1 = idx1;
+    let cont1 = err1;
+    let off1 = cont1;
+    let contents1 = off1;
+    contents1
+}
+pub fn is_used<K: Copy + PartialEq + Clone, V: Clone>(c: cell<K, V>) -> (bool, cell<K, V>) {
+    match c {
+        Used(_, _) => (true, c),
+        _ => (false, c),
+    }
+}
+pub fn not_full<KT: Copy + PartialEq + Clone, VT: Clone>(
+    ht: ht_t<KT, VT>,
+    pht: (),
+) -> (ht_t<KT, VT>, bool) {
+    let hashf = ht.hashf;
+    let mut contents = ht.contents;
+    let mut i = 0;
+    while {
+        let vi = i;
+        if vi < ht.sz {
+            let c = std::mem::replace(&mut contents[vi], cell::Zombie);
+            let b = is_used(c);
+            let uu___ = std::mem::replace(&mut contents[vi], b.1);
+            b.0
+        } else {
+            false
+        }
+    } {
+        let vi = i;
+        i = vi + 1;
+    }
+    let vi = i;
+    let res = vi < ht.sz;
+    let vcontents = contents;
+    let ht1 = mk_ht(ht.sz, hashf, vcontents);
+    let b = (ht1, res);
+    let i1 = b;
+    let contents1 = i1;
+    contents1
+}
+pub fn run_stt<A>(post: (), f: A) -> A {
+    panic!()
+}
+pub type ctxt_hndl_t = u32;
+pub type sid_t = u32;
+#[derive(Clone)]
+pub struct session_state__Available__payload {
+    handle: ctxt_hndl_t,
+    context: context_t,
+}
+#[derive(Clone)]
+pub enum session_state {
+    SessionStart,
+    Available(session_state__Available__payload),
+    InUse,
+    SessionClosed,
+    SessionError,
+}
+use crate::session_state::*;
+pub fn mk_available_payload(
+    handle: ctxt_hndl_t,
+    context: context_t,
+) -> session_state__Available__payload {
+    session_state__Available__payload {
+        handle: handle,
+        context: context,
+    }
+}
+pub fn intro_session_state_perm_available(
+    ctxt: context_t,
+    hndl: ctxt_hndl_t,
+    __repr: (),
+) -> session_state {
+    session_state::Available(mk_available_payload(hndl, ctxt))
+}
+pub struct global_state_t {
+    session_id_counter: sid_t,
+    session_table: ht_t<sid_t, session_state>,
+}
+pub fn sid_hash(uu___: sid_t) -> usize {
+    panic!()
+}
+pub const fn initialize_global_state(
+    uu___: (),
+) -> std::sync::Mutex<std::option::Option<global_state_t>> {
+    let res = None;
+    std::sync::Mutex::new(res)
+}
+pub static global_state: std::sync::Mutex<std::option::Option<global_state_t>> =
+    initialize_global_state(());
+pub fn mk_global_state(uu___: ()) -> global_state_t {
+    let session_table = alloc(sid_hash, 256);
+    let st = global_state_t {
+        session_id_counter: 0,
+        session_table: session_table,
+    };
+    st
+}
+pub fn insert_if_not_full<KT: Copy + PartialEq + Clone, VT: Clone>(
+    ht: ht_t<KT, VT>,
+    k: KT,
+    v: VT,
+    pht: (),
+) -> (ht_t<KT, VT>, bool) {
+    let b = not_full(ht, ());
+    if b.1 {
+        insert(b.0, k, v, ())
+    } else {
+        let res = (b.0, false);
+        res
+    }
+}
+pub fn safe_add(i: u32, j: u32) -> std::option::Option<u32> {
+    panic!()
+}
+pub fn open_session_aux(st: global_state_t) -> (global_state_t, std::option::Option<sid_t>) {
+    let ctr = st.session_id_counter;
+    let tbl = st.session_table;
+    let opt_inc = safe_add(ctr, 1);
+    match opt_inc {
+        None => {
+            let st1 = global_state_t {
+                session_id_counter: ctr,
+                session_table: tbl,
+            };
+            let res = (st1, None);
+            res
+        }
+        None => {
+            let st1 = global_state_t {
+                session_id_counter: ctr,
+                session_table: tbl,
+            };
+            let res = (st1, None);
+            res
+        }
+        Some(next_sid) => {
+            let res = insert_if_not_full(tbl, ctr, session_state::SessionStart, ());
+            if res.1 {
+                let st1 = global_state_t {
+                    session_id_counter: next_sid,
+                    session_table: res.0,
+                };
+                let res1 = (st1, Some(next_sid));
+                res1
+            } else {
+                let st1 = global_state_t {
+                    session_id_counter: ctr,
+                    session_table: res.0,
+                };
+                let res1 = (st1, None);
+                res1
+            }
+        }
+    }
+}
+pub fn destroy_ctxt(ctxt: context_t, repr: ()) -> () {
+    match ctxt {
+        Engine_context(c) => drop(c.uds),
+        Engine_context(c) => drop(c.uds),
+        L0_context(c) => drop(c.cdi),
+        L1_context(c) => {
+            drop(c.deviceID_priv);
+            drop(c.deviceID_pub);
+            drop(c.aliasKey_priv);
+            drop(c.aliasKey_pub);
+            drop(c.aliasKeyCRT);
+            drop(c.deviceIDCSR)
+        }
+    }
+}
+pub fn take_session_state(
+    sid: sid_t,
+    replace_with: session_state,
+) -> std::option::Option<session_state> {
+    let r: &mut std::option::Option<global_state_t> = &mut global_state.lock().unwrap();
+    let st_opt = std::mem::replace(r, None);
+    match st_opt {
+        None => None,
+        None => None,
+        Some(st) => {
+            let ctr = st.session_id_counter;
+            let tbl = st.session_table;
+            if sid < ctr {
+                let ss = lookup((), tbl, sid);
+                if ss.1 {
+                    match ss.2 {
+                        Some(idx) => {
+                            let ok = replace((), ss.0, idx, sid, replace_with, ());
+                            let st1 = global_state_t {
+                                session_id_counter: ctr,
+                                session_table: ok.0,
+                            };
+                            *r = Some(st1);
+                            Some(ok.1)
+                        }
+                        Some(idx) => {
+                            let ok = replace((), ss.0, idx, sid, replace_with, ());
+                            let st1 = global_state_t {
+                                session_id_counter: ctr,
+                                session_table: ok.0,
+                            };
+                            *r = Some(st1);
+                            Some(ok.1)
+                        }
+                        None => {
+                            let st1 = global_state_t {
+                                session_id_counter: ctr,
+                                session_table: ss.0,
+                            };
+                            *r = Some(st1);
+                            None
+                        }
+                    }
+                } else {
+                    let st1 = global_state_t {
+                        session_id_counter: ctr,
+                        session_table: ss.0,
+                    };
+                    *r = Some(st1);
+                    None
+                }
+            } else {
+                let st1 = global_state_t {
+                    session_id_counter: ctr,
+                    session_table: tbl,
+                };
+                *r = Some(st1);
+                None
+            }
+        }
+    }
+}
+pub fn destroy_session_state(st: session_state) -> () {
+    match st {
+        Available(st1) => destroy_ctxt(st1.context, ()),
+        Available(st1) => destroy_ctxt(st1.context, ()),
+        _ => (),
+    }
+}
+pub fn init_engine_ctxt(uds: &mut [u8], p: (), uds_bytes: ()) -> context_t {
+    let mut uds_buf = vec![0; uds_len];
+    memcpy(uds_len, uds, &mut uds_buf, (), (), ());
+    let engine_context = mk_engine_context_t(uds_buf);
+    let ctxt = mk_context_t_engine(engine_context);
+    ctxt
+}
+pub fn init_l0_ctxt(cdi: &mut [u8], engine_repr: (), s: (), uds_bytes: (), uu___: ()) -> context_t {
+    let mut cdi_buf = vec![0; dice_digest_len];
+    memcpy(dice_digest_len, cdi, &mut cdi_buf, (), (), ());
+    let l0_context = mk_l0_context_t(cdi_buf);
+    let ctxt = mk_context_t_l0(l0_context);
+    ctxt
+}
+pub fn init_l1_ctxt(
+    deviceIDCSR_len: usize,
+    aliasKeyCRT_len: usize,
+    deviceID_priv: &mut [u8],
+    deviceID_pub: &mut [u8],
+    aliasKey_priv: &mut [u8],
+    aliasKey_pub: &mut [u8],
+    deviceIDCSR: &mut [u8],
+    aliasKeyCRT: &mut [u8],
+    deviceID_label_len: (),
+    aliasKey_label_len: (),
+    cdi: (),
+    repr: (),
+    deviceIDCSR_ingredients: (),
+    aliasKeyCRT_ingredients: (),
+    deviceID_priv0: (),
+    deviceID_pub0: (),
+    aliasKey_priv0: (),
+    aliasKey_pub0: (),
+    deviceIDCSR0: (),
+    aliasKeyCRT0: (),
+) -> context_t {
+    let mut deviceID_pub_buf = vec![0; v32us];
+    let mut deviceID_priv_buf = vec![0; v32us];
+    let mut aliasKey_priv_buf = vec![0; v32us];
+    let mut aliasKey_pub_buf = vec![0; v32us];
+    let mut deviceIDCSR_buf = vec![0; deviceIDCSR_len];
+    let mut aliasKeyCRT_buf = vec![0; aliasKeyCRT_len];
+    memcpy(v32us, deviceID_priv, &mut deviceID_priv_buf, (), (), ());
+    memcpy(v32us, deviceID_pub, &mut deviceID_pub_buf, (), (), ());
+    memcpy(v32us, aliasKey_priv, &mut aliasKey_priv_buf, (), (), ());
+    memcpy(v32us, aliasKey_pub, &mut aliasKey_pub_buf, (), (), ());
+    memcpy(
+        deviceIDCSR_len,
+        deviceIDCSR,
+        &mut deviceIDCSR_buf,
+        (),
+        (),
+        (),
+    );
+    memcpy(
+        aliasKeyCRT_len,
+        aliasKeyCRT,
+        &mut aliasKeyCRT_buf,
+        (),
+        (),
+        (),
+    );
+    let l1_context = mk_l1_context_t(
+        deviceID_priv_buf,
+        deviceID_pub_buf,
+        aliasKey_priv_buf,
+        aliasKey_pub_buf,
+        aliasKeyCRT_buf,
+        deviceIDCSR_buf,
+    );
+    let ctxt = mk_context_t_l1(l1_context);
+    ctxt
+}
+pub fn prng(uu___: ()) -> u32 {
+    panic!()
+}
+pub fn intro_maybe_context_perm(c: context_t, __repr: ()) -> std::option::Option<context_t> {
+    Some(c)
+}
+pub fn derive_child_from_context(
+    context: context_t,
+    record: record_t,
+    p: (),
+    record_repr: (),
+    context_repr: (),
+) -> (context_t, record_t, std::option::Option<context_t>) {
+    match context {
+        Engine_context(c) => {
+            if op_Negation(uu___is_Engine_record(record)) {
+                let res = (context, record, None);
+                res
+            } else {
+                match record {
+                    Engine_record(r) => {
+                        let cdi = &mut [0; dice_digest_len];
+                        let ret = engine_main(cdi, &mut c.uds, r, (), (), (), (), ());
+                        let _bind_c = match ret.1 {
+                            DICE_SUCCESS => {
+                                let l0_ctxt = init_l0_ctxt(cdi, (), (), (), ());
+                                let l0_ctxt_opt = intro_maybe_context_perm(l0_ctxt, ());
+                                let res = (context, record_t::Engine_record(ret.0), l0_ctxt_opt);
+                                res
+                            }
+                            DICE_SUCCESS => {
+                                let l0_ctxt = init_l0_ctxt(cdi, (), (), (), ());
+                                let l0_ctxt_opt = intro_maybe_context_perm(l0_ctxt, ());
+                                let res = (context, record_t::Engine_record(ret.0), l0_ctxt_opt);
+                                res
+                            }
+                            DICE_ERROR => {
+                                zeroize(dice_digest_len, cdi, ());
+                                let res = (context, record_t::Engine_record(ret.0), None);
+                                res
+                            }
+                        };
+                        let cdi1 = _bind_c;
+                        cdi1
+                    }
+                    Engine_record(r) => {
+                        let cdi = &mut [0; dice_digest_len];
+                        let ret = engine_main(cdi, &mut c.uds, r, (), (), (), (), ());
+                        let _bind_c = match ret.1 {
+                            DICE_SUCCESS => {
+                                let l0_ctxt = init_l0_ctxt(cdi, (), (), (), ());
+                                let l0_ctxt_opt = intro_maybe_context_perm(l0_ctxt, ());
+                                let res = (context, record_t::Engine_record(ret.0), l0_ctxt_opt);
+                                res
+                            }
+                            DICE_SUCCESS => {
+                                let l0_ctxt = init_l0_ctxt(cdi, (), (), (), ());
+                                let l0_ctxt_opt = intro_maybe_context_perm(l0_ctxt, ());
+                                let res = (context, record_t::Engine_record(ret.0), l0_ctxt_opt);
+                                res
+                            }
+                            DICE_ERROR => {
+                                zeroize(dice_digest_len, cdi, ());
+                                let res = (context, record_t::Engine_record(ret.0), None);
+                                res
+                            }
+                        };
+                        let cdi1 = _bind_c;
+                        cdi1
+                    }
+                }
+            }
+        }
+        Engine_context(c) => {
+            if op_Negation(uu___is_Engine_record(record)) {
+                let res = (context, record, None);
+                res
+            } else {
+                match record {
+                    Engine_record(r) => {
+                        let cdi = &mut [0; dice_digest_len];
+                        let ret = engine_main(cdi, &mut c.uds, r, (), (), (), (), ());
+                        let _bind_c = match ret.1 {
+                            DICE_SUCCESS => {
+                                let l0_ctxt = init_l0_ctxt(cdi, (), (), (), ());
+                                let l0_ctxt_opt = intro_maybe_context_perm(l0_ctxt, ());
+                                let res = (context, record_t::Engine_record(ret.0), l0_ctxt_opt);
+                                res
+                            }
+                            DICE_SUCCESS => {
+                                let l0_ctxt = init_l0_ctxt(cdi, (), (), (), ());
+                                let l0_ctxt_opt = intro_maybe_context_perm(l0_ctxt, ());
+                                let res = (context, record_t::Engine_record(ret.0), l0_ctxt_opt);
+                                res
+                            }
+                            DICE_ERROR => {
+                                zeroize(dice_digest_len, cdi, ());
+                                let res = (context, record_t::Engine_record(ret.0), None);
+                                res
+                            }
+                        };
+                        let cdi1 = _bind_c;
+                        cdi1
+                    }
+                    Engine_record(r) => {
+                        let cdi = &mut [0; dice_digest_len];
+                        let ret = engine_main(cdi, &mut c.uds, r, (), (), (), (), ());
+                        let _bind_c = match ret.1 {
+                            DICE_SUCCESS => {
+                                let l0_ctxt = init_l0_ctxt(cdi, (), (), (), ());
+                                let l0_ctxt_opt = intro_maybe_context_perm(l0_ctxt, ());
+                                let res = (context, record_t::Engine_record(ret.0), l0_ctxt_opt);
+                                res
+                            }
+                            DICE_SUCCESS => {
+                                let l0_ctxt = init_l0_ctxt(cdi, (), (), (), ());
+                                let l0_ctxt_opt = intro_maybe_context_perm(l0_ctxt, ());
+                                let res = (context, record_t::Engine_record(ret.0), l0_ctxt_opt);
+                                res
+                            }
+                            DICE_ERROR => {
+                                zeroize(dice_digest_len, cdi, ());
+                                let res = (context, record_t::Engine_record(ret.0), None);
+                                res
+                            }
+                        };
+                        let cdi1 = _bind_c;
+                        cdi1
+                    }
+                }
+            }
+        }
+        L0_context(c) => {
+            if op_Negation(uu___is_L0_record(record)) {
+                let res = (context, record, None);
+                res
+            } else {
+                match record {
+                    L0_record(r) => {
+                        let idcsr_ing = r.deviceIDCSR_ingredients;
+                        let akcrt_ing = r.aliasKeyCRT_ingredients;
+                        let deviceIDCRI_len = len_of_deviceIDCRI(
+                            idcsr_ing.version,
+                            idcsr_ing.s_common,
+                            idcsr_ing.s_org,
+                            idcsr_ing.s_country,
+                        );
+                        let aliasKeyTBS_len = len_of_aliasKeyTBS(
+                            akcrt_ing.serialNumber,
+                            akcrt_ing.i_common,
+                            akcrt_ing.i_org,
+                            akcrt_ing.i_country,
+                            akcrt_ing.s_common1,
+                            akcrt_ing.s_org1,
+                            akcrt_ing.s_country1,
+                            akcrt_ing.l0_version,
+                        );
+                        let deviceIDCSR_len = length_of_deviceIDCSR(deviceIDCRI_len);
+                        let aliasKeyCRT_len = length_of_aliasKeyCRT(aliasKeyTBS_len);
+                        let deviceID_pub = &mut [0; v32us];
+                        let deviceID_priv = &mut [0; v32us];
+                        let aliasKey_pub = &mut [0; v32us];
+                        let aliasKey_priv = &mut [0; v32us];
+                        let deviceIDCSR = &mut [0; deviceIDCSR_len];
+                        let aliasKeyCRT = &mut [0; aliasKeyCRT_len];
+                        l0_main(
+                            &mut c.cdi,
+                            deviceID_pub,
+                            deviceID_priv,
+                            aliasKey_pub,
+                            aliasKey_priv,
+                            aliasKeyTBS_len,
+                            aliasKeyCRT_len,
+                            aliasKeyCRT,
+                            deviceIDCRI_len,
+                            deviceIDCSR_len,
+                            deviceIDCSR,
+                            r,
+                            (),
+                            (),
+                            (),
+                            (),
+                            (),
+                            (),
+                            (),
+                            (),
+                            (),
+                            (),
+                        );
+                        let l1_context = init_l1_ctxt(
+                            deviceIDCSR_len,
+                            aliasKeyCRT_len,
+                            deviceID_priv,
+                            deviceID_pub,
+                            aliasKey_priv,
+                            aliasKey_pub,
+                            deviceIDCSR,
+                            aliasKeyCRT,
+                            (),
+                            (),
+                            (),
+                            (),
+                            (),
+                            (),
+                            (),
+                            (),
+                            (),
+                            (),
+                            (),
+                            (),
+                        );
+                        let l1_context_opt = intro_maybe_context_perm(l1_context, ());
+                        let res = (context, record, l1_context_opt);
+                        let aliasKeyCRT1 = res;
+                        let deviceIDCSR1 = aliasKeyCRT1;
+                        let aliasKey_priv1 = deviceIDCSR1;
+                        let aliasKey_pub1 = aliasKey_priv1;
+                        let deviceID_priv1 = aliasKey_pub1;
+                        let deviceID_pub1 = deviceID_priv1;
+                        deviceID_pub1
+                    }
+                    L0_record(r) => {
+                        let idcsr_ing = r.deviceIDCSR_ingredients;
+                        let akcrt_ing = r.aliasKeyCRT_ingredients;
+                        let deviceIDCRI_len = len_of_deviceIDCRI(
+                            idcsr_ing.version,
+                            idcsr_ing.s_common,
+                            idcsr_ing.s_org,
+                            idcsr_ing.s_country,
+                        );
+                        let aliasKeyTBS_len = len_of_aliasKeyTBS(
+                            akcrt_ing.serialNumber,
+                            akcrt_ing.i_common,
+                            akcrt_ing.i_org,
+                            akcrt_ing.i_country,
+                            akcrt_ing.s_common1,
+                            akcrt_ing.s_org1,
+                            akcrt_ing.s_country1,
+                            akcrt_ing.l0_version,
+                        );
+                        let deviceIDCSR_len = length_of_deviceIDCSR(deviceIDCRI_len);
+                        let aliasKeyCRT_len = length_of_aliasKeyCRT(aliasKeyTBS_len);
+                        let deviceID_pub = &mut [0; v32us];
+                        let deviceID_priv = &mut [0; v32us];
+                        let aliasKey_pub = &mut [0; v32us];
+                        let aliasKey_priv = &mut [0; v32us];
+                        let deviceIDCSR = &mut [0; deviceIDCSR_len];
+                        let aliasKeyCRT = &mut [0; aliasKeyCRT_len];
+                        l0_main(
+                            &mut c.cdi,
+                            deviceID_pub,
+                            deviceID_priv,
+                            aliasKey_pub,
+                            aliasKey_priv,
+                            aliasKeyTBS_len,
+                            aliasKeyCRT_len,
+                            aliasKeyCRT,
+                            deviceIDCRI_len,
+                            deviceIDCSR_len,
+                            deviceIDCSR,
+                            r,
+                            (),
+                            (),
+                            (),
+                            (),
+                            (),
+                            (),
+                            (),
+                            (),
+                            (),
+                            (),
+                        );
+                        let l1_context = init_l1_ctxt(
+                            deviceIDCSR_len,
+                            aliasKeyCRT_len,
+                            deviceID_priv,
+                            deviceID_pub,
+                            aliasKey_priv,
+                            aliasKey_pub,
+                            deviceIDCSR,
+                            aliasKeyCRT,
+                            (),
+                            (),
+                            (),
+                            (),
+                            (),
+                            (),
+                            (),
+                            (),
+                            (),
+                            (),
+                            (),
+                            (),
+                        );
+                        let l1_context_opt = intro_maybe_context_perm(l1_context, ());
+                        let res = (context, record, l1_context_opt);
+                        let aliasKeyCRT1 = res;
+                        let deviceIDCSR1 = aliasKeyCRT1;
+                        let aliasKey_priv1 = deviceIDCSR1;
+                        let aliasKey_pub1 = aliasKey_priv1;
+                        let deviceID_priv1 = aliasKey_pub1;
+                        let deviceID_pub1 = deviceID_priv1;
+                        deviceID_pub1
+                    }
+                }
+            }
+        }
+        L1_context(_) => {
+            let res = (context, record, None);
+            res
+        }
+    }
+}
