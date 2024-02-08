@@ -179,9 +179,9 @@ let eq_ascription (a1 a2:comp_ascription)
 let rec eq_st_term (t1 t2:st_term) 
   : b:bool { b <==> (t1 == t2) }
   = match t1.term, t2.term with
-    | Tm_Return {ctag=c1; insert_eq=b1; term=t1}, 
-      Tm_Return {ctag=c2; insert_eq=b2; term=t2} ->
-      c1 = c2 &&
+    | Tm_Return {expected_type=ty1; insert_eq=b1; term=t1}, 
+      Tm_Return {expected_type=ty2; insert_eq=b2; term=t2} ->
+      eq_tm ty1 ty2 &&
       b1 = b2 &&
       eq_tm t1 t2
 

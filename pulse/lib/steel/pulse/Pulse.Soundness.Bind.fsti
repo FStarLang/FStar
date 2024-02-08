@@ -45,26 +45,6 @@ val elab_bind_typing (g:stt_env)
           (requires Bind_comp? bc)
           (ensures fun _ -> True)
 
-val tot_bind_typing
-  (#g:stt_env)
-  (#t:st_term)
-  (#c:comp)
-  (d:st_typing g t c{T_TotBind? d})
-  (soundness:soundness_t d)
-  : GTot (RT.tot_typing (elab_env g)
-                        (elab_st_typing d)
-                        (elab_comp c))
-
-val ghost_bind_typing
-  (#g:stt_env)
-  (#t:st_term)
-  (#c:comp)
-  (d:st_typing g t c { T_GhostBind? d })
-  (soundness:soundness_t d)
-  : GTot (RT.tot_typing (elab_env g)
-                        (elab_st_typing d)
-                        (elab_comp c))
-
 val bind_fn_typing
   (#g:stt_env)
   (#t:st_term)

@@ -144,7 +144,8 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
              (freevars_st t `set_minus` x)))
     (decreases t)
   = match t.term with
-    | Tm_Return { term } ->
+    | Tm_Return { expected_type; term } ->
+      freevars_close_term' expected_type x i;
       freevars_close_term' term x i
 
     | Tm_STApp { head; arg } ->
@@ -462,22 +463,22 @@ let freevars_mk_erased (u:universe) (t:term)
   : Lemma (freevars (mk_erased u t) == freevars t) =
   admit ()
 
-let freevars_mk_fst (u:universe) (aL aR x_tm:term)
-  : Lemma (freevars (Pulse.Typing.mk_fst u u aL aR x_tm) ==
+let freevars_mk_fst (uL uR:universe) (aL aR x_tm:term)
+  : Lemma (freevars (Pulse.Typing.mk_fst uL uR aL aR x_tm) ==
            Set.union (freevars aL)
                      (Set.union (freevars aR)
                                 (freevars x_tm))) =
   admit ()
 
-let freevars_mk_snd (u:universe) (aL aR x_tm:term)
-  : Lemma (freevars (Pulse.Typing.mk_snd u u aL aR x_tm) ==
+let freevars_mk_snd (uL uR:universe) (aL aR x_tm:term)
+  : Lemma (freevars (Pulse.Typing.mk_snd uL uR aL aR x_tm) ==
            Set.union (freevars aL)
                      (Set.union (freevars aR)
                                 (freevars x_tm))) =
   admit ()
 
-let freevars_mk_tuple2 (u:universe) (aL aR:term)
-  : Lemma (freevars (mk_tuple2 u u aL aR) ==
+let freevars_mk_tuple2 (uL uR:universe) (aL aR:term)
+  : Lemma (freevars (mk_tuple2 uL uR aL aR) ==
            Set.union (freevars aL) (freevars aR)) =
   admit ()
 
@@ -548,13 +549,6 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
     comp_typing_freevars c;
     freevars_open_st_term_inv e2 x
 
-  | T_TotBind _ e1 e2 _ c2 b x e1_typing e2_typing
-  | T_GhostBind _ e1 e2 _ c2 b x e1_typing e2_typing _ ->
-    tot_or_ghost_typing_freevars e1_typing;
-    st_typing_freevars e2_typing;
-    freevars_open_st_term_inv e2 x;
-    freevars_close_comp c2 x 0
-
   | T_If _ _b e1 e2 _c hyp tb d1 d2 (E ct) ->
     assert (t.term == (Tm_If { b = _b; then_=e1; else_=e2; post=None }));
     calc (Set.subset) {
@@ -571,7 +565,7 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
   };
   comp_typing_freevars ct
 
-  | T_Match _ _ _ _ _ _ _ _ _ _ ->
+  | T_Match _ _ _ _ _ _ _ _ _ _ _ ->
     admit ()
 
   | T_Frame _ _ _ _ df dc ->
@@ -643,18 +637,19 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
 
   | T_Par _ _ cL _ cR x _ _ eL_typing eR_typing ->
     let x_tm = term_of_no_name_var x in
-    let u = comp_u cL in
+    let uL = comp_u cL in
+    let uR = comp_u cR in
     let aL = comp_res cL in
     let aR = comp_res cR in
     st_typing_freevars eL_typing;
     st_typing_freevars eR_typing;
-    freevars_mk_fst u aL aR x_tm;
-    freevars_mk_snd u aL aR x_tm;
-    freevars_open_term (comp_post cL) (Pulse.Typing.mk_fst u u aL aR x_tm) 0;
-    freevars_open_term (comp_post cR) (Pulse.Typing.mk_snd u u aL aR x_tm) 0;
-    freevars_close_term (tm_star (open_term' (comp_post cL) (Pulse.Typing.mk_fst u u aL aR x_tm) 0)
-                                (open_term' (comp_post cR) (Pulse.Typing.mk_snd u u aL aR x_tm) 0)) x 0;
-    freevars_mk_tuple2 u aL aR
+    freevars_mk_fst uL uR aL aR x_tm;
+    freevars_mk_snd uL uR aL aR x_tm;
+    freevars_open_term (comp_post cL) (Pulse.Typing.mk_fst uL uR aL aR x_tm) 0;
+    freevars_open_term (comp_post cR) (Pulse.Typing.mk_snd uL uR aL aR x_tm) 0;
+    freevars_close_term (tm_star (open_term' (comp_post cL) (Pulse.Typing.mk_fst uL uR aL aR x_tm) 0)
+                                (open_term' (comp_post cR) (Pulse.Typing.mk_snd uL uR aL aR x_tm) 0)) x 0;
+    freevars_mk_tuple2 uL uR aL aR
 
 
   | T_Rewrite _ _ _ p_typing equiv_p_q ->

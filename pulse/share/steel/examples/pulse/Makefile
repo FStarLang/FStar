@@ -3,7 +3,7 @@ STEEL_SHARE = ../../
 # the root (../../../..) since the OPAM package will detach the share
 # directory from the rest of the repo.
 
-INCLUDE_DIRS=bug-reports by-example lib class lib/pledge dice/cbor dice/common dice/dpe dice/engine dice/l0 parallel parix .
+INCLUDE_DIRS=bug-reports by-example lib lib/c class lib/pledge dice/cbor dice/common dice/dpe dice/engine dice/l0 parallel parix c .
 CACHE_DIR=.cache
 SRC_DIRS=$(addprefix $(STEEL_SHARE)/examples/pulse/, $(INCLUDE_DIRS))
 FSTAR_FILES=$(wildcard $(addsuffix /*.fst, $(SRC_DIRS))) $(wildcard $(addsuffix /*.fsti, $(SRC_DIRS)))
@@ -16,7 +16,7 @@ extract:
 
 extract_c: _output/cache/ExtractionTest.fst.checked
 	$(FSTAR) --odir _output --codegen krml ExtractionTest.fst --extract ExtractionTest
-	$(FSTAR_HOME)/../karamel/krml -bundle ExtractionTest=* -skip-compilation _output/ExtractionTest.krml -tmpdir _output
+	$(KRML_HOME)/krml -bundle ExtractionTest=* -skip-compilation _output/ExtractionTest.krml -tmpdir _output
 
 #	$(FSTAR) --codegen krml Demo.MultiplyByRepeatedAddition.fst --extract '* -Pulse.Lib.Core'
 #	$(FSTAR_HOME)/../karamel/krml -bundle Demo.MultiplyByRepeatedAddition=* -skip-compilation _output/out.krml
@@ -24,11 +24,21 @@ extract_c: _output/cache/ExtractionTest.fst.checked
 ifneq (,$(KRML_HOME))
 test-cbor: cbor
 	+$(MAKE) -C dice/cbor
+
+extract_pulse_c: _output/cache/PulsePointStruct.fst.checked
+	$(FSTAR) --odir _output --codegen krml PulsePointStruct.fst --extract PulsePointStruct
+	$(KRML_HOME)/krml -bundle PulsePointStruct=* -skip-linking _output/PulsePointStruct.krml -tmpdir _output
+
 else
 test-cbor:
+
+extract_pulse_c:
+
 endif
 
-test: test-cbor
+test: test-cbor extract_pulse_c
+
+.PHONY: extract_pulse_c
 
 .PHONY: test test-cbor test-cbor-raw
 
@@ -38,6 +48,11 @@ PULSE_LIB_CHECKED_FILES=$(filter $(CACHE_DIRECTORY)/Pulse.Lib.%,$(ALL_CHECKED_FI
 
 .PHONY: lib
 lib: $(PULSE_LIB_CHECKED_FILES)
+
+PULSE_C_CHECKED_FILES=$(filter $(CACHE_DIRECTORY)/Pulse.C.%,$(ALL_CHECKED_FILES))
+
+.PHONY: c
+c: $(PULSE_C_CHECKED_FILES)
 
 CBOR_CHECKED_FILES=$(filter $(CACHE_DIRECTORY)/CBOR.% $(CACHE_DIRECTORY)/CDDL.% $(CACHE_DIRECTORY)/CDDLExtractionTest.%,$(ALL_CHECKED_FILES))
 

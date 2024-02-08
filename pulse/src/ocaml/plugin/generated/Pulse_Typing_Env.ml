@@ -288,6 +288,16 @@ let (push_context_no_range : env -> Prims.string -> env) =
           (Pulse_RuntimeUtils.extend_context ctx FStar_Pervasives_Native.None
              g.ctxt)
       }
+let (reset_context : env -> env -> env) =
+  fun g ->
+    fun g' ->
+      {
+        f = (g.f);
+        bs = (g.bs);
+        names = (g.names);
+        m = (g.m);
+        ctxt = (g'.ctxt)
+      }
 let (get_context : env -> Pulse_RuntimeUtils.context) = fun g -> g.ctxt
 let (range_of_env :
   env -> (Pulse_Syntax_Base.range, unit) FStar_Tactics_Effect.tac_repr) =

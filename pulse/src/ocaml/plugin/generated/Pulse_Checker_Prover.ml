@@ -2529,11 +2529,12 @@ let (try_frame_pre_uvs :
                                                                     g11
                                                                     (Pulse_Syntax_Base.st_comp_of_comp
                                                                     c2)
+                                                                    (FStar_Pervasives_Native.fst
                                                                     (Pulse_Typing_Metatheory_Base.comp_typing_inversion
                                                                     g11 c2
                                                                     (Pulse_Typing_Metatheory_Base.st_typing_correctness
                                                                     g11 t1 c2
-                                                                    d5))
+                                                                    d5)))
                                                                     with
                                                                     | 
                                                                     (comp_res_typing_in_g1,

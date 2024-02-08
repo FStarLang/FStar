@@ -221,6 +221,43 @@ val intro_h_exists (#a:_) (x:a) (p:a -> slprop) (h:heap)
 val elim_h_exists (#a:_) (p:a -> slprop) (h:heap)
   : Lemma (interp (h_exists p) h ==> (exists x. interp (p x) h))
 
+(** Introducing [h_forall] by proving all cases *)
+val intro_h_forall (#a:_) (p:a -> slprop) (h:heap)
+  : Lemma ((forall x. interp (p x) h) ==> interp (h_forall p) h)
+
+(** Eliminate a universal by instantiating it. *)
+val elim_h_forall (#a:_) (p:a -> slprop) (h:heap) (x:a)
+  : Lemma (interp (h_forall p) h ==> interp (p x) h)
+
+(** Introducing [h_and] by proving both sides *)
+val intro_h_and (p q: slprop) (h:heap)
+  : Lemma (interp p h /\ interp q h ==> interp (h_and p q) h)
+
+val elim_h_and (p q: slprop) (h:heap)
+  : Lemma (interp (h_and p q) h ==> (interp p h /\ interp q h))
+
+(** Introducing [h_or] by proving one side *)
+val intro_h_or_left (p q: slprop) (h:heap)
+  : Lemma (interp p h ==> interp (h_or p q) h)
+
+val intro_h_or_right (p q: slprop) (h:heap)
+  : Lemma (interp q h ==> interp (h_or p q) h)
+
+val elim_h_or (p q: slprop) (h:heap)
+  : Lemma (interp (h_or p q) h ==> (interp p h \/ interp q h))
+
+val intro_wand (p1 p2: slprop u#a) (h:heap)
+  : Lemma ((forall h1. h `disjoint` h1 /\ interp p1 h1 ==> interp p2 (join h h1))
+  ==> interp (wand p1 p2) h)
+
+(** Eliminating a wand by proving a heap that satisfies the LHS **)
+val elim_wand (p1 p2: slprop u#a) (h:heap) (h1:heap)
+  : Lemma ((interp (wand p1 p2) h /\ h `disjoint` h1 /\ interp p1 h1)
+    ==> interp p2 (join h h1))
+
+
+
+
 (**
   The interpretation of a separation logic proposition [hp] is itself an [hprop] of footprint
   [hp]

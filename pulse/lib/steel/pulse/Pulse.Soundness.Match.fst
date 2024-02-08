@@ -61,7 +61,7 @@ let match_soundness
                         (elab_st_typing d)
                         (elab_comp c))
   =
-  let T_Match _g sc_u sc_ty sc (E sc_ty_d) (E sc_d) _c brs brs_ty brs_complete = d in
+  let T_Match _g sc_u sc_ty sc (E sc_ty_d) (E sc_d) _c _ctyping brs brs_ty brs_complete = d in
 
   let sc_e_ty : R.typ = elab_term sc_ty in
   let sc_e_ty_t : RT.typing (elab_env g) sc_e_ty (T.E_Total, RT.tm_type sc_u) = sc_ty_d in

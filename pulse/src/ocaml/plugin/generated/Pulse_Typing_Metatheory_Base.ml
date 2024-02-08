@@ -27,6 +27,14 @@ let (st_typing_correctness_ctot :
         (unit, unit, unit) Pulse_Typing.st_typing ->
           (unit, unit) Prims.dtuple2)
   = fun g -> fun t -> fun c -> fun uu___ -> Prims.Mkdtuple2 ((), ())
+let (inames_of_comp_st : Pulse_Syntax_Base.comp_st -> Pulse_Syntax_Base.term)
+  =
+  fun c ->
+    match c with
+    | Pulse_Syntax_Base.C_STAtomic (uu___, uu___1, uu___2) ->
+        Pulse_Syntax_Base.comp_inames c
+    | uu___ -> Pulse_Syntax_Base.tm_emp_inames
+type ('g, 'c) iname_typing = unit
 let (st_typing_correctness :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_term ->
@@ -45,20 +53,21 @@ let (add_frame_well_typed :
     fun c ->
       fun ct ->
         fun f -> fun ft -> admit_comp_typing g (Pulse_Typing.add_frame c f)
+
 let (comp_typing_inversion :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.comp_st ->
       (unit, unit) Pulse_Typing.comp_typing_u ->
-        (unit, unit) Pulse_Typing.st_comp_typing)
+        ((unit, unit) Pulse_Typing.st_comp_typing * unit))
   =
   fun g ->
     fun c ->
       fun ct ->
         match ct with
-        | Pulse_Typing.CT_ST (uu___, uu___1, st) -> st
-        | Pulse_Typing.CT_STAtomic
-            (uu___, uu___1, uu___2, uu___3, uu___4, st) -> st
-        | Pulse_Typing.CT_STGhost (uu___, uu___1, st) -> st
+        | Pulse_Typing.CT_ST (uu___, uu___1, st) -> (st, ())
+        | Pulse_Typing.CT_STGhost (uu___, uu___1, st) -> (st, ())
+        | Pulse_Typing.CT_STAtomic (uu___, uu___1, uu___2, uu___3, it, st) ->
+            (st, ())
 let (st_comp_typing_inversion_cofinite :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_comp ->
@@ -419,36 +428,6 @@ let rec (st_typing_weakening :
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), e1, e2, c1, c2,
                       b, x, d_e11, (), (), d_e24, c2_typing1)
-              | Pulse_Typing.T_TotBind
-                  (uu___, e1, e2, t1, c2, b, x, uu___1, d_e2) ->
-                  let d_e21 = d_e2 in
-                  let d_e22 = d_e21 in
-                  let d_e23 =
-                    st_typing_weakening g
-                      (Pulse_Typing_Env.push_binding g' x
-                         Pulse_Syntax_Base.ppname_default t1)
-                      (Pulse_Syntax_Naming.open_st_term_nv e2
-                         (Pulse_Syntax_Base.v_as_nv x)) c2 d_e22 g1 in
-                  let d_e24 = d_e23 in
-                  Pulse_Typing.T_TotBind
-                    ((Pulse_Typing_Env.push_env
-                        (Pulse_Typing_Env.push_env g g1) g'), e1, e2, t1, c2,
-                      b, x, (), d_e24)
-              | Pulse_Typing.T_GhostBind
-                  (uu___, e1, e2, t1, c2, b, x, uu___1, d_e2, uu___2) ->
-                  let d_e21 = d_e2 in
-                  let d_e22 = d_e21 in
-                  let d_e23 =
-                    st_typing_weakening g
-                      (Pulse_Typing_Env.push_binding g' x
-                         Pulse_Syntax_Base.ppname_default t1)
-                      (Pulse_Syntax_Naming.open_st_term_nv e2
-                         (Pulse_Syntax_Base.v_as_nv x)) c2 d_e22 g1 in
-                  let d_e24 = d_e23 in
-                  Pulse_Typing.T_GhostBind
-                    ((Pulse_Typing_Env.push_env
-                        (Pulse_Typing_Env.push_env g g1) g'), e1, e2, t1, c2,
-                      b, x, (), d_e24, ())
               | Pulse_Typing.T_If
                   (uu___, b, e1, e2, c1, hyp, uu___1, d_e1, d_e2, uu___2) ->
                   let d_e11 = d_e1 in
@@ -476,13 +455,13 @@ let rec (st_typing_weakening :
                         (Pulse_Typing_Env.push_env g g1) g'), b, e1, e2, c1,
                       hyp, (), d_e14, d_e24, ())
               | Pulse_Typing.T_Match
-                  (uu___, sc_u, sc_ty, sc, d_sc_ty, d_sc, c1, brs, d_brs,
-                   d_pats_complete)
+                  (uu___, sc_u, sc_ty, sc, d_sc_ty, d_sc, c1, c_typing, brs,
+                   d_brs, d_pats_complete)
                   ->
                   Pulse_Typing.T_Match
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), sc_u, sc_ty,
-                      sc, (), (), c1, brs, d_brs, d_pats_complete)
+                      sc, (), (), c1, (), brs, d_brs, d_pats_complete)
               | Pulse_Typing.T_Frame (uu___, e, c1, frame, uu___1, d_e) ->
                   Pulse_Typing.T_Frame
                     ((Pulse_Typing_Env.push_env
@@ -1001,44 +980,6 @@ let rec (st_typing_subst :
                                       (Pulse_Syntax_Base.comp_res c11)) e ()
                                    c2 (Pulse_Syntax_Base.universe_of_comp c2)
                                    d_c2))
-                        | Pulse_Typing.T_TotBind
-                            (uu___1, e11, e2, t1, c2, b, y, uu___2, d_e2) ->
-                            Pulse_Typing.T_TotBind
-                              ((Pulse_Typing_Env.push_env g
-                                  (Pulse_Typing_Env.subst_env g' (nt x e))),
-                                (Pulse_Syntax_Naming.subst_term e11 ss),
-                                (Pulse_Syntax_Naming.subst_st_term e2 ss),
-                                (Pulse_Syntax_Naming.subst_term t1 ss),
-                                (Pulse_Syntax_Naming.subst_comp c2 ss), b, y,
-                                (),
-                                (coerce_eq
-                                   (st_typing_subst g x t
-                                      (Pulse_Typing_Env.push_binding g' y
-                                         Pulse_Syntax_Base.ppname_default t1)
-                                      e eff ()
-                                      (Pulse_Syntax_Naming.open_st_term_nv e2
-                                         (Pulse_Syntax_Base.v_as_nv y)) c2
-                                      d_e2 ()) ()))
-                        | Pulse_Typing.T_GhostBind
-                            (uu___1, e11, e2, t1, c2, b, y, uu___2, d_e2,
-                             uu___3)
-                            ->
-                            Pulse_Typing.T_GhostBind
-                              ((Pulse_Typing_Env.push_env g
-                                  (Pulse_Typing_Env.subst_env g' (nt x e))),
-                                (Pulse_Syntax_Naming.subst_term e11 ss),
-                                (Pulse_Syntax_Naming.subst_st_term e2 ss),
-                                (Pulse_Syntax_Naming.subst_term t1 ss),
-                                (Pulse_Syntax_Naming.subst_comp c2 ss), b, y,
-                                (),
-                                (coerce_eq
-                                   (st_typing_subst g x t
-                                      (Pulse_Typing_Env.push_binding g' y
-                                         Pulse_Syntax_Base.ppname_default t1)
-                                      e eff ()
-                                      (Pulse_Syntax_Naming.open_st_term_nv e2
-                                         (Pulse_Syntax_Base.v_as_nv y)) c2
-                                      d_e2 ()) ()), ())
                         | Pulse_Typing.T_If
                             (uu___1, b, e11, e2, c, hyp, uu___2, d_e1, d_e2,
                              uu___3)
@@ -1071,7 +1012,7 @@ let rec (st_typing_subst :
                                       e2 c d_e2 ()) ()), ())
                         | Pulse_Typing.T_Match
                             (uu___1, sc_u, sc_ty, sc, _ty_typing, _sc_typing,
-                             c, brs, brs_typing, pats_complete)
+                             c, c_typing, brs, brs_typing, pats_complete)
                             -> FStar_Pervasives.coerce_eq () e1_typing
                         | Pulse_Typing.T_Frame
                             (uu___1, e2, c, frame, uu___2, d_e) ->

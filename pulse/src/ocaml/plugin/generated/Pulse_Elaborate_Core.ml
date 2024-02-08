@@ -369,34 +369,6 @@ let rec (elab_st_typing :
               FStar_Reflection_Typing.mk_let
                 FStar_Reflection_Typing.pp_name_default e1 ty1
                 (FStar_Reflection_Typing.close_term e2 x)
-          | Pulse_Typing.T_TotBind
-              (uu___, e1, e2, t1, uu___1, uu___2, x, uu___3, e2_typing) ->
-              let re1 = Pulse_Elaborate_Pure.elab_term e1 in
-              let rt1 = Pulse_Elaborate_Pure.elab_term t1 in
-              let re2 =
-                elab_st_typing
-                  (Pulse_Typing_Env.push_binding uu___ x
-                     Pulse_Syntax_Base.ppname_default t1)
-                  (Pulse_Syntax_Naming.open_st_term_nv e2
-                     (Pulse_Syntax_Base.v_as_nv x)) uu___1 e2_typing in
-              FStar_Reflection_Typing.mk_let
-                FStar_Reflection_Typing.pp_name_default re1 rt1
-                (FStar_Reflection_Typing.close_term re2 x)
-          | Pulse_Typing.T_GhostBind
-              (uu___, e1, e2, t1, uu___1, uu___2, x, uu___3, e2_typing,
-               uu___4)
-              ->
-              let re1 = Pulse_Elaborate_Pure.elab_term e1 in
-              let rt1 = Pulse_Elaborate_Pure.elab_term t1 in
-              let re2 =
-                elab_st_typing
-                  (Pulse_Typing_Env.push_binding uu___ x
-                     Pulse_Syntax_Base.ppname_default t1)
-                  (Pulse_Syntax_Naming.open_st_term_nv e2
-                     (Pulse_Syntax_Base.v_as_nv x)) uu___1 e2_typing in
-              FStar_Reflection_Typing.mk_let
-                FStar_Reflection_Typing.pp_name_default re1 rt1
-                (FStar_Reflection_Typing.close_term re2 x)
           | Pulse_Typing.T_Frame
               (uu___, uu___1, c1, frame, _frame_typing, e_typing) ->
               let e = elab_st_typing uu___ uu___1 c1 e_typing in
@@ -439,11 +411,11 @@ let rec (elab_st_typing :
               FStar_Reflection_Typing.mk_if rb re1 re2
           | Pulse_Typing.T_Match
               (uu___, uu___1, uu___2, sc, uu___3, uu___4, uu___5, uu___6,
-               brty, uu___7)
+               uu___7, brty, uu___8)
               ->
               let sc1 = Pulse_Elaborate_Pure.elab_term sc in
               let brs =
-                elab_branches uu___ uu___5 uu___1 uu___2 sc uu___6 brty in
+                elab_branches uu___ uu___5 uu___1 uu___2 sc uu___7 brty in
               FStar_Reflection_V2_Builtins.pack_ln
                 (FStar_Reflection_V2_Data.Tv_Match
                    (sc1, FStar_Pervasives_Native.None, brs))

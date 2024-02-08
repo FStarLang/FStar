@@ -366,12 +366,6 @@ let rec soundness (g:stt_env)
     | T_BindFn _ _ _ _ _ _ _ _ _ _ _ _ ->
       Bind.bind_fn_typing d soundness
 
-    | T_TotBind _ _ _ _ _ _ _ _ _ ->
-      Bind.tot_bind_typing d soundness
-
-    | T_GhostBind _ _ _ _ _ _ _ _ _ _ ->
-      Bind.ghost_bind_typing d soundness
-
     | T_Equiv _ _ _ _ _ _ ->
       stequiv_soundness _ _ _ d soundness
 
@@ -384,7 +378,7 @@ let rec soundness (g:stt_env)
       in
       if_soundness _ _ _ d soundness ct_soundness
 
-    | T_Match _ _ _ _ _ _ _ _ _ _->
+    | T_Match _ _ _ _ _ _ _ _ _ _ _ ->
       let ct_soundness g c uc (d':_ {d' << d}) =
         Comp.comp_typing_soundness g c uc d'
       in
