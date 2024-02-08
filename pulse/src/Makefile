@@ -43,20 +43,15 @@ clean-snapshot:
 
 .PHONY: full-boot
 full-boot:
-	+$(MAKE) build
 	+$(MAKE) clean-snapshot
 	+$(MAKE) boot
-
-.PHONY: proofs
-proofs:
-	+$(MAKE) -C $@
 
 .PHONY: share
 share:
 	+$(MAKE) -C ../share/steel
 
 .PHONY: test
-test: proofs share
+test: share
 
 .PHONY: check-for-changes
 check-for-changes:
