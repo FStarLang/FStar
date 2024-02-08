@@ -127,13 +127,11 @@ let mk_profile_descriptor
 
 module V = Pulse.Lib.Vec
 
-// TODO: move to Pulse.Lib.Vec
-type lvec (a:Type) (n:nat) = v:V.vec a { V.length v == n }
-
 (* Engine Context *)
+[@@ Rust_derive "Clone"]
 noeq
 type engine_context_t = { 
-  uds: lvec U8.t (SZ.v uds_len); 
+  uds: V.lvec U8.t (SZ.v uds_len); 
 }
 
 let engine_context_perm (c:engine_context_t) (uds_bytes:Seq.seq U8.t) : vprop
@@ -143,9 +141,10 @@ let engine_context_perm (c:engine_context_t) (uds_bytes:Seq.seq U8.t) : vprop
 let mk_engine_context_t uds : engine_context_t = {uds}
 
 (* L0 Context *)
+[@@ Rust_derive "Clone"]
 noeq
 type l0_context_t = { 
-  cdi : lvec U8.t (SZ.v dice_digest_len); 
+  cdi : V.lvec U8.t (SZ.v dice_digest_len); 
 }
 
 let mk_l0_context_t cdi : l0_context_t = {cdi}
@@ -170,11 +169,12 @@ let l0_context_perm (c:l0_context_t) (r:l0_context_repr_t): vprop
        /\ l0_is_authentic r.repr)
 
 (* L1 Context *)
+[@@ Rust_derive "Clone"]
 noeq
-type l1_context_t = { deviceID_priv: lvec U8.t (SZ.v v32us);
-                      deviceID_pub: lvec U8.t (SZ.v v32us);   
-                      aliasKey_priv: lvec U8.t (SZ.v v32us);
-                      aliasKey_pub: lvec U8.t (SZ.v v32us);
+type l1_context_t = { deviceID_priv: V.lvec U8.t (SZ.v v32us);
+                      deviceID_pub: V.lvec U8.t (SZ.v v32us);   
+                      aliasKey_priv: V.lvec U8.t (SZ.v v32us);
+                      aliasKey_pub: V.lvec U8.t (SZ.v v32us);
                       aliasKeyCRT: V.vec U8.t;
                       deviceIDCSR: V.vec U8.t; }
 
@@ -252,6 +252,7 @@ let l1_context_perm (c:l1_context_t) (r:l1_context_repr_t)
 // unlike record_t (below), we require full permission on the resources inside
 // the context because we will eventually free the resources when we destroy
 // the context
+[@@ Rust_derive "Clone"]
 noeq
 type context_t = 
   | Engine_context : c:engine_context_t -> context_t

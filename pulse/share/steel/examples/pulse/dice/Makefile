@@ -23,6 +23,7 @@ DPE_FILES = EngineTypes.fst \
 	Pulse.Lib.HashTable.Type.fst \
 	Pulse.Lib.HashTable.Spec.fst \
 	Pulse.Lib.HashTable.fst \
+	DPETypes.fst \
 	DPE.fst
 
 dpe-ast: $(addsuffix .ast, $(DPE_FILES))
