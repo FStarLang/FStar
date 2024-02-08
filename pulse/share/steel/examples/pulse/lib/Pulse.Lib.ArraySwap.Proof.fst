@@ -1,4 +1,4 @@
-module Steel.ST.GenArraySwap.Proof
+module Pulse.Lib.ArraySwap.Proof
 open FStar.Math.Lemmas
 open FStar.Mul
 

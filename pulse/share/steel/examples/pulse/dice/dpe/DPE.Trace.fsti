@@ -101,7 +101,7 @@ let trace_extension (t0 t1:trace)
 let trace_preorder
   : FStar.Preorder.preorder trace
   = FStar.ReflexiveTransitiveClosure.closure trace_extension
-module FRAP = Steel.FractionalAnchoredPreorder
+module FRAP = Pulse.Lib.FractionalAnchoredPreorder
 let degenerate_anchor
   : FRAP.anchor_rel trace_preorder
   = fun x y -> trace_preorder x y /\ True

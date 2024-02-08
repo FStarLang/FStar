@@ -15,10 +15,10 @@
 
    Author: N. Swamy
 *)
-module Steel.FractionalAnchoredPreorder
+module Pulse.Lib.FractionalAnchoredPreorder
 
 (** This module provides a partial commutative monoid (PCM) for use in
-    the ghost state of a concurrent Steel program.
+    the ghost state of a concurrent Pulse program.
 
     Its goal is to facilitate a form of information-sharing between
     multiple threads including the following features: Fractions,
@@ -60,8 +60,8 @@ module Steel.FractionalAnchoredPreorder
 *)
 open FStar.PCM
 open FStar.Preorder
-open Steel.Preorder
-open Steel.FractionalPermission
+open PulseCore.Preorder
+open PulseCore.FractionalPermission
 
 #push-options "--fuel 0 --ifuel 2"
 
@@ -101,11 +101,11 @@ let anchor_rel (#v:Type) (p:preorder v) =
     (forall x z. x `anchors` z  ==> (forall y. p x y /\ p y z ==> x `anchors` y)) //
   }
 
-/// An implementation remark: We use Steel.Preorder here to
+/// An implementation remark: We use PulseCore.Preorder here to
 /// generically transform any preorder into a PCM. That works by
 /// taking the value of the PCM to be a history of values related by
 /// the preorder. So, throughout, we'll be using the the [vhist p]
-/// from Steel.Preorder, the type of a non-empty history compatible
+/// from PulseCore.Preorder, the type of a non-empty history compatible
 /// with [p]. The details of the histories don't matter much for our
 /// purposes---we only care about the most recent value, for which
 /// we'll use [curval v].

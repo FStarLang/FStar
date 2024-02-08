@@ -16,7 +16,7 @@
 
 module Pulse.Lib.ArraySwap
 module R = Pulse.Lib.Reference
-module Prf = Steel.ST.GenArraySwap.Proof
+module Prf = Pulse.Lib.ArraySwap.Proof
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --fuel 2 --ifuel 1"
 #restart-solver
 
