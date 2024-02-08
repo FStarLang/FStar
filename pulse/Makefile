@@ -47,7 +47,7 @@ ocaml:
 
 .PHONY: verify-pulse
 verify-pulse: ocaml
-	+$(MAKE) -C lib/steel/pulse pulse
+	+$(MAKE) -C lib/pulse
 
 .PHONY: verify-pulse-core
 verify-pulse-core: 
@@ -57,7 +57,7 @@ verify-pulse-core:
 verify: verify-pulse verify-pulse-core
 
 clean: clean_ocaml
-	+$(MAKE) -C lib/steel clean ; true
+	+$(MAKE) -C lib/pulse clean ; true
 
 clean_ocaml:
 	cd src/ocaml && { dune uninstall --prefix=$(PULSE_HOME) ; dune clean ; true ; }
@@ -88,7 +88,7 @@ install-ocaml:
 	cd src/ocaml && dune install --prefix=$(PULSE_INSTALL_PREFIX)
 
 install-lib:
-	+$(MAKE) -C lib/steel install
+	+$(MAKE) -C lib/pulse install
 
 install-share:
 	+$(MAKE) -C share/steel install

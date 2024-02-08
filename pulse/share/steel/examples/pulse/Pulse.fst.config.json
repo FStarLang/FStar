@@ -11,8 +11,8 @@
     "-249"
   ],
   "include_dirs": [
-    "../../../../lib/steel/pulse",
-    "../../../../lib/steel",
+    "../../../../lib/pulse",
+    "../../../../lib/pulse",
     "../../../../lib/pulse_core",
     "bug-reports",
     "by-example",

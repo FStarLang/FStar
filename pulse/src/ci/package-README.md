@@ -7,7 +7,7 @@ This binary package contains z3 4.8.5, F*, Karamel, Steel, Pulse, and
 
 * in `bin`: the executables for z3, F* and Karamel
 
-* in `lib/steel`:
+* in `lib/pulse`:
   * the Steel F* modules of the `Steel` and `Steel.ST` namespaces
   * the Steel F* plugin, `steel.cmxs`, containing the Steel and Pulse
     tactics, and the Steel and SteelC extraction to krml, is installed
@@ -16,14 +16,14 @@ This binary package contains z3 4.8.5, F*, Karamel, Steel, Pulse, and
     what used to be the Steel part of krmllib (currently binding the
     pthreads spinlock), is installed here
   
-* in `lib/steel/runtime`: the Steel OCaml runtime,
+* in `lib/pulse/runtime`: the Steel OCaml runtime,
   `steel_runtime.cmxa`, necessary to compile and run Steel code
   extracted to OCaml, is installed here
   
-* in `lib/steel/pulse`: the Pulse F* modules of the `Pulse` namespace
+* in `lib/pulse`: the Pulse F* modules of the `Pulse` namespace
   (except `Pulse.Lib`)
 
-* in `lib/steel/c`: the SteelC F* modules of the `Steel.C` and
+* in `lib/pulse/c`: the SteelC F* modules of the `Steel.C` and
   `Steel.ST.C` namespaces
 
 * in `include/steel`: the C include files necessary to compile Steel
@@ -59,8 +59,8 @@ plugin loaded.
    * `FSTAR_OPTIONS`: additional options to pass to F*. While
      `Makefile.include` is already configured to use Steel, you need
      to add more options if you need Pulse and/or SteelC:
-     * if you want to use Pulse, add `--include $PULSE_HOME/lib/steel/pulse`
-     * if you want to use SteelC, add `--include $PULSE_HOME/lib/steel/c`
+     * if you want to use Pulse, add `--include $PULSE_HOME/lib/pulse`
+     * if you want to use SteelC, add `--include $PULSE_HOME/lib/pulse/c`
    * `FSTAR_DEP_OPTIONS`: additional options to pass to F* to compute
      dependencies (in addition to `FSTAR_OPTIONS`), such as `--extract`
    * `FSTAR_ML_CODEGEN`: useful only if you want to extract OCaml
@@ -79,6 +79,6 @@ Pulse-based project, you now need to pass new options to your Makefile
 to use Steel from this repository, as described in this section.
 
 To call F* with Steel or Pulse, pass the following options to F*:
-* in all cases, `--include $PULSE_HOME/lib/steel --load_cmxs steel`
-* if you want to use Pulse, add `--include $PULSE_HOME/lib/steel/pulse`
-* if you want to use SteelC, add `--include $PULSE_HOME/lib/steel/c`
+* in all cases, `--include $PULSE_HOME/lib/pulse --load_cmxs pulse`
+* if you want to use Pulse, add `--include $PULSE_HOME/lib/pulse`
+* if you want to use SteelC, add `--include $PULSE_HOME/lib/pulse/c`

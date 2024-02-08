@@ -22,7 +22,7 @@ In all cases (user or developer), please first read `README.md`
   to krml.
 * In `src/proofs/steelc`: The F* correctness proofs of the SteelC
   library, i.e. the `*.fst` implementations of the
-  `lib/steel/c/Steel.ST.C.*.fsti` interfaces. Those files are not
+  `lib/pulse/c/Steel.ST.C.*.fsti` interfaces. Those files are not
   necessary for the end-user, and they take a large amount of time and
   memory to verify.
 
@@ -30,10 +30,10 @@ In all cases (user or developer), please first read `README.md`
 
 If you want to modify the specs and proofs, or add a new module, as
 long as you do not modify the tactics, you can work directly in
-`lib/steel` and its subdirectories. While you can reverify Steel
+`lib/pulse` and its subdirectories. While you can reverify Steel
 directly with `make` from the Steel root directory, you can also use
-the partial Makefiles from `lib/steel`, `lib/steel/c` and
-`lib/steel/pulse` to verify only those parts that you are modifying.
+the partial Makefiles from `lib/pulse`, `lib/pulse/c` and
+`lib/pulse` to verify only those parts that you are modifying.
 
 ## Modifying the Steel interfaces of the LibSteel C library
 
@@ -61,7 +61,7 @@ Steel root directory.
 
 The Pulse checker is an F* program implemented as a plugin to the F*
 compiler. The sources of the core part of the plugin is in
-lib/steel/pulse in files named Pulse.Checker.* but also Pulse.Typing,
+lib/pulse in files named Pulse.Checker.* but also Pulse.Typing,
 Pulse.Soundness. Maybe all of these should move under the
 Pulse.Checker namespace to make it clear that they are not
 user-facing.
@@ -78,7 +78,7 @@ Phases of the Pulse checker:
 
 1. menhir parser produces PulseSugar
 
-2. PulseDesugar transforms PulseSugar to Pulse.Syntax.Base (in lib/steel/pulse)
+2. PulseDesugar transforms PulseSugar to Pulse.Syntax.Base (in lib/pulse)
 
 3. Pulse.Main is the main Pulse checker, and it typechecks the
    Pulse.Syntax.Base AST and transforms it into FStar.Reflection.Data,

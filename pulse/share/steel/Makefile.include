@@ -37,7 +37,7 @@ export OCAMLPATH
 
 FSTAR_FILES += $(filter-out $(EXCLUDE_FILES),$(wildcard *.fst *.fsti))
 ADDITIONAL_INCLUDES ?= 
-FSTAR_OPTIONS += $(OTHERFLAGS) --cmi --cache_checked_modules --warn_error @241 --already_cached 'Prims,FStar,LowStar,C' --include $(PULSE_HOME)/lib/steel $(ADDITIONAL_INCLUDES) --load_cmxs steel
+FSTAR_OPTIONS += $(OTHERFLAGS) --cmi --cache_checked_modules --warn_error @241 --already_cached 'Prims,FStar,LowStar,C' --include $(PULSE_HOME)/lib/pulse $(ADDITIONAL_INCLUDES) --load_cmxs pulse
 
 COMPAT_INDEXED_EFFECTS?=--compat_pre_typed_indexed_effects
 

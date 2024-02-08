@@ -1,7 +1,7 @@
 (include_subdirs unqualified)
 (library
- (name steel)
- (public_name steel)
+ (name pulse)
+ (public_name pulse)
  (libraries
     batteries
     fstar.lib
