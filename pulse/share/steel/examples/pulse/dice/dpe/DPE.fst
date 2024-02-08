@@ -1090,6 +1090,27 @@ fn elim_maybe_context_perm (c:context_t)
 ```
 
 ```pulse
+ghost
+fn l0_record_perm_aux (r1 r2:l0_record_t) (#p:perm) (#repr:l0_record_repr_t)
+  requires l0_record_perm r1 p repr **
+           pure (r1.fwid == r2.fwid /\
+                  r1.deviceID_label_len == r2.deviceID_label_len /\
+                  r1.deviceID_label == r2.deviceID_label /\
+                  r1.aliasKey_label_len == r2.aliasKey_label_len /\
+                  r1.aliasKey_label == r2.aliasKey_label)
+  ensures l0_record_perm r2 p repr
+{
+  unfold (l0_record_perm r1 p repr);
+  rewrite (V.pts_to r1.fwid #p repr.fwid) as (V.pts_to r2.fwid #p repr.fwid);
+  rewrite (V.pts_to r1.deviceID_label #p repr.deviceID_label)
+       as (V.pts_to r2.deviceID_label #p repr.deviceID_label);
+  rewrite (V.pts_to r1.aliasKey_label #p repr.aliasKey_label)
+       as (V.pts_to r2.aliasKey_label #p repr.aliasKey_label);
+  fold (l0_record_perm r2 p repr)
+}
+```
+
+```pulse
 fn derive_child_from_context
     (context:context_t)
     (record:record_t)
@@ -1131,7 +1152,7 @@ fn derive_child_from_context
             DICE_SUCCESS -> {
               let l0_ctxt = init_l0_ctxt cdi #r0 #s #uds ();
               let l0_ctxt_opt = intro_maybe_context_perm l0_ctxt;
-              let res = (context, Engine_record (fst ret), l0_ctxt_opt);
+              let res = (Engine_context c, Engine_record (fst ret), l0_ctxt_opt);
               rewrite (maybe_context_perm l0_ctxt_opt)
                    as (maybe_context_perm (tthd res));
               rewrite (context_perm context context_repr)
@@ -1144,7 +1165,7 @@ fn derive_child_from_context
 
             DICE_ERROR -> {
               A.zeroize dice_digest_len cdi;
-              let res = (context, Engine_record (fst ret), None #context_t);
+              let res = (Engine_context c, Engine_record (fst ret), None #context_t);
               rewrite emp as (maybe_context_perm (tthd res));
               rewrite (context_perm context context_repr)
                    as (context_perm (tfst res) context_repr);
@@ -1156,7 +1177,7 @@ fn derive_child_from_context
         }
         _ -> { //illegal argument; reject
           assume_ (pure (~ (Engine_record? record)));
-          let res = (context, record, None #context_t);
+          let res = (Engine_context c, record, None #context_t);
           rewrite emp as (maybe_context_perm (tthd res));
           rewrite (context_perm context context_repr) as (context_perm (tfst res) context_repr);
           rewrite (record_perm record p record_repr) as (record_perm (tsnd res) p record_repr);
@@ -1182,12 +1203,10 @@ fn derive_child_from_context
           let deviceIDCRI_len_and_ing = len_of_deviceIDCRI  r.deviceIDCSR_ingredients;
           let deviceIDCSR_ingredients = fst deviceIDCRI_len_and_ing;
           let deviceIDCRI_len = snd deviceIDCRI_len_and_ing;
-          assume_ (pure (deviceIDCSR_ingredients == r.deviceIDCSR_ingredients));
 
           let aliasKeyTBS_len_and_ing = len_of_aliasKeyTBS  r.aliasKeyCRT_ingredients;
           let aliasKeyCRT_ingredients = fst aliasKeyTBS_len_and_ing;
           let aliasKeyTBS_len = snd aliasKeyTBS_len_and_ing;
-          assume_ (pure (aliasKeyCRT_ingredients == r.aliasKeyCRT_ingredients));
 
           let deviceIDCSR_len = length_of_deviceIDCSR deviceIDCRI_len;
           let aliasKeyCRT_len = length_of_aliasKeyCRT aliasKeyTBS_len;
@@ -1204,7 +1223,7 @@ fn derive_child_from_context
           V.to_array_pts_to aliasKeyCRT;
           V.to_array_pts_to c.cdi;
 
-          let r1 : l0_record_t = {
+          let r1 = {
             fwid = r.fwid;
             deviceID_label_len = r.deviceID_label_len;
             deviceID_label = r.deviceID_label;
@@ -1213,11 +1232,8 @@ fn derive_child_from_context
             deviceIDCSR_ingredients;
             aliasKeyCRT_ingredients;
           } <: l0_record_t;
-          
-          drop_ (l0_record_perm _ _ _);
-          assume_ (l0_record_perm r1 p r0);
-          // admit ();
-          // with p repr. rewrite (l0_record_perm r p repr) as (l0_record_perm r1 p repr);
+          l0_record_perm_aux r r1;
+
           let r2 = L0Core.l0_main  (V.vec_to_array c.cdi) deviceID_pub deviceID_priv 
                                    aliasKey_pub aliasKey_priv 
                                    aliasKeyTBS_len aliasKeyCRT_len (V.vec_to_array aliasKeyCRT)
@@ -1243,7 +1259,7 @@ fn derive_child_from_context
           V.free aliasKeyCRT;
 
           let l1_context_opt = intro_maybe_context_perm l1_context;
-          let res = (context, L0_record r2, l1_context_opt);
+          let res = (L0_context c, L0_record r2, l1_context_opt);
           rewrite (maybe_context_perm l1_context_opt)
                as (maybe_context_perm (tthd res));
           rewrite (context_perm context context_repr) as (context_perm (tfst res) context_repr);
@@ -1254,7 +1270,7 @@ fn derive_child_from_context
         _ -> {
           // illegal argument; reject
           assume_ (pure (~ (L0_record? record)));
-          let res = (context, record, None #context_t);
+          let res = (L0_context c, record, None #context_t);
           rewrite emp as (maybe_context_perm (tthd res));
           rewrite (context_perm context context_repr)
                as (context_perm (tfst res) context_repr);
@@ -1263,10 +1279,10 @@ fn derive_child_from_context
         }
       }
     }
-    L1_context _ ->
+    L1_context c ->
     {
       // ERROR - cannot invoke DeriveChild with L1 context
-      let res = (context, record, None #context_t);
+      let res = (L1_context c, record, None #context_t);
       rewrite emp as (maybe_context_perm (tthd res));
       rewrite (context_perm context context_repr)
            as (context_perm (tfst res) context_repr);
