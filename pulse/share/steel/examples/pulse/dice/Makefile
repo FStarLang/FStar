@@ -1,3 +1,5 @@
+## Modeled on dice/cbor/Makefile
+
 PULSE_EXAMPLES_ROOT = ..
 STEEL_HOME = $(PULSE_EXAMPLES_ROOT)/../../../../
 
@@ -13,4 +15,14 @@ FSTAR_DEP_OPTIONS=--extract '* -FStar.Tactics -FStar.Reflection -Steel -Pulse +P
 %.ast:
 	$(FSTAR) --admit_smt_queries true --codegen Extension $(subst .ast,, $(notdir $@)) --extract_module $(basename $(subst .ast,, $(notdir $@)))
 
-dpe-ast: EngineTypes.fst.ast EngineCore.fst.ast L0Types.fst.ast L0Crypto.fst.ast L0Core.fst.ast Pulse.Lib.HashTable.Type.fst.ast Pulse.Lib.HashTable.Spec.fst.ast Pulse.Lib.HashTable.fst.ast DPE.fst.ast
+DPE_FILES = EngineTypes.fst \
+  EngineCore.fst \
+	L0Types.fst \
+	L0Crypto.fst \
+	L0Core.fst \
+	Pulse.Lib.HashTable.Type.fst \
+	Pulse.Lib.HashTable.Spec.fst \
+	Pulse.Lib.HashTable.fst \
+	DPE.fst
+
+dpe-ast: $(addsuffix .ast, $(DPE_FILES))
