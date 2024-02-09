@@ -213,8 +213,9 @@ let is_arrow (t:term) : option (binder & option qualifier & comp) =
                         match readback_comp c_t with
                         | Some c -> Some c <: option Pulse.Syntax.Base.comp
                         | None -> None in
-                      Some ({binder_ty;
-                             binder_ppname=mk_ppname ppname (T.range_of_term host_term)},
+                      Some (mk_binder_ppname
+                              binder_ty
+                              (mk_ppname ppname (T.range_of_term host_term)),
                             q,
                             c) in
                       

@@ -109,12 +109,15 @@ and typ = term
 and binder = {
   binder_ty     : term;
   binder_ppname : ppname;
+  binder_attrs  : FStar.Sealed.Inhabited.sealed #(list term) []
 }
 
 and term = {
   t : term';
   range : range;
 }
+
+let binder_attrs_default = FStar.Sealed.seal []
 
 let term_range (t:term) = t.range
 let tm_fstar (t:host_term) (r:range) : term = { t = Tm_FStar t; range=r }
@@ -350,10 +353,15 @@ and decl = {
 }
 
 let null_binder (t:term) : binder =
-  {binder_ty=t;binder_ppname=ppname_default}
+  {binder_ty=t;binder_ppname=ppname_default;binder_attrs=binder_attrs_default}
 
 let mk_binder (s:string) (r:range) (t:term) : binder =
-  {binder_ty=t;binder_ppname=mk_ppname (RT.seal_pp_name s) r }
+  {binder_ty=t;
+   binder_ppname=mk_ppname (RT.seal_pp_name s) r;
+   binder_attrs=binder_attrs_default}
+
+let mk_binder_ppname (binder_ty:term) (binder_ppname:ppname) : binder =
+  {binder_ty; binder_ppname; binder_attrs=binder_attrs_default}
 
 val eq_univ (u1 u2:universe)
   : b:bool { b <==> (u1 == u2) }
@@ -415,4 +423,5 @@ let comp_inames (c:comp { C_STAtomic? c }) : term =
 
 let nvar = ppname & var 
 let v_as_nv x : nvar = ppname_default, x
-let as_binder (t:term) = { binder_ty=t; binder_ppname=ppname_default}
+let as_binder (t:term) = null_binder t
+

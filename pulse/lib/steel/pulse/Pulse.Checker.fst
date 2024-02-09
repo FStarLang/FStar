@@ -54,10 +54,7 @@ let terms_to_string (t:list term)
   : T.Tac string 
   = String.concat "\n" (T.map Pulse.Syntax.Printer.term_to_string t)
 
-let default_binder_annot = {
-    binder_ppname = ppname_default;
-    binder_ty = tm_unknown
-}
+let default_binder_annot = mk_binder_ppname tm_unknown ppname_default
 
 let rec gen_names_for_unknowns (g:env) (t:term) (ws:list term)
   : T.Tac (list (nvar & term) &  // new names with their types
@@ -108,7 +105,7 @@ let instantiate_unknown_witnesses (g:env) (t:st_term { Tm_IntroExists? t.term })
           let e = close_st_term' e x 0 in
           match e.term with
           | Tm_ProofHintWithBinders {hint_type;binders;t} ->
-            let new_binder = {binder_ty=ty; binder_ppname=ppname} in
+            let new_binder = mk_binder_ppname ty ppname in
             let t' = Tm_ProofHintWithBinders {hint_type;binders=new_binder::binders;t} in
             {e with term=t'})
         new_names

@@ -52,7 +52,7 @@ let check
   let Tm_While { invariant=inv; condition=cond; body; condition_var } = t.term in
   let (| ex_inv, inv_typing |) =
     check_vprop (push_context "invariant" (term_range inv) g) 
-                (tm_exists_sl u0 { binder_ppname=condition_var; binder_ty=tm_bool } inv)
+                (tm_exists_sl u0 (mk_binder_ppname tm_bool condition_var) inv)
   in
 
   if not (Tm_ExistsSL? ex_inv.t)

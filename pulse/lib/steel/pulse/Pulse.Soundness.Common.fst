@@ -88,7 +88,7 @@ let mk_t_abs_tot (g:env)
                  (body_typing:tot_typing (push_binding g x ppname ty) (open_term body x) body_ty)
   : GTot (RT.tot_typing (elab_env g)
             (mk_abs_with_name ppname.name (elab_term ty) (elab_qual q) (elab_term body))
-            (elab_term (tm_arrow {binder_ty=ty; binder_ppname=ppname} q (close_comp (C_Tot body_ty) x))))
+            (elab_term (tm_arrow (mk_binder_ppname ty ppname) q (close_comp (C_Tot body_ty) x))))
   = let c = C_Tot body_ty in
     let r_ty = elab_term ty in
     let r_body = elab_term (open_term body x) in
@@ -109,7 +109,7 @@ let mk_t_abs_tot (g:env)
     let d : RT.tot_typing (elab_env g)
               (mk_abs_with_name ppname.name (elab_term ty) (elab_qual q)
                  (RT.close_term (elab_term (open_term body x)) x))
-              (elab_term (tm_arrow {binder_ty=ty;binder_ppname=ppname} q (close_comp (C_Tot body_ty) x)))
+              (elab_term (tm_arrow (mk_binder_ppname ty ppname) q (close_comp (C_Tot body_ty) x)))
           = 
     RT.T_Abs (elab_env g)
              x
@@ -152,7 +152,7 @@ let mk_t_abs (g:env)
                                           (elab_comp c))
   : GTot (RT.tot_typing (elab_env g)
             (mk_abs_with_name ppname.name (elab_term ty) (elab_qual q) (RT.close_term (elab_st_typing body_typing) x))
-            (elab_term (tm_arrow {binder_ty=ty;binder_ppname=ppname} q (close_comp c x))))
+            (elab_term (tm_arrow (mk_binder_ppname ty ppname) q (close_comp c x))))
   = let r_ty = elab_term ty in
     let r_body = elab_st_typing body_typing in
     let r_c = elab_comp c in

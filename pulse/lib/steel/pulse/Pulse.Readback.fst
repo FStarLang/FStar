@@ -207,7 +207,7 @@ let rec readback_ty (t:R.term)
             let bview = inspect_binder b in
             Some (bview.ppname, RU.binder_range b, p) <: option (ppname_t & range & term)
           | _ -> None in  // TODO: FIXME: provide error from this function?
-        let b = { binder_ty = ty; binder_ppname = mk_ppname ppname range } in
+        let b = mk_binder_ppname ty (mk_ppname ppname range) in
         if inspect_fv fv = exists_lid
         then return (Tm_ExistsSL u b p)
         else return (Tm_ForallSL u b p)
