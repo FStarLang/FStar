@@ -27,7 +27,7 @@ fn test ([@@@ mut_binder] x:int)
   requires emp
   ensures emp
 {
-   ()
+   admit ()
 }
 ```
 
