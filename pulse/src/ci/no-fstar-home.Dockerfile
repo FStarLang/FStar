@@ -15,7 +15,7 @@ RUN sudo apt-get install -y --no-install-recommends nodejs
 
 # install rust
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-RUN source "$HOME/.cargo/env"
+RUN . "$HOME/.cargo/env"
 
 ADD --chown=opam:opam ./ steel/
 
@@ -28,7 +28,7 @@ RUN sudo apt-get update && sudo apt-get install --yes --no-install-recommends \
     git clone --branch $(jq -c -r '.RepoVersions.fstar' steel/src/ci/config.json || echo master) https://github.com/FStarLang/FStar $HOME/FStar && \
     eval $(opam env) && \
     opam depext conf-gmp z3.4.8.5-1 conf-m4 && \
-    opam install --deps-only $FSTAR_HOME/fstar.opam && \
+    opam install --deps-only $HOME/FStar/fstar.opam && \
     env OTHERFLAGS='--admit_smt_queries true' make -C $HOME/FStar -j $opamthreads && \
     git clone --branch $(jq -c -r '.RepoVersions.karamel' steel/src/ci/config.json || echo master) https://github.com/FStarLang/karamel $KRML_HOME && \
     eval $(opam env) && $KRML_HOME/.docker/build/install-other-deps.sh && \
