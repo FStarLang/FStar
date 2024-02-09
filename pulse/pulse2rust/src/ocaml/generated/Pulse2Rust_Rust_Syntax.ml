@@ -1025,15 +1025,16 @@ let (mk_lock_mutex : expr -> expr) =
     let e_lock = mk_method_call e "lock" [] in
     let e_lock_unwrap = mk_method_call e_lock "unwrap" [] in
     let is_mut = true in mk_reference_expr is_mut e_lock_unwrap
-let (mk_scalar_fn_arg : Prims.string -> typ -> fn_arg) =
+let (mk_scalar_fn_arg : Prims.string -> Prims.bool -> typ -> fn_arg) =
   fun name ->
-    fun t ->
-      Fn_arg_pat
-        {
-          pat_typ_pat =
-            (Pat_ident { pat_name = name; by_ref = false; is_mut = false });
-          pat_typ_typ = t
-        }
+    fun is_mut ->
+      fun t ->
+        Fn_arg_pat
+          {
+            pat_typ_pat =
+              (Pat_ident { pat_name = name; by_ref = false; is_mut });
+            pat_typ_typ = t
+          }
 let (mk_ref_fn_arg : Prims.string -> Prims.bool -> typ -> fn_arg) =
   fun name ->
     fun is_mut ->

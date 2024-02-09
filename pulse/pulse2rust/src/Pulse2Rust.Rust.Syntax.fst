@@ -177,12 +177,12 @@ let mk_lock_mutex (e:expr) : expr =
   let is_mut = true in
   mk_reference_expr is_mut e_lock_unwrap
 
-let mk_scalar_fn_arg (name:string) (t:typ) =
+let mk_scalar_fn_arg (name:string) (is_mut:bool) (t:typ) =
   Fn_arg_pat {
     pat_typ_pat = Pat_ident {
       pat_name = name;
       by_ref = false;
-      is_mut = false;
+      is_mut;
     };
     pat_typ_typ = t;
   }

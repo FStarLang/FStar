@@ -213,8 +213,19 @@ let extract_mltyopt (g:env) (t:option S.mlty) : typ =
   | None -> Typ_infer
   | Some t -> extract_mlty g t
 
-let extract_top_level_fn_arg (g:env) (arg_name:string) (t:S.mlty) : fn_arg =
-  t |> extract_mlty g |> mk_scalar_fn_arg arg_name
+let arg_has_mut_attribute (attrs:list S.mlexpr) : bool =
+  List.existsb (fun attr ->
+    match attr.S.expr with
+    | S.MLE_CTor (p, _)
+      when S.string_of_mlpath p = "Pulse.Lib.Pervasives.Rust_mut_binder" -> true
+    | _ -> false
+  ) attrs
+
+let extract_top_level_fn_arg (g:env) (arg_name:string) (arg_attrs:list S.mlexpr) (t:S.mlty) : fn_arg =
+  mk_scalar_fn_arg
+    arg_name
+    (arg_has_mut_attribute arg_attrs)
+    (t |> extract_mlty g) 
 
 let push_fn_arg (g:env) (arg_name:string) (arg:fn_arg) : env =
   match arg with
@@ -234,13 +245,14 @@ let extract_top_level_sig
   (fn_name:string)
   (generic_type_params:list generic_type_param)
   (arg_names:list string)
+  (arg_attrs:list (list S.mlexpr))
   (arg_ts:list S.mlty)
   (ret_t:option S.mlty)
   
   : fn_signature & env =
 
   let fn_args =
-    List.map2 (extract_top_level_fn_arg g) (List.map varname arg_names) arg_ts in
+    List.map3 (extract_top_level_fn_arg g) (List.map varname arg_names) arg_attrs arg_ts in
   let fn_ret_t = extract_mltyopt g ret_t in
   mk_fn_signature
     fn_const
@@ -754,6 +766,7 @@ let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : item & env =
     match lb.mllb_def.expr with
     | S.MLE_Fun (bs, body) ->
       let arg_names = List.map (fun b -> b.S.mlbinder_name) bs in
+      let arg_attrs = List.map (fun b -> b.S.mlbinder_attrs) bs in
       let tvars, arg_ts, ret_t =
         match lb.mllb_tysc with
         | Some tsc ->
@@ -770,6 +783,7 @@ let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : item & env =
           lb.mllb_name
           (extract_generic_type_params tvars lb.mllb_attrs)
           arg_names
+          arg_attrs
           arg_ts
           ret_t in
       let fn_body = extract_mlexpr_to_stmts g_body body in

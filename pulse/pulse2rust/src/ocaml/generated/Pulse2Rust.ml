@@ -312,16 +312,29 @@ let (extract_mltyopt :
       match t with
       | FStar_Pervasives_Native.None -> Pulse2Rust_Rust_Syntax.Typ_infer
       | FStar_Pervasives_Native.Some t1 -> extract_mlty g t1
+let (arg_has_mut_attribute :
+  FStar_Extraction_ML_Syntax.mlexpr Prims.list -> Prims.bool) =
+  fun attrs ->
+    FStar_Compiler_List.existsb
+      (fun attr ->
+         match attr.FStar_Extraction_ML_Syntax.expr with
+         | FStar_Extraction_ML_Syntax.MLE_CTor (p, uu___) when
+             let uu___1 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___1 = "Pulse.Lib.Pervasives.Rust_mut_binder" -> true
+         | uu___ -> false) attrs
 let (extract_top_level_fn_arg :
   env ->
     Prims.string ->
-      FStar_Extraction_ML_Syntax.mlty -> Pulse2Rust_Rust_Syntax.fn_arg)
+      FStar_Extraction_ML_Syntax.mlexpr Prims.list ->
+        FStar_Extraction_ML_Syntax.mlty -> Pulse2Rust_Rust_Syntax.fn_arg)
   =
   fun g ->
     fun arg_name ->
-      fun t ->
-        let uu___ = extract_mlty g t in
-        Pulse2Rust_Rust_Syntax.mk_scalar_fn_arg arg_name uu___
+      fun arg_attrs ->
+        fun t ->
+          let uu___ = arg_has_mut_attribute arg_attrs in
+          let uu___1 = extract_mlty g t in
+          Pulse2Rust_Rust_Syntax.mk_scalar_fn_arg arg_name uu___ uu___1
 let (push_fn_arg :
   env -> Prims.string -> Pulse2Rust_Rust_Syntax.fn_arg -> env) =
   fun g ->
@@ -338,34 +351,37 @@ let (extract_top_level_sig :
       Prims.string ->
         Pulse2Rust_Rust_Syntax.generic_type_param Prims.list ->
           Prims.string Prims.list ->
-            FStar_Extraction_ML_Syntax.mlty Prims.list ->
-              FStar_Extraction_ML_Syntax.mlty FStar_Pervasives_Native.option
-                -> (Pulse2Rust_Rust_Syntax.fn_signature * env))
+            FStar_Extraction_ML_Syntax.mlexpr Prims.list Prims.list ->
+              FStar_Extraction_ML_Syntax.mlty Prims.list ->
+                FStar_Extraction_ML_Syntax.mlty
+                  FStar_Pervasives_Native.option ->
+                  (Pulse2Rust_Rust_Syntax.fn_signature * env))
   =
   fun g ->
     fun fn_const ->
       fun fn_name ->
         fun generic_type_params ->
           fun arg_names ->
-            fun arg_ts ->
-              fun ret_t ->
-                let fn_args =
-                  let uu___ = FStar_Compiler_List.map varname arg_names in
-                  FStar_Compiler_List.map2 (extract_top_level_fn_arg g) uu___
-                    arg_ts in
-                let fn_ret_t = extract_mltyopt g ret_t in
-                let uu___ =
-                  Pulse2Rust_Rust_Syntax.mk_fn_signature fn_const fn_name
-                    generic_type_params fn_args fn_ret_t in
-                let uu___1 =
-                  let uu___2 = FStar_Compiler_List.zip arg_names fn_args in
-                  FStar_Compiler_List.fold_left
-                    (fun g1 ->
-                       fun uu___3 ->
-                         match uu___3 with
-                         | (arg_name, arg) -> push_fn_arg g1 arg_name arg) g
-                    uu___2 in
-                (uu___, uu___1)
+            fun arg_attrs ->
+              fun arg_ts ->
+                fun ret_t ->
+                  let fn_args =
+                    let uu___ = FStar_Compiler_List.map varname arg_names in
+                    FStar_Compiler_List.map3 (extract_top_level_fn_arg g)
+                      uu___ arg_attrs arg_ts in
+                  let fn_ret_t = extract_mltyopt g ret_t in
+                  let uu___ =
+                    Pulse2Rust_Rust_Syntax.mk_fn_signature fn_const fn_name
+                      generic_type_params fn_args fn_ret_t in
+                  let uu___1 =
+                    let uu___2 = FStar_Compiler_List.zip arg_names fn_args in
+                    FStar_Compiler_List.fold_left
+                      (fun g1 ->
+                         fun uu___3 ->
+                           match uu___3 with
+                           | (arg_name, arg) -> push_fn_arg g1 arg_name arg)
+                      g uu___2 in
+                  (uu___, uu___1)
 let (is_binop :
   Prims.string -> Pulse2Rust_Rust_Syntax.binop FStar_Pervasives_Native.option)
   =
@@ -1593,6 +1609,10 @@ let (extract_top_level_lb :
                         FStar_Compiler_List.map
                           (fun b ->
                              b.FStar_Extraction_ML_Syntax.mlbinder_name) bs in
+                      let arg_attrs =
+                        FStar_Compiler_List.map
+                          (fun b ->
+                             b.FStar_Extraction_ML_Syntax.mlbinder_attrs) bs in
                       let uu___3 =
                         match lb.FStar_Extraction_ML_Syntax.mllb_tysc with
                         | FStar_Pervasives_Native.Some tsc ->
@@ -1617,7 +1637,7 @@ let (extract_top_level_lb :
                                  lb.FStar_Extraction_ML_Syntax.mllb_attrs in
                              extract_top_level_sig g fn_const
                                lb.FStar_Extraction_ML_Syntax.mllb_name uu___5
-                               arg_names arg_ts ret_t in
+                               arg_names arg_attrs arg_ts ret_t in
                            (match uu___4 with
                             | (fn_sig, g_body) ->
                                 let fn_body =
@@ -2347,18 +2367,18 @@ let (collect_reachable_defs : dict -> Prims.string -> reachable_defs) =
           let uu___1 = FStar_Compiler_Util.smap_try_find d root_module in
           FStar_Compiler_Util.must uu___1 in
         match uu___ with | (uu___1, uu___2, decls) -> decls in
-      FStar_Compiler_List.iter
-        (fun decl ->
-           let uu___1 = FStar_Extraction_ML_Syntax.mlmodule1_to_string decl in
-           FStar_Compiler_Util.print1 "Decl: %s\n" uu___1) root_decls;
-      (let worklist =
-         FStar_Compiler_List.fold_left
-           (fun worklist1 ->
-              fun decl ->
-                let uu___1 = reachable_defs_mlmodule1 decl in
-                FStar_Compiler_Set.union FStar_Class_Ord.ord_string worklist1
-                  uu___1) empty_defs root_decls in
-       collect_reachable_defs_aux dd worklist empty_defs)
+      let worklist =
+        FStar_Compiler_List.fold_left
+          (fun worklist1 ->
+             fun decl ->
+               let uu___ =
+                 let uu___1 = mlmodule1_name decl in
+                 FStar_Compiler_List.map
+                   (fun s -> Prims.strcat root_module (Prims.strcat "." s))
+                   uu___1 in
+               FStar_Compiler_Set.addn FStar_Class_Ord.ord_string uu___
+                 worklist1) empty_defs root_decls in
+      collect_reachable_defs_aux dd worklist empty_defs
 let (extract : Prims.string Prims.list -> Prims.string) =
   fun files ->
     let d = read_all_ast_files files in
