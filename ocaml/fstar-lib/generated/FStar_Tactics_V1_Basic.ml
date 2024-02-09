@@ -8518,7 +8518,9 @@ let rec (inspect :
                            FStar_Reflection_V1_Data.Pat_Cons uu___3
                        | FStar_Syntax_Syntax.Pat_var bv ->
                            FStar_Reflection_V1_Data.Pat_Var
-                             (bv, (bv.FStar_Syntax_Syntax.sort))
+                             (bv,
+                               (FStar_Compiler_Sealed.seal
+                                  bv.FStar_Syntax_Syntax.sort))
                        | FStar_Syntax_Syntax.Pat_dot_term eopt ->
                            FStar_Reflection_V1_Data.Pat_Dot_Term eopt in
                      let brs1 =

@@ -3023,8 +3023,10 @@ let (bv_to_binding :
   fun bv ->
     let uu___ = FStar_BigInt.of_int_fs bv.FStar_Syntax_Syntax.index in
     let uu___1 =
-      FStar_Class_Show.show FStar_Ident.showable_ident
-        bv.FStar_Syntax_Syntax.ppname in
+      let uu___2 =
+        FStar_Class_Show.show FStar_Ident.showable_ident
+          bv.FStar_Syntax_Syntax.ppname in
+      FStar_Compiler_Sealed.seal uu___2 in
     {
       FStar_Reflection_V2_Data.uniq1 = uu___;
       FStar_Reflection_V2_Data.sort3 = (bv.FStar_Syntax_Syntax.sort);
@@ -3042,13 +3044,14 @@ let (binding_to_string : FStar_Reflection_V2_Data.binding -> Prims.string) =
           (FStar_Class_Show.printableshow FStar_Class_Printable.printable_int)
           uu___2 in
       Prims.strcat "#" uu___1 in
-    Prims.strcat b.FStar_Reflection_V2_Data.ppname3 uu___
+    Prims.strcat
+      (FStar_Compiler_Sealed.unseal b.FStar_Reflection_V2_Data.ppname3) uu___
 let (binding_to_bv :
   FStar_Reflection_V2_Data.binding -> FStar_Syntax_Syntax.bv) =
   fun b ->
     let uu___ =
       FStar_Ident.mk_ident
-        ((b.FStar_Reflection_V2_Data.ppname3),
+        ((FStar_Compiler_Sealed.unseal b.FStar_Reflection_V2_Data.ppname3),
           FStar_Compiler_Range_Type.dummyRange) in
     let uu___1 = FStar_BigInt.to_int_fs b.FStar_Reflection_V2_Data.uniq1 in
     {
@@ -5504,7 +5507,9 @@ let (rename_to :
                                                             =
                                                             (b.FStar_Reflection_V2_Data.sort3);
                                                           FStar_Reflection_V2_Data.ppname3
-                                                            = s
+                                                            =
+                                                            (FStar_Compiler_Sealed.seal
+                                                               s)
                                                         }))) uu___4))))
                              uu___2))) uu___1)) in
       FStar_Tactics_Monad.wrap_err "rename_to" uu___

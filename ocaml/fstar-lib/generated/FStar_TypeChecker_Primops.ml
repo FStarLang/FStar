@@ -766,7 +766,9 @@ let (seal_steps : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                          FStar_Pervasives_Native.Some f1) ->
                           let r =
                             let uu___5 =
-                              let uu___6 = FStar_Syntax_Syntax.as_arg s1 in
+                              let uu___6 =
+                                FStar_Syntax_Syntax.as_arg
+                                  (FStar_Compiler_Sealed.unseal s1) in
                               [uu___6] in
                             FStar_Syntax_Util.mk_app f1 uu___5 in
                           let emb =
@@ -775,7 +777,8 @@ let (seal_steps : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                           let uu___5 =
                             FStar_TypeChecker_Primops_Base.embed_simple
                               (FStar_Syntax_Embeddings.e_sealed emb)
-                              psc.FStar_TypeChecker_Primops_Base.psc_range r in
+                              psc.FStar_TypeChecker_Primops_Base.psc_range
+                              (FStar_Compiler_Sealed.seal r) in
                           FStar_Pervasives_Native.Some uu___5
                       | uu___5 -> FStar_Pervasives_Native.None)
                  | uu___ -> FStar_Pervasives_Native.None)),
@@ -792,10 +795,9 @@ let (seal_steps : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                      let uu___6 =
                        try_unembed FStar_TypeChecker_NBETerm.e_any tb in
                      let uu___7 =
-                       let uu___8 =
-                         FStar_TypeChecker_NBETerm.e_sealed
-                           FStar_TypeChecker_NBETerm.e_any in
-                       try_unembed uu___8 s in
+                       try_unembed
+                         (FStar_TypeChecker_NBETerm.e_sealed
+                            FStar_TypeChecker_NBETerm.e_any) s in
                      let uu___8 =
                        try_unembed FStar_TypeChecker_NBETerm.e_any f in
                      (uu___5, uu___6, uu___7, uu___8) in
@@ -806,15 +808,18 @@ let (seal_steps : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                        FStar_Pervasives_Native.Some f1) ->
                         let r =
                           let uu___5 =
-                            let uu___6 = FStar_TypeChecker_NBETerm.as_arg s1 in
+                            let uu___6 =
+                              FStar_TypeChecker_NBETerm.as_arg
+                                (FStar_Compiler_Sealed.unseal s1) in
                             [uu___6] in
                           cb.FStar_TypeChecker_NBETerm.iapp f1 uu___5 in
                         let emb =
                           FStar_TypeChecker_NBETerm.set_type ta1
                             FStar_TypeChecker_NBETerm.e_any in
                         let uu___5 =
-                          let uu___6 = FStar_TypeChecker_NBETerm.e_sealed emb in
-                          FStar_TypeChecker_NBETerm.embed uu___6 cb r in
+                          FStar_TypeChecker_NBETerm.embed
+                            (FStar_TypeChecker_NBETerm.e_sealed emb) cb
+                            (FStar_Compiler_Sealed.seal r) in
                         FStar_Pervasives_Native.Some uu___5
                     | uu___5 -> FStar_Pervasives_Native.None)
                | uu___ -> FStar_Pervasives_Native.None)));
@@ -848,7 +853,9 @@ let (seal_steps : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                         FStar_Pervasives_Native.Some f1) ->
                          let r =
                            let uu___5 =
-                             let uu___6 = FStar_Syntax_Syntax.as_arg s1 in
+                             let uu___6 =
+                               FStar_Syntax_Syntax.as_arg
+                                 (FStar_Compiler_Sealed.unseal s1) in
                              [uu___6] in
                            FStar_Syntax_Util.mk_app f1 uu___5 in
                          let uu___5 =
@@ -871,10 +878,9 @@ let (seal_steps : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                     let uu___6 =
                       try_unembed FStar_TypeChecker_NBETerm.e_any tb in
                     let uu___7 =
-                      let uu___8 =
-                        FStar_TypeChecker_NBETerm.e_sealed
-                          FStar_TypeChecker_NBETerm.e_any in
-                      try_unembed uu___8 s in
+                      try_unembed
+                        (FStar_TypeChecker_NBETerm.e_sealed
+                           FStar_TypeChecker_NBETerm.e_any) s in
                     let uu___8 =
                       try_unembed FStar_TypeChecker_NBETerm.e_any f in
                     (uu___5, uu___6, uu___7, uu___8) in
@@ -885,7 +891,9 @@ let (seal_steps : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                       FStar_Pervasives_Native.Some f1) ->
                        let r =
                          let uu___5 =
-                           let uu___6 = FStar_TypeChecker_NBETerm.as_arg s1 in
+                           let uu___6 =
+                             FStar_TypeChecker_NBETerm.as_arg
+                               (FStar_Compiler_Sealed.unseal s1) in
                            [uu___6] in
                          cb.FStar_TypeChecker_NBETerm.iapp f1 uu___5 in
                        let emb =

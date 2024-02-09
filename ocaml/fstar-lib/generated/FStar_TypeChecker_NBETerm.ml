@@ -1704,7 +1704,8 @@ let (e_norm_step : FStar_Pervasives.norm_step embedding) =
        mkFV uu___1 [] [])
     (FStar_Syntax_Embeddings_Base.emb_typ_of
        FStar_Syntax_Embeddings.e_norm_step)
-let e_sealed : 'a . 'a embedding -> 'a embedding =
+let e_sealed : 'a . 'a embedding -> 'a FStar_Compiler_Sealed.sealed embedding
+  =
   fun ea ->
     let etyp uu___ =
       let uu___1 =
@@ -1715,7 +1716,9 @@ let e_sealed : 'a . 'a embedding -> 'a embedding =
       lazy_embed etyp x
         (fun uu___ ->
            let uu___1 =
-             let uu___2 = let uu___3 = embed ea cb x in as_arg uu___3 in
+             let uu___2 =
+               let uu___3 = embed ea cb (FStar_Compiler_Sealed.unseal x) in
+               as_arg uu___3 in
              let uu___3 =
                let uu___4 = let uu___5 = type_of ea in as_iarg uu___5 in
                [uu___4] in
@@ -1724,12 +1727,23 @@ let e_sealed : 'a . 'a embedding -> 'a embedding =
              [FStar_Syntax_Syntax.U_zero] uu___1) in
     let un1 cb trm =
       lazy_unembed etyp trm
-        (fun trm1 ->
-           match trm1.nbe_t with
-           | Construct (fvar, us, (a1, uu___)::uu___1::[]) when
-               FStar_Syntax_Syntax.fv_eq_lid fvar FStar_Parser_Const.seal_lid
-               -> unembed ea cb a1
-           | uu___ -> FStar_Pervasives_Native.None) in
+        (fun uu___ ->
+           (fun trm1 ->
+              match trm1.nbe_t with
+              | Construct (fvar, us, (a1, uu___)::uu___1::[]) when
+                  FStar_Syntax_Syntax.fv_eq_lid fvar
+                    FStar_Parser_Const.seal_lid
+                  ->
+                  Obj.magic
+                    (Obj.repr
+                       (let uu___2 = unembed ea cb a1 in
+                        FStar_Class_Monad.fmap FStar_Class_Monad.monad_option
+                          () ()
+                          (fun uu___3 ->
+                             (Obj.magic FStar_Compiler_Sealed.seal) uu___3)
+                          (Obj.magic uu___2)))
+              | uu___ -> Obj.magic (Obj.repr FStar_Pervasives_Native.None))
+             uu___) in
     mk_emb em1 un1
       (fun uu___ ->
          let uu___1 =
