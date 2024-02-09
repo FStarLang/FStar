@@ -72,7 +72,7 @@ clean_ocaml:
 
 .PHONY: test
 test: all
-	+$(MAKE) -C share/steel
+	+$(MAKE) -C share/pulse
 
 PREFIX ?= /usr/local
 ifeq ($(OS),Windows_NT)
@@ -99,7 +99,7 @@ install-lib:
 	+$(MAKE) -C lib/pulse install
 
 install-share:
-	+$(MAKE) -C share/steel install
+	+$(MAKE) -C share/pulse install
 
 install: install-ocaml install-lib install-share
 

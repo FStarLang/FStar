@@ -2,8 +2,7 @@
 # It is not intended to be used with `emacs`. Instead, please use VSCode, with
 # a workspace starting from the Steel root directory.
 
-PULSE_HOME ?= ../../../../../../
-PULSE_EXAMPLES_ROOT = $(PULSE_HOME)/share/steel/examples/pulse
+PULSE_HOME ?= ../../../../../
 OUTPUT_DIRECTORY=_output
 CACHE_DIRECTORY=$(OUTPUT_DIRECTORY)/cache
 SRC_DIRS := extern
@@ -14,7 +13,7 @@ FSTAR_DEP_OPTIONS=--extract '* -FStar.Tactics -FStar.Reflection -Steel -Pulse +P
 KRML=$(KRML_HOME)/krml $(KRML_OPTS)
 all: verify test
 
-include $(PULSE_HOME)/share/steel/Makefile.include
+include $(PULSE_HOME)/share/pulse/Makefile.include
 
 FILTERED_KRML_FILES := $(filter-out %/prims.krml,$(ALL_KRML_FILES))
 

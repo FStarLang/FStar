@@ -1,8 +1,5 @@
-PULSE_HOME ?= ../../../..
-PULSE_SHARE = $(PULSE_HOME)/share/steel
-# ^ This must point to /steel/share. But we cannot rely on going via
-# the root (../../../..) since the OPAM package will detach the share
-# directory from the rest of the repo.
+PULSE_HOME ?= ../../..
+PULSE_SHARE = $(PULSE_HOME)/share/pulse
 
 SRC_DIRS = bug-reports by-example parallel parix c .
 INCLUDE_PATHS += $(PULSE_HOME)/lib/pulse/c

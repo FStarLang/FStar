@@ -2,7 +2,7 @@
   "fstar_exe": "fstar.exe",
   "options": [
     "--load_cmxs",
-    "steel",
+    "pulse",
     "--cache_dir",
     "_output/cache",
     "--using_facts_from",
@@ -11,12 +11,12 @@
     "-249"
   ],
   "include_dirs": [
-    "../../../../lib/pulse",
-    "../../../../lib/pulse/lib",
-    "../../../../lib/pulse/lib/c",
-    "../../../../lib/pulse/lib/class",
-    "../../../../lib/pulse/lib/pledge",
-    "../../../../lib/pulse/core",
+    "../../../lib/pulse",
+    "../../../lib/pulse/lib",
+    "../../../lib/pulse/lib/c",
+    "../../../lib/pulse/lib/class",
+    "../../../lib/pulse/lib/pledge",
+    "../../../lib/pulse/core",
     "bug-reports",
     "by-example",
     "parallel",

@@ -3,4 +3,4 @@ ALREADY_CACHED_LIST = '*,-Pulse.C'
 
 all: verify
 
-include $(PULSE_HOME)/share/steel/Makefile.include
+include $(PULSE_HOME)/share/pulse/Makefile.include

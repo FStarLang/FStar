@@ -1,14 +1,14 @@
-PULSE_HOME ?= ../../../../..
-PULSE_EXAMPLES_ROOT = $(PULSE_HOME)/share/steel/examples/pulse
+PULSE_HOME ?= ../../../..
+PULSE_EXAMPLES_ROOT = $(PULSE_HOME)/share/pulse/examples
 OUTPUT_DIRECTORY=_output
 CACHE_DIRECTORY=$(OUTPUT_DIRECTORY)/cache
 SRC_DIRS = common dpe engine l0
 INCLUDE_PATHS += cbor
 #/Pulse.Lib.HashTable.fst
-FSTAR_DEP_OPTIONS=--extract '* -FStar.Tactics -FStar.Reflection -Steel -Pulse +Pulse.Class +Pulse.Lib -Pulse.Lib.Core'
+FSTAR_DEP_OPTIONS=--extract '* -FStar.Tactics -FStar.Reflection -Pulse +Pulse.Class +Pulse.Lib -Pulse.Lib.Core'
 all: verify
 
-include $(PULSE_HOME)/share/steel/Makefile.include
+include $(PULSE_HOME)/share/pulse/Makefile.include
 
 ifeq (,$(KRML_HOME))
 KRML_HOME=$(FSTAR_HOME)/../karamel
