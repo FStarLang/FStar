@@ -57,8 +57,12 @@ verify-pulse-core:
 verify-pulse-lib: ocaml verify-pulse verify-pulse-core
 	+$(MAKE) -C lib/pulse/lib
 
+.PHONY: verify-pulse-c
+verify-pulse-c: verify-pulse-lib
+	+$(MAKE) -C lib/pulse/c
+
 .PHONY: verify
-verify: verify-pulse-lib
+verify: verify-pulse-c
 
 clean: clean_ocaml
 	+$(MAKE) -C lib/pulse clean ; true

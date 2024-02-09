@@ -13,12 +13,12 @@
   "include_dirs": [
     "../../../../lib/pulse",
     "../../../../lib/pulse/lib",
+    "../../../../lib/pulse/lib/c",
     "../../../../lib/pulse/lib/class",
     "../../../../lib/pulse/lib/pledge",
     "../../../../lib/pulse/core",
     "bug-reports",
     "by-example",
-    "lib/c",
     "parallel",
     "parix",
     "c",

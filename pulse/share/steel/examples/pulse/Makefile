@@ -4,7 +4,8 @@ PULSE_SHARE = $(PULSE_HOME)/share/steel
 # the root (../../../..) since the OPAM package will detach the share
 # directory from the rest of the repo.
 
-SRC_DIRS = bug-reports by-example lib/c parallel parix c .
+SRC_DIRS = bug-reports by-example parallel parix c .
+INCLUDE_PATHS += $(PULSE_HOME)/lib/pulse/c
 OUTPUT_DIRECTORY=_output
 CACHE_DIRECTORY=$(OUTPUT_DIRECTORY)/cache
 
@@ -47,11 +48,6 @@ test: test-cbor extract_pulse_c
 .PHONY: extract_pulse_c
 
 .PHONY: test test-cbor test-cbor-raw
-
-PULSE_C_CHECKED_FILES=$(filter $(CACHE_DIRECTORY)/Pulse.C.%,$(ALL_CHECKED_FILES))
-
-.PHONY: c
-c: $(PULSE_C_CHECKED_FILES)
 
 PREFIX ?= /usr/local
 ifeq ($(OS),Windows_NT)
