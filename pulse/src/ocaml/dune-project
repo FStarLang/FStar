@@ -4,5 +4,5 @@
 (using menhir 2.1)
 (package
   (name pulse)
-  (synopsis "The Steel separation logic library for F*")
+  (synopsis "The Pulse separation logic DSL for F*")
 )

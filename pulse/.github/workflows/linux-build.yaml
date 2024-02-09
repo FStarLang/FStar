@@ -1,4 +1,4 @@
-name: Build a Linux Steel binary package
+name: Build a Linux Pulse binary package
 on:
   workflow_dispatch:
 jobs:
@@ -10,16 +10,16 @@ jobs:
       - name: Identify the base FStar branch and the notification channel
         run: |
           echo "FSTAR_BRANCH=$(jq -c -r '.BranchName' .docker/build/config.json)" >> $GITHUB_ENV
-      - name: Build Steel and its dependencies
+      - name: Build Pulse and its dependencies
         run: |
-          ci_docker_image_tag=steel:local-binary-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
+          ci_docker_image_tag=pulse:local-binary-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
           docker buildx build --secret id=DZOMO_GITHUB_TOKEN -t $ci_docker_image_tag -f src/ci/package.Dockerfile --build-arg FSTAR_BRANCH=$FSTAR_BRANCH --build-arg CI_BRANCH=$GITHUB_REF_NAME .
-          docker run $ci_docker_image_tag /bin/bash -c 'cat $PULSE_HOME/src/ci/steel.tar.gz || true' > steel.tar.gz
-          gunzip steel.tar.gz
+          docker run $ci_docker_image_tag /bin/bash -c 'cat $PULSE_HOME/src/ci/pulse.tar.gz || true' > pulse.tar.gz
+          gunzip pulse.tar.gz
         env:
           DZOMO_GITHUB_TOKEN: ${{ secrets.DZOMO_GITHUB_TOKEN }}
-      - name: Archive Steel package
+      - name: Archive Pulse package
         uses: actions/upload-artifact@v3
         with:
-          name: steel.tar
-          path: steel.tar
+          name: pulse.tar
+          path: pulse.tar

@@ -1,4 +1,4 @@
-name: Build Steel Binaries for MacOS
+name: Build Pulse Binaries for MacOS
 
 on:
   workflow_dispatch:
@@ -10,27 +10,27 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - name: Checkout Steel
+    - name: Checkout Pulse
       uses: actions/checkout@v3
       with:
-        path: steel
+        path: pulse
     - name: Checkout everest
       uses: actions/checkout@v3
       with:
         repository: project-everest/everest
-        path: steel/.github/everest
+        path: pulse/.github/everest
     - name: Install .NET SDK
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: '6.0.x'
     - name: Setup dependencies
-      run: ./steel/.github/setup-macos.sh
-    - name: Package Steel
+      run: ./pulse/.github/setup-macos.sh
+    - name: Package Pulse
       run: |
-        source steel/.github/env.sh
-        steel/src/ci/package.sh -j
+        source pulse/.github/env.sh
+        pulse/src/ci/package.sh -j
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
-        name: steel-Darwin_x86_64.tar.gz
-        path: steel/src/ci/steel.tar.gz
+        name: pulse-Darwin_x86_64.tar.gz
+        path: pulse/src/ci/pulse.tar.gz

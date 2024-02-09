@@ -1,4 +1,4 @@
-name: Build and test Steel
+name: Build and test Pulse
 on:
   push:
     branches-ignore:
@@ -29,14 +29,14 @@ jobs:
       - name: Determine the build flavor
         run: |
           if docker image inspect fstar:local-branch-$FSTAR_BRANCH ; then echo CI_FLAVOR=hierarchic >> $GITHUB_ENV ; else echo CI_FLAVOR=ci >> $GITHUB_ENV ; fi
-      - name: Build Steel and its dependencies
+      - name: Build Pulse and its dependencies
         run: |
-          ci_docker_image_tag=steel:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
+          ci_docker_image_tag=pulse:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
           docker build -t $ci_docker_image_tag -f src/ci/$CI_FLAVOR.Dockerfile --build-arg FSTAR_BRANCH=$FSTAR_BRANCH . |& tee BUILDLOG
           if ! { echo $GITHUB_REF_NAME | grep '/' ; } ; then
-             docker tag $ci_docker_image_tag steel:local-branch-$GITHUB_REF_NAME
+             docker tag $ci_docker_image_tag pulse:local-branch-$GITHUB_REF_NAME
           fi
-          docker tag $ci_docker_image_tag steel:local-commit-$GITHUB_SHA
+          docker tag $ci_docker_image_tag pulse:local-commit-$GITHUB_SHA
       - name: Compute elapsed time
         if: ${{ always() }}
         run: |

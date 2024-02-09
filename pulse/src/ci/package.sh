@@ -26,7 +26,7 @@ make="$(which gmake >/dev/null 2>&1 && echo gmake || echo make)"
 
 # make sure the package has not already been built
 cd $(cd `dirname $0` && pwd)
-[[ ! -e steel ]]
+[[ ! -e pulse ]]
 
 # download the z3 license file
 if ! [[ -f LICENSE-z3.txt ]] ; then
@@ -64,7 +64,7 @@ $cp -r $KRML_HOME/misc $fstar_package_dir/
 # assume current directory is $PULSE_HOME/src/ci
 export PULSE_HOME=$(fixpath $(cd ../.. && pwd))
 
-# use the package to build Steel
+# use the package to build Pulse
 export FSTAR_HOME="$fstar_package_dir"
 $make -C "$PULSE_HOME" "$@"
 mkdir -p "$old_FSTAR_HOME"/src/.cache.boot
@@ -72,7 +72,7 @@ if ! $is_windows ; then
     FSTAR_HOME="$old_FSTAR_HOME" $make -C "$PULSE_HOME"/pulse2rust "$@"
 fi
 
-# install Steel into the package directory
+# install Pulse into the package directory
 export PREFIX="$FSTAR_HOME"
 $make -C "$PULSE_HOME" install "$@"
 if ! $is_windows ; then
@@ -81,11 +81,11 @@ if ! $is_windows ; then
 fi
 
 # create the archive package
-mv "$PREFIX" steel
-rm -rf steel/share/fstar steel/INSTALL.md steel/README.md steel/version.txt
-$cp package-README.md steel/README.md
+mv "$PREFIX" pulse
+rm -rf pulse/share/fstar pulse/INSTALL.md pulse/README.md pulse/version.txt
+$cp package-README.md pulse/README.md
 if $is_windows ; then
-  zip -r -9 steel.zip steel
+  zip -r -9 pulse.zip pulse
 else
-  tar czf steel.tar.gz steel
+  tar czf pulse.tar.gz pulse
 fi

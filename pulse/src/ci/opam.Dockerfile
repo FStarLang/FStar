@@ -1,4 +1,4 @@
-# This Dockerfile should be run from the root Steel directory
+# This Dockerfile should be run from the root Pulse directory
 
 ARG ocaml_version=4.12
 FROM ocaml/opam:ubuntu-22.04-ocaml-$ocaml_version

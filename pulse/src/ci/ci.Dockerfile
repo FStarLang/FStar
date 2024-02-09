@@ -1,4 +1,4 @@
-# This Dockerfile should be run from the root Steel directory
+# This Dockerfile should be run from the root Pulse directory
 
 ARG ocaml_version=4.12
 FROM ocaml/opam:ubuntu-22.04-ocaml-$ocaml_version
@@ -12,7 +12,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
 ARG opamthreads=24
 
-ADD --chown=opam:opam ./ steel/
+ADD --chown=opam:opam ./ pulse/
 
 # Install F* and Karamel from the Karamel CI install script
 # FIXME: the `opam depext` command should be unnecessary with opam 2.1
@@ -22,12 +22,12 @@ RUN sudo apt-get update && sudo apt-get install --yes --no-install-recommends \
     wget \
     jq \
     && \
-    git clone --branch $(jq -c -r '.RepoVersions.fstar' steel/src/ci/config.json || echo master) https://github.com/FStarLang/FStar $FSTAR_HOME && \
+    git clone --branch $(jq -c -r '.RepoVersions.fstar' pulse/src/ci/config.json || echo master) https://github.com/FStarLang/FStar $FSTAR_HOME && \
     eval $(opam env) && \
     opam depext conf-gmp z3.4.8.5-1 conf-m4 && \
     opam install --deps-only $FSTAR_HOME/fstar.opam && \
     env OTHERFLAGS='--admit_smt_queries true' make -C $FSTAR_HOME -j $opamthreads && \
-    git clone --branch $(jq -c -r '.RepoVersions.karamel' steel/src/ci/config.json || echo master) https://github.com/FStarLang/karamel $KRML_HOME && \
+    git clone --branch $(jq -c -r '.RepoVersions.karamel' pulse/src/ci/config.json || echo master) https://github.com/FStarLang/karamel $KRML_HOME && \
     eval $(opam env) && $KRML_HOME/.docker/build/install-other-deps.sh && \
     env OTHERFLAGS='--admit_smt_queries true' make -C $KRML_HOME -j $opamthreads
 
@@ -41,9 +41,9 @@ RUN sudo apt-get update && sudo apt-get install --yes --no-install-recommends \
 RUN eval $(opam env) && \
     env OTHERFLAGS='--admit_smt_queries true' make -C $FSTAR_HOME -j $opamthreads bootstrap
 
-# Steel CI proper
+# Pulse CI proper
 ARG PULSE_NIGHTLY_CI
 ARG OTHERFLAGS=--use_hints
-RUN eval $(opam env) && . $HOME/.cargo/env && env PULSE_NIGHTLY_CI="$PULSE_NIGHTLY_CI" make -k -j $opamthreads -C steel/src ci
+RUN eval $(opam env) && . $HOME/.cargo/env && env PULSE_NIGHTLY_CI="$PULSE_NIGHTLY_CI" make -k -j $opamthreads -C pulse/src ci
 
-ENV PULSE_HOME $HOME/steel
+ENV PULSE_HOME $HOME/pulse

@@ -3,5 +3,5 @@
         "fstar": "master",
         "karamel" : "master"
     },
-    "NotificationChannel" : "#steel-build"
+    "NotificationChannel" : "#pulse-build"
 }

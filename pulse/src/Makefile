@@ -1,5 +1,5 @@
 # This Makefile is meant to regenerate the OCaml source snapshot of
-# the Steel plugin and the header files for the Steel C library. The
+# the Pulse plugin and the header files for the Pulse C library. The
 # end-user shouldn't need to do that explicitly, and the
 # main ../Makefile should be enough for them.
 

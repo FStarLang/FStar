@@ -1,5 +1,5 @@
 {
-  "name": "Steel devcontainer",
+  "name": "Pulse devcontainer",
   "build": {
     "dockerfile": "minimal.Dockerfile"
   },
