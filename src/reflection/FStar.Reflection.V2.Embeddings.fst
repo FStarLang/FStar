@@ -257,7 +257,7 @@ let rec e_pattern_aq aq =
         | Pat_Var sort ppname ->
             S.mk_Tm_app ref_Pat_Var.t [
               S.as_arg (embed #_ #e_sort rng sort);
-              S.as_arg (embed rng ppname);
+              S.as_arg (embed #_ #e_ppname rng ppname);
             ] rng
         | Pat_Dot_Term eopt ->
             S.mk_Tm_app ref_Pat_Dot_Term.t [S.as_arg (embed #_ #(e_option e_term) rng eopt)]

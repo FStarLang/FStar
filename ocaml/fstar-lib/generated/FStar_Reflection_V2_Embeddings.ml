@@ -587,8 +587,7 @@ let rec e_pattern_aq :
               FStar_Syntax_Syntax.as_arg uu___2 in
             let uu___2 =
               let uu___3 =
-                let uu___4 =
-                  embed FStar_Syntax_Embeddings.e_string rng ppname in
+                let uu___4 = embed e_ppname rng ppname in
                 FStar_Syntax_Syntax.as_arg uu___4 in
               [uu___3] in
             uu___1 :: uu___2 in
