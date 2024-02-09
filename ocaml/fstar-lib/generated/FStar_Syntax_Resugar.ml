@@ -1436,17 +1436,11 @@ let rec (resugar_term' :
             | FStar_Syntax_Syntax.Masked_effect -> resugar_term' env e
             | FStar_Syntax_Syntax.Meta_smt_pat -> resugar_term' env e in
           (match m with
-           | FStar_Syntax_Syntax.Meta_pattern (uu___1, pats) ->
-               let pats1 =
-                 FStar_Compiler_List.map
-                   (fun uu___2 ->
-                      match uu___2 with | (x, uu___3) -> resugar_term' env x)
-                   (FStar_Compiler_List.flatten pats) in
-               mk (FStar_Parser_AST.Attributes pats1)
            | FStar_Syntax_Syntax.Meta_labeled uu___1 -> resugar_term' env e
            | FStar_Syntax_Syntax.Meta_desugared i -> resugar_meta_desugared i
            | FStar_Syntax_Syntax.Meta_named t1 ->
                mk (FStar_Parser_AST.Name t1)
+           | FStar_Syntax_Syntax.Meta_pattern uu___1 -> resugar_term' env e
            | FStar_Syntax_Syntax.Meta_monadic uu___1 -> resugar_term' env e
            | FStar_Syntax_Syntax.Meta_monadic_lift uu___1 ->
                resugar_term' env e)

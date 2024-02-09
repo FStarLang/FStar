@@ -1126,6 +1126,10 @@ let is_fext_on_domain (t:term) :option term =
     | _ -> None)
   | _ -> None
 
+(* Set below. Used by the simplifier. *)
+let __get_n_binders : ref ((env:Env.env) -> list step -> (n:int) -> (t:term) -> list binder & comp) =
+  BU.mk_ref (fun e s n t -> failwith "Impossible: __get_n_binders unset")
+
 (* Returns `true` iff the head of `t` is a primop, and
 it not applied or only partially applied. *)
 let is_partial_primop_app (cfg:Cfg.cfg) (t:term) : bool =
@@ -2311,14 +2315,14 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term & bool
         | _ -> None
     in
     let is_applied_maybe_squashed (bs : binders) (t : term) : option bv =
-        if cfg.debug.wpe then
-            BU.print2 "WPE> is_applied_maybe_squashed %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t);
-        match is_squash t with
-        | Some (_, t') -> is_applied bs t'
-        | _ -> begin match is_auto_squash t with
-               | Some (_, t') -> is_applied bs t'
-               | _ -> is_applied bs t
-               end
+      if cfg.debug.wpe then
+          BU.print2 "WPE> is_applied_maybe_squashed %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t);
+      match is_squash t with
+      | Some (_, t') -> is_applied bs t'
+      | _ -> begin match is_auto_squash t with
+             | Some (_, t') -> is_applied bs t'
+             | _ -> is_applied bs t
+             end
     in
     // A very F*-specific optimization:
     //  1)  forall p.                       (p ==> E[p])     ~>     E[True]
@@ -2327,6 +2331,23 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term & bool
     //  4)  forall p. (forall j1 j2 ... jn. ~(p j1 j2 ... jn)) ==> E[p]    ~>    E[(fun j1 j2 ... jn -> False)]
     let is_quantified_const (bv:bv) (phi : term) : option term =
         let open FStar.Syntax.Formula in
+        let types_match bs =
+          (* We need to make sure that the forall above is over the same types
+          as those in the domain of `f`. See bug #3213. *)
+          let bs_q, _ = !__get_n_binders cfg.tcenv [AllowUnboundUniverses] (List.length bs) bv.sort in
+          let rec unrefine_true (t:term) : term =
+            (* Discard trivial refinements. *)
+            match (SS.compress t).n with
+            | Tm_refine {b; phi} when U.term_eq phi U.t_true -> unrefine_true b.sort
+            | _ -> t
+          in
+          List.length bs = List.length bs_q &&
+          List.forall2 (fun b1 b2 ->
+            let s1 = b1.binder_bv.sort |> unrefine_true in
+            let s2 = b2.binder_bv.sort |> unrefine_true in
+            U.term_eq s1 s2)
+            bs bs_q
+        in
         match destruct_typ_as_formula phi with
         | Some (BaseConn (lid, [(p, _); (q, _)])) when Ident.lid_equals lid PC.imp_lid ->
             if cfg.debug.wpe then
@@ -2353,7 +2374,7 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term & bool
                 | _ -> None
                 end
 
-            | Some (QAll (bs, pats, phi)) ->
+            | Some (QAll (bs, pats, phi)) when types_match bs ->
                 begin match destruct_typ_as_formula phi with
                 | None ->
                     begin match is_applied_maybe_squashed bs phi with
@@ -3555,14 +3576,14 @@ let unfold_head_once env t =
   | Tm_uinst({n=Tm_fvar fv}, us) -> aux fv us args
   | _ -> None
 
-let get_n_binders (env:Env.env) (n:int) (t:term) : list binder * comp =
+let get_n_binders' (env:Env.env) (steps : list step) (n:int) (t:term) : list binder * comp =
   let rec aux (retry:bool) (n:int) (t:term) : list binder * comp =
     let bs, c = U.arrow_formals_comp t in
     let len = List.length bs in
     match bs, c with
     (* Got no binders, maybe retry after normalizing *)
     | [], _ when retry ->
-      aux false n (unfold_whnf env t)
+      aux false n (unfold_whnf' steps env t)
 
     (* Can't retry, stop *)
     | [], _ when not retry ->
@@ -3587,6 +3608,11 @@ let get_n_binders (env:Env.env) (n:int) (t:term) : list binder * comp =
       (bs, c)
   in
   aux true n t
+
+let get_n_binders env n t = get_n_binders' env [] n t
+
+let () =
+  __get_n_binders := get_n_binders'
 
 let maybe_unfold_head_fv (env:Env.env) (head:term)
   : option term
