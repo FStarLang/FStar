@@ -115,17 +115,22 @@ let resolve_names (env:env_t) (ns:option (list lident))
     | None -> return None
     | Some ns -> let! ns = mapM (resolve_lid env) ns in return (Some ns)
 
+// the list A.term is the binder attributes
 let destruct_binder (b:A.binder)
-: A.aqual & ident & A.term 
-= match b.b with
+: A.aqual & ident & A.term & list A.term
+= let attrs = b.battributes in
+  match b.b with
   | A.Annotated (x, t)
   | A.TAnnotated (x, t) ->
-    b.aqual, x, t
+    b.aqual, x, t, attrs
   | A.NoName t ->
-    b.aqual, Ident.id_of_text "_", t
+    b.aqual, Ident.id_of_text "_", t, attrs
   | A.Variable x
   | A.TVariable x ->
-    b.aqual, x, A.mk_term A.Wild (Ident.range_of_id x) A.Un
+    b.aqual, x, A.mk_term A.Wild (Ident.range_of_id x) A.Un, attrs
+
+let free_vars_list (#a:Type0) (f : env_t -> a -> list ident) (env:env_t) (xs : list a) : list ident =
+  L.collect (f env) xs
 
 let rec free_vars_term (env:env_t) (t:A.term) =
   ToSyntax.free_vars false env.tcenv.dsenv t
@@ -135,18 +140,16 @@ and free_vars_binders (env:env_t) (bs:Sugar.binders)
   = match bs with
     | [] -> env, []
     | b::bs ->
-      let _, x, t = destruct_binder b in
+      let _, x, t, attrs = destruct_binder b in
       let fvs = free_vars_term env t in
+      let fvs_attrs = free_vars_list free_vars_term env attrs in
       let env', res = free_vars_binders (fst (push_bv env x)) bs in
-      env', fvs@res
+      env', fvs@fvs_attrs@res
 
 let free_vars_vprop (env:env_t) (t:Sugar.vprop) =
   let open PulseSyntaxExtension.Sugar in
   match t.v with
   | VPropTerm t -> free_vars_term env t
-
-let free_vars_list (#a:Type0) (f : env_t -> a -> list ident) (env:env_t) (xs : list a) : list ident =
-  L.collect (f env) xs
 
 let free_vars_comp (env:env_t) (c:Sugar.computation_type)
   : list ident
