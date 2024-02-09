@@ -656,18 +656,19 @@ and desugar_proof_hint_with_binders (env:env_t) (s1:Sugar.stmt) (k:option Sugar.
 and desugar_binders (env:env_t) (bs:Sugar.binders)
   : err (env_t & list (option SW.qualifier & SW.binder) & list S.bv)
   = let rec aux env bs 
-      : err (env_t & list (qual & ident & SW.term) & list S.bv)
+      : err (env_t & list (qual & ident & SW.term & list SW.term) & list S.bv)
       = match bs with
         | [] -> return (env, [], [])
         | b::bs -> 
-          let (aq, b, t) = destruct_binder b in 
+          let (aq, b, t, attrs) = destruct_binder b in
           let! t = desugar_term env t in
+          let! attrs = mapM (desugar_term env) attrs in
           let env, bv = push_bv env b in
           let! env, bs, bvs = aux env bs in
-          return (env, (as_qual aq, b, t)::bs, bv::bvs)
+          return (env, (as_qual aq, b, t, attrs)::bs, bv::bvs)
     in
     let! env, bs, bvs = aux env bs in
-    return (env, L.map (fun (aq, b, t) -> aq, SW.mk_binder b t) bs, bvs)
+    return (env, L.map (fun (aq, b, t, attrs) -> aq, SW.mk_binder_with_attrs b t attrs) bs, bvs)
 
 and desugar_lambda (env:env_t) (l:Sugar.lambda)
   : err SW.st_term
@@ -719,7 +720,7 @@ and desugar_decl (env:env_t)
     let! env, bs', _ = desugar_binders env bs in
     let! res_t = comp_to_ast_term res in
     let bs'' = bs |> L.map (fun b ->
-      let (q, x, ty) = destruct_binder b in
+      let (q, x, ty, _) = destruct_binder b in
       A.mk_binder (A.Annotated (x, ty)) r A.Expr q)
     in
     let last = L.last bs'' in

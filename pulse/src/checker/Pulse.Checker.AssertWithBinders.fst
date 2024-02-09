@@ -52,7 +52,7 @@ let rec refl_abs_binders (t:R.term) (acc:list binder) : T.Tac (list binder) =
       (Printf.sprintf "Failed to readback elaborated binder sort %s in refl_abs_binders"
          (T.term_to_string sort)) in
     refl_abs_binders body
-     ({ binder_ty = sort; binder_ppname = mk_ppname ppname (RU.range_of_term t) }::acc)
+     ((mk_binder_ppname sort (mk_ppname ppname (RU.range_of_term t)))::acc)
   | _ -> L.rev acc  
 
 let infer_binder_types (g:env) (bs:list binder) (v:vprop)
@@ -119,7 +119,7 @@ let rec close_binders (bs:list (ppname & var & typ))
     let bss = L.mapi (fun n (n1, x1, t1) ->
       assume (n >= 0);
       n1, x1, subst_term t1 [ND x n]) bs in
-    let b = {binder_ppname=name; binder_ty = t} in
+    let b = mk_binder_ppname t name in
     assume (L.length bss == L.length bs);
     b::(close_binders bss)
 

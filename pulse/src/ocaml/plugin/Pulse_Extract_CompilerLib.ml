@@ -88,14 +88,14 @@ let mle_app (x:mlexpr) (args:mlexpr list) : mlexpr =
 let mle_tapp (x:mlexpr) (args:mlty list) : mlexpr =
     as_expr (ML.MLE_TApp(x, args))
 
-let mk_binders (bs:(mlident * mlty) list) : mlbinder list =
-  List.map (fun (x, t) -> {
+let mk_binders (bs:(mlident * mlty * mlexpr list) list) : mlbinder list =
+  List.map (fun (x, t, attrs) -> {
     ML.mlbinder_name=x;
     ML.mlbinder_ty=t;
-    ML.mlbinder_attrs=[]
+    ML.mlbinder_attrs=attrs
   }) bs
 
-let mle_fun (formals:(mlident * mlty) list) (body:mlexpr) : mlexpr =
+let mle_fun (formals:(mlident * mlty * mlexpr list) list) (body:mlexpr) : mlexpr =
    match body.expr with
    | ML.MLE_Fun(formals', body) -> 
      as_expr (ML.MLE_Fun((mk_binders formals)@formals', body))

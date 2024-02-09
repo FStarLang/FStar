@@ -431,7 +431,9 @@ let (check_elim_exists :
                                                                     Pulse_Syntax_Base.binder_ty
                                                                     = ty;
                                                                     Pulse_Syntax_Base.binder_ppname
-                                                                    = uu___5;_},
+                                                                    = uu___5;
+                                                                    Pulse_Syntax_Base.binder_attrs
+                                                                    = uu___6;_},
                                                                     p) ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -455,10 +457,10 @@ let (check_elim_exists :
                                                                     (Pulse_Checker_Pure.check_universe
                                                                     g1 ty))
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___7 ->
                                                                     (fun
-                                                                    uu___6 ->
-                                                                    match uu___6
+                                                                    uu___7 ->
+                                                                    match uu___7
                                                                     with
                                                                     | 
                                                                     Prims.Mkdtuple2
@@ -489,11 +491,11 @@ let (check_elim_exists :
                                                                     (Prims.of_int (122)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___8 ->
                                                                     Pulse_Typing_Env.fresh
                                                                     g1))
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___8 ->
                                                                     (fun x ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -515,13 +517,13 @@ let (check_elim_exists :
                                                                     (Prims.of_int (122)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___8 ->
                                                                     Pulse_Typing.T_ElimExists
                                                                     (g1, u,
                                                                     ty, p, x,
                                                                     (), ())))
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___8 ->
                                                                     (fun d ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -571,7 +573,7 @@ let (check_elim_exists :
                                                                     =
                                                                     (Pulse_Syntax_Base.tm_exists_sl
                                                                     u
-                                                                    (Pulse_Typing.as_binder
+                                                                    (Pulse_Syntax_Base.as_binder
                                                                     ty) p)
                                                                     }))
                                                                     (Pulse_Typing.comp_elim_exists
@@ -580,28 +582,28 @@ let (check_elim_exists :
                                                                     x)) d
                                                                     post_hint))
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___8 ->
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___8 ->
                                                                     Obj.magic
                                                                     (Pulse_Checker_Prover.try_frame_pre
                                                                     g pre ()
-                                                                    uu___7
+                                                                    uu___8
                                                                     res_ppname))
-                                                                    uu___7)))
+                                                                    uu___8)))
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___8 ->
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___8 ->
                                                                     Obj.magic
                                                                     (Pulse_Checker_Prover.prove_post_hint
                                                                     g pre
-                                                                    uu___7
+                                                                    uu___8
                                                                     post_hint
                                                                     t2.Pulse_Syntax_Base.range1))
-                                                                    uu___7)))
-                                                                    uu___7)))
-                                                                    uu___7))
+                                                                    uu___8)))
+                                                                    uu___8)))
+                                                                    uu___8))
                                                                     else
                                                                     Obj.magic
                                                                     (Pulse_Typing_Env.fail
@@ -618,7 +620,7 @@ let (check_elim_exists :
                                                                     (Prims.strcat
                                                                     (Pulse_Syntax_Printer.univ_to_string
                                                                     u) ""))))
-                                                                    uu___6)))
+                                                                    uu___7)))
                                                                     uu___4)))
                                                                     uu___3)))
                                                               uu___2)))

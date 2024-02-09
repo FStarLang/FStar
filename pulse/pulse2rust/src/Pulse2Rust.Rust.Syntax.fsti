@@ -346,7 +346,7 @@ val mk_new_mutex (e:expr) : expr
 val mk_lock_mutex (e:expr) : expr
 
 val mk_local_stmt (name:option string) (t:option typ) (is_mut:bool) (init:expr) : stmt
-val mk_scalar_fn_arg (name:string) (t:typ) : fn_arg
+val mk_scalar_fn_arg (name:string) (is_mut:bool) (t:typ) : fn_arg
 val mk_ref_fn_arg (name:string) (is_mut:bool) (t:typ) : fn_arg
 val mk_generic_type_param (generic_name:string) (trait_bounds:list (list string)) : generic_type_param
 val mk_fn_signature (fn_const:bool) (fn_name:string) (fn_generics:list generic_type_param) (fn_args:list fn_arg) (fn_ret_t:typ) : fn_signature

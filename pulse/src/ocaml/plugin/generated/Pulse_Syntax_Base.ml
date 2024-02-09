@@ -65,9 +65,11 @@ type term' =
   | Tm_AddInv of term * term 
   | Tm_FStar of host_term 
   | Tm_Unknown 
-and binder = {
+and binder =
+  {
   binder_ty: term ;
-  binder_ppname: ppname }
+  binder_ppname: ppname ;
+  binder_attrs: (term Prims.list, unit) FStar_Sealed_Inhabited.sealed }
 and term = {
   t: term' ;
   range1: range }
@@ -93,6 +95,9 @@ let uu___is_Tm_Unknown uu___ =
   match uu___ with | Tm_Unknown _ -> true | _ -> false
 type vprop = term
 type typ = term
+let binder_attrs_default :
+  'uuuuu . unit -> 'uuuuu Prims.list FStar_Sealed.sealed =
+  fun uu___ -> FStar_Sealed.seal []
 let (term_range : term -> range) = fun t -> t.range1
 let (tm_fstar : host_term -> range -> term) =
   fun t -> fun r -> { t = (Tm_FStar t); range1 = r }
@@ -580,17 +585,26 @@ let (__proj__Mkdecl__item__d : decl -> decl') =
   fun projectee -> match projectee with | { d; range3 = range1;_} -> d
 let (__proj__Mkdecl__item__range : decl -> range) =
   fun projectee -> match projectee with | { d; range3 = range1;_} -> range1
+let (mk_binder_with_attrs :
+  term ->
+    ppname -> (term Prims.list, unit) FStar_Sealed_Inhabited.sealed -> binder)
+  =
+  fun binder_ty ->
+    fun binder_ppname ->
+      fun binder_attrs -> { binder_ty; binder_ppname; binder_attrs }
 let (null_binder : term -> binder) =
-  fun t -> { binder_ty = t; binder_ppname = ppname_default }
+  fun t -> mk_binder_with_attrs t ppname_default (binder_attrs_default ())
 let (mk_binder : Prims.string -> range -> term -> binder) =
   fun s ->
     fun r ->
       fun t ->
-        {
-          binder_ty = t;
-          binder_ppname =
-            (mk_ppname (FStar_Reflection_Typing.seal_pp_name s) r)
-        }
+        mk_binder_with_attrs t
+          (mk_ppname (FStar_Reflection_Typing.seal_pp_name s) r)
+          (binder_attrs_default ())
+let (mk_binder_ppname : term -> ppname -> binder) =
+  fun binder_ty ->
+    fun binder_ppname ->
+      mk_binder_with_attrs binder_ty binder_ppname (binder_attrs_default ())
 let (eq_univ : universe -> universe -> Prims.bool) =
   fun u1 -> fun u2 -> FStar_Reflection_V2_TermEq.univ_eq_dec u1 u2
 let rec (eq_tm : term -> term -> Prims.bool) =
@@ -879,5 +893,4 @@ let (comp_inames : comp -> term) =
   fun c -> match c with | C_STAtomic (inames, uu___, uu___1) -> inames
 type nvar = (ppname * var)
 let (v_as_nv : var -> nvar) = fun x -> (ppname_default, x)
-let (as_binder : term -> binder) =
-  fun t -> { binder_ty = t; binder_ppname = ppname_default }
+let (as_binder : term -> binder) = fun t -> null_binder t

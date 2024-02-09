@@ -317,7 +317,7 @@ let comp_intro_pure (p:term) =
               post=tm_pure p
             }
 
-let named_binder (x:ppname) (t:term) = { binder_ppname = x; binder_ty = t}
+let named_binder (x:ppname) (t:term) = mk_binder_ppname t x
 
 let comp_intro_exists (u:universe) (b:binder) (p:term) (e:term)
   : comp
@@ -515,8 +515,6 @@ let non_informative_t (g:env) (u:universe) (t:term) =
 
 let non_informative_c (g:env) (c:comp_st) =
   non_informative_t g (comp_u c) (comp_res c)
-
-let as_binder t = { binder_ty = t; binder_ppname = ppname_default }
 
 // TODO: move
 let tm_join_inames (inames1 inames2 : term) : term =
@@ -833,33 +831,6 @@ type st_typing : env -> st_term -> comp -> Type =
       comp_typing_u g c2 ->
       st_typing g (wr c2 (Tm_Bind { binder=b; head=e1; body=e2 })) c2
 
-  | T_TotBind:
-      g:env ->
-      e1:term ->
-      e2:st_term ->
-      t1:term ->
-      c2:comp_st ->
-      b:binder { b.binder_ty == t1 } ->
-      x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars_st e2) } ->
-      tot_typing g e1 t1 ->
-      st_typing (push_binding g x ppname_default t1) (open_st_term_nv e2 (v_as_nv x)) c2 ->
-      st_typing g (wr c2 (Tm_TotBind { binder = b; head = e1; body = e2 }))
-                  (open_comp_with (close_comp c2 x) e1)
-
-  | T_GhostBind:  // see the comment on T_STGhostApp regarding the non-informative judgment
-      g:env ->
-      e1:term ->
-      e2:st_term ->
-      t1:term ->
-      c2:comp_st ->
-      b:binder { b.binder_ty == t1 } ->
-      x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars_st e2) } ->
-      ghost_typing g e1 t1 ->
-      st_typing (push_binding g x ppname_default t1) (open_st_term_nv e2 (v_as_nv x)) c2 ->
-      non_informative (push_binding g x ppname_default t1) c2 ->
-      st_typing g (wr c2 (Tm_TotBind { binder = b; head = e1; body = e2 }))
-                  (open_comp_with (close_comp c2 x) e1)
-
   | T_If:
       g:env ->
       b:term -> 
@@ -997,7 +968,7 @@ type st_typing : env -> st_term -> comp -> Type =
       st_typing (push_binding g x ppname_default (mk_ref init_t))
                 (open_st_term_nv body (v_as_nv x))
                 (comp_withlocal_body x init_t init c) ->
-      st_typing g (wr c (Tm_WithLocal { binder= { binder_ppname; binder_ty = mk_ref init_t }; initializer=init; body } )) c
+      st_typing g (wr c (Tm_WithLocal { binder = mk_binder_ppname (mk_ref init_t) binder_ppname; initializer=init; body } )) c
 
   | T_WithLocalArray:
       g:env ->
@@ -1015,7 +986,7 @@ type st_typing : env -> st_term -> comp -> Type =
       st_typing (push_binding g x ppname_default (mk_array a))
                 (open_st_term_nv body (v_as_nv x))
                 (comp_withlocal_array_body x a initializer length c) ->
-      st_typing g (wr c (Tm_WithLocalArray { binder= { binder_ppname; binder_ty = mk_array a }; initializer; length; body } )) c
+      st_typing g (wr c (Tm_WithLocalArray { binder = mk_binder_ppname (mk_array a) binder_ppname; initializer; length; body } )) c
 
   | T_Rewrite:
       g:env ->

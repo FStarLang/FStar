@@ -10,26 +10,18 @@ all: verify
 
 include $(PULSE_HOME)/share/pulse/Makefile.include
 
-ifeq (,$(KRML_HOME))
-KRML_HOME=$(FSTAR_HOME)/../karamel
-endif
-KRML=$(KRML_HOME)/krml
+%.ast:
+	$(FSTAR) --admit_smt_queries true --codegen Extension $(subst .ast,, $(notdir $@)) --extract_module $(basename $(subst .ast,, $(notdir $@)))
 
-extract:
-#	$(FSTAR) --codegen OCaml CustomSyntax.fst --extract CustomSyntax
-	$(FSTAR) --codegen OCaml ExtractionTest.fst --extract ExtractionTest
+DPE_FILES = EngineTypes.fst \
+  EngineCore.fst \
+	L0Types.fst \
+	L0Crypto.fst \
+	L0Core.fst \
+	Pulse.Lib.HashTable.Type.fst \
+	Pulse.Lib.HashTable.Spec.fst \
+	Pulse.Lib.HashTable.fst \
+	DPETypes.fst \
+	DPE.fst
 
-extract_c:
-	$(FSTAR) --codegen krml Demo.MultiplyByRepeatedAddition.fst --extract '* -Pulse.Lib.Core'
-	$(FSTAR_HOME)/../karamel/krml -bundle Demo.MultiplyByRepeatedAddition=* -skip-compilation $(OUTPUT_DIRECTORY)/out.krml
-
-extract_all: $(ALL_KRML_FILES)
-
-$(OUTPUT_DIRECTORY)/DPE.c:
-	$(KRML) -bundle DPE=* -skip-compilation $(wildcard $(OUTPUT_DIRECTORY)/*.krml) -tmpdir $(OUTPUT_DIRECTORY)
-
-$(OUTPUT_DIRECTORY)/Pulse_Lib_HashTable.c:
-	$(KRML) -bundle Pulse.Lib.HashTable=* -skip-compilation $(wildcard $(OUTPUT_DIRECTORY)/*.krml) -tmpdir $(OUTPUT_DIRECTORY)
-
-$(OUTPUT_DIRECTORY)/%.krml:
-	$(FSTAR) --codegen krml $(subst .checked,, $(notdir $<)) --extract_module $(basename $(subst .checked,, $(notdir $<)))
+dpe-ast: $(addsuffix .ast, $(DPE_FILES))

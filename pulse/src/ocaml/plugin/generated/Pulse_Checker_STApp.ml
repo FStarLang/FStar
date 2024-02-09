@@ -611,7 +611,9 @@ let (apply_impure_function :
                                              Pulse_Syntax_Base.binder_ty =
                                                formal;
                                              Pulse_Syntax_Base.binder_ppname
-                                               = ppname;_},
+                                               = ppname;
+                                             Pulse_Syntax_Base.binder_attrs =
+                                               uu___1;_},
                                            bqual, comp_typ) ->
                                             Obj.magic
                                               (FStar_Tactics_Effect.tac_bind
@@ -632,8 +634,8 @@ let (apply_impure_function :
                                                           (Prims.of_int (208))
                                                           (Prims.of_int (5)))))
                                                  (FStar_Tactics_Effect.lift_div_tac
-                                                    (fun uu___1 -> post_hint))
-                                                 (fun uu___1 ->
+                                                    (fun uu___2 -> post_hint))
+                                                 (fun uu___2 ->
                                                     (fun post_hint1 ->
                                                        Obj.magic
                                                          (FStar_Tactics_Effect.tac_bind
@@ -655,7 +657,7 @@ let (apply_impure_function :
                                                                     (Prims.of_int (5)))))
                                                             (Obj.magic
                                                                (debug_log g
-                                                                  (fun uu___1
+                                                                  (fun uu___2
                                                                     ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -696,9 +698,9 @@ let (apply_impure_function :
                                                                     (Pulse_Syntax_Printer.comp_to_string
                                                                     comp_typ))
                                                                     (fun
-                                                                    uu___2 ->
+                                                                    uu___3 ->
                                                                     (fun
-                                                                    uu___2 ->
+                                                                    uu___3 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -739,9 +741,9 @@ let (apply_impure_function :
                                                                     (Pulse_Syntax_Printer.term_to_string
                                                                     arg))
                                                                     (fun
-                                                                    uu___3 ->
+                                                                    uu___4 ->
                                                                     (fun
-                                                                    uu___3 ->
+                                                                    uu___4 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -782,10 +784,10 @@ let (apply_impure_function :
                                                                     (Pulse_Syntax_Printer.term_to_string
                                                                     head))
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___5 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___5 ->
+                                                                    uu___6 ->
                                                                     fun x ->
                                                                     fun x1 ->
                                                                     Prims.strcat
@@ -793,13 +795,21 @@ let (apply_impure_function :
                                                                     (Prims.strcat
                                                                     "st_app, head="
                                                                     (Prims.strcat
-                                                                    uu___4
+                                                                    uu___5
                                                                     ", arg="))
                                                                     (Prims.strcat
                                                                     x
                                                                     ", readback comp as "))
                                                                     (Prims.strcat
                                                                     x1 "\n")))))
+                                                                    (fun
+                                                                    uu___5 ->
+                                                                    FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___6 ->
+                                                                    uu___5
+                                                                    uu___4))))
+                                                                    uu___4)))
                                                                     (fun
                                                                     uu___4 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
@@ -810,22 +820,14 @@ let (apply_impure_function :
                                                                     uu___3)))
                                                                     (fun
                                                                     uu___3 ->
-                                                                    FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___4 ->
-                                                                    uu___3
-                                                                    uu___2))))
-                                                                    uu___2)))
-                                                                    (fun
-                                                                    uu___2 ->
-                                                                    (fun
-                                                                    uu___2 ->
+                                                                    uu___3 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_V2_Builtins.print
-                                                                    uu___2))
-                                                                    uu___2))))
-                                                            (fun uu___1 ->
-                                                               (fun uu___1 ->
+                                                                    uu___3))
+                                                                    uu___3))))
+                                                            (fun uu___2 ->
+                                                               (fun uu___2 ->
                                                                   Obj.magic
                                                                     (
                                                                     FStar_Tactics_Effect.tac_bind
@@ -847,11 +849,11 @@ let (apply_impure_function :
                                                                     (Prims.of_int (5)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___2 ->
+                                                                    uu___3 ->
                                                                     Pulse_Syntax_Base.uu___is_C_STGhost
                                                                     comp_typ))
                                                                     (fun
-                                                                    uu___2 ->
+                                                                    uu___3 ->
                                                                     (fun
                                                                     allow_ghost
                                                                     ->
@@ -922,37 +924,37 @@ let (apply_impure_function :
                                                                     (Pulse_Syntax_Printer.term_to_string
                                                                     head))
                                                                     (fun
-                                                                    uu___2 ->
+                                                                    uu___3 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___3 ->
+                                                                    uu___4 ->
                                                                     Prims.strcat
                                                                     "head term "
                                                                     (Prims.strcat
-                                                                    uu___2
+                                                                    uu___3
                                                                     " is ghost, but the arrow comp is not STGhost")))))
                                                                     (fun
-                                                                    uu___2 ->
+                                                                    uu___3 ->
                                                                     (fun
-                                                                    uu___2 ->
+                                                                    uu___3 ->
                                                                     Obj.magic
                                                                     (Pulse_Typing_Env.fail
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
                                                                     range)
-                                                                    uu___2))
-                                                                    uu___2)))
+                                                                    uu___3))
+                                                                    uu___3)))
                                                                     else
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___3 ->
+                                                                    uu___4 ->
                                                                     ()))))
                                                                     (fun
-                                                                    uu___2 ->
+                                                                    uu___3 ->
                                                                     (fun
-                                                                    uu___2 ->
+                                                                    uu___3 ->
                                                                     if
                                                                     qual <>
                                                                     bqual
@@ -997,9 +999,9 @@ let (apply_impure_function :
                                                                     (Pulse_Syntax_Printer.term_to_string
                                                                     arg))
                                                                     (fun
-                                                                    uu___3 ->
+                                                                    uu___4 ->
                                                                     (fun
-                                                                    uu___3 ->
+                                                                    uu___4 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -1040,9 +1042,9 @@ let (apply_impure_function :
                                                                     (Pulse_Syntax_Printer.term_to_string
                                                                     head))
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___5 ->
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___5 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -1083,10 +1085,10 @@ let (apply_impure_function :
                                                                     (Pulse_Syntax_Printer.term_to_string
                                                                     ty_head))
                                                                     (fun
-                                                                    uu___5 ->
+                                                                    uu___6 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___7 ->
                                                                     fun x ->
                                                                     fun x1 ->
                                                                     Prims.strcat
@@ -1094,13 +1096,21 @@ let (apply_impure_function :
                                                                     (Prims.strcat
                                                                     "Unexpected qualifier in head type "
                                                                     (Prims.strcat
-                                                                    uu___5
+                                                                    uu___6
                                                                     " of stateful application: head = "))
                                                                     (Prims.strcat
                                                                     x
                                                                     ", arg = "))
                                                                     (Prims.strcat
                                                                     x1 "")))))
+                                                                    (fun
+                                                                    uu___6 ->
+                                                                    FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___7 ->
+                                                                    uu___6
+                                                                    uu___5))))
+                                                                    uu___5)))
                                                                     (fun
                                                                     uu___5 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
@@ -1111,23 +1121,15 @@ let (apply_impure_function :
                                                                     uu___4)))
                                                                     (fun
                                                                     uu___4 ->
-                                                                    FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___5 ->
-                                                                    uu___4
-                                                                    uu___3))))
-                                                                    uu___3)))
-                                                                    (fun
-                                                                    uu___3 ->
-                                                                    (fun
-                                                                    uu___3 ->
+                                                                    uu___4 ->
                                                                     Obj.magic
                                                                     (Pulse_Typing_Env.fail
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
                                                                     range)
-                                                                    uu___3))
-                                                                    uu___3))
+                                                                    uu___4))
+                                                                    uu___4))
                                                                     else
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1149,7 +1151,7 @@ let (apply_impure_function :
                                                                     (Prims.of_int (51)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___5 ->
                                                                     if
                                                                     allow_ghost
                                                                     then
@@ -1157,7 +1159,7 @@ let (apply_impure_function :
                                                                     else
                                                                     FStar_TypeChecker_Core.E_Total))
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___5 ->
                                                                     (fun
                                                                     eff_arg
                                                                     ->
@@ -1185,10 +1187,10 @@ let (apply_impure_function :
                                                                     eff_arg
                                                                     formal))
                                                                     (fun
-                                                                    uu___4 ->
+                                                                    uu___5 ->
                                                                     (fun
-                                                                    uu___4 ->
-                                                                    match uu___4
+                                                                    uu___5 ->
+                                                                    match uu___5
                                                                     with
                                                                     | 
                                                                     Prims.Mkdtuple2
@@ -1221,7 +1223,7 @@ let (apply_impure_function :
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___5 ->
+                                                                    uu___6 ->
                                                                     FStar_Pervasives.Mkdtuple3
                                                                     ({
                                                                     Pulse_Syntax_Base.term1
@@ -1272,14 +1274,14 @@ let (apply_impure_function :
                                                                     ())))))))
                                                                     | 
                                                                     Pulse_Syntax_Base.C_STAtomic
-                                                                    (uu___5,
-                                                                    uu___6,
+                                                                    (uu___6,
+                                                                    uu___7,
                                                                     res) ->
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___8 ->
                                                                     FStar_Pervasives.Mkdtuple3
                                                                     ({
                                                                     Pulse_Syntax_Base.term1
@@ -1352,11 +1354,11 @@ let (apply_impure_function :
                                                                     (Prims.of_int (23)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___5 ->
+                                                                    uu___6 ->
                                                                     Pulse_Typing_Env.fresh
                                                                     g))
                                                                     (fun
-                                                                    uu___5 ->
+                                                                    uu___6 ->
                                                                     (fun x ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1394,12 +1396,12 @@ let (apply_impure_function :
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___7 ->
                                                                     ()))))
                                                                     (fun
-                                                                    uu___5 ->
+                                                                    uu___6 ->
                                                                     (fun
-                                                                    uu___5 ->
+                                                                    uu___6 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -1447,7 +1449,7 @@ let (apply_impure_function :
                                                                     (Pulse_Syntax_Pure.null_var
                                                                     x))))
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___7 ->
                                                                     (fun
                                                                     token ->
                                                                     match token
@@ -1496,25 +1498,25 @@ let (apply_impure_function :
                                                                     (Pulse_Syntax_Printer.comp_to_string
                                                                     comp_typ))
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___7 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___8 ->
                                                                     Prims.strcat
                                                                     "Unexpected non-informative result for "
                                                                     (Prims.strcat
-                                                                    uu___6 "")))))
+                                                                    uu___7 "")))))
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___7 ->
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___7 ->
                                                                     Obj.magic
                                                                     (Pulse_Typing_Env.fail
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
                                                                     range)
-                                                                    uu___6))
-                                                                    uu___6)))
+                                                                    uu___7))
+                                                                    uu___7)))
                                                                     | 
                                                                     FStar_Pervasives_Native.Some
                                                                     token1 ->
@@ -1522,7 +1524,7 @@ let (apply_impure_function :
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___7 ->
                                                                     FStar_Reflection_Typing.Non_informative_token
                                                                     ((Pulse_Typing.elab_env
                                                                     (Pulse_Typing_Env.push_binding
@@ -1534,13 +1536,13 @@ let (apply_impure_function :
                                                                     comp_typ
                                                                     (Pulse_Syntax_Pure.null_var
                                                                     x))), ())))))
-                                                                    uu___6)))
+                                                                    uu___7)))
                                                                     (fun
                                                                     d_non_info
                                                                     ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___7 ->
                                                                     FStar_Pervasives.Mkdtuple3
                                                                     ({
                                                                     Pulse_Syntax_Base.term1
@@ -1589,10 +1591,10 @@ let (apply_impure_function :
                                                                     arg1, x,
                                                                     (), (),
                                                                     ()))))))))
-                                                                    uu___5)))
-                                                                    uu___5)))
+                                                                    uu___6)))
+                                                                    uu___6)))
                                                                     | 
-                                                                    uu___5 ->
+                                                                    uu___6 ->
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (Pulse_Typing_Env.fail
@@ -1601,10 +1603,10 @@ let (apply_impure_function :
                                                                     range)
                                                                     "Expected an effectful application; got a pure term (could it be partially applied by mistake?)")))
                                                                     (fun
-                                                                    uu___5 ->
+                                                                    uu___6 ->
                                                                     (fun
-                                                                    uu___5 ->
-                                                                    match uu___5
+                                                                    uu___6 ->
+                                                                    match uu___6
                                                                     with
                                                                     | 
                                                                     FStar_Pervasives.Mkdtuple3
@@ -1630,12 +1632,12 @@ let (apply_impure_function :
                                                                     (Prims.of_int (51)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___6 ->
-                                                                    uu___5))
+                                                                    uu___7 ->
+                                                                    uu___6))
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___7 ->
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___7 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -1659,10 +1661,10 @@ let (apply_impure_function :
                                                                     g t c d
                                                                     post_hint1))
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___8 ->
                                                                     (fun
-                                                                    uu___7 ->
-                                                                    match uu___7
+                                                                    uu___8 ->
+                                                                    match uu___8
                                                                     with
                                                                     | 
                                                                     FStar_Pervasives.Mkdtuple3
@@ -1691,7 +1693,7 @@ let (apply_impure_function :
                                                                     (debug_log
                                                                     g
                                                                     (fun
-                                                                    uu___8 ->
+                                                                    uu___9 ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -1732,28 +1734,31 @@ let (apply_impure_function :
                                                                     Pulse_Show.uu___33
                                                                     c'))
                                                                     (fun
-                                                                    uu___9 ->
+                                                                    uu___10
+                                                                    ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___10
+                                                                    uu___11
                                                                     ->
                                                                     Prims.strcat
                                                                     "st_app: c' = "
                                                                     (Prims.strcat
-                                                                    uu___9
+                                                                    uu___10
                                                                     "\n")))))
                                                                     (fun
-                                                                    uu___9 ->
+                                                                    uu___10
+                                                                    ->
                                                                     (fun
-                                                                    uu___9 ->
+                                                                    uu___10
+                                                                    ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_V2_Builtins.print
-                                                                    uu___9))
-                                                                    uu___9))))
+                                                                    uu___10))
+                                                                    uu___10))))
                                                                     (fun
-                                                                    uu___8 ->
+                                                                    uu___9 ->
                                                                     (fun
-                                                                    uu___8 ->
+                                                                    uu___9 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -1781,7 +1786,8 @@ let (apply_impure_function :
                                                                     st_typing'))
                                                                     res_ppname))
                                                                     (fun
-                                                                    uu___9 ->
+                                                                    uu___10
+                                                                    ->
                                                                     (fun
                                                                     framed ->
                                                                     Obj.magic
@@ -1790,17 +1796,17 @@ let (apply_impure_function :
                                                                     framed
                                                                     post_hint1
                                                                     range))
+                                                                    uu___10)))
                                                                     uu___9)))
                                                                     uu___8)))
                                                                     uu___7)))
                                                                     uu___6)))
                                                                     uu___5)))
-                                                                    uu___4)))
-                                                                    uu___4)))
-                                                                    uu___2)))
-                                                                    uu___2)))
-                                                                 uu___1)))
-                                                      uu___1))) uu___)
+                                                                    uu___5)))
+                                                                    uu___3)))
+                                                                    uu___3)))
+                                                                 uu___2)))
+                                                      uu___2))) uu___)
 let (check :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->

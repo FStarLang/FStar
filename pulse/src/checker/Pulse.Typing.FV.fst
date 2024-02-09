@@ -549,13 +549,6 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
     comp_typing_freevars c;
     freevars_open_st_term_inv e2 x
 
-  | T_TotBind _ e1 e2 _ c2 b x e1_typing e2_typing
-  | T_GhostBind _ e1 e2 _ c2 b x e1_typing e2_typing _ ->
-    tot_or_ghost_typing_freevars e1_typing;
-    st_typing_freevars e2_typing;
-    freevars_open_st_term_inv e2 x;
-    freevars_close_comp c2 x 0
-
   | T_If _ _b e1 e2 _c hyp tb d1 d2 (E ct) ->
     assert (t.term == (Tm_If { b = _b; then_=e1; else_=e2; post=None }));
     calc (Set.subset) {

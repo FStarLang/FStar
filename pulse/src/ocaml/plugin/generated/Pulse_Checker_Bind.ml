@@ -198,7 +198,10 @@ let (check_bind_fn :
                                                                     c);
                                                                     Pulse_Syntax_Base.binder_ppname
                                                                     =
-                                                                    (binder.Pulse_Syntax_Base.binder_ppname)
+                                                                    (binder.Pulse_Syntax_Base.binder_ppname);
+                                                                    Pulse_Syntax_Base.binder_attrs
+                                                                    =
+                                                                    (binder.Pulse_Syntax_Base.binder_attrs)
                                                                     }))
                                                                     (fun
                                                                     uu___5 ->
@@ -1082,7 +1085,7 @@ let (check_tot_bind :
                      (Obj.magic
                         (FStar_Range.mk_range "Pulse.Checker.Bind.fst"
                            (Prims.of_int (142)) (Prims.of_int (2))
-                           (Prims.of_int (201)) (Prims.of_int (3)))))
+                           (Prims.of_int (158)) (Prims.of_int (3)))))
                   (FStar_Tactics_Effect.lift_div_tac
                      (fun uu___ ->
                         Pulse_Typing_Env.push_context g "check_tot_bind"
@@ -1104,7 +1107,7 @@ let (check_tot_bind :
                                       "Pulse.Checker.Bind.fst"
                                       (Prims.of_int (143))
                                       (Prims.of_int (94))
-                                      (Prims.of_int (201)) (Prims.of_int (3)))))
+                                      (Prims.of_int (158)) (Prims.of_int (3)))))
                              (if
                                 FStar_Pervasives_Native.uu___is_None
                                   post_hint
@@ -1138,7 +1141,7 @@ let (check_tot_bind :
                                                  "Pulse.Checker.Bind.fst"
                                                  (Prims.of_int (143))
                                                  (Prims.of_int (94))
-                                                 (Prims.of_int (201))
+                                                 (Prims.of_int (158))
                                                  (Prims.of_int (3)))))
                                         (FStar_Tactics_Effect.lift_div_tac
                                            (fun uu___1 ->
@@ -1171,7 +1174,7 @@ let (check_tot_bind :
                                                                 "Pulse.Checker.Bind.fst"
                                                                 (Prims.of_int (147))
                                                                 (Prims.of_int (2))
-                                                                (Prims.of_int (201))
+                                                                (Prims.of_int (158))
                                                                 (Prims.of_int (3)))))
                                                        (Obj.magic
                                                           (Pulse_Checker_Base.is_stateful_application

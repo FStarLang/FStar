@@ -285,12 +285,9 @@ let rec (readback_ty :
                               match uu___1 with
                               | (ppname, range, p) ->
                                   let b =
-                                    {
-                                      Pulse_Syntax_Base.binder_ty = ty;
-                                      Pulse_Syntax_Base.binder_ppname =
-                                        (Pulse_Syntax_Base.mk_ppname ppname
-                                           range)
-                                    } in
+                                    Pulse_Syntax_Base.mk_binder_ppname ty
+                                      (Pulse_Syntax_Base.mk_ppname ppname
+                                         range) in
                                   if
                                     (FStar_Reflection_V2_Builtins.inspect_fv
                                        fv)

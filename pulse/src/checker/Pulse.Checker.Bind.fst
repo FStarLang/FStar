@@ -155,47 +155,4 @@ let check_tot_bind
     let head = { term = head; range = e1.range; effect_tag = default_effect_hint } in
     let t = { t with term = Tm_Bind { binder=b; head; body=e2 } } in
     check_bind g pre pre_typing post_hint res_ppname t check
-    // let t = { t with term = Tm_Bind { binder=b; head=st_app; body=e2 } } in
-    // check_bind g pre pre_typing post_hint res_ppname t check
-    // let (| e1, eff1, t1, (| u1, _t1_typing |) , e1_typing |) =
-    //   (* If there's an annotated type for e1 in the binder, we check it at
-    //   that type. Otherwise we just call check_term_and_type and infer. *)
-    //   let ty = b.binder_ty in
-    //   match ty.t with
-    //   | Tm_Unknown ->
-    //     compute_term_type_and_u g e1
-    //   | _ ->
-    //     let (| ty, _, _ |) = compute_tot_term_type g ty in //elaborate it first
-    //     let (| u1, ty_typing |) = check_universe g ty in
-    //     let (| e1, eff1, e1_typing |) = check_term_at_type g e1 ty in
-    //     let ty_typing : universe_of g ty u1 = ty_typing in
-    //     let e1_typing : typing g e1 eff1 ty = e1_typing in
-    //     (| e1, eff1, ty, (| u1, ty_typing |), e1_typing |)
-    //       <: (t:term & eff:T.tot_or_ghost & ty:term & (u:universe & universe_of g ty u) & typing g t eff ty)
-    //       (* ^ Need this annotation *)
-    // in
-    // let t1 =
-    //   let b = {binder_ty=t1;binder_ppname=ppname_default} in
-    //   let eq_tm = mk_eq2 u1 t1 (null_bvar 0) e1 in
-    //   tm_refine b eq_tm in
-
-    // // THIS IS WASTEFUL, CHECKING e1 MULTIPLE TIMES
-    // let (| e1, e1_typing |) =
-    //   check_term g e1 eff1 t1 in
-
-    // let x = fresh g in
-
-    // let b = { b with binder_ty = t1 } in
-    // let k = continuation_elaborator_with_let pre_typing b e1_typing (ppname_default, x) in
-
-    // let px = b.binder_ppname, x in
-    // let g' = push_binding g x (fst px) t1 in
-    // let pre_typing' : tot_typing g' pre tm_vprop =
-    //   Metatheory.tot_typing_weakening_single pre_typing x t1 in
-    // let d =
-    //   let ppname = mk_ppname_no_range "_tbind_c" in
-    //   let r = check g' pre pre_typing' post_hint ppname (open_st_term_nv e2 px) in
-    //   apply_checker_result_k #_ #_ #(Some?.v post_hint) r ppname in
-    // let d = k post_hint d in
-    // checker_result_for_st_typing d res_ppname
   )

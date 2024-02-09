@@ -435,11 +435,7 @@ let (comp_intro_pure : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp) =
 let (named_binder :
   Pulse_Syntax_Base.ppname ->
     Pulse_Syntax_Base.term -> Pulse_Syntax_Base.binder)
-  =
-  fun x ->
-    fun t ->
-      { Pulse_Syntax_Base.binder_ty = t; Pulse_Syntax_Base.binder_ppname = x
-      }
+  = fun x -> fun t -> Pulse_Syntax_Base.mk_binder_ppname t x
 let (comp_intro_exists :
   Pulse_Syntax_Base.universe ->
     Pulse_Syntax_Base.binder ->
@@ -842,12 +838,6 @@ type ('g, 't, 'u) universe_of = unit
 type ('g, 'u, 't) non_informative_t =
   (Pulse_Syntax_Base.term, unit) Prims.dtuple2
 type ('g, 'c) non_informative_c = (unit, unit, unit) non_informative_t
-let (as_binder : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.binder) =
-  fun t ->
-    {
-      Pulse_Syntax_Base.binder_ty = t;
-      Pulse_Syntax_Base.binder_ppname = Pulse_Syntax_Base.ppname_default
-    }
 let (tm_join_inames :
   Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
   =
@@ -1084,14 +1074,6 @@ type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.binder *
   Pulse_Syntax_Base.var * (unit, unit, unit) st_typing * unit * unit * (
   unit, unit, unit) st_typing * (unit, unit) comp_typing_u 
-  | T_TotBind of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
-  Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.term *
-  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.binder *
-  Pulse_Syntax_Base.var * unit * (unit, unit, unit) st_typing 
-  | T_GhostBind of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
-  Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.term *
-  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.binder *
-  Pulse_Syntax_Base.var * unit * (unit, unit, unit) st_typing * unit 
   | T_If of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
   Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.st_term *
   Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.var * unit * (unit, unit,
@@ -1176,10 +1158,6 @@ let uu___is_T_Bind uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Bind _ -> true | _ -> false
 let uu___is_T_BindFn uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_BindFn _ -> true | _ -> false
-let uu___is_T_TotBind uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | T_TotBind _ -> true | _ -> false
-let uu___is_T_GhostBind uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | T_GhostBind _ -> true | _ -> false
 let uu___is_T_If uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_If _ -> true | _ -> false
 let uu___is_T_Match uu___2 uu___1 uu___ uu___3 =

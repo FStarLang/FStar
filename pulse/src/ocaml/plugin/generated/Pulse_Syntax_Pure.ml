@@ -355,14 +355,11 @@ let (is_arrow :
                                      FStar_Pervasives_Native.None)
                                 (fun c1 ->
                                    FStar_Pervasives_Native.Some
-                                     ({
-                                        Pulse_Syntax_Base.binder_ty =
-                                          binder_ty;
-                                        Pulse_Syntax_Base.binder_ppname =
-                                          (Pulse_Syntax_Base.mk_ppname ppname
-                                             (FStar_Reflection_V2_Builtins.range_of_term
-                                                host_term))
-                                      }, q, c1))) in
+                                     ((Pulse_Syntax_Base.mk_binder_ppname
+                                         binder_ty
+                                         (Pulse_Syntax_Base.mk_ppname ppname
+                                            (FStar_Reflection_V2_Builtins.range_of_term
+                                               host_term))), q, c1))) in
                        (match c_view with
                         | FStar_Reflection_V2_Data.C_Total c_t -> ret c_t
                         | FStar_Reflection_V2_Data.C_Eff

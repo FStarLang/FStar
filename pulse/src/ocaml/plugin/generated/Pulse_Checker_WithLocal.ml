@@ -25,7 +25,7 @@ let (extend_post_hint_for_local :
             (FStar_Tactics_Effect.lift_div_tac
                (fun uu___ ->
                   Pulse_Syntax_Base.tm_exists_sl Pulse_Syntax_Pure.u0
-                    (Pulse_Typing.as_binder init_t)
+                    (Pulse_Syntax_Base.as_binder init_t)
                     (Pulse_Typing.mk_pts_to init_t
                        (Pulse_Syntax_Pure.null_var x)
                        (Pulse_Syntax_Pure.null_bvar Prims.int_zero))))
@@ -992,15 +992,10 @@ let (check :
                                                                     {
                                                                     Pulse_Syntax_Base.binder2
                                                                     =
-                                                                    {
-                                                                    Pulse_Syntax_Base.binder_ty
-                                                                    =
+                                                                    (Pulse_Syntax_Base.mk_binder_ppname
                                                                     (Pulse_Typing.mk_ref
-                                                                    init_t);
-                                                                    Pulse_Syntax_Base.binder_ppname
-                                                                    =
-                                                                    (binder.Pulse_Syntax_Base.binder_ppname)
-                                                                    };
+                                                                    init_t)
+                                                                    binder.Pulse_Syntax_Base.binder_ppname);
                                                                     Pulse_Syntax_Base.initializer1
                                                                     = init1;
                                                                     Pulse_Syntax_Base.body4

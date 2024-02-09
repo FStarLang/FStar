@@ -283,59 +283,6 @@ let rec st_typing_weakening g g' t c d g1
     let c2_typing = comp_typing_weakening g g' c2_typing g1 in
     T_BindFn _ e1 e2 c1 c2 b x d_e1 u (RU.magic #(tot_typing _ _ _) ()) d_e2 c2_typing
 
-  | T_TotBind _ e1 e2 t1 c2 b x _ d_e2 ->
-    assume (~ (x `Set.mem` dom g'));
-    assume (~ (x `Set.mem` dom g1));
-    let d_e2
-      : st_typing (push_binding (push_env g g') x ppname_default t1)
-                  (open_st_term_nv e2 (v_as_nv x))
-                  c2 = d_e2 in
-    assert (equal (push_binding (push_env g g') x ppname_default t1)
-                  (push_env g (push_binding g' x ppname_default t1)));
-    let d_e2
-      : st_typing (push_env g (push_binding g' x ppname_default t1))
-                  (open_st_term_nv e2 (v_as_nv x))
-                  c2 = d_e2 in
-    let d_e2
-      : st_typing (push_env (push_env g g1) (push_binding g' x ppname_default t1))
-                  (open_st_term_nv e2 (v_as_nv x))
-                  c2 = st_typing_weakening g (push_binding g' x ppname_default t1) _ _ d_e2 g1 in
-    assert (equal (push_env (push_env g g1) (push_binding g' x ppname_default t1))
-                  (push_binding (push_env (push_env g g1) g') x ppname_default t1));
-    let d_e2
-      : st_typing (push_binding (push_env (push_env g g1) g') x ppname_default t1)
-                  (open_st_term_nv e2 (v_as_nv x))
-                  c2 = d_e2 in
-    
-    T_TotBind _ e1 e2 t1 c2 b x (RU.magic ()) d_e2
-
-  | T_GhostBind _ e1 e2 t1 c2 b x _ d_e2 _ ->
-    assume (~ (x `Set.mem` dom g'));
-    assume (~ (x `Set.mem` dom g1));
-    let d_e2
-      : st_typing (push_binding (push_env g g') x ppname_default t1)
-                  (open_st_term_nv e2 (v_as_nv x))
-                  c2 = d_e2 in
-    assert (equal (push_binding (push_env g g') x ppname_default t1)
-                  (push_env g (push_binding g' x ppname_default t1)));
-    let d_e2
-      : st_typing (push_env g (push_binding g' x ppname_default t1))
-                  (open_st_term_nv e2 (v_as_nv x))
-                  c2 = d_e2 in
-    let d_e2
-      : st_typing (push_env (push_env g g1) (push_binding g' x ppname_default t1))
-                  (open_st_term_nv e2 (v_as_nv x))
-                  c2 = st_typing_weakening g (push_binding g' x ppname_default t1) _ _ d_e2 g1 in
-    assert (equal (push_env (push_env g g1) (push_binding g' x ppname_default t1))
-                  (push_binding (push_env (push_env g g1) g') x ppname_default t1));
-    let d_e2
-      : st_typing (push_binding (push_env (push_env g g1) g') x ppname_default t1)
-                  (open_st_term_nv e2 (v_as_nv x))
-                  c2 = d_e2 in
-    
-    T_GhostBind _ e1 e2 t1 c2 b x (RU.magic ()) d_e2 (RU.magic ())
-
-
   | T_If _ b e1 e2 c hyp _ d_e1 d_e2 _ ->
     assume (~ (hyp `Set.mem` dom g'));
     assume (~ (hyp `Set.mem` dom g1));
@@ -687,27 +634,7 @@ let rec st_typing_subst g x t g' #e #eff e_typing #e1 #c1 e1_typing _
                (RU.magic ())
                (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default (comp_res c1)) e_typing d_e2 (RU.magic ())) ())
                (comp_typing_subst g x t (push_binding g' y ppname_default (comp_res c1)) e_typing d_c2)
-  | T_TotBind _ e1 e2 t1 c2 b y _ d_e2 ->
-    T_TotBind _ (subst_term e1 ss)
-                (subst_st_term e2 ss)
-                (subst_term t1 ss)
-                (subst_comp c2 ss)
-                b
-                y
-                (RU.magic ())
-                (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default t1) e_typing d_e2 (RU.magic ())) ())
-
-  | T_GhostBind _ e1 e2 t1 c2 b y _ d_e2 _ ->
-    T_GhostBind _ (subst_term e1 ss)
-                (subst_st_term e2 ss)
-                (subst_term t1 ss)
-                (subst_comp c2 ss)
-                b
-                y
-                (RU.magic ())
-                (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default t1) e_typing d_e2 (RU.magic ())) ())
-                (RU.magic ())
-
+ 
   | T_If _ b e1 e2 c hyp _ d_e1 d_e2 _ ->
     T_If _ (subst_term b ss)
            (subst_st_term e1 ss)

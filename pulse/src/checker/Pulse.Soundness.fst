@@ -60,7 +60,7 @@ let tabs_t (d:'a) =
     body_typing:st_typing (push_binding g x ppname ty) (open_st_term body x) c { body_typing << d } ->
     GTot (RT.tot_typing (elab_env g)
             (mk_abs_with_name ppname.name (elab_term ty) (elab_qual q) (RT.close_term (elab_st_typing body_typing) x))
-            (elab_term (tm_arrow {binder_ty=ty;binder_ppname=ppname} q (close_comp c x))))
+            (elab_term (tm_arrow (mk_binder_ppname ty ppname) q (close_comp c x))))
 
 #push-options "--z3rlimit_factor 4 --split_queries no"
 let lift_soundness
@@ -119,7 +119,7 @@ let stapp_soundness
   let r_arg = elab_term arg in
   let r_head_typing
     : RT.tot_typing _ r_head
-        (elab_term (tm_arrow {binder_ty=formal;binder_ppname=ppname_default} q res))
+        (elab_term (tm_arrow (mk_binder_ppname formal ppname_default) q res))
     = tot_typing_soundness head_typing
   in
   let r_arg_typing = tot_typing_soundness arg_typing in
@@ -150,7 +150,7 @@ let stghostapp_soundness
   let T_STGhostApp _ head formal q res arg x head_typing d_non_info arg_typing = d in
   let r_head = elab_term head in
   let r_arg = elab_term arg in
-  let r_binder = {binder_ty=formal;binder_ppname=ppname_default} in
+  let r_binder = mk_binder_ppname formal ppname_default in
   let head_t = tm_arrow r_binder q res in
   let r_head_t = mk_arrow_with_name ppname_default.name (elab_term formal, elab_qual q)
                                                         (elab_comp res) in
@@ -339,7 +339,7 @@ let rec soundness (g:stt_env)
                  (body_typing:st_typing (push_binding g x ppname ty) (open_st_term body x) c { body_typing << d })
       : GTot (RT.tot_typing (elab_env g)
                 (mk_abs_with_name ppname.name (elab_term ty) (elab_qual q) (RT.close_term (elab_st_typing body_typing) x))
-                (elab_term (tm_arrow {binder_ty=ty;binder_ppname=ppname} q (close_comp c x))))
+                (elab_term (tm_arrow (mk_binder_ppname ty ppname) q (close_comp c x))))
       = let r_t_typing = tot_typing_soundness t_typing in
         let r_body_typing = soundness _ _ _ body_typing in
         mk_t_abs g #_ #_ #_ #t_typing ppname r_t_typing r_body_typing
@@ -365,12 +365,6 @@ let rec soundness (g:stt_env)
 
     | T_BindFn _ _ _ _ _ _ _ _ _ _ _ _ ->
       Bind.bind_fn_typing d soundness
-
-    | T_TotBind _ _ _ _ _ _ _ _ _ ->
-      Bind.tot_bind_typing d soundness
-
-    | T_GhostBind _ _ _ _ _ _ _ _ _ _ ->
-      Bind.ghost_bind_typing d soundness
 
     | T_Equiv _ _ _ _ _ _ ->
       stequiv_soundness _ _ _ d soundness

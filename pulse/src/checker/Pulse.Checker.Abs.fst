@@ -140,7 +140,7 @@ let rec rebuild_abs (g:env) (t:st_term) (annot:T.term)
       | Some ty, T.C_Total res_ty -> (
         if Tm_Abs? body.term
         then (
-          let b = { binder_ty = ty ; binder_ppname = b.binder_ppname } in
+          let b = mk_binder_with_attrs ty b.binder_ppname b.binder_attrs in
           let body = rebuild_abs g body res_ty in
           let asc = { asc with elaborated = None } in
           { t with term = Tm_Abs { b; q; ascription=asc; body }}
@@ -165,7 +165,7 @@ let rec rebuild_abs (g:env) (t:st_term) (annot:T.term)
           )
 
           | Some c ->
-            let b = { binder_ty = ty ; binder_ppname = b.binder_ppname } in
+            let b = mk_binder_with_attrs ty b.binder_ppname b.binder_attrs in
             let asc = { asc with elaborated = Some c } in
             { t with term = Tm_Abs { b; q; ascription=asc; body }}              
         )
@@ -322,8 +322,7 @@ let rec check_abs_core
   //warn g (Some t.range) (Printf.sprintf "check_abs_core, t = %s" (P.st_term_to_string t));
   let range = t.range in
   match t.term with  
-  | Tm_Abs { b = {binder_ty=t;binder_ppname=ppname}; q=qual; ascription=asc; body } -> //pre=pre_hint; body; ret_ty; post=post_hint_body } ->
-
+  | Tm_Abs { b = {binder_ty=t;binder_ppname=ppname;binder_attrs}; q=qual; ascription=asc; body } -> //pre=pre_hint; body; ret_ty; post=post_hint_body } ->
     (*  (fun (x:t) -> {pre_hint} body : t { post_hint } *)
     let (| t, _, _ |) = compute_tot_term_type g t in //elaborate it first
     let (| u, t_typing |) = check_universe g t in //then check that its universe ... We could collapse the two calls
@@ -359,9 +358,9 @@ let rec check_abs_core
       FV.st_typing_freevars body_typing;
       let body_closed = close_st_term body x in
       assume (open_st_term body_closed x == body);
-      let b = {binder_ty=t;binder_ppname=ppname} in
+      let b = {binder_ty=t;binder_ppname=ppname;binder_attrs} in
       let tt = T_Abs g x qual b u body_closed c_body t_typing body_typing in
-      let tres = tm_arrow {binder_ty=t;binder_ppname=ppname} qual (close_comp c_body x) in
+      let tres = tm_arrow {binder_ty=t;binder_ppname=ppname;binder_attrs} qual (close_comp c_body x) in
       (| _, C_Tot tres, tt |)
     | _ ->
       let elab_c, pre_opened, inames_opened, ret_ty, post_hint_body =
@@ -427,9 +426,9 @@ let rec check_abs_core
       FV.st_typing_freevars body_typing;
       let body_closed = close_st_term body x in
       assume (open_st_term body_closed x == body);
-      let b = {binder_ty=t;binder_ppname=ppname} in
+      let b = {binder_ty=t;binder_ppname=ppname;binder_attrs} in
       let tt = T_Abs g x qual b u body_closed c_body t_typing body_typing in
-      let tres = tm_arrow {binder_ty=t;binder_ppname=ppname} qual (close_comp c_body x) in
+      let tres = tm_arrow {binder_ty=t;binder_ppname=ppname;binder_attrs} qual (close_comp c_body x) in
 
       (| _, C_Tot tres, tt |)
 

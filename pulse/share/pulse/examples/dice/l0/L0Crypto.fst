@@ -49,8 +49,8 @@ let derive_key_pair_spec = derive_key_pair_spec_aux
 
 assume
 val derive_key_pair_aux
-  (pub : A.larray U8.t (US.v v32us))
-  (priv: A.larray U8.t (US.v v32us))
+  (pubk : A.larray U8.t (US.v v32us))
+  (privk: A.larray U8.t (US.v v32us))
   (ikm_len: hkdf_ikm_len) 
   (ikm: A.array U8.t)
   (lbl_len: hkdf_lbl_len) 
@@ -59,8 +59,8 @@ val derive_key_pair_aux
   (#_pub_seq #_priv_seq #ikm_seq #lbl_seq:erased (Seq.seq U8.t))
   : stt unit
   (requires (
-    A.pts_to pub _pub_seq ** 
-    A.pts_to priv _priv_seq ** 
+    A.pts_to pubk _pub_seq ** 
+    A.pts_to privk _priv_seq ** 
     A.pts_to ikm #ikm_perm ikm_seq ** 
     A.pts_to lbl #lbl_perm lbl_seq
   ))
@@ -68,8 +68,8 @@ val derive_key_pair_aux
     A.pts_to ikm #ikm_perm ikm_seq ** 
     A.pts_to lbl #lbl_perm lbl_seq **
     (exists* (pub_seq priv_seq:Seq.seq U8.t).
-      A.pts_to pub pub_seq ** 
-      A.pts_to priv priv_seq **
+      A.pts_to pubk pub_seq ** 
+      A.pts_to privk priv_seq **
       pure ((pub_seq, priv_seq) == derive_key_pair_spec ikm_len ikm_seq lbl_len lbl_seq)
     )))
 

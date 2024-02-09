@@ -70,7 +70,7 @@ let rec (refl_abs_binders :
                              (FStar_Range.mk_range
                                 "Pulse.Checker.AssertWithBinders.fst"
                                 (Prims.of_int (49)) (Prims.of_int (20))
-                                (Prims.of_int (55)) (Prims.of_int (87)))))
+                                (Prims.of_int (55)) (Prims.of_int (75)))))
                        (FStar_Tactics_Effect.lift_div_tac
                           (fun uu___ ->
                              FStar_Reflection_V2_Builtins.inspect_binder b))
@@ -99,7 +99,7 @@ let rec (refl_abs_binders :
                                                (Prims.of_int (54))
                                                (Prims.of_int (4))
                                                (Prims.of_int (55))
-                                               (Prims.of_int (87)))))
+                                               (Prims.of_int (75)))))
                                       (Obj.magic
                                          (FStar_Tactics_Effect.tac_bind
                                             (FStar_Sealed.seal
@@ -158,16 +158,13 @@ let rec (refl_abs_binders :
                                          (fun sort1 ->
                                             Obj.magic
                                               (refl_abs_binders body
-                                                 ({
-                                                    Pulse_Syntax_Base.binder_ty
-                                                      = sort1;
-                                                    Pulse_Syntax_Base.binder_ppname
-                                                      =
-                                                      (Pulse_Syntax_Base.mk_ppname
-                                                         ppname
-                                                         (Pulse_RuntimeUtils.range_of_term
-                                                            t))
-                                                  } :: acc))) uu___3))) uu___)))
+                                                 ((Pulse_Syntax_Base.mk_binder_ppname
+                                                     sort1
+                                                     (Pulse_Syntax_Base.mk_ppname
+                                                        ppname
+                                                        (Pulse_RuntimeUtils.range_of_term
+                                                           t))) :: acc)))
+                                           uu___3))) uu___)))
            | uu___ ->
                Obj.magic
                  (Obj.repr
@@ -766,12 +763,8 @@ let rec (close_binders :
                      (n1, x1,
                        (Pulse_Syntax_Naming.subst_term t1
                           [Pulse_Syntax_Naming.ND (x, n)]))) bs1 in
-        let b =
-          {
-            Pulse_Syntax_Base.binder_ty = t;
-            Pulse_Syntax_Base.binder_ppname = name
-          } in
-        b :: (close_binders bss)
+        let b = Pulse_Syntax_Base.mk_binder_ppname t name in b ::
+          (close_binders bss)
 let (unfold_defs :
   Pulse_Typing_Env.env ->
     Prims.string Prims.list FStar_Pervasives_Native.option ->
@@ -2238,7 +2231,10 @@ let (visit_and_rewrite :
                                                                     = uu___2;
                                                                     Pulse_Syntax_Base.binder_ppname
                                                                     =
-                                                                    (b.Pulse_Syntax_Base.binder_ppname)
+                                                                    (b.Pulse_Syntax_Base.binder_ppname);
+                                                                    Pulse_Syntax_Base.binder_attrs
+                                                                    =
+                                                                    (b.Pulse_Syntax_Base.binder_attrs)
                                                                     }))))
                                                               (fun uu___2 ->
                                                                  (fun uu___2
@@ -2360,7 +2356,10 @@ let (visit_and_rewrite :
                                                                     = uu___2;
                                                                     Pulse_Syntax_Base.binder_ppname
                                                                     =
-                                                                    (b.Pulse_Syntax_Base.binder_ppname)
+                                                                    (b.Pulse_Syntax_Base.binder_ppname);
+                                                                    Pulse_Syntax_Base.binder_attrs
+                                                                    =
+                                                                    (b.Pulse_Syntax_Base.binder_attrs)
                                                                     }))))
                                                               (fun uu___2 ->
                                                                  (fun uu___2
@@ -3055,7 +3054,7 @@ let (check_renaming :
                                                                    {
                                                                     Pulse_Syntax_Base.binder
                                                                     =
-                                                                    (Pulse_Typing.as_binder
+                                                                    (Pulse_Syntax_Base.as_binder
                                                                     Pulse_Typing.tm_unit);
                                                                     Pulse_Syntax_Base.head1
                                                                     =
@@ -3153,7 +3152,7 @@ let (check_renaming :
                                                                     {
                                                                     Pulse_Syntax_Base.binder
                                                                     =
-                                                                    (Pulse_Typing.as_binder
+                                                                    (Pulse_Syntax_Base.as_binder
                                                                     Pulse_Typing.tm_unit);
                                                                     Pulse_Syntax_Base.head1
                                                                     =
@@ -3934,7 +3933,7 @@ let (check :
                                                                     {
                                                                     Pulse_Syntax_Base.binder
                                                                     =
-                                                                    (Pulse_Typing.as_binder
+                                                                    (Pulse_Syntax_Base.as_binder
                                                                     Pulse_Typing.tm_unit);
                                                                     Pulse_Syntax_Base.head1
                                                                     = t;
@@ -4019,7 +4018,7 @@ let (check :
                                                                     {
                                                                     Pulse_Syntax_Base.binder
                                                                     =
-                                                                    (Pulse_Typing.as_binder
+                                                                    (Pulse_Syntax_Base.as_binder
                                                                     Pulse_Typing.tm_unit);
                                                                     Pulse_Syntax_Base.head1
                                                                     = t;
@@ -4867,7 +4866,7 @@ let (check :
                                                                     {
                                                                     Pulse_Syntax_Base.binder
                                                                     =
-                                                                    (Pulse_Typing.as_binder
+                                                                    (Pulse_Syntax_Base.as_binder
                                                                     (Pulse_Syntax_Base.tm_fstar
                                                                     (FStar_Reflection_V2_Builtins.pack_ln
                                                                     (FStar_Reflection_V2_Data.Tv_FVar
@@ -5517,7 +5516,7 @@ let (check :
                                                                     {
                                                                     Pulse_Syntax_Base.binder
                                                                     =
-                                                                    (Pulse_Typing.as_binder
+                                                                    (Pulse_Syntax_Base.as_binder
                                                                     (Pulse_Syntax_Base.tm_fstar
                                                                     (FStar_Reflection_V2_Builtins.pack_ln
                                                                     (FStar_Reflection_V2_Data.Tv_FVar

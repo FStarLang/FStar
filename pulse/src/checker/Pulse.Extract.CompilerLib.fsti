@@ -54,7 +54,10 @@ val mle_name (x:mlpath) : mlexpr
 val mle_let (x:mlletbinding) (b:mlexpr) : mlexpr
 val mle_app (x:mlexpr) (args:list mlexpr) : mlexpr
 val mke_tapp (x:mlexpr) (args:list mlty) : mlexpr
-val mle_fun (formals:list (mlident * mlty)) (body:mlexpr) : mlexpr
+
+// formals are: formal name, type, and binder attributes
+val mle_fun (formals:list (mlident * mlty * list mlexpr)) (body:mlexpr) : mlexpr
+
 val mle_if (guard:mlexpr) (t:mlexpr) (f:option mlexpr) : mlexpr
 
 val mlpattern : Type0

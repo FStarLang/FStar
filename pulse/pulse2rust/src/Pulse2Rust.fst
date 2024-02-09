@@ -39,6 +39,9 @@ type var = string
 type binding = var & typ & bool // name, type, is_mut
 type reachable_defs = Set.set string
 
+let reachable_defs_to_string (d:reachable_defs) : string =
+  d |> Set.elems |> String.concat ";" |> format1 "[%s]"
+
 type env = {
   fns : list (string & fn_signature);
   statics : list (string & typ);
@@ -210,8 +213,19 @@ let extract_mltyopt (g:env) (t:option S.mlty) : typ =
   | None -> Typ_infer
   | Some t -> extract_mlty g t
 
-let extract_top_level_fn_arg (g:env) (arg_name:string) (t:S.mlty) : fn_arg =
-  t |> extract_mlty g |> mk_scalar_fn_arg arg_name
+let arg_has_mut_attribute (attrs:list S.mlexpr) : bool =
+  List.existsb (fun attr ->
+    match attr.S.expr with
+    | S.MLE_CTor (p, _)
+      when S.string_of_mlpath p = "Pulse.Lib.Pervasives.Rust_mut_binder" -> true
+    | _ -> false
+  ) attrs
+
+let extract_top_level_fn_arg (g:env) (arg_name:string) (arg_attrs:list S.mlexpr) (t:S.mlty) : fn_arg =
+  mk_scalar_fn_arg
+    arg_name
+    (arg_has_mut_attribute arg_attrs)
+    (t |> extract_mlty g) 
 
 let push_fn_arg (g:env) (arg_name:string) (arg:fn_arg) : env =
   match arg with
@@ -231,13 +245,14 @@ let extract_top_level_sig
   (fn_name:string)
   (generic_type_params:list generic_type_param)
   (arg_names:list string)
+  (arg_attrs:list (list S.mlexpr))
   (arg_ts:list S.mlty)
   (ret_t:option S.mlty)
   
   : fn_signature & env =
 
   let fn_args =
-    List.map2 (extract_top_level_fn_arg g) (List.map varname arg_names) arg_ts in
+    List.map3 (extract_top_level_fn_arg g) (List.map varname arg_names) arg_attrs arg_ts in
   let fn_ret_t = extract_mltyopt g ret_t in
   mk_fn_signature
     fn_const
@@ -751,6 +766,7 @@ let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : item & env =
     match lb.mllb_def.expr with
     | S.MLE_Fun (bs, body) ->
       let arg_names = List.map (fun b -> b.S.mlbinder_name) bs in
+      let arg_attrs = List.map (fun b -> b.S.mlbinder_attrs) bs in
       let tvars, arg_ts, ret_t =
         match lb.mllb_tysc with
         | Some tsc ->
@@ -767,6 +783,7 @@ let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : item & env =
           lb.mllb_name
           (extract_generic_type_params tvars lb.mllb_attrs)
           arg_names
+          arg_attrs
           arg_ts
           ret_t in
       let fn_body = extract_mlexpr_to_stmts g_body body in
@@ -999,7 +1016,7 @@ let reachable_defs_mlmodule1 (m:S.mlmodule1) : reachable_defs =
     | MLM_Loc _ -> empty_defs in
   // print2 "reachable defs for %s are %s\n"
     // (S.mlmodule1_to_string m)
-    // (Set.elems defs |> String.concat ";");
+    // (reachable_defs_to_string defs);
   defs
 
 let reachable_defs_decls (decls:S.mlmodule) : reachable_defs =
@@ -1125,6 +1142,52 @@ let read_all_ast_files (files:list string) : dict =
     smap_add d (file_to_module_name f) contents);
   d
 
+let build_decls_dict (d:dict) : smap S.mlmodule1 =
+  let dd = smap_create 100 in
+  smap_iter d (fun module_nm (_, _, decls) ->
+    List.iter (fun (decl:S.mlmodule1) ->
+      List.iter (fun decl_nm ->
+        smap_add dd (module_nm ^ "." ^ decl_nm) decl
+      ) (mlmodule1_name decl)
+    ) decls
+  );
+  dd
+
+let rec collect_reachable_defs_aux
+  (dd:smap S.mlmodule1)
+  (worklist:reachable_defs)
+  (reachable_defs:reachable_defs) =
+
+  if Set.is_empty worklist
+  then reachable_defs
+  else let hd::_ = Set.elems worklist in
+       let worklist = Set.remove hd worklist in
+      //  print1 "Adding %s to reachable_defs\n" hd;
+       let reachable_defs = Set.add hd reachable_defs in
+       let worklist =
+         let hd_decl = smap_try_find dd hd in
+         match hd_decl with
+         | None -> worklist
+         | Some hd_decl ->
+           let hd_reachable_defs = reachable_defs_mlmodule1 hd_decl in
+           hd_reachable_defs |> Set.elems |> List.fold_left (fun worklist def ->
+             if Set.mem def reachable_defs ||
+                Set.mem def worklist
+             then worklist
+             else Set.add def worklist
+           ) worklist in
+       collect_reachable_defs_aux dd worklist reachable_defs
+
+let collect_reachable_defs (d:dict) (root_module:string) : reachable_defs =
+  let dd = build_decls_dict d in
+  let root_decls = smap_try_find d root_module |> must |> (fun (_, _, decls) -> decls) in
+  let worklist = List.fold_left (fun worklist decl ->
+    Set.addn
+      (decl |> mlmodule1_name |> List.map (fun s -> root_module ^ "." ^ s))
+      worklist
+  ) empty_defs root_decls in
+  collect_reachable_defs_aux dd worklist empty_defs
+
 let extract (files:list string) : string =
   let d = read_all_ast_files files in
   //
@@ -1134,41 +1197,30 @@ let extract (files:list string) : string =
   let all_modules = topsort_all d [] in
   print1 "order: %s\n" (String.concat "; " all_modules);
   let root_module::_ = all_modules in
-  let reachable_defs : reachable_defs = empty_defs in
-  let root_decls = smap_try_find d root_module |> must |> (fun (_, _, decls) -> decls) in
-  let reachable_defs =
-    List.fold_left (fun reachable_defs decl ->
-      let nms = mlmodule1_name decl in
-      List.fold_left (fun reachable_defs nm ->
-        Set.union reachable_defs (Set.singleton (root_module ^ "." ^ nm))
-      ) reachable_defs nms
-    ) reachable_defs root_decls
-  in
-  // print1 "Before:%s\n" (String.concat ";" (reachable_defs |> Set.elems));
-  let reachable_defs =
-    List.fold_left (fun reachable_defs m ->
-      let m_decls = smap_try_find d m |> must |> (fun (_, _, decls) -> decls) in
-      let m_decls = List.filter (fun d ->
-        let nms = mlmodule1_name d in
-        List.existsb (fun nm -> Set.mem (m ^ "." ^ nm) reachable_defs) nms
-      ) m_decls in
-      Set.union reachable_defs (reachable_defs_decls m_decls)
-    ) reachable_defs all_modules
-  in
+  // let reachable_defs : reachable_defs = empty_defs in
+  let reachable_defs = collect_reachable_defs d root_module in
+  // let root_decls = smap_try_find d root_module |> must |> (fun (_, _, decls) -> decls) in
+  // let reachable_defs =
+  //   List.fold_left (fun reachable_defs decl ->
+  //     let nms = mlmodule1_name decl in
+  //     List.fold_left (fun reachable_defs nm ->
+  //       Set.union reachable_defs (Set.singleton (root_module ^ "." ^ nm))
+  //     ) reachable_defs nms
+  //   ) reachable_defs root_decls
+  // in
+  // print1 "Root reachable defs: %s\n" (reachable_defs_to_string reachable_defs);
+  // // print1 "Before:%s\n" (String.concat ";" (reachable_defs |> Set.elems));
+  // let reachable_defs =
+  //   List.fold_left (fun reachable_defs m ->
+  //     let m_decls = smap_try_find d m |> must |> (fun (_, _, decls) -> decls) in
+  //     let m_decls = List.filter (fun d ->
+  //       let nms = mlmodule1_name d in
+  //       List.existsb (fun nm -> Set.mem (m ^ "." ^ nm) reachable_defs) nms
+  //     ) m_decls in
+  //     Set.union reachable_defs (reachable_defs_decls m_decls)
+  //   ) reachable_defs all_modules
+  // in
 
-  // // assume the last file is the root
-  // let last = List.nth files (List.length files - 1) in
-  // let reachable_defs = collect_reachable_defs files [last] in
-  // let d = smap_create 100 in
-  // List.iter (fun f ->
-  //   let contents  : (list string & list UEnv.binding & S.mlmodule) =
-  //     match load_value_from_file f with
-  //     | Some r -> r
-  //     | None -> failwith "Could not load file" in
-  //   smap_add d (file_to_module_name f) contents) files;
-  // // print1 "reachable_defs: %s\n"
-  // //   (String.concat "\n" (reachable_defs |> Set.elems));
-  // let files = topsort_all d [] |> List.rev in
   let g = empty_env reachable_defs in
   let s = List.fold_left_map (fun g f ->
     let (_, bs, ds) = smap_try_find d f |> must in

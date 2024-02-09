@@ -2295,6 +2295,7 @@ ocaml_export! {
 // type hashable_len = usize;
 // type signable_len = usize;
 // type hkdf_lbl_len = usize;
+// type hkdf_ikm_len = usize;
 // type alg_t = ();
 
 // pub const dice_digest_len: usize = 32;
@@ -2340,6 +2341,14 @@ ocaml_export! {
 //     panic!()
 // }
 
+// pub fn memcpy<A>(l: usize, src: &mut [A], dst: &mut [A], p: (), src0: (), dst0: ()) -> () {
+//     panic!()
+// }
+
+// pub fn zeroize(len: usize, src: &mut [u8], s: ()) -> () {
+//     panic!()
+// }
+
 // pub fn hacl_hmac(
 //     alg: (),
 //     dst: &mut [u8],
@@ -2357,15 +2366,11 @@ ocaml_export! {
 // }
 
 // pub fn x509_get_deviceIDCRI(
-//     version: x509_version_t,
-//     s_common: String,
-//     s_org: String,
-//     s_country: String,
-//     ku: u32,
+//     deviceIDCSR_ingredients: deviceIDCSR_ingredients_t,
 //     deviceID_pub: &mut [u8],
 //     pub_perm: (),
 //     deviceID_pub0: (),
-// ) -> deviceIDCRI_t {
+// ) -> (deviceIDCSR_ingredients_t, deviceIDCRI_t) {
 //     panic!()
 // }
 
@@ -2425,7 +2430,7 @@ ocaml_export! {
 //     fwid0: (),
 //     deviceID0: (),
 //     aliasKey0: (),
-// ) -> aliasKeyTBS_t {
+// ) -> (aliasKeyCRT_ingredients_t, aliasKeyTBS_t) {
 //     panic!()
 // }
 
@@ -2466,20 +2471,18 @@ ocaml_export! {
 
 // pub const v32us: usize = 32;
 
-// pub fn derive_key_pair(
-//     pubk: &mut [u8],
-//     privk: &mut [u8],
-//     ikm_len: usize,
-//     ikm: &mut [u8],
-//     lbl_len: hkdf_lbl_len,
-//     lbl: &mut [u8],
-//     ikm_perm: (),
-//     lbl_perm: (),
-//     pub_seq: (),
-//     priv_seq: (),
-//     ikm_seq: (),
-//     lbl_seq: (),
-// ) -> () {
+// pub fn len_of_deviceIDCRI(x: deviceIDCSR_ingredients_t) -> (deviceIDCSR_ingredients_t, usize) {
+//     panic!()
+// }
+
+// pub fn len_of_aliasKeyTBS(x: aliasKeyCRT_ingredients_t) -> (aliasKeyCRT_ingredients_t, usize) {
+//     panic!()
+// }
+
+// pub fn length_of_deviceIDCSR(x: usize) -> usize {
+//     panic!()
+// }
+// pub fn length_of_aliasKeyCRT(x: usize) -> usize {
 //     panic!()
 // }
 

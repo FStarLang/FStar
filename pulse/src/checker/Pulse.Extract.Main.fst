@@ -549,11 +549,15 @@ let rec extract (g:env) (p:st_term)
       | Tm_Rewrite _ ->
         erased_result
 
-      | Tm_Abs { b; q; body } -> 
+      | Tm_Abs { b; q; body } ->
         let g, mlident, mlty, name = extend_env g b in
+        let mlattrs =
+          b.binder_attrs
+          |> T.unseal
+          |> T.map (term_as_mlexpr g) in
         let body = LN.open_st_term_nv body name in
         let body, _ = extract g body in
-        let res = mle_fun [mlident, mlty] body in
+        let res = mle_fun [mlident, mlty, mlattrs] body in
         res, e_tag_pure
 
       | Tm_Return { term } ->
@@ -625,16 +629,16 @@ let rec extract (g:env) (p:st_term)
       | Tm_While { condition; body } ->
         let condition, _ = extract g condition in
         let body, _ = extract g body in
-        let condition = mle_fun [("_", mlty_unit)] condition in
-        let body = mle_fun [("_", mlty_unit)] body in
+        let condition = mle_fun [("_", mlty_unit, [])] condition in
+        let body = mle_fun [("_", mlty_unit, [])] body in
         let w = mle_app (mle_name (["Pulse"; "Lib"; "Core"], "while_")) [condition; body] in
         w, e_tag_impure
 
       | Tm_Par { body1; body2 } ->
         let body1, _ = extract g body1 in
         let body2, _ = extract g body2 in
-        let body1 = mle_fun [("_", mlty_unit)] body1 in
-        let body2 = mle_fun [("_", mlty_unit)] body2 in
+        let body1 = mle_fun [("_", mlty_unit, [])] body1 in
+        let body2 = mle_fun [("_", mlty_unit, [])] body2 in
         let p = mle_app (mle_name (["Pulse"; "Lib"; "Core"], "par")) [body1; body2] in
         p, e_tag_impure
 
@@ -764,7 +768,11 @@ let rec extract_recursive g (p:st_term) (rec_name:R.fv)
         let g, mlident, mlty, name = extend_env g b in
         let body = LN.open_st_term_nv body name in
         let body, _ = extract_recursive g body rec_name in
-        let res = mle_fun [mlident, mlty] body in
+        let attrs =
+          b.binder_attrs
+          |> T.unseal
+          |> T.map (term_as_mlexpr g) in
+        let res = mle_fun [mlident, mlty, attrs] body in
         res, e_tag_pure
       | _ -> //last binder used for knot; replace it with the recursively bound name
         let body = LN.subst_st_term body [LN.DT 0 (tm_fstar R.(pack_ln (Tv_FVar rec_name)) Range.range_0)] in

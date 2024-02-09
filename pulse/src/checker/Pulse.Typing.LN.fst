@@ -1126,24 +1126,6 @@ let comp_typing_ln (#g:_) (#c:_) (#u:_) (d:comp_typing g c u)
   | CT_STAtomic _ _ _ _ inames_typing st_typing ->
     tot_or_ghost_typing_ln inames_typing;
     st_comp_typing_ln st_typing
-
-let st_typing_ln_tot_or_ghost_bind #g #t #c (d:st_typing g t c { T_TotBind? d \/ T_GhostBind? d })
-  (typing_ln:
-     (#g:env ->
-      #e:st_term ->
-      #c:comp ->
-      d':st_typing g e c{d' << d} ->
-      Lemma (ensures ln_st e /\ ln_c c)))
-  : Lemma (ensures ln_st t /\ ln_c c) =
-
-  match d with
-  | T_TotBind _ e1 e2 _ c2 b x e1_typing e2_typing
-  | T_GhostBind _ e1 e2 _ c2 b x e1_typing e2_typing _ ->
-    tot_or_ghost_typing_ln e1_typing;
-    typing_ln e2_typing;
-    open_st_term_ln e2 x;
-    close_comp_ln' c2 x 0;
-    open_comp_ln_inv' (close_comp c2 x) e1 0
 #pop-options
 
 let ln_mk_reveal (u:universe) (t:term) (e:term) (n:int)
@@ -1235,10 +1217,6 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       st_typing_ln d2;
       open_st_term_ln e2 x;
       comp_typing_ln c
-
-    | T_TotBind _ _ _ _ _ _ _ _ _
-    | T_GhostBind _ _ _ _ _ _ _ _ _ _ ->
-      st_typing_ln_tot_or_ghost_bind d st_typing_ln
 
     | T_If _ _ _ _ _ _ tb d1 d2 _ ->
       tot_or_ghost_typing_ln tb;

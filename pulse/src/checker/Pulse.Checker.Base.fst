@@ -436,72 +436,8 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
 
 module LN = Pulse.Typing.LN
 #push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 1"
-let continuation_elaborator_with_let (#g:env) (#ctxt:term)
-  (ctxt_typing:tot_typing g ctxt tm_vprop)
-  (#e1:term)
-  (#eff1:T.tot_or_ghost)
-  (#t1:term)
-  (b:binder{b.binder_ty == t1})
-  (e1_typing:typing g e1 eff1 t1)
-  (x:nvar { None? (lookup g (snd x)) })
-  : T.Tac (continuation_elaborator
-           g ctxt
-           (push_binding g (snd x) (fst x) t1) ctxt) =
 
-  assert ((push_binding g (snd x) (fst x) t1) `env_extends` g);
-  fun post_hint (| e2, c2, d2 |) ->
-  if eff1 = T.E_Ghost &&
-     not (C_STGhost? c2)
-  then fail g (Some e1.range)
-         (Printf.sprintf "Cannot bind ghost expression %s with %s computation"
-            (P.term_to_string e1)
-            (P.tag_of_comp c2));
-  let ppname, x = x in
-  let e2_closed = close_st_term e2 x in
-  assume (open_st_term (close_st_term e2 x) x == e2);
 
-  let e = wr c2 (Tm_TotBind {binder=b; head=e1;body=e2_closed}) in
-  let c = open_comp_with (close_comp c2 x) e1 in
-  // we just closed
-  assume (~ (x `Set.mem` freevars_st e2_closed));
-  let d : st_typing g e c =
-    if eff1 = T.E_Total
-    then T_TotBind g e1 e2_closed t1 c2 b x e1_typing d2
-    else let token = CP.is_non_informative (push_binding g x ppname t1) c2 in
-         match token with
-         | None ->
-           fail g None
-             (Printf.sprintf "Impossible! Non-informative for %s returned None"
-                (P.comp_to_string c2))
-         | Some token ->
-           let token = FStar.Squash.return_squash token in
-           T_GhostBind g e1 e2_closed t1 c2 b x e1_typing d2
-             (E (RT.Non_informative_token _ _ token)) in
-  
-  let _ =
-    match post_hint with
-    | None -> ()
-    | Some post_hint ->
-      //
-      // The post_hint is well-typed in g
-      // so it should not have x free
-      //
-      // c2 matches post hint, so it should also not have x free
-      // so closing with x, and opening with e1 should be identity
-      //
-      assume (comp_post c == comp_post c2 /\
-              comp_res c == comp_res c2 /\
-              comp_u c == comp_u c2 /\
-              effect_annot_of_comp c == effect_annot_of_comp c2) in
-
-  FV.tot_typing_freevars ctxt_typing;
-  close_with_non_freevar ctxt x 0;
-  LN.tot_typing_ln ctxt_typing;
-  open_with_gt_ln ctxt (-1) e1 0;
-
-  (| e, c, d |)
-
-    
 let st_comp_typing_with_post_hint 
       (#g:env) (#ctxt:_)
       (ctxt_typing:tot_typing g ctxt tm_vprop)

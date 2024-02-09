@@ -43,6 +43,7 @@ new val binder : Type0
 new val comp : Type0
 let vprop = term
 val mk_binder (x:ident) (t:term) : binder
+val mk_binder_with_attrs (x:ident) (t:term) (attrs:list term) : binder
 
 val tm_bvar (bv:bv) : term
 val tm_var (x:nm) : term

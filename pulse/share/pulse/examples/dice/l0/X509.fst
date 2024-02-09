@@ -37,24 +37,14 @@ assume
 val length_of_aliasKeyCRT (len: US.t) : US.t 
 
 assume
-val len_of_deviceIDCRI
-  (version: x509_version_t)
-  (s_common: string)
-  (s_org: string)
-  (s_country: string)
-  : v:US.t{0 < US.v v /\ valid_deviceIDCSR_ingredients v}
+val len_of_deviceIDCRI (x:deviceIDCSR_ingredients_t)
+  : tuple2 (y:deviceIDCSR_ingredients_t { y == x })
+           (v:US.t{0 < US.v v /\ valid_deviceIDCSR_ingredients v})
 
 assume
-val len_of_aliasKeyTBS
-  (serialNumber  : x509_serialNumber_t)
-  (i_common      : string)
-  (i_org         : string)
-  (i_country     : string)
-  (s_common      : string)
-  (s_org         : string)
-  (s_country     : string)
-  (l0_version    : U32.t)
-  : v:US.t{0 < US.v v /\ valid_aliasKeyCRT_ingredients v}
+val len_of_aliasKeyTBS (x:aliasKeyCRT_ingredients_t)
+  : tuple2 (y:aliasKeyCRT_ingredients_t { y == x})
+           (v:US.t{0 < US.v v /\ valid_aliasKeyCRT_ingredients v})
 
 (* Serialize Functions *)
 
@@ -173,23 +163,20 @@ val spec_x509_get_deviceIDCRI
   : GTot deviceIDCRI_t
 
 assume 
-val x509_get_deviceIDCRI
-  (version: x509_version_t)
-  (s_common: string)
-  (s_org: string)
-  (s_country: string)
-  (ku: U32.t)
+val x509_get_deviceIDCRI (deviceIDCSR_ingredients:deviceIDCSR_ingredients_t)
   (deviceID_pub: A.larray U8.t (US.v v32us))
   (#pub_perm:perm)
   (#deviceID_pub0: erased (Seq.seq U8.t))
-  : stt deviceIDCRI_t
+  : stt (deviceIDCSR_ingredients_t & deviceIDCRI_t)
     (A.pts_to deviceID_pub #pub_perm deviceID_pub0)
     (fun res -> 
       A.pts_to deviceID_pub #pub_perm deviceID_pub0 **
-      pure (res == spec_x509_get_deviceIDCRI 
-                    version s_common 
-                    s_org s_country 
-                    ku deviceID_pub0))
+      pure (fst res == deviceIDCSR_ingredients /\
+            snd res == spec_x509_get_deviceIDCRI 
+                       deviceIDCSR_ingredients.version
+                       deviceIDCSR_ingredients.s_common 
+                       deviceIDCSR_ingredients.s_org deviceIDCSR_ingredients.s_country 
+                       deviceIDCSR_ingredients.ku deviceID_pub0))
 
 assume 
 val spec_x509_get_aliasKeyTBS
@@ -206,7 +193,7 @@ val x509_get_aliasKeyTBS
   (aliasKey_pub:A.larray U8.t (US.v v32us))
   (#fwid_perm #deviceID_perm #aliasKey_perm:perm)
   (#fwid0 #deviceID0 #aliasKey0:erased (Seq.seq U8.t))
-  : stt aliasKeyTBS_t
+  : stt (aliasKeyCRT_ingredients_t & aliasKeyTBS_t)
   (A.pts_to fwid #fwid_perm fwid0 **
    A.pts_to deviceID_pub #deviceID_perm deviceID0 **
    A.pts_to aliasKey_pub #aliasKey_perm aliasKey0)
@@ -214,9 +201,10 @@ val x509_get_aliasKeyTBS
     A.pts_to fwid #fwid_perm fwid0 **
     A.pts_to deviceID_pub #deviceID_perm deviceID0 **
     A.pts_to aliasKey_pub #aliasKey_perm aliasKey0 **
-    pure (res == spec_x509_get_aliasKeyTBS 
-                  aliasKeyCRT_ingredients 
-                  fwid0 deviceID0 aliasKey0))
+    pure (fst res == aliasKeyCRT_ingredients /\
+          snd res == spec_x509_get_aliasKeyTBS 
+                     aliasKeyCRT_ingredients 
+                     fwid0 deviceID0 aliasKey0))
   
 assume 
 val spec_x509_get_aliasKeyCRT

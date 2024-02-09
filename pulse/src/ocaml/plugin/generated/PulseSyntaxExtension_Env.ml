@@ -381,28 +381,36 @@ let (resolve_names :
         uu___1 uu___
 let (destruct_binder :
   FStar_Parser_AST.binder ->
-    (FStar_Parser_AST.aqual * FStar_Ident.ident * FStar_Parser_AST.term))
+    (FStar_Parser_AST.aqual * FStar_Ident.ident * FStar_Parser_AST.term *
+      FStar_Parser_AST.term Prims.list))
   =
   fun b ->
+    let attrs = b.FStar_Parser_AST.battributes in
     match b.FStar_Parser_AST.b with
-    | FStar_Parser_AST.Annotated (x, t) -> ((b.FStar_Parser_AST.aqual), x, t)
+    | FStar_Parser_AST.Annotated (x, t) ->
+        ((b.FStar_Parser_AST.aqual), x, t, attrs)
     | FStar_Parser_AST.TAnnotated (x, t) ->
-        ((b.FStar_Parser_AST.aqual), x, t)
+        ((b.FStar_Parser_AST.aqual), x, t, attrs)
     | FStar_Parser_AST.NoName t ->
         let uu___ = FStar_Ident.id_of_text "_" in
-        ((b.FStar_Parser_AST.aqual), uu___, t)
+        ((b.FStar_Parser_AST.aqual), uu___, t, attrs)
     | FStar_Parser_AST.Variable x ->
         let uu___ =
           let uu___1 = FStar_Ident.range_of_id x in
           FStar_Parser_AST.mk_term FStar_Parser_AST.Wild uu___1
             FStar_Parser_AST.Un in
-        ((b.FStar_Parser_AST.aqual), x, uu___)
+        ((b.FStar_Parser_AST.aqual), x, uu___, attrs)
     | FStar_Parser_AST.TVariable x ->
         let uu___ =
           let uu___1 = FStar_Ident.range_of_id x in
           FStar_Parser_AST.mk_term FStar_Parser_AST.Wild uu___1
             FStar_Parser_AST.Un in
-        ((b.FStar_Parser_AST.aqual), x, uu___)
+        ((b.FStar_Parser_AST.aqual), x, uu___, attrs)
+let free_vars_list :
+  'a .
+    (env_t -> 'a -> FStar_Ident.ident Prims.list) ->
+      env_t -> 'a Prims.list -> FStar_Ident.ident Prims.list
+  = fun f -> fun env -> fun xs -> FStar_Compiler_List.collect (f env) xs
 let rec (free_vars_term :
   env_t -> FStar_Parser_AST.term -> FStar_Ident.ident Prims.list) =
   fun env ->
@@ -421,15 +429,19 @@ and (free_vars_binders :
       | b::bs1 ->
           let uu___ = destruct_binder b in
           (match uu___ with
-           | (uu___1, x, t) ->
+           | (uu___1, x, t, attrs) ->
                let fvs = free_vars_term env t in
+               let fvs_attrs = free_vars_list free_vars_term env attrs in
                let uu___2 =
                  let uu___3 =
                    let uu___4 = push_bv env x in
                    FStar_Pervasives_Native.fst uu___4 in
                  free_vars_binders uu___3 bs1 in
                (match uu___2 with
-                | (env', res) -> (env', (FStar_List_Tot_Base.op_At fvs res))))
+                | (env', res) ->
+                    (env',
+                      (FStar_List_Tot_Base.op_At fvs
+                         (FStar_List_Tot_Base.op_At fvs_attrs res)))))
 let (free_vars_vprop :
   env_t -> PulseSyntaxExtension_Sugar.vprop -> FStar_Ident.ident Prims.list)
   =
@@ -437,11 +449,6 @@ let (free_vars_vprop :
     fun t ->
       match t.PulseSyntaxExtension_Sugar.v with
       | PulseSyntaxExtension_Sugar.VPropTerm t1 -> free_vars_term env t1
-let free_vars_list :
-  'a .
-    (env_t -> 'a -> FStar_Ident.ident Prims.list) ->
-      env_t -> 'a Prims.list -> FStar_Ident.ident Prims.list
-  = fun f -> fun env -> fun xs -> FStar_Compiler_List.collect (f env) xs
 let (free_vars_comp :
   env_t ->
     PulseSyntaxExtension_Sugar.computation_type ->
