@@ -2852,6 +2852,21 @@ let (is_fext_on_domain :
              FStar_Pervasives_Native.Some f
          | uu___2 -> FStar_Pervasives_Native.None)
     | uu___1 -> FStar_Pervasives_Native.None
+let (__get_n_binders :
+  (FStar_TypeChecker_Env.env ->
+     FStar_TypeChecker_Env.step Prims.list ->
+       Prims.int ->
+         FStar_Syntax_Syntax.term ->
+           (FStar_Syntax_Syntax.binder Prims.list * FStar_Syntax_Syntax.comp))
+    FStar_Compiler_Effect.ref)
+  =
+  FStar_Compiler_Util.mk_ref
+    (fun e ->
+       fun s ->
+         fun n ->
+           fun t ->
+             FStar_Compiler_Effect.failwith
+               "Impossible: __get_n_binders unset")
 let (is_partial_primop_app :
   FStar_TypeChecker_Cfg.cfg -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun cfg ->
@@ -5944,6 +5959,42 @@ and (maybe_simplify_aux :
                              is_applied bs t'
                          | uu___6 -> is_applied bs t)) in
                  let is_quantified_const bv phi =
+                   let types_match bs =
+                     let uu___2 =
+                       let uu___3 =
+                         FStar_Compiler_Effect.op_Bang __get_n_binders in
+                       uu___3 cfg.FStar_TypeChecker_Cfg.tcenv
+                         [FStar_TypeChecker_Env.AllowUnboundUniverses]
+                         (FStar_Compiler_List.length bs)
+                         bv.FStar_Syntax_Syntax.sort in
+                     match uu___2 with
+                     | (bs_q, uu___3) ->
+                         let rec unrefine_true t =
+                           let uu___4 =
+                             let uu___5 = FStar_Syntax_Subst.compress t in
+                             uu___5.FStar_Syntax_Syntax.n in
+                           match uu___4 with
+                           | FStar_Syntax_Syntax.Tm_refine
+                               { FStar_Syntax_Syntax.b = b;
+                                 FStar_Syntax_Syntax.phi = phi1;_}
+                               when
+                               FStar_Syntax_Util.term_eq phi1
+                                 FStar_Syntax_Util.t_true
+                               -> unrefine_true b.FStar_Syntax_Syntax.sort
+                           | uu___5 -> t in
+                         ((FStar_Compiler_List.length bs) =
+                            (FStar_Compiler_List.length bs_q))
+                           &&
+                           (FStar_Compiler_List.forall2
+                              (fun b1 ->
+                                 fun b2 ->
+                                   let s1 =
+                                     unrefine_true
+                                       (b1.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
+                                   let s2 =
+                                     unrefine_true
+                                       (b2.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
+                                   FStar_Syntax_Util.term_eq s1 s2) bs bs_q) in
                    let uu___2 =
                      FStar_Syntax_Formula.destruct_typ_as_formula phi in
                    match uu___2 with
@@ -6007,7 +6058,8 @@ and (maybe_simplify_aux :
                                     FStar_Pervasives_Native.Some uu___10))
                               | uu___9 -> FStar_Pervasives_Native.None)
                          | FStar_Pervasives_Native.Some
-                             (FStar_Syntax_Formula.QAll (bs, pats, phi1)) ->
+                             (FStar_Syntax_Formula.QAll (bs, pats, phi1))
+                             when types_match bs ->
                              let uu___7 =
                                FStar_Syntax_Formula.destruct_typ_as_formula
                                  phi1 in
@@ -9927,44 +9979,56 @@ let (unfold_head_once :
                 us)
                -> aux fv us args
            | uu___2 -> FStar_Pervasives_Native.None)
+let (get_n_binders' :
+  FStar_TypeChecker_Env.env ->
+    FStar_TypeChecker_Env.step Prims.list ->
+      Prims.int ->
+        FStar_Syntax_Syntax.term ->
+          (FStar_Syntax_Syntax.binder Prims.list * FStar_Syntax_Syntax.comp))
+  =
+  fun env1 ->
+    fun steps ->
+      fun n ->
+        fun t ->
+          let rec aux retry n1 t1 =
+            let uu___ = FStar_Syntax_Util.arrow_formals_comp t1 in
+            match uu___ with
+            | (bs, c) ->
+                let len = FStar_Compiler_List.length bs in
+                (match (bs, c) with
+                 | ([], uu___1) when retry ->
+                     let uu___2 = unfold_whnf' steps env1 t1 in
+                     aux false n1 uu___2
+                 | ([], uu___1) when Prims.op_Negation retry -> (bs, c)
+                 | (bs1, c1) when len = n1 -> (bs1, c1)
+                 | (bs1, c1) when len > n1 ->
+                     let uu___1 = FStar_Compiler_List.splitAt n1 bs1 in
+                     (match uu___1 with
+                      | (bs_l, bs_r) ->
+                          let uu___2 =
+                            let uu___3 = FStar_Syntax_Util.arrow bs_r c1 in
+                            FStar_Syntax_Syntax.mk_Total uu___3 in
+                          (bs_l, uu___2))
+                 | (bs1, c1) when
+                     ((len < n1) && (FStar_Syntax_Util.is_total_comp c1)) &&
+                       (let uu___1 = FStar_Syntax_Util.has_decreases c1 in
+                        Prims.op_Negation uu___1)
+                     ->
+                     let uu___1 =
+                       aux true (n1 - len) (FStar_Syntax_Util.comp_result c1) in
+                     (match uu___1 with
+                      | (bs', c') ->
+                          ((FStar_Compiler_List.op_At bs1 bs'), c'))
+                 | (bs1, c1) -> (bs1, c1)) in
+          aux true n t
 let (get_n_binders :
   FStar_TypeChecker_Env.env ->
     Prims.int ->
       FStar_Syntax_Syntax.term ->
         (FStar_Syntax_Syntax.binder Prims.list * FStar_Syntax_Syntax.comp))
-  =
-  fun env1 ->
-    fun n ->
-      fun t ->
-        let rec aux retry n1 t1 =
-          let uu___ = FStar_Syntax_Util.arrow_formals_comp t1 in
-          match uu___ with
-          | (bs, c) ->
-              let len = FStar_Compiler_List.length bs in
-              (match (bs, c) with
-               | ([], uu___1) when retry ->
-                   let uu___2 = unfold_whnf env1 t1 in aux false n1 uu___2
-               | ([], uu___1) when Prims.op_Negation retry -> (bs, c)
-               | (bs1, c1) when len = n1 -> (bs1, c1)
-               | (bs1, c1) when len > n1 ->
-                   let uu___1 = FStar_Compiler_List.splitAt n1 bs1 in
-                   (match uu___1 with
-                    | (bs_l, bs_r) ->
-                        let uu___2 =
-                          let uu___3 = FStar_Syntax_Util.arrow bs_r c1 in
-                          FStar_Syntax_Syntax.mk_Total uu___3 in
-                        (bs_l, uu___2))
-               | (bs1, c1) when
-                   ((len < n1) && (FStar_Syntax_Util.is_total_comp c1)) &&
-                     (let uu___1 = FStar_Syntax_Util.has_decreases c1 in
-                      Prims.op_Negation uu___1)
-                   ->
-                   let uu___1 =
-                     aux true (n1 - len) (FStar_Syntax_Util.comp_result c1) in
-                   (match uu___1 with
-                    | (bs', c') -> ((FStar_Compiler_List.op_At bs1 bs'), c'))
-               | (bs1, c1) -> (bs1, c1)) in
-        aux true n t
+  = fun env1 -> fun n -> fun t -> get_n_binders' env1 [] n t
+let (uu___3973 : unit) =
+  FStar_Compiler_Effect.op_Colon_Equals __get_n_binders get_n_binders'
 let (maybe_unfold_head_fv :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
