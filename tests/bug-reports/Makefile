@@ -54,7 +54,7 @@ SHOULD_VERIFY_CLOSED=Bug022.fst Bug024.fst Bug025.fst Bug026.fst Bug026b.fst Bug
   Bug2756.fst MutualRecPositivity.fst Bug2806a.fst Bug2806b.fst Bug2806c.fst Bug2806d.fst Bug2809.fst\
   Bug2849a.fst Bug2849b.fst Bug2045.fst Bug2876.fst Bug2882.fst Bug2895.fst Bug2894.fst \
   Bug2415.fst Bug3028.fst Bug2954.fst Bug3089.fst Bug3102.fst Bug2981.fst Bug2980.fst Bug3115.fst \
-  Bug2083.fst Bug2002.fst Bug1482.fst Bug1066.fst Bug3120a.fst Bug3120b.fst Bug3186.fst Bug3185.fst
+  Bug2083.fst Bug2002.fst Bug1482.fst Bug1066.fst Bug3120a.fst Bug3120b.fst Bug3186.fst Bug3185.fst Bug3210.fst
 
 SHOULD_VERIFY_INTERFACE_CLOSED=Bug771.fsti Bug771b.fsti
 SHOULD_VERIFY_AND_WARN_CLOSED=Bug016.fst
