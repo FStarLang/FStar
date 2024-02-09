@@ -66,7 +66,7 @@ export PULSE_HOME=$(fixpath $(cd ../.. && pwd))
 
 # use the package to build Steel
 export FSTAR_HOME="$fstar_package_dir"
-OTHERFLAGS='--admit_smt_queries true' $make -C "$PULSE_HOME" "$@"
+$make -C "$PULSE_HOME" "$@"
 mkdir -p "$old_FSTAR_HOME"/src/.cache.boot
 if ! $is_windows ; then
     FSTAR_HOME="$old_FSTAR_HOME" $make -C "$PULSE_HOME"/pulse2rust "$@"
