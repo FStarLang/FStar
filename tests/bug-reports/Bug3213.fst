@@ -1,11 +1,7 @@
 module Bug3213
 
-#set-options "--debug Test --debug_level SMTQuery"
-
-let ff = nat -> Type0
-
-let bad2 ()
-  : Lemma (forall (f : ff). (forall (x : nat). f x) ==> (fun (_:nat) -> True) == f) = ()
+let this_is_ok ()
+  : Lemma (forall (f : (nat -> Type0)). (forall (x : nat). f x) ==> (fun (_:nat) -> True) == f) = ()
 
 [@@expect_failure [19]]
 let bad ()
