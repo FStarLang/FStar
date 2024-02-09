@@ -41,7 +41,7 @@ let cdi_functional_correctness (c0:Seq.seq U8.t) (uds_bytes:Seq.seq U8.t) (repr:
     c0 == spec_hmac dice_hash_alg (spec_hash dice_hash_alg uds_bytes) (spec_hash dice_hash_alg repr.l0_binary)
 
 ```pulse
-fn authenticate_l0_image (record:engine_record_t) (#repr:Ghost.erased engine_record_repr) (#p:perm)
+fn authenticate_l0_image ([@@@ Rust_mut_binder] record:engine_record_t) (#repr:Ghost.erased engine_record_repr) (#p:perm)
     requires engine_record_perm record p repr
     returns b:(engine_record_t & bool)
     ensures (
@@ -97,7 +97,7 @@ fn authenticate_l0_image (record:engine_record_t) (#repr:Ghost.erased engine_rec
 fn compute_cdi
   (cdi:A.larray U8.t (SZ.v (digest_len dice_hash_alg)))
   (uds:A.larray U8.t (US.v uds_len))
-  (record:engine_record_t)
+  ([@@@ Rust_mut_binder] record:engine_record_t)
   (#uds_perm #p:perm)
   (#uds_bytes:Ghost.erased (Seq.seq U8.t))
   requires A.pts_to uds #uds_perm uds_bytes

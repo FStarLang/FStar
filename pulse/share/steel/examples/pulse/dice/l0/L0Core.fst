@@ -314,7 +314,7 @@ fn l0_main_aux
   (deviceIDCRI_len:US.t)
   (deviceIDCSR_len:US.t)
   (deviceIDCSR: A.larray U8.t (US.v deviceIDCSR_len))
-  (record: l0_record_t)
+  ([@@@ Rust_mut_binder] record: l0_record_t)
   (#repr: erased l0_record_repr_t)
   (#cdi0 #deviceID_pub0 #deviceID_priv0 #aliasKey_pub0 #aliasKey_priv0 #aliasKeyCRT0 #deviceIDCSR0: erased (Seq.seq U8.t))
   (#cdi_perm #p:perm)
