@@ -2347,14 +2347,18 @@ let (collect_reachable_defs : dict -> Prims.string -> reachable_defs) =
           let uu___1 = FStar_Compiler_Util.smap_try_find d root_module in
           FStar_Compiler_Util.must uu___1 in
         match uu___ with | (uu___1, uu___2, decls) -> decls in
-      let worklist =
-        FStar_Compiler_List.fold_left
-          (fun worklist1 ->
-             fun decl ->
-               let uu___ = reachable_defs_mlmodule1 decl in
-               FStar_Compiler_Set.union FStar_Class_Ord.ord_string worklist1
-                 uu___) empty_defs root_decls in
-      collect_reachable_defs_aux dd worklist empty_defs
+      FStar_Compiler_List.iter
+        (fun decl ->
+           let uu___1 = FStar_Extraction_ML_Syntax.mlmodule1_to_string decl in
+           FStar_Compiler_Util.print1 "Decl: %s\n" uu___1) root_decls;
+      (let worklist =
+         FStar_Compiler_List.fold_left
+           (fun worklist1 ->
+              fun decl ->
+                let uu___1 = reachable_defs_mlmodule1 decl in
+                FStar_Compiler_Set.union FStar_Class_Ord.ord_string worklist1
+                  uu___1) empty_defs root_decls in
+       collect_reachable_defs_aux dd worklist empty_defs)
 let (extract : Prims.string Prims.list -> Prims.string) =
   fun files ->
     let d = read_all_ast_files files in

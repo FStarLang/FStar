@@ -1168,7 +1168,9 @@ let collect_reachable_defs (d:dict) (root_module:string) : reachable_defs =
   let dd = build_decls_dict d in
   let root_decls = smap_try_find d root_module |> must |> (fun (_, _, decls) -> decls) in
   let worklist = List.fold_left (fun worklist decl ->
-    Set.union worklist (reachable_defs_mlmodule1 decl)
+    Set.addn
+      (decl |> mlmodule1_name |> List.map (fun s -> root_module ^ "." ^ s))
+      worklist
   ) empty_defs root_decls in
   collect_reachable_defs_aux dd worklist empty_defs
 
