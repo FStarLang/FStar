@@ -44,7 +44,7 @@ let (extend_post_hint :
                           (fun uu___ ->
                              Pulse_Syntax_Base.tm_exists_sl
                                Pulse_Syntax_Pure.u0
-                               (Pulse_Typing.as_binder
+                               (Pulse_Syntax_Base.as_binder
                                   (Pulse_Typing.mk_seq Pulse_Syntax_Pure.u0
                                      init_t))
                                (Pulse_Typing.mk_array_pts_to init_t arr
@@ -1132,15 +1132,10 @@ let (check :
                                                                     {
                                                                     Pulse_Syntax_Base.binder3
                                                                     =
-                                                                    {
-                                                                    Pulse_Syntax_Base.binder_ty
-                                                                    =
+                                                                    (Pulse_Syntax_Base.mk_binder_ppname
                                                                     (Pulse_Typing.mk_array
-                                                                    init_t);
-                                                                    Pulse_Syntax_Base.binder_ppname
-                                                                    =
-                                                                    (binder.Pulse_Syntax_Base.binder_ppname)
-                                                                    };
+                                                                    init_t)
+                                                                    binder.Pulse_Syntax_Base.binder_ppname);
                                                                     Pulse_Syntax_Base.initializer2
                                                                     = init;
                                                                     Pulse_Syntax_Base.length

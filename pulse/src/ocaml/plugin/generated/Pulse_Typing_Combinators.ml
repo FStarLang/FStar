@@ -17,10 +17,7 @@ let (nvar_as_binder :
   =
   fun x ->
     fun t ->
-      {
-        Pulse_Syntax_Base.binder_ty = t;
-        Pulse_Syntax_Base.binder_ppname = (FStar_Pervasives_Native.fst x)
-      }
+      Pulse_Syntax_Base.mk_binder_ppname t (FStar_Pervasives_Native.fst x)
 type ('caseuc1, 'caseuc2) bind_t =
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->

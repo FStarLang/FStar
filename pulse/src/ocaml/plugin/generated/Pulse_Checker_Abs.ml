@@ -880,27 +880,23 @@ let rec (rebuild_abs :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
                                                                     (Prims.of_int (143))
-                                                                    (Prims.of_int (20))
+                                                                    (Prims.of_int (18))
                                                                     (Prims.of_int (143))
-                                                                    (Prims.of_int (68)))))
+                                                                    (Prims.of_int (53)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
                                                                     (Prims.of_int (143))
-                                                                    (Prims.of_int (73))
+                                                                    (Prims.of_int (56))
                                                                     (Prims.of_int (146))
                                                                     (Prims.of_int (64)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___2 ->
-                                                                    {
-                                                                    Pulse_Syntax_Base.binder_ty
-                                                                    = ty1;
-                                                                    Pulse_Syntax_Base.binder_ppname
-                                                                    =
-                                                                    (b.Pulse_Syntax_Base.binder_ppname)
-                                                                    }))
+                                                                    Pulse_Syntax_Base.mk_binder_ppname
+                                                                    ty1
+                                                                    b.Pulse_Syntax_Base.binder_ppname))
                                                                     (fun
                                                                     uu___2 ->
                                                                     (fun b1
@@ -1203,13 +1199,9 @@ let rec (rebuild_abs :
                                                                     {
                                                                     Pulse_Syntax_Base.b
                                                                     =
-                                                                    {
-                                                                    Pulse_Syntax_Base.binder_ty
-                                                                    = ty1;
-                                                                    Pulse_Syntax_Base.binder_ppname
-                                                                    =
-                                                                    (b.Pulse_Syntax_Base.binder_ppname)
-                                                                    };
+                                                                    (Pulse_Syntax_Base.mk_binder_ppname
+                                                                    ty1
+                                                                    b.Pulse_Syntax_Base.binder_ppname);
                                                                     Pulse_Syntax_Base.q
                                                                     = q;
                                                                     Pulse_Syntax_Base.ascription
@@ -2968,7 +2960,8 @@ let rec (check_abs_core :
                     {
                       Pulse_Syntax_Base.b =
                         { Pulse_Syntax_Base.binder_ty = t1;
-                          Pulse_Syntax_Base.binder_ppname = ppname;_};
+                          Pulse_Syntax_Base.binder_ppname = ppname;
+                          Pulse_Syntax_Base.binder_attrs = binder_attrs;_};
                       Pulse_Syntax_Base.q = qual;
                       Pulse_Syntax_Base.ascription = asc;
                       Pulse_Syntax_Base.body = body;_}
@@ -2983,7 +2976,7 @@ let rec (check_abs_core :
                          (FStar_Sealed.seal
                             (Obj.magic
                                (FStar_Range.mk_range "Pulse.Checker.Abs.fst"
-                                  (Prims.of_int (325)) (Prims.of_int (86))
+                                  (Prims.of_int (325)) (Prims.of_int (99))
                                   (Prims.of_int (434)) (Prims.of_int (29)))))
                          (Obj.magic
                             (Pulse_Checker_Pure.compute_tot_term_type g t1))
@@ -3446,7 +3439,10 @@ let rec (check_abs_core :
                                                                     Pulse_Syntax_Base.binder_ty
                                                                     = t2;
                                                                     Pulse_Syntax_Base.binder_ppname
-                                                                    = ppname
+                                                                    = ppname;
+                                                                    Pulse_Syntax_Base.binder_attrs
+                                                                    =
+                                                                    binder_attrs
                                                                     };
                                                                     Pulse_Syntax_Base.q
                                                                     = qual;
@@ -3464,7 +3460,10 @@ let rec (check_abs_core :
                                                                     Pulse_Syntax_Base.binder_ty
                                                                     = t2;
                                                                     Pulse_Syntax_Base.binder_ppname
-                                                                    = ppname
+                                                                    = ppname;
+                                                                    Pulse_Syntax_Base.binder_attrs
+                                                                    =
+                                                                    binder_attrs
                                                                     } qual
                                                                     (Pulse_Syntax_Naming.close_comp
                                                                     c_body3 x))),
@@ -3475,7 +3474,10 @@ let rec (check_abs_core :
                                                                     Pulse_Syntax_Base.binder_ty
                                                                     = t2;
                                                                     Pulse_Syntax_Base.binder_ppname
-                                                                    = ppname
+                                                                    = ppname;
+                                                                    Pulse_Syntax_Base.binder_attrs
+                                                                    =
+                                                                    binder_attrs
                                                                     }, u,
                                                                     (Pulse_Syntax_Naming.close_st_term
                                                                     body1 x),
@@ -4145,7 +4147,10 @@ let rec (check_abs_core :
                                                                     Pulse_Syntax_Base.binder_ty
                                                                     = t2;
                                                                     Pulse_Syntax_Base.binder_ppname
-                                                                    = ppname
+                                                                    = ppname;
+                                                                    Pulse_Syntax_Base.binder_attrs
+                                                                    =
+                                                                    binder_attrs
                                                                     };
                                                                     Pulse_Syntax_Base.q
                                                                     = qual;
@@ -4163,7 +4168,10 @@ let rec (check_abs_core :
                                                                     Pulse_Syntax_Base.binder_ty
                                                                     = t2;
                                                                     Pulse_Syntax_Base.binder_ppname
-                                                                    = ppname
+                                                                    = ppname;
+                                                                    Pulse_Syntax_Base.binder_attrs
+                                                                    =
+                                                                    binder_attrs
                                                                     } qual
                                                                     (Pulse_Syntax_Naming.close_comp
                                                                     c_body3 x))),
@@ -4174,7 +4182,10 @@ let rec (check_abs_core :
                                                                     Pulse_Syntax_Base.binder_ty
                                                                     = t2;
                                                                     Pulse_Syntax_Base.binder_ppname
-                                                                    = ppname
+                                                                    = ppname;
+                                                                    Pulse_Syntax_Base.binder_attrs
+                                                                    =
+                                                                    binder_attrs
                                                                     }, u,
                                                                     (Pulse_Syntax_Naming.close_st_term
                                                                     body1 x),

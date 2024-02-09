@@ -198,7 +198,10 @@ let (check_bind_fn :
                                                                     c);
                                                                     Pulse_Syntax_Base.binder_ppname
                                                                     =
-                                                                    (binder.Pulse_Syntax_Base.binder_ppname)
+                                                                    (binder.Pulse_Syntax_Base.binder_ppname);
+                                                                    Pulse_Syntax_Base.binder_attrs
+                                                                    =
+                                                                    (binder.Pulse_Syntax_Base.binder_attrs)
                                                                     }))
                                                                     (fun
                                                                     uu___5 ->

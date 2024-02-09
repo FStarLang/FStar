@@ -570,7 +570,9 @@ let rec (subst_term :
                    Pulse_Syntax_Base.binder_ty =
                      (subst_term b.Pulse_Syntax_Base.binder_ty ss);
                    Pulse_Syntax_Base.binder_ppname =
-                     (b.Pulse_Syntax_Base.binder_ppname)
+                     (b.Pulse_Syntax_Base.binder_ppname);
+                   Pulse_Syntax_Base.binder_attrs =
+                     (b.Pulse_Syntax_Base.binder_attrs)
                  }, (subst_term body (shift_subst ss))))
       | Pulse_Syntax_Base.Tm_ForallSL (u, b, body) ->
           w
@@ -580,7 +582,9 @@ let rec (subst_term :
                    Pulse_Syntax_Base.binder_ty =
                      (subst_term b.Pulse_Syntax_Base.binder_ty ss);
                    Pulse_Syntax_Base.binder_ppname =
-                     (b.Pulse_Syntax_Base.binder_ppname)
+                     (b.Pulse_Syntax_Base.binder_ppname);
+                   Pulse_Syntax_Base.binder_attrs =
+                     (b.Pulse_Syntax_Base.binder_attrs)
                  }, (subst_term body (shift_subst ss))))
       | Pulse_Syntax_Base.Tm_FStar t1 ->
           w (Pulse_Syntax_Base.Tm_FStar (subst_host_term t1 ss))
@@ -665,7 +669,8 @@ let (subst_binder :
       {
         Pulse_Syntax_Base.binder_ty =
           (subst_term b.Pulse_Syntax_Base.binder_ty ss);
-        Pulse_Syntax_Base.binder_ppname = (b.Pulse_Syntax_Base.binder_ppname)
+        Pulse_Syntax_Base.binder_ppname = (b.Pulse_Syntax_Base.binder_ppname);
+        Pulse_Syntax_Base.binder_attrs = (b.Pulse_Syntax_Base.binder_attrs)
       }
 let (open_binder :
   Pulse_Syntax_Base.binder ->
@@ -679,7 +684,8 @@ let (open_binder :
           Pulse_Syntax_Base.binder_ty =
             (open_term' b.Pulse_Syntax_Base.binder_ty v i);
           Pulse_Syntax_Base.binder_ppname =
-            (b.Pulse_Syntax_Base.binder_ppname)
+            (b.Pulse_Syntax_Base.binder_ppname);
+          Pulse_Syntax_Base.binder_attrs = (b.Pulse_Syntax_Base.binder_attrs)
         }
 let rec (subst_term_pairs :
   (Pulse_Syntax_Base.term * Pulse_Syntax_Base.term) Prims.list ->
@@ -1171,7 +1177,9 @@ let (close_binders :
                 Pulse_Syntax_Base.binder_ty =
                   (subst_term b.Pulse_Syntax_Base.binder_ty s);
                 Pulse_Syntax_Base.binder_ppname =
-                  (b.Pulse_Syntax_Base.binder_ppname)
+                  (b.Pulse_Syntax_Base.binder_ppname);
+                Pulse_Syntax_Base.binder_attrs =
+                  (b.Pulse_Syntax_Base.binder_attrs)
               } in
             let s1 = (ND (x, Prims.int_zero)) :: (shift_subst s) in
             aux s1 (b1 :: out) bs2 xs2 in

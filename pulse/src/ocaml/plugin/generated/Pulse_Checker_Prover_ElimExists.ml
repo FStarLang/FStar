@@ -33,7 +33,8 @@ let (mk :
                        | Pulse_Syntax_Base.Tm_ExistsSL
                            (u,
                             { Pulse_Syntax_Base.binder_ty = t;
-                              Pulse_Syntax_Base.binder_ppname = nm;_},
+                              Pulse_Syntax_Base.binder_ppname = nm;
+                              Pulse_Syntax_Base.binder_attrs = uu___1;_},
                             p)
                            ->
                            FStar_Pervasives_Native.Some
@@ -52,7 +53,8 @@ let (mk :
                                                      (nm,
                                                        (Pulse_Typing_Env.fresh
                                                           g))))
-                                               (Pulse_Typing.as_binder t) p)
+                                               (Pulse_Syntax_Base.as_binder t)
+                                               p)
                                         })),
                                   (Pulse_Typing.comp_elim_exists u t p
                                      (nm, (Pulse_Typing_Env.fresh g))),

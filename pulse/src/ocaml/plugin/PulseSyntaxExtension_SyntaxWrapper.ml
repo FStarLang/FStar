@@ -38,7 +38,8 @@ let ppname_of_id (i:ident) : ppname = { name = FStar_Ident.string_of_id i; range
 
 let mk_binder_with_attrs (x:ident) (t:term) (attrs:term list) : binder =
   { binder_ty = t;
-    binder_ppname=ppname_of_id x}
+    binder_ppname=ppname_of_id x;
+    binder_attrs=attrs}
   
 let mk_binder (x:ident) (t:term) : binder =
   mk_binder_with_attrs x t []

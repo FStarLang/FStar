@@ -435,11 +435,7 @@ let (comp_intro_pure : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp) =
 let (named_binder :
   Pulse_Syntax_Base.ppname ->
     Pulse_Syntax_Base.term -> Pulse_Syntax_Base.binder)
-  =
-  fun x ->
-    fun t ->
-      { Pulse_Syntax_Base.binder_ty = t; Pulse_Syntax_Base.binder_ppname = x
-      }
+  = fun x -> fun t -> Pulse_Syntax_Base.mk_binder_ppname t x
 let (comp_intro_exists :
   Pulse_Syntax_Base.universe ->
     Pulse_Syntax_Base.binder ->
@@ -842,12 +838,6 @@ type ('g, 't, 'u) universe_of = unit
 type ('g, 'u, 't) non_informative_t =
   (Pulse_Syntax_Base.term, unit) Prims.dtuple2
 type ('g, 'c) non_informative_c = (unit, unit, unit) non_informative_t
-let (as_binder : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.binder) =
-  fun t ->
-    {
-      Pulse_Syntax_Base.binder_ty = t;
-      Pulse_Syntax_Base.binder_ppname = Pulse_Syntax_Base.ppname_default
-    }
 let (tm_join_inames :
   Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
   =
