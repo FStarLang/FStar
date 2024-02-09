@@ -67,7 +67,7 @@ let solve (#a:Type) {| ev : a |} : Tot a = ev
 instance _ = RE.e_term (* REMOVE ME *)
 
 (* Takes a `sealed a`, but that's just a userspace abstraction. *)
-let unseal (_typ:_) (x:'a) : tac 'a = return x
+let unseal (_typ:_) (x:Sealed.sealed 'a) : tac 'a = return (Sealed.unseal x)
 let unseal_step =
   (* Unseal is not in builtins. *)
   let s =

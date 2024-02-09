@@ -27,10 +27,14 @@ module Ident = FStar.Ident
 module Range = FStar.Compiler.Range
 module Z     = FStar.BigInt
 open FStar.Ident
+open FStar.Compiler.Sealed
 
 type name = list string
 type typ  = term
 type binders = list binder
+
+type ppname_t = sealed string
+val as_ppname (s:string) : Tot ppname_t
 
 let binder_is_simple (b:Stubs.Reflection.Types.binder) : Tot Type0 = True
 
@@ -73,8 +77,8 @@ type pattern =
  // else here but a ppname, the variable is referred to by its DB index.
  // This means all Pat_Var are provably equal.
  | Pat_Var :
-     sort   : term ->
-     ppname : string ->
+     sort   : sealed term ->
+     ppname : ppname_t ->
      pattern
 
  // Dot pattern: resolved by other elements in the pattern and type
@@ -91,31 +95,29 @@ type aqualv =
 
 type argv = term * aqualv
 
-val as_ppname (s:string) : Tot string
-
 type namedv_view = {
   uniq   : Z.t;
-  sort   : typ;
-  ppname : string;
+  sort   : sealed typ;
+  ppname : ppname_t;
 }
 
 type bv_view = {
   index  : Z.t;
-  sort   : typ;
-  ppname : string;
+  sort   : sealed typ;
+  ppname : ppname_t;
 }
 
 type binder_view = {
   sort   : typ;
   qual   : aqualv;
   attrs  : list term;
-  ppname : string;
+  ppname : ppname_t;
 }
 
 type binding = {
   uniq   : Z.t;
   sort   : typ;
-  ppname : string;
+  ppname : ppname_t;
 }
 type bindings = list binding
 

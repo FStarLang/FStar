@@ -648,20 +648,20 @@ let e_norm_step =
 
 // Embedding a sealed term. This just calls the embedding for a but also
 // adds a `seal` marker to the result. The unembedding removes it.
-let e_sealed (ea : embedding 'a) =
+let e_sealed (ea : embedding 'a) : Prims.Tot (embedding (Sealed.sealed 'a)) =
     let etyp () =
         ET_app(PC.sealed_lid |> Ident.string_of_lid, [ea.e_typ ()])
     in
-    let em cb (x:'a) : t =
+    let em cb (x: Sealed.sealed 'a) : t =
         lazy_embed etyp x (fun () ->
-          lid_as_constr PC.seal_lid [U_zero] [as_arg (embed ea cb x);
+          lid_as_constr PC.seal_lid [U_zero] [as_arg (embed ea cb (Sealed.unseal x));
                                           as_iarg (type_of ea)])
     in
-    let un cb (trm:t) : option 'a =
+    let un cb (trm:t) : option (Sealed.sealed 'a) =
         lazy_unembed etyp trm (fun trm ->
         match trm.nbe_t with
         | Construct (fvar, us, [(a, _); _]) when S.fv_eq_lid fvar PC.seal_lid ->
-          unembed ea cb a
+          Class.Monad.fmap Sealed.seal <| unembed ea cb a
         | _ -> None)
     in
     mk_emb em un (fun () -> lid_as_typ PC.sealed_lid [U_zero] [as_arg (type_of ea)]) etyp

@@ -133,6 +133,9 @@ let e_term_aq aq =
 
 let e_term = e_term_aq (0, [])
 
+let e_sort = e_sealed e_term
+let e_ppname = e_sealed e_string
+
 let e_aqualv =
     let embed_aqualv cb (q : aqualv) : t =
         match q with
@@ -274,7 +277,7 @@ let rec e_pattern_aq aq =
                as_arg (embed (e_option (e_list e_universe)) cb us_opt);
                as_arg (embed (e_list (e_tuple2 (e_pattern_aq aq) e_bool)) cb ps)]
         | Pat_Var (bv, sort) ->
-            mkConstruct ref_Pat_Var.fv [] [as_arg (embed e_bv cb bv); as_arg (embed (e_sealed e_term) cb sort)]
+            mkConstruct ref_Pat_Var.fv [] [as_arg (embed e_bv cb bv); as_arg (embed e_sort cb sort)]
         | Pat_Dot_Term eopt ->
             mkConstruct ref_Pat_Dot_Term.fv [] [as_arg (embed (e_option e_term) cb eopt)]
     in
@@ -292,7 +295,7 @@ let rec e_pattern_aq aq =
 
         | Construct (fv, [], [(sort, _); (bv, _)]) when S.fv_eq_lid fv ref_Pat_Var.lid ->
             BU.bind_opt (unembed e_bv cb bv) (fun bv ->
-            BU.bind_opt (unembed (e_sealed e_term) cb sort) (fun sort ->
+            BU.bind_opt (unembed e_sort cb sort) (fun sort ->
             Some <| Pat_Var (bv, sort)))
 
         | Construct (fv, [], [(eopt, _)]) when S.fv_eq_lid fv ref_Pat_Dot_Term.lid ->

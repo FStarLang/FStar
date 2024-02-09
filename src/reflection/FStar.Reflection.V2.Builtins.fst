@@ -181,7 +181,7 @@ let rec inspect_pat p =
   match p.v with
   | Pat_constant c -> Pat_Constant (inspect_const c)
   | Pat_cons (fv, us_opt, ps) -> Pat_Cons fv us_opt (List.map (fun (p, b) -> inspect_pat p, b) ps)
-  | Pat_var bv -> Pat_Var bv.sort (string_of_id bv.ppname)
+  | Pat_var bv -> Pat_Var (Sealed.seal bv.sort) (Sealed.seal <| string_of_id bv.ppname)
   | Pat_dot_term eopt -> Pat_Dot_Term eopt
 
 let rec inspect_ln (t:term) : term_view =
@@ -368,7 +368,7 @@ let rec pack_pat p : S.pat =
   | Pat_Constant c -> wrap <| Pat_constant (pack_const c)
   | Pat_Cons head univs subpats -> wrap <| Pat_cons (head, univs, List.map (fun (p, b) -> pack_pat p, b) subpats)
   | Pat_Var  sort ppname ->
-    let bv = S.gen_bv ppname None sort in
+    let bv = S.gen_bv (Sealed.unseal ppname) None (Sealed.unseal sort) in
     wrap <| Pat_var bv
   | Pat_Dot_Term eopt -> wrap <| Pat_dot_term eopt
 
@@ -649,21 +649,21 @@ let inspect_namedv (v:bv) : namedv_view =
     );
     {
       uniq   = Z.of_int_fs v.index;
-      ppname = Ident.string_of_id v.ppname;
-      sort   = v.sort
+      ppname = Sealed.seal <| Ident.string_of_id v.ppname;
+      sort   = Sealed.seal <| v.sort
     }
 
 let pack_namedv (vv:namedv_view) : namedv =
     if Z.to_int_fs vv.uniq < 0 then (
         Err.log_issue Range.dummyRange
             (Err.Warning_CantInspect, BU.format2 "pack_namedv: uniq is negative (%s), uniq = %s"
-                                         vv.ppname
+                                         (Sealed.unseal vv.ppname)
                                          (string_of_int (Z.to_int_fs vv.uniq)))
     );
     {
       index  = Z.to_int_fs vv.uniq;
-      ppname = Ident.mk_ident (vv.ppname, Range.dummyRange);
-      sort   = vv.sort;
+      ppname = Ident.mk_ident (Sealed.unseal vv.ppname, Range.dummyRange);
+      sort   = Sealed.unseal <| vv.sort;
     }
 
 let inspect_bv (bv:bv) : bv_view =
@@ -676,27 +676,27 @@ let inspect_bv (bv:bv) : bv_view =
     );
     {
       index  = Z.of_int_fs bv.index;
-      ppname = Ident.string_of_id bv.ppname;
-      sort   = bv.sort;
+      ppname = Sealed.seal <| Ident.string_of_id bv.ppname;
+      sort   = Sealed.seal <| bv.sort;
     }
 
 let pack_bv (bvv:bv_view) : bv =
     if Z.to_int_fs bvv.index < 0 then (
         Err.log_issue Range.dummyRange
             (Err.Warning_CantInspect, BU.format2 "pack_bv: index is negative (%s), index = %s"
-                                         bvv.ppname
+                                         (Sealed.unseal bvv.ppname)
                                          (string_of_int (Z.to_int_fs bvv.index)))
     );
     {
       index = Z.to_int_fs bvv.index;
-      ppname = Ident.mk_ident (bvv.ppname, Range.dummyRange);
-      sort = bvv.sort;
+      ppname = Ident.mk_ident (Sealed.unseal bvv.ppname, Range.dummyRange);
+      sort = Sealed.unseal bvv.sort;
     }
 
 let inspect_binder (b:binder) : binder_view =
   let attrs = U.encode_positivity_attributes b.binder_positivity b.binder_attrs in
   {
-    ppname = Ident.string_of_id b.binder_bv.ppname;
+    ppname = Sealed.seal <| Ident.string_of_id b.binder_bv.ppname;
     qual   = inspect_bqual (b.binder_qual);
     attrs  = attrs;
     sort   = b.binder_bv.sort;
@@ -705,7 +705,7 @@ let inspect_binder (b:binder) : binder_view =
 let pack_binder (bview:binder_view) : binder =
   let pqual, attrs = U.parse_positivity_attributes bview.attrs in
   {
-    binder_bv= { ppname = Ident.mk_ident (bview.ppname, Range.dummyRange)
+    binder_bv= { ppname = Ident.mk_ident (Sealed.unseal bview.ppname, Range.dummyRange)
                ; sort = bview.sort
                ; index = 0 (* irrelevant, this is a binder *)
                };
@@ -726,7 +726,7 @@ let bv_to_binding (bv : bv) : RD.binding =
   {
     uniq   = Z.of_int_fs bv.index;
     sort   = bv.sort;
-    ppname = string_of_id bv.ppname;
+    ppname = Sealed.seal <| string_of_id bv.ppname;
   }
 
 let vars_of_env e = FStar.TypeChecker.Env.all_binders e |> List.map (fun b -> bv_to_binding b.binder_bv)
