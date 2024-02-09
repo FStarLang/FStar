@@ -948,7 +948,7 @@ let (mk_reference_expr : Prims.bool -> expr -> expr) =
     fun expr_reference_expr ->
       Expr_reference { expr_reference_is_mut; expr_reference_expr }
 let (mk_pat_ident : Prims.string -> pat) =
-  fun path -> Pat_ident { pat_name = path; by_ref = false; is_mut = false }
+  fun path -> Pat_ident { pat_name = path; by_ref = false; is_mut = true }
 let (mk_pat_ts : Prims.string -> pat Prims.list -> pat) =
   fun pat_ts_path ->
     fun pat_ts_elems ->

@@ -115,7 +115,7 @@ let mk_reference_expr (expr_reference_is_mut:bool) (expr_reference_expr:expr) : 
   Expr_reference { expr_reference_is_mut; expr_reference_expr }
 
 let mk_pat_ident (path:string) : pat =
-  Pat_ident { pat_name = path; by_ref = false; is_mut = false }
+  Pat_ident { pat_name = path; by_ref = false; is_mut = true }
 
 let mk_pat_ts (pat_ts_path:string) (pat_ts_elems:list pat) : pat =
   if L.length pat_ts_elems = 0

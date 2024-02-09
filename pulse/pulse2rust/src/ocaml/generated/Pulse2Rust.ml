@@ -662,8 +662,13 @@ and (extract_mlexpr :
           (FStar_Extraction_ML_Syntax.MLC_Unit) ->
           Pulse2Rust_Rust_Syntax.Expr_lit Pulse2Rust_Rust_Syntax.Lit_unit
       | FStar_Extraction_ML_Syntax.MLE_Const c ->
-          let lit = extract_mlconstant_to_lit c in
-          Pulse2Rust_Rust_Syntax.Expr_lit lit
+          let elit =
+            let uu___ = extract_mlconstant_to_lit c in
+            Pulse2Rust_Rust_Syntax.Expr_lit uu___ in
+          (match c with
+           | FStar_Extraction_ML_Syntax.MLC_String uu___ ->
+               Pulse2Rust_Rust_Syntax.mk_method_call elit "to_string" []
+           | uu___ -> elit)
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =

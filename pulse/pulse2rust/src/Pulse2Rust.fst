@@ -432,8 +432,11 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     //   no unit extraction in the lit function
     //
   | S.MLE_Const c ->
-    let lit = extract_mlconstant_to_lit c in
-    Expr_lit lit
+    let elit = extract_mlconstant_to_lit c |> Expr_lit in
+    (match c with
+     | S.MLC_String _ ->
+       mk_method_call elit "to_string" [] 
+     | _ -> elit)
   | S.MLE_App ({expr=S.MLE_Name p}, [e])
     when S.string_of_mlpath p = "FStar.SizeT.uint_to_t" ->
     extract_mlexpr g e
