@@ -214,9 +214,9 @@ let seal_steps =
                 try_unembed (e_sealed e_any) s,
                 try_unembed e_any f with
           | Some ta, Some tb, Some s, Some f ->
-            let r = U.mk_app f [S.as_arg s] in
+            let r = U.mk_app f [S.as_arg (Sealed.unseal s)] in
             let emb = set_type ta e_any in
-            Some (embed_simple #_ #(e_sealed emb) psc.psc_range r)
+            Some (embed_simple psc.psc_range (Sealed.seal r))
           | _ -> None
           end
         | _ -> None),
@@ -233,9 +233,9 @@ let seal_steps =
                 try_unembed (e_sealed e_any) s,
                 try_unembed e_any f with
           | Some ta, Some tb, Some s, Some f ->
-            let r = cb.iapp f [as_arg s] in
+            let r = cb.iapp f [as_arg (Sealed.unseal s)] in
             let emb = set_type ta e_any in
-            Some (embed (e_sealed emb) cb r)
+            Some (embed (e_sealed emb) cb (Sealed.seal r))
           | _ -> None
           end
         | _ -> None
@@ -254,7 +254,7 @@ let seal_steps =
                 try_unembed (e_sealed e_any) s,
                 try_unembed e_any f with
           | Some ta, Some tb, Some s, Some f ->
-            let r = U.mk_app f [S.as_arg s] in
+            let r = U.mk_app f [S.as_arg (Sealed.unseal s)] in
             Some (embed_simple #_ #e_any psc.psc_range r)
           | _ -> None
           end
@@ -272,7 +272,7 @@ let seal_steps =
                 try_unembed (e_sealed e_any) s,
                 try_unembed e_any f with
           | Some ta, Some tb, Some s, Some f ->
-            let r = cb.iapp f [as_arg s] in
+            let r = cb.iapp f [as_arg (Sealed.unseal s)] in
             let emb = set_type ta e_any in
             Some (embed emb cb r)
           | _ -> None

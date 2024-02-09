@@ -721,20 +721,20 @@ let bv_to_binding (bv : bv) : RD.binding =
   {
     uniq   = Z.of_int_fs bv.index;
     sort   = bv.sort;
-    ppname = show bv.ppname;
+    ppname = Sealed.seal (show bv.ppname);
   }
 
 let binder_to_binding (b:binder) : RD.binding =
   bv_to_binding b.binder_bv
 
 let binding_to_string (b : RD.binding) : string =
-  b.ppname ^ "#" ^ show (Z.to_int_fs b.uniq)
+  Sealed.unseal b.ppname ^ "#" ^ show (Z.to_int_fs b.uniq)
 
 
 let binding_to_bv (b : RD.binding) : bv =
   {
     sort = b.sort;
-    ppname = mk_ident(b.ppname, Range.dummyRange);
+    ppname = mk_ident (Sealed.unseal b.ppname, Range.dummyRange);
     index = Z.to_int_fs b.uniq;
   }
 
@@ -1284,7 +1284,7 @@ let rename_to (b : RD.binding) (s : string) : tac RD.binding = wrap_err "rename_
     | Some (bv', goal) ->
       replace_cur goal ;!
       let uniq = Z.of_int_fs bv'.index in
-      return {b with uniq=uniq; ppname = s}
+      return {b with uniq=uniq; ppname = Sealed.seal s}
     )
 
 let var_retype (b : RD.binding) : tac unit = wrap_err "binder_retype" <| (
