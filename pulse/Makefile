@@ -12,20 +12,19 @@ all: build
 ifeq (,$(FSTAR_HOME))
   _check_fstar := $(shell which fstar.exe)
   ifeq ($(.SHELLSTATUS),0)
-    _fstar_home := $(realpath $(dir $(_check_fstar))/..)
-    ifeq ($(OS),Windows_NT)
-      OCAMLPATH := $(shell cygpath -m $(_fstar_home)/lib);$(OCAMLPATH)
-    else
-      OCAMLPATH := $(_fstar_home)/lib:$(OCAMLPATH)
-    endif
-  endif
-else
-  _fstar_home := $(FSTAR_HOME)
-  ifeq ($(OS),Windows_NT)
-    OCAMLPATH := $(shell cygpath -m $(FSTAR_HOME)/lib);$(OCAMLPATH)
+    FSTAR_HOME := $(realpath $(dir $(_check_fstar))/..)
   else
-    OCAMLPATH := $(FSTAR_HOME)/lib:$(OCAMLPATH)
+    $(error "FSTAR_HOME is not defined and I cannot find fstar.exe in $(PATH). Please make sure fstar.exe is properly installed and in your PATH or FSTAR_HOME points to its prefix directory or the F* source repository.")
   endif
+endif
+ifeq ($(OS),Windows_NT)
+  FSTAR_HOME := $(shell cygpath -m $(FSTAR_HOME))
+endif
+export FSTAR_HOME
+ifeq ($(OS),Windows_NT)
+    OCAMLPATH := $(shell cygpath -m $(FSTAR_HOME)/lib);$(OCAMLPATH)
+else
+    OCAMLPATH := $(FSTAR_HOME)/lib:$(OCAMLPATH)
 endif
 export OCAMLPATH
 _check_fstar_lib_package := $(shell env OCAMLPATH="$(OCAMLPATH)" ocamlfind query fstar.lib)

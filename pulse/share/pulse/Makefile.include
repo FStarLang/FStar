@@ -1,7 +1,18 @@
 ifeq (,$(PULSE_HOME))
 	$(error PULSE_HOME should be defined in the enclosing Makefile as the prefix directory where Pulse was installed, or the root directory of its source repository)
 endif
-FSTAR_HOME ?= $(realpath $(dir $(shell which fstar.exe))/..)
+
+ifeq (,$(FSTAR_HOME))
+  _check_fstar := $(shell which fstar.exe)
+  ifeq ($(.SHELLSTATUS),0)
+    FSTAR_HOME := $(realpath $(dir $(_check_fstar))/..)
+  else
+    $(error "FSTAR_HOME is not defined and I cannot find fstar.exe in PATH. Please make sure fstar.exe is properly installed and in your PATH or FSTAR_HOME points to its prefix directory or the F* source repository.")
+  endif
+endif
+ifeq ($(OS),Windows_NT)
+  FSTAR_HOME := $(shell cygpath -m $(FSTAR_HOME))
+endif
 
 # List the files that should be verified by verify-extra and verify-all
 EXTRA=
