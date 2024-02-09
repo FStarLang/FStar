@@ -36,10 +36,12 @@ type vprop = term
 
 let ppname_of_id (i:ident) : ppname = { name = FStar_Ident.string_of_id i; range = i.idRange }
 
-let mk_binder (x:ident) (t:term) : binder =
+let mk_binder_with_attrs (x:ident) (t:term) (attrs:term list) : binder =
   { binder_ty = t;
     binder_ppname=ppname_of_id x}
-
+  
+let mk_binder (x:ident) (t:term) : binder =
+  mk_binder_with_attrs x t []
 
 let tm_bvar (bv:bv) : term = U.tm_bvar bv
 let tm_var (x:nm) : term = U.tm_var x
