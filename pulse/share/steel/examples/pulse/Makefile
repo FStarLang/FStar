@@ -1,33 +1,39 @@
-PULSE_SHARE = ../../
+PULSE_HOME ?= ../../../..
+PULSE_SHARE = $(PULSE_HOME)/share/steel
 # ^ This must point to /steel/share. But we cannot rely on going via
 # the root (../../../..) since the OPAM package will detach the share
 # directory from the rest of the repo.
 
-INCLUDE_DIRS=bug-reports by-example lib/c dice/cbor dice/common dice/dpe dice/engine dice/l0 parallel parix c .
-CACHE_DIR=.cache
-SRC_DIRS=$(addprefix $(PULSE_SHARE)/examples/pulse/, $(INCLUDE_DIRS))
-FSTAR_FILES=$(wildcard $(addsuffix /*.fst, $(SRC_DIRS))) $(wildcard $(addsuffix /*.fsti, $(SRC_DIRS)))
+SRC_DIRS = bug-reports by-example lib/c parallel parix c .
+OUTPUT_DIRECTORY=_output
+CACHE_DIRECTORY=$(OUTPUT_DIRECTORY)/cache
 
-all: verify test
+all: verify test dice
+
+include $(PULSE_SHARE)/Makefile.include
+
+.PHONY: dice
+dice:
+	+$(MAKE) -C dice
 
 extract:
-#	$(FSTAR) --odir _output --codegen OCaml CustomSyntax.fst --extract CustomSyntax
-	$(FSTAR) --odir _output --codegen OCaml ExtractionTest.fst --extract ExtractionTest
+#	$(FSTAR) --odir $(OUTPUT_DIRECTORY) --codegen OCaml CustomSyntax.fst --extract CustomSyntax
+	$(FSTAR) --codegen OCaml ExtractionTest.fst --extract ExtractionTest
 
-extract_c: _output/cache/ExtractionTest.fst.checked
-	$(FSTAR) --odir _output --codegen krml ExtractionTest.fst --extract ExtractionTest
-	$(KRML_HOME)/krml -bundle ExtractionTest=* -skip-compilation _output/ExtractionTest.krml -tmpdir _output
+extract_c: $(CACHE_DIRECTORY)/ExtractionTest.fst.checked
+	$(FSTAR) --codegen krml ExtractionTest.fst --extract ExtractionTest
+	$(KRML_HOME)/krml -bundle ExtractionTest=* -skip-compilation $(OUTPUT_DIRECTORY)/ExtractionTest.krml -tmpdir $(OUTPUT_DIRECTORY)
 
 #	$(FSTAR) --codegen krml Demo.MultiplyByRepeatedAddition.fst --extract '* -Pulse.Lib.Core'
-#	$(FSTAR_HOME)/../karamel/krml -bundle Demo.MultiplyByRepeatedAddition=* -skip-compilation _output/out.krml
+#	$(FSTAR_HOME)/../karamel/krml -bundle Demo.MultiplyByRepeatedAddition=* -skip-compilation $(OUTPUT_DIRECTORY)/out.krml
 
 ifneq (,$(KRML_HOME))
-test-cbor: cbor
+test-cbor: dice
 	+$(MAKE) -C dice/cbor
 
-extract_pulse_c: _output/cache/PulsePointStruct.fst.checked
-	$(FSTAR) --odir _output --codegen krml PulsePointStruct.fst --extract PulsePointStruct
-	$(KRML_HOME)/krml -bundle PulsePointStruct=* -skip-linking _output/PulsePointStruct.krml -tmpdir _output
+extract_pulse_c: $(CACHE_DIRECTORY)/PulsePointStruct.fst.checked
+	$(FSTAR) --odir $(OUTPUT_DIRECTORY) --codegen krml PulsePointStruct.fst --extract PulsePointStruct
+	$(KRML_HOME)/krml -bundle PulsePointStruct=* -skip-linking $(OUTPUT_DIRECTORY)/PulsePointStruct.krml -tmpdir $(OUTPUT_DIRECTORY)
 
 else
 test-cbor:
@@ -42,17 +48,10 @@ test: test-cbor extract_pulse_c
 
 .PHONY: test test-cbor test-cbor-raw
 
-include Makefile.pulse.common
-
 PULSE_C_CHECKED_FILES=$(filter $(CACHE_DIRECTORY)/Pulse.C.%,$(ALL_CHECKED_FILES))
 
 .PHONY: c
 c: $(PULSE_C_CHECKED_FILES)
-
-CBOR_CHECKED_FILES=$(filter $(CACHE_DIRECTORY)/CBOR.% $(CACHE_DIRECTORY)/CDDL.% $(CACHE_DIRECTORY)/CDDLExtractionTest.%,$(ALL_CHECKED_FILES))
-
-.PHONY: cbor
-cbor: $(CBOR_CHECKED_FILES)
 
 PREFIX ?= /usr/local
 ifeq ($(OS),Windows_NT)

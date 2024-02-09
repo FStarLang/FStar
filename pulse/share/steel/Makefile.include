@@ -1,80 +1,110 @@
 ifeq (,$(PULSE_HOME))
 	$(error PULSE_HOME should be defined in the enclosing Makefile as the prefix directory where Pulse was installed, or the root directory of its source repository)
 endif
+FSTAR_HOME ?= $(realpath $(dir $(shell which fstar.exe))/..)
 
-ifneq (,$(FSTAR_HOME))
-  FSTAR=$(FSTAR_HOME)/bin/fstar.exe
-else
-  FSTAR=fstar.exe
-endif
+# List the files that should be verified by verify-extra and verify-all
+EXTRA=
 
-# Add Pulse to the OCaml (ocamlfind) search path
-ifeq ($(OS),Windows_NT)
-  OCAMLPATH := $(shell cygpath -m $(PULSE_HOME)/lib);$(OCAMLPATH)
-else
-  OCAMLPATH := $(PULSE_HOME)/lib:$(OCAMLPATH)
-endif
+# List the files that should NOT be verified at all
+FLAKY=
 
-# Find fstar.exe and the fstar.lib OCaml package
-ifeq (,$(FSTAR_HOME))
-  _check_fstar := $(shell which fstar.exe)
-  ifeq ($(.SHELLSTATUS),0)
-    _fstar_home := $(realpath $(dir $(_check_fstar))/..)
-    ifeq ($(OS),Windows_NT)
-      OCAMLPATH := $(shell cygpath -m $(_fstar_home)/lib);$(OCAMLPATH)
-    else
-      OCAMLPATH := $(_fstar_home)/lib:$(OCAMLPATH)
-    endif
-  endif
-else
-  ifeq ($(OS),Windows_NT)
-    OCAMLPATH := $(shell cygpath -m $(FSTAR_HOME)/lib);$(OCAMLPATH)
-  else
-    OCAMLPATH := $(FSTAR_HOME)/lib:$(OCAMLPATH)
-  endif
-endif
-export OCAMLPATH
+# List additional directories for the include path
+SRC_DIRS += .
 
-FSTAR_FILES += $(filter-out $(EXCLUDE_FILES),$(wildcard *.fst *.fsti))
-ADDITIONAL_INCLUDES ?= 
-FSTAR_OPTIONS += $(OTHERFLAGS) --cmi --cache_checked_modules --warn_error @241 --already_cached 'Prims,FStar,LowStar,C' --include $(PULSE_HOME)/lib/pulse $(ADDITIONAL_INCLUDES) --load_cmxs pulse
+# List the files that should be verified by verify-core and verify-all
+# Those files are the roots from where all dependencies are computed
+FSTAR_FILES ?= $(wildcard $(addsuffix /*.fst,$(SRC_DIRS)) $(addsuffix /*.fsti,$(SRC_DIRS)))
 
-COMPAT_INDEXED_EFFECTS?=--compat_pre_typed_indexed_effects
+# Uncomment the definition of PROFILE below, if you want some basic
+# profiling of F* runs It will report the time spent
+# on typechecking your file And the time spent in SMT, which is
+# included in the total typechecking time
+
+# PROFILE=--profile YOUR_FILE --profile_component 'FStar.Universal.tc_source_file FStar.SMTEncoding'
 
 # Used only for OCaml extraction, not krml extraction
+# OCaml or Plugin
 FSTAR_ML_CODEGEN ?= OCaml
 
-MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(FSTAR_OPTIONS)
+OTHERFLAGS+=$(PROFILE)
 
-%.checked:
-	$(call msg, "CHECK", $(basename $(notdir $@)))
-	@# You can debug with --debug $(basename $(notdir $<))
-	$(Q)$(RUNLIM) $(MY_FSTAR) $(SIL) $(COMPAT_INDEXED_EFFECTS) $<
-	touch -c $@
+# Backward compatibility with pre typed indexed effects (see F* PR 2760)
+OTHERFLAGS+=
+
+WARN_ERROR=
+
+SMT_OPTIONS?=
+OTHERFLAGS+=$(WARN_ERROR) $(SMT_OPTIONS)
+ALREADY_CACHED_LIST ?= Prims,FStar,PulseCore,Pulse,-Pulse.C
+ALREADY_CACHED = --already_cached $(ALREADY_CACHED_LIST)
+
+# A place to put all build artifacts
+ifneq (,$(OUTPUT_DIRECTORY))
+  FSTAR_OPTIONS += --odir $(OUTPUT_DIRECTORY)
+endif
+
+# A place to put .checked files
+ifneq (,$(CACHE_DIRECTORY))
+  FSTAR_OPTIONS += --cache_dir $(CACHE_DIRECTORY)
+  INCLUDE_PATHS+=$(CACHE_DIRECTORY)
+endif
+
+# FIXME: do we still need separate subdirectories for pledges, classes?
+INCLUDE_PATHS+=$(SRC_DIRS) $(PULSE_HOME)/lib/pulse $(PULSE_HOME)/lib/pulse/lib $(PULSE_HOME)/lib/pulse/lib/class $(PULSE_HOME)/lib/pulse/lib/pledge $(PULSE_HOME)/lib/pulse/core
+
+FSTAR_OPTIONS += \
+		 $(OTHERFLAGS) \
+	         $(addprefix --include , $(INCLUDE_PATHS)) \
+		 --cache_checked_modules \
+		 --load_cmxs pulse
+
+FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(FSTAR_OPTIONS) $(ALREADY_CACHED)
 
 .depend: $(FSTAR_FILES)
-	$(call msg, "DEPEND")
-	$(Q)true $(shell rm -f .depend.rsp) $(foreach f,$(FSTAR_FILES),$(shell echo $(f) >> $@.rsp))
-	$(Q)$(MY_FSTAR) $(FSTAR_DEP_OPTIONS) --dep full @$@.rsp --output_deps_to $@.tmp
-	mv $@.tmp $@
+ifneq (,$(OUTPUT_DIRECTORY))
+	mkdir -p $(OUTPUT_DIRECTORY)
+endif
+ifneq (,$(CACHE_DIRECTORY))
+	mkdir -p $(CACHE_DIRECTORY)
+endif
+	$(FSTAR) $(FSTAR_DEP_OPTIONS) --dep full $(notdir $(FSTAR_FILES)) --output_deps_to .depend.aux
+	mv .depend.aux .depend
+
+depend: .depend
 
 include .depend
+
+
+# a.fst(i).checked is the binary, checked version of a.fst(i)
+$(ALL_CHECKED_FILES): %.checked:
+	$(FSTAR) $<
+	touch -c $@
 
 verify: $(ALL_CHECKED_FILES)
 
 $(ALL_ML_FILES): %.ml:
-	$(call msg, "EXTRACT", $(basename $(notdir $@)))
-	$(Q)$(MY_FSTAR) $(subst .checked,,$(notdir $<)) --codegen $(FSTAR_ML_CODEGEN) --extract_module $(basename $(notdir $(subst .checked,,$<)))
+	$(FSTAR) $(subst .checked,,$(notdir $<)) --codegen $(FSTAR_ML_CODEGEN) --extract_module $(basename $(notdir $(subst .checked,,$<)))
 
 $(ALL_KRML_FILES): %.krml:
-	$(MY_FSTAR) $(notdir $(subst .checked,,$<)) --codegen krml \
+	$(FSTAR) $(notdir $(subst .checked,,$<)) --codegen krml \
 	  --extract_module $(basename $(notdir $(subst .checked,,$<)))
 	touch -c $@
 
-clean::
-	rm -f *.checked .depend* *.krml
-
-.PHONY: all verify clean %.fst-in %.fsti-in
-
 %.fst-in %.fsti-in:
-	@echo $(FSTAR_OPTIONS) $(COMPAT_INDEXED_EFFECTS)
+	@echo $(FSTAR_OPTIONS)
+
+.PHONY: verify clean depend all %.fst-in $.fsti-in
+
+clean:
+	rm -f .depend*
+ifneq (,$(CACHE_DIRECTORY))
+	rm -rf $(CACHE_DIRECTORY)
+else
+	rm -f *.checked
+endif
+ifneq (,$(OUTPUT_DIRECTORY))
+	rm -rf $(OUTPUT_DIRECTORY)
+else
+	rm -f *.krml
+endif

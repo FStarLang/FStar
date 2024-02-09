@@ -1,21 +1,20 @@
-# This Makefile only tests (verification and) extraction of DPE message parsing.
+# This Makefile only tests extraction of CBOR parsing and serialization.
 # It is not intended to be used with `emacs`. Instead, please use VSCode, with
 # a workspace starting from the Steel root directory.
 
-PULSE_EXAMPLES_ROOT = ../..
-PULSE_HOME = $(PULSE_EXAMPLES_ROOT)/../../../../
-
-# The INCLUDE_DIRS are relative to PULSE_EXAMPLES_ROOT
-INCLUDE_DIRS=_output/cache dice/cbor/extern
-SRC_DIRS=$(addprefix $(PULSE_EXAMPLES_ROOT)/, $(INCLUDE_DIRS))
-FSTAR_FILES=$(wildcard CDDLExtractionTest.*.fst) # but I still need to enumerate them in the Karamel bundle
-OTHERFLAGS += --cmi --already_cached '*,-CBOR.Pulse.Type'
+PULSE_HOME ?= ../../../../../../
+PULSE_EXAMPLES_ROOT = $(PULSE_HOME)/share/steel/examples/pulse
+OUTPUT_DIRECTORY=_output
+CACHE_DIRECTORY=$(OUTPUT_DIRECTORY)/cache
+SRC_DIRS := extern
+INCLUDE_PATHS := ../_output/cache
+OTHERFLAGS += --cmi --already_cached '*,-CBOR.Pulse.Type,-CDDLExtractionTest'
 
 FSTAR_DEP_OPTIONS=--extract '* -FStar.Tactics -FStar.Reflection -Steel -Pulse +Pulse.Class +Pulse.Lib -Pulse.Lib.Core'
 KRML=$(KRML_HOME)/krml $(KRML_OPTS)
 all: verify test
 
-include $(PULSE_EXAMPLES_ROOT)/Makefile.pulse.common
+include $(PULSE_HOME)/share/steel/Makefile.include
 
 FILTERED_KRML_FILES := $(filter-out %/prims.krml,$(ALL_KRML_FILES))
 
