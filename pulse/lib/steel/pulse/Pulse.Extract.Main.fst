@@ -549,8 +549,10 @@ let rec extract (g:env) (p:st_term)
       | Tm_Rewrite _ ->
         erased_result
 
-      | Tm_Abs { b; q; body } -> 
+      | Tm_Abs { b; q; body } ->
         let g, mlident, mlty, name = extend_env g b in
+        let attrs = b.binder_attrs |> T.unseal in
+        T.print (Printf.sprintf "attrs: %s\n" (if L.length attrs = 0 then "" else term_to_string (L.hd attrs)));
         let body = LN.open_st_term_nv body name in
         let body, _ = extract g body in
         let res = mle_fun [mlident, mlty] body in

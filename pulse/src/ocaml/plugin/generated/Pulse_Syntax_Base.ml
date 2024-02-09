@@ -585,27 +585,26 @@ let (__proj__Mkdecl__item__d : decl -> decl') =
   fun projectee -> match projectee with | { d; range3 = range1;_} -> d
 let (__proj__Mkdecl__item__range : decl -> range) =
   fun projectee -> match projectee with | { d; range3 = range1;_} -> range1
+let (mk_binder_with_attrs :
+  term ->
+    ppname -> (term Prims.list, unit) FStar_Sealed_Inhabited.sealed -> binder)
+  =
+  fun binder_ty ->
+    fun binder_ppname ->
+      fun binder_attrs -> { binder_ty; binder_ppname; binder_attrs }
 let (null_binder : term -> binder) =
-  fun t ->
-    {
-      binder_ty = t;
-      binder_ppname = ppname_default;
-      binder_attrs = (binder_attrs_default ())
-    }
+  fun t -> mk_binder_with_attrs t ppname_default (binder_attrs_default ())
 let (mk_binder : Prims.string -> range -> term -> binder) =
   fun s ->
     fun r ->
       fun t ->
-        {
-          binder_ty = t;
-          binder_ppname =
-            (mk_ppname (FStar_Reflection_Typing.seal_pp_name s) r);
-          binder_attrs = (binder_attrs_default ())
-        }
+        mk_binder_with_attrs t
+          (mk_ppname (FStar_Reflection_Typing.seal_pp_name s) r)
+          (binder_attrs_default ())
 let (mk_binder_ppname : term -> ppname -> binder) =
   fun binder_ty ->
     fun binder_ppname ->
-      { binder_ty; binder_ppname; binder_attrs = (binder_attrs_default ()) }
+      mk_binder_with_attrs binder_ty binder_ppname (binder_attrs_default ())
 let (eq_univ : universe -> universe -> Prims.bool) =
   fun u1 -> fun u2 -> FStar_Reflection_V2_TermEq.univ_eq_dec u1 u2
 let rec (eq_tm : term -> term -> Prims.bool) =

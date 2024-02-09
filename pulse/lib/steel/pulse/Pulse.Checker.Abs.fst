@@ -140,7 +140,7 @@ let rec rebuild_abs (g:env) (t:st_term) (annot:T.term)
       | Some ty, T.C_Total res_ty -> (
         if Tm_Abs? body.term
         then (
-          let b = mk_binder_ppname ty b.binder_ppname in
+          let b = mk_binder_with_attrs ty b.binder_ppname b.binder_attrs in
           let body = rebuild_abs g body res_ty in
           let asc = { asc with elaborated = None } in
           { t with term = Tm_Abs { b; q; ascription=asc; body }}
@@ -165,7 +165,7 @@ let rec rebuild_abs (g:env) (t:st_term) (annot:T.term)
           )
 
           | Some c ->
-            let b = mk_binder_ppname ty b.binder_ppname in
+            let b = mk_binder_with_attrs ty b.binder_ppname b.binder_attrs in
             let asc = { asc with elaborated = Some c } in
             { t with term = Tm_Abs { b; q; ascription=asc; body }}              
         )
@@ -323,7 +323,6 @@ let rec check_abs_core
   let range = t.range in
   match t.term with  
   | Tm_Abs { b = {binder_ty=t;binder_ppname=ppname;binder_attrs}; q=qual; ascription=asc; body } -> //pre=pre_hint; body; ret_ty; post=post_hint_body } ->
-
     (*  (fun (x:t) -> {pre_hint} body : t { post_hint } *)
     let (| t, _, _ |) = compute_tot_term_type g t in //elaborate it first
     let (| u, t_typing |) = check_universe g t in //then check that its universe ... We could collapse the two calls

@@ -74,7 +74,10 @@ let rec collect_binders (until: term' -> bool) (t:term) : list binder & term =
 
 let rec binder_to_string_paren (b:binder)
   : T.Tac string
-  = sprintf "(%s:%s)" 
+  = sprintf "(%s%s:%s)"
+            (match T.unseal b.binder_attrs with
+             | [] -> ""
+             | l -> sprintf "[@@@ %s] " (String.concat ";" (T.map (term_to_string' "") l)))
             (T.unseal b.binder_ppname.name)
             (term_to_string' "" b.binder_ty)
 
@@ -164,7 +167,10 @@ and term_to_doc t
 
 let binder_to_string (b:binder)
   : T.Tac string
-  = sprintf "%s:%s" 
+  = sprintf "%s%s:%s"
+            (match T.unseal b.binder_attrs with
+             | [] -> ""
+             | l -> sprintf "[@@@ %s] " (String.concat ";" (T.map (term_to_string' "") l)))
             (T.unseal b.binder_ppname.name)
             (term_to_string b.binder_ty)
 
