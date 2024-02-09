@@ -1778,7 +1778,8 @@ fn to_syn_file(f: &File) -> syn::File {
 
 fn file_to_syn_string(f: &File) -> String {
     let f: syn::File = to_syn_file(f);
-    quote::quote!(#f).to_string()
+    prettyplease::unparse(&f)
+    // quote::quote!(#f).to_string()
 }
 
 // fn fn_to_syn_string(f: &Fn) -> String {
