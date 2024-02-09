@@ -84,6 +84,10 @@ pulse2rust:
 boot:
 	+$(MAKE) -C src boot
 
+.PHONY: full-boot
+full-boot:
+	+$(MAKE) -C src full-boot
+
 .PHONY: ci
 ci:
 	+$(MAKE) -C src ci
