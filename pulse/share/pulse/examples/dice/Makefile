@@ -6,7 +6,7 @@ SRC_DIRS = common dpe engine l0
 INCLUDE_PATHS += cbor
 #/Pulse.Lib.HashTable.fst
 FSTAR_DEP_OPTIONS=--extract '* -FStar.Tactics -FStar.Reflection -Pulse +Pulse.Class +Pulse.Lib -Pulse.Lib.Core'
-all: verify
+all: verify dpe-ast
 
 include $(PULSE_HOME)/share/pulse/Makefile.include
 
@@ -25,3 +25,5 @@ DPE_FILES = EngineTypes.fst \
 	DPE.fst
 
 dpe-ast: $(addsuffix .ast, $(DPE_FILES))
+
+.PHONY: dpe-ast
