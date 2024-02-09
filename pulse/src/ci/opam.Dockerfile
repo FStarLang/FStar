@@ -5,21 +5,25 @@ FROM ocaml/opam:ubuntu-22.04-ocaml-$ocaml_version
 
 ARG opamthreads=24
 
-ADD --chown=opam:opam ./ steel/
+ADD --chown=opam:opam ./ pulse/
 
 # FIXME: the `opam depext` command should be unnecessary with opam 2.1
 RUN sudo apt-get update && \
     sudo apt-get install --yes --no-install-recommends jq && \
     opam depext conf-gmp z3.4.8.5-1 conf-m4 && \
-    git clone --branch $(jq -c -r '.RepoVersions.fstar' steel/src/ci/config.json || echo master) https://github.com/FStarLang/FStar FStar && \
+    git clone --branch $(jq -c -r '.RepoVersions.fstar' pulse/src/ci/config.json || echo master) https://github.com/FStarLang/FStar FStar && \
     opam install -j $opamthreads -v -v -v FStar/fstar.opam && \
     rm -rf FStar
 
-RUN opam install -j $opamthreads -v -v -v steel/steel.opam
+RUN eval $(opam env) && \
+    opam install -j $opamthreads -v -v -v pulse/pulse.opam
 
 ARG OTHERFLAGS=--use_hints
 
-RUN cp -p -r steel/share/steel /tmp/steel-share && \
-    rm -rf steel /tmp/steel-share/Makefile.include && \
+RUN cp -p -r pulse/share/pulse /tmp/pulse-share && \
+    rm -rf pulse /tmp/pulse-share/Makefile.include && \
     eval $(opam env) && \
-    env PULSE_HOME=$(opam config var prefix) make -j $opamthreads -k -C /tmp/steel-share
+    env PULSE_HOME=$(opam config var prefix) make -j $opamthreads -k -C /tmp/pulse-share
+
+RUN eval $(opam env) && \
+    opam uninstall pulse
