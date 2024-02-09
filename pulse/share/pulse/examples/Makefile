@@ -45,21 +45,3 @@ test: test-cbor extract_pulse_c
 .PHONY: extract_pulse_c
 
 .PHONY: test test-cbor test-cbor-raw
-
-PREFIX ?= /usr/local
-ifeq ($(OS),Windows_NT)
-  PULSE_INSTALL_PREFIX=$(shell cygpath -m $(PREFIX))
-else
-  PULSE_INSTALL_PREFIX=$(PREFIX)
-endif
-export PULSE_INSTALL_PREFIX
-
-ifeq (,$(INSTALL))
-  INSTALL := $(shell ginstall --version 2>/dev/null | cut -c -8 | head -n 1)
-  ifdef INSTALL
-     INSTALL := ginstall
-  else
-     INSTALL := install
-  endif
-  export INSTALL
-endif

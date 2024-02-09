@@ -6,7 +6,7 @@ ifeq (3.81,$(MAKE_VERSION))
     install make, then invoke gmake instead of make)
 endif
 
-all: verify
+all: build
 
 # Find fstar.exe and the fstar.lib OCaml package
 ifeq (,$(FSTAR_HOME))
@@ -40,47 +40,24 @@ else
   PULSE_HOME := $(CURDIR)
 endif
 
-.PHONY: ocaml
-ocaml:
-	cd src/ocaml && dune build
-	cd src/ocaml && dune install --prefix=$(PULSE_HOME)
-
-.PHONY: verify-pulse
-verify-pulse:
+.PHONY: build
+build:
 	+$(MAKE) -C lib/pulse
 
-.PHONY: verify-pulse-core
-verify-pulse-core: 
-	+$(MAKE) -C lib/pulse/core pulse_core
-
-.PHONY: verify-pulse-lib
-verify-pulse-lib: ocaml verify-pulse verify-pulse-core
-	+$(MAKE) -C lib/pulse/lib
-
-.PHONY: verify-pulse-c
-verify-pulse-c: verify-pulse-lib
-	+$(MAKE) -C lib/pulse/c
-
-.PHONY: verify
-verify: verify-pulse-c
-
-clean: clean_ocaml
+clean:
 	+$(MAKE) -C lib/pulse clean ; true
-
-clean_ocaml:
-	cd src/ocaml && { dune uninstall --prefix=$(PULSE_HOME) ; dune clean ; true ; }
 
 .PHONY: test
 test: all
 	+$(MAKE) -C share/pulse
 
-PREFIX ?= /usr/local
-ifeq ($(OS),Windows_NT)
-  PULSE_INSTALL_PREFIX=$(shell cygpath -m $(PREFIX))
-else
-  PULSE_INSTALL_PREFIX=$(PREFIX)
+ifeq (,$(PREFIX))
+  PREFIX := /usr/local
 endif
-export PULSE_INSTALL_PREFIX
+ifeq ($(OS),Windows_NT)
+  PREFIX := $(shell cygpath -m $(PREFIX))
+endif
+export PREFIX
 
 INSTALL := $(shell ginstall --version 2>/dev/null | cut -c -8 | head -n 1)
 ifdef INSTALL
@@ -90,10 +67,7 @@ else
 endif
 export INSTALL
 
-.PHONY: install install-ocaml install-lib install-include install-share
-
-install-ocaml:
-	cd src/ocaml && dune install --prefix=$(PULSE_INSTALL_PREFIX)
+.PHONY: install install-lib install-share
 
 install-lib:
 	+$(MAKE) -C lib/pulse install
@@ -101,16 +75,16 @@ install-lib:
 install-share:
 	+$(MAKE) -C share/pulse install
 
-install: install-ocaml install-lib install-share
+install: install-lib install-share
 
 .PHONY: pulse2rust
 pulse2rust:
 	+$(MAKE) -C pulse2rust
 
+.PHONY: boot
 boot:
-	+$(MAKE) verify-pulse
-	+$(MAKE) -C src extract-pulse-plugin
-	+$(MAKE) ocaml
+	+$(MAKE) -C src boot
 
+.PHONY: ci
 ci:
 	+$(MAKE) -C src ci

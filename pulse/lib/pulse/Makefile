@@ -1,4 +1,22 @@
-all: pulse
+PULSE_HOME ?= $(realpath ../..)
+
+all: core pulse ocaml lib c
+
+.PHONY: ocaml
+ocaml:
+	cd ../../src/ocaml && dune build && dune install --prefix=$(PULSE_HOME)
+
+.PHONY: core
+core:
+	+$(MAKE) -C $@
+
+.PHONY: lib
+lib: core pulse ocaml
+	+$(MAKE) -C $@
+
+.PHONY: c
+c: lib
+	+$(MAKE) -C $@
 
 ifneq (,$(FSTAR_HOME))
   FSTAR=$(FSTAR_HOME)/bin/fstar.exe
@@ -30,8 +48,15 @@ include .depend
 
 pulse: $(ALL_CHECKED_FILES)
 
-clean:
-	rm -f .depend* *.checked
+clean: clean-ocaml clean-fstar
+
+.PHONY: clean-ocaml
+clean-ocaml:
+	cd ../../src/ocaml && { dune uninstall --prefix=$(PULSE_HOME) ; dune clean ; true ; }
+
+.PHONY: clean-fstar
+clean-fstar:
+	find . -name '*.checked' -or -name '.depend*' | xargs rm -f
 
 .PHONY: all pulse clean %.fst-in %.fsti-in
 
@@ -41,9 +66,19 @@ clean:
 .PHONY: install-pulse install
 install: install-pulse
 
-.PHONY: %.install
+.PHONY: %.install %.install-dir
 
 %.install: %
-	$(INSTALL) -m 644 -D $< $(PULSE_INSTALL_PREFIX)/lib/pulse/$<
+	$(INSTALL) -m 644 -D $< $(PREFIX)/lib/pulse/$<
 
-install-pulse: $(addsuffix .install,$(wildcard *.fst *.fsti *.checked))
+%.install-dir: %
+	find $< -type f -exec $(INSTALL) -m 644 -D '{}' $(PREFIX)/lib/pulse/'{}' ';'
+
+install_subdirs=. core lib c
+install_other_dirs=lib/class lib/ml lib/pledge
+
+install: $(addsuffix .install,$(wildcard $(addsuffix /*.fst,$(install_subdirs)) $(addsuffix /*.fsti,$(install_subdirs)) $(addsuffix /*.checked,$(install_subdirs)))) $(addsuffix .install-dir,$(install_other_dirs)) install-ocaml
+
+.PHONY: install-ocaml
+install-ocaml:
+	cd ../../src/ocaml && dune install --prefix=$(PREFIX)

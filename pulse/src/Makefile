@@ -46,12 +46,9 @@ full-boot:
 	+$(MAKE) clean-snapshot
 	+$(MAKE) boot
 
-.PHONY: share
-share:
-	+$(MAKE) -C ../share/steel
-
 .PHONY: test
-test: share
+test:
+	+$(MAKE) -C .. test
 
 .PHONY: check-for-changes
 check-for-changes:
