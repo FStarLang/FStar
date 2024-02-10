@@ -162,7 +162,8 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
   | S.MLTY_Named ([], p)
     when S.string_of_mlpath p = "FStar.Int64.t" ||
          S.string_of_mlpath p = "Prims.int"     ||
-         S.string_of_mlpath p = "Prims.nat" -> mk_scalar_typ "i64"  // TODO: int to int64, nat to int64, FIX
+         S.string_of_mlpath p = "Prims.nat"     ||
+         S.string_of_mlpath p = "Prims.pos" -> mk_scalar_typ "i64"  // TODO: int to int64, nat to int64, FIX
   | S.MLTY_Named ([], p)
     when S.string_of_mlpath p = "FStar.SizeT.t" -> mk_scalar_typ "usize"
   | S.MLTY_Named ([], p)
@@ -1191,7 +1192,12 @@ let collect_reachable_defs (d:dict) (root_module:string) : reachable_defs =
   ) empty_defs root_decls in
   collect_reachable_defs_aux dd worklist empty_defs
 
-let extract (files:list string) : string =
+let rust_file_name (mname:string) =
+  let s = replace_char mname '.' '_' |> String.lowercase in
+  strcat s ".rs"
+
+
+let extract (files:list string) (odir:string) : unit =
   let d = read_all_ast_files files in
   //
   // reversed order in which decls should be emitted,
@@ -1225,8 +1231,19 @@ let extract (files:list string) : string =
   // in
 
   let g = empty_env reachable_defs in
-  let s = List.fold_left_map (fun g f ->
+  let _ = List.fold_left (fun g f ->
     let (_, bs, ds) = smap_try_find d f |> must in
     let s, g = extract_one g f bs ds in
-    g, s) g (List.rev all_modules) |> snd |> String.concat " " in
-  s
+    let rust_f = open_file_for_writing (concat_dir_filename odir (rust_file_name f)) in
+    append_to_file rust_f s;
+    close_out_channel rust_f;
+    g
+  ) g all_modules in
+  ()
+
+
+  // let s = List.fold_left_map (fun g f ->
+  //   let (_, bs, ds) = smap_try_find d f |> must in
+  //   let s, g = extract_one g f bs ds in
+  //   g, s) g (List.rev all_modules) |> snd |> String.concat " " in
+  // s

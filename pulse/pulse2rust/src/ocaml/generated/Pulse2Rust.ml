@@ -225,13 +225,16 @@ let rec (extract_mlty :
           uu___ = "Prims.string" ->
           Pulse2Rust_Rust_Syntax.mk_scalar_typ "String"
       | FStar_Extraction_ML_Syntax.MLTY_Named ([], p) when
-          ((let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-            uu___ = "FStar.Int64.t") ||
+          (((let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___ = "FStar.Int64.t") ||
+              (let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+               uu___ = "Prims.int"))
+             ||
              (let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-              uu___ = "Prims.int"))
+              uu___ = "Prims.nat"))
             ||
             (let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___ = "Prims.nat")
+             uu___ = "Prims.pos")
           -> Pulse2Rust_Rust_Syntax.mk_scalar_typ "i64"
       | FStar_Extraction_ML_Syntax.MLTY_Named ([], p) when
           let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
@@ -2384,31 +2387,44 @@ let (collect_reachable_defs : dict -> Prims.string -> reachable_defs) =
                FStar_Compiler_Set.addn FStar_Class_Ord.ord_string uu___
                  worklist1) empty_defs root_decls in
       collect_reachable_defs_aux dd worklist empty_defs
-let (extract : Prims.string Prims.list -> Prims.string) =
+let (rust_file_name : Prims.string -> Prims.string) =
+  fun mname ->
+    let s =
+      FStar_Compiler_String.lowercase
+        (FStar_Compiler_Util.replace_char mname 46 95) in
+    FStar_Compiler_Util.strcat s ".rs"
+let (extract : Prims.string Prims.list -> Prims.string -> unit) =
   fun files ->
-    let d = read_all_ast_files files in
-    let all_modules = topsort_all d [] in
-    FStar_Compiler_Util.print1 "order: %s\n"
-      (FStar_Compiler_String.concat "; " all_modules);
-    (let uu___1 = all_modules in
-     match uu___1 with
-     | root_module::uu___2 ->
-         let reachable_defs1 = collect_reachable_defs d root_module in
-         let g = empty_env reachable_defs1 in
-         let s =
+    fun odir ->
+      let d = read_all_ast_files files in
+      let all_modules = topsort_all d [] in
+      FStar_Compiler_Util.print1 "order: %s\n"
+        (FStar_Compiler_String.concat "; " all_modules);
+      (let uu___1 = all_modules in
+       match uu___1 with
+       | root_module::uu___2 ->
+           let reachable_defs1 = collect_reachable_defs d root_module in
+           let g = empty_env reachable_defs1 in
            let uu___3 =
-             let uu___4 =
-               FStar_Compiler_List.fold_left_map
-                 (fun g1 ->
-                    fun f ->
-                      let uu___5 =
-                        let uu___6 = FStar_Compiler_Util.smap_try_find d f in
-                        FStar_Compiler_Util.must uu___6 in
-                      match uu___5 with
-                      | (uu___6, bs, ds) ->
-                          let uu___7 = extract_one g1 f bs ds in
-                          (match uu___7 with | (s1, g2) -> (g2, s1))) g
-                 (FStar_Compiler_List.rev all_modules) in
-             FStar_Pervasives_Native.snd uu___4 in
-           FStar_Compiler_String.concat " " uu___3 in
-         s)
+             FStar_Compiler_List.fold_left
+               (fun g1 ->
+                  fun f ->
+                    let uu___4 =
+                      let uu___5 = FStar_Compiler_Util.smap_try_find d f in
+                      FStar_Compiler_Util.must uu___5 in
+                    match uu___4 with
+                    | (uu___5, bs, ds) ->
+                        let uu___6 = extract_one g1 f bs ds in
+                        (match uu___6 with
+                         | (s, g2) ->
+                             let rust_f =
+                               let uu___7 =
+                                 let uu___8 = rust_file_name f in
+                                 FStar_Compiler_Util.concat_dir_filename odir
+                                   uu___8 in
+                               FStar_Compiler_Util.open_file_for_writing
+                                 uu___7 in
+                             (FStar_Compiler_Util.append_to_file rust_f s;
+                              FStar_Compiler_Util.close_out_channel rust_f;
+                              g2))) g all_modules in
+           ())
