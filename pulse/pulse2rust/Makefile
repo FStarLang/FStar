@@ -1,4 +1,5 @@
-all: build test
+all: build
+	+$(MAKE) test
 
 build: extract
 	export OCAMLPATH=$(FSTAR_HOME)/lib && cd src/ocaml && dune build
