@@ -84,6 +84,10 @@ pulse2rust:
 boot:
 	+$(MAKE) -C src boot
 
+.PHONY: boot-checker
+boot-checker:
+	+$(MAKE) -C src boot-checker
+
 .PHONY: full-boot
 full-boot:
 	+$(MAKE) -C src full-boot

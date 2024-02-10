@@ -1,4 +1,4 @@
-all: pulse
+all: verify extract
 
 PULSE_HOME ?= ../..
 OUTPUT_DIRECTORY=$(PULSE_HOME)/src/ocaml/plugin/generated
@@ -12,7 +12,7 @@ endif
 
 FSTAR_FILES:=$(wildcard *.fst *.fsti)
 
-FSTAR_OPTIONS=$(OTHERFLAGS) --cache_checked_modules --warn_error @241 --already_cached '*,-Pulse,-PulseSyntaxExtension' --include $(PULSE_HOME)/lib/pulse --odir $(OUTPUT_DIRECTORY)
+FSTAR_OPTIONS=$(OTHERFLAGS) --cache_checked_modules --warn_error @241 --already_cached '*,-Pulse,-PulseSyntaxExtension' --include $(PULSE_HOME)/lib/pulse/core --include $(PULSE_HOME)/lib/pulse --odir $(OUTPUT_DIRECTORY)
 EXTRACT_MODULES=--extract '+Pulse,-Pulse.Steel'
 
 include $(PULSE_HOME)/lib/pulse/runlim.mk
@@ -40,21 +40,16 @@ $(OUTPUT_DIRECTORY)/%.ml:
 	$(Q)$(MY_FSTAR) $(subst .checked,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked,,$<)))
 	chmod -x $@
 
-fstar_parser_parse=$(OUTPUT_DIRECTORY)/../FStar_Parser_Parse.mly
-
-$(fstar_parser_parse): $(FSTAR_HOME)/ocaml/fstar-lib/FStar_Parser_Parse.mly
-	cp $^ $@
-
-extract: pulse $(ALL_ML_FILES) $(fstar_parser_parse)
+extract: $(ALL_ML_FILES)
 
 .PHONY: extract
 
-pulse: $(ALL_CHECKED_FILES)
+verify: $(ALL_CHECKED_FILES)
 
 clean:
 	rm -f .depend* *.checked
 
-.PHONY: all pulse clean %.fst-in %.fsti-in
+.PHONY: all verify clean %.fst-in %.fsti-in
 
 %.fst-in %.fsti-in:
 	@echo $(FSTAR_OPTIONS)

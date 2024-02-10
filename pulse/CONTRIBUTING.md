@@ -7,8 +7,10 @@ In all cases (user or developer), please first read `README.md`
 ## Source layout
 
 * In `src/checker`: the F* source code of the Pulse checker. This F*
-  code typechecks against `lib/pulse` but none of its
-  subdirectories. (TODO: should it also depend on `lib/pulse/core`?)
+  code typechecks against `lib/pulse` and `lib/pulse/core` but none of
+  its other subdirectories. It does not require loading the Pulse
+  plugin (which makes sense, since the checker itself is part of the
+  plugin.)
 * In `src/extraction`: The krml extraction rules for Pulse and
   PulseC. This F* code typechecks against the F* sources.
 * In `src/syntax-extension`: A top-level parser hook for the custom
@@ -27,10 +29,20 @@ the Pulse root directory.
 
 Dependency diagram:
 
-* `lib/pulse` depends on `lib/pulse/core`
-* `lib/pulse/lib` and its subdirectories depend on `lib/pulse` and
-  `lib/pulse/core`
+* `lib/pulse` and `lib/pulse/core` can be typechecked without loading
+  the Pulse plugin
+* `lib/pulse/lib` and its subdirectories depend on `lib/pulse`,
+  `lib/pulse/core`, and need to load the Pulse plugin
 * `lib/pulse/c` depends on `lib/pulse/lib`
+
+## Modifying the Pulse checker
+
+If you modify the Pulse checker in `src/checker`, you need to
+regenerate and recompile the corresponding OCaml snapshot, with `make -j
+boot-checker` .
+
+Modifying the Pulse checker does not require a source repository clone
+of F*.
 
 ### Notes on the implementation of Pulse
 
@@ -62,9 +74,9 @@ Phases of the Pulse checker:
 4. The F* compiler then processes this as usual
 
 
-## Modifying the Pulse checker, the Pulse or PulseC extraction rules, or the syntax extension
+## Modifying the Pulse or PulseC extraction rules, or the syntax extension
 
-If you modify the Pulse checker in `src/checker`, the Pulse or PulseC
+If you modify the Pulse or PulseC
 extraction rules in `src/extraction` (`ExtractPulse.fst` and
 `ExtractPulseC.fst` respectively), or the syntax extension in
 `src/syntax-extension`, you need to regenerate the corresponding OCaml
