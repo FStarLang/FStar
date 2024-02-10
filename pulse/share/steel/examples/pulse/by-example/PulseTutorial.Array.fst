@@ -21,6 +21,7 @@ open Pulse.Lib.Array
 
 module SZ = FStar.SizeT
 
+[@@ Rust_generics_bounds [["Copy"]]]
 ```pulse //readi$
 fn read_i #t (arr:array t) (#p:perm) (#s:erased (Seq.seq t)) (i:SZ.t { SZ.v i < Seq.length s })
   requires pts_to arr #p s
@@ -56,6 +57,7 @@ module A = Pulse.Lib.Array
 module R = Pulse.Lib.Reference
 open FStar.SizeT
 
+[@@ Rust_generics_bounds [["PartialEq"; "Copy"]]]
 ```pulse
 //comparesigbegin$
 fn compare (#t:eqtype) #p1 #p2 (a1 a2:A.array t) (l:SZ.t) 
@@ -106,6 +108,7 @@ fn compare (#t:eqtype) #p1 #p2 (a1 a2:A.array t) (l:SZ.t)
 //compareimplend$
 ```
 
+[@@ Rust_generics_bounds [["Copy"]]]
 ```pulse //copy$
 fn copy #t (a1 a2:A.array t) (l:SZ.t)
   requires (
@@ -144,6 +147,7 @@ fn copy #t (a1 a2:A.array t) (l:SZ.t)
 }
 ```
 
+[@@ Rust_generics_bounds [["Copy"]]]
 ```pulse
 //copy2sigbegin$
 fn copy2 #t (a1 a2:A.array t) (l:SZ.t)
@@ -237,7 +241,7 @@ fn heap_arrays ()
 //heaparrayend$
 
 ```pulse //copyuse$
-fn copy_app (v:V.vec int)
+fn copy_app ([@@@ Rust_mut_binder] v:V.vec int)
   requires exists* s. V.pts_to v s ** pure (Seq.length s == 2)
   ensures V.pts_to v (Seq.create 2 0)
 {

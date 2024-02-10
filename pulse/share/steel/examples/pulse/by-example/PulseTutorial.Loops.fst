@@ -125,19 +125,23 @@ fn multiply_by_repeated_addition (x y:nat)
 }
 ```
 
+noextract
 //SNIPPET_START: sum$
 let rec sum (n:nat)
 : nat
 = if n = 0 then 0 else n + sum (n - 1)
 
+noextract
 let rec sum_lemma (n:nat)
 : Lemma (sum n == n * (n + 1) / 2)
 = if n = 0 then ()
   else sum_lemma (n - 1)
 //SNIPPET_END: sum$
 
+
 //SNIPPET_START: isum$
 #push-options "--z3cliopt 'smt.arith.nl=false'"
+noextract
 ```pulse
 fn isum (n:nat)
 requires emp
@@ -170,12 +174,14 @@ ensures pure ((n * (n + 1) / 2) == z)
 #pop-options
 //SNIPPET_END: isum$
 
+noextract
 //fib$
 let rec fib (n:nat) : nat =
   if n <= 1 then 1
   else fib (n - 1) + fib (n - 2)
 //fib$
 
+noextract
 ```pulse //fib_rec$
 fn rec fib_rec (n:pos) (out:ref (nat & nat))
 requires
@@ -242,7 +248,7 @@ fn fib_loop (k:pos)
 ```
 
 
-
+noextract
 let rec fib_mono (n:nat) (m:nat { m <= n})
   : Lemma
     (ensures fib m <= fib n)
@@ -254,6 +260,7 @@ open Pulse.Lib.BoundedIntegers
 module U32 = FStar.UInt32
 
 
+noextract
 ```pulse
 fn fibonacci32 (k:U32.t)
   requires pure (0ul < k /\ fib (v k) < pow2 32)
