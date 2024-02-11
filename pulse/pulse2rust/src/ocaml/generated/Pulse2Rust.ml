@@ -274,8 +274,12 @@ let (should_extract_mlpath_with_symbol :
   env -> FStar_Extraction_ML_Syntax.mlsymbol Prims.list -> Prims.bool) =
   fun g ->
     fun path ->
-      FStar_Compiler_List.contains (FStar_Compiler_String.concat "." path)
-        g.all_modules
+      let p = FStar_Compiler_String.concat "." path in
+      let b =
+        (((p = "Prims") || (p = "Pulse.Lib.Pervasives")) ||
+           (p = "FStar.Pervasives.Native"))
+          || (p = "FStar.Pervasives") in
+      Prims.op_Negation b
 let (rust_mod_name :
   FStar_Extraction_ML_Syntax.mlsymbol Prims.list -> Prims.string) =
   fun path ->
@@ -801,8 +805,20 @@ and (extract_mlexpr :
           let uu___ = varname x in
           Pulse2Rust_Rust_Syntax.mk_expr_path_singl uu___
       | FStar_Extraction_ML_Syntax.MLE_Name p ->
-          Pulse2Rust_Rust_Syntax.mk_expr_path_singl
-            (FStar_Pervasives_Native.snd p)
+          let uu___ =
+            should_extract_mlpath_with_symbol g
+              (FStar_Pervasives_Native.fst p) in
+          if uu___
+          then
+            let uu___1 =
+              let uu___2 =
+                extract_path_for_symbol (FStar_Pervasives_Native.fst p) in
+              FStar_Compiler_List.append uu___2
+                [FStar_Pervasives_Native.snd p] in
+            Pulse2Rust_Rust_Syntax.mk_expr_path uu___1
+          else
+            Pulse2Rust_Rust_Syntax.mk_expr_path_singl
+              (FStar_Pervasives_Native.snd p)
       | FStar_Extraction_ML_Syntax.MLE_Let uu___ ->
           let uu___1 = extract_mlexpr_to_stmts g e in
           Pulse2Rust_Rust_Syntax.mk_block_expr uu___1

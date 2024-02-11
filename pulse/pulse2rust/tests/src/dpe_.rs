@@ -1,8 +1,10 @@
+mod enginecore;
+mod enginetypes;
+mod hacl;
+mod pulse_lib_array;
 mod pulse_lib_hashtable;
 mod pulse_lib_hashtable_spec;
 mod pulse_lib_hashtable_type;
-// mod enginetypes;
-// mod enginecore;
 // mod l0types;
 // mod l0crypto;
 // mod l0core;

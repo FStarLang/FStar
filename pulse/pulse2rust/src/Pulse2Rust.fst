@@ -169,7 +169,12 @@ let arg_ts_and_ret_t (t:S.mltyscheme)
   | _ -> fail_nyi (format1 "top level arg_ts and ret_t %s" (S.mlty_to_string t))
 
 let should_extract_mlpath_with_symbol (g:env) (path:list S.mlsymbol) : bool =
-  List.contains (String.concat "." path) g.all_modules
+  let p = String.concat "." path in
+  let b =
+    p = "Prims" || p = "Pulse.Lib.Pervasives" || p = "FStar.Pervasives.Native" ||
+    p = "FStar.Pervasives" in
+  not b
+  // List.contains (String.concat "." path) g.all_modules
 
 let rust_mod_name (path:list S.mlsymbol) : string =
   path |> List.map String.lowercase
@@ -496,7 +501,10 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     extract_mlexpr g e
 
   | S.MLE_Var x -> mk_expr_path_singl (varname x)
-  | S.MLE_Name p -> mk_expr_path_singl (snd p)
+  | S.MLE_Name p ->
+    if should_extract_mlpath_with_symbol g (fst p)
+    then mk_expr_path (List.append (extract_path_for_symbol (fst p)) [snd p])
+    else mk_expr_path_singl (snd p)
 
     // nested let binding
   | S.MLE_Let _ -> e |> extract_mlexpr_to_stmts g |> mk_block_expr
