@@ -196,7 +196,7 @@ let (lookup_datacon_in_module1 :
 let (lookup_datacon :
   env ->
     FStar_Extraction_ML_Syntax.mlident ->
-      (Prims.string * FStar_Extraction_ML_Syntax.mlsymbol)
+      (Prims.string Prims.list * FStar_Extraction_ML_Syntax.mlsymbol)
         FStar_Pervasives_Native.option)
   =
   fun g ->
@@ -216,7 +216,8 @@ let (lookup_datacon :
                 | FStar_Pervasives_Native.None ->
                     FStar_Pervasives_Native.None
                 | FStar_Pervasives_Native.Some tname ->
-                    FStar_Pervasives_Native.Some (k, tname)))
+                    FStar_Pervasives_Native.Some
+                      ((FStar_Compiler_Util.split k "."), tname)))
 let (type_of : env -> Pulse2Rust_Rust_Syntax.expr -> Prims.bool) =
   fun g ->
     fun e ->
@@ -638,14 +639,16 @@ let rec (extract_mlpattern_to_pat :
                  let ropt =
                    lookup_datacon g1 (FStar_Pervasives_Native.snd p1) in
                  match ropt with
-                 | FStar_Pervasives_Native.Some (s, t) ->
-                     (FStar_Compiler_Util.print3
-                        "Found datacon %s in module %s with tname %s"
-                        (FStar_Pervasives_Native.snd p1) s t;
-                      fail_nyi "datacon in module")
+                 | FStar_Pervasives_Native.Some (l, t) ->
+                     let uu___1 = should_extract_mlpath_with_symbol g1 l in
+                     if uu___1
+                     then
+                       let uu___2 = extract_path_for_symbol l in
+                       FStar_Compiler_List.append uu___2 [t]
+                     else []
                  | FStar_Pervasives_Native.None -> [] in
                let uu___1 =
-                 Pulse2Rust_Rust_Syntax.mk_pat_ts
+                 Pulse2Rust_Rust_Syntax.mk_pat_ts path
                    (FStar_Pervasives_Native.snd p1) ps1 in
                (g1, uu___1))
       | FStar_Extraction_ML_Syntax.MLP_Record (p1, fs) ->

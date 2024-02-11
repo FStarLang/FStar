@@ -87,6 +87,7 @@ and pat =
   | Pat_struct of pat_struct
   | Pat_tuple of list pat
   | Pat_typ of pat_typ
+  | Pat_path of list path_segment
 
 and expr =
   | Expr_binop of expr_bin
@@ -210,6 +211,11 @@ and typ_reference = {
   typ_ref_typ : typ;
 }
 
+//
+// TODO: THIS NEEDS FIXING
+// we are using path_segment for exprs, pats as well
+// whereas generic args are only for typ
+//
 and path_segment = {
   path_segment_name : string;
   path_segment_generic_args : list typ;
@@ -330,7 +336,7 @@ val mk_while (cond:expr) (body:list stmt) : expr
 val mk_repeat (elem len:expr) : expr
 val mk_reference_expr (is_mut:bool) (e:expr) : expr
 val mk_pat_ident (path:string) : pat
-val mk_pat_ts (path:string) (elems:list pat) : pat
+val mk_pat_ts (path:list string) (s:string) (elems:list pat) : pat
 val mk_pat_struct (path:string) (fields:list (string & pat)) : pat
 val mk_pat_tuple (l:list pat) : pat
 val mk_arm (arm_pat:pat) (arm_body:expr) : arm

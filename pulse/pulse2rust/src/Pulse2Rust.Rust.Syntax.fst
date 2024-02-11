@@ -121,11 +121,19 @@ let mk_reference_expr (expr_reference_is_mut:bool) (expr_reference_expr:expr) : 
 let mk_pat_ident (path:string) : pat =
   Pat_ident { pat_name = path; by_ref = false; is_mut = true }
 
-let mk_pat_ts (pat_ts_path:string) (pat_ts_elems:list pat) : pat =
+let mk_pat_ts (path:list string) (s:string) (pat_ts_elems:list pat) : pat =
   if L.length pat_ts_elems = 0
-  then Pat_ident { pat_name = pat_ts_path; by_ref = false; is_mut = false }
+  then if L.length path = 0
+       then Pat_ident { pat_name = s; by_ref = false; is_mut = false }
+       else Pat_path (L.map (fun s -> {
+              path_segment_name = s;
+              path_segment_generic_args = []
+            }) (path @ [s]))
   else Pat_tuple_struct {
-    pat_ts_path = [{path_segment_name = pat_ts_path; path_segment_generic_args = []}];
+    pat_ts_path = L.map (fun s -> {
+      path_segment_name = s;
+      path_segment_generic_args = []
+    }) (path @ [s]);
     pat_ts_elems
   }
 

@@ -212,6 +212,7 @@ enum Pat {
     PStruct(PatStruct),
     PTuple(Vec<Pat>),
     PTyp(Box<PatTyp>),
+    PPath(Vec<PathSegment>),
 }
 
 struct LocalStmt {
@@ -575,6 +576,7 @@ impl_from_ocaml_variant! {
     Pat::PStruct (payload:PatStruct),
     Pat::PTuple (payload:OCamlList<Pat>),
     Pat::PTyp (payload:PatTyp),
+    Pat::PPath (payload:OCamlList<PathSegment>),
   }
 }
 
@@ -1236,6 +1238,11 @@ fn to_syn_pat(p: &Pat) -> syn::Pat {
                 spans: [Span::call_site()],
             },
             ty: Box::new(to_syn_typ(&p.pat_typ_typ)),
+        }),
+        Pat::PPath(p) => syn::Pat::Path(syn::PatPath {
+            attrs: vec![],
+            qself: None,
+            path: to_syn_path(p),
         }),
     }
 }
@@ -1909,6 +1916,14 @@ impl fmt::Display for Pat {
                     .join(",")
             ),
             Pat::PTyp(p) => write!(f, "{}:{}", p.pat_typ_pat, p.pat_typ_typ),
+            Pat::PPath(p) => write!(
+                f,
+                "{}",
+                p.iter()
+                    .map(|s| s.to_string())
+                    .collect::<Vec<_>>()
+                    .join("::")
+            ),
         }
     }
 }

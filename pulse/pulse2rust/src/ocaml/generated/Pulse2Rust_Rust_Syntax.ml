@@ -111,7 +111,7 @@ let (__proj__Mkpat_ident__item__is_mut : pat_ident -> Prims.bool) =
     match projectee with | { pat_name; by_ref; is_mut;_} -> is_mut
 type pat_tuple_struct =
   {
-  pat_ts_path: Prims.string ;
+  pat_ts_path: path_segment Prims.list ;
   pat_ts_elems: pat Prims.list }
 and field_pat = {
   field_pat_name: Prims.string ;
@@ -131,6 +131,7 @@ and pat =
   | Pat_struct of pat_struct 
   | Pat_tuple of pat Prims.list 
   | Pat_typ of pat_typ 
+  | Pat_path of path_segment Prims.list 
 and expr =
   | Expr_binop of expr_bin 
   | Expr_path of path_segment Prims.list 
@@ -234,7 +235,7 @@ and typ_fn = {
   typ_fn_args: typ Prims.list ;
   typ_fn_ret: typ }
 let (__proj__Mkpat_tuple_struct__item__pat_ts_path :
-  pat_tuple_struct -> Prims.string) =
+  pat_tuple_struct -> path_segment Prims.list) =
   fun projectee ->
     match projectee with | { pat_ts_path; pat_ts_elems;_} -> pat_ts_path
 let (__proj__Mkpat_tuple_struct__item__pat_ts_elems :
@@ -295,6 +296,11 @@ let (uu___is_Pat_typ : pat -> Prims.bool) =
   fun projectee -> match projectee with | Pat_typ _0 -> true | uu___ -> false
 let (__proj__Pat_typ__item___0 : pat -> pat_typ) =
   fun projectee -> match projectee with | Pat_typ _0 -> _0
+let (uu___is_Pat_path : pat -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Pat_path _0 -> true | uu___ -> false
+let (__proj__Pat_path__item___0 : pat -> path_segment Prims.list) =
+  fun projectee -> match projectee with | Pat_path _0 -> _0
 let (uu___is_Expr_binop : expr -> Prims.bool) =
   fun projectee ->
     match projectee with | Expr_binop _0 -> true | uu___ -> false
@@ -957,13 +963,31 @@ let (mk_reference_expr : Prims.bool -> expr -> expr) =
       Expr_reference { expr_reference_is_mut; expr_reference_expr }
 let (mk_pat_ident : Prims.string -> pat) =
   fun path -> Pat_ident { pat_name = path; by_ref = false; is_mut = true }
-let (mk_pat_ts : Prims.string -> pat Prims.list -> pat) =
-  fun pat_ts_path ->
-    fun pat_ts_elems ->
-      if (FStar_Compiler_List.length pat_ts_elems) = Prims.int_zero
-      then
-        Pat_ident { pat_name = pat_ts_path; by_ref = false; is_mut = false }
-      else Pat_tuple_struct { pat_ts_path; pat_ts_elems }
+let (mk_pat_ts :
+  Prims.string Prims.list -> Prims.string -> pat Prims.list -> pat) =
+  fun path ->
+    fun s ->
+      fun pat_ts_elems ->
+        if (FStar_Compiler_List.length pat_ts_elems) = Prims.int_zero
+        then
+          (if (FStar_Compiler_List.length path) = Prims.int_zero
+           then Pat_ident { pat_name = s; by_ref = false; is_mut = false }
+           else
+             (let uu___1 =
+                FStar_Compiler_List.map
+                  (fun s1 ->
+                     { path_segment_name = s1; path_segment_generic_args = []
+                     }) (FStar_List_Tot_Base.append path [s]) in
+              Pat_path uu___1))
+        else
+          (let uu___1 =
+             let uu___2 =
+               FStar_Compiler_List.map
+                 (fun s1 ->
+                    { path_segment_name = s1; path_segment_generic_args = []
+                    }) (FStar_List_Tot_Base.append path [s]) in
+             { pat_ts_path = uu___2; pat_ts_elems } in
+           Pat_tuple_struct uu___1)
 let (mk_pat_struct : Prims.string -> (Prims.string * pat) Prims.list -> pat)
   =
   fun pat_struct_path ->

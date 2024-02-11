@@ -119,14 +119,14 @@ let lookup_datacon_in_module1 (s:S.mlident) (m:S.mlmodule1) : option S.mlsymbol 
     )
   | _ -> None
 
-let lookup_datacon (g:env) (s:S.mlident) : option (string & S.mlsymbol) =
+let lookup_datacon (g:env) (s:S.mlident) : option (list string & S.mlsymbol) =
   let d_keys = smap_keys g.d in
   find_map d_keys (fun k ->
     let (_, _, decls) = smap_try_find g.d k |> must in
     let ropt = find_map decls (lookup_datacon_in_module1 s) in
     match ropt with
     | None -> None
-    | Some tname -> Some (k, tname)
+    | Some tname -> Some (FStar.Compiler.Util.split k ".", tname)
   )
 
 //
@@ -398,12 +398,13 @@ let rec extract_mlpattern_to_pat (g:env) (p:S.mlpattern) : env & pat =
     let path =
       let ropt = lookup_datacon g (snd p) in
       match ropt with
-      | Some (s, t) ->
-        print3 "Found datacon %s in module %s with tname %s" (snd p) s t;
-        fail_nyi "datacon in module"
-      | None -> Nil #string in
+      | Some (l, t) ->
+        if should_extract_mlpath_with_symbol g l
+        then List.append (extract_path_for_symbol l) [t]
+        else []
+      | None -> [] in
     g,
-    mk_pat_ts (snd p) ps
+    mk_pat_ts path (snd p) ps
   | S.MLP_Record (p, fs) ->
     let g, ps = fold_left_map extract_mlpattern_to_pat g (List.map snd fs) in
     g,
