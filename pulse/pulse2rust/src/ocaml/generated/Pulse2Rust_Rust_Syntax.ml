@@ -133,7 +133,7 @@ and pat =
   | Pat_typ of pat_typ 
 and expr =
   | Expr_binop of expr_bin 
-  | Expr_path of Prims.string Prims.list 
+  | Expr_path of path_segment Prims.list 
   | Expr_call of expr_call 
   | Expr_unary of expr_unary 
   | Expr_assign of expr_assignment 
@@ -212,7 +212,7 @@ and stmt =
   | Stmt_local of local_stmt 
   | Stmt_expr of expr 
 and typ =
-  | Typ_path of typ_path_segment Prims.list 
+  | Typ_path of path_segment Prims.list 
   | Typ_reference of typ_reference 
   | Typ_slice of typ 
   | Typ_array of typ_array 
@@ -223,10 +223,10 @@ and typ =
 and typ_reference = {
   typ_ref_mut: Prims.bool ;
   typ_ref_typ: typ }
-and typ_path_segment =
+and path_segment =
   {
-  typ_path_segment_name: Prims.string ;
-  typ_path_segment_generic_args: typ Prims.list }
+  path_segment_name: Prims.string ;
+  path_segment_generic_args: typ Prims.list }
 and typ_array = {
   typ_array_elem: typ ;
   typ_array_len: expr }
@@ -303,7 +303,7 @@ let (__proj__Expr_binop__item___0 : expr -> expr_bin) =
 let (uu___is_Expr_path : expr -> Prims.bool) =
   fun projectee ->
     match projectee with | Expr_path _0 -> true | uu___ -> false
-let (__proj__Expr_path__item___0 : expr -> Prims.string Prims.list) =
+let (__proj__Expr_path__item___0 : expr -> path_segment Prims.list) =
   fun projectee -> match projectee with | Expr_path _0 -> _0
 let (uu___is_Expr_call : expr -> Prims.bool) =
   fun projectee ->
@@ -555,7 +555,7 @@ let (__proj__Stmt_expr__item___0 : stmt -> expr) =
 let (uu___is_Typ_path : typ -> Prims.bool) =
   fun projectee ->
     match projectee with | Typ_path _0 -> true | uu___ -> false
-let (__proj__Typ_path__item___0 : typ -> typ_path_segment Prims.list) =
+let (__proj__Typ_path__item___0 : typ -> path_segment Prims.list) =
   fun projectee -> match projectee with | Typ_path _0 -> _0
 let (uu___is_Typ_reference : typ -> Prims.bool) =
   fun projectee ->
@@ -592,18 +592,17 @@ let (__proj__Mktyp_reference__item__typ_ref_mut :
 let (__proj__Mktyp_reference__item__typ_ref_typ : typ_reference -> typ) =
   fun projectee ->
     match projectee with | { typ_ref_mut; typ_ref_typ;_} -> typ_ref_typ
-let (__proj__Mktyp_path_segment__item__typ_path_segment_name :
-  typ_path_segment -> Prims.string) =
+let (__proj__Mkpath_segment__item__path_segment_name :
+  path_segment -> Prims.string) =
   fun projectee ->
     match projectee with
-    | { typ_path_segment_name; typ_path_segment_generic_args;_} ->
-        typ_path_segment_name
-let (__proj__Mktyp_path_segment__item__typ_path_segment_generic_args :
-  typ_path_segment -> typ Prims.list) =
+    | { path_segment_name; path_segment_generic_args;_} -> path_segment_name
+let (__proj__Mkpath_segment__item__path_segment_generic_args :
+  path_segment -> typ Prims.list) =
   fun projectee ->
     match projectee with
-    | { typ_path_segment_name; typ_path_segment_generic_args;_} ->
-        typ_path_segment_generic_args
+    | { path_segment_name; path_segment_generic_args;_} ->
+        path_segment_generic_args
 let (__proj__Mktyp_array__item__typ_array_elem : typ_array -> typ) =
   fun projectee ->
     match projectee with
@@ -855,39 +854,35 @@ let (vec_new_fn : Prims.string) = "vec_new"
 let (panic_fn : Prims.string) = "panic"
 let (mk_scalar_typ : Prims.string -> typ) =
   fun name ->
-    Typ_path
-      [{ typ_path_segment_name = name; typ_path_segment_generic_args = [] }]
+    Typ_path [{ path_segment_name = name; path_segment_generic_args = [] }]
 let (mk_ref_typ : Prims.bool -> typ -> typ) =
   fun is_mut ->
     fun t -> Typ_reference { typ_ref_mut = is_mut; typ_ref_typ = t }
 let (mk_box_typ : typ -> typ) =
   fun t ->
     Typ_path
-      [{ typ_path_segment_name = "std"; typ_path_segment_generic_args = [] };
-      { typ_path_segment_name = "boxed"; typ_path_segment_generic_args = [] };
-      { typ_path_segment_name = "Box"; typ_path_segment_generic_args = [t] }]
+      [{ path_segment_name = "std"; path_segment_generic_args = [] };
+      { path_segment_name = "boxed"; path_segment_generic_args = [] };
+      { path_segment_name = "Box"; path_segment_generic_args = [t] }]
 let (mk_slice_typ : typ -> typ) = fun t -> Typ_slice t
 let (mk_vec_typ : typ -> typ) =
   fun t ->
     Typ_path
-      [{ typ_path_segment_name = "std"; typ_path_segment_generic_args = [] };
-      { typ_path_segment_name = "vec"; typ_path_segment_generic_args = [] };
-      { typ_path_segment_name = "Vec"; typ_path_segment_generic_args = [t] }]
+      [{ path_segment_name = "std"; path_segment_generic_args = [] };
+      { path_segment_name = "vec"; path_segment_generic_args = [] };
+      { path_segment_name = "Vec"; path_segment_generic_args = [t] }]
 let (mk_mutex_typ : typ -> typ) =
   fun t ->
     Typ_path
-      [{ typ_path_segment_name = "std"; typ_path_segment_generic_args = [] };
-      { typ_path_segment_name = "sync"; typ_path_segment_generic_args = [] };
-      { typ_path_segment_name = "Mutex"; typ_path_segment_generic_args = [t]
-      }]
+      [{ path_segment_name = "std"; path_segment_generic_args = [] };
+      { path_segment_name = "sync"; path_segment_generic_args = [] };
+      { path_segment_name = "Mutex"; path_segment_generic_args = [t] }]
 let (mk_option_typ : typ -> typ) =
   fun t ->
     Typ_path
-      [{ typ_path_segment_name = "std"; typ_path_segment_generic_args = [] };
-      { typ_path_segment_name = "option"; typ_path_segment_generic_args = []
-      };
-      { typ_path_segment_name = "Option"; typ_path_segment_generic_args = [t]
-      }]
+      [{ path_segment_name = "std"; path_segment_generic_args = [] };
+      { path_segment_name = "option"; path_segment_generic_args = [] };
+      { path_segment_name = "Option"; path_segment_generic_args = [t] }]
 let (mk_array_typ : typ -> expr -> typ) =
   fun t -> fun len -> Typ_array { typ_array_elem = t; typ_array_len = len }
 let (mk_named_typ :
@@ -898,21 +893,24 @@ let (mk_named_typ :
         let path1 =
           FStar_Compiler_List.map
             (fun s1 ->
-               {
-                 typ_path_segment_name = s1;
-                 typ_path_segment_generic_args = []
-               }) path in
+               { path_segment_name = s1; path_segment_generic_args = [] })
+            path in
         let s1 =
-          {
-            typ_path_segment_name = s;
-            typ_path_segment_generic_args = generic_args
-          } in
+          { path_segment_name = s; path_segment_generic_args = generic_args } in
         Typ_path (FStar_List_Tot_Base.append path1 [s1])
 let (mk_fn_typ : typ Prims.list -> typ -> typ) =
   fun typ_fn_args -> fun typ_fn_ret -> Typ_fn { typ_fn_args; typ_fn_ret }
 let (mk_tuple_typ : typ Prims.list -> typ) = fun l -> Typ_tuple l
-let (mk_expr_path_singl : Prims.string -> expr) = fun s -> Expr_path [s]
-let (mk_expr_path : Prims.string Prims.list -> expr) = fun l -> Expr_path l
+let (mk_expr_path_singl : Prims.string -> expr) =
+  fun s ->
+    Expr_path [{ path_segment_name = s; path_segment_generic_args = [] }]
+let (mk_expr_path : Prims.string Prims.list -> expr) =
+  fun l ->
+    let uu___ =
+      FStar_Compiler_List.map
+        (fun s -> { path_segment_name = s; path_segment_generic_args = [] })
+        l in
+    Expr_path uu___
 let (mk_lit_bool : Prims.bool -> expr) = fun b -> Expr_lit (Lit_bool b)
 let (mk_binop : expr -> binop -> expr -> expr) =
   fun l ->
@@ -1017,7 +1015,9 @@ let (mk_expr_struct :
 let (mk_expr_tuple : expr Prims.list -> expr) = fun l -> Expr_tuple l
 let (mk_mem_replace : expr -> expr -> expr) =
   fun e ->
-    fun new_v -> mk_call (Expr_path ["std"; "mem"; "replace"]) [e; new_v]
+    fun new_v ->
+      let uu___ = mk_expr_path ["std"; "mem"; "replace"] in
+      mk_call uu___ [e; new_v]
 let (mk_method_call : expr -> Prims.string -> expr Prims.list -> expr) =
   fun receiver ->
     fun name ->
@@ -1029,7 +1029,9 @@ let (mk_method_call : expr -> Prims.string -> expr Prims.list -> expr) =
             expr_method_call_args = args
           }
 let (mk_new_mutex : expr -> expr) =
-  fun e -> mk_call (Expr_path ["std"; "sync"; "Mutex"; "new"]) [e]
+  fun e ->
+    let uu___ = mk_expr_path ["std"; "sync"; "Mutex"; "new"] in
+    mk_call uu___ [e]
 let (mk_lock_mutex : expr -> expr) =
   fun e ->
     let e_lock = mk_method_call e "lock" [] in

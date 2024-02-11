@@ -6,8 +6,8 @@ use proc_macro2::Span;
 use syn::{
     punctuated::Punctuated, token::Brace, token::Colon, token::Comma, token::Eq, token::Let,
     token::Mut, token::Paren, token::Pub, token::RArrow, token::Ref, token::Semi, Block, Generics,
-    Ident, ItemFn, Local, LocalInit, Pat as SynPat, PatType, Path, PathArguments, PathSegment,
-    ReturnType, Signature, Type, Visibility,
+    Ident, ItemFn, Local, LocalInit, Pat as SynPat, PatType, Path, PathArguments, ReturnType,
+    Signature, Type, Visibility,
 };
 
 use std::fmt;
@@ -134,7 +134,7 @@ struct ExprMethodCall {
 
 enum Expr {
     EBinOp(ExprBin),
-    EPath(Vec<String>),
+    EPath(Vec<PathSegment>),
     ECall(ExprCall),
     EUnOp(ExprUnary),
     EAssign(ExprAssign),
@@ -157,9 +157,9 @@ struct TypeReference {
     type_reference_typ: Box<Typ>,
 }
 
-struct TypePathSegment {
-    type_path_segment_name: String,
-    type_path_segment_generic_args: Vec<Typ>,
+struct PathSegment {
+    path_segment_name: String,
+    path_segment_generic_args: Vec<Typ>,
 }
 
 struct TypeArray {
@@ -173,7 +173,7 @@ struct TypeFn {
 }
 
 enum Typ {
-    TPath(Vec<TypePathSegment>),
+    TPath(Vec<PathSegment>),
     TReference(TypeReference),
     TSlice(Box<Typ>),
     TArray(TypeArray),
@@ -368,7 +368,7 @@ impl_from_ocaml_variant! {
 impl_from_ocaml_variant! {
   Expr {
     Expr::EBinOp (payload:ExprBin),
-    Expr::EPath (payload:OCamlList<String>),
+    Expr::EPath (payload:OCamlList<PathSegment>),
     Expr::ECall (payload:ExprCall),
     Expr::EUnOp (payload:ExprUnary),
     Expr::EAssign (payload:ExprAssign),
@@ -504,9 +504,9 @@ impl_from_ocaml_record! {
 }
 
 impl_from_ocaml_record! {
-  TypePathSegment {
-    type_path_segment_name: String,
-    type_path_segment_generic_args: OCamlList<Typ>,
+  PathSegment {
+    path_segment_name: String,
+    path_segment_generic_args: OCamlList<Typ>,
   }
 }
 
@@ -526,7 +526,7 @@ impl_from_ocaml_record! {
 
 impl_from_ocaml_variant! {
   Typ {
-    Typ::TPath (payload:OCamlList<TypePathSegment>),
+    Typ::TPath (payload:OCamlList<PathSegment>),
     Typ::TReference (payload:TypeReference),
     Typ::TSlice (payload:Typ),
     Typ::TArray (payload:TypeArray),
@@ -706,11 +706,25 @@ impl_from_ocaml_record! {
   }
 }
 
-fn to_syn_path(s: &Vec<String>) -> syn::Path {
+fn to_syn_path_string(s: &Vec<String>) -> syn::Path {
     let mut segs: Punctuated<syn::PathSegment, syn::token::PathSep> = Punctuated::new();
     s.iter().for_each(|s| {
-        segs.push(PathSegment {
+        segs.push(syn::PathSegment {
             ident: Ident::new(&s, Span::call_site()),
+            arguments: PathArguments::None,
+        })
+    });
+    Path {
+        leading_colon: None,
+        segments: segs,
+    }
+}
+
+fn to_syn_path(s: &Vec<PathSegment>) -> syn::Path {
+    let mut segs: Punctuated<syn::PathSegment, syn::token::PathSep> = Punctuated::new();
+    s.iter().for_each(|s| {
+        segs.push(syn::PathSegment {
+            ident: Ident::new(&s.path_segment_name, Span::call_site()),
             arguments: PathArguments::None,
         })
     });
@@ -763,14 +777,14 @@ fn to_syn_binop(op: &BinOp) -> syn::BinOp {
 
 fn is_vec_new(e: &Expr) -> bool {
     match e {
-        Expr::EPath(s) => s[0] == VEC_NEW_FN,
+        Expr::EPath(s) => s[0].path_segment_name == VEC_NEW_FN,
         _ => false,
     }
 }
 
 fn is_panic(e: &Expr) -> bool {
     match e {
-        Expr::EPath(s) => s[0] == PANIC_FN,
+        Expr::EPath(s) => s[0].path_segment_name == PANIC_FN,
         _ => false,
     }
 }
@@ -785,7 +799,10 @@ fn to_syn_vec_new(args: &Vec<Expr>) -> syn::Expr {
     syn::Expr::Macro(syn::ExprMacro {
         attrs: vec![],
         mac: syn::Macro {
-            path: to_syn_path(&vec!["vec".to_string()]),
+            path: to_syn_path(&vec![PathSegment {
+                path_segment_name: "vec".to_string(),
+                path_segment_generic_args: vec![],
+            }]),
             bang_token: syn::token::Not {
                 spans: [Span::call_site()],
             },
@@ -807,7 +824,10 @@ fn to_syn_panic() -> syn::Expr {
     syn::Expr::Macro(syn::ExprMacro {
         attrs: vec![],
         mac: syn::Macro {
-            path: to_syn_path(&vec!["panic".to_string()]),
+            path: to_syn_path(&vec![PathSegment {
+                path_segment_name: "panic".to_string(),
+                path_segment_generic_args: vec![],
+            }]),
             bang_token: syn::token::Not {
                 spans: [Span::call_site()],
             },
@@ -1084,7 +1104,7 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
             syn::Expr::Struct(syn::ExprStruct {
                 attrs: vec![],
                 qself: None,
-                path: to_syn_path(expr_struct_path),
+                path: to_syn_path_string(expr_struct_path),
                 brace_token: Brace::default(),
                 fields,
                 dot2_token: None,
@@ -1148,7 +1168,7 @@ fn to_syn_pat(p: &Pat) -> syn::Pat {
         Pat::PTupleStruct(pts) => SynPat::TupleStruct(syn::PatTupleStruct {
             attrs: vec![],
             qself: None,
-            path: to_syn_path(&vec![pts.pat_ts_path.to_string()]),
+            path: to_syn_path_string(&vec![pts.pat_ts_path.to_string()]),
             paren_token: syn::token::Paren {
                 span: proc_macro2::Group::new(
                     proc_macro2::Delimiter::None,
@@ -1194,7 +1214,7 @@ fn to_syn_pat(p: &Pat) -> syn::Pat {
             syn::Pat::Struct(syn::PatStruct {
                 attrs: vec![],
                 qself: None,
-                path: to_syn_path(&vec![pat_struct_path.to_string()]),
+                path: to_syn_path_string(&vec![pat_struct_path.to_string()]),
                 brace_token: Brace::default(),
                 fields,
                 rest: None,
@@ -1274,8 +1294,8 @@ fn to_syn_typ(t: &Typ) -> Type {
                 segments: v
                     .iter()
                     .map(|s| syn::PathSegment {
-                        ident: Ident::new(&s.type_path_segment_name, Span::call_site()),
-                        arguments: if s.type_path_segment_generic_args.len() == 0 {
+                        ident: Ident::new(&s.path_segment_name, Span::call_site()),
+                        arguments: if s.path_segment_generic_args.len() == 0 {
                             syn::PathArguments::None
                         } else {
                             syn::PathArguments::AngleBracketed(
@@ -1285,7 +1305,7 @@ fn to_syn_typ(t: &Typ) -> Type {
                                         spans: [Span::call_site()],
                                     },
                                     args: s
-                                        .type_path_segment_generic_args
+                                        .path_segment_generic_args
                                         .iter()
                                         .map(|t| syn::GenericArgument::Type(to_syn_typ(t)))
                                         .collect(),
@@ -1511,7 +1531,7 @@ fn to_syn_attr(attr: &Attribute) -> syn::Attribute {
             .delim_span(),
         },
         meta: syn::Meta::List(syn::MetaList {
-            path: to_syn_path(&vec!["derive".to_string()]),
+            path: to_syn_path_string(&vec!["derive".to_string()]),
             delimiter: syn::MacroDelimiter::Paren(syn::token::Paren {
                 span: proc_macro2::Group::new(
                     proc_macro2::Delimiter::None,
@@ -1895,6 +1915,12 @@ impl fmt::Display for Arm {
     }
 }
 
+impl fmt::Display for PathSegment {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.path_segment_name)
+    }
+}
+
 impl fmt::Display for Expr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
@@ -2033,13 +2059,13 @@ impl fmt::Display for Typ {
                 f,
                 "{}",
                 v.iter()
-                    .map(|s| if s.type_path_segment_generic_args.len() == 0 {
-                        s.type_path_segment_name.to_string()
+                    .map(|s| if s.path_segment_generic_args.len() == 0 {
+                        s.path_segment_name.to_string()
                     } else {
                         format!(
                             "{}<{}>",
-                            s.type_path_segment_name,
-                            s.type_path_segment_generic_args
+                            s.path_segment_name,
+                            s.path_segment_generic_args
                                 .iter()
                                 .map(|t| t.to_string())
                                 .collect::<Vec<_>>()

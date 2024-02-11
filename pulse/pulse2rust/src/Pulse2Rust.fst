@@ -137,10 +137,10 @@ let lookup_datacon (g:env) (s:S.mlident) : option (string & S.mlsymbol) =
 //
 let type_of (g:env) (e:expr) : bool =  // is_mut
   match e with
-  | Expr_path [s] ->
-    (match lookup_local g s with
+  | Expr_path [{path_segment_name}] ->
+    (match lookup_local g path_segment_name with
      | Some (_t, b) -> b
-     | None -> fail (format1 "lookup in env for %s" s))
+     | None -> fail (format1 "lookup in env for %s" path_segment_name))
   
   | _ -> false
 

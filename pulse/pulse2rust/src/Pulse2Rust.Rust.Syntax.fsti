@@ -90,7 +90,7 @@ and pat =
 
 and expr =
   | Expr_binop of expr_bin
-  | Expr_path of list string
+  | Expr_path of list path_segment
   | Expr_call of expr_call
   | Expr_unary of expr_unary
   | Expr_assign of expr_assignment
@@ -196,7 +196,7 @@ and stmt =
   | Stmt_expr of expr
 
 and typ =
-  | Typ_path of list typ_path_segment
+  | Typ_path of list path_segment
   | Typ_reference of typ_reference
   | Typ_slice of typ
   | Typ_array of typ_array
@@ -210,9 +210,9 @@ and typ_reference = {
   typ_ref_typ : typ;
 }
 
-and typ_path_segment = {
-  typ_path_segment_name : string;
-  typ_path_segment_generic_args : list typ;
+and path_segment = {
+  path_segment_name : string;
+  path_segment_generic_args : list typ;
 }
 
 and typ_array = {

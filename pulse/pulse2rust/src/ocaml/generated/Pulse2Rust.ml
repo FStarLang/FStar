@@ -221,14 +221,18 @@ let (type_of : env -> Pulse2Rust_Rust_Syntax.expr -> Prims.bool) =
   fun g ->
     fun e ->
       match e with
-      | Pulse2Rust_Rust_Syntax.Expr_path (s::[]) ->
-          let uu___ = lookup_local g s in
-          (match uu___ with
+      | Pulse2Rust_Rust_Syntax.Expr_path
+          ({ Pulse2Rust_Rust_Syntax.path_segment_name = path_segment_name;
+             Pulse2Rust_Rust_Syntax.path_segment_generic_args = uu___;_}::[])
+          ->
+          let uu___1 = lookup_local g path_segment_name in
+          (match uu___1 with
            | FStar_Pervasives_Native.Some (_t, b) -> b
            | FStar_Pervasives_Native.None ->
-               let uu___1 =
-                 FStar_Compiler_Util.format1 "lookup in env for %s" s in
-               fail uu___1)
+               let uu___2 =
+                 FStar_Compiler_Util.format1 "lookup in env for %s"
+                   path_segment_name in
+               fail uu___2)
       | uu___ -> false
 let rec (uncurry_arrow :
   FStar_Extraction_ML_Syntax.mlty ->
