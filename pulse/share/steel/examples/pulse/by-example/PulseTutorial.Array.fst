@@ -21,6 +21,8 @@ open Pulse.Lib.Array
 
 module SZ = FStar.SizeT
 
+let some_f (x:'a) : GTot _ = ()
+
 [@@ Rust_generics_bounds [["Copy"]]]
 ```pulse //readi$
 fn read_i #t (arr:array t) (#p:perm) (#s:erased (Seq.seq t)) (i:SZ.t { SZ.v i < Seq.length s })
