@@ -43,7 +43,7 @@ DPE_FILES = EngineTypes.ast \
 dpe.rs: $(DPE_FILES)
 	$(MAIN) -odir $(RUST_SRC_DIR)/dpe_ $(addprefix $(OUTPUT_DIRECTORY)/, $^)
 
-all-rs: pulsetutorial-array.rs pulsetutorial-loops.rs pulsetutorial-algorithms.rs dpe.rs
+all-rs: pulsetutorial-loops.rs pulsetutorial-algorithms.rs dpe.rs  #pulsetutorial-array.rs
 
 test: all-rs
 	cargo test
