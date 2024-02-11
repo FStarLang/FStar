@@ -1729,7 +1729,7 @@ fn to_syn_item(i: &Item) -> Vec<syn::Item> {
                 brace_token: Brace::default(),
                 variants,
             });
-            vec![item, use_enum_item(i)]
+            vec![item] //, use_enum_item(i)]
         }
         Item::IStatic(ItemStatic {
             item_static_name,

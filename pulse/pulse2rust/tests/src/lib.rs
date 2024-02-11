@@ -1,9 +1,12 @@
+mod dpe_;
 mod pulsetutorial_algorithms;
 mod pulsetutorial_array;
 mod pulsetutorial_loops;
-
+#[cfg(test)]
 use pulsetutorial_algorithms::*;
+#[cfg(test)]
 use pulsetutorial_array::*;
+#[cfg(test)]
 use pulsetutorial_loops::*;
 
 #[cfg(test)]
@@ -38,7 +41,7 @@ mod tests {
     }
 
     #[test]
-    fn test_voting() {
+    fn voting_tests() {
         let mut votes = vec![
             Cand::B,
             Cand::A,
