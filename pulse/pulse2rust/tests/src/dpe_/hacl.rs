@@ -47,3 +47,29 @@ pub fn hacl_hmac(
 ) -> () {
     panic!()
 }
+
+pub type hkdf_lbl_len = usize;
+
+pub type hkdf_ikm_len = usize;
+
+pub type alg_t = ();
+
+pub fn digest_len(alg: alg_t) -> usize {
+    panic!()
+}
+
+pub const v32us: usize = 32;
+
+pub fn ed25519_sign(
+    buf: &mut [u8],
+    privk: &mut [u8],
+    len: usize,
+    msg: &mut [u8],
+    pprivk: (),
+    pmsg: (),
+    buf0: (),
+    privk_seq: (),
+    msg_seq: (),
+) -> () {
+    panic!()
+}
