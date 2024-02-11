@@ -1,3 +1,5 @@
+mod dpe;
+mod dpetypes;
 mod enginecore;
 mod enginetypes;
 mod hacl;
@@ -9,5 +11,3 @@ mod pulse_lib_hashtable;
 mod pulse_lib_hashtable_spec;
 mod pulse_lib_hashtable_type;
 mod x509;
-// mod dpetypes;
-// mod dpe;

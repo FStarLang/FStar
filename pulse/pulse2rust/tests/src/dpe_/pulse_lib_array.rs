@@ -9,3 +9,11 @@ pub fn compare(
 ) -> bool {
     panic!()
 }
+
+pub fn memcpy<A>(l: usize, src: &mut [A], dst: &mut [A], p: (), src0: (), dst0: ()) -> () {
+    panic!()
+}
+
+pub fn zeroize(len: usize, src: &mut [u8], s: ()) -> () {
+    panic!()
+}
