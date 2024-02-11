@@ -8,46 +8,55 @@ let (reachable_defs_to_string : reachable_defs -> Prims.string) =
       let uu___1 = FStar_Compiler_Set.elems FStar_Class_Ord.ord_string d in
       FStar_Compiler_String.concat ";" uu___1 in
     FStar_Compiler_Util.format1 "[%s]" uu___
+type dict =
+  (Prims.string Prims.list * FStar_Extraction_ML_UEnv.binding Prims.list *
+    FStar_Extraction_ML_Syntax.mlmodule) FStar_Compiler_Util.smap
 type env =
   {
   fns: (Prims.string * Pulse2Rust_Rust_Syntax.fn_signature) Prims.list ;
   statics: (Prims.string * Pulse2Rust_Rust_Syntax.typ) Prims.list ;
   gamma: binding Prims.list ;
   record_field_names: Prims.string Prims.list FStar_Compiler_Util.psmap ;
+  d: dict ;
   all_modules: Prims.string Prims.list ;
   reachable_defs: reachable_defs }
 let (__proj__Mkenv__item__fns :
   env -> (Prims.string * Pulse2Rust_Rust_Syntax.fn_signature) Prims.list) =
   fun projectee ->
     match projectee with
-    | { fns; statics; gamma; record_field_names; all_modules;
+    | { fns; statics; gamma; record_field_names; d; all_modules;
         reachable_defs = reachable_defs1;_} -> fns
 let (__proj__Mkenv__item__statics :
   env -> (Prims.string * Pulse2Rust_Rust_Syntax.typ) Prims.list) =
   fun projectee ->
     match projectee with
-    | { fns; statics; gamma; record_field_names; all_modules;
+    | { fns; statics; gamma; record_field_names; d; all_modules;
         reachable_defs = reachable_defs1;_} -> statics
 let (__proj__Mkenv__item__gamma : env -> binding Prims.list) =
   fun projectee ->
     match projectee with
-    | { fns; statics; gamma; record_field_names; all_modules;
+    | { fns; statics; gamma; record_field_names; d; all_modules;
         reachable_defs = reachable_defs1;_} -> gamma
 let (__proj__Mkenv__item__record_field_names :
   env -> Prims.string Prims.list FStar_Compiler_Util.psmap) =
   fun projectee ->
     match projectee with
-    | { fns; statics; gamma; record_field_names; all_modules;
+    | { fns; statics; gamma; record_field_names; d; all_modules;
         reachable_defs = reachable_defs1;_} -> record_field_names
+let (__proj__Mkenv__item__d : env -> dict) =
+  fun projectee ->
+    match projectee with
+    | { fns; statics; gamma; record_field_names; d; all_modules;
+        reachable_defs = reachable_defs1;_} -> d
 let (__proj__Mkenv__item__all_modules : env -> Prims.string Prims.list) =
   fun projectee ->
     match projectee with
-    | { fns; statics; gamma; record_field_names; all_modules;
+    | { fns; statics; gamma; record_field_names; d; all_modules;
         reachable_defs = reachable_defs1;_} -> all_modules
 let (__proj__Mkenv__item__reachable_defs : env -> reachable_defs) =
   fun projectee ->
     match projectee with
-    | { fns; statics; gamma; record_field_names; all_modules;
+    | { fns; statics; gamma; record_field_names; d; all_modules;
         reachable_defs = reachable_defs1;_} -> reachable_defs1
 let (tyvar_of : Prims.string -> Prims.string) =
   fun s ->
@@ -76,18 +85,20 @@ let fail_nyi : 'uuuuu . Prims.string -> 'uuuuu =
       FStar_Compiler_Util.format1
         "Pulse to Rust extraction failed: no support yet for %s" s in
     FStar_Compiler_Effect.failwith uu___
-let (empty_env : Prims.string Prims.list -> reachable_defs -> env) =
-  fun all_modules ->
-    fun reachable_defs1 ->
-      let uu___ = FStar_Compiler_Util.psmap_empty () in
-      {
-        fns = [];
-        statics = [];
-        gamma = [];
-        record_field_names = uu___;
-        all_modules;
-        reachable_defs = reachable_defs1
-      }
+let (empty_env : dict -> Prims.string Prims.list -> reachable_defs -> env) =
+  fun d ->
+    fun all_modules ->
+      fun reachable_defs1 ->
+        let uu___ = FStar_Compiler_Util.psmap_empty () in
+        {
+          fns = [];
+          statics = [];
+          gamma = [];
+          record_field_names = uu___;
+          d;
+          all_modules;
+          reachable_defs = reachable_defs1
+        }
 let (lookup_global_fn :
   env ->
     Prims.string ->
@@ -124,6 +135,7 @@ let (push_fn :
           statics = (g.statics);
           gamma = (g.gamma);
           record_field_names = (g.record_field_names);
+          d = (g.d);
           all_modules = (g.all_modules);
           reachable_defs = (g.reachable_defs)
         }
@@ -137,6 +149,7 @@ let (push_static : env -> Prims.string -> Pulse2Rust_Rust_Syntax.typ -> env)
           statics = ((s, t) :: (g.statics));
           gamma = (g.gamma);
           record_field_names = (g.record_field_names);
+          d = (g.d);
           all_modules = (g.all_modules);
           reachable_defs = (g.reachable_defs)
         }
@@ -151,9 +164,59 @@ let (push_local :
             statics = (g.statics);
             gamma = ((s, t, is_mut) :: (g.gamma));
             record_field_names = (g.record_field_names);
+            d = (g.d);
             all_modules = (g.all_modules);
             reachable_defs = (g.reachable_defs)
           }
+let (lookup_datacon_in_module1 :
+  FStar_Extraction_ML_Syntax.mlident ->
+    FStar_Extraction_ML_Syntax.mlmodule1 ->
+      FStar_Extraction_ML_Syntax.mlsymbol FStar_Pervasives_Native.option)
+  =
+  fun s ->
+    fun m ->
+      match m.FStar_Extraction_ML_Syntax.mlmodule1_m with
+      | FStar_Extraction_ML_Syntax.MLM_Ty l ->
+          FStar_Compiler_Util.find_map l
+            (fun t ->
+               match t.FStar_Extraction_ML_Syntax.tydecl_defn with
+               | FStar_Pervasives_Native.Some
+                   (FStar_Extraction_ML_Syntax.MLTD_DType l1) ->
+                   FStar_Compiler_Util.find_map l1
+                     (fun uu___ ->
+                        match uu___ with
+                        | (consname, uu___1) ->
+                            if consname = s
+                            then
+                              FStar_Pervasives_Native.Some
+                                (t.FStar_Extraction_ML_Syntax.tydecl_name)
+                            else FStar_Pervasives_Native.None)
+               | uu___ -> FStar_Pervasives_Native.None)
+      | uu___ -> FStar_Pervasives_Native.None
+let (lookup_datacon :
+  env ->
+    FStar_Extraction_ML_Syntax.mlident ->
+      (Prims.string * FStar_Extraction_ML_Syntax.mlsymbol)
+        FStar_Pervasives_Native.option)
+  =
+  fun g ->
+    fun s ->
+      let d_keys = FStar_Compiler_Util.smap_keys g.d in
+      FStar_Compiler_Util.find_map d_keys
+        (fun k ->
+           let uu___ =
+             let uu___1 = FStar_Compiler_Util.smap_try_find g.d k in
+             FStar_Compiler_Util.must uu___1 in
+           match uu___ with
+           | (uu___1, uu___2, decls) ->
+               let ropt =
+                 FStar_Compiler_Util.find_map decls
+                   (lookup_datacon_in_module1 s) in
+               (match ropt with
+                | FStar_Pervasives_Native.None ->
+                    FStar_Pervasives_Native.None
+                | FStar_Pervasives_Native.Some tname ->
+                    FStar_Pervasives_Native.Some (k, tname)))
 let (type_of : env -> Pulse2Rust_Rust_Syntax.expr -> Prims.bool) =
   fun g ->
     fun e ->
@@ -213,23 +276,12 @@ let (rust_mod_name :
   fun path ->
     let uu___ = FStar_Compiler_List.map FStar_Compiler_String.lowercase path in
     FStar_Compiler_String.concat "_" uu___
-let (extract_mlpath_for_symbol :
-  FStar_Extraction_ML_Syntax.mlsymbol Prims.list ->
-    Pulse2Rust_Rust_Syntax.typ_path_segment Prims.list)
+let (extract_path_for_symbol :
+  FStar_Extraction_ML_Syntax.mlsymbol Prims.list -> Prims.string Prims.list)
   =
   fun path ->
-    let uu___ =
-      let uu___1 =
-        let uu___2 = rust_mod_name path in
-        {
-          Pulse2Rust_Rust_Syntax.typ_path_segment_name = uu___2;
-          Pulse2Rust_Rust_Syntax.typ_path_segment_generic_args = []
-        } in
-      [uu___1] in
-    {
-      Pulse2Rust_Rust_Syntax.typ_path_segment_name = "super";
-      Pulse2Rust_Rust_Syntax.typ_path_segment_generic_args = []
-    } :: uu___
+    let uu___ = let uu___1 = rust_mod_name path in [uu___1] in "super" ::
+      uu___
 let rec (extract_mlty :
   env -> FStar_Extraction_ML_Syntax.mlty -> Pulse2Rust_Rust_Syntax.typ) =
   fun g ->
@@ -332,7 +384,7 @@ let rec (extract_mlty :
               should_extract_mlpath_with_symbol g
                 (FStar_Pervasives_Native.fst p) in
             if uu___
-            then extract_mlpath_for_symbol (FStar_Pervasives_Native.fst p)
+            then extract_path_for_symbol (FStar_Pervasives_Native.fst p)
             else [] in
           let uu___ = FStar_Compiler_List.map (extract_mlty g) args in
           Pulse2Rust_Rust_Syntax.mk_named_typ path
@@ -578,6 +630,16 @@ let rec (extract_mlpattern_to_pat :
             FStar_Compiler_List.fold_left_map extract_mlpattern_to_pat g ps in
           (match uu___ with
            | (g1, ps1) ->
+               let path =
+                 let ropt =
+                   lookup_datacon g1 (FStar_Pervasives_Native.snd p1) in
+                 match ropt with
+                 | FStar_Pervasives_Native.Some (s, t) ->
+                     (FStar_Compiler_Util.print3
+                        "Found datacon %s in module %s with tname %s"
+                        (FStar_Pervasives_Native.snd p1) s t;
+                      fail_nyi "datacon in module")
+                 | FStar_Pervasives_Native.None -> [] in
                let uu___1 =
                  Pulse2Rust_Rust_Syntax.mk_pat_ts
                    (FStar_Pervasives_Native.snd p1) ps1 in
@@ -1346,8 +1408,16 @@ and (extract_mlexpr :
               Pulse2Rust_Rust_Syntax.mk_expr_path_singl
                 (FStar_Pervasives_Native.snd p)
             else
-              Pulse2Rust_Rust_Syntax.mk_expr_path
-                [ty_name; FStar_Pervasives_Native.snd p] in
+              (let path =
+                 let uu___1 =
+                   should_extract_mlpath_with_symbol g
+                     (FStar_Pervasives_Native.fst p) in
+                 if uu___1
+                 then extract_path_for_symbol (FStar_Pervasives_Native.fst p)
+                 else [] in
+               Pulse2Rust_Rust_Syntax.mk_expr_path
+                 (FStar_Compiler_List.append path
+                    [ty_name; FStar_Pervasives_Native.snd p])) in
           if (FStar_Compiler_List.length args) = Prims.int_zero
           then dexpr
           else
@@ -1380,14 +1450,18 @@ and (extract_mlexpr :
           Pulse2Rust_Rust_Syntax.mk_match e2 uu___
       | FStar_Extraction_ML_Syntax.MLE_Coerce (e1, uu___, uu___1) ->
           extract_mlexpr g e1
-      | FStar_Extraction_ML_Syntax.MLE_Record (uu___, nm, fields) ->
-          let uu___1 =
+      | FStar_Extraction_ML_Syntax.MLE_Record (p, nm, fields) ->
+          let path =
+            let uu___ = should_extract_mlpath_with_symbol g p in
+            if uu___ then extract_path_for_symbol p else [] in
+          let uu___ =
             FStar_Compiler_List.map
-              (fun uu___2 ->
-                 match uu___2 with
-                 | (f, e1) -> let uu___3 = extract_mlexpr g e1 in (f, uu___3))
+              (fun uu___1 ->
+                 match uu___1 with
+                 | (f, e1) -> let uu___2 = extract_mlexpr g e1 in (f, uu___2))
               fields in
-          Pulse2Rust_Rust_Syntax.mk_expr_struct [nm] uu___1
+          Pulse2Rust_Rust_Syntax.mk_expr_struct
+            (FStar_Compiler_List.append path [nm]) uu___
       | FStar_Extraction_ML_Syntax.MLE_Proj (e1, p) ->
           let uu___ = extract_mlexpr g e1 in
           Pulse2Rust_Rust_Syntax.mk_expr_field uu___
@@ -1794,6 +1868,7 @@ let (extract_struct_defn :
                 statics = (g.statics);
                 gamma = (g.gamma);
                 record_field_names = uu___3;
+                d = (g.d);
                 all_modules = (g.all_modules);
                 reachable_defs = (g.reachable_defs)
               } in
@@ -2247,9 +2322,6 @@ let (file_to_module_name : Prims.string -> Prims.string) =
         ((FStar_Compiler_String.length s) -
            (FStar_Compiler_String.length suffix)) in
     FStar_Compiler_Util.replace_chars s1 95 "."
-type dict =
-  (Prims.string Prims.list * FStar_Extraction_ML_UEnv.binding Prims.list *
-    FStar_Extraction_ML_Syntax.mlmodule) FStar_Compiler_Util.smap
 let rec (topsort :
   dict ->
     Prims.string Prims.list ->
@@ -2451,7 +2523,7 @@ let (extract : Prims.string Prims.list -> Prims.string -> unit) =
        match uu___1 with
        | root_module::uu___2 ->
            let reachable_defs1 = collect_reachable_defs d root_module in
-           let g = empty_env all_modules reachable_defs1 in
+           let g = empty_env d all_modules reachable_defs1 in
            let uu___3 =
              FStar_Compiler_List.fold_left
                (fun g1 ->

@@ -62,10 +62,13 @@ let mk_option_typ (t:typ) : typ =
 let mk_array_typ (t:typ) (len:expr) : typ =
   Typ_array { typ_array_elem = t; typ_array_len = len }
 
-let mk_named_typ (path:list typ_path_segment) (s:string) (generic_args:list typ) : typ =
-  Typ_path
-    (List.append path
-       [ { typ_path_segment_name = s; typ_path_segment_generic_args = generic_args } ])
+let mk_named_typ (path:list string) (s:string) (generic_args:list typ) : typ =
+  let path = path |> L.map (fun s -> {
+      typ_path_segment_name = s;
+      typ_path_segment_generic_args = []
+  }) in
+  let s = { typ_path_segment_name = s; typ_path_segment_generic_args = generic_args } in
+  Typ_path (List.append path [s])
 
 let mk_fn_typ (typ_fn_args:list typ) (typ_fn_ret:typ) : typ =
   Typ_fn { typ_fn_args; typ_fn_ret }

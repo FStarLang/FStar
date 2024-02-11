@@ -42,11 +42,14 @@ type reachable_defs = Set.set string
 let reachable_defs_to_string (d:reachable_defs) : string =
   d |> Set.elems |> String.concat ";" |> format1 "[%s]"
 
+type dict = smap (list string & list UEnv.binding & S.mlmodule)
+
 type env = {
   fns : list (string & fn_signature);
   statics : list (string & typ);
   gamma : list binding;
   record_field_names : psmap (list string);
+  d: dict;
   all_modules : list string;
   reachable_defs : reachable_defs
 }
@@ -81,11 +84,12 @@ let fail (s:string) =
 let fail_nyi (s:string) =
   failwith (format1 "Pulse to Rust extraction failed: no support yet for %s" s)
 
-let empty_env (all_modules:list string) (reachable_defs:reachable_defs) =
+let empty_env (d:dict) (all_modules:list string) (reachable_defs:reachable_defs) =
   { fns = [];
     gamma = [];
     statics = [];
     record_field_names = psmap_empty ();
+    d;
     all_modules;
     reachable_defs }
 
@@ -103,6 +107,27 @@ let push_static (g:env) (s:string) (t:typ) : env =
 
 let push_local (g:env) (s:string) (t:typ) (is_mut:bool) : env =
   { g with gamma = (s, t, is_mut)::g.gamma }
+
+let lookup_datacon_in_module1 (s:S.mlident) (m:S.mlmodule1) : option S.mlsymbol =
+  match m.mlmodule1_m with
+  | S.MLM_Ty l ->
+    find_map l (fun t ->
+      match t.tydecl_defn with
+      | Some (S.MLTD_DType l) ->
+        find_map l (fun (consname, _) -> if consname = s then Some t.tydecl_name else None)
+      | _ -> None
+    )
+  | _ -> None
+
+let lookup_datacon (g:env) (s:S.mlident) : option (string & S.mlsymbol) =
+  let d_keys = smap_keys g.d in
+  find_map d_keys (fun k ->
+    let (_, _, decls) = smap_try_find g.d k |> must in
+    let ropt = find_map decls (lookup_datacon_in_module1 s) in
+    match ropt with
+    | None -> None
+    | Some tname -> Some (k, tname)
+  )
 
 //
 // A very shallow type checker for rust ast terms
@@ -150,11 +175,8 @@ let rust_mod_name (path:list S.mlsymbol) : string =
   path |> List.map String.lowercase
        |> String.concat "_"  
 
-let extract_mlpath_for_symbol (path:list S.mlsymbol) : list typ_path_segment =
-  [ { typ_path_segment_name = "super";
-      typ_path_segment_generic_args = []};
-    { typ_path_segment_name = rust_mod_name path;
-      typ_path_segment_generic_args = []} ]
+let extract_path_for_symbol (path:list S.mlsymbol) : list string =
+  [ "super"; rust_mod_name path ]
 
 //
 // Most translations are straightforward
@@ -220,7 +242,7 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
   | S.MLTY_Named (args, p) ->
     let path =
       if should_extract_mlpath_with_symbol g (fst p)
-      then extract_mlpath_for_symbol (fst p)
+      then extract_path_for_symbol (fst p)
       else [] in
     mk_named_typ path (snd p) (List.map (extract_mlty g) args)
 
@@ -373,6 +395,13 @@ let rec extract_mlpattern_to_pat (g:env) (p:S.mlpattern) : env & pat =
     mk_pat_tuple ps
   | S.MLP_CTor (p, ps) ->
     let g, ps = fold_left_map extract_mlpattern_to_pat g ps in
+    let path =
+      let ropt = lookup_datacon g (snd p) in
+      match ropt with
+      | Some (s, t) ->
+        print3 "Found datacon %s in module %s with tname %s" (snd p) s t;
+        fail_nyi "datacon in module"
+      | None -> Nil #string in
     g,
     mk_pat_ts (snd p) ps
   | S.MLP_Record (p, fs) ->
@@ -652,7 +681,11 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
       | _ -> failwith "S.MLE_CTor: unexpected type" in
     let dexpr =
       if is_native then mk_expr_path_singl (snd p)
-      else mk_expr_path [ty_name; snd p] in
+      else let path =
+             if should_extract_mlpath_with_symbol g (fst p)
+             then extract_path_for_symbol (fst p)
+             else [] in
+           mk_expr_path (List.append path [ty_name; snd p]) in
     if List.length args = 0
     then dexpr
     else mk_call dexpr (List.map (extract_mlexpr g) args)
@@ -679,8 +712,12 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
 
   | S.MLE_Coerce (e, _, _) -> extract_mlexpr g e  // TODO: FIXME: perhaps cast in Rust?
 
-  | S.MLE_Record (_, nm, fields) ->
-    mk_expr_struct [nm] (List.map (fun (f, e) -> f, extract_mlexpr g e) fields)
+  | S.MLE_Record (p, nm, fields) ->
+    let path =
+      if should_extract_mlpath_with_symbol g p
+      then extract_path_for_symbol p
+      else [] in
+    mk_expr_struct (List.append path [nm]) (List.map (fun (f, e) -> f, extract_mlexpr g e) fields)
 
   | S.MLE_Proj (e, p) -> mk_expr_field (extract_mlexpr g e) (snd p)
 
@@ -1131,8 +1168,6 @@ let file_to_module_name (f:string) : string =
   let s = String.substring s 0 (String.length s - String.length suffix) in
   replace_chars s '_' "."
 
-type dict = smap (list string & list UEnv.binding & S.mlmodule)
-
 let rec topsort (d:dict) (grey:list string) (black:list string) (root:string)
   : (list string & list string) =  // grey and black
   let grey = root::grey in
@@ -1253,7 +1288,7 @@ let extract (files:list string) (odir:string) : unit =
   //   ) reachable_defs all_modules
   // in
 
-  let g = empty_env all_modules reachable_defs in
+  let g = empty_env d all_modules reachable_defs in
   let _ = List.fold_left (fun g f ->
     let (_, bs, ds) = smap_try_find d f |> must in
     let s, g = extract_one g f bs ds in

@@ -1578,7 +1578,9 @@ fn to_syn_item(i: &Item) -> Vec<syn::Item> {
             item_struct_fields.iter().for_each(|ft| {
                 fields.push(syn::Field {
                     attrs: vec![],
-                    vis: Visibility::Inherited,
+                    vis: Visibility::Public(syn::token::Pub {
+                        span: Span::call_site(),
+                    }),
                     mutability: syn::FieldMutability::None,
                     ident: Some(Ident::new(&ft.field_typ_name, Span::call_site())),
                     colon_token: Some(Colon {
