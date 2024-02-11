@@ -890,14 +890,17 @@ let (mk_option_typ : typ -> typ) =
       }]
 let (mk_array_typ : typ -> expr -> typ) =
   fun t -> fun len -> Typ_array { typ_array_elem = t; typ_array_len = len }
-let (mk_named_typ : Prims.string -> typ Prims.list -> typ) =
-  fun s ->
-    fun generic_args ->
-      Typ_path
-        [{
-           typ_path_segment_name = s;
-           typ_path_segment_generic_args = generic_args
-         }]
+let (mk_named_typ :
+  typ_path_segment Prims.list -> Prims.string -> typ Prims.list -> typ) =
+  fun path ->
+    fun s ->
+      fun generic_args ->
+        Typ_path
+          (FStar_List_Tot_Base.append path
+             [{
+                typ_path_segment_name = s;
+                typ_path_segment_generic_args = generic_args
+              }])
 let (mk_fn_typ : typ Prims.list -> typ -> typ) =
   fun typ_fn_args -> fun typ_fn_ret -> Typ_fn { typ_fn_args; typ_fn_ret }
 let (mk_tuple_typ : typ Prims.list -> typ) = fun l -> Typ_tuple l

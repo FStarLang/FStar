@@ -14,34 +14,40 @@ type env =
   statics: (Prims.string * Pulse2Rust_Rust_Syntax.typ) Prims.list ;
   gamma: binding Prims.list ;
   record_field_names: Prims.string Prims.list FStar_Compiler_Util.psmap ;
+  all_modules: Prims.string Prims.list ;
   reachable_defs: reachable_defs }
 let (__proj__Mkenv__item__fns :
   env -> (Prims.string * Pulse2Rust_Rust_Syntax.fn_signature) Prims.list) =
   fun projectee ->
     match projectee with
-    | { fns; statics; gamma; record_field_names;
+    | { fns; statics; gamma; record_field_names; all_modules;
         reachable_defs = reachable_defs1;_} -> fns
 let (__proj__Mkenv__item__statics :
   env -> (Prims.string * Pulse2Rust_Rust_Syntax.typ) Prims.list) =
   fun projectee ->
     match projectee with
-    | { fns; statics; gamma; record_field_names;
+    | { fns; statics; gamma; record_field_names; all_modules;
         reachable_defs = reachable_defs1;_} -> statics
 let (__proj__Mkenv__item__gamma : env -> binding Prims.list) =
   fun projectee ->
     match projectee with
-    | { fns; statics; gamma; record_field_names;
+    | { fns; statics; gamma; record_field_names; all_modules;
         reachable_defs = reachable_defs1;_} -> gamma
 let (__proj__Mkenv__item__record_field_names :
   env -> Prims.string Prims.list FStar_Compiler_Util.psmap) =
   fun projectee ->
     match projectee with
-    | { fns; statics; gamma; record_field_names;
+    | { fns; statics; gamma; record_field_names; all_modules;
         reachable_defs = reachable_defs1;_} -> record_field_names
+let (__proj__Mkenv__item__all_modules : env -> Prims.string Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { fns; statics; gamma; record_field_names; all_modules;
+        reachable_defs = reachable_defs1;_} -> all_modules
 let (__proj__Mkenv__item__reachable_defs : env -> reachable_defs) =
   fun projectee ->
     match projectee with
-    | { fns; statics; gamma; record_field_names;
+    | { fns; statics; gamma; record_field_names; all_modules;
         reachable_defs = reachable_defs1;_} -> reachable_defs1
 let (tyvar_of : Prims.string -> Prims.string) =
   fun s ->
@@ -70,16 +76,18 @@ let fail_nyi : 'uuuuu . Prims.string -> 'uuuuu =
       FStar_Compiler_Util.format1
         "Pulse to Rust extraction failed: no support yet for %s" s in
     FStar_Compiler_Effect.failwith uu___
-let (empty_env : reachable_defs -> env) =
-  fun reachable_defs1 ->
-    let uu___ = FStar_Compiler_Util.psmap_empty () in
-    {
-      fns = [];
-      statics = [];
-      gamma = [];
-      record_field_names = uu___;
-      reachable_defs = reachable_defs1
-    }
+let (empty_env : Prims.string Prims.list -> reachable_defs -> env) =
+  fun all_modules ->
+    fun reachable_defs1 ->
+      let uu___ = FStar_Compiler_Util.psmap_empty () in
+      {
+        fns = [];
+        statics = [];
+        gamma = [];
+        record_field_names = uu___;
+        all_modules;
+        reachable_defs = reachable_defs1
+      }
 let (lookup_global_fn :
   env ->
     Prims.string ->
@@ -116,6 +124,7 @@ let (push_fn :
           statics = (g.statics);
           gamma = (g.gamma);
           record_field_names = (g.record_field_names);
+          all_modules = (g.all_modules);
           reachable_defs = (g.reachable_defs)
         }
 let (push_static : env -> Prims.string -> Pulse2Rust_Rust_Syntax.typ -> env)
@@ -128,6 +137,7 @@ let (push_static : env -> Prims.string -> Pulse2Rust_Rust_Syntax.typ -> env)
           statics = ((s, t) :: (g.statics));
           gamma = (g.gamma);
           record_field_names = (g.record_field_names);
+          all_modules = (g.all_modules);
           reachable_defs = (g.reachable_defs)
         }
 let (push_local :
@@ -141,6 +151,7 @@ let (push_local :
             statics = (g.statics);
             gamma = ((s, t, is_mut) :: (g.gamma));
             record_field_names = (g.record_field_names);
+            all_modules = (g.all_modules);
             reachable_defs = (g.reachable_defs)
           }
 let (type_of : env -> Pulse2Rust_Rust_Syntax.expr -> Prims.bool) =
@@ -191,6 +202,34 @@ let (arg_ts_and_ret_t :
                FStar_Compiler_Util.format1 "top level arg_ts and ret_t %s"
                  uu___3 in
              fail_nyi uu___2)
+let (should_extract_mlpath_with_symbol :
+  env -> FStar_Extraction_ML_Syntax.mlsymbol Prims.list -> Prims.bool) =
+  fun g ->
+    fun path ->
+      FStar_Compiler_List.contains (FStar_Compiler_String.concat "." path)
+        g.all_modules
+let (rust_mod_name :
+  FStar_Extraction_ML_Syntax.mlsymbol Prims.list -> Prims.string) =
+  fun path ->
+    let uu___ = FStar_Compiler_List.map FStar_Compiler_String.lowercase path in
+    FStar_Compiler_String.concat "_" uu___
+let (extract_mlpath_for_symbol :
+  FStar_Extraction_ML_Syntax.mlsymbol Prims.list ->
+    Pulse2Rust_Rust_Syntax.typ_path_segment Prims.list)
+  =
+  fun path ->
+    let uu___ =
+      let uu___1 =
+        let uu___2 = rust_mod_name path in
+        {
+          Pulse2Rust_Rust_Syntax.typ_path_segment_name = uu___2;
+          Pulse2Rust_Rust_Syntax.typ_path_segment_generic_args = []
+        } in
+      [uu___1] in
+    {
+      Pulse2Rust_Rust_Syntax.typ_path_segment_name = "super";
+      Pulse2Rust_Rust_Syntax.typ_path_segment_generic_args = []
+    } :: uu___
 let rec (extract_mlty :
   env -> FStar_Extraction_ML_Syntax.mlty -> Pulse2Rust_Rust_Syntax.typ) =
   fun g ->
@@ -288,9 +327,16 @@ let rec (extract_mlty :
       | FStar_Extraction_ML_Syntax.MLTY_Erased ->
           Pulse2Rust_Rust_Syntax.Typ_unit
       | FStar_Extraction_ML_Syntax.MLTY_Named (args, p) ->
+          let path =
+            let uu___ =
+              should_extract_mlpath_with_symbol g
+                (FStar_Pervasives_Native.fst p) in
+            if uu___
+            then extract_mlpath_for_symbol (FStar_Pervasives_Native.fst p)
+            else [] in
           let uu___ = FStar_Compiler_List.map (extract_mlty g) args in
-          Pulse2Rust_Rust_Syntax.mk_named_typ (FStar_Pervasives_Native.snd p)
-            uu___
+          Pulse2Rust_Rust_Syntax.mk_named_typ path
+            (FStar_Pervasives_Native.snd p) uu___
       | FStar_Extraction_ML_Syntax.MLTY_Fun uu___ ->
           let uu___1 = arg_ts_and_ret_t ([], t) in
           (match uu___1 with
@@ -1748,6 +1794,7 @@ let (extract_struct_defn :
                 statics = (g.statics);
                 gamma = (g.gamma);
                 record_field_names = uu___3;
+                all_modules = (g.all_modules);
                 reachable_defs = (g.reachable_defs)
               } in
             (uu___1, uu___2)
@@ -2404,7 +2451,7 @@ let (extract : Prims.string Prims.list -> Prims.string -> unit) =
        match uu___1 with
        | root_module::uu___2 ->
            let reachable_defs1 = collect_reachable_defs d root_module in
-           let g = empty_env reachable_defs1 in
+           let g = empty_env all_modules reachable_defs1 in
            let uu___3 =
              FStar_Compiler_List.fold_left
                (fun g1 ->

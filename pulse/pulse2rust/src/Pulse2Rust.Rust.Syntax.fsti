@@ -311,7 +311,7 @@ val mk_vec_typ (t:typ) : typ
 val mk_mutex_typ (t:typ) : typ
 val mk_option_typ (t:typ) : typ
 val mk_array_typ (t:typ) (len:expr) : typ
-val mk_named_typ (s:string) (generic_args:list typ) : typ
+val mk_named_typ (path:list typ_path_segment) (s:string) (generic_args:list typ) : typ
 val mk_fn_typ (arg_typs:list typ) (ret_typ:typ) : typ
 val mk_tuple_typ (l:list typ) : typ
 

@@ -47,6 +47,7 @@ type env = {
   statics : list (string & typ);
   gamma : list binding;
   record_field_names : psmap (list string);
+  all_modules : list string;
   reachable_defs : reachable_defs
 }
 
@@ -80,8 +81,13 @@ let fail (s:string) =
 let fail_nyi (s:string) =
   failwith (format1 "Pulse to Rust extraction failed: no support yet for %s" s)
 
-let empty_env (reachable_defs:reachable_defs) =
-  { fns = []; gamma = []; statics = []; record_field_names = psmap_empty (); reachable_defs }
+let empty_env (all_modules:list string) (reachable_defs:reachable_defs) =
+  { fns = [];
+    gamma = [];
+    statics = [];
+    record_field_names = psmap_empty ();
+    all_modules;
+    reachable_defs }
 
 let lookup_global_fn (g:env) (s:string) : option fn_signature =
   map_option (fun (_, t) -> t) (tryFind (fun (f, _) -> f = s) g.fns)
@@ -136,6 +142,19 @@ let arg_ts_and_ret_t (t:S.mltyscheme)
     let arg_ts, ret_t = uncurry_arrow t in
     tvars, arg_ts, ret_t
   | _ -> fail_nyi (format1 "top level arg_ts and ret_t %s" (S.mlty_to_string t))
+
+let should_extract_mlpath_with_symbol (g:env) (path:list S.mlsymbol) : bool =
+  List.contains (String.concat "." path) g.all_modules
+
+let rust_mod_name (path:list S.mlsymbol) : string =
+  path |> List.map String.lowercase
+       |> String.concat "_"  
+
+let extract_mlpath_for_symbol (path:list S.mlsymbol) : list typ_path_segment =
+  [ { typ_path_segment_name = "super";
+      typ_path_segment_generic_args = []};
+    { typ_path_segment_name = rust_mod_name path;
+      typ_path_segment_generic_args = []} ]
 
 //
 // Most translations are straightforward
@@ -199,7 +218,11 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
   | S.MLTY_Erased -> Typ_unit
 
   | S.MLTY_Named (args, p) ->
-    mk_named_typ (snd p) (List.map (extract_mlty g) args)
+    let path =
+      if should_extract_mlpath_with_symbol g (fst p)
+      then extract_mlpath_for_symbol (fst p)
+      else [] in
+    mk_named_typ path (snd p) (List.map (extract_mlty g) args)
 
   | S.MLTY_Fun _ ->
     let _, arg_ts, ret_t = arg_ts_and_ret_t ([], t) in
@@ -1230,7 +1253,7 @@ let extract (files:list string) (odir:string) : unit =
   //   ) reachable_defs all_modules
   // in
 
-  let g = empty_env reachable_defs in
+  let g = empty_env all_modules reachable_defs in
   let _ = List.fold_left (fun g f ->
     let (_, bs, ds) = smap_try_find d f |> must in
     let s, g = extract_one g f bs ds in
