@@ -22,6 +22,7 @@ open Pulse.Lib.Array
 module SZ = FStar.SizeT
 
 let some_f (x:'a) : GTot _ = ()
+let some_g (x:'a) : GTot _ = ()
 
 [@@ Rust_generics_bounds [["Copy"]]]
 ```pulse //readi$
