@@ -124,7 +124,10 @@ let mk_pat_ident (path:string) : pat =
 let mk_pat_ts (pat_ts_path:string) (pat_ts_elems:list pat) : pat =
   if L.length pat_ts_elems = 0
   then Pat_ident { pat_name = pat_ts_path; by_ref = false; is_mut = false }
-  else Pat_tuple_struct { pat_ts_path; pat_ts_elems}
+  else Pat_tuple_struct {
+    pat_ts_path = [{path_segment_name = pat_ts_path; path_segment_generic_args = []}];
+    pat_ts_elems
+  }
 
 let mk_pat_struct (pat_struct_path:string) (pats:list (string & pat)) : pat =
   Pat_struct { pat_struct_path;

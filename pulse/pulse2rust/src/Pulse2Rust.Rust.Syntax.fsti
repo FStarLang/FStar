@@ -60,7 +60,7 @@ type pat_ident = {
 }
 
 type pat_tuple_struct = {
-  pat_ts_path : string;
+  pat_ts_path : list path_segment;
   pat_ts_elems : list pat;
 }
 

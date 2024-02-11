@@ -190,7 +190,7 @@ struct PatIdent {
 }
 
 struct PatTupleStruct {
-    pat_ts_path: String,
+    pat_ts_path: Vec<PathSegment>,
     pat_ts_elems: Vec<Pat>,
 }
 
@@ -547,7 +547,7 @@ impl_from_ocaml_record! {
 
 impl_from_ocaml_record! {
   PatTupleStruct {
-    pat_ts_path : String,
+    pat_ts_path : OCamlList<PathSegment>,
     pat_ts_elems : OCamlList<Pat>,
   }
 }
@@ -1168,7 +1168,7 @@ fn to_syn_pat(p: &Pat) -> syn::Pat {
         Pat::PTupleStruct(pts) => SynPat::TupleStruct(syn::PatTupleStruct {
             attrs: vec![],
             qself: None,
-            path: to_syn_path_string(&vec![pts.pat_ts_path.to_string()]),
+            path: to_syn_path(&pts.pat_ts_path),
             paren_token: syn::token::Paren {
                 span: proc_macro2::Group::new(
                     proc_macro2::Delimiter::None,
@@ -1874,7 +1874,11 @@ impl fmt::Display for Pat {
             Pat::PTupleStruct(pts) => write!(
                 f,
                 "{}({})",
-                pts.pat_ts_path,
+                pts.pat_ts_path
+                    .iter()
+                    .map(|s| s.to_string())
+                    .collect::<Vec<_>>()
+                    .join("::"),
                 pts.pat_ts_elems
                     .iter()
                     .map(|p| p.to_string())
