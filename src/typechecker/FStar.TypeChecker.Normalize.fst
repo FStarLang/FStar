@@ -3124,35 +3124,29 @@ and norm_residual_comp cfg env (rc:residual_comp) : residual_comp =
 let reflection_env_hook = BU.mk_ref None
 
 let normalize_with_primitive_steps ps s e t =
-  Profiling.profile (fun () ->
-    let c = config' ps s e in
-    reflection_env_hook := Some e;
-    plugin_unfold_warn_ctr := 10;
-    log_cfg c (fun () -> BU.print1 "Cfg = %s\n" (show c));
-    if is_nbe_request s then begin
-      log_top c (fun () -> BU.print1 "Starting NBE for (%s) {\n" (Print.term_to_string t));
+  let is_nbe = is_nbe_request s in
+  let maybe_nbe = if is_nbe then " (NBE)" else "" in
+  Errors.with_ctx ("While normalizing a term" ^ maybe_nbe) (fun () ->
+    Profiling.profile (fun () ->
+      let c = config' ps s e in
+      reflection_env_hook := Some e;
+      plugin_unfold_warn_ctr := 10;
+      log_top c (fun () -> BU.print2 "\nStarting normalizer%s for (%s) {\n" maybe_nbe (show t));
       log_top c (fun () -> BU.print1 ">>> cfg = %s\n" (show c));
       def_check_scoped t.pos "normalize_with_primitive_steps call" e t;
-      let (r, ms) = Errors.with_ctx "While normalizing a term via NBE" (fun () ->
-                      BU.record_time (fun () ->
-                        nbe_eval c s t))
+      let (r, ms) =
+        BU.record_time (fun () ->
+          if is_nbe
+          then nbe_eval c s t
+          else norm c [] [] t
+        )
       in
-      log_top c (fun () -> BU.print2 "}\nNormalization result = (%s) in %s ms\n" (Print.term_to_string r) (string_of_int ms));
+      log_top c (fun () -> BU.print3 "}\nNormalization%s result = (%s) in %s ms\n" maybe_nbe (show r) (show ms));
       r
-    end else begin
-      log_top c (fun () -> BU.print1 "Starting normalizer for (%s) {\n" (Print.term_to_string t));
-      log_top c (fun () -> BU.print1 ">>> cfg = %s\n" (show c));
-      def_check_scoped t.pos "normalize_with_primitive_steps call" e t;
-      let (r, ms) = Errors.with_ctx "While normalizing a term" (fun () ->
-                      BU.record_time (fun () ->
-                        norm c [] [] t))
-      in
-      log_top c (fun () -> BU.print2 "}\nNormalization result = (%s) in %s ms\n" (Print.term_to_string r) (string_of_int ms));
-      r
-    end
+    )
+    (Some (Ident.string_of_lid (Env.current_module e)))
+    "FStar.TypeChecker.Normalize.normalize_with_primitive_steps"
   )
-  (Some (Ident.string_of_lid (Env.current_module e)))
-  "FStar.TypeChecker.Normalize.normalize_with_primitive_steps"
 
 let normalize s e t =
     Profiling.profile (fun () -> normalize_with_primitive_steps [] s e t)
