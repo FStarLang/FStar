@@ -60,6 +60,7 @@ type step =
   | ForExtraction   //marking an invocation of the normalizer for extraction
   | Unrefine
   | NormDebug       //force debugging
+  | DefaultUnivsToZero // default al unresolved universe uvars to zero
 and steps = list step
 
 val eq_step : step -> step -> bool

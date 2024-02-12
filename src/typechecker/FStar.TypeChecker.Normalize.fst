@@ -225,11 +225,13 @@ let norm_universe cfg (env:env) u =
                           then [U_unknown]
                           else failwith ("Universe variable not found: u@" ^ string_of_int x)
             end
+          | U_unif _ when cfg.steps.default_univs_to_zero ->
+            [U_zero]
+
           | U_unif _ when cfg.steps.check_no_uvars ->
-            [U_zero] // GM: why?
-//            failwith (BU.format2 "(%s) CheckNoUvars: unexpected universes variable remains: %s"
-//                                       (Range.string_of_range (Env.get_range cfg.tcenv))
-//                                       (Print.univ_to_string u))
+            failwith (BU.format2 "(%s) CheckNoUvars: unexpected universes variable remains: %s"
+                                       (Range.string_of_range (Env.get_range cfg.tcenv))
+                                       (Print.univ_to_string u))
 
           | U_zero
           | U_unif _
@@ -3341,7 +3343,7 @@ let unfold_whnf' steps env t = normalize (steps@whnf_steps) env t
 let unfold_whnf  env t = unfold_whnf' [] env t
 
 let reduce_or_remove_uvar_solutions remove env t =
-    normalize ((if remove then [CheckNoUvars] else [])
+    normalize ((if remove then [DefaultUnivsToZero; CheckNoUvars] else [])
               @[Beta; DoNotUnfoldPureLets; CompressUvars; Exclude Zeta; Exclude Iota; NoFullNorm;])
               env
               t
