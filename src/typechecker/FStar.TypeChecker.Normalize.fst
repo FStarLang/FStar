@@ -66,11 +66,11 @@ let maybe_debug (cfg:Cfg.cfg) (t:term) (dbg:option (term * BU.time)) =
        | Some (tm, time_then) ->
          let time_now = BU.now () in
                     // BU.print1 "Normalizer result timing (%s ms)\n"
-                    //              (BU.string_of_int (snd (BU.time_diff time_then time_now)))
+                    //              (show (snd (BU.time_diff time_then time_now)))
          BU.print4 "Normalizer result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
-                       (BU.string_of_int (snd (BU.time_diff time_then time_now)))
+                       (show (snd (BU.time_diff time_then time_now)))
                        (Print.term_to_string tm)
-                       (Cfg.cfg_to_string cfg)
+                       (show cfg)
                        (Print.term_to_string t)
        | _ -> ()
 
@@ -1183,9 +1183,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                         (Print.tag_of_term t)
                                         (BU.string_of_bool (cfg.steps.no_full_norm))
                                         (Print.term_to_string t)
-                                        (BU.string_of_int (List.length env))
+                                        (show (List.length env))
                                         (stack_to_string (fst <| firstn 4 stack)));
-        log_cfg cfg (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string cfg));
+        log_cfg cfg (fun () -> BU.print1 ">>> cfg = %s\n" (show cfg));
         match t.n with
           // Values
           | Tm_unknown
@@ -1264,11 +1264,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
               then begin
                 let cfg' = Cfg.config' [] s cfg.tcenv in
                 // BU.print1 "NBE result timing (%s ms)\n"
-                //        (BU.string_of_int (snd (BU.time_diff start fin)))
+                //        (show (snd (BU.time_diff start fin)))
                 BU.print4 "NBE result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
-                       (BU.string_of_int (snd (BU.time_diff start fin)))
+                       (show (snd (BU.time_diff start fin)))
                        (Print.term_to_string tm')
-                       (Cfg.cfg_to_string cfg')
+                       (show cfg')
                        (Print.term_to_string tm_norm)
               end;
               rebuild cfg env stack tm_norm
@@ -2201,7 +2201,7 @@ and norm_comp : cfg -> env -> comp -> comp =
     fun cfg env comp ->
         log cfg (fun () -> BU.print2 ">>> %s\nNormComp with with %s env elements\n"
                                         (Print.comp_to_string comp)
-                                        (BU.string_of_int (List.length env)));
+                                        (show (List.length env)));
         match comp.n with
             | Total t ->
               let t = norm cfg env [] t in
@@ -2649,7 +2649,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
     BU.print4 ">>> %s\nRebuild %s with %s env elements and top of the stack %s \n"
                                         (Print.tag_of_term t)
                                         (Print.term_to_string t)
-                                        (BU.string_of_int (List.length env))
+                                        (show (List.length env))
                                         (stack_to_string (fst <| firstn 4 stack));
     if Env.debug cfg.tcenv (Options.Other "NormRebuild")
     then match FStar.Syntax.Util.unbound_variables t with
@@ -3128,10 +3128,10 @@ let normalize_with_primitive_steps ps s e t =
     let c = config' ps s e in
     reflection_env_hook := Some e;
     plugin_unfold_warn_ctr := 10;
-    log_cfg c (fun () -> BU.print1 "Cfg = %s\n" (cfg_to_string c));
+    log_cfg c (fun () -> BU.print1 "Cfg = %s\n" (show c));
     if is_nbe_request s then begin
       log_top c (fun () -> BU.print1 "Starting NBE for (%s) {\n" (Print.term_to_string t));
-      log_top c (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string c));
+      log_top c (fun () -> BU.print1 ">>> cfg = %s\n" (show c));
       def_check_scoped t.pos "normalize_with_primitive_steps call" e t;
       let (r, ms) = Errors.with_ctx "While normalizing a term via NBE" (fun () ->
                       BU.record_time (fun () ->
@@ -3141,7 +3141,7 @@ let normalize_with_primitive_steps ps s e t =
       r
     end else begin
       log_top c (fun () -> BU.print1 "Starting normalizer for (%s) {\n" (Print.term_to_string t));
-      log_top c (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string c));
+      log_top c (fun () -> BU.print1 ">>> cfg = %s\n" (show c));
       def_check_scoped t.pos "normalize_with_primitive_steps call" e t;
       let (r, ms) = Errors.with_ctx "While normalizing a term" (fun () ->
                       BU.record_time (fun () ->
@@ -3165,7 +3165,7 @@ let normalize_comp s e c =
     reflection_env_hook := Some e;
     plugin_unfold_warn_ctr := 10;
     log_top cfg (fun () -> BU.print1 "Starting normalizer for computation (%s) {\n" (Print.comp_to_string c));
-    log_top cfg (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string cfg));
+    log_top cfg (fun () -> BU.print1 ">>> cfg = %s\n" (show cfg));
     def_check_scoped c.pos "normalize_comp call" e c;
     let (c, ms) = Errors.with_ctx "While normalizing a computation type" (fun () ->
                     BU.record_time (fun () ->
