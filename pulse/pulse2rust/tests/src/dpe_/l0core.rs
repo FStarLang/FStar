@@ -13,9 +13,18 @@ pub fn create_deviceIDCRI(
     deviceIDCRI_buf: &mut [u8],
     deviceIDCSR_ingredients: super::l0types::deviceIDCSR_ingredients_t,
 ) -> super::l0types::deviceIDCSR_ingredients_t {
-    let deviceIDCRI =
-        super::x509::x509_get_deviceIDCRI(deviceIDCSR_ingredients, deviceID_pub, (), ());
-    super::x509::serialize_deviceIDCRI(deviceIDCRI.1, deviceIDCRI_len, deviceIDCRI_buf, ());
+    let deviceIDCRI = super::x509::x509_get_deviceIDCRI(
+        deviceIDCSR_ingredients,
+        deviceID_pub,
+        (),
+        (),
+    );
+    super::x509::serialize_deviceIDCRI(
+        deviceIDCRI.1,
+        deviceIDCRI_len,
+        deviceIDCRI_buf,
+        (),
+    );
     deviceIDCRI.0
 }
 pub fn sign_and_finalize_deviceIDCSR(
@@ -90,7 +99,12 @@ pub fn create_aliasKeyTBS(
         (),
         (),
     );
-    super::x509::serialize_aliasKeyTBS(aliasKeyTBS.1, aliasKeyTBS_len, aliasKeyTBS_buf, ());
+    super::x509::serialize_aliasKeyTBS(
+        aliasKeyTBS.1,
+        aliasKeyTBS_len,
+        aliasKeyTBS_buf,
+        (),
+    );
     aliasKeyTBS.0
 }
 pub fn sign_and_finalize_aliasKeyCRT(
@@ -289,3 +303,4 @@ pub static l0_main: fn(
     (),
     (),
 ) -> super::l0types::l0_record_t = super::l0core::l0_main_aux;
+

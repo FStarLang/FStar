@@ -64,10 +64,6 @@ pub fn replace<KT: Copy + PartialEq + Clone, VT: Clone>(
             let res = (ht1, v_1);
             res
         }
-        super::pulse_lib_hashtable_spec::cell::Used(mut k_, mut v_1) => {
-            let res = (ht1, v_1);
-            res
-        }
         super::pulse_lib_hashtable_spec::cell::Clean => panic!(),
         super::pulse_lib_hashtable_spec::cell::Zombie => panic!(),
     };
@@ -105,71 +101,6 @@ pub fn lookup<KT: Copy + PartialEq + Clone, VT: Clone>(
                         super::pulse_lib_hashtable_spec::cell::Zombie,
                     );
                     match c {
-                        super::pulse_lib_hashtable_spec::cell::Used(mut k_, mut v_) => {
-                            if k_ == k {
-                                cont = false;
-                                ret = Some(idx);
-                                let uu___2 = std::mem::replace(
-                                    &mut contents[idx],
-                                    super::pulse_lib_hashtable_spec::cell::Used(k_, v_),
-                                );
-                            } else {
-                                off = voff + 1;
-                                let uu___1 = std::mem::replace(
-                                    &mut contents[idx],
-                                    super::pulse_lib_hashtable_spec::cell::Used(k_, v_),
-                                );
-                            }
-                        }
-                        super::pulse_lib_hashtable_spec::cell::Used(mut k_, mut v_) => {
-                            if k_ == k {
-                                cont = false;
-                                ret = Some(idx);
-                                let uu___2 = std::mem::replace(
-                                    &mut contents[idx],
-                                    super::pulse_lib_hashtable_spec::cell::Used(k_, v_),
-                                );
-                            } else {
-                                off = voff + 1;
-                                let uu___1 = std::mem::replace(
-                                    &mut contents[idx],
-                                    super::pulse_lib_hashtable_spec::cell::Used(k_, v_),
-                                );
-                            }
-                        }
-                        super::pulse_lib_hashtable_spec::cell::Clean => {
-                            cont = false;
-                            let uu___1 = std::mem::replace(&mut contents[idx], c);
-                        }
-                        super::pulse_lib_hashtable_spec::cell::Zombie => {
-                            off = voff + 1;
-                            let uu___1 = std::mem::replace(&mut contents[idx], c);
-                        }
-                    }
-                }
-                Some(mut sum) => {
-                    let idx = super::pulse_lib_hashtable::size_t_mod(sum, ht.sz);
-                    let c = std::mem::replace(
-                        &mut contents[idx],
-                        super::pulse_lib_hashtable_spec::cell::Zombie,
-                    );
-                    match c {
-                        super::pulse_lib_hashtable_spec::cell::Used(mut k_, mut v_) => {
-                            if k_ == k {
-                                cont = false;
-                                ret = Some(idx);
-                                let uu___2 = std::mem::replace(
-                                    &mut contents[idx],
-                                    super::pulse_lib_hashtable_spec::cell::Used(k_, v_),
-                                );
-                            } else {
-                                off = voff + 1;
-                                let uu___1 = std::mem::replace(
-                                    &mut contents[idx],
-                                    super::pulse_lib_hashtable_spec::cell::Used(k_, v_),
-                                );
-                            }
-                        }
                         super::pulse_lib_hashtable_spec::cell::Used(mut k_, mut v_) => {
                             if k_ == k {
                                 cont = false;
@@ -265,22 +196,6 @@ pub fn insert<KT: Copy + PartialEq + Clone, VT: Clone>(
                                 off = voff + 1;
                             }
                         }
-                        super::pulse_lib_hashtable_spec::cell::Used(mut k_, mut v_) => {
-                            if k_ == k {
-                                contents[vidx] = super::pulse_lib_hashtable_spec::cell::Used(
-                                    k_,
-                                    v_,
-                                );
-                                cont = false;
-                                idx = vidx;
-                            } else {
-                                contents[vidx] = super::pulse_lib_hashtable_spec::cell::Used(
-                                    k_,
-                                    v_,
-                                );
-                                off = voff + 1;
-                            }
-                        }
                         super::pulse_lib_hashtable_spec::cell::Clean => {
                             contents[vidx] = super::pulse_lib_hashtable_spec::cell::Clean;
                             cont = false;
@@ -298,88 +213,6 @@ pub fn insert<KT: Copy + PartialEq + Clone, VT: Clone>(
                             if res.1 {
                                 let o = res.2;
                                 match o {
-                                    Some(mut p) => {
-                                        contents[p] = super::pulse_lib_hashtable_spec::cell::Zombie;
-                                        cont = false;
-                                        idx = vidx;
-                                    }
-                                    Some(mut p) => {
-                                        contents[p] = super::pulse_lib_hashtable_spec::cell::Zombie;
-                                        cont = false;
-                                        idx = vidx;
-                                    }
-                                    None => {
-                                        cont = false;
-                                        idx = vidx;
-                                    }
-                                }
-                            } else {
-                                err = true
-                            }
-                        }
-                    }
-                }
-                Some(mut sum) => {
-                    let vidx = super::pulse_lib_hashtable::size_t_mod(sum, ht.sz);
-                    let c = std::mem::replace(
-                        &mut contents[vidx],
-                        super::pulse_lib_hashtable_spec::cell::Zombie,
-                    );
-                    match c {
-                        super::pulse_lib_hashtable_spec::cell::Used(mut k_, mut v_) => {
-                            if k_ == k {
-                                contents[vidx] = super::pulse_lib_hashtable_spec::cell::Used(
-                                    k_,
-                                    v_,
-                                );
-                                cont = false;
-                                idx = vidx;
-                            } else {
-                                contents[vidx] = super::pulse_lib_hashtable_spec::cell::Used(
-                                    k_,
-                                    v_,
-                                );
-                                off = voff + 1;
-                            }
-                        }
-                        super::pulse_lib_hashtable_spec::cell::Used(mut k_, mut v_) => {
-                            if k_ == k {
-                                contents[vidx] = super::pulse_lib_hashtable_spec::cell::Used(
-                                    k_,
-                                    v_,
-                                );
-                                cont = false;
-                                idx = vidx;
-                            } else {
-                                contents[vidx] = super::pulse_lib_hashtable_spec::cell::Used(
-                                    k_,
-                                    v_,
-                                );
-                                off = voff + 1;
-                            }
-                        }
-                        super::pulse_lib_hashtable_spec::cell::Clean => {
-                            contents[vidx] = super::pulse_lib_hashtable_spec::cell::Clean;
-                            cont = false;
-                            idx = vidx;
-                        }
-                        super::pulse_lib_hashtable_spec::cell::Zombie => {
-                            let vcontents = contents;
-                            let ht1 = super::pulse_lib_hashtable_type::ht_t {
-                                sz: ht.sz,
-                                hashf: hashf,
-                                contents: vcontents,
-                            };
-                            let res = super::pulse_lib_hashtable::lookup((), ht1, k);
-                            contents = res.0.contents;
-                            if res.1 {
-                                let o = res.2;
-                                match o {
-                                    Some(mut p) => {
-                                        contents[p] = super::pulse_lib_hashtable_spec::cell::Zombie;
-                                        cont = false;
-                                        idx = vidx;
-                                    }
                                     Some(mut p) => {
                                         contents[p] = super::pulse_lib_hashtable_spec::cell::Zombie;
                                         cont = false;
