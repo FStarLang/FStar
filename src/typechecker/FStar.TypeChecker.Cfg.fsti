@@ -29,8 +29,9 @@ open FStar.Syntax.Subst
 open FStar.Syntax.Util
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
-
 open FStar.TypeChecker.Primops
+
+open FStar.Class.Show
 
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
@@ -116,7 +117,7 @@ val primop_time_report : unit -> string
 
 val cfg_env: cfg -> Env.env
 
-val cfg_to_string : cfg -> string
+instance val showable_cfg : showable cfg
 
 val log : cfg -> (unit -> unit) -> unit
 val log_top : cfg -> (unit -> unit) -> unit

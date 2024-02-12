@@ -214,11 +214,13 @@ let prim_from_list (l : list primitive_step) : prim_step_set =
 let built_in_primitive_steps = prim_from_list built_in_primitive_steps_list
 let equality_ops = prim_from_list equality_ops_list
 
-let cfg_to_string cfg =
-    String.concat "\n"
-        ["{";
-         BU.format1 "  steps = %s" (steps_to_string cfg.steps);
-         "}" ]
+instance showable_cfg : showable cfg = {
+  show = (fun cfg ->
+             String.concat "\n"
+                 ["{";
+                 BU.format1 "  steps = %s" (steps_to_string cfg.steps);
+                 "}" ]);
+}
 
 let cfg_env cfg = cfg.tcenv
 

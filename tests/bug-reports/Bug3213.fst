@@ -1,7 +1,7 @@
 module Bug3213
 
-let this_is_ok ()
-  : Lemma (forall (f : (nat -> Type0)). (forall (x : nat). f x) ==> (fun (_:nat) -> True) == f) = ()
+let forall_elim (#a: Type) (p: (a -> GTot Type)) (x:a)
+  : Lemma (requires forall (x: a). p x) (ensures p x) = ()
 
 [@@expect_failure [19]]
 let bad ()
@@ -10,9 +10,6 @@ let bad ()
 (* Replaying unsoundness from an axiom *)
 let bad_assumed ()
   : Lemma (forall (f : int -> Type0). (forall (x : nat). f x) ==> f (-1)) = admit()
-
-let forall_elim (#a: Type) (p: (a -> GTot Type)) (x:a)
-  : Lemma (requires forall (x: a). p x) (ensures p x) = ()
 
 let falso () : Lemma False =
   bad_assumed();
