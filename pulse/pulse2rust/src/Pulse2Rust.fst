@@ -48,7 +48,6 @@ type env = {
   fns : list (string & fn_signature);
   statics : list (string & typ);
   gamma : list binding;
-  record_field_names : psmap (list string);
   d: dict;
   all_modules : list string;
   reachable_defs : reachable_defs
@@ -88,7 +87,6 @@ let empty_env (d:dict) (all_modules:list string) (reachable_defs:reachable_defs)
   { fns = [];
     gamma = [];
     statics = [];
-    record_field_names = psmap_empty ();
     d;
     all_modules;
     reachable_defs }
@@ -524,16 +522,6 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     let e = extract_mlexpr g e in
     mk_expr_field_unnamed e 2
 
-  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, [_; e])
-    when starts_with (snd p) "explode_ref_" ->
-    let n = String.length "explode_ref_" in
-    let rname = String.substring (snd p) n (String.length (snd p) - n) in
-    let flds = psmap_try_find g.record_field_names rname in
-    let flds = flds |> must in
-    let e = extract_mlexpr g e in
-    let es = flds |> List.map (fun f -> mk_reference_expr true (mk_expr_field e f)) in
-    mk_expr_tuple es
-
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2; _])
     when S.string_of_mlpath p = "Pulse.Lib.Reference.op_Colon_Equals" ||
          S.string_of_mlpath p = "Pulse.Lib.Box.op_Colon_Equals" ->
@@ -745,8 +733,7 @@ and extract_mlexpr_to_stmts (g:env) (e:S.mlexpr) : list stmt =
     begin
       match lb.mllb_def.expr with
       | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, _)
-        when starts_with (snd p) "unexplode_ref" ||
-             S.mlpath_to_string p = "Pulse.Lib.Mutex.unlock" ->
+        when S.mlpath_to_string p = "Pulse.Lib.Mutex.unlock" ->
         extract_mlexpr_to_stmts g e
       | _ ->
         let is_mut, ty, init = lb_init_and_def g lb in
@@ -926,7 +913,7 @@ let extract_struct_defn (g:env) (attrs:list S.mlattribute) (d:S.one_mltydecl) : 
     (d.tydecl_name |> enum_or_struct_name)
     (extract_generic_type_params d.tydecl_parameters attrs)
     (List.map (fun (f, t) -> f, extract_mlty g t) fts),
-  { g with record_field_names = psmap_add g.record_field_names d.tydecl_name (List.map fst fts) }
+  g
 
 let extract_type_abbrev (g:env) (attrs:list S.mlattribute) (d:S.one_mltydecl) : item & env =
   let Some (S.MLTD_Abbrev t) = d.tydecl_defn in
@@ -1141,9 +1128,7 @@ let extract_one
     //
     match d.S.mlmodule1_m with
     | S.MLM_Let (S.NonRec, [{mllb_name}])
-      when starts_with mllb_name "explode_ref" ||
-           starts_with mllb_name "unexplode_ref" ||
-           starts_with mllb_name "uu___is_" ||
+      when starts_with mllb_name "uu___is_" ||
            starts_with mllb_name "__proj__" -> items, g
     | S.MLM_Let lb ->
       let f, g = extract_top_level_lb g lb in

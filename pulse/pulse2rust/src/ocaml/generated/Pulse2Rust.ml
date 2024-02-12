@@ -16,7 +16,6 @@ type env =
   fns: (Prims.string * Pulse2Rust_Rust_Syntax.fn_signature) Prims.list ;
   statics: (Prims.string * Pulse2Rust_Rust_Syntax.typ) Prims.list ;
   gamma: binding Prims.list ;
-  record_field_names: Prims.string Prims.list FStar_Compiler_Util.psmap ;
   d: dict ;
   all_modules: Prims.string Prims.list ;
   reachable_defs: reachable_defs }
@@ -24,39 +23,33 @@ let (__proj__Mkenv__item__fns :
   env -> (Prims.string * Pulse2Rust_Rust_Syntax.fn_signature) Prims.list) =
   fun projectee ->
     match projectee with
-    | { fns; statics; gamma; record_field_names; d; all_modules;
+    | { fns; statics; gamma; d; all_modules;
         reachable_defs = reachable_defs1;_} -> fns
 let (__proj__Mkenv__item__statics :
   env -> (Prims.string * Pulse2Rust_Rust_Syntax.typ) Prims.list) =
   fun projectee ->
     match projectee with
-    | { fns; statics; gamma; record_field_names; d; all_modules;
+    | { fns; statics; gamma; d; all_modules;
         reachable_defs = reachable_defs1;_} -> statics
 let (__proj__Mkenv__item__gamma : env -> binding Prims.list) =
   fun projectee ->
     match projectee with
-    | { fns; statics; gamma; record_field_names; d; all_modules;
+    | { fns; statics; gamma; d; all_modules;
         reachable_defs = reachable_defs1;_} -> gamma
-let (__proj__Mkenv__item__record_field_names :
-  env -> Prims.string Prims.list FStar_Compiler_Util.psmap) =
-  fun projectee ->
-    match projectee with
-    | { fns; statics; gamma; record_field_names; d; all_modules;
-        reachable_defs = reachable_defs1;_} -> record_field_names
 let (__proj__Mkenv__item__d : env -> dict) =
   fun projectee ->
     match projectee with
-    | { fns; statics; gamma; record_field_names; d; all_modules;
+    | { fns; statics; gamma; d; all_modules;
         reachable_defs = reachable_defs1;_} -> d
 let (__proj__Mkenv__item__all_modules : env -> Prims.string Prims.list) =
   fun projectee ->
     match projectee with
-    | { fns; statics; gamma; record_field_names; d; all_modules;
+    | { fns; statics; gamma; d; all_modules;
         reachable_defs = reachable_defs1;_} -> all_modules
 let (__proj__Mkenv__item__reachable_defs : env -> reachable_defs) =
   fun projectee ->
     match projectee with
-    | { fns; statics; gamma; record_field_names; d; all_modules;
+    | { fns; statics; gamma; d; all_modules;
         reachable_defs = reachable_defs1;_} -> reachable_defs1
 let (tyvar_of : Prims.string -> Prims.string) =
   fun s ->
@@ -89,12 +82,10 @@ let (empty_env : dict -> Prims.string Prims.list -> reachable_defs -> env) =
   fun d ->
     fun all_modules ->
       fun reachable_defs1 ->
-        let uu___ = FStar_Compiler_Util.psmap_empty () in
         {
           fns = [];
           statics = [];
           gamma = [];
-          record_field_names = uu___;
           d;
           all_modules;
           reachable_defs = reachable_defs1
@@ -134,7 +125,6 @@ let (push_fn :
           fns = ((s, t) :: (g.fns));
           statics = (g.statics);
           gamma = (g.gamma);
-          record_field_names = (g.record_field_names);
           d = (g.d);
           all_modules = (g.all_modules);
           reachable_defs = (g.reachable_defs)
@@ -148,7 +138,6 @@ let (push_static : env -> Prims.string -> Pulse2Rust_Rust_Syntax.typ -> env)
           fns = (g.fns);
           statics = ((s, t) :: (g.statics));
           gamma = (g.gamma);
-          record_field_names = (g.record_field_names);
           d = (g.d);
           all_modules = (g.all_modules);
           reachable_defs = (g.reachable_defs)
@@ -163,7 +152,6 @@ let (push_local :
             fns = (g.fns);
             statics = (g.statics);
             gamma = ((s, t, is_mut) :: (g.gamma));
-            record_field_names = (g.record_field_names);
             d = (g.d);
             all_modules = (g.all_modules);
             reachable_defs = (g.reachable_defs)
@@ -891,38 +879,6 @@ and (extract_mlexpr :
                     FStar_Extraction_ML_Syntax.MLE_Name p;
                   FStar_Extraction_ML_Syntax.mlty = uu___;
                   FStar_Extraction_ML_Syntax.loc = uu___1;_},
-                uu___2);
-             FStar_Extraction_ML_Syntax.mlty = uu___3;
-             FStar_Extraction_ML_Syntax.loc = uu___4;_},
-           uu___5::e1::[])
-          when
-          FStar_Compiler_Util.starts_with (FStar_Pervasives_Native.snd p)
-            "explode_ref_"
-          ->
-          let n = FStar_Compiler_String.length "explode_ref_" in
-          let rname =
-            FStar_Compiler_String.substring (FStar_Pervasives_Native.snd p) n
-              ((FStar_Compiler_String.length (FStar_Pervasives_Native.snd p))
-                 - n) in
-          let flds =
-            FStar_Compiler_Util.psmap_try_find g.record_field_names rname in
-          let flds1 = FStar_Compiler_Util.must flds in
-          let e2 = extract_mlexpr g e1 in
-          let es =
-            FStar_Compiler_List.map
-              (fun f ->
-                 let uu___6 = Pulse2Rust_Rust_Syntax.mk_expr_field e2 f in
-                 Pulse2Rust_Rust_Syntax.mk_reference_expr true uu___6) flds1 in
-          Pulse2Rust_Rust_Syntax.mk_expr_tuple es
-      | FStar_Extraction_ML_Syntax.MLE_App
-          ({
-             FStar_Extraction_ML_Syntax.expr =
-               FStar_Extraction_ML_Syntax.MLE_TApp
-               ({
-                  FStar_Extraction_ML_Syntax.expr =
-                    FStar_Extraction_ML_Syntax.MLE_Name p;
-                  FStar_Extraction_ML_Syntax.mlty = uu___;
-                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
                 uu___2::[]);
              FStar_Extraction_ML_Syntax.mlty = uu___3;
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
@@ -1542,11 +1498,8 @@ and (extract_mlexpr_to_stmts :
                   FStar_Extraction_ML_Syntax.loc = uu___4;_},
                 uu___5)
                when
-               (FStar_Compiler_Util.starts_with
-                  (FStar_Pervasives_Native.snd p) "unexplode_ref")
-                 ||
-                 ((FStar_Extraction_ML_Syntax.mlpath_to_string p) =
-                    "Pulse.Lib.Mutex.unlock")
+               (FStar_Extraction_ML_Syntax.mlpath_to_string p) =
+                 "Pulse.Lib.Mutex.unlock"
                -> extract_mlexpr_to_stmts g e1
            | uu___ ->
                let uu___1 = lb_init_and_def g lb in
@@ -1880,22 +1833,7 @@ let (extract_struct_defn :
                   fts in
               Pulse2Rust_Rust_Syntax.mk_item_struct uu___2 uu___3 uu___4
                 uu___5 in
-            let uu___2 =
-              let uu___3 =
-                let uu___4 =
-                  FStar_Compiler_List.map FStar_Pervasives_Native.fst fts in
-                FStar_Compiler_Util.psmap_add g.record_field_names
-                  d.FStar_Extraction_ML_Syntax.tydecl_name uu___4 in
-              {
-                fns = (g.fns);
-                statics = (g.statics);
-                gamma = (g.gamma);
-                record_field_names = uu___3;
-                d = (g.d);
-                all_modules = (g.all_modules);
-                reachable_defs = (g.reachable_defs)
-              } in
-            (uu___1, uu___2)
+            (uu___1, g)
 let (extract_type_abbrev :
   env ->
     FStar_Extraction_ML_Syntax.mlattribute Prims.list ->
@@ -2295,14 +2233,8 @@ let (extract_one :
                                  FStar_Extraction_ML_Syntax.print_typ =
                                    uu___9;_}::[])
                               when
-                              (((FStar_Compiler_Util.starts_with mllb_name
-                                   "explode_ref")
-                                  ||
-                                  (FStar_Compiler_Util.starts_with mllb_name
-                                     "unexplode_ref"))
-                                 ||
-                                 (FStar_Compiler_Util.starts_with mllb_name
-                                    "uu___is_"))
+                              (FStar_Compiler_Util.starts_with mllb_name
+                                 "uu___is_")
                                 ||
                                 (FStar_Compiler_Util.starts_with mllb_name
                                    "__proj__")
