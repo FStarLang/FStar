@@ -356,7 +356,7 @@ let join_branches (#g #pre #post_hint #sc_u #sc_ty #sc:_)
           #(check_branches_aux_t #g pre post_hint sc_u sc_ty sc)
           #(br:branch & br_typing g sc_u sc_ty sc (fst br) (snd br) c)
           (fun (| br, c', d |) -> (| br, d |))
-          checked_brs
+          rest
       in
       (| c, ((| br, d |) :: rest) |)
     | C_STAtomic i obs stc ->
@@ -364,7 +364,7 @@ let join_branches (#g #pre #post_hint #sc_u #sc_ty #sc:_)
       let c = C_STAtomic i max_obs stc in
       let checked_brs = T.map (weaken_branch_observability max_obs c) checked_brs in
       (| c, checked_brs |)
-      
+
 let check_branches
         (g:env)
         (pre:term)
