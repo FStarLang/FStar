@@ -1871,16 +1871,19 @@ let (built_in_primitive_steps :
 let (equality_ops :
   FStar_TypeChecker_Primops_Base.primitive_step FStar_Compiler_Util.psmap) =
   prim_from_list FStar_TypeChecker_Primops.equality_ops_list
-let (cfg_to_string : cfg -> Prims.string) =
-  fun cfg1 ->
-    let uu___ =
-      let uu___1 =
-        let uu___2 =
-          let uu___3 = steps_to_string cfg1.steps in
-          FStar_Compiler_Util.format1 "  steps = %s" uu___3 in
-        [uu___2; "}"] in
-      "{" :: uu___1 in
-    FStar_Compiler_String.concat "\n" uu___
+let (showable_cfg : cfg FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun cfg1 ->
+         let uu___ =
+           let uu___1 =
+             let uu___2 =
+               let uu___3 = steps_to_string cfg1.steps in
+               FStar_Compiler_Util.format1 "  steps = %s" uu___3 in
+             [uu___2; "}"] in
+           "{" :: uu___1 in
+         FStar_Compiler_String.concat "\n" uu___)
+  }
 let (cfg_env : cfg -> FStar_TypeChecker_Env.env) = fun cfg1 -> cfg1.tcenv
 let (find_prim_step :
   cfg ->
