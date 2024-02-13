@@ -279,6 +279,7 @@ let rec is_permutation (nts:nt_substs) (ss:ss_t) : Type0 =
     is_permutation nts_rest ({l=remove_l ss.l x; m=remove_map ss.m x})
   | _ -> False
 
+#push-options "--z3rlimit 20"
 let rec ss_to_nt_substs (g:env) (uvs:env) (ss:ss_t)
   : T.Tac (either (nts:nt_substs &
                    effect_labels:list T.tot_or_ghost {
@@ -313,6 +314,7 @@ let rec ss_to_nt_substs (g:env) (uvs:env) (ss:ss_t)
                     }) = (| (NT x t)::nts, eff::effect_labels |) in
            Inl r
     else Inr (Printf.sprintf "prover could not prove uvar _#%d" x)
+#pop-options
 
 let rec well_typed_nt_substs_prefix
   (g:env)
@@ -356,6 +358,7 @@ let ss_nt_subst (g:env) (uvs:env) (ss:ss_t) (nts:nt_substs) (effect_labels:list 
          (forall (c:comp). nt_subst_comp c nts == ss_comp c ss) /\
          (forall (s:st_comp). nt_subst_st_comp s nts == ss_st_comp s ss)) = admit ()
 
+#push-options "--z3rlimit 20"
 let rec st_typing_nt_substs
   (g:env) (uvs:env) (g':env { pairwise_disjoint g uvs g' })
   (#t:st_term) (#c:comp_st) (t_typing:st_typing (push_env g (push_env uvs g')) t c)
@@ -397,7 +400,7 @@ let rec st_typing_nt_substs
         t_typing nts_rest effect_labels_rest
     end
     else Inr (x, e)
-
+#pop-options
 
 // let st_typing_subst (g:env) (uvs:env { disjoint uvs g }) (t:st_term) (c:comp_st)
 //   (d:st_typing (push_env g uvs) t c)
