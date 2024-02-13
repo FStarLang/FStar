@@ -21,6 +21,12 @@ let rec with_context (c:context) (f: unit -> 'a utac) : 'a utac =
     | sr::tl ->
       with_context tl (fun _ ps ->
       FStar_Errors.with_ctx (ctxt_elt_as_string sr) (fun _ -> f () ps)) ps
+let disable_admit_smt_queries (f: unit -> 'a utac) : 'a utac =
+  fun ps ->
+    FStar_Options.with_saved_options (fun _ ->
+      FStar_Options.set_option "admit_smt_queries" (FStar_Options.Bool false);
+      f () ps
+    )
 let env_set_context (g:FStar_Reflection_Types.env) (c:context) = g
 let print_exn (e:exn) = Printexc.to_string e
 let debug_at_level_no_module (s:string) = FStar_Options.debug_at_level_no_module (FStar_Options.Other s)

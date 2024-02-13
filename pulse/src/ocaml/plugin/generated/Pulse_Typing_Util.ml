@@ -10,8 +10,11 @@ let (check_equiv_now :
   fun tcenv ->
     fun t0 ->
       fun t1 ->
-        FStar_Tactics_V2_Derived.with_policy FStar_Tactics_Types.SMTSync
-          (fun uu___ -> FStar_Tactics_V2_Builtins.check_equiv tcenv t0 t1)
+        Pulse_RuntimeUtils.disable_admit_smt_queries
+          (fun uu___ ->
+             FStar_Tactics_V2_Derived.with_policy FStar_Tactics_Types.SMTSync
+               (fun uu___1 ->
+                  FStar_Tactics_V2_Builtins.check_equiv tcenv t0 t1))
 let (universe_of_now :
   FStar_Reflection_Types.env ->
     FStar_Tactics_NamedView.term ->

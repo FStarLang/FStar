@@ -18,11 +18,12 @@ module Pulse.Typing.Util
 
 module L = FStar.List.Tot
 module T = FStar.Tactics.V2
-
+module RU = Pulse.RuntimeUtils
 (* Call check_equiv under a SMTSync guard policy *)
 let check_equiv_now tcenv t0 t1 =
-  T.with_policy SMTSync (fun () ->
-    T.check_equiv tcenv t0 t1)
+  RU.disable_admit_smt_queries (fun _ -> 
+    T.with_policy SMTSync (fun () ->
+      T.check_equiv tcenv t0 t1))
 
 let universe_of_now g e =
   T.with_policy SMTSync (fun () ->
