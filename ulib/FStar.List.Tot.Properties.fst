@@ -78,6 +78,12 @@ let rec memP_map_intro
   | [] -> ()
   | _ :: q -> memP_map_intro f x q (* NOTE: would fail if [requires memP x l] instead of [ ==> ] *)
 
+(** Same as [memP_map_intro] above, stated with [forall] *)
+let memP_map_intro_forall (#a #b: Type) (f: (a -> Tot b)) (l: list a)
+    : Lemma (forall x. memP x l ==> memP (f x) (map f l)) =
+  introduce forall x . memP x l ==> memP (f x) (map f l)
+  with memP_map_intro f x l
+
 let rec memP_map_elim
   (#a #b: Type)
   (f: a -> Tot b)
@@ -90,6 +96,12 @@ let rec memP_map_elim
 = match l with
   | [] -> ()
   | _ :: q -> memP_map_elim f y q
+
+(** Same as [memP_map_elim] above, stated with [forall] *)
+let memP_map_elim_forall (#a #b: Type) (f: (a -> Tot b)) (l: list a)
+    : Lemma (forall y. memP y (map f l) ==> (exists x. memP x l /\ f x == y)) =
+  introduce forall y . memP y (map f l) ==> (exists x. memP x l /\ f x == y)
+  with memP_map_elim f y l
 
 (** The empty list has no elements *)
 val mem_empty : #a:eqtype -> x:a ->
