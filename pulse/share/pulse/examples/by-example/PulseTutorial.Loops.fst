@@ -130,10 +130,12 @@ let rec sum (n:nat)
 : nat
 = if n = 0 then 0 else n + sum (n - 1)
 
+#push-options "--z3rlimit 20"
 let rec sum_lemma (n:nat)
 : Lemma (sum n == n * (n + 1) / 2)
 = if n = 0 then ()
   else sum_lemma (n - 1)
+#pop-options
 //SNIPPET_END: sum$
 
 //SNIPPET_START: isum$

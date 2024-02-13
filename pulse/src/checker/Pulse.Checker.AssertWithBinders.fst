@@ -394,6 +394,7 @@ let check
   )
   
   | ASSERT { p = v } ->
+    FStar.Tactics.BreakVC.break_vc(); // Some stabilization
     let bs = infer_binder_types g bs v in
     let (| uvs, v_opened, body_opened |) = open_binders g bs (mk_env (fstar_env g)) v body in
     let v, body = v_opened, body_opened in
