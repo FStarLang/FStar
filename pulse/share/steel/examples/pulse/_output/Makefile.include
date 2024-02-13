@@ -1,5 +1,0 @@
-USER_TARGET=
-USER_CFLAGS=
-USER_C_FILES=
-ALL_C_FILES=PulsePointStruct.c
-ALL_H_FILES=PulsePointStruct.h
