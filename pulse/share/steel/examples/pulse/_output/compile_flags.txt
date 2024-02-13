@@ -1,0 +1,17 @@
+-I
+/home/datadrive/aseem/everest/karamel/krmllib/dist/minimal
+-I
+/home/datadrive/aseem/everest/karamel/krmllib
+-I
+/home/datadrive/aseem/everest/karamel/include
+-I
+_output
+-Wall
+-Werror
+-Wno-unknown-warning-option
+-g
+-fwrapv
+-D_BSD_SOURCE
+-D_DEFAULT_SOURCE
+-Wno-parentheses
+-std=c11
