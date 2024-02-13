@@ -6,8 +6,8 @@ use proc_macro2::Span;
 use syn::{
     punctuated::Punctuated, token::Brace, token::Colon, token::Comma, token::Eq, token::Let,
     token::Mut, token::Paren, token::Pub, token::RArrow, token::Ref, token::Semi, Block, Generics,
-    Ident, ItemFn, Local, LocalInit, Pat as SynPat, PatType, Path, PathArguments, PathSegment,
-    ReturnType, Signature, Type, Visibility,
+    Ident, ItemFn, Local, LocalInit, Pat as SynPat, PatType, Path, PathArguments, ReturnType,
+    Signature, Type, Visibility,
 };
 
 use std::fmt;
@@ -134,7 +134,7 @@ struct ExprMethodCall {
 
 enum Expr {
     EBinOp(ExprBin),
-    EPath(Vec<String>),
+    EPath(Vec<PathSegment>),
     ECall(ExprCall),
     EUnOp(ExprUnary),
     EAssign(ExprAssign),
@@ -157,9 +157,9 @@ struct TypeReference {
     type_reference_typ: Box<Typ>,
 }
 
-struct TypePathSegment {
-    type_path_segment_name: String,
-    type_path_segment_generic_args: Vec<Typ>,
+struct PathSegment {
+    path_segment_name: String,
+    path_segment_generic_args: Vec<Typ>,
 }
 
 struct TypeArray {
@@ -173,7 +173,7 @@ struct TypeFn {
 }
 
 enum Typ {
-    TPath(Vec<TypePathSegment>),
+    TPath(Vec<PathSegment>),
     TReference(TypeReference),
     TSlice(Box<Typ>),
     TArray(TypeArray),
@@ -190,7 +190,7 @@ struct PatIdent {
 }
 
 struct PatTupleStruct {
-    pat_ts_path: String,
+    pat_ts_path: Vec<PathSegment>,
     pat_ts_elems: Vec<Pat>,
 }
 
@@ -212,6 +212,7 @@ enum Pat {
     PStruct(PatStruct),
     PTuple(Vec<Pat>),
     PTyp(Box<PatTyp>),
+    PPath(Vec<PathSegment>),
 }
 
 struct LocalStmt {
@@ -368,7 +369,7 @@ impl_from_ocaml_variant! {
 impl_from_ocaml_variant! {
   Expr {
     Expr::EBinOp (payload:ExprBin),
-    Expr::EPath (payload:OCamlList<String>),
+    Expr::EPath (payload:OCamlList<PathSegment>),
     Expr::ECall (payload:ExprCall),
     Expr::EUnOp (payload:ExprUnary),
     Expr::EAssign (payload:ExprAssign),
@@ -504,9 +505,9 @@ impl_from_ocaml_record! {
 }
 
 impl_from_ocaml_record! {
-  TypePathSegment {
-    type_path_segment_name: String,
-    type_path_segment_generic_args: OCamlList<Typ>,
+  PathSegment {
+    path_segment_name: String,
+    path_segment_generic_args: OCamlList<Typ>,
   }
 }
 
@@ -526,7 +527,7 @@ impl_from_ocaml_record! {
 
 impl_from_ocaml_variant! {
   Typ {
-    Typ::TPath (payload:OCamlList<TypePathSegment>),
+    Typ::TPath (payload:OCamlList<PathSegment>),
     Typ::TReference (payload:TypeReference),
     Typ::TSlice (payload:Typ),
     Typ::TArray (payload:TypeArray),
@@ -547,7 +548,7 @@ impl_from_ocaml_record! {
 
 impl_from_ocaml_record! {
   PatTupleStruct {
-    pat_ts_path : String,
+    pat_ts_path : OCamlList<PathSegment>,
     pat_ts_elems : OCamlList<Pat>,
   }
 }
@@ -575,6 +576,7 @@ impl_from_ocaml_variant! {
     Pat::PStruct (payload:PatStruct),
     Pat::PTuple (payload:OCamlList<Pat>),
     Pat::PTyp (payload:PatTyp),
+    Pat::PPath (payload:OCamlList<PathSegment>),
   }
 }
 
@@ -706,11 +708,25 @@ impl_from_ocaml_record! {
   }
 }
 
-fn to_syn_path(s: &Vec<String>) -> syn::Path {
+fn to_syn_path_string(s: &Vec<String>) -> syn::Path {
     let mut segs: Punctuated<syn::PathSegment, syn::token::PathSep> = Punctuated::new();
     s.iter().for_each(|s| {
-        segs.push(PathSegment {
+        segs.push(syn::PathSegment {
             ident: Ident::new(&s, Span::call_site()),
+            arguments: PathArguments::None,
+        })
+    });
+    Path {
+        leading_colon: None,
+        segments: segs,
+    }
+}
+
+fn to_syn_path(s: &Vec<PathSegment>) -> syn::Path {
+    let mut segs: Punctuated<syn::PathSegment, syn::token::PathSep> = Punctuated::new();
+    s.iter().for_each(|s| {
+        segs.push(syn::PathSegment {
+            ident: Ident::new(&s.path_segment_name, Span::call_site()),
             arguments: PathArguments::None,
         })
     });
@@ -763,14 +779,14 @@ fn to_syn_binop(op: &BinOp) -> syn::BinOp {
 
 fn is_vec_new(e: &Expr) -> bool {
     match e {
-        Expr::EPath(s) => s[0] == VEC_NEW_FN,
+        Expr::EPath(s) => s[0].path_segment_name == VEC_NEW_FN,
         _ => false,
     }
 }
 
 fn is_panic(e: &Expr) -> bool {
     match e {
-        Expr::EPath(s) => s[0] == PANIC_FN,
+        Expr::EPath(s) => s[0].path_segment_name == PANIC_FN,
         _ => false,
     }
 }
@@ -785,7 +801,10 @@ fn to_syn_vec_new(args: &Vec<Expr>) -> syn::Expr {
     syn::Expr::Macro(syn::ExprMacro {
         attrs: vec![],
         mac: syn::Macro {
-            path: to_syn_path(&vec!["vec".to_string()]),
+            path: to_syn_path(&vec![PathSegment {
+                path_segment_name: "vec".to_string(),
+                path_segment_generic_args: vec![],
+            }]),
             bang_token: syn::token::Not {
                 spans: [Span::call_site()],
             },
@@ -807,7 +826,10 @@ fn to_syn_panic() -> syn::Expr {
     syn::Expr::Macro(syn::ExprMacro {
         attrs: vec![],
         mac: syn::Macro {
-            path: to_syn_path(&vec!["panic".to_string()]),
+            path: to_syn_path(&vec![PathSegment {
+                path_segment_name: "panic".to_string(),
+                path_segment_generic_args: vec![],
+            }]),
             bang_token: syn::token::Not {
                 spans: [Span::call_site()],
             },
@@ -1084,7 +1106,7 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
             syn::Expr::Struct(syn::ExprStruct {
                 attrs: vec![],
                 qself: None,
-                path: to_syn_path(expr_struct_path),
+                path: to_syn_path_string(expr_struct_path),
                 brace_token: Brace::default(),
                 fields,
                 dot2_token: None,
@@ -1148,7 +1170,7 @@ fn to_syn_pat(p: &Pat) -> syn::Pat {
         Pat::PTupleStruct(pts) => SynPat::TupleStruct(syn::PatTupleStruct {
             attrs: vec![],
             qself: None,
-            path: to_syn_path(&vec![pts.pat_ts_path.to_string()]),
+            path: to_syn_path(&pts.pat_ts_path),
             paren_token: syn::token::Paren {
                 span: proc_macro2::Group::new(
                     proc_macro2::Delimiter::None,
@@ -1194,7 +1216,7 @@ fn to_syn_pat(p: &Pat) -> syn::Pat {
             syn::Pat::Struct(syn::PatStruct {
                 attrs: vec![],
                 qself: None,
-                path: to_syn_path(&vec![pat_struct_path.to_string()]),
+                path: to_syn_path_string(&vec![pat_struct_path.to_string()]),
                 brace_token: Brace::default(),
                 fields,
                 rest: None,
@@ -1216,6 +1238,11 @@ fn to_syn_pat(p: &Pat) -> syn::Pat {
                 spans: [Span::call_site()],
             },
             ty: Box::new(to_syn_typ(&p.pat_typ_typ)),
+        }),
+        Pat::PPath(p) => syn::Pat::Path(syn::PatPath {
+            attrs: vec![],
+            qself: None,
+            path: to_syn_path(p),
         }),
     }
 }
@@ -1274,8 +1301,8 @@ fn to_syn_typ(t: &Typ) -> Type {
                 segments: v
                     .iter()
                     .map(|s| syn::PathSegment {
-                        ident: Ident::new(&s.type_path_segment_name, Span::call_site()),
-                        arguments: if s.type_path_segment_generic_args.len() == 0 {
+                        ident: Ident::new(&s.path_segment_name, Span::call_site()),
+                        arguments: if s.path_segment_generic_args.len() == 0 {
                             syn::PathArguments::None
                         } else {
                             syn::PathArguments::AngleBracketed(
@@ -1285,7 +1312,7 @@ fn to_syn_typ(t: &Typ) -> Type {
                                         spans: [Span::call_site()],
                                     },
                                     args: s
-                                        .type_path_segment_generic_args
+                                        .path_segment_generic_args
                                         .iter()
                                         .map(|t| syn::GenericArgument::Type(to_syn_typ(t)))
                                         .collect(),
@@ -1511,7 +1538,7 @@ fn to_syn_attr(attr: &Attribute) -> syn::Attribute {
             .delim_span(),
         },
         meta: syn::Meta::List(syn::MetaList {
-            path: to_syn_path(&vec!["derive".to_string()]),
+            path: to_syn_path_string(&vec!["derive".to_string()]),
             delimiter: syn::MacroDelimiter::Paren(syn::token::Paren {
                 span: proc_macro2::Group::new(
                     proc_macro2::Delimiter::None,
@@ -1524,6 +1551,7 @@ fn to_syn_attr(attr: &Attribute) -> syn::Attribute {
     }
 }
 
+#[allow(dead_code)]
 fn use_enum_item(i: &Item) -> syn::Item {
     match i {
         Item::IEnum(ItemEnum { item_enum_name, .. }) => {
@@ -1578,7 +1606,9 @@ fn to_syn_item(i: &Item) -> Vec<syn::Item> {
             item_struct_fields.iter().for_each(|ft| {
                 fields.push(syn::Field {
                     attrs: vec![],
-                    vis: Visibility::Inherited,
+                    vis: Visibility::Public(syn::token::Pub {
+                        span: Span::call_site(),
+                    }),
                     mutability: syn::FieldMutability::None,
                     ident: Some(Ident::new(&ft.field_typ_name, Span::call_site())),
                     colon_token: Some(Colon {
@@ -1729,7 +1759,7 @@ fn to_syn_item(i: &Item) -> Vec<syn::Item> {
                 brace_token: Brace::default(),
                 variants,
             });
-            vec![item, use_enum_item(i)]
+            vec![item] //, use_enum_item(i)]
         }
         Item::IStatic(ItemStatic {
             item_static_name,
@@ -1778,7 +1808,8 @@ fn to_syn_file(f: &File) -> syn::File {
 
 fn file_to_syn_string(f: &File) -> String {
     let f: syn::File = to_syn_file(f);
-    quote::quote!(#f).to_string()
+    prettyplease::unparse(&f)
+    // quote::quote!(#f).to_string()
 }
 
 // fn fn_to_syn_string(f: &Fn) -> String {
@@ -1851,7 +1882,11 @@ impl fmt::Display for Pat {
             Pat::PTupleStruct(pts) => write!(
                 f,
                 "{}({})",
-                pts.pat_ts_path,
+                pts.pat_ts_path
+                    .iter()
+                    .map(|s| s.to_string())
+                    .collect::<Vec<_>>()
+                    .join("::"),
                 pts.pat_ts_elems
                     .iter()
                     .map(|p| p.to_string())
@@ -1882,6 +1917,14 @@ impl fmt::Display for Pat {
                     .join(",")
             ),
             Pat::PTyp(p) => write!(f, "{}:{}", p.pat_typ_pat, p.pat_typ_typ),
+            Pat::PPath(p) => write!(
+                f,
+                "{}",
+                p.iter()
+                    .map(|s| s.to_string())
+                    .collect::<Vec<_>>()
+                    .join("::")
+            ),
         }
     }
 }
@@ -1889,6 +1932,12 @@ impl fmt::Display for Pat {
 impl fmt::Display for Arm {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} => {}", self.arm_pat, self.arm_body)
+    }
+}
+
+impl fmt::Display for PathSegment {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.path_segment_name)
     }
 }
 
@@ -2030,13 +2079,13 @@ impl fmt::Display for Typ {
                 f,
                 "{}",
                 v.iter()
-                    .map(|s| if s.type_path_segment_generic_args.len() == 0 {
-                        s.type_path_segment_name.to_string()
+                    .map(|s| if s.path_segment_generic_args.len() == 0 {
+                        s.path_segment_name.to_string()
                     } else {
                         format!(
                             "{}<{}>",
-                            s.type_path_segment_name,
-                            s.type_path_segment_generic_args
+                            s.path_segment_name,
+                            s.path_segment_generic_args
                                 .iter()
                                 .map(|t| t.to_string())
                                 .collect::<Vec<_>>()
@@ -2279,211 +2328,3 @@ ocaml_export! {
   //   z.to_string().to_owned().to_ocaml(cr)
   // }
 }
-
-// use std::sync::Mutex;
-// struct S {
-//     v: Vec<i32>,
-//     f: u32,
-// }
-
-// const fn new_mutex() -> Mutex<S> {
-//     Mutex::new(S { v: vec![], f: 0 })
-// }
-
-// static OBJ: Mutex<S> = new_mutex();
-
-// type hashable_len = usize;
-// type signable_len = usize;
-// type hkdf_lbl_len = usize;
-// type hkdf_ikm_len = usize;
-// type alg_t = ();
-
-// pub const dice_digest_len: usize = 32;
-
-// pub const dice_hash_alg: () = ();
-
-// pub fn ed25519_verify(
-//     pubk: &mut [u8],
-//     hdr: &mut [u8],
-//     hdr_len: signable_len,
-//     sig: &mut [u8],
-//     ppubk: (),
-//     phdr: (),
-//     psig: (),
-//     pubk_seq: (),
-//     hdr_seq: (),
-//     sig_seq: (),
-// ) -> bool {
-//     panic!()
-// }
-
-// pub fn hacl_hash(
-//     alg: (),
-//     src_len: hashable_len,
-//     src: &mut [u8],
-//     dst: &mut [u8],
-//     psrc: (),
-//     src_seq: (),
-//     dst_seq: (),
-// ) -> () {
-//     panic!()
-// }
-
-// pub fn compare(
-//     len: usize,
-//     a: &mut [u8],
-//     b: &mut [u8],
-//     p: (),
-//     a_seq: (),
-//     b_seq: (),
-//     __c0: (),
-// ) -> bool {
-//     panic!()
-// }
-
-// pub fn memcpy<A>(l: usize, src: &mut [A], dst: &mut [A], p: (), src0: (), dst0: ()) -> () {
-//     panic!()
-// }
-
-// pub fn zeroize(len: usize, src: &mut [u8], s: ()) -> () {
-//     panic!()
-// }
-
-// pub fn hacl_hmac(
-//     alg: (),
-//     dst: &mut [u8],
-//     key: &mut [u8],
-//     key_len: hashable_len,
-//     msg: &mut [u8],
-//     msg_len: hashable_len,
-//     pkey: (),
-//     pmsg: (),
-//     dst_seq: (),
-//     key_seq: (),
-//     msg_seq: (),
-// ) -> () {
-//     panic!()
-// }
-
-// pub fn x509_get_deviceIDCRI(
-//     deviceIDCSR_ingredients: deviceIDCSR_ingredients_t,
-//     deviceID_pub: &mut [u8],
-//     pub_perm: (),
-//     deviceID_pub0: (),
-// ) -> (deviceIDCSR_ingredients_t, deviceIDCRI_t) {
-//     panic!()
-// }
-
-// pub fn serialize_deviceIDCRI(
-//     deviceIDCRI: deviceIDCRI_t,
-//     deviceIDCRI_len: usize,
-//     deviceIDCRI_buf: &mut [u8],
-//     deviceIDCRI_buf0: (),
-// ) -> () {
-//     panic!()
-// }
-
-// pub fn x509_get_deviceIDCSR(
-//     deviceIDCRI_len: usize,
-//     deviceIDCRI_buf: &mut [u8],
-//     deviceIDCRI_sig: &mut [u8],
-//     buf_perm: (),
-//     sig_perm: (),
-//     buf: (),
-//     sig: (),
-// ) -> deviceIDCSR_t {
-//     panic!()
-// }
-
-// pub fn ed25519_sign(
-//     buf: &mut [u8],
-//     privk: &mut [u8],
-//     len: usize,
-//     msg: &mut [u8],
-//     pprivk: (),
-//     pmsg: (),
-//     buf0: (),
-//     privk_seq: (),
-//     msg_seq: (),
-// ) -> () {
-//     panic!()
-// }
-
-// pub fn serialize_deviceIDCSR(
-//     deviceIDCRI_len: usize,
-//     deviceIDCSR: deviceIDCSR_t,
-//     deviceIDCSR_len: usize,
-//     deviceIDCSR_buf: &mut [u8],
-//     _buf: (),
-// ) -> () {
-//     panic!()
-// }
-
-// pub fn x509_get_aliasKeyTBS(
-//     aliasKeyCRT_ingredients: aliasKeyCRT_ingredients_t,
-//     fwid: &mut [u8],
-//     deviceID_pub: &mut [u8],
-//     aliasKey_pub: &mut [u8],
-//     fwid_perm: (),
-//     deviceID_perm: (),
-//     aliasKey_perm: (),
-//     fwid0: (),
-//     deviceID0: (),
-//     aliasKey0: (),
-// ) -> (aliasKeyCRT_ingredients_t, aliasKeyTBS_t) {
-//     panic!()
-// }
-
-// pub fn serialize_aliasKeyTBS(
-//     aliasKeyTBS: aliasKeyTBS_t,
-//     aliasKeyTBS_len: usize,
-//     aliasKeyTBS_buf: &mut [u8],
-//     aliasKeyTBS_buf0: (),
-// ) -> () {
-//     panic!()
-// }
-
-// pub fn x509_get_aliasKeyCRT(
-//     aliasKeyTBS_len: usize,
-//     aliasKeyTBS_buf: &mut [u8],
-//     aliasKeyTBS_sig: &mut [u8],
-//     buf_perm: (),
-//     sig_perm: (),
-//     buf: (),
-//     sig: (),
-// ) -> aliasKeyCRT_t {
-//     panic!()
-// }
-
-// pub fn serialize_aliasKeyCRT(
-//     aliasKeyTBS_len: usize,
-//     aliasKeyCRT: aliasKeyCRT_t,
-//     aliasKeyCRT_len: usize,
-//     aliasKeyCRT_buf: &mut [u8],
-//     _buf: (),
-// ) -> () {
-//     panic!()
-// }
-
-// pub fn digest_len(alg: alg_t) -> usize {
-//     panic!()
-// }
-
-// pub const v32us: usize = 32;
-
-// pub fn len_of_deviceIDCRI(x: deviceIDCSR_ingredients_t) -> (deviceIDCSR_ingredients_t, usize) {
-//     panic!()
-// }
-
-// pub fn len_of_aliasKeyTBS(x: aliasKeyCRT_ingredients_t) -> (aliasKeyCRT_ingredients_t, usize) {
-//     panic!()
-// }
-
-// pub fn length_of_deviceIDCSR(x: usize) -> usize {
-//     panic!()
-// }
-// pub fn length_of_aliasKeyCRT(x: usize) -> usize {
-//     panic!()
-// }
-
-//////////////////////////////

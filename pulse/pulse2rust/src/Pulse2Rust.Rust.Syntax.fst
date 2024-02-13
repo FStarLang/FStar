@@ -24,56 +24,60 @@ let vec_new_fn = "vec_new"
 let panic_fn = "panic"
 
 let mk_scalar_typ (name:string) : typ =
-  Typ_path [ {typ_path_segment_name = name; typ_path_segment_generic_args = [] } ]
+  Typ_path [ {path_segment_name = name; path_segment_generic_args = [] } ]
 
 let mk_ref_typ (is_mut:bool) (t:typ) : typ =
   Typ_reference { typ_ref_mut = is_mut; typ_ref_typ = t }
 
 let mk_box_typ (t:typ) : typ =
   Typ_path [
-    { typ_path_segment_name = "std"; typ_path_segment_generic_args = [] };
-    { typ_path_segment_name = "boxed"; typ_path_segment_generic_args = [] };
-    { typ_path_segment_name = "Box"; typ_path_segment_generic_args = [t] };
+    { path_segment_name = "std"; path_segment_generic_args = [] };
+    { path_segment_name = "boxed"; path_segment_generic_args = [] };
+    { path_segment_name = "Box"; path_segment_generic_args = [t] };
   ]
 
 let mk_slice_typ (t:typ) : typ = Typ_slice t
 
 let mk_vec_typ (t:typ) : typ =
   Typ_path [
-    { typ_path_segment_name = "std"; typ_path_segment_generic_args = [] };
-    { typ_path_segment_name = "vec"; typ_path_segment_generic_args = [] };
-    { typ_path_segment_name = "Vec"; typ_path_segment_generic_args = [t] };
+    { path_segment_name = "std"; path_segment_generic_args = [] };
+    { path_segment_name = "vec"; path_segment_generic_args = [] };
+    { path_segment_name = "Vec"; path_segment_generic_args = [t] };
   ]
 
 let mk_mutex_typ (t:typ) : typ =
   Typ_path [
-    { typ_path_segment_name = "std"; typ_path_segment_generic_args = [] };
-    { typ_path_segment_name = "sync"; typ_path_segment_generic_args = [] };
-    { typ_path_segment_name = "Mutex"; typ_path_segment_generic_args = [t] };
+    { path_segment_name = "std"; path_segment_generic_args = [] };
+    { path_segment_name = "sync"; path_segment_generic_args = [] };
+    { path_segment_name = "Mutex"; path_segment_generic_args = [t] };
   ]
 
 let mk_option_typ (t:typ) : typ =
   Typ_path [
-    { typ_path_segment_name = "std"; typ_path_segment_generic_args = [] };
-    { typ_path_segment_name = "option"; typ_path_segment_generic_args = [] };
-    { typ_path_segment_name = "Option"; typ_path_segment_generic_args = [t] };
+    { path_segment_name = "std"; path_segment_generic_args = [] };
+    { path_segment_name = "option"; path_segment_generic_args = [] };
+    { path_segment_name = "Option"; path_segment_generic_args = [t] };
   ]
 
 let mk_array_typ (t:typ) (len:expr) : typ =
   Typ_array { typ_array_elem = t; typ_array_len = len }
 
-let mk_named_typ (s:string) (generic_args:list typ) : typ =
-  Typ_path [
-    { typ_path_segment_name = s; typ_path_segment_generic_args = generic_args };
-  ]
+let mk_named_typ (path:list string) (s:string) (generic_args:list typ) : typ =
+  let path = path |> L.map (fun s -> {
+      path_segment_name = s;
+      path_segment_generic_args = []
+  }) in
+  let s = { path_segment_name = s; path_segment_generic_args = generic_args } in
+  Typ_path (List.append path [s])
 
 let mk_fn_typ (typ_fn_args:list typ) (typ_fn_ret:typ) : typ =
   Typ_fn { typ_fn_args; typ_fn_ret }
 
 let mk_tuple_typ (l:list typ) : typ = Typ_tuple l
 
-let mk_expr_path_singl s = Expr_path [s]
-let mk_expr_path l = Expr_path l
+let mk_expr_path_singl s = Expr_path [{ path_segment_name = s; path_segment_generic_args = [] }]
+let mk_expr_path l =
+  Expr_path (L.map (fun s -> { path_segment_name = s; path_segment_generic_args = [] }) l)
 
 let mk_lit_bool (b:bool) : expr = Expr_lit (Lit_bool b)
 
@@ -115,12 +119,23 @@ let mk_reference_expr (expr_reference_is_mut:bool) (expr_reference_expr:expr) : 
   Expr_reference { expr_reference_is_mut; expr_reference_expr }
 
 let mk_pat_ident (path:string) : pat =
-  Pat_ident { pat_name = path; by_ref = false; is_mut = false }
+  Pat_ident { pat_name = path; by_ref = false; is_mut = true }
 
-let mk_pat_ts (pat_ts_path:string) (pat_ts_elems:list pat) : pat =
+let mk_pat_ts (path:list string) (s:string) (pat_ts_elems:list pat) : pat =
   if L.length pat_ts_elems = 0
-  then Pat_ident { pat_name = pat_ts_path; by_ref = false; is_mut = false }
-  else Pat_tuple_struct { pat_ts_path; pat_ts_elems}
+  then if L.length path = 0
+       then Pat_ident { pat_name = s; by_ref = false; is_mut = false }
+       else Pat_path (L.map (fun s -> {
+              path_segment_name = s;
+              path_segment_generic_args = []
+            }) (path @ [s]))
+  else Pat_tuple_struct {
+    pat_ts_path = L.map (fun s -> {
+      path_segment_name = s;
+      path_segment_generic_args = []
+    }) (path @ [s]);
+    pat_ts_elems
+  }
 
 let mk_pat_struct (pat_struct_path:string) (pats:list (string & pat)) : pat =
   Pat_struct { pat_struct_path;
@@ -156,7 +171,7 @@ let mk_expr_tuple (l:list expr) : expr = Expr_tuple l
 
 let mk_mem_replace (e:expr) (new_v:expr) : expr =
   mk_call
-    (Expr_path ["std"; "mem"; "replace"])
+    (mk_expr_path ["std"; "mem"; "replace"])
     [e; new_v]
 
 let mk_method_call (receiver:expr) (name:string) (args:list expr) : expr =
@@ -168,7 +183,7 @@ let mk_method_call (receiver:expr) (name:string) (args:list expr) : expr =
 
 let mk_new_mutex (e:expr) =
   mk_call
-    (Expr_path ["std"; "sync"; "Mutex"; "new"])
+    (mk_expr_path ["std"; "sync"; "Mutex"; "new"])
     [e]
 
 let mk_lock_mutex (e:expr) : expr =

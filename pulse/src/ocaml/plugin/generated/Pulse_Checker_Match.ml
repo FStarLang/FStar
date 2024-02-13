@@ -1349,7 +1349,7 @@ let (join_branches :
                                                                     d1) ->
                                                                     Prims.Mkdtuple2
                                                                     (br1, d1))
-                                                                    checked_brs))))))
+                                                                    rest))))))
                                                       | Pulse_Syntax_Base.C_STGhost
                                                           uu___1 ->
                                                           Obj.magic
@@ -1373,7 +1373,7 @@ let (join_branches :
                                                                     d1) ->
                                                                     Prims.Mkdtuple2
                                                                     (br1, d1))
-                                                                    checked_brs))))))
+                                                                    rest))))))
                                                       | Pulse_Syntax_Base.C_STAtomic
                                                           (i, obs, stc) ->
                                                           Obj.magic

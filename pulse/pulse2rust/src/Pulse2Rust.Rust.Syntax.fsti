@@ -60,7 +60,7 @@ type pat_ident = {
 }
 
 type pat_tuple_struct = {
-  pat_ts_path : string;
+  pat_ts_path : list path_segment;
   pat_ts_elems : list pat;
 }
 
@@ -87,10 +87,11 @@ and pat =
   | Pat_struct of pat_struct
   | Pat_tuple of list pat
   | Pat_typ of pat_typ
+  | Pat_path of list path_segment
 
 and expr =
   | Expr_binop of expr_bin
-  | Expr_path of list string
+  | Expr_path of list path_segment
   | Expr_call of expr_call
   | Expr_unary of expr_unary
   | Expr_assign of expr_assignment
@@ -196,7 +197,7 @@ and stmt =
   | Stmt_expr of expr
 
 and typ =
-  | Typ_path of list typ_path_segment
+  | Typ_path of list path_segment
   | Typ_reference of typ_reference
   | Typ_slice of typ
   | Typ_array of typ_array
@@ -210,9 +211,14 @@ and typ_reference = {
   typ_ref_typ : typ;
 }
 
-and typ_path_segment = {
-  typ_path_segment_name : string;
-  typ_path_segment_generic_args : list typ;
+//
+// TODO: THIS NEEDS FIXING
+// we are using path_segment for exprs, pats as well
+// whereas generic args are only for typ
+//
+and path_segment = {
+  path_segment_name : string;
+  path_segment_generic_args : list typ;
 }
 
 and typ_array = {
@@ -311,7 +317,7 @@ val mk_vec_typ (t:typ) : typ
 val mk_mutex_typ (t:typ) : typ
 val mk_option_typ (t:typ) : typ
 val mk_array_typ (t:typ) (len:expr) : typ
-val mk_named_typ (s:string) (generic_args:list typ) : typ
+val mk_named_typ (path:list string) (s:string) (generic_args:list typ) : typ
 val mk_fn_typ (arg_typs:list typ) (ret_typ:typ) : typ
 val mk_tuple_typ (l:list typ) : typ
 
@@ -330,7 +336,7 @@ val mk_while (cond:expr) (body:list stmt) : expr
 val mk_repeat (elem len:expr) : expr
 val mk_reference_expr (is_mut:bool) (e:expr) : expr
 val mk_pat_ident (path:string) : pat
-val mk_pat_ts (path:string) (elems:list pat) : pat
+val mk_pat_ts (path:list string) (s:string) (elems:list pat) : pat
 val mk_pat_struct (path:string) (fields:list (string & pat)) : pat
 val mk_pat_tuple (l:list pat) : pat
 val mk_arm (arm_pat:pat) (arm_body:expr) : arm
