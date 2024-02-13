@@ -1,21 +1,18 @@
-STEEL_HOME=../..
+PULSE_HOME ?= ../..
+PULSE_EXAMPLES_ROOT ?= $(PULSE_HOME)/share/pulse/examples
 
-INCLUDE_DIRS=lib by-example _output/cache lib/pledge dice/common dice/dpe dice/engine dice/l0 
-OUTPUT_DIRECTORY=_output
-CACHE_DIRECTORY=$(OUTPUT_DIRECTORY)/cache
-
-PULSE_EXAMPLES_ROOT=$(STEEL_HOME)/share/steel/examples/pulse
-SRC_DIRS=$(addprefix $(PULSE_EXAMPLES_ROOT)/, $(INCLUDE_DIRS))
-FSTAR_FILES=$(wildcard $(addsuffix /*.fst, $(SRC_DIRS))) $(wildcard $(addsuffix /*.fsti, $(SRC_DIRS)))
+SRC_DIRS := $(addprefix $(PULSE_EXAMPLES_ROOT)/,by-example dice/common dice/dpe dice/engine dice/l0)
+OUTPUT_DIRECTORY := _output
+CACHE_DIRECTORY := $(OUTPUT_DIRECTORY)/cache
 
 MAIN=../main.exe
 RUST_SRC_DIR=./src/
 
 all: test
 
-include $(PULSE_EXAMPLES_ROOT)/Makefile.pulse.common
+include $(PULSE_HOME)/share/pulse/Makefile.include
 
-FSTAR_DEP_OPTIONS=--extract '* -FStar.Tactics -FStar.Reflection -Steel -Pulse +Pulse.Class +Pulse.Lib -Pulse.Lib.Core'
+FSTAR_DEP_OPTIONS=--extract '* -FStar.Tactics -FStar.Reflection -Pulse +Pulse.Class +Pulse.Lib -Pulse.Lib.Core'
 
 %.ast:
 		$(FSTAR) --admit_smt_queries true --codegen Extension $(subst .ast,.fst, $(subst _,., $(notdir $@))) --extract_module $(basename $(subst .ast,.fst, $(subst _,., $(notdir $@))))
