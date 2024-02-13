@@ -39,7 +39,7 @@ Dependency diagram:
 
 If you modify the Pulse checker in `src/checker`, you need to
 regenerate and recompile the corresponding OCaml snapshot, with `make -j
-boot-checker` .
+boot-checker` from the Pulse root directory.
 
 Modifying the Pulse checker does not require a source repository clone
 of F*.
@@ -88,7 +88,7 @@ against the F* sources. An opam installation of F* (or a binary
 package) will not work.
 
 Then, you can extract the rules and recompile everything with `make -j
-boot` .
+boot` from the Pulse root directory.
 
 Alternatively, you can do `make -j full-boot`, which will remove all
 generated OCaml files beforehand.
