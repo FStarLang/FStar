@@ -64,7 +64,7 @@ type fsteps = {
      simplify : bool;
      erase_universes : bool;
      allow_unbound_universes : bool;
-     reify_ : bool; // fun fact: calling it 'reify' won't bootstrap :)
+     reify_ : bool; // 'reify' is reserved
      compress_uvars : bool;
      no_full_norm : bool;
      check_no_uvars : bool;
@@ -75,6 +75,7 @@ type fsteps = {
      nbe_step:bool;
      for_extraction:bool;
      unrefine:bool;
+     default_univs_to_zero:bool; (* Default unresolved universe levels to zero *)
 }
 
 val default_steps : fsteps

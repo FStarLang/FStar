@@ -72,6 +72,7 @@ val comp_to_string:  Env.env -> comp -> string
 val elim_uvars: Env.env -> sigelt -> sigelt
 val erase_universes: Env.env -> term -> term
 
+(* Note: This will default any unresolved universe variables to U_zero. *)
 val remove_uvar_solutions: Env.env -> term -> term
 
 val unfold_head_once: Env.env -> term -> option term

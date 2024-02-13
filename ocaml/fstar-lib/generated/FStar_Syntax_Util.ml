@@ -302,16 +302,17 @@ let rec (univ_kernel :
   FStar_Syntax_Syntax.universe -> (FStar_Syntax_Syntax.universe * Prims.int))
   =
   fun u ->
-    match u with
+    let uu___ = FStar_Syntax_Subst.compress_univ u in
+    match uu___ with
     | FStar_Syntax_Syntax.U_unknown -> (u, Prims.int_zero)
-    | FStar_Syntax_Syntax.U_name uu___ -> (u, Prims.int_zero)
-    | FStar_Syntax_Syntax.U_unif uu___ -> (u, Prims.int_zero)
-    | FStar_Syntax_Syntax.U_max uu___ -> (u, Prims.int_zero)
+    | FStar_Syntax_Syntax.U_name uu___1 -> (u, Prims.int_zero)
+    | FStar_Syntax_Syntax.U_unif uu___1 -> (u, Prims.int_zero)
+    | FStar_Syntax_Syntax.U_max uu___1 -> (u, Prims.int_zero)
     | FStar_Syntax_Syntax.U_zero -> (u, Prims.int_zero)
     | FStar_Syntax_Syntax.U_succ u1 ->
-        let uu___ = univ_kernel u1 in
-        (match uu___ with | (k, n) -> (k, (n + Prims.int_one)))
-    | FStar_Syntax_Syntax.U_bvar uu___ ->
+        let uu___1 = univ_kernel u1 in
+        (match uu___1 with | (k, n) -> (k, (n + Prims.int_one)))
+    | FStar_Syntax_Syntax.U_bvar uu___1 ->
         FStar_Compiler_Effect.failwith "Imposible: univ_kernel (U_bvar _)"
 let (constant_univ_as_nat : FStar_Syntax_Syntax.universe -> Prims.int) =
   fun u -> let uu___ = univ_kernel u in FStar_Pervasives_Native.snd uu___
@@ -321,35 +322,39 @@ let rec (compare_univs :
   fun u1 ->
     fun u2 ->
       let rec compare_kernel uk1 uk2 =
-        match (uk1, uk2) with
-        | (FStar_Syntax_Syntax.U_bvar uu___, uu___1) ->
+        let uu___ =
+          let uu___1 = FStar_Syntax_Subst.compress_univ uk1 in
+          let uu___2 = FStar_Syntax_Subst.compress_univ uk2 in
+          (uu___1, uu___2) in
+        match uu___ with
+        | (FStar_Syntax_Syntax.U_bvar uu___1, uu___2) ->
             FStar_Compiler_Effect.failwith "Impossible: compare_kernel bvar"
-        | (uu___, FStar_Syntax_Syntax.U_bvar uu___1) ->
+        | (uu___1, FStar_Syntax_Syntax.U_bvar uu___2) ->
             FStar_Compiler_Effect.failwith "Impossible: compare_kernel bvar"
-        | (FStar_Syntax_Syntax.U_succ uu___, uu___1) ->
+        | (FStar_Syntax_Syntax.U_succ uu___1, uu___2) ->
             FStar_Compiler_Effect.failwith "Impossible: compare_kernel succ"
-        | (uu___, FStar_Syntax_Syntax.U_succ uu___1) ->
+        | (uu___1, FStar_Syntax_Syntax.U_succ uu___2) ->
             FStar_Compiler_Effect.failwith "Impossible: compare_kernel succ"
         | (FStar_Syntax_Syntax.U_unknown, FStar_Syntax_Syntax.U_unknown) ->
             Prims.int_zero
-        | (FStar_Syntax_Syntax.U_unknown, uu___) -> (Prims.of_int (-1))
-        | (uu___, FStar_Syntax_Syntax.U_unknown) -> Prims.int_one
+        | (FStar_Syntax_Syntax.U_unknown, uu___1) -> (Prims.of_int (-1))
+        | (uu___1, FStar_Syntax_Syntax.U_unknown) -> Prims.int_one
         | (FStar_Syntax_Syntax.U_zero, FStar_Syntax_Syntax.U_zero) ->
             Prims.int_zero
-        | (FStar_Syntax_Syntax.U_zero, uu___) -> (Prims.of_int (-1))
-        | (uu___, FStar_Syntax_Syntax.U_zero) -> Prims.int_one
+        | (FStar_Syntax_Syntax.U_zero, uu___1) -> (Prims.of_int (-1))
+        | (uu___1, FStar_Syntax_Syntax.U_zero) -> Prims.int_one
         | (FStar_Syntax_Syntax.U_name u11, FStar_Syntax_Syntax.U_name u21) ->
-            let uu___ = FStar_Ident.string_of_id u11 in
-            let uu___1 = FStar_Ident.string_of_id u21 in
-            FStar_Compiler_String.compare uu___ uu___1
-        | (FStar_Syntax_Syntax.U_name uu___, uu___1) -> (Prims.of_int (-1))
-        | (uu___, FStar_Syntax_Syntax.U_name uu___1) -> Prims.int_one
+            let uu___1 = FStar_Ident.string_of_id u11 in
+            let uu___2 = FStar_Ident.string_of_id u21 in
+            FStar_Compiler_String.compare uu___1 uu___2
+        | (FStar_Syntax_Syntax.U_name uu___1, uu___2) -> (Prims.of_int (-1))
+        | (uu___1, FStar_Syntax_Syntax.U_name uu___2) -> Prims.int_one
         | (FStar_Syntax_Syntax.U_unif u11, FStar_Syntax_Syntax.U_unif u21) ->
-            let uu___ = FStar_Syntax_Unionfind.univ_uvar_id u11 in
-            let uu___1 = FStar_Syntax_Unionfind.univ_uvar_id u21 in
-            uu___ - uu___1
-        | (FStar_Syntax_Syntax.U_unif uu___, uu___1) -> (Prims.of_int (-1))
-        | (uu___, FStar_Syntax_Syntax.U_unif uu___1) -> Prims.int_one
+            let uu___1 = FStar_Syntax_Unionfind.univ_uvar_id u11 in
+            let uu___2 = FStar_Syntax_Unionfind.univ_uvar_id u21 in
+            uu___1 - uu___2
+        | (FStar_Syntax_Syntax.U_unif uu___1, uu___2) -> (Prims.of_int (-1))
+        | (uu___1, FStar_Syntax_Syntax.U_unif uu___2) -> Prims.int_one
         | (FStar_Syntax_Syntax.U_max us1, FStar_Syntax_Syntax.U_max us2) ->
             let n1 = FStar_Compiler_List.length us1 in
             let n2 = FStar_Compiler_List.length us2 in
@@ -357,10 +362,10 @@ let rec (compare_univs :
             then n1 - n2
             else
               (let copt =
-                 let uu___1 = FStar_Compiler_List.zip us1 us2 in
-                 FStar_Compiler_Util.find_map uu___1
-                   (fun uu___2 ->
-                      match uu___2 with
+                 let uu___2 = FStar_Compiler_List.zip us1 us2 in
+                 FStar_Compiler_Util.find_map uu___2
+                   (fun uu___3 ->
+                      match uu___3 with
                       | (u11, u21) ->
                           let c = compare_univs u11 u21 in
                           if c <> Prims.int_zero

@@ -97,7 +97,7 @@ let rec resugar_universe (u:S.universe) r: A.term =
       //augment `a` an Unknown level (the level is unimportant ... we should maybe remove it altogether)
       A.mk_term a r A.Un
   in
-  begin match u with
+  begin match Subst.compress_univ u with
     | U_zero ->
       mk (A.Const(Const_int ("0", None))) r
 
