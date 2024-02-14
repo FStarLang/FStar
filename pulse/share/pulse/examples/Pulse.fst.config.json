@@ -12,8 +12,8 @@
   ],
   "include_dirs": [
     "../../../lib/pulse",
+    "../../../lib/pulse/c",
     "../../../lib/pulse/lib",
-    "../../../lib/pulse/lib/c",
     "../../../lib/pulse/lib/class",
     "../../../lib/pulse/lib/pledge",
     "../../../lib/pulse/core",
