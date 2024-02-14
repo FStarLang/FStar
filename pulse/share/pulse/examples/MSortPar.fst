@@ -8,7 +8,7 @@ module SZ = FStar.SizeT
 
 open MSort
 open MSort.SeqLemmas
-open TaskPool
+open Pulse.Lib.Task
 open Pulse.Lib.Par.Pledge
 
 ```pulse
