@@ -1,8 +1,13 @@
 {
 	"fstar_exe": "fstar.exe",
 	"options": [
+		"--load_cmxs", "pulse"
 	],
 	"include_dirs": [
-		".."
+		"c",
+		"core",
+		"lib",
+		"lib/class",
+		"lib/pledge"
 	]
 }
