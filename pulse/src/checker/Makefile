@@ -16,7 +16,7 @@ include $(PULSE_HOME)/share/pulse/Makefile.include-base
 # extract an .ml file
 $(OUTPUT_DIRECTORY)/%.ml:
 	$(call msg, "EXTRACT", $(basename $(notdir $@)))
-	$(Q)$(MY_FSTAR) $(subst .checked,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked,,$<)))
+	$(Q)$(FSTAR) $(subst .checked,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked,,$<)))
 	chmod -x $@
 
 extract: $(ALL_ML_FILES)
