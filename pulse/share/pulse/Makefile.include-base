@@ -3,7 +3,6 @@ ifeq (,$(PULSE_HOME))
 endif
 
 include $(PULSE_HOME)/share/pulse/Makefile.locate-fstar
-include $(PULSE_HOME)/lib/pulse/runlim.mk
 
 # List the directories of all root files
 ifeq (,$(SRC_DIRS))
