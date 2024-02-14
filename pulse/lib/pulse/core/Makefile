@@ -4,4 +4,4 @@ all: verify
 
 FSTAR_OPTIONS += --already_cached '*,-PulseCore'
 
-include $(PULSE_HOME)/lib/pulse/Makefile.include
+include $(PULSE_HOME)/share/pulse/Makefile.include-base

@@ -10,7 +10,7 @@ INCLUDE_PATHS += $(PULSE_HOME)/lib/pulse
 FSTAR_OPTIONS += --already_cached '*,-Pulse,-PulseSyntaxExtension' --odir $(OUTPUT_DIRECTORY)
 FSTAR_DEP_OPTIONS +=--extract '+Pulse,-Pulse.Steel'
 
-include $(PULSE_HOME)/lib/pulse/Makefile.include
+include $(PULSE_HOME)/share/pulse/Makefile.include-base
 
 # And then, in a separate invocation, from each .checked we
 # extract an .ml file
