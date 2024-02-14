@@ -1,27 +1,20 @@
-module MSortPar
+module MSort.Parallel
 
-open FStar.Ghost
 open Pulse.Lib.Pervasives
-module A = Pulse.Lib.Array
 module S = FStar.Seq
 module SZ = FStar.SizeT
-
-open MSort
 open MSort.SeqLemmas
-open Pulse.Lib.Task
-open Pulse.Lib.Par.Pledge
+open MSort.Base
 
 ```pulse
 fn
 rec
-t_msort_par
-  (p : pool)
-  (f : perm)
+msort
   (a : array int)
   (lo hi : SZ.t)
   (s : erased (S.seq int))
-  requires pool_alive #f p ** pts_to_range a (SZ.v lo) (SZ.v hi) (reveal s)
-  ensures  pool_alive #f p ** pts_to_range a (SZ.v lo) (SZ.v hi) (sort (reveal s))
+  requires pts_to_range a (SZ.v lo) (SZ.v hi) (reveal s)
+  ensures  pts_to_range a (SZ.v lo) (SZ.v hi) (sort (reveal s))
 {
   pts_to_range_prop a;
   if ((hi `SZ.sub` lo) `SZ.lt` 2sz) {
@@ -35,14 +28,14 @@ t_msort_par
 
     with s1. assert (pts_to_range a (SZ.v lo) (SZ.v mid) s1);
     with s2. assert (pts_to_range a (SZ.v mid) (SZ.v hi) s2);
-    
-    share_alive p f;
 
-    let h = spawn p #(half_perm f) (fun () -> t_msort_par p (half_perm f) a lo mid s1);
-    t_msort_par p (half_perm f) a mid hi s2;
-    join h;
-    
-    gather_alive p f;
+    parallel
+      requires pts_to_range a (SZ.v lo) (SZ.v mid) (reveal s1)
+           and pts_to_range a (SZ.v mid) (SZ.v hi) (reveal s2)
+      ensures  pts_to_range a (SZ.v lo) (SZ.v mid) (sort (reveal s1))
+          and  pts_to_range a (SZ.v mid) (SZ.v hi) (sort (reveal s2))
+    { msort a lo mid s1; }
+    { msort a mid hi s2; };
 
     merge_impl a lo mid hi () (sort s1) (sort s2);
   }
