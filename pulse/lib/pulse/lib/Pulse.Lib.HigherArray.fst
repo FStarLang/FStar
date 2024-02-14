@@ -91,7 +91,7 @@ type array ([@@@strictly_positive] elt: Type u#1)
     length: (l:Ghost.erased nat {offset p + l <= base_len (base p)})
   }
 
-let length (#elt: Type) (a: array elt) : GTot nat = a.length
+let length (#elt: Type) (a: array elt) = a.length
 
 let ptr_of
   (#elt: Type)

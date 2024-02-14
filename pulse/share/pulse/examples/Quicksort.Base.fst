@@ -26,7 +26,6 @@ Actual implementations are Quicksort.Sequential, Quicksort.Parallel and
 Quicksort.Task. *)
 
 let nat_smaller (n: nat) = i:nat{i < n}
-let nat_fits = n:nat{SZ.fits n}
 
 let seq_swap (#a: Type) (s: Seq.seq a) (i j: nat_smaller (Seq.length s)) =
   Seq.swap s j i
@@ -184,7 +183,7 @@ let op_Array_Assignment
 (** Partitioning **)
 
 ```pulse
-fn swap (a: A.array int) (i j: nat_fits) (#l:(l:nat{l <= i /\ l <= j})) (#r:(r:nat{i < r /\ j < r}))
+fn swap (a: A.array int) (i j: nat) (#l:nat{l <= i /\ l <= j}) (#r:nat{i < r /\ j < r})
   (#s0: Ghost.erased (Seq.seq int))
   requires A.pts_to_range a l r s0
   ensures
@@ -194,6 +193,7 @@ fn swap (a: A.array int) (i j: nat_fits) (#l:(l:nat{l <= i /\ l <= j})) (#r:(r:n
             s == seq_swap s0 (i - l) (j - l) /\
             permutation s0 s)
 {
+  A.pts_to_range_prop a;
   let vi = a.(SZ.uint_to_t i);
   let vj = a.(SZ.uint_to_t j);
   (a.(SZ.uint_to_t i) <- vj);
@@ -210,7 +210,6 @@ fn partition (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi}))
     A.pts_to_range a lo hi s0 **
     pure (
       hi <= A.length a /\
-      SZ.fits (A.length a) /\
       Seq.length s0 = hi - lo /\
       between_bounds s0 lb rb
       )
@@ -348,7 +347,6 @@ fn partition_wrapper (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi}))
     A.pts_to_range a lo hi s0 **
     pure (
       hi <= A.length a /\
-      SZ.fits (A.length a) /\
       Seq.length s0 = hi - lo /\
       between_bounds s0 lb rb
       )
@@ -404,7 +402,6 @@ let pure_pre_quicksort (a: A.array int) (lo: nat) (hi:(hi:nat{lo <= hi})) (lb rb
   = hi <= A.length a /\
     between_bounds s0 lb rb /\
     Seq.length s0 = hi - lo /\
-    SZ.fits (A.length a) /\
     lo <= A.length a /\
     lb <= rb
 
@@ -413,7 +410,6 @@ let pure_post_quicksort (a: A.array int) (lo: nat) (hi:(hi:nat{lo <= hi})) (lb r
   = hi <= A.length a /\
     Seq.length s0 = hi - lo /\
     Seq.length s = hi - lo /\
-    SZ.fits (A.length a) /\
     sorted s /\
     between_bounds s lb rb /\
     permutation s0 s
