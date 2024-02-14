@@ -12,7 +12,7 @@ endif
 
 FSTAR_FILES:=$(wildcard *.fst *.fsti)
 
-FSTAR_OPTIONS=$(OTHERFLAGS) --cache_checked_modules --warn_error @241 --already_cached '*,-Pulse,-PulseSyntaxExtension' --include $(PULSE_HOME)/lib/pulse/core --include $(PULSE_HOME)/lib/pulse --odir $(OUTPUT_DIRECTORY)
+FSTAR_OPTIONS=$(OTHERFLAGS) --cache_checked_modules --warn_error @241 --already_cached '*,-Pulse,-PulseSyntaxExtension' --include $(PULSE_HOME)/lib/pulse --odir $(OUTPUT_DIRECTORY)
 EXTRACT_MODULES=--extract '+Pulse,-Pulse.Steel'
 
 include $(PULSE_HOME)/lib/pulse/runlim.mk
