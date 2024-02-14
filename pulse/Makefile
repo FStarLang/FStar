@@ -19,6 +19,7 @@ include $(PULSE_HOME)/share/pulse/Makefile.locate-fstar
 
 .PHONY: build
 build:
+	+$(MAKE) -C src build-ocaml
 	+$(MAKE) -C lib/pulse
 
 clean:

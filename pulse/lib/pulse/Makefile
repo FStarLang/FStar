@@ -1,67 +1,11 @@
 PULSE_HOME ?= $(realpath ../..)
 
-all: core pulse ocaml lib c
+all: verify
 
-.PHONY: ocaml
-ocaml:
-	cd ../../src/ocaml && dune build && dune install --prefix=$(PULSE_HOME)
+SRC_DIRS := . core lib lib/class lib/pledge c
+FSTAR_OPTIONS += --already_cached '*,-Pulse,-PulseCore' --load_cmxs pulse
 
-.PHONY: core
-core:
-	+$(MAKE) -C $@
-
-.PHONY: lib
-lib: core pulse ocaml
-	+$(MAKE) -C $@
-
-.PHONY: c
-c: lib
-	+$(MAKE) -C $@
-
-ifneq (,$(FSTAR_HOME))
-  FSTAR=$(FSTAR_HOME)/bin/fstar.exe
-else
-  FSTAR=fstar.exe
-endif
-
-FSTAR_FILES:=$(wildcard *.fst *.fsti)
-
-FSTAR_OPTIONS=$(OTHERFLAGS) --cache_checked_modules --warn_error @241 --already_cached '*,-Pulse,-PulseSyntaxExtension'
-
-include runlim.mk
-
-MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(FSTAR_OPTIONS)
-
-%.checked:
-	$(call msg, "CHECK", $(basename $(notdir $@)))
-	@# You can debug with --debug $(basename $(notdir $<))
-	$(Q)$(RUNLIM) $(MY_FSTAR) $(SIL) $(COMPAT_INDEXED_EFFECTS) $<
-	touch -c $@
-
-.depend: $(FSTAR_FILES)
-	$(call msg, "DEPEND")
-	$(Q)true $(shell rm -f .depend.rsp) $(foreach f,$(FSTAR_FILES),$(shell echo $(f) >> $@.rsp))
-	$(Q)$(MY_FSTAR) --dep full @$@.rsp > $@.tmp
-	mv $@.tmp $@
-
-include .depend
-
-pulse: $(ALL_CHECKED_FILES)
-
-clean: clean-ocaml clean-fstar
-
-.PHONY: clean-ocaml
-clean-ocaml:
-	cd ../../src/ocaml && { dune uninstall --prefix=$(PULSE_HOME) ; dune clean ; true ; }
-
-.PHONY: clean-fstar
-clean-fstar:
-	find . -name '*.checked' -or -name '.depend*' | xargs rm -f
-
-.PHONY: all pulse clean %.fst-in %.fsti-in
-
-%.fst-in %.fsti-in:
-	@echo $(FSTAR_OPTIONS)
+include Makefile.include
 
 .PHONY: install-pulse install
 install: install-pulse
@@ -82,3 +26,6 @@ install: $(addsuffix .install,$(wildcard $(addsuffix /*.fst,$(install_subdirs)) 
 .PHONY: install-ocaml
 install-ocaml:
 	cd ../../src/ocaml && dune install --prefix=$(PREFIX)
+
+.PHONY: main
+main: Pulse.Main.fsti.checked

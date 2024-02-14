@@ -1,0 +1,54 @@
+ifeq (,$(PULSE_HOME))
+	$(error PULSE_HOME should be defined in the enclosing Makefile as the prefix directory where Pulse was installed, or the root directory of its source repository)
+endif
+
+include $(PULSE_HOME)/share/pulse/Makefile.locate-fstar
+include $(PULSE_HOME)/lib/pulse/runlim.mk
+
+# List the directories of all root files
+ifeq (,$(SRC_DIRS))
+  SRC_DIRS := .
+endif
+
+# List additional include paths
+INCLUDE_PATHS += $(SRC_DIRS)
+
+# List the roots from where all dependencies are computed
+FSTAR_FILES ?= $(wildcard $(addsuffix /*.fst,$(SRC_DIRS)) $(addsuffix /*.fsti,$(SRC_DIRS)))
+
+FSTAR_OPTIONS += $(OTHERFLAGS) $(addprefix --include ,$(INCLUDE_PATHS)) --cache_checked_modules --warn_error @241
+
+# Passing RESOURCEMONITOR=1 will create .runlim files through the source tree with
+# information about the time and space taken by each F* invocation.
+ifneq ($(RESOURCEMONITOR),)
+	ifeq ($(shell which runlim),)
+		_ := $(error $(NO_RUNLIM_ERR)))
+	endif
+	ifneq ($(MONID),)
+		MONPREFIX=$(MONID).
+	endif
+	RUNLIM=runlim -p -o $@.$(MONPREFIX)runlim
+endif
+
+MY_FSTAR=$(RUNLIM) $(FSTAR_HOME)/bin/fstar.exe $(SIL) $(FSTAR_OPTIONS)
+
+.depend: $(FSTAR_FILES)
+	$(call msg, "DEPEND")
+	$(Q)true $(shell rm -f .depend.rsp) $(foreach f,$(FSTAR_FILES),$(shell echo $(f) >> $@.rsp))
+	$(Q)$(MY_FSTAR) $(FSTAR_DEP_OPTIONS) --dep full @$@.rsp > $@.tmp
+	mv $@.tmp $@
+
+include .depend
+
+$(ALL_CHECKED_FILES): %.checked:
+	$(call msg, "CHECK", $(basename $(notdir $@)))
+	@# You can debug with --debug $(basename $(notdir $<))
+	$(Q)$(RUNLIM) $(MY_FSTAR) $(SIL) $(COMPAT_INDEXED_EFFECTS) $<
+	touch -c $@
+
+verify: $(ALL_CHECKED_FILES)
+
+%.fst-in %.fsti-in:
+	@echo $(FSTAR_OPTIONS)
+
+.PHONY: all verify %.fst-in %.fsti-in
