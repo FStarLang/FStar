@@ -370,7 +370,8 @@ let (lift_ghost_atomic :
                                                               (Prims.of_int (18)))))
                                                      (Obj.magic
                                                         (Pulse_PP.pp
-                                                           Pulse_PP.uu___44 t))
+                                                           Pulse_PP.printable_term
+                                                           t))
                                                      (fun uu___ ->
                                                         FStar_Tactics_Effect.lift_div_tac
                                                           (fun uu___1 ->
