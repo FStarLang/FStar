@@ -23,7 +23,7 @@ module SZ = FStar.SizeT
 
 open Pulse.Lib.InvList
 
-module T = TaskPool
+module T = Pulse.Lib.Task
 open Quicksort.Base
 open Pulse.Lib.Par.Pledge
 
@@ -59,8 +59,8 @@ fn rec t_quicksort
     T.share_alive p f;
     T.share_alive p (half_perm f);
 
-    t_quicksort p (half_perm (half_perm f)) a r._2 hi pivot rb;
     T.spawn_ p #(half_perm f) (fun () -> t_quicksort p (half_perm (half_perm f)) a lo r._1 lb pivot);
+    t_quicksort p (half_perm (half_perm f)) a r._2 hi pivot rb;
     
     return_pledge [] (T.pool_done p) (T.pool_alive #(half_perm f) p ** A.pts_to_range a r._1 r._2 s2);
     squash_pledge _ _ _;
