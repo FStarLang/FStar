@@ -14,10 +14,9 @@
    limitations under the License.
 *)
 
-module TaskPool
+module Pulse.Lib.Task
 
 open Pulse.Lib.Pervasives
-open Pulse.Lib.SpinLock
 open Pulse.Lib.Par.Pledge
 module T = FStar.Tactics
 
@@ -109,6 +108,8 @@ val teardown_pool
   (p:pool)
   : stt unit (pool_alive #full_perm p) (fun _ -> pool_done p)
 
+(* Or, have at least an epsilon of permission over it, and know that
+the rest of it (1-e) is "sunk" into the pool itself. *)
 val teardown_pool'
   (#is : Pulse.Lib.InvList.invlist)
   (p:pool) (f:perm{f `lesser_perm` full_perm})

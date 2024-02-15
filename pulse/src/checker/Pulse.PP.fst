@@ -28,7 +28,6 @@ open Pulse.Syntax.Printer
 open Pulse.Show
 
 (* A helper to create wrapped text *)
-val text : string -> FStar.Stubs.Pprint.document
 let text (s:string) : FStar.Stubs.Pprint.document =
   flow (break_ 1) (words s)
 
@@ -41,25 +40,20 @@ before the doc, so if you want to format something as
 
   you should write  hdr ^^ indent (subdoc) ^/^ tail.  Note the ^^ vs ^/^.
 *)
-val indent : document -> document
 let indent d =
   nest 2 (hardline ^^ align d)
-
-class printable (a:Type) = {
-  pp : a -> Tac document;
-}
 
 (* Repurposing a show instance *)
 let from_show #a {| d : tac_showable a |} : printable a = {
   pp = (fun x -> arbitrary_string (show x));
 }
 
-instance _ : printable string = from_show
-instance _ : printable unit   = from_show
-instance _ : printable bool   = from_show
-instance _ : printable int    = from_show
+instance printable_string : printable string = from_show
+instance printable_unit   : printable unit   = from_show
+instance printable_bool   : printable bool   = from_show
+instance printable_int    : printable int    = from_show
 
-instance _ : printable ctag = from_show
+instance printable_ctag : printable ctag = from_show
 
 instance printable_option (a:Type) (_ : printable a) : printable (option a) = {
   pp = (function None -> doc_of_string "None"
@@ -74,15 +68,15 @@ let rec separate_map (sep: document) (f : 'a -> Tac document) (l : list 'a) : Ta
   | [x] -> f x
   | x::xs -> f x ^^ sep ^/^ separate_map sep f xs
 
-instance showable_list (a:Type) (_ : printable a) : printable (list a) = {
+instance printable_list (a:Type) (_ : printable a) : printable (list a) = {
   pp = (fun l -> brackets (separate_map comma pp l))
 }
 
-instance _ : printable term = from_show
-instance _ : printable universe = from_show
-instance _ : printable comp = from_show
+instance printable_term     : printable term = from_show
+instance printable_universe : printable universe = from_show
+instance printable_comp     : printable comp = from_show
 
-instance _ : printable env = {
+instance printable_env : printable env = {
   pp = Pulse.Typing.Env.env_to_doc;
 }
 
@@ -94,7 +88,7 @@ let pp_record (flds : list (string & document)) : Tac document =
   in
   braces (align flds_doc)
 
-instance _ : printable post_hint_t = {
+instance printable_post_hint_t : printable post_hint_t = {
   pp = (fun (h:post_hint_t) ->
           pp_record [ "g", pp h.g
                     ; "effect_annot", pp h.effect_annot
@@ -107,3 +101,18 @@ instance _ : printable post_hint_t = {
 instance printable_fstar_term : printable Reflection.V2.term = {
   pp = (fun t -> doc_of_string (Tactics.V2.term_to_string t))
 }
+
+instance printable_tuple2 (a b:Type)
+          (_:printable a) (_:printable b) : printable (a * b) = {
+    pp = (fun (x, y) -> parens (separate comma [pp x; pp y]));
+  }
+  
+instance printable_tuple3 (a b c:Type)
+          (_:printable a) (_:printable b) (_:printable c) : printable (a * b * c) = {
+    pp = (fun (x, y, z) -> parens (separate comma [pp x; pp y; pp z]));
+  }
+  
+instance printable_tuple4 (a b c d:Type)
+          (_:printable a) (_:printable b) (_:printable c) (_:printable d) : printable (a * b * c * d) = {
+    pp = (fun (x, y, z, w) -> parens (separate comma [pp x; pp y; pp z; pp w]));
+  }

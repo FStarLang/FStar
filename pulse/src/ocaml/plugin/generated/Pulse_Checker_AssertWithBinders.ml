@@ -3816,7 +3816,7 @@ let (check :
                                                                     (Prims.of_int (27)))))
                                                                    (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.uu___44
+                                                                    Pulse_PP.printable_term
                                                                     pre))
                                                                    (fun
                                                                     uu___1 ->

@@ -4,7 +4,7 @@ module PledgeArith
 
 open Pulse.Lib.Pervasives
 open Pulse.Lib.InvList
-module T = TaskPool
+module T = Pulse.Lib.Task
 open Pulse.Lib.Par.Pledge
 
 ```pulse
