@@ -18,8 +18,6 @@ copy_array
   (#s_tgt : erased (S.seq int))
   requires pts_to_range src (SZ.v s_lo) (SZ.v s_lo + SZ.v len) s_src
         ** pts_to_range tgt (SZ.v t_lo) (SZ.v t_lo + SZ.v len) s_tgt
-        ** pure (SZ.fits (SZ.v s_lo + SZ.v len) /\
-                 SZ.fits (SZ.v t_lo + SZ.v len))
   ensures  pts_to_range src (SZ.v s_lo) (SZ.v s_lo + SZ.v len) s_src
         ** pts_to_range tgt (SZ.v t_lo) (SZ.v t_lo + SZ.v len) s_src
 {

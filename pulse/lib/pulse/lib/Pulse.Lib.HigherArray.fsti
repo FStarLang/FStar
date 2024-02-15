@@ -24,7 +24,7 @@ module Seq = FStar.Seq
 
 val array ([@@@strictly_positive] a:Type u#1) : Type u#0
 
-val length (#a:Type) (x:array a) : GTot nat
+val length (#a:Type) (x:array a) : Ghost nat (requires True) (ensures SZ.fits)
 
 type elseq (a:Type) (l:SZ.t) = s:erased (Seq.seq a) { Seq.length s == SZ.v l }
 
