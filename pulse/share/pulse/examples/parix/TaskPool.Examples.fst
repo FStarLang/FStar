@@ -18,7 +18,7 @@ module TaskPool.Examples
 
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Par.Pledge
-open TaskPool
+open Pulse.Lib.Task
 
 assume
 val qsv : nat -> vprop

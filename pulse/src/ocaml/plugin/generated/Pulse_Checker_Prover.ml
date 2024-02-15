@@ -216,7 +216,8 @@ let rec (prove_pures :
                                                            (Prims.of_int (15)))))
                                                   (Obj.magic
                                                      (Pulse_PP.pp
-                                                        Pulse_PP.uu___44 p))
+                                                        Pulse_PP.printable_term
+                                                        p))
                                                   (fun uu___1 ->
                                                      FStar_Tactics_Effect.lift_div_tac
                                                        (fun uu___2 ->
@@ -1031,7 +1032,7 @@ let rec (prover :
                                                                     (Prims.of_int (29)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.uu___44
+                                                                    Pulse_PP.printable_term
                                                                     q))
                                                                     (fun
                                                                     uu___9 ->
@@ -1129,7 +1130,7 @@ let rec (prover :
                                                                     (Prims.of_int (62)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.uu___44
+                                                                    Pulse_PP.printable_term
                                                                     (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst3.Pulse_Checker_Prover_Base.remaining_ctxt)))
                                                                     (fun
@@ -1279,7 +1280,7 @@ let rec (prover :
                                                                     (Prims.of_int (46)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.uu___44
+                                                                    Pulse_PP.printable_term
                                                                     preamble.Pulse_Checker_Prover_Base.goals))
                                                                     (fun
                                                                     uu___11
@@ -1381,7 +1382,7 @@ let rec (prover :
                                                                     (Prims.of_int (45)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.uu___44
+                                                                    Pulse_PP.printable_term
                                                                     preamble.Pulse_Checker_Prover_Base.ctxt))
                                                                     (fun
                                                                     uu___12
@@ -2855,7 +2856,7 @@ let (prove_post_hint :
                                                                     (Prims.of_int (24)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.uu___44
+                                                                    Pulse_PP.printable_term
                                                                     ty))
                                                                     (fun
                                                                     uu___1 ->
@@ -2924,7 +2925,7 @@ let (prove_post_hint :
                                                                     (Prims.of_int (38)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.uu___44
+                                                                    Pulse_PP.printable_term
                                                                     post_hint1.Pulse_Typing.ret_ty))
                                                                     (fun
                                                                     uu___2 ->
@@ -3175,7 +3176,7 @@ let (prove_post_hint :
                                                                     (Prims.of_int (38)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.uu___44
+                                                                    Pulse_PP.printable_term
                                                                     remaining_ctxt))
                                                                     (fun
                                                                     uu___5 ->
