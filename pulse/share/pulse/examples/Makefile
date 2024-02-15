@@ -14,11 +14,17 @@ include $(PULSE_SHARE)/Makefile.include
 dice:
 	+$(MAKE) -C dice
 
-extract:
+ifeq (,$(CACHE_DIRECTORY))
+	extractiontest_fst_checked=ExtractionTest.fst.checked
+else
+	extractiontest_fst_checked=$(CACHE_DIRECTORY)/ExtractionTest.fst.checked
+endif
+
+extract: $(extractiontest_fst_checked)
 #	$(FSTAR) --odir $(OUTPUT_DIRECTORY) --codegen OCaml CustomSyntax.fst --extract CustomSyntax
 	$(FSTAR) --codegen OCaml ExtractionTest.fst --extract ExtractionTest
 
-extract_c: $(CACHE_DIRECTORY)/ExtractionTest.fst.checked
+extract_c: $(extractiontest_fst_checked)
 	$(FSTAR) --codegen krml ExtractionTest.fst --extract ExtractionTest
 	$(KRML_HOME)/krml -bundle ExtractionTest=* -skip-compilation $(OUTPUT_DIRECTORY)/ExtractionTest.krml -tmpdir $(OUTPUT_DIRECTORY)
 
@@ -29,7 +35,13 @@ ifneq (,$(KRML_HOME))
 test-cbor: dice
 	+$(MAKE) -C dice/cbor
 
-extract_pulse_c: $(CACHE_DIRECTORY)/PulsePointStruct.fst.checked
+ifeq (,$(CACHE_DIRECTORY))
+	pulsepointstruct_fst_checked=c/PulsePointStruct.fst.checked
+else
+	pulsepointstruct_fst_checked=$(CACHE_DIRECTORY)/PulsePointStruct.fst.checked
+endif
+
+extract_pulse_c: $(pulsepointstruct_fst_checked)
 	$(FSTAR) --odir $(OUTPUT_DIRECTORY) --codegen krml PulsePointStruct.fst --extract PulsePointStruct
 	$(KRML_HOME)/krml -bundle PulsePointStruct=* -skip-linking $(OUTPUT_DIRECTORY)/PulsePointStruct.krml -tmpdir $(OUTPUT_DIRECTORY)
 

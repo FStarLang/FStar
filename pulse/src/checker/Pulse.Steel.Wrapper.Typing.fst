@@ -20,8 +20,6 @@ open FStar.Reflection.V2
 open Pulse.Reflection.Util
 
 module RT = FStar.Reflection.Typing
-module PC = PulseCore.InstantiatedSemantics
-module PCA = PulseCore.Atomic
 
 let return_stt_typing _ _ _ = admit ()
 let return_stt_noeq_typing _ _ _ = admit ()
