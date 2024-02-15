@@ -18,7 +18,7 @@ module ParallelFor
 
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Fixpoints
-open TaskPool
+open Pulse.Lib.Task
 open FStar.Real
 open Pulse.Lib.Par.Pledge
 open Pulse.Lib.InvList
@@ -238,18 +238,6 @@ assume val unfrac_n (n:pos) (p:pool) (e:perm)
   : stt unit (range (fun i -> pool_alive #(div_perm e n) p) 0 n)
              (fun () -> pool_alive #e p)
 
-#set-options "--print_implicits --print_universes"
-
-// FIXME: arguments with defaults (i.e. metaargs with tactics)
-// make functions not be recognized by Pulse
-val gspawn_
-  (#pre #post : _)
-  (#e : perm)
-  (p:pool) (f : unit -> stt unit pre (fun _ -> post))
-  : stt unit (pool_alive #e p ** pre)
-             (fun prom -> pool_alive #e p ** pledge [] (pool_done p) post)
-let gspawn_ p f = TaskPool.spawn_ p f
-
 ```pulse
 fn spawned_f_i 
   (p:pool)
@@ -261,7 +249,7 @@ fn spawned_f_i
   requires emp ** (pre i ** pool_alive #e p)
   ensures emp ** (pledge [] (pool_done p) (post i) ** pool_alive #e p)
 {
-  gspawn_ #(pre i) #(post i) #e p (fun () -> f i)
+  spawn_ #(pre i) #(post i) p #e (fun () -> f i)
 }
 ```
 
@@ -351,7 +339,7 @@ fn spawned_f_i_alt
   requires pool_alive p ** pre i
   ensures pool_alive p ** pledge [] (pool_done p) (post i)
 {
-  gspawn_ #(pre i) #(post i) #full_perm p (fun () -> f i)
+  spawn_ #(pre i) #(post i) p #full_perm (fun () -> f i)
 }
 ```
 
@@ -555,16 +543,16 @@ fn h_for_task
 
     p_split pre lo mid hi ();
 
-    gspawn_ #(pool_alive #(half_perm (half_perm e)) p ** range pre lo mid)
+    spawn_ #(pool_alive #(half_perm (half_perm e)) p ** range pre lo mid)
             #(pledge [] (pool_done p) (range post lo mid))
-            #(half_perm e)
             p
+            #(half_perm e)
             (h_for_task__ p (half_perm (half_perm e)) pre post f lo mid);
 
-    gspawn_ #(pool_alive #(half_perm (half_perm e)) p ** range pre mid hi)
+    spawn_ #(pool_alive #(half_perm (half_perm e)) p ** range pre mid hi)
             #(pledge [] (pool_done p) (range post mid hi))
-            #(half_perm e)
             p
+            #(half_perm e)
             (h_for_task__ p (half_perm (half_perm e)) pre post f mid hi);
 
     (* We get this complicated pledge [] from the spawns above. We can
@@ -625,10 +613,10 @@ parallel_for_hier
     assert (pool_alive #one_half p ** pool_alive #one_half p);
 
 
-    gspawn_ #(pool_alive #one_half p ** range pre 0 n)
+    spawn_ #(pool_alive #one_half p ** range pre 0 n)
             #(pledge [] (pool_done p) (range post 0 n))
-            #one_half
             p
+            #one_half
             (h_for_task p one_half pre post f 0 n);
 
     (* We get this complicated pledge [] from the spawn above. We can

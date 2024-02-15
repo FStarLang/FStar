@@ -1904,7 +1904,7 @@ let (check_effect_annotation :
                                                                     (Prims.of_int (80)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.uu___44
+                                                                    Pulse_PP.printable_term
                                                                     i))
                                                                     (fun
                                                                     uu___1 ->
@@ -1977,7 +1977,7 @@ let (check_effect_annotation :
                                                                     (Prims.of_int (93)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.uu___44
+                                                                    Pulse_PP.printable_term
                                                                     j))
                                                                     (fun
                                                                     uu___2 ->
@@ -2271,7 +2271,7 @@ let (check_effect_annotation :
                                                                     (Prims.of_int (80)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.uu___44
+                                                                    Pulse_PP.printable_term
                                                                     i))
                                                                     (fun
                                                                     uu___1 ->
@@ -2344,7 +2344,7 @@ let (check_effect_annotation :
                                                                     (Prims.of_int (93)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.uu___44
+                                                                    Pulse_PP.printable_term
                                                                     j))
                                                                     (fun
                                                                     uu___2 ->

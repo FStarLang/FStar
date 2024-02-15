@@ -269,7 +269,7 @@ let (check_iname_disjoint :
                                                                     (Prims.of_int (95)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.uu___44
+                                                                    Pulse_PP.printable_term
                                                                     inames))
                                                                     (fun
                                                                     uu___2 ->
@@ -342,7 +342,7 @@ let (check_iname_disjoint :
                                                                     (Prims.of_int (91)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.uu___44
+                                                                    Pulse_PP.printable_term
                                                                     inv))
                                                                     (fun
                                                                     uu___3 ->
@@ -596,7 +596,7 @@ let (add_remove_inverse :
                                                                     (Prims.of_int (17)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.uu___44
+                                                                    Pulse_PP.printable_term
                                                                     (add_iname
                                                                     inv_p
                                                                     (remove_iname
@@ -656,7 +656,7 @@ let (add_remove_inverse :
                                                                     (Prims.of_int (65)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.uu___44
+                                                                    Pulse_PP.printable_term
                                                                     inames))
                                                                     (fun
                                                                     uu___2 ->
@@ -854,7 +854,7 @@ let (check :
                                                                     (Prims.of_int (57)))))
                                                                 (Obj.magic
                                                                    (Pulse_PP.pp
-                                                                    Pulse_PP.uu___44
+                                                                    Pulse_PP.printable_term
                                                                     p))
                                                                 (fun uu___2
                                                                    ->
@@ -925,7 +925,7 @@ let (check :
                                                                     (Prims.of_int (58)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.uu___53
+                                                                    Pulse_PP.printable_post_hint_t
                                                                     q))
                                                                     (fun
                                                                     uu___3 ->
