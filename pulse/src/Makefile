@@ -12,7 +12,7 @@ endif
 # dune install --prefix needs the Windows absolute path
 PULSE_HOME := $(realpath $(PULSE_HOME))
 ifeq ($(OS),Windows_NT)
-  PULSE_HOME := $(shell cygpath -m $(FSTAR_HOME))
+  PULSE_HOME := $(shell cygpath -m $(PULSE_HOME))
 endif
 
 include $(PULSE_HOME)/share/pulse/Makefile.locate-fstar
