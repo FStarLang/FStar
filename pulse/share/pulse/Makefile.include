@@ -2,34 +2,11 @@ ifeq (,$(PULSE_HOME))
 	$(error PULSE_HOME should be defined in the enclosing Makefile as the prefix directory where Pulse was installed, or the root directory of its source repository)
 endif
 
-# Uncomment the definition of PROFILE below, if you want some basic
-# profiling of F* runs It will report the time spent
-# on typechecking your file And the time spent in SMT, which is
-# included in the total typechecking time
-
-# PROFILE=--profile YOUR_FILE --profile_component 'FStar.Universal.tc_source_file FStar.SMTEncoding'
-FSTAR_OPTIONS += $(PROFILE)
-
-# Used only for OCaml extraction, not krml extraction
-# OCaml or Plugin
-FSTAR_ML_CODEGEN ?= OCaml
-
 # Which modules or namespaces are already cached? If all of your
 # source files in your project are under the same namespace, say
 # MyNamespace, then you can set this variable to *,-MyNamespace
 ALREADY_CACHED_LIST ?= Prims,FStar,PulseCore,Pulse
 FSTAR_OPTIONS += --already_cached $(ALREADY_CACHED_LIST)
-
-# A place to put all build artifacts
-ifneq (,$(OUTPUT_DIRECTORY))
-  FSTAR_OPTIONS += --odir $(OUTPUT_DIRECTORY)
-endif
-
-# A place to put .checked files
-ifneq (,$(CACHE_DIRECTORY))
-  FSTAR_OPTIONS += --cache_dir $(CACHE_DIRECTORY)
-  INCLUDE_PATHS+=$(CACHE_DIRECTORY)
-endif
 
 # FIXME: do we still need separate subdirectories for pledges, classes?
 INCLUDE_PATHS += $(PULSE_HOME)/lib/pulse $(PULSE_HOME)/lib/pulse/lib $(PULSE_HOME)/lib/pulse/lib/class $(PULSE_HOME)/lib/pulse/lib/pledge $(PULSE_HOME)/lib/pulse/core
@@ -40,19 +17,9 @@ FSTAR_OPTIONS += --load_cmxs pulse
 # included
 include $(PULSE_HOME)/share/pulse/Makefile.include-base
 
-# Extraction
-
-$(ALL_ML_FILES): %.ml:
-	$(FSTAR) $(subst .checked,,$(notdir $<)) --codegen $(FSTAR_ML_CODEGEN) --extract_module $(basename $(notdir $(subst .checked,,$<)))
-
-$(ALL_KRML_FILES): %.krml:
-	$(FSTAR) $(notdir $(subst .checked,,$<)) --codegen krml \
-	  --extract_module $(basename $(notdir $(subst .checked,,$<)))
-	touch -c $@
-
-.PHONY: verify clean depend all %.fst-in $.fsti-in
-
 # Cleanup
+
+.PHONY: clean
 
 clean:
 	rm -f .depend*

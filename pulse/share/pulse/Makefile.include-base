@@ -10,6 +10,31 @@ SRC_DIRS += .
 # List additional include paths
 INCLUDE_PATHS += $(SRC_DIRS)
 
+# A place to put all build artifacts
+ifneq (,$(OUTPUT_DIRECTORY))
+  FSTAR_OPTIONS += --odir $(OUTPUT_DIRECTORY)
+endif
+
+# A place to put .checked files. If this variable is left empty, then
+# each .checked file will be generated right next to its corresponding
+# source file.
+ifneq (,$(CACHE_DIRECTORY))
+  FSTAR_OPTIONS += --cache_dir $(CACHE_DIRECTORY)
+  INCLUDE_PATHS+=$(CACHE_DIRECTORY)
+endif
+
+# Used only for OCaml extraction, not krml extraction
+# OCaml or Plugin
+FSTAR_ML_CODEGEN ?= OCaml
+
+# Uncomment the definition of PROFILE below, if you want some basic
+# profiling of F* runs It will report the time spent
+# on typechecking your file And the time spent in SMT, which is
+# included in the total typechecking time
+
+# PROFILE=--profile YOUR_FILE --profile_component 'FStar.Universal.tc_source_file FStar.SMTEncoding'
+FSTAR_OPTIONS += $(PROFILE)
+
 # List the roots from where all dependencies are computed
 FSTAR_FILES ?= $(wildcard $(addsuffix /*.fst,$(SRC_DIRS)) $(addsuffix /*.fsti,$(SRC_DIRS)))
 
@@ -53,5 +78,15 @@ verify: $(ALL_CHECKED_FILES)
 
 %.fst-in %.fsti-in:
 	@echo $(FSTAR_OPTIONS)
+
+# Extraction
+
+$(ALL_ML_FILES): %.ml:
+	$(FSTAR) $(subst .checked,,$(notdir $<)) --codegen $(FSTAR_ML_CODEGEN) --extract_module $(basename $(notdir $(subst .checked,,$<)))
+
+$(ALL_KRML_FILES): %.krml:
+	$(FSTAR) $(notdir $(subst .checked,,$<)) --codegen krml \
+	  --extract_module $(basename $(notdir $(subst .checked,,$<)))
+	touch -c $@
 
 .PHONY: all verify %.fst-in %.fsti-in

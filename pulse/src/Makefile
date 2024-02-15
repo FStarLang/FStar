@@ -110,6 +110,6 @@ ci:
 	+$(MAKE) verify
 	+$(MAKE) extract
 	+$(MAKE) check-for-changes
-	+$(MAKE) build
+	+$(MAKE) build-ocaml
 	+$(MAKE) test
 	+$(MAKE) pulse2rust
