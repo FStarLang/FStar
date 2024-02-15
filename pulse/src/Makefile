@@ -88,6 +88,7 @@ full-boot:
 .PHONY: test
 test:
 	+$(MAKE) -C $(PULSE_HOME)/share/pulse CACHE_DIRECTORY=
+	+$(MAKE) pulse2rust
 
 .PHONY: check-for-changes
 check-for-changes:
@@ -103,13 +104,15 @@ pulse2rust:
 verify:
 	+$(MAKE) -f verify.Makefile
 
+# since CI is supposed to fail if there are any changes in the
+# snapshot, there is no need to rebuild it
+.PHONY: ci-post-verify
+ci-post-verify: extract test
+
 .PHONY: ci
 ci:
 	+$(MAKE) build-ocaml
 	+$(MAKE) clean-snapshot
 	+$(MAKE) verify
-	+$(MAKE) extract
+	+$(MAKE) ci-post-verify
 	+$(MAKE) check-for-changes
-	+$(MAKE) build-ocaml
-	+$(MAKE) test
-	+$(MAKE) pulse2rust
