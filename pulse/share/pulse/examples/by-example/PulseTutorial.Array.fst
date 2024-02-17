@@ -21,9 +21,13 @@ open Pulse.Lib.Array
 
 module SZ = FStar.SizeT
 
-[@@ Rust_generics_bounds [["Copy"]]]
 ```pulse //readi$
-fn read_i (#t:Type) (arr:array t) (#p:perm) (#s:erased (Seq.seq t)) (i:SZ.t { SZ.v i < Seq.length s })
+fn read_i
+  (#[@@@ Rust_generics_bounds ["Copy"]] t:Type)
+  (arr:array t)
+  (#p:perm)
+  (#s:erased (Seq.seq t))
+  (i:SZ.t { SZ.v i < Seq.length s })
   requires pts_to arr #p s
   returns x:t
   ensures pts_to arr #p s ** pure (x == Seq.index s (SZ.v i))
@@ -57,10 +61,13 @@ module A = Pulse.Lib.Array
 module R = Pulse.Lib.Reference
 open FStar.SizeT
 
-[@@ Rust_generics_bounds [["PartialEq"; "Copy"]]]
 ```pulse
 //comparesigbegin$
-fn compare (#t:eqtype) #p1 #p2 (a1 a2:A.array t) (l:SZ.t) 
+fn compare
+  (#[@@@ Rust_generics_bounds ["PartialEq"; "Copy"]] t:eqtype)
+  #p1 #p2
+  (a1 a2:A.array t)
+  (l:SZ.t) 
   requires (
     A.pts_to a1 #p1 's1 **
     A.pts_to a2 #p2 's2 **
@@ -108,9 +115,11 @@ fn compare (#t:eqtype) #p1 #p2 (a1 a2:A.array t) (l:SZ.t)
 //compareimplend$
 ```
 
-[@@ Rust_generics_bounds [["Copy"]]]
 ```pulse //copy$
-fn copy #t (a1 a2:A.array t) (l:SZ.t)
+fn copy
+  (#[@@@ Rust_generics_bounds ["Copy"]] t:Type0)
+  (a1 a2:A.array t)
+  (l:SZ.t)
   requires (
     A.pts_to a1 's1 **
     A.pts_to a2 #p2 's2 **
@@ -147,10 +156,12 @@ fn copy #t (a1 a2:A.array t) (l:SZ.t)
 }
 ```
 
-[@@ Rust_generics_bounds [["Copy"]]]
 ```pulse
 //copy2sigbegin$
-fn copy2 #t (a1 a2:A.array t) (l:SZ.t)
+fn copy2
+  (#[@@@ Rust_generics_bounds ["Copy"]] t:Type0)
+  (a1 a2:A.array t)
+  (l:SZ.t)
   requires (
     A.pts_to a1 's1 **
     A.pts_to a2 #p2 's2 **

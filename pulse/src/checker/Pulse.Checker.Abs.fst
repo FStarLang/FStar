@@ -314,6 +314,7 @@ let open_ascription (c:comp_ascription) (nv:nvar) : comp_ascription =
 let close_ascription (c:comp_ascription) (nv:nvar) : comp_ascription =
   subst_ascription c [ND (snd nv) 0]
 
+#push-options "--z3rlimit_factor 4"
 let rec check_abs_core
   (g:env)
   (t:st_term{Tm_Abs? t.term})
