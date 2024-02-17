@@ -6,7 +6,9 @@ PULSE_HOME ?= ../../../../../
 OUTPUT_DIRECTORY=_output
 CACHE_DIRECTORY=$(OUTPUT_DIRECTORY)/cache
 SRC_DIRS := extern
-INCLUDE_PATHS := ../_output/cache
+ifneq (,$(wildcard ../_output/cache))
+  INCLUDE_PATHS += ../_output/cache
+endif
 OTHERFLAGS += --cmi --already_cached '*,-CBOR.Pulse.Type,-CDDLExtractionTest'
 
 FSTAR_DEP_OPTIONS=--extract '* -FStar.Tactics -FStar.Reflection -Steel -Pulse +Pulse.Class +Pulse.Lib -Pulse.Lib.Core'
@@ -27,12 +29,6 @@ extract_c: $(OUTPUT_DIRECTORY)/CBOR.h
 
 $(OUTPUT_DIRECTORY)/CBOR.h: $(FILTERED_KRML_FILES)
 	$(KRML) -bundle C -bundle CBOR.Spec.Constants+CBOR.Pulse.Type+CBOR.Pulse.Extern=[rename=CBOR] -no-prefix CBOR.Spec.Constants,CBOR.Pulse.Type,CBOR.Pulse.Extern -bundle CBOR.Pulse= -bundle CDDLExtractionTest.Assume+CDDLExtractionTest.Bytes+CDDLExtractionTest.BytesUnwrapped+CDDLExtractionTest.Choice=*[rename=CDDLExtractionTest] -skip-linking $^ -tmpdir $(OUTPUT_DIRECTORY)
-
-$(OUTPUT_DIRECTORY)/%.krml:
-	$(FSTAR) --codegen krml $(subst .checked,, $(notdir $<)) --extract_module $(basename $(subst .checked,, $(notdir $<)))
-
-$(OUTPUT_DIRECTORY)/%.ml:
-	$(FSTAR) --codegen OCaml $(subst .checked,, $(notdir $<)) --extract_module $(basename $(subst .checked,, $(notdir $<)))
 
 .PHONY: extern
 

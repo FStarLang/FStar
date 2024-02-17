@@ -4,19 +4,34 @@
 # main ../Makefile should be enough for them.
 
 all: boot
-.PHONY: all
 
-.PHONY: build-lib-core build-lib-main
+ifeq (,$(PULSE_HOME))
+  PULSE_HOME := ..
+endif
+
+# dune install --prefix needs the Windows absolute path
+PULSE_HOME := $(realpath $(PULSE_HOME))
+ifeq ($(OS),Windows_NT)
+  PULSE_HOME := $(shell cygpath -m $(PULSE_HOME))
+endif
+
+include $(PULSE_HOME)/share/pulse/Makefile.locate-fstar
+
+.PHONY: all build-lib-core build-lib-main
 
 build-lib-core:
-	+$(MAKE) -C ../lib/pulse/core
+	+$(MAKE) -C $(PULSE_HOME)/lib/pulse/core
 
 build-lib-main:
-	+$(MAKE) -C ../lib/pulse pulse
+	+$(MAKE) -C $(PULSE_HOME)/lib/pulse main
 
 .PHONY: build
 build:
 	+$(MAKE) -C .. all
+
+.PHONY: build-ocaml
+build-ocaml:
+	cd ocaml && dune build && dune install --prefix=$(PULSE_HOME)
 
 # this file cannot be copied to `generated` because of a bug with
 # Dune's `menhir` stanza
@@ -72,7 +87,8 @@ full-boot:
 
 .PHONY: test
 test:
-	+$(MAKE) -C .. test
+	+$(MAKE) -C $(PULSE_HOME)/share/pulse CACHE_DIRECTORY=
+	+$(MAKE) pulse2rust
 
 .PHONY: check-for-changes
 check-for-changes:
@@ -83,11 +99,20 @@ check-for-changes:
 	if ! git diff-index --exit-code HEAD .. ; then git diff .. ; false ; fi
 
 pulse2rust:
-	+$(MAKE) -C .. pulse2rust
+	+$(MAKE) -C $(PULSE_HOME) pulse2rust
+
+verify:
+	+$(MAKE) -f verify.Makefile
+
+# since CI is supposed to fail if there are any changes in the
+# snapshot, there is no need to rebuild it
+.PHONY: ci-post-verify
+ci-post-verify: extract test
 
 .PHONY: ci
 ci:
-	+$(MAKE) full-boot
+	+$(MAKE) build-ocaml
+	+$(MAKE) clean-snapshot
+	+$(MAKE) verify
+	+$(MAKE) ci-post-verify
 	+$(MAKE) check-for-changes
-	+$(MAKE) test
-	+$(MAKE) pulse2rust
