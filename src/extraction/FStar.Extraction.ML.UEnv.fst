@@ -484,7 +484,7 @@ let extend_fv (g:uenv) (x:fv) (t_x:mltyscheme) (add_unit:bool)
       | [] -> true
     in
     let tySchemeIsClosed (tys : mltyscheme) : bool =
-      subsetMlidents  (mltyFvars (snd tys)) (fst tys)
+      subsetMlidents  (mltyFvars (snd tys)) (tys |> fst |> ty_param_names)
     in
     if tySchemeIsClosed t_x
     then
@@ -631,7 +631,8 @@ let new_uenv (e:TypeChecker.Env.env)
     (* We handle [failwith] specially, extracting it to OCaml's 'failwith'
        rather than FStar.Compiler.Effect.failwith. Not sure this is necessary *)
     let a = "'a" in
-    let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in
+    let failwith_ty = ([{ty_param_name=a; ty_param_attrs=[]}],
+                        MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in
     let g, _, _ =
         extend_lb env (Inr (lid_as_fv (Const.failwith_lid()) None)) tun failwith_ty false
     in

@@ -204,7 +204,8 @@ let elim_tydef (env:env_t) name metadata parameters mlty
     let freevars = freevars_of_mlty mlty in
     let _, parameters, entry =
         List.fold_left
-          (fun (i, params, entry) p ->
+          (fun (i, params, entry) param ->
+             let p = param.ty_param_name in
              if Set.mem p freevars
              then begin
                if must_eliminate i
@@ -215,7 +216,7 @@ let elim_tydef (env:env_t) name metadata parameters mlty
                     "Expected parameter %s of %s to be unused in its definition and eliminated"
                       p name)
                end;
-               i+1, p::params, Retain::entry
+               i+1, param::params, Retain::entry
              end
              else begin
                if can_eliminate i //there's no val
@@ -240,7 +241,7 @@ let elim_tydef (env:env_t) name metadata parameters mlty
                         name
                         (string_of_int i));
                     raise Drop_tydef
-               else i+1, p::params, Retain::entry
+               else i+1, param::params, Retain::entry
              end)
           (0, [], [])
           parameters
