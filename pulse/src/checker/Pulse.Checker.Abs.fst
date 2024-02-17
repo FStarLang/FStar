@@ -358,6 +358,14 @@ let rec check_abs_core
       FV.st_typing_freevars body_typing;
       let body_closed = close_st_term body x in
       assume (open_st_term body_closed x == body);
+
+      // instantiate implicits in the attributes
+      let binder_attrs =
+        binder_attrs
+        |> T.unseal
+        |> T.map (fun attr -> attr |> instantiate_term_implicits g |> fst)
+        |> FStar.Sealed.seal in
+
       let b = {binder_ty=t;binder_ppname=ppname;binder_attrs} in
       let tt = T_Abs g x qual b u body_closed c_body t_typing body_typing in
       let tres = tm_arrow {binder_ty=t;binder_ppname=ppname;binder_attrs} qual (close_comp c_body x) in
