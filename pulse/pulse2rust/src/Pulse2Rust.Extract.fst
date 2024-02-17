@@ -104,7 +104,7 @@ let rec uncurry_arrow (t:S.mlty) : (list S.mlty & S.mlty) =
   | _ -> ([], t)
 
 let arg_ts_and_ret_t (t:S.mltyscheme)
-  : S.mlidents &   // type parameters
+  : list S.ty_param &   // type parameters
     list S.mlty &  // function argument types (after uncurrying the input type)
     S.mlty =       // function return type
   let tvars, t = t in
@@ -725,7 +725,7 @@ let has_rust_const_fn_attribute (lb:S.mllb) : bool =
     | _ -> false
   ) lb.mllb_attrs
 
-let extract_generic_type_param_trait_bounds_aux (attrs:list S.mlexpr) : list (list (list string)) =
+let extract_generic_type_param_trait_bounds (attrs:list S.mlexpr) : list (list string) =
   let open S in
   attrs
   |> List.tryFind (fun attr ->
@@ -736,34 +736,20 @@ let extract_generic_type_param_trait_bounds_aux (attrs:list S.mlexpr) : list (li
   |> map_option (fun attr ->
        let MLE_CTor (p, args) = attr.expr in
        let Some l = EUtil.list_elements (List.hd args) in
-       l |> List.map (fun tyvar_bounds ->
-              let Some l = EUtil.list_elements tyvar_bounds in
-              l |> List.map (fun e ->
-                     match e.expr with
-                     | MLE_Const (MLC_String s) -> s
-                     | _ -> failwith "unexpected generic type param bounds")
-                |> List.map (fun bound -> FStar.Compiler.Util.split bound "::")))
+       l |> List.map (fun e ->
+                      match e.expr with
+                      | MLE_Const (MLC_String s) -> s
+                      | _ -> failwith "unexpected generic type param bounds")
+         |> List.map (fun bound -> FStar.Compiler.Util.split bound "::"))
   |> dflt []
 
-let expand_list_with (#a:Type) (l:list a) (n:nat) (x:a) : list a =
-  let rec nlist (n:nat) (x:a) : list a =
-    if n = 0 then [] else x::(nlist (n - 1) x) in
-  if n <= List.length l
-  then l
-  else l @ (nlist (n - List.length l) x)
-
-let extract_generic_type_param_trait_bounds (n:nat) (attrs:list S.mlattribute)
-  : list (list (list string)) =
-
-  let l = extract_generic_type_param_trait_bounds_aux attrs in
-  expand_list_with l n []
-
-let extract_generic_type_params (tyvars:list S.mlident) (attrs:list S.mlattribute)
+let extract_generic_type_params (tyvars:list S.ty_param)
   : list generic_type_param =
-
-  attrs
-  |> extract_generic_type_param_trait_bounds (List.length tyvars)
-  |> List.map2 (fun tvar bounds -> mk_generic_type_param (tyvar_of tvar) bounds) tyvars  
+  
+  tyvars
+  |> List.map (fun {S.ty_param_name; S.ty_param_attrs} ->
+               mk_generic_type_param (tyvar_of ty_param_name)
+                                     (extract_generic_type_param_trait_bounds ty_param_attrs))
 
 let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : item & env =
   let is_rec, lbs = lbs in
@@ -790,7 +776,7 @@ let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : item & env =
           g
           fn_const
           lb.mllb_name
-          (extract_generic_type_params tvars lb.mllb_attrs)
+          (extract_generic_type_params tvars)
           arg_names
           arg_attrs
           arg_ts
@@ -829,7 +815,7 @@ let extract_struct_defn (g:env) (attrs:list S.mlattribute) (d:S.one_mltydecl) : 
   mk_item_struct
     (attrs |> has_rust_derive_attr |> map_option (fun a -> [a]) |> dflt [])
     (d.tydecl_name |> enum_or_struct_name)
-    (extract_generic_type_params d.tydecl_parameters attrs)
+    (extract_generic_type_params d.tydecl_parameters)
     (List.map (fun (f, t) -> f, extract_mlty g t) fts),
   g
 
@@ -837,7 +823,7 @@ let extract_type_abbrev (g:env) (attrs:list S.mlattribute) (d:S.one_mltydecl) : 
   let Some (S.MLTD_Abbrev t) = d.tydecl_defn in
   mk_item_type
     d.tydecl_name
-    (extract_generic_type_params d.tydecl_parameters attrs)
+    (extract_generic_type_params d.tydecl_parameters)
     (extract_mlty g t),
   g
 
@@ -847,7 +833,7 @@ let extract_enum (g:env) (attrs:list S.mlattribute) (d:S.one_mltydecl) : item & 
   mk_item_enum
     (attrs |> has_rust_derive_attr |> map_option (fun a -> [a]) |> dflt [])
     (d.tydecl_name |> enum_or_struct_name)
-    (extract_generic_type_params d.tydecl_parameters attrs)
+    (extract_generic_type_params d.tydecl_parameters)
     (List.map (fun (cname, dts) -> cname, List.map (fun (_, t) -> extract_mlty g t) dts) cts),
   g  // TODO: add it to env if needed later
 

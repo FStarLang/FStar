@@ -176,10 +176,12 @@ let extract (files:list string) (odir:string) : unit =
   //   i.e., main function first
   //
   let all_modules = topsort_all d [] in
+  // print1 "all_modules: %s\n" (String.concat " " all_modules);
   let root_module::_ = all_modules in
   let reachable_defs = collect_reachable_defs d root_module in
   let g = empty_env d all_modules reachable_defs in
   let _, all_rust_files = List.fold_left (fun (g, all_rust_files) f ->
+    // print1 "Extracting file: %s\n" f;
     let (_, bs, ds) = smap_try_find d f |> must in
     let s, g = extract_one g f bs ds in
     let rust_fname = concat_dir_filename odir (rust_file_name f) in
