@@ -26,16 +26,19 @@ open Pulse.Lib.HashTable.Type
 
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 
-[@@ Rust_generics_bounds [["Copy"; "PartialEq"; "Clone"];
-                          ["Clone"]]]
-let mk_used_cell (#a:eqtype) #b (k:a) (v:b) : cell a b = Used k v
+let mk_used_cell
+  (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] a:eqtype)
+  (#[@@@ Rust_generics_bounds ["Clone"]] b:Type)
+  (k:a) (v:b) : cell a b =
 
-[@@ Rust_generics_bounds [["Copy"; "PartialEq"; "Clone"];
-                          ["Clone"]]]
-let mk_ht (#k:eqtype) #v 
-          (sz:pos_us) 
-          (hashf:k -> SZ.t)
-          (contents:V.vec (cell k v))
+  Used k v
+
+let mk_ht
+  (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] k:eqtype)
+  (#[@@@ Rust_generics_bounds ["Clone"]] v:Type)
+  (sz:pos_us) 
+  (hashf:k -> SZ.t)
+  (contents:V.vec (cell k v))
   : ht_t k v
   = { sz; hashf; contents; }
 
@@ -64,10 +67,11 @@ let models #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt) : vprop =
 
 let pht_sz #k #v (pht:pht_t k v) : GTot pos = pht.repr.sz
 
-[@@ Rust_generics_bounds [["Copy"; "PartialEq"; "Clone"];
-                          ["Clone"]]]
 ```pulse
-fn alloc (#k:eqtype) (#v:Type0) (hashf:(k -> SZ.t)) (l:pos_us)
+fn alloc
+  (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] k:eqtype)
+  (#[@@@ Rust_generics_bounds ["Clone"]] v:Type0)
+  (hashf:(k -> SZ.t)) (l:pos_us)
   requires emp
   returns ht:ht_t k v
   ensures exists* pht. models ht pht ** pure (pht == mk_init_pht hashf l)
@@ -83,7 +87,10 @@ fn alloc (#k:eqtype) (#v:Type0) (hashf:(k -> SZ.t)) (l:pos_us)
 ```
 
 ```pulse
-fn dealloc (#k:eqtype) (#v:Type0) (ht:ht_t k v)
+fn dealloc
+  (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] k:eqtype)
+  (#[@@@ Rust_generics_bounds ["Clone"]] v:Type0)
+  (ht:ht_t k v)
   requires exists* pht. models ht pht
   ensures emp
 {
@@ -114,10 +121,10 @@ let same_sz_and_hashf (#kt:eqtype) (#vt:Type) (ht1 ht2:ht_t kt vt) : GTot prop =
   ht1.sz == ht2.sz /\
   ht1.hashf == ht2.hashf
 
-[@@ Rust_generics_bounds [["Copy"; "PartialEq"; "Clone"];
-                          ["Clone"]]]
 ```pulse
-fn replace (#kt:eqtype) (#vt:Type)
+fn replace
+  (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
+  (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
   (#pht:erased (pht_t kt vt))
   (ht:ht_t kt vt)
   (idx:SZ.t)
@@ -159,10 +166,11 @@ fn replace (#kt:eqtype) (#vt:Type)
 ```
 
 #push-options "--fuel 1 --ifuel 1"
-[@@ Rust_generics_bounds [["Copy"; "PartialEq"; "Clone"];
-                          ["Clone"]]]
 ```pulse
-fn lookup (#kt:eqtype) (#vt:Type0) (#pht:erased (pht_t kt vt))
+fn lookup
+  (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
+  (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
+  (#pht:erased (pht_t kt vt))
   (ht:ht_t kt vt)
   (k:kt)
   requires models ht pht
@@ -299,12 +307,12 @@ fn lookup (#kt:eqtype) (#vt:Type0) (#pht:erased (pht_t kt vt))
 
 #restart-solver
 #push-options "--fuel 1 --ifuel 2"
-[@@ Rust_generics_bounds [["Copy"; "PartialEq"; "Clone"];
-                          ["Clone"]]]
 ```pulse
-fn insert (#kt:eqtype) (#vt:Type0)
-           (ht:ht_t kt vt) (k:kt) (v:vt)
-           (#pht:(p:erased (pht_t kt vt){PHT.not_full p.repr}))
+fn insert
+  (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
+  (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
+  (ht:ht_t kt vt) (k:kt) (v:vt)
+  (#pht:(p:erased (pht_t kt vt){PHT.not_full p.repr}))
   requires models ht pht
   returns b:(ht_t kt vt & bool)
   ensures
@@ -495,7 +503,9 @@ fn insert (#kt:eqtype) (#vt:Type0)
 ```
 
 ```pulse
-fn delete (#kt:eqtype) (#vt:Type0)
+fn delete
+  (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
+  (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
   (ht:ht_t kt vt) (k:kt)
   (#pht:erased (pht_t kt vt))
   
@@ -614,18 +624,19 @@ fn delete (#kt:eqtype) (#vt:Type0)
 }
 ```
 
-[@@ Rust_generics_bounds [["Copy"; "PartialEq"; "Clone"];
-                          ["Clone"]]]
-let is_used (#k:eqtype) (#v:Type0) (c:cell k v) : (bool & cell k v) =
+let is_used
+  (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] k:eqtype)
+  (#[@@@ Rust_generics_bounds ["Clone"]] v:Type0)
+  (c:cell k v) : (bool & cell k v) =
   match c with
   | Used _ _ -> true, c
   | _ -> false, c
 
 #push-options "--print_implicits"
-[@@ Rust_generics_bounds [["Copy"; "PartialEq"; "Clone"];
-                          ["Clone"]]]
 ```pulse
-fn not_full (#kt:eqtype) (#vt:Type0)
+fn not_full
+  (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
+  (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
   (ht:ht_t kt vt)
   (#pht:erased (pht_t kt vt))
   

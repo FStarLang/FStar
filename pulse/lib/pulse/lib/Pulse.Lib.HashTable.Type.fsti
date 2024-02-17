@@ -25,11 +25,9 @@ open Pulse.Lib.HashTable.Spec
 
 type pos_us = n:SZ.t{SZ.v n > 0}
 
-[@@ no_auto_projectors;
-    Rust_generics_bounds [["Copy"; "PartialEq"; "Clone"];
-                          ["Clone"]] ]
 noeq
-type ht_t (keyt:eqtype) (valt:Type) = {
+type ht_t ([@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] keyt:eqtype)
+          ([@@@ Rust_generics_bounds ["Clone"]] valt:Type) = {
   sz : pos_us;
   hashf: keyt -> SZ.t;
   contents : V.vec (cell keyt valt);

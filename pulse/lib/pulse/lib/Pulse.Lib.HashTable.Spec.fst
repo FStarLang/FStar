@@ -22,22 +22,13 @@ let unreachable #a (_:squash False) : a =
 
 open FStar.Ghost
 
-[@@ Pulse.Lib.Pervasives.Rust_derive "Clone";
-    Pulse.Lib.Pervasives.Rust_generics_bounds [["PartialEq"; "Copy"; "Clone"];
-                                               ["Clone"]]
-]
+[@@ Pulse.Lib.Pervasives.Rust_derive "Clone"]
 noeq
-type cell (kt : eqtype) (vt : Type) =
+type cell ([@@@ Pulse.Lib.Pervasives.Rust_generics_bounds ["PartialEq"; "Copy"; "Clone"]] kt : eqtype)
+          ([@@@ Pulse.Lib.Pervasives.Rust_generics_bounds ["Clone"]] vt : Type) =
   | Clean
   | Zombie
   | Used : k:kt -> v:vt -> cell kt vt
-
-// noeq
-// type pht_sig = {
-//   keyt : eqtype;
-//   valt : Type0;
-//   hashf : keyt -> nat;
-// }
 
 // Pure view of the hash table
 type spec_t (k:eqtype) v = k -> option v
