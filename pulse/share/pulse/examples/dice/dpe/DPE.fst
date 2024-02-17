@@ -332,10 +332,10 @@ fn get_profile ()
 // Move to hashtable?
 //
 
-[@@ Rust_generics_bounds [["Copy"; "PartialEq"; "Clone"];
-                          ["Clone"]]]
 ```pulse
-fn insert_if_not_full (#kt:eqtype) (#vt:Type0)
+fn insert_if_not_full
+  (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
+  (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
   (ht:ht_t kt vt) (k:kt) (v:vt)
   (#pht:erased (PHT.pht_t kt vt))
   requires models ht pht
