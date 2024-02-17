@@ -681,9 +681,14 @@ let rec extract (g:env) (p:st_term)
       
     end
 
+let rec map_dv (#a #b:Type) (f:a -> Dv b) (l:list a) : Dv (list b) =
+  match l with
+  | [] -> []
+  | hd::tl -> (f hd)::(map_dv f tl)
+
 let rec generalize (g:env) (t:R.typ) (e:option st_term)
   : T.Tac (env &
-           list mlident &
+           list mlty_param &
            R.typ &
            o:option st_term { Some? e <==> Some? o}) =
 
@@ -701,11 +706,13 @@ let rec generalize (g:env) (t:R.typ) (e:option st_term)
            let x = Pulse.Typing.fresh g.coreenv in
            let xt = R.(pack_ln (Tv_Var (pack_namedv {uniq = x; sort = RT.sort_default; ppname}))) in
            let t = R.subst_term [R.DT 0 xt] t in
-           let e =
+           let e, attrs =
              match e with
              | Some {term=Tm_Abs {b; body}} ->
-               Some (LN.subst_st_term body [LN.DT 0 (tm_fstar xt Range.range_0)])
-             | _ -> e in
+               Some (LN.subst_st_term body [LN.DT 0 (tm_fstar xt Range.range_0)]),
+               b.binder_attrs
+             | _ -> e, binder_attrs_default in
+           let mlattrs = attrs |> T.unseal |> T.map (term_as_mlexpr g) in
            let namedv = R.pack_namedv {
             uniq = x;
             sort = FStar.Sealed.seal sort;
@@ -720,7 +727,8 @@ let rec generalize (g:env) (t:R.typ) (e:option st_term)
                (tm_fstar sort FStar.Range.range_0) in
            let g = { g with uenv_inner = uenv; coreenv } in
            let g, tys, t, e = generalize g t e in
-           g, (lookup_ty g.uenv_inner namedv)::tys, t, e
+           let ty_param = mk_ty_param (lookup_ty g.uenv_inner namedv) mlattrs in
+           g, ty_param::tys, t, e
          | _ -> T.raise (Extraction_failure "Unexpected effectful arrow")
     else g, [], t, e
   
