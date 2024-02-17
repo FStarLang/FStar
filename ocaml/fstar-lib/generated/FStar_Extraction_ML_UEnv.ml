@@ -819,7 +819,10 @@ let (extend_fv :
             | [] -> true in
           let tySchemeIsClosed tys =
             let uu___ = mltyFvars (FStar_Pervasives_Native.snd tys) in
-            subsetMlidents uu___ (FStar_Pervasives_Native.fst tys) in
+            let uu___1 =
+              FStar_Extraction_ML_Syntax.ty_param_names
+                (FStar_Pervasives_Native.fst tys) in
+            subsetMlidents uu___ uu___1 in
           let uu___ = tySchemeIsClosed t_x in
           if uu___
           then
@@ -1137,7 +1140,10 @@ let (new_uenv : FStar_TypeChecker_Env.env -> uenv) =
       } in
     let a = "'a" in
     let failwith_ty =
-      ([a],
+      ([{
+          FStar_Extraction_ML_Syntax.ty_param_name = a;
+          FStar_Extraction_ML_Syntax.ty_param_attrs = []
+        }],
         (FStar_Extraction_ML_Syntax.MLTY_Fun
            ((FStar_Extraction_ML_Syntax.MLTY_Named
                ([], (["Prims"], "string"))),

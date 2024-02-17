@@ -391,7 +391,7 @@ and build_binding (toplevel: bool) (lb: mllb): value_binding =
       | None -> None
       | Some ts ->
            if lb.print_typ && toplevel
-           then let vars = List.map mk1 (fst ts) in
+           then let vars = List.map mk1 (ty_param_names (fst ts)) in
                 let ty = snd ts in
                 Some (build_core_type ~annots:vars ty)
            else None
@@ -460,7 +460,7 @@ let build_one_tydecl ({tydecl_name=x;
   let ptype_name = match mangle_opt with
     | Some y -> mk_sym y
     | None -> mk_sym x in
-  let ptype_params = Some (map (fun sym -> Typ.mk (Ptyp_var (mk_typ_name sym)), (NoVariance, NoInjectivity)) tparams) in
+  let ptype_params = Some (map (fun sym -> Typ.mk (Ptyp_var (mk_typ_name sym)), (NoVariance, NoInjectivity)) (ty_param_names tparams)) in
   let (ptype_manifest: core_type option) =
     BatOption.map_default build_ty_manifest None body |> add_deriving_const attrs in
   let ptype_kind =  Some (BatOption.map_default build_ty_kind Ptype_abstract body) in

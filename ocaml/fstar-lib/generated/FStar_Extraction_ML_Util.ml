@@ -186,11 +186,15 @@ let (try_subst :
           then FStar_Pervasives_Native.None
           else
             (let uu___2 =
-               let uu___3 = FStar_Compiler_List.zip formals args in
+               let uu___3 =
+                 let uu___4 =
+                   FStar_Extraction_ML_Syntax.ty_param_names formals in
+                 FStar_Compiler_List.zip uu___4 args in
                subst_aux uu___3 t in
              FStar_Pervasives_Native.Some uu___2)
 let (subst :
-  (FStar_Extraction_ML_Syntax.mlidents * FStar_Extraction_ML_Syntax.mlty) ->
+  (FStar_Extraction_ML_Syntax.ty_param Prims.list *
+    FStar_Extraction_ML_Syntax.mlty) ->
     FStar_Extraction_ML_Syntax.mlty Prims.list ->
       FStar_Extraction_ML_Syntax.mlty)
   =
