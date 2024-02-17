@@ -406,7 +406,7 @@ let my_type_decls () = register_pre_translate_type_decl begin fun env ty ->
       when Syntax.string_of_mlpath p = "Pulse.C.Types.Struct.struct_t0"
       ->
       let name = env.module_name, name in
-      define_struct_gen env name args fields
+      define_struct_gen env name (ty_param_names args) fields
 
     | {tydecl_name=name;
        tydecl_parameters=args;
@@ -414,7 +414,7 @@ let my_type_decls () = register_pre_translate_type_decl begin fun env ty ->
       when Syntax.string_of_mlpath p = "Pulse.C.Types.Union.union_t0"
       ->
       let name = env.module_name, name in
-      define_union_gen env name args fields
+      define_union_gen env name (ty_param_names args) fields
 
     | _ -> raise NotSupportedByKrmlExtension
 end
