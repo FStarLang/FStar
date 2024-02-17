@@ -97,8 +97,9 @@ let rec (uncurry_arrow :
     | uu___ -> ([], t)
 let (arg_ts_and_ret_t :
   FStar_Extraction_ML_Syntax.mltyscheme ->
-    (FStar_Extraction_ML_Syntax.mlidents * FStar_Extraction_ML_Syntax.mlty
-      Prims.list * FStar_Extraction_ML_Syntax.mlty))
+    (FStar_Extraction_ML_Syntax.ty_param Prims.list *
+      FStar_Extraction_ML_Syntax.mlty Prims.list *
+      FStar_Extraction_ML_Syntax.mlty))
   =
   fun t ->
     let uu___ = t in
@@ -1478,9 +1479,9 @@ let (has_rust_const_fn_attribute :
              let uu___1 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
              uu___1 = "Pulse.Lib.Pervasives.Rust_const_fn" -> true
          | uu___ -> false) lb.FStar_Extraction_ML_Syntax.mllb_attrs
-let (extract_generic_type_param_trait_bounds_aux :
+let (extract_generic_type_param_trait_bounds :
   FStar_Extraction_ML_Syntax.mlexpr Prims.list ->
-    Prims.string Prims.list Prims.list Prims.list)
+    Prims.string Prims.list Prims.list)
   =
   fun attrs ->
     let uu___ =
@@ -1502,69 +1503,34 @@ let (extract_generic_type_param_trait_bounds_aux :
                  FStar_Extraction_ML_Util.list_elements uu___4 in
                (match uu___3 with
                 | FStar_Pervasives_Native.Some l ->
+                    let uu___4 =
+                      FStar_Compiler_List.map
+                        (fun e ->
+                           match e.FStar_Extraction_ML_Syntax.expr with
+                           | FStar_Extraction_ML_Syntax.MLE_Const
+                               (FStar_Extraction_ML_Syntax.MLC_String s) -> s
+                           | uu___5 ->
+                               FStar_Compiler_Effect.failwith
+                                 "unexpected generic type param bounds") l in
                     FStar_Compiler_List.map
-                      (fun tyvar_bounds ->
-                         let uu___4 =
-                           FStar_Extraction_ML_Util.list_elements
-                             tyvar_bounds in
-                         match uu___4 with
-                         | FStar_Pervasives_Native.Some l1 ->
-                             let uu___5 =
-                               FStar_Compiler_List.map
-                                 (fun e ->
-                                    match e.FStar_Extraction_ML_Syntax.expr
-                                    with
-                                    | FStar_Extraction_ML_Syntax.MLE_Const
-                                        (FStar_Extraction_ML_Syntax.MLC_String
-                                        s) -> s
-                                    | uu___6 ->
-                                        FStar_Compiler_Effect.failwith
-                                          "unexpected generic type param bounds")
-                                 l1 in
-                             FStar_Compiler_List.map
-                               (fun bound ->
-                                  FStar_Compiler_Util.split bound "::")
-                               uu___5) l)) uu___1 in
+                      (fun bound -> FStar_Compiler_Util.split bound "::")
+                      uu___4)) uu___1 in
     FStar_Compiler_Util.dflt [] uu___
-let expand_list_with : 'a . 'a Prims.list -> Prims.nat -> 'a -> 'a Prims.list
-  =
-  fun l ->
-    fun n ->
-      fun x ->
-        let rec nlist n1 x1 =
-          if n1 = Prims.int_zero
-          then []
-          else (let uu___1 = nlist (n1 - Prims.int_one) x1 in x1 :: uu___1) in
-        if n <= (FStar_Compiler_List.length l)
-        then l
-        else
-          (let uu___1 = nlist (n - (FStar_Compiler_List.length l)) x in
-           FStar_Compiler_List.op_At l uu___1)
-let (extract_generic_type_param_trait_bounds :
-  Prims.nat ->
-    FStar_Extraction_ML_Syntax.mlattribute Prims.list ->
-      Prims.string Prims.list Prims.list Prims.list)
-  =
-  fun n ->
-    fun attrs ->
-      let l = extract_generic_type_param_trait_bounds_aux attrs in
-      expand_list_with l n []
 let (extract_generic_type_params :
-  FStar_Extraction_ML_Syntax.mlident Prims.list ->
-    FStar_Extraction_ML_Syntax.mlattribute Prims.list ->
-      Pulse2Rust_Rust_Syntax.generic_type_param Prims.list)
+  FStar_Extraction_ML_Syntax.ty_param Prims.list ->
+    Pulse2Rust_Rust_Syntax.generic_type_param Prims.list)
   =
   fun tyvars ->
-    fun attrs ->
-      let uu___ =
-        extract_generic_type_param_trait_bounds
-          (FStar_Compiler_List.length tyvars) attrs in
-      FStar_Compiler_List.map2
-        (fun tvar ->
-           fun bounds ->
-             let uu___1 = tyvar_of tvar in
-             Pulse2Rust_Rust_Syntax.mk_generic_type_param uu___1 bounds)
-        tyvars uu___
+    FStar_Compiler_List.map
+      (fun uu___ ->
+         match uu___ with
+         | { FStar_Extraction_ML_Syntax.ty_param_name = ty_param_name;
+             FStar_Extraction_ML_Syntax.ty_param_attrs = ty_param_attrs;_} ->
+             let uu___1 = tyvar_of ty_param_name in
+             let uu___2 =
+               extract_generic_type_param_trait_bounds ty_param_attrs in
+             Pulse2Rust_Rust_Syntax.mk_generic_type_param uu___1 uu___2)
+      tyvars
 let (extract_top_level_lb :
   Pulse2Rust_Env.env ->
     FStar_Extraction_ML_Syntax.mlletbinding ->
@@ -1611,9 +1577,7 @@ let (extract_top_level_lb :
                        | (tvars, arg_ts, ret_t) ->
                            let fn_const = has_rust_const_fn_attribute lb in
                            let uu___4 =
-                             let uu___5 =
-                               extract_generic_type_params tvars
-                                 lb.FStar_Extraction_ML_Syntax.mllb_attrs in
+                             let uu___5 = extract_generic_type_params tvars in
                              extract_top_level_sig g fn_const
                                lb.FStar_Extraction_ML_Syntax.mllb_name uu___5
                                arg_names arg_attrs arg_ts ret_t in
@@ -1699,7 +1663,7 @@ let (extract_struct_defn :
                 enum_or_struct_name d.FStar_Extraction_ML_Syntax.tydecl_name in
               let uu___4 =
                 extract_generic_type_params
-                  d.FStar_Extraction_ML_Syntax.tydecl_parameters attrs in
+                  d.FStar_Extraction_ML_Syntax.tydecl_parameters in
               let uu___5 =
                 FStar_Compiler_List.map
                   (fun uu___6 ->
@@ -1725,7 +1689,7 @@ let (extract_type_abbrev :
             let uu___1 =
               let uu___2 =
                 extract_generic_type_params
-                  d.FStar_Extraction_ML_Syntax.tydecl_parameters attrs in
+                  d.FStar_Extraction_ML_Syntax.tydecl_parameters in
               let uu___3 = extract_mlty g t in
               Pulse2Rust_Rust_Syntax.mk_item_type
                 d.FStar_Extraction_ML_Syntax.tydecl_name uu___2 uu___3 in
@@ -1753,7 +1717,7 @@ let (extract_enum :
                 enum_or_struct_name d.FStar_Extraction_ML_Syntax.tydecl_name in
               let uu___4 =
                 extract_generic_type_params
-                  d.FStar_Extraction_ML_Syntax.tydecl_parameters attrs in
+                  d.FStar_Extraction_ML_Syntax.tydecl_parameters in
               let uu___5 =
                 FStar_Compiler_List.map
                   (fun uu___6 ->

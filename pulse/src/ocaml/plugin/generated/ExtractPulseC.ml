@@ -824,7 +824,8 @@ let (my_type_decls : unit -> unit) =
                let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
                uu___7 = "Pulse.C.Types.Struct.struct_t0" ->
                let name1 = ((env.FStar_Extraction_Krml.module_name), name) in
-               define_struct_gen env name1 args fields
+               let uu___7 = FStar_Extraction_ML_Syntax.ty_param_names args in
+               define_struct_gen env name1 uu___7 fields
            | { FStar_Extraction_ML_Syntax.tydecl_assumed = uu___1;
                FStar_Extraction_ML_Syntax.tydecl_name = name;
                FStar_Extraction_ML_Syntax.tydecl_ignored = uu___2;
@@ -839,7 +840,8 @@ let (my_type_decls : unit -> unit) =
                let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
                uu___7 = "Pulse.C.Types.Union.union_t0" ->
                let name1 = ((env.FStar_Extraction_Krml.module_name), name) in
-               define_union_gen env name1 args fields
+               let uu___7 = FStar_Extraction_ML_Syntax.ty_param_names args in
+               define_union_gen env name1 uu___7 fields
            | uu___1 ->
                FStar_Compiler_Effect.raise
                  FStar_Extraction_Krml.NotSupportedByKrmlExtension)

@@ -7,7 +7,7 @@
 pub fn read(p: (), s: (), arr: &mut [u32], len: usize, i: usize) -> u32 {
     arr[i]
 }
-pub fn majority<A: PartialEq + Copy>(
+pub fn majority<A: Copy + PartialEq>(
     p: (),
     s: (),
     votes: &mut [A],
