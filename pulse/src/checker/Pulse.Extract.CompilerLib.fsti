@@ -25,12 +25,17 @@ val e_tag : Type0
 val mlty  : Type0
 
 val mlty_unit : mlty
+
+val mlty_param : Type0
+
 type mlsymbol = string
 type mlident  = mlsymbol
 type mlpath   = list mlsymbol * mlsymbol //Path and name of a module
-type mltyscheme = list mlident * mlty   //forall a1..an. t  (the list of binders can be empty)
+type mltyscheme = list mlty_param * mlty //forall a1..an. t  (the list of binders can be empty)
 
 val mllb : Type0
+
+val mk_ty_param (ty_param_name:mlident) (ty_param_attrs:list mlexpr) : mlty_param
 
 val mk_mllb_with_attrs
   (mllb_name:mlident)

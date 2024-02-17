@@ -13,6 +13,8 @@ type mlty = ML.mlty
 
 let mlty_unit = ML.ml_unit_ty
 
+type mlty_param = ML.ty_param
+
 type mlsymbol = ML.mlsymbol
 type mlident  = ML.mlident
 type mlpath   = ML.mlpath
@@ -20,6 +22,11 @@ type mltyscheme = ML.mltyscheme
 type mlbinder = ML.mlbinder
 
 type mllb = ML.mllb
+
+let mk_ty_param ty_param_name ty_param_attrs = {
+  ML.ty_param_name = ty_param_name;
+  ML.ty_param_attrs = ty_param_attrs;
+}
 
 let mk_mllb_with_attrs
   (mllb_name:mlident)
