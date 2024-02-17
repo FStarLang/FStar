@@ -128,7 +128,7 @@ let rec subst_aux (subst:list (mlident * mlty)) (t:mlty)  : mlty =
 let try_subst ((formals, t):mltyscheme) (args:list mlty) : option mlty =
     if List.length formals <> List.length args
     then None
-    else Some (subst_aux (List.zip formals args) t)
+    else Some (subst_aux (List.zip (ty_param_names formals) args) t)
 
 let subst ts args =
     match try_subst ts args with

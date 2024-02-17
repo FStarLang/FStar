@@ -629,7 +629,9 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
                       reduce1 [text ":"; ty]
                     | Some (vs, ty) ->
                       let ty = doc_of_mltype currentModule (min_op_prec, NonAssoc) ty in
-                      let vars = vs |> List.map (fun x -> doc_of_mltype currentModule (min_op_prec, NonAssoc) (MLTY_Var x)) |>  reduce1  in
+                      let vars = vs |> ty_param_names
+                                    |> List.map (fun x -> doc_of_mltype currentModule (min_op_prec, NonAssoc) (MLTY_Var x))
+                                    |>  reduce1  in
                       reduce1 [text ":"; vars; text "."; ty]
             else text "" in
         reduce1 [text name; reduce1 ids; ty_annot; text "="; e] in
@@ -658,6 +660,7 @@ let doc_of_mltydecl (currentModule : mlsymbol) (decls : mltydecl) =
                 | None -> x
                 | Some y -> y in
         let tparams =
+            let tparams = ty_param_names tparams in
             match tparams with
             | []  -> empty
             | [x] -> text x
