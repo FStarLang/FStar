@@ -326,22 +326,16 @@ let find_t env x =
   with _ ->
     failwith (BU.format1 "Internal error: name not found %s\n" x)
 
-let add_binders env binders =
-  List.fold_left (fun env (name, _) -> extend env name) env binders
+let add_binders env bs =
+  List.fold_left (fun env {mlbinder_name} -> extend env mlbinder_name) env bs
 
 (* Actual translation ********************************************************)
 
-let list_elements e2 =
-  let rec list_elements acc e2 =
-    match e2.expr with
-    | MLE_CTor (([ "Prims" ], "Cons" ), [ hd; tl ]) ->
-        list_elements (hd :: acc) tl
-    | MLE_CTor (([ "Prims" ], "Nil" ), []) ->
-        List.rev acc
-    | _ ->
-        failwith "Argument of FStar.Buffer.createL is not a list literal!"
-  in
-  list_elements [] e2
+let list_elements e =
+  let lopt = FStar.Extraction.ML.Util.list_elements e in
+  match lopt with
+  | None -> failwith "Argument of FStar.Buffer.createL is not a list literal!"
+  | Some l -> l
 
 let translate_flags flags =
   List.choose (function
@@ -589,11 +583,11 @@ and translate_type' env t: typ =
       
   | t -> translate_type_without_decay env t
 
-and translate_binders env args =
-  List.map (translate_binder env) args
+and translate_binders env bs =
+  List.map (translate_binder env) bs
 
-and translate_binder env (name, typ) =
-  { name = name; typ = translate_type env typ; mut = false }
+and translate_binder env ({mlbinder_name;mlbinder_ty}) =
+  { name = mlbinder_name; typ = translate_type env mlbinder_ty; mut = false }
 
 and translate_expr' env e: expr =
   match e.expr with
@@ -995,9 +989,9 @@ and translate_expr' env e: expr =
   | MLE_CTor ((_, cons), es) ->
       ECons (assert_lid env e.mlty, cons, List.map (translate_expr env) es)
 
-  | MLE_Fun (args, body) ->
-      let binders = translate_binders env args in
-      let env = add_binders env args in
+  | MLE_Fun (bs, body) ->
+      let binders = translate_binders env bs in
+      let env = add_binders env bs in
       EFun (binders, translate_expr env body, translate_type env body.mlty)
 
   | MLE_If (e1, e2, e3) ->
@@ -1121,7 +1115,7 @@ let translate_type_decl' env ty: option decl =
        tydecl_meta=flags;
        tydecl_defn= Some (MLTD_Abbrev t)} ->
         let name = env.module_name, name in
-        let env = List.fold_left (fun env name -> extend_t env name) env args in
+        let env = List.fold_left (fun env {ty_param_name} -> extend_t env ty_param_name) env args in
         if assumed && List.mem Syntax.CAbstract flags then
           Some (DTypeAbstractStruct name)
         else if assumed then
@@ -1137,7 +1131,7 @@ let translate_type_decl' env ty: option decl =
        tydecl_meta=flags;
        tydecl_defn=Some (MLTD_Record fields)} ->
         let name = env.module_name, name in
-        let env = List.fold_left (fun env name -> extend_t env name) env args in
+        let env = List.fold_left (fun env {ty_param_name} -> extend_t env ty_param_name) env args in
         Some (DTypeFlat (name, translate_flags flags, List.length args, List.map (fun (f, t) ->
           f, (translate_type_without_decay env t, false)) fields))
 
@@ -1147,7 +1141,7 @@ let translate_type_decl' env ty: option decl =
        tydecl_defn=Some (MLTD_DType branches)} ->
         let name = env.module_name, name in
         let flags = translate_flags flags in
-        let env = List.fold_left extend_t env args in
+        let env = args |> ty_param_names |> List.fold_left extend_t env in
         Some (DTypeVariant (name, flags, List.length args, List.map (fun (cons, ts) ->
           cons, List.map (fun (name, t) ->
             name, (translate_type_without_decay env t, false)
@@ -1168,7 +1162,7 @@ let translate_let' env flavor lb: option decl =
     } when BU.for_some (function Syntax.Assumed -> true | _ -> false) meta ->
       let name = env.module_name, name in
       let arg_names = match e.expr with
-        | MLE_Fun (args, _) -> List.map fst args
+        | MLE_Fun (bs, _) -> List.map (fun {mlbinder_name} -> mlbinder_name) bs
         | _ -> []
       in
       if List.length tvars = 0 then
@@ -1189,7 +1183,7 @@ let translate_let' env flavor lb: option decl =
       else
         // Case 1: a possibly-polymorphic function.
         let env = if flavor = Rec then extend env name else env in
-        let env = List.fold_left (fun env name -> extend_t env name) env tvars in
+        let env = tvars |> ty_param_names |> List.fold_left (fun env name -> extend_t env name) env in
         let rec find_return_type eff i = function
           | MLTY_Fun (_, eff, t) when i > 0 ->
               find_return_type eff (i - 1) t
@@ -1236,7 +1230,7 @@ let translate_let' env flavor lb: option decl =
       else
         // Case 2: this is a global
         let meta = translate_flags meta in
-        let env = List.fold_left (fun env name -> extend_t env name) env tvars in
+        let env = tvars |> ty_param_names |> List.fold_left (fun env name -> extend_t env name) env in
         let t = translate_type env t in
         let name = env.module_name, name in
         begin try
@@ -1251,9 +1245,9 @@ let translate_let' env flavor lb: option decl =
       // TODO JP: figure out what exactly we're hitting here...?
       Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format1 "Not extracting %s to KaRaMeL\n" name));
       begin match ts with
-      | Some (idents, t) ->
+      | Some (tps, t) ->
           BU.print2 "Type scheme is: forall %s. %s\n"
-            (String.concat ", " idents)
+            (String.concat ", " (ty_param_names tps))
             (ML.Code.string_of_mlty ([], "") t)
       | None ->
           ()
@@ -1277,7 +1271,7 @@ let translate_let env flavor lb: option decl =
   !ref_translate_let env flavor lb
 
 let translate_decl env d: list decl =
-  match d with
+  match d.mlmodule1_m with
   | MLM_Let (flavor, lbs) ->
       // We don't care about mutual recursion, since every C file will include
       // its own header with the forward declarations.

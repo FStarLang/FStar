@@ -143,6 +143,9 @@ let e_term_aq aq =
 
 let e_term = e_term_aq (0, [])
 
+let e_sort = e_sealed e_term
+let e_ppname = e_sealed e_string
+
 let e_aqualv =
     let embed_aqualv cb (q : aqualv) : t =
         match q with
@@ -284,7 +287,7 @@ let rec e_pattern_aq aq =
                as_arg (embed (e_option (e_list e_universe)) cb us_opt);
                as_arg (embed (e_list (e_tuple2 (e_pattern_aq aq) e_bool)) cb ps)]
         | Pat_Var sort ppname ->
-            mkConstruct ref_Pat_Var.fv [] [as_arg (embed (e_sealed e_term) cb sort); as_arg (embed (e_sealed e_string) cb ppname)]
+            mkConstruct ref_Pat_Var.fv [] [as_arg (embed e_sort cb sort); as_arg (embed e_ppname cb ppname)]
         | Pat_Dot_Term eopt ->
             mkConstruct ref_Pat_Dot_Term.fv [] [as_arg (embed (e_option e_term) cb eopt)]
     in
@@ -301,8 +304,8 @@ let rec e_pattern_aq aq =
             Some <| Pat_Cons f us ps)))
 
         | Construct (fv, [], [(ppname, _); (sort, _)]) when S.fv_eq_lid fv ref_Pat_Var.lid ->
-            BU.bind_opt (unembed (e_sealed e_term) cb sort) (fun sort ->
-            BU.bind_opt (unembed (e_sealed e_string) cb ppname) (fun ppname ->
+            BU.bind_opt (unembed e_sort cb sort) (fun sort ->
+            BU.bind_opt (unembed e_ppname cb ppname) (fun ppname ->
             Some <| Pat_Var sort ppname))
 
         | Construct (fv, [], [(eopt, _)]) when S.fv_eq_lid fv ref_Pat_Dot_Term.lid ->
@@ -613,17 +616,17 @@ let e_term_view = e_term_view_aq (0, [])
 let e_namedv_view =
     let embed_namedv_view cb (namedvv:namedv_view) : t =
         mkConstruct ref_Mk_namedv_view.fv [] [
-          as_arg (embed e_int               cb namedvv.uniq);
-          as_arg (embed (e_sealed e_string) cb namedvv.ppname);
-          as_arg (embed e_term              cb namedvv.sort);
+          as_arg (embed e_int    cb namedvv.uniq);
+          as_arg (embed e_ppname cb namedvv.ppname);
+          as_arg (embed e_sort   cb namedvv.sort);
         ]
     in
     let unembed_namedv_view cb (t : t) : option namedv_view =
         match t.nbe_t with
         | Construct (fv, _, [(sort, _); (ppname, _); (uniq, _)]) when S.fv_eq_lid fv ref_Mk_namedv_view.lid ->
             BU.bind_opt (unembed e_int cb uniq) (fun uniq ->
-            BU.bind_opt (unembed (e_sealed e_string) cb ppname) (fun ppname ->
-            BU.bind_opt (unembed e_term cb sort) (fun sort ->
+            BU.bind_opt (unembed e_ppname cb ppname) (fun ppname ->
+            BU.bind_opt (unembed e_sort cb sort) (fun sort ->
             let r : namedv_view = { ppname = ppname; uniq = uniq ; sort=sort } in
             Some r)))
 
@@ -636,17 +639,17 @@ let e_namedv_view =
 let e_bv_view =
     let embed_bv_view cb (bvv:bv_view) : t =
         mkConstruct ref_Mk_bv_view.fv [] [
-          as_arg (embed e_int               cb bvv.index);
-          as_arg (embed (e_sealed e_string) cb bvv.ppname);
-          as_arg (embed e_term              cb bvv.sort);
+          as_arg (embed e_int    cb bvv.index);
+          as_arg (embed e_ppname cb bvv.ppname);
+          as_arg (embed e_sort   cb bvv.sort);
         ]
     in
     let unembed_bv_view cb (t : t) : option bv_view =
         match t.nbe_t with
         | Construct (fv, _, [(sort, _); (ppname, _); (idx, _)]) when S.fv_eq_lid fv ref_Mk_bv_view.lid ->
             BU.bind_opt (unembed e_int cb idx) (fun idx ->
-            BU.bind_opt (unembed (e_sealed e_string) cb ppname) (fun ppname ->
-            BU.bind_opt (unembed e_term cb sort) (fun sort ->
+            BU.bind_opt (unembed e_ppname cb ppname) (fun ppname ->
+            BU.bind_opt (unembed e_sort cb sort) (fun sort ->
             let r : bv_view = { ppname = ppname; index = idx; sort=sort } in
             Some r)))
 
@@ -664,7 +667,7 @@ let e_binding =
     mkConstruct ref_Mk_binding.fv [] [
       as_arg (embed e_int cb b.uniq);
       as_arg (embed e_term cb b.sort);
-      as_arg (embed (e_sealed e_string) cb b.ppname);
+      as_arg (embed e_ppname cb b.ppname);
     ]
   in
   let unembed cb (t:t) : option RD.binding =
@@ -673,7 +676,7 @@ let e_binding =
       when S.fv_eq_lid fv ref_Mk_binding.lid ->
       BU.bind_opt (unembed e_int cb uniq) (fun uniq ->
       BU.bind_opt (unembed e_term cb sort) (fun sort ->
-      BU.bind_opt (unembed (e_sealed e_string) cb ppname) (fun ppname ->
+      BU.bind_opt (unembed e_ppname cb ppname) (fun ppname ->
       let r : RD.binding = {uniq=uniq; ppname=ppname; sort=sort} in
       Some r)))
   in
@@ -685,7 +688,7 @@ let e_binder_view =
       as_arg (embed e_term cb bview.sort);
       as_arg (embed e_aqualv cb bview.qual);
       as_arg (embed e_attributes cb bview.attrs);
-      as_arg (embed (e_sealed e_string) cb bview.ppname);
+      as_arg (embed e_ppname cb bview.ppname);
     ] in
 
   let unembed_binder_view cb (t:t) : option binder_view =
@@ -695,7 +698,7 @@ let e_binder_view =
       BU.bind_opt (unembed e_term cb sort) (fun sort ->
       BU.bind_opt (unembed e_aqualv cb q) (fun q ->
       BU.bind_opt (unembed e_attributes cb attrs) (fun attrs ->
-      BU.bind_opt (unembed (e_sealed e_string) cb ppname) (fun ppname ->
+      BU.bind_opt (unembed e_ppname cb ppname) (fun ppname ->
       let r : binder_view = {ppname=ppname; qual=q; attrs=attrs; sort=sort} in
       Some r))))
 

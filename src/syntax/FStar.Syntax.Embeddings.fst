@@ -1005,13 +1005,13 @@ let e_arrow (ea:embedding 'a) (eb:embedding 'b) : Tot (embedding ('a -> 'b)) =
         printer
         emb_t_arr_a_b
 
-let e_sealed (ea : embedding 'a) : Tot (embedding 'a) =
+let e_sealed (ea : embedding 'a) : Tot (embedding (Sealed.sealed 'a)) =
     let typ () = S.t_sealed_of (type_of ea) in
     let emb_ty_a () =
         ET_app(PC.sealed_lid |> Ident.string_of_lid, [emb_typ_of 'a ()])
     in
-    let printer x = "(seal " ^ printer_of ea x ^ ")" in
-    let em (a:'a) (rng:range) shadow norm : term =
+    let printer x = "(seal " ^ printer_of ea (Sealed.unseal x) ^ ")" in
+    let em (a:Sealed.sealed 'a) (rng:range) shadow norm : term =
       let shadow_a =
         (* TODO: this application below is in TAC.. OK? *)
         map_shadow shadow (fun t ->
@@ -1021,15 +1021,15 @@ let e_sealed (ea : embedding 'a) : Tot (embedding 'a) =
                       rng)
       in
       S.mk_Tm_app (S.mk_Tm_uinst (U.fvar_const PC.seal_lid) [U_zero])
-                  [S.iarg (type_of ea); S.as_arg (embed a rng shadow_a norm)]
+                  [S.iarg (type_of ea); S.as_arg (embed (Sealed.unseal a) rng shadow_a norm)]
                   rng
     in
-    let un (t:term) norm : option 'a =
+    let un (t:term) norm : option (Sealed.sealed 'a) =
       let hd, args = U.head_and_args_full t in
       match (U.un_uinst hd).n, args with
       | Tm_fvar fv, [_; (a, _)] when S.fv_eq_lid fv PC.seal_lid ->
            // Just relay it
-           try_unembed a norm
+           Class.Monad.fmap Sealed.seal <| try_unembed a norm
       | _ ->
            None
     in
@@ -1043,7 +1043,8 @@ let e_sealed (ea : embedding 'a) : Tot (embedding 'a) =
 (*
  * Embed a range as a FStar.Range.__range
  * The user usually manipulates a FStar.Range.range = sealed __range
- * See also e_range below.
+ * For embedding an actual FStar.Range.range, we compose this (automatically
+ * via typeclass resolution) with e_sealed.
  *)
 let e___range =
     let em (r:range) (rng:range) _shadow _norm : term =
@@ -1061,7 +1062,10 @@ let e___range =
         Range.string_of_range
         (fun () -> ET_app (PC.range_lid |> Ident.string_of_lid, []))
 
-let e_range = e_sealed e___range
+(* This is an odd one. We embed ranges as sealed, but we don't want to use the Sealed.sealed
+type internally, so we "hack" it like this. *)
+let e_range : embedding Range.range =
+  embed_as (e_sealed e___range) Sealed.unseal Sealed.seal None
 
 let e_issue : embedding Err.issue = e_lazy Lazy_issue (S.fvar PC.issue_lid None)
 let e_document : embedding Pprint.document = e_lazy Lazy_doc (S.fvar PC.document_lid None)

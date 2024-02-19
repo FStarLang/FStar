@@ -168,16 +168,19 @@ let rec extract_meta x : option meta =
 let extract_metadata metas =
   List.choose extract_meta metas
 
-let binders_as_mlty_binders (env:UEnv.uenv) bs =
+let binders_as_mlty_binders (env:UEnv.uenv) bs : UEnv.uenv & list ty_param =
     BU.fold_map
-      (fun env ({binder_bv=bv}) ->
+      (fun env ({binder_bv=bv; binder_attrs}) ->
         let env = UEnv.extend_ty env bv false in
-        let name =
+        let ty_param_name =
           match lookup_bv env bv with
           | Inl ty -> ty.ty_b_name
           | _ -> failwith "Impossible"
         in
-        env, name)
+        let ty_param_attrs =
+          List.map (fun attr -> let e, _, _ = Term.term_as_mlexpr env attr in e) binder_attrs
+        in
+        env, {ty_param_name; ty_param_attrs})
       env bs
 
 (*******************************************************************************)
@@ -320,6 +323,8 @@ let gamma_to_string env =
     BU.format1 "Gamma = {\n %s }"
         (List.map (print_binding cm) gamma |> String.concat "\n")
 
+let extract_attrs env (attrs:list S.attribute) : list mlattribute =
+  List.map (fun attr -> let e, _, _ = Term.term_as_mlexpr env attr in e) attrs
 
 (* Type abbreviations:
           //extracting `type t = e`
@@ -390,7 +395,10 @@ let extract_typ_abbrev env quals attrs lb
       tydecl_meta = metadata;
       tydecl_defn = Some (MLTD_Abbrev body)
     } in
-    let def = [MLM_Loc (Util.mlloc_of_range (Ident.range_of_lid lid)); MLM_Ty [td]] in
+    let loc_mlmodule1 = MLM_Loc (Util.mlloc_of_range (Ident.range_of_lid lid)) in
+    let ty_mlmodule1 = MLM_Ty [td] in
+    let def = [mk_mlmodule1 loc_mlmodule1;
+               mk_mlmodule1_with_attrs ty_mlmodule1 (extract_attrs env attrs)] in
     env,
     iface,
     def
@@ -426,7 +434,10 @@ let extract_let_rec_type env quals attrs lb
       tydecl_meta = metadata;
       tydecl_defn = Some (MLTD_Abbrev body)
     } in
-    let def = [MLM_Loc (Util.mlloc_of_range (Ident.range_of_lid lid)); MLM_Ty [td]] in
+    let loc_mlmodule1 = MLM_Loc (Util.mlloc_of_range (Ident.range_of_lid lid)) in
+    let td_mlmodule1 = MLM_Ty [td] in
+    let def = [mk_mlmodule1 loc_mlmodule1;
+               mk_mlmodule1_with_attrs td_mlmodule1 (extract_attrs env attrs)] in
     let iface = iface_of_tydefs [tydef] in
     env,
     iface,
@@ -441,7 +452,7 @@ let extract_let_rec_type env quals attrs lb
 let extract_bundle_iface env se
     : env_t * iface =
     let extract_ctor (env_iparams:env_t)
-                     (ml_tyvars:list mlsymbol)
+                     (ml_tyvars:list ty_param)
                      (env:env_t)
                      (ctor: data_constructor)
         :  env_t * (fv * exp_binding) =
@@ -534,11 +545,12 @@ let extract_reifiable_effect g ed
             mllb_tysc=None;
             mllb_add_unit=false;
             mllb_def=exp;
+            mllb_attrs=[];
             mllb_meta = [];
             print_typ=false
             }
         in
-        iface_of_bindings [fv, exp_binding], MLM_Let(NonRec, [lb])
+        iface_of_bindings [fv, exp_binding], mk_mlmodule1 (MLM_Let(NonRec, [lb]))
     in
 
     let rec extract_fv tm =
@@ -577,7 +589,7 @@ let extract_reifiable_effect g ed
             BU.print1 "Extracted action term: %s\n" (Code.string_of_mlexpr a_nm a_let);
         if Env.debug (tcenv_of_uenv g) <| Options.Other "ExtractionReify" then begin
             BU.print1 "Extracted action type: %s\n" (Code.string_of_mlty a_nm (snd tysc));
-            List.iter (fun x -> BU.print1 "and binders: %s\n" x) (fst tysc) end;
+            List.iter (fun x -> BU.print1 "and binders: %s\n" x) (ty_param_names (fst tysc)) end;
         let iface, impl = extend_iface a_lid a_nm exp exp_b in
         g, (iface, impl)
     in
@@ -621,7 +633,7 @@ let should_split_let_rec_types_and_terms (env:uenv) (lbs:list letbinding)
             false
     in
     not (is_homogeneous None lbs)
-      
+
 let split_let_rec_types_and_terms se (env:uenv) (lbs:list letbinding)
   : list sigelt
   = let rec aux (out:list sigelt) (mutuals:list letbinding) (lbs:list letbinding)
@@ -891,7 +903,7 @@ let extract_iface (g:env_t) modul =
 
 let extract_bundle env se =
     let extract_ctor (env_iparams:env_t)
-                     (ml_tyvars:list mlsymbol)
+                     (ml_tyvars:list ty_param)
                      (env:env_t)
                      (ctor: data_constructor):
         env_t * (mlsymbol * list (mlsymbol * mlty))
@@ -914,7 +926,10 @@ let extract_bundle env se =
        let env_iparams, vars  = binders_as_mlty_binders env ind.iparams in
        let env, ctors = ind.idatas |> BU.fold_map (extract_ctor env_iparams vars) env in
        let indices, _ = U.arrow_formals ind.ityp in
-       let ml_params = List.append vars (indices |> List.mapi (fun i _ -> "'dummyV" ^ BU.string_of_int i)) in
+       let ml_params = List.append vars (indices |> List.mapi (fun i _ -> {
+        ty_param_name = "'dummyV" ^ BU.string_of_int i;
+        ty_param_attrs = []
+       })) in
        let tbody, env =
          match BU.find_opt (function RecordType _ -> true | _ -> false) ind.iquals with
          | Some (RecordType (ns, ids)) ->
@@ -947,10 +962,11 @@ let extract_bundle env se =
        td
     in
 
+    let mlattrs = extract_attrs env se.sigattrs in
     match se.sigel, se.sigquals with
     | Sig_bundle {ses=[{sigel = Sig_datacon {lid=l; t}}]}, [ExceptionConstructor] ->
         let env, ctor = extract_ctor env [] env ({dname=l; dtyp=t}) in
-        env, [MLM_Exn ctor]
+        env, [mk_mlmodule1_with_attrs (MLM_Exn ctor) mlattrs]
 
     | Sig_bundle {ses}, quals ->
         if U.has_attribute se.sigattrs PC.erasable_attr
@@ -958,7 +974,7 @@ let extract_bundle env se =
         else begin
           let env, ifams = bundle_as_inductive_families env ses quals in
           let env, td = BU.fold_map extract_one_family env ifams in
-          env, [MLM_Ty td]
+          env, [mk_mlmodule1_with_attrs (MLM_Ty td) mlattrs]
         end
 
     | _ -> failwith "Unexpected signature element"
@@ -973,144 +989,144 @@ let lb_irrelevant (g:env_t) (lb:letbinding) : bool =
 (*****************************************************************************)
 let rec extract_sig (g:env_t) (se:sigelt) : env_t * list mlmodule1 =
   Errors.with_ctx (BU.format1 "While extracting top-level definition `%s`" (Print.sigelt_to_string_short se)) (fun () ->
-     debug g (fun u -> BU.print1 ">>>> extract_sig %s \n" (Print.sigelt_to_string_short se));
+    debug g (fun u -> BU.print1 ">>>> extract_sig %s \n" (Print.sigelt_to_string_short se));
 
-     if sigelt_has_noextract se then
-       let g = mark_sigelt_erased se g in
-       g, []
-     else
+  if sigelt_has_noextract se then
+    let g = mark_sigelt_erased se g in
+    g, []
+  else begin
     let se = karamel_fixup_qual se in
 
-     match se.sigel with
-        | Sig_bundle _
-        | Sig_inductive_typ _
-        | Sig_datacon _ ->
-          let g, ses = extract_bundle g se in
-          g, ses @ maybe_register_plugin g se
+    match se.sigel with
+    | Sig_bundle _
+    | Sig_inductive_typ _
+    | Sig_datacon _ ->
+      let g, ses = extract_bundle g se in
+      g, ses @ maybe_register_plugin g se
 
-        | Sig_new_effect ed when Env.is_reifiable_effect (tcenv_of_uenv g) ed.mname ->
-          let env, _iface, impl =
-              extract_reifiable_effect g ed in
-          env, impl
+    | Sig_new_effect ed when Env.is_reifiable_effect (tcenv_of_uenv g) ed.mname ->
+      let env, _iface, impl =
+        extract_reifiable_effect g ed in
+      env, impl
 
-        | Sig_splice _ ->
-          failwith "impossible: trying to extract splice"
+    | Sig_splice _ ->
+      failwith "impossible: trying to extract splice"
 
-        | Sig_fail _ ->
-          failwith "impossible: trying to extract Sig_fail"
+    | Sig_fail _ ->
+      failwith "impossible: trying to extract Sig_fail"
 
-        | Sig_new_effect _ ->
-          g, []
+    | Sig_new_effect _ ->
+      g, []
 
-        (* Ignore all non-informative sigelts *)
-        | Sig_let {lbs=(_, lbs)} when List.for_all (lb_irrelevant g) lbs ->
-          g, []
+    (* Ignore all non-informative sigelts *)
+    | Sig_let {lbs=(_, lbs)} when List.for_all (lb_irrelevant g) lbs ->
+      g, []
 
-        | Sig_declare_typ {lid; us=univs; t}  when Term.is_arity g t -> //lid is a type
-          //extracting `assume type t : k`
-          let env, _, impl = extract_type_declaration g false lid se.sigquals se.sigattrs univs t in
-          env, impl
+    | Sig_declare_typ {lid; us=univs; t}  when Term.is_arity g t -> //lid is a type
+      //extracting `assume type t : k`
+      let env, _, impl = extract_type_declaration g false lid se.sigquals se.sigattrs univs t in
+      env, impl
 
-        | Sig_let {lbs=(false, [lb])} when Term.is_arity g lb.lbtyp ->
-          //extracting `type t = e`
-          //or         `let t = e` when e is a type
-          if se.sigquals |> BU.for_some (function Projector _ -> true | _ -> false)
-          then (
-            //Don't extract projectors returning types---not useful for typing generated code and
-            //And can actually break F# extraction, in case there are unused type parameters
-            g, []
-          ) else (
-            let env, _, impl =
-                extract_typ_abbrev g se.sigquals se.sigattrs lb
-            in
-            env, impl
-          )
+    | Sig_let {lbs=(false, [lb])} when Term.is_arity g lb.lbtyp ->
+      //extracting `type t = e`
+      //or         `let t = e` when e is a type
+      if se.sigquals |> BU.for_some (function Projector _ -> true | _ -> false)
+      then (
+        //Don't extract projectors returning types---not useful for typing generated code and
+        //And can actually break F# extraction, in case there are unused type parameters
+        g, []
+      ) else (
+        let env, _, impl =
+          extract_typ_abbrev g se.sigquals se.sigattrs lb
+        in
+        env, impl
+      )
 
-        | Sig_let {lbs=(true, lbs)}
-          when should_split_let_rec_types_and_terms g lbs ->
-          let ses = split_let_rec_types_and_terms se g lbs in
-          List.fold_left 
-            (fun (g, out) se -> 
-              let g, mls = extract_sig g se in
-              g,  out@mls)
-            (g, []) ses
+    | Sig_let {lbs=(true, lbs)}
+      when should_split_let_rec_types_and_terms g lbs ->
+      let ses = split_let_rec_types_and_terms se g lbs in
+      List.fold_left 
+        (fun (g, out) se -> 
+         let g, mls = extract_sig g se in
+         g,  out@mls) (g, []) ses
 
-        | Sig_let {lbs=(true, lbs)}
-          when BU.for_some (fun lb -> Term.is_arity g lb.lbtyp) lbs ->
-          //extracting `let rec t .. : Type = e
-          //            and ...
-          let env, _, impl =
-            extract_let_rec_types se g lbs
-          in
-          env, impl
+    | Sig_let {lbs=(true, lbs)}
+      when BU.for_some (fun lb -> Term.is_arity g lb.lbtyp) lbs ->
+      //extracting `let rec t .. : Type = e
+      //            and ...
+      let env, _, impl =
+        extract_let_rec_types se g lbs
+      in
+      env, impl
 
-        (* Extension extraction is only supported for non-recursive let bindings *)
-        | Sig_let { lbs=(false, [lb]) } when (Cons? se.sigmeta.sigmeta_extension_data) -> (
-           match List.tryPick 
-                  (fun (ext, blob) ->
-                      match lookup_extension_extractor ext with
-                      | None -> None
-                      | Some extractor -> Some (ext, blob, extractor))
-                  se.sigmeta.sigmeta_extension_data
-           with
-           | None ->
-             extract_sig_let g se
+    (* Extension extraction is only supported for non-recursive let bindings *)
+    | Sig_let { lbs=(false, [lb]) } when (Cons? se.sigmeta.sigmeta_extension_data) -> (
+      match List.tryPick 
+              (fun (ext, blob) ->
+               match lookup_extension_extractor ext with
+               | None -> None
+               | Some extractor -> Some (ext, blob, extractor))
+            se.sigmeta.sigmeta_extension_data with
+      | None ->
+        extract_sig_let g se
 
-           | Some (ext, blob, extractor) ->
-              match extractor.extract_sigelt g se blob with
-              | Inl decls ->
-                let meta = extract_metadata se.sigattrs in
-                List.fold_left (fun (g, decls) d ->
-                  match d with
-                  | MLM_Let (maybe_rec, [mllb]) ->
-                    let g, mlid, _ =
-                      UEnv.extend_lb g lb.lbname lb.lbtyp (must mllb.mllb_tysc) mllb.mllb_add_unit in
-                    let mllb = { mllb with mllb_name = mlid; mllb_meta = meta } in
-                    g, decls@[MLM_Let (maybe_rec, [mllb])]
-                  | _ ->
-                    failwith (BU.format1 "Unexpected ML decl returned by the extension: %s" (mlmodule1_to_string d))
-                ) (g, []) decls
-              | Inr err ->
-                Errors.raise_error
-                  (Errors.Fatal_ExtractionUnsupported,
-                   BU.format2 "Extension %s failed to extract term: %s" ext err)
-                  se.sigrng
-          )
-          
-        | Sig_let _ ->
-          extract_sig_let g se
+      | Some (ext, blob, extractor) ->
+        match extractor.extract_sigelt g se blob with
+        | Inl decls ->
+          let meta = extract_metadata se.sigattrs in
+          let mlattrs = extract_attrs g se.sigattrs in
+          List.fold_left (fun (g, decls) d ->
+            match d.mlmodule1_m with
+            | MLM_Let (maybe_rec, [mllb]) ->
+              let g, mlid, _ =
+                UEnv.extend_lb g lb.lbname lb.lbtyp (must mllb.mllb_tysc) mllb.mllb_add_unit in
+              let mllb = { mllb with mllb_name = mlid; mllb_attrs = mlattrs; mllb_meta = meta } in
+              g, decls@[mk_mlmodule1_with_attrs (MLM_Let (maybe_rec, [mllb])) mlattrs]
+            | _ ->
+              failwith (BU.format1 "Unexpected ML decl returned by the extension: %s" (mlmodule1_to_string d))
+          ) (g, []) decls
+        | Inr err ->
+          Errors.raise_error
+            (Errors.Fatal_ExtractionUnsupported,
+             BU.format2 "Extension %s failed to extract term: %s" ext err)
+               se.sigrng
+      )
 
-        | Sig_declare_typ {lid; t} ->
-         let quals = se.sigquals in
-         if quals |> List.contains Assumption
-         && not (TcUtil.must_erase_for_extraction (tcenv_of_uenv g) t)
-         then let always_fail =
-                  { se with sigel = Sig_let {lbs=(false, [always_fail lid t]); lids=[]} } in
-              let g, mlm = extract_sig g always_fail in //extend the scope with the new name
-              match BU.find_map quals (function Discriminator l -> Some l |  _ -> None) with
-              | Some l -> //if it's a discriminator, generate real code for it, rather than mlm
-                g, [MLM_Loc (Util.mlloc_of_range se.sigrng); Term.ind_discriminator_body g lid l]
+    | Sig_let _ -> extract_sig_let g se
 
-              | _ ->
-                begin match BU.find_map quals (function  Projector (l,_)  -> Some l |  _ -> None) with
-                    (* TODO : this could fail, it happens that projectors for variants are assumed *)
-                    | Some _ -> //it must be a record projector, since other projectors are not assumed
-                        g, [] //records are extracted as ML records; no projectors for them
-                    | _ ->
-                        g, mlm //in all other cases, generate mlm, a stub that always fails
-                end
-         else g, [] //it's not assumed, so wait for the corresponding Sig_let to generate code
-                    //or, it must be erased
+    | Sig_declare_typ {lid; t} ->
+      let quals = se.sigquals in
+      if quals |> List.contains Assumption
+      && not (TcUtil.must_erase_for_extraction (tcenv_of_uenv g) t)
+      then let always_fail =
+             { se with sigel = Sig_let {lbs=(false, [always_fail lid t]); lids=[]} } in
+           let g, mlm = extract_sig g always_fail in //extend the scope with the new name
+           match BU.find_map quals (function Discriminator l -> Some l |  _ -> None) with
+           | Some l -> //if it's a discriminator, generate real code for it, rather than mlm
+             g, [mk_mlmodule1 (MLM_Loc (Util.mlloc_of_range se.sigrng));
+                 Term.ind_discriminator_body g lid l]
 
-       | Sig_assume _ //not needed; purely logical
-       | Sig_sub_effect  _
-       | Sig_effect_abbrev _ //effects are all primitive; so these are not extracted; this may change as we add user-defined non-primitive effects
-       | Sig_polymonadic_bind _
-       | Sig_polymonadic_subcomp _ ->
-         g, []
-       | Sig_pragma (p) ->
-         U.process_pragma p se.sigrng;
-         g, []
+           | _ ->
+             begin match BU.find_map quals (function  Projector (l,_)  -> Some l |  _ -> None) with
+                   (* TODO : this could fail, it happens that projectors for variants are assumed *)
+                   | Some _ -> //it must be a record projector, since other projectors are not assumed
+                     g, [] //records are extracted as ML records; no projectors for them
+                   | _ ->
+                     g, mlm //in all other cases, generate mlm, a stub that always fails
+             end
+      else g, [] //it's not assumed, so wait for the corresponding Sig_let to generate code
+                     //or, it must be erased
+
+    | Sig_assume _ //not needed; purely logical
+    | Sig_sub_effect  _
+    | Sig_effect_abbrev _ //effects are all primitive; so these are not extracted; this may change as we add user-defined non-primitive effects
+    | Sig_polymonadic_bind _
+    | Sig_polymonadic_subcomp _ ->
+      g, []
+    | Sig_pragma (p) ->
+      U.process_pragma p se.sigrng;
+      g, []
+  end
   )
 
 and extract_sig_let (g:uenv) (se:sigelt) : uenv * list mlmodule1 =
@@ -1201,6 +1217,7 @@ and extract_sig_let (g:uenv) (se:sigelt) : uenv * list mlmodule1 =
               g
               (mk (Tm_let {lbs; body=U.exp_false_bool}) se.sigrng)
     in
+    let mlattrs = extract_attrs g se.sigattrs in
     begin
     match ml_let.expr with
     | MLE_Let((flavor, bindings), _) ->
@@ -1238,7 +1255,7 @@ and extract_sig_let (g:uenv) (se:sigelt) : uenv * list mlmodule1 =
                               []
                       in
                       let meta = flags @ flags' @ flags'' in
-                      let ml_lb = { ml_lb with mllb_meta = meta } in
+                      let ml_lb = { ml_lb with mllb_attrs = mlattrs; mllb_meta = meta } in
                       let g, ml_lb =
                           if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
                           then let env, mls, _ =
@@ -1256,8 +1273,8 @@ and extract_sig_let (g:uenv) (se:sigelt) : uenv * list mlmodule1 =
           bindings
           (snd lbs) in
       g,
-      [MLM_Loc (Util.mlloc_of_range se.sigrng);
-        MLM_Let (flavor, List.rev ml_lbs')]
+      [mk_mlmodule1 (MLM_Loc (Util.mlloc_of_range se.sigrng));
+       mk_mlmodule1_with_attrs (MLM_Let (flavor, List.rev ml_lbs')) mlattrs]
       @ maybe_register_plugin g se
 
     | _ ->

@@ -11,9 +11,9 @@ let (bv2int : Prims.pos -> unit bv_t -> unit FStar_UInt.uint_t) =
 let (int2bv_nat : Prims.pos -> Prims.nat -> unit bv_t) =
   fun n -> fun num -> FStar_UInt.to_vec n (num mod (Prims.pow2 n))
 let (list2bv : Prims.pos -> Prims.bool Prims.list -> unit bv_t) =
-  fun n -> fun l -> FStar_Seq_Properties.seq_of_list l
+  fun n -> fun l -> FStar_Seq_Base.seq_of_list l
 let (bv2list : Prims.pos -> unit bv_t -> Prims.bool Prims.list) =
-  fun n -> fun s -> FStar_Seq_Properties.seq_to_list s
+  fun n -> fun s -> FStar_Seq_Base.seq_to_list s
 let (bvand : Prims.pos -> unit bv_t -> unit bv_t -> unit bv_t) =
   FStar_BitVector.logand_vec
 let (bvxor : Prims.pos -> unit bv_t -> unit bv_t -> unit bv_t) =

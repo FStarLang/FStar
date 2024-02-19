@@ -66,11 +66,11 @@ let maybe_debug (cfg:Cfg.cfg) (t:term) (dbg:option (term * BU.time)) =
        | Some (tm, time_then) ->
          let time_now = BU.now () in
                     // BU.print1 "Normalizer result timing (%s ms)\n"
-                    //              (BU.string_of_int (snd (BU.time_diff time_then time_now)))
+                    //              (show (snd (BU.time_diff time_then time_now)))
          BU.print4 "Normalizer result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
-                       (BU.string_of_int (snd (BU.time_diff time_then time_now)))
+                       (show (snd (BU.time_diff time_then time_now)))
                        (Print.term_to_string tm)
-                       (Cfg.cfg_to_string cfg)
+                       (show cfg)
                        (Print.term_to_string t)
        | _ -> ()
 
@@ -225,11 +225,13 @@ let norm_universe cfg (env:env) u =
                           then [U_unknown]
                           else failwith ("Universe variable not found: u@" ^ string_of_int x)
             end
+          | U_unif _ when cfg.steps.default_univs_to_zero ->
+            [U_zero]
+
           | U_unif _ when cfg.steps.check_no_uvars ->
-            [U_zero] // GM: why?
-//            failwith (BU.format2 "(%s) CheckNoUvars: unexpected universes variable remains: %s"
-//                                       (Range.string_of_range (Env.get_range cfg.tcenv))
-//                                       (Print.univ_to_string u))
+            failwith (BU.format2 "(%s) CheckNoUvars: unexpected universes variable remains: %s"
+                                       (Range.string_of_range (Env.get_range cfg.tcenv))
+                                       (Print.univ_to_string u))
 
           | U_zero
           | U_unif _
@@ -1126,6 +1128,10 @@ let is_fext_on_domain (t:term) :option term =
     | _ -> None)
   | _ -> None
 
+(* Set below. Used by the simplifier. *)
+let __get_n_binders : ref ((env:Env.env) -> list step -> (n:int) -> (t:term) -> list binder & comp) =
+  BU.mk_ref (fun e s n t -> failwith "Impossible: __get_n_binders unset")
+
 (* Returns `true` iff the head of `t` is a primop, and
 it not applied or only partially applied. *)
 let is_partial_primop_app (cfg:Cfg.cfg) (t:term) : bool =
@@ -1150,6 +1156,161 @@ let get_extraction_mode env (m:Ident.lident) =
 let can_reify_for_extraction env (m:Ident.lident) =
   (get_extraction_mode env m) = S.Extract_reify
 
+(* Checks if a list of arguments matches some binders exactly *)
+let rec args_are_binders args bs : bool =
+    match args, bs with
+    | (t, _)::args, b::bs ->
+        begin match (SS.compress t).n with
+        | Tm_name bv' -> S.bv_eq b.binder_bv bv' && args_are_binders args bs
+        | _ -> false
+        end
+    | [], [] -> true
+    | _, _ -> false
+
+(* Is t a variable applied to exactly bs? If so return it. *)
+let is_applied cfg (bs:binders) (t : term) : option bv =
+    if cfg.debug.wpe then
+        BU.print2 "WPE> is_applied %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t);
+    let hd, args = U.head_and_args_full t in
+    match (SS.compress hd).n with
+    | Tm_name bv when args_are_binders args bs ->
+        if cfg.debug.wpe then
+            BU.print3 "WPE> got it\n>>>>top = %s\n>>>>b = %s\n>>>>hd = %s\n"
+                        (Print.term_to_string t)
+                        (Print.bv_to_string bv)
+                        (Print.term_to_string hd);
+        Some bv
+    | _ -> None
+
+(* As above accounting for squashes *)
+let is_applied_maybe_squashed cfg (bs : binders) (t : term) : option bv =
+  if cfg.debug.wpe then
+      BU.print2 "WPE> is_applied_maybe_squashed %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t);
+  match is_squash t with
+  | Some (_, t') -> is_applied cfg bs t'
+  | _ -> begin match is_auto_squash t with
+         | Some (_, t') -> is_applied cfg bs t'
+         | _ -> is_applied cfg bs t
+         end
+
+let is_quantified_const cfg (bv:bv) (phi : term) : option term =
+    let open FStar.Syntax.Formula in
+    let open FStar.Class.Monad in
+    let guard (b:bool) : option unit = if b then Some () else None in
+
+    let phi0 = phi in
+    let types_match bs =
+      (* We need to make sure that the forall above is over the same types
+      as those in the domain of `f`. See bug #3213. *)
+      let bs_q, _ = !__get_n_binders cfg.tcenv [AllowUnboundUniverses] (List.length bs) bv.sort in
+      let rec unrefine_true (t:term) : term =
+        (* Discard trivial refinements. *)
+        match (SS.compress t).n with
+        | Tm_refine {b; phi} when U.term_eq phi U.t_true -> unrefine_true b.sort
+        | _ -> t
+      in
+      List.length bs = List.length bs_q &&
+      List.forall2 (fun b1 b2 ->
+        let s1 = b1.binder_bv.sort |> unrefine_true in
+        let s2 = b2.binder_bv.sort |> unrefine_true in
+        U.term_eq s1 s2)
+        bs bs_q
+    in
+    let is_bv (bv:S.bv) (t:term) =
+      match (SS.compress t).n with
+      | Tm_name bv' -> S.bv_eq bv bv'
+      | _ -> false
+    in
+    let replace_full_applications_with (bv:S.bv) (arity:int) (s:term) (t:term) : term & bool =
+      let chgd = BU.mk_ref false in
+      let t' = t |> Syntax.Visit.visit_term (fun t ->
+                      let hd, args = U.head_and_args t in
+                      if List.length args = arity && is_bv bv hd then (
+                        chgd := true;
+                        s
+                      ) else
+                        t)
+      in
+      t', !chgd
+    in
+    let! form = destruct_typ_as_formula phi in
+    match form with
+    | BaseConn (lid, [(p, _); (q, _)]) when Ident.lid_equals lid PC.imp_lid ->
+        if cfg.debug.wpe then
+            BU.print2 "WPE> p = (%s); q = (%s)\n"
+                    (Print.term_to_string p)
+                    (Print.term_to_string q);
+        let! q' =
+          begin match destruct_typ_as_formula p with
+          (* Case 1 *)
+          | None -> begin match (SS.compress p).n with
+                    | Tm_bvar bv' when S.bv_eq bv bv' ->
+                          if cfg.debug.wpe then
+                              BU.print_string "WPE> Case 1\n";
+                          let q' = SS.subst [NT (bv, U.t_true)] q in
+                          Some q'
+                    | _ -> None
+                    end
+          (* Case 2 *)
+          | Some (BaseConn (lid, [(p, _)])) when Ident.lid_equals lid PC.not_lid ->
+              begin match (SS.compress p).n with
+              | Tm_bvar bv' when S.bv_eq bv bv' ->
+                      if cfg.debug.wpe then
+                          BU.print_string "WPE> Case 2\n";
+                      let q' = SS.subst [NT (bv, U.t_false)] q in
+                      Some q'
+              | _ -> None
+              end
+          | Some (QAll (bs, pats, phi)) when types_match bs ->
+              begin match destruct_typ_as_formula phi with
+              | None ->
+                  let! bv' = is_applied_maybe_squashed cfg bs phi in
+                  guard (S.bv_eq bv bv');!
+                  (* Case 3 *)
+                  if cfg.debug.wpe then
+                      BU.print_string "WPE> Case 3\n";
+                  let q', chgd = replace_full_applications_with bv (List.length bs) U.t_true q in
+                  guard chgd;! (* If nothing triggered, do not rewrite to itself to avoid infinite loops *)
+                  Some q'
+              | Some (BaseConn (lid, [(p, _)])) when Ident.lid_equals lid PC.not_lid ->
+                  let! bv' = is_applied_maybe_squashed cfg bs p in
+                  guard (S.bv_eq bv bv');!
+                  if cfg.debug.wpe then
+                    BU.print_string "WPE> Case 4\n";
+                  let q', chgd = replace_full_applications_with bv (List.length bs) U.t_false q in
+                  guard chgd;!
+                  Some q'
+              | _ ->
+                  None
+              end
+          | _ -> None
+          end
+        in
+        let phi' = U.mk_app (S.fvar PC.imp_lid None) [S.as_arg p; S.as_arg q'] in
+        Some phi'
+    | _ -> None
+
+// A very F*-specific optimization:
+//  1)  forall f.                       (f ==> E[f])     ~>     E[True]
+//  2)  forall f.                      (~f ==> E[f])     ~>     E[False]
+//
+//  3)  forall f. (forall j1 ... jn. f j1 ... jn)    ==> E
+//  ~>  forall f. (forall j1 ... jn. f j1 ... jn)    ==> E', where every full application of `f` to `n` binders is rewritten to true
+//
+//  4)  forall f. (forall j1 ... jn. ~(f j1 ... jn)) ==> E
+//  ~>  forall f. (forall j1 ... jn. ~(f j1 ... jn)) ==> E', idem rewriting to false
+// reurns the rewritten formula.
+let is_forall_const cfg (phi : term) : option term =
+  let open FStar.Syntax.Formula in
+    match Syntax.Formula.destruct_typ_as_formula phi with
+    | Some (QAll ([b], _, phi')) ->
+        let open FStar.Class.Monad in
+        if cfg.debug.wpe then
+            BU.print2 "WPE> QAll [%s] %s\n" (show b.binder_bv) (show phi');
+        let! phi' = is_quantified_const cfg b.binder_bv phi' in
+        Some (U.mk_forall (cfg.tcenv.universe_of cfg.tcenv b.binder_bv.sort) b.binder_bv phi')
+
+    | _ -> None
 
 (* GM: Please consider this function private outside of this recursive
  * group, and call `normalize` instead. `normalize` will print timing
@@ -1179,9 +1340,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                         (Print.tag_of_term t)
                                         (BU.string_of_bool (cfg.steps.no_full_norm))
                                         (Print.term_to_string t)
-                                        (BU.string_of_int (List.length env))
+                                        (show (List.length env))
                                         (stack_to_string (fst <| firstn 4 stack)));
-        log_cfg cfg (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string cfg));
+        log_cfg cfg (fun () -> BU.print1 ">>> cfg = %s\n" (show cfg));
         match t.n with
           // Values
           | Tm_unknown
@@ -1260,11 +1421,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
               then begin
                 let cfg' = Cfg.config' [] s cfg.tcenv in
                 // BU.print1 "NBE result timing (%s ms)\n"
-                //        (BU.string_of_int (snd (BU.time_diff start fin)))
+                //        (show (snd (BU.time_diff start fin)))
                 BU.print4 "NBE result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
-                       (BU.string_of_int (snd (BU.time_diff start fin)))
+                       (show (snd (BU.time_diff start fin)))
                        (Print.term_to_string tm')
-                       (Cfg.cfg_to_string cfg')
+                       (show cfg')
                        (Print.term_to_string tm_norm)
               end;
               rebuild cfg env stack tm_norm
@@ -2197,7 +2358,7 @@ and norm_comp : cfg -> env -> comp -> comp =
     fun cfg env comp ->
         log cfg (fun () -> BU.print2 ">>> %s\nNormComp with with %s env elements\n"
                                         (Print.comp_to_string comp)
-                                        (BU.string_of_int (List.length env)));
+                                        (show (List.length env)));
         match comp.n with
             | Total t ->
               let t = norm cfg env [] t in
@@ -2274,7 +2435,6 @@ and norm_cb cfg : EMB.norm_cb = function
 (* The boolean indicates whether further normalization is required. *)
 (*******************************************************************)
 and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term & bool =
-    let open FStar.Syntax.Formula in
     let tm, renorm = reduce_primops (norm_cb cfg) cfg env tm in
     if not <| cfg.steps.simplify then tm, renorm
     else
@@ -2284,113 +2444,6 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term & bool
         match (U.unmeta t).n with
         | Tm_fvar fv when S.fv_eq_lid fv PC.true_lid ->  Some true
         | Tm_fvar fv when S.fv_eq_lid fv PC.false_lid -> Some false
-        | _ -> None
-    in
-    let rec args_are_binders args bs =
-        match args, bs with
-        | (t, _)::args, b::bs ->
-            begin match (SS.compress t).n with
-            | Tm_name bv' -> S.bv_eq b.binder_bv bv' && args_are_binders args bs
-            | _ -> false
-            end
-        | [], [] -> true
-        | _, _ -> false
-    in
-    let is_applied (bs:binders) (t : term) : option bv =
-        if cfg.debug.wpe then
-            BU.print2 "WPE> is_applied %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t);
-        let hd, args = U.head_and_args_full t in
-        match (SS.compress hd).n with
-        | Tm_name bv when args_are_binders args bs ->
-            if cfg.debug.wpe then
-                BU.print3 "WPE> got it\n>>>>top = %s\n>>>>b = %s\n>>>>hd = %s\n"
-                            (Print.term_to_string t)
-                            (Print.bv_to_string bv)
-                            (Print.term_to_string hd);
-            Some bv
-        | _ -> None
-    in
-    let is_applied_maybe_squashed (bs : binders) (t : term) : option bv =
-        if cfg.debug.wpe then
-            BU.print2 "WPE> is_applied_maybe_squashed %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t);
-        match is_squash t with
-        | Some (_, t') -> is_applied bs t'
-        | _ -> begin match is_auto_squash t with
-               | Some (_, t') -> is_applied bs t'
-               | _ -> is_applied bs t
-               end
-    in
-    // A very F*-specific optimization:
-    //  1)  forall p.                       (p ==> E[p])     ~>     E[True]
-    //  2)  forall p.                      (~p ==> E[p])     ~>     E[False]
-    //  3)  forall p. (forall j1 j2 ... jn. p j1 j2 ... jn)    ==> E[p]    ~>    E[(fun j1 j2 ... jn -> True)]
-    //  4)  forall p. (forall j1 j2 ... jn. ~(p j1 j2 ... jn)) ==> E[p]    ~>    E[(fun j1 j2 ... jn -> False)]
-    let is_quantified_const (bv:bv) (phi : term) : option term =
-        let open FStar.Syntax.Formula in
-        match destruct_typ_as_formula phi with
-        | Some (BaseConn (lid, [(p, _); (q, _)])) when Ident.lid_equals lid PC.imp_lid ->
-            if cfg.debug.wpe then
-                BU.print2 "WPE> p = (%s); q = (%s)\n"
-                        (Print.term_to_string p)
-                        (Print.term_to_string q);
-            begin match destruct_typ_as_formula p with
-            // Case 1)
-            | None -> begin match (SS.compress p).n with
-                      | Tm_bvar bv' when S.bv_eq bv bv' ->
-                            if cfg.debug.wpe then
-                                BU.print_string "WPE> Case 1\n";
-                            Some (SS.subst [NT (bv, U.t_true)] q)
-                      | _ -> None
-                      end
-
-            // Case 2)
-            | Some (BaseConn (lid, [(p, _)])) when Ident.lid_equals lid PC.not_lid ->
-                begin match (SS.compress p).n with
-                | Tm_bvar bv' when S.bv_eq bv bv' ->
-                        if cfg.debug.wpe then
-                            BU.print_string "WPE> Case 2\n";
-                        Some (SS.subst [NT (bv, U.t_false)] q)
-                | _ -> None
-                end
-
-            | Some (QAll (bs, pats, phi)) ->
-                begin match destruct_typ_as_formula phi with
-                | None ->
-                    begin match is_applied_maybe_squashed bs phi with
-                    // Case 3)
-                    | Some bv' when S.bv_eq bv bv' ->
-                        if cfg.debug.wpe then
-                            BU.print_string "WPE> Case 3\n";
-                        let ftrue = U.abs bs U.t_true (Some (U.residual_tot U.ktype0)) in
-                        Some (SS.subst [NT (bv, ftrue)] q)
-                    | _ ->
-                        None
-                    end
-                | Some (BaseConn (lid, [(p, _)])) when Ident.lid_equals lid PC.not_lid ->
-                    begin match is_applied_maybe_squashed bs p with
-                    // Case 4)
-                    | Some bv' when S.bv_eq bv bv' ->
-                        if cfg.debug.wpe then
-                            BU.print_string "WPE> Case 4\n";
-                        let ffalse = U.abs bs U.t_false (Some (U.residual_tot U.ktype0)) in
-                        Some (SS.subst [NT (bv, ffalse)] q)
-                    | _ ->
-                        None
-                    end
-                | _ ->
-                    None
-                end
-
-            | _ -> None
-            end
-        | _ -> None
-    in
-    let is_forall_const (phi : term) : option term =
-        match destruct_typ_as_formula phi with
-        | Some (QAll ([b], _, phi')) ->
-            if cfg.debug.wpe then
-                BU.print2 "WPE> QAll [%s] %s\n" (Print.bv_to_string b.binder_bv) (Print.term_to_string phi');
-            is_quantified_const b.binder_bv phi'
         | _ -> None
     in
     let is_const_match (phi : term) : option bool =
@@ -2444,11 +2497,11 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term & bool
         | _ -> false
     in
     let simplify arg = (simp_t (fst arg), arg) in
-    match is_forall_const tm with
+    match is_forall_const cfg tm with
     (* We need to recurse, and maybe reduce further! *)
     | Some tm' ->
         if cfg.debug.wpe then
-            BU.print2 "WPE> %s ~> %s\n" (Print.term_to_string tm) (Print.term_to_string tm');
+            BU.print2 "WPE> %s ~> %s\n" (show tm) (show tm');
         maybe_simplify_aux cfg env stack (norm cfg env [] tm')
     (* Otherwise try to simplify this point *)
     | None ->
@@ -2628,7 +2681,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
     BU.print4 ">>> %s\nRebuild %s with %s env elements and top of the stack %s \n"
                                         (Print.tag_of_term t)
                                         (Print.term_to_string t)
-                                        (BU.string_of_int (List.length env))
+                                        (show (List.length env))
                                         (stack_to_string (fst <| firstn 4 stack));
     if Env.debug cfg.tcenv (Options.Other "NormRebuild")
     then match FStar.Syntax.Util.unbound_variables t with
@@ -3103,35 +3156,29 @@ and norm_residual_comp cfg env (rc:residual_comp) : residual_comp =
 let reflection_env_hook = BU.mk_ref None
 
 let normalize_with_primitive_steps ps s e t =
-  Profiling.profile (fun () ->
-    let c = config' ps s e in
-    reflection_env_hook := Some e;
-    plugin_unfold_warn_ctr := 10;
-    log_cfg c (fun () -> BU.print1 "Cfg = %s\n" (cfg_to_string c));
-    if is_nbe_request s then begin
-      log_top c (fun () -> BU.print1 "Starting NBE for (%s) {\n" (Print.term_to_string t));
-      log_top c (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string c));
+  let is_nbe = is_nbe_request s in
+  let maybe_nbe = if is_nbe then " (NBE)" else "" in
+  Errors.with_ctx ("While normalizing a term" ^ maybe_nbe) (fun () ->
+    Profiling.profile (fun () ->
+      let c = config' ps s e in
+      reflection_env_hook := Some e;
+      plugin_unfold_warn_ctr := 10;
+      log_top c (fun () -> BU.print2 "\nStarting normalizer%s for (%s) {\n" maybe_nbe (show t));
+      log_top c (fun () -> BU.print1 ">>> cfg = %s\n" (show c));
       def_check_scoped t.pos "normalize_with_primitive_steps call" e t;
-      let (r, ms) = Errors.with_ctx "While normalizing a term via NBE" (fun () ->
-                      BU.record_time (fun () ->
-                        nbe_eval c s t))
+      let (r, ms) =
+        BU.record_time (fun () ->
+          if is_nbe
+          then nbe_eval c s t
+          else norm c [] [] t
+        )
       in
-      log_top c (fun () -> BU.print2 "}\nNormalization result = (%s) in %s ms\n" (Print.term_to_string r) (string_of_int ms));
+      log_top c (fun () -> BU.print3 "}\nNormalization%s result = (%s) in %s ms\n" maybe_nbe (show r) (show ms));
       r
-    end else begin
-      log_top c (fun () -> BU.print1 "Starting normalizer for (%s) {\n" (Print.term_to_string t));
-      log_top c (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string c));
-      def_check_scoped t.pos "normalize_with_primitive_steps call" e t;
-      let (r, ms) = Errors.with_ctx "While normalizing a term" (fun () ->
-                      BU.record_time (fun () ->
-                        norm c [] [] t))
-      in
-      log_top c (fun () -> BU.print2 "}\nNormalization result = (%s) in %s ms\n" (Print.term_to_string r) (string_of_int ms));
-      r
-    end
+    )
+    (Some (Ident.string_of_lid (Env.current_module e)))
+    "FStar.TypeChecker.Normalize.normalize_with_primitive_steps"
   )
-  (Some (Ident.string_of_lid (Env.current_module e)))
-  "FStar.TypeChecker.Normalize.normalize_with_primitive_steps"
 
 let normalize s e t =
     Profiling.profile (fun () -> normalize_with_primitive_steps [] s e t)
@@ -3144,7 +3191,7 @@ let normalize_comp s e c =
     reflection_env_hook := Some e;
     plugin_unfold_warn_ctr := 10;
     log_top cfg (fun () -> BU.print1 "Starting normalizer for computation (%s) {\n" (Print.comp_to_string c));
-    log_top cfg (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string cfg));
+    log_top cfg (fun () -> BU.print1 ">>> cfg = %s\n" (show cfg));
     def_check_scoped c.pos "normalize_comp call" e c;
     let (c, ms) = Errors.with_ctx "While normalizing a computation type" (fun () ->
                     BU.record_time (fun () ->
@@ -3296,7 +3343,7 @@ let unfold_whnf' steps env t = normalize (steps@whnf_steps) env t
 let unfold_whnf  env t = unfold_whnf' [] env t
 
 let reduce_or_remove_uvar_solutions remove env t =
-    normalize ((if remove then [CheckNoUvars] else [])
+    normalize ((if remove then [DefaultUnivsToZero; CheckNoUvars] else [])
               @[Beta; DoNotUnfoldPureLets; CompressUvars; Exclude Zeta; Exclude Iota; NoFullNorm;])
               env
               t
@@ -3555,14 +3602,14 @@ let unfold_head_once env t =
   | Tm_uinst({n=Tm_fvar fv}, us) -> aux fv us args
   | _ -> None
 
-let get_n_binders (env:Env.env) (n:int) (t:term) : list binder * comp =
+let get_n_binders' (env:Env.env) (steps : list step) (n:int) (t:term) : list binder * comp =
   let rec aux (retry:bool) (n:int) (t:term) : list binder * comp =
     let bs, c = U.arrow_formals_comp t in
     let len = List.length bs in
     match bs, c with
     (* Got no binders, maybe retry after normalizing *)
     | [], _ when retry ->
-      aux false n (unfold_whnf env t)
+      aux false n (unfold_whnf' steps env t)
 
     (* Can't retry, stop *)
     | [], _ when not retry ->
@@ -3587,6 +3634,11 @@ let get_n_binders (env:Env.env) (n:int) (t:term) : list binder * comp =
       (bs, c)
   in
   aux true n t
+
+let get_n_binders env n t = get_n_binders' env [] n t
+
+let () =
+  __get_n_binders := get_n_binders'
 
 let maybe_unfold_head_fv (env:Env.env) (head:term)
   : option term

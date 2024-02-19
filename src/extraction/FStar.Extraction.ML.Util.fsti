@@ -28,13 +28,13 @@ val mk_range_mle : mlexpr
 val mlconst_of_const : p:Range.range -> c:Const.sconst -> mlconstant
 val mlexpr_of_const : p:Range.range -> c:Const.sconst -> mlexpr'
 val mlexpr_of_range : r:Range.range -> mlexpr'
-val subst : mlidents * mlty -> args:list mlty -> mlty
+val subst : list ty_param * mlty -> args:list mlty -> mlty
 val udelta_unfold : g:UEnv.uenv -> _arg1:mlty -> option mlty
 val eff_leq : f:e_tag -> f':e_tag -> bool
 val eff_to_string : _arg1:e_tag -> string
 val join : r:Range.range -> f:e_tag -> f':e_tag -> e_tag
 val join_l : r:Range.range -> fs:Prims.list e_tag -> e_tag
-val mk_ty_fun : (Prims.list (mlident * mlty) -> mlty -> mlty)
+val mk_ty_fun : (Prims.list mlbinder -> mlty -> mlty)
 type unfold_t = mlty -> option mlty
 val type_leq_c : unfold_ty:unfold_t -> e:option mlexpr -> t:mlty -> t':mlty -> bool * option mlexpr
 val type_leq : g:unfold_t -> t1:mlty -> t2:mlty -> bool
@@ -60,3 +60,5 @@ val mlloc_of_range : r:Range.range -> int * string
 val doms_and_cod : t:mlty -> list mlty * mlty
 val argTypes : t:mlty -> list mlty
 val uncurry_mlty_fun : t:mlty -> list mlty * mlty
+
+val list_elements : mlexpr -> option (list mlexpr)

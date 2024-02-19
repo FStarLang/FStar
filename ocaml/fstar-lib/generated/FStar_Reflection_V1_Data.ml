@@ -45,7 +45,7 @@ type pattern =
   | Pat_Cons of (FStar_Syntax_Syntax.fv * FStar_Syntax_Syntax.universe
   Prims.list FStar_Pervasives_Native.option * (pattern * Prims.bool)
   Prims.list) 
-  | Pat_Var of (FStar_Syntax_Syntax.bv * typ) 
+  | Pat_Var of (FStar_Syntax_Syntax.bv * typ FStar_Compiler_Sealed.sealed) 
   | Pat_Dot_Term of FStar_Syntax_Syntax.term FStar_Pervasives_Native.option 
 let (uu___is_Pat_Constant : pattern -> Prims.bool) =
   fun projectee ->
@@ -62,7 +62,8 @@ let (__proj__Pat_Cons__item___0 :
   = fun projectee -> match projectee with | Pat_Cons _0 -> _0
 let (uu___is_Pat_Var : pattern -> Prims.bool) =
   fun projectee -> match projectee with | Pat_Var _0 -> true | uu___ -> false
-let (__proj__Pat_Var__item___0 : pattern -> (FStar_Syntax_Syntax.bv * typ)) =
+let (__proj__Pat_Var__item___0 :
+  pattern -> (FStar_Syntax_Syntax.bv * typ FStar_Compiler_Sealed.sealed)) =
   fun projectee -> match projectee with | Pat_Var _0 -> _0
 let (uu___is_Pat_Dot_Term : pattern -> Prims.bool) =
   fun projectee ->
@@ -84,11 +85,13 @@ let (uu___is_Q_Meta : aqualv -> Prims.bool) =
 let (__proj__Q_Meta__item___0 : aqualv -> FStar_Syntax_Syntax.term) =
   fun projectee -> match projectee with | Q_Meta _0 -> _0
 type argv = (FStar_Syntax_Syntax.term * aqualv)
-let (as_ppname : Prims.string -> Prims.string) = fun x -> x
+type ppname_t = Prims.string FStar_Compiler_Sealed.sealed
+let (as_ppname : Prims.string -> ppname_t) =
+  fun x -> FStar_Compiler_Sealed.seal x
 type bv_view = {
-  bv_ppname: Prims.string ;
+  bv_ppname: ppname_t ;
   bv_index: FStar_BigInt.t }
-let (__proj__Mkbv_view__item__bv_ppname : bv_view -> Prims.string) =
+let (__proj__Mkbv_view__item__bv_ppname : bv_view -> ppname_t) =
   fun projectee ->
     match projectee with | { bv_ppname; bv_index;_} -> bv_ppname
 let (__proj__Mkbv_view__item__bv_index : bv_view -> FStar_BigInt.t) =

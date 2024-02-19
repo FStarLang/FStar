@@ -186,9 +186,11 @@ let (e_term :
   FStar_Syntax_Syntax.term FStar_Syntax_Embeddings_Base.embedding) =
   e_term_aq noaqs
 let (e_sort :
-  FStar_Syntax_Syntax.term FStar_Syntax_Embeddings_Base.embedding) =
-  FStar_Syntax_Embeddings.e_sealed e_term
-let (e_ppname : Prims.string FStar_Syntax_Embeddings_Base.embedding) =
+  FStar_Syntax_Syntax.term FStar_Compiler_Sealed.sealed
+    FStar_Syntax_Embeddings_Base.embedding)
+  = FStar_Syntax_Embeddings.e_sealed e_term
+let (e_ppname :
+  FStar_Reflection_V2_Data.ppname_t FStar_Syntax_Embeddings_Base.embedding) =
   FStar_Syntax_Embeddings.e_sealed FStar_Syntax_Embeddings.e_string
 let (e_aqualv :
   FStar_Reflection_V2_Data.aqualv FStar_Syntax_Embeddings_Base.embedding) =
@@ -588,7 +590,9 @@ let rec e_pattern_aq :
             let uu___2 =
               let uu___3 =
                 let uu___4 =
-                  embed FStar_Syntax_Embeddings.e_string rng ppname in
+                  embed
+                    (FStar_Syntax_Embeddings.e_sealed
+                       FStar_Syntax_Embeddings.e_string) rng ppname in
                 FStar_Syntax_Syntax.as_arg uu___4 in
               [uu___3] in
             uu___1 :: uu___2 in
@@ -1312,7 +1316,10 @@ let (e_namedv_view :
         let uu___4 =
           let uu___5 =
             let uu___6 =
-              embed e_ppname rng namedvv.FStar_Reflection_V2_Data.ppname in
+              embed
+                (FStar_Syntax_Embeddings.e_sealed
+                   FStar_Syntax_Embeddings.e_string) rng
+                namedvv.FStar_Reflection_V2_Data.ppname in
             FStar_Syntax_Syntax.as_arg uu___6 in
           [uu___5] in
         uu___3 :: uu___4 in
@@ -1366,7 +1373,10 @@ let (e_bv_view :
         let uu___4 =
           let uu___5 =
             let uu___6 =
-              embed e_ppname rng bvv.FStar_Reflection_V2_Data.ppname1 in
+              embed
+                (FStar_Syntax_Embeddings.e_sealed
+                   FStar_Syntax_Embeddings.e_string) rng
+                bvv.FStar_Reflection_V2_Data.ppname1 in
             FStar_Syntax_Syntax.as_arg uu___6 in
           [uu___5] in
         uu___3 :: uu___4 in
@@ -1421,7 +1431,10 @@ let (e_binding :
         let uu___4 =
           let uu___5 =
             let uu___6 =
-              embed e_ppname rng bindingv.FStar_Reflection_V2_Data.ppname3 in
+              embed
+                (FStar_Syntax_Embeddings.e_sealed
+                   FStar_Syntax_Embeddings.e_string) rng
+                bindingv.FStar_Reflection_V2_Data.ppname3 in
             FStar_Syntax_Syntax.as_arg uu___6 in
           [uu___5] in
         uu___3 :: uu___4 in
@@ -1485,7 +1498,10 @@ let (e_binder_view :
           let uu___6 =
             let uu___7 =
               let uu___8 =
-                embed e_ppname rng bview.FStar_Reflection_V2_Data.ppname2 in
+                embed
+                  (FStar_Syntax_Embeddings.e_sealed
+                     FStar_Syntax_Embeddings.e_string) rng
+                  bview.FStar_Reflection_V2_Data.ppname2 in
               FStar_Syntax_Syntax.as_arg uu___8 in
             [uu___7] in
           uu___5 :: uu___6 in

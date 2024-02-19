@@ -29,8 +29,9 @@ open FStar.Syntax.Subst
 open FStar.Syntax.Util
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
-
 open FStar.TypeChecker.Primops
+
+open FStar.Class.Show
 
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
@@ -63,7 +64,7 @@ type fsteps = {
      simplify : bool;
      erase_universes : bool;
      allow_unbound_universes : bool;
-     reify_ : bool; // fun fact: calling it 'reify' won't bootstrap :)
+     reify_ : bool; // 'reify' is reserved
      compress_uvars : bool;
      no_full_norm : bool;
      check_no_uvars : bool;
@@ -74,6 +75,7 @@ type fsteps = {
      nbe_step:bool;
      for_extraction:bool;
      unrefine:bool;
+     default_univs_to_zero:bool; (* Default unresolved universe levels to zero *)
 }
 
 val default_steps : fsteps
@@ -116,7 +118,7 @@ val primop_time_report : unit -> string
 
 val cfg_env: cfg -> Env.env
 
-val cfg_to_string : cfg -> string
+instance val showable_cfg : showable cfg
 
 val log : cfg -> (unit -> unit) -> unit
 val log_top : cfg -> (unit -> unit) -> unit

@@ -23,6 +23,7 @@ any .ml file from an interface. Hence we keep both, exactly equal to
 each other. *)
 open FStar.Compiler.List
 open FStar.Syntax.Syntax
+open FStar.Compiler.Sealed
 module Ident = FStar.Ident
 module Range = FStar.Compiler.Range
 module Z     = FStar.BigInt
@@ -49,7 +50,7 @@ type universes = list universe
 type pattern =
     | Pat_Constant of vconst
     | Pat_Cons     of fv * option (list universe) * list (pattern * bool)
-    | Pat_Var      of bv * typ
+    | Pat_Var      of bv * sealed typ
     | Pat_Dot_Term of option term
 
 type branch = pattern * term
@@ -61,10 +62,11 @@ type aqualv =
 
 type argv = term * aqualv
 
-val as_ppname (s:string) : Tot string
+type ppname_t = sealed string
+val as_ppname (s:string) : Tot ppname_t
 
 type bv_view = {
-    bv_ppname : string;
+    bv_ppname : ppname_t;
     bv_index : Z.t;
 }
 

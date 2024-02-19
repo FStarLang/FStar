@@ -3,22 +3,24 @@ let solve : 'a . 'a -> 'a = fun ev -> ev
 let (uu___2 :
   FStar_Syntax_Syntax.term FStar_Syntax_Embeddings_Base.embedding) =
   FStar_Reflection_V2_Embeddings.e_term
-let unseal : 'uuuuu 'a . 'uuuuu -> 'a -> 'a FStar_Tactics_Monad.tac =
+let unseal :
+  'uuuuu 'a .
+    'uuuuu -> 'a FStar_Compiler_Sealed.sealed -> 'a FStar_Tactics_Monad.tac
+  =
   fun uu___1 ->
     fun uu___ ->
       (fun _typ ->
          fun x ->
            Obj.magic
              (FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac ()
-                (Obj.magic x))) uu___1 uu___
+                (Obj.magic (FStar_Compiler_Sealed.unseal x)))) uu___1 uu___
 let (unseal_step : FStar_TypeChecker_Primops_Base.primitive_step) =
   let s =
-    let uu___ =
-      FStar_TypeChecker_NBETerm.e_sealed FStar_TypeChecker_NBETerm.e_any in
     FStar_Tactics_InterpFuns.mk_tac_step_2 Prims.int_one "unseal"
       FStar_Syntax_Embeddings.e_any
       (FStar_Syntax_Embeddings.e_sealed FStar_Syntax_Embeddings.e_any)
-      FStar_Syntax_Embeddings.e_any FStar_TypeChecker_NBETerm.e_any uu___
+      FStar_Syntax_Embeddings.e_any FStar_TypeChecker_NBETerm.e_any
+      (FStar_TypeChecker_NBETerm.e_sealed FStar_TypeChecker_NBETerm.e_any)
       FStar_TypeChecker_NBETerm.e_any unseal unseal in
   {
     FStar_TypeChecker_Primops_Base.name = FStar_Parser_Const.unseal_lid;

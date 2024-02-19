@@ -97,7 +97,7 @@ let rec resugar_universe (u:S.universe) r: A.term =
       //augment `a` an Unknown level (the level is unimportant ... we should maybe remove it altogether)
       A.mk_term a r A.Un
   in
-  begin match u with
+  begin match Subst.compress_univ u with
     | U_zero ->
       mk (A.Const(Const_int ("0", None))) r
 
@@ -795,12 +795,6 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
               resugar_term' env e
       in
       begin match m with
-      | Meta_pattern (_, pats) ->
-        // This case is possible in TypeChecker when creating "haseq" for Sig_inductive_typ whose Sig_datacon has no binders.
-        let pats = List.flatten pats |> List.map (fun (x, _) -> resugar_term' env x) in
-        // Is it correct to resugar it to Attributes.
-        mk (A.Attributes pats)
-
       | Meta_labeled _ ->
           (* Ignore the label, we don't want to print it *)
           resugar_term' env e
@@ -808,6 +802,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           resugar_meta_desugared i
       | Meta_named t ->
           mk (A.Name t)
+      | Meta_pattern _ // stray pattern, ignore
       | Meta_monadic _
       | Meta_monadic_lift _ -> resugar_term' env e
       end

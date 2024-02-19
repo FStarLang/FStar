@@ -129,8 +129,8 @@ let e_term_aq aq =
 
 let e_term = e_term_aq noaqs
 
-let e_sort   : embedding term   = e_sealed e_term
-let e_ppname : embedding string = e_sealed e_string
+let e_sort   : embedding (Sealed.sealed term)   = e_sealed e_term
+let e_ppname : embedding ppname_t = e_sealed e_string
 
 let e_aqualv =
     let embed_aqualv (rng:Range.range) (q : aqualv) : term =
@@ -435,7 +435,7 @@ instance e_namedv_view =
         S.mk_Tm_app ref_Mk_namedv_view.t [
           S.as_arg (embed rng namedvv.uniq);
           S.as_arg (embed #_ #e_sort   rng namedvv.sort);
-          S.as_arg (embed #_ #e_ppname rng namedvv.ppname);
+          S.as_arg (embed rng namedvv.ppname);
         ]
                     rng
     in
@@ -453,7 +453,7 @@ instance e_bv_view =
         S.mk_Tm_app ref_Mk_bv_view.t [
           S.as_arg (embed rng bvv.index);
           S.as_arg (embed #_ #e_sort   rng bvv.sort);
-          S.as_arg (embed #_ #e_ppname rng bvv.ppname);
+          S.as_arg (embed rng bvv.ppname);
         ]
                     rng
     in
@@ -471,7 +471,7 @@ instance e_binding =
         S.mk_Tm_app ref_Mk_binding.t [
           S.as_arg (embed rng bindingv.uniq);
           S.as_arg (embed #_ #e_term   rng bindingv.sort);
-          S.as_arg (embed #_ #e_ppname rng bindingv.ppname);
+          S.as_arg (embed rng bindingv.ppname);
         ]
                     rng
     in
@@ -493,7 +493,7 @@ let e_binder_view =
       S.as_arg (embed #_ #e_term rng bview.sort);
       S.as_arg (embed rng bview.qual);
       S.as_arg (embed #_ #e_attributes rng bview.attrs);
-      S.as_arg (embed #_ #e_ppname rng bview.ppname);
+      S.as_arg (embed rng bview.ppname);
     ]
                 rng in
 

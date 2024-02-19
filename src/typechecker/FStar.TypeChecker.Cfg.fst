@@ -65,6 +65,7 @@ let steps_to_string f =
     weakly_reduce_scrutinee = %s;\n\
     for_extraction = %s;\n\
     unrefine = %s;\n\
+    default_univs_to_zero = %s;\n\
   }"
   [ f.beta |> b;
     f.iota |> b;
@@ -95,6 +96,7 @@ let steps_to_string f =
     f.weakly_reduce_scrutinee |> b;
     f.for_extraction |> b;
     f.unrefine |> b;
+    f.default_univs_to_zero |> b;
    ]
 
 let default_steps : fsteps = {
@@ -128,6 +130,7 @@ let default_steps : fsteps = {
     nbe_step = false;
     for_extraction = false;
     unrefine = false;
+    default_univs_to_zero = false;
 }
 
 let fstep_add_one s fs =
@@ -173,6 +176,7 @@ let fstep_add_one s fs =
     | ForExtraction -> {fs with for_extraction = true }
     | Unrefine -> {fs with unrefine = true }
     | NormDebug -> fs // handled above, affects only dbg flags
+    | DefaultUnivsToZero -> {fs with default_univs_to_zero = true}
 
 let to_fsteps (s : list step) : fsteps =
     List.fold_right fstep_add_one s default_steps
@@ -214,11 +218,13 @@ let prim_from_list (l : list primitive_step) : prim_step_set =
 let built_in_primitive_steps = prim_from_list built_in_primitive_steps_list
 let equality_ops = prim_from_list equality_ops_list
 
-let cfg_to_string cfg =
-    String.concat "\n"
-        ["{";
-         BU.format1 "  steps = %s" (steps_to_string cfg.steps);
-         "}" ]
+instance showable_cfg : showable cfg = {
+  show = (fun cfg ->
+             String.concat "\n"
+                 ["{";
+                 BU.format1 "  steps = %s" (steps_to_string cfg.steps);
+                 "}" ]);
+}
 
 let cfg_env cfg = cfg.tcenv
 

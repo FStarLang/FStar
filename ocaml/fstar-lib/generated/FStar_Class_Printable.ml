@@ -258,5 +258,5 @@ let printable_seq : 'b . 'b printable -> 'b FStar_Seq_Base.seq printable =
            Prims.strcat "<"
              (Prims.strcat
                 (FStar_String.concat "; "
-                   (FStar_Seq_Properties.seq_to_list strings_of_b)) ">"))
+                   (FStar_Seq_Base.seq_to_list strings_of_b)) ">"))
     }

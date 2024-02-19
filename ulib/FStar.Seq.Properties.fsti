@@ -49,8 +49,6 @@ val lemma_tail_append: #a:Type -> s1:seq a{length s1 > 0} -> s2:seq a -> Lemma
 
 let last (#a:Type) (s:seq a{length s > 0}) : Tot a = index s (length s - 1)
 
-let cons (#a:Type) (x:a) (s:seq a) : Tot (seq a) = append (create 1 x) s
-
 val lemma_cons_inj: #a:Type -> v1:a -> v2:a -> s1:seq a -> s2:seq a
   -> Lemma (requires (equal (cons v1 s1) (cons v2 s2)))
           (ensures (v1 == v2 /\ equal s1 s2))
@@ -426,18 +424,6 @@ val seq_mem_k: #a:eqtype -> s:seq a -> n:nat{n < Seq.length s} ->
           [SMTPat (mem (Seq.index s n) s)]
 
 module L = FStar.List.Tot
-
-let rec seq_to_list (#a:Type) (s:seq a)
-: Tot (l:list a{L.length l = length s})
-  (decreases (length s))
-= if length s = 0 then []
-  else index s 0::seq_to_list (slice s 1 (length s))
-
-[@@"opaque_to_smt"]
-let rec seq_of_list (#a:Type) (l:list a) : Tot (s:seq a{L.length l = length s})  =
-  match l with
-  | [] -> Seq.empty #a
-  | hd::tl -> create 1 hd @| seq_of_list tl
 
 val lemma_seq_of_list_induction (#a:Type) (l:list a)
   :Lemma (requires True)
