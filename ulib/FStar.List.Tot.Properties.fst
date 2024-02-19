@@ -595,14 +595,15 @@ let rec partition_count_forall #a f l= match l with
 (** Properties about subset **)
 
 let rec mem_subset (#a: eqtype) (la lb: list a)
-    : Lemma (requires (forall x. mem x la ==> mem x lb))
-            (ensures (subset la lb)) =
+    : Lemma (subset la lb <==> (forall x. mem x la ==> mem x lb))
+            [SMTPat (subset la lb)] =
   match la with
   | [] -> ()
   | hd :: tl -> mem_subset tl lb
 
+(* NOTE: This is implied by mem_subset above, kept for compatibility *)
 let subset_reflexive (#a: eqtype) (l: list a)
-    : Lemma (subset l l) [SMTPat (subset l l)] = mem_subset l l
+    : Lemma (subset l l) = ()
 
 (** Correctness of quicksort **)
 
