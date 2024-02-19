@@ -139,7 +139,8 @@ let lift_atomic1 = A.lift_atomic1
 let lift_atomic2 = A.lift_atomic2
 let new_invariant = A.new_invariant
 let with_invariant = A.with_invariant
-
+let distinct_invariants_have_distinct_names #p #q i j = A.distinct_invariants_have_distinct_names #p #q i j ()
+let invariant_name_identifies_invariant #p #q i j = A.invariant_name_identifies_invariant p q i j
 ////////////////////////////////////////////////////////////////////
 // Ghost computations
 ////////////////////////////////////////////////////////////////////

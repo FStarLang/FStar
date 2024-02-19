@@ -115,6 +115,23 @@ val with_invariant
     (f:unit -> act a f_opens (p ** fp) (fun x -> p ** fp' x))
 : act a (add_inv f_opens i) fp fp'
 
+val distinct_invariants_have_distinct_names
+    (#p:slprop)
+    (#q:slprop)
+    (i:inv p)
+    (j:inv q)
+    (_:squash (p =!= q))
+: act (squash (name_of_inv i =!= name_of_inv j))
+    emp_inames 
+    emp
+    (fun _ -> emp)
+
+val invariant_name_identifies_invariant
+      (p q:slprop)
+      (i:inv p)
+      (j:inv q { name_of_inv i == name_of_inv j } )
+: act (squash (p == q /\ i == j)) emp_inames emp (fun _ -> emp)
+
 ////////////////////////////////////////////////////////////////////////
 // References
 ////////////////////////////////////////////////////////////////////////

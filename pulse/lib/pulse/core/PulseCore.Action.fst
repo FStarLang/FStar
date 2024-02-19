@@ -236,6 +236,15 @@ let with_invariant
     let m = with_invariant i f in
     mem_action_as_action _ _ _ _ m
 
+let distinct_invariants_have_distinct_names
+    #p #q i j pf
+= fun #ictx -> mem_action_as_action _ _ _ _ (distinct_invariants_have_distinct_names ictx p q i j)
+
+let invariant_name_identifies_invariant
+      (p q:slprop)
+      (i:inv p)
+      (j:inv q { name_of_inv i == name_of_inv j } )
+= fun #ictx -> mem_action_as_action _ _ _ _ (invariant_name_identifies_invariant ictx p q i j)
 
 ///////////////////////////////////////////////////////////////////
 // Core operations on references
