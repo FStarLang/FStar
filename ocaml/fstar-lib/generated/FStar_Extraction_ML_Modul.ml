@@ -325,7 +325,7 @@ let (extract_metadata :
 let (binders_as_mlty_binders :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Syntax_Syntax.binder Prims.list ->
-      (FStar_Extraction_ML_UEnv.uenv * FStar_Extraction_ML_Syntax.mlident
+      (FStar_Extraction_ML_UEnv.uenv * FStar_Extraction_ML_Syntax.ty_param
         Prims.list))
   =
   fun env ->
@@ -337,15 +337,27 @@ let (binders_as_mlty_binders :
              | { FStar_Syntax_Syntax.binder_bv = bv;
                  FStar_Syntax_Syntax.binder_qual = uu___1;
                  FStar_Syntax_Syntax.binder_positivity = uu___2;
-                 FStar_Syntax_Syntax.binder_attrs = uu___3;_} ->
+                 FStar_Syntax_Syntax.binder_attrs = binder_attrs;_} ->
                  let env2 = FStar_Extraction_ML_UEnv.extend_ty env1 bv false in
-                 let name =
-                   let uu___4 = FStar_Extraction_ML_UEnv.lookup_bv env2 bv in
-                   match uu___4 with
+                 let ty_param_name =
+                   let uu___3 = FStar_Extraction_ML_UEnv.lookup_bv env2 bv in
+                   match uu___3 with
                    | FStar_Pervasives.Inl ty ->
                        ty.FStar_Extraction_ML_UEnv.ty_b_name
-                   | uu___5 -> FStar_Compiler_Effect.failwith "Impossible" in
-                 (env2, name)) env bs
+                   | uu___4 -> FStar_Compiler_Effect.failwith "Impossible" in
+                 let ty_param_attrs =
+                   FStar_Compiler_List.map
+                     (fun attr ->
+                        let uu___3 =
+                          FStar_Extraction_ML_Term.term_as_mlexpr env2 attr in
+                        match uu___3 with | (e, uu___4, uu___5) -> e)
+                     binder_attrs in
+                 (env2,
+                   {
+                     FStar_Extraction_ML_Syntax.ty_param_name = ty_param_name;
+                     FStar_Extraction_ML_Syntax.ty_param_attrs =
+                       ty_param_attrs
+                   })) env bs
 type data_constructor =
   {
   dname: FStar_Ident.lident ;
@@ -1290,11 +1302,13 @@ let (extract_reifiable_effect :
                                  (FStar_Pervasives_Native.snd tysc) in
                              FStar_Compiler_Util.print1
                                "Extracted action type: %s\n" uu___9);
-                            FStar_Compiler_List.iter
-                              (fun x ->
-                                 FStar_Compiler_Util.print1
-                                   "and binders: %s\n" x)
-                              (FStar_Pervasives_Native.fst tysc))
+                            (let uu___9 =
+                               FStar_Extraction_ML_Syntax.ty_param_names
+                                 (FStar_Pervasives_Native.fst tysc) in
+                             FStar_Compiler_List.iter
+                               (fun x ->
+                                  FStar_Compiler_Util.print1
+                                    "and binders: %s\n" x) uu___9))
                          else ());
                         (let uu___7 = extend_iface a_lid a_nm exp exp_b in
                          match uu___7 with
@@ -1968,8 +1982,15 @@ let (extract_bundle :
                             (fun i ->
                                fun uu___5 ->
                                  let uu___6 =
-                                   FStar_Compiler_Util.string_of_int i in
-                                 Prims.strcat "'dummyV" uu___6) indices in
+                                   let uu___7 =
+                                     FStar_Compiler_Util.string_of_int i in
+                                   Prims.strcat "'dummyV" uu___7 in
+                                 {
+                                   FStar_Extraction_ML_Syntax.ty_param_name =
+                                     uu___6;
+                                   FStar_Extraction_ML_Syntax.ty_param_attrs
+                                     = []
+                                 }) indices in
                         FStar_Compiler_List.append vars uu___4 in
                       let uu___4 =
                         let uu___5 =

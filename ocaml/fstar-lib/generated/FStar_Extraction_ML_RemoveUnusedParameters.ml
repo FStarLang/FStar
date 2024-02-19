@@ -273,10 +273,10 @@ let (elim_tydef :
   env_t ->
     Prims.string ->
       FStar_Extraction_ML_Syntax.meta Prims.list ->
-        Prims.string Prims.list ->
+        FStar_Extraction_ML_Syntax.ty_param Prims.list ->
           FStar_Extraction_ML_Syntax.mlty ->
             (env_t * (Prims.string * FStar_Extraction_ML_Syntax.meta
-              Prims.list * Prims.string Prims.list *
+              Prims.list * FStar_Extraction_ML_Syntax.ty_param Prims.list *
               FStar_Extraction_ML_Syntax.mlty)))
   =
   fun env ->
@@ -321,9 +321,11 @@ let (elim_tydef :
             let uu___ =
               FStar_Compiler_List.fold_left
                 (fun uu___1 ->
-                   fun p ->
+                   fun param ->
                      match uu___1 with
                      | (i, params, entry1) ->
+                         let p =
+                           param.FStar_Extraction_ML_Syntax.ty_param_name in
                          let uu___2 =
                            FStar_Compiler_Set.mem FStar_Class_Ord.ord_string
                              p freevars in
@@ -340,8 +342,8 @@ let (elim_tydef :
                                    uu___5) in
                                FStar_Errors.log_issue range_of_tydef uu___4)
                             else ();
-                            ((i + Prims.int_one), (p :: params), (Retain ::
-                              entry1)))
+                            ((i + Prims.int_one), (param :: params), (Retain
+                              :: entry1)))
                          else
                            if (can_eliminate i) || (must_eliminate i)
                            then
@@ -372,9 +374,9 @@ let (elim_tydef :
                                   FStar_Errors.log_issue range uu___7);
                                  FStar_Compiler_Effect.raise Drop_tydef)
                               else
-                                ((i + Prims.int_one), (p :: params), (Retain
-                                  :: entry1)))) (Prims.int_zero, [], [])
-                parameters in
+                                ((i + Prims.int_one), (param :: params),
+                                  (Retain :: entry1))))
+                (Prims.int_zero, [], []) parameters in
             match uu___ with
             | (uu___1, parameters1, entry1) ->
                 let uu___2 =

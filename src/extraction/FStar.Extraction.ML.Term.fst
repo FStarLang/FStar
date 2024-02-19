@@ -1203,7 +1203,7 @@ let maybe_promote_effect ml_e tag t =
     | _ -> ml_e, tag
 
 
-let extract_lb_sig (g:uenv) (lbs:letbindings) =
+let rec extract_lb_sig (g:uenv) (lbs:letbindings) =
     let maybe_generalize {lbname=lbname_; lbeff=lbeff; lbtyp=lbtyp; lbdef=lbdef; lbattrs=lbattrs}
             : lbname //just lbname returned back
             * e_tag  //the ML version of the effect label lbeff
@@ -1252,6 +1252,9 @@ let extract_lb_sig (g:uenv) (lbs:letbindings) =
 
                    let n_tbinders = List.length tbinders in
                    let lbdef = normalize_abs lbdef |> U.unmeta in
+                   let tbinders_as_ty_params env = List.map (fun ({binder_bv=x; binder_attrs}) -> {
+                     ty_param_name = (UEnv.lookup_ty env x).ty_b_name;
+                     ty_param_attrs = List.map (fun attr -> let e, _, _ = term_as_mlexpr g attr in e) binder_attrs}) in
                    begin match lbdef.n with
                       | Tm_abs {bs; body; rc_opt=copt} ->
                         let bs, body = SS.open_term bs body in
@@ -1262,7 +1265,7 @@ let extract_lb_sig (g:uenv) (lbs:letbindings) =
                                 SS.subst s tbody in
                              let env = List.fold_left (fun env ({binder_bv=a}) -> UEnv.extend_ty env a false) g targs in
                              let expected_t = term_as_mlty env expected_source_ty in
-                             let polytype = targs |> List.map (fun ({binder_bv=x}) -> (UEnv.lookup_ty env x).ty_b_name), expected_t in
+                             let polytype = tbinders_as_ty_params env targs, expected_t in
                              let add_unit =
                                 match rest_args with
                                 | [] ->
@@ -1289,7 +1292,7 @@ let extract_lb_sig (g:uenv) (lbs:letbindings) =
                      | Tm_name _ ->
                        let env = List.fold_left (fun env ({binder_bv=a}) -> UEnv.extend_ty env a false) g tbinders in
                        let expected_t = term_as_mlty env tbody in
-                       let polytype = tbinders |> List.map (fun ({binder_bv=x}) -> (UEnv.lookup_ty env x).ty_b_name), expected_t in
+                       let polytype = tbinders_as_ty_params env tbinders, expected_t in
                        //In this case, an eta expansion is safe
                        let args = tbinders |> List.map (fun ({binder_bv=bv}) -> S.bv_to_name bv |> as_arg) in
                        let e = mk (Tm_app {hd=lbdef; args}) lbdef.pos in
@@ -1315,7 +1318,7 @@ let extract_lb_sig (g:uenv) (lbs:letbindings) =
     in
     snd lbs |> List.map maybe_generalize
 
-let extract_lb_iface (g:uenv) (lbs:letbindings)
+and extract_lb_iface (g:uenv) (lbs:letbindings)
     : uenv * list (fv * exp_binding) =
     let is_top = FStar.Syntax.Syntax.is_top_level (snd lbs) in
     let is_rec = not is_top && fst lbs in
@@ -1329,7 +1332,7 @@ let extract_lb_iface (g:uenv) (lbs:letbindings)
                 lbs
 
 //The main extraction function
-let rec check_term_as_mlexpr (g:uenv) (e:term) (f:e_tag) (ty:mlty) :  (mlexpr * mlty) =
+and check_term_as_mlexpr (g:uenv) (e:term) (f:e_tag) (ty:mlty) :  (mlexpr * mlty) =
     debug g
       (fun () -> BU.print3 "Checking %s at type %s and eff %s\n"
                         (Print.term_to_string e)

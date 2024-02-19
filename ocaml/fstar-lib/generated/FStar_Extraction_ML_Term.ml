@@ -2171,7 +2171,7 @@ let (maybe_promote_effect :
             (FStar_Extraction_ML_Syntax.ml_unit,
               FStar_Extraction_ML_Syntax.E_PURE)
         | uu___ -> (ml_e, tag)
-let (extract_lb_sig :
+let rec (extract_lb_sig :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Syntax_Syntax.letbindings ->
       (FStar_Syntax_Syntax.lbname * FStar_Extraction_ML_Syntax.e_tag *
@@ -2234,6 +2234,37 @@ let (extract_lb_sig :
                              let lbdef1 =
                                let uu___7 = normalize_abs lbdef in
                                FStar_Syntax_Util.unmeta uu___7 in
+                             let tbinders_as_ty_params env =
+                               FStar_Compiler_List.map
+                                 (fun uu___7 ->
+                                    match uu___7 with
+                                    | { FStar_Syntax_Syntax.binder_bv = x;
+                                        FStar_Syntax_Syntax.binder_qual =
+                                          uu___8;
+                                        FStar_Syntax_Syntax.binder_positivity
+                                          = uu___9;
+                                        FStar_Syntax_Syntax.binder_attrs =
+                                          binder_attrs;_}
+                                        ->
+                                        let uu___10 =
+                                          let uu___11 =
+                                            FStar_Extraction_ML_UEnv.lookup_ty
+                                              env x in
+                                          uu___11.FStar_Extraction_ML_UEnv.ty_b_name in
+                                        let uu___11 =
+                                          FStar_Compiler_List.map
+                                            (fun attr ->
+                                               let uu___12 =
+                                                 term_as_mlexpr g attr in
+                                               match uu___12 with
+                                               | (e, uu___13, uu___14) -> e)
+                                            binder_attrs in
+                                        {
+                                          FStar_Extraction_ML_Syntax.ty_param_name
+                                            = uu___10;
+                                          FStar_Extraction_ML_Syntax.ty_param_attrs
+                                            = uu___11
+                                        }) in
                              (match lbdef1.FStar_Syntax_Syntax.n with
                               | FStar_Syntax_Syntax.Tm_abs
                                   { FStar_Syntax_Syntax.bs = bs2;
@@ -2313,23 +2344,7 @@ let (extract_lb_sig :
                                                   expected_source_ty in
                                               let polytype =
                                                 let uu___9 =
-                                                  FStar_Compiler_List.map
-                                                    (fun uu___10 ->
-                                                       match uu___10 with
-                                                       | {
-                                                           FStar_Syntax_Syntax.binder_bv
-                                                             = x;
-                                                           FStar_Syntax_Syntax.binder_qual
-                                                             = uu___11;
-                                                           FStar_Syntax_Syntax.binder_positivity
-                                                             = uu___12;
-                                                           FStar_Syntax_Syntax.binder_attrs
-                                                             = uu___13;_}
-                                                           ->
-                                                           let uu___14 =
-                                                             FStar_Extraction_ML_UEnv.lookup_ty
-                                                               env x in
-                                                           uu___14.FStar_Extraction_ML_UEnv.ty_b_name)
+                                                  tbinders_as_ty_params env
                                                     targs in
                                                 (uu___9, expected_t) in
                                               let add_unit =
@@ -2387,24 +2402,7 @@ let (extract_lb_sig :
                                   let expected_t = term_as_mlty env tbody in
                                   let polytype =
                                     let uu___8 =
-                                      FStar_Compiler_List.map
-                                        (fun uu___9 ->
-                                           match uu___9 with
-                                           | {
-                                               FStar_Syntax_Syntax.binder_bv
-                                                 = x;
-                                               FStar_Syntax_Syntax.binder_qual
-                                                 = uu___10;
-                                               FStar_Syntax_Syntax.binder_positivity
-                                                 = uu___11;
-                                               FStar_Syntax_Syntax.binder_attrs
-                                                 = uu___12;_}
-                                               ->
-                                               let uu___13 =
-                                                 FStar_Extraction_ML_UEnv.lookup_ty
-                                                   env x in
-                                               uu___13.FStar_Extraction_ML_UEnv.ty_b_name)
-                                        tbinders in
+                                      tbinders_as_ty_params env tbinders in
                                     (uu___8, expected_t) in
                                   let args =
                                     FStar_Compiler_List.map
@@ -2455,24 +2453,7 @@ let (extract_lb_sig :
                                   let expected_t = term_as_mlty env tbody in
                                   let polytype =
                                     let uu___8 =
-                                      FStar_Compiler_List.map
-                                        (fun uu___9 ->
-                                           match uu___9 with
-                                           | {
-                                               FStar_Syntax_Syntax.binder_bv
-                                                 = x;
-                                               FStar_Syntax_Syntax.binder_qual
-                                                 = uu___10;
-                                               FStar_Syntax_Syntax.binder_positivity
-                                                 = uu___11;
-                                               FStar_Syntax_Syntax.binder_attrs
-                                                 = uu___12;_}
-                                               ->
-                                               let uu___13 =
-                                                 FStar_Extraction_ML_UEnv.lookup_ty
-                                                   env x in
-                                               uu___13.FStar_Extraction_ML_UEnv.ty_b_name)
-                                        tbinders in
+                                      tbinders_as_ty_params env tbinders in
                                     (uu___8, expected_t) in
                                   let args =
                                     FStar_Compiler_List.map
@@ -2523,24 +2504,7 @@ let (extract_lb_sig :
                                   let expected_t = term_as_mlty env tbody in
                                   let polytype =
                                     let uu___8 =
-                                      FStar_Compiler_List.map
-                                        (fun uu___9 ->
-                                           match uu___9 with
-                                           | {
-                                               FStar_Syntax_Syntax.binder_bv
-                                                 = x;
-                                               FStar_Syntax_Syntax.binder_qual
-                                                 = uu___10;
-                                               FStar_Syntax_Syntax.binder_positivity
-                                                 = uu___11;
-                                               FStar_Syntax_Syntax.binder_attrs
-                                                 = uu___12;_}
-                                               ->
-                                               let uu___13 =
-                                                 FStar_Extraction_ML_UEnv.lookup_ty
-                                                   env x in
-                                               uu___13.FStar_Extraction_ML_UEnv.ty_b_name)
-                                        tbinders in
+                                      tbinders_as_ty_params env tbinders in
                                     (uu___8, expected_t) in
                                   let args =
                                     FStar_Compiler_List.map
@@ -2574,7 +2538,7 @@ let (extract_lb_sig :
                | uu___5 -> no_gen ()) in
       FStar_Compiler_List.map maybe_generalize
         (FStar_Pervasives_Native.snd lbs)
-let (extract_lb_iface :
+and (extract_lb_iface :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Syntax_Syntax.letbindings ->
       (FStar_Extraction_ML_UEnv.uenv * (FStar_Syntax_Syntax.fv *
@@ -2602,7 +2566,7 @@ let (extract_lb_iface :
                         let uu___4 = FStar_Compiler_Util.right lbname in
                         (uu___4, exp_binding) in
                       (env1, uu___3))) g lbs1
-let rec (check_term_as_mlexpr :
+and (check_term_as_mlexpr :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Syntax_Syntax.term ->
       FStar_Extraction_ML_Syntax.e_tag ->
