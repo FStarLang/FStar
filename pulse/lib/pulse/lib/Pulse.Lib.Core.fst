@@ -107,8 +107,11 @@ let join_emp is =
   Set.lemma_equal_intro (join_inames emp_inames is) (reveal is)
 
 let inv = Act.inv
+let allocated_name = Act.allocated_name
 let name_of_inv = Act.name_of_inv
-
+let allocated_name_of_inv = Act.allocated_name_of_inv
+let name_of_allocated_name = Act.name_of_allocated_name
+let allocated_name_of_inv_equiv #p i = ()
 let add_already_there i is = Set.lemma_equal_intro (add_inv is i) is
 
 ////////////////////////////////////////////////////////////////////
@@ -138,6 +141,9 @@ let lift_atomic0 = A.lift_atomic0
 let lift_atomic1 = A.lift_atomic1
 let lift_atomic2 = A.lift_atomic2
 let new_invariant = A.new_invariant
+let fresh_wrt = PulseCore.Action.fresh_wrt
+let fresh_wrt_def i c = ()
+let fresh_invariant = A.fresh_invariant
 let with_invariant = A.with_invariant
 let distinct_invariants_have_distinct_names #p #q i j = A.distinct_invariants_have_distinct_names #p #q i j ()
 let invariant_name_identifies_invariant #p #q i j = A.invariant_name_identifies_invariant p q i j

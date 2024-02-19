@@ -121,8 +121,13 @@ let (/!) (is1 is2 : inames) : Type0 =
   Set.disjoint is1 is2
 
 val inv (p:vprop) : Type u#0
-
+val allocated_name : Type0
 val name_of_inv #p (i : inv p) : GTot iname
+val allocated_name_of_inv #p (i : inv p) : allocated_name
+val name_of_allocated_name (a:allocated_name) : GTot iname
+val allocated_name_of_inv_equiv (#p:vprop) (i:inv p)
+: Lemma (name_of_allocated_name (allocated_name_of_inv i) == name_of_inv i)
+        [SMTPat (name_of_allocated_name (allocated_name_of_inv i))]
 
 let mem_iname (e:inames) (i:iname) : erased bool = elift2 (fun e i -> Set.mem i e) e i
 let mem_inv (#p:vprop) (e:inames) (i:inv p) : erased bool = mem_iname e (name_of_inv i)
@@ -345,6 +350,20 @@ val lift_atomic2
 val new_invariant
     (p:vprop)
 : stt_atomic (inv p) #Unobservable emp_inames p (fun _ -> emp)
+
+val fresh_wrt (i:iname) (c:list allocated_name)
+: prop
+
+val fresh_wrt_def (i:iname) (c:list allocated_name)
+: Lemma
+    (fresh_wrt i c <==>
+    (forall (a:allocated_name). List.Tot.memP a c ==> name_of_allocated_name a =!= i))
+    [SMTPat (fresh_wrt i c)]
+
+val fresh_invariant
+    (ctx:list allocated_name)
+    (p:vprop)
+: stt_atomic (i:inv p { name_of_inv i `fresh_wrt` ctx }) #Unobservable emp_inames p (fun _ -> emp)
 
 val with_invariant
     (#a:Type)

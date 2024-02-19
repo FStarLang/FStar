@@ -318,7 +318,7 @@ val invariant_name_identifies_invariant
   : action_except (squash (p == q /\ i == j)) e emp (fun _ -> emp)
 
 val fresh_invariant (e:inames) (p:slprop) (ctx:list pre_inv)
-  : action_except (i:inv p { not (mem_inv e i) /\ fresh_wrt ctx (name_of_inv i) }) e p (fun _ -> emp)
+  : action_except (i:inv p { fresh_wrt ctx (name_of_inv i) }) e p (fun _ -> emp)
 
 val new_invariant (e:inames) (p:slprop)
   : action_except (inv p) e p (fun _ -> emp)

@@ -210,6 +210,9 @@ val new_invariant
     (p:slprop)
 : stt_atomic (inv p) #Unobservable emp_inames p (fun _ -> emp)
 
+val fresh_invariant (ctx:list allocated_name) (p:slprop)
+: stt_atomic (i:inv p { name_of_inv i `fresh_wrt` ctx }) #Unobservable emp_inames p (fun _ -> emp)
+
 val with_invariant
     (#a:Type)
     (#obs:_)

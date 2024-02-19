@@ -92,7 +92,17 @@ val lift2 (#a:Type u#2) #opens #pre #post
 
 val inv (p:slprop) : Type0
 
-val name_of_inv #p (i:inv p) : GTot iname
+val allocated_name : Type0
+
+val allocated_name_of_inv (#p:_) (i:inv p)
+: allocated_name
+
+val name_of_allocated_name (n:allocated_name)
+: GTot iname
+
+let name_of_inv #p (i:inv p)
+: GTot iname
+= name_of_allocated_name (allocated_name_of_inv i)
 
 let mem_inv (#p:_) (opens:inames) (i:inv p)
 : GTot bool
@@ -104,6 +114,14 @@ let add_inv (#p:_) (opens:inames) (i:inv p)
 
 val new_invariant (p:slprop)
 : act (inv p) emp_inames p (fun _ -> emp)
+
+let fresh_wrt (i:iname)
+              (ctx:list allocated_name)
+: prop
+= forall i'. List.Tot.memP i' ctx ==> name_of_allocated_name i' <> i
+
+val fresh_invariant (ctx:list allocated_name) (p:slprop)
+: act (i:inv p { name_of_inv i `fresh_wrt` ctx }) emp_inames p (fun _ -> emp)
 
 val with_invariant
     (#a:Type)

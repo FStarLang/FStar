@@ -223,6 +223,8 @@ let new_invariant
 : stt_atomic (inv p) #Unobservable emp_inames p (fun _ -> emp)
 = A.new_invariant p
 
+let fresh_invariant = A.fresh_invariant
+
 let with_invariant
     (#a:Type)
     (#obs:_)
