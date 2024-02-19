@@ -210,6 +210,9 @@ val new_invariant
     (p:slprop)
 : stt_atomic (inv p) #Unobservable emp_inames p (fun _ -> emp)
 
+val fresh_invariant (ctx:list allocated_name) (p:slprop)
+: stt_atomic (i:inv p { name_of_inv i `fresh_wrt` ctx }) #Unobservable emp_inames p (fun _ -> emp)
+
 val with_invariant
     (#a:Type)
     (#obs:_)
@@ -222,6 +225,28 @@ val with_invariant
                             (p ** fp)
                             (fun x -> p ** fp' x))
 : stt_atomic a #(join_obs obs Unobservable) (add_inv f_opens i) fp fp'
+
+val distinct_invariants_have_distinct_names
+    (#p:slprop)
+    (#q:slprop)
+    (i:inv p)
+    (j:inv q)
+    (_:squash (p =!= q))
+: stt_atomic (squash (name_of_inv i =!= name_of_inv j))
+    #Unobservable
+    emp_inames 
+    emp
+    (fun _ -> emp)
+
+val invariant_name_identifies_invariant
+      (p q:slprop)
+      (i:inv p)
+      (j:inv q { name_of_inv i == name_of_inv j } )
+: stt_atomic (squash (p == q /\ i == j))
+    #Unobservable
+    emp_inames
+    emp
+    (fun _ -> emp)
 
 ////////////////////////////////////////////////////////////////////////
 // References

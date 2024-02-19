@@ -1428,6 +1428,34 @@ let rec recall_all (ctx:list pre_inv)
       MSTTotal.recall _ mem_evolves (name_is_ok q) i;
       recall_all tl
 
+let distinct_invariants_have_distinct_names
+      (e:inames)
+      (p:slprop)
+      (q:slprop { p =!= q })
+      (i:inv p)
+      (j:inv q)
+      (frame:slprop u#1)
+: MstTot (squash (name_of_inv i =!= name_of_inv j)) e emp (fun _ -> emp) frame
+= let (| ni, wi, toki |) = i in
+  let (| nj, wj, tokj |) = j in
+  MSTTotal.recall _ _ _ toki;
+  MSTTotal.recall _ _ _ tokj
+
+let invariant_name_identifies_invariant
+      (e:inames)
+      (p:slprop)
+      (q:slprop)
+      (i:inv p)
+      (j:inv q { name_of_inv i == name_of_inv j })
+      (frame:slprop u#1)
+: MstTot (squash (p == q /\ i == j)) e emp (fun _ -> emp) frame
+= let (| ni, wi, toki |) = i in
+  let (| nj, wj, tokj |) = j in
+  MSTTotal.recall _ _ _ toki;
+  MSTTotal.recall _ _ _ tokj;
+  W.witnessed_proof_irrelevant _ _ _ wi wj;
+  W.witnessed_proof_irrelevant _ _ _ toki tokj
+
 let fresh_invariant (e:inames) (p:slprop) (ctx:list pre_inv) (frame:slprop)
   : MstTot (i:inv p { not (mem_inv e i) /\ fresh_wrt ctx (name_of_inv i)}) e p (fun _ -> emp) frame
   = let m0 = MSTTotal.get () in

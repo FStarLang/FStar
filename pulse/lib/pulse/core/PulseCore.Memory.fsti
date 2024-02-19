@@ -302,8 +302,23 @@ let fresh_wrt (ctx:list pre_inv)
               (i:iname)
   = forall i'. List.Tot.memP i' ctx ==> name_of_pre_inv i' <> i
 
+val distinct_invariants_have_distinct_names
+      (e:inames)
+      (p:slprop)
+      (q:slprop { p =!= q })
+      (i:inv p)
+      (j:inv q)
+  : action_except (squash (name_of_inv i =!= name_of_inv j)) e emp (fun _ -> emp)
+
+val invariant_name_identifies_invariant
+      (e:inames)
+      (p q:slprop)
+      (i:inv p)
+      (j:inv q { name_of_inv i == name_of_inv j } )
+  : action_except (squash (p == q /\ i == j)) e emp (fun _ -> emp)
+
 val fresh_invariant (e:inames) (p:slprop) (ctx:list pre_inv)
-  : action_except (i:inv p { not (mem_inv e i) /\ fresh_wrt ctx (name_of_inv i) }) e p (fun _ -> emp)
+  : action_except (i:inv p { fresh_wrt ctx (name_of_inv i) }) e p (fun _ -> emp)
 
 val new_invariant (e:inames) (p:slprop)
   : action_except (inv p) e p (fun _ -> emp)

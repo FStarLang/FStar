@@ -214,12 +214,18 @@ let lift2 (#a:Type u#2) #opens #pre #post
 ///////////////////////////////////////////////////////
 
 let inv = inv
-let name_of_inv = name_of_inv
+let allocated_name = pre_inv
+let allocated_name_of_inv = pre_inv_of_inv
+let name_of_allocated_name = name_of_pre_inv
 
 let new_invariant (p:slprop)
 : act (inv p) emp_inames p (fun _ -> emp)
 = fun #ictx -> 
     mem_action_as_action _ _ _ _ (new_invariant ictx p)
+
+let fresh_invariant ctx p
+: act (i:inv p { fresh_wrt (name_of_inv i) ctx  }) emp_inames p (fun _ -> emp)
+= fun #ictx -> mem_action_as_action _ _ _ _ (fresh_invariant ictx p ctx)
 
 let with_invariant
     (#a:Type)
@@ -236,6 +242,15 @@ let with_invariant
     let m = with_invariant i f in
     mem_action_as_action _ _ _ _ m
 
+let distinct_invariants_have_distinct_names
+    #p #q i j pf
+= fun #ictx -> mem_action_as_action _ _ _ _ (distinct_invariants_have_distinct_names ictx p q i j)
+
+let invariant_name_identifies_invariant
+      (p q:slprop)
+      (i:inv p)
+      (j:inv q { name_of_inv i == name_of_inv j } )
+= fun #ictx -> mem_action_as_action _ _ _ _ (invariant_name_identifies_invariant ictx p q i j)
 
 ///////////////////////////////////////////////////////////////////
 // Core operations on references

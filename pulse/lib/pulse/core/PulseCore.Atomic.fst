@@ -223,6 +223,8 @@ let new_invariant
 : stt_atomic (inv p) #Unobservable emp_inames p (fun _ -> emp)
 = A.new_invariant p
 
+let fresh_invariant = A.fresh_invariant
+
 let with_invariant
     (#a:Type)
     (#obs:_)
@@ -236,6 +238,9 @@ let with_invariant
                             (fun x -> p ** fp' x))
 : stt_atomic a #obs (add_inv f_opens i) fp fp'
 = A.with_invariant i f
+
+let distinct_invariants_have_distinct_names = A.distinct_invariants_have_distinct_names
+let invariant_name_identifies_invariant = A.invariant_name_identifies_invariant
 
 let pts_to_not_null #a #p r v = Ghost.hide (A.pts_to_not_null #a #p r v)
 let alloc = A.alloc
