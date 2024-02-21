@@ -326,8 +326,9 @@ val witness
     (fact:stable_property pcm)
     (v:Ghost.erased a)
     (pf:squash (forall z. compatible pcm v z ==> fact z))
-: stt_ghost
+: stt_atomic
     (witnessed r fact)
+    #Unobservable emp_inames
     (pts_to r v)
     (fun _ -> pts_to r v)
 
@@ -338,7 +339,8 @@ val recall
     (r:erased (ref a pcm))
     (v:Ghost.erased a)
     (w:witnessed r fact)
-: stt_ghost (v1:Ghost.erased a{compatible pcm v v1})
+: stt_atomic (v1:Ghost.erased a{compatible pcm v v1})
+    #Unobservable emp_inames
     (pts_to r v)
     (fun v1 -> pts_to r v ** pure (fact v1))
 
@@ -413,8 +415,9 @@ val ghost_witness
     (fact:stable_property pcm)
     (v:Ghost.erased a)
     (pf:squash (forall z. compatible pcm v z ==> fact z))
-: stt_ghost
+: stt_atomic
     (ghost_witnessed r fact)
+    #Unobservable emp_inames
     (ghost_pts_to r v)
     (fun _ -> ghost_pts_to r v)
 
@@ -425,7 +428,8 @@ val ghost_recall
     (r:ghost_ref pcm)
     (v:Ghost.erased a)
     (w:ghost_witnessed r fact)
-: stt_ghost (v1:Ghost.erased a{compatible pcm v v1})
+: stt_atomic (v1:Ghost.erased a{compatible pcm v v1})
+    #Unobservable emp_inames
     (ghost_pts_to r v)
     (fun v1 -> ghost_pts_to r v ** pure (fact v1))
 

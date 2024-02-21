@@ -5,6 +5,15 @@ open PulseCore.InstantiatedSemantics
 open FStar.PCM
 open FStar.Ghost
 
+type reifiability =
+ | Reifiable
+ | UsesInvariants
+
+let ( ^^ ) (r1 r2 : reifiability) : reifiability =
+  match r1, r2 with
+  | Reifiable, Reifiable -> Reifiable
+  | _ -> UsesInvariants
+
 val iname : eqtype
 
 let inames = Ghost.erased (FStar.Set.set iname)
@@ -25,6 +34,7 @@ let inames_disj (ictx:inames) : Type = is:inames{is /! ictx}
 
 val act 
     (a:Type u#a)
+    (tag:reifiability)
     (opens:inames)
     (pre:slprop)
     (post:a -> slprop)
@@ -32,58 +42,74 @@ val act
 
 val return 
     (#a:Type u#a)
+    (#r:_)
     (#post:a -> slprop)
     (x:a)
-: act a emp_inames (post x) post
+: act a r emp_inames (post x) post
 
 val bind
      (#a:Type u#a)
      (#b:Type u#b)
+     (#r:reifiability)
      (#opens:inames)
      (#pre1 #post1 #post2:_)
-     (f:act a opens pre1 post1)
-     (g:(x:a -> act b opens (post1 x) post2))
-: act b opens pre1 post2
+     (f:act a r opens pre1 post1)
+     (g:(x:a -> act b r opens (post1 x) post2))
+: act b r opens pre1 post2
 
 val frame
      (#a:Type u#a)
+     (#r:reifiability)
      (#opens:inames)
      (#pre #post #frame:_)
-     (f:act a opens pre post)
-: act a opens (pre ** frame) (fun x -> post x ** frame)
+     (f:act a r opens pre post)
+: act a r opens (pre ** frame) (fun x -> post x ** frame)
+
+
+val lift_reifiability 
+    (#a:Type)
+    (#r:_)
+    (#pre:slprop)
+    (#post:a -> slprop)
+    (#opens:inames)
+    (f:act a r opens pre post)
+: act a UsesInvariants opens pre post
 
 val weaken 
     (#a:Type)
     (#pre:slprop)
     (#post:a -> slprop)
+    (#r0 #r1:reifiability)
     (#opens opens':inames)
-    (f:act a opens pre post)
-: act a (Set.union opens opens') pre post
+    (f:act a r0 opens pre post)
+: act a (r0 ^^ r1) (Set.union opens opens') pre post
+
 
 val sub 
     (#a:Type)
     (#pre:slprop)
     (#post:a -> slprop)
+    (#r:reifiability)
     (#opens:inames)
     (pre':slprop { slprop_equiv pre pre' })
     (post':a -> slprop { forall x. slprop_equiv (post x) (post' x) })
-    (f:act a opens pre post)
-: act a opens pre' post'
+    (f:act a r opens pre post)
+: act a r opens pre' post'
 
-val lift (#a:Type u#100) #opens (#pre:slprop) (#post:a -> slprop)
-         (m:act a opens pre post)
+val lift (#a:Type u#100) #r #opens (#pre:slprop) (#post:a -> slprop)
+         (m:act a r opens pre post)
 : I.stt a pre post
 
-val lift0 (#a:Type u#0) #opens #pre #post
-          (m:act a opens pre post)
+val lift0 (#a:Type u#0) #r #opens #pre #post
+          (m:act a r opens pre post)
 : I.stt a pre post
 
-val lift1 (#a:Type u#1) #opens #pre #post
-          (m:act a opens pre post)
+val lift1 (#a:Type u#1) #r #opens #pre #post
+          (m:act a r opens pre post)
 : I.stt a pre post
 
-val lift2 (#a:Type u#2) #opens #pre #post
-          (m:act a opens pre post)
+val lift2 (#a:Type u#2) #r #opens #pre #post
+          (m:act a r opens pre post)
 : I.stt a pre post
 
 //////////////////////////////////////////////////////////////////////
@@ -113,7 +139,7 @@ let add_inv (#p:_) (opens:inames) (i:inv p)
 = Set.union (Set.singleton (name_of_inv i)) opens
 
 val new_invariant (p:slprop)
-: act (inv p) emp_inames p (fun _ -> emp)
+: act (inv p) UsesInvariants emp_inames p (fun _ -> emp)
 
 let fresh_wrt (i:iname)
               (ctx:list allocated_name)
@@ -121,17 +147,18 @@ let fresh_wrt (i:iname)
 = forall i'. List.Tot.memP i' ctx ==> name_of_allocated_name i' <> i
 
 val fresh_invariant (ctx:list allocated_name) (p:slprop)
-: act (i:inv p { name_of_inv i `fresh_wrt` ctx }) emp_inames p (fun _ -> emp)
+: act (i:inv p { name_of_inv i `fresh_wrt` ctx }) UsesInvariants emp_inames p (fun _ -> emp)
 
 val with_invariant
     (#a:Type)
+    (#r:_)
     (#fp:slprop)
     (#fp':a -> slprop)
     (#f_opens:inames)
     (#p:slprop)
     (i:inv p{not (mem_inv f_opens i)})
-    (f:unit -> act a f_opens (p ** fp) (fun x -> p ** fp' x))
-: act a (add_inv f_opens i) fp fp'
+    (f:unit -> act a r f_opens (p ** fp) (fun x -> p ** fp' x))
+: act a UsesInvariants (add_inv f_opens i) fp fp'
 
 val distinct_invariants_have_distinct_names
     (#p:slprop)
@@ -140,6 +167,7 @@ val distinct_invariants_have_distinct_names
     (j:inv q)
     (_:squash (p =!= q))
 : act (squash (name_of_inv i =!= name_of_inv j))
+    UsesInvariants
     emp_inames 
     emp
     (fun _ -> emp)
@@ -148,7 +176,7 @@ val invariant_name_identifies_invariant
       (p q:slprop)
       (i:inv p)
       (j:inv q { name_of_inv i == name_of_inv j } )
-: act (squash (p == q /\ i == j)) emp_inames emp (fun _ -> emp)
+: act (squash (p == q /\ i == j)) UsesInvariants emp_inames emp (fun _ -> emp)
 
 ////////////////////////////////////////////////////////////////////////
 // References
@@ -164,15 +192,20 @@ val pts_to (#a:Type u#1) (#p:pcm a) (r:ref a p) (v:a) : slprop
 
 val pts_to_not_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p) (v:a)
 : act (squash (not (is_ref_null r)))
-            emp_inames 
-            (pts_to r v)
-            (fun _ -> pts_to r v)
+    Reifiable
+    emp_inames 
+    (pts_to r v)
+    (fun _ -> pts_to r v)
 
 val alloc
     (#a:Type u#1)
     (#pcm:pcm a)
     (x:a{compatible pcm x x /\ pcm.refine x})
-: act (ref a pcm) emp_inames emp (fun r -> pts_to r x)
+: act (ref a pcm)
+      Reifiable
+      emp_inames
+      emp
+      (fun r -> pts_to r x)
 
 val read
     (#a:Type)
@@ -182,7 +215,9 @@ val read
     (f:(v:a{compatible p x v}
         -> GTot (y:a{compatible p y v /\
                      FStar.PCM.frame_compatible p x v y})))
-: act (v:a{compatible p x v /\ p.refine v}) emp_inames
+: act (v:a{compatible p x v /\ p.refine v})
+      Reifiable
+      emp_inames
       (pts_to r x)
       (fun v -> pts_to r (f v))
 
@@ -192,7 +227,9 @@ val write
     (r:ref a p)
     (x y:Ghost.erased a)
     (f:FStar.PCM.frame_preserving_upd p x y)
-: act unit emp_inames
+: act unit
+    Reifiable
+    emp_inames
     (pts_to r x)
     (fun _ -> pts_to r y)
 
@@ -202,9 +239,11 @@ val share
     (r:ref a pcm)
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a{composable pcm v0 v1})
-: act unit emp_inames
-      (pts_to r (v0 `op pcm` v1))
-      (fun _ -> pts_to r v0 ** pts_to r v1)
+: act unit
+    Reifiable
+    emp_inames
+    (pts_to r (v0 `op pcm` v1))
+    (fun _ -> pts_to r v0 ** pts_to r v1)
 
 val gather
     (#a:Type)
@@ -213,6 +252,7 @@ val gather
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a)
 : act (squash (composable pcm v0 v1))
+    Reifiable
     emp_inames
     (pts_to r v0 ** pts_to r v1)
     (fun _ -> pts_to r (op pcm v0 v1))
@@ -238,7 +278,7 @@ val witness
     (fact:stable_property pcm)
     (v:Ghost.erased a)
     (pf:squash (forall z. compatible pcm v z ==> fact z))
-: act (witnessed r fact) emp_inames (pts_to r v) (fun _ -> pts_to r v)
+: act (witnessed r fact) UsesInvariants emp_inames (pts_to r v) (fun _ -> pts_to r v)
 
 val recall
     (#a:Type u#1)
@@ -248,6 +288,7 @@ val recall
     (v:Ghost.erased a)
     (w:witnessed r fact)
 : act (v1:Ghost.erased a{compatible pcm v v1})
+    UsesInvariants
     emp_inames
     (pts_to r v)
     (fun v1 -> pts_to r v ** pure (fact v1))
@@ -259,22 +300,22 @@ val pure_true ()
 : slprop_equiv (pure True) emp
 
 val intro_pure (p:prop) (pf:squash p)
-: act unit emp_inames emp (fun _ -> pure p)
+: act unit Reifiable emp_inames emp (fun _ -> pure p)
 
 val elim_pure (p:prop)
-: act (squash p) emp_inames (pure p) (fun _ -> emp)
+: act (squash p) Reifiable emp_inames (pure p) (fun _ -> emp)
 
 ///////////////////////////////////////////////////////////////////
 // exists*
 ///////////////////////////////////////////////////////////////////
 val intro_exists (#a:Type u#a) (p:a -> slprop) (x:erased a)
-: act unit emp_inames (p x) (fun _ -> exists* x. p x)
+: act unit Reifiable emp_inames (p x) (fun _ -> exists* x. p x)
 
 val elim_exists (#a:Type u#a) (p:a -> slprop)
-: act (erased a) emp_inames (exists* x. p x) (fun x -> p x)
+: act (erased a) Reifiable emp_inames (exists* x. p x) (fun x -> p x)
 
 ///////////////////////////////////////////////////////////////////
 // Other utils
 ///////////////////////////////////////////////////////////////////
 val drop (p:slprop)
-: act unit emp_inames p (fun _ -> emp)
+: act unit Reifiable emp_inames p (fun _ -> emp)

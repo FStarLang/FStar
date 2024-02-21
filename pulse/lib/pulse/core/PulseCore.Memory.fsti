@@ -18,9 +18,10 @@ open FStar.Ghost
 open FStar.PCM
 module M_ = PulseCore.NondeterministicMonotonicStateMonad
 module PP = PulseCore.Preorder
+module PST = PulseCore.PreorderStateMonad
 
-/// Building up on `Steel.Heap`, this module adds memory invariants to the heap to expose the
-/// final interface for Steel's PCM-based memory model.
+/// Building on `PulseCore.Heap`, this module adds memory invariants to the heap to expose the
+/// final interface for Pulse's PCM-based memory model.
 
 (**** Basic memory properties *)
 
@@ -179,22 +180,41 @@ effect MstTot
         interp (expects `star` frame `star` locks_invariant except m0) m0 /\  //TODO: fix the effect so as not to repeat this
         interp (provides x `star` frame `star` locks_invariant except m1) m1)
 
+let _PST 
+  (a:Type u#a)
+  (except:inames)
+  (expects:slprop u#1)
+  (provides: a -> slprop u#1)
+  (frame:slprop u#1)
+= PST.pst #(full_mem u#1) a mem_evolves
+    (requires fun m0 ->
+        inames_ok except m0 /\
+        interp (expects `star` frame `star` locks_invariant except m0) m0)
+    (ensures fun m0 x m1 ->
+        inames_ok except m1 /\
+        interp (expects `star` frame `star` locks_invariant except m0) m0 /\  //TODO: fix the effect so as not to repeat this
+        interp (provides x `star` frame `star` locks_invariant except m1) m1)
+
 (** An action is just a thunked computation in [MstTot] that takes a frame as argument *)
 let action_except (a:Type u#a) (except:inames) (expects:slprop) (provides: a -> slprop) =
   frame:slprop -> MstTot a except expects provides frame
 
+(** An action is just a thunked computation in [MstTot] that takes a frame as argument *)
+let pst_action_except (a:Type u#a) (except:inames) (expects:slprop) (provides: a -> slprop) =
+  frame:slprop -> _PST a except expects provides frame
+
 val sel_action (#a:Type u#1) (#pcm:_) (e:inames) (r:ref a pcm) (v0:erased a)
-  : action_except (v:a{compatible pcm v0 v}) e (pts_to r v0) (fun _ -> pts_to r v0)
+  : pst_action_except (v:a{compatible pcm v0 v}) e (pts_to r v0) (fun _ -> pts_to r v0)
 
 val upd_action (#a:Type u#1) (#pcm:_) (e:inames)
                (r:ref a pcm)
                (v0:FStar.Ghost.erased a)
                (v1:a {FStar.PCM.frame_preserving pcm v0 v1 /\ pcm.refine v1})
-  : action_except unit e (pts_to r v0) (fun _ -> pts_to r v1)
+  : pst_action_except unit e (pts_to r v0) (fun _ -> pts_to r v1)
 
 val free_action (#a:Type u#1) (#pcm:pcm a) (e:inames)
                 (r:ref a pcm) (x:FStar.Ghost.erased a{FStar.PCM.exclusive pcm x /\ pcm.refine pcm.FStar.PCM.p.one})
-  : action_except unit e (pts_to r x) (fun _ -> pts_to r pcm.FStar.PCM.p.one)
+  : pst_action_except unit e (pts_to r x) (fun _ -> pts_to r pcm.FStar.PCM.p.one)
 
 (** Splitting a permission on a composite resource into two separate permissions *)
 val split_action
@@ -204,7 +224,7 @@ val split_action
   (r:ref a pcm)
   (v0:FStar.Ghost.erased a)
   (v1:FStar.Ghost.erased a{composable pcm v0 v1})
-  : action_except unit e (pts_to r (v0 `op pcm` v1)) (fun _ -> pts_to r v0 `star` pts_to r v1)
+  : pst_action_except unit e (pts_to r (v0 `op pcm` v1)) (fun _ -> pts_to r v0 `star` pts_to r v1)
 
 (** Combining separate permissions into a single composite permission *)
 val gather_action
@@ -214,11 +234,10 @@ val gather_action
   (r:ref a pcm)
   (v0:FStar.Ghost.erased a)
   (v1:FStar.Ghost.erased a)
-  : action_except (_:unit{composable pcm v0 v1}) e (pts_to r v0 `star` pts_to r v1) (fun _ -> pts_to r (op pcm v0 v1))
+  : pst_action_except (_:unit{composable pcm v0 v1}) e (pts_to r v0 `star` pts_to r v1) (fun _ -> pts_to r (op pcm v0 v1))
 
 val alloc_action (#a:Type u#1) (#pcm:pcm a) (e:inames) (x:a{compatible pcm x x /\ pcm.refine x})
-  : action_except (ref a pcm) e emp (fun r -> pts_to r x)
-
+  : pst_action_except (ref a pcm) e emp (fun r -> pts_to r x)
 
 val select_refine (#a:Type u#1) (#p:pcm a)
                   (e:inames)
@@ -227,13 +246,13 @@ val select_refine (#a:Type u#1) (#p:pcm a)
                   (f:(v:a{compatible p x v}
                       -> GTot (y:a{compatible p y v /\
                                   FStar.PCM.frame_compatible p x v y})))
-   : action_except (v:a{compatible p x v /\ p.refine v}) e
-                   (pts_to r x)
-                   (fun v -> pts_to r (f v))
+  : pst_action_except (v:a{compatible p x v /\ p.refine v}) e
+                      (pts_to r x)
+                      (fun v -> pts_to r (f v))
 
 val upd_gen (#a:Type) (#p:pcm a) (e:inames) (r:ref a p) (x y:Ghost.erased a)
             (f:FStar.PCM.frame_preserving_upd p x y)
-  : action_except unit e
+  : pst_action_except unit e
                   (pts_to r x)
                   (fun _ -> pts_to r y)
 
@@ -273,7 +292,7 @@ val pts_to_not_null_action
       (e:inames)
       (r:erased (ref a pcm))
       (v:Ghost.erased a)
-: action_except (squash (not (is_null r))) e
+: pst_action_except (squash (not (is_null r))) e
     (pts_to r v)
     (fun _ -> pts_to r v)
 
@@ -341,28 +360,36 @@ val frame (#a:Type)
           ($f:action_except a opened_invariants pre post)
   : action_except a opened_invariants (pre `star` frame) (fun x -> post x `star` frame)
 
+val pst_frame (#a:Type)
+              (#opened_invariants:inames)
+              (#pre:slprop)
+              (#post:a -> slprop)
+              (frame:slprop)
+              ($f:pst_action_except a opened_invariants pre post)
+  : pst_action_except a opened_invariants (pre `star` frame) (fun x -> post x `star` frame)
+
 module U = FStar.Universe
 
 val witness_h_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
-  : action_except (erased a) opened_invariants
+  : pst_action_except (erased a) opened_invariants
            (h_exists p)
            (fun x -> p x)
 
 val intro_exists (#opened_invariants:_) (#a:_) (p:a -> slprop) (x:erased a)
-  : action_except unit opened_invariants
+  : pst_action_except unit opened_invariants
            (p x)
            (fun _ -> h_exists p)
 
 val lift_h_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
-  : action_except unit opened_invariants
+  : pst_action_except unit opened_invariants
            (h_exists p)
            (fun _a -> h_exists #(U.raise_t a) (U.lift_dom p))
 
 val elim_pure (#opened_invariants:_) (p:prop)
-  : action_except (u:unit{p}) opened_invariants (pure p) (fun _ -> emp)
+  : pst_action_except (u:unit{p}) opened_invariants (pure p) (fun _ -> emp)
 
 val intro_pure (#opened_invariants:_) (p:prop) (_:squash p)
-  : action_except unit opened_invariants emp (fun _ -> pure p)
+  : pst_action_except unit opened_invariants emp (fun _ -> pure p)
 
 val drop (#opened_invariants:_) (p:slprop)
-  : action_except unit opened_invariants p (fun _ -> emp)
+  : pst_action_except unit opened_invariants p (fun _ -> emp)
