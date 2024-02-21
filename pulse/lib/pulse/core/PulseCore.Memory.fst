@@ -893,9 +893,13 @@ let frame_preserving_respects_preorder #a #e #fp #fp' ($f:tot_action_nf_except e
     assert (interp ((fp `star` emp) `star` linv e m0) m0);
     aux emp m0
 
-let lift_tot_action_nf #a #e #fp #fp' ($f:tot_action_nf_except e fp a fp')
-  : MstTotNF a e fp fp'
-  = let m0 = MSTTotal.get () in
+let lift_tot_action #a #e #fp #fp'
+  ($f:tot_action_nf_except e fp a fp')
+: pst_action_except a e fp fp'
+= fun (frame:slprop) m0 ->
+    ac_reasoning_for_m_frame_preserving fp frame (locks_invariant e m0) m0;
+    assert (interp (fp `star` frame `star` locks_invariant e m0) m0);
+    assert (interp (fp `star` locks_invariant e m0) m0);
     let m0' : hmem_with_inv_except e fp = m0 in
     let r = f m0' in
     let (| x, m1 |) = r in
@@ -903,19 +907,7 @@ let lift_tot_action_nf #a #e #fp #fp' ($f:tot_action_nf_except e fp a fp')
     assert (is_frame_preserving f);
     assert (m1 == dsnd (f m0));
     frame_preserving_respects_preorder f m0;
-    MSTTotal.put #_ #(mem_evolves) m1;
-    x
-
-let lift_tot_action #a #e #fp #fp'
-  ($f:tot_action_nf_except e fp a fp')
-  (frame:slprop)
-  : MstTot a e fp fp' frame 
-  = let m0 = MSTTotal.get #(full_mem) #_ () in
-    ac_reasoning_for_m_frame_preserving fp frame (locks_invariant e m0) m0;
-    assert (interp (fp `star` frame `star` locks_invariant e m0) m0);
-    assert (interp (fp `star` locks_invariant e m0) m0);
-    lift_tot_action_nf f
-
+    (x, m1)
 
 (**
   Now defining the lift for heap actions with explicit frame
@@ -972,10 +964,9 @@ let lift_heap_action_with_frame
     (| x, m1 |)
 
 let lift_tot_action_with_frame #a #e #fp #fp'
-  ($f:tot_action_with_frame_except e fp a fp')
-  (frame:slprop)
-  : MstTot a e fp fp' frame
-  = let m0 = MSTTotal.get () in
+    ($f:tot_action_with_frame_except e fp a fp')
+: pst_action_except a e fp fp'
+= fun (frame:slprop) m0 ->
     assert (inames_ok e m0);
     ac_reasoning_for_m_frame_preserving fp frame (locks_invariant e m0) m0;
     assert (interp (fp `star` frame `star` locks_invariant e m0) m0);
@@ -987,8 +978,7 @@ let lift_tot_action_with_frame #a #e #fp #fp'
     assert (interp (fp' x `star` frame `star` locks_invariant e m1) m1);
     assert (interp (fp' x `star` locks_invariant e m1) m1);
     let m1' : hmem_with_inv_except e (fp' x) = m1 in
-    MSTTotal.put #_ #(mem_evolves) m1;
-    x
+    (x, m1)
 
 let sel_action #a #pcm e r v0
   = lift_tot_action (lift_heap_action e (H.sel_action #a #pcm r v0))
@@ -1404,7 +1394,7 @@ let pts_to_not_null_action
       (e:inames)
       (r:erased (ref a pcm))
       (v:Ghost.erased a)
-: action_except (squash (not (is_null r))) e
+: pst_action_except (squash (not (is_null r))) e
     (pts_to r v)
     (fun _ -> pts_to r v)
 = lift_tot_action (lift_heap_action e (H.pts_to_not_null_action #a #pcm r v))
@@ -1702,20 +1692,34 @@ let frame (#a:Type)
     assert (interp (post x `star` frame `star` frame0 `star` linv opened_invariants m1) m1);
     x
 
-val change_slprop (#opened_invariants:inames)
-                  (p q:slprop)
-                  (proof: (m:mem -> Lemma (requires interp p m) (ensures interp q m)))
-  : action_except unit opened_invariants p (fun _ -> q)
+let pst_frame
+          (#a:Type)
+          (#opened_invariants:inames)
+          (#pre:slprop)
+          (#post:a -> slprop)
+          (frame:slprop)
+          ($f:pst_action_except a opened_invariants pre post)
+: pst_action_except a opened_invariants (pre `star` frame) (fun x -> post x `star` frame)
+= fun frame0 m0 ->
+    equiv_pqrs_p_qr_s pre frame frame0 (linv opened_invariants m0);
+    assert (interp (pre `star` frame `star` frame0 `star` linv opened_invariants m0) m0);
+    assert (interp (pre `star` (frame `star` frame0) `star` linv opened_invariants m0) m0);
+    let x, m1 = f (frame `star` frame0) m0 in
+    equiv_pqrs_p_qr_s (post x) frame frame0 (linv opened_invariants m1);
+    assert (interp (post x `star` (frame `star` frame0) `star` linv opened_invariants m1) m1);
+    assert (interp (post x `star` frame `star` frame0 `star` linv opened_invariants m1) m1);
+    x, m1
 
 let change_slprop (#opened_invariants:inames)
                   (p q:slprop)
                   (proof: (m:mem -> Lemma (requires interp p m) (ensures interp q m)))
-  = let proof (h:H.heap)
-      : Lemma (requires H.interp p h)
-              (ensures H.interp q h)
-      = proof (mem_of_heap h)
-    in
-    lift_tot_action (lift_heap_action opened_invariants (H.change_slprop p q proof))
+: pst_action_except unit opened_invariants p (fun _ -> q)
+= let proof (h:H.heap)
+    : Lemma (requires H.interp p h)
+            (ensures H.interp q h)
+    = proof (mem_of_heap h)
+  in
+  lift_tot_action (lift_heap_action opened_invariants (H.change_slprop p q proof))
 
 
 let is_frame_monotonic #a (p : a -> slprop) : prop =
@@ -1732,18 +1736,20 @@ let relate_frame_monotonic_1 #a p
   = ()
 
 let relate_frame_monotonic_2 #a p
-  : Lemma (requires (is_frame_monotonic p))
+: Lemma (requires (is_frame_monotonic p))
           (ensures (H.is_frame_monotonic p))
-  =  let aux (x y : a) (h : H.heap) (f : H.slprop) :
-      Lemma (requires (H.interp (p x `H.star` f) h /\ H.interp (p y) h))
-            (ensures (H.interp (p y `H.star` f) h))
-      =
-        let m = mem_of_heap h in
-        assert (interp (p x `star` f) m);
-        assert (interp (p y)          m);
-        assert (interp (p y `star` f) m)
-    in
-    Classical.forall_intro_4 (fun x y h f -> Classical.move_requires (aux x y h) f)
+= introduce 
+    forall x y h f.
+      (H.interp (p x `H.star` f) h /\ H.interp (p y) h) ==>
+        H.interp (p y `H.star` f) h
+    with 
+  introduce _ ==> _
+  with _ . (
+    let m = mem_of_heap h in
+    assert (interp (p x `star` f) m);
+    assert (interp (p y)          m);
+    assert (interp (p y `star` f) m)
+  )
 
 let witness_h_exists #opened_invariants #a p =
   lift_tot_action_with_frame (lift_heap_action_with_frame opened_invariants (H.witness_h_exists p))
@@ -1758,106 +1764,3 @@ let elim_pure #opened_invariants p = lift_tot_action (lift_heap_action opened_in
 let intro_pure #opened_invariants p pf = lift_tot_action (lift_heap_action opened_invariants (H.intro_pure p pf))
 
 let drop #o p = lift_tot_action (lift_heap_action o (H.drop p))
-(*
-let pts_to_join (#a:Type) (#pcm:pcm a) (r:ref a pcm) (x y : a) (m:mem) :
-  Lemma (requires (interp (pts_to r x) m /\ interp (pts_to r y) m))
-        (ensures (joinable pcm x y)) =
-  H.pts_to_join #a #pcm r x y (heap_of_mem m)
-
-let pts_to_evolve (#a:Type u#a) (#pcm:_) (r:ref a pcm) (x y : a) (m:mem)
-  : Lemma (requires (interp (pts_to r x) m /\ compatible pcm y x))
-          (ensures  (interp (pts_to r y) m))
-  = H.pts_to_evolve #a #pcm r x y (heap_of_mem m)
-
-let id_elim_star p q m =
-  let starprop (ml:mem) (mr:mem) =
-      disjoint ml mr
-    /\ m == join ml mr
-    /\ interp p ml
-    /\ interp q mr
-  in
-  elim_star p q m;
-  let p1 : mem -> prop = fun ml -> (exists mr. starprop ml mr) in
-  let ml = IndefiniteDescription.indefinite_description_tot _ p1 in
-  let starpropml mr : prop = starprop ml mr in // this prop annotation seems needed
-  let mr = IndefiniteDescription.indefinite_description_tot _ starpropml in
-  (ml, mr)
-
-let id_elim_exists #a p m =
-  let existsprop (x:a) =
-    interp (p x) m
-  in
-  elim_h_exists p m;
-  let x = IndefiniteDescription.indefinite_description_tot _ existsprop in
-  x
-
-
-let slimp_star (p q r s : slprop)
-  : Lemma (requires (slimp p q /\ slimp r s))
-          (ensures (slimp (p `star` r) (q `star` s)))
-  = let aux (m:mem) : Lemma (requires (interp (p `star` r) m))
-                            (ensures (interp (q `star` s) m))
-    =
-      let (ml, mr) = id_elim_star p r m in
-      intro_star q s ml mr
-   in
-   Classical.forall_intro (Classical.move_requires aux)
-
-let elim_wi #a (p : a -> slprop{is_witness_invariant p}) (x y : a) (m : mem)
-  : Lemma (requires (interp (p x) m /\ interp (p y) m))
-          (ensures (x == y))
-  = ()
-
-let witinv_framon (#a:Type) (p : a -> slprop)
-  : Lemma (is_witness_invariant p ==> is_frame_monotonic p)
-          [SMTPatOr [[SMTPat (is_witness_invariant p)]; [SMTPat (is_frame_monotonic p)]]]
-  = ()
-
-let star_is_frame_monotonic (#a:Type)
-    (f g : a -> slprop)
-  : Lemma (requires (is_frame_monotonic f /\ is_frame_monotonic g))
-          (ensures (is_frame_monotonic (fun x -> f x `star` g x)))
-  = let aux (x y : a) (m:mem) (frame : slprop)
-       : Lemma (requires interp ((f x `star` g x) `star` frame) m
-                        /\ interp (f y `star` g y) m)
-               (ensures (interp ((f y `star` g y) `star` frame) m))
-       = star_associative (f x) (g x) frame;
-         let (m1, m23) = id_elim_star (f x) (g x `star` frame) m in
-         let (m2, m3)  = id_elim_star (g x) frame m23 in
-         affine_star (f y) (g y) m;
-         assert (interp (f y) m);
-         assert (interp (g y) m);
-         assert (interp (f x `star` (g x `star` frame)) m);
-         assert (interp (f y `star` (g x `star` frame)) m);
-
-         (* flip and do the same reasoning *)
-         star_associative (f y) (g x) frame;
-         star_commutative (f y) (g x);
-         star_congruence (f y `star` g x) frame (g x `star` f y) frame;
-         star_associative (g x) (f y) frame;
-         assert (interp (g x `star` (f y `star` frame)) m);
-         assert (interp (g y `star` (f y `star` frame)) m);
-
-         (* get back in shape *)
-         star_associative (f y) (g y) frame;
-         star_commutative (f y) (g y);
-         star_congruence (f y `star` g y) frame (g y `star` f y) frame;
-         star_associative (g y) (f y) frame;
-         assert (interp (f y `star` (g y `star` frame)) m);
-         ()
-    in
-    Classical.forall_intro_4 (fun x y m -> Classical.move_requires (aux x y m));
-    ()
-
-let star_is_witinv_left (#a:Type)
-    (f g : a -> slprop)
-  : Lemma (requires (is_witness_invariant f))
-          (ensures  (is_witness_invariant (fun x -> f x `star` g x)))
-  = ()
-
-let star_is_witinv_right (#a:Type)
-    (f g : a -> slprop)
-  : Lemma (requires (is_witness_invariant g))
-          (ensures  (is_witness_invariant (fun x -> f x `star` g x)))
-  = ()
-*)
