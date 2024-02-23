@@ -752,6 +752,7 @@ and (lidents_of_term' :
         FStar_Compiler_List.op_At uu___ uu___1
     | FStar_Parser_AST.QForall (bs, _pats, t1) -> lidents_of_term t1
     | FStar_Parser_AST.QExists (bs, _pats, t1) -> lidents_of_term t1
+    | FStar_Parser_AST.QuantOp (i, bs, pats, t1) -> lidents_of_term t1
     | FStar_Parser_AST.Refine (b, t1) -> lidents_of_term t1
     | FStar_Parser_AST.NamedTyp (i, t1) -> lidents_of_term t1
     | FStar_Parser_AST.Paren t1 -> lidents_of_term t1
