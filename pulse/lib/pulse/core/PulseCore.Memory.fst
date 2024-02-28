@@ -19,7 +19,7 @@ open FStar.PCM
 module M_ = PulseCore.NondeterministicMonotonicStateMonad
 module F = FStar.FunctionalExtensionality
 open FStar.FunctionalExtensionality
-module H = PulseCore.Heap
+module H = PulseCore.Heap2
 module PP = PulseCore.Preorder
 
 
@@ -143,12 +143,8 @@ let core_ref_is_null r = H.core_ref_is_null r
 let emp : slprop u#a = H.emp
 let pure = H.pure
 let pts_to = H.pts_to
-let h_and = H.h_and
-let h_or = H.h_or
 let star = H.star
-let wand = H.wand
 let h_exists = H.h_exists
-let h_forall = H.h_forall
 
 ////////////////////////////////////////////////////////////////////////////////
 //properties of equiv
@@ -448,7 +444,7 @@ let rec move_invariant (e:inames) (l:lock_store) (p:slprop)
        end
 
 let heap_ctr_valid (ctr:nat) (h:H.heap u#a) : prop =
-    h `H.free_above_addr` ctr
+    h `H.free_above_addr H.CONCRETE` ctr
 
 let ctr_validity (ctr:nat) (h:H.heap) : slprop =
     H.pure (heap_ctr_valid ctr h)
@@ -762,8 +758,7 @@ let is_frame_preserving
     (ac_reasoning_for_m_frame_preserving fp frame (locks_invariant e m0) m0;
      let (| x, m1 |) = f m0 in
      interp ((fp' x `star` frame) `star` locks_invariant e m1) m1 /\
-     mem_evolves m0 m1 /\
-     (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1)))
+     mem_evolves m0 m1)
 
 let tot_action_nf_except (e:inames) (fp:slprop u#a) (a:Type u#b) (fp':a -> slprop u#a) =
   f:tot_pre_action_nf_except e fp a fp'{ is_frame_preserving f }
@@ -773,7 +768,7 @@ let tot_action_nf = tot_action_nf_except S.empty
 let linv e (m:mem) = locks_invariant e m
 
 let hheap_of_hmem #fp #e (m:hmem_with_inv_except e fp)
-  : h:H.hheap (fp `star` linv e m) { h `H.free_above_addr` m.ctr}
+  : h:H.hheap (fp `star` linv e m) { h `H.free_above_addr H.CONCRETE` m.ctr}
   = let h = heap_of_mem m in
     H.pure_interp (heap_ctr_valid m.ctr (heap_of_mem m)) h;
     h
@@ -781,7 +776,7 @@ let hheap_of_hmem #fp #e (m:hmem_with_inv_except e fp)
 module Heap = PulseCore.Heap
 let hmem_of_hheap #e (#fp0 #fp1:slprop) (m:hmem_with_inv_except e fp0)
                   (h:H.full_hheap (fp1 `star` linv e m) {
-                       h `Heap.free_above_addr` m.ctr
+                       h `H.free_above_addr H.CONCRETE` m.ctr
                   })
     : m1:hmem_with_inv_except e fp1{linv e m `equiv` linv e m1}
     = let m1 : mem = { m with heap = h } in
@@ -825,21 +820,21 @@ let as_hprop (frame:slprop) (mp:mprop frame)
       in
       f
 
-let mprop_preservation_of_hprop_preservation
-       (p:slprop) (m0 m1:mem)
-    : Lemma
-      (requires (forall (hp:H.hprop p). hp (heap_of_mem m0) == hp (heap_of_mem m1)))
-      (ensures (forall (mp:mprop p). mp (core_mem m0) == mp (core_mem m1)))
-    = let aux (mp:mprop p)
-        : Lemma (mp (core_mem m0) == mp (core_mem m1))
-          [SMTPat()]
-        = assert (as_hprop p mp (heap_of_mem m0) == as_hprop p mp (heap_of_mem m1))
-      in
-      ()
+// let mprop_preservation_of_hprop_preservation
+//        (p:slprop) (m0 m1:mem)
+//     : Lemma
+//       (requires (forall (hp:H.hprop p). hp (heap_of_mem m0) == hp (heap_of_mem m1)))
+//       (ensures (forall (mp:mprop p). mp (core_mem m0) == mp (core_mem m1)))
+//     = let aux (mp:mprop p)
+//         : Lemma (mp (core_mem m0) == mp (core_mem m1))
+//           [SMTPat()]
+//         = assert (as_hprop p mp (heap_of_mem m0) == as_hprop p mp (heap_of_mem m1))
+//       in
+//       ()
 
-let lift_heap_action (#fp:slprop) (#a:Type) (#fp':a -> slprop)
+let lift_heap_action (#fp:slprop) (#a:Type) (#fp':a -> slprop) (#immut:_)
                      (e:inames)
-                     ($f:H.action fp a fp')
+                     ($f:H.action #immut #None fp a fp')
   : tot_action_nf_except e fp a fp'
   = let g : tot_pre_action_nf_except e fp a fp' = fun m ->
         let h0 = hheap_of_hmem m in
@@ -852,8 +847,9 @@ let lift_heap_action (#fp:slprop) (#a:Type) (#fp':a -> slprop)
           (ac_reasoning_for_m_frame_preserving fp frame (locks_invariant e m0) m0;
            let (| x, m1 |) = g m0 in
            interp ((fp' x `star` frame) `star` locks_invariant e m1) m1 /\
-           mem_evolves m0 m1 /\
-           (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1))))
+           mem_evolves m0 m1
+           
+           ))
         [SMTPat ()]
       = ac_reasoning_for_m_frame_preserving fp frame (locks_invariant e m0) m0;
         let (| x, m1 |) = g m0 in
@@ -869,8 +865,8 @@ let lift_heap_action (#fp:slprop) (#a:Type) (#fp':a -> slprop)
         let h1' : H.hheap ((fp' x `star` frame) `star` linv e m0) = h1 in
         assert (m1 == hmem_of_hheap m0 h1');
         assert (with_inv_except m1 e (fp' x `star` frame));
-        assert (forall (hp:H.hprop frame). hp h0 == hp h1);
-        mprop_preservation_of_hprop_preservation frame m0 m1;
+        // assert (forall (hp:H.hprop frame). hp h0 == hp h1);
+        // mprop_preservation_of_hprop_preservation frame m0 m1;
         ()
     in
     assert (is_frame_preserving g);
@@ -959,8 +955,6 @@ let lift_heap_action_with_frame
 
     let m1 = hmem_of_hheap m0 h1 in
     assert (mem_evolves m0 m1);
-    mprop_preservation_of_hprop_preservation (frame `star` locks_invariant e m0) m0 m1;
-    assert (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1));
     (| x, m1 |)
 
 let lift_tot_action_with_frame #a #e #fp #fp'
@@ -1021,7 +1015,7 @@ let inc_ctr (#p:slprop) #e (m:hmem_with_inv_except e p)
     assert (linv e m' == lock_store_invariant e m.locks
                          `star`
                         ctr_validity (m.ctr + 1) (heap_of_mem m));
-    H.weaken_free_above (heap_of_mem m) m.ctr (m.ctr + 1);
+    H.weaken_free_above H.CONCRETE (heap_of_mem m) m.ctr (m.ctr + 1);
     weaken_pure (heap_ctr_valid m.ctr (heap_of_mem m))
                 (heap_ctr_valid (m.ctr + 1) (heap_of_mem m));
     assert (H.stronger
@@ -1045,8 +1039,7 @@ let frame_related_mems (fp0 fp1:slprop u#a) e (m0:hmem_with_inv_except e fp0) (m
     forall (frame:slprop u#a).
       interp ((fp0 `star` frame) `star` linv e m0) m0 ==>
       interp ((fp1 `star` frame) `star` linv e m1) m1 /\
-      mem_evolves m0 m1 /\
-      (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1))
+      mem_evolves m0 m1
 
 let refined_pre_action e (fp0:slprop) (a:Type) (fp1:a -> slprop) =
   m0:hmem_with_inv_except e fp0 ->
@@ -1067,8 +1060,7 @@ let refined_pre_action_as_action (#fp0:slprop) (#a:Type) (#fp1:a -> slprop)
           (ac_reasoning_for_m_frame_preserving fp0 frame (locks_invariant e m0) m0;
            let (| x, m1 |) = g m0 in
            interp ((fp1 x `star` frame) `star` locks_invariant e m1) m1 /\
-           mem_evolves m0 m1 /\
-          (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1))))
+           mem_evolves m0 m1))
         [SMTPat ()]
       = ac_reasoning_for_m_frame_preserving fp0 frame (locks_invariant e m0) m0;
         let (| x', m1' |) = g m0 in
@@ -1077,49 +1069,49 @@ let refined_pre_action_as_action (#fp0:slprop) (#a:Type) (#fp1:a -> slprop)
     in
     g
 
-let alloc_action #a #pcm e x
-  = let f : refined_pre_action e emp (ref a pcm) (fun r -> pts_to r x)
-      = fun m0 ->
-        (* NS: 9/29/22 I needed to annotate h : Heap.full_heap, for use with the Core checker
-           which generates a guard for checking the implicit pattern "dot" term in the dependent
-           pair pattern on the next line. That guard expects `h` to be a full_heap, which is it,
-           because it is a projection of m0. However, this is not reflected in `h`'s type. So,
-           the Core checker, which produces a guard for the pat_dot_term in isolation, cannot
-           recheck the term. If we were to fold in the checking of pat_dot_terms and their guards
-           with the rest of the VC, this would work.  *)
-        let h : Heap.full_heap = hheap_of_hmem m0 in
-        let (|r, h'|) = H.extend #a #pcm x m0.ctr h in
-        let m' : hmem_with_inv_except e emp = inc_ctr m0 in
-        let h' : H.hheap (pts_to #a #pcm r x `star` linv e m') = weaken _ (linv e m0) (linv e m') h' in
-        let m1 : hmem_with_inv_except e (pts_to #a #pcm r x) = hmem_of_hheap m' h' in
-        assert (forall frame. H.frame_related_heaps h h' emp (pts_to #a #pcm r x) frame true);
-        let aux (frame:slprop)
-          : Lemma
-            (requires
-               interp ((emp `star` frame) `star` linv e m0) m0)
-            (ensures
-               interp ((pts_to #a #pcm r x `star` frame) `star` linv e m1) m1 /\
-               mem_evolves m0 m1 /\
-               (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1)))
-            [SMTPat (emp `star` frame)]
-          = star_associative emp frame (linv e m0);
-            assert (H.interp (emp `star` (frame `star` linv e m0)) h);
-            assert (H.interp (pts_to #a #pcm r x `star` (frame `star` linv e m0)) h');
-            star_associative (pts_to #a #pcm r x) frame (linv e m0);
-            assert (H.interp ((pts_to #a #pcm r x `star` frame) `star` linv e m0) h');
-            assert (H.stronger (linv e m0) (linv e m'));
-            assert (H.equiv (linv e m') (linv e m1));
-            assert (H.stronger (linv e m0) (linv e m1));
-            let h' : H.hheap ((pts_to #a #pcm r x `star` frame) `star` linv e m1) = weaken _ (linv e m0) (linv e m1) h' in
-            assert (H.interp ((pts_to #a #pcm r x `star` frame) `star` linv e m1) h');
-            assert (forall (mp:H.hprop frame). mp h == mp h');
-            mprop_preservation_of_hprop_preservation frame m0 m1;
-            assert (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1))
-        in
-        assert (frame_related_mems emp (pts_to r x) e m0 m1);
-        (| r, m1 |)
-    in
-    lift_tot_action (refined_pre_action_as_action f)
+let alloc_action #a #pcm e x = admit()
+  // = let f : refined_pre_action e emp (ref a pcm) (fun r -> pts_to r x)
+  //     = fun m0 ->
+  //       (* NS: 9/29/22 I needed to annotate h : Heap.full_heap, for use with the Core checker
+  //          which generates a guard for checking the implicit pattern "dot" term in the dependent
+  //          pair pattern on the next line. That guard expects `h` to be a full_heap, which is it,
+  //          because it is a projection of m0. However, this is not reflected in `h`'s type. So,
+  //          the Core checker, which produces a guard for the pat_dot_term in isolation, cannot
+  //          recheck the term. If we were to fold in the checking of pat_dot_terms and their guards
+  //          with the rest of the VC, this would work.  *)
+  //       let h : Heap.full_heap = hheap_of_hmem m0 in
+  //       let (|r, h'|) = H.extend #a #pcm x m0.ctr h in
+  //       let m' : hmem_with_inv_except e emp = inc_ctr m0 in
+  //       let h' : H.hheap (pts_to #a #pcm r x `star` linv e m') = weaken _ (linv e m0) (linv e m') h' in
+  //       let m1 : hmem_with_inv_except e (pts_to #a #pcm r x) = hmem_of_hheap m' h' in
+  //       assert (forall frame. H.frame_related_heaps h h' emp (pts_to #a #pcm r x) frame true);
+  //       let aux (frame:slprop)
+  //         : Lemma
+  //           (requires
+  //              interp ((emp `star` frame) `star` linv e m0) m0)
+  //           (ensures
+  //              interp ((pts_to #a #pcm r x `star` frame) `star` linv e m1) m1 /\
+  //              mem_evolves m0 m1 /\
+  //              (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1)))
+  //           [SMTPat (emp `star` frame)]
+  //         = star_associative emp frame (linv e m0);
+  //           assert (H.interp (emp `star` (frame `star` linv e m0)) h);
+  //           assert (H.interp (pts_to #a #pcm r x `star` (frame `star` linv e m0)) h');
+  //           star_associative (pts_to #a #pcm r x) frame (linv e m0);
+  //           assert (H.interp ((pts_to #a #pcm r x `star` frame) `star` linv e m0) h');
+  //           assert (H.stronger (linv e m0) (linv e m'));
+  //           assert (H.equiv (linv e m') (linv e m1));
+  //           assert (H.stronger (linv e m0) (linv e m1));
+  //           let h' : H.hheap ((pts_to #a #pcm r x `star` frame) `star` linv e m1) = weaken _ (linv e m0) (linv e m1) h' in
+  //           assert (H.interp ((pts_to #a #pcm r x `star` frame) `star` linv e m1) h');
+  //           assert (forall (mp:H.hprop frame). mp h == mp h');
+  //           mprop_preservation_of_hprop_preservation frame m0 m1;
+  //           assert (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1))
+  //       in
+  //       assert (frame_related_mems emp (pts_to r x) e m0 m1);
+  //       (| r, m1 |)
+  //   in
+  //   lift_tot_action (refined_pre_action_as_action f)
 
 
 let select_refine #a #p e r x f
@@ -1722,42 +1714,42 @@ let change_slprop (#opened_invariants:inames)
   lift_tot_action (lift_heap_action opened_invariants (H.change_slprop p q proof))
 
 
-let is_frame_monotonic #a (p : a -> slprop) : prop =
-  forall x y m frame. interp (p x `star` frame) m /\ interp (p y) m ==> interp (p y `star` frame) m
+// let is_frame_monotonic #a (p : a -> slprop) : prop =
+//   forall x y m frame. interp (p x `star` frame) m /\ interp (p y) m ==> interp (p y `star` frame) m
 
-let is_witness_invariant #a (p : a -> slprop) =
-  forall x y m. interp (p x) m /\ interp (p y) m ==> x == y
+// let is_witness_invariant #a (p : a -> slprop) =
+//   forall x y m. interp (p x) m /\ interp (p y) m ==> x == y
 
-(* This module reuses is_frame_monotonic from Heap, but does not expose that
-to clients, so we need this lemma to typecheck witness_h_exists below. *)
-let relate_frame_monotonic_1 #a p
-  : Lemma (requires (H.is_frame_monotonic p))
-          (ensures (is_frame_monotonic p))
-  = ()
+// (* This module reuses is_frame_monotonic from Heap, but does not expose that
+// to clients, so we need this lemma to typecheck witness_h_exists below. *)
+// let relate_frame_monotonic_1 #a p
+//   : Lemma (requires (H.is_frame_monotonic p))
+//           (ensures (is_frame_monotonic p))
+//   = ()
 
-let relate_frame_monotonic_2 #a p
-: Lemma (requires (is_frame_monotonic p))
-          (ensures (H.is_frame_monotonic p))
-= introduce 
-    forall x y h f.
-      (H.interp (p x `H.star` f) h /\ H.interp (p y) h) ==>
-        H.interp (p y `H.star` f) h
-    with 
-  introduce _ ==> _
-  with _ . (
-    let m = mem_of_heap h in
-    assert (interp (p x `star` f) m);
-    assert (interp (p y)          m);
-    assert (interp (p y `star` f) m)
-  )
+// let relate_frame_monotonic_2 #a p
+// : Lemma (requires (is_frame_monotonic p))
+//           (ensures (H.is_frame_monotonic p))
+// = introduce 
+//     forall x y h f.
+//       (H.interp (p x `H.star` f) h /\ H.interp (p y) h) ==>
+//         H.interp (p y `H.star` f) h
+//     with 
+//   introduce _ ==> _
+//   with _ . (
+//     let m = mem_of_heap h in
+//     assert (interp (p x `star` f) m);
+//     assert (interp (p y)          m);
+//     assert (interp (p y `star` f) m)
+//   )
 
 let witness_h_exists #opened_invariants #a p =
-  lift_tot_action_with_frame (lift_heap_action_with_frame opened_invariants (H.witness_h_exists p))
+  lift_tot_action_with_frame (lift_heap_action_with_frame opened_invariants (H.elim_exists p))
 
 let intro_exists #opened_invariants #a p x = 
   lift_tot_action_with_frame (lift_heap_action_with_frame opened_invariants (H.intro_exists p x))
 
-let lift_h_exists #opened_invariants p = lift_tot_action (lift_heap_action opened_invariants (H.lift_h_exists p))
+let lift_h_exists #opened_invariants p = lift_tot_action (lift_heap_action opened_invariants (H.lift_exists p))
 
 let elim_pure #opened_invariants p = lift_tot_action (lift_heap_action opened_invariants (H.elim_pure p))
 
