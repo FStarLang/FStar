@@ -51,7 +51,10 @@ let mem_set_heap (m:mem) (h:H.heap) : mem = {
   m with heap = h;
 }
 
-let is_ghost_action m0 m1 = H.concrete m0.heap == H.concrete m1.heap
+let is_ghost_action m0 m1 =
+  H.concrete m0.heap == H.concrete m1.heap /\
+  m0.ctr == m1.ctr /\
+  m0.locks == m1.locks
 let core_mem (m:mem) : mem = mem_of_heap (heap_of_mem m)
 
 val core_mem_invol (m: mem u#a) : Lemma
@@ -496,10 +499,10 @@ let mem_prop_is_affine
 
 let a_mem_prop (sl: slprop u#a) : Type u#(a+1) = (f: (hmem sl -> Tot prop) { mem_prop_is_affine sl f })
 
-val refine_slprop
-  (sl: slprop u#a)
-  (f: a_mem_prop sl)
-: Tot (slprop u#a)
+// val refine_slprop
+//   (sl: slprop u#a)
+//   (f: a_mem_prop sl)
+// : Tot (slprop u#a)
 
 
 let core_mem_interp (hp:slprop u#a) (m:mem u#a) = ()
@@ -1729,3 +1732,39 @@ let elim_pure #opened_invariants p = lift_tot_action (lift_heap_action opened_in
 let intro_pure #opened_invariants p pf = lift_tot_action (lift_heap_action opened_invariants (H.intro_pure p pf))
 
 let drop #o p = lift_tot_action (lift_heap_action o (H.drop p))
+assume
+val upd_ghost_heap (h0:H.heap) (h1:erased H.heap { H.concrete h0 == H.concrete h1 })
+  : h2:H.heap { h2 == reveal h1 }
+#push-options "--query_stats"
+let lift_ghost
+      (#a:Type)
+      #opened_invariants #p #q
+      (ni_a:non_info a)
+      (f:erased (pst_ghost_action_except a opened_invariants p q))
+  : pst_ghost_action_except a opened_invariants p q
+  = fun frame m0 ->
+      let xm1 : erased (a * full_mem) = 
+        let ff = reveal f in
+        let x, m1 = ff frame m0 in
+        assert (maybe_ghost_action true m0 m1);
+        hide (x, m1)
+      in
+      let m1' : erased full_mem = hide (snd (reveal xm1)) in
+      let x' : erased a = hide (fst (reveal xm1)) in
+      let m1 : full_mem = 
+        { m0 with heap = upd_ghost_heap m0.heap (hide (m1'.heap));
+                  ghost_ctr = (reveal m1').ghost_ctr } in
+      let x = ni_a (hide (fst (reveal xm1))) in
+      (x, m1)
+
+let ghost_ref = H.ghost_ref
+let ghost_pts_to = H.ghost_pts_to
+let ghost_alloc #o = admit()
+let ghost_read #o #a #p r x f
+  = lift_tot_action (lift_heap_action o (H.ghost_read #a #p r x f))
+let ghost_write #o #a #p r x y f
+  = lift_tot_action (lift_heap_action o (H.ghost_write #a #p r x y f)) 
+let ghost_share #o #a #p r v0 v1
+  = lift_tot_action (lift_heap_action o (H.ghost_share #a #p r v0 v1))
+let ghost_gather #o #a #p r v0 v1
+  = lift_tot_action (lift_heap_action o (H.ghost_gather #a #p r v0 v1))

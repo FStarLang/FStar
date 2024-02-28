@@ -13,6 +13,9 @@ type heap : Type u#(a + 1) = {
 }
 let concrete h = h.concrete
 let ghost h = h.ghost
+let upd_ghost_heap (h0:heap) (h1:erased heap { concrete h0 == concrete h1 })
+  : h2:heap { h2 == reveal h1 }
+  = { h0 with ghost = h1.ghost  }
 let empty_heap = { concrete = H.empty_heap; ghost = H.empty_heap }
 
 let get (t:tag) (h:heap u#a) : GTot (H.heap u#a) =

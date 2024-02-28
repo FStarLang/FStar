@@ -41,6 +41,8 @@ module H = PulseCore.Heap
 val heap  : Type u#(a + 1)
 val concrete (h:heap u#a) : H.heap u#a
 val ghost (h:heap u#a) : erased (H.heap u#a)
+val upd_ghost_heap (h0:heap) (h1:erased heap { concrete h0 == concrete h1 })
+  : h2:heap { h2 == reveal h1 }
 type tag =
   | GHOST
   | CONCRETE
