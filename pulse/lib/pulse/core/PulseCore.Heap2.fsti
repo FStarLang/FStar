@@ -689,13 +689,13 @@ val change_slprop (p q:slprop)
   With the quantified frame actions, it creates an issue, since we have to prove that the witness is ok for all frames
     whereas with an explicit frame, we can pick the witness for that particular frame
 *)
-val witness_h_exists (#a:_) (p:a -> slprop)
+val elim_exists (#a:_) (p:a -> slprop)
   : action_with_frame (h_exists p) (erased a) (fun x -> p x)
 
 val intro_exists (#a:_) (p:a -> slprop) (x:erased a)
   : action_with_frame (p x) unit (fun _ -> h_exists p)
   
-val lift_h_exists (#a:_) (p:a -> slprop)
+val lift_exists (#a:_) (p:a -> slprop)
   : action #IMMUTABLE #no_allocs (h_exists p) unit
            (fun _a -> h_exists #(FStar.Universe.raise_t a) (FStar.Universe.lift_dom p))
 
@@ -711,3 +711,79 @@ val pts_to_evolve (#a:Type u#a) (#pcm:_) (r:ref a pcm) (x y : a) (h:heap)
 
 val drop (p:slprop)
   : action #IMMUTABLE #no_allocs p unit (fun _ -> emp)
+
+let non_informative (a:Type u#a) =
+  x:Ghost.erased a -> y:a{y == Ghost.reveal x}
+
+val lift_erased
+          (#a:Type)
+          (#ni_a:non_informative a)
+           #hpre #hpost
+          (#pre:slprop)
+          (#post:a -> slprop)
+          (frame:slprop)
+          ($f:erased (action #ONLY_GHOST #hpre #hpost pre a post))
+: action #ONLY_GHOST #hpre #hpost pre a post
+
+[@@erasable]
+val ghost_ref (#[@@@unused] a:Type u#a) ([@@@unused]p:pcm a) : Type0
+val ghost_pts_to (#a:Type u#a) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop u#a
+
+val ghost_free_above_addr (h:heap) (addr:nat) : prop
+val ghost_extend
+    (#a:Type u#a)
+    (#pcm:pcm a)
+    (x:erased a{compatible pcm x x /\ pcm.refine x})
+    (addr:erased nat)
+: action #ONLY_GHOST #true
+      #(fun h -> h `ghost_free_above_addr` addr)
+      #(fun h -> h `ghost_free_above_addr` (addr + 1))      
+      emp 
+      (ghost_ref pcm)
+      (fun r -> ghost_pts_to r x)
+
+val ghost_read
+    (#a:Type)
+    (#p:pcm a)
+    (r:ghost_ref p)
+    (x:erased a)
+    (f:(v:a{compatible p x v}
+        -> GTot (y:a{compatible p y v /\
+                     FStar.PCM.frame_compatible p x v y})))
+: action #IMMUTABLE
+    (ghost_pts_to r x)
+    (erased (v:a{compatible p x v /\ p.refine v}))
+    (fun v -> ghost_pts_to r (f v))
+
+val ghost_write
+    (#a:Type)
+    (#p:pcm a)
+    (r:ghost_ref p)
+    (x y:Ghost.erased a)
+    (f:FStar.PCM.frame_preserving_upd p x y)
+: action #ONLY_GHOST 
+    (ghost_pts_to r x)
+    unit
+    (fun _ -> ghost_pts_to r y)
+
+val ghost_share
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ghost_ref pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+: action #IMMUTABLE
+    (ghost_pts_to r (v0 `op pcm` v1))
+    unit
+    (fun _ -> ghost_pts_to r v0 `star` ghost_pts_to r v1)
+
+val ghost_gather
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ghost_ref pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a)
+: action #IMMUTABLE 
+    (ghost_pts_to r v0 `star` ghost_pts_to r v1)
+    (squash (composable pcm v0 v1))
+    (fun _ -> ghost_pts_to r (op pcm v0 v1))

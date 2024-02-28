@@ -408,7 +408,7 @@ let change_slprop (p q:slprop)
     refined_pre_action_as_action g
 
 
-let witness_h_exists #a p =
+let elim_exists #a p =
   fun frame h0 ->
   let w = FStar.IndefiniteDescription.indefinite_description_tot
     a
@@ -422,7 +422,7 @@ let intro_exists #a p x =
 
 module U = FStar.Universe    
 
-let lift_h_exists (#a:_) (p:a -> slprop)
+let lift_exists (#a:_) (p:a -> slprop)
   : action (h_exists p) unit
            (fun _a -> h_exists #(U.raise_t a) (U.lift_dom p))
   = let g : refined_pre_action #IMMUTABLE #no_allocs (h_exists p) unit (fun _a -> h_exists #(U.raise_t a) (U.lift_dom p))
@@ -487,9 +487,6 @@ let is_frame_preserving_only_ghost
 
     
 
-type non_informative (a:Type u#a) =
-  x:Ghost.erased a -> y:a{y == Ghost.reveal x}
-
 let lift_erased
           (#a:Type)
           (#ni_a:non_informative a)
@@ -512,3 +509,7 @@ let lift_erased
       (| x, { h with ghost = gg } |)
   in
   refined_pre_action_as_action g
+
+let ghost_ref #a p = erased H.core_ref
+let lift_ghost (p:H.slprop) : slprop = as_slprop (fun h -> H.of_slprop p h.ghost)
+let ghost_pts_to #a #p r v = lift_ghost (H.pts_to #a #p r v)
