@@ -770,22 +770,6 @@ let refined_pre_action_as_action #immut #allocs #pre #post (#fp0:slprop) (#a:Typ
                                  ($f:refined_pre_action #immut #allocs #pre #post fp0 a fp1)
   : action #immut #allocs #pre #post fp0 a fp1
   = let g : pre_action fp0 a fp1 = fun m -> f m in
-    let aux (frame:slprop)
-            (m0:full_hheap (fp0 `star` frame))
-      : Lemma
-        (requires pre m0)
-        (ensures
-          (affine_star fp0 frame m0;
-           let (| x, m1 |) = g m0 in
-           interp (fp1 x `star` frame) m1 /\
-          heap_evolves m0 m1 /\
-          (not allocs ==> (forall ctr. m0 `free_above_addr` ctr ==> m1 `free_above_addr` ctr))))
-        [SMTPat ()]
-      = affine_star fp0 frame m0;
-        let (| x', m1' |) = g m0 in
-        let (| x, m1 |) = f m0 in
-        assert (x == x' /\ m1 == m1')
-    in
     g
 
 let select_join #a #p (r:ref a p) (x:erased a) (h:full_heap) (hl hr:heap)
@@ -1202,24 +1186,13 @@ let frame (#a:Type)
               assert (interp (post x) h1);
               assert (interp (post x `star` frame) h1);
               assert (forall frame'. frame_related_heaps h0 h1 pre (post x) frame' immut allocates);
-              let aux (frame':slprop)
-                : Lemma (requires
-                            interp ((pre `star` frame) `star` frame') h0)
-                        (ensures
-                            interp ((post x `star` frame) `star` frame') h1)
-                = star_associative pre frame frame';
-                  star_associative (post x) frame frame'
-              in
-              let aux (frame':slprop)
-                : Lemma
-                  (requires interp ((pre `star` frame) `star` frame') h0)
-                  (ensures  interp ((post x `star` frame) `star` frame') h1 /\
-                            heap_evolves h0 h1 /\
-                            (not allocates ==> (forall ctr. h0 `free_above_addr` ctr ==> h1 `free_above_addr` ctr)))
-                  [SMTPat ((pre `star` frame) `star` frame')]
-                 = aux frame'
-              in
-              assert (forall frame'. frame_related_heaps h0 h1 (pre `star` frame) (post x `star` frame) frame' immut allocates);
+              introduce forall frame'.
+                    (interp ((pre `star` frame) `star` frame') h0 ==>
+                     interp ((post x `star` frame) `star` frame') h1)
+              with (
+                star_associative pre frame frame';
+                star_associative (post x) frame frame'
+              );
               (| x, h1 |)
     in
     refined_pre_action_as_action g
@@ -1230,53 +1203,10 @@ let change_slprop (p q:slprop)
   = let g
       : refined_pre_action p unit (fun _ -> q)
       = fun h ->
-          proof h;
-          let aux (frame:slprop)
-            : Lemma (requires
-                        interp (p `star` frame) h)
-                    (ensures
-                        interp (q `star` frame) h)
-                    [SMTPat ()]
-            = FStar.Classical.forall_intro (FStar.Classical.move_requires proof)
-          in
+          FStar.Classical.forall_intro (FStar.Classical.move_requires proof);
           (| (), h |)
     in
     refined_pre_action_as_action g
-
-// let id_elim_star p q m =
-//   let starprop (ml:heap) (mr:heap) =
-//       disjoint ml mr
-//     /\ m == join ml mr
-//     /\ interp p ml
-//     /\ interp q mr
-//   in
-//   elim_star p q m;
-//   let p1 : heap -> prop = fun ml -> (exists mr. starprop ml mr) in
-//   let ml = IndefiniteDescription.indefinite_description_tot _ p1 in
-//   let starpropml mr : prop = starprop ml mr in // this prop annotation seems needed
-//   let mr = IndefiniteDescription.indefinite_description_tot _ starpropml in
-//   (ml, mr)
-
-// let id_elim_exists #a p m =
-//   let existsprop (x:a) = interp (p x) m in
-//   elim_h_exists p m;
-//   let x = IndefiniteDescription.indefinite_description_tot _ existsprop in
-//   x
-
-// let witinv_framon #a (p : a -> slprop)
-//   : Lemma (requires (is_witness_invariant p))
-//           (ensures (is_frame_monotonic p))
-//     =
-//     let aux x y h frame : Lemma (requires (interp (p x `star` frame) h /\ interp (p y) h))
-//                                 (ensures (interp (p y `star` frame) h)) =
-//       assert (interp (p x `star` frame) h);
-//       let (hl, hr) = id_elim_star (p x) frame h in
-//       affine_star (p x) frame h;
-//       assert (interp (p x) h);
-//       assert (x == y);
-//       ()
-//     in
-//     Classical.forall_intro_4 (fun x y m frame -> Classical.move_requires (aux x y m) frame)
 
 let witness_h_exists #a p =
   fun frame h0 ->
@@ -1289,7 +1219,7 @@ let intro_exists #a p x =
   fun frame h0 ->
     intro_h_exists (reveal x) p h0;
     (| (), h0 |)
-    
+module U = FStar.Universe    
 let lift_h_exists (#a:_) (p:a -> slprop)
   : action (h_exists p) unit
            (fun _a -> h_exists #(U.raise_t a) (U.lift_dom p))

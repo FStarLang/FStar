@@ -289,11 +289,15 @@ let witnessed_ref_stability #a #pcm r fact =
     )
   )
 
+let lift_pred (pre:H.full_heap -> prop)
+  : full_heap -> prop
+  = fun h -> pre h.concrete
+
 let lift_heap_pre_action
-      (#fp:H.slprop) (#a:Type) (#fp':a -> H.slprop)
-      (act:H.pre_action fp a fp')
-: pre_action (lift fp) a (fun x -> lift (fp' x))
-= fun (h0:full_hheap (lift fp)) ->
+      (#pre #post:_) (#fp:H.slprop) (#a:Type) (#fp':a -> H.slprop)
+      (act:H.pre_action #pre #post fp a fp')
+: pre_action #(lift_pred pre) #(lift_pred post) (lift fp) a (fun x -> lift (fp' x))
+= fun (h0:full_hheap (lift fp) { lift_pred pre h0 }) ->
     let (| x, c |) = act h0.concrete in
     let h1 : full_hheap (lift (fp' x)) = { h0 with concrete=c } in
     (| x, h1 |)
@@ -302,14 +306,16 @@ let lift_heap_pre_action
 
 #push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 4"
 let lift_action
+      (#immut #allocs #pre #post:_)
       (#fp:H.slprop) (#a:Type) (#fp':a -> H.slprop)
-      (act:H.action fp a fp')
-: action (lift fp) a (fun x -> lift (fp' x))
+      (act:H.action #immut #allocs #pre #post fp a fp')
+: action #immut #allocs #(lift_pred pre) #(lift_pred post)
+        (lift fp) a (fun x -> lift (fp' x))
 = let p = lift_heap_pre_action act in
-  introduce forall frame (h0:full_hheap (lift fp `star` frame)).
+  introduce forall frame (h0:full_hheap (lift fp `star` frame) { lift_pred pre h0 }).
     let (| x, h1 |) = p h0 in
     interp (lift (fp' x) `star` frame) h1 /\
-    action_related_heaps frame h0 h1
+    action_related_heaps #immut #allocs h0 h1
   with (
     assert (interp (lift fp `star` frame) h0);
     let (| x, h1 |) = p h0 in
@@ -320,7 +326,7 @@ let lift_action
       interp frame h1'
     returns 
       interp (lift (fp' x) `star` frame) h1 /\
-      action_related_heaps frame h0 h1
+      action_related_heaps #immut #allocs h0 h1
     with _ . (
       let hframe : H.heap -> prop = (fun h -> interp frame { concrete = h; ghost = h1'.ghost }) in
       introduce forall c0 c1.
@@ -363,7 +369,7 @@ let lift_action
         assert (disjoint h10 h11)
       );
       heap_evolves_iff h0 h1;
-      assert (action_related_heaps frame h0 h1)
+      assert (action_related_heaps #immut #allocs h0 h1)
     )
   );
   p
@@ -408,7 +414,7 @@ let lift_star (p q:H.slprop)
     )
   );
   slprop_extensionality (lift (p `H.star` q)) (lift p `star` lift q)
-
+let lift_emp : squash (lift H.emp == emp) = admit()
 let sel_action #a #pcm r v0 = lift_action (H.sel_action #a #pcm r v0)
 let select_refine #a #p r x f = lift_action (H.select_refine #a #p r x f)
 let upd_gen_action #a #p r x y f = lift_action (H.upd_gen_action #a #p r x y f)
@@ -417,3 +423,123 @@ let free_action #a #p r v0 = lift_action (H.free_action #a #p r v0)
 let split_action #a #p r v0 v1 = lift_action (H.split_action #a #p r v0 v1)
 let gather_action #a #p r v0 v1 = lift_action (H.gather_action #a #p r v0 v1)
 let pts_to_not_null_action #a #p r v = lift_action (H.pts_to_not_null_action #a #p r v)
+let extend #a #pcm x addr = lift_action (H.extend #a #pcm x addr)
+
+let refined_pre_action (#immut:bool) (#allocates:bool)
+                       (#[T.exact (`trivial_pre)]pre:full_heap ->prop)
+                       (#[T.exact (`trivial_pre)]post:full_heap -> prop)
+                       (fp0:slprop) (a:Type) (fp1:a -> slprop) =
+  m0:full_hheap fp0 ->
+  Pure (x:a &
+        full_hheap (fp1 x))
+       (requires pre m0)
+       (ensures fun  (| x, m1 |) ->
+         post m1 /\
+         (forall frame. frame_related_heaps m0 m1 fp0 (fp1 x) frame immut allocates))
+
+#restart-solver
+let refined_pre_action_as_action #immut #allocs #pre #post (#fp0:slprop) (#a:Type) (#fp1:a -> slprop)
+                                 ($f:refined_pre_action #immut #allocs #pre #post fp0 a fp1)
+  : action #immut #allocs #pre #post fp0 a fp1
+  = let g : pre_action fp0 a fp1 = fun m -> f m in
+    g
+
+let frame (#a:Type)
+          (#immut #allocates #hpre #hpost:_)
+          (#pre:slprop)
+          (#post:a -> slprop)
+          (frame:slprop)
+          ($f:action pre a post)
+  = let g 
+      : refined_pre_action #immut #allocates #hpre #hpost 
+          (pre `star` frame) a (fun x -> post x `star` frame)
+        = fun h0 ->
+              assert (interp (pre `star` frame) h0);
+              affine_star pre frame h0;
+              let (| x, h1 |) = f h0 in
+              assert (interp (post x) h1);
+              assert (interp (post x `star` frame) h1);
+              assert (forall frame'. frame_related_heaps h0 h1 pre (post x) frame' immut allocates);
+              introduce forall frame'.
+                    (interp ((pre `star` frame) `star` frame') h0 ==>
+                     interp ((post x `star` frame) `star` frame') h1)
+              with (
+                star_associative pre frame frame';
+                star_associative (post x) frame frame'
+              );
+              (| x, h1 |)
+    in
+    refined_pre_action_as_action g
+
+
+let change_slprop (p q:slprop)
+                  (proof: (h:heap -> Lemma (requires interp p h) (ensures interp q h)))
+  : action #immut_heap #no_allocs p unit (fun _ -> q)
+  = let g
+      : refined_pre_action p unit (fun _ -> q)
+      = fun h ->
+          FStar.Classical.forall_intro (FStar.Classical.move_requires proof);
+          (| (), h |)
+    in
+    refined_pre_action_as_action g
+
+
+let witness_h_exists #a p =
+  fun frame h0 ->
+  let w = FStar.IndefiniteDescription.indefinite_description_tot
+    a
+    (fun x -> interp (p x `star` frame) h0) in
+  (| w, h0 |)
+
+let intro_exists #a p x =
+  fun frame h0 ->
+    intro_h_exists (reveal x) p h0;
+    (| (), h0 |)
+
+module U = FStar.Universe    
+
+let lift_h_exists (#a:_) (p:a -> slprop)
+  : action (h_exists p) unit
+           (fun _a -> h_exists #(U.raise_t a) (U.lift_dom p))
+  = let g : refined_pre_action #immut_heap #no_allocs (h_exists p) unit (fun _a -> h_exists #(U.raise_t a) (U.lift_dom p))
+          = fun h ->
+              introduce forall x h.
+                  interp (p x) h ==>
+                  interp (h_exists (U.lift_dom p)) h
+              with (
+                introduce _ ==> _
+                with _ . (
+                  assert (interp (U.lift_dom p (U.raise_val x)) h)
+                )
+              );
+              (| (), h |)
+    in
+    refined_pre_action_as_action g
+
+let elim_pure (p:prop)
+  : action (pure p) (u:unit{p}) (fun _ -> emp)
+  = let f
+      : refined_pre_action (pure p) (_:unit{p}) (fun _ -> emp)
+      = fun h -> (| (), h |)
+    in
+    refined_pre_action_as_action f
+
+let intro_pure (p:prop) (_:squash p)
+: action emp unit (fun _ -> pure p)
+= let f
+    : refined_pre_action emp unit (fun _ -> pure p)
+    = fun h -> (| (), h |)
+  in
+  refined_pre_action_as_action f
+
+let pts_to_evolve (#a:Type u#a) (#pcm:_) (r:ref a pcm) (x y : a) (h:heap)
+  : Lemma (requires (interp (pts_to r x) h /\ compatible pcm y x))
+          (ensures  (interp (pts_to r y) h))
+  = H.pts_to_evolve #a #pcm r x y h.concrete
+
+let drop p
+= let f
+    : refined_pre_action p unit (fun _ -> emp)
+    = fun h -> (| (), h |)
+  in
+  refined_pre_action_as_action f
