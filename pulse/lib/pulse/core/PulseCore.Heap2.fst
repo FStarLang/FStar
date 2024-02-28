@@ -65,14 +65,8 @@ let interp p m = p m
 let as_slprop f = F.on _ f
 let slprop_extensionality p q = FStar.PredicateExtensionality.predicateExtensionality _ p q
 let emp = as_slprop (fun _ -> True)
-assume
-val of_slprop (f:H.slprop) : H.a_heap_prop
-assume
-val slprop_inj (f:H.slprop) : Lemma (H.as_slprop (of_slprop f) == f)
-                                    [SMTPat (of_slprop f)]
-
 let lift (p:H.slprop) : slprop =
-  as_slprop (fun h -> of_slprop p h.concrete)
+  as_slprop (fun h -> H.of_slprop p h.concrete)
 let pts_to #a #pcm (r:ref a pcm) (v:a) = lift (H.pts_to #a #pcm r v)
 let star p1 p2 =
   as_slprop (fun (h: heap) ->
@@ -85,61 +79,68 @@ let h_exists #a f = as_slprop (fun h -> exists (x:a). interp (f x) h)
 let affine_star p1 p2 h = ()
 let equiv_symmetric p1 p2 = ()
 let equiv_extensional_on_star p1 p2 p3 = ()
-let emp_unit p = admit()
-let intro_emp h = ()
-let h_exists_cong #a p q = ()
-let intro_h_exists x p h = ()
-let elim_h_exists #a p h = ()
-let interp_depends_only_on hp = ()
 let h_join_empty (h:H.heap)
   : Lemma (H.disjoint h H.empty_heap /\
            H.join h H.empty_heap == h)
            [SMTPatOr
               [[SMTPat (H.disjoint h H.empty_heap)];
                [SMTPat (H.join h H.empty_heap)]]]
-  = admit()
-let pts_to_compatible #a #pcm (x:ref a pcm) (v0 v1:a) h = 
-  H.pts_to_compatible #a #pcm x v0 v1 h.concrete;
-  introduce interp (pts_to x v0 `star` pts_to x v1) h ==>
-            composable pcm v0 v1 /\
-            interp (pts_to x (op pcm v0 v1)) h
-  with _ . (
-    eliminate exists h0 h1.
-      disjoint h0 h1 /\
-      h == join h0 h1 /\
-      interp (pts_to x v0) h0 /\
-      interp (pts_to x v1) h1
-    returns
-      composable pcm v0 v1 /\
-      interp (pts_to x (op pcm v0 v1)) h
-    with _ . (
-      H.intro_star (H.pts_to #a #pcm x v0) (H.pts_to #a #pcm x v1) h0.concrete h1.concrete;
-      H.pts_to_compatible #a #pcm x v0 v1 h0.concrete
+  = H.join_empty h
+let emp_unit p = 
+  assert (forall h. disjoint h empty_heap /\ join h empty_heap == h)
+let intro_emp h = ()
+let h_exists_cong #a p q = ()
+let intro_h_exists x p h = ()
+let elim_h_exists #a p h = ()
+let interp_depends_only_on hp = ()
+
+let lift_star (p q:H.slprop)
+: Lemma (lift (p `H.star` q) == (lift p `star` lift q))
+        [SMTPat (lift (p `H.star` q))]
+= introduce forall m.
+    interp (lift (p `H.star` q)) m <==>
+    interp (lift p `star` lift q) m
+  with (
+    introduce 
+      interp (lift p `star` lift q) m ==>
+      interp (lift (p `H.star` q)) m
+    with _ . ( 
+      eliminate exists h0 h1.
+        disjoint h0 h1 /\
+        m == join h0 h1 /\
+        interp (lift p) h0 /\
+        interp (lift q) h1
+      returns interp (lift (p `H.star` q)) m
+      with _ . (
+        H.intro_star p q h0.concrete h1.concrete
+      )
+    );
+    introduce 
+      interp (lift (p `H.star` q)) m ==>
+      interp (lift p `star` lift q) m
+    with _ . ( 
+      H.elim_star p q m.concrete;
+      eliminate exists c0 c1.
+        H.disjoint c0 c1 /\
+        m.concrete == H.join c0 c1 /\
+        H.interp p c0 /\
+        H.interp q c1
+      returns interp (lift p `star` lift q) m
+      with _ . (
+        let h0 = { concrete = c0; ghost = m.ghost } in
+        let h1 = { concrete = c1; ghost = H.empty_heap } in
+        assert (disjoint h0 h1)
+      )
     )
   );
-  introduce (composable pcm v0 v1 /\
-             interp (pts_to x (op pcm v0 v1)) h) ==>
-            interp (pts_to x v0 `star` pts_to x v1) h
-  with _ . (
-    assert (H.interp (H.pts_to #a #pcm x (op pcm v0 v1)) h.concrete);
-    H.pts_to_compatible #a #pcm x v0 v1 h.concrete;
-    assert (H.interp (H.pts_to #a #pcm x v0 `H.star` H.pts_to #a #pcm x v1) h.concrete);
-    H.elim_star (H.pts_to #a #pcm x v0) (H.pts_to #a #pcm x v1) h.concrete;
-    eliminate exists c0 c1.
-      H.disjoint c0 c1 /\ 
-      h.concrete == H.join c0 c1 /\
-      H.interp (H.pts_to #a #pcm x v0) c0 /\
-      H.interp (H.pts_to #a #pcm x v1) c1
-    returns interp (pts_to x v0 `star` pts_to x v1) h
-    with _ . (
-      let h0 = { h with concrete = c0 } in
-      let h1 = { concrete = c1; ghost = H.empty_heap } in
-      assert (disjoint h0 h1);
-      assert (interp (lift (H.pts_to #a #pcm x v0)) h0);
-      assert (interp (lift (H.pts_to #a #pcm x v1)) h1);
-      assert (h == join h0 h1)
-    )
-  )
+  slprop_extensionality (lift (p `H.star` q)) (lift p `star` lift q)
+let lift_emp : squash (lift H.emp == emp) = 
+  FStar.Classical.forall_intro H.intro_emp;
+  slprop_extensionality (lift H.emp) emp
+
+let pts_to_compatible #a #pcm (x:ref a pcm) (v0 v1:a) h = 
+  H.pts_to_compatible #a #pcm x v0 v1 h.concrete;
+  lift_star (H.pts_to #a #pcm x v0) (H.pts_to #a #pcm x v1)
 
 let pts_to_join #a #pcm (r:ref a pcm) (v1 v2:a) h =
   H.pts_to_join #a #pcm r v1 v2 h.concrete
@@ -149,51 +150,16 @@ let pts_to_join' #a #pcm r v1 v2 h =
 
 let pts_to_compatible_equiv #a #pcm r v0 v1 =
   H.pts_to_compatible_equiv #a #pcm r v0 v1;
-  assert (H.equiv (H.pts_to #a #pcm r v0 `H.star` H.pts_to #a #pcm r v1)
-                  (H.pts_to #a #pcm r (op pcm v0 v1)));
-  introduce forall h.
-      interp (pts_to #a #pcm r v0 `star` pts_to #a #pcm r v1) h <==>
-      interp (pts_to #a #pcm r (op pcm v0 v1)) h
-  with (
-    introduce
-      interp (pts_to #a #pcm r v0 `star` pts_to #a #pcm r v1) h ==>
-      interp (pts_to #a #pcm r (op pcm v0 v1)) h
-    with _ . (
-      eliminate exists h0 h1.
-        disjoint h0 h1 /\
-        h == join h0 h1 /\
-        interp (pts_to #a #pcm r v0) h0 /\
-        interp (pts_to #a #pcm r v1) h1
-      returns _
-      with _ . (
-        H.intro_star (H.pts_to #a #pcm r v0) (H.pts_to #a #pcm r v1) h0.concrete h1.concrete
-      )
-    );
-    introduce
-      interp (pts_to #a #pcm r (op pcm v0 v1)) h ==>
-      interp (pts_to #a #pcm r v0 `star` pts_to #a #pcm r v1) h
-    with _ . (
-      H.elim_star (H.pts_to #a #pcm r v0) (H.pts_to #a #pcm r v1) h.concrete;
-      eliminate exists c0 c1.
-        H.disjoint c0 c1 /\ 
-        h.concrete == H.join c0 c1 /\
-        H.interp (H.pts_to #a #pcm r v0) c0 /\
-        H.interp (H.pts_to #a #pcm r v1) c1
-      returns _
-      with _ . (
-        let h0 = { h with concrete = c0 } in
-        let h1 = { concrete = c1; ghost = H.empty_heap } in
-        assert (disjoint h0 h1)
-      )
-    )
-  )
+  lift_star (H.pts_to #a #pcm r v0) (H.pts_to #a #pcm r v1)
 
 let pts_to_not_null #a #pcm x v m = H.pts_to_not_null #a #pcm x v m.concrete
 
 let intro_star p q h hq = ()
 let elim_star p q h = ()
 let star_commutative p1 p2 = ()
+#push-options "--fuel 0 --ifuel 4 --z3rlimit_factor 4 --z3cliopt smt.qi.eager_threshold=1000000"
 let star_associative p1 p2 p3 = ()
+#pop-options
 let star_congruence p1 p2 q1 q2 = ()
 
 let pure p = as_slprop (fun _ -> p)
@@ -374,47 +340,6 @@ let lift_action
   );
   p
 
-let lift_star (p q:H.slprop)
-: Lemma (lift (p `H.star` q) == (lift p `star` lift q))
-        [SMTPat (lift (p `H.star` q))]
-= introduce forall m.
-    interp (lift (p `H.star` q)) m <==>
-    interp (lift p `star` lift q) m
-  with (
-    introduce 
-      interp (lift p `star` lift q) m ==>
-      interp (lift (p `H.star` q)) m
-    with _ . ( 
-      eliminate exists h0 h1.
-        disjoint h0 h1 /\
-        m == join h0 h1 /\
-        interp (lift p) h0 /\
-        interp (lift q) h1
-      returns interp (lift (p `H.star` q)) m
-      with _ . (
-        H.intro_star p q h0.concrete h1.concrete
-      )
-    );
-    introduce 
-      interp (lift (p `H.star` q)) m ==>
-      interp (lift p `star` lift q) m
-    with _ . ( 
-      H.elim_star p q m.concrete;
-      eliminate exists c0 c1.
-        H.disjoint c0 c1 /\
-        m.concrete == H.join c0 c1 /\
-        H.interp p c0 /\
-        H.interp q c1
-      returns interp (lift p `star` lift q) m
-      with _ . (
-        let h0 = { concrete = c0; ghost = m.ghost } in
-        let h1 = { concrete = c1; ghost = H.empty_heap } in
-        assert (disjoint h0 h1)
-      )
-    )
-  );
-  slprop_extensionality (lift (p `H.star` q)) (lift p `star` lift q)
-let lift_emp : squash (lift H.emp == emp) = admit()
 let sel_action #a #pcm r v0 = lift_action (H.sel_action #a #pcm r v0)
 let select_refine #a #p r x f = lift_action (H.select_refine #a #p r x f)
 let upd_gen_action #a #p r x y f = lift_action (H.upd_gen_action #a #p r x y f)

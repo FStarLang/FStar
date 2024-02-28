@@ -253,6 +253,7 @@ let join_associative2 (m0 m1 m2:heap)
     join_commutative (join m0 m1) m2;
     join_associative m2 m0 m1
 
+let join_empty h = assert (join h empty_heap `mem_equiv` h)
 ////////////////////////////////////////////////////////////////////////////////
 let slprop = p:(heap ^-> prop) { heap_prop_is_affine p }
 
@@ -264,6 +265,8 @@ let interp (p:slprop u#a) (m:heap u#a)
   = p m
 
 let as_slprop p = FStar.FunctionalExtensionality.on _ p
+let of_slprop p = p
+let slprop_inj (f:slprop) = ()
 
 let slprop_extensionality (p q:slprop)
   : Lemma

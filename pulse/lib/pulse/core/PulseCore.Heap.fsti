@@ -103,6 +103,10 @@ val join_associative (h0 h1 h2:heap)
        disjoint (join h0 h1) h2 /\
        join h0 (join h1 h2) == join (join h0 h1) h2))
 
+val join_empty (h:heap)
+  : Lemma (disjoint h empty_heap /\
+           join h empty_heap == h)
+   
 (**** Separation logic over heaps *)
 
 (**
@@ -137,6 +141,9 @@ val interp (p:slprop u#a) (m:heap u#a) : prop
   Promoting an affine heap proposition to an slprop
   *)
 val as_slprop (f:a_heap_prop) : p:slprop{forall h.interp p h <==> f h}
+val of_slprop (f:slprop u#a) : a_heap_prop u#a
+val slprop_inj (f:slprop) : Lemma (as_slprop (of_slprop f) == f)
+                                  [SMTPat (of_slprop f)]
 
 (**
   An [hprop] is heap predicate indexed by a footprint [fp:slprop].
