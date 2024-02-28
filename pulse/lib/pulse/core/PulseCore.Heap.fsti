@@ -412,10 +412,10 @@ val weaken_free_above (h:heap) (a b:nat)
   The base type for an action is indexed by two separation logic propositions, representing
   the heap specification of the action before and after.
 *)
-let trivial_pre (h:full_heap) : prop = True
+let trivial_pre (h:heap) : prop = True
 module T = FStar.Tactics
-let pre_action (#[T.exact (`trivial_pre)]pre:full_heap -> prop)
-               (#[T.exact (`trivial_pre)]post:full_heap -> prop)
+let pre_action (#[T.exact (`trivial_pre)]pre:heap -> prop)
+               (#[T.exact (`trivial_pre)]post:heap -> prop)
                (fp:slprop u#a)
                (a:Type u#b)
                (fp':a -> slprop u#a)
@@ -465,8 +465,8 @@ let is_frame_preserving
 (** Every action is frame-preserving *)
 let action (#[T.exact (`mut_heap)] immut:bool)
            (#[T.exact (`no_allocs)] allocates:bool)
-           (#[T.exact (`trivial_pre)]pre:full_heap -> prop)
-           (#[T.exact (`trivial_pre)]post:full_heap -> prop)
+           (#[T.exact (`trivial_pre)]pre:heap -> prop)
+           (#[T.exact (`trivial_pre)]post:heap -> prop)
            (fp:slprop u#b) (a:Type u#a) (fp':a -> slprop u#b) =
   f:pre_action #pre #post fp a fp'{ is_frame_preserving immut allocates f }
 
@@ -709,3 +709,12 @@ val pts_to_evolve (#a:Type u#a) (#pcm:_) (r:ref a pcm) (x y : a) (h:heap)
 
 val drop (p:slprop)
   : action #immut_heap #no_allocs p unit (fun _ -> emp)
+
+val erase_action_result
+      (#pre #post:_)
+      (#immut #alloc:_)
+      (#fp:slprop)
+      (#a:Type)
+      (#fp':a -> slprop)
+      (act:action #immut #alloc #pre #post fp a fp')
+: action #immut #alloc #pre #post fp (erased a) (fun x -> fp' x)

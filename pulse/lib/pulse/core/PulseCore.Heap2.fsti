@@ -41,7 +41,9 @@ module H = PulseCore.Heap
 val heap  : Type u#(a + 1)
 val concrete (h:heap u#a) : H.heap u#a
 val ghost (h:heap u#a) : erased (H.heap u#a)
-
+type tag =
+  | GHOST
+  | CONCRETE
 (* An empty heap *)
 val empty_heap : heap u#a
 
@@ -398,20 +400,20 @@ val heap_evolves : FStar.Preorder.preorder full_heap
   This predicate allows us to maintain an allocation counter, as all references above [a]
   in [h] are free.
 *)
-val free_above_addr (h:heap u#a) (a:nat) : prop
+val free_above_addr (t:tag) (h:heap u#a) (a:nat) : prop
 
 (** [free_above_addr] is abstract but can be weakened consistently with its intended behavior *)
-val weaken_free_above (h:heap) (a b:nat)
-  : Lemma (free_above_addr h a /\ a <= b ==> free_above_addr h b)
+val weaken_free_above (t:tag) (h:heap) (a b:nat)
+  : Lemma (free_above_addr t h a /\ a <= b ==> free_above_addr t h b)
 
 (**
   The base type for an action is indexed by two separation logic propositions, representing
   the heap specification of the action before and after.
 *)
-let trivial_pre (h:full_heap) : prop = True
+let trivial_pre (h:heap) : prop = True
 
-let pre_action (#[T.exact (`trivial_pre)]pre:full_heap -> prop)
-               (#[T.exact (`trivial_pre)]post:full_heap -> prop)
+let pre_action (#[T.exact (`trivial_pre)]pre:heap -> prop)
+               (#[T.exact (`trivial_pre)]post:heap -> prop)
                (fp:slprop u#a)
                (a:Type u#b)
                (fp':a -> slprop u#a)
@@ -427,19 +429,33 @@ type mutability =
   | ONLY_GHOST
   | IMMUTABLE
   | MUTABLE
-let allocs = true
-let no_allocs = false
+let no_allocs : option tag = None
+let does_not_allocate (t:tag) (h0 h1:heap) =
+    forall ctr. free_above_addr t h0 ctr ==> free_above_addr t h1 ctr
+let maybe_allocates (t:option tag) (h0 h1:heap) =
+  match t with
+  | None ->
+    does_not_allocate CONCRETE h0 h1 /\
+    does_not_allocate GHOST h0 h1
+  | Some CONCRETE ->
+    does_not_allocate GHOST h0 h1
+  | Some GHOST ->
+    does_not_allocate CONCRETE h0 h1
+  
 unfold
 let action_related_heaps 
       (#[T.exact (`MUTABLE)] m:mutability)
-      (#[T.exact (`no_allocs)] allocates:bool)
+      (#[T.exact (`no_allocs)] allocates:option tag)
       (h0 h1:full_heap) =
   heap_evolves h0 h1 /\
-  (not allocates ==> (forall ctr. h0 `free_above_addr` ctr ==> h1 `free_above_addr` ctr)) /\
+  maybe_allocates allocates h0 h1 /\
   (match m with
-  | ONLY_GHOST -> concrete h0 == concrete h1
-  | IMMUTABLE -> h0 == h1
+  | ONLY_GHOST ->
+    concrete h0 == concrete h1
+  | IMMUTABLE ->
+    h0 == h1
   | _ -> True)
+
 
 (**
   We only want to consider heap updates that are "frame-preserving", meaning that they only
@@ -454,7 +470,7 @@ let is_frame_preserving
   (#fp: slprop u#b)
   (#fp': a -> slprop u#b)
   (immut:mutability)
-  (allocates:bool)
+  (allocates:option tag)
   (f:pre_action #pre #post fp a fp')
   =
   forall (frame: slprop u#b) (h0:full_hheap (fp `star` frame) { pre h0 }).
@@ -465,9 +481,9 @@ let is_frame_preserving
 
 (** Every action is frame-preserving *)
 let action (#[T.exact (`MUTABLE)] mut:mutability)
-           (#[T.exact (`no_allocs)] allocates:bool)
-           (#[T.exact (`trivial_pre)]pre:full_heap -> prop)
-           (#[T.exact (`trivial_pre)]post:full_heap -> prop)
+           (#[T.exact (`no_allocs)] allocates:option tag)
+           (#[T.exact (`trivial_pre)]pre:heap -> prop)
+           (#[T.exact (`trivial_pre)]post:heap -> prop)
            (fp:slprop u#b) (a:Type u#a) (fp':a -> slprop u#b) =
   f:pre_action #pre #post fp a fp'{ is_frame_preserving mut allocates f }
 
@@ -493,7 +509,7 @@ let action_with_frame
   frame-preserving update.
 *)
 let frame_related_heaps (h0 h1:full_heap) (fp0 fp1 frame:slprop)
-                        (mut:mutability) (allocates:bool) =
+                        (mut:mutability) (allocates:option tag) =
   interp (fp0 `star` frame) h0 ==>
   interp (fp1 `star` frame) h1 /\
   action_related_heaps #mut #allocates h0 h1
@@ -637,9 +653,9 @@ val extend
   (x:a{compatible pcm x x /\ pcm.refine x})
   (addr:nat)
   : action
-      #MUTABLE #allocs
-      #(fun h -> h `free_above_addr` addr)
-      #(fun h -> h `free_above_addr` (addr + 1))      
+      #MUTABLE #(Some CONCRETE)
+      #(fun h -> h `free_above_addr CONCRETE` addr)
+      #(fun h -> h `free_above_addr CONCRETE` (addr + 1))      
       emp 
       (ref a pcm)
       (fun r -> pts_to r x)
@@ -718,26 +734,25 @@ let non_informative (a:Type u#a) =
 val lift_erased
           (#a:Type)
           (#ni_a:non_informative a)
+          (#allocs:option tag)
            #hpre #hpost
           (#pre:slprop)
           (#post:a -> slprop)
-          (frame:slprop)
-          ($f:erased (action #ONLY_GHOST #hpre #hpost pre a post))
-: action #ONLY_GHOST #hpre #hpost pre a post
+          ($f:erased (action #ONLY_GHOST #allocs #hpre #hpost pre a post))
+: action #ONLY_GHOST #allocs #hpre #hpost pre a post
 
 [@@erasable]
 val ghost_ref (#[@@@unused] a:Type u#a) ([@@@unused]p:pcm a) : Type0
 val ghost_pts_to (#a:Type u#a) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop u#a
 
-val ghost_free_above_addr (h:heap) (addr:nat) : prop
 val ghost_extend
     (#a:Type u#a)
     (#pcm:pcm a)
     (x:erased a{compatible pcm x x /\ pcm.refine x})
     (addr:erased nat)
-: action #ONLY_GHOST #true
-      #(fun h -> h `ghost_free_above_addr` addr)
-      #(fun h -> h `ghost_free_above_addr` (addr + 1))      
+: action #ONLY_GHOST #(Some GHOST)
+      #(fun h -> h `free_above_addr GHOST` addr)
+      #(fun h -> h `free_above_addr GHOST` (addr + 1))      
       emp 
       (ghost_ref pcm)
       (fun r -> ghost_pts_to r x)

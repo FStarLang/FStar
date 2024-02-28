@@ -757,8 +757,8 @@ let sel_action' (#a:_) (#pcm:_) (r:ref a pcm) (v0:erased a) (h:full_hheap (pts_t
   = sel_v r v0 h
 
 let refined_pre_action (#immut:bool) (#allocates:bool)
-                       (#[T.exact (`trivial_pre)]pre:full_heap ->prop)
-                       (#[T.exact (`trivial_pre)]post:full_heap -> prop)
+                       (#[T.exact (`trivial_pre)]pre:heap ->prop)
+                       (#[T.exact (`trivial_pre)]post:heap -> prop)
                        (fp0:slprop) (a:Type) (fp1:a -> slprop) =
   m0:full_hheap fp0 ->
   Pure (x:a &
@@ -1267,3 +1267,22 @@ let drop p
     = fun h -> (| (), h |)
   in
   refined_pre_action_as_action f
+
+
+let erased_action_result
+      (#pre #post:_)
+      (#immut #alloc:_)
+      (#fp:slprop)
+      (#a:Type)
+      (#fp':a -> slprop)
+      (act:action #immut #alloc #pre #post fp a fp')
+: action #immut #alloc #pre #post fp (erased a) (fun x -> fp' x)
+= let g
+  : refined_pre_action #immut #alloc #pre #post fp (erased a) (fun x -> fp' x)
+  = fun h ->
+    let (| x, h1 |) = act h in
+    let y : erased a = hide x in
+    let h1 : full_hheap (fp' (reveal y)) = h1 in
+    (| y, h1 |)
+  in
+  refined_pre_action_as_action g
