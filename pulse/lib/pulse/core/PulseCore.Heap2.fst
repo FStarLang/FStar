@@ -11,7 +11,8 @@ type heap : Type u#(a + 1) = {
   concrete : H.heap u#a; 
   ghost    : erased (H.heap u#a);
 }
-
+let concrete h = h.concrete
+let ghost h = h.ghost
 let empty_heap = { concrete = H.empty_heap; ghost = H.empty_heap }
 
 let core_ref = H.core_ref
@@ -185,10 +186,6 @@ let sel_v' (#a:Type u#h) (#pcm:pcm a) (r:ref a pcm) (v:erased a) (m:full_hheap (
           True
           }
   = let v = H.sel_v #a #pcm r v m.concrete in
-    // assert (H.interp (H.ptr #a #pcm r) m.concrete);
-    // assert (exists v. H.interp (H.pts_to #a #pcm r v) m.concrete);
-    // assert (exists v. interp (pts_to r v) m);
-    // assert (interp (ptr r) m);
     v
 
 let lower_ptr #a #pcm (r:ref a pcm) (m:full_hheap (ptr r))
@@ -271,17 +268,19 @@ let lift_heap_pre_action
 #restart-solver
 
 #push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 4"
+let lift_immut (m:bool) = if m then IMMUTABLE else MUTABLE
 let lift_action
       (#immut #allocs #pre #post:_)
       (#fp:H.slprop) (#a:Type) (#fp':a -> H.slprop)
       (act:H.action #immut #allocs #pre #post fp a fp')
-: action #immut #allocs #(lift_pred pre) #(lift_pred post)
+: action #(lift_immut immut) #allocs #(lift_pred pre) #(lift_pred post)
         (lift fp) a (fun x -> lift (fp' x))
 = let p = lift_heap_pre_action act in
+  let mut = lift_immut immut in
   introduce forall frame (h0:full_hheap (lift fp `star` frame) { lift_pred pre h0 }).
     let (| x, h1 |) = p h0 in
     interp (lift (fp' x) `star` frame) h1 /\
-    action_related_heaps #immut #allocs h0 h1
+    action_related_heaps #mut #allocs h0 h1
   with (
     assert (interp (lift fp `star` frame) h0);
     let (| x, h1 |) = p h0 in
@@ -292,7 +291,7 @@ let lift_action
       interp frame h1'
     returns 
       interp (lift (fp' x) `star` frame) h1 /\
-      action_related_heaps #immut #allocs h0 h1
+      action_related_heaps #mut #allocs h0 h1
     with _ . (
       let hframe : H.heap -> prop = (fun h -> interp frame { concrete = h; ghost = h1'.ghost }) in
       introduce forall c0 c1.
@@ -335,7 +334,7 @@ let lift_action
         assert (disjoint h10 h11)
       );
       heap_evolves_iff h0 h1;
-      assert (action_related_heaps #immut #allocs h0 h1)
+      assert (action_related_heaps #mut #allocs h0 h1)
     )
   );
   p
@@ -350,7 +349,7 @@ let gather_action #a #p r v0 v1 = lift_action (H.gather_action #a #p r v0 v1)
 let pts_to_not_null_action #a #p r v = lift_action (H.pts_to_not_null_action #a #p r v)
 let extend #a #pcm x addr = lift_action (H.extend #a #pcm x addr)
 
-let refined_pre_action (#immut:bool) (#allocates:bool)
+let refined_pre_action (#mut:mutability) (#allocates:bool)
                        (#[T.exact (`trivial_pre)]pre:full_heap ->prop)
                        (#[T.exact (`trivial_pre)]post:full_heap -> prop)
                        (fp0:slprop) (a:Type) (fp1:a -> slprop) =
@@ -360,7 +359,7 @@ let refined_pre_action (#immut:bool) (#allocates:bool)
        (requires pre m0)
        (ensures fun  (| x, m1 |) ->
          post m1 /\
-         (forall frame. frame_related_heaps m0 m1 fp0 (fp1 x) frame immut allocates))
+         (forall frame. frame_related_heaps m0 m1 fp0 (fp1 x) frame mut allocates))
 
 #restart-solver
 let refined_pre_action_as_action #immut #allocs #pre #post (#fp0:slprop) (#a:Type) (#fp1:a -> slprop)
@@ -399,7 +398,7 @@ let frame (#a:Type)
 
 let change_slprop (p q:slprop)
                   (proof: (h:heap -> Lemma (requires interp p h) (ensures interp q h)))
-  : action #immut_heap #no_allocs p unit (fun _ -> q)
+  : action #IMMUTABLE #no_allocs p unit (fun _ -> q)
   = let g
       : refined_pre_action p unit (fun _ -> q)
       = fun h ->
@@ -426,7 +425,7 @@ module U = FStar.Universe
 let lift_h_exists (#a:_) (p:a -> slprop)
   : action (h_exists p) unit
            (fun _a -> h_exists #(U.raise_t a) (U.lift_dom p))
-  = let g : refined_pre_action #immut_heap #no_allocs (h_exists p) unit (fun _a -> h_exists #(U.raise_t a) (U.lift_dom p))
+  = let g : refined_pre_action #IMMUTABLE #no_allocs (h_exists p) unit (fun _a -> h_exists #(U.raise_t a) (U.lift_dom p))
           = fun h ->
               introduce forall x h.
                   interp (p x) h ==>

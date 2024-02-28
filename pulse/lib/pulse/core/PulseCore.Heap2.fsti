@@ -17,7 +17,7 @@ module PulseCore.Heap2
 open FStar.Ghost
 open FStar.PCM
 module T = FStar.Tactics
-
+module H = PulseCore.Heap
 /// This module defines the behavior of a structured heap where each memory cell is governed by
 /// a partial commutative monoid. This PCM structure is reused for the entire heap as it is possible
 /// to talk about disjoint heaps and join them together.
@@ -39,6 +39,8 @@ module T = FStar.Tactics
   contents of memory cells.
 *)
 val heap  : Type u#(a + 1)
+val concrete (h:heap u#a) : H.heap u#a
+val ghost (h:heap u#a) : erased (H.heap u#a)
 
 (* An empty heap *)
 val empty_heap : heap u#a
@@ -421,18 +423,23 @@ let pre_action (#[T.exact (`trivial_pre)]pre:full_heap -> prop)
   - not allocating any new references;
   - preserving the validity of any heap proposition affecting any frame
 *)
-let immut_heap = true
-let mut_heap = false
+type mutability =
+  | ONLY_GHOST
+  | IMMUTABLE
+  | MUTABLE
 let allocs = true
 let no_allocs = false
 unfold
 let action_related_heaps 
-      (#[T.exact (`mut_heap)] immut:bool)
+      (#[T.exact (`MUTABLE)] m:mutability)
       (#[T.exact (`no_allocs)] allocates:bool)
       (h0 h1:full_heap) =
   heap_evolves h0 h1 /\
   (not allocates ==> (forall ctr. h0 `free_above_addr` ctr ==> h1 `free_above_addr` ctr)) /\
-  (immut ==> h0 == h1)
+  (match m with
+  | ONLY_GHOST -> concrete h0 == concrete h1
+  | IMMUTABLE -> h0 == h1
+  | _ -> True)
 
 (**
   We only want to consider heap updates that are "frame-preserving", meaning that they only
@@ -446,7 +453,7 @@ let is_frame_preserving
   (#pre #post:_)
   (#fp: slprop u#b)
   (#fp': a -> slprop u#b)
-  (immut:bool)
+  (immut:mutability)
   (allocates:bool)
   (f:pre_action #pre #post fp a fp')
   =
@@ -457,12 +464,12 @@ let is_frame_preserving
       action_related_heaps #immut #allocates h0 h1)
 
 (** Every action is frame-preserving *)
-let action (#[T.exact (`mut_heap)] immut:bool)
+let action (#[T.exact (`MUTABLE)] mut:mutability)
            (#[T.exact (`no_allocs)] allocates:bool)
            (#[T.exact (`trivial_pre)]pre:full_heap -> prop)
            (#[T.exact (`trivial_pre)]post:full_heap -> prop)
            (fp:slprop u#b) (a:Type u#a) (fp':a -> slprop u#b) =
-  f:pre_action #pre #post fp a fp'{ is_frame_preserving immut allocates f }
+  f:pre_action #pre #post fp a fp'{ is_frame_preserving mut allocates f }
 
 (**
   We define a second, but equivalent, type for actions that
@@ -479,16 +486,17 @@ let action_with_frame
     h0:full_hheap (fp `star` frame) ->
     Pure (x:a & full_hheap (fp' x `star` frame))
       (requires True)
-      (ensures fun (| x, h1 |) -> action_related_heaps #immut_heap #no_allocs h0 h1)
+      (ensures fun (| x, h1 |) -> action_related_heaps #IMMUTABLE #no_allocs h0 h1)
 
 (**
   Two heaps [h0] and [h1] are frame-related if you can get from [h0] to [h1] with a
   frame-preserving update.
 *)
-let frame_related_heaps (h0 h1:full_heap) (fp0 fp1 frame:slprop) (immut:bool) (allocates:bool) =
+let frame_related_heaps (h0 h1:full_heap) (fp0 fp1 frame:slprop)
+                        (mut:mutability) (allocates:bool) =
   interp (fp0 `star` frame) h0 ==>
   interp (fp1 `star` frame) h1 /\
-  action_related_heaps #immut #allocates h0 h1
+  action_related_heaps #mut #allocates h0 h1
 
 
 (**
@@ -497,15 +505,15 @@ let frame_related_heaps (h0 h1:full_heap) (fp0 fp1 frame:slprop) (immut:bool) (a
 *)
 let action_framing
   (#a: Type u#a)
-  (#immut #allocates:bool)
+  (#mut #allocates:_)
   (#fp: slprop u#b)
   (#fp': a -> slprop u#b)
-  ($f:action #immut #allocates fp a fp')
+  ($f:action #mut #allocates fp a fp')
   (frame:slprop) (h0:full_hheap (fp `star` frame))
     : Lemma (
       affine_star fp frame h0;
       let (| x, h1 |) = f h0 in
-      frame_related_heaps h0 h1 fp (fp' x) frame immut allocates
+      frame_related_heaps h0 h1 fp (fp' x) frame mut allocates
     )
   =
   affine_star fp frame h0;
@@ -547,7 +555,7 @@ val sel_action
   (#pcm:pcm a)
   (r:ref a pcm)
   (v0:erased a)
-    : action #immut_heap #no_allocs
+    : action #IMMUTABLE #no_allocs
        (pts_to r v0) (v:a{compatible pcm v0 v}) (fun _ -> pts_to r v0)
 
 (**
@@ -560,7 +568,7 @@ val select_refine (#a:_) (#p:_)
                   (f:(v:a{compatible p x v}
                       -> GTot (y:a{compatible p y v /\
                                   FStar.PCM.frame_compatible p x v y})))
-   : action #immut_heap #no_allocs (pts_to r x)
+   : action #IMMUTABLE #no_allocs (pts_to r x)
             (v:a{compatible p x v /\ p.refine v})
             (fun v -> pts_to r (f v))
 
@@ -568,7 +576,7 @@ val select_refine (#a:_) (#p:_)
 (** Updating a ref cell for a user-defined PCM *)
 val upd_gen_action (#a:Type) (#p:pcm a) (r:ref a p) (x y:Ghost.erased a)
                    (f:FStar.PCM.frame_preserving_upd p x y)
-  : action #mut_heap #no_allocs (pts_to r x)
+  : action #MUTABLE #no_allocs (pts_to r x)
            unit
            (fun _ -> pts_to r y)
 
@@ -582,7 +590,7 @@ val upd_action
   (r:ref a pcm)
   (v0:FStar.Ghost.erased a)
   (v1:a {FStar.PCM.frame_preserving pcm v0 v1 /\ pcm.refine v1})
-  : action #mut_heap #no_allocs (pts_to r v0) unit (fun _ -> pts_to r v1)
+  : action #MUTABLE #no_allocs (pts_to r v0) unit (fun _ -> pts_to r v1)
 
 (** Deallocating a reference, by actually replacing its value by the unit of the PCM *)
 val free_action
@@ -590,7 +598,7 @@ val free_action
   (#pcm:pcm a)
   (r:ref a pcm)
   (v0:FStar.Ghost.erased a {exclusive pcm v0 /\ pcm.refine pcm.FStar.PCM.p.one})
-  : action #mut_heap #no_allocs (pts_to r v0) unit (fun _ -> pts_to r pcm.FStar.PCM.p.one)
+  : action #MUTABLE #no_allocs (pts_to r v0) unit (fun _ -> pts_to r pcm.FStar.PCM.p.one)
 
 
 (** Splitting a permission on a composite resource into two separate permissions *)
@@ -600,7 +608,7 @@ val split_action
   (r:ref a pcm)
   (v0:FStar.Ghost.erased a)
   (v1:FStar.Ghost.erased a{composable pcm v0 v1})
-  : action #immut_heap #no_allocs (pts_to r (v0 `op pcm` v1)) unit (fun _ -> pts_to r v0 `star` pts_to r v1)
+  : action #IMMUTABLE #no_allocs (pts_to r (v0 `op pcm` v1)) unit (fun _ -> pts_to r v0 `star` pts_to r v1)
 
 (** Combining separate permissions into a single composite permission *)
 val gather_action
@@ -609,7 +617,7 @@ val gather_action
   (r:ref a pcm)
   (v0:FStar.Ghost.erased a)
   (v1:FStar.Ghost.erased a)
-  : action #immut_heap #no_allocs
+  : action #IMMUTABLE #no_allocs
     (pts_to r v0 `star` pts_to r v1) (_:unit{composable pcm v0 v1}) (fun _ -> pts_to r (op pcm v0 v1))
 
 val pts_to_not_null_action 
@@ -617,7 +625,7 @@ val pts_to_not_null_action
       (#pcm:pcm a)
       (r:erased (ref a pcm))
       (v:Ghost.erased a)
-: action #immut_heap #no_allocs
+: action #IMMUTABLE #no_allocs
     (pts_to r v)
     (squash (not (is_null r)))
     (fun _ -> pts_to r v)
@@ -629,7 +637,7 @@ val extend
   (x:a{compatible pcm x x /\ pcm.refine x})
   (addr:nat)
   : action
-      #mut_heap #allocs
+      #MUTABLE #allocs
       #(fun h -> h `free_above_addr` addr)
       #(fun h -> h `free_above_addr` (addr + 1))      
       emp 
@@ -646,7 +654,7 @@ val frame (#a:Type)
 
 val change_slprop (p q:slprop)
                   (proof: (h:heap -> Lemma (requires interp p h) (ensures interp q h)))
-  : action #immut_heap #no_allocs p unit (fun _ -> q)
+  : action #IMMUTABLE #no_allocs p unit (fun _ -> q)
 
 // module U = FStar.Universe
 
@@ -688,18 +696,18 @@ val intro_exists (#a:_) (p:a -> slprop) (x:erased a)
   : action_with_frame (p x) unit (fun _ -> h_exists p)
   
 val lift_h_exists (#a:_) (p:a -> slprop)
-  : action #immut_heap #no_allocs (h_exists p) unit
+  : action #IMMUTABLE #no_allocs (h_exists p) unit
            (fun _a -> h_exists #(FStar.Universe.raise_t a) (FStar.Universe.lift_dom p))
 
 val elim_pure (p:prop)
-  : action #immut_heap #no_allocs (pure p) (u:unit{p}) (fun _ -> emp)
+  : action #IMMUTABLE #no_allocs (pure p) (u:unit{p}) (fun _ -> emp)
 
 val intro_pure (p:prop) (_:squash p)
-  : action #immut_heap #no_allocs emp unit (fun _ -> pure p)
+  : action #IMMUTABLE #no_allocs emp unit (fun _ -> pure p)
 
 val pts_to_evolve (#a:Type u#a) (#pcm:_) (r:ref a pcm) (x y : a) (h:heap)
   : Lemma (requires (interp (pts_to r x) h /\ compatible pcm y x))
           (ensures  (interp (pts_to r y) h))
 
 val drop (p:slprop)
-  : action #immut_heap #no_allocs p unit (fun _ -> emp)
+  : action #IMMUTABLE #no_allocs p unit (fun _ -> emp)
