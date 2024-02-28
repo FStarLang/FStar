@@ -80,7 +80,7 @@ let (uu___is_Black : color -> Prims.bool) =
 let (check_and_strip_suffix :
   Prims.string -> Prims.string FStar_Pervasives_Native.option) =
   fun f ->
-    let suffixes = [".fsti"; ".fst"; ".fsi"; ".fs"] in
+    let suffixes = [".fsti"; ".fst"] in
     let matches =
       FStar_Compiler_List.map
         (fun ext ->
@@ -136,7 +136,7 @@ let (module_name_of_file : Prims.string -> Prims.string) =
     | FStar_Pervasives_Native.None ->
         let uu___1 =
           let uu___2 =
-            FStar_Compiler_Util.format1 "not a valid FStar file: %s" f in
+            FStar_Compiler_Util.format1 "Not a valid FStar file: '%s'" f in
           (FStar_Errors_Codes.Fatal_NotValidFStarFile, uu___2) in
         FStar_Errors.raise_err uu___1
 let (lowercase_module_name : Prims.string -> Prims.string) =
