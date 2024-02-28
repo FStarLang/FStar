@@ -1269,7 +1269,7 @@ let drop p
   refined_pre_action_as_action f
 
 
-let erased_action_result
+let erase_action_result
       (#pre #post:_)
       (#immut #alloc:_)
       (#fp:slprop)
