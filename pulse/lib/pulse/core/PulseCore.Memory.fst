@@ -1069,49 +1069,38 @@ let refined_pre_action_as_action (#fp0:slprop) (#a:Type) (#fp1:a -> slprop)
     in
     g
 
-let alloc_action #a #pcm e x = admit()
-  // = let f : refined_pre_action e emp (ref a pcm) (fun r -> pts_to r x)
-  //     = fun m0 ->
-  //       (* NS: 9/29/22 I needed to annotate h : Heap.full_heap, for use with the Core checker
-  //          which generates a guard for checking the implicit pattern "dot" term in the dependent
-  //          pair pattern on the next line. That guard expects `h` to be a full_heap, which is it,
-  //          because it is a projection of m0. However, this is not reflected in `h`'s type. So,
-  //          the Core checker, which produces a guard for the pat_dot_term in isolation, cannot
-  //          recheck the term. If we were to fold in the checking of pat_dot_terms and their guards
-  //          with the rest of the VC, this would work.  *)
-  //       let h : Heap.full_heap = hheap_of_hmem m0 in
-  //       let (|r, h'|) = H.extend #a #pcm x m0.ctr h in
-  //       let m' : hmem_with_inv_except e emp = inc_ctr m0 in
-  //       let h' : H.hheap (pts_to #a #pcm r x `star` linv e m') = weaken _ (linv e m0) (linv e m') h' in
-  //       let m1 : hmem_with_inv_except e (pts_to #a #pcm r x) = hmem_of_hheap m' h' in
-  //       assert (forall frame. H.frame_related_heaps h h' emp (pts_to #a #pcm r x) frame true);
-  //       let aux (frame:slprop)
-  //         : Lemma
-  //           (requires
-  //              interp ((emp `star` frame) `star` linv e m0) m0)
-  //           (ensures
-  //              interp ((pts_to #a #pcm r x `star` frame) `star` linv e m1) m1 /\
-  //              mem_evolves m0 m1 /\
-  //              (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1)))
-  //           [SMTPat (emp `star` frame)]
-  //         = star_associative emp frame (linv e m0);
-  //           assert (H.interp (emp `star` (frame `star` linv e m0)) h);
-  //           assert (H.interp (pts_to #a #pcm r x `star` (frame `star` linv e m0)) h');
-  //           star_associative (pts_to #a #pcm r x) frame (linv e m0);
-  //           assert (H.interp ((pts_to #a #pcm r x `star` frame) `star` linv e m0) h');
-  //           assert (H.stronger (linv e m0) (linv e m'));
-  //           assert (H.equiv (linv e m') (linv e m1));
-  //           assert (H.stronger (linv e m0) (linv e m1));
-  //           let h' : H.hheap ((pts_to #a #pcm r x `star` frame) `star` linv e m1) = weaken _ (linv e m0) (linv e m1) h' in
-  //           assert (H.interp ((pts_to #a #pcm r x `star` frame) `star` linv e m1) h');
-  //           assert (forall (mp:H.hprop frame). mp h == mp h');
-  //           mprop_preservation_of_hprop_preservation frame m0 m1;
-  //           assert (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1))
-  //       in
-  //       assert (frame_related_mems emp (pts_to r x) e m0 m1);
-  //       (| r, m1 |)
-  //   in
-  //   lift_tot_action (refined_pre_action_as_action f)
+
+let alloc_action #a #pcm e x
+  = let f : refined_pre_action e emp (ref a pcm) (fun r -> pts_to r x)
+    = fun m0 ->
+        let h = hheap_of_hmem m0 in
+        let (|r, h'|) = H.extend #a #pcm x m0.ctr h in
+        let m' : hmem_with_inv_except e emp = inc_ctr m0 in
+        let h' : H.hheap (pts_to #a #pcm r x `star` linv e m') = weaken _ (linv e m0) (linv e m') h' in
+        let m1 : hmem_with_inv_except e (pts_to #a #pcm r x) = hmem_of_hheap m' h' in
+        let aux (frame:slprop)
+          : Lemma
+            (requires
+               interp ((emp `star` frame) `star` linv e m0) m0)
+            (ensures
+               interp ((pts_to #a #pcm r x `star` frame) `star` linv e m1) m1 /\
+               mem_evolves m0 m1)
+            [SMTPat (emp `star` frame)]
+          = star_associative emp frame (linv e m0);
+            assert (H.interp (emp `star` (frame `star` linv e m0)) h);
+            assert (H.interp (pts_to #a #pcm r x `star` (frame `star` linv e m0)) h');
+            star_associative (pts_to #a #pcm r x) frame (linv e m0);
+            assert (H.interp ((pts_to #a #pcm r x `star` frame) `star` linv e m0) h');
+            assert (H.stronger (linv e m0) (linv e m'));
+            assert (H.equiv (linv e m') (linv e m1));
+            assert (H.stronger (linv e m0) (linv e m1));
+            let h' : H.hheap ((pts_to #a #pcm r x `star` frame) `star` linv e m1) = weaken _ (linv e m0) (linv e m1) h' in
+            assert (H.interp ((pts_to #a #pcm r x `star` frame) `star` linv e m1) h')
+        in
+        assert (frame_related_mems emp (pts_to r x) e m0 m1);
+        (| r, m1 |)
+    in
+    lift_tot_action (refined_pre_action_as_action f)
 
 
 let select_refine #a #p e r x f
@@ -1712,36 +1701,6 @@ let change_slprop (#opened_invariants:inames)
     = proof (mem_of_heap h)
   in
   lift_tot_action (lift_heap_action opened_invariants (H.change_slprop p q proof))
-
-
-// let is_frame_monotonic #a (p : a -> slprop) : prop =
-//   forall x y m frame. interp (p x `star` frame) m /\ interp (p y) m ==> interp (p y `star` frame) m
-
-// let is_witness_invariant #a (p : a -> slprop) =
-//   forall x y m. interp (p x) m /\ interp (p y) m ==> x == y
-
-// (* This module reuses is_frame_monotonic from Heap, but does not expose that
-// to clients, so we need this lemma to typecheck witness_h_exists below. *)
-// let relate_frame_monotonic_1 #a p
-//   : Lemma (requires (H.is_frame_monotonic p))
-//           (ensures (is_frame_monotonic p))
-//   = ()
-
-// let relate_frame_monotonic_2 #a p
-// : Lemma (requires (is_frame_monotonic p))
-//           (ensures (H.is_frame_monotonic p))
-// = introduce 
-//     forall x y h f.
-//       (H.interp (p x `H.star` f) h /\ H.interp (p y) h) ==>
-//         H.interp (p y `H.star` f) h
-//     with 
-//   introduce _ ==> _
-//   with _ . (
-//     let m = mem_of_heap h in
-//     assert (interp (p x `star` f) m);
-//     assert (interp (p y)          m);
-//     assert (interp (p y `star` f) m)
-//   )
 
 let witness_h_exists #opened_invariants #a p =
   lift_tot_action_with_frame (lift_heap_action_with_frame opened_invariants (H.elim_exists p))
