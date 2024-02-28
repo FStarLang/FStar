@@ -1732,10 +1732,7 @@ let elim_pure #opened_invariants p = lift_tot_action (lift_heap_action opened_in
 let intro_pure #opened_invariants p pf = lift_tot_action (lift_heap_action opened_invariants (H.intro_pure p pf))
 
 let drop #o p = lift_tot_action (lift_heap_action o (H.drop p))
-assume
-val upd_ghost_heap (h0:H.heap) (h1:erased H.heap { H.concrete h0 == H.concrete h1 })
-  : h2:H.heap { h2 == reveal h1 }
-#push-options "--query_stats"
+
 let lift_ghost
       (#a:Type)
       #opened_invariants #p #q
@@ -1752,14 +1749,77 @@ let lift_ghost
       let m1' : erased full_mem = hide (snd (reveal xm1)) in
       let x' : erased a = hide (fst (reveal xm1)) in
       let m1 : full_mem = 
-        { m0 with heap = upd_ghost_heap m0.heap (hide (m1'.heap));
+        { m0 with heap = H.upd_ghost_heap m0.heap (hide (m1'.heap));
                   ghost_ctr = (reveal m1').ghost_ctr } in
       let x = ni_a (hide (fst (reveal xm1))) in
       (x, m1)
 
 let ghost_ref = H.ghost_ref
 let ghost_pts_to = H.ghost_pts_to
-let ghost_alloc #o = admit()
+
+
+let inc_ghost_ctr (#p:slprop) #e (m:hmem_with_inv_except e p)
+  : m':hmem_with_inv_except e p{reveal m'.ghost_ctr = m.ghost_ctr + 1 /\ H.stronger (linv e m) (linv e m')}
+  = let m' : mem = { m with ghost_ctr = m.ghost_ctr + 1} in
+    assert (interp (p `star` linv e m) m');
+    assert (linv e m == lock_store_invariant e m.locks
+                        `star`
+                        ctr_validity m.ctr m.ghost_ctr (heap_of_mem m));
+    assert (linv e m' == lock_store_invariant e m.locks
+                         `star`
+                        ctr_validity m.ctr (m.ghost_ctr + 1) (heap_of_mem m));
+    H.weaken_free_above H.GHOST (heap_of_mem m) m.ghost_ctr (m.ghost_ctr + 1);
+    weaken_pure (heap_ctr_valid m.ctr m.ghost_ctr (heap_of_mem m))
+                (heap_ctr_valid m.ctr (m.ghost_ctr + 1) (heap_of_mem m));
+    assert (H.stronger
+                  (ctr_validity m.ctr m.ghost_ctr (heap_of_mem m))
+                  (ctr_validity m.ctr (m.ghost_ctr + 1) (heap_of_mem m)));
+    H.star_associative p (lock_store_invariant e m.locks)
+                         (ctr_validity m.ctr m.ghost_ctr (heap_of_mem m));
+    H.stronger_star (lock_store_invariant e m.locks)
+                    (ctr_validity m.ctr m.ghost_ctr (heap_of_mem m))
+                    (ctr_validity m.ctr (m.ghost_ctr + 1) (heap_of_mem m));
+    H.weaken (p `star` lock_store_invariant e m.locks)
+             (ctr_validity m.ctr m.ghost_ctr (heap_of_mem m))
+             (ctr_validity m.ctr (m.ghost_ctr + 1) (heap_of_mem m))
+             (heap_of_mem m');
+    H.star_associative p (lock_store_invariant e m.locks)
+                         (ctr_validity m.ctr (m.ghost_ctr + 1) (heap_of_mem m));
+    let m' : hmem_with_inv_except e p = m' in
+    m'
+
+let ghost_alloc #e #a #pcm x
+  = let f : refined_pre_action true e emp (ghost_ref pcm) (fun r -> ghost_pts_to r x)
+    = fun m0 ->
+        let h = hheap_of_hmem m0 in
+        let (|r, h'|) = H.ghost_extend #a #pcm x m0.ghost_ctr h in
+        let m' : hmem_with_inv_except e emp = inc_ghost_ctr m0 in
+        let h' : H.hheap (ghost_pts_to #a #pcm r x `star` linv e m') = weaken _ (linv e m0) (linv e m') h' in
+        let m1 : hmem_with_inv_except e (ghost_pts_to #a #pcm r x) = hmem_of_hheap m' h' in
+        let aux (frame:slprop)
+          : Lemma
+            (requires
+               interp ((emp `star` frame) `star` linv e m0) m0)
+            (ensures
+               interp ((ghost_pts_to #a #pcm r x `star` frame) `star` linv e m1) m1 /\
+               mem_evolves m0 m1)
+            [SMTPat (emp `star` frame)]
+          = star_associative emp frame (linv e m0);
+            assert (H.interp (emp `star` (frame `star` linv e m0)) h);
+            assert (H.interp (ghost_pts_to #a #pcm r x `star` (frame `star` linv e m0)) h');
+            star_associative (ghost_pts_to #a #pcm r x) frame (linv e m0);
+            assert (H.interp ((ghost_pts_to #a #pcm r x `star` frame) `star` linv e m0) h');
+            assert (H.stronger (linv e m0) (linv e m'));
+            assert (H.equiv (linv e m') (linv e m1));
+            assert (H.stronger (linv e m0) (linv e m1));
+            let h' : H.hheap ((ghost_pts_to #a #pcm r x `star` frame) `star` linv e m1) = weaken _ (linv e m0) (linv e m1) h' in
+            assert (H.interp ((ghost_pts_to #a #pcm r x `star` frame) `star` linv e m1) h')
+        in
+        assert (frame_related_mems emp (ghost_pts_to r x) e m0 m1);
+        (| r, m1 |)
+    in
+    lift_tot_action (refined_pre_action_as_action f)
+
 let ghost_read #o #a #p r x f
   = lift_tot_action (lift_heap_action o (H.ghost_read #a #p r x f))
 let ghost_write #o #a #p r x y f
