@@ -15,6 +15,56 @@ let concrete h = h.concrete
 let ghost h = h.ghost
 let empty_heap = { concrete = H.empty_heap; ghost = H.empty_heap }
 
+type tag =
+  | CONCRETE
+  | GHOST
+let get (t:tag) (h:heap u#a) : GTot (H.heap u#a) =
+  match t with
+  | CONCRETE -> h.concrete
+  | GHOST -> h.ghost
+let put (t:tag) (h':H.heap u#a) (h:heap u#a) : GTot (heap u#a) =
+  match t with
+  | CONCRETE -> { h with concrete = h' }
+  | GHOST -> { h with ghost = h' }
+noeq
+type splittable (a:Type) = {
+  disjoint : a -> a -> prop;
+  join : x:a -> y:a {disjoint x y } -> a;
+  laws : squash (
+    (forall (x:a) (y:a). disjoint x y <==> disjoint y x) /\
+    (forall (x:a) (y:a) (z:a). disjoint y z /\ disjoint x (join y z) ==>
+      disjoint x y /\
+      disjoint x z /\
+      disjoint (join x y) z /\
+      disjoint (join x z) y /\
+      join x (join y z) == join (join x y) z)
+  )  
+}
+noeq
+type lens (a:Type) (b:Type) = {
+  get : a -> GTot b;
+  put : b -> a -> GTot a;
+  sa: splittable a;
+  sb: splittable b;
+  lens_laws : squash (
+      (forall (x:a). put (get x) x == x) /\
+      (forall (x:a) (y:b). get (put y x) == y) /\
+      (forall (x:a) (y:b) (z:b). put z (put y x) == put z x
+    )
+  );
+  law0: (x:a) -> (y:a) -> Lemma (
+      sa.disjoint x y ==>
+      sb.disjoint (get x) (get y) /\
+      get (sa.join x y) == sb.join (get x) (get y)
+  );
+  law1: (x:a) -> (y:a) -> l:b -> m:b -> Lemma (
+        sa.disjoint x y /\
+        sb.disjoint l m ==>
+        sa.disjoint (put l x) (put m y) /\
+        sa.join (put l x) (put m y) == put (sb.join l m) (sa.join x y)
+      )
+}
+
 let core_ref = H.core_ref
 let core_ref_null = H.core_ref_null
 let core_ref_is_null = H.core_ref_is_null
@@ -61,13 +111,57 @@ let join_associative2 (m0 m1 m2:heap)
     join_commutative m2 m1;
     join_associative m0 m1 m2
 
+let splittable_heap : splittable (heap u#a) = {
+  disjoint;
+  join;
+  laws = FStar.Classical.forall_intro_3 disjoint_join
+}
+let splittable_hheap : splittable (H.heap u#a) = {
+  disjoint = H.disjoint;
+  join = H.join;
+  laws = admit()
+}
+let lens_concrete : lens (heap u#a) (H.heap u#a) = {
+  get = (fun h -> h.concrete);
+  put = (fun concrete h -> { h with concrete });
+  sa = splittable_heap;
+  sb = splittable_hheap;
+  lens_laws = ();
+  law0 = (fun x y -> ());
+  law1 = (fun x y l m -> ())
+}
+let lens_ghost : lens (heap u#a) (H.heap u#a) = {
+  get = (fun h -> reveal h.ghost);
+  put = (fun ghost h -> { h with ghost });
+  sa = splittable_heap;
+  sb = splittable_hheap;
+  lens_laws = ();
+  law0 = (fun x y -> ());
+  law1 = (fun x y l m -> ())
+}
+
+
+
 let slprop = p:(heap ^-> prop) { heap_prop_is_affine p }
 let interp p m = p m
 let as_slprop f = F.on _ f
 let slprop_extensionality p q = FStar.PredicateExtensionality.predicateExtensionality _ p q
 let emp = as_slprop (fun _ -> True)
-let lift (p:H.slprop) : slprop =
-  as_slprop (fun h -> H.of_slprop p h.concrete)
+let hlens : Type u#(a + 1) = h:lens (heap u#a) (H.heap u#a) { h.sa == splittable_heap /\ h.sb == splittable_hheap }
+let llift (l:hlens) (p:H.slprop) : slprop =
+  let f : heap -> prop = (fun h -> H.of_slprop p (l.get h)) in
+  introduce forall h0 h1. f h0 /\ disjoint h0 h1 ==> f (join h0 h1)
+  with ( 
+    introduce _ ==> _
+    with _ . (
+      l.law0 h0 h1;
+      assert (l.get h0 `l.sb.disjoint` l.get h1);
+      assert (l.get (join h0 h1) == l.sb.join (l.get h0) (l.get h1))
+    )
+  );
+  as_slprop f
+let lift (p:H.slprop) : slprop = llift lens_concrete p
+  // as_slprop (fun h -> H.of_slprop p h.concrete)
 let pts_to #a #pcm (r:ref a pcm) (v:a) = lift (H.pts_to #a #pcm r v)
 let star p1 p2 =
   as_slprop (fun (h: heap) ->
@@ -94,54 +188,78 @@ let h_exists_cong #a p q = ()
 let intro_h_exists x p h = ()
 let elim_h_exists #a p h = ()
 let interp_depends_only_on hp = ()
-
-let lift_star (p q:H.slprop)
-: Lemma (lift (p `H.star` q) == (lift p `star` lift q))
-        [SMTPat (lift (p `H.star` q))]
+#restart-solver
+#push-options "--fuel 0 --ifuel 2 --z3rlimit_factor 4 --split_queries always"
+let lift_star (l:hlens) (p q:H.slprop)
+: Lemma (llift l (p `H.star` q) == (llift l p `star` llift l q))
+        [SMTPat (llift l (p `H.star` q))]
 = introduce forall m.
-    interp (lift (p `H.star` q)) m <==>
-    interp (lift p `star` lift q) m
+    interp (llift l (p `H.star` q)) m <==>
+    interp (llift l p `star` llift l q) m
   with (
     introduce 
-      interp (lift p `star` lift q) m ==>
-      interp (lift (p `H.star` q)) m
+      interp (llift l p `star` llift l q) m ==>
+      interp (llift l (p `H.star` q)) m
     with _ . ( 
       eliminate exists h0 h1.
         disjoint h0 h1 /\
         m == join h0 h1 /\
-        interp (lift p) h0 /\
-        interp (lift q) h1
-      returns interp (lift (p `H.star` q)) m
+        interp (llift l p) h0 /\
+        interp (llift l q) h1
+      returns interp (llift l (p `H.star` q)) m
       with _ . (
-        H.intro_star p q h0.concrete h1.concrete
+        l.law0 h0 h1;
+        H.intro_star p q (l.get h0) (l.get h1)
       )
     );
     introduce 
-      interp (lift (p `H.star` q)) m ==>
-      interp (lift p `star` lift q) m
+      interp (llift l (p `H.star` q)) m ==>
+      interp (llift l p `star` llift l q) m
     with _ . ( 
-      H.elim_star p q m.concrete;
+      H.elim_star p q (l.get m);
       eliminate exists c0 c1.
         H.disjoint c0 c1 /\
-        m.concrete == H.join c0 c1 /\
+        l.get m == H.join c0 c1 /\
         H.interp p c0 /\
         H.interp q c1
-      returns interp (lift p `star` lift q) m
+      returns interp (llift l p `star` llift l q) m
       with _ . (
-        let h0 = { concrete = c0; ghost = m.ghost } in
-        let h1 = { concrete = c1; ghost = H.empty_heap } in
-        assert (disjoint h0 h1)
+        let h0 = l.put c0 m in
+        let h1 = l.put c1 empty_heap in
+        l.law0 m empty_heap;
+        l.law1 m empty_heap c0 c1;
+        assert (join h0 h1 == m)
+        //admit()
+        // introduce exists (m0 m1:heap).
+        //   disjoint m0 m1 /\
+        //   m == join m0 m1 /\
+        //   interp (llift l p) m0 /\
+        //   interp (llift l q) m1
+        // with h0 h1
+        // and (
+        //   l.laws m empty_heap 
+        // )
+
+        //   l.get m0 == c0 /\
+        //   l.get m1 == c1 /\
+        //   disjoint m0 m1
+
+        // assume (disjoint h0 h1);
+        // assume (l.get (join h0 h1) == H.join c0 c1);
+        // l.laws m empty_heap
       )
-    )
+    );
+    ()
   );
-  slprop_extensionality (lift (p `H.star` q)) (lift p `star` lift q)
+  slprop_extensionality (llift l (p `H.star` q)) (llift l p `star` llift l q)
+#pop-options
 let lift_emp : squash (lift H.emp == emp) = 
   FStar.Classical.forall_intro H.intro_emp;
   slprop_extensionality (lift H.emp) emp
 
 let pts_to_compatible #a #pcm (x:ref a pcm) (v0 v1:a) h = 
   H.pts_to_compatible #a #pcm x v0 v1 h.concrete;
-  lift_star (H.pts_to #a #pcm x v0) (H.pts_to #a #pcm x v1)
+  lift_star lens_concrete (H.pts_to #a #pcm x v0) (H.pts_to #a #pcm x v1)
 
 let pts_to_join #a #pcm (r:ref a pcm) (v1 v2:a) h =
   H.pts_to_join #a #pcm r v1 v2 h.concrete
@@ -151,7 +269,7 @@ let pts_to_join' #a #pcm r v1 v2 h =
 
 let pts_to_compatible_equiv #a #pcm r v0 v1 =
   H.pts_to_compatible_equiv #a #pcm r v0 v1;
-  lift_star (H.pts_to #a #pcm r v0) (H.pts_to #a #pcm r v1)
+  lift_star lens_concrete (H.pts_to #a #pcm r v0) (H.pts_to #a #pcm r v1)
 
 let pts_to_not_null #a #pcm x v m = H.pts_to_not_null #a #pcm x v m.concrete
 
@@ -513,3 +631,4 @@ let lift_erased
 let ghost_ref #a p = erased H.core_ref
 let lift_ghost (p:H.slprop) : slprop = as_slprop (fun h -> H.of_slprop p h.ghost)
 let ghost_pts_to #a #p r v = lift_ghost (H.pts_to #a #p r v)
+let ghost_free_above_addr h addr = H.free_above_addr h.ghost addr
