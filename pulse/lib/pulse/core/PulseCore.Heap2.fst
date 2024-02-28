@@ -467,3 +467,48 @@ let drop p
     = fun h -> (| (), h |)
   in
   refined_pre_action_as_action f
+
+let is_frame_preserving_only_ghost 
+    (#a: Type u#a)
+    (#pre #post:_)
+    (#fp: slprop u#b)
+    (#fp': a -> slprop u#b)
+    (f:pre_action #pre #post fp a fp')
+    (h:full_hheap fp { pre h })
+: Lemma 
+  (requires is_frame_preserving ONLY_GHOST false f)
+  (ensures (dsnd (f h)).concrete == h.concrete)
+= emp_unit fp;
+  let h : full_hheap (fp `star` emp) = h in
+  eliminate forall frame (h0:full_hheap (fp `star` frame) { pre h0 }). (
+      affine_star fp frame h0 ;
+      (dsnd (f h0)).concrete == h0.concrete)
+  with emp h
+
+    
+
+type non_informative (a:Type u#a) =
+  x:Ghost.erased a -> y:a{y == Ghost.reveal x}
+
+let lift_erased
+          (#a:Type)
+          (#ni_a:non_informative a)
+           #hpre #hpost
+          (#pre:slprop)
+          (#post:a -> slprop)
+          (frame:slprop)
+          ($f:erased (action #ONLY_GHOST #hpre #hpost pre a post))
+: action #ONLY_GHOST #hpre #hpost pre a post
+= let g : refined_pre_action #ONLY_GHOST #hpre #hpost pre a post =
+    fun h ->
+      let gg : erased (a & H.heap) =
+        let ff : action #ONLY_GHOST #hpre #hpost pre a post = reveal f in
+        let (| x, hh' |) = ff h in
+        is_frame_preserving_only_ghost ff h;
+        Ghost.hide (x, Ghost.reveal hh'.ghost)
+      in
+      let x = ni_a (Ghost.hide (fst gg)) in
+      let gg = Ghost.hide (snd gg) in
+      (| x, { h with ghost = gg } |)
+  in
+  refined_pre_action_as_action g
