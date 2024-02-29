@@ -6,13 +6,18 @@ open FStar.PCM
 open FStar.Ghost
 
 type reifiability =
+ | Ghost
  | Reifiable
  | UsesInvariants
 
 let ( ^^ ) (r1 r2 : reifiability) : reifiability =
-  match r1, r2 with
-  | Reifiable, Reifiable -> Reifiable
-  | _ -> UsesInvariants
+  if r1 = r2 then r1
+  else (
+   match r1, r2 with
+   | Ghost, Reifiable
+   | Reifiable, Ghost -> Reifiable
+   | _ -> UsesInvariants
+  )
 
 val iname : eqtype
 
@@ -192,7 +197,7 @@ val pts_to (#a:Type u#1) (#p:pcm a) (r:ref a p) (v:a) : slprop
 
 val pts_to_not_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p) (v:a)
 : act (squash (not (is_ref_null r)))
-    Reifiable
+    Ghost
     emp_inames 
     (pts_to r v)
     (fun _ -> pts_to r v)
@@ -240,7 +245,7 @@ val share
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a{composable pcm v0 v1})
 : act unit
-    Reifiable
+    Ghost
     emp_inames
     (pts_to r (v0 `op pcm` v1))
     (fun _ -> pts_to r v0 ** pts_to r v1)
@@ -252,7 +257,7 @@ val gather
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a)
 : act (squash (composable pcm v0 v1))
-    Reifiable
+    Ghost
     emp_inames
     (pts_to r v0 ** pts_to r v1)
     (fun _ -> pts_to r (op pcm v0 v1))
@@ -300,22 +305,22 @@ val pure_true ()
 : slprop_equiv (pure True) emp
 
 val intro_pure (p:prop) (pf:squash p)
-: act unit Reifiable emp_inames emp (fun _ -> pure p)
+: act unit Ghost emp_inames emp (fun _ -> pure p)
 
 val elim_pure (p:prop)
-: act (squash p) Reifiable emp_inames (pure p) (fun _ -> emp)
+: act (squash p) Ghost emp_inames (pure p) (fun _ -> emp)
 
 ///////////////////////////////////////////////////////////////////
 // exists*
 ///////////////////////////////////////////////////////////////////
 val intro_exists (#a:Type u#a) (p:a -> slprop) (x:erased a)
-: act unit Reifiable emp_inames (p x) (fun _ -> exists* x. p x)
+: act unit Ghost emp_inames (p x) (fun _ -> exists* x. p x)
 
 val elim_exists (#a:Type u#a) (p:a -> slprop)
-: act (erased a) Reifiable emp_inames (exists* x. p x) (fun x -> p x)
+: act (erased a) Ghost emp_inames (exists* x. p x) (fun x -> p x)
 
 ///////////////////////////////////////////////////////////////////
 // Other utils
 ///////////////////////////////////////////////////////////////////
 val drop (p:slprop)
-: act unit Reifiable emp_inames p (fun _ -> emp)
+: act unit Ghost emp_inames p (fun _ -> emp)

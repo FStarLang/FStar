@@ -91,6 +91,11 @@ let stt_of_action2 (#a:Type u#2) #pre #post (m:action a Set.empty pre post)
 
 let iname = iname
 
+let maybe_ghost (r:reifiability { r =!= UsesInvariants}) =
+  match r with
+  | Ghost -> true
+  | _ -> false
+
 let pre_act
     (a:Type u#a)
     (r:reifiability)
@@ -98,10 +103,17 @@ let pre_act
     (pre:slprop)
     (post:a -> slprop)
 = match r with
-  | Reifiable ->
-    Mem.pst_action_except a opens pre post
-  | _ ->
+  | UsesInvariants ->
     Mem.action_except a opens pre post
+  | _ ->
+    Mem._pst_action_except a (maybe_ghost r) opens pre post
+
+let force 
+    #a (#r:reifiability { r =!= UsesInvariants})
+    (#opens:inames) (#pre:slprop) (#post:a -> slprop)    
+    (f:pre_act a r opens pre post)
+: Mem._pst_action_except a (maybe_ghost r) opens pre post
+= f
 
 let mem_action_as_action
         (#a:Type u#a)
@@ -135,8 +147,8 @@ let action_of_pre_act
     (f:pre_act a r opens pre post)
 : action a opens pre post
 = match r with
-  | Reifiable -> mem_pst_action_as_action f
-  | _ -> mem_action_as_action f
+  | UsesInvariants -> mem_action_as_action f
+  | _ -> mem_pst_action_as_action f
 
 let act 
     (a:Type u#a)
@@ -148,13 +160,39 @@ let act
 = #ictx:inames_disj opens ->
    pre_act a r ictx pre post
 
+let ghost_action_refl (m:mem)
+  : Lemma (is_ghost_action m m)
+          [SMTPat (is_ghost_action m m)]
+  = admit()
+
+let ghost_action_trans (m0 m1 m2:mem)
+  : Lemma 
+    (requires 
+      is_ghost_action m0 m1 /\
+      is_ghost_action m1 m2)
+    (ensures is_ghost_action m0 m2)
+    [SMTPat (is_ghost_action m0 m2);
+     SMTPat (is_ghost_action m1 m2)]
+  = admit()
+  
 let return_pre_act
     (#a:Type u#a)
     (#except:inames)
     (#post:a -> slprop)
     (x:a)
-: pre_act a Reifiable except (post x) post
+: pre_act a Ghost except (post x) post
 = fun frame m0 -> x, m0
+
+let bind_pre_act_ghost
+     (#a:Type u#a)
+     (#b:Type u#b)
+     (#except:inames)
+     (#pre1 #post1 #post2:_)
+     (f:pre_act a Ghost except pre1 post1)
+     (g:(x:a -> pre_act b Ghost except (post1 x) post2))
+: pre_act b Ghost except pre1 post2
+= fun frame ->
+    PST.weaken (PST.bind (f frame) (fun x -> g x frame))
 
 let bind_pre_act_reifiable
      (#a:Type u#a)
@@ -189,10 +227,20 @@ let bind_pre_act
      (g:(x:a -> pre_act b r except (post1 x) post2))
 : pre_act b r except pre1 post2
 = match r with
+  | Ghost -> 
+    bind_pre_act_ghost #a #b #except #pre1 #post1 #post2 f g
   | Reifiable ->
     bind_pre_act_reifiable #a #b #except #pre1 #post1 #post2 f g
   | UsesInvariants ->
     bind_pre_act_non_reifiable #a #b #except #pre1 #post1 #post2 f g
+
+let frame_pre_act_ghost
+     (#a:Type u#a)
+     (#except:inames)
+     (#pre #post #frame:_)
+     (f:pre_act a Ghost except pre post)
+: pre_act a Ghost except (pre `star` frame) (fun x -> post x `star` frame)
+= fun frame' -> f (frame `star` frame')
 
 let frame_pre_act_reifiable
      (#a:Type u#a)
@@ -218,8 +266,17 @@ let frame_pre_act
      (f:pre_act a r except pre post)
 : pre_act a r except (pre `star` frame) (fun x -> post x `star` frame)
 = match r with
+  | Ghost -> frame_pre_act_ghost #a #except #pre #post #frame f
   | Reifiable -> frame_pre_act_reifiable #a #except #pre #post #frame f
   | _ -> frame_pre_act_non_reifiable #a #except #pre #post #frame f
+
+let lift_pre_act_ghost
+     (#a:Type u#a)
+     (#except:inames)
+     (#pre #post:_)
+     (f:pre_act a Ghost except pre post)
+: pre_act a Reifiable except pre post
+= f
 
 let lift_pre_act_reifiablity
      (#a:Type u#a)
@@ -245,6 +302,7 @@ let return
 = fun #ictx ->
     let m = return_pre_act #a #ictx #post x in
     match r with
+    | Ghost -> m
     | Reifiable -> m
     | _ -> lift_pre_act_reifiablity m
 
@@ -268,6 +326,15 @@ let frame
 : act a r opens (pre `star` frame) (fun x -> post x `star` frame)
 = fun #ictx -> frame_pre_act (f #ictx)
 
+let lift_ghost_reifiability 
+    (#a:Type)
+    (#pre:slprop)
+    (#post:a -> slprop)
+    (#opens:inames)
+    (f:act a Ghost opens pre post)
+: act a Reifiable opens pre post
+= fun #ictx -> lift_pre_act_ghost (f #ictx)
+
 let lift_reifiability 
     (#a:Type)
     (#r:_)
@@ -286,22 +353,25 @@ let weaken
     (#opens opens':inames)
     (f:act a r0 opens pre post)
 : act a (r0 ^^ r1) (Set.union opens opens') pre post
-= match r0 with
-  | UsesInvariants -> f
-  | _ ->
-    match r1 with
-    | Reifiable -> f
-    | _ -> lift_reifiability f
+= if r0 = r1 then f
+  else (
+    match r0, r1 with
+    | UsesInvariants, _ -> f
+    | _, UsesInvariants -> lift_reifiability f
+    | Reifiable, Ghost -> f
+    | Ghost, Reifiable -> lift_ghost_reifiability #a #pre #post #opens f
+  )
 
 let sub_pre_act_reifiable 
     (#a:Type)
+    (#r:reifiability { r =!= UsesInvariants})
     (#pre:slprop)
     (#post:a -> slprop)
     (#opens:inames)
     (pre':slprop { slprop_equiv pre pre' })
     (post':a -> slprop { forall x. slprop_equiv (post x) (post' x) })
-    (f:pre_act a Reifiable opens pre post)
-: pre_act a Reifiable opens pre' post'
+    (f:pre_act a r opens pre post)
+: pre_act a r opens pre' post'
 = I.slprop_equiv_elim pre pre';
   introduce forall x. post x == post' x
   with I.slprop_equiv_elim (post x) (post' x);
@@ -332,10 +402,10 @@ let sub
     (f:act a r opens pre post)
 : act a r opens pre' post'
 = match r with
-  | Reifiable ->
-    fun #ictx -> sub_pre_act_reifiable #a #pre #post #ictx pre' post' (f #ictx)
-  | _ ->
+  | UsesInvariants ->
     fun #ictx -> sub_pre_act_non_reifiable #a #pre #post #ictx pre' post' (f #ictx)
+  | _ ->
+    fun #ictx -> sub_pre_act_reifiable #a #r #pre #post #ictx pre' post' (f #ictx)
 
 let action_of_act 
     (#a:Type)
@@ -465,7 +535,7 @@ let share
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a{composable pcm v0 v1})
 : act unit
-      Reifiable
+      Ghost
       emp_inames
       (pts_to r (v0 `op pcm` v1))
       (fun _ -> pts_to r v0 `star` pts_to r v1)
@@ -478,7 +548,7 @@ let gather
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a)
 : act (squash (composable pcm v0 v1))
-      Reifiable
+      Ghost
       emp_inames
       (pts_to r v0 `star` pts_to r v1)
       (fun _ -> pts_to r (op pcm v0 v1))
@@ -522,11 +592,11 @@ let pure_true ()
   coerce_eq () <| slprop_equiv_refl (pure True)
 
 let intro_pure (p:prop) (pf:squash p)
-: act unit Reifiable emp_inames emp (fun _ -> pure p)
+: act unit Ghost emp_inames emp (fun _ -> pure p)
 = fun #ictx -> intro_pure #ictx p pf
 
 let elim_pure (p:prop)
-: act (squash p) Reifiable emp_inames (pure p) (fun _ -> emp)
+: act (squash p) Ghost emp_inames (pure p) (fun _ -> emp)
 = fun #ictx -> elim_pure #ictx p
 
 ///////////////////////////////////////////////////////////////////
@@ -542,23 +612,23 @@ let exists_equiv (#a:_) (#p:a -> slprop)
 let thunk (p:slprop) = fun (_:unit) -> p
 
 let intro_exists' (#a:Type u#a) (p:a -> slprop) (x:erased a)
-: act unit Reifiable emp_inames (p x) (thunk (op_exists_Star p))
+: act unit Ghost emp_inames (p x) (thunk (op_exists_Star p))
 = fun #ictx -> intro_exists #ictx (F.on_dom a p) x
 
 let intro_exists'' (#a:Type u#a) (p:a -> slprop) (x:erased a)
-: act unit Reifiable emp_inames (p x) (thunk (exists* x. p x))
+: act unit Ghost emp_inames (p x) (thunk (exists* x. p x))
 = coerce_eq (exists_equiv #a #p) (intro_exists' #a p x)
 
 let intro_exists (#a:Type u#a) (p:a -> slprop) (x:erased a)
-: act unit Reifiable emp_inames (p x) (fun _ -> exists* x. p x)
+: act unit Ghost emp_inames (p x) (fun _ -> exists* x. p x)
 = intro_exists'' p x
 
 let elim_exists' (#a:Type u#a) (p:a -> slprop)
-: act (erased a) Reifiable emp_inames (op_exists_Star p) (fun x -> p x)
+: act (erased a) Ghost emp_inames (op_exists_Star p) (fun x -> p x)
 = fun #ictx -> witness_h_exists #ictx (F.on_dom a p)
 
 let elim_exists (#a:Type u#a) (p:a -> slprop)
-: act (erased a) Reifiable emp_inames (exists* x. p x) (fun x -> p x)
+: act (erased a) Ghost emp_inames (exists* x. p x) (fun x -> p x)
 = coerce_eq (exists_equiv #a #p) (elim_exists' #a p)
 
 let drop p = fun #ictx -> drop #ictx p
