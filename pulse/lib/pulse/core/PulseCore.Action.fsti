@@ -70,6 +70,13 @@ val frame
      (f:act a r opens pre post)
 : act a r opens (pre ** frame) (fun x -> post x ** frame)
 
+val lift_ghost_reifiable
+    (#a:Type)
+    (#pre:slprop)
+    (#post:a -> slprop)
+    (#opens:inames)
+    (f:act a Ghost opens pre post)
+: act a Reifiable opens pre post
 
 val lift_reifiability 
     (#a:Type)

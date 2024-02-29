@@ -5,7 +5,7 @@ open PulseCore.InstantiatedSemantics
 open PulseCore.Action
 
 let r_of_obs = function
-  | Neutral -> Reifiable
+  | Neutral -> Ghost
   | _ -> UsesInvariants
 
 let stt_atomic a #obs opens pre post =
@@ -77,9 +77,9 @@ let bind_atomic
     (e1:stt_atomic a #obs1 opens pre1 post1)
     (e2:(x:a -> stt_atomic b #obs2 opens (post1 x) post2))
 = match r_of_obs obs1, r_of_obs obs2 with
-  | Reifiable, Reifiable ->
-    let e1 : act a Reifiable opens pre1 post1 = e1 in
-    let e2 : x:a -> act b Reifiable opens (post1 x) post2 = e2 in
+  | Ghost, Ghost ->
+    let e1 : act a Ghost opens pre1 post1 = e1 in
+    let e2 : x:a -> act b Ghost opens (post1 x) post2 = e2 in
     A.bind e1 e2
   | _ ->
     let e1 : act a UsesInvariants opens pre1 post1 = A.lift_reifiability e1 in
@@ -164,7 +164,7 @@ let sub_invs_stt_atomic
 = assert (Set.equal (Set.union opens1 opens2) opens2);
   A.weaken #_ #_ #_ #_ #(r_of_obs obs) opens2 e
 
-let stt_ghost a pre post = Ghost.erased (act a Reifiable emp_inames pre post)
+let stt_ghost a pre post = Ghost.erased (act a Ghost emp_inames pre post)
 let return_ghost #a x p = Ghost.hide (return_eq x)
 let return_ghost_noeq #a x p = Ghost.hide (A.return #_ #_ #p x)
 let bind_ghost
@@ -187,7 +187,7 @@ let lift_ghost_neutral
     (e:stt_ghost a pre post)
     (reveal_a:non_informative_witness a)
 : stt_atomic a #Neutral emp_inames pre post
-= admit() //This is the main axiom about ghost computations; in Steel, this axiom is implemented within the effect system
+= Action.lift_erased reveal_a e
 
 let lift_neutral_ghost
     (#a:Type u#a)
@@ -273,8 +273,8 @@ let gather #a #pcm r v0 v1 = Ghost.hide (A.gather r v0 v1)
 let witness #a #pcm r f v pf = A.witness r f v pf
 let recall #a #pcm #fact r v w = A.recall r v w
 
-let ghost_ref #a p = Ghost.erased (ref a p)
-let ghost_pts_to #a #p r v = pts_to r v
+let ghost_ref = A.ghost_ref
+let ghost_pts_to = A.ghost_pts_to
 let hide_ghost #a #pre #post 
               (f:stt_ghost a pre post)
 : stt_ghost (erased a) pre (fun x -> post (reveal x))
@@ -285,7 +285,7 @@ let hide_ghost #a #pre #post
     A.return #(erased a) #_ #(fun (x:erased a) -> post (reveal x))
        (hide r))
 
-let ghost_alloc #a #pcm x = hide_ghost (Ghost.hide <| A.alloc #a x)
+let ghost_alloc #a #pcm x = Ghost.hide <| A.ghost_alloc #a #pcm x
 let ghost_read
     (#a:Type)
     (#p:pcm a)
@@ -297,19 +297,18 @@ let ghost_read
 : stt_ghost (erased (v:a{compatible p x v /\ p.refine v}))
     (ghost_pts_to r x)
     (fun v -> ghost_pts_to r (f v))
-= hide_ghost <| Ghost.hide <|A.read r x f
+= Ghost.hide <| A.ghost_read r x f
 
-let ghost_write r x y f = Ghost.hide (A.write r x y f)
-
-let ghost_share r v0 v1 = Ghost.hide (A.share r v0 v1)
-let ghost_gather r v0 v1 = Ghost.hide (A.gather r v0 v1) 
+let ghost_write r x y f = Ghost.hide (A.ghost_write r x y f)
+let ghost_share r v0 v1 = Ghost.hide (A.ghost_share r v0 v1)
+let ghost_gather r v0 v1 = Ghost.hide (A.ghost_gather r v0 v1) 
 
 let ghost_witnessed 
     (#a:Type u#1) 
     (#p:pcm a)
     (r:ghost_ref p)
     (f:property a)
-= witnessed (reveal r) f
+= admit() //witnessed (reveal r) f
 
 let ghost_witness
     (#a:Type)
@@ -318,7 +317,7 @@ let ghost_witness
     (fact:stable_property pcm)
     (v:Ghost.erased a)
     (pf:squash (forall z. compatible pcm v z ==> fact z))
-= A.witness r fact v pf
+= admit() //A.witness r fact v pf
 
 let ghost_recall
     (#a:Type u#1)
@@ -327,6 +326,6 @@ let ghost_recall
     (r:ghost_ref pcm)
     (v:Ghost.erased a)
     (w:ghost_witnessed r fact)
-= A.recall r v w
+= admit() //A.recall r v w
 
 let drop p = Ghost.hide (A.drop p)

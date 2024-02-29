@@ -313,7 +313,7 @@ let frame
 : act a r opens (pre `star` frame) (fun x -> post x `star` frame)
 = fun #ictx -> frame_pre_act (f #ictx)
 
-let lift_ghost_reifiability 
+let lift_ghost_reifiable
     (#a:Type)
     (#pre:slprop)
     (#post:a -> slprop)
@@ -346,7 +346,7 @@ let weaken
     | UsesInvariants, _ -> f
     | _, UsesInvariants -> lift_reifiability f
     | Reifiable, Ghost -> f
-    | Ghost, Reifiable -> lift_ghost_reifiability #a #pre #post #opens f
+    | Ghost, Reifiable -> lift_ghost_reifiable #a #pre #post #opens f
   )
 
 let sub_pre_act_reifiable 
