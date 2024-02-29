@@ -159,21 +159,6 @@ let act
 : Type u#(max a 2)
 = #ictx:inames_disj opens ->
    pre_act a r ictx pre post
-
-let ghost_action_refl (m:mem)
-  : Lemma (is_ghost_action m m)
-          [SMTPat (is_ghost_action m m)]
-  = admit()
-
-let ghost_action_trans (m0 m1 m2:mem)
-  : Lemma 
-    (requires 
-      is_ghost_action m0 m1 /\
-      is_ghost_action m1 m2)
-    (ensures is_ghost_action m0 m2)
-    [SMTPat (is_ghost_action m0 m2);
-     SMTPat (is_ghost_action m1 m2)]
-  = admit()
   
 let return_pre_act
     (#a:Type u#a)
@@ -181,7 +166,8 @@ let return_pre_act
     (#post:a -> slprop)
     (x:a)
 : pre_act a Ghost except (post x) post
-= fun frame m0 -> x, m0
+= Mem.ghost_action_preorder ();
+  fun frame m0 -> x, m0
 
 let bind_pre_act_ghost
      (#a:Type u#a)
@@ -191,7 +177,8 @@ let bind_pre_act_ghost
      (f:pre_act a Ghost except pre1 post1)
      (g:(x:a -> pre_act b Ghost except (post1 x) post2))
 : pre_act b Ghost except pre1 post2
-= fun frame ->
+= Mem.ghost_action_preorder ();
+  fun frame ->
     PST.weaken (PST.bind (f frame) (fun x -> g x frame))
 
 let bind_pre_act_reifiable
@@ -490,7 +477,7 @@ let invariant_name_identifies_invariant
 let ref (a:Type u#a) (p:pcm a) = ref a p
 let ref_null (#a:Type u#a) (p:pcm a) = core_ref_null
 let is_ref_null (#a:Type u#a) (#p:pcm a) (r:ref a p) = core_ref_is_null r
-let pts_to = pts_to
+let pts_to = Mem.pts_to
 let pts_to_not_null #a #p r v #ictx = pts_to_not_null_action ictx r v
 
 let alloc
@@ -632,3 +619,17 @@ let elim_exists (#a:Type u#a) (p:a -> slprop)
 = coerce_eq (exists_equiv #a #p) (elim_exists' #a p)
 
 let drop p = fun #ictx -> drop #ictx p
+
+let ghost_ref = Mem.ghost_ref
+let ghost_pts_to = Mem.ghost_pts_to
+let ghost_alloc #a #pcm x = fun #ictx -> ghost_alloc #ictx #a #pcm x
+let ghost_read #a #p r x f = fun #ictx -> ghost_read #ictx #a #p r x f
+let ghost_write #a #p r x y f = fun #ictx -> ghost_write #ictx #a #p r x y f
+let ghost_share #a #pcm r v0 v1 = fun #ictx -> ghost_share #ictx #a #pcm r v0 v1
+let ghost_gather #a #pcm r v0 v1 = fun #ictx -> ghost_gather #ictx #a #pcm r v0 v1
+let lift_erased #a ni_a #opens #pre #post f =
+  fun #ictx ->
+    let f : erased (pre_act a Ghost ictx pre post) =
+      hide (reveal f #ictx)
+    in
+    lift_ghost #a #ictx #pre #post ni_a f

@@ -31,6 +31,9 @@ val mem  : Type u#(a + 1)
 val is_ghost_action (m0 m1:mem u#a) : prop
 let maybe_ghost_action (b:bool) (m0 m1:mem u#a) = b ==> is_ghost_action m0 m1
 
+val ghost_action_preorder (_:unit)
+  : Lemma (FStar.Preorder.preorder_rel is_ghost_action)
+ 
 (**
   The memory is built on top of the heap, adding on the memory invariants. However, some of the
   properties exposed for memories need only to talk about the underlying heap, putting aside

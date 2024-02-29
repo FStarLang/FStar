@@ -324,3 +324,71 @@ val elim_exists (#a:Type u#a) (p:a -> slprop)
 ///////////////////////////////////////////////////////////////////
 val drop (p:slprop)
 : act unit Ghost emp_inames p (fun _ -> emp)
+
+////////////////////////////////////////////////////////////////////////
+// Ghost References
+////////////////////////////////////////////////////////////////////////
+[@@erasable]
+val ghost_ref (#[@@@unused] a:Type u#a) ([@@@unused] p:pcm a) : Type u#0
+val ghost_pts_to (#a:Type u#1) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop
+
+val ghost_alloc
+    (#a:Type u#1)
+    (#pcm:pcm a)
+    (x:erased a{compatible pcm x x /\ pcm.refine x})
+: act (ghost_ref pcm) Ghost emp_inames
+    emp 
+    (fun r -> ghost_pts_to r x)
+
+val ghost_read
+    (#a:Type)
+    (#p:pcm a)
+    (r:ghost_ref p)
+    (x:erased a)
+    (f:(v:a{compatible p x v}
+        -> GTot (y:a{compatible p y v /\
+                     FStar.PCM.frame_compatible p x v y})))
+: act (erased (v:a{compatible p x v /\ p.refine v})) Ghost emp_inames
+    (ghost_pts_to r x)
+    (fun v -> ghost_pts_to r (f v))
+
+val ghost_write
+    (#a:Type)
+    (#p:pcm a)
+    (r:ghost_ref p)
+    (x y:Ghost.erased a)
+    (f:FStar.PCM.frame_preserving_upd p x y)
+: act unit Ghost emp_inames 
+    (ghost_pts_to r x)
+    (fun _ -> ghost_pts_to r y)
+
+val ghost_share
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ghost_ref pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+: act unit Ghost emp_inames
+    (ghost_pts_to r (v0 `op pcm` v1))
+    (fun _ -> ghost_pts_to r v0 ** ghost_pts_to r v1)
+
+val ghost_gather
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ghost_ref pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a)
+: act (squash (composable pcm v0 v1)) Ghost emp_inames
+    (ghost_pts_to r v0 ** ghost_pts_to r v1)
+    (fun _ -> ghost_pts_to r (op pcm v0 v1))
+
+let non_informative a = x:erased a -> y:a { reveal x == y}
+
+val lift_erased 
+    (#a:Type)
+    (ni_a:non_informative a)
+    (#opens:inames)
+    (#pre:slprop)
+    (#post:a -> slprop)
+    (f:erased (act a Ghost opens pre post))
+: act a Ghost opens pre post

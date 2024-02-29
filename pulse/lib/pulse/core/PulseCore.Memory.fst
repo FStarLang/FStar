@@ -55,6 +55,11 @@ let is_ghost_action m0 m1 =
   H.concrete m0.heap == H.concrete m1.heap /\
   m0.ctr == m1.ctr /\
   m0.locks == m1.locks
+
+let ghost_action_preorder (_:unit)
+  : Lemma (FStar.Preorder.preorder_rel is_ghost_action)
+  = ()
+ 
 let core_mem (m:mem) : mem = mem_of_heap (heap_of_mem m)
 
 val core_mem_invol (m: mem u#a) : Lemma
