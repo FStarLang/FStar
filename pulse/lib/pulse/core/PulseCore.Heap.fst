@@ -253,6 +253,7 @@ let join_associative2 (m0 m1 m2:heap)
     join_commutative (join m0 m1) m2;
     join_associative m2 m0 m1
 
+let join_empty h = assert (join h empty_heap `mem_equiv` h)
 ////////////////////////////////////////////////////////////////////////////////
 let slprop = p:(heap ^-> prop) { heap_prop_is_affine p }
 
@@ -264,6 +265,8 @@ let interp (p:slprop u#a) (m:heap u#a)
   = p m
 
 let as_slprop p = FStar.FunctionalExtensionality.on _ p
+let of_slprop p = p
+let slprop_inj (f:slprop) = ()
 
 let slprop_extensionality (p q:slprop)
   : Lemma
@@ -735,9 +738,9 @@ let witnessed_ref_stability #a #pcm (r:ref a pcm) (fact:a -> prop)
     ()
 
 #set-options "--fuel 2 --ifuel 2"
-
+#restart-solver
 let sel_action (#a:_) (#pcm:_) (r:ref a pcm) (v0:erased a)
-  : action (pts_to r v0) (v:a{compatible pcm v0 v}) (fun _ -> pts_to r v0)
+  : action #immut_heap #no_allocs (pts_to r v0) (v:a{compatible pcm v0 v}) (fun _ -> pts_to r v0)
   = let f
       : pre_action (pts_to r v0)
                    (v:a{compatible pcm v0 v})
@@ -753,34 +756,23 @@ let sel_action' (#a:_) (#pcm:_) (r:ref a pcm) (v0:erased a) (h:full_hheap (pts_t
                   compatible pcm frame v)}
   = sel_v r v0 h
 
-let refined_pre_action (fp0:slprop) (a:Type) (fp1:a -> slprop) =
+let refined_pre_action (#immut:bool) (#allocates:bool)
+                       (#[T.exact (`trivial_pre)]pre:heap ->prop)
+                       (#[T.exact (`trivial_pre)]post:heap -> prop)
+                       (fp0:slprop) (a:Type) (fp1:a -> slprop) =
   m0:full_hheap fp0 ->
   Pure (x:a &
         full_hheap (fp1 x))
-       (requires True)
+       (requires pre m0)
        (ensures fun  (| x, m1 |) ->
-         forall frame. frame_related_heaps m0 m1 fp0 (fp1 x) frame false)
+         post m1 /\
+         (forall frame. frame_related_heaps m0 m1 fp0 (fp1 x) frame immut allocates))
 
-let refined_pre_action_as_action (#fp0:slprop) (#a:Type) (#fp1:a -> slprop)
-                                 ($f:refined_pre_action fp0 a fp1)
-  : action fp0 a fp1
+#restart-solver
+let refined_pre_action_as_action #immut #allocs #pre #post (#fp0:slprop) (#a:Type) (#fp1:a -> slprop)
+                                 ($f:refined_pre_action #immut #allocs #pre #post fp0 a fp1)
+  : action #immut #allocs #pre #post fp0 a fp1
   = let g : pre_action fp0 a fp1 = fun m -> f m in
-    let aux (frame:slprop)
-            (m0:full_hheap (fp0 `star` frame))
-      : Lemma
-        (ensures
-          (affine_star fp0 frame m0;
-           let (| x, m1 |) = g m0 in
-           interp (fp1 x `star` frame) m1 /\
-          (forall (hp:hprop frame). hp m0 == hp m1) /\
-          heap_evolves m0 m1 /\
-          (forall ctr. m0 `free_above_addr` ctr ==> m1 `free_above_addr` ctr)))
-        [SMTPat ()]
-      = affine_star fp0 frame m0;
-        let (| x', m1' |) = g m0 in
-        let (| x, m1 |) = f m0 in
-        assert (x == x' /\ m1 == m1')
-    in
     g
 
 let select_join #a #p (r:ref a p) (x:erased a) (h:full_heap) (hl hr:heap)
@@ -804,7 +796,7 @@ let select_refine_pre (#a:_) (#p:_)
                       (f:(v:a{compatible p x v}
                         -> GTot (y:a{compatible p y v /\
                                     frame_compatible p x v y})))
-   : refined_pre_action
+   : refined_pre_action #immut_heap #no_allocs
                 (pts_to r x)
                 (v:a{compatible p x v /\ p.refine v})
                 (fun v -> pts_to r (f v))
@@ -894,7 +886,7 @@ let select_refine (#a:_) (#p:_)
                   (f:(v:a{compatible p x v}
                       -> GTot (y:a{compatible p y v /\
                                   frame_compatible p x v y})))
-   : action (pts_to r x)
+   : action #immut_heap #no_allocs (pts_to r x)
             (v:a{compatible p x v /\ p.refine v})
             (fun v -> pts_to r (f v))
    = refined_pre_action_as_action (select_refine_pre r x f)
@@ -1029,13 +1021,13 @@ let upd_gen_frame_preserving (#a:Type u#a) (#p:pcm a)
        = FStar.PropositionalExtensionality.apply (hp h) (hp h1)
      in
      ()
- 
+#restart-solver 
 
 let upd_gen_action #a (#p:pcm a) (r:ref a p) (x y:Ghost.erased a) (f:frame_preserving_upd p x y)
-  : action (pts_to r x)
+  : action #mut_heap #no_allocs (pts_to r x)
            unit
            (fun _ -> pts_to r y)
-  = let refined : refined_pre_action
+  = let refined : refined_pre_action #mut_heap #no_allocs
                     (pts_to r x)
                     unit
                     (fun _ -> pts_to r y)
@@ -1044,7 +1036,6 @@ let upd_gen_action #a (#p:pcm a) (r:ref a p) (x y:Ghost.erased a) (f:frame_prese
          FStar.Classical.forall_intro (FStar.Classical.move_requires (upd_gen_frame_preserving r x y f h));
          upd_gen_full_evolution r x y f h;
          let h1 : full_hheap (pts_to r y) = h1 in
-         assert (forall x. contains_addr h1 x ==> contains_addr h x);
          assert (forall ctr. h `free_above_addr` ctr ==> h1 `free_above_addr` ctr);
          (| (), h1 |)
     in
@@ -1108,7 +1099,28 @@ let pts_to_not_null_action #a #pcm r v
     
 ////////////////////////////////////////////////////////////////////////////////
 #push-options "--z3rlimit 20"
-let extend #a #pcm x addr h =
+let extend_alt
+  (#a:Type u#a)
+  (#pcm:pcm a)
+  (x:a{compatible pcm x x /\ pcm.refine x})
+  (addr:nat)
+: refined_pre_action #mut_heap #allocs
+    #(fun h -> h `free_above_addr` addr)
+    #(fun h -> h `free_above_addr` (addr + 1))
+    emp
+    (ref a pcm)
+    (fun r -> pts_to r x)
+  // (h:full_heap{h `free_above_addr` addr})
+  // : (
+  //   r:ref a pcm
+  //   & h':full_heap{
+  //     (forall (frame: slprop u#a).
+  //       frame_related_heaps h h' emp (pts_to r x) frame mut_heap allocs) /\
+  //       h' `free_above_addr` (addr + 1) /\
+  //       heap_evolves h h'
+  //   }
+  // )
+  = fun h -> 
     let r : ref a pcm = Addr addr in
     let h' = update_addr_full_heap h addr (Ref a pcm Frac.full_perm x) in
     assert (h' `free_above_addr` (addr + 1));
@@ -1127,8 +1139,8 @@ let extend #a #pcm x addr h =
           interp (pts_to r x) h0' /\
           h' == join h0' hf /\
           heap_evolves h h' /\
-          interp (pts_to r x `star` frame) h' /\
-          (forall (hp:hprop frame). hp h == hp h')
+          interp (pts_to r x `star` frame) h' ///\
+          // (forall (hp:hprop frame). hp h == hp h')
          ))
        [SMTPat (interp emp h0);
         SMTPat (interp frame hf)]
@@ -1139,15 +1151,20 @@ let extend #a #pcm x addr h =
         // assert (h' == (join h0' hf));
         intro_star (pts_to r x) frame h0' hf;
         // assert (interp (pts_to r x `star` frame) h');
-        let aux (hp:hprop frame)
-          : Lemma (ensures (hp h == hp h'))
-                  [SMTPat ()]
-            = FStar.PropositionalExtensionality.apply (hp h) (hp h')
-        in
+        // let aux (hp:hprop frame)
+        //   : Lemma (ensures (hp h == hp h'))
+        //           [SMTPat ()]
+        //     = FStar.PropositionalExtensionality.apply (hp h) (hp h')
+        // in
         ()
      in
      (| r, h' |)
 #pop-options
+
+let extend #a #pcm
+        (x:a{compatible pcm x x /\ pcm.refine x})
+        (addr:nat)
+ = refined_pre_action_as_action (extend_alt x addr)
 
 let hprop_sub (p q:slprop) (h0 h1:heap)
   : Lemma (requires (forall (hp:hprop (p `star` q)). hp h0 == hp h1))
@@ -1157,96 +1174,42 @@ let hprop_sub (p q:slprop) (h0 h1:heap)
 #push-options "--z3rlimit_factor 4 --max_fuel 1 --max_ifuel 1"
 #restart-solver
 let frame (#a:Type)
+          (#immut #allocates #hpre #hpost:_)
           (#pre:slprop)
           (#post:a -> slprop)
           (frame:slprop)
           ($f:action pre a post)
-  = let g : refined_pre_action (pre `star` frame) a (fun x -> post x `star` frame)
+  = let g 
+      : refined_pre_action #immut #allocates #hpre #hpost 
+          (pre `star` frame) a (fun x -> post x `star` frame)
         = fun h0 ->
               assert (interp (pre `star` frame) h0);
               affine_star pre frame h0;
               let (| x, h1 |) = f h0 in
               assert (interp (post x) h1);
               assert (interp (post x `star` frame) h1);
-              assert (forall frame'. frame_related_heaps h0 h1 pre (post x) frame' false);
-              let aux (frame':slprop)
-                : Lemma (requires
-                            interp ((pre `star` frame) `star` frame') h0)
-                        (ensures
-                            interp ((post x `star` frame) `star` frame') h1 /\
-                            (forall (hp:hprop frame'). hp h0 == hp h1))
-                = star_associative pre frame frame';
-                  star_associative (post x) frame frame';
-                  hprop_sub frame frame' h0 h1
-              in
-              let aux (frame':slprop)
-                : Lemma
-                  (requires interp ((pre `star` frame) `star` frame') h0)
-                  (ensures  interp ((post x `star` frame) `star` frame') h1 /\
-                            heap_evolves h0 h1 /\
-                            (forall (hp:hprop frame'). hp h0 == hp h1) /\
-                            (forall ctr. h0 `free_above_addr` ctr ==> h1 `free_above_addr` ctr))
-                  [SMTPat ((pre `star` frame) `star` frame')]
-                 = aux frame'
-              in
-              assert (forall frame'. frame_related_heaps h0 h1 (pre `star` frame) (post x `star` frame) frame' false);
+              assert (forall frame'. frame_related_heaps h0 h1 pre (post x) frame' immut allocates);
+              introduce forall frame'.
+                    (interp ((pre `star` frame) `star` frame') h0 ==>
+                     interp ((post x `star` frame) `star` frame') h1)
+              with (
+                star_associative pre frame frame';
+                star_associative (post x) frame frame'
+              );
               (| x, h1 |)
     in
     refined_pre_action_as_action g
 
 let change_slprop (p q:slprop)
                   (proof: (h:heap -> Lemma (requires interp p h) (ensures interp q h)))
-  : action p unit (fun _ -> q)
+  : action #immut_heap #no_allocs p unit (fun _ -> q)
   = let g
       : refined_pre_action p unit (fun _ -> q)
       = fun h ->
-          proof h;
-          let aux (frame:slprop)
-            : Lemma (requires
-                        interp (p `star` frame) h)
-                    (ensures
-                        interp (q `star` frame) h)
-                    [SMTPat ()]
-            = FStar.Classical.forall_intro (FStar.Classical.move_requires proof)
-          in
+          FStar.Classical.forall_intro (FStar.Classical.move_requires proof);
           (| (), h |)
     in
     refined_pre_action_as_action g
-
-let id_elim_star p q m =
-  let starprop (ml:heap) (mr:heap) =
-      disjoint ml mr
-    /\ m == join ml mr
-    /\ interp p ml
-    /\ interp q mr
-  in
-  elim_star p q m;
-  let p1 : heap -> prop = fun ml -> (exists mr. starprop ml mr) in
-  let ml = IndefiniteDescription.indefinite_description_tot _ p1 in
-  let starpropml mr : prop = starprop ml mr in // this prop annotation seems needed
-  let mr = IndefiniteDescription.indefinite_description_tot _ starpropml in
-  (ml, mr)
-
-let id_elim_exists #a p m =
-  let existsprop (x:a) = interp (p x) m in
-  elim_h_exists p m;
-  let x = IndefiniteDescription.indefinite_description_tot _ existsprop in
-  x
-
-let witinv_framon #a (p : a -> slprop)
-  : Lemma (requires (is_witness_invariant p))
-          (ensures (is_frame_monotonic p))
-    =
-    let aux x y h frame : Lemma (requires (interp (p x `star` frame) h /\ interp (p y) h))
-                                (ensures (interp (p y `star` frame) h)) =
-      assert (interp (p x `star` frame) h);
-      let (hl, hr) = id_elim_star (p x) frame h in
-      affine_star (p x) frame h;
-      assert (interp (p x) h);
-      assert (x == y);
-      ()
-    in
-    Classical.forall_intro_4 (fun x y m frame -> Classical.move_requires (aux x y m) frame)
 
 let witness_h_exists #a p =
   fun frame h0 ->
@@ -1259,11 +1222,11 @@ let intro_exists #a p x =
   fun frame h0 ->
     intro_h_exists (reveal x) p h0;
     (| (), h0 |)
-    
+module U = FStar.Universe    
 let lift_h_exists (#a:_) (p:a -> slprop)
   : action (h_exists p) unit
            (fun _a -> h_exists #(U.raise_t a) (U.lift_dom p))
-  = let g : refined_pre_action (h_exists p) unit (fun _a -> h_exists #(U.raise_t a) (U.lift_dom p))
+  = let g : refined_pre_action #immut_heap #no_allocs (h_exists p) unit (fun _a -> h_exists #(U.raise_t a) (U.lift_dom p))
           = fun h ->
               let aux (x:a) (h:heap)
                 : Lemma
@@ -1304,3 +1267,22 @@ let drop p
     = fun h -> (| (), h |)
   in
   refined_pre_action_as_action f
+
+
+let erase_action_result
+      (#pre #post:_)
+      (#immut #alloc:_)
+      (#fp:slprop)
+      (#a:Type)
+      (#fp':a -> slprop)
+      (act:action #immut #alloc #pre #post fp a fp')
+: action #immut #alloc #pre #post fp (erased a) (fun x -> fp' x)
+= let g
+  : refined_pre_action #immut #alloc #pre #post fp (erased a) (fun x -> fp' x)
+  = fun h ->
+    let (| x, h1 |) = act h in
+    let y : erased a = hide x in
+    let h1 : full_hheap (fp' (reveal y)) = h1 in
+    (| y, h1 |)
+  in
+  refined_pre_action_as_action g
