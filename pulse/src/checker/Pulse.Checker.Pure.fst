@@ -505,7 +505,28 @@ let try_get_non_informative_witness g u t
                      None
                      (Some?.v arg_opt))
         else None
-      | _ -> None
+      | _ ->
+        // ghost_pcm_ref #a p
+        let is_ghost_pcm_ref () =
+          let ropt = is_pure_app t in
+          match ropt with
+          | None -> None
+          | Some (t, _, arg2) ->
+            let ropt = is_fvar_app t in
+            match ropt with
+            | None -> None
+            | Some (l, us, _, arg1_opt) ->
+              if l = mk_pulse_lib_core_lid "ghost_pcm_ref" &&
+                 Some? arg1_opt
+              then let t = tm_pureapp
+                     (tm_uinst (as_fv (mk_pulse_lib_core_lid "ghost_pcm_ref_non_informative")) us)
+                     None
+                     (Some?.v arg1_opt) in
+                   let t = tm_pureapp t None arg2 in
+                   Some t
+              else None
+        in
+        is_ghost_pcm_ref ()
     in
     match eopt with
     | None -> None
