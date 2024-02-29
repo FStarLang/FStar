@@ -256,6 +256,7 @@ let gather = A.gather
 // ghost refs
 ////////////////////////////////////////////////////////
 let ghost_pcm_ref #a p = A.ghost_ref #a p
+let ghost_pcm_ref_non_informative a p = fun r -> reveal r
 let ghost_pcm_pts_to #a #p r v = A.ghost_pts_to #a #p r v
 let ghost_alloc = A.ghost_alloc
 let ghost_read = A.ghost_read

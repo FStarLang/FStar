@@ -627,6 +627,9 @@ val ghost_pcm_ref
     ([@@@unused] p:FStar.PCM.pcm a)
 : Type0
 
+val ghost_pcm_ref_non_informative (a:Type u#a) (p:FStar.PCM.pcm a)
+  : non_informative_witness (ghost_pcm_ref p)
+
 val ghost_pcm_pts_to
     (#a:Type u#1)
     (#p:pcm a)
