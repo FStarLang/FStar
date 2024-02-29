@@ -302,30 +302,4 @@ let ghost_read
 let ghost_write r x y f = Ghost.hide (A.ghost_write r x y f)
 let ghost_share r v0 v1 = Ghost.hide (A.ghost_share r v0 v1)
 let ghost_gather r v0 v1 = Ghost.hide (A.ghost_gather r v0 v1) 
-
-let ghost_witnessed 
-    (#a:Type u#1) 
-    (#p:pcm a)
-    (r:ghost_ref p)
-    (f:property a)
-= admit() //witnessed (reveal r) f
-
-let ghost_witness
-    (#a:Type)
-    (#pcm:pcm a)
-    (r:ghost_ref pcm)
-    (fact:stable_property pcm)
-    (v:Ghost.erased a)
-    (pf:squash (forall z. compatible pcm v z ==> fact z))
-= admit() //A.witness r fact v pf
-
-let ghost_recall
-    (#a:Type u#1)
-    (#pcm:pcm a)
-    (#fact:property a)
-    (r:ghost_ref pcm)
-    (v:Ghost.erased a)
-    (w:ghost_witnessed r fact)
-= admit() //A.recall r v w
-
 let drop p = Ghost.hide (A.drop p)
