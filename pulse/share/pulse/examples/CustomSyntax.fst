@@ -407,3 +407,20 @@ fn incr (x:nat)
   ( y <: r:nat { r > x } )
 }
 ```
+
+open Pulse.Lib.PCM.Fraction
+
+//
+// The example checks that ghost_pcm_ref is considered non-informative
+//
+
+```pulse
+fn test_ghost_ref_non_informative (#a:Type u#1) (y:a)
+  requires emp
+  ensures emp
+{
+  full_values_compatible y;
+  let r = ghost_alloc #_ #(pcm_frac #a) (hide (Some (y, full_perm)));
+  drop_ (ghost_pcm_pts_to r _);
+}
+```
