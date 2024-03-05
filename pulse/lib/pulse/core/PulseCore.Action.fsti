@@ -212,7 +212,7 @@ val pts_to_not_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p) (v:a)
 val alloc
     (#a:Type u#1)
     (#pcm:pcm a)
-    (x:a{compatible pcm x x /\ pcm.refine x})
+    (x:a{pcm.refine x})
 : act (ref a pcm)
       Reifiable
       emp_inames
@@ -342,7 +342,7 @@ val ghost_pts_to (#a:Type u#1) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop
 val ghost_alloc
     (#a:Type u#1)
     (#pcm:pcm a)
-    (x:erased a{compatible pcm x x /\ pcm.refine x})
+    (x:erased a{pcm.refine x})
 : act (ghost_ref pcm) Ghost emp_inames
     emp 
     (fun r -> ghost_pts_to r x)

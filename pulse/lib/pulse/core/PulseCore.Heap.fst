@@ -1102,7 +1102,7 @@ let pts_to_not_null_action #a #pcm r v
 let extend_alt
   (#a:Type u#a)
   (#pcm:pcm a)
-  (x:a{compatible pcm x x /\ pcm.refine x})
+  (x:a{pcm.refine x})
   (addr:nat)
 : refined_pre_action #mut_heap #allocs
     #(fun h -> h `free_above_addr` addr)
@@ -1125,6 +1125,7 @@ let extend_alt
     let h' = update_addr_full_heap h addr (Ref a pcm Frac.full_perm x) in
     assert (h' `free_above_addr` (addr + 1));
     assert (h' `contains_addr` addr);
+    PCM.compatible_refl pcm x;
     assert (interp (pts_to r x) h');
     let extend_aux (frame:slprop) (h0 hf:heap)
       : Lemma
@@ -1162,7 +1163,7 @@ let extend_alt
 #pop-options
 
 let extend #a #pcm
-        (x:a{compatible pcm x x /\ pcm.refine x})
+        (x:a{pcm.refine x})
         (addr:nat)
  = refined_pre_action_as_action (extend_alt x addr)
 

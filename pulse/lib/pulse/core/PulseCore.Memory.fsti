@@ -257,7 +257,7 @@ val gather_action
   (v1:FStar.Ghost.erased a)
   : pst_ghost_action_except (_:unit{composable pcm v0 v1}) e (pts_to r v0 `star` pts_to r v1) (fun _ -> pts_to r (op pcm v0 v1))
 
-val alloc_action (#a:Type u#1) (#pcm:pcm a) (e:inames) (x:a{compatible pcm x x /\ pcm.refine x})
+val alloc_action (#a:Type u#1) (#pcm:pcm a) (e:inames) (x:a{pcm.refine x})
   : pst_action_except (ref a pcm) e emp (fun r -> pts_to r x)
 
 val select_refine (#a:Type u#1) (#p:pcm a)
@@ -432,7 +432,7 @@ val ghost_alloc
     (#o:_)
     (#a:Type u#1)
     (#pcm:pcm a)
-    (x:erased a{compatible pcm x x /\ pcm.refine x})
+    (x:erased a{pcm.refine x})
 : pst_ghost_action_except
     (ghost_ref pcm)
     o

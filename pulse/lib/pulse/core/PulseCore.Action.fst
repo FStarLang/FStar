@@ -483,7 +483,7 @@ let pts_to_not_null #a #p r v #ictx = pts_to_not_null_action ictx r v
 let alloc
     (#a:Type u#1)
     (#pcm:pcm a)
-    (x:a{compatible pcm x x /\ pcm.refine x})
+    (x:a{pcm.refine x})
 : act (ref a pcm) Reifiable emp_inames emp (fun r -> pts_to r x)
 = fun #ictx -> alloc_action ictx x
 
