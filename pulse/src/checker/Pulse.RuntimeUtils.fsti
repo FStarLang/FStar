@@ -62,6 +62,7 @@ val map_seal (s:FStar.Sealed.sealed 't) (f: 't -> 'u) : FStar.Sealed.sealed 'u
 val float_one : FStar.Float.float
 val lax_check_term_with_unknown_universes (g:env) (t:T.term) : option T.term
 val whnf_lax (g:env) (t:T.term) : T.term
+val hnf_lax (g:env) (t:T.term) : T.term
 module RT = FStar.Reflection.Typing
 module T = FStar.Tactics.V2
 val norm_well_typed_term

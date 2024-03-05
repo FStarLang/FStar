@@ -359,7 +359,7 @@ let rec (arrow_of_abs :
                                                                     (Prims.of_int (79))
                                                                     (Prims.of_int (24))
                                                                     (Prims.of_int (79))
-                                                                    (Prims.of_int (69)))))
+                                                                    (Prims.of_int (68)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -371,7 +371,7 @@ let rec (arrow_of_abs :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___2 ->
-                                                                    Pulse_RuntimeUtils.whnf_lax
+                                                                    Pulse_RuntimeUtils.hnf_lax
                                                                     (Pulse_Typing.elab_env
                                                                     env1)
                                                                     (Pulse_Elaborate_Pure.elab_term
@@ -2722,7 +2722,7 @@ let (maybe_rewrite_body_typing :
                                                                     (Prims.of_int (292))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (293))
-                                                                    (Prims.of_int (56)))))
+                                                                    (Prims.of_int (51)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -2735,8 +2735,7 @@ let (maybe_rewrite_body_typing :
                                                                     (Pulse_Checker_Base.norm_st_typing_inverse
                                                                     g e t' d
                                                                     u t1 ()
-                                                                    [FStar_Pervasives.weak;
-                                                                    FStar_Pervasives.hnf;
+                                                                    [FStar_Pervasives.hnf;
                                                                     FStar_Pervasives.delta]))
                                                                     (fun
                                                                     uu___3 ->
