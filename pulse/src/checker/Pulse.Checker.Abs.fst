@@ -76,7 +76,7 @@ let rec arrow_of_abs (env:_) (prog:st_term { Tm_Abs? prog.term })
         let c = open_comp_with c (U.term_of_nvar px) in
         match c with
         | C_Tot tannot -> (
-          let tannot' = RU.whnf_lax (elab_env env) (elab_term tannot) in
+          let tannot' = RU.hnf_lax (elab_env env) (elab_term tannot) in
           match Pulse.Readback.readback_ty tannot' with
           | None -> 
             Env.fail 
@@ -290,7 +290,7 @@ let maybe_rewrite_body_typing
         let t, _ = Pulse.Checker.Pure.instantiate_term_implicits g t in
         let (| u, t_typing |) = Pulse.Checker.Pure.check_universe g t in
         match Pulse.Checker.Base.norm_st_typing_inverse
-                 #_ #_ #t' d t t_typing [weak;hnf;delta]
+                 #_ #_ #t' d t t_typing [hnf;delta]
         with
         | None -> 
           Env.fail g (Some e.range) "Inferred type is incompatible with annotation"

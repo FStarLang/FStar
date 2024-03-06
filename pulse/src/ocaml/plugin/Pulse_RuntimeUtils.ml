@@ -167,6 +167,9 @@ let lax_check_term_with_unknown_universes (g:TcEnv.env) (e:S.term)
 let whnf_lax (g:TcEnv.env) (t:S.term) : S.term = 
   FStar_TypeChecker_Normalize.unfold_whnf' [TcEnv.Unascribe] g t
 
+let hnf_lax (g:TcEnv.env) (t:S.term) : S.term =
+  FStar_TypeChecker_Normalize.normalize [TcEnv.Unascribe; TcEnv.Primops; TcEnv.HNF; TcEnv.UnfoldUntil S.delta_constant; TcEnv.Beta] g t
+
 let norm_well_typed_term_aux
       (g:TcEnv.env)
       (t:S.term)
