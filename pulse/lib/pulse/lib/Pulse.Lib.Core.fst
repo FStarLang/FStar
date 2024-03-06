@@ -219,7 +219,7 @@ let pts_to_not_null #a #p r v = A.pts_to_not_null #a #p r v
 let alloc
     (#a:Type u#1)
     (#pcm:pcm a)
-    (x:a{compatible pcm x x /\ pcm.refine x})
+    (x:a{pcm.refine x})
 : stt (pcm_ref pcm)
     emp
     (fun r -> pcm_pts_to r x)

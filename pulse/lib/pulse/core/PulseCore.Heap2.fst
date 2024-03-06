@@ -666,7 +666,7 @@ let lift_ghost_emp : squash (llift GHOST H.emp == emp) =
 let ghost_extend
     (#a:Type u#a)
     (#pcm:pcm a)
-    (x:erased a{compatible pcm x x /\ pcm.refine x})
+    (x:erased a{pcm.refine x})
     (addr:erased nat)
 = lift_erased #_ #(ni_erased H.core_ref)
     (Ghost.hide <|

@@ -652,7 +652,7 @@ val pts_to_not_null_action
 val extend
   (#a:Type u#a)
   (#pcm:pcm a)
-  (x:a{compatible pcm x x /\ pcm.refine x})
+  (x:a{pcm.refine x})
   (addr:nat)
   : action
       #MUTABLE #(Some CONCRETE)
@@ -750,7 +750,7 @@ val ghost_pts_to (#a:Type u#a) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop u#a
 val ghost_extend
     (#a:Type u#a)
     (#pcm:pcm a)
-    (x:erased a{compatible pcm x x /\ pcm.refine x})
+    (x:erased a{pcm.refine x})
     (addr:erased nat)
 : action #ONLY_GHOST #(Some GHOST)
       #(fun h -> h `free_above_addr GHOST` addr)

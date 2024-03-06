@@ -632,7 +632,7 @@ val pts_to_not_null_action
 val extend
   (#a:Type u#a)
   (#pcm:pcm a)
-  (x:a{compatible pcm x x /\ pcm.refine x})
+  (x:a{pcm.refine x})
   (addr:nat)
   : action
       #mut_heap #allocs
