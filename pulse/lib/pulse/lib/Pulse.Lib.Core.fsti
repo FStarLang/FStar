@@ -572,7 +572,7 @@ val pts_to_not_null
 val alloc
     (#a:Type u#1)
     (#pcm:pcm a)
-    (x:a{compatible pcm x x /\ pcm.refine x})
+    (x:a{pcm.refine x})
 : stt (pcm_ref pcm)
     emp
     (fun r -> pcm_pts_to r x)
@@ -640,7 +640,7 @@ val ghost_pcm_pts_to
 val ghost_alloc
     (#a:Type u#1)
     (#pcm:pcm a)
-    (x:erased a{compatible pcm x x /\ pcm.refine x})
+    (x:erased a{pcm.refine x})
 : stt_ghost (ghost_pcm_ref pcm)
     emp
     (fun r -> ghost_pcm_pts_to r x)

@@ -266,7 +266,7 @@ val pts_to_not_null
 val alloc
     (#a:Type u#1)
     (#pcm:pcm a)
-    (x:a{compatible pcm x x /\ pcm.refine x})
+    (x:a{pcm.refine x})
 : stt_atomic (ref a pcm)
     #Observable
     emp_inames
@@ -354,7 +354,7 @@ val ghost_pts_to (#a:Type u#1) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop
 val ghost_alloc
     (#a:Type u#1)
     (#pcm:pcm a)
-    (x:erased a{compatible pcm x x /\ pcm.refine x})
+    (x:erased a{pcm.refine x})
 : stt_ghost (ghost_ref pcm)
     emp
     (fun r -> ghost_pts_to r x)
