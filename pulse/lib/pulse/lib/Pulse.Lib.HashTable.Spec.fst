@@ -731,7 +731,7 @@ let upd_pht (#kt:eqtype) (#vt:Type) (pht:pht_t kt vt) idx (k:kt) (v:vt)
              repr = repr';
              inv = () }
 
-#push-options "--z3rlimit_factor 2"
+#push-options "--z3rlimit_factor 3"
 let eliminate_strong_all_used_not_by #kt #vt (r:repr_t kt vt) (k:kt) (i:nat{i < r.sz})
   : Lemma 
     (requires strong_all_used_not_by r (canonical_index k r) r.sz k)
