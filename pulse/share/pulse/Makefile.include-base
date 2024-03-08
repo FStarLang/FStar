@@ -54,7 +54,9 @@ endif
 
 FSTAR=$(RUNLIM) $(FSTAR_HOME)/bin/fstar.exe $(SIL) $(FSTAR_OPTIONS)
 
-.depend: $(FSTAR_FILES)
+FSTAR_DEP_FILE ?= .depend
+
+$(FSTAR_DEP_FILE): $(FSTAR_FILES)
 	$(call msg, "DEPEND")
 ifneq (,$(OUTPUT_DIRECTORY))
 	mkdir -p $(OUTPUT_DIRECTORY)
@@ -66,7 +68,7 @@ endif
 	$(Q)$(FSTAR) $(FSTAR_DEP_OPTIONS) --dep full @$@.rsp --output_deps_to $@.aux
 	mv $@.aux $@
 
-include .depend
+include $(FSTAR_DEP_FILE)
 
 $(ALL_CHECKED_FILES): %.checked:
 	$(call msg, "CHECK", $(basename $(notdir $@)))
