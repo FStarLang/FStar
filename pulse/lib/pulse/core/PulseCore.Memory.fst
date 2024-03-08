@@ -16,6 +16,7 @@
 module PulseCore.Memory
 open FStar.Ghost
 open FStar.PCM
+open PulseCore.Tags
 module M_ = PulseCore.NondeterministicMonotonicStateMonad
 module F = FStar.FunctionalExtensionality
 open FStar.FunctionalExtensionality
@@ -455,8 +456,8 @@ let rec move_invariant (e:inames) (l:lock_store) (p:slprop)
        end
 
 let heap_ctr_valid (ctr:nat) (ghost_ctr:nat) (h:H.heap u#a) : prop =
-    h `H.free_above_addr H.CONCRETE` ctr /\
-    h `H.free_above_addr H.GHOST` ghost_ctr
+    h `H.free_above_addr CONCRETE` ctr /\
+    h `H.free_above_addr GHOST` ghost_ctr
 
 let ctr_validity (ctr:nat) (ghost_ctr:nat) (h:H.heap) : slprop =
     H.pure (heap_ctr_valid ctr ghost_ctr h)
@@ -846,9 +847,9 @@ let as_hprop (frame:slprop) (mp:mprop frame)
 //       in
 //       ()
 
-let mg_of_mut (m:H.mutability) =
+let mg_of_mut (m:mutability) =
   match m with
-  | H.MUTABLE -> false
+  | MUTABLE -> false
   | _ -> true
 
 let lift_heap_action (#fp:slprop) (#a:Type) (#fp':a -> slprop) (#mut:_)
@@ -1035,7 +1036,7 @@ let inc_ctr (#p:slprop) #e (m:hmem_with_inv_except e p)
     assert (linv e m' == lock_store_invariant e m.locks
                          `star`
                         ctr_validity (m.ctr + 1) m.ghost_ctr (heap_of_mem m));
-    H.weaken_free_above H.CONCRETE (heap_of_mem m) m.ctr (m.ctr + 1);
+    H.weaken_free_above CONCRETE (heap_of_mem m) m.ctr (m.ctr + 1);
     weaken_pure (heap_ctr_valid m.ctr m.ghost_ctr (heap_of_mem m))
                 (heap_ctr_valid (m.ctr + 1) m.ghost_ctr (heap_of_mem m));
     assert (H.stronger
@@ -1773,7 +1774,7 @@ let inc_ghost_ctr (#p:slprop) #e (m:hmem_with_inv_except e p)
     assert (linv e m' == lock_store_invariant e m.locks
                          `star`
                         ctr_validity m.ctr (m.ghost_ctr + 1) (heap_of_mem m));
-    H.weaken_free_above H.GHOST (heap_of_mem m) m.ghost_ctr (m.ghost_ctr + 1);
+    H.weaken_free_above GHOST (heap_of_mem m) m.ghost_ctr (m.ghost_ctr + 1);
     weaken_pure (heap_ctr_valid m.ctr m.ghost_ctr (heap_of_mem m))
                 (heap_ctr_valid m.ctr (m.ghost_ctr + 1) (heap_of_mem m));
     assert (H.stronger
