@@ -15,6 +15,9 @@ include $(PULSE_HOME)/share/pulse/Makefile.include
 extract-c: verify
 	+$(MAKE) -f c.Makefile extract
 
+.PHONY: test-c
+test-c: extract-c
+
 # FIXME: this rule should depend on the .checked file. However, right
 # now there is no way to reconcile the cache directories. There are
 # currently two modes:
