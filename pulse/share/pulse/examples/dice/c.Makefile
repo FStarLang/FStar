@@ -21,4 +21,4 @@ KRML ?= $(KRML_HOME)/krml
 
 .PHONY: extract
 extract: $(ALL_KRML_FILES)
-	$(KRML) -skip-compilation -bundle 'DPE=*' -library Pulse.Lib.SpinLock -warn-error +9 $^
+	$(KRML) -skip-compilation -bundle 'DPE=*' -library Pulse.Lib.SpinLock -warn-error @4+9 $^
