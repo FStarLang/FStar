@@ -108,13 +108,6 @@ let a_heap_prop = p:(heap -> prop) { heap_prop_is_affine p }
 [@@erasable]
 val slprop : Type u#3
 
-[@@erasable]
-val small_slprop : Type u#2
-val down (s:slprop) : small_slprop
-val up (s:small_slprop) : slprop
-let is_small (s:slprop) = s == up (down s)
-let vprop = s:slprop { is_small s }
-
 (**
   [slprop]s can be "interpreted" over any heap, yielding a [prop]
 *)
@@ -137,8 +130,19 @@ let hprop (fp:slprop) =
       q h0 <==> q (join h0 h1)
   }
 
+
 (** A common abbreviation: [hheap p] is a heap on which [p] is valid *)
 let hheap (p:slprop) = m:heap {interp p m}
+
+(**
+  The interpretation of a separation logic proposition [hp] is itself an [hprop] of footprint
+  [hp]
+*)
+val interp_depends_only_on (hp:slprop)
+    : Lemma
+      (forall (h0:hheap hp) (h1:heap{disjoint h0 h1}).
+        interp hp h0 <==> interp hp (join h0 h1))
+
 
 (**
   Equivalence relation on [slprop]s is just
@@ -155,30 +159,21 @@ val slprop_extensionality (p q:slprop)
     (requires p `equiv` q)
     (ensures p == q)
 
-/// We can now define all the standard connectives of separation logic
+[@@erasable]
+val small_slprop : Type u#2
+val down (s:slprop) : small_slprop
+val up (s:small_slprop) : slprop
+let is_small (s:slprop) = s == up (down s)
+let vprop = s:slprop { is_small s }
 
 (** [emp] is the empty [slprop], valid on all heaps. It acts as the unit element *)
 val emp : vprop
-val big_pts_to (#a:Type u#2) (#pcm:_) (r:ref a pcm) (v:a) : slprop
-val pts_to (#a:Type u#1) (#pcm:_) (r:ref a pcm) (v:a) : vprop
+val pure (p:prop) : vprop
 val star  (p1 p2:slprop) : slprop
 val h_exists (#[@@@strictly_positive] a:Type u#b)
              ([@@@strictly_positive]  f: (a -> slprop))
   : slprop
 
-(***** Basic properties of separation logic *)
-
-(** If [p * q] is valid on [h], then [p] and [q] are valid on [h] *)
-val affine_star (p q:slprop) (h:heap)
-  : Lemma ((interp (p `star` q) h ==> interp p h /\ interp q h))
-
-(** Equivalence of separation logic propositions is symmetric *)
-val equiv_symmetric (p1 p2:slprop)
-  : squash (p1 `equiv` p2 ==> p2 `equiv` p1)
-
-(** If [p1 ~ p2] then [p1 * p3 ~ p2 * p3] *)
-val equiv_extensional_on_star (p1 p2 p3:slprop)
-  : squash (p1 `equiv` p2 ==> (p1 `star` p3) `equiv` (p2 `star` p3))
 
 (** [p ~~ p * emp] *)
 val emp_unit (p:slprop)
@@ -188,132 +183,24 @@ val emp_unit (p:slprop)
 val intro_emp (h:heap)
   : Lemma (interp emp h)
 
-(** Introduction rule for equivalence of [h_exists] propositions *)
-val h_exists_cong (#a:Type) (p q : a -> slprop)
-    : Lemma
-      (requires (forall x. p x `equiv` q x))
-      (ensures (h_exists p `equiv` h_exists q))
 
-(** Introducing [h_exists] by presenting a witness *)
-val intro_h_exists (#a:_) (x:a) (p:a -> slprop) (h:heap)
-  : Lemma (interp (p x) h ==> interp (h_exists p) h)
+(** Equivalence of pure propositions is the equivalence of the underlying propositions *)
+val pure_equiv (p q:prop)
+  : Lemma ((p <==> q) ==> (pure p `equiv` pure q))
 
-(** Eliminate an existential by simply getting a proposition. *)
-val elim_h_exists (#a:_) (p:a -> slprop) (h:heap)
-  : Lemma (interp (h_exists p) h ==> (exists x. interp (p x) h))
+(** And the interpretation of pure propositions is their underlying propositions *)
+val pure_interp (q:prop) (h:heap)
+   : Lemma (interp (pure q) h <==> q)
 
-(**
-  The interpretation of a separation logic proposition [hp] is itself an [hprop] of footprint
-  [hp]
-*)
-val interp_depends_only_on (hp:slprop)
-    : Lemma
-      (forall (h0:hheap hp) (h1:heap{disjoint h0 h1}).
-        interp hp h0 <==> interp hp (join h0 h1))
+(** A helper lemma for interpreting a pure proposition with another [slprop] *)
+val pure_star_interp (p:slprop) (q:prop) (h:heap)
+   : Lemma (interp (p `star` pure q) h <==>
+            interp (p `star` emp) h /\ q)
 
+(** If [p * q] is valid on [h], then [p] and [q] are valid on [h] *)
+val affine_star (p q:slprop) (h:heap)
+  : Lemma ((interp (p `star` q) h ==> interp p h /\ interp q h))
 
-(***** [pts_to] properties *)
-
-(**
-  [ptr r] is a separation logic proposition asserting the existence of an allocated cell at
-  reference [r]
-*)
-let ptr (#a: Type u#1) (#pcm: pcm a) (r:ref a pcm) =
-    h_exists (pts_to r)
-
-(**
-  If we have [pts_to x v0] and [pts_to y v1] on the same heap, then [v0] and [v1] are are related
-  by the PCM governing [x]. Indeed, the [pts_to] predicate is not stricly injective, as our partial
-  heaps offer only a partial view on the contents of the memory cell. This partial view is governed
-  by [pcm], and this lemma shows that you can combine two [pts_to] predicates into a third, with
-  a new value with is the composition of [v0] and [v1] by [pcm].
-  This lemma is equivalent to injectivity of [pts_to] if you instantiate [pcm] with the exclusive
-  PCM.
-*)
-val pts_to_compatible
-  (#a:Type u#1)
-  (#pcm: pcm a)
-  (x:ref a pcm)
-  (v0 v1:a)
-  (h:heap)
-    : Lemma
-      (interp (pts_to x v0 `star` pts_to x v1) h
-       <==>
-       (composable pcm v0 v1 /\
-        interp (pts_to x (op pcm v0 v1)) h))
-
-(** If a reference points to two different values, they must be joinable
-in the PCM, even when the pointing does not happen separately. *)
-val pts_to_join (#a:Type u#1) (#pcm:_) (r:ref a pcm) (v1 v2:a) (m:heap)
-  : Lemma (requires (interp (pts_to r v1) m /\ interp (pts_to r v2) m))
-          (ensures joinable pcm v1 v2)
-
-(** Further, the value in the heap is a witness for that property *)
-val pts_to_join' (#a:Type u#1) (#pcm:_) (r:ref a pcm) (v1 v2:a) (m:heap)
-  : Lemma (requires (interp (pts_to r v1) m /\ interp (pts_to r v2) m))
-          (ensures (exists z. compatible pcm v1 z /\ compatible pcm v2 z /\
-                         interp (pts_to r z) m))
-
-val pts_to_compatible_equiv (#a:Type)
-                            (#pcm:_)
-                            (x:ref a pcm)
-                            (v0:a)
-                            (v1:a{composable pcm v0 v1})
-  : Lemma (equiv (pts_to x v0 `star` pts_to x v1)
-                 (pts_to x (op pcm v0 v1)))
-
-val pts_to_not_null (#a:Type)
-                    (#pcm:_)
-                    (x:ref a pcm)
-                    (v:a)
-                    (m:heap)
-  : Lemma (requires interp (pts_to x v) m)
-          (ensures x =!= null)
-
-/////////////////////////////////////////////
-
-val big_pts_to_compatible
-  (#a:Type u#2)
-  (#pcm: pcm a)
-  (x:ref a pcm)
-  (v0 v1:a)
-  (h:heap)
-    : Lemma
-      (interp (big_pts_to x v0 `star` big_pts_to x v1) h
-       <==>
-       (composable pcm v0 v1 /\
-        interp (big_pts_to x (op pcm v0 v1)) h))
-
-
-(** If a reference points to two different values, they must be joinable
-in the PCM, even when the pointing does not happen separately. *)
-val big_pts_to_join (#a:Type u#2) (#pcm:_) (r:ref a pcm) (v1 v2:a) (m:heap)
-  : Lemma (requires (interp (big_pts_to r v1) m /\ interp (big_pts_to r v2) m))
-          (ensures joinable pcm v1 v2)
-
-(** Further, the value in the heap is a witness for that property *)
-val big_pts_to_join' (#a:Type u#2) (#pcm:_) (r:ref a pcm) (v1 v2:a) (m:heap)
-  : Lemma (requires (interp (big_pts_to r v1) m /\ interp (big_pts_to r v2) m))
-          (ensures (exists z. compatible pcm v1 z /\ compatible pcm v2 z /\
-                         interp (big_pts_to r z) m))
-
-val big_pts_to_compatible_equiv (#a:Type)
-                            (#pcm:_)
-                            (x:ref a pcm)
-                            (v0:a)
-                            (v1:a{composable pcm v0 v1})
-  : Lemma (equiv (big_pts_to x v0 `star` big_pts_to x v1)
-                 (big_pts_to x (op pcm v0 v1)))
-
-val big_pts_to_not_null (#a:Type)
-                    (#pcm:_)
-                    (x:ref a pcm)
-                    (v:a)
-                    (m:heap)
-  : Lemma (requires interp (big_pts_to x v) m)
-          (ensures x =!= null)
-
-(***** Properties of separating conjunction *)
 
 (** The separating conjunction [star] arises from the disjointness of partial heaps *)
 val intro_star (p q:slprop) (hp:hheap p) (hq:hheap q)
@@ -347,27 +234,33 @@ val star_congruence (p1 p2 p3 p4:slprop)
   : Lemma (requires p1 `equiv` p3 /\ p2 `equiv` p4)
           (ensures (p1 `star` p2) `equiv` (p3 `star` p4))
 
-(***** Properties of the refinement *)
-(**
-  A [pure] separation logic predicate is a refinement on the empty heap. That is how we
-  lift pure propositions to the separation logic world
-*)
-val pure (p:prop) : vprop
 
-(** Equivalence of pure propositions is the equivalence of the underlying propositions *)
-val pure_equiv (p q:prop)
-  : Lemma ((p <==> q) ==> (pure p `equiv` pure q))
+val vprop_star (p1 p2:vprop)
+  : Lemma (is_small (p1 `star` p2))
 
-(** And the interpretation of pure propositions is their underlying propositions *)
-val pure_interp (q:prop) (h:heap)
-   : Lemma (interp (pure q) h <==> q)
 
-(** A helper lemma for interpreting a pure proposition with another [slprop] *)
-val pure_star_interp (p:slprop) (q:prop) (h:heap)
-   : Lemma (interp (p `star` pure q) h <==>
-            interp (p `star` emp) h /\ q)
+(** Introduction rule for equivalence of [h_exists] propositions *)
+val h_exists_cong (#a:Type) (p q : a -> slprop)
+    : Lemma
+      (requires (forall x. p x `equiv` q x))
+      (ensures (h_exists p `equiv` h_exists q))
 
-(***** Magic wand and implications properties *)
+(** Introducing [h_exists] by presenting a witness *)
+val intro_h_exists (#a:_) (x:a) (p:a -> slprop) (h:heap)
+  : Lemma (interp (p x) h ==> interp (h_exists p) h)
+
+(** Eliminate an existential by simply getting a proposition. *)
+val elim_h_exists (#a:_) (p:a -> slprop) (h:heap)
+  : Lemma (interp (h_exists p) h ==> (exists x. interp (p x) h))
+
+val vprop_exists_alt (a:Type) (p:a -> slprop)
+  : Lemma
+    (requires forall x. is_small (p x))
+    (ensures is_small (h_exists p))
+
+val vprop_exists (a:Type) (p:a -> vprop)
+  : Lemma (is_small (h_exists p))
+
 
 (** We can define a [stronger] relation on [slprops], defined by interpretation implication *)
 let stronger (p q:slprop) =
@@ -534,32 +427,53 @@ let action_framing
   affine_star fp frame h0;
   emp_unit fp
 
-// (** [sel] is a ghost read of the value contained in a heap reference *)
-// val sel (#a:Type u#1) (#pcm:pcm a) (r:ref a pcm) (m:full_hheap (ptr r)) : a
+(*********** Some generic actions *)
 
-// (** [sel_v] is a ghost read of the value contained in a heap reference *)
-// val sel_v (#a:Type u#1) (#pcm:pcm a) (r:ref a pcm) (v:erased a) (m:full_hheap (pts_to r v))
-//   : v':a{ compatible pcm v v' /\
-//           pcm.refine v' /\
-//           interp (ptr r) m /\
-//           v' == sel r m }
 
-// (** [sel] respect [pts_to] *)
-// val sel_lemma (#a:_) (#pcm:_) (r:ref a pcm) (m:full_hheap (ptr r))
-//   : Lemma (interp (pts_to r (sel r m)) m)
+val frame (#a:Type)
+          #immut #allocates #hpre #hpost
+          (#pre:slprop)
+          (#post:a -> slprop)
+          (frame:slprop)
+          ($f:action #immut #allocates #hpre #hpost pre a post)
+  : action #immut #allocates #hpre #hpost (pre `star` frame) a (fun x -> post x `star` frame)
 
-// let witnessed_ref (#a:Type u#1)
-//                   (#pcm:pcm a)
-//                   (r:ref a pcm)
-//                   (fact:a -> prop)
-//                   (h:full_heap)
-//   = interp (ptr r) h /\
-//     fact (sel r h)
+val change_slprop (p q:slprop)
+                  (proof: (h:heap -> Lemma (requires interp p h) (ensures interp q h)))
+  : action #IMMUTABLE #no_allocs p unit (fun _ -> q)
 
-// val witnessed_ref_stability (#a:Type) (#pcm:pcm a) (r:ref a pcm) (fact:a -> prop)
-//   : Lemma
-//     (requires FStar.Preorder.stable fact (PulseCore.Preorder.preorder_of_pcm pcm))
-//     (ensures FStar.Preorder.stable (witnessed_ref r fact) heap_evolves)
+(**
+  witness_h_exists is defined with action_with_frame as it allows us to define it with any p
+
+  With the quantified frame actions, it creates an issue, since we have to prove that the witness is ok for all frames
+    whereas with an explicit frame, we can pick the witness for that particular frame
+*)
+val elim_exists (#a:_) (p:a -> slprop)
+  : action_with_frame (h_exists p) (erased a) (fun x -> p x)
+
+val intro_exists (#a:_) (p:a -> slprop) (x:erased a)
+  : action_with_frame (p x) unit (fun _ -> h_exists p)
+  
+val lift_exists (#a:_) (p:a -> slprop)
+  : action #IMMUTABLE #no_allocs (h_exists p) unit
+           (fun _a -> h_exists #(FStar.Universe.raise_t a) (FStar.Universe.lift_dom p))
+
+val elim_pure (p:prop)
+  : action #IMMUTABLE #no_allocs (pure p) (u:unit{p}) (fun _ -> emp)
+
+val intro_pure (p:prop) (_:squash p)
+  : action #IMMUTABLE #no_allocs emp unit (fun _ -> pure p)
+
+val drop (p:slprop)
+  : action #IMMUTABLE #no_allocs p unit (fun _ -> emp)
+
+
+(*** Actions on the small heap *)
+
+(* Small concrete references *)
+
+(***** [pts_to]: Ownership of a concrete reference on the small heap *)
+val pts_to (#a:Type u#1) (#pcm:_) (r:ref a pcm) (v:a) : vprop
 
 (**
   The action variant of [sel], returning the "true" value inside the heap. This "true" value
@@ -659,62 +573,11 @@ val extend
       (ref a pcm)
       (fun r -> pts_to r x)
 
-val frame (#a:Type)
-          #immut #allocates #hpre #hpost
-          (#pre:slprop)
-          (#post:a -> slprop)
-          (frame:slprop)
-          ($f:action #immut #allocates #hpre #hpost pre a post)
-  : action #immut #allocates #hpre #hpost (pre `star` frame) a (fun x -> post x `star` frame)
-
-val change_slprop (p q:slprop)
-                  (proof: (h:heap -> Lemma (requires interp p h) (ensures interp q h)))
-  : action #IMMUTABLE #no_allocs p unit (fun _ -> q)
-
-(**
-  witness_h_exists is defined with action_with_frame as it allows us to define it with any p
-
-  With the quantified frame actions, it creates an issue, since we have to prove that the witness is ok for all frames
-    whereas with an explicit frame, we can pick the witness for that particular frame
-*)
-val elim_exists (#a:_) (p:a -> slprop)
-  : action_with_frame (h_exists p) (erased a) (fun x -> p x)
-
-val intro_exists (#a:_) (p:a -> slprop) (x:erased a)
-  : action_with_frame (p x) unit (fun _ -> h_exists p)
-  
-val lift_exists (#a:_) (p:a -> slprop)
-  : action #IMMUTABLE #no_allocs (h_exists p) unit
-           (fun _a -> h_exists #(FStar.Universe.raise_t a) (FStar.Universe.lift_dom p))
-
-val elim_pure (p:prop)
-  : action #IMMUTABLE #no_allocs (pure p) (u:unit{p}) (fun _ -> emp)
-
-val intro_pure (p:prop) (_:squash p)
-  : action #IMMUTABLE #no_allocs emp unit (fun _ -> pure p)
-
-// val pts_to_evolve (#a:Type u#a) (#pcm:_) (r:ref a pcm) (x y : a) (h:heap)
-//   : Lemma (requires (interp (pts_to r x) h /\ compatible pcm y x))
-//           (ensures  (interp (pts_to r y) h))
-
-val drop (p:slprop)
-  : action #IMMUTABLE #no_allocs p unit (fun _ -> emp)
-
-let non_informative (a:Type u#a) =
-  x:Ghost.erased a -> y:a{y == Ghost.reveal x}
-
-// val lift_erased
-//           (#a:Type)
-//           (#ni_a:non_informative a)
-//           (#allocs:option tag)
-//            #hpre #hpost
-//           (#pre:slprop)
-//           (#post:a -> slprop)
-//           ($f:erased (action #ONLY_GHOST #allocs #hpre #hpost pre a post))
-// : action #ONLY_GHOST #allocs #hpre #hpost pre a post
-
+(* Small ghost references *)
 [@@erasable]
 val ghost_ref (#[@@@unused] a:Type u#a) ([@@@unused]p:pcm a) : Type0
+
+(*** ghost_pts_to: Ownership of a ghost reference on the small heap *)
 val ghost_pts_to (#a:Type u#1) (#p:pcm a) (r:ghost_ref p) (v:a) : vprop
 
 val ghost_extend
@@ -775,8 +638,113 @@ val ghost_gather
     (squash (composable pcm v0 v1))
     (fun _ -> ghost_pts_to r (op pcm v0 v1))
 
+/////////////////////////////////////////////
 
-val big_ghost_pts_to (#a:Type u#2) (#p:pcm a) (r:ghost_ref p) (v:a) : vprop
+(* Big concrete references *)
+
+(***** [big_pts_to]: Ownership of a concrete reference on the small heap *)
+val big_pts_to (#a:Type u#2) (#pcm:_) (r:ref a pcm) (v:a) : slprop
+
+(**
+  The action variant of [sel], returning the "true" value inside the heap. This "true" value
+  can be different of the [big_pts_to] value you assumed at the beginning, because of the PCM structure
+*)
+val big_sel_action
+  (#a:Type)
+  (#pcm:pcm a)
+  (r:ref a pcm)
+  (v0:erased a)
+    : action #IMMUTABLE #no_allocs
+       (big_pts_to r v0) (v:a{compatible pcm v0 v}) (fun _ -> big_pts_to r v0)
+
+(**
+  A version of select that incorporates a ghost update of local
+  knowledge of a ref cell based on the value that was read
+ *)
+val big_select_refine (#a:_) (#p:_)
+                  (r:ref a p)
+                  (x:erased a)
+                  (f:(v:a{compatible p x v}
+                      -> GTot (y:a{compatible p y v /\
+                                  FStar.PCM.frame_compatible p x v y})))
+   : action #IMMUTABLE #no_allocs (big_pts_to r x)
+            (v:a{compatible p x v /\ p.refine v})
+            (fun v -> big_pts_to r (f v))
+
+
+(** Updating a ref cell for a user-defined PCM *)
+val big_upd_gen_action (#a:Type) (#p:pcm a) (r:ref a p) (x y:Ghost.erased a)
+                   (f:FStar.PCM.frame_preserving_upd p x y)
+  : action #MUTABLE #no_allocs (big_pts_to r x)
+           unit
+           (fun _ -> big_pts_to r y)
+
+(**
+  The update action needs you to prove that the mutation from [v0] to [v1] is frame-preserving
+  with respect to the individual PCM governing the reference [r]. See [FStar.PCM.frame_preserving]
+*)
+val big_upd_action
+  (#a:Type)
+  (#pcm:pcm a)
+  (r:ref a pcm)
+  (v0:FStar.Ghost.erased a)
+  (v1:a {FStar.PCM.frame_preserving pcm v0 v1 /\ pcm.refine v1})
+  : action #MUTABLE #no_allocs (big_pts_to r v0) unit (fun _ -> big_pts_to r v1)
+
+(** Deallocating a reference, by actually replacing its value by the unit of the PCM *)
+val big_free_action
+  (#a:Type)
+  (#pcm:pcm a)
+  (r:ref a pcm)
+  (v0:FStar.Ghost.erased a {exclusive pcm v0 /\ pcm.refine pcm.FStar.PCM.p.one})
+  : action #MUTABLE #no_allocs (big_pts_to r v0) unit (fun _ -> big_pts_to r pcm.FStar.PCM.p.one)
+
+
+(** Splitting a permission on a composite resource into two separate permissions *)
+val big_split_action
+  (#a:Type)
+  (#pcm:pcm a)
+  (r:ref a pcm)
+  (v0:FStar.Ghost.erased a)
+  (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+  : action #IMMUTABLE #no_allocs (big_pts_to r (v0 `op pcm` v1)) unit (fun _ -> big_pts_to r v0 `star` big_pts_to r v1)
+
+(** Combining separate permissions into a single composite permission *)
+val big_gather_action
+  (#a:Type)
+  (#pcm:pcm a)
+  (r:ref a pcm)
+  (v0:FStar.Ghost.erased a)
+  (v1:FStar.Ghost.erased a)
+  : action #IMMUTABLE #no_allocs
+    (big_pts_to r v0 `star` big_pts_to r v1) (_:unit{composable pcm v0 v1}) (fun _ -> big_pts_to r (op pcm v0 v1))
+
+val big_pts_to_not_null_action 
+      (#a:Type)
+      (#pcm:pcm a)
+      (r:erased (ref a pcm))
+      (v:Ghost.erased a)
+: action #IMMUTABLE #no_allocs
+    (big_pts_to r v)
+    (squash (not (is_null r)))
+    (fun _ -> big_pts_to r v)
+
+(** Allocating is a pseudo action here, the context needs to provide a fresh address *)
+val big_extend
+  (#a:Type)
+  (#pcm:pcm a)
+  (x:a{pcm.refine x})
+  (addr:nat)
+  : action
+      #MUTABLE #(Some CONCRETE)
+      #(fun h -> h `free_above_addr CONCRETE` addr)
+      #(fun h -> h `free_above_addr CONCRETE` (addr + 1))      
+      emp 
+      (ref a pcm)
+      (fun r -> big_pts_to r x)
+
+(** Big ghost references *)
+val big_ghost_pts_to (#a:Type u#2) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop
 
 val big_ghost_extend
     (#a:Type)
@@ -835,15 +803,3 @@ val big_ghost_gather
     (big_ghost_pts_to r v0 `star` big_ghost_pts_to r v1)
     (squash (composable pcm v0 v1))
     (fun _ -> big_ghost_pts_to r (op pcm v0 v1))
-
-
-val vprop_star (p1 p2:vprop)
-  : Lemma (is_small (p1 `star` p2))
-
-val vprop_exists (a:Type) (p:a -> vprop)
-  : Lemma (is_small (h_exists p))
-
-val vprop_exists_alt (a:Type) (p:a -> slprop)
-  : Lemma
-    (requires forall x. is_small (p x))
-    (ensures is_small (h_exists p))

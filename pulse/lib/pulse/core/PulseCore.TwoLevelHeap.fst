@@ -105,6 +105,13 @@ let h2_join_empty (h:H2.heap)
   = admit() // H.join_empty h
 
 let slprop = p:(heap ^-> prop) { heap_prop_is_affine p }
+let interp p m = p m
+let as_slprop f = F.on _ f
+let interp_depends_only_on hp = ()
+let slprop_extensionality p q = FStar.PredicateExtensionality.predicateExtensionality _ p q
+
+
+
 let small_slprop = H2.slprop u#1
 let down_p (p:slprop) : small_heap -> prop = fun h -> p { small = h; big = H2.empty_heap }
 let down_p_affine (p:slprop) : Lemma (H2.heap_prop_is_affine (down_p p)) = 
@@ -152,17 +159,14 @@ let down_up (p:small_slprop)
   );
   H2.slprop_extensionality (down (up p)) p
 
-let interp p m = p m
-let as_slprop f = F.on _ f
-let slprop_extensionality p q = FStar.PredicateExtensionality.predicateExtensionality _ p q
-let emp = up H2.emp
 let h2_of_slprop (p:H2.slprop u#2) : H2.a_heap_prop u#2 =
   H2.interp_depends_only_on p;
   fun h -> H2.interp p h
-let big_up (p:H2.slprop u#2) : slprop =
-  as_slprop (fun h -> h2_of_slprop p  h.big)
-let big_pts_to #a #pcm (r:ref a pcm) (v:a) = big_up (H2.pts_to #a #pcm r v)
-let pts_to #a #pcm (r:ref a pcm) (v:a) = up (H2.pts_to #a #pcm r v)
+let big_up (p:H2.slprop u#2) : slprop = as_slprop (fun h -> h2_of_slprop p  h.big)
+
+(* Four main connectives *)
+let emp = up H2.emp
+let pure p = up (H2.pure p)
 let star p1 p2 =
   as_slprop (fun (h: heap) ->
     exists (h1 h2 : heap).
@@ -171,9 +175,8 @@ let star p1 p2 =
         interp p1 h1 /\
         interp p2 h2)
 let h_exists #a f = as_slprop (fun h -> exists (x:a). interp (f x) h)
-let affine_star p1 p2 h = ()
-let equiv_symmetric p1 p2 = ()
-let equiv_extensional_on_star p1 p2 p3 = ()
+
+(* Properties of emp *)
 let h_join_empty (h:heap)
   : Lemma (disjoint h empty_heap /\
            join h empty_heap == h)
@@ -191,10 +194,73 @@ let emp_unit p =
 let intro_emp h =
   assert (h == join empty_heap h);
   H2.intro_emp H2.empty_heap
-let h_exists_cong #a p q = ()
-let intro_h_exists x p h = ()
-let elim_h_exists #a p h = ()
-let interp_depends_only_on hp = ()
+
+
+(* Properties of pure *)
+let pure_equiv p q = H2.pure_equiv p q
+let pure_interp q h = H2.pure_interp q h.small
+let pure_star_interp p q h =
+  introduce interp (p `star` pure q) h ==>
+            interp (p `star` emp) h /\ q
+  with _ . (
+    eliminate exists h0 h1.
+      disjoint h0 h1 /\
+      h == join h0 h1 /\
+      interp p h0 /\
+      interp (pure q) h1
+    returns interp (p `star` emp) h /\ q
+    with _ . (
+      H2.pure_interp q h1.small;
+      H2.intro_emp h1.small
+    )
+  );
+  introduce interp (p `star` emp) h /\ q ==>
+            interp (p `star` pure q) h            
+  with _ . (
+    eliminate exists h0 h1.
+      disjoint h0 h1 /\
+      h == join h0 h1 /\
+      interp p h0 /\
+      interp emp h1
+    returns interp (p `star` pure q) h
+    with _ . (
+      pure_interp q h1
+    )
+  );
+  ()
+
+(* Properties of star *)
+let affine_star p1 p2 h = ()
+let intro_star p q h hq = ()
+let elim_star p q h = ()
+let star_commutative p1 p2 = ()
+#push-options "--fuel 0 --ifuel 4 --z3rlimit_factor 4 --z3cliopt smt.qi.eager_threshold=1000000"
+let star_associative p1 p2 p3 = ()
+#pop-options
+let star_congruence p1 p2 q1 q2 = ()
+// assume
+// val of_small_slprop (p:small_slprop) : H2.a_heap_prop u#1
+// let small_slprop_inv (f:H2.a_heap_prop u#1)
+//   : Lemma (of_small_slprop (H2.as_slprop f) == f /\
+//            interp (H2.as_slprop f) == f)
+//   = admit()
+
+let interp_up_down (p:slprop) (h:heap)
+: Lemma (interp p { small = h.small; big = H2.empty_heap } <==> interp (up (down p)) h)
+=   calc (<==>) {
+        interp (up (down p)) h;
+      (<==>) {}
+         up_p (down p) h;
+      (<==>) {}
+         H2.interp (down p) h.small;
+      (<==>) {  }
+         (down_p_affine p;
+          H2.interp (H2.as_slprop (down_p p)) h.small);
+      (<==>) {}
+         down_p p h.small;
+      (<==>) {}
+        p {small = h.small; big = H2.empty_heap};
+      }
 
 let lift_small_star (p q:small_slprop)
 : Lemma (up (p `H2.star` q) == up p `star` up q)
@@ -237,123 +303,97 @@ let lift_small_star (p q:small_slprop)
   );
   slprop_extensionality (up (p `H2.star` q)) (up p `star` up q)
 
-let pts_to_compatible #a #pcm x v0 v1 h =
-  H2.pts_to_compatible #a #pcm x v0 v1 h.small;
-  lift_small_star (H2.pts_to #a #pcm x v0) (H2.pts_to #a #pcm x v1)
-
-let pts_to_join #a #pcm x v0 v1 h =
-  H2.pts_to_join #a #pcm x v0 v1 h.small
-
-let pts_to_join' #a #pcm r v1 v2 h =
-  H2.pts_to_join' #a #pcm r v1 v2 h.small
-
-let pts_to_compatible_equiv #a #pcm r v0 v1 =
-  H2.pts_to_compatible_equiv #a #pcm r v0 v1;
-  lift_small_star (H2.pts_to #a #pcm r v0) (H2.pts_to #a #pcm r v1)
-
-let pts_to_not_null #a #pcm x v m = H2.pts_to_not_null #a #pcm x v m.small
-
-let big_slprop = H2.slprop u#2
-let lift_big_star (p q:big_slprop)
-: Lemma (big_up (p `H2.star` q) == big_up p `star` big_up q)
-        [SMTPat (big_up (p `H2.star` q))]
-= introduce forall m.
-    interp (big_up (p `H2.star` q)) m <==>
-    interp (big_up p `star` big_up q) m
-  with (
-    introduce 
-      interp (big_up p `star` big_up q) m ==>
-      interp (big_up (p `H2.star` q)) m
-    with _ . ( 
-      eliminate exists h0 h1.
-        disjoint h0 h1 /\
-        m == join h0 h1 /\
-        interp (big_up p) h0 /\
-        interp (big_up q) h1
-      returns interp (big_up (p `H2.star` q)) m
-      with _ . (
-        H2.intro_star p q h0.big h1.big
-      )
-    );
-    introduce 
-      interp (big_up (p `H2.star` q)) m ==>
-      interp (big_up p `star` big_up q) m
-    with _ . ( 
-      H2.elim_star p q m.big;
-      eliminate exists c0 c1.
-        H2.disjoint c0 c1 /\
-        m.big == H2.join c0 c1 /\
-        H2.interp p c0 /\
-        H2.interp q c1
-      returns interp (big_up p `star` big_up q) m
-      with _ . (
-        let h0 = { m with big = c0 } in
-        let h1 = { empty_heap with big = c1 } in
-        assert (join h0 h1 == m)
-      )
-    )
-  );
-  slprop_extensionality (big_up (p `H2.star` q)) (big_up p `star` big_up q)
-
-let big_pts_to_compatible #a #pcm x v0 v1 h =
-  H2.pts_to_compatible #a #pcm x v0 v1 h.big;
-  lift_big_star (H2.pts_to #a #pcm x v0) (H2.pts_to #a #pcm x v1)
-
-let big_pts_to_join #a #pcm x v0 v1 h =
-  H2.pts_to_join #a #pcm x v0 v1 h.big
-
-let big_pts_to_join' #a #pcm r v1 v2 h =
-  H2.pts_to_join' #a #pcm r v1 v2 h.big
-
-let big_pts_to_compatible_equiv #a #pcm r v0 v1 =
-  H2.pts_to_compatible_equiv #a #pcm r v0 v1;
-  lift_big_star (H2.pts_to #a #pcm r v0) (H2.pts_to #a #pcm r v1)
-
-let big_pts_to_not_null #a #pcm x v m = H2.pts_to_not_null #a #pcm x v m.big
-
-
-let intro_star p q h hq = ()
-let elim_star p q h = ()
-let star_commutative p1 p2 = ()
-#push-options "--fuel 0 --ifuel 4 --z3rlimit_factor 4 --z3cliopt smt.qi.eager_threshold=1000000"
-let star_associative p1 p2 p3 = ()
-#pop-options
-let star_congruence p1 p2 q1 q2 = ()
-
-let pure p = up (H2.pure p)
-let pure_equiv p q = H2.pure_equiv p q
-let pure_interp q h = H2.pure_interp q h.small
-let pure_star_interp p q h =
-  introduce interp (p `star` pure q) h ==>
-            interp (p `star` emp) h /\ q
-  with _ . (
-    eliminate exists h0 h1.
-      disjoint h0 h1 /\
-      h == join h0 h1 /\
-      interp p h0 /\
-      interp (pure q) h1
-    returns interp (p `star` emp) h /\ q
+let vprop_star p1 p2 =
+  introduce forall h. 
+    interp (p1 `star` p2) h ==> interp (up (down (p1 `star` p2))) h
+  with introduce _ ==> _ 
+  with _. (
+    eliminate exists h1 h2. 
+      disjoint h1 h2 /\
+      h == join h1 h2 /\
+      interp p1 h1 /\
+      interp p2 h2
+    returns interp (up (down (p1 `star` p2))) h
     with _ . (
-      H2.pure_interp q h1.small;
-      H2.intro_emp h1.small
+      interp_up_down (p1 `star` p2) h;
+      let hh = { h with big = H2.empty_heap } in
+      let hh1 = {h1 with big = H2.empty_heap} in
+      let hh2 = {h2 with big = H2.empty_heap} in
+      assert (interp p1 hh1);
+      assert (interp p2 hh2);
+      assert (disjoint hh1 hh2);
+      assert (interp (p1 `star` p2) hh)
     )
   );
-  introduce interp (p `star` emp) h /\ q ==>
-            interp (p `star` pure q) h            
-  with _ . (
-    eliminate exists h0 h1.
-      disjoint h0 h1 /\
-      h == join h0 h1 /\
-      interp p h0 /\
-      interp emp h1
-    returns interp (p `star` pure q) h
+  introduce forall h. 
+    interp (up (down (p1 `star` p2))) h ==> interp (p1 `star` p2) h
+  with introduce _ ==> _
+  with _. (
+    interp_up_down (p1 `star` p2) h;
+    let hh = { h with big = H2.empty_heap } in
+    assert (interp (p1 `star` p2) hh);
+    eliminate exists hh0 hh1. 
+      disjoint hh0 hh1 /\
+      hh == join hh0 hh1 /\
+      interp p1 hh0 /\
+      interp p2 hh1
+    returns interp (p1 `star` p2) h
     with _ . (
-      pure_interp q h1
+      assert (hh.big == H2.empty_heap);
+      assert (H2.disjoint hh.big h.big);
+      h2_join_empty h.big;
+      H2.join_commutative hh.big h.big;
+      let h0 = {hh0 with big = h.big} in
+      let h1 = {hh1 with big = H2.empty_heap} in
+      assert (H2.join hh.big h.big == h.big);
+      assert (join h0 h1 == h);
+      assert (interp p1 h0);
+      assert (interp p2 h1)
     )
   );
+  slprop_extensionality (up (down (p1 `star` p2))) (p1 `star` p2)
+
+let h_exists_cong #a p q = ()
+let intro_h_exists x p h = ()
+let elim_h_exists #a p h = ()
+#restart-solver
+let vprop_exists_alt (a:Type) (p:a -> slprop)
+: Lemma 
+  (requires forall x. is_small (p x))
+  (ensures is_small (h_exists p))
+= introduce forall h.
+    interp (h_exists p) h ==> interp (up (down (h_exists p))) h
+  with introduce _ ==> _
+  with _ . (
+    interp_up_down (h_exists p) h;
+    eliminate exists x.
+      interp (p x) h
+    returns interp (up (down (h_exists p))) h
+    with _ . (
+      interp_up_down (p x) h
+    )
+  );
+  introduce forall h.
+    interp (up (down (h_exists p))) h ==> interp (h_exists p) h
+  with introduce _ ==> _ 
+  with _ . (
+    interp_up_down (h_exists p) h;
+    eliminate exists x.
+      interp (up (down (p x))) h
+    returns interp (h_exists p) h
+    with _ . (
+      interp_up_down (p x) h
+    )
+  );
+  slprop_extensionality (h_exists p) (up (down (h_exists p)));
   ()
+let vprop_exists (a:Type) (p:a -> vprop)
+: Lemma (is_small (h_exists p))
+= vprop_exists_alt a p
+
 let stronger_star p q r = ()
 let weaken p q r h = ()
+
 
 let full_heap_pred h =
   H2.full_heap_pred h.small /\
@@ -467,55 +507,6 @@ let up_action_big_heap_immutable
   )
 = ()
 
-let sel_action #a #pcm r v0 = up_action (H2.sel_action #a #pcm r v0)
-let select_refine #a #p r x f = up_action (H2.select_refine #a #p r x f)
-let upd_gen_action #a #p r x y f = up_action (H2.upd_gen_action #a #p r x y f)
-let upd_action #a #p r v0 v1 = up_action (H2.upd_action #a #p r v0 v1)
-let free_action #a #p r v0 = up_action (H2.free_action #a #p r v0)
-let split_action #a #pcm r v0 v1 = up_action (H2.split_action #a #pcm r v0 v1)
-let gather_action #a #pcm r v0 v1 = up_action (H2.gather_action #a #pcm r v0 v1)
-let pts_to_not_null_action #a #pcm r v = up_action (H2.pts_to_not_null_action #a #pcm r v)
-let extend
-  (#a:Type u#1)
-  (#pcm:pcm a)
-  (x:a{pcm.refine x})
-  (addr:nat)
-  : action
-      #MUTABLE #(Some CONCRETE)
-      #(fun h -> h `free_above_addr CONCRETE` addr)
-      #(fun h -> h `free_above_addr CONCRETE` (addr + 1))
-      emp 
-      (ref a pcm)
-      (fun r -> pts_to r x)
-  = let extend'
-      : action
-          #MUTABLE #(Some CONCRETE)
-          #(fun h -> h `free_above_addr CONCRETE` addr)
-          #(up_pred (fun h -> h `H2.free_above_addr CONCRETE` (addr + 1)))
-          emp 
-          (ref a pcm)
-          (fun r -> pts_to r x)
-      = up_action (H2.extend #a #pcm x addr)
-    in
-    //we use a single freshness counter for the both small and big concrete heaps
-    //so, we need to prove that after allocating in the small heap, the
-    //big heap remains unchanged and so the next address is still fresh
-    //for both heaps
-    let ff :
-        pre_action
-          #(fun h -> h `free_above_addr CONCRETE` addr)
-          #(fun h -> h `free_above_addr CONCRETE` (addr + 1))
-          emp 
-          (ref a pcm)
-          (fun r -> pts_to r x)
-      = fun h0 ->
-          let (| y, h1 |) = extend' h0 in
-          up_action_big_heap_immutable (H2.extend #a #pcm x addr) h0;
-          H2.weaken_free_above CONCRETE h1.big addr (addr + 1);
-          (| y, h1 |)
-    in
-    ff
-
 let refined_pre_action (#mut:mutability) (#allocates:option tag)
                        (#[T.exact (`trivial_pre)]pre:heap ->prop)
                        (#[T.exact (`trivial_pre)]post:heap -> prop)
@@ -613,44 +604,327 @@ let drop p
         (| (), h |)
   in
   refined_pre_action_as_action f
+let pts_to #a #pcm (r:ref a pcm) (v:a) = up (H2.pts_to #a #pcm r v)
 
-  let ghost_ref = H2.ghost_ref
-  let ghost_pts_to #a #pcm r v = up (H2.ghost_pts_to #a #pcm r v)
-  let ghost_extend
-    (#a:Type u#1)
-    (#pcm:pcm a)
-    (x:erased a{pcm.refine x})
-    (addr:erased nat)
-  : action #ONLY_GHOST #(Some GHOST)
-      #(fun h -> h `free_above_addr GHOST` addr)
-      #(fun h -> h `free_above_addr GHOST` (addr + 1))      
+let sel_action #a #pcm r v0 = up_action (H2.sel_action #a #pcm r v0)
+let select_refine #a #p r x f = up_action (H2.select_refine #a #p r x f)
+let upd_gen_action #a #p r x y f = up_action (H2.upd_gen_action #a #p r x y f)
+let upd_action #a #p r v0 v1 = up_action (H2.upd_action #a #p r v0 v1)
+let free_action #a #p r v0 = up_action (H2.free_action #a #p r v0)
+let split_action #a #pcm r v0 v1 = up_action (H2.split_action #a #pcm r v0 v1)
+let gather_action #a #pcm r v0 v1 = up_action (H2.gather_action #a #pcm r v0 v1)
+let pts_to_not_null_action #a #pcm r v = up_action (H2.pts_to_not_null_action #a #pcm r v)
+let extend
+  (#a:Type u#1)
+  (#pcm:pcm a)
+  (x:a{pcm.refine x})
+  (addr:nat)
+  : action
+      #MUTABLE #(Some CONCRETE)
+      #(fun h -> h `free_above_addr CONCRETE` addr)
+      #(fun h -> h `free_above_addr CONCRETE` (addr + 1))
       emp 
-      (ghost_ref pcm)
-      (fun r -> ghost_pts_to r x)
+      (ref a pcm)
+      (fun r -> pts_to r x)
   = let extend'
-    : action #ONLY_GHOST #(Some GHOST)
-      #(fun h -> h `free_above_addr GHOST` addr)
-      #(up_pred (fun h -> h `H2.free_above_addr GHOST` (addr + 1)) )     
-      emp 
-      (ghost_ref pcm)
-      (fun r -> ghost_pts_to r x)
-      = up_action (H2.ghost_extend #a #pcm x addr)
+      : action
+          #MUTABLE #(Some CONCRETE)
+          #(fun h -> h `free_above_addr CONCRETE` addr)
+          #(up_pred (fun h -> h `H2.free_above_addr CONCRETE` (addr + 1)))
+          emp 
+          (ref a pcm)
+          (fun r -> pts_to r x)
+      = up_action (H2.extend #a #pcm x addr)
     in
+    //we use a single freshness counter for the both small and big concrete heaps
+    //so, we need to prove that after allocating in the small heap, the
+    //big heap remains unchanged and so the next address is still fresh
+    //for both heaps
     let ff :
         pre_action
-          #(fun h -> h `free_above_addr GHOST` addr)
-          #(fun h -> h `free_above_addr GHOST` (addr + 1))
+          #(fun h -> h `free_above_addr CONCRETE` addr)
+          #(fun h -> h `free_above_addr CONCRETE` (addr + 1))
           emp 
-          (ghost_ref pcm)
-          (fun r -> ghost_pts_to r x)
+          (ref a pcm)
+          (fun r -> pts_to r x)
       = fun h0 ->
           let (| y, h1 |) = extend' h0 in
-          up_action_big_heap_immutable (H2.ghost_extend #a #pcm x addr) h0;
-          H2.weaken_free_above GHOST h1.big addr (addr + 1);
+          up_action_big_heap_immutable (H2.extend #a #pcm x addr) h0;
+          H2.weaken_free_above CONCRETE h1.big addr (addr + 1);
           (| y, h1 |)
     in
     ff
-  let ghost_read #a #p r x f = up_action (H2.ghost_read #a #p r x f)
-  let ghost_write #a #p r x y f = up_action (H2.ghost_write #a #p r x y f)
-  let ghost_share #a #p r v0 v1 = up_action (H2.ghost_share #a #p r v0 v1)
-  let ghost_gather #a #pcm r v0 v1 = up_action (H2.ghost_gather #a #pcm r v0 v1)
+
+let ghost_ref = H2.ghost_ref
+let ghost_pts_to #a #pcm r v = up (H2.ghost_pts_to #a #pcm r v)
+let ghost_extend
+  (#a:Type u#1)
+  (#pcm:pcm a)
+  (x:erased a{pcm.refine x})
+  (addr:erased nat)
+: action #ONLY_GHOST #(Some GHOST)
+    #(fun h -> h `free_above_addr GHOST` addr)
+    #(fun h -> h `free_above_addr GHOST` (addr + 1))      
+    emp 
+    (ghost_ref pcm)
+    (fun r -> ghost_pts_to r x)
+= let extend'
+  : action #ONLY_GHOST #(Some GHOST)
+    #(fun h -> h `free_above_addr GHOST` addr)
+    #(up_pred (fun h -> h `H2.free_above_addr GHOST` (addr + 1)) )     
+    emp 
+    (ghost_ref pcm)
+    (fun r -> ghost_pts_to r x)
+    = up_action (H2.ghost_extend #a #pcm x addr)
+  in
+  let ff :
+      pre_action
+        #(fun h -> h `free_above_addr GHOST` addr)
+        #(fun h -> h `free_above_addr GHOST` (addr + 1))
+        emp 
+        (ghost_ref pcm)
+        (fun r -> ghost_pts_to r x)
+    = fun h0 ->
+        let (| y, h1 |) = extend' h0 in
+        up_action_big_heap_immutable (H2.ghost_extend #a #pcm x addr) h0;
+        H2.weaken_free_above GHOST h1.big addr (addr + 1);
+        (| y, h1 |)
+  in
+  ff
+let ghost_read #a #p r x f = up_action (H2.ghost_read #a #p r x f)
+let ghost_write #a #p r x y f = up_action (H2.ghost_write #a #p r x y f)
+let ghost_share #a #p r v0 v1 = up_action (H2.ghost_share #a #p r v0 v1)
+let ghost_gather #a #pcm r v0 v1 = up_action (H2.ghost_gather #a #pcm r v0 v1)
+
+let big_pts_to #a #pcm (r:ref a pcm) (v:a) = big_up (H2.pts_to #a #pcm r v)
+let big_slprop = H2.slprop u#2
+let lift_big_emp ()
+: Lemma (emp == big_up H2.emp)
+= introduce forall h. H2.interp H2.emp h
+  with H2.intro_emp h;
+  slprop_extensionality emp (big_up H2.emp)
+
+let lift_big_star (p q:big_slprop)
+: Lemma (big_up (p `H2.star` q) == big_up p `star` big_up q)
+        [SMTPat (big_up (p `H2.star` q))]
+= introduce forall m.
+    interp (big_up (p `H2.star` q)) m <==>
+    interp (big_up p `star` big_up q) m
+  with (
+    introduce 
+      interp (big_up p `star` big_up q) m ==>
+      interp (big_up (p `H2.star` q)) m
+    with _ . ( 
+      eliminate exists h0 h1.
+        disjoint h0 h1 /\
+        m == join h0 h1 /\
+        interp (big_up p) h0 /\
+        interp (big_up q) h1
+      returns interp (big_up (p `H2.star` q)) m
+      with _ . (
+        H2.intro_star p q h0.big h1.big
+      )
+    );
+    introduce 
+      interp (big_up (p `H2.star` q)) m ==>
+      interp (big_up p `star` big_up q) m
+    with _ . ( 
+      H2.elim_star p q m.big;
+      eliminate exists c0 c1.
+        H2.disjoint c0 c1 /\
+        m.big == H2.join c0 c1 /\
+        H2.interp p c0 /\
+        H2.interp q c1
+      returns interp (big_up p `star` big_up q) m
+      with _ . (
+        let h0 = { m with big = c0 } in
+        let h1 = { empty_heap with big = c1 } in
+        assert (join h0 h1 == m)
+      )
+    )
+  );
+  slprop_extensionality (big_up (p `H2.star` q)) (big_up p `star` big_up q)
+
+let big_up_pred (pre:H2.heap u#2 -> prop)
+  : heap -> prop
+  = fun h -> pre h.big
+
+let big_up_pre_action
+      (#pre #post:_) (#fp:big_slprop) (#a:Type) (#fp':a -> big_slprop)
+      (act:H2.pre_action #pre #post fp a fp')
+: pre_action #(big_up_pred pre) #(big_up_pred post) (big_up fp) a (fun x -> big_up (fp' x))
+= fun (h0:full_hheap (big_up fp) { big_up_pred pre h0 }) ->
+    let (| x, c |) = act h0.big in
+    let h1 : full_hheap (big_up (fp' x)) = { h0 with big=c } in
+    (| x, h1 |)
+
+#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 4"
+let big_up_action
+      (#mut #allocs #pre #post:_)
+      (#fp:big_slprop) (#a:Type) (#fp':a -> big_slprop)
+      (act:H2.action #mut #allocs #pre #post fp a fp')
+: action #mut #allocs #(big_up_pred pre) #(big_up_pred post)
+        (big_up fp) a (fun x -> big_up (fp' x))
+= let p = big_up_pre_action act in
+  introduce forall frame (h0:full_hheap (big_up fp `star` frame) { big_up_pred pre h0 }).
+    let (| x, h1 |) = p h0 in
+    interp (big_up (fp' x) `star` frame) h1 /\
+    action_related_heaps #mut #allocs h0 h1
+  with (
+    assert (interp (big_up fp `star` frame) h0);
+    let (| x, h1 |) = p h0 in
+    eliminate exists h0' h1'.
+      disjoint h0' h1' /\
+      h0 == join h0' h1' /\
+      interp (big_up fp) h0' /\
+      interp frame h1'
+    returns 
+      interp (big_up (fp' x) `star` frame) h1 /\
+      action_related_heaps #mut #allocs h0 h1
+    with _ . (
+      let hframe : H2.heap -> prop = (fun h -> interp frame { h1' with big = h }) in
+      introduce forall c0 c1.
+        (hframe c0 /\ H2.disjoint c0 c1)
+         ==> 
+        hframe (H2.join c0 c1)
+      with (
+        introduce _ ==> _
+        with _ . (
+          let h0g = {h1' with big=c0} in
+          assert (interp frame h0g);
+          assert (H2.disjoint c0 c1);
+          assert (heap_prop_is_affine frame);
+          let h1g = { big = c1; small = H2.empty_heap } in
+          assert (disjoint h0g h1g);
+          assert (interp frame (join h0g h1g));
+          assert (hframe (H2.join c0 c1))
+        )
+      );
+      assert (H2.heap_prop_is_affine hframe);
+      let hframe : H2.slprop = H2.as_slprop hframe in
+      assert (H2.interp fp h0'.big);
+      assert (H2.interp hframe h1'.big);
+      H2.intro_star fp hframe h0'.big h1'.big;
+      let h00 : H2.full_hheap (fp `H2.star` hframe) = h0.big in
+      let h11 : H2.full_hheap (fp' x `H2.star` hframe) = dsnd (act h00) in
+      assert (h1 == { h0 with big = h11 });
+      H2.elim_star (fp' x) hframe h11;
+      eliminate exists c0 c1.
+        H2.disjoint c0 c1 /\
+        h11 == H2.join c0 c1 /\
+        H2.interp (fp' x) c0 /\
+        H2.interp hframe c1
+      returns interp (big_up (fp' x) `star` frame) h1
+      with _ . ( 
+        let h10 = { h0' with big = c0 } in
+        let h11 = { h1' with big = c1 } in
+        assert (interp (big_up (fp' x)) h10);
+        assert (interp frame h11);
+        assert (disjoint h10 h11)
+      );
+      heap_evolves_iff h0 h1;
+      assert (action_related_heaps #mut #allocs h0 h1)
+    )
+  );
+  p
+let big_up_action_small_heap_immutable
+    (#mut #allocs #pre #post:_)
+    (#fp:big_slprop) (#a:Type) (#fp':a -> big_slprop)
+    (act:H2.action #mut #allocs #pre #post fp a fp')
+    (h0:full_hheap (big_up fp) { big_up_pred pre h0 })
+: Lemma (
+    let (|x, h1|) = big_up_action act h0 in
+    h1.small == h0.small
+  )
+= ()
+
+let big_sel_action #a #pcm r v0 = big_up_action (H2.sel_action #a #pcm r v0)
+let big_select_refine #a #p r x f = big_up_action (H2.select_refine #a #p r x f)
+let big_upd_gen_action #a #p r x y f = big_up_action (H2.upd_gen_action #a #p r x y f)
+let big_upd_action #a #p r v0 v1 = big_up_action (H2.upd_action #a #p r v0 v1)
+let big_free_action #a #p r v0 = big_up_action (H2.free_action #a #p r v0)
+let big_split_action #a #pcm r v0 v1 = big_up_action (H2.split_action #a #pcm r v0 v1)
+let big_gather_action #a #pcm r v0 v1 = big_up_action (H2.gather_action #a #pcm r v0 v1)
+let big_pts_to_not_null_action #a #pcm r v = big_up_action (H2.pts_to_not_null_action #a #pcm r v)
+let big_extend
+  (#a:Type u#2)
+  (#pcm:pcm a)
+  (x:a{pcm.refine x})
+  (addr:nat)
+  : action
+      #MUTABLE #(Some CONCRETE)
+      #(fun h -> h `free_above_addr CONCRETE` addr)
+      #(fun h -> h `free_above_addr CONCRETE` (addr + 1))
+      emp 
+      (ref a pcm)
+      (fun r -> big_pts_to r x)
+  = lift_big_emp ();
+    let extend'
+      : action
+          #MUTABLE #(Some CONCRETE)
+          #(fun h -> h `free_above_addr CONCRETE` addr)
+          #(big_up_pred (fun h -> h `H2.free_above_addr CONCRETE` (addr + 1)))
+          emp 
+          (ref a pcm)
+          (fun r -> big_pts_to r x)
+      = big_up_action (H2.extend #a #pcm x addr)
+    in
+    //we use a single freshness counter for the both small and big concrete heaps
+    //so, we need to prove that after allocating in the small heap, the
+    //big heap remains unchanged and so the next address is still fresh
+    //for both heaps
+    let ff :
+        pre_action
+          #(fun h -> h `free_above_addr CONCRETE` addr)
+          #(fun h -> h `free_above_addr CONCRETE` (addr + 1))
+          emp 
+          (ref a pcm)
+          (fun r -> big_pts_to r x)
+      = fun h0 ->
+          let (| y, h1 |) = extend' h0 in
+          big_up_action_small_heap_immutable (H2.extend #a #pcm x addr) h0;
+          H2.weaken_free_above CONCRETE h1.small addr (addr + 1);
+          (| y, h1 |)
+    in
+    ff
+
+let big_ghost_pts_to #a #pcm r v = big_up (H2.ghost_pts_to #a #pcm r v)
+let big_ghost_extend
+  (#a:Type u#2)
+  (#pcm:pcm a)
+  (x:erased a{pcm.refine x})
+  (addr:erased nat)
+: action #ONLY_GHOST #(Some GHOST)
+    #(fun h -> h `free_above_addr GHOST` addr)
+    #(fun h -> h `free_above_addr GHOST` (addr + 1))      
+    emp 
+    (ghost_ref pcm)
+    (fun r -> big_ghost_pts_to r x)
+= lift_big_emp ();
+  let extend'
+  : action #ONLY_GHOST #(Some GHOST)
+    #(fun h -> h `free_above_addr GHOST` addr)
+    #(big_up_pred (fun h -> h `H2.free_above_addr GHOST` (addr + 1)) )     
+    emp 
+    (ghost_ref pcm)
+    (fun r -> big_ghost_pts_to r x)
+    = big_up_action (H2.ghost_extend #a #pcm x addr)
+  in
+  let ff :
+      pre_action
+        #(fun h -> h `free_above_addr GHOST` addr)
+        #(fun h -> h `free_above_addr GHOST` (addr + 1))
+        emp 
+        (ghost_ref pcm)
+        (fun r -> big_ghost_pts_to r x)
+    = fun h0 ->
+        let (| y, h1 |) = extend' h0 in
+        big_up_action_small_heap_immutable (H2.ghost_extend #a #pcm x addr) h0;
+        H2.weaken_free_above GHOST h1.small addr (addr + 1);
+        (| y, h1 |)
+  in
+  ff
+let big_ghost_read #a #p r x f = big_up_action (H2.ghost_read #a #p r x f)
+let big_ghost_write #a #p r x y f = big_up_action (H2.ghost_write #a #p r x y f)
+let big_ghost_share #a #p r v0 v1 = big_up_action (H2.ghost_share #a #p r v0 v1)
+let big_ghost_gather #a #pcm r v0 v1 = big_up_action (H2.ghost_gather #a #pcm r v0 v1)

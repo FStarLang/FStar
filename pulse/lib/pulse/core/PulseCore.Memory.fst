@@ -240,38 +240,38 @@ let pure_star_interp p q m = H.pure_star_interp p q (heap_of_mem m)
 let ptr (#a: Type u#a) (#pcm: pcm a) (r:ref a pcm) =
     h_exists (pts_to r)
 
-(** Injectivity-like lemma for [pts_to], see [Steel.Heap] for more explanations *)
-val pts_to_compatible
-  (#a:Type u#a)
-  (#pcm:pcm a)
-  (x:ref a pcm)
-  (v0 v1:a)
-  (m:mem u#a)
-    : Lemma
-      (interp (pts_to x v0 `star` pts_to x v1) m <==>
-       composable pcm v0 v1 /\ interp (pts_to x (op pcm v0 v1)) m)
+// (** Injectivity-like lemma for [pts_to], see [Steel.Heap] for more explanations *)
+// val pts_to_compatible
+//   (#a:Type u#a)
+//   (#pcm:pcm a)
+//   (x:ref a pcm)
+//   (v0 v1:a)
+//   (m:mem u#a)
+//     : Lemma
+//       (interp (pts_to x v0 `star` pts_to x v1) m <==>
+//        composable pcm v0 v1 /\ interp (pts_to x (op pcm v0 v1)) m)
 
-val pts_to_compatible_equiv (#a:Type)
-                            (#pcm:_)
-                            (x:ref a pcm)
-                            (v0:a)
-                            (v1:a{composable pcm v0 v1})
-  : Lemma (equiv (pts_to x v0 `star` pts_to x v1)
-                 (pts_to x (op pcm v0 v1)))
+// val pts_to_compatible_equiv (#a:Type)
+//                             (#pcm:_)
+//                             (x:ref a pcm)
+//                             (v0:a)
+//                             (v1:a{composable pcm v0 v1})
+//   : Lemma (equiv (pts_to x v0 `star` pts_to x v1)
+//                  (pts_to x (op pcm v0 v1)))
 
-val pts_to_not_null (#a:Type u#a)
-                    (#pcm:_)
-                    (x:ref a pcm)
-                    (v:a)
-                    (m:mem u#a)
-  : Lemma (requires interp (pts_to x v) m)
-          (ensures x =!= null)
-let pts_to_compatible #a #pcm x v0 v1 m
-  = H.pts_to_compatible #a #pcm x v0 v1 (heap_of_mem m)
-let pts_to_compatible_equiv #a #pcm x v0 v1
-  = H.pts_to_compatible_equiv #a #pcm x v0 v1
-let pts_to_not_null #a #pcm x v m
-  = H.pts_to_not_null #a #pcm x v (heap_of_mem m)
+// val pts_to_not_null (#a:Type u#a)
+//                     (#pcm:_)
+//                     (x:ref a pcm)
+//                     (v:a)
+//                     (m:mem u#a)
+//   : Lemma (requires interp (pts_to x v) m)
+//           (ensures x =!= null)
+// let pts_to_compatible #a #pcm x v0 v1 m
+//   = H.pts_to_compatible #a #pcm x v0 v1 (heap_of_mem m)
+// let pts_to_compatible_equiv #a #pcm x v0 v1
+//   = H.pts_to_compatible_equiv #a #pcm x v0 v1
+// let pts_to_not_null #a #pcm x v m
+//   = H.pts_to_not_null #a #pcm x v (heap_of_mem m)
 
 ////////////////////////////////////////////////////////////////////////////////
 // star
