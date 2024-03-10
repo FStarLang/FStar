@@ -19,7 +19,7 @@ open FStar.PCM
 module M_ = PulseCore.NondeterministicMonotonicStateMonad
 module PP = PulseCore.Preorder
 module PST = PulseCore.PreorderStateMonad
-
+module MSTTotal = PulseCore.MonotonicStateMonad
 /// Building on `PulseCore.Heap`, this module adds memory invariants to the heap to expose the
 /// final interface for Pulse's PCM-based memory model.
 
@@ -171,13 +171,13 @@ val mem_evolves : FStar.Preorder.preorder full_mem
   effect MSTATETOT. The effect is indexed by [except], which is the set of invariants that
   are currently opened.
 *)
-effect MstTot
+let _MstTot
   (a:Type u#a)
   (except:inames)
   (expects:slprop u#1)
   (provides: a -> slprop u#1)
   (frame:slprop u#1)
-  = MSTTotal.MSTATETOT a (full_mem u#1) mem_evolves
+  = MSTTotal.mst #(full_mem u#1) mem_evolves a
     (requires fun m0 ->
         inames_ok except m0 /\
         interp (expects `star` frame `star` locks_invariant except m0) m0)
@@ -206,7 +206,7 @@ let _PST
 (** An action is just a thunked computation in [MstTot] that takes a frame as argument *)
 let action_except (a:Type u#a) (except:inames) (expects:slprop) (provides: a -> slprop)
   : Type u#(max a 2) =
-  frame:slprop -> MstTot a except expects provides frame
+  frame:slprop -> _MstTot a except expects provides frame
 
 (** An action is just a thunked computation in [MstTot] that takes a frame as argument *)
 let _pst_action_except 

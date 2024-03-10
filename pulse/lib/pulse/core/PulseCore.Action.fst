@@ -50,8 +50,8 @@ let action_as_mem_action
                     interp ((post x `star` locks_invariant except s1) `star` frame) s1)
       = M.weaken (act frame)
     in
-    M.to_msttotal _ _ _ _ m
-
+    M.weaken m
+ 
 let stt_of_action (#a:Type u#100) #pre #post (m:action a Set.empty pre post)
 : stt a pre post
 = let step (frame:slprop)
@@ -123,11 +123,7 @@ let mem_action_as_action
         (act:Mem.action_except a except req ens)
 : action a except req ens
 = fun frame ->
-    let thunk
-      : unit -> MstTot a except req ens frame
-      = fun _ -> act frame
-    in
-    M.of_msttotal _ _ _ _ thunk
+    M.weaken (act frame)
 
 let mem_pst_action_as_action
         (#a:Type u#a)
@@ -201,8 +197,7 @@ let bind_pre_act_non_reifiable
      ($g:(x:a -> pre_act b UsesInvariants except (post1 x) post2))
 : pre_act b UsesInvariants except pre1 post2
 = fun frame ->
-    let x = f frame in
-    g x frame
+    M.weaken <| M.bind (f frame) (fun x -> g x frame)
 
 let bind_pre_act
      (#a:Type u#a)
@@ -243,7 +238,7 @@ let frame_pre_act_non_reifiable
      (#pre #post #frame:_)
      (f:pre_act a UsesInvariants except pre post)
 : pre_act a UsesInvariants except (pre `star` frame) (fun x -> post x `star` frame)
-= fun frame' -> f (frame `star` frame')
+= fun frame' -> M.weaken <| f (frame `star` frame')
 
 let frame_pre_act
      (#a:Type u#a)
@@ -274,7 +269,7 @@ let lift_pre_act_reifiablity
 : pre_act a UsesInvariants except pre post
 = if r = UsesInvariants then f
   else let f : pre_act a Reifiable except pre post = f in
-       fun frame -> M.to_msttotal _ _ _ _ (M.lift_pst (f frame))
+       fun frame -> M.weaken <| (M.lift_pst (f frame))
 
 //////////////////////////////////////////////////////
 // Next, reversing the polarity of the inames index
