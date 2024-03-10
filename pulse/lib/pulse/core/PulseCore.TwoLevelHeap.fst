@@ -12,18 +12,18 @@ module H2 = PulseCore.Heap2
   Abstract type of heaps. Can conceptually be thought of as a map from addresses to
   contents of memory cells.
 *)
-let small_heap = H2.heap u#1
+let small_heap = H2.heap u#a
 
 noeq
-type heap  : Type u#3 = {
-  small : H2.heap u#1;
-  big   : H2.heap u#2
+type heap  : Type u#(a + 2) = {
+  small : H2.heap u#a;
+  big   : H2.heap u#(a + 1)
 }
 
 noeq
-type core_heap : Type u#3 = {
-  core_small : H.heap u#1;
-  core_big   : H.heap u#2
+type core_heap : Type u#(a + 2) = {
+  core_small : H.heap u#a;
+  core_big   : H.heap u#(a + 1);
 }
 
 let concrete (h:heap) : core_heap = {
@@ -102,18 +102,18 @@ let h2_join_empty (h:H2.heap)
            [SMTPatOr
               [[SMTPat (H2.disjoint h H2.empty_heap)];
                [SMTPat (H2.join h H2.empty_heap)]]]
-  = admit() // H.join_empty h
+  = H2.join_empty h
 
-let slprop = p:(heap ^-> prop) { heap_prop_is_affine p }
+let slprop = p:(heap u#a ^-> prop) { heap_prop_is_affine p }
 let interp p m = p m
 let as_slprop f = F.on _ f
 let interp_depends_only_on hp = ()
 let slprop_extensionality p q = FStar.PredicateExtensionality.predicateExtensionality _ p q
 
-
-
-let small_slprop = H2.slprop u#1
-let down_p (p:slprop) : small_heap -> prop = fun h -> p { small = h; big = H2.empty_heap }
+let small_slprop = H2.slprop u#a
+let down_p (p:slprop u#a)
+: small_heap u#a -> prop
+= fun h -> p { small = h; big = H2.empty_heap }
 let down_p_affine (p:slprop) : Lemma (H2.heap_prop_is_affine (down_p p)) = 
   introduce forall (h1 h2:small_heap).
           down_p p h1 /\ H2.disjoint h1 h2 ==> down_p p (H2.join h1 h2)
@@ -159,10 +159,12 @@ let down_up (p:small_slprop)
   );
   H2.slprop_extensionality (down (up p)) p
 
-let h2_of_slprop (p:H2.slprop u#2) : H2.a_heap_prop u#2 =
+let h2_of_slprop (p:H2.slprop u#a) : H2.a_heap_prop u#a =
   H2.interp_depends_only_on p;
   fun h -> H2.interp p h
-let big_up (p:H2.slprop u#2) : slprop = as_slprop (fun h -> h2_of_slprop p  h.big)
+let big_up (p:H2.slprop u#(a + 1))
+: slprop u#a
+= as_slprop (fun h -> h2_of_slprop p h.big)
 
 (* Four main connectives *)
 let emp = up H2.emp
@@ -404,7 +406,7 @@ let heap_evolves (h0 h1:full_heap) =
 let free_above_addr tag h a = H2.free_above_addr tag h.small a /\ H2.free_above_addr tag h.big a
 let weaken_free_above tag h a b = H2.weaken_free_above tag h.small a b; H2.weaken_free_above tag h.big a b
 
-let up_pred (pre:H2.heap u#1 -> prop)
+let up_pred (pre:H2.heap u#a -> prop)
   : heap -> prop
   = fun h -> pre h.small
 
@@ -429,7 +431,8 @@ let heap_evolves_iff (h0 h1:full_heap)
 
 #push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 4"
 let up_action
-      (#mut #allocs #pre #post:_)
+      (#mut #allocs :_)
+      (#pre #post:_)
       (#fp:small_slprop) (#a:Type) (#fp':a -> small_slprop)
       (act:H2.action #mut #allocs #pre #post fp a fp')
 : action #mut #allocs #(up_pred pre) #(up_pred post)
@@ -594,6 +597,7 @@ let lift_exists (#a:_) (p:a -> slprop)
               (| (), h |)
     in
     refined_pre_action_as_action g
+#push-options "--print_universes"
 let elim_pure p = up_action (H2.elim_pure p)
 let intro_pure p pf = up_action (H2.intro_pure p pf)
 let drop p
@@ -615,7 +619,7 @@ let split_action #a #pcm r v0 v1 = up_action (H2.split_action #a #pcm r v0 v1)
 let gather_action #a #pcm r v0 v1 = up_action (H2.gather_action #a #pcm r v0 v1)
 let pts_to_not_null_action #a #pcm r v = up_action (H2.pts_to_not_null_action #a #pcm r v)
 let extend
-  (#a:Type u#1)
+  (#a:Type u#a)
   (#pcm:pcm a)
   (x:a{pcm.refine x})
   (addr:nat)
@@ -658,7 +662,7 @@ let extend
 let ghost_ref = H2.ghost_ref
 let ghost_pts_to #a #pcm r v = up (H2.ghost_pts_to #a #pcm r v)
 let ghost_extend
-  (#a:Type u#1)
+  (#a:Type u#a)
   (#pcm:pcm a)
   (x:erased a{pcm.refine x})
   (addr:erased nat)
@@ -697,7 +701,7 @@ let ghost_share #a #p r v0 v1 = up_action (H2.ghost_share #a #p r v0 v1)
 let ghost_gather #a #pcm r v0 v1 = up_action (H2.ghost_gather #a #pcm r v0 v1)
 
 let big_pts_to #a #pcm (r:ref a pcm) (v:a) = big_up (H2.pts_to #a #pcm r v)
-let big_slprop = H2.slprop u#2
+let big_slprop = H2.slprop u#(a + 1)
 let lift_big_emp ()
 : Lemma (emp == big_up H2.emp)
 = introduce forall h. H2.interp H2.emp h
@@ -745,8 +749,8 @@ let lift_big_star (p q:big_slprop)
   );
   slprop_extensionality (big_up (p `H2.star` q)) (big_up p `star` big_up q)
 
-let big_up_pred (pre:H2.heap u#2 -> prop)
-  : heap -> prop
+let big_up_pred (pre:H2.heap u#(a + 1) -> prop)
+  : heap u#a -> prop
   = fun h -> pre h.big
 
 let big_up_pre_action
@@ -847,7 +851,7 @@ let big_split_action #a #pcm r v0 v1 = big_up_action (H2.split_action #a #pcm r 
 let big_gather_action #a #pcm r v0 v1 = big_up_action (H2.gather_action #a #pcm r v0 v1)
 let big_pts_to_not_null_action #a #pcm r v = big_up_action (H2.pts_to_not_null_action #a #pcm r v)
 let big_extend
-  (#a:Type u#2)
+  (#a:Type u#(ua + 1))
   (#pcm:pcm a)
   (x:a{pcm.refine x})
   (addr:nat)
@@ -890,7 +894,7 @@ let big_extend
 
 let big_ghost_pts_to #a #pcm r v = big_up (H2.ghost_pts_to #a #pcm r v)
 let big_ghost_extend
-  (#a:Type u#2)
+  (#a:Type u#(ua + 1))
   (#pcm:pcm a)
   (x:erased a{pcm.refine x})
   (addr:erased nat)

@@ -10,14 +10,14 @@ module H2 = PulseCore.Heap2
   Abstract type of heaps. Can conceptually be thought of as a map from addresses to
   contents of memory cells.
 *)
-val heap  : Type u#3
-val core_heap : Type u#3
-val concrete (h:heap) : core_heap
-val ghost (h:heap) : erased core_heap
+val heap  : Type u#(a + 2)
+val core_heap : Type u#(a + 2)
+val concrete (h:heap u#a) : core_heap u#a
+val ghost (h:heap u#a) : erased (core_heap u#a)
 val upd_ghost_heap
-      (h0:heap)
-      (h1:erased heap { concrete h0 == concrete h1 })
-: h2:heap { h2 == reveal h1 }
+      (h0:heap u#a)
+      (h1:erased (heap u#a) { concrete h0 == concrete h1 })
+: h2:heap u#a { h2 == reveal h1 }
 
 (* An empty heap *)
 val empty_heap : heap
@@ -44,18 +44,18 @@ val core_ref_is_null (r:core_ref) : b:bool { b <==> r == core_ref_null }
 let is_null (#a:Type u#a) (#pcm:pcm a) (r:ref a pcm) : (b:bool{b <==> r == null}) = core_ref_is_null r
 
 (** The predicate describing non-overlapping heaps *)
-val disjoint (h0 h1:heap) : prop
+val disjoint (h0 h1:heap u#a) : prop
 
 (** Disjointness is symmetric *)
-val disjoint_sym (h0 h1:heap)
+val disjoint_sym (h0 h1:heap u#a)
   : Lemma (disjoint h0 h1 <==> disjoint h1 h0)
           [SMTPat (disjoint h0 h1)]
 
 (** Disjoint heaps can be combined into a bigger heap*)
-val join (h0:heap) (h1:heap{disjoint h0 h1}) : heap
+val join (h0:heap u#a) (h1:heap u#a{disjoint h0 h1}) : heap u#a
 
 (** The join operation is commutative *)
-val join_commutative (h0 h1:heap)
+val join_commutative (h0 h1:heap u#a)
   : Lemma
     (requires
       disjoint h0 h1)
@@ -64,7 +64,7 @@ val join_commutative (h0 h1:heap)
        join h0 h1 == join h1 h0))
 
 (** Disjointness distributes over join *)
-val disjoint_join (h0 h1 h2:heap)
+val disjoint_join (h0 h1 h2:heap u#a)
   : Lemma (disjoint h1 h2 /\
            disjoint h0 (join h1 h2) ==>
            disjoint h0 h1 /\
@@ -73,7 +73,7 @@ val disjoint_join (h0 h1 h2:heap)
            disjoint (join h0 h2) h1)
 
 (** Join is associative *)
-val join_associative (h0 h1 h2:heap)
+val join_associative (h0 h1 h2:heap u#a)
   : Lemma
     (requires
       disjoint h1 h2 /\
@@ -106,12 +106,12 @@ let a_heap_prop = p:(heap -> prop) { heap_prop_is_affine p }
   and will be extracted to [()]
 *)
 [@@erasable]
-val slprop : Type u#3
+val slprop : Type u#(a + 2)
 
 (**
   [slprop]s can be "interpreted" over any heap, yielding a [prop]
 *)
-val interp (p:slprop) (m:heap) : prop
+val interp (p:slprop u#a) (m:heap u#a) : prop
 
 (**
   Promoting an affine heap proposition to an slprop
@@ -160,19 +160,19 @@ val slprop_extensionality (p q:slprop)
     (ensures p == q)
 
 [@@erasable]
-val small_slprop : Type u#2
-val down (s:slprop) : small_slprop
-val up (s:small_slprop) : slprop
-let is_small (s:slprop) = s == up (down s)
+val small_slprop : Type u#(a + 1)
+val down (s:slprop u#a) : small_slprop u#a
+val up (s:small_slprop u#a) : slprop u#a
+let is_small (s:slprop u#a) = s == up (down s)
 let vprop = s:slprop { is_small s }
 
 (** [emp] is the empty [slprop], valid on all heaps. It acts as the unit element *)
 val emp : vprop
 val pure (p:prop) : vprop
-val star  (p1 p2:slprop) : slprop
+val star  (p1 p2:slprop u#a) : slprop u#a
 val h_exists (#[@@@strictly_positive] a:Type u#b)
-             ([@@@strictly_positive]  f: (a -> slprop))
-  : slprop
+             ([@@@strictly_positive]  f: (a -> slprop u#a))
+  : slprop u#a
 
 
 (** [p ~~ p * emp] *)
@@ -308,11 +308,11 @@ val weaken_free_above (t:tag) (h:heap) (a b:nat)
 *)
 let trivial_pre (h:heap) : prop = True
 
-let pre_action (#[T.exact (`trivial_pre)]pre:heap -> prop)
-               (#[T.exact (`trivial_pre)]post:heap -> prop)
-               (fp:slprop)
+let pre_action (#[T.exact (`trivial_pre)]pre:heap u#a -> prop)
+               (#[T.exact (`trivial_pre)]post:heap u#a -> prop)
+               (fp:slprop u#a)
                (a:Type u#b)
-               (fp':a -> slprop)
+               (fp':a -> slprop u#a)
   = h0:full_hheap fp { pre h0 } -> res:(x:a & full_hheap (fp' x)) { post (dsnd res) }
 
 (**
@@ -357,7 +357,7 @@ let action_related_heaps
   - heaps are related as defined above
 *)
 let is_frame_preserving
-  (#a: Type u#a)
+  (#a: Type)
   (#pre #post:_)
   (#fp: slprop)
   (#fp': a -> slprop)
@@ -376,7 +376,7 @@ let action (#[T.exact (`MUTABLE)] mut:mutability)
            (#[T.exact (`no_allocs)] allocates:option tag)
            (#[T.exact (`trivial_pre)]pre:heap -> prop)
            (#[T.exact (`trivial_pre)]post:heap -> prop)
-           (fp:slprop) (a:Type u#a) (fp':a -> slprop) =
+           (fp:slprop) (a:Type) (fp':a -> slprop) =
   f:pre_action #pre #post fp a fp'{ is_frame_preserving mut allocates f }
 
 (**
@@ -388,7 +388,7 @@ let action (#[T.exact (`MUTABLE)] mut:mutability)
 *)
 let action_with_frame
   (fp:slprop)
-  (a:Type u#b)
+  (a:Type)
   (fp':a -> slprop)
   = frame:slprop ->
     h0:full_hheap (fp `star` frame) ->
@@ -412,7 +412,7 @@ let frame_related_heaps (h0 h1:full_heap) (fp0 fp1 frame:slprop)
   frame-related
 *)
 let action_framing
-  (#a: Type u#a)
+  (#a: Type)
   (#mut #allocates:_)
   (#fp: slprop)
   (#fp': a -> slprop)
@@ -473,14 +473,14 @@ val drop (p:slprop)
 (* Small concrete references *)
 
 (***** [pts_to]: Ownership of a concrete reference on the small heap *)
-val pts_to (#a:Type u#1) (#pcm:_) (r:ref a pcm) (v:a) : vprop
+val pts_to (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v:a) : vprop u#a
 
 (**
   The action variant of [sel], returning the "true" value inside the heap. This "true" value
   can be different of the [pts_to] value you assumed at the beginning, because of the PCM structure
 *)
 val sel_action
-  (#a:Type u#1)
+  (#a:Type u#a)
   (#pcm:pcm a)
   (r:ref a pcm)
   (v0:erased a)
@@ -514,7 +514,7 @@ val upd_gen_action (#a:Type) (#p:pcm a) (r:ref a p) (x y:Ghost.erased a)
   with respect to the individual PCM governing the reference [r]. See [FStar.PCM.frame_preserving]
 *)
 val upd_action
-  (#a:Type u#1)
+  (#a:Type u#a)
   (#pcm:pcm a)
   (r:ref a pcm)
   (v0:FStar.Ghost.erased a)
@@ -523,7 +523,7 @@ val upd_action
 
 (** Deallocating a reference, by actually replacing its value by the unit of the PCM *)
 val free_action
-  (#a:Type u#1)
+  (#a:Type u#a)
   (#pcm:pcm a)
   (r:ref a pcm)
   (v0:FStar.Ghost.erased a {exclusive pcm v0 /\ pcm.refine pcm.FStar.PCM.p.one})
@@ -532,7 +532,7 @@ val free_action
 
 (** Splitting a permission on a composite resource into two separate permissions *)
 val split_action
-  (#a:Type u#1)
+  (#a:Type u#a)
   (#pcm:pcm a)
   (r:ref a pcm)
   (v0:FStar.Ghost.erased a)
@@ -541,7 +541,7 @@ val split_action
 
 (** Combining separate permissions into a single composite permission *)
 val gather_action
-  (#a:Type u#1)
+  (#a:Type u#a)
   (#pcm:pcm a)
   (r:ref a pcm)
   (v0:FStar.Ghost.erased a)
@@ -550,7 +550,7 @@ val gather_action
     (pts_to r v0 `star` pts_to r v1) (_:unit{composable pcm v0 v1}) (fun _ -> pts_to r (op pcm v0 v1))
 
 val pts_to_not_null_action 
-      (#a:Type u#1)
+      (#a:Type u#a)
       (#pcm:pcm a)
       (r:erased (ref a pcm))
       (v:Ghost.erased a)
@@ -561,7 +561,7 @@ val pts_to_not_null_action
 
 (** Allocating is a pseudo action here, the context needs to provide a fresh address *)
 val extend
-  (#a:Type u#1)
+  (#a:Type u#a)
   (#pcm:pcm a)
   (x:a{pcm.refine x})
   (addr:nat)
@@ -578,10 +578,10 @@ val extend
 val ghost_ref (#[@@@unused] a:Type u#a) ([@@@unused]p:pcm a) : Type0
 
 (*** ghost_pts_to: Ownership of a ghost reference on the small heap *)
-val ghost_pts_to (#a:Type u#1) (#p:pcm a) (r:ghost_ref p) (v:a) : vprop
+val ghost_pts_to (#a:Type u#a) (#p:pcm a) (r:ghost_ref p) (v:a) : vprop u#a
 
 val ghost_extend
-    (#a:Type)
+    (#a:Type u#a)
     (#pcm:pcm a)
     (x:erased a{pcm.refine x})
     (addr:erased nat)
@@ -643,14 +643,14 @@ val ghost_gather
 (* Big concrete references *)
 
 (***** [big_pts_to]: Ownership of a concrete reference on the small heap *)
-val big_pts_to (#a:Type u#2) (#pcm:_) (r:ref a pcm) (v:a) : slprop
+val big_pts_to (#a:Type u#(ua + 1)) (#pcm:_) (r:ref a pcm) (v:a) : slprop u#ua
 
 (**
   The action variant of [sel], returning the "true" value inside the heap. This "true" value
   can be different of the [big_pts_to] value you assumed at the beginning, because of the PCM structure
 *)
 val big_sel_action
-  (#a:Type)
+  (#a:Type u#(ua + 1))
   (#pcm:pcm a)
   (r:ref a pcm)
   (v0:erased a)
@@ -661,23 +661,25 @@ val big_sel_action
   A version of select that incorporates a ghost update of local
   knowledge of a ref cell based on the value that was read
  *)
-val big_select_refine (#a:_) (#p:_)
-                  (r:ref a p)
-                  (x:erased a)
-                  (f:(v:a{compatible p x v}
-                      -> GTot (y:a{compatible p y v /\
-                                  FStar.PCM.frame_compatible p x v y})))
+val big_select_refine
+  (#a:_) (#p:_)
+  (r:ref a p)
+  (x:erased a)
+  (f:(v:a{compatible p x v}
+      -> GTot (y:a{compatible p y v /\
+                  FStar.PCM.frame_compatible p x v y})))
    : action #IMMUTABLE #no_allocs (big_pts_to r x)
             (v:a{compatible p x v /\ p.refine v})
             (fun v -> big_pts_to r (f v))
 
 
 (** Updating a ref cell for a user-defined PCM *)
-val big_upd_gen_action (#a:Type) (#p:pcm a) (r:ref a p) (x y:Ghost.erased a)
-                   (f:FStar.PCM.frame_preserving_upd p x y)
-  : action #MUTABLE #no_allocs (big_pts_to r x)
-           unit
-           (fun _ -> big_pts_to r y)
+val big_upd_gen_action
+  (#a:Type) (#p:pcm a) (r:ref a p) (x y:Ghost.erased a)
+  (f:FStar.PCM.frame_preserving_upd p x y)
+: action #MUTABLE #no_allocs (big_pts_to r x)
+        unit
+        (fun _ -> big_pts_to r y)
 
 (**
   The update action needs you to prove that the mutation from [v0] to [v1] is frame-preserving
@@ -689,7 +691,7 @@ val big_upd_action
   (r:ref a pcm)
   (v0:FStar.Ghost.erased a)
   (v1:a {FStar.PCM.frame_preserving pcm v0 v1 /\ pcm.refine v1})
-  : action #MUTABLE #no_allocs (big_pts_to r v0) unit (fun _ -> big_pts_to r v1)
+: action #MUTABLE #no_allocs (big_pts_to r v0) unit (fun _ -> big_pts_to r v1)
 
 (** Deallocating a reference, by actually replacing its value by the unit of the PCM *)
 val big_free_action
@@ -697,7 +699,7 @@ val big_free_action
   (#pcm:pcm a)
   (r:ref a pcm)
   (v0:FStar.Ghost.erased a {exclusive pcm v0 /\ pcm.refine pcm.FStar.PCM.p.one})
-  : action #MUTABLE #no_allocs (big_pts_to r v0) unit (fun _ -> big_pts_to r pcm.FStar.PCM.p.one)
+: action #MUTABLE #no_allocs (big_pts_to r v0) unit (fun _ -> big_pts_to r pcm.FStar.PCM.p.one)
 
 
 (** Splitting a permission on a composite resource into two separate permissions *)
@@ -707,7 +709,10 @@ val big_split_action
   (r:ref a pcm)
   (v0:FStar.Ghost.erased a)
   (v1:FStar.Ghost.erased a{composable pcm v0 v1})
-  : action #IMMUTABLE #no_allocs (big_pts_to r (v0 `op pcm` v1)) unit (fun _ -> big_pts_to r v0 `star` big_pts_to r v1)
+: action #IMMUTABLE #no_allocs
+    (big_pts_to r (v0 `op pcm` v1))
+    unit
+    (fun _ -> big_pts_to r v0 `star` big_pts_to r v1)
 
 (** Combining separate permissions into a single composite permission *)
 val big_gather_action
@@ -716,8 +721,10 @@ val big_gather_action
   (r:ref a pcm)
   (v0:FStar.Ghost.erased a)
   (v1:FStar.Ghost.erased a)
-  : action #IMMUTABLE #no_allocs
-    (big_pts_to r v0 `star` big_pts_to r v1) (_:unit{composable pcm v0 v1}) (fun _ -> big_pts_to r (op pcm v0 v1))
+: action #IMMUTABLE #no_allocs
+    (big_pts_to r v0 `star` big_pts_to r v1)
+    (_:unit{composable pcm v0 v1})
+    (fun _ -> big_pts_to r (op pcm v0 v1))
 
 val big_pts_to_not_null_action 
       (#a:Type)
@@ -735,16 +742,16 @@ val big_extend
   (#pcm:pcm a)
   (x:a{pcm.refine x})
   (addr:nat)
-  : action
-      #MUTABLE #(Some CONCRETE)
-      #(fun h -> h `free_above_addr CONCRETE` addr)
-      #(fun h -> h `free_above_addr CONCRETE` (addr + 1))      
-      emp 
-      (ref a pcm)
-      (fun r -> big_pts_to r x)
+: action
+    #MUTABLE #(Some CONCRETE)
+    #(fun h -> h `free_above_addr CONCRETE` addr)
+    #(fun h -> h `free_above_addr CONCRETE` (addr + 1))      
+    emp 
+    (ref a pcm)
+    (fun r -> big_pts_to r x)
 
 (** Big ghost references *)
-val big_ghost_pts_to (#a:Type u#2) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop
+val big_ghost_pts_to (#a:Type u#(ua + 1)) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop u#ua
 
 val big_ghost_extend
     (#a:Type)
