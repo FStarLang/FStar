@@ -44,6 +44,8 @@ let flatten_app e =
 
 let pulse_translate_expr : translate_expr_t = fun env e ->
   let e = flatten_app e in
+  if FStar.Options.debug_at_level_no_module (FStar.Options.Other "extraction")
+  then BU.print1_warning "ExtractPulse.pulse_translate_expr %s\n" (mlexpr_to_string e);
   match e.expr with
 
   (* Pulse references *)
