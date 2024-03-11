@@ -55,11 +55,15 @@ let state : Sem.state = state0 Set.empty
 
 let slprop = slprop
 let _eq : squash (slprop == state.pred) = ()
-let is_small p = Mem.is_small p
+let small_slprop = small_slprop
+let down = down
+let up = up
 let emp = emp
 let pure p = pure p
 let ( ** ) p q = p `star` q
+let small_star p q = small_star_congruence p q
 let ( exists* ) #a p = h_exists (F.on_dom a p)
+let small_exists #a p = small_exists_congruence #a (F.on_dom a p)
 
 let prop_squash_idem (p:prop)
   : Tot (squash (p == squash p))

@@ -124,7 +124,9 @@ let join_associative (m0 m1 m2:mem)
   = H.join_associative m0.heap m1.heap m2.heap
 
 let slprop = H.slprop
-let is_small p = H.is_small p
+let small_slprop = H.small_slprop
+let down = H.down
+let up = H.up
 let interp p m = H.interp p m.heap
 
 let equiv p1 p2 = H.equiv p1 p2 //forall m. interp p1 m <==> interp p2 m

@@ -50,7 +50,14 @@ val core_mem (m:mem u#a) : mem u#a
 (** The type of separation logic propositions. Based on Steel.Heap.slprop *)
 [@@erasable]
 val slprop : Type u#(a + 2)
-val is_small (p:slprop u#a) : prop
+
+[@@erasable]
+val small_slprop : Type u#(a + 1)
+
+val down (s:slprop u#a) : small_slprop u#a
+val up (s:small_slprop u#a) : slprop u#a
+let is_small (s:slprop u#a) = s == up (down s)
+
 let vprop = s:slprop u#a { is_small s }
 
 (** Interpreting mem assertions as memory predicates *)

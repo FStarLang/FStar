@@ -58,7 +58,12 @@ val equate_by_smt : unit
 
 [@@erasable]
 val vprop : Type u#3
-val is_small (v:vprop) : prop
+
+[@@erasable]
+val small_vprop : Type u#2
+val down (p:vprop) : small_vprop
+val up (p:small_vprop) : vprop
+let is_small (v:vprop) : prop = up (down v) == v
 
 val emp : vprop
 val emp_is_small : squash (is_small emp)
