@@ -1269,8 +1269,26 @@ let rec extract_lb_sig (g:uenv) (lbs:letbindings) =
                              let add_unit =
                                 match rest_args with
                                 | [] ->
-                                  not (is_fstar_value body) //if it's a pure type app, then it will be extracted to a value in ML; so don't add a unit
-                                  || not (U.is_pure_comp c)
+                                  //
+                                  // See if body is a type application
+                                  // If so, we don't need to add a unit argument
+                                  //
+                                  // To check for tyapp, lookup fvar in ml env,
+                                  //   and check that # of args in F* are at most the # of type parameters in ML
+                                  //
+                                  let is_tyapp body =
+                                    let head, args = body |> U.unascribe |> U.head_and_args_full in
+                                    match (U.un_uinst head).n with
+                                    | Tm_fvar fv ->
+                                      (match UEnv.try_lookup_fv Range.dummyRange g fv with
+                                       | Some {exp_b_tscheme} -> List.length args <= List.length (fst exp_b_tscheme)
+                                       | _ -> false)
+                                    | _ -> false
+                                  in
+                                  if is_tyapp body
+                                  then false
+                                  else not (is_fstar_value body) ||
+                                       not (U.is_pure_comp c)
                                 | _ -> false in
                              let rest_args = if add_unit then (unit_binder()::rest_args) else rest_args in
                              let polytype = if add_unit then push_unit polytype else polytype in
