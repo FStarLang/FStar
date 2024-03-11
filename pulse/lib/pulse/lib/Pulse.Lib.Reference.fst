@@ -39,7 +39,7 @@ ensures pts_to r v
   r
 }
 ```
-let alloc = alloc'
+let alloc v = alloc' v
 
 ```pulse
 fn read (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
