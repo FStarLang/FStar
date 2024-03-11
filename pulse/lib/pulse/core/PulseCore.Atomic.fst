@@ -270,8 +270,6 @@ let read r x f = A.lift_reifiability (A.read r x f)
 let write r x y f = A.lift_reifiability (A.write r x y f)
 let share #a #pcm r v0 v1 = Ghost.hide (A.share r v0 v1)
 let gather #a #pcm r v0 v1 = Ghost.hide (A.gather r v0 v1)
-let witness #a #pcm r f v pf = A.witness r f v pf
-let recall #a #pcm #fact r v w = A.recall r v w
 
 let ghost_ref = A.ghost_ref
 let ghost_pts_to = A.ghost_pts_to

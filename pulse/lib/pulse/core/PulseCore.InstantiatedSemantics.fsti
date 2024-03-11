@@ -1,9 +1,11 @@
 module PulseCore.InstantiatedSemantics
 
 [@@erasable]
-val slprop : Type u#2
-val emp : slprop
-val pure (p:prop) : slprop
+val slprop : Type u#3
+val is_small (s:slprop) : prop
+let vprop = s:slprop { is_small s }
+val emp : vprop
+val pure (p:prop) : vprop
 val ( ** ) (p q : slprop) : slprop
 val ( exists* ) (#a:Type u#a) (p: a -> slprop) : slprop
 val slprop_equiv (p q:slprop) : prop

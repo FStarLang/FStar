@@ -21,7 +21,7 @@ let action
     (except:inames)
     (pre:slprop)
     (post:a -> slprop)
-: Type u#(max a 2)
+: Type u#(max a 3)
 = frame:slprop ->
   Sem.mst_sep_aux state
     (inames_ok except)
@@ -78,7 +78,7 @@ let stt_of_action1 (#a:Type u#1) #pre #post (m:action a Set.empty pre post)
     = M.weaken (m frame)
   in
   let action : Sem.action state a = {pre=pre; post=F.on_dom _ post; step} in
-  fun _ -> Sem.act_as_m1 u#2 u#100 action
+  fun _ -> Sem.act_as_m1 u#_ u#100 action
 
 let stt_of_action2 (#a:Type u#2) #pre #post (m:action a Set.empty pre post)
 : stt a pre post
@@ -87,7 +87,7 @@ let stt_of_action2 (#a:Type u#2) #pre #post (m:action a Set.empty pre post)
     = M.weaken (m frame)
   in
   let action : Sem.action state a = {pre=pre; post=F.on_dom _ post; step} in
-  fun _ -> Sem.act_as_m2 u#2 u#100 action
+  fun _ -> Sem.act_as_m2 u#_ u#100 action
 
 let iname = iname
 
@@ -152,7 +152,6 @@ let act
     (opens:inames)
     (pre:slprop)
     (post:a -> slprop)
-: Type u#(max a 2)
 = #ictx:inames_disj opens ->
    pre_act a r ictx pre post
   
@@ -423,8 +422,8 @@ let lift2 (#a:Type u#2) #r #opens #pre #post
 ///////////////////////////////////////////////////////
 
 let inv = inv
-let allocated_name = pre_inv
-let allocated_name_of_inv = pre_inv_of_inv
+let allocated_name = pre_inv u#1
+let allocated_name_of_inv (#p:slprop) (i:inv p) = pre_inv_of_inv #p i
 let name_of_allocated_name = name_of_pre_inv
 
 let new_invariant (p:slprop)
@@ -456,7 +455,11 @@ let with_invariant
     with_invariant #a #fp #fp' #ictx i (f #ictx')
 
 let distinct_invariants_have_distinct_names
-    #p #q i j pf
+    (#p:slprop)
+    (#q:slprop)
+    (i:inv p)
+    (j:inv q)
+    (pf:squash (p =!= q))
 = fun #ictx -> distinct_invariants_have_distinct_names ictx p q i j
 
 let invariant_name_identifies_invariant
@@ -536,35 +539,6 @@ let gather
       (fun _ -> pts_to r (op pcm v0 v1))
 = fun #ictx -> gather_action ictx r v0 v1
 
-let witnessed = witnessed
-let witness
-    (#a:Type)
-    (#pcm:pcm a)
-    (r:erased (ref a pcm))
-    (fact:stable_property pcm)
-    (v:Ghost.erased a)
-    (pf:squash (forall z. compatible pcm v z ==> fact z))
-: act (witnessed r fact)
-      UsesInvariants
-      emp_inames
-      (pts_to r v)
-      (fun _ -> pts_to r v)
-= fun #ictx -> witness ictx r fact v pf
-
-let recall
-    (#a:Type u#1)
-    (#pcm:pcm a)
-    (#fact:property a)
-    (r:erased (ref a pcm))
-    (v:Ghost.erased a)
-    (w:witnessed r fact)
-: act (v1:Ghost.erased a{compatible pcm v v1})
-      UsesInvariants
-      emp_inames
-      (pts_to r v)
-      (fun v1 -> pts_to r v `star` pure (fact v1))
-= fun #ictx -> recall ictx r v w
-
 ///////////////////////////////////////////////////////////////////
 // pure
 ///////////////////////////////////////////////////////////////////
@@ -599,7 +573,7 @@ let intro_exists' (#a:Type u#a) (p:a -> slprop) (x:erased a)
 
 let intro_exists'' (#a:Type u#a) (p:a -> slprop) (x:erased a)
 : act unit Ghost emp_inames (p x) (thunk (exists* x. p x))
-= coerce_eq (exists_equiv #a #p) (intro_exists' #a p x)
+= fun #ictx -> coerce_eq (exists_equiv #a #p) (intro_exists' #a p x #ictx)
 
 let intro_exists (#a:Type u#a) (p:a -> slprop) (x:erased a)
 : act unit Ghost emp_inames (p x) (fun _ -> exists* x. p x)
@@ -611,7 +585,7 @@ let elim_exists' (#a:Type u#a) (p:a -> slprop)
 
 let elim_exists (#a:Type u#a) (p:a -> slprop)
 : act (erased a) Ghost emp_inames (exists* x. p x) (fun x -> p x)
-= coerce_eq (exists_equiv #a #p) (elim_exists' #a p)
+= fun #ictx -> coerce_eq (exists_equiv #a #p) (elim_exists' #a p #ictx)
 
 let drop p = fun #ictx -> drop #ictx p
 

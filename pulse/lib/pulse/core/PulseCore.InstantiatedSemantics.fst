@@ -38,10 +38,9 @@ let laws ()
         with emp_unit x
   in
   ()
-
-let state0 (e:inames) : Sem.state = {
+let state0 (e:inames) : Sem.state u#3 u#100 = {
     max_act = U.raise_t u#0 u#100 unit;
-    s = mem;
+    s = mem u#1;
     is_full_mem = full_mem_pred;
     pred = slprop;
     emp = emp;
@@ -56,6 +55,7 @@ let state : Sem.state = state0 Set.empty
 
 let slprop = slprop
 let _eq : squash (slprop == state.pred) = ()
+let is_small p = Mem.is_small p
 let emp = emp
 let pure p = pure p
 let ( ** ) p q = p `star` q
@@ -116,7 +116,7 @@ let stt (a:Type u#a)
         (pre:slprop)
         (post:a -> slprop)
 : Type0
-= lower (Sem.m u#2 u#100 u#a #state a pre (F.on_dom a post))
+= lower (Sem.m u#3 u#100 u#a #state a pre (F.on_dom a post))
 
 let return (#a:Type u#a) (x:a) (p:a -> slprop)
 : stt a (p x) p

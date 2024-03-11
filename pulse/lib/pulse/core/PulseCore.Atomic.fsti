@@ -18,7 +18,7 @@ val stt_atomic
     (opens:inames)
     (pre:slprop)
     (post:a -> slprop)
-: Type u#(max 2 a)
+: Type u#(max 3 a)
 
 val return_atomic
     (#a:Type u#a)
@@ -125,7 +125,7 @@ val stt_ghost
     (a:Type u#a)
     (pre:slprop)
     (post:a -> slprop)
-: Type u#(max 2 a)
+: Type u#(max 3 a)
 
 val return_ghost
     (#a:Type u#a)
@@ -319,31 +319,6 @@ val gather
     (pts_to r v0 ** pts_to r v1)
     (fun _ -> pts_to r (op pcm v0 v1))
 
-val witness
-    (#a:Type)
-    (#pcm:pcm a)
-    (r:erased (ref a pcm))
-    (fact:stable_property pcm)
-    (v:Ghost.erased a)
-    (pf:squash (forall z. compatible pcm v z ==> fact z))
-: stt_atomic
-    (witnessed r fact)
-    #Unobservable emp_inames
-    (pts_to r v)
-    (fun _ -> pts_to r v)
-
-val recall
-    (#a:Type u#1)
-    (#pcm:pcm a)
-    (#fact:property a)
-    (r:erased (ref a pcm))
-    (v:Ghost.erased a)
-    (w:witnessed r fact)
-: stt_atomic (v1:Ghost.erased a{compatible pcm v v1})
-    #Unobservable emp_inames
-    (pts_to r v)
-    (fun v1 -> pts_to r v ** pure (fact v1))
-
 ////////////////////////////////////////////////////////////////////////
 // References
 ////////////////////////////////////////////////////////////////////////
@@ -400,40 +375,6 @@ val ghost_gather
 : stt_ghost (squash (composable pcm v0 v1))
     (ghost_pts_to r v0 ** ghost_pts_to r v1)
     (fun _ -> ghost_pts_to r (op pcm v0 v1))
-
-// Unused?
-
-// val ghost_witnessed
-//     (#a:Type u#1)
-//     (#p:pcm a)
-//     (r:ghost_ref p)
-//     (f:property a)
-// : Type0
-
-// val ghost_witness
-//     (#a:Type)
-//     (#pcm:pcm a)
-//     (r:ghost_ref pcm)
-//     (fact:stable_property pcm)
-//     (v:Ghost.erased a)
-//     (pf:squash (forall z. compatible pcm v z ==> fact z))
-// : stt_atomic
-//     (ghost_witnessed r fact)
-//     #Unobservable emp_inames
-//     (ghost_pts_to r v)
-//     (fun _ -> ghost_pts_to r v)
-
-// val ghost_recall
-//     (#a:Type u#1)
-//     (#pcm:pcm a)
-//     (#fact:property a)
-//     (r:ghost_ref pcm)
-//     (v:Ghost.erased a)
-//     (w:ghost_witnessed r fact)
-// : stt_atomic (v1:Ghost.erased a{compatible pcm v v1})
-//     #Unobservable emp_inames
-//     (ghost_pts_to r v)
-//     (fun v1 -> ghost_pts_to r v ** pure (fact v1))
 
 val drop (p:slprop)
 : stt_ghost unit p (fun _ -> emp)

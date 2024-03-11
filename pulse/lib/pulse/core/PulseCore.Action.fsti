@@ -43,7 +43,7 @@ val act
     (opens:inames)
     (pre:slprop)
     (post:a -> slprop)
-: Type u#(max a 2)
+: Type u#(max a 3)
 
 val return 
     (#a:Type u#a)
@@ -269,41 +269,41 @@ val gather
     (pts_to r v0 ** pts_to r v1)
     (fun _ -> pts_to r (op pcm v0 v1))
 
-let property (a:Type)
-  = a -> prop
+// let property (a:Type)
+//   = a -> prop
 
-val witnessed (#a:Type u#1)
-              (#pcm:pcm a)
-              (r:ref a pcm)
-              (fact:property a)
-  : Type0
+// val witnessed (#a:Type u#1)
+//               (#pcm:pcm a)
+//               (r:ref a pcm)
+//               (fact:property a)
+//   : Type0
 
-let stable_property (#a:Type) (pcm:pcm a)
-  = fact:property a {
-       FStar.Preorder.stable fact (PP.preorder_of_pcm pcm)
-    }
+// let stable_property (#a:Type) (pcm:pcm a)
+//   = fact:property a {
+//        FStar.Preorder.stable fact (PP.preorder_of_pcm pcm)
+//     }
 
-val witness
-    (#a:Type)
-    (#pcm:pcm a)
-    (r:erased (ref a pcm))
-    (fact:stable_property pcm)
-    (v:Ghost.erased a)
-    (pf:squash (forall z. compatible pcm v z ==> fact z))
-: act (witnessed r fact) UsesInvariants emp_inames (pts_to r v) (fun _ -> pts_to r v)
+// val witness
+//     (#a:Type)
+//     (#pcm:pcm a)
+//     (r:erased (ref a pcm))
+//     (fact:stable_property pcm)
+//     (v:Ghost.erased a)
+//     (pf:squash (forall z. compatible pcm v z ==> fact z))
+// : act (witnessed r fact) UsesInvariants emp_inames (pts_to r v) (fun _ -> pts_to r v)
 
-val recall
-    (#a:Type u#1)
-    (#pcm:pcm a)
-    (#fact:property a)
-    (r:erased (ref a pcm))
-    (v:Ghost.erased a)
-    (w:witnessed r fact)
-: act (v1:Ghost.erased a{compatible pcm v v1})
-    UsesInvariants
-    emp_inames
-    (pts_to r v)
-    (fun v1 -> pts_to r v ** pure (fact v1))
+// val recall
+//     (#a:Type u#1)
+//     (#pcm:pcm a)
+//     (#fact:property a)
+//     (r:erased (ref a pcm))
+//     (v:Ghost.erased a)
+//     (w:witnessed r fact)
+// : act (v1:Ghost.erased a{compatible pcm v v1})
+//     UsesInvariants
+//     emp_inames
+//     (pts_to r v)
+//     (fun v1 -> pts_to r v ** pure (fact v1))
 
 ///////////////////////////////////////////////////////////////////
 // pure
