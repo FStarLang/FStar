@@ -1250,42 +1250,10 @@ let _MstTotAux
         interp (expects `star` frame `star` locks_invariant except m0) m0 /\  //TODO: fix the effect so as not to repeat this
         interp (provides x `star` frame `star` locks_invariant except m1) m1)
 
-let (let!)
-      (#s:Type u#s)
-      (#a:Type u#a)
-      (#b:Type u#b)
-      (#rel:FStar.Preorder.preorder s)
-      (#req_f:MSTTotal.req_t s)
-      (#ens_f:MSTTotal.ens_t s a)
-      (#req_g:a -> MSTTotal.req_t s)
-      (#ens_g:a -> MSTTotal.ens_t s b)
-      (#pre:a -> Type0)
-      (f:MSTTotal.mst rel a req_f ens_f)
-      ($g:(x:a -> Pure (MSTTotal.mst rel b (req_g x) (ens_g x)) (pre x) (fun _ -> True)))
-: MSTTotal.mst rel b
-  (fun s0 -> req_f s0 /\ (forall x s1. ens_f s0 x s1 ==> pre x /\ (req_g x) s1))
-  (fun s0 r s2 -> req_f s0 /\ (exists x s1. ens_f s0 x s1 /\ pre x /\ (req_g x) s1 /\ (ens_g x) s1 r s2))
-= admit()
 
 open FStar.Preorder
 module MST = PulseCore.MonotonicStateMonad
-assume
-val mst_witness (#s:Type u#s) (#rel:preorder s) (p: s -> prop { stable p rel })
-  : MST.mst rel (W.witnessed s rel p) (fun s0 -> p s0) (fun s0 x s1 -> s0 == s1)
 
-assume
-val mst_recall (#s:Type u#s) (#rel:preorder s) (p: s -> prop) (w:W.witnessed s rel p) 
-  : MST.mst rel unit (fun s0 -> True) (fun s0 x s1 -> s0 == s1 /\ p s1)
-
-let with_get
-      (#s:Type u#s)
-      (#a:Type u#a)
-      (#rel:preorder s)
-      (#req_f:MST.req_t s)
-      (#ens_f:MST.ens_t s a)
-      (f: (x:s { req_f x } -> MST.mst rel a (fun s0 -> s0 == x) ens_f))
-: MST.mst rel a req_f ens_f
-= admit()
 
 let _mst_tot_aux
   (a:Type u#a)
@@ -1336,9 +1304,9 @@ let witness (#a:Type) (#pcm:pcm a)
           witnessed_ref_stability r fact;
           assert (FStar.Preorder.stable (witnessed_ref r fact) mem_evolves)
         in
-        MST.weaken <| mst_witness #_ #mem_evolves (witnessed_ref r fact)
+        MST.weaken <| MST.witness #_ #mem_evolves (witnessed_ref r fact)
   in
-  with_get f
+  MST.with_get f
 
 let with_get_aux #a #e #p #q #frame #pre (f:_mst_tot_aux a e p q frame pre)
   : MST.mst mem_evolves a
@@ -1350,7 +1318,7 @@ let with_get_aux #a #e #p #q #frame #pre (f:_mst_tot_aux a e p q frame pre)
         inames_ok e m1 /\
         interp (p `star` frame `star` locks_invariant e m0) m0 /\  //TODO: fix the effect so as not to repeat this
         interp (q x `star` frame `star` locks_invariant e m1) m1)
-  = with_get f
+  = MST.with_get f
 
 let recall (#a:Type u#1) (#pcm:pcm a) (#fact:property a)
            (e:inames)
@@ -1371,7 +1339,6 @@ let recall (#a:Type u#1) (#pcm:pcm a) (#fact:property a)
           frame
           (witnessed_ref r fact)
     = fun m0 ->
-        // mst_recall #_ #mem_evolves (witnessed_ref r fact) w;
         let v1 :(v1: Ghost.erased a { compatible pcm v v1}) =
           let hr : H.ref a pcm = r in
           assert (witnessed_ref r fact m0);
@@ -1401,7 +1368,7 @@ let recall (#a:Type u#1) (#pcm:pcm a) (#fact:property a)
         MST.return v1
   in
   MST.weaken <|
-  MST.bind (mst_recall #_ #mem_evolves (witnessed_ref r fact) w)
+  MST.bind (MST.recall #_ #mem_evolves (witnessed_ref r fact) w)
            (fun _ -> with_get_aux f)
 
 let iname_for_p_mem (i:iname) (p:slprop) : full_mem -> prop = //W.s_predicate mem =
@@ -1534,7 +1501,7 @@ let rec recall_all (ctx:list pre_inv)
       let (| q, i |) = hd in
       let i : W.witnessed full_mem mem_evolves (name_is_ok q) = i in
       MST.weaken <|
-      MST.bind (mst_recall (name_is_ok q) i) (fun _ -> recall_all tl)
+      MST.bind (MST.recall (name_is_ok q) i) (fun _ -> recall_all tl)
 
 let distinct_invariants_have_distinct_names
       (e:inames)
@@ -1559,8 +1526,8 @@ let distinct_invariants_have_distinct_names
     = fun m0 -> MST.weaken <| MST.return ()
   in
   MST.weaken <|
-  MST.bind (mst_recall _ toki) (fun _ ->
-  MST.bind (mst_recall _ tokj) (fun _ ->
+  MST.bind (MST.recall _ toki) (fun _ ->
+  MST.bind (MST.recall _ tokj) (fun _ ->
             with_get_aux elim))
 
 let invariant_name_identifies_invariant
@@ -1588,8 +1555,8 @@ let invariant_name_identifies_invariant
         MST.weaken <| MST.return ()
   in
   MST.weaken <|
-  MST.bind (mst_recall _ toki) (fun _ ->
-  MST.bind (mst_recall _ tokj) (fun _ ->
+  MST.bind (MST.recall _ toki) (fun _ ->
+  MST.bind (MST.recall _ tokj) (fun _ ->
             with_get_aux elim))
   
 let fresh_invariant (e:inames) (p:slprop) (ctx:list pre_inv) (frame:slprop)
@@ -1614,8 +1581,8 @@ let fresh_invariant (e:inames) (p:slprop) (ctx:list pre_inv) (frame:slprop)
         iname_for_p_stable i p;
         MST.weaken <|
         MST.bind (MSTTotal.put #full_mem #mem_evolves m1) (fun _ ->
-        MST.bind (mst_witness #full_mem #mem_evolves (iname_for_p_mem i p)) (fun w ->
-        MST.bind (mst_witness #full_mem #mem_evolves (name_is_ok i)) (fun w0 ->
+        MST.bind (MST.witness #full_mem #mem_evolves (iname_for_p_mem i p)) (fun w ->
+        MST.bind (MST.witness #full_mem #mem_evolves (name_is_ok i)) (fun w0 ->
         let i : inv p = (| hide i, w0, w |) in
         assert (fresh_wrt ctx (name_of_inv i));
         MST.weaken #_ #_ #(i:inv p {fresh_wrt ctx (name_of_inv i)})
@@ -1780,15 +1747,7 @@ let with_invariant (#a:Type)
                    (frame:slprop)
   : _MstTot a opened_invariants fp fp' frame
   = let k1 (r:a)
-    :  MSTTotal.mst #(full_mem u#1) mem_evolves a
-          (fun m0 ->
-             inames_ok (set_add (name_of_inv i) opened_invariants) m0 /\
-             interp (p `star` fp' r `star` frame `star` locks_invariant (set_add (name_of_inv i) opened_invariants) m0) m0)
-          (fun m0 x m1 ->
-             inames_ok opened_invariants m1 /\
-             interp (fp' x `star` frame `star` locks_invariant opened_invariants m1) m1)
-    = let aux
-       : mst_aux mem_evolves a
+       : MST.mst_aux mem_evolves a
           (fun m1 ->
              inames_ok (set_add (name_of_inv i) opened_invariants) m1 /\
              interp (p `star` fp' r `star` frame `star` locks_invariant (set_add (name_of_inv i) opened_invariants) m1) m1)
@@ -1802,7 +1761,7 @@ let with_invariant (#a:Type)
             ctr_validity m1.ctr m1.ghost_ctr (heap_of_mem m1))) m1);
 
           let k2
-            : mst_aux mem_evolves a
+            : MST.mst_aux mem_evolves a
                 (fun m1 ->
                   inames_ok (set_add (name_of_inv i) opened_invariants) m1 /\
                   interp (p `star` fp' r `star` frame `star`
@@ -1830,50 +1789,9 @@ let with_invariant (#a:Type)
                   assert (inames_ok opened_invariants m1);
                   MST.weaken <| MST.return r
           in
-          let k2
-            : MST.mst 
-            mem_evolves a
-                (fun m1 ->
-                  inames_ok (set_add (name_of_inv i) opened_invariants) m1 /\
-                  interp (p `star` fp' r `star` frame `star`
-                            (lock_store_invariant (set_add (name_of_inv i) opened_invariants) m1.locks `star`
-                              ctr_validity m1.ctr m1.ghost_ctr (heap_of_mem m1))) m1 /\
-                  iname_for_p_mem (name_of_inv i) p m1)
-                (fun _ x m1 ->
-                  inames_ok opened_invariants m1 /\
-                  interp (fp' x `star` frame `star` locks_invariant opened_invariants m1) m1)
-            = with_get k2
-          in
           MST.weaken <|
-          MST.bind (mst_recall _ (token_of_inv i)) (fun _ -> k2)
+          MST.bind (MST.recall _ (token_of_inv i)) (fun _ -> MST.with_get k2)
       in
-      with_get aux
-    in
- 
-    
-    
-    // MSTTotal.recall _ mem_evolves (iname_for_p_mem (name_of_inv i) p) (token_of_inv i);
-
-    // move_invariant opened_invariants m1.locks p (name_of_inv i);
-    // assert (lock_store_invariant opened_invariants m1.locks `equiv`
-    //         (p `star` lock_store_invariant (set_add (name_of_inv i) opened_invariants) m1.locks));
-
-    // with_inv_helper
-    //   (fp' r)
-    //   frame
-    //   (lock_store_invariant opened_invariants m1.locks)
-    //   (ctr_validity m1.ctr m1.ghost_ctr (heap_of_mem m1))
-    //   p
-    //   (lock_store_invariant (set_add (name_of_inv i) opened_invariants) m1.locks);
-
-    // assert (interp (fp' r `star` frame `star` locks_invariant opened_invariants m1) m1);
-
-    // assert (inames_ok opened_invariants m1);
-    // r
-
-
-    // in
-    
     let k0
     : _mst_tot_aux a opened_invariants fp fp' frame
           (iname_for_p_mem (name_of_inv i) p)
@@ -1897,10 +1815,10 @@ let with_invariant (#a:Type)
           (lock_store_invariant (set_add (name_of_inv i) opened_invariants) m0.locks);
 
         assert (interp (p `star` fp `star` frame `star` locks_invariant (set_add (name_of_inv i) opened_invariants) m0) m0);
-        MST.weaken <| MST.bind (f frame) k1
+        MST.weaken <| MST.bind (f frame) (fun r -> MST.with_get (k1 r))
     in
     MST.weaken <|
-    MST.bind (mst_recall _ (token_of_inv i)) (fun _ ->
+    MST.bind (MST.recall _ (token_of_inv i)) (fun _ ->
     with_get_aux k0) 
  
 let equiv_pqrs_p_qr_s (p q r s:slprop)
@@ -1929,7 +1847,7 @@ let frame (#a:Type)
         MST.weaken <| 
         MST.bind (f (frame `star` frame0)) (fun x ->
           let k
-            : mst_aux mem_evolves a 
+            : MST.mst_aux mem_evolves a 
               (fun m1 ->
                 inames_ok opened_invariants m1 /\
                 interp (post x `star` (frame `star` frame0) `star` linv opened_invariants m1) m1)
@@ -1942,17 +1860,7 @@ let frame (#a:Type)
                 assert (interp (post x `star` frame `star` frame0 `star` linv opened_invariants m1) m1);
                 MST.weaken <| MST.return x
           in
-          let k
-            : MST.mst mem_evolves a 
-              (fun m1 ->
-                inames_ok opened_invariants m1 /\
-                interp (post x `star` (frame `star` frame0) `star` linv opened_invariants m1) m1)
-              (fun m0 x m1 -> 
-                inames_ok opened_invariants m1 /\
-                interp (post x `star` frame `star` frame0 `star` linv opened_invariants m1) m1)
-            = with_get k
-          in
-          k
+          MST.with_get k
         )
     in
     MST.weaken <| with_get_aux aux
