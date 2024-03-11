@@ -21,4 +21,4 @@ KRML ?= $(KRML_HOME)/krml
 
 .PHONY: extract
 extract: $(ALL_KRML_FILES)
-	$(KRML) -skip-compilation -bundle 'DPE=*' -library Pulse.Lib.SpinLock -warn-error @4+9 $^
+	$(KRML) -skip-makefiles -skip-linking -ccopt -Wno-unused-variable -bundle 'DPE=*' -library Pulse.Lib.SpinLock -library HACL -warn-error @4+9 -tmpdir $(OUTPUT_DIRECTORY) -add-include '"HACL_Base.h"' -I . $^
