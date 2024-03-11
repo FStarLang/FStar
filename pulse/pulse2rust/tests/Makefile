@@ -4,6 +4,7 @@ PULSE_EXAMPLES_ROOT ?= $(PULSE_HOME)/share/pulse/examples
 SRC_DIRS := $(addprefix $(PULSE_EXAMPLES_ROOT)/,by-example dice/common dice/dpe dice/engine dice/l0)
 OUTPUT_DIRECTORY := _output
 CACHE_DIRECTORY := $(OUTPUT_DIRECTORY)/cache
+FSTAR_OPTIONS += --warn_error -342
 
 MAIN=../main.exe
 RUST_SRC_DIR=./src/
@@ -25,6 +26,9 @@ pulsetutorial-loops.rs: PulseTutorial_Loops.ast
 
 pulsetutorial-algorithms.rs: PulseTutorial_Algorithms.ast
 	$(MAIN) -odir $(RUST_SRC_DIR) $(addprefix $(OUTPUT_DIRECTORY)/, $^)
+
+# FIXME: this seems to be a duplicate of the `dpe-ast` rule in
+# share/pulse/examples/dice/Makefile
 
 DPE_FILES = EngineTypes.ast \
   EngineCore.ast \
