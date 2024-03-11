@@ -2350,15 +2350,62 @@ let rec (extract_lb_sig :
                                               let add_unit =
                                                 match rest_args with
                                                 | [] ->
-                                                    (let uu___9 =
-                                                       is_fstar_value body1 in
-                                                     Prims.op_Negation uu___9)
-                                                      ||
-                                                      (let uu___9 =
-                                                         FStar_Syntax_Util.is_pure_comp
-                                                           c1 in
+                                                    let is_tyapp body2 =
+                                                      let uu___9 =
+                                                        let uu___10 =
+                                                          FStar_Syntax_Util.unascribe
+                                                            body2 in
+                                                        FStar_Syntax_Util.head_and_args_full
+                                                          uu___10 in
+                                                      match uu___9 with
+                                                      | (head, args) ->
+                                                          let uu___10 =
+                                                            let uu___11 =
+                                                              FStar_Syntax_Util.un_uinst
+                                                                head in
+                                                            uu___11.FStar_Syntax_Syntax.n in
+                                                          (match uu___10 with
+                                                           | FStar_Syntax_Syntax.Tm_fvar
+                                                               fv ->
+                                                               let uu___11 =
+                                                                 FStar_Extraction_ML_UEnv.try_lookup_fv
+                                                                   FStar_Compiler_Range_Type.dummyRange
+                                                                   g fv in
+                                                               (match uu___11
+                                                                with
+                                                                | FStar_Pervasives_Native.Some
+                                                                    {
+                                                                    FStar_Extraction_ML_UEnv.exp_b_name
+                                                                    = uu___12;
+                                                                    FStar_Extraction_ML_UEnv.exp_b_expr
+                                                                    = uu___13;
+                                                                    FStar_Extraction_ML_UEnv.exp_b_tscheme
+                                                                    =
+                                                                    exp_b_tscheme;_}
+                                                                    ->
+                                                                    (FStar_Compiler_List.length
+                                                                    args) <=
+                                                                    (FStar_Compiler_List.length
+                                                                    (FStar_Pervasives_Native.fst
+                                                                    exp_b_tscheme))
+                                                                | uu___12 ->
+                                                                    false)
+                                                           | uu___11 -> false) in
+                                                    let uu___9 =
+                                                      is_tyapp body1 in
+                                                    if uu___9
+                                                    then false
+                                                    else
+                                                      (let uu___11 =
+                                                         is_fstar_value body1 in
                                                        Prims.op_Negation
-                                                         uu___9)
+                                                         uu___11)
+                                                        ||
+                                                        ((let uu___11 =
+                                                            FStar_Syntax_Util.is_pure_comp
+                                                              c1 in
+                                                          Prims.op_Negation
+                                                            uu___11))
                                                 | uu___9 -> false in
                                               let rest_args1 =
                                                 if add_unit
