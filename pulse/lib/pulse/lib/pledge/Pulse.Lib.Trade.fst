@@ -21,7 +21,7 @@ open Pulse.Lib.Pervasives
 open Pulse.Lib.InvList
 module T = FStar.Tactics
 
-let trade_elim_t is hyp extra concl : Type u#2 =
+let trade_elim_t is hyp extra concl : Type u#3 =
   unit -> stt_ghost unit (invlist_v is ** extra ** hyp) (fun _ -> invlist_v is ** concl)
 
 let trade_elim_exists (is:invlist) (hyp extra concl : vprop) : vprop =
@@ -58,7 +58,7 @@ let psquash (a:Type u#a) : prop = squash a
 
 ```pulse
 ghost
-fn pextract (a:Type u#2) (_:squash a)
+fn pextract (a:Type u#3) (_:squash a)
 requires emp
 returns i:a
 ensures emp

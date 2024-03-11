@@ -25,10 +25,15 @@ open PulseCore.Observability
 let double_one_half () = ()
 let equate_by_smt = ()
 let vprop = slprop
+let is_small = is_small
 let emp = emp
-let op_Star_Star = op_Star_Star
+let emp_is_small = ()
 let pure = pure
+let pure_is_small p = ()
+let op_Star_Star = op_Star_Star
+let small_star p q = admit()
 let op_exists_Star = op_exists_Star
+let small_exists #a p = admit()
 let vprop_equiv = slprop_equiv
 let elim_vprop_equiv #p #q pf = slprop_equiv_elim p q
 let vprop_post_equiv = slprop_post_equiv

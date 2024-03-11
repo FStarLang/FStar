@@ -412,7 +412,7 @@ let comp_u (c:comp { stateful_comp c }) = (st_comp_of_comp c).u
 let universe_of_comp (c:comp_st) =
   match c with
   | C_ST _ -> RT.u_zero
-  | _ -> Pulse.Reflection.Util.u_max_two (comp_u c)
+  | _ -> Pulse.Reflection.Util.u_atomic_ghost (comp_u c)
 
 let comp_pre (c:comp { stateful_comp c }) = (st_comp_of_comp c).pre
 

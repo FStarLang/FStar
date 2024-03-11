@@ -886,7 +886,7 @@ let (universe_of_comp : comp_st -> FStar_Reflection_Types.universe) =
   fun c ->
     match c with
     | C_ST uu___ -> FStar_Reflection_Typing.u_zero
-    | uu___ -> Pulse_Reflection_Util.u_max_two (comp_u c)
+    | uu___ -> Pulse_Reflection_Util.u_atomic_ghost (comp_u c)
 let (comp_pre : comp -> vprop) = fun c -> (st_comp_of_comp c).pre
 let (comp_post : comp -> vprop) = fun c -> (st_comp_of_comp c).post
 let (comp_inames : comp -> term) =

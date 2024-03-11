@@ -55,13 +55,30 @@ val equate_by_smt : unit
 
 #set-options "--print_implicits --ugly --print_universes"
 
+
 [@@erasable]
-val vprop : Type u#2
+val vprop : Type u#3
+val is_small (v:vprop) : prop
 
 val emp : vprop
-val ( ** ) (p q:vprop) : vprop
+val emp_is_small : squash (is_small emp)
+
 val pure (p:prop) : vprop
+val pure_is_small (p:prop) : squash (is_small (pure p))
+
+val ( ** ) (p q:vprop) : vprop
+val small_star (p q : vprop)
+: Lemma
+    (requires is_small p /\ is_small q)
+    (ensures is_small (p ** q))
+
 val ( exists* ) (#a:Type) (p:a -> vprop) : vprop
+val small_exists (#a:Type u#a) (p: a -> vprop)
+: Lemma
+    (requires forall x. is_small (p x))
+    (ensures is_small (op_exists_Star p))
+    
+
 val vprop_equiv (p q:vprop) : prop
 val elim_vprop_equiv (#p #q:_) (_:vprop_equiv p q) : squash (p == q)
 val vprop_post_equiv (#t:Type u#a) (p q: t -> vprop) : prop
@@ -252,7 +269,7 @@ val stt_atomic
     (opens:inames)
     (pre:vprop)
     (post:a -> vprop)
-: Type u#(max 2 a)
+: Type u#(max 3 a)
 
 val lift_observability
     (#a:Type u#a)
@@ -321,7 +338,7 @@ val sub_invs_atomic
 : stt_atomic a #obs opens2 pre post
 
 val lift_atomic0
-(#a:Type u#0)
+  (#a:Type u#0)
   (#obs:_)
   (#opens:inames)
   (#pre:vprop)
@@ -413,7 +430,7 @@ val stt_ghost
     (a:Type u#a)
     (pre:vprop)
     (post:a -> vprop)
-: Type u#(max 2 a)
+: Type u#(max 3 a)
 
 val bind_ghost
     (#a:Type u#a)
