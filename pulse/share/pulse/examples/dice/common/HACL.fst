@@ -60,6 +60,7 @@ val valid_hkdf_ikm_len (_:US.t) : prop
 
 let hkdf_ikm_len = v:US.t{ valid_hkdf_ikm_len v }
 
+noextract [@@noextract_to "krml"]
 assume
 val spec_hash 
   (a:alg_t) 
@@ -80,6 +81,7 @@ val hacl_hash (alg:alg_t)
        A.pts_to src #psrc src_seq **
        A.pts_to dst (spec_hash alg src_seq))
 
+noextract [@@noextract_to "krml"]
 assume
 val spec_hmac 
   (a:alg_t) 
@@ -128,6 +130,7 @@ val ed25519_verify
       A.pts_to sig #psig sig_seq **
       pure (spec_ed25519_verify pubk_seq hdr_seq sig_seq))
 
+noextract [@@noextract_to "krml"]
 assume
 val spec_ed25519_sign (privk msg:Seq.seq U8.t) : Seq.seq U8.t
 
