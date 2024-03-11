@@ -61,6 +61,15 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
     when string_of_mlpath p = "Pulse.Lib.Reference.alloc" ->
     EBufCreate (Stack, translate_expr env init, EConstant (UInt32, "1"))
 
+  | MLE_App ({ expr = MLE_Name p } , [ init ])
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ init ])
+    when string_of_mlpath p = "Pulse.Lib.Box.alloc" ->
+    EBufCreate (ManuallyManaged, translate_expr env init, EConstant (UInt32, "1"))
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ x; _w ])
+    when string_of_mlpath p = "Pulse.Lib.Box.free" ->
+    EBufFree (translate_expr env x)
+
   | MLE_App({expr=MLE_App({expr=MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e ])}, [_v])}, [_perm])
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e; _v; _perm ])
     when string_of_mlpath p = "Pulse.Lib.Reference.op_Bang" ->
