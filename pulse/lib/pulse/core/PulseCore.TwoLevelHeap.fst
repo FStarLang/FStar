@@ -240,12 +240,6 @@ let star_commutative p1 p2 = ()
 let star_associative p1 p2 p3 = ()
 #pop-options
 let star_congruence p1 p2 q1 q2 = ()
-// assume
-// val of_small_slprop (p:small_slprop) : H2.a_heap_prop u#1
-// let small_slprop_inv (f:H2.a_heap_prop u#1)
-//   : Lemma (of_small_slprop (H2.as_slprop f) == f /\
-//            interp (H2.as_slprop f) == f)
-//   = admit()
 
 let interp_up_down (p:slprop) (h:heap)
 : Lemma (interp p { small = h.small; big = H2.empty_heap } <==> interp (up (down p)) h)
