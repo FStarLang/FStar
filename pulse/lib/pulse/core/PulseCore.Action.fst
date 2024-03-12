@@ -663,6 +663,15 @@ let ghost_read #a #p r x f = fun #ictx -> ghost_read #ictx #a #p r x f
 let ghost_write #a #p r x y f = fun #ictx -> ghost_write #ictx #a #p r x y f
 let ghost_share #a #pcm r v0 v1 = fun #ictx -> ghost_share #ictx #a #pcm r v0 v1
 let ghost_gather #a #pcm r v0 v1 = fun #ictx -> ghost_gather #ictx #a #pcm r v0 v1
+
+let big_ghost_pts_to = Mem.big_ghost_pts_to
+let big_ghost_alloc #a #pcm x = fun #ictx -> big_ghost_alloc #ictx #a #pcm x
+let big_ghost_read #a #p r x f = fun #ictx -> big_ghost_read #ictx #a #p r x f
+let big_ghost_write #a #p r x y f = fun #ictx -> big_ghost_write #ictx #a #p r x y f
+let big_ghost_share #a #pcm r v0 v1 = fun #ictx -> big_ghost_share #ictx #a #pcm r v0 v1
+let big_ghost_gather #a #pcm r v0 v1 = fun #ictx -> big_ghost_gather #ictx #a #pcm r v0 v1
+
+
 let lift_erased #a ni_a #opens #pre #post f =
   fun #ictx ->
     let f : erased (pre_act a Ghost ictx pre post) =

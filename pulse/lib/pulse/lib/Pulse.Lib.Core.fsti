@@ -724,7 +724,7 @@ val ghost_gather
     (fun _ -> ghost_pcm_pts_to r (op pcm v0 v1))
 
 ////////////////////////////////////////////////////////
-//Core PCM references
+//Big PCM references
 ////////////////////////////////////////////////////////
 val big_pcm_pts_to
     (#a:Type u#2)
@@ -791,6 +791,64 @@ val big_gather
 : stt_ghost (squash (composable pcm v0 v1))
     (big_pcm_pts_to r v0 ** big_pcm_pts_to r v1)
     (fun _ -> big_pcm_pts_to r (op pcm v0 v1))
+
+val big_ghost_pcm_pts_to
+    (#a:Type u#2)
+    (#p:pcm a)
+    (r:ghost_pcm_ref p)
+    (v:a)
+: vprop
+
+val big_ghost_alloc
+    (#a:Type)
+    (#pcm:pcm a)
+    (x:erased a{pcm.refine x})
+: stt_ghost (ghost_pcm_ref pcm)
+    emp
+    (fun r -> big_ghost_pcm_pts_to r x)
+
+val big_ghost_read
+    (#a:Type)
+    (#p:pcm a)
+    (r:ghost_pcm_ref p)
+    (x:erased a)
+    (f:(v:a{compatible p x v}
+        -> GTot (y:a{compatible p y v /\
+                     FStar.PCM.frame_compatible p x v y})))
+: stt_ghost (erased (v:a{compatible p x v /\ p.refine v}))
+    (big_ghost_pcm_pts_to r x)
+    (fun v -> big_ghost_pcm_pts_to r (f v))
+
+val big_ghost_write
+    (#a:Type)
+    (#p:pcm a)
+    (r:ghost_pcm_ref p)
+    (x y:Ghost.erased a)
+    (f:FStar.PCM.frame_preserving_upd p x y)
+: stt_ghost unit
+    (big_ghost_pcm_pts_to r x)
+    (fun _ -> big_ghost_pcm_pts_to r y)
+
+val big_ghost_share
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ghost_pcm_ref pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+: stt_ghost unit
+    (big_ghost_pcm_pts_to r (v0 `op pcm` v1))
+    (fun _ -> big_ghost_pcm_pts_to r v0 ** big_ghost_pcm_pts_to r v1)
+
+val big_ghost_gather
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ghost_pcm_ref pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a)
+: stt_ghost (squash (composable pcm v0 v1))
+    (big_ghost_pcm_pts_to r v0 ** big_ghost_pcm_pts_to r v1)
+    (fun _ -> big_ghost_pcm_pts_to r (op pcm v0 v1))
+
 
 // Finally, a big escape hatch for introducing architecture/backend-specific
 // atomic operations from proven stt specifications

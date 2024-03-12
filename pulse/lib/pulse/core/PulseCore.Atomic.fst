@@ -306,4 +306,11 @@ let big_write r x y f = A.lift_reifiability (A.big_write r x y f)
 let big_share #a #pcm r v0 v1 = Ghost.hide (A.big_share r v0 v1)
 let big_gather #a #pcm r v0 v1 = Ghost.hide (A.big_gather r v0 v1)
 
+
+let big_ghost_alloc #a #pcm x = Ghost.hide <| A.big_ghost_alloc #a #pcm x
+let big_ghost_read #a #p r x f = Ghost.hide <| A.big_ghost_read r x f
+let big_ghost_write r x y f = Ghost.hide (A.big_ghost_write r x y f)
+let big_ghost_share r v0 v1 = Ghost.hide (A.big_ghost_share r v0 v1)
+let big_ghost_gather r v0 v1 = Ghost.hide (A.big_ghost_gather r v0 v1) 
+
 let drop p = Ghost.hide (A.drop p)

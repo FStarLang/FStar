@@ -342,4 +342,11 @@ let big_write
 let big_share = A.big_share
 let big_gather = A.big_gather
 
+let big_ghost_pcm_pts_to #a #p r v = PulseCore.Action.big_ghost_pts_to #a #p r v
+let big_ghost_alloc = A.big_ghost_alloc
+let big_ghost_read = A.big_ghost_read
+let big_ghost_write = A.big_ghost_write
+let big_ghost_share = A.big_ghost_share
+let big_ghost_gather = A.big_ghost_gather
+
 let as_atomic #a pre post (e:stt a pre post) = admit() //intentional
