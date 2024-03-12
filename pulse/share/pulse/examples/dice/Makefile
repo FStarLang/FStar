@@ -11,12 +11,9 @@ all: verify dpe-ast
 
 include $(PULSE_HOME)/share/pulse/Makefile.include
 
-.PHONY: extract-c
-extract-c: verify
-	+$(MAKE) -f c.Makefile extract
-
 .PHONY: test-c
-test-c: extract-c
+test-c: verify
+	+$(MAKE) -f c.Makefile
 
 # FIXME: this rule should depend on the .checked file. However, right
 # now there is no way to reconcile the cache directories. There are
