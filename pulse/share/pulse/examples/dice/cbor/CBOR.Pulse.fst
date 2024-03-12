@@ -24,8 +24,8 @@ module Cbor = CBOR.Spec
 module A = Pulse.Lib.Array
 module SZ = FStar.SizeT
 
+#push-options "--using_facts_from '* -FStar.Reflection -FStar.Tactics'"
 #push-options "--fuel 2 --ifuel 2"
-
 assume val elim_stick0
   (_: unit)
   (#hyp #concl: vprop)
