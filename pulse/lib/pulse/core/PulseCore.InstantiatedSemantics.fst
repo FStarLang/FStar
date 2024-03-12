@@ -38,10 +38,9 @@ let laws ()
         with emp_unit x
   in
   ()
-
-let state0 (e:inames) : Sem.state = {
+let state0 (e:inames) : Sem.state u#3 u#100 = {
     max_act = U.raise_t u#0 u#100 unit;
-    s = mem;
+    s = mem u#1;
     is_full_mem = full_mem_pred;
     pred = slprop;
     emp = emp;
@@ -56,10 +55,15 @@ let state : Sem.state = state0 Set.empty
 
 let slprop = slprop
 let _eq : squash (slprop == state.pred) = ()
+let small_slprop = small_slprop
+let down = down
+let up = up
 let emp = emp
 let pure p = pure p
 let ( ** ) p q = p `star` q
+let small_star p q = small_star_congruence p q
 let ( exists* ) #a p = h_exists (F.on_dom a p)
+let small_exists #a p = small_exists_congruence #a (F.on_dom a p)
 
 let prop_squash_idem (p:prop)
   : Tot (squash (p == squash p))
@@ -116,7 +120,7 @@ let stt (a:Type u#a)
         (pre:slprop)
         (post:a -> slprop)
 : Type0
-= lower (Sem.m u#2 u#100 u#a #state a pre (F.on_dom a post))
+= lower (Sem.m u#3 u#100 u#a #state a pre (F.on_dom a post))
 
 let return (#a:Type u#a) (x:a) (p:a -> slprop)
 : stt a (p x) p

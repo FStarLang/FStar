@@ -21,7 +21,7 @@ let action
     (except:inames)
     (pre:slprop)
     (post:a -> slprop)
-: Type u#(max a 2)
+: Type u#(max a 3)
 = frame:slprop ->
   Sem.mst_sep_aux state
     (inames_ok except)
@@ -50,8 +50,8 @@ let action_as_mem_action
                     interp ((post x `star` locks_invariant except s1) `star` frame) s1)
       = M.weaken (act frame)
     in
-    M.to_msttotal _ _ _ _ m
-
+    M.weaken m
+ 
 let stt_of_action (#a:Type u#100) #pre #post (m:action a Set.empty pre post)
 : stt a pre post
 = let step (frame:slprop)
@@ -78,7 +78,7 @@ let stt_of_action1 (#a:Type u#1) #pre #post (m:action a Set.empty pre post)
     = M.weaken (m frame)
   in
   let action : Sem.action state a = {pre=pre; post=F.on_dom _ post; step} in
-  fun _ -> Sem.act_as_m1 u#2 u#100 action
+  fun _ -> Sem.act_as_m1 u#_ u#100 action
 
 let stt_of_action2 (#a:Type u#2) #pre #post (m:action a Set.empty pre post)
 : stt a pre post
@@ -87,7 +87,7 @@ let stt_of_action2 (#a:Type u#2) #pre #post (m:action a Set.empty pre post)
     = M.weaken (m frame)
   in
   let action : Sem.action state a = {pre=pre; post=F.on_dom _ post; step} in
-  fun _ -> Sem.act_as_m2 u#2 u#100 action
+  fun _ -> Sem.act_as_m2 u#_ u#100 action
 
 let iname = iname
 
@@ -123,11 +123,7 @@ let mem_action_as_action
         (act:Mem.action_except a except req ens)
 : action a except req ens
 = fun frame ->
-    let thunk
-      : unit -> MstTot a except req ens frame
-      = fun _ -> act frame
-    in
-    M.of_msttotal _ _ _ _ thunk
+    M.weaken (act frame)
 
 let mem_pst_action_as_action
         (#a:Type u#a)
@@ -156,7 +152,6 @@ let act
     (opens:inames)
     (pre:slprop)
     (post:a -> slprop)
-: Type u#(max a 2)
 = #ictx:inames_disj opens ->
    pre_act a r ictx pre post
   
@@ -201,8 +196,7 @@ let bind_pre_act_non_reifiable
      ($g:(x:a -> pre_act b UsesInvariants except (post1 x) post2))
 : pre_act b UsesInvariants except pre1 post2
 = fun frame ->
-    let x = f frame in
-    g x frame
+    M.weaken <| M.bind (f frame) (fun x -> g x frame)
 
 let bind_pre_act
      (#a:Type u#a)
@@ -243,7 +237,7 @@ let frame_pre_act_non_reifiable
      (#pre #post #frame:_)
      (f:pre_act a UsesInvariants except pre post)
 : pre_act a UsesInvariants except (pre `star` frame) (fun x -> post x `star` frame)
-= fun frame' -> f (frame `star` frame')
+= fun frame' -> M.weaken <| f (frame `star` frame')
 
 let frame_pre_act
      (#a:Type u#a)
@@ -274,7 +268,7 @@ let lift_pre_act_reifiablity
 : pre_act a UsesInvariants except pre post
 = if r = UsesInvariants then f
   else let f : pre_act a Reifiable except pre post = f in
-       fun frame -> M.to_msttotal _ _ _ _ (M.lift_pst (f frame))
+       fun frame -> M.weaken <| (M.lift_pst (f frame))
 
 //////////////////////////////////////////////////////
 // Next, reversing the polarity of the inames index
@@ -428,8 +422,8 @@ let lift2 (#a:Type u#2) #r #opens #pre #post
 ///////////////////////////////////////////////////////
 
 let inv = inv
-let allocated_name = pre_inv
-let allocated_name_of_inv = pre_inv_of_inv
+let allocated_name = pre_inv u#1
+let allocated_name_of_inv (#p:slprop) (i:inv p) = pre_inv_of_inv #p i
 let name_of_allocated_name = name_of_pre_inv
 
 let new_invariant (p:slprop)
@@ -461,7 +455,11 @@ let with_invariant
     with_invariant #a #fp #fp' #ictx i (f #ictx')
 
 let distinct_invariants_have_distinct_names
-    #p #q i j pf
+    (#p:slprop)
+    (#q:slprop)
+    (i:inv p)
+    (j:inv q)
+    (pf:squash (p =!= q))
 = fun #ictx -> distinct_invariants_have_distinct_names ictx p q i j
 
 let invariant_name_identifies_invariant
@@ -541,34 +539,72 @@ let gather
       (fun _ -> pts_to r (op pcm v0 v1))
 = fun #ictx -> gather_action ictx r v0 v1
 
-let witnessed = witnessed
-let witness
+///////////////////////////////////////////////////////////////////
+// big refs
+///////////////////////////////////////////////////////////////////
+let big_pts_to = Mem.big_pts_to
+let big_pts_to_not_null #a #p r v #ictx = big_pts_to_not_null_action ictx r v
+
+let big_alloc
     (#a:Type)
     (#pcm:pcm a)
-    (r:erased (ref a pcm))
-    (fact:stable_property pcm)
-    (v:Ghost.erased a)
-    (pf:squash (forall z. compatible pcm v z ==> fact z))
-: act (witnessed r fact)
-      UsesInvariants
-      emp_inames
-      (pts_to r v)
-      (fun _ -> pts_to r v)
-= fun #ictx -> witness ictx r fact v pf
+    (x:a{pcm.refine x})
+: act (ref a pcm) Reifiable emp_inames emp (fun r -> big_pts_to r x)
+= fun #ictx -> big_alloc_action ictx x
 
-let recall
-    (#a:Type u#1)
-    (#pcm:pcm a)
-    (#fact:property a)
-    (r:erased (ref a pcm))
-    (v:Ghost.erased a)
-    (w:witnessed r fact)
-: act (v1:Ghost.erased a{compatible pcm v v1})
-      UsesInvariants
+let big_read
+    (#a:Type)
+    (#p:pcm a)
+    (r:ref a p)
+    (x:erased a)
+    (f:(v:a{compatible p x v}
+        -> GTot (y:a{compatible p y v /\
+                     FStar.PCM.frame_compatible p x v y})))
+: act (v:a{compatible p x v /\ p.refine v})
+      Reifiable
       emp_inames
-      (pts_to r v)
-      (fun v1 -> pts_to r v `star` pure (fact v1))
-= fun #ictx -> recall ictx r v w
+      (big_pts_to r x)
+      (fun v -> big_pts_to r (f v))
+= fun #ictx -> big_select_refine ictx r x f
+
+let big_write
+    (#a:Type)
+    (#p:pcm a)
+    (r:ref a p)
+    (x y:Ghost.erased a)
+    (f:FStar.PCM.frame_preserving_upd p x y)
+: act unit
+      Reifiable 
+      emp_inames
+      (big_pts_to r x)
+      (fun _ -> big_pts_to r y)
+= fun #ictx -> big_upd_gen ictx r x y f
+
+let big_share
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ref a pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+: act unit
+      Ghost
+      emp_inames
+      (big_pts_to r (v0 `op pcm` v1))
+      (fun _ -> big_pts_to r v0 `star` big_pts_to r v1)
+= fun #ictx -> big_split_action ictx r v0 v1
+
+let big_gather
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ref a pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a)
+: act (squash (composable pcm v0 v1))
+      Ghost
+      emp_inames
+      (big_pts_to r v0 `star` big_pts_to r v1)
+      (fun _ -> big_pts_to r (op pcm v0 v1))
+= fun #ictx -> big_gather_action ictx r v0 v1
 
 ///////////////////////////////////////////////////////////////////
 // pure
@@ -604,7 +640,7 @@ let intro_exists' (#a:Type u#a) (p:a -> slprop) (x:erased a)
 
 let intro_exists'' (#a:Type u#a) (p:a -> slprop) (x:erased a)
 : act unit Ghost emp_inames (p x) (thunk (exists* x. p x))
-= coerce_eq (exists_equiv #a #p) (intro_exists' #a p x)
+= fun #ictx -> coerce_eq (exists_equiv #a #p) (intro_exists' #a p x #ictx)
 
 let intro_exists (#a:Type u#a) (p:a -> slprop) (x:erased a)
 : act unit Ghost emp_inames (p x) (fun _ -> exists* x. p x)
@@ -616,7 +652,7 @@ let elim_exists' (#a:Type u#a) (p:a -> slprop)
 
 let elim_exists (#a:Type u#a) (p:a -> slprop)
 : act (erased a) Ghost emp_inames (exists* x. p x) (fun x -> p x)
-= coerce_eq (exists_equiv #a #p) (elim_exists' #a p)
+= fun #ictx -> coerce_eq (exists_equiv #a #p) (elim_exists' #a p #ictx)
 
 let drop p = fun #ictx -> drop #ictx p
 
@@ -627,6 +663,15 @@ let ghost_read #a #p r x f = fun #ictx -> ghost_read #ictx #a #p r x f
 let ghost_write #a #p r x y f = fun #ictx -> ghost_write #ictx #a #p r x y f
 let ghost_share #a #pcm r v0 v1 = fun #ictx -> ghost_share #ictx #a #pcm r v0 v1
 let ghost_gather #a #pcm r v0 v1 = fun #ictx -> ghost_gather #ictx #a #pcm r v0 v1
+
+let big_ghost_pts_to = Mem.big_ghost_pts_to
+let big_ghost_alloc #a #pcm x = fun #ictx -> big_ghost_alloc #ictx #a #pcm x
+let big_ghost_read #a #p r x f = fun #ictx -> big_ghost_read #ictx #a #p r x f
+let big_ghost_write #a #p r x y f = fun #ictx -> big_ghost_write #ictx #a #p r x y f
+let big_ghost_share #a #pcm r v0 v1 = fun #ictx -> big_ghost_share #ictx #a #pcm r v0 v1
+let big_ghost_gather #a #pcm r v0 v1 = fun #ictx -> big_ghost_gather #ictx #a #pcm r v0 v1
+
+
 let lift_erased #a ni_a #opens #pre #post f =
   fun #ictx ->
     let f : erased (pre_act a Ghost ictx pre post) =

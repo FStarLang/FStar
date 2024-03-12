@@ -1,11 +1,21 @@
 module PulseCore.InstantiatedSemantics
 
 [@@erasable]
-val slprop : Type u#2
-val emp : slprop
-val pure (p:prop) : slprop
+val slprop : Type u#3
+[@@erasable]
+val small_slprop : Type u#2
+val down (s:slprop) : small_slprop
+val up (s:small_slprop) : slprop
+let is_small (s:slprop) : prop = up (down s) == s
+let vprop = s:slprop { is_small s }
+val emp : vprop
+val pure (p:prop) : vprop
 val ( ** ) (p q : slprop) : slprop
+val small_star (p q:vprop) : squash (is_small (p ** q))
 val ( exists* ) (#a:Type u#a) (p: a -> slprop) : slprop
+val small_exists (#a:Type u#a) (p: a -> slprop)
+: Lemma (requires forall x. is_small (p x))
+        (ensures is_small (op_exists_Star p))
 val slprop_equiv (p q:slprop) : prop
 
 val slprop_equiv_refl (p:slprop)

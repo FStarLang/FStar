@@ -43,7 +43,7 @@ val act
     (opens:inames)
     (pre:slprop)
     (post:a -> slprop)
-: Type u#(max a 2)
+: Type u#(max a 3)
 
 val return 
     (#a:Type u#a)
@@ -200,7 +200,7 @@ val ref_null (#a:Type u#a) (p:pcm a) : ref a p
 val is_ref_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p)
 : b:bool { b <==> r == ref_null p }
 
-val pts_to (#a:Type u#1) (#p:pcm a) (r:ref a p) (v:a) : slprop
+val pts_to (#a:Type u#1) (#p:pcm a) (r:ref a p) (v:a) : vprop
 
 val pts_to_not_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p) (v:a)
 : act (squash (not (is_ref_null r)))
@@ -269,41 +269,78 @@ val gather
     (pts_to r v0 ** pts_to r v1)
     (fun _ -> pts_to r (op pcm v0 v1))
 
-let property (a:Type)
-  = a -> prop
+///////////////////////////////////////////////////////////////////
+// Big references
+///////////////////////////////////////////////////////////////////
 
-val witnessed (#a:Type u#1)
-              (#pcm:pcm a)
-              (r:ref a pcm)
-              (fact:property a)
-  : Type0
+val big_pts_to (#a:Type u#2) (#p:pcm a) (r:ref a p) (v:a) : slprop
 
-let stable_property (#a:Type) (pcm:pcm a)
-  = fact:property a {
-       FStar.Preorder.stable fact (PP.preorder_of_pcm pcm)
-    }
+val big_pts_to_not_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p) (v:a)
+: act (squash (not (is_ref_null r)))
+    Ghost
+    emp_inames 
+    (big_pts_to r v)
+    (fun _ -> big_pts_to r v)
 
-val witness
+val big_alloc
     (#a:Type)
     (#pcm:pcm a)
-    (r:erased (ref a pcm))
-    (fact:stable_property pcm)
-    (v:Ghost.erased a)
-    (pf:squash (forall z. compatible pcm v z ==> fact z))
-: act (witnessed r fact) UsesInvariants emp_inames (pts_to r v) (fun _ -> pts_to r v)
+    (x:a{pcm.refine x})
+: act (ref a pcm)
+      Reifiable
+      emp_inames
+      emp
+      (fun r -> big_pts_to r x)
 
-val recall
-    (#a:Type u#1)
-    (#pcm:pcm a)
-    (#fact:property a)
-    (r:erased (ref a pcm))
-    (v:Ghost.erased a)
-    (w:witnessed r fact)
-: act (v1:Ghost.erased a{compatible pcm v v1})
-    UsesInvariants
+val big_read
+    (#a:Type)
+    (#p:pcm a)
+    (r:ref a p)
+    (x:erased a)
+    (f:(v:a{compatible p x v}
+        -> GTot (y:a{compatible p y v /\
+                     FStar.PCM.frame_compatible p x v y})))
+: act (v:a{compatible p x v /\ p.refine v})
+      Reifiable
+      emp_inames
+      (big_pts_to r x)
+      (fun v -> big_pts_to r (f v))
+
+val big_write
+    (#a:Type)
+    (#p:pcm a)
+    (r:ref a p)
+    (x y:Ghost.erased a)
+    (f:FStar.PCM.frame_preserving_upd p x y)
+: act unit
+    Reifiable
     emp_inames
-    (pts_to r v)
-    (fun v1 -> pts_to r v ** pure (fact v1))
+    (big_pts_to r x)
+    (fun _ -> big_pts_to r y)
+
+val big_share
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ref a pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+: act unit
+    Ghost
+    emp_inames
+    (big_pts_to r (v0 `op pcm` v1))
+    (fun _ -> big_pts_to r v0 ** big_pts_to r v1)
+
+val big_gather
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ref a pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a)
+: act (squash (composable pcm v0 v1))
+    Ghost
+    emp_inames
+    (big_pts_to r v0 ** big_pts_to r v1)
+    (fun _ -> big_pts_to r (op pcm v0 v1))
 
 ///////////////////////////////////////////////////////////////////
 // pure
@@ -337,7 +374,7 @@ val drop (p:slprop)
 ////////////////////////////////////////////////////////////////////////
 [@@erasable]
 val ghost_ref (#[@@@unused] a:Type u#a) ([@@@unused] p:pcm a) : Type u#0
-val ghost_pts_to (#a:Type u#1) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop
+val ghost_pts_to (#a:Type u#1) (#p:pcm a) (r:ghost_ref p) (v:a) : vprop
 
 val ghost_alloc
     (#a:Type u#1)
@@ -388,6 +425,58 @@ val ghost_gather
 : act (squash (composable pcm v0 v1)) Ghost emp_inames
     (ghost_pts_to r v0 ** ghost_pts_to r v1)
     (fun _ -> ghost_pts_to r (op pcm v0 v1))
+
+val big_ghost_pts_to (#a:Type u#2) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop
+
+val big_ghost_alloc
+    (#a:Type)
+    (#pcm:pcm a)
+    (x:erased a{pcm.refine x})
+: act (ghost_ref pcm) Ghost emp_inames
+    emp 
+    (fun r -> big_ghost_pts_to r x)
+
+val big_ghost_read
+    (#a:Type)
+    (#p:pcm a)
+    (r:ghost_ref p)
+    (x:erased a)
+    (f:(v:a{compatible p x v}
+        -> GTot (y:a{compatible p y v /\
+                     FStar.PCM.frame_compatible p x v y})))
+: act (erased (v:a{compatible p x v /\ p.refine v})) Ghost emp_inames
+    (big_ghost_pts_to r x)
+    (fun v -> big_ghost_pts_to r (f v))
+
+val big_ghost_write
+    (#a:Type)
+    (#p:pcm a)
+    (r:ghost_ref p)
+    (x y:Ghost.erased a)
+    (f:FStar.PCM.frame_preserving_upd p x y)
+: act unit Ghost emp_inames 
+    (big_ghost_pts_to r x)
+    (fun _ -> big_ghost_pts_to r y)
+
+val big_ghost_share
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ghost_ref pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+: act unit Ghost emp_inames
+    (big_ghost_pts_to r (v0 `op pcm` v1))
+    (fun _ -> big_ghost_pts_to r v0 ** big_ghost_pts_to r v1)
+
+val big_ghost_gather
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ghost_ref pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a)
+: act (squash (composable pcm v0 v1)) Ghost emp_inames
+    (big_ghost_pts_to r v0 ** big_ghost_pts_to r v1)
+    (fun _ -> big_ghost_pts_to r (op pcm v0 v1))
 
 let non_informative a = x:erased a -> y:a { reveal x == y}
 
