@@ -16,4 +16,4 @@ KRML ?= $(KRML_HOME)/krml
 
 .PHONY: extract
 extract: $(ALL_KRML_FILES)
-	$(KRML) -skip-makefiles -skip-compilation -bundle 'EverCrypt.Hash.Incremental=[rename=EverCrypt_Hash]' -warn-error @4 -tmpdir $(OUTPUT_DIRECTORY) $^
+	$(KRML) -skip-makefiles -skip-compilation -bundle 'EverCrypt.Hash.Incremental=[rename=EverCrypt_Hash]' -warn-error @4 -tmpdir $(OUTPUT_DIRECTORY) -add-include '"EverCrypt_Base.h"' $^

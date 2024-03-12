@@ -27,4 +27,4 @@ extract: $(ALL_KRML_FILES)
 .PHONY: test
 test: extract
 	+$(MAKE) -C common/hacl-c
-	+$(MAKE) -C $(OUTPUT_DIRECTORY) -f Makefile.basic USER_CFLAGS='-I $(CURDIR)/common/hacl-c/_output' DPE.o HACL.o
+	+$(MAKE) -C $(OUTPUT_DIRECTORY) -f Makefile.basic USER_CFLAGS='-I $(CURDIR)/common/hacl-c/_output -I $(CURDIR)/common/hacl-c' DPE.o HACL.o
