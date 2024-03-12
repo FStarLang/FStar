@@ -28,7 +28,19 @@ assume
 val valid_deviceIDCSR_ingredients (len: US.t) : prop
 
 assume
+val valid_deviceIDCSR_ingredients_elim (len: US.t) : Lemma
+  (requires (valid_deviceIDCSR_ingredients len))
+  (ensures (US.v len < pow2 32)) // constrained by HACL.ed25519_sign
+  [SMTPat (valid_deviceIDCSR_ingredients len)]
+
+assume
 val valid_aliasKeyCRT_ingredients (len: US.t) : prop
+
+assume
+val valid_aliasKeyCRT_ingredients_elim (len: US.t) : Lemma
+  (requires (valid_aliasKeyCRT_ingredients len))
+  (ensures (US.v len < pow2 32)) // constrained by HACL.ed25519_sign
+  [SMTPat (valid_aliasKeyCRT_ingredients len)]
 
 assume
 val length_of_deviceIDCSR (len: US.t) : US.t 
