@@ -142,12 +142,16 @@ val ed25519_sign
 
 // NOTE: I added a unit argument to avoid krmlinit_globals
 
-val dice_hash_alg (_: unit) : alg_t
+val dice_hash_alg0 (_: unit) : alg_t
 
-let dice_digest_len (_: unit) : hashable_len = assume (is_hashable_len (digest_len (dice_hash_alg ()))); digest_len (dice_hash_alg ())
+inline_for_extraction noextract [@@noextract_to "krml"]
+let dice_hash_alg = dice_hash_alg0 ()
 
-assume Dice_digest_len_is_hashable : is_hashable_len (dice_digest_len ())
+inline_for_extraction noextract [@@noextract_to "krml"]
+let dice_digest_len : hashable_len = assume (is_hashable_len (digest_len dice_hash_alg)); digest_len dice_hash_alg
 
-assume Dice_digest_len_is_hkdf_ikm : valid_hkdf_ikm_len (dice_digest_len ())
+assume Dice_digest_len_is_hashable : is_hashable_len dice_digest_len
+
+assume Dice_digest_len_is_hkdf_ikm : valid_hkdf_ikm_len dice_digest_len
 
 assume Is_hashable_len_32 : is_hashable_len v32us
