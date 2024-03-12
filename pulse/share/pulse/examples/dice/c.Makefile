@@ -28,3 +28,10 @@ extract: $(ALL_KRML_FILES)
 test: extract
 	+$(MAKE) -C common/hacl-c
 	+$(MAKE) -C $(OUTPUT_DIRECTORY) -f Makefile.basic USER_CFLAGS='-I $(CURDIR)/common/hacl-c/_output -I $(CURDIR)/common/hacl-c' DPE.o HACL.o
+ifneq (,$(HACL_HOME))
+	+$(MAKE) -C $(OUTPUT_DIRECTORY) -f Makefile.basic clean
+	+$(MAKE) -C $(HACL_HOME)/dist/gcc-compatible Makefile.config
+	+$(MAKE) -C $(OUTPUT_DIRECTORY) -f Makefile.basic USER_CFLAGS='-I $(HACL_HOME)/dist/gcc-compatible -mavx' DPE.o HACL.o
+	+$(MAKE) -C $(OUTPUT_DIRECTORY) -f Makefile.basic clean
+	+$(MAKE) -C $(OUTPUT_DIRECTORY) -f Makefile.basic USER_CFLAGS='-I $(HACL_HOME)/dist/gcc-compatible -mavx -mavx2' DPE.o HACL.o
+endif
