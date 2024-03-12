@@ -540,6 +540,73 @@ let gather
 = fun #ictx -> gather_action ictx r v0 v1
 
 ///////////////////////////////////////////////////////////////////
+// big refs
+///////////////////////////////////////////////////////////////////
+let big_pts_to = Mem.big_pts_to
+let big_pts_to_not_null #a #p r v #ictx = big_pts_to_not_null_action ictx r v
+
+let big_alloc
+    (#a:Type)
+    (#pcm:pcm a)
+    (x:a{pcm.refine x})
+: act (ref a pcm) Reifiable emp_inames emp (fun r -> big_pts_to r x)
+= fun #ictx -> big_alloc_action ictx x
+
+let big_read
+    (#a:Type)
+    (#p:pcm a)
+    (r:ref a p)
+    (x:erased a)
+    (f:(v:a{compatible p x v}
+        -> GTot (y:a{compatible p y v /\
+                     FStar.PCM.frame_compatible p x v y})))
+: act (v:a{compatible p x v /\ p.refine v})
+      Reifiable
+      emp_inames
+      (big_pts_to r x)
+      (fun v -> big_pts_to r (f v))
+= fun #ictx -> big_select_refine ictx r x f
+
+let big_write
+    (#a:Type)
+    (#p:pcm a)
+    (r:ref a p)
+    (x y:Ghost.erased a)
+    (f:FStar.PCM.frame_preserving_upd p x y)
+: act unit
+      Reifiable 
+      emp_inames
+      (big_pts_to r x)
+      (fun _ -> big_pts_to r y)
+= fun #ictx -> big_upd_gen ictx r x y f
+
+let big_share
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ref a pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+: act unit
+      Ghost
+      emp_inames
+      (big_pts_to r (v0 `op pcm` v1))
+      (fun _ -> big_pts_to r v0 `star` big_pts_to r v1)
+= fun #ictx -> big_split_action ictx r v0 v1
+
+let big_gather
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ref a pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a)
+: act (squash (composable pcm v0 v1))
+      Ghost
+      emp_inames
+      (big_pts_to r v0 `star` big_pts_to r v1)
+      (fun _ -> big_pts_to r (op pcm v0 v1))
+= fun #ictx -> big_gather_action ictx r v0 v1
+
+///////////////////////////////////////////////////////////////////
 // pure
 ///////////////////////////////////////////////////////////////////
 let pure_true ()

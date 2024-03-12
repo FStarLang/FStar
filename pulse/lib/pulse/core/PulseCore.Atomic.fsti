@@ -320,12 +320,8 @@ val gather
     (fun _ -> pts_to r (op pcm v0 v1))
 
 ////////////////////////////////////////////////////////////////////////
-// References
+// Ghost References
 ////////////////////////////////////////////////////////////////////////
-[@@erasable]
-val ghost_ref (#[@@@unused] a:Type u#a) ([@@@unused]p:pcm a) : Type0
-val ghost_pts_to (#a:Type u#1) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop 
-
 val ghost_alloc
     (#a:Type u#1)
     (#pcm:pcm a)
@@ -375,6 +371,75 @@ val ghost_gather
 : stt_ghost (squash (composable pcm v0 v1))
     (ghost_pts_to r v0 ** ghost_pts_to r v1)
     (fun _ -> ghost_pts_to r (op pcm v0 v1))
+
+////////////////////////////////////////////////////////////////////////
+// Big References
+////////////////////////////////////////////////////////////////////////
+
+val big_pts_to_not_null
+    (#a:Type)
+    (#p:FStar.PCM.pcm a)
+    (r:ref a p)
+    (v:a)
+: stt_ghost (squash (not (is_ref_null r)))
+    (big_pts_to r v)
+    (fun _ -> big_pts_to r v)
+
+val big_alloc
+    (#a:Type)
+    (#pcm:pcm a)
+    (x:a{pcm.refine x})
+: stt_atomic (ref a pcm)
+    #Observable
+    emp_inames
+    emp
+    (fun r -> big_pts_to r x)
+
+val big_read
+    (#a:Type)
+    (#p:pcm a)
+    (r:ref a p)
+    (x:erased a)
+    (f:(v:a{compatible p x v}
+        -> GTot (y:a{compatible p y v /\
+                     FStar.PCM.frame_compatible p x v y})))
+: stt_atomic (v:a{compatible p x v /\ p.refine v})
+    #Observable
+    emp_inames
+    (big_pts_to r x)
+    (fun v -> big_pts_to r (f v))
+
+val big_write
+    (#a:Type)
+    (#p:pcm a)
+    (r:ref a p)
+    (x y:Ghost.erased a)
+    (f:FStar.PCM.frame_preserving_upd p x y)
+: stt_atomic unit
+    #Observable
+    emp_inames
+    (big_pts_to r x)
+    (fun _ -> big_pts_to r y)
+
+val big_share
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ref a pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+: stt_ghost unit
+    (big_pts_to r (v0 `op pcm` v1))
+    (fun _ -> big_pts_to r v0 ** big_pts_to r v1)
+
+val big_gather
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ref a pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a)
+: stt_ghost (squash (composable pcm v0 v1))
+    (big_pts_to r v0 ** big_pts_to r v1)
+    (fun _ -> big_pts_to r (op pcm v0 v1))
 
 val drop (p:slprop)
 : stt_ghost unit p (fun _ -> emp)

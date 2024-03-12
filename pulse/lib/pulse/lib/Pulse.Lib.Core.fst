@@ -218,7 +218,7 @@ let pcm_ref #a p = PulseCore.Action.ref a p
 
 let pcm_pts_to (#a:Type u#1) (#p:pcm a) (r:pcm_ref p) (v:a) =
   PulseCore.Action.pts_to r v
-
+let is_small_pcm_pts_to #a #p r v = ()
 let pcm_ref_null #a p = PulseCore.Action.ref_null #a p
 let is_pcm_ref_null #a #p r = PulseCore.Action.is_ref_null #a #p r
 let pts_to_not_null #a #p r v = A.pts_to_not_null #a #p r v
@@ -262,9 +262,10 @@ let gather = A.gather
 ////////////////////////////////////////////////////////
 // ghost refs
 ////////////////////////////////////////////////////////
-let ghost_pcm_ref #a p = A.ghost_ref #a p
+let ghost_pcm_ref #a p = PulseCore.Action.ghost_ref #a p
 let ghost_pcm_ref_non_informative a p = fun r -> reveal r
-let ghost_pcm_pts_to #a #p r v = A.ghost_pts_to #a #p r v
+let ghost_pcm_pts_to #a #p r v = PulseCore.Action.ghost_pts_to #a #p r v
+let is_small_ghost_pcm_pts_to #a #p r v = ()
 let ghost_alloc = A.ghost_alloc
 let ghost_read = A.ghost_read
 let ghost_write = A.ghost_write
@@ -298,5 +299,47 @@ let return_stt_a (#a:Type u#a) (x:a) (p:a -> vprop)
 let return_stt (#a:Type u#a) (x:a) (p:a -> vprop)
 : stt a (p x) (fun v -> p v ** pure (v == x))
 = bind_stt (return_stt_a x p) (fun _ -> return_stt_alt x p)
+
+////////////////////////////////////////////////////////
+// big refs
+////////////////////////////////////////////////////////
+let big_pcm_pts_to #a #p r v = PulseCore.Action.big_pts_to #a #p r v
+let big_pts_to_not_null #a #p r v = A.big_pts_to_not_null #a #p r v
+
+let big_alloc
+    (#a:Type)
+    (#pcm:pcm a)
+    (x:a{pcm.refine x})
+: stt (pcm_ref pcm)
+    emp
+    (fun r -> big_pcm_pts_to r x)
+= A.lift_atomic0 (A.big_alloc #a #pcm x)
+
+let big_read
+    (#a:Type)
+    (#p:pcm a)
+    (r:pcm_ref p)
+    (x:erased a)
+    (f:(v:a{compatible p x v}
+        -> GTot (y:a{compatible p y v /\
+                     FStar.PCM.frame_compatible p x v y})))
+: stt (v:a{compatible p x v /\ p.refine v})
+    (big_pcm_pts_to r x)
+    (fun v -> big_pcm_pts_to r (f v))
+= A.lift_atomic2 (A.big_read r x f)
+
+let big_write
+    (#a:Type)
+    (#p:pcm a)
+    (r:pcm_ref p)
+    (x y:Ghost.erased a)
+    (f:FStar.PCM.frame_preserving_upd p x y)
+: stt unit
+    (big_pcm_pts_to r x)
+    (fun _ -> big_pcm_pts_to r y)
+= A.lift_atomic0 (A.big_write r x y f)
+
+let big_share = A.big_share
+let big_gather = A.big_gather
 
 let as_atomic #a pre post (e:stt a pre post) = admit() //intentional

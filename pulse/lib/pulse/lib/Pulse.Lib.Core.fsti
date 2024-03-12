@@ -571,6 +571,13 @@ val pcm_pts_to
     (v:a)
 : vprop
 
+val is_small_pcm_pts_to
+    (#a:Type u#1)
+    (#p:pcm a)
+    (r:pcm_ref p)
+    (v:a)
+: Lemma (is_small (pcm_pts_to r v))
+
 val pcm_ref_null
     (#a:Type)
     (p:FStar.PCM.pcm a)
@@ -659,6 +666,13 @@ val ghost_pcm_pts_to
     (v:a)
 : vprop
 
+val is_small_ghost_pcm_pts_to
+    (#a:Type u#1)
+    (#p:pcm a)
+    (r:ghost_pcm_ref p)
+    (v:a)
+: Lemma (is_small (ghost_pcm_pts_to r v))
+
 val ghost_alloc
     (#a:Type u#1)
     (#pcm:pcm a)
@@ -708,6 +722,75 @@ val ghost_gather
 : stt_ghost (squash (composable pcm v0 v1))
     (ghost_pcm_pts_to r v0 ** ghost_pcm_pts_to r v1)
     (fun _ -> ghost_pcm_pts_to r (op pcm v0 v1))
+
+////////////////////////////////////////////////////////
+//Core PCM references
+////////////////////////////////////////////////////////
+val big_pcm_pts_to
+    (#a:Type u#2)
+    (#p:pcm a)
+    (r:pcm_ref p)
+    (v:a)
+: vprop
+
+val big_pts_to_not_null
+    (#a:Type)
+    (#p:FStar.PCM.pcm a)
+    (r:pcm_ref p)
+    (v:a)
+: stt_ghost (squash (not (is_pcm_ref_null r)))
+            (big_pcm_pts_to r v)
+            (fun _ -> big_pcm_pts_to r v)
+
+val big_alloc
+    (#a:Type u#2)
+    (#pcm:pcm a)
+    (x:a{pcm.refine x})
+: stt (pcm_ref pcm)
+    emp
+    (fun r -> big_pcm_pts_to r x)
+
+val big_read
+    (#a:Type)
+    (#p:pcm a)
+    (r:pcm_ref p)
+    (x:erased a)
+    (f:(v:a{compatible p x v}
+        -> GTot (y:a{compatible p y v /\
+                     FStar.PCM.frame_compatible p x v y})))
+: stt (v:a{compatible p x v /\ p.refine v})
+    (big_pcm_pts_to r x)
+    (fun v -> big_pcm_pts_to r (f v))
+
+val big_write
+    (#a:Type)
+    (#p:pcm a)
+    (r:pcm_ref p)
+    (x y:Ghost.erased a)
+    (f:FStar.PCM.frame_preserving_upd p x y)
+: stt unit
+    (big_pcm_pts_to r x)
+    (fun _ -> big_pcm_pts_to r y)
+
+val big_share
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:pcm_ref pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+: stt_ghost unit
+    (big_pcm_pts_to r (v0 `op pcm` v1))
+    (fun _ -> big_pcm_pts_to r v0 ** big_pcm_pts_to r v1)
+
+val big_gather
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:pcm_ref pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a)
+: stt_ghost (squash (composable pcm v0 v1))
+    (big_pcm_pts_to r v0 ** big_pcm_pts_to r v1)
+    (fun _ -> big_pcm_pts_to r (op pcm v0 v1))
 
 // Finally, a big escape hatch for introducing architecture/backend-specific
 // atomic operations from proven stt specifications
