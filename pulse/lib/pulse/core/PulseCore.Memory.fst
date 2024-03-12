@@ -212,10 +212,6 @@ let equiv_heap_iff_equiv_forall ()
     ()
 #pop-options
 
-// let equiv_extensional_on_star (p1 p2 p3:slprop u#a) =
-//   equiv_heap_iff_equiv_forall ();
-//   H.equiv_extensional_on_star p1 p2 p3
-
 let emp_unit p = H.emp_unit p
 
 
@@ -683,18 +679,6 @@ let as_hprop (frame:slprop) (mp:mprop frame)
       in
       f
 
-// let mprop_preservation_of_hprop_preservation
-//        (p:slprop) (m0 m1:mem)
-//     : Lemma
-//       (requires (forall (hp:H.hprop p). hp (heap_of_mem m0) == hp (heap_of_mem m1)))
-//       (ensures (forall (mp:mprop p). mp (core_mem m0) == mp (core_mem m1)))
-//     = let aux (mp:mprop p)
-//         : Lemma (mp (core_mem m0) == mp (core_mem m1))
-//           [SMTPat()]
-//         = assert (as_hprop p mp (heap_of_mem m0) == as_hprop p mp (heap_of_mem m1))
-//       in
-//       ()
-
 let mg_of_mut (m:mutability) =
   match m with
   | MUTABLE -> false
@@ -844,26 +828,6 @@ let lift_tot_action_with_frame #mg #a #e #fp #fp'
     (x, m1)
 
 
-////////////////////////////////////////////////////////////////////////////////
-// witness / recall
-////////////////////////////////////////////////////////////////////////////////
-
-// let witnessed_ref #a #pcm (r:ref a pcm) (fact:property a) (m:full_mem)
-// : prop
-// = H.witnessed_ref #a #pcm r fact (heap_of_mem m)
-
-// let witnessed_ref_stability #a #pcm (r:ref a pcm) (fact:property a)
-//   : Lemma
-//     (requires FStar.Preorder.stable fact (PP.preorder_of_pcm pcm))
-//     (ensures FStar.Preorder.stable (witnessed_ref r fact) mem_evolves)
-//   = H.witnessed_ref_stability #a #pcm r fact
-
-// let witnessed (#a:Type u#1)
-//               (#pcm:pcm a)
-//               (r:ref a pcm)
-//               (fact:property a)
-//   = W.witnessed _ mem_evolves (witnessed_ref r fact)
-
 let rearrange_pqr_prq (p q r:slprop)
       : Lemma (((p `star` q) `star` r) `equiv`
                ((p `star` r) `star` q))
@@ -988,54 +952,6 @@ let _mst_tot_aux
         interp (provides x `star` frame `star` locks_invariant except m1) m1)
 
 
-// let witness_aux (#a:Type) (#pcm:pcm a)
-//             (e:inames)
-//             (r:erased (ref a pcm))
-//             (fact:stable_property pcm)
-//             (v:Ghost.erased a)
-//             (_:squash (forall z. compatible pcm v z ==> fact z))
-//             (frame:slprop)
-// : _mst_tot_aux (witnessed r fact) e
-//           (pts_to r v)
-//           (fun _ -> pts_to r v) frame (fun _ -> True)
-// = fun m0 ->
-//     let _ : unit = 
-//       let hr : H.ref a pcm = r in
-//       let v' = H.sel_v hr v (heap_of_mem m0) in
-//       assert (interp (H.ptr hr) m0 /\ H.sel #a #pcm hr (heap_of_mem m0) == v');
-//       assert (compatible pcm v v');
-//       assert (fact v');
-//       assert (witnessed_ref r fact m0);
-//       witnessed_ref_stability r fact;
-//       assert (FStar.Preorder.stable (witnessed_ref r fact) mem_evolves)
-//     in
-//     MST.weaken <| MST.witness #_ #mem_evolves (witnessed_ref r fact)
-
-// let witness (#a:Type) (#pcm:pcm a)
-//             (e:inames)
-//             (r:erased (ref a pcm))
-//             (fact:stable_property pcm)
-//             (v:Ghost.erased a)
-//             (_:squash (forall z. compatible pcm v z ==> fact z))
-//             (frame:slprop) = MST.with_get (witness_aux e r fact v () frame)
-
-let bind_with_get 
-      (#s:Type u#s)
-      (#a:Type u#a)
-      (#b:Type u#b)
-      (#rel:preorder s)
-      (#req_f:MST.req_t s)
-      (#ens_f:MST.ens_t s a)
-      (#req_g:a -> MST.req_t s)
-      (#ens_g:a -> MST.ens_t s b)
-      (f:MST.mst rel a req_f ens_f)
-      (g:(x:a -> MST.mst_aux rel b (req_g x) (ens_g x)))
-: MST.mst rel b
-  (fun s0 -> req_f s0 /\ (forall x s1. ens_f s0 x s1 ==> (req_g x) s1))
-  (fun s0 r s2 -> req_f s0 /\ (exists x s1. ens_f s0 x s1 /\ (req_g x) s1 /\ (ens_g x) s1 r s2))
-= MST.bind f (fun x -> MST.with_get (g x))
-
-
 let with_get_aux #a #e #p #q #frame #pre (f:_mst_tot_aux a e p q frame pre)
   : MST.mst mem_evolves a
       (fun m0 ->
@@ -1047,57 +963,6 @@ let with_get_aux #a #e #p #q #frame #pre (f:_mst_tot_aux a e p q frame pre)
         interp (p `star` frame `star` locks_invariant e m0) m0 /\
         interp (q x `star` frame `star` locks_invariant e m1) m1)
   = MST.with_get f
-
-// let recall (#a:Type u#1) (#pcm:pcm a) (#fact:property a)
-//            (e:inames)
-//            (r:erased (ref a pcm))
-//            (v:Ghost.erased a)
-//            (w:witnessed r fact)
-//            (frame:slprop)
-// : _MstTot (v1:Ghost.erased a{compatible pcm v v1}) e
-//           (pts_to r v)
-//           (fun v1 -> pts_to r v `star` pure (fact v1))
-//           frame
-// = let f
-//     : _mst_tot_aux
-//           (v1:Ghost.erased a{compatible pcm v v1})
-//           e
-//           (pts_to r v)
-//           (fun v1 -> pts_to r v `star` pure (fact v1))
-//           frame
-//           (witnessed_ref r fact)
-//     = fun m0 ->
-//         let v1 :(v1: Ghost.erased a { compatible pcm v v1}) =
-//           let hr : H.ref a pcm = r in
-//           assert (witnessed_ref r fact m0);
-//           let v1 = H.sel_v hr v (heap_of_mem m0) in
-//           assert (compatible pcm v v1);
-//           assert (H.sel hr (heap_of_mem m0) == v1);
-//           assert (fact v1);
-//           assert (interp ((pts_to r v `star` frame) `star` locks_invariant e m0) m0);
-//           emp_unit ((pts_to r v `star` frame) `star` locks_invariant e m0);
-//           pure_star_interp ((pts_to r v `star` frame) `star` locks_invariant e m0) (fact v1) m0;
-//           assert (interp (((pts_to r v `star` frame)
-//                           `star` locks_invariant e m0)
-//                           `star` pure (fact v1)) m0);
-//           rearrange_pqr_prq (pts_to r v `star` frame)
-//                             (locks_invariant e m0)
-//                             (pure (fact v1));
-//           assert (interp (((pts_to r v `star` frame) `star` pure (fact v1)) 
-//                         `star` locks_invariant e m0) m0);
-//           rearrange_pqr_prq (pts_to r v) frame (pure (fact v1));
-//           star_congruence ((pts_to r v `star` frame) `star` pure (fact v1))
-//                           (locks_invariant e m0)
-//                           ((pts_to r v `star` pure (fact v1)) `star` frame)
-//                           (locks_invariant e m0);         
-//           Ghost.hide v1
-//         in
-//         MST.weaken <|
-//         MST.return v1
-//   in
-//   MST.weaken <|
-//   MST.bind (MST.recall #_ #mem_evolves (witnessed_ref r fact) w)
-//            (fun _ -> with_get_aux f)
 
 let iname_for_p_mem (i:iname) (p:slprop) : full_mem -> prop =
   fun m -> iname_for_p i p m.locks
@@ -1492,6 +1357,7 @@ let with_inv_helper (fp frame ls1 ctr p ls2:slprop)
 let token_of_inv #p (i:inv p) : (name_of_inv i >--> p) = let (| _, _, tok |) = i in tok
 
 let mst_aux #s rel a p q = x:s { p x } -> MST.mst #s rel a (fun s0 -> s0 == x) q
+
 let with_invariant (#a:Type)
                    (#fp:slprop)
                    (#fp':a -> slprop)
