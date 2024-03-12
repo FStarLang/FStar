@@ -5,7 +5,7 @@ INCLUDE_PATHS += ..
 ifneq (,$(wildcard ../../_output/cache))
   INCLUDE_PATHS += ../../_output/cache
 endif
-ALREADY_CACHED_LIST = *,-HACL,-EverCrypt
+ALREADY_CACHED_LIST = *,-HACL,-EverCrypt,Spec.Hash.Definitions
 FSTAR_OPTIONS += --warn_error -342
 FSTAR_DEP_OPTIONS=--extract '+EverCrypt'
 all: verify extract
@@ -16,4 +16,4 @@ KRML ?= $(KRML_HOME)/krml
 
 .PHONY: extract
 extract: $(ALL_KRML_FILES)
-	$(KRML) -skip-makefiles -skip-compilation -bundle 'EverCrypt.Hash.Incremental=[rename=EverCrypt_Hash]' -warn-error @4 -tmpdir $(OUTPUT_DIRECTORY) -add-include '"EverCrypt_Base.h"' $^
+	$(KRML) -skip-makefiles -skip-compilation -bundle 'EverCrypt.Hash.Incremental=Spec.Hash.Definitions[rename=EverCrypt_Hash]' -warn-error @4 -tmpdir $(OUTPUT_DIRECTORY) -add-include '"EverCrypt_Base.h"' $^

@@ -3,7 +3,7 @@
 
 #include "krmllib.h"
 
-typedef uint8_t EverCrypt_Hash_Incremental_hash_alg;
+typedef uint8_t Spec_Hash_Definitions_hash_alg;
 
 #define __EverCrypt_Base_H_DEFINED
 #endif

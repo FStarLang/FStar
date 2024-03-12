@@ -1,13 +1,11 @@
 module EverCrypt.Hash.Incremental
+include Spec.Hash.Definitions
 open Pulse.Lib.Pervasives
 module R = Pulse.Lib.Reference
 module A = Pulse.Lib.Array
 module US = FStar.SizeT
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
-
-/// From EverCrypt.Hash.Incremental.hash_alg
-val hash_alg: Type0
 
 /// From EverCrypt.Hash.Incremental.hash_len
 val hash_len : hash_alg -> U32.t

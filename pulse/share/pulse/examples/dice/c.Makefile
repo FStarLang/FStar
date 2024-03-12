@@ -10,7 +10,7 @@ CACHE_DIRECTORY=$(OUTPUT_DIRECTORY_BASE)/cache
 OUTPUT_DIRECTORY=$(OUTPUT_DIRECTORY_BASE)/c
 INCLUDE_PATHS += common dpe engine l0 cbor common/hacl-c
 FSTAR_FILES := dpe/DPE.fst
-ALREADY_CACHED_LIST = *,-HACL,-EverCrypt
+ALREADY_CACHED_LIST = *,-HACL,-EverCrypt,-Spec.Hash.Definitions
 FSTAR_DEP_FILE=.depend-c
 FSTAR_OPTIONS += --warn_error -342
 FSTAR_DEP_OPTIONS=--extract '* -FStar.Tactics -FStar.Reflection -Pulse -PulseCore +Pulse.Lib -Pulse.Lib.Array.Core -Pulse.Lib.Core -Pulse.Lib.HigherReference'
@@ -22,7 +22,7 @@ KRML ?= $(KRML_HOME)/krml
 
 .PHONY: extract
 extract: $(ALL_KRML_FILES)
-	$(KRML) -skip-compilation -ccopt -Wno-unused-variable -bundle 'HACL=EverCrypt.\*' -bundle 'DPE=*' -library Pulse.Lib.SpinLock -add-include '"EverCrypt_Hash.h"' -add-include '"EverCrypt_HMAC.h"' -add-include '"EverCrypt_Ed25519.h"' -warn-error @4+9 -tmpdir $(OUTPUT_DIRECTORY) $^
+	$(KRML) -skip-compilation -ccopt -Wno-unused-variable -bundle 'HACL=EverCrypt.\*,Spec.Hash.Definitions' -bundle 'DPE=*' -library Pulse.Lib.SpinLock -add-include '"EverCrypt_Hash.h"' -add-include '"EverCrypt_HMAC.h"' -add-include '"EverCrypt_Ed25519.h"' -warn-error @4+9 -tmpdir $(OUTPUT_DIRECTORY) $^
 
 .PHONY: test
 test: extract
