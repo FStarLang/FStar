@@ -21,7 +21,7 @@ val block_length: H.hash_alg -> pos
 /// From Spec.Agile.HMAC
 noextract [@@noextract_to "krml"]
 let keysized (a:H.hash_alg) (l:nat) =
-  l `H.less_than_max_input_length` a /\
+  l `H.less_than_max_input_length` a &&
   l + block_length a < pow2 32
 
 /// From Spec.Agile.HMAC

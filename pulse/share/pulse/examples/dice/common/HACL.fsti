@@ -34,40 +34,32 @@ let v32us : US.t = 32sz
 
 (* a tiny model of HACL* hashes *)
 
-assume
 val alg_t : Type0
 
-assume
 val digest_len (_:alg_t) : US.t
 
-assume
 val is_hashable_len (_:US.t) : prop
 
 let hashable_len = v:US.t{ is_hashable_len v }
 
-assume
 val is_signable_len (_:US.t) : prop
 
 let signable_len = v:US.t{ is_signable_len v }
 
-assume
 val valid_hkdf_lbl_len (l:US.t) : prop
 
 let hkdf_lbl_len = v:US.t{ valid_hkdf_lbl_len v }
 
-assume
 val valid_hkdf_ikm_len (_:US.t) : prop
 
 let hkdf_ikm_len = v:US.t{ valid_hkdf_ikm_len v }
 
 noextract [@@noextract_to "krml"]
-assume
 val spec_hash 
   (a:alg_t) 
   (s:Seq.seq U8.t) 
   : s:(Seq.seq U8.t){ Seq.length s = (US.v (digest_len a)) }
 
-assume
 val hacl_hash (alg:alg_t)
               (src_len: hashable_len)
               (src:A.larray U8.t (US.v src_len))
@@ -82,14 +74,12 @@ val hacl_hash (alg:alg_t)
        A.pts_to dst (spec_hash alg src_seq))
 
 noextract [@@noextract_to "krml"]
-assume
 val spec_hmac 
   (a:alg_t) 
   (k:Seq.seq U8.t) 
   (m:Seq.seq U8.t) 
   : s:(Seq.seq U8.t){ Seq.length s = (US.v (digest_len a)) }
 
-assume
 val hacl_hmac (alg:alg_t)
               (dst:A.larray U8.t (US.v (digest_len alg)))
               (key:A.array U8.t)
@@ -109,10 +99,8 @@ val hacl_hmac (alg:alg_t)
        A.pts_to msg #pmsg msg_seq **
        A.pts_to dst (spec_hmac alg key_seq msg_seq))
 
-assume
 val spec_ed25519_verify (pubk hdr sig:Seq.seq U8.t) : prop 
 
-assume
 val ed25519_verify 
   (pubk:A.larray U8.t (US.v v32us))
   (hdr:A.array U8.t)
@@ -124,21 +112,19 @@ val ed25519_verify
     (A.pts_to pubk #ppubk pubk_seq **
      A.pts_to hdr #phdr hdr_seq **
      A.pts_to sig #psig sig_seq)
-    (fun _ ->
+    (fun res ->
       A.pts_to pubk #ppubk pubk_seq **
       A.pts_to hdr #phdr hdr_seq **
       A.pts_to sig #psig sig_seq **
-      pure (spec_ed25519_verify pubk_seq hdr_seq sig_seq))
+      pure (res == true <==> spec_ed25519_verify pubk_seq hdr_seq sig_seq))
 
 noextract [@@noextract_to "krml"]
-assume
 val spec_ed25519_sign (privk msg:Seq.seq U8.t) : Seq.seq U8.t
 
-assume
 val ed25519_sign 
-  (buf:A.array U8.t)
+  (buf:A.larray U8.t 64)
   (privk:A.larray U8.t (US.v v32us))
-  (len:US.t)
+  (len:US.t { US.v len < pow2 32 })
   (msg:A.larray U8.t (US.v len))
   (#pprivk #pmsg:perm)
   (#buf0 #privk_seq #msg_seq:erased (Seq.seq U8.t))
@@ -154,13 +140,14 @@ val ed25519_sign
 
 (* DICE hash constants *)
 
-assume
-val dice_hash_alg : alg_t
+// NOTE: I added a unit argument to avoid krmlinit_globals
 
-let dice_digest_len : hashable_len = assume (is_hashable_len (digest_len dice_hash_alg)); digest_len dice_hash_alg
+val dice_hash_alg (_: unit) : alg_t
 
-assume Dice_digest_len_is_hashable : is_hashable_len dice_digest_len
+let dice_digest_len (_: unit) : hashable_len = assume (is_hashable_len (digest_len (dice_hash_alg ()))); digest_len (dice_hash_alg ())
 
-assume Dice_digest_len_is_hkdf_ikm : valid_hkdf_ikm_len dice_digest_len
+assume Dice_digest_len_is_hashable : is_hashable_len (dice_digest_len ())
+
+assume Dice_digest_len_is_hkdf_ikm : valid_hkdf_ikm_len (dice_digest_len ())
 
 assume Is_hashable_len_32 : is_hashable_len v32us
