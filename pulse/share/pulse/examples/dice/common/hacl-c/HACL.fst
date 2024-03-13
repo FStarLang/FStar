@@ -37,7 +37,9 @@ ensures
        A.pts_to dst (spec_hash alg src_seq)
 {
   A.pts_to_len src;
-  EverCrypt.Hash.Incremental.hash alg dst src psrc src_seq (US.sizet_to_uint32 src_len)
+  EverCrypt.AutoConfig2.init ();
+  EverCrypt.Hash.Incremental.hash alg dst src psrc src_seq (US.sizet_to_uint32 src_len);
+  drop_ EverCrypt.AutoConfig2.initialized
 }
 ```
 
