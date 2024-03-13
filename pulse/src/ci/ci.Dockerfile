@@ -12,10 +12,9 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
 ARG opamthreads=24
 
-ADD --chown=opam:opam ./ pulse/
-
 # Install F* and Karamel from the Karamel CI install script
 # FIXME: the `opam depext` command should be unnecessary with opam 2.1
+ADD --chown=opam:opam src/ci/config.json pulse/src/ci/config.json
 ENV FSTAR_HOME=$HOME/FStar
 ENV KRML_HOME=$HOME/karamel
 RUN sudo apt-get update && sudo apt-get install --yes --no-install-recommends \
@@ -42,6 +41,7 @@ RUN eval $(opam env) && \
     env OTHERFLAGS='--admit_smt_queries true' make -C $FSTAR_HOME -j $opamthreads bootstrap
 
 # Pulse CI proper
+ADD --chown=opam:opam ./ pulse/
 ARG PULSE_NIGHTLY_CI
 ARG OTHERFLAGS=--use_hints
 RUN eval $(opam env) && . $HOME/.cargo/env && env PULSE_NIGHTLY_CI="$PULSE_NIGHTLY_CI" make -k -j $opamthreads -C pulse/src ci
