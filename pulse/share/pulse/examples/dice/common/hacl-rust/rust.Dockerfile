@@ -7,4 +7,4 @@ RUN rustup component add rustfmt
 RUN cargo install bindgen-cli
 ADD c/*.h .
 ADD krmllib.h .
-RUN for f in EverCrypt*.h ; do bindgen -o $(basename $f .h).rs --allowlist-file 'EverCrypt.*' $f ; done
+RUN bindgen -o evercrypt.rs --allowlist-file '.*EverCrypt.*' bindings.h
