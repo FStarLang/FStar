@@ -5,7 +5,7 @@ INCLUDE_PATHS += ..
 ifneq (,$(wildcard ../../_output/cache))
   INCLUDE_PATHS += ../../_output/cache
 endif
-ALREADY_CACHED_LIST = *,-HACL,-EverCrypt,Spec.Hash.Definitions
+ALREADY_CACHED_LIST = *,-HACL,-EverCrypt,-Spec.Hash.Definitions
 FSTAR_OPTIONS += --warn_error -342
 FSTAR_DEP_OPTIONS=--extract '+EverCrypt'
 all: verify extract
