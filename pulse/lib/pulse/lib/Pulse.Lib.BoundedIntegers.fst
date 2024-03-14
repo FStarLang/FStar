@@ -197,50 +197,17 @@ instance bounded_int_pos : bounded_int pos = {
 }
 
 // Using a fits predicate as the bounds check allows this class to also accomodate SizeT
-
-// FIXME: Shouldn't typeclass instances be inlined at extraction? I
-// need to lift those lambdas as their standalone definitions because
-// otherwise Karamel cannot produce C code for `bounded_int_size_t`
-
-let bounded_int_size_add
-  (x:FStar.SizeT.t)
-  (y:FStar.SizeT.t)
-: Pure FStar.SizeT.t (requires FStar.SizeT.fits (FStar.SizeT.v x + FStar.SizeT.v y)) (ensures fun z -> FStar.SizeT.v z == FStar.SizeT.v x + FStar.SizeT.v y)
-= x `FStar.SizeT.add` y
-
-let bounded_int_size_sub
-  (x:FStar.SizeT.t)
-  (y:FStar.SizeT.t)
-: Pure FStar.SizeT.t (requires FStar.SizeT.v x - FStar.SizeT.v y >= 0 /\ FStar.SizeT.fits (FStar.SizeT.v x - FStar.SizeT.v y)) (ensures fun z -> FStar.SizeT.v z == FStar.SizeT.v x - FStar.SizeT.v y)
-= x `FStar.SizeT.sub` y
-
-let bounded_int_size_lt
-  (x y: FStar.SizeT.t)
-: Tot (res: bool { res == (FStar.SizeT.v x < FStar.SizeT.v y) })
-= x `FStar.SizeT.lt` y
-
-let bounded_int_size_lte
-  (x y: FStar.SizeT.t)
-: Tot (res: bool { res == (FStar.SizeT.v x <= FStar.SizeT.v y) })
-= x `FStar.SizeT.lte` y
-
-let bounded_int_size_rem
-  (x:FStar.SizeT.t)
-  (y:FStar.SizeT.t)
-: Pure FStar.SizeT.t
-    (requires FStar.SizeT.v y > 0 /\ FStar.SizeT.fits (FStar.SizeT.v x % FStar.SizeT.v y))
-    (ensures fun z -> FStar.SizeT.v z == FStar.SizeT.v x % FStar.SizeT.v y)
-= x `FStar.SizeT.rem` y
+open FStar.SizeT
 
 instance bounded_int_size_t : bounded_int FStar.SizeT.t = {
     fits = (fun x -> x >= 0 /\ FStar.SizeT.fits x);
     v = (fun x -> FStar.SizeT.v x);
     u = (fun x -> FStar.SizeT.uint_to_t x);
-    ( + ) = bounded_int_size_add; // (fun x y -> FStar.SizeT.add x y);
-    op_Subtraction = bounded_int_size_sub; // (fun x y -> FStar.SizeT.sub x y);
-    ( < ) = bounded_int_size_lt; // (fun x y -> FStar.SizeT.(x <^ y));
-    ( <= ) = bounded_int_size_lte; // (fun x y -> FStar.SizeT.(x <=^ y));
-    ( % ) = bounded_int_size_rem; // (fun x y -> FStar.SizeT.(x %^ y));
+    ( + ) = (fun x y -> FStar.SizeT.add x y);
+    op_Subtraction = (fun x y -> FStar.SizeT.sub x y);
+    ( < ) = (fun x y -> FStar.SizeT.(x <^ y));
+    ( <= ) = (fun x y -> FStar.SizeT.(x <=^ y));
+    ( % ) = (fun x y -> FStar.SizeT.(x %^ y));
     properties = ();
 }
 
