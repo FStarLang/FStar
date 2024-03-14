@@ -39,7 +39,7 @@ pub fn sign_and_finalize_deviceIDCSR(
     deviceIDCSR_buf: &mut [u8],
     deviceIDCSR_ingredients: (),
 ) -> () {
-    let mut deviceIDCRI_sig = vec![0; deviceIDCRI_len];
+    let mut deviceIDCRI_sig = vec![0; 64];
     super::hacl::ed25519_sign(
         &mut deviceIDCRI_sig,
         deviceID_priv,
@@ -119,7 +119,7 @@ pub fn sign_and_finalize_aliasKeyCRT(
     aliasKeyCRT_buf: &mut [u8],
     aliasKeyCRT_ingredients: (),
 ) -> () {
-    let mut aliasKeyTBS_sig = vec![0; aliasKeyTBS_len];
+    let mut aliasKeyTBS_sig = vec![0; 64];
     super::hacl::ed25519_sign(
         &mut aliasKeyTBS_sig,
         deviceID_priv,
@@ -174,7 +174,7 @@ pub fn l0_main_aux(
     p: (),
 ) -> super::l0types::l0_record_t {
     super::l0crypto::derive_DeviceID(
-        super::hacl::dice_hash_alg,
+        super::hacl::dice_hash_alg0(()),
         deviceID_pub,
         deviceID_priv,
         cdi,
@@ -188,7 +188,7 @@ pub fn l0_main_aux(
         (),
     );
     super::l0crypto::derive_AliasKey(
-        super::hacl::dice_hash_alg,
+        super::hacl::dice_hash_alg0(()),
         aliasKey_pub,
         aliasKey_priv,
         cdi,
@@ -203,9 +203,9 @@ pub fn l0_main_aux(
         (),
         (),
     );
-    let mut authKeyID = vec![0; super::hacl::dice_digest_len];
+    let mut authKeyID = vec![0; 32];
     super::l0crypto::derive_AuthKeyID(
-        super::hacl::dice_hash_alg,
+        super::hacl::dice_hash_alg0(()),
         &mut authKeyID,
         deviceID_pub,
         (),

@@ -23,9 +23,9 @@ pub fn authenticate_l0_image(
     );
     let mut b = false;
     let b1 = if valid_header_sig {
-        let hash_buf = &mut [0; super::hacl::dice_digest_len];
+        let hash_buf = &mut [0; 32];
         super::hacl::hacl_hash(
-            super::hacl::dice_hash_alg,
+            super::hacl::dice_hash_alg0(()),
             record.l0_binary_size,
             &mut record.l0_binary,
             hash_buf,
@@ -34,7 +34,7 @@ pub fn authenticate_l0_image(
             (),
         );
         let res = super::pulse_lib_array::compare(
-            super::hacl::dice_digest_len,
+            32,
             hash_buf,
             &mut record.l0_binary_hash,
             (),
@@ -61,10 +61,10 @@ pub fn compute_cdi(
     __c0: (),
     __repr: (),
 ) -> super::enginetypes::engine_record_t {
-    let uds_digest = &mut [0; super::hacl::dice_digest_len];
-    let l0_digest = &mut [0; super::hacl::dice_digest_len];
+    let uds_digest = &mut [0; 32];
+    let l0_digest = &mut [0; 32];
     super::hacl::hacl_hash(
-        super::hacl::dice_hash_alg,
+        super::hacl::dice_hash_alg0(()),
         super::enginetypes::uds_len,
         uds,
         uds_digest,
@@ -73,7 +73,7 @@ pub fn compute_cdi(
         (),
     );
     super::hacl::hacl_hash(
-        super::hacl::dice_hash_alg,
+        super::hacl::dice_hash_alg0(()),
         record.l0_binary_size,
         &mut record.l0_binary,
         l0_digest,
@@ -82,12 +82,12 @@ pub fn compute_cdi(
         (),
     );
     super::hacl::hacl_hmac(
-        super::hacl::dice_hash_alg,
+        super::hacl::dice_hash_alg0(()),
         cdi,
         uds_digest,
-        super::hacl::dice_digest_len,
+        32,
         l0_digest,
-        super::hacl::dice_digest_len,
+        32,
         (),
         (),
         (),

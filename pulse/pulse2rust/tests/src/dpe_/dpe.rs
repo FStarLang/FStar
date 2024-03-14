@@ -390,15 +390,8 @@ pub fn init_l0_ctxt(
     uds_bytes: (),
     uu___: (),
 ) -> super::dpetypes::context_t {
-    let mut cdi_buf = vec![0; super::hacl::dice_digest_len];
-    super::pulse_lib_array::memcpy(
-        super::hacl::dice_digest_len,
-        cdi,
-        &mut cdi_buf,
-        (),
-        (),
-        (),
-    );
+    let mut cdi_buf = vec![0; 32];
+    super::pulse_lib_array::memcpy(32, cdi, &mut cdi_buf, (), (), ());
     let l0_context = super::dpetypes::mk_l0_context_t(cdi_buf);
     let ctxt = super::dpetypes::mk_context_t_l0(l0_context);
     ctxt
@@ -425,44 +418,30 @@ pub fn init_l1_ctxt(
     deviceIDCSR0: (),
     aliasKeyCRT0: (),
 ) -> super::dpetypes::context_t {
-    let mut deviceID_pub_buf = vec![0; super::hacl::v32us];
-    let mut deviceID_priv_buf = vec![0; super::hacl::v32us];
-    let mut aliasKey_priv_buf = vec![0; super::hacl::v32us];
-    let mut aliasKey_pub_buf = vec![0; super::hacl::v32us];
+    let mut deviceID_pub_buf = vec![0; 32];
+    let mut deviceID_priv_buf = vec![0; 32];
+    let mut aliasKey_priv_buf = vec![0; 32];
+    let mut aliasKey_pub_buf = vec![0; 32];
     let mut deviceIDCSR_buf = vec![0; deviceIDCSR_len];
     let mut aliasKeyCRT_buf = vec![0; aliasKeyCRT_len];
     super::pulse_lib_array::memcpy(
-        super::hacl::v32us,
+        32,
         deviceID_priv,
         &mut deviceID_priv_buf,
         (),
         (),
         (),
     );
+    super::pulse_lib_array::memcpy(32, deviceID_pub, &mut deviceID_pub_buf, (), (), ());
     super::pulse_lib_array::memcpy(
-        super::hacl::v32us,
-        deviceID_pub,
-        &mut deviceID_pub_buf,
-        (),
-        (),
-        (),
-    );
-    super::pulse_lib_array::memcpy(
-        super::hacl::v32us,
+        32,
         aliasKey_priv,
         &mut aliasKey_priv_buf,
         (),
         (),
         (),
     );
-    super::pulse_lib_array::memcpy(
-        super::hacl::v32us,
-        aliasKey_pub,
-        &mut aliasKey_pub_buf,
-        (),
-        (),
-        (),
-    );
+    super::pulse_lib_array::memcpy(32, aliasKey_pub, &mut aliasKey_pub_buf, (), (), ());
     super::pulse_lib_array::memcpy(
         deviceIDCSR_len,
         deviceIDCSR,
@@ -579,7 +558,7 @@ pub fn derive_child_from_context(
         super::dpetypes::context_t::Engine_context(mut c) => {
             match record {
                 super::dpetypes::record_t::Engine_record(mut r) => {
-                    let cdi = &mut [0; super::hacl::dice_digest_len];
+                    let cdi = &mut [0; 32];
                     let ret = super::enginecore::engine_main(
                         cdi,
                         &mut c.uds,
@@ -605,11 +584,7 @@ pub fn derive_child_from_context(
                             res
                         }
                         super::enginetypes::dice_return_code::DICE_ERROR => {
-                            super::pulse_lib_array::zeroize(
-                                super::hacl::dice_digest_len,
-                                cdi,
-                                (),
-                            );
+                            super::pulse_lib_array::zeroize(32, cdi, ());
                             let res = (
                                 super::dpetypes::context_t::Engine_context(c),
                                 super::dpetypes::record_t::Engine_record(ret.0),
@@ -650,10 +625,10 @@ pub fn derive_child_from_context(
                     let aliasKeyCRT_len = super::x509::length_of_aliasKeyCRT(
                         aliasKeyTBS_len,
                     );
-                    let deviceID_pub = &mut [0; super::hacl::v32us];
-                    let deviceID_priv = &mut [0; super::hacl::v32us];
-                    let aliasKey_pub = &mut [0; super::hacl::v32us];
-                    let aliasKey_priv = &mut [0; super::hacl::v32us];
+                    let deviceID_pub = &mut [0; 32];
+                    let deviceID_priv = &mut [0; 32];
+                    let aliasKey_pub = &mut [0; 32];
+                    let aliasKey_priv = &mut [0; 32];
                     let mut deviceIDCSR = vec![0; deviceIDCSR_len];
                     let mut aliasKeyCRT = vec![0; aliasKeyCRT_len];
                     let r1 = super::l0types::l0_record_t {

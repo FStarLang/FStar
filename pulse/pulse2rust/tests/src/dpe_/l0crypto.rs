@@ -49,15 +49,7 @@ pub fn derive_DeviceID_aux(
     p: (),
 ) -> () {
     let mut cdigest = vec![0; super::hacl::digest_len(alg)];
-    super::hacl::hacl_hash(
-        alg,
-        super::hacl::dice_digest_len,
-        cdi,
-        &mut cdigest,
-        (),
-        (),
-        (),
-    );
+    super::hacl::hacl_hash(alg, 32, cdi, &mut cdigest, (), (), ());
     super::l0crypto::derive_key_pair(
         deviceID_pub,
         deviceID_priv,
@@ -106,22 +98,14 @@ pub fn derive_AliasKey_aux(
 ) -> () {
     let mut cdigest = vec![0; super::hacl::digest_len(alg)];
     let mut adigest = vec![0; super::hacl::digest_len(alg)];
-    super::hacl::hacl_hash(
-        alg,
-        super::hacl::dice_digest_len,
-        cdi,
-        &mut cdigest,
-        (),
-        (),
-        (),
-    );
+    super::hacl::hacl_hash(alg, 32, cdi, &mut cdigest, (), (), ());
     super::hacl::hacl_hmac(
         alg,
         &mut adigest,
         &mut cdigest,
         super::hacl::digest_len(alg),
         fwid,
-        super::hacl::v32us,
+        32,
         (),
         (),
         (),
@@ -169,7 +153,7 @@ pub fn derive_AuthKeyID_aux(
     deviceID_pub0: (),
     p: (),
 ) -> () {
-    super::hacl::hacl_hash(alg, super::hacl::v32us, deviceID_pub, authKeyID, (), (), ())
+    super::hacl::hacl_hash(alg, 32, deviceID_pub, authKeyID, (), (), ())
 }
 pub static derive_AuthKeyID: fn(
     super::hacl::alg_t,
