@@ -2,6 +2,7 @@ module PulseCore.Heap2
 module F = FStar.FunctionalExtensionality
 open FStar.FunctionalExtensionality
 open FStar.PCM
+open PulseCore.Tags
 module Frac = PulseCore.FractionalPermission
 module PP = PulseCore.Preorder
 module H = PulseCore.Heap
@@ -73,35 +74,15 @@ let join_associative2 (m0 m1 m2:heap)
     join_commutative m2 m1;
     join_associative m0 m1 m2
 
-// let splittable_heap : splittable (heap u#a) = {
-//   disjoint;
-//   join;
-//   laws = FStar.Classical.forall_intro_3 disjoint_join
-// }
-// let splittable_hheap : splittable (H.heap u#a) = {
-//   disjoint = H.disjoint;
-//   join = H.join;
-//   laws = admit()
-// }
-// let lens_concrete : lens (heap u#a) (H.heap u#a) = {
-//   get = (fun h -> h.concrete);
-//   put = (fun concrete h -> { h with concrete });
-//   sa = splittable_heap;
-//   sb = splittable_hheap;
-//   lens_laws = ();
-//   law0 = (fun x y -> ());
-//   law1 = (fun x y l m -> ())
-// }
-// let lens_ghost : lens (heap u#a) (H.heap u#a) = {
-//   get = (fun h -> reveal h.ghost);
-//   put = (fun ghost h -> { h with ghost });
-//   sa = splittable_heap;
-//   sb = splittable_hheap;
-//   lens_laws = ();
-//   law0 = (fun x y -> ());
-//   law1 = (fun x y l m -> ())
-// }
+let h_join_empty (h:H.heap)
+  : Lemma (H.disjoint h H.empty_heap /\
+           H.join h H.empty_heap == h)
+           [SMTPatOr
+              [[SMTPat (H.disjoint h H.empty_heap)];
+               [SMTPat (H.join h H.empty_heap)]]]
+  = H.join_empty h
 
+let join_empty h = ()
 let slprop = p:(heap ^-> prop) { heap_prop_is_affine p }
 let interp p m = p m
 let as_slprop f = F.on _ f
@@ -122,13 +103,6 @@ let h_exists #a f = as_slprop (fun h -> exists (x:a). interp (f x) h)
 let affine_star p1 p2 h = ()
 let equiv_symmetric p1 p2 = ()
 let equiv_extensional_on_star p1 p2 p3 = ()
-let h_join_empty (h:H.heap)
-  : Lemma (H.disjoint h H.empty_heap /\
-           H.join h H.empty_heap == h)
-           [SMTPatOr
-              [[SMTPat (H.disjoint h H.empty_heap)];
-               [SMTPat (H.join h H.empty_heap)]]]
-  = H.join_empty h
 let emp_unit p = 
   assert (forall h. disjoint h empty_heap /\ join h empty_heap == h)
 let intro_emp h = ()

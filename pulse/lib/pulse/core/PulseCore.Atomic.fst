@@ -270,11 +270,7 @@ let read r x f = A.lift_reifiability (A.read r x f)
 let write r x y f = A.lift_reifiability (A.write r x y f)
 let share #a #pcm r v0 v1 = Ghost.hide (A.share r v0 v1)
 let gather #a #pcm r v0 v1 = Ghost.hide (A.gather r v0 v1)
-let witness #a #pcm r f v pf = A.witness r f v pf
-let recall #a #pcm #fact r v w = A.recall r v w
 
-let ghost_ref = A.ghost_ref
-let ghost_pts_to = A.ghost_pts_to
 let hide_ghost #a #pre #post 
               (f:stt_ghost a pre post)
 : stt_ghost (erased a) pre (fun x -> post (reveal x))
@@ -302,4 +298,19 @@ let ghost_read
 let ghost_write r x y f = Ghost.hide (A.ghost_write r x y f)
 let ghost_share r v0 v1 = Ghost.hide (A.ghost_share r v0 v1)
 let ghost_gather r v0 v1 = Ghost.hide (A.ghost_gather r v0 v1) 
+
+let big_pts_to_not_null #a #p r v = Ghost.hide (A.big_pts_to_not_null #a #p r v)
+let big_alloc #a #pcm x = A.lift_reifiability (A.big_alloc x)
+let big_read r x f = A.lift_reifiability (A.big_read r x f)
+let big_write r x y f = A.lift_reifiability (A.big_write r x y f)
+let big_share #a #pcm r v0 v1 = Ghost.hide (A.big_share r v0 v1)
+let big_gather #a #pcm r v0 v1 = Ghost.hide (A.big_gather r v0 v1)
+
+
+let big_ghost_alloc #a #pcm x = Ghost.hide <| A.big_ghost_alloc #a #pcm x
+let big_ghost_read #a #p r x f = Ghost.hide <| A.big_ghost_read r x f
+let big_ghost_write r x y f = Ghost.hide (A.big_ghost_write r x y f)
+let big_ghost_share r v0 v1 = Ghost.hide (A.big_ghost_share r v0 v1)
+let big_ghost_gather r v0 v1 = Ghost.hide (A.big_ghost_gather r v0 v1) 
+
 let drop p = Ghost.hide (A.drop p)

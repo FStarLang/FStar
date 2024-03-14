@@ -25,7 +25,7 @@ module GW = Pulse.Lib.GhostWitness
 (* Do NOT use this module. Use a simple Trade instead. This is only here
 to be able to define subtyping of invariants for InvList, which cannot use trades. *)
    
-let implication p q : Type u#2 =
+let implication p q : Type u#3 =
   unit -> stt_ghost unit p (fun _ -> q)
 
 let exists_implication p q : Type u#0 =

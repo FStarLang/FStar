@@ -25,10 +25,17 @@ open PulseCore.Observability
 let double_one_half () = ()
 let equate_by_smt = ()
 let vprop = slprop
+let small_vprop = small_slprop
+let down = down
+let up = up
 let emp = emp
-let op_Star_Star = op_Star_Star
+let emp_is_small = ()
 let pure = pure
+let pure_is_small p = ()
+let op_Star_Star = op_Star_Star
+let small_star p q = small_star p q
 let op_exists_Star = op_exists_Star
+let small_exists #a p = small_exists #a p
 let vprop_equiv = slprop_equiv
 let elim_vprop_equiv #p #q pf = slprop_equiv_elim p q
 let vprop_post_equiv = slprop_post_equiv
@@ -211,7 +218,7 @@ let pcm_ref #a p = PulseCore.Action.ref a p
 
 let pcm_pts_to (#a:Type u#1) (#p:pcm a) (r:pcm_ref p) (v:a) =
   PulseCore.Action.pts_to r v
-
+let is_small_pcm_pts_to #a #p r v = ()
 let pcm_ref_null #a p = PulseCore.Action.ref_null #a p
 let is_pcm_ref_null #a #p r = PulseCore.Action.is_ref_null #a #p r
 let pts_to_not_null #a #p r v = A.pts_to_not_null #a #p r v
@@ -255,9 +262,10 @@ let gather = A.gather
 ////////////////////////////////////////////////////////
 // ghost refs
 ////////////////////////////////////////////////////////
-let ghost_pcm_ref #a p = A.ghost_ref #a p
+let ghost_pcm_ref #a p = PulseCore.Action.ghost_ref #a p
 let ghost_pcm_ref_non_informative a p = fun r -> reveal r
-let ghost_pcm_pts_to #a #p r v = A.ghost_pts_to #a #p r v
+let ghost_pcm_pts_to #a #p r v = PulseCore.Action.ghost_pts_to #a #p r v
+let is_small_ghost_pcm_pts_to #a #p r v = ()
 let ghost_alloc = A.ghost_alloc
 let ghost_read = A.ghost_read
 let ghost_write = A.ghost_write
@@ -291,5 +299,54 @@ let return_stt_a (#a:Type u#a) (x:a) (p:a -> vprop)
 let return_stt (#a:Type u#a) (x:a) (p:a -> vprop)
 : stt a (p x) (fun v -> p v ** pure (v == x))
 = bind_stt (return_stt_a x p) (fun _ -> return_stt_alt x p)
+
+////////////////////////////////////////////////////////
+// big refs
+////////////////////////////////////////////////////////
+let big_pcm_pts_to #a #p r v = PulseCore.Action.big_pts_to #a #p r v
+let big_pts_to_not_null #a #p r v = A.big_pts_to_not_null #a #p r v
+
+let big_alloc
+    (#a:Type)
+    (#pcm:pcm a)
+    (x:a{pcm.refine x})
+: stt (pcm_ref pcm)
+    emp
+    (fun r -> big_pcm_pts_to r x)
+= A.lift_atomic0 (A.big_alloc #a #pcm x)
+
+let big_read
+    (#a:Type)
+    (#p:pcm a)
+    (r:pcm_ref p)
+    (x:erased a)
+    (f:(v:a{compatible p x v}
+        -> GTot (y:a{compatible p y v /\
+                     FStar.PCM.frame_compatible p x v y})))
+: stt (v:a{compatible p x v /\ p.refine v})
+    (big_pcm_pts_to r x)
+    (fun v -> big_pcm_pts_to r (f v))
+= A.lift_atomic2 (A.big_read r x f)
+
+let big_write
+    (#a:Type)
+    (#p:pcm a)
+    (r:pcm_ref p)
+    (x y:Ghost.erased a)
+    (f:FStar.PCM.frame_preserving_upd p x y)
+: stt unit
+    (big_pcm_pts_to r x)
+    (fun _ -> big_pcm_pts_to r y)
+= A.lift_atomic0 (A.big_write r x y f)
+
+let big_share = A.big_share
+let big_gather = A.big_gather
+
+let big_ghost_pcm_pts_to #a #p r v = PulseCore.Action.big_ghost_pts_to #a #p r v
+let big_ghost_alloc = A.big_ghost_alloc
+let big_ghost_read = A.big_ghost_read
+let big_ghost_write = A.big_ghost_write
+let big_ghost_share = A.big_ghost_share
+let big_ghost_gather = A.big_ghost_gather
 
 let as_atomic #a pre post (e:stt a pre post) = admit() //intentional

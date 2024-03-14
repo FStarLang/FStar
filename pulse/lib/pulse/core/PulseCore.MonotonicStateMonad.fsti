@@ -1,8 +1,8 @@
 module PulseCore.MonotonicStateMonad
 open FStar.Preorder
-module M = FStar.MSTTotal
+// module M = FStar.MSTTotal
 module PST = PulseCore.PreorderStateMonad
-
+module W = FStar.Witnessed.Core
 val mst (#s:Type u#s)
         (rel:FStar.Preorder.preorder s)
         (a:Type u#a)
@@ -18,16 +18,6 @@ val lift_pst
     (#post:s -> a -> s -> prop)
     (pst:PST.pst a rel pre post)
 : mst rel a pre post
-
-val of_msttotal (#s:Type u#2) (rel:FStar.Preorder.preorder s)
-                (a:Type u#a) (pre:s -> prop) (post:s -> a -> s -> prop)
-                (f:unit -> M.MSTATETOT a s rel pre post)
-: mst rel a pre post
-
-val to_msttotal (#s:Type u#2) (rel:FStar.Preorder.preorder s)
-                (a:Type u#a) (pre:s -> prop) (post:s -> a -> s -> prop)
-                (f:mst rel a pre post)
-: M.MSTATETOT a s rel pre post
 
 val return (#s:Type u#s)
            (#rel:preorder s)
@@ -77,10 +67,20 @@ val get (#s:Type u#s) (#rel:preorder s) (_:unit)
 val put (#s:Type u#s) (#rel:preorder s) (v:s)
   : mst rel unit (fun s0 -> rel s0 v /\ True) (fun s0 x s1 -> v == s1)
 
-val witnessed (#s:Type u#s) (p: s -> prop) : Type0
-
 val witness (#s:Type u#s) (#rel:preorder s) (p: s -> prop { stable p rel })
-  : mst rel (witnessed p) (fun s0 -> p s0) (fun s0 x s1 -> s0 == s1)
+  : mst rel (W.witnessed s rel p) (fun s0 -> p s0) (fun s0 x s1 -> s0 == s1)
 
-val recall (#s:Type u#s) (#rel:preorder s) (p: s -> prop) (w:witnessed p) 
+val recall (#s:Type u#s) (#rel:preorder s) (p: s -> prop) (w:W.witnessed s rel p) 
   : mst rel unit (fun s0 -> True) (fun s0 x s1 -> s0 == s1 /\ p s1)
+
+let mst_aux #s rel a req_f ens_f = 
+    x:s { req_f x } -> mst #s rel a (fun s0 -> s0 == x) ens_f
+
+val with_get
+      (#s:Type u#s)
+      (#a:Type u#a)
+      (#rel:preorder s)
+      (#req_f:req_t s)
+      (#ens_f:ens_t s a)
+      (f: mst_aux rel a req_f ens_f)
+: mst rel a req_f ens_f

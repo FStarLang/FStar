@@ -55,13 +55,35 @@ val equate_by_smt : unit
 
 #set-options "--print_implicits --ugly --print_universes"
 
+
 [@@erasable]
-val vprop : Type u#2
+val vprop : Type u#3
+
+[@@erasable]
+val small_vprop : Type u#2
+val down (p:vprop) : small_vprop
+val up (p:small_vprop) : vprop
+let is_small (v:vprop) : prop = up (down v) == v
 
 val emp : vprop
-val ( ** ) (p q:vprop) : vprop
+val emp_is_small : squash (is_small emp)
+
 val pure (p:prop) : vprop
+val pure_is_small (p:prop) : squash (is_small (pure p))
+
+val ( ** ) (p q:vprop) : vprop
+val small_star (p q : vprop)
+: Lemma
+    (requires is_small p /\ is_small q)
+    (ensures is_small (p ** q))
+
 val ( exists* ) (#a:Type) (p:a -> vprop) : vprop
+val small_exists (#a:Type u#a) (p: a -> vprop)
+: Lemma
+    (requires forall x. is_small (p x))
+    (ensures is_small (op_exists_Star p))
+    
+
 val vprop_equiv (p q:vprop) : prop
 val elim_vprop_equiv (#p #q:_) (_:vprop_equiv p q) : squash (p == q)
 val vprop_post_equiv (#t:Type u#a) (p q: t -> vprop) : prop
@@ -252,7 +274,7 @@ val stt_atomic
     (opens:inames)
     (pre:vprop)
     (post:a -> vprop)
-: Type u#(max 2 a)
+: Type u#(max 3 a)
 
 val lift_observability
     (#a:Type u#a)
@@ -321,7 +343,7 @@ val sub_invs_atomic
 : stt_atomic a #obs opens2 pre post
 
 val lift_atomic0
-(#a:Type u#0)
+  (#a:Type u#0)
   (#obs:_)
   (#opens:inames)
   (#pre:vprop)
@@ -413,7 +435,7 @@ val stt_ghost
     (a:Type u#a)
     (pre:vprop)
     (post:a -> vprop)
-: Type u#(max 2 a)
+: Type u#(max 3 a)
 
 val bind_ghost
     (#a:Type u#a)
@@ -549,6 +571,13 @@ val pcm_pts_to
     (v:a)
 : vprop
 
+val is_small_pcm_pts_to
+    (#a:Type u#1)
+    (#p:pcm a)
+    (r:pcm_ref p)
+    (v:a)
+: Lemma (is_small (pcm_pts_to r v))
+
 val pcm_ref_null
     (#a:Type)
     (p:FStar.PCM.pcm a)
@@ -637,6 +666,13 @@ val ghost_pcm_pts_to
     (v:a)
 : vprop
 
+val is_small_ghost_pcm_pts_to
+    (#a:Type u#1)
+    (#p:pcm a)
+    (r:ghost_pcm_ref p)
+    (v:a)
+: Lemma (is_small (ghost_pcm_pts_to r v))
+
 val ghost_alloc
     (#a:Type u#1)
     (#pcm:pcm a)
@@ -686,6 +722,133 @@ val ghost_gather
 : stt_ghost (squash (composable pcm v0 v1))
     (ghost_pcm_pts_to r v0 ** ghost_pcm_pts_to r v1)
     (fun _ -> ghost_pcm_pts_to r (op pcm v0 v1))
+
+////////////////////////////////////////////////////////
+//Big PCM references
+////////////////////////////////////////////////////////
+val big_pcm_pts_to
+    (#a:Type u#2)
+    (#p:pcm a)
+    (r:pcm_ref p)
+    (v:a)
+: vprop
+
+val big_pts_to_not_null
+    (#a:Type)
+    (#p:FStar.PCM.pcm a)
+    (r:pcm_ref p)
+    (v:a)
+: stt_ghost (squash (not (is_pcm_ref_null r)))
+            (big_pcm_pts_to r v)
+            (fun _ -> big_pcm_pts_to r v)
+
+val big_alloc
+    (#a:Type u#2)
+    (#pcm:pcm a)
+    (x:a{pcm.refine x})
+: stt (pcm_ref pcm)
+    emp
+    (fun r -> big_pcm_pts_to r x)
+
+val big_read
+    (#a:Type)
+    (#p:pcm a)
+    (r:pcm_ref p)
+    (x:erased a)
+    (f:(v:a{compatible p x v}
+        -> GTot (y:a{compatible p y v /\
+                     FStar.PCM.frame_compatible p x v y})))
+: stt (v:a{compatible p x v /\ p.refine v})
+    (big_pcm_pts_to r x)
+    (fun v -> big_pcm_pts_to r (f v))
+
+val big_write
+    (#a:Type)
+    (#p:pcm a)
+    (r:pcm_ref p)
+    (x y:Ghost.erased a)
+    (f:FStar.PCM.frame_preserving_upd p x y)
+: stt unit
+    (big_pcm_pts_to r x)
+    (fun _ -> big_pcm_pts_to r y)
+
+val big_share
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:pcm_ref pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+: stt_ghost unit
+    (big_pcm_pts_to r (v0 `op pcm` v1))
+    (fun _ -> big_pcm_pts_to r v0 ** big_pcm_pts_to r v1)
+
+val big_gather
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:pcm_ref pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a)
+: stt_ghost (squash (composable pcm v0 v1))
+    (big_pcm_pts_to r v0 ** big_pcm_pts_to r v1)
+    (fun _ -> big_pcm_pts_to r (op pcm v0 v1))
+
+val big_ghost_pcm_pts_to
+    (#a:Type u#2)
+    (#p:pcm a)
+    (r:ghost_pcm_ref p)
+    (v:a)
+: vprop
+
+val big_ghost_alloc
+    (#a:Type)
+    (#pcm:pcm a)
+    (x:erased a{pcm.refine x})
+: stt_ghost (ghost_pcm_ref pcm)
+    emp
+    (fun r -> big_ghost_pcm_pts_to r x)
+
+val big_ghost_read
+    (#a:Type)
+    (#p:pcm a)
+    (r:ghost_pcm_ref p)
+    (x:erased a)
+    (f:(v:a{compatible p x v}
+        -> GTot (y:a{compatible p y v /\
+                     FStar.PCM.frame_compatible p x v y})))
+: stt_ghost (erased (v:a{compatible p x v /\ p.refine v}))
+    (big_ghost_pcm_pts_to r x)
+    (fun v -> big_ghost_pcm_pts_to r (f v))
+
+val big_ghost_write
+    (#a:Type)
+    (#p:pcm a)
+    (r:ghost_pcm_ref p)
+    (x y:Ghost.erased a)
+    (f:FStar.PCM.frame_preserving_upd p x y)
+: stt_ghost unit
+    (big_ghost_pcm_pts_to r x)
+    (fun _ -> big_ghost_pcm_pts_to r y)
+
+val big_ghost_share
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ghost_pcm_ref pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+: stt_ghost unit
+    (big_ghost_pcm_pts_to r (v0 `op pcm` v1))
+    (fun _ -> big_ghost_pcm_pts_to r v0 ** big_ghost_pcm_pts_to r v1)
+
+val big_ghost_gather
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ghost_pcm_ref pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a)
+: stt_ghost (squash (composable pcm v0 v1))
+    (big_ghost_pcm_pts_to r v0 ** big_ghost_pcm_pts_to r v1)
+    (fun _ -> big_ghost_pcm_pts_to r (op pcm v0 v1))
+
 
 // Finally, a big escape hatch for introducing architecture/backend-specific
 // atomic operations from proven stt specifications

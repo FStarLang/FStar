@@ -40,18 +40,6 @@ let extract_q #a (v:vprop) (p:a -> vprop) (pf:squash (is_forall v p))
 
 ```pulse
 ghost
-fn return (#a:Type u#2) (x:a)
-requires emp
-returns v:a
-ensures pure (v == x)
-{
-  x
-}
-```
-
-
-```pulse
-ghost
 fn elim_forall'
     (#a:Type u#0)
     (#p:a->vprop)
@@ -63,7 +51,7 @@ ensures p x
     unfold (uquant #a (F.on_dom a (fun x -> p x)));
     with v. assert (token v);
     unfold token;
-    let f = return (extract_q (Ghost.reveal v) (F.on_dom a (fun x -> p x)) ());
+    let f = extract_q (Ghost.reveal v) (F.on_dom a (fun x -> p x)) ();
     f x;
     rewrite ((F.on_dom a (fun x -> p x)) x) as (p x);
 }

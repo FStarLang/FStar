@@ -25,7 +25,7 @@ let ghost_witness = __ghost_witness
 
 ```pulse
 ghost
-fn __ghost_witness2 (a:Type u#2) (_:squash a)
+fn __ghost_witness2 (a:Type u#3) (_:squash a)
 requires emp
 returns i:a
 ensures emp
@@ -53,7 +53,7 @@ let ghost_witness_exists = __ghost_witness_exists
 
 ```pulse
 ghost
-fn __ghost_witness_exists2 (a:Type u#2)
+fn __ghost_witness_exists2 (a:Type u#3)
 requires pure (exists (x:a). True)
 returns i:a
 ensures emp
