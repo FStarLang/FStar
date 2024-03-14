@@ -120,6 +120,6 @@ ci:
 .PHONY: rust-ci
 rust-ci:
 	+OTHERFLAGS='--admit_smt_queries true' $(MAKE) -C $(PULSE_HOME)
-	+OTHERFLAGS='--admit_smt_queries true' $(MAKE) -C $(PULSE_HOME)/share/pulse/examples/dice
+	+OTHERFLAGS='--admit_smt_queries true' $(MAKE) -C $(PULSE_HOME)/share/pulse/examples dice verify
 	+OTHERFLAGS='--admit_smt_queries true' $(MAKE) -C $(PULSE_HOME)/share/pulse/examples/dice/common/hacl-c
 	+OTHERFLAGS='--admit_smt_queries true' $(MAKE) -C $(PULSE_HOME) pulse2rust

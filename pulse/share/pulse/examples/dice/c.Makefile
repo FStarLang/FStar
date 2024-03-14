@@ -12,7 +12,7 @@ INCLUDE_PATHS += common dpe engine l0 cbor common/hacl-c
 FSTAR_FILES := dpe/DPE.fst
 ALREADY_CACHED_LIST = *,-HACL,-EverCrypt,-Spec.Hash.Definitions
 FSTAR_DEP_FILE=.depend-c
-FSTAR_OPTIONS += --warn_error -342
+FSTAR_OPTIONS += --warn_error -342 --cmi
 FSTAR_DEP_OPTIONS=--extract '* -FStar.Tactics -FStar.Reflection -Pulse -PulseCore +Pulse.Lib -Pulse.Lib.Array.Core -Pulse.Lib.Core -Pulse.Lib.HigherReference'
 all: test
 
