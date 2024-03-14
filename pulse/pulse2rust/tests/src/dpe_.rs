@@ -7,6 +7,7 @@ mod evercrypt_autoconfig2;
 mod evercrypt_ed25519;
 mod evercrypt_hash_incremental;
 mod evercrypt_hmac;
+mod fstar_sizet;
 mod hacl;
 mod l0core;
 mod l0crypto;
