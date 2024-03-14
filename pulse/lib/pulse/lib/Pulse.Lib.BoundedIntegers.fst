@@ -20,6 +20,7 @@ module TC = FStar.Tactics.Typeclasses
 
 let fits_t (fits:int -> prop) = x:int { fits x }
 
+inline_for_extraction // this is a pure typeclass, so that's fine
 class bounded_int (t:eqtype) = {
     fits: int -> prop;
     v : t -> GTot int;
@@ -51,6 +52,7 @@ instance bounded_int_int : bounded_int int = {
 }
 
 
+inline_for_extraction // this is a pure typeclass, so that's fine
 class bounded_unsigned (t:eqtype) = {
   [@@@TC.no_method]
   base:bounded_int t;
@@ -65,6 +67,7 @@ class bounded_unsigned (t:eqtype) = {
 }
 
 
+inline_for_extraction
 instance bounded_from_bounded_unsigned (t:eqtype) (c:bounded_unsigned t) : bounded_int t = c.base
 
 let safe_add (#t:eqtype) {| c: bounded_unsigned t |} (x y : t)
@@ -105,14 +108,18 @@ let safe_mod (#t:eqtype) {| c: bounded_unsigned t |} (x : t) (y : t)
 let ok (#t:eqtype) {| c:bounded_int t |} (op: int -> int -> int) (x y:t) =
     c.fits (op (v x) (v y))
 
+inline_for_extraction
 let add (#t:eqtype) {| bounded_int t |} (x:t) (y:t { ok (+) x y }) = x + y
 
+inline_for_extraction
 let add3 (#t:eqtype) {| bounded_int t |} (x:t) (y:t) (z:t { ok (+) x y /\ ok (+) z (x + y)}) = x + y + z
 
 //Writing the signature of bounded_int.(+) using Pure
 //allows this to work, since the type of (x+y) is not refined
+inline_for_extraction
 let add3_alt (#t:eqtype) {| bounded_int t |} (x:t) (y:t) (z:t { ok (+) x y /\ ok (+) (x + y) z}) = x + y + z
 
+inline_for_extraction
 instance bounded_int_u32 : bounded_int FStar.UInt32.t = {
     fits = (fun x -> 0 <= x /\ x < 4294967296);
     v = (fun x -> FStar.UInt32.v x);
@@ -125,6 +132,7 @@ instance bounded_int_u32 : bounded_int FStar.UInt32.t = {
     properties = ()
 }
 
+inline_for_extraction
 instance bounded_unsigned_u32 : bounded_unsigned FStar.UInt32.t = {
   base = TC.solve;
   max_bound = 0xfffffffful;
@@ -132,6 +140,7 @@ instance bounded_unsigned_u32 : bounded_unsigned FStar.UInt32.t = {
   properties = ()
 }
 
+inline_for_extraction
 instance bounded_int_u64 : bounded_int FStar.UInt64.t = {
     fits = (fun x -> 0 <= x /\ x <= 0xffffffffffffffff);
     v = (fun x -> FStar.UInt64.v x);
@@ -144,6 +153,7 @@ instance bounded_int_u64 : bounded_int FStar.UInt64.t = {
     properties = ()
 }
 
+inline_for_extraction
 instance bounded_unsigned_u64 : bounded_unsigned FStar.UInt64.t = {
   base = TC.solve;
   max_bound = 0xffffffffffffffffuL;
@@ -199,6 +209,7 @@ instance bounded_int_pos : bounded_int pos = {
 // Using a fits predicate as the bounds check allows this class to also accomodate SizeT
 open FStar.SizeT
 
+inline_for_extraction
 instance bounded_int_size_t : bounded_int FStar.SizeT.t = {
     fits = (fun x -> x >= 0 /\ FStar.SizeT.fits x);
     v = (fun x -> FStar.SizeT.v x);
@@ -211,6 +222,7 @@ instance bounded_int_size_t : bounded_int FStar.SizeT.t = {
     properties = ();
 }
 
+inline_for_extraction
 instance bounded_unsigned_size_t : bounded_unsigned FStar.SizeT.t = {
   base = TC.solve;
   max_bound = 0xffffsz;
