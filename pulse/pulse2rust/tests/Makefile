@@ -1,7 +1,10 @@
 PULSE_HOME ?= ../..
 PULSE_EXAMPLES_ROOT ?= $(PULSE_HOME)/share/pulse/examples
 
-SRC_DIRS := $(addprefix $(PULSE_EXAMPLES_ROOT)/,by-example dice/common dice/dpe dice/engine dice/l0 dice/common/hacl-c dice/_output/cache dice/common/hacl-c/_output/cache _output/cache)
+SRC_DIRS := $(addprefix $(PULSE_EXAMPLES_ROOT)/,by-example dice/common dice/dpe dice/engine dice/l0 dice/common/hacl-c dice/_output/cache dice/common/hacl-c/_output/cache)
+ifneq (,$(wildcard $(PULSE_EXAMPLES_ROOT)/_output/cache))
+SRC_DIRS += $(PULSE_EXAMPLES_ROOT)/_output/cache
+endif
 OUTPUT_DIRECTORY := _output
 CACHE_DIRECTORY := $(OUTPUT_DIRECTORY)/cache
 FSTAR_OPTIONS += --warn_error -342 --cmi
