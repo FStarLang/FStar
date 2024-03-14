@@ -5,10 +5,15 @@ CACHE_DIRECTORY=$(OUTPUT_DIRECTORY)/cache
 SRC_DIRS = common dpe engine l0
 INCLUDE_PATHS += cbor
 #/Pulse.Lib.HashTable.fst
+FSTAR_OPTIONS += --warn_error -342
 FSTAR_DEP_OPTIONS=--extract '* -FStar.Tactics -FStar.Reflection -Pulse +Pulse.Class +Pulse.Lib -Pulse.Lib.Core'
 all: verify dpe-ast
 
 include $(PULSE_HOME)/share/pulse/Makefile.include
+
+.PHONY: test-c
+test-c: verify
+	+$(MAKE) -f c.Makefile
 
 # FIXME: this rule should depend on the .checked file. However, right
 # now there is no way to reconcile the cache directories. There are

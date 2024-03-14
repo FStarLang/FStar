@@ -28,6 +28,7 @@ val length (#a:Type u#0) (x:array a) : Ghost nat (requires True) (ensures SZ.fit
 
 type elseq (a:Type) (l:SZ.t) = s:erased (Seq.seq a) { Seq.length s == SZ.v l }
 
+inline_for_extraction
 type larray t (n:nat) = a:array t { length a == n }
 
 val is_full_array (#a:Type u#0) (x:array a) : prop

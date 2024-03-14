@@ -105,7 +105,7 @@ fn sign_and_finalize_deviceIDCSR
               _cri_buf)))
     ))
 {
-  let deviceIDCRI_sig = V.alloc 0uy deviceIDCRI_len;
+  let deviceIDCRI_sig = V.alloc 0uy 64sz;
   V.to_array_pts_to deviceIDCRI_sig;
   ed25519_sign (V.vec_to_array deviceIDCRI_sig) deviceID_priv deviceIDCRI_len deviceIDCRI_buf;
   let deviceIDCSR = x509_get_deviceIDCSR
@@ -206,7 +206,7 @@ fn sign_and_finalize_aliasKeyCRT
               _tbs_buf)))
     ))
 {
-  let aliasKeyTBS_sig = V.alloc 0uy aliasKeyTBS_len;
+  let aliasKeyTBS_sig = V.alloc 0uy 64sz;
   V.to_array_pts_to aliasKeyTBS_sig;
 
   ed25519_sign (V.vec_to_array aliasKeyTBS_sig) deviceID_priv aliasKeyTBS_len aliasKeyTBS_buf;

@@ -32,6 +32,9 @@ extract_c: $(extractiontest_fst_checked)
 #	$(FSTAR_HOME)/../karamel/krml -bundle Demo.MultiplyByRepeatedAddition=* -skip-compilation $(OUTPUT_DIRECTORY)/out.krml
 
 ifneq (,$(KRML_HOME))
+test-dpe-c: dice
+	+$(MAKE) -C dice test-c
+
 test-cbor: dice
 	+$(MAKE) -C dice/cbor
 
@@ -46,13 +49,17 @@ extract_pulse_c: $(pulsepointstruct_fst_checked)
 	$(KRML_HOME)/krml -bundle PulsePointStruct=* -skip-linking $(OUTPUT_DIRECTORY)/PulsePointStruct.krml -tmpdir $(OUTPUT_DIRECTORY)
 
 else
+test-dpe-c:
+
 test-cbor:
 
 extract_pulse_c:
 
 endif
 
-test: test-cbor extract_pulse_c
+test: test-cbor extract_pulse_c test-dpe-c
+
+.PHONY: test-dpe-c
 
 .PHONY: extract_pulse_c
 

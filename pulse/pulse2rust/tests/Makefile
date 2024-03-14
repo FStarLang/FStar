@@ -1,9 +1,19 @@
 PULSE_HOME ?= ../..
 PULSE_EXAMPLES_ROOT ?= $(PULSE_HOME)/share/pulse/examples
 
-SRC_DIRS := $(addprefix $(PULSE_EXAMPLES_ROOT)/,by-example dice/common dice/dpe dice/engine dice/l0)
+SRC_DIRS := $(addprefix $(PULSE_EXAMPLES_ROOT)/,by-example dice/common dice/dpe dice/engine dice/l0 dice/common/hacl-c)
+ifneq (,$(wildcard $(PULSE_EXAMPLES_ROOT)/dice/_output/cache))
+SRC_DIRS += $(PULSE_EXAMPLES_ROOT)/dice/_output/cache
+endif
+ifneq (,$(wildcard $(PULSE_EXAMPLES_ROOT)/dice/common/hacl-c/_output/cache))
+SRC_DIRS += $(PULSE_EXAMPLES_ROOT)/dice/common/hacl-c/_output/cache
+endif
+ifneq (,$(wildcard $(PULSE_EXAMPLES_ROOT)/_output/cache))
+SRC_DIRS += $(PULSE_EXAMPLES_ROOT)/_output/cache
+endif
 OUTPUT_DIRECTORY := _output
 CACHE_DIRECTORY := $(OUTPUT_DIRECTORY)/cache
+FSTAR_OPTIONS += --warn_error -342 --cmi
 
 MAIN=../main.exe
 RUST_SRC_DIR=./src/
@@ -26,8 +36,12 @@ pulsetutorial-loops.rs: PulseTutorial_Loops.ast
 pulsetutorial-algorithms.rs: PulseTutorial_Algorithms.ast
 	$(MAIN) -odir $(RUST_SRC_DIR) $(addprefix $(OUTPUT_DIRECTORY)/, $^)
 
+# FIXME: this seems to be a duplicate of the `dpe-ast` rule in
+# share/pulse/examples/dice/Makefile
+
 DPE_FILES = EngineTypes.ast \
   EngineCore.ast \
+	HACL.ast \
 	L0Types.ast \
 	L0Crypto.ast \
 	L0Core.ast \

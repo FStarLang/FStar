@@ -85,6 +85,7 @@ ensures p
 let acquire = acquire'
 
 
+noextract [@@noextract_to "krml"] // FIXME: This function cannot be extracted to krml because Extension pulse failed to extract term: Unexpected extraction error: FStar_Tactics_Common.TacticFailure("Unexpected st term when erasing ghost subterms")
 ```pulse
 fn release' #p (l:lock p)
 requires p
@@ -99,5 +100,12 @@ ensures emp
   }
 }
 ```
+
+// FIXME: due to the extraction failure for release' above, I need to swap out the implementation of `release` at extraction time. That is fine, since Pulse.Lib.SpinLock is implemented with a handwritten C file. However, Karamel still needs the signature of those functions to be extracted to krml, and there is no way to extract only the .fsti to krml if the .fst is present in the include path. Hence this awkward dance.
+
+assume val release'' (#p: _) (l: lock p) : stt unit p (fun _ -> emp)
+assume val release''_eq : squash (eq2 #((#p: _) -> (l: lock p) -> stt unit p (fun _ -> emp)) release' release'')
+
+[@@FStar.Tactics.Effect.postprocess_for_extraction_with (fun _ -> FStar.Tactics.apply (`release''_eq))]
 let release = release'
 
