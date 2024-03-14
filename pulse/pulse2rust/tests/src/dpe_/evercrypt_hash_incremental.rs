@@ -1,4 +1,8 @@
-pub use super::evercrypt::EverCrypt_Hash_Incremental_hash_len as hash_len;
+pub fn hash_len (
+  a: super::evercrypt::Spec_Hash_Definitions_hash_alg
+) -> u32 { unsafe {
+  return super::evercrypt::EverCrypt_Hash_Incremental_hash_len(a);
+}}
 
 pub fn hash (
   a: super::evercrypt::Spec_Hash_Definitions_hash_alg,
@@ -7,6 +11,6 @@ pub fn hash (
   p_input: (),
   v_input: (),
   input_len: u32
-) {
+) { unsafe {
   super::evercrypt::EverCrypt_Hash_Incremental_hash(a, output.as_mut_ptr(), input.as_mut_ptr(), input_len);
-}
+}}

@@ -1,3 +1,3 @@
-pub fn init (_: ()) {
+pub fn init (_: ()) { unsafe {
     super::evercrypt::EverCrypt_AutoConfig2_init();
-}
+}}

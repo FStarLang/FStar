@@ -7,9 +7,9 @@ pub fn sign (
     p_msg: (),
     v_msg: (),
     msg: &mut [u8]
-) {
+) { unsafe {
   super::evercrypt::EverCrypt_Ed25519_sign(signature.as_mut_ptr(), private_key.as_mut_ptr(), msg_len, msg.as_mut_ptr());
-}
+}}
 
 pub fn verify (
     p_public_key: (),
@@ -22,6 +22,6 @@ pub fn verify (
     p_signature: (),
     v_signature: (),
     signature: &mut [u8]
-) -> bool {
+) -> bool { unsafe {
   return super::evercrypt::EverCrypt_Ed25519_verify(public_key.as_mut_ptr(), msg_len, msg.as_mut_ptr(), signature.as_mut_ptr());
-}
+}}
