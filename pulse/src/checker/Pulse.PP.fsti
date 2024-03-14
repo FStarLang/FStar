@@ -50,6 +50,7 @@ instance val printable_option (a:Type) (_ : printable a) : printable (option a)
 instance val printable_list (a:Type) (_ : printable a) : printable (list a)
 
 instance val printable_term     : printable term
+instance val printable_st_term  : printable st_term
 instance val printable_universe : printable universe
 instance val printable_comp     : printable comp
 
