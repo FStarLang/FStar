@@ -165,3 +165,13 @@ let ed25519_sign = ed25519_sign0
 assume val dice_hash_alg1 (_: unit) : alg_t
 
 let dice_hash_alg0 _ = dice_hash_alg1 ()
+
+inline_for_extraction noextract [@@noextract_to "krml"]
+let dice_digest_len0 = 32sz // FIXME: this is taken from previously handwritten hacl.rs
+
+assume val dice_digest_len_spec : squash (
+  is_hashable_len (digest_len dice_hash_alg) /\
+  dice_digest_len0 == digest_len dice_hash_alg
+)
+
+let dice_digest_len = dice_digest_len0

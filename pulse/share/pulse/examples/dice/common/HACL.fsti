@@ -22,6 +22,7 @@ module US = FStar.SizeT
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 
+inline_for_extraction noextract [@@noextract_to "krml"]
 let v32us : US.t = 32sz
 
 // let coerce (l:US.t) (s:erased (elseq U8.t l)) : erased (Seq.seq U8.t)
@@ -147,8 +148,17 @@ val dice_hash_alg0 (_: unit) : alg_t
 inline_for_extraction noextract [@@noextract_to "krml"]
 let dice_hash_alg = dice_hash_alg0 ()
 
-inline_for_extraction noextract [@@noextract_to "krml"]
-let dice_digest_len : hashable_len = assume (is_hashable_len (digest_len dice_hash_alg)); digest_len dice_hash_alg
+// inline_for_extraction noextract [@@noextract_to "krml"]
+(* FIXME: WHY WHY WHY can I not inline this definition? If so, Karamel refuses to produce C code for DPE with: Cannot re-check L0Core.l0_main_aux as valid Low* and will not extract it.  If L0Core.l0_main_aux is not meant to be extracted, consider marking it as Ghost, noextract, or using a bundle. If it is meant to be extracted, use -dast for further debugging.
+
+Warning 4: in the definition of authKeyID, after the definition of uu___1, in top-level declaration L0Core.l0_main_aux, in file DPE: Malformed input:
+subtype mismatch, () (a.k.a. ()) vs size_t (a.k.a. size_t)
+Warning 4 is fatal, exiting.
+*)
+val dice_digest_len : (dice_digest_len: hashable_len {
+  is_hashable_len (digest_len dice_hash_alg) /\
+  dice_digest_len == digest_len dice_hash_alg
+})
 
 assume Dice_digest_len_is_hashable : is_hashable_len dice_digest_len
 
