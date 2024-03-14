@@ -1,7 +1,13 @@
 PULSE_HOME ?= ../..
 PULSE_EXAMPLES_ROOT ?= $(PULSE_HOME)/share/pulse/examples
 
-SRC_DIRS := $(addprefix $(PULSE_EXAMPLES_ROOT)/,by-example dice/common dice/dpe dice/engine dice/l0 dice/common/hacl-c dice/_output/cache dice/common/hacl-c/_output/cache)
+SRC_DIRS := $(addprefix $(PULSE_EXAMPLES_ROOT)/,by-example dice/common dice/dpe dice/engine dice/l0 dice/common/hacl-c)
+ifneq (,$(wildcard $(PULSE_EXAMPLES_ROOT)/dice/_output/cache))
+SRC_DIRS += $(PULSE_EXAMPLES_ROOT)/dice/_output/cache
+endif
+ifneq (,$(wildcard $(PULSE_EXAMPLES_ROOT)/dice/common/hacl-c/_output/cache))
+SRC_DIRS += $(PULSE_EXAMPLES_ROOT)/dice/common/hacl-c/_output/cache
+endif
 ifneq (,$(wildcard $(PULSE_EXAMPLES_ROOT)/_output/cache))
 SRC_DIRS += $(PULSE_EXAMPLES_ROOT)/_output/cache
 endif
