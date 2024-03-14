@@ -1,2 +1,1 @@
-pub const init : fn ()
-= super::evercrypt::EverCrypt_AutoConfig2_init;
+pub use super::evercrypt::EverCrypt_AutoConfig2_init as init;
