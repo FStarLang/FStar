@@ -22,6 +22,7 @@ open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.TypeChecker.Common
 open FStar.Class.Binders
+open FStar.Class.Deq
 
 module BU = FStar.Compiler.Util
 module S = FStar.Syntax.Syntax
@@ -63,7 +64,7 @@ type step =
   | DefaultUnivsToZero // default al unresolved universe uvars to zero
 and steps = list step
 
-val eq_step : step -> step -> bool
+instance val deq_step : deq step
 
 type sig_binding = list lident * sigelt
 
@@ -72,6 +73,8 @@ type delta_level =
   | InliningDelta // ZP : Trying to resolve name clash
   | Eager_unfolding_only
   | Unfold of delta_depth
+
+instance val deq_delta_level : deq delta_level
 
 // A name prefix, such as ["FStar";"Math"]
 type name_prefix = FStar.Ident.path

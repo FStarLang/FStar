@@ -88,3 +88,9 @@ instance hasrange_lident = {
   pos = (fun lid -> Class.HasRange.pos lid.ident);
   setPos = (fun rng id -> { id with ident = setPos rng id.ident });
 }
+instance deq_ident = {
+  (=?) = ident_equals;
+}
+instance deq_lident = {
+  (=?) = lid_equals;
+}
