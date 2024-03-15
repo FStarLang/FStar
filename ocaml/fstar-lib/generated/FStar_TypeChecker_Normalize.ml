@@ -191,6 +191,22 @@ let (head_of : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun t ->
     let uu___ = FStar_Syntax_Util.head_and_args_full t in
     match uu___ with | (hd, uu___1) -> hd
+let (cfg_equivalent :
+  FStar_TypeChecker_Cfg.cfg -> FStar_TypeChecker_Cfg.cfg -> Prims.bool) =
+  fun c1 ->
+    fun c2 ->
+      ((FStar_Class_Deq.op_Equals_Question FStar_TypeChecker_Cfg.deq_fsteps
+          c1.FStar_TypeChecker_Cfg.steps c2.FStar_TypeChecker_Cfg.steps)
+         &&
+         (FStar_Class_Deq.op_Equals_Question
+            (FStar_Class_Deq.deq_list FStar_TypeChecker_Env.deq_delta_level)
+            c1.FStar_TypeChecker_Cfg.delta_level
+            c2.FStar_TypeChecker_Cfg.delta_level))
+        &&
+        (FStar_Class_Deq.op_Equals_Question
+           (FStar_Class_Ord.ord_eq FStar_Class_Ord.ord_bool)
+           c1.FStar_TypeChecker_Cfg.normalize_pure_lets
+           c2.FStar_TypeChecker_Cfg.normalize_pure_lets)
 let read_memo :
   'a .
     FStar_TypeChecker_Cfg.cfg ->
@@ -202,8 +218,9 @@ let read_memo :
       let uu___ = FStar_Compiler_Effect.op_Bang r in
       match uu___ with
       | FStar_Pervasives_Native.Some (cfg', a1) when
-          cfg.FStar_TypeChecker_Cfg.compat_memo_ignore_cfg ||
-            (FStar_Compiler_Util.physical_equality cfg cfg')
+          (cfg.FStar_TypeChecker_Cfg.compat_memo_ignore_cfg ||
+             (FStar_Compiler_Util.physical_equality cfg cfg'))
+            || (cfg_equivalent cfg' cfg)
           -> FStar_Pervasives_Native.Some a1
       | uu___1 -> FStar_Pervasives_Native.None
 let set_memo :
@@ -1758,7 +1775,8 @@ let (rejig_norm_request :
 let (is_nbe_request : FStar_TypeChecker_Env.step Prims.list -> Prims.bool) =
   fun s ->
     FStar_Compiler_Util.for_some
-      (FStar_TypeChecker_Env.eq_step FStar_TypeChecker_Env.NBE) s
+      (FStar_Class_Deq.op_Equals_Question FStar_TypeChecker_Env.deq_step
+         FStar_TypeChecker_Env.NBE) s
 let get_norm_request :
   'uuuuu .
     FStar_TypeChecker_Cfg.cfg ->
@@ -10322,7 +10340,7 @@ let (get_n_binders :
       FStar_Syntax_Syntax.term ->
         (FStar_Syntax_Syntax.binder Prims.list * FStar_Syntax_Syntax.comp))
   = fun env1 -> fun n -> fun t -> get_n_binders' env1 [] n t
-let (uu___3995 : unit) =
+let (uu___3997 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals __get_n_binders get_n_binders'
 let (maybe_unfold_head_fv :
   FStar_TypeChecker_Env.env ->

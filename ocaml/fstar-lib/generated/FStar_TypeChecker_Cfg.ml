@@ -551,6 +551,170 @@ let (steps_to_string : fsteps -> Prims.string) =
     FStar_Compiler_Util.format
       "{\nbeta = %s;\niota = %s;\nzeta = %s;\nzeta_full = %s;\nweak = %s;\nhnf  = %s;\nprimops = %s;\ndo_not_unfold_pure_lets = %s;\nunfold_until = %s;\nunfold_only = %s;\nunfold_fully = %s;\nunfold_attr = %s;\nunfold_qual = %s;\nunfold_namespace = %s;\nunfold_tac = %s;\npure_subterms_within_computations = %s;\nsimplify = %s;\nerase_universes = %s;\nallow_unbound_universes = %s;\nreify_ = %s;\ncompress_uvars = %s;\nno_full_norm = %s;\ncheck_no_uvars = %s;\nunmeta = %s;\nunascribe = %s;\nin_full_norm_request = %s;\nweakly_reduce_scrutinee = %s;\nfor_extraction = %s;\nunrefine = %s;\ndefault_univs_to_zero = %s;\n}"
       uu___
+let (deq_fsteps : fsteps FStar_Class_Deq.deq) =
+  {
+    FStar_Class_Deq.op_Equals_Question =
+      (fun f1 ->
+         fun f2 ->
+           ((((((((((((((((((((((((((((((FStar_Class_Deq.op_Equals_Question
+                                           (FStar_Class_Ord.ord_eq
+                                              FStar_Class_Ord.ord_bool)
+                                           f1.beta f2.beta)
+                                          &&
+                                          (FStar_Class_Deq.op_Equals_Question
+                                             (FStar_Class_Ord.ord_eq
+                                                FStar_Class_Ord.ord_bool)
+                                             f1.iota f2.iota))
+                                         &&
+                                         (FStar_Class_Deq.op_Equals_Question
+                                            (FStar_Class_Ord.ord_eq
+                                               FStar_Class_Ord.ord_bool)
+                                            f1.zeta f2.zeta))
+                                        &&
+                                        (FStar_Class_Deq.op_Equals_Question
+                                           (FStar_Class_Ord.ord_eq
+                                              FStar_Class_Ord.ord_bool)
+                                           f1.zeta_full f2.zeta_full))
+                                       &&
+                                       (FStar_Class_Deq.op_Equals_Question
+                                          (FStar_Class_Ord.ord_eq
+                                             FStar_Class_Ord.ord_bool)
+                                          f1.weak f2.weak))
+                                      &&
+                                      (FStar_Class_Deq.op_Equals_Question
+                                         (FStar_Class_Ord.ord_eq
+                                            FStar_Class_Ord.ord_bool) 
+                                         f1.hnf f2.hnf))
+                                     &&
+                                     (FStar_Class_Deq.op_Equals_Question
+                                        (FStar_Class_Ord.ord_eq
+                                           FStar_Class_Ord.ord_bool)
+                                        f1.primops f2.primops))
+                                    &&
+                                    (FStar_Class_Deq.op_Equals_Question
+                                       (FStar_Class_Ord.ord_eq
+                                          FStar_Class_Ord.ord_bool)
+                                       f1.do_not_unfold_pure_lets
+                                       f2.do_not_unfold_pure_lets))
+                                   &&
+                                   (FStar_Class_Deq.op_Equals_Question
+                                      (FStar_Class_Deq.deq_option
+                                         FStar_Syntax_Syntax.deq_delta_depth)
+                                      f1.unfold_until f2.unfold_until))
+                                  &&
+                                  (FStar_Class_Deq.op_Equals_Question
+                                     (FStar_Class_Ord.ord_eq
+                                        (FStar_Class_Ord.ord_option
+                                           (FStar_Class_Ord.ord_list
+                                              FStar_Syntax_Syntax.ord_fv)))
+                                     f1.unfold_only f2.unfold_only))
+                                 &&
+                                 (FStar_Class_Deq.op_Equals_Question
+                                    (FStar_Class_Ord.ord_eq
+                                       (FStar_Class_Ord.ord_option
+                                          (FStar_Class_Ord.ord_list
+                                             FStar_Syntax_Syntax.ord_fv)))
+                                    f1.unfold_fully f2.unfold_fully))
+                                &&
+                                (FStar_Class_Deq.op_Equals_Question
+                                   (FStar_Class_Ord.ord_eq
+                                      (FStar_Class_Ord.ord_option
+                                         (FStar_Class_Ord.ord_list
+                                            FStar_Syntax_Syntax.ord_fv)))
+                                   f1.unfold_attr f2.unfold_attr))
+                               &&
+                               (FStar_Class_Deq.op_Equals_Question
+                                  (FStar_Class_Ord.ord_eq
+                                     (FStar_Class_Ord.ord_option
+                                        (FStar_Class_Ord.ord_list
+                                           FStar_Class_Ord.ord_string)))
+                                  f1.unfold_qual f2.unfold_qual))
+                              &&
+                              (FStar_Class_Deq.op_Equals_Question
+                                 (FStar_Class_Ord.ord_eq
+                                    (FStar_Class_Ord.ord_option
+                                       (FStar_Class_Ord.ord_tuple2
+                                          (FStar_Class_Ord.ord_list
+                                             (FStar_Class_Ord.ord_tuple2
+                                                (FStar_Class_Ord.ord_list
+                                                   FStar_Class_Ord.ord_string)
+                                                FStar_Class_Ord.ord_bool))
+                                          FStar_Class_Ord.ord_bool)))
+                                 f1.unfold_namespace f2.unfold_namespace))
+                             &&
+                             (FStar_Class_Deq.op_Equals_Question
+                                (FStar_Class_Ord.ord_eq
+                                   FStar_Class_Ord.ord_bool) f1.unfold_tac
+                                f2.unfold_tac))
+                            &&
+                            (FStar_Class_Deq.op_Equals_Question
+                               (FStar_Class_Ord.ord_eq
+                                  FStar_Class_Ord.ord_bool)
+                               f1.pure_subterms_within_computations
+                               f2.pure_subterms_within_computations))
+                           &&
+                           (FStar_Class_Deq.op_Equals_Question
+                              (FStar_Class_Ord.ord_eq
+                                 FStar_Class_Ord.ord_bool) f1.simplify
+                              f2.simplify))
+                          &&
+                          (FStar_Class_Deq.op_Equals_Question
+                             (FStar_Class_Ord.ord_eq FStar_Class_Ord.ord_bool)
+                             f1.erase_universes f2.erase_universes))
+                         &&
+                         (FStar_Class_Deq.op_Equals_Question
+                            (FStar_Class_Ord.ord_eq FStar_Class_Ord.ord_bool)
+                            f1.allow_unbound_universes
+                            f2.allow_unbound_universes))
+                        &&
+                        (FStar_Class_Deq.op_Equals_Question
+                           (FStar_Class_Ord.ord_eq FStar_Class_Ord.ord_bool)
+                           f1.reify_ f2.reify_))
+                       &&
+                       (FStar_Class_Deq.op_Equals_Question
+                          (FStar_Class_Ord.ord_eq FStar_Class_Ord.ord_bool)
+                          f1.compress_uvars f2.compress_uvars))
+                      &&
+                      (FStar_Class_Deq.op_Equals_Question
+                         (FStar_Class_Ord.ord_eq FStar_Class_Ord.ord_bool)
+                         f1.no_full_norm f2.no_full_norm))
+                     &&
+                     (FStar_Class_Deq.op_Equals_Question
+                        (FStar_Class_Ord.ord_eq FStar_Class_Ord.ord_bool)
+                        f1.check_no_uvars f2.check_no_uvars))
+                    &&
+                    (FStar_Class_Deq.op_Equals_Question
+                       (FStar_Class_Ord.ord_eq FStar_Class_Ord.ord_bool)
+                       f1.unmeta f2.unmeta))
+                   &&
+                   (FStar_Class_Deq.op_Equals_Question
+                      (FStar_Class_Ord.ord_eq FStar_Class_Ord.ord_bool)
+                      f1.unascribe f2.unascribe))
+                  &&
+                  (FStar_Class_Deq.op_Equals_Question
+                     (FStar_Class_Ord.ord_eq FStar_Class_Ord.ord_bool)
+                     f1.in_full_norm_request f2.in_full_norm_request))
+                 &&
+                 (FStar_Class_Deq.op_Equals_Question
+                    (FStar_Class_Ord.ord_eq FStar_Class_Ord.ord_bool)
+                    f1.weakly_reduce_scrutinee f2.weakly_reduce_scrutinee))
+                &&
+                (FStar_Class_Deq.op_Equals_Question
+                   (FStar_Class_Ord.ord_eq FStar_Class_Ord.ord_bool)
+                   f1.nbe_step f2.nbe_step))
+               &&
+               (FStar_Class_Deq.op_Equals_Question
+                  (FStar_Class_Ord.ord_eq FStar_Class_Ord.ord_bool)
+                  f1.for_extraction f2.for_extraction))
+              &&
+              (FStar_Class_Deq.op_Equals_Question
+                 (FStar_Class_Ord.ord_eq FStar_Class_Ord.ord_bool)
+                 f1.unrefine f2.unrefine))
+             &&
+             (FStar_Class_Deq.op_Equals_Question
+                (FStar_Class_Ord.ord_eq FStar_Class_Ord.ord_bool)
+                f1.default_univs_to_zero f2.default_univs_to_zero))
+  }
 let (default_steps : fsteps) =
   {
     beta = true;
@@ -2334,7 +2498,9 @@ let (translate_norm_steps :
     let s1 = FStar_Compiler_List.concatMap translate_norm_step s in
     let add_exclude s2 z =
       let uu___ =
-        FStar_Compiler_Util.for_some (FStar_TypeChecker_Env.eq_step z) s2 in
+        FStar_Compiler_Util.for_some
+          (FStar_Class_Deq.op_Equals_Question FStar_TypeChecker_Env.deq_step
+             z) s2 in
       if uu___ then s2 else (FStar_TypeChecker_Env.Exclude z) :: s2 in
     let s2 = FStar_TypeChecker_Env.Beta :: s1 in
     let s3 = add_exclude s2 FStar_TypeChecker_Env.Zeta in

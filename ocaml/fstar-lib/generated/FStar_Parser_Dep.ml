@@ -80,7 +80,7 @@ let (uu___is_Black : color -> Prims.bool) =
 let (check_and_strip_suffix :
   Prims.string -> Prims.string FStar_Pervasives_Native.option) =
   fun f ->
-    let suffixes = [".fsti"; ".fst"] in
+    let suffixes = [".fsti"; ".fst"; ".fsi"; ".fs"] in
     let matches =
       FStar_Compiler_List.map
         (fun ext ->
