@@ -32,6 +32,7 @@ open FStar.TypeChecker.Env
 open FStar.TypeChecker.Primops
 
 open FStar.Class.Show
+open FStar.Class.Deq
 
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
@@ -78,6 +79,8 @@ type fsteps = {
      default_univs_to_zero:bool; (* Default unresolved universe levels to zero *)
 }
 
+instance val deq_fsteps : deq fsteps
+
 val default_steps : fsteps
 val fstep_add_one : step -> fsteps -> fsteps
 val to_fsteps : list step -> fsteps
@@ -105,7 +108,7 @@ type cfg = {
      delta_level: list Env.delta_level;  // Controls how much unfolding of definitions should be performed
      primitive_steps:BU.psmap primitive_step;
      strong : bool;                       // under a binder
-     memoize_lazy : bool;
+     memoize_lazy : bool;     (* What exactly is this? Seems to be always true now. *)
      normalize_pure_lets: bool;
      reifying : bool;
      compat_memo_ignore_cfg:bool; (* See #2155, #2161, #2986 *)

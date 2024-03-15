@@ -2321,6 +2321,8 @@ let (deq_univ_name : univ_name FStar_Class_Deq.deq) =
        fun y ->
          let uu___ = order_univ_name x y in
          FStar_Compiler_Order.order_from_int uu___)
+let (deq_delta_depth : delta_depth FStar_Class_Deq.deq) =
+  { FStar_Class_Deq.op_Equals_Question = (fun x -> fun y -> x = y) }
 let (ord_bv : bv FStar_Class_Ord.ord) =
   ord_instance_from_cmp
     (fun x ->

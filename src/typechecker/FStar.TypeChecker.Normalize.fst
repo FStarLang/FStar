@@ -36,6 +36,7 @@ open FStar.TypeChecker.Env
 open FStar.TypeChecker.Cfg
 
 open FStar.Class.Show
+open FStar.Class.Deq
 
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
@@ -117,11 +118,17 @@ type stack = list stack_elt
 
 let head_of t = let hd, _ = U.head_and_args_full t in hd
 
+(* Decides whether a memo taken in config c1 is valid when reducing in config c2. *)
+let cfg_equivalent (c1 c2 : Cfg.cfg) : bool =
+  c1.steps =? c2.steps &&
+  c1.delta_level =? c2.delta_level &&
+  c1.normalize_pure_lets =? c2.normalize_pure_lets
+
 let read_memo cfg (r:memo (Cfg.cfg * 'a)) : option 'a =
   match !r with
   (* We only take this memoized value if the cfg matches the current
   one, or if we are running in compatibility mode for it. *)
-  | Some (cfg', a) when cfg.compat_memo_ignore_cfg || BU.physical_equality cfg cfg' ->
+  | Some (cfg', a) when cfg.compat_memo_ignore_cfg || BU.physical_equality cfg cfg' || cfg_equivalent cfg' cfg ->
     Some a
   | _ -> None
 
@@ -791,7 +798,7 @@ let rejig_norm_request (hd:term) (args:args) :term =
      | _ -> failwith "Impossible! invalid rejig_norm_request for norm")
   | _ -> failwith ("Impossible! invalid rejig_norm_request for: %s" ^ (Print.term_to_string hd))
 
-let is_nbe_request s = BU.for_some (eq_step NBE) s
+let is_nbe_request s = BU.for_some ((=?) NBE) s
 
 let get_norm_request cfg (full_norm:term -> term) args =
     let parse_steps s =
