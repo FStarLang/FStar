@@ -1585,7 +1585,9 @@ and (encode_term :
                             FStar_TypeChecker_Env.erase_erasable_args =
                               (uu___6.FStar_TypeChecker_Env.erase_erasable_args);
                             FStar_TypeChecker_Env.core_check =
-                              (uu___6.FStar_TypeChecker_Env.core_check)
+                              (uu___6.FStar_TypeChecker_Env.core_check);
+                            FStar_TypeChecker_Env.extension_state =
+                              (uu___6.FStar_TypeChecker_Env.extension_state)
                           } in
                         let uu___6 =
                           FStar_TypeChecker_Util.pure_or_ghost_pre_and_post

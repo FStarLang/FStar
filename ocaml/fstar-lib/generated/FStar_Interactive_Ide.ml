@@ -1725,7 +1725,9 @@ let (run_push_without_deps :
                FStar_TypeChecker_Env.erase_erasable_args =
                  (uu___.FStar_TypeChecker_Env.erase_erasable_args);
                FStar_TypeChecker_Env.core_check =
-                 (uu___.FStar_TypeChecker_Env.core_check)
+                 (uu___.FStar_TypeChecker_Env.core_check);
+               FStar_TypeChecker_Env.extension_state =
+                 (uu___.FStar_TypeChecker_Env.extension_state)
              });
           FStar_Interactive_Ide_Types.repl_stdin =
             (st1.FStar_Interactive_Ide_Types.repl_stdin);

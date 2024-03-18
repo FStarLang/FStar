@@ -2674,7 +2674,9 @@ and (extract_sig_let :
                        (env.FStar_TypeChecker_Env.unif_allow_ref_guards);
                      FStar_TypeChecker_Env.erase_erasable_args = true;
                      FStar_TypeChecker_Env.core_check =
-                       (env.FStar_TypeChecker_Env.core_check)
+                       (env.FStar_TypeChecker_Env.core_check);
+                     FStar_TypeChecker_Env.extension_state =
+                       (env.FStar_TypeChecker_Env.extension_state)
                    } in
                  let lbd =
                    let uu___3 =

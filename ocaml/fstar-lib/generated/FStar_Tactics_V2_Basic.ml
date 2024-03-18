@@ -857,7 +857,9 @@ let (tc_unifier_solved_implicits :
                          FStar_TypeChecker_Env.erase_erasable_args =
                            (env1.FStar_TypeChecker_Env.erase_erasable_args);
                          FStar_TypeChecker_Env.core_check =
-                           (env1.FStar_TypeChecker_Env.core_check)
+                           (env1.FStar_TypeChecker_Env.core_check);
+                         FStar_TypeChecker_Env.extension_state =
+                           (env1.FStar_TypeChecker_Env.extension_state)
                        } in
                      let must_tot1 =
                        must_tot &&
@@ -1861,7 +1863,9 @@ let (__tc :
                                   FStar_TypeChecker_Env.erase_erasable_args =
                                     (e.FStar_TypeChecker_Env.erase_erasable_args);
                                   FStar_TypeChecker_Env.core_check =
-                                    (e.FStar_TypeChecker_Env.core_check)
+                                    (e.FStar_TypeChecker_Env.core_check);
+                                  FStar_TypeChecker_Env.extension_state =
+                                    (e.FStar_TypeChecker_Env.extension_state)
                                 } in
                               try
                                 (fun uu___1 ->
@@ -2036,7 +2040,9 @@ let (__tc_ghost :
                                   FStar_TypeChecker_Env.erase_erasable_args =
                                     (e.FStar_TypeChecker_Env.erase_erasable_args);
                                   FStar_TypeChecker_Env.core_check =
-                                    (e.FStar_TypeChecker_Env.core_check)
+                                    (e.FStar_TypeChecker_Env.core_check);
+                                  FStar_TypeChecker_Env.extension_state =
+                                    (e.FStar_TypeChecker_Env.extension_state)
                                 } in
                               let e2 =
                                 {
@@ -2147,7 +2153,9 @@ let (__tc_ghost :
                                   FStar_TypeChecker_Env.erase_erasable_args =
                                     (e1.FStar_TypeChecker_Env.erase_erasable_args);
                                   FStar_TypeChecker_Env.core_check =
-                                    (e1.FStar_TypeChecker_Env.core_check)
+                                    (e1.FStar_TypeChecker_Env.core_check);
+                                  FStar_TypeChecker_Env.extension_state =
+                                    (e1.FStar_TypeChecker_Env.extension_state)
                                 } in
                               try
                                 (fun uu___1 ->
@@ -2333,7 +2341,9 @@ let (__tc_lax :
                                   FStar_TypeChecker_Env.erase_erasable_args =
                                     (e.FStar_TypeChecker_Env.erase_erasable_args);
                                   FStar_TypeChecker_Env.core_check =
-                                    (e.FStar_TypeChecker_Env.core_check)
+                                    (e.FStar_TypeChecker_Env.core_check);
+                                  FStar_TypeChecker_Env.extension_state =
+                                    (e.FStar_TypeChecker_Env.extension_state)
                                 } in
                               let e2 =
                                 {
@@ -2444,7 +2454,9 @@ let (__tc_lax :
                                   FStar_TypeChecker_Env.erase_erasable_args =
                                     (e1.FStar_TypeChecker_Env.erase_erasable_args);
                                   FStar_TypeChecker_Env.core_check =
-                                    (e1.FStar_TypeChecker_Env.core_check)
+                                    (e1.FStar_TypeChecker_Env.core_check);
+                                  FStar_TypeChecker_Env.extension_state =
+                                    (e1.FStar_TypeChecker_Env.extension_state)
                                 } in
                               let e3 =
                                 {
@@ -2555,7 +2567,9 @@ let (__tc_lax :
                                   FStar_TypeChecker_Env.erase_erasable_args =
                                     (e2.FStar_TypeChecker_Env.erase_erasable_args);
                                   FStar_TypeChecker_Env.core_check =
-                                    (e2.FStar_TypeChecker_Env.core_check)
+                                    (e2.FStar_TypeChecker_Env.core_check);
+                                  FStar_TypeChecker_Env.extension_state =
+                                    (e2.FStar_TypeChecker_Env.extension_state)
                                 } in
                               try
                                 (fun uu___1 ->
@@ -6130,7 +6144,9 @@ let (_t_trefl :
                                       =
                                       (uu___12.FStar_TypeChecker_Env.erase_erasable_args);
                                     FStar_TypeChecker_Env.core_check =
-                                      (uu___12.FStar_TypeChecker_Env.core_check)
+                                      (uu___12.FStar_TypeChecker_Env.core_check);
+                                    FStar_TypeChecker_Env.extension_state =
+                                      (uu___12.FStar_TypeChecker_Env.extension_state)
                                   } in
                                 let uu___12 =
                                   FStar_TypeChecker_Core.compute_term_type_handle_guards
@@ -6654,7 +6670,9 @@ let (join_goals :
                                       =
                                       (uu___3.FStar_TypeChecker_Env.erase_erasable_args);
                                     FStar_TypeChecker_Env.core_check =
-                                      (uu___3.FStar_TypeChecker_Env.core_check)
+                                      (uu___3.FStar_TypeChecker_Env.core_check);
+                                    FStar_TypeChecker_Env.extension_state =
+                                      (uu___3.FStar_TypeChecker_Env.extension_state)
                                   } in
                                 let uu___3 =
                                   FStar_Tactics_Monad.mk_irrelevant_goal
@@ -7323,7 +7341,9 @@ let (unshelve : FStar_Syntax_Syntax.term -> unit FStar_Tactics_Monad.tac) =
                       FStar_TypeChecker_Env.erase_erasable_args =
                         (env1.FStar_TypeChecker_Env.erase_erasable_args);
                       FStar_TypeChecker_Env.core_check =
-                        (env1.FStar_TypeChecker_Env.core_check)
+                        (env1.FStar_TypeChecker_Env.core_check);
+                      FStar_TypeChecker_Env.extension_state =
+                        (env1.FStar_TypeChecker_Env.extension_state)
                     } in
                   let g =
                     FStar_Tactics_Types.mk_goal env2 ctx_uvar opts false "" in
@@ -8820,7 +8840,10 @@ let (t_destruct :
                                                                     (env1.FStar_TypeChecker_Env.erase_erasable_args);
                                                                     FStar_TypeChecker_Env.core_check
                                                                     =
-                                                                    (env1.FStar_TypeChecker_Env.core_check)
+                                                                    (env1.FStar_TypeChecker_Env.core_check);
+                                                                    FStar_TypeChecker_Env.extension_state
+                                                                    =
+                                                                    (env1.FStar_TypeChecker_Env.extension_state)
                                                                     } s_ty1
                                                                     pat in
                                                                     match uu___31
@@ -9482,7 +9505,9 @@ let (push_bv_dsenv :
                     FStar_TypeChecker_Env.erase_erasable_args =
                       (e.FStar_TypeChecker_Env.erase_erasable_args);
                     FStar_TypeChecker_Env.core_check =
-                      (e.FStar_TypeChecker_Env.core_check)
+                      (e.FStar_TypeChecker_Env.core_check);
+                    FStar_TypeChecker_Env.extension_state =
+                      (e.FStar_TypeChecker_Env.extension_state)
                   }, uu___2) in
                Obj.magic
                  (FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac ()
@@ -10631,7 +10656,9 @@ let (refl_tc_term :
                              FStar_TypeChecker_Env.erase_erasable_args =
                                (g1.FStar_TypeChecker_Env.erase_erasable_args);
                              FStar_TypeChecker_Env.core_check =
-                               (g1.FStar_TypeChecker_Env.core_check)
+                               (g1.FStar_TypeChecker_Env.core_check);
+                             FStar_TypeChecker_Env.extension_state =
+                               (g1.FStar_TypeChecker_Env.extension_state)
                            } in
                          let e1 =
                            let g3 =
@@ -10740,7 +10767,9 @@ let (refl_tc_term :
                                FStar_TypeChecker_Env.erase_erasable_args =
                                  (g2.FStar_TypeChecker_Env.erase_erasable_args);
                                FStar_TypeChecker_Env.core_check =
-                                 (g2.FStar_TypeChecker_Env.core_check)
+                                 (g2.FStar_TypeChecker_Env.core_check);
+                               FStar_TypeChecker_Env.extension_state =
+                                 (g2.FStar_TypeChecker_Env.extension_state)
                              } in
                            let must_tot = false in
                            let uu___4 =
@@ -11341,7 +11370,9 @@ let (refl_instantiate_implicits :
                              FStar_TypeChecker_Env.erase_erasable_args =
                                (g1.FStar_TypeChecker_Env.erase_erasable_args);
                              FStar_TypeChecker_Env.core_check =
-                               (g1.FStar_TypeChecker_Env.core_check)
+                               (g1.FStar_TypeChecker_Env.core_check);
+                             FStar_TypeChecker_Env.extension_state =
+                               (g1.FStar_TypeChecker_Env.extension_state)
                            } in
                          let uu___4 =
                            g2.FStar_TypeChecker_Env.typeof_tot_or_gtot_term
@@ -11782,7 +11813,10 @@ let (refl_try_unify :
                                                 (g1.FStar_TypeChecker_Env.erase_erasable_args);
                                               FStar_TypeChecker_Env.core_check
                                                 =
-                                                (g1.FStar_TypeChecker_Env.core_check)
+                                                (g1.FStar_TypeChecker_Env.core_check);
+                                              FStar_TypeChecker_Env.extension_state
+                                                =
+                                                (g1.FStar_TypeChecker_Env.extension_state)
                                             } in
                                           let guard_eq =
                                             let smt_ok = true in
@@ -12147,7 +12181,9 @@ let (push_open_namespace :
                FStar_TypeChecker_Env.erase_erasable_args =
                  (e.FStar_TypeChecker_Env.erase_erasable_args);
                FStar_TypeChecker_Env.core_check =
-                 (e.FStar_TypeChecker_Env.core_check)
+                 (e.FStar_TypeChecker_Env.core_check);
+               FStar_TypeChecker_Env.extension_state =
+                 (e.FStar_TypeChecker_Env.extension_state)
              } in
            Obj.magic
              (FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac ()
@@ -12271,7 +12307,9 @@ let (push_module_abbrev :
                    FStar_TypeChecker_Env.erase_erasable_args =
                      (e.FStar_TypeChecker_Env.erase_erasable_args);
                    FStar_TypeChecker_Env.core_check =
-                     (e.FStar_TypeChecker_Env.core_check)
+                     (e.FStar_TypeChecker_Env.core_check);
+                   FStar_TypeChecker_Env.extension_state =
+                     (e.FStar_TypeChecker_Env.extension_state)
                  } in
                Obj.magic
                  (FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac ()
@@ -12424,7 +12462,9 @@ let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
             FStar_TypeChecker_Env.erase_erasable_args =
               (env2.FStar_TypeChecker_Env.erase_erasable_args);
             FStar_TypeChecker_Env.core_check =
-              (env2.FStar_TypeChecker_Env.core_check)
+              (env2.FStar_TypeChecker_Env.core_check);
+            FStar_TypeChecker_Env.extension_state =
+              (env2.FStar_TypeChecker_Env.extension_state)
           } in
         let env4 =
           {
@@ -12524,7 +12564,9 @@ let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
             FStar_TypeChecker_Env.erase_erasable_args =
               (env3.FStar_TypeChecker_Env.erase_erasable_args);
             FStar_TypeChecker_Env.core_check =
-              (env3.FStar_TypeChecker_Env.core_check)
+              (env3.FStar_TypeChecker_Env.core_check);
+            FStar_TypeChecker_Env.extension_state =
+              (env3.FStar_TypeChecker_Env.extension_state)
           } in
         let env5 =
           {
@@ -12624,7 +12666,9 @@ let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
             FStar_TypeChecker_Env.erase_erasable_args =
               (env4.FStar_TypeChecker_Env.erase_erasable_args);
             FStar_TypeChecker_Env.core_check =
-              (env4.FStar_TypeChecker_Env.core_check)
+              (env4.FStar_TypeChecker_Env.core_check);
+            FStar_TypeChecker_Env.extension_state =
+              (env4.FStar_TypeChecker_Env.extension_state)
           } in
         env5
 let (proofstate_of_goals :
@@ -12770,7 +12814,9 @@ let (proofstate_of_goal_ty :
             FStar_TypeChecker_Env.erase_erasable_args =
               (env1.FStar_TypeChecker_Env.erase_erasable_args);
             FStar_TypeChecker_Env.core_check =
-              (env1.FStar_TypeChecker_Env.core_check)
+              (env1.FStar_TypeChecker_Env.core_check);
+            FStar_TypeChecker_Env.extension_state =
+              (env1.FStar_TypeChecker_Env.extension_state)
           } in
         let env3 = tac_env env2 in
         let uu___ = FStar_Tactics_Types.goal_of_goal_ty env3 typ in

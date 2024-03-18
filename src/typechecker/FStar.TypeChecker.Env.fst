@@ -187,7 +187,9 @@ let initial_env deps
     unif_allow_ref_guards=false;
     erase_erasable_args=false;
 
-    core_check
+    core_check;
+
+    extension_state = BU.mk_ref None;
   }
 
 let dsenv env = env.dsenv
@@ -226,7 +228,8 @@ let push_stack env =
               normalized_eff_names=BU.smap_copy env.normalized_eff_names;
               fv_delta_depths=BU.smap_copy env.fv_delta_depths;
               strict_args_tab=BU.smap_copy env.strict_args_tab;
-              erasable_types_tab=BU.smap_copy env.erasable_types_tab }
+              erasable_types_tab=BU.smap_copy env.erasable_types_tab;              
+              extension_state = BU.mk_ref !env.extension_state; }
 
 let pop_stack () =
     match !stack with

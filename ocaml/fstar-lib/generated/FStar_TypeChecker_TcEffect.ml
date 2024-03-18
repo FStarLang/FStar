@@ -5723,7 +5723,10 @@ let (tc_layered_eff_decl :
                                                                (uu___20.FStar_TypeChecker_Env.erase_erasable_args);
                                                              FStar_TypeChecker_Env.core_check
                                                                =
-                                                               (uu___20.FStar_TypeChecker_Env.core_check)
+                                                               (uu___20.FStar_TypeChecker_Env.core_check);
+                                                             FStar_TypeChecker_Env.extension_state
+                                                               =
+                                                               (uu___20.FStar_TypeChecker_Env.extension_state)
                                                            } in
                                                          FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term
                                                            uu___19
@@ -7806,7 +7809,10 @@ let (tc_non_layered_eff_decl :
                                                                     (env1.FStar_TypeChecker_Env.erase_erasable_args);
                                                                     FStar_TypeChecker_Env.core_check
                                                                     =
-                                                                    (env1.FStar_TypeChecker_Env.core_check)
+                                                                    (env1.FStar_TypeChecker_Env.core_check);
+                                                                    FStar_TypeChecker_Env.extension_state
+                                                                    =
+                                                                    (env1.FStar_TypeChecker_Env.extension_state)
                                                                     } in
                                                                 check_and_gen'
                                                                   "bind_repr"
@@ -8089,7 +8095,10 @@ let (tc_non_layered_eff_decl :
                                                                     (uu___24.FStar_TypeChecker_Env.erase_erasable_args);
                                                                    FStar_TypeChecker_Env.core_check
                                                                     =
-                                                                    (uu___24.FStar_TypeChecker_Env.core_check)
+                                                                    (uu___24.FStar_TypeChecker_Env.core_check);
+                                                                   FStar_TypeChecker_Env.extension_state
+                                                                    =
+                                                                    (uu___24.FStar_TypeChecker_Env.extension_state)
                                                                  } in
                                                                ((let uu___25
                                                                    =
@@ -8427,7 +8436,10 @@ let (tc_non_layered_eff_decl :
                                                                     (env1.FStar_TypeChecker_Env.erase_erasable_args);
                                                                     FStar_TypeChecker_Env.core_check
                                                                     =
-                                                                    (env1.FStar_TypeChecker_Env.core_check)
+                                                                    (env1.FStar_TypeChecker_Env.core_check);
+                                                                    FStar_TypeChecker_Env.extension_state
+                                                                    =
+                                                                    (env1.FStar_TypeChecker_Env.extension_state)
                                                                     } uu___30);
                                                                     (let act_typ3
                                                                     =
@@ -9227,7 +9239,9 @@ let (tc_lift :
                                FStar_TypeChecker_Env.erase_erasable_args =
                                  (env.FStar_TypeChecker_Env.erase_erasable_args);
                                FStar_TypeChecker_Env.core_check =
-                                 (env.FStar_TypeChecker_Env.core_check)
+                                 (env.FStar_TypeChecker_Env.core_check);
+                               FStar_TypeChecker_Env.extension_state =
+                                 (env.FStar_TypeChecker_Env.extension_state)
                              } in
                            let lift1 =
                              match lift with

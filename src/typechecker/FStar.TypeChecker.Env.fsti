@@ -217,6 +217,8 @@ and env = {
   erase_erasable_args: bool;                      (* This flag is set when running normalize_for_extraction, see Extraction.ML.Modul *)
 
   core_check: core_check_t;
+
+  extension_state: ref (option FStar.Compiler.Dyn.dyn);
 }
 
 and solver_depth_t = int * int * int

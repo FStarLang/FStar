@@ -958,7 +958,9 @@ let rec (traverse_for_spinoff :
                              FStar_TypeChecker_Env.erase_erasable_args =
                                (env2.FStar_TypeChecker_Env.erase_erasable_args);
                              FStar_TypeChecker_Env.core_check =
-                               (env2.FStar_TypeChecker_Env.core_check)
+                               (env2.FStar_TypeChecker_Env.core_check);
+                             FStar_TypeChecker_Env.extension_state =
+                               (env2.FStar_TypeChecker_Env.extension_state)
                            } e1 in
                        (match uu___4 with
                         | (e2, lc) ->
@@ -1935,7 +1937,9 @@ let (splice :
                                        =
                                        (env.FStar_TypeChecker_Env.erase_erasable_args);
                                      FStar_TypeChecker_Env.core_check =
-                                       (env.FStar_TypeChecker_Env.core_check)
+                                       (env.FStar_TypeChecker_Env.core_check);
+                                     FStar_TypeChecker_Env.extension_state =
+                                       (env.FStar_TypeChecker_Env.extension_state)
                                    }
                                    (FStar_Syntax_Embeddings.e_list
                                       (FStar_Syntax_Embeddings.e_tuple3

@@ -149,7 +149,9 @@ let (register_goal : FStar_Tactics_Types.goal -> unit) =
                  FStar_TypeChecker_Env.erase_erasable_args =
                    (env.FStar_TypeChecker_Env.erase_erasable_args);
                  FStar_TypeChecker_Env.core_check =
-                   (env.FStar_TypeChecker_Env.core_check)
+                   (env.FStar_TypeChecker_Env.core_check);
+                 FStar_TypeChecker_Env.extension_state =
+                   (env.FStar_TypeChecker_Env.extension_state)
                } in
              (let uu___6 =
                 FStar_TypeChecker_Env.debug env1

@@ -116,7 +116,9 @@ let with_dsenv_of_tcenv :
               FStar_TypeChecker_Env.erase_erasable_args =
                 (tcenv.FStar_TypeChecker_Env.erase_erasable_args);
               FStar_TypeChecker_Env.core_check =
-                (tcenv.FStar_TypeChecker_Env.core_check)
+                (tcenv.FStar_TypeChecker_Env.core_check);
+              FStar_TypeChecker_Env.extension_state =
+                (tcenv.FStar_TypeChecker_Env.extension_state)
             })
 let with_tcenv_of_env :
   'a .
@@ -365,7 +367,9 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.erase_erasable_args =
           (env.FStar_TypeChecker_Env.erase_erasable_args);
         FStar_TypeChecker_Env.core_check =
-          (env.FStar_TypeChecker_Env.core_check)
+          (env.FStar_TypeChecker_Env.core_check);
+        FStar_TypeChecker_Env.extension_state =
+          (env.FStar_TypeChecker_Env.extension_state)
       } in
     let env2 =
       {
@@ -456,7 +460,9 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.erase_erasable_args =
           (env1.FStar_TypeChecker_Env.erase_erasable_args);
         FStar_TypeChecker_Env.core_check =
-          (env1.FStar_TypeChecker_Env.core_check)
+          (env1.FStar_TypeChecker_Env.core_check);
+        FStar_TypeChecker_Env.extension_state =
+          (env1.FStar_TypeChecker_Env.extension_state)
       } in
     let env3 =
       {
@@ -547,7 +553,9 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.erase_erasable_args =
           (env2.FStar_TypeChecker_Env.erase_erasable_args);
         FStar_TypeChecker_Env.core_check =
-          (env2.FStar_TypeChecker_Env.core_check)
+          (env2.FStar_TypeChecker_Env.core_check);
+        FStar_TypeChecker_Env.extension_state =
+          (env2.FStar_TypeChecker_Env.extension_state)
       } in
     let env4 =
       {
@@ -637,7 +645,9 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.erase_erasable_args =
           (env3.FStar_TypeChecker_Env.erase_erasable_args);
         FStar_TypeChecker_Env.core_check =
-          (env3.FStar_TypeChecker_Env.core_check)
+          (env3.FStar_TypeChecker_Env.core_check);
+        FStar_TypeChecker_Env.extension_state =
+          (env3.FStar_TypeChecker_Env.extension_state)
       } in
     let env5 =
       {
@@ -727,7 +737,9 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.erase_erasable_args =
           (env4.FStar_TypeChecker_Env.erase_erasable_args);
         FStar_TypeChecker_Env.core_check =
-          (env4.FStar_TypeChecker_Env.core_check)
+          (env4.FStar_TypeChecker_Env.core_check);
+        FStar_TypeChecker_Env.extension_state =
+          (env4.FStar_TypeChecker_Env.extension_state)
       } in
     (env5.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.init env5; env5
 let (tc_one_fragment :
