@@ -384,7 +384,9 @@ let shift_right_value_lemma #n a s =
   else if s = 0 then shift_right_value_aux_2 #n a
   else shift_right_value_aux_3 #n a s
 
+#push-options "--z3rlimit 10"
 let lemma_msb_pow2 #n a = if n = 1 then () else from_vec_propriety (to_vec a) 1
+#pop-options
 
 val plus_one_mod : p:pos -> a:nat ->
     Lemma (requires (a < p /\ ((a + 1) % p == 0))) (ensures (a == p - 1))
