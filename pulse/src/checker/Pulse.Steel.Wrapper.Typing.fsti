@@ -433,3 +433,15 @@ val with_localarray_typing
   : GTot (RT.tot_typing g (mk_withlocalarray u a init len pre ret_t (RT.mk_abs ret_t Q_Explicit post)
                                                                     (RT.mk_abs (mk_array a) Q_Explicit (RT.close_term body x)))
                           (mk_stt_comp u ret_t pre (mk_abs ret_t Q_Explicit post)))
+
+let squash_non_informative_witness_tm (u:universe) (t:term) : term =
+  let tm = pack_ln (Tv_UInst (pack_fv squash_non_informative_lid) [u]) in
+  pack_ln (Tv_App tm (t, Q_Explicit))
+
+val squash_non_informative_witness_typing
+  (#g:env)
+  (#u:universe)
+  (#t:term)
+  (t_typing:RT.tot_typing g t (pack_ln (Tv_Type u)))
+  : GTot (RT.tot_typing g (squash_non_informative_witness_tm u t)
+                          (non_informative_witness_rt uzero (mk_squash u t)))

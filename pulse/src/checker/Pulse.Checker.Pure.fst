@@ -474,36 +474,60 @@ let pulse_lib_higher_gref = ["Pulse"; "Lib"; "HigherGhostReference"]
 let mk_pulse_lib_higher_gref_lid s = pulse_lib_higher_gref@[s]
 let higher_gref_lid = mk_pulse_lib_higher_gref_lid "ref"
 
+module WT = Pulse.Steel.Wrapper.Typing
 let try_get_non_informative_witness g u t
   : T.Tac (option (non_informative_t g u t))
-  = let eopt =
+  = let ropt : option (e:term &
+                       option (tot_typing g e (non_informative_witness_t u t))) =
       let ropt = is_fvar_app t in
       match ropt with
       | Some (l, us, _, arg_opt) ->
         if l = R.unit_lid
-        then Some (tm_fvar (as_fv (mk_pulse_lib_core_lid "unit_non_informative")))
+        then let e = tm_fvar (as_fv (mk_pulse_lib_core_lid "unit_non_informative")) in
+             Some (| e, None |)
         else if l = R.prop_qn
-        then Some (tm_fvar (as_fv (mk_pulse_lib_core_lid "prop_non_informative")))
-        else if l = R.squash_qn && Some? arg_opt
-        then Some (tm_pureapp
-                     (tm_uinst (as_fv (mk_pulse_lib_core_lid "squash_non_informative")) us)
-                     None
-                     (Some?.v arg_opt))
+        then let e = tm_fvar (as_fv (mk_pulse_lib_core_lid "prop_non_informative")) in
+             Some (| e, None |)
+        else if l = R.squash_qn
+        then match arg_opt, us with
+             | Some arg, [u_t] ->
+               let e =
+                 tm_pureapp
+                   (tm_uinst (as_fv squash_non_informative_lid) us)
+                   None
+                   arg in
+               assume (u == uzero);
+               assume (elab_term t ==
+                       Pulse.Reflection.Util.mk_squash u_t (elab_term arg));
+               let d : tot_typing g e (non_informative_witness_t u t) =
+                 E (Pulse.Steel.Wrapper.Typing.squash_non_informative_witness_typing
+                      #(elab_env g)
+                      #u_t
+                      #(elab_term arg)
+                      (magic ())) in
+               Some (| e, Some d |)
+             | _ -> None
         else if l = erased_lid && Some? arg_opt
-        then Some (tm_pureapp
-                     (tm_uinst (as_fv (mk_pulse_lib_core_lid "erased_non_informative")) us)
-                     None
-                     (Some?.v arg_opt))
+        then let e =
+               tm_pureapp
+                 (tm_uinst (as_fv (mk_pulse_lib_core_lid "erased_non_informative")) us)
+                 None
+                 (Some?.v arg_opt) in
+             Some (| e, None |)
         else if l = gref_lid && Some? arg_opt
-        then Some (tm_pureapp
-                     (tm_uinst (as_fv (mk_pulse_lib_gref_lid "gref_non_informative")) us)
-                     None
-                     (Some?.v arg_opt))
+        then let e =  
+               tm_pureapp
+                 (tm_uinst (as_fv (mk_pulse_lib_gref_lid "gref_non_informative")) us)
+                 None
+                 (Some?.v arg_opt) in
+             Some (| e, None |)
         else if l = higher_gref_lid && Some? arg_opt
-        then Some (tm_pureapp
-                     (tm_uinst (as_fv (mk_pulse_lib_higher_gref_lid "gref_non_informative")) us)
-                     None
-                     (Some?.v arg_opt))
+        then let e =
+               tm_pureapp
+                 (tm_uinst (as_fv (mk_pulse_lib_higher_gref_lid "gref_non_informative")) us)
+                 None
+                 (Some?.v arg_opt) in
+             Some (| e, None |)
         else None
       | _ ->
         // ghost_pcm_ref #a p
@@ -523,22 +547,25 @@ let try_get_non_informative_witness g u t
                      None
                      (Some?.v arg1_opt) in
                    let t = tm_pureapp t None arg2 in
-                   Some t
+                   Some (| t, None |)
               else None
         in
         is_ghost_pcm_ref ()
     in
-    match eopt with
+    match ropt with
     | None -> None
-    | Some e ->
-      let tok =
-        check_term
-          (push_context_no_range g "get_noninformative_witness")
-          e
-          T.E_Total
-          (non_informative_witness_t u t)
-      in
-      Some tok
+    | Some (| e, dopt |) ->
+      match dopt with
+      | None ->
+        let tok =
+          check_term
+            (push_context_no_range g "get_noninformative_witness")
+            e
+            T.E_Total
+            (non_informative_witness_t u t)
+        in
+        Some tok
+      | Some d -> Some (| e, d |)
 
 let get_non_informative_witness g u t
   : T.Tac (non_informative_t g u t)
