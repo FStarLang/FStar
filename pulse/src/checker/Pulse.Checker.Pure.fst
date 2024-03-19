@@ -481,7 +481,7 @@ let try_get_non_informative_witness g u t
                        option (tot_typing g e (non_informative_witness_t u t))) =
       let ropt = is_fvar_app t in
       match ropt with
-      | Some (l, us, _, arg_opt) ->
+      | Some (l, us, q_opt, arg_opt) ->
         if l = R.unit_lid
         then let e = tm_fvar (as_fv (mk_pulse_lib_core_lid "unit_non_informative")) in
              Some (| e, None |)
@@ -497,8 +497,8 @@ let try_get_non_informative_witness g u t
                    None
                    arg in
                assume (u == uzero);
-               assume (elab_term t ==
-                       Pulse.Reflection.Util.mk_squash u_t (elab_term arg));
+               assume (q_opt == None);
+               is_fvar_app_tm_app t;
                let d : tot_typing g e (non_informative_witness_t u t) =
                  E (Pulse.Steel.Wrapper.Typing.squash_non_informative_witness_typing
                       #(elab_env g)
