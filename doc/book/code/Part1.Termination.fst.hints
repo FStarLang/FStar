@@ -21,7 +21,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "2f965779a9505c81546c61c2a626d6d9"
+      "4266c20283f3b8aba5953b96fc426f30"
     ],
     [
       "Part1.Termination.ackermann_flip",
@@ -41,7 +41,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "f9200c0c5f044b2fd0cbf22c121e6cf9"
+      "bdcfbef3cc27fb67f3bb7e86ae71a9d0"
     ],
     [
       "Part1.Termination.foo",
@@ -58,7 +58,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ecb0be262682b8e53449605c527fb9d4"
+      "40003efafd9147d7194bacb4eb9a1144"
     ],
     [
       "Part1.Termination.foo",
@@ -114,7 +114,7 @@
         "typing_tok_Part1.Termination.Terminal@tok"
       ],
       0,
-      "eb2941b303328375d97967486e15a493"
+      "f657c1d5f0f6f3f0c768543f9d2318d1"
     ],
     [
       "Part1.Termination.incr_tree",
@@ -152,7 +152,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "02ee35aa55a8734a74d1ca3b8878cbac"
+      "c96c6d35e160d8a6acd61766aaa4e062"
     ],
     [
       "Part1.Termination.rev_aux",
@@ -167,7 +167,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "1b089ae983924714e35a4df191787d66"
+      "6fb082775d58e7f4eb5ffd422b58a1d5"
     ]
   ]
 ]

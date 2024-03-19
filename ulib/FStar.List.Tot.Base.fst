@@ -273,27 +273,28 @@ predicate [f] *)
 (** [filter f l] returns [l] with all elements [x] such that [f x]
 does not hold removed. Requires, at type-checking time, [f] to be a
 pure total function.  Named as in: OCaml, Coq *)
-val filter : #a: Type -> f:(a -> Tot bool) -> l: list a -> Tot (m:list a{forall x. memP x m ==> f x})
+val filter : #a: Type -> f:(a -> Tot bool) -> l: list a -> Tot (list a)
 let rec filter #a f = function
   | [] -> []
   | hd::tl -> if f hd then hd::filter f tl else filter f tl
 
 (** Postcondition on [filter f l]: for any element [x] of [filter f l],
-[f x] holds. Requires, at type-checking time, [f] to be a pure total
-function.*)
-val mem_filter (#a:Type) (f: (a -> Tot bool)) (l: list a) (x: a) : Lemma
-  (requires (memP x (filter f l)))
-  (ensures (f x))
-let mem_filter f l x = ()
+[x] is a member of [l] and [f x] holds. Requires, at type-checking time,
+[f] to be a pure total function.*)
+let rec mem_filter (#a: Type) (f: (a -> Tot bool)) (l: list a) (x: a)
+    : Lemma (memP x (filter f l) <==> memP x l /\ f x) =
+  match l with
+  | [] -> ()
+  | hd :: tl -> mem_filter f tl x
 
 (** Postcondition on [filter f l]: stated with [forall]: for any element
-[x] of [filter f l], [f x] holds. Requires, at type-checking time, [f]
-to be a pure total function. *)
-val mem_filter_forall (#a:Type) (f: (a -> Tot bool)) (l: list a) : Lemma
-  (requires True)
-  (ensures (forall x . memP x (filter f l) ==> f x))
-  [SMTPat (filter f l)]
-let mem_filter_forall f l = FStar.Classical.ghost_lemma (mem_filter f l)
+[x] of [filter f l], [x] is a member of [l] and [f x] holds. Requires,
+at type-checking time, [f] to be a pure total function.*)
+let mem_filter_forall (#a: Type) (f: (a -> Tot bool)) (l: list a)
+    : Lemma (forall x. memP x (filter f l) <==> memP x l /\ f x)
+            [SMTPat (filter f l)] =
+  introduce forall x . memP x (filter f l) <==> memP x l /\ f x
+  with mem_filter f l x
 
 (** [for_all f l] returns [true] if, and only if, for all elements [x]
 appearing in [l], [f x] holds. Requires, at type-checking time, [f] to

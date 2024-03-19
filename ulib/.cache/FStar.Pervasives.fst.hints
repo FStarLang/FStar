@@ -20,7 +20,7 @@
       1,
       [ "@query", "equation_FStar.Pervasives.spinoff" ],
       0,
-      "0eedf3449356582289a1fa394a8fd62a"
+      "1e82d3b7b98f6146f06e43979e3a02c2"
     ],
     [
       "FStar.Pervasives.spinoff_equiv",
@@ -203,7 +203,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.result"
       ],
       0,
-      "b0783028588efd013c3282de4c9ce2f3"
+      "f7293dfc203ee7f88ec224777bdadadf"
     ],
     [
       "FStar.Pervasives.Exn",
@@ -226,7 +226,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.result"
       ],
       0,
-      "e5b19bee32cff17ef60bc2c53f1ea143"
+      "04a72bd610318f72a0923895666ad5e6"
     ],
     [
       "FStar.Pervasives.allow_inversion",

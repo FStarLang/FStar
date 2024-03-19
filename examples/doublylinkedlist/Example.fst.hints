@@ -14,7 +14,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d40006c7b8a2aa9119d814fe21a4398d"
+      "838a259f21a35413344d4c5fad2ed730"
     ],
     [
       "Example.reverse",
@@ -132,7 +132,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "9e87ec2dc80900e7603194bb1d6f7d70"
+      "0b6b22171116140e8d187e7242841840"
     ],
     [
       "Example.main",
@@ -146,7 +146,6 @@
         "@fuel_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
-        "@fuel_irrelevance_FStar.List.Tot.Base.append.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.memP.fuel_instrumented",
         "@query", "FStar.UInt32_pretyping_2ab3c8ba2d08b0172817fc70b5994868",
         "bool_inversion", "constructor_distinct_Prims.Cons",
@@ -177,7 +176,6 @@
         "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
-        "fuel_guarded_inversion_Prims.list",
         "function_token_typing_FStar.Monotonic.Heap.heap", "l_or-interp",
         "lemma_DoublyLinkedListIface.auto_dll_as_list_staying_unchanged",
         "lemma_DoublyLinkedListIface.auto_dll_as_payload_list_staying_unchanged",
@@ -254,7 +252,7 @@
         "typing_LowStar.Monotonic.Buffer.loc_union"
       ],
       0,
-      "a61da4bbae54a4de3ad10642a8a34a48"
+      "85684cbe53eb3530d3c3fe8ed811b70b"
     ]
   ]
 ]

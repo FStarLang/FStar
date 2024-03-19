@@ -13,7 +13,7 @@
         "typing_FStar.Int64.t"
       ],
       0,
-      "ef0b6b49b96eba890aab72e789ff986c"
+      "604f916051ba7190756ca56fae9d8d2c"
     ],
     [
       "IntervalIntersect.goodLIs",
@@ -28,7 +28,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "02697b6f2847d50cd2476b97d89e0b38"
+      "16e71ddd23a7a87877304db570f0f418"
     ],
     [
       "IntervalIntersect.good",
@@ -41,7 +41,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "45967ad5a939cbc1670e17176f2acfa4"
+      "ac9be415df78381cf0c8b8bb9af35cea"
     ],
     [
       "IntervalIntersect.max",
@@ -57,7 +57,7 @@
         "typing_FStar.Int64.v"
       ],
       0,
-      "9b44af544ebea4bb2d1bb9f61c8dbf66"
+      "7ff76323f7cc5bb2c4db665eda6fcf7d"
     ],
     [
       "IntervalIntersect.go",
@@ -142,7 +142,7 @@
         "typing_IntervalIntersect.max", "well-founded-ordering-on-nat"
       ],
       0,
-      "94bb530889f76cb125b84097aba39b14"
+      "5ce7aef366b0e5000b56fa121749dda1"
     ],
     [
       "IntervalIntersect.go",
@@ -162,7 +162,7 @@
         "refinement_interpretation_Tm_refine_c40578a76758fd6b1af00123f3c0a89b"
       ],
       0,
-      "998fbcf8a443dbc8c1b9b2d4862050ef"
+      "b69f2b1710504382eaf20d9704f4da31"
     ],
     [
       "IntervalIntersect.mem_rangeGT",
@@ -174,7 +174,7 @@
         "equation_IntervalIntersect.rangeGT"
       ],
       0,
-      "4fdd98f22edf6436b1a720c314788c5b"
+      "8a5066b1f52c7958aa0e2f969124bc9d"
     ],
     [
       "IntervalIntersect.range",
@@ -232,7 +232,7 @@
         "typing_FStar.Set.singleton", "well-founded-ordering-on-nat"
       ],
       0,
-      "8d826ca729312740bfc7ef75206db976"
+      "5f05a8ebcb564df6183195e0f6e1f197"
     ],
     [
       "IntervalIntersect.sem",
@@ -282,7 +282,7 @@
         "typing_FStar.Int64.v", "typing_IntervalIntersect.good"
       ],
       0,
-      "cb169c6c2808a489c22b74e14a3bf809"
+      "c6743b124bbd31e1b191fc8f6b34caef"
     ],
     [
       "IntervalIntersect.lemma_disjoint_intro",
@@ -291,7 +291,7 @@
       1,
       [ "@query", "equation_FStar.Set.disjoint" ],
       0,
-      "11ca05c80db6f1ddcada3080f2709cfe"
+      "190236ee6b65443b056ecc887a8d559e"
     ],
     [
       "IntervalIntersect.lemma_semI_sem_disjoint",
@@ -367,7 +367,7 @@
         "typing_IntervalIntersect.semI"
       ],
       0,
-      "c52926852acfd89bc154cde0d7d2cc4d"
+      "cb57a6ea69015e4e6c186fca03f18574"
     ],
     [
       "IntervalIntersect.lemma_disjoint_prefix",
@@ -436,7 +436,7 @@
         "typing_IntervalIntersect.semI"
       ],
       0,
-      "d8b60bd0e9364aaf388eed72676684c8"
+      "acd153550fc51389b910d1a1e8a7dd96"
     ],
     [
       "IntervalIntersect.lemma_subset_prefix",
@@ -515,7 +515,7 @@
         "typing_IntervalIntersect.semI"
       ],
       0,
-      "1bdd9d5d9e79e9d5cafbdf54d9f91001"
+      "2c861706193fd09f5b6df97095d44f51"
     ],
     [
       "IntervalIntersect.lemma_overlapping_prefix",
@@ -598,7 +598,7 @@
         "typing_IntervalIntersect.semI"
       ],
       0,
-      "c06c14c1c550a8cc2ab6b9133485fc87"
+      "fd014550b6dcb2a8bbd94ee7e994e2d2"
     ],
     [
       "IntervalIntersect.lemma_overlapping_prefix",
@@ -657,7 +657,7 @@
         "typing_IntervalIntersect.good"
       ],
       0,
-      "7adf6f026800c2cc0ba60a67d2515f55"
+      "49465e380174740120ddb6a91680cfc3"
     ],
     [
       "IntervalIntersect.lemma_intersection_spec",
@@ -752,12 +752,13 @@
         "typing_IntervalIntersect.__proj__I__item__to",
         "typing_IntervalIntersect.go", "typing_IntervalIntersect.good",
         "typing_IntervalIntersect.intersect", "typing_IntervalIntersect.max",
+        "typing_IntervalIntersect.needs_reorder",
         "typing_IntervalIntersect.offset", "typing_IntervalIntersect.range",
         "typing_IntervalIntersect.sem", "typing_IntervalIntersect.semI",
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "29bec49f868029d782cb23affdba91ab"
+      "6061cbd161ca4b6417a6ac9d11a06e6c"
     ],
     [
       "IntervalIntersect.ppIntervals'",
@@ -806,7 +807,7 @@
         "typing_FStar.Int64.v", "typing_IntervalIntersect.good"
       ],
       0,
-      "9a2e1fec328747698733068e49c9b044"
+      "227347e846efcf0798a9e9dcf07fcfe6"
     ],
     [
       "IntervalIntersect.main",
@@ -857,7 +858,7 @@
         "typing_Prims.pow2"
       ],
       0,
-      "6d2db77f3fa1776ede6c65cc806f9d0d"
+      "72f6d06aaf1bf73b0599592766a73f12"
     ]
   ]
 ]

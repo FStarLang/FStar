@@ -12,7 +12,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "95c23ad7a1204a22fc6444ea2510801e"
+      "9aac551a9d8820d4e333e7fde62e2fdd"
     ],
     [
       "Enum.succ",
@@ -27,7 +27,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "fdfaf0059b01aca74e8d8c62cb94bb06"
+      "4d44f2ec8a2bc9d08bc5f58aed8b8882"
     ],
     [
       "Enum.enum_nat",
@@ -40,7 +40,7 @@
         "projection_inverse_FStar.Pervasives.Native.None_a"
       ],
       0,
-      "18939cc84cdabb5159e786bb07c03e43"
+      "d68adaf373c6c74738a458f33c4289c2"
     ],
     [
       "Enum.enum_opt",
@@ -67,10 +67,10 @@
         "refinement_interpretation_Tm_refine_4a6eaf440e75ef17916cf0f682fb32c5",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "token_correspondence_Enum.__proj__Mkenum__item__toInt",
-        "typing_Enum.__proj__Mkenum__item__max", "typing_Enum.succ"
+        "typing_Enum.__proj__Mkenum__item__max"
       ],
       0,
-      "d2605f369ef33368911af876737f1cad"
+      "670ebd5e29e9573e11008c9f2af72366"
     ]
   ]
 ]
