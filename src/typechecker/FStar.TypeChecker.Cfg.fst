@@ -99,6 +99,41 @@ let steps_to_string f =
     f.default_univs_to_zero |> b;
    ]
 
+instance deq_fsteps : deq fsteps = {
+  (=?) = (fun f1 f2 ->
+            f1.beta =? f2.beta &&
+            f1.iota =? f2.iota &&
+            f1.zeta =? f2.zeta &&
+            f1.zeta_full =? f2.zeta_full &&
+            f1.weak =? f2.weak &&
+            f1.hnf =? f2.hnf &&
+            f1.primops =? f2.primops &&
+            f1.do_not_unfold_pure_lets =? f2.do_not_unfold_pure_lets &&
+            f1.unfold_until =? f2.unfold_until &&
+            f1.unfold_only =? f2.unfold_only &&
+            f1.unfold_fully =? f2.unfold_fully &&
+            f1.unfold_attr =? f2.unfold_attr &&
+            f1.unfold_qual =? f2.unfold_qual &&
+            f1.unfold_namespace =? f2.unfold_namespace &&
+            f1.unfold_tac =? f2.unfold_tac &&
+            f1.pure_subterms_within_computations =? f2.pure_subterms_within_computations &&
+            f1.simplify =? f2.simplify &&
+            f1.erase_universes =? f2.erase_universes &&
+            f1.allow_unbound_universes =? f2.allow_unbound_universes &&
+            f1.reify_ =? f2.reify_ &&
+            f1.compress_uvars =? f2.compress_uvars &&
+            f1.no_full_norm =? f2.no_full_norm &&
+            f1.check_no_uvars =? f2.check_no_uvars &&
+            f1.unmeta =? f2.unmeta &&
+            f1.unascribe =? f2.unascribe &&
+            f1.in_full_norm_request =? f2.in_full_norm_request &&
+            f1.weakly_reduce_scrutinee =? f2.weakly_reduce_scrutinee &&
+            f1.nbe_step =? f2.nbe_step &&
+            f1.for_extraction =? f2.for_extraction &&
+            f1.unrefine =? f2.unrefine &&
+            f1.default_univs_to_zero =? f2.default_univs_to_zero);
+}
+
 let default_steps : fsteps = {
     beta = true;
     iota = true;
@@ -416,7 +451,7 @@ let translate_norm_step = function
 
 let translate_norm_steps s =
     let s = List.concatMap translate_norm_step s in
-    let add_exclude s z = if BU.for_some (eq_step z) s then s else Exclude z :: s in
+    let add_exclude s z = if BU.for_some ((=?) z) s then s else Exclude z :: s in
     let s = Beta::s in
     let s = add_exclude s Zeta in
     let s = add_exclude s Iota in

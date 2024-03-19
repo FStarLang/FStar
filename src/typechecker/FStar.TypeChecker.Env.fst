@@ -71,11 +71,23 @@ let rec eq_step s1 s2 =
   | UnfoldUntil s1, UnfoldUntil s2 -> s1 = s2
   | UnfoldOnly lids1, UnfoldOnly lids2
   | UnfoldFully lids1, UnfoldFully lids2
-  | UnfoldAttr lids1, UnfoldAttr lids2 ->
-      List.length lids1 = List.length lids2 && List.forall2 Ident.lid_equals lids1 lids2
-  | UnfoldQual strs1, UnfoldQual strs2 -> strs1 = strs2
-  | UnfoldNamespace strs1, UnfoldNamespace strs2 -> strs1 = strs2  
+  | UnfoldAttr lids1, UnfoldAttr lids2 -> lids1 =? lids2
+  | UnfoldQual strs1, UnfoldQual strs2 -> strs1 =? strs2
+  | UnfoldNamespace strs1, UnfoldNamespace strs2 -> strs1 =? strs2
   | _ -> false
+
+instance deq_step : deq step = {
+  (=?) = eq_step;
+}
+
+instance deq_delta_level : deq delta_level = {
+  (=?) = (fun x y -> match x, y with
+    | NoDelta, NoDelta -> true
+    | InliningDelta, InliningDelta -> true
+    | Eager_unfolding_only, Eager_unfolding_only -> true
+    | Unfold x, Unfold y -> x =? y
+    | _ -> false);
+}
 
 let preprocess env tau tm  = env.mpreprocess env tau tm
 let postprocess env tau ty tm = env.postprocess env tau ty tm

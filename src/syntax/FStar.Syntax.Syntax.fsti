@@ -907,11 +907,12 @@ instance val showable_should_check_uvar : showable should_check_uvar
 
 instance val showable_lazy_kind : showable lazy_kind
 
-instance val deq_lazy_kind : deq lazy_kind
-instance val deq_bv         : deq bv
-instance val deq_ident      : deq ident
-instance val deq_fv         : deq lident
-instance val deq_univ_name  : deq univ_name
+instance val deq_lazy_kind   : deq lazy_kind
+instance val deq_bv          : deq bv
+instance val deq_ident       : deq ident
+instance val deq_fv          : deq lident
+instance val deq_univ_name   : deq univ_name
+instance val deq_delta_depth : deq delta_depth
 
 instance val ord_bv         : ord bv
 instance val ord_ident      : ord ident

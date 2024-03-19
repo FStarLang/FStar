@@ -162,23 +162,33 @@ let rec (eq_step : step -> step -> Prims.bool) =
       | (Exclude s11, Exclude s21) -> eq_step s11 s21
       | (UnfoldUntil s11, UnfoldUntil s21) -> s11 = s21
       | (UnfoldOnly lids1, UnfoldOnly lids2) ->
-          ((FStar_Compiler_List.length lids1) =
-             (FStar_Compiler_List.length lids2))
-            &&
-            (FStar_Compiler_List.forall2 FStar_Ident.lid_equals lids1 lids2)
+          FStar_Class_Deq.op_Equals_Question
+            (FStar_Class_Ord.ord_eq
+               (FStar_Class_Ord.ord_list FStar_Syntax_Syntax.ord_fv)) lids1
+            lids2
       | (UnfoldFully lids1, UnfoldFully lids2) ->
-          ((FStar_Compiler_List.length lids1) =
-             (FStar_Compiler_List.length lids2))
-            &&
-            (FStar_Compiler_List.forall2 FStar_Ident.lid_equals lids1 lids2)
+          FStar_Class_Deq.op_Equals_Question
+            (FStar_Class_Ord.ord_eq
+               (FStar_Class_Ord.ord_list FStar_Syntax_Syntax.ord_fv)) lids1
+            lids2
       | (UnfoldAttr lids1, UnfoldAttr lids2) ->
-          ((FStar_Compiler_List.length lids1) =
-             (FStar_Compiler_List.length lids2))
-            &&
-            (FStar_Compiler_List.forall2 FStar_Ident.lid_equals lids1 lids2)
-      | (UnfoldQual strs1, UnfoldQual strs2) -> strs1 = strs2
-      | (UnfoldNamespace strs1, UnfoldNamespace strs2) -> strs1 = strs2
+          FStar_Class_Deq.op_Equals_Question
+            (FStar_Class_Ord.ord_eq
+               (FStar_Class_Ord.ord_list FStar_Syntax_Syntax.ord_fv)) lids1
+            lids2
+      | (UnfoldQual strs1, UnfoldQual strs2) ->
+          FStar_Class_Deq.op_Equals_Question
+            (FStar_Class_Ord.ord_eq
+               (FStar_Class_Ord.ord_list FStar_Class_Ord.ord_string)) strs1
+            strs2
+      | (UnfoldNamespace strs1, UnfoldNamespace strs2) ->
+          FStar_Class_Deq.op_Equals_Question
+            (FStar_Class_Ord.ord_eq
+               (FStar_Class_Ord.ord_list FStar_Class_Ord.ord_string)) strs1
+            strs2
       | uu___ -> false
+let (deq_step : step FStar_Class_Deq.deq) =
+  { FStar_Class_Deq.op_Equals_Question = eq_step }
 type sig_binding =
   (FStar_Ident.lident Prims.list * FStar_Syntax_Syntax.sigelt)
 type delta_level =
@@ -199,6 +209,20 @@ let (uu___is_Unfold : delta_level -> Prims.bool) =
 let (__proj__Unfold__item___0 :
   delta_level -> FStar_Syntax_Syntax.delta_depth) =
   fun projectee -> match projectee with | Unfold _0 -> _0
+let (deq_delta_level : delta_level FStar_Class_Deq.deq) =
+  {
+    FStar_Class_Deq.op_Equals_Question =
+      (fun x ->
+         fun y ->
+           match (x, y) with
+           | (NoDelta, NoDelta) -> true
+           | (InliningDelta, InliningDelta) -> true
+           | (Eager_unfolding_only, Eager_unfolding_only) -> true
+           | (Unfold x1, Unfold y1) ->
+               FStar_Class_Deq.op_Equals_Question
+                 FStar_Syntax_Syntax.deq_delta_depth x1 y1
+           | uu___ -> false)
+  }
 type name_prefix = FStar_Ident.path
 type proof_namespace = (name_prefix * Prims.bool) Prims.list
 type cached_elt =

@@ -168,16 +168,19 @@ let rec extract_meta x : option meta =
 let extract_metadata metas =
   List.choose extract_meta metas
 
-let binders_as_mlty_binders (env:UEnv.uenv) bs =
+let binders_as_mlty_binders (env:UEnv.uenv) bs : UEnv.uenv & list ty_param =
     BU.fold_map
-      (fun env ({binder_bv=bv}) ->
+      (fun env ({binder_bv=bv; binder_attrs}) ->
         let env = UEnv.extend_ty env bv false in
-        let name =
+        let ty_param_name =
           match lookup_bv env bv with
           | Inl ty -> ty.ty_b_name
           | _ -> failwith "Impossible"
         in
-        env, name)
+        let ty_param_attrs =
+          List.map (fun attr -> let e, _, _ = Term.term_as_mlexpr env attr in e) binder_attrs
+        in
+        env, {ty_param_name; ty_param_attrs})
       env bs
 
 (*******************************************************************************)
@@ -449,7 +452,7 @@ let extract_let_rec_type env quals attrs lb
 let extract_bundle_iface env se
     : env_t * iface =
     let extract_ctor (env_iparams:env_t)
-                     (ml_tyvars:list mlsymbol)
+                     (ml_tyvars:list ty_param)
                      (env:env_t)
                      (ctor: data_constructor)
         :  env_t * (fv * exp_binding) =
@@ -586,7 +589,7 @@ let extract_reifiable_effect g ed
             BU.print1 "Extracted action term: %s\n" (Code.string_of_mlexpr a_nm a_let);
         if Env.debug (tcenv_of_uenv g) <| Options.Other "ExtractionReify" then begin
             BU.print1 "Extracted action type: %s\n" (Code.string_of_mlty a_nm (snd tysc));
-            List.iter (fun x -> BU.print1 "and binders: %s\n" x) (fst tysc) end;
+            List.iter (fun x -> BU.print1 "and binders: %s\n" x) (ty_param_names (fst tysc)) end;
         let iface, impl = extend_iface a_lid a_nm exp exp_b in
         g, (iface, impl)
     in
@@ -900,7 +903,7 @@ let extract_iface (g:env_t) modul =
 
 let extract_bundle env se =
     let extract_ctor (env_iparams:env_t)
-                     (ml_tyvars:list mlsymbol)
+                     (ml_tyvars:list ty_param)
                      (env:env_t)
                      (ctor: data_constructor):
         env_t * (mlsymbol * list (mlsymbol * mlty))
@@ -923,7 +926,10 @@ let extract_bundle env se =
        let env_iparams, vars  = binders_as_mlty_binders env ind.iparams in
        let env, ctors = ind.idatas |> BU.fold_map (extract_ctor env_iparams vars) env in
        let indices, _ = U.arrow_formals ind.ityp in
-       let ml_params = List.append vars (indices |> List.mapi (fun i _ -> "'dummyV" ^ BU.string_of_int i)) in
+       let ml_params = List.append vars (indices |> List.mapi (fun i _ -> {
+        ty_param_name = "'dummyV" ^ BU.string_of_int i;
+        ty_param_attrs = []
+       })) in
        let tbody, env =
          match BU.find_opt (function RecordType _ -> true | _ -> false) ind.iquals with
          | Some (RecordType (ns, ids)) ->
