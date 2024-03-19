@@ -213,7 +213,7 @@
         "subterm_ordering_Ex07b.EIf"
       ],
       0,
-      "7754f8176b4d4baf6bdd404335e43711"
+      "cc867372b788ed0c735ccc2a0e3133ef"
     ],
     [
       "Ex07b.step",
@@ -234,7 +234,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "08204bce445eb778328c4e8f7f328781"
+      "2152f29dccfd9b67a745c8258ef645b8"
     ],
     [
       "Ex07b.typing",
@@ -260,7 +260,7 @@
         "typing_tok_Ex07b.TBool@tok"
       ],
       0,
-      "0e09256d9ba3ff4a25c373d8952389db"
+      "479f61fd3b0f43b759291626eea788c7"
     ],
     [
       "Ex07b.progress",
@@ -348,7 +348,7 @@
         "subterm_ordering_Ex07b.EIf"
       ],
       0,
-      "9058405b3a12e139f6ba94e24a4f146f"
+      "2d85482bcee8f669c2641696e4e837a6"
     ],
     [
       "Ex07b.free_in_context",

@@ -16,7 +16,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "64fa6562a5b878af8205e5c0eeb42600"
+      "2036ece02ce63be15aa17989916ba0b3"
     ],
     [
       "Ex05b.fib",
@@ -34,7 +34,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "aa92620db016faa1a688f26c6bf92a2c"
+      "1780d31e9d33ea1e0788d055bef165e9"
     ],
     [
       "Ex05b.fib_is_ok",

@@ -23,7 +23,7 @@
         "token_correspondence_Prims.pow2.fuel_instrumented"
       ],
       0,
-      "157b3f818b1e30b4abb89f66d51a9932"
+      "b72860e35a5d6dbb067ded71c227a51c"
     ],
     [
       "BoxBitVec.bv_trivial",
@@ -48,7 +48,7 @@
         "typing_inversion_for_BoxBitVec3"
       ],
       0,
-      "78241535d4f1c2d9fd8eca58ef4ec67d"
+      "6e80cb8a62d0ed45935430a777622034"
     ]
   ]
 ]

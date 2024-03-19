@@ -17,7 +17,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "a0800a9c418e0cd6f658b6a9695fd390"
+      "de8e1c8f974c8c3cbc82e0c015e34e97"
     ],
     [
       "Part1.Quicksort.Permutation.append",
@@ -32,7 +32,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "a684610622ed9b6aad6c8d6cd1780a8d"
+      "5cb9c410f3a3e4bf4fd4657b86cdec48"
     ],
     [
       "Part1.Quicksort.Permutation.sorted",
@@ -52,7 +52,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "36dfe4e63d64aa642424bb9227ee6c91"
+      "3b1f3eac7f0d78b631962501f3960632"
     ],
     [
       "Part1.Quicksort.Permutation.count",
@@ -72,7 +72,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "0cad6725cf692525a244d0edbea9309c"
+      "032b97bff8950bb973868df94094d383"
     ],
     [
       "Part1.Quicksort.Permutation.is_permutation",
@@ -160,7 +160,7 @@
         "typing_Part1.Quicksort.Permutation.length"
       ],
       0,
-      "d699ef62f28e9d42746911b752c3cca3"
+      "07725efb1edeab81d6e550cddbf08323"
     ],
     [
       "Part1.Quicksort.Permutation.sort",
@@ -205,7 +205,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "8960114c5f8a5bb554040b12dae9337f"
+      "9dd14c42f6200b58203f6b849bdbf3ae"
     ],
     [
       "Part1.Quicksort.Permutation.sorted_concat",

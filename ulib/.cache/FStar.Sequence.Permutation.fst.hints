@@ -98,7 +98,7 @@
         "typing_FStar.Sequence.Util.cons"
       ],
       0,
-      "00be3ab3d54662eefdeef56d923db039"
+      "fa67bad87107f5ec32e79e906cad7fad"
     ],
     [
       "FStar.Sequence.Permutation.find",
@@ -173,7 +173,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "8109f38e24ce1f0474e4568c2f9af242"
+      "0774b2620ed05cb440b0e73d24726d03"
     ],
     [
       "FStar.Sequence.Permutation.count_singleton_one",
@@ -405,7 +405,7 @@
         "typing_FStar.Sequence.Util.count", "well-founded-ordering-on-nat"
       ],
       0,
-      "2c2f57e5ce30880c884cb1cf044272f0"
+      "34174d72481af19b905b4a6c9de81d67"
     ],
     [
       "FStar.Sequence.Permutation.elim_monoid_laws",
@@ -639,7 +639,7 @@
         "typing_FStar.Sequence.Base.take", "typing_FStar.Sequence.Util.tail"
       ],
       0,
-      "a0a649808e184953234807606bbd8908"
+      "5d1ba09be48998482db2ece1babdec6d"
     ],
     [
       "FStar.Sequence.Permutation.shift_perm",

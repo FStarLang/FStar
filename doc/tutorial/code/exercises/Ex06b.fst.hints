@@ -15,7 +15,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "28f4208c2fe7c4b692f14c10a5e8e5c0"
+      "5881dc54194390df52f23ccc30a5460c"
     ],
     [
       "Ex06b.append",
@@ -30,7 +30,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "fa6d6621924361a5f58cdb99cffb895c"
+      "30e1314e1936368b8db0f1359fe07c64"
     ],
     [
       "Ex06b.append_mem",
@@ -79,7 +79,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "00d6c512cbff6d55eebbbc2c3c113908"
+      "5165b6f42f942099f4dff33ff79f4ff0"
     ],
     [
       "Ex06b.sorted",
@@ -100,7 +100,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "0a883b30935f8f2ee948a17edb21663b"
+      "a1643b4e308207ac75f4bc9c04869308"
     ],
     [
       "Ex06b.partition",
@@ -115,7 +115,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "2253bd52400cd78fbd851835c57fc65d"
+      "b123b42e86fc628ebef94620474047ed"
     ],
     [
       "Ex06b.partition_lemma",
@@ -269,7 +269,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "7ce3af91918f614493bbe297a7a045c1"
+      "79cb3529f5708108c5d62d1fba8e9cb0"
     ]
   ]
 ]

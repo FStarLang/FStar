@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "2db0159ad6f42cc25a6e54cfa900754a"
+      "1e6b712b4192966d30cecebe6358e5a9"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "e2c411a90137bc4c898ff3d0d5b80f3a"
+      "c2bc515b3ee0341c5b891a6e0c4c4ec9"
     ],
     [
       "Trace.tick_last",
@@ -37,7 +37,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3a717f42d61576f61c3638bd645b2bb7"
+      "5c63a28c4ef9fb142f94d7789457de3c"
     ],
     [
       "Trace.instrument_body",
@@ -50,7 +50,7 @@
         "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result"
       ],
       0,
-      "36a4f3ded674ff882ac642f579eecb5a"
+      "cf520e183f390999f8d435bdff4ce94a"
     ],
     [
       "Trace.cutlast",
@@ -79,7 +79,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "ce16ffeb187c70e88dc7c751e250ea95"
+      "6db61750e8495e03f6c20c3a5c43a874"
     ],
     [
       "Trace.instrument",
@@ -87,7 +87,7 @@
       2,
       1,
       [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "constructor_distinct_FStar.Stubs.Tactics.Result.Failed",
@@ -113,7 +113,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "25a8987eda4214827d79034c53a9d6b0"
+      "ef4d42bba2f3b1907638475e5832d40d"
     ],
     [
       "Trace.fall",
@@ -130,7 +130,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "49754826e1ab0e229ea9a36ae0951fc6"
+      "faebcd90af94ba30ec9f66539322b6a7"
     ],
     [
       "Trace.uu___114",
@@ -149,7 +149,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "ebeacdb005a9272aa64ba9aad76457d6"
+      "5426acd1d130e714055a2bb2ae215401"
     ],
     [
       "Trace.fact_aux",
@@ -167,7 +167,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "93b896164b62d8470f865f5e150bc803"
+      "39388c106f91c0dd7529deaaa3503d77"
     ],
     [
       "Trace.uu___127",
@@ -192,7 +192,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "915aa808ea3dc0a81cd79f1b1762819c"
+      "9ebd44c2a54374e2216aa5370edeeca7"
     ],
     [
       "Trace.uu___133",
@@ -218,7 +218,7 @@
         "typing_Trace.fact_"
       ],
       0,
-      "0c0d1f3f499a7f5ec87cf25dab11ff41"
+      "a5745132be07aa39f04a6fa7ca4a3810"
     ]
   ]
 ]
