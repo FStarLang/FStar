@@ -279,7 +279,7 @@ let rec filter #a f = function
   | hd::tl -> if f hd then hd::filter f tl else filter f tl
 
 (** Postcondition on [filter f l]: for any element [x] of [filter f l],
-[x] was a member of [l], and [f x] holds. Requires, at type-checking time,
+[x] is a member of [l] and [f x] holds. Requires, at type-checking time,
 [f] to be a pure total function.*)
 let rec mem_filter (#a: Type) (f: (a -> Tot bool)) (l: list a) (x: a)
     : Lemma (memP x (filter f l) <==> memP x l /\ f x) =
@@ -288,7 +288,7 @@ let rec mem_filter (#a: Type) (f: (a -> Tot bool)) (l: list a) (x: a)
   | hd :: tl -> mem_filter f tl x
 
 (** Postcondition on [filter f l]: stated with [forall]: for any element
-[x] of [filter f l], [x] was a member of [l], and [f x] holds. Requires,
+[x] of [filter f l], [x] is a member of [l] and [f x] holds. Requires,
 at type-checking time, [f] to be a pure total function.*)
 let mem_filter_forall (#a: Type) (f: (a -> Tot bool)) (l: list a)
     : Lemma (forall x. memP x (filter f l) <==> memP x l /\ f x)
