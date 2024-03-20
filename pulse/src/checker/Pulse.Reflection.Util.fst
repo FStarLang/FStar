@@ -309,6 +309,8 @@ let non_informative_witness_rt (u:R.universe) (a:R.term) : R.term =
   let t = pack_ln (Tv_App t (a, Q_Explicit)) in
   t
 
+let unit_non_informative_lid = mk_pulse_lib_core_lid "unit_non_informative"
+let prop_non_informative_lid = mk_pulse_lib_core_lid "prop_non_informative"
 let squash_non_informative_lid = mk_pulse_lib_core_lid "squash_non_informative"
 
 let stt_vprop_equiv_fv =

@@ -486,11 +486,19 @@ let try_get_non_informative_witness g u t t_typing
       | Some (l, us, q_opt, arg_opt) ->
         is_fvar_app_tm_app t;
         if l = R.unit_lid
-        then let e = tm_fvar (as_fv (mk_pulse_lib_core_lid "unit_non_informative")) in
-             Some (| e, None |)
+        then match us, q_opt, arg_opt with
+             | [], None, None ->
+               Metatheory.unit_typing_inversion u t_typing;
+               let e = tm_fvar (as_fv unit_non_informative_lid) in
+               Some (| e, Some (E (WT.unit_non_informative_witness_typing (elab_env g))) |)
+             | _ -> None
         else if l = R.prop_qn
-        then let e = tm_fvar (as_fv (mk_pulse_lib_core_lid "prop_non_informative")) in
-             Some (| e, None |)
+        then match us, q_opt, arg_opt with
+             | [], None, None ->
+               Metatheory.prop_typing_inversion u t_typing;
+               let e = tm_fvar (as_fv prop_non_informative_lid) in
+               Some (| e, Some (E (WT.prop_non_informative_witness_typing (elab_env g))) |)
+             | _ -> None
         else if l = R.squash_qn
         then match q_opt, arg_opt, us with
              | None, Some arg, [u_t] ->

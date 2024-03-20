@@ -80,6 +80,7 @@ let pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (tm_pure p) tm_vpro
    : tot_typing g p (tm_fstar FStar.Reflection.Typing.tm_prop Range.range_0)
    = admit ()
 
+let unit_typing_inversion #g u d = admit ()
 let squash_typing_inversion #g u t u_sq sq_typing = admit ()
 
 let typing_correctness _ = admit()
