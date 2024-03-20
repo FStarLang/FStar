@@ -319,3 +319,17 @@ let (squash_non_informative_witness_tm :
       FStar_Reflection_V2_Builtins.pack_ln
         (FStar_Reflection_V2_Data.Tv_App
            (tm, (t, FStar_Reflection_V2_Data.Q_Explicit)))
+let (erased_non_informative_witness_tm :
+  FStar_Reflection_Types.universe ->
+    FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+  =
+  fun u ->
+    fun t ->
+      let tm =
+        FStar_Reflection_V2_Builtins.pack_ln
+          (FStar_Reflection_V2_Data.Tv_UInst
+             ((FStar_Reflection_V2_Builtins.pack_fv
+                 Pulse_Reflection_Util.erased_non_informative_lid), [u])) in
+      FStar_Reflection_V2_Builtins.pack_ln
+        (FStar_Reflection_V2_Data.Tv_App
+           (tm, (t, FStar_Reflection_V2_Data.Q_Explicit)))
