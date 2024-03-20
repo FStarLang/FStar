@@ -467,3 +467,14 @@ val erased_non_informative_witness_typing
   (t_typing:RT.tot_typing g t (pack_ln (Tv_Type u)))
   : GTot (RT.tot_typing g (erased_non_informative_witness_tm u t)
                           (non_informative_witness_rt u (mk_erased u t)))
+
+let gref_non_informative_witness_tm (t:term) : term =
+  let tm = pack_ln (Tv_UInst (pack_fv gref_non_informative_lid) [uzero]) in
+  pack_ln (Tv_App tm (t, Q_Explicit))
+
+val gref_non_informative_witness_typing
+  (#g:env)
+  (#t:term)
+  (t_typing:RT.tot_typing g t (pack_ln (Tv_Type uzero)))
+  : GTot (RT.tot_typing g (gref_non_informative_witness_tm t)
+                          (non_informative_witness_rt uzero (mk_gref uzero t)))

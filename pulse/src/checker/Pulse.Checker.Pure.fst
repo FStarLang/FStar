@@ -466,14 +466,6 @@ let check_vprop_with_core (g:env)
     (push_context_no_range g "check_vprop_with_core") t T.E_Total tm_vprop
 
   
-let pulse_lib_gref = ["Pulse"; "Lib"; "GhostReference"]
-let mk_pulse_lib_gref_lid s = pulse_lib_gref@[s]
-let gref_lid = mk_pulse_lib_gref_lid "ref"
-
-let pulse_lib_higher_gref = ["Pulse"; "Lib"; "HigherGhostReference"]
-let mk_pulse_lib_higher_gref_lid s = pulse_lib_higher_gref@[s]
-let higher_gref_lid = mk_pulse_lib_higher_gref_lid "ref"
-
 module WT = Pulse.Lib.Core.Typing
 module Metatheory = Pulse.Typing.Metatheory.Base
 
@@ -531,13 +523,21 @@ let try_get_non_informative_witness g u t t_typing
                       arg_typing) in
                Some (| e, Some d |)
              | _ -> None
-        else if l = gref_lid && Some? arg_opt
-        then let e =  
-               tm_pureapp
-                 (tm_uinst (as_fv (mk_pulse_lib_gref_lid "gref_non_informative")) us)
-                 None
-                 (Some?.v arg_opt) in
-             Some (| e, None |)
+        else if l = gref_lid
+        then match q_opt, arg_opt, us with
+             | None, Some arg, [u_t] ->
+               let e =
+                 tm_pureapp
+                   (tm_uinst (as_fv gref_non_informative_lid) us)
+                   None
+                   arg in
+               let arg_typing = Metatheory.gref_typing_inversion u_t arg u t_typing in
+               let d : tot_typing g e (non_informative_witness_t u t) =
+                 let E arg_typing = arg_typing in
+                 E (WT.gref_non_informative_witness_typing
+                      arg_typing) in
+               Some (| e, Some d |)
+             | _ -> None
         else if l = higher_gref_lid && Some? arg_opt
         then let e =
                tm_pureapp
