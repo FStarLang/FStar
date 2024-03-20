@@ -455,3 +455,15 @@ val squash_non_informative_witness_typing
   (t_typing:RT.tot_typing g t (pack_ln (Tv_Type u)))
   : GTot (RT.tot_typing g (squash_non_informative_witness_tm u t)
                           (non_informative_witness_rt uzero (mk_squash u t)))
+
+let erased_non_informative_witness_tm (u:universe) (t:term) : term =
+  let tm = pack_ln (Tv_UInst (pack_fv erased_non_informative_lid) [u]) in
+  pack_ln (Tv_App tm (t, Q_Explicit))
+
+val erased_non_informative_witness_typing
+  (#g:env)
+  (u:universe)
+  (#t:term)
+  (t_typing:RT.tot_typing g t (pack_ln (Tv_Type u)))
+  : GTot (RT.tot_typing g (erased_non_informative_witness_tm u t)
+                          (non_informative_witness_rt u (mk_erased u t)))

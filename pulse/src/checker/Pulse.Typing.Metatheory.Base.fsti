@@ -91,6 +91,12 @@ val squash_typing_inversion (#g:env)
   (sq_typing:universe_of g (mk_squash u t) u_sq)
   : (_:universe_of g t u { u_sq == u_zero })
 
+val erased_typing_inversion (#g:env)
+  (u:universe)
+  (t:term)
+  (u_er:universe)
+  (er_typing:universe_of g (mk_erased u t) u_er)
+  : (_:universe_of g t u { u_er == u })
 
 module RT = FStar.Reflection.Typing
 val typing_correctness

@@ -81,7 +81,9 @@ let pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (tm_pure p) tm_vpro
    = admit ()
 
 let unit_typing_inversion #g u d = admit ()
+let prop_typing_inversion #g u d = admit ()
 let squash_typing_inversion #g u t u_sq sq_typing = admit ()
+let erased_typing_inversion #g u t u_er er_typing = admit ()
 
 let typing_correctness _ = admit()
 let tot_typing_renaming1 _ _ _ _ _ _ = admit()

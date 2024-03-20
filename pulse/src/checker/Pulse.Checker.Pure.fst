@@ -515,13 +515,22 @@ let try_get_non_informative_witness g u t t_typing
                       arg_typing) in
                Some (| e, Some d |)
              | _ -> None
-        else if l = erased_lid && Some? arg_opt
-        then let e =
-               tm_pureapp
-                 (tm_uinst (as_fv (mk_pulse_lib_core_lid "erased_non_informative")) us)
-                 None
-                 (Some?.v arg_opt) in
-             Some (| e, None |)
+        else if l = erased_lid
+        then match q_opt, arg_opt, us with
+             | None, Some arg, [u_t] ->
+               let e =
+                 tm_pureapp
+                   (tm_uinst (as_fv erased_non_informative_lid) us)
+                   None
+                   arg in
+               let arg_typing = Metatheory.erased_typing_inversion u_t arg u t_typing in
+               let d : tot_typing g e (non_informative_witness_t u t) =
+                 let E arg_typing = arg_typing in
+                 E (WT.erased_non_informative_witness_typing
+                      u_t
+                      arg_typing) in
+               Some (| e, Some d |)
+             | _ -> None
         else if l = gref_lid && Some? arg_opt
         then let e =  
                tm_pureapp
