@@ -35,6 +35,7 @@ let u1 : universe = R.pack_universe (R.Uv_Succ u0)
 let u2 : universe = R.pack_universe (R.Uv_Succ u1)
 
 let u_zero = u0
+let u_one = u1
 let u_succ (u:universe) : universe =
   R.pack_universe (R.Uv_Succ u)
 let u_var (s:string) : universe =

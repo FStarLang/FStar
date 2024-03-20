@@ -115,6 +115,7 @@ let mk_pure (p:R.term) : R.term =
   pack_ln (Tv_App t (p, Q_Explicit))
 
 let uzero = R.pack_universe (R.Uv_Zero)
+let uone = R.pack_universe (R.Uv_Succ uzero)
 
 let pulse_lib_reference = ["Pulse"; "Lib"; "Reference"]
 let mk_pulse_lib_reference_lid s = pulse_lib_reference@[s]
@@ -322,6 +323,7 @@ let prop_non_informative_lid = mk_pulse_lib_core_lid "prop_non_informative"
 let erased_non_informative_lid = mk_pulse_lib_core_lid "erased_non_informative"
 let squash_non_informative_lid = mk_pulse_lib_core_lid "squash_non_informative"
 let gref_non_informative_lid = mk_pulse_lib_gref_lid "gref_non_informative"
+let higher_gref_non_informative_lid = mk_pulse_lib_higher_gref_lid "gref_non_informative"
 
 let stt_vprop_equiv_fv =
   R.pack_fv (mk_pulse_lib_core_lid "vprop_equiv")
@@ -771,4 +773,8 @@ let neutral_lid = mk_observability_lid "Neutral"
 
 let mk_gref (u:R.universe) (t:R.term) : R.term =
   let hd = R.pack_ln (R.Tv_UInst (R.pack_fv gref_lid) [u]) in
+  R.pack_ln (R.Tv_App hd (t, R.Q_Explicit))
+
+let mk_higher_gref (u:R.universe) (t:R.term) : R.term =
+  let hd = R.pack_ln (R.Tv_UInst (R.pack_fv higher_gref_lid) [u]) in
   R.pack_ln (R.Tv_App hd (t, R.Q_Explicit))

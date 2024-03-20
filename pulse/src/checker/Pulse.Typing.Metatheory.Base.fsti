@@ -105,6 +105,13 @@ val gref_typing_inversion (#g:env)
   (gref_typing:universe_of g (mk_gref u t) u_gref)
   : (_:universe_of g t u { u_gref == u_zero /\ u == u_zero })
 
+val higher_gref_typing_inversion (#g:env)
+  (u:universe)
+  (t:term)
+  (u_gref:universe)
+  (higher_gref_typing:universe_of g (mk_higher_gref u t) u_gref)
+  : (_:universe_of g t u { u_gref == u_zero /\ u == u_one })
+
 module RT = FStar.Reflection.Typing
 val typing_correctness
   (#g:R.env) 
