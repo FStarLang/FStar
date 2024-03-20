@@ -2427,21 +2427,27 @@ let (should_reduce_local_let :
          if uu___1
          then true
          else
-           (let n =
-              FStar_TypeChecker_Env.norm_eff_name cfg1.tcenv
-                lb.FStar_Syntax_Syntax.lbeff in
-            let uu___3 =
-              (FStar_Syntax_Util.is_pure_effect n) &&
-                (cfg1.normalize_pure_lets ||
-                   (FStar_Syntax_Util.has_attribute
-                      lb.FStar_Syntax_Syntax.lbattrs
-                      FStar_Parser_Const.inline_let_attr)) in
+           (let uu___3 =
+              FStar_Syntax_Util.has_attribute lb.FStar_Syntax_Syntax.lbattrs
+                FStar_Parser_Const.no_inline_let_attr in
             if uu___3
-            then true
+            then false
             else
-              (FStar_Syntax_Util.is_ghost_effect n) &&
-                (Prims.op_Negation
-                   (cfg1.steps).pure_subterms_within_computations)))
+              (let n =
+                 FStar_TypeChecker_Env.norm_eff_name cfg1.tcenv
+                   lb.FStar_Syntax_Syntax.lbeff in
+               let uu___5 =
+                 (FStar_Syntax_Util.is_pure_effect n) &&
+                   (cfg1.normalize_pure_lets ||
+                      (FStar_Syntax_Util.has_attribute
+                         lb.FStar_Syntax_Syntax.lbattrs
+                         FStar_Parser_Const.inline_let_attr)) in
+               if uu___5
+               then true
+               else
+                 (FStar_Syntax_Util.is_ghost_effect n) &&
+                   (Prims.op_Negation
+                      (cfg1.steps).pure_subterms_within_computations))))
 let (translate_norm_step :
   FStar_Pervasives.norm_step -> FStar_TypeChecker_Env.step Prims.list) =
   fun uu___ ->
