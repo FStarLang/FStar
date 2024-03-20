@@ -70,9 +70,13 @@ val tm_exists_inversion (#g:env) (#u:universe) (#ty:term) (#p:term)
 val pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (tm_pure p) tm_vprop)
    : tot_typing g p (tm_fstar FStar.Reflection.Typing.tm_prop Range.range_0)
 
-val squash_typing_inversion (#g:env) (#u:universe)
+val squash_typing_inversion (#g:env)
+  (u:universe)
   (t:term)
-  (sq_typing:tot_typing g )
+  (u_sq:universe)
+  (sq_typing:universe_of g (mk_squash u t) u_sq)
+  : (universe_of g t u) &
+    (squash (u_sq == u_zero))
 
 
 module RT = FStar.Reflection.Typing

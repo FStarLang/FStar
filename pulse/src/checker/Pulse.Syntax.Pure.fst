@@ -285,3 +285,6 @@ let is_fvar_app_tm_app (t:term)
                     | us, Some arg ->
                       t == tm_pureapp (tm_uinst (as_fv l) us) q_opt arg)) =
   admit ()
+
+let mk_squash (u:universe) (t:term) : term =
+  tm_pureapp (tm_uinst (as_fv R.squash_qn) [u]) None t

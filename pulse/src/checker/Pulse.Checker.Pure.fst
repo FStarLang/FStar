@@ -124,11 +124,11 @@ let rtb_core_check_term_at_type g f e t =
   let res = RU.with_context (get_context g) (fun _ -> RTB.core_check_term_at_type f e t) in
   res
 
-let mk_squash t =
+let mk_squash0 t =
   let sq : R.term = pack_ln (Tv_UInst (pack_fv squash_qn) [u_zero]) in
   mk_e_app sq [t]
 
-let squash_prop_validity_token f p (t:prop_validity_token f (mk_squash p))
+let squash_prop_validity_token f p (t:prop_validity_token f (mk_squash0 p))
   : prop_validity_token f p
   = admit(); t
 
@@ -138,7 +138,7 @@ let rtb_check_prop_validity (g:env) (sync:bool) (f:_) (p:_) =
     Printf.sprintf "(%s) Calling check_prop_validity on %s"
           (T.range_to_string (RU.range_of_term p))
           (T.term_to_string p));
-  let sp = mk_squash p in
+  let sp = mk_squash0 p in
   let res, issues = 
     RU.with_context (get_context g) 
     (fun _ -> 
@@ -475,6 +475,8 @@ let mk_pulse_lib_higher_gref_lid s = pulse_lib_higher_gref@[s]
 let higher_gref_lid = mk_pulse_lib_higher_gref_lid "ref"
 
 module WT = Pulse.Steel.Wrapper.Typing
+module Metatheory = Pulse.Typing.Metatheory.Base
+
 let try_get_non_informative_witness g u t
   : T.Tac (option (non_informative_t g u t))
   = let ropt : option (e:term &
@@ -482,6 +484,7 @@ let try_get_non_informative_witness g u t
       let ropt = is_fvar_app t in
       match ropt with
       | Some (l, us, q_opt, arg_opt) ->
+        is_fvar_app_tm_app t;
         if l = R.unit_lid
         then let e = tm_fvar (as_fv (mk_pulse_lib_core_lid "unit_non_informative")) in
              Some (| e, None |)
@@ -489,22 +492,22 @@ let try_get_non_informative_witness g u t
         then let e = tm_fvar (as_fv (mk_pulse_lib_core_lid "prop_non_informative")) in
              Some (| e, None |)
         else if l = R.squash_qn
-        then match arg_opt, us with
-             | Some arg, [u_t] ->
+        then match q_opt, arg_opt, us with
+             | None, Some arg, [u_t] ->
                let e =
                  tm_pureapp
                    (tm_uinst (as_fv squash_non_informative_lid) us)
                    None
                    arg in
-               assume (u == uzero);
-               assume (q_opt == None);
-               is_fvar_app_tm_app t;
+               let sq_typing : universe_of g t u = magic () in
+               let arg_typing, _ = Metatheory.squash_typing_inversion u_t arg u sq_typing in
                let d : tot_typing g e (non_informative_witness_t u t) =
+                 let E arg_typing = arg_typing in
                  E (Pulse.Steel.Wrapper.Typing.squash_non_informative_witness_typing
                       #(elab_env g)
                       #u_t
                       #(elab_term arg)
-                      (magic ())) in
+                      arg_typing) in
                Some (| e, Some d |)
              | _ -> None
         else if l = erased_lid && Some? arg_opt
