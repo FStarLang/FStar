@@ -474,7 +474,7 @@ let pulse_lib_higher_gref = ["Pulse"; "Lib"; "HigherGhostReference"]
 let mk_pulse_lib_higher_gref_lid s = pulse_lib_higher_gref@[s]
 let higher_gref_lid = mk_pulse_lib_higher_gref_lid "ref"
 
-module WT = Pulse.Steel.Wrapper.Typing
+module WT = Pulse.Lib.Core.Typing
 module Metatheory = Pulse.Typing.Metatheory.Base
 
 let try_get_non_informative_witness g u t t_typing
@@ -502,7 +502,7 @@ let try_get_non_informative_witness g u t t_typing
                let arg_typing = Metatheory.squash_typing_inversion u_t arg u t_typing in
                let d : tot_typing g e (non_informative_witness_t u t) =
                  let E arg_typing = arg_typing in
-                 E (Pulse.Steel.Wrapper.Typing.squash_non_informative_witness_typing
+                 E (WT.squash_non_informative_witness_typing
                       u_t
                       arg_typing) in
                Some (| e, Some d |)

@@ -45,7 +45,7 @@ module Sub = Pulse.Soundness.Sub
 module RU = Pulse.RuntimeUtils
 module Typing = Pulse.Typing
 module EPure = Pulse.Elaborate.Pure
-module WT= Pulse.Steel.Wrapper.Typing
+module WT= Pulse.Lib.Core.Typing
 
 let tabs_t (d:'a) = 
     #g:stt_env ->

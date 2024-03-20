@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Pulse.Steel.Wrapper.Typing
+module Pulse.Lib.Core.Typing
 
 open FStar.Reflection.V2
 open Pulse.Reflection.Util
