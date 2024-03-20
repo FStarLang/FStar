@@ -469,6 +469,107 @@ let check_vprop_with_core (g:env)
 module WT = Pulse.Lib.Core.Typing
 module Metatheory = Pulse.Typing.Metatheory.Base
 
+type non_informative_checker_t (l:R.name) =
+  #g:env ->
+  #u:universe ->
+  #t:term ->
+  t_typing:universe_of g t u ->
+  Pure (option (e:term & option (tot_typing g e (non_informative_witness_t u t))))
+       (requires (match is_fvar_app t with
+                  | Some (l1, _, _, _) -> l1 == l
+                  | _ -> False))
+        (ensures fun _ -> True)
+
+let unit_non_informative_checker : non_informative_checker_t R.unit_lid =
+  fun #g #u #t t_typing ->
+  let Some (l, us, q_opt, arg_opt) = is_fvar_app t in
+  is_fvar_app_tm_app t;
+  match us, q_opt, arg_opt with
+  | [], None, None ->
+    Metatheory.unit_typing_inversion u t_typing;
+    let e = tm_fvar (as_fv unit_non_informative_lid) in
+    Some (| e, Some (E (WT.unit_non_informative_witness_typing (elab_env g))) |)
+  | _ -> None
+
+let prop_non_informative_checker : non_informative_checker_t R.prop_qn =
+  fun #g #u #t t_typing ->
+  let Some (l, us, q_opt, arg_opt) = is_fvar_app t in
+  is_fvar_app_tm_app t;
+  match us, q_opt, arg_opt with
+  | [], None, None ->
+    Metatheory.prop_typing_inversion u t_typing;
+    let e = tm_fvar (as_fv prop_non_informative_lid) in
+    Some (| e, Some (E (WT.prop_non_informative_witness_typing (elab_env g))) |)
+  | _ -> None
+
+let squash_non_informative_checker : non_informative_checker_t R.squash_qn =
+  fun #g #u #t t_typing ->
+  let Some (l, us, q_opt, arg_opt) = is_fvar_app t in
+  is_fvar_app_tm_app t;
+  match q_opt, arg_opt, us with
+  | None, Some arg, [u_t] ->
+    let e = tm_pureapp
+              (tm_uinst (as_fv squash_non_informative_lid) us)
+                 None
+                 arg in
+    let arg_typing = Metatheory.squash_typing_inversion u_t arg u t_typing in
+    let d : tot_typing g e (non_informative_witness_t u t) =
+      let E arg_typing = arg_typing in
+      E (WT.squash_non_informative_witness_typing u_t arg_typing) in
+    Some (| e, Some d |)
+  | _ -> None
+
+let erased_non_informative_checker : non_informative_checker_t erased_lid =
+  fun #g #u #t t_typing ->
+  let Some (l, us, q_opt, arg_opt) = is_fvar_app t in
+  is_fvar_app_tm_app t;
+  match q_opt, arg_opt, us with
+  | None, Some arg, [u_t] ->
+    let e = tm_pureapp
+              (tm_uinst (as_fv erased_non_informative_lid) us)
+                 None
+                 arg in
+    let arg_typing = Metatheory.erased_typing_inversion u_t arg u t_typing in
+    let d : tot_typing g e (non_informative_witness_t u t) =
+      let E arg_typing = arg_typing in
+      E (WT.erased_non_informative_witness_typing u_t arg_typing) in
+    Some (| e, Some d |)
+  | _ -> None
+
+let gref_non_informative_checker : non_informative_checker_t gref_lid =
+  fun #g #u #t t_typing ->
+  let Some (l, us, q_opt, arg_opt) = is_fvar_app t in
+  is_fvar_app_tm_app t;
+  match q_opt, arg_opt, us with
+  | None, Some arg, [u_t] ->
+    let e = tm_pureapp
+              (tm_uinst (as_fv gref_non_informative_lid) us)
+                 None
+                 arg in
+    let arg_typing = Metatheory.gref_typing_inversion u_t arg u t_typing in
+    let d : tot_typing g e (non_informative_witness_t u t) =
+      let E arg_typing = arg_typing in
+      E (WT.gref_non_informative_witness_typing arg_typing) in
+    Some (| e, Some d |)
+  | _ -> None
+
+let higher_gref_non_informative_checker : non_informative_checker_t higher_gref_lid =
+  fun #g #u #t t_typing ->
+  let Some (l, us, q_opt, arg_opt) = is_fvar_app t in
+  is_fvar_app_tm_app t;
+  match q_opt, arg_opt, us with
+  | None, Some arg, [u_t] ->
+    let e = tm_pureapp
+              (tm_uinst (as_fv higher_gref_non_informative_lid) us)
+                 None
+                 arg in
+    let arg_typing = Metatheory.higher_gref_typing_inversion u_t arg u t_typing in
+    let d : tot_typing g e (non_informative_witness_t u t) =
+      let E arg_typing = arg_typing in
+      E (WT.higher_gref_non_informative_witness_typing arg_typing) in
+    Some (| e, Some d |)
+  | _ -> None
+
 let try_get_non_informative_witness g u t t_typing
   : T.Tac (option (non_informative_t g u t))
   = let ropt : option (e:term &
@@ -478,81 +579,17 @@ let try_get_non_informative_witness g u t t_typing
       | Some (l, us, q_opt, arg_opt) ->
         is_fvar_app_tm_app t;
         if l = R.unit_lid
-        then match us, q_opt, arg_opt with
-             | [], None, None ->
-               Metatheory.unit_typing_inversion u t_typing;
-               let e = tm_fvar (as_fv unit_non_informative_lid) in
-               Some (| e, Some (E (WT.unit_non_informative_witness_typing (elab_env g))) |)
-             | _ -> None
+        then unit_non_informative_checker t_typing
         else if l = R.prop_qn
-        then match us, q_opt, arg_opt with
-             | [], None, None ->
-               Metatheory.prop_typing_inversion u t_typing;
-               let e = tm_fvar (as_fv prop_non_informative_lid) in
-               Some (| e, Some (E (WT.prop_non_informative_witness_typing (elab_env g))) |)
-             | _ -> None
+        then prop_non_informative_checker t_typing
         else if l = R.squash_qn
-        then match q_opt, arg_opt, us with
-             | None, Some arg, [u_t] ->
-               let e =
-                 tm_pureapp
-                   (tm_uinst (as_fv squash_non_informative_lid) us)
-                   None
-                   arg in
-               let arg_typing = Metatheory.squash_typing_inversion u_t arg u t_typing in
-               let d : tot_typing g e (non_informative_witness_t u t) =
-                 let E arg_typing = arg_typing in
-                 E (WT.squash_non_informative_witness_typing
-                      u_t
-                      arg_typing) in
-               Some (| e, Some d |)
-             | _ -> None
+        then squash_non_informative_checker t_typing
         else if l = erased_lid
-        then match q_opt, arg_opt, us with
-             | None, Some arg, [u_t] ->
-               let e =
-                 tm_pureapp
-                   (tm_uinst (as_fv erased_non_informative_lid) us)
-                   None
-                   arg in
-               let arg_typing = Metatheory.erased_typing_inversion u_t arg u t_typing in
-               let d : tot_typing g e (non_informative_witness_t u t) =
-                 let E arg_typing = arg_typing in
-                 E (WT.erased_non_informative_witness_typing
-                      u_t
-                      arg_typing) in
-               Some (| e, Some d |)
-             | _ -> None
+        then erased_non_informative_checker t_typing
         else if l = gref_lid
-        then match q_opt, arg_opt, us with
-             | None, Some arg, [u_t] ->
-               let e =
-                 tm_pureapp
-                   (tm_uinst (as_fv gref_non_informative_lid) us)
-                   None
-                   arg in
-               let arg_typing = Metatheory.gref_typing_inversion u_t arg u t_typing in
-               let d : tot_typing g e (non_informative_witness_t u t) =
-                 let E arg_typing = arg_typing in
-                 E (WT.gref_non_informative_witness_typing
-                      arg_typing) in
-               Some (| e, Some d |)
-             | _ -> None
-        else if l = higher_gref_lid && Some? arg_opt
-        then match q_opt, arg_opt, us with
-             | None, Some arg, [u_t] ->
-               let e =
-                 tm_pureapp
-                   (tm_uinst (as_fv higher_gref_non_informative_lid) us)
-                   None
-                   arg in
-               let arg_typing = Metatheory.higher_gref_typing_inversion u_t arg u t_typing in
-               let d : tot_typing g e (non_informative_witness_t u t) =
-                 let E arg_typing = arg_typing in
-                 E (WT.higher_gref_non_informative_witness_typing
-                      arg_typing) in
-               Some (| e, Some d |)
-             | _ -> None
+        then gref_non_informative_checker t_typing
+        else if l = higher_gref_lid
+        then higher_gref_non_informative_checker t_typing
         else None
       | _ ->
         // ghost_pcm_ref #a p
