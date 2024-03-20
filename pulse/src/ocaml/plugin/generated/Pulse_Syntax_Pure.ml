@@ -419,3 +419,12 @@ let (unreveal :
               | uu___1 -> FStar_Pervasives_Native.None)
          | uu___ -> FStar_Pervasives_Native.None)
     | uu___ -> FStar_Pervasives_Native.None
+let (mk_squash :
+  Pulse_Syntax_Base.universe ->
+    Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
+  =
+  fun u ->
+    fun t ->
+      tm_pureapp
+        (tm_uinst (Pulse_Syntax_Base.as_fv FStar_Reflection_Const.squash_qn)
+           [u]) FStar_Pervasives_Native.None t
