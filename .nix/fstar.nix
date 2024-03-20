@@ -1,11 +1,24 @@
-{ callPackage, fstar-dune, fstar-ulib, installShellFiles, lib, makeWrapper
-, stdenv, version, z3 }:
-
+{
+  fstar-dune,
+  fstar-ulib,
+  installShellFiles,
+  lib,
+  makeWrapper,
+  ocamlPackages,
+  stdenv,
+  removeReferencesTo,
+  version,
+  z3,
+}:
 stdenv.mkDerivation {
   pname = "fstar";
   inherit version;
 
-  buildInputs = [ installShellFiles makeWrapper ];
+  buildInputs = [
+    installShellFiles
+    makeWrapper
+    removeReferencesTo
+  ];
 
   src = lib.sourceByRegex ./.. [
     ".common.mk"
@@ -14,6 +27,8 @@ stdenv.mkDerivation {
     "src(/ocaml-output(/Makefile)?)?"
     "ucontrib.*"
   ];
+
+  inherit (fstar-dune) propagatedBuildInputs;
 
   dontBuild = true;
 
@@ -26,17 +41,15 @@ stdenv.mkDerivation {
 
     PREFIX=$out make -C src/ocaml-output install-sides
 
-    for binary in $out/bin/*
-    do
-      chmod +x $binary
-      wrapProgram $binary --prefix PATH ":" ${z3}/bin
-    done
+    chmod +x $out/bin/fstar.exe
+    wrapProgram $out/bin/fstar.exe --prefix PATH ":" ${z3}/bin
+    remove-references-to -t '${ocamlPackages.ocaml}' $out/bin/fstar.exe
 
-    cd $out
+    substituteInPlace $out/lib/ocaml/${ocamlPackages.ocaml.version}/site-lib/fstar/dune-package \
+      --replace ${fstar-dune} $out
+
     installShellCompletion --bash ${../.completion/bash/fstar.exe.bash}
     installShellCompletion --fish ${../.completion/fish/fstar.exe.fish}
-    installShellCompletion --zsh --name _fstar.exe ${
-      ../.completion/zsh/__fstar.exe
-    }
+    installShellCompletion --zsh --name _fstar.exe ${../.completion/zsh/__fstar.exe}
   '';
 }
