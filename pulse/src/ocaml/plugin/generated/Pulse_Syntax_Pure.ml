@@ -19,6 +19,7 @@ let (u2 : Pulse_Syntax_Base.universe) =
   FStar_Reflection_V2_Builtins.pack_universe
     (FStar_Reflection_V2_Data.Uv_Succ u1)
 let (u_zero : Pulse_Syntax_Base.universe) = u0
+let (u_one : Pulse_Syntax_Base.universe) = u1
 let (u_succ : Pulse_Syntax_Base.universe -> Pulse_Syntax_Base.universe) =
   fun u ->
     FStar_Reflection_V2_Builtins.pack_universe

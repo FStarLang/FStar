@@ -173,6 +173,26 @@ let (mk_ref : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term) =
       (Pulse_Syntax_Pure.tm_fvar
          (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.ref_lid))
       FStar_Pervasives_Native.None t
+let (mk_gref :
+  Pulse_Syntax_Base.universe ->
+    Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
+  =
+  fun u ->
+    fun t ->
+      Pulse_Syntax_Pure.tm_pureapp
+        (Pulse_Syntax_Pure.tm_uinst
+           (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.gref_lid) [u])
+        FStar_Pervasives_Native.None t
+let (mk_higher_gref :
+  Pulse_Syntax_Base.universe ->
+    Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
+  =
+  fun u ->
+    fun t ->
+      Pulse_Syntax_Pure.tm_pureapp
+        (Pulse_Syntax_Pure.tm_uinst
+           (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.higher_gref_lid)
+           [u]) FStar_Pervasives_Native.None t
 let (mk_pts_to :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.term ->
