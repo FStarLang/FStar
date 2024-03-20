@@ -5476,13 +5476,13 @@ let (gref_non_informative_checker : unit non_informative_checker_t) =
           | FStar_Pervasives_Native.Some (l, us, q_opt, arg_opt) ->
               (match (q_opt, arg_opt, us) with
                | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.Some
-                  arg, u_t::[]) ->
+                  arg, []) ->
                    let e =
                      Pulse_Syntax_Pure.tm_pureapp
-                       (Pulse_Syntax_Pure.tm_uinst
+                       (Pulse_Syntax_Pure.tm_fvar
                           (Pulse_Syntax_Base.as_fv
-                             Pulse_Reflection_Util.gref_non_informative_lid)
-                          us) FStar_Pervasives_Native.None arg in
+                             Pulse_Reflection_Util.gref_non_informative_lid))
+                       FStar_Pervasives_Native.None arg in
                    FStar_Pervasives_Native.Some
                      (Prims.Mkdtuple2 (e, (FStar_Pervasives_Native.Some ())))
                | uu___1 -> FStar_Pervasives_Native.None)
@@ -5496,13 +5496,13 @@ let (higher_gref_non_informative_checker : unit non_informative_checker_t) =
           | FStar_Pervasives_Native.Some (l, us, q_opt, arg_opt) ->
               (match (q_opt, arg_opt, us) with
                | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.Some
-                  arg, u_t::[]) ->
+                  arg, []) ->
                    let e =
                      Pulse_Syntax_Pure.tm_pureapp
-                       (Pulse_Syntax_Pure.tm_uinst
+                       (Pulse_Syntax_Pure.tm_fvar
                           (Pulse_Syntax_Base.as_fv
-                             Pulse_Reflection_Util.higher_gref_non_informative_lid)
-                          us) FStar_Pervasives_Native.None arg in
+                             Pulse_Reflection_Util.higher_gref_non_informative_lid))
+                       FStar_Pervasives_Native.None arg in
                    FStar_Pervasives_Native.Some
                      (Prims.Mkdtuple2 (e, (FStar_Pervasives_Native.Some ())))
                | uu___1 -> FStar_Pervasives_Native.None)

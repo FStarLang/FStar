@@ -2227,29 +2227,22 @@ let (observable_lid : Prims.string Prims.list) =
 let (unobservable_lid : Prims.string Prims.list) =
   mk_observability_lid "Unobservable"
 let (neutral_lid : Prims.string Prims.list) = mk_observability_lid "Neutral"
-let (mk_gref :
-  FStar_Reflection_Types.universe ->
-    FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
-  =
-  fun u ->
-    fun t ->
-      let hd =
-        FStar_Reflection_V2_Builtins.pack_ln
-          (FStar_Reflection_V2_Data.Tv_UInst
-             ((FStar_Reflection_V2_Builtins.pack_fv gref_lid), [u])) in
+let (mk_gref : FStar_Reflection_Types.term -> FStar_Reflection_Types.term) =
+  fun t ->
+    let hd =
       FStar_Reflection_V2_Builtins.pack_ln
-        (FStar_Reflection_V2_Data.Tv_App
-           (hd, (t, FStar_Reflection_V2_Data.Q_Explicit)))
+        (FStar_Reflection_V2_Data.Tv_FVar
+           (FStar_Reflection_V2_Builtins.pack_fv gref_lid)) in
+    FStar_Reflection_V2_Builtins.pack_ln
+      (FStar_Reflection_V2_Data.Tv_App
+         (hd, (t, FStar_Reflection_V2_Data.Q_Explicit)))
 let (mk_higher_gref :
-  FStar_Reflection_Types.universe ->
-    FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
-  =
-  fun u ->
-    fun t ->
-      let hd =
-        FStar_Reflection_V2_Builtins.pack_ln
-          (FStar_Reflection_V2_Data.Tv_UInst
-             ((FStar_Reflection_V2_Builtins.pack_fv higher_gref_lid), [u])) in
+  FStar_Reflection_Types.term -> FStar_Reflection_Types.term) =
+  fun t ->
+    let hd =
       FStar_Reflection_V2_Builtins.pack_ln
-        (FStar_Reflection_V2_Data.Tv_App
-           (hd, (t, FStar_Reflection_V2_Data.Q_Explicit)))
+        (FStar_Reflection_V2_Data.Tv_FVar
+           (FStar_Reflection_V2_Builtins.pack_fv higher_gref_lid)) in
+    FStar_Reflection_V2_Builtins.pack_ln
+      (FStar_Reflection_V2_Data.Tv_App
+         (hd, (t, FStar_Reflection_V2_Data.Q_Explicit)))
