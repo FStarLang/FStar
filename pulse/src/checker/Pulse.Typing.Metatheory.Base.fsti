@@ -20,11 +20,15 @@ open Pulse.Syntax.Naming
 open Pulse.Typing
 module RU = Pulse.RuntimeUtils
 module T = FStar.Tactics.V2
+module R = FStar.Reflection.V2
+module RT = FStar.Reflection.Typing  
+module C = FStar.Stubs.TypeChecker.Core
+open FStar.Ghost
+
 
 val admit_comp_typing (g:env) (c:comp_st)
   : comp_typing_u g c
 
-module RT = FStar.Reflection.Typing  
 let rt_equiv_typing (#g:_) (#t0 #t1:_) (d:RT.equiv g t0 t1)
                     (#k:_)
                     (d1:Ghost.erased (RT.tot_typing g t0 k))
@@ -70,10 +74,43 @@ val tm_exists_inversion (#g:env) (#u:universe) (#ty:term) (#p:term)
 val pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (tm_pure p) tm_vprop)
    : tot_typing g p (tm_fstar FStar.Reflection.Typing.tm_prop Range.range_0)
 
+val unit_typing_inversion (#g:env)
+  (u:universe)
+  (d:universe_of g (tm_fvar (as_fv R.unit_lid)) u)
+  : GTot (squash (u == u_zero))
+
+val prop_typing_inversion (#g:env)
+  (u:universe)
+  (d:universe_of g (tm_fvar (as_fv R.prop_qn)) u)
+  : GTot (squash (u == u_zero))
+
+val squash_typing_inversion (#g:env)
+  (u:universe)
+  (t:term)
+  (u_sq:universe)
+  (sq_typing:universe_of g (mk_squash u t) u_sq)
+  : (_:universe_of g t u { u_sq == u_zero })
+
+val erased_typing_inversion (#g:env)
+  (u:universe)
+  (t:term)
+  (u_er:universe)
+  (er_typing:universe_of g (mk_erased u t) u_er)
+  : (_:universe_of g t u { u_er == u })
+
+val gref_typing_inversion (#g:env)
+  (t:term)
+  (u_gref:universe)
+  (gref_typing:universe_of g (mk_gref t) u_gref)
+  : (_:universe_of g t u_zero { u_gref == u_zero })
+
+val higher_gref_typing_inversion (#g:env)
+  (t:term)
+  (u_gref:universe)
+  (higher_gref_typing:universe_of g (mk_higher_gref t) u_gref)
+  : (_:universe_of g t u_one { u_gref == u_zero })
+
 module RT = FStar.Reflection.Typing
-module R = FStar.Reflection.V2
-module C = FStar.Stubs.TypeChecker.Core
-open FStar.Ghost
 val typing_correctness
   (#g:R.env) 
   (#t:R.term)

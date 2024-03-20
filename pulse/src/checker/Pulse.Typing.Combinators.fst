@@ -22,6 +22,8 @@ module L = FStar.List.Tot
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 
+module Metatheory = Pulse.Typing.Metatheory.Base
+
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Typing
@@ -204,7 +206,14 @@ let st_ghost_as_atomic (c:comp_st { C_STGhost? c }) =
 
 let try_lift_ghost_atomic (#g:env) (#e:st_term) (#c:comp_st { C_STGhost? c }) (d:st_typing g e c)
 : T.Tac (option (st_typing g e (st_ghost_as_atomic c)))
-= let w = try_get_non_informative_witness g (comp_u c) (comp_res c) in
+= let comp_res_typing : universe_of g (comp_res c) (comp_u c) =
+    let open Metatheory in
+    let d = st_typing_correctness d in
+    let d, _ = comp_typing_inversion d in
+    let (| d, _, _, _ |) = st_comp_typing_inversion d in
+    d
+  in
+  let w = try_get_non_informative_witness g (comp_u c) (comp_res c) comp_res_typing in
   match w with
   | None -> None
   | Some w ->

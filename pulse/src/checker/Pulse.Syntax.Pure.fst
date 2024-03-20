@@ -35,6 +35,7 @@ let u1 : universe = R.pack_universe (R.Uv_Succ u0)
 let u2 : universe = R.pack_universe (R.Uv_Succ u1)
 
 let u_zero = u0
+let u_one = u1
 let u_succ (u:universe) : universe =
   R.pack_universe (R.Uv_Succ u)
 let u_var (s:string) : universe =
@@ -275,3 +276,16 @@ let is_arrow_tm_arrow (t:term)
                     t == tm_arrow b q c)) =
   admit ()
 
+let is_fvar_app_tm_app (t:term)
+  : Lemma (requires Some? (is_fvar_app t))
+          (ensures (let Some (l, us, q_opt, arg_opt) = is_fvar_app t in
+                    match us, arg_opt with
+                    | [], None -> t == tm_fvar (as_fv l)
+                    | [], Some arg -> t == tm_pureapp (tm_fvar (as_fv l)) q_opt arg
+                    | us, None -> t == tm_uinst (as_fv l) us
+                    | us, Some arg ->
+                      t == tm_pureapp (tm_uinst (as_fv l) us) q_opt arg)) =
+  admit ()
+
+let mk_squash (u:universe) (t:term) : term =
+  tm_pureapp (tm_uinst (as_fv R.squash_qn) [u]) None t

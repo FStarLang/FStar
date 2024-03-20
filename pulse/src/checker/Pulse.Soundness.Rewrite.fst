@@ -26,7 +26,7 @@ open Pulse.Soundness.Common
 open Pulse.Checker.VPropEquiv
 
 module RT = FStar.Reflection.Typing
-module WT = Pulse.Steel.Wrapper.Typing
+module WT = Pulse.Lib.Core.Typing
 
 let rewrite_soundness
   		(#g:stt_env)

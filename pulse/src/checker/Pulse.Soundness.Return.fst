@@ -26,7 +26,7 @@ open Pulse.Soundness.Common
 module R = FStar.Reflection.V2
 
 module PReflUtil = Pulse.Reflection.Util
-module WT = Pulse.Steel.Wrapper.Typing
+module WT = Pulse.Lib.Core.Typing
 module LN = Pulse.Typing.LN
 
 #push-options "--z3rlimit_factor 8 --split_queries no --fuel 4 --ifuel 2"
@@ -135,7 +135,7 @@ let return_soundness
       assert (elab_comp c == mk_stt_comp ru rt elab_c_pre elab_c_post);
       elab_stt_equiv _ c _ _ pre_eq post_eq
     | STT_Atomic ->
-      assert (elab_comp c == mk_stt_atomic_comp Pulse.Steel.Wrapper.Typing.neutral_fv ru rt emp_inames_tm elab_c_pre elab_c_post);
+      assert (elab_comp c == mk_stt_atomic_comp WT.neutral_fv ru rt emp_inames_tm elab_c_pre elab_c_post);
       elab_statomic_equiv _ c _ _ pre_eq post_eq
     | STT_Ghost ->
       assert (elab_comp c == mk_stt_ghost_comp ru rt elab_c_pre elab_c_post);

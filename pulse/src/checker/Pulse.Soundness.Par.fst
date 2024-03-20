@@ -26,7 +26,7 @@ open Pulse.Soundness.Common
 module R = FStar.Reflection.V2
 
 module PReflUtil = Pulse.Reflection.Util
-module WT = Pulse.Steel.Wrapper.Typing
+module WT = Pulse.Lib.Core.Typing
 
 
 #push-options "--z3rlimit_factor 4 --fuel 4 --ifuel 1"

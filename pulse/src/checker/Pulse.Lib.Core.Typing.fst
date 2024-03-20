@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Pulse.Steel.Wrapper.Typing
+module Pulse.Lib.Core.Typing
 
 open FStar.Reflection.V2
 open Pulse.Reflection.Util
@@ -44,3 +44,10 @@ let stt_ghost_admit_typing _ _ _ = admit ()
 let rewrite_typing _ _ _ = admit ()
 let with_local_typing _ _ _ _ _ _ _ = admit ()
 let with_localarray_typing _ _ _ _ _ _ _ _ = admit ()
+
+let unit_non_informative_witness_typing _ = admit ()
+let prop_non_informative_witness_typing _ = admit ()
+let squash_non_informative_witness_typing _ _ = admit ()
+let erased_non_informative_witness_typing _ _ = admit ()
+let gref_non_informative_witness_typing _ = admit ()
+let higher_gref_non_informative_witness_typing _ = admit ()

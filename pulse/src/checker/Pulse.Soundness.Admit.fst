@@ -27,7 +27,7 @@ open Pulse.Elaborate.Core
 open Pulse.Elaborate
 open Pulse.Soundness.Common
 
-module WT = Pulse.Steel.Wrapper.Typing
+module WT = Pulse.Lib.Core.Typing
 module Comp = Pulse.Soundness.Comp
 
 let admit_soundess

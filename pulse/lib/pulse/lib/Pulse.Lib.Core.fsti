@@ -500,7 +500,7 @@ let erased_non_informative (a:Type u#a)
 
 inline_for_extraction
 let squash_non_informative (a:Type u#a)
-: non_informative_witness (squash  u#a a)
+: non_informative_witness (squash u#a a)
 = fun x -> x
 
 (***** end computation types and combinators *****)

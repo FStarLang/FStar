@@ -124,11 +124,11 @@ let rtb_core_check_term_at_type g f e t =
   let res = RU.with_context (get_context g) (fun _ -> RTB.core_check_term_at_type f e t) in
   res
 
-let mk_squash t =
+let mk_squash0 t =
   let sq : R.term = pack_ln (Tv_UInst (pack_fv squash_qn) [u_zero]) in
   mk_e_app sq [t]
 
-let squash_prop_validity_token f p (t:prop_validity_token f (mk_squash p))
+let squash_prop_validity_token f p (t:prop_validity_token f (mk_squash0 p))
   : prop_validity_token f p
   = admit(); t
 
@@ -138,7 +138,7 @@ let rtb_check_prop_validity (g:env) (sync:bool) (f:_) (p:_) =
     Printf.sprintf "(%s) Calling check_prop_validity on %s"
           (T.range_to_string (RU.range_of_term p))
           (T.term_to_string p));
-  let sp = mk_squash p in
+  let sp = mk_squash0 p in
   let res, issues = 
     RU.with_context (get_context g) 
     (fun _ -> 
@@ -466,44 +466,130 @@ let check_vprop_with_core (g:env)
     (push_context_no_range g "check_vprop_with_core") t T.E_Total tm_vprop
 
   
-let pulse_lib_gref = ["Pulse"; "Lib"; "GhostReference"]
-let mk_pulse_lib_gref_lid s = pulse_lib_gref@[s]
-let gref_lid = mk_pulse_lib_gref_lid "ref"
+module WT = Pulse.Lib.Core.Typing
+module Metatheory = Pulse.Typing.Metatheory.Base
 
-let pulse_lib_higher_gref = ["Pulse"; "Lib"; "HigherGhostReference"]
-let mk_pulse_lib_higher_gref_lid s = pulse_lib_higher_gref@[s]
-let higher_gref_lid = mk_pulse_lib_higher_gref_lid "ref"
+type non_informative_checker_t (l:R.name) =
+  #g:env ->
+  #u:universe ->
+  #t:term ->
+  t_typing:universe_of g t u ->
+  Pure (option (e:term & option (tot_typing g e (non_informative_witness_t u t))))
+       (requires (match is_fvar_app t with
+                  | Some (l1, _, _, _) -> l1 == l
+                  | _ -> False))
+        (ensures fun _ -> True)
 
-let try_get_non_informative_witness g u t
+let unit_non_informative_checker : non_informative_checker_t R.unit_lid =
+  fun #g #u #t t_typing ->
+  let Some (l, us, q_opt, arg_opt) = is_fvar_app t in
+  is_fvar_app_tm_app t;
+  match us, q_opt, arg_opt with
+  | [], None, None ->
+    Metatheory.unit_typing_inversion u t_typing;
+    let e = tm_fvar (as_fv unit_non_informative_lid) in
+    Some (| e, Some (E (WT.unit_non_informative_witness_typing (elab_env g))) |)
+  | _ -> None
+
+let prop_non_informative_checker : non_informative_checker_t R.prop_qn =
+  fun #g #u #t t_typing ->
+  let Some (l, us, q_opt, arg_opt) = is_fvar_app t in
+  is_fvar_app_tm_app t;
+  match us, q_opt, arg_opt with
+  | [], None, None ->
+    Metatheory.prop_typing_inversion u t_typing;
+    let e = tm_fvar (as_fv prop_non_informative_lid) in
+    Some (| e, Some (E (WT.prop_non_informative_witness_typing (elab_env g))) |)
+  | _ -> None
+
+let squash_non_informative_checker : non_informative_checker_t R.squash_qn =
+  fun #g #u #t t_typing ->
+  let Some (l, us, q_opt, arg_opt) = is_fvar_app t in
+  is_fvar_app_tm_app t;
+  match q_opt, arg_opt, us with
+  | None, Some arg, [u_t] ->
+    let e = tm_pureapp
+              (tm_uinst (as_fv squash_non_informative_lid) us)
+                 None
+                 arg in
+    let arg_typing = Metatheory.squash_typing_inversion u_t arg u t_typing in
+    let d : tot_typing g e (non_informative_witness_t u t) =
+      let E arg_typing = arg_typing in
+      E (WT.squash_non_informative_witness_typing u_t arg_typing) in
+    Some (| e, Some d |)
+  | _ -> None
+
+let erased_non_informative_checker : non_informative_checker_t erased_lid =
+  fun #g #u #t t_typing ->
+  let Some (l, us, q_opt, arg_opt) = is_fvar_app t in
+  is_fvar_app_tm_app t;
+  match q_opt, arg_opt, us with
+  | None, Some arg, [u_t] ->
+    let e = tm_pureapp
+              (tm_uinst (as_fv erased_non_informative_lid) us)
+                 None
+                 arg in
+    let arg_typing = Metatheory.erased_typing_inversion u_t arg u t_typing in
+    let d : tot_typing g e (non_informative_witness_t u t) =
+      let E arg_typing = arg_typing in
+      E (WT.erased_non_informative_witness_typing u_t arg_typing) in
+    Some (| e, Some d |)
+  | _ -> None
+
+let gref_non_informative_checker : non_informative_checker_t gref_lid =
+  fun #g #u #t t_typing ->
+  let Some (l, us, q_opt, arg_opt) = is_fvar_app t in
+  is_fvar_app_tm_app t;
+  match q_opt, arg_opt, us with
+  | None, Some arg, [] ->
+    let e = tm_pureapp
+              (tm_fvar (as_fv gref_non_informative_lid))
+                 None
+                 arg in
+    let arg_typing = Metatheory.gref_typing_inversion arg u t_typing in
+    let d : tot_typing g e (non_informative_witness_t u t) =
+      let E arg_typing = arg_typing in
+      E (WT.gref_non_informative_witness_typing arg_typing) in
+    Some (| e, Some d |)
+  | _ -> None
+
+let higher_gref_non_informative_checker : non_informative_checker_t higher_gref_lid =
+  fun #g #u #t t_typing ->
+  let Some (l, us, q_opt, arg_opt) = is_fvar_app t in
+  is_fvar_app_tm_app t;
+  match q_opt, arg_opt, us with
+  | None, Some arg, [] ->
+    let e = tm_pureapp
+              (tm_fvar (as_fv higher_gref_non_informative_lid))
+                 None
+                 arg in
+    let arg_typing = Metatheory.higher_gref_typing_inversion arg u t_typing in
+    let d : tot_typing g e (non_informative_witness_t u t) =
+      let E arg_typing = arg_typing in
+      E (WT.higher_gref_non_informative_witness_typing arg_typing) in
+    Some (| e, Some d |)
+  | _ -> None
+
+let try_get_non_informative_witness g u t t_typing
   : T.Tac (option (non_informative_t g u t))
-  = let eopt =
+  = let ropt : option (e:term &
+                       option (tot_typing g e (non_informative_witness_t u t))) =
       let ropt = is_fvar_app t in
       match ropt with
-      | Some (l, us, _, arg_opt) ->
+      | Some (l, us, q_opt, arg_opt) ->
+        is_fvar_app_tm_app t;
         if l = R.unit_lid
-        then Some (tm_fvar (as_fv (mk_pulse_lib_core_lid "unit_non_informative")))
+        then unit_non_informative_checker t_typing
         else if l = R.prop_qn
-        then Some (tm_fvar (as_fv (mk_pulse_lib_core_lid "prop_non_informative")))
-        else if l = R.squash_qn && Some? arg_opt
-        then Some (tm_pureapp
-                     (tm_uinst (as_fv (mk_pulse_lib_core_lid "squash_non_informative")) us)
-                     None
-                     (Some?.v arg_opt))
-        else if l = erased_lid && Some? arg_opt
-        then Some (tm_pureapp
-                     (tm_uinst (as_fv (mk_pulse_lib_core_lid "erased_non_informative")) us)
-                     None
-                     (Some?.v arg_opt))
-        else if l = gref_lid && Some? arg_opt
-        then Some (tm_pureapp
-                     (tm_uinst (as_fv (mk_pulse_lib_gref_lid "gref_non_informative")) us)
-                     None
-                     (Some?.v arg_opt))
-        else if l = higher_gref_lid && Some? arg_opt
-        then Some (tm_pureapp
-                     (tm_uinst (as_fv (mk_pulse_lib_higher_gref_lid "gref_non_informative")) us)
-                     None
-                     (Some?.v arg_opt))
+        then prop_non_informative_checker t_typing
+        else if l = R.squash_qn
+        then squash_non_informative_checker t_typing
+        else if l = erased_lid
+        then erased_non_informative_checker t_typing
+        else if l = gref_lid
+        then gref_non_informative_checker t_typing
+        else if l = higher_gref_lid
+        then higher_gref_non_informative_checker t_typing
         else None
       | _ ->
         // ghost_pcm_ref #a p
@@ -523,26 +609,29 @@ let try_get_non_informative_witness g u t
                      None
                      (Some?.v arg1_opt) in
                    let t = tm_pureapp t None arg2 in
-                   Some t
+                   Some (| t, None |)
               else None
         in
         is_ghost_pcm_ref ()
     in
-    match eopt with
+    match ropt with
     | None -> None
-    | Some e ->
-      let tok =
-        check_term
-          (push_context_no_range g "get_noninformative_witness")
-          e
-          T.E_Total
-          (non_informative_witness_t u t)
-      in
-      Some tok
+    | Some (| e, dopt |) ->
+      match dopt with
+      | None ->
+        let tok =
+          check_term
+            (push_context_no_range g "get_noninformative_witness")
+            e
+            T.E_Total
+            (non_informative_witness_t u t)
+        in
+        Some tok
+      | Some d -> Some (| e, d |)
 
-let get_non_informative_witness g u t
+let get_non_informative_witness g u t t_typing
   : T.Tac (non_informative_t g u t)
-  = match try_get_non_informative_witness g u t with
+  = match try_get_non_informative_witness g u t t_typing with
     | None ->
       let open Pulse.PP in
       fail_doc g (Some t.range) [
