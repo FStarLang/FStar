@@ -771,10 +771,10 @@ let observable_lid = mk_observability_lid "Observable"
 let unobservable_lid = mk_observability_lid "Unobservable"
 let neutral_lid = mk_observability_lid "Neutral"
 
-let mk_gref (u:R.universe) (t:R.term) : R.term =
-  let hd = R.pack_ln (R.Tv_UInst (R.pack_fv gref_lid) [u]) in
+let mk_gref (t:R.term) : R.term =
+  let hd = R.pack_ln (R.Tv_FVar (R.pack_fv gref_lid)) in
   R.pack_ln (R.Tv_App hd (t, R.Q_Explicit))
 
-let mk_higher_gref (u:R.universe) (t:R.term) : R.term =
-  let hd = R.pack_ln (R.Tv_UInst (R.pack_fv higher_gref_lid) [u]) in
+let mk_higher_gref (t:R.term) : R.term =
+  let hd = R.pack_ln (R.Tv_FVar (R.pack_fv higher_gref_lid)) in
   R.pack_ln (R.Tv_App hd (t, R.Q_Explicit))

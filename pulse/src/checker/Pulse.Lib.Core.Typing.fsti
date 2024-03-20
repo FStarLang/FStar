@@ -469,7 +469,7 @@ val erased_non_informative_witness_typing
                           (non_informative_witness_rt u (mk_erased u t)))
 
 let gref_non_informative_witness_tm (t:term) : term =
-  let tm = pack_ln (Tv_UInst (pack_fv gref_non_informative_lid) [uzero]) in
+  let tm = pack_ln (Tv_FVar (pack_fv gref_non_informative_lid)) in
   pack_ln (Tv_App tm (t, Q_Explicit))
 
 val gref_non_informative_witness_typing
@@ -477,10 +477,10 @@ val gref_non_informative_witness_typing
   (#t:term)
   (t_typing:RT.tot_typing g t (pack_ln (Tv_Type uzero)))
   : GTot (RT.tot_typing g (gref_non_informative_witness_tm t)
-                          (non_informative_witness_rt uzero (mk_gref uzero t)))
+                          (non_informative_witness_rt uzero (mk_gref t)))
 
 let higher_gref_non_informative_witness_tm (t:term) : term =
-  let tm = pack_ln (Tv_UInst (pack_fv higher_gref_non_informative_lid) [uone]) in
+  let tm = pack_ln (Tv_FVar (pack_fv higher_gref_non_informative_lid)) in
   pack_ln (Tv_App tm (t, Q_Explicit))
 
 val higher_gref_non_informative_witness_typing
@@ -488,4 +488,4 @@ val higher_gref_non_informative_witness_typing
   (#t:term)
   (t_typing:RT.tot_typing g t (pack_ln (Tv_Type uone)))
   : GTot (RT.tot_typing g (higher_gref_non_informative_witness_tm t)
-                          (non_informative_witness_rt uzero (mk_higher_gref uone t)))
+                          (non_informative_witness_rt uzero (mk_higher_gref t)))

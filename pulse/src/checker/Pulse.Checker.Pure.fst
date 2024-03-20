@@ -541,12 +541,12 @@ let gref_non_informative_checker : non_informative_checker_t gref_lid =
   let Some (l, us, q_opt, arg_opt) = is_fvar_app t in
   is_fvar_app_tm_app t;
   match q_opt, arg_opt, us with
-  | None, Some arg, [u_t] ->
+  | None, Some arg, [] ->
     let e = tm_pureapp
-              (tm_uinst (as_fv gref_non_informative_lid) us)
+              (tm_fvar (as_fv gref_non_informative_lid))
                  None
                  arg in
-    let arg_typing = Metatheory.gref_typing_inversion u_t arg u t_typing in
+    let arg_typing = Metatheory.gref_typing_inversion arg u t_typing in
     let d : tot_typing g e (non_informative_witness_t u t) =
       let E arg_typing = arg_typing in
       E (WT.gref_non_informative_witness_typing arg_typing) in
@@ -558,12 +558,12 @@ let higher_gref_non_informative_checker : non_informative_checker_t higher_gref_
   let Some (l, us, q_opt, arg_opt) = is_fvar_app t in
   is_fvar_app_tm_app t;
   match q_opt, arg_opt, us with
-  | None, Some arg, [u_t] ->
+  | None, Some arg, [] ->
     let e = tm_pureapp
-              (tm_uinst (as_fv higher_gref_non_informative_lid) us)
+              (tm_fvar (as_fv higher_gref_non_informative_lid))
                  None
                  arg in
-    let arg_typing = Metatheory.higher_gref_typing_inversion u_t arg u t_typing in
+    let arg_typing = Metatheory.higher_gref_typing_inversion arg u t_typing in
     let d : tot_typing g e (non_informative_witness_t u t) =
       let E arg_typing = arg_typing in
       E (WT.higher_gref_non_informative_witness_typing arg_typing) in

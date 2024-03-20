@@ -99,18 +99,16 @@ val erased_typing_inversion (#g:env)
   : (_:universe_of g t u { u_er == u })
 
 val gref_typing_inversion (#g:env)
-  (u:universe)
   (t:term)
   (u_gref:universe)
-  (gref_typing:universe_of g (mk_gref u t) u_gref)
-  : (_:universe_of g t u { u_gref == u_zero /\ u == u_zero })
+  (gref_typing:universe_of g (mk_gref t) u_gref)
+  : (_:universe_of g t u_zero { u_gref == u_zero })
 
 val higher_gref_typing_inversion (#g:env)
-  (u:universe)
   (t:term)
   (u_gref:universe)
-  (higher_gref_typing:universe_of g (mk_higher_gref u t) u_gref)
-  : (_:universe_of g t u { u_gref == u_zero /\ u == u_one })
+  (higher_gref_typing:universe_of g (mk_higher_gref t) u_gref)
+  : (_:universe_of g t u_one { u_gref == u_zero })
 
 module RT = FStar.Reflection.Typing
 val typing_correctness
