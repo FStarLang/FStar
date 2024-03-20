@@ -75,8 +75,7 @@ val squash_typing_inversion (#g:env)
   (t:term)
   (u_sq:universe)
   (sq_typing:universe_of g (mk_squash u t) u_sq)
-  : (universe_of g t u) &
-    (squash (u_sq == u_zero))
+  : (_:universe_of g t u { u_sq == u_zero })
 
 
 module RT = FStar.Reflection.Typing

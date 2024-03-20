@@ -440,7 +440,7 @@ let squash_non_informative_witness_tm (u:universe) (t:term) : term =
 
 val squash_non_informative_witness_typing
   (#g:env)
-  (#u:universe)
+  (u:universe)
   (#t:term)
   (t_typing:RT.tot_typing g t (pack_ln (Tv_Type u)))
   : GTot (RT.tot_typing g (squash_non_informative_witness_tm u t)

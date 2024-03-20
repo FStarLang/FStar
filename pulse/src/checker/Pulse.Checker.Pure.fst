@@ -477,7 +477,7 @@ let higher_gref_lid = mk_pulse_lib_higher_gref_lid "ref"
 module WT = Pulse.Steel.Wrapper.Typing
 module Metatheory = Pulse.Typing.Metatheory.Base
 
-let try_get_non_informative_witness g u t
+let try_get_non_informative_witness g u t t_typing
   : T.Tac (option (non_informative_t g u t))
   = let ropt : option (e:term &
                        option (tot_typing g e (non_informative_witness_t u t))) =
@@ -499,14 +499,11 @@ let try_get_non_informative_witness g u t
                    (tm_uinst (as_fv squash_non_informative_lid) us)
                    None
                    arg in
-               let sq_typing : universe_of g t u = magic () in
-               let arg_typing, _ = Metatheory.squash_typing_inversion u_t arg u sq_typing in
+               let arg_typing = Metatheory.squash_typing_inversion u_t arg u t_typing in
                let d : tot_typing g e (non_informative_witness_t u t) =
                  let E arg_typing = arg_typing in
                  E (Pulse.Steel.Wrapper.Typing.squash_non_informative_witness_typing
-                      #(elab_env g)
-                      #u_t
-                      #(elab_term arg)
+                      u_t
                       arg_typing) in
                Some (| e, Some d |)
              | _ -> None
@@ -570,9 +567,9 @@ let try_get_non_informative_witness g u t
         Some tok
       | Some d -> Some (| e, d |)
 
-let get_non_informative_witness g u t
+let get_non_informative_witness g u t t_typing
   : T.Tac (non_informative_t g u t)
-  = match try_get_non_informative_witness g u t with
+  = match try_get_non_informative_witness g u t t_typing with
     | None ->
       let open Pulse.PP in
       fail_doc g (Some t.range) [

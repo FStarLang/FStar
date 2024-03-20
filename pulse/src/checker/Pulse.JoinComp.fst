@@ -62,7 +62,14 @@ let lift_ghost_to_atomic
              ctag_of_comp_st c' == STT_Atomic /\
              tm_emp_inames == C_STAtomic?.inames c')
 = let C_STGhost c_st = c in
-  let w : non_informative_c g c = get_non_informative_witness g (comp_u c) (comp_res c) in
+  let comp_res_typing : universe_of g (comp_res c) (comp_u c) =
+    let open Metatheory in
+    let d = st_typing_correctness d in
+    let d, _ = comp_typing_inversion d in
+    let (| d, _, _, _ |) = st_comp_typing_inversion d in
+    d
+  in
+  let w : non_informative_c g c = get_non_informative_witness g (comp_u c) (comp_res c) comp_res_typing in
   FStar.Tactics.BreakVC.break_vc(); // somehow this proof is unstable, this helps
   let c' = C_STAtomic tm_emp_inames Neutral c_st in
   let d' : st_typing g e c' =

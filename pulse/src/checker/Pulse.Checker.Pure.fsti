@@ -78,9 +78,11 @@ val check_vprop_with_core (g:env)
   : T.Tac (tot_typing g t tm_vprop)
 
 val try_get_non_informative_witness (g:env) (u:universe) (t:term)
+  (t_typing:universe_of g t u)
   : T.Tac (option (non_informative_t g u t))
 
 val get_non_informative_witness (g:env) (u:universe) (t:term)
+  (t_typing:universe_of g t u)
   : T.Tac (non_informative_t g u t)
 
 val try_check_prop_validity (g:env) (p:term) (_:tot_typing g p tm_prop)
