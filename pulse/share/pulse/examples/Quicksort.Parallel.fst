@@ -36,6 +36,39 @@ fn rec quicksort (a: A.array int) (lo: nat) (hi:(hi:nat{lo <= hi})) (lb rb: eras
     with s2. assert (A.pts_to_range a r._1 r._2 s2);
     with s3. assert (A.pts_to_range a r._2 hi s3);
 
+    parallel
+      requires (A.pts_to_range a lo r._1 s1 ** pure (pure_pre_quicksort a lo r._1 lb pivot s1))
+          and (A.pts_to_range a r._2 hi s3 ** pure (pure_pre_quicksort a r._2 hi pivot rb s3))
+      ensures (exists* s. (A.pts_to_range a lo r._1 s ** pure (pure_post_quicksort a lo r._1 lb pivot s1 s)))
+          and (exists* s. (A.pts_to_range a r._2 hi s ** pure (pure_post_quicksort a r._2 hi pivot rb s3 s)))
+      { quicksort a lo r._1 lb pivot; }
+      { quicksort a r._2 hi pivot rb; };
+    ();
+
+    with s1'. assert (A.pts_to_range a lo r._1 s1');
+    with s3'. assert (A.pts_to_range a r._2 hi s3');
+
+    let _ = append_permutations_3_squash s1 s2 s3 s1' s3' ();
+
+    quicksort_proof a lo r._1 r._2 hi lb rb pivot #s0 s1' s2 s3';
+  }
+}
+```
+
+(* This version cuts the recursion off when the array is small enough. *)
+```pulse
+fn rec autostop_quicksort (a: A.array int) (lo: nat) (hi:(hi:nat{lo <= hi})) (lb rb: erased int) (#s0: Ghost.erased (Seq.seq int))
+  requires A.pts_to_range a lo hi s0 ** pure (pure_pre_quicksort a lo hi lb rb s0)
+  ensures exists* s. (A.pts_to_range a lo hi s ** pure (pure_post_quicksort a lo hi lb rb s0 s))
+{
+  if (lo < hi - 1)
+  {
+    let r = partition_wrapper a lo hi lb rb;
+    let pivot = r._3;
+    with s1. assert (A.pts_to_range a lo r._1 s1);
+    with s2. assert (A.pts_to_range a r._1 r._2 s2);
+    with s3. assert (A.pts_to_range a r._2 hi s3);
+
     if (lo + 1000 < hi) // worth parallelizing
       ensures 
           (exists* s. (A.pts_to_range a lo r._1 s ** pure (pure_post_quicksort a lo r._1 lb pivot s1 s))) **
@@ -51,13 +84,13 @@ fn rec quicksort (a: A.array int) (lo: nat) (hi:(hi:nat{lo <= hi})) (lb rb: eras
             and (A.pts_to_range a r._2 hi s3 ** pure (pure_pre_quicksort a r._2 hi pivot rb s3))
         ensures (exists* s. (A.pts_to_range a lo r._1 s ** pure (pure_post_quicksort a lo r._1 lb pivot s1 s)))
             and (exists* s. (A.pts_to_range a r._2 hi s ** pure (pure_post_quicksort a r._2 hi pivot rb s3 s)))
-        { quicksort a lo r._1 lb pivot; }
-        { quicksort a r._2 hi pivot rb; };
+        { autostop_quicksort a lo r._1 lb pivot; }
+        { autostop_quicksort a r._2 hi pivot rb; };
       ()
     } else {
       // else run sequentially
-      quicksort a lo r._1 lb pivot;
-      quicksort a r._2 hi pivot rb;
+      autostop_quicksort a lo r._1 lb pivot;
+      autostop_quicksort a r._2 hi pivot rb;
     };
     
     with s1'. assert (A.pts_to_range a lo r._1 s1');

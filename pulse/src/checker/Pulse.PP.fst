@@ -73,6 +73,7 @@ instance printable_list (a:Type) (_ : printable a) : printable (list a) = {
 }
 
 instance printable_term     : printable term = from_show
+instance printable_st_term  : printable st_term = from_show
 instance printable_universe : printable universe = from_show
 instance printable_comp     : printable comp = from_show
 
@@ -104,15 +105,30 @@ instance printable_fstar_term : printable Reflection.V2.term = {
 
 instance printable_tuple2 (a b:Type)
           (_:printable a) (_:printable b) : printable (a * b) = {
-    pp = (fun (x, y) -> parens (separate comma [pp x; pp y]));
-  }
-  
+  pp = (fun (x, y) -> parens (pp x ^^ comma ^/^ pp y));
+}
+
 instance printable_tuple3 (a b c:Type)
           (_:printable a) (_:printable b) (_:printable c) : printable (a * b * c) = {
-    pp = (fun (x, y, z) -> parens (separate comma [pp x; pp y; pp z]));
-  }
-  
+  pp = (fun (x, y, z) -> parens (pp x ^^ comma ^/^ pp y ^^ comma ^/^ pp z));
+}
+
 instance printable_tuple4 (a b c d:Type)
           (_:printable a) (_:printable b) (_:printable c) (_:printable d) : printable (a * b * c * d) = {
-    pp = (fun (x, y, z, w) -> parens (separate comma [pp x; pp y; pp z; pp w]));
-  }
+  pp = (fun (x, y, z, w) -> parens (pp x ^^ comma ^/^ pp y ^^ comma ^/^ pp z ^^ comma ^/^ pp w));
+}
+
+instance printable_tuple5 (a b c d e:Type)
+          (_:printable a) (_:printable b) (_:printable c) (_:printable d) (_:printable e) : printable (a * b * c * d * e) = {
+  pp = (fun (x, y, z, w, v) -> parens (pp x ^^ comma ^/^ pp y ^^ comma ^/^ pp z ^^ comma ^/^ pp w ^^ comma ^/^ pp v));
+}
+
+instance printable_tuple6 (a b c d e f:Type)
+          (_:printable a) (_:printable b) (_:printable c) (_:printable d) (_:printable e) (_:printable f) : printable (a * b * c * d * e * f) = {
+  pp = (fun (x, y, z, w, v, u) -> parens (pp x ^^ comma ^/^ pp y ^^ comma ^/^ pp z ^^ comma ^/^ pp w ^^ comma ^/^ pp v ^^ comma ^/^ pp u));
+}
+
+instance printable_tuple7 (a b c d e f g:Type)
+          (_:printable a) (_:printable b) (_:printable c) (_:printable d) (_:printable e) (_:printable f) (_:printable g) : printable (a * b * c * d * e * f * g) = {
+  pp = (fun (x, y, z, w, v, u, t) -> parens (pp x ^^ comma ^/^ pp y ^^ comma ^/^ pp z ^^ comma ^/^ pp w ^^ comma ^/^ pp v ^^ comma ^/^ pp u ^^ comma ^/^ pp t));
+}

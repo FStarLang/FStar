@@ -522,7 +522,7 @@ let (instantiate_implicits :
                                                                     (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (Pulse_Show.show
-                                                                    Pulse_Show.uu___30
+                                                                    Pulse_Show.tac_showable_term
                                                                     t1))
                                                                     (fun
                                                                     uu___4 ->
@@ -1731,7 +1731,7 @@ let (apply_impure_function :
                                                                     (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (Pulse_Show.show
-                                                                    Pulse_Show.uu___33
+                                                                    Pulse_Show.tac_showable_comp
                                                                     c'))
                                                                     (fun
                                                                     uu___10

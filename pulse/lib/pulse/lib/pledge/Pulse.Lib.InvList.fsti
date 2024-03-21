@@ -49,6 +49,9 @@ val with_invlist_ghost (#pre : vprop) (#post : vprop)
   (f : unit -> stt_ghost unit (invlist_v is ** pre) (fun _ -> invlist_v is ** post))
   : stt_atomic unit #Unobservable (invlist_names is) pre (fun _ -> post)
 
+// TODO: change to just subset so invlist_sub_split is implementable in Ghost.
+// In unobservable, we should be able to prove that the names being a subset
+// is enough for the invlists to be a sublist.
 let invlist_sub (is1 is2 : invlist) : prop =
   inames_subset (invlist_names is1) (invlist_names is2)
 
