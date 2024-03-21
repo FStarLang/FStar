@@ -1805,7 +1805,45 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                     FStar_Tactics_V2_Basic.log_issues
                                                                     FStar_Tactics_V2_Basic.log_issues in
-                                                                    [uu___212] in
+                                                                    let uu___213
+                                                                    =
+                                                                    let uu___214
+                                                                    =
+                                                                    let uu___215
+                                                                    =
+                                                                    FStar_Tactics_Interpreter.e_tactic_thunk
+                                                                    FStar_Syntax_Embeddings.e_unit in
+                                                                    let uu___216
+                                                                    =
+                                                                    FStar_Tactics_Interpreter.e_tactic_nbe_thunk
+                                                                    FStar_TypeChecker_NBETerm.e_unit in
+                                                                    FStar_Tactics_InterpFuns.mk_tac_step_4
+                                                                    Prims.int_zero
+                                                                    "call_subtac"
+                                                                    FStar_Reflection_V2_Embeddings.e_env
+                                                                    uu___215
+                                                                    FStar_Reflection_V2_Embeddings.e_universe
+                                                                    uu___2
+                                                                    (FStar_Syntax_Embeddings.e_tuple2
+                                                                    (FStar_Syntax_Embeddings.e_option
+                                                                    uu___2)
+                                                                    (FStar_Syntax_Embeddings.e_list
+                                                                    FStar_Syntax_Embeddings.e_issue))
+                                                                    FStar_Reflection_V2_NBEEmbeddings.e_env
+                                                                    uu___216
+                                                                    FStar_Reflection_V2_NBEEmbeddings.e_universe
+                                                                    FStar_Reflection_V2_NBEEmbeddings.e_attribute
+                                                                    (FStar_TypeChecker_NBETerm.e_tuple2
+                                                                    (FStar_TypeChecker_NBETerm.e_option
+                                                                    FStar_Reflection_V2_NBEEmbeddings.e_attribute)
+                                                                    (FStar_TypeChecker_NBETerm.e_list
+                                                                    FStar_TypeChecker_NBETerm.e_issue))
+                                                                    FStar_Tactics_V2_Basic.call_subtac
+                                                                    FStar_Tactics_V2_Basic.call_subtac in
+                                                                    [uu___214] in
+                                                                    uu___212
+                                                                    ::
+                                                                    uu___213 in
                                                                     uu___210
                                                                     ::
                                                                     uu___211 in
