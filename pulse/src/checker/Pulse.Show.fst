@@ -22,59 +22,58 @@ open Pulse.Typing
 open Pulse.Syntax.Base
 open Pulse.Syntax.Printer
 
-class tac_showable (a:Type) = {
-  show : a -> Tac string;
-}
-
-instance _ : tac_showable string = {
+instance tac_showable_string : tac_showable string = {
   show = (fun s -> s);
 }
 
-instance _ : tac_showable unit = {
+instance tac_showable_unit : tac_showable unit = {
   show = (fun () -> "()");
 }
 
-instance _ : tac_showable bool = {
+instance tac_showable_bool : tac_showable bool = {
   show = (fun b -> string_of_bool b);
 }
 
-instance _ : tac_showable int = {
+instance tac_showable_int : tac_showable int = {
   show = (fun b -> string_of_int b);
 }
 
-instance showable_option (a:Type) (_ : tac_showable a) : tac_showable (option a) = {
+instance tac_showable_option (a:Type) (tac_showable_a : tac_showable a) : tac_showable (option a) = {
   show = (function None -> "None"
                  | Some v -> "Some " ^ show v);
 }
 
-instance showable_list (a:Type) (_ : tac_showable a) : tac_showable (list a) = {
+instance tac_showable_list (a:Type) (tac_showable_a : tac_showable a) : tac_showable (list a) = {
   show = string_of_list show;
 }
 
-instance _ : tac_showable ctag = {
+instance tac_showable_ctag : tac_showable ctag = {
   show = (fun t -> ctag_to_string t);
 }
 
-instance _ : tac_showable term = {
+instance tac_showable_term : tac_showable term = {
   show = term_to_string;
 }
-instance _ : tac_showable universe = {
+instance tac_showable_st_term : tac_showable st_term = {
+  show = st_term_to_string;
+}
+instance tac_showable_universe : tac_showable universe = {
   show = (fun t -> univ_to_string t);
 }
-instance _ : tac_showable comp = {
+instance tac_showable_comp : tac_showable comp = {
   show = comp_to_string;
 }
-instance _ : tac_showable env = {
+instance tac_showable_env : tac_showable env = {
   show = env_to_string;
 }
-instance _ : tac_showable observability = {
+instance tac_showable_observability : tac_showable observability = {
   show = (fun o -> observability_to_string o)
 }
-instance _ : tac_showable effect_annot = {
+instance tac_showable_effect_annot : tac_showable effect_annot = {
   show = effect_annot_to_string
 } 
 
-instance _ : tac_showable post_hint_t = {
+instance tac_showable_post_hint_t : tac_showable post_hint_t = {
   show = (fun (h:post_hint_t) ->
     "{" ^
       "g = " ^ show h.g ^ "; " ^
@@ -83,4 +82,32 @@ instance _ : tac_showable post_hint_t = {
       "u = " ^ show h.u ^ "; " ^
       "post = " ^ show h.post ^ "; " ^
     "}")
+}
+
+instance tac_showable_r_term : tac_showable Reflection.term = {
+  show = Tactics.term_to_string;
+}
+
+instance tac_showable_tuple2 (a b : Type) (_ : tac_showable a) (_ : tac_showable b) : tac_showable (a & b) = {
+  show = (fun (x, y) -> "(" ^ show x ^ ", " ^ show y ^ ")");
+}
+
+instance tac_showable_tuple3 (a b c : Type) (_ : tac_showable a) (_ : tac_showable b) (_ : tac_showable c) : tac_showable (a & b & c) = {
+  show = (fun (x, y, z) -> "(" ^ show x ^ ", " ^ show y ^ ", " ^ show z ^ ")");
+}
+
+instance tac_showable_tuple4 (a b c d : Type) (_ : tac_showable a) (_ : tac_showable b) (_ : tac_showable c) (_ : tac_showable d) : tac_showable (a & b & c & d) = {
+  show = (fun (x, y, z, w) -> "(" ^ show x ^ ", " ^ show y ^ ", " ^ show z ^ ", " ^ show w ^ ")");
+}
+
+instance tac_showable_tuple5 (a b c d e : Type) (_ : tac_showable a) (_ : tac_showable b) (_ : tac_showable c) (_ : tac_showable d) (_ : tac_showable e) : tac_showable (a & b & c & d & e) = {
+  show = (fun (x, y, z, w, v) -> "(" ^ show x ^ ", " ^ show y ^ ", " ^ show z ^ ", " ^ show w ^ ", " ^ show v ^ ")");
+}
+
+instance tac_showable_tuple6 (a b c d e f : Type) (_ : tac_showable a) (_ : tac_showable b) (_ : tac_showable c) (_ : tac_showable d) (_ : tac_showable e) (_ : tac_showable f) : tac_showable (a & b & c & d & e & f) = {
+  show = (fun (x, y, z, w, v, u) -> "(" ^ show x ^ ", " ^ show y ^ ", " ^ show z ^ ", " ^ show w ^ ", " ^ show v ^ ", " ^ show u ^ ")");
+}
+
+instance tac_showable_tuple7 (a b c d e f g : Type) (_ : tac_showable a) (_ : tac_showable b) (_ : tac_showable c) (_ : tac_showable d) (_ : tac_showable e) (_ : tac_showable f) (_ : tac_showable g) : tac_showable (a & b & c & d & e & f & g) = {
+  show = (fun (x, y, z, w, v, u, t) -> "(" ^ show x ^ ", " ^ show y ^ ", " ^ show z ^ ", " ^ show w ^ ", " ^ show v ^ ", " ^ show u ^ ", " ^ show t ^ ")");
 }
