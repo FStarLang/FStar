@@ -1513,7 +1513,7 @@ and do_check (g:env) (e:term)
               (weaken
                  this_path_condition
                  (let! eff_br, tbr = check "branch" g' b in
-                  let expect_tbr = Subst.subst [NT(as_x.binder_bv, e)] returns_ty in
+                  let expect_tbr = Subst.subst [NT(as_x.binder_bv, sc)] returns_ty in
                   let rel =
                     if eq
                     then EQUALITY
