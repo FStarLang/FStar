@@ -37,18 +37,11 @@ module TcComm = FStar.TypeChecker.Common
 module Core   = FStar.TypeChecker.Core
 module RD     = FStar.Reflection.V2.Data
 
-(* Internal utilities *)
-val is_irrelevant : goal -> bool
-val goal_typedness_deps : goal -> list ctx_uvar
-
 val proofstate_of_goals : Range.range -> env -> list goal -> list implicit -> proofstate
 (* Returns proofstate and uvar for main witness *)
 val proofstate_of_goal_ty : Range.range -> env -> typ -> proofstate * term
 
 val proofstate_of_all_implicits: Range.range -> env -> implicits -> proofstate * term
-
-(* Helper *)
-val focus                  : tac 'a -> tac 'a
 
 (* Metaprogramming primitives (not all of them).
  * Documented in `ulib/FStar.Tactics.Builtins.fst` *)
@@ -106,8 +99,6 @@ val lset                   : typ -> string -> term -> tac unit
 val curms                  : unit -> tac Z.t
 val set_urgency            : Z.t -> tac unit
 val t_commute_applied_match : unit -> tac unit
-val goal_with_type : goal -> typ -> goal
-val mark_goal_implicit_already_checked : goal -> unit
 val string_to_term         : env -> string -> tac term
 val push_bv_dsenv          : env -> string -> tac (env * RD.binding)
 val term_to_string         : term -> tac string

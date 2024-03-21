@@ -61,11 +61,6 @@ module PO     = FStar.TypeChecker.Primops
 open FStar.Class.Show
 open FStar.Class.Monad
 
-(* Internal, repeated from V2 too. Could be in Types, but that
-constrains dependencies and F* claims a cycle. *)
-let get_phi (g:goal) : option term = U.un_squash (N.unfold_whnf (goal_env g) (goal_type g))
-let is_irrelevant (g:goal) : bool = Option.isSome (get_phi g)
-
 let compress (t:term) : tac term =
   return ();!
   return (SS.compress t)
@@ -114,30 +109,6 @@ let whnf e t = N.unfold_whnf e t
  * term_to_string, we don't want to cause normalization with debug
  * flags. *)
 let tts = N.term_to_string
-
-let set_uvar_expected_typ (u:ctx_uvar) (t:typ)
-  : unit
-  = let dec = UF.find_decoration u.ctx_uvar_head in
-    UF.change_decoration u.ctx_uvar_head ({dec with uvar_decoration_typ = t })
-
-let mark_uvar_with_should_check_tag (u:ctx_uvar) (sc:should_check_uvar)
-  : unit
-  = let dec = UF.find_decoration u.ctx_uvar_head in
-    UF.change_decoration u.ctx_uvar_head ({dec with uvar_decoration_should_check = sc })
-
-let mark_uvar_as_already_checked (u:ctx_uvar)
-  : unit
-  = mark_uvar_with_should_check_tag u Already_checked
-
-let mark_goal_implicit_already_checked (g:goal)
-  : unit
-  = mark_uvar_as_already_checked g.goal_ctx_uvar
-
-let goal_with_type g t
-  : goal
-  = let u = g.goal_ctx_uvar in
-    set_uvar_expected_typ u t;
-    g
 
 let bnorm_goal g = goal_with_type g (bnorm (goal_env g) (goal_type g))
 
@@ -666,33 +637,6 @@ let tc (e : env) (t : term) : tac typ = wrap_err "tc" <| (
   return (U.comp_result c)
 )
 
-let divide (n:Z.t) (l : tac 'a) (r : tac 'b) : tac ('a * 'b) =
-  let! p = get in
-  let! lgs, rgs =
-    try return (List.splitAt (Z.to_int_fs n) p.goals) with
-    | _ -> fail "divide: not enough goals"
-  in
-  let lp = { p with goals = lgs; smt_goals = [] } in
-  set lp;!
-  let! a = l in
-  let! lp' = get in
-  let rp = { lp' with goals = rgs; smt_goals = [] } in
-  set rp;!
-  let! b = r in
-  let! rp' = get in
-  let p' = { rp' with goals = lp'.goals @ rp'.goals;
-                      smt_goals = lp'.smt_goals @ rp'.smt_goals @ p.smt_goals }
-  in
-  set p';!
-  remove_solved_goals;!
-  return (a, b)
-
-(* focus: runs f on the current goal only, and then restores all the goals *)
-(* There is a user defined version as well, we just use this one internally, but can't mark it as private *)
-let focus (f:tac 'a) : tac 'a =
-    let! (a, _) = divide Z.one f (return ()) in
-    return a
-
 (* Applies t to each of the current goals
       fails if t fails on any of the goals
       collects each result in the output list *)
@@ -713,7 +657,6 @@ let seq (t1:tac unit) (t2:tac unit) : tac unit =
   focus (t1 ;! map t2 ;! return ())
 
 let should_check_goal_uvar (g:goal) = U.ctx_uvar_should_check g.goal_ctx_uvar
-let goal_typedness_deps (g:goal) = U.ctx_uvar_typedness_deps g.goal_ctx_uvar
 
 let bnorm_and_replace g = replace_cur (bnorm_goal g)
 

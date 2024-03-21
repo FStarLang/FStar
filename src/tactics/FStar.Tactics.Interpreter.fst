@@ -33,7 +33,6 @@ open FStar.Tactics.Result
 open FStar.Tactics.Types
 open FStar.Tactics.Printing
 open FStar.Tactics.Monad
-open FStar.Tactics.V2.Basic
 open FStar.Tactics.CtrlRewrite
 open FStar.Tactics.Native
 open FStar.Tactics.Common
@@ -342,7 +341,7 @@ let run_tactic_on_ps'
         let remaining_smt_goals = ps.goals@ps.smt_goals in
         List.iter
           (fun g ->
-            FStar.Tactics.V2.Basic.mark_goal_implicit_already_checked g;//all of these will be fed to SMT anyway
+            mark_goal_implicit_already_checked g;//all of these will be fed to SMT anyway
             if is_irrelevant g
             then (
               if !tacdbg then BU.print1 "Assigning irrelevant goal %s\n" (show (goal_witness g));

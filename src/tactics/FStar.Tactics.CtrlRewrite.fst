@@ -114,7 +114,7 @@ let __do_rewrite
     let! ut, uvar_t =
       new_uvar "do_rewrite.rhs" env typ 
                should_check
-               (FStar.Tactics.V2.Basic.goal_typedness_deps g0)
+               (goal_typedness_deps g0)
                (rangeof g0)
     in
     if_verbose (fun () ->
@@ -127,7 +127,7 @@ let __do_rewrite
                       (U.mk_eq2 (env.universe_of env typ) typ tm ut)
                       None ;!
     (* v1 and v2 match *)
-    FStar.Tactics.V2.Basic.focus rewriter ;!
+    focus rewriter ;!
     // Try to get rid of all the unification lambdas
     let ut = N.reduce_uvar_solutions env ut in
     if_verbose (fun () ->
@@ -437,6 +437,6 @@ let ctrl_rewrite
         BU.print1 "ctrl_rewrite seems to have succeded with %s\n" (show gt')) ;!
 
     push_goals gs ;!
-    let g = V2.Basic.goal_with_type g gt' in
+    let g = goal_with_type g gt' in
     add_goals [g]
     )

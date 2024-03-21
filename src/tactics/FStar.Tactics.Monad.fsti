@@ -149,3 +149,16 @@ val mk_tac : (proofstate -> __result 'a) -> tac 'a
 
 (* inform the core of a well-typed goal *)
 val register_goal (g:goal) : unit
+
+val divide (n:BigInt.t) (l : tac 'a) (r : tac 'b) : tac ('a * 'b)
+val focus (f:tac 'a) : tac 'a
+
+(* Internal utilities *)
+val get_phi : goal -> option term
+val is_irrelevant : goal -> bool
+val goal_typedness_deps : goal -> list ctx_uvar
+val set_uvar_expected_typ (u:ctx_uvar) (t:typ) : unit
+val mark_uvar_with_should_check_tag (u:ctx_uvar) (sc:should_check_uvar) : unit
+val mark_uvar_as_already_checked (u:ctx_uvar) : unit
+val mark_goal_implicit_already_checked (g:goal) : unit
+val goal_with_type : goal -> typ -> goal
