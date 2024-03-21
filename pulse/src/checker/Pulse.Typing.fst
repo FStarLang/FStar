@@ -290,9 +290,9 @@ let st_equiv_pre (c1 c2:comp_st)
       True
     | _, _ -> False)
 
-let non_informative_witness_t (u:universe) (t:term)
+let non_informative_class (u:universe) (t:term)
   : term
-  = tm_pureapp (tm_uinst (as_fv non_informative_witness_lid) [u])
+  = tm_pureapp (tm_uinst (as_fv non_informative_lid) [u])
                None
                t
 
@@ -513,7 +513,7 @@ let universe_of (g:env) (t:term) (u:universe) =
   tot_typing g t (tm_type u)
 
 let non_informative_t (g:env) (u:universe) (t:term) =
-  w:term & tot_typing g w (non_informative_witness_t u t)
+  w:term & tot_typing g w (non_informative_class u t)
 
 let non_informative_c (g:env) (c:comp_st) =
   non_informative_t g (comp_u c) (comp_res c)

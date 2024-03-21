@@ -69,7 +69,7 @@ let with_invlist = __with_invlist
 
 let lift_ghost_unobservable #pre #post (f:stt_ghost unit pre post) 
   : stt_atomic unit #Unobservable emp_inames pre post
-  = lift_observability #_ #_ #Unobservable (lift_ghost_neutral f unit_non_informative)
+  = lift_observability #_ #_ #Unobservable (lift_ghost_neutral f FStar.Tactics.Typeclasses.solve)
 
 ```pulse
 unobservable

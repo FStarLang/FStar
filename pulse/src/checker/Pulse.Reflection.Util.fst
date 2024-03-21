@@ -29,6 +29,9 @@ let u_atomic_ghost u = (RT.u_max u_three u)
 let pulse_lib_core = ["Pulse"; "Lib"; "Core"]
 let mk_pulse_lib_core_lid s = pulse_lib_core@[s]
 
+let pulse_lib_noninformative = ["Pulse"; "Lib"; "NonInformative"]
+let mk_pulse_lib_noninformative_lid s = pulse_lib_noninformative@[s]
+
 let tun = R.pack_ln R.Tv_Unknown
 let unit_lid = R.unit_lid
 let bool_lid = R.bool_lid
@@ -303,10 +306,10 @@ let remove_inv_tm (p is i : R.term) : R.term =
   let h = R.pack_ln (R.Tv_FVar (R.pack_fv remove_inv_lid)) in
   R.mk_app h [im p; ex is; ex i]
 
-let non_informative_witness_lid = mk_pulse_lib_core_lid "non_informative_witness"
-let non_informative_witness_rt (u:R.universe) (a:R.term) : R.term =
+let non_informative_lid = mk_pulse_lib_noninformative_lid "non_informative"
+let non_informative_rt (u:R.universe) (a:R.term) : R.term =
   let open R in
-  let t = pack_ln (Tv_UInst (pack_fv non_informative_witness_lid) [u]) in
+  let t = pack_ln (Tv_UInst (pack_fv non_informative_lid) [u]) in
   let t = pack_ln (Tv_App t (a, Q_Explicit)) in
   t
 
@@ -317,13 +320,7 @@ let gref_lid = mk_pulse_lib_gref_lid "ref"
 let pulse_lib_higher_gref = ["Pulse"; "Lib"; "HigherGhostReference"]
 let mk_pulse_lib_higher_gref_lid s = pulse_lib_higher_gref@[s]
 let higher_gref_lid = mk_pulse_lib_higher_gref_lid "ref"
-
-let unit_non_informative_lid = mk_pulse_lib_core_lid "unit_non_informative"
-let prop_non_informative_lid = mk_pulse_lib_core_lid "prop_non_informative"
-let erased_non_informative_lid = mk_pulse_lib_core_lid "erased_non_informative"
-let squash_non_informative_lid = mk_pulse_lib_core_lid "squash_non_informative"
-let gref_non_informative_lid = mk_pulse_lib_gref_lid "gref_non_informative"
-let higher_gref_non_informative_lid = mk_pulse_lib_higher_gref_lid "gref_non_informative"
+let anchored_ref_lid = ["Pulse"; "Lib"; "AnchoredReference"; "ref"]
 
 let stt_vprop_equiv_fv =
   R.pack_fv (mk_pulse_lib_core_lid "vprop_equiv")
