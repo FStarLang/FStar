@@ -1843,3 +1843,11 @@ let mk_unchecked_let (g:R.env) (nm:string) (tm:R.term) (ty:R.typ) : T.Tac (sigel
   let lb = R.pack_lb ({ lb_fv = fv; lb_us = []; lb_typ = ty; lb_def = tm }) in
   let se = R.pack_sigelt (R.Sg_Let false [lb]) in
   ( false, se, None )
+
+(* Turn a typing derivation into a token. This is useful
+to call primitives that require a proof of typing, like
+`call_subtac`, since they do not take derivations nor can
+they even be mentioned in that module due to dependencies.
+Probably the right thing to do is refactor and avoid this, though. *)
+val typing_to_token (#g:env) (#e:term) (#c:comp_typ)
+  : typing g e c -> T.typing_token g e c
