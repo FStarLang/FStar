@@ -173,3 +173,7 @@ let ctrl_rewrite
     (t2 : unit -> unit __tac)
   : unit __tac
   = from_tac_3 "ctrl_rewrite" CTRW.ctrl_rewrite d (to_tac_1 t1) (to_tac_0 (t2 ()))
+
+let call_subtac g (t : unit -> unit __tac) u ty =
+  let t = to_tac_1 t () in
+  from_tac_4 "B.call_subtac" B.call_subtac g t u ty

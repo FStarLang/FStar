@@ -283,15 +283,12 @@ let report_implicits rng (is : TcRel.tagged_implicits) : unit =
                              (show ty)));
   Err.stop_if_err ()
 
-let run_tactic_on_ps'
+let run_unembedded_tactic_on_ps
   (rng_call : Range.range)
   (rng_goal : Range.range)
   (background : bool)
-  (e_arg : embedding 'a)
   (arg : 'a)
-  (e_res : embedding 'b)
-  (tactic:term)
-  (tactic_already_typed:bool)
+  (tau: 'a -> tac 'b)
   (ps:proofstate)
   : list goal // remaining goals
   * 'b // return value
@@ -299,27 +296,6 @@ let run_tactic_on_ps'
     let ps = { ps with main_context = { ps.main_context with intactics = true } } in
     let ps = { ps with main_context = { ps.main_context with range = rng_goal } } in
     let env = ps.main_context in
-    if !tacdbg then
-        BU.print2 "Typechecking tactic: (%s) (already_typed: %s) {\n"
-          (show tactic)
-          (show tactic_already_typed);
-
-    (* Do NOT use the returned tactic, the typechecker is not idempotent and
-     * will mess up the monadic lifts. We're just making sure it's well-typed
-     * so it won't get stuck. c.f #1307 *)
-    let g =
-      if tactic_already_typed
-      then Env.trivial_guard
-      else let _, _, g = TcTerm.tc_tactic (type_of e_arg) (type_of e_res) env tactic in
-           g in
-
-    if !tacdbg then
-        BU.print_string "}\n";
-
-    TcRel.force_trivial_guard env g;
-    Err.stop_if_err ();
-    let tau = unembed_tactic_1 e_arg e_res tactic FStar.Syntax.Embeddings.id_norm_cb in
-
     (* if !tacdbg then *)
     (*     BU.print1 "Running tactic with goal = (%s) {\n" (show typ); *)
     let res =
@@ -409,6 +385,46 @@ let run_tactic_on_ps'
                              doc_of_string (texn_to_string e);
                             ])
                           rng
+
+let run_tactic_on_ps'
+  (rng_call : Range.range)
+  (rng_goal : Range.range)
+  (background : bool)
+  (e_arg : embedding 'a)
+  (arg : 'a)
+  (e_res : embedding 'b)
+  (tactic:term)
+  (tactic_already_typed:bool)
+  (ps:proofstate)
+  : list goal // remaining goals
+  * 'b // return value
+  =
+    let env = ps.main_context in
+    if !tacdbg then
+        BU.print2 "Typechecking tactic: (%s) (already_typed: %s) {\n"
+          (show tactic)
+          (show tactic_already_typed);
+
+    (* Do NOT use the returned tactic, the typechecker is not idempotent and
+     * will mess up the monadic lifts. We're just making sure it's well-typed
+     * so it won't get stuck. c.f #1307 *)
+    let g =
+      if tactic_already_typed
+      then Env.trivial_guard
+      else let _, _, g = TcTerm.tc_tactic (type_of e_arg) (type_of e_res) env tactic in
+           g
+    in
+
+    if !tacdbg then
+        BU.print_string "}\n";
+
+    TcRel.force_trivial_guard env g;
+    Err.stop_if_err ();
+    let tau = unembed_tactic_1 e_arg e_res tactic FStar.Syntax.Embeddings.id_norm_cb in
+
+    run_unembedded_tactic_on_ps
+        rng_call rng_goal background
+        arg tau ps
 
 let run_tactic_on_ps
           (rng_call : Range.range)

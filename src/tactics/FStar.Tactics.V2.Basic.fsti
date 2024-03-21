@@ -144,3 +144,5 @@ val push_open_namespace               : env -> list string -> tac env
 val push_module_abbrev                : env -> string -> list string -> tac env
 val resolve_name                      : env -> list string -> tac (option (either bv fv))
 val log_issues                        : list Errors.issue -> tac unit
+
+val call_subtac                       : env -> tac unit -> universe -> typ -> tac (option term & issues)

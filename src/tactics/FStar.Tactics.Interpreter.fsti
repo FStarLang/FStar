@@ -22,6 +22,17 @@ open FStar.Syntax.Embeddings
 open FStar.Tactics.Types
 module Env = FStar.TypeChecker.Env
 
+(* Run a `tac` *)
+val run_unembedded_tactic_on_ps :
+    range -> (* position on the tactic call *)
+    range -> (* position for the goal *)
+    bool ->  (* whether this call is in the "background", like resolve_implicits *)
+    'a ->
+    ('a -> Monad.tac 'b) -> (* a term representing an `'a -> tac 'b` *)
+    proofstate ->  (* proofstate *)
+    list goal * 'b (* goals and return value *)
+
+(* Run a term of type `a -> Tac b` *)
 val run_tactic_on_ps :
     range -> (* position on the tactic call *)
     range -> (* position for the goal *)

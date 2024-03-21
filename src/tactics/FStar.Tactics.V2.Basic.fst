@@ -2806,3 +2806,43 @@ let proofstate_of_all_implicits rng env imps =
     }
     in
     (ps, w)
+
+let getprop (e:Env.env) (t:term) : option term =
+    let tn = N.normalize [Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant] e t in
+    U.un_squash tn
+
+let run_unembedded_tactic_on_ps_and_solve_remaining
+    (t_range g_range : Range.range)
+    (background : bool)
+    (t : 'a)
+    (f : 'a -> tac 'b)
+    (ps : proofstate)
+    : 'b
+=
+  let remaining_goals, r = FStar.Tactics.Interpreter.run_unembedded_tactic_on_ps t_range g_range background t f ps in
+  // Check that all goals left are irrelevant and provable
+  remaining_goals |> List.iter (fun g ->
+      match getprop (goal_env g) (goal_type g) with
+      | Some vc ->
+          let guard = { guard_f = NonTrivial vc
+                      ; deferred_to_tac = []
+                      ; deferred = []
+                      ; univ_ineqs = [], []
+                      ; implicits = [] } in
+          Rel.force_trivial_guard (goal_env g) guard
+      | None ->
+          Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "tactic left a computationally-relevant goal unsolved") g_range);
+  r
+
+(* One last primitive in this file *)
+let call_subtac (g:env) (f : tac unit) (_u:universe) (goal_ty : typ) : tac (option term & issues) =
+  return ();! // thunk
+  let rng = Env.get_range g in
+  let ps, w = proofstate_of_goal_ty rng g goal_ty in
+  match Errors.catch_errors_and_ignore_rest (fun () ->
+          run_unembedded_tactic_on_ps_and_solve_remaining rng rng false () (fun () -> f) ps)
+  with
+  | [], Some () ->
+    return (Some w, [])
+  | issues, _ ->
+    return (None, issues)
