@@ -267,4 +267,8 @@ let ops = [
     #_ #_ #(NBET.e_option (NBET.e_either NRE.e_bv solve))
     resolve_name resolve_name;
   mk_tac_step_1 0 "log_issues" log_issues log_issues;
+  mk_tac_step_4 0 "call_subtac"
+    #_ #(TI.e_tactic_thunk e_unit) #_ #_ #_
+    #_ #(TI.e_tactic_nbe_thunk NBET.e_unit) #_ #_ #_
+    call_subtac call_subtac;
 ]

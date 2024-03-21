@@ -388,3 +388,61 @@ let compress_implicits : tac unit =
     let imps = Rel.resolve_implicits_tac ps.main_context g in
     let ps' = { ps with all_implicits = List.map fst imps } in
     set ps')
+
+module N = FStar.TypeChecker.Normalize
+let get_phi (g:goal) : option term = U.un_squash (N.unfold_whnf (goal_env g) (goal_type g))
+let is_irrelevant (g:goal) : bool = Option.isSome (get_phi g)
+let goal_typedness_deps (g:goal) = U.ctx_uvar_typedness_deps g.goal_ctx_uvar
+
+let set_uvar_expected_typ (u:ctx_uvar) (t:typ)
+  : unit
+  = let dec = UF.find_decoration u.ctx_uvar_head in
+    UF.change_decoration u.ctx_uvar_head ({dec with uvar_decoration_typ = t })
+
+let mark_uvar_with_should_check_tag (u:ctx_uvar) (sc:should_check_uvar)
+  : unit
+  = let dec = UF.find_decoration u.ctx_uvar_head in
+    UF.change_decoration u.ctx_uvar_head ({dec with uvar_decoration_should_check = sc })
+
+let mark_uvar_as_already_checked (u:ctx_uvar)
+  : unit
+  = mark_uvar_with_should_check_tag u Already_checked
+
+let mark_goal_implicit_already_checked (g:goal)
+  : unit
+  = mark_uvar_as_already_checked g.goal_ctx_uvar
+
+let goal_with_type g t
+  : goal
+  = let u = g.goal_ctx_uvar in
+    set_uvar_expected_typ u t;
+    g
+
+module Z = FStar.BigInt
+
+let divide (n:Z.t) (l : tac 'a) (r : tac 'b) : tac ('a * 'b) =
+  let! p = get in
+  let! lgs, rgs =
+    try return (List.splitAt (Z.to_int_fs n) p.goals) with
+    | _ -> fail "divide: not enough goals"
+  in
+  let lp = { p with goals = lgs; smt_goals = [] } in
+  set lp;!
+  let! a = l in
+  let! lp' = get in
+  let rp = { lp' with goals = rgs; smt_goals = [] } in
+  set rp;!
+  let! b = r in
+  let! rp' = get in
+  let p' = { rp' with goals = lp'.goals @ rp'.goals;
+                      smt_goals = lp'.smt_goals @ rp'.smt_goals @ p.smt_goals }
+  in
+  set p';!
+  remove_solved_goals;!
+  return (a, b)
+
+(* focus: runs f on the current goal only, and then restores all the goals *)
+(* There is a user defined version as well, we just use this one internally, but can't mark it as private *)
+let focus (f:tac 'a) : tac 'a =
+    let! (a, _) = divide FStar.BigInt.one f (return ()) in
+    return a

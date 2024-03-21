@@ -969,3 +969,5 @@ let mkif
     [[]; []]
     (MC_Tok g scrutinee bool_ty _ _ (Squash.return_squash (if_complete_match g scrutinee)))
     (brty ())
+
+let typing_to_token (#g:env) (#e:term) (#c:comp_typ) (_ : typing g e c) = magic()

@@ -226,8 +226,7 @@ let (__do_rewrite :
                                       "do_rewrite.lhs") in
                              let uu___4 =
                                let uu___5 =
-                                 FStar_Tactics_V2_Basic.goal_typedness_deps
-                                   g0 in
+                                 FStar_Tactics_Monad.goal_typedness_deps g0 in
                                FStar_Tactics_Monad.new_uvar "do_rewrite.rhs"
                                  env typ should_check uu___5 (rangeof g0) in
                              Obj.magic
@@ -285,7 +284,7 @@ let (__do_rewrite :
                                                                     uu___9 in
                                                                   let uu___10
                                                                     =
-                                                                    FStar_Tactics_V2_Basic.focus
+                                                                    FStar_Tactics_Monad.focus
                                                                     rewriter in
                                                                   Obj.magic
                                                                     (
@@ -1628,7 +1627,7 @@ let (ctrl_rewrite :
                                                                     Obj.magic
                                                                     uu___9 in
                                                                     let g1 =
-                                                                    FStar_Tactics_V2_Basic.goal_with_type
+                                                                    FStar_Tactics_Monad.goal_with_type
                                                                     g gt' in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Monad.add_goals
