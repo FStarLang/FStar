@@ -3453,7 +3453,7 @@ let (check_wild :
                                                                     (Prims.of_int (44)))))
                                                                     (Obj.magic
                                                                     (Pulse_Show.show
-                                                                    Pulse_Show.uu___30
+                                                                    Pulse_Show.tac_showable_term
                                                                     ex1))
                                                                     (fun
                                                                     uu___7 ->
