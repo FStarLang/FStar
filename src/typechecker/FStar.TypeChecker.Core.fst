@@ -16,6 +16,7 @@ module BU = FStar.Compiler.Util
 module TcUtil = FStar.TypeChecker.Util
 module Hash = FStar.Syntax.Hash
 module Subst = FStar.Syntax.Subst
+open FStar.Class.Show
 
 let goal_ctr = BU.mk_ref 0
 let get_goal_ctr () = !goal_ctr
@@ -163,6 +164,10 @@ let context_term_to_string (c:context_term) =
 type context = {
   no_guard : bool;
   error_context: list (string & option context_term)
+}
+
+instance showable_context : showable context = {
+  show = (fun _ -> "<ctx>");
 }
 
 let print_context (ctx:context)
@@ -687,11 +692,13 @@ let debug g f =
   if Env.debug g.tcenv (Options.Other "Core")
   then f ()
 
-let side_to_string = function
-  | Left -> "Left"
-  | Right -> "Right"
-  | Both -> "Both"
-  | Neither -> "Neither"
+instance showable_side = {
+    show = (function
+            | Left -> "Left"
+            | Right -> "Right"
+            | Both -> "Both"
+            | Neither -> "Neither");
+}
 
 let boolean_negation_simp b =
   if Hash.equal_term b U.exp_false_bool
@@ -766,15 +773,15 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
     let rel_to_string rel =
       match rel with
       | EQUALITY -> "=?="
-      | _ -> "<:?"
+      | SUBTYPING _ -> "<:?"
     in
     if Env.debug g.tcenv (Options.Other "Core")
     then BU.print5 "check_relation (%s) %s %s (%s) %s\n"
                    (P.tag_of_term t0)
-                   (P.term_to_string t0)
+                   (show t0)
                    (rel_to_string rel)
                    (P.tag_of_term t1)
-                   (P.term_to_string t1);
+                   (show t1);
     let! guard_not_ok = guard_not_allowed in
     let guard_ok = not guard_not_ok in
     let head_matches t0 t1
@@ -1937,10 +1944,17 @@ let open_binders_in_comp (env:Env.env) (bs:binders) (c:comp) =
 
 let check_term_equality g t0 t1
   = let g = initial_env g None in
+    if Env.debug g.tcenv (Options.Other "CoreTop") then
+       BU.print2 "Entering check_term_equality with %s and %s {\n" (show t0) (show t1);
     let ctx = { no_guard = false; error_context = [("Eq", None)] } in
-    match check_relation g EQUALITY t0 t1 ctx with
-    | Inl (_, g) -> Inl g
-    | Inr err -> Inr err
+    let r =
+      match check_relation g EQUALITY t0 t1 ctx with
+      | Inl (_, g) -> Inl g
+      | Inr err -> Inr err
+    in
+    if Env.debug g.tcenv (Options.Other "CoreTop") then
+       BU.print3 "} Exiting check_term_equality (%s, %s). Result = %s.\n" (show t0) (show t1) (show r);
+    r
 
 let check_term_subtyping g t0 t1
   = let g = initial_env g None in
