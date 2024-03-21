@@ -74,8 +74,6 @@ let mk_vprop_eq (e0 e1:term) : term =
   mk_eq2 u2 tm_vprop e0 e1
 
 let mk_ref (t:term) : term = tm_pureapp (tm_fvar (as_fv ref_lid)) None t
-let mk_gref (t:term) : term = tm_pureapp (tm_fvar (as_fv gref_lid)) None t
-let mk_higher_gref (t:term) : term = tm_pureapp (tm_fvar (as_fv higher_gref_lid)) None t
 
 let mk_pts_to (ty:term) (r:term) (v:term) : term =
   let t = tm_fvar (as_fv pts_to_lid) in
