@@ -2758,8 +2758,7 @@ let refl_maybe_relate_after_unfolding (g:env) (t0 t1:typ)
              (show t1));
          let s = Core.maybe_relate_after_unfolding g t0 t1 in
          dbg_refl g (fun _ ->
-           BU.format1 "} returning side: %s\n"
-             (Core.side_to_string s));
+           BU.format1 "} returning side: %s\n" (show s));
          s, [])
   else return (None, [unexpected_uvars_issue (Env.get_range g)])
 

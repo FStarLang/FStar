@@ -401,6 +401,8 @@ let (__proj__Mkcontext__item__error_context :
   =
   fun projectee ->
     match projectee with | { no_guard; error_context;_} -> error_context
+let (showable_context : context FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = (fun uu___ -> "<ctx>") }
 let (print_context : context -> Prims.string) =
   fun ctx ->
     let rec aux depth ctx1 =
@@ -1582,13 +1584,16 @@ let (debug : env -> (unit -> unit) -> unit) =
       let uu___ =
         FStar_TypeChecker_Env.debug g.tcenv (FStar_Options.Other "Core") in
       if uu___ then f () else ()
-let (side_to_string : side -> Prims.string) =
-  fun uu___ ->
-    match uu___ with
-    | Left -> "Left"
-    | Right -> "Right"
-    | Both -> "Both"
-    | Neither -> "Neither"
+let (showable_side : side FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | Left -> "Left"
+         | Right -> "Right"
+         | Both -> "Both"
+         | Neither -> "Neither")
+  }
 let (boolean_negation_simp :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
@@ -1701,15 +1706,17 @@ let rec (check_relation :
                     uu___3 uu___4 in
                 fail uu___2 in
           let rel_to_string rel1 =
-            match rel1 with | EQUALITY -> "=?=" | uu___ -> "<:?" in
+            match rel1 with | EQUALITY -> "=?=" | SUBTYPING uu___ -> "<:?" in
           (let uu___1 =
              FStar_TypeChecker_Env.debug g.tcenv (FStar_Options.Other "Core") in
            if uu___1
            then
              let uu___2 = FStar_Syntax_Print.tag_of_term t0 in
-             let uu___3 = FStar_Syntax_Print.term_to_string t0 in
+             let uu___3 =
+               FStar_Class_Show.show FStar_Syntax_Print.showable_term t0 in
              let uu___4 = FStar_Syntax_Print.tag_of_term t1 in
-             let uu___5 = FStar_Syntax_Print.term_to_string t1 in
+             let uu___5 =
+               FStar_Class_Show.show FStar_Syntax_Print.showable_term t1 in
              FStar_Compiler_Util.print5 "check_relation (%s) %s %s (%s) %s\n"
                uu___2 uu___3 (rel_to_string rel) uu___4 uu___5
            else ());
@@ -6057,7 +6064,7 @@ and (do_check :
                                                                     [
                                                                     FStar_Syntax_Syntax.NT
                                                                     ((as_x2.FStar_Syntax_Syntax.binder_bv),
-                                                                    e1)]
+                                                                    sc)]
                                                                     returns_ty1 in
                                                                     let rel =
                                                                     if eq
@@ -7958,16 +7965,51 @@ let (check_term_equality :
     fun t0 ->
       fun t1 ->
         let g1 = initial_env g FStar_Pervasives_Native.None in
-        let ctx =
-          {
-            no_guard = false;
-            error_context = [("Eq", FStar_Pervasives_Native.None)]
-          } in
-        let uu___ =
-          let uu___1 = check_relation g1 EQUALITY t0 t1 in uu___1 ctx in
-        match uu___ with
-        | FStar_Pervasives.Inl (uu___1, g2) -> FStar_Pervasives.Inl g2
-        | FStar_Pervasives.Inr err -> FStar_Pervasives.Inr err
+        (let uu___1 =
+           FStar_TypeChecker_Env.debug g1.tcenv
+             (FStar_Options.Other "CoreTop") in
+         if uu___1
+         then
+           let uu___2 =
+             FStar_Class_Show.show FStar_Syntax_Print.showable_term t0 in
+           let uu___3 =
+             FStar_Class_Show.show FStar_Syntax_Print.showable_term t1 in
+           FStar_Compiler_Util.print2
+             "Entering check_term_equality with %s and %s {\n" uu___2 uu___3
+         else ());
+        (let ctx =
+           {
+             no_guard = false;
+             error_context = [("Eq", FStar_Pervasives_Native.None)]
+           } in
+         let r =
+           let uu___1 =
+             let uu___2 = check_relation g1 EQUALITY t0 t1 in uu___2 ctx in
+           match uu___1 with
+           | FStar_Pervasives.Inl (uu___2, g2) -> FStar_Pervasives.Inl g2
+           | FStar_Pervasives.Inr err -> FStar_Pervasives.Inr err in
+         (let uu___2 =
+            FStar_TypeChecker_Env.debug g1.tcenv
+              (FStar_Options.Other "CoreTop") in
+          if uu___2
+          then
+            let uu___3 =
+              FStar_Class_Show.show FStar_Syntax_Print.showable_term t0 in
+            let uu___4 =
+              FStar_Class_Show.show FStar_Syntax_Print.showable_term t1 in
+            let uu___5 =
+              FStar_Class_Show.show
+                (FStar_Class_Show.show_either
+                   (FStar_Class_Show.show_option
+                      FStar_Syntax_Print.showable_term)
+                   (FStar_Class_Show.show_tuple2 showable_context
+                      (FStar_Class_Show.printableshow
+                         FStar_Class_Printable.printable_string))) r in
+            FStar_Compiler_Util.print3
+              "} Exiting check_term_equality (%s, %s). Result = %s.\n" uu___3
+              uu___4 uu___5
+          else ());
+         r)
 let (check_term_subtyping :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.typ ->

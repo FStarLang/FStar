@@ -21,7 +21,7 @@ type side =
   | Both
   | Neither
 
-val side_to_string : side -> string
+instance val showable_side : Class.Show.showable side
 
 val maybe_relate_after_unfolding (g:Env.env) (t0 t1:term) : side
 

@@ -11954,7 +11954,8 @@ let (refl_maybe_relate_after_unfolding :
                              dbg_refl g1
                                (fun uu___4 ->
                                   let uu___5 =
-                                    FStar_TypeChecker_Core.side_to_string s in
+                                    FStar_Class_Show.show
+                                      FStar_TypeChecker_Core.showable_side s in
                                   FStar_Compiler_Util.format1
                                     "} returning side: %s\n" uu___5);
                              (s, [])))))
