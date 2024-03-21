@@ -1157,7 +1157,7 @@ and check_relation_comp (g:env) rel (c0 c1:comp)
         )
       )
 
-    | Some (E_Total, t0), Some (_, t1)
+    | Some (E_Total, t0), Some (_, t1) // why is this right? what about EQUALITY?
     | Some (E_Ghost, t0), Some (E_Ghost, t1) ->
       check_relation g rel t0 t1
 
