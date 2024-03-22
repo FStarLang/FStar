@@ -159,7 +159,9 @@ let invariant_name_identifies_invariant #p #q i j = A.invariant_name_identifies_
 ////////////////////////////////////////////////////////////////////
 let stt_ghost = A.stt_ghost
 let bind_ghost = A.bind_ghost
-let lift_ghost_neutral = A.lift_ghost_neutral
+(* lift_ghost_neutral takes a dictionary argument in Core, but just a revealer
+function internally in the model, hence we project it away. *)
+let lift_ghost_neutral #a #pre #post e ni_a = A.lift_ghost_neutral #a #pre #post e ni_a.reveal
 let lift_neutral_ghost = A.lift_neutral_ghost
 let frame_ghost = A.frame_ghost
 let sub_ghost = A.sub_ghost
@@ -263,7 +265,11 @@ let gather = A.gather
 // ghost refs
 ////////////////////////////////////////////////////////
 let ghost_pcm_ref #a p = PulseCore.Action.ghost_ref #a p
-let ghost_pcm_ref_non_informative a p = fun r -> reveal r
+
+instance non_informative_ghost_pcm_ref a p = {
+  reveal = (fun r -> Ghost.reveal r) <: NonInformative.revealer (ghost_pcm_ref p);
+}
+
 let ghost_pcm_pts_to #a #p r v = PulseCore.Action.ghost_pts_to #a #p r v
 let is_small_ghost_pcm_pts_to #a #p r v = ()
 let ghost_alloc = A.ghost_alloc
@@ -279,7 +285,7 @@ let return_stt_alt (#a:Type u#a) (x:a) (p:a -> vprop)
 let refl_stt (#a:Type u#a) (x:a)
 : stt unit emp (fun _ -> pure (x == x))
 = let m : stt_ghost unit emp (fun _ -> pure (x == x)) = intro_pure (x == x) () in
-  let m : stt_atomic unit #Neutral emp_inames emp (fun _ -> pure (x == x)) = lift_ghost_neutral m unit_non_informative in
+  let m : stt_atomic unit #Neutral emp_inames emp (fun _ -> pure (x == x)) = lift_ghost_neutral m FStar.Tactics.Typeclasses.solve in
   lift_atomic0 m
 
 let frame_flip (#pre #a #post:_) (frame:slprop) (e:stt a pre post)

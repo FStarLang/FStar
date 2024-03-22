@@ -23,7 +23,8 @@ open FStar.Ghost
 [@@erasable]
 val ref ([@@@unused] a:Type u#1) : Type u#0
       
-val gref_non_informative (a:Type u#1) : non_informative_witness (ref a)
+instance val non_informative_gref (a:Type u#1)
+  : NonInformative.non_informative (ref a)
 
 val pts_to (#a:Type)
            (r:ref a)

@@ -21,7 +21,10 @@ open FStar.PCM
 open Pulse.Lib.PCM.Fraction
 module T = FStar.Tactics
 let ref (a:Type u#2) = ghost_pcm_ref (pcm_frac #a)
-let gref_non_informative (a:Type u#2) : non_informative_witness (ref a) = fun x -> reveal x
+
+instance non_informative_gref (a:Type u#2) : NonInformative.non_informative (ref a) = {
+  reveal = (fun x -> reveal x) <: NonInformative.revealer (ref a);
+}
 
 let pts_to (#a:Type) (r:ref a) (#[T.exact (`full_perm)] p:perm) (n:a)
 = big_ghost_pcm_pts_to r (Some (n, p)) ** pure (perm_ok p)
