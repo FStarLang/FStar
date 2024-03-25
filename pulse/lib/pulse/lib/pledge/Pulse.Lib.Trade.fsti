@@ -73,3 +73,22 @@ val trade_sub_inv
 : stt_ghost unit emp_inames
     (trade #is1 hyp concl)
     (fun _ -> trade #is2 hyp concl)
+
+// Could weaken `f` to
+// (f : unit -> stt_ghost unit (invlist_names os) (invlist_inv os ** q) (fun _ -> invlist_inv os ** r))
+val trade_map
+  (#is : inames)
+  (p q r : vprop)
+  (f : unit -> stt_ghost unit emp_inames q (fun _ -> r))
+: stt_ghost unit
+    emp_inames
+    (trade #is p q)
+    (fun _ -> trade #is p r)
+
+val trade_compose
+  (#is : inames)
+  (p q r : vprop)
+: stt_ghost unit
+    emp_inames
+    (trade #is p q ** trade #is q r)
+    (fun _ -> trade #is p r)
