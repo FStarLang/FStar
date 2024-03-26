@@ -74,10 +74,50 @@ let rec eq_step s1 s2 =
   | UnfoldAttr lids1, UnfoldAttr lids2 -> lids1 =? lids2
   | UnfoldQual strs1, UnfoldQual strs2 -> strs1 =? strs2
   | UnfoldNamespace strs1, UnfoldNamespace strs2 -> strs1 =? strs2
-  | _ -> false
+  | _ -> false // fixme: others ?
 
 instance deq_step : deq step = {
   (=?) = eq_step;
+}
+
+let rec step_to_string (s:step) : string =
+  match s with
+  | Beta -> "Beta"
+  | Iota -> "Iota"
+  | Zeta -> "Zeta"
+  | ZetaFull -> "ZetaFull"
+  | Exclude s1 -> "Exclude " ^ step_to_string s1
+  | Weak -> "Weak"
+  | HNF -> "HNF"
+  | Primops -> "Primops"
+  | Eager_unfolding -> "Eager_unfolding"
+  | Inlining -> "Inlining"
+  | DoNotUnfoldPureLets -> "DoNotUnfoldPureLets"
+  | UnfoldUntil s1 -> "UnfoldUntil " ^ show s1
+  | UnfoldOnly lids1 -> "UnfoldOnly " ^ show lids1
+  | UnfoldFully lids1 -> "UnfoldFully " ^ show lids1
+  | UnfoldAttr lids1 -> "UnfoldAttr " ^ show lids1
+  | UnfoldQual strs1 -> "UnfoldQual " ^ show strs1
+  | UnfoldNamespace strs1 -> "UnfoldNamespace " ^ show strs1
+  | UnfoldTac -> "UnfoldTac"
+  | PureSubtermsWithinComputations -> "PureSubtermsWithinComputations"
+  | Simplify -> "Simplify"
+  | EraseUniverses -> "EraseUniverses"
+  | AllowUnboundUniverses -> "AllowUnboundUniverses"
+  | Reify -> "Reify"
+  | CompressUvars -> "CompressUvars"
+  | NoFullNorm -> "NoFullNorm"
+  | CheckNoUvars -> "CheckNoUvars"
+  | Unmeta -> "Unmeta"
+  | Unascribe -> "Unascribe"
+  | NBE -> "NBE"
+  | ForExtraction -> "ForExtraction"
+  | Unrefine -> "Unrefine"
+  | NormDebug -> "NormDebug"
+  | DefaultUnivsToZero -> "DefaultUnivsToZero"
+
+instance showable_step : showable step = {
+  show = step_to_string;
 }
 
 instance deq_delta_level : deq delta_level = {

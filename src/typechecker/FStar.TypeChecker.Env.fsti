@@ -23,6 +23,7 @@ open FStar.Ident
 open FStar.TypeChecker.Common
 open FStar.Class.Binders
 open FStar.Class.Deq
+open FStar.Class.Show
 
 module BU = FStar.Compiler.Util
 module S = FStar.Syntax.Syntax
@@ -65,6 +66,7 @@ type step =
 and steps = list step
 
 instance val deq_step : deq step
+instance val showable_step : showable step
 
 type sig_binding = list lident * sigelt
 
