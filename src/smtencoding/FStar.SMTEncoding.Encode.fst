@@ -1273,10 +1273,11 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 let t_tp = tp.binder_bv.sort in
                 if u_leq_u_k u_tp
                 then true
-                else let formals, _ = U.arrow_formals t_tp in
-                     let _, _, _, u_formals = TcTerm.tc_binders env_tps formals in
-                     //List.iter (fun u -> BU.print1 "Universe of formal: %s\n" (Print.univ_to_string u)) u_formals;
-                     BU.for_all (fun u_formal -> u_leq_u_k u_formal) u_formals
+                else false
+                    //  let formals, _ = U.arrow_formals t_tp in
+                    //  let _, _, _, u_formals = TcTerm.tc_binders env_tps formals in
+                    //  //List.iter (fun u -> BU.print1 "Universe of formal: %s\n" (Print.univ_to_string u)) u_formals;
+                    //  BU.for_all (fun u_formal -> u_leq_u_k u_formal) u_formals
              in
              List.forall2 tp_ok tps us
         in

@@ -4632,24 +4632,7 @@ and (encode_sigelt' :
                                        let t_tp =
                                          (tp.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
                                        let uu___10 = u_leq_u_k u_tp in
-                                       if uu___10
-                                       then true
-                                       else
-                                         (let uu___12 =
-                                            FStar_Syntax_Util.arrow_formals
-                                              t_tp in
-                                          match uu___12 with
-                                          | (formals, uu___13) ->
-                                              let uu___14 =
-                                                FStar_TypeChecker_TcTerm.tc_binders
-                                                  env_tps formals in
-                                              (match uu___14 with
-                                               | (uu___15, uu___16, uu___17,
-                                                  u_formals) ->
-                                                   FStar_Compiler_Util.for_all
-                                                     (fun u_formal ->
-                                                        u_leq_u_k u_formal)
-                                                     u_formals)) in
+                                       if uu___10 then true else false in
                                      FStar_Compiler_List.forall2 tp_ok tps3
                                        us)))) in
            ((let uu___4 =
