@@ -1480,7 +1480,8 @@ and do_check (g:env) (e:term)
     let! u_sc = with_context "universe_of" (Some (CtxTerm t_sc)) (fun _ -> universe_of g t_sc) in
     let as_x = {as_x with binder_bv = { as_x.binder_bv with sort = t_sc } } in
     let g_as_x, as_x, returns_ty = open_term g as_x returns_ty in
-    let! _eff_t, returns_ty_t = check "return type" g_as_x returns_ty in
+    let! _eff_t, returns_ty_t =
+      with_binders [as_x] [u_sc] (check "return type" g_as_x returns_ty) in
     let! _u_ty = is_type g_as_x returns_ty_t in
     let rec check_branches (path_condition: S.term)
                            (branches: list S.branch)
