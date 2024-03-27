@@ -706,8 +706,8 @@ let rec (unascribe : term -> term) =
 let (eq_tm : term -> term -> Prims.bool) =
   fun t1 ->
     fun t2 ->
-      let t1' = unascribe t1 in
-      let t2' = unascribe t2 in
+      let t1' = t1 in
+      let t2' = t2 in
       let b = FStar_Reflection_V2_TermEq.term_eq_dec t1' t2' in b
 let (eq_st_comp : st_comp -> st_comp -> Prims.bool) =
   fun s1 ->

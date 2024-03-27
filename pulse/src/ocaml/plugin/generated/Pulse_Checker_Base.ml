@@ -3268,7 +3268,7 @@ let (norm_typing_inverse :
                          (Obj.magic
                             (FStar_Range.mk_range "Pulse.Checker.Base.fst"
                                (Prims.of_int (818)) (Prims.of_int (3))
-                               (Prims.of_int (830)) (Prims.of_int (15)))))
+                               (Prims.of_int (829)) (Prims.of_int (15)))))
                       (Obj.magic
                          (FStar_Tactics_Effect.tac_bind
                             (FStar_Sealed.seal
@@ -3299,15 +3299,11 @@ let (norm_typing_inverse :
                               match uu___ with
                               | FStar_Pervasives.Mkdtuple3
                                   (t1', t1'_typing, related_t1_t1') ->
-                                  (match Pulse_Readback.readback_ty t1' with
-                                   | FStar_Pervasives_Native.Some t1_p ->
-                                       if
-                                         FStar_Reflection_V2_TermEq.term_eq
-                                           (Pulse_Elaborate_Pure.elab_term t0)
-                                           t1'
-                                       then FStar_Pervasives_Native.Some ()
-                                       else FStar_Pervasives_Native.None
-                                   | uu___2 -> FStar_Pervasives_Native.None)))
+                                  if
+                                    FStar_Reflection_V2_TermEq.term_eq
+                                      (Pulse_Elaborate_Pure.elab_term t0) t1'
+                                  then FStar_Pervasives_Native.Some ()
+                                  else FStar_Pervasives_Native.None))
 let (norm_st_typing_inverse :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_term ->
@@ -3339,7 +3335,7 @@ let (norm_st_typing_inverse :
                        (Obj.magic
                           (FStar_Range.mk_range "Pulse.Checker.Base.fst"
                              (Prims.of_int (844)) (Prims.of_int (6))
-                             (Prims.of_int (866)) (Prims.of_int (15)))))
+                             (Prims.of_int (865)) (Prims.of_int (15)))))
                     (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> ()))
                     (fun uu___ ->
                        (fun d11 ->
@@ -3359,7 +3355,7 @@ let (norm_st_typing_inverse :
                                         "Pulse.Checker.Base.fst"
                                         (Prims.of_int (844))
                                         (Prims.of_int (6))
-                                        (Prims.of_int (866))
+                                        (Prims.of_int (865))
                                         (Prims.of_int (15)))))
                                (Obj.magic
                                   (Pulse_RuntimeUtils.norm_well_typed_term
@@ -3374,28 +3370,19 @@ let (norm_st_typing_inverse :
                                        | FStar_Pervasives.Mkdtuple3
                                            (t1', t1'_typing, related_t1_t1')
                                            ->
-                                           (match Pulse_Readback.readback_ty
-                                                    t1'
-                                            with
-                                            | FStar_Pervasives_Native.Some
-                                                t1_p ->
-                                                if
-                                                  FStar_Reflection_V2_TermEq.term_eq
-                                                    (Pulse_Elaborate_Pure.elab_term
-                                                       t0) t1'
-                                                then
-                                                  FStar_Pervasives_Native.Some
-                                                    (Pulse_Typing.T_Equiv
-                                                       (g, e,
-                                                         (Pulse_Syntax_Base.C_Tot
-                                                            t0),
-                                                         (Pulse_Syntax_Base.C_Tot
-                                                            t1), d,
-                                                         (Pulse_Typing.ST_TotEquiv
-                                                            (g, t0, t1, u,
-                                                              (), ()))))
-                                                else
-                                                  FStar_Pervasives_Native.None
-                                            | uu___2 ->
-                                                FStar_Pervasives_Native.None)))))
+                                           if
+                                             FStar_Reflection_V2_TermEq.term_eq
+                                               (Pulse_Elaborate_Pure.elab_term
+                                                  t0) t1'
+                                           then
+                                             FStar_Pervasives_Native.Some
+                                               (Pulse_Typing.T_Equiv
+                                                  (g, e,
+                                                    (Pulse_Syntax_Base.C_Tot
+                                                       t0),
+                                                    (Pulse_Syntax_Base.C_Tot
+                                                       t1), d,
+                                                    (Pulse_Typing.ST_TotEquiv
+                                                       (g, t0, t1, u, (), ()))))
+                                           else FStar_Pervasives_Native.None))))
                          uu___)
