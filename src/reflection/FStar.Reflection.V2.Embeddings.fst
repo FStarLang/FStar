@@ -87,14 +87,6 @@ let e_letbinding         : embedding letbinding         = EMB.e_lazy Lazy_letbin
 instance e_ctx_uvar_and_subst : embedding ctx_uvar_and_subst = EMB.e_lazy Lazy_uvar fstar_refl_ctx_uvar_and_subst
 instance e_universe_uvar      : embedding universe_uvar      = EMB.e_lazy Lazy_universe_uvar fstar_refl_universe_uvar
 
-let rec mapM_opt (f : ('a -> option 'b)) (l : list 'a) : option (list 'b) =
-    match l with
-    | [] -> Some []
-    | x::xs ->
-        BU.bind_opt (f x) (fun x ->
-        BU.bind_opt (mapM_opt f xs) (fun xs ->
-        Some (x :: xs)))
-
 let e_term_aq aq =
     let embed_term (rng:Range.range) (t:term) : term =
         let qi = { qkind = Quote_static; antiquotations = aq } in
@@ -105,7 +97,7 @@ let e_term_aq aq =
             let shift, aqs = aq in
             let aqs = List.rev aqs in
             // Try to unembed all antiquotations
-            BU.bind_opt (mapM_opt unembed_term aqs) (fun aq_ts ->
+            let! aq_ts = mapM unembed_term aqs in
             // Create a substitution of the DB indices of t for the antiquotations
             (* let n = List.length aq_ts - 1 in *)
             let subst_open, subst =
@@ -117,7 +109,7 @@ let e_term_aq aq =
             in
 
             // Substitute and return
-            Some (SS.subst subst <| SS.subst subst_open t))
+            Some (SS.subst subst <| SS.subst subst_open t)
         in
         let t = U.unmeta t in
         match (SS.compress t).n with
@@ -289,7 +281,22 @@ let e_argv   = e_tuple2 e_term    e_aqualv
 
 let e_args   = e_list e_argv
 
-let e_branch_aq aq = e_tuple2 (e_pattern_aq aq) (e_term_aq aq)
+let pattern_depth (p:pat) : int =
+  let _, n = SS.subst_pat' ([], NoUseRange) p in
+  n
+
+let e_branch_aq aq =
+  let push n (s, aq) = (s+n, aq) in
+  let embed_branch (rng:Range.range) (pe : pattern & term) : term =
+    let p, e = pe in
+    let n = pattern_depth (pack_pat p) in
+    embed #_ #(e_tuple2 (e_pattern_aq aq) (e_term_aq (push n aq))) rng (p, e)
+  in
+  let unembed_branch (t:term) : option (pattern & term) =
+    unembed #_ #(e_tuple2 (e_pattern_aq aq) (e_term_aq aq)) t EMB.id_norm_cb
+  in
+  mk_emb embed_branch unembed_branch fstar_refl_branch
+
 let e_argv_aq   aq = e_tuple2 (e_term_aq aq) e_aqualv
 
 instance e_match_returns_annotation =

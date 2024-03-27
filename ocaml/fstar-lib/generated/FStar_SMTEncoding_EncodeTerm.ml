@@ -1325,31 +1325,19 @@ and (encode_term :
             if uu___5
             then (FStar_SMTEncoding_Term.mk_Term_unit, [])
             else encode_term t2 env
-        | FStar_Syntax_Syntax.Tm_quoted (qt, uu___2) ->
-            let tv =
-              let uu___3 =
-                let uu___4 = FStar_Reflection_V2_Builtins.inspect_ln qt in
-                FStar_Syntax_Embeddings_Base.embed
-                  FStar_Reflection_V2_Embeddings.e_term_view uu___4 in
-              uu___3 t1.FStar_Syntax_Syntax.pos FStar_Pervasives_Native.None
-                FStar_Syntax_Embeddings_Base.id_norm_cb in
-            ((let uu___4 =
+        | FStar_Syntax_Syntax.Tm_quoted (qt, qi) ->
+            let t2 = FStar_Reflection_V2_Util.unfold_quotation qt qi in
+            ((let uu___3 =
                 FStar_TypeChecker_Env.debug env.FStar_SMTEncoding_Env.tcenv
                   (FStar_Options.Other "SMTEncoding") in
-              if uu___4
+              if uu___3
               then
-                let uu___5 = FStar_Syntax_Print.term_to_string t0 in
-                let uu___6 = FStar_Syntax_Print.term_to_string tv in
+                let uu___4 = FStar_Syntax_Print.term_to_string t0 in
+                let uu___5 = FStar_Syntax_Print.term_to_string t2 in
                 FStar_Compiler_Util.print2 ">> Inspected (%s) ~> (%s)\n"
-                  uu___5 uu___6
+                  uu___4 uu___5
               else ());
-             (let t2 =
-                let uu___4 =
-                  let uu___5 = FStar_Syntax_Syntax.as_arg tv in [uu___5] in
-                FStar_Syntax_Util.mk_app
-                  (FStar_Reflection_V2_Constants.refl_constant_term
-                     FStar_Reflection_V2_Constants.fstar_refl_pack_ln) uu___4 in
-              encode_term t2 env))
+             encode_term t2 env)
         | FStar_Syntax_Syntax.Tm_meta
             { FStar_Syntax_Syntax.tm2 = t2;
               FStar_Syntax_Syntax.meta = FStar_Syntax_Syntax.Meta_pattern

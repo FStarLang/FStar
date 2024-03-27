@@ -119,10 +119,10 @@ let on_antiquoted (f : (term -> term)) (qi : quoteinfo) : quoteinfo =
 
 (* Requires that bv.index is in scope. *)
 let lookup_aq (bv : bv) (aq : antiquotations) : term =
-    try List.nth (snd aq) (List.length (snd aq) - 1 - bv.index + fst aq) // subtract shift
-    with
-    | _ ->
-      failwith "antiquotation out of bounds"
+  let idx = List.length (snd aq) - 1 - bv.index + fst aq in // subtract shift
+  try List.nth (snd aq) idx with
+  | _ ->
+    failwith "antiquotation out of bounds"
 
 (*********************************************************************************)
 (* Syntax builders *)
