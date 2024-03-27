@@ -357,7 +357,6 @@ fn sum2 (r:ref nat) (n:nat)
 }
 ```
 
-[@@ expect_failure]  // TODO: two ascriptions are killing it
 ```pulse
 fn if_then_else_in_specs (r:ref U32.t)
   requires (if true
