@@ -17,7 +17,7 @@ module FStar.ModifiesGen
 
 #set-options "--split_queries no"
 #set-options "--using_facts_from '*,-FStar.Tactics,-FStar.Reflection,-FStar.List'"
-
+#set-options "--z3rlimit_factor 2"
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 
@@ -217,7 +217,11 @@ let loc_equal_elim (#al: aloc_t) (#c: cls al) (s1 s2: loc c) : Lemma
   (ensures (s1 == s2))
   [SMTPat (s1 `loc_equal` s2)]
 = fun_set_equal_elim (Loc?.non_live_addrs s1) (Loc?.non_live_addrs s2);
-  fun_set_equal_elim (Loc?.live_addrs s1) (Loc?.live_addrs s2)
+  fun_set_equal_elim (Loc?.live_addrs s1) (Loc?.live_addrs s2);
+  let Loc regions1 region_liveness_tags1 _ _ aux1 = s1 in
+  let Loc regions2 region_liveness_tags2 _ _ aux2 = s2 in
+  assert (regions1 == regions2);
+  assert (region_liveness_tags1 == region_liveness_tags2)
 
 
 let loc_union_idem #al #c s =
@@ -1757,7 +1761,7 @@ let mem_union_aux_of_aux_left_intro
 : Lemma
   (GSet.mem x aux <==> GSet.mem (ALoc x.region x.addr (if None? x.loc then None else Some (make_cls_union_aloc b (Some?.v x.loc)))) (union_aux_of_aux_left c b aux))
   [SMTPat (GSet.mem x aux)]
-= ()
+= let ALoc _ _ _ = x in ()
 
 let mem_union_aux_of_aux_left_elim
   (#al: (bool -> HS.rid -> nat -> Tot Type))
@@ -2118,12 +2122,12 @@ let upgrade_aloc (#al: aloc_t u#a) (#c: cls al) (a: aloc c) : Tot (aloc (raise_c
 let downgrade_aloc_upgrade_aloc (#al: aloc_t u#a) (#c: cls al) (a: aloc c) : Lemma
   (downgrade_aloc (upgrade_aloc u#a u#b a) == a)
   [SMTPat (downgrade_aloc (upgrade_aloc u#a u#b a))]
-= ()
+= let ALoc _ _ _ = a in ()
 
 let upgrade_aloc_downgrade_aloc (#al: aloc_t u#a) (#c: cls al) (a: aloc (raise_cls u#a u#b c)) : Lemma
   (upgrade_aloc (downgrade_aloc a) == a)
   [SMTPat (upgrade_aloc u#a u#b (downgrade_aloc a))]
-= ()
+= let ALoc _ _ _ = a in ()
 
 let raise_loc_aux_pred
   (#al: aloc_t u#a)
@@ -2166,6 +2170,7 @@ let raise_loc_includes #al #c l1 l2 =
 #pop-options
 
 let raise_loc_disjoint #al #c l1 l2 =
+  // let ALoc _ _ _ = al in
   let l1' = raise_loc l1 in
   let l2' = raise_loc l2 in
   assert (forall (x: aloc (raise_cls c)) . GSet.mem x (Ghost.reveal (Loc?.aux l1')) <==> GSet.mem (downgrade_aloc x) (Ghost.reveal (Loc?.aux l1)));

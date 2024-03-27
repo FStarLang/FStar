@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStar.Constructive
+
 type cand p1 p2 =
   | Conj : h1:p1 -> h2:p2 -> cand p1 p2
 
@@ -39,10 +40,10 @@ type ceq_type (a:Type) : Type -> Type =
   | ReflType : ceq_type a a
 
 val eq_ind : #a:Type -> x:a -> p:(a -> Type) -> f:p x -> y:a -> e:ceq x y -> Tot (p y)
-let eq_ind #a x p f y _ = f
+let eq_ind #a x p f y e = let Refl = e in f
 
 val ceq_eq : #a:Type{hasEq a} -> #x:a -> #y:a -> h:(ceq x y) -> Lemma (x = y)
-let ceq_eq #a #x #y h = ()
+let ceq_eq #a #x #y h = let Refl = h in ()
 
 val ceq_congruence : #a:Type -> #b:Type -> #x:a -> #y:a -> ceq x y ->
                      f:(a -> GTot b) -> GTot (ceq (f x) (f y))

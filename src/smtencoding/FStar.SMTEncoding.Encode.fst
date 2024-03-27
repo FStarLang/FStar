@@ -1228,6 +1228,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                           params=tps;
                           t=k;
                           ds=datas} ->
+         let t_lid = t in
          let tcenv = env.tcenv in
          let is_injective  =
              let usubst, uvs = SS.univ_var_opening universe_names in
@@ -1267,17 +1268,42 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                  | _ -> false
              in
              let u_leq_u_k u =
-                universe_leq (N.normalize_universe env_tps u) u_k
+                let u = N.normalize_universe env_tps u in
+                universe_leq u u_k 
              in
              let tp_ok (tp:S.binder) (u_tp:universe) =
                 let t_tp = tp.binder_bv.sort in
                 if u_leq_u_k u_tp
                 then true
-                else false
-                    //  let formals, _ = U.arrow_formals t_tp in
-                    //  let _, _, _, u_formals = TcTerm.tc_binders env_tps formals in
-                    //  //List.iter (fun u -> BU.print1 "Universe of formal: %s\n" (Print.univ_to_string u)) u_formals;
-                    //  BU.for_all (fun u_formal -> u_leq_u_k u_formal) u_formals
+                else (
+                   let t_tp = 
+                      N.normalize
+                          [Unrefine; Unascribe; Unmeta;
+                          Primops; HNF; UnfoldUntil delta_constant; Beta]
+                          env_tps t_tp
+                   in
+                   let formals, t = U.arrow_formals t_tp in
+                   let _, _, _, u_formals = TcTerm.tc_binders env_tps formals in
+                   let inj = BU.for_all (fun u_formal -> u_leq_u_k u_formal) u_formals in                  
+                   if inj
+                   then (
+                     match (SS.compress t).n with
+                     | Tm_type _ -> (* this parameter is an "arity", i.e., a type function *)
+                       true
+                     | Tm_name _ -> (* this is a value of another type parameter in scope *)
+                       true
+                     | _ ->
+                      //  BU.print5 "No injectivity for %s because of parameter %s : %s @ universe %s </= %s\n"
+                      //             (Ident.string_of_lid t_lid)
+                      //             (Print.binder_to_string tp)
+                      //             (Print.term_to_string t_tp)
+                      //             (Print.univ_to_string (N.normalize_universe env_tps u_tp))
+                      //             (Print.univ_to_string u_k);
+                       false
+                   )
+                   else
+                      false
+                 )
              in
              List.forall2 tp_ok tps us
         in

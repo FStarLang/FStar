@@ -4491,6 +4491,7 @@ and (encode_sigelt' :
              FStar_Syntax_Syntax.t = k; FStar_Syntax_Syntax.mutuals = uu___2;
              FStar_Syntax_Syntax.ds = datas;_}
            ->
+           let t_lid = t in
            let tcenv = env.FStar_SMTEncoding_Env.tcenv in
            let is_injective =
              let uu___3 = FStar_Syntax_Subst.univ_var_opening universe_names in
@@ -4624,15 +4625,58 @@ and (encode_sigelt' :
                                              uu___12
                                        | uu___10 -> false in
                                      let u_leq_u_k u =
-                                       let uu___10 =
+                                       let u1 =
                                          FStar_TypeChecker_Normalize.normalize_universe
                                            env_tps u in
-                                       universe_leq uu___10 u_k in
+                                       universe_leq u1 u_k in
                                      let tp_ok tp u_tp =
                                        let t_tp =
                                          (tp.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
                                        let uu___10 = u_leq_u_k u_tp in
-                                       if uu___10 then true else false in
+                                       if uu___10
+                                       then true
+                                       else
+                                         (let t_tp1 =
+                                            FStar_TypeChecker_Normalize.normalize
+                                              [FStar_TypeChecker_Env.Unrefine;
+                                              FStar_TypeChecker_Env.Unascribe;
+                                              FStar_TypeChecker_Env.Unmeta;
+                                              FStar_TypeChecker_Env.Primops;
+                                              FStar_TypeChecker_Env.HNF;
+                                              FStar_TypeChecker_Env.UnfoldUntil
+                                                FStar_Syntax_Syntax.delta_constant;
+                                              FStar_TypeChecker_Env.Beta]
+                                              env_tps t_tp in
+                                          let uu___12 =
+                                            FStar_Syntax_Util.arrow_formals
+                                              t_tp1 in
+                                          match uu___12 with
+                                          | (formals, t1) ->
+                                              let uu___13 =
+                                                FStar_TypeChecker_TcTerm.tc_binders
+                                                  env_tps formals in
+                                              (match uu___13 with
+                                               | (uu___14, uu___15, uu___16,
+                                                  u_formals) ->
+                                                   let inj =
+                                                     FStar_Compiler_Util.for_all
+                                                       (fun u_formal ->
+                                                          u_leq_u_k u_formal)
+                                                       u_formals in
+                                                   if inj
+                                                   then
+                                                     let uu___17 =
+                                                       let uu___18 =
+                                                         FStar_Syntax_Subst.compress
+                                                           t1 in
+                                                       uu___18.FStar_Syntax_Syntax.n in
+                                                     (match uu___17 with
+                                                      | FStar_Syntax_Syntax.Tm_type
+                                                          uu___18 -> true
+                                                      | FStar_Syntax_Syntax.Tm_name
+                                                          uu___18 -> true
+                                                      | uu___18 -> false)
+                                                   else false)) in
                                      FStar_Compiler_List.forall2 tp_ok tps3
                                        us)))) in
            ((let uu___4 =
