@@ -186,7 +186,7 @@ let (raw_pat_as_exp :
               match c with
               | FStar_Const.Const_int (repr, FStar_Pervasives_Native.Some sw)
                   ->
-                  FStar_ToSyntax_ToSyntax.desugar_machine_integer
+                  FStar_ToSyntax_ToSyntax.unfold_machine_integer
                     env.FStar_TypeChecker_Env.dsenv repr sw
                     p1.FStar_Syntax_Syntax.p
               | uu___ ->
@@ -289,7 +289,7 @@ let (pat_as_exp :
                   match c with
                   | FStar_Const.Const_int
                       (repr, FStar_Pervasives_Native.Some sw) ->
-                      FStar_ToSyntax_ToSyntax.desugar_machine_integer
+                      FStar_ToSyntax_ToSyntax.unfold_machine_integer
                         env1.FStar_TypeChecker_Env.dsenv repr sw
                         p1.FStar_Syntax_Syntax.p
                   | uu___ ->

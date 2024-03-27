@@ -128,7 +128,7 @@ let raw_pat_as_exp (env:Env.env) (p:pat)
           let e =
               match c with
               | FStar.Const.Const_int(repr, Some sw) ->
-                FStar.ToSyntax.ToSyntax.desugar_machine_integer env.dsenv repr sw p.p
+                FStar.ToSyntax.ToSyntax.unfold_machine_integer env.dsenv repr sw p.p
               | _ ->
                 mk (Tm_constant c) p.p
           in
@@ -199,7 +199,7 @@ let pat_as_exp (introduce_bv_uvars:bool)
              let e =
                 match c with
                 | FStar.Const.Const_int(repr, Some sw) ->
-                  FStar.ToSyntax.ToSyntax.desugar_machine_integer env.dsenv repr sw p.p
+                  FStar.ToSyntax.ToSyntax.unfold_machine_integer env.dsenv repr sw p.p
                 | _ ->
                   mk (Tm_constant c) p.p
              in

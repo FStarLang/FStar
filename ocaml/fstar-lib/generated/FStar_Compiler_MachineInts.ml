@@ -47,7 +47,7 @@ let (is_unsigned : machint_kind -> Prims.bool) =
     | SizeT -> true
 let (is_signed : machint_kind -> Prims.bool) =
   fun k -> let uu___ = is_unsigned k in Prims.op_Negation uu___
-let (width : machint_kind -> Prims.int) =
+let (widthn : machint_kind -> Prims.int) =
   fun k ->
     match k with
     | Int8 -> (Prims.of_int (8))
@@ -75,7 +75,7 @@ let (module_name_for : machint_kind -> Prims.string) =
     | SizeT -> "SizeT"
 let (mask : machint_kind -> FStar_BigInt.t) =
   fun k ->
-    let uu___ = width k in
+    let uu___ = widthn k in
     match uu___ with
     | uu___1 when uu___1 = (Prims.of_int (8)) -> FStar_BigInt.of_hex "ff"
     | uu___1 when uu___1 = (Prims.of_int (16)) -> FStar_BigInt.of_hex "ffff"
@@ -85,70 +85,38 @@ let (mask : machint_kind -> FStar_BigInt.t) =
         FStar_BigInt.of_hex "ffffffffffffffff"
     | uu___1 when uu___1 = (Prims.of_int (128)) ->
         FStar_BigInt.of_hex "ffffffffffffffffffffffffffffffff"
-let (int_to_t_lid_for : machint_kind -> FStar_Ident.lid) =
+let (signedness : machint_kind -> FStar_Const.signedness) =
   fun k ->
-    let path =
-      let uu___ =
-        let uu___1 = module_name_for k in
-        let uu___2 =
-          let uu___3 =
-            let uu___4 = is_unsigned k in
-            if uu___4 then "uint_to_t" else "int_to_t" in
-          [uu___3] in
-        uu___1 :: uu___2 in
-      "FStar" :: uu___ in
-    FStar_Ident.lid_of_path path FStar_Compiler_Range_Type.dummyRange
-let (int_to_t_for : machint_kind -> FStar_Syntax_Syntax.term) =
+    let uu___ = is_unsigned k in
+    if uu___ then FStar_Const.Unsigned else FStar_Const.Signed
+let (width : machint_kind -> FStar_Const.width) =
   fun k ->
-    let lid = int_to_t_lid_for k in
-    FStar_Syntax_Syntax.fvar lid FStar_Pervasives_Native.None
-let (__int_to_t_lid_for : machint_kind -> FStar_Ident.lid) =
-  fun k ->
-    let path =
-      let uu___ =
-        let uu___1 = module_name_for k in
-        let uu___2 =
-          let uu___3 =
-            let uu___4 = is_unsigned k in
-            if uu___4 then "__uint_to_t" else "__int_to_t" in
-          [uu___3] in
-        uu___1 :: uu___2 in
-      "FStar" :: uu___ in
-    FStar_Ident.lid_of_path path FStar_Compiler_Range_Type.dummyRange
-let (__int_to_t_for : machint_kind -> FStar_Syntax_Syntax.term) =
-  fun k ->
-    let lid = __int_to_t_lid_for k in
-    FStar_Syntax_Syntax.fvar lid FStar_Pervasives_Native.None
+    match k with
+    | Int8 -> FStar_Const.Int8
+    | UInt8 -> FStar_Const.Int8
+    | Int16 -> FStar_Const.Int16
+    | UInt16 -> FStar_Const.Int16
+    | Int32 -> FStar_Const.Int32
+    | UInt32 -> FStar_Const.Int32
+    | Int64 -> FStar_Const.Int64
+    | UInt64 -> FStar_Const.Int64
+    | UInt128 -> FStar_Const.Int128
+    | SizeT -> FStar_Const.Sizet
 type 'k machint =
-  | Mk of FStar_BigInt.t * FStar_Syntax_Syntax.meta_source_info
-  FStar_Pervasives_Native.option 
+  | Mk of FStar_BigInt.t 
 let (uu___is_Mk : machint_kind -> unit machint -> Prims.bool) =
   fun k -> fun projectee -> true
 let (__proj__Mk__item___0 : machint_kind -> unit machint -> FStar_BigInt.t) =
-  fun k -> fun projectee -> match projectee with | Mk (_0, _1) -> _0
-let (__proj__Mk__item___1 :
-  machint_kind ->
-    unit machint ->
-      FStar_Syntax_Syntax.meta_source_info FStar_Pervasives_Native.option)
-  = fun k -> fun projectee -> match projectee with | Mk (_0, _1) -> _1
-let (mk :
-  machint_kind ->
-    FStar_BigInt.t ->
-      FStar_Syntax_Syntax.meta_source_info FStar_Pervasives_Native.option ->
-        unit machint)
-  = fun k -> fun x -> fun m -> Mk (x, m)
+  fun k -> fun projectee -> match projectee with | Mk _0 -> _0
+let (mk : machint_kind -> FStar_BigInt.t -> unit machint) =
+  fun k -> fun x -> Mk x
 let (v : machint_kind -> unit machint -> FStar_BigInt.t) =
-  fun k -> fun x -> let uu___ = x in match uu___ with | Mk (v1, uu___1) -> v1
-let (meta :
-  machint_kind ->
-    unit machint ->
-      FStar_Syntax_Syntax.meta_source_info FStar_Pervasives_Native.option)
-  =
-  fun k ->
-    fun x -> let uu___ = x in match uu___ with | Mk (uu___1, meta1) -> meta1
+  fun k -> fun x -> let uu___ = x in match uu___ with | Mk v1 -> v1
+let (int_to_t : machint_kind -> FStar_BigInt.t -> unit machint) =
+  fun k -> fun i -> Mk i
 let (make_as :
   machint_kind -> unit machint -> FStar_BigInt.t -> unit machint) =
-  fun k -> fun x -> fun z -> let uu___ = meta k x in Mk (z, uu___)
+  fun k -> fun x -> fun z -> Mk z
 let (showable_bounded_k :
   machint_kind -> unit machint FStar_Class_Show.showable) =
   fun k ->
@@ -156,7 +124,7 @@ let (showable_bounded_k :
       FStar_Class_Show.show =
         (fun uu___ ->
            match uu___ with
-           | Mk (x, m) ->
+           | Mk x ->
                let uu___1 =
                  let uu___2 =
                    let uu___3 = FStar_BigInt.to_int_fs x in
@@ -185,65 +153,32 @@ let (e_machint :
     let em x rng shadow cb =
       let uu___ = x in
       match uu___ with
-      | Mk (i, m) ->
-          let it =
+      | Mk i ->
+          let const =
             let uu___1 =
-              FStar_Syntax_Embeddings_Base.embed
-                FStar_Syntax_Embeddings.e_int i in
-            uu___1 rng FStar_Pervasives_Native.None cb in
-          let int_to_t = int_to_t_for k in
-          let t =
-            let uu___1 =
-              let uu___2 = FStar_Syntax_Syntax.as_arg it in [uu___2] in
-            FStar_Syntax_Syntax.mk_Tm_app int_to_t uu___1 rng in
-          with_meta_ds rng t m in
-    let un uu___1 uu___ =
-      (fun t ->
-         fun cb ->
-           let uu___ =
-             let uu___1 =
-               let uu___2 = FStar_Syntax_Subst.compress t in
-               uu___2.FStar_Syntax_Syntax.n in
-             match uu___1 with
-             | FStar_Syntax_Syntax.Tm_meta
-                 { FStar_Syntax_Syntax.tm2 = t1;
-                   FStar_Syntax_Syntax.meta =
-                     FStar_Syntax_Syntax.Meta_desugared m;_}
-                 -> (t1, (FStar_Pervasives_Native.Some m))
-             | uu___2 -> (t, FStar_Pervasives_Native.None) in
-           match uu___ with
-           | (t1, m) ->
-               let t2 = FStar_Syntax_Util.unmeta_safe t1 in
-               let uu___1 =
-                 let uu___2 = FStar_Syntax_Subst.compress t2 in
-                 uu___2.FStar_Syntax_Syntax.n in
-               (match uu___1 with
-                | FStar_Syntax_Syntax.Tm_app
-                    { FStar_Syntax_Syntax.hd = hd;
-                      FStar_Syntax_Syntax.args = (a, uu___2)::[];_}
-                    when
-                    (let uu___3 = int_to_t_lid_for k in
-                     FStar_Syntax_Util.is_fvar uu___3 hd) ||
-                      (let uu___3 = __int_to_t_lid_for k in
-                       FStar_Syntax_Util.is_fvar uu___3 hd)
-                    ->
-                    Obj.magic
-                      (Obj.repr
-                         (let a1 = FStar_Syntax_Util.unlazy_emb a in
-                          let uu___3 =
-                            FStar_Syntax_Embeddings_Base.try_unembed
-                              FStar_Syntax_Embeddings.e_int a1 cb in
-                          FStar_Class_Monad.op_let_Bang
-                            FStar_Class_Monad.monad_option () ()
-                            (Obj.magic uu___3)
-                            (fun uu___4 ->
-                               (fun a2 ->
-                                  let a2 = Obj.magic a2 in
-                                  Obj.magic
-                                    (FStar_Pervasives_Native.Some
-                                       (Mk (a2, m)))) uu___4)))
-                | uu___2 -> Obj.magic (Obj.repr FStar_Pervasives_Native.None)))
-        uu___1 uu___ in
+              let uu___2 = FStar_BigInt.string_of_big_int i in
+              let uu___3 =
+                let uu___4 =
+                  let uu___5 = signedness k in
+                  let uu___6 = width k in (uu___5, uu___6) in
+                FStar_Pervasives_Native.Some uu___4 in
+              (uu___2, uu___3) in
+            FStar_Const.Const_int uu___1 in
+          FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_constant const) rng in
+    let un t cb =
+      let t1 = FStar_Syntax_Util.unmeta_safe t in
+      let uu___ =
+        let uu___1 = FStar_Syntax_Subst.compress t1 in
+        uu___1.FStar_Syntax_Syntax.n in
+      match uu___ with
+      | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_int
+          (str, FStar_Pervasives_Native.Some (s, w))) when
+          (let uu___1 = signedness k in s = uu___1) &&
+            (let uu___1 = width k in w = uu___1)
+          ->
+          let n = FStar_BigInt.big_int_of_string str in
+          FStar_Pervasives_Native.Some (Mk n)
+      | uu___1 -> FStar_Pervasives_Native.None in
     FStar_Syntax_Embeddings_Base.mk_emb_full em un
       (fun uu___ ->
          let uu___1 =
@@ -273,63 +208,31 @@ let (nbe_machint :
     let em cbs x =
       let uu___ = x in
       match uu___ with
-      | Mk (i, m) ->
-          let it =
-            FStar_TypeChecker_NBETerm.embed FStar_TypeChecker_NBETerm.e_int
-              cbs i in
-          let int_to_t args =
+      | Mk i ->
+          let const =
             let uu___1 =
-              let uu___2 =
-                let uu___3 =
-                  let uu___4 = __int_to_t_lid_for k in
-                  FStar_Syntax_Syntax.lid_as_fv uu___4
-                    FStar_Pervasives_Native.None in
-                (uu___3, [], args) in
-              FStar_TypeChecker_NBETerm.FV uu___2 in
-            FStar_TypeChecker_NBETerm.mk_t uu___1 in
-          let t =
-            let uu___1 =
-              let uu___2 = FStar_TypeChecker_NBETerm.as_arg it in [uu___2] in
-            int_to_t uu___1 in
-          with_meta_ds t m in
-    let un uu___1 uu___ =
-      (fun cbs ->
-         fun a ->
-           let uu___ =
-             match a.FStar_TypeChecker_NBETerm.nbe_t with
-             | FStar_TypeChecker_NBETerm.Meta (t, tm) ->
-                 let uu___1 = FStar_Thunk.force tm in
-                 (match uu___1 with
-                  | FStar_Syntax_Syntax.Meta_desugared m ->
-                      (t, (FStar_Pervasives_Native.Some m))
-                  | uu___2 -> (a, FStar_Pervasives_Native.None))
-             | uu___1 -> (a, FStar_Pervasives_Native.None) in
-           match uu___ with
-           | (a1, m) ->
-               (match a1.FStar_TypeChecker_NBETerm.nbe_t with
-                | FStar_TypeChecker_NBETerm.FV (fv1, [], (a2, uu___1)::[])
-                    when
-                    let uu___2 = int_to_t_lid_for k in
-                    FStar_Ident.lid_equals
-                      (fv1.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
-                      uu___2
-                    ->
-                    Obj.magic
-                      (Obj.repr
-                         (let uu___2 =
-                            FStar_TypeChecker_NBETerm.unembed
-                              FStar_TypeChecker_NBETerm.e_int cbs a2 in
-                          FStar_Class_Monad.op_let_Bang
-                            FStar_Class_Monad.monad_option () ()
-                            (Obj.magic uu___2)
-                            (fun uu___3 ->
-                               (fun a3 ->
-                                  let a3 = Obj.magic a3 in
-                                  Obj.magic
-                                    (FStar_Pervasives_Native.Some
-                                       (Mk (a3, m)))) uu___3)))
-                | uu___1 -> Obj.magic (Obj.repr FStar_Pervasives_Native.None)))
-        uu___1 uu___ in
+              let uu___2 = FStar_BigInt.string_of_big_int i in
+              let uu___3 =
+                let uu___4 =
+                  let uu___5 = signedness k in
+                  let uu___6 = width k in (uu___5, uu___6) in
+                FStar_Pervasives_Native.Some uu___4 in
+              (uu___2, uu___3) in
+            FStar_Const.Const_int uu___1 in
+          FStar_TypeChecker_NBETerm.mk_t
+            (FStar_TypeChecker_NBETerm.Constant
+               (FStar_TypeChecker_NBETerm.SConst const)) in
+    let un cbs a =
+      match a.FStar_TypeChecker_NBETerm.nbe_t with
+      | FStar_TypeChecker_NBETerm.Constant (FStar_TypeChecker_NBETerm.SConst
+          (FStar_Const.Const_int (str, FStar_Pervasives_Native.Some (s, w))))
+          when
+          (let uu___ = signedness k in s = uu___) &&
+            (let uu___ = width k in w = uu___)
+          ->
+          let n = FStar_BigInt.big_int_of_string str in
+          FStar_Pervasives_Native.Some (Mk n)
+      | uu___ -> FStar_Pervasives_Native.None in
     FStar_TypeChecker_NBETerm.mk_emb em un
       (fun uu___ ->
          let uu___1 =

@@ -22,7 +22,7 @@ open FStar.BaseTypes
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type signedness = | Unsigned | Signed
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
-type width = | Int8 | Int16 | Int32 | Int64 | Sizet
+type width = | Int8 | Int16 | Int32 | Int64 | Sizet | Int128
 
 (* NB:
     Const_int (_, None) is not a canonical representation for a mathematical integer
@@ -78,6 +78,7 @@ let bounds signedness width =
         | Int32 -> big_int_of_string "32"
         | Int64 -> big_int_of_string "64"
         | Sizet -> big_int_of_string "16"
+        | Int128 -> big_int_of_string "128"
     in
     let lower, upper =
       match signedness with

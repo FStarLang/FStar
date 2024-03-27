@@ -124,7 +124,7 @@ let (lognot : t -> t) =
     { low = (FStar_UInt64.lognot a.low); high = (FStar_UInt64.lognot a.high)
     }
 let (__uint_to_t : Prims.int -> t) = fun x -> uint_to_t x
-let (u32_64 : FStar_UInt32.t) = FStar_UInt32.uint_to_t (Prims.of_int (64))
+let (u32_64 : FStar_UInt32.t) = (Stdint.Uint32.of_int (64))
 let (add_u64_shift_left :
   FStar_UInt64.t -> FStar_UInt64.t -> FStar_UInt32.t -> FStar_UInt64.t) =
   fun hi ->
@@ -149,7 +149,7 @@ let (shift_left_large : t -> FStar_UInt32.t -> t) =
   fun a ->
     fun s ->
       {
-        low = (FStar_UInt64.uint_to_t Prims.int_zero);
+        low = Stdint.Uint64.zero;
         high = (FStar_UInt64.shift_left a.low (FStar_UInt32.sub s u32_64))
       }
 let (shift_left : t -> FStar_UInt32.t -> t) =
@@ -183,7 +183,7 @@ let (shift_right_large : t -> FStar_UInt32.t -> t) =
     fun s ->
       {
         low = (FStar_UInt64.shift_right a.high (FStar_UInt32.sub s u32_64));
-        high = (FStar_UInt64.uint_to_t Prims.int_zero)
+        high = Stdint.Uint64.zero
       }
 let (shift_right : t -> FStar_UInt32.t -> t) =
   fun a ->
@@ -243,15 +243,12 @@ let (gte_mask : t -> t -> t) =
                 (FStar_UInt64.gte_mask a.low b.low)))
       }
 let (uint64_to_uint128 : FStar_UInt64.t -> t) =
-  fun a -> { low = a; high = (FStar_UInt64.uint_to_t Prims.int_zero) }
+  fun a -> { low = a; high = Stdint.Uint64.zero }
 let (uint128_to_uint64 : t -> FStar_UInt64.t) = fun a -> a.low
-let (u64_l32_mask : FStar_UInt64.t) =
-  FStar_UInt64.uint_to_t (Prims.parse_int "0xffffffff")
+let (u64_l32_mask : FStar_UInt64.t) = (Stdint.Uint64.of_string "4294967295")
 let (u64_mod_32 : FStar_UInt64.t -> FStar_UInt64.t) =
-  fun a ->
-    FStar_UInt64.logand a
-      (FStar_UInt64.uint_to_t (Prims.parse_int "0xffffffff"))
-let (u32_32 : FStar_UInt32.t) = FStar_UInt32.uint_to_t (Prims.of_int (32))
+  fun a -> FStar_UInt64.logand a (Stdint.Uint64.of_string "4294967295")
+let (u32_32 : FStar_UInt32.t) = (Stdint.Uint32.of_int (32))
 let (u32_combine : FStar_UInt64.t -> FStar_UInt64.t -> FStar_UInt64.t) =
   fun hi -> fun lo -> FStar_UInt64.add lo (FStar_UInt64.shift_left hi u32_32)
 let (mul32 : FStar_UInt64.t -> FStar_UInt32.t -> t) =

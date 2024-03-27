@@ -36,7 +36,7 @@ let is_unsigned (k : machint_kind) : bool =
   | SizeT -> true
 let is_signed k = not (is_unsigned k)
 
-let width (k : machint_kind) : int =
+let widthn (k : machint_kind) : int =
   match k with
   | Int8 -> 8
   | Int16 -> 16
@@ -63,43 +63,41 @@ let module_name_for (k:machint_kind) : string =
   | SizeT   -> "SizeT"
 
 let mask (k:machint_kind) : Z.t =
-  match width k with
+  match widthn k with
   | 8 -> Z.of_hex "ff"
   | 16 -> Z.of_hex "ffff"
   | 32 -> Z.of_hex "ffffffff"
   | 64 -> Z.of_hex "ffffffffffffffff"
   | 128 -> Z.of_hex "ffffffffffffffffffffffffffffffff"
 
-let int_to_t_lid_for (k:machint_kind) : Ident.lid =
-  let path = "FStar" :: module_name_for k :: (if is_unsigned k then "uint_to_t" else "int_to_t") :: [] in
-  Ident.lid_of_path path Range.dummyRange
+let signedness (k:machint_kind) : Const.signedness =
+  if is_unsigned k then Const.Unsigned else Const.Signed
 
-let int_to_t_for (k:machint_kind) : S.term =
-  let lid = int_to_t_lid_for k in
-  S.fvar lid None
-
-let __int_to_t_lid_for (k:machint_kind) : Ident.lid =
-  let path = "FStar" :: module_name_for k :: (if is_unsigned k then "__uint_to_t" else "__int_to_t") :: [] in
-  Ident.lid_of_path path Range.dummyRange
-
-let __int_to_t_for (k:machint_kind) : S.term =
-  let lid = __int_to_t_lid_for k in
-  S.fvar lid None
+let width (k:machint_kind) : Const.width =
+  match k with
+  | Int8 | UInt8 -> Const.Int8
+  | Int16 | UInt16 -> Const.Int16
+  | Int32 | UInt32 -> Const.Int32
+  | Int64 | UInt64 -> Const.Int64
+  | UInt128 -> Const.Int128
+  | SizeT -> Const.Sizet
 
 (* just a newtype really, no checks or conditions here *)
-type machint (k : machint_kind) = | Mk : Z.t -> option S.meta_source_info -> machint k
+type machint (k : machint_kind) = | Mk : Z.t -> machint k
 
-let mk #k x m = Mk #k x m
+let mk #k x = Mk #k x
 let v #k (x : machint k) =
-  let Mk v _ = x in v
-let meta #k (x : machint k) =
-  let Mk _ meta = x in meta
+  let Mk v = x in v
+let int_to_t #k (i : Z.t) : machint k =
+  (* FIXME: Check bounds? *)
+  Mk i
+
 let make_as #k (x : machint k) (z : Z.t) : machint k =
-  Mk z (meta x)
+  Mk z
 
 (* just for debugging *)
 instance showable_bounded_k k : Tot (showable (machint k)) = {
-  show = (function Mk x m -> "machine integer " ^ show (Z.to_int_fs x) ^ "@@" ^ module_name_for k);
+  show = (function Mk x -> "machine integer " ^ show (Z.to_int_fs x) ^ "@@" ^ module_name_for k);
 }
 
 instance e_machint (k : machint_kind) : Tot (EMB.embedding (machint k)) =
@@ -109,25 +107,17 @@ instance e_machint (k : machint_kind) : Tot (EMB.embedding (machint k)) =
     | Some m -> S.mk (Tm_meta {tm=t; meta=Meta_desugared m}) r
   in
   let em (x : machint k) rng shadow cb =
-    let Mk i m = x in
-    let it = EMB.embed i rng None cb in
-    let int_to_t = int_to_t_for k in
-    let t = S.mk_Tm_app int_to_t [S.as_arg it] rng in
-    with_meta_ds rng t m
+    let Mk i = x in
+    let const = Const.Const_int (Z.string_of_big_int i, Some (signedness k, width k)) in
+    S.mk (S.Tm_constant const) rng
   in
   let un (t:term) cb : option (machint k) =
-    let (t, m) =
-        (match (SS.compress t).n with
-        | Tm_meta {tm=t; meta=Meta_desugared m} -> (t, Some m)
-        | _ -> (t, None))
-    in
     let t = U.unmeta_safe t in
     match (SS.compress t).n with
-    | Tm_app {hd; args=[(a,_)]} when U.is_fvar (int_to_t_lid_for k) hd
-                                  || U.is_fvar (__int_to_t_lid_for k) hd ->
-      let a = U.unlazy_emb a in
-      let! a : Z.t = EMB.try_unembed a cb in
-      Some (Mk a m)
+    | Tm_constant (Const.Const_int (str, Some (s, w)))
+        when s = signedness k && w = width k ->
+      let n = Z.big_int_of_string str in
+      Some (Mk n)
     | _ ->
       None
   in
@@ -143,29 +133,19 @@ instance nbe_machint (k : machint_kind) : Tot (NBE.embedding (machint k)) =
     | None -> t
     | Some m -> NBE.mk_t (Meta(t, Thunk.mk (fun _ -> Meta_desugared m)))
   in
-  let em cbs (x : machint k) =
-    let Mk i m = x in
-    let it = embed e_int cbs i in
-    let int_to_t args = mk_t <| FV (S.lid_as_fv (__int_to_t_lid_for k) None, [], args) in
-    let t = int_to_t [as_arg it] in
-    with_meta_ds t m
+  let em cbs (x : machint k) : t =
+    let Mk i = x in
+    let const = Const.Const_int (Z.string_of_big_int i, Some (signedness k, width k)) in
+    mk_t <| Constant (SConst const)
   in
   let un cbs a : option (machint k) =
-    let (a, m) =
-      (match a.nbe_t with
-       | Meta(t, tm) ->
-         (match Thunk.force tm with
-          | Meta_desugared m -> (t, Some m)
-          | _ -> (a, None))
-       | _ -> (a, None))
-    in
     match a.nbe_t with
-    | FV (fv1, [], [(a, _)]) when Ident.lid_equals (fv1.fv_name.v) (int_to_t_lid_for k) ->
-      let! a : Z.t = unembed e_int cbs a in
-      Some (Mk a m)
+    | Constant (SConst (Const.Const_int (str, Some (s, w))))
+        when s = signedness k && w = width k ->
+      let n = Z.big_int_of_string str in
+      Some (Mk n)
     | _ -> None
   in
   mk_emb em un
      (fun () -> mkFV (lid_as_fv (Ident.lid_of_path ["FStar"; module_name_for k; "t"] Range.dummyRange) None) [] [])
      (fun () -> ET_abstract)
-

@@ -2321,10 +2321,11 @@ and (desugar_typ :
       let uu___ = desugar_typ_aq env e in
       match uu___ with | (t, aq) -> (check_no_aq aq; t)
 and (desugar_machine_integer :
-  FStar_Syntax_DsEnv.env ->
+  env_t ->
     Prims.string ->
       (FStar_Const.signedness * FStar_Const.width) ->
-        FStar_Compiler_Range_Type.range -> FStar_Syntax_Syntax.term)
+        FStar_Compiler_Range_Type.range ->
+          FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
   fun env ->
     fun repr ->
@@ -2346,7 +2347,8 @@ and (desugar_machine_integer :
                            | FStar_Const.Int8 -> "8"
                            | FStar_Const.Int16 -> "16"
                            | FStar_Const.Int32 -> "32"
-                           | FStar_Const.Int64 -> "64"))) in
+                           | FStar_Const.Int64 -> "64"
+                           | FStar_Const.Int128 -> "128"))) in
               ((let uu___2 =
                   let uu___3 =
                     FStar_Const.within_bounds repr signedness width in
@@ -2360,92 +2362,12 @@ and (desugar_machine_integer :
                     (FStar_Errors_Codes.Error_OutOfRange, uu___4) in
                   FStar_Errors.log_issue range uu___3
                 else ());
-               (let private_intro_nm =
-                  Prims.strcat tnm
-                    (Prims.strcat ".__"
-                       (Prims.strcat
-                          (match signedness with
-                           | FStar_Const.Unsigned -> "u"
-                           | FStar_Const.Signed -> "") "int_to_t")) in
-                let intro_nm =
-                  Prims.strcat tnm
-                    (Prims.strcat "."
-                       (Prims.strcat
-                          (match signedness with
-                           | FStar_Const.Unsigned -> "u"
-                           | FStar_Const.Signed -> "") "int_to_t")) in
-                let lid =
-                  let uu___2 = FStar_Ident.path_of_text intro_nm in
-                  FStar_Ident.lid_of_path uu___2 range in
-                let lid1 =
-                  let uu___2 = FStar_Syntax_DsEnv.try_lookup_lid env lid in
-                  match uu___2 with
-                  | FStar_Pervasives_Native.Some intro_term ->
-                      (match intro_term.FStar_Syntax_Syntax.n with
-                       | FStar_Syntax_Syntax.Tm_fvar fv ->
-                           let private_lid =
-                             let uu___3 =
-                               FStar_Ident.path_of_text private_intro_nm in
-                             FStar_Ident.lid_of_path uu___3 range in
-                           let private_fv =
-                             let uu___3 =
-                               FStar_Syntax_Util.incr_delta_depth
-                                 (FStar_Pervasives_Native.__proj__Some__item__v
-                                    fv.FStar_Syntax_Syntax.fv_delta) in
-                             FStar_Syntax_Syntax.lid_and_dd_as_fv private_lid
-                               uu___3 fv.FStar_Syntax_Syntax.fv_qual in
-                           {
-                             FStar_Syntax_Syntax.n =
-                               (FStar_Syntax_Syntax.Tm_fvar private_fv);
-                             FStar_Syntax_Syntax.pos =
-                               (intro_term.FStar_Syntax_Syntax.pos);
-                             FStar_Syntax_Syntax.vars =
-                               (intro_term.FStar_Syntax_Syntax.vars);
-                             FStar_Syntax_Syntax.hash_code =
-                               (intro_term.FStar_Syntax_Syntax.hash_code)
-                           }
-                       | uu___3 ->
-                           FStar_Compiler_Effect.failwith
-                             (Prims.strcat "Unexpected non-fvar for "
-                                intro_nm))
-                  | FStar_Pervasives_Native.None ->
-                      let uu___3 =
-                        let uu___4 =
-                          FStar_Compiler_Util.format1
-                            "Unexpected numeric literal.  Restart F* to load %s."
-                            tnm in
-                        (FStar_Errors_Codes.Fatal_UnexpectedNumericLiteral,
-                          uu___4) in
-                      FStar_Errors.raise_error uu___3 range in
-                let repr' =
-                  FStar_Syntax_Syntax.mk
-                    (FStar_Syntax_Syntax.Tm_constant
-                       (FStar_Const.Const_int
-                          (repr, FStar_Pervasives_Native.None))) range in
-                let app =
-                  let uu___2 =
-                    let uu___3 =
-                      let uu___4 =
-                        let uu___5 =
-                          let uu___6 =
-                            FStar_Syntax_Syntax.as_aqual_implicit false in
-                          (repr', uu___6) in
-                        [uu___5] in
-                      {
-                        FStar_Syntax_Syntax.hd = lid1;
-                        FStar_Syntax_Syntax.args = uu___4
-                      } in
-                    FStar_Syntax_Syntax.Tm_app uu___3 in
-                  FStar_Syntax_Syntax.mk uu___2 range in
-                FStar_Syntax_Syntax.mk
-                  (FStar_Syntax_Syntax.Tm_meta
-                     {
-                       FStar_Syntax_Syntax.tm2 = app;
-                       FStar_Syntax_Syntax.meta =
-                         (FStar_Syntax_Syntax.Meta_desugared
-                            (FStar_Syntax_Syntax.Machine_integer
-                               (signedness, width)))
-                     }) range))
+               (let c =
+                  FStar_Const.Const_int
+                    (repr,
+                      (FStar_Pervasives_Native.Some (signedness, width))) in
+                FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_constant c)
+                  range))
 and (desugar_term_maybe_top :
   Prims.bool ->
     env_t ->
@@ -10403,3 +10325,83 @@ let (add_modul_to_env :
       (FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) ->
         unit FStar_Syntax_DsEnv.withenv)
   = add_modul_to_env_core true
+let (unfold_machine_integer :
+  FStar_Syntax_DsEnv.env ->
+    Prims.string ->
+      (FStar_Const.signedness * FStar_Const.width) ->
+        FStar_Compiler_Range_Type.range -> FStar_Syntax_Syntax.term)
+  =
+  fun env ->
+    fun repr ->
+      fun uu___ ->
+        fun range ->
+          match uu___ with
+          | (signedness, width) ->
+              let tnm =
+                if width = FStar_Const.Sizet
+                then "FStar.SizeT"
+                else
+                  Prims.strcat "FStar."
+                    (Prims.strcat
+                       (match signedness with
+                        | FStar_Const.Unsigned -> "U"
+                        | FStar_Const.Signed -> "")
+                       (Prims.strcat "Int"
+                          (match width with
+                           | FStar_Const.Int8 -> "8"
+                           | FStar_Const.Int16 -> "16"
+                           | FStar_Const.Int32 -> "32"
+                           | FStar_Const.Int64 -> "64"
+                           | FStar_Const.Int128 -> "128"))) in
+              let intro_nm =
+                Prims.strcat tnm
+                  (Prims.strcat "."
+                     (Prims.strcat
+                        (match signedness with
+                         | FStar_Const.Unsigned -> "u"
+                         | FStar_Const.Signed -> "") "int_to_t")) in
+              let lid =
+                let uu___1 = FStar_Ident.path_of_text intro_nm in
+                FStar_Ident.lid_of_path uu___1 range in
+              let hd =
+                let uu___1 = FStar_Syntax_DsEnv.try_lookup_lid env lid in
+                match uu___1 with
+                | FStar_Pervasives_Native.Some intro_term -> intro_term
+                | FStar_Pervasives_Native.None ->
+                    let uu___2 =
+                      let uu___3 =
+                        FStar_Compiler_Util.format1
+                          "Unexpected numeric literal.  Restart F* to load %s."
+                          tnm in
+                      (FStar_Errors_Codes.Fatal_UnexpectedNumericLiteral,
+                        uu___3) in
+                    FStar_Errors.raise_error uu___2 range in
+              let repr' =
+                FStar_Syntax_Syntax.mk
+                  (FStar_Syntax_Syntax.Tm_constant
+                     (FStar_Const.Const_int
+                        (repr, FStar_Pervasives_Native.None))) range in
+              let app =
+                let uu___1 =
+                  let uu___2 =
+                    let uu___3 =
+                      let uu___4 =
+                        let uu___5 =
+                          FStar_Syntax_Syntax.as_aqual_implicit false in
+                        (repr', uu___5) in
+                      [uu___4] in
+                    {
+                      FStar_Syntax_Syntax.hd = hd;
+                      FStar_Syntax_Syntax.args = uu___3
+                    } in
+                  FStar_Syntax_Syntax.Tm_app uu___2 in
+                FStar_Syntax_Syntax.mk uu___1 range in
+              FStar_Syntax_Syntax.mk
+                (FStar_Syntax_Syntax.Tm_meta
+                   {
+                     FStar_Syntax_Syntax.tm2 = app;
+                     FStar_Syntax_Syntax.meta =
+                       (FStar_Syntax_Syntax.Meta_desugared
+                          (FStar_Syntax_Syntax.Machine_integer
+                             (signedness, width)))
+                   }) range

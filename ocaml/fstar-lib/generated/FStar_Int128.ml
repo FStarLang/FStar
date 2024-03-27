@@ -71,8 +71,7 @@ let (op_Less_Hat : t -> t -> Prims.bool) = lt
 let (op_Less_Equals_Hat : t -> t -> Prims.bool) = lte
 let (ct_abs : t -> t) =
   fun a ->
-    let mask =
-      shift_arithmetic_right a (FStar_UInt32.uint_to_t (Prims.of_int (127))) in
+    let mask = shift_arithmetic_right a (Stdint.Uint32.of_int (127)) in
     sub (logxor a mask) mask
 let (to_string : t -> Prims.string) = fun uu___ -> Prims.admit ()
 let (of_string : Prims.string -> t) = fun uu___ -> Prims.admit ()

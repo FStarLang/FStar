@@ -1114,41 +1114,18 @@ and desugar_machine_integer env repr (signedness, width) range =
   let tnm = if width = Sizet then "FStar.SizeT" else
     "FStar." ^
     (match signedness with | Unsigned -> "U" | Signed -> "") ^ "Int" ^
-    (match width with | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64")
+    (match width with | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64" | Int128 -> "128")
   in
-  //we do a static check of integer constants
-  //and coerce them to the appropriate type using the internal coercion
-  // __uint_to_t or __int_to_t
-  //Rather than relying on a verification condition to check this trivial property
+  // We do a static check of integer constants
+  // And simply create the relevant Tm_constant node
+  // Rather than relying on a verification condition to check this trivial property
   if not (within_bounds repr signedness width)
   then FStar.Errors.log_issue
                     range
                     (Errors.Error_OutOfRange,
                      BU.format2 "%s is not in the expected range for %s" repr tnm);
-  let private_intro_nm = tnm ^
-    ".__" ^ (match signedness with | Unsigned -> "u" | Signed -> "") ^ "int_to_t"
-  in
-  let intro_nm = tnm ^
-    "." ^ (match signedness with | Unsigned -> "u" | Signed -> "") ^ "int_to_t"
-  in
-  let lid = lid_of_path (path_of_text intro_nm) range in
-  let lid =
-    match Env.try_lookup_lid env lid with
-    | Some intro_term ->
-      begin match intro_term.n with
-        | Tm_fvar fv ->
-          let private_lid = lid_of_path (path_of_text private_intro_nm) range in
-          let private_fv = S.lid_and_dd_as_fv private_lid (U.incr_delta_depth (Some?.v fv.fv_delta)) fv.fv_qual in
-          {intro_term with n=Tm_fvar private_fv}
-        | _ ->
-          failwith ("Unexpected non-fvar for " ^ intro_nm)
-      end
-    | None ->
-      raise_error (Errors.Fatal_UnexpectedNumericLiteral, (BU.format1 "Unexpected numeric literal.  Restart F* to load %s." tnm)) range in
-  let repr' = S.mk (Tm_constant (Const_int (repr, None))) range in
-  let app = S.mk (Tm_app {hd=lid; args=[repr', S.as_aqual_implicit false]}) range in
-  S.mk (Tm_meta {tm=app;
-                 meta=Meta_desugared (Machine_integer (signedness, width))}) range
+  let c : FStar.Const.sconst = Const_int (repr, Some (signedness, width)) in
+  S.mk (Tm_constant c) range
 
 and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * antiquotations_temp =
   let mk e = S.mk e top.range in
@@ -4398,3 +4375,25 @@ let add_modul_to_env_core (finish: bool) (m:Syntax.modul)
 
 let add_partial_modul_to_env = add_modul_to_env_core false
 let add_modul_to_env = add_modul_to_env_core true
+
+let unfold_machine_integer env repr (signedness, width) range =
+  let tnm = if width = Sizet then "FStar.SizeT" else
+    "FStar." ^
+    (match signedness with | Unsigned -> "U" | Signed -> "") ^ "Int" ^
+    (match width with | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64" | Int128 -> "128")
+  in
+  let intro_nm = tnm ^
+    "." ^ (match signedness with | Unsigned -> "u" | Signed -> "") ^ "int_to_t"
+  in
+  let lid = lid_of_path (path_of_text intro_nm) range in
+  let hd =
+    match Env.try_lookup_lid env lid with
+    | Some intro_term ->
+      intro_term
+    | None ->
+      raise_error (Errors.Fatal_UnexpectedNumericLiteral, (BU.format1 "Unexpected numeric literal.  Restart F* to load %s." tnm)) range
+  in
+  let repr' = S.mk (Tm_constant (Const_int (repr, None))) range in
+  let app = S.mk (Tm_app {hd; args=[repr', S.as_aqual_implicit false]}) range in
+  S.mk (Tm_meta {tm=app;
+                 meta=Meta_desugared (Machine_integer (signedness, width))}) range
