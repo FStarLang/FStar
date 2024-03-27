@@ -40,7 +40,7 @@ let impl_typ
             res == t v
         ))
 
-inline_for_extraction noextract [@@noextract_to "krml"; expect_failure]  // TODO
+inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
 fn impl_coerce_to_bounded_typ
     (b: Ghost.erased (option raw_data_item))
@@ -55,7 +55,7 @@ fn impl_coerce_to_bounded_typ
 }
 ```
 
-inline_for_extraction noextract [@@noextract_to "krml"; expect_failure]  // TODO
+inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
 fn impl_t_choice
     (#b: Ghost.erased (option raw_data_item))

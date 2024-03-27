@@ -33,7 +33,6 @@ let swap_fun = #a:Type0 -> x:ref a -> y:ref a -> #vx:erased a -> #vy:erased a ->
     (ensures fun _ -> pts_to x vy ** pts_to y vx)
 
 
-[@@ expect_failure]  // TODO
 ```pulse
 fn s1 () 
   : swap_fun 
@@ -46,7 +45,6 @@ fn s1 ()
     }
 ```
 
-[@@ expect_failure]  // TODO
 let ss = s1
 
 [@@expect_failure]

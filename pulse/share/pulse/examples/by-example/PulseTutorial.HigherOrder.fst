@@ -35,7 +35,6 @@ ensures post x y
 
 let id_t = (#a:Type0) -> x:a -> stt a emp (fun _ -> emp)
 
-[@@ expect_failure]  // TODO
 ```pulse
 fn id ()
 : id_t 
@@ -44,7 +43,6 @@ fn id ()
 
 let id_t_a (a:Type0) = x:a -> stt a emp (fun _ -> emp)
 
-[@@ expect_failure]  // TODO
 ```pulse
 fn id_a (a:Type0)
 : id_t_a a 
