@@ -97,13 +97,13 @@ let dump_symbols_for_lid (l:lident)
   let end_line = Range.line_of_pos end_pos in
   let end_col = Range.col_of_pos end_pos in
   let position = "<input>", start_line, start_col in
-  as_query (Lookup(Ident.string_of_lid l,
+  as_query (IgnoreErrors(Lookup(Ident.string_of_lid l,
                     LKCode,
                     Some position,
                     ["type"; "documentation"; "defined-at"],
                     Some (JsonAssoc [("fname", JsonStr "<input>");
                                     ("beg", JsonList [JsonInt start_line; JsonInt start_col]);
-                                    ("end", JsonList [JsonInt end_line; JsonInt end_col])])))
+                                    ("end", JsonList [JsonInt end_line; JsonInt end_col])]))))
 
 let dump_symbols (d:decl)
 : qst (list query)

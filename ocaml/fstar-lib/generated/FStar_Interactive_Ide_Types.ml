@@ -192,6 +192,7 @@ type query' =
   | GenericError of Prims.string 
   | ProtocolViolation of Prims.string 
   | FullBuffer of (Prims.string * full_buffer_request_kind * Prims.bool) 
+  | IgnoreErrors of query' 
   | Callback of
   (repl_state ->
      ((query_status * FStar_Json.json Prims.list) * (repl_state, Prims.int)
@@ -283,6 +284,11 @@ let (uu___is_FullBuffer : query' -> Prims.bool) =
 let (__proj__FullBuffer__item___0 :
   query' -> (Prims.string * full_buffer_request_kind * Prims.bool)) =
   fun projectee -> match projectee with | FullBuffer _0 -> _0
+let (uu___is_IgnoreErrors : query' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | IgnoreErrors _0 -> true | uu___ -> false
+let (__proj__IgnoreErrors__item___0 : query' -> query') =
+  fun projectee -> match projectee with | IgnoreErrors _0 -> _0
 let (uu___is_Callback : query' -> Prims.bool) =
   fun projectee ->
     match projectee with | Callback _0 -> true | uu___ -> false
@@ -477,7 +483,7 @@ let (push_query_to_string : push_query -> Prims.string) =
     FStar_Compiler_Util.format
       "{ push_kind = %s; push_line = %s; push_column = %s; push_peek_only = %s; push_code_or_decl = %s }"
       uu___
-let (query_to_string : query -> Prims.string) =
+let rec (query_to_string : query -> Prims.string) =
   fun q ->
     match q.qq with
     | Exit -> "Exit"
@@ -508,11 +514,16 @@ let (query_to_string : query -> Prims.string) =
     | GenericError uu___ -> "GenericError"
     | ProtocolViolation uu___ -> "ProtocolViolation"
     | FullBuffer uu___ -> "FullBuffer"
+    | IgnoreErrors qq ->
+        let uu___ =
+          let uu___1 = query_to_string { qq; qid = (q.qid) } in
+          Prims.strcat uu___1 ")" in
+        Prims.strcat "IgnoreErrors (" uu___
     | Callback uu___ -> "Callback"
     | Format uu___ -> "Format"
     | RestartSolver -> "RestartSolver"
     | Cancel uu___ -> "Cancel"
-let (query_needs_current_module : query' -> Prims.bool) =
+let rec (query_needs_current_module : query' -> Prims.bool) =
   fun uu___ ->
     match uu___ with
     | Exit -> false
@@ -538,6 +549,7 @@ let (query_needs_current_module : query' -> Prims.bool) =
     | Lookup uu___1 -> true
     | Compute uu___1 -> true
     | Search uu___1 -> true
+    | IgnoreErrors q -> query_needs_current_module q
 let (interactive_protocol_vernum : Prims.int) = (Prims.of_int (2))
 let (interactive_protocol_features : Prims.string Prims.list) =
   ["autocomplete";
