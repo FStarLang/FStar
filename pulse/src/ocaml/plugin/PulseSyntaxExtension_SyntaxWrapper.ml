@@ -48,7 +48,7 @@ let tm_bvar (bv:bv) : term = U.tm_bvar bv
 let tm_var (x:nm) : term = U.tm_var x
 let tm_fvar (x:fv) : term = U.tm_fvar x
 let tm_uinst (l:fv) (us:universe list) : term = U.tm_uinst l us
-let wr r t = { t; range1 = r }
+let wr r t = with_range t r
 let tm_emp r : term = wr r Tm_Emp
 let tm_pure (p:term) r : term = wr r (Tm_Pure p)
 let tm_star (p0:term) (p1:term) r : term = wr r (Tm_Star (p0, p1))
@@ -60,14 +60,14 @@ let map_aqual (q:S.aqual) =
   | _ -> None
 let tm_arrow (b:binder) (q:S.aqual) (body:comp) : term =
   U.tm_arrow b (map_aqual q) body
-let tm_expr (t:S.term) r : term = wr r (Tm_FStar t)
+let tm_expr (t:S.term) r : term = tm_fstar t r
 let tm_unknown r : term = wr r Tm_Unknown
 let tm_emp_inames :term = wr FStar_Range.range_0 Tm_EmpInames
 let tm_add_inv i is r : term = wr r (Tm_AddInv (i, is))
 
 let is_tm_exists (t:term) : bool =
-  match t.t with
-  | Tm_ExistsSL _ -> true
+  match Pulse_Syntax_Pure.inspect_term t with
+  | Some (Tm_ExistsSL _) -> true
   | _ -> false
 
 let mk_tot (t:term) : comp = C_Tot t
@@ -170,7 +170,7 @@ let mk_rewrite_hint_type p1 p2 = PSB.mk_rewrite_hint_type p1 p2
 let tm_proof_hint_with_binders (ht:_) (binders: binder list)  (s:st_term) r : st_term =
   PSB.(with_range (Tm_ProofHintWithBinders { hint_type=ht;
                                              binders;
-                                             t3=s }) r)
+                                             t=s }) r)
 
 let tm_with_inv (name:term) (body:st_term) returns_inv r : st_term =
   PSB.(with_range (tm_with_inv name body returns_inv) r)
