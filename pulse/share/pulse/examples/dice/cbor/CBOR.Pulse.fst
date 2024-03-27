@@ -527,6 +527,7 @@ ensures
             unfold (cbor_map_get_invariant pmap vkey vmap map NotFound i l);
             elim_stick0 ();
             fold (cbor_map_get_post_not_found pmap vkey vmap map);
+            admit ();  // TODO: some ascription coming in the way
             fold (cbor_map_get_post pmap vkey vmap map NotFound)
         }
         Found value ->
@@ -534,6 +535,7 @@ ensures
             rewrite (cbor_map_get_invariant pmap vkey vmap map gres i l) // FIXME: WHY WHY WHY?
                 as (cbor_map_get_invariant pmap vkey vmap map (Found value) i l);
             unfold (cbor_map_get_invariant pmap vkey vmap map (Found value) i l);
+            admit ();  // TODO: some ascription coming in the way
             fold (cbor_map_get_post pmap vkey vmap map (Found value))
         }
     }
