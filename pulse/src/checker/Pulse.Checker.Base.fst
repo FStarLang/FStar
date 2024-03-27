@@ -819,15 +819,15 @@ let norm_typing_inverse
       let d1 = Ghost.hide d1._0 in
       Pulse.RuntimeUtils.norm_well_typed_term d1 steps
     in
-    match Pulse.Readback.readback_ty t1' with
-    | Some t1_p ->
+    // match Pulse.Readback.readback_ty t1' with
+    // | Some t1_p ->
       if TermEq.term_eq (elab_term t0) t1'
       then (
         let related_t1'_t1 = Ghost.hide (RT.Rel_sym _ _ _ related_t1_t1') in
         Some (apply_conversion d related_t1'_t1)
       )
       else None
-    | _ -> None
+    // | _ -> None
 
 
 let norm_st_typing_inverse
@@ -845,8 +845,8 @@ let norm_st_typing_inverse
     let (| t1', t1'_typing, related_t1_t1' |) =
       Pulse.RuntimeUtils.norm_well_typed_term d1 steps
     in
-    match Pulse.Readback.readback_ty t1' with
-    | Some t1_p ->
+    // match Pulse.Readback.readback_ty t1' with
+    // | Some t1_p ->
       if TermEq.term_eq (elab_term t0) t1'
       then (
         let t0_typing 
@@ -863,4 +863,4 @@ let norm_st_typing_inverse
         Some (T_Equiv _ _ _ _ d steq)
       )
       else None
-    | _ -> None
+    // | _ -> None

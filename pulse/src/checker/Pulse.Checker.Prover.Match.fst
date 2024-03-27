@@ -261,6 +261,12 @@ let try_solve_uvars (g:env) (uvs:env { disjoint uvs g }) (p q:term)
       // | None -> ss
     ) ss l
 
+let rec unascribe (t:term) : term =
+  match R.inspect_ln t with
+  | R.Tv_AscribedT t _ _ _
+  | R.Tv_AscribedC t _ _ _ -> unascribe t
+  | _ -> t
+
 let unify (g:env) (uvs:env { disjoint uvs g})
   (p q:term)
   : T.Tac (ss:PS.ss_t { PS.dom ss `Set.subset` freevars q } &
@@ -274,6 +280,8 @@ let unify (g:env) (uvs:env { disjoint uvs g})
   // | Some q -> 
     if eq_tm p q
     then (| ss, Some (RT.Rel_refl _ _ _) |)
+    else if eq_tm (unascribe p) (unascribe q)
+    then let _ = assume False in (| ss, Some (RT.Rel_refl _ _ _) |)
     else if contains_uvar q uvs g
     then (| ss, None |)
     else if eligible_for_smt_equality g p q
