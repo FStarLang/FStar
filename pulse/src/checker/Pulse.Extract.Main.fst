@@ -523,7 +523,12 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
 
     | Tm_Admit _ -> p
 
-    | _ -> T.fail "Unexpected st term when erasing ghost subterms"
+    | Tm_ProofHintWithBinders _ ->
+      T.fail "erase_ghost_subterms: Unexpected constructor: ProofHintWithBinders should have been desugared away"
+
+    | Tm_WithInv { name; body; returns_inv } ->
+      ret (Tm_WithInv { name; body = erase_ghost_subterms g body; returns_inv })
+      
   end
 
 and erase_ghost_subterms_branch (g:env) (b:branch) : T.Tac branch =

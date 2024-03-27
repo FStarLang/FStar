@@ -440,6 +440,17 @@ let (pulse_translate_expr : FStar_Extraction_Krml.translate_expr_t) =
        | FStar_Extraction_ML_Syntax.MLE_App
            ({
               FStar_Extraction_ML_Syntax.expr =
+                FStar_Extraction_ML_Syntax.MLE_Name p;
+              FStar_Extraction_ML_Syntax.mlty = uu___1;
+              FStar_Extraction_ML_Syntax.loc = uu___2;_},
+            uu___3)
+           when
+           let uu___4 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___4 = "Pulse.Lib.Core.new_invariant" ->
+           FStar_Extraction_Krml.EUnit
+       | FStar_Extraction_ML_Syntax.MLE_App
+           ({
+              FStar_Extraction_ML_Syntax.expr =
                 FStar_Extraction_ML_Syntax.MLE_TApp
                 ({
                    FStar_Extraction_ML_Syntax.expr =
@@ -457,7 +468,7 @@ let (pulse_translate_expr : FStar_Extraction_Krml.translate_expr_t) =
        | uu___1 ->
            FStar_Compiler_Effect.raise
              FStar_Extraction_Krml.NotSupportedByKrmlExtension)
-let (uu___257 : unit) =
+let (uu___263 : unit) =
   FStar_Extraction_Krml.register_pre_translate_type_without_decay
     pulse_translate_type_without_decay;
   FStar_Extraction_Krml.register_pre_translate_expr pulse_translate_expr
