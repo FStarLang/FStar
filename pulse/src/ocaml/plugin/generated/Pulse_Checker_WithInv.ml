@@ -55,8 +55,9 @@ let (term_remove_inv :
     fun uu___ ->
       (fun inv ->
          fun tm ->
-           match tm.Pulse_Syntax_Base.t with
-           | Pulse_Syntax_Base.Tm_Star (tm1, inv') ->
+           match Pulse_Syntax_Pure.inspect_term tm with
+           | FStar_Pervasives_Native.Some (Pulse_Syntax_Base.Tm_Star
+               (tm1, inv')) ->
                if Pulse_Syntax_Base.eq_tm inv inv'
                then
                  Obj.magic
@@ -269,7 +270,7 @@ let (check_iname_disjoint :
                                                                     (Prims.of_int (95)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.printable_term
+                                                                    Pulse_PP.printable_fstar_term
                                                                     inames))
                                                                     (fun
                                                                     uu___2 ->
@@ -342,7 +343,7 @@ let (check_iname_disjoint :
                                                                     (Prims.of_int (91)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.printable_term
+                                                                    Pulse_PP.printable_fstar_term
                                                                     inv))
                                                                     (fun
                                                                     uu___3 ->
@@ -407,7 +408,7 @@ let (remove_iname :
              (Pulse_Elaborate_Pure.elab_term inv_p)
              (Pulse_Elaborate_Pure.elab_term inames)
              (Pulse_Elaborate_Pure.elab_term inv))
-          inames.Pulse_Syntax_Base.range1
+          (Pulse_RuntimeUtils.range_of_term inames)
 let (add_iname :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.term ->
@@ -421,7 +422,7 @@ let (add_iname :
              (Pulse_Elaborate_Pure.elab_term inv_p)
              (Pulse_Elaborate_Pure.elab_term inames)
              (Pulse_Elaborate_Pure.elab_term inv))
-          inames.Pulse_Syntax_Base.range1
+          (Pulse_RuntimeUtils.range_of_term inames)
 let (all_inames : Pulse_Syntax_Base.term) =
   Pulse_Syntax_Base.tm_fstar Pulse_Reflection_Util.all_inames_tm
     FStar_Range.range_0
@@ -596,7 +597,7 @@ let (add_remove_inverse :
                                                                     (Prims.of_int (17)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.printable_term
+                                                                    Pulse_PP.printable_fstar_term
                                                                     (add_iname
                                                                     inv_p
                                                                     (remove_iname
@@ -656,7 +657,7 @@ let (add_remove_inverse :
                                                                     (Prims.of_int (65)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.printable_term
+                                                                    Pulse_PP.printable_fstar_term
                                                                     inames))
                                                                     (fun
                                                                     uu___2 ->
@@ -854,7 +855,7 @@ let (check :
                                                                     (Prims.of_int (57)))))
                                                                 (Obj.magic
                                                                    (Pulse_PP.pp
-                                                                    Pulse_PP.printable_term
+                                                                    Pulse_PP.printable_fstar_term
                                                                     p))
                                                                 (fun uu___2
                                                                    ->
@@ -964,14 +965,14 @@ let (check :
                                                       (Pulse_Typing_Env.fail_doc
                                                          g
                                                          (FStar_Pervasives_Native.Some
-                                                            (t.Pulse_Syntax_Base.range2))
+                                                            (t.Pulse_Syntax_Base.range1))
                                                          uu___2)) uu___2)))
                                   | (uu___1, uu___2) ->
                                       Obj.magic
                                         (Obj.repr
                                            (Pulse_Typing_Env.fail g
                                               (FStar_Pervasives_Native.Some
-                                                 (t.Pulse_Syntax_Base.range2))
+                                                 (t.Pulse_Syntax_Base.range1))
                                               "Fatal: no post hint on with_invariant")))
                                  (fun uu___1 ->
                                     (fun post ->
@@ -982,7 +983,7 @@ let (check :
                                            Obj.magic
                                              (Pulse_Typing_Env.fail_doc g
                                                 (FStar_Pervasives_Native.Some
-                                                   (t.Pulse_Syntax_Base.range2))
+                                                   (t.Pulse_Syntax_Base.range1))
                                                 [FStar_Pprint.doc_of_string
                                                    "Cannot open invariants in a 'ghost' context"])
                                        | uu___1 ->
@@ -1006,7 +1007,7 @@ let (check :
                                                          (Prims.of_int (7)))))
                                                 (FStar_Tactics_Effect.lift_div_tac
                                                    (fun uu___2 ->
-                                                      body.Pulse_Syntax_Base.range2))
+                                                      body.Pulse_Syntax_Base.range1))
                                                 (fun uu___2 ->
                                                    (fun body_range ->
                                                       Obj.magic
@@ -1018,18 +1019,19 @@ let (check :
                                                                     (Prims.of_int (210))
                                                                     (Prims.of_int (23))
                                                                     (Prims.of_int (210))
-                                                                    (Prims.of_int (35)))))
+                                                                    (Prims.of_int (62)))))
                                                            (FStar_Sealed.seal
                                                               (Obj.magic
                                                                  (FStar_Range.mk_range
                                                                     "Pulse.Checker.WithInv.fst"
                                                                     (Prims.of_int (210))
-                                                                    (Prims.of_int (38))
+                                                                    (Prims.of_int (65))
                                                                     (Prims.of_int (328))
                                                                     (Prims.of_int (7)))))
                                                            (FStar_Tactics_Effect.lift_div_tac
                                                               (fun uu___2 ->
-                                                                 inv_tm.Pulse_Syntax_Base.range1))
+                                                                 Pulse_RuntimeUtils.range_of_term
+                                                                   inv_tm))
                                                            (fun uu___2 ->
                                                               (fun
                                                                  inv_tm_range
@@ -1049,7 +1051,7 @@ let (check :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.WithInv.fst"
                                                                     (Prims.of_int (210))
-                                                                    (Prims.of_int (38))
+                                                                    (Prims.of_int (65))
                                                                     (Prims.of_int (328))
                                                                     (Prims.of_int (7)))))
                                                                     (Obj.magic
@@ -1095,7 +1097,7 @@ let (check :
                                                                     (Pulse_Typing_Env.fail
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (inv_tm1.Pulse_Syntax_Base.range1))
+                                                                    inv_tm_range)
                                                                     "Ghost effect on inv?"))
                                                                     else
                                                                     Obj.magic
@@ -1127,11 +1129,13 @@ let (check :
                                                                     (Prims.of_int (328))
                                                                     (Prims.of_int (7)))))
                                                                     (match 
-                                                                    inv_tm_ty.Pulse_Syntax_Base.t
+                                                                    Pulse_Syntax_Pure.inspect_term
+                                                                    inv_tm_ty
                                                                     with
                                                                     | 
-                                                                    Pulse_Syntax_Base.Tm_Inv
-                                                                    p ->
+                                                                    FStar_Pervasives_Native.Some
+                                                                    (Pulse_Syntax_Base.Tm_Inv
+                                                                    p) ->
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.lift_div_tac
@@ -1139,7 +1143,7 @@ let (check :
                                                                     uu___4 ->
                                                                     p)))
                                                                     | 
-                                                                    Pulse_Syntax_Base.Tm_FStar
+                                                                    FStar_Pervasives_Native.Some
                                                                     uu___4 ->
                                                                     Obj.magic
                                                                     (Obj.repr
@@ -1250,7 +1254,7 @@ let (check :
                                                                     (Pulse_Typing_Env.fail
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (inv_tm1.Pulse_Syntax_Base.range1))
+                                                                    inv_tm_range)
                                                                     uu___8))
                                                                     uu___8))))
                                                                     | 
@@ -1313,7 +1317,7 @@ let (check :
                                                                     (Pulse_Typing_Env.fail
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (inv_tm1.Pulse_Syntax_Base.range1))
+                                                                    inv_tm_range)
                                                                     uu___6))
                                                                     uu___6))))
                                                                     uu___5)))
@@ -1377,7 +1381,7 @@ let (check :
                                                                     (Pulse_Typing_Env.fail
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (inv_tm1.Pulse_Syntax_Base.range1))
+                                                                    inv_tm_range)
                                                                     uu___5))
                                                                     uu___5))))
                                                                     (fun
@@ -2152,9 +2156,9 @@ let (check :
                                                                     =
                                                                     FStar_Pervasives_Native.None
                                                                     });
-                                                                    Pulse_Syntax_Base.range2
+                                                                    Pulse_Syntax_Base.range1
                                                                     =
-                                                                    (t.Pulse_Syntax_Base.range2);
+                                                                    (t.Pulse_Syntax_Base.range1);
                                                                     Pulse_Syntax_Base.effect_tag
                                                                     =
                                                                     (FStar_Sealed.seal

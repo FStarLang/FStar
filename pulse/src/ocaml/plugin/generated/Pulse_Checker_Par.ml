@@ -31,7 +31,7 @@ let (check :
                   (FStar_Tactics_Effect.lift_div_tac
                      (fun uu___ ->
                         Pulse_Checker_Pure.push_context "check_par"
-                          t.Pulse_Syntax_Base.range2 g))
+                          t.Pulse_Syntax_Base.range1 g))
                   (fun uu___ ->
                      (fun g1 ->
                         Obj.magic
@@ -558,7 +558,7 @@ let (check :
                                                                     g pre
                                                                     uu___5
                                                                     post_hint
-                                                                    t.Pulse_Syntax_Base.range2))
+                                                                    t.Pulse_Syntax_Base.range1))
                                                                     uu___5)))
                                                                     uu___5)))
                                                                     uu___5)))

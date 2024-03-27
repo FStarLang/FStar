@@ -194,7 +194,7 @@ let printable_list : 'a . 'a printable -> 'a Prims.list printable =
                   (fun uu___2 -> FStar_Pprint.brackets uu___1)))
     }
 let (printable_term : Pulse_Syntax_Base.term printable) =
-  from_show Pulse_Show.tac_showable_term
+  from_show Pulse_Show.tac_showable_r_term
 let (printable_st_term : Pulse_Syntax_Base.st_term printable) =
   from_show Pulse_Show.tac_showable_st_term
 let (printable_universe : Pulse_Syntax_Base.universe printable) =

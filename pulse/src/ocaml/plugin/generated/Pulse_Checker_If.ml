@@ -35,7 +35,7 @@ let (check :
                       (FStar_Tactics_Effect.lift_div_tac
                          (fun uu___ ->
                             Pulse_Typing_Env.push_context g "check_if"
-                              e1.Pulse_Syntax_Base.range2))
+                              e1.Pulse_Syntax_Base.range1))
                       (fun uu___ ->
                          (fun g1 ->
                             Obj.magic
@@ -361,7 +361,7 @@ let (check :
                                                                     (Pulse_Typing_Env.fail
                                                                     g1
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (br1.Pulse_Syntax_Base.range2))
+                                                                    (br1.Pulse_Syntax_Base.range1))
                                                                     (Prims.strcat
                                                                     "check_if: branch hypothesis is in freevars of checked "
                                                                     (Prims.strcat

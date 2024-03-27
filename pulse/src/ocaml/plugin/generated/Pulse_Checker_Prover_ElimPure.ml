@@ -25,7 +25,7 @@ let (elim_pure_head_ty : FStar_Reflection_Types.term) =
            (FStar_Reflection_V2_Builtins.pack_fv
               FStar_Reflection_Const.prop_qn))),
       FStar_Reflection_V2_Data.Q_Explicit) cod
-let (tm_fstar : Pulse_Syntax_Base.host_term -> Pulse_Syntax_Base.term) =
+let (tm_fstar : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term) =
   fun t -> Pulse_Syntax_Base.tm_fstar t FStar_Range.range_0
 
 let (mk_elim_pure : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.st_term) =
@@ -39,8 +39,7 @@ let (mk_elim_pure : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.st_term) =
         } in
     Pulse_Typing.wtag
       (FStar_Pervasives_Native.Some Pulse_Syntax_Base.STT_Ghost) t
-let (elim_pure_comp : Pulse_Syntax_Base.host_term -> Pulse_Syntax_Base.comp)
-  =
+let (elim_pure_comp : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp) =
   fun p ->
     let st =
       {
@@ -53,7 +52,7 @@ let (elim_pure_comp : Pulse_Syntax_Base.host_term -> Pulse_Syntax_Base.comp)
     Pulse_Syntax_Base.C_STGhost st
 let (elim_pure_typing :
   Pulse_Typing_Env.env ->
-    Pulse_Syntax_Base.host_term ->
+    Pulse_Syntax_Base.term ->
       unit -> (unit, unit, unit) Pulse_Typing.st_typing)
   =
   fun g ->
@@ -71,11 +70,9 @@ let (is_elim_pure :
        Obj.magic
          (FStar_Tactics_Effect.lift_div_tac
             (fun uu___ ->
-               match vp.Pulse_Syntax_Base.t with
-               | Pulse_Syntax_Base.Tm_Pure
-                   { Pulse_Syntax_Base.t = Pulse_Syntax_Base.Tm_FStar uu___1;
-                     Pulse_Syntax_Base.range1 = uu___2;_}
-                   -> true
+               match Pulse_Syntax_Pure.inspect_term vp with
+               | FStar_Pervasives_Native.Some (Pulse_Syntax_Base.Tm_Pure
+                   uu___1) -> true
                | uu___1 -> false))) uu___
 let (mk :
   Pulse_Typing_Env.env ->
@@ -95,13 +92,9 @@ let (mk :
                Obj.magic
                  (FStar_Tactics_Effect.lift_div_tac
                     (fun uu___ ->
-                       match v.Pulse_Syntax_Base.t with
-                       | Pulse_Syntax_Base.Tm_Pure
-                           {
-                             Pulse_Syntax_Base.t = Pulse_Syntax_Base.Tm_FStar
-                               pp;
-                             Pulse_Syntax_Base.range1 = uu___1;_}
-                           ->
+                       match Pulse_Syntax_Pure.inspect_term v with
+                       | FStar_Pervasives_Native.Some
+                           (Pulse_Syntax_Base.Tm_Pure pp) ->
                            FStar_Pervasives_Native.Some
                              (FStar_Pervasives.Mkdtuple4
                                 (Pulse_Syntax_Base.ppname_default,
@@ -146,13 +139,13 @@ let (elim_pure :
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "Pulse.Checker.Prover.ElimPure.fst"
-                   (Prims.of_int (123)) (Prims.of_int (4))
-                   (Prims.of_int (123)) (Prims.of_int (58)))))
+                   (Prims.of_int (124)) (Prims.of_int (4))
+                   (Prims.of_int (124)) (Prims.of_int (58)))))
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "Pulse.Checker.Prover.ElimPure.fst"
-                   (Prims.of_int (121)) (Prims.of_int (84))
-                   (Prims.of_int (126)) (Prims.of_int (62)))))
+                   (Prims.of_int (122)) (Prims.of_int (84))
+                   (Prims.of_int (127)) (Prims.of_int (62)))))
           (Obj.magic
              (elim_pure_frame g ctxt Pulse_Syntax_Base.tm_emp ()
                 (Pulse_Typing_Env.mk_env (Pulse_Typing_Env.fstar_env g))))
@@ -181,13 +174,13 @@ let (elim_pure_pst :
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "Pulse.Checker.Prover.ElimPure.fst"
-                 (Prims.of_int (135)) (Prims.of_int (4)) (Prims.of_int (140))
+                 (Prims.of_int (136)) (Prims.of_int (4)) (Prims.of_int (141))
                  (Prims.of_int (13)))))
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "Pulse.Checker.Prover.ElimPure.fst"
-                 (Prims.of_int (132)) (Prims.of_int (74))
-                 (Prims.of_int (171)) (Prims.of_int (3)))))
+                 (Prims.of_int (133)) (Prims.of_int (74))
+                 (Prims.of_int (172)) (Prims.of_int (3)))))
         (Obj.magic
            (elim_pure_frame pst.Pulse_Checker_Prover_Base.pg
               (Pulse_Typing_Combinators.list_as_vprop

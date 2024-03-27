@@ -94,7 +94,7 @@ let (check_bind_fn :
                                                              (Pulse_Typing_Env.fail
                                                                 g
                                                                 (FStar_Pervasives_Native.Some
-                                                                   (t1.Pulse_Syntax_Base.range2))
+                                                                   (t1.Pulse_Syntax_Base.range1))
                                                                 "check_bind_fn: head is not a total abstraction"))
                                                       else
                                                         Obj.magic
@@ -131,7 +131,7 @@ let (check_bind_fn :
                                                                     (Pulse_Typing_Env.fail
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (t1.Pulse_Syntax_Base.range2))
+                                                                    (t1.Pulse_Syntax_Base.range1))
                                                                     "check_bind: please annotate the postcondition"))
                                                                  else
                                                                    Obj.magic
@@ -395,7 +395,7 @@ let (check_bind_fn :
                                  Obj.magic
                                    (Pulse_Typing_Env.fail g
                                       (FStar_Pervasives_Native.Some
-                                         (t.Pulse_Syntax_Base.range2))
+                                         (t.Pulse_Syntax_Base.range1))
                                       "check_bind_fn: head is not an abstraction")))
                        uu___)
 let (check_bind :
@@ -430,7 +430,7 @@ let (check_bind :
                   (FStar_Tactics_Effect.lift_div_tac
                      (fun uu___ ->
                         Pulse_Typing_Env.push_context g "check_bind"
-                          t.Pulse_Syntax_Base.range2))
+                          t.Pulse_Syntax_Base.range1))
                   (fun uu___ ->
                      (fun g1 ->
                         Obj.magic
@@ -504,7 +504,7 @@ let (check_bind :
                                              (Obj.repr
                                                 (Pulse_Typing_Env.fail g1
                                                    (FStar_Pervasives_Native.Some
-                                                      (t.Pulse_Syntax_Base.range2))
+                                                      (t.Pulse_Syntax_Base.range1))
                                                    "check_bind: post hint is not set, please add an annotation"))
                                          else
                                            Obj.magic
@@ -659,10 +659,12 @@ let (check_bind :
                                                                     (Prims.of_int (96))
                                                                     (Prims.of_int (11)))))
                                                                     (match 
-                                                                    ty.Pulse_Syntax_Base.t
+                                                                    Pulse_Syntax_Pure.inspect_term
+                                                                    ty
                                                                     with
                                                                     | 
-                                                                    Pulse_Syntax_Base.Tm_Unknown
+                                                                    FStar_Pervasives_Native.Some
+                                                                    (Pulse_Syntax_Base.Tm_Unknown)
                                                                     ->
                                                                     Obj.magic
                                                                     (Obj.repr
@@ -871,7 +873,7 @@ let (check_bind :
                                                                     (Pulse_Typing_Env.fail
                                                                     g1
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (e1.Pulse_Syntax_Base.range2))
+                                                                    (e1.Pulse_Syntax_Base.range1))
                                                                     uu___16))
                                                                     uu___16)))
                                                                     else
@@ -1089,7 +1091,7 @@ let (check_tot_bind :
                   (FStar_Tactics_Effect.lift_div_tac
                      (fun uu___ ->
                         Pulse_Typing_Env.push_context g "check_tot_bind"
-                          t.Pulse_Syntax_Base.range2))
+                          t.Pulse_Syntax_Base.range1))
                   (fun uu___ ->
                      (fun g1 ->
                         Obj.magic
@@ -1116,7 +1118,7 @@ let (check_tot_bind :
                                   (Obj.repr
                                      (Pulse_Typing_Env.fail g1
                                         (FStar_Pervasives_Native.Some
-                                           (t.Pulse_Syntax_Base.range2))
+                                           (t.Pulse_Syntax_Base.range1))
                                         "check_tot_bind: post hint is not set, please add an annotation"))
                               else
                                 Obj.magic
@@ -1218,9 +1220,9 @@ let (check_tot_bind :
                                                                     Pulse_Syntax_Base.body1
                                                                     = e2
                                                                     });
-                                                                    Pulse_Syntax_Base.range2
+                                                                    Pulse_Syntax_Base.range1
                                                                     =
-                                                                    (t.Pulse_Syntax_Base.range2);
+                                                                    (t.Pulse_Syntax_Base.range1);
                                                                     Pulse_Syntax_Base.effect_tag
                                                                     =
                                                                     (t.Pulse_Syntax_Base.effect_tag)
@@ -1282,13 +1284,13 @@ let (check_tot_bind :
                                                                     (Prims.of_int (155))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (155))
-                                                                    (Prims.of_int (80)))))
+                                                                    (Prims.of_int (107)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Bind.fst"
                                                                     (Prims.of_int (155))
-                                                                    (Prims.of_int (85))
+                                                                    (Prims.of_int (112))
                                                                     (Prims.of_int (157))
                                                                     (Prims.of_int (60)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
@@ -1297,9 +1299,10 @@ let (check_tot_bind :
                                                                     {
                                                                     Pulse_Syntax_Base.term1
                                                                     = head;
-                                                                    Pulse_Syntax_Base.range2
+                                                                    Pulse_Syntax_Base.range1
                                                                     =
-                                                                    (e1.Pulse_Syntax_Base.range1);
+                                                                    (Pulse_RuntimeUtils.range_of_term
+                                                                    e1);
                                                                     Pulse_Syntax_Base.effect_tag
                                                                     =
                                                                     Pulse_Syntax_Base.default_effect_hint
@@ -1341,9 +1344,9 @@ let (check_tot_bind :
                                                                     Pulse_Syntax_Base.body1
                                                                     = e2
                                                                     });
-                                                                    Pulse_Syntax_Base.range2
+                                                                    Pulse_Syntax_Base.range1
                                                                     =
-                                                                    (t.Pulse_Syntax_Base.range2);
+                                                                    (t.Pulse_Syntax_Base.range1);
                                                                     Pulse_Syntax_Base.effect_tag
                                                                     =
                                                                     (t.Pulse_Syntax_Base.effect_tag)

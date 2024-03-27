@@ -424,7 +424,7 @@ let (check_branch :
                                  (Obj.repr
                                     (Pulse_Typing_Env.fail g
                                        (FStar_Pervasives_Native.Some
-                                          (e.Pulse_Syntax_Base.range2))
+                                          (e.Pulse_Syntax_Base.range1))
                                        "readback_pat failed")))
                           (fun uu___ ->
                              (fun p ->
@@ -555,7 +555,7 @@ let (check_branch :
                                                                     (Pulse_Typing_Env.fail
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (e.Pulse_Syntax_Base.range2))
+                                                                    (e.Pulse_Syntax_Base.range1))
                                                                     "Failed to elab pattern into term"))
                                                                     else
                                                                     Obj.magic
@@ -598,7 +598,7 @@ let (check_branch :
                                                                     (Pulse_Typing_Env.fail
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (e.Pulse_Syntax_Base.range2))
+                                                                    (e.Pulse_Syntax_Base.range1))
                                                                     "should not happen: pattern elaborated to Tv_Unknown"))
                                                                     else
                                                                     Obj.magic
@@ -1616,17 +1616,18 @@ let (check :
                                         (Prims.of_int (411))
                                         (Prims.of_int (17))
                                         (Prims.of_int (411))
-                                        (Prims.of_int (25)))))
+                                        (Prims.of_int (52)))))
                                (FStar_Sealed.seal
                                   (Obj.magic
                                      (FStar_Range.mk_range
                                         "Pulse.Checker.Match.fst"
                                         (Prims.of_int (411))
-                                        (Prims.of_int (28))
+                                        (Prims.of_int (55))
                                         (Prims.of_int (457))
                                         (Prims.of_int (55)))))
                                (FStar_Tactics_Effect.lift_div_tac
-                                  (fun uu___ -> sc.Pulse_Syntax_Base.range1))
+                                  (fun uu___ ->
+                                     Pulse_RuntimeUtils.range_of_term sc))
                                (fun uu___ ->
                                   (fun sc_range ->
                                      Obj.magic

@@ -50,29 +50,39 @@ let (__proj__Mkfv__item__fv_range : fv -> range) =
   fun projectee -> match projectee with | { fv_name; fv_range;_} -> fv_range
 let (as_fv : FStar_Reflection_Types.name -> fv) =
   fun l -> { fv_name = l; fv_range = FStar_Range.range_0 }
-type 't not_tv_unknown = unit
-type host_term = FStar_Reflection_Types.term
-type term' =
-  | Tm_Emp 
-  | Tm_Pure of term 
-  | Tm_Star of term * term 
-  | Tm_ExistsSL of universe * binder * term 
-  | Tm_ForallSL of universe * binder * term 
-  | Tm_VProp 
-  | Tm_Inv of term 
-  | Tm_Inames 
-  | Tm_EmpInames 
-  | Tm_AddInv of term * term 
-  | Tm_FStar of host_term 
-  | Tm_Unknown 
-and binder =
+type term = FStar_Reflection_Types.term
+type vprop = term
+type typ = term
+type binder =
   {
   binder_ty: term ;
   binder_ppname: ppname ;
   binder_attrs: (term Prims.list, unit) FStar_Sealed_Inhabited.sealed }
-and term = {
-  t: term' ;
-  range1: range }
+let (__proj__Mkbinder__item__binder_ty : binder -> term) =
+  fun projectee ->
+    match projectee with
+    | { binder_ty; binder_ppname; binder_attrs;_} -> binder_ty
+let (__proj__Mkbinder__item__binder_ppname : binder -> ppname) =
+  fun projectee ->
+    match projectee with
+    | { binder_ty; binder_ppname; binder_attrs;_} -> binder_ppname
+let (__proj__Mkbinder__item__binder_attrs :
+  binder -> (term Prims.list, unit) FStar_Sealed_Inhabited.sealed) =
+  fun projectee ->
+    match projectee with
+    | { binder_ty; binder_ppname; binder_attrs;_} -> binder_attrs
+type term_view =
+  | Tm_Emp 
+  | Tm_Pure of term 
+  | Tm_Star of vprop * vprop 
+  | Tm_ExistsSL of universe * binder * vprop 
+  | Tm_ForallSL of universe * binder * vprop 
+  | Tm_VProp 
+  | Tm_Inv of vprop 
+  | Tm_Inames 
+  | Tm_EmpInames 
+  | Tm_AddInv of term * term 
+  | Tm_Unknown 
 let uu___is_Tm_Emp uu___ = match uu___ with | Tm_Emp _ -> true | _ -> false
 let uu___is_Tm_Pure uu___ = match uu___ with | Tm_Pure _ -> true | _ -> false
 let uu___is_Tm_Star uu___ = match uu___ with | Tm_Star _ -> true | _ -> false
@@ -89,54 +99,132 @@ let uu___is_Tm_EmpInames uu___ =
   match uu___ with | Tm_EmpInames _ -> true | _ -> false
 let uu___is_Tm_AddInv uu___ =
   match uu___ with | Tm_AddInv _ -> true | _ -> false
-let uu___is_Tm_FStar uu___ =
-  match uu___ with | Tm_FStar _ -> true | _ -> false
 let uu___is_Tm_Unknown uu___ =
   match uu___ with | Tm_Unknown _ -> true | _ -> false
-type vprop = term
-type typ = term
+let (pack_term_view : term_view -> range -> term) =
+  fun top ->
+    fun r ->
+      let w t' = Pulse_RuntimeUtils.set_range t' r in
+      match top with
+      | Tm_VProp ->
+          w
+            (FStar_Reflection_V2_Builtins.pack_ln
+               (FStar_Reflection_V2_Data.Tv_FVar
+                  (FStar_Reflection_V2_Builtins.pack_fv
+                     Pulse_Reflection_Util.vprop_lid)))
+      | Tm_Emp ->
+          w
+            (FStar_Reflection_V2_Builtins.pack_ln
+               (FStar_Reflection_V2_Data.Tv_FVar
+                  (FStar_Reflection_V2_Builtins.pack_fv
+                     Pulse_Reflection_Util.emp_lid)))
+      | Tm_Inv p ->
+          let head =
+            FStar_Reflection_V2_Builtins.pack_ln
+              (FStar_Reflection_V2_Data.Tv_FVar
+                 (FStar_Reflection_V2_Builtins.pack_fv
+                    Pulse_Reflection_Util.inv_lid)) in
+          w
+            (FStar_Reflection_V2_Builtins.pack_ln
+               (FStar_Reflection_V2_Data.Tv_App
+                  (head, (p, FStar_Reflection_V2_Data.Q_Explicit))))
+      | Tm_Pure p ->
+          let head =
+            FStar_Reflection_V2_Builtins.pack_ln
+              (FStar_Reflection_V2_Data.Tv_FVar
+                 (FStar_Reflection_V2_Builtins.pack_fv
+                    Pulse_Reflection_Util.pure_lid)) in
+          w
+            (FStar_Reflection_V2_Builtins.pack_ln
+               (FStar_Reflection_V2_Data.Tv_App
+                  (head, (p, FStar_Reflection_V2_Data.Q_Explicit))))
+      | Tm_Star (l, r1) -> w (Pulse_Reflection_Util.mk_star l r1)
+      | Tm_ExistsSL (u, b, body) ->
+          let t = b.binder_ty in
+          if uu___is_Tm_ExistsSL top
+          then
+            w
+              (Pulse_Reflection_Util.mk_exists u t
+                 (Pulse_Reflection_Util.mk_abs_with_name_and_range
+                    (b.binder_ppname).name (b.binder_ppname).range t
+                    FStar_Reflection_V2_Data.Q_Explicit body))
+          else
+            w
+              (Pulse_Reflection_Util.mk_forall u t
+                 (Pulse_Reflection_Util.mk_abs_with_name_and_range
+                    (b.binder_ppname).name (b.binder_ppname).range t
+                    FStar_Reflection_V2_Data.Q_Explicit body))
+      | Tm_ForallSL (u, b, body) ->
+          let t = b.binder_ty in
+          if uu___is_Tm_ExistsSL top
+          then
+            w
+              (Pulse_Reflection_Util.mk_exists u t
+                 (Pulse_Reflection_Util.mk_abs_with_name_and_range
+                    (b.binder_ppname).name (b.binder_ppname).range t
+                    FStar_Reflection_V2_Data.Q_Explicit body))
+          else
+            w
+              (Pulse_Reflection_Util.mk_forall u t
+                 (Pulse_Reflection_Util.mk_abs_with_name_and_range
+                    (b.binder_ppname).name (b.binder_ppname).range t
+                    FStar_Reflection_V2_Data.Q_Explicit body))
+      | Tm_Inames ->
+          w
+            (FStar_Reflection_V2_Builtins.pack_ln
+               (FStar_Reflection_V2_Data.Tv_FVar
+                  (FStar_Reflection_V2_Builtins.pack_fv
+                     Pulse_Reflection_Util.inames_lid)))
+      | Tm_EmpInames -> w Pulse_Reflection_Util.emp_inames_tm
+      | Tm_AddInv (i, is) ->
+          w
+            (Pulse_Reflection_Util.add_inv_tm
+               (FStar_Reflection_V2_Builtins.pack_ln
+                  FStar_Reflection_V2_Data.Tv_Unknown) is i)
+      | Tm_Unknown ->
+          w
+            (FStar_Reflection_V2_Builtins.pack_ln
+               FStar_Reflection_V2_Data.Tv_Unknown)
 let binder_attrs_default :
   'uuuuu . unit -> 'uuuuu Prims.list FStar_Sealed.sealed =
   fun uu___ -> FStar_Sealed.seal []
-let (term_range : term -> range) = fun t -> t.range1
-let (tm_fstar : host_term -> range -> term) =
-  fun t -> fun r -> { t = (Tm_FStar t); range1 = r }
-let (with_range : term' -> range -> term) =
-  fun t -> fun r -> { t; range1 = r }
+let (term_range : term -> FStar_Range.range) =
+  fun t -> Pulse_RuntimeUtils.range_of_term t
+let (tm_fstar : term -> range -> term) =
+  fun t -> fun r -> Pulse_RuntimeUtils.set_range t r
+let (with_range : term_view -> range -> term) =
+  fun t -> fun r -> pack_term_view t r
 let (tm_vprop : term) = with_range Tm_VProp FStar_Range.range_0
-let (tm_inv : term -> term) =
+let (tm_inv : vprop -> term) =
   fun p -> with_range (Tm_Inv p) FStar_Range.range_0
 let (tm_inames : term) = with_range Tm_Inames FStar_Range.range_0
 let (tm_emp : term) = with_range Tm_Emp FStar_Range.range_0
 let (tm_emp_inames : term) = with_range Tm_EmpInames FStar_Range.range_0
 let (tm_unknown : term) = with_range Tm_Unknown FStar_Range.range_0
 let (tm_pure : term -> term) =
-  fun p -> { t = (Tm_Pure p); range1 = (p.range1) }
+  fun p -> pack_term_view (Tm_Pure p) (Pulse_RuntimeUtils.range_of_term p)
 let (tm_star : vprop -> vprop -> term) =
   fun l ->
     fun r ->
-      {
-        t = (Tm_Star (l, r));
-        range1 = (Pulse_RuntimeUtils.union_ranges l.range1 r.range1)
-      }
+      pack_term_view (Tm_Star (l, r))
+        (Pulse_RuntimeUtils.union_ranges (Pulse_RuntimeUtils.range_of_term l)
+           (Pulse_RuntimeUtils.range_of_term r))
 let (tm_exists_sl : universe -> binder -> vprop -> term) =
   fun u ->
     fun b ->
       fun body ->
-        {
-          t = (Tm_ExistsSL (u, b, body));
-          range1 =
-            (Pulse_RuntimeUtils.union_ranges (b.binder_ty).range1 body.range1)
-        }
+        pack_term_view (Tm_ExistsSL (u, b, body))
+          (Pulse_RuntimeUtils.union_ranges
+             (Pulse_RuntimeUtils.range_of_term b.binder_ty)
+             (Pulse_RuntimeUtils.range_of_term body))
 let (tm_forall_sl : universe -> binder -> vprop -> term) =
   fun u ->
     fun b ->
       fun body ->
-        {
-          t = (Tm_ForallSL (u, b, body));
-          range1 =
-            (Pulse_RuntimeUtils.union_ranges (b.binder_ty).range1 body.range1)
-        }
+        pack_term_view (Tm_ForallSL (u, b, body))
+          (Pulse_RuntimeUtils.union_ranges
+             (Pulse_RuntimeUtils.range_of_term b.binder_ty)
+             (Pulse_RuntimeUtils.range_of_term body))
 type st_comp = {
   u: universe ;
   res: term ;
@@ -468,7 +556,7 @@ and st_term'__Tm_ProofHintWithBinders__payload =
   {
   hint_type: proof_hint_type ;
   binders: binder Prims.list ;
-  t3: st_term }
+  t: st_term }
 and st_term'__Tm_WithInv__payload =
   {
   name1: term ;
@@ -496,7 +584,7 @@ and st_term' =
   | Tm_WithInv of st_term'__Tm_WithInv__payload 
 and st_term = {
   term1: st_term' ;
-  range2: range ;
+  range1: range ;
   effect_tag: effect_hint }
 let uu___is_Tm_Return uu___ =
   match uu___ with | Tm_Return _ -> true | _ -> false
@@ -545,7 +633,7 @@ and decl' =
   | FnDecl of decl'__FnDecl__payload 
 and decl = {
   d: decl' ;
-  range3: range }
+  range2: range }
 let (__proj__Mkdecl'__FnDecl__payload__item__id :
   decl'__FnDecl__payload -> FStar_Reflection_Types.ident) =
   fun projectee ->
@@ -582,9 +670,9 @@ let (uu___is_FnDecl : decl' -> Prims.bool) = fun projectee -> true
 let (__proj__FnDecl__item___0 : decl' -> decl'__FnDecl__payload) =
   fun projectee -> match projectee with | FnDecl _0 -> _0
 let (__proj__Mkdecl__item__d : decl -> decl') =
-  fun projectee -> match projectee with | { d; range3 = range1;_} -> d
+  fun projectee -> match projectee with | { d; range2 = range1;_} -> d
 let (__proj__Mkdecl__item__range : decl -> range) =
-  fun projectee -> match projectee with | { d; range3 = range1;_} -> range1
+  fun projectee -> match projectee with | { d; range2 = range1;_} -> range1
 let (mk_binder_with_attrs :
   term ->
     ppname -> (term Prims.list, unit) FStar_Sealed_Inhabited.sealed -> binder)
@@ -607,30 +695,8 @@ let (mk_binder_ppname : term -> ppname -> binder) =
       mk_binder_with_attrs binder_ty binder_ppname (binder_attrs_default ())
 let (eq_univ : universe -> universe -> Prims.bool) =
   fun u1 -> fun u2 -> FStar_Reflection_V2_TermEq.univ_eq_dec u1 u2
-let rec (eq_tm : term -> term -> Prims.bool) =
-  fun t1 ->
-    fun t2 ->
-      match ((t1.t), (t2.t)) with
-      | (Tm_VProp, Tm_VProp) -> true
-      | (Tm_Emp, Tm_Emp) -> true
-      | (Tm_Inames, Tm_Inames) -> true
-      | (Tm_EmpInames, Tm_EmpInames) -> true
-      | (Tm_Unknown, Tm_Unknown) -> true
-      | (Tm_Star (l1, r1), Tm_Star (l2, r2)) ->
-          (eq_tm l1 l2) && (eq_tm r1 r2)
-      | (Tm_Inv p1, Tm_Inv p2) -> eq_tm p1 p2
-      | (Tm_Pure p1, Tm_Pure p2) -> eq_tm p1 p2
-      | (Tm_ExistsSL (u1, t11, b1), Tm_ExistsSL (u2, t21, b2)) ->
-          ((eq_univ u1 u2) && (eq_tm t11.binder_ty t21.binder_ty)) &&
-            (eq_tm b1 b2)
-      | (Tm_ForallSL (u1, t11, b1), Tm_ForallSL (u2, t21, b2)) ->
-          ((eq_univ u1 u2) && (eq_tm t11.binder_ty t21.binder_ty)) &&
-            (eq_tm b1 b2)
-      | (Tm_FStar t11, Tm_FStar t21) ->
-          FStar_Reflection_V2_TermEq.term_eq_dec t11 t21
-      | (Tm_AddInv (i1, is1), Tm_AddInv (i2, is2)) ->
-          (eq_tm i1 i2) && (eq_tm is1 is2)
-      | uu___ -> false
+let (eq_tm : term -> term -> Prims.bool) =
+  fun t1 -> fun t2 -> FStar_Reflection_V2_TermEq.term_eq_dec t1 t2
 let (eq_st_comp : st_comp -> st_comp -> Prims.bool) =
   fun s1 ->
     fun s2 ->
@@ -832,9 +898,9 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
             (eq_tm_opt post1 post2)
       | (Tm_Unreachable, Tm_Unreachable) -> true
       | (Tm_ProofHintWithBinders
-         { hint_type = ht1; binders = bs1; t3 = t11;_},
+         { hint_type = ht1; binders = bs1; t = t11;_},
          Tm_ProofHintWithBinders
-         { hint_type = ht2; binders = bs2; t3 = t21;_}) ->
+         { hint_type = ht2; binders = bs2; t = t21;_}) ->
           ((eq_hint_type ht1 ht2) && (eq_list eq_binder bs1 bs2)) &&
             (eq_st_term t11 t21)
       | (Tm_WithInv { name1; body6 = body1; returns_inv = r1;_}, Tm_WithInv
