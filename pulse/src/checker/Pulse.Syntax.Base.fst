@@ -26,13 +26,21 @@ let eq_univ (u1 u2:universe) : b:bool{b <==> u1 == u2} =
   assume (faithful_univ u2);
   univ_eq_dec u1 u2
 
+let rec unascribe (t:term) : term =
+  match R.inspect_ln t with
+  | R.Tv_AscribedT t _ _ _
+  | R.Tv_AscribedC t _ _ _ -> unascribe t
+  | _ -> t
+
 let eq_tm (t1 t2:term) : Tot (b:bool { b <==> (t1 == t2) }) =  
   let open FStar.Reflection.V2.TermEq in
-  assume (faithful t1);
-  assume (faithful t2);
-  term_eq_dec t1 t2
-
-
+  let t1' = t1 in // unascribe t1 in
+  let t2' = t2 in // unascribe t2 in
+  assume (faithful t1');
+  assume (faithful t2');
+  let b = term_eq_dec t1' t2' in
+  assume (b <==> (t1 == t2));
+  b
 
   // = match t1.t, t2.t with
   //   | Tm_VProp, Tm_VProp

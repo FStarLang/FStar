@@ -36,9 +36,11 @@ module P = Pulse.Syntax.Printer
 module PS = Pulse.Checker.Prover.Substs
 module Metatheory = Pulse.Typing.Metatheory
 
-let equational (t:term) : bool =
+let rec equational (t:term) : bool =
   match R.inspect_ln t with
   | R.Tv_Match _ _ _ -> true
+  | R.Tv_AscribedT t _ _ _
+  | R.Tv_AscribedC t _ _ _ -> equational t
   | _ -> false
 
 let type_of_fv (g:env) (fv:R.fv)
