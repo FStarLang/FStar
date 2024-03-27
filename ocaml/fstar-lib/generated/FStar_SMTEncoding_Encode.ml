@@ -4493,7 +4493,7 @@ and (encode_sigelt' :
            ->
            let t_lid = t in
            let tcenv = env.FStar_SMTEncoding_Env.tcenv in
-           let is_injective =
+           let is_injective_on_params =
              let uu___3 = FStar_Syntax_Subst.univ_var_opening universe_names in
              match uu___3 with
              | (usubst, uvs) ->
@@ -4686,7 +4686,7 @@ and (encode_sigelt' :
              then
                let uu___5 = FStar_Ident.string_of_lid t in
                FStar_Compiler_Util.print2 "%s injectivity for %s\n"
-                 (if is_injective then "YES" else "NO") uu___5
+                 (if is_injective_on_params then "YES" else "NO") uu___5
              else ());
             (let quals = se.FStar_Syntax_Syntax.sigquals in
              let is_logical =
@@ -4794,21 +4794,61 @@ and (encode_sigelt' :
                                                        "Impossible"
                                                    else ();
                                                    (let eqs =
-                                                      if is_injective
+                                                      let uu___14 =
+                                                        is_injective_on_params
+                                                          ||
+                                                          (let uu___15 =
+                                                             FStar_Options.ext_getv
+                                                               "compat:injectivity" in
+                                                           uu___15 <> "") in
+                                                      if uu___14
                                                       then
                                                         FStar_Compiler_List.map2
                                                           (fun v ->
                                                              fun a ->
-                                                               let uu___14 =
-                                                                 let uu___15
+                                                               let uu___15 =
+                                                                 let uu___16
                                                                    =
                                                                    FStar_SMTEncoding_Util.mkFreeV
                                                                     v in
-                                                                 (uu___15, a) in
+                                                                 (uu___16, a) in
                                                                FStar_SMTEncoding_Util.mkEq
-                                                                 uu___14)
+                                                                 uu___15)
                                                           vars indices1
-                                                      else [] in
+                                                      else
+                                                        (let num_params =
+                                                           FStar_Compiler_List.length
+                                                             tps in
+                                                         let uu___16 =
+                                                           FStar_Compiler_List.splitAt
+                                                             num_params vars in
+                                                         match uu___16 with
+                                                         | (_var_params,
+                                                            var_indices) ->
+                                                             let uu___17 =
+                                                               FStar_Compiler_List.splitAt
+                                                                 num_params
+                                                                 indices1 in
+                                                             (match uu___17
+                                                              with
+                                                              | (_i_params,
+                                                                 indices2) ->
+                                                                  FStar_Compiler_List.map2
+                                                                    (
+                                                                    fun v ->
+                                                                    fun a ->
+                                                                    let uu___18
+                                                                    =
+                                                                    let uu___19
+                                                                    =
+                                                                    FStar_SMTEncoding_Util.mkFreeV
+                                                                    v in
+                                                                    (uu___19,
+                                                                    a) in
+                                                                    FStar_SMTEncoding_Util.mkEq
+                                                                    uu___18)
+                                                                    var_indices
+                                                                    indices2)) in
                                                     let uu___14 =
                                                       let uu___15 =
                                                         let uu___16 =

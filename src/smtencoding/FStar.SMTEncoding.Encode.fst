@@ -1230,7 +1230,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                           ds=datas} ->
          let t_lid = t in
          let tcenv = env.tcenv in
-         let is_injective  =
+         let is_injective_on_params  =
              let usubst, uvs = SS.univ_var_opening universe_names in
              let env, tps, k =
                 Env.push_univ_vars tcenv uvs,
@@ -1309,7 +1309,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         in
         if Env.debug env.tcenv <| Options.Other "SMTEncoding"
         then BU.print2 "%s injectivity for %s\n"
-                    (if is_injective then "YES" else "NO")
+                    (if is_injective_on_params then "YES" else "NO")
                     (Ident.string_of_lid t);
         let quals = se.sigquals in
         let is_logical = quals |> BU.for_some (function Logic | Assumption -> true | _ -> false) in
@@ -1333,9 +1333,17 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                     if List.length indices <> List.length vars
                     then failwith "Impossible";
                     let eqs =
-                        if is_injective
+                        if is_injective_on_params
+                        || Options.ext_getv "compat:injectivity" <> ""
                         then List.map2 (fun v a -> mkEq(mkFreeV v, a)) vars indices
-                        else [] in
+                        else (
+                            //only injectivity on indices
+                            let num_params = List.length tps in
+                            let _var_params, var_indices = List.splitAt num_params vars in
+                            let _i_params, indices = List.splitAt num_params indices in
+                            List.map2 (fun v a -> mkEq(mkFreeV v, a)) var_indices indices
+                        )
+                    in
                     mkOr(out, mkAnd(mk_data_tester env l xx, eqs |> mk_and_l)), decls@decls') (mkFalse, []) in
                 let ffsym, ff = fresh_fvar env.current_module_name "f" Fuel_sort in
                 let fuel_guarded_inversion =
