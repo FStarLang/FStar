@@ -528,9 +528,12 @@ let continuation_elaborator_with_bind_fn (#g:env) (#ctxt:term)
 
 let rec check_equiv_emp (g:env) (vp:term)
   : option (vprop_equiv g vp tm_emp)
-  = match vp.t with
-    | Tm_Emp -> Some (VE_Refl _ _)
-    | Tm_Star vp1 vp2 ->
+  = assume False;  // TODO
+    match inspect_term vp with
+    | Some Tm_Emp -> Some (VE_Refl _ _)
+    | Some (Tm_Star vp1 vp2) ->
+      assume (vp1 << vp);
+      assume (vp2 << vp);
       (match check_equiv_emp g vp1, check_equiv_emp g vp2 with
        | Some d1, Some d2 ->
          let d3 : vprop_equiv g (tm_star vp1 vp2) (tm_star tm_emp tm_emp)
@@ -694,10 +697,10 @@ let rec is_stateful_arrow (g:env) (c:option comp) (args:list T.argv) (out:list T
     )
 
     | Some (C_Tot c_res) -> (
-      if not (Tm_FStar? c_res.t)
-      then None
-      else (
-        let Tm_FStar c_res = c_res.t in
+      // if not (Tm_FStar? c_res.t)
+      // then None
+      // else (
+        let c_res = c_res in
         let ht = T.inspect c_res in
         match ht with
         | T.Tv_Arrow b c -> (
@@ -729,33 +732,34 @@ let rec is_stateful_arrow (g:env) (c:option comp) (args:list T.argv) (out:list T
           let ht = T.inspect c_res' in
           if T.Tv_Arrow? ht
           then (
-            assume (not_tv_unknown c_res');
+            // assume (not_tv_unknown c_res');
             let c_res' = tm_fstar c_res' (T.range_of_term c_res') in
             is_stateful_arrow g (Some (C_Tot c_res')) args out
           )
           else None
-      )
+      // )
     )
 
 module RU = Pulse.RuntimeUtils  
 let is_stateful_application (g:env) (e:term) 
-  : T.Tac (option st_term)
-  = match e.t with
-    | Tm_FStar host_term -> (
+  : T.Tac (option st_term) =
+  // = match e.t with
+  //   | Tm_FStar host_term -> (
+    let host_term = e in
       let head, args = T.collect_app_ln host_term in
-      assume (not_tv_unknown head);
+      // assume (not_tv_unknown head);
       match RU.lax_check_term_with_unknown_universes (elab_env g) head with
       | None -> None
       | Some ht -> 
-        assume (not_tv_unknown ht);
+        // assume (not_tv_unknown ht);
         let head_t = tm_fstar ht (T.range_of_term ht) in
         match is_stateful_arrow g (Some (C_Tot head_t)) args [] with 
         | None -> None
         | Some (applied_args, (last_arg, aqual))->
           let head = T.mk_app head applied_args in
-          assume (not_tv_unknown head);
+          // assume (not_tv_unknown head);
           let head = tm_fstar head (T.range_of_term head) in
-          assume (not_tv_unknown last_arg);
+          // assume (not_tv_unknown last_arg);
           let last_arg = tm_fstar last_arg (T.range_of_term last_arg) in
           let qual = 
             match aqual with
@@ -763,9 +767,9 @@ let is_stateful_application (g:env) (e:term)
             | _ -> None
           in
           let st_app = Tm_STApp { head; arg=last_arg; arg_qual=qual} in
-          let st_app = { term = st_app; range=e.range; effect_tag=default_effect_hint } in
+          let st_app = { term = st_app; range=RU.range_of_term e; effect_tag=default_effect_hint } in
           Some st_app
-    )
+    // )
     | _ -> None
 
 
@@ -795,9 +799,10 @@ let norm_typing
     let (| t', t'_typing, related_t_t' |) =
       Pulse.RuntimeUtils.norm_well_typed_term (dsnd u_t_typing) steps
     in
-    match Pulse.Readback.readback_ty t' with
-    | None -> T.fail "Could not readback normalized type"
-    | Some t'' ->
+    // match Pulse.Readback.readback_ty t' with
+    // | None -> T.fail "Could not readback normalized type"
+    // | Some t'' ->
+    let t'' = t' in
       let d : typing g e eff t'' = apply_conversion d related_t_t' in
       (| t'', d |)
 

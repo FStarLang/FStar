@@ -23,6 +23,7 @@ open Pulse.Checker.Base
 
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
+module RU = Pulse.RuntimeUtils
 
 let extend_post_hint_for_local (g:env) (p:post_hint_for_env g)
                                (init_t:term) (x:var { ~ (Set.mem x (dom g)) })
@@ -48,7 +49,7 @@ let with_local_pre_typing (#g:env) (#pre:term) (pre_typing:tot_typing g pre tm_v
 #push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1"
 let head_range (t:st_term {Tm_WithLocal? t.term}) : range =
   let Tm_WithLocal { initializer } = t.term in
-  initializer.range
+  (RU.range_of_term initializer)
 
 let check
   (g:env)
@@ -75,8 +76,8 @@ let check
     let (| init, init_u, init_t, init_t_typing, init_typing |) =
       (* Check against annotation if any *)
       let ty = binder.binder_ty in
-      match ty.t with
-      | Tm_Unknown -> compute_tot_term_type_and_u g init
+      match inspect_term ty with
+      | Some Tm_Unknown -> compute_tot_term_type_and_u g init
       | _ ->
         let (| u, ty_typing |) = check_universe g ty in
         let (| init, init_typing |) = check_term g init T.E_Total ty in

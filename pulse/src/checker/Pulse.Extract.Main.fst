@@ -103,7 +103,7 @@ let rec extend_env_pat_core (g:env) (p:pattern)
       let x = E.fresh g.coreenv in
       let pp = mk_ppname pp FStar.Range.range_0 in
       let ty = T.unseal sort in
-      assume (not_tv_unknown ty);
+      // assume (not_tv_unknown ty);
       let ty = tm_fstar ty (T.range_of_term ty) in
       debug g (fun _ -> Printf.sprintf "Pushing pat_var %s : %s\n" (T.unseal pp.name) (term_to_string ty));
       let coreenv = E.push_binding g.coreenv x pp ty in
@@ -139,10 +139,10 @@ let is_erasable (p:st_term) : T.Tac bool =
   | _ -> false
     
 let head_and_args (t:term)
-  : option (R.term & list R.argv) =
-  match t.t with
-  | Tm_FStar t0 -> Some (R.collect_app_ln t0)
-  | _ -> None
+  : option (R.term & list R.argv) = Some (R.collect_app_ln t)
+  // match t.t with
+  // | Tm_FStar t0 -> Some (R.collect_app_ln t0)
+  // | _ -> None
 
 let term_eq_string (s:string) (t:R.term) : bool =
   match R.inspect_ln t with
@@ -233,7 +233,9 @@ let maybe_inline (g:env) (head:term) (arg:term) :T.Tac (option st_term) =
       // debug g (fun _ -> Printf.sprintf "Unfolded %s to body %s\n"
       //                       (T.term_to_string head)
       //                       (st_term_to_string body));
-      let as_term (a:R.term) = assume (not_tv_unknown a); tm_fstar a Range.range_0 in
+      let as_term (a:R.term) =
+        // assume (not_tv_unknown a);
+        tm_fstar a Range.range_0 in
       let all_args : list (term & option qualifier) =
         L.map #R.argv
               (fun (t, q) -> 
@@ -270,10 +272,10 @@ let maybe_inline (g:env) (head:term) (arg:term) :T.Tac (option st_term) =
           )
       )
       | Inr body ->
-        assume (not_tv_unknown body);
+        // assume (not_tv_unknown body);
         let applied_body = unascribe (LN.subst_host_term body subst) in
         let mk_st_app (head:R.term) (arg:term) (arg_qual:option qualifier) =
-          assume (not_tv_unknown head);
+          // assume (not_tv_unknown head);
           let head = tm_fstar head (T.range_of_term head) in
           let tm = Tm_STApp { head; arg_qual; arg } in 
           Some { term = tm; range=FStar.Range.range_0; effect_tag=default_effect_hint }
@@ -282,7 +284,7 @@ let maybe_inline (g:env) (head:term) (arg:term) :T.Tac (option st_term) =
         | [] -> (
           match R.inspect_ln applied_body with
           | R.Tv_App head (arg, aqual) ->
-            assume (not_tv_unknown arg);
+            // assume (not_tv_unknown arg);
             let arg = tm_fstar arg (T.range_of_term arg) in
             let arg_qual = if R.Q_Implicit? aqual then Some Implicit else None in
             mk_st_app head arg arg_qual
@@ -439,9 +441,10 @@ and simplify_branch (g:env) (b:branch) : T.Tac branch =
   pat, Pulse.Syntax.Naming.close_st_term_n body (L.map fst bs)
 
 let erase_type_for_extraction (g:env) (t:term) : T.Tac bool =
-  match t.t with
-  | Tm_FStar t -> RU.must_erase_for_extraction (tcenv_of_env g) t
-  | _ -> false
+  RU.must_erase_for_extraction (tcenv_of_env g) t
+  // match t.t with
+  // | Tm_FStar t -> RU.must_erase_for_extraction (tcenv_of_env g) t
+  // | _ -> false
 
 let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
   let open Pulse.Syntax.Naming in

@@ -63,11 +63,11 @@ let rec gen_names_for_unknowns (g:env) (t:term) (ws:list term)
   = match ws with
     | [] -> [], t, []
     | w::ws ->
-      match t.t with
-      | Tm_ExistsSL _ b body ->
+      match inspect_term t with
+      | Some (Tm_ExistsSL _ b body) ->
         let xopt, w, g =
-          match w.t with
-          | Tm_Unknown ->
+          match inspect_term w with
+          | Some Tm_Unknown ->
             let x = fresh g in
             Some x,
             tm_var {nm_index=x;nm_ppname=b.binder_ppname},
@@ -81,7 +81,7 @@ let rec gen_names_for_unknowns (g:env) (t:term) (ws:list term)
            t,
            w::ws
          | None -> new_names, t, w::ws)
-      | _ -> fail g (Some t.range) "intro exists with non-existential"
+      | _ -> fail g (Some (Pulse.RuntimeUtils.range_of_term t)) "intro exists with non-existential"
 
 let instantiate_unknown_witnesses (g:env) (t:st_term { Tm_IntroExists? t.term })
   : T.Tac (option st_term) =
@@ -115,15 +115,17 @@ let instantiate_unknown_witnesses (g:env) (t:st_term { Tm_IntroExists? t.term })
 let rec transform_to_unary_intro_exists (g:env) (t:term) (ws:list term)
   : T.Tac st_term =
   
+  let t_rng = Pulse.RuntimeUtils.range_of_term t in
   match ws with
-  | [] -> fail g (Some t.range) "intro exists with empty witnesses"
+  | [] -> fail g (Some t_rng) "intro exists with empty witnesses"
   | [w] ->
-    if Tm_ExistsSL? t.t
+    let tv = inspect_term t in
+    if Some? tv && Tm_ExistsSL? (Some?.v tv)
     then wtag (Some STT_Ghost) (Tm_IntroExists {p=t;witnesses=[w]})
-    else fail g (Some t.range) "intro exists with non-existential"
+    else fail g (Some t_rng) "intro exists with non-existential"
   | w::ws ->
-    match t.t with
-    | Tm_ExistsSL u b body ->
+    match inspect_term t with
+    | Some (Tm_ExistsSL u b body) ->
       let body = subst_term body [ DT 0 w ] in
       let st = transform_to_unary_intro_exists g body ws in
       // w is the witness
@@ -133,7 +135,7 @@ let rec transform_to_unary_intro_exists (g:env) (t:term) (ws:list term)
                      head=st;
                      body= intro})
 
-    | _ -> fail g (Some t.range) "intro exists with non-existential"
+    | _ -> fail g (Some t_rng) "intro exists with non-existential"
 
 #push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1"
 let rec check

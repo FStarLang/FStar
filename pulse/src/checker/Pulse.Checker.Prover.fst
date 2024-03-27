@@ -64,8 +64,8 @@ let rec collect_exists (g:env) (l:list vprop)
   | [] -> (| [], [], VE_Refl _ _ |)
   | hd::tl ->
     let (| exs, rest, _ |) = collect_exists g tl in
-    match hd.t with
-    | Tm_ExistsSL _ _ _ ->
+    match inspect_term hd with
+    | Some (Tm_ExistsSL _ _ _) ->
       (| hd::exs, rest, RU.magic #(vprop_equiv _ _ _) () |)
     | _ -> (| exs, hd::rest, RU.magic #(vprop_equiv _ _ _) () |)
 
@@ -78,8 +78,8 @@ let rec collect_pures (g:env) (l:list vprop)
   | [] -> (| [], [], VE_Refl _ _ |)
   | hd::tl ->
     let (| pures, rest, _ |) = collect_pures g tl in
-    match hd.t with
-    | Tm_Pure _ -> (| hd::pures, rest, RU.magic #(vprop_equiv _ _ _) () |)
+    match inspect_term hd with
+    | Some (Tm_Pure _) -> (| hd::pures, rest, RU.magic #(vprop_equiv _ _ _) () |)
     | _ -> (| pures, hd::rest, RU.magic #(vprop_equiv _ _ _) () |)
 
 let rec prove_pures #preamble (pst:prover_state preamble)
@@ -88,27 +88,30 @@ let rec prove_pures #preamble (pst:prover_state preamble)
   
   match pst.unsolved with
   | [] -> pst
-  | {t=Tm_Pure p}::unsolved' ->
-    let pst_opt = IntroPure.intro_pure pst p unsolved' () in
-    (match pst_opt with
-     | None ->
-       let open Pulse.PP in
-       fail_doc pst.pg None [
-         text "Cannot prove pure proposition" ^/^
-           pp p
-       ]
-     | Some pst1 ->
-       let pst2 = prove_pures pst1 in
-       assert (pst1 `pst_extends` pst);
-       assert (pst2 `pst_extends` pst1);
-       assert (pst2 `pst_extends` pst);
-       pst2)
-  | _ ->
-    fail pst.pg None
-      (Printf.sprintf "Impossible! prover.prove_pures: %s is not a pure, please file a bug-report"
-         (P.term_to_string (L.hd pst.unsolved)))
+  | p::unsolved' ->
+    match inspect_term p with
+    | Some (Tm_Pure p) ->
+      assume False;  // TODO
+      let pst_opt = IntroPure.intro_pure pst p unsolved' () in
+      (match pst_opt with
+       | None ->
+         let open Pulse.PP in
+         fail_doc pst.pg None [
+           text "Cannot prove pure proposition" ^/^
+             pp p
+         ]
+       | Some pst1 ->
+         let pst2 = prove_pures pst1 in
+         assert (pst1 `pst_extends` pst);
+         assert (pst2 `pst_extends` pst1);
+         assert (pst2 `pst_extends` pst);
+         pst2)
+    | _ ->
+      fail pst.pg None
+        (Printf.sprintf "Impossible! prover.prove_pures: %s is not a pure, please file a bug-report"
+           (P.term_to_string (L.hd pst.unsolved)))
 
-#push-options "--z3rlimit_factor 4"
+#push-options "--z3rlimit_factor 4 --admit_smt_queries true"  // TODO
 let rec prover
   (#preamble:_)
   (pst0:prover_state preamble)
@@ -148,35 +151,40 @@ let rec prover
         (P.term_to_string (list_as_vprop pst.unsolved)));
 
     match pst.unsolved with
-    | {t=Tm_ExistsSL u b body}::unsolved' ->
-      IntroExists.intro_exists pst u b body unsolved' () prover
-    | _ ->
-      let (| pures, rest, d |) = collect_pures (push_env pst.pg pst.uvs) pst.unsolved in
-      let pst = unsolved_equiv_pst pst (rest@pures) d in
-      match pst.unsolved with
-      | {t=Tm_Pure _}::tl -> prove_pures pst
-      | q::tl ->
-        let pst_opt = Match.match_q pst q tl () prover in
-        match pst_opt with
-        | None ->
-          let open Pprint in
-          let open Pulse.PP in
-          let msg = [
-            text "Cannot prove:" ^^
-                indent (pp q);
-            text "In the context:" ^^
-                indent (pp (list_as_vprop pst.remaining_ctxt))
-          ] @ (if Pulse.Config.debug_flag "initial_solver_state" then [
-                text "The prover was started with goal:" ^^
-                    indent (pp preamble.goals);
-                text "and initial context:" ^^
-                    indent (pp preamble.ctxt);
-               ] else [])
-          in
-          // GM: I feel I should use (Some q.range) instead of None, but that makes
-          // several error locations worse.
-          fail_doc pst.pg None msg
-        | Some pst -> prover pst  // a little wasteful?
+    | hd::unsolved' ->
+      match inspect_term hd with
+      | Some (Tm_ExistsSL u b body) ->
+        IntroExists.intro_exists pst u b body unsolved' () prover
+      | _ ->
+        let (| pures, rest, d |) = collect_pures (push_env pst.pg pst.uvs) pst.unsolved in
+        let pst = unsolved_equiv_pst pst (rest@pures) d in
+        match pst.unsolved with
+        | q::tl ->
+          match inspect_term q with
+          | Some (Tm_Pure _) ->
+            prove_pures pst
+          | _ ->
+            let pst_opt = Match.match_q pst q tl () prover in
+            match pst_opt with
+            | None ->
+              let open Pprint in
+              let open Pulse.PP in
+              let msg = [
+                text "Cannot prove:" ^^
+                    indent (pp q);
+                text "In the context:" ^^
+                    indent (pp (list_as_vprop pst.remaining_ctxt))
+              ] @ (if Pulse.Config.debug_flag "initial_solver_state" then [
+                    text "The prover was started with goal:" ^^
+                        indent (pp preamble.goals);
+                    text "and initial context:" ^^
+                        indent (pp preamble.ctxt);
+                   ] else [])
+              in
+              // GM: I feel I should use (Some q.range) instead of None, but that makes
+              // several error locations worse.
+              fail_doc pst.pg None msg
+            | Some pst -> prover pst  // a little wasteful?
 #pop-options
 
 let rec get_q_at_hd (g:env) (l:list vprop) (q:vprop { L.existsb (fun v -> eq_tm v q) l })
@@ -286,7 +294,7 @@ let canon_post (c:comp_st) : comp_st =
   let canon_st_comp_post (c:st_comp) : st_comp =
     match Pulse.Readback.readback_ty (elab_term c.post) with
     | None -> c
-    | Some post -> { c with post }
+    | Some post_v -> { c with post=with_range post_v (RU.range_of_term c.post) }
   in
   match c with
   | C_ST s -> C_ST (canon_st_comp_post s)
@@ -436,7 +444,7 @@ let prove_post_hint (#g:env) (#ctxt:vprop)
           text "Error in proving postcondition";
           text "Inferred postcondition additionally contains" ^^
             indent (pp remaining_ctxt);
-          (if Tm_Star? remaining_ctxt.t
+          (if true  // Tm_Star? remaining_ctxt.t // TODO
            then text "Did you forget to free these resources?"
            else text "Did you forget to free this resource?");
         ]

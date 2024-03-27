@@ -37,11 +37,8 @@ module PS = Pulse.Checker.Prover.Substs
 module Metatheory = Pulse.Typing.Metatheory
 
 let equational (t:term) : bool =
-  match t.t with
-  | Tm_FStar host_term ->
-    (match R.inspect_ln host_term with
-     | R.Tv_Match _ _ _ -> true
-     | _ -> false)
+  match R.inspect_ln t with
+  | R.Tv_Match _ _ _ -> true
   | _ -> false
 
 let type_of_fv (g:env) (fv:R.fv)
@@ -114,8 +111,9 @@ let eligible_for_smt_equality (g:env) (t0 t1:term)
         TermEq.term_eq h0 h1
       | _ -> false
     in
-    match t0.t, t1.t with
-    | Tm_FStar t0, Tm_FStar t1 -> (
+    match inspect_term t0, inspect_term t1 with
+    | Some (Tm_ForallSL _ _ _), Some (Tm_ForallSL _ _ _) -> true
+    | _ -> (
       let h0, args0 = R.collect_app_ln t0 in
       let h1, args1 = R.collect_app_ln t1 in
       if TermEq.term_eq h0 h1 && L.length args0 = L.length args1
@@ -165,7 +163,6 @@ let eligible_for_smt_equality (g:env) (t0 t1:term)
       )
       else either_equational ()
     )
-    | Tm_ForallSL _ _ _, Tm_ForallSL _ _ _ -> true
     | _ -> either_equational ()
 
 
@@ -178,9 +175,8 @@ let refl_uvar (t:R.term) (uvs:env) : option var =
   | _ -> None
 
 let is_uvar (t:term) (uvs:env) : option var =
-  match t.t with
-  | Tm_FStar t -> refl_uvar t uvs
-  | _ -> None
+  refl_uvar t uvs
+
 
 let contains_uvar (t:term) (uvs:env) (g:env) : T.Tac bool =
   not (check_disjoint uvs (freevars t))
@@ -247,9 +243,9 @@ let try_solve_uvars (g:env) (uvs:env { disjoint uvs g }) (p q:term)
     let q_names = freevars q in
     L.fold_left (fun (ss:(ss:PS.ss_t { PS.dom ss `Set.subset` freevars q })) (x, t) ->
       let nv_view = R.inspect_namedv x in
-      let topt = readback_ty t in
-      match topt with
-      | Some t ->
+      // let topt = readback_ty t in
+      // match topt with
+      // | Some t ->
         if Set.mem nv_view.uniq q_names &&
            not (Set.mem nv_view.uniq (PS.dom ss))
         then begin
@@ -260,7 +256,7 @@ let try_solve_uvars (g:env) (uvs:env { disjoint uvs g }) (p q:term)
           ss_new
         end
         else ss
-      | None -> ss
+      // | None -> ss
     ) ss l
 
 let unify (g:env) (uvs:env { disjoint uvs g})
@@ -269,10 +265,11 @@ let unify (g:env) (uvs:env { disjoint uvs g})
            option (RT.equiv (elab_env g) (elab_term p) (elab_term ss.(q)))) =
 
   let ss = try_solve_uvars g uvs p q in
-  let q_ss = readback_ty (elab_term ss.(q)) in
-  match q_ss with
-  | None -> (| ss, None |)
-  | Some q -> 
+  let q_ss = ss.(q) in  // readback_ty (elab_term ss.(q)) in
+  let q = q_ss in
+  // match q_ss with
+  // | None -> (| ss, None |)
+  // | Some q -> 
     if eq_tm p q
     then (| ss, Some (RT.Rel_refl _ _ _) |)
     else if contains_uvar q uvs g
@@ -405,15 +402,15 @@ let rec match_q_aux (#preamble:_) (pst:prover_state preamble)
 //
 // THIS SHOULD GO AWAY SOON
 //
-let ___canon___ (q:vprop) : Dv (r:vprop { r == q }) =
-  assume False;
-  match Pulse.Readback.readback_ty (elab_term q) with
-  | None -> q
-  | Some q -> q
+let ___canon___ (q:vprop) : Dv (r:vprop { r == q }) = q
+  // assume False;
+  // match Pulse.Readback.readback_ty (elab_term q) with
+  // | None -> q
+  // | Some q -> q
 
 let has_structure (q:vprop) : bool =
-  match q.t with
-  | Tm_Star _ _ -> true
+  match inspect_term q with
+  | Some (Tm_Star _ _) -> true
   | _ -> false
 
 #push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 2"

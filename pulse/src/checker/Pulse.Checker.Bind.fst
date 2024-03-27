@@ -96,8 +96,8 @@ let check_bind
       let r = check g ctxt ctxt_typing None binder.binder_ppname e1 in
       (* Check that the type matches the annotation, if any *)
       let ty = binder.binder_ty in
-      begin match ty.t with
-      | Tm_Unknown -> ()
+      begin match inspect_term ty with
+      | Some Tm_Unknown -> ()
       | _ ->
         let (| ty, _, _ |) = compute_tot_term_type g ty in //elaborate it first
         let (| _, _, (| _, t, _ |), _, _ |) = r in
@@ -152,7 +152,7 @@ let check_tot_bind
 
   | None -> (
     let head = Tm_Return { expected_type = b.binder_ty; term = e1; insert_eq = true } in
-    let head = { term = head; range = e1.range; effect_tag = default_effect_hint } in
+    let head = { term = head; range = Pulse.RuntimeUtils.range_of_term e1; effect_tag = default_effect_hint } in
     let t = { t with term = Tm_Bind { binder=b; head; body=e2 } } in
     check_bind g pre pre_typing post_hint res_ppname t check
   )

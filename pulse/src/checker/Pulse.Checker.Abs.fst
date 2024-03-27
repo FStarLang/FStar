@@ -41,11 +41,11 @@ let debug_abs g (s: unit -> T.Tac string) : T.Tac unit =
 (* Infers the the type of the binders from the specification alone, not the body *)
 
 let range_of_st_comp (st:st_comp) =
-  RU.union_ranges (st.pre.range) (st.post.range)
+  RU.union_ranges (RU.range_of_term st.pre) (RU.range_of_term st.post)
 
 let range_of_comp (c:comp) =
   match c with
-  | C_Tot t -> t.range
+  | C_Tot t -> RU.range_of_term t
   | C_ST st -> range_of_st_comp st
   | C_STAtomic _ _ st -> range_of_st_comp st
   | C_STGhost st -> range_of_st_comp st
@@ -68,7 +68,7 @@ let rec arrow_of_abs (env:_) (prog:st_term { Tm_Abs? prog.term })
         let arr, body = arrow_of_abs env body in
         let arr = close_term arr x in
         let body = close_st_term body x in
-        let ty : term = { tm_arrow b q (C_Tot arr) with range = RU.union_ranges b.binder_ty.range arr.range } in
+        let ty : term = tm_fstar (tm_arrow b q (C_Tot arr)) (RU.union_ranges (RU.range_of_term b.binder_ty) (RU.range_of_term arr)) in
         let prog : st_term = { prog with term = Tm_Abs { b; q; ascription; body}} in
         ty, prog
 
@@ -77,18 +77,19 @@ let rec arrow_of_abs (env:_) (prog:st_term { Tm_Abs? prog.term })
         match c with
         | C_Tot tannot -> (
           let tannot' = RU.hnf_lax (elab_env env) (elab_term tannot) in
-          match Pulse.Readback.readback_ty tannot' with
-          | None -> 
-            Env.fail 
-              env 
-              (Some prog.range) 
-              (Printf.sprintf "Unexpected type of abstraction, expected an arrow, got: %s"
-                  (T.term_to_string tannot'))
-          | Some t ->
+          let t = tannot' in
+          // match Pulse.Readback.readback_ty tannot' with
+          // | None -> 
+          //   Env.fail 
+          //     env 
+          //     (Some prog.range) 
+          //     (Printf.sprintf "Unexpected type of abstraction, expected an arrow, got: %s"
+          //         (T.term_to_string tannot'))
+          // | Some t ->
             //retain the original annotation, so that we check it wrt the inferred type in maybe_rewrite_body_typing
             let t = close_term t x in
             let annot = close_comp c x in
-            let ty : term = { tm_arrow b q (C_Tot t) with range = RU.union_ranges b.binder_ty.range t.range } in
+            let ty : term = tm_fstar (tm_arrow b q (C_Tot t)) (RU.union_ranges (RU.range_of_term b.binder_ty) (RU.range_of_term t)) in
             let ascription = { annotated = Some annot; elaborated = None } in
             let body = close_st_term body x in
             let prog : st_term = { prog with term = Tm_Abs { b; q; ascription; body} } in
@@ -109,7 +110,8 @@ let rec arrow_of_abs (env:_) (prog:st_term { Tm_Abs? prog.term })
         Env.fail env (Some prog.range) "Unannotated function body"
       
       | Some c -> ( //we're taking the annotation as is; remove it from the abstraction to avoid rechecking it
-        let ty : term = { tm_arrow b q c with range = RU.union_ranges b.binder_ty.range (range_of_comp c) } in
+        let ty : term = tm_fstar (tm_arrow b q c)
+                                 (RU.union_ranges (RU.range_of_term b.binder_ty) (range_of_comp c)) in
         let ascription = empty_ascription in
         let body = close_st_term body x in
         let prog : st_term = { prog with term = Tm_Abs { b; q; ascription; body} } in
@@ -134,10 +136,10 @@ let rec rebuild_abs (g:env) (t:st_term) (annot:T.term)
     | Tm_Abs { b; q; ascription=asc; body }, R.Tv_Arrow b' c' -> (
       let b' = T.inspect_binder b' in
       qualifier_compat g b.binder_ppname.range q b'.qual;
-      let ty = readback_ty b'.sort in
+      let ty = b'.sort in
       let comp = R.inspect_comp c' in
-      match ty, comp with
-      | Some ty, T.C_Total res_ty -> (
+      match comp with
+      | T.C_Total res_ty -> (
         if Tm_Abs? body.term
         then (
           let b = mk_binder_with_attrs ty b.binder_ppname b.binder_attrs in
@@ -188,15 +190,15 @@ let preprocess_abs
   = let annot, t = arrow_of_abs g t in
     debug_abs g (fun _ -> Printf.sprintf "arrow_of_abs = %s\n" (P.term_to_string annot));
     let annot, _ = Pulse.Checker.Pure.instantiate_term_implicits g annot in
-    match annot.t with
-    | Tm_FStar annot ->
+    // match annot.t with
+    // | Tm_FStar annot ->
       let abs = rebuild_abs g t annot in
       debug_abs g (fun _ -> Printf.sprintf "rebuild_abs = %s\n" (P.st_term_to_string abs));
       abs
-    | _ ->
-      Env.fail g (Some t.range) 
-                 (Printf.sprintf "Expected an arrow type as an annotation, got %s"
-                          (P.term_to_string annot))
+    // | _ ->
+    //   Env.fail g (Some t.range) 
+    //              (Printf.sprintf "Expected an arrow type as an annotation, got %s"
+    //                       (P.term_to_string annot))
 
 let sub_effect_comp g r (asc:comp_ascription) (c_computed:comp) : T.Tac (option (c2:comp & lift_comp g c_computed c2)) =
   let nop = None in
@@ -251,7 +253,7 @@ let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac 
       let tok = T.with_policy T.SMTSync (fun () -> try_check_prop_validity g phi typing) in
       if None? tok then (
         let open Pulse.PP in
-        fail_doc g (Some i.range) [
+        fail_doc g (Some (RU.range_of_term i)) [
           prefix 4 1 (text "Annotated effect expects only invariants in") (pp i) ^/^
           prefix 4 1 (text "to be opened; but computed effect claims that invariants") (pp j) ^/^
           text "are opened"
@@ -306,7 +308,7 @@ let maybe_rewrite_body_typing
     )
     | Some c -> 
       let st = st_comp_of_comp c in
-      Env.fail g (Some st.pre.range) "Unexpected annotation on a function body"
+      Env.fail g (Some (RU.range_of_term st.pre)) "Unexpected annotation on a function body"
 
 let open_ascription (c:comp_ascription) (nv:nvar) : comp_ascription =
   let t = term_of_nvar nv in

@@ -45,28 +45,30 @@ let rec elab_open_commute' (e:term)
               RT.subst_term (elab_term e) [ RT.DT n (elab_term v) ] ==
               elab_term (open_term' e v n))
           (decreases e)
-  = match e.t with
-    | Tm_Emp 
-    | Tm_Inames
-    | Tm_EmpInames
-    | Tm_VProp
-    | Tm_Unknown -> ()
-    // | Tm_PureApp e1 _ e2 ->
-    //   elab_open_commute' e1 v n;
-    //   elab_open_commute' e2 v n
-    | Tm_Inv p ->
-      elab_open_commute' p v n
-    | Tm_Pure p ->
-      elab_open_commute' p v n
-    | Tm_AddInv e1 e2
-    | Tm_Star e1 e2 ->
-      elab_open_commute' e1 v n;
-      elab_open_commute' e2 v n
-    | Tm_ExistsSL u t body
-    | Tm_ForallSL u t body ->
-      elab_open_commute' t.binder_ty v n;
-      elab_open_commute' body v (n + 1)
-    | Tm_FStar t -> ()
+  = ()
+  
+  // match e.t with
+  //   | Tm_Emp 
+  //   | Tm_Inames
+  //   | Tm_EmpInames
+  //   | Tm_VProp
+  //   | Tm_Unknown -> ()
+  //   // | Tm_PureApp e1 _ e2 ->
+  //   //   elab_open_commute' e1 v n;
+  //   //   elab_open_commute' e2 v n
+  //   | Tm_Inv p ->
+  //     elab_open_commute' p v n
+  //   | Tm_Pure p ->
+  //     elab_open_commute' p v n
+  //   | Tm_AddInv e1 e2
+  //   | Tm_Star e1 e2 ->
+  //     elab_open_commute' e1 v n;
+  //     elab_open_commute' e2 v n
+  //   | Tm_ExistsSL u t body
+  //   | Tm_ForallSL u t body ->
+  //     elab_open_commute' t.binder_ty v n;
+  //     elab_open_commute' body v (n + 1)
+  //   | Tm_FStar t -> ()
 
 let elab_comp_open_commute' (c:comp) (v:term) (n:index)
   : Lemma (ensures
@@ -92,25 +94,27 @@ let rec elab_close_commute' (e:term)
               RT.subst_term (elab_term e) [ RT.ND v n ] ==
               elab_term (close_term' e v n)))
           (decreases e)
-  = match e.t with
-    | Tm_Emp 
-    | Tm_Inames
-    | Tm_EmpInames
-    | Tm_VProp
-    | Tm_Unknown -> ()
-    | Tm_Inv p ->
-      elab_close_commute' p v n
-    | Tm_Pure p ->
-      elab_close_commute' p v n
-    | Tm_AddInv e1 e2
-    | Tm_Star e1 e2 ->
-      elab_close_commute' e1 v n;
-      elab_close_commute' e2 v n
-    | Tm_ExistsSL _ t body
-    | Tm_ForallSL _ t body ->
-      elab_close_commute' t.binder_ty v n;
-      elab_close_commute' body v (n + 1)    
-    | Tm_FStar _ -> ()
+  = ()
+  
+  // match e.t with
+  //   | Tm_Emp 
+  //   | Tm_Inames
+  //   | Tm_EmpInames
+  //   | Tm_VProp
+  //   | Tm_Unknown -> ()
+  //   | Tm_Inv p ->
+  //     elab_close_commute' p v n
+  //   | Tm_Pure p ->
+  //     elab_close_commute' p v n
+  //   | Tm_AddInv e1 e2
+  //   | Tm_Star e1 e2 ->
+  //     elab_close_commute' e1 v n;
+  //     elab_close_commute' e2 v n
+  //   | Tm_ExistsSL _ t body
+  //   | Tm_ForallSL _ t body ->
+  //     elab_close_commute' t.binder_ty v n;
+  //     elab_close_commute' body v (n + 1)    
+  //   | Tm_FStar _ -> ()
     
 let elab_comp_close_commute' (c:comp) (v:var) (n:index)
   : Lemma (ensures
@@ -145,24 +149,24 @@ let elab_comp_open_commute (c:comp) (x:term)
   = RT.open_with_spec (elab_comp c) (elab_term x);
     elab_comp_open_commute' c x 0
 
-let rec elab_ln t i =
-  match t.t with
-  | Tm_Emp -> ()
-  | Tm_Inv p -> elab_ln p i
-  | Tm_Pure t -> elab_ln t i
-  | Tm_AddInv l r
-  | Tm_Star l r ->
-    elab_ln l i;
-    elab_ln r i
-  | Tm_ExistsSL _ t body
-  | Tm_ForallSL _ t body ->
-    elab_ln t.binder_ty i;
-    elab_ln body (i + 1)
-  | Tm_VProp
-  | Tm_Inames
-  | Tm_EmpInames
-  | Tm_Unknown
-  | Tm_FStar _ -> ()
+let rec elab_ln t i = ()
+  // match t.t with
+  // | Tm_Emp -> ()
+  // | Tm_Inv p -> elab_ln p i
+  // | Tm_Pure t -> elab_ln t i
+  // | Tm_AddInv l r
+  // | Tm_Star l r ->
+  //   elab_ln l i;
+  //   elab_ln r i
+  // | Tm_ExistsSL _ t body
+  // | Tm_ForallSL _ t body ->
+  //   elab_ln t.binder_ty i;
+  //   elab_ln body (i + 1)
+  // | Tm_VProp
+  // | Tm_Inames
+  // | Tm_EmpInames
+  // | Tm_Unknown
+  // | Tm_FStar _ -> ()
 
 let elab_ln_comp (c:comp) (i:int)
   : Lemma (requires ln_c' c i)
@@ -182,24 +186,24 @@ let elab_ln_comp (c:comp) (i:int)
     elab_ln st.post (i + 1)
 
 let rec elab_freevars_eq (e:term)
-  : Lemma (Set.equal (freevars e) (RT.freevars (elab_term e))) =
-  match e.t with
-  | Tm_Emp -> ()
-  | Tm_Inv p -> elab_freevars_eq p
-  | Tm_Pure t -> elab_freevars_eq t
-  | Tm_AddInv l r
-  | Tm_Star l r ->
-    elab_freevars_eq l;
-    elab_freevars_eq r
-  | Tm_ExistsSL _ t body
-  | Tm_ForallSL _ t body ->
-    elab_freevars_eq t.binder_ty;
-    elab_freevars_eq body
-  | Tm_VProp
-  | Tm_Inames
-  | Tm_EmpInames
-  | Tm_Unknown
-  | Tm_FStar _ -> ()
+  : Lemma (Set.equal (freevars e) (RT.freevars (elab_term e))) = ()
+  // match e.t with
+  // | Tm_Emp -> ()
+  // | Tm_Inv p -> elab_freevars_eq p
+  // | Tm_Pure t -> elab_freevars_eq t
+  // | Tm_AddInv l r
+  // | Tm_Star l r ->
+  //   elab_freevars_eq l;
+  //   elab_freevars_eq r
+  // | Tm_ExistsSL _ t body
+  // | Tm_ForallSL _ t body ->
+  //   elab_freevars_eq t.binder_ty;
+  //   elab_freevars_eq body
+  // | Tm_VProp
+  // | Tm_Inames
+  // | Tm_EmpInames
+  // | Tm_Unknown
+  // | Tm_FStar _ -> ()
 
 let elab_freevars_comp_eq (c:comp)
   : Lemma (Set.equal (freevars_comp c) (RT.freevars (elab_comp c))) =

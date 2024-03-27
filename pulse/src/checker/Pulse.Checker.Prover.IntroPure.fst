@@ -124,8 +124,10 @@ let is_uvar_implication
 : pure_uv_heuristic_t
 = fun (uvs:env) (t:term) ->
     debug uvs (fun _ -> Printf.sprintf "is_uvar_implication??: %s\n" (P.term_to_string t));
-    match t.t with 
-    | Tm_FStar tt -> (
+    match inspect_term t with
+    | Some _ -> None
+    | None -> (
+      let tt = t in
       let f = RF.term_as_formula' tt in
       match f with
       | RF.Implies t0 t1 -> (
@@ -146,8 +148,9 @@ let is_uvar_implication
                 | Some nm ->
                   if Set.mem nm.nm_index (dom uvs)
                   then (
-                      match rhs.t with
-                      | Tm_FStar rhs -> 
+                      match inspect_term rhs with
+                      | Some _ -> None
+                      | None -> 
                         let rhs = tm_fstar (`(not (`#(rhs)))) FStar.Range.range_0 in
                         assume (nm.nm_index `Set.mem` freevars t);
                         Some (| nm.nm_index, rhs |)
@@ -182,13 +185,15 @@ let pure_uvar_heursitics : pure_uv_heuristic_t
 let rec try_collect_substs (uvs:env) (t:term)
   : T.Tac (ss:PS.ss_t { PS.dom ss `Set.subset` freevars t }) =
   assume (PS.dom PS.empty == Set.empty);
-  match t.t with
-  | Tm_FStar rt ->
+  match inspect_term t with
+  | Some _ -> PS.empty
+  | _ ->
+    let rt = t in
     let f = RF.term_as_formula' rt in
     begin
       match f with
       | RF.And rt0 rt1 ->
-        assume (not_tv_unknown rt0 /\ not_tv_unknown rt1);
+        // assume (not_tv_unknown rt0 /\ not_tv_unknown rt1);
         let ss0 = try_collect_substs uvs (tm_fstar rt0 FStar.Range.range_0) in
         let ss1 = try_collect_substs uvs (tm_fstar rt1 FStar.Range.range_0) in
         if PS.check_disjoint ss0 ss1
@@ -233,7 +238,7 @@ let intro_pure (#preamble:_) (pst:prover_state preamble)
     if check_disjoint pst.uvs fvs
     then ()
     else 
-      fail_doc pst.pg (Some t_ss.range)
+      fail_doc pst.pg (Some (Pulse.RuntimeUtils.range_of_term t_ss))
         [Pulse.PP.text "Could not resolve all free variables in the proposition: ";
          P.term_to_doc t_ss;]
   in

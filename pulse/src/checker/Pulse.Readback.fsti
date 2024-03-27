@@ -24,7 +24,7 @@ val readback_qual (q:R.aqualv)
   : option qualifier
   
 val readback_ty (t:R.term)
-  : option (ty:term { elab_term ty == t })
+  : option term_view
 
 val readback_comp (t:R.term)
   : option (c:comp{ elab_comp c == t})

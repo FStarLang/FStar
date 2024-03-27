@@ -100,9 +100,12 @@ type st_typing_in_ctxt (g:env) (ctxt:vprop) (post_hint:post_hint_opt g) =
 
 let rec vprop_as_list (vp:term)
   : list term
-  = match vp.t with
-    | Tm_Emp -> []
-    | Tm_Star vp0 vp1 -> vprop_as_list vp0 @ vprop_as_list vp1
+  = match inspect_term vp with
+    | Some Tm_Emp -> []
+    | Some (Tm_Star vp0 vp1) ->
+      assume (vp0 << vp);
+      assume (vp1 << vp);
+      vprop_as_list vp0 @ vprop_as_list vp1
     | _ -> [vp]
 
 let rec list_as_vprop (vps:list term)

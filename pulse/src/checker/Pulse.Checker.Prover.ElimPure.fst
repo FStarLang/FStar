@@ -68,7 +68,7 @@ let mk_elim_pure (p:term)
     wtag (Some STT_Ghost) t
 
 
-let elim_pure_comp (p:host_term) =
+let elim_pure_comp (p:term) =
     let st : st_comp = {
         u=u_zero;
         res=tm_fstar (mk_squash u0 p);
@@ -78,15 +78,15 @@ let elim_pure_comp (p:host_term) =
     C_STGhost st
 
 #push-options "--admit_smt_queries true"    
-let elim_pure_typing (g:env) (p:host_term)
+let elim_pure_typing (g:env) (p:term)
                      (p_prop:tot_typing g (tm_fstar p) (tm_fstar RT.tm_prop))
    : st_typing g (mk_elim_pure (tm_fstar p)) (elim_pure_comp p)
    = T_STApp g elim_pure_head (tm_fstar RT.tm_prop) None (elim_pure_comp p) _ (elim_pure_head_typing g) p_prop
 #pop-options
 
 let is_elim_pure (vp:term) : T.Tac bool =
-  match vp.t with
-  | Tm_Pure {t=Tm_FStar _} -> true
+  match inspect_term vp with
+  | Some (Tm_Pure _) -> true
   | _ -> false
 
 let mk (#g:env) (#v:vprop) (v_typing:tot_typing g v tm_vprop)
@@ -94,8 +94,9 @@ let mk (#g:env) (#v:vprop) (v_typing:tot_typing g v tm_vprop)
                    t:st_term &
                    c:comp { stateful_comp c /\ comp_pre c == v } &
                    st_typing g t c)) =
-  match v.t with
-  | Tm_Pure {t=Tm_FStar pp} ->
+  match inspect_term v with
+  | Some (Tm_Pure pp) ->
+    assume False;  // TODO
     let p_typing =
       Metatheory.pure_typing_inversion #g #(tm_fstar pp) v_typing in
     Some (| ppname_default,

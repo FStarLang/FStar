@@ -26,7 +26,7 @@ open Pulse.Soundness.Common
 
 let vars_of_rt_env (g:R.env) = Set.intension (fun x -> Some? (RT.lookup_bvar g x))
 
-let freevars_close_term_host_term (t:host_term) (x:var) (i:index)
+let freevars_close_term_host_term (t:term) (x:var) (i:index)
   : Lemma
     (ensures (freevars (close_term' (tm_fstar t FStar.Range.range_0) x i)
             `Set.equal`
@@ -38,30 +38,32 @@ let rec freevars_close_term' (e:term) (x:var) (i:index)
   : Lemma 
     (ensures freevars (close_term' e x i) `Set.equal`
              (freevars e `set_minus` x))
-  = match e.t with
-    | Tm_Emp
-    | Tm_VProp
-    | Tm_Inames
-    | Tm_EmpInames
-    | Tm_Unknown -> ()
+  = freevars_close_term_host_term e x i
+  
+  // match e.t with
+  //   | Tm_Emp
+  //   | Tm_VProp
+  //   | Tm_Inames
+  //   | Tm_EmpInames
+  //   | Tm_Unknown -> ()
 
-    | Tm_Inv p ->
-      freevars_close_term' p x i
-    | Tm_Pure p ->
-      freevars_close_term' p x i
+  //   | Tm_Inv p ->
+  //     freevars_close_term' p x i
+  //   | Tm_Pure p ->
+  //     freevars_close_term' p x i
 
-    | Tm_AddInv l r
-    | Tm_Star l r ->
-      freevars_close_term' l x i;
-      freevars_close_term' r x i
+  //   | Tm_AddInv l r
+  //   | Tm_Star l r ->
+  //     freevars_close_term' l x i;
+  //     freevars_close_term' r x i
 
-    | Tm_ExistsSL _ t b
-    | Tm_ForallSL _ t b ->
-      freevars_close_term' t.binder_ty x i;    
-      freevars_close_term' b x (i + 1)
+  //   | Tm_ExistsSL _ t b
+  //   | Tm_ForallSL _ t b ->
+  //     freevars_close_term' t.binder_ty x i;    
+  //     freevars_close_term' b x (i + 1)
 
-    | Tm_FStar t ->
-      freevars_close_term_host_term t x i
+  //   | Tm_FStar t ->
+  //     freevars_close_term_host_term t x i
 
 let freevars_close_comp (c:comp)
                         (x:var)

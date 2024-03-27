@@ -82,56 +82,117 @@ type fv = {
 }
 let as_fv l = { fv_name = l; fv_range = FStar.Range.range_0 }
 
-let not_tv_unknown (t:R.term) = R.inspect_ln t =!= R.Tv_Unknown
-let host_term = t:R.term { not_tv_unknown t }
+type term = R.term
+type vprop = term
+type typ = term
 
-
-[@@ no_auto_projectors]
 noeq
-type term' =
-  | Tm_Emp        : term'
-  | Tm_Pure       : p:term -> term'
-  | Tm_Star       : l:vprop -> r:vprop -> term'
-  | Tm_ExistsSL   : u:universe -> b:binder -> body:vprop -> term'
-  | Tm_ForallSL   : u:universe -> b:binder -> body:vprop -> term'
-  | Tm_VProp      : term'
-  | Tm_Inv        : vprop -> term'
-  | Tm_Inames     : term'  // type inames
-  | Tm_EmpInames  : term'
-  | Tm_AddInv     : i:term -> is:term -> term'
-  | Tm_FStar      : host_term -> term'
-  | Tm_Unknown    : term'
-
-and vprop = term
-
-and typ = term
-
-and binder = {
+type binder = {
   binder_ty     : term;
   binder_ppname : ppname;
   binder_attrs  : FStar.Sealed.Inhabited.sealed #(list term) []
 }
 
-and term = {
-  t : term';
-  range : range;
-}
+
+// let not_tv_unknown (t:R.term) = R.inspect_ln t =!= R.Tv_Unknown
+// let host_term = t:R.term { not_tv_unknown t }
+
+[@@ no_auto_projectors]
+noeq
+type term_view =
+  | Tm_Emp        : term_view
+  | Tm_Pure       : p:term -> term_view
+  | Tm_Star       : l:vprop -> r:vprop -> term_view
+  | Tm_ExistsSL   : u:universe -> b:binder -> body:vprop -> term_view
+  | Tm_ForallSL   : u:universe -> b:binder -> body:vprop -> term_view
+  | Tm_VProp      : term_view
+  | Tm_Inv        : vprop -> term_view
+  | Tm_Inames     : term_view  // type inames
+  | Tm_EmpInames  : term_view
+  | Tm_AddInv     : i:term -> is:term -> term_view
+  // | Tm_FStar      : host_term -> term_view
+  | Tm_Unknown    : term_view
+
+// and vprop = term
+
+// and typ = term
+
+// and term = {
+//   t : term';
+//   range : range;
+// }
+open Pulse.Reflection.Util
+
+let pack_term_view (top:term_view) (r:range)
+  : term
+  = let open R in
+    let w t' = RU.set_range t' r in
+    match top with
+    | Tm_VProp ->
+      w (pack_ln (Tv_FVar (pack_fv vprop_lid)))
+
+    | Tm_Emp ->
+      w (pack_ln (Tv_FVar (pack_fv emp_lid)))
+      
+    | Tm_Inv p ->
+      let head = pack_ln (Tv_FVar (pack_fv inv_lid)) in
+      w (pack_ln (Tv_App head (p, Q_Explicit)))
+
+    | Tm_Pure p ->
+      let head = pack_ln (Tv_FVar (pack_fv pure_lid)) in
+      w (pack_ln (Tv_App head (p, Q_Explicit)))
+
+    | Tm_Star l r ->
+      w (mk_star l r)
+      
+    | Tm_ExistsSL u b body
+    | Tm_ForallSL u b body ->
+      // let t = pack_term_view b.binder_ty in
+      // let body = pack_term_view body in
+      let t = set_range_of b.binder_ty b.binder_ppname.range in
+      if Tm_ExistsSL? top
+      then w (mk_exists u t (mk_abs_with_name_and_range b.binder_ppname.name b.binder_ppname.range t R.Q_Explicit body))
+      else w (mk_forall u t (mk_abs_with_name_and_range b.binder_ppname.name b.binder_ppname.range t R.Q_Explicit body))
+
+    | Tm_Inames ->
+      w (pack_ln (Tv_FVar (pack_fv inames_lid)))
+
+    | Tm_EmpInames ->
+      w (emp_inames_tm)
+
+    | Tm_AddInv i is ->
+      // let i = pack_term_view i in
+      // let is = pack_term_view is in
+      w (add_inv_tm (`_) is i) // Careful on the order flip
+
+    | Tm_Unknown ->
+      w (pack_ln R.Tv_Unknown)
+
+    // | Tm_FStar t ->
+    //   w t
+
 
 let binder_attrs_default = FStar.Sealed.seal []
 
-let term_range (t:term) = t.range
-let tm_fstar (t:host_term) (r:range) : term = { t = Tm_FStar t; range=r }
-let with_range (t:term') (r:range) = { t; range=r }
+let term_range (t:term) = RU.range_of_term t
+let tm_fstar (t:term) (r:range) : term = RU.set_range t r
+let with_range (t:term_view) (r:range) = pack_term_view t r  //{ t; range=r }
 let tm_vprop = with_range Tm_VProp FStar.Range.range_0
 let tm_inv p = with_range (Tm_Inv p) FStar.Range.range_0
 let tm_inames = with_range Tm_Inames FStar.Range.range_0
 let tm_emp = with_range Tm_Emp FStar.Range.range_0
 let tm_emp_inames = with_range Tm_EmpInames FStar.Range.range_0
 let tm_unknown = with_range Tm_Unknown FStar.Range.range_0
-let tm_pure (p:term) : term = { t = Tm_Pure p; range = p.range }
-let tm_star (l:vprop) (r:vprop) : term = { t = Tm_Star l r; range = RU.union_ranges l.range r.range }
-let tm_exists_sl (u:universe) (b:binder) (body:vprop) : term = { t = Tm_ExistsSL u b body; range = RU.union_ranges b.binder_ty.range body.range }
-let tm_forall_sl (u:universe) (b:binder) (body:vprop) : term = { t = Tm_ForallSL u b body; range = RU.union_ranges b.binder_ty.range body.range }
+let tm_pure (p:term) : term = pack_term_view (Tm_Pure p) (RU.range_of_term p)  //{ t = Tm_Pure p; range = p.range }
+let tm_star (l:vprop) (r:vprop) : term =
+  pack_term_view (Tm_Star l r)
+                 (RU.union_ranges (RU.range_of_term l) (RU.range_of_term r))
+let tm_exists_sl (u:universe) (b:binder) (body:vprop) : term =
+  pack_term_view (Tm_ExistsSL u b body)
+                 (RU.union_ranges (RU.range_of_term b.binder_ty) (RU.range_of_term body))
+let tm_forall_sl (u:universe) (b:binder) (body:vprop) : term =
+  pack_term_view (Tm_ForallSL u b body)
+                 (RU.union_ranges (RU.range_of_term b.binder_ty) (RU.range_of_term body))
 
 noeq
 type st_comp = { (* ST pre (x:res) post ... x is free in post *)

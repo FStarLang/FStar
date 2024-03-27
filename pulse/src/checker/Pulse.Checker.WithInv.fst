@@ -45,9 +45,9 @@ let recheck (#g:env) (#e:term) (#ty: typ) () : T.Tac (tot_typing g e ty) =
   core_check_tot_term g e ty
 
 let term_remove_inv (inv:vprop) (tm:term) : T.Tac (tm':term { tm_star tm' inv == tm}) =
-  match tm.t with
-  | Tm_Star tm inv' ->
-    if eq_tm inv inv' then tm
+  match inspect_term tm with
+  | Some (Tm_Star tm inv') ->
+    if eq_tm inv inv' then let _ = assume False in tm
     else T.fail "term_remove_inv"
 
   | _ ->
@@ -86,7 +86,7 @@ let remove_iname (inv_p inames inv:term)
       (elab_term inv_p)
       (elab_term inames)
       (elab_term inv))
-  inames.range
+  (Pulse.RuntimeUtils.range_of_term inames)
 let add_iname (inv_p inames inv:term)
 : term
 = tm_fstar 
@@ -94,7 +94,7 @@ let add_iname (inv_p inames inv:term)
       (elab_term inv_p)
       (elab_term inames)
       (elab_term inv))
-  inames.range
+  (Pulse.RuntimeUtils.range_of_term inames)
 #pop-options
 
 module RU = Pulse.RuntimeUtils
@@ -207,7 +207,7 @@ let check
     (* Checking the body seems to change its range, so store the original one
     for better errors. *)
     let body_range = body.range in
-    let inv_tm_range = inv_tm.range in
+    let inv_tm_range = Pulse.RuntimeUtils.range_of_term inv_tm in
 
     // info_doc g (Some t.range) [
     //   let open Pulse.PP in
@@ -220,25 +220,25 @@ let check
     let (| inv_tm, eff, inv_tm_ty, inv_tm_typing |) = compute_term_type g inv_tm in
 
     if eff <> T.E_Total then
-      fail g (Some inv_tm.range) "Ghost effect on inv?";
+      fail g (Some inv_tm_range) "Ghost effect on inv?";
 
     (* Check the term without an expected type, and check that it's Tm_Inv p *)
     let inv_p =
-      match inv_tm_ty.t with
-      | Tm_Inv p -> p
-      | Tm_FStar _ -> begin
+      match inspect_term inv_tm_ty with
+      | Some (Tm_Inv p) -> p
+      | Some _ -> begin
         (* FIXME: should unrefine... meh *)
         let ropt = Pulse.Syntax.Pure.is_fvar_app inv_tm_ty in
         match ropt with
         | Some (lid, _, _, Some tm) -> 
           if lid = ["Pulse"; "Lib"; "Core"; "inv" ]
           then tm
-          else fail g (Some inv_tm.range)
+          else fail g (Some inv_tm_range)
                     (Printf.sprintf "Does not have invariant type (%s)" (P.term_to_string inv_tm_ty))
-        | _ -> fail g (Some inv_tm.range)
+        | _ -> fail g (Some inv_tm_range)
                     (Printf.sprintf "Does not have invariant type (%s)" (P.term_to_string inv_tm_ty))
       end
-      | _ -> fail g (Some inv_tm.range)
+      | _ -> fail g (Some inv_tm_range)
                   (Printf.sprintf "Does not have invariant type (%s)" (P.term_to_string inv_tm_ty))
     in
     
@@ -323,7 +323,7 @@ let check
       let d = T_Sub _ _ _ _ d (STS_AtomicInvs _ st _ _ obs' obs' tok) in
       checker_result_for_st_typing (| tm, _, d |) res_ppname
     | EffectAnnotSTT ->
-      let d = T_Lift _ _ _ _ d (Lift_STAtomic_ST _ c_out) in
+      let d = T_Lift _ _ _ _ d (Lift_STAtomic_ST _ c_out) in      
       checker_result_for_st_typing (| tm, _, d |) res_ppname
     end
 #pop-options

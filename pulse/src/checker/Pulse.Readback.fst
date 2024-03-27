@@ -47,8 +47,8 @@ let readback_observability (t:R.term)
 // TODO: FIXME: may be mark as opaque_to_smt
 let try_readback_st_comp
   (t:R.term)
-  (readback_ty:(t':R.term ->
-                option (ty:term { elab_term ty == t' })))
+  // (readback_ty:(t':R.term ->
+  //               option (ty:term { elab_term ty == t' })))
 
   : option (c:comp{elab_comp c == t}) =
 
@@ -74,9 +74,9 @@ let try_readback_st_comp
                       snd post == Q_Explicit);
 
               assume (t == mk_stt_comp u (fst res) (fst pre) (mk_abs (fst res) R.Q_Explicit body));
-              let? res' = readback_ty (fst res) in
-              let? pre' = readback_ty (fst pre) in
-              let? post' = readback_ty body in
+              let res' = fst res in
+              let pre' = fst pre in
+              let post' = body in
               let c = C_ST {u; res=res'; pre=pre';post=post'} in
               Some (c <: c:Pulse.Syntax.Base.comp{ elab_comp c == t })
             | _ -> None)
@@ -89,11 +89,11 @@ let try_readback_st_comp
               let { qual=aq; attrs=attrs }
                   = inspect_binder b
               in    
-              let? res' = readback_ty (fst res) in
+              let res' = fst res in
               let? obs' = readback_observability (fst obs) in
-              let? opened' = readback_ty (fst opened) in
-              let? pre' = readback_ty (fst pre) in
-              let? post' = readback_ty body in
+              let opened' = fst opened in
+              let pre' = fst pre in
+              let post' = body in
               assume (t == mk_stt_atomic_comp (fst obs) u (fst res) (fst opened) (fst pre) (mk_abs (fst res) R.Q_Explicit body));
               let c = C_STAtomic opened' obs' ({u; res=res'; pre=pre';post=post'}) in
               Some (c <: c:Pulse.Syntax.Base.comp { elab_comp c == t })
@@ -107,9 +107,9 @@ let try_readback_st_comp
               let { qual=aq; attrs=attrs }
                   = inspect_binder b
               in    
-              let? res' = readback_ty (fst res) in
-              let? pre' = readback_ty (fst pre) in
-              let? post' = readback_ty body in
+              let res' = fst res in
+              let pre' = fst pre in
+              let post' = body in
               assume (t == mk_stt_ghost_comp u (fst res) (fst pre) (mk_abs (fst res) R.Q_Explicit body));
               let c = C_STGhost ({u; res=res'; pre=pre';post=post'}) in
               Some (c <: c:Pulse.Syntax.Base.comp { elab_comp c == t })
@@ -149,14 +149,14 @@ let readback_qual = function
 // #pop-options
 
 let rec readback_ty (t:R.term)
-  : option (ty:term { elab_term ty == t }) =
+  : option term_view =  // (ty:term { elab_term ty == t }) =
 
   let open R in
   let open Pulse.Syntax.Base in
-  let w (res:term') = with_range res (RU.range_of_term t) in
-  let return (res:term' { elab_term (w res) == t}) 
-    : option (ty:term { elab_term ty == t})
-    = Some (w res)
+  // let w (res:term') = with_range res (RU.range_of_term t) in
+  let return (res:term_view)  // { elab_term (w res) == t}) 
+    : option term_view  // { elab_term ty == t})
+    = Some res
   in
   match inspect_ln t with
   | Tv_FVar fv ->
@@ -169,15 +169,14 @@ let rec readback_ty (t:R.term)
     then return Tm_Inames
     else if fv_lid = emp_inames_lid
     then return Tm_EmpInames
-    else return (Tm_FStar t)
+    else None
 
   | Tv_App hd (a, q) ->
-    admit(); //this case doesn't work because it is using collect_app_ln, etc.
-    let aux () = 
-      match q with
-      | R.Q_Meta _ -> None
-      | _ -> return (Tm_FStar t)
-    in
+    // admit(); //this case doesn't work because it is using collect_app_ln, etc.
+    let aux () = None in
+      // match q with
+      // | R.Q_Meta _ -> None
+      // | _ -> return (Tm_FStar t)
     let head, args = collect_app_ln t in
     begin
     match inspect_ln head, args with
@@ -186,10 +185,10 @@ let rec readback_ty (t:R.term)
       then (
         let t1 : R.term = fst a1 in
         let t2 : R.term = fst a2 in 
-        assume (t1 << t);
-        assume (t2 << t);
-        let? t1 = readback_ty t1 in
-        let? t2 = readback_ty t2 in
+        // assume (t1 << t);
+        // assume (t2 << t);
+        // let? t1 = readback_ty t1 in
+        // let? t2 = readback_ty t2 in
         return (Tm_Star t1 t2)
       )
       else aux ()
@@ -199,11 +198,11 @@ let rec readback_ty (t:R.term)
       then (
         let t1 : R.term = fst a1 in
         let t2 : R.term = fst a2 in
-        let? ty = readback_ty t1 in
+        let ty = t1 in
         let? (ppname, range, p) =
           match inspect_ln t2 with
           | Tv_Abs b body ->
-            let? p = readback_ty body in
+            let p = body in
             let bview = inspect_binder b in
             Some (bview.ppname, RU.binder_range b, p) <: option (ppname_t & range & term)
           | _ -> None in  // TODO: FIXME: provide error from this function?
@@ -217,13 +216,13 @@ let rec readback_ty (t:R.term)
       if inspect_fv fv = pure_lid
       then (
         let t1 : R.term = fst a in
-        let? t1 = readback_ty t1 in
+        let t1 = t1 in
         return (Tm_Pure t1)
       )
       else if inspect_fv fv = inv_lid
       then (
         let t1 : R.term = fst a in
-        let? t1 = readback_ty t1 in
+        let t1 = t1 in
         return (Tm_Inv t1)
       )
       else aux ()
@@ -240,7 +239,8 @@ let rec readback_ty (t:R.term)
   | Tv_UInst _ _
   | Tv_Match _ _ _
   | Tv_Abs _ _ ->
-    return (Tm_FStar t)
+    // return t
+    None
 
   | Tv_AscribedT t _ _ _
   | Tv_AscribedC t _ _ _ ->
@@ -258,11 +258,11 @@ let rec readback_ty (t:R.term)
 let readback_comp (t:R.term)
   : option (c:comp { elab_comp c == t }) =
 
-  let ropt = try_readback_st_comp t readback_ty in
+  let ropt = try_readback_st_comp t in
   match ropt with
   | Some c ->
     // debug_log (fun _ -> T.print (Printf.sprintf "readback_comp: %s as\n%s\n" (T.term_to_string t) (P.comp_to_string c)));
     ropt
   | _ ->
-    let? t' = readback_ty t in
+    let t' = t in
     Some (C_Tot t' <: c:comp{ elab_comp c == t })

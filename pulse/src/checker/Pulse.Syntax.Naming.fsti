@@ -29,23 +29,22 @@ module RU = Pulse.RuntimeUtils
 module U = Pulse.Syntax.Pure
 module E = Pulse.Elaborate.Pure
 
-let rec freevars (t:term) 
-  : Set.set var
-  = match t.t with
-    | Tm_Emp
-    | Tm_VProp
-    | Tm_Inames
-    | Tm_EmpInames
-    | Tm_Unknown -> Set.empty
-    | Tm_Inv p -> freevars p
-    | Tm_Star t1 t2 ->
-      Set.union (freevars t1) (freevars t2)
-    | Tm_ExistsSL _ t1 t2
-    | Tm_ForallSL _ t1 t2 ->
-      Set.union (freevars t1.binder_ty) (freevars t2)
-    | Tm_Pure p -> freevars p
-    | Tm_FStar t -> RT.freevars t
-    | Tm_AddInv i is -> Set.union (freevars i) (freevars is)
+let freevars (t:term) : Set.set var = RT.freevars t
+  // = match t.t with
+  //   | Tm_Emp
+  //   | Tm_VProp
+  //   | Tm_Inames
+  //   | Tm_EmpInames
+  //   | Tm_Unknown -> Set.empty
+  //   | Tm_Inv p -> freevars p
+  //   | Tm_Star t1 t2 ->
+  //     Set.union (freevars t1) (freevars t2)
+  //   | Tm_ExistsSL _ t1 t2
+  //   | Tm_ForallSL _ t1 t2 ->
+  //     Set.union (freevars t1.binder_ty) (freevars t2)
+  //   | Tm_Pure p -> freevars p
+  //   | Tm_FStar t -> RT.freevars t
+  //   | Tm_AddInv i is -> Set.union (freevars i) (freevars is)
 
 let freevars_st_comp (s:st_comp) : Set.set var =
   freevars s.res `Set.union`
@@ -183,34 +182,34 @@ and freevars_branches (t:list (pattern & st_term)) : Set.set var =
   | (_, b)::tl -> freevars_st b `Set.union` freevars_branches tl
 
 
-let rec ln' (t:term) (i:int) : Tot bool (decreases t) =
-  match t.t with
-  | Tm_Emp
-  | Tm_VProp
-  | Tm_Inames
-  | Tm_EmpInames
-  | Tm_Unknown -> true
+let ln' (t:term) (i:int) : bool = RT.ln' t i
+  // match t.t with
+  // | Tm_Emp
+  // | Tm_VProp
+  // | Tm_Inames
+  // | Tm_EmpInames
+  // | Tm_Unknown -> true
 
-  | Tm_Inv p -> ln' p i
+  // | Tm_Inv p -> ln' p i
 
-  | Tm_Star t1 t2 ->
-    ln' t1 i &&
-    ln' t2 i
+  // | Tm_Star t1 t2 ->
+  //   ln' t1 i &&
+  //   ln' t2 i
 
-  | Tm_Pure p ->
-    ln' p i
+  // | Tm_Pure p ->
+  //   ln' p i
 
-  | Tm_ExistsSL _ t body
-  | Tm_ForallSL _ t body ->
-    ln' t.binder_ty i &&
-    ln' body (i + 1)
+  // | Tm_ExistsSL _ t body
+  // | Tm_ForallSL _ t body ->
+  //   ln' t.binder_ty i &&
+  //   ln' body (i + 1)
     
-  | Tm_FStar t ->
-    RT.ln' t i
+  // | Tm_FStar t ->
+  //   RT.ln' t i
 
-  | Tm_AddInv x is ->
-    ln' x i &&
-    ln' is i
+  // | Tm_AddInv x is ->
+  //   ln' x i &&
+  //   ln' is i
 
 
 let ln_st_comp (s:st_comp) (i:int) : bool =
@@ -431,47 +430,47 @@ let rt_subst_elt = function
 
 let rt_subst = L.map rt_subst_elt
 
-let open_or_close_host_term (t:host_term) (ss:subst)
-  : Lemma (not_tv_unknown (RT.subst_term t (rt_subst ss)))
-  = admit()
+// let open_or_close_host_term (t:host_term) (ss:subst)
+//   : Lemma (not_tv_unknown (RT.subst_term t (rt_subst ss)))
+//   = admit()
 
-val subst_host_term (t:host_term) (ss:subst)
-  : Tot (t':host_term { t' == RT.subst_term t (rt_subst ss) })
+val subst_host_term (t:term) (ss:subst)
+  : Tot (t':term { t' == RT.subst_term t (rt_subst ss) })
 
-let rec subst_term (t:term) (ss:subst)
-  : Tot term (decreases t)
-  = let w t' = with_range t' t.range in
-    match t.t with
-    | Tm_VProp
-    | Tm_Emp
-    | Tm_Inames
-    | Tm_EmpInames
-    | Tm_Unknown -> t
+let subst_term (t:term) (ss:subst) : term = subst_host_term t ss
+  // : Tot term (decreases t)
+  // = let w t' = with_range t' t.range in
+  //   match t.t with
+  //   | Tm_VProp
+  //   | Tm_Emp
+  //   | Tm_Inames
+  //   | Tm_EmpInames
+  //   | Tm_Unknown -> t
 
-    | Tm_Inv p ->
-      w (Tm_Inv (subst_term p ss))
+  //   | Tm_Inv p ->
+  //     w (Tm_Inv (subst_term p ss))
                  
-    | Tm_Pure p ->
-      w (Tm_Pure (subst_term p ss))
+  //   | Tm_Pure p ->
+  //     w (Tm_Pure (subst_term p ss))
       
-    | Tm_Star l r ->
-      w (Tm_Star (subst_term l ss)
-                 (subst_term r ss))
+  //   | Tm_Star l r ->
+  //     w (Tm_Star (subst_term l ss)
+  //                (subst_term r ss))
               
-    | Tm_ExistsSL u b body ->
-      w (Tm_ExistsSL u { b with binder_ty = subst_term b.binder_ty ss }
-                       (subst_term body (shift_subst ss)))
+  //   | Tm_ExistsSL u b body ->
+  //     w (Tm_ExistsSL u { b with binder_ty = subst_term b.binder_ty ss }
+  //                      (subst_term body (shift_subst ss)))
                   
-    | Tm_ForallSL u b body ->
-      w (Tm_ForallSL u { b with binder_ty = subst_term b.binder_ty ss }
-                       (subst_term body (shift_subst ss)))
+  //   | Tm_ForallSL u b body ->
+  //     w (Tm_ForallSL u { b with binder_ty = subst_term b.binder_ty ss }
+  //                      (subst_term body (shift_subst ss)))
     
-    | Tm_FStar t ->
-      w (Tm_FStar (subst_host_term t ss))
+  //   | Tm_FStar t ->
+  //     w (Tm_FStar (subst_host_term t ss))
 
-    | Tm_AddInv i is ->
-      w (Tm_AddInv (subst_term i ss)
-                   (subst_term is ss))
+  //   | Tm_AddInv i is ->
+  //     w (Tm_AddInv (subst_term i ss)
+  //                  (subst_term is ss))
 
 let open_term' (t:term) (v:term) (i:index) =
   subst_term t [ DT i v ]

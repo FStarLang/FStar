@@ -29,8 +29,9 @@ let check_prop (g:env) (p:term)
   
   let p0 = p in
   let (| p, p_typing |) = Pulse.Checker.Pure.check_vprop g (tm_pure p) in
-  match p.t with
-  | Tm_Pure pp ->
+  match inspect_term p with
+  | Some (Tm_Pure pp) ->
+    assume False;
     let prop_typing = Pulse.Typing.Metatheory.pure_typing_inversion #_ #pp p_typing in
     (| pp, prop_typing |)
   | _ ->

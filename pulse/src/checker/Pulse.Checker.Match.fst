@@ -408,7 +408,7 @@ let check
 
   let g = Pulse.Typing.Env.push_context_no_range g "check_match" in
 
-  let sc_range = sc.range in // save range, it gets lost otherwise
+  let sc_range = Pulse.RuntimeUtils.range_of_term sc in // save range, it gets lost otherwise
   let orig_brs = brs in
   let nbr = L.length brs in
 

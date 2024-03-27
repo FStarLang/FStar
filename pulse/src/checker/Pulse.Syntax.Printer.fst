@@ -61,16 +61,16 @@ let qual_to_string = function
 let indent (level:string) = level ^ "\t"
     
 
-let rec collect_binders (until: term' -> bool) (t:term) : list binder & term =
-  if not (until t.t) then [], t
-  else (
-    match t.t with
-    | Tm_ExistsSL _ b body
-    | Tm_ForallSL _ b body -> 
-      let bs, t = collect_binders until body in
-      b::bs, t
-    | _ -> [], t
-  )
+// let rec collect_binders (until: term' -> bool) (t:term) : list binder & term =
+//   if not (until t.t) then [], t
+//   else (
+//     match t.t with
+//     | Tm_ExistsSL _ b body
+//     | Tm_ForallSL _ b body -> 
+//       let bs, t = collect_binders until body in
+//       b::bs, t
+//     | _ -> [], t
+//   )
 
 let rec binder_to_string_paren (b:binder)
   : T.Tac string
@@ -81,48 +81,48 @@ let rec binder_to_string_paren (b:binder)
             (T.unseal b.binder_ppname.name)
             (term_to_string' "" b.binder_ty)
 
-and term_to_string' (level:string) (t:term)
-  : T.Tac string
-  = match t.t with
-    | Tm_Emp -> "emp"
+and term_to_string' (level:string) (t:term) : T.Tac string = T.term_to_string t
+  
+  // = match t.t with
+  //   | Tm_Emp -> "emp"
 
-    | Tm_Pure p ->
-      sprintf "pure (%s)" 
-        (term_to_string' (indent level) p)
+  //   | Tm_Pure p ->
+  //     sprintf "pure (%s)" 
+  //       (term_to_string' (indent level) p)
       
-    | Tm_Star p1 p2 ->
-      sprintf "%s ** \n%s%s" 
-        (term_to_string' level p1)
-        level
-        (term_to_string' level p2)
+  //   | Tm_Star p1 p2 ->
+  //     sprintf "%s ** \n%s%s" 
+  //       (term_to_string' level p1)
+  //       level
+  //       (term_to_string' level p2)
                           
-    | Tm_ExistsSL _ _ _ ->
-      let bs, body = collect_binders Tm_ExistsSL? t in
-      sprintf "(exists* %s.\n%s%s)"
-              (T.map binder_to_string_paren bs |> String.concat " ")
-              level
-              (term_to_string' (indent level) body)
+  //   | Tm_ExistsSL _ _ _ ->
+  //     let bs, body = collect_binders Tm_ExistsSL? t in
+  //     sprintf "(exists* %s.\n%s%s)"
+  //             (T.map binder_to_string_paren bs |> String.concat " ")
+  //             level
+  //             (term_to_string' (indent level) body)
 
-    | Tm_ForallSL u b body ->
-      let bs, body = collect_binders Tm_ForallSL? t in
-      sprintf "(forall* %s.\n%s%s)"
-              (T.map binder_to_string_paren bs |> String.concat " ")
-              level
-              (term_to_string' (indent level) body)
+  //   | Tm_ForallSL u b body ->
+  //     let bs, body = collect_binders Tm_ForallSL? t in
+  //     sprintf "(forall* %s.\n%s%s)"
+  //             (T.map binder_to_string_paren bs |> String.concat " ")
+  //             level
+  //             (term_to_string' (indent level) body)
                           
-    | Tm_VProp -> "vprop"
-    | Tm_Inames -> "inames"
-    | Tm_EmpInames -> "emp_inames"
-    | Tm_Unknown -> "_"
-    | Tm_AddInv i is ->
-      sprintf "add_inv %s %s"
-        (term_to_string' level i)
-        (term_to_string' level is)
-    | Tm_Inv i ->
-      sprintf "inv %s"
-        (term_to_string' level i)
-    | Tm_FStar t ->
-      T.term_to_string t
+  //   | Tm_VProp -> "vprop"
+  //   | Tm_Inames -> "inames"
+  //   | Tm_EmpInames -> "emp_inames"
+  //   | Tm_Unknown -> "_"
+  //   | Tm_AddInv i is ->
+  //     sprintf "add_inv %s %s"
+  //       (term_to_string' level i)
+  //       (term_to_string' level is)
+  //   | Tm_Inv i ->
+  //     sprintf "inv %s"
+  //       (term_to_string' level i)
+  //   | Tm_FStar t ->
+  //     T.term_to_string t
 let term_to_string t = term_to_string' "" t
 
 let rec binder_to_doc b : T.Tac document =
@@ -130,40 +130,39 @@ let rec binder_to_doc b : T.Tac document =
           ^^ doc_of_string ":"
           ^^ term_to_doc b.binder_ty)
 
-and term_to_doc t
-  : T.Tac document
-  = match t.t with
-    | Tm_Emp -> doc_of_string "emp"
+and term_to_doc t : T.Tac document = doc_of_string (T.term_to_string t)
+  // = match t.t with
+  //   | Tm_Emp -> doc_of_string "emp"
 
-    | Tm_Pure p -> doc_of_string "pure" ^^ parens (term_to_doc p)
-    | Tm_Star p1 p2 ->
-      infix 2 1 (doc_of_string "**")
-                (term_to_doc p1)
-                (term_to_doc p2)
+  //   | Tm_Pure p -> doc_of_string "pure" ^^ parens (term_to_doc p)
+  //   | Tm_Star p1 p2 ->
+  //     infix 2 1 (doc_of_string "**")
+  //               (term_to_doc p1)
+  //               (term_to_doc p2)
 
-    | Tm_ExistsSL _ _ _ ->
-      let bs, body = collect_binders Tm_ExistsSL? t in
-      parens (doc_of_string "exists*" ^/^ (separate (doc_of_string " ") (T.map binder_to_doc bs))
-              ^^ doc_of_string "."
-              ^/^ term_to_doc body)
+  //   | Tm_ExistsSL _ _ _ ->
+  //     let bs, body = collect_binders Tm_ExistsSL? t in
+  //     parens (doc_of_string "exists*" ^/^ (separate (doc_of_string " ") (T.map binder_to_doc bs))
+  //             ^^ doc_of_string "."
+  //             ^/^ term_to_doc body)
 
-    | Tm_ForallSL _ _ _ ->
-      let bs, body = collect_binders Tm_ForallSL? t in
-      parens (doc_of_string "forall*" ^/^ (separate (doc_of_string " ") (T.map binder_to_doc bs))
-              ^^ doc_of_string "."
-              ^/^ term_to_doc body)
+  //   | Tm_ForallSL _ _ _ ->
+  //     let bs, body = collect_binders Tm_ForallSL? t in
+  //     parens (doc_of_string "forall*" ^/^ (separate (doc_of_string " ") (T.map binder_to_doc bs))
+  //             ^^ doc_of_string "."
+  //             ^/^ term_to_doc body)
 
-    | Tm_VProp -> doc_of_string "vprop"
-    | Tm_Inames -> doc_of_string "inames"
-    | Tm_EmpInames -> doc_of_string "emp_inames"
-    | Tm_AddInv i is ->
-      doc_of_string "add_inv" ^/^ parens (term_to_doc i ^^ doc_of_string "," ^^ term_to_doc is)
-    | Tm_Inv i ->
-      doc_of_string "inv" ^/^ parens (term_to_doc i)
-    | Tm_Unknown -> doc_of_string "_"
-    | Tm_FStar t ->
-      // Should call term_to_doc when available
-      doc_of_string (T.term_to_string t)
+  //   | Tm_VProp -> doc_of_string "vprop"
+  //   | Tm_Inames -> doc_of_string "inames"
+  //   | Tm_EmpInames -> doc_of_string "emp_inames"
+  //   | Tm_AddInv i is ->
+  //     doc_of_string "add_inv" ^/^ parens (term_to_doc i ^^ doc_of_string "," ^^ term_to_doc is)
+  //   | Tm_Inv i ->
+  //     doc_of_string "inv" ^/^ parens (term_to_doc i)
+  //   | Tm_Unknown -> doc_of_string "_"
+  //   | Tm_FStar t ->
+  //     // Should call term_to_doc when available
+  //     doc_of_string (T.term_to_string t)
 
 let binder_to_string (b:binder)
   : T.Tac string
@@ -431,20 +430,22 @@ and pattern_to_string (p:pattern) : T.Tac string =
 
 let st_term_to_string t = st_term_to_string' "" t
 
-let tag_of_term (t:term) =
-  match t.t with
-  | Tm_Emp -> "Tm_Emp"
-  | Tm_Pure _ -> "Tm_Pure"
-  | Tm_Star _ _ -> "Tm_Star"
-  | Tm_ExistsSL _ _ _ -> "Tm_ExistsSL"
-  | Tm_ForallSL _ _ _ -> "Tm_ForallSL"
-  | Tm_VProp -> "Tm_VProp"
-  | Tm_Inames -> "Tm_Inames"
-  | Tm_EmpInames -> "Tm_EmpInames"
-  | Tm_Unknown -> "Tm_Unknown"
-  | Tm_FStar _ -> "Tm_FStar"
-  | Tm_AddInv _ _ -> "Tm_AddInv"
-  | Tm_Inv _ -> "Tm_Inv"
+let tag_of_term (t:term) = "Tm_FStar"
+  // TODO: inspect t and print proper tag
+  // let tv = inspect_term t in
+  // match t.t with
+  // | Tm_Emp -> "Tm_Emp"
+  // | Tm_Pure _ -> "Tm_Pure"
+  // | Tm_Star _ _ -> "Tm_Star"
+  // | Tm_ExistsSL _ _ _ -> "Tm_ExistsSL"
+  // | Tm_ForallSL _ _ _ -> "Tm_ForallSL"
+  // | Tm_VProp -> "Tm_VProp"
+  // | Tm_Inames -> "Tm_Inames"
+  // | Tm_EmpInames -> "Tm_EmpInames"
+  // | Tm_Unknown -> "Tm_Unknown"
+  // | Tm_FStar _ -> "Tm_FStar"
+  // | Tm_AddInv _ _ -> "Tm_AddInv"
+  // | Tm_Inv _ -> "Tm_Inv"
 
 let tag_of_st_term (t:st_term) =
   match t.term with

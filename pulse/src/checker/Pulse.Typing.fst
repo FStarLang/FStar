@@ -39,7 +39,7 @@ let tm_szt  = tm_fvar (as_fv szt_lid)
 let tm_true = tm_constant R.C_True
 let tm_false = tm_constant R.C_False
 
-let tm_prop = with_range (Tm_FStar FStar.Reflection.Typing.tm_prop) Range.range_0
+let tm_prop = RU.set_range FStar.Reflection.Typing.tm_prop Range.range_0
 
 let mk_erased (u:universe) (t:term) : term =
   let hd = tm_uinst (as_fv erased_lid) [u] in
@@ -246,7 +246,7 @@ let join_obs (o1 o2:observability) : observability =
 let add_iname_at_least_unobservable (s:comp_st {C_STAtomic? s}) (inv_vprop inv_tm:term) =
   let add_inv_tm (inames:term) = 
     tm_fstar (Pulse.Reflection.Util.add_inv_tm (elab_term inv_vprop) (elab_term inames) (elab_term inv_tm))
-              inames.range
+              (RU.range_of_term inames)
   in
   let C_STAtomic inames obs s = s in
   C_STAtomic (add_inv_tm inames) (join_obs obs Unobservable) s
@@ -526,16 +526,16 @@ let tm_join_inames (inames1 inames2 : term) : term =
   let inames2 = elab_term inames2 in
   let join_lid = Pulse.Reflection.Util.mk_pulse_lib_core_lid "join_inames" in
   let join : R.term = R.pack_ln (R.Tv_FVar (R.pack_fv join_lid)) in
-  with_range (Tm_FStar (R.mk_e_app join [inames1; inames2]))
-             (T.range_of_term inames1)
+  tm_fstar (R.mk_e_app join [inames1; inames2])
+           (T.range_of_term inames1)
 
 let tm_inames_subset (inames1 inames2 : term) : term =
   let inames1 = elab_term inames1 in
   let inames2 = elab_term inames2 in
   let join_lid = Pulse.Reflection.Util.mk_pulse_lib_core_lid "inames_subset" in
   let join : R.term = R.pack_ln (R.Tv_FVar (R.pack_fv join_lid)) in
-  with_range (Tm_FStar (R.mk_e_app join [inames1; inames2]))
-             (T.range_of_term inames1)
+  tm_fstar (R.mk_e_app join [inames1; inames2])
+           (T.range_of_term inames1)
 
 let tm_inames_subset_typing (g:env) (inames1 inames2 : term) : tot_typing g (tm_inames_subset inames1 inames2) tm_prop =
   (* Need to add the typing hypothesis for `inames_subset` to
@@ -708,20 +708,20 @@ let subtyping_token g t1 t2 =
   T.subtyping_token (elab_env g) (elab_term t1) (elab_term t2)
 
 val readback_binding : R.binding -> binding
-let readback_binding b =
-  assume (host_term == R.term); // fixme! expose this fact
-  match readback_ty b.sort with
-  | Some sort -> (b.uniq, sort)
-  | None ->
-    let sort : term = {t=Tm_FStar b.sort; range=T.range_of_term b.sort} in
-    (b.uniq, sort)
+let readback_binding b = (b.uniq, b.sort)
+  // assume (host_term == R.term); // fixme! expose this fact
+  // match readback_ty b.sort with
+  // | Some sort -> (b.uniq, sort)
+  // | None ->
+  //   let sort : term = {t=Tm_FStar b.sort; range=T.range_of_term b.sort} in
+  //   (b.uniq, sort)
 
 let non_informative (g:env) (c:comp) =
   my_erased (RT.non_informative (elab_env g) (elab_comp c))
 
 let inv_disjointness (inv_p inames inv:term) = 
   let g = Pulse.Reflection.Util.inv_disjointness_goal (elab_term inv_p) (elab_term inames) (elab_term inv) in 
-  tm_fstar g inv.range
+  tm_fstar g (RU.range_of_term inv)
 
 let eff_of_ctag = function
   | STT_Ghost -> T.E_Ghost
