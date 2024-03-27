@@ -20,7 +20,10 @@ open Pulse.Main
 module H = Pulse.Lib.HigherGhostReference
 module U = FStar.Universe
 let ref a = H.ref (U.raise_t a)
-let gref_non_informative (a:Type u#0) : non_informative_witness (ref a) = fun x -> reveal x
+
+instance non_informative_gref (a:Type0) : NonInformative.non_informative (ref a) = {
+  reveal = (fun x -> Ghost.reveal x) <: NonInformative.revealer (ref a);
+}
 
 let pts_to
     (#a:Type u#0)

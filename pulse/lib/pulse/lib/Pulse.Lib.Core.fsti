@@ -447,15 +447,12 @@ val bind_ghost
     (e2:(x:a -> stt_ghost b (post1 x) post2))
 : stt_ghost b pre1 post2
 
-type non_informative_witness (a:Type u#a) =
-  x:Ghost.erased a -> y:a{y == Ghost.reveal x}
-
 val lift_ghost_neutral
     (#a:Type u#a)
     (#pre:vprop)
     (#post:a -> vprop)
     (e:stt_ghost a pre post)
-    (reveal_a:non_informative_witness a)
+    (ni_a:NonInformative.non_informative a)
 : stt_atomic a #Neutral emp_inames pre post
 
 val lift_neutral_ghost
@@ -482,26 +479,6 @@ val sub_ghost
     (pf2 : vprop_post_equiv post1 post2)
     (e:stt_ghost a pre1 post1)
 : stt_ghost a pre2 post2
-
-inline_for_extraction
-let unit_non_informative
-: non_informative_witness unit
-= fun u -> u
-
-inline_for_extraction
-let prop_non_informative
-: non_informative_witness prop
-= fun p -> p
-
-inline_for_extraction
-let erased_non_informative (a:Type u#a)
-: non_informative_witness (Ghost.erased u#a a)
-= fun x -> Ghost.reveal x
-
-inline_for_extraction
-let squash_non_informative (a:Type u#a)
-: non_informative_witness (squash u#a a)
-= fun x -> x
 
 (***** end computation types and combinators *****)
 
@@ -656,8 +633,9 @@ val ghost_pcm_ref
     ([@@@unused] p:FStar.PCM.pcm a)
 : Type0
 
-val ghost_pcm_ref_non_informative (a:Type u#a) (p:FStar.PCM.pcm a)
-  : non_informative_witness (ghost_pcm_ref p)
+instance val non_informative_ghost_pcm_ref
+  (a:Type u#a) (p:FStar.PCM.pcm a)
+  : NonInformative.non_informative (ghost_pcm_ref p)
 
 val ghost_pcm_pts_to
     (#a:Type u#1)

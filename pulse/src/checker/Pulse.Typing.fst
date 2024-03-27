@@ -74,8 +74,6 @@ let mk_vprop_eq (e0 e1:term) : term =
   mk_eq2 u2 tm_vprop e0 e1
 
 let mk_ref (t:term) : term = tm_pureapp (tm_fvar (as_fv ref_lid)) None t
-let mk_gref (t:term) : term = tm_pureapp (tm_fvar (as_fv gref_lid)) None t
-let mk_higher_gref (t:term) : term = tm_pureapp (tm_fvar (as_fv higher_gref_lid)) None t
 
 let mk_pts_to (ty:term) (r:term) (v:term) : term =
   let t = tm_fvar (as_fv pts_to_lid) in
@@ -290,9 +288,9 @@ let st_equiv_pre (c1 c2:comp_st)
       True
     | _, _ -> False)
 
-let non_informative_witness_t (u:universe) (t:term)
+let non_informative_class (u:universe) (t:term)
   : term
-  = tm_pureapp (tm_uinst (as_fv non_informative_witness_lid) [u])
+  = tm_pureapp (tm_uinst (as_fv non_informative_lid) [u])
                None
                t
 
@@ -513,7 +511,7 @@ let universe_of (g:env) (t:term) (u:universe) =
   tot_typing g t (tm_type u)
 
 let non_informative_t (g:env) (u:universe) (t:term) =
-  w:term & tot_typing g w (non_informative_witness_t u t)
+  w:term & tot_typing g w (non_informative_class u t)
 
 let non_informative_c (g:env) (c:comp_st) =
   non_informative_t g (comp_u c) (comp_res c)

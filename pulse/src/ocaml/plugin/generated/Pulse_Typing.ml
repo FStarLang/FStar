@@ -173,18 +173,6 @@ let (mk_ref : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term) =
       (Pulse_Syntax_Pure.tm_fvar
          (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.ref_lid))
       FStar_Pervasives_Native.None t
-let (mk_gref : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term) =
-  fun t ->
-    Pulse_Syntax_Pure.tm_pureapp
-      (Pulse_Syntax_Pure.tm_fvar
-         (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.gref_lid))
-      FStar_Pervasives_Native.None t
-let (mk_higher_gref : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term) =
-  fun t ->
-    Pulse_Syntax_Pure.tm_pureapp
-      (Pulse_Syntax_Pure.tm_fvar
-         (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.higher_gref_lid))
-      FStar_Pervasives_Native.None t
 let (mk_pts_to :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.term ->
@@ -390,7 +378,7 @@ let (bind_comp_out :
       | (Pulse_Syntax_Base.C_ST uu___, Pulse_Syntax_Base.C_ST uu___1) ->
           Pulse_Syntax_Base.C_ST s
 type ('c1, 'c2) st_equiv_pre = unit
-let (non_informative_witness_t :
+let (non_informative_class :
   Pulse_Syntax_Base.universe ->
     Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
   =
@@ -398,9 +386,8 @@ let (non_informative_witness_t :
     fun t ->
       Pulse_Syntax_Pure.tm_pureapp
         (Pulse_Syntax_Pure.tm_uinst
-           (Pulse_Syntax_Base.as_fv
-              Pulse_Reflection_Util.non_informative_witness_lid) [u])
-        FStar_Pervasives_Native.None t
+           (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.non_informative_lid)
+           [u]) FStar_Pervasives_Native.None t
 let (elim_exists_post :
   Pulse_Syntax_Base.universe ->
     Pulse_Syntax_Base.term ->
