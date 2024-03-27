@@ -501,17 +501,18 @@ let (is_xtuple :
     match uu___ with
     | (ns, n) ->
         let uu___1 =
-          let uu___2 =
-            FStar_Compiler_Util.concat_l "."
-              (FStar_Compiler_List.op_At ns [n]) in
-          FStar_Parser_Const.is_tuple_datacon_string uu___2 in
-        if uu___1
-        then
-          let uu___2 =
-            let uu___3 = FStar_Compiler_Util.char_at n (Prims.of_int (7)) in
-            FStar_Compiler_Util.int_of_char uu___3 in
-          FStar_Pervasives_Native.Some uu___2
-        else FStar_Pervasives_Native.None
+          FStar_Compiler_Util.concat_l "." (FStar_Compiler_List.op_At ns [n]) in
+        FStar_Parser_Const.get_tuple_datacon_arity uu___1
+let (is_xtuple_ty :
+  (Prims.string Prims.list * Prims.string) ->
+    Prims.int FStar_Pervasives_Native.option)
+  =
+  fun uu___ ->
+    match uu___ with
+    | (ns, n) ->
+        let uu___1 =
+          FStar_Compiler_Util.concat_l "." (FStar_Compiler_List.op_At ns [n]) in
+        FStar_Parser_Const.get_tuple_tycon_arity uu___1
 let (resugar_exp :
   FStar_Extraction_ML_Syntax.mlexpr -> FStar_Extraction_ML_Syntax.mlexpr) =
   fun e ->
@@ -552,25 +553,6 @@ let record_fields :
                let uu___1 = FStar_Ident.ident_of_lid f in
                FStar_Ident.string_of_id uu___1 in
              (uu___, e)) fs vs
-let (is_xtuple_ty :
-  (Prims.string Prims.list * Prims.string) ->
-    Prims.int FStar_Pervasives_Native.option)
-  =
-  fun uu___ ->
-    match uu___ with
-    | (ns, n) ->
-        let uu___1 =
-          let uu___2 =
-            FStar_Compiler_Util.concat_l "."
-              (FStar_Compiler_List.op_At ns [n]) in
-          FStar_Parser_Const.is_tuple_constructor_string uu___2 in
-        if uu___1
-        then
-          let uu___2 =
-            let uu___3 = FStar_Compiler_Util.char_at n (Prims.of_int (5)) in
-            FStar_Compiler_Util.int_of_char uu___3 in
-          FStar_Pervasives_Native.Some uu___2
-        else FStar_Pervasives_Native.None
 let (resugar_mlty :
   FStar_Extraction_ML_Syntax.mlty -> FStar_Extraction_ML_Syntax.mlty) =
   fun t ->

@@ -40,6 +40,8 @@ type univ_name = ident
 type typ     = term
 type binders = list binder
 
+open FStar.Tuple3
+
 (*
  * match e as binder returns t|C
  *

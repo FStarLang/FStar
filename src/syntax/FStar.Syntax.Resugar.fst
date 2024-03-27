@@ -209,8 +209,8 @@ let is_true_pat (p:S.pat) : bool = match p.v with
     | _ -> false
 
 let is_tuple_constructor_lid lid =
-     C.is_tuple_data_lid' lid
-  || C.is_dtuple_data_lid' lid
+     C.is_tuple_datacon_lid lid
+  || C.is_dtuple_datacon_lid lid
 
 let may_shorten lid =
   if Options.print_real_names () then false
@@ -1126,7 +1126,7 @@ and resugar_pat' env (p:S.pat) (branch_bv: Set.set bv) : A.pattern =
         args |>
         List.filter_map (fun (p, is_implicit) ->
             if is_implicit then None else Some (aux p (Some false))) in
-      let is_dependent_tuple = C.is_dtuple_data_lid' fv.fv_name.v in
+      let is_dependent_tuple = C.is_dtuple_datacon_lid fv.fv_name.v in
       mk (A.PatTuple (args, is_dependent_tuple))
 
     | Pat_cons({fv_qual=Some (Record_ctor(name, fields))}, _, args) ->

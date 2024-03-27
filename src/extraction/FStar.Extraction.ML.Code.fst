@@ -27,8 +27,10 @@ open FStar.Const
 open FStar.BaseTypes
 module BU = FStar.Compiler.Util
 
-(* This is the old printer used exclusively for the F# build of F*. It will not
- * evolve in the future. *)
+(* NOTE!!!!!!!!!!!!!!!!!!!!
+ * This is the old printer used exclusively for the F# build of F*. It will not
+ * evolve in the future. For the actual printer used for extracting OCaml code,
+ * see ocaml/fstar-lib/FStar_Extraction_ML_PrintML.ml *)
 
 (* -------------------------------------------------------------------- *)
 type assoc  = | ILeft | IRight | Left | Right | NonAssoc

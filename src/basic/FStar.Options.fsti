@@ -21,6 +21,8 @@ open FStar.BaseTypes
 open FStar.VConfig
 open FStar.Compiler
 
+open FStar.Tuple4
+
 //let __test_norm_all = Util.mk_ref false
 
 type debug_level_t =

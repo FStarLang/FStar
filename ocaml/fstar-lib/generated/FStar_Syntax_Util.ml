@@ -4576,9 +4576,9 @@ let (get_bind_vc_combinator :
     | FStar_Syntax_Syntax.DM4F_eff combs ->
         ((combs.FStar_Syntax_Syntax.bind_wp), FStar_Pervasives_Native.None)
     | FStar_Syntax_Syntax.Layered_eff combs ->
-        ((FStar_Pervasives_Native.__proj__Mktuple3__item___2
+        ((FStar_Tuple3.__proj__Mktuple3__item___2
             combs.FStar_Syntax_Syntax.l_bind),
-          (FStar_Pervasives_Native.__proj__Mktuple3__item___3
+          (FStar_Tuple3.__proj__Mktuple3__item___3
              combs.FStar_Syntax_Syntax.l_bind))
 let (get_return_vc_combinator :
   FStar_Syntax_Syntax.eff_decl -> FStar_Syntax_Syntax.tscheme) =
@@ -4601,7 +4601,7 @@ let (get_bind_repr :
         combs.FStar_Syntax_Syntax.bind_repr
     | FStar_Syntax_Syntax.Layered_eff combs ->
         FStar_Pervasives_Native.Some
-          (FStar_Pervasives_Native.__proj__Mktuple3__item___1
+          (FStar_Tuple3.__proj__Mktuple3__item___1
              combs.FStar_Syntax_Syntax.l_bind)
 let (get_return_repr :
   FStar_Syntax_Syntax.eff_decl ->
@@ -4637,9 +4637,9 @@ let (get_layered_if_then_else_combinator :
     match ed.FStar_Syntax_Syntax.combinators with
     | FStar_Syntax_Syntax.Layered_eff combs ->
         FStar_Pervasives_Native.Some
-          ((FStar_Pervasives_Native.__proj__Mktuple3__item___1
+          ((FStar_Tuple3.__proj__Mktuple3__item___1
               combs.FStar_Syntax_Syntax.l_if_then_else),
-            (FStar_Pervasives_Native.__proj__Mktuple3__item___3
+            (FStar_Tuple3.__proj__Mktuple3__item___3
                combs.FStar_Syntax_Syntax.l_if_then_else))
     | uu___ -> FStar_Pervasives_Native.None
 let (get_wp_if_then_else_combinator :
@@ -4677,9 +4677,9 @@ let (get_stronger_vc_combinator :
     | FStar_Syntax_Syntax.DM4F_eff combs ->
         ((combs.FStar_Syntax_Syntax.stronger), FStar_Pervasives_Native.None)
     | FStar_Syntax_Syntax.Layered_eff combs ->
-        ((FStar_Pervasives_Native.__proj__Mktuple3__item___2
+        ((FStar_Tuple3.__proj__Mktuple3__item___2
             combs.FStar_Syntax_Syntax.l_subcomp),
-          (FStar_Pervasives_Native.__proj__Mktuple3__item___3
+          (FStar_Tuple3.__proj__Mktuple3__item___3
              combs.FStar_Syntax_Syntax.l_subcomp))
 let (get_stronger_repr :
   FStar_Syntax_Syntax.eff_decl ->
@@ -4691,7 +4691,7 @@ let (get_stronger_repr :
     | FStar_Syntax_Syntax.DM4F_eff uu___ -> FStar_Pervasives_Native.None
     | FStar_Syntax_Syntax.Layered_eff combs ->
         FStar_Pervasives_Native.Some
-          (FStar_Pervasives_Native.__proj__Mktuple3__item___1
+          (FStar_Tuple3.__proj__Mktuple3__item___1
              combs.FStar_Syntax_Syntax.l_subcomp)
 let (aqual_is_erasable : FStar_Syntax_Syntax.aqual -> Prims.bool) =
   fun aq ->

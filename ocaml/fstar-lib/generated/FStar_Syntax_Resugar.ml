@@ -336,8 +336,8 @@ let (is_true_pat : FStar_Syntax_Syntax.pat -> Prims.bool) =
     | uu___ -> false
 let (is_tuple_constructor_lid : FStar_Ident.lident -> Prims.bool) =
   fun lid ->
-    (FStar_Parser_Const.is_tuple_data_lid' lid) ||
-      (FStar_Parser_Const.is_dtuple_data_lid' lid)
+    (FStar_Parser_Const.is_tuple_datacon_lid lid) ||
+      (FStar_Parser_Const.is_dtuple_datacon_lid lid)
 let (may_shorten : FStar_Ident.lident -> Prims.bool) =
   fun lid ->
     let uu___ = FStar_Options.print_real_names () in
@@ -2186,7 +2186,7 @@ and (resugar_pat' :
                               aux p2 (FStar_Pervasives_Native.Some false) in
                             FStar_Pervasives_Native.Some uu___3)) args in
               let is_dependent_tuple =
-                FStar_Parser_Const.is_dtuple_data_lid'
+                FStar_Parser_Const.is_dtuple_datacon_lid
                   (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
               mk (FStar_Parser_AST.PatTuple (args1, is_dependent_tuple))
           | FStar_Syntax_Syntax.Pat_cons
