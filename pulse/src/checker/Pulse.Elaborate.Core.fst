@@ -15,15 +15,20 @@
 *)
 
 module Pulse.Elaborate.Core
-module RT = FStar.Reflection.Typing
-module R = FStar.Reflection.V2
-module L = FStar.List.Tot
-module T = FStar.Tactics.V2
+
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Elaborate.Pure
 open Pulse.Typing
+
+module RT = FStar.Reflection.Typing
+module R = FStar.Reflection.V2
+module L = FStar.List.Tot
+module T = FStar.Tactics.V2
+
+module S = Pulse.Syntax
 module RU = Pulse.RuntimeUtils
+
 open Pulse.Reflection.Util
 
 let elab_frame (c:comp_st) (frame:term) (e:R.term) =
@@ -144,7 +149,7 @@ let intro_pure_tm (p:term) =
                        None
                        p;
           arg_qual = None;
-          arg = tm_fstar (`()) Range.range_0 })
+          arg = S.wr (`()) Range.range_0 })
 
 let simple_arr (t1 t2 : R.term) : R.term =
   let b = R.pack_binder {

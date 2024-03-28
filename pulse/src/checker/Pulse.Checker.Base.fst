@@ -97,7 +97,7 @@ let intro_post_hint g effect_annot ret_ty_opt post =
   let x = fresh g in
   let ret_ty = 
       match ret_ty_opt with
-      | None -> tm_fstar RT.unit_ty FStar.Range.range_0
+      | None -> wr RT.unit_ty FStar.Range.range_0
       | Some t -> t
   in
   let ret_ty, _ = CP.instantiate_term_implicits g ret_ty in
@@ -504,7 +504,7 @@ let continuation_elaborator_with_bind_fn (#g:env) (#ctxt:term)
     let ppname, x = x in
     let e2_closed = close_st_term e2 x in
     assume (open_st_term (close_st_term e2 x) x == e2);
-    let e = wr c2 (Tm_Bind {binder=b; head=e1; body=e2_closed}) in
+    let e = wrst c2 (Tm_Bind {binder=b; head=e1; body=e2_closed}) in
     let (| u, c1_typing |) = Pulse.Typing.Metatheory.Base.st_typing_correctness_ctot e1_typing in
     let c2_typing : comp_typing g c2 (universe_of_comp c2) =
       match c2 with
@@ -723,7 +723,7 @@ let rec is_stateful_arrow (g:env) (c:option comp) (args:list T.argv) (out:list T
         let ht = T.inspect c_res' in
         if T.Tv_Arrow? ht
         then (
-          let c_res' = tm_fstar c_res' (T.range_of_term c_res') in
+          let c_res' = wr c_res' (T.range_of_term c_res') in
           is_stateful_arrow g (Some (C_Tot c_res')) args out
         )
         else None
@@ -737,13 +737,13 @@ let is_stateful_application (g:env) (e:term)
   match RU.lax_check_term_with_unknown_universes (elab_env g) head with
   | None -> None
   | Some ht -> 
-    let head_t = tm_fstar ht (T.range_of_term ht) in
+    let head_t = wr ht (T.range_of_term ht) in
     match is_stateful_arrow g (Some (C_Tot head_t)) args [] with 
     | None -> None
     | Some (applied_args, (last_arg, aqual))->
       let head = T.mk_app head applied_args in
-      let head = tm_fstar head (T.range_of_term head) in
-      let last_arg = tm_fstar last_arg (T.range_of_term last_arg) in
+      let head = wr head (T.range_of_term head) in
+      let last_arg = wr last_arg (T.range_of_term last_arg) in
       let qual = 
         match aqual with
         | T.Q_Implicit -> Some Implicit

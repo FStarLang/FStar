@@ -21,8 +21,8 @@ module T = FStar.Tactics.V2
 module RT = FStar.Reflection.Typing
 
 open Pulse.Syntax.Base
-open Pulse.Elaborate.Pure
 open Pulse.Readback
+open Pulse.Elaborate.Pure
 open Pulse.Reflection.Util
 open Pulse.RuntimeUtils
 
@@ -144,6 +144,10 @@ let is_fvar (t:term) : option (R.name & list universe) =
   | Tv_UInst fv us -> Some (inspect_fv fv, us)
   | _ -> None
 
+let readback_qual = function
+  | R.Q_Implicit -> Some Implicit
+  | _ -> None
+
 let is_pure_app (t:term) : option (term & option qualifier & term) =
   match R.inspect_ln t with
   | R.Tv_App hd (arg, q) ->
@@ -258,5 +262,187 @@ let is_fvar_app_tm_app (t:term)
 let mk_squash (u:universe) (t:term) : term =
   tm_pureapp (tm_uinst (as_fv R.squash_qn) [u]) None t
 
-let inspect_term (t:R.term) : option term_view =
-  readback_ty t
+[@@ no_auto_projectors]
+noeq
+type term_view =
+  | Tm_Emp        : term_view
+  | Tm_Pure       : p:term -> term_view
+  | Tm_Star       : l:vprop -> r:vprop -> term_view
+  | Tm_ExistsSL   : u:universe -> b:binder -> body:vprop -> term_view
+  | Tm_ForallSL   : u:universe -> b:binder -> body:vprop -> term_view
+  | Tm_VProp      : term_view
+  | Tm_Inv        : vprop -> term_view
+  | Tm_Inames     : term_view  // type inames
+  | Tm_EmpInames  : term_view
+  | Tm_AddInv     : i:term -> is:term -> term_view
+  | Tm_Unknown    : term_view
+
+let wr (t:term) (r:range) : term = set_range t r
+
+let pack_term_view (top:term_view) (r:range)
+  : term
+  = let open R in
+    let w t' = wr t' r in
+    match top with
+    | Tm_VProp ->
+      w (pack_ln (Tv_FVar (pack_fv vprop_lid)))
+
+    | Tm_Emp ->
+      w (pack_ln (Tv_FVar (pack_fv emp_lid)))
+      
+    | Tm_Inv p ->
+      let head = pack_ln (Tv_FVar (pack_fv inv_lid)) in
+      w (pack_ln (Tv_App head (p, Q_Explicit)))
+
+    | Tm_Pure p ->
+      let head = pack_ln (Tv_FVar (pack_fv pure_lid)) in
+      w (pack_ln (Tv_App head (p, Q_Explicit)))
+
+    | Tm_Star l r ->
+      w (mk_star l r)
+      
+    | Tm_ExistsSL u b body
+    | Tm_ForallSL u b body ->
+      let t = set_range_of b.binder_ty b.binder_ppname.range in
+      if Tm_ExistsSL? top
+      then w (mk_exists u t (mk_abs_with_name_and_range b.binder_ppname.name b.binder_ppname.range t R.Q_Explicit body))
+      else w (mk_forall u t (mk_abs_with_name_and_range b.binder_ppname.name b.binder_ppname.range t R.Q_Explicit body))
+
+    | Tm_Inames ->
+      w (pack_ln (Tv_FVar (pack_fv inames_lid)))
+
+    | Tm_EmpInames ->
+      w (emp_inames_tm)
+
+    | Tm_AddInv i is ->
+      w (add_inv_tm (`_) is i) // Careful on the order flip
+
+    | Tm_Unknown ->
+      w (pack_ln R.Tv_Unknown)
+
+let term_range (t:term) = range_of_term t
+let pack_term_view_wr (t:term_view) (r:range) = pack_term_view t r
+let tm_vprop = pack_term_view_wr Tm_VProp FStar.Range.range_0
+let tm_inv p = pack_term_view_wr (Tm_Inv p) FStar.Range.range_0
+let tm_inames = pack_term_view_wr Tm_Inames FStar.Range.range_0
+let tm_emp = pack_term_view_wr Tm_Emp FStar.Range.range_0
+let tm_emp_inames = pack_term_view_wr Tm_EmpInames FStar.Range.range_0
+let tm_unknown = pack_term_view_wr Tm_Unknown FStar.Range.range_0
+let tm_pure (p:term) : term = pack_term_view (Tm_Pure p) (range_of_term p)
+let tm_star (l:vprop) (r:vprop) : term =
+  pack_term_view (Tm_Star l r)
+                 (union_ranges (range_of_term l) (range_of_term r))
+let tm_exists_sl (u:universe) (b:binder) (body:vprop) : term =
+  pack_term_view (Tm_ExistsSL u b body)
+                 (union_ranges (range_of_term b.binder_ty) (range_of_term body))
+let tm_forall_sl (u:universe) (b:binder) (body:vprop) : term =
+  pack_term_view (Tm_ForallSL u b body)
+                 (union_ranges (range_of_term b.binder_ty) (range_of_term body))
+
+
+let is_view_of (tv:term_view) (t:term) : prop =
+  match tv with
+  | Tm_Emp -> t == tm_emp
+  | Tm_VProp -> t == tm_vprop
+  | Tm_Inames -> t == tm_inames
+  | Tm_EmpInames -> t == tm_emp_inames
+  | Tm_Star t1 t2 ->
+    t == tm_star t1 t2 /\
+    t1 << t /\ t2 << t
+  | Tm_ExistsSL u b body ->
+    t == tm_exists_sl u b body /\
+    u << t /\ b << t /\ body << t
+  | Tm_ForallSL u b body ->
+    t == tm_forall_sl u b body /\
+    u << t /\ b << t /\ body << t
+  | Tm_Pure p ->
+    t == tm_pure p /\
+    p << t
+  | Tm_Inv p ->
+    t == tm_inv p /\
+    p << t
+  | Tm_Unknown -> t == tm_unknown
+  | Tm_AddInv i is -> True
+
+let rec inspect_term (t:R.term)
+  : (r:option term_view { Some? r ==> (Some?.v r `is_view_of` t) }) =
+
+  let open R in
+  let open Pulse.Syntax.Base in
+
+  let return tv = Some tv in
+  pack_inspect_inv t;
+
+  match inspect_ln t with
+  | Tv_FVar fv ->
+    let fv_lid = inspect_fv fv in
+    if fv_lid = vprop_lid
+    then return Tm_VProp
+    else if fv_lid = emp_lid
+    then return Tm_Emp
+    else if fv_lid = inames_lid
+    then return Tm_Inames
+    else if fv_lid = emp_inames_lid
+    then return Tm_EmpInames
+    else None
+
+  | Tv_App hd (a, q) ->
+    admit(); //this case doesn't work because it is using collect_app_ln, etc.
+    let head, args = collect_app_ln t in
+    begin
+      match inspect_ln head, args with
+      | Tv_FVar fv, [a1; a2] ->
+        if inspect_fv fv = star_lid
+        then return (Tm_Star (fst a1) (fst a2))
+        else None
+      | Tv_UInst fv [u], [a1; a2] ->
+        if inspect_fv fv = exists_lid ||
+           inspect_fv fv = forall_lid
+        then (
+          let t1 : R.term = fst a1 in
+          let t2 : R.term = fst a2 in
+          let ty = t1 in
+          let? (ppname, range, p) =
+            match inspect_ln t2 with
+            | Tv_Abs b body ->
+              let p = body in
+              let bview = inspect_binder b in
+              Some (bview.ppname, binder_range b, p) <: option (ppname_t & range & term)
+            | _ -> None in  // TODO: FIXME: provide error from this function?
+          let b = mk_binder_ppname ty (mk_ppname ppname range) in
+          if inspect_fv fv = exists_lid
+          then return (Tm_ExistsSL u b p)
+          else return (Tm_ForallSL u b p)
+        )
+        else None
+     | Tv_FVar fv, [a] ->
+        if inspect_fv fv = pure_lid
+        then return (Tm_Pure (fst a))
+        else if inspect_fv fv = inv_lid
+        then return (Tm_Inv (fst a))
+        else None
+     | _ -> None
+    end
+
+  | Tv_Refine _ _
+  | Tv_Arrow _ _
+  | Tv_Type _
+  | Tv_Const _
+  | Tv_Let _ _ _ _ _
+  | Tv_Var _
+  | Tv_BVar _
+  | Tv_UInst _ _
+  | Tv_Match _ _ _
+  | Tv_Abs _ _ -> None
+
+  | Tv_AscribedT t _ _ _
+  | Tv_AscribedC t _ _ _ ->
+    //this case doesn't work because it is unascribing
+    admit();
+    inspect_term t
+
+  | Tv_Uvar _ _ -> None
+  
+  | Tv_Unknown -> return Tm_Unknown
+
+  | Tv_Unsupp -> None

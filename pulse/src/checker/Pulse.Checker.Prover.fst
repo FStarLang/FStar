@@ -290,9 +290,9 @@ let prove
 
 let canon_post (c:comp_st) : comp_st =
   let canon_st_comp_post (c:st_comp) : st_comp =
-    match Pulse.Readback.readback_ty (elab_term c.post) with
+    match inspect_term (elab_term c.post) with
     | None -> c
-    | Some post_v -> { c with post=with_range post_v (RU.range_of_term c.post) }
+    | Some post_v -> { c with post=pack_term_view_wr post_v (RU.range_of_term c.post) }
   in
   match c with
   | C_ST s -> C_ST (canon_st_comp_post s)

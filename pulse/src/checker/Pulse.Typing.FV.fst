@@ -28,9 +28,9 @@ let vars_of_rt_env (g:R.env) = Set.intension (fun x -> Some? (RT.lookup_bvar g x
 
 let freevars_close_term_host_term (t:term) (x:var) (i:index)
   : Lemma
-    (ensures (freevars (close_term' (tm_fstar t FStar.Range.range_0) x i)
+    (ensures (freevars (close_term' (wr t FStar.Range.range_0) x i)
             `Set.equal`
-             (freevars (tm_fstar t FStar.Range.range_0) `set_minus` x)))
+             (freevars (wr t FStar.Range.range_0) `set_minus` x)))
   = admit()
 
 #push-options "--query_stats --z3rlimit_factor 2"

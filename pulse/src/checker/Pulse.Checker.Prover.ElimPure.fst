@@ -53,10 +53,10 @@ let elim_pure_head_ty =
     //                       (pure p)
     //                       (fun _ -> emp))
 
-let tm_fstar t = tm_fstar t Range.range_0
+let wr t = wr t Range.range_0
 
 let elim_pure_head_typing (g:env)
-    : tot_typing g elim_pure_head (tm_fstar elim_pure_head_ty)
+    : tot_typing g elim_pure_head (wr elim_pure_head_ty)
     = admit()
 
 let mk_elim_pure (p:term)
@@ -71,17 +71,17 @@ let mk_elim_pure (p:term)
 let elim_pure_comp (p:term) =
     let st : st_comp = {
         u=u_zero;
-        res=tm_fstar (mk_squash u0 p);
-        pre=tm_pure (tm_fstar p);
+        res=wr (mk_squash u0 p);
+        pre=tm_pure (wr p);
         post=tm_emp
     } in
     C_STGhost st
 
 #push-options "--admit_smt_queries true"    
 let elim_pure_typing (g:env) (p:term)
-                     (p_prop:tot_typing g (tm_fstar p) (tm_fstar RT.tm_prop))
-   : st_typing g (mk_elim_pure (tm_fstar p)) (elim_pure_comp p)
-   = T_STApp g elim_pure_head (tm_fstar RT.tm_prop) None (elim_pure_comp p) _ (elim_pure_head_typing g) p_prop
+                     (p_prop:tot_typing g (wr p) (wr RT.tm_prop))
+   : st_typing g (mk_elim_pure (wr p)) (elim_pure_comp p)
+   = T_STApp g elim_pure_head (wr RT.tm_prop) None (elim_pure_comp p) _ (elim_pure_head_typing g) p_prop
 #pop-options
 
 let is_elim_pure (vp:term) : T.Tac bool =
@@ -97,9 +97,9 @@ let mk (#g:env) (#v:vprop) (v_typing:tot_typing g v tm_vprop)
   match inspect_term v with
   | Some (Tm_Pure pp) ->
     let p_typing =
-      Metatheory.pure_typing_inversion #g #(tm_fstar pp) v_typing in
+      Metatheory.pure_typing_inversion #g #(wr pp) v_typing in
     Some (| ppname_default,
-            mk_elim_pure (tm_fstar pp),
+            mk_elim_pure (wr pp),
             elim_pure_comp pp,
             elim_pure_typing g pp p_typing |)
   | _ -> None

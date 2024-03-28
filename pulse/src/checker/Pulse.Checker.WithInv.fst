@@ -80,7 +80,7 @@ let check_iname_disjoint (g:env) (r:range) (inv_p inames inv:term)
 #push-options "--ifuel 2 --fuel 8"
 let remove_iname (inv_p inames inv:term)
 : term
-= tm_fstar 
+= wr 
     (Pulse.Reflection.Util.remove_inv_tm
       (elab_term inv_p)
       (elab_term inames)
@@ -88,7 +88,7 @@ let remove_iname (inv_p inames inv:term)
   (Pulse.RuntimeUtils.range_of_term inames)
 let add_iname (inv_p inames inv:term)
 : term
-= tm_fstar 
+= wr 
     (Pulse.Reflection.Util.add_inv_tm
       (elab_term inv_p)
       (elab_term inames)
@@ -98,7 +98,7 @@ let add_iname (inv_p inames inv:term)
 
 module RU = Pulse.RuntimeUtils
 let all_inames =
-  tm_fstar Pulse.Reflection.Util.all_inames_tm FStar.Range.range_0
+  wr Pulse.Reflection.Util.all_inames_tm FStar.Range.range_0
 let all_inames_typing (g:env)
 : tot_typing g all_inames tm_inames
 = RU.magic()
@@ -253,7 +253,7 @@ let check
                   (Printf.sprintf "Does not have invariant type (%s)" (P.term_to_string inv_tm_ty))
     in
     
-    (* FIXME: This is bogus for the Tm_FStar case!!! *)
+    (* FIXME: This is bogus for the wr case!!! *)
     assume (tm_inv inv_p == inv_tm_ty);
 
     (* Can this come from some inversion instead? *)

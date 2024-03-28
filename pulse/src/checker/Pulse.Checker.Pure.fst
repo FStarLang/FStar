@@ -465,7 +465,7 @@ let try_get_non_informative_witness g u ty ty_typing
       // T.print (Printf.sprintf "Resolved to %s" (T.term_to_string r_dict));
       assert (typing_token r_env r_dict (E_Total, r_goal));
       assume (~(Tv_Unknown? (inspect_ln r_dict)));
-      let dict = tm_fstar r_dict (RU.range_of_term ty) in
+      let dict = wr r_dict (RU.range_of_term ty) in
       let r_dict_typing_token : squash (typing_token r_env r_dict (E_Total, r_goal)) = () in
       let r_dict_typing : RT.typing r_env r_dict (E_Total, r_goal) = RT.T_Token _ _ _ () in
       let dict_typing : tot_typing g dict (non_informative_class u ty) = E r_dict_typing in

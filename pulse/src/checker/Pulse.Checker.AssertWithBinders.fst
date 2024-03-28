@@ -77,7 +77,7 @@ let infer_binder_types (g:env) (bs:list binder) (v:vprop)
         bs
         tv
     in
-    let inst_abstraction, _ = PC.instantiate_term_implicits g (tm_fstar abstraction v_rng) in
+    let inst_abstraction, _ = PC.instantiate_term_implicits g (wr abstraction v_rng) in
     refl_abs_binders inst_abstraction []
 
 let rec open_binders (g:env) (bs:list binder) (uvs:env { disjoint uvs g }) (v:term) (body:st_term)
@@ -156,7 +156,7 @@ let visit_and_rewrite (p: (R.term & R.term)) (t:term) : T.Tac term =
   | R.Tv_Var n -> (
     let nv = R.inspect_namedv n in
     assume (is_host_term rhs);
-    subst_term t [NT nv.uniq (tm_fstar rhs (Pulse.RuntimeUtils.range_of_term t))]
+    subst_term t [NT nv.uniq (wr rhs (Pulse.RuntimeUtils.range_of_term t))]
     ) 
   | _ -> FStar.Tactics.Visit.visit_tm visitor t
     
@@ -413,7 +413,7 @@ let check
                                    t2 = rhs };
                range = st.range;
                effect_tag = as_effect_hint STT_Ghost } in
-    let st = { term = Tm_Bind { binder = as_binder (tm_fstar (`unit) st.range);
+    let st = { term = Tm_Bind { binder = as_binder (wr (`unit) st.range);
                                 head = rw; body };
                range = st.range;
                effect_tag = body.effect_tag } in

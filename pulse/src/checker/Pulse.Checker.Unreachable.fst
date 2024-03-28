@@ -57,7 +57,7 @@ let check
         assume (close_term post_opened x == post.post);
         let s : st_comp = {u; res=t; pre; post=post.post} in
         let stc : st_comp_typing g s = (STC _ s x t_typing pre_typing post_typing) in
-        let ff = (tm_fstar (`False) rng) in
+        let ff = (wr (`False) rng) in
         let (|eff, ff_typing |) = Pulse.Checker.Pure.core_check_term_at_type g ff tm_prop in
         if eff <> T.E_Total then T.fail "Impossible: False has effect Ghost"
         else

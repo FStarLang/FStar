@@ -103,7 +103,7 @@ let rec extend_env_pat_core (g:env) (p:pattern)
       let x = E.fresh g.coreenv in
       let pp = mk_ppname pp FStar.Range.range_0 in
       let ty = T.unseal sort in
-      let ty = tm_fstar ty (T.range_of_term ty) in
+      let ty = wr ty (T.range_of_term ty) in
       debug g (fun _ -> Printf.sprintf "Pushing pat_var %s : %s\n" (T.unseal pp.name) (term_to_string ty));
       let coreenv = E.push_binding g.coreenv x pp ty in
       let uenv_inner, mlident = extend_bv g.uenv_inner pp x mlty_top in
@@ -130,7 +130,7 @@ let extend_env_pat g p =
   | [p] -> g, p, bs
   | _ -> T.raise (Extraction_failure "Unexpected extraction of pattern")
 
-let unit_val : term = tm_fstar Pulse.Reflection.Util.unit_tm Range.range_0
+let unit_val : term = wr Pulse.Reflection.Util.unit_tm Range.range_0
 let is_erasable (p:st_term) : T.Tac bool = 
   let tag = T.unseal p.effect_tag in
   match tag with
@@ -230,7 +230,7 @@ let maybe_inline (g:env) (head:term) (arg:term) :T.Tac (option st_term) =
       //                       (T.term_to_string head)
       //                       (st_term_to_string body));
       let as_term (a:R.term) =
-        tm_fstar a Range.range_0 in
+        wr a Range.range_0 in
       let all_args : list (term & option qualifier) =
         L.map #R.argv
               (fun (t, q) -> 
@@ -269,7 +269,7 @@ let maybe_inline (g:env) (head:term) (arg:term) :T.Tac (option st_term) =
       | Inr body ->
         let applied_body = unascribe (LN.subst_host_term body subst) in
         let mk_st_app (head:R.term) (arg:term) (arg_qual:option qualifier) =
-          let head = tm_fstar head (T.range_of_term head) in
+          let head = wr head (T.range_of_term head) in
           let tm = Tm_STApp { head; arg_qual; arg } in 
           Some { term = tm; range=FStar.Range.range_0; effect_tag=default_effect_hint }
         in
@@ -277,7 +277,7 @@ let maybe_inline (g:env) (head:term) (arg:term) :T.Tac (option st_term) =
         | [] -> (
           match R.inspect_ln applied_body with
           | R.Tv_App head (arg, aqual) ->
-            let arg = tm_fstar arg (T.range_of_term arg) in
+            let arg = wr arg (T.range_of_term arg) in
             let arg_qual = if R.Q_Implicit? aqual then Some Implicit else None in
             mk_st_app head arg arg_qual
           | _ ->
@@ -706,7 +706,7 @@ let rec generalize (g:env) (t:R.typ) (e:option st_term)
            let e, attrs =
              match e with
              | Some {term=Tm_Abs {b; body}} ->
-               Some (LN.subst_st_term body [LN.DT 0 (tm_fstar xt Range.range_0)]),
+               Some (LN.subst_st_term body [LN.DT 0 (wr xt Range.range_0)]),
                b.binder_attrs
              | _ -> e, binder_attrs_default in
            let mlattrs = attrs |> T.unseal |> T.map (term_as_mlexpr g) in
@@ -721,7 +721,7 @@ let rec generalize (g:env) (t:R.typ) (e:option st_term)
                g.coreenv
                x
                (mk_ppname ppname FStar.Range.range_0)
-               (tm_fstar sort FStar.Range.range_0) in
+               (wr sort FStar.Range.range_0) in
            let g = { g with uenv_inner = uenv; coreenv } in
            let g, tys, t, e = generalize g t e in
            let ty_param = mk_ty_param (lookup_ty g.uenv_inner namedv) mlattrs in
@@ -780,7 +780,7 @@ let rec extract_recursive g (p:st_term) (rec_name:R.fv)
         let res = mle_fun [mlident, mlty, attrs] body in
         res, e_tag_pure
       | _ -> //last binder used for knot; replace it with the recursively bound name
-        let body = LN.subst_st_term body [LN.DT 0 (tm_fstar R.(pack_ln (Tv_FVar rec_name)) Range.range_0)] in
+        let body = LN.subst_st_term body [LN.DT 0 (wr R.(pack_ln (Tv_FVar rec_name)) Range.range_0)] in
         let body, tag = extract g body in
         body, tag
     )

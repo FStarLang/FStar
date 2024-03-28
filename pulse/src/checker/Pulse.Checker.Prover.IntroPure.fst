@@ -135,11 +135,11 @@ let is_uvar_implication
         match R.inspect_ln t0 with
         | R.Tv_Unknown -> None
         | _ -> (
-          let t0 = tm_fstar t0 FStar.Range.range_0 in
+          let t0 = wr t0 FStar.Range.range_0 in
           match is_eq2 t0 with
           | None -> None
           | Some (ty, lhs, rhs) ->
-            if eq_tm ty (tm_fstar (`bool) FStar.Range.range_0)
+            if eq_tm ty (wr (`bool) FStar.Range.range_0)
             then (
               let try_negated maybe_var other_side
               : T.Tac  (option (uv:var { uv `Set.mem` freevars t } & term))
@@ -151,7 +151,7 @@ let is_uvar_implication
                       match inspect_term rhs with
                       | Some _ -> None
                       | None -> 
-                        let rhs = tm_fstar (`(not (`#(rhs)))) FStar.Range.range_0 in
+                        let rhs = wr (`(not (`#(rhs)))) FStar.Range.range_0 in
                         assume (nm.nm_index `Set.mem` freevars t);
                         Some (| nm.nm_index, rhs |)
                       | _ -> None
@@ -193,8 +193,8 @@ let rec try_collect_substs (uvs:env) (t:term)
     begin
       match f with
       | RF.And rt0 rt1 ->
-        let ss0 = try_collect_substs uvs (tm_fstar rt0 FStar.Range.range_0) in
-        let ss1 = try_collect_substs uvs (tm_fstar rt1 FStar.Range.range_0) in
+        let ss0 = try_collect_substs uvs (wr rt0 FStar.Range.range_0) in
+        let ss1 = try_collect_substs uvs (wr rt1 FStar.Range.range_0) in
         if PS.check_disjoint ss0 ss1
         then let r = PS.push_ss ss0 ss1 in
              assume (PS.dom r `Set.subset` freevars t);
