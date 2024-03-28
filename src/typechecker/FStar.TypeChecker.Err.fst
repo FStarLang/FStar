@@ -219,9 +219,18 @@ let expected_pattern_of_type env t1 e t2 =
 
 let basic_type_error env eopt t1 t2 =
   let s1, s2 = err_msg_type_strings env t1 t2 in
+  let open FStar.Errors.Msg in
   let msg = match eopt with
-    | None -> format2 "Expected type \"%s\"; got type \"%s\"" s1 s2
-    | Some e -> format3 "Expected type \"%s\"; but \"%s\" has type \"%s\"" s1 (N.term_to_string env e) s2 in
+    | None -> [
+      prefix 4 1 (text "Expected type") (N.term_to_doc env t1) ^/^
+      prefix 4 1 (text "got type") (N.term_to_doc env t2);
+    ]
+    | Some e -> [
+      prefix 4 1 (text "Expected type") (N.term_to_doc env t1) ^/^
+      prefix 4 1 (text "but") (N.term_to_doc env e) ^/^
+      prefix 4 1 (text "has type") (N.term_to_doc env t2);
+    ]
+  in
   (Errors.Error_TypeError, msg)
 
 let occurs_check =

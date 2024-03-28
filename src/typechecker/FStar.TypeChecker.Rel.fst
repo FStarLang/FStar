@@ -4794,7 +4794,7 @@ let try_teq smt_ok env t1 t2 : option guard_t =
 let teq env t1 t2 : guard_t =
     match try_teq true env t1 t2 with
     | None ->
-        FStar.Errors.log_issue
+        FStar.Errors.log_issue_doc
             (Env.get_range env)
             (Err.basic_type_error env None t2 t1);
         trivial_guard
@@ -4823,7 +4823,7 @@ let get_teq_predicate env t1 t2 =
     | Some g -> Some (abstract_guard (S.mk_binder x) g)
 
 let subtype_fail env e t1 t2 =
-    Errors.log_issue (Env.get_range env) (Err.basic_type_error env (Some e) t2 t1)
+    Errors.log_issue_doc (Env.get_range env) (Err.basic_type_error env (Some e) t2 t1)
 
 let sub_or_eq_comp env (use_eq:bool) c1 c2 =
   Profiling.profile (fun () ->

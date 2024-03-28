@@ -6066,7 +6066,7 @@ and (tc_abs_check_binders :
                                                  let uu___13 =
                                                    FStar_TypeChecker_Env.get_range
                                                      env1 in
-                                                 FStar_Errors.raise_error
+                                                 FStar_Errors.raise_error_doc
                                                    uu___12 uu___13
                                              | FStar_Pervasives_Native.Some
                                                  g_env -> label_guard g_env) in

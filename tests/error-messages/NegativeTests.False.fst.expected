@@ -8,16 +8,24 @@
 >>]
 >> Got issues: [
 * Error 12 at NegativeTests.False.fst(30,18-30,41):
-  - Expected type "Prims.l_True \/ Prims.l_True"; but "Prims.Left Prims.T" has type "Prims.sum (*?u1*) _ Prims.l_True"
+  - Expected type Prims.l_True \/ Prims.l_True
+    but Prims.Left Prims.T
+    has type Prims.sum (*?u1*) _ Prims.l_True
 
 * Error 12 at NegativeTests.False.fst(30,18-30,41):
-  - Expected type "Prims.l_True \/ Prims.l_True"; but "Prims.Left Prims.T" has type "Prims.sum Prims.trivial Prims.l_True"
+  - Expected type Prims.l_True \/ Prims.l_True
+    but Prims.Left Prims.T
+    has type Prims.sum Prims.trivial Prims.l_True
 
 * Error 12 at NegativeTests.False.fst(30,42-30,66):
-  - Expected type "Prims.l_True \/ Prims.l_True"; but "Prims.Right Prims.T" has type "Prims.sum Prims.l_True (*?u6*) _"
+  - Expected type Prims.l_True \/ Prims.l_True
+    but Prims.Right Prims.T
+    has type Prims.sum Prims.l_True (*?u6*) _
 
 * Error 12 at NegativeTests.False.fst(30,42-30,66):
-  - Expected type "Prims.l_True \/ Prims.l_True"; but "Prims.Right Prims.T" has type "Prims.sum Prims.l_True Prims.trivial"
+  - Expected type Prims.l_True \/ Prims.l_True
+    but Prims.Right Prims.T
+    has type Prims.sum Prims.l_True Prims.trivial
 
 >>]
 * Warning 240 at NegativeTests.False.fst(21,4-21,7):
