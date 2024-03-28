@@ -50,7 +50,7 @@ val sel_empty (i:nat)
     [SMTPat (sel i H0.empty_heap)
     ]
 
-module PA = Pulse.Lib.PCM.Agreement
+module PA = PulseCore.PCM.Agreement
 
 let inv_store_has_only_invs (l:raw_inv_store u#a) : prop =
   forall i.
@@ -777,6 +777,21 @@ let lift_h0_pred (pre:H0.heap -> prop)
   : iheap -> prop
   = fun h -> pre h.invariants
 
+let star_congruence_h0 (p q:H0.slprop)
+  : Lemma (lift_h0 (p `H0.star` q) == lift_h0 p `star` lift_h0 q)
+  = admit()
+
+let intro_star (p q:slprop) (m0 m1:mem)
+: Lemma
+  (requires
+     disjoint m0 m1 /\
+     interp p m0 /\
+     interp q m1)
+  (ensures
+     interp (p `star` q) (join m0 m1))
+= ()
+#restart-solver
+
 let new_invariant_pre_action (e:inames) (p:slprop { is_big p })
 : refined_pre_action true e p iname_ref (fun i -> iname_ref_pts_to i p)
 = fun (m0:hmem_with_inv_except e p) ->
@@ -832,10 +847,58 @@ let new_invariant_pre_action (e:inames) (p:slprop { is_big p })
           fun (i:H0.heap) ->
             interp ((p `star` frame) `star` mem_invariant e m0)
                    {m0 with iheap={m0.iheap with invariants=i}} in
+        (* todo: proof of affinity *)
         assume (H0.heap_prop_is_affine pick_frame);
         assert (pick_frame m0.iheap.invariants);
-        // let inv0 : H0.full_hheap (emp `star` ())
-        admit()
+        let frm : H0.slprop = H0.as_slprop pick_frame in
+        assert(H0.interp frm m0.iheap.invariants);
+        (* easy, intro emp *)
+        assume (H0.interp (H0.emp `H0.star` frm) m0.iheap.invariants);
+        let inv0 : H0.full_hheap (H0.emp `H0.star` frm) = m0.iheap.invariants in
+        H0.action_framing 
+          (H0.extend #_ #(PA.pcm_agreement) (Some (down p)) iname)
+          frm
+          inv0;
+        assert (H0.interp (H0.pts_to x (Some (down p)) `H0.star` frm)
+                          inv1);
+        assert (interp 
+          (lift_h0 
+            (H0.pts_to x (Some (down p)) `H0.star` frm))
+          m1);
+        star_congruence_h0 (H0.pts_to x (Some (down p))) frm;
+        assert (interp (iname_ref_pts_to x p `star` lift_h0 frm) m1);
+        eliminate 
+          exists h1_0 h1_1.
+              idisjoint h1_0 h1_1 /\
+              m1.iheap == ijoin h1_0 h1_1 /\
+              (iname_ref_pts_to x p) h1_0 /\
+              (lift_h0 frm) h1_1
+          returns
+              interp 
+                ((iname_ref_pts_to x p `star` frame) `star`
+                  mem_invariant e m1)
+                m1
+          with _ . (
+            assert 
+              (h0_of_slprop (H0.as_slprop pick_frame) h1_1.invariants);
+            assume (pick_frame h1_1.invariants);
+            let m1_0 = { m1 with iheap = { concrete = H2.empty_heap; invariants = h1_0.invariants } } in
+            assert (interp (iname_ref_pts_to x p) m1_0);
+            let m1_1 = { m1 with iheap = {m1.iheap with invariants=h1_1.invariants}} in
+            assert (interp ((p `star` frame) `star` mem_invariant e m0) m1_1); 
+            assume ((p `star` frame) `star` mem_invariant e m0 ==
+                    frame `star` (p `star` mem_invariant e m0));
+            assume (p `star` mem_invariant e m0 == mem_invariant e m1);
+            assert (interp (frame `star` mem_invariant e m1) m1_1);
+            assert (disjoint m1_0 m1_1);
+            assert (m1 == join m1_0 m1_1);
+            intro_star (iname_ref_pts_to x p) (frame `star` mem_invariant e m1) m1_0 m1_1;
+            assert (interp (iname_ref_pts_to x p `star` (frame `star` mem_invariant e m1)) m1);
+            star_assoc (iname_ref_pts_to x p) frame (mem_invariant e m1)
+          );
+        assert (H2.heap_evolves m0.iheap.concrete m1.iheap.concrete);
+        assume (istore_evolves m0.iheap.invariants m1.iheap.invariants);
+        assume (mem_evolves m0 m1)
     in
     assert (frame_related_mems p (iname_ref_pts_to x p) e m0 m1);
     res
