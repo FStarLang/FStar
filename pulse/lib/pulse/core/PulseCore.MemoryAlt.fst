@@ -61,14 +61,14 @@ let inv_store_has_only_invs (l:raw_inv_store u#a) : prop =
       a == PA.agreement H2.slprop /\
       p == PA.pcm_agreement #H2.slprop
   
-let istore = i:raw_inv_store { inv_store_has_only_invs i }
+let istore = raw_inv_store
 
-let join_istore (h0 h1:istore)
-  : Lemma 
-    (requires H0.disjoint h0 h1)
-    (ensures (inv_store_has_only_invs (H0.join h0 h1)))
-    [SMTPat ((inv_store_has_only_invs (H0.join h0 h1)))]
-  = admit()
+// let join_istore (h0 h1:istore)
+//   : Lemma 
+//     (requires H0.disjoint h0 h1)
+//     (ensures (inv_store_has_only_invs (H0.join h0 h1)))
+//     [SMTPat ((inv_store_has_only_invs (H0.join h0 h1)))]
+//   = admit()
 
 noeq
 type iheap : Type u#(a + 3) = {
@@ -425,17 +425,29 @@ let affine_star (p q:slprop) (m:mem) = ()
 
 let iname = nat
 module W = FStar.Witnessed.Core
+let sl_pure_imp (p:prop) (q: squash p -> slprop) : slprop =
+  as_slprop (fun (h:iheap) -> p ==> q () h)
+
+let cell_pred_pre (c:cell) =
+  let Ref a pcm _ _ = c in
+  a == PA.agreement H2.slprop /\
+  pcm == PA.pcm_agreement #H2.slprop
+
+let cell_pred_post (c:cell) (_:squash (cell_pred_pre c)) =
+  let Ref _ _ _ v = c in
+  let v : PA.agreement H2.slprop = v in
+  match v with
+  | None -> emp
+  | Some p -> up p
+
 
 let invariant_of_one_cell (addr:nat) (e:inames) (l:istore u#a) : slprop u#a =
   if addr `S.mem` e then emp
   else match sel addr l with
-       | Some cell -> (
-         let Ref _a _p _f v = cell in
-         let v' : PA.agreement H2.slprop = v in
-         match v' with
-         | None -> emp
-         | Some p -> up p
-       )
+       | Some c -> 
+         sl_pure_imp 
+          (cell_pred_pre c)
+          (cell_pred_post c)
        | _ -> emp
 
 let rec istore_invariant_aux
@@ -497,11 +509,15 @@ let frame_related_mems (fp0 fp1:slprop u#a) e (m0:hmem_with_inv_except e fp0) (m
 let iname_for_p (i:iname) (p:slprop) (m:istore) =
   match sel i m with
   | None -> False
-  | Some cell -> 
+  | Some cell ->
+    let Ref a pcm _ v = cell in
+    a == PA.agreement H2.slprop /\
+    pcm == PA.pcm_agreement #H2.slprop /\ (
     let v : PA.agreement H2.slprop = cell.v in
     match v with
     | None -> False
     | Some q -> up q == p
+    )
 
 assume
 val core_ref_of_iname (i:iname) : H0.core_ref
@@ -566,6 +582,10 @@ let rec weaken_inames_istore_invariant
   then ()
   else weaken_inames_istore_invariant (from - 1) down_to e e' l
 
+let sl_pure_imp_elim (p:prop) (q: squash p -> slprop)
+  : Lemma (p ==> sl_pure_imp p q == q ())
+  = admit()
+
 let rec move_invariant (e:inames) (l:istore) (p:slprop) (from:nat)
                        (i:iname{iname_for_p i p l /\ from >= i /\ ~(i `Set.mem` e)})
 : Lemma (ensures 
@@ -581,6 +601,9 @@ let rec move_invariant (e:inames) (l:istore) (p:slprop) (from:nat)
   };
   if i = from
   then (
+    let Some c = sel i l in
+    assert (cell_pred_pre c);
+    sl_pure_imp_elim (cell_pred_pre c) (cell_pred_post c);
     assert (invariant_of_one_cell from e l == p);
     if from = 0
     then (
@@ -775,7 +798,7 @@ let new_invariant_pre_action (e:inames) (p:slprop { is_big p })
     assume (forall i. i < iname ==> sel i m0.iheap.invariants == sel i inv1);
     assume (sel iname inv1 == Some (Ref _ (PA.pcm_agreement #H2.slprop) Frac.full_perm (Some (down p))));
     assume (forall i. i > iname ==> sel i inv1 == None);
-    assert (inv_store_has_only_invs (reveal inv1));
+    // assert (inv_store_has_only_invs (reveal inv1));
     let iheap1 = { m0.iheap with invariants = inv1 } in
     let m1 = { m0 with iname_ctr = iname + 1; iheap = iheap1 } in
     assert (full_mem_pred m1);
