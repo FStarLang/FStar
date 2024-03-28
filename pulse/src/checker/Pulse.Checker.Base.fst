@@ -528,12 +528,9 @@ let continuation_elaborator_with_bind_fn (#g:env) (#ctxt:term)
 
 let rec check_equiv_emp (g:env) (vp:term)
   : option (vprop_equiv g vp tm_emp)
-  = assume False;  // TODO
-    match inspect_term vp with
+  = match inspect_term vp with
     | Some Tm_Emp -> Some (VE_Refl _ _)
     | Some (Tm_Star vp1 vp2) ->
-      assume (vp1 << vp);
-      assume (vp2 << vp);
       (match check_equiv_emp g vp1, check_equiv_emp g vp2 with
        | Some d1, Some d2 ->
          let d3 : vprop_equiv g (tm_star vp1 vp2) (tm_star tm_emp tm_emp)
@@ -543,8 +540,6 @@ let rec check_equiv_emp (g:env) (vp:term)
          Some (VE_Trans _ _ _ _ d3 d4)
        | _, _ -> None)
      | _ -> None
-
-
 
 let emp_inames_included (g:env) (i:term) (_:tot_typing g i tm_inames)
 : prop_validity g (tm_inames_subset tm_emp_inames i)
@@ -697,79 +692,66 @@ let rec is_stateful_arrow (g:env) (c:option comp) (args:list T.argv) (out:list T
     )
 
     | Some (C_Tot c_res) -> (
-      // if not (Tm_FStar? c_res.t)
-      // then None
-      // else (
-        let c_res = c_res in
-        let ht = T.inspect c_res in
-        match ht with
-        | T.Tv_Arrow b c -> (
-          match args with
-          | [] -> ( //no more args; check that only implicits remain, ending in an stateful comp  
-            let bs, c = T.collect_arr_ln_bs c_res in
-            if List.Tot.for_all (fun b -> R.Q_Implicit? (R.inspect_binder b).qual) bs
-            then is_stateful_arrow g (readback_comp_res_as_comp (R.inspect_comp c)) [] out
-            else None //too few args    
-          )
-
-          | (arg, qual)::args' -> ( //check that this arg qual matches the binder and recurse accordingly
-            match b.qual, qual with
-            | T.Q_Meta _, T.Q_Implicit
-            | T.Q_Implicit, T.Q_Implicit 
-            | T.Q_Explicit, T.Q_Explicit ->  //consume this argument
-              is_stateful_arrow g (readback_comp_res_as_comp c) args' ((arg, qual)::out)
-
-            | T.Q_Meta _, T.Q_Explicit
-            | T.Q_Implicit, T.Q_Explicit -> 
-              //don't consume this argument
-              is_stateful_arrow g (readback_comp_res_as_comp c) args out
-
-            | _ -> None //incompatible qualifiers; bail
-          )
+      let ht = T.inspect c_res in
+      match ht with
+      | T.Tv_Arrow b c -> (
+        match args with
+        | [] -> ( //no more args; check that only implicits remain, ending in an stateful comp  
+          let bs, c = T.collect_arr_ln_bs c_res in
+          if List.Tot.for_all (fun b -> R.Q_Implicit? (R.inspect_binder b).qual) bs
+          then is_stateful_arrow g (readback_comp_res_as_comp (R.inspect_comp c)) [] out
+          else None //too few args    
         )
-        | _ ->
-          let c_res' = RU.whnf_lax (elab_env g) c_res in
-          let ht = T.inspect c_res' in
-          if T.Tv_Arrow? ht
-          then (
-            // assume (not_tv_unknown c_res');
-            let c_res' = tm_fstar c_res' (T.range_of_term c_res') in
-            is_stateful_arrow g (Some (C_Tot c_res')) args out
-          )
-          else None
-      // )
+
+        | (arg, qual)::args' -> ( //check that this arg qual matches the binder and recurse accordingly
+          match b.qual, qual with
+          | T.Q_Meta _, T.Q_Implicit
+          | T.Q_Implicit, T.Q_Implicit 
+          | T.Q_Explicit, T.Q_Explicit ->  //consume this argument
+            is_stateful_arrow g (readback_comp_res_as_comp c) args' ((arg, qual)::out)
+
+          | T.Q_Meta _, T.Q_Explicit
+          | T.Q_Implicit, T.Q_Explicit -> 
+            //don't consume this argument
+            is_stateful_arrow g (readback_comp_res_as_comp c) args out
+
+          | _ -> None //incompatible qualifiers; bail
+        )
+      )
+      | _ ->
+        let c_res' = RU.whnf_lax (elab_env g) c_res in
+        let ht = T.inspect c_res' in
+        if T.Tv_Arrow? ht
+        then (
+          let c_res' = tm_fstar c_res' (T.range_of_term c_res') in
+          is_stateful_arrow g (Some (C_Tot c_res')) args out
+        )
+        else None
     )
 
 module RU = Pulse.RuntimeUtils  
 let is_stateful_application (g:env) (e:term) 
   : T.Tac (option st_term) =
-  // = match e.t with
-  //   | Tm_FStar host_term -> (
-    let host_term = e in
-      let head, args = T.collect_app_ln host_term in
-      // assume (not_tv_unknown head);
-      match RU.lax_check_term_with_unknown_universes (elab_env g) head with
-      | None -> None
-      | Some ht -> 
-        // assume (not_tv_unknown ht);
-        let head_t = tm_fstar ht (T.range_of_term ht) in
-        match is_stateful_arrow g (Some (C_Tot head_t)) args [] with 
-        | None -> None
-        | Some (applied_args, (last_arg, aqual))->
-          let head = T.mk_app head applied_args in
-          // assume (not_tv_unknown head);
-          let head = tm_fstar head (T.range_of_term head) in
-          // assume (not_tv_unknown last_arg);
-          let last_arg = tm_fstar last_arg (T.range_of_term last_arg) in
-          let qual = 
-            match aqual with
-            | T.Q_Implicit -> Some Implicit
-            | _ -> None
-          in
-          let st_app = Tm_STApp { head; arg=last_arg; arg_qual=qual} in
-          let st_app = { term = st_app; range=RU.range_of_term e; effect_tag=default_effect_hint } in
-          Some st_app
-    // )
+  
+  let head, args = T.collect_app_ln e in
+  match RU.lax_check_term_with_unknown_universes (elab_env g) head with
+  | None -> None
+  | Some ht -> 
+    let head_t = tm_fstar ht (T.range_of_term ht) in
+    match is_stateful_arrow g (Some (C_Tot head_t)) args [] with 
+    | None -> None
+    | Some (applied_args, (last_arg, aqual))->
+      let head = T.mk_app head applied_args in
+      let head = tm_fstar head (T.range_of_term head) in
+      let last_arg = tm_fstar last_arg (T.range_of_term last_arg) in
+      let qual = 
+        match aqual with
+        | T.Q_Implicit -> Some Implicit
+        | _ -> None
+      in
+      let st_app = Tm_STApp { head; arg=last_arg; arg_qual=qual} in
+      let st_app = { term = st_app; range=RU.range_of_term e; effect_tag=default_effect_hint } in
+      Some st_app
     | _ -> None
 
 
@@ -799,12 +781,8 @@ let norm_typing
     let (| t', t'_typing, related_t_t' |) =
       Pulse.RuntimeUtils.norm_well_typed_term (dsnd u_t_typing) steps
     in
-    // match Pulse.Readback.readback_ty t' with
-    // | None -> T.fail "Could not readback normalized type"
-    // | Some t'' ->
-    let t'' = t' in
-      let d : typing g e eff t'' = apply_conversion d related_t_t' in
-      (| t'', d |)
+    let d : typing g e eff t' = apply_conversion d related_t_t' in
+    (| t', d |)
 
 module TermEq = FStar.Reflection.V2.TermEq
 let norm_typing_inverse
@@ -819,15 +797,12 @@ let norm_typing_inverse
       let d1 = Ghost.hide d1._0 in
       Pulse.RuntimeUtils.norm_well_typed_term d1 steps
     in
-    // match Pulse.Readback.readback_ty t1' with
-    // | Some t1_p ->
-      if TermEq.term_eq (elab_term t0) t1'
-      then (
-        let related_t1'_t1 = Ghost.hide (RT.Rel_sym _ _ _ related_t1_t1') in
-        Some (apply_conversion d related_t1'_t1)
-      )
-      else None
-    // | _ -> None
+    if TermEq.term_eq (elab_term t0) t1'
+    then (
+      let related_t1'_t1 = Ghost.hide (RT.Rel_sym _ _ _ related_t1_t1') in
+      Some (apply_conversion d related_t1'_t1)
+    )
+    else None
 
 
 let norm_st_typing_inverse
@@ -845,22 +820,19 @@ let norm_st_typing_inverse
     let (| t1', t1'_typing, related_t1_t1' |) =
       Pulse.RuntimeUtils.norm_well_typed_term d1 steps
     in
-    // match Pulse.Readback.readback_ty t1' with
-    // | Some t1_p ->
-      if TermEq.term_eq (elab_term t0) t1'
-      then (
-        let t0_typing 
-          : Ghost.erased (RT.tot_typing (elab_env g) (elab_term t0) (RT.tm_type u)) =
-          rt_equiv_typing #_ #_ #(elab_term t0) related_t1_t1' d1
-        in
-        let eq
-          : Ghost.erased (RT.equiv (elab_env g) (elab_term t0) (elab_term t1))
-          = Ghost.hide (RT.Rel_sym _ _ _ related_t1_t1')
-        in
-        let steq : st_equiv g (C_Tot t0) (C_Tot t1) =
-          ST_TotEquiv _ _ _ u (E (Ghost.reveal t0_typing)) eq
-        in
-        Some (T_Equiv _ _ _ _ d steq)
-      )
-      else None
-    // | _ -> None
+    if TermEq.term_eq (elab_term t0) t1'
+    then (
+      let t0_typing 
+        : Ghost.erased (RT.tot_typing (elab_env g) (elab_term t0) (RT.tm_type u)) =
+        rt_equiv_typing #_ #_ #(elab_term t0) related_t1_t1' d1
+      in
+      let eq
+        : Ghost.erased (RT.equiv (elab_env g) (elab_term t0) (elab_term t1))
+        = Ghost.hide (RT.Rel_sym _ _ _ related_t1_t1')
+      in
+      let steq : st_equiv g (C_Tot t0) (C_Tot t1) =
+        ST_TotEquiv _ _ _ u (E (Ghost.reveal t0_typing)) eq
+      in
+      Some (T_Equiv _ _ _ _ d steq)
+    )
+    else None

@@ -161,12 +161,13 @@ let (readback_qual :
     | FStar_Reflection_V2_Data.Q_Implicit ->
         FStar_Pervasives_Native.Some Pulse_Syntax_Base.Implicit
     | uu___1 -> FStar_Pervasives_Native.None
+type ('tv, 't) is_view_of = Obj.t
 let rec (readback_ty :
   FStar_Reflection_Types.term ->
     Pulse_Syntax_Base.term_view FStar_Pervasives_Native.option)
   =
   fun t ->
-    let return res = FStar_Pervasives_Native.Some res in
+    let return tv = FStar_Pervasives_Native.Some tv in
     match FStar_Reflection_V2_Builtins.inspect_ln t with
     | FStar_Reflection_V2_Data.Tv_FVar fv ->
         let fv_lid = FStar_Reflection_V2_Builtins.inspect_fv fv in
@@ -183,7 +184,6 @@ let rec (readback_ty :
               then return Pulse_Syntax_Base.Tm_EmpInames
               else FStar_Pervasives_Native.None
     | FStar_Reflection_V2_Data.Tv_App (hd, (a, q)) ->
-        let aux uu___ = FStar_Pervasives_Native.None in
         let uu___ = FStar_Reflection_V2_Derived.collect_app_ln t in
         (match uu___ with
          | (head, args) ->
@@ -194,10 +194,11 @@ let rec (readback_ty :
                     (FStar_Reflection_V2_Builtins.inspect_fv fv) =
                       Pulse_Reflection_Util.star_lid
                   then
-                    let t1 = FStar_Pervasives_Native.fst a1 in
-                    let t2 = FStar_Pervasives_Native.fst a2 in
-                    return (Pulse_Syntax_Base.Tm_Star (t1, t2))
-                  else aux ()
+                    return
+                      (Pulse_Syntax_Base.Tm_Star
+                         ((FStar_Pervasives_Native.fst a1),
+                           (FStar_Pervasives_Native.fst a2)))
+                  else FStar_Pervasives_Native.None
               | (FStar_Reflection_V2_Data.Tv_UInst (fv, u::[]), a1::a2::[])
                   ->
                   if
@@ -235,23 +236,25 @@ let rec (readback_ty :
                              else
                                return
                                  (Pulse_Syntax_Base.Tm_ForallSL (u, b, p)))
-                  else aux ()
+                  else FStar_Pervasives_Native.None
               | (FStar_Reflection_V2_Data.Tv_FVar fv, a1::[]) ->
                   if
                     (FStar_Reflection_V2_Builtins.inspect_fv fv) =
                       Pulse_Reflection_Util.pure_lid
                   then
-                    let t1 = FStar_Pervasives_Native.fst a1 in
-                    let t11 = t1 in return (Pulse_Syntax_Base.Tm_Pure t11)
+                    return
+                      (Pulse_Syntax_Base.Tm_Pure
+                         (FStar_Pervasives_Native.fst a1))
                   else
                     if
                       (FStar_Reflection_V2_Builtins.inspect_fv fv) =
                         Pulse_Reflection_Util.inv_lid
                     then
-                      (let t1 = FStar_Pervasives_Native.fst a1 in
-                       let t11 = t1 in return (Pulse_Syntax_Base.Tm_Inv t11))
-                    else aux ()
-              | uu___1 -> aux ()))
+                      return
+                        (Pulse_Syntax_Base.Tm_Inv
+                           (FStar_Pervasives_Native.fst a1))
+                    else FStar_Pervasives_Native.None
+              | uu___1 -> FStar_Pervasives_Native.None))
     | FStar_Reflection_V2_Data.Tv_Refine (uu___, uu___1) ->
         FStar_Pervasives_Native.None
     | FStar_Reflection_V2_Data.Tv_Arrow (uu___, uu___1) ->

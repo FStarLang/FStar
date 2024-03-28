@@ -123,41 +123,15 @@ let readback_qual = function
   | R.Q_Implicit -> Some Implicit
   | _ -> None
 
-// WARNING WARNING WARNING: THIS DEFINITION MAKES THE CONTEXT INCONSISTENT
-// #push-options "--admit_smt_queries true"
-// let collect_app_refined (t:R.term) : res:(R.term & list R.argv){fst res << t /\ (forall a. L.memP a (snd res) ==> a << t)} =
-//   R.collect_app_ln t
-// #pop-options
-
-// let readback_ty_ascribed (t:R.term { let t = R.inspect_ln t in
-//                                      R.Tv_AscribedT? t || R.Tv_AscribedC? t })
-//   : option (ty:term { elab_term ty == t }) =
-//   match R.inspect_ln t with
-//   //
-//   // The following is dropping the ascription, which is not ideal
-//   // However, if we don't, then ascriptions start to come in the way of
-//   //   R.term_eq used to decide equality of tm_fstar terms,
-//   //   which then results in framing failures
-//   //
-//   // At least in the examples it came up, the ascription was a redundant
-//   //   ascription on F* Tm_Match
-//   //   I tried an F* patch that did not add the ascription, if it was already
-//   //   ascribed, but that failed a couple of proofs in HACL* : (
-//   //
-//   | R.Tv_AscribedT t _ _ _
-//   | R.Tv_AscribedC t _ _ _ -> Some (tm_fstar t (R.range_of_term t))
-// #pop-options
-
 let rec readback_ty (t:R.term)
-  : option term_view =  // (ty:term { elab_term ty == t }) =
+  : (r:option term_view { Some? r ==> (Some?.v r `is_view_of` t) }) =
 
   let open R in
   let open Pulse.Syntax.Base in
-  // let w (res:term') = with_range res (RU.range_of_term t) in
-  let return (res:term_view)  // { elab_term (w res) == t}) 
-    : option term_view  // { elab_term ty == t})
-    = Some res
-  in
+
+  let return tv = Some tv in
+  pack_inspect_inv t;
+
   match inspect_ln t with
   | Tv_FVar fv ->
     let fv_lid = inspect_fv fv in
@@ -172,61 +146,41 @@ let rec readback_ty (t:R.term)
     else None
 
   | Tv_App hd (a, q) ->
-    // admit(); //this case doesn't work because it is using collect_app_ln, etc.
-    let aux () = None in
-      // match q with
-      // | R.Q_Meta _ -> None
-      // | _ -> return (Tm_FStar t)
+    admit(); //this case doesn't work because it is using collect_app_ln, etc.
     let head, args = collect_app_ln t in
     begin
-    match inspect_ln head, args with
-    | Tv_FVar fv, [a1; a2] ->
-      if inspect_fv fv = star_lid
-      then (
-        let t1 : R.term = fst a1 in
-        let t2 : R.term = fst a2 in 
-        // assume (t1 << t);
-        // assume (t2 << t);
-        // let? t1 = readback_ty t1 in
-        // let? t2 = readback_ty t2 in
-        return (Tm_Star t1 t2)
-      )
-      else aux ()
-    | Tv_UInst fv [u], [a1; a2] ->
-      if inspect_fv fv = exists_lid 
-      || inspect_fv fv = forall_lid
-      then (
-        let t1 : R.term = fst a1 in
-        let t2 : R.term = fst a2 in
-        let ty = t1 in
-        let? (ppname, range, p) =
-          match inspect_ln t2 with
-          | Tv_Abs b body ->
-            let p = body in
-            let bview = inspect_binder b in
-            Some (bview.ppname, RU.binder_range b, p) <: option (ppname_t & range & term)
-          | _ -> None in  // TODO: FIXME: provide error from this function?
-        let b = mk_binder_ppname ty (mk_ppname ppname range) in
-        if inspect_fv fv = exists_lid
-        then return (Tm_ExistsSL u b p)
-        else return (Tm_ForallSL u b p)
-      )
-      else aux ()
-    | Tv_FVar fv, [a] ->
-      if inspect_fv fv = pure_lid
-      then (
-        let t1 : R.term = fst a in
-        let t1 = t1 in
-        return (Tm_Pure t1)
-      )
-      else if inspect_fv fv = inv_lid
-      then (
-        let t1 : R.term = fst a in
-        let t1 = t1 in
-        return (Tm_Inv t1)
-      )
-      else aux ()
-    | _ -> aux ()
+      match inspect_ln head, args with
+      | Tv_FVar fv, [a1; a2] ->
+        if inspect_fv fv = star_lid
+        then return (Tm_Star (fst a1) (fst a2))
+        else None
+      | Tv_UInst fv [u], [a1; a2] ->
+        if inspect_fv fv = exists_lid ||
+           inspect_fv fv = forall_lid
+        then (
+          let t1 : R.term = fst a1 in
+          let t2 : R.term = fst a2 in
+          let ty = t1 in
+          let? (ppname, range, p) =
+            match inspect_ln t2 with
+            | Tv_Abs b body ->
+              let p = body in
+              let bview = inspect_binder b in
+              Some (bview.ppname, RU.binder_range b, p) <: option (ppname_t & range & term)
+            | _ -> None in  // TODO: FIXME: provide error from this function?
+          let b = mk_binder_ppname ty (mk_ppname ppname range) in
+          if inspect_fv fv = exists_lid
+          then return (Tm_ExistsSL u b p)
+          else return (Tm_ForallSL u b p)
+        )
+        else None
+     | Tv_FVar fv, [a] ->
+        if inspect_fv fv = pure_lid
+        then return (Tm_Pure (fst a))
+        else if inspect_fv fv = inv_lid
+        then return (Tm_Inv (fst a))
+        else None
+     | _ -> None
     end
 
   | Tv_Refine _ _
@@ -238,22 +192,20 @@ let rec readback_ty (t:R.term)
   | Tv_BVar _
   | Tv_UInst _ _
   | Tv_Match _ _ _
-  | Tv_Abs _ _ ->
-    // return t
-    None
+  | Tv_Abs _ _ -> None
 
   | Tv_AscribedT t _ _ _
   | Tv_AscribedC t _ _ _ ->
     //this case doesn't work because it is unascribing
-    admit(); 
+    admit();
     readback_ty t
 
-  | Tv_Uvar _ _ -> None // TODO: FIXME: T.fail "readback_ty: unexpected Tv_Uvar"
-
-  | Tv_Unknown ->
-    return Tm_Unknown
+  | Tv_Uvar _ _ -> None
+  
+  | Tv_Unknown -> return Tm_Unknown
 
   | Tv_Unsupp -> None
+
 
 let readback_comp (t:R.term)
   : option (c:comp { elab_comp c == t }) =
