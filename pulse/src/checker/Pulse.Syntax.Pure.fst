@@ -147,15 +147,7 @@ let is_fvar (t:term) : option (R.name & list universe) =
 let is_pure_app (t:term) : option (term & option qualifier & term) =
   match R.inspect_ln t with
   | R.Tv_App hd (arg, q) ->
-    // let? hd =
-    //   match readback_ty hd with
-    //   | Some hd -> Some hd <: option term
-    //   | _ -> None in
     let q = readback_qual q in
-    // let? arg =
-    //   match readback_ty arg with
-    //   | Some arg -> Some arg <: option term
-    //   | _ -> None in
     Some (hd, q, arg)
   | _ -> None
 

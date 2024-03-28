@@ -63,7 +63,9 @@ let check
         else
             let ff_validity = Pulse.Checker.Pure.check_prop_validity g ff ff_typing in
             let dt = T_Unreachable g s ctag stc ff_validity in
-            prove_post_hint (try_frame_pre pre_typing (match_comp_res_with_post_hint dt post_hint) res_ppname) post_hint (Pulse.RuntimeUtils.range_of_term t)
+            prove_post_hint (try_frame_pre pre_typing (match_comp_res_with_post_hint dt post_hint) res_ppname)
+                            post_hint
+                            (Pulse.RuntimeUtils.range_of_term t)
     
 
   

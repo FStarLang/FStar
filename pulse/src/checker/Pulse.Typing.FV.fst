@@ -34,36 +34,11 @@ let freevars_close_term_host_term (t:term) (x:var) (i:index)
   = admit()
 
 #push-options "--query_stats --z3rlimit_factor 2"
-let rec freevars_close_term' (e:term) (x:var) (i:index)
+let freevars_close_term' (e:term) (x:var) (i:index)
   : Lemma 
     (ensures freevars (close_term' e x i) `Set.equal`
              (freevars e `set_minus` x))
   = freevars_close_term_host_term e x i
-  
-  // match e.t with
-  //   | Tm_Emp
-  //   | Tm_VProp
-  //   | Tm_Inames
-  //   | Tm_EmpInames
-  //   | Tm_Unknown -> ()
-
-  //   | Tm_Inv p ->
-  //     freevars_close_term' p x i
-  //   | Tm_Pure p ->
-  //     freevars_close_term' p x i
-
-  //   | Tm_AddInv l r
-  //   | Tm_Star l r ->
-  //     freevars_close_term' l x i;
-  //     freevars_close_term' r x i
-
-  //   | Tm_ExistsSL _ t b
-  //   | Tm_ForallSL _ t b ->
-  //     freevars_close_term' t.binder_ty x i;    
-  //     freevars_close_term' b x (i + 1)
-
-  //   | Tm_FStar t ->
-  //     freevars_close_term_host_term t x i
 
 let freevars_close_comp (c:comp)
                         (x:var)

@@ -217,14 +217,6 @@ let instantiate_term_implicits (g:env) (t0:term) =
                         (pp t0)
         ]
     else t, ty
-      // let topt = readback_ty t in
-      // let tyopt = readback_ty ty in
-      // match topt, tyopt with
-      // | Some t, Some ty -> t, ty
-      // | Some _, None ->
-      //   fail g (Some rng) (readback_failure ty)
-      // | None, _ ->
-      //   fail g (Some rng) (readback_failure t)
 
 let instantiate_term_implicits_uvs (g:env) (t0:term) =
   let f = elab_env g in
@@ -243,33 +235,20 @@ let instantiate_term_implicits_uvs (g:env) (t0:term) =
             ]
   )
   | Some (namedvs, t, ty) ->
-    // let topt = readback_ty t in
-    // let tyopt = readback_ty ty in
-    // match topt, tyopt with
-    // | Some t, Some ty ->
-      let (| uvs, t, ty |)
-        : uvs:env { disjoint g uvs } &
-          term &
-          term =
-        T.fold_left (fun (| uvs, t, ty |) (namedv, namedvt) ->
-          let nview = R.inspect_namedv namedv in
-          let ppname = { name = nview.ppname; range = rng } <: Pulse.Syntax.Base.ppname in
-          let xt = namedvt in
-          // if None? xt
-          // then fail g (Some rng) (readback_failure namedvt)
-          // else
-          // let Some xt = xt in
-               let x = fresh (push_env g uvs) in
-               let ss = [NT nview.uniq (tm_var {nm_index = x; nm_ppname = ppname})] in
-               let uvs : uvs:env { disjoint g uvs } = push_binding uvs x ppname xt in
-               (| uvs,
-                  subst_term t ss,
-                  subst_term ty ss |)) (| mk_env (fstar_env g), t, ty |) namedvs in
-      (| uvs, t, ty |)
-    // | Some _, None ->
-    //   fail g (Some rng) (readback_failure ty)
-    // | None, _ ->
-    //   fail g (Some rng) (readback_failure t)
+    let (| uvs, t, ty |)
+      : uvs:env { disjoint g uvs } &
+        term &
+        term =
+      T.fold_left (fun (| uvs, t, ty |) (namedv, namedvt) ->
+        let nview = R.inspect_namedv namedv in
+        let ppname = { name = nview.ppname; range = rng } <: Pulse.Syntax.Base.ppname in
+        let x = fresh (push_env g uvs) in
+        let ss = [NT nview.uniq (tm_var {nm_index = x; nm_ppname = ppname})] in
+        let uvs : uvs:env { disjoint g uvs } = push_binding uvs x ppname namedvt in
+        (| uvs,
+           subst_term t ss,
+           subst_term ty ss |)) (| mk_env (fstar_env g), t, ty |) namedvs in
+    (| uvs, t, ty |)
 
 let check_universe (g:env) (t:term)
   : T.Tac (u:universe & universe_of g t u)
@@ -319,12 +298,7 @@ let compute_term_type (g:env) (t:term)
     | None -> 
       maybe_fail_doc issues
             g (RU.range_of_term t) (ill_typed_term t None None)
-    | Some (| rt, eff, ty', tok |) ->
-      (| rt, eff, ty', E tok |)
-      // match readback_ty rt, readback_ty ty' with
-      // | None, _ -> fail g (Some t.range) (readback_failure rt)
-      // | _, None -> fail g (Some t.range) (readback_failure ty')
-      // | Some t, Some ty -> (| t, eff, ty, E tok |)
+    | Some (| rt, eff, ty', tok |) -> (| rt, eff, ty', E tok |)
 
 
 let compute_term_type_and_u (g:env) (t:term)
@@ -345,13 +319,6 @@ let compute_term_type_and_u (g:env) (t:term)
     | Some (| rt, eff, ty', tok |) ->
       let (| u, uty |) = check_universe g ty' in
       (| rt, eff, ty', (| u, uty |), E tok |)
-
-      // match readback_ty rt, readback_ty ty' with
-      // | None, _ -> fail g (Some t.range) (readback_failure rt)
-      // | _, None -> fail g (Some t.range) (readback_failure ty')
-      // | Some t, Some ty -> 
-      //   let (| u, uty |) = check_universe g ty in
-      //   (| t, eff, ty, (| u, uty |), E tok |)
 
 let check_term (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
   : T.Tac (e:term & typing g e eff t) =
@@ -418,13 +385,7 @@ let core_compute_term_type (g:env) (t:term)
       maybe_fail_doc 
         issues
         g (RU.range_of_term t) (ill_typed_term t None None)
-    | Some (| eff, ty', tok |) ->
-      (| eff, ty', E tok |)
-        // match readback_ty ty' with
-        // | None ->
-        //   fail g (Some t.range) (readback_failure ty')
-        // | Some ty -> 
-        //   (| eff, ty, E tok |)
+    | Some (| eff, ty', tok |) -> (| eff, ty', E tok |)
 
 let core_check_term g e eff t =
   let fg = elab_env g in

@@ -20,7 +20,6 @@ open Pulse.Syntax.Base
 open Pulse.Reflection.Util
 module RU = Pulse.RuntimeUtils
 module T = FStar.Tactics
-module P = Pulse.Syntax.Printer
 let debug_log (f: unit -> T.Tac unit) : T.Tac unit = if RU.debug_at_level_no_module "readback" then f()
 
 let (let?) (f:option 'a) (g:'a -> option 'b) : option 'b =
@@ -45,11 +44,7 @@ let readback_observability (t:R.term)
 
 #push-options "--z3rlimit_factor 20"
 // TODO: FIXME: may be mark as opaque_to_smt
-let try_readback_st_comp
-  (t:R.term)
-  // (readback_ty:(t':R.term ->
-  //               option (ty:term { elab_term ty == t' })))
-
+let try_readback_st_comp (t:R.term)
   : option (c:comp{elab_comp c == t}) =
 
   let open R in

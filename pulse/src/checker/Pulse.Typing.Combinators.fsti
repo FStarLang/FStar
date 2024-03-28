@@ -103,8 +103,6 @@ let rec vprop_as_list (vp:term)
   = match inspect_term vp with
     | Some Tm_Emp -> []
     | Some (Tm_Star vp0 vp1) ->
-      assume (vp0 << vp);
-      assume (vp1 << vp);
       vprop_as_list vp0 @ vprop_as_list vp1
     | _ -> [vp]
 

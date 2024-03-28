@@ -91,7 +91,6 @@ let rec prove_pures #preamble (pst:prover_state preamble)
   | p::unsolved' ->
     match inspect_term p with
     | Some (Tm_Pure p) ->
-      assume False;  // TODO
       let pst_opt = IntroPure.intro_pure pst p unsolved' () in
       (match pst_opt with
        | None ->
@@ -111,7 +110,7 @@ let rec prove_pures #preamble (pst:prover_state preamble)
         (Printf.sprintf "Impossible! prover.prove_pures: %s is not a pure, please file a bug-report"
            (P.term_to_string (L.hd pst.unsolved)))
 
-#push-options "--z3rlimit_factor 4 --admit_smt_queries true"  // TODO
+#push-options "--z3rlimit_factor 4"
 let rec prover
   (#preamble:_)
   (pst0:prover_state preamble)
@@ -161,8 +160,7 @@ let rec prover
         match pst.unsolved with
         | q::tl ->
           match inspect_term q with
-          | Some (Tm_Pure _) ->
-            prove_pures pst
+          | Some (Tm_Pure _) -> prove_pures pst
           | _ ->
             let pst_opt = Match.match_q pst q tl () prover in
             match pst_opt with
@@ -444,7 +442,8 @@ let prove_post_hint (#g:env) (#ctxt:vprop)
           text "Error in proving postcondition";
           text "Inferred postcondition additionally contains" ^^
             indent (pp remaining_ctxt);
-          (if true  // Tm_Star? remaining_ctxt.t // TODO
+          (let tv = inspect_term remaining_ctxt in
+           if Some? tv && Tm_Star? (Some?.v tv)
            then text "Did you forget to free these resources?"
            else text "Did you forget to free this resource?");
         ]

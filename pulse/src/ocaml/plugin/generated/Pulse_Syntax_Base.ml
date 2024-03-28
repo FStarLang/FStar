@@ -695,20 +695,8 @@ let (mk_binder_ppname : term -> ppname -> binder) =
       mk_binder_with_attrs binder_ty binder_ppname (binder_attrs_default ())
 let (eq_univ : universe -> universe -> Prims.bool) =
   fun u1 -> fun u2 -> FStar_Reflection_V2_TermEq.univ_eq_dec u1 u2
-let rec (unascribe : term -> term) =
-  fun t ->
-    match FStar_Reflection_V2_Builtins.inspect_ln t with
-    | FStar_Reflection_V2_Data.Tv_AscribedT (t1, uu___, uu___1, uu___2) ->
-        unascribe t1
-    | FStar_Reflection_V2_Data.Tv_AscribedC (t1, uu___, uu___1, uu___2) ->
-        unascribe t1
-    | uu___ -> t
 let (eq_tm : term -> term -> Prims.bool) =
-  fun t1 ->
-    fun t2 ->
-      let t1' = t1 in
-      let t2' = t2 in
-      let b = FStar_Reflection_V2_TermEq.term_eq_dec t1' t2' in b
+  fun t1 -> fun t2 -> FStar_Reflection_V2_TermEq.term_eq_dec t1 t2
 let (eq_st_comp : st_comp -> st_comp -> Prims.bool) =
   fun s1 ->
     fun s2 ->

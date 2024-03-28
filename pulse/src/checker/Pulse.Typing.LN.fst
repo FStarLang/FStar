@@ -56,32 +56,6 @@ let rec open_term_ln' (e:term)
     (ensures ln' e i)
     (decreases e)
   = open_term_ln_host' e (elab_term x) i
-  
-  // match e.t with
-  //   | Tm_Emp
-  //   | Tm_VProp
-  //   | Tm_Inames
-  //   | Tm_EmpInames
-  //   | Tm_Unknown -> ()
-
-  //   | Tm_Inv p ->
-  //     open_term_ln' p x i
-
-  //   | Tm_Pure p ->
-  //     open_term_ln' p x i
-
-  //   | Tm_AddInv l r
-  //   | Tm_Star l r ->
-  //     open_term_ln' l x i;
-  //     open_term_ln' r x i
-
-  //   | Tm_ExistsSL _ t b
-  //   | Tm_ForallSL _ t b ->
-  //     open_term_ln' t.binder_ty x i;    
-  //     open_term_ln' b x (i + 1)
-
-  //   | Tm_FStar t ->
-  //     open_term_ln_host' t (elab_term x) i
 
 let open_comp_ln' (c:comp)
                   (x:term)
@@ -372,7 +346,7 @@ val r_ln_weakening (e:R.term) (i j:int)
     (requires RT.ln' e i /\ i <= j)
     (ensures RT.ln' e j)
 
-let rec ln_weakening (e:term) (i j:int)
+let ln_weakening (e:term) (i j:int)
   : Lemma 
     (requires ln' e i /\ i <= j)
     (ensures ln' e j)      
@@ -380,31 +354,6 @@ let rec ln_weakening (e:term) (i j:int)
     [SMTPat (ln' e j);
      SMTPat (ln' e i)]
   = r_ln_weakening e i j
-  
-  // match e.t with
-  //   | Tm_Emp
-  //   | Tm_VProp
-  //   | Tm_Inames
-  //   | Tm_EmpInames
-  //   | Tm_Unknown -> ()
-  //   | Tm_Inv p ->
-  //     ln_weakening p i j
-  //   | Tm_Pure p ->
-  //     ln_weakening p i j
-      
-  //   // | Tm_PureApp l _ r
-  //   | Tm_AddInv l r
-  //   | Tm_Star l r ->
-  //     ln_weakening l i j;
-  //     ln_weakening r i j
-
-  //   | Tm_ExistsSL _ t b
-  //   | Tm_ForallSL _ t b ->
-  //     ln_weakening t.binder_ty i j;    
-  //     ln_weakening b (i + 1) (j + 1)
-
-  //   | Tm_FStar t ->
-  //     r_ln_weakening t i j
 #pop-options
 
 let ln_weakening_comp (c:comp) (i j:int)
@@ -584,37 +533,8 @@ let rec open_term_ln_inv' (e:term)
     (requires ln' e i)
     (ensures ln' (open_term' e x i) (i - 1))
     (decreases e)
-  =       Pulse.Elaborate.elab_ln x (-1);
-      r_open_term_ln_inv' e (elab_term x) i
-
-  
-  // match e.t with
-  //   | Tm_Emp
-  //   | Tm_VProp
-  //   | Tm_Inames
-  //   | Tm_EmpInames
-  //   | Tm_Unknown ->
-  //     ln_weakening x (-1) (i - 1)
-
-  //   | Tm_Inv p ->
-  //     open_term_ln_inv' p x i
-  //   | Tm_Pure p ->
-  //     open_term_ln_inv' p x i
-
-  //   // | Tm_PureApp l _ r
-  //   | Tm_AddInv l r
-  //   | Tm_Star l r ->
-  //     open_term_ln_inv' l x i;
-  //     open_term_ln_inv' r x i
-
-  //   | Tm_ExistsSL _ t b
-  //   | Tm_ForallSL _ t b ->
-  //     open_term_ln_inv' t.binder_ty x i;    
-  //     open_term_ln_inv' b x (i + 1)
-
-  //   | Tm_FStar t ->
-  //     Pulse.Elaborate.elab_ln x (-1);
-  //     r_open_term_ln_inv' t (elab_term x) i
+  =  Pulse.Elaborate.elab_ln x (-1);
+     r_open_term_ln_inv' e (elab_term x) i
 
 let open_comp_ln_inv' (c:comp)
                       (x:term { ln x })
@@ -807,32 +727,7 @@ let rec close_term_ln' (e:term)
     (requires ln' e (i - 1))
     (ensures ln' (close_term' e x i) i)
     (decreases e)
-  =       r_close_term_ln' e x i
-  
-  // match e.t with
-  //   | Tm_Emp
-  //   | Tm_VProp
-  //   | Tm_Inames
-  //   | Tm_EmpInames
-  //   | Tm_Unknown -> ()
-
-  //   | Tm_Inv p ->
-  //     close_term_ln' p x i
-  //   | Tm_Pure p ->
-  //     close_term_ln' p x i
-
-  //   | Tm_AddInv l r
-  //   | Tm_Star l r ->
-  //     close_term_ln' l x i;
-  //     close_term_ln' r x i
-
-  //   | Tm_ExistsSL _ t b
-  //   | Tm_ForallSL _ t b ->
-  //     close_term_ln' t.binder_ty x i;    
-  //     close_term_ln' b x (i + 1)
-
-  //   | Tm_FStar t ->
-  //     r_close_term_ln' t x i
+  = r_close_term_ln' e x i
 
 let close_comp_ln' (c:comp)
                    (x:var)

@@ -25,7 +25,7 @@ let (check :
                    (Obj.magic
                       (FStar_Range.mk_range "Pulse.Checker.Unreachable.fst"
                          (Prims.of_int (38)) (Prims.of_int (2))
-                         (Prims.of_int (66)) (Prims.of_int (157)))))
+                         (Prims.of_int (68)) (Prims.of_int (64)))))
                 (FStar_Tactics_Effect.lift_div_tac
                    (fun uu___ -> t.Pulse_Syntax_Base.range1))
                 (fun uu___ ->
@@ -54,8 +54,8 @@ let (check :
                                         "Pulse.Checker.Unreachable.fst"
                                         (Prims.of_int (43))
                                         (Prims.of_int (22))
-                                        (Prims.of_int (66))
-                                        (Prims.of_int (157)))))
+                                        (Prims.of_int (68))
+                                        (Prims.of_int (64)))))
                                (FStar_Tactics_Effect.lift_div_tac
                                   (fun uu___ -> Pulse_Typing_Env.fresh g))
                                (fun uu___ ->
@@ -76,8 +76,8 @@ let (check :
                                                    "Pulse.Checker.Unreachable.fst"
                                                    (Prims.of_int (44))
                                                    (Prims.of_int (25))
-                                                   (Prims.of_int (66))
-                                                   (Prims.of_int (157)))))
+                                                   (Prims.of_int (68))
+                                                   (Prims.of_int (64)))))
                                           (FStar_Tactics_Effect.lift_div_tac
                                              (fun uu___ ->
                                                 Pulse_Syntax_Base.v_as_nv x))
@@ -99,8 +99,8 @@ let (check :
                                                               "Pulse.Checker.Unreachable.fst"
                                                               (Prims.of_int (46))
                                                               (Prims.of_int (4))
-                                                              (Prims.of_int (66))
-                                                              (Prims.of_int (157)))))
+                                                              (Prims.of_int (68))
+                                                              (Prims.of_int (64)))))
                                                      (FStar_Tactics_Effect.lift_div_tac
                                                         (fun uu___ -> post))
                                                      (fun uu___ ->
@@ -132,8 +132,8 @@ let (check :
                                                                     "Pulse.Checker.Unreachable.fst"
                                                                     (Prims.of_int (49))
                                                                     (Prims.of_int (60))
-                                                                    (Prims.of_int (66))
-                                                                    (Prims.of_int (157)))))
+                                                                    (Prims.of_int (68))
+                                                                    (Prims.of_int (64)))))
                                                                   (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___1 ->
@@ -159,8 +159,8 @@ let (check :
                                                                     "Pulse.Checker.Unreachable.fst"
                                                                     (Prims.of_int (50))
                                                                     (Prims.of_int (58))
-                                                                    (Prims.of_int (66))
-                                                                    (Prims.of_int (157)))))
+                                                                    (Prims.of_int (68))
+                                                                    (Prims.of_int (64)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___1 ->
@@ -187,8 +187,8 @@ let (check :
                                                                     "Pulse.Checker.Unreachable.fst"
                                                                     (Prims.of_int (52))
                                                                     (Prims.of_int (55))
-                                                                    (Prims.of_int (66))
-                                                                    (Prims.of_int (157)))))
+                                                                    (Prims.of_int (68))
+                                                                    (Prims.of_int (64)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___1 ->
@@ -216,8 +216,8 @@ let (check :
                                                                     "Pulse.Checker.Unreachable.fst"
                                                                     (Prims.of_int (53))
                                                                     (Prims.of_int (37))
-                                                                    (Prims.of_int (66))
-                                                                    (Prims.of_int (157)))))
+                                                                    (Prims.of_int (68))
+                                                                    (Prims.of_int (64)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___1 ->
@@ -242,8 +242,8 @@ let (check :
                                                                     "Pulse.Checker.Unreachable.fst"
                                                                     (Prims.of_int (54))
                                                                     (Prims.of_int (25))
-                                                                    (Prims.of_int (66))
-                                                                    (Prims.of_int (157)))))
+                                                                    (Prims.of_int (68))
+                                                                    (Prims.of_int (64)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___1 ->
@@ -267,8 +267,8 @@ let (check :
                                                                     "Pulse.Checker.Unreachable.fst"
                                                                     (Prims.of_int (55))
                                                                     (Prims.of_int (71))
-                                                                    (Prims.of_int (66))
-                                                                    (Prims.of_int (157)))))
+                                                                    (Prims.of_int (68))
+                                                                    (Prims.of_int (64)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___1 ->
@@ -294,8 +294,8 @@ let (check :
                                                                     "Pulse.Checker.Unreachable.fst"
                                                                     (Prims.of_int (57))
                                                                     (Prims.of_int (55))
-                                                                    (Prims.of_int (66))
-                                                                    (Prims.of_int (157)))))
+                                                                    (Prims.of_int (68))
+                                                                    (Prims.of_int (64)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___1 ->
@@ -321,8 +321,8 @@ let (check :
                                                                     "Pulse.Checker.Unreachable.fst"
                                                                     (Prims.of_int (58))
                                                                     (Prims.of_int (60))
-                                                                    (Prims.of_int (66))
-                                                                    (Prims.of_int (157)))))
+                                                                    (Prims.of_int (68))
+                                                                    (Prims.of_int (64)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___1 ->
@@ -356,8 +356,8 @@ let (check :
                                                                     "Pulse.Checker.Unreachable.fst"
                                                                     (Prims.of_int (59))
                                                                     (Prims.of_int (85))
-                                                                    (Prims.of_int (66))
-                                                                    (Prims.of_int (157)))))
+                                                                    (Prims.of_int (68))
+                                                                    (Prims.of_int (64)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___1 ->
@@ -385,8 +385,8 @@ let (check :
                                                                     "Pulse.Checker.Unreachable.fst"
                                                                     (Prims.of_int (60))
                                                                     (Prims.of_int (43))
-                                                                    (Prims.of_int (66))
-                                                                    (Prims.of_int (157)))))
+                                                                    (Prims.of_int (68))
+                                                                    (Prims.of_int (64)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___1 ->
@@ -417,8 +417,8 @@ let (check :
                                                                     "Pulse.Checker.Unreachable.fst"
                                                                     (Prims.of_int (60))
                                                                     (Prims.of_int (43))
-                                                                    (Prims.of_int (66))
-                                                                    (Prims.of_int (157)))))
+                                                                    (Prims.of_int (68))
+                                                                    (Prims.of_int (64)))))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Pure.core_check_term_at_type
                                                                     g ff
@@ -460,8 +460,8 @@ let (check :
                                                                     "Pulse.Checker.Unreachable.fst"
                                                                     (Prims.of_int (64))
                                                                     (Prims.of_int (86))
-                                                                    (Prims.of_int (66))
-                                                                    (Prims.of_int (157)))))
+                                                                    (Prims.of_int (68))
+                                                                    (Prims.of_int (64)))))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Pure.check_prop_validity
                                                                     g ff ()))
@@ -486,8 +486,8 @@ let (check :
                                                                     "Pulse.Checker.Unreachable.fst"
                                                                     (Prims.of_int (66))
                                                                     (Prims.of_int (12))
-                                                                    (Prims.of_int (66))
-                                                                    (Prims.of_int (157)))))
+                                                                    (Prims.of_int (68))
+                                                                    (Prims.of_int (64)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___3 ->
@@ -515,8 +515,8 @@ let (check :
                                                                     "Pulse.Checker.Unreachable.fst"
                                                                     (Prims.of_int (66))
                                                                     (Prims.of_int (12))
-                                                                    (Prims.of_int (66))
-                                                                    (Prims.of_int (157)))))
+                                                                    (Prims.of_int (68))
+                                                                    (Prims.of_int (64)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal

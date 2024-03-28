@@ -709,12 +709,6 @@ let subtyping_token g t1 t2 =
 
 val readback_binding : R.binding -> binding
 let readback_binding b = (b.uniq, b.sort)
-  // assume (host_term == R.term); // fixme! expose this fact
-  // match readback_ty b.sort with
-  // | Some sort -> (b.uniq, sort)
-  // | None ->
-  //   let sort : term = {t=Tm_FStar b.sort; range=T.range_of_term b.sort} in
-  //   (b.uniq, sort)
 
 let non_informative (g:env) (c:comp) =
   my_erased (RT.non_informative (elab_env g) (elab_comp c))

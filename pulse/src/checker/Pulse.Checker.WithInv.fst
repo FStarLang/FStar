@@ -47,9 +47,8 @@ let recheck (#g:env) (#e:term) (#ty: typ) () : T.Tac (tot_typing g e ty) =
 let term_remove_inv (inv:vprop) (tm:term) : T.Tac (tm':term { tm_star tm' inv == tm}) =
   match inspect_term tm with
   | Some (Tm_Star tm inv') ->
-    if eq_tm inv inv' then let _ = assume False in tm
+    if eq_tm inv inv' then tm
     else T.fail "term_remove_inv"
-
   | _ ->
     T.fail "term_remove_inv: not a star?"
 

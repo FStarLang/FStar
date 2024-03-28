@@ -56,15 +56,12 @@ let rec check_vprop_equiv r (g:env) (p q:vprop)
         let g' = push_binding g x b1.binder_ppname b1.binder_ty in
         let nx = b1.binder_ppname, x in
         let ext = check_vprop_equiv r g' (open_term_nv t1 nx) (open_term_nv t2 nx) in
-        assume False;  // TODO
         VE_Fa g x u1 b1 t1 t2 ext
       )
       else check_vprop_equiv_ext r g p q
     | Some (Tm_Star p1 p2), Some (Tm_Star q1 q2) ->
       let ext1 = check_vprop_equiv r g p1 q1 in
       let ext2 = check_vprop_equiv r g p2 q2 in
-
-      assume False;  // TODO
       VE_Ctxt g p1 p2 q1 q2 ext1 ext2
     | _ -> 
       check_vprop_equiv_ext r g p q
