@@ -49,16 +49,18 @@ val core_mem (m:mem u#a) : mem u#a
 
 (** The type of separation logic propositions. Based on Steel.Heap.slprop *)
 [@@erasable]
-val slprop : Type u#(a + 3)
+val slprop : Type u#(a + 3) //invariant predicates, i --> p, live in u#a+3
 
 [@@erasable]
-val big_slprop : Type u#(a + 2)
+val big_slprop : Type u#(a + 2) //all other predicates live in u#a+2, e.g., big_pts_to, pts_to
 val down (s:slprop u#a) : big_slprop u#a
 val up (s:big_slprop u#a) : slprop u#a
-let is_big (s:slprop u#a) = s == up (down s)
+let is_big (s:slprop u#a) = s == up (down s) //any slprop that has no invariants in it, satisfies is_big
+//big slprops can be turned into invariants, but are not otherwise storeable in the heap
 
 [@@erasable]
-val small_slprop : Type u#(a + 1)
+val small_slprop : Type u#(a + 1) //small slprops are heap storeable; these are the most common ones e.g., pts_to etc
+//e.g., one can write `r:BigRef.ref small_slprop` and write `big_pts_to r `
 val down2 (s:slprop u#a) : small_slprop u#a
 val up2 (s:small_slprop u#a) : slprop u#a
 let is_small (s:slprop u#a) = s == up2 (down2 s)
