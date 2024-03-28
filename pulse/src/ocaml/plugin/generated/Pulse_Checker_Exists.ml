@@ -41,12 +41,12 @@ let (check_elim_exists :
                 (FStar_Sealed.seal
                    (Obj.magic
                       (FStar_Range.mk_range "Pulse.Checker.Exists.fst"
-                         (Prims.of_int (52)) (Prims.of_int (10))
-                         (Prims.of_int (52)) (Prims.of_int (69)))))
+                         (Prims.of_int (53)) (Prims.of_int (10))
+                         (Prims.of_int (53)) (Prims.of_int (69)))))
                 (FStar_Sealed.seal
                    (Obj.magic
                       (FStar_Range.mk_range "Pulse.Checker.Exists.fst"
-                         (Prims.of_int (52)) (Prims.of_int (72))
+                         (Prims.of_int (53)) (Prims.of_int (72))
                          (Prims.of_int (94)) (Prims.of_int (55)))))
                 (FStar_Tactics_Effect.lift_div_tac
                    (fun uu___ ->
@@ -60,13 +60,13 @@ let (check_elim_exists :
                               (Obj.magic
                                  (FStar_Range.mk_range
                                     "Pulse.Checker.Exists.fst"
-                                    (Prims.of_int (54)) (Prims.of_int (32))
-                                    (Prims.of_int (54)) (Prims.of_int (38)))))
+                                    (Prims.of_int (55)) (Prims.of_int (32))
+                                    (Prims.of_int (55)) (Prims.of_int (38)))))
                            (FStar_Sealed.seal
                               (Obj.magic
                                  (FStar_Range.mk_range
                                     "Pulse.Checker.Exists.fst"
-                                    (Prims.of_int (52)) (Prims.of_int (72))
+                                    (Prims.of_int (53)) (Prims.of_int (72))
                                     (Prims.of_int (94)) (Prims.of_int (55)))))
                            (FStar_Tactics_Effect.lift_div_tac
                               (fun uu___ -> t.Pulse_Syntax_Base.term1))
@@ -81,15 +81,15 @@ let (check_elim_exists :
                                              (Obj.magic
                                                 (FStar_Range.mk_range
                                                    "Pulse.Checker.Exists.fst"
-                                                   (Prims.of_int (55))
+                                                   (Prims.of_int (56))
                                                    (Prims.of_int (14))
-                                                   (Prims.of_int (55))
+                                                   (Prims.of_int (56))
                                                    (Prims.of_int (48)))))
                                           (FStar_Sealed.seal
                                              (Obj.magic
                                                 (FStar_Range.mk_range
                                                    "Pulse.Checker.Exists.fst"
-                                                   (Prims.of_int (55))
+                                                   (Prims.of_int (56))
                                                    (Prims.of_int (51))
                                                    (Prims.of_int (94))
                                                    (Prims.of_int (55)))))
@@ -105,15 +105,15 @@ let (check_elim_exists :
                                                         (Obj.magic
                                                            (FStar_Range.mk_range
                                                               "Pulse.Checker.Exists.fst"
-                                                              (Prims.of_int (57))
+                                                              (Prims.of_int (58))
                                                               (Prims.of_int (4))
-                                                              (Prims.of_int (75))
+                                                              (Prims.of_int (76))
                                                               (Prims.of_int (21)))))
                                                      (FStar_Sealed.seal
                                                         (Obj.magic
                                                            (FStar_Range.mk_range
                                                               "Pulse.Checker.Exists.fst"
-                                                              (Prims.of_int (55))
+                                                              (Prims.of_int (56))
                                                               (Prims.of_int (51))
                                                               (Prims.of_int (94))
                                                               (Prims.of_int (55)))))
@@ -129,17 +129,17 @@ let (check_elim_exists :
                                                                   (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (60))
+                                                                    (Prims.of_int (61))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (60))
+                                                                    (Prims.of_int (61))
                                                                     (Prims.of_int (32)))))
                                                                (FStar_Sealed.seal
                                                                   (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (60))
+                                                                    (Prims.of_int (61))
                                                                     (Prims.of_int (35))
-                                                                    (Prims.of_int (71))
+                                                                    (Prims.of_int (72))
                                                                     (Prims.of_int (41)))))
                                                                (FStar_Tactics_Effect.lift_div_tac
                                                                   (fun uu___1
@@ -154,17 +154,17 @@ let (check_elim_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (61))
+                                                                    (Prims.of_int (62))
                                                                     (Prims.of_int (22))
-                                                                    (Prims.of_int (63))
+                                                                    (Prims.of_int (64))
                                                                     (Prims.of_int (75)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (64))
+                                                                    (Prims.of_int (65))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (71))
+                                                                    (Prims.of_int (72))
                                                                     (Prims.of_int (41)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -212,17 +212,17 @@ let (check_elim_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (70))
-                                                                    (Prims.of_int (10))
                                                                     (Prims.of_int (71))
+                                                                    (Prims.of_int (10))
+                                                                    (Prims.of_int (72))
                                                                     (Prims.of_int (41)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (69))
+                                                                    (Prims.of_int (70))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (71))
+                                                                    (Prims.of_int (72))
                                                                     (Prims.of_int (41)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -230,9 +230,9 @@ let (check_elim_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (71))
+                                                                    (Prims.of_int (72))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (71))
+                                                                    (Prims.of_int (72))
                                                                     (Prims.of_int (40)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -274,17 +274,17 @@ let (check_elim_exists :
                                                                   (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (74))
+                                                                    (Prims.of_int (75))
                                                                     (Prims.of_int (17))
-                                                                    (Prims.of_int (74))
+                                                                    (Prims.of_int (75))
                                                                     (Prims.of_int (47)))))
                                                                (FStar_Sealed.seal
                                                                   (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (73))
+                                                                    (Prims.of_int (74))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (75))
+                                                                    (Prims.of_int (76))
                                                                     (Prims.of_int (21)))))
                                                                (Obj.magic
                                                                   (Pulse_Checker_Pure.instantiate_term_implicits
@@ -315,7 +315,7 @@ let (check_elim_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (76))
+                                                                    (Prims.of_int (77))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (94))
                                                                     (Prims.of_int (55)))))
@@ -324,7 +324,7 @@ let (check_elim_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (76))
+                                                                    (Prims.of_int (77))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (94))
                                                                     (Prims.of_int (55)))))
@@ -344,15 +344,15 @@ let (check_elim_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (78))
+                                                                    (Prims.of_int (79))
                                                                     (Prims.of_int (11))
-                                                                    (Prims.of_int (78))
+                                                                    (Prims.of_int (79))
                                                                     (Prims.of_int (25)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (79))
+                                                                    (Prims.of_int (80))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (94))
                                                                     (Prims.of_int (55)))))
@@ -371,15 +371,15 @@ let (check_elim_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (79))
+                                                                    (Prims.of_int (80))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (82))
+                                                                    (Prims.of_int (83))
                                                                     (Prims.of_int (33)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (82))
+                                                                    (Prims.of_int (83))
                                                                     (Prims.of_int (34))
                                                                     (Prims.of_int (94))
                                                                     (Prims.of_int (55)))))
@@ -398,17 +398,17 @@ let (check_elim_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (81))
-                                                                    (Prims.of_int (9))
                                                                     (Prims.of_int (82))
+                                                                    (Prims.of_int (9))
+                                                                    (Prims.of_int (83))
                                                                     (Prims.of_int (33)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (80))
+                                                                    (Prims.of_int (81))
                                                                     (Prims.of_int (7))
-                                                                    (Prims.of_int (82))
+                                                                    (Prims.of_int (83))
                                                                     (Prims.of_int (33)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -416,9 +416,9 @@ let (check_elim_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (82))
+                                                                    (Prims.of_int (83))
                                                                     (Prims.of_int (12))
-                                                                    (Prims.of_int (82))
+                                                                    (Prims.of_int (83))
                                                                     (Prims.of_int (32)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -469,15 +469,15 @@ let (check_elim_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (84))
+                                                                    (Prims.of_int (85))
                                                                     (Prims.of_int (48))
-                                                                    (Prims.of_int (84))
+                                                                    (Prims.of_int (85))
                                                                     (Prims.of_int (50)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (82))
+                                                                    (Prims.of_int (83))
                                                                     (Prims.of_int (34))
                                                                     (Prims.of_int (94))
                                                                     (Prims.of_int (55)))))
@@ -509,15 +509,15 @@ let (check_elim_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (86))
+                                                                    (Prims.of_int (87))
                                                                     (Prims.of_int (28))
-                                                                    (Prims.of_int (86))
+                                                                    (Prims.of_int (87))
                                                                     (Prims.of_int (47)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (84))
+                                                                    (Prims.of_int (85))
                                                                     (Prims.of_int (53))
                                                                     (Prims.of_int (94))
                                                                     (Prims.of_int (55)))))
@@ -545,16 +545,16 @@ let (check_elim_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (88))
+                                                                    (Prims.of_int (89))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (88))
+                                                                    (Prims.of_int (89))
                                                                     (Prims.of_int (22)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
                                                                     (Prims.of_int (89))
-                                                                    (Prims.of_int (20))
+                                                                    (Prims.of_int (25))
                                                                     (Prims.of_int (91))
                                                                     (Prims.of_int (120)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
@@ -733,13 +733,13 @@ let (check_intro_exists :
                   (FStar_Sealed.seal
                      (Obj.magic
                         (FStar_Range.mk_range "Pulse.Checker.Exists.fst"
-                           (Prims.of_int (106)) (Prims.of_int (10))
-                           (Prims.of_int (106)) (Prims.of_int (82)))))
+                           (Prims.of_int (107)) (Prims.of_int (10))
+                           (Prims.of_int (107)) (Prims.of_int (82)))))
                   (FStar_Sealed.seal
                      (Obj.magic
                         (FStar_Range.mk_range "Pulse.Checker.Exists.fst"
-                           (Prims.of_int (106)) (Prims.of_int (85))
-                           (Prims.of_int (130)) (Prims.of_int (156)))))
+                           (Prims.of_int (107)) (Prims.of_int (85))
+                           (Prims.of_int (132)) (Prims.of_int (54)))))
                   (FStar_Tactics_Effect.lift_div_tac
                      (fun uu___ ->
                         Pulse_Typing_Env.push_context g
@@ -753,18 +753,18 @@ let (check_intro_exists :
                                 (Obj.magic
                                    (FStar_Range.mk_range
                                       "Pulse.Checker.Exists.fst"
-                                      (Prims.of_int (108))
+                                      (Prims.of_int (109))
                                       (Prims.of_int (52))
-                                      (Prims.of_int (108))
+                                      (Prims.of_int (109))
                                       (Prims.of_int (59)))))
                              (FStar_Sealed.seal
                                 (Obj.magic
                                    (FStar_Range.mk_range
                                       "Pulse.Checker.Exists.fst"
-                                      (Prims.of_int (106))
+                                      (Prims.of_int (107))
                                       (Prims.of_int (85))
-                                      (Prims.of_int (130))
-                                      (Prims.of_int (156)))))
+                                      (Prims.of_int (132))
+                                      (Prims.of_int (54)))))
                              (FStar_Tactics_Effect.lift_div_tac
                                 (fun uu___ -> st.Pulse_Syntax_Base.term1))
                              (fun uu___ ->
@@ -781,18 +781,18 @@ let (check_intro_exists :
                                                (Obj.magic
                                                   (FStar_Range.mk_range
                                                      "Pulse.Checker.Exists.fst"
-                                                     (Prims.of_int (110))
+                                                     (Prims.of_int (111))
                                                      (Prims.of_int (4))
-                                                     (Prims.of_int (112))
+                                                     (Prims.of_int (113))
                                                      (Prims.of_int (26)))))
                                             (FStar_Sealed.seal
                                                (Obj.magic
                                                   (FStar_Range.mk_range
                                                      "Pulse.Checker.Exists.fst"
-                                                     (Prims.of_int (108))
+                                                     (Prims.of_int (109))
                                                      (Prims.of_int (62))
-                                                     (Prims.of_int (130))
-                                                     (Prims.of_int (156)))))
+                                                     (Prims.of_int (132))
+                                                     (Prims.of_int (54)))))
                                             (match vprop_typing with
                                              | FStar_Pervasives_Native.Some
                                                  typing ->
@@ -818,18 +818,18 @@ let (check_intro_exists :
                                                               (Obj.magic
                                                                  (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (115))
+                                                                    (Prims.of_int (116))
                                                                     (Prims.of_int (11))
-                                                                    (Prims.of_int (115))
-                                                                    (Prims.of_int (35)))))
+                                                                    (Prims.of_int (116))
+                                                                    (Prims.of_int (25)))))
                                                            (FStar_Sealed.seal
                                                               (Obj.magic
                                                                  (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (116))
+                                                                    (Prims.of_int (117))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (130))
-                                                                    (Prims.of_int (156)))))
+                                                                    (Prims.of_int (132))
+                                                                    (Prims.of_int (54)))))
                                                            (FStar_Tactics_Effect.lift_div_tac
                                                               (fun uu___2 ->
                                                                  Pulse_Syntax_Pure.inspect_term
@@ -842,18 +842,18 @@ let (check_intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (116))
+                                                                    (Prims.of_int (117))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (119))
+                                                                    (Prims.of_int (120))
                                                                     (Prims.of_int (33)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (119))
+                                                                    (Prims.of_int (120))
                                                                     (Prims.of_int (34))
-                                                                    (Prims.of_int (130))
-                                                                    (Prims.of_int (156)))))
+                                                                    (Prims.of_int (132))
+                                                                    (Prims.of_int (54)))))
                                                                     (if
                                                                     Prims.op_Negation
                                                                     ((FStar_Pervasives_Native.uu___is_Some
@@ -869,17 +869,17 @@ let (check_intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (118))
-                                                                    (Prims.of_int (9))
                                                                     (Prims.of_int (119))
+                                                                    (Prims.of_int (9))
+                                                                    (Prims.of_int (120))
                                                                     (Prims.of_int (33)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (117))
+                                                                    (Prims.of_int (118))
                                                                     (Prims.of_int (7))
-                                                                    (Prims.of_int (119))
+                                                                    (Prims.of_int (120))
                                                                     (Prims.of_int (33)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -887,9 +887,9 @@ let (check_intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (119))
+                                                                    (Prims.of_int (120))
                                                                     (Prims.of_int (12))
-                                                                    (Prims.of_int (119))
+                                                                    (Prims.of_int (120))
                                                                     (Prims.of_int (32)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -940,18 +940,18 @@ let (check_intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (121))
+                                                                    (Prims.of_int (122))
                                                                     (Prims.of_int (33))
-                                                                    (Prims.of_int (121))
+                                                                    (Prims.of_int (122))
                                                                     (Prims.of_int (35)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
-                                                                    (Prims.of_int (119))
+                                                                    (Prims.of_int (120))
                                                                     (Prims.of_int (34))
-                                                                    (Prims.of_int (130))
-                                                                    (Prims.of_int (156)))))
+                                                                    (Prims.of_int (132))
+                                                                    (Prims.of_int (54)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___3 ->
@@ -982,9 +982,9 @@ let (check_intro_exists :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
                                                                     (Prims.of_int (124))
-                                                                    (Prims.of_int (15))
-                                                                    (Prims.of_int (130))
-                                                                    (Prims.of_int (156)))))
+                                                                    (Prims.of_int (47))
+                                                                    (Prims.of_int (132))
+                                                                    (Prims.of_int (54)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___4 ->
@@ -1020,8 +1020,8 @@ let (check_intro_exists :
                                                                     "Pulse.Checker.Exists.fst"
                                                                     (Prims.of_int (125))
                                                                     (Prims.of_int (95))
-                                                                    (Prims.of_int (130))
-                                                                    (Prims.of_int (156)))))
+                                                                    (Prims.of_int (132))
+                                                                    (Prims.of_int (54)))))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Pure.check_term
                                                                     g1
@@ -1055,8 +1055,8 @@ let (check_intro_exists :
                                                                     "Pulse.Checker.Exists.fst"
                                                                     (Prims.of_int (128))
                                                                     (Prims.of_int (76))
-                                                                    (Prims.of_int (130))
-                                                                    (Prims.of_int (156)))))
+                                                                    (Prims.of_int (132))
+                                                                    (Prims.of_int (54)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___7 ->
@@ -1085,8 +1085,8 @@ let (check_intro_exists :
                                                                     "Pulse.Checker.Exists.fst"
                                                                     (Prims.of_int (128))
                                                                     (Prims.of_int (76))
-                                                                    (Prims.of_int (130))
-                                                                    (Prims.of_int (156)))))
+                                                                    (Prims.of_int (132))
+                                                                    (Prims.of_int (54)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___7 ->
@@ -1113,16 +1113,16 @@ let (check_intro_exists :
                                                                     "Pulse.Checker.Exists.fst"
                                                                     (Prims.of_int (130))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (130))
-                                                                    (Prims.of_int (156)))))
+                                                                    (Prims.of_int (132))
+                                                                    (Prims.of_int (54)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
                                                                     (Prims.of_int (130))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (130))
-                                                                    (Prims.of_int (156)))))
+                                                                    (Prims.of_int (132))
+                                                                    (Prims.of_int (54)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___8 ->
@@ -1147,8 +1147,8 @@ let (check_intro_exists :
                                                                     "Pulse.Checker.Exists.fst"
                                                                     (Prims.of_int (130))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (130))
-                                                                    (Prims.of_int (156)))))
+                                                                    (Prims.of_int (132))
+                                                                    (Prims.of_int (54)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
