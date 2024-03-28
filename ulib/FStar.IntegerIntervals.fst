@@ -38,13 +38,13 @@ type interval_type (x y:int) = z : Type0{ z == t:int{interval_condition x y t} }
 type interval (x y: int) : interval_type x y = t:int{interval_condition x y t}
 
 (* general finite integer intervals *)
-type efrom_eto (x y: int) = interval (x+1) y
-type efrom_ito (x y: int) = interval (x+1) (y+1)
-type ifrom_eto (x y: int) = interval x y
-type ifrom_ito (x y: int) = interval x (y+1)
+type efrom_eto (x y: int) : interval_type _ _ = interval (x+1) y
+type efrom_ito (x y: int) : interval_type _ _ = interval (x+1) (y+1)
+type ifrom_eto (x y: int) : interval_type _ _ = interval x y
+type ifrom_ito (x y: int) : interval_type _ _ = interval x (y+1)
 
 (* Special case for naturals under k, to use in sequences, lists, arrays, etc *)
-type under (k: nat) = interval 0 k
+type under (k: nat) : interval_type 0 k = interval 0 k
 
 (* If we define our intervals this way, then the following lemma comes for free: *)
 private let closed_interval_lemma (x y:int) : Lemma (interval x (y+1) == ifrom_ito x y) = ()
@@ -55,7 +55,7 @@ let interval_size (#x #y: int) (interval: interval_type x y) : nat
   = if y >= x then y-x else 0
 
 (* when we want a zero-based index that runs over an interval, we use this *)
-type counter_for (#x #y:int) (interval: interval_type x y) = under (interval_size interval)
+type counter_for (#x #y:int) (interval: interval_type x y) : Type = under (interval_size interval)
 
 (* special case for closed intervals, used in FStar.Algebra.CommMonoid.Fold *)
 let closed_interval_size (x y: int) : nat = interval_size (ifrom_ito x y)

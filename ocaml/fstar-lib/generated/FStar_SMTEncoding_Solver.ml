@@ -3,16 +3,6 @@ exception SplitQueryAndRetry
 let (uu___is_SplitQueryAndRetry : Prims.exn -> Prims.bool) =
   fun projectee ->
     match projectee with | SplitQueryAndRetry -> true | uu___ -> false
-let (z3_replay_result : (unit * unit)) = ((), ())
-let z3_result_as_replay_result :
-  'uuuuu 'uuuuu1 'uuuuu2 .
-    ('uuuuu, ('uuuuu1 * 'uuuuu2)) FStar_Pervasives.either ->
-      ('uuuuu, 'uuuuu1) FStar_Pervasives.either
-  =
-  fun uu___ ->
-    match uu___ with
-    | FStar_Pervasives.Inl l -> FStar_Pervasives.Inl l
-    | FStar_Pervasives.Inr (r, uu___1) -> FStar_Pervasives.Inr r
 let (recorded_hints :
   FStar_Compiler_Hints.hints FStar_Pervasives_Native.option
     FStar_Compiler_Effect.ref)

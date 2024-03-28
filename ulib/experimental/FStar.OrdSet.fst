@@ -15,7 +15,7 @@
 *)
 module FStar.OrdSet
 
-type ordset a f = l:(list a){sorted f l}
+type ordset (a:eqtype) f = l:(list a){sorted f l}
 
 let hasEq_ordset _ _ = ()
     

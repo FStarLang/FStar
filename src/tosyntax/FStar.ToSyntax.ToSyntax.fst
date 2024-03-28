@@ -3050,7 +3050,7 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs:list S.term) quals tcs : (env_t
             | None ->
               if BU.for_some (function S.Effect -> true | _ -> false) quals
               then Some teff
-              else None
+              else Some ktype
             | Some k -> Some (desugar_term env' k) in
         let t0 = t in
         let quals = if quals |> BU.for_some (function S.Logic -> true | _ -> false)

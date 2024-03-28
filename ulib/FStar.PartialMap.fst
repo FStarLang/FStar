@@ -20,13 +20,13 @@ module FStar.PartialMap
 
 open FStar.FunctionalExtensionality
 
-type t k v = k ^-> option v
+type t (k:eqtype) ([@@@strictly_positive] v:Type u#a) = k ^-> option v
 
 let empty _ _ = on_dom _ (fun _ -> None)
 let literal f = on_dom _ (fun x -> f x)
 let sel m x = m x
-let upd m x y = on_dom _ (fun x1 -> if x1 = x then Some y else m x1)
-let remove m x = on_dom _ (fun x1 -> if x1 = x then None else m x1)
+let upd (#k:eqtype) #v m x y = on_dom _ (fun (x1:k) -> if x1 = x then Some y else m x1)
+let remove (#k:eqtype) m x = on_dom _ (fun (x1:k) -> if x1 = x then None else m x1)
 
 let sel_empty _ _ = ()
 let sel_literal _ _ = ()
