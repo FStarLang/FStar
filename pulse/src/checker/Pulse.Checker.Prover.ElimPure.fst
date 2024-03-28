@@ -96,7 +96,6 @@ let mk (#g:env) (#v:vprop) (v_typing:tot_typing g v tm_vprop)
                    st_typing g t c)) =
   match inspect_term v with
   | Some (Tm_Pure pp) ->
-    assume False;  // TODO
     let p_typing =
       Metatheory.pure_typing_inversion #g #(tm_fstar pp) v_typing in
     Some (| ppname_default,

@@ -193,7 +193,6 @@ let rec try_collect_substs (uvs:env) (t:term)
     begin
       match f with
       | RF.And rt0 rt1 ->
-        // assume (not_tv_unknown rt0 /\ not_tv_unknown rt1);
         let ss0 = try_collect_substs uvs (tm_fstar rt0 FStar.Range.range_0) in
         let ss1 = try_collect_substs uvs (tm_fstar rt1 FStar.Range.range_0) in
         if PS.check_disjoint ss0 ss1

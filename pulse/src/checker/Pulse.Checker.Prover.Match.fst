@@ -176,8 +176,7 @@ let refl_uvar (t:R.term) (uvs:env) : option var =
     if contains uvs n then Some n else None
   | _ -> None
 
-let is_uvar (t:term) (uvs:env) : option var =
-  refl_uvar t uvs
+let is_uvar (t:term) (uvs:env) : option var = refl_uvar t uvs
 
 
 let contains_uvar (t:term) (uvs:env) (g:env) : T.Tac bool =
@@ -245,27 +244,31 @@ let try_solve_uvars (g:env) (uvs:env { disjoint uvs g }) (p q:term)
     let q_names = freevars q in
     L.fold_left (fun (ss:(ss:PS.ss_t { PS.dom ss `Set.subset` freevars q })) (x, t) ->
       let nv_view = R.inspect_namedv x in
-      // let topt = readback_ty t in
-      // match topt with
-      // | Some t ->
-        if Set.mem nv_view.uniq q_names &&
-           not (Set.mem nv_view.uniq (PS.dom ss))
-        then begin
-          let ss_new = PS.push ss nv_view.uniq t in
-          assert (nv_view.uniq `Set.mem` freevars q);
-          assert (PS.dom ss `Set.subset` freevars q);
-          assume (PS.dom ss_new `Set.subset` freevars q);
-          ss_new
-        end
-        else ss
-      // | None -> ss
+      if Set.mem nv_view.uniq q_names &&
+         not (Set.mem nv_view.uniq (PS.dom ss))
+      then begin
+        let ss_new = PS.push ss nv_view.uniq t in
+        assert (nv_view.uniq `Set.mem` freevars q);
+        assert (PS.dom ss `Set.subset` freevars q);
+        assume (PS.dom ss_new `Set.subset` freevars q);
+        ss_new
+      end
+      else ss
     ) ss l
 
-let rec unascribe (t:term) : term =
-  match R.inspect_ln t with
-  | R.Tv_AscribedT t _ _ _
-  | R.Tv_AscribedC t _ _ _ -> unascribe t
-  | _ -> t
+let eq_tm_unascribe (g:env) (p q:term)
+  : option (RT.equiv (elab_env g) (elab_term p) (elab_term q)) =
+
+  let rec unascribe (t:term) : term =
+    match R.inspect_ln t with
+    | R.Tv_AscribedT t _ _ _
+    | R.Tv_AscribedC t _ _ _ -> unascribe t
+    | _ -> t
+  in
+
+  if eq_tm (unascribe p) (unascribe q)
+  then Some (RT.Rel_eq_token _ _ _ (magic ()))
+  else None
 
 let unify (g:env) (uvs:env { disjoint uvs g})
   (p q:term)
@@ -273,23 +276,19 @@ let unify (g:env) (uvs:env { disjoint uvs g})
            option (RT.equiv (elab_env g) (elab_term p) (elab_term ss.(q)))) =
 
   let ss = try_solve_uvars g uvs p q in
-  let q_ss = ss.(q) in  // readback_ty (elab_term ss.(q)) in
-  let q = q_ss in
-  // match q_ss with
-  // | None -> (| ss, None |)
-  // | Some q -> 
-    if eq_tm p q
-    then (| ss, Some (RT.Rel_refl _ _ _) |)
-    else if eq_tm (unascribe p) (unascribe q)
-    then let _ = assume False in (| ss, Some (RT.Rel_refl _ _ _) |)
-    else if contains_uvar q uvs g
+  let q = ss.(q) in
+  let is_eq = eq_tm_unascribe g p q in
+  match is_eq with
+  | Some eq -> (| ss, Some eq |)
+  | None ->
+    if contains_uvar q uvs g
     then (| ss, None |)
     else if eligible_for_smt_equality g p q
     then let v0 = elab_term p in
-        let v1 = elab_term q in
-        match check_equiv_now (elab_env g) v0 v1 with
-        | Some token, _ -> (| ss, Some (RT.Rel_eq_token _ _ _ (FStar.Squash.return_squash token)) |)
-        | None, _ -> (| ss, None |)
+         let v1 = elab_term q in
+         match check_equiv_now (elab_env g) v0 v1 with
+         | Some token, _ -> (| ss, Some (RT.Rel_eq_token _ _ _ (FStar.Squash.return_squash token)) |)
+         | None, _ -> (| ss, None |)
     else (| ss, None |)
 
 let try_match_pq (g:env) (uvs:env { disjoint uvs g}) (p q:vprop)
@@ -409,15 +408,6 @@ let rec match_q_aux (#preamble:_) (pst:prover_state preamble)
           (move_hd_end pst.pg pst.remaining_ctxt) in
       match_q_aux pst q unsolved' () (i+1)
 
-//
-// THIS SHOULD GO AWAY SOON
-//
-let ___canon___ (q:vprop) : Dv (r:vprop { r == q }) = q
-  // assume False;
-  // match Pulse.Readback.readback_ty (elab_term q) with
-  // | None -> q
-  // | Some q -> q
-
 let has_structure (q:vprop) : bool =
   match inspect_term q with
   | Some (Tm_Star _ _) -> true
@@ -431,7 +421,6 @@ let match_q (#preamble:preamble) (pst:prover_state preamble)
 : T.Tac (option (pst':prover_state preamble { pst' `pst_extends` pst })) =
 
 let q_ss = pst.ss.(q) in
-let q_ss = ___canon___ q_ss in
 
 if has_structure q_ss
 then begin

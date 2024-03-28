@@ -45,7 +45,6 @@ let mk (#g:env) (#v:vprop) (v_typing:tot_typing g v tm_vprop)
     let tm_typing : st_typing g _ c =
         T_ElimExists g (comp_u c) t p x (RU.magic()) (RU.magic())
     in
-    assume (comp_pre c == v);  // TODO
     Some (| nm, _, c, tm_typing |)
   | _ -> None
 
