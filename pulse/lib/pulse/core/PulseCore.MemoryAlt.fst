@@ -450,13 +450,13 @@ let invariant_of_one_cell (addr:nat) (e:inames) (l:istore u#a) : slprop u#a =
           (cell_pred_post c)
        | _ -> emp
 
-let rec istore_invariant_aux
-         (from:nat) (down_to:nat { down_to <= from})
-         (e:inames) (l:istore u#a) : slprop u#a =
-  invariant_of_one_cell from e l `star` 
-  (if from = down_to then emp else istore_invariant_aux (from - 1) down_to e l)
-
-let istore_invariant from e l = istore_invariant_aux from 0 e l
+let rec istore_invariant
+         (from:nat)
+         (e:inames) 
+         (l:istore u#a)
+: slprop u#a
+= invariant_of_one_cell from e l `star` 
+  (if from = 0 then emp else istore_invariant (from - 1) e l)
 
 let istore_evolves : FStar.Preorder.preorder istore =
   fun (l1 l2 : istore) ->
@@ -553,7 +553,11 @@ let star_assoc (p q r:slprop)
   = star_associative p q r;
     slprop_extensionality (p `star` (q `star` r)) ((p `star` q) `star` r)
 
-let emp_u (p:slprop) : Lemma (p == p `star` emp) = emp_unit p; slprop_extensionality p (p `star` emp)
+let emp_u (p:slprop)
+: Lemma (p == p `star` emp /\ emp `star` p == p)
+= emp_unit p;
+  star_comm p emp;
+  slprop_extensionality p (p `star` emp)
 
 let pqr_qpr (p q r:slprop)
   : Lemma (p `star` (q `star` r) == q `star` (p `star` r))
@@ -571,16 +575,15 @@ module T = FStar.Tactics
 
 let rec weaken_inames_istore_invariant
           (from:nat)
-          (down_to:nat{from >= down_to})
           (e:inames)
-          (e':inames { forall i. i `Set.mem` e' ==> from < i \/ i < down_to })
+          (e':inames { forall i. i `Set.mem` e' ==> from < i })
           (l:istore)
 : Lemma
-  (ensures istore_invariant_aux from down_to e l == istore_invariant_aux from down_to (Set.union e' e) l)
+  (ensures istore_invariant from e l == istore_invariant from (Set.union e' e) l)
   (decreases from)
-= if from = down_to
+= if from = 0
   then ()
-  else weaken_inames_istore_invariant (from - 1) down_to e e' l
+  else weaken_inames_istore_invariant (from - 1) e e' l
 
 let sl_pure_imp_elim (p:prop) (q: squash p -> slprop)
   : Lemma (p ==> sl_pure_imp p q == q ())
@@ -595,9 +598,7 @@ let rec move_invariant (e:inames) (l:istore) (p:slprop) (from:nat)
 = calc (==) {
     istore_invariant from e l;
     (==) {}
-    istore_invariant_aux from 0 e l;
-    (==) {}
-    invariant_of_one_cell from e l `star` (if from = 0 then emp else (istore_invariant_aux (from - 1) 0 e l));
+    invariant_of_one_cell from e l `star` (if from = 0 then emp else (istore_invariant (from - 1) e l));
   };
   if i = from
   then (
@@ -614,16 +615,16 @@ let rec move_invariant (e:inames) (l:istore) (p:slprop) (from:nat)
     )
     else (
       calc (==) {
-        istore_invariant_aux from 0 (set_add i e) l;
+        istore_invariant from (set_add i e) l;
       (==) {}
-        invariant_of_one_cell from (set_add i e) l `star` (istore_invariant_aux (from - 1) 0 (set_add i e) l);
+        invariant_of_one_cell from (set_add i e) l `star` (istore_invariant (from - 1) (set_add i e) l);
       (==) {}
-        emp `star` (istore_invariant_aux (from - 1) 0 (set_add i e) l);
-      (==) { star_comm emp (istore_invariant_aux (from - 1) 0 (set_add i e) l) }
-        istore_invariant_aux (from - 1) 0 (set_add i e) l `star` emp;
-      (==) { emp_u (istore_invariant_aux (from - 1) 0 (set_add i e) l)}
-        istore_invariant_aux (from - 1) 0 (set_add i e) l;
-      (==) { weaken_inames_istore_invariant (from - 1) 0 e (Set.singleton i) l }
+        emp `star` (istore_invariant (from - 1) (set_add i e) l);
+      (==) { star_comm emp (istore_invariant (from - 1) (set_add i e) l) }
+        istore_invariant (from - 1) (set_add i e) l `star` emp;
+      (==) { emp_u (istore_invariant (from - 1) (set_add i e) l)}
+        istore_invariant (from - 1) (set_add i e) l;
+      (==) { weaken_inames_istore_invariant (from - 1) e (Set.singleton i) l }
         istore_invariant (from - 1) e l;
       }
     )
@@ -633,11 +634,11 @@ let rec move_invariant (e:inames) (l:istore) (p:slprop) (from:nat)
     calc (==) {
       istore_invariant from e l;
     (==) {}
-      invariant_of_one_cell from e l `star` (p `star` istore_invariant_aux (from - 1) 0 (set_add i e) l);
+      invariant_of_one_cell from e l `star` (p `star` istore_invariant (from - 1) (set_add i e) l);
     (==) { _ by (T.mapply (`pqr_qpr))}
-      p `star` (invariant_of_one_cell from e l `star` istore_invariant_aux (from - 1) 0 (set_add i e) l);
+      p `star` (invariant_of_one_cell from e l `star` istore_invariant (from - 1) (set_add i e) l);
     (==) { }
-      p `star` (invariant_of_one_cell from (set_add i e) l `star` istore_invariant_aux (from - 1) 0 (set_add i e) l);
+      p `star` (invariant_of_one_cell from (set_add i e) l `star` istore_invariant (from - 1) (set_add i e) l);
     }
   )
 
@@ -810,6 +811,82 @@ let mem_evolves_iff (h0 h1:full_mem)
             (H2.heap_evolves h0.iheap.concrete h1.iheap.concrete /\ istore_evolves h0.iheap.invariants h1.iheap.invariants))
       by (FStar.Tactics.norm [delta_only [`%mem_evolves]])
 
+let big_star_congruence (p:slprop { is_big p }) (q:slprop { is_big q })
+  : Lemma (is_big (p `star` q))
+  = admit()
+
+#push-options "--fuel 1"
+let sl_pure_imp_big (p:prop) (q: squash p -> slprop)
+: Lemma
+  (requires p ==> is_big (q ()))
+  (ensures is_big (sl_pure_imp p q))
+= eliminate p \/ ~p
+  returns is_big (sl_pure_imp p q)
+  with _ . (
+    assert (forall h. sl_pure_imp p q h <==> q () h);
+    slprop_extensionality (sl_pure_imp p q) (q ())
+  )
+  and _ . (
+    introduce forall h. emp h
+    with ( admit () ); 
+    assert (forall h. sl_pure_imp p q h <==> emp h);
+    slprop_extensionality (sl_pure_imp p q) emp
+  )
+
+let invariant_of_one_cell_is_big (from:nat) (e:inames) (i:istore)
+: Lemma (is_big (invariant_of_one_cell from e i))
+= if from `S.mem` e then ()
+  else match sel from i with
+       | None -> ()
+       | Some c ->
+         introduce cell_pred_pre c ==> is_big (cell_pred_post c ())
+         with _ . (
+            let Ref _ _ _ v = c in
+            let v : PA.agreement H2.slprop = v in
+            match v with
+            | None -> ()
+            | Some p -> ()
+         );
+         sl_pure_imp_big (cell_pred_pre c) (cell_pred_post c)
+
+let rec istore_invariant_is_big (from:nat) (e:inames) (i:istore)
+: Lemma (is_big (istore_invariant from e i))
+= invariant_of_one_cell_is_big from e i;
+  if from = 0
+  then (
+    emp_u (invariant_of_one_cell from e i)
+  )
+  else (
+    istore_invariant_is_big (from - 1) e i;
+    big_star_congruence (invariant_of_one_cell from e i) (istore_invariant (from - 1) e i)
+  )
+#pop-options
+
+let mem_invariant_is_big (e:inames) (m:mem)
+: Lemma (is_big (mem_invariant e m))
+= istore_invariant_is_big m.iname_ctr e m.iheap.invariants;
+  big_star_congruence
+    (istore_invariant m.iname_ctr e m.iheap.invariants)
+    (ctr_validity m.ctr m.ghost_ctr m.iname_ctr m.iheap)
+  
+let big_slprop_depends_only_on_concrete
+    (p:slprop { is_big p })
+    (m0 m1:mem)
+  : Lemma 
+    (requires interp p m0 /\ m0.iheap.concrete == m1.iheap.concrete)
+    (ensures interp p m1)
+  = ()
+
+let big_inv_star (p:H0.slprop) (q:slprop { is_big q })  (m:mem)
+: Lemma 
+  (requires interp (lift_h0 p) m /\ interp q m)
+  (ensures interp (lift_h0 p `star` q) m)
+= let ml = { m with iheap={m.iheap with concrete = H2.empty_heap }} in
+  let mr = { m with iheap={m.iheap with invariants = H0.empty_heap }} in
+  assert (interp (lift_h0 p) ml);
+  assert (interp q mr);
+  assert (disjoint ml mr)
+
 #push-options "--split_queries no --z3rlimit_factor 2"           
 let new_invariant_pre_action (e:inames) (p:slprop { is_big p })
 : refined_pre_action true e p iname_ref (fun i -> iname_ref_pts_to i p)
@@ -844,15 +921,20 @@ let new_invariant_pre_action (e:inames) (p:slprop { is_big p })
     assert (istore_invariant m1.iname_ctr e m1.iheap.invariants ==
             p `star` istore_invariant m0.iname_ctr e m0.iheap.invariants);
     assert (interp (istore_invariant m1.iname_ctr e m1.iheap.invariants) m0);
+    istore_invariant_is_big m1.iname_ctr e m1.iheap.invariants;
+    big_slprop_depends_only_on_concrete p m0 m1;
     (* istore_invariants is a lifting of a conjunction of ups; so, since m0.iheap.concrete didn't change, this should hold *)
-    assume (interp (istore_invariant m1.iname_ctr e m1.iheap.invariants) m1);
+    assert (interp (istore_invariant m1.iname_ctr e m1.iheap.invariants) m1);
     intro_pure_star
       (istore_invariant m1.iname_ctr e m1.iheap.invariants)
       (heap_ctr_valid m1.ctr m1.ghost_ctr m1.iname_ctr m1.iheap)
       m1;
     assert (interp (mem_invariant e m1) m1);
     assert (H0.interp (H0.pts_to x (Some (down p))) m1.iheap.invariants);
-    assume (interp (iname_ref_pts_to x p `star` mem_invariant e m1) m1);
+    assert (interp (iname_ref_pts_to x p) m1);
+    mem_invariant_is_big e m1;
+    big_inv_star (H0.pts_to x (Some (down p))) (mem_invariant e m1) m1;
+    assert (interp (iname_ref_pts_to x p `star` mem_invariant e m1) m1);
     assume (inames_ok e m1);
     let res : (x:iname_ref & hmem_with_inv_except e (iname_ref_pts_to x p)) = (| x, m1 |) in
     assert (maybe_ghost_action true m0 m1);
@@ -939,8 +1021,8 @@ let new_invariant_pre_action (e:inames) (p:slprop { is_big p })
     res
   
 
-let new_invariant' (e:inames) (p:slprop)
-: pst_ghost_action_except iname e p (fun i -> i -~- p)
+let new_invariant' (e:inames) (p:slprop { is_big p })
+: pst_ghost_action_except iname_ref e p (fun i -> iname_ref_pts_to i p)
 = lift_tot_action (refined_pre_action_as_action (new_invariant_pre_action e p))
 
 let new_invariant_tot_action (e:inames) (p:slprop) (m0:hmem_with_inv_except e p{ e `inames_in` m0.locks })
