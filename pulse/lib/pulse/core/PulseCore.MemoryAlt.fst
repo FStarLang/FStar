@@ -792,6 +792,25 @@ let intro_star (p q:slprop) (m0 m1:mem)
 = ()
 #restart-solver
 
+let h0_emp_unit (p:H0.slprop)
+  : Lemma (H0.( emp `star` p == p `star` emp /\ p `star` emp == p))
+  = admit()
+
+let h0_of_as_slprop (p:H0.a_heap_prop) (h:H0.heap)
+  : Lemma (h0_of_slprop (H0.as_slprop p) h <==> p h)
+  = ()
+
+let mem_evolves_iff (h0 h1:full_mem)
+: Lemma 
+  (ensures
+     mem_evolves h0 h1 <==> (
+      H2.heap_evolves h0.iheap.concrete h1.iheap.concrete /\
+      istore_evolves h0.iheap.invariants h1.iheap.invariants))
+= assert (mem_evolves h0 h1 <==> 
+            (H2.heap_evolves h0.iheap.concrete h1.iheap.concrete /\ istore_evolves h0.iheap.invariants h1.iheap.invariants))
+      by (FStar.Tactics.norm [delta_only [`%mem_evolves]])
+
+#push-options "--split_queries no --z3rlimit_factor 2"           
 let new_invariant_pre_action (e:inames) (p:slprop { is_big p })
 : refined_pre_action true e p iname_ref (fun i -> iname_ref_pts_to i p)
 = fun (m0:hmem_with_inv_except e p) ->
@@ -810,9 +829,9 @@ let new_invariant_pre_action (e:inames) (p:slprop { is_big p })
     let x : iname_ref = dfst res in
     let inv1 : raw_inv_store (* erased (H0.full_hheap (H0.pts_to x (Some (down p)))) *) = dsnd res in
     (* Need a lemma about extend from H0 *)
-    assume (forall i. i < iname ==> sel i m0.iheap.invariants == sel i inv1);
-    assume (sel iname inv1 == Some (Ref _ (PA.pcm_agreement #H2.slprop) Frac.full_perm (Some (down p))));
-    assume (forall i. i > iname ==> sel i inv1 == None);
+    // assume (forall i. i < iname ==> sel i m0.iheap.invariants == sel i inv1);
+    // assume (sel iname inv1 == Some (Ref _ (PA.pcm_agreement #H2.slprop) Frac.full_perm (Some (down p))));
+    // assume (forall i. i > iname ==> sel i inv1 == None);
     // assert (inv_store_has_only_invs (reveal inv1));
     let iheap1 = { m0.iheap with invariants = inv1 } in
     let m1 = { m0 with iname_ctr = iname + 1; iheap = iheap1 } in
@@ -847,13 +866,26 @@ let new_invariant_pre_action (e:inames) (p:slprop { is_big p })
           fun (i:H0.heap) ->
             interp ((p `star` frame) `star` mem_invariant e m0)
                    {m0 with iheap={m0.iheap with invariants=i}} in
-        (* todo: proof of affinity *)
-        assume (H0.heap_prop_is_affine pick_frame);
+        (* proof of affinity *)
+        let _ = 
+          introduce forall h0 h1.
+              pick_frame h0 /\ H0.disjoint h0 h1
+              ==> pick_frame (H0.join h0 h1)
+          with (
+            introduce _ ==> _
+            with _ . (
+                let left = { m0.iheap with invariants = h0 } in
+                let right = { concrete=H2.empty_heap; invariants = h1} in
+                assert (idisjoint left right)
+            )
+          )
+        in
+        assert (H0.heap_prop_is_affine pick_frame);
         assert (pick_frame m0.iheap.invariants);
         let frm : H0.slprop = H0.as_slprop pick_frame in
         assert(H0.interp frm m0.iheap.invariants);
-        (* easy, intro emp *)
-        assume (H0.interp (H0.emp `H0.star` frm) m0.iheap.invariants);
+        h0_emp_unit frm;
+        assert (H0.interp (H0.emp `H0.star` frm) m0.iheap.invariants);
         let inv0 : H0.full_hheap (H0.emp `H0.star` frm) = m0.iheap.invariants in
         H0.action_framing 
           (H0.extend #_ #(PA.pcm_agreement) (Some (down p)) iname)
@@ -881,12 +913,15 @@ let new_invariant_pre_action (e:inames) (p:slprop { is_big p })
           with _ . (
             assert 
               (h0_of_slprop (H0.as_slprop pick_frame) h1_1.invariants);
-            assume (pick_frame h1_1.invariants);
+            h0_of_as_slprop pick_frame h1_1.invariants;
+            assert (pick_frame h1_1.invariants);
             let m1_0 = { m1 with iheap = { concrete = H2.empty_heap; invariants = h1_0.invariants } } in
             assert (interp (iname_ref_pts_to x p) m1_0);
             let m1_1 = { m1 with iheap = {m1.iheap with invariants=h1_1.invariants}} in
-            assert (interp ((p `star` frame) `star` mem_invariant e m0) m1_1); 
-            assume ((p `star` frame) `star` mem_invariant e m0 ==
+            assert (interp ((p `star` frame) `star` mem_invariant e m0) m1_1);
+            star_assoc p frame (mem_invariant e m0);
+            pqr_qpr p frame (mem_invariant e m0);
+            assert ((p `star` frame) `star` mem_invariant e m0 ==
                     frame `star` (p `star` mem_invariant e m0));
             assume (p `star` mem_invariant e m0 == mem_invariant e m1);
             assert (interp (frame `star` mem_invariant e m1) m1_1);
@@ -898,7 +933,7 @@ let new_invariant_pre_action (e:inames) (p:slprop { is_big p })
           );
         assert (H2.heap_evolves m0.iheap.concrete m1.iheap.concrete);
         assume (istore_evolves m0.iheap.invariants m1.iheap.invariants);
-        assume (mem_evolves m0 m1)
+        mem_evolves_iff m0 m1
     in
     assert (frame_related_mems p (iname_ref_pts_to x p) e m0 m1);
     res
