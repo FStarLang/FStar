@@ -91,7 +91,9 @@ let check_core
 
   assume (open_term (close_term post_opened x) x == post_opened);
   let d = T_Admit _ _ c (STC _ s x t_typing pre_typing post_typing) in
-  prove_post_hint (try_frame_pre pre_typing (match_comp_res_with_post_hint d post_hint) res_ppname) post_hint (Pulse.RuntimeUtils.range_of_term t)
+  prove_post_hint (try_frame_pre pre_typing (match_comp_res_with_post_hint d post_hint) res_ppname)
+                  post_hint
+                  (Pulse.RuntimeUtils.range_of_term t)
 
 let check
     (g:env)

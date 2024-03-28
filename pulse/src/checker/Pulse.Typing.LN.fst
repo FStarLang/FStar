@@ -1070,6 +1070,19 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
     (ensures ln_st t /\ ln_c c)
     (decreases d)
   = match d with
+    | T_Frame _ _ c frame df dc ->
+      tot_or_ghost_typing_ln df;
+      st_typing_ln dc;
+      assert (ln' (comp_post c) 0);
+      assert (ln' frame 0);
+      assert (ln' (tm_star (comp_post c) frame) 0)
+
+    | T_IntroPure _ p t _ ->
+      tot_or_ghost_typing_ln t;
+      assert (ln p);
+      assert (ln' p 0);
+      assert (ln' (tm_pure p) 0)
+
     | T_Abs _g x _q ty _u body c dt db ->
       tot_or_ghost_typing_ln dt;
       st_typing_ln db;
@@ -1131,13 +1144,6 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
     | T_Match _ _ _ sc _ scd c _ _ _ _ ->
       tot_or_ghost_typing_ln scd;
       admit ()
-
-    | T_Frame _ _ _ _ df dc ->
-      tot_or_ghost_typing_ln df;
-      st_typing_ln dc
-
-    | T_IntroPure _ _ t _ ->
-      tot_or_ghost_typing_ln t
 
     | T_ElimExists _ u t p x dt dv ->
       tot_or_ghost_typing_ln dt;
@@ -1212,5 +1218,4 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
 
     | T_WithInv _ _ _ _ _ _ _ _ _ ->
       admit() // IOU
-
 #pop-options

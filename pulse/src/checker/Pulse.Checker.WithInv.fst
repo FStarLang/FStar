@@ -171,7 +171,19 @@ let add_remove_inverse (g:env)
       
   | Some tok -> tok
 
-#push-options "--z3rlimit_factor 4 --split_queries no"
+module R = FStar.Reflection.V2
+
+#push-options "--warn_error -271"
+let tm_star_inj (p1 p2 q:term)
+  : Lemma (requires tm_star p1 q == tm_star p2 q)
+          (ensures p1 == p2) =
+  let aux tv
+    : Lemma (ensures R.inspect_ln (R.pack_ln tv) == tv)
+            [SMTPat ()] = R.inspect_pack_inv tv in
+  ()
+#pop-options
+
+#push-options "--z3rlimit_factor 8 --split_queries no"
 let check
   (g:env)
   (pre:term)
@@ -300,6 +312,9 @@ let check
     let C_STAtomic inames obs st = c_body in
     assert (inames == opens_remove_i);
     let c_out = C_STAtomic inames obs (st_comp_remove_inv inv_p st) in
+    assert (tm_star (comp_pre c_out) inv_p == pre');
+    tm_star_inj (comp_pre c_out) pre inv_p;
+    assert (comp_pre c_out == pre);
     assert (add_inv c_out inv_p == c_body);
     let tok = disjointness_remove_i_i g inv_p opens inv_tm in
     let tm : st_term =
@@ -310,6 +325,7 @@ let check
       
     let d = T_WithInv g inv_tm inv_p inv_p_typing inv_tm_typing body c_out body_typing tok in
     let c_out = add_iname_at_least_unobservable c_out inv_p inv_tm in
+    let d : st_typing _ _ c_out = d in
     match post.effect_annot with
     | EffectAnnotAtomic _ -> 
       let C_STAtomic add_inv obs' st = c_out in
@@ -319,10 +335,12 @@ let check
             opens_typing
             inv_tm_typing
       in
-      let d = T_Sub _ _ _ _ d (STS_AtomicInvs _ st _ _ obs' obs' tok) in
+      let c_out = C_STAtomic opens obs' st in
+      let d : st_typing _ _ c_out =
+        T_Sub _ _ _ _ d (STS_AtomicInvs _ st add_inv opens obs' obs' tok) in
       checker_result_for_st_typing (| tm, _, d |) res_ppname
     | EffectAnnotSTT ->
-      let d = T_Lift _ _ _ _ d (Lift_STAtomic_ST _ c_out) in      
+      let d = T_Lift _ _ _ _ d (Lift_STAtomic_ST _ c_out) in
       checker_result_for_st_typing (| tm, _, d |) res_ppname
     end
 #pop-options

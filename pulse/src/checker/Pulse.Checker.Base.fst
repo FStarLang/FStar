@@ -358,7 +358,7 @@ let k_elab_equiv
     k_elab_equiv_prefix k d1 in
   k
 
-#push-options "--query_stats --fuel 2 --ifuel 2 --split_queries no --z3rlimit_factor 20"
+#push-options "--query_stats --fuel 3 --ifuel 2 --split_queries no --z3rlimit_factor 20"
 open Pulse.PP
 let continuation_elaborator_with_bind (#g:env) (ctxt:term)
   (#c1:comp{stateful_comp c1})

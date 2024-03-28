@@ -45,7 +45,7 @@ let is_view_of (tv:term_view) (t:term) : prop =
     t == tm_inv p /\
     p << t
   | Tm_Unknown -> t == tm_unknown
-  | Tm_AddInv _ _ -> True
+  | Tm_AddInv i is -> True
 
 val readback_ty (t:R.term)
   : (r:option term_view { Some? r ==> Some?.v r `is_view_of` t })

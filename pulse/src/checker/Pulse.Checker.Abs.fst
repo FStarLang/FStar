@@ -68,7 +68,8 @@ let rec arrow_of_abs (env:_) (prog:st_term { Tm_Abs? prog.term })
         let arr, body = arrow_of_abs env body in
         let arr = close_term arr x in
         let body = close_st_term body x in
-        let ty : term = tm_fstar (tm_arrow b q (C_Tot arr)) (RU.union_ranges (RU.range_of_term b.binder_ty) (RU.range_of_term arr)) in
+        let ty : term = tm_fstar (tm_arrow b q (C_Tot arr))
+                                 (RU.union_ranges (RU.range_of_term b.binder_ty) (RU.range_of_term arr)) in
         let prog : st_term = { prog with term = Tm_Abs { b; q; ascription; body}} in
         ty, prog
 
@@ -76,24 +77,16 @@ let rec arrow_of_abs (env:_) (prog:st_term { Tm_Abs? prog.term })
         let c = open_comp_with c (U.term_of_nvar px) in
         match c with
         | C_Tot tannot -> (
-          let tannot' = RU.hnf_lax (elab_env env) (elab_term tannot) in
-          let t = tannot' in
-          // match Pulse.Readback.readback_ty tannot' with
-          // | None -> 
-          //   Env.fail 
-          //     env 
-          //     (Some prog.range) 
-          //     (Printf.sprintf "Unexpected type of abstraction, expected an arrow, got: %s"
-          //         (T.term_to_string tannot'))
-          // | Some t ->
-            //retain the original annotation, so that we check it wrt the inferred type in maybe_rewrite_body_typing
-            let t = close_term t x in
-            let annot = close_comp c x in
-            let ty : term = tm_fstar (tm_arrow b q (C_Tot t)) (RU.union_ranges (RU.range_of_term b.binder_ty) (RU.range_of_term t)) in
-            let ascription = { annotated = Some annot; elaborated = None } in
-            let body = close_st_term body x in
-            let prog : st_term = { prog with term = Tm_Abs { b; q; ascription; body} } in
-            ty, prog
+          let t = RU.hnf_lax (elab_env env) (elab_term tannot) in
+          //retain the original annotation, so that we check it wrt the inferred type in maybe_rewrite_body_typing
+          let t = close_term t x in
+          let annot = close_comp c x in
+          let ty : term = tm_fstar (tm_arrow b q (C_Tot t))
+                                   (RU.union_ranges (RU.range_of_term b.binder_ty) (RU.range_of_term t)) in
+          let ascription = { annotated = Some annot; elaborated = None } in
+          let body = close_st_term body x in
+          let prog : st_term = { prog with term = Tm_Abs { b; q; ascription; body} } in
+          ty, prog
         )
 
         | _ ->
@@ -190,15 +183,9 @@ let preprocess_abs
   = let annot, t = arrow_of_abs g t in
     debug_abs g (fun _ -> Printf.sprintf "arrow_of_abs = %s\n" (P.term_to_string annot));
     let annot, _ = Pulse.Checker.Pure.instantiate_term_implicits g annot in
-    // match annot.t with
-    // | Tm_FStar annot ->
-      let abs = rebuild_abs g t annot in
-      debug_abs g (fun _ -> Printf.sprintf "rebuild_abs = %s\n" (P.st_term_to_string abs));
-      abs
-    // | _ ->
-    //   Env.fail g (Some t.range) 
-    //              (Printf.sprintf "Expected an arrow type as an annotation, got %s"
-    //                       (P.term_to_string annot))
+    let abs = rebuild_abs g t annot in
+    debug_abs g (fun _ -> Printf.sprintf "rebuild_abs = %s\n" (P.st_term_to_string abs));
+    abs
 
 let sub_effect_comp g r (asc:comp_ascription) (c_computed:comp) : T.Tac (option (c2:comp & lift_comp g c_computed c2)) =
   let nop = None in
