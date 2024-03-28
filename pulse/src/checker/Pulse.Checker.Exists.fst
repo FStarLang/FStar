@@ -94,6 +94,7 @@ let check_elim_exists
             (P.univ_to_string u') (P.univ_to_string u))
 #pop-options
 
+#push-options "--z3rlimit_factor 2 --fuel 2 --ifuel 1"
 let check_intro_exists
   (g:env)
   (pre:term)
@@ -130,3 +131,4 @@ let check_intro_exists
   prove_post_hint (try_frame_pre pre_typing (match_comp_res_with_post_hint d post_hint) res_ppname)
                   post_hint
                   (Pulse.RuntimeUtils.range_of_term t)
+#pop-options
