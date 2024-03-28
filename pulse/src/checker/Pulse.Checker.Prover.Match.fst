@@ -266,6 +266,11 @@ let eq_tm_unascribe (g:env) (p q:term)
     | _ -> t
   in
 
+  //
+  // We are using magic () here to construct the token
+  // But we could use call the F* unifier here, in some restricted
+  //   setting (no delta, no smt), and have it return us the token
+  //
   if eq_tm (unascribe p) (unascribe q)
   then Some (RT.Rel_eq_token _ _ _ (magic ()))
   else None
