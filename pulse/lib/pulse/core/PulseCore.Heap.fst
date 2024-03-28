@@ -22,16 +22,6 @@ module PP = PulseCore.Preorder
 
 #set-options "--fuel 1 --ifuel 1"
 
-// In the future, we may have other cases of cells
-// for arrays and structs
-noeq
-type cell : Type u#(a + 1) =
-  | Ref : a:Type u#a ->
-          p:pcm a ->
-          frac:Frac.perm{ frac `Frac.lesser_equal_perm` Frac.full_perm } ->
-          v:a { frac == Frac.full_perm ==> p.refine v } ->
-          cell
-
 let addr = nat
 
 /// This is just the core of a memory, about which one can write
@@ -39,7 +29,11 @@ let addr = nat
 /// with a freshness counter, a lock store etc.
 let heap : Type u#(a + 1) = addr ^-> option (cell u#a)
 
+let select i h = h i
+
 let empty_heap : heap = F.on _ (fun _ -> None)
+
+let sel_empty i = ()
 
 let contains_addr (m:heap) (a:addr)
   : bool

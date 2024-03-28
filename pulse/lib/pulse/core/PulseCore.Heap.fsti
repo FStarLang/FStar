@@ -16,6 +16,7 @@
 module PulseCore.Heap
 open FStar.Ghost
 open FStar.PCM
+module Frac = PulseCore.FractionalPermission
 
 /// This module defines the behavior of a structured heap where each memory cell is governed by
 /// a partial commutative monoid. This PCM structure is reused for the entire heap as it is possible
@@ -33,14 +34,29 @@ open FStar.PCM
 
 (**** The base : partial heaps *)
 
+(** [sel] is a ghost read of the value contained in a heap reference *)
+noeq
+type cell : Type u#(a + 1) =
+  | Ref : a:Type u#a ->
+          p:pcm a ->
+          frac:Frac.perm{ frac `Frac.lesser_equal_perm` Frac.full_perm } ->
+          v:a { frac == Frac.full_perm ==> p.refine v } ->
+          cell
+
 (**
   Abstract type of heaps. Can conceptually be thought of as a map from addresses to
   contents of memory cells.
 *)
 val heap  : Type u#(a + 1)
 
+val select (i:nat) (m:heap u#a) : option (cell u#a)
+
 (* An empty heap *)
 val empty_heap : heap u#a
+
+val sel_empty (i:nat)
+  : Lemma 
+    (ensures select i empty_heap == None)
 
 (** A [core_ref] is a key into the [heap] or [null] *)
 val core_ref : Type u#0
