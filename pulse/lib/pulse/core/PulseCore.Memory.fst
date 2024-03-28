@@ -533,28 +533,11 @@ let mem_evolves =
     m0.ctr <= m1.ctr /\
     lock_store_evolves m0.locks m1.locks
 
-
-(** A memory predicate that depends only on fp *)
-let mprop (fp:slprop u#a) =
-  q:(mem u#a -> prop){
-    forall (m0:mem{interp fp m0}) (m1:mem{disjoint m0 m1}).
-      q m0 <==> q (join m0 m1)}
-
-let mprop2 (#a:Type u#b) (fp_pre:slprop u#a) (fp_post:a -> slprop u#a) =
-  q:(mem u#a -> a -> mem u#a -> prop){
-    // can join any disjoint mem to the pre-mem and q is still valid
-    (forall (x:a) (m0:mem{interp fp_pre m0}) (m_post:mem{interp (fp_post x) m_post}) (m1:mem{disjoint m0 m1}).
-      q m0 x m_post <==> q (join m0 m1) x m_post) /\
-    // can join any mem to the post-mem and q is still valid
-    (forall (x:a) (m_pre:mem{interp fp_pre m_pre}) (m0:mem{interp (fp_post x) m0}) (m1:mem{disjoint m0 m1}).
-      q m_pre x m0 <==> q m_pre x (join m0 m1))}
-
 (** See [Steel.Heap.is_frame_preserving]. We add in [lock_invariants] now *)
 let preserves_frame (e:inames) (pre post:slprop) (m0 m1:mem) =
   forall (frame:slprop).
     interp ((pre `star` frame) `star` locks_invariant e m0) m0 ==>
-    (interp ((post `star` frame) `star` locks_invariant e m1) m1 /\
-     (forall (f_frame:mprop frame). f_frame (core_mem m0) == f_frame (core_mem m1)))
+    (interp ((post `star` frame) `star` locks_invariant e m1) m1)
 
 (**
   This is a version of MstTot with frame quantified, as part of preserves_frame
@@ -667,18 +650,6 @@ let hmem_of_hheap #e (#fp0 #fp1:slprop) (m:hmem_with_inv_except e fp0)
 let with_inv_except (m:mem) e (fp:slprop) = interp (fp `star` locks_invariant e m) m
 
 #push-options "--warn_error -271"
-let as_hprop (frame:slprop) (mp:mprop frame)
-    : hp:H.hprop frame{forall m. mp (core_mem m) == hp (heap_of_mem m)}
-    = let f = fun h -> mp (mem_of_heap h) in
-      assert (forall m. mp (core_mem m) == f (heap_of_mem m));
-      let aux (m0:H.hheap frame) (m1:H.heap{H.disjoint m0 m1})
-        : Lemma
-          (ensures (mem_of_heap (H.join m0 m1) == join (mem_of_heap m0) (mem_of_heap m1)))
-          [SMTPat ()]
-        = ()
-      in
-      f
-
 let mg_of_mut (m:mutability) =
   match m with
   | MUTABLE -> false
@@ -717,8 +688,6 @@ let lift_heap_action (#fp:slprop) (#a:Type) (#fp':a -> slprop) (#mut:_)
         let h1' : H.hheap ((fp' x `star` frame) `star` linv e m0) = h1 in
         assert (m1 == hmem_of_hheap m0 h1');
         assert (with_inv_except m1 e (fp' x `star` frame));
-        // assert (forall (hp:H.hprop frame). hp h0 == hp h1);
-        // mprop_preservation_of_hprop_preservation frame m0 m1;
         ()
     in
     assert (is_frame_preserving g);
@@ -1070,8 +1039,7 @@ let new_invariant_tot_action (e:inames) (p:slprop) (m0:hmem_with_inv_except e p{
       : Lemma
         (requires interp ((p `star` frame) `star` linv e m0) m0)
         (ensures interp ((emp `star` frame) `star` linv e m1) m1 /\
-                 mem_evolves m0 m1 /\
-                 (forall (mp:mprop frame). mp (core_mem m0) <==> mp (core_mem m1)))
+                 mem_evolves m0 m1)
         [SMTPat (p `star` frame)]
       = assert (interp ((p `star` frame) `star` linv e m0) m1);
         calc (equiv) {
@@ -1274,8 +1242,7 @@ let preserves_frame_invariant (fp fp':slprop)
            (requires
              interp ((fp `star` frame) `star` linv opened_invariants m0) m0)
            (ensures
-             interp ((fp' `star` frame) `star` linv opened_invariants m1) m1 /\
-             (forall (f_frame:mprop frame). f_frame (core_mem m0) == f_frame (core_mem m1)))
+             interp ((fp' `star` frame) `star` linv opened_invariants m1) m1)
            [SMTPat()]
         = rearrange_invariant (fp `star` frame) (lock_store_invariant opened_invariants m0.locks) (ctr_validity m0.ctr m0.ghost_ctr (heap_of_mem m0))
                                                 p (lock_store_invariant (set_add (name_of_inv i) opened_invariants) m0.locks);
