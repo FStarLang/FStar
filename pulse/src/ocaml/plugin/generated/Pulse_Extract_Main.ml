@@ -475,7 +475,7 @@ let rec (extend_env_pat_core :
                                                                  (Prims.of_int (106))
                                                                  (Prims.of_int (15))
                                                                  (Prims.of_int (106))
-                                                                 (Prims.of_int (47)))))
+                                                                 (Prims.of_int (41)))))
                                                         (FStar_Sealed.seal
                                                            (Obj.magic
                                                               (FStar_Range.mk_range
@@ -486,7 +486,7 @@ let rec (extend_env_pat_core :
                                                                  (Prims.of_int (25)))))
                                                         (FStar_Tactics_Effect.lift_div_tac
                                                            (fun uu___ ->
-                                                              Pulse_Syntax_Base.tm_fstar
+                                                              Pulse_Syntax_Pure.wr
                                                                 ty
                                                                 (FStar_Reflection_V2_Builtins.range_of_term
                                                                    ty)))
@@ -626,7 +626,7 @@ let rec (extend_env_pat_core :
                                                                     mlident],
                                                                     [
                                                                     (x,
-                                                                    Pulse_Syntax_Base.tm_unknown)])))))
+                                                                    Pulse_Syntax_Pure.tm_unknown)])))))
                                                              uu___))) uu___)))
                                        uu___))) uu___)))
            | Pulse_Syntax_Base.Pat_Cons (f, pats) ->
@@ -805,8 +805,7 @@ let (extend_env_pat :
                     FStar_Tactics_Effect.raise
                       (Extraction_failure "Unexpected extraction of pattern")))
 let (unit_val : Pulse_Syntax_Base.term) =
-  Pulse_Syntax_Base.tm_fstar Pulse_Reflection_Util.unit_tm
-    FStar_Range.range_0
+  Pulse_Syntax_Pure.wr Pulse_Reflection_Util.unit_tm FStar_Range.range_0
 let (is_erasable :
   Pulse_Syntax_Base.st_term ->
     (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
@@ -1479,19 +1478,19 @@ let (maybe_inline :
                                                                (Prims.of_int (233))
                                                                (Prims.of_int (8))
                                                                (Prims.of_int (233))
-                                                               (Prims.of_int (32)))))
+                                                               (Prims.of_int (26)))))
                                                       (FStar_Sealed.seal
                                                          (Obj.magic
                                                             (FStar_Range.mk_range
                                                                "Pulse.Extract.Main.fst"
                                                                (Prims.of_int (233))
-                                                               (Prims.of_int (35))
+                                                               (Prims.of_int (29))
                                                                (Prims.of_int (300))
                                                                (Prims.of_int (46)))))
                                                       (FStar_Tactics_Effect.lift_div_tac
                                                          (fun uu___3 ->
                                                             fun a ->
-                                                              Pulse_Syntax_Base.tm_fstar
+                                                              Pulse_Syntax_Pure.wr
                                                                 a
                                                                 FStar_Range.range_0))
                                                       (fun uu___3 ->
@@ -1980,7 +1979,7 @@ let (maybe_inline :
                                                                     {
                                                                     Pulse_Syntax_Base.head
                                                                     =
-                                                                    (Pulse_Syntax_Base.tm_fstar
+                                                                    (Pulse_Syntax_Pure.wr
                                                                     head2
                                                                     (FStar_Reflection_V2_Builtins.range_of_term
                                                                     head2));
@@ -2024,7 +2023,7 @@ let (maybe_inline :
                                                                     uu___7 ->
                                                                     mk_st_app
                                                                     head2
-                                                                    (Pulse_Syntax_Base.tm_fstar
+                                                                    (Pulse_Syntax_Pure.wr
                                                                     arg1
                                                                     (FStar_Reflection_V2_Builtins.range_of_term
                                                                     arg1))
@@ -3579,7 +3578,7 @@ let rec (erase_ghost_subterms :
                                                       {
                                                         Pulse_Syntax_Base.expected_type
                                                           =
-                                                          Pulse_Syntax_Base.tm_unknown;
+                                                          Pulse_Syntax_Pure.tm_unknown;
                                                         Pulse_Syntax_Base.insert_eq
                                                           = false;
                                                         Pulse_Syntax_Base.term
@@ -6849,7 +6848,7 @@ let rec (generalize :
                                                                     [
                                                                     Pulse_Syntax_Naming.DT
                                                                     (Prims.int_zero,
-                                                                    (Pulse_Syntax_Base.tm_fstar
+                                                                    (Pulse_Syntax_Pure.wr
                                                                     xt
                                                                     FStar_Range.range_0))])),
                                                                     (b1.Pulse_Syntax_Base.binder_attrs))
@@ -6993,13 +6992,13 @@ let rec (generalize :
                                                                     (Prims.of_int (720))
                                                                     (Prims.of_int (13))
                                                                     (Prims.of_int (724))
-                                                                    (Prims.of_int (50)))))
+                                                                    (Prims.of_int (44)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
                                                                     (Prims.of_int (724))
-                                                                    (Prims.of_int (53))
+                                                                    (Prims.of_int (47))
                                                                     (Prims.of_int (728))
                                                                     (Prims.of_int (33)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
@@ -7011,7 +7010,7 @@ let rec (generalize :
                                                                     (Pulse_Syntax_Base.mk_ppname
                                                                     ppname
                                                                     FStar_Range.range_0)
-                                                                    (Pulse_Syntax_Base.tm_fstar
+                                                                    (Pulse_Syntax_Pure.wr
                                                                     sort
                                                                     FStar_Range.range_0)))
                                                                     (fun
@@ -7379,13 +7378,13 @@ let rec (extract_recursive :
                                         (Prims.of_int (783))
                                         (Prims.of_int (19))
                                         (Prims.of_int (783))
-                                        (Prims.of_int (106)))))
+                                        (Prims.of_int (100)))))
                                (FStar_Sealed.seal
                                   (Obj.magic
                                      (FStar_Range.mk_range
                                         "Pulse.Extract.Main.fst"
                                         (Prims.of_int (783))
-                                        (Prims.of_int (109))
+                                        (Prims.of_int (103))
                                         (Prims.of_int (785))
                                         (Prims.of_int (17)))))
                                (FStar_Tactics_Effect.lift_div_tac
@@ -7393,7 +7392,7 @@ let rec (extract_recursive :
                                      Pulse_Syntax_Naming.subst_st_term body
                                        [Pulse_Syntax_Naming.DT
                                           (Prims.int_zero,
-                                            (Pulse_Syntax_Base.tm_fstar
+                                            (Pulse_Syntax_Pure.wr
                                                (FStar_Reflection_V2_Builtins.pack_ln
                                                   (FStar_Reflection_V2_Data.Tv_FVar
                                                      rec_name))
@@ -7415,7 +7414,7 @@ let rec (extract_recursive :
                                                 (FStar_Range.mk_range
                                                    "Pulse.Extract.Main.fst"
                                                    (Prims.of_int (783))
-                                                   (Prims.of_int (109))
+                                                   (Prims.of_int (103))
                                                    (Prims.of_int (785))
                                                    (Prims.of_int (17)))))
                                           (Obj.magic (extract g body1))

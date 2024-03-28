@@ -275,7 +275,7 @@ let rec (arrow_of_abs :
                                                                     | 
                                                                     (arr,
                                                                     body2) ->
-                                                                    ((Pulse_Syntax_Base.tm_fstar
+                                                                    ((Pulse_Syntax_Pure.wr
                                                                     (Pulse_Syntax_Pure.tm_arrow
                                                                     b q
                                                                     (Pulse_Syntax_Base.C_Tot
@@ -352,7 +352,7 @@ let rec (arrow_of_abs :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___2 ->
-                                                                    ((Pulse_Syntax_Base.tm_fstar
+                                                                    ((Pulse_Syntax_Pure.wr
                                                                     (Pulse_Syntax_Pure.tm_arrow
                                                                     b q
                                                                     (Pulse_Syntax_Base.C_Tot
@@ -491,7 +491,7 @@ let rec (arrow_of_abs :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___3 ->
-                                                                    ((Pulse_Syntax_Base.tm_fstar
+                                                                    ((Pulse_Syntax_Pure.wr
                                                                     (Pulse_Syntax_Pure.tm_arrow
                                                                     b q c)
                                                                     (Pulse_RuntimeUtils.union_ranges
@@ -1441,7 +1441,7 @@ let sub_effect_comp :
                                    Pulse_Syntax_Base.C_STGhost uu___1) ->
                                     if
                                       Pulse_Syntax_Base.eq_tm i
-                                        Pulse_Syntax_Base.tm_emp_inames
+                                        Pulse_Syntax_Pure.tm_emp_inames
                                     then
                                       FStar_Pervasives_Native.Some
                                         (Prims.Mkdtuple2
@@ -3579,7 +3579,7 @@ let rec (check_abs_core :
                                                                     (Pulse_Syntax_Base.comp_inames
                                                                     c) px
                                                                     else
-                                                                    Pulse_Syntax_Base.tm_emp_inames),
+                                                                    Pulse_Syntax_Pure.tm_emp_inames),
                                                                     (FStar_Pervasives_Native.Some
                                                                     (Pulse_Syntax_Naming.open_term_nv
                                                                     (Pulse_Syntax_Base.comp_res

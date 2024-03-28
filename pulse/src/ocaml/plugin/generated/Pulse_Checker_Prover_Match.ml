@@ -119,10 +119,10 @@ let (eligible_for_smt_equality :
                                    (Pulse_Syntax_Pure.inspect_term t1))
                            with
                            | (FStar_Pervasives_Native.Some
-                              (Pulse_Syntax_Base.Tm_ForallSL
+                              (Pulse_Syntax_Pure.Tm_ForallSL
                               (uu___, uu___1, uu___2)),
                               FStar_Pervasives_Native.Some
-                              (Pulse_Syntax_Base.Tm_ForallSL
+                              (Pulse_Syntax_Pure.Tm_ForallSL
                               (uu___3, uu___4, uu___5))) ->
                                Obj.magic
                                  (Obj.repr
@@ -1566,7 +1566,7 @@ let rec (match_q_aux :
 let (has_structure : Pulse_Syntax_Base.vprop -> Prims.bool) =
   fun q ->
     match Pulse_Syntax_Pure.inspect_term q with
-    | FStar_Pervasives_Native.Some (Pulse_Syntax_Base.Tm_Star
+    | FStar_Pervasives_Native.Some (Pulse_Syntax_Pure.Tm_Star
         (uu___, uu___1)) -> true
     | uu___ -> false
 let (match_q :
@@ -1686,7 +1686,7 @@ let (match_q :
                                                          preamble_sub.Pulse_Checker_Prover_Base.frame)
                                                       (Pulse_Checker_Prover_Base.op_Array_Access
                                                          pst.Pulse_Checker_Prover_Base.ss
-                                                         Pulse_Syntax_Base.tm_emp))
+                                                         Pulse_Syntax_Pure.tm_emp))
                                                    (Pulse_Checker_Base.k_elab_unit
                                                       preamble_sub.Pulse_Checker_Prover_Base.g0
                                                       (Pulse_Checker_Prover_Base.op_Star
@@ -1736,7 +1736,7 @@ let (match_q :
                                                              FStar_Pervasives_Native.None;
                                                            Pulse_Checker_Prover_Base.solved
                                                              =
-                                                             Pulse_Syntax_Base.tm_emp;
+                                                             Pulse_Syntax_Pure.tm_emp;
                                                            Pulse_Checker_Prover_Base.unsolved
                                                              =
                                                              (Pulse_Typing_Combinators.vprop_as_list

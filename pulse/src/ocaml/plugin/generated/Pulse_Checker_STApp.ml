@@ -1256,7 +1256,7 @@ let (apply_impure_function :
                                                                     arg1)),
                                                                     (canonicalize_st_typing
                                                                     g
-                                                                    (Pulse_Typing.wr
+                                                                    (Pulse_Typing.wrst
                                                                     comp_typ
                                                                     (Pulse_Syntax_Base.Tm_STApp
                                                                     {
@@ -1314,7 +1314,7 @@ let (apply_impure_function :
                                                                     arg1)),
                                                                     (canonicalize_st_typing
                                                                     g
-                                                                    (Pulse_Typing.wr
+                                                                    (Pulse_Typing.wrst
                                                                     comp_typ
                                                                     (Pulse_Syntax_Base.Tm_STApp
                                                                     {
@@ -1574,7 +1574,7 @@ let (apply_impure_function :
                                                                     arg1)),
                                                                     (canonicalize_st_typing
                                                                     g
-                                                                    (Pulse_Typing.wr
+                                                                    (Pulse_Typing.wrst
                                                                     comp_typ
                                                                     (Pulse_Syntax_Base.Tm_STApp
                                                                     {

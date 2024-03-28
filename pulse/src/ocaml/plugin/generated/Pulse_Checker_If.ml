@@ -541,7 +541,7 @@ let (check :
                                                                     (fun
                                                                     uu___4 ->
                                                                     FStar_Pervasives.Mkdtuple3
-                                                                    ((Pulse_Typing.wr
+                                                                    ((Pulse_Typing.wrst
                                                                     c
                                                                     (Pulse_Syntax_Base.Tm_If
                                                                     {

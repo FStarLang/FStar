@@ -839,7 +839,7 @@ let (add_knot :
                                                                     (FStar_Pervasives_Native.None,
                                                                     (Pulse_Syntax_Base.mk_binder
                                                                     s rng1
-                                                                    (Pulse_Syntax_Base.tm_fstar
+                                                                    (Pulse_Syntax_Pure.wr
                                                                     r_ty rng1)),
                                                                     {
                                                                     Pulse_Syntax_Base.bv_index

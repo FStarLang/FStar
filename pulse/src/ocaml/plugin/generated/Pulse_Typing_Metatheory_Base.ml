@@ -33,7 +33,7 @@ let (inames_of_comp_st : Pulse_Syntax_Base.comp_st -> Pulse_Syntax_Base.term)
     match c with
     | Pulse_Syntax_Base.C_STAtomic (uu___, uu___1, uu___2) ->
         Pulse_Syntax_Base.comp_inames c
-    | uu___ -> Pulse_Syntax_Base.tm_emp_inames
+    | uu___ -> Pulse_Syntax_Pure.tm_emp_inames
 type ('g, 'c) iname_typing = unit
 let (st_typing_correctness :
   Pulse_Typing_Env.env ->

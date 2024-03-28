@@ -35,14 +35,14 @@ let (check_prop :
                             (Prims.of_int (41)) (Prims.of_int (30)))))
                    (Obj.magic
                       (Pulse_Checker_Pure.check_vprop g
-                         (Pulse_Syntax_Base.tm_pure p)))
+                         (Pulse_Syntax_Pure.tm_pure p)))
                    (fun uu___ ->
                       (fun uu___ ->
                          match uu___ with
                          | Prims.Mkdtuple2 (p1, p_typing) ->
                              (match Pulse_Syntax_Pure.inspect_term p1 with
                               | FStar_Pervasives_Native.Some
-                                  (Pulse_Syntax_Base.Tm_Pure pp) ->
+                                  (Pulse_Syntax_Pure.Tm_Pure pp) ->
                                   Obj.magic
                                     (Obj.repr
                                        (FStar_Tactics_Effect.lift_div_tac
@@ -132,7 +132,7 @@ let (check_prop :
                                                                  (Obj.magic
                                                                     (
                                                                     Pulse_Syntax_Printer.term_to_string
-                                                                    (Pulse_Syntax_Base.tm_pure
+                                                                    (Pulse_Syntax_Pure.tm_pure
                                                                     p0)))
                                                                  (fun uu___3
                                                                     ->

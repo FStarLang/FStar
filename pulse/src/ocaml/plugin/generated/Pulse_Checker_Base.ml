@@ -471,7 +471,7 @@ let (check_effect_annot :
                  (Obj.repr
                     (Pulse_Checker_Pure.core_check_term g opens
                        FStar_TypeChecker_Core.E_Total
-                       Pulse_Syntax_Base.tm_inames))) uu___1 uu___
+                       Pulse_Syntax_Pure.tm_inames))) uu___1 uu___
 let (intro_post_hint :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.effect_annot ->
@@ -515,7 +515,7 @@ let (intro_post_hint :
                           (fun uu___ ->
                              match ret_ty_opt with
                              | FStar_Pervasives_Native.None ->
-                                 Pulse_Syntax_Base.tm_fstar
+                                 Pulse_Syntax_Pure.wr
                                    FStar_Reflection_Typing.unit_ty
                                    FStar_Range.range_0
                              | FStar_Pervasives_Native.Some t -> t))
@@ -832,7 +832,7 @@ let (extend_post_hint :
                                      Pulse_Typing.u = (p.Pulse_Typing.u);
                                      Pulse_Typing.ty_typing = ();
                                      Pulse_Typing.post =
-                                       (Pulse_Syntax_Base.tm_star
+                                       (Pulse_Syntax_Pure.tm_star
                                           p.Pulse_Typing.post conjunct);
                                      Pulse_Typing.x =
                                        (Pulse_Typing_Env.fresh
@@ -1248,7 +1248,7 @@ let (k_elab_equiv_prefix :
                       (FStar_Tactics_Effect.lift_div_tac
                          (fun uu___ ->
                             FStar_Pervasives.Mkdtuple3
-                              (Pulse_Syntax_Base.tm_emp, (), ())))
+                              (Pulse_Syntax_Pure.tm_emp, (), ())))
                       (fun uu___ ->
                          (fun framing_token ->
                             Obj.magic
@@ -1335,7 +1335,7 @@ let (continuation_elaborator_with_bind :
                                     (fun uu___ ->
                                        match Pulse_Typing_Combinators.apply_frame
                                                g e1
-                                               (Pulse_Syntax_Base.tm_star
+                                               (Pulse_Syntax_Pure.tm_star
                                                   ctxt
                                                   (Pulse_Syntax_Base.comp_pre
                                                      c1)) () c1 e1_typing
@@ -1544,7 +1544,7 @@ let (continuation_elaborator_with_bind :
                                                                     (Obj.magic
                                                                     (Pulse_Typing_Combinators.mk_bind
                                                                     g1
-                                                                    (Pulse_Syntax_Base.tm_star
+                                                                    (Pulse_Syntax_Pure.tm_star
                                                                     ctxt
                                                                     (Pulse_Syntax_Base.comp_pre
                                                                     c1)) e1
@@ -1730,19 +1730,19 @@ let (continuation_elaborator_with_bind_fn :
                                                                     (Prims.of_int (507))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (507))
-                                                                    (Prims.of_int (63)))))
+                                                                    (Prims.of_int (65)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Base.fst"
                                                                     (Prims.of_int (507))
-                                                                    (Prims.of_int (66))
+                                                                    (Prims.of_int (68))
                                                                     (Prims.of_int (527))
                                                                     (Prims.of_int (18)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___4 ->
-                                                                    Pulse_Typing.wr
+                                                                    Pulse_Typing.wrst
                                                                     c2
                                                                     (Pulse_Syntax_Base.Tm_Bind
                                                                     {
@@ -1772,7 +1772,7 @@ let (continuation_elaborator_with_bind_fn :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Base.fst"
                                                                     (Prims.of_int (507))
-                                                                    (Prims.of_int (66))
+                                                                    (Prims.of_int (68))
                                                                     (Prims.of_int (527))
                                                                     (Prims.of_int (18)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
@@ -1884,7 +1884,7 @@ let (continuation_elaborator_with_bind_fn :
                                                                     (Pulse_Checker_Pure.core_check_term
                                                                     g i
                                                                     FStar_TypeChecker_Core.E_Total
-                                                                    Pulse_Syntax_Base.tm_inames))
+                                                                    Pulse_Syntax_Pure.tm_inames))
                                                                     (fun
                                                                     i_typing
                                                                     ->
@@ -1944,9 +1944,9 @@ let rec (check_equiv_emp :
   fun g ->
     fun vp ->
       match Pulse_Syntax_Pure.inspect_term vp with
-      | FStar_Pervasives_Native.Some (Pulse_Syntax_Base.Tm_Emp) ->
+      | FStar_Pervasives_Native.Some (Pulse_Syntax_Pure.Tm_Emp) ->
           FStar_Pervasives_Native.Some ()
-      | FStar_Pervasives_Native.Some (Pulse_Syntax_Base.Tm_Star (vp1, vp2))
+      | FStar_Pervasives_Native.Some (Pulse_Syntax_Pure.Tm_Star (vp1, vp2))
           ->
           (match ((check_equiv_emp g vp1), (check_equiv_emp g vp2)) with
            | (FStar_Pervasives_Native.Some d1, FStar_Pervasives_Native.Some
@@ -2018,7 +2018,7 @@ let (return_in_ctxt :
                           (Pulse_Syntax_Base.Tm_Return
                              {
                                Pulse_Syntax_Base.expected_type =
-                                 Pulse_Syntax_Base.tm_unknown;
+                                 Pulse_Syntax_Pure.tm_unknown;
                                Pulse_Syntax_Base.insert_eq = false;
                                Pulse_Syntax_Base.term = y_tm
                              }) in
@@ -2042,7 +2042,7 @@ let (return_in_ctxt :
                                  (Pulse_Typing.STS_AtomicInvs
                                     (g,
                                       (Pulse_Syntax_Base.st_comp_of_comp c),
-                                      Pulse_Syntax_Base.tm_emp_inames, opens,
+                                      Pulse_Syntax_Pure.tm_emp_inames, opens,
                                       obs, obs, ()))) in
                            FStar_Pervasives.Mkdtuple3
                              (t,
@@ -2591,7 +2591,7 @@ let (checker_result_for_st_typing :
                                                               (Obj.magic
                                                                  (continuation_elaborator_with_bind
                                                                     g
-                                                                    Pulse_Syntax_Base.tm_emp
+                                                                    Pulse_Syntax_Pure.tm_emp
                                                                     c t d1 ()
                                                                     (ppname,
                                                                     x)))
@@ -2626,15 +2626,15 @@ let (checker_result_for_st_typing :
                                                                     ())),
                                                                     (k_elab_equiv
                                                                     g g'
-                                                                    (Pulse_Syntax_Base.tm_star
-                                                                    Pulse_Syntax_Base.tm_emp
+                                                                    (Pulse_Syntax_Pure.tm_star
+                                                                    Pulse_Syntax_Pure.tm_emp
                                                                     (Pulse_Syntax_Base.comp_pre
                                                                     c))
                                                                     (Pulse_Syntax_Base.comp_pre
                                                                     c)
-                                                                    (Pulse_Syntax_Base.tm_star
+                                                                    (Pulse_Syntax_Pure.tm_star
                                                                     ctxt'
-                                                                    Pulse_Syntax_Base.tm_emp)
+                                                                    Pulse_Syntax_Pure.tm_emp)
                                                                     ctxt' k
                                                                     () ()))))))
                                                         uu___1))) uu___1)))
@@ -2915,7 +2915,7 @@ let rec (is_stateful_arrow :
                                                                     (Prims.of_int (726))
                                                                     (Prims.of_int (23))
                                                                     (Prims.of_int (726))
-                                                                    (Prims.of_int (63)))))
+                                                                    (Prims.of_int (57)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -2927,7 +2927,7 @@ let rec (is_stateful_arrow :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___1 ->
-                                                                    Pulse_Syntax_Base.tm_fstar
+                                                                    Pulse_Syntax_Pure.wr
                                                                     c_res'
                                                                     (FStar_Reflection_V2_Builtins.range_of_term
                                                                     c_res')))
@@ -2998,7 +2998,7 @@ let (is_stateful_application :
                                         (Prims.of_int (740))
                                         (Prims.of_int (17))
                                         (Prims.of_int (740))
-                                        (Prims.of_int (49)))))
+                                        (Prims.of_int (43)))))
                                (FStar_Sealed.seal
                                   (Obj.magic
                                      (FStar_Range.mk_range
@@ -3009,7 +3009,7 @@ let (is_stateful_application :
                                         (Prims.of_int (15)))))
                                (FStar_Tactics_Effect.lift_div_tac
                                   (fun uu___1 ->
-                                     Pulse_Syntax_Base.tm_fstar ht
+                                     Pulse_Syntax_Pure.wr ht
                                        (FStar_Reflection_V2_Builtins.range_of_term
                                           ht)))
                                (fun uu___1 ->
@@ -3056,7 +3056,7 @@ let (is_stateful_application :
                                                                {
                                                                  Pulse_Syntax_Base.head
                                                                    =
-                                                                   (Pulse_Syntax_Base.tm_fstar
+                                                                   (Pulse_Syntax_Pure.wr
                                                                     (FStar_Reflection_V2_Derived.mk_app
                                                                     head
                                                                     applied_args)
@@ -3079,7 +3079,7 @@ let (is_stateful_application :
                                                                     FStar_Pervasives_Native.None));
                                                                  Pulse_Syntax_Base.arg
                                                                    =
-                                                                   (Pulse_Syntax_Base.tm_fstar
+                                                                   (Pulse_Syntax_Pure.wr
                                                                     last_arg
                                                                     (FStar_Reflection_V2_Builtins.range_of_term
                                                                     last_arg))

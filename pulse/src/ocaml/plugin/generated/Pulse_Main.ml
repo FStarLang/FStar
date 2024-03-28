@@ -1166,7 +1166,7 @@ let (main' :
                                                             Prims.op_Negation
                                                               (Pulse_Syntax_Base.eq_tm
                                                                  ty
-                                                                 Pulse_Syntax_Base.tm_vprop)
+                                                                 Pulse_Syntax_Pure.tm_vprop)
                                                           then
                                                             Obj.magic
                                                               (Obj.repr
@@ -1933,7 +1933,7 @@ let (check_pulse :
                           | FStar_Pervasives.Inl decl ->
                               Obj.magic
                                 (Obj.repr
-                                   (main nm decl Pulse_Syntax_Base.tm_emp env))
+                                   (main nm decl Pulse_Syntax_Pure.tm_emp env))
                           | FStar_Pervasives.Inr
                               (FStar_Pervasives_Native.None) ->
                               Obj.magic

@@ -265,7 +265,7 @@ let (infer_binder_types :
                                                                     (Prims.of_int (80))
                                                                     (Prims.of_int (30))
                                                                     (Prims.of_int (80))
-                                                                    (Prims.of_int (90)))))
+                                                                    (Prims.of_int (84)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -277,7 +277,7 @@ let (infer_binder_types :
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Pure.instantiate_term_implicits
                                                                     g1
-                                                                    (Pulse_Syntax_Base.tm_fstar
+                                                                    (Pulse_Syntax_Pure.wr
                                                                     abstraction
                                                                     v_rng)))
                                                                     (fun
@@ -1061,8 +1061,7 @@ let (visit_and_rewrite :
                                               [Pulse_Syntax_Naming.NT
                                                  (((FStar_Reflection_V2_Builtins.inspect_namedv
                                                       n).FStar_Reflection_V2_Data.uniq),
-                                                   (Pulse_Syntax_Base.tm_fstar
-                                                      rhs
+                                                   (Pulse_Syntax_Pure.wr rhs
                                                       (Pulse_RuntimeUtils.range_of_term
                                                          t)))])))
                              | uu___1 ->
@@ -1913,7 +1912,7 @@ let (check_wild :
                                                                    (FStar_Pervasives_Native.uu___is_Some
                                                                     (Pulse_Syntax_Pure.inspect_term
                                                                     v)) &&
-                                                                    (Pulse_Syntax_Base.uu___is_Tm_ExistsSL
+                                                                    (Pulse_Syntax_Pure.uu___is_Tm_ExistsSL
                                                                     (FStar_Pervasives_Native.__proj__Some__item__v
                                                                     (Pulse_Syntax_Pure.inspect_term
                                                                     v))))
@@ -2019,7 +2018,7 @@ let (check_wild :
                                                                     with
                                                                     | 
                                                                     FStar_Pervasives_Native.Some
-                                                                    (Pulse_Syntax_Base.Tm_ExistsSL
+                                                                    (Pulse_Syntax_Pure.Tm_ExistsSL
                                                                     (u, b,
                                                                     body1))
                                                                     ->
@@ -2933,7 +2932,7 @@ let (check :
                                                                     (Obj.magic
                                                                     (check1
                                                                     g11
-                                                                    (Pulse_Syntax_Base.tm_star
+                                                                    (Pulse_Syntax_Pure.tm_star
                                                                     (Pulse_Checker_Prover_Substs.nt_subst_term
                                                                     v2 nts)
                                                                     pre') ()
@@ -3526,7 +3525,7 @@ let (check :
                                                                     Pulse_Syntax_Base.binder
                                                                     =
                                                                     (Pulse_Syntax_Base.as_binder
-                                                                    (Pulse_Syntax_Base.tm_fstar
+                                                                    (Pulse_Syntax_Pure.wr
                                                                     (FStar_Reflection_V2_Builtins.pack_ln
                                                                     (FStar_Reflection_V2_Data.Tv_FVar
                                                                     (FStar_Reflection_V2_Builtins.pack_fv
@@ -4176,7 +4175,7 @@ let (check :
                                                                     Pulse_Syntax_Base.binder
                                                                     =
                                                                     (Pulse_Syntax_Base.as_binder
-                                                                    (Pulse_Syntax_Base.tm_fstar
+                                                                    (Pulse_Syntax_Pure.wr
                                                                     (FStar_Reflection_V2_Builtins.pack_ln
                                                                     (FStar_Reflection_V2_Data.Tv_FVar
                                                                     (FStar_Reflection_V2_Builtins.pack_fv

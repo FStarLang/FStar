@@ -57,7 +57,7 @@ let (mk_bind_st_st : (unit, unit) bind_t) =
                                     match px with
                                     | (uu___2, x) ->
                                         FStar_Pervasives.Mkdtuple3
-                                          ((Pulse_Typing.wr
+                                          ((Pulse_Typing.wrst
                                               (Pulse_Typing.bind_comp_out c1
                                                  c2)
                                               (Pulse_Syntax_Base.Tm_Bind
@@ -86,8 +86,8 @@ let (mk_bind_st_st : (unit, unit) bind_t) =
 let (inames_of : Pulse_Syntax_Base.comp_st -> Pulse_Syntax_Base.term) =
   fun c ->
     match c with
-    | Pulse_Syntax_Base.C_ST uu___ -> Pulse_Syntax_Base.tm_emp_inames
-    | Pulse_Syntax_Base.C_STGhost uu___ -> Pulse_Syntax_Base.tm_emp_inames
+    | Pulse_Syntax_Base.C_ST uu___ -> Pulse_Syntax_Pure.tm_emp_inames
+    | Pulse_Syntax_Base.C_STGhost uu___ -> Pulse_Syntax_Pure.tm_emp_inames
     | Pulse_Syntax_Base.C_STAtomic (inames, uu___, uu___1) -> inames
 let (with_inames :
   Pulse_Syntax_Base.comp_st ->
@@ -218,7 +218,7 @@ let (st_ghost_as_atomic :
   Pulse_Syntax_Base.comp_st -> Pulse_Syntax_Base.comp) =
   fun c ->
     Pulse_Syntax_Base.C_STAtomic
-      (Pulse_Syntax_Base.tm_emp_inames, Pulse_Syntax_Base.Neutral,
+      (Pulse_Syntax_Pure.tm_emp_inames, Pulse_Syntax_Base.Neutral,
         (Pulse_Syntax_Base.st_comp_of_comp c))
 let (try_lift_ghost_atomic :
   Pulse_Typing_Env.env ->
@@ -276,7 +276,7 @@ let (try_lift_ghost_atomic :
                                      (Pulse_Typing.T_Lift
                                         (g, e, c,
                                           (Pulse_Syntax_Base.C_STAtomic
-                                             (Pulse_Syntax_Base.tm_emp_inames,
+                                             (Pulse_Syntax_Pure.tm_emp_inames,
                                                Pulse_Syntax_Base.Neutral,
                                                (Pulse_Syntax_Base.st_comp_of_comp
                                                   c))), d,
@@ -434,7 +434,7 @@ let (mk_bind_ghost_ghost : (unit, unit) bind_t) =
                                     match px with
                                     | (uu___2, x) ->
                                         FStar_Pervasives.Mkdtuple3
-                                          ((Pulse_Typing.wr
+                                          ((Pulse_Typing.wrst
                                               (Pulse_Typing.bind_comp_out c1
                                                  c2)
                                               (Pulse_Syntax_Base.Tm_Bind
@@ -600,7 +600,7 @@ let (mk_bind_atomic_atomic : (unit, unit) bind_t) =
                                                                     (fun
                                                                     uu___4 ->
                                                                     FStar_Pervasives.Mkdtuple3
-                                                                    ((Pulse_Typing.wr
+                                                                    ((Pulse_Typing.wrst
                                                                     (Pulse_Typing.bind_comp_out
                                                                     c1 c2)
                                                                     (Pulse_Syntax_Base.Tm_Bind
@@ -725,7 +725,7 @@ let (mk_bind_atomic_atomic : (unit, unit) bind_t) =
                                                                     (fun
                                                                     uu___5 ->
                                                                     FStar_Pervasives.Mkdtuple3
-                                                                    ((Pulse_Typing.wr
+                                                                    ((Pulse_Typing.wrst
                                                                     (Pulse_Typing.bind_comp_out
                                                                     (Pulse_Syntax_Base.C_STAtomic
                                                                     (inames2,
@@ -1005,7 +1005,7 @@ let (mk_bind_atomic_atomic : (unit, unit) bind_t) =
                                                                     (fun
                                                                     uu___6 ->
                                                                     FStar_Pervasives.Mkdtuple3
-                                                                    ((Pulse_Typing.wr
+                                                                    ((Pulse_Typing.wrst
                                                                     (Pulse_Typing.bind_comp_out
                                                                     (Pulse_Syntax_Base.C_STAtomic
                                                                     (new_inames,
@@ -2616,14 +2616,14 @@ let rec (vprop_as_list :
   Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term Prims.list) =
   fun vp ->
     match Pulse_Syntax_Pure.inspect_term vp with
-    | FStar_Pervasives_Native.Some (Pulse_Syntax_Base.Tm_Emp) -> []
-    | FStar_Pervasives_Native.Some (Pulse_Syntax_Base.Tm_Star (vp0, vp1)) ->
+    | FStar_Pervasives_Native.Some (Pulse_Syntax_Pure.Tm_Emp) -> []
+    | FStar_Pervasives_Native.Some (Pulse_Syntax_Pure.Tm_Star (vp0, vp1)) ->
         FStar_List_Tot_Base.op_At (vprop_as_list vp0) (vprop_as_list vp1)
     | uu___ -> [vp]
 let rec (list_as_vprop :
   Pulse_Syntax_Base.term Prims.list -> Pulse_Syntax_Base.term) =
   fun vps ->
     match vps with
-    | [] -> Pulse_Syntax_Base.tm_emp
+    | [] -> Pulse_Syntax_Pure.tm_emp
     | hd::[] -> hd
-    | hd::tl -> Pulse_Syntax_Base.tm_star hd (list_as_vprop tl)
+    | hd::tl -> Pulse_Syntax_Pure.tm_star hd (list_as_vprop tl)

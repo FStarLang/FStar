@@ -343,7 +343,7 @@ let (check_core :
                                                                     (FStar_Pervasives_Native.fst
                                                                     px) t1)
                                                                     post_opened
-                                                                    Pulse_Syntax_Base.tm_vprop))
+                                                                    Pulse_Syntax_Pure.tm_vprop))
                                                                     (fun
                                                                     uu___4 ->
                                                                     FStar_Tactics_Effect.lift_div_tac

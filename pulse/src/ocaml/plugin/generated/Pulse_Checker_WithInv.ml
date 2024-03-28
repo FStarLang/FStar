@@ -56,7 +56,7 @@ let (term_remove_inv :
       (fun inv ->
          fun tm ->
            match Pulse_Syntax_Pure.inspect_term tm with
-           | FStar_Pervasives_Native.Some (Pulse_Syntax_Base.Tm_Star
+           | FStar_Pervasives_Native.Some (Pulse_Syntax_Pure.Tm_Star
                (tm1, inv')) ->
                if Pulse_Syntax_Base.eq_tm inv inv'
                then
@@ -403,7 +403,7 @@ let (remove_iname :
   fun inv_p ->
     fun inames ->
       fun inv ->
-        Pulse_Syntax_Base.tm_fstar
+        Pulse_Syntax_Pure.wr
           (Pulse_Reflection_Util.remove_inv_tm
              (Pulse_Elaborate_Pure.elab_term inv_p)
              (Pulse_Elaborate_Pure.elab_term inames)
@@ -417,14 +417,14 @@ let (add_iname :
   fun inv_p ->
     fun inames ->
       fun inv ->
-        Pulse_Syntax_Base.tm_fstar
+        Pulse_Syntax_Pure.wr
           (Pulse_Reflection_Util.add_inv_tm
              (Pulse_Elaborate_Pure.elab_term inv_p)
              (Pulse_Elaborate_Pure.elab_term inames)
              (Pulse_Elaborate_Pure.elab_term inv))
           (Pulse_RuntimeUtils.range_of_term inames)
 let (all_inames : Pulse_Syntax_Base.term) =
-  Pulse_Syntax_Base.tm_fstar Pulse_Reflection_Util.all_inames_tm
+  Pulse_Syntax_Pure.wr Pulse_Reflection_Util.all_inames_tm
     FStar_Range.range_0
 
 
@@ -1134,7 +1134,7 @@ let (check :
                                                                     with
                                                                     | 
                                                                     FStar_Pervasives_Native.Some
-                                                                    (Pulse_Syntax_Base.Tm_Inv
+                                                                    (Pulse_Syntax_Pure.Tm_Inv
                                                                     p) ->
                                                                     Obj.magic
                                                                     (Obj.repr
@@ -1409,7 +1409,7 @@ let (check :
                                                                     (Obj.magic
                                                                     (recheck
                                                                     g inv_p
-                                                                    Pulse_Syntax_Base.tm_vprop
+                                                                    Pulse_Syntax_Pure.tm_vprop
                                                                     ()))
                                                                     (fun
                                                                     uu___4 ->
@@ -1437,7 +1437,7 @@ let (check :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___4 ->
-                                                                    Pulse_Syntax_Base.tm_star
+                                                                    Pulse_Syntax_Pure.tm_star
                                                                     pre inv_p))
                                                                     (fun
                                                                     uu___4 ->
@@ -1464,7 +1464,7 @@ let (check :
                                                                     (Obj.magic
                                                                     (recheck
                                                                     g pre'
-                                                                    Pulse_Syntax_Base.tm_vprop
+                                                                    Pulse_Syntax_Pure.tm_vprop
                                                                     ()))
                                                                     (fun
                                                                     uu___4 ->
@@ -1492,7 +1492,7 @@ let (check :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___4 ->
-                                                                    Pulse_Syntax_Base.tm_star
+                                                                    Pulse_Syntax_Pure.tm_star
                                                                     post.Pulse_Typing.post
                                                                     inv_p))
                                                                     (fun
@@ -1637,7 +1637,7 @@ let (check :
                                                                     (Pulse_Syntax_Base.v_as_nv
                                                                     x)))
                                                                     (Pulse_Elaborate_Pure.elab_term
-                                                                    Pulse_Syntax_Base.tm_vprop)
+                                                                    Pulse_Syntax_Pure.tm_vprop)
                                                                     ()))
                                                                     (fun
                                                                     uu___4 ->

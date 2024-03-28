@@ -378,19 +378,19 @@ let (check :
                                                                     (Prims.of_int (60))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (60))
-                                                                    (Prims.of_int (40)))))
+                                                                    (Prims.of_int (34)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Unreachable.fst"
                                                                     (Prims.of_int (60))
-                                                                    (Prims.of_int (43))
+                                                                    (Prims.of_int (37))
                                                                     (Prims.of_int (68))
                                                                     (Prims.of_int (64)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___1 ->
-                                                                    Pulse_Syntax_Base.tm_fstar
+                                                                    Pulse_Syntax_Pure.wr
                                                                     (FStar_Reflection_V2_Builtins.pack_ln
                                                                     (FStar_Reflection_V2_Data.Tv_FVar
                                                                     (FStar_Reflection_V2_Builtins.pack_fv
@@ -416,7 +416,7 @@ let (check :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Unreachable.fst"
                                                                     (Prims.of_int (60))
-                                                                    (Prims.of_int (43))
+                                                                    (Prims.of_int (37))
                                                                     (Prims.of_int (68))
                                                                     (Prims.of_int (64)))))
                                                                     (Obj.magic

@@ -19,7 +19,7 @@ let (terms_to_string :
          FStar_Tactics_Effect.lift_div_tac
            (fun uu___1 -> FStar_String.concat "\n" uu___))
 let (default_binder_annot : Pulse_Syntax_Base.binder) =
-  Pulse_Syntax_Base.mk_binder_ppname Pulse_Syntax_Base.tm_unknown
+  Pulse_Syntax_Base.mk_binder_ppname Pulse_Syntax_Pure.tm_unknown
     Pulse_Syntax_Base.ppname_default
 let rec (gen_names_for_unknowns :
   Pulse_Typing_Env.env ->
@@ -46,7 +46,7 @@ let rec (gen_names_for_unknowns :
                      (Obj.repr
                         (match Pulse_Syntax_Pure.inspect_term t with
                          | FStar_Pervasives_Native.Some
-                             (Pulse_Syntax_Base.Tm_ExistsSL (uu___, b, body))
+                             (Pulse_Syntax_Pure.Tm_ExistsSL (uu___, b, body))
                              ->
                              FStar_Tactics_Effect.tac_bind
                                (FStar_Sealed.seal
@@ -70,7 +70,7 @@ let rec (gen_names_for_unknowns :
                                      match Pulse_Syntax_Pure.inspect_term w
                                      with
                                      | FStar_Pervasives_Native.Some
-                                         (Pulse_Syntax_Base.Tm_Unknown) ->
+                                         (Pulse_Syntax_Pure.Tm_Unknown) ->
                                          ((FStar_Pervasives_Native.Some
                                              (Pulse_Typing_Env.fresh g)),
                                            (Pulse_Syntax_Pure.tm_var
@@ -349,7 +349,7 @@ let rec (transform_to_unary_intro_exists :
                             (fun tv ->
                                if
                                  (FStar_Pervasives_Native.uu___is_Some tv) &&
-                                   (Pulse_Syntax_Base.uu___is_Tm_ExistsSL
+                                   (Pulse_Syntax_Pure.uu___is_Tm_ExistsSL
                                       (FStar_Pervasives_Native.__proj__Some__item__v
                                          tv))
                                then
@@ -376,7 +376,7 @@ let rec (transform_to_unary_intro_exists :
                 | w::ws1 ->
                     (match Pulse_Syntax_Pure.inspect_term t with
                      | FStar_Pervasives_Native.Some
-                         (Pulse_Syntax_Base.Tm_ExistsSL (u, b, body)) ->
+                         (Pulse_Syntax_Pure.Tm_ExistsSL (u, b, body)) ->
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
                               (FStar_Sealed.seal

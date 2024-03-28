@@ -48,7 +48,7 @@ let tm_bvar (bv:bv) : term = U.tm_bvar bv
 let tm_var (x:nm) : term = U.tm_var x
 let tm_fvar (x:fv) : term = U.tm_fvar x
 let tm_uinst (l:fv) (us:universe list) : term = U.tm_uinst l us
-let wr r t = with_range t r
+let wr r t = Pulse_Syntax_Pure.pack_term_view_wr t r
 let tm_emp r : term = wr r Tm_Emp
 let tm_pure (p:term) r : term = wr r (Tm_Pure p)
 let tm_star (p0:term) (p1:term) r : term = wr r (Tm_Star (p0, p1))
@@ -60,7 +60,7 @@ let map_aqual (q:S.aqual) =
   | _ -> None
 let tm_arrow (b:binder) (q:S.aqual) (body:comp) : term =
   U.tm_arrow b (map_aqual q) body
-let tm_expr (t:S.term) r : term = tm_fstar t r
+let tm_expr (t:S.term) r : term = Pulse_Syntax_Pure.wr t r
 let tm_unknown r : term = wr r Tm_Unknown
 let tm_emp_inames :term = wr FStar_Range.range_0 Tm_EmpInames
 let tm_add_inv i is r : term = wr r (Tm_AddInv (i, is))
@@ -198,7 +198,7 @@ let comp_pre c =
    | C_ST st
    | C_STAtomic (_, _, st)
    | C_STGhost st -> st.pre
-   | _ -> Pulse_Syntax_Base.tm_emp
+   | _ -> Pulse_Syntax_Pure.tm_emp
 
 let comp_res c =
   match c with
@@ -212,7 +212,7 @@ let comp_post c =
    | C_ST st
    | C_STAtomic (_, _, st)
    | C_STGhost st -> st.post
-   | _ -> Pulse_Syntax_Base.tm_emp
+   | _ -> Pulse_Syntax_Pure.tm_emp
 
 let print_exn (e:exn) = Printexc.to_string e
 

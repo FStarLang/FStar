@@ -664,7 +664,7 @@ let (check_bind :
                                                                     with
                                                                     | 
                                                                     FStar_Pervasives_Native.Some
-                                                                    (Pulse_Syntax_Base.Tm_Unknown)
+                                                                    (Pulse_Syntax_Pure.Tm_Unknown)
                                                                     ->
                                                                     Obj.magic
                                                                     (Obj.repr

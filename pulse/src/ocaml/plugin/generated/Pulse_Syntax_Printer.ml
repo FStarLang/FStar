@@ -46,7 +46,7 @@ let (qual_to_string :
 let (indent : Prims.string -> Prims.string) =
   fun level -> Prims.strcat level "\t"
 let rec (collect_binders :
-  (Pulse_Syntax_Base.term_view -> Prims.bool) ->
+  (Pulse_Syntax_Pure.term_view -> Prims.bool) ->
     Pulse_Syntax_Base.term ->
       (Pulse_Syntax_Base.binder Prims.list * Pulse_Syntax_Base.term))
   =
@@ -60,10 +60,10 @@ let rec (collect_binders :
       then ([], t)
       else
         (match FStar_Pervasives_Native.__proj__Some__item__v tv_opt with
-         | Pulse_Syntax_Base.Tm_ExistsSL (uu___1, b, body) ->
+         | Pulse_Syntax_Pure.Tm_ExistsSL (uu___1, b, body) ->
              let uu___2 = collect_binders until body in
              (match uu___2 with | (bs, t1) -> ((b :: bs), t1))
-         | Pulse_Syntax_Base.Tm_ForallSL (uu___1, b, body) ->
+         | Pulse_Syntax_Pure.Tm_ForallSL (uu___1, b, body) ->
              let uu___2 = collect_binders until body in
              (match uu___2 with | (bs, t1) -> ((b :: bs), t1))
          | uu___1 -> ([], t))
@@ -292,11 +292,11 @@ and (term_to_string' :
                   (Obj.repr
                      (match FStar_Pervasives_Native.__proj__Some__item__v tv
                       with
-                      | Pulse_Syntax_Base.Tm_Emp ->
+                      | Pulse_Syntax_Pure.Tm_Emp ->
                           Obj.repr
                             (FStar_Tactics_Effect.lift_div_tac
                                (fun uu___1 -> "emp"))
-                      | Pulse_Syntax_Base.Tm_Pure p ->
+                      | Pulse_Syntax_Pure.Tm_Pure p ->
                           Obj.repr
                             (FStar_Tactics_Effect.tac_bind
                                (FStar_Sealed.seal
@@ -320,7 +320,7 @@ and (term_to_string' :
                                     (fun uu___2 ->
                                        Prims.strcat "pure ("
                                          (Prims.strcat uu___1 ")"))))
-                      | Pulse_Syntax_Base.Tm_Star (p1, p2) ->
+                      | Pulse_Syntax_Pure.Tm_Star (p1, p2) ->
                           Obj.repr
                             (FStar_Tactics_Effect.tac_bind
                                (FStar_Sealed.seal
@@ -425,7 +425,7 @@ and (term_to_string' :
                                              FStar_Tactics_Effect.lift_div_tac
                                                (fun uu___3 -> uu___2 uu___1))))
                                     uu___1))
-                      | Pulse_Syntax_Base.Tm_ExistsSL
+                      | Pulse_Syntax_Pure.Tm_ExistsSL
                           (uu___1, uu___2, uu___3) ->
                           Obj.repr
                             (FStar_Tactics_Effect.tac_bind
@@ -448,7 +448,7 @@ and (term_to_string' :
                                (FStar_Tactics_Effect.lift_div_tac
                                   (fun uu___4 ->
                                      collect_binders
-                                       Pulse_Syntax_Base.uu___is_Tm_ExistsSL
+                                       Pulse_Syntax_Pure.uu___is_Tm_ExistsSL
                                        t))
                                (fun uu___4 ->
                                   (fun uu___4 ->
@@ -592,7 +592,7 @@ and (term_to_string' :
                                                                  uu___6
                                                                    uu___5))))
                                                    uu___5))) uu___4))
-                      | Pulse_Syntax_Base.Tm_ForallSL (u, b, body) ->
+                      | Pulse_Syntax_Pure.Tm_ForallSL (u, b, body) ->
                           Obj.repr
                             (FStar_Tactics_Effect.tac_bind
                                (FStar_Sealed.seal
@@ -614,7 +614,7 @@ and (term_to_string' :
                                (FStar_Tactics_Effect.lift_div_tac
                                   (fun uu___1 ->
                                      collect_binders
-                                       Pulse_Syntax_Base.uu___is_Tm_ForallSL
+                                       Pulse_Syntax_Pure.uu___is_Tm_ForallSL
                                        t))
                                (fun uu___1 ->
                                   (fun uu___1 ->
@@ -758,23 +758,23 @@ and (term_to_string' :
                                                                  uu___3
                                                                    uu___2))))
                                                    uu___2))) uu___1))
-                      | Pulse_Syntax_Base.Tm_VProp ->
+                      | Pulse_Syntax_Pure.Tm_VProp ->
                           Obj.repr
                             (FStar_Tactics_Effect.lift_div_tac
                                (fun uu___1 -> "vprop"))
-                      | Pulse_Syntax_Base.Tm_Inames ->
+                      | Pulse_Syntax_Pure.Tm_Inames ->
                           Obj.repr
                             (FStar_Tactics_Effect.lift_div_tac
                                (fun uu___1 -> "inames"))
-                      | Pulse_Syntax_Base.Tm_EmpInames ->
+                      | Pulse_Syntax_Pure.Tm_EmpInames ->
                           Obj.repr
                             (FStar_Tactics_Effect.lift_div_tac
                                (fun uu___1 -> "emp_inames"))
-                      | Pulse_Syntax_Base.Tm_Unknown ->
+                      | Pulse_Syntax_Pure.Tm_Unknown ->
                           Obj.repr
                             (FStar_Tactics_Effect.lift_div_tac
                                (fun uu___1 -> "_"))
-                      | Pulse_Syntax_Base.Tm_AddInv (i, is) ->
+                      | Pulse_Syntax_Pure.Tm_AddInv (i, is) ->
                           Obj.repr
                             (FStar_Tactics_Effect.tac_bind
                                (FStar_Sealed.seal
@@ -849,7 +849,7 @@ and (term_to_string' :
                                              FStar_Tactics_Effect.lift_div_tac
                                                (fun uu___3 -> uu___2 uu___1))))
                                     uu___1))
-                      | Pulse_Syntax_Base.Tm_Inv i ->
+                      | Pulse_Syntax_Pure.Tm_Inv i ->
                           Obj.repr
                             (FStar_Tactics_Effect.tac_bind
                                (FStar_Sealed.seal
@@ -1014,11 +1014,11 @@ and (term_to_doc :
                 (Obj.repr
                    (match FStar_Pervasives_Native.__proj__Some__item__v tv
                     with
-                    | Pulse_Syntax_Base.Tm_Emp ->
+                    | Pulse_Syntax_Pure.Tm_Emp ->
                         Obj.repr
                           (FStar_Tactics_Effect.lift_div_tac
                              (fun uu___1 -> FStar_Pprint.doc_of_string "emp"))
-                    | Pulse_Syntax_Base.Tm_Pure p ->
+                    | Pulse_Syntax_Pure.Tm_Pure p ->
                         Obj.repr
                           (FStar_Tactics_Effect.tac_bind
                              (FStar_Sealed.seal
@@ -1066,7 +1066,7 @@ and (term_to_doc :
                                      FStar_Pprint.op_Hat_Hat
                                        (FStar_Pprint.doc_of_string "pure")
                                        uu___1)))
-                    | Pulse_Syntax_Base.Tm_Star (p1, p2) ->
+                    | Pulse_Syntax_Pure.Tm_Star (p1, p2) ->
                         Obj.repr
                           (FStar_Tactics_Effect.tac_bind
                              (FStar_Sealed.seal
@@ -1115,7 +1115,7 @@ and (term_to_doc :
                                                   (FStar_Pprint.doc_of_string
                                                      "**") uu___1 uu___2))))
                                   uu___1))
-                    | Pulse_Syntax_Base.Tm_ExistsSL (uu___1, uu___2, uu___3)
+                    | Pulse_Syntax_Pure.Tm_ExistsSL (uu___1, uu___2, uu___3)
                         ->
                         Obj.repr
                           (FStar_Tactics_Effect.tac_bind
@@ -1138,7 +1138,7 @@ and (term_to_doc :
                              (FStar_Tactics_Effect.lift_div_tac
                                 (fun uu___4 ->
                                    collect_binders
-                                     Pulse_Syntax_Base.uu___is_Tm_ExistsSL t))
+                                     Pulse_Syntax_Pure.uu___is_Tm_ExistsSL t))
                              (fun uu___4 ->
                                 (fun uu___4 ->
                                    match uu___4 with
@@ -1300,7 +1300,7 @@ and (term_to_doc :
                                                  (fun uu___6 ->
                                                     FStar_Pprint.parens
                                                       uu___5)))) uu___4))
-                    | Pulse_Syntax_Base.Tm_ForallSL (uu___1, uu___2, uu___3)
+                    | Pulse_Syntax_Pure.Tm_ForallSL (uu___1, uu___2, uu___3)
                         ->
                         Obj.repr
                           (FStar_Tactics_Effect.tac_bind
@@ -1323,7 +1323,7 @@ and (term_to_doc :
                              (FStar_Tactics_Effect.lift_div_tac
                                 (fun uu___4 ->
                                    collect_binders
-                                     Pulse_Syntax_Base.uu___is_Tm_ForallSL t))
+                                     Pulse_Syntax_Pure.uu___is_Tm_ForallSL t))
                              (fun uu___4 ->
                                 (fun uu___4 ->
                                    match uu___4 with
@@ -1485,22 +1485,22 @@ and (term_to_doc :
                                                  (fun uu___6 ->
                                                     FStar_Pprint.parens
                                                       uu___5)))) uu___4))
-                    | Pulse_Syntax_Base.Tm_VProp ->
+                    | Pulse_Syntax_Pure.Tm_VProp ->
                         Obj.repr
                           (FStar_Tactics_Effect.lift_div_tac
                              (fun uu___1 ->
                                 FStar_Pprint.doc_of_string "vprop"))
-                    | Pulse_Syntax_Base.Tm_Inames ->
+                    | Pulse_Syntax_Pure.Tm_Inames ->
                         Obj.repr
                           (FStar_Tactics_Effect.lift_div_tac
                              (fun uu___1 ->
                                 FStar_Pprint.doc_of_string "inames"))
-                    | Pulse_Syntax_Base.Tm_EmpInames ->
+                    | Pulse_Syntax_Pure.Tm_EmpInames ->
                         Obj.repr
                           (FStar_Tactics_Effect.lift_div_tac
                              (fun uu___1 ->
                                 FStar_Pprint.doc_of_string "emp_inames"))
-                    | Pulse_Syntax_Base.Tm_AddInv (i, is) ->
+                    | Pulse_Syntax_Pure.Tm_AddInv (i, is) ->
                         Obj.repr
                           (FStar_Tactics_Effect.tac_bind
                              (FStar_Sealed.seal
@@ -1619,7 +1619,7 @@ and (term_to_doc :
                                      FStar_Pprint.op_Hat_Slash_Hat
                                        (FStar_Pprint.doc_of_string "add_inv")
                                        uu___1)))
-                    | Pulse_Syntax_Base.Tm_Inv i ->
+                    | Pulse_Syntax_Pure.Tm_Inv i ->
                         Obj.repr
                           (FStar_Tactics_Effect.tac_bind
                              (FStar_Sealed.seal
@@ -1666,7 +1666,7 @@ and (term_to_doc :
                                      FStar_Pprint.op_Hat_Slash_Hat
                                        (FStar_Pprint.doc_of_string "inv")
                                        uu___1)))
-                    | Pulse_Syntax_Base.Tm_Unknown ->
+                    | Pulse_Syntax_Pure.Tm_Unknown ->
                         Obj.repr
                           (FStar_Tactics_Effect.lift_div_tac
                              (fun uu___1 -> FStar_Pprint.doc_of_string "_")))))
@@ -5781,19 +5781,19 @@ let (tag_of_term : Pulse_Syntax_Base.term -> Prims.string) =
     then "Tm_FStar"
     else
       (match FStar_Pervasives_Native.__proj__Some__item__v tv with
-       | Pulse_Syntax_Base.Tm_Emp -> "Tm_Emp"
-       | Pulse_Syntax_Base.Tm_Pure uu___1 -> "Tm_Pure"
-       | Pulse_Syntax_Base.Tm_Star (uu___1, uu___2) -> "Tm_Star"
-       | Pulse_Syntax_Base.Tm_ExistsSL (uu___1, uu___2, uu___3) ->
+       | Pulse_Syntax_Pure.Tm_Emp -> "Tm_Emp"
+       | Pulse_Syntax_Pure.Tm_Pure uu___1 -> "Tm_Pure"
+       | Pulse_Syntax_Pure.Tm_Star (uu___1, uu___2) -> "Tm_Star"
+       | Pulse_Syntax_Pure.Tm_ExistsSL (uu___1, uu___2, uu___3) ->
            "Tm_ExistsSL"
-       | Pulse_Syntax_Base.Tm_ForallSL (uu___1, uu___2, uu___3) ->
+       | Pulse_Syntax_Pure.Tm_ForallSL (uu___1, uu___2, uu___3) ->
            "Tm_ForallSL"
-       | Pulse_Syntax_Base.Tm_VProp -> "Tm_VProp"
-       | Pulse_Syntax_Base.Tm_Inames -> "Tm_Inames"
-       | Pulse_Syntax_Base.Tm_EmpInames -> "Tm_EmpInames"
-       | Pulse_Syntax_Base.Tm_Unknown -> "Tm_Unknown"
-       | Pulse_Syntax_Base.Tm_AddInv (uu___1, uu___2) -> "Tm_AddInv"
-       | Pulse_Syntax_Base.Tm_Inv uu___1 -> "Tm_Inv")
+       | Pulse_Syntax_Pure.Tm_VProp -> "Tm_VProp"
+       | Pulse_Syntax_Pure.Tm_Inames -> "Tm_Inames"
+       | Pulse_Syntax_Pure.Tm_EmpInames -> "Tm_EmpInames"
+       | Pulse_Syntax_Pure.Tm_Unknown -> "Tm_Unknown"
+       | Pulse_Syntax_Pure.Tm_AddInv (uu___1, uu___2) -> "Tm_AddInv"
+       | Pulse_Syntax_Pure.Tm_Inv uu___1 -> "Tm_Inv")
 let (tag_of_st_term : Pulse_Syntax_Base.st_term -> Prims.string) =
   fun t ->
     match t.Pulse_Syntax_Base.term1 with

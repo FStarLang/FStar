@@ -4843,7 +4843,7 @@ let (check_vprop :
   fun g ->
     fun t ->
       check_term (Pulse_Typing_Env.push_context_no_range g "check_vprop") t
-        FStar_TypeChecker_Core.E_Total Pulse_Syntax_Base.tm_vprop
+        FStar_TypeChecker_Core.E_Total Pulse_Syntax_Pure.tm_vprop
 let (check_vprop_with_core :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term -> (unit, unit) FStar_Tactics_Effect.tac_repr)
@@ -4852,7 +4852,7 @@ let (check_vprop_with_core :
     fun t ->
       core_check_term
         (Pulse_Typing_Env.push_context_no_range g "check_vprop_with_core") t
-        FStar_TypeChecker_Core.E_Total Pulse_Syntax_Base.tm_vprop
+        FStar_TypeChecker_Core.E_Total Pulse_Syntax_Pure.tm_vprop
 let (try_get_non_informative_witness :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.universe ->
@@ -5009,7 +5009,7 @@ let (try_get_non_informative_witness :
                                                                     uu___1 ->
                                                                     FStar_Pervasives_Native.Some
                                                                     (Prims.Mkdtuple2
-                                                                    ((Pulse_Syntax_Base.tm_fstar
+                                                                    ((Pulse_Syntax_Pure.wr
                                                                     r_dict
                                                                     (Pulse_RuntimeUtils.range_of_term
                                                                     ty)), ()))))))

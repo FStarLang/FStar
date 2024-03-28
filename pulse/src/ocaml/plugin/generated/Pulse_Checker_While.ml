@@ -115,9 +115,9 @@ let (check :
                                                (Pulse_Checker_Pure.check_vprop
                                                   (Pulse_Checker_Pure.push_context
                                                      "invariant"
-                                                     (Pulse_Syntax_Base.term_range
+                                                     (Pulse_Syntax_Pure.term_range
                                                         inv) g1)
-                                                  (Pulse_Syntax_Base.tm_exists_sl
+                                                  (Pulse_Syntax_Pure.tm_exists_sl
                                                      Pulse_Syntax_Pure.u0
                                                      (Pulse_Syntax_Base.mk_binder_ppname
                                                         Pulse_Typing.tm_bool
@@ -175,7 +175,7 @@ let (check :
                                                                     ((FStar_Pervasives_Native.uu___is_Some
                                                                     ex_inv_v)
                                                                     &&
-                                                                    (Pulse_Syntax_Base.uu___is_Tm_ExistsSL
+                                                                    (Pulse_Syntax_Pure.uu___is_Tm_ExistsSL
                                                                     (FStar_Pervasives_Native.__proj__Some__item__v
                                                                     ex_inv_v)))
                                                                     then
@@ -281,7 +281,7 @@ let (check :
                                                                     with
                                                                     | 
                                                                     FStar_Pervasives_Native.Some
-                                                                    (Pulse_Syntax_Base.Tm_ExistsSL
+                                                                    (Pulse_Syntax_Pure.Tm_ExistsSL
                                                                     (u,
                                                                     {
                                                                     Pulse_Syntax_Base.binder_ty
@@ -416,7 +416,7 @@ let (check :
                                                                     while_cond_comp_typing
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "invariant"
-                                                                    (Pulse_Syntax_Base.term_range
+                                                                    (Pulse_Syntax_Pure.term_range
                                                                     inv) g1)
                                                                     u nm ty
                                                                     inv1 ()))
@@ -449,7 +449,7 @@ let (check :
                                                                     Pulse_Typing_Metatheory_Base.st_comp_typing_inversion
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "invariant"
-                                                                    (Pulse_Syntax_Base.term_range
+                                                                    (Pulse_Syntax_Pure.term_range
                                                                     inv) g1)
                                                                     (Pulse_Syntax_Base.st_comp_of_comp
                                                                     (Pulse_Typing.comp_while_cond
@@ -458,7 +458,7 @@ let (check :
                                                                     (Pulse_Typing_Metatheory_Base.comp_typing_inversion
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "invariant"
-                                                                    (Pulse_Syntax_Base.term_range
+                                                                    (Pulse_Syntax_Pure.term_range
                                                                     inv) g1)
                                                                     (Pulse_Typing.comp_while_cond
                                                                     nm inv1)
@@ -500,7 +500,7 @@ let (check :
                                                                     Pulse_Checker_Base.post_hint_from_comp_typing
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "invariant"
-                                                                    (Pulse_Syntax_Base.term_range
+                                                                    (Pulse_Syntax_Pure.term_range
                                                                     inv) g1)
                                                                     (Pulse_Typing.comp_while_cond
                                                                     nm inv1)
@@ -645,7 +645,7 @@ let (check :
                                                                     while_body_comp_typing
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "invariant"
-                                                                    (Pulse_Syntax_Base.term_range
+                                                                    (Pulse_Syntax_Pure.term_range
                                                                     inv) g1)
                                                                     u nm ty
                                                                     inv1 ()))
@@ -678,7 +678,7 @@ let (check :
                                                                     Pulse_Typing_Metatheory_Base.st_comp_typing_inversion
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "invariant"
-                                                                    (Pulse_Syntax_Base.term_range
+                                                                    (Pulse_Syntax_Pure.term_range
                                                                     inv) g1)
                                                                     (Pulse_Syntax_Base.st_comp_of_comp
                                                                     (Pulse_Typing.comp_while_body
@@ -687,7 +687,7 @@ let (check :
                                                                     (Pulse_Typing_Metatheory_Base.comp_typing_inversion
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "invariant"
-                                                                    (Pulse_Syntax_Base.term_range
+                                                                    (Pulse_Syntax_Pure.term_range
                                                                     inv) g1)
                                                                     (Pulse_Typing.comp_while_body
                                                                     nm inv1)
@@ -729,7 +729,7 @@ let (check :
                                                                     Pulse_Checker_Base.post_hint_from_comp_typing
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "invariant"
-                                                                    (Pulse_Syntax_Base.term_range
+                                                                    (Pulse_Syntax_Pure.term_range
                                                                     inv) g1)
                                                                     (Pulse_Typing.comp_while_body
                                                                     nm inv1)

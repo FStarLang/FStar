@@ -277,7 +277,7 @@ let (check_core :
                                                                expected_type
                                                        with
                                                        | FStar_Pervasives_Native.Some
-                                                           (Pulse_Syntax_Base.Tm_Unknown)
+                                                           (Pulse_Syntax_Pure.Tm_Unknown)
                                                            ->
                                                            Obj.repr
                                                              (FStar_Tactics_Effect.lift_div_tac
@@ -562,8 +562,8 @@ let (check_core :
                                                                     g1 x
                                                                     (FStar_Pervasives_Native.fst
                                                                     px) ty)
-                                                                    Pulse_Syntax_Base.tm_emp
-                                                                    Pulse_Syntax_Base.tm_vprop))
+                                                                    Pulse_Syntax_Pure.tm_emp
+                                                                    Pulse_Syntax_Pure.tm_vprop))
                                                                     (fun
                                                                     uu___3 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
@@ -754,7 +754,7 @@ let (check_core :
                                                                     {
                                                                     Pulse_Syntax_Base.expected_type
                                                                     =
-                                                                    Pulse_Syntax_Base.tm_unknown;
+                                                                    Pulse_Syntax_Pure.tm_unknown;
                                                                     Pulse_Syntax_Base.insert_eq
                                                                     = use_eq;
                                                                     Pulse_Syntax_Base.term

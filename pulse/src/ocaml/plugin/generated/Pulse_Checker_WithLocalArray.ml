@@ -42,7 +42,7 @@ let (extend_post_hint :
                                 (Prims.of_int (44)) (Prims.of_int (5)))))
                        (FStar_Tactics_Effect.lift_div_tac
                           (fun uu___ ->
-                             Pulse_Syntax_Base.tm_exists_sl
+                             Pulse_Syntax_Pure.tm_exists_sl
                                Pulse_Syntax_Pure.u0
                                (Pulse_Syntax_Base.as_binder
                                   (Pulse_Typing.mk_seq Pulse_Syntax_Pure.u0
@@ -98,7 +98,7 @@ let (extend_post_hint :
                                                 (Pulse_Checker_Pure.core_check_term
                                                    g' conjunct
                                                    FStar_TypeChecker_Core.E_Total
-                                                   Pulse_Syntax_Base.tm_vprop))
+                                                   Pulse_Syntax_Pure.tm_vprop))
                                              (fun uu___ ->
                                                 (fun c_typing ->
                                                    Obj.magic
@@ -305,7 +305,7 @@ let (check :
                                                                     ty
                                                             with
                                                             | FStar_Pervasives_Native.Some
-                                                                (Pulse_Syntax_Base.Tm_Unknown)
+                                                                (Pulse_Syntax_Pure.Tm_Unknown)
                                                                 ->
                                                                 Obj.magic
                                                                   (Pulse_Checker_Pure.compute_tot_term_type_and_u
@@ -1129,7 +1129,7 @@ let (check :
                                                                     g pre
                                                                     post_hint
                                                                     (FStar_Pervasives.Mkdtuple3
-                                                                    ((Pulse_Typing.wr
+                                                                    ((Pulse_Typing.wrst
                                                                     c
                                                                     (Pulse_Syntax_Base.Tm_WithLocalArray
                                                                     {

@@ -121,7 +121,7 @@ let (check_elim_exists :
                                                               t1
                                                       with
                                                       | FStar_Pervasives_Native.Some
-                                                          (Pulse_Syntax_Base.Tm_Unknown)
+                                                          (Pulse_Syntax_Pure.Tm_Unknown)
                                                           ->
                                                           Obj.magic
                                                             (FStar_Tactics_Effect.tac_bind
@@ -178,7 +178,7 @@ let (check_elim_exists :
                                                                     with
                                                                     | 
                                                                     FStar_Pervasives_Native.Some
-                                                                    (Pulse_Syntax_Base.Tm_ExistsSL
+                                                                    (Pulse_Syntax_Pure.Tm_ExistsSL
                                                                     (uu___2,
                                                                     uu___3,
                                                                     uu___4))
@@ -387,7 +387,7 @@ let (check_elim_exists :
                                                                     Prims.op_Negation
                                                                     ((FStar_Pervasives_Native.uu___is_Some
                                                                     tv) &&
-                                                                    (Pulse_Syntax_Base.uu___is_Tm_ExistsSL
+                                                                    (Pulse_Syntax_Pure.uu___is_Tm_ExistsSL
                                                                     (FStar_Pervasives_Native.__proj__Some__item__v
                                                                     tv)))
                                                                     then
@@ -493,7 +493,7 @@ let (check_elim_exists :
                                                                     with
                                                                     | 
                                                                     FStar_Pervasives_Native.Some
-                                                                    (Pulse_Syntax_Base.Tm_ExistsSL
+                                                                    (Pulse_Syntax_Pure.Tm_ExistsSL
                                                                     (u,
                                                                     {
                                                                     Pulse_Syntax_Base.binder_ty
@@ -639,7 +639,7 @@ let (check_elim_exists :
                                                                     {
                                                                     Pulse_Syntax_Base.p4
                                                                     =
-                                                                    (Pulse_Syntax_Base.tm_exists_sl
+                                                                    (Pulse_Syntax_Pure.tm_exists_sl
                                                                     u
                                                                     (Pulse_Syntax_Base.as_binder
                                                                     ty) p)
@@ -858,7 +858,7 @@ let (check_intro_exists :
                                                                     Prims.op_Negation
                                                                     ((FStar_Pervasives_Native.uu___is_Some
                                                                     tv) &&
-                                                                    (Pulse_Syntax_Base.uu___is_Tm_ExistsSL
+                                                                    (Pulse_Syntax_Pure.uu___is_Tm_ExistsSL
                                                                     (FStar_Pervasives_Native.__proj__Some__item__v
                                                                     tv)))
                                                                     then
@@ -964,7 +964,7 @@ let (check_intro_exists :
                                                                     with
                                                                     | 
                                                                     FStar_Pervasives_Native.Some
-                                                                    (Pulse_Syntax_Base.Tm_ExistsSL
+                                                                    (Pulse_Syntax_Pure.Tm_ExistsSL
                                                                     (u, b, p))
                                                                     ->
                                                                     Obj.magic
@@ -1177,7 +1177,7 @@ let (check_intro_exists :
                                                                     {
                                                                     Pulse_Syntax_Base.p5
                                                                     =
-                                                                    (Pulse_Syntax_Base.tm_exists_sl
+                                                                    (Pulse_Syntax_Pure.tm_exists_sl
                                                                     u b p);
                                                                     Pulse_Syntax_Base.witnesses
                                                                     =

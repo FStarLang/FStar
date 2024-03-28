@@ -100,7 +100,7 @@ let rec (collect_exists :
           (match uu___ with
            | FStar_Pervasives.Mkdtuple3 (exs, rest, uu___1) ->
                (match Pulse_Syntax_Pure.inspect_term hd with
-                | FStar_Pervasives_Native.Some (Pulse_Syntax_Base.Tm_ExistsSL
+                | FStar_Pervasives_Native.Some (Pulse_Syntax_Pure.Tm_ExistsSL
                     (uu___2, uu___3, uu___4)) ->
                     FStar_Pervasives.Mkdtuple3 ((hd :: exs), rest, ())
                 | uu___2 ->
@@ -120,7 +120,7 @@ let rec (collect_pures :
           (match uu___ with
            | FStar_Pervasives.Mkdtuple3 (pures, rest, uu___1) ->
                (match Pulse_Syntax_Pure.inspect_term hd with
-                | FStar_Pervasives_Native.Some (Pulse_Syntax_Base.Tm_Pure
+                | FStar_Pervasives_Native.Some (Pulse_Syntax_Pure.Tm_Pure
                     uu___2) ->
                     FStar_Pervasives.Mkdtuple3 ((hd :: pures), rest, ())
                 | uu___2 ->
@@ -145,7 +145,7 @@ let rec (prove_pures :
                  (Obj.repr
                     (match Pulse_Syntax_Pure.inspect_term p with
                      | FStar_Pervasives_Native.Some
-                         (Pulse_Syntax_Base.Tm_Pure p1) ->
+                         (Pulse_Syntax_Pure.Tm_Pure p1) ->
                          FStar_Tactics_Effect.tac_bind
                            (FStar_Sealed.seal
                               (Obj.magic
@@ -819,7 +819,7 @@ let rec (prover :
                                                                     with
                                                                     | 
                                                                     FStar_Pervasives_Native.Some
-                                                                    (Pulse_Syntax_Base.Tm_ExistsSL
+                                                                    (Pulse_Syntax_Pure.Tm_ExistsSL
                                                                     (u, b,
                                                                     body)) ->
                                                                     Obj.magic
@@ -910,7 +910,7 @@ let rec (prover :
                                                                     with
                                                                     | 
                                                                     FStar_Pervasives_Native.Some
-                                                                    (Pulse_Syntax_Base.Tm_Pure
+                                                                    (Pulse_Syntax_Pure.Tm_Pure
                                                                     uu___9)
                                                                     ->
                                                                     Obj.magic
@@ -1661,7 +1661,7 @@ let (prove :
                                               Pulse_Checker_Prover_Base.ctxt
                                                 = ctxt;
                                               Pulse_Checker_Prover_Base.frame
-                                                = Pulse_Syntax_Base.tm_emp;
+                                                = Pulse_Syntax_Pure.tm_emp;
                                               Pulse_Checker_Prover_Base.ctxt_frame_typing
                                                 = ();
                                               Pulse_Checker_Prover_Base.goals
@@ -1708,7 +1708,7 @@ let (prove :
                                                            FStar_Pervasives_Native.None;
                                                          Pulse_Checker_Prover_Base.solved
                                                            =
-                                                           Pulse_Syntax_Base.tm_emp;
+                                                           Pulse_Syntax_Pure.tm_emp;
                                                          Pulse_Checker_Prover_Base.unsolved
                                                            =
                                                            (Pulse_Typing_Combinators.vprop_as_list
@@ -1730,7 +1730,7 @@ let (prove :
                                                                     preamble.Pulse_Checker_Prover_Base.frame)
                                                                  (Pulse_Checker_Prover_Base.op_Array_Access
                                                                     Pulse_Checker_Prover_Substs.empty
-                                                                    Pulse_Syntax_Base.tm_emp))
+                                                                    Pulse_Syntax_Pure.tm_emp))
                                                               (Pulse_Checker_Base.k_elab_unit
                                                                  g ctxt) ()
                                                               ());
@@ -1885,13 +1885,13 @@ let (prove :
                                                                     pst.Pulse_Checker_Prover_Base.pg
                                                                     (Pulse_Checker_Prover_Base.op_Star
                                                                     ctxt
-                                                                    Pulse_Syntax_Base.tm_emp)
+                                                                    Pulse_Syntax_Pure.tm_emp)
                                                                     ctxt
                                                                     (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst.Pulse_Checker_Prover_Base.remaining_ctxt)
-                                                                    Pulse_Syntax_Base.tm_emp)
+                                                                    Pulse_Syntax_Pure.tm_emp)
                                                                     (Pulse_Checker_Prover_Substs.nt_subst_term
                                                                     pst.Pulse_Checker_Prover_Base.solved
                                                                     nts))
@@ -1909,7 +1909,7 @@ let (prove :
 let (canon_post : Pulse_Syntax_Base.comp_st -> Pulse_Syntax_Base.comp_st) =
   fun c ->
     let canon_st_comp_post c1 =
-      match Pulse_Readback.readback_ty
+      match Pulse_Syntax_Pure.inspect_term
               (Pulse_Elaborate_Pure.elab_term c1.Pulse_Syntax_Base.post)
       with
       | FStar_Pervasives_Native.None -> c1
@@ -1919,7 +1919,7 @@ let (canon_post : Pulse_Syntax_Base.comp_st -> Pulse_Syntax_Base.comp_st) =
             Pulse_Syntax_Base.res = (c1.Pulse_Syntax_Base.res);
             Pulse_Syntax_Base.pre = (c1.Pulse_Syntax_Base.pre);
             Pulse_Syntax_Base.post =
-              (Pulse_Syntax_Base.with_range post_v
+              (Pulse_Syntax_Pure.pack_term_view_wr post_v
                  (Pulse_RuntimeUtils.range_of_term c1.Pulse_Syntax_Base.post))
           } in
     match c with
@@ -2588,7 +2588,7 @@ let (try_frame_pre_uvs :
                                                                     remaining_ctxt
                                                                     (Pulse_Syntax_Base.comp_pre
                                                                     c2))
-                                                                    (Pulse_Syntax_Base.tm_star
+                                                                    (Pulse_Syntax_Pure.tm_star
                                                                     (Pulse_Syntax_Base.comp_pre
                                                                     c2)
                                                                     remaining_ctxt)
@@ -3228,7 +3228,7 @@ let (prove_post_hint :
                                                                     (Pulse_Syntax_Pure.inspect_term
                                                                     remaining_ctxt))
                                                                     &&
-                                                                    (Pulse_Syntax_Base.uu___is_Tm_Star
+                                                                    (Pulse_Syntax_Pure.uu___is_Tm_Star
                                                                     (FStar_Pervasives_Native.__proj__Some__item__v
                                                                     (Pulse_Syntax_Pure.inspect_term
                                                                     remaining_ctxt)))

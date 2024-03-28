@@ -266,9 +266,9 @@ let rec (check_vprop_equiv :
                                    (Pulse_Syntax_Pure.inspect_term q))
                            with
                            | (FStar_Pervasives_Native.Some
-                              (Pulse_Syntax_Base.Tm_ForallSL (u1, b1, t1)),
+                              (Pulse_Syntax_Pure.Tm_ForallSL (u1, b1, t1)),
                               FStar_Pervasives_Native.Some
-                              (Pulse_Syntax_Base.Tm_ForallSL (u2, b2, t2)))
+                              (Pulse_Syntax_Pure.Tm_ForallSL (u2, b2, t2)))
                                ->
                                if
                                  (Pulse_Syntax_Base.eq_univ u1 u2) &&
@@ -386,9 +386,9 @@ let rec (check_vprop_equiv :
                                                    uu___1))) uu___1)
                                else check_vprop_equiv_ext r g p q
                            | (FStar_Pervasives_Native.Some
-                              (Pulse_Syntax_Base.Tm_Star (p1, p2)),
+                              (Pulse_Syntax_Pure.Tm_Star (p1, p2)),
                               FStar_Pervasives_Native.Some
-                              (Pulse_Syntax_Base.Tm_Star (q1, q2))) ->
+                              (Pulse_Syntax_Pure.Tm_Star (q1, q2))) ->
                                FStar_Tactics_Effect.tac_bind
                                  (FStar_Sealed.seal
                                     (Obj.magic

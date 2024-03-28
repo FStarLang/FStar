@@ -287,14 +287,14 @@ let (k_intro_pure :
                                                                     Pulse_Typing.tm_unit)
                                                                     (Pulse_Checker_Prover_Base.op_Star
                                                                     frame
-                                                                    Pulse_Syntax_Base.tm_emp)
+                                                                    Pulse_Syntax_Pure.tm_emp)
                                                                     frame
                                                                     (Pulse_Checker_Prover_Base.op_Star
-                                                                    (Pulse_Syntax_Base.tm_pure
+                                                                    (Pulse_Syntax_Pure.tm_pure
                                                                     p) frame)
                                                                     (Pulse_Checker_Prover_Base.op_Star
                                                                     frame
-                                                                    (Pulse_Syntax_Base.tm_pure
+                                                                    (Pulse_Syntax_Pure.tm_pure
                                                                     p)) k ()
                                                                     ()
                                                                     post_hint
@@ -528,7 +528,7 @@ let (is_uvar_implication : pure_uv_heuristic_t) =
                                                                     (Prims.of_int (138))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (138))
-                                                                    (Prims.of_int (50)))))
+                                                                    (Prims.of_int (44)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -540,7 +540,7 @@ let (is_uvar_implication : pure_uv_heuristic_t) =
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___3 ->
-                                                                    Pulse_Syntax_Base.tm_fstar
+                                                                    Pulse_Syntax_Pure.wr
                                                                     t0
                                                                     FStar_Range.range_0))
                                                                     (fun
@@ -569,7 +569,7 @@ let (is_uvar_implication : pure_uv_heuristic_t) =
                                                                     (if
                                                                     Pulse_Syntax_Base.eq_tm
                                                                     ty
-                                                                    (Pulse_Syntax_Base.tm_fstar
+                                                                    (Pulse_Syntax_Pure.wr
                                                                     (FStar_Reflection_V2_Builtins.pack_ln
                                                                     (FStar_Reflection_V2_Data.Tv_FVar
                                                                     (FStar_Reflection_V2_Builtins.pack_fv
@@ -645,7 +645,7 @@ let (is_uvar_implication : pure_uv_heuristic_t) =
                                                                     FStar_Pervasives_Native.Some
                                                                     (Prims.Mkdtuple2
                                                                     ((nm.Pulse_Syntax_Base.nm_index),
-                                                                    (Pulse_Syntax_Base.tm_fstar
+                                                                    (Pulse_Syntax_Pure.wr
                                                                     (FStar_Reflection_V2_Builtins.pack_ln
                                                                     (FStar_Reflection_V2_Data.Tv_App
                                                                     ((FStar_Reflection_V2_Builtins.pack_ln
@@ -847,18 +847,18 @@ let rec (try_collect_substs :
                                                           (Prims.of_int (196))
                                                           (Prims.of_int (18))
                                                           (Prims.of_int (196))
-                                                          (Prims.of_int (75)))))
+                                                          (Prims.of_int (69)))))
                                                  (FStar_Sealed.seal
                                                     (Obj.magic
                                                        (FStar_Range.mk_range
                                                           "Pulse.Checker.Prover.IntroPure.fst"
                                                           (Prims.of_int (196))
-                                                          (Prims.of_int (78))
+                                                          (Prims.of_int (72))
                                                           (Prims.of_int (202))
                                                           (Prims.of_int (21)))))
                                                  (Obj.magic
                                                     (try_collect_substs uvs
-                                                       (Pulse_Syntax_Base.tm_fstar
+                                                       (Pulse_Syntax_Pure.wr
                                                           rt0
                                                           FStar_Range.range_0)))
                                                  (fun uu___1 ->
@@ -872,7 +872,7 @@ let rec (try_collect_substs :
                                                                     (Prims.of_int (197))
                                                                     (Prims.of_int (18))
                                                                     (Prims.of_int (197))
-                                                                    (Prims.of_int (75)))))
+                                                                    (Prims.of_int (69)))))
                                                             (FStar_Sealed.seal
                                                                (Obj.magic
                                                                   (FStar_Range.mk_range
@@ -884,7 +884,7 @@ let rec (try_collect_substs :
                                                             (Obj.magic
                                                                (try_collect_substs
                                                                   uvs
-                                                                  (Pulse_Syntax_Base.tm_fstar
+                                                                  (Pulse_Syntax_Pure.wr
                                                                     rt1
                                                                     FStar_Range.range_0)))
                                                             (fun ss1 ->
@@ -1397,7 +1397,7 @@ let (intro_pure :
                                                                     (fun
                                                                     uu___3 ->
                                                                     Pulse_Checker_Prover_Base.op_Star
-                                                                    (Pulse_Syntax_Base.tm_pure
+                                                                    (Pulse_Syntax_Pure.tm_pure
                                                                     t)
                                                                     pst.Pulse_Checker_Prover_Base.solved))
                                                                     (fun
@@ -1544,7 +1544,7 @@ let (intro_pure :
                                                                     frame
                                                                     (Pulse_Checker_Prover_Base.op_Star
                                                                     frame
-                                                                    (Pulse_Syntax_Base.tm_pure
+                                                                    (Pulse_Syntax_Pure.tm_pure
                                                                     t_ss1))
                                                                     (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Checker_Prover_Base.op_Star
@@ -1552,7 +1552,7 @@ let (intro_pure :
                                                                     pst.Pulse_Checker_Prover_Base.remaining_ctxt)
                                                                     preamble.Pulse_Checker_Prover_Base.frame)
                                                                     (Pulse_Checker_Prover_Base.op_Star
-                                                                    (Pulse_Syntax_Base.tm_pure
+                                                                    (Pulse_Syntax_Pure.tm_pure
                                                                     t_ss1)
                                                                     (Pulse_Checker_Prover_Base.op_Array_Access
                                                                     ss_new
