@@ -1066,22 +1066,67 @@ let new_invariant (e:inames) (p:slprop u#a { is_big p })
 : pst_ghost_action_except iname_ref e p (fun i -> i -~- p)
 = lift_tot_action (refined_pre_action_as_action (new_invariant_pre_action e p))
 
+
+#push-options "--fuel 0 --ifuel 0 --split_queries no --z3rlimit_factor 2"
+let move_mem_invariant
+        (e:inames)
+        (m:mem)
+        (p:slprop)
+        (i:iname{
+            iname_for_p i p m.iheap.invariants /\
+            m.iname_ctr >= i /\
+            ~(i `Set.mem` e)
+        })
+: Lemma 
+  (ensures 
+    mem_invariant e m ==
+    (p `star` mem_invariant (set_add i e) m))
+= move_invariant e m.iheap.invariants p m.iname_ctr i;
+  star_assoc p 
+            (istore_invariant m.iname_ctr (set_add i e) m.iheap.invariants) 
+            (ctr_validity m.ctr m.ghost_ctr m.iname_ctr m.iheap)
+  
+
 let with_invariant (#a:Type)
                    (#fp:slprop)
                    (#fp':a -> slprop)
-                   (#opened_invariants:inames)
+                   (#e:inames)
                    (#p:slprop { is_big p })
                    (#maybe_ghost:bool)
-                   (i:iname_ref{not (mem_inv opened_invariants i)})
+                   (i:iname_ref{not (mem_inv e i)})
                    (f:_pst_action_except a maybe_ghost
-                        (add_inv opened_invariants i) 
+                        (add_inv e i) 
                         (p `star` fp)
                         (fun x -> p `star` fp' x))
-: _pst_action_except a maybe_ghost opened_invariants 
+: _pst_action_except a maybe_ghost e
       ((i -~- p) `star` fp)
       (fun x -> (i -~- p) `star` fp' x)
-= admit()
-
+= fun (frame:slprop) (m0:hmem_with_inv_except e(((i -~- p) `star` fp) `star` frame)) ->
+    assert (interp ((i -~- p) `star` fp `star` frame `star` mem_invariant e m0) m0);
+    assert (interp ((i -~- p)) m0);
+    (* elim the pts to assertion on h0 *)
+    assume (iname_for_p (name_of_inv i) p m0.iheap.invariants);
+    (* we know iname is live *)
+    assume (m0.iname_ctr >= name_of_inv i);
+    move_mem_invariant e m0 p (name_of_inv i);
+    assert (interp ((i -~- p) `star` fp `star` frame `star` (p `star` mem_invariant (set_add (name_of_inv i) e) m0)) m0);
+    assume (((i -~- p) `star` fp `star` frame `star` (p `star` mem_invariant (set_add (name_of_inv i) e) m0)) ==
+            (((p `star` fp) `star` ((i -~- p) `star` frame) `star` mem_invariant (add_inv e i) m0)));
+    assert (inames_ok (set_add (name_of_inv i) e) m0);
+    let m0 : hmem_with_inv_except (add_inv e i) ((p `star` fp) `star` ((i -~- p) `star` frame)) = m0 in
+    let (x, m1) = f ((i -~- p) `star` frame) m0 in
+    let m1 : hmem_with_inv_except (add_inv e i) ((p `star` fp' x) `star` ((i -~- p) `star` frame)) = m1 in
+    assert (interp (((p `star` fp' x) `star` ((i -~- p) `star` frame)) `star` mem_invariant (add_inv e i) m1) m1);
+    assume ((((p `star` fp' x) `star` ((i -~- p) `star` frame)) `star` mem_invariant (add_inv e i) m1) ==
+           (((i -~- p) `star` fp' x) `star` frame `star` (p `star` mem_invariant (set_add (name_of_inv i) e) m1)));   
+    assume (iname_for_p (name_of_inv i) p m1.iheap.invariants);
+    assume (m1.iname_ctr >= m0.iname_ctr);
+    move_mem_invariant e m1 p (name_of_inv i);             
+    assert (interp (((i -~- p) `star` fp' x) `star` frame `star` mem_invariant e m1) m1);
+    let m1 : hmem_with_inv_except e (((i -~- p) `star` fp' x) `star` frame) = m1 in
+    (x, m1)
+#pop-options
+ 
 let distinct_invariants_have_distinct_names
       (e:inames)
       (p:slprop u#m)
