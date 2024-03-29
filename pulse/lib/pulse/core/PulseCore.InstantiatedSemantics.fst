@@ -82,6 +82,9 @@ let small_slprop = small_slprop
 let down2 = down2
 let up2 = up2
 
+let small_is_also_big (s:slprop)
+  : Lemma (is_small s ==> is_big s) = small_is_also_big s
+
 let emp = emp
 let pure p = pure p
 let ( ** ) p q = p `star` q

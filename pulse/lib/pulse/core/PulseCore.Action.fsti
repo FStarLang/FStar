@@ -149,6 +149,7 @@ val lift2 (#a:Type u#2) #r #opens #pre #post
 // Invariants
 //////////////////////////////////////////////////////////////////////
 
+[@@ erasable]
 val iname_ref : Type0
 
 val name_of_inv (i:iname_ref) : GTot iname
@@ -179,6 +180,9 @@ val ( -~- ) (i:iname_ref) (p:slprop) : slprop
 // let add_inv (#p:_) (opens:inames) (i:inv p)
 // : inames
 // = Set.union (Set.singleton (name_of_inv i)) opens
+
+val dup_inv (i:iname_ref) (p:slprop)
+  : act unit Ghost emp_inames (i -~- p) (fun _ -> (i -~- p) ** (i -~- p))
 
 val new_invariant (p:big_vprop)
 : act iname_ref Ghost emp_inames p (fun i -> i -~- p)

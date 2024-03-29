@@ -445,6 +445,8 @@ let name_of_inv = name_of_inv
 
 let ( -~- ) i p = ( -~- ) i p
 
+let dup_inv (i:iname_ref) (p:slprop) =
+  fun #ictx -> dup_inv ictx i p
 let new_invariant p = fun #ictx -> new_invariant ictx p
 let fresh_invariant ctx p = fun #ictx -> fresh_invariant ictx p ctx
 let with_invariant #a #r #fp #fp' #f_opens #p i f =

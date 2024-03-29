@@ -229,6 +229,9 @@ val ghost_reveal (a:Type) (x:erased a)
 
 //////////////////////////////////////////////////////////////////
 
+val dup_inv (i:iname_ref) (p:slprop)
+  : stt_ghost unit emp_inames (i -~- p) (fun _ -> (i -~- p) ** (i -~- p))
+
 val new_invariant (p:big_vprop)
   : stt_ghost iname_ref emp_inames p (fun i -> i -~- p)
 
@@ -247,8 +250,8 @@ val with_invariant
     (#p:big_vprop)
     (i:iname_ref { not (mem_inv f_opens i) })
     ($f:unit -> stt_atomic a #obs f_opens
-                             (p ** fp)
-                             (fun x -> p ** fp' x))
+                           (p ** fp)
+                           (fun x -> p ** fp' x))
 : stt_atomic a #obs (add_inv f_opens i) ((i -~- p) ** fp) (fun x -> (i -~- p) ** fp' x)
 
 val with_invariant_g

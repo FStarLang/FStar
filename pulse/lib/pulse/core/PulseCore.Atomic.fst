@@ -270,6 +270,9 @@ let ghost_reveal (a:Type) (x:erased a)
   pure_trivial (reveal x == reveal x) ();
   m
 
+
+let dup_inv (i:iname_ref) (p:slprop) = A.dup_inv i p
+
 let new_invariant (p:big_vprop)
 : stt_ghost iname_ref emp_inames p (fun i -> i -~- p)
 = A.new_invariant p

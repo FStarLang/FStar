@@ -32,6 +32,9 @@ val up2 (s:small_slprop) : slprop
 let is_small (s:slprop) : prop = up2 (down2 s) == s
 let vprop = s:slprop { is_small s }
 
+val small_is_also_big (s:slprop)
+  : Lemma (is_small s ==> is_big s)
+
 val emp : vprop
 val pure (p:prop) : vprop
 val ( ** ) (p q : slprop) : slprop
@@ -47,6 +50,7 @@ val small_exists (#a:Type u#a) (p: a -> slprop)
 : Lemma (requires forall x. is_small (p x))
         (ensures is_small (op_exists_Star p))
 
+[@@ erasable]
 val iname_ref : Type0
 val ( -~- ) (i:iname_ref) (p:slprop) : slprop
 
