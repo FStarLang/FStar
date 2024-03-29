@@ -168,8 +168,8 @@ val with_invariant
 : act a r (add_inv f_opens i) ((i -~- p) ** fp) (fun x -> (i -~- p) ** fp' x)
 
 val distinct_invariants_have_distinct_names
-    (#p:slprop)
-    (#q:slprop)
+    (#p:big_vprop)
+    (#q:big_vprop)
     (i j:iname_ref)
     (_:squash (p =!= q))
 : act (squash (name_of_inv i =!= name_of_inv j))
@@ -179,7 +179,7 @@ val distinct_invariants_have_distinct_names
       (fun _ -> (i -~- p) ** (j -~- q))
 
 val invariant_name_identifies_invariant
-      (p q:slprop)
+      (p q:big_vprop)
       (i:iname_ref)
       (j:iname_ref { name_of_inv i == name_of_inv j } )
 : act (squash (p == q /\ i == j))
@@ -273,7 +273,7 @@ val gather
 // Big references
 ///////////////////////////////////////////////////////////////////
 
-val big_pts_to (#a:Type u#2) (#p:pcm a) (r:ref a p) (v:a) : slprop
+val big_pts_to (#a:Type u#2) (#p:pcm a) (r:ref a p) (v:a) : big_vprop
 
 val big_pts_to_not_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p) (v:a)
 : act (squash (not (is_ref_null r)))
@@ -426,7 +426,7 @@ val ghost_gather
     (ghost_pts_to r v0 ** ghost_pts_to r v1)
     (fun _ -> ghost_pts_to r (op pcm v0 v1))
 
-val big_ghost_pts_to (#a:Type u#2) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop
+val big_ghost_pts_to (#a:Type u#2) (#p:pcm a) (r:ghost_ref p) (v:a) : big_vprop
 
 val big_ghost_alloc
     (#a:Type)

@@ -277,8 +277,8 @@ val with_invariant (#a:Type)
 
 val distinct_invariants_have_distinct_names
       (e:inames)
-      (p:slprop u#m)
-      (q:slprop u#m { p =!= q })
+      (p:big_vprop u#m)
+      (q:big_vprop u#m { p =!= q })
       (i j: iname_ref)
 : pst_ghost_action_except u#0 u#m 
     (squash (name_of_inv i =!= name_of_inv j))
@@ -288,7 +288,7 @@ val distinct_invariants_have_distinct_names
 
 val invariant_name_identifies_invariant
       (e:inames)
-      (p q:slprop u#m)
+      (p q:big_vprop u#m)
       (i:iname_ref)
       (j:iname_ref { name_of_inv i == name_of_inv j } )
 : pst_ghost_action_except (squash (p == q /\ i == j)) e
@@ -304,7 +304,7 @@ let fresh_wrt (ctx:list iname_ref)
               (i:iname_ref)
   = forall i'. List.Tot.memP i' ctx ==> name_of_inv i' <> name_of_inv i
 
-val fresh_invariant (e:inames) (p:slprop u#m) (ctx:list iname_ref)
+val fresh_invariant (e:inames) (p:big_vprop u#m) (ctx:list iname_ref)
   : pst_ghost_action_except (i:iname_ref { fresh_wrt ctx i }) e
        p
        (fun i -> i -~- p)
