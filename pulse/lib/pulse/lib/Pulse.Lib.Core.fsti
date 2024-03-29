@@ -57,13 +57,19 @@ val equate_by_smt : unit
 
 
 [@@erasable]
-val vprop : Type u#3
+val vprop : Type u#4
+
+[@@erasable]
+val big_vprop : Type u#3
+val down (p:vprop) : big_vprop
+val up (p:big_vprop) : vprop
+let is_big (v:vprop) : prop = up (down v) == v
 
 [@@erasable]
 val small_vprop : Type u#2
-val down (p:vprop) : small_vprop
-val up (p:small_vprop) : vprop
-let is_small (v:vprop) : prop = up (down v) == v
+val down2 (p:vprop) : small_vprop
+val up2 (p:small_vprop) : vprop
+let is_small (v:vprop) : prop = up2 (down2 v) == v
 
 val emp : vprop
 val emp_is_small : squash (is_small emp)
@@ -72,12 +78,24 @@ val pure (p:prop) : vprop
 val pure_is_small (p:prop) : squash (is_small (pure p))
 
 val ( ** ) (p q:vprop) : vprop
+
+val big_star (p q : vprop)
+: Lemma
+    (requires is_big p /\ is_big q)
+    (ensures is_big (p ** q))
+
 val small_star (p q : vprop)
 : Lemma
     (requires is_small p /\ is_small q)
     (ensures is_small (p ** q))
 
 val ( exists* ) (#a:Type) (p:a -> vprop) : vprop
+
+val big_exists (#a:Type u#a) (p: a -> vprop)
+: Lemma
+    (requires forall x. is_big (p x))
+    (ensures is_big (op_exists_Star p))
+
 val small_exists (#a:Type u#a) (p: a -> vprop)
 : Lemma
     (requires forall x. is_small (p x))
