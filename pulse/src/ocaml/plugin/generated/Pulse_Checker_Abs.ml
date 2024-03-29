@@ -38,12 +38,12 @@ let (debug_abs :
 let (range_of_st_comp : Pulse_Syntax_Base.st_comp -> FStar_Range.range) =
   fun st ->
     Pulse_RuntimeUtils.union_ranges
-      (st.Pulse_Syntax_Base.pre).Pulse_Syntax_Base.range1
-      (st.Pulse_Syntax_Base.post).Pulse_Syntax_Base.range1
+      (Pulse_RuntimeUtils.range_of_term st.Pulse_Syntax_Base.pre)
+      (Pulse_RuntimeUtils.range_of_term st.Pulse_Syntax_Base.post)
 let (range_of_comp : Pulse_Syntax_Base.comp -> FStar_Range.range) =
   fun c ->
     match c with
-    | Pulse_Syntax_Base.C_Tot t -> t.Pulse_Syntax_Base.range1
+    | Pulse_Syntax_Base.C_Tot t -> Pulse_RuntimeUtils.range_of_term t
     | Pulse_Syntax_Base.C_ST st -> range_of_st_comp st
     | Pulse_Syntax_Base.C_STAtomic (uu___, uu___1, st) -> range_of_st_comp st
     | Pulse_Syntax_Base.C_STGhost st -> range_of_st_comp st
@@ -64,7 +64,7 @@ let rec (arrow_of_abs :
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "Pulse.Checker.Abs.fst"
-                 (Prims.of_int (55)) (Prims.of_int (3)) (Prims.of_int (118))
+                 (Prims.of_int (55)) (Prims.of_int (3)) (Prims.of_int (113))
                  (Prims.of_int (5)))))
         (FStar_Tactics_Effect.lift_div_tac
            (fun uu___ -> prog.Pulse_Syntax_Base.term1))
@@ -87,7 +87,7 @@ let rec (arrow_of_abs :
                           (Obj.magic
                              (FStar_Range.mk_range "Pulse.Checker.Abs.fst"
                                 (Prims.of_int (56)) (Prims.of_int (24))
-                                (Prims.of_int (118)) (Prims.of_int (5)))))
+                                (Prims.of_int (113)) (Prims.of_int (5)))))
                        (FStar_Tactics_Effect.lift_div_tac
                           (fun uu___1 -> Pulse_Typing_Env.fresh env))
                        (fun uu___1 ->
@@ -108,7 +108,7 @@ let rec (arrow_of_abs :
                                            "Pulse.Checker.Abs.fst"
                                            (Prims.of_int (57))
                                            (Prims.of_int (34))
-                                           (Prims.of_int (118))
+                                           (Prims.of_int (113))
                                            (Prims.of_int (5)))))
                                   (FStar_Tactics_Effect.lift_div_tac
                                      (fun uu___1 ->
@@ -132,7 +132,7 @@ let rec (arrow_of_abs :
                                                       "Pulse.Checker.Abs.fst"
                                                       (Prims.of_int (58))
                                                       (Prims.of_int (56))
-                                                      (Prims.of_int (118))
+                                                      (Prims.of_int (113))
                                                       (Prims.of_int (5)))))
                                              (FStar_Tactics_Effect.lift_div_tac
                                                 (fun uu___1 ->
@@ -159,7 +159,7 @@ let rec (arrow_of_abs :
                                                                  "Pulse.Checker.Abs.fst"
                                                                  (Prims.of_int (59))
                                                                  (Prims.of_int (41))
-                                                                 (Prims.of_int (118))
+                                                                 (Prims.of_int (113))
                                                                  (Prims.of_int (5)))))
                                                         (FStar_Tactics_Effect.lift_div_tac
                                                            (fun uu___1 ->
@@ -183,7 +183,7 @@ let rec (arrow_of_abs :
                                                                     "Pulse.Checker.Abs.fst"
                                                                     (Prims.of_int (61))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (118))
+                                                                    (Prims.of_int (113))
                                                                     (Prims.of_int (5)))))
                                                                    (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -209,7 +209,7 @@ let rec (arrow_of_abs :
                                                                     "Pulse.Checker.Abs.fst"
                                                                     (Prims.of_int (63))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (118))
+                                                                    (Prims.of_int (113))
                                                                     (Prims.of_int (5)))))
                                                                     (if
                                                                     FStar_Pervasives_Native.uu___is_Some
@@ -220,7 +220,7 @@ let rec (arrow_of_abs :
                                                                     (Pulse_Typing_Env.fail
                                                                     env1
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (prog.Pulse_Syntax_Base.range2))
+                                                                    (prog.Pulse_Syntax_Base.range1))
                                                                     "Unexpected elaborated annotation on function"))
                                                                     else
                                                                     Obj.magic
@@ -259,7 +259,7 @@ let rec (arrow_of_abs :
                                                                     "Pulse.Checker.Abs.fst"
                                                                     (Prims.of_int (66))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (73))
+                                                                    (Prims.of_int (74))
                                                                     (Prims.of_int (16)))))
                                                                     (Obj.magic
                                                                     (arrow_of_abs
@@ -275,21 +275,18 @@ let rec (arrow_of_abs :
                                                                     | 
                                                                     (arr,
                                                                     body2) ->
-                                                                    ({
-                                                                    Pulse_Syntax_Base.t
-                                                                    =
-                                                                    ((Pulse_Syntax_Pure.tm_arrow
+                                                                    ((Pulse_Syntax_Pure.wr
+                                                                    (Pulse_Syntax_Pure.tm_arrow
                                                                     b q
                                                                     (Pulse_Syntax_Base.C_Tot
                                                                     (Pulse_Syntax_Naming.close_term
-                                                                    arr x))).Pulse_Syntax_Base.t);
-                                                                    Pulse_Syntax_Base.range1
-                                                                    =
+                                                                    arr x)))
                                                                     (Pulse_RuntimeUtils.union_ranges
-                                                                    (b.Pulse_Syntax_Base.binder_ty).Pulse_Syntax_Base.range1
+                                                                    (Pulse_RuntimeUtils.range_of_term
+                                                                    b.Pulse_Syntax_Base.binder_ty)
+                                                                    (Pulse_RuntimeUtils.range_of_term
                                                                     (Pulse_Syntax_Naming.close_term
-                                                                    arr x).Pulse_Syntax_Base.range1)
-                                                                    },
+                                                                    arr x)))),
                                                                     {
                                                                     Pulse_Syntax_Base.term1
                                                                     =
@@ -307,9 +304,9 @@ let rec (arrow_of_abs :
                                                                     (Pulse_Syntax_Naming.close_st_term
                                                                     body2 x)
                                                                     });
-                                                                    Pulse_Syntax_Base.range2
+                                                                    Pulse_Syntax_Base.range1
                                                                     =
-                                                                    (prog.Pulse_Syntax_Base.range2);
+                                                                    (prog.Pulse_Syntax_Base.range1);
                                                                     Pulse_Syntax_Base.effect_tag
                                                                     =
                                                                     (prog.Pulse_Syntax_Base.effect_tag)
@@ -322,17 +319,17 @@ let rec (arrow_of_abs :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (76))
+                                                                    (Prims.of_int (77))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (76))
+                                                                    (Prims.of_int (77))
                                                                     (Prims.of_int (52)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (77))
+                                                                    (Prims.of_int (78))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (103))
+                                                                    (Prims.of_int (97))
                                                                     (Prims.of_int (37)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -351,126 +348,32 @@ let rec (arrow_of_abs :
                                                                     Pulse_Syntax_Base.C_Tot
                                                                     tannot ->
                                                                     Obj.magic
-                                                                    (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (79))
-                                                                    (Prims.of_int (24))
-                                                                    (Prims.of_int (79))
-                                                                    (Prims.of_int (68)))))
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (80))
-                                                                    (Prims.of_int (10))
-                                                                    (Prims.of_int (95))
-                                                                    (Prims.of_int (20)))))
-                                                                    (FStar_Tactics_Effect.lift_div_tac
-                                                                    (fun
-                                                                    uu___2 ->
-                                                                    Pulse_RuntimeUtils.hnf_lax
-                                                                    (Pulse_Typing.elab_env
-                                                                    env1)
-                                                                    (Pulse_Elaborate_Pure.elab_term
-                                                                    tannot)))
-                                                                    (fun
-                                                                    uu___2 ->
-                                                                    (fun
-                                                                    tannot'
-                                                                    ->
-                                                                    match 
-                                                                    Pulse_Readback.readback_ty
-                                                                    tannot'
-                                                                    with
-                                                                    | 
-                                                                    FStar_Pervasives_Native.None
-                                                                    ->
-                                                                    Obj.magic
-                                                                    (Obj.repr
-                                                                    (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (85))
-                                                                    (Prims.of_int (14))
-                                                                    (Prims.of_int (86))
-                                                                    (Prims.of_int (45)))))
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (82))
-                                                                    (Prims.of_int (12))
-                                                                    (Prims.of_int (86))
-                                                                    (Prims.of_int (45)))))
-                                                                    (Obj.magic
-                                                                    (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (86))
-                                                                    (Prims.of_int (18))
-                                                                    (Prims.of_int (86))
-                                                                    (Prims.of_int (44)))))
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "prims.fst"
-                                                                    (Prims.of_int (590))
-                                                                    (Prims.of_int (19))
-                                                                    (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))))
-                                                                    (Obj.magic
-                                                                    (FStar_Tactics_V2_Builtins.term_to_string
-                                                                    tannot'))
-                                                                    (fun
-                                                                    uu___2 ->
-                                                                    FStar_Tactics_Effect.lift_div_tac
-                                                                    (fun
-                                                                    uu___3 ->
-                                                                    Prims.strcat
-                                                                    "Unexpected type of abstraction, expected an arrow, got: "
-                                                                    (Prims.strcat
-                                                                    uu___2 "")))))
-                                                                    (fun
-                                                                    uu___2 ->
-                                                                    (fun
-                                                                    uu___2 ->
-                                                                    Obj.magic
-                                                                    (Pulse_Typing_Env.fail
-                                                                    env1
-                                                                    (FStar_Pervasives_Native.Some
-                                                                    (prog.Pulse_Syntax_Base.range2))
-                                                                    uu___2))
-                                                                    uu___2)))
-                                                                    | 
-                                                                    FStar_Pervasives_Native.Some
-                                                                    t ->
-                                                                    Obj.magic
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___2 ->
-                                                                    ({
-                                                                    Pulse_Syntax_Base.t
-                                                                    =
-                                                                    ((Pulse_Syntax_Pure.tm_arrow
+                                                                    ((Pulse_Syntax_Pure.wr
+                                                                    (Pulse_Syntax_Pure.tm_arrow
                                                                     b q
                                                                     (Pulse_Syntax_Base.C_Tot
                                                                     (Pulse_Syntax_Naming.close_term
-                                                                    t x))).Pulse_Syntax_Base.t);
-                                                                    Pulse_Syntax_Base.range1
-                                                                    =
+                                                                    (Pulse_RuntimeUtils.hnf_lax
+                                                                    (Pulse_Typing.elab_env
+                                                                    env1)
+                                                                    (Pulse_Elaborate_Pure.elab_term
+                                                                    tannot))
+                                                                    x)))
                                                                     (Pulse_RuntimeUtils.union_ranges
-                                                                    (b.Pulse_Syntax_Base.binder_ty).Pulse_Syntax_Base.range1
+                                                                    (Pulse_RuntimeUtils.range_of_term
+                                                                    b.Pulse_Syntax_Base.binder_ty)
+                                                                    (Pulse_RuntimeUtils.range_of_term
                                                                     (Pulse_Syntax_Naming.close_term
-                                                                    t x).Pulse_Syntax_Base.range1)
-                                                                    },
+                                                                    (Pulse_RuntimeUtils.hnf_lax
+                                                                    (Pulse_Typing.elab_env
+                                                                    env1)
+                                                                    (Pulse_Elaborate_Pure.elab_term
+                                                                    tannot))
+                                                                    x)))),
                                                                     {
                                                                     Pulse_Syntax_Base.term1
                                                                     =
@@ -497,33 +400,33 @@ let rec (arrow_of_abs :
                                                                     (Pulse_Syntax_Naming.close_st_term
                                                                     body1 x)
                                                                     });
-                                                                    Pulse_Syntax_Base.range2
+                                                                    Pulse_Syntax_Base.range1
                                                                     =
-                                                                    (prog.Pulse_Syntax_Base.range2);
+                                                                    (prog.Pulse_Syntax_Base.range1);
                                                                     Pulse_Syntax_Base.effect_tag
                                                                     =
                                                                     (prog.Pulse_Syntax_Base.effect_tag)
-                                                                    })))))
-                                                                    uu___2))
+                                                                    }))))
                                                                     | 
                                                                     uu___2 ->
                                                                     Obj.magic
+                                                                    (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (102))
+                                                                    (Prims.of_int (96))
                                                                     (Prims.of_int (12))
-                                                                    (Prims.of_int (103))
+                                                                    (Prims.of_int (97))
                                                                     (Prims.of_int (37)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (99))
+                                                                    (Prims.of_int (93))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (103))
+                                                                    (Prims.of_int (97))
                                                                     (Prims.of_int (37)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -531,9 +434,9 @@ let rec (arrow_of_abs :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (103))
+                                                                    (Prims.of_int (97))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (103))
+                                                                    (Prims.of_int (97))
                                                                     (Prims.of_int (36)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -563,9 +466,9 @@ let rec (arrow_of_abs :
                                                                     (Pulse_Typing_Env.fail
                                                                     env1
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (prog.Pulse_Syntax_Base.range2))
+                                                                    (prog.Pulse_Syntax_Base.range1))
                                                                     uu___3))
-                                                                    uu___3)))
+                                                                    uu___3))))
                                                                     uu___2)))
                                                                     else
                                                                     Obj.magic
@@ -579,7 +482,7 @@ let rec (arrow_of_abs :
                                                                     (Pulse_Typing_Env.fail
                                                                     env1
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (prog.Pulse_Syntax_Base.range2))
+                                                                    (prog.Pulse_Syntax_Base.range1))
                                                                     "Unannotated function body")
                                                                     | 
                                                                     FStar_Pervasives_Native.Some
@@ -588,18 +491,14 @@ let rec (arrow_of_abs :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___3 ->
-                                                                    ({
-                                                                    Pulse_Syntax_Base.t
-                                                                    =
-                                                                    ((Pulse_Syntax_Pure.tm_arrow
-                                                                    b q c).Pulse_Syntax_Base.t);
-                                                                    Pulse_Syntax_Base.range1
-                                                                    =
+                                                                    ((Pulse_Syntax_Pure.wr
+                                                                    (Pulse_Syntax_Pure.tm_arrow
+                                                                    b q c)
                                                                     (Pulse_RuntimeUtils.union_ranges
-                                                                    (b.Pulse_Syntax_Base.binder_ty).Pulse_Syntax_Base.range1
+                                                                    (Pulse_RuntimeUtils.range_of_term
+                                                                    b.Pulse_Syntax_Base.binder_ty)
                                                                     (range_of_comp
-                                                                    c))
-                                                                    },
+                                                                    c))),
                                                                     {
                                                                     Pulse_Syntax_Base.term1
                                                                     =
@@ -617,9 +516,9 @@ let rec (arrow_of_abs :
                                                                     (Pulse_Syntax_Naming.close_st_term
                                                                     body1 x)
                                                                     });
-                                                                    Pulse_Syntax_Base.range2
+                                                                    Pulse_Syntax_Base.range1
                                                                     =
-                                                                    (prog.Pulse_Syntax_Base.range2);
+                                                                    (prog.Pulse_Syntax_Base.range1);
                                                                     Pulse_Syntax_Base.effect_tag
                                                                     =
                                                                     (prog.Pulse_Syntax_Base.effect_tag)
@@ -684,13 +583,13 @@ let rec (rebuild_abs :
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "Pulse.Checker.Abs.fst"
-                   (Prims.of_int (130)) (Prims.of_int (4))
-                   (Prims.of_int (132)) (Prims.of_int (41)))))
+                   (Prims.of_int (125)) (Prims.of_int (4))
+                   (Prims.of_int (127)) (Prims.of_int (41)))))
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "Pulse.Checker.Abs.fst"
-                   (Prims.of_int (133)) (Prims.of_int (4))
-                   (Prims.of_int (182)) (Prims.of_int (47)))))
+                   (Prims.of_int (128)) (Prims.of_int (4))
+                   (Prims.of_int (177)) (Prims.of_int (47)))))
           (Obj.magic
              (debug_abs g
                 (fun uu___ ->
@@ -698,13 +597,13 @@ let rec (rebuild_abs :
                      (FStar_Sealed.seal
                         (Obj.magic
                            (FStar_Range.mk_range "Pulse.Checker.Abs.fst"
-                              (Prims.of_int (132)) (Prims.of_int (16))
-                              (Prims.of_int (132)) (Prims.of_int (40)))))
+                              (Prims.of_int (127)) (Prims.of_int (16))
+                              (Prims.of_int (127)) (Prims.of_int (40)))))
                      (FStar_Sealed.seal
                         (Obj.magic
                            (FStar_Range.mk_range "Pulse.Checker.Abs.fst"
-                              (Prims.of_int (130)) (Prims.of_int (26))
-                              (Prims.of_int (132)) (Prims.of_int (40)))))
+                              (Prims.of_int (125)) (Prims.of_int (26))
+                              (Prims.of_int (127)) (Prims.of_int (40)))))
                      (Obj.magic
                         (FStar_Tactics_V2_Builtins.term_to_string annot))
                      (fun uu___1 ->
@@ -715,17 +614,17 @@ let rec (rebuild_abs :
                                    (Obj.magic
                                       (FStar_Range.mk_range
                                          "Pulse.Checker.Abs.fst"
-                                         (Prims.of_int (130))
+                                         (Prims.of_int (125))
                                          (Prims.of_int (26))
-                                         (Prims.of_int (132))
+                                         (Prims.of_int (127))
                                          (Prims.of_int (40)))))
                                 (FStar_Sealed.seal
                                    (Obj.magic
                                       (FStar_Range.mk_range
                                          "Pulse.Checker.Abs.fst"
-                                         (Prims.of_int (130))
+                                         (Prims.of_int (125))
                                          (Prims.of_int (26))
-                                         (Prims.of_int (132))
+                                         (Prims.of_int (127))
                                          (Prims.of_int (40)))))
                                 (Obj.magic
                                    (FStar_Tactics_Effect.tac_bind
@@ -733,9 +632,9 @@ let rec (rebuild_abs :
                                          (Obj.magic
                                             (FStar_Range.mk_range
                                                "Pulse.Checker.Abs.fst"
-                                               (Prims.of_int (131))
+                                               (Prims.of_int (126))
                                                (Prims.of_int (16))
-                                               (Prims.of_int (131))
+                                               (Prims.of_int (126))
                                                (Prims.of_int (39)))))
                                       (FStar_Sealed.seal
                                          (Obj.magic
@@ -776,13 +675,13 @@ let rec (rebuild_abs :
                          (FStar_Sealed.seal
                             (Obj.magic
                                (FStar_Range.mk_range "Pulse.Checker.Abs.fst"
-                                  (Prims.of_int (135)) (Prims.of_int (15))
-                                  (Prims.of_int (135)) (Prims.of_int (34)))))
+                                  (Prims.of_int (130)) (Prims.of_int (15))
+                                  (Prims.of_int (130)) (Prims.of_int (34)))))
                          (FStar_Sealed.seal
                             (Obj.magic
                                (FStar_Range.mk_range "Pulse.Checker.Abs.fst"
-                                  (Prims.of_int (136)) (Prims.of_int (6))
-                                  (Prims.of_int (176)) (Prims.of_int (41)))))
+                                  (Prims.of_int (131)) (Prims.of_int (6))
+                                  (Prims.of_int (171)) (Prims.of_int (41)))))
                          (FStar_Tactics_Effect.lift_div_tac
                             (fun uu___1 ->
                                FStar_Reflection_V2_Builtins.inspect_binder b'))
@@ -794,17 +693,17 @@ let rec (rebuild_abs :
                                        (Obj.magic
                                           (FStar_Range.mk_range
                                              "Pulse.Checker.Abs.fst"
-                                             (Prims.of_int (136))
+                                             (Prims.of_int (131))
                                              (Prims.of_int (6))
-                                             (Prims.of_int (136))
+                                             (Prims.of_int (131))
                                              (Prims.of_int (56)))))
                                     (FStar_Sealed.seal
                                        (Obj.magic
                                           (FStar_Range.mk_range
                                              "Pulse.Checker.Abs.fst"
-                                             (Prims.of_int (136))
+                                             (Prims.of_int (131))
                                              (Prims.of_int (57))
-                                             (Prims.of_int (176))
+                                             (Prims.of_int (171))
                                              (Prims.of_int (41)))))
                                     (Obj.magic
                                        (qualifier_compat g
@@ -818,22 +717,21 @@ let rec (rebuild_abs :
                                                   (Obj.magic
                                                      (FStar_Range.mk_range
                                                         "Pulse.Checker.Abs.fst"
-                                                        (Prims.of_int (137))
+                                                        (Prims.of_int (132))
                                                         (Prims.of_int (15))
-                                                        (Prims.of_int (137))
-                                                        (Prims.of_int (34)))))
+                                                        (Prims.of_int (132))
+                                                        (Prims.of_int (22)))))
                                                (FStar_Sealed.seal
                                                   (Obj.magic
                                                      (FStar_Range.mk_range
                                                         "Pulse.Checker.Abs.fst"
-                                                        (Prims.of_int (137))
-                                                        (Prims.of_int (37))
-                                                        (Prims.of_int (176))
+                                                        (Prims.of_int (132))
+                                                        (Prims.of_int (25))
+                                                        (Prims.of_int (171))
                                                         (Prims.of_int (41)))))
                                                (FStar_Tactics_Effect.lift_div_tac
                                                   (fun uu___2 ->
-                                                     Pulse_Readback.readback_ty
-                                                       b'1.FStar_Reflection_V2_Data.sort2))
+                                                     b'1.FStar_Reflection_V2_Data.sort2))
                                                (fun uu___2 ->
                                                   (fun ty ->
                                                      Obj.magic
@@ -842,17 +740,17 @@ let rec (rebuild_abs :
                                                              (Obj.magic
                                                                 (FStar_Range.mk_range
                                                                    "Pulse.Checker.Abs.fst"
-                                                                   (Prims.of_int (138))
+                                                                   (Prims.of_int (133))
                                                                    (Prims.of_int (17))
-                                                                   (Prims.of_int (138))
+                                                                   (Prims.of_int (133))
                                                                    (Prims.of_int (34)))))
                                                           (FStar_Sealed.seal
                                                              (Obj.magic
                                                                 (FStar_Range.mk_range
                                                                    "Pulse.Checker.Abs.fst"
-                                                                   (Prims.of_int (139))
+                                                                   (Prims.of_int (134))
                                                                    (Prims.of_int (6))
-                                                                   (Prims.of_int (176))
+                                                                   (Prims.of_int (171))
                                                                    (Prims.of_int (41)))))
                                                           (FStar_Tactics_Effect.lift_div_tac
                                                              (fun uu___2 ->
@@ -860,13 +758,10 @@ let rec (rebuild_abs :
                                                                   c'))
                                                           (fun uu___2 ->
                                                              (fun comp ->
-                                                                match 
-                                                                  (ty, comp)
+                                                                match comp
                                                                 with
-                                                                | (FStar_Pervasives_Native.Some
-                                                                   ty1,
-                                                                   FStar_Reflection_V2_Data.C_Total
-                                                                   res_ty) ->
+                                                                | FStar_Reflection_V2_Data.C_Total
+                                                                    res_ty ->
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (if
@@ -879,23 +774,23 @@ let rec (rebuild_abs :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (143))
+                                                                    (Prims.of_int (138))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (143))
+                                                                    (Prims.of_int (138))
                                                                     (Prims.of_int (72)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (143))
+                                                                    (Prims.of_int (138))
                                                                     (Prims.of_int (75))
-                                                                    (Prims.of_int (146))
+                                                                    (Prims.of_int (141))
                                                                     (Prims.of_int (64)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___2 ->
                                                                     Pulse_Syntax_Base.mk_binder_with_attrs
-                                                                    ty1
+                                                                    ty
                                                                     b.Pulse_Syntax_Base.binder_ppname
                                                                     b.Pulse_Syntax_Base.binder_attrs))
                                                                     (fun
@@ -908,17 +803,17 @@ let rec (rebuild_abs :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (144))
+                                                                    (Prims.of_int (139))
                                                                     (Prims.of_int (21))
-                                                                    (Prims.of_int (144))
+                                                                    (Prims.of_int (139))
                                                                     (Prims.of_int (46)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (146))
+                                                                    (Prims.of_int (141))
                                                                     (Prims.of_int (12))
-                                                                    (Prims.of_int (146))
+                                                                    (Prims.of_int (141))
                                                                     (Prims.of_int (63)))))
                                                                     (Obj.magic
                                                                     (rebuild_abs
@@ -951,9 +846,9 @@ let rec (rebuild_abs :
                                                                     Pulse_Syntax_Base.body
                                                                     = body1
                                                                     });
-                                                                    Pulse_Syntax_Base.range2
+                                                                    Pulse_Syntax_Base.range1
                                                                     =
-                                                                    (t.Pulse_Syntax_Base.range2);
+                                                                    (t.Pulse_Syntax_Base.range1);
                                                                     Pulse_Syntax_Base.effect_tag
                                                                     =
                                                                     (t.Pulse_Syntax_Base.effect_tag)
@@ -974,17 +869,17 @@ let rec (rebuild_abs :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (152))
+                                                                    (Prims.of_int (147))
                                                                     (Prims.of_int (14))
-                                                                    (Prims.of_int (153))
+                                                                    (Prims.of_int (148))
                                                                     (Prims.of_int (44)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (151))
+                                                                    (Prims.of_int (146))
                                                                     (Prims.of_int (12))
-                                                                    (Prims.of_int (153))
+                                                                    (Prims.of_int (148))
                                                                     (Prims.of_int (44)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -992,9 +887,9 @@ let rec (rebuild_abs :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (153))
+                                                                    (Prims.of_int (148))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (153))
+                                                                    (Prims.of_int (148))
                                                                     (Prims.of_int (43)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -1031,24 +926,24 @@ let rec (rebuild_abs :
                                                                     | 
                                                                     FStar_Pervasives_Native.Some
                                                                     (Pulse_Syntax_Base.C_Tot
-                                                                    ty2) ->
+                                                                    ty1) ->
                                                                     Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (155))
+                                                                    (Prims.of_int (150))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (155))
+                                                                    (Prims.of_int (150))
                                                                     (Prims.of_int (34)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (154))
+                                                                    (Prims.of_int (149))
                                                                     (Prims.of_int (31))
-                                                                    (Prims.of_int (165))
+                                                                    (Prims.of_int (160))
                                                                     (Prims.of_int (11)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_NamedView.inspect
@@ -1070,17 +965,17 @@ let rec (rebuild_abs :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (158))
+                                                                    (Prims.of_int (153))
                                                                     (Prims.of_int (25))
-                                                                    (Prims.of_int (158))
+                                                                    (Prims.of_int (153))
                                                                     (Prims.of_int (91)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (157))
+                                                                    (Prims.of_int (152))
                                                                     (Prims.of_int (14))
-                                                                    (Prims.of_int (158))
+                                                                    (Prims.of_int (153))
                                                                     (Prims.of_int (91)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1088,9 +983,9 @@ let rec (rebuild_abs :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (158))
+                                                                    (Prims.of_int (153))
                                                                     (Prims.of_int (68))
-                                                                    (Prims.of_int (158))
+                                                                    (Prims.of_int (153))
                                                                     (Prims.of_int (90)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -1120,7 +1015,7 @@ let rec (rebuild_abs :
                                                                     (Pulse_Typing_Env.fail
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (body.Pulse_Syntax_Base.range2))
+                                                                    (body.Pulse_Syntax_Base.range1))
                                                                     uu___5))
                                                                     uu___5))
                                                                     | 
@@ -1131,17 +1026,17 @@ let rec (rebuild_abs :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (162))
+                                                                    (Prims.of_int (157))
                                                                     (Prims.of_int (20))
-                                                                    (Prims.of_int (164))
+                                                                    (Prims.of_int (159))
                                                                     (Prims.of_int (52)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (161))
+                                                                    (Prims.of_int (156))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (164))
+                                                                    (Prims.of_int (159))
                                                                     (Prims.of_int (52)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1149,9 +1044,9 @@ let rec (rebuild_abs :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (164))
+                                                                    (Prims.of_int (159))
                                                                     (Prims.of_int (22))
-                                                                    (Prims.of_int (164))
+                                                                    (Prims.of_int (159))
                                                                     (Prims.of_int (51)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -1164,7 +1059,7 @@ let rec (rebuild_abs :
                                                                     (Obj.magic
                                                                     (Pulse_Syntax_Printer.comp_to_string
                                                                     (Pulse_Syntax_Base.C_Tot
-                                                                    ty2)))
+                                                                    ty1)))
                                                                     (fun
                                                                     uu___5 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
@@ -1182,7 +1077,7 @@ let rec (rebuild_abs :
                                                                     (Pulse_Typing_Env.fail
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (body.Pulse_Syntax_Base.range2))
+                                                                    (body.Pulse_Syntax_Base.range1))
                                                                     uu___5))
                                                                     uu___5)))
                                                                     uu___3))
@@ -1201,7 +1096,7 @@ let rec (rebuild_abs :
                                                                     Pulse_Syntax_Base.b
                                                                     =
                                                                     (Pulse_Syntax_Base.mk_binder_with_attrs
-                                                                    ty1
+                                                                    ty
                                                                     b.Pulse_Syntax_Base.binder_ppname
                                                                     b.Pulse_Syntax_Base.binder_attrs);
                                                                     Pulse_Syntax_Base.q
@@ -1220,9 +1115,9 @@ let rec (rebuild_abs :
                                                                     Pulse_Syntax_Base.body
                                                                     = body
                                                                     });
-                                                                    Pulse_Syntax_Base.range2
+                                                                    Pulse_Syntax_Base.range1
                                                                     =
-                                                                    (t.Pulse_Syntax_Base.range2);
+                                                                    (t.Pulse_Syntax_Base.range1);
                                                                     Pulse_Syntax_Base.effect_tag
                                                                     =
                                                                     (t.Pulse_Syntax_Base.effect_tag)
@@ -1235,17 +1130,17 @@ let rec (rebuild_abs :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (175))
+                                                                    (Prims.of_int (170))
                                                                     (Prims.of_int (12))
-                                                                    (Prims.of_int (176))
+                                                                    (Prims.of_int (171))
                                                                     (Prims.of_int (41)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (174))
+                                                                    (Prims.of_int (169))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (176))
+                                                                    (Prims.of_int (171))
                                                                     (Prims.of_int (41)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1253,9 +1148,9 @@ let rec (rebuild_abs :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (176))
+                                                                    (Prims.of_int (171))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (176))
+                                                                    (Prims.of_int (171))
                                                                     (Prims.of_int (40)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -1285,7 +1180,7 @@ let rec (rebuild_abs :
                                                                     (Pulse_Typing_Env.fail
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (t.Pulse_Syntax_Base.range2))
+                                                                    (t.Pulse_Syntax_Base.range1))
                                                                     uu___3))
                                                                     uu___3))))
                                                                uu___2)))
@@ -1297,22 +1192,22 @@ let rec (rebuild_abs :
                          (FStar_Sealed.seal
                             (Obj.magic
                                (FStar_Range.mk_range "Pulse.Checker.Abs.fst"
-                                  (Prims.of_int (181)) (Prims.of_int (16))
-                                  (Prims.of_int (182)) (Prims.of_int (47)))))
+                                  (Prims.of_int (176)) (Prims.of_int (16))
+                                  (Prims.of_int (177)) (Prims.of_int (47)))))
                          (FStar_Sealed.seal
                             (Obj.magic
                                (FStar_Range.mk_range "Pulse.Checker.Abs.fst"
-                                  (Prims.of_int (180)) (Prims.of_int (6))
-                                  (Prims.of_int (182)) (Prims.of_int (47)))))
+                                  (Prims.of_int (175)) (Prims.of_int (6))
+                                  (Prims.of_int (177)) (Prims.of_int (47)))))
                          (Obj.magic
                             (FStar_Tactics_Effect.tac_bind
                                (FStar_Sealed.seal
                                   (Obj.magic
                                      (FStar_Range.mk_range
                                         "Pulse.Checker.Abs.fst"
-                                        (Prims.of_int (182))
+                                        (Prims.of_int (177))
                                         (Prims.of_int (22))
-                                        (Prims.of_int (182))
+                                        (Prims.of_int (177))
                                         (Prims.of_int (46)))))
                                (FStar_Sealed.seal
                                   (Obj.magic
@@ -1335,7 +1230,7 @@ let rec (rebuild_abs :
                                Obj.magic
                                  (Pulse_Typing_Env.fail g
                                     (FStar_Pervasives_Native.Some
-                                       (t.Pulse_Syntax_Base.range2)) uu___2))
+                                       (t.Pulse_Syntax_Base.range1)) uu___2))
                               uu___2))) uu___)
 let (preprocess_abs :
   Pulse_Typing_Env.env ->
@@ -1348,13 +1243,13 @@ let (preprocess_abs :
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "Pulse.Checker.Abs.fst"
-                 (Prims.of_int (188)) (Prims.of_int (19))
-                 (Prims.of_int (188)) (Prims.of_int (35)))))
+                 (Prims.of_int (183)) (Prims.of_int (19))
+                 (Prims.of_int (183)) (Prims.of_int (35)))))
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "Pulse.Checker.Abs.fst"
-                 (Prims.of_int (188)) (Prims.of_int (3)) (Prims.of_int (199))
-                 (Prims.of_int (51))))) (Obj.magic (arrow_of_abs g t))
+                 (Prims.of_int (183)) (Prims.of_int (3)) (Prims.of_int (188))
+                 (Prims.of_int (7))))) (Obj.magic (arrow_of_abs g t))
         (fun uu___ ->
            (fun uu___ ->
               match uu___ with
@@ -1364,13 +1259,13 @@ let (preprocess_abs :
                        (FStar_Sealed.seal
                           (Obj.magic
                              (FStar_Range.mk_range "Pulse.Checker.Abs.fst"
-                                (Prims.of_int (189)) (Prims.of_int (4))
-                                (Prims.of_int (189)) (Prims.of_int (88)))))
+                                (Prims.of_int (184)) (Prims.of_int (4))
+                                (Prims.of_int (184)) (Prims.of_int (88)))))
                        (FStar_Sealed.seal
                           (Obj.magic
                              (FStar_Range.mk_range "Pulse.Checker.Abs.fst"
-                                (Prims.of_int (189)) (Prims.of_int (89))
-                                (Prims.of_int (199)) (Prims.of_int (51)))))
+                                (Prims.of_int (184)) (Prims.of_int (89))
+                                (Prims.of_int (188)) (Prims.of_int (7)))))
                        (Obj.magic
                           (debug_abs g
                              (fun uu___1 ->
@@ -1379,9 +1274,9 @@ let (preprocess_abs :
                                      (Obj.magic
                                         (FStar_Range.mk_range
                                            "Pulse.Checker.Abs.fst"
-                                           (Prims.of_int (189))
+                                           (Prims.of_int (184))
                                            (Prims.of_int (63))
-                                           (Prims.of_int (189))
+                                           (Prims.of_int (184))
                                            (Prims.of_int (87)))))
                                   (FStar_Sealed.seal
                                      (Obj.magic
@@ -1406,18 +1301,18 @@ let (preprocess_abs :
                                      (Obj.magic
                                         (FStar_Range.mk_range
                                            "Pulse.Checker.Abs.fst"
-                                           (Prims.of_int (190))
+                                           (Prims.of_int (185))
                                            (Prims.of_int (19))
-                                           (Prims.of_int (190))
+                                           (Prims.of_int (185))
                                            (Prims.of_int (72)))))
                                   (FStar_Sealed.seal
                                      (Obj.magic
                                         (FStar_Range.mk_range
                                            "Pulse.Checker.Abs.fst"
-                                           (Prims.of_int (189))
+                                           (Prims.of_int (184))
                                            (Prims.of_int (89))
-                                           (Prims.of_int (199))
-                                           (Prims.of_int (51)))))
+                                           (Prims.of_int (188))
+                                           (Prims.of_int (7)))))
                                   (Obj.magic
                                      (Pulse_Checker_Pure.instantiate_term_implicits
                                         g annot))
@@ -1425,68 +1320,59 @@ let (preprocess_abs :
                                      (fun uu___2 ->
                                         match uu___2 with
                                         | (annot1, uu___3) ->
-                                            (match annot1.Pulse_Syntax_Base.t
-                                             with
-                                             | Pulse_Syntax_Base.Tm_FStar
-                                                 annot2 ->
-                                                 Obj.magic
-                                                   (FStar_Tactics_Effect.tac_bind
-                                                      (FStar_Sealed.seal
-                                                         (Obj.magic
-                                                            (FStar_Range.mk_range
-                                                               "Pulse.Checker.Abs.fst"
-                                                               (Prims.of_int (193))
-                                                               (Prims.of_int (16))
-                                                               (Prims.of_int (193))
-                                                               (Prims.of_int (37)))))
-                                                      (FStar_Sealed.seal
-                                                         (Obj.magic
-                                                            (FStar_Range.mk_range
-                                                               "Pulse.Checker.Abs.fst"
-                                                               (Prims.of_int (194))
-                                                               (Prims.of_int (6))
-                                                               (Prims.of_int (195))
-                                                               (Prims.of_int (9)))))
-                                                      (Obj.magic
-                                                         (rebuild_abs g t1
-                                                            annot2))
-                                                      (fun uu___4 ->
-                                                         (fun abs ->
-                                                            Obj.magic
-                                                              (FStar_Tactics_Effect.tac_bind
-                                                                 (FStar_Sealed.seal
-                                                                    (
-                                                                    Obj.magic
-                                                                    (FStar_Range.mk_range
+                                            Obj.magic
+                                              (FStar_Tactics_Effect.tac_bind
+                                                 (FStar_Sealed.seal
+                                                    (Obj.magic
+                                                       (FStar_Range.mk_range
+                                                          "Pulse.Checker.Abs.fst"
+                                                          (Prims.of_int (186))
+                                                          (Prims.of_int (14))
+                                                          (Prims.of_int (186))
+                                                          (Prims.of_int (35)))))
+                                                 (FStar_Sealed.seal
+                                                    (Obj.magic
+                                                       (FStar_Range.mk_range
+                                                          "Pulse.Checker.Abs.fst"
+                                                          (Prims.of_int (187))
+                                                          (Prims.of_int (4))
+                                                          (Prims.of_int (188))
+                                                          (Prims.of_int (7)))))
+                                                 (Obj.magic
+                                                    (rebuild_abs g t1 annot1))
+                                                 (fun uu___4 ->
+                                                    (fun abs ->
+                                                       Obj.magic
+                                                         (FStar_Tactics_Effect.tac_bind
+                                                            (FStar_Sealed.seal
+                                                               (Obj.magic
+                                                                  (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (194))
-                                                                    (Prims.of_int (6))
-                                                                    (Prims.of_int (194))
-                                                                    (Prims.of_int (90)))))
-                                                                 (FStar_Sealed.seal
-                                                                    (
-                                                                    Obj.magic
-                                                                    (FStar_Range.mk_range
+                                                                    (Prims.of_int (187))
+                                                                    (Prims.of_int (4))
+                                                                    (Prims.of_int (187))
+                                                                    (Prims.of_int (88)))))
+                                                            (FStar_Sealed.seal
+                                                               (Obj.magic
+                                                                  (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (193))
-                                                                    (Prims.of_int (10))
-                                                                    (Prims.of_int (193))
-                                                                    (Prims.of_int (13)))))
-                                                                 (Obj.magic
-                                                                    (
-                                                                    debug_abs
-                                                                    g
-                                                                    (fun
-                                                                    uu___4 ->
+                                                                    (Prims.of_int (186))
+                                                                    (Prims.of_int (8))
+                                                                    (Prims.of_int (186))
+                                                                    (Prims.of_int (11)))))
+                                                            (Obj.magic
+                                                               (debug_abs g
+                                                                  (fun uu___4
+                                                                    ->
                                                                     FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (194))
-                                                                    (Prims.of_int (64))
-                                                                    (Prims.of_int (194))
-                                                                    (Prims.of_int (89)))))
+                                                                    (Prims.of_int (187))
+                                                                    (Prims.of_int (62))
+                                                                    (Prims.of_int (187))
+                                                                    (Prims.of_int (87)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -1508,71 +1394,11 @@ let (preprocess_abs :
                                                                     (Prims.strcat
                                                                     uu___5
                                                                     "\n"))))))
-                                                                 (fun uu___4
-                                                                    ->
-                                                                    FStar_Tactics_Effect.lift_div_tac
-                                                                    (fun
-                                                                    uu___5 ->
-                                                                    abs))))
-                                                           uu___4))
-                                             | uu___4 ->
-                                                 Obj.magic
-                                                   (FStar_Tactics_Effect.tac_bind
-                                                      (FStar_Sealed.seal
-                                                         (Obj.magic
-                                                            (FStar_Range.mk_range
-                                                               "Pulse.Checker.Abs.fst"
-                                                               (Prims.of_int (198))
-                                                               (Prims.of_int (17))
-                                                               (Prims.of_int (199))
-                                                               (Prims.of_int (51)))))
-                                                      (FStar_Sealed.seal
-                                                         (Obj.magic
-                                                            (FStar_Range.mk_range
-                                                               "Pulse.Checker.Abs.fst"
-                                                               (Prims.of_int (197))
-                                                               (Prims.of_int (6))
-                                                               (Prims.of_int (199))
-                                                               (Prims.of_int (51)))))
-                                                      (Obj.magic
-                                                         (FStar_Tactics_Effect.tac_bind
-                                                            (FStar_Sealed.seal
-                                                               (Obj.magic
-                                                                  (FStar_Range.mk_range
-                                                                    "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (199))
-                                                                    (Prims.of_int (26))
-                                                                    (Prims.of_int (199))
-                                                                    (Prims.of_int (50)))))
-                                                            (FStar_Sealed.seal
-                                                               (Obj.magic
-                                                                  (FStar_Range.mk_range
-                                                                    "prims.fst"
-                                                                    (Prims.of_int (590))
-                                                                    (Prims.of_int (19))
-                                                                    (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))))
-                                                            (Obj.magic
-                                                               (Pulse_Syntax_Printer.term_to_string
-                                                                  annot1))
-                                                            (fun uu___5 ->
+                                                            (fun uu___4 ->
                                                                FStar_Tactics_Effect.lift_div_tac
-                                                                 (fun uu___6
-                                                                    ->
-                                                                    Prims.strcat
-                                                                    "Expected an arrow type as an annotation, got "
-                                                                    (Prims.strcat
-                                                                    uu___5 "")))))
-                                                      (fun uu___5 ->
-                                                         (fun uu___5 ->
-                                                            Obj.magic
-                                                              (Pulse_Typing_Env.fail
-                                                                 g
-                                                                 (FStar_Pervasives_Native.Some
-                                                                    (
-                                                                    t1.Pulse_Syntax_Base.range2))
-                                                                 uu___5))
-                                                           uu___5)))) uu___2)))
+                                                                 (fun uu___5
+                                                                    -> abs))))
+                                                      uu___4))) uu___2)))
                             uu___1))) uu___)
 let sub_effect_comp :
   'uuuuu .
@@ -1615,7 +1441,7 @@ let sub_effect_comp :
                                    Pulse_Syntax_Base.C_STGhost uu___1) ->
                                     if
                                       Pulse_Syntax_Base.eq_tm i
-                                        Pulse_Syntax_Base.tm_emp_inames
+                                        Pulse_Syntax_Pure.tm_emp_inames
                                     then
                                       FStar_Pervasives_Native.Some
                                         (Prims.Mkdtuple2
@@ -1654,13 +1480,13 @@ let (check_effect_annotation :
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "Pulse.Checker.Abs.fst"
-                     (Prims.of_int (225)) (Prims.of_int (12))
-                     (Prims.of_int (225)) (Prims.of_int (42)))))
+                     (Prims.of_int (214)) (Prims.of_int (12))
+                     (Prims.of_int (214)) (Prims.of_int (42)))))
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "Pulse.Checker.Abs.fst"
-                     (Prims.of_int (226)) (Prims.of_int (2))
-                     (Prims.of_int (276)) (Prims.of_int (7)))))
+                     (Prims.of_int (215)) (Prims.of_int (2))
+                     (Prims.of_int (265)) (Prims.of_int (7)))))
             (FStar_Tactics_Effect.lift_div_tac
                (fun uu___ ->
                   Prims.Mkdtuple2
@@ -1709,17 +1535,17 @@ let (check_effect_annotation :
                                              (Obj.magic
                                                 (FStar_Range.mk_range
                                                    "Pulse.Checker.Abs.fst"
-                                                   (Prims.of_int (246))
+                                                   (Prims.of_int (235))
                                                    (Prims.of_int (14))
-                                                   (Prims.of_int (246))
+                                                   (Prims.of_int (235))
                                                    (Prims.of_int (50)))))
                                           (FStar_Sealed.seal
                                              (Obj.magic
                                                 (FStar_Range.mk_range
                                                    "Pulse.Checker.Abs.fst"
-                                                   (Prims.of_int (246))
+                                                   (Prims.of_int (235))
                                                    (Prims.of_int (53))
-                                                   (Prims.of_int (267))
+                                                   (Prims.of_int (256))
                                                    (Prims.of_int (20)))))
                                           (FStar_Tactics_Effect.lift_div_tac
                                              (fun uu___1 ->
@@ -1734,17 +1560,17 @@ let (check_effect_annotation :
                                                         (Obj.magic
                                                            (FStar_Range.mk_range
                                                               "Pulse.Checker.Abs.fst"
-                                                              (Prims.of_int (247))
+                                                              (Prims.of_int (236))
                                                               (Prims.of_int (16))
-                                                              (Prims.of_int (247))
+                                                              (Prims.of_int (236))
                                                               (Prims.of_int (36)))))
                                                      (FStar_Sealed.seal
                                                         (Obj.magic
                                                            (FStar_Range.mk_range
                                                               "Pulse.Checker.Abs.fst"
-                                                              (Prims.of_int (247))
+                                                              (Prims.of_int (236))
                                                               (Prims.of_int (39))
-                                                              (Prims.of_int (267))
+                                                              (Prims.of_int (256))
                                                               (Prims.of_int (20)))))
                                                      (FStar_Tactics_Effect.lift_div_tac
                                                         (fun uu___1 ->
@@ -1758,17 +1584,17 @@ let (check_effect_annotation :
                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (248))
+                                                                    (Prims.of_int (237))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (248))
+                                                                    (Prims.of_int (237))
                                                                     (Prims.of_int (48)))))
                                                                 (FStar_Sealed.seal
                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (248))
+                                                                    (Prims.of_int (237))
                                                                     (Prims.of_int (51))
-                                                                    (Prims.of_int (267))
+                                                                    (Prims.of_int (256))
                                                                     (Prims.of_int (20)))))
                                                                 (FStar_Tactics_Effect.lift_div_tac
                                                                    (fun
@@ -1784,17 +1610,17 @@ let (check_effect_annotation :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (251))
+                                                                    (Prims.of_int (240))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (251))
+                                                                    (Prims.of_int (240))
                                                                     (Prims.of_int (88)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (252))
+                                                                    (Prims.of_int (241))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (267))
+                                                                    (Prims.of_int (256))
                                                                     (Prims.of_int (20)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_V2_Derived.with_policy
@@ -1813,17 +1639,17 @@ let (check_effect_annotation :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (252))
+                                                                    (Prims.of_int (241))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (259))
+                                                                    (Prims.of_int (248))
                                                                     (Prims.of_int (7)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (259))
+                                                                    (Prims.of_int (248))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (267))
+                                                                    (Prims.of_int (256))
                                                                     (Prims.of_int (20)))))
                                                                     (if
                                                                     FStar_Pervasives_Native.uu___is_None
@@ -1836,17 +1662,17 @@ let (check_effect_annotation :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (254))
-                                                                    (Prims.of_int (34))
-                                                                    (Prims.of_int (258))
+                                                                    (Prims.of_int (243))
+                                                                    (Prims.of_int (47))
+                                                                    (Prims.of_int (247))
                                                                     (Prims.of_int (9)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (254))
+                                                                    (Prims.of_int (243))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (258))
+                                                                    (Prims.of_int (247))
                                                                     (Prims.of_int (9)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1854,17 +1680,17 @@ let (check_effect_annotation :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (244))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (257))
+                                                                    (Prims.of_int (246))
                                                                     (Prims.of_int (27)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (254))
-                                                                    (Prims.of_int (34))
-                                                                    (Prims.of_int (258))
+                                                                    (Prims.of_int (243))
+                                                                    (Prims.of_int (47))
+                                                                    (Prims.of_int (247))
                                                                     (Prims.of_int (9)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1872,17 +1698,17 @@ let (check_effect_annotation :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (244))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (244))
                                                                     (Prims.of_int (80)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (244))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (257))
+                                                                    (Prims.of_int (246))
                                                                     (Prims.of_int (27)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1890,21 +1716,21 @@ let (check_effect_annotation :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (244))
                                                                     (Prims.of_int (74))
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (244))
                                                                     (Prims.of_int (80)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (244))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (244))
                                                                     (Prims.of_int (80)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.printable_term
+                                                                    Pulse_PP.printable_fstar_term
                                                                     i))
                                                                     (fun
                                                                     uu___1 ->
@@ -1927,17 +1753,17 @@ let (check_effect_annotation :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (256))
+                                                                    (Prims.of_int (245))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (257))
+                                                                    (Prims.of_int (246))
                                                                     (Prims.of_int (27)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (244))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (257))
+                                                                    (Prims.of_int (246))
                                                                     (Prims.of_int (27)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1945,17 +1771,17 @@ let (check_effect_annotation :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (256))
+                                                                    (Prims.of_int (245))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (256))
+                                                                    (Prims.of_int (245))
                                                                     (Prims.of_int (93)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (256))
+                                                                    (Prims.of_int (245))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (257))
+                                                                    (Prims.of_int (246))
                                                                     (Prims.of_int (27)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1963,21 +1789,21 @@ let (check_effect_annotation :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (256))
+                                                                    (Prims.of_int (245))
                                                                     (Prims.of_int (87))
-                                                                    (Prims.of_int (256))
+                                                                    (Prims.of_int (245))
                                                                     (Prims.of_int (93)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (256))
+                                                                    (Prims.of_int (245))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (256))
+                                                                    (Prims.of_int (245))
                                                                     (Prims.of_int (93)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.printable_term
+                                                                    Pulse_PP.printable_fstar_term
                                                                     j))
                                                                     (fun
                                                                     uu___2 ->
@@ -2022,7 +1848,8 @@ let (check_effect_annotation :
                                                                     (Pulse_Typing_Env.fail_doc
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (i.Pulse_Syntax_Base.range1))
+                                                                    (Pulse_RuntimeUtils.range_of_term
+                                                                    i))
                                                                     uu___1))
                                                                     uu___1)))
                                                                     else
@@ -2076,17 +1903,17 @@ let (check_effect_annotation :
                                              (Obj.magic
                                                 (FStar_Range.mk_range
                                                    "Pulse.Checker.Abs.fst"
-                                                   (Prims.of_int (246))
+                                                   (Prims.of_int (235))
                                                    (Prims.of_int (14))
-                                                   (Prims.of_int (246))
+                                                   (Prims.of_int (235))
                                                    (Prims.of_int (50)))))
                                           (FStar_Sealed.seal
                                              (Obj.magic
                                                 (FStar_Range.mk_range
                                                    "Pulse.Checker.Abs.fst"
-                                                   (Prims.of_int (246))
+                                                   (Prims.of_int (235))
                                                    (Prims.of_int (53))
-                                                   (Prims.of_int (267))
+                                                   (Prims.of_int (256))
                                                    (Prims.of_int (20)))))
                                           (FStar_Tactics_Effect.lift_div_tac
                                              (fun uu___1 ->
@@ -2101,17 +1928,17 @@ let (check_effect_annotation :
                                                         (Obj.magic
                                                            (FStar_Range.mk_range
                                                               "Pulse.Checker.Abs.fst"
-                                                              (Prims.of_int (247))
+                                                              (Prims.of_int (236))
                                                               (Prims.of_int (16))
-                                                              (Prims.of_int (247))
+                                                              (Prims.of_int (236))
                                                               (Prims.of_int (36)))))
                                                      (FStar_Sealed.seal
                                                         (Obj.magic
                                                            (FStar_Range.mk_range
                                                               "Pulse.Checker.Abs.fst"
-                                                              (Prims.of_int (247))
+                                                              (Prims.of_int (236))
                                                               (Prims.of_int (39))
-                                                              (Prims.of_int (267))
+                                                              (Prims.of_int (256))
                                                               (Prims.of_int (20)))))
                                                      (FStar_Tactics_Effect.lift_div_tac
                                                         (fun uu___1 ->
@@ -2125,17 +1952,17 @@ let (check_effect_annotation :
                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (248))
+                                                                    (Prims.of_int (237))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (248))
+                                                                    (Prims.of_int (237))
                                                                     (Prims.of_int (48)))))
                                                                 (FStar_Sealed.seal
                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (248))
+                                                                    (Prims.of_int (237))
                                                                     (Prims.of_int (51))
-                                                                    (Prims.of_int (267))
+                                                                    (Prims.of_int (256))
                                                                     (Prims.of_int (20)))))
                                                                 (FStar_Tactics_Effect.lift_div_tac
                                                                    (fun
@@ -2151,17 +1978,17 @@ let (check_effect_annotation :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (251))
+                                                                    (Prims.of_int (240))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (251))
+                                                                    (Prims.of_int (240))
                                                                     (Prims.of_int (88)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (252))
+                                                                    (Prims.of_int (241))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (267))
+                                                                    (Prims.of_int (256))
                                                                     (Prims.of_int (20)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_V2_Derived.with_policy
@@ -2180,17 +2007,17 @@ let (check_effect_annotation :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (252))
+                                                                    (Prims.of_int (241))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (259))
+                                                                    (Prims.of_int (248))
                                                                     (Prims.of_int (7)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (259))
+                                                                    (Prims.of_int (248))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (267))
+                                                                    (Prims.of_int (256))
                                                                     (Prims.of_int (20)))))
                                                                     (if
                                                                     FStar_Pervasives_Native.uu___is_None
@@ -2203,17 +2030,17 @@ let (check_effect_annotation :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (254))
-                                                                    (Prims.of_int (34))
-                                                                    (Prims.of_int (258))
+                                                                    (Prims.of_int (243))
+                                                                    (Prims.of_int (47))
+                                                                    (Prims.of_int (247))
                                                                     (Prims.of_int (9)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (254))
+                                                                    (Prims.of_int (243))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (258))
+                                                                    (Prims.of_int (247))
                                                                     (Prims.of_int (9)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -2221,17 +2048,17 @@ let (check_effect_annotation :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (244))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (257))
+                                                                    (Prims.of_int (246))
                                                                     (Prims.of_int (27)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (254))
-                                                                    (Prims.of_int (34))
-                                                                    (Prims.of_int (258))
+                                                                    (Prims.of_int (243))
+                                                                    (Prims.of_int (47))
+                                                                    (Prims.of_int (247))
                                                                     (Prims.of_int (9)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -2239,17 +2066,17 @@ let (check_effect_annotation :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (244))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (244))
                                                                     (Prims.of_int (80)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (244))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (257))
+                                                                    (Prims.of_int (246))
                                                                     (Prims.of_int (27)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -2257,21 +2084,21 @@ let (check_effect_annotation :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (244))
                                                                     (Prims.of_int (74))
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (244))
                                                                     (Prims.of_int (80)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (244))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (244))
                                                                     (Prims.of_int (80)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.printable_term
+                                                                    Pulse_PP.printable_fstar_term
                                                                     i))
                                                                     (fun
                                                                     uu___1 ->
@@ -2294,17 +2121,17 @@ let (check_effect_annotation :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (256))
+                                                                    (Prims.of_int (245))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (257))
+                                                                    (Prims.of_int (246))
                                                                     (Prims.of_int (27)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (244))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (257))
+                                                                    (Prims.of_int (246))
                                                                     (Prims.of_int (27)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -2312,17 +2139,17 @@ let (check_effect_annotation :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (256))
+                                                                    (Prims.of_int (245))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (256))
+                                                                    (Prims.of_int (245))
                                                                     (Prims.of_int (93)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (256))
+                                                                    (Prims.of_int (245))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (257))
+                                                                    (Prims.of_int (246))
                                                                     (Prims.of_int (27)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -2330,21 +2157,21 @@ let (check_effect_annotation :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (256))
+                                                                    (Prims.of_int (245))
                                                                     (Prims.of_int (87))
-                                                                    (Prims.of_int (256))
+                                                                    (Prims.of_int (245))
                                                                     (Prims.of_int (93)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (256))
+                                                                    (Prims.of_int (245))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (256))
+                                                                    (Prims.of_int (245))
                                                                     (Prims.of_int (93)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.printable_term
+                                                                    Pulse_PP.printable_fstar_term
                                                                     j))
                                                                     (fun
                                                                     uu___2 ->
@@ -2389,7 +2216,8 @@ let (check_effect_annotation :
                                                                     (Pulse_Typing_Env.fail_doc
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (i.Pulse_Syntax_Base.range1))
+                                                                    (Pulse_RuntimeUtils.range_of_term
+                                                                    i))
                                                                     uu___1))
                                                                     uu___1)))
                                                                     else
@@ -2433,17 +2261,17 @@ let (check_effect_annotation :
                                         (Obj.magic
                                            (FStar_Range.mk_range
                                               "Pulse.Checker.Abs.fst"
-                                              (Prims.of_int (271))
+                                              (Prims.of_int (260))
                                               (Prims.of_int (26))
-                                              (Prims.of_int (276))
+                                              (Prims.of_int (265))
                                               (Prims.of_int (7)))))
                                      (FStar_Sealed.seal
                                         (Obj.magic
                                            (FStar_Range.mk_range
                                               "Pulse.Checker.Abs.fst"
-                                              (Prims.of_int (271))
+                                              (Prims.of_int (260))
                                               (Prims.of_int (6))
-                                              (Prims.of_int (276))
+                                              (Prims.of_int (265))
                                               (Prims.of_int (7)))))
                                      (Obj.magic
                                         (FStar_Tactics_Effect.tac_bind
@@ -2451,17 +2279,17 @@ let (check_effect_annotation :
                                               (Obj.magic
                                                  (FStar_Range.mk_range
                                                     "Pulse.Checker.Abs.fst"
-                                                    (Prims.of_int (272))
+                                                    (Prims.of_int (261))
                                                     (Prims.of_int (8))
-                                                    (Prims.of_int (275))
+                                                    (Prims.of_int (264))
                                                     (Prims.of_int (67)))))
                                            (FStar_Sealed.seal
                                               (Obj.magic
                                                  (FStar_Range.mk_range
                                                     "Pulse.Checker.Abs.fst"
-                                                    (Prims.of_int (271))
+                                                    (Prims.of_int (260))
                                                     (Prims.of_int (26))
-                                                    (Prims.of_int (276))
+                                                    (Prims.of_int (265))
                                                     (Prims.of_int (7)))))
                                            (Obj.magic
                                               (FStar_Tactics_Effect.tac_bind
@@ -2469,17 +2297,17 @@ let (check_effect_annotation :
                                                     (Obj.magic
                                                        (FStar_Range.mk_range
                                                           "Pulse.Checker.Abs.fst"
-                                                          (Prims.of_int (272))
+                                                          (Prims.of_int (261))
                                                           (Prims.of_int (8))
-                                                          (Prims.of_int (273))
+                                                          (Prims.of_int (262))
                                                           (Prims.of_int (58)))))
                                                  (FStar_Sealed.seal
                                                     (Obj.magic
                                                        (FStar_Range.mk_range
                                                           "Pulse.Checker.Abs.fst"
-                                                          (Prims.of_int (272))
+                                                          (Prims.of_int (261))
                                                           (Prims.of_int (8))
-                                                          (Prims.of_int (275))
+                                                          (Prims.of_int (264))
                                                           (Prims.of_int (67)))))
                                                  (Obj.magic
                                                     (FStar_Tactics_Effect.tac_bind
@@ -2487,17 +2315,17 @@ let (check_effect_annotation :
                                                           (Obj.magic
                                                              (FStar_Range.mk_range
                                                                 "Pulse.Checker.Abs.fst"
-                                                                (Prims.of_int (273))
+                                                                (Prims.of_int (262))
                                                                 (Prims.of_int (22))
-                                                                (Prims.of_int (273))
+                                                                (Prims.of_int (262))
                                                                 (Prims.of_int (58)))))
                                                        (FStar_Sealed.seal
                                                           (Obj.magic
                                                              (FStar_Range.mk_range
                                                                 "Pulse.Checker.Abs.fst"
-                                                                (Prims.of_int (272))
+                                                                (Prims.of_int (261))
                                                                 (Prims.of_int (8))
-                                                                (Prims.of_int (273))
+                                                                (Prims.of_int (262))
                                                                 (Prims.of_int (58)))))
                                                        (Obj.magic
                                                           (FStar_Tactics_Effect.tac_bind
@@ -2505,17 +2333,17 @@ let (check_effect_annotation :
                                                                 (Obj.magic
                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (273))
+                                                                    (Prims.of_int (262))
                                                                     (Prims.of_int (40))
-                                                                    (Prims.of_int (273))
+                                                                    (Prims.of_int (262))
                                                                     (Prims.of_int (57)))))
                                                              (FStar_Sealed.seal
                                                                 (Obj.magic
                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (273))
+                                                                    (Prims.of_int (262))
                                                                     (Prims.of_int (22))
-                                                                    (Prims.of_int (273))
+                                                                    (Prims.of_int (262))
                                                                     (Prims.of_int (58)))))
                                                              (Obj.magic
                                                                 (Pulse_Syntax_Printer.tag_of_comp
@@ -2543,17 +2371,17 @@ let (check_effect_annotation :
                                                                (Obj.magic
                                                                   (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (274))
+                                                                    (Prims.of_int (263))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (275))
+                                                                    (Prims.of_int (264))
                                                                     (Prims.of_int (67)))))
                                                             (FStar_Sealed.seal
                                                                (Obj.magic
                                                                   (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (272))
+                                                                    (Prims.of_int (261))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (275))
+                                                                    (Prims.of_int (264))
                                                                     (Prims.of_int (67)))))
                                                             (Obj.magic
                                                                (FStar_Tactics_Effect.tac_bind
@@ -2561,17 +2389,17 @@ let (check_effect_annotation :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (275))
+                                                                    (Prims.of_int (264))
                                                                     (Prims.of_int (22))
-                                                                    (Prims.of_int (275))
+                                                                    (Prims.of_int (264))
                                                                     (Prims.of_int (67)))))
                                                                   (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (274))
+                                                                    (Prims.of_int (263))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (275))
+                                                                    (Prims.of_int (264))
                                                                     (Prims.of_int (67)))))
                                                                   (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -2579,17 +2407,17 @@ let (check_effect_annotation :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (275))
+                                                                    (Prims.of_int (264))
                                                                     (Prims.of_int (40))
-                                                                    (Prims.of_int (275))
+                                                                    (Prims.of_int (264))
                                                                     (Prims.of_int (66)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (275))
+                                                                    (Prims.of_int (264))
                                                                     (Prims.of_int (22))
-                                                                    (Prims.of_int (275))
+                                                                    (Prims.of_int (264))
                                                                     (Prims.of_int (67)))))
                                                                     (Obj.magic
                                                                     (Pulse_Syntax_Printer.tag_of_comp
@@ -2667,17 +2495,17 @@ let (maybe_rewrite_body_typing :
                                           (Obj.magic
                                              (FStar_Range.mk_range
                                                 "Pulse.Checker.Abs.fst"
-                                                (Prims.of_int (290))
+                                                (Prims.of_int (279))
                                                 (Prims.of_int (19))
-                                                (Prims.of_int (290))
+                                                (Prims.of_int (279))
                                                 (Prims.of_int (68)))))
                                        (FStar_Sealed.seal
                                           (Obj.magic
                                              (FStar_Range.mk_range
                                                 "Pulse.Checker.Abs.fst"
-                                                (Prims.of_int (289))
+                                                (Prims.of_int (278))
                                                 (Prims.of_int (20))
-                                                (Prims.of_int (303))
+                                                (Prims.of_int (292))
                                                 (Prims.of_int (7)))))
                                        (Obj.magic
                                           (Pulse_Checker_Pure.instantiate_term_implicits
@@ -2692,17 +2520,17 @@ let (maybe_rewrite_body_typing :
                                                          (Obj.magic
                                                             (FStar_Range.mk_range
                                                                "Pulse.Checker.Abs.fst"
-                                                               (Prims.of_int (291))
+                                                               (Prims.of_int (280))
                                                                (Prims.of_int (32))
-                                                               (Prims.of_int (291))
+                                                               (Prims.of_int (280))
                                                                (Prims.of_int (69)))))
                                                       (FStar_Sealed.seal
                                                          (Obj.magic
                                                             (FStar_Range.mk_range
                                                                "Pulse.Checker.Abs.fst"
-                                                               (Prims.of_int (290))
+                                                               (Prims.of_int (279))
                                                                (Prims.of_int (71))
-                                                               (Prims.of_int (302))
+                                                               (Prims.of_int (291))
                                                                (Prims.of_int (26)))))
                                                       (Obj.magic
                                                          (Pulse_Checker_Pure.check_universe
@@ -2719,17 +2547,17 @@ let (maybe_rewrite_body_typing :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (292))
+                                                                    (Prims.of_int (281))
                                                                     (Prims.of_int (14))
-                                                                    (Prims.of_int (293))
+                                                                    (Prims.of_int (282))
                                                                     (Prims.of_int (51)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (292))
+                                                                    (Prims.of_int (281))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (302))
+                                                                    (Prims.of_int (291))
                                                                     (Prims.of_int (26)))))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Base.norm_st_typing_inverse
@@ -2750,7 +2578,7 @@ let (maybe_rewrite_body_typing :
                                                                     (Pulse_Typing_Env.fail
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (e.Pulse_Syntax_Base.range2))
+                                                                    (e.Pulse_Syntax_Base.range1))
                                                                     "Inferred type is incompatible with annotation")
                                                                     | 
                                                                     FStar_Pervasives_Native.Some
@@ -2761,17 +2589,17 @@ let (maybe_rewrite_body_typing :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (298))
+                                                                    (Prims.of_int (287))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (301))
+                                                                    (Prims.of_int (290))
                                                                     (Prims.of_int (43)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (302))
+                                                                    (Prims.of_int (291))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (302))
+                                                                    (Prims.of_int (291))
                                                                     (Prims.of_int (26)))))
                                                                     (Obj.magic
                                                                     (debug_abs
@@ -2783,17 +2611,17 @@ let (maybe_rewrite_body_typing :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (301))
+                                                                    (Prims.of_int (290))
                                                                     (Prims.of_int (14))
-                                                                    (Prims.of_int (301))
+                                                                    (Prims.of_int (290))
                                                                     (Prims.of_int (42)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (299))
+                                                                    (Prims.of_int (288))
                                                                     (Prims.of_int (22))
-                                                                    (Prims.of_int (301))
+                                                                    (Prims.of_int (290))
                                                                     (Prims.of_int (42)))))
                                                                     (Obj.magic
                                                                     (Pulse_Syntax_Printer.comp_to_string
@@ -2809,17 +2637,17 @@ let (maybe_rewrite_body_typing :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (299))
+                                                                    (Prims.of_int (288))
                                                                     (Prims.of_int (22))
-                                                                    (Prims.of_int (301))
+                                                                    (Prims.of_int (290))
                                                                     (Prims.of_int (42)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (299))
+                                                                    (Prims.of_int (288))
                                                                     (Prims.of_int (22))
-                                                                    (Prims.of_int (301))
+                                                                    (Prims.of_int (290))
                                                                     (Prims.of_int (42)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -2827,9 +2655,9 @@ let (maybe_rewrite_body_typing :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (300))
+                                                                    (Prims.of_int (289))
                                                                     (Prims.of_int (14))
-                                                                    (Prims.of_int (300))
+                                                                    (Prims.of_int (289))
                                                                     (Prims.of_int (34)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -2877,7 +2705,7 @@ let (maybe_rewrite_body_typing :
                                  | uu___ ->
                                      Pulse_Typing_Env.fail g
                                        (FStar_Pervasives_Native.Some
-                                          (e.Pulse_Syntax_Base.range2))
+                                          (e.Pulse_Syntax_Base.range1))
                                        "Inferred type is incompatible with annotation"))
                        | FStar_Pervasives_Native.Some c1 ->
                            Obj.magic
@@ -2887,18 +2715,18 @@ let (maybe_rewrite_body_typing :
                                       (Obj.magic
                                          (FStar_Range.mk_range
                                             "Pulse.Checker.Abs.fst"
-                                            (Prims.of_int (308))
+                                            (Prims.of_int (297))
                                             (Prims.of_int (15))
-                                            (Prims.of_int (308))
+                                            (Prims.of_int (297))
                                             (Prims.of_int (32)))))
                                    (FStar_Sealed.seal
                                       (Obj.magic
                                          (FStar_Range.mk_range
                                             "Pulse.Checker.Abs.fst"
-                                            (Prims.of_int (309))
+                                            (Prims.of_int (298))
                                             (Prims.of_int (6))
-                                            (Prims.of_int (309))
-                                            (Prims.of_int (79)))))
+                                            (Prims.of_int (298))
+                                            (Prims.of_int (92)))))
                                    (FStar_Tactics_Effect.lift_div_tac
                                       (fun uu___ ->
                                          Pulse_Syntax_Base.st_comp_of_comp c1))
@@ -2907,7 +2735,8 @@ let (maybe_rewrite_body_typing :
                                          Obj.magic
                                            (Pulse_Typing_Env.fail g
                                               (FStar_Pervasives_Native.Some
-                                                 ((st.Pulse_Syntax_Base.pre).Pulse_Syntax_Base.range1))
+                                                 (Pulse_RuntimeUtils.range_of_term
+                                                    st.Pulse_Syntax_Base.pre))
                                               "Unexpected annotation on a function body"))
                                         uu___)))) uu___4 uu___3 uu___2 uu___1
               uu___
@@ -2945,15 +2774,15 @@ let rec (check_abs_core :
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "Pulse.Checker.Abs.fst"
-                   (Prims.of_int (324)) (Prims.of_int (14))
-                   (Prims.of_int (324)) (Prims.of_int (21)))))
+                   (Prims.of_int (313)) (Prims.of_int (14))
+                   (Prims.of_int (313)) (Prims.of_int (21)))))
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "Pulse.Checker.Abs.fst"
-                   (Prims.of_int (325)) (Prims.of_int (2))
-                   (Prims.of_int (442)) (Prims.of_int (29)))))
+                   (Prims.of_int (314)) (Prims.of_int (2))
+                   (Prims.of_int (431)) (Prims.of_int (29)))))
           (FStar_Tactics_Effect.lift_div_tac
-             (fun uu___ -> t.Pulse_Syntax_Base.range2))
+             (fun uu___ -> t.Pulse_Syntax_Base.range1))
           (fun uu___ ->
              (fun range ->
                 match t.Pulse_Syntax_Base.term1 with
@@ -2972,13 +2801,13 @@ let rec (check_abs_core :
                          (FStar_Sealed.seal
                             (Obj.magic
                                (FStar_Range.mk_range "Pulse.Checker.Abs.fst"
-                                  (Prims.of_int (328)) (Prims.of_int (24))
-                                  (Prims.of_int (328)) (Prims.of_int (49)))))
+                                  (Prims.of_int (317)) (Prims.of_int (24))
+                                  (Prims.of_int (317)) (Prims.of_int (49)))))
                          (FStar_Sealed.seal
                             (Obj.magic
                                (FStar_Range.mk_range "Pulse.Checker.Abs.fst"
-                                  (Prims.of_int (326)) (Prims.of_int (99))
-                                  (Prims.of_int (442)) (Prims.of_int (29)))))
+                                  (Prims.of_int (315)) (Prims.of_int (99))
+                                  (Prims.of_int (431)) (Prims.of_int (29)))))
                          (Obj.magic
                             (Pulse_Checker_Pure.compute_tot_term_type g t1))
                          (fun uu___ ->
@@ -2992,17 +2821,17 @@ let rec (check_abs_core :
                                            (Obj.magic
                                               (FStar_Range.mk_range
                                                  "Pulse.Checker.Abs.fst"
-                                                 (Prims.of_int (329))
+                                                 (Prims.of_int (318))
                                                  (Prims.of_int (28))
-                                                 (Prims.of_int (329))
+                                                 (Prims.of_int (318))
                                                  (Prims.of_int (46)))))
                                         (FStar_Sealed.seal
                                            (Obj.magic
                                               (FStar_Range.mk_range
                                                  "Pulse.Checker.Abs.fst"
-                                                 (Prims.of_int (328))
+                                                 (Prims.of_int (317))
                                                  (Prims.of_int (52))
-                                                 (Prims.of_int (442))
+                                                 (Prims.of_int (431))
                                                  (Prims.of_int (29)))))
                                         (Obj.magic
                                            (Pulse_Checker_Pure.check_universe
@@ -3018,17 +2847,17 @@ let rec (check_abs_core :
                                                           (Obj.magic
                                                              (FStar_Range.mk_range
                                                                 "Pulse.Checker.Abs.fst"
-                                                                (Prims.of_int (330))
+                                                                (Prims.of_int (319))
                                                                 (Prims.of_int (12))
-                                                                (Prims.of_int (330))
+                                                                (Prims.of_int (319))
                                                                 (Prims.of_int (19)))))
                                                        (FStar_Sealed.seal
                                                           (Obj.magic
                                                              (FStar_Range.mk_range
                                                                 "Pulse.Checker.Abs.fst"
-                                                                (Prims.of_int (330))
+                                                                (Prims.of_int (319))
                                                                 (Prims.of_int (22))
-                                                                (Prims.of_int (442))
+                                                                (Prims.of_int (431))
                                                                 (Prims.of_int (29)))))
                                                        (FStar_Tactics_Effect.lift_div_tac
                                                           (fun uu___4 ->
@@ -3042,17 +2871,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (331))
+                                                                    (Prims.of_int (320))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (331))
+                                                                    (Prims.of_int (320))
                                                                     (Prims.of_int (22)))))
                                                                   (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (331))
+                                                                    (Prims.of_int (320))
                                                                     (Prims.of_int (25))
-                                                                    (Prims.of_int (442))
+                                                                    (Prims.of_int (431))
                                                                     (Prims.of_int (29)))))
                                                                   (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -3069,17 +2898,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (332))
+                                                                    (Prims.of_int (321))
                                                                     (Prims.of_int (14))
-                                                                    (Prims.of_int (332))
+                                                                    (Prims.of_int (321))
                                                                     (Prims.of_int (50)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (332))
+                                                                    (Prims.of_int (321))
                                                                     (Prims.of_int (53))
-                                                                    (Prims.of_int (442))
+                                                                    (Prims.of_int (431))
                                                                     (Prims.of_int (29)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -3101,17 +2930,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (333))
+                                                                    (Prims.of_int (322))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (333))
+                                                                    (Prims.of_int (322))
                                                                     (Prims.of_int (38)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (333))
+                                                                    (Prims.of_int (322))
                                                                     (Prims.of_int (41))
-                                                                    (Prims.of_int (442))
+                                                                    (Prims.of_int (431))
                                                                     (Prims.of_int (29)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -3129,17 +2958,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (334))
+                                                                    (Prims.of_int (323))
                                                                     (Prims.of_int (22))
-                                                                    (Prims.of_int (334))
+                                                                    (Prims.of_int (323))
                                                                     (Prims.of_int (45)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (334))
+                                                                    (Prims.of_int (323))
                                                                     (Prims.of_int (48))
-                                                                    (Prims.of_int (442))
+                                                                    (Prims.of_int (431))
                                                                     (Prims.of_int (29)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -3157,17 +2986,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (335))
+                                                                    (Prims.of_int (324))
                                                                     (Prims.of_int (14))
-                                                                    (Prims.of_int (335))
+                                                                    (Prims.of_int (324))
                                                                     (Prims.of_int (36)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (336))
+                                                                    (Prims.of_int (325))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (442))
+                                                                    (Prims.of_int (431))
                                                                     (Prims.of_int (29)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -3190,17 +3019,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (339))
+                                                                    (Prims.of_int (328))
                                                                     (Prims.of_int (44))
-                                                                    (Prims.of_int (339))
+                                                                    (Prims.of_int (328))
                                                                     (Prims.of_int (79)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (337))
+                                                                    (Prims.of_int (326))
                                                                     (Prims.of_int (17))
-                                                                    (Prims.of_int (373))
+                                                                    (Prims.of_int (362))
                                                                     (Prims.of_int (29)))))
                                                                     (Obj.magic
                                                                     (check_abs_core
@@ -3225,17 +3054,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (343))
+                                                                    (Prims.of_int (332))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (347))
+                                                                    (Prims.of_int (336))
                                                                     (Prims.of_int (35)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (339))
+                                                                    (Prims.of_int (328))
                                                                     (Prims.of_int (82))
-                                                                    (Prims.of_int (373))
+                                                                    (Prims.of_int (362))
                                                                     (Prims.of_int (29)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -3243,22 +3072,22 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (343))
+                                                                    (Prims.of_int (332))
                                                                     (Prims.of_int (14))
-                                                                    (Prims.of_int (343))
+                                                                    (Prims.of_int (332))
                                                                     (Prims.of_int (54)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (343))
+                                                                    (Prims.of_int (332))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (347))
+                                                                    (Prims.of_int (336))
                                                                     (Prims.of_int (35)))))
                                                                     (Obj.magic
                                                                     (sub_effect_comp
                                                                     g'
-                                                                    body1.Pulse_Syntax_Base.range2
+                                                                    body1.Pulse_Syntax_Base.range1
                                                                     asc1
                                                                     c_body))
                                                                     (fun
@@ -3305,17 +3134,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (348))
+                                                                    (Prims.of_int (337))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (373))
+                                                                    (Prims.of_int (362))
                                                                     (Prims.of_int (29)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (348))
+                                                                    (Prims.of_int (337))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (373))
+                                                                    (Prims.of_int (362))
                                                                     (Prims.of_int (29)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -3331,22 +3160,22 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (352))
+                                                                    (Prims.of_int (341))
                                                                     (Prims.of_int (32))
-                                                                    (Prims.of_int (352))
+                                                                    (Prims.of_int (341))
                                                                     (Prims.of_int (80)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (348))
+                                                                    (Prims.of_int (337))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (373))
+                                                                    (Prims.of_int (362))
                                                                     (Prims.of_int (29)))))
                                                                     (Obj.magic
                                                                     (check_effect_annotation
                                                                     g'
-                                                                    body1.Pulse_Syntax_Base.range2
+                                                                    body1.Pulse_Syntax_Base.range1
                                                                     asc1
                                                                     c_body1))
                                                                     (fun
@@ -3365,17 +3194,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (353))
+                                                                    (Prims.of_int (342))
                                                                     (Prims.of_int (24))
-                                                                    (Prims.of_int (353))
+                                                                    (Prims.of_int (342))
                                                                     (Prims.of_int (55)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (353))
+                                                                    (Prims.of_int (342))
                                                                     (Prims.of_int (58))
-                                                                    (Prims.of_int (373))
+                                                                    (Prims.of_int (362))
                                                                     (Prims.of_int (29)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -3398,17 +3227,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (357))
+                                                                    (Prims.of_int (346))
                                                                     (Prims.of_int (38))
-                                                                    (Prims.of_int (357))
+                                                                    (Prims.of_int (346))
                                                                     (Prims.of_int (79)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (353))
+                                                                    (Prims.of_int (342))
                                                                     (Prims.of_int (58))
-                                                                    (Prims.of_int (373))
+                                                                    (Prims.of_int (362))
                                                                     (Prims.of_int (29)))))
                                                                     (Obj.magic
                                                                     (maybe_rewrite_body_typing
@@ -3433,17 +3262,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (360))
+                                                                    (Prims.of_int (349))
                                                                     (Prims.of_int (24))
-                                                                    (Prims.of_int (360))
+                                                                    (Prims.of_int (349))
                                                                     (Prims.of_int (44)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (361))
+                                                                    (Prims.of_int (350))
                                                                     (Prims.of_int (50))
-                                                                    (Prims.of_int (373))
+                                                                    (Prims.of_int (362))
                                                                     (Prims.of_int (29)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -3463,17 +3292,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (365))
+                                                                    (Prims.of_int (354))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (368))
+                                                                    (Prims.of_int (357))
                                                                     (Prims.of_int (28)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (373))
+                                                                    (Prims.of_int (362))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (373))
+                                                                    (Prims.of_int (362))
                                                                     (Prims.of_int (29)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -3481,17 +3310,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (365))
+                                                                    (Prims.of_int (354))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (367))
+                                                                    (Prims.of_int (356))
                                                                     (Prims.of_int (74)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (365))
+                                                                    (Prims.of_int (354))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (368))
+                                                                    (Prims.of_int (357))
                                                                     (Prims.of_int (28)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -3499,17 +3328,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (365))
+                                                                    (Prims.of_int (354))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (366))
+                                                                    (Prims.of_int (355))
                                                                     (Prims.of_int (19)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (365))
+                                                                    (Prims.of_int (354))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (367))
+                                                                    (Prims.of_int (356))
                                                                     (Prims.of_int (74)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Unseal.unseal
@@ -3529,17 +3358,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (367))
+                                                                    (Prims.of_int (356))
                                                                     (Prims.of_int (30))
-                                                                    (Prims.of_int (367))
+                                                                    (Prims.of_int (356))
                                                                     (Prims.of_int (66)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (367))
+                                                                    (Prims.of_int (356))
                                                                     (Prims.of_int (30))
-                                                                    (Prims.of_int (367))
+                                                                    (Prims.of_int (356))
                                                                     (Prims.of_int (73)))))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Pure.instantiate_term_implicits
@@ -3640,17 +3469,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (376))
+                                                                    (Prims.of_int (365))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (393))
+                                                                    (Prims.of_int (382))
                                                                     (Prims.of_int (47)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (374))
+                                                                    (Prims.of_int (363))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (442))
+                                                                    (Prims.of_int (431))
                                                                     (Prims.of_int (29)))))
                                                                     (match 
                                                                     asc1.Pulse_Syntax_Base.elaborated
@@ -3663,7 +3492,7 @@ let rec (check_abs_core :
                                                                     (Pulse_Typing_Env.fail
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (body.Pulse_Syntax_Base.range2))
+                                                                    (body.Pulse_Syntax_Base.range1))
                                                                     "Missing annotation on a function body"))
                                                                     | 
                                                                     FStar_Pervasives_Native.Some
@@ -3676,17 +3505,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (383))
+                                                                    (Prims.of_int (372))
                                                                     (Prims.of_int (21))
-                                                                    (Prims.of_int (385))
+                                                                    (Prims.of_int (374))
                                                                     (Prims.of_int (53)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (381))
+                                                                    (Prims.of_int (370))
                                                                     (Prims.of_int (28))
-                                                                    (Prims.of_int (386))
+                                                                    (Prims.of_int (375))
                                                                     (Prims.of_int (9)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -3694,9 +3523,9 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (385))
+                                                                    (Prims.of_int (374))
                                                                     (Prims.of_int (24))
-                                                                    (Prims.of_int (385))
+                                                                    (Prims.of_int (374))
                                                                     (Prims.of_int (52)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -3727,7 +3556,7 @@ let rec (check_abs_core :
                                                                     (Pulse_Typing_Env.fail
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (body.Pulse_Syntax_Base.range2))
+                                                                    (body.Pulse_Syntax_Base.range1))
                                                                     uu___5))
                                                                     uu___5)))
                                                                     | 
@@ -3750,7 +3579,7 @@ let rec (check_abs_core :
                                                                     (Pulse_Syntax_Base.comp_inames
                                                                     c) px
                                                                     else
-                                                                    Pulse_Syntax_Base.tm_emp_inames),
+                                                                    Pulse_Syntax_Pure.tm_emp_inames),
                                                                     (FStar_Pervasives_Native.Some
                                                                     (Pulse_Syntax_Naming.open_term_nv
                                                                     (Pulse_Syntax_Base.comp_res
@@ -3779,17 +3608,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (395))
+                                                                    (Prims.of_int (384))
                                                                     (Prims.of_int (41))
-                                                                    (Prims.of_int (395))
+                                                                    (Prims.of_int (384))
                                                                     (Prims.of_int (66)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (394))
+                                                                    (Prims.of_int (383))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (442))
+                                                                    (Prims.of_int (431))
                                                                     (Prims.of_int (29)))))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Pure.check_vprop
@@ -3812,17 +3641,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (396))
+                                                                    (Prims.of_int (385))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (396))
+                                                                    (Prims.of_int (385))
                                                                     (Prims.of_int (39)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (396))
+                                                                    (Prims.of_int (385))
                                                                     (Prims.of_int (42))
-                                                                    (Prims.of_int (442))
+                                                                    (Prims.of_int (431))
                                                                     (Prims.of_int (29)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -3840,17 +3669,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (398))
+                                                                    (Prims.of_int (387))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (411))
+                                                                    (Prims.of_int (400))
                                                                     (Prims.of_int (31)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (412))
+                                                                    (Prims.of_int (401))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (442))
+                                                                    (Prims.of_int (431))
                                                                     (Prims.of_int (29)))))
                                                                     (match post_hint_body
                                                                     with
@@ -3861,7 +3690,7 @@ let rec (check_abs_core :
                                                                     (Pulse_Typing_Env.fail_doc
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (body.Pulse_Syntax_Base.range2))
+                                                                    (body.Pulse_Syntax_Base.range1))
                                                                     [
                                                                     Pulse_PP.text
                                                                     "Top-level functions must be annotated with pre and post conditions"])
@@ -3874,17 +3703,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (405))
+                                                                    (Prims.of_int (394))
                                                                     (Prims.of_int (14))
-                                                                    (Prims.of_int (409))
+                                                                    (Prims.of_int (398))
                                                                     (Prims.of_int (22)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (411))
+                                                                    (Prims.of_int (400))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (411))
+                                                                    (Prims.of_int (400))
                                                                     (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Base.intro_post_hint
@@ -3913,17 +3742,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (414))
+                                                                    (Prims.of_int (403))
                                                                     (Prims.of_int (23))
-                                                                    (Prims.of_int (414))
+                                                                    (Prims.of_int (403))
                                                                     (Prims.of_int (49)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (414))
+                                                                    (Prims.of_int (403))
                                                                     (Prims.of_int (52))
-                                                                    (Prims.of_int (442))
+                                                                    (Prims.of_int (431))
                                                                     (Prims.of_int (29)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -3941,17 +3770,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (415))
+                                                                    (Prims.of_int (404))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (415))
+                                                                    (Prims.of_int (404))
                                                                     (Prims.of_int (73)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (415))
+                                                                    (Prims.of_int (404))
                                                                     (Prims.of_int (77))
-                                                                    (Prims.of_int (442))
+                                                                    (Prims.of_int (431))
                                                                     (Prims.of_int (29)))))
                                                                     (Obj.magic
                                                                     (check g'
@@ -3968,17 +3797,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (417))
+                                                                    (Prims.of_int (406))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (417))
+                                                                    (Prims.of_int (406))
                                                                     (Prims.of_int (65)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (415))
+                                                                    (Prims.of_int (404))
                                                                     (Prims.of_int (77))
-                                                                    (Prims.of_int (442))
+                                                                    (Prims.of_int (431))
                                                                     (Prims.of_int (29)))))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Base.apply_checker_result_k
@@ -4005,17 +3834,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (417))
+                                                                    (Prims.of_int (406))
                                                                     (Prims.of_int (68))
-                                                                    (Prims.of_int (442))
+                                                                    (Prims.of_int (431))
                                                                     (Prims.of_int (29)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (417))
+                                                                    (Prims.of_int (406))
                                                                     (Prims.of_int (68))
-                                                                    (Prims.of_int (442))
+                                                                    (Prims.of_int (431))
                                                                     (Prims.of_int (29)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -4031,17 +3860,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (419))
+                                                                    (Prims.of_int (408))
                                                                     (Prims.of_int (41))
-                                                                    (Prims.of_int (419))
+                                                                    (Prims.of_int (408))
                                                                     (Prims.of_int (101)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (419))
+                                                                    (Prims.of_int (408))
                                                                     (Prims.of_int (106))
-                                                                    (Prims.of_int (442))
+                                                                    (Prims.of_int (431))
                                                                     (Prims.of_int (29)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -4067,17 +3896,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (423))
+                                                                    (Prims.of_int (412))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (427))
+                                                                    (Prims.of_int (416))
                                                                     (Prims.of_int (35)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (419))
+                                                                    (Prims.of_int (408))
                                                                     (Prims.of_int (106))
-                                                                    (Prims.of_int (442))
+                                                                    (Prims.of_int (431))
                                                                     (Prims.of_int (29)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -4085,22 +3914,22 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (423))
+                                                                    (Prims.of_int (412))
                                                                     (Prims.of_int (14))
-                                                                    (Prims.of_int (423))
+                                                                    (Prims.of_int (412))
                                                                     (Prims.of_int (59)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (423))
+                                                                    (Prims.of_int (412))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (427))
+                                                                    (Prims.of_int (416))
                                                                     (Prims.of_int (35)))))
                                                                     (Obj.magic
                                                                     (sub_effect_comp
                                                                     g'
-                                                                    body1.Pulse_Syntax_Base.range2
+                                                                    body1.Pulse_Syntax_Base.range1
                                                                     c_opened
                                                                     c_body))
                                                                     (fun
@@ -4148,17 +3977,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (428))
+                                                                    (Prims.of_int (417))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (442))
+                                                                    (Prims.of_int (431))
                                                                     (Prims.of_int (29)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (428))
+                                                                    (Prims.of_int (417))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (442))
+                                                                    (Prims.of_int (431))
                                                                     (Prims.of_int (29)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -4176,22 +4005,22 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (430))
+                                                                    (Prims.of_int (419))
                                                                     (Prims.of_int (32))
-                                                                    (Prims.of_int (430))
+                                                                    (Prims.of_int (419))
                                                                     (Prims.of_int (85)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (428))
+                                                                    (Prims.of_int (417))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (442))
+                                                                    (Prims.of_int (431))
                                                                     (Prims.of_int (29)))))
                                                                     (Obj.magic
                                                                     (check_effect_annotation
                                                                     g'
-                                                                    body1.Pulse_Syntax_Base.range2
+                                                                    body1.Pulse_Syntax_Base.range1
                                                                     c_opened
                                                                     c_body1))
                                                                     (fun
@@ -4212,17 +4041,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (431))
+                                                                    (Prims.of_int (420))
                                                                     (Prims.of_int (24))
-                                                                    (Prims.of_int (431))
+                                                                    (Prims.of_int (420))
                                                                     (Prims.of_int (55)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (431))
+                                                                    (Prims.of_int (420))
                                                                     (Prims.of_int (58))
-                                                                    (Prims.of_int (442))
+                                                                    (Prims.of_int (431))
                                                                     (Prims.of_int (29)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -4247,17 +4076,17 @@ let rec (check_abs_core :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (433))
+                                                                    (Prims.of_int (422))
                                                                     (Prims.of_int (38))
-                                                                    (Prims.of_int (433))
+                                                                    (Prims.of_int (422))
                                                                     (Prims.of_int (79)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
-                                                                    (Prims.of_int (431))
+                                                                    (Prims.of_int (420))
                                                                     (Prims.of_int (58))
-                                                                    (Prims.of_int (442))
+                                                                    (Prims.of_int (431))
                                                                     (Prims.of_int (29)))))
                                                                     (Obj.magic
                                                                     (maybe_rewrite_body_typing
@@ -4371,13 +4200,13 @@ let (check_abs :
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "Pulse.Checker.Abs.fst"
-                   (Prims.of_int (446)) (Prims.of_int (10))
-                   (Prims.of_int (446)) (Prims.of_int (28)))))
+                   (Prims.of_int (435)) (Prims.of_int (10))
+                   (Prims.of_int (435)) (Prims.of_int (28)))))
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "Pulse.Checker.Abs.fst"
-                   (Prims.of_int (447)) (Prims.of_int (2))
-                   (Prims.of_int (447)) (Prims.of_int (26)))))
+                   (Prims.of_int (436)) (Prims.of_int (2))
+                   (Prims.of_int (436)) (Prims.of_int (26)))))
           (Obj.magic (preprocess_abs g t))
           (fun uu___ ->
              (fun t1 -> Obj.magic (check_abs_core g t1 check)) uu___)

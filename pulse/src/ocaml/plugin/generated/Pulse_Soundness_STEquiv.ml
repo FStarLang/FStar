@@ -19,6 +19,6 @@ let (vprop_arrow : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term) =
   fun t ->
     Pulse_Syntax_Pure.tm_arrow (Pulse_Syntax_Base.null_binder t)
       FStar_Pervasives_Native.None
-      (Pulse_Syntax_Base.C_Tot Pulse_Syntax_Base.tm_vprop)
+      (Pulse_Syntax_Base.C_Tot Pulse_Syntax_Pure.tm_vprop)
 let coerce_eq : 'a 'b . 'a -> unit -> 'b =
   fun uu___1 -> fun uu___ -> (fun x -> fun uu___ -> Obj.magic x) uu___1 uu___

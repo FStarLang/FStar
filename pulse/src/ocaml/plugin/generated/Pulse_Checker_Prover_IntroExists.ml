@@ -45,7 +45,7 @@ let (k_intro_exists :
                               (Pulse_Syntax_Base.Tm_IntroExists
                                  {
                                    Pulse_Syntax_Base.p5 =
-                                     (Pulse_Syntax_Base.tm_exists_sl u b p);
+                                     (Pulse_Syntax_Pure.tm_exists_sl u b p);
                                    Pulse_Syntax_Base.witnesses = [e]
                                  })))
                       (fun uu___ ->
@@ -179,7 +179,7 @@ let (k_intro_exists :
                                                                     {
                                                                     Pulse_Syntax_Base.p5
                                                                     =
-                                                                    (Pulse_Syntax_Base.tm_exists_sl
+                                                                    (Pulse_Syntax_Pure.tm_exists_sl
                                                                     u b p);
                                                                     Pulse_Syntax_Base.witnesses
                                                                     = [e]
@@ -341,12 +341,12 @@ let (k_intro_exists :
                                                                     (Prims.int_zero,
                                                                     e)]))
                                                                     (Pulse_Checker_Prover_Base.op_Star
-                                                                    (Pulse_Syntax_Base.tm_exists_sl
+                                                                    (Pulse_Syntax_Pure.tm_exists_sl
                                                                     u b p)
                                                                     frame)
-                                                                    (Pulse_Syntax_Base.tm_star
+                                                                    (Pulse_Syntax_Pure.tm_star
                                                                     frame
-                                                                    (Pulse_Syntax_Base.tm_exists_sl
+                                                                    (Pulse_Syntax_Pure.tm_exists_sl
                                                                     u b p)) k
                                                                     () ()
                                                                     post_hint
@@ -512,7 +512,7 @@ let (intro_exists :
                                                                     preamble_sub.Pulse_Checker_Prover_Base.frame)
                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
                                                                     pst.Pulse_Checker_Prover_Base.ss
-                                                                    Pulse_Syntax_Base.tm_emp))
+                                                                    Pulse_Syntax_Pure.tm_emp))
                                                                 (Pulse_Checker_Base.k_elab_unit
                                                                    preamble_sub.Pulse_Checker_Prover_Base.g0
                                                                    (Pulse_Checker_Prover_Base.op_Star
@@ -567,7 +567,7 @@ let (intro_exists :
                                                                     FStar_Pervasives_Native.None;
                                                                     Pulse_Checker_Prover_Base.solved
                                                                     =
-                                                                    Pulse_Syntax_Base.tm_emp;
+                                                                    Pulse_Syntax_Pure.tm_emp;
                                                                     Pulse_Checker_Prover_Base.unsolved
                                                                     =
                                                                     (FStar_List_Tot_Base.append
@@ -1274,7 +1274,7 @@ let (intro_exists :
                                                                     (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Checker_Prover_Base.op_Star
                                                                     pst.Pulse_Checker_Prover_Base.solved
-                                                                    (Pulse_Syntax_Base.tm_exists_sl
+                                                                    (Pulse_Syntax_Pure.tm_exists_sl
                                                                     u b body))
                                                                     (Pulse_Typing_Combinators.list_as_vprop
                                                                     unsolved'))))
@@ -1324,7 +1324,7 @@ let (intro_exists :
                                                                     (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Checker_Prover_Base.op_Star
                                                                     pst.Pulse_Checker_Prover_Base.solved
-                                                                    (Pulse_Syntax_Base.tm_exists_sl
+                                                                    (Pulse_Syntax_Pure.tm_exists_sl
                                                                     u b body))
                                                                     (Pulse_Typing_Combinators.list_as_vprop
                                                                     unsolved'))))
@@ -1385,7 +1385,7 @@ let (intro_exists :
                                                                     unsolved')))
                                                                     (Pulse_Checker_Prover_Base.op_Array_Access
                                                                     pst_sub1.Pulse_Checker_Prover_Base.ss
-                                                                    (Pulse_Syntax_Base.tm_exists_sl
+                                                                    (Pulse_Syntax_Pure.tm_exists_sl
                                                                     u b body)))
                                                                     (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Checker_Prover_Base.op_Star
@@ -1399,7 +1399,7 @@ let (intro_exists :
                                                                     pst.Pulse_Checker_Prover_Base.solved)
                                                                     (Pulse_Checker_Prover_Base.op_Array_Access
                                                                     pst_sub1.Pulse_Checker_Prover_Base.ss
-                                                                    (Pulse_Syntax_Base.tm_exists_sl
+                                                                    (Pulse_Syntax_Pure.tm_exists_sl
                                                                     u b body)))
                                                                     (Pulse_Checker_Prover_Base.op_Array_Access
                                                                     pst_sub1.Pulse_Checker_Prover_Base.ss

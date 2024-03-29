@@ -21,10 +21,13 @@ module R = FStar.Reflection.V2
 open Pulse.Reflection.Util
 open FStar.List.Tot
 open Pulse.Syntax
+
 module L = FStar.List.Tot
 module FTB = FStar.Tactics.V2
+module S = Pulse.Syntax
 module RU = Pulse.RuntimeUtils
 module T= FStar.Tactics.V2
+
 include Pulse.Typing.Env
 
 let debug_log (level:string)  (g:env) (f: unit -> T.Tac string) : T.Tac unit =
@@ -39,7 +42,7 @@ let tm_szt  = tm_fvar (as_fv szt_lid)
 let tm_true = tm_constant R.C_True
 let tm_false = tm_constant R.C_False
 
-let tm_prop = with_range (Tm_FStar FStar.Reflection.Typing.tm_prop) Range.range_0
+let tm_prop = RU.set_range FStar.Reflection.Typing.tm_prop Range.range_0
 
 let mk_erased (u:universe) (t:term) : term =
   let hd = tm_uinst (as_fv erased_lid) [u] in
@@ -245,8 +248,8 @@ let join_obs (o1 o2:observability) : observability =
 
 let add_iname_at_least_unobservable (s:comp_st {C_STAtomic? s}) (inv_vprop inv_tm:term) =
   let add_inv_tm (inames:term) = 
-    tm_fstar (Pulse.Reflection.Util.add_inv_tm (elab_term inv_vprop) (elab_term inames) (elab_term inv_tm))
-              inames.range
+    wr (Pulse.Reflection.Util.add_inv_tm (elab_term inv_vprop) (elab_term inames) (elab_term inv_tm))
+       (RU.range_of_term inames)
   in
   let C_STAtomic inames obs s = s in
   C_STAtomic (add_inv_tm inames) (join_obs obs Unobservable) s
@@ -526,16 +529,16 @@ let tm_join_inames (inames1 inames2 : term) : term =
   let inames2 = elab_term inames2 in
   let join_lid = Pulse.Reflection.Util.mk_pulse_lib_core_lid "join_inames" in
   let join : R.term = R.pack_ln (R.Tv_FVar (R.pack_fv join_lid)) in
-  with_range (Tm_FStar (R.mk_e_app join [inames1; inames2]))
-             (T.range_of_term inames1)
+  wr (R.mk_e_app join [inames1; inames2])
+     (T.range_of_term inames1)
 
 let tm_inames_subset (inames1 inames2 : term) : term =
   let inames1 = elab_term inames1 in
   let inames2 = elab_term inames2 in
   let join_lid = Pulse.Reflection.Util.mk_pulse_lib_core_lid "inames_subset" in
   let join : R.term = R.pack_ln (R.Tv_FVar (R.pack_fv join_lid)) in
-  with_range (Tm_FStar (R.mk_e_app join [inames1; inames2]))
-             (T.range_of_term inames1)
+  wr (R.mk_e_app join [inames1; inames2])
+     (T.range_of_term inames1)
 
 let tm_inames_subset_typing (g:env) (inames1 inames2 : term) : tot_typing g (tm_inames_subset inames1 inames2) tm_prop =
   (* Need to add the typing hypothesis for `inames_subset` to
@@ -631,8 +634,10 @@ type lift_comp : env -> comp -> comp -> Type =
       c:comp_st{C_STAtomic? c /\ C_STAtomic?.obs c == Neutral } ->
       lift_comp g c (C_STGhost (st_comp_of_comp c))
 
-let wr (ct:comp_st) (t:st_term') : st_term = { term = t; range = FStar.Range.range_0; effect_tag = as_effect_hint (ctag_of_comp_st ct) }
-let wtag (ct:option ctag)  (t:st_term') : st_term = { term = t; range = FStar.Range.range_0; effect_tag = FStar.Sealed.seal ct }
+let wrst (ct:comp_st) (t:st_term') : st_term =
+  { term = t; range = FStar.Range.range_0; effect_tag = as_effect_hint (ctag_of_comp_st ct) }
+let wtag (ct:option ctag)  (t:st_term') : st_term =
+  { term = t; range = FStar.Range.range_0; effect_tag = FStar.Sealed.seal ct }
 
 [@@ no_auto_projectors]
 noeq
@@ -708,20 +713,14 @@ let subtyping_token g t1 t2 =
   T.subtyping_token (elab_env g) (elab_term t1) (elab_term t2)
 
 val readback_binding : R.binding -> binding
-let readback_binding b =
-  assume (host_term == R.term); // fixme! expose this fact
-  match readback_ty b.sort with
-  | Some sort -> (b.uniq, sort)
-  | None ->
-    let sort : term = {t=Tm_FStar b.sort; range=T.range_of_term b.sort} in
-    (b.uniq, sort)
+let readback_binding b = (b.uniq, b.sort)
 
 let non_informative (g:env) (c:comp) =
   my_erased (RT.non_informative (elab_env g) (elab_comp c))
 
 let inv_disjointness (inv_p inames inv:term) = 
   let g = Pulse.Reflection.Util.inv_disjointness_goal (elab_term inv_p) (elab_term inames) (elab_term inv) in 
-  tm_fstar g inv.range
+  S.wr g (RU.range_of_term inv)
 
 let eff_of_ctag = function
   | STT_Ghost -> T.E_Ghost
@@ -751,7 +750,7 @@ type st_typing : env -> st_term -> comp -> Type =
       arg:term ->
       tot_typing g head (tm_arrow (as_binder ty) q res) ->
       tot_typing g arg ty ->
-      st_typing g (wr res (Tm_STApp {head; arg_qual=q; arg}))
+      st_typing g (wrst res (Tm_STApp {head; arg_qual=q; arg}))
                   (open_comp_with res arg)
 
     //
@@ -774,7 +773,7 @@ type st_typing : env -> st_term -> comp -> Type =
       non_informative (push_binding g x ppname_default ty)
                       (open_comp_with res (null_var x)) ->
       ghost_typing g arg ty ->
-      st_typing g (wr res (Tm_STApp {head; arg_qual=q; arg}))
+      st_typing g (wrst res (Tm_STApp {head; arg_qual=q; arg}))
                   (open_comp_with res arg)
 
   | T_Return:
@@ -814,7 +813,7 @@ type st_typing : env -> st_term -> comp -> Type =
       tot_typing g (comp_res c1) (tm_type (comp_u c1)) -> //type-correctness; would be nice to derive it instead      
       st_typing (push_binding g x ppname_default (comp_res c1)) (open_st_term_nv e2 (b.binder_ppname, x)) c2 ->
       bind_comp g x c1 c2 c ->
-      st_typing g (wr c (Tm_Bind { binder=b; head=e1; body=e2 })) c
+      st_typing g (wrst c (Tm_Bind { binder=b; head=e1; body=e2 })) c
 
   | T_BindFn:
       g:env ->
@@ -829,7 +828,7 @@ type st_typing : env -> st_term -> comp -> Type =
       tot_typing g (comp_res c1) (tm_type u) -> //type-correctness; would be nice to derive it instead      
       st_typing (push_binding g x ppname_default (comp_res c1)) (open_st_term_nv e2 (b.binder_ppname, x)) c2 ->
       comp_typing_u g c2 ->
-      st_typing g (wr c2 (Tm_Bind { binder=b; head=e1; body=e2 })) c2
+      st_typing g (wrst c2 (Tm_Bind { binder=b; head=e1; body=e2 })) c2
 
   | T_If:
       g:env ->
@@ -849,7 +848,7 @@ type st_typing : env -> st_term -> comp -> Type =
       st_typing (push_binding g hyp ppname_default (mk_eq2 u0 tm_bool b tm_true)) e1 c ->
       st_typing (push_binding g hyp ppname_default (mk_eq2 u0 tm_bool b tm_false)) e2 c ->
       my_erased (comp_typing_u g c) ->
-      st_typing g (wr c (Tm_If { b; then_=e1; else_=e2; post=None })) c
+      st_typing g (wrst c (Tm_If { b; then_=e1; else_=e2; post=None })) c
 
   | T_Match :
       g:env ->
@@ -863,7 +862,7 @@ type st_typing : env -> st_term -> comp -> Type =
       brs:list (pattern & st_term) ->
       brs_typing g sc_u sc_ty sc brs c ->
       pats_complete g sc sc_ty (L.map (fun (p, _) -> elab_pat p) brs) ->
-      st_typing g (wr c (Tm_Match {sc; returns_=None; brs})) c
+      st_typing g (wrst c (Tm_Match {sc; returns_=None; brs})) c
 
   | T_Frame:
       g:env ->
@@ -950,8 +949,8 @@ type st_typing : env -> st_term -> comp -> Type =
       comp_typing_u g cR ->
       st_typing g eL cL ->
       st_typing g eR cR ->
-      st_typing g (wr cL (Tm_Par { pre1=tm_unknown; body1=eL; post1=tm_unknown;
-                                   pre2=tm_unknown; body2=eR; post2=tm_unknown }))
+      st_typing g (wrst cL (Tm_Par { pre1=tm_unknown; body1=eL; post1=tm_unknown;
+                                     pre2=tm_unknown; body2=eR; post2=tm_unknown }))
                   (comp_par cL cR x)
 
   | T_WithLocal:
@@ -968,7 +967,7 @@ type st_typing : env -> st_term -> comp -> Type =
       st_typing (push_binding g x ppname_default (mk_ref init_t))
                 (open_st_term_nv body (v_as_nv x))
                 (comp_withlocal_body x init_t init c) ->
-      st_typing g (wr c (Tm_WithLocal { binder = mk_binder_ppname (mk_ref init_t) binder_ppname; initializer=init; body } )) c
+      st_typing g (wrst c (Tm_WithLocal { binder = mk_binder_ppname (mk_ref init_t) binder_ppname; initializer=init; body } )) c
 
   | T_WithLocalArray:
       g:env ->
@@ -986,7 +985,7 @@ type st_typing : env -> st_term -> comp -> Type =
       st_typing (push_binding g x ppname_default (mk_array a))
                 (open_st_term_nv body (v_as_nv x))
                 (comp_withlocal_array_body x a initializer length c) ->
-      st_typing g (wr c (Tm_WithLocalArray { binder = mk_binder_ppname (mk_array a) binder_ppname; initializer; length; body } )) c
+      st_typing g (wrst c (Tm_WithLocalArray { binder = mk_binder_ppname (mk_array a) binder_ppname; initializer; length; body } )) c
 
   | T_Rewrite:
       g:env ->
@@ -1010,7 +1009,7 @@ type st_typing : env -> st_term -> comp -> Type =
       s:st_comp ->
       c:ctag ->
       st_comp_typing g s ->
-      prop_validity g (tm_fstar (`False) FStar.Range.range_0) -> 
+      prop_validity g (S.wr (`False) FStar.Range.range_0) -> 
       st_typing g (wtag (Some c) Tm_Unreachable) (comp_admit c s)
 
   (* This limits the body to be atomic, rather than also allowing unobservable *)
@@ -1070,7 +1069,7 @@ and br_typing : env -> universe -> typ -> term -> pattern -> st_term -> comp_st 
          push_binding (push_bindings g (L.map readback_binding bs))
               hyp
               ({name=Sealed.seal "branch equality"; range=FStar.Range.range_0})
-              (mk_sq_eq2 sc_u sc_ty sc (tm_fstar (fst (Some?.v (RT.elaborate_pat (elab_pat p) bs))) Range.range_0))
+              (mk_sq_eq2 sc_u sc_ty sc (S.wr (fst (Some?.v (RT.elaborate_pat (elab_pat p) bs))) Range.range_0))
          ) e c ->
       br_typing g sc_u sc_ty sc p (close_st_term_n e (L.map fst (L.map readback_binding bs))) c
 

@@ -25,8 +25,8 @@ let (elim_pure_head_ty : FStar_Reflection_Types.term) =
            (FStar_Reflection_V2_Builtins.pack_fv
               FStar_Reflection_Const.prop_qn))),
       FStar_Reflection_V2_Data.Q_Explicit) cod
-let (tm_fstar : Pulse_Syntax_Base.host_term -> Pulse_Syntax_Base.term) =
-  fun t -> Pulse_Syntax_Base.tm_fstar t FStar_Range.range_0
+let (wr : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term) =
+  fun t -> Pulse_Syntax_Pure.wr t FStar_Range.range_0
 
 let (mk_elim_pure : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.st_term) =
   fun p ->
@@ -39,30 +39,28 @@ let (mk_elim_pure : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.st_term) =
         } in
     Pulse_Typing.wtag
       (FStar_Pervasives_Native.Some Pulse_Syntax_Base.STT_Ghost) t
-let (elim_pure_comp : Pulse_Syntax_Base.host_term -> Pulse_Syntax_Base.comp)
-  =
+let (elim_pure_comp : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp) =
   fun p ->
     let st =
       {
         Pulse_Syntax_Base.u = Pulse_Syntax_Pure.u_zero;
         Pulse_Syntax_Base.res =
-          (tm_fstar (Pulse_Reflection_Util.mk_squash Pulse_Syntax_Pure.u0 p));
-        Pulse_Syntax_Base.pre = (Pulse_Syntax_Base.tm_pure (tm_fstar p));
-        Pulse_Syntax_Base.post = Pulse_Syntax_Base.tm_emp
+          (wr (Pulse_Reflection_Util.mk_squash Pulse_Syntax_Pure.u0 p));
+        Pulse_Syntax_Base.pre = (Pulse_Syntax_Pure.tm_pure (wr p));
+        Pulse_Syntax_Base.post = Pulse_Syntax_Pure.tm_emp
       } in
     Pulse_Syntax_Base.C_STGhost st
 let (elim_pure_typing :
   Pulse_Typing_Env.env ->
-    Pulse_Syntax_Base.host_term ->
+    Pulse_Syntax_Base.term ->
       unit -> (unit, unit, unit) Pulse_Typing.st_typing)
   =
   fun g ->
     fun p ->
       fun p_prop ->
         Pulse_Typing.T_STApp
-          (g, elim_pure_head, (tm_fstar FStar_Reflection_Typing.tm_prop),
-            FStar_Pervasives_Native.None, (elim_pure_comp p), (tm_fstar p),
-            (), ())
+          (g, elim_pure_head, (wr FStar_Reflection_Typing.tm_prop),
+            FStar_Pervasives_Native.None, (elim_pure_comp p), (wr p), (), ())
 let (is_elim_pure :
   Pulse_Syntax_Base.term -> (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -71,11 +69,8 @@ let (is_elim_pure :
        Obj.magic
          (FStar_Tactics_Effect.lift_div_tac
             (fun uu___ ->
-               match vp.Pulse_Syntax_Base.t with
-               | Pulse_Syntax_Base.Tm_Pure
-                   { Pulse_Syntax_Base.t = Pulse_Syntax_Base.Tm_FStar uu___1;
-                     Pulse_Syntax_Base.range1 = uu___2;_}
-                   -> true
+               match Pulse_Syntax_Pure.inspect_term vp with
+               | Pulse_Syntax_Pure.Tm_Pure uu___1 -> true
                | uu___1 -> false))) uu___
 let (mk :
   Pulse_Typing_Env.env ->
@@ -95,17 +90,12 @@ let (mk :
                Obj.magic
                  (FStar_Tactics_Effect.lift_div_tac
                     (fun uu___ ->
-                       match v.Pulse_Syntax_Base.t with
-                       | Pulse_Syntax_Base.Tm_Pure
-                           {
-                             Pulse_Syntax_Base.t = Pulse_Syntax_Base.Tm_FStar
-                               pp;
-                             Pulse_Syntax_Base.range1 = uu___1;_}
-                           ->
+                       match Pulse_Syntax_Pure.inspect_term v with
+                       | Pulse_Syntax_Pure.Tm_Pure pp ->
                            FStar_Pervasives_Native.Some
                              (FStar_Pervasives.Mkdtuple4
                                 (Pulse_Syntax_Base.ppname_default,
-                                  (mk_elim_pure (tm_fstar pp)),
+                                  (mk_elim_pure (wr pp)),
                                   (elim_pure_comp pp),
                                   (elim_pure_typing g pp ())))
                        | uu___1 -> FStar_Pervasives_Native.None))) uu___2
@@ -154,7 +144,7 @@ let (elim_pure :
                    (Prims.of_int (121)) (Prims.of_int (84))
                    (Prims.of_int (126)) (Prims.of_int (62)))))
           (Obj.magic
-             (elim_pure_frame g ctxt Pulse_Syntax_Base.tm_emp ()
+             (elim_pure_frame g ctxt Pulse_Syntax_Pure.tm_emp ()
                 (Pulse_Typing_Env.mk_env (Pulse_Typing_Env.fstar_env g))))
           (fun uu___ ->
              FStar_Tactics_Effect.lift_div_tac
@@ -166,9 +156,9 @@ let (elim_pure :
                         (g', ctxt', (),
                           (Pulse_Checker_Base.k_elab_equiv g g'
                              (Pulse_Checker_Prover_Base.op_Star ctxt
-                                Pulse_Syntax_Base.tm_emp) ctxt
+                                Pulse_Syntax_Pure.tm_emp) ctxt
                              (Pulse_Checker_Prover_Base.op_Star ctxt'
-                                Pulse_Syntax_Base.tm_emp) ctxt' k () ()))))
+                                Pulse_Syntax_Pure.tm_emp) ctxt' k () ()))))
 let (elim_pure_pst :
   Pulse_Checker_Prover_Base.preamble ->
     unit Pulse_Checker_Prover_Base.prover_state ->

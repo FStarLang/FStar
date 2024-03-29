@@ -16,7 +16,7 @@ let rec (list_as_vprop' :
     fun fvps ->
       match fvps with
       | [] -> vp
-      | hd::tl -> list_as_vprop' (Pulse_Syntax_Base.tm_star vp hd) tl
+      | hd::tl -> list_as_vprop' (Pulse_Syntax_Pure.tm_star vp hd) tl
 let rec (canon_right_aux :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.vprop Prims.list ->
@@ -162,15 +162,15 @@ let (canon_right :
                                 (Pulse_Typing_Combinators.list_as_vprop vps')
                                 pures), (),
                               (Pulse_Checker_Base.k_elab_equiv g g
-                                 (Pulse_Syntax_Base.tm_star ctxt frame)
-                                 (Pulse_Syntax_Base.tm_star ctxt frame)
-                                 (Pulse_Syntax_Base.tm_star ctxt frame)
-                                 (Pulse_Syntax_Base.tm_star
+                                 (Pulse_Syntax_Pure.tm_star ctxt frame)
+                                 (Pulse_Syntax_Pure.tm_star ctxt frame)
+                                 (Pulse_Syntax_Pure.tm_star ctxt frame)
+                                 (Pulse_Syntax_Pure.tm_star
                                     (list_as_vprop'
                                        (Pulse_Typing_Combinators.list_as_vprop
                                           vps') pures) frame)
                                  (Pulse_Checker_Base.k_elab_unit g
-                                    (Pulse_Syntax_Base.tm_star ctxt frame))
+                                    (Pulse_Syntax_Pure.tm_star ctxt frame))
                                  () ()))))
 let (elim_one :
   Pulse_Typing_Env.env ->
@@ -261,7 +261,7 @@ let (elim_one :
                                               (Obj.magic
                                                  (Pulse_Checker_Base.continuation_elaborator_with_bind
                                                     g
-                                                    (Pulse_Syntax_Base.tm_star
+                                                    (Pulse_Syntax_Pure.tm_star
                                                        ctxt frame) c1 e1
                                                     e1_typing () (nx, x)))
                                               (fun k ->
@@ -272,7 +272,7 @@ let (elim_one :
                                                             g x nx
                                                             (Pulse_Syntax_Base.comp_res
                                                                c1)),
-                                                          (Pulse_Syntax_Base.tm_star
+                                                          (Pulse_Syntax_Pure.tm_star
                                                              (Pulse_Syntax_Naming.open_term_nv
                                                                 (Pulse_Syntax_Base.comp_post
                                                                    c1)
@@ -284,23 +284,23 @@ let (elim_one :
                                                                 g x nx
                                                                 (Pulse_Syntax_Base.comp_res
                                                                    c1))
-                                                             (Pulse_Syntax_Base.tm_star
-                                                                (Pulse_Syntax_Base.tm_star
+                                                             (Pulse_Syntax_Pure.tm_star
+                                                                (Pulse_Syntax_Pure.tm_star
                                                                    ctxt frame)
                                                                 p)
-                                                             (Pulse_Syntax_Base.tm_star
-                                                                (Pulse_Syntax_Base.tm_star
+                                                             (Pulse_Syntax_Pure.tm_star
+                                                                (Pulse_Syntax_Pure.tm_star
                                                                    ctxt frame)
                                                                 p)
-                                                             (Pulse_Syntax_Base.tm_star
+                                                             (Pulse_Syntax_Pure.tm_star
                                                                 (Pulse_Syntax_Naming.open_term_nv
                                                                    (Pulse_Syntax_Base.comp_post
                                                                     c1)
                                                                    (nx, x))
-                                                                (Pulse_Syntax_Base.tm_star
+                                                                (Pulse_Syntax_Pure.tm_star
                                                                    ctxt frame))
-                                                             (Pulse_Syntax_Base.tm_star
-                                                                (Pulse_Syntax_Base.tm_star
+                                                             (Pulse_Syntax_Pure.tm_star
+                                                                (Pulse_Syntax_Pure.tm_star
                                                                    (Pulse_Syntax_Naming.open_term_nv
                                                                     (Pulse_Syntax_Base.comp_post
                                                                     c1)
@@ -340,8 +340,8 @@ let rec (elim_all :
                          fun frame ->
                            fun ctxt_frame_typing ->
                              fun uvs ->
-                               match ctxt.Pulse_Syntax_Base.t with
-                               | Pulse_Syntax_Base.Tm_Star (ctxt', p) ->
+                               match Pulse_Syntax_Pure.inspect_term ctxt with
+                               | Pulse_Syntax_Pure.Tm_Star (ctxt', p) ->
                                    Obj.magic
                                      (Obj.repr
                                         (FStar_Tactics_Effect.tac_bind
@@ -511,18 +511,18 @@ let rec (elim_all :
                                                                     uu___4 ->
                                                                     Pulse_Checker_Base.k_elab_equiv
                                                                     g g'
-                                                                    (Pulse_Syntax_Base.tm_star
-                                                                    (Pulse_Syntax_Base.tm_star
+                                                                    (Pulse_Syntax_Pure.tm_star
+                                                                    (Pulse_Syntax_Pure.tm_star
                                                                     ctxt'
                                                                     frame) p)
-                                                                    (Pulse_Syntax_Base.tm_star
-                                                                    (Pulse_Syntax_Base.tm_star
+                                                                    (Pulse_Syntax_Pure.tm_star
+                                                                    (Pulse_Syntax_Pure.tm_star
                                                                     ctxt' p)
                                                                     frame)
-                                                                    (Pulse_Syntax_Base.tm_star
+                                                                    (Pulse_Syntax_Pure.tm_star
                                                                     uu___3
                                                                     frame)
-                                                                    (Pulse_Syntax_Base.tm_star
+                                                                    (Pulse_Syntax_Pure.tm_star
                                                                     uu___3
                                                                     frame) k1
                                                                     () ()))
@@ -575,14 +575,14 @@ let rec (elim_all :
                                                                     (),
                                                                     (Pulse_Checker_Base.k_elab_trans
                                                                     g g' g''
-                                                                    (Pulse_Syntax_Base.tm_star
-                                                                    (Pulse_Syntax_Base.tm_star
+                                                                    (Pulse_Syntax_Pure.tm_star
+                                                                    (Pulse_Syntax_Pure.tm_star
                                                                     ctxt' p)
                                                                     frame)
-                                                                    (Pulse_Syntax_Base.tm_star
+                                                                    (Pulse_Syntax_Pure.tm_star
                                                                     uu___3
                                                                     frame)
-                                                                    (Pulse_Syntax_Base.tm_star
+                                                                    (Pulse_Syntax_Pure.tm_star
                                                                     ctxt''
                                                                     frame) k2
                                                                     k'))))))))
@@ -603,7 +603,7 @@ let rec (elim_all :
                                                                     (),
                                                                     (Pulse_Checker_Base.k_elab_unit
                                                                     g
-                                                                    (Pulse_Syntax_Base.tm_star
+                                                                    (Pulse_Syntax_Pure.tm_star
                                                                     ctxt
                                                                     frame)))))))))
                                                                     uu___1)))
@@ -619,7 +619,7 @@ let rec (elim_all :
                                                                     (),
                                                                     (Pulse_Checker_Base.k_elab_unit
                                                                     g
-                                                                    (Pulse_Syntax_Base.tm_star
+                                                                    (Pulse_Syntax_Pure.tm_star
                                                                     ctxt
                                                                     frame)))))))))
                                                            uu___))) uu___)))
@@ -633,7 +633,7 @@ let rec (elim_all :
                                                    (g, ctxt, (),
                                                      (Pulse_Checker_Base.k_elab_unit
                                                         g
-                                                        (Pulse_Syntax_Base.tm_star
+                                                        (Pulse_Syntax_Pure.tm_star
                                                            ctxt frame)))))))))
                   uu___6 uu___5 uu___4 uu___3 uu___2 uu___1 uu___
 let (add_elims_aux :
@@ -710,11 +710,11 @@ let (add_elims_aux :
                                                   (g', ctxt'', (),
                                                     (Pulse_Checker_Base.k_elab_trans
                                                        g g g'
-                                                       (Pulse_Syntax_Base.tm_star
+                                                       (Pulse_Syntax_Pure.tm_star
                                                           ctxt frame)
-                                                       (Pulse_Syntax_Base.tm_star
+                                                       (Pulse_Syntax_Pure.tm_star
                                                           ctxt' frame)
-                                                       (Pulse_Syntax_Base.tm_star
+                                                       (Pulse_Syntax_Pure.tm_star
                                                           ctxt'' frame) k k'))))))))
                        uu___)
 let rec (add_elims :
@@ -828,13 +828,13 @@ let rec (add_elims :
                                                                     (),
                                                                     (Pulse_Checker_Base.k_elab_trans
                                                                     g g' g''
-                                                                    (Pulse_Syntax_Base.tm_star
+                                                                    (Pulse_Syntax_Pure.tm_star
                                                                     ctxt
                                                                     frame)
-                                                                    (Pulse_Syntax_Base.tm_star
+                                                                    (Pulse_Syntax_Pure.tm_star
                                                                     ctxt'
                                                                     frame)
-                                                                    (Pulse_Syntax_Base.tm_star
+                                                                    (Pulse_Syntax_Pure.tm_star
                                                                     ctxt''
                                                                     frame) k
                                                                     k'))))))
@@ -870,7 +870,7 @@ let (op_Array_Access :
 let (op_Star :
   Pulse_Syntax_Base.vprop ->
     Pulse_Syntax_Base.vprop -> Pulse_Syntax_Base.term)
-  = Pulse_Syntax_Base.tm_star
+  = Pulse_Syntax_Pure.tm_star
 type 'preamble1 prover_state =
   {
   pg: Pulse_Typing_Env.env ;

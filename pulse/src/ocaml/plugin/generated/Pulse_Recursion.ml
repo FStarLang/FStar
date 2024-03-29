@@ -257,7 +257,7 @@ let (add_knot :
                               (Obj.repr
                                  (Pulse_Typing_Env.fail g
                                     (FStar_Pervasives_Native.Some
-                                       (d.Pulse_Syntax_Base.range3))
+                                       (d.Pulse_Syntax_Base.range2))
                                     "main: FnDecl does not have binders"))
                           else
                             Obj.magic
@@ -569,7 +569,7 @@ let (add_knot :
                                                                     (Pulse_Typing_Env.fail_doc
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (d.Pulse_Syntax_Base.range3))
+                                                                    (d.Pulse_Syntax_Base.range2))
                                                                     [
                                                                     Pulse_PP.text
                                                                     "'ghost' and 'atomic' recursive functions require a 'decreases' clause"]))
@@ -790,7 +790,7 @@ let (add_knot :
                                                                     (Pulse_Typing_Env.fail
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (d.Pulse_Syntax_Base.range3))
+                                                                    (d.Pulse_Syntax_Base.range2))
                                                                     "error: r_ty is Tv_unknown in add_knot?"))
                                                                     else
                                                                     Obj.magic
@@ -839,7 +839,7 @@ let (add_knot :
                                                                     (FStar_Pervasives_Native.None,
                                                                     (Pulse_Syntax_Base.mk_binder
                                                                     s rng1
-                                                                    (Pulse_Syntax_Base.tm_fstar
+                                                                    (Pulse_Syntax_Pure.wr
                                                                     r_ty rng1)),
                                                                     {
                                                                     Pulse_Syntax_Base.bv_index
@@ -865,9 +865,9 @@ let (add_knot :
                                                                     Pulse_Syntax_Base.body7
                                                                     = body
                                                                     });
-                                                                    Pulse_Syntax_Base.range3
+                                                                    Pulse_Syntax_Base.range2
                                                                     =
-                                                                    (d.Pulse_Syntax_Base.range3)
+                                                                    (d.Pulse_Syntax_Base.range2)
                                                                     }))))
                                                                     uu___4)))
                                                                     uu___4)))

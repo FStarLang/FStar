@@ -73,7 +73,7 @@ let is_annotated_type_array (t:term) : option term =
 #push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1"
 let head_range (t:st_term {Tm_WithLocalArray? t.term}) : range =
   let Tm_WithLocalArray { initializer } = t.term in
-  initializer.range
+  Pulse.RuntimeUtils.range_of_term initializer
 
 let check
   (g:env)
@@ -100,12 +100,12 @@ let check
     let (| init, init_u, init_t, init_t_typing, init_typing |) =
       (* Check against annotation if any *)
       let ty = binder.binder_ty in
-      match ty.t with
+      match inspect_term ty with
       | Tm_Unknown -> compute_tot_term_type_and_u g initializer
       | _ ->
         match is_annotated_type_array ty with
         | None ->
-          fail g (Some ty.range)
+          fail g (Some (Pulse.RuntimeUtils.range_of_term ty))
             (Printf.sprintf "expected annotated type to be an array, found: %s"
               (P.term_to_string ty))
         | Some ty ->

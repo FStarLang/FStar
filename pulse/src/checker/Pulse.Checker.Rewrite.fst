@@ -45,7 +45,7 @@ let rec check_vprop_equiv r (g:env) (p q:vprop)
 = if eq_tm p q
   then VE_Refl g p
   else (
-    match p.t, q.t with
+    match inspect_term p, inspect_term q with
     | Tm_ForallSL u1 b1 t1, Tm_ForallSL u2 b2 t2 ->
       if eq_univ u1 u2
       && eq_tm b1.binder_ty b2.binder_ty

@@ -82,56 +82,16 @@ type fv = {
 }
 let as_fv l = { fv_name = l; fv_range = FStar.Range.range_0 }
 
-let not_tv_unknown (t:R.term) = R.inspect_ln t =!= R.Tv_Unknown
-let host_term = t:R.term { not_tv_unknown t }
+type term = R.term
+type vprop = term
+type typ = term
 
-
-[@@ no_auto_projectors]
 noeq
-type term' =
-  | Tm_Emp        : term'
-  | Tm_Pure       : p:term -> term'
-  | Tm_Star       : l:vprop -> r:vprop -> term'
-  | Tm_ExistsSL   : u:universe -> b:binder -> body:vprop -> term'
-  | Tm_ForallSL   : u:universe -> b:binder -> body:vprop -> term'
-  | Tm_VProp      : term'
-  | Tm_Inv        : vprop -> term'
-  | Tm_Inames     : term'  // type inames
-  | Tm_EmpInames  : term'
-  | Tm_AddInv     : i:term -> is:term -> term'
-  | Tm_FStar      : host_term -> term'
-  | Tm_Unknown    : term'
-
-and vprop = term
-
-and typ = term
-
-and binder = {
+type binder = {
   binder_ty     : term;
   binder_ppname : ppname;
   binder_attrs  : FStar.Sealed.Inhabited.sealed #(list term) []
 }
-
-and term = {
-  t : term';
-  range : range;
-}
-
-let binder_attrs_default = FStar.Sealed.seal []
-
-let term_range (t:term) = t.range
-let tm_fstar (t:host_term) (r:range) : term = { t = Tm_FStar t; range=r }
-let with_range (t:term') (r:range) = { t; range=r }
-let tm_vprop = with_range Tm_VProp FStar.Range.range_0
-let tm_inv p = with_range (Tm_Inv p) FStar.Range.range_0
-let tm_inames = with_range Tm_Inames FStar.Range.range_0
-let tm_emp = with_range Tm_Emp FStar.Range.range_0
-let tm_emp_inames = with_range Tm_EmpInames FStar.Range.range_0
-let tm_unknown = with_range Tm_Unknown FStar.Range.range_0
-let tm_pure (p:term) : term = { t = Tm_Pure p; range = p.range }
-let tm_star (l:vprop) (r:vprop) : term = { t = Tm_Star l r; range = RU.union_ranges l.range r.range }
-let tm_exists_sl (u:universe) (b:binder) (body:vprop) : term = { t = Tm_ExistsSL u b body; range = RU.union_ranges b.binder_ty.range body.range }
-let tm_forall_sl (u:universe) (b:binder) (body:vprop) : term = { t = Tm_ForallSL u b body; range = RU.union_ranges b.binder_ty.range body.range }
 
 noeq
 type st_comp = { (* ST pre (x:res) post ... x is free in post *)
@@ -355,6 +315,8 @@ and decl = {
 let mk_binder_with_attrs (binder_ty:term) (binder_ppname:ppname) binder_attrs : binder =
   {binder_ty;binder_ppname;binder_attrs}
 
+let binder_attrs_default = FStar.Sealed.seal []
+
 let null_binder (t:term) : binder =
   mk_binder_with_attrs t ppname_default binder_attrs_default
 
@@ -425,4 +387,3 @@ let comp_inames (c:comp { C_STAtomic? c }) : term =
 let nvar = ppname & var 
 let v_as_nv x : nvar = ppname_default, x
 let as_binder (t:term) = null_binder t
-

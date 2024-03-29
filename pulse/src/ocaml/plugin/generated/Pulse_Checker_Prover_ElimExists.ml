@@ -7,8 +7,8 @@ let (should_elim_exists :
        Obj.magic
          (FStar_Tactics_Effect.lift_div_tac
             (fun uu___ ->
-               match v.Pulse_Syntax_Base.t with
-               | Pulse_Syntax_Base.Tm_ExistsSL (uu___1, uu___2, uu___3) ->
+               match Pulse_Syntax_Pure.inspect_term v with
+               | Pulse_Syntax_Pure.Tm_ExistsSL (uu___1, uu___2, uu___3) ->
                    true
                | uu___1 -> false))) uu___
 let (mk :
@@ -29,8 +29,8 @@ let (mk :
                Obj.magic
                  (FStar_Tactics_Effect.lift_div_tac
                     (fun uu___ ->
-                       match v.Pulse_Syntax_Base.t with
-                       | Pulse_Syntax_Base.Tm_ExistsSL
+                       match Pulse_Syntax_Pure.inspect_term v with
+                       | Pulse_Syntax_Pure.Tm_ExistsSL
                            (u,
                             { Pulse_Syntax_Base.binder_ty = t;
                               Pulse_Syntax_Base.binder_ppname = nm;
@@ -46,7 +46,7 @@ let (mk :
                                      (Pulse_Syntax_Base.Tm_ElimExists
                                         {
                                           Pulse_Syntax_Base.p4 =
-                                            (Pulse_Syntax_Base.tm_exists_sl
+                                            (Pulse_Syntax_Pure.tm_exists_sl
                                                (Pulse_Syntax_Base.comp_u
                                                   (Pulse_Typing.comp_elim_exists
                                                      u t p
@@ -112,7 +112,7 @@ let (elim_exists :
                    (Prims.of_int (67)) (Prims.of_int (84))
                    (Prims.of_int (72)) (Prims.of_int (62)))))
           (Obj.magic
-             (elim_exists_frame g ctxt Pulse_Syntax_Base.tm_emp ()
+             (elim_exists_frame g ctxt Pulse_Syntax_Pure.tm_emp ()
                 (Pulse_Typing_Env.mk_env (Pulse_Typing_Env.fstar_env g))))
           (fun uu___ ->
              FStar_Tactics_Effect.lift_div_tac
@@ -124,9 +124,9 @@ let (elim_exists :
                         (g', ctxt', (),
                           (Pulse_Checker_Base.k_elab_equiv g g'
                              (Pulse_Checker_Prover_Base.op_Star ctxt
-                                Pulse_Syntax_Base.tm_emp) ctxt
+                                Pulse_Syntax_Pure.tm_emp) ctxt
                              (Pulse_Checker_Prover_Base.op_Star ctxt'
-                                Pulse_Syntax_Base.tm_emp) ctxt' k () ()))))
+                                Pulse_Syntax_Pure.tm_emp) ctxt' k () ()))))
 let (elim_exists_pst :
   Pulse_Checker_Prover_Base.preamble ->
     unit Pulse_Checker_Prover_Base.prover_state ->

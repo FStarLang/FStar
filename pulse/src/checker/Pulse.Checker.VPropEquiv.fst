@@ -88,7 +88,7 @@ let rec vprop_list_equiv (g:env)
                          (vp:term)
   : GTot (vprop_equiv g vp (canon_vprop vp))
          (decreases vp)
-  = match vp.t with
+  = match inspect_term vp with
     | Tm_Emp -> VE_Refl _ _
     | Tm_Star vp0 vp1 ->
       let eq0 = vprop_list_equiv g vp0 in
@@ -103,8 +103,7 @@ let rec vprop_list_equiv (g:env)
       in
       VE_Trans _ _ _ _ step (VE_Sym _ _ _ app_eq)
       
-    | _ -> 
-      VE_Refl _ _
+    | _ -> VE_Refl _ _
 
 let vprop_equiv_swap_equiv (g:_)
                           (l0 l2:list term)

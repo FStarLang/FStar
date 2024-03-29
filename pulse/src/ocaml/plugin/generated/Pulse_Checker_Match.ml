@@ -35,7 +35,7 @@ let rec (readback_pat :
         then FStar_Pervasives_Native.None
         else
           (let t1 = Pulse_RuntimeUtils.deep_compress t in
-           let t2 = Pulse_Syntax_Base.tm_fstar t1 FStar_Range.range_0 in
+           let t2 = Pulse_Syntax_Pure.wr t1 FStar_Range.range_0 in
            FStar_Pervasives_Native.Some
              (Pulse_Syntax_Base.Pat_Dot_Term
                 (FStar_Pervasives_Native.Some t2)))
@@ -424,7 +424,7 @@ let (check_branch :
                                  (Obj.repr
                                     (Pulse_Typing_Env.fail g
                                        (FStar_Pervasives_Native.Some
-                                          (e.Pulse_Syntax_Base.range2))
+                                          (e.Pulse_Syntax_Base.range1))
                                        "readback_pat failed")))
                           (fun uu___ ->
                              (fun p ->
@@ -555,7 +555,7 @@ let (check_branch :
                                                                     (Pulse_Typing_Env.fail
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (e.Pulse_Syntax_Base.range2))
+                                                                    (e.Pulse_Syntax_Base.range1))
                                                                     "Failed to elab pattern into term"))
                                                                     else
                                                                     Obj.magic
@@ -598,7 +598,7 @@ let (check_branch :
                                                                     (Pulse_Typing_Env.fail
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (e.Pulse_Syntax_Base.range2))
+                                                                    (e.Pulse_Syntax_Base.range1))
                                                                     "should not happen: pattern elaborated to Tv_Unknown"))
                                                                     else
                                                                     Obj.magic
@@ -620,13 +620,13 @@ let (check_branch :
                                                                     (Prims.of_int (248))
                                                                     (Prims.of_int (15))
                                                                     (Prims.of_int (248))
-                                                                    (Prims.of_int (86)))))
+                                                                    (Prims.of_int (80)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Match.fst"
                                                                     (Prims.of_int (248))
-                                                                    (Prims.of_int (89))
+                                                                    (Prims.of_int (83))
                                                                     (Prims.of_int (259))
                                                                     (Prims.of_int (58)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
@@ -635,7 +635,7 @@ let (check_branch :
                                                                     Pulse_Typing.mk_sq_eq2
                                                                     sc_u
                                                                     sc_ty sc
-                                                                    (Pulse_Syntax_Base.tm_fstar
+                                                                    (Pulse_Syntax_Pure.wr
                                                                     (FStar_Pervasives_Native.fst
                                                                     (FStar_Pervasives_Native.__proj__Some__item__v
                                                                     elab_p))
@@ -1204,7 +1204,7 @@ let (weaken_branch_observability :
                                                                     sc_u1
                                                                     sc_ty1
                                                                     sc1
-                                                                    (Pulse_Syntax_Base.tm_fstar
+                                                                    (Pulse_Syntax_Pure.wr
                                                                     (FStar_Pervasives_Native.fst
                                                                     (FStar_Pervasives_Native.__proj__Some__item__v
                                                                     (FStar_Reflection_Typing.elaborate_pat
@@ -1238,7 +1238,7 @@ let (weaken_branch_observability :
                                                                     sc_u1
                                                                     sc_ty1
                                                                     sc1
-                                                                    (Pulse_Syntax_Base.tm_fstar
+                                                                    (Pulse_Syntax_Pure.wr
                                                                     (FStar_Pervasives_Native.fst
                                                                     (FStar_Pervasives_Native.__proj__Some__item__v
                                                                     (FStar_Reflection_Typing.elaborate_pat
@@ -1616,17 +1616,18 @@ let (check :
                                         (Prims.of_int (411))
                                         (Prims.of_int (17))
                                         (Prims.of_int (411))
-                                        (Prims.of_int (25)))))
+                                        (Prims.of_int (52)))))
                                (FStar_Sealed.seal
                                   (Obj.magic
                                      (FStar_Range.mk_range
                                         "Pulse.Checker.Match.fst"
                                         (Prims.of_int (411))
-                                        (Prims.of_int (28))
+                                        (Prims.of_int (55))
                                         (Prims.of_int (457))
                                         (Prims.of_int (55)))))
                                (FStar_Tactics_Effect.lift_div_tac
-                                  (fun uu___ -> sc.Pulse_Syntax_Base.range1))
+                                  (fun uu___ ->
+                                     Pulse_RuntimeUtils.range_of_term sc))
                                (fun uu___ ->
                                   (fun sc_range ->
                                      Obj.magic
@@ -2086,7 +2087,7 @@ let (check :
                                                                     (FStar_Pervasives_Native.Some
                                                                     post_hint)
                                                                     (FStar_Pervasives.Mkdtuple3
-                                                                    ((Pulse_Typing.wr
+                                                                    ((Pulse_Typing.wrst
                                                                     c
                                                                     (Pulse_Syntax_Base.Tm_Match
                                                                     {

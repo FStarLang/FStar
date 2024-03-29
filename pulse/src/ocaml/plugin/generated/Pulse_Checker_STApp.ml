@@ -193,9 +193,10 @@ let rec (intro_uvars_for_logical_implicits :
                                                                     (Pulse_Syntax_Pure.null_var
                                                                     x)
                                                                     });
-                                                                    Pulse_Syntax_Base.range2
+                                                                    Pulse_Syntax_Base.range1
                                                                     =
-                                                                    (t.Pulse_Syntax_Base.range1);
+                                                                    (Pulse_RuntimeUtils.range_of_term
+                                                                    t);
                                                                     Pulse_Syntax_Base.effect_tag
                                                                     =
                                                                     (Pulse_Syntax_Base.as_effect_hint
@@ -231,9 +232,10 @@ let rec (intro_uvars_for_logical_implicits :
                                                                     (Pulse_Syntax_Pure.null_var
                                                                     x)
                                                                     });
-                                                                    Pulse_Syntax_Base.range2
+                                                                    Pulse_Syntax_Base.range1
                                                                     =
-                                                                    (t.Pulse_Syntax_Base.range1);
+                                                                    (Pulse_RuntimeUtils.range_of_term
+                                                                    t);
                                                                     Pulse_Syntax_Base.effect_tag
                                                                     =
                                                                     (Pulse_Syntax_Base.as_effect_hint
@@ -267,9 +269,10 @@ let rec (intro_uvars_for_logical_implicits :
                                                                     (Pulse_Syntax_Pure.null_var
                                                                     x)
                                                                     });
-                                                                    Pulse_Syntax_Base.range2
+                                                                    Pulse_Syntax_Base.range1
                                                                     =
-                                                                    (t.Pulse_Syntax_Base.range1);
+                                                                    (Pulse_RuntimeUtils.range_of_term
+                                                                    t);
                                                                     Pulse_Syntax_Base.effect_tag
                                                                     =
                                                                     (Pulse_Syntax_Base.as_effect_hint
@@ -356,7 +359,7 @@ let (instantiate_implicits :
                  (Prims.of_int (94)) (Prims.of_int (24)) (Prims.of_int (109))
                  (Prims.of_int (20)))))
         (FStar_Tactics_Effect.lift_div_tac
-           (fun uu___ -> t.Pulse_Syntax_Base.range2))
+           (fun uu___ -> t.Pulse_Syntax_Base.range1))
         (fun uu___ ->
            (fun range ->
               Obj.magic
@@ -476,9 +479,10 @@ let (instantiate_implicits :
                                                                     Pulse_Syntax_Base.arg
                                                                     = arg1
                                                                     });
-                                                                    Pulse_Syntax_Base.range2
+                                                                    Pulse_Syntax_Base.range1
                                                                     =
-                                                                    (t1.Pulse_Syntax_Base.range1);
+                                                                    (Pulse_RuntimeUtils.range_of_term
+                                                                    t1);
                                                                     Pulse_Syntax_Base.effect_tag
                                                                     =
                                                                     Pulse_Syntax_Base.default_effect_hint
@@ -522,7 +526,7 @@ let (instantiate_implicits :
                                                                     (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (Pulse_Show.show
-                                                                    Pulse_Show.tac_showable_term
+                                                                    Pulse_Show.tac_showable_r_term
                                                                     t1))
                                                                     (fun
                                                                     uu___4 ->
@@ -541,7 +545,8 @@ let (instantiate_implicits :
                                                                     (Pulse_Typing_Env.fail
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (t1.Pulse_Syntax_Base.range1))
+                                                                    (Pulse_RuntimeUtils.range_of_term
+                                                                    t1))
                                                                     uu___4))
                                                                     uu___4))))))
                                                   uu___1))) uu___1))) uu___)))
@@ -1237,7 +1242,7 @@ let (apply_impure_function :
                                                                     Pulse_Syntax_Base.arg
                                                                     = arg1
                                                                     });
-                                                                    Pulse_Syntax_Base.range2
+                                                                    Pulse_Syntax_Base.range1
                                                                     = range;
                                                                     Pulse_Syntax_Base.effect_tag
                                                                     =
@@ -1251,7 +1256,7 @@ let (apply_impure_function :
                                                                     arg1)),
                                                                     (canonicalize_st_typing
                                                                     g
-                                                                    (Pulse_Typing.wr
+                                                                    (Pulse_Typing.wrst
                                                                     comp_typ
                                                                     (Pulse_Syntax_Base.Tm_STApp
                                                                     {
@@ -1295,7 +1300,7 @@ let (apply_impure_function :
                                                                     Pulse_Syntax_Base.arg
                                                                     = arg1
                                                                     });
-                                                                    Pulse_Syntax_Base.range2
+                                                                    Pulse_Syntax_Base.range1
                                                                     = range;
                                                                     Pulse_Syntax_Base.effect_tag
                                                                     =
@@ -1309,7 +1314,7 @@ let (apply_impure_function :
                                                                     arg1)),
                                                                     (canonicalize_st_typing
                                                                     g
-                                                                    (Pulse_Typing.wr
+                                                                    (Pulse_Typing.wrst
                                                                     comp_typ
                                                                     (Pulse_Syntax_Base.Tm_STApp
                                                                     {
@@ -1556,7 +1561,7 @@ let (apply_impure_function :
                                                                     Pulse_Syntax_Base.arg
                                                                     = arg1
                                                                     });
-                                                                    Pulse_Syntax_Base.range2
+                                                                    Pulse_Syntax_Base.range1
                                                                     = range;
                                                                     Pulse_Syntax_Base.effect_tag
                                                                     =
@@ -1569,7 +1574,7 @@ let (apply_impure_function :
                                                                     arg1)),
                                                                     (canonicalize_st_typing
                                                                     g
-                                                                    (Pulse_Typing.wr
+                                                                    (Pulse_Typing.wrst
                                                                     comp_typ
                                                                     (Pulse_Syntax_Base.Tm_STApp
                                                                     {
@@ -1837,7 +1842,7 @@ let (check :
                 (FStar_Tactics_Effect.lift_div_tac
                    (fun uu___ ->
                       Pulse_Checker_Pure.push_context "st_app"
-                        t.Pulse_Syntax_Base.range2 g0))
+                        t.Pulse_Syntax_Base.range1 g0))
                 (fun uu___ ->
                    (fun g01 ->
                       Obj.magic
@@ -1855,7 +1860,7 @@ let (check :
                                     (Prims.of_int (221)) (Prims.of_int (24))
                                     (Prims.of_int (251)) (Prims.of_int (117)))))
                            (FStar_Tactics_Effect.lift_div_tac
-                              (fun uu___ -> t.Pulse_Syntax_Base.range2))
+                              (fun uu___ -> t.Pulse_Syntax_Base.range1))
                            (fun uu___ ->
                               (fun range ->
                                  Obj.magic
@@ -2155,7 +2160,7 @@ let (check :
                                                                     b ->
                                                                     Obj.magic
                                                                     (apply_impure_function
-                                                                    t1.Pulse_Syntax_Base.range2
+                                                                    t1.Pulse_Syntax_Base.range1
                                                                     g01 uvs g
                                                                     ctxt ()
                                                                     post_hint1
@@ -2324,7 +2329,7 @@ let (check :
                                                                     (Pulse_Typing_Env.fail
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (t1.Pulse_Syntax_Base.range2))
+                                                                    (t1.Pulse_Syntax_Base.range1))
                                                                     uu___6))
                                                                     uu___6))
                                                                     | 
@@ -2332,7 +2337,7 @@ let (check :
                                                                     b ->
                                                                     Obj.magic
                                                                     (apply_impure_function
-                                                                    t1.Pulse_Syntax_Base.range2
+                                                                    t1.Pulse_Syntax_Base.range1
                                                                     g01 uvs g
                                                                     ctxt ()
                                                                     post_hint1
