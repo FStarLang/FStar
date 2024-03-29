@@ -1063,7 +1063,46 @@ let new_invariant_pre_action (e:inames) (p:slprop u#a { is_big p })
 
 let name_of_inv (i:iname_ref) = H0.core_ref_as_addr i
 let ( -~- ) (i:iname_ref) (p:slprop u#a) = iname_ref_pts_to i p
-let dup_inv e i p = admit()
+
+let lift_h0_star (p q:H0.slprop)
+: Lemma (lift_h0 (p `H0.star` q) == lift_h0 p `star` lift_h0 q)
+= admit()
+
+let dup_inv_lemma (i:iname_ref) (p:slprop) frame (m:mem)
+: Lemma (requires interp ((i -~- p) `star` frame) m)
+        (ensures interp (((i -~- p) `star` (i -~- p)) `star` frame) m)
+= let h = m.iheap in
+  eliminate exists h0 h1.
+    idisjoint h0 h1 /\
+    m.iheap == ijoin h0 h1 /\
+    (i -~- p) h0 /\
+    frame h1
+  returns interp (((i -~- p) `star` (i -~- p)) `star` frame) m
+  with _ . (
+    let pcm = PA.pcm_agreement #(H2.slprop u#a) in
+    assert (H0.interp (H0.pts_to #_ #pcm i (Some (down p))) h0.invariants);
+    assert (H0.interp (H0.pts_to #_ #pcm i (op pcm (Some (down p)) (Some (down p)))) h0.invariants);
+    H0.pts_to_compatible #_ #(PA.pcm_agreement #(H2.slprop u#a)) i (Some (down p)) (Some (down p)) h0.invariants;
+    assert (H0.interp (H0.pts_to #_ #pcm i (Some (down p)) `H0.star`
+                       H0.pts_to #_ #pcm i (Some (down p))) h0.invariants);
+    assert ( (lift_h0 
+                      (H0.pts_to #_ #pcm i (Some (down p)) `H0.star`
+                                        H0.pts_to #_ #pcm i (Some (down p))))
+                    h0);
+    lift_h0_star (H0.pts_to #_ #pcm i (Some (down p)))
+                 (H0.pts_to #_ #pcm i (Some (down p)));
+    assert (((i -~- p) `star` (i -~- p)) h0)
+  )
+
+let dup_inv e i p =
+  fun (frame:slprop) (m:hmem_with_inv_except e ((i -~- p) `star` frame)) ->
+    assert (interp (((i -~- p) `star` frame) `star` mem_invariant e m) m);
+    FStar.Classical.forall_intro_3 star_assoc;
+    dup_inv_lemma i p (frame `star` mem_invariant e m) m;
+    assert (interp (((i -~- p) `star` (i -~- p)) `star` (frame `star` mem_invariant e m)) m);
+    let m : hmem_with_inv_except e (((i -~- p) `star` (i -~- p)) `star` frame) = m in
+    ((), m)
+
 
 let new_invariant (e:inames) (p:slprop u#a { is_big p })
 : pst_ghost_action_except iname_ref e p (fun i -> i -~- p)
