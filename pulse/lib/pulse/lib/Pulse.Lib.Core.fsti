@@ -166,38 +166,18 @@ val iname_ref : Type0
 val ( -~- ) (i:iname_ref) (p:vprop) : vprop
 val name_of_inv (i:iname_ref) : GTot iname
 
-// val inv (p:vprop) : Type u#0
-// val allocated_name : Type0
-// val name_of_inv #p (i : inv p) : GTot iname
-// val allocated_name_of_inv #p (i : inv p) : allocated_name
-// val name_of_allocated_name (a:allocated_name) : GTot iname
-// val allocated_name_of_inv_equiv (#p:vprop) (i:inv p)
-// : Lemma (name_of_allocated_name (allocated_name_of_inv i) == name_of_inv i)
-//         [SMTPat (name_of_allocated_name (allocated_name_of_inv i))]
-
 let mem_iname (e:inames) (i:iname) : erased bool = elift2 (fun e i -> Set.mem i e) e i
-// let mem_inv (#p:vprop) (e:inames) (i:inv p) : erased bool = mem_iname e (name_of_inv i)
 let mem_inv (e:inames) (i:iname_ref) : GTot bool = mem_iname e (name_of_inv i)
 
 let add_iname (e:inames) (i:iname) : inames = Set.add i (reveal e)
-// let add_inv (#p:vprop) (e:inames) (i:inv p) : inames = add_iname e (name_of_inv i)
 let add_inv (e:inames) (i:iname_ref) : inames = Set.add (name_of_inv i) e
-// let remove_inv (#p:vprop) (e:inames) (i:inv p) : inames = Set.remove (name_of_inv i) e
 let remove_inv (e:inames) (i:iname_ref) : inames = Set.remove (name_of_inv i) e
 let all_inames : inames = Set.complement Set.empty
-// let inv_disjointness_remove_i_i (#p:vprop) (e:inames) (i:inv p)
-// : Lemma (not (mem_inv (remove_inv e i) i))
-// = ()
 let inv_disjointness_remove_i_i (e:inames) (i:iname_ref)
   : Lemma (not (mem_inv (remove_inv e i) i)) = ()
 
 (* Useful for reasoning about inames equalities. TODO: We need a decent
 set of patterns. *)
-// val add_already_there #p (i : inv p) (is : inames)
-//   : Lemma (requires Set.mem (name_of_inv i) is)
-//           (ensures add_inv is i == is)
-//           [SMTPat (add_inv is i)]
-
 val add_already_there (i:iname_ref) (is:inames)
   : Lemma (requires Set.mem (name_of_inv i) is)
           (ensures add_inv is i == is)

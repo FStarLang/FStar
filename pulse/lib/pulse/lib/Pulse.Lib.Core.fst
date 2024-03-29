@@ -122,13 +122,6 @@ let join_emp is =
 let iname_ref = Act.iname_ref
 let ( -~- ) i p = Act.(( -~- ) i p)
 let name_of_inv i = Act.name_of_inv i
-
-// let inv = Act.inv
-// let allocated_name = Act.allocated_name
-// let name_of_inv = Act.name_of_inv
-// let allocated_name_of_inv = Act.allocated_name_of_inv
-// let name_of_allocated_name = Act.name_of_allocated_name
-// let allocated_name_of_inv_equiv #p i = ()
 let add_already_there i is = Set.lemma_equal_intro (add_inv is i) is
 
 ////////////////////////////////////////////////////////////////////

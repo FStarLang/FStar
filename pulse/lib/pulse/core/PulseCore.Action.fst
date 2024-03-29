@@ -110,9 +110,6 @@ let stt_of_action2 (#a:Type u#2) #pre #post (m:action a Set.empty pre post)
 let iname = iname
 
 let maybe_ghost (r:reifiability) = r = Ghost
-  // match r with
-  // | Ghost -> true
-  // | _ -> false
 
 let pre_act
     (a:Type u#a)
@@ -121,12 +118,6 @@ let pre_act
     (pre:slprop)
     (post:a -> slprop)
 = Mem._pst_action_except a (maybe_ghost r) opens pre post
-
-// match r with
-//   | UsesInvariants ->
-//     Mem.action_except a opens pre post
-//   | _ ->
-//     Mem._pst_action_except a (maybe_ghost r) opens pre post
 
 let force 
     #a (#r:reifiability)
@@ -151,7 +142,7 @@ let mem_pst_action_as_action
         (#ens: a -> slprop)
         (act:Mem.pst_action_except a except req ens)
 : action a except req ens
-= act  //fun frame -> M.weaken <| M.lift_pst (act frame)
+= act
 
 let action_of_pre_act
     (#a:Type u#a)
@@ -161,10 +152,7 @@ let action_of_pre_act
     (#post:a -> slprop)
     (f:pre_act a r opens pre post)
 : action a opens pre post
-= f  //mem_pst_action_as_action f
-  // match r with
-  // | UsesInvariants -> mem_action_as_action f
-  // | _ -> mem_pst_action_as_action f
+= f
 
 let act 
     (a:Type u#a)
@@ -205,17 +193,6 @@ let bind_pre_act_reifiable
 : pre_act b Reifiable except pre1 post2
 = fun frame -> PST.bind (f frame) (fun x -> g x frame)
 
-// let bind_pre_act_non_reifiable
-//      (#a:Type u#a)
-//      (#b:Type u#b)
-//      (#except:inames)
-//      (#pre1 #post1 #post2:_)
-//      ($f:pre_act a UsesInvariants except pre1 post1)
-//      ($g:(x:a -> pre_act b UsesInvariants except (post1 x) post2))
-// : pre_act b UsesInvariants except pre1 post2
-// = fun frame ->
-//     M.weaken <| M.bind (f frame) (fun x -> g x frame)
-
 let bind_pre_act
      (#a:Type u#a)
      (#b:Type u#b)
@@ -230,8 +207,6 @@ let bind_pre_act
     bind_pre_act_ghost #a #b #except #pre1 #post1 #post2 f g
   | Reifiable ->
     bind_pre_act_reifiable #a #b #except #pre1 #post1 #post2 f g
-  // | UsesInvariants ->
-  //   bind_pre_act_non_reifiable #a #b #except #pre1 #post1 #post2 f g
 
 let frame_pre_act_ghost
      (#a:Type u#a)
@@ -249,14 +224,6 @@ let frame_pre_act_reifiable
 : pre_act a Reifiable except (pre `star` frame) (fun x -> post x `star` frame)
 = fun frame' -> f (frame `star` frame')
 
-// let frame_pre_act_non_reifiable
-//      (#a:Type u#a)
-//      (#except:inames)
-//      (#pre #post #frame:_)
-//      (f:pre_act a UsesInvariants except pre post)
-// : pre_act a UsesInvariants except (pre `star` frame) (fun x -> post x `star` frame)
-// = fun frame' -> M.weaken <| f (frame `star` frame')
-
 let frame_pre_act
      (#a:Type u#a)
      (#r:reifiability)
@@ -267,7 +234,6 @@ let frame_pre_act
 = match r with
   | Ghost -> frame_pre_act_ghost #a #except #pre #post #frame f
   | Reifiable -> frame_pre_act_reifiable #a #except #pre #post #frame f
-  // | _ -> frame_pre_act_non_reifiable #a #except #pre #post #frame f
 
 let lift_pre_act_ghost
      (#a:Type u#a)
@@ -276,17 +242,6 @@ let lift_pre_act_ghost
      (f:pre_act a Ghost except pre post)
 : pre_act a Reifiable except pre post
 = f
-
-// let lift_pre_act_reifiablity
-//      (#a:Type u#a)
-//      (#r:_)
-//      (#except:inames)
-//      (#pre #post:_)
-//      (f:pre_act a r except pre post)
-// : pre_act a UsesInvariants except pre post
-// = if r = UsesInvariants then f
-//   else let f : pre_act a Reifiable except pre post = f in
-//        fun frame -> M.weaken <| (M.lift_pst (f frame))
 
 //////////////////////////////////////////////////////
 // Next, reversing the polarity of the inames index
@@ -299,11 +254,6 @@ let return
     (x:a)
 : act a r emp_inames (post x) post
 = fun #ictx -> return_pre_act #a #ictx #post x
-    // let m =  in
-    // match r with
-    // | Ghost -> m
-    // | Reifiable -> m
-    // | _ -> lift_pre_act_reifiablity m
 
 let bind
      (#a:Type u#a)
@@ -334,16 +284,6 @@ let lift_ghost_reifiable
 : act a Reifiable opens pre post
 = fun #ictx -> lift_pre_act_ghost (f #ictx)
 
-// let lift_reifiability 
-//     (#a:Type)
-//     (#r:_)
-//     (#pre:slprop)
-//     (#post:a -> slprop)
-//     (#opens:inames)
-//     (f:act a r opens pre post)
-// : act a UsesInvariants opens pre post
-// = fun #ictx -> lift_pre_act_reifiablity (f #ictx)
-
 let weaken 
     (#a:Type)
     (#pre:slprop)
@@ -355,10 +295,8 @@ let weaken
 = if r0 = r1 then f
   else (
     match r0, r1 with
-    // | UsesInvariants, _ -> f
-    // | _, UsesInvariants -> lift_reifiability f
     | Reifiable, Ghost -> f
-    | Ghost, Reifiable -> lift_ghost_reifiable #a #pre #post #opens f
+    | _ -> lift_ghost_reifiable #a #pre #post #opens f
   )
 
 let sub_pre_act_reifiable 
@@ -376,20 +314,6 @@ let sub_pre_act_reifiable
   with I.slprop_equiv_elim (post x) (post' x);
   f
 
-// let sub_pre_act_non_reifiable 
-//     (#a:Type)
-//     (#pre:slprop)
-//     (#post:a -> slprop)
-//     (#opens:inames)
-//     (pre':slprop { slprop_equiv pre pre' })
-//     (post':a -> slprop { forall x. slprop_equiv (post x) (post' x) })
-//     (f:pre_act a UsesInvariants opens pre post)
-// : pre_act a UsesInvariants opens pre' post'
-// = I.slprop_equiv_elim pre pre';
-//   introduce forall x. post x == post' x
-//   with I.slprop_equiv_elim (post x) (post' x);
-//   f
-
 let sub 
     (#a:Type)
     (#pre:slprop)
@@ -401,11 +325,6 @@ let sub
     (f:act a r opens pre post)
 : act a r opens pre' post'
 = fun #ictx -> sub_pre_act_reifiable #a #r #pre #post #ictx pre' post' (f #ictx)
-  // match r with
-  // | UsesInvariants ->
-  //   fun #ictx -> sub_pre_act_non_reifiable #a #pre #post #ictx pre' post' (f #ictx)
-  // | _ ->
-    
 
 let action_of_act 
     (#a:Type)
@@ -458,53 +377,6 @@ let distinct_invariants_have_distinct_names #p #q i j _ =
   fun #ictx -> distinct_invariants_have_distinct_names ictx p q i j
 let invariant_name_identifies_invariant p q i j =
   fun #ictx -> invariant_name_identifies_invariant ictx p q i j
-
-// let inv = inv
-// let allocated_name = pre_inv u#1
-// let allocated_name_of_inv (#p:slprop) (i:inv p) = pre_inv_of_inv #p i
-// let name_of_allocated_name = name_of_pre_inv
-
-// let new_invariant (p:slprop)
-// : act (inv p) UsesInvariants emp_inames p (fun _ -> emp)
-// = fun #ictx -> new_invariant ictx p
-
-// let fresh_invariant ctx p
-// : act (i:inv p { fresh_wrt (name_of_inv i) ctx  })
-//       UsesInvariants emp_inames p (fun _ -> emp)
-// = fun #ictx -> fresh_invariant ictx p ctx
-
-// let with_invariant
-//     (#a:Type)
-//     (#r:_)
-//     (#fp:slprop)
-//     (#fp':a -> slprop)
-//     (#f_opens:inames)
-//     (#p:slprop)
-//     (i:inv p{not (mem_inv f_opens i)})
-//     (f:unit -> act a r f_opens (p `star` fp) (fun x -> p `star` fp' x))
-// : act a UsesInvariants (add_inv f_opens i) fp fp'
-// = fun #ictx ->
-//     let f : act a UsesInvariants f_opens (p `star` fp) (fun x -> p `star` fp' x)
-//       = match r with
-//         | UsesInvariants -> f ()
-//         | _ -> lift_reifiability (f ())
-//     in
-//     let ictx' = Mem.add_inv ictx i in
-//     with_invariant #a #fp #fp' #ictx i (f #ictx')
-
-// let distinct_invariants_have_distinct_names
-//     (#p:slprop)
-//     (#q:slprop)
-//     (i:inv p)
-//     (j:inv q)
-//     (pf:squash (p =!= q))
-// = fun #ictx -> distinct_invariants_have_distinct_names ictx p q i j
-
-// let invariant_name_identifies_invariant
-//       (p q:slprop)
-//       (i:inv p)
-//       (j:inv q { name_of_inv i == name_of_inv j } )
-// = fun #ictx -> invariant_name_identifies_invariant ictx p q i j
 
 ///////////////////////////////////////////////////////////////////
 // Core operations on references
