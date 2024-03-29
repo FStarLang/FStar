@@ -556,6 +556,22 @@ val sel_v (#a:Type u#h) (#pcm:pcm a) (r:ref a pcm) (v:erased a) (m:full_hheap (p
           interp (ptr r) m /\
           v' == sel r m }
 
+val interp_pts_to (i:core_ref)
+                  (#a:Type)
+                  (#pcm:FStar.PCM.pcm a)
+                  (v:a)
+                  (h0:heap)
+: Lemma
+  (requires interp (pts_to #a #pcm i v) h0)
+  (ensures (
+    match select (core_ref_as_addr i) h0 with
+    | None -> False
+    | Some c ->
+      let Ref a' pcm' _ v' = c in
+      a == a' /\
+      pcm == pcm' /\
+      compatible pcm v v'))
+      
 (** [sel] respect [pts_to] *)
 val sel_lemma (#a:_) (#pcm:_) (r:ref a pcm) (m:full_hheap (ptr r))
   : Lemma (interp (pts_to r (sel r m)) m)

@@ -468,7 +468,7 @@ let hmem_with_inv (fp:slprop u#a) = hmem_with_inv_except S.empty fp
 
 let mem_evolves (m0 m1 : full_mem) =
     H2.heap_evolves (heap_of_mem m0).concrete (heap_of_mem m1).concrete /\
-    //m0.ctr <= m1.ctr /\
+    m0.iname_ctr <= m1.iname_ctr /\
     istore_evolves m0.iheap.invariants m1.iheap.invariants
 
 let frame_related_mems (fp0 fp1:slprop u#a) e (m0:hmem_with_inv_except e fp0) (m1:hmem_with_inv_except e fp1) =
@@ -751,9 +751,12 @@ let mem_evolves_iff (h0 h1:full_mem)
   (ensures
      mem_evolves h0 h1 <==> (
       H2.heap_evolves h0.iheap.concrete h1.iheap.concrete /\
+      h0.iname_ctr <= h1.iname_ctr /\
       istore_evolves h0.iheap.invariants h1.iheap.invariants))
 = assert (mem_evolves h0 h1 <==> 
-            (H2.heap_evolves h0.iheap.concrete h1.iheap.concrete /\ istore_evolves h0.iheap.invariants h1.iheap.invariants))
+            (H2.heap_evolves h0.iheap.concrete h1.iheap.concrete /\
+             h0.iname_ctr <= h1.iname_ctr /\
+             istore_evolves h0.iheap.invariants h1.iheap.invariants))
       by (FStar.Tactics.norm [delta_only [`%mem_evolves]])
 
 
@@ -1086,6 +1089,36 @@ let move_mem_invariant
             (istore_invariant m.iname_ctr (set_add i e) m.iheap.invariants) 
             (ctr_validity m.ctr m.ghost_ctr m.iname_ctr m.iheap)
   
+let elim_inv e (i:iname_ref) (p:slprop { is_big p }) (m:mem)
+: Lemma
+  (requires interp (i -~- p) m /\ interp (mem_invariant e m) m)
+  (ensures iname_for_p (name_of_inv i) p m.iheap.invariants /\
+           m.iname_ctr >= name_of_inv i)
+= assert (interp (pure (heap_ctr_valid m.ctr m.ghost_ctr m.iname_ctr m.iheap)) m);
+  assert (H0.interp (H0.pts_to #_ #(PA.pcm_agreement #(H2.slprop u#a)) i (Some (down p))) m.iheap.invariants);
+  H0.interp_pts_to i #_ #(PA.pcm_agreement #(H2.slprop u#a)) (Some (down p)) m.iheap.invariants;
+  H0.interp_free_above m.iheap.invariants m.iname_ctr
+  
+let pqrst_sq_pr_t (p q r s t : slprop)
+: Lemma (p `star` q `star` r `star` (s `star` t) == (s `star` q) `star` (p `star` r) `star` t)
+= FStar.Classical.forall_intro_3 star_assoc;
+  FStar.Classical.forall_intro_2 star_comm
+
+let elim_star_pq (p q:slprop) (m:mem)
+: Lemma 
+  (requires interp (p `star` q) m)
+  (ensures interp p m /\ interp q m)
+= ()
+
+let elim_star_pqrs (p q r s:slprop) (m:mem)
+: Lemma 
+  (requires interp (p `star` q `star` r `star` s) m)
+  (ensures 
+    interp p m /\
+    interp q m /\
+    interp r m /\
+    interp s m)
+= ()
 
 let with_invariant (#a:Type)
                    (#fp:slprop)
@@ -1104,29 +1137,39 @@ let with_invariant (#a:Type)
 = fun (frame:slprop) (m0:hmem_with_inv_except e(((i -~- p) `star` fp) `star` frame)) ->
     assert (interp ((i -~- p) `star` fp `star` frame `star` mem_invariant e m0) m0);
     assert (interp ((i -~- p)) m0);
-    (* elim the pts to assertion on h0 *)
-    assume (iname_for_p (name_of_inv i) p m0.iheap.invariants);
-    (* we know iname is live *)
-    assume (m0.iname_ctr >= name_of_inv i);
+    elim_star_pqrs (i -~- p) fp frame (mem_invariant e m0) m0;
+    assert (interp (mem_invariant e m0) m0);
+    elim_inv e i p m0;
     move_mem_invariant e m0 p (name_of_inv i);
     assert (interp ((i -~- p) `star` fp `star` frame `star` (p `star` mem_invariant (set_add (name_of_inv i) e) m0)) m0);
-    assume (((i -~- p) `star` fp `star` frame `star` (p `star` mem_invariant (set_add (name_of_inv i) e) m0)) ==
-            (((p `star` fp) `star` ((i -~- p) `star` frame) `star` mem_invariant (add_inv e i) m0)));
+    assert (Set.equal (set_add (name_of_inv i) e) (add_inv e i));
+    assert (
+        ((i -~- p) `star` fp `star` frame `star` (p `star` mem_invariant (add_inv e i) m0)) ==
+        (((p `star` fp) `star` ((i -~- p) `star` frame) `star` mem_invariant (add_inv e i) m0))
+      ) by (T.mapply (`pqrst_sq_pr_t));
     assert (inames_ok (set_add (name_of_inv i) e) m0);
     let m0 : hmem_with_inv_except (add_inv e i) ((p `star` fp) `star` ((i -~- p) `star` frame)) = m0 in
     let (x, m1) = f ((i -~- p) `star` frame) m0 in
     let m1 : hmem_with_inv_except (add_inv e i) ((p `star` fp' x) `star` ((i -~- p) `star` frame)) = m1 in
     assert (interp (((p `star` fp' x) `star` ((i -~- p) `star` frame)) `star` mem_invariant (add_inv e i) m1) m1);
-    assume ((((p `star` fp' x) `star` ((i -~- p) `star` frame)) `star` mem_invariant (add_inv e i) m1) ==
-           (((i -~- p) `star` fp' x) `star` frame `star` (p `star` mem_invariant (set_add (name_of_inv i) e) m1)));   
-    assume (iname_for_p (name_of_inv i) p m1.iheap.invariants);
-    assume (m1.iname_ctr >= m0.iname_ctr);
+    assert (
+        (((i -~- p) `star` fp' x) `star` frame `star` (p `star` mem_invariant (add_inv e i) m1)) ==
+        (((p `star` fp' x) `star` ((i -~- p) `star` frame)) `star` mem_invariant (add_inv e i) m1)
+      ) by (T.mapply (`pqrst_sq_pr_t));
+    assert (interp (((i -~- p) `star` fp' x) `star` frame) m1);
+    assert (interp (i -~- p) m1);
+    elim_star_pq 
+       ((p `star` fp' x) `star` ((i -~- p) `star` frame)) 
+       (mem_invariant (add_inv e i) m1)
+       m1;
+    assert (interp (mem_invariant (add_inv e i) m1) m1);
+    elim_inv (add_inv e i) i p m1;
+    mem_evolves_iff m0 m1;
     move_mem_invariant e m1 p (name_of_inv i);             
-    assert (interp (((i -~- p) `star` fp' x) `star` frame `star` mem_invariant e m1) m1);
     let m1 : hmem_with_inv_except e (((i -~- p) `star` fp' x) `star` frame) = m1 in
     (x, m1)
 #pop-options
- 
+
 let distinct_invariants_have_distinct_names
       (e:inames)
       (p:slprop u#m)

@@ -720,6 +720,24 @@ let sel #a #pcm (r:ref a pcm) (m:full_hheap (ptr r))
 
 let sel_v #a #pcm r v m = sel r m
 
+ 
+let interp_pts_to (i:core_ref)
+                  (#a:Type)
+                  (#pcm:FStar.PCM.pcm a)
+                  (v:a)
+                  (h0:heap)
+: Lemma
+  (requires interp (pts_to #a #pcm i v) h0)
+  (ensures (
+    match select (core_ref_as_addr i) h0 with
+    | None -> False
+    | Some c ->
+      let Ref a' pcm' _ v' = c in
+      a == a' /\
+      pcm == pcm' /\
+      compatible pcm v v'))
+= ()
+
 let sel_lemma (#a:_) (#pcm:_) (r:ref a pcm) (m:full_hheap (ptr r))
   : Lemma (interp (pts_to r (sel r m)) m)
   = let Ref _ _ _ v = select_addr m (Addr?._0 r) in
