@@ -848,6 +848,78 @@ let big_inv_star (p:H0.slprop) (q:slprop { is_big q })  (m:mem)
   assert (interp q mr);
   assert (disjoint ml mr)
 
+#push-options "--fuel 1"
+let cell_of (i:iname) (l:istore { Some? (H0.select i l) })
+: GTot H0.cell
+= Some?.v (H0.select i l)
+
+let istore_invariant_after_extend
+      (e:inames)
+      (iname:nat)
+      (p : slprop { is_big p })
+      (m0 : full_mem)
+      (invs0:H0.full_hheap H0.emp { 
+        H0.free_above_addr invs0 iname /\
+        reveal m0.iheap.invariants == invs0 /\
+        iname == reveal m0.iname_ctr /\
+        inames_ok e m0 })
+: Lemma (
+    let (| v, inv1 |) = H0.extend #_ #(PA.pcm_agreement #H2.slprop) (Some (down p)) iname invs0 in
+    let m1 = { m0 with iname_ctr=iname + 1; iheap = {m0.iheap with invariants = inv1} } in
+    istore_invariant m1.iname_ctr e m1.iheap.invariants ==
+    p `star` istore_invariant m0.iname_ctr e m0.iheap.invariants /\
+    inames_ok e m1 /\
+    istore_evolves m0.iheap.invariants m1.iheap.invariants
+  )
+= let (| v, inv1 |) = H0.extend #_ #(PA.pcm_agreement #H2.slprop) (Some (down p)) iname invs0 in
+  let m1 = { m0 with iname_ctr=iname + 1; iheap = {m0.iheap with invariants = inv1} } in
+  H0.extend_modifies_nothing #_ #(PA.pcm_agreement #H2.slprop) (Some (down p)) iname invs0;
+  H0.interp_free_above invs0 iname;
+  calc (==) {
+    istore_invariant m1.iname_ctr e m1.iheap.invariants;
+    (==) {}
+    invariant_of_one_cell (iname + 1) e inv1
+    `star` istore_invariant iname e inv1;
+    (==) { assert (H0.select (iname + 1) inv1 == None) }
+    emp `star` istore_invariant iname e inv1;
+    (==) { emp_u (istore_invariant iname e inv1) }
+    istore_invariant iname e inv1;
+    (==)  {}
+    invariant_of_one_cell iname e inv1 `star` (if iname = 0 then emp else istore_invariant (iname - 1) e inv1);
+    (==) { assert (Some? (H0.select iname inv1)); assert (not (iname `Set.mem` e))  }
+    sl_pure_imp (cell_pred_pre (cell_of iname inv1)) (cell_pred_post (cell_of iname inv1))
+    `star`
+    (if iname = 0 then emp else istore_invariant (iname - 1) e inv1);
+    (==) { sl_pure_imp_elim (cell_pred_pre (cell_of iname inv1)) (cell_pred_post (cell_of iname inv1)) }
+    p `star`
+    (if iname = 0 then emp else istore_invariant (iname - 1) e inv1);
+    };
+    assert (H0.select iname invs0 == None);
+    calc (==) {
+      istore_invariant iname e invs0; 
+    (==) { }
+      emp `star` (if iname = 0 then emp else istore_invariant (iname - 1) e invs0);
+    (==) { emp_u (if iname = 0 then emp else istore_invariant (iname - 1) e invs0) }
+      (if iname = 0 then emp else istore_invariant (iname - 1) e invs0);
+    };
+    if iname = 0
+    then ()
+    else (
+      assert (forall i. i < iname ==> H0.select i invs0 == H0.select i inv1);
+      let rec aux (i:nat { i < iname })
+        : Lemma  (istore_invariant i e invs0 == istore_invariant i e inv1)
+        = if i = 0
+          then ()
+          else (
+            aux (i - 1)
+          )
+      in
+      aux (iname - 1);
+      assert (istore_invariant (iname - 1) e invs0 ==
+              istore_invariant (iname - 1) e inv1)
+    )
+#pop-options
+
 #push-options "--split_queries no --z3rlimit_factor 2"           
 let new_invariant_pre_action (e:inames) (p:slprop { is_big p })
 : refined_pre_action true e p iname_ref (fun i -> iname_ref_pts_to i p)
@@ -875,10 +947,11 @@ let new_invariant_pre_action (e:inames) (p:slprop { is_big p })
     let m1 = { m0 with iname_ctr = iname + 1; iheap = iheap1 } in
     assert (full_mem_pred m1);
     assert (heap_ctr_valid m1.ctr m1.ghost_ctr m1.iname_ctr m1.iheap);
-    (* Induction on istore_invariant, given the assumes above about how invs have changed *)    
-    assume (istore_invariant m1.iname_ctr e m1.iheap.invariants ==
-            up (down p) `star` istore_invariant m0.iname_ctr e m0.iheap.invariants);
-    assert (up (down p) == p);
+    (* Induction on istore_invariant, given the assumes above about how invs have changed *)  
+    istore_invariant_after_extend e iname p m0 m0.iheap.invariants;  
+    // assume (istore_invariant m1.iname_ctr e m1.iheap.invariants ==
+    //         up (down p) `star` istore_invariant m0.iname_ctr e m0.iheap.invariants);
+    // assert (up (down p) == p);
     assert (istore_invariant m1.iname_ctr e m1.iheap.invariants ==
             p `star` istore_invariant m0.iname_ctr e m0.iheap.invariants);
     assert (interp (istore_invariant m1.iname_ctr e m1.iheap.invariants) m0);
@@ -896,7 +969,7 @@ let new_invariant_pre_action (e:inames) (p:slprop { is_big p })
     mem_invariant_is_big e m1;
     big_inv_star (H0.pts_to x (Some (down p))) (mem_invariant e m1) m1;
     assert (interp (iname_ref_pts_to x p `star` mem_invariant e m1) m1);
-    assume (inames_ok e m1);
+    assert (inames_ok e m1);
     let res : (x:iname_ref & hmem_with_inv_except e (iname_ref_pts_to x p)) = (| x, m1 |) in
     assert (maybe_ghost_action true m0 m1);
     let aux (frame:slprop)
@@ -975,7 +1048,7 @@ let new_invariant_pre_action (e:inames) (p:slprop { is_big p })
             star_assoc (iname_ref_pts_to x p) frame (mem_invariant e m1)
           );
         assert (H2.heap_evolves m0.iheap.concrete m1.iheap.concrete);
-        assume (istore_evolves m0.iheap.invariants m1.iheap.invariants);
+        assert (istore_evolves m0.iheap.invariants m1.iheap.invariants);
         mem_evolves_iff m0 m1
     in
     assert (frame_related_mems p (iname_ref_pts_to x p) e m0 m1);

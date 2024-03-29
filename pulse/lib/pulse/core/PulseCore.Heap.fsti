@@ -75,6 +75,13 @@ let null (#a:Type u#a) (#pcm:pcm a) : ref a pcm = core_ref_null
 *)
 val core_ref_is_null (r:core_ref) : b:bool { b <==> r == core_ref_null }
 
+val addr_as_core_ref (n:nat) : GTot core_ref
+val core_ref_as_addr (c:core_ref) : GTot nat
+val addr_core_ref_injective (n:nat)
+: Lemma (core_ref_as_addr (addr_as_core_ref n) == n)
+val addr_core_ref_injective_2 (c:core_ref { not (core_ref_is_null c) })
+: Lemma (addr_as_core_ref (core_ref_as_addr c) == c)
+
 (** Checking whether [r] is the null pointer is decidable through [is_null]
 *)
 let is_null (#a:Type u#a) (#pcm:pcm a) (r:ref a pcm) : (b:bool{b <==> r == null}) = core_ref_is_null r
@@ -420,6 +427,10 @@ val heap_evolves : FStar.Preorder.preorder full_heap
 *)
 val free_above_addr (h:heap u#a) (a:nat) : prop
 
+val interp_free_above (h:heap u#a) (a:nat)
+: Lemma (free_above_addr h a <==> (forall i. i >= a ==> select i h == None))
+
+
 (** [free_above_addr] is abstract but can be weakened consistently with its intended behavior *)
 val weaken_free_above (h:heap) (a b:nat)
   : Lemma (free_above_addr h a /\ a <= b ==> free_above_addr h b)
@@ -660,6 +671,17 @@ val extend
       (ref a pcm)
       (fun r -> pts_to r x)
 
+val extend_modifies_nothing
+      #a #pcm (x:a { pcm.refine x })
+      (addr:nat) (h:full_hheap emp { free_above_addr h addr })
+: Lemma (
+      let (| r, h1 |) = extend #a #pcm x addr h in
+      (forall (a:nat). a <> addr ==> select a h == select a h1) /\
+      select addr h1 == Some (Ref a pcm Frac.full_perm x) /\
+      not (core_ref_is_null r) /\
+      addr == core_ref_as_addr r
+  )
+
 val frame (#a:Type)
           #immut #allocates #hpre #hpost
           (#pre:slprop)
@@ -671,32 +693,6 @@ val frame (#a:Type)
 val change_slprop (p q:slprop)
                   (proof: (h:heap -> Lemma (requires interp p h) (ensures interp q h)))
   : action #immut_heap #no_allocs p unit (fun _ -> q)
-
-// module U = FStar.Universe
-
-// val id_elim_star (p q:slprop) (h:heap)
-//   : Pure (erased heap & erased heap )
-//          (requires (interp (p `star` q) h))
-//          (ensures (fun (hl, hr) -> disjoint hl hr
-//                               /\ h == join hl hr
-//                               /\ interp p hl
-//                               /\ interp q hr))
-
-// val id_elim_exists (#a:Type) (p : a -> slprop) (h:heap)
-//   : Pure (erased a)
-//          (requires (interp (h_exists p) h))
-//          (ensures (fun x -> interp (p x) h))
-
-
-// let is_frame_monotonic #a (p : a -> slprop) : prop =
-//   forall x y m frame. interp (p x `star` frame) m /\ interp (p y) m ==> interp (p y `star` frame) m
-
-// let is_witness_invariant #a (p : a -> slprop) =
-//   forall x y m. interp (p x) m /\ interp (p y) m ==> x == y
-
-// val witinv_framon (#a:_) (p : a -> slprop)
-//   : Lemma (requires (is_witness_invariant p))
-//           (ensures (is_frame_monotonic p))
 
 
 (**
