@@ -114,7 +114,7 @@ let eligible_for_smt_equality (g:env) (t0 t1:term)
       | _ -> false
     in
     match inspect_term t0, inspect_term t1 with
-    | Some (Tm_ForallSL _ _ _), Some (Tm_ForallSL _ _ _) -> true
+    | Tm_ForallSL _ _ _, Tm_ForallSL _ _ _ -> true
     | _ -> (
       let h0, args0 = R.collect_app_ln t0 in
       let h1, args1 = R.collect_app_ln t1 in
@@ -415,7 +415,7 @@ let rec match_q_aux (#preamble:_) (pst:prover_state preamble)
 
 let has_structure (q:vprop) : bool =
   match inspect_term q with
-  | Some (Tm_Star _ _) -> true
+  | Tm_Star _ _ -> true
   | _ -> false
 
 #push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 2"

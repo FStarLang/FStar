@@ -56,11 +56,11 @@ let check_elim_exists
   let t_rng = Pulse.RuntimeUtils.range_of_term t in
   let (| t, t_typing |) : (t:term & tot_typing g t tm_vprop ) = 
     match inspect_term t with
-    | Some Tm_Unknown -> (
+    | Tm_Unknown -> (
       //There should be exactly one exists_ vprop in the context and we eliminate it      
       let ts = vprop_as_list pre in
       let exist_tms = List.Tot.Base.filter #term (fun t -> match inspect_term t with
-                                                           | Some (Tm_ExistsSL _ _ _) -> true
+                                                           | Tm_ExistsSL _ _ _ -> true
                                                            | _ -> false) ts in
       match exist_tms with
       | [one] -> 
@@ -77,12 +77,12 @@ let check_elim_exists
   in
 
   let tv = inspect_term t in
-  if not (Some? tv && Tm_ExistsSL? (Some?.v tv))
+  if not (Tm_ExistsSL? tv)
   then fail g (Some t_rng)
          (Printf.sprintf "check_elim_exists: elim_exists argument %s not an existential"
             (P.term_to_string t));
 
-  let Some (Tm_ExistsSL u { binder_ty=ty } p) = tv in
+  let Tm_ExistsSL u { binder_ty=ty } p = tv in
 
   let (| u', ty_typing |) = check_universe g ty in
   if eq_univ u u'
@@ -115,12 +115,12 @@ let check_intro_exists
   in
 
   let tv = inspect_term t in
-  if not (Some? tv && Tm_ExistsSL? (Some?.v tv))
+  if not (Tm_ExistsSL? tv)
   then fail g (Some st.range)
          (Printf.sprintf "check_intro_exists_non_erased: vprop %s is not an existential"
             (P.term_to_string t));
 
-  let Some (Tm_ExistsSL u b p) = tv in
+  let Tm_ExistsSL u b p = tv in
 
   Pulse.Typing.FV.tot_typing_freevars t_typing;
   let ty_typing, _ = Metatheory.tm_exists_inversion #g #u #b.binder_ty #p t_typing (fresh g) in

@@ -56,12 +56,12 @@ let check
   in
 
   let ex_inv_v = inspect_term ex_inv in
-  if not (Some? ex_inv_v && Tm_ExistsSL? (Some?.v ex_inv_v))
+  if not (Tm_ExistsSL? ex_inv_v)
   then fail g (Some t.range)
          (Printf.sprintf "check_while: typechecked invariant %s is not an existential"
             (P.term_to_string ex_inv));
 
-  let Some (Tm_ExistsSL u {binder_ppname=nm; binder_ty=ty} inv) = ex_inv_v in
+  let Tm_ExistsSL u {binder_ppname=nm; binder_ty=ty} inv = ex_inv_v in
 
   if not (eq_tm ty tm_bool) ||
      not (eq_univ u u0)

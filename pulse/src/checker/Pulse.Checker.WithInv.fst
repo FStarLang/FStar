@@ -46,7 +46,7 @@ let recheck (#g:env) (#e:term) (#ty: typ) () : T.Tac (tot_typing g e ty) =
 
 let term_remove_inv (inv:vprop) (tm:term) : T.Tac (tm':term { tm_star tm' inv == tm}) =
   match inspect_term tm with
-  | Some (Tm_Star tm inv') ->
+  | Tm_Star tm inv' ->
     if eq_tm inv inv' then tm
     else T.fail "term_remove_inv"
   | _ ->
@@ -236,8 +236,12 @@ let check
     (* Check the term without an expected type, and check that it's Tm_Inv p *)
     let inv_p =
       match inspect_term inv_tm_ty with
-      | Some (Tm_Inv p) -> p
-      | Some _ -> begin
+      | Tm_Inv p -> p
+      | Tm_FStar _ ->
+        fail g (Some inv_tm_range)
+          (Printf.sprintf "Does not have invariant type (%s)" (P.term_to_string inv_tm_ty))
+
+      | _ -> begin
         (* FIXME: should unrefine... meh *)
         let ropt = Pulse.Syntax.Pure.is_fvar_app inv_tm_ty in
         match ropt with
@@ -249,8 +253,6 @@ let check
         | _ -> fail g (Some inv_tm_range)
                     (Printf.sprintf "Does not have invariant type (%s)" (P.term_to_string inv_tm_ty))
       end
-      | _ -> fail g (Some inv_tm_range)
-                  (Printf.sprintf "Does not have invariant type (%s)" (P.term_to_string inv_tm_ty))
     in
     
     (* FIXME: This is bogus for the wr case!!! *)

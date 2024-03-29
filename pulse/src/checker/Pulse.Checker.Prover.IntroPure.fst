@@ -125,8 +125,7 @@ let is_uvar_implication
 = fun (uvs:env) (t:term) ->
     debug uvs (fun _ -> Printf.sprintf "is_uvar_implication??: %s\n" (P.term_to_string t));
     match inspect_term t with
-    | Some _ -> None
-    | None -> (
+    | Tm_FStar _ -> (
       let tt = t in
       let f = RF.term_as_formula' tt in
       match f with
@@ -149,8 +148,7 @@ let is_uvar_implication
                   if Set.mem nm.nm_index (dom uvs)
                   then (
                       match inspect_term rhs with
-                      | Some _ -> None
-                      | None -> 
+                      | Tm_FStar _ -> 
                         let rhs = wr (`(not (`#(rhs)))) FStar.Range.range_0 in
                         assume (nm.nm_index `Set.mem` freevars t);
                         Some (| nm.nm_index, rhs |)
@@ -186,8 +184,7 @@ let rec try_collect_substs (uvs:env) (t:term)
   : T.Tac (ss:PS.ss_t { PS.dom ss `Set.subset` freevars t }) =
   assume (PS.dom PS.empty == Set.empty);
   match inspect_term t with
-  | Some _ -> PS.empty
-  | _ ->
+  | Tm_FStar _ ->
     let rt = t in
     let f = RF.term_as_formula' rt in
     begin

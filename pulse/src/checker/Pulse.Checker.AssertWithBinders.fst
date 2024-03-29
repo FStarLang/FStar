@@ -138,7 +138,7 @@ let unfold_defs (g:env) (defs:option (list string)) (t:term)
 
 let check_unfoldable g (v:term) : T.Tac unit =
   match inspect_term v with
-  | None -> ()
+  | Tm_FStar _ -> ()
   | _ -> 
    fail g 
       (Some (Pulse.RuntimeUtils.range_of_term v))
@@ -273,8 +273,8 @@ let check_wild
   | _ ->
     let vprops = Pulse.Typing.Combinators.vprop_as_list pre in
     let ex, rest = List.Tot.partition (fun (v:vprop) ->
-                                       let vopt = inspect_term v in
-                                       Some? vopt && Tm_ExistsSL? (Some?.v vopt)) vprops in
+                                       let vv = inspect_term v in
+                                       Tm_ExistsSL? vv) vprops in
     match ex with
     | []
     | _::_::_ ->
@@ -289,7 +289,7 @@ let check_wild
         )
         else (
           match inspect_term t with
-          | Some (Tm_ExistsSL u b body) -> peel_binders (n-1) body
+          | Tm_ExistsSL u b body -> peel_binders (n-1) body
           | _ -> 
             fail g (Some st.range)
                (Printf.sprintf "Expected an existential quantifier with at least %d binders; but only found %s with %d binders"

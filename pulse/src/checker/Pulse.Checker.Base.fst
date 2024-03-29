@@ -529,8 +529,8 @@ let continuation_elaborator_with_bind_fn (#g:env) (#ctxt:term)
 let rec check_equiv_emp (g:env) (vp:term)
   : option (vprop_equiv g vp tm_emp)
   = match inspect_term vp with
-    | Some Tm_Emp -> Some (VE_Refl _ _)
-    | Some (Tm_Star vp1 vp2) ->
+    | Tm_Emp -> Some (VE_Refl _ _)
+    | Tm_Star vp1 vp2 ->
       (match check_equiv_emp g vp1, check_equiv_emp g vp2 with
        | Some d1, Some d2 ->
          let d3 : vprop_equiv g (tm_star vp1 vp2) (tm_star tm_emp tm_emp)

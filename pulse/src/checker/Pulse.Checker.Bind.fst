@@ -97,7 +97,7 @@ let check_bind
       (* Check that the type matches the annotation, if any *)
       let ty = binder.binder_ty in
       begin match inspect_term ty with
-      | Some Tm_Unknown -> ()
+      | Tm_Unknown -> ()
       | _ ->
         let (| ty, _, _ |) = compute_tot_term_type g ty in //elaborate it first
         let (| _, _, (| _, t, _ |), _, _ |) = r in

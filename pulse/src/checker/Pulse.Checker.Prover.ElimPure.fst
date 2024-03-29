@@ -86,7 +86,7 @@ let elim_pure_typing (g:env) (p:term)
 
 let is_elim_pure (vp:term) : T.Tac bool =
   match inspect_term vp with
-  | Some (Tm_Pure _) -> true
+  | Tm_Pure _ -> true
   | _ -> false
 
 let mk (#g:env) (#v:vprop) (v_typing:tot_typing g v tm_vprop)
@@ -95,7 +95,7 @@ let mk (#g:env) (#v:vprop) (v_typing:tot_typing g v tm_vprop)
                    c:comp { stateful_comp c /\ comp_pre c == v } &
                    st_typing g t c)) =
   match inspect_term v with
-  | Some (Tm_Pure pp) ->
+  | Tm_Pure pp ->
     let p_typing =
       Metatheory.pure_typing_inversion #g #(wr pp) v_typing in
     Some (| ppname_default,

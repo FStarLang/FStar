@@ -77,7 +77,7 @@ let check
       (* Check against annotation if any *)
       let ty = binder.binder_ty in
       match inspect_term ty with
-      | Some Tm_Unknown -> compute_tot_term_type_and_u g init
+      | Tm_Unknown -> compute_tot_term_type_and_u g init
       | _ ->
         let (| u, ty_typing |) = check_universe g ty in
         let (| init, init_typing |) = check_term g init T.E_Total ty in

@@ -127,7 +127,7 @@ let rec elim_all (#g:env)
             tot_typing g' (tm_star ctxt' frame) tm_vprop &
             continuation_elaborator g (tm_star ctxt frame) g' (tm_star ctxt' frame)))
    = match inspect_term ctxt with
-     | Some (Tm_Star ctxt' p) ->
+     | Tm_Star ctxt' p ->
        let p_typing =
          star_typing_inversion_r #_ #ctxt' #p (star_typing_inversion_l ctxt_frame_typing) in
        if f p

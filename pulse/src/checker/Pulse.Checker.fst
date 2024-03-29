@@ -64,10 +64,10 @@ let rec gen_names_for_unknowns (g:env) (t:term) (ws:list term)
     | [] -> [], t, []
     | w::ws ->
       match inspect_term t with
-      | Some (Tm_ExistsSL _ b body) ->
+      | Tm_ExistsSL _ b body ->
         let xopt, w, g =
           match inspect_term w with
-          | Some Tm_Unknown ->
+          | Tm_Unknown ->
             let x = fresh g in
             Some x,
             tm_var {nm_index=x;nm_ppname=b.binder_ppname},
@@ -120,12 +120,12 @@ let rec transform_to_unary_intro_exists (g:env) (t:term) (ws:list term)
   | [] -> fail g (Some t_rng) "intro exists with empty witnesses"
   | [w] ->
     let tv = inspect_term t in
-    if Some? tv && Tm_ExistsSL? (Some?.v tv)
+    if Tm_ExistsSL? tv
     then wtag (Some STT_Ghost) (Tm_IntroExists {p=t;witnesses=[w]})
     else fail g (Some t_rng) "intro exists with non-existential"
   | w::ws ->
     match inspect_term t with
-    | Some (Tm_ExistsSL u b body) ->
+    | Tm_ExistsSL u b body ->
       let body = subst_term body [ DT 0 w ] in
       let st = transform_to_unary_intro_exists g body ws in
       // w is the witness

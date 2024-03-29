@@ -101,7 +101,7 @@ let check
       (* Check against annotation if any *)
       let ty = binder.binder_ty in
       match inspect_term ty with
-      | Some Tm_Unknown -> compute_tot_term_type_and_u g initializer
+      | Tm_Unknown -> compute_tot_term_type_and_u g initializer
       | _ ->
         match is_annotated_type_array ty with
         | None ->

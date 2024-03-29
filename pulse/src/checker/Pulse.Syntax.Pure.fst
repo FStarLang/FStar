@@ -262,6 +262,12 @@ let is_fvar_app_tm_app (t:term)
 let mk_squash (u:universe) (t:term) : term =
   tm_pureapp (tm_uinst (as_fv R.squash_qn) [u]) None t
 
+//
+// A separation logic specific view of pure F* terms
+// The inspect_term API returns a view,
+//   where Tm_FStar is the catch all case
+// See also the is_view_of predicate below
+//
 [@@ no_auto_projectors]
 noeq
 type term_view =
@@ -276,6 +282,7 @@ type term_view =
   | Tm_EmpInames  : term_view
   | Tm_AddInv     : i:term -> is:term -> term_view
   | Tm_Unknown    : term_view
+  | Tm_FStar      : term -> term_view  // catch all
 
 let wr (t:term) (r:range) : term = set_range t r
 
@@ -304,9 +311,10 @@ let pack_term_view (top:term_view) (r:range)
     | Tm_ExistsSL u b body
     | Tm_ForallSL u b body ->
       let t = set_range_of b.binder_ty b.binder_ppname.range in
+      let abs = mk_abs_with_name_and_range b.binder_ppname.name b.binder_ppname.range t R.Q_Explicit body in
       if Tm_ExistsSL? top
-      then w (mk_exists u t (mk_abs_with_name_and_range b.binder_ppname.name b.binder_ppname.range t R.Q_Explicit body))
-      else w (mk_forall u t (mk_abs_with_name_and_range b.binder_ppname.name b.binder_ppname.range t R.Q_Explicit body))
+      then w (mk_exists u t abs)
+      else w (mk_forall u t abs)
 
     | Tm_Inames ->
       w (pack_ln (Tv_FVar (pack_fv inames_lid)))
@@ -319,6 +327,8 @@ let pack_term_view (top:term_view) (r:range)
 
     | Tm_Unknown ->
       w (pack_ln R.Tv_Unknown)
+
+    | Tm_FStar t -> w t
 
 let term_range (t:term) = range_of_term t
 let pack_term_view_wr (t:term_view) (r:range) = pack_term_view t r
@@ -363,28 +373,30 @@ let is_view_of (tv:term_view) (t:term) : prop =
     p << t
   | Tm_Unknown -> t == tm_unknown
   | Tm_AddInv i is -> True
+  | Tm_FStar t' -> t' == t
 
 let rec inspect_term (t:R.term)
-  : (r:option term_view { Some? r ==> (Some?.v r `is_view_of` t) }) =
+  : (tv:term_view { tv `is_view_of` t }) =
 
   let open R in
   let open Pulse.Syntax.Base in
 
-  let return tv = Some tv in
+  let default_view = Tm_FStar t in
+
   pack_inspect_inv t;
 
   match inspect_ln t with
   | Tv_FVar fv ->
     let fv_lid = inspect_fv fv in
     if fv_lid = vprop_lid
-    then return Tm_VProp
+    then Tm_VProp
     else if fv_lid = emp_lid
-    then return Tm_Emp
+    then Tm_Emp
     else if fv_lid = inames_lid
-    then return Tm_Inames
+    then Tm_Inames
     else if fv_lid = emp_inames_lid
-    then return Tm_EmpInames
-    else None
+    then Tm_EmpInames
+    else default_view
 
   | Tv_App hd (a, q) ->
     admit(); //this case doesn't work because it is using collect_app_ln, etc.
@@ -393,35 +405,31 @@ let rec inspect_term (t:R.term)
       match inspect_ln head, args with
       | Tv_FVar fv, [a1; a2] ->
         if inspect_fv fv = star_lid
-        then return (Tm_Star (fst a1) (fst a2))
-        else None
+        then Tm_Star (fst a1) (fst a2)
+        else default_view
       | Tv_UInst fv [u], [a1; a2] ->
         if inspect_fv fv = exists_lid ||
            inspect_fv fv = forall_lid
         then (
           let t1 : R.term = fst a1 in
           let t2 : R.term = fst a2 in
-          let ty = t1 in
-          let? (ppname, range, p) =
-            match inspect_ln t2 with
-            | Tv_Abs b body ->
-              let p = body in
-              let bview = inspect_binder b in
-              Some (bview.ppname, binder_range b, p) <: option (ppname_t & range & term)
-            | _ -> None in  // TODO: FIXME: provide error from this function?
-          let b = mk_binder_ppname ty (mk_ppname ppname range) in
-          if inspect_fv fv = exists_lid
-          then return (Tm_ExistsSL u b p)
-          else return (Tm_ForallSL u b p)
+          match inspect_ln t2 with
+          | Tv_Abs b body ->
+            let bview = inspect_binder b in
+            let b = mk_binder_ppname t1 (mk_ppname bview.ppname (binder_range b)) in
+            if inspect_fv fv = exists_lid
+            then Tm_ExistsSL u b body
+            else Tm_ForallSL u b body
+          | _ -> default_view
         )
-        else None
+        else default_view
      | Tv_FVar fv, [a] ->
         if inspect_fv fv = pure_lid
-        then return (Tm_Pure (fst a))
+        then Tm_Pure (fst a)
         else if inspect_fv fv = inv_lid
-        then return (Tm_Inv (fst a))
-        else None
-     | _ -> None
+        then Tm_Inv (fst a)
+        else default_view
+     | _ -> default_view
     end
 
   | Tv_Refine _ _
@@ -433,7 +441,7 @@ let rec inspect_term (t:R.term)
   | Tv_BVar _
   | Tv_UInst _ _
   | Tv_Match _ _ _
-  | Tv_Abs _ _ -> None
+  | Tv_Abs _ _ -> default_view
 
   | Tv_AscribedT t _ _ _
   | Tv_AscribedC t _ _ _ ->
@@ -441,8 +449,8 @@ let rec inspect_term (t:R.term)
     admit();
     inspect_term t
 
-  | Tv_Uvar _ _ -> None
+  | Tv_Uvar _ _ -> default_view
   
-  | Tv_Unknown -> return Tm_Unknown
+  | Tv_Unknown -> Tm_Unknown
 
-  | Tv_Unsupp -> None
+  | Tv_Unsupp -> default_view
