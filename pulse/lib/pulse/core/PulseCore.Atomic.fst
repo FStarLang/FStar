@@ -97,14 +97,8 @@ let bind_atomic
 = match r_of_obs obs1, r_of_obs obs2 with
   | Ghost, Ghost
   | Reifiable, Reifiable -> A.bind e1 e2
-    // let e1 : act a Ghost opens pre1 post1 = e1 in
-    // let e2 : x:a -> act b Ghost opens (post1 x) post2 = e2 in
   | Ghost, _ -> A.bind (A.lift_ghost_reifiable e1) e2
   | _ -> A.bind e1 (fun x -> A.lift_ghost_reifiable (e2 x))
-    // let e1 : act a Reifiable opens pre1 post1 = A.lift_reifiability e1 in
-    // let e2 : x:a -> act b Reifiable opens (post1 x) post2 = 
-    //   fun x -> lift_reifiability (e2 x) in
-    // A.bind e1 e2
 
 let lift_observability
     (#a:Type u#a)
@@ -116,9 +110,6 @@ let lift_observability
 = match r_of_obs obs, r_of_obs obs' with
   | Ghost, Reifiable -> A.lift_ghost_reifiable e
   | _ -> e
-
-// if obs = obs' then e
-//   else A.lift_ghost_reifiable e
 
 let lift_atomic0
     (#a:Type u#0)
@@ -270,6 +261,9 @@ let ghost_reveal (a:Type) (x:erased a)
   pure_trivial (reveal x == reveal x) ();
   m
 
+
+let dup_inv (i:iname_ref) (p:slprop) = A.dup_inv i p
+
 let new_invariant (p:big_vprop)
 : stt_ghost iname_ref emp_inames p (fun i -> i -~- p)
 = A.new_invariant p
@@ -304,16 +298,6 @@ let read r x f = A.read r x f
 let write r x y f = A.write r x y f
 let share #a #pcm r v0 v1 = Ghost.hide (A.share r v0 v1)
 let gather #a #pcm r v0 v1 = Ghost.hide (A.gather r v0 v1)
-
-// let hide_ghost #a #pre #post 
-//               (f:stt_ghost a pre post)
-// : stt_ghost (erased a) pre (fun x -> post (reveal x))
-// = let f = Ghost.reveal f in
-//   Ghost.hide <|
-//   A.bind f
-//   (fun (r:a) ->
-//     A.return #(erased a) #_ #(fun (x:erased a) -> post (reveal x))
-//        (hide r))
 
 let ghost_alloc #a #pcm x = Ghost.hide <| A.ghost_alloc #a #pcm x
 let ghost_read

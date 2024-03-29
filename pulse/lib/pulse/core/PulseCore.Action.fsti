@@ -28,16 +28,10 @@ open PulseCore.InstantiatedSemantics
 type reifiability =
  | Ghost
  | Reifiable
-//  | UsesInvariants  // AR: we should not need this?
 
 let ( ^^ ) (r1 r2 : reifiability) : reifiability =
   if r1 = r2 then r1
   else Reifiable
-  //  match r1, r2 with
-  //  | Ghost, Reifiable
-  //  | Reifiable, Ghost -> Reifiable
-  //  | _ -> UsesInvariants
-  // )
 
 val iname : eqtype
 
@@ -98,16 +92,6 @@ val lift_ghost_reifiable
     (f:act a Ghost opens pre post)
 : act a Reifiable opens pre post
 
-// AR: don't need UsesInvariants?
-// val lift_reifiability 
-//     (#a:Type)
-//     (#r:_)
-//     (#pre:slprop)
-//     (#post:a -> slprop)
-//     (#opens:inames)
-//     (f:act a r opens pre post)
-// : act a UsesInvariants opens pre post
-
 val weaken 
     (#a:Type)
     (#pre:slprop)
@@ -116,7 +100,6 @@ val weaken
     (#opens opens':inames)
     (f:act a r0 opens pre post)
 : act a (r0 ^^ r1) (Set.union opens opens') pre post
-
 
 val sub 
     (#a:Type)
@@ -149,6 +132,7 @@ val lift2 (#a:Type u#2) #r #opens #pre #post
 // Invariants
 //////////////////////////////////////////////////////////////////////
 
+[@@ erasable]
 val iname_ref : Type0
 
 val name_of_inv (i:iname_ref) : GTot iname
@@ -158,27 +142,8 @@ let mem_inv (e:inames) (i:iname_ref) : GTot bool = S.mem (name_of_inv i) e
 
 val ( -~- ) (i:iname_ref) (p:slprop) : slprop
 
-// val inv (p:slprop) : Type0
-
-// val allocated_name : Type0
-
-// val allocated_name_of_inv (#p:_) (i:inv p)
-// : allocated_name
-
-// val name_of_allocated_name (n:allocated_name)
-// : GTot iname
-
-// let name_of_inv #p (i:inv p)
-// : GTot iname
-// = name_of_allocated_name (allocated_name_of_inv i)
-
-// let mem_inv (#p:_) (opens:inames) (i:inv p)
-// : GTot bool
-// = Set.mem (name_of_inv i) opens
-
-// let add_inv (#p:_) (opens:inames) (i:inv p)
-// : inames
-// = Set.union (Set.singleton (name_of_inv i)) opens
+val dup_inv (i:iname_ref) (p:slprop)
+  : act unit Ghost emp_inames (i -~- p) (fun _ -> (i -~- p) ** (i -~- p))
 
 val new_invariant (p:big_vprop)
 : act iname_ref Ghost emp_inames p (fun i -> i -~- p)

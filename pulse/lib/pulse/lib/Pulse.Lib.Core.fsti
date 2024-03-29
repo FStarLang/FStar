@@ -71,6 +71,8 @@ val down2 (p:vprop) : small_vprop
 val up2 (p:small_vprop) : vprop
 let is_small (v:vprop) : prop = up2 (down2 v) == v
 
+val small_is_also_big (v:vprop) : Lemma (is_small v ==> is_big v)
+
 val emp : vprop
 val emp_is_small : squash (is_small emp)
 
@@ -101,7 +103,6 @@ val small_exists (#a:Type u#a) (p: a -> vprop)
     (requires forall x. is_small (p x))
     (ensures is_small (op_exists_Star p))
     
-
 val vprop_equiv (p q:vprop) : prop
 val elim_vprop_equiv (#p #q:_) (_:vprop_equiv p q) : squash (p == q)
 val vprop_post_equiv (#t:Type u#a) (p q: t -> vprop) : prop
@@ -160,28 +161,24 @@ let inames_subset (is1 is2 : inames) : Type0 =
 let (/!) (is1 is2 : inames) : Type0 =
   Set.disjoint is1 is2
 
-val inv (p:vprop) : Type u#0
-val allocated_name : Type0
-val name_of_inv #p (i : inv p) : GTot iname
-val allocated_name_of_inv #p (i : inv p) : allocated_name
-val name_of_allocated_name (a:allocated_name) : GTot iname
-val allocated_name_of_inv_equiv (#p:vprop) (i:inv p)
-: Lemma (name_of_allocated_name (allocated_name_of_inv i) == name_of_inv i)
-        [SMTPat (name_of_allocated_name (allocated_name_of_inv i))]
+[@@ erasable]
+val iname_ref : Type0
+val ( -~- ) (i:iname_ref) (p:vprop) : vprop
+val name_of_inv (i:iname_ref) : GTot iname
 
 let mem_iname (e:inames) (i:iname) : erased bool = elift2 (fun e i -> Set.mem i e) e i
-let mem_inv (#p:vprop) (e:inames) (i:inv p) : erased bool = mem_iname e (name_of_inv i)
+let mem_inv (e:inames) (i:iname_ref) : GTot bool = mem_iname e (name_of_inv i)
 
-let add_iname (e:inames) (i:iname) : inames = Set.union (Set.singleton i) (reveal e)
-let add_inv (#p:vprop) (e:inames) (i:inv p) : inames = add_iname e (name_of_inv i)
-let remove_inv (#p:vprop) (e:inames) (i:inv p) : inames = Set.remove (name_of_inv i) e
+let add_iname (e:inames) (i:iname) : inames = Set.add i (reveal e)
+let add_inv (e:inames) (i:iname_ref) : inames = Set.add (name_of_inv i) e
+let remove_inv (e:inames) (i:iname_ref) : inames = Set.remove (name_of_inv i) e
 let all_inames : inames = Set.complement Set.empty
-let inv_disjointness_remove_i_i (#p:vprop) (e:inames) (i:inv p)
-: Lemma (not (mem_inv (remove_inv e i) i))
-= ()
+let inv_disjointness_remove_i_i (e:inames) (i:iname_ref)
+  : Lemma (not (mem_inv (remove_inv e i) i)) = ()
+
 (* Useful for reasoning about inames equalities. TODO: We need a decent
 set of patterns. *)
-val add_already_there #p (i : inv p) (is : inames)
+val add_already_there (i:iname_ref) (is:inames)
   : Lemma (requires Set.mem (name_of_inv i) is)
           (ensures add_inv is i == is)
           [SMTPat (add_inv is i)]
@@ -292,7 +289,7 @@ val stt_atomic
     (opens:inames)
     (pre:vprop)
     (post:a -> vprop)
-: Type u#(max 3 a)
+: Type u#(max 4 a)
 
 val lift_observability
     (#a:Type u#a)
@@ -387,57 +384,6 @@ val lift_atomic2
   (e:stt_atomic a #obs opens pre post)
 : stt a pre post
 
-val new_invariant
-    (p:vprop)
-: stt_atomic (inv p) #Unobservable emp_inames p (fun _ -> emp)
-
-val fresh_wrt (i:iname) (c:list allocated_name)
-: prop
-
-val fresh_wrt_def (i:iname) (c:list allocated_name)
-: Lemma
-    (fresh_wrt i c <==>
-    (forall (a:allocated_name). List.Tot.memP a c ==> name_of_allocated_name a =!= i))
-    [SMTPat (fresh_wrt i c)]
-
-val fresh_invariant
-    (ctx:list allocated_name)
-    (p:vprop)
-: stt_atomic (i:inv p { name_of_inv i `fresh_wrt` ctx }) #Unobservable emp_inames p (fun _ -> emp)
-
-val with_invariant
-    (#a:Type)
-    (#obs:_)
-    (#fp:vprop)
-    (#fp':a -> vprop)
-    (#f_opens:inames)
-    (#p:vprop)
-    (i:inv p{not (mem_inv f_opens i)})
-    ($f:unit -> stt_atomic a #obs f_opens
-                            (p ** fp)
-                            (fun x -> p ** fp' x))
-: stt_atomic a #(join_obs obs Unobservable) (add_inv f_opens i) fp fp'
-
-val distinct_invariants_have_distinct_names
-    (#p #q:vprop)
-    (i:inv p)
-    (j:inv q { (p =!= q) })
-: stt_atomic (_:squash (name_of_inv i =!= name_of_inv j))
-    #Unobservable
-    emp_inames
-    emp
-    (fun _ -> emp)
-
-val invariant_name_identifies_invariant
-      (#p #q:vprop)
-      (i:inv p)
-      (j:inv q { name_of_inv i == name_of_inv j } )
-: stt_atomic (squash (p == q /\ i == j))
-    #Unobservable
-    emp_inames
-    emp
-    (fun _ -> emp)
-
 //////////////////////////////////////////////////////////////////////////
 // Ghost computations
 //////////////////////////////////////////////////////////////////////////
@@ -451,52 +397,127 @@ val invariant_name_identifies_invariant
 [@@ erasable]
 val stt_ghost
     (a:Type u#a)
+    (opens:inames)
     (pre:vprop)
     (post:a -> vprop)
-: Type u#(max 3 a)
+: Type u#(max 4 a)
 
 val bind_ghost
     (#a:Type u#a)
     (#b:Type u#b)
+    (#opens:inames)
     (#pre1:vprop)
     (#post1:a -> vprop)
     (#post2:b -> vprop)
-    (e1:stt_ghost a pre1 post1)
-    (e2:(x:a -> stt_ghost b (post1 x) post2))
-: stt_ghost b pre1 post2
+    (e1:stt_ghost a opens pre1 post1)
+    (e2:(x:a -> stt_ghost b opens (post1 x) post2))
+: stt_ghost b opens pre1 post2
 
 val lift_ghost_neutral
     (#a:Type u#a)
+    (#opens:inames)
     (#pre:vprop)
     (#post:a -> vprop)
-    (e:stt_ghost a pre post)
+    (e:stt_ghost a opens pre post)
     (ni_a:NonInformative.non_informative a)
-: stt_atomic a #Neutral emp_inames pre post
+: stt_atomic a #Neutral opens pre post
 
 val lift_neutral_ghost
     (#a:Type u#a)
+    (#opens:inames)
     (#pre:vprop)
     (#post:a -> vprop)
-    (e:stt_atomic a #Neutral emp_inames pre post)
-: stt_ghost a pre post
+    (e:stt_atomic a #Neutral opens pre post)
+: stt_ghost a opens pre post
 
 val frame_ghost
     (#a:Type u#a)
+    (#opens:inames)
     (#pre:vprop) (#post:a -> vprop)
     (frame:vprop)
-    (e:stt_ghost a pre post)
-: stt_ghost a (pre ** frame) (fun x -> post x ** frame)
+    (e:stt_ghost a opens pre post)
+: stt_ghost a opens (pre ** frame) (fun x -> post x ** frame)
 
 val sub_ghost
     (#a:Type u#a)
+    (#opens:inames)
     (#pre1:vprop)
     (pre2:vprop)
     (#post1:a -> vprop)
     (post2:a -> vprop)
     (pf1 : vprop_equiv pre1 pre2)
     (pf2 : vprop_post_equiv post1 post2)
-    (e:stt_ghost a pre1 post1)
-: stt_ghost a pre2 post2
+    (e:stt_ghost a opens pre1 post1)
+: stt_ghost a opens pre2 post2
+
+//////////////////////////////////////////////////////////////////////////
+// Invariants
+//////////////////////////////////////////////////////////////////////////
+
+val dup_inv (i:iname_ref) (p:vprop)
+  : stt_ghost unit emp_inames (i -~- p) (fun _ -> (i -~- p) ** (i -~- p))
+
+val new_invariant (p:vprop { is_big p })
+: stt_ghost iname_ref emp_inames p (fun i -> i -~- p)
+
+val fresh_wrt (i:iname_ref) (c:list iname_ref)
+: prop
+
+val fresh_wrt_def (i:iname_ref) (c:list iname_ref)
+: Lemma
+    (fresh_wrt i c <==>
+    (forall i'. List.Tot.memP i' c ==> name_of_inv i' =!= name_of_inv i))
+    [SMTPat (fresh_wrt i c)]
+
+val fresh_invariant
+    (ctx:list iname_ref)
+    (p:vprop { is_big p })
+: stt_ghost (i:iname_ref { i `fresh_wrt` ctx }) emp_inames p (fun i -> i -~- p)
+
+val with_invariant
+    (#a:Type)
+    (#obs:_)
+    (#fp:vprop)
+    (#fp':a -> vprop)
+    (#f_opens:inames)
+    (#p:vprop { is_big p})
+    (i:iname_ref { not (mem_inv f_opens i) })
+    ($f:unit -> stt_atomic a #obs f_opens
+                           (p ** fp)
+                           (fun x -> p ** fp' x))
+: stt_atomic a #obs (add_inv f_opens i) ((i -~- p) ** fp) (fun x -> (i -~- p) ** fp' x)
+
+val with_invariant_g
+    (#a:Type)
+    (#fp:vprop)
+    (#fp':a -> vprop)
+    (#f_opens:inames)
+    (#p:vprop { is_big p })
+    (i:iname_ref { not (mem_inv f_opens i) })
+    ($f:unit -> stt_ghost a f_opens
+                            (p ** fp)
+                            (fun x -> p ** fp' x))
+: stt_ghost a (add_inv f_opens i) ((i -~- p) ** fp) (fun x -> (i -~- p) ** fp' x)
+
+val distinct_invariants_have_distinct_names
+    (#p #q:vprop)
+    (i j:iname_ref)
+    (_:squash (p =!= q))
+: stt_ghost
+    (_:squash (name_of_inv i =!= name_of_inv j))
+    emp_inames
+    ((i -~- p) ** (j -~- q))
+    (fun _ -> (i -~- p) ** (j -~- q))
+
+val invariant_name_identifies_invariant
+      (#p #q:vprop)
+      (i:iname_ref)
+      (j:iname_ref { name_of_inv i == name_of_inv j } )
+: stt_ghost
+    (squash (p == q /\ i == j))
+    emp_inames
+    ((i -~- p) ** (j -~- q))
+    (fun _ -> (i -~- p) ** (j -~- q))
 
 (***** end computation types and combinators *****)
 
@@ -505,51 +526,51 @@ val sub_ghost
 //////////////////////////////////////////////////////////////////////////
 
 val rewrite (p:vprop) (q:vprop) (_:vprop_equiv p q)
-: stt_ghost unit p (fun _ -> q)
+: stt_ghost unit emp_inames p (fun _ -> q)
 
 val rewrite_by (p:vprop) (q:vprop) 
                (t:unit -> T.Tac unit)
                (_:unit { T.with_tactic t (vprop_equiv p q) })
-: stt_ghost unit p (fun _ -> q)
+: stt_ghost unit emp_inames p (fun _ -> q)
 
 val elim_pure_explicit (p:prop)
-: stt_ghost (squash p) (pure p) (fun _ -> emp)
+: stt_ghost (squash p) emp_inames (pure p) (fun _ -> emp)
 
 val elim_pure () (#p:prop)
-: stt_ghost (squash p) (pure p) (fun _ -> emp)
+: stt_ghost (squash p) emp_inames (pure p) (fun _ -> emp)
 
 val intro_pure (p:prop) (_:squash p)
-: stt_ghost unit emp (fun _ -> pure p)
+: stt_ghost unit emp_inames emp (fun _ -> pure p)
 
 val elim_exists (#a:Type) (p:a -> vprop)
-: stt_ghost (erased a) (exists* x. p x) (fun x -> p (reveal x))
+: stt_ghost (erased a) emp_inames (exists* x. p x) (fun x -> p (reveal x))
 
 val intro_exists (#a:Type) (p:a -> vprop) (e:a)
-: stt_ghost unit (p e) (fun _ -> exists* x. p x)
+: stt_ghost unit emp_inames (p e) (fun _ -> exists* x. p x)
 
 val intro_exists_erased (#a:Type) (p:a -> vprop) (e:erased a)
-: stt_ghost unit (p (reveal e)) (fun _ -> exists* x. p x)
+: stt_ghost unit emp_inames (p (reveal e)) (fun _ -> exists* x. p x)
 
 val stt_ghost_reveal (a:Type) (x:erased a)
-: stt_ghost a emp (fun y -> pure (reveal x == y))
+: stt_ghost a emp_inames emp (fun y -> pure (reveal x == y))
 
 val stt_admit (a:Type) (p:vprop) (q:a -> vprop)
 : stt_atomic a #Neutral emp_inames p q
 
 val assert_ (p:vprop)
-: stt_ghost unit p (fun _ -> p)
+: stt_ghost unit emp_inames p (fun _ -> p)
 
 val assume_ (p:vprop)
-: stt_ghost unit emp (fun _ -> p)
+: stt_ghost unit emp_inames emp (fun _ -> p)
 
 val drop_ (p:vprop)
-: stt_ghost unit p (fun _ -> emp)
+: stt_ghost unit emp_inames p (fun _ -> emp)
 
 val unreachable (#a:Type) (#p:vprop) (#q:a -> vprop) (_:squash False)
-: stt_ghost a p q
+: stt_ghost a emp_inames p q
 
 val elim_false (a:Type) (p:a -> vprop)
-: stt_ghost a (pure False) p
+: stt_ghost a emp_inames (pure False) p
 
 ////////////////////////////////////////////////////////
 //Core PCM references
@@ -590,6 +611,7 @@ val pts_to_not_null
     (r:pcm_ref p)
     (v:a)
 : stt_ghost (squash (not (is_pcm_ref_null r)))
+            emp_inames
             (pcm_pts_to r v)
             (fun _ -> pcm_pts_to r v)
 
@@ -598,8 +620,8 @@ val alloc
     (#pcm:pcm a)
     (x:a{pcm.refine x})
 : stt (pcm_ref pcm)
-    emp
-    (fun r -> pcm_pts_to r x)
+      emp
+      (fun r -> pcm_pts_to r x)
 
 val read
     (#a:Type)
@@ -610,8 +632,8 @@ val read
         -> GTot (y:a{compatible p y v /\
                      FStar.PCM.frame_compatible p x v y})))
 : stt (v:a{compatible p x v /\ p.refine v})
-    (pcm_pts_to r x)
-    (fun v -> pcm_pts_to r (f v))
+     (pcm_pts_to r x)
+     (fun v -> pcm_pts_to r (f v))
 
 val write
     (#a:Type)
@@ -620,8 +642,8 @@ val write
     (x y:Ghost.erased a)
     (f:FStar.PCM.frame_preserving_upd p x y)
 : stt unit
-    (pcm_pts_to r x)
-    (fun _ -> pcm_pts_to r y)
+     (pcm_pts_to r x)
+     (fun _ -> pcm_pts_to r y)
 
 val share
     (#a:Type)
@@ -630,6 +652,7 @@ val share
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a{composable pcm v0 v1})
 : stt_ghost unit
+    emp_inames
     (pcm_pts_to r (v0 `op pcm` v1))
     (fun _ -> pcm_pts_to r v0 ** pcm_pts_to r v1)
 
@@ -640,6 +663,7 @@ val gather
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a)
 : stt_ghost (squash (composable pcm v0 v1))
+    emp_inames
     (pcm_pts_to r v0 ** pcm_pts_to r v1)
     (fun _ -> pcm_pts_to r (op pcm v0 v1))
 
@@ -674,6 +698,7 @@ val ghost_alloc
     (#pcm:pcm a)
     (x:erased a{pcm.refine x})
 : stt_ghost (ghost_pcm_ref pcm)
+    emp_inames
     emp
     (fun r -> ghost_pcm_pts_to r x)
 
@@ -686,6 +711,7 @@ val ghost_read
         -> GTot (y:a{compatible p y v /\
                      FStar.PCM.frame_compatible p x v y})))
 : stt_ghost (erased (v:a{compatible p x v /\ p.refine v}))
+    emp_inames
     (ghost_pcm_pts_to r x)
     (fun v -> ghost_pcm_pts_to r (f v))
 
@@ -696,6 +722,7 @@ val ghost_write
     (x y:Ghost.erased a)
     (f:FStar.PCM.frame_preserving_upd p x y)
 : stt_ghost unit
+    emp_inames
     (ghost_pcm_pts_to r x)
     (fun _ -> ghost_pcm_pts_to r y)
 
@@ -706,6 +733,7 @@ val ghost_share
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a{composable pcm v0 v1})
 : stt_ghost unit
+    emp_inames
     (ghost_pcm_pts_to r (v0 `op pcm` v1))
     (fun _ -> ghost_pcm_pts_to r v0 ** ghost_pcm_pts_to r v1)
 
@@ -716,6 +744,7 @@ val ghost_gather
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a)
 : stt_ghost (squash (composable pcm v0 v1))
+    emp_inames
     (ghost_pcm_pts_to r v0 ** ghost_pcm_pts_to r v1)
     (fun _ -> ghost_pcm_pts_to r (op pcm v0 v1))
 
@@ -735,6 +764,7 @@ val big_pts_to_not_null
     (r:pcm_ref p)
     (v:a)
 : stt_ghost (squash (not (is_pcm_ref_null r)))
+            emp_inames
             (big_pcm_pts_to r v)
             (fun _ -> big_pcm_pts_to r v)
 
@@ -775,6 +805,7 @@ val big_share
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a{composable pcm v0 v1})
 : stt_ghost unit
+    emp_inames
     (big_pcm_pts_to r (v0 `op pcm` v1))
     (fun _ -> big_pcm_pts_to r v0 ** big_pcm_pts_to r v1)
 
@@ -785,6 +816,7 @@ val big_gather
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a)
 : stt_ghost (squash (composable pcm v0 v1))
+    emp_inames
     (big_pcm_pts_to r v0 ** big_pcm_pts_to r v1)
     (fun _ -> big_pcm_pts_to r (op pcm v0 v1))
 
@@ -800,6 +832,7 @@ val big_ghost_alloc
     (#pcm:pcm a)
     (x:erased a{pcm.refine x})
 : stt_ghost (ghost_pcm_ref pcm)
+    emp_inames
     emp
     (fun r -> big_ghost_pcm_pts_to r x)
 
@@ -812,6 +845,7 @@ val big_ghost_read
         -> GTot (y:a{compatible p y v /\
                      FStar.PCM.frame_compatible p x v y})))
 : stt_ghost (erased (v:a{compatible p x v /\ p.refine v}))
+    emp_inames
     (big_ghost_pcm_pts_to r x)
     (fun v -> big_ghost_pcm_pts_to r (f v))
 
@@ -822,6 +856,7 @@ val big_ghost_write
     (x y:Ghost.erased a)
     (f:FStar.PCM.frame_preserving_upd p x y)
 : stt_ghost unit
+    emp_inames
     (big_ghost_pcm_pts_to r x)
     (fun _ -> big_ghost_pcm_pts_to r y)
 
@@ -832,6 +867,7 @@ val big_ghost_share
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a{composable pcm v0 v1})
 : stt_ghost unit
+    emp_inames
     (big_ghost_pcm_pts_to r (v0 `op pcm` v1))
     (fun _ -> big_ghost_pcm_pts_to r v0 ** big_ghost_pcm_pts_to r v1)
 
@@ -842,6 +878,7 @@ val big_ghost_gather
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a)
 : stt_ghost (squash (composable pcm v0 v1))
+    emp_inames
     (big_ghost_pcm_pts_to r v0 ** big_ghost_pcm_pts_to r v1)
     (fun _ -> big_ghost_pcm_pts_to r (op pcm v0 v1))
 
