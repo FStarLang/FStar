@@ -100,8 +100,7 @@ let rec (collect_exists :
           (match uu___ with
            | FStar_Pervasives.Mkdtuple3 (exs, rest, uu___1) ->
                (match Pulse_Syntax_Pure.inspect_term hd with
-                | FStar_Pervasives_Native.Some (Pulse_Syntax_Pure.Tm_ExistsSL
-                    (uu___2, uu___3, uu___4)) ->
+                | Pulse_Syntax_Pure.Tm_ExistsSL (uu___2, uu___3, uu___4) ->
                     FStar_Pervasives.Mkdtuple3 ((hd :: exs), rest, ())
                 | uu___2 ->
                     FStar_Pervasives.Mkdtuple3 (exs, (hd :: rest), ())))
@@ -120,8 +119,7 @@ let rec (collect_pures :
           (match uu___ with
            | FStar_Pervasives.Mkdtuple3 (pures, rest, uu___1) ->
                (match Pulse_Syntax_Pure.inspect_term hd with
-                | FStar_Pervasives_Native.Some (Pulse_Syntax_Pure.Tm_Pure
-                    uu___2) ->
+                | Pulse_Syntax_Pure.Tm_Pure uu___2 ->
                     FStar_Pervasives.Mkdtuple3 ((hd :: pures), rest, ())
                 | uu___2 ->
                     FStar_Pervasives.Mkdtuple3 (pures, (hd :: rest), ())))
@@ -144,8 +142,7 @@ let rec (prove_pures :
                Obj.magic
                  (Obj.repr
                     (match Pulse_Syntax_Pure.inspect_term p with
-                     | FStar_Pervasives_Native.Some
-                         (Pulse_Syntax_Pure.Tm_Pure p1) ->
+                     | Pulse_Syntax_Pure.Tm_Pure p1 ->
                          FStar_Tactics_Effect.tac_bind
                            (FStar_Sealed.seal
                               (Obj.magic
@@ -818,10 +815,9 @@ let rec (prover :
                                                                     hd
                                                                     with
                                                                     | 
-                                                                    FStar_Pervasives_Native.Some
-                                                                    (Pulse_Syntax_Pure.Tm_ExistsSL
+                                                                    Pulse_Syntax_Pure.Tm_ExistsSL
                                                                     (u, b,
-                                                                    body)) ->
+                                                                    body) ->
                                                                     Obj.magic
                                                                     (Pulse_Checker_Prover_IntroExists.intro_exists
                                                                     preamble
@@ -909,10 +905,8 @@ let rec (prover :
                                                                     q
                                                                     with
                                                                     | 
-                                                                    FStar_Pervasives_Native.Some
-                                                                    (Pulse_Syntax_Pure.Tm_Pure
-                                                                    uu___9)
-                                                                    ->
+                                                                    Pulse_Syntax_Pure.Tm_Pure
+                                                                    uu___9 ->
                                                                     Obj.magic
                                                                     (prove_pures
                                                                     preamble
@@ -1912,8 +1906,8 @@ let (canon_post : Pulse_Syntax_Base.comp_st -> Pulse_Syntax_Base.comp_st) =
       match Pulse_Syntax_Pure.inspect_term
               (Pulse_Elaborate_Pure.elab_term c1.Pulse_Syntax_Base.post)
       with
-      | FStar_Pervasives_Native.None -> c1
-      | FStar_Pervasives_Native.Some post_v ->
+      | Pulse_Syntax_Pure.Tm_FStar uu___ -> c1
+      | post_v ->
           {
             Pulse_Syntax_Base.u = (c1.Pulse_Syntax_Base.u);
             Pulse_Syntax_Base.res = (c1.Pulse_Syntax_Base.res);
@@ -3224,14 +3218,9 @@ let (prove_post_hint :
                                                                     uu___6 ->
                                                                     [uu___5;
                                                                     if
-                                                                    (FStar_Pervasives_Native.uu___is_Some
+                                                                    Pulse_Syntax_Pure.uu___is_Tm_Star
                                                                     (Pulse_Syntax_Pure.inspect_term
-                                                                    remaining_ctxt))
-                                                                    &&
-                                                                    (Pulse_Syntax_Pure.uu___is_Tm_Star
-                                                                    (FStar_Pervasives_Native.__proj__Some__item__v
-                                                                    (Pulse_Syntax_Pure.inspect_term
-                                                                    remaining_ctxt)))
+                                                                    remaining_ctxt)
                                                                     then
                                                                     Pulse_PP.text
                                                                     "Did you forget to free these resources?"

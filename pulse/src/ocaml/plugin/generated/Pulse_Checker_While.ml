@@ -172,12 +172,8 @@ let (check :
                                                                     (Prims.of_int (70)))))
                                                                     (if
                                                                     Prims.op_Negation
-                                                                    ((FStar_Pervasives_Native.uu___is_Some
-                                                                    ex_inv_v)
-                                                                    &&
                                                                     (Pulse_Syntax_Pure.uu___is_Tm_ExistsSL
-                                                                    (FStar_Pervasives_Native.__proj__Some__item__v
-                                                                    ex_inv_v)))
+                                                                    ex_inv_v)
                                                                     then
                                                                     Obj.magic
                                                                     (Obj.repr
@@ -258,9 +254,9 @@ let (check :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.While.fst"
                                                                     (Prims.of_int (64))
-                                                                    (Prims.of_int (66))
+                                                                    (Prims.of_int (59))
                                                                     (Prims.of_int (64))
-                                                                    (Prims.of_int (74)))))
+                                                                    (Prims.of_int (67)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -280,8 +276,7 @@ let (check :
                                                                     match uu___3
                                                                     with
                                                                     | 
-                                                                    FStar_Pervasives_Native.Some
-                                                                    (Pulse_Syntax_Pure.Tm_ExistsSL
+                                                                    Pulse_Syntax_Pure.Tm_ExistsSL
                                                                     (u,
                                                                     {
                                                                     Pulse_Syntax_Base.binder_ty
@@ -290,7 +285,7 @@ let (check :
                                                                     = nm;
                                                                     Pulse_Syntax_Base.binder_attrs
                                                                     = uu___4;_},
-                                                                    inv1)) ->
+                                                                    inv1) ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal

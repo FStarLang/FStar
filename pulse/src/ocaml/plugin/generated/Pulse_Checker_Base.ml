@@ -1944,10 +1944,8 @@ let rec (check_equiv_emp :
   fun g ->
     fun vp ->
       match Pulse_Syntax_Pure.inspect_term vp with
-      | FStar_Pervasives_Native.Some (Pulse_Syntax_Pure.Tm_Emp) ->
-          FStar_Pervasives_Native.Some ()
-      | FStar_Pervasives_Native.Some (Pulse_Syntax_Pure.Tm_Star (vp1, vp2))
-          ->
+      | Pulse_Syntax_Pure.Tm_Emp -> FStar_Pervasives_Native.Some ()
+      | Pulse_Syntax_Pure.Tm_Star (vp1, vp2) ->
           (match ((check_equiv_emp g vp1), (check_equiv_emp g vp2)) with
            | (FStar_Pervasives_Native.Some d1, FStar_Pervasives_Native.Some
               d2) -> FStar_Pervasives_Native.Some ()

@@ -67,7 +67,7 @@ let tm_add_inv i is r : term = wr r (Tm_AddInv (i, is))
 
 let is_tm_exists (t:term) : bool =
   match Pulse_Syntax_Pure.inspect_term t with
-  | Some (Tm_ExistsSL _) -> true
+  | Tm_ExistsSL _ -> true
   | _ -> false
 
 let mk_tot (t:term) : comp = C_Tot t

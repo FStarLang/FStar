@@ -341,8 +341,7 @@ let rec (elim_all :
                            fun ctxt_frame_typing ->
                              fun uvs ->
                                match Pulse_Syntax_Pure.inspect_term ctxt with
-                               | FStar_Pervasives_Native.Some
-                                   (Pulse_Syntax_Pure.Tm_Star (ctxt', p)) ->
+                               | Pulse_Syntax_Pure.Tm_Star (ctxt', p) ->
                                    Obj.magic
                                      (Obj.repr
                                         (FStar_Tactics_Effect.tac_bind

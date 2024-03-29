@@ -2616,8 +2616,8 @@ let rec (vprop_as_list :
   Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term Prims.list) =
   fun vp ->
     match Pulse_Syntax_Pure.inspect_term vp with
-    | FStar_Pervasives_Native.Some (Pulse_Syntax_Pure.Tm_Emp) -> []
-    | FStar_Pervasives_Native.Some (Pulse_Syntax_Pure.Tm_Star (vp0, vp1)) ->
+    | Pulse_Syntax_Pure.Tm_Emp -> []
+    | Pulse_Syntax_Pure.Tm_Star (vp0, vp1) ->
         FStar_List_Tot_Base.op_At (vprop_as_list vp0) (vprop_as_list vp1)
     | uu___ -> [vp]
 let rec (list_as_vprop :

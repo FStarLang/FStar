@@ -45,9 +45,7 @@ let rec (gen_names_for_unknowns :
                    Obj.magic
                      (Obj.repr
                         (match Pulse_Syntax_Pure.inspect_term t with
-                         | FStar_Pervasives_Native.Some
-                             (Pulse_Syntax_Pure.Tm_ExistsSL (uu___, b, body))
-                             ->
+                         | Pulse_Syntax_Pure.Tm_ExistsSL (uu___, b, body) ->
                              FStar_Tactics_Effect.tac_bind
                                (FStar_Sealed.seal
                                   (Obj.magic
@@ -62,15 +60,14 @@ let rec (gen_names_for_unknowns :
                                      (FStar_Range.mk_range
                                         "Pulse.Checker.fst"
                                         (Prims.of_int (67))
-                                        (Prims.of_int (38))
+                                        (Prims.of_int (31))
                                         (Prims.of_int (83))
                                         (Prims.of_int (39)))))
                                (FStar_Tactics_Effect.lift_div_tac
                                   (fun uu___1 ->
                                      match Pulse_Syntax_Pure.inspect_term w
                                      with
-                                     | FStar_Pervasives_Native.Some
-                                         (Pulse_Syntax_Pure.Tm_Unknown) ->
+                                     | Pulse_Syntax_Pure.Tm_Unknown ->
                                          ((FStar_Pervasives_Native.Some
                                              (Pulse_Typing_Env.fresh g)),
                                            (Pulse_Syntax_Pure.tm_var
@@ -347,11 +344,7 @@ let rec (transform_to_unary_intro_exists :
                             (fun uu___ -> Pulse_Syntax_Pure.inspect_term t))
                          (fun uu___ ->
                             (fun tv ->
-                               if
-                                 (FStar_Pervasives_Native.uu___is_Some tv) &&
-                                   (Pulse_Syntax_Pure.uu___is_Tm_ExistsSL
-                                      (FStar_Pervasives_Native.__proj__Some__item__v
-                                         tv))
+                               if Pulse_Syntax_Pure.uu___is_Tm_ExistsSL tv
                                then
                                  Obj.magic
                                    (Obj.repr
@@ -375,8 +368,7 @@ let rec (transform_to_unary_intro_exists :
                               uu___))
                 | w::ws1 ->
                     (match Pulse_Syntax_Pure.inspect_term t with
-                     | FStar_Pervasives_Native.Some
-                         (Pulse_Syntax_Pure.Tm_ExistsSL (u, b, body)) ->
+                     | Pulse_Syntax_Pure.Tm_ExistsSL (u, b, body) ->
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
                               (FStar_Sealed.seal

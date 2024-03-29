@@ -120,8 +120,7 @@ let (check_elim_exists :
                                                      (match Pulse_Syntax_Pure.inspect_term
                                                               t1
                                                       with
-                                                      | FStar_Pervasives_Native.Some
-                                                          (Pulse_Syntax_Pure.Tm_Unknown)
+                                                      | Pulse_Syntax_Pure.Tm_Unknown
                                                           ->
                                                           Obj.magic
                                                             (FStar_Tactics_Effect.tac_bind
@@ -177,11 +176,10 @@ let (check_elim_exists :
                                                                     t2
                                                                     with
                                                                     | 
-                                                                    FStar_Pervasives_Native.Some
-                                                                    (Pulse_Syntax_Pure.Tm_ExistsSL
+                                                                    Pulse_Syntax_Pure.Tm_ExistsSL
                                                                     (uu___2,
                                                                     uu___3,
-                                                                    uu___4))
+                                                                    uu___4)
                                                                     -> true
                                                                     | 
                                                                     uu___2 ->
@@ -385,11 +383,8 @@ let (check_elim_exists :
                                                                     (Prims.of_int (55)))))
                                                                     (if
                                                                     Prims.op_Negation
-                                                                    ((FStar_Pervasives_Native.uu___is_Some
-                                                                    tv) &&
                                                                     (Pulse_Syntax_Pure.uu___is_Tm_ExistsSL
-                                                                    (FStar_Pervasives_Native.__proj__Some__item__v
-                                                                    tv)))
+                                                                    tv)
                                                                     then
                                                                     Obj.magic
                                                                     (Obj.repr
@@ -470,9 +465,9 @@ let (check_elim_exists :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
                                                                     (Prims.of_int (85))
-                                                                    (Prims.of_int (48))
+                                                                    (Prims.of_int (41))
                                                                     (Prims.of_int (85))
-                                                                    (Prims.of_int (50)))))
+                                                                    (Prims.of_int (43)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -492,8 +487,7 @@ let (check_elim_exists :
                                                                     match uu___4
                                                                     with
                                                                     | 
-                                                                    FStar_Pervasives_Native.Some
-                                                                    (Pulse_Syntax_Pure.Tm_ExistsSL
+                                                                    Pulse_Syntax_Pure.Tm_ExistsSL
                                                                     (u,
                                                                     {
                                                                     Pulse_Syntax_Base.binder_ty
@@ -502,7 +496,7 @@ let (check_elim_exists :
                                                                     = uu___5;
                                                                     Pulse_Syntax_Base.binder_attrs
                                                                     = uu___6;_},
-                                                                    p)) ->
+                                                                    p) ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -518,7 +512,7 @@ let (check_elim_exists :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
                                                                     (Prims.of_int (85))
-                                                                    (Prims.of_int (53))
+                                                                    (Prims.of_int (46))
                                                                     (Prims.of_int (94))
                                                                     (Prims.of_int (55)))))
                                                                     (Obj.magic
@@ -856,11 +850,8 @@ let (check_intro_exists :
                                                                     (Prims.of_int (54)))))
                                                                     (if
                                                                     Prims.op_Negation
-                                                                    ((FStar_Pervasives_Native.uu___is_Some
-                                                                    tv) &&
                                                                     (Pulse_Syntax_Pure.uu___is_Tm_ExistsSL
-                                                                    (FStar_Pervasives_Native.__proj__Some__item__v
-                                                                    tv)))
+                                                                    tv)
                                                                     then
                                                                     Obj.magic
                                                                     (Obj.repr
@@ -941,9 +932,9 @@ let (check_intro_exists :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
                                                                     (Prims.of_int (123))
-                                                                    (Prims.of_int (33))
+                                                                    (Prims.of_int (26))
                                                                     (Prims.of_int (123))
-                                                                    (Prims.of_int (35)))))
+                                                                    (Prims.of_int (28)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -963,9 +954,8 @@ let (check_intro_exists :
                                                                     match uu___3
                                                                     with
                                                                     | 
-                                                                    FStar_Pervasives_Native.Some
-                                                                    (Pulse_Syntax_Pure.Tm_ExistsSL
-                                                                    (u, b, p))
+                                                                    Pulse_Syntax_Pure.Tm_ExistsSL
+                                                                    (u, b, p)
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind

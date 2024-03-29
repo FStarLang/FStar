@@ -276,8 +276,7 @@ let (check_core :
                                                       (match Pulse_Syntax_Pure.inspect_term
                                                                expected_type
                                                        with
-                                                       | FStar_Pervasives_Native.Some
-                                                           (Pulse_Syntax_Pure.Tm_Unknown)
+                                                       | Pulse_Syntax_Pure.Tm_Unknown
                                                            ->
                                                            Obj.repr
                                                              (FStar_Tactics_Effect.lift_div_tac

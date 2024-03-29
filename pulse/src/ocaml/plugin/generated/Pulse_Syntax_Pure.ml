@@ -413,6 +413,7 @@ type term_view =
   | Tm_EmpInames 
   | Tm_AddInv of Pulse_Syntax_Base.term * Pulse_Syntax_Base.term 
   | Tm_Unknown 
+  | Tm_FStar of Pulse_Syntax_Base.term 
 let uu___is_Tm_Emp uu___ = match uu___ with | Tm_Emp _ -> true | _ -> false
 let uu___is_Tm_Pure uu___ = match uu___ with | Tm_Pure _ -> true | _ -> false
 let uu___is_Tm_Star uu___ = match uu___ with | Tm_Star _ -> true | _ -> false
@@ -431,6 +432,8 @@ let uu___is_Tm_AddInv uu___ =
   match uu___ with | Tm_AddInv _ -> true | _ -> false
 let uu___is_Tm_Unknown uu___ =
   match uu___ with | Tm_Unknown _ -> true | _ -> false
+let uu___is_Tm_FStar uu___ =
+  match uu___ with | Tm_FStar _ -> true | _ -> false
 let (wr :
   Pulse_Syntax_Base.term -> Pulse_Syntax_Base.range -> Pulse_Syntax_Base.term)
   = fun t -> fun r -> Pulse_RuntimeUtils.set_range t r
@@ -475,38 +478,24 @@ let (pack_term_view :
       | Tm_Star (l, r1) -> w (Pulse_Reflection_Util.mk_star l r1)
       | Tm_ExistsSL (u, b, body) ->
           let t = b.Pulse_Syntax_Base.binder_ty in
+          let abs =
+            Pulse_Reflection_Util.mk_abs_with_name_and_range
+              (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name
+              (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.range t
+              FStar_Reflection_V2_Data.Q_Explicit body in
           if uu___is_Tm_ExistsSL top
-          then
-            w
-              (Pulse_Reflection_Util.mk_exists u t
-                 (Pulse_Reflection_Util.mk_abs_with_name_and_range
-                    (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name
-                    (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.range
-                    t FStar_Reflection_V2_Data.Q_Explicit body))
-          else
-            w
-              (Pulse_Reflection_Util.mk_forall u t
-                 (Pulse_Reflection_Util.mk_abs_with_name_and_range
-                    (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name
-                    (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.range
-                    t FStar_Reflection_V2_Data.Q_Explicit body))
+          then w (Pulse_Reflection_Util.mk_exists u t abs)
+          else w (Pulse_Reflection_Util.mk_forall u t abs)
       | Tm_ForallSL (u, b, body) ->
           let t = b.Pulse_Syntax_Base.binder_ty in
+          let abs =
+            Pulse_Reflection_Util.mk_abs_with_name_and_range
+              (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name
+              (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.range t
+              FStar_Reflection_V2_Data.Q_Explicit body in
           if uu___is_Tm_ExistsSL top
-          then
-            w
-              (Pulse_Reflection_Util.mk_exists u t
-                 (Pulse_Reflection_Util.mk_abs_with_name_and_range
-                    (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name
-                    (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.range
-                    t FStar_Reflection_V2_Data.Q_Explicit body))
-          else
-            w
-              (Pulse_Reflection_Util.mk_forall u t
-                 (Pulse_Reflection_Util.mk_abs_with_name_and_range
-                    (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name
-                    (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.range
-                    t FStar_Reflection_V2_Data.Q_Explicit body))
+          then w (Pulse_Reflection_Util.mk_exists u t abs)
+          else w (Pulse_Reflection_Util.mk_forall u t abs)
       | Tm_Inames ->
           w
             (FStar_Reflection_V2_Builtins.pack_ln
@@ -523,6 +512,7 @@ let (pack_term_view :
           w
             (FStar_Reflection_V2_Builtins.pack_ln
                FStar_Reflection_V2_Data.Tv_Unknown)
+      | Tm_FStar t -> w t
 let (term_range : Pulse_Syntax_Base.term -> FStar_Range.range) =
   fun t -> Pulse_RuntimeUtils.range_of_term t
 let (pack_term_view_wr :
@@ -576,25 +566,24 @@ let (tm_forall_sl :
              (Pulse_RuntimeUtils.range_of_term b.Pulse_Syntax_Base.binder_ty)
              (Pulse_RuntimeUtils.range_of_term body))
 type ('tv, 't) is_view_of = Obj.t
-let rec (inspect_term :
-  FStar_Reflection_Types.term -> term_view FStar_Pervasives_Native.option) =
+let rec (inspect_term : FStar_Reflection_Types.term -> term_view) =
   fun t ->
-    let return tv = FStar_Pervasives_Native.Some tv in
+    let default_view = Tm_FStar t in
     match FStar_Reflection_V2_Builtins.inspect_ln t with
     | FStar_Reflection_V2_Data.Tv_FVar fv ->
         let fv_lid = FStar_Reflection_V2_Builtins.inspect_fv fv in
         if fv_lid = Pulse_Reflection_Util.vprop_lid
-        then return Tm_VProp
+        then Tm_VProp
         else
           if fv_lid = Pulse_Reflection_Util.emp_lid
-          then return Tm_Emp
+          then Tm_Emp
           else
             if fv_lid = Pulse_Reflection_Util.inames_lid
-            then return Tm_Inames
+            then Tm_Inames
             else
               if fv_lid = Pulse_Reflection_Util.emp_inames_lid
-              then return Tm_EmpInames
-              else FStar_Pervasives_Native.None
+              then Tm_EmpInames
+              else default_view
     | FStar_Reflection_V2_Data.Tv_App (hd, (a, q)) ->
         let uu___ = FStar_Reflection_V2_Derived.collect_app_ln t in
         (match uu___ with
@@ -606,11 +595,10 @@ let rec (inspect_term :
                     (FStar_Reflection_V2_Builtins.inspect_fv fv) =
                       Pulse_Reflection_Util.star_lid
                   then
-                    return
-                      (Tm_Star
-                         ((FStar_Pervasives_Native.fst a1),
-                           (FStar_Pervasives_Native.fst a2)))
-                  else FStar_Pervasives_Native.None
+                    Tm_Star
+                      ((FStar_Pervasives_Native.fst a1),
+                        (FStar_Pervasives_Native.fst a2))
+                  else default_view
               | (FStar_Reflection_V2_Data.Tv_UInst (fv, u::[]), a1::a2::[])
                   ->
                   if
@@ -622,62 +610,50 @@ let rec (inspect_term :
                   then
                     let t1 = FStar_Pervasives_Native.fst a1 in
                     let t2 = FStar_Pervasives_Native.fst a2 in
-                    let ty = t1 in
-                    op_let_Question
-                      (match FStar_Reflection_V2_Builtins.inspect_ln t2 with
-                       | FStar_Reflection_V2_Data.Tv_Abs (b, body) ->
-                           let p = body in
-                           let bview =
-                             FStar_Reflection_V2_Builtins.inspect_binder b in
-                           FStar_Pervasives_Native.Some
-                             ((bview.FStar_Reflection_V2_Data.ppname2),
-                               (Pulse_RuntimeUtils.binder_range b), p)
-                       | uu___1 -> FStar_Pervasives_Native.None)
-                      (fun uu___1 ->
-                         match uu___1 with
-                         | (ppname, range, p) ->
-                             let b =
-                               Pulse_Syntax_Base.mk_binder_ppname ty
-                                 (Pulse_Syntax_Base.mk_ppname ppname range) in
-                             if
-                               (FStar_Reflection_V2_Builtins.inspect_fv fv) =
-                                 Pulse_Reflection_Util.exists_lid
-                             then return (Tm_ExistsSL (u, b, p))
-                             else return (Tm_ForallSL (u, b, p)))
-                  else FStar_Pervasives_Native.None
+                    (match FStar_Reflection_V2_Builtins.inspect_ln t2 with
+                     | FStar_Reflection_V2_Data.Tv_Abs (b, body) ->
+                         let bview =
+                           FStar_Reflection_V2_Builtins.inspect_binder b in
+                         let b1 =
+                           Pulse_Syntax_Base.mk_binder_ppname t1
+                             (Pulse_Syntax_Base.mk_ppname
+                                bview.FStar_Reflection_V2_Data.ppname2
+                                (Pulse_RuntimeUtils.binder_range b)) in
+                         if
+                           (FStar_Reflection_V2_Builtins.inspect_fv fv) =
+                             Pulse_Reflection_Util.exists_lid
+                         then Tm_ExistsSL (u, b1, body)
+                         else Tm_ForallSL (u, b1, body)
+                     | uu___1 -> default_view)
+                  else default_view
               | (FStar_Reflection_V2_Data.Tv_FVar fv, a1::[]) ->
                   if
                     (FStar_Reflection_V2_Builtins.inspect_fv fv) =
                       Pulse_Reflection_Util.pure_lid
-                  then return (Tm_Pure (FStar_Pervasives_Native.fst a1))
+                  then Tm_Pure (FStar_Pervasives_Native.fst a1)
                   else
                     if
                       (FStar_Reflection_V2_Builtins.inspect_fv fv) =
                         Pulse_Reflection_Util.inv_lid
-                    then return (Tm_Inv (FStar_Pervasives_Native.fst a1))
-                    else FStar_Pervasives_Native.None
-              | uu___1 -> FStar_Pervasives_Native.None))
-    | FStar_Reflection_V2_Data.Tv_Refine (uu___, uu___1) ->
-        FStar_Pervasives_Native.None
-    | FStar_Reflection_V2_Data.Tv_Arrow (uu___, uu___1) ->
-        FStar_Pervasives_Native.None
-    | FStar_Reflection_V2_Data.Tv_Type uu___ -> FStar_Pervasives_Native.None
-    | FStar_Reflection_V2_Data.Tv_Const uu___ -> FStar_Pervasives_Native.None
+                    then Tm_Inv (FStar_Pervasives_Native.fst a1)
+                    else default_view
+              | uu___1 -> default_view))
+    | FStar_Reflection_V2_Data.Tv_Refine (uu___, uu___1) -> default_view
+    | FStar_Reflection_V2_Data.Tv_Arrow (uu___, uu___1) -> default_view
+    | FStar_Reflection_V2_Data.Tv_Type uu___ -> default_view
+    | FStar_Reflection_V2_Data.Tv_Const uu___ -> default_view
     | FStar_Reflection_V2_Data.Tv_Let (uu___, uu___1, uu___2, uu___3, uu___4)
-        -> FStar_Pervasives_Native.None
-    | FStar_Reflection_V2_Data.Tv_Var uu___ -> FStar_Pervasives_Native.None
-    | FStar_Reflection_V2_Data.Tv_BVar uu___ -> FStar_Pervasives_Native.None
-    | FStar_Reflection_V2_Data.Tv_UInst (uu___, uu___1) ->
-        FStar_Pervasives_Native.None
+        -> default_view
+    | FStar_Reflection_V2_Data.Tv_Var uu___ -> default_view
+    | FStar_Reflection_V2_Data.Tv_BVar uu___ -> default_view
+    | FStar_Reflection_V2_Data.Tv_UInst (uu___, uu___1) -> default_view
     | FStar_Reflection_V2_Data.Tv_Match (uu___, uu___1, uu___2) ->
-        FStar_Pervasives_Native.None
-    | FStar_Reflection_V2_Data.Tv_Abs (uu___, uu___1) ->
-        FStar_Pervasives_Native.None
+        default_view
+    | FStar_Reflection_V2_Data.Tv_Abs (uu___, uu___1) -> default_view
     | FStar_Reflection_V2_Data.Tv_AscribedT (t1, uu___, uu___1, uu___2) ->
         inspect_term t1
     | FStar_Reflection_V2_Data.Tv_AscribedC (t1, uu___, uu___1, uu___2) ->
         inspect_term t1
-    | FStar_Reflection_V2_Data.Tv_Uvar (uu___, uu___1) ->
-        FStar_Pervasives_Native.None
-    | FStar_Reflection_V2_Data.Tv_Unknown -> return Tm_Unknown
-    | FStar_Reflection_V2_Data.Tv_Unsupp -> FStar_Pervasives_Native.None
+    | FStar_Reflection_V2_Data.Tv_Uvar (uu___, uu___1) -> default_view
+    | FStar_Reflection_V2_Data.Tv_Unknown -> Tm_Unknown
+    | FStar_Reflection_V2_Data.Tv_Unsupp -> default_view

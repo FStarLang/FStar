@@ -260,8 +260,7 @@ let (check :
                                                             match Pulse_Syntax_Pure.inspect_term
                                                                     ty
                                                             with
-                                                            | FStar_Pervasives_Native.Some
-                                                                (Pulse_Syntax_Pure.Tm_Unknown)
+                                                            | Pulse_Syntax_Pure.Tm_Unknown
                                                                 ->
                                                                 Obj.magic
                                                                   (Pulse_Checker_Pure.compute_tot_term_type_and_u

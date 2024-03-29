@@ -41,8 +41,7 @@ let (check_prop :
                          match uu___ with
                          | Prims.Mkdtuple2 (p1, p_typing) ->
                              (match Pulse_Syntax_Pure.inspect_term p1 with
-                              | FStar_Pervasives_Native.Some
-                                  (Pulse_Syntax_Pure.Tm_Pure pp) ->
+                              | Pulse_Syntax_Pure.Tm_Pure pp ->
                                   Obj.magic
                                     (Obj.repr
                                        (FStar_Tactics_Effect.lift_div_tac

@@ -118,12 +118,10 @@ let (eligible_for_smt_equality :
                            match ((Pulse_Syntax_Pure.inspect_term t0),
                                    (Pulse_Syntax_Pure.inspect_term t1))
                            with
-                           | (FStar_Pervasives_Native.Some
-                              (Pulse_Syntax_Pure.Tm_ForallSL
-                              (uu___, uu___1, uu___2)),
-                              FStar_Pervasives_Native.Some
-                              (Pulse_Syntax_Pure.Tm_ForallSL
-                              (uu___3, uu___4, uu___5))) ->
+                           | (Pulse_Syntax_Pure.Tm_ForallSL
+                              (uu___, uu___1, uu___2),
+                              Pulse_Syntax_Pure.Tm_ForallSL
+                              (uu___3, uu___4, uu___5)) ->
                                Obj.magic
                                  (Obj.repr
                                     (FStar_Tactics_Effect.lift_div_tac
@@ -1566,8 +1564,7 @@ let rec (match_q_aux :
 let (has_structure : Pulse_Syntax_Base.vprop -> Prims.bool) =
   fun q ->
     match Pulse_Syntax_Pure.inspect_term q with
-    | FStar_Pervasives_Native.Some (Pulse_Syntax_Pure.Tm_Star
-        (uu___, uu___1)) -> true
+    | Pulse_Syntax_Pure.Tm_Star (uu___, uu___1) -> true
     | uu___ -> false
 let (match_q :
   Pulse_Checker_Prover_Base.preamble ->

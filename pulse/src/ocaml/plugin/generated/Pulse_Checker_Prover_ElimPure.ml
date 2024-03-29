@@ -70,8 +70,7 @@ let (is_elim_pure :
          (FStar_Tactics_Effect.lift_div_tac
             (fun uu___ ->
                match Pulse_Syntax_Pure.inspect_term vp with
-               | FStar_Pervasives_Native.Some (Pulse_Syntax_Pure.Tm_Pure
-                   uu___1) -> true
+               | Pulse_Syntax_Pure.Tm_Pure uu___1 -> true
                | uu___1 -> false))) uu___
 let (mk :
   Pulse_Typing_Env.env ->
@@ -92,8 +91,7 @@ let (mk :
                  (FStar_Tactics_Effect.lift_div_tac
                     (fun uu___ ->
                        match Pulse_Syntax_Pure.inspect_term v with
-                       | FStar_Pervasives_Native.Some
-                           (Pulse_Syntax_Pure.Tm_Pure pp) ->
+                       | Pulse_Syntax_Pure.Tm_Pure pp ->
                            FStar_Pervasives_Native.Some
                              (FStar_Pervasives.Mkdtuple4
                                 (Pulse_Syntax_Base.ppname_default,

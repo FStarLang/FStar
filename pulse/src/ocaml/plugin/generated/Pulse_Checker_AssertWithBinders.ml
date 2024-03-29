@@ -944,10 +944,10 @@ let (check_unfoldable :
       (fun g ->
          fun v ->
            match Pulse_Syntax_Pure.inspect_term v with
-           | FStar_Pervasives_Native.None ->
+           | Pulse_Syntax_Pure.Tm_FStar uu___ ->
                Obj.magic
                  (Obj.repr
-                    (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> ())))
+                    (FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> ())))
            | uu___ ->
                Obj.magic
                  (Obj.repr
@@ -1896,7 +1896,7 @@ let (check_wild :
                                                                  (Prims.of_int (275))
                                                                  (Prims.of_int (19))
                                                                  (Prims.of_int (277))
-                                                                 (Prims.of_int (88)))))
+                                                                 (Prims.of_int (62)))))
                                                         (FStar_Sealed.seal
                                                            (Obj.magic
                                                               (FStar_Range.mk_range
@@ -1909,13 +1909,9 @@ let (check_wild :
                                                            (fun uu___4 ->
                                                               FStar_List_Tot_Base.partition
                                                                 (fun v ->
-                                                                   (FStar_Pervasives_Native.uu___is_Some
+                                                                   Pulse_Syntax_Pure.uu___is_Tm_ExistsSL
                                                                     (Pulse_Syntax_Pure.inspect_term
-                                                                    v)) &&
-                                                                    (Pulse_Syntax_Pure.uu___is_Tm_ExistsSL
-                                                                    (FStar_Pervasives_Native.__proj__Some__item__v
-                                                                    (Pulse_Syntax_Pure.inspect_term
-                                                                    v))))
+                                                                    v))
                                                                 vprops))
                                                         (fun uu___4 ->
                                                            (fun uu___4 ->
@@ -2017,11 +2013,9 @@ let (check_wild :
                                                                     t
                                                                     with
                                                                     | 
-                                                                    FStar_Pervasives_Native.Some
-                                                                    (Pulse_Syntax_Pure.Tm_ExistsSL
+                                                                    Pulse_Syntax_Pure.Tm_ExistsSL
                                                                     (u, b,
-                                                                    body1))
-                                                                    ->
+                                                                    body1) ->
                                                                     peel_binders
                                                                     (n -
                                                                     Prims.int_one)
