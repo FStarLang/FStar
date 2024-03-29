@@ -1,9 +1,26 @@
+(*
+   Copyright 2024 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module PulseCore.InstantiatedSemantics
+
 module Sem = PulseCore.Semantics
-module Mem = PulseCore.Memory
+module Mem = PulseCore.MemoryAlt
 module U = FStar.Universe
 module F = FStar.FunctionalExtensionality
-open PulseCore.Memory
+
+open PulseCore.MemoryAlt
 
 let laws ()
 : squash (
@@ -38,7 +55,8 @@ let laws ()
         with emp_unit x
   in
   ()
-let state0 (e:inames) : Sem.state u#3 u#100 = {
+
+let state0 (e:inames) : Sem.state u#4 u#100 = {
     max_act = U.raise_t u#0 u#100 unit;
     s = mem u#1;
     is_full_mem = full_mem_pred;
@@ -47,7 +65,7 @@ let state0 (e:inames) : Sem.state u#3 u#100 = {
     star = star;
     interp = interp;
     evolves = mem_evolves;
-    invariant = locks_invariant e;
+    invariant = mem_invariant e;
     laws = laws ()
 }
 
@@ -55,9 +73,15 @@ let state : Sem.state = state0 Set.empty
 
 let slprop = slprop
 let _eq : squash (slprop == state.pred) = ()
-let small_slprop = small_slprop
+
+let big_slprop = big_slprop
 let down = down
 let up = up
+
+let small_slprop = small_slprop
+let down2 = down2
+let up2 = up2
+
 let emp = emp
 let pure p = pure p
 let ( ** ) p q = p `star` q
@@ -120,7 +144,7 @@ let stt (a:Type u#a)
         (pre:slprop)
         (post:a -> slprop)
 : Type0
-= lower (Sem.m u#3 u#100 u#a #state a pre (F.on_dom a post))
+= lower (Sem.m u#4 u#100 u#a #state a pre (F.on_dom a post))
 
 let return (#a:Type u#a) (x:a) (p:a -> slprop)
 : stt a (p x) p
