@@ -85,9 +85,15 @@ let up2 = up2
 let emp = emp
 let pure p = pure p
 let ( ** ) p q = p `star` q
-let small_star p q = small_star_congruence p q
 let ( exists* ) #a p = h_exists (F.on_dom a p)
+
+let big_star p q = big_star_congruence p q
+let big_exists #a p = big_exists_congruence #a (F.on_dom a p)
+let small_star p q = small_star_congruence p q
 let small_exists #a p = small_exists_congruence #a (F.on_dom a p)
+
+let iname_ref = iname_ref
+let ( -~- ) i p = ( -~- ) i p
 
 let prop_squash_idem (p:prop)
   : Tot (squash (p == squash p))

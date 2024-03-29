@@ -35,12 +35,20 @@ let vprop = s:slprop { is_small s }
 val emp : vprop
 val pure (p:prop) : vprop
 val ( ** ) (p q : slprop) : slprop
-val small_star (p q:vprop) : squash (is_small (p ** q))
 val ( exists* ) (#a:Type u#a) (p: a -> slprop) : slprop
 
+val big_star (p q:big_vprop) : squash (is_big (p ** q))
+val big_exists (#a:Type u#a) (p: a -> slprop)
+: Lemma (requires forall x. is_big (p x))
+        (ensures is_big (op_exists_Star p))
+
+val small_star (p q:vprop) : squash (is_small (p ** q))
 val small_exists (#a:Type u#a) (p: a -> slprop)
 : Lemma (requires forall x. is_small (p x))
         (ensures is_small (op_exists_Star p))
+
+val iname_ref : Type0
+val ( -~- ) (i:iname_ref) (p:slprop) : slprop
 
 val slprop_equiv (p q:slprop) : prop
 

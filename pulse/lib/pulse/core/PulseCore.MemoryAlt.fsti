@@ -1,5 +1,5 @@
 (*
-   Copyright 2019 Microsoft Research
+   Copyright 2024 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -13,12 +13,13 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+
 module PulseCore.MemoryAlt
 open FStar.Ghost
 open FStar.PCM
 module PP = PulseCore.Preorder
 module PST = PulseCore.PreorderStateMonad
-module MSTTotal = PulseCore.MonotonicStateMonad
+// module MSTTotal = PulseCore.MonotonicStateMonad
 module U = FStar.Universe
 module S = FStar.Set
 

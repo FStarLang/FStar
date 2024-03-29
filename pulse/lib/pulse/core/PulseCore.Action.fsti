@@ -1,23 +1,43 @@
+(*
+   Copyright 2024 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module PulseCore.Action
+
+module S = FStar.Set
 module I = PulseCore.InstantiatedSemantics
 module PP = PulseCore.Preorder
-open PulseCore.InstantiatedSemantics
+
 open FStar.PCM
 open FStar.Ghost
+
+open PulseCore.InstantiatedSemantics
 
 type reifiability =
  | Ghost
  | Reifiable
- | UsesInvariants
+//  | UsesInvariants  // AR: we should not need this?
 
 let ( ^^ ) (r1 r2 : reifiability) : reifiability =
   if r1 = r2 then r1
-  else (
-   match r1, r2 with
-   | Ghost, Reifiable
-   | Reifiable, Ghost -> Reifiable
-   | _ -> UsesInvariants
-  )
+  else Reifiable
+  //  match r1, r2 with
+  //  | Ghost, Reifiable
+  //  | Reifiable, Ghost -> Reifiable
+  //  | _ -> UsesInvariants
+  // )
 
 val iname : eqtype
 
@@ -43,7 +63,7 @@ val act
     (opens:inames)
     (pre:slprop)
     (post:a -> slprop)
-: Type u#(max a 3)
+: Type u#(max a 4)
 
 val return 
     (#a:Type u#a)
@@ -78,14 +98,15 @@ val lift_ghost_reifiable
     (f:act a Ghost opens pre post)
 : act a Reifiable opens pre post
 
-val lift_reifiability 
-    (#a:Type)
-    (#r:_)
-    (#pre:slprop)
-    (#post:a -> slprop)
-    (#opens:inames)
-    (f:act a r opens pre post)
-: act a UsesInvariants opens pre post
+// AR: don't need UsesInvariants?
+// val lift_reifiability 
+//     (#a:Type)
+//     (#r:_)
+//     (#pre:slprop)
+//     (#post:a -> slprop)
+//     (#opens:inames)
+//     (f:act a r opens pre post)
+// : act a UsesInvariants opens pre post
 
 val weaken 
     (#a:Type)
@@ -128,38 +149,47 @@ val lift2 (#a:Type u#2) #r #opens #pre #post
 // Invariants
 //////////////////////////////////////////////////////////////////////
 
-val inv (p:slprop) : Type0
+val iname_ref : Type0
 
-val allocated_name : Type0
+val name_of_inv (i:iname_ref) : GTot iname
 
-val allocated_name_of_inv (#p:_) (i:inv p)
-: allocated_name
+let add_inv (e:inames) (i:iname_ref) : inames = S.add (name_of_inv i) e
+let mem_inv (e:inames) (i:iname_ref) : GTot bool = S.mem (name_of_inv i) e
 
-val name_of_allocated_name (n:allocated_name)
-: GTot iname
+val ( -~- ) (i:iname_ref) (p:slprop) : slprop
 
-let name_of_inv #p (i:inv p)
-: GTot iname
-= name_of_allocated_name (allocated_name_of_inv i)
+// val inv (p:slprop) : Type0
 
-let mem_inv (#p:_) (opens:inames) (i:inv p)
-: GTot bool
-= Set.mem (name_of_inv i) opens
+// val allocated_name : Type0
 
-let add_inv (#p:_) (opens:inames) (i:inv p)
-: inames
-= Set.union (Set.singleton (name_of_inv i)) opens
+// val allocated_name_of_inv (#p:_) (i:inv p)
+// : allocated_name
 
-val new_invariant (p:slprop)
-: act (inv p) UsesInvariants emp_inames p (fun _ -> emp)
+// val name_of_allocated_name (n:allocated_name)
+// : GTot iname
 
-let fresh_wrt (i:iname)
-              (ctx:list allocated_name)
+// let name_of_inv #p (i:inv p)
+// : GTot iname
+// = name_of_allocated_name (allocated_name_of_inv i)
+
+// let mem_inv (#p:_) (opens:inames) (i:inv p)
+// : GTot bool
+// = Set.mem (name_of_inv i) opens
+
+// let add_inv (#p:_) (opens:inames) (i:inv p)
+// : inames
+// = Set.union (Set.singleton (name_of_inv i)) opens
+
+val new_invariant (p:big_vprop)
+: act iname_ref Ghost emp_inames p (fun i -> i -~- p)
+
+let fresh_wrt (i:iname_ref)
+              (ctx:list iname_ref)
 : prop
-= forall i'. List.Tot.memP i' ctx ==> name_of_allocated_name i' <> i
+= forall i'. List.Tot.memP i' ctx ==> name_of_inv i' <> name_of_inv i
 
-val fresh_invariant (ctx:list allocated_name) (p:slprop)
-: act (i:inv p { name_of_inv i `fresh_wrt` ctx }) UsesInvariants emp_inames p (fun _ -> emp)
+val fresh_invariant (ctx:list iname_ref) (p:big_vprop)
+: act (i:iname_ref { i `fresh_wrt` ctx }) Ghost emp_inames p (fun i -> i -~- p)
 
 val with_invariant
     (#a:Type)
@@ -167,32 +197,37 @@ val with_invariant
     (#fp:slprop)
     (#fp':a -> slprop)
     (#f_opens:inames)
-    (#p:slprop)
-    (i:inv p{not (mem_inv f_opens i)})
+    (#p:big_vprop)
+    (i:iname_ref { not (mem_inv f_opens i) })
     (f:unit -> act a r f_opens (p ** fp) (fun x -> p ** fp' x))
-: act a UsesInvariants (add_inv f_opens i) fp fp'
+: act a r (add_inv f_opens i) ((i -~- p) ** fp) (fun x -> (i -~- p) ** fp' x)
 
 val distinct_invariants_have_distinct_names
     (#p:slprop)
     (#q:slprop)
-    (i:inv p)
-    (j:inv q)
+    (i j:iname_ref)
     (_:squash (p =!= q))
 : act (squash (name_of_inv i =!= name_of_inv j))
-    UsesInvariants
-    emp_inames 
-    emp
-    (fun _ -> emp)
+      Ghost
+      emp_inames 
+      ((i -~- p) ** (j -~- q))
+      (fun _ -> (i -~- p) ** (j -~- q))
 
 val invariant_name_identifies_invariant
       (p q:slprop)
-      (i:inv p)
-      (j:inv q { name_of_inv i == name_of_inv j } )
-: act (squash (p == q /\ i == j)) UsesInvariants emp_inames emp (fun _ -> emp)
+      (i:iname_ref)
+      (j:iname_ref { name_of_inv i == name_of_inv j } )
+: act (squash (p == q /\ i == j))
+      Ghost
+      emp_inames
+      ((i -~- p) ** (j -~- q))
+      (fun _ -> (i -~- p) ** (j -~- q))
+
 
 ////////////////////////////////////////////////////////////////////////
 // References
 ////////////////////////////////////////////////////////////////////////
+
 val ref ([@@@unused] a:Type u#a) ([@@@unused] p:pcm a) : Type u#0
 
 val ref_null (#a:Type u#a) (p:pcm a) : ref a p
