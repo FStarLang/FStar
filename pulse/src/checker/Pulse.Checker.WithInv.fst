@@ -209,7 +209,7 @@ let check
       fail g (Some t.range) "Fatal: no post hint on with_invariant"
   in
   match post.effect_annot with
-  | EffectAnnotGhost -> 
+  | EffectAnnotGhost _ -> 
     let open Pulse.PP in
     fail_doc g (Some t.range) 
     [ doc_of_string "Cannot open invariants in a 'ghost' context" ]

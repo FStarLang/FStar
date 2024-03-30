@@ -297,11 +297,9 @@ let check_branches_aux
   assume (samepats brs0 (L.map Mkdtuple3?._1 r));
   r
 
-let comp_observability (c:comp_st) =
-  match c with
-  | C_ST _ -> Observable
-  | C_STGhost _ -> Unobservable
-  | C_STAtomic _ obs _ -> obs
+let comp_observability (c:comp_st {C_STAtomic? c}) =
+  let C_STAtomic _ obs _ = c in
+  obs
 
 let weaken_branch_observability 
       (obs:observability)
@@ -335,7 +333,7 @@ let rec max_obs
   | c'::rest -> 
     match c' with
     | C_ST _
-    | C_STGhost _ ->
+    | C_STGhost _ _ ->
       max_obs rest obs
     | C_STAtomic _ obs' _ ->
       max_obs rest (join_obs obs obs')
@@ -350,7 +348,7 @@ let join_branches (#g #pre #post_hint #sc_u #sc_ty #sc:_)
     let (| br, c, d |) = checked_br in
     match c with
     | C_ST _ 
-    | C_STGhost _ ->
+    | C_STGhost _ _ ->
       let rest = 
         List.Tot.map 
           #(check_branches_aux_t #g pre post_hint sc_u sc_ty sc)

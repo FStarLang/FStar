@@ -70,37 +70,6 @@ let (comp_to_ast_term :
              FStar_Parser_AST.mk_term
                (FStar_Parser_AST.App (h1, is, FStar_Parser_AST.Nothing)) r
                FStar_Parser_AST.Expr
-         | PulseSyntaxExtension_Sugar.STUnobservable ->
-             let is =
-               let uu___ =
-                 let uu___1 =
-                   FStar_Ident.lid_of_str "Pulse.Lib.Core.emp_inames" in
-                 FStar_Parser_AST.Var uu___1 in
-               FStar_Parser_AST.mk_term uu___ r FStar_Parser_AST.Expr in
-             let unobs =
-               let uu___ =
-                 let uu___1 =
-                   FStar_Ident.lid_of_str
-                     "PulseCore.Observability.Unobservable" in
-                 FStar_Parser_AST.Var uu___1 in
-               FStar_Parser_AST.mk_term uu___ r FStar_Parser_AST.Expr in
-             let h =
-               FStar_Parser_AST.mk_term
-                 (FStar_Parser_AST.Var
-                    PulseSyntaxExtension_Env.stt_atomic_lid) r
-                 FStar_Parser_AST.Expr in
-             let h1 =
-               FStar_Parser_AST.mk_term
-                 (FStar_Parser_AST.App
-                    (h, return_ty, FStar_Parser_AST.Nothing)) r
-                 FStar_Parser_AST.Expr in
-             let h2 =
-               FStar_Parser_AST.mk_term
-                 (FStar_Parser_AST.App (h1, unobs, FStar_Parser_AST.Hash)) r
-                 FStar_Parser_AST.Expr in
-             FStar_Parser_AST.mk_term
-               (FStar_Parser_AST.App (h2, is, FStar_Parser_AST.Nothing)) r
-               FStar_Parser_AST.Expr
          | PulseSyntaxExtension_Sugar.STGhost ->
              let h =
                FStar_Parser_AST.mk_term
@@ -735,24 +704,6 @@ let (desugar_computation_type :
                                                                     c.PulseSyntaxExtension_Sugar.return_name
                                                                     ret1 in
                                                                     PulseSyntaxExtension_SyntaxWrapper.atomic_comp
-                                                                    opens pre
-                                                                    uu___6
-                                                                    post1 in
-                                                                    PulseSyntaxExtension_Err.return
-                                                                    uu___5))
-                                                           | PulseSyntaxExtension_Sugar.STUnobservable
-                                                               ->
-                                                               Obj.magic
-                                                                 (Obj.repr
-                                                                    (
-                                                                    let uu___5
-                                                                    =
-                                                                    let uu___6
-                                                                    =
-                                                                    PulseSyntaxExtension_SyntaxWrapper.mk_binder
-                                                                    c.PulseSyntaxExtension_Sugar.return_name
-                                                                    ret1 in
-                                                                    PulseSyntaxExtension_SyntaxWrapper.unobservable_comp
                                                                     opens pre
                                                                     uu___6
                                                                     post1 in

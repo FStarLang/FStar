@@ -1139,6 +1139,7 @@ let fresh_wrt (x:var) (g:env) (vars:_) =
 
 let effect_annot_typing (g:env) (e:effect_annot) =
   match e with
+  | EffectAnnotGhost { opens }
   | EffectAnnotAtomic { opens } ->
     tot_typing g opens tm_inames
   | _ ->

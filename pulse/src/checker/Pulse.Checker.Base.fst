@@ -75,9 +75,9 @@ let intro_comp_typing (g:env)
     | C_STAtomic i obs st -> 
       let stc = intro_st_comp_typing st in
       CT_STAtomic _ i obs _ i_typing stc
-    | C_STGhost st -> 
+    | C_STGhost i st -> 
       let stc = intro_st_comp_typing st in
-      CT_STGhost _ _ stc
+      CT_STGhost _ i _ i_typing stc
 
 irreducible
 let post_typing_as_abstraction
@@ -88,8 +88,8 @@ let post_typing_as_abstraction
 
 let check_effect_annot (g:env) (e:effect_annot) : T.Tac (effect_annot_typing g e) =
   match e with
-  | EffectAnnotSTT
-  | EffectAnnotGhost -> ()
+  | EffectAnnotSTT -> ()
+  | EffectAnnotGhost { opens }
   | EffectAnnotAtomic { opens } ->
     CP.core_check_term g opens T.E_Total tm_inames
 
@@ -121,8 +121,8 @@ let comp_typing_as_effect_annot_typing (#g:env) (#c:comp_st) (ct:comp_typing_u g
 = let _, iname_typing = Metatheory.comp_typing_inversion ct in
   match c with
   | C_ST _ -> ()
-  | C_STGhost _ -> ()
-  | C_STAtomic opens obs _ -> iname_typing
+  | C_STGhost _ _
+  | C_STAtomic _ _ _ -> iname_typing
   
 
 let post_hint_from_comp_typing #g #c ct = 
@@ -211,7 +211,7 @@ let comp_st_with_post (c:comp_st) (post:term)
   : c':comp_st { st_comp_of_comp c' == ({ st_comp_of_comp c with post} <: st_comp) } =
   match c with
   | C_ST st -> C_ST { st with post }
-  | C_STGhost st -> C_STGhost { st with post }
+  | C_STGhost i st -> C_STGhost i { st with post }
   | C_STAtomic i obs st -> C_STAtomic i obs {st with post}
 
 let ve_unit_r g (p:term) : vprop_equiv g (tm_star p tm_emp) p = 
@@ -290,7 +290,7 @@ let vprop_equiv_typing_bk (#g:env) (#ctxt:_) (ctxt_typing:tot_typing g ctxt tm_v
 let comp_with_pre (c:comp_st) (pre:term) =
   match c with
   | C_ST st -> C_ST { st with pre }
-  | C_STGhost st -> C_STGhost { st with pre }
+  | C_STGhost i st -> C_STGhost i { st with pre }
   | C_STAtomic i obs st -> C_STAtomic i obs {st with pre}
 
 
@@ -517,9 +517,10 @@ let continuation_elaborator_with_bind_fn (#g:env) (#ctxt:term)
         let i_typing = CP.core_check_term g i T.E_Total tm_inames in
         CT_STAtomic _ _ obs _ i_typing stc
 
-      | C_STGhost st -> 
+      | C_STGhost i st ->
+        let i_typing = CP.core_check_term g i T.E_Total tm_inames in
         let stc = st_comp_typing_with_post_hint ctxt_typing post_hint c2 in
-        CT_STGhost _ _ stc
+        CT_STGhost _ i _ i_typing stc
     in
     let d : st_typing g e c2 =
         T_BindFn g e1 e2_closed c1 c2 b x e1_typing u c1_typing d2 c2_typing
@@ -549,15 +550,15 @@ let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctx
   (ty_typing:universe_of g ty u)
   (post_hint0:post_hint_opt g { Some? post_hint0 /\ checker_res_matches_post_hint g post_hint0 y ty ctxt})
 : Pure (st_typing_in_ctxt g ctxt post_hint0)
-      (requires lookup g y == Some ty)
-      (ensures fun _ -> True)
+       (requires lookup g y == Some ty)
+       (ensures fun _ -> True)
 = let Some post_hint = post_hint0 in
   let x = fresh g in
   assume (~ (x `Set.mem` freevars post_hint.post));
   let ctag =
     match post_hint.effect_annot with
     | EffectAnnotAtomic _ -> STT_Atomic
-    | EffectAnnotGhost -> STT_Ghost
+    | EffectAnnotGhost _ -> STT_Ghost
     | _ -> STT
   in
   let y_tm = tm_var {nm_index=y;nm_ppname=y_ppname} in
@@ -575,6 +576,12 @@ let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctx
     let pht = post_hint_typing g post_hint x in
     let validity = emp_inames_included g opens pht.effect_annot_typing in
     let d = T_Sub _ _ _ _ d (STS_AtomicInvs _ (st_comp_of_comp c) tm_emp_inames opens obs obs validity) in
+    (| _, _, d |)
+  | C_STGhost _  _, EffectAnnotGhost { opens } ->
+    assert (comp_inames c == tm_emp_inames);
+    let pht = post_hint_typing g post_hint x in
+    let validity = emp_inames_included g opens pht.effect_annot_typing in
+    let d = T_Sub _ _ _ _ d (STS_GhostInvs _ (st_comp_of_comp c) tm_emp_inames opens validity) in
     (| _, _, d |)
   | _ -> 
     (| _, _, d |)
@@ -684,7 +691,7 @@ let rec is_stateful_arrow (g:env) (c:option comp) (args:list T.argv) (out:list T
     match c with
     | None -> None
     | Some (C_ST _)
-    | Some (C_STGhost _)
+    | Some (C_STGhost _ _)
     | Some (C_STAtomic _ _ _) -> (
       match args, out with
       | [], hd::tl -> Some (List.rev tl, hd)

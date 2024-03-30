@@ -181,13 +181,13 @@ let (check :
                 | FStar_Pervasives_Native.Some
                     { Pulse_Typing.g = uu___;
                       Pulse_Typing.effect_annot =
-                        Pulse_Syntax_Base.EffectAnnotGhost;
-                      Pulse_Typing.effect_annot_typing = uu___1;
-                      Pulse_Typing.ret_ty = uu___2; Pulse_Typing.u = uu___3;
-                      Pulse_Typing.ty_typing = uu___4;
-                      Pulse_Typing.post = uu___5; Pulse_Typing.x = uu___6;
-                      Pulse_Typing.post_typing_src = uu___7;
-                      Pulse_Typing.post_typing = uu___8;_}
+                        Pulse_Syntax_Base.EffectAnnotGhost uu___1;
+                      Pulse_Typing.effect_annot_typing = uu___2;
+                      Pulse_Typing.ret_ty = uu___3; Pulse_Typing.u = uu___4;
+                      Pulse_Typing.ty_typing = uu___5;
+                      Pulse_Typing.post = uu___6; Pulse_Typing.x = uu___7;
+                      Pulse_Typing.post_typing_src = uu___8;
+                      Pulse_Typing.post_typing = uu___9;_}
                     ->
                     Pulse_Typing_Env.fail g
                       (FStar_Pervasives_Native.Some (head_range t))

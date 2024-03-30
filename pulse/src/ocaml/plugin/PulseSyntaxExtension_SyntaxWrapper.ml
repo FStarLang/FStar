@@ -83,13 +83,10 @@ let mk_comp (pre:term) (ret:binder) (post:term) : comp =
    C_ST (mk_st_comp pre ret post)
 
 let ghost_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp =
-   C_STGhost (mk_st_comp pre ret post)
+   C_STGhost (inames, mk_st_comp pre ret post)
 
 let neutral_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp =
    C_STAtomic (inames, Neutral, mk_st_comp pre ret post)
-
-let unobservable_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp =
-   C_STAtomic (inames, Unobservable, mk_st_comp pre ret post)
 
 let atomic_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp =
    C_STAtomic (inames, Observable, mk_st_comp pre ret post)
@@ -197,21 +194,21 @@ let comp_pre c =
   match c with
    | C_ST st
    | C_STAtomic (_, _, st)
-   | C_STGhost st -> st.pre
+   | C_STGhost (_, st) -> st.pre
    | _ -> Pulse_Syntax_Pure.tm_emp
 
 let comp_res c =
   match c with
    | C_ST st
    | C_STAtomic (_, _, st)
-   | C_STGhost st -> st.res
+   | C_STGhost (_, st) -> st.res
    | C_Tot t -> t
 
 let comp_post c =
   match c with
    | C_ST st
    | C_STAtomic (_, _, st)
-   | C_STGhost st -> st.post
+   | C_STGhost (_, st) -> st.post
    | _ -> Pulse_Syntax_Pure.tm_emp
 
 let print_exn (e:exn) = Printexc.to_string e

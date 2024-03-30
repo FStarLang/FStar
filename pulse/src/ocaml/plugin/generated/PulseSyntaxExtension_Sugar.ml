@@ -20,15 +20,11 @@ let (as_vprop : vprop' -> rng -> vprop) = fun v -> fun r -> { v; vrange = r }
 type st_comp_tag =
   | ST 
   | STAtomic 
-  | STUnobservable 
   | STGhost 
 let (uu___is_ST : st_comp_tag -> Prims.bool) =
   fun projectee -> match projectee with | ST -> true | uu___ -> false
 let (uu___is_STAtomic : st_comp_tag -> Prims.bool) =
   fun projectee -> match projectee with | STAtomic -> true | uu___ -> false
-let (uu___is_STUnobservable : st_comp_tag -> Prims.bool) =
-  fun projectee ->
-    match projectee with | STUnobservable -> true | uu___ -> false
 let (uu___is_STGhost : st_comp_tag -> Prims.bool) =
   fun projectee -> match projectee with | STGhost -> true | uu___ -> false
 type computation_type =

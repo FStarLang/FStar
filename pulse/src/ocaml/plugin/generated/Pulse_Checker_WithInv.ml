@@ -978,7 +978,7 @@ let (check :
                                        match post.Pulse_Typing.effect_annot
                                        with
                                        | Pulse_Syntax_Base.EffectAnnotGhost
-                                           ->
+                                           uu___1 ->
                                            Obj.magic
                                              (Pulse_Typing_Env.fail_doc g
                                                 (FStar_Pervasives_Native.Some
@@ -1702,7 +1702,7 @@ let (check :
                                                                     | 
                                                                     Pulse_Syntax_Base.EffectAnnotAtomic
                                                                     {
-                                                                    Pulse_Syntax_Base.opens
+                                                                    Pulse_Syntax_Base.opens1
                                                                     = opens;_}
                                                                     ->
                                                                     Prims.Mkdtuple2
@@ -1798,7 +1798,7 @@ let (check :
                                                                     uu___6 ->
                                                                     Pulse_Syntax_Base.EffectAnnotAtomic
                                                                     {
-                                                                    Pulse_Syntax_Base.opens
+                                                                    Pulse_Syntax_Base.opens1
                                                                     =
                                                                     opens_remove_i
                                                                     }))

@@ -89,7 +89,7 @@ let check
     fail g (Some <| head_range t)
       "Allocating a mutable local variable expects an annotated post-condition"
 
-  | Some { effect_annot = EffectAnnotGhost }
+  | Some { effect_annot = EffectAnnotGhost _ }
   | Some { effect_annot = EffectAnnotAtomic _ } ->
     fail g (Some <| head_range t)
       "Allocating a mutable local variable is only allowed in non-ghost and non-atomic code"

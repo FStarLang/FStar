@@ -297,7 +297,7 @@ let canon_post (c:comp_st) : comp_st =
   match c with
   | C_ST s -> C_ST (canon_st_comp_post s)
   | C_STAtomic i obs s -> C_STAtomic i obs (canon_st_comp_post s)
-  | C_STGhost s -> C_STGhost (canon_st_comp_post s)
+  | C_STGhost i s -> C_STGhost i (canon_st_comp_post s)
 
 irreducible
 let typing_canon #g #t (#c:comp_st) (d:st_typing g t c) : st_typing g t (canon_post c) =
