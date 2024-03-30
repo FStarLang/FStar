@@ -75,7 +75,8 @@ val ss_comp_commutes (c:comp) (ss:ss_t)
               (C_STAtomic? c ==> r == C_STAtomic (ss_term (comp_inames c) ss)
                                                  (C_STAtomic?.obs c)
                                                  (ss_st_comp (st_comp_of_comp c) ss)) /\
-              (C_STGhost? c ==> r == C_STGhost (ss_st_comp (st_comp_of_comp c) ss))))
+              (C_STGhost? c ==> r == C_STGhost (ss_term (comp_inames c) ss)
+                                               (ss_st_comp (st_comp_of_comp c) ss))))
           [SMTPat (ss_comp c ss)]
 
 type nt_substs = l:list subst_elt { forall elt. L.memP elt l ==> NT? elt }
@@ -117,7 +118,8 @@ val nt_subst_comp_commutes (c:comp) (nts:nt_substs)
               (C_STAtomic? c ==> r == C_STAtomic (nt_subst_term (comp_inames c) nts)
                                                   (C_STAtomic?.obs c)
                                                  (nt_subst_st_comp (st_comp_of_comp c) nts)) /\
-              (C_STGhost? c ==> r == C_STGhost (nt_subst_st_comp (st_comp_of_comp c) nts))))
+              (C_STGhost? c ==> r == C_STGhost (nt_subst_term (comp_inames c) nts)
+                                               (nt_subst_st_comp (st_comp_of_comp c) nts))))
           [SMTPat (nt_subst_comp c nts)]
 
 let rec well_typed_nt_substs

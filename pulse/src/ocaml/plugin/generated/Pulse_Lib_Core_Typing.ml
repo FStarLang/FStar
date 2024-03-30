@@ -106,6 +106,7 @@ let (return_stt_ghost_comp :
         fun p ->
           fun x ->
             Pulse_Reflection_Util.mk_stt_ghost_comp u a
+              Pulse_Reflection_Util.emp_inames_tm
               (FStar_Reflection_V2_Builtins.pack_ln
                  (FStar_Reflection_V2_Data.Tv_App
                     (p, (e, FStar_Reflection_V2_Data.Q_Explicit))))
@@ -121,6 +122,7 @@ let (return_stt_ghost_noeq_comp :
       fun x ->
         fun p ->
           Pulse_Reflection_Util.mk_stt_ghost_comp u a
+            Pulse_Reflection_Util.emp_inames_tm
             (FStar_Reflection_V2_Builtins.pack_ln
                (FStar_Reflection_V2_Data.Tv_App
                   (p, (x, FStar_Reflection_V2_Data.Q_Explicit)))) p

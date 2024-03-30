@@ -66,9 +66,15 @@ let check (g:env)
       let (| ty, i_typing |) = core_compute_tot_term_type g i in
       if not (eq_tm ty tm_inames)
       then fail g None
-             (Printf.sprintf "check_comp: type of inames term %s is %s, expected %s"
+             (Printf.sprintf "check_comp (atomic): type of inames term %s is %s, expected %s"
                 (P.term_to_string i) (P.term_to_string ty) (P.term_to_string tm_inames))
       else CT_STAtomic _ _ obs _ i_typing stc
-    | C_STGhost st -> 
-      let stc = check_st_comp st in
-      CT_STGhost _ _ stc
+    | C_STGhost i st ->
+      let (| ty, i_typing |) = core_compute_tot_term_type g i in
+      if not (eq_tm ty tm_inames)
+      then fail g None
+             (Printf.sprintf "check_comp (ghost): type of inames term %s is %s, expected %s"
+                (P.term_to_string i) (P.term_to_string ty) (P.term_to_string tm_inames))
+      else 
+        let stc = check_st_comp st in
+        CT_STGhost _ _ _ i_typing stc

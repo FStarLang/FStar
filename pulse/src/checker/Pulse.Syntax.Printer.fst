@@ -178,12 +178,11 @@ let ctag_to_string = function
 let observability_to_string =
   function
   | Observable -> "Observable"
-  | Unobservable -> "Unobservable"
   | Neutral -> "Neutral"
 
 let effect_annot_to_string = function
   | EffectAnnotSTT -> "stt"
-  | EffectAnnotGhost -> "stt_ghost"
+  | EffectAnnotGhost { opens } -> sprintf "stt_ghost %s" (term_to_string opens)
   | EffectAnnotAtomic { opens } -> sprintf "stt_atomic %s" (term_to_string opens)
   
 let comp_to_string (c:comp)
@@ -206,9 +205,10 @@ let comp_to_string (c:comp)
               (term_to_string s.pre)
               (term_to_string s.post)
 
-    | C_STGhost s ->
-      sprintf "stt_ghost %s (requires\n%s) (ensures\n%s)"
+    | C_STGhost inames s ->
+      sprintf "stt_ghost %s %s (requires\n%s) (ensures\n%s)"
               (term_to_string s.res)
+              (term_to_string inames)
               (term_to_string s.pre)
               (term_to_string s.post)
 
@@ -470,7 +470,7 @@ let tag_of_comp (c:comp) : T.Tac string =
   | C_ST _ -> "ST"
   | C_STAtomic i obs _ ->
     Printf.sprintf "%s %s" (observability_to_string obs) (term_to_string i)
-  | C_STGhost _ ->
+  | C_STGhost _ _ ->
     "Ghost" 
     
 let rec print_st_head (t:st_term)

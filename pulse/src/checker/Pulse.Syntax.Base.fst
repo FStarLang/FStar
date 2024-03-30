@@ -50,7 +50,8 @@ let eq_comp (c1 c2:comp)
       eq_tm i1 i2 &&
       o1 = o2 &&
       eq_st_comp s1 s2
-    | C_STGhost s1, C_STGhost s2 ->
+    | C_STGhost i1 s1, C_STGhost i2 s2 ->
+      eq_tm i1 i2 &&
       eq_st_comp s1 s2
     | _ -> false
 

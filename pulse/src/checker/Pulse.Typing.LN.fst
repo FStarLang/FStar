@@ -48,9 +48,9 @@ val open_term_ln_host' (t:term) (x:R.term) (i:index)
     (requires RT.ln' (RT.subst_term t [ RT.DT i x ]) (i - 1))
     (ensures RT.ln' t i)
 
-let rec open_term_ln' (e:term)
-                      (x:term)
-                      (i:index)
+let open_term_ln' (e:term)
+                  (x:term)
+                  (i:index)
   : Lemma 
     (requires ln' (open_term' e x i) (i - 1))
     (ensures ln' e i)
@@ -66,13 +66,11 @@ let open_comp_ln' (c:comp)
   = match c with
     | C_Tot t ->
       open_term_ln' t x i
-
-    | C_ST s
-    | C_STGhost s ->
+    | C_ST s ->
       open_term_ln' s.res x i;
       open_term_ln' s.pre x i;      
       open_term_ln' s.post x (i + 1)
-
+    | C_STGhost n s
     | C_STAtomic n _ s ->    
       open_term_ln' n x i;    
       open_term_ln' s.res x i;
@@ -363,13 +361,11 @@ let ln_weakening_comp (c:comp) (i j:int)
   = match c with
     | C_Tot t ->
       ln_weakening t i j
-
-    | C_ST s
-    | C_STGhost s ->
+    | C_ST s ->
       ln_weakening s.res i j;
       ln_weakening s.pre i j;      
       ln_weakening s.post (i + 1) (j + 1)
-
+    | C_STGhost n s
     | C_STAtomic n _ s ->    
       ln_weakening n i j;    
       ln_weakening s.res i j;
@@ -526,9 +522,9 @@ val r_open_term_ln_inv' (e:R.term) (x:R.term { RT.ln x }) (i:index)
     (requires RT.ln' e i)
     (ensures RT.ln' (RT.subst_term e [ RT.DT i x ]) (i - 1))
 
-let rec open_term_ln_inv' (e:term)
-                          (x:term { ln x })
-                          (i:index)
+let open_term_ln_inv' (e:term)
+                      (x:term { ln x })
+                      (i:index)
   : Lemma 
     (requires ln' e i)
     (ensures ln' (open_term' e x i) (i - 1))
@@ -545,13 +541,11 @@ let open_comp_ln_inv' (c:comp)
   = match c with
     | C_Tot t ->
       open_term_ln_inv' t x i
-
-    | C_ST s
-    | C_STGhost s ->
+    | C_ST s ->
       open_term_ln_inv' s.res x i;
       open_term_ln_inv' s.pre x i;      
       open_term_ln_inv' s.post x (i + 1)
-
+    | C_STGhost n s
     | C_STAtomic n _ s ->    
       open_term_ln_inv' n x i;    
       open_term_ln_inv' s.res x i;
@@ -720,9 +714,9 @@ val r_close_term_ln' (e:R.term) (x:var) (i:index)
     (requires RT.ln' e (i - 1))
     (ensures RT.ln' (RT.subst_term e [ RT.ND x i ]) i)
 
-let rec close_term_ln' (e:term)
-                       (x:var)
-                       (i:index)
+let close_term_ln' (e:term)
+                   (x:var)
+                   (i:index)
   : Lemma 
     (requires ln' e (i - 1))
     (ensures ln' (close_term' e x i) i)
@@ -739,12 +733,11 @@ let close_comp_ln' (c:comp)
     | C_Tot t ->
       close_term_ln' t x i
 
-    | C_ST s
-    | C_STGhost s ->
+    | C_ST s ->
       close_term_ln' s.res x i;
       close_term_ln' s.pre x i;      
       close_term_ln' s.post x (i + 1)
-
+    | C_STGhost n s
     | C_STAtomic n _ s ->    
       close_term_ln' n x i;    
       close_term_ln' s.res x i;
@@ -1002,6 +995,7 @@ let rec st_sub_ln #g #c1 #c2 (d:st_sub g c1 c2)
       st_sub_ln d1;
       st_sub_ln d2
 
+    | STS_GhostInvs g stc is1 is2 tok
     | STS_AtomicInvs g stc is1 is2 _ _ tok ->
       prop_valid_must_be_ln g (tm_inames_subset is1 is2) tok;
       assume (ln (tm_inames_subset is1 is2) ==> ln is2)
@@ -1026,8 +1020,8 @@ let comp_typing_ln (#g:_) (#c:_) (#u:_) (d:comp_typing g c u)
 
   match d with
   | CT_Tot _ _ _ t_typing -> tot_or_ghost_typing_ln t_typing
-  | CT_ST _ _ st_typing
-  | CT_STGhost _ _ st_typing -> st_comp_typing_ln st_typing
+  | CT_ST _ _ st_typing -> st_comp_typing_ln st_typing
+  | CT_STGhost _ _ _ inames_typing st_typing
   | CT_STAtomic _ _ _ _ inames_typing st_typing ->
     tot_or_ghost_typing_ln inames_typing;
     st_comp_typing_ln st_typing

@@ -385,13 +385,6 @@ let (stt_atomic_fv : FStar_Reflection_Types.fv) =
 let (stt_atomic_tm : FStar_Reflection_Types.term) =
   FStar_Reflection_V2_Builtins.pack_ln
     (FStar_Reflection_V2_Data.Tv_FVar stt_atomic_fv)
-let (stt_unobservable_lid : Prims.string Prims.list) =
-  mk_pulse_lib_core_lid "stt_unobservable"
-let (stt_unobservable_fv : FStar_Reflection_Types.fv) =
-  FStar_Reflection_V2_Builtins.pack_fv stt_unobservable_lid
-let (stt_unobservable_tm : FStar_Reflection_Types.term) =
-  FStar_Reflection_V2_Builtins.pack_ln
-    (FStar_Reflection_V2_Data.Tv_FVar stt_unobservable_fv)
 let (mk_stt_atomic_comp :
   FStar_Reflection_Types.term ->
     FStar_Reflection_Types.universe ->
@@ -440,26 +433,32 @@ let (mk_stt_ghost_comp :
   FStar_Reflection_Types.universe ->
     FStar_Reflection_Types.term ->
       FStar_Reflection_Types.term ->
-        FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+        FStar_Reflection_Types.term ->
+          FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
   =
   fun u ->
     fun a ->
-      fun pre ->
-        fun post ->
-          let t =
-            FStar_Reflection_V2_Builtins.pack_ln
-              (FStar_Reflection_V2_Data.Tv_UInst (stt_ghost_fv, [u])) in
-          let t1 =
+      fun inames ->
+        fun pre ->
+          fun post ->
+            let t =
+              FStar_Reflection_V2_Builtins.pack_ln
+                (FStar_Reflection_V2_Data.Tv_UInst (stt_ghost_fv, [u])) in
+            let t1 =
+              FStar_Reflection_V2_Builtins.pack_ln
+                (FStar_Reflection_V2_Data.Tv_App
+                   (t, (a, FStar_Reflection_V2_Data.Q_Explicit))) in
+            let t2 =
+              FStar_Reflection_V2_Builtins.pack_ln
+                (FStar_Reflection_V2_Data.Tv_App
+                   (t1, (inames, FStar_Reflection_V2_Data.Q_Explicit))) in
+            let t3 =
+              FStar_Reflection_V2_Builtins.pack_ln
+                (FStar_Reflection_V2_Data.Tv_App
+                   (t2, (pre, FStar_Reflection_V2_Data.Q_Explicit))) in
             FStar_Reflection_V2_Builtins.pack_ln
               (FStar_Reflection_V2_Data.Tv_App
-                 (t, (a, FStar_Reflection_V2_Data.Q_Explicit))) in
-          let t2 =
-            FStar_Reflection_V2_Builtins.pack_ln
-              (FStar_Reflection_V2_Data.Tv_App
-                 (t1, (pre, FStar_Reflection_V2_Data.Q_Explicit))) in
-          FStar_Reflection_V2_Builtins.pack_ln
-            (FStar_Reflection_V2_Data.Tv_App
-               (t2, (post, FStar_Reflection_V2_Data.Q_Explicit)))
+                 (t3, (post, FStar_Reflection_V2_Data.Q_Explicit)))
 let (mk_stt_ghost_comp_post_equiv :
   FStar_Reflection_Types.env ->
     FStar_Reflection_Types.universe ->
@@ -467,32 +466,38 @@ let (mk_stt_ghost_comp_post_equiv :
         FStar_Reflection_Types.term ->
           FStar_Reflection_Types.term ->
             FStar_Reflection_Types.term ->
-              (unit, unit, unit) FStar_Reflection_Typing.equiv ->
-                (unit, unit, unit) FStar_Reflection_Typing.equiv)
+              FStar_Reflection_Types.term ->
+                (unit, unit, unit) FStar_Reflection_Typing.equiv ->
+                  (unit, unit, unit) FStar_Reflection_Typing.equiv)
   =
   fun g ->
     fun u ->
       fun a ->
-        fun pre ->
-          fun post1 ->
-            fun post2 ->
-              fun posts_equiv ->
-                let t =
-                  FStar_Reflection_V2_Builtins.pack_ln
-                    (FStar_Reflection_V2_Data.Tv_UInst (stt_ghost_fv, [u])) in
-                let t1 =
-                  FStar_Reflection_V2_Builtins.pack_ln
-                    (FStar_Reflection_V2_Data.Tv_App
-                       (t, (a, FStar_Reflection_V2_Data.Q_Explicit))) in
-                let t2 =
-                  FStar_Reflection_V2_Builtins.pack_ln
-                    (FStar_Reflection_V2_Data.Tv_App
-                       (t1, (pre, FStar_Reflection_V2_Data.Q_Explicit))) in
-                FStar_Reflection_Typing.Rel_ctxt
-                  (g, post1, post2,
-                    (FStar_Reflection_Typing.Ctxt_app_arg
-                       (t2, FStar_Reflection_V2_Data.Q_Explicit,
-                         FStar_Reflection_Typing.Ctxt_hole)), posts_equiv)
+        fun inames ->
+          fun pre ->
+            fun post1 ->
+              fun post2 ->
+                fun posts_equiv ->
+                  let t =
+                    FStar_Reflection_V2_Builtins.pack_ln
+                      (FStar_Reflection_V2_Data.Tv_UInst (stt_ghost_fv, [u])) in
+                  let t1 =
+                    FStar_Reflection_V2_Builtins.pack_ln
+                      (FStar_Reflection_V2_Data.Tv_App
+                         (t, (a, FStar_Reflection_V2_Data.Q_Explicit))) in
+                  let t2 =
+                    FStar_Reflection_V2_Builtins.pack_ln
+                      (FStar_Reflection_V2_Data.Tv_App
+                         (t1, (inames, FStar_Reflection_V2_Data.Q_Explicit))) in
+                  let t3 =
+                    FStar_Reflection_V2_Builtins.pack_ln
+                      (FStar_Reflection_V2_Data.Tv_App
+                         (t2, (pre, FStar_Reflection_V2_Data.Q_Explicit))) in
+                  FStar_Reflection_Typing.Rel_ctxt
+                    (g, post1, post2,
+                      (FStar_Reflection_Typing.Ctxt_app_arg
+                         (t3, FStar_Reflection_V2_Data.Q_Explicit,
+                           FStar_Reflection_Typing.Ctxt_hole)), posts_equiv)
 let (mk_total :
   FStar_Reflection_Types.typ -> FStar_Reflection_V2_Data.comp_view) =
   fun t -> FStar_Reflection_V2_Data.C_Total t
@@ -1240,50 +1245,61 @@ let (mk_bind_ghost :
             FStar_Reflection_Types.term ->
               FStar_Reflection_Types.term ->
                 FStar_Reflection_Types.term ->
-                  FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+                  FStar_Reflection_Types.term ->
+                    FStar_Reflection_Types.term ->
+                      FStar_Reflection_Types.term)
   =
   fun u1 ->
     fun u2 ->
       fun a ->
         fun b ->
-          fun pre1 ->
-            fun post1 ->
-              fun post2 ->
-                fun e1 ->
-                  fun e2 ->
-                    let bind_lid = mk_pulse_lib_core_lid "bind_ghost" in
-                    let t =
-                      FStar_Reflection_V2_Builtins.pack_ln
-                        (FStar_Reflection_V2_Data.Tv_UInst
-                           ((FStar_Reflection_V2_Builtins.pack_fv bind_lid),
-                             [u1; u2])) in
-                    let t1 =
+          fun opens ->
+            fun pre1 ->
+              fun post1 ->
+                fun post2 ->
+                  fun e1 ->
+                    fun e2 ->
+                      let bind_lid = mk_pulse_lib_core_lid "bind_ghost" in
+                      let t =
+                        FStar_Reflection_V2_Builtins.pack_ln
+                          (FStar_Reflection_V2_Data.Tv_UInst
+                             ((FStar_Reflection_V2_Builtins.pack_fv bind_lid),
+                               [u1; u2])) in
+                      let t1 =
+                        FStar_Reflection_V2_Builtins.pack_ln
+                          (FStar_Reflection_V2_Data.Tv_App
+                             (t, (a, FStar_Reflection_V2_Data.Q_Implicit))) in
+                      let t2 =
+                        FStar_Reflection_V2_Builtins.pack_ln
+                          (FStar_Reflection_V2_Data.Tv_App
+                             (t1, (b, FStar_Reflection_V2_Data.Q_Implicit))) in
+                      let t3 =
+                        FStar_Reflection_V2_Builtins.pack_ln
+                          (FStar_Reflection_V2_Data.Tv_App
+                             (t2,
+                               (opens, FStar_Reflection_V2_Data.Q_Implicit))) in
+                      let t4 =
+                        FStar_Reflection_V2_Builtins.pack_ln
+                          (FStar_Reflection_V2_Data.Tv_App
+                             (t3,
+                               (pre1, FStar_Reflection_V2_Data.Q_Implicit))) in
+                      let t5 =
+                        FStar_Reflection_V2_Builtins.pack_ln
+                          (FStar_Reflection_V2_Data.Tv_App
+                             (t4,
+                               (post1, FStar_Reflection_V2_Data.Q_Implicit))) in
+                      let t6 =
+                        FStar_Reflection_V2_Builtins.pack_ln
+                          (FStar_Reflection_V2_Data.Tv_App
+                             (t5,
+                               (post2, FStar_Reflection_V2_Data.Q_Implicit))) in
+                      let t7 =
+                        FStar_Reflection_V2_Builtins.pack_ln
+                          (FStar_Reflection_V2_Data.Tv_App
+                             (t6, (e1, FStar_Reflection_V2_Data.Q_Explicit))) in
                       FStar_Reflection_V2_Builtins.pack_ln
                         (FStar_Reflection_V2_Data.Tv_App
-                           (t, (a, FStar_Reflection_V2_Data.Q_Implicit))) in
-                    let t2 =
-                      FStar_Reflection_V2_Builtins.pack_ln
-                        (FStar_Reflection_V2_Data.Tv_App
-                           (t1, (b, FStar_Reflection_V2_Data.Q_Implicit))) in
-                    let t3 =
-                      FStar_Reflection_V2_Builtins.pack_ln
-                        (FStar_Reflection_V2_Data.Tv_App
-                           (t2, (pre1, FStar_Reflection_V2_Data.Q_Implicit))) in
-                    let t4 =
-                      FStar_Reflection_V2_Builtins.pack_ln
-                        (FStar_Reflection_V2_Data.Tv_App
-                           (t3, (post1, FStar_Reflection_V2_Data.Q_Implicit))) in
-                    let t5 =
-                      FStar_Reflection_V2_Builtins.pack_ln
-                        (FStar_Reflection_V2_Data.Tv_App
-                           (t4, (post2, FStar_Reflection_V2_Data.Q_Implicit))) in
-                    let t6 =
-                      FStar_Reflection_V2_Builtins.pack_ln
-                        (FStar_Reflection_V2_Data.Tv_App
-                           (t5, (e1, FStar_Reflection_V2_Data.Q_Explicit))) in
-                    FStar_Reflection_V2_Builtins.pack_ln
-                      (FStar_Reflection_V2_Data.Tv_App
-                         (t6, (e2, FStar_Reflection_V2_Data.Q_Explicit)))
+                           (t7, (e2, FStar_Reflection_V2_Data.Q_Explicit)))
 let (mk_bind_atomic :
   FStar_Reflection_Types.universe ->
     FStar_Reflection_Types.universe ->
@@ -1879,17 +1895,19 @@ let (mk_stt_ghost_comp_equiv :
           FStar_Reflection_Types.term ->
             FStar_Reflection_Types.term ->
               FStar_Reflection_Types.term ->
-                (unit, unit, unit) FStar_Reflection_Typing.equiv ->
+                FStar_Reflection_Types.term ->
                   (unit, unit, unit) FStar_Reflection_Typing.equiv ->
-                    (unit, unit, unit) FStar_Reflection_Typing.equiv)
+                    (unit, unit, unit) FStar_Reflection_Typing.equiv ->
+                      (unit, unit, unit) FStar_Reflection_Typing.equiv)
   =
   fun g ->
     fun u ->
       fun res ->
-        fun pre1 ->
-          fun post1 ->
-            fun pre2 ->
-              fun post2 -> fun pre_eq -> fun post_eq -> Prims.admit ()
+        fun inames ->
+          fun pre1 ->
+            fun post1 ->
+              fun pre2 ->
+                fun post2 -> fun pre_eq -> fun post_eq -> Prims.admit ()
 let (ref_lid : Prims.string Prims.list) = mk_pulse_lib_reference_lid "ref"
 let (pts_to_lid : Prims.string Prims.list) =
   mk_pulse_lib_reference_lid "pts_to"
@@ -2211,6 +2229,4 @@ let (mk_observability_lid : Prims.string -> Prims.string Prims.list) =
   fun l -> ["PulseCore"; "Observability"; l]
 let (observable_lid : Prims.string Prims.list) =
   mk_observability_lid "Observable"
-let (unobservable_lid : Prims.string Prims.list) =
-  mk_observability_lid "Unobservable"
 let (neutral_lid : Prims.string Prims.list) = mk_observability_lid "Neutral"
