@@ -477,6 +477,45 @@ let big_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
   slprop_extensionality (h_exists p) (up (down (h_exists p)));
   ()
 #restart-solver
+
+let big_up_star (p q:H2.slprop)
+: Lemma (up (p `H2.star` q) == (up p `star` up q))
+        [SMTPat (up (p `H2.star` q))]
+= introduce forall h.
+      up (p `H2.star` q) h ==>
+      (up p `star` up q) h
+  with introduce _ ==> _
+  with _ . (
+    H2.elim_star p q h.concrete;
+    eliminate exists h1 h2.
+      H2.disjoint h1 h2 /\
+      h.concrete == H2.join h1 h2 /\
+      H2.interp p h1 /\
+      H2.interp q h2
+    returns (up p `star` up q) h
+    with _ . (
+      let hl = { h with concrete = h1 } in
+      let hr = { concrete = h2; invariants = H0.empty_heap } in
+      assert (idisjoint hl hr)
+    )
+  );
+  introduce forall h.
+      (up p `star` up q) h ==>
+      up (p `H2.star` q) h
+  with introduce _ ==> _
+  with _ . (
+    eliminate exists h1 h2.
+      idisjoint h1 h2 /\
+      h == ijoin h1 h2 /\
+      up p h1 /\
+      up q h2
+    returns up (p `H2.star` q) h
+    with _ . (
+      H2.intro_star p q h1.concrete h2.concrete
+      )    
+  );
+  slprop_extensionality (up (p `H2.star` q)) (up p `star` up q)
+
 let down_star (p1 p2:big_vprop)
 : Lemma 
   (ensures down (p1 `star` p2) == down p1 `H2.star` down p2)
@@ -953,8 +992,13 @@ let lift_tot_action #a #mg #e #fp #fp'
 #push-options "--fuel 0 --ifuel 0"
 let intro_pure_star (p:slprop) (q:prop) (m:mem)
   : Lemma (interp p m /\ q ==> interp (p `star` pure q) m)
-  = admit()
-
+  = introduce
+      interp p m /\ q ==> interp (p `star` pure q) m
+    with _ . (
+      let m0 = {m with iheap=empty_iheap} in
+      assert (interp (pure q) {m with iheap=empty_iheap});
+      assert (disjoint m m0)
+    )
 
 let intro_star (p q:slprop) (m0 m1:mem)
 : Lemma
@@ -969,7 +1013,11 @@ let intro_star (p q:slprop) (m0 m1:mem)
 
 let h0_emp_unit (p:H0.slprop)
   : Lemma (H0.( emp `star` p == p `star` emp /\ p `star` emp == p))
-  = admit()
+  = let open H0 in
+    H0.star_commutative p H0.emp;
+    H0.slprop_extensionality (p `star` emp) (emp `star` p);
+    H0.emp_unit p;
+    H0.slprop_extensionality (p `H0.star` H0.emp) p
 
 let h0_of_as_slprop (p:H0.a_heap_prop) (h:H0.heap)
   : Lemma (h0_of_slprop (H0.as_slprop p) h <==> p h)
@@ -1295,7 +1343,7 @@ let ( -~- ) (i:iname_ref) (p:slprop u#a) = iname_ref_pts_to i p
 
 let lift_h0_star (p q:H0.slprop)
 : Lemma (lift_h0 (p `H0.star` q) == lift_h0 p `star` lift_h0 q)
-= admit()
+= star_congruence_h0 p q
 
 let dup_inv_lemma (i:iname_ref) (p:slprop) frame (m:mem)
 : Lemma (requires interp ((i -~- p) `star` frame) m)
@@ -1519,8 +1567,46 @@ let mg_of_mut (m:mutability) =
 let lift_heap_action (#fp:H2.slprop u#a) (#a:Type u#b) (#fp':a -> H2.slprop u#a) (#mut:_)
                      (e:inames)
                      ($f:H2.action #mut #None fp a fp')
-  : tot_action_nf_except (mg_of_mut mut) e (up fp) a (fun x -> up (fp' x))
-  = admit()
+: tot_action_nf_except (mg_of_mut mut) e (up fp) a (fun x -> up (fp' x))
+= 
+// let g : tot_pre_action_nf_except (mg_of_mut mut) e (up fp) a (fun x -> up (fp' x)) = fun m ->
+//       let (| x, h' |) = f m.iheap.concrete in
+//       let ih' = { m.iheap with concrete = h' } in
+//       let m' = { m with iheap = ih' } in
+//       assume (maybe_ghost_action (mg_of_mut mut) m m');
+//       (| x, m' |)
+//   in
+  admit()
+    // let aux (frame:slprop) (m0:hmem_with_inv_except e (fp `star` frame))
+    //   : Lemma
+    //     (ensures
+    //       (ac_reasoning_for_m_frame_preserving fp frame (locks_invariant e m0) m0;
+    //        let (| x, m1 |) = g m0 in
+    //        interp ((fp' x `star` frame) `star` locks_invariant e m1) m1 /\
+    //        mem_evolves m0 m1
+           
+    //        ))
+    //     [SMTPat ()]
+    //   = ac_reasoning_for_m_frame_preserving fp frame (locks_invariant e m0) m0;
+    //     let (| x, m1 |) = g m0 in
+    //     let h0 = hheap_of_hmem m0 in
+    //     let (| x', h1 |) = f h0 in
+    //     H.action_framing f (linv e m0) h0;
+    //     assert (x == x');
+    //     star_associative fp frame (linv e m0);
+    //     H.action_framing f (frame `star` linv e m0) h0;
+    //     assert (H.interp ((fp' x) `star` (frame `star` linv e m0)) h1);
+    //     star_associative (fp' x) frame (linv e m0);
+    //     assert (H.interp ((fp' x `star` frame) `star` linv e m0) h1);
+    //     let h1' : H.hheap ((fp' x `star` frame) `star` linv e m0) = h1 in
+    //     assert (m1 == hmem_of_hheap m0 h1');
+    //     assert (with_inv_except m1 e (fp' x `star` frame));
+    //     ()
+    // in
+    // assert (is_frame_preserving g);
+    // g
+
+
 
 let change_slprop (#e:inames)
                   (p q:slprop)
@@ -1600,11 +1686,6 @@ let upd_action #a #pcm e r v0 v1
 
 let free_action #a #pcm e r v0
   = lift_tot_action (lift_heap_action e (H2.free_action #a #pcm r v0))
-
-let big_up_star (p q:H2.slprop)
-: Lemma (up (p `H2.star` q) == (up p `star` up q))
-        [SMTPat (up (p `H2.star` q))]
-= admit()
 
 let split_action #a #pcm e r v0 v1
   = lift_tot_action (lift_heap_action e (H2.split_action #a #pcm r v0 v1))
