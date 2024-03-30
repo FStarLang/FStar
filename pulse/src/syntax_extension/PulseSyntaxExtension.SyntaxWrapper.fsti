@@ -62,7 +62,6 @@ val tm_add_inv : i:term -> is:term -> range -> term
 val mk_tot (t:term) : comp
 val mk_comp (pre:term) (ret:binder) (post:term) : comp
 val ghost_comp (opens:term) (pre:term) (ret:binder) (post:term) : comp
-val unobservable_comp (opens:term) (pre:term) (ret:binder) (post:term) : comp
 val atomic_comp (opens:term) (pre:term) (ret:binder) (post:term) : comp
 
 val is_tm_exists (x:term) : bool

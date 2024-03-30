@@ -50,6 +50,7 @@ let lift_atomic_to_st
   in
   (| c', d' |)
 
+#push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1"
 let lift_ghost_to_atomic
   (g : env)
   (e : st_term)
@@ -60,8 +61,8 @@ let lift_ghost_to_atomic
          (ensures fun (| c', _ |) ->
              st_comp_of_comp c' == st_comp_of_comp c /\
              ctag_of_comp_st c' == STT_Atomic /\
-             tm_emp_inames == C_STAtomic?.inames c')
-= let C_STGhost c_st = c in
+             comp_inames c' == comp_inames c)
+= let C_STGhost inames c_st = c in
   let comp_res_typing : universe_of g (comp_res c) (comp_u c) =
     let open Metatheory in
     let d = st_typing_correctness d in
@@ -71,14 +72,15 @@ let lift_ghost_to_atomic
   in
   let w : non_informative_c g c = get_non_informative_witness g (comp_u c) (comp_res c) comp_res_typing in
   FStar.Tactics.BreakVC.break_vc(); // somehow this proof is unstable, this helps
-  let c' = C_STAtomic tm_emp_inames Neutral c_st in
+  let c' = C_STAtomic inames Neutral c_st in
   let d' : st_typing g e c' =
     T_Lift g e c c' d (Lift_Ghost_Neutral g c w)
   in
   assert (st_comp_of_comp c' == st_comp_of_comp c);
   assert (ctag_of_comp_st c' == STT_Atomic);
-  assert (tm_emp_inames == C_STAtomic?.inames c');
+  assert (comp_inames c' == comp_inames c);
   (| c', d' |)
+#pop-options
 
 (* This matches the effects of the two branches, without
 necessarily matching inames. *)

@@ -79,7 +79,8 @@ let comp_typing_soundness (g:stt_env)
       let res_typing, pre_typing, post_typing = stc_soundness d_st in
       STT.stt_atomic_typing #(elab_observability obs) res_typing i_typing pre_typing post_typing
 
-    | CT_STGhost _ st d_st -> 
+    | CT_STGhost _ i st d_i d_st ->
+      let i_typing = tot_typing_soundness d_i in
       let res_typing, pre_typing, post_typing = stc_soundness d_st in
-      STT.stt_ghost_typing res_typing pre_typing post_typing
+      STT.stt_ghost_typing res_typing i_typing pre_typing post_typing
 #pop-options
