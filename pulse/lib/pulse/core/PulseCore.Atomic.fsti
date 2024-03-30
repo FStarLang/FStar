@@ -209,6 +209,15 @@ val sub_ghost
     (e:stt_ghost a opens pre1 post1)
 : stt_ghost a opens pre2 post2
 
+val sub_invs_stt_ghost
+    (#a:Type u#a)
+    (#opens1 #opens2:inames)
+    (#pre:slprop)
+    (#post:a -> slprop)
+    (e:stt_ghost a opens1 pre post)
+    (_ : squash (inames_subset opens1 opens2))
+: stt_ghost a opens2 pre post
+
 val noop (p:slprop)
 : stt_ghost unit emp_inames p (fun _ -> p)
 

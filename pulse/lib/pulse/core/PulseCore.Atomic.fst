@@ -230,6 +230,17 @@ let frame_ghost
 let sub_ghost pre2 post2 pf1 pf2 e
 = Ghost.hide (A.sub pre2 post2 e)
 
+let sub_invs_stt_ghost
+    (#a:Type u#a)
+    (#opens1 #opens2:inames)
+    (#pre:slprop)
+    (#post:a -> slprop)
+    (e:stt_ghost a opens1 pre post)
+    (_ : squash (inames_subset opens1 opens2))
+: stt_ghost a opens2 pre post
+= assert (Set.equal (Set.union opens1 opens2) opens2);
+  Ghost.hide (A.weaken #_ #_ #_ #_ #Ghost opens2 e)
+
 let noop (p:slprop)
 : stt_ghost unit emp_inames p (fun _ -> p)
 = Ghost.hide (A.return #_ #_ #(fun _ -> p) ())
