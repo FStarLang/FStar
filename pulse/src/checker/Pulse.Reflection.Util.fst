@@ -24,7 +24,8 @@ open FStar.List.Tot
 
 let u_two = RT.(u_succ (u_succ u_zero))
 let u_three = RT.(u_succ (u_succ (u_succ u_zero)))
-let u_atomic_ghost u = (RT.u_max u_three u)
+let u_four = RT.(u_succ (u_succ (u_succ (u_succ u_zero))))
+let u_atomic_ghost u = (RT.u_max u_four u)
 
 let pulse_lib_core = ["Pulse"; "Lib"; "Core"]
 let mk_pulse_lib_core_lid s = pulse_lib_core@[s]
