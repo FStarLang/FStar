@@ -142,6 +142,13 @@ let mem_inv (e:inames) (i:iname_ref) : GTot bool = S.mem (name_of_inv i) e
 
 val ( -~- ) (i:iname_ref) (p:slprop) : slprop
 
+let live (i:iname_ref) = exists* p. i -~- p
+
+let rec all_live (ctx:list iname_ref) =
+  match ctx with
+  | [] -> emp
+  | hd::tl -> live hd ** all_live tl
+
 val dup_inv (i:iname_ref) (p:slprop)
   : act unit Ghost emp_inames (i -~- p) (fun _ -> (i -~- p) ** (i -~- p))
 
@@ -154,7 +161,7 @@ let fresh_wrt (i:iname_ref)
 = forall i'. List.Tot.memP i' ctx ==> name_of_inv i' <> name_of_inv i
 
 val fresh_invariant (ctx:list iname_ref) (p:big_vprop)
-: act (i:iname_ref { i `fresh_wrt` ctx }) Ghost emp_inames p (fun i -> i -~- p)
+: act (i:iname_ref { i `fresh_wrt` ctx }) Ghost emp_inames (p ** all_live ctx) (fun i -> i -~- p)
 
 val with_invariant
     (#a:Type)

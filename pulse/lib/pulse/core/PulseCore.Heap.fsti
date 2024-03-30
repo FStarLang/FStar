@@ -564,14 +564,15 @@ val interp_pts_to (i:core_ref)
 : Lemma
   (requires interp (pts_to #a #pcm i v) h0)
   (ensures (
+    not (core_ref_is_null i) /\ (
     match select (core_ref_as_addr i) h0 with
     | None -> False
     | Some c ->
       let Ref a' pcm' _ v' = c in
       a == a' /\
       pcm == pcm' /\
-      compatible pcm v v'))
-      
+      compatible pcm v v')))
+
 (** [sel] respect [pts_to] *)
 val sel_lemma (#a:_) (#pcm:_) (r:ref a pcm) (m:full_hheap (ptr r))
   : Lemma (interp (pts_to r (sel r m)) m)

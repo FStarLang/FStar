@@ -385,6 +385,12 @@ let small_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
     (ensures is_small (h_exists p))
 = admit()
 
+let h_exists_equiv (#a:Type) (p q : a -> slprop)
+: Lemma
+    (requires (forall x. p x `equiv` q x))
+    (ensures (h_exists p == h_exists q))
+= slprop_extensionality (h_exists p) (h_exists q)
+
 val affine_star (p q:slprop) (m:mem)
   : Lemma ((interp (p `star` q) m ==> interp p m /\ interp q m))
 
@@ -1132,7 +1138,8 @@ let elim_inv e (i:iname_ref) (p:slprop { is_big p }) (m:mem)
 : Lemma
   (requires interp (i -~- p) m /\ interp (mem_invariant e m) m)
   (ensures iname_for_p (name_of_inv i) p m.iheap.invariants /\
-           m.iname_ctr >= name_of_inv i)
+           m.iname_ctr >= name_of_inv i /\
+           not (H0.core_ref_is_null i))
 = assert (interp (pure (heap_ctr_valid m.ctr m.ghost_ctr m.iname_ctr m.iheap)) m);
   assert (H0.interp (H0.pts_to #_ #(PA.pcm_agreement #(H2.slprop u#a)) i (Some (down p))) m.iheap.invariants);
   H0.interp_pts_to i #_ #(PA.pcm_agreement #(H2.slprop u#a)) (Some (down p)) m.iheap.invariants;
@@ -1225,8 +1232,6 @@ let distinct_invariants_have_distinct_names
     elim_inv e j q m0;
     ((), m0)
 
-
-
 let invariant_name_identifies_invariant
       (e:inames)
       (p q:big_vprop u#m)
@@ -1235,11 +1240,18 @@ let invariant_name_identifies_invariant
 : pst_ghost_action_except (squash (p == q /\ i == j)) e
    ((i -~- p) `star` (j -~- q))
    (fun _ -> (i -~- p) `star` (j -~- q))
-= admit()
+= fun frame m0 ->
+    elim_star_pqrs (i -~- p) (j -~- q) frame (mem_invariant e m0) m0;
+    elim_inv e i p m0;
+    elim_inv e j q m0;
+    let open H0 in
+    addr_core_ref_injective_2 i;
+    addr_core_ref_injective_2 j;    
+    ((), m0)
 
 let fresh_invariant (e:inames) (p:slprop u#m) (ctx:list iname_ref)
 : pst_ghost_action_except (i:iname_ref { fresh_wrt ctx i }) e
-       p
+       (p `star` all_live ctx)
        (fun i -> i -~- p)
 = admit()
 

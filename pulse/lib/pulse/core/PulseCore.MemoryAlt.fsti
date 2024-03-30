@@ -165,6 +165,11 @@ val small_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
     (requires forall x. is_small (p x))
     (ensures is_small (h_exists p))
 
+val h_exists_equiv (#a:Type) (p q : a -> slprop)
+: Lemma
+    (requires (forall x. p x `equiv` q x))
+    (ensures (h_exists p == h_exists q))
+
 (**** Memory invariants *)
 
 (** Invariants have a name *)
@@ -306,7 +311,7 @@ let fresh_wrt (ctx:list iname_ref)
 
 val fresh_invariant (e:inames) (p:big_vprop u#m) (ctx:list iname_ref)
   : pst_ghost_action_except (i:iname_ref { fresh_wrt ctx i }) e
-       p
+       (p `star` all_live ctx)
        (fun i -> i -~- p)
 
 

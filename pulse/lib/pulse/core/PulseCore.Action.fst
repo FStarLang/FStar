@@ -367,7 +367,35 @@ let ( -~- ) i p = ( -~- ) i p
 let dup_inv (i:iname_ref) (p:slprop) =
   fun #ictx -> dup_inv ictx i p
 let new_invariant p = fun #ictx -> new_invariant ictx p
-let fresh_invariant ctx p = fun #ictx -> fresh_invariant ictx p ctx
+
+let exists_equiv (#a:_) (#p:a -> slprop)
+  : squash (op_exists_Star p == (exists* x. p x))
+  = let pf = I.slprop_equiv_exists p (fun x -> p x) () in
+    let pf = FStar.Squash.return_squash pf in
+    I.slprop_equiv_elim (op_exists_Star p) (exists* x. p x)
+ 
+module T = FStar.Tactics
+let live_eq (i:iname_ref)
+: Lemma (live i == Mem.live i)
+= calc (==) {
+    live i;
+  (==) { exists_equiv #_ #(fun (p:slprop) -> i -~- p) }
+    op_exists_Star #slprop (fun p -> i -~- p);
+  (==) { _ by (T.trefl ()) }
+    Mem.h_exists (F.on_dom slprop (fun p -> i -~- p));
+  (==) { _ by (T.mapply (`Mem.h_exists_equiv)) }
+    Mem.h_exists (fun p -> i -~- p);
+  (==) { _ by (T.trefl ()) }
+    Mem.live i;
+  }
+let rec all_live_eq (ctx:list iname_ref)
+: Lemma (all_live ctx == Mem.all_live ctx)
+= match ctx with
+  | [] -> ()
+  | hd::tl ->
+    live_eq hd;
+    all_live_eq tl
+let fresh_invariant ctx p = fun #ictx -> all_live_eq ctx; fresh_invariant ictx p ctx
 let with_invariant #a #r #fp #fp' #f_opens #p i f =
   fun #ictx ->
   let f : act a r f_opens (p `star` fp) (fun x -> p `star` fp' x) = f () in
@@ -536,11 +564,6 @@ let elim_pure (p:prop)
 // exists*
 ///////////////////////////////////////////////////////////////////
 module F = FStar.FunctionalExtensionality
-let exists_equiv (#a:_) (#p:a -> slprop)
-  : squash (op_exists_Star p == (exists* x. p x))
-  = let pf = I.slprop_equiv_exists p (fun x -> p x) () in
-    let pf = FStar.Squash.return_squash pf in
-    I.slprop_equiv_elim (op_exists_Star p) (exists* x. p x)
 
 let thunk (p:slprop) = fun (_:unit) -> p
 
