@@ -20,6 +20,7 @@ include Pulse.Lib.Core
 include Pulse.Lib.Forall
 include Pulse.Lib.Array
 include Pulse.Lib.Reference
+include Pulse.Lib.Primitives // TODO: what if we want to support several architectures?
 include PulseCore.FractionalPermission
 include PulseCore.Observability
 include FStar.Ghost

@@ -45,11 +45,10 @@ let recheck (#g:env) (#e:term) (#ty: typ) () : T.Tac (tot_typing g e ty) =
   core_check_tot_term g e ty
 
 let term_remove_inv (inv:vprop) (tm:term) : T.Tac (tm':term { tm_star tm' inv == tm}) =
-  match tm.t with
+  match inspect_term tm with
   | Tm_Star tm inv' ->
     if eq_tm inv inv' then tm
     else T.fail "term_remove_inv"
-
   | _ ->
     T.fail "term_remove_inv: not a star?"
 
@@ -81,25 +80,25 @@ let check_iname_disjoint (g:env) (r:range) (inv_p inames inv:term)
 #push-options "--ifuel 2 --fuel 8"
 let remove_iname (inv_p inames inv:term)
 : term
-= tm_fstar 
+= wr 
     (Pulse.Reflection.Util.remove_inv_tm
       (elab_term inv_p)
       (elab_term inames)
       (elab_term inv))
-  inames.range
+  (Pulse.RuntimeUtils.range_of_term inames)
 let add_iname (inv_p inames inv:term)
 : term
-= tm_fstar 
+= wr 
     (Pulse.Reflection.Util.add_inv_tm
       (elab_term inv_p)
       (elab_term inames)
       (elab_term inv))
-  inames.range
+  (Pulse.RuntimeUtils.range_of_term inames)
 #pop-options
 
 module RU = Pulse.RuntimeUtils
 let all_inames =
-  tm_fstar Pulse.Reflection.Util.all_inames_tm FStar.Range.range_0
+  wr Pulse.Reflection.Util.all_inames_tm FStar.Range.range_0
 let all_inames_typing (g:env)
 : tot_typing g all_inames tm_inames
 = RU.magic()
@@ -172,7 +171,19 @@ let add_remove_inverse (g:env)
       
   | Some tok -> tok
 
-#push-options "--z3rlimit_factor 4 --split_queries no"
+module R = FStar.Reflection.V2
+
+#push-options "--warn_error -271"
+let tm_star_inj (p1 p2 q:term)
+  : Lemma (requires tm_star p1 q == tm_star p2 q)
+          (ensures p1 == p2) =
+  let aux tv
+    : Lemma (ensures R.inspect_ln (R.pack_ln tv) == tv)
+            [SMTPat ()] = R.inspect_pack_inv tv in
+  ()
+#pop-options
+
+#push-options "--z3rlimit_factor 8 --split_queries no"
 let check
   (g:env)
   (pre:term)
@@ -207,7 +218,7 @@ let check
     (* Checking the body seems to change its range, so store the original one
     for better errors. *)
     let body_range = body.range in
-    let inv_tm_range = inv_tm.range in
+    let inv_tm_range = Pulse.RuntimeUtils.range_of_term inv_tm in
 
     // info_doc g (Some t.range) [
     //   let open Pulse.PP in
@@ -220,29 +231,31 @@ let check
     let (| inv_tm, eff, inv_tm_ty, inv_tm_typing |) = compute_term_type g inv_tm in
 
     if eff <> T.E_Total then
-      fail g (Some inv_tm.range) "Ghost effect on inv?";
+      fail g (Some inv_tm_range) "Ghost effect on inv?";
 
     (* Check the term without an expected type, and check that it's Tm_Inv p *)
     let inv_p =
-      match inv_tm_ty.t with
+      match inspect_term inv_tm_ty with
       | Tm_Inv p -> p
-      | Tm_FStar _ -> begin
+      | Tm_FStar _ ->
+        fail g (Some inv_tm_range)
+          (Printf.sprintf "Does not have invariant type (%s)" (P.term_to_string inv_tm_ty))
+
+      | _ -> begin
         (* FIXME: should unrefine... meh *)
         let ropt = Pulse.Syntax.Pure.is_fvar_app inv_tm_ty in
         match ropt with
         | Some (lid, _, _, Some tm) -> 
           if lid = ["Pulse"; "Lib"; "Core"; "inv" ]
           then tm
-          else fail g (Some inv_tm.range)
+          else fail g (Some inv_tm_range)
                     (Printf.sprintf "Does not have invariant type (%s)" (P.term_to_string inv_tm_ty))
-        | _ -> fail g (Some inv_tm.range)
+        | _ -> fail g (Some inv_tm_range)
                     (Printf.sprintf "Does not have invariant type (%s)" (P.term_to_string inv_tm_ty))
       end
-      | _ -> fail g (Some inv_tm.range)
-                  (Printf.sprintf "Does not have invariant type (%s)" (P.term_to_string inv_tm_ty))
     in
     
-    (* FIXME: This is bogus for the Tm_FStar case!!! *)
+    (* FIXME: This is bogus for the wr case!!! *)
     assume (tm_inv inv_p == inv_tm_ty);
 
     (* Can this come from some inversion instead? *)
@@ -301,6 +314,9 @@ let check
     let C_STAtomic inames obs st = c_body in
     assert (inames == opens_remove_i);
     let c_out = C_STAtomic inames obs (st_comp_remove_inv inv_p st) in
+    assert (tm_star (comp_pre c_out) inv_p == pre');
+    tm_star_inj (comp_pre c_out) pre inv_p;
+    assert (comp_pre c_out == pre);
     assert (add_inv c_out inv_p == c_body);
     let tok = disjointness_remove_i_i g inv_p opens inv_tm in
     let tm : st_term =
@@ -311,6 +327,7 @@ let check
       
     let d = T_WithInv g inv_tm inv_p inv_p_typing inv_tm_typing body c_out body_typing tok in
     let c_out = add_iname_at_least_unobservable c_out inv_p inv_tm in
+    let d : st_typing _ _ c_out = d in
     match post.effect_annot with
     | EffectAnnotAtomic _ -> 
       let C_STAtomic add_inv obs' st = c_out in
@@ -320,7 +337,9 @@ let check
             opens_typing
             inv_tm_typing
       in
-      let d = T_Sub _ _ _ _ d (STS_AtomicInvs _ st _ _ obs' obs' tok) in
+      let c_out = C_STAtomic opens obs' st in
+      let d : st_typing _ _ c_out =
+        T_Sub _ _ _ _ d (STS_AtomicInvs _ st add_inv opens obs' obs' tok) in
       checker_result_for_st_typing (| tm, _, d |) res_ppname
     | EffectAnnotSTT ->
       let d = T_Lift _ _ _ _ d (Lift_STAtomic_ST _ c_out) in

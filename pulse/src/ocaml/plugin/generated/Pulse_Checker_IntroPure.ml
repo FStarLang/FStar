@@ -35,13 +35,13 @@ let (check_prop :
                             (Prims.of_int (41)) (Prims.of_int (30)))))
                    (Obj.magic
                       (Pulse_Checker_Pure.check_vprop g
-                         (Pulse_Syntax_Base.tm_pure p)))
+                         (Pulse_Syntax_Pure.tm_pure p)))
                    (fun uu___ ->
                       (fun uu___ ->
                          match uu___ with
                          | Prims.Mkdtuple2 (p1, p_typing) ->
-                             (match p1.Pulse_Syntax_Base.t with
-                              | Pulse_Syntax_Base.Tm_Pure pp ->
+                             (match Pulse_Syntax_Pure.inspect_term p1 with
+                              | Pulse_Syntax_Pure.Tm_Pure pp ->
                                   Obj.magic
                                     (Obj.repr
                                        (FStar_Tactics_Effect.lift_div_tac
@@ -131,7 +131,7 @@ let (check_prop :
                                                                  (Obj.magic
                                                                     (
                                                                     Pulse_Syntax_Printer.term_to_string
-                                                                    (Pulse_Syntax_Base.tm_pure
+                                                                    (Pulse_Syntax_Pure.tm_pure
                                                                     p0)))
                                                                  (fun uu___3
                                                                     ->
@@ -199,7 +199,7 @@ let (check :
                 (FStar_Tactics_Effect.lift_div_tac
                    (fun uu___ ->
                       Pulse_Typing_Env.push_context g "check_intro_pure"
-                        t.Pulse_Syntax_Base.range2))
+                        t.Pulse_Syntax_Base.range1))
                 (fun uu___ ->
                    (fun g1 ->
                       Obj.magic
@@ -373,7 +373,7 @@ let (check :
                                                                     g pre
                                                                     uu___2
                                                                     post_hint
-                                                                    t.Pulse_Syntax_Base.range2))
+                                                                    t.Pulse_Syntax_Base.range1))
                                                                     uu___2)))
                                                                     uu___2)))
                                                               uu___2)))

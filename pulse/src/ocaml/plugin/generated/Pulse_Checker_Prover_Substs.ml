@@ -12,7 +12,7 @@ let (remove_map :
   fun m ->
     fun x ->
       FStar_Map.restrict (FStar_Set.complement (FStar_Set.singleton x))
-        (FStar_Map.upd m x Pulse_Syntax_Base.tm_unknown)
+        (FStar_Map.upd m x Pulse_Syntax_Pure.tm_unknown)
 type ('l, 'm) is_dom = Obj.t
 type ss_t = {
   l: ss_dom ;
@@ -38,7 +38,7 @@ let (empty : ss_t) =
   {
     l = [];
     m =
-      (FStar_Map.const_on (FStar_Set.empty ()) Pulse_Syntax_Base.tm_unknown)
+      (FStar_Map.const_on (FStar_Set.empty ()) Pulse_Syntax_Pure.tm_unknown)
   }
 let (push : ss_t -> Pulse_Syntax_Base.var -> Pulse_Syntax_Base.term -> ss_t)
   =

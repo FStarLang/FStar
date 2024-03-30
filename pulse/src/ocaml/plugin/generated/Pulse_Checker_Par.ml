@@ -31,7 +31,7 @@ let (check :
                   (FStar_Tactics_Effect.lift_div_tac
                      (fun uu___ ->
                         Pulse_Checker_Pure.push_context "check_par"
-                          t.Pulse_Syntax_Base.range2 g))
+                          t.Pulse_Syntax_Base.range1 g))
                   (fun uu___ ->
                      (fun g1 ->
                         Obj.magic
@@ -83,7 +83,7 @@ let (check :
                                             (Obj.magic
                                                (Pulse_Checker_Pure.check_tot_term
                                                   g1 preL
-                                                  Pulse_Syntax_Base.tm_vprop))
+                                                  Pulse_Syntax_Pure.tm_vprop))
                                             (fun uu___1 ->
                                                (fun uu___1 ->
                                                   match uu___1 with
@@ -110,7 +110,7 @@ let (check :
                                                            (Obj.magic
                                                               (Pulse_Checker_Pure.check_tot_term
                                                                  g1 preR
-                                                                 Pulse_Syntax_Base.tm_vprop))
+                                                                 Pulse_Syntax_Pure.tm_vprop))
                                                            (fun uu___2 ->
                                                               (fun uu___2 ->
                                                                  match uu___2
@@ -514,26 +514,26 @@ let (check :
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Base.match_comp_res_with_post_hint
                                                                     g1
-                                                                    (Pulse_Typing.wr
+                                                                    (Pulse_Typing.wrst
                                                                     cL
                                                                     (Pulse_Syntax_Base.Tm_Par
                                                                     {
                                                                     Pulse_Syntax_Base.pre1
                                                                     =
-                                                                    Pulse_Syntax_Base.tm_unknown;
+                                                                    Pulse_Syntax_Pure.tm_unknown;
                                                                     Pulse_Syntax_Base.body11
                                                                     = eL1;
                                                                     Pulse_Syntax_Base.post11
                                                                     =
-                                                                    Pulse_Syntax_Base.tm_unknown;
+                                                                    Pulse_Syntax_Pure.tm_unknown;
                                                                     Pulse_Syntax_Base.pre2
                                                                     =
-                                                                    Pulse_Syntax_Base.tm_unknown;
+                                                                    Pulse_Syntax_Pure.tm_unknown;
                                                                     Pulse_Syntax_Base.body21
                                                                     = eR1;
                                                                     Pulse_Syntax_Base.post2
                                                                     =
-                                                                    Pulse_Syntax_Base.tm_unknown
+                                                                    Pulse_Syntax_Pure.tm_unknown
                                                                     }))
                                                                     (Pulse_Typing.comp_par
                                                                     cL cR x)
@@ -558,7 +558,7 @@ let (check :
                                                                     g pre
                                                                     uu___5
                                                                     post_hint
-                                                                    t.Pulse_Syntax_Base.range2))
+                                                                    t.Pulse_Syntax_Base.range1))
                                                                     uu___5)))
                                                                     uu___5)))
                                                                     uu___5)))

@@ -302,7 +302,7 @@ let (check :
                                                                     Prims.op_Negation
                                                                     (Pulse_Syntax_Base.eq_tm
                                                                     ty
-                                                                    Pulse_Syntax_Base.tm_vprop)
+                                                                    Pulse_Syntax_Pure.tm_vprop)
                                                                     then
                                                                     Obj.magic
                                                                     (Obj.repr
@@ -457,7 +457,7 @@ let (check :
                                                            Prims.op_Negation
                                                              (Pulse_Syntax_Base.eq_tm
                                                                 ty
-                                                                Pulse_Syntax_Base.tm_inames)
+                                                                Pulse_Syntax_Pure.tm_inames)
                                                          then
                                                            Obj.magic
                                                              (Obj.repr
@@ -498,7 +498,7 @@ let (check :
                                                                     (Prims.of_int (88)))))
                                                                     (Obj.magic
                                                                     (Pulse_Syntax_Printer.term_to_string
-                                                                    Pulse_Syntax_Base.tm_inames))
+                                                                    Pulse_Syntax_Pure.tm_inames))
                                                                     (fun
                                                                     uu___1 ->
                                                                     (fun

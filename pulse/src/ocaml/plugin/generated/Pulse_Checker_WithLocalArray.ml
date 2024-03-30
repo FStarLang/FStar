@@ -42,7 +42,7 @@ let (extend_post_hint :
                                 (Prims.of_int (44)) (Prims.of_int (5)))))
                        (FStar_Tactics_Effect.lift_div_tac
                           (fun uu___ ->
-                             Pulse_Syntax_Base.tm_exists_sl
+                             Pulse_Syntax_Pure.tm_exists_sl
                                Pulse_Syntax_Pure.u0
                                (Pulse_Syntax_Base.as_binder
                                   (Pulse_Typing.mk_seq Pulse_Syntax_Pure.u0
@@ -98,7 +98,7 @@ let (extend_post_hint :
                                                 (Pulse_Checker_Pure.core_check_term
                                                    g' conjunct
                                                    FStar_TypeChecker_Core.E_Total
-                                                   Pulse_Syntax_Base.tm_vprop))
+                                                   Pulse_Syntax_Pure.tm_vprop))
                                              (fun uu___ ->
                                                 (fun c_typing ->
                                                    Obj.magic
@@ -154,7 +154,7 @@ let (head_range : Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.range) =
           Pulse_Syntax_Base.initializer2 = initializer1;
           Pulse_Syntax_Base.length = uu___2;
           Pulse_Syntax_Base.body5 = uu___3;_}
-        -> initializer1.Pulse_Syntax_Base.range1
+        -> Pulse_RuntimeUtils.range_of_term initializer1
 let (check :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
@@ -224,7 +224,7 @@ let (check :
                          (fun uu___ ->
                             Pulse_Checker_Pure.push_context
                               "check_withlocal_array"
-                              t.Pulse_Syntax_Base.range2 g))
+                              t.Pulse_Syntax_Base.range1 g))
                       (fun uu___ ->
                          (fun g1 ->
                             Obj.magic
@@ -301,9 +301,10 @@ let (check :
                                                             binder.Pulse_Syntax_Base.binder_ty))
                                                       (fun uu___1 ->
                                                          (fun ty ->
-                                                            match ty.Pulse_Syntax_Base.t
+                                                            match Pulse_Syntax_Pure.inspect_term
+                                                                    ty
                                                             with
-                                                            | Pulse_Syntax_Base.Tm_Unknown
+                                                            | Pulse_Syntax_Pure.Tm_Unknown
                                                                 ->
                                                                 Obj.magic
                                                                   (Pulse_Checker_Pure.compute_tot_term_type_and_u
@@ -372,7 +373,8 @@ let (check :
                                                                     (Pulse_Typing_Env.fail
                                                                     g1
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (ty.Pulse_Syntax_Base.range1))
+                                                                    (Pulse_RuntimeUtils.range_of_term
+                                                                    ty))
                                                                     uu___2))
                                                                     uu___2))
                                                                  | FStar_Pervasives_Native.Some
@@ -706,7 +708,7 @@ let (check :
                                                                     (Pulse_Typing_Env.fail
                                                                     g1
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (body.Pulse_Syntax_Base.range2))
+                                                                    (body.Pulse_Syntax_Base.range1))
                                                                     uu___4))
                                                                     uu___4))
                                                                     else
@@ -1126,7 +1128,7 @@ let (check :
                                                                     g pre
                                                                     post_hint
                                                                     (FStar_Pervasives.Mkdtuple3
-                                                                    ((Pulse_Typing.wr
+                                                                    ((Pulse_Typing.wrst
                                                                     c
                                                                     (Pulse_Syntax_Base.Tm_WithLocalArray
                                                                     {

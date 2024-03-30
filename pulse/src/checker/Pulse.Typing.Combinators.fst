@@ -22,6 +22,8 @@ module L = FStar.List.Tot
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 
+module RU = Pulse.RuntimeUtils
+
 module Metatheory = Pulse.Typing.Metatheory.Base
 
 open FStar.List.Tot
@@ -227,7 +229,7 @@ let lift_ghost_atomic (#g:env) (#e:st_term) (#c:comp_st { C_STGhost? c }) (d:st_
   | None -> 
     let open Pulse.PP in
     let t = comp_res c in
-    fail_doc g (Some t.range) [
+    fail_doc g (Some (RU.range_of_term t)) [
         text "Expected a term with a non-informative (e.g., erased) type; got"
           ^/^ pp t
     ]

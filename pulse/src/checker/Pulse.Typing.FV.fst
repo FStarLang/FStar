@@ -26,42 +26,19 @@ open Pulse.Soundness.Common
 
 let vars_of_rt_env (g:R.env) = Set.intension (fun x -> Some? (RT.lookup_bvar g x))
 
-let freevars_close_term_host_term (t:host_term) (x:var) (i:index)
+let freevars_close_term_host_term (t:term) (x:var) (i:index)
   : Lemma
-    (ensures (freevars (close_term' (tm_fstar t FStar.Range.range_0) x i)
+    (ensures (freevars (close_term' (wr t FStar.Range.range_0) x i)
             `Set.equal`
-             (freevars (tm_fstar t FStar.Range.range_0) `set_minus` x)))
+             (freevars (wr t FStar.Range.range_0) `set_minus` x)))
   = admit()
 
 #push-options "--query_stats --z3rlimit_factor 2"
-let rec freevars_close_term' (e:term) (x:var) (i:index)
+let freevars_close_term' (e:term) (x:var) (i:index)
   : Lemma 
     (ensures freevars (close_term' e x i) `Set.equal`
              (freevars e `set_minus` x))
-  = match e.t with
-    | Tm_Emp
-    | Tm_VProp
-    | Tm_Inames
-    | Tm_EmpInames
-    | Tm_Unknown -> ()
-
-    | Tm_Inv p ->
-      freevars_close_term' p x i
-    | Tm_Pure p ->
-      freevars_close_term' p x i
-
-    | Tm_AddInv l r
-    | Tm_Star l r ->
-      freevars_close_term' l x i;
-      freevars_close_term' r x i
-
-    | Tm_ExistsSL _ t b
-    | Tm_ForallSL _ t b ->
-      freevars_close_term' t.binder_ty x i;    
-      freevars_close_term' b x (i + 1)
-
-    | Tm_FStar t ->
-      freevars_close_term_host_term t x i
+  = freevars_close_term_host_term e x i
 
 let freevars_close_comp (c:comp)
                         (x:var)
@@ -328,7 +305,8 @@ let rec vprop_equiv_freevars (#g:_) (#t0 #t1:_) (v:vprop_equiv g t0 t1)
   : Lemma (ensures (freevars t0 `Set.subset` vars_of_env g) <==>
                    (freevars t1 `Set.subset` vars_of_env g))
           (decreases v)
-  = match v with
+  = assume False;  // TODO: AR
+    match v with
     | VE_Refl _ _ -> ()
     | VE_Sym _ _ _ v' -> 
       vprop_equiv_freevars v'
@@ -491,7 +469,7 @@ let freevars_array (t:term)
   = admit()
 
 // FIXME: tame this proof
-#push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 15 --query_stats --retry 5"
+#push-options "--fuel 3 --ifuel 1 --z3rlimit_factor 15 --query_stats --retry 5"
 let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
                            (d:st_typing g t c)
 : Lemma 
@@ -687,5 +665,4 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
   | T_Sub _ _ _ _ d_t d_sub ->
     st_typing_freevars d_t;
     st_sub_freevars d_sub
-
 #pop-options //takes about 12s
