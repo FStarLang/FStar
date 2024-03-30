@@ -117,13 +117,13 @@ let (lift_ghost_to_atomic :
                                                       (fun uu___2 ->
                                                          Prims.Mkdtuple2
                                                            ((Pulse_Syntax_Base.C_STAtomic
-                                                               (Pulse_Syntax_Base.tm_emp_inames,
+                                                               (Pulse_Syntax_Pure.tm_emp_inames,
                                                                  Pulse_Syntax_Base.Neutral,
                                                                  c_st)),
                                                              (Pulse_Typing.T_Lift
                                                                 (g, e, c,
                                                                   (Pulse_Syntax_Base.C_STAtomic
-                                                                    (Pulse_Syntax_Base.tm_emp_inames,
+                                                                    (Pulse_Syntax_Pure.tm_emp_inames,
                                                                     Pulse_Syntax_Base.Neutral,
                                                                     c_st)),
                                                                   d,

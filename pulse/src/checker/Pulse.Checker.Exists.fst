@@ -40,6 +40,7 @@ let terms_to_string (t:list term)
   : T.Tac string 
   = String.concat "\n" (T.map Pulse.Syntax.Printer.term_to_string t)
 
+#push-options "--z3rlimit_factor 2 --fuel 0 --ifuel 1"
 let check_elim_exists
   (g:env)
   (pre:term)
@@ -52,18 +53,21 @@ let check_elim_exists
   let g = Pulse.Typing.Env.push_context g "check_elim_exists" t.range in
 
   let Tm_ElimExists { p = t } = t.term in
+  let t_rng = Pulse.RuntimeUtils.range_of_term t in
   let (| t, t_typing |) : (t:term & tot_typing g t tm_vprop ) = 
-    match t.t with
+    match inspect_term t with
     | Tm_Unknown -> (
       //There should be exactly one exists_ vprop in the context and we eliminate it      
       let ts = vprop_as_list pre in
-      let exist_tms = List.Tot.Base.filter #term (function | {t = Tm_ExistsSL _ _ _ } -> true | _ -> false) ts in
+      let exist_tms = List.Tot.Base.filter #term (fun t -> match inspect_term t with
+                                                           | Tm_ExistsSL _ _ _ -> true
+                                                           | _ -> false) ts in
       match exist_tms with
       | [one] -> 
         assume (one `List.Tot.memP` ts);
         (| one, vprop_as_list_typing pre_typing one |) //shouldn't need to check this again
       | _ -> 
-        fail g (Some t.range)
+        fail g (Some t_rng)
           (Printf.sprintf "Could not decide which exists term to eliminate: choices are\n%s"
              (terms_to_string exist_tms))
       )
@@ -72,22 +76,25 @@ let check_elim_exists
       check_vprop g t
   in
 
-  if not (Tm_ExistsSL? t.t)
-  then fail g (Some t.range)
+  let tv = inspect_term t in
+  if not (Tm_ExistsSL? tv)
+  then fail g (Some t_rng)
          (Printf.sprintf "check_elim_exists: elim_exists argument %s not an existential"
             (P.term_to_string t));
 
-  let Tm_ExistsSL u { binder_ty=ty } p = t.t in
+  let Tm_ExistsSL u { binder_ty=ty } p = tv in
 
   let (| u', ty_typing |) = check_universe g ty in
   if eq_univ u u'
   then let x = fresh g in
        let d = T_ElimExists g u ty p x ty_typing t_typing in
-       prove_post_hint (try_frame_pre pre_typing (match_comp_res_with_post_hint d post_hint) res_ppname) post_hint t.range
-  else fail g (Some t.range)
+       prove_post_hint (try_frame_pre pre_typing (match_comp_res_with_post_hint d post_hint) res_ppname) post_hint t_rng
+  else fail g (Some t_rng)
          (Printf.sprintf "check_elim_exists: universe checking failed, computed %s, expected %s"
             (P.univ_to_string u') (P.univ_to_string u))
+#pop-options
 
+#push-options "--z3rlimit_factor 2 --fuel 2 --ifuel 1"
 let check_intro_exists
   (g:env)
   (pre:term)
@@ -107,12 +114,13 @@ let check_intro_exists
     | _ -> check_vprop g t
   in
 
-  if not (Tm_ExistsSL? (t <: term).t)
+  let tv = inspect_term t in
+  if not (Tm_ExistsSL? tv)
   then fail g (Some st.range)
          (Printf.sprintf "check_intro_exists_non_erased: vprop %s is not an existential"
             (P.term_to_string t));
 
-  let Tm_ExistsSL u b p = (t <: term).t in
+  let Tm_ExistsSL u b p = tv in
 
   Pulse.Typing.FV.tot_typing_freevars t_typing;
   let ty_typing, _ = Metatheory.tm_exists_inversion #g #u #b.binder_ty #p t_typing (fresh g) in
@@ -120,4 +128,7 @@ let check_intro_exists
     check_term g witness T.E_Ghost b.binder_ty in
   let d = T_IntroExists g u b p witness ty_typing t_typing witness_typing in
   let (| c, d |) : (c:_ & st_typing g _ c) = (| _, d |) in
-  prove_post_hint (try_frame_pre pre_typing (match_comp_res_with_post_hint d post_hint) res_ppname) post_hint (t <: term).range
+  prove_post_hint (try_frame_pre pre_typing (match_comp_res_with_post_hint d post_hint) res_ppname)
+                  post_hint
+                  (Pulse.RuntimeUtils.range_of_term t)
+#pop-options

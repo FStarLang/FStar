@@ -21,10 +21,13 @@ module R = FStar.Reflection.V2
 open Pulse.Reflection.Util
 open FStar.List.Tot
 open Pulse.Syntax
+
 module L = FStar.List.Tot
 module FTB = FStar.Tactics.V2
+module S = Pulse.Syntax
 module RU = Pulse.RuntimeUtils
 module T= FStar.Tactics.V2
+
 include Pulse.Typing.Env
 
 let debug_log (level:string)  (g:env) (f: unit -> T.Tac string) : T.Tac unit =
@@ -39,7 +42,7 @@ let tm_szt  = tm_fvar (as_fv szt_lid)
 let tm_true = tm_constant R.C_True
 let tm_false = tm_constant R.C_False
 
-let tm_prop = with_range (Tm_FStar FStar.Reflection.Typing.tm_prop) Range.range_0
+let tm_prop = RU.set_range FStar.Reflection.Typing.tm_prop Range.range_0
 
 let mk_erased (u:universe) (t:term) : term =
   let hd = tm_uinst (as_fv erased_lid) [u] in
@@ -100,6 +103,7 @@ let comp_return (c:ctag) (use_eq:bool) (u:universe) (t:term) (e:term) (post:term
       { u; res = t; pre = open_term' post e 0; post = post_maybe_eq }
   | STT_Ghost ->
     C_STGhost
+      tm_emp_inames
       { u; res = t; pre = open_term' post e 0; post = post_maybe_eq }
 
 
@@ -224,7 +228,7 @@ let add_frame (s:comp_st) (frame:term)
     match s with
     | C_ST s -> C_ST (add_frame_s s)
     | C_STAtomic inames obs s -> C_STAtomic inames obs (add_frame_s s)
-    | C_STGhost s -> C_STGhost (add_frame_s s)
+    | C_STGhost inames s -> C_STGhost inames (add_frame_s s)
 
 let add_inv (s:comp_st) (v:vprop)
   : comp_st
@@ -236,27 +240,23 @@ let at_most_one_observable o1 o2 =
   | _ -> true
 
 let join_obs (o1 o2:observability) : observability =
-  match o1, o2 with
-  | Neutral, o
-  | o, Neutral -> o
-  | Observable, _ -> Observable
-  | _, Observable -> Observable
-  | Unobservable, Unobservable -> Unobservable
+  if o1 = o2 then o1
+  else Observable
 
 let add_iname_at_least_unobservable (s:comp_st {C_STAtomic? s}) (inv_vprop inv_tm:term) =
-  let add_inv_tm (inames:term) = 
-    tm_fstar (Pulse.Reflection.Util.add_inv_tm (elab_term inv_vprop) (elab_term inames) (elab_term inv_tm))
-              inames.range
-  in
-  let C_STAtomic inames obs s = s in
-  C_STAtomic (add_inv_tm inames) (join_obs obs Unobservable) s
- 
+  admit ()  // TODO: FIX INV
+  // let add_inv_tm (inames:term) = 
+  //   wr (Pulse.Reflection.Util.add_inv_tm (elab_term inv_vprop) (elab_term inames) (elab_term inv_tm))
+  //      (RU.range_of_term inames)
+  // in
+  // let C_STAtomic inames obs s = s in
+  // C_STAtomic (add_inv_tm inames) (join_obs obs Unobservable) s
 
 let bind_comp_compatible (c1 c2:comp_st)
   : prop
   = match c1, c2 with
-    | C_ST _, C_ST _
-    | C_STGhost _, C_STGhost _ -> True
+    | C_ST _, C_ST _ -> True
+    | C_STGhost inames1 _, C_STGhost inames2 _ -> inames1 == inames2
     | C_STAtomic inames1 obs1 _, C_STAtomic inames2 obs2 _ ->
       inames1 == inames2 /\ at_most_one_observable obs1 obs2
     | _, _ -> False
@@ -272,7 +272,7 @@ let bind_comp_out (c1:comp_st) (c2:comp_st{bind_comp_compatible c1 c2})
   : comp_st
   = let s : st_comp = {u=comp_u c2; res=comp_res c2; pre=comp_pre c1; post=comp_post c2} in
     match c1, c2 with
-    | C_STGhost _, C_STGhost _ -> C_STGhost s
+    | C_STGhost inames _, C_STGhost _ _ -> C_STGhost inames s
     | C_STAtomic inames obs1 _, C_STAtomic _ obs2 _ ->
       C_STAtomic inames (join_obs obs1 obs2) s
     | C_ST _, C_ST _ -> C_ST s
@@ -284,8 +284,7 @@ let st_equiv_pre (c1 c2:comp_st)
     | C_ST _, C_ST _ -> True
     | C_STAtomic inames1 obs1 _, C_STAtomic inames2 obs2 _ ->
       inames1 == inames2 /\ obs1 == obs2
-    | C_STGhost _, C_STGhost  _ ->
-      True
+    | C_STGhost inames1 _, C_STGhost inames2 _ -> inames1 == inames2
     | _, _ -> False)
 
 let non_informative_class (u:universe) (t:term)
@@ -302,40 +301,44 @@ let elim_exists_post (u:universe) (t:term) (p:term) (x:nvar)
 
 let comp_elim_exists (u:universe) (t:term) (p:term) (x:nvar)
   : comp
-  = C_STGhost {
-                u=u;
-                res=mk_erased u t;
-                pre=tm_exists_sl u (as_binder t) p;
-                post=elim_exists_post u t p x
-              }
+  = C_STGhost emp_inames_tm
+      {
+        u=u;
+        res=mk_erased u t;
+        pre=tm_exists_sl u (as_binder t) p;
+        post=elim_exists_post u t p x
+      }
 
 let comp_intro_pure (p:term) =
-  C_STGhost {
-              u=u_zero;
-              res=tm_unit;
-              pre=tm_emp;
-              post=tm_pure p
-            }
+  C_STGhost emp_inames_tm
+    {
+      u=u_zero;
+      res=tm_unit;
+      pre=tm_emp;
+      post=tm_pure p
+    }
 
 let named_binder (x:ppname) (t:term) = mk_binder_ppname t x
 
 let comp_intro_exists (u:universe) (b:binder) (p:term) (e:term)
   : comp
-  = C_STGhost {
-                u=u0;
-                res=tm_unit;
-                pre=open_term' p e 0;
-                post=tm_exists_sl u b p
-              }
+  = C_STGhost emp_inames_tm
+      {
+        u=u0;
+        res=tm_unit;
+        pre=open_term' p e 0;
+        post=tm_exists_sl u b p
+      }
 
 let comp_intro_exists_erased (u:universe) (b:binder) (p:term) (e:term)
   : comp
-  = C_STGhost {
-                u=u0;
-                res=tm_unit;
-                pre=open_term' p (mk_reveal u b.binder_ty e) 0;
-                post=tm_exists_sl u b p
-              }
+  = C_STGhost emp_inames_tm
+      {
+        u=u0;
+        res=tm_unit;
+        pre=open_term' p (mk_reveal u b.binder_ty e) 0;
+        post=tm_exists_sl u b p
+      }
 
 
 let comp_while_cond (x:ppname) (inv:term)
@@ -473,7 +476,8 @@ let comp_withlocal_array_body (arr:var) (a:term) (init:term) (len:term) (c:comp{
   }
 
 let comp_rewrite (p q:vprop) : comp =
-  C_STGhost  {
+  C_STGhost emp_inames_tm
+    {
 			u = u0;
 			res = tm_unit;
 			pre = p;
@@ -484,7 +488,7 @@ let comp_admit (c:ctag) (s:st_comp) : comp =
   match c with
   | STT -> C_ST s
   | STT_Atomic -> C_STAtomic tm_emp_inames Neutral s
-  | STT_Ghost -> C_STGhost s
+  | STT_Ghost -> C_STGhost tm_emp_inames s
 
 [@@erasable]
 noeq
@@ -526,16 +530,16 @@ let tm_join_inames (inames1 inames2 : term) : term =
   let inames2 = elab_term inames2 in
   let join_lid = Pulse.Reflection.Util.mk_pulse_lib_core_lid "join_inames" in
   let join : R.term = R.pack_ln (R.Tv_FVar (R.pack_fv join_lid)) in
-  with_range (Tm_FStar (R.mk_e_app join [inames1; inames2]))
-             (T.range_of_term inames1)
+  wr (R.mk_e_app join [inames1; inames2])
+     (T.range_of_term inames1)
 
 let tm_inames_subset (inames1 inames2 : term) : term =
   let inames1 = elab_term inames1 in
   let inames2 = elab_term inames2 in
   let join_lid = Pulse.Reflection.Util.mk_pulse_lib_core_lid "inames_subset" in
   let join : R.term = R.pack_ln (R.Tv_FVar (R.pack_fv join_lid)) in
-  with_range (Tm_FStar (R.mk_e_app join [inames1; inames2]))
-             (T.range_of_term inames1)
+  wr (R.mk_e_app join [inames1; inames2])
+     (T.range_of_term inames1)
 
 let tm_inames_subset_typing (g:env) (inames1 inames2 : term) : tot_typing g (tm_inames_subset inames1 inames2) tm_prop =
   (* Need to add the typing hypothesis for `inames_subset` to
@@ -594,6 +598,14 @@ type st_sub : env -> comp -> comp -> Type =
     st_sub g c2 c3 ->
     st_sub g c1 c3
 
+  | STS_GhostInvs :
+    g:env ->
+    stc:st_comp ->
+    is1:term ->
+    is2:term ->
+    prop_validity g (tm_inames_subset is1 is2) ->
+    st_sub g (C_STGhost is1 stc) (C_STGhost is2 stc)
+
   | STS_AtomicInvs :
     g:env ->
     stc:st_comp ->
@@ -624,15 +636,17 @@ type lift_comp : env -> comp -> comp -> Type =
       g:env ->
       c:comp_st{C_STGhost? c} ->
       non_informative_c:non_informative_c g c ->
-      lift_comp g c (C_STAtomic tm_emp_inames Neutral (st_comp_of_comp c))
+      lift_comp g c (C_STAtomic (comp_inames c) Neutral (st_comp_of_comp c))
 
   | Lift_Neutral_Ghost:
       g:env ->
       c:comp_st{C_STAtomic? c /\ C_STAtomic?.obs c == Neutral } ->
-      lift_comp g c (C_STGhost (st_comp_of_comp c))
+      lift_comp g c (C_STGhost (comp_inames c) (st_comp_of_comp c))
 
-let wr (ct:comp_st) (t:st_term') : st_term = { term = t; range = FStar.Range.range_0; effect_tag = as_effect_hint (ctag_of_comp_st ct) }
-let wtag (ct:option ctag)  (t:st_term') : st_term = { term = t; range = FStar.Range.range_0; effect_tag = FStar.Sealed.seal ct }
+let wrst (ct:comp_st) (t:st_term') : st_term =
+  { term = t; range = FStar.Range.range_0; effect_tag = as_effect_hint (ctag_of_comp_st ct) }
+let wtag (ct:option ctag)  (t:st_term') : st_term =
+  { term = t; range = FStar.Range.range_0; effect_tag = FStar.Sealed.seal ct }
 
 [@@ no_auto_projectors]
 noeq
@@ -697,10 +711,12 @@ type comp_typing : env -> comp -> universe -> Type =
       comp_typing g (C_STAtomic inames obs st) (universe_of_comp (C_STAtomic inames obs st))
 
   | CT_STGhost :
-      g:env -> 
-      st:st_comp -> 
+      g:env ->
+      inames:term ->
+      st:st_comp ->
+      tot_typing g inames tm_inames ->
       st_comp_typing g st ->
-      comp_typing g (C_STGhost st) (universe_of_comp (C_STGhost st))
+      comp_typing g (C_STGhost inames st) (universe_of_comp (C_STGhost inames st))
 
 let comp_typing_u (e:env) (c:comp_st) = comp_typing e c (universe_of_comp c)
 
@@ -708,20 +724,14 @@ let subtyping_token g t1 t2 =
   T.subtyping_token (elab_env g) (elab_term t1) (elab_term t2)
 
 val readback_binding : R.binding -> binding
-let readback_binding b =
-  assume (host_term == R.term); // fixme! expose this fact
-  match readback_ty b.sort with
-  | Some sort -> (b.uniq, sort)
-  | None ->
-    let sort : term = {t=Tm_FStar b.sort; range=T.range_of_term b.sort} in
-    (b.uniq, sort)
+let readback_binding b = (b.uniq, b.sort)
 
 let non_informative (g:env) (c:comp) =
   my_erased (RT.non_informative (elab_env g) (elab_comp c))
 
 let inv_disjointness (inv_p inames inv:term) = 
   let g = Pulse.Reflection.Util.inv_disjointness_goal (elab_term inv_p) (elab_term inames) (elab_term inv) in 
-  tm_fstar g inv.range
+  S.wr g (RU.range_of_term inv)
 
 let eff_of_ctag = function
   | STT_Ghost -> T.E_Ghost
@@ -751,7 +761,7 @@ type st_typing : env -> st_term -> comp -> Type =
       arg:term ->
       tot_typing g head (tm_arrow (as_binder ty) q res) ->
       tot_typing g arg ty ->
-      st_typing g (wr res (Tm_STApp {head; arg_qual=q; arg}))
+      st_typing g (wrst res (Tm_STApp {head; arg_qual=q; arg}))
                   (open_comp_with res arg)
 
     //
@@ -774,7 +784,7 @@ type st_typing : env -> st_term -> comp -> Type =
       non_informative (push_binding g x ppname_default ty)
                       (open_comp_with res (null_var x)) ->
       ghost_typing g arg ty ->
-      st_typing g (wr res (Tm_STApp {head; arg_qual=q; arg}))
+      st_typing g (wrst res (Tm_STApp {head; arg_qual=q; arg}))
                   (open_comp_with res arg)
 
   | T_Return:
@@ -814,7 +824,7 @@ type st_typing : env -> st_term -> comp -> Type =
       tot_typing g (comp_res c1) (tm_type (comp_u c1)) -> //type-correctness; would be nice to derive it instead      
       st_typing (push_binding g x ppname_default (comp_res c1)) (open_st_term_nv e2 (b.binder_ppname, x)) c2 ->
       bind_comp g x c1 c2 c ->
-      st_typing g (wr c (Tm_Bind { binder=b; head=e1; body=e2 })) c
+      st_typing g (wrst c (Tm_Bind { binder=b; head=e1; body=e2 })) c
 
   | T_BindFn:
       g:env ->
@@ -829,7 +839,7 @@ type st_typing : env -> st_term -> comp -> Type =
       tot_typing g (comp_res c1) (tm_type u) -> //type-correctness; would be nice to derive it instead      
       st_typing (push_binding g x ppname_default (comp_res c1)) (open_st_term_nv e2 (b.binder_ppname, x)) c2 ->
       comp_typing_u g c2 ->
-      st_typing g (wr c2 (Tm_Bind { binder=b; head=e1; body=e2 })) c2
+      st_typing g (wrst c2 (Tm_Bind { binder=b; head=e1; body=e2 })) c2
 
   | T_If:
       g:env ->
@@ -849,7 +859,7 @@ type st_typing : env -> st_term -> comp -> Type =
       st_typing (push_binding g hyp ppname_default (mk_eq2 u0 tm_bool b tm_true)) e1 c ->
       st_typing (push_binding g hyp ppname_default (mk_eq2 u0 tm_bool b tm_false)) e2 c ->
       my_erased (comp_typing_u g c) ->
-      st_typing g (wr c (Tm_If { b; then_=e1; else_=e2; post=None })) c
+      st_typing g (wrst c (Tm_If { b; then_=e1; else_=e2; post=None })) c
 
   | T_Match :
       g:env ->
@@ -863,7 +873,7 @@ type st_typing : env -> st_term -> comp -> Type =
       brs:list (pattern & st_term) ->
       brs_typing g sc_u sc_ty sc brs c ->
       pats_complete g sc sc_ty (L.map (fun (p, _) -> elab_pat p) brs) ->
-      st_typing g (wr c (Tm_Match {sc; returns_=None; brs})) c
+      st_typing g (wrst c (Tm_Match {sc; returns_=None; brs})) c
 
   | T_Frame:
       g:env ->
@@ -950,8 +960,8 @@ type st_typing : env -> st_term -> comp -> Type =
       comp_typing_u g cR ->
       st_typing g eL cL ->
       st_typing g eR cR ->
-      st_typing g (wr cL (Tm_Par { pre1=tm_unknown; body1=eL; post1=tm_unknown;
-                                   pre2=tm_unknown; body2=eR; post2=tm_unknown }))
+      st_typing g (wrst cL (Tm_Par { pre1=tm_unknown; body1=eL; post1=tm_unknown;
+                                     pre2=tm_unknown; body2=eR; post2=tm_unknown }))
                   (comp_par cL cR x)
 
   | T_WithLocal:
@@ -968,7 +978,7 @@ type st_typing : env -> st_term -> comp -> Type =
       st_typing (push_binding g x ppname_default (mk_ref init_t))
                 (open_st_term_nv body (v_as_nv x))
                 (comp_withlocal_body x init_t init c) ->
-      st_typing g (wr c (Tm_WithLocal { binder = mk_binder_ppname (mk_ref init_t) binder_ppname; initializer=init; body } )) c
+      st_typing g (wrst c (Tm_WithLocal { binder = mk_binder_ppname (mk_ref init_t) binder_ppname; initializer=init; body } )) c
 
   | T_WithLocalArray:
       g:env ->
@@ -986,7 +996,7 @@ type st_typing : env -> st_term -> comp -> Type =
       st_typing (push_binding g x ppname_default (mk_array a))
                 (open_st_term_nv body (v_as_nv x))
                 (comp_withlocal_array_body x a initializer length c) ->
-      st_typing g (wr c (Tm_WithLocalArray { binder = mk_binder_ppname (mk_array a) binder_ppname; initializer; length; body } )) c
+      st_typing g (wrst c (Tm_WithLocalArray { binder = mk_binder_ppname (mk_array a) binder_ppname; initializer; length; body } )) c
 
   | T_Rewrite:
       g:env ->
@@ -1010,7 +1020,7 @@ type st_typing : env -> st_term -> comp -> Type =
       s:st_comp ->
       c:ctag ->
       st_comp_typing g s ->
-      prop_validity g (tm_fstar (`False) FStar.Range.range_0) -> 
+      prop_validity g (S.wr (`False) FStar.Range.range_0) -> 
       st_typing g (wtag (Some c) Tm_Unreachable) (comp_admit c s)
 
   (* This limits the body to be atomic, rather than also allowing unobservable *)
@@ -1070,7 +1080,7 @@ and br_typing : env -> universe -> typ -> term -> pattern -> st_term -> comp_st 
          push_binding (push_bindings g (L.map readback_binding bs))
               hyp
               ({name=Sealed.seal "branch equality"; range=FStar.Range.range_0})
-              (mk_sq_eq2 sc_u sc_ty sc (tm_fstar (fst (Some?.v (RT.elaborate_pat (elab_pat p) bs))) Range.range_0))
+              (mk_sq_eq2 sc_u sc_ty sc (S.wr (fst (Some?.v (RT.elaborate_pat (elab_pat p) bs))) Range.range_0))
          ) e c ->
       br_typing g sc_u sc_ty sc p (close_st_term_n e (L.map fst (L.map readback_binding bs))) c
 
@@ -1192,8 +1202,8 @@ let post_hint_typing (g:env)
 
 let effect_annot_matches c (effect_annot:effect_annot) : prop =
   match c, effect_annot with
-  | C_ST _, EffectAnnotSTT
-  | C_STGhost _, EffectAnnotGhost -> True
+  | C_ST _, EffectAnnotSTT -> True
+  | C_STGhost inames' _, EffectAnnotGhost { opens }
   | C_STAtomic inames' _ _, EffectAnnotAtomic { opens } ->
     inames' == opens
   | _ -> False

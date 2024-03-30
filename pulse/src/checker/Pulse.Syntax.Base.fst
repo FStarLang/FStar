@@ -26,34 +26,11 @@ let eq_univ (u1 u2:universe) : b:bool{b <==> u1 == u2} =
   assume (faithful_univ u2);
   univ_eq_dec u1 u2
 
-let rec eq_tm (t1 t2:term)
-  : Tot (b:bool { b <==> (t1 == t2) }) (decreases t1)
-  = match t1.t, t2.t with
-    | Tm_VProp, Tm_VProp
-    | Tm_Emp, Tm_Emp
-    | Tm_Inames, Tm_Inames
-    | Tm_EmpInames, Tm_EmpInames
-    | Tm_Unknown, Tm_Unknown -> true
-    | Tm_Star l1 r1, Tm_Star l2 r2 ->
-      eq_tm l1 l2 &&
-      eq_tm r1 r2
-    | Tm_Inv p1, Tm_Inv p2 ->
-      eq_tm p1 p2
-    | Tm_Pure p1, Tm_Pure p2 ->
-      eq_tm p1 p2
-    | Tm_ExistsSL u1 t1 b1, Tm_ExistsSL u2 t2 b2
-    | Tm_ForallSL u1 t1 b1, Tm_ForallSL u2 t2 b2 ->
-      eq_univ u1 u2 &&
-      eq_tm t1.binder_ty t2.binder_ty &&
-      eq_tm b1 b2
-    | Tm_FStar t1, Tm_FStar t2 ->
-      let open FStar.Reflection.V2.TermEq in
-      assume (faithful t1);
-      assume (faithful t2);
-      term_eq_dec t1 t2
-    | Tm_AddInv i1 is1, Tm_AddInv i2 is2 ->
-      eq_tm i1 i2 && eq_tm is1 is2
-    | _ -> false
+let eq_tm (t1 t2:term) : Tot (b:bool { b <==> (t1 == t2) }) =  
+  let open FStar.Reflection.V2.TermEq in
+  assume (faithful t1);
+  assume (faithful t2);
+  term_eq_dec t1 t2
 
 let eq_st_comp (s1 s2:st_comp)  
   : b:bool { b <==> (s1 == s2) }
@@ -73,7 +50,8 @@ let eq_comp (c1 c2:comp)
       eq_tm i1 i2 &&
       o1 = o2 &&
       eq_st_comp s1 s2
-    | C_STGhost s1, C_STGhost s2 ->
+    | C_STGhost i1 s1, C_STGhost i2 s2 ->
+      eq_tm i1 i2 &&
       eq_st_comp s1 s2
     | _ -> false
 

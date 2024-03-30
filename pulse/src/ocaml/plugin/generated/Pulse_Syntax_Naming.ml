@@ -1,26 +1,7 @@
 open Prims
-let rec (freevars :
+let (freevars :
   Pulse_Syntax_Base.term -> Pulse_Syntax_Base.var FStar_Set.set) =
-  fun t ->
-    match t.Pulse_Syntax_Base.t with
-    | Pulse_Syntax_Base.Tm_Emp -> FStar_Set.empty ()
-    | Pulse_Syntax_Base.Tm_VProp -> FStar_Set.empty ()
-    | Pulse_Syntax_Base.Tm_Inames -> FStar_Set.empty ()
-    | Pulse_Syntax_Base.Tm_EmpInames -> FStar_Set.empty ()
-    | Pulse_Syntax_Base.Tm_Unknown -> FStar_Set.empty ()
-    | Pulse_Syntax_Base.Tm_Inv p -> freevars p
-    | Pulse_Syntax_Base.Tm_Star (t1, t2) ->
-        FStar_Set.union (freevars t1) (freevars t2)
-    | Pulse_Syntax_Base.Tm_ExistsSL (uu___, t1, t2) ->
-        FStar_Set.union (freevars t1.Pulse_Syntax_Base.binder_ty)
-          (freevars t2)
-    | Pulse_Syntax_Base.Tm_ForallSL (uu___, t1, t2) ->
-        FStar_Set.union (freevars t1.Pulse_Syntax_Base.binder_ty)
-          (freevars t2)
-    | Pulse_Syntax_Base.Tm_Pure p -> freevars p
-    | Pulse_Syntax_Base.Tm_FStar t1 -> FStar_Reflection_Typing.freevars t1
-    | Pulse_Syntax_Base.Tm_AddInv (i, is) ->
-        FStar_Set.union (freevars i) (freevars is)
+  fun t -> FStar_Reflection_Typing.freevars t
 let (freevars_st_comp :
   Pulse_Syntax_Base.st_comp -> Pulse_Syntax_Base.var FStar_Set.set) =
   fun s ->
@@ -34,7 +15,8 @@ let (freevars_comp :
     match c with
     | Pulse_Syntax_Base.C_Tot t -> freevars t
     | Pulse_Syntax_Base.C_ST s -> freevars_st_comp s
-    | Pulse_Syntax_Base.C_STGhost s -> freevars_st_comp s
+    | Pulse_Syntax_Base.C_STGhost (inames, s) ->
+        FStar_Set.union (freevars inames) (freevars_st_comp s)
     | Pulse_Syntax_Base.C_STAtomic (inames, uu___, s) ->
         FStar_Set.union (freevars inames) (freevars_st_comp s)
 let freevars_opt :
@@ -194,7 +176,7 @@ let rec (freevars_st :
     | Pulse_Syntax_Base.Tm_Unreachable -> FStar_Set.empty ()
     | Pulse_Syntax_Base.Tm_ProofHintWithBinders
         { Pulse_Syntax_Base.hint_type = hint_type;
-          Pulse_Syntax_Base.binders = binders; Pulse_Syntax_Base.t3 = t1;_}
+          Pulse_Syntax_Base.binders = binders; Pulse_Syntax_Base.t = t1;_}
         -> FStar_Set.union (freevars_proof_hint hint_type) (freevars_st t1)
     | Pulse_Syntax_Base.Tm_WithInv
         { Pulse_Syntax_Base.name1 = name; Pulse_Syntax_Base.body6 = body;
@@ -216,26 +198,8 @@ and (freevars_branches :
     | [] -> FStar_Set.empty ()
     | (uu___, b)::tl ->
         FStar_Set.union (freevars_st b) (freevars_branches tl)
-let rec (ln' : Pulse_Syntax_Base.term -> Prims.int -> Prims.bool) =
-  fun t ->
-    fun i ->
-      match t.Pulse_Syntax_Base.t with
-      | Pulse_Syntax_Base.Tm_Emp -> true
-      | Pulse_Syntax_Base.Tm_VProp -> true
-      | Pulse_Syntax_Base.Tm_Inames -> true
-      | Pulse_Syntax_Base.Tm_EmpInames -> true
-      | Pulse_Syntax_Base.Tm_Unknown -> true
-      | Pulse_Syntax_Base.Tm_Inv p -> ln' p i
-      | Pulse_Syntax_Base.Tm_Star (t1, t2) -> (ln' t1 i) && (ln' t2 i)
-      | Pulse_Syntax_Base.Tm_Pure p -> ln' p i
-      | Pulse_Syntax_Base.Tm_ExistsSL (uu___, t1, body) ->
-          (ln' t1.Pulse_Syntax_Base.binder_ty i) &&
-            (ln' body (i + Prims.int_one))
-      | Pulse_Syntax_Base.Tm_ForallSL (uu___, t1, body) ->
-          (ln' t1.Pulse_Syntax_Base.binder_ty i) &&
-            (ln' body (i + Prims.int_one))
-      | Pulse_Syntax_Base.Tm_FStar t1 -> FStar_Reflection_Typing.ln' t1 i
-      | Pulse_Syntax_Base.Tm_AddInv (x, is) -> (ln' x i) && (ln' is i)
+let (ln' : Pulse_Syntax_Base.term -> Prims.int -> Prims.bool) =
+  fun t -> fun i -> FStar_Reflection_Typing.ln' t i
 let (ln_st_comp : Pulse_Syntax_Base.st_comp -> Prims.int -> Prims.bool) =
   fun s ->
     fun i ->
@@ -247,7 +211,8 @@ let (ln_c' : Pulse_Syntax_Base.comp -> Prims.int -> Prims.bool) =
       match c with
       | Pulse_Syntax_Base.C_Tot t -> ln' t i
       | Pulse_Syntax_Base.C_ST s -> ln_st_comp s i
-      | Pulse_Syntax_Base.C_STGhost s -> ln_st_comp s i
+      | Pulse_Syntax_Base.C_STGhost (inames, s) ->
+          (ln' inames i) && (ln_st_comp s i)
       | Pulse_Syntax_Base.C_STAtomic (inames, uu___, s) ->
           (ln' inames i) && (ln_st_comp s i)
 let ln_opt' :
@@ -436,7 +401,7 @@ let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
       | Pulse_Syntax_Base.Tm_Unreachable -> true
       | Pulse_Syntax_Base.Tm_ProofHintWithBinders
           { Pulse_Syntax_Base.hint_type = hint_type;
-            Pulse_Syntax_Base.binders = binders; Pulse_Syntax_Base.t3 = t1;_}
+            Pulse_Syntax_Base.binders = binders; Pulse_Syntax_Base.t = t1;_}
           ->
           let n = FStar_List_Tot_Base.length binders in
           (ln_proof_hint' hint_type (i + n)) && (ln_st' t1 (i + n))
@@ -536,62 +501,16 @@ let (r_subst_of_rt_subst_elt : subst_elt -> FStar_Syntax_Syntax.subst_elt) =
         FStar_Syntax_Syntax.NM
           ((FStar_Reflection_Typing.var_as_namedv x1), i)
 let (subst_host_term' :
-  Pulse_Syntax_Base.host_term -> subst -> FStar_Reflection_Types.term) =
+  Pulse_Syntax_Base.term -> subst -> FStar_Reflection_Types.term) =
   fun t ->
     fun ss ->
       FStar_Reflection_V2_Builtins.subst_term
         (FStar_List_Tot_Base.map r_subst_of_rt_subst_elt ss) t
 let (subst_host_term :
-  Pulse_Syntax_Base.host_term -> subst -> Pulse_Syntax_Base.host_term) =
-  fun t -> fun ss -> let res0 = subst_host_term' t ss in res0
-let rec (subst_term :
   Pulse_Syntax_Base.term -> subst -> Pulse_Syntax_Base.term) =
-  fun t ->
-    fun ss ->
-      let w t' = Pulse_Syntax_Base.with_range t' t.Pulse_Syntax_Base.range1 in
-      match t.Pulse_Syntax_Base.t with
-      | Pulse_Syntax_Base.Tm_VProp -> t
-      | Pulse_Syntax_Base.Tm_Emp -> t
-      | Pulse_Syntax_Base.Tm_Inames -> t
-      | Pulse_Syntax_Base.Tm_EmpInames -> t
-      | Pulse_Syntax_Base.Tm_Unknown -> t
-      | Pulse_Syntax_Base.Tm_Inv p ->
-          w (Pulse_Syntax_Base.Tm_Inv (subst_term p ss))
-      | Pulse_Syntax_Base.Tm_Pure p ->
-          w (Pulse_Syntax_Base.Tm_Pure (subst_term p ss))
-      | Pulse_Syntax_Base.Tm_Star (l, r) ->
-          w
-            (Pulse_Syntax_Base.Tm_Star ((subst_term l ss), (subst_term r ss)))
-      | Pulse_Syntax_Base.Tm_ExistsSL (u, b, body) ->
-          w
-            (Pulse_Syntax_Base.Tm_ExistsSL
-               (u,
-                 {
-                   Pulse_Syntax_Base.binder_ty =
-                     (subst_term b.Pulse_Syntax_Base.binder_ty ss);
-                   Pulse_Syntax_Base.binder_ppname =
-                     (b.Pulse_Syntax_Base.binder_ppname);
-                   Pulse_Syntax_Base.binder_attrs =
-                     (b.Pulse_Syntax_Base.binder_attrs)
-                 }, (subst_term body (shift_subst ss))))
-      | Pulse_Syntax_Base.Tm_ForallSL (u, b, body) ->
-          w
-            (Pulse_Syntax_Base.Tm_ForallSL
-               (u,
-                 {
-                   Pulse_Syntax_Base.binder_ty =
-                     (subst_term b.Pulse_Syntax_Base.binder_ty ss);
-                   Pulse_Syntax_Base.binder_ppname =
-                     (b.Pulse_Syntax_Base.binder_ppname);
-                   Pulse_Syntax_Base.binder_attrs =
-                     (b.Pulse_Syntax_Base.binder_attrs)
-                 }, (subst_term body (shift_subst ss))))
-      | Pulse_Syntax_Base.Tm_FStar t1 ->
-          w (Pulse_Syntax_Base.Tm_FStar (subst_host_term t1 ss))
-      | Pulse_Syntax_Base.Tm_AddInv (i, is) ->
-          w
-            (Pulse_Syntax_Base.Tm_AddInv
-               ((subst_term i ss), (subst_term is ss)))
+  fun t -> fun ss -> let res0 = subst_host_term' t ss in res0
+let (subst_term : Pulse_Syntax_Base.term -> subst -> Pulse_Syntax_Base.term)
+  = fun t -> fun ss -> subst_host_term t ss
 let (open_term' :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.term ->
@@ -625,8 +544,9 @@ let (subst_comp : Pulse_Syntax_Base.comp -> subst -> Pulse_Syntax_Base.comp)
       | Pulse_Syntax_Base.C_STAtomic (inames, obs, s) ->
           Pulse_Syntax_Base.C_STAtomic
             ((subst_term inames ss), obs, (subst_st_comp s ss))
-      | Pulse_Syntax_Base.C_STGhost s ->
-          Pulse_Syntax_Base.C_STGhost (subst_st_comp s ss)
+      | Pulse_Syntax_Base.C_STGhost (inames, s) ->
+          Pulse_Syntax_Base.C_STGhost
+            ((subst_term inames ss), (subst_st_comp s ss))
 let (open_comp' :
   Pulse_Syntax_Base.comp ->
     Pulse_Syntax_Base.term ->
@@ -1004,7 +924,7 @@ let rec (subst_st_term :
         | Pulse_Syntax_Base.Tm_ProofHintWithBinders
             { Pulse_Syntax_Base.hint_type = hint_type;
               Pulse_Syntax_Base.binders = binders;
-              Pulse_Syntax_Base.t3 = t1;_}
+              Pulse_Syntax_Base.t = t1;_}
             ->
             let n = FStar_List_Tot_Base.length binders in
             let ss1 = shift_subst_n n ss in
@@ -1013,7 +933,7 @@ let rec (subst_st_term :
                 Pulse_Syntax_Base.hint_type =
                   (subst_proof_hint hint_type ss1);
                 Pulse_Syntax_Base.binders = binders;
-                Pulse_Syntax_Base.t3 = (subst_st_term t1 ss1)
+                Pulse_Syntax_Base.t = (subst_st_term t1 ss1)
               }
         | Pulse_Syntax_Base.Tm_WithInv
             { Pulse_Syntax_Base.name1 = name; Pulse_Syntax_Base.body6 = body;
@@ -1035,7 +955,7 @@ let rec (subst_st_term :
               } in
       {
         Pulse_Syntax_Base.term1 = t';
-        Pulse_Syntax_Base.range2 = (t.Pulse_Syntax_Base.range2);
+        Pulse_Syntax_Base.range1 = (t.Pulse_Syntax_Base.range1);
         Pulse_Syntax_Base.effect_tag = (t.Pulse_Syntax_Base.effect_tag)
       }
 and (subst_branches :

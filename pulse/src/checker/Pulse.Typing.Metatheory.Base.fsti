@@ -18,11 +18,16 @@ module Pulse.Typing.Metatheory.Base
 open Pulse.Syntax
 open Pulse.Syntax.Naming
 open Pulse.Typing
-module RU = Pulse.RuntimeUtils
+
 module T = FStar.Tactics.V2
 module R = FStar.Reflection.V2
 module RT = FStar.Reflection.Typing  
 module C = FStar.Stubs.TypeChecker.Core
+
+module S = Pulse.Syntax
+module RU = Pulse.RuntimeUtils
+
+
 open FStar.Ghost
 
 
@@ -41,7 +46,8 @@ val st_typing_correctness_ctot (#g:env) (#t:st_term) (#c:comp{C_Tot? c})
 
 let inames_of_comp_st (c:comp_st) =
   match c with
-  | C_STAtomic _ _ _ -> comp_inames c
+  | C_STAtomic _ _ _
+  | C_STGhost _ _ -> comp_inames c
   | _ -> tm_emp_inames
 
 let iname_typing (g:env) (c:comp_st) = tot_typing g (inames_of_comp_st c) tm_inames
@@ -72,7 +78,7 @@ val tm_exists_inversion (#g:env) (#u:universe) (#ty:term) (#p:term)
     tot_typing (push_binding g x ppname_default ty) p tm_vprop
 
 val pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (tm_pure p) tm_vprop)
-   : tot_typing g p (tm_fstar FStar.Reflection.Typing.tm_prop Range.range_0)
+   : tot_typing g p (S.wr FStar.Reflection.Typing.tm_prop Range.range_0)
 
 module RT = FStar.Reflection.Typing
 val typing_correctness

@@ -28,7 +28,7 @@ open Pulse.Checker.VPropEquiv
 open Pulse.Checker.Prover.Base
 
 let should_elim_exists (v:vprop) : T.Tac bool =
-  match v.t with
+  match inspect_term v with
   | Tm_ExistsSL _ _ _ -> true
   | _ -> false
 
@@ -38,7 +38,7 @@ let mk (#g:env) (#v:vprop) (v_typing:tot_typing g v tm_vprop)
                    c:comp { stateful_comp c /\ comp_pre c == v } &
                    st_typing g t c)) =
 
-  match v.t with
+  match inspect_term v with
   | Tm_ExistsSL u { binder_ppname=nm; binder_ty = t } p ->
     let x = fresh g in
     let c = Pulse.Typing.comp_elim_exists u t p (nm, x) in

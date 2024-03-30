@@ -21,9 +21,10 @@ module T = FStar.Tactics.V2
 module RT = FStar.Reflection.Typing
 
 open Pulse.Syntax.Base
-open Pulse.Elaborate.Pure
 open Pulse.Readback
+open Pulse.Elaborate.Pure
 open Pulse.Reflection.Util
+open Pulse.RuntimeUtils
 
 let (let?) (f:option 'a) (g:'a -> option 'b) : option 'b =
   match f with
@@ -45,41 +46,41 @@ let u_max (u0 u1:universe) : universe =
 let u_unknown : universe = R.pack_universe R.Uv_Unk
 
 let tm_bvar (bv:bv) : term =
-  tm_fstar (R.pack_ln (R.Tv_BVar (R.pack_bv (RT.make_bv_with_name bv.bv_ppname.name bv.bv_index))))
+  set_range (R.pack_ln (R.Tv_BVar (R.pack_bv (RT.make_bv_with_name bv.bv_ppname.name bv.bv_index))))
             bv.bv_ppname.range
 
 let tm_var (nm:nm) : term =
-  tm_fstar (R.pack_ln (R.Tv_Var (R.pack_namedv (RT.make_namedv_with_name nm.nm_ppname.name nm.nm_index))))
-           nm.nm_ppname.range
+  set_range (R.pack_ln (R.Tv_Var (R.pack_namedv (RT.make_namedv_with_name nm.nm_ppname.name nm.nm_index))))
+            nm.nm_ppname.range
 
 let tm_fvar (l:fv) : term =
-  tm_fstar (R.pack_ln (R.Tv_FVar (R.pack_fv l.fv_name)))
-           l.fv_range
+  set_range (R.pack_ln (R.Tv_FVar (R.pack_fv l.fv_name)))
+            l.fv_range
 
 let tm_uinst (l:fv) (us:list universe) : term =
-  tm_fstar (R.pack_ln (R.Tv_UInst (R.pack_fv l.fv_name) us))
-           l.fv_range
+  set_range (R.pack_ln (R.Tv_UInst (R.pack_fv l.fv_name) us))
+            l.fv_range
 
 let tm_constant (c:constant) : term =
-  tm_fstar (R.pack_ln (R.Tv_Const c)) FStar.Range.range_0
+  set_range (R.pack_ln (R.Tv_Const c)) FStar.Range.range_0
 
 let tm_refine (b:binder) (t:term) : term =
   let rb : R.simple_binder = RT.mk_simple_binder b.binder_ppname.name (elab_term b.binder_ty) in
-  tm_fstar (R.pack_ln (R.Tv_Refine rb (elab_term t)))
-           FStar.Range.range_0
+  set_range (R.pack_ln (R.Tv_Refine rb (elab_term t)))
+            FStar.Range.range_0
 
 let tm_let (t e1 e2:term) : term =
   let rb : R.simple_binder = RT.mk_simple_binder RT.pp_name_default (elab_term t) in
-  tm_fstar (R.pack_ln (R.Tv_Let false
-                                []
-                                rb
-                                (elab_term e1)
-                                (elab_term e2)))
+  set_range (R.pack_ln (R.Tv_Let false
+                                 []
+                                 rb
+                                 (elab_term e1)
+                                 (elab_term e2)))
            FStar.Range.range_0
 
 let tm_pureapp (head:term) (q:option qualifier) (arg:term) : term =
-  tm_fstar (R.mk_app (elab_term head) [(elab_term arg, elab_qual q)])
-           FStar.Range.range_0
+  set_range (R.mk_app (elab_term head) [(elab_term arg, elab_qual q)])
+            FStar.Range.range_0
 
 let tm_pureabs (ppname:R.ppname_t) (ty : term) (q : option qualifier) (body:term) : term =
   let open R in
@@ -94,15 +95,15 @@ let tm_pureabs (ppname:R.ppname_t) (ty : term) (q : option qualifier) (body:term
   in
   let r = pack (Tv_Abs b (elab_term body)) in
   assume (~(R.Tv_Unknown? (R.inspect_ln r))); // NamedView API doesn't ensure this, it should
-  tm_fstar r FStar.Range.range_0
+  set_range r FStar.Range.range_0
 
 let tm_arrow (b:binder) (q:option qualifier) (c:comp) : term =
-  tm_fstar (mk_arrow_with_name b.binder_ppname.name (elab_term b.binder_ty, elab_qual q)
-                                                    (elab_comp c))
-           FStar.Range.range_0
+  set_range (mk_arrow_with_name b.binder_ppname.name (elab_term b.binder_ty, elab_qual q)
+                                                     (elab_comp c))
+            FStar.Range.range_0
 
 let tm_type (u:universe) : term =
-  tm_fstar (R.pack_ln (R.Tv_Type u)) FStar.Range.range_0
+  set_range (R.pack_ln (R.Tv_Type u)) FStar.Range.range_0
 
 let mk_bvar (s:string) (r:Range.range) (i:index) : term =
   tm_bvar {bv_index=i;bv_ppname=mk_ppname (RT.seal_pp_name s) r}
@@ -120,68 +121,43 @@ let term_of_no_name_var (x:var) : term =
 
 let is_bvar (t:term) : option nat =
   let open R in
-  match t.t with
-  | Tm_FStar host_term ->
-    begin match R.inspect_ln host_term with
-          | R.Tv_BVar bv ->
-            let bv_view = R.inspect_bv bv in
-            Some bv_view.index
-          | _ -> None
-    end
+  match R.inspect_ln t with
+  | R.Tv_BVar bv ->
+    let bv_view = R.inspect_bv bv in
+    Some bv_view.index
   | _ -> None
 
 let is_var (t:term) : option nm =
   let open R in
-  match t.t with
-  | Tm_FStar host_term ->
-    begin match R.inspect_ln host_term with
-          | R.Tv_Var nv ->
-            let nv_view = R.inspect_namedv nv in
-            Some {nm_index=nv_view.uniq;
-                  nm_ppname=mk_ppname (nv_view.ppname) t.range}
-          | _ -> None
-    end
+  match R.inspect_ln t with
+  | R.Tv_Var nv ->
+    let nv_view = R.inspect_namedv nv in
+    Some {nm_index=nv_view.uniq;
+          nm_ppname=mk_ppname (nv_view.ppname) (range_of_term t)}
   | _ -> None
 
 
 let is_fvar (t:term) : option (R.name & list universe) =
   let open R in
-  match t.t with
-  | Tm_FStar host_term ->
-    begin match inspect_ln host_term with
-          | Tv_FVar fv -> Some (inspect_fv fv, [])
-          | Tv_UInst fv us -> Some (inspect_fv fv, us)
-          | _ -> None
-    end
+  match inspect_ln t with
+  | Tv_FVar fv -> Some (inspect_fv fv, [])
+  | Tv_UInst fv us -> Some (inspect_fv fv, us)
+  | _ -> None
+
+let readback_qual = function
+  | R.Q_Implicit -> Some Implicit
   | _ -> None
 
 let is_pure_app (t:term) : option (term & option qualifier & term) =
-  match t.t with
-  | Tm_FStar host_term ->
-    begin match R.inspect_ln host_term with
-          | R.Tv_App hd (arg, q) ->
-            let? hd =
-              match readback_ty hd with
-              | Some hd -> Some hd <: option term
-              | _ -> None in
-            let q = readback_qual q in
-            let? arg =
-              match readback_ty arg with
-              | Some arg -> Some arg <: option term
-              | _ -> None in
-            Some (hd, q, arg)
-          | _ -> None
-    end
+  match R.inspect_ln t with
+  | R.Tv_App hd (arg, q) ->
+    let q = readback_qual q in
+    Some (hd, q, arg)
   | _ -> None
 
 let leftmost_head (t:term) : option term =
-  match t.t with
-  | Tm_FStar host_term ->
-    let hd, _ = R.collect_app_ln host_term in
-    (match readback_ty hd with
-     | Some t -> Some t
-     | None -> None)
-  | _ -> None
+  let hd, _ = R.collect_app_ln t in
+  Some hd
 
 let is_fvar_app (t:term) : option (R.name &
                                    list universe &
@@ -198,43 +174,39 @@ let is_fvar_app (t:term) : option (R.name &
     | _ -> None
 
 let is_arrow (t:term) : option (binder & option qualifier & comp) =
-  match t.t with
-  | Tm_FStar host_term ->
-    begin match R.inspect_ln_unascribe host_term with
-          | R.Tv_Arrow b c ->
-            let {ppname;qual;sort} = R.inspect_binder b in
-            begin match qual with
-                  | R.Q_Meta _ -> None
-                  | _ ->
-                    let q = readback_qual qual in
-                    let c_view = R.inspect_comp c in
-                    let ret (c_t:R.typ) =
-                      let? binder_ty = readback_ty sort in
-                      let? c =
-                        match readback_comp c_t with
-                        | Some c -> Some c <: option Pulse.Syntax.Base.comp
-                        | None -> None in
-                      Some (mk_binder_ppname
-                              binder_ty
-                              (mk_ppname ppname (T.range_of_term host_term)),
-                            q,
-                            c) in
+  match R.inspect_ln_unascribe t with
+  | R.Tv_Arrow b c ->
+    let {ppname;qual;sort} = R.inspect_binder b in
+    begin match qual with
+          | R.Q_Meta _ -> None
+          | _ ->
+            let q = readback_qual qual in
+            let c_view = R.inspect_comp c in
+            let ret (c_t:R.typ) =
+              let binder_ty = sort in
+              let? c =
+                match readback_comp c_t with
+                | Some c -> Some c <: option Pulse.Syntax.Base.comp
+                | None -> None in
+              Some (mk_binder_ppname
+                      binder_ty
+                      (mk_ppname ppname (T.range_of_term t)),
+                      q,
+                      c) in
                       
-                    begin match c_view with
-                          | R.C_Total c_t -> ret c_t
-                          | R.C_Eff _ eff_name c_t _ _ ->
-                            //
-                            // Consider Tot effect with decreases also
-                            //
-                            if eff_name = tot_lid
-                            then ret c_t
-                            else None
-                          | _ -> None
-                    end
+            begin match c_view with
+            | R.C_Total c_t -> ret c_t
+            | R.C_Eff _ eff_name c_t _ _ ->
+              //
+              // Consider Tot effect with decreases also
+              //
+              if eff_name = tot_lid
+              then ret c_t
+              else None
+            | _ -> None
             end
-          
-          | _ -> None
     end
+          
   | _ -> None
 
 // TODO: write it better, with pattern matching on reflection syntax
@@ -289,3 +261,196 @@ let is_fvar_app_tm_app (t:term)
 
 let mk_squash (u:universe) (t:term) : term =
   tm_pureapp (tm_uinst (as_fv R.squash_qn) [u]) None t
+
+//
+// A separation logic specific view of pure F* terms
+// The inspect_term API returns a view,
+//   where Tm_FStar is the catch all case
+// See also the is_view_of predicate below
+//
+[@@ no_auto_projectors]
+noeq
+type term_view =
+  | Tm_Emp        : term_view
+  | Tm_Pure       : p:term -> term_view
+  | Tm_Star       : l:vprop -> r:vprop -> term_view
+  | Tm_ExistsSL   : u:universe -> b:binder -> body:vprop -> term_view
+  | Tm_ForallSL   : u:universe -> b:binder -> body:vprop -> term_view
+  | Tm_VProp      : term_view
+  | Tm_Inv        : vprop -> term_view
+  | Tm_Inames     : term_view  // type inames
+  | Tm_EmpInames  : term_view
+  | Tm_AddInv     : i:term -> is:term -> term_view
+  | Tm_Unknown    : term_view
+  | Tm_FStar      : term -> term_view  // catch all
+
+let wr (t:term) (r:range) : term = set_range t r
+
+let pack_term_view (top:term_view) (r:range)
+  : term
+  = let open R in
+    let w t' = wr t' r in
+    match top with
+    | Tm_VProp ->
+      w (pack_ln (Tv_FVar (pack_fv vprop_lid)))
+
+    | Tm_Emp ->
+      w (pack_ln (Tv_FVar (pack_fv emp_lid)))
+      
+    | Tm_Inv p ->
+      let head = pack_ln (Tv_FVar (pack_fv inv_lid)) in
+      w (pack_ln (Tv_App head (p, Q_Explicit)))
+
+    | Tm_Pure p ->
+      let head = pack_ln (Tv_FVar (pack_fv pure_lid)) in
+      w (pack_ln (Tv_App head (p, Q_Explicit)))
+
+    | Tm_Star l r ->
+      w (mk_star l r)
+      
+    | Tm_ExistsSL u b body
+    | Tm_ForallSL u b body ->
+      let t = set_range_of b.binder_ty b.binder_ppname.range in
+      let abs = mk_abs_with_name_and_range b.binder_ppname.name b.binder_ppname.range t R.Q_Explicit body in
+      if Tm_ExistsSL? top
+      then w (mk_exists u t abs)
+      else w (mk_forall u t abs)
+
+    | Tm_Inames ->
+      w (pack_ln (Tv_FVar (pack_fv inames_lid)))
+
+    | Tm_EmpInames ->
+      w (emp_inames_tm)
+
+    | Tm_AddInv i is ->
+      w (add_inv_tm (`_) is i) // Careful on the order flip
+
+    | Tm_Unknown ->
+      w (pack_ln R.Tv_Unknown)
+
+    | Tm_FStar t -> w t
+
+let term_range (t:term) = range_of_term t
+let pack_term_view_wr (t:term_view) (r:range) = pack_term_view t r
+let tm_vprop = pack_term_view_wr Tm_VProp FStar.Range.range_0
+let tm_inv p = pack_term_view_wr (Tm_Inv p) FStar.Range.range_0
+let tm_inames = pack_term_view_wr Tm_Inames FStar.Range.range_0
+let tm_emp = pack_term_view_wr Tm_Emp FStar.Range.range_0
+let tm_emp_inames = pack_term_view_wr Tm_EmpInames FStar.Range.range_0
+let tm_unknown = pack_term_view_wr Tm_Unknown FStar.Range.range_0
+let tm_pure (p:term) : term = pack_term_view (Tm_Pure p) (range_of_term p)
+let tm_star (l:vprop) (r:vprop) : term =
+  pack_term_view (Tm_Star l r)
+                 (union_ranges (range_of_term l) (range_of_term r))
+let tm_exists_sl (u:universe) (b:binder) (body:vprop) : term =
+  pack_term_view (Tm_ExistsSL u b body)
+                 (union_ranges (range_of_term b.binder_ty) (range_of_term body))
+let tm_forall_sl (u:universe) (b:binder) (body:vprop) : term =
+  pack_term_view (Tm_ForallSL u b body)
+                 (union_ranges (range_of_term b.binder_ty) (range_of_term body))
+
+
+let is_view_of (tv:term_view) (t:term) : prop =
+  match tv with
+  | Tm_Emp -> t == tm_emp
+  | Tm_VProp -> t == tm_vprop
+  | Tm_Inames -> t == tm_inames
+  | Tm_EmpInames -> t == tm_emp_inames
+  | Tm_Star t1 t2 ->
+    t == tm_star t1 t2 /\
+    t1 << t /\ t2 << t
+  | Tm_ExistsSL u b body ->
+    t == tm_exists_sl u b body /\
+    u << t /\ b << t /\ body << t
+  | Tm_ForallSL u b body ->
+    t == tm_forall_sl u b body /\
+    u << t /\ b << t /\ body << t
+  | Tm_Pure p ->
+    t == tm_pure p /\
+    p << t
+  | Tm_Inv p ->
+    t == tm_inv p /\
+    p << t
+  | Tm_Unknown -> t == tm_unknown
+  | Tm_AddInv i is -> True
+  | Tm_FStar t' -> t' == t
+
+let rec inspect_term (t:R.term)
+  : (tv:term_view { tv `is_view_of` t }) =
+
+  let open R in
+  let open Pulse.Syntax.Base in
+
+  let default_view = Tm_FStar t in
+
+  pack_inspect_inv t;
+
+  match inspect_ln t with
+  | Tv_FVar fv ->
+    let fv_lid = inspect_fv fv in
+    if fv_lid = vprop_lid
+    then Tm_VProp
+    else if fv_lid = emp_lid
+    then Tm_Emp
+    else if fv_lid = inames_lid
+    then Tm_Inames
+    else if fv_lid = emp_inames_lid
+    then Tm_EmpInames
+    else default_view
+
+  | Tv_App hd (a, q) ->
+    admit(); //this case doesn't work because it is using collect_app_ln, etc.
+    let head, args = collect_app_ln t in
+    begin
+      match inspect_ln head, args with
+      | Tv_FVar fv, [a1; a2] ->
+        if inspect_fv fv = star_lid
+        then Tm_Star (fst a1) (fst a2)
+        else default_view
+      | Tv_UInst fv [u], [a1; a2] ->
+        if inspect_fv fv = exists_lid ||
+           inspect_fv fv = forall_lid
+        then (
+          let t1 : R.term = fst a1 in
+          let t2 : R.term = fst a2 in
+          match inspect_ln t2 with
+          | Tv_Abs b body ->
+            let bview = inspect_binder b in
+            let b = mk_binder_ppname t1 (mk_ppname bview.ppname (binder_range b)) in
+            if inspect_fv fv = exists_lid
+            then Tm_ExistsSL u b body
+            else Tm_ForallSL u b body
+          | _ -> default_view
+        )
+        else default_view
+     | Tv_FVar fv, [a] ->
+        if inspect_fv fv = pure_lid
+        then Tm_Pure (fst a)
+        else if inspect_fv fv = inv_lid
+        then Tm_Inv (fst a)
+        else default_view
+     | _ -> default_view
+    end
+
+  | Tv_Refine _ _
+  | Tv_Arrow _ _
+  | Tv_Type _
+  | Tv_Const _
+  | Tv_Let _ _ _ _ _
+  | Tv_Var _
+  | Tv_BVar _
+  | Tv_UInst _ _
+  | Tv_Match _ _ _
+  | Tv_Abs _ _ -> default_view
+
+  | Tv_AscribedT t _ _ _
+  | Tv_AscribedC t _ _ _ ->
+    //this case doesn't work because it is unascribing
+    admit();
+    inspect_term t
+
+  | Tv_Uvar _ _ -> default_view
+  
+  | Tv_Unknown -> Tm_Unknown
+
+  | Tv_Unsupp -> default_view

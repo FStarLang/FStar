@@ -50,93 +50,27 @@ let (__proj__Mkfv__item__fv_range : fv -> range) =
   fun projectee -> match projectee with | { fv_name; fv_range;_} -> fv_range
 let (as_fv : FStar_Reflection_Types.name -> fv) =
   fun l -> { fv_name = l; fv_range = FStar_Range.range_0 }
-type 't not_tv_unknown = unit
-type host_term = FStar_Reflection_Types.term
-type term' =
-  | Tm_Emp 
-  | Tm_Pure of term 
-  | Tm_Star of term * term 
-  | Tm_ExistsSL of universe * binder * term 
-  | Tm_ForallSL of universe * binder * term 
-  | Tm_VProp 
-  | Tm_Inv of term 
-  | Tm_Inames 
-  | Tm_EmpInames 
-  | Tm_AddInv of term * term 
-  | Tm_FStar of host_term 
-  | Tm_Unknown 
-and binder =
+type term = FStar_Reflection_Types.term
+type vprop = term
+type typ = term
+type binder =
   {
   binder_ty: term ;
   binder_ppname: ppname ;
   binder_attrs: (term Prims.list, unit) FStar_Sealed_Inhabited.sealed }
-and term = {
-  t: term' ;
-  range1: range }
-let uu___is_Tm_Emp uu___ = match uu___ with | Tm_Emp _ -> true | _ -> false
-let uu___is_Tm_Pure uu___ = match uu___ with | Tm_Pure _ -> true | _ -> false
-let uu___is_Tm_Star uu___ = match uu___ with | Tm_Star _ -> true | _ -> false
-let uu___is_Tm_ExistsSL uu___ =
-  match uu___ with | Tm_ExistsSL _ -> true | _ -> false
-let uu___is_Tm_ForallSL uu___ =
-  match uu___ with | Tm_ForallSL _ -> true | _ -> false
-let uu___is_Tm_VProp uu___ =
-  match uu___ with | Tm_VProp _ -> true | _ -> false
-let uu___is_Tm_Inv uu___ = match uu___ with | Tm_Inv _ -> true | _ -> false
-let uu___is_Tm_Inames uu___ =
-  match uu___ with | Tm_Inames _ -> true | _ -> false
-let uu___is_Tm_EmpInames uu___ =
-  match uu___ with | Tm_EmpInames _ -> true | _ -> false
-let uu___is_Tm_AddInv uu___ =
-  match uu___ with | Tm_AddInv _ -> true | _ -> false
-let uu___is_Tm_FStar uu___ =
-  match uu___ with | Tm_FStar _ -> true | _ -> false
-let uu___is_Tm_Unknown uu___ =
-  match uu___ with | Tm_Unknown _ -> true | _ -> false
-type vprop = term
-type typ = term
-let binder_attrs_default :
-  'uuuuu . unit -> 'uuuuu Prims.list FStar_Sealed.sealed =
-  fun uu___ -> FStar_Sealed.seal []
-let (term_range : term -> range) = fun t -> t.range1
-let (tm_fstar : host_term -> range -> term) =
-  fun t -> fun r -> { t = (Tm_FStar t); range1 = r }
-let (with_range : term' -> range -> term) =
-  fun t -> fun r -> { t; range1 = r }
-let (tm_vprop : term) = with_range Tm_VProp FStar_Range.range_0
-let (tm_inv : term -> term) =
-  fun p -> with_range (Tm_Inv p) FStar_Range.range_0
-let (tm_inames : term) = with_range Tm_Inames FStar_Range.range_0
-let (tm_emp : term) = with_range Tm_Emp FStar_Range.range_0
-let (tm_emp_inames : term) = with_range Tm_EmpInames FStar_Range.range_0
-let (tm_unknown : term) = with_range Tm_Unknown FStar_Range.range_0
-let (tm_pure : term -> term) =
-  fun p -> { t = (Tm_Pure p); range1 = (p.range1) }
-let (tm_star : vprop -> vprop -> term) =
-  fun l ->
-    fun r ->
-      {
-        t = (Tm_Star (l, r));
-        range1 = (Pulse_RuntimeUtils.union_ranges l.range1 r.range1)
-      }
-let (tm_exists_sl : universe -> binder -> vprop -> term) =
-  fun u ->
-    fun b ->
-      fun body ->
-        {
-          t = (Tm_ExistsSL (u, b, body));
-          range1 =
-            (Pulse_RuntimeUtils.union_ranges (b.binder_ty).range1 body.range1)
-        }
-let (tm_forall_sl : universe -> binder -> vprop -> term) =
-  fun u ->
-    fun b ->
-      fun body ->
-        {
-          t = (Tm_ForallSL (u, b, body));
-          range1 =
-            (Pulse_RuntimeUtils.union_ranges (b.binder_ty).range1 body.range1)
-        }
+let (__proj__Mkbinder__item__binder_ty : binder -> term) =
+  fun projectee ->
+    match projectee with
+    | { binder_ty; binder_ppname; binder_attrs;_} -> binder_ty
+let (__proj__Mkbinder__item__binder_ppname : binder -> ppname) =
+  fun projectee ->
+    match projectee with
+    | { binder_ty; binder_ppname; binder_attrs;_} -> binder_ppname
+let (__proj__Mkbinder__item__binder_attrs :
+  binder -> (term Prims.list, unit) FStar_Sealed_Inhabited.sealed) =
+  fun projectee ->
+    match projectee with
+    | { binder_ty; binder_ppname; binder_attrs;_} -> binder_attrs
 type st_comp = {
   u: universe ;
   res: term ;
@@ -153,19 +87,15 @@ let (__proj__Mkst_comp__item__post : st_comp -> vprop) =
 type observability =
   | Neutral 
   | Observable 
-  | Unobservable 
 let (uu___is_Neutral : observability -> Prims.bool) =
   fun projectee -> match projectee with | Neutral -> true | uu___ -> false
 let (uu___is_Observable : observability -> Prims.bool) =
   fun projectee -> match projectee with | Observable -> true | uu___ -> false
-let (uu___is_Unobservable : observability -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Unobservable -> true | uu___ -> false
 type comp =
   | C_Tot of term 
   | C_ST of st_comp 
   | C_STAtomic of term * observability * st_comp 
-  | C_STGhost of st_comp 
+  | C_STGhost of term * st_comp 
 let (uu___is_C_Tot : comp -> Prims.bool) =
   fun projectee -> match projectee with | C_Tot _0 -> true | uu___ -> false
 let (__proj__C_Tot__item___0 : comp -> term) =
@@ -188,9 +118,11 @@ let (__proj__C_STAtomic__item___2 : comp -> st_comp) =
   fun projectee -> match projectee with | C_STAtomic (inames, obs, _2) -> _2
 let (uu___is_C_STGhost : comp -> Prims.bool) =
   fun projectee ->
-    match projectee with | C_STGhost _0 -> true | uu___ -> false
-let (__proj__C_STGhost__item___0 : comp -> st_comp) =
-  fun projectee -> match projectee with | C_STGhost _0 -> _0
+    match projectee with | C_STGhost (inames, _1) -> true | uu___ -> false
+let (__proj__C_STGhost__item__inames : comp -> term) =
+  fun projectee -> match projectee with | C_STGhost (inames, _1) -> inames
+let (__proj__C_STGhost__item___1 : comp -> st_comp) =
+  fun projectee -> match projectee with | C_STGhost (inames, _1) -> _1
 type comp_st = comp
 type pattern =
   | Pat_Cons of fv * (pattern * Prims.bool) Prims.list 
@@ -246,22 +178,30 @@ let (ctag_of_comp_st : comp_st -> ctag) =
     match c with
     | C_ST uu___ -> STT
     | C_STAtomic (uu___, uu___1, uu___2) -> STT_Atomic
-    | C_STGhost uu___ -> STT_Ghost
-type effect_annot__EffectAnnotAtomic__payload = {
+    | C_STGhost (uu___, uu___1) -> STT_Ghost
+type effect_annot__EffectAnnotGhost__payload = {
   opens: term }
+and effect_annot__EffectAnnotAtomic__payload = {
+  opens1: term }
 and effect_annot =
   | EffectAnnotSTT 
-  | EffectAnnotGhost 
+  | EffectAnnotGhost of effect_annot__EffectAnnotGhost__payload 
   | EffectAnnotAtomic of effect_annot__EffectAnnotAtomic__payload 
+let (__proj__Mkeffect_annot__EffectAnnotGhost__payload__item__opens :
+  effect_annot__EffectAnnotGhost__payload -> term) =
+  fun projectee -> match projectee with | { opens;_} -> opens
 let (__proj__Mkeffect_annot__EffectAnnotAtomic__payload__item__opens :
   effect_annot__EffectAnnotAtomic__payload -> term) =
-  fun projectee -> match projectee with | { opens;_} -> opens
+  fun projectee -> match projectee with | { opens1 = opens;_} -> opens
 let (uu___is_EffectAnnotSTT : effect_annot -> Prims.bool) =
   fun projectee ->
     match projectee with | EffectAnnotSTT -> true | uu___ -> false
 let (uu___is_EffectAnnotGhost : effect_annot -> Prims.bool) =
   fun projectee ->
-    match projectee with | EffectAnnotGhost -> true | uu___ -> false
+    match projectee with | EffectAnnotGhost _0 -> true | uu___ -> false
+let (__proj__EffectAnnotGhost__item___0 :
+  effect_annot -> effect_annot__EffectAnnotGhost__payload) =
+  fun projectee -> match projectee with | EffectAnnotGhost _0 -> _0
 let (uu___is_EffectAnnotAtomic : effect_annot -> Prims.bool) =
   fun projectee ->
     match projectee with | EffectAnnotAtomic _0 -> true | uu___ -> false
@@ -272,14 +212,15 @@ let (effect_annot_of_comp : comp_st -> effect_annot) =
   fun c ->
     match c with
     | C_ST uu___ -> EffectAnnotSTT
-    | C_STGhost uu___ -> EffectAnnotGhost
-    | C_STAtomic (opens, uu___, uu___1) -> EffectAnnotAtomic { opens }
+    | C_STGhost (opens, uu___) -> EffectAnnotGhost { opens }
+    | C_STAtomic (opens, uu___, uu___1) ->
+        EffectAnnotAtomic { opens1 = opens }
 let (ctag_of_effect_annot : effect_annot -> ctag) =
   fun uu___ ->
     match uu___ with
     | EffectAnnotSTT -> STT
-    | EffectAnnotGhost -> STT_Ghost
-    | uu___1 -> STT_Atomic
+    | EffectAnnotGhost uu___1 -> STT_Ghost
+    | EffectAnnotAtomic uu___1 -> STT_Atomic
 type proof_hint_type__ASSERT__payload = {
   p: vprop }
 and proof_hint_type__FOLD__payload =
@@ -468,7 +409,7 @@ and st_term'__Tm_ProofHintWithBinders__payload =
   {
   hint_type: proof_hint_type ;
   binders: binder Prims.list ;
-  t3: st_term }
+  t: st_term }
 and st_term'__Tm_WithInv__payload =
   {
   name1: term ;
@@ -496,7 +437,7 @@ and st_term' =
   | Tm_WithInv of st_term'__Tm_WithInv__payload 
 and st_term = {
   term1: st_term' ;
-  range2: range ;
+  range1: range ;
   effect_tag: effect_hint }
 let uu___is_Tm_Return uu___ =
   match uu___ with | Tm_Return _ -> true | _ -> false
@@ -545,7 +486,7 @@ and decl' =
   | FnDecl of decl'__FnDecl__payload 
 and decl = {
   d: decl' ;
-  range3: range }
+  range2: range }
 let (__proj__Mkdecl'__FnDecl__payload__item__id :
   decl'__FnDecl__payload -> FStar_Reflection_Types.ident) =
   fun projectee ->
@@ -582,9 +523,9 @@ let (uu___is_FnDecl : decl' -> Prims.bool) = fun projectee -> true
 let (__proj__FnDecl__item___0 : decl' -> decl'__FnDecl__payload) =
   fun projectee -> match projectee with | FnDecl _0 -> _0
 let (__proj__Mkdecl__item__d : decl -> decl') =
-  fun projectee -> match projectee with | { d; range3 = range1;_} -> d
+  fun projectee -> match projectee with | { d; range2 = range1;_} -> d
 let (__proj__Mkdecl__item__range : decl -> range) =
-  fun projectee -> match projectee with | { d; range3 = range1;_} -> range1
+  fun projectee -> match projectee with | { d; range2 = range1;_} -> range1
 let (mk_binder_with_attrs :
   term ->
     ppname -> (term Prims.list, unit) FStar_Sealed_Inhabited.sealed -> binder)
@@ -592,6 +533,9 @@ let (mk_binder_with_attrs :
   fun binder_ty ->
     fun binder_ppname ->
       fun binder_attrs -> { binder_ty; binder_ppname; binder_attrs }
+let binder_attrs_default :
+  'uuuuu . unit -> 'uuuuu Prims.list FStar_Sealed.sealed =
+  fun uu___ -> FStar_Sealed.seal []
 let (null_binder : term -> binder) =
   fun t -> mk_binder_with_attrs t ppname_default (binder_attrs_default ())
 let (mk_binder : Prims.string -> range -> term -> binder) =
@@ -607,30 +551,8 @@ let (mk_binder_ppname : term -> ppname -> binder) =
       mk_binder_with_attrs binder_ty binder_ppname (binder_attrs_default ())
 let (eq_univ : universe -> universe -> Prims.bool) =
   fun u1 -> fun u2 -> FStar_Reflection_V2_TermEq.univ_eq_dec u1 u2
-let rec (eq_tm : term -> term -> Prims.bool) =
-  fun t1 ->
-    fun t2 ->
-      match ((t1.t), (t2.t)) with
-      | (Tm_VProp, Tm_VProp) -> true
-      | (Tm_Emp, Tm_Emp) -> true
-      | (Tm_Inames, Tm_Inames) -> true
-      | (Tm_EmpInames, Tm_EmpInames) -> true
-      | (Tm_Unknown, Tm_Unknown) -> true
-      | (Tm_Star (l1, r1), Tm_Star (l2, r2)) ->
-          (eq_tm l1 l2) && (eq_tm r1 r2)
-      | (Tm_Inv p1, Tm_Inv p2) -> eq_tm p1 p2
-      | (Tm_Pure p1, Tm_Pure p2) -> eq_tm p1 p2
-      | (Tm_ExistsSL (u1, t11, b1), Tm_ExistsSL (u2, t21, b2)) ->
-          ((eq_univ u1 u2) && (eq_tm t11.binder_ty t21.binder_ty)) &&
-            (eq_tm b1 b2)
-      | (Tm_ForallSL (u1, t11, b1), Tm_ForallSL (u2, t21, b2)) ->
-          ((eq_univ u1 u2) && (eq_tm t11.binder_ty t21.binder_ty)) &&
-            (eq_tm b1 b2)
-      | (Tm_FStar t11, Tm_FStar t21) ->
-          FStar_Reflection_V2_TermEq.term_eq_dec t11 t21
-      | (Tm_AddInv (i1, is1), Tm_AddInv (i2, is2)) ->
-          (eq_tm i1 i2) && (eq_tm is1 is2)
-      | uu___ -> false
+let (eq_tm : term -> term -> Prims.bool) =
+  fun t1 -> fun t2 -> FStar_Reflection_V2_TermEq.term_eq_dec t1 t2
 let (eq_st_comp : st_comp -> st_comp -> Prims.bool) =
   fun s1 ->
     fun s2 ->
@@ -645,7 +567,8 @@ let (eq_comp : comp -> comp -> Prims.bool) =
       | (C_ST s1, C_ST s2) -> eq_st_comp s1 s2
       | (C_STAtomic (i1, o1, s1), C_STAtomic (i2, o2, s2)) ->
           ((eq_tm i1 i2) && (o1 = o2)) && (eq_st_comp s1 s2)
-      | (C_STGhost s1, C_STGhost s2) -> eq_st_comp s1 s2
+      | (C_STGhost (i1, s1), C_STGhost (i2, s2)) ->
+          (eq_tm i1 i2) && (eq_st_comp s1 s2)
       | uu___ -> false
 let rec eq_list :
   'a .
@@ -832,9 +755,9 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
             (eq_tm_opt post1 post2)
       | (Tm_Unreachable, Tm_Unreachable) -> true
       | (Tm_ProofHintWithBinders
-         { hint_type = ht1; binders = bs1; t3 = t11;_},
+         { hint_type = ht1; binders = bs1; t = t11;_},
          Tm_ProofHintWithBinders
-         { hint_type = ht2; binders = bs2; t3 = t21;_}) ->
+         { hint_type = ht2; binders = bs2; t = t21;_}) ->
           ((eq_hint_type ht1 ht2) && (eq_list eq_binder bs1 bs2)) &&
             (eq_st_term t11 t21)
       | (Tm_WithInv { name1; body6 = body1; returns_inv = r1;_}, Tm_WithInv
@@ -864,7 +787,7 @@ let (comp_res : comp -> term) =
     | C_Tot ty -> ty
     | C_ST s -> s.res
     | C_STAtomic (uu___, uu___1, s) -> s.res
-    | C_STGhost s -> s.res
+    | C_STGhost (uu___, s) -> s.res
 let (stateful_comp : comp -> Prims.bool) =
   fun c ->
     ((uu___is_C_ST c) || (uu___is_C_STAtomic c)) || (uu___is_C_STGhost c)
@@ -873,14 +796,14 @@ let (st_comp_of_comp : comp -> st_comp) =
     match c with
     | C_ST s -> s
     | C_STAtomic (uu___, uu___1, s) -> s
-    | C_STGhost s -> s
+    | C_STGhost (uu___, s) -> s
 let (with_st_comp : comp -> st_comp -> comp) =
   fun c ->
     fun s ->
       match c with
       | C_ST uu___ -> C_ST s
       | C_STAtomic (inames, obs, uu___) -> C_STAtomic (inames, obs, s)
-      | C_STGhost uu___ -> C_STGhost s
+      | C_STGhost (inames, uu___) -> C_STGhost (inames, s)
 let (comp_u : comp -> universe) = fun c -> (st_comp_of_comp c).u
 let (universe_of_comp : comp_st -> FStar_Reflection_Types.universe) =
   fun c ->
@@ -890,7 +813,10 @@ let (universe_of_comp : comp_st -> FStar_Reflection_Types.universe) =
 let (comp_pre : comp -> vprop) = fun c -> (st_comp_of_comp c).pre
 let (comp_post : comp -> vprop) = fun c -> (st_comp_of_comp c).post
 let (comp_inames : comp -> term) =
-  fun c -> match c with | C_STAtomic (inames, uu___, uu___1) -> inames
+  fun c ->
+    match c with
+    | C_STGhost (inames, uu___) -> inames
+    | C_STAtomic (inames, uu___, uu___1) -> inames
 type nvar = (ppname * var)
 let (v_as_nv : var -> nvar) = fun x -> (ppname_default, x)
 let (as_binder : term -> binder) = fun t -> null_binder t

@@ -36,12 +36,11 @@ module P = Pulse.Syntax.Printer
 module PS = Pulse.Checker.Prover.Substs
 module Metatheory = Pulse.Typing.Metatheory
 
-let equational (t:term) : bool =
-  match t.t with
-  | Tm_FStar host_term ->
-    (match R.inspect_ln host_term with
-     | R.Tv_Match _ _ _ -> true
-     | _ -> false)
+let rec equational (t:term) : bool =
+  match R.inspect_ln t with
+  | R.Tv_Match _ _ _ -> true
+  | R.Tv_AscribedT t _ _ _
+  | R.Tv_AscribedC t _ _ _ -> equational t
   | _ -> false
 
 let type_of_fv (g:env) (fv:R.fv)
@@ -114,8 +113,9 @@ let eligible_for_smt_equality (g:env) (t0 t1:term)
         TermEq.term_eq h0 h1
       | _ -> false
     in
-    match t0.t, t1.t with
-    | Tm_FStar t0, Tm_FStar t1 -> (
+    match inspect_term t0, inspect_term t1 with
+    | Tm_ForallSL _ _ _, Tm_ForallSL _ _ _ -> true
+    | _ -> (
       let h0, args0 = R.collect_app_ln t0 in
       let h1, args1 = R.collect_app_ln t1 in
       if TermEq.term_eq h0 h1 && L.length args0 = L.length args1
@@ -165,7 +165,6 @@ let eligible_for_smt_equality (g:env) (t0 t1:term)
       )
       else either_equational ()
     )
-    | Tm_ForallSL _ _ _, Tm_ForallSL _ _ _ -> true
     | _ -> either_equational ()
 
 
@@ -177,10 +176,8 @@ let refl_uvar (t:R.term) (uvs:env) : option var =
     if contains uvs n then Some n else None
   | _ -> None
 
-let is_uvar (t:term) (uvs:env) : option var =
-  match t.t with
-  | Tm_FStar t -> refl_uvar t uvs
-  | _ -> None
+let is_uvar (t:term) (uvs:env) : option var = refl_uvar t uvs
+
 
 let contains_uvar (t:term) (uvs:env) (g:env) : T.Tac bool =
   not (check_disjoint uvs (freevars t))
@@ -247,21 +244,36 @@ let try_solve_uvars (g:env) (uvs:env { disjoint uvs g }) (p q:term)
     let q_names = freevars q in
     L.fold_left (fun (ss:(ss:PS.ss_t { PS.dom ss `Set.subset` freevars q })) (x, t) ->
       let nv_view = R.inspect_namedv x in
-      let topt = readback_ty t in
-      match topt with
-      | Some t ->
-        if Set.mem nv_view.uniq q_names &&
-           not (Set.mem nv_view.uniq (PS.dom ss))
-        then begin
-          let ss_new = PS.push ss nv_view.uniq t in
-          assert (nv_view.uniq `Set.mem` freevars q);
-          assert (PS.dom ss `Set.subset` freevars q);
-          assume (PS.dom ss_new `Set.subset` freevars q);
-          ss_new
-        end
-        else ss
-      | None -> ss
+      if Set.mem nv_view.uniq q_names &&
+         not (Set.mem nv_view.uniq (PS.dom ss))
+      then begin
+        let ss_new = PS.push ss nv_view.uniq t in
+        assert (nv_view.uniq `Set.mem` freevars q);
+        assert (PS.dom ss `Set.subset` freevars q);
+        assume (PS.dom ss_new `Set.subset` freevars q);
+        ss_new
+      end
+      else ss
     ) ss l
+
+let eq_tm_unascribe (g:env) (p q:term)
+  : option (RT.equiv (elab_env g) (elab_term p) (elab_term q)) =
+
+  let rec unascribe (t:term) : term =
+    match R.inspect_ln t with
+    | R.Tv_AscribedT t _ _ _
+    | R.Tv_AscribedC t _ _ _ -> unascribe t
+    | _ -> t
+  in
+
+  //
+  // We are using magic () here to construct the token
+  // But we could use call the F* unifier here, in some restricted
+  //   setting (no delta, no smt), and have it return us the token
+  //
+  if eq_tm (unascribe p) (unascribe q)
+  then Some (RT.Rel_eq_token _ _ _ (magic ()))
+  else None
 
 let unify (g:env) (uvs:env { disjoint uvs g})
   (p q:term)
@@ -269,20 +281,19 @@ let unify (g:env) (uvs:env { disjoint uvs g})
            option (RT.equiv (elab_env g) (elab_term p) (elab_term ss.(q)))) =
 
   let ss = try_solve_uvars g uvs p q in
-  let q_ss = readback_ty (elab_term ss.(q)) in
-  match q_ss with
-  | None -> (| ss, None |)
-  | Some q -> 
-    if eq_tm p q
-    then (| ss, Some (RT.Rel_refl _ _ _) |)
-    else if contains_uvar q uvs g
+  let q = ss.(q) in
+  let is_eq = eq_tm_unascribe g p q in
+  match is_eq with
+  | Some eq -> (| ss, Some eq |)
+  | None ->
+    if contains_uvar q uvs g
     then (| ss, None |)
     else if eligible_for_smt_equality g p q
     then let v0 = elab_term p in
-        let v1 = elab_term q in
-        match check_equiv_now (elab_env g) v0 v1 with
-        | Some token, _ -> (| ss, Some (RT.Rel_eq_token _ _ _ (FStar.Squash.return_squash token)) |)
-        | None, _ -> (| ss, None |)
+         let v1 = elab_term q in
+         match check_equiv_now (elab_env g) v0 v1 with
+         | Some token, _ -> (| ss, Some (RT.Rel_eq_token _ _ _ (FStar.Squash.return_squash token)) |)
+         | None, _ -> (| ss, None |)
     else (| ss, None |)
 
 let try_match_pq (g:env) (uvs:env { disjoint uvs g}) (p q:vprop)
@@ -402,17 +413,8 @@ let rec match_q_aux (#preamble:_) (pst:prover_state preamble)
           (move_hd_end pst.pg pst.remaining_ctxt) in
       match_q_aux pst q unsolved' () (i+1)
 
-//
-// THIS SHOULD GO AWAY SOON
-//
-let ___canon___ (q:vprop) : Dv (r:vprop { r == q }) =
-  assume False;
-  match Pulse.Readback.readback_ty (elab_term q) with
-  | None -> q
-  | Some q -> q
-
 let has_structure (q:vprop) : bool =
-  match q.t with
+  match inspect_term q with
   | Tm_Star _ _ -> true
   | _ -> false
 
@@ -424,7 +426,6 @@ let match_q (#preamble:preamble) (pst:prover_state preamble)
 : T.Tac (option (pst':prover_state preamble { pst' `pst_extends` pst })) =
 
 let q_ss = pst.ss.(q) in
-let q_ss = ___canon___ q_ss in
 
 if has_structure q_ss
 then begin

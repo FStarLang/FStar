@@ -43,7 +43,7 @@ let check_effect
   | _, T.E_Total -> 
     (| STT_Atomic, e, d |)
   | _ -> 
-    fail g (Some e.range) "Expected a total term, but this term has Ghost effect"
+    fail g (Some (Pulse.RuntimeUtils.range_of_term e)) "Expected a total term, but this term has Ghost effect"
  
 
 let check_tot_or_ghost_term (g:env) (e:term) (t:term) (c:option ctag)
@@ -90,7 +90,7 @@ let check_core
         Metatheory.tot_typing_weakening_standard post.g post.ty_typing g in
       Some (| post.ret_ty, post.u, ty_typing |)
     | _ ->
-      match expected_type.t with
+      match inspect_term expected_type with
       | Tm_Unknown -> None
       | _ ->
         let ty, _ = Pulse.Checker.Pure.instantiate_term_implicits g expected_type in
@@ -132,7 +132,7 @@ let check_core
     let (| _, c, _ |) = dd in
     Printf.sprintf "Return comp is: %s"
       (Pulse.Syntax.Printer.comp_to_string c));
-  prove_post_hint #g (try_frame_pre #g ctxt_typing dd res_ppname) post_hint t.range
+  prove_post_hint #g (try_frame_pre #g ctxt_typing dd res_ppname) post_hint (Pulse.RuntimeUtils.range_of_term t)
 #pop-options
 
 let check

@@ -30,8 +30,8 @@ let share b = R.share b
 let gather b = R.gather b
 let share2 b = R.share2 b
 let gather2 b = R.gather2 b
-let read_atomic b #n #p = R.read_atomic b #n #p
-let write_atomic b x #n = R.write_atomic b x #n
+let read_atomic b #n #p = Pulse.Lib.Primitives.read_atomic b #n #p
+let write_atomic b x #n = Pulse.Lib.Primitives.write_atomic b x #n
 let pts_to_injective_eq b = R.pts_to_injective_eq b
 let box_to_ref b = b
 

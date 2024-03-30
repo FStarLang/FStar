@@ -151,7 +151,7 @@ let (check_vprop_equiv_ext :
                                                                     (Prims.of_int (17)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.printable_term
+                                                                    Pulse_PP.printable_fstar_term
                                                                     p))
                                                                     (fun
                                                                     uu___2 ->
@@ -195,7 +195,7 @@ let (check_vprop_equiv_ext :
                                                                     (Prims.of_int (17)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.printable_term
+                                                                    Pulse_PP.printable_fstar_term
                                                                     q))
                                                                     (fun
                                                                     uu___3 ->
@@ -262,11 +262,11 @@ let rec (check_vprop_equiv :
                    else
                      Obj.magic
                        (Obj.repr
-                          (match ((p.Pulse_Syntax_Base.t),
-                                   (q.Pulse_Syntax_Base.t))
+                          (match ((Pulse_Syntax_Pure.inspect_term p),
+                                   (Pulse_Syntax_Pure.inspect_term q))
                            with
-                           | (Pulse_Syntax_Base.Tm_ForallSL (u1, b1, t1),
-                              Pulse_Syntax_Base.Tm_ForallSL (u2, b2, t2)) ->
+                           | (Pulse_Syntax_Pure.Tm_ForallSL (u1, b1, t1),
+                              Pulse_Syntax_Pure.Tm_ForallSL (u2, b2, t2)) ->
                                if
                                  (Pulse_Syntax_Base.eq_univ u1 u2) &&
                                    (Pulse_Syntax_Base.eq_tm
@@ -382,8 +382,8 @@ let rec (check_vprop_equiv :
                                                               uu___1)))
                                                    uu___1))) uu___1)
                                else check_vprop_equiv_ext r g p q
-                           | (Pulse_Syntax_Base.Tm_Star (p1, p2),
-                              Pulse_Syntax_Base.Tm_Star (q1, q2)) ->
+                           | (Pulse_Syntax_Pure.Tm_Star (p1, p2),
+                              Pulse_Syntax_Pure.Tm_Star (q1, q2)) ->
                                FStar_Tactics_Effect.tac_bind
                                  (FStar_Sealed.seal
                                     (Obj.magic
@@ -459,7 +459,7 @@ let (check :
                 (FStar_Tactics_Effect.lift_div_tac
                    (fun uu___ ->
                       Pulse_Checker_Pure.push_context "check_rewrite"
-                        t.Pulse_Syntax_Base.range2 g))
+                        t.Pulse_Syntax_Base.range1 g))
                 (fun uu___ ->
                    (fun g1 ->
                       Obj.magic
@@ -560,7 +560,7 @@ let (check :
                                                                     (Prims.of_int (116)))))
                                                                     (Obj.magic
                                                                     (check_vprop_equiv
-                                                                    t.Pulse_Syntax_Base.range2
+                                                                    t.Pulse_Syntax_Base.range1
                                                                     g1 p1 q1))
                                                                     (fun
                                                                     uu___3 ->
@@ -666,7 +666,7 @@ let (check :
                                                                     g pre
                                                                     uu___3
                                                                     post_hint
-                                                                    t.Pulse_Syntax_Base.range2))
+                                                                    t.Pulse_Syntax_Base.range1))
                                                                     uu___3)))
                                                                     uu___3)))
                                                                     uu___3)))

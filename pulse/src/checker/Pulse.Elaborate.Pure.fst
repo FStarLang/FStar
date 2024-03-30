@@ -37,61 +37,9 @@ let elab_observability =
   let open R in
   function
   | Neutral ->  pack_ln (Tv_FVar (pack_fv neutral_lid))
-  | Unobservable -> pack_ln (Tv_FVar (pack_fv unobservable_lid))
   | Observable ->  pack_ln (Tv_FVar (pack_fv observable_lid))
-  
-let rec elab_term (top:term)
-  : R.term
-  = let open R in
-    let w t' = RU.set_range t' top.range in
-    match top.t with
-    | Tm_VProp ->
-      w (pack_ln (Tv_FVar (pack_fv vprop_lid)))
 
-    | Tm_Emp ->
-      w (pack_ln (Tv_FVar (pack_fv emp_lid)))
-      
-    | Tm_Inv p ->
-      let p = elab_term p in
-      let head = pack_ln (Tv_FVar (pack_fv inv_lid)) in
-      w (pack_ln (Tv_App head (p, Q_Explicit)))
-
-    | Tm_Pure p ->
-      let p = elab_term p in
-      let head = pack_ln (Tv_FVar (pack_fv pure_lid)) in
-      w (pack_ln (Tv_App head (p, Q_Explicit)))
-
-    | Tm_Star l r ->
-      let l = elab_term l in
-      let r = elab_term r in
-      w (mk_star l r)
-      
-    | Tm_ExistsSL u b body
-    | Tm_ForallSL u b body ->
-      let t = elab_term b.binder_ty in
-      let body = elab_term body in
-      let t = set_range_of t b.binder_ppname.range in
-      if Tm_ExistsSL? top.t
-      then w (mk_exists u t (mk_abs_with_name_and_range b.binder_ppname.name b.binder_ppname.range t R.Q_Explicit body))
-      else w (mk_forall u t (mk_abs_with_name_and_range b.binder_ppname.name b.binder_ppname.range t R.Q_Explicit body))
-
-    | Tm_Inames ->
-      w (pack_ln (Tv_FVar (pack_fv inames_lid)))
-
-    | Tm_EmpInames ->
-      w (emp_inames_tm)
-
-    | Tm_AddInv i is ->
-      let i = elab_term i in
-      let is = elab_term is in
-      w (add_inv_tm (`_) is i) // Careful on the order flip
-
-    | Tm_Unknown ->
-      w (pack_ln R.Tv_Unknown)
-
-    | Tm_FStar t ->
-      w t
-      
+let elab_term (top:term) : R.term = top      
 
 let rec elab_pat (p:pattern) : Tot R.pattern =
   let elab_fv (f:fv) : R.fv =
@@ -135,9 +83,10 @@ let elab_comp (c:comp)
       let post = mk_abs res R.Q_Explicit post in
       mk_stt_atomic_comp (elab_observability obs) u res inames pre post
 
-    | C_STGhost c ->
+    | C_STGhost inames c ->
+      let inames = elab_term inames in
       let u, res, pre, post = elab_st_comp c in
-      mk_stt_ghost_comp u res pre (mk_abs res R.Q_Explicit post)
+      mk_stt_ghost_comp u res inames pre (mk_abs res R.Q_Explicit post)
 
 let elab_stt_equiv (g:R.env) (c:comp{C_ST? c}) (pre:R.term) (post:R.term)
   (eq_pre:RT.equiv g pre (elab_term (comp_pre c)))
@@ -188,15 +137,17 @@ let elab_stghost_equiv (g:R.env) (c:comp{C_STGhost? c}) (pre:R.term) (post:R.ter
   (eq_post:RT.equiv g post
                     (mk_abs (elab_term (comp_res c)) R.Q_Explicit (elab_term (comp_post c))))
   : RT.equiv g
-      (let C_STGhost {u;res} = c in
+      (let C_STGhost inames {u;res} = c in
        mk_stt_ghost_comp u
                          (elab_term res)
+                         (elab_term inames)
                          pre
                          post)
       (elab_comp c) =
   
-  let C_STGhost _ = c in
+  let C_STGhost inames _ = c in
   mk_stt_ghost_comp_equiv _
     (comp_u c)
     (elab_term (comp_res c))
+    (elab_term inames)
     _ _ _ _ eq_pre eq_post

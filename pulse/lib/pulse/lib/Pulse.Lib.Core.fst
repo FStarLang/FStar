@@ -162,6 +162,7 @@ let lift_ghost_neutral #a #pre #post e ni_a = A.lift_ghost_neutral #a #pre #post
 let lift_neutral_ghost = A.lift_neutral_ghost
 let frame_ghost = A.frame_ghost
 let sub_ghost = A.sub_ghost
+let sub_invs_ghost = A.sub_invs_stt_ghost
 
 ////////////////////////////////////////////////////////////////////
 // Invariants

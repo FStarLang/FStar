@@ -82,56 +82,16 @@ type fv = {
 }
 let as_fv l = { fv_name = l; fv_range = FStar.Range.range_0 }
 
-let not_tv_unknown (t:R.term) = R.inspect_ln t =!= R.Tv_Unknown
-let host_term = t:R.term { not_tv_unknown t }
+type term = R.term
+type vprop = term
+type typ = term
 
-
-[@@ no_auto_projectors]
 noeq
-type term' =
-  | Tm_Emp        : term'
-  | Tm_Pure       : p:term -> term'
-  | Tm_Star       : l:vprop -> r:vprop -> term'
-  | Tm_ExistsSL   : u:universe -> b:binder -> body:vprop -> term'
-  | Tm_ForallSL   : u:universe -> b:binder -> body:vprop -> term'
-  | Tm_VProp      : term'
-  | Tm_Inv        : vprop -> term'
-  | Tm_Inames     : term'  // type inames
-  | Tm_EmpInames  : term'
-  | Tm_AddInv     : i:term -> is:term -> term'
-  | Tm_FStar      : host_term -> term'
-  | Tm_Unknown    : term'
-
-and vprop = term
-
-and typ = term
-
-and binder = {
+type binder = {
   binder_ty     : term;
   binder_ppname : ppname;
   binder_attrs  : FStar.Sealed.Inhabited.sealed #(list term) []
 }
-
-and term = {
-  t : term';
-  range : range;
-}
-
-let binder_attrs_default = FStar.Sealed.seal []
-
-let term_range (t:term) = t.range
-let tm_fstar (t:host_term) (r:range) : term = { t = Tm_FStar t; range=r }
-let with_range (t:term') (r:range) = { t; range=r }
-let tm_vprop = with_range Tm_VProp FStar.Range.range_0
-let tm_inv p = with_range (Tm_Inv p) FStar.Range.range_0
-let tm_inames = with_range Tm_Inames FStar.Range.range_0
-let tm_emp = with_range Tm_Emp FStar.Range.range_0
-let tm_emp_inames = with_range Tm_EmpInames FStar.Range.range_0
-let tm_unknown = with_range Tm_Unknown FStar.Range.range_0
-let tm_pure (p:term) : term = { t = Tm_Pure p; range = p.range }
-let tm_star (l:vprop) (r:vprop) : term = { t = Tm_Star l r; range = RU.union_ranges l.range r.range }
-let tm_exists_sl (u:universe) (b:binder) (body:vprop) : term = { t = Tm_ExistsSL u b body; range = RU.union_ranges b.binder_ty.range body.range }
-let tm_forall_sl (u:universe) (b:binder) (body:vprop) : term = { t = Tm_ForallSL u b body; range = RU.union_ranges b.binder_ty.range body.range }
 
 noeq
 type st_comp = { (* ST pre (x:res) post ... x is free in post *)
@@ -144,14 +104,13 @@ type st_comp = { (* ST pre (x:res) post ... x is free in post *)
 type observability =
   | Neutral
   | Observable
-  | Unobservable
 
 noeq
 type comp =
   | C_Tot      : term -> comp
   | C_ST       : st_comp -> comp
   | C_STAtomic : inames:term -> obs:observability -> st_comp -> comp
-  | C_STGhost  : st_comp -> comp
+  | C_STGhost  : inames:term -> st_comp -> comp
 
 
 let comp_st = c:comp {not (C_Tot? c) }
@@ -176,26 +135,26 @@ let ctag_of_comp_st (c:comp_st) : ctag =
   match c with
   | C_ST _ -> STT
   | C_STAtomic _ _ _ -> STT_Atomic
-  | C_STGhost _ -> STT_Ghost
+  | C_STGhost _ _ -> STT_Ghost
 
 noeq
 type effect_annot =
   | EffectAnnotSTT
-  | EffectAnnotGhost
+  | EffectAnnotGhost { opens:term }
   | EffectAnnotAtomic { opens:term }
 
 let effect_annot_of_comp (c:comp_st)
 : effect_annot
 = match c with
   | C_ST _ -> EffectAnnotSTT
-  | C_STGhost _ -> EffectAnnotGhost
+  | C_STGhost opens _ -> EffectAnnotGhost { opens }
   | C_STAtomic opens _ _ -> EffectAnnotAtomic { opens }
 
 let ctag_of_effect_annot =
   function
   | EffectAnnotSTT -> STT
-  | EffectAnnotGhost -> STT_Ghost
-  | _ -> STT_Atomic
+  | EffectAnnotGhost _ -> STT_Ghost
+  | EffectAnnotAtomic _ -> STT_Atomic
 
 noeq
 type proof_hint_type =
@@ -355,6 +314,8 @@ and decl = {
 let mk_binder_with_attrs (binder_ty:term) (binder_ppname:ppname) binder_attrs : binder =
   {binder_ty;binder_ppname;binder_attrs}
 
+let binder_attrs_default = FStar.Sealed.seal []
+
 let null_binder (t:term) : binder =
   mk_binder_with_attrs t ppname_default binder_attrs_default
 
@@ -390,7 +351,7 @@ let comp_res (c:comp) : term =
   | C_Tot ty -> ty
   | C_ST s
   | C_STAtomic _ _ s
-  | C_STGhost s -> s.res
+  | C_STGhost _ s -> s.res
 
 let stateful_comp (c:comp) =
   C_ST? c || C_STAtomic? c || C_STGhost? c
@@ -399,13 +360,13 @@ let st_comp_of_comp (c:comp{stateful_comp c}) : st_comp =
   match c with
   | C_ST s
   | C_STAtomic _ _ s
-  | C_STGhost s -> s
+  | C_STGhost _ s -> s
 
 let with_st_comp (c:comp{stateful_comp c}) (s:st_comp) : comp =
   match c with
   | C_ST _ -> C_ST s
   | C_STAtomic inames obs _ -> C_STAtomic inames obs s
-  | C_STGhost _ -> C_STGhost s
+  | C_STGhost inames _ -> C_STGhost inames s
 
 let comp_u (c:comp { stateful_comp c }) = (st_comp_of_comp c).u
 
@@ -418,11 +379,11 @@ let comp_pre (c:comp { stateful_comp c }) = (st_comp_of_comp c).pre
 
 let comp_post (c:comp { stateful_comp c }) = (st_comp_of_comp c).post
 
-let comp_inames (c:comp { C_STAtomic? c }) : term =
+let comp_inames (c:comp { C_STAtomic? c || C_STGhost? c }) : term =
   match c with
+  | C_STGhost inames _
   | C_STAtomic inames _ _ -> inames
 
 let nvar = ppname & var 
 let v_as_nv x : nvar = ppname_default, x
 let as_binder (t:term) = null_binder t
-

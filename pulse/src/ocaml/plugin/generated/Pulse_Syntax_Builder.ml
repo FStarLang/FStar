@@ -234,7 +234,7 @@ let (tm_rename :
                  Pulse_Syntax_Base.goal = FStar_Pervasives_Native.None
                });
           Pulse_Syntax_Base.binders = [];
-          Pulse_Syntax_Base.t3 = t
+          Pulse_Syntax_Base.t = t
         }
 let (tm_admit :
   Pulse_Syntax_Base.ctag ->
@@ -264,7 +264,7 @@ let (with_range :
     fun r ->
       {
         Pulse_Syntax_Base.term1 = t;
-        Pulse_Syntax_Base.range2 = r;
+        Pulse_Syntax_Base.range1 = r;
         Pulse_Syntax_Base.effect_tag = Pulse_Syntax_Base.default_effect_hint
       }
 let (tm_assert_with_binders :
@@ -280,7 +280,7 @@ let (tm_assert_with_binders :
             Pulse_Syntax_Base.hint_type =
               (Pulse_Syntax_Base.ASSERT { Pulse_Syntax_Base.p = p });
             Pulse_Syntax_Base.binders = bs;
-            Pulse_Syntax_Base.t3 = t
+            Pulse_Syntax_Base.t = t
           }
 let (mk_assert_hint_type :
   Pulse_Syntax_Base.vprop -> Pulse_Syntax_Base.proof_hint_type) =
@@ -348,4 +348,4 @@ let (mk_decl :
   =
   fun d ->
     fun range ->
-      { Pulse_Syntax_Base.d = d; Pulse_Syntax_Base.range3 = range }
+      { Pulse_Syntax_Base.d = d; Pulse_Syntax_Base.range2 = range }

@@ -64,7 +64,7 @@ let rec (mk_abs :
                     fun r ->
                       {
                         Pulse_Syntax_Base.term1 = s;
-                        Pulse_Syntax_Base.range2 = r;
+                        Pulse_Syntax_Base.range1 = r;
                         Pulse_Syntax_Base.effect_tag =
                           Pulse_Syntax_Base.default_effect_hint
                       }))
@@ -90,7 +90,7 @@ let rec (mk_abs :
                                       (Pulse_Syntax_Naming.close_st_term body
                                          last_bv.Pulse_Syntax_Base.bv_index))
                                    (Pulse_Syntax_Naming.close_st_term body
-                                      last_bv.Pulse_Syntax_Base.bv_index).Pulse_Syntax_Base.range2)))
+                                      last_bv.Pulse_Syntax_Base.bv_index).Pulse_Syntax_Base.range1)))
                   | (q, b, bv)::qbs1 ->
                       Obj.magic
                         (Obj.repr
@@ -120,7 +120,7 @@ let rec (mk_abs :
                                               bv.Pulse_Syntax_Base.bv_index))
                                         (Pulse_Syntax_Naming.close_st_term
                                            body1
-                                           bv.Pulse_Syntax_Base.bv_index).Pulse_Syntax_Base.range2)))))
+                                           bv.Pulse_Syntax_Base.bv_index).Pulse_Syntax_Base.range1)))))
                  uu___)
 let (check_fndecl :
   Pulse_Syntax_Base.decl ->
@@ -192,7 +192,7 @@ let (check_fndecl :
                                          Obj.magic
                                            (Obj.repr
                                               (Pulse_Recursion.add_knot g
-                                                 d.Pulse_Syntax_Base.range3 d))
+                                                 d.Pulse_Syntax_Base.range2 d))
                                        else
                                          Obj.magic
                                            (Obj.repr
@@ -294,7 +294,7 @@ let (check_fndecl :
                                                                     (Pulse_Typing_Env.fail
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (d1.Pulse_Syntax_Base.range3))
+                                                                    (d1.Pulse_Syntax_Base.range2))
                                                                     "main: FnDecl does not have binders"))
                                                                     else
                                                                     Obj.magic
@@ -354,7 +354,7 @@ let (check_fndecl :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___3 ->
-                                                                    body1.Pulse_Syntax_Base.range2))
+                                                                    body1.Pulse_Syntax_Base.range1))
                                                                     (fun
                                                                     uu___3 ->
                                                                     (fun rng
@@ -1153,20 +1153,20 @@ let (main' :
                                                                   (Prims.of_int (135))
                                                                   (Prims.of_int (6))
                                                                   (Prims.of_int (136))
-                                                                  (Prims.of_int (80)))))
+                                                                  (Prims.of_int (109)))))
                                                          (FStar_Sealed.seal
                                                             (Obj.magic
                                                                (FStar_Range.mk_range
                                                                   "Pulse.Main.fst"
                                                                   (Prims.of_int (136))
-                                                                  (Prims.of_int (81))
+                                                                  (Prims.of_int (110))
                                                                   (Prims.of_int (140))
                                                                   (Prims.of_int (39)))))
                                                          (if
                                                             Prims.op_Negation
                                                               (Pulse_Syntax_Base.eq_tm
                                                                  ty
-                                                                 Pulse_Syntax_Base.tm_vprop)
+                                                                 Pulse_Syntax_Pure.tm_vprop)
                                                           then
                                                             Obj.magic
                                                               (Obj.repr
@@ -1174,7 +1174,8 @@ let (main' :
                                                                     g1
                                                                     (
                                                                     FStar_Pervasives_Native.Some
-                                                                    (pre1.Pulse_Syntax_Base.range1))
+                                                                    (Pulse_RuntimeUtils.range_of_term
+                                                                    pre1))
                                                                     "pulse main: cannot typecheck pre at type vprop"))
                                                           else
                                                             Obj.magic
@@ -1932,7 +1933,7 @@ let (check_pulse :
                           | FStar_Pervasives.Inl decl ->
                               Obj.magic
                                 (Obj.repr
-                                   (main nm decl Pulse_Syntax_Base.tm_emp env))
+                                   (main nm decl Pulse_Syntax_Pure.tm_emp env))
                           | FStar_Pervasives.Inr
                               (FStar_Pervasives_Native.None) ->
                               Obj.magic

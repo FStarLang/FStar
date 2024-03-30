@@ -75,7 +75,7 @@ let rec intro_uvars_for_logical_implicits (g:env) (uvs:env { disjoint g uvs }) (
        | C_STAtomic _ _ _
        | C_STGhost _ ->
          (| uvs', push_env g uvs', {term=Tm_STApp {head=t;arg_qual=Some Implicit;arg=null_var x};
-                                    range=t.range;
+                                    range=Pulse.RuntimeUtils.range_of_term t;
                                     effect_tag=as_effect_hint (ctag_of_comp_st c_rest) } |)
        | C_Tot ty ->
          intro_uvars_for_logical_implicits g uvs' (tm_pureapp t (Some Implicit) (null_var x)) ty
@@ -102,9 +102,9 @@ let instantiate_implicits (g:env) (t:st_term { Tm_STApp? t.term })
   | _ ->
     match is_pure_app t with
     | Some (head, q, arg) ->
-      (| uvs, push_env g uvs, {term=Tm_STApp {head;arg_qual=q;arg}; range=t.range; effect_tag=default_effect_hint } |)
+      (| uvs, push_env g uvs, {term=Tm_STApp {head;arg_qual=q;arg}; range=Pulse.RuntimeUtils.range_of_term t; effect_tag=default_effect_hint } |)
     | _ ->
-      fail g (Some t.range)
+      fail g (Some (Pulse.RuntimeUtils.range_of_term t))
         (Printf.sprintf "check_stapp.instantiate_implicits: expected an application term, found: %s"
            (show t))
 

@@ -48,9 +48,6 @@ let rec refl_abs_binders (t:R.term) (acc:list binder) : T.Tac (list binder) =
   match inspect_ln t with
   | Tv_Abs b body ->
     let {sort; ppname} = R.inspect_binder b in
-    let sort = option_must (readback_ty sort)
-      (Printf.sprintf "Failed to readback elaborated binder sort %s in refl_abs_binders"
-         (T.term_to_string sort)) in
     refl_abs_binders body
      ((mk_binder_ppname sort (mk_ppname ppname (RU.range_of_term t)))::acc)
   | _ -> L.rev acc  
@@ -60,12 +57,9 @@ let infer_binder_types (g:env) (bs:list binder) (v:vprop)
   match bs with
   | [] -> []
   | _ ->
-    let g = push_context g "infer_binder_types" v.range in
+    let v_rng = Pulse.RuntimeUtils.range_of_term v in
+    let g = push_context g "infer_binder_types" v_rng in
     let tv = elab_term v in
-    if not (is_host_term tv)
-    then fail g (Some v.range)
-           (Printf.sprintf "assert.infer_binder_types: elaborated %s to %s, which failed the host term check"
-              (P.term_to_string v) (T.term_to_string tv));
     let as_binder (b:binder) : R.binder =
       let open R in
       let bv : binder_view = 
@@ -77,16 +71,14 @@ let infer_binder_types (g:env) (bs:list binder) (v:vprop)
     in
     let abstraction = 
       L.fold_right 
-        (fun b (tv:host_term) -> 
+        (fun b (tv:term) -> 
          let b = as_binder b in
          R.pack_ln (R.Tv_Abs b tv))
         bs
         tv
     in
-    let inst_abstraction, _ = PC.instantiate_term_implicits g (tm_fstar abstraction v.range) in
-    match inst_abstraction.t with
-    | Tm_FStar t -> refl_abs_binders t []
-    | _ -> T.fail "Impossible: instantiated abstraction is not embedded F* term, please file a bug-report"
+    let inst_abstraction, _ = PC.instantiate_term_implicits g (wr abstraction v_rng) in
+    refl_abs_binders inst_abstraction []
 
 let rec open_binders (g:env) (bs:list binder) (uvs:env { disjoint uvs g }) (v:term) (body:st_term)
   : T.Tac (uvs:env { disjoint uvs g } & term & st_term) =
@@ -137,23 +129,19 @@ let unfold_defs (g:env) (defs:option (list string)) (t:term)
           | None -> []
         in
         let rt = RU.unfold_def (fstar_env g) head fully t in
-        let rt = option_must rt
-          (Printf.sprintf "unfolding %s returned None" (T.term_to_string t)) in
-        let ty = option_must (readback_ty rt)
-          (Printf.sprintf "error in reading back the unfolded term %s" (T.term_to_string rt)) in
-        debug_log g (fun _ -> Printf.sprintf "Unfolded %s to F* term %s and readback as %s" (T.term_to_string t) (T.term_to_string rt) (P.term_to_string ty));
-        ty
+        option_must rt
+          (Printf.sprintf "unfolding %s returned None" (T.term_to_string t))
       )
     | _ ->
       fail g (Some (RU.range_of_term t))
         (Printf.sprintf "Cannot unfold %s, the head is not an fvar" (T.term_to_string t))
 
-let check_unfoldable g (v:term) : T.Tac unit = 
-  match v.t with
+let check_unfoldable g (v:term) : T.Tac unit =
+  match inspect_term v with
   | Tm_FStar _ -> ()
   | _ -> 
    fail g 
-      (Some v.range)
+      (Some (Pulse.RuntimeUtils.range_of_term v))
       (Printf.sprintf "`fold` and `unfold` expect a single user-defined predicate as an argument, \
                         but %s is a primitive term that cannot be folded or unfolded"
                         (P.term_to_string v))
@@ -168,31 +156,9 @@ let visit_and_rewrite (p: (R.term & R.term)) (t:term) : T.Tac term =
   | R.Tv_Var n -> (
     let nv = R.inspect_namedv n in
     assume (is_host_term rhs);
-    subst_term t [NT nv.uniq { t = Tm_FStar rhs; range = t.range }]
+    subst_term t [NT nv.uniq (wr rhs (Pulse.RuntimeUtils.range_of_term t))]
     ) 
-  | _ ->
-    let rec aux (t:term) : T.Tac term =
-      match t.t with
-      | Tm_Emp
-      | Tm_VProp
-      | Tm_Inames
-      | Tm_EmpInames
-      | Tm_Inames
-      | Tm_Unknown  -> t
-      | Tm_Inv i ->
-        { t with t = Tm_Inv (aux i) }
-      | Tm_AddInv i is ->
-        { t with t = Tm_AddInv (aux i) (aux is) }
-      | Tm_Pure p -> { t with t = Tm_Pure (aux p) }
-      | Tm_Star l r ->  { t with t = Tm_Star (aux l) (aux r) }
-      | Tm_ExistsSL u b body -> { t with t = Tm_ExistsSL u { b with binder_ty=aux b.binder_ty} (aux body) }
-      | Tm_ForallSL u b body -> { t with t = Tm_ForallSL u { b with binder_ty=aux b.binder_ty} (aux body) }
-      | Tm_FStar h -> 
-        let h = FStar.Tactics.Visit.visit_tm visitor h in
-        assume (is_host_term h);
-        { t with t=Tm_FStar h }
-    in
-    aux t
+  | _ -> FStar.Tactics.Visit.visit_tm visitor t
     
 let visit_and_rewrite_conjuncts (p: (R.term & R.term)) (tms:list term) : T.Tac (list term) =
   T.map (visit_and_rewrite p) tms
@@ -227,20 +193,17 @@ let rec as_subst (p : list (term & term))
     then Some out
     else None
   | (e1, e2)::p -> (
-    match e1.t with
-    | Tm_FStar e1 -> ( 
-      match R.inspect_ln e1 with
-      | R.Tv_Var n -> (
-        let nv = R.inspect_namedv n in
-        as_subst p 
-          (NT nv.uniq e2::out) 
-          (nv.uniq ::domain )
-          (Set.union codomain (freevars e2))
-      ) 
-      | _ -> None
-    )
+    match R.inspect_ln e1 with
+    | R.Tv_Var n -> (
+      let nv = R.inspect_namedv n in
+      as_subst p 
+        (NT nv.uniq e2::out) 
+        (nv.uniq ::domain )
+        (Set.union codomain (freevars e2))
+    ) 
     | _ -> None
   )
+
 
 
 let rewrite_all (g:env) (p: list (term & term)) (t:term) : T.Tac (term & term) =
@@ -309,7 +272,9 @@ let check_wild
 
   | _ ->
     let vprops = Pulse.Typing.Combinators.vprop_as_list pre in
-    let ex, rest = List.Tot.partition (fun (v:vprop) -> Tm_ExistsSL? v.t) vprops in
+    let ex, rest = List.Tot.partition (fun (v:vprop) ->
+                                       let vv = inspect_term v in
+                                       Tm_ExistsSL? vv) vprops in
     match ex with
     | []
     | _::_::_ ->
@@ -323,7 +288,7 @@ let check_wild
           { st with term = Tm_ProofHintWithBinders { ht with hint_type = ASSERT { p = ex_body } }}
         )
         else (
-          match t.t with
+          match inspect_term t with
           | Tm_ExistsSL u b body -> peel_binders (n-1) body
           | _ -> 
             fail g (Some st.range)
@@ -448,7 +413,7 @@ let check
                                    t2 = rhs };
                range = st.range;
                effect_tag = as_effect_hint STT_Ghost } in
-    let st = { term = Tm_Bind { binder = as_binder (tm_fstar (`unit) st.range);
+    let st = { term = Tm_Bind { binder = as_binder (wr (`unit) st.range);
                                 head = rw; body };
                range = st.range;
                effect_tag = body.effect_tag } in
