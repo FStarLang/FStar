@@ -1592,14 +1592,139 @@ let mem_invariant_eq e m0 m1
   (ensures mem_invariant e m0 == mem_invariant e m1)
 = admit()
 
+#restart-solver
+#push-options "--fuel 0 --ifuel 0 --split_queries no --z3rlimit_factor 2"
 let lift_heap_action_aux (#fp:H2.slprop u#a) (#a:Type u#b) (#fp':a -> H2.slprop u#a) (#mut:_)
                      (e:inames)
                      ($f:H2.action #mut #None fp a fp')
 : refined_pre_action (mg_of_mut mut) e (up fp) a (fun x -> up (fp' x))
 = fun (m0:hmem_with_inv_except e (up fp)) ->
     assert (interp (up fp `star` mem_invariant e m0) m0);
+    let ih0 = m0.iheap in
+    let h0 = m0.iheap.concrete in
+    assert (H2.interp fp h0);
+    let (| x, h1 |) = f m0.iheap.concrete in
+    let ih1 = { m0.iheap with concrete = h1 } in
+    let m1 = { m0 with iheap = ih1 } in
+    let aux (frame:slprop)
+    : Lemma 
+      (requires
+        interp ((up fp `star` frame) `star` mem_invariant e m0) m0)
+      (ensures
+        interp ((up (fp' x) `star` frame) `star` mem_invariant e m1) m1 /\
+        mem_evolves m0 m1 /\
+        maybe_ghost_action (mg_of_mut mut) m0 m1)
+    = star_assoc (up fp) frame (mem_invariant e m0);
+      assert (interp (up fp `star` (frame `star` mem_invariant e m0)) m0);
+      eliminate exists hl hr.
+          idisjoint hl hr /\
+          m0.iheap == ijoin hl hr /\
+          up fp hl /\
+          (frame `star` mem_invariant e m0) hr
+      returns 
+        interp ((up (fp' x) `star` frame) `star` mem_invariant e m1) m1 /\
+        mem_evolves m0 m1 /\
+        maybe_ghost_action (mg_of_mut mut) m0 m1
+      with _ . (
+        let pick_frame =
+          fun (h:H2.heap) ->
+              (frame `star` mem_invariant e m0)
+              {hr with concrete = h}
+        in
+        (* proof of affinity *)
+        let _ = 
+          introduce forall h0 h1.
+              pick_frame h0 /\ H2.disjoint h0 h1
+              ==> pick_frame (H2.join h0 h1)
+          with (
+            introduce _ ==> _
+            with _ . (
+              let left = { hr with concrete = h0 } in
+              let right = { invariants=H0.empty_heap; concrete = h1} in
+              assert (idisjoint left right)
+            )
+          )
+        in
+        assert (H2.heap_prop_is_affine pick_frame);
+        let frm : H2.slprop = H2.as_slprop pick_frame in
+        H2.intro_star fp frm hl.concrete hr.concrete;
+        assert (H2.interp (fp `H2.star` frm) m0.iheap.concrete);
+        H2.action_framing f frm h0;
+        assert (H2.interp (fp' x `H2.star` frm) h1);
+        H2.elim_star (fp' x) frm h1;
+        eliminate exists hl' hr'.
+            H2.disjoint hl' hr' /\
+            h1 == H2.join hl' hr' /\
+            H2.interp (fp' x) hl' /\
+            H2.interp frm hr'
+        returns _
+        with _ . (
+          assert (pick_frame hr');
+          let ml = { invariants=H0.empty_heap; concrete=hl'} in
+          let mr = {hr with concrete=hr'} in 
+          assert ((frame `star` mem_invariant e m0) mr);
+          assert ((up (fp' x)) ml);
+          assert (idisjoint ml mr);
+          assert (H2.join hl' hr' == m1.iheap.concrete);
+          
+          // assert (m1.iheap == ijoin ml mr);
+          admit()
+          // assert (interp ((up (fp' x)) `star` (frame `star` mem_invariant e m0)) m1);
+
+          // assume (mem_evolves m0 m1);
+          // assume (maybe_ghost_action (mg_of_mut mut) m0 m1);
+          // star_assoc (up (fp' x)) frame (mem_invariant e m0);
+          // assume (mem_invariant e m0 == mem_invariant e m1);
+          // admit()
+        )
+      )    
+  
+
+      // assert (pick_frame m0.iheap.concrete);
+      // let frm : H2.slprop = H2.as_slprop pick_frame in
+      // eliminate exists hl hr.
+      //     idisjoint hl hr /\
+      //     m0.iheap == ijoin hl hr /\
+      //     up fp hl /\
+      //     (frame `star` mem_invariant e m0) hr
+      // returns H2.interp (fp `H2.star` frm) m0.iheap.concrete
+      // with _ . (
+      //   assert (pick_frame hr.concrete);
+      //   admit();
+      //   H2.intro_star fp frm hl.concrete hr.concrete
+      // );
+
+      // assume (H2.interp (fp `H2.star` frm) m0.iheap.concrete);
+
+      // admit()
+    in
+    emp_u (up fp);
+    emp_u (up (fp' x));
+    aux emp;
+    FStar.Classical.(forall_intro (move_requires aux));
+    assert (frame_related_mems (up fp) (up (fp' x)) e m0 m1);
+    (| x, m1 |)
+    // assert (interp (upmem_invariant e m0) m0);
+
+    // introduce forall frame.
+    //   interp ((up fp `star` frame) `star` mem_invariant e m0) m0 ==>
+    //   interp ((up (fp' x) `star` frame) `star` mem_invariant e m1) m1 /\
+    //   mem_evolves m0 m1
+    // with introduce _ ==> _
+    // with _ . (
+    //   admit()
+    // );
+    // emp_u (up fp);
+    // assert (interp ((up fp `star emp) `star` mem_invariant e m0) m0);
+    // emp_u (up (fp' x));
+    // (| x, m1 |)
+(*)
+    admit() (*)
     assert (interp (mem_invariant e m0) m0);
+    
     elim_mem_invariant e m0;
+
+
     assert (heap_ctr_valid m0.ctr m0.ghost_ctr m0.iname_ctr m0.iheap);
     let h0 = m0.iheap.concrete in
     assert (H2.interp fp h0);
@@ -1642,6 +1767,57 @@ let lift_heap_action_aux (#fp:H2.slprop u#a) (#a:Type u#b) (#fp':a -> H2.slprop 
     );
     assert (frame_related_mems (up fp) (up (fp' x)) e m0 m1);
     (| x, m1 |)
+
+// let lift_heap_action_aux (#fp:H2.slprop u#a) (#a:Type u#b) (#fp':a -> H2.slprop u#a) (#mut:_)
+//                      (e:inames)
+//                      ($f:H2.action #mut #None fp a fp')
+// : refined_pre_action (mg_of_mut mut) e (up fp) a (fun x -> up (fp' x))
+// = fun (m0:hmem_with_inv_except e (up fp)) ->
+//     assert (interp (up fp `star` mem_invariant e m0) m0);
+//     assert (interp (mem_invariant e m0) m0);
+//     elim_mem_invariant e m0;
+//     assert (heap_ctr_valid m0.ctr m0.ghost_ctr m0.iname_ctr m0.iheap);
+//     let h0 = m0.iheap.concrete in
+//     assert (H2.interp fp h0);
+//     mem_invariant_is_big e m0;
+//     eliminate exists hl hr.
+//         idisjoint hl hr /\
+//         m0.iheap == ijoin hl hr /\
+//         up fp hl /\
+//         mem_invariant e m0 hr
+//     returns 
+//       H2.interp (fp `H2.star` down (mem_invariant e m0)) h0
+//     with _ . (
+//       assert (up (down (mem_invariant e m0)) == mem_invariant e m0);
+//       assert (mem_invariant e m0 { hr with invariants = H0.empty_heap});
+//       assert (H2.interp (down (mem_invariant e m0)) hr.concrete);
+//       assert (H2.interp fp hl.concrete);
+//       assert (H2.disjoint hl.concrete hr.concrete);
+//       H2.intro_star fp (down (mem_invariant e m0)) hl.concrete hr.concrete
+//     );
+//     let (| x, h1 |) = f m0.iheap.concrete in
+//     assert (H2.interp (fp' x) h1);
+//     let ih1 = { m0.iheap with concrete = h1 } in
+//     let m1 = { m0 with iheap = ih1 } in
+//     assert (interp (up (fp' x)) m1);
+//     assert (H2.is_frame_preserving mut None f);
+//     H2.action_framing f (down (mem_invariant e m0)) h0;
+//     assert (H2.interp (fp' x `H2.star` down (mem_invariant e m0)) h1);
+//     mem_invariant_eq e m0 m1;
+//     assert (H2.interp (fp' x `H2.star` down (mem_invariant e m1)) h1);
+//     assert  (up (fp' x `H2.star` down (mem_invariant e m1)) m1.iheap);
+//     mem_invariant_is_big e m1;
+//     assert (interp (up (fp' x) `star` mem_invariant e m1) m1);
+//     introduce forall frame.
+//       interp ((up fp `star` frame) `star` mem_invariant e m0) m0 ==>
+//       interp ((up (fp' x) `star` frame) `star` mem_invariant e m1) m1 /\
+//       mem_evolves m0 m1
+//     with introduce _ ==> _
+//     with _ . (
+//       admit()
+//     );
+//     assert (frame_related_mems (up fp) (up (fp' x)) e m0 m1);
+//     (| x, m1 |)
 
 let lift_heap_action (#fp:H2.slprop u#a) (#a:Type u#b) (#fp':a -> H2.slprop u#a) (#mut:_)
                      (e:inames)
