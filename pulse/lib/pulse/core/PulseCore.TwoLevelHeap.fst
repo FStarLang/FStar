@@ -103,7 +103,7 @@ let h2_join_empty (h:H2.heap)
               [[SMTPat (H2.disjoint h H2.empty_heap)];
                [SMTPat (H2.join h H2.empty_heap)]]]
   = H2.join_empty h
-
+let join_empty h = ()
 let slprop = p:(heap u#a ^-> prop) { heap_prop_is_affine p }
 let interp p m = p m
 let as_slprop f = F.on _ f

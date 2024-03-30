@@ -83,6 +83,10 @@ val join_associative (h0 h1 h2:heap u#a)
        disjoint (join h0 h1) h2 /\
        join h0 (join h1 h2) == join (join h0 h1) h2))
 
+val join_empty (h:heap u#a)
+  : Lemma (disjoint h empty_heap /\
+           join h empty_heap == h)
+
 (**** Separation logic over heaps *)
 
 (**

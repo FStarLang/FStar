@@ -135,7 +135,7 @@ let h2_join_empty (h:H2.heap)
            [SMTPatOr
               [[SMTPat (H2.disjoint h H2.empty_heap)];
                [SMTPat (H2.join h H2.empty_heap)]]]
-  = admit() //H2.h2_join_empty h
+  = H2.join_empty h
 
 let h0_join_empty (h:H0.heap)
   : Lemma (H0.disjoint h H0.empty_heap /\
@@ -144,6 +144,10 @@ let h0_join_empty (h:H0.heap)
               [[SMTPat (H0.disjoint h H0.empty_heap)];
                [SMTPat (H0.join h H0.empty_heap)]]]
   = H0.join_empty h
+
+let join_empty (h:iheap)
+  : Lemma (idisjoint h empty_iheap)
+  = ()
 
 (**
   An affine heap proposition or affine heap predicate is a proposition whose validity does not
@@ -344,47 +348,230 @@ let star p1 p2 =
 let h_exists #a f =
   as_slprop (fun h -> exists (x:a). f x h)
 
-let emp_unit p = admit()
+let emp_unit p =
+  introduce forall h. interp p h <==> interp (p `star` emp) h
+  with (
+    assert (h == join h ({h with iheap = empty_iheap}));
+    H2.intro_emp empty_iheap.concrete
+  )
+
 let pure_equiv p q = H2.pure_equiv p q
 val pure_interp (q:prop) (m:mem) 
   : Lemma (interp (pure q) m <==> q)
           [SMTPat (interp (pure q) m)]
 let pure_interp q m = H2.pure_interp q (heap_of_mem m).concrete
 let pure_true_emp () : Lemma (pure True `equiv` emp) =
-  admit()
+  FStar.Classical.forall_intro (H2.pure_interp True);
+  FStar.Classical.forall_intro H2.intro_emp;
+  slprop_extensionality (pure True) emp
 
 
 ////////////////////////////////////////////////////////////////////////////////
 // star
 ////////////////////////////////////////////////////////////////////////////////
-let star_commutative (p1 p2:slprop) = admit()
-
-let star_associative (p1 p2 p3:slprop) = admit()
+let star_commutative (p1 p2:slprop) = ()
+let star_associative (p1 p2 p3:slprop) = ()
 
 let star_congruence (p1 p2 p3 p4:slprop) =
   slprop_extensionality p1 p3;
   slprop_extensionality p2 p4
 
+let iinterp_up_down (p:slprop) (h:iheap)
+: Lemma (
+    p { h with invariants = H0.empty_heap } <==>
+    (up (down p)) h)
+= calc (<==>) {
+    (up (down p)) h;
+      (<==>) {}
+    up_p (down p) h;
+      (<==>) {}
+    H2.interp (down p) h.concrete;
+      (<==>) {  }
+    (down_p_affine p;
+     H2.interp (H2.as_slprop (down_p p)) h.concrete);
+      (<==>) {}
+    down_p p h.concrete;
+      (<==>) {}
+    p { h with invariants = H0.empty_heap };
+  }
+
 let big_star_congruence (p1 p2:big_vprop u#a)
 : Lemma (is_big (p1 `star` p2))
-= admit()
+= introduce forall h. 
+    (p1 `star` p2) h ==> (up (down (p1 `star` p2))) h
+  with introduce _ ==> _ 
+  with _. (
+    eliminate exists h1 h2. 
+      idisjoint h1 h2 /\
+      h == ijoin h1 h2 /\
+      p1 h1 /\
+      p2 h2
+    returns (up (down (p1 `star` p2))) h
+    with _ . (
+      iinterp_up_down (p1 `star` p2) h;
+      let hh = { h with invariants = H0.empty_heap } in
+      let hh1 = {h1 with invariants = H0.empty_heap} in
+      let hh2 = {h2 with invariants = H0.empty_heap} in
+      assert (p1 hh1);
+      assert (p2 hh2);
+      assert (idisjoint hh1 hh2);
+      assert ((p1 `star` p2) hh)
+    )
+  );
+  introduce forall h. 
+     (up (down (p1 `star` p2))) h ==> (p1 `star` p2) h
+  with introduce _ ==> _
+  with _. (
+    iinterp_up_down (p1 `star` p2) h;
+    let hh = { h with invariants = H0.empty_heap } in
+    assert ((p1 `star` p2) hh);
+    eliminate exists hh0 hh1. 
+      idisjoint hh0 hh1 /\
+      hh == ijoin hh0 hh1 /\
+      p1 hh0 /\
+      p2 hh1
+    returns (p1 `star` p2) h
+    with _ . (
+      assert (reveal hh.invariants == H0.empty_heap);
+      assert (H0.disjoint hh.invariants h.invariants);
+      h0_join_empty h.invariants;
+      H0.join_commutative hh.invariants h.invariants;
+      let h0 = {hh0 with invariants = h.invariants} in
+      let h1 = {hh1 with invariants = H0.empty_heap} in
+      assert (H0.join hh.invariants h.invariants == reveal h.invariants);
+      assert (ijoin h0 h1 == h);
+      assert (p1 h0);
+      assert (p2 h1)
+    )
+  );
+  slprop_extensionality (up (down (p1 `star` p2))) (p1 `star` p2)
 
 let big_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
 : Lemma
     (requires forall x. is_big (p x))
     (ensures is_big (h_exists p))
-= admit()
+= introduce forall h.
+     (h_exists p) h ==> (up (down (h_exists p))) h
+  with introduce _ ==> _
+  with _ . (
+    iinterp_up_down (h_exists p) h;
+    eliminate exists x.
+       (p x) h
+    returns (up (down (h_exists p))) h
+    with _ . (
+      iinterp_up_down (p x) h
+    )
+  );
+  introduce forall h.
+    (up (down (h_exists p))) h ==> (h_exists p) h
+  with introduce _ ==> _ 
+  with _ . (
+    iinterp_up_down (h_exists p) h;
+    eliminate exists x.
+      (up (down (p x))) h
+    returns (h_exists p) h
+    with _ . (
+      iinterp_up_down (p x) h
+    )
+  );
+  slprop_extensionality (h_exists p) (up (down (h_exists p)));
+  ()
+#restart-solver
+let down_star (p1 p2:big_vprop)
+: Lemma 
+  (ensures down (p1 `star` p2) == down p1 `H2.star` down p2)
+= introduce forall h. 
+    H2.interp (down (p1 `star` p2)) h ==>
+    H2.interp (down p1 `H2.star` down p2) h
+  with introduce _ ==> _
+  with _ . (
+    down_p_affine (p1 `star` p2);
+    assert ((down_p (p1 `star` p2)) h);
+    eliminate exists h1 h2. 
+      H2.disjoint h1 h2 /\
+      h == H2.join h1 h2 /\
+      p1 { concrete = h1 ; invariants = H0.empty_heap } /\
+      p2 { concrete = h2 ; invariants = H0.empty_heap }
+    returns H2.interp (down p1 `H2.star` down p2) h
+    with _ . (
+      H2.intro_star (down p1) (down p2) h1 h2
+    )
+  );
+  introduce forall h. 
+    H2.interp (down p1 `H2.star` down p2) h ==>
+    H2.interp (down (p1 `star` p2)) h
+  with introduce _ ==> _
+  with _ . (
+    H2.elim_star (down p1) (down p2) h;
+    eliminate exists h1 h2.
+      H2.disjoint h1 h2 /\
+      h == H2.join h1 h2 /\
+      H2.interp (down p1) h1 /\
+      H2.interp (down p2) h2
+    returns
+      H2.interp (down (p1 `star` p2)) h
+    with _ . (
+      down_p_affine (p1 `star` p2);
+      assert (down (p1 `star` p2) == H2.as_slprop (down_p (p1 `star` p2)));
+      let m1 = {concrete=h1; invariants=H0.empty_heap} in
+      let m2 = {concrete=h2; invariants=H0.empty_heap} in
+      assert (p1 m1 /\ p2 m2 /\ idisjoint m1 m2);
+      assert (down_p (p1 `star` p2) h)
+    )
+  );
+  H2.slprop_extensionality (down (p1 `star` p2)) (down p1 `H2.star` down p2)
+
+let down_exists #a (p: a -> slprop)
+: Lemma 
+  (requires forall x. is_big (p x))
+  (ensures down (h_exists p) == H2.h_exists (fun x -> down (p x)))
+= introduce forall h.
+      H2.interp (down (h_exists p)) h ==>
+      H2.interp (H2.h_exists (fun x -> down (p x))) h
+  with introduce _ ==> _
+  with _ . (
+    down_p_affine (h_exists p);
+    assert (down_p (h_exists p) h);
+    eliminate exists x.
+      (p x) { concrete=h; invariants=H0.empty_heap }
+    returns H2.interp (H2.h_exists (fun x -> down (p x))) h
+    with _ . (
+      down_p_affine (p x);
+      H2.intro_h_exists  x (fun x -> down (p x)) h
+    )
+  );
+  introduce forall h.
+      H2.interp (H2.h_exists (fun x -> down (p x))) h ==>
+      H2.interp (down (h_exists p)) h
+  with introduce _ ==> _
+  with _ . (
+    H2.elim_h_exists (fun x -> down (p x)) h;
+    down_p_affine (h_exists p)
+  );
+  H2.slprop_extensionality
+    (down (h_exists p))
+    (H2.h_exists (fun x -> down (p x)))
 
 let small_star_congruence (p1 p2:vprop u#a)
 : Lemma (is_small (p1 `star` p2))
-= admit()
+= big_star_congruence p1 p2;
+  assert (is_big (p1 `star` p2));
+  down_star p1 p2;
+  H2.vprop_star (down p1) (down p2)
 
+module T = FStar.Tactics
 let small_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
 : Lemma
     (requires forall x. is_small (p x))
     (ensures is_small (h_exists p))
-= admit()
-
+= big_exists_congruence #a p;
+  assert (is_big (h_exists p));
+  down_exists p;
+  assert (forall x. H2.is_small (down (p x)));
+  assert (H2.is_small (H2.h_exists (fun x -> (down (p x)))))
+    by  (T.mapply (`H2.vprop_exists));
+  assert (H2.is_small (down (h_exists p)))
+  
 let h_exists_equiv (#a:Type) (p q : a -> slprop)
 : Lemma
     (requires (forall x. p x `equiv` q x))
@@ -395,6 +582,56 @@ val affine_star (p q:slprop) (m:mem)
   : Lemma ((interp (p `star` q) m ==> interp p m /\ interp q m))
 
 let affine_star (p q:slprop) (m:mem) = ()
+
+let lift_h0_pred (pre:H0.heap -> prop)
+  : iheap -> prop
+  = fun h -> pre h.invariants
+
+let h0_of_slprop (p:H0.slprop u#(a + 2)) : H0.a_heap_prop u#(a + 2) =
+  H0.interp_depends_only_on p;
+  fun h -> H0.interp p h
+
+let lift_h0 (p:H0.slprop u#(a + 2))
+: slprop u#a
+= as_slprop (fun h -> h0_of_slprop p h.invariants)
+
+let star_congruence_h0 (p q:H0.slprop)
+: Lemma (lift_h0 (p `H0.star` q) == lift_h0 p `star` lift_h0 q)
+= introduce forall h.
+    (lift_h0 (p `H0.star` q)) h ==>
+    (lift_h0 p `star` lift_h0 q) h
+  with introduce _ ==> _
+  with _ . (
+    assert (H0.interp (p `H0.star` q) h.invariants);
+    H0.elim_star p q h.invariants;
+    eliminate exists h1 h2.
+      H0.disjoint h1 h2 /\
+      reveal h.invariants == H0.join h1 h2 /\
+      H0.interp p h1 /\
+      H0.interp q h2
+    returns (lift_h0 p `star` lift_h0 q) h
+    with _ . (
+      let hl = { h with invariants = h1 } in
+      let hr = { concrete = H2.empty_heap; invariants = h2 } in
+      assert (idisjoint hl hr)
+    )
+  );
+  introduce forall h.
+    (lift_h0 p `star` lift_h0 q) h ==>
+    (lift_h0 (p `H0.star` q)) h
+  with introduce _ ==> _
+  with _ . (
+    eliminate exists h0 h1.
+      idisjoint h0 h1 /\
+      h == ijoin h0 h1 /\
+      lift_h0 p h0 /\
+      lift_h0 q h1
+    returns (lift_h0 (p `H0.star` q)) h
+    with _ . (
+      H0.intro_star p q h0.invariants h1.invariants
+    )
+  );
+  slprop_extensionality (lift_h0 (p `H0.star` q)) (lift_h0 p `star` lift_h0 q)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Invariants
@@ -496,13 +733,6 @@ let iname_for_p (i:iname) (p:slprop) (m:istore) =
     | Some q -> up q == p
     )
 
-let h0_of_slprop (p:H0.slprop u#(a + 2)) : H0.a_heap_prop u#(a + 2) =
-  H0.interp_depends_only_on p;
-  fun h -> H0.interp p h
-
-let lift_h0 (p:H0.slprop u#(a + 2))
-: slprop u#a
-= as_slprop (fun h -> h0_of_slprop p h.invariants)
 
 let iname_ref = erased (H0.ref _ (PA.pcm_agreement #H2.slprop))
 let iname_ref_pts_to (i:iname_ref) (p:slprop u#a) =
@@ -725,13 +955,6 @@ let intro_pure_star (p:slprop) (q:prop) (m:mem)
   : Lemma (interp p m /\ q ==> interp (p `star` pure q) m)
   = admit()
 
-let lift_h0_pred (pre:H0.heap -> prop)
-  : iheap -> prop
-  = fun h -> pre h.invariants
-
-let star_congruence_h0 (p q:H0.slprop)
-  : Lemma (lift_h0 (p `H0.star` q) == lift_h0 p `star` lift_h0 q)
-  = admit()
 
 let intro_star (p q:slprop) (m0 m1:mem)
 : Lemma
@@ -1248,6 +1471,12 @@ let invariant_name_identifies_invariant
     addr_core_ref_injective_2 i;
     addr_core_ref_injective_2 j;    
     ((), m0)
+
+// let elim_live (i:iname_ref) (m:mem)
+// : Lemma 
+//   (requires interp (live i) m)
+//   (ensures iname_ok i m)
+// = admit()
 
 let fresh_invariant (e:inames) (p:slprop u#m) (ctx:list iname_ref)
 : pst_ghost_action_except (i:iname_ref { fresh_wrt ctx i }) e
