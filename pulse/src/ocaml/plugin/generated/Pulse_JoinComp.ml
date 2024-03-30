@@ -39,30 +39,30 @@ let (lift_ghost_to_atomic :
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "Pulse.JoinComp.fst"
-                     (Prims.of_int (64)) (Prims.of_int (23))
-                     (Prims.of_int (64)) (Prims.of_int (24)))))
+                     (Prims.of_int (65)) (Prims.of_int (30))
+                     (Prims.of_int (65)) (Prims.of_int (31)))))
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "Pulse.JoinComp.fst"
-                     (Prims.of_int (64)) Prims.int_one (Prims.of_int (81))
+                     (Prims.of_int (65)) Prims.int_one (Prims.of_int (82))
                      (Prims.of_int (14)))))
             (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> c))
             (fun uu___ ->
                (fun uu___ ->
                   match uu___ with
-                  | Pulse_Syntax_Base.C_STGhost c_st ->
+                  | Pulse_Syntax_Base.C_STGhost (inames, c_st) ->
                       Obj.magic
                         (FStar_Tactics_Effect.tac_bind
                            (FStar_Sealed.seal
                               (Obj.magic
                                  (FStar_Range.mk_range "Pulse.JoinComp.fst"
-                                    (Prims.of_int (66)) (Prims.of_int (26))
-                                    (Prims.of_int (70)) (Prims.of_int (5)))))
+                                    (Prims.of_int (67)) (Prims.of_int (26))
+                                    (Prims.of_int (71)) (Prims.of_int (5)))))
                            (FStar_Sealed.seal
                               (Obj.magic
                                  (FStar_Range.mk_range "Pulse.JoinComp.fst"
-                                    (Prims.of_int (71)) (Prims.of_int (4))
-                                    (Prims.of_int (81)) (Prims.of_int (14)))))
+                                    (Prims.of_int (72)) (Prims.of_int (4))
+                                    (Prims.of_int (82)) (Prims.of_int (14)))))
                            (FStar_Tactics_Effect.lift_div_tac
                               (fun uu___1 -> ()))
                            (fun uu___1 ->
@@ -73,17 +73,17 @@ let (lift_ghost_to_atomic :
                                          (Obj.magic
                                             (FStar_Range.mk_range
                                                "Pulse.JoinComp.fst"
-                                               (Prims.of_int (72))
+                                               (Prims.of_int (73))
                                                (Prims.of_int (34))
-                                               (Prims.of_int (72))
+                                               (Prims.of_int (73))
                                                (Prims.of_int (103)))))
                                       (FStar_Sealed.seal
                                          (Obj.magic
                                             (FStar_Range.mk_range
                                                "Pulse.JoinComp.fst"
-                                               (Prims.of_int (73))
+                                               (Prims.of_int (74))
                                                (Prims.of_int (2))
-                                               (Prims.of_int (81))
+                                               (Prims.of_int (82))
                                                (Prims.of_int (14)))))
                                       (Obj.magic
                                          (Pulse_Checker_Pure.get_non_informative_witness
@@ -97,17 +97,17 @@ let (lift_ghost_to_atomic :
                                                     (Obj.magic
                                                        (FStar_Range.mk_range
                                                           "Pulse.JoinComp.fst"
-                                                          (Prims.of_int (73))
+                                                          (Prims.of_int (74))
                                                           (Prims.of_int (2))
-                                                          (Prims.of_int (73))
+                                                          (Prims.of_int (74))
                                                           (Prims.of_int (34)))))
                                                  (FStar_Sealed.seal
                                                     (Obj.magic
                                                        (FStar_Range.mk_range
                                                           "Pulse.JoinComp.fst"
-                                                          (Prims.of_int (81))
+                                                          (Prims.of_int (82))
                                                           (Prims.of_int (2))
-                                                          (Prims.of_int (81))
+                                                          (Prims.of_int (82))
                                                           (Prims.of_int (14)))))
                                                  (Obj.magic
                                                     (FStar_Tactics_BreakVC.break_vc
@@ -117,13 +117,13 @@ let (lift_ghost_to_atomic :
                                                       (fun uu___2 ->
                                                          Prims.Mkdtuple2
                                                            ((Pulse_Syntax_Base.C_STAtomic
-                                                               (Pulse_Syntax_Pure.tm_emp_inames,
+                                                               (inames,
                                                                  Pulse_Syntax_Base.Neutral,
                                                                  c_st)),
                                                              (Pulse_Typing.T_Lift
                                                                 (g, e, c,
                                                                   (Pulse_Syntax_Base.C_STAtomic
-                                                                    (Pulse_Syntax_Pure.tm_emp_inames,
+                                                                    (inames,
                                                                     Pulse_Syntax_Base.Neutral,
                                                                     c_st)),
                                                                   d,
