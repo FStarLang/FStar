@@ -1520,12 +1520,6 @@ let invariant_name_identifies_invariant
     addr_core_ref_injective_2 j;    
     ((), m0)
 
-// let elim_live (i:iname_ref) (m:mem)
-// : Lemma 
-//   (requires interp (live i) m)
-//   (ensures iname_ok i m)
-// = admit()
-
 let fresh_invariant (e:inames) (p:slprop u#m) (ctx:list iname_ref)
 : pst_ghost_action_except (i:iname_ref { fresh_wrt ctx i }) e
        (p `star` all_live ctx)
@@ -1634,11 +1628,75 @@ let change_slprop (#e:inames)
    in
    lift_tot_action (refined_pre_action_as_action g)
 
-let witness_h_exists #opened_invariants #a p = admit()
+let witness_h_exists #e #a p =
+  fun frame (m0:hmem_with_inv_except e (h_exists p `star` frame)) ->
+    assert (interp (h_exists p `star` frame `star` mem_invariant e m0) m0);
+    star_assoc (h_exists p) frame (mem_invariant e m0);
+    eliminate exists h0 h1.
+        idisjoint h0 h1 /\
+        m0.iheap == ijoin h0 h1 /\
+        h_exists p h0 /\
+        (frame `star` mem_invariant e m0) h1
+    returns exists x. interp (p x `star` frame `star` mem_invariant e m0) m0
+    with _ . (
+      assert (exists x. p x h0);
+      eliminate exists x.
+          p x h0
+      returns
+        exists x.
+          interp (p x `star` frame `star` mem_invariant e m0) m0
+      with _ . (
+        star_assoc (p x) frame (mem_invariant e m0)
+      )
+    );
+    let x : erased a = 
+      FStar.IndefiniteDescription.indefinite_description_tot 
+        a 
+        (fun x -> interp (p x `star` frame `star` mem_invariant e m0) m0)
+    in
+    let m : hmem_with_inv_except e (p x `star` frame) = m0 in 
+    x, m
 
-let intro_exists #opened_invariants #a p x =  admit()
+let intro_exists #e #a p x =
+  fun frame (m0:hmem_with_inv_except e (p x `star` frame)) ->
+    assert (interp (p x `star` frame `star` mem_invariant e m0) m0);
+    star_assoc (p x) frame (mem_invariant e m0);
+    eliminate exists h0 h1.
+        idisjoint h0 h1 /\
+        m0.iheap == ijoin h0 h1 /\
+        p x h0 /\
+        (frame `star` mem_invariant e m0) h1
+    returns interp (h_exists p `star` frame `star` mem_invariant e m0) m0
+    with _ . (
+      assert (h_exists p h0);
+      star_assoc (h_exists p) frame (mem_invariant e m0)
+    );
+    let m : hmem_with_inv_except e (h_exists p `star` frame) = m0 in
+    (), m
 
-let lift_h_exists #opened_invariants p = admit()
+let lift_h_exists #e #a p =
+  fun frame (m0:hmem_with_inv_except e (h_exists #a p `star` frame)) -> 
+    assert (interp (h_exists #a p `star` frame `star` mem_invariant e m0) m0);
+    star_assoc (h_exists #a p) frame (mem_invariant e m0);
+    eliminate exists h0 h1.
+        idisjoint h0 h1 /\
+        m0.iheap == ijoin h0 h1 /\
+        h_exists #a p h0 /\
+        (frame `star` mem_invariant e m0) h1
+    returns interp (h_exists #(U.raise_t a) (U.lift_dom p)
+                   `star` frame `star` mem_invariant e m0) m0
+    with _ . (
+      assert (exists x. p x h0);
+      eliminate exists x.
+          p x h0
+      returns h_exists #(U.raise_t a) (U.lift_dom p) h0
+      with _ . (
+        let p' = U.lift_dom p in
+        assert (p' (U.raise_val x) h0)
+      );
+      star_assoc (h_exists #(U.raise_t a) (U.lift_dom p)) frame (mem_invariant e m0)
+    );
+    (), m0
 
 let elim_pure #opened_invariants p = 
   lift_tot_action (lift_heap_action opened_invariants (H2.elim_pure p))
@@ -1646,7 +1704,14 @@ let elim_pure #opened_invariants p =
 let intro_pure #opened_invariants p pf = 
   lift_tot_action (lift_heap_action opened_invariants (H2.intro_pure p pf))
 
-let drop #o p = admit()
+let drop #e p =
+  fun frame (m0:hmem_with_inv_except e (p `star` frame)) ->
+    star_assoc p frame (mem_invariant e m0);
+    assert (interp (p `star` (frame `star` mem_invariant e m0)) m0);
+    assert (interp (frame `star` mem_invariant e m0) m0);
+    emp_u (frame `star` mem_invariant e m0);
+    star_assoc emp frame (mem_invariant e m0);
+    (), m0
 
 let lift_ghost
       (#a:Type)
