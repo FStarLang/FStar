@@ -1592,8 +1592,23 @@ let mem_invariant_eq e m0 m1
   (ensures mem_invariant e m0 == mem_invariant e m1)
 = admit()
 
-#push-options "--fuel 0 --ifuel 0 --split_queries no --z3rlimit_factor 2"
+let elim_h2_frame_preserving
+  (#a: Type)
+  (#pre #post:_)
+  (#fp: H2.slprop)
+  (#fp': a -> H2.slprop)
+  (#immut:mutability)
+  (#allocates:option tag)
+  ($f:H2.action #immut #allocates #pre #post fp a fp')
+  (h0:H2.full_hheap fp { pre h0 })
+: Lemma
+  (ensures (
+    let (| x, h1 |) = f h0 in
+    H2.action_related_heaps #immut #allocates h0 h1))
+= admit()
+
 #restart-solver
+#push-options "--fuel 0 --ifuel 1 --split_queries no --z3rlimit_factor 2"
 let lift_heap_action_aux (#fp:H2.slprop u#a) (#a:Type u#b) (#fp':a -> H2.slprop u#a) (#mut:_)
                      (e:inames)
                      ($f:H2.action #mut #None fp a fp')
@@ -1608,10 +1623,13 @@ let lift_heap_action_aux (#fp:H2.slprop u#a) (#a:Type u#b) (#fp':a -> H2.slprop 
     let (| x, h1 |) = f m0.iheap.concrete in
     let ih1 = { m0.iheap with concrete = h1 } in
     let m1 = { m0 with iheap = ih1 } in
-    assume (heap_ctr_valid m1.ctr m1.ghost_ctr m1.iname_ctr m1.iheap);
+    assert (H2.is_frame_preserving mut None f);
+    elim_h2_frame_preserving f h0;
+    assert (heap_ctr_valid m1.ctr m1.ghost_ctr m1.iname_ctr m1.iheap);
     mem_invariant_eq e m0 m1;
-    assume (mem_evolves m0 m1);
-    assume (maybe_ghost_action (mg_of_mut mut) m0 m1);
+    mem_evolves_iff m0 m1;
+    assert (mem_evolves m0 m1);
+    assert (maybe_ghost_action (mg_of_mut mut) m0 m1);
     let aux (frame:slprop)
     : Lemma 
       (requires
