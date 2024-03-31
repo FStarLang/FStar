@@ -285,7 +285,7 @@ let with_invariant #a #fp #fp' #f_opens #p i $f =
   A.with_invariant i f
 
 let pull_up_ghost (#a #b:Type) (f:a -> GTot b) : GTot (g:(a -> b) {forall x. f x == g x }) =
-  admit ()
+  FStar.Ghost.Pull.pull f
 
 let with_invariant_g #a #fp #fp' #f_opens #p i $f =
   let f : unit -> stt_ghost a f_opens (p ** fp) (fun x -> p ** fp' x) = f in

@@ -901,11 +901,15 @@ let refined_pre_action
          maybe_ghost_action mg m0 m1 /\
          frame_related_mems fp0 (fp1 x) e m0 m1)
 
-let tot_pre_action_nf_except (maybe_ghost:bool) (e:inames) (fp:slprop u#a) (a:Type u#b) (fp':a -> slprop u#a) =
-  m0:hmem_with_inv_except e fp ->
+let tot_pre_action_nf_except
+  (#[T.exact (`trivial_pre)] pre:mem -> prop)
+  (maybe_ghost:bool) (e:inames) (fp:slprop u#a) (a:Type u#b) (fp':a -> slprop u#a) =
+  m0:hmem_with_inv_except e fp { pre m0 } ->
   res:(x:a & hmem_with_inv_except e (fp' x)) { maybe_ghost_action maybe_ghost m0 (dsnd res)}
 
-let tot_pre_action_nf maybe_ghost = tot_pre_action_nf_except maybe_ghost S.empty
+let tot_pre_action_nf
+    (#[T.exact (`trivial_pre)] pre:mem -> prop)
+     maybe_ghost = tot_pre_action_nf_except #pre maybe_ghost S.empty
 
 let ac_reasoning_for_m_frame_preserving
     (p q r:slprop u#a) (m:mem u#a)
@@ -924,28 +928,33 @@ let ac_reasoning_for_m_frame_preserving
     affine_star q (p `star` r) m
 
 let is_frame_preserving
+  (#[T.exact (`trivial_pre)] pre:mem -> prop)
   (#mg:bool)
   (#e:inames)
   (#a:Type u#b)
   (#fp:slprop u#a)
   (#fp':a -> slprop u#a)
-  (f:tot_pre_action_nf_except mg e fp a fp') =
-  forall (frame:slprop u#a) (m0:hmem_with_inv_except e (fp `star` frame)).
+  (f:tot_pre_action_nf_except #pre mg e fp a fp') =
+  forall (frame:slprop u#a) (m0:hmem_with_inv_except e (fp `star` frame) { pre m0 }).
     (ac_reasoning_for_m_frame_preserving fp frame (mem_invariant e m0) m0;
      let (| x, m1 |) = f m0 in
      interp ((fp' x `star` frame) `star` mem_invariant e m1) m1 /\
      mem_evolves m0 m1)
 
-let tot_action_nf_except (mg:bool) (e:inames) (fp:slprop u#a) (a:Type u#b) (fp':a -> slprop u#a) =
-  f:tot_pre_action_nf_except mg e fp a fp'{ is_frame_preserving f }
+let tot_action_nf_except 
+      (#[T.exact (`trivial_pre)] pre:mem -> prop)
+      (mg:bool) (e:inames) (fp:slprop u#a) (a:Type u#b) (fp':a -> slprop u#a)
+  = f:tot_pre_action_nf_except #pre mg e fp a fp'{ is_frame_preserving f }
 
-let refined_pre_action_as_action (#fp0:slprop) (#a:Type) (#fp1:a -> slprop)
-                                 #mg #e ($f:refined_pre_action mg e fp0 a fp1)
-  : tot_action_nf_except mg e fp0 a fp1
-  = let g : tot_pre_action_nf_except mg e fp0 a fp1 = fun m -> f m in
+let refined_pre_action_as_action 
+     (#[T.exact (`trivial_pre)] pre:mem -> prop)
+     (#fp0:slprop) (#a:Type) (#fp1:a -> slprop)
+     #mg #e ($f:refined_pre_action #pre mg e fp0 a fp1)
+  : tot_action_nf_except #pre mg e fp0 a fp1
+  = let g : tot_pre_action_nf_except #pre mg e fp0 a fp1 = fun m -> f m in
     introduce 
       forall (frame:slprop)
-             (m0:hmem_with_inv_except e (fp0 `star` frame)).
+             (m0:hmem_with_inv_except e (fp0 `star` frame) {pre m0}).
               (ac_reasoning_for_m_frame_preserving fp0 frame (mem_invariant e m0) m0;
                 let (| x, m1 |) = g m0 in
                 interp ((fp1 x `star` frame) `star` mem_invariant e m1) m1 /\
@@ -970,15 +979,67 @@ let pqr_prq (p q r:slprop)
       (p `star` r) `star` q;
     }
 
-let frame_preserving_respects_preorder #mg #a #e #fp #fp' ($f:tot_action_nf_except mg e fp a fp') (m0:hmem_with_inv_except e fp)
+
+let mem_evolves_iff (h0 h1:full_mem)
+: Lemma 
+  (ensures
+     mem_evolves h0 h1 <==> (
+      H2.heap_evolves h0.iheap.concrete h1.iheap.concrete /\
+      h0.iname_ctr <= h1.iname_ctr /\
+      istore_evolves h0.iheap.invariants h1.iheap.invariants))
+= assert (mem_evolves h0 h1 <==> 
+            (H2.heap_evolves h0.iheap.concrete h1.iheap.concrete /\
+             h0.iname_ctr <= h1.iname_ctr /\
+             istore_evolves h0.iheap.invariants h1.iheap.invariants))
+      by (FStar.Tactics.norm [delta_only [`%mem_evolves]])
+
+let frame_preserving_respects_preorder #pre #mg #a #e #fp #fp'
+     ($f:tot_action_nf_except #pre mg e fp a fp') 
+     (m0:hmem_with_inv_except e fp { pre m0 })
   : Lemma (let (| x, m1 |) = f m0 in
            mem_evolves m0 m1)
   = assert (is_frame_preserving f);
-    emp_u fp
-    
-let lift_tot_action #a #mg #e #fp #fp'
-  ($f:tot_action_nf_except mg e fp a fp')
-: _pst_action_except a mg e fp fp'
+    emp_u fp;
+    eliminate
+     forall (frame:slprop) (m0:hmem_with_inv_except e (fp `star` frame) { pre m0 }).
+        (ac_reasoning_for_m_frame_preserving fp frame (mem_invariant e m0) m0;
+        let (| x, m1 |) = f m0 in
+        interp ((fp' x `star` frame) `star` mem_invariant e m1) m1 /\
+        mem_evolves m0 m1)
+    with emp m0
+
+let _PST_aux
+  (#[T.exact (`trivial_pre)] pre:mem -> prop)
+  (a:Type u#a)
+  (maybe_ghost:bool)
+  (except:inames)
+  (expects:slprop u#m)
+  (provides: a -> slprop u#m)
+  (frame:slprop u#m)
+= PST.pst #(full_mem u#m) a mem_evolves
+    (requires fun m0 ->
+        pre m0 /\
+        inames_ok except m0 /\
+        interp (expects `star` frame `star` mem_invariant except m0) m0)
+    (ensures fun m0 x m1 ->
+        maybe_ghost_action maybe_ghost m0 m1 /\
+        inames_ok except m1 /\
+        interp (expects `star` frame `star` mem_invariant except m0) m0 /\  //TODO: fix the effect so as not to repeat this
+        interp (provides x `star` frame `star` mem_invariant except m1) m1)
+
+let _pst_action_except_aux
+    (#[T.exact (`trivial_pre)] pre:mem -> prop)
+    (a:Type u#a)
+    (maybe_ghost:bool)
+    (except:inames)
+    (expects:slprop u#um)
+    (provides: a -> slprop u#um)
+ : Type u#(max a (um + 3)) 
+ = frame:slprop -> _PST_aux #pre a maybe_ghost except expects provides frame
+
+let lift_tot_action_aux #pre #a #mg #e #fp #fp'
+  ($f:tot_action_nf_except #pre mg e fp a fp')
+: _pst_action_except_aux #pre a mg e fp fp'
 = fun (frame:slprop) m0 ->
     ac_reasoning_for_m_frame_preserving fp frame (mem_invariant e m0) m0;
     assert (interp (fp `star` frame `star` mem_invariant e m0) m0);
@@ -991,6 +1052,13 @@ let lift_tot_action #a #mg #e #fp #fp'
     assert (m1 == dsnd (f m0));
     frame_preserving_respects_preorder f m0;
     (x, m1)
+
+
+let lift_tot_action #a #mg #e #fp #fp'
+  ($f:tot_action_nf_except mg e fp a fp')
+: _pst_action_except a mg e fp fp'
+= lift_tot_action_aux f
+
 #restart-solver
 #push-options "--fuel 0 --ifuel 0"
 let intro_pure_star (p:slprop) (q:prop) (m:mem)
@@ -1025,19 +1093,6 @@ let h0_emp_unit (p:H0.slprop)
 let h0_of_as_slprop (p:H0.a_heap_prop) (h:H0.heap)
   : Lemma (h0_of_slprop (H0.as_slprop p) h <==> p h)
   = ()
-
-let mem_evolves_iff (h0 h1:full_mem)
-: Lemma 
-  (ensures
-     mem_evolves h0 h1 <==> (
-      H2.heap_evolves h0.iheap.concrete h1.iheap.concrete /\
-      h0.iname_ctr <= h1.iname_ctr /\
-      istore_evolves h0.iheap.invariants h1.iheap.invariants))
-= assert (mem_evolves h0 h1 <==> 
-            (H2.heap_evolves h0.iheap.concrete h1.iheap.concrete /\
-             h0.iname_ctr <= h1.iname_ctr /\
-             istore_evolves h0.iheap.invariants h1.iheap.invariants))
-      by (FStar.Tactics.norm [delta_only [`%mem_evolves]])
 
 
 #push-options "--fuel 1"
@@ -1221,7 +1276,7 @@ let name_of_inv (i:iname_ref) = H0.core_ref_as_addr i
 let iname_ctr_not_ok 
     (m0:mem { m0.iheap.invariants `H0.free_above_addr` m0.iname_ctr })
 : Lemma (None? (H0.select m0.iname_ctr m0.iheap.invariants))
-= admit()
+= H0.interp_free_above m0.iheap.invariants m0.iname_ctr
 
 
 let new_invariant_pre_action (ctx:inames) (e:inames) (p:slprop u#a { is_big p })
@@ -1546,26 +1601,71 @@ let rec inames_of (ctx:list iname_ref) : inames =
   | [] -> Set.empty
   | hd::tl -> set_add (name_of_inv hd) (inames_of tl)
 
-let live_inames_ok (ctx:list iname_ref) (m:mem { interp (all_live ctx) m })
+let iname_ok (i:iname_ref) (m:mem) : prop = 
+    Some? (H0.select (name_of_inv i) m.iheap.invariants)
+
+let elim_inv_liveness e (i:iname_ref) (p:slprop) (m:mem)
+: Lemma
+  (requires interp (i -~- p) m /\ interp (mem_invariant e m) m)
+  (ensures iname_ok i m /\
+           m.iname_ctr >= name_of_inv i /\
+           not (H0.core_ref_is_null i))
+= assert (interp (pure (heap_ctr_valid m.ctr m.ghost_ctr m.iname_ctr m.iheap)) m);
+  assert (H0.interp (H0.pts_to #_ #(PA.pcm_agreement #(H2.slprop u#a)) i (Some (down p))) m.iheap.invariants);
+  H0.interp_pts_to i #_ #(PA.pcm_agreement #(H2.slprop u#a)) (Some (down p)) m.iheap.invariants;
+  H0.interp_free_above m.iheap.invariants m.iname_ctr
+
+let live_iname_ok 
+      (i:iname_ref)
+      (e:inames)
+      (m:mem {interp (live i) m /\ interp (mem_invariant e m) m})
+: Lemma (iname_ok i m)
+= assert (interp (h_exists (fun p -> i -~- p)) m);
+  eliminate exists p.
+    interp (i -~- p) m
+  returns iname_ok i m
+  with _ . (
+    elim_inv_liveness e i p m
+  )
+
+let rec live_inames_ok
+        (ctx:list iname_ref) 
+        (e:inames)
+        (m:mem { interp (all_live ctx) m /\ interp (mem_invariant e m) m })
   : Lemma (inames_ok (inames_of ctx) m)
-  = admit()
+  = match ctx with
+    | [] -> ()
+    | hd::tl -> 
+      live_iname_ok hd e m;
+      live_inames_ok tl e m
 
+let rec fresh_wrt_lemma (ctx:list iname_ref) (i:iname_ref)
+  : Lemma 
+    (requires (~ (name_of_inv i `Set.mem` inames_of ctx)))
+    (ensures fresh_wrt ctx i)
+  = match ctx with
+    | [] -> ()
+    | hd::tl -> 
+      fresh_wrt_lemma tl i
 
-let fresh_invariant (e:inames) (p:slprop u#m) (ctx:list iname_ref)
+let fresh_invariant (e:inames) (p:big_vprop u#m) (ctx:list iname_ref)
 : pst_ghost_action_except (i:iname_ref { fresh_wrt ctx i }) e
        (p `star` all_live ctx)
        (fun i -> i -~- p)
-= fun frame (m:hmem_with_inv_except e (p `star` all_live ctx)) ->
-    assume (inames_ok (inames_of ctx) m);
-    admit()
-    // let act =
-    //   lift_tot_action (
-    //     refined_pre_action_as_action
-    //       (new_invariant_pre_action (inames_of ctx) e p)
-    //   )
-    // in
-    // let m : hmem_with_inv_except e p = m in
-    // act frame m
+= fun frame (m:hmem_with_inv_except e ((p `star` all_live ctx) `star` frame)) ->
+    live_inames_ok ctx e m;
+    assert (inames_ok (inames_of ctx) m);
+    let act =
+      lift_tot_action_aux (
+        refined_pre_action_as_action
+          (new_invariant_pre_action (inames_of ctx) e p)
+      )
+    in
+    let m :  hmem_with_inv_except e (p `star` frame) = m in
+    let res = act frame m in
+    fresh_wrt_lemma ctx (fst res);
+    let i, m = res in
+    i, m
 
 let equiv_pqrs_p_qr_s (p q r s:slprop)
   : Lemma ((p `star` q `star` r `star` s) ==
