@@ -1541,11 +1541,31 @@ let invariant_name_identifies_invariant
     addr_core_ref_injective_2 j;    
     ((), m0)
 
+let rec inames_of (ctx:list iname_ref) : inames =
+  match ctx with
+  | [] -> Set.empty
+  | hd::tl -> set_add (name_of_inv hd) (inames_of tl)
+
+let live_inames_ok (ctx:list iname_ref) (m:mem { interp (all_live ctx) m })
+  : Lemma (inames_ok (inames_of ctx) m)
+  = admit()
+
+
 let fresh_invariant (e:inames) (p:slprop u#m) (ctx:list iname_ref)
 : pst_ghost_action_except (i:iname_ref { fresh_wrt ctx i }) e
        (p `star` all_live ctx)
        (fun i -> i -~- p)
-= admit()
+= fun frame (m:hmem_with_inv_except e (p `star` all_live ctx)) ->
+    assume (inames_ok (inames_of ctx) m);
+    admit()
+    // let act =
+    //   lift_tot_action (
+    //     refined_pre_action_as_action
+    //       (new_invariant_pre_action (inames_of ctx) e p)
+    //   )
+    // in
+    // let m : hmem_with_inv_except e p = m in
+    // act frame m
 
 let equiv_pqrs_p_qr_s (p q r s:slprop)
   : Lemma ((p `star` q `star` r `star` s) ==
