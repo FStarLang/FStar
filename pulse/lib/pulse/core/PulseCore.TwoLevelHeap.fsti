@@ -418,10 +418,11 @@ let frame_related_heaps (h0 h1:full_heap) (fp0 fp1 frame:slprop)
 let action_framing
   (#a: Type)
   (#mut #allocates:_)
+  (#pre #post:_)
   (#fp: slprop)
   (#fp': a -> slprop)
-  ($f:action #mut #allocates fp a fp')
-  (frame:slprop) (h0:full_hheap (fp `star` frame))
+  ($f:action #mut #allocates #pre #post fp a fp')
+  (frame:slprop) (h0:full_hheap (fp `star` frame) { pre h0 })
     : Lemma (
       affine_star fp frame h0;
       let (| x, h1 |) = f h0 in
