@@ -1927,15 +1927,16 @@ let gather_action #a #pcm e r v0 v1
 //     let m' : hmem_with_inv_except e p = m' in
 //     m'
 
-// let with_fresh_counter (#t:Type u#a) (#post:t -> slprop u#m) (e:inames)
-//   (f: (addr:nat ->
-//         H.action #MUTABLE #(Some CONCRETE)
-//           #(fun h -> h `H.free_above_addr CONCRETE` addr)
-//           #(fun h -> h `H.free_above_addr CONCRETE` (addr + 1))      
-//           emp 
-//           t
-//           post))
-// : pst_action_except t e emp post
+let with_fresh_counter (#t:Type u#t) (#post:t -> H2.slprop u#a) (e:inames)
+  (f: (addr:nat ->
+        H2.action #MUTABLE #(Some CONCRETE)
+          #(fun h -> h `H2.free_above_addr CONCRETE` addr)
+          #(fun h -> h `H2.free_above_addr CONCRETE` (addr + 1))      
+          H2.emp 
+          t
+          post))
+: pst_action_except t e emp (fun x -> up (post x))
+= admit()
 // = let f : refined_pre_action false e emp t post
 //     = fun m0 ->
 //         let h = hheap_of_hmem m0 in
@@ -1969,7 +1970,7 @@ let gather_action #a #pcm e r v0 v1
 
 
 let alloc_action #a #pcm e x
-  = admit() //with_fresh_counter e (H.extend #a #pcm x)
+  = with_fresh_counter e (H2.extend #a #pcm x)
 
 let select_refine #a #p e r x f
   = lift_tot_action (lift_heap_action e (H2.select_refine #a #p r x f))
@@ -2021,16 +2022,16 @@ let ghost_pts_to #a #pcm r v = up (H2.ghost_pts_to #a #pcm r v)
 //     let m' : hmem_with_inv_except e p = m' in
 //     m'
 
-// let with_fresh_ghost_counter (#t:Type u#a) (#post:t -> slprop u#m) (e:inames)
-//   (f: (addr:erased nat ->
-//         H.action #ONLY_GHOST #(Some GHOST)
-//           #(fun h -> h `H.free_above_addr GHOST` addr)
-//           #(fun h -> h `H.free_above_addr GHOST` (addr + 1))      
-//           emp 
-//           t
-//           post))
-// : pst_ghost_action_except t e emp post
-//   = let f : refined_pre_action true e emp t post
+let with_fresh_ghost_counter (#t:Type u#t) (#post:t -> H2.slprop u#a) (e:inames)
+  (f: (addr:erased nat ->
+        H2.action #ONLY_GHOST #(Some GHOST)
+          #(fun h -> h `H2.free_above_addr GHOST` addr)
+          #(fun h -> h `H2.free_above_addr GHOST` (addr + 1))      
+          H2.emp 
+          t
+          post))
+: pst_ghost_action_except t e emp (fun x -> up (post x))
+= admit() //   = let f : refined_pre_action true e emp t post
 //     = fun m0 ->
 //         let h = hheap_of_hmem m0 in
 //         let (|r, h'|) = f m0.ghost_ctr h in
@@ -2062,7 +2063,7 @@ let ghost_pts_to #a #pcm r v = up (H2.ghost_pts_to #a #pcm r v)
 //     lift_tot_action (refined_pre_action_as_action f)
 
 let ghost_alloc #e #a #pcm x
-  = admit() //with_fresh_ghost_counter e (H.ghost_extend #a #pcm x)
+  = with_fresh_ghost_counter e (H2.ghost_extend #a #pcm x)
 
 let ghost_read #o #a #p r x f
   = lift_tot_action (lift_heap_action o (H2.ghost_read #a #p r x f))
@@ -2091,7 +2092,7 @@ let big_gather_action #a #pcm e r v0 v1
   = lift_tot_action (lift_heap_action e (H2.big_gather_action #a #pcm r v0 v1))
 
 let big_alloc_action #a #pcm e x
-  = admit() //with_fresh_counter e (H.big_extend #a #pcm x)
+  = with_fresh_counter e (H2.big_extend #a #pcm x)
 
 let big_select_refine #a #p e r x f
   = lift_tot_action (lift_heap_action e (H2.big_select_refine #a #p r x f))
@@ -2112,7 +2113,7 @@ let big_pts_to_not_null_action
 
 let big_ghost_pts_to #a #pcm r v = up (H2.big_ghost_pts_to #a #pcm r v)
 let big_ghost_alloc #e #a #pcm x
-  = admit() //with_fresh_ghost_counter e (H.big_ghost_extend #a #pcm x)
+  = with_fresh_ghost_counter e (H2.big_ghost_extend #a #pcm x)
 let big_ghost_read #o #a #p r x f
   = lift_tot_action (lift_heap_action o (H2.big_ghost_read #a #p r x f))
 let big_ghost_write #o #a #p r x y f
