@@ -27,8 +27,8 @@ val fix_ghost_1 (#a : Type0) (#b : a -> Type0)
   : x:a -> GTot (b x)
 
 val fix_stt_ghost_1 (#a : Type) (#b : a -> Type) (#pre : a -> vprop) (#post : (x:a -> b x -> vprop))
-  (ff : (x:a -> (y:a{y << x} -> stt_ghost (b y) (pre y) (post y)) -> stt_ghost (b x) (pre x) (post x)))
-  : x:a -> stt_ghost (b x) (pre x) (post x)
+  (ff : (x:a -> (y:a{y << x} -> stt_ghost (b y) emp_inames (pre y) (post y)) -> stt_ghost (b x) emp_inames (pre x) (post x)))
+  : x:a -> stt_ghost (b x) emp_inames (pre x) (post x)
 
 val fix_stt_1 (#a : Type) (#b : a -> Type) (#pre : a -> vprop) (#post : (x:a -> b x -> vprop))
   (ff : (y:a -> stt (b y) (pre y) (post y)) -> (x:a -> stt (b x) (pre x) (post x)))

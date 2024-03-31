@@ -39,7 +39,7 @@ val is_full_vec (#a:Type0) (v:vec a) : prop
 val pts_to (#a:Type0) (v:vec a) (#[T.exact (`full_perm)] p:perm) (s:Seq.seq a) : vprop
 
 val pts_to_len (#a:Type0) (v:vec a) (#p:perm) (#s:Seq.seq a)
-  : stt_ghost unit
+  : stt_ghost unit emp_inames
       (pts_to v #p s)
       (fun _ → pts_to v #p s ** pure (length v == Seq.length s))
 
@@ -93,7 +93,7 @@ val share
   (v:vec a)
   (#s:Ghost.erased (Seq.seq a))
   (#p:perm)
-  : stt_ghost unit
+  : stt_ghost unit emp_inames
       (requires pts_to v #p s)
       (ensures fun _ -> pts_to v #(half_perm p) s ** pts_to v #(half_perm p) s)
 
@@ -102,19 +102,19 @@ val gather
   (v:vec a)
   (#s0 #s1:Ghost.erased (Seq.seq a))
   (#p0 #p1:perm)
-  : stt_ghost unit
+  : stt_ghost unit emp_inames
       (requires pts_to v #p0 s0 ** pts_to v #p1 s1)
       (ensures fun _ -> pts_to v #(sum_perm p0 p1) s0 ** pure (s0 == s1))
 
 val vec_to_array (#a:Type0) (v:vec a) : arr:A.array a { A.length arr == length v }
 
 val to_array_pts_to (#a:Type0) (v:vec a) (#p:perm) (#s:Seq.seq a)
-  : stt_ghost unit
+  : stt_ghost unit emp_inames
       (pts_to v #p s)
       (fun _ → A.pts_to (vec_to_array v) #p s)
 
 val to_vec_pts_to (#a:Type0) (v:vec a) (#p:perm) (#s:Seq.seq a)
-  : stt_ghost unit
+  : stt_ghost unit emp_inames
       (A.pts_to (vec_to_array v) #p s)
       (fun _ → pts_to v #p s)
 

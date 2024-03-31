@@ -50,25 +50,25 @@ val free (#a:Type0) (b:box a) (#v:erased a)
   : stt unit (pts_to b v) (fun _ -> emp)
 
 val share (#a:Type) (r:box a) (#v:erased a) (#p:perm)
-  : stt_ghost unit
+  : stt_ghost unit emp_inames
       (pts_to r #p v)
       (fun _ ->
        pts_to r #(half_perm p) v **
        pts_to r #(half_perm p) v)
 
 val gather (#a:Type) (r:box a) (#x0 #x1:erased a) (#p0 #p1:perm)
-  : stt_ghost unit
+  : stt_ghost unit emp_inames
       (pts_to r #p0 x0 ** pts_to r #p1 x1)
       (fun _ -> pts_to r #(sum_perm p0 p1) x0 ** pure (x0 == x1))
 
 (* Share/gather specialized to half permission *)
 val share2 (#a:Type) (r:box a) (#v:erased a)
-  : stt_ghost unit
+  : stt_ghost unit emp_inames
       (pts_to r v)
       (fun _ -> pts_to r #one_half v ** pts_to r #one_half v)
 
 val gather2 (#a:Type) (r:box a) (#x0 #x1:erased a)
-  : stt_ghost unit
+  : stt_ghost unit emp_inames
       (pts_to r #one_half x0 ** pts_to r #one_half x1)
       (fun _ -> pts_to r x0 ** pure (x0 == x1))
 
@@ -86,14 +86,14 @@ val pts_to_injective_eq (#a:_)
                         (#p #q:_)
                         (#v0 #v1:a)
                         (r:box a)
-  : stt_ghost unit
+  : stt_ghost unit emp_inames
       (pts_to r #p v0 ** pts_to r #q v1)
       (fun _ -> pts_to r #p v0 ** pts_to r #q v1 ** pure (v0 == v1))
 
 val box_to_ref  (#a:Type0) (b:box a) : R.ref a
 
 val to_ref_pts_to (#a:Type0) (b:box a) (#p:perm) (#v:a)
-  : stt_ghost unit (pts_to b #p v) (fun _ -> R.pts_to (box_to_ref b) #p v)
+  : stt_ghost unit emp_inames (pts_to b #p v) (fun _ -> R.pts_to (box_to_ref b) #p v)
 
 val to_box_pts_to (#a:Type0) (b:box a) (#p:perm) (#v:a)
-  : stt_ghost unit (R.pts_to (box_to_ref b) #p v) (fun _ -> pts_to b #p v)
+  : stt_ghost unit emp_inames (R.pts_to (box_to_ref b) #p v) (fun _ -> pts_to b #p v)

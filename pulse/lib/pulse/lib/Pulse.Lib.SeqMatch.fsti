@@ -39,7 +39,7 @@ val seq_list_match_nil_intro
   (c: Seq.seq t)
   (v: list t')
   (item_match: (t -> (v': t' { v' << v }) -> vprop))
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (pure (c `Seq.equal` Seq.empty /\
       Nil? v))
     (fun _ -> seq_list_match c v item_match)
@@ -49,7 +49,7 @@ val seq_list_match_nil_elim
   (c: Seq.seq t)
   (v: list t')
   (item_match: (t -> (v': t' { v' << v }) -> vprop))
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (seq_list_match c v item_match ** pure (
       c `Seq.equal` Seq.empty /\
       Nil? v
@@ -73,7 +73,7 @@ val seq_list_match_cons_intro
   (c: Seq.seq t)
   (v: list t')
   (item_match: (t -> (v': t' { v' << a' :: v }) -> vprop))
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (item_match a a' ** seq_list_match c v item_match)
     (fun _ -> seq_list_match (Seq.cons a c) (a' :: v) item_match)
 
@@ -83,6 +83,7 @@ val seq_list_match_cons_elim
   (v: list t' { Cons? v \/ Seq.length c > 0 })
   (item_match: (t -> (v': t' { v' << v }) -> vprop))
 : stt_ghost (squash (Cons? v /\ Seq.length c > 0))
+    emp_inames
     (seq_list_match c v item_match)
     (fun _ -> item_match (Seq.head c) (List.Tot.hd v) **
       seq_list_match (Seq.tail c) (List.Tot.tl v) item_match)
@@ -96,11 +97,11 @@ val seq_list_match_weaken
   (prf: (
     (c': t) ->
     (v': t' { v' << v }) ->
-    stt_ghost unit
+    stt_ghost unit emp_inames
       (item_match1 c' v')
       (fun _ -> item_match2 c' v')
   ))
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (seq_list_match c v item_match1)
     (fun _ -> seq_list_match c v item_match2)
 
@@ -124,20 +125,20 @@ val seq_seq_match_length
   (s1: Seq.seq t1)
   (s2: Seq.seq t2)
   (i j: nat)
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (seq_seq_match p s1 s2 i j)
     (fun _ -> seq_seq_match p s1 s2 i j ** pure (i <= j /\ (i == j \/ (j <= Seq.length s1 /\ j <= Seq.length s2))))
 
 val seq_seq_match_weaken
   (#t1 #t2: Type)
   (p p': t1 -> t2 -> vprop)
-  (w: ((x1: t1) -> (x2: t2) -> stt_ghost unit
+  (w: ((x1: t1) -> (x2: t2) -> stt_ghost unit emp_inames
     (p x1 x2) (fun _ -> p' x1 x2)
   ))
   (c1 c1': Seq.seq t1)
   (c2 c2': Seq.seq t2)
   (i j: nat)
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (seq_seq_match p c1 c2 i j ** pure (
       (i <= j /\ (i == j \/ (
         j <= Seq.length c1 /\ j <= Seq.length c2 /\
@@ -154,7 +155,7 @@ val seq_seq_match_weaken_with_implies
   (c1 c1': Seq.seq t1)
   (c2 c2': Seq.seq t2)
   (i j: nat)
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (seq_seq_match p c1 c2 i j ** pure (
       (i <= j /\ (i == j \/ (
         j <= Seq.length c1 /\ j <= Seq.length c2 /\
@@ -174,7 +175,7 @@ val seq_seq_match_seq_list_match
   (p: t1 -> t2 -> vprop)
   (c: Seq.seq t1)
   (l: list t2)
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l) ** pure (
       (Seq.length c == List.Tot.length l)
     ))
@@ -185,7 +186,7 @@ val seq_list_match_seq_seq_match
   (p: t1 -> t2 -> vprop)
   (c: Seq.seq t1)
   (l: list t2)
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (seq_list_match c l p)
     (fun _ -> seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l) ** pure (
       Seq.length c == List.Tot.length l
@@ -196,7 +197,7 @@ val seq_seq_match_seq_list_match_with_implies
   (p: t1 -> t2 -> vprop)
   (c: Seq.seq t1)
   (l: list t2)
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l) ** pure (
       (Seq.length c == List.Tot.length l)
     ))
@@ -207,7 +208,7 @@ val seq_list_match_seq_seq_match_with_implies
   (p: t1 -> t2 -> vprop)
   (c: Seq.seq t1)
   (l: list t2)
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (seq_list_match c l p)
     (fun _ -> seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l) ** (seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l) @==> seq_list_match c l p) ** pure (
       Seq.length c == List.Tot.length l
@@ -218,7 +219,7 @@ val seq_list_match_length
   (p: t1 -> t2 -> vprop)
   (c: Seq.seq t1)
   (l: list t2)
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (seq_list_match c l p)
     (fun _ -> seq_list_match c l p ** pure (
       Seq.length c == List.Tot.length l
@@ -231,6 +232,7 @@ val seq_list_match_index
   (s2: list t2)
   (i: nat)
 : stt_ghost (squash (i < Seq.length s1 /\ List.Tot.length s2 == Seq.length s1))
+    emp_inames
     (seq_list_match s1 s2 p ** pure (
       (i < Seq.length s1 \/ i < List.Tot.length s2)
     ))
@@ -352,7 +354,7 @@ val seq_seq_match_item_match_option_elim
   (s1: Seq.seq t1)
   (s2: Seq.seq t2)
   (i j: nat)
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (seq_seq_match (item_match_option p) s1 (seq_map Some s2) i j)
     (fun _ -> seq_seq_match p s1 s2 i j)
 
@@ -362,7 +364,7 @@ val seq_seq_match_item_match_option_intro
   (s1: Seq.seq t1)
   (s2: Seq.seq t2)
   (i j: nat)
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (seq_seq_match p s1 s2 i j)
     (fun _ -> seq_seq_match (item_match_option p) s1 (seq_map Some s2) i j)
 
@@ -370,7 +372,7 @@ val seq_seq_match_item_match_option_init
   (#t1 #t2: Type)
   (p: t1 -> t2 -> vprop)
   (s: Seq.seq t1)
-: stt_ghost unit
+: stt_ghost unit emp_inames
     emp
     (fun _ -> seq_seq_match (item_match_option p) s (Seq.create (Seq.length s) None) 0 (Seq.length s))
 
@@ -386,6 +388,7 @@ val seq_seq_match_upd
   (x1: t1)
   (x2: t2)
 : stt_ghost (squash (j < Seq.length s1 /\ j < Seq.length s2))
+    emp_inames
     (seq_seq_match p s1 s2 i k ** p x1 x2)
     (fun _ -> 
       seq_seq_match p (Seq.upd s1 j x1) (Seq.upd s2 j x2) i k
@@ -403,6 +406,7 @@ val seq_seq_match_item_match_option_upd
   (x1: t1)
   (x2: t2)
 : stt_ghost (squash (j < Seq.length s1 /\ j < Seq.length s2))
+    emp_inames
     (seq_seq_match (item_match_option p) s1 s2 i k ** p x1 x2)
     (fun _ -> 
       seq_seq_match (item_match_option p) (Seq.upd s1 j x1) (Seq.upd s2 j (Some x2)) i k
@@ -419,6 +423,7 @@ val seq_seq_match_item_match_option_index
     (j < Seq.length s2 ==> Some? (Seq.index s2 j))
   })
 : stt_ghost (squash (j < Seq.length s1 /\ j < Seq.length s2 /\ Some? (Seq.index s2 j)))
+    emp_inames
     (seq_seq_match (item_match_option p) s1 s2 i k)
     (fun _ -> 
       seq_seq_match (item_match_option p) s1 (Seq.upd s2 j None) i k **

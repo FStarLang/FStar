@@ -135,17 +135,19 @@ ensures active p t
 }
 ```
 
- 
-```pulse
-atomic
-fn cancel_inv (#t #v:_) (i:inv (cancellable t v))
-requires
-    active full_perm t
-ensures v
-opens (add_inv emp_inames i)
-{
-    with_invariants i {
-        cancel v;
-    }
-}
-```
+
+// TODO: FIX INV
+
+// ```pulse
+// atomic
+// fn cancel_inv (#t #v:_) (i:inv (cancellable t v))
+// requires
+//     active full_perm t
+// ensures v
+// opens (add_inv emp_inames i)
+// {
+//     with_invariants i {
+//         cancel v;
+//     }
+// }
+// ```

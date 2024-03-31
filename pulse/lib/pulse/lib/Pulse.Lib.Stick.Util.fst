@@ -24,7 +24,7 @@ fn intro
   (hyp concl: vprop)
   (v: vprop)
   (f_elim: (unit -> (
-    stt_ghost unit
+    stt_ghost unit emp_inames
     (v ** hyp)
     (fun _ -> concl)
   )))

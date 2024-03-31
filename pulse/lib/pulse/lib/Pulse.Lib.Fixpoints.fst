@@ -29,9 +29,9 @@ let rec fix_ghost_1 (#a : Type0) (#b : a -> Type0)
   = fun x -> ff x (fix_ghost_1 ff)
 
 let fix_stt_ghost_1 (#a : Type) (#b : a -> Type) (#pre : a -> vprop) (#post : (x:a -> b x -> vprop))
-  (ff : (x:a -> (y:a{y << x} -> stt_ghost (b y) (pre y) (post y)) -> stt_ghost (b x) (pre x) (post x)))
-  : x:a -> stt_ghost (b x) (pre x) (post x)
-  = fix_1 #a #(fun x -> stt_ghost (b x) (pre x) (post x)) ff
+  (ff : (x:a -> (y:a{y << x} -> stt_ghost (b y) emp_inames (pre y) (post y)) -> stt_ghost (b x) emp_inames (pre x) (post x)))
+  : x:a -> stt_ghost (b x) emp_inames (pre x) (post x)
+  = fix_1 #a #(fun x -> stt_ghost (b x) emp_inames (pre x) (post x)) ff
 
 (* No termination check needed by dropping into STT *)
 

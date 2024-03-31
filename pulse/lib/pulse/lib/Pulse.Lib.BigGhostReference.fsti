@@ -22,7 +22,7 @@ open FStar.Ghost
 
 [@@erasable]
 val ref ([@@@unused] a:Type u#2) : Type u#0
-      
+
 instance val non_informative_gref (a:Type u#2) : NonInformative.non_informative (ref a)
 
 val pts_to (#a:Type)
@@ -32,49 +32,49 @@ val pts_to (#a:Type)
 : vprop
 
 val alloc (#a:Type) (x:a)
-  : stt_ghost (ref a) emp (fun r -> pts_to r x)
+  : stt_ghost (ref a) emp_inames emp (fun r -> pts_to r x)
   
 val read (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
-  : stt_ghost (erased a)
+  : stt_ghost (erased a) emp_inames
         (pts_to r #p n)
         (fun x -> pts_to r #p n ** pure (n == x))
 
 val ( ! ) (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
-  : stt_ghost (erased a)
+  : stt_ghost (erased a) emp_inames
         (pts_to r #p n)
         (fun x -> pts_to r #p n ** pure (n == x))
 
 
 val ( := ) (#a:Type) (r:ref a) (x:erased a) (#n:erased a)
-  : stt_ghost unit
+  : stt_ghost unit emp_inames
         (pts_to r n) 
         (fun _ -> pts_to r x)
 
 let write = ( := )
 
 val free (#a:Type) (r:ref a) (#n:erased a)
-  : stt_ghost unit (pts_to r n) (fun _ -> emp)
+  : stt_ghost unit emp_inames (pts_to r n) (fun _ -> emp)
 
 val share (#a:Type) (r:ref a) (#v:erased a) (#p:perm)
-  : stt_ghost unit
+  : stt_ghost unit emp_inames
       (pts_to r #p v)
       (fun _ ->
        pts_to r #(half_perm p) v **
        pts_to r #(half_perm p) v)
 
 val gather (#a:Type) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
-  : stt_ghost unit
+  : stt_ghost unit emp_inames
       (pts_to r #p0 x0 ** pts_to r #p1 x1)
       (fun _ -> pts_to r #(sum_perm p0 p1) x0 ** pure (x0 == x1))
 
 (* Share/gather specialized to half permission *)
 val share2 (#a:Type) (r:ref a) (#v:erased a)
-  : stt_ghost unit
+  : stt_ghost unit emp_inames
       (pts_to r v)
       (fun _ -> pts_to r #one_half v ** pts_to r #one_half v)
 
 val gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a)
-  : stt_ghost unit
+  : stt_ghost unit emp_inames
       (pts_to r #one_half x0 ** pts_to r #one_half x1)
       (fun _ -> pts_to r x0 ** pure (x0 == x1))
 
@@ -82,11 +82,11 @@ val pts_to_injective_eq (#a:_)
                         (#p #q:_)
                         (#v0 #v1:a)
                         (r:ref a)
-  : stt_ghost unit
+  : stt_ghost unit emp_inames
       (pts_to r #p v0 ** pts_to r #q v1)
       (fun _ -> pts_to r #p v0 ** pts_to r #q v1 ** pure (v0 == v1))
 
 val pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
-  : stt_ghost unit
+  : stt_ghost unit emp_inames
       (pts_to r #p v)
       (fun _ -> pts_to r #p v ** pure (p `lesser_equal_perm` full_perm))
