@@ -269,6 +269,8 @@ let rec (st_sub_weakening :
                         (Pulse_Typing_Env.push_env g g1) g'), uu___1, uu___2,
                       uu___3, (st_sub_weakening g g' uu___1 uu___2 dl g1),
                       (st_sub_weakening g g' uu___2 uu___3 dr g1))
+              | Pulse_Typing.STS_GhostInvs (uu___, stc, is1, is2, tok) ->
+                  Pulse_Typing.STS_GhostInvs (g'', stc, is1, is2, ())
               | Pulse_Typing.STS_AtomicInvs
                   (uu___, stc, is1, is2, o1, o2, tok) ->
                   Pulse_Typing.STS_AtomicInvs

@@ -156,6 +156,9 @@ let rec st_sub_weakening (g:env) (g':env { disjoint g g' })
     STS_Refl _ _
   | STS_Trans _ _ _ _ dl dr ->
     STS_Trans _ _ _ _ (st_sub_weakening g g' dl g1) (st_sub_weakening g g' dr g1)
+  | STS_GhostInvs _ stc is1 is2 tok ->
+    let tok : prop_validity g'' (tm_inames_subset is1 is2) = prop_validity_token_weakening tok g'' in
+    STS_GhostInvs g'' stc is1 is2 tok
   | STS_AtomicInvs _ stc is1 is2 o1 o2 tok ->
     let tok : prop_validity g'' (tm_inames_subset is1 is2) = prop_validity_token_weakening tok g'' in
     STS_AtomicInvs g'' stc is1 is2 o1 o2 tok

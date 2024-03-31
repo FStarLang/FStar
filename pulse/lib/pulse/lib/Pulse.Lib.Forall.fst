@@ -6,7 +6,7 @@ module F = FStar.FunctionalExtensionality
 let token (v:vprop) = v
 
 let universal_quantifier #a (v:vprop) (p: a -> vprop) =
-  x:a -> stt_ghost unit v (fun _ -> p x)
+  x:a -> stt_ghost unit emp_inames v (fun _ -> p x)
 
 let is_forall #a (v:vprop) (p:a -> vprop) =
   squash (universal_quantifier #a v p)
@@ -61,12 +61,12 @@ let elim_forall
     (#a:Type u#a)
     (#p:a->vprop)
     (x:a)
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (forall* (x:a). p x)
     (fun _ -> p x)
 = let m1 = elim_exists #vprop (fun (v:vprop) -> pure (is_forall v p) ** token v) in
   let m2 (v:Ghost.erased vprop)
-    : stt_ghost unit 
+    : stt_ghost unit emp_inames
         (pure (is_forall v p) ** token v)
         (fun _ -> p x)
     = bind_ghost
@@ -90,16 +90,16 @@ let intro_forall
     (#a:Type)
     (#p:a->vprop)
     (v:vprop)
-    (f_elim : (x:a -> stt_ghost unit v (fun _ -> p x)))
-: stt_ghost unit
+    (f_elim : (x:a -> stt_ghost unit emp_inames v (fun _ -> p x)))
+: stt_ghost unit emp_inames
     v
     (fun _ -> forall* x. p x)
 = let _ : squash (universal_quantifier v p) = FStar.Squash.return_squash f_elim in
   let m1
-    : stt_ghost unit (emp ** v) (fun _ -> pure (is_forall v p) ** v) 
+    : stt_ghost unit emp_inames (emp ** v) (fun _ -> pure (is_forall v p) ** v) 
     = frame_ghost v (intro_pure (is_forall v p) ()) in
   let m2 ()
-    : stt_ghost unit
+    : stt_ghost unit emp_inames
           (pure (is_forall v p) ** token v) 
           (fun _ -> forall* x. p x)
     = intro_exists (fun (v:vprop) -> pure (is_forall v p) ** token v) v
