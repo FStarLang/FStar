@@ -1501,7 +1501,8 @@ let dup_inv e i p =
 
 let new_invariant (e:inames) (p:slprop u#a { is_big p })
 : pst_ghost_action_except iname_ref e p (fun i -> i -~- p)
-= lift_tot_action (refined_pre_action_as_action (new_invariant_pre_action Set.empty e p))
+= FStar.Classical.forall_intro_2 iname_ref_pts_to_equiv;
+  lift_tot_action (refined_pre_action_as_action (new_invariant_pre_action Set.empty e p))
 
 
 #push-options "--fuel 0 --ifuel 0 --split_queries no --z3rlimit_factor 2"
@@ -1544,7 +1545,7 @@ let with_invariant (#a:Type)
                    (#fp:slprop)
                    (#fp':a -> slprop)
                    (#e:inames)
-                   (#p:slprop { is_big p })
+                   (#p:slprop)
                    (#maybe_ghost:bool)
                    (i:iname_ref{not (mem_inv e i)})
                    (f:_pst_action_except a maybe_ghost
@@ -1557,6 +1558,8 @@ let with_invariant (#a:Type)
 = fun (frame:slprop) (m0:hmem_with_inv_except e(((i -~- p) `star` fp) `star` frame)) ->
     assert (interp ((i -~- p) `star` fp `star` frame `star` mem_invariant e m0) m0);
     assert (interp ((i -~- p)) m0);
+    i_p_is_big i p m0;
+    iname_ref_pts_to_equiv i p;
     elim_star_pqrs (i -~- p) fp frame (mem_invariant e m0) m0;
     assert (interp (mem_invariant e m0) m0);
     elim_inv e i p m0;
@@ -1592,8 +1595,8 @@ let with_invariant (#a:Type)
 
 let distinct_invariants_have_distinct_names
       (e:inames)
-      (p:big_vprop u#m)
-      (q:big_vprop u#m { p =!= q })
+      (p:slprop u#m)
+      (q:slprop u#m { p =!= q })
       (i j: iname_ref)
 : pst_ghost_action_except u#0 u#m 
     (squash (name_of_inv i =!= name_of_inv j))
@@ -1602,13 +1605,17 @@ let distinct_invariants_have_distinct_names
     (fun _ -> (i -~- p) `star` (j -~- q))
 = fun frame m0 ->
     elim_star_pqrs (i -~- p) (j -~- q) frame (mem_invariant e m0) m0;
+    i_p_is_big i p m0;
+    i_p_is_big j q m0;
+    iname_ref_pts_to_equiv i p;
+    iname_ref_pts_to_equiv j q;
     elim_inv e i p m0;
     elim_inv e j q m0;
     ((), m0)
 
 let invariant_name_identifies_invariant
       (e:inames)
-      (p q:big_vprop u#m)
+      (p q:slprop u#m)
       (i:iname_ref)
       (j:iname_ref { name_of_inv i == name_of_inv j } )
 : pst_ghost_action_except (squash (p == q /\ i == j)) e
@@ -1616,6 +1623,10 @@ let invariant_name_identifies_invariant
    (fun _ -> (i -~- p) `star` (j -~- q))
 = fun frame m0 ->
     elim_star_pqrs (i -~- p) (j -~- q) frame (mem_invariant e m0) m0;
+    i_p_is_big i p m0;
+    i_p_is_big j q m0;
+    iname_ref_pts_to_equiv i p;
+    iname_ref_pts_to_equiv j q;
     elim_inv e i p m0;
     elim_inv e j q m0;
     let open H0 in
@@ -1692,6 +1703,7 @@ let fresh_invariant (e:inames) (p:big_vprop u#m) (ctx:list iname_ref)
     let res = act frame m in
     fresh_wrt_lemma ctx (fst res);
     let i, m = res in
+    iname_ref_pts_to_equiv i p;
     i, m
 
 let equiv_pqrs_p_qr_s (p q r s:slprop)

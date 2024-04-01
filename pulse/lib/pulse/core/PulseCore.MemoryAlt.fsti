@@ -268,7 +268,7 @@ val with_invariant (#a:Type)
                    (#fp:slprop)
                    (#fp':a -> slprop)
                    (#opened_invariants:inames)
-                   (#p:slprop { is_big p })
+                   (#p:slprop)
                    (#maybe_ghost:bool)
                    (i:iname_ref{not (mem_inv opened_invariants i)})
                    (f:_pst_action_except a maybe_ghost
@@ -282,8 +282,8 @@ val with_invariant (#a:Type)
 
 val distinct_invariants_have_distinct_names
       (e:inames)
-      (p:big_vprop u#m)
-      (q:big_vprop u#m { p =!= q })
+      (p:slprop u#m)
+      (q:slprop u#m { p =!= q })
       (i j: iname_ref)
 : pst_ghost_action_except u#0 u#m 
     (squash (name_of_inv i =!= name_of_inv j))
@@ -293,7 +293,7 @@ val distinct_invariants_have_distinct_names
 
 val invariant_name_identifies_invariant
       (e:inames)
-      (p q:big_vprop u#m)
+      (p q:slprop u#m)
       (i:iname_ref)
       (j:iname_ref { name_of_inv i == name_of_inv j } )
 : pst_ghost_action_except (squash (p == q /\ i == j)) e

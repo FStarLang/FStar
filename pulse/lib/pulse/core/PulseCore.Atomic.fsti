@@ -256,7 +256,7 @@ val with_invariant
     (#fp:slprop)
     (#fp':a -> slprop)
     (#f_opens:inames)
-    (#p:big_vprop)
+    (#p:slprop)
     (i:iname_ref { not (mem_inv f_opens i) })
     ($f:unit -> stt_atomic a #obs f_opens
                            (p ** fp)
@@ -268,7 +268,7 @@ val with_invariant_g
     (#fp:slprop)
     (#fp':a -> slprop)
     (#f_opens:inames)
-    (#p:big_vprop)
+    (#p:slprop)
     (i:iname_ref { not (mem_inv f_opens i) })
     ($f:unit -> stt_ghost a f_opens
                             (p ** fp)
@@ -276,8 +276,7 @@ val with_invariant_g
 : stt_ghost a (add_inv f_opens i) ((i -~- p) ** fp) (fun x -> (i -~- p) ** fp' x)
 
 val distinct_invariants_have_distinct_names
-    (#p:big_vprop)
-    (#q:big_vprop)
+    (#p #q:slprop)
     (i j:iname_ref)
     (_:squash (p =!= q))
 : stt_ghost
@@ -287,7 +286,7 @@ val distinct_invariants_have_distinct_names
     (fun _ -> (i -~- p) ** (j -~- q))
 
 val invariant_name_identifies_invariant
-      (p q:big_vprop)
+      (p q:slprop)
       (i:iname_ref)
       (j:iname_ref { name_of_inv i == name_of_inv j })
 : stt_ghost

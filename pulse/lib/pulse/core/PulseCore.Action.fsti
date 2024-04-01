@@ -169,14 +169,14 @@ val with_invariant
     (#fp:slprop)
     (#fp':a -> slprop)
     (#f_opens:inames)
-    (#p:big_vprop)
+    (#p:slprop)
     (i:iname_ref { not (mem_inv f_opens i) })
     (f:unit -> act a r f_opens (p ** fp) (fun x -> p ** fp' x))
 : act a r (add_inv f_opens i) ((i -~- p) ** fp) (fun x -> (i -~- p) ** fp' x)
 
 val distinct_invariants_have_distinct_names
-    (#p:big_vprop)
-    (#q:big_vprop)
+    (#p:slprop)
+    (#q:slprop)
     (i j:iname_ref)
     (_:squash (p =!= q))
 : act (squash (name_of_inv i =!= name_of_inv j))
@@ -186,7 +186,7 @@ val distinct_invariants_have_distinct_names
       (fun _ -> (i -~- p) ** (j -~- q))
 
 val invariant_name_identifies_invariant
-      (p q:big_vprop)
+      (p q:slprop)
       (i:iname_ref)
       (j:iname_ref { name_of_inv i == name_of_inv j } )
 : act (squash (p == q /\ i == j))
