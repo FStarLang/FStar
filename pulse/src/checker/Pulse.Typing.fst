@@ -230,6 +230,17 @@ let add_frame (s:comp_st) (frame:term)
     | C_STAtomic inames obs s -> C_STAtomic inames obs (add_frame_s s)
     | C_STGhost inames s -> C_STGhost inames (add_frame_s s)
 
+let add_frame_l (s:comp_st) (frame:term)
+  : comp_st
+  = let add_frame_s (s:st_comp) : st_comp =
+        { s with pre = tm_star frame s.pre;
+                 post = tm_star frame s.post }
+    in
+    match s with
+    | C_ST s -> C_ST (add_frame_s s)
+    | C_STAtomic inames obs s -> C_STAtomic inames obs (add_frame_s s)
+    | C_STGhost inames s -> C_STGhost inames (add_frame_s s)
+
 let add_inv (s:comp_st) (v:vprop)
   : comp_st
   = add_frame s v
@@ -243,14 +254,14 @@ let join_obs (o1 o2:observability) : observability =
   if o1 = o2 then o1
   else Observable
 
-let add_iname_at_least_unobservable (s:comp_st {C_STAtomic? s}) (inv_vprop inv_tm:term) =
-  admit ()  // TODO: FIX INV
-  // let add_inv_tm (inames:term) = 
-  //   wr (Pulse.Reflection.Util.add_inv_tm (elab_term inv_vprop) (elab_term inames) (elab_term inv_tm))
-  //      (RU.range_of_term inames)
-  // in
-  // let C_STAtomic inames obs s = s in
-  // C_STAtomic (add_inv_tm inames) (join_obs obs Unobservable) s
+let comp_with_inv_atomic (s:comp_st {C_STAtomic? s}) (i p:term) =
+  let frame = tm_inv i p in
+  let C_STAtomic inames obs s = s in
+  C_STAtomic
+    (add_inv_tm inames i)
+    obs
+    { s with pre = tm_star frame s.pre;
+             post = tm_star frame s.post }
 
 let bind_comp_compatible (c1 c2:comp_st)
   : prop
@@ -301,7 +312,7 @@ let elim_exists_post (u:universe) (t:term) (p:term) (x:nvar)
 
 let comp_elim_exists (u:universe) (t:term) (p:term) (x:nvar)
   : comp
-  = C_STGhost emp_inames_tm
+  = C_STGhost tm_emp_inames
       {
         u=u;
         res=mk_erased u t;
@@ -310,7 +321,7 @@ let comp_elim_exists (u:universe) (t:term) (p:term) (x:nvar)
       }
 
 let comp_intro_pure (p:term) =
-  C_STGhost emp_inames_tm
+  C_STGhost tm_emp_inames
     {
       u=u_zero;
       res=tm_unit;
@@ -322,7 +333,7 @@ let named_binder (x:ppname) (t:term) = mk_binder_ppname t x
 
 let comp_intro_exists (u:universe) (b:binder) (p:term) (e:term)
   : comp
-  = C_STGhost emp_inames_tm
+  = C_STGhost tm_emp_inames
       {
         u=u0;
         res=tm_unit;
@@ -332,7 +343,7 @@ let comp_intro_exists (u:universe) (b:binder) (p:term) (e:term)
 
 let comp_intro_exists_erased (u:universe) (b:binder) (p:term) (e:term)
   : comp
-  = C_STGhost emp_inames_tm
+  = C_STGhost tm_emp_inames
       {
         u=u0;
         res=tm_unit;
@@ -476,7 +487,7 @@ let comp_withlocal_array_body (arr:var) (a:term) (init:term) (len:term) (c:comp{
   }
 
 let comp_rewrite (p q:vprop) : comp =
-  C_STGhost emp_inames_tm
+  C_STGhost tm_emp_inames
     {
 			u = u0;
 			res = tm_unit;
@@ -729,9 +740,9 @@ let readback_binding b = (b.uniq, b.sort)
 let non_informative (g:env) (c:comp) =
   my_erased (RT.non_informative (elab_env g) (elab_comp c))
 
-let inv_disjointness (inv_p inames inv:term) = 
-  let g = Pulse.Reflection.Util.inv_disjointness_goal (elab_term inv_p) (elab_term inames) (elab_term inv) in 
-  S.wr g (RU.range_of_term inv)
+let inv_disjointness (inames i:term) = 
+  let g = Pulse.Reflection.Util.inv_disjointness_goal (elab_term inames) (elab_term i) in 
+  S.wr g (RU.range_of_term i)
 
 let eff_of_ctag = function
   | STT_Ghost -> T.E_Ghost
@@ -1026,16 +1037,16 @@ type st_typing : env -> st_term -> comp -> Type =
   (* This limits the body to be atomic, rather than also allowing unobservable *)
   | T_WithInv:
       g:env ->
-      inv_tm : term ->
-      inv_vprop : vprop ->
-      inv_vprop_typing : tot_typing g inv_vprop tm_vprop -> // could be ghost
-      inv_typing : tot_typing g inv_tm (tm_inv inv_vprop) ->
-      body : st_term ->
-      c : comp_st { C_STAtomic? c } ->
-      body_typing : st_typing g body (add_frame c inv_vprop) ->
-      inv_disjointness_token:prop_validity g (inv_disjointness inv_vprop (comp_inames c) inv_tm) ->
-      st_typing g (wtag (Some STT_Atomic) (Tm_WithInv {name=inv_tm; body; returns_inv=None}))
-                  (add_iname_at_least_unobservable c inv_vprop inv_tm)
+      i:term ->
+      p:term ->
+      body:st_term ->
+      c:comp_st { C_STAtomic? c } ->
+      tot_typing g i tm_iname_ref ->
+      tot_typing g p tm_vprop ->
+      body_typing : st_typing g body (add_frame_l c p) ->
+      inv_disjointness_token:prop_validity g (inv_disjointness (comp_inames c) i) ->
+      st_typing g (wtag (Some STT_Atomic) (Tm_WithInv {name=i; body; returns_inv=None}))
+                  (comp_with_inv_atomic c i p)
 
 and pats_complete : env -> term -> typ -> list R.pattern -> Type0 =
   // just check the elaborated term with the core tc
@@ -1189,11 +1200,11 @@ let post_hint_typing (g:env)
   : post_hint_typing_t g p x
   = let effect_annot_typing : effect_annot_typing g p.effect_annot = 
       match p.effect_annot with
-      | EffectAnnotAtomic { opens } ->
+      | EffectAnnotAtomic { opens }
+      | EffectAnnotGhost { opens } ->
         let opens_typing : tot_typing g opens tm_inames = RU.magic () in //weakening
         opens_typing
-      | _ ->
-        ()
+      | _ -> ()
     in
   {
     effect_annot_typing;
