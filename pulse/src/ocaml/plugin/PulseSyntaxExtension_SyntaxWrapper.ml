@@ -63,7 +63,6 @@ let tm_arrow (b:binder) (q:S.aqual) (body:comp) : term =
 let tm_expr (t:S.term) r : term = Pulse_Syntax_Pure.wr t r
 let tm_unknown r : term = wr r Tm_Unknown
 let tm_emp_inames :term = wr FStar_Range.range_0 Tm_EmpInames
-let tm_add_inv i is r : term = wr r (Tm_AddInv (i, is))
 
 let is_tm_exists (t:term) : bool =
   match Pulse_Syntax_Pure.inspect_term t with

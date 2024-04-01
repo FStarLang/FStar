@@ -58,7 +58,6 @@ val tm_arrow (b:binder) (q:FStar.Syntax.Syntax.aqual) (body:comp) (_:range)  : t
 val tm_expr (t:FStar.Syntax.Syntax.term) (_:range) : term
 val tm_unknown (_:range)  : term
 val tm_emp_inames : term 
-val tm_add_inv : i:term -> is:term -> range -> term
 val mk_tot (t:term) : comp
 val mk_comp (pre:term) (ret:binder) (post:term) : comp
 val ghost_comp (opens:term) (pre:term) (ret:binder) (post:term) : comp

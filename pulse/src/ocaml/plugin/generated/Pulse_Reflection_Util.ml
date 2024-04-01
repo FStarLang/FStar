@@ -36,6 +36,7 @@ let (vprop_fv : FStar_Reflection_Types.fv) =
 let (vprop_tm : FStar_Reflection_Types.term) =
   FStar_Reflection_V2_Builtins.pack_ln
     (FStar_Reflection_V2_Data.Tv_FVar vprop_fv)
+let (emp_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "emp"
 let (unit_fv : FStar_Reflection_Types.fv) =
   FStar_Reflection_V2_Builtins.pack_fv unit_lid
 let (unit_tm : FStar_Reflection_Types.term) =
@@ -160,9 +161,6 @@ let (true_tm : FStar_Reflection_Types.term) =
 let (false_tm : FStar_Reflection_Types.term) =
   FStar_Reflection_V2_Builtins.pack_ln
     (FStar_Reflection_V2_Data.Tv_Const FStar_Reflection_V2_Data.C_False)
-let (inv_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "inv"
-let (emp_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "emp"
-let (inames_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "inames"
 let (star_lid : Prims.string Prims.list) =
   mk_pulse_lib_core_lid "op_Star_Star"
 let (mk_star :
@@ -339,13 +337,6 @@ let (mk_stt_ghost_admit :
           FStar_Reflection_V2_Builtins.pack_ln
             (FStar_Reflection_V2_Data.Tv_App
                (t3, (post, FStar_Reflection_V2_Data.Q_Explicit)))
-let (emp_inames_lid : Prims.string Prims.list) =
-  mk_pulse_lib_core_lid "emp_inames"
-let (all_inames_lid : Prims.string Prims.list) =
-  mk_pulse_lib_core_lid "all_inames"
-let (add_inv_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "add_inv"
-let (remove_inv_lid : Prims.string Prims.list) =
-  mk_pulse_lib_core_lid "remove_inv"
 let (elim_pure_lid : Prims.string Prims.list) =
   mk_pulse_lib_core_lid "elim_pure"
 let (stt_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "stt"
@@ -802,40 +793,6 @@ let (vprop_eq_tm :
           (FStar_Reflection_V2_Data.Tv_App
              (t4, (t2, FStar_Reflection_V2_Data.Q_Explicit))) in
       t5
-let (emp_inames_tm : FStar_Reflection_Types.term) =
-  FStar_Reflection_V2_Builtins.pack_ln
-    (FStar_Reflection_V2_Data.Tv_FVar
-       (FStar_Reflection_V2_Builtins.pack_fv emp_inames_lid))
-let (all_inames_tm : FStar_Reflection_Types.term) =
-  FStar_Reflection_V2_Builtins.pack_ln
-    (FStar_Reflection_V2_Data.Tv_FVar
-       (FStar_Reflection_V2_Builtins.pack_fv all_inames_lid))
-let (add_inv_tm :
-  FStar_Reflection_Types.term ->
-    FStar_Reflection_Types.term ->
-      FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
-  =
-  fun p ->
-    fun is ->
-      fun i ->
-        let h =
-          FStar_Reflection_V2_Builtins.pack_ln
-            (FStar_Reflection_V2_Data.Tv_FVar
-               (FStar_Reflection_V2_Builtins.pack_fv add_inv_lid)) in
-        FStar_Reflection_V2_Derived.mk_app h [im p; ex is; ex i]
-let (remove_inv_tm :
-  FStar_Reflection_Types.term ->
-    FStar_Reflection_Types.term ->
-      FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
-  =
-  fun p ->
-    fun is ->
-      fun i ->
-        let h =
-          FStar_Reflection_V2_Builtins.pack_ln
-            (FStar_Reflection_V2_Data.Tv_FVar
-               (FStar_Reflection_V2_Builtins.pack_fv remove_inv_lid)) in
-        FStar_Reflection_V2_Derived.mk_app h [im p; ex is; ex i]
 let (non_informative_lid : Prims.string Prims.list) =
   mk_pulse_lib_noninformative_lid "non_informative"
 let (non_informative_rt :
@@ -2136,39 +2093,39 @@ let (mk_opaque_let :
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "Pulse.Reflection.Util.fst"
-                     (Prims.of_int (738)) (Prims.of_int (11))
-                     (Prims.of_int (738)) (Prims.of_int (45)))))
+                     (Prims.of_int (720)) (Prims.of_int (11))
+                     (Prims.of_int (720)) (Prims.of_int (45)))))
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "Pulse.Reflection.Util.fst"
-                     (Prims.of_int (738)) (Prims.of_int (48))
-                     (Prims.of_int (744)) (Prims.of_int (18)))))
+                     (Prims.of_int (720)) (Prims.of_int (48))
+                     (Prims.of_int (726)) (Prims.of_int (18)))))
             (Obj.magic
                (FStar_Tactics_Effect.tac_bind
                   (FStar_Sealed.seal
                      (Obj.magic
                         (FStar_Range.mk_range "Pulse.Reflection.Util.fst"
-                           (Prims.of_int (738)) (Prims.of_int (21))
-                           (Prims.of_int (738)) (Prims.of_int (45)))))
+                           (Prims.of_int (720)) (Prims.of_int (21))
+                           (Prims.of_int (720)) (Prims.of_int (45)))))
                   (FStar_Sealed.seal
                      (Obj.magic
                         (FStar_Range.mk_range "Pulse.Reflection.Util.fst"
-                           (Prims.of_int (738)) (Prims.of_int (11))
-                           (Prims.of_int (738)) (Prims.of_int (45)))))
+                           (Prims.of_int (720)) (Prims.of_int (11))
+                           (Prims.of_int (720)) (Prims.of_int (45)))))
                   (Obj.magic
                      (FStar_Tactics_Effect.tac_bind
                         (FStar_Sealed.seal
                            (Obj.magic
                               (FStar_Range.mk_range
                                  "Pulse.Reflection.Util.fst"
-                                 (Prims.of_int (738)) (Prims.of_int (22))
-                                 (Prims.of_int (738)) (Prims.of_int (37)))))
+                                 (Prims.of_int (720)) (Prims.of_int (22))
+                                 (Prims.of_int (720)) (Prims.of_int (37)))))
                         (FStar_Sealed.seal
                            (Obj.magic
                               (FStar_Range.mk_range
                                  "Pulse.Reflection.Util.fst"
-                                 (Prims.of_int (738)) (Prims.of_int (21))
-                                 (Prims.of_int (738)) (Prims.of_int (45)))))
+                                 (Prims.of_int (720)) (Prims.of_int (21))
+                                 (Prims.of_int (720)) (Prims.of_int (45)))))
                         (Obj.magic (FStar_Tactics_V2_Derived.cur_module ()))
                         (fun uu___ ->
                            FStar_Tactics_Effect.lift_div_tac
@@ -2194,39 +2151,69 @@ let (mk_opaque_let :
                                      (FStar_Reflection_V2_Builtins.pack_ln
                                         FStar_Reflection_V2_Data.Tv_Unknown)
                                  }]))), FStar_Pervasives_Native.None)))
-let (mk_mem_inv :
-  FStar_Reflection_Types.term ->
-    FStar_Reflection_Types.term ->
-      FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
-  =
-  fun invP ->
-    fun inames ->
-      fun inv ->
-        let mem_inv_tm = mk_pulse_lib_core_lid "mem_inv" in
-        let t =
-          FStar_Reflection_V2_Builtins.pack_ln
-            (FStar_Reflection_V2_Data.Tv_FVar
-               (FStar_Reflection_V2_Builtins.pack_fv mem_inv_tm)) in
-        FStar_Reflection_V2_Derived.mk_app t [im invP; ex inames; ex inv]
-let (inv_disjointness_goal :
-  FStar_Tactics_NamedView.term ->
-    FStar_Tactics_NamedView.term ->
-      FStar_Tactics_NamedView.term -> FStar_Reflection_Types.term)
-  =
-  fun inv_p ->
-    fun inames ->
-      fun inv ->
-        let p = mk_mem_inv inv_p inames inv in
-        let u0 =
-          FStar_Reflection_V2_Builtins.pack_universe
-            FStar_Reflection_V2_Data.Uv_Zero in
-        let p1 = mk_reveal u0 bool_tm p in
-        mk_eq2 u0 bool_tm
-          (FStar_Reflection_V2_Builtins.pack_ln
-             (FStar_Reflection_V2_Data.Tv_Const
-                FStar_Reflection_V2_Data.C_False)) p1
 let (mk_observability_lid : Prims.string -> Prims.string Prims.list) =
   fun l -> ["PulseCore"; "Observability"; l]
 let (observable_lid : Prims.string Prims.list) =
   mk_observability_lid "Observable"
 let (neutral_lid : Prims.string Prims.list) = mk_observability_lid "Neutral"
+let (inames_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "inames"
+let (iname_ref_lid : Prims.string Prims.list) =
+  mk_pulse_lib_core_lid "iname_ref"
+let (inv_lid : Prims.string Prims.list) =
+  mk_pulse_lib_core_lid "op_Subtraction_Tilde_Subtraction"
+let (emp_inames_lid : Prims.string Prims.list) =
+  mk_pulse_lib_core_lid "emp_inames"
+let (all_inames_lid : Prims.string Prims.list) =
+  mk_pulse_lib_core_lid "all_inames"
+let (add_inv_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "add_inv"
+let (remove_inv_lid : Prims.string Prims.list) =
+  mk_pulse_lib_core_lid "remove_inv"
+let (add_inv_tm :
+  FStar_Reflection_Types.term ->
+    FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+  =
+  fun is ->
+    fun iref ->
+      let h =
+        FStar_Reflection_V2_Builtins.pack_ln
+          (FStar_Reflection_V2_Data.Tv_FVar
+             (FStar_Reflection_V2_Builtins.pack_fv add_inv_lid)) in
+      FStar_Reflection_V2_Derived.mk_app h [ex is; ex iref]
+let (remove_inv_tm :
+  FStar_Reflection_Types.term ->
+    FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+  =
+  fun is ->
+    fun iref ->
+      let h =
+        FStar_Reflection_V2_Builtins.pack_ln
+          (FStar_Reflection_V2_Data.Tv_FVar
+             (FStar_Reflection_V2_Builtins.pack_fv remove_inv_lid)) in
+      FStar_Reflection_V2_Derived.mk_app h [ex is; ex iref]
+let (mk_mem_inv :
+  FStar_Reflection_Types.term ->
+    FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+  =
+  fun is ->
+    fun iref ->
+      let mem_inv_tm = mk_pulse_lib_core_lid "mem_inv" in
+      let t =
+        FStar_Reflection_V2_Builtins.pack_ln
+          (FStar_Reflection_V2_Data.Tv_FVar
+             (FStar_Reflection_V2_Builtins.pack_fv mem_inv_tm)) in
+      FStar_Reflection_V2_Derived.mk_app t [ex is; ex iref]
+let (inv_disjointness_goal :
+  FStar_Reflection_Types.term ->
+    FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+  =
+  fun is ->
+    fun iref ->
+      let p = mk_mem_inv is iref in
+      let u0 =
+        FStar_Reflection_V2_Builtins.pack_universe
+          FStar_Reflection_V2_Data.Uv_Zero in
+      let p1 = mk_reveal u0 bool_tm p in
+      mk_eq2 u0 bool_tm
+        (FStar_Reflection_V2_Builtins.pack_ln
+           (FStar_Reflection_V2_Data.Tv_Const
+              FStar_Reflection_V2_Data.C_False)) p1

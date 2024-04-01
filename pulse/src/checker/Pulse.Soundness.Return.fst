@@ -135,10 +135,10 @@ let return_soundness
       assert (elab_comp c == mk_stt_comp ru rt elab_c_pre elab_c_post);
       elab_stt_equiv _ c _ _ pre_eq post_eq
     | STT_Atomic ->
-      assert (elab_comp c == mk_stt_atomic_comp WT.neutral_fv ru rt emp_inames_tm elab_c_pre elab_c_post);
+      assert (elab_comp c == mk_stt_atomic_comp WT.neutral_fv ru rt tm_emp_inames elab_c_pre elab_c_post);
       elab_statomic_equiv _ c _ _ pre_eq post_eq
     | STT_Ghost ->
-      assert (elab_comp c == mk_stt_ghost_comp ru rt emp_inames_tm elab_c_pre elab_c_post);
+      assert (elab_comp c == mk_stt_ghost_comp ru rt tm_emp_inames elab_c_pre elab_c_post);
       elab_stghost_equiv _ c _ _ pre_eq post_eq
   in
   match ctag, use_eq with
