@@ -254,14 +254,17 @@ let join_obs (o1 o2:observability) : observability =
   if o1 = o2 then o1
   else Observable
 
-let comp_with_inv_atomic (s:comp_st {C_STAtomic? s}) (i p:term) =
-  let frame = tm_inv i p in
-  let C_STAtomic inames obs s = s in
-  C_STAtomic
-    (add_inv_tm inames i)
-    obs
+let comp_with_inv (s:comp_st {C_STAtomic? s || C_STGhost? s}) (i p:term) =
+  let add_inv inames = add_inv_tm inames i in
+  let add_inv_st_comp (s:st_comp) =
+    let frame = tm_inv i p in
     { s with pre = tm_star frame s.pre;
-             post = tm_star frame s.post }
+             post = tm_star frame s.post} in
+  match s with
+  | C_STAtomic inames obs s ->
+    C_STAtomic (add_inv inames) obs (add_inv_st_comp s)
+  | C_STGhost inames s ->
+    C_STGhost (add_inv inames) (add_inv_st_comp s)
 
 let bind_comp_compatible (c1 c2:comp_st)
   : prop
@@ -1039,13 +1042,13 @@ type st_typing : env -> st_term -> comp -> Type =
       i:term ->
       p:term ->
       body:st_term ->
-      c:comp_st { C_STAtomic? c } ->
+      c:comp_st { C_STAtomic? c || C_STGhost? c } ->
       tot_typing g i tm_iname_ref ->
       tot_typing g p tm_vprop ->
       body_typing : st_typing g body (add_frame_l c p) ->
       inv_disjointness_token:prop_validity g (inv_disjointness (comp_inames c) i) ->
-      st_typing g (wtag (Some STT_Atomic) (Tm_WithInv {name=i; body; returns_inv=None}))
-                  (comp_with_inv_atomic c i p)
+      st_typing g (wtag (Some (ctag_of_comp_st c)) (Tm_WithInv {name=i; body; returns_inv=None}))
+                  (comp_with_inv c i p)
 
 and pats_complete : env -> term -> typ -> list R.pattern -> Type0 =
   // just check the elaborated term with the core tc

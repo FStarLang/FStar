@@ -264,8 +264,17 @@ let find_inv_post (#g:env) (x:var { lookup g x == None})
     
 //   | _ -> None
 
+let atomic_or_ghost_with_inames_and_pre_post
+  (c:comp { C_STAtomic? c \/ C_STGhost? c})
+  (inames pre post:term) =
+  match c with
+  | C_STAtomic _ obs s ->
+    C_STAtomic inames obs { s with pre; post }
+  | C_STGhost _ s ->
+    C_STGhost inames { s with pre; post }
+
 #restart-solver
-#push-options "--z3rlimit_factor 10 --split_queries no"
+#push-options "--z3rlimit_factor 15 --split_queries no"
 let check
   (g:env)
   (pre:term)
@@ -291,10 +300,10 @@ let check
       fail g (Some t.range) "Fatal: no post hint on with_invariant"
   in
   match post_hint.effect_annot with
-  | EffectAnnotGhost _ -> 
-    let open Pulse.PP in
-    fail_doc g (Some t.range) 
-    [ doc_of_string "Cannot open invariants in a 'ghost' context" ]
+  // | EffectAnnotGhost _ -> 
+  //   let open Pulse.PP in
+  //   fail_doc g (Some t.range) 
+  //   [ doc_of_string "Cannot open invariants in a 'ghost' context" ]
 
   | _ ->
     (* Checking the body seems to change its range, so store the original one
@@ -349,11 +358,18 @@ let check
       = match post_hint.effect_annot with
         | EffectAnnotSTT ->
           (| all_inames, all_inames_typing g |)
+        | EffectAnnotGhost { opens }
         | EffectAnnotAtomic { opens } ->
           (| opens, (post_hint_typing g post_hint x).effect_annot_typing |)
     in
     let opens_remove_i = remove_iname opens i in
-    let effect_annot = EffectAnnotAtomic { opens=opens_remove_i } in
+    let effect_annot =
+      match post_hint.effect_annot with
+      | EffectAnnotSTT
+      | EffectAnnotAtomic _ ->
+        EffectAnnotAtomic { opens=opens_remove_i }
+      | EffectAnnotGhost _ ->
+        EffectAnnotGhost { opens=opens_remove_i } in
     let effect_annot_typing
       : effect_annot_typing g effect_annot
       = remove_iname_typing g #opens #i opens_typing (magic ())  // from inversion of tm_inv_typing
@@ -377,23 +393,32 @@ let check
       apply_checker_result_k r ppname
     in
 
-    let C_STAtomic inames obs st = c_body in
-    assert (inames == opens_remove_i);
-    assert (st.pre == tm_star p pre_frame);
-    assert (st.post == tm_star p post_frame);
+    assert (comp_inames c_body == opens_remove_i);
+    assert (comp_pre c_body == tm_star p pre_frame);
+    assert (comp_post c_body == tm_star p post_frame);
 
-    let c_out = C_STAtomic (Pulse.Reflection.Util.add_inv_tm inames i) obs
-      {st with pre = pre;
-       post = post_hint.post} in
+    let c_out = atomic_or_ghost_with_inames_and_pre_post c_body
+      (Pulse.Reflection.Util.add_inv_tm (comp_inames c_body) i)
+      pre
+      post_hint.post in 
 
     let tok = disjointness_remove_i_i g opens i in
-    let d : st_typing _ _ c_out =
-      let c = C_STAtomic inames obs { st with pre = pre_frame; post = post_frame  } in
-      let c_out_eq = C_STAtomic (Pulse.Reflection.Util.add_inv_tm inames i) obs
-        {st with pre = tm_star (tm_inv i p ) pre_frame;
-         post = tm_star (tm_inv i p) post_frame} in
+
+    let tm = wtag (Some (ctag_of_comp_st c_out)) (Tm_WithInv {name=i;body;returns_inv=None}) in
+    let d : st_typing _ tm c_out =
+      let c = atomic_or_ghost_with_inames_and_pre_post
+        c_body
+        (comp_inames c_body)
+        pre_frame
+        post_frame in
+      let c_out_eq = atomic_or_ghost_with_inames_and_pre_post
+        c_body
+        (Pulse.Reflection.Util.add_inv_tm (comp_inames c_body) i)
+        (tm_star (tm_inv i p) pre_frame)
+        (tm_star (tm_inv i p) post_frame) in
+      
       assert (add_frame_l c p == c_body);
-      assert (comp_with_inv_atomic c i p == c_out_eq);
+      assert (comp_with_inv c i p == c_out_eq);
       let d : st_typing _ _ c_out_eq =
         T_WithInv _ i p _ c (magic ()) (magic ()) body_typing tok in
       let d_pre_eq : vprop_equiv g (comp_pre c_out_eq) (comp_pre c_out) = d_pre_frame_eq in
@@ -410,26 +435,33 @@ let check
       assert (comp_res c_out_eq == comp_res c_out);
       assume (~ (x `Set.mem` freevars (comp_post c_out_eq)));
       assume (~ (x `Set.mem` freevars (comp_post c_out)));
-      T_Equiv _ _ _ _ d
-        (ST_VPropEquiv _ c_out_eq c_out x (magic ())
-                                          (magic ())
-                                          (magic ())
-                                          (RT.Rel_refl _ _ RT.R_Eq)
-                                          d_pre_eq
-                                          d_post_eq)
-    in
-
-    match post_hint.effect_annot with
-    | EffectAnnotAtomic _ -> 
-      let C_STAtomic add_inv obs st = c_out in
-      let tok : prop_validity g (tm_inames_subset add_inv opens) =
-        add_remove_inverse g opens i
-            opens_typing
-            (magic ())
-      in
-      let c_out = C_STAtomic opens obs st in
+      let d_st_equiv : st_equiv _ c_out_eq c_out =
+        ST_VPropEquiv _ c_out_eq c_out x (magic ())
+                                         (magic ())
+                                         (magic ())
+                                         (RT.Rel_refl _ _ RT.R_Eq)
+                                         d_pre_eq
+                                         d_post_eq in
       let d : st_typing _ _ c_out =
-        T_Sub _ _ _ _ d (STS_AtomicInvs _ st add_inv opens obs obs tok) in
+        T_Equiv _ _ _ _ d d_st_equiv in
+      d
+    in
+    match post_hint.effect_annot with
+    | EffectAnnotGhost _
+    | EffectAnnotAtomic _ ->
+      let tok : prop_validity g (tm_inames_subset (comp_inames c_out) opens) =
+        add_remove_inverse g opens i opens_typing (magic ())
+      in
+      let (| c_out_opens, d_sub_c |) : (c_out_opens:comp & st_sub _ c_out c_out_opens) =
+        match c_out with
+        | C_STAtomic add_inv obs st ->
+          (| C_STAtomic opens obs st,
+             STS_AtomicInvs _ st add_inv opens obs obs tok |)
+        | C_STGhost add_inv st ->
+          (| C_STGhost opens st,
+            STS_GhostInvs _ st add_inv opens tok |) in
+      let d : st_typing _ _ c_out_opens =
+        T_Sub _ _ _ _ d d_sub_c in
       checker_result_for_st_typing (| _, _, d |) res_ppname
 
     | EffectAnnotSTT ->

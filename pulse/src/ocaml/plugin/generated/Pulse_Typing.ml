@@ -345,7 +345,7 @@ let (join_obs :
   Pulse_Syntax_Base.observability ->
     Pulse_Syntax_Base.observability -> Pulse_Syntax_Base.observability)
   = fun o1 -> fun o2 -> if o1 = o2 then o1 else Pulse_Syntax_Base.Observable
-let (comp_with_inv_atomic :
+let (comp_with_inv :
   Pulse_Syntax_Base.comp_st ->
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.term -> Pulse_Syntax_Base.comp)
@@ -353,21 +353,24 @@ let (comp_with_inv_atomic :
   fun s ->
     fun i ->
       fun p ->
-        let frame = Pulse_Syntax_Pure.tm_inv i p in
-        let uu___ = s in
-        match uu___ with
+        let add_inv1 inames = Pulse_Reflection_Util.add_inv_tm inames i in
+        let add_inv_st_comp s1 =
+          let frame = Pulse_Syntax_Pure.tm_inv i p in
+          {
+            Pulse_Syntax_Base.u = (s1.Pulse_Syntax_Base.u);
+            Pulse_Syntax_Base.res = (s1.Pulse_Syntax_Base.res);
+            Pulse_Syntax_Base.pre =
+              (Pulse_Syntax_Pure.tm_star frame s1.Pulse_Syntax_Base.pre);
+            Pulse_Syntax_Base.post =
+              (Pulse_Syntax_Pure.tm_star frame s1.Pulse_Syntax_Base.post)
+          } in
+        match s with
         | Pulse_Syntax_Base.C_STAtomic (inames, obs, s1) ->
             Pulse_Syntax_Base.C_STAtomic
-              ((Pulse_Reflection_Util.add_inv_tm inames i), obs,
-                {
-                  Pulse_Syntax_Base.u = (s1.Pulse_Syntax_Base.u);
-                  Pulse_Syntax_Base.res = (s1.Pulse_Syntax_Base.res);
-                  Pulse_Syntax_Base.pre =
-                    (Pulse_Syntax_Pure.tm_star frame s1.Pulse_Syntax_Base.pre);
-                  Pulse_Syntax_Base.post =
-                    (Pulse_Syntax_Pure.tm_star frame
-                       s1.Pulse_Syntax_Base.post)
-                })
+              ((add_inv1 inames), obs, (add_inv_st_comp s1))
+        | Pulse_Syntax_Base.C_STGhost (inames, s1) ->
+            Pulse_Syntax_Base.C_STGhost
+              ((add_inv1 inames), (add_inv_st_comp s1))
 type ('c1, 'c2) bind_comp_compatible = Obj.t
 type ('x, 'c1, 'c2) bind_comp_pre = unit
 let (bind_comp_out :

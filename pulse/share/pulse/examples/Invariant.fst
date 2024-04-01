@@ -45,6 +45,21 @@ fn g (i:iname_ref)
 }
 ```
 
+assume val f_ghost () : stt_ghost unit emp_inames (p ** q) (fun _ -> p ** r)
+
+```pulse
+ghost
+fn g_ghost (i:iname_ref)
+  requires ((i -~- p) ** q)
+  ensures (r ** (i -~- p))
+  opens (add_inv emp_inames i)
+{
+  with_invariants i {
+    f_ghost ()
+  }
+}
+```
+
 // let test (i:inv emp) = assert (
 //   (add_inv emp_inames i)
 //   ==
