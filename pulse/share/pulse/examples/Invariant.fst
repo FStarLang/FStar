@@ -36,7 +36,7 @@ assume val f () : stt_atomic unit emp_inames (p ** q) (fun _ -> p ** r)
 atomic
 fn g (i:iname_ref)
   requires ((i -~- p) ** q)
-  ensures ((i -~- p) ** r)
+  ensures (r ** (i -~- p))
   opens (add_inv emp_inames i)
 {
   with_invariants i {

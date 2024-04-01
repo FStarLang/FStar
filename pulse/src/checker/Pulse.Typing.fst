@@ -1034,7 +1034,6 @@ type st_typing : env -> st_term -> comp -> Type =
       prop_validity g (S.wr (`False) FStar.Range.range_0) -> 
       st_typing g (wtag (Some c) Tm_Unreachable) (comp_admit c s)
 
-  (* This limits the body to be atomic, rather than also allowing unobservable *)
   | T_WithInv:
       g:env ->
       i:term ->

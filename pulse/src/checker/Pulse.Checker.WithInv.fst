@@ -197,7 +197,7 @@ let rec find_inv (#g:env) (#pre:term) (pre_typing:tot_typing g pre tm_vprop) (i:
       let (| p, frame, _, _, _ |) = res in
      Some (| p, tm_star frame r, magic (), magic (), magic () |)
     | None ->
-      match find_inv #g #l (magic ()) i with
+      match find_inv #g #r (magic ()) i with
       | Some res ->
         let (| p, frame, _, _, _ |) = res in
         Some (| p, tm_star l frame, magic (), magic (), magic () |)
