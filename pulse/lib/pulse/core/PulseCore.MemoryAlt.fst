@@ -1884,27 +1884,20 @@ let change_slprop (#e:inames)
                   (p q:slprop)
                   (proof: (m:mem -> Lemma (requires interp p m) (ensures interp q m)))
 : pst_ghost_action_except unit e p (fun _ -> q)
-=  let g
-     : refined_pre_action true e p unit (fun _ -> q)
-     = fun m ->
-          assert (interp (p `star` mem_invariant e m) m);
-          eliminate exists h0 h1.
-              idisjoint h0 h1 /\
-              m.iheap == ijoin h0 h1 /\
-              p h0 /\
-              mem_invariant e m h1
-          returns interp (q `star` mem_invariant e m) m
-          with _ . (
-            let m0 = {m with iheap = h0} in
-            let m1 = {m with iheap = h1} in
-            proof m0
-          );
-          let m : hmem_with_inv_except e q = m in
-          assert (mem_evolves m m);
-          assume (frame_related_mems p q e m m);
-          (| (), m |)
-   in
-   lift_tot_action (refined_pre_action_as_action g)
+= fun frame m ->  
+    assert (interp ((p `star` frame) `star` (mem_invariant e m)) m);
+    star_assoc p frame (mem_invariant e m);
+    eliminate exists h0 h1. 
+        idisjoint h0 h1 /\
+        m.iheap == ijoin h0 h1 /\
+        p h0 /\
+        (frame `star` mem_invariant e m) h1
+    returns interp (q `star` (frame `star` mem_invariant e m)) m
+    with _ . (
+      proof { m with iheap = h0 }
+    );
+    star_assoc q frame (mem_invariant e m);
+    ((), m)
 
 let witness_h_exists #e #a p =
   fun frame (m0:hmem_with_inv_except e (h_exists p `star` frame)) ->
