@@ -1415,16 +1415,57 @@ let new_invariant_pre_action (ctx:inames) (e:inames) (p:slprop u#a { is_big p })
 #pop-options
 #pop-options
 
-let ( -~- ) (i:iname_ref) (p:slprop u#a) = iname_ref_pts_to i p
+let ( -~- ) (i:iname_ref) (p:slprop u#a) = iname_ref_pts_to i p `star` pure (is_big p)
 
 let lift_h0_star (p q:H0.slprop)
 : Lemma (lift_h0 (p `H0.star` q) == lift_h0 p `star` lift_h0 q)
 = star_congruence_h0 p q
 
+let elim_star_pq (p q:slprop) (m:mem)
+: Lemma 
+  (requires interp (p `star` q) m)
+  (ensures interp p m /\ interp q m)
+= ()
+
+let elim_star_pqrs (p q r s:slprop) (m:mem)
+: Lemma 
+  (requires interp (p `star` q `star` r `star` s) m)
+  (ensures 
+    interp p m /\
+    interp q m /\
+    interp r m /\
+    interp s m)
+= ()
+
+let i_p_is_big (i:iname_ref) (p:slprop) (m:mem)
+: Lemma
+  (requires interp (i -~- p) m)
+  (ensures is_big p)
+= elim_star_pq (iname_ref_pts_to i p) (pure (is_big p)) m;
+  assert (interp (pure (is_big p)) m)
+
+
+let iname_ref_pts_to_equiv (i:iname_ref) (p:slprop { is_big p })
+: Lemma
+  (ensures iname_ref_pts_to i p == (i -~- p))
+= calc (==) {
+    (i -~- p);
+  (==) {}
+    iname_ref_pts_to i p `star` pure (is_big p);
+  (==) { slprop_extensionality (pure (is_big p)) (pure True) }
+    iname_ref_pts_to i p `star` pure True;
+  (==) { pure_true_emp (); slprop_extensionality (pure True) emp }
+    iname_ref_pts_to i p `star` emp;
+  (==) { emp_u (iname_ref_pts_to i p) }
+    iname_ref_pts_to i p;
+  }
+ 
+
 let dup_inv_lemma (i:iname_ref) (p:slprop) frame (m:mem)
 : Lemma (requires interp ((i -~- p) `star` frame) m)
         (ensures interp (((i -~- p) `star` (i -~- p)) `star` frame) m)
-= let h = m.iheap in
+= i_p_is_big i p m;
+  let h = m.iheap in
   eliminate exists h0 h1.
     idisjoint h0 h1 /\
     m.iheap == ijoin h0 h1 /\
@@ -1444,6 +1485,7 @@ let dup_inv_lemma (i:iname_ref) (p:slprop) frame (m:mem)
                     h0);
     lift_h0_star (H0.pts_to #_ #pcm i (Some (down p)))
                  (H0.pts_to #_ #pcm i (Some (down p)));
+    iname_ref_pts_to_equiv i p;
     assert (((i -~- p) `star` (i -~- p)) h0)
   )
 
@@ -1497,21 +1539,6 @@ let pqrst_sq_pr_t (p q r s t : slprop)
 = FStar.Classical.forall_intro_3 star_assoc;
   FStar.Classical.forall_intro_2 star_comm
 
-let elim_star_pq (p q:slprop) (m:mem)
-: Lemma 
-  (requires interp (p `star` q) m)
-  (ensures interp p m /\ interp q m)
-= ()
-
-let elim_star_pqrs (p q r s:slprop) (m:mem)
-: Lemma 
-  (requires interp (p `star` q `star` r `star` s) m)
-  (ensures 
-    interp p m /\
-    interp q m /\
-    interp r m /\
-    interp s m)
-= ()
 
 let with_invariant (#a:Type)
                    (#fp:slprop)
