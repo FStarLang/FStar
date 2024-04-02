@@ -35,6 +35,9 @@ noeq
 type cinv =
   | E : i:iref -> t:token -> cinv
 
+instance val non_informative_cinv
+  : NonInformative.non_informative cinv
+
 val new_cancellable_invariant (v:vprop { is_big v })
   : stt_ghost cinv emp_inames
       v
@@ -60,7 +63,22 @@ val gather (#p:perm) (t:token)
       (active (half_perm p) t ** active (half_perm p) t)
       (fun _ -> active p t)
 
-val cancel (#p:perm) (#v:vprop) (i:cinv)
+val cancel (#v:vprop) (i:cinv)
   : stt_ghost unit (add_inv emp_inames i.i)
       (inv i.i (cancellable i.t v) ** active full_perm i.t)
       (fun _ -> v)
+
+
+
+// r:ref bool
+// inv_p = exists b. pts_to r full_perm b **
+//                   (if b then p else emp)
+// inv i inv_p
+
+// to allow for release predicate:
+
+// add a ghost ref that mirrors the concrete ref
+// and half give to the user when locked, half in the inv, else full in the inv
+
+// now for sharing etc.:
+

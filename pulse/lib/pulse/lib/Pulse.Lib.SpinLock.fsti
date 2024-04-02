@@ -15,26 +15,35 @@
 *)
 
 module Pulse.Lib.SpinLock
-open Pulse.Lib.Core
 
-val lock (p:vprop) : Type u#0
+open Pulse.Lib.Pervasives
 
-val new_lock
-        (p:vprop)
-  : stt (lock p)
-        (requires p)
-        (ensures (fun _ -> emp))
+module T = FStar.Tactics.V2
 
-val acquire
-        (#p:vprop)
-        (l:lock p)
-  : stt unit 
-        (requires emp)
-        (ensures (fun _ -> p))
+val lock : Type0
 
-val release
-        (#p:vprop)
-        (l:lock p)
-  : stt unit
-        (requires p)
-        (ensures (fun _ -> emp))
+val lock_alive (l:lock) (#[T.exact (`full_perm)] p:perm)  (v:vprop) : vprop
+
+val lock_acquired (l:lock) (#[T.exact (`full_perm)] p:perm)  (v:vprop) : vprop
+
+val new_lock (v:vprop { is_big v })
+  : stt lock v (fun l -> lock_alive l v)
+
+val acquire (#v:vprop) (#p:perm) (l:lock)
+  : stt unit (lock_alive l #p v) (fun _ -> v ** lock_acquired l #p v)
+
+val release (#v:vprop) (#p:perm) (l:lock)
+  : stt unit (v ** lock_acquired l #p v) (fun _ -> lock_alive l #p v)
+
+val share (#v:vprop) (#p:perm) (l:lock)
+  : stt_ghost unit emp_inames
+      (lock_alive l #p v)
+      (fun _ -> lock_alive l #(half_perm p) v ** lock_alive l #(half_perm p) v)
+
+val gather (#v:vprop) (#p:perm) (l:lock)
+  : stt_ghost unit emp_inames
+      (lock_alive l #(half_perm p) v ** lock_alive l #(half_perm p) v)
+      (fun _ -> lock_alive l #p v)
+
+val free (#v:vprop) (l:lock)
+  : stt unit (lock_alive l #full_perm v) (fun _ -> v)

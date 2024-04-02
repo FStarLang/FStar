@@ -178,3 +178,5 @@ fn cancel_aux (#p:perm) (#v:vprop) (i:cinv)
   drop_ (inv i.i _)
 }
 ```
+
+let cancel = cancel_aux
