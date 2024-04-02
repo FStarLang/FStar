@@ -175,11 +175,11 @@ let add_remove_inverse (g:env)
 // Find i -~- p in pre, where pre is well-typed
 //
 let rec find_inv (#g:env) (#pre:term) (pre_typing:tot_typing g pre tm_vprop) (i:term)
-  : option (p:term &
-            frame:term &
-            tot_typing g (tm_inv i p) tm_vprop &
-            tot_typing g frame tm_vprop &
-            vprop_equiv g (tm_star (tm_inv i p) frame) pre) =
+  : T.Tac (option (p:term &
+                   frame:term &
+                   tot_typing g (tm_inv i p) tm_vprop &
+                   tot_typing g frame tm_vprop &
+                   vprop_equiv g (tm_star (tm_inv i p) frame) pre)) =
 
   match inspect_term pre with
   | Tm_Inv i' p ->
@@ -285,11 +285,13 @@ let check
   (check:check_t)
 : T.Tac (checker_result_t g pre post_hint)
 = let Tm_WithInv {name=i; returns_inv; body} = t.term in
+  let (| i, _ |) = check_tot_term g i tm_iname_ref in
+  
   let post_hint : post_hint_t =
     match returns_inv, post_hint with
     | None, Some p -> p
     | Some (b, p), None ->
-      Pulse.Checker.Base.intro_post_hint g EffectAnnotSTT (Some b.binder_ty) p
+      Pulse.Checker.Base.intro_post_hint g (EffectAnnotAtomic { opens = Pulse.Reflection.Util.add_inv_tm tm_emp_inames i }) (Some b.binder_ty) p
     | Some (_, p), Some q ->
       let open Pulse.PP in
       fail_doc g (Some t.range) 
@@ -310,6 +312,8 @@ let check
     for better errors. *)
     let body_range = body.range in
     let i_range = Pulse.RuntimeUtils.range_of_term i in
+
+    let (| i, _ |) = check_tot_term g i tm_iname_ref in
 
     let res = find_inv pre_typing i in
     if None? res then fail g (Some i_range) "Cannot find inv in the context";
