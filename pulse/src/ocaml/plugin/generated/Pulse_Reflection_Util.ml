@@ -2157,10 +2157,8 @@ let (observable_lid : Prims.string Prims.list) =
   mk_observability_lid "Observable"
 let (neutral_lid : Prims.string Prims.list) = mk_observability_lid "Neutral"
 let (inames_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "inames"
-let (iname_ref_lid : Prims.string Prims.list) =
-  mk_pulse_lib_core_lid "iname_ref"
-let (inv_lid : Prims.string Prims.list) =
-  mk_pulse_lib_core_lid "op_Subtraction_Tilde_Subtraction"
+let (iname_ref_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "iref"
+let (inv_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "inv"
 let (emp_inames_lid : Prims.string Prims.list) =
   mk_pulse_lib_core_lid "emp_inames"
 let (all_inames_lid : Prims.string Prims.list) =

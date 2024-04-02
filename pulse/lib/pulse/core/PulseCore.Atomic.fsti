@@ -238,17 +238,17 @@ val ghost_reveal (a:Type) (x:erased a)
 
 //////////////////////////////////////////////////////////////////
 
-val dup_inv (i:iname_ref) (p:slprop)
-  : stt_ghost unit emp_inames (i -~- p) (fun _ -> (i -~- p) ** (i -~- p))
+val dup_inv (i:iref) (p:slprop)
+  : stt_ghost unit emp_inames (inv i p) (fun _ -> (inv i p) ** (inv i p))
 
 val new_invariant (p:big_vprop)
-  : stt_ghost iname_ref emp_inames p (fun i -> i -~- p)
+  : stt_ghost iref emp_inames p (fun i -> inv i p)
 
-val fresh_invariant (ctx:list iname_ref) (p:big_vprop)
-: stt_ghost (i:iname_ref { i `fresh_wrt` ctx })
+val fresh_invariant (ctx:list iref) (p:big_vprop)
+: stt_ghost (i:iref { i `fresh_wrt` ctx })
             emp_inames
             (p ** all_live ctx)
-            (fun i -> i -~- p)
+            (fun i -> inv i p)
 
 val with_invariant
     (#a:Type)
@@ -257,11 +257,11 @@ val with_invariant
     (#fp':a -> slprop)
     (#f_opens:inames)
     (#p:slprop)
-    (i:iname_ref { not (mem_inv f_opens i) })
+    (i:iref { not (mem_inv f_opens i) })
     ($f:unit -> stt_atomic a #obs f_opens
                            (p ** fp)
                            (fun x -> p ** fp' x))
-: stt_atomic a #obs (add_inv f_opens i) ((i -~- p) ** fp) (fun x -> (i -~- p) ** fp' x)
+: stt_atomic a #obs (add_inv f_opens i) ((inv i p) ** fp) (fun x -> (inv i p) ** fp' x)
 
 val with_invariant_g
     (#a:Type)
@@ -269,31 +269,31 @@ val with_invariant_g
     (#fp':a -> slprop)
     (#f_opens:inames)
     (#p:slprop)
-    (i:iname_ref { not (mem_inv f_opens i) })
+    (i:iref { not (mem_inv f_opens i) })
     ($f:unit -> stt_ghost a f_opens
                             (p ** fp)
                             (fun x -> p ** fp' x))
-: stt_ghost a (add_inv f_opens i) ((i -~- p) ** fp) (fun x -> (i -~- p) ** fp' x)
+: stt_ghost a (add_inv f_opens i) ((inv i p) ** fp) (fun x -> (inv i p) ** fp' x)
 
 val distinct_invariants_have_distinct_names
     (#p #q:slprop)
-    (i j:iname_ref)
+    (i j:iref)
     (_:squash (p =!= q))
 : stt_ghost
-    (squash (name_of_inv i =!= name_of_inv j))
+    (squash (iname_of i =!= iname_of j))
     emp_inames
-    ((i -~- p) ** (j -~- q))
-    (fun _ -> (i -~- p) ** (j -~- q))
+    ((inv i p) ** (inv j q))
+    (fun _ -> (inv i p) ** (inv j q))
 
 val invariant_name_identifies_invariant
       (p q:slprop)
-      (i:iname_ref)
-      (j:iname_ref { name_of_inv i == name_of_inv j })
+      (i:iref)
+      (j:iref { iname_of i == iname_of j })
 : stt_ghost
     (squash (p == q /\ i == j))
     emp_inames
-    ((i -~- p) ** (j -~- q))
-    (fun _ -> (i -~- p) ** (j -~- q))
+    ((inv i p) ** (inv j q))
+    (fun _ -> (inv i p) ** (inv j q))
 
 ////////////////////////////////////////////////////////////////////////
 // References

@@ -34,9 +34,9 @@ assume val f () : stt_atomic unit emp_inames (p ** q) (fun _ -> p ** r)
 
 ```pulse
 atomic
-fn g (i:iname_ref)
-  requires ((i -~- p) ** q)
-  ensures (r ** (i -~- p))
+fn g (i:iref)
+  requires (inv i p ** q)
+  ensures (r ** inv i p)
   opens (add_inv emp_inames i)
 {
   with_invariants i {
@@ -49,9 +49,9 @@ assume val f_ghost () : stt_ghost unit emp_inames (p ** q) (fun _ -> p ** r)
 
 ```pulse
 ghost
-fn g_ghost (i:iname_ref)
-  requires ((i -~- p) ** q)
-  ensures (r ** (i -~- p))
+fn g_ghost (i:iref)
+  requires (inv i p ** q)
+  ensures (r ** inv i p)
   opens (add_inv emp_inames i)
 {
   with_invariants i {
@@ -60,50 +60,36 @@ fn g_ghost (i:iname_ref)
 }
 ```
 
-// let test (i:inv emp) = assert (
-//   (add_inv emp_inames i)
-//   ==
-//   ((join_inames (((add_inv #emp) emp_inames) i)) emp_inames)
-// )
+let test (i:iref) = assert (
+  add_inv emp_inames i
+  ==
+  join_inames (add_inv emp_inames i) emp_inames
+)
 
-// assume
-// val atomic_write_int (r : ref int) (v : int) :
-//   stt_atomic unit emp_inames (exists* v0. pts_to r v0) (fun _ -> pts_to r v)
+assume
+val atomic_write_int (r : ref int) (v : int) :
+  stt_atomic unit emp_inames (exists* v0. pts_to r v0) (fun _ -> pts_to r v)
 
-// ```pulse
-// atomic
-// fn test_atomic (r : ref int)
-//   requires pts_to r 'v
-//   ensures pts_to r 0
-// {
-//   atomic_write_int r 0;
-// }
-// ```
+```pulse
+atomic
+fn test_atomic (r : ref int)
+  requires pts_to r 'v
+  ensures pts_to r 0
+{
+  atomic_write_int r 0;
+}
+```
 
-// assume
-// val unobservable_write_int (r : ref int) (v : int) :
-//   stt_atomic unit #Unobservable emp_inames (exists* v0. pts_to r v0) (fun _ -> pts_to r v)
-
-// ```pulse
-// unobservable
-// fn test_unobservable (r : ref int)
-//   requires pts_to r 'v
-//   ensures pts_to r 0
-// {
-//   unobservable_write_int r 0;
-// }
-// ```
-
-// ```pulse
-// fn package (r:ref int)
-//    requires pts_to r 123
-//    returns i : inv (pts_to r 123)
-//    ensures emp
-// {
-//   let i : inv (pts_to r 123) = new_invariant (pts_to r 123);
-//   i
-// }
-// ```
+```pulse
+fn package (r:ref int)
+   requires pts_to r 123
+   returns i : iref
+   ensures inv i (pts_to r 123)
+{
+  let i = new_invariant (pts_to r 123);
+  i
+}
+```
 
 // // Fails as it is not atomic
 // [@@expect_failure]

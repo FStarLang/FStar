@@ -359,12 +359,12 @@ let lift2 (#a:Type u#2) #r #opens #pre #post
 // invariants
 ///////////////////////////////////////////////////////
 
-let iname_ref = iname_ref
-let name_of_inv = name_of_inv
+let iref = iref
+let iname_of = iname_of
 
-let ( -~- ) i p = ( -~- ) i p
+let inv i p = inv i p
 
-let dup_inv (i:iname_ref) (p:slprop) =
+let dup_inv (i:iref) (p:slprop) =
   fun #ictx -> dup_inv ictx i p
 let new_invariant p = fun #ictx -> new_invariant ictx p
 
@@ -375,20 +375,20 @@ let exists_equiv (#a:_) (#p:a -> slprop)
     I.slprop_equiv_elim (op_exists_Star p) (exists* x. p x)
  
 module T = FStar.Tactics
-let live_eq (i:iname_ref)
+let live_eq (i:iref)
 : Lemma (live i == Mem.live i)
 = calc (==) {
     live i;
-  (==) { exists_equiv #_ #(fun (p:slprop) -> i -~- p) }
-    op_exists_Star #slprop (fun p -> i -~- p);
+  (==) { exists_equiv #_ #(fun (p:slprop) -> inv i p) }
+    op_exists_Star #slprop (fun p -> inv i p);
   (==) { _ by (T.trefl ()) }
-    Mem.h_exists (F.on_dom slprop (fun p -> i -~- p));
+    Mem.h_exists (F.on_dom slprop (fun p -> inv i p));
   (==) { _ by (T.mapply (`Mem.h_exists_equiv)) }
-    Mem.h_exists (fun p -> i -~- p);
+    Mem.h_exists (fun p -> inv i p);
   (==) { _ by (T.trefl ()) }
     Mem.live i;
   }
-let rec all_live_eq (ctx:list iname_ref)
+let rec all_live_eq (ctx:list iref)
 : Lemma (all_live ctx == Mem.all_live ctx)
 = match ctx with
   | [] -> ()

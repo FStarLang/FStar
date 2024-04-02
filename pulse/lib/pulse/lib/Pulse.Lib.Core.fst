@@ -119,9 +119,12 @@ let join_emp is =
   Set.lemma_equal_intro (join_inames is emp_inames) (reveal is);
   Set.lemma_equal_intro (join_inames emp_inames is) (reveal is)
 
-let iname_ref = Act.iname_ref
-let ( -~- ) i p = Act.(( -~- ) i p)
-let name_of_inv i = Act.name_of_inv i
+let iref = Act.iref
+instance non_informative_iref = {
+  reveal = (fun r -> Ghost.reveal r) <: NonInformative.revealer iref;
+}
+let inv i p = Act.(inv i p)
+let iname_of i = Act.iname_of i
 let add_already_there i is = Set.lemma_equal_intro (add_inv is i) is
 
 ////////////////////////////////////////////////////////////////////
@@ -174,12 +177,12 @@ let fresh_wrt_def i c = ()
 let all_live = Act.all_live
 let all_live_nil () = ()
 
-let live_eq (i:iname_ref)
-  : Lemma (Act.live i == (exists* (p:vprop). i -~- p)) =
+let live_eq (i:iref)
+  : Lemma (Act.live i == (exists* (p:vprop). inv i p)) =
   calc (==) {
     Act.live i;
   (==) { _ by (T.trefl ()) }
-    exists* (p:vprop). i -~- p;
+    exists* (p:vprop). inv i p;
   }
 let all_live_cons hd tl = live_eq hd
 let fresh_invariant = A.fresh_invariant

@@ -162,24 +162,26 @@ let (/!) (is1 is2 : inames) : Type0 =
   Set.disjoint is1 is2
 
 [@@ erasable]
-val iname_ref : Type0
-val ( -~- ) (i:iname_ref) (p:vprop) : vprop
-val name_of_inv (i:iname_ref) : GTot iname
+val iref : Type0
+instance val non_informative_iref
+  : NonInformative.non_informative iref
+val inv (i:iref) (p:vprop) : vprop
+val iname_of (i:iref) : GTot iname
 
 let mem_iname (e:inames) (i:iname) : erased bool = elift2 (fun e i -> Set.mem i e) e i
-let mem_inv (e:inames) (i:iname_ref) : GTot bool = mem_iname e (name_of_inv i)
+let mem_inv (e:inames) (i:iref) : GTot bool = mem_iname e (iname_of i)
 
 let add_iname (e:inames) (i:iname) : inames = Set.add i (reveal e)
-let add_inv (e:inames) (i:iname_ref) : inames = Set.add (name_of_inv i) e
-let remove_inv (e:inames) (i:iname_ref) : inames = Set.remove (name_of_inv i) e
+let add_inv (e:inames) (i:iref) : inames = Set.add (iname_of i) e
+let remove_inv (e:inames) (i:iref) : inames = Set.remove (iname_of i) e
 let all_inames : inames = Set.complement Set.empty
-let inv_disjointness_remove_i_i (e:inames) (i:iname_ref)
+let inv_disjointness_remove_i_i (e:inames) (i:iref)
   : Lemma (not (mem_inv (remove_inv e i) i)) = ()
 
 (* Useful for reasoning about inames equalities. TODO: We need a decent
 set of patterns. *)
-val add_already_there (i:iname_ref) (is:inames)
-  : Lemma (requires Set.mem (name_of_inv i) is)
+val add_already_there (i:iref) (is:inames)
+  : Lemma (requires Set.mem (iname_of i) is)
           (ensures add_inv is i == is)
           [SMTPat (add_inv is i)]
 
@@ -463,31 +465,31 @@ val sub_invs_ghost
 // Invariants
 //////////////////////////////////////////////////////////////////////////
 
-val dup_inv (i:iname_ref) (p:vprop)
-  : stt_ghost unit emp_inames (i -~- p) (fun _ -> (i -~- p) ** (i -~- p))
+val dup_inv (i:iref) (p:vprop)
+  : stt_ghost unit emp_inames (inv i p) (fun _ -> inv i p ** inv i p)
 
 val new_invariant (p:vprop { is_big p })
-: stt_ghost iname_ref emp_inames p (fun i -> i -~- p)
+: stt_ghost iref emp_inames p (fun i -> inv i p)
 
-val fresh_wrt (i:iname_ref) (c:list iname_ref)
+val fresh_wrt (i:iref) (c:list iref)
 : prop
 
-val fresh_wrt_def (i:iname_ref) (c:list iname_ref)
+val fresh_wrt_def (i:iref) (c:list iref)
 : Lemma
     (fresh_wrt i c <==>
-    (forall i'. List.Tot.memP i' c ==> name_of_inv i' =!= name_of_inv i))
+    (forall i'. List.Tot.memP i' c ==> iname_of i' =!= iname_of i))
     [SMTPat (fresh_wrt i c)]
 
-val all_live (ctx:list iname_ref) : vprop
+val all_live (ctx:list iref) : vprop
 
 val all_live_nil () : Lemma (all_live [] == emp)
-val all_live_cons (hd:iname_ref) (tl:list iname_ref)
-  : Lemma (all_live (hd::tl) == (exists* p. hd -~- p) ** all_live tl)
+val all_live_cons (hd:iref) (tl:list iref)
+  : Lemma (all_live (hd::tl) == (exists* p. inv hd p) ** all_live tl)
 
 val fresh_invariant
-    (ctx:list iname_ref)
+    (ctx:list iref)
     (p:vprop { is_big p })
-: stt_ghost (i:iname_ref { i `fresh_wrt` ctx }) emp_inames (p ** all_live ctx) (fun i -> i -~- p)
+: stt_ghost (i:iref { i `fresh_wrt` ctx }) emp_inames (p ** all_live ctx) (fun i -> inv i p)
 
 val with_invariant
     (#a:Type)
@@ -496,11 +498,11 @@ val with_invariant
     (#fp':a -> vprop)
     (#f_opens:inames)
     (#p:vprop)
-    (i:iname_ref { not (mem_inv f_opens i) })
+    (i:iref { not (mem_inv f_opens i) })
     ($f:unit -> stt_atomic a #obs f_opens
                            (p ** fp)
                            (fun x -> p ** fp' x))
-: stt_atomic a #obs (add_inv f_opens i) ((i -~- p) ** fp) (fun x -> (i -~- p) ** fp' x)
+: stt_atomic a #obs (add_inv f_opens i) (inv i p ** fp) (fun x -> inv i p ** fp' x)
 
 val with_invariant_g
     (#a:Type)
@@ -508,31 +510,31 @@ val with_invariant_g
     (#fp':a -> vprop)
     (#f_opens:inames)
     (#p:vprop)
-    (i:iname_ref { not (mem_inv f_opens i) })
+    (i:iref { not (mem_inv f_opens i) })
     ($f:unit -> stt_ghost a f_opens
                             (p ** fp)
                             (fun x -> p ** fp' x))
-: stt_ghost a (add_inv f_opens i) ((i -~- p) ** fp) (fun x -> (i -~- p) ** fp' x)
+: stt_ghost a (add_inv f_opens i) (inv i p ** fp) (fun x -> inv i p ** fp' x)
 
 val distinct_invariants_have_distinct_names
     (#p #q:vprop)
-    (i j:iname_ref)
+    (i j:iref)
     (_:squash (p =!= q))
 : stt_ghost
-    (_:squash (name_of_inv i =!= name_of_inv j))
+    (_:squash (iname_of i =!= iname_of j))
     emp_inames
-    ((i -~- p) ** (j -~- q))
-    (fun _ -> (i -~- p) ** (j -~- q))
+    (inv i p ** inv j q)
+    (fun _ -> inv i p ** inv j q)
 
 val invariant_name_identifies_invariant
       (#p #q:vprop)
-      (i:iname_ref)
-      (j:iname_ref { name_of_inv i == name_of_inv j } )
+      (i:iref)
+      (j:iref { iname_of i == iname_of j } )
 : stt_ghost
     (squash (p == q /\ i == j))
     emp_inames
-    ((i -~- p) ** (j -~- q))
-    (fun _ -> (i -~- p) ** (j -~- q))
+    (inv i p ** inv j q)
+    (fun _ -> inv i p ** inv j q)
 
 (***** end computation types and combinators *****)
 

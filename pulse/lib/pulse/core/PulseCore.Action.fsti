@@ -133,35 +133,35 @@ val lift2 (#a:Type u#2) #r #opens #pre #post
 //////////////////////////////////////////////////////////////////////
 
 [@@ erasable]
-val iname_ref : Type0
+val iref : Type0
 
-val name_of_inv (i:iname_ref) : GTot iname
+val iname_of (i:iref) : GTot iname
 
-let add_inv (e:inames) (i:iname_ref) : inames = S.add (name_of_inv i) e
-let mem_inv (e:inames) (i:iname_ref) : GTot bool = S.mem (name_of_inv i) e
+let add_inv (e:inames) (i:iref) : inames = S.add (iname_of i) e
+let mem_inv (e:inames) (i:iref) : GTot bool = S.mem (iname_of i) e
 
-val ( -~- ) (i:iname_ref) (p:slprop) : slprop
+val inv (i:iref) (p:slprop) : slprop
 
-let live (i:iname_ref) = exists* (p:slprop). i -~- p
+let live (i:iref) = exists* (p:slprop). inv i p
 
-let rec all_live (ctx:list iname_ref) =
+let rec all_live (ctx:list iref) =
   match ctx with
   | [] -> emp
   | hd::tl -> live hd ** all_live tl
 
-val dup_inv (i:iname_ref) (p:slprop)
-  : act unit Ghost emp_inames (i -~- p) (fun _ -> (i -~- p) ** (i -~- p))
+val dup_inv (i:iref) (p:slprop)
+  : act unit Ghost emp_inames (inv i p) (fun _ -> (inv i p) ** (inv i p))
 
 val new_invariant (p:big_vprop)
-: act iname_ref Ghost emp_inames p (fun i -> i -~- p)
+: act iref Ghost emp_inames p (fun i -> inv i p)
 
-let fresh_wrt (i:iname_ref)
-              (ctx:list iname_ref)
+let fresh_wrt (i:iref)
+              (ctx:list iref)
 : prop
-= forall i'. List.Tot.memP i' ctx ==> name_of_inv i' <> name_of_inv i
+= forall i'. List.Tot.memP i' ctx ==> iname_of i' <> iname_of i
 
-val fresh_invariant (ctx:list iname_ref) (p:big_vprop)
-: act (i:iname_ref { i `fresh_wrt` ctx }) Ghost emp_inames (p ** all_live ctx) (fun i -> i -~- p)
+val fresh_invariant (ctx:list iref) (p:big_vprop)
+: act (i:iref { i `fresh_wrt` ctx }) Ghost emp_inames (p ** all_live ctx) (fun i -> inv i p)
 
 val with_invariant
     (#a:Type)
@@ -170,30 +170,30 @@ val with_invariant
     (#fp':a -> slprop)
     (#f_opens:inames)
     (#p:slprop)
-    (i:iname_ref { not (mem_inv f_opens i) })
+    (i:iref { not (mem_inv f_opens i) })
     (f:unit -> act a r f_opens (p ** fp) (fun x -> p ** fp' x))
-: act a r (add_inv f_opens i) ((i -~- p) ** fp) (fun x -> (i -~- p) ** fp' x)
+: act a r (add_inv f_opens i) ((inv i p) ** fp) (fun x -> (inv i p) ** fp' x)
 
 val distinct_invariants_have_distinct_names
     (#p:slprop)
     (#q:slprop)
-    (i j:iname_ref)
+    (i j:iref)
     (_:squash (p =!= q))
-: act (squash (name_of_inv i =!= name_of_inv j))
+: act (squash (iname_of i =!= iname_of j))
       Ghost
       emp_inames 
-      ((i -~- p) ** (j -~- q))
-      (fun _ -> (i -~- p) ** (j -~- q))
+      ((inv i p) ** (inv j q))
+      (fun _ -> (inv i p) ** (inv j q))
 
 val invariant_name_identifies_invariant
       (p q:slprop)
-      (i:iname_ref)
-      (j:iname_ref { name_of_inv i == name_of_inv j } )
+      (i:iref)
+      (j:iref { iname_of i == iname_of j } )
 : act (squash (p == q /\ i == j))
       Ghost
       emp_inames
-      ((i -~- p) ** (j -~- q))
-      (fun _ -> (i -~- p) ** (j -~- q))
+      ((inv i p) ** (inv j q))
+      (fun _ -> (inv i p) ** (inv j q))
 
 
 ////////////////////////////////////////////////////////////////////////

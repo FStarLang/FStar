@@ -51,8 +51,8 @@ val small_exists (#a:Type u#a) (p: a -> slprop)
         (ensures is_small (op_exists_Star p))
 
 [@@ erasable]
-val iname_ref : Type0
-val ( -~- ) (i:iname_ref) (p:slprop) : slprop
+val iref : Type0
+val inv (i:iref) (p:slprop) : slprop
 
 val slprop_equiv (p q:slprop) : prop
 
