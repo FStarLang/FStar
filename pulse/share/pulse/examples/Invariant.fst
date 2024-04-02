@@ -91,105 +91,124 @@ fn package (r:ref int)
 }
 ```
 
-// // Fails as it is not atomic
-// [@@expect_failure]
-// ```pulse
-// fn test2 ()
-//   requires emp
-//   ensures emp
-// {
-//   let r = alloc #int 123;
-//   let i : inv (pts_to r 123) = package r;
-//   with_invariants i {
-//     r := 124;
-//     r := 123;
-//     ()
-//   }
-// }
-// ```
+```pulse
+fn test2 ()
+  requires emp
+  ensures emp
+{
+  let r = alloc #int 0;
+  let i = new_invariant (exists* v. pts_to r v);
+  with_invariants i
+    returns _:unit
+    ensures (inv i (exists* v. pts_to r v)) {
+      atomic_write_int r 1;
+  };
+  drop_ (inv i _)
+}
+```
 
-//  ```pulse
-//  ghost
-//  fn t00 () (i:inv emp)
-//    requires emp
-//    ensures emp
-//    opens (add_inv emp_inames i)
-//  {
-//   ()
-//  }
-// ```
+// Fails as the with_invariants block is not atomic/ghost
+[@@expect_failure]
+```pulse
+fn test3 ()
+  requires emp
+  ensures emp
+{
+  let r = alloc #int 0;
+  let i = new_invariant (exists* v. pts_to r v);
+  with_invariants i
+    returns _:unit
+    ensures (inv i (exists* v. pts_to r v)) {
+      r := 1;
+  };
+  drop_ (inv i _)
+}
+```
 
-// // FIXME: crashes
-//  ```pulse
-//  atomic
-//  fn t0 () (i:inv emp)
-//    requires emp
-//    ensures emp
-//    opens (add_inv emp_inames i)
-//  {
-//    with_invariants i {
-//      ()
-//    }
-//  }
-// ```
+//
+// Ghost code overclaiming
+//
+```pulse
+ ghost
+ fn t00 () (i:iref)
+   requires (inv i emp)
+   ensures (inv i emp)
+   opens (add_inv emp_inames i)
+ {
+  ()
+ }
+```
+
+```pulse
+atomic
+fn t0 () (i:iref)
+  requires inv i emp
+  ensures inv i emp
+  opens (add_inv emp_inames i)
+{
+  with_invariants i {
+    ()
+  }
+}
+```
 
 
-// assume val i : inv emp
-// assume val i2 : inv emp
+assume val i : iref
+assume val i2 : iref
 
+```pulse
+ghost
+fn basic_ghost ()
+  requires emp
+  ensures emp
+{
+  (); ()
+}
+```
 
-// ```pulse
-// ghost
-// fn basic_ghost ()
-//   requires emp
-//   ensures emp
-// {
-//   (); ()
-// }
-// ```
+(* Using invariants while claiming not to. *)
+[@@expect_failure]
+```pulse
+atomic
+fn t1 ()
+  requires inv i emp
+  ensures inv i emp
+  opens emp_inames
+{
+  with_invariants i {
+    ()
+  }
+}
+```
 
-// (* Using invariants while claiming not to. *)
-// [@@expect_failure]
-// ```pulse
-// atomic
-// fn t1 ()
-//   requires emp
-//   ensures emp
-//   opens emp_inames
-// {
-//   with_invariants i {
-//     ()
-//   }
-// }
-// ```
+(* Overclaiming, OK *)
+```pulse
+atomic
+fn t3 ()
+  requires inv i emp
+  ensures inv i emp
+  opens (add_inv (add_inv emp_inames i) i2)
+{
+  with_invariants i {
+    ()
+  }
+}
+```
 
-// (* Overclaiming, OK *)
-// ```pulse
-// atomic
-// fn t3 ()
-//   requires emp
-//   ensures emp
-//   opens (add_inv (add_inv emp_inames i) i2)
-// {
-//   with_invariants i {
-//     ()
-//   }
-// }
-// ```
-
-// (* Works, no need to declare opens as its an effectful fn *)
-// ```pulse
-// fn t2 ()
-//   requires emp
-//   returns _:int
-//   ensures emp
-// {
-//   let j = new_invariant emp;
-//   with_invariants j 
-//     returns _:unit
-//     ensures emp {
-//     ()
-//   };
-//   123
-// }
-// ```
+(* Works, no need to declare opens as its an effectful fn *)
+```pulse
+fn t2 ()
+  requires emp
+  returns _:int
+  ensures emp
+{
+  let j = new_invariant emp;
+  with_invariants j 
+    returns _:unit
+    ensures inv j emp {
+    ()
+  };
+  drop_ (inv j _);
+  123
+}
+```

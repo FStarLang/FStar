@@ -30,6 +30,10 @@ val pts_to
     ([@@@equate_by_smt] n:a)
   : vprop
 
+val pts_to_is_small (#a:Type) (r:ref a) (p:perm) (x:a)
+  : Lemma (is_small (pts_to r #p x))
+          [SMTPat (is_small (pts_to r #p x))]
+
 [@@deprecated "Reference.alloc is unsound; use Box.alloc instead"]
 val alloc (#a:Type) (x:a)
   : stt (ref a) emp (fun r -> pts_to r x)

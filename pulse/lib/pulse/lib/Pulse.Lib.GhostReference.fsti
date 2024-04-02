@@ -32,6 +32,10 @@ val pts_to (#a:Type)
            ([@@@equate_by_smt] n:a)
 : vprop
 
+val pts_to_is_small (#a:Type) (r:ref a) (p:perm) (x:a)
+  : Lemma (is_small (pts_to r #p x))
+          [SMTPat (is_small (pts_to r #p x))]
+
 val alloc (#a:Type) (x:a)
   : stt_ghost (ref a) emp_inames emp (fun r -> pts_to r x)
   

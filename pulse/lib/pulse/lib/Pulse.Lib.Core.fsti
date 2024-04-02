@@ -71,13 +71,17 @@ val down2 (p:vprop) : small_vprop
 val up2 (p:small_vprop) : vprop
 let is_small (v:vprop) : prop = up2 (down2 v) == v
 
-val small_is_also_big (v:vprop) : Lemma (is_small v ==> is_big v)
+val small_is_also_big (v:vprop)
+  : Lemma (is_small v ==> is_big v)
+          [SMTPat (is_big v)]
 
 val emp : vprop
 val emp_is_small : squash (is_small emp)
 
 val pure (p:prop) : vprop
-val pure_is_small (p:prop) : squash (is_small (pure p))
+val pure_is_small (p:prop)
+  : Lemma (is_small (pure p))
+          [SMTPat (is_small (pure p))]
 
 val ( ** ) (p q:vprop) : vprop
 
@@ -90,6 +94,7 @@ val small_star (p q : vprop)
 : Lemma
     (requires is_small p /\ is_small q)
     (ensures is_small (p ** q))
+    [SMTPat (is_small (p ** q))]
 
 val ( exists* ) (#a:Type) (p:a -> vprop) : vprop
 
@@ -102,6 +107,7 @@ val small_exists (#a:Type u#a) (p: a -> vprop)
 : Lemma
     (requires forall x. is_small (p x))
     (ensures is_small (op_exists_Star p))
+    [SMTPat (is_small (op_exists_Star p))]
     
 val vprop_equiv (p q:vprop) : prop
 val elim_vprop_equiv (#p #q:_) (_:vprop_equiv p q) : squash (p == q)
@@ -610,6 +616,7 @@ val is_small_pcm_pts_to
     (r:pcm_ref p)
     (v:a)
 : Lemma (is_small (pcm_pts_to r v))
+        [SMTPat (is_small (pcm_pts_to r v))]
 
 val pcm_ref_null
     (#a:Type)
@@ -709,6 +716,7 @@ val is_small_ghost_pcm_pts_to
     (r:ghost_pcm_ref p)
     (v:a)
 : Lemma (is_small (ghost_pcm_pts_to r v))
+        [SMTPat (is_small (ghost_pcm_pts_to r v))]
 
 val ghost_alloc
     (#a:Type u#1)
