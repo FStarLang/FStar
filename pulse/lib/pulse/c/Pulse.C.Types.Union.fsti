@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.C.Types.Union
 open Pulse.Lib.Pervasives
 include Pulse.C.Types.Fields
@@ -245,6 +261,7 @@ val has_union_field_prop
   (#td': typedef t')
   (r': ref td')
 : stt_ghost unit
+    emp_inames
     (has_union_field r field r')
     (fun _ -> has_union_field r field r' ** pure (
       t' == fields.fd_type field /\
@@ -262,6 +279,7 @@ val has_union_field_dup
   (#td': typedef t')
   (r': ref td')
 : stt_ghost unit
+    emp_inames
     (has_union_field r field r')
     (fun _ -> has_union_field r field r' ** has_union_field r field r')
 
@@ -279,6 +297,7 @@ val has_union_field_inj
   (#td2: typedef t2)
   (r2: ref td2)
 : stt_ghost (squash (t1 == t2 /\ td1 == td2))
+    emp_inames
     (has_union_field r field r1 ** has_union_field r field r2)
     (fun _ -> has_union_field r field r1 ** has_union_field r field r2 ** ref_equiv r1 (coerce_eq () r2))
 
@@ -293,6 +312,7 @@ val has_union_field_equiv_from
   (#td': typedef t')
   (r': ref td')
 : stt_ghost unit
+    emp_inames
     (has_union_field r1 field r' ** ref_equiv r1 r2)
     (fun _ -> has_union_field r2 field r' ** ref_equiv r1 r2)
 
@@ -307,6 +327,7 @@ val has_union_field_equiv_to
   (#td': typedef t')
   (r1 r2: ref td')
 : stt_ghost unit
+    emp_inames
     (has_union_field r field r1 ** ref_equiv r1 r2)
     (fun _ -> has_union_field r field r2 ** ref_equiv r1 r2)
 
@@ -325,6 +346,7 @@ val ghost_union_field_focus
       t' == fields.fd_type field /\
       td' == fields.fd_typedef field
   ))
+    emp_inames
     (has_union_field r field r' ** pts_to r v)
     (fun _ -> has_union_field r field r' ** pts_to r' (Ghost.hide (coerce_eq () (union_get_field v field))))
 
@@ -337,6 +359,7 @@ val ghost_union_field
   (r: ref (union0 tn n fields))
   (field: field_t fields {union_get_case v == Some field})
 : stt_ghost (Ghost.erased (ref (fields.fd_typedef field)))
+    emp_inames
     (pts_to r v)
     (fun r' -> has_union_field r field r' ** pts_to r' (union_get_field v field))
 
@@ -411,6 +434,7 @@ val ununion_field
   (#v': Ghost.erased t')
   (r': ref td')
 : stt_ghost (Ghost.erased (union_t0 tn n fields))
+    emp_inames
     (has_union_field r field r' ** pts_to r' v')
     (fun res -> has_union_field r field r' ** pts_to r res ** pure (
       t' == fields.fd_type field /\

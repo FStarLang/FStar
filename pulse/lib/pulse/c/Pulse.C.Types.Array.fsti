@@ -97,7 +97,7 @@ val has_base_array_cell_post
   (r: ref (base_array0 tn td n))
   (i: SZ.t)
   (r': ref td)
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (has_base_array_cell r i r')
     (fun _ -> has_base_array_cell r i r' ** pure (
       SZ.v i < SZ.v n
@@ -111,7 +111,7 @@ val has_base_array_cell_dup
   (r: ref (base_array0 tn td n))
   (i: SZ.t)
   (r': ref td)
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (has_base_array_cell r i r')
     (fun _ -> has_base_array_cell r i r' ** has_base_array_cell r i r')
 
@@ -123,7 +123,7 @@ val has_base_array_cell_inj
   (r: ref (base_array0 tn td n))
   (i: SZ.t)
   (r1 r2: ref td)
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (has_base_array_cell r i r1 ** has_base_array_cell r i r2)
     (fun _ -> has_base_array_cell r i r1 ** has_base_array_cell r i r2 ** ref_equiv r1 r2)
 
@@ -135,7 +135,7 @@ val has_base_array_cell_equiv_from
   (r1 r2: ref (base_array0 tn td n))
   (i: SZ.t)
   (r': ref td)
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (has_base_array_cell r1 i r' ** ref_equiv r1 r2)
     (fun _ -> has_base_array_cell r2 i r' ** ref_equiv r1 r2)
 
@@ -147,7 +147,7 @@ val has_base_array_cell_equiv_to
   (r: ref (base_array0 tn td n))
   (i: SZ.t)
   (r1 r2: ref td)
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (has_base_array_cell r i r1 ** ref_equiv r1 r2)
     (fun _ -> has_base_array_cell r i r2 ** ref_equiv r1 r2)
 
@@ -307,7 +307,7 @@ val array_pts_to_length
   (#td: typedef t)
   (r: array td)
   (v: Ghost.erased (Seq.seq t))
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (array_pts_to r v)
     (fun _ -> array_pts_to r v ** pure (
       Seq.length v == SZ.v (dsnd r)
@@ -362,7 +362,7 @@ val ghost_array_of_base_focus
   (#v: Ghost.erased (base_array_t t tn n))
   (r: ref (base_array0 tn td n))
   (a: array td)
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (pts_to r v ** pure (
       has_array_of_base r a
     ))
@@ -376,6 +376,7 @@ val ghost_array_of_base
   (#v: Ghost.erased (base_array_t t tn n))
   (r: ref (base_array0 tn td n))
 : stt_ghost (a: Ghost.erased (array td) { has_array_of_base r a })
+    emp_inames
     (pts_to r v)
     (fun a -> array_pts_to a (seq_of_base_array v))
 
@@ -450,6 +451,7 @@ val unarray_of_base
   (r: ref (base_array0 tn td n))
   (a: array td)
 : stt_ghost (Ghost.erased (base_array_t t tn n))
+    emp_inames
     (array_pts_to a v ** pure (
       has_array_of_base r a
     ))
@@ -677,7 +679,7 @@ val has_array_cell_post
   (a: array td)
   (i: SZ.t)
   (r': ref td)
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (has_array_cell a i r')
     (fun _ -> has_array_cell a i r' ** pure (
       SZ.v i < SZ.v (dsnd a)
@@ -691,7 +693,7 @@ val has_array_cell_has_base_array_cell
   (r: ref td)
   (#ty: Type)
   (br: ref (base_array0 ty td (array_ref_base_size (array_ptr_of a))))
-: stt_ghost (Ghost.erased SZ.t)
+: stt_ghost (Ghost.erased SZ.t) emp_inames
     (has_array_cell a i r ** pure (
       has_array_ref_base (array_ptr_of a) br
     ))
@@ -707,7 +709,7 @@ val has_base_array_cell_has_array_cell
   (r: ref td)
   (#ty: Type)
   (br: ref (base_array0 ty td (array_ref_base_size (array_ptr_of a))))
-: stt_ghost (Ghost.erased SZ.t)
+: stt_ghost (Ghost.erased SZ.t) emp_inames
     (has_base_array_cell br i r ** pure (
       has_array_ref_base (array_ptr_of a) br /\
       SZ.v i >= SZ.v (array_ref_offset (array_ptr_of a)) /\
@@ -723,7 +725,7 @@ val has_array_cell_inj
   (a: array td)
   (i: SZ.t)
   (r1 r2: ref td)
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (
       has_array_cell a i r1 **
       has_array_cell a i r2
@@ -755,6 +757,7 @@ val ghost_array_cell_focus
   (i: SZ.t)
   (r: ref td)
 : stt_ghost (squash (SZ.v i < Seq.length s /\ Seq.length s == SZ.v (dsnd a)))
+    emp_inames
     (array_pts_to a s ** has_array_cell a i r)
     (fun _ -> array_pts_to a (Seq.upd s (SZ.v i) (unknown td)) ** pts_to r (Seq.index s (SZ.v i)) ** has_array_cell a i r)
 
@@ -765,6 +768,7 @@ val ghost_array_cell
   (a: array td)
   (i: SZ.t)
 : stt_ghost (r: Ghost.erased (ref td) { SZ.v i < Seq.length s /\ Seq.length s == SZ.v (dsnd a) })
+    emp_inames
     (array_pts_to a s ** pure (
       SZ.v i < Seq.length s \/ SZ.v i < SZ.v (dsnd a)
     ))
@@ -819,6 +823,7 @@ val unarray_cell
   (i: SZ.t)
   (r: ref td)
 : stt_ghost (squash (SZ.v i < Seq.length s /\ Seq.length s == SZ.v (dsnd a)))
+    emp_inames
     (array_pts_to a s ** pts_to r v ** has_array_cell a i r ** pure (
       SZ.v i < Seq.length s ==> Seq.index s (SZ.v i) == unknown td
     ))
@@ -887,6 +892,7 @@ val ghost_array_split
   (a: array td)
   (i: SZ.t)
 : stt_ghost (squash (SZ.v i <= SZ.v (dsnd a) /\ Seq.length s == SZ.v (dsnd a)))
+    emp_inames
     (array_pts_to a s ** pure (
       SZ.v i <= SZ.v (dsnd a) \/ SZ.v i <= Seq.length s
     ))
@@ -968,7 +974,7 @@ val array_join
   (#sl #sr: Ghost.erased (Seq.seq t))
   (a al ar: array td)
   (i: SZ.t)
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (array_pts_to al sl ** array_pts_to ar sr ** pure (
       SZ.v i <= SZ.v (dsnd a) /\
       al == array_split_l a i /\
@@ -992,7 +998,7 @@ let mk_fraction_seq_full (#t: Type0) (td: typedef t) (x: Seq.seq t) : Lemma
 
 val mk_fraction_seq_split_gen
   (#t: Type) (#td: typedef t) (r: array td) (v: Seq.seq t { fractionable_seq td v }) (p p1 p2: perm)
-: stt_ghost unit
+: stt_ghost unit emp_inames
   (array_pts_to r (mk_fraction_seq td v p) ** pure (
     p == p1 `sum_perm` p2 /\ (p `lesser_equal_perm` full_perm \/ Seq.length v == 0)
   ))
@@ -1000,7 +1006,7 @@ val mk_fraction_seq_split_gen
 
 val mk_fraction_seq_split
   (#t: Type) (#td: typedef t) (r: array td) (v: Ghost.erased (Seq.seq t) { fractionable_seq td v }) (p1 p2: perm)
-: stt_ghost unit
+: stt_ghost unit emp_inames
   (array_pts_to r v ** pure (
     full_perm == p1 `sum_perm` p2
   ))
@@ -1013,7 +1019,7 @@ val mk_fraction_seq_split
 
 val mk_fraction_seq_join
   (#t: Type) (#td: typedef t) (r: array td) (v: Seq.seq t { fractionable_seq td v }) (p1 p2: perm)
-: stt_ghost unit
+: stt_ghost unit emp_inames
   (array_pts_to r (mk_fraction_seq td v p1) ** array_pts_to r (mk_fraction_seq td v p2))
   (fun _ -> array_pts_to r (mk_fraction_seq td v (p1 `sum_perm` p2)))
 
@@ -1024,7 +1030,7 @@ val array_fractional_permissions_theorem
   (v2: Seq.seq t { fractionable_seq td v2 })
   (p1 p2: perm)
   (r: array td)
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (array_pts_to r (mk_fraction_seq td v1 p1) ** array_pts_to r (mk_fraction_seq td v2 p2) ** pure (
       full_seq td v1 /\ full_seq td v2
     ))

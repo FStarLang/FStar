@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.C.Types.UserStruct
 open Pulse.Lib.Pervasives
 open Pulse.C.Types.Struct.Aux
@@ -86,6 +102,7 @@ val has_struct_field_dup
   (field: field_t sd.fields)
   (r': ref (sd.field_desc.fd_typedef field))
 : stt_ghost unit
+    emp_inames
     (has_struct_field r field r')
     (fun _ -> has_struct_field r field r' ** has_struct_field r field r')
 
@@ -96,6 +113,7 @@ val has_struct_field_inj
   (field: field_t sd.fields)
   (r1 r2: ref (sd.field_desc.fd_typedef field))
 : stt_ghost unit
+    emp_inames
     (has_struct_field r field r1 ** has_struct_field r field r2)
     (fun _ -> has_struct_field r field r1 ** has_struct_field r field r2 ** ref_equiv r1 r2)
 
@@ -107,6 +125,7 @@ val has_struct_field_equiv_from
   (r': ref (sd.field_desc.fd_typedef field))
   (r2: ref (struct_typedef sd))
 : stt_ghost unit
+    emp_inames
     (ref_equiv r1 r2 ** has_struct_field r1 field r')
     (fun _ -> ref_equiv r1 r2 ** has_struct_field r2 field r')
 
@@ -117,6 +136,7 @@ val has_struct_field_equiv_to
   (field: field_t sd.fields)
   (r1' r2': ref (sd.field_desc.fd_typedef field))
 : stt_ghost unit
+    emp_inames
     (ref_equiv r1' r2' ** has_struct_field r field r1')
     (fun _ -> ref_equiv r1' r2' ** has_struct_field r field r2')
 
@@ -128,6 +148,7 @@ val ghost_struct_field_focus
   (field: field_t sd.fields)
   (r': ref (sd.field_desc.fd_typedef field))
 : stt_ghost unit
+    emp_inames
     (has_struct_field r field r' ** pts_to r v)
     (fun _ -> has_struct_field r field r' ** pts_to r (set sd v field (unknown (sd.field_desc.fd_typedef field))) ** pts_to r' (sd.get v field))
 
@@ -138,6 +159,7 @@ val ghost_struct_field
   (r: ref (struct_typedef sd))
   (field: field_t sd.fields)
 : stt_ghost (Ghost.erased (ref (sd.field_desc.fd_typedef field)))
+    emp_inames
     (pts_to r v)
     (fun r' -> has_struct_field r field r' ** pts_to r (set sd v field (unknown (sd.field_desc.fd_typedef field))) ** pts_to r' (sd.get v field))
 
@@ -182,6 +204,7 @@ val unstruct_field
   (#v': Ghost.erased (sd.field_desc.fd_type field))
   (r': ref (sd.field_desc.fd_typedef field))
 : stt_ghost unit
+    emp_inames
     (has_struct_field r field r' ** pts_to r v ** pts_to r' v' ** pure (
       sd.get v field == unknown (sd.field_desc.fd_typedef field)
     ))
