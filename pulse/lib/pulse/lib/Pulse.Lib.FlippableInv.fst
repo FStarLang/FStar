@@ -82,7 +82,7 @@ fn _flip_on (#p:vprop) (fi:finv p)
   unfold off;
   with_invariants fi.i
     returns _:unit
-    ensures inv fi.i (finv_p p fi.r) ** GR.pts_to fi.r #one_half true {
+    ensures GR.pts_to fi.r #one_half true {
     unfold finv_p;
     GR.gather2 fi.r;
     rewrite (if false then p else emp) as emp;
@@ -107,7 +107,7 @@ fn _flip_off (#p:vprop) (fi : finv p)
   unfold on;
   with_invariants fi.i
     returns _:unit
-    ensures inv fi.i (finv_p p fi.r) ** GR.pts_to fi.r #one_half false ** p {
+    ensures GR.pts_to fi.r #one_half false ** p {
     unfold finv_p;
     GR.gather2 fi.r;
     rewrite (if true then p else emp) as p;

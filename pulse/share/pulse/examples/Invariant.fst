@@ -100,7 +100,7 @@ fn test2 ()
   let i = new_invariant (exists* v. pts_to r v);
   with_invariants i
     returns _:unit
-    ensures (inv i (exists* v. pts_to r v)) {
+    ensures emp {
       atomic_write_int r 1;
   };
   drop_ (inv i _)
@@ -118,7 +118,7 @@ fn test3 ()
   let i = new_invariant (exists* v. pts_to r v);
   with_invariants i
     returns _:unit
-    ensures (inv i (exists* v. pts_to r v)) {
+    ensures emp {
       r := 1;
   };
   drop_ (inv i _)
@@ -205,7 +205,7 @@ fn t2 ()
   let j = new_invariant emp;
   with_invariants j 
     returns _:unit
-    ensures inv j emp {
+    ensures emp {
     ()
   };
   drop_ (inv j _);

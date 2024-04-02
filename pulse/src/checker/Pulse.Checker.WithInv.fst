@@ -286,189 +286,187 @@ let check
 : T.Tac (checker_result_t g pre post_hint)
 = let Tm_WithInv {name=i; returns_inv; body} = t.term in
   let (| i, _ |) = check_tot_term g i tm_iname_ref in
-  
+  let i_range = Pulse.RuntimeUtils.range_of_term i in
+  let res = find_inv pre_typing i in
+  if None? res then fail g (Some i_range) "Cannot find inv in the context";
+    
+  let Some (| p, pre_frame, inv_typing, pre_frame_typing, d_pre_frame_eq |) = res in
+
   let post_hint : post_hint_t =
     match returns_inv, post_hint with
-    | None, Some p -> p
-    | Some (b, p), None ->
-      Pulse.Checker.Base.intro_post_hint g (EffectAnnotAtomic { opens = Pulse.Reflection.Util.add_inv_tm tm_emp_inames i }) (Some b.binder_ty) p
-    | Some (_, p), Some q ->
+    | None, Some post -> post
+    | Some (b, post), None ->
+      //
+      // When returns is annotated, it is annotated with only fp' (see typing rule)
+      // Adding inv i p in the post hint makes the treatment of this case,
+      //   and when post hint is coming from postcondition uniform
+      //
+      Pulse.Checker.Base.intro_post_hint g
+        (EffectAnnotAtomic { opens = Pulse.Reflection.Util.add_inv_tm tm_emp_inames i })
+        (Some b.binder_ty)
+        (tm_star (tm_inv i p) post)
+    | Some (_, post), Some q ->
       let open Pulse.PP in
       fail_doc g (Some t.range) 
         [ doc_of_string "Fatal: multiple annotated postconditions on with_invariant";
-          prefix 4 1 (text "First postcondition:") (pp p);
+          prefix 4 1 (text "First postcondition:") (pp post);
           prefix 4 1 (text "Second postcondition:") (pp q) ]
     | _, _ ->
       fail g (Some t.range) "Fatal: no post hint on with_invariant"
   in
-  match post_hint.effect_annot with
-  // | EffectAnnotGhost _ -> 
-  //   let open Pulse.PP in
-  //   fail_doc g (Some t.range) 
-  //   [ doc_of_string "Cannot open invariants in a 'ghost' context" ]
+  (* Checking the body seems to change its range, so store the original one
+  for better errors. *)
+  let body_range = body.range in
 
-  | _ ->
-    (* Checking the body seems to change its range, so store the original one
-    for better errors. *)
-    let body_range = body.range in
-    let i_range = Pulse.RuntimeUtils.range_of_term i in
+  let pre_body : vprop = tm_star p pre_frame in
+  //
+  // we know tm_inv i p is well-typed,
+  // so p is well-typed
+  // and frame is well-typed
+  // therefore tm_star is well-typed
+  //
+  let pre_body_typing : tot_typing g pre_body tm_vprop = magic () in
 
-    let (| i, _ |) = check_tot_term g i tm_iname_ref in
+  let x = fresh g in
+  assume (fresh_wrt x g (freevars post_hint.post));
+  let g' = (push_binding g x ppname_default post_hint.ret_ty) in
+  let post_hint_ret_ty_typing
+    : universe_of g post_hint.ret_ty post_hint.u = recheck () in
+  let post_hint_post_typing
+    : tot_typing g'
+                 (open_term_nv post_hint.post (ppname_default, x))
+                 tm_vprop
+    = recheck ()
+  in
+  
+  let res = find_inv_post #g
+    x
+    post_hint.u
+    post_hint.ret_ty
+    post_hint.post
+    post_hint_ret_ty_typing
+    post_hint_post_typing
+    i in
 
-    let res = find_inv pre_typing i in
-    if None? res then fail g (Some i_range) "Cannot find inv in the context";
-    
-    let Some (| p, pre_frame, inv_typing, pre_frame_typing, d_pre_frame_eq |) = res in
+  if None? res then fail g (Some i_range) "Cannot find inv in the postcondition";
 
-    let pre_body : vprop = tm_star p pre_frame in
-    //
-    // we know tm_inv i p is well-typed,
-    // so p is well-typed
-    // and frame is well-typed
-    // therefore tm_star is well-typed
-    //
-    let pre_body_typing : tot_typing g pre_body tm_vprop = magic () in
+  let Some (| p', post_frame, _, post_frame_typing, d_post_frame_equiv |) = res in
+  assume (p' == p);
 
-    let x = fresh g in
-    assume (fresh_wrt x g (freevars post_hint.post));
-    let g' = (push_binding g x ppname_default post_hint.ret_ty) in
-    let post_hint_ret_ty_typing
-      : universe_of g post_hint.ret_ty post_hint.u = recheck () in
-    let post_hint_post_typing
-      : tot_typing g'
-                   (open_term_nv post_hint.post (ppname_default, x))
-                   tm_vprop
-      = recheck ()
-    in
-    
-    let res = find_inv_post #g
-      x
-      post_hint.u
-      post_hint.ret_ty
-      post_hint.post
-      post_hint_ret_ty_typing
-      post_hint_post_typing
-      i in
-
-    if None? res then fail g (Some i_range) "Cannot find inv in the postcondition";
-
-    let Some (| p', post_frame, _, post_frame_typing, d_post_frame_equiv |) = res in
-    assume (p' == p);
-
-    let post_body = tm_star p post_frame in
-    
-    let (| opens, opens_typing |) 
-      : t:term & tot_typing g t tm_inames 
-      = match post_hint.effect_annot with
-        | EffectAnnotSTT ->
-          (| all_inames, all_inames_typing g |)
-        | EffectAnnotGhost { opens }
-        | EffectAnnotAtomic { opens } ->
-          (| opens, (post_hint_typing g post_hint x).effect_annot_typing |)
-    in
-    let opens_remove_i = remove_iname opens i in
-    let effect_annot =
-      match post_hint.effect_annot with
-      | EffectAnnotSTT
-      | EffectAnnotAtomic _ ->
-        EffectAnnotAtomic { opens=opens_remove_i }
-      | EffectAnnotGhost _ ->
-        EffectAnnotGhost { opens=opens_remove_i } in
-    let effect_annot_typing
-      : effect_annot_typing g effect_annot
-      = remove_iname_typing g #opens #i opens_typing (magic ())  // from inversion of tm_inv_typing
-    in
-
-    assume (fresh_wrt x g (freevars post_body));
-    let post_hint_body : post_hint_for_env g =  { post_hint with
-      effect_annot;
-      effect_annot_typing;
-      g;
-      ty_typing = post_hint_ret_ty_typing;
-      post = post_body;
-      x;
-      post_typing_src=magic ();
-      post_typing=magic ();
-    } in
-
-    let (| body, c_body, body_typing |) =
-      let ppname = mk_ppname_no_range "with_inv_body" in
-      let r = check g pre_body pre_body_typing (Some post_hint_body) ppname body in
-      apply_checker_result_k r ppname
-    in
-
-    assert (comp_inames c_body == opens_remove_i);
-    assert (comp_pre c_body == tm_star p pre_frame);
-    assert (comp_post c_body == tm_star p post_frame);
-
-    let c_out = atomic_or_ghost_with_inames_and_pre_post c_body
-      (Pulse.Reflection.Util.add_inv_tm (comp_inames c_body) i)
-      pre
-      post_hint.post in 
-
-    let tok = disjointness_remove_i_i g opens i in
-
-    let tm = wtag (Some (ctag_of_comp_st c_out)) (Tm_WithInv {name=i;body;returns_inv=None}) in
-    let d : st_typing _ tm c_out =
-      let c = atomic_or_ghost_with_inames_and_pre_post
-        c_body
-        (comp_inames c_body)
-        pre_frame
-        post_frame in
-      let c_out_eq = atomic_or_ghost_with_inames_and_pre_post
-        c_body
-        (Pulse.Reflection.Util.add_inv_tm (comp_inames c_body) i)
-        (tm_star (tm_inv i p) pre_frame)
-        (tm_star (tm_inv i p) post_frame) in
-      
-      assert (add_frame_l c p == c_body);
-      assert (comp_with_inv c i p == c_out_eq);
-      let d : st_typing _ _ c_out_eq =
-        T_WithInv _ i p _ c (magic ()) (magic ()) body_typing tok in
-      let d_pre_eq : vprop_equiv g (comp_pre c_out_eq) (comp_pre c_out) = d_pre_frame_eq in
-      let d_post_eq : vprop_equiv (push_binding g x ppname_default post_hint.ret_ty)
-                                  (tm_star (tm_inv i p) (open_term post_frame x))
-                                  (open_term post_hint.post x) = d_post_frame_equiv in
-      assume (open_term (tm_inv i p) x == tm_inv i p);
-      assert (comp_post c_out_eq == tm_star (tm_inv i p) post_frame);
-      assume (open_term (comp_post c_out_eq) x ==
-              tm_star (tm_inv i p) (open_term post_frame x));
-      let d_post_eq : vprop_equiv (push_binding g x ppname_default post_hint.ret_ty)
-                                  (open_term (comp_post c_out_eq) x)
-                                  (open_term (comp_post c_out) x) = d_post_eq in
-      assert (comp_res c_out_eq == comp_res c_out);
-      assume (~ (x `Set.mem` freevars (comp_post c_out_eq)));
-      assume (~ (x `Set.mem` freevars (comp_post c_out)));
-      let d_st_equiv : st_equiv _ c_out_eq c_out =
-        ST_VPropEquiv _ c_out_eq c_out x (magic ())
-                                         (magic ())
-                                         (magic ())
-                                         (RT.Rel_refl _ _ RT.R_Eq)
-                                         d_pre_eq
-                                         d_post_eq in
-      let d : st_typing _ _ c_out =
-        T_Equiv _ _ _ _ d d_st_equiv in
-      d
-    in
+  let post_body = tm_star p post_frame in
+  
+  let (| opens, opens_typing |) 
+    : t:term & tot_typing g t tm_inames 
+    = match post_hint.effect_annot with
+      | EffectAnnotSTT ->
+        (| all_inames, all_inames_typing g |)
+      | EffectAnnotGhost { opens }
+      | EffectAnnotAtomic { opens } ->
+        (| opens, (post_hint_typing g post_hint x).effect_annot_typing |)
+  in
+  let opens_remove_i = remove_iname opens i in
+  let effect_annot =
     match post_hint.effect_annot with
-    | EffectAnnotGhost _
+    | EffectAnnotSTT
     | EffectAnnotAtomic _ ->
-      let tok : prop_validity g (tm_inames_subset (comp_inames c_out) opens) =
-        add_remove_inverse g opens i opens_typing (magic ())
-      in
-      let (| c_out_opens, d_sub_c |) : (c_out_opens:comp & st_sub _ c_out c_out_opens) =
-        match c_out with
-        | C_STAtomic add_inv obs st ->
-          (| C_STAtomic opens obs st,
-             STS_AtomicInvs _ st add_inv opens obs obs tok |)
-        | C_STGhost add_inv st ->
-          (| C_STGhost opens st,
-            STS_GhostInvs _ st add_inv opens tok |) in
-      let d : st_typing _ _ c_out_opens =
-        T_Sub _ _ _ _ d d_sub_c in
-      checker_result_for_st_typing (| _, _, d |) res_ppname
+      EffectAnnotAtomic { opens=opens_remove_i }
+    | EffectAnnotGhost _ ->
+      EffectAnnotGhost { opens=opens_remove_i } in
+  let effect_annot_typing
+    : effect_annot_typing g effect_annot
+    = remove_iname_typing g #opens #i opens_typing (magic ())  // from inversion of tm_inv_typing
+  in
 
-    | EffectAnnotSTT ->
-      let d = T_Lift _ _ _ _ d (Lift_STAtomic_ST _ c_out) in
-      checker_result_for_st_typing (| _, _, d |) res_ppname
+  assume (fresh_wrt x g (freevars post_body));
+  let post_hint_body : post_hint_for_env g =  { post_hint with
+    effect_annot;
+    effect_annot_typing;
+    g;
+    ty_typing = post_hint_ret_ty_typing;
+    post = post_body;
+    x;
+    post_typing_src=magic ();
+    post_typing=magic ();
+  } in
+
+  let (| body, c_body, body_typing |) =
+    let ppname = mk_ppname_no_range "with_inv_body" in
+    let r = check g pre_body pre_body_typing (Some post_hint_body) ppname body in
+    apply_checker_result_k r ppname
+  in
+
+  assert (comp_inames c_body == opens_remove_i);
+  assert (comp_pre c_body == tm_star p pre_frame);
+  assert (comp_post c_body == tm_star p post_frame);
+
+  let c_out = atomic_or_ghost_with_inames_and_pre_post c_body
+    (Pulse.Reflection.Util.add_inv_tm (comp_inames c_body) i)
+    pre
+    post_hint.post in 
+
+  let tok = disjointness_remove_i_i g opens i in
+
+  let tm = wtag (Some (ctag_of_comp_st c_out)) (Tm_WithInv {name=i;body;returns_inv=None}) in
+  let d : st_typing _ tm c_out =
+    let c = atomic_or_ghost_with_inames_and_pre_post
+      c_body
+      (comp_inames c_body)
+      pre_frame
+      post_frame in
+    let c_out_eq = atomic_or_ghost_with_inames_and_pre_post
+      c_body
+      (Pulse.Reflection.Util.add_inv_tm (comp_inames c_body) i)
+      (tm_star (tm_inv i p) pre_frame)
+      (tm_star (tm_inv i p) post_frame) in
+    
+    assert (add_frame_l c p == c_body);
+    assert (comp_with_inv c i p == c_out_eq);
+    let d : st_typing _ _ c_out_eq =
+      T_WithInv _ i p _ c (magic ()) (magic ()) body_typing tok in
+    let d_pre_eq : vprop_equiv g (comp_pre c_out_eq) (comp_pre c_out) = d_pre_frame_eq in
+    let d_post_eq : vprop_equiv (push_binding g x ppname_default post_hint.ret_ty)
+                                (tm_star (tm_inv i p) (open_term post_frame x))
+                                (open_term post_hint.post x) = d_post_frame_equiv in
+    assume (open_term (tm_inv i p) x == tm_inv i p);
+    assert (comp_post c_out_eq == tm_star (tm_inv i p) post_frame);
+    assume (open_term (comp_post c_out_eq) x ==
+            tm_star (tm_inv i p) (open_term post_frame x));
+    let d_post_eq : vprop_equiv (push_binding g x ppname_default post_hint.ret_ty)
+                                (open_term (comp_post c_out_eq) x)
+                                (open_term (comp_post c_out) x) = d_post_eq in
+    assert (comp_res c_out_eq == comp_res c_out);
+    assume (~ (x `Set.mem` freevars (comp_post c_out_eq)));
+    assume (~ (x `Set.mem` freevars (comp_post c_out)));
+    let d_st_equiv : st_equiv _ c_out_eq c_out =
+      ST_VPropEquiv _ c_out_eq c_out x (magic ())
+                                       (magic ())
+                                       (magic ())
+                                       (RT.Rel_refl _ _ RT.R_Eq)
+                                       d_pre_eq
+                                       d_post_eq in
+    let d : st_typing _ _ c_out =
+      T_Equiv _ _ _ _ d d_st_equiv in
+    d
+  in
+  match post_hint.effect_annot with
+  | EffectAnnotGhost _
+  | EffectAnnotAtomic _ ->
+    let tok : prop_validity g (tm_inames_subset (comp_inames c_out) opens) =
+      add_remove_inverse g opens i opens_typing (magic ())
+    in
+    let (| c_out_opens, d_sub_c |) : (c_out_opens:comp & st_sub _ c_out c_out_opens) =
+      match c_out with
+      | C_STAtomic add_inv obs st ->
+        (| C_STAtomic opens obs st,
+           STS_AtomicInvs _ st add_inv opens obs obs tok |)
+      | C_STGhost add_inv st ->
+        (| C_STGhost opens st,
+          STS_GhostInvs _ st add_inv opens tok |) in
+    let d : st_typing _ _ c_out_opens =
+      T_Sub _ _ _ _ d d_sub_c in
+    checker_result_for_st_typing (| _, _, d |) res_ppname
+
+  | EffectAnnotSTT ->
+    let d = T_Lift _ _ _ _ d (Lift_STAtomic_ST _ c_out) in
+    checker_result_for_st_typing (| _, _, d |) res_ppname
 #pop-options
