@@ -171,6 +171,17 @@ let dup_inv = A.dup_inv
 let new_invariant = A.new_invariant
 let fresh_wrt = PulseCore.Action.fresh_wrt
 let fresh_wrt_def i c = ()
+let all_live = Act.all_live
+let all_live_nil () = ()
+
+let live_eq (i:iname_ref)
+  : Lemma (Act.live i == (exists* (p:vprop). i -~- p)) =
+  calc (==) {
+    Act.live i;
+  (==) { _ by (T.trefl ()) }
+    exists* (p:vprop). i -~- p;
+  }
+let all_live_cons hd tl = live_eq hd
 let fresh_invariant = A.fresh_invariant
 let with_invariant = A.with_invariant
 let with_invariant_g = A.with_invariant_g

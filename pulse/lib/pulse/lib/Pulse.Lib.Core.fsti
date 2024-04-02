@@ -478,10 +478,16 @@ val fresh_wrt_def (i:iname_ref) (c:list iname_ref)
     (forall i'. List.Tot.memP i' c ==> name_of_inv i' =!= name_of_inv i))
     [SMTPat (fresh_wrt i c)]
 
+val all_live (ctx:list iname_ref) : vprop
+
+val all_live_nil () : Lemma (all_live [] == emp)
+val all_live_cons (hd:iname_ref) (tl:list iname_ref)
+  : Lemma (all_live (hd::tl) == (exists* p. hd -~- p) ** all_live tl)
+
 val fresh_invariant
     (ctx:list iname_ref)
     (p:vprop { is_big p })
-: stt_ghost (i:iname_ref { i `fresh_wrt` ctx }) emp_inames p (fun i -> i -~- p)
+: stt_ghost (i:iname_ref { i `fresh_wrt` ctx }) emp_inames (p ** all_live ctx) (fun i -> i -~- p)
 
 val with_invariant
     (#a:Type)
@@ -489,7 +495,7 @@ val with_invariant
     (#fp:vprop)
     (#fp':a -> vprop)
     (#f_opens:inames)
-    (#p:vprop { is_big p})
+    (#p:vprop)
     (i:iname_ref { not (mem_inv f_opens i) })
     ($f:unit -> stt_atomic a #obs f_opens
                            (p ** fp)
@@ -501,7 +507,7 @@ val with_invariant_g
     (#fp:vprop)
     (#fp':a -> vprop)
     (#f_opens:inames)
-    (#p:vprop { is_big p })
+    (#p:vprop)
     (i:iname_ref { not (mem_inv f_opens i) })
     ($f:unit -> stt_ghost a f_opens
                             (p ** fp)

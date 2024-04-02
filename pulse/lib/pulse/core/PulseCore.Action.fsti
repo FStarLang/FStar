@@ -142,7 +142,7 @@ let mem_inv (e:inames) (i:iname_ref) : GTot bool = S.mem (name_of_inv i) e
 
 val ( -~- ) (i:iname_ref) (p:slprop) : slprop
 
-let live (i:iname_ref) = exists* p. i -~- p
+let live (i:iname_ref) = exists* (p:slprop). i -~- p
 
 let rec all_live (ctx:list iname_ref) =
   match ctx with
