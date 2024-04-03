@@ -183,16 +183,23 @@ type effect_annot__EffectAnnotGhost__payload = {
   opens: term }
 and effect_annot__EffectAnnotAtomic__payload = {
   opens1: term }
+and effect_annot__EffectAnnotAtomicOrGhost__payload = {
+  opens2: term }
 and effect_annot =
   | EffectAnnotSTT 
   | EffectAnnotGhost of effect_annot__EffectAnnotGhost__payload 
   | EffectAnnotAtomic of effect_annot__EffectAnnotAtomic__payload 
+  | EffectAnnotAtomicOrGhost of
+  effect_annot__EffectAnnotAtomicOrGhost__payload 
 let (__proj__Mkeffect_annot__EffectAnnotGhost__payload__item__opens :
   effect_annot__EffectAnnotGhost__payload -> term) =
   fun projectee -> match projectee with | { opens;_} -> opens
 let (__proj__Mkeffect_annot__EffectAnnotAtomic__payload__item__opens :
   effect_annot__EffectAnnotAtomic__payload -> term) =
   fun projectee -> match projectee with | { opens1 = opens;_} -> opens
+let (__proj__Mkeffect_annot__EffectAnnotAtomicOrGhost__payload__item__opens :
+  effect_annot__EffectAnnotAtomicOrGhost__payload -> term) =
+  fun projectee -> match projectee with | { opens2 = opens;_} -> opens
 let (uu___is_EffectAnnotSTT : effect_annot -> Prims.bool) =
   fun projectee ->
     match projectee with | EffectAnnotSTT -> true | uu___ -> false
@@ -208,6 +215,14 @@ let (uu___is_EffectAnnotAtomic : effect_annot -> Prims.bool) =
 let (__proj__EffectAnnotAtomic__item___0 :
   effect_annot -> effect_annot__EffectAnnotAtomic__payload) =
   fun projectee -> match projectee with | EffectAnnotAtomic _0 -> _0
+let (uu___is_EffectAnnotAtomicOrGhost : effect_annot -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | EffectAnnotAtomicOrGhost _0 -> true
+    | uu___ -> false
+let (__proj__EffectAnnotAtomicOrGhost__item___0 :
+  effect_annot -> effect_annot__EffectAnnotAtomicOrGhost__payload) =
+  fun projectee -> match projectee with | EffectAnnotAtomicOrGhost _0 -> _0
 let (effect_annot_of_comp : comp_st -> effect_annot) =
   fun c ->
     match c with
@@ -215,12 +230,14 @@ let (effect_annot_of_comp : comp_st -> effect_annot) =
     | C_STGhost (opens, uu___) -> EffectAnnotGhost { opens }
     | C_STAtomic (opens, uu___, uu___1) ->
         EffectAnnotAtomic { opens1 = opens }
-let (ctag_of_effect_annot : effect_annot -> ctag) =
-  fun uu___ ->
-    match uu___ with
-    | EffectAnnotSTT -> STT
-    | EffectAnnotGhost uu___1 -> STT_Ghost
-    | EffectAnnotAtomic uu___1 -> STT_Atomic
+let (ctag_of_effect_annot :
+  effect_annot -> ctag FStar_Pervasives_Native.option) =
+  fun x ->
+    match x with
+    | EffectAnnotSTT -> FStar_Pervasives_Native.Some STT
+    | EffectAnnotGhost uu___ -> FStar_Pervasives_Native.Some STT_Ghost
+    | EffectAnnotAtomic uu___ -> FStar_Pervasives_Native.Some STT_Atomic
+    | EffectAnnotAtomicOrGhost uu___ -> FStar_Pervasives_Native.None
 type proof_hint_type__ASSERT__payload = {
   p: vprop }
 and proof_hint_type__FOLD__payload =

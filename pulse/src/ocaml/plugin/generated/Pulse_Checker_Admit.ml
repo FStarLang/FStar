@@ -664,7 +664,7 @@ let (check :
                    (Obj.magic
                       (FStar_Range.mk_range "Pulse.Checker.Admit.fst"
                          (Prims.of_int (107)) (Prims.of_int (3))
-                         (Prims.of_int (113)) (Prims.of_int (56)))))
+                         (Prims.of_int (116)) (Prims.of_int (56)))))
                 (FStar_Tactics_Effect.lift_div_tac
                    (fun uu___ -> t.Pulse_Syntax_Base.term1))
                 (fun uu___ ->
@@ -679,22 +679,27 @@ let (check :
                                        (Obj.magic
                                           (FStar_Range.mk_range
                                              "Pulse.Checker.Admit.fst"
-                                             (Prims.of_int (110))
-                                             (Prims.of_int (15))
-                                             (Prims.of_int (110))
-                                             (Prims.of_int (50)))))
+                                             (Prims.of_int (111))
+                                             (Prims.of_int (8))
+                                             (Prims.of_int (113))
+                                             (Prims.of_int (28)))))
                                     (FStar_Sealed.seal
                                        (Obj.magic
                                           (FStar_Range.mk_range
                                              "Pulse.Checker.Admit.fst"
-                                             (Prims.of_int (111))
+                                             (Prims.of_int (114))
                                              (Prims.of_int (6))
-                                             (Prims.of_int (111))
+                                             (Prims.of_int (114))
                                              (Prims.of_int (97)))))
                                     (FStar_Tactics_Effect.lift_div_tac
                                        (fun uu___1 ->
-                                          Pulse_Syntax_Base.ctag_of_effect_annot
-                                            p.Pulse_Typing.effect_annot))
+                                          match Pulse_Syntax_Base.ctag_of_effect_annot
+                                                  p.Pulse_Typing.effect_annot
+                                          with
+                                          | FStar_Pervasives_Native.Some c ->
+                                              c
+                                          | FStar_Pervasives_Native.None ->
+                                              Pulse_Syntax_Base.STT_Atomic))
                                     (fun uu___1 ->
                                        (fun ct ->
                                           Obj.magic
