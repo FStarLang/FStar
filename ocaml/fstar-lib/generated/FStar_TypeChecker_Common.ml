@@ -370,36 +370,39 @@ let (id_info__insert :
         let use_range =
           let uu___ = FStar_Compiler_Range_Type.use_range range in
           FStar_Compiler_Range_Type.set_def_range range uu___ in
-        let id_ty =
-          match info.identifier with
-          | FStar_Pervasives.Inr uu___ -> ty_map info.identifier_ty
-          | FStar_Pervasives.Inl x -> ty_map info.identifier_ty in
-        match id_ty with
-        | FStar_Pervasives_Native.None -> db
-        | FStar_Pervasives_Native.Some id_ty1 ->
-            let info1 =
-              {
-                identifier = (info.identifier);
-                identifier_ty = id_ty1;
-                identifier_range = use_range
-              } in
-            let fn = FStar_Compiler_Range_Ops.file_of_range use_range in
-            let start = FStar_Compiler_Range_Ops.start_of_range use_range in
-            let uu___ =
-              let uu___1 = FStar_Compiler_Range_Ops.line_of_pos start in
-              let uu___2 = FStar_Compiler_Range_Ops.col_of_pos start in
-              (uu___1, uu___2) in
-            (match uu___ with
-             | (row, col) ->
-                 let rows =
-                   let uu___1 = FStar_Compiler_Util.pimap_empty () in
-                   FStar_Compiler_Util.psmap_find_default db fn uu___1 in
-                 let cols =
-                   FStar_Compiler_Util.pimap_find_default rows row [] in
-                 let uu___1 =
-                   let uu___2 = insert_col_info col info1 cols in
-                   FStar_Compiler_Util.pimap_add rows row uu___2 in
-                 FStar_Compiler_Util.psmap_add db fn uu___1)
+        if use_range = FStar_Compiler_Range_Type.dummyRange
+        then db
+        else
+          (let id_ty =
+             match info.identifier with
+             | FStar_Pervasives.Inr uu___1 -> ty_map info.identifier_ty
+             | FStar_Pervasives.Inl x -> ty_map info.identifier_ty in
+           match id_ty with
+           | FStar_Pervasives_Native.None -> db
+           | FStar_Pervasives_Native.Some id_ty1 ->
+               let info1 =
+                 {
+                   identifier = (info.identifier);
+                   identifier_ty = id_ty1;
+                   identifier_range = use_range
+                 } in
+               let fn = FStar_Compiler_Range_Ops.file_of_range use_range in
+               let start = FStar_Compiler_Range_Ops.start_of_range use_range in
+               let uu___1 =
+                 let uu___2 = FStar_Compiler_Range_Ops.line_of_pos start in
+                 let uu___3 = FStar_Compiler_Range_Ops.col_of_pos start in
+                 (uu___2, uu___3) in
+               (match uu___1 with
+                | (row, col) ->
+                    let rows =
+                      let uu___2 = FStar_Compiler_Util.pimap_empty () in
+                      FStar_Compiler_Util.psmap_find_default db fn uu___2 in
+                    let cols =
+                      FStar_Compiler_Util.pimap_find_default rows row [] in
+                    let uu___2 =
+                      let uu___3 = insert_col_info col info1 cols in
+                      FStar_Compiler_Util.pimap_add rows row uu___3 in
+                    FStar_Compiler_Util.psmap_add db fn uu___2))
 let (id_info_insert :
   id_info_table ->
     (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) FStar_Pervasives.either

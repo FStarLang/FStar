@@ -126,6 +126,7 @@ let print_identifier_info info =
 let id_info__insert ty_map db info =
     let range = info.identifier_range in
     let use_range = Range.set_def_range range (Range.use_range range) in
+    if use_range = Range.dummyRange then db else
     let id_ty =
       match info.identifier with
       | Inr _ ->
