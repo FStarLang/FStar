@@ -59,8 +59,7 @@ type lock = {
 let lock_alive l #p v =
   inv l.i.i (cancellable l.i.t (lock_inv l.r l.gr v)) ** active p l.i.t
 
-let lock_acquired l #p v =
-  inv l.i.i (cancellable l.i.t (lock_inv l.r l.gr v)) ** active p l.i.t ** GR.pts_to l.gr #(half_perm full_perm) 1ul
+let lock_acquired l = GR.pts_to l.gr #(half_perm full_perm) 1ul
 
 ```pulse
 fn new_lock_aux (v:vprop { is_big v })
@@ -89,7 +88,7 @@ let new_lock = new_lock_aux
 ```pulse
 fn rec acquire_aux (#v:vprop) (#p:perm) (l:lock)
   requires lock_alive l #p v
-  ensures v **  lock_acquired l #p v
+  ensures v **  lock_alive l #p v ** lock_acquired l
 {
   unfold (lock_alive l #p v);
   let b =
@@ -134,7 +133,8 @@ fn rec acquire_aux (#v:vprop) (#p:perm) (l:lock)
   if b {
     rewrite (if b then v ** GR.pts_to l.gr #(half_perm full_perm) 1ul else emp) as
             (v ** GR.pts_to l.gr #(half_perm full_perm) 1ul);
-    fold (lock_acquired l #p v);
+    fold (lock_alive l #p v);
+    fold (lock_acquired l)
   } else {
     rewrite (if b then v ** GR.pts_to l.gr #(half_perm full_perm) 1ul else emp) as
             emp;
@@ -148,10 +148,11 @@ let acquire = acquire_aux
 
 ```pulse
 fn release_aux (#v:vprop) (#p:perm) (l:lock)
-  requires v ** lock_acquired l #p v
+  requires v ** lock_alive l #p v ** lock_acquired l
   ensures lock_alive l #p v
 {
-  unfold (lock_acquired l #p v);
+  unfold (lock_alive l #p v);
+  unfold (lock_acquired l);
 
   with_invariants l.i.i
     returns _:unit
@@ -210,61 +211,19 @@ fn gather_aux (#v:vprop) (#p:perm) (l:lock)
 let gather = gather_aux
 
 ```pulse
-fn rec free_aux (#v:vprop) (l:lock)
-  requires lock_alive l #full_perm v
-  ensures v
+fn free_aux (#v:vprop) (l:lock)
+  requires lock_alive l #full_perm v ** lock_acquired l
+  ensures emp
 {
   unfold (lock_alive l #full_perm v);
-
-  let b = with_invariants l.i.i
-    returns b:bool
-    ensures active full_perm l.i.t **
-            (if b then (v ** GR.pts_to l.gr #(half_perm full_perm) 2ul)
-                  else emp) {
-    take l.i.t;
-    unfold (lock_inv l.r l.gr v);
-    unfold (lock_inv_aux l.r l.gr v);
-    let b = cas l.r 0ul 2ul;
-    if b {
-      elim_cond_true _ _ _;
-      rewrite (if (0ul = 0ul) then v else emp) as v;
-      GR.(l.gr := 2ul);
-      GR.share l.gr;
-      rewrite emp as (if (2ul = 0ul) then v else emp);
-      fold (lock_inv_aux l.r l.gr v);
-      fold (lock_inv l.r l.gr v);
-      give l.i.t;
-      let b = true;
-      rewrite (v ** GR.pts_to l.gr #(half_perm full_perm) 2ul)
-           as (if b then (v ** GR.pts_to l.gr #(half_perm full_perm) 2ul) else emp);
-      b
-    } else {
-      elim_cond_false _ _ _;
-      fold (lock_inv_aux l.r l.gr v);
-      fold (lock_inv l.r l.gr v);
-      give l.i.t;
-      let b = false;
-      rewrite emp as (if b then (v ** GR.pts_to l.gr #(half_perm full_perm) 2ul) else emp);
-      b
-    }
-  };
-
-  if b {
-    rewrite (if b then (v ** GR.pts_to l.gr #(half_perm full_perm) 2ul) else emp) as
-            (v ** GR.pts_to l.gr #(half_perm full_perm) 2ul);
-    cancel l.i;
-    unfold (lock_inv l.r l.gr v);
-    unfold (lock_inv_aux l.r l.gr v);
-    GR.gather l.gr;
-    rewrite (if (2ul = 0ul) then v else emp) as emp;
-    free l.r;
-    GR.free l.gr
-  } else {
-    rewrite (if b then (v ** GR.pts_to l.gr #(half_perm full_perm) 2ul) else emp) as
-            emp;
-    fold (lock_alive l #full_perm v);
-    free_aux l
-  }
+  unfold (lock_acquired l);
+  cancel l.i;
+  unfold (lock_inv l.r l.gr v);
+  unfold (lock_inv_aux l.r l.gr v);
+  free l.r;
+  GR.gather l.gr;
+  GR.free l.gr;
+  rewrite (if (1ul = 0ul) then v else emp) as emp
 }
 ```
 

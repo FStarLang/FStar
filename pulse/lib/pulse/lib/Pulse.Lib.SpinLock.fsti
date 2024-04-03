@@ -5,7 +5,6 @@
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,16 +23,16 @@ val lock : Type0
 
 val lock_alive (l:lock) (#[T.exact (`full_perm)] p:perm)  (v:vprop) : vprop
 
-val lock_acquired (l:lock) (#[T.exact (`full_perm)] p:perm)  (v:vprop) : vprop
+val lock_acquired (l:lock) : vprop
 
 val new_lock (v:vprop { is_big v })
   : stt lock v (fun l -> lock_alive l v)
 
 val acquire (#v:vprop) (#p:perm) (l:lock)
-  : stt unit (lock_alive l #p v) (fun _ -> v ** lock_acquired l #p v)
+  : stt unit (lock_alive l #p v) (fun _ -> v ** lock_alive l #p v ** lock_acquired l)
 
 val release (#v:vprop) (#p:perm) (l:lock)
-  : stt unit (v ** lock_acquired l #p v) (fun _ -> lock_alive l #p v)
+  : stt unit (v ** lock_alive l #p v ** lock_acquired l) (fun _ -> lock_alive l #p v)
 
 val share (#v:vprop) (#p:perm) (l:lock)
   : stt_ghost unit emp_inames
@@ -46,4 +45,4 @@ val gather (#v:vprop) (#p:perm) (l:lock)
       (fun _ -> lock_alive l #p v)
 
 val free (#v:vprop) (l:lock)
-  : stt unit (lock_alive l #full_perm v) (fun _ -> v)
+  : stt unit (lock_alive l #full_perm v ** lock_acquired l) (fun _ -> emp)
