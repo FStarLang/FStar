@@ -20,6 +20,7 @@ open Pulse.Lib.Pervasives
 open Pulse.Lib.CancellableInvariant
 
 module U32 = FStar.UInt32
+module B = Pulse.Lib.Box
 module GR = Pulse.Lib.GhostReference
 
 let big_star (p q : vprop)
@@ -34,22 +35,22 @@ let big_exists (#a:Type u#a) (p: a -> vprop)
     (ensures is_big (op_exists_Star p))
     [SMTPat (is_big (op_exists_Star p))] = big_exists p
 
-let lock_inv_aux (r:ref U32.t) (gr:GR.ref U32.t) (v:vprop) : (w:vprop { is_big v ==> is_big w })  =
-  exists* i p. pts_to r #full_perm i **
+let lock_inv_aux (r:B.box U32.t) (gr:GR.ref U32.t) (v:vprop) : (w:vprop { is_big v ==> is_big w })  =
+  exists* i p. B.pts_to r #full_perm i **
                GR.pts_to gr #p i **
                (if i = 0ul then v else emp) **
                pure ((i == 0ul ==> p == full_perm) /\
                      (i =!= 0ul ==> p == half_perm full_perm)) 
 
-let lock_inv (r:ref U32.t) (gr:GR.ref U32.t) (v:vprop) : vprop =
+let lock_inv (r:B.box U32.t) (gr:GR.ref U32.t) (v:vprop) : vprop =
   lock_inv_aux r gr v
 
-let is_big_lock_inv (r:ref U32.t) (gr:GR.ref U32.t) (v:vprop)
+let is_big_lock_inv (r:B.box U32.t) (gr:GR.ref U32.t) (v:vprop)
   : Lemma (is_big v ==> is_big (lock_inv r gr v)) = ()
 
 noeq
 type lock = {
-  r : ref U32.t;
+  r : B.box U32.t;
   gr : GR.ref U32.t;
   i : cinv;
 }
@@ -65,7 +66,7 @@ fn new_lock_aux (v:vprop { is_big v })
   returns l:lock
   ensures lock_alive l v
 {
-  let r = alloc 0ul;
+  let r = B.alloc 0ul;
   let gr = GR.alloc 0ul;
   rewrite v as (if 0ul = 0ul then v else emp);
   fold (lock_inv_aux r gr v);
@@ -97,7 +98,7 @@ fn rec acquire_aux (#v:vprop) (#p:perm) (l:lock)
       unpack_cinv_vp l.i;
       unfold lock_inv;
       unfold lock_inv_aux;
-      let b = cas l.r 0ul 1ul;
+      let b = cas_box l.r 0ul 1ul;
       if b {
         elim_cond_true _ _ _;
         GR.(l.gr := 1ul);
@@ -161,7 +162,7 @@ fn release_aux (#v:vprop) (#p:perm) (l:lock)
     GR.pts_to_injective_eq l.gr;
     GR.gather2 l.gr;
     rewrite (if (1ul = 0ul) then v else emp) as emp;
-    write_atomic l.r 0ul;
+    write_atomic_box l.r 0ul;
     GR.(l.gr := 0ul);
     fold (lock_inv_aux l.r l.gr v);
     fold (lock_inv l.r l.gr v);
@@ -218,7 +219,7 @@ fn free_aux (#v:vprop) (l:lock)
   cancel l.i;
   unfold (lock_inv l.r l.gr v);
   unfold (lock_inv_aux l.r l.gr v);
-  free l.r;
+  B.free l.r;
   GR.gather l.gr;
   GR.free l.gr;
   rewrite (if (1ul = 0ul) then v else emp) as emp

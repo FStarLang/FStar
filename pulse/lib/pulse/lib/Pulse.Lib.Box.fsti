@@ -33,6 +33,10 @@ val pts_to (#a:Type0)
            (#[T.exact (`full_perm)] [@@@equate_by_smt] p:perm)
            ([@@@equate_by_smt] v:a) : vprop
 
+val pts_to_is_small (#a:Type) (r:box a) (p:perm) (x:a)
+  : Lemma (is_small (pts_to r #p x))
+          [SMTPat (is_small (pts_to r #p x))]
+
 val alloc (#a:Type0) (x:a)
   : stt (box a) emp (fun b -> pts_to b x)
   
@@ -71,16 +75,6 @@ val gather2 (#a:Type) (r:box a) (#x0 #x1:erased a)
   : stt_ghost unit emp_inames
       (pts_to r #one_half x0 ** pts_to r #one_half x1)
       (fun _ -> pts_to r x0 ** pure (x0 == x1))
-
-val read_atomic (r:box U32.t) (#n:erased U32.t) (#p:perm)
-  : stt_atomic U32.t emp_inames
-    (pts_to r #p n)
-    (fun x -> pts_to r #p n ** pure (reveal n == x))
-
-val write_atomic (r:box U32.t) (x:U32.t) (#n:erased U32.t)
-  : stt_atomic unit emp_inames
-        (pts_to r n) 
-        (fun _ -> pts_to r (hide x))
 
 val pts_to_injective_eq (#a:_)
                         (#p #q:_)

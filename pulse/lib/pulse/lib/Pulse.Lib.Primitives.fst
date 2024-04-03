@@ -16,6 +16,10 @@
 
 module Pulse.Lib.Primitives
 
+module B = Pulse.Lib.Box
+
+friend Pulse.Lib.Box
+
 let read_atomic (r:ref U32.t) (#n:erased U32.t) (#p:perm)
 : stt_atomic U32.t emp_inames
     (pts_to r #p n)
@@ -53,3 +57,9 @@ ensures
 ```
 
 let cas r u v #i = Pulse.Lib.Core.as_atomic _ _ (cas_impl r u v #i)
+
+let read_atomic_box b #n #p = read_atomic b #n #p
+
+let write_atomic_box b x #n = write_atomic b x #n
+
+let cas_box r u v #i = cas r u v #i

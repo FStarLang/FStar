@@ -22,6 +22,7 @@ module R = Pulse.Lib.Reference
 
 type box a = R.ref a
 let pts_to b #p v = R.pts_to b #p v
+let pts_to_is_small _ _ _ = ()
 let alloc x = R.alloc x
 let op_Bang b #v #p = R.op_Bang b #v #p
 let op_Colon_Equals b x #v = R.op_Colon_Equals b x #v
@@ -30,13 +31,9 @@ let share b = R.share b
 let gather b = R.gather b
 let share2 b = R.share2 b
 let gather2 b = R.gather2 b
-let read_atomic b #n #p = Pulse.Lib.Primitives.read_atomic b #n #p
-let write_atomic b x #n = Pulse.Lib.Primitives.write_atomic b x #n
 let pts_to_injective_eq b = R.pts_to_injective_eq b
 let box_to_ref b = b
-
 let to_ref_pts_to #a b #p #v =
   rewrite (pts_to b #p v) (R.pts_to b #p v) (vprop_equiv_refl _)
-
 let to_box_pts_to #a r #p #v =
   rewrite (R.pts_to r #p v) (pts_to r #p v) (vprop_equiv_refl _)
