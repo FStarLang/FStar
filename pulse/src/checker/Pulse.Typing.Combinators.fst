@@ -205,9 +205,6 @@ let weaken_comp_inames (#g:env) (#e:st_term) (#c:comp_st) (d_e:st_typing g e c) 
       let d_e = T_Sub _ _ _ _ d_e (STS_AtomicInvs _ sc inames new_inames obs obs (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
       (| with_inames c new_inames, d_e |)
 
-let st_ghost_as_atomic (c:comp_st { C_STGhost? c }) = 
-  C_STAtomic (comp_inames c) Neutral (st_comp_of_comp c)
-
 let try_lift_ghost_atomic (#g:env) (#e:st_term) (#c:comp_st { C_STGhost? c }) (d:st_typing g e c)
 : T.Tac (option (st_typing g e (st_ghost_as_atomic c)))
 = let comp_res_typing : universe_of g (comp_res c) (comp_u c) =

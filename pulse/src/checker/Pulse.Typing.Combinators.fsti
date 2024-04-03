@@ -31,6 +31,12 @@ val vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
   : GTot ((tot_typing g t0 tm_vprop -> tot_typing g t1 tm_vprop) &
           (tot_typing g t1 tm_vprop -> tot_typing g t0 tm_vprop))
 
+let st_ghost_as_atomic (c:comp_st { C_STGhost? c }) = 
+  C_STAtomic (comp_inames c) Neutral (st_comp_of_comp c)
+
+val lift_ghost_atomic (#g:env) (#e:st_term) (#c:comp_st { C_STGhost? c }) (d:st_typing g e c)
+: T.Tac (st_typing g e (st_ghost_as_atomic c))
+
 val mk_bind (g:env)
             (pre:term)
             (e1:st_term)

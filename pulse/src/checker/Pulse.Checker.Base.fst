@@ -90,7 +90,8 @@ let check_effect_annot (g:env) (e:effect_annot) : T.Tac (effect_annot_typing g e
   match e with
   | EffectAnnotSTT -> ()
   | EffectAnnotGhost { opens }
-  | EffectAnnotAtomic { opens } ->
+  | EffectAnnotAtomic { opens }
+  | EffectAnnotAtomicOrGhost { opens } ->
     CP.core_check_term g opens T.E_Total tm_inames
 
 let intro_post_hint g effect_annot ret_ty_opt post =
@@ -559,6 +560,7 @@ let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctx
     match post_hint.effect_annot with
     | EffectAnnotAtomic _ -> STT_Atomic
     | EffectAnnotGhost _ -> STT_Ghost
+    | EffectAnnotAtomicOrGhost _ -> STT_Atomic
     | _ -> STT
   in
   let y_tm = tm_var {nm_index=y;nm_ppname=y_ppname} in
@@ -571,13 +573,15 @@ let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctx
   let d : st_typing g t c = d in
   assume (comp_u c == post_hint.u); // this u should follow from equality of t
   match c, post_hint.effect_annot with
-  | C_STAtomic _ obs _, EffectAnnotAtomic { opens } ->
+  | C_STAtomic _ obs _, EffectAnnotAtomic { opens }
+  | C_STAtomic _ obs _, EffectAnnotAtomicOrGhost { opens } ->
     assert (comp_inames c == tm_emp_inames);
     let pht = post_hint_typing g post_hint x in
     let validity = emp_inames_included g opens pht.effect_annot_typing in
     let d = T_Sub _ _ _ _ d (STS_AtomicInvs _ (st_comp_of_comp c) tm_emp_inames opens obs obs validity) in
     (| _, _, d |)
-  | C_STGhost _  _, EffectAnnotGhost { opens } ->
+  | C_STGhost _ _, EffectAnnotGhost { opens }
+  | C_STGhost _ _, EffectAnnotAtomicOrGhost { opens } ->
     assert (comp_inames c == tm_emp_inames);
     let pht = post_hint_typing g post_hint x in
     let validity = emp_inames_included g opens pht.effect_annot_typing in

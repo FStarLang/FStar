@@ -302,7 +302,7 @@ let check
       //   and when post hint is coming from postcondition uniform
       //
       Pulse.Checker.Base.intro_post_hint g
-        (EffectAnnotAtomic { opens = Pulse.Reflection.Util.add_inv_tm tm_emp_inames i })
+        (EffectAnnotAtomicOrGhost { opens = Pulse.Reflection.Util.add_inv_tm tm_emp_inames i })
         (Some b.binder_ty)
         (tm_star (tm_inv i p) post)
     | Some (_, post), Some q ->
@@ -361,7 +361,8 @@ let check
       | EffectAnnotSTT ->
         (| all_inames, all_inames_typing g |)
       | EffectAnnotGhost { opens }
-      | EffectAnnotAtomic { opens } ->
+      | EffectAnnotAtomic { opens }
+      | EffectAnnotAtomicOrGhost { opens } ->
         (| opens, (post_hint_typing g post_hint x).effect_annot_typing |)
   in
   let opens_remove_i = remove_iname opens i in
@@ -371,7 +372,9 @@ let check
     | EffectAnnotAtomic _ ->
       EffectAnnotAtomic { opens=opens_remove_i }
     | EffectAnnotGhost _ ->
-      EffectAnnotGhost { opens=opens_remove_i } in
+      EffectAnnotGhost { opens=opens_remove_i }
+    | EffectAnnotAtomicOrGhost _ ->
+      EffectAnnotAtomicOrGhost { opens=opens_remove_i } in
   let effect_annot_typing
     : effect_annot_typing g effect_annot
     = remove_iname_typing g #opens #i opens_typing (magic ())  // from inversion of tm_inv_typing
@@ -450,7 +453,8 @@ let check
   in
   match post_hint.effect_annot with
   | EffectAnnotGhost _
-  | EffectAnnotAtomic _ ->
+  | EffectAnnotAtomic _
+  | EffectAnnotAtomicOrGhost _ ->
     let tok : prop_validity g (tm_inames_subset (comp_inames c_out) opens) =
       add_remove_inverse g opens i opens_typing (magic ())
     in

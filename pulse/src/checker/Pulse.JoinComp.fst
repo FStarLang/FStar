@@ -84,11 +84,11 @@ let lift_ghost_to_atomic
 
 (* This matches the effects of the two branches, without
 necessarily matching inames. *)
-#push-options "--z3rlimit 20"
+#push-options "--z3rlimit_factor 4"
 open Pulse.Checker.Base
 (* NB: g_then and g_else are equal except for containing one extra
 hypothesis according to which branch was taken. *)
-let join_comps
+let rec join_comps
   (g_then:env)
   (e_then:st_term)
   (c_then:comp_st)
@@ -116,6 +116,14 @@ let join_comps
     let e_then_typing = T_Lift _ _ _ _ e_then_typing (Lift_Observability g_then c_then obs) in
     let e_else_typing = T_Lift _ _ _ _ e_else_typing (Lift_Observability g_else c_else obs) in
     (| _, e_then_typing, e_else_typing |)
+  | C_STGhost _ _, C_STAtomic _ _ _ ->
+    admit ();  // TODO: FIXME
+    let d = lift_ghost_atomic e_then_typing in
+    join_comps _ _ _ d _ _ _ e_else_typing post
+  | C_STAtomic _ _ _, C_STGhost _ _ ->
+    admit ();  // TODO: FIXME
+    let d = lift_ghost_atomic e_else_typing in
+    join_comps _ _ _ e_then_typing _ _ _ d post
   | _ -> 
     (| _, e_then_typing, e_else_typing |)
 #pop-options

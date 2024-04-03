@@ -1153,10 +1153,10 @@ let fresh_wrt (x:var) (g:env) (vars:_) =
 let effect_annot_typing (g:env) (e:effect_annot) =
   match e with
   | EffectAnnotGhost { opens }
-  | EffectAnnotAtomic { opens } ->
+  | EffectAnnotAtomic { opens }
+  | EffectAnnotAtomicOrGhost { opens } ->
     tot_typing g opens tm_inames
-  | _ ->
-    unit
+  | _ -> unit
 
 noeq
 type post_hint_t = {
@@ -1194,7 +1194,6 @@ type post_hint_typing_t (g:env) (p:post_hint_t) (x:var { ~ (Set.mem x (dom g)) }
   post_typing:tot_typing (push_binding g x ppname_default p.ret_ty) (open_term p.post x) tm_vprop
 }
 
-
 irreducible
 let post_hint_typing (g:env)
                      (p:post_hint_for_env g)
@@ -1203,7 +1202,8 @@ let post_hint_typing (g:env)
   = let effect_annot_typing : effect_annot_typing g p.effect_annot = 
       match p.effect_annot with
       | EffectAnnotAtomic { opens }
-      | EffectAnnotGhost { opens } ->
+      | EffectAnnotGhost { opens }
+      | EffectAnnotAtomicOrGhost { opens } ->
         let opens_typing : tot_typing g opens tm_inames = RU.magic () in //weakening
         opens_typing
       | _ -> ()
@@ -1214,12 +1214,14 @@ let post_hint_typing (g:env)
     post_typing = RU.magic ();
   }
 
-let effect_annot_matches c (effect_annot:effect_annot) : prop =
+let effect_annot_matches (c:comp_st) (effect_annot:effect_annot) : prop =
   match c, effect_annot with
   | C_ST _, EffectAnnotSTT -> True
   | C_STGhost inames' _, EffectAnnotGhost { opens }
   | C_STAtomic inames' _ _, EffectAnnotAtomic { opens } ->
     inames' == opens
+  | _, EffectAnnotAtomicOrGhost { opens } ->
+    (C_STAtomic? c \/ C_STGhost? c)  /\ (comp_inames c == opens)
   | _ -> False
 
 let comp_post_matches_hint (c:comp_st) (post_hint:option post_hint_t) =

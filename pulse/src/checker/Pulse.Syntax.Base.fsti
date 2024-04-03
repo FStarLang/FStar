@@ -142,6 +142,7 @@ type effect_annot =
   | EffectAnnotSTT
   | EffectAnnotGhost { opens:term }
   | EffectAnnotAtomic { opens:term }
+  | EffectAnnotAtomicOrGhost { opens:term }
 
 let effect_annot_of_comp (c:comp_st)
 : effect_annot
@@ -150,11 +151,12 @@ let effect_annot_of_comp (c:comp_st)
   | C_STGhost opens _ -> EffectAnnotGhost { opens }
   | C_STAtomic opens _ _ -> EffectAnnotAtomic { opens }
 
-let ctag_of_effect_annot =
-  function
-  | EffectAnnotSTT -> STT
-  | EffectAnnotGhost _ -> STT_Ghost
-  | EffectAnnotAtomic _ -> STT_Atomic
+let ctag_of_effect_annot (x:effect_annot) : option ctag =
+  match x with
+  | EffectAnnotSTT -> Some STT
+  | EffectAnnotGhost _ -> Some STT_Ghost
+  | EffectAnnotAtomic _ -> Some STT_Atomic
+  | EffectAnnotAtomicOrGhost _ -> None
 
 noeq
 type proof_hint_type =

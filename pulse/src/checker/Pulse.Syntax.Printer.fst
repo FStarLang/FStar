@@ -182,7 +182,8 @@ let effect_annot_to_string = function
   | EffectAnnotSTT -> "stt"
   | EffectAnnotGhost { opens } -> sprintf "stt_ghost %s" (term_to_string opens)
   | EffectAnnotAtomic { opens } -> sprintf "stt_atomic %s" (term_to_string opens)
-  
+  | EffectAnnotAtomicOrGhost { opens } -> sprintf "stt_atomic_or_ghost %s" (term_to_string opens)  
+
 let comp_to_string (c:comp)
   : T.Tac string
   = match c with
