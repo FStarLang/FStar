@@ -19,8 +19,6 @@ module Pulse.Lib.SpinLock
 open Pulse.Lib.Pervasives
 open Pulse.Lib.CancellableInvariant
 
-
-module Box = Pulse.Lib.Box
 module U32 = FStar.UInt32
 module GR = Pulse.Lib.GhostReference
 
@@ -57,7 +55,7 @@ type lock = {
 }
 
 let lock_alive l #p v =
-  inv l.i.i (cancellable l.i.t (lock_inv l.r l.gr v)) ** active p l.i.t
+  inv (iref_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v)) ** active p l.i
 
 let lock_acquired l = GR.pts_to l.gr #(half_perm full_perm) 1ul
 
@@ -92,11 +90,11 @@ fn rec acquire_aux (#v:vprop) (#p:perm) (l:lock)
 {
   unfold (lock_alive l #p v);
   let b =
-    with_invariants l.i.i
+    with_invariants (iref_of l.i)
       returns b:bool
-      ensures active p l.i.t **
+      ensures active p l.i **
               (if b then v ** GR.pts_to l.gr #(half_perm full_perm) 1ul else emp) {
-      take l.i.t;
+      unpack_cinv_vp l.i;
       unfold lock_inv;
       unfold lock_inv_aux;
       let b = cas l.r 0ul 1ul;
@@ -107,9 +105,9 @@ fn rec acquire_aux (#v:vprop) (#p:perm) (l:lock)
         rewrite emp as (if (1ul = 0ul) then v else emp);
         fold (lock_inv_aux l.r l.gr v);
         fold (lock_inv l.r l.gr v);
-        give l.i.t;
-        assert (cancellable l.i.t (lock_inv l.r l.gr v) **
-                active p l.i.t **
+        pack_cinv_vp l.i;
+        assert (cinv_vp l.i (lock_inv l.r l.gr v) **
+                active p l.i **
                 GR.pts_to l.gr #(half_perm full_perm) 1ul **
                 v);
         let b = true;
@@ -120,9 +118,9 @@ fn rec acquire_aux (#v:vprop) (#p:perm) (l:lock)
         elim_cond_false _ _ _;
         fold (lock_inv_aux l.r l.gr v);
         fold (lock_inv l.r l.gr v);
-        give l.i.t;
-        assert (cancellable l.i.t (lock_inv l.r l.gr v) **
-                active p l.i.t);
+        pack_cinv_vp l.i;
+        assert (cinv_vp l.i (lock_inv l.r l.gr v) **
+                active p l.i);
         let b = false;
         rewrite emp as
                 (if b then v ** GR.pts_to l.gr #(half_perm full_perm) 1ul else emp);
@@ -154,10 +152,10 @@ fn release_aux (#v:vprop) (#p:perm) (l:lock)
   unfold (lock_alive l #p v);
   unfold (lock_acquired l);
 
-  with_invariants l.i.i
+  with_invariants (iref_of l.i)
     returns _:unit
-    ensures active p l.i.t {
-    take l.i.t;
+    ensures active p l.i {
+    unpack_cinv_vp l.i;
     unfold (lock_inv l.r l.gr v);
     unfold (lock_inv_aux l.r l.gr v);
     GR.pts_to_injective_eq l.gr;
@@ -167,7 +165,7 @@ fn release_aux (#v:vprop) (#p:perm) (l:lock)
     GR.(l.gr := 0ul);
     fold (lock_inv_aux l.r l.gr v);
     fold (lock_inv l.r l.gr v);
-    give l.i.t;
+    pack_cinv_vp l.i;
   };
 
   fold (lock_alive l #p v)
@@ -184,8 +182,8 @@ fn share_aux (#v:vprop) (#p:perm) (l:lock)
   opens emp_inames
 {
   unfold (lock_alive l #p v);
-  share l.i.t;
-  dup_inv l.i.i (cancellable l.i.t (lock_inv l.r l.gr v));  // make this arg implicit
+  share l.i;
+  dup_inv (iref_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v));  // make this arg implicit
   fold (lock_alive l #(half_perm p) v);
   fold (lock_alive l #(half_perm p) v)
 } 
@@ -202,7 +200,7 @@ fn gather_aux (#v:vprop) (#p:perm) (l:lock)
 {
   unfold (lock_alive l #(half_perm p) v);
   unfold (lock_alive l #(half_perm p) v);
-  gather l.i.t;
+  gather l.i;
   fold (lock_alive l #p v);
   drop_ (inv _ _)
 } 

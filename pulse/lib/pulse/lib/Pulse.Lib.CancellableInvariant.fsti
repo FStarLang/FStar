@@ -19,51 +19,48 @@ module Pulse.Lib.CancellableInvariant
 open Pulse.Lib.Pervasives
 
 [@@ erasable]
-val token : Type0
-
-val cancellable (t:token) (v:vprop) : vprop
-
-val cancellable_big (t:token) (v:vprop)
-  : Lemma (is_big v ==> is_big (cancellable t v))
-
-val active (p:perm) (t:token) : vprop
-
-val taken (t:token) : vprop
-
-[@@ erasable]
-noeq
-type cinv =
-  | E : i:iref -> t:token -> cinv
+val cinv : Type0
 
 instance val non_informative_cinv
   : NonInformative.non_informative cinv
 
+val cinv_vp (c:cinv) (v:vprop) : vprop
+
+val is_big_cinv_vp (c:cinv) (v:vprop)
+  : Lemma (is_big v ==> is_big (cinv_vp c v))
+
+val active (p:perm) (c:cinv) : vprop
+
+val iref_of (c:cinv) : GTot iref
+
 val new_cancellable_invariant (v:vprop { is_big v })
   : stt_ghost cinv emp_inames
       v
-      (fun r -> inv r.i (cancellable r.t v) ** active full_perm r.t)
+      (fun c -> inv (iref_of c) (cinv_vp c v) ** active full_perm c)
 
-val take (#p:perm) (#v:vprop) (t:token)
+val unpacked (c:cinv) : vprop
+
+val unpack_cinv_vp (#p:perm) (#v:vprop) (c:cinv)
   : stt_ghost unit emp_inames
-      (cancellable t v ** active p t)
-      (fun _ -> v ** active p t ** taken t)
+      (cinv_vp c v ** active p c)
+      (fun _ -> v ** unpacked c ** active p c)
 
-val give (#v:vprop) (t:token)
+val pack_cinv_vp (#v:vprop) (c:cinv)
   : stt_ghost unit emp_inames
-      (v ** taken t)
-      (fun _ -> cancellable t v)
+      (v ** unpacked c)
+      (fun _ -> cinv_vp c v)
 
-val share (#p:perm) (t:token)
+val share (#p:perm) (c:cinv)
   : stt_ghost unit emp_inames
-      (active p t)
-      (fun _ -> active (half_perm p) t ** active (half_perm p) t)
+      (active p c)
+      (fun _ -> active (half_perm p) c ** active (half_perm p) c)
 
-val gather (#p:perm) (t:token)
+val gather (#p:perm) (c:cinv)
   : stt_ghost unit emp_inames
-      (active (half_perm p) t ** active (half_perm p) t)
-      (fun _ -> active p t)
+      (active (half_perm p) c ** active (half_perm p) c)
+      (fun _ -> active p c)
 
-val cancel (#v:vprop) (i:cinv)
-  : stt_ghost unit (add_inv emp_inames i.i)
-      (inv i.i (cancellable i.t v) ** active full_perm i.t)
+val cancel (#v:vprop) (c:cinv)
+  : stt_ghost unit (add_inv emp_inames (iref_of c))
+      (inv (iref_of c) (cinv_vp c v) ** active full_perm c)
       (fun _ -> v)
