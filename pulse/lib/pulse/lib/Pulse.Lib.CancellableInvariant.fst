@@ -46,6 +46,11 @@ let active p t = GR.pts_to t #(half_perm p) true
 
 let taken t = GR.pts_to t #(half_perm full_perm) true
 
+instance non_informative_cinv = {
+  reveal = (fun r -> Ghost.reveal r) <: NonInformative.revealer cinv;
+}
+
+
 ```pulse
 ghost
 fn new_cancellable_invariant_aux (v:vprop { is_big v })
