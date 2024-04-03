@@ -23,18 +23,6 @@ module U32 = FStar.UInt32
 module B = Pulse.Lib.Box
 module GR = Pulse.Lib.GhostReference
 
-let big_star (p q : vprop)
-: Lemma
-    (requires is_big p /\ is_big q)
-    (ensures is_big (p ** q))
-    [SMTPat (is_big (p ** q))] = big_star p q
-
-let big_exists (#a:Type u#a) (p: a -> vprop)
-: Lemma
-    (requires forall x. is_big (p x))
-    (ensures is_big (op_exists_Star p))
-    [SMTPat (is_big (op_exists_Star p))] = big_exists p
-
 let lock_inv_aux (r:B.box U32.t) (gr:GR.ref U32.t) (v:vprop) : (w:vprop { is_big v ==> is_big w })  =
   exists* i p. B.pts_to r #full_perm i **
                GR.pts_to gr #p i **

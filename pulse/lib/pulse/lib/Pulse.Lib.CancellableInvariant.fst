@@ -30,18 +30,6 @@ instance non_informative_cinv = {
   reveal = (fun r -> Ghost.reveal r) <: NonInformative.revealer cinv;
 }
 
-let big_star (p q : vprop)
-: Lemma
-    (requires is_big p /\ is_big q)
-    (ensures is_big (p ** q))
-    [SMTPat (is_big (p ** q))] = big_star p q
-
-let big_exists (#a:Type u#a) (p: a -> vprop)
-: Lemma
-    (requires forall x. is_big (p x))
-    (ensures is_big (op_exists_Star p))
-    [SMTPat (is_big (op_exists_Star p))] = big_exists p
-
 let cinv_vp_aux (r:GR.ref bool) (v:vprop) : (w:vprop { is_big v ==> is_big w }) =
   exists* (b:bool). GR.pts_to r #(half_perm full_perm) b **
                     (if b then v else emp)

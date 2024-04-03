@@ -19,18 +19,6 @@ module Pulse.Lib.FlippableInv
 open Pulse.Lib.Pervasives
 module GR = Pulse.Lib.GhostReference
 
-let big_star (p q : vprop)
-: Lemma
-    (requires is_big p /\ is_big q)
-    (ensures is_big (p ** q))
-    [SMTPat (is_big (p ** q))] = big_star p q
-
-let big_exists (#a:Type u#a) (p: a -> vprop)
-: Lemma
-    (requires forall x. is_big (p x))
-    (ensures is_big (op_exists_Star p))
-    [SMTPat (is_big (op_exists_Star p))] = big_exists p
-
 let finv_p (p:vprop { is_big p }) (r : GR.ref bool) : v:vprop { is_big v } =
   exists* (b:bool). GR.pts_to r #one_half b ** (if b then p else emp)
 

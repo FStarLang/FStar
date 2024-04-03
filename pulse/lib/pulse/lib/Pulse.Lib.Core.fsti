@@ -71,6 +71,17 @@ val down2 (p:vprop) : small_vprop
 val up2 (p:small_vprop) : vprop
 let is_small (v:vprop) : prop = up2 (down2 v) == v
 
+//
+// A note on smt patterns on is_small and is_big lemmas:
+//
+// While the patterns on the individual lemmas are goal-directed,
+//   there are multiple ways to prove, say, is_big (p ** q)
+//
+// Either via, is_big p /\ is_big q ==> is_big (p ** q)
+// or via, is_small p /\ is_small q ==> is_small (p ** q) ==> is_big (p ** q)
+//
+// This is a bit suboptimal
+//
 val small_is_also_big (v:vprop)
   : Lemma (is_small v ==> is_big v)
           [SMTPat (is_big v)]
@@ -89,6 +100,7 @@ val big_star (p q : vprop)
 : Lemma
     (requires is_big p /\ is_big q)
     (ensures is_big (p ** q))
+    [SMTPat (is_big (p ** q))]
 
 val small_star (p q : vprop)
 : Lemma
@@ -102,6 +114,7 @@ val big_exists (#a:Type u#a) (p: a -> vprop)
 : Lemma
     (requires forall x. is_big (p x))
     (ensures is_big (op_exists_Star p))
+    [SMTPat (is_big (op_exists_Star p))]
 
 val small_exists (#a:Type u#a) (p: a -> vprop)
 : Lemma
