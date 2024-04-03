@@ -171,7 +171,7 @@ fn share_aux (#v:vprop) (#p:perm) (l:lock)
   opens emp_inames
 {
   unfold (lock_alive l #p v);
-  share l.i;
+  Pulse.Lib.CancellableInvariant.share l.i;
   dup_inv (iref_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v));  // make this arg implicit
   fold (lock_alive l #(half_perm p) v);
   fold (lock_alive l #(half_perm p) v)
@@ -189,7 +189,7 @@ fn gather_aux (#v:vprop) (#p:perm) (l:lock)
 {
   unfold (lock_alive l #(half_perm p) v);
   unfold (lock_alive l #(half_perm p) v);
-  gather l.i;
+  Pulse.Lib.CancellableInvariant.gather l.i;
   fold (lock_alive l #p v);
   drop_ (inv _ _)
 } 

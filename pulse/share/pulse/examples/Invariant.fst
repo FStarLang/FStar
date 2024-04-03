@@ -212,3 +212,46 @@ fn t2 ()
   123
 }
 ```
+
+assume val p_to_q : unit -> stt_atomic unit emp_inames p (fun _ -> p ** q)
+assume val ghost_p_to_q : unit -> stt_ghost unit emp_inames p (fun _ -> p ** q)
+
+let folded_inv (i:iref) = inv i p
+
+```pulse
+atomic
+fn test_returns0 (i:iref) (b:bool)
+  requires folded_inv i
+  ensures folded_inv i ** q
+  opens (add_inv emp_inames i)
+{
+  unfold folded_inv i;
+  with_invariants i
+    returns _:unit
+    ensures q {
+    if b {
+      p_to_q ()
+    } else {
+      ghost_p_to_q ()
+    }
+  };
+  fold folded_inv i
+}
+```
+
+```pulse
+ghost
+fn test_returns1 (i:iref)
+  requires folded_inv i
+  ensures folded_inv i ** q
+  opens (add_inv emp_inames i)
+{
+  unfold folded_inv i;
+  with_invariants i
+    returns _:unit
+    ensures q {
+    ghost_p_to_q ()
+  };
+  fold folded_inv i
+}
+```
