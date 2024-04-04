@@ -294,9 +294,10 @@ let rec open_st_term_ln' (e:st_term)
       open_st_term_ln' body x i;
       match returns_inv with
       | None -> ()
-      | Some (b, r) ->
+      | Some (b, r, is) ->
         open_term_ln' b.binder_ty x i;
-        open_term_ln' r x (i + 1)
+        open_term_ln' r x (i + 1);
+        open_term_ln' is x i
 
 // The Tm_Match? and __brs_of conditions are to prove that the ln_branches' below
 // satisfies the termination refinment.
@@ -512,9 +513,10 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       ln_weakening_st body i j;
       match returns_inv with
       | None -> ()
-      | Some (b, r) ->
+      | Some (b, r, is) ->
         ln_weakening b.binder_ty i j;
-        ln_weakening r (i + 1) (j + 1)
+        ln_weakening r (i + 1) (j + 1);
+        ln_weakening is i j
 
 assume
 val r_open_term_ln_inv' (e:R.term) (x:R.term { RT.ln x }) (i:index)
@@ -702,10 +704,10 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv_st' body x i;
       match returns_inv with
       | None -> ()
-      | Some (b, r) ->
+      | Some (b, r, is) ->
         open_term_ln_inv' b.binder_ty x i;
-        open_term_ln_inv' r x (i + 1)
-
+        open_term_ln_inv' r x (i + 1);
+        open_term_ln_inv' is x i
 #pop-options
 
 assume
@@ -890,9 +892,10 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_st_term_ln' body x i;
       match returns_inv with
       | None -> ()
-      | Some (ret_ty, returns_inv) ->
+      | Some (ret_ty, returns_post, ret_is) ->
         close_term_ln' ret_ty.binder_ty x i;
-        close_term_ln' returns_inv x (i + 1)
+        close_term_ln' returns_post x (i + 1);
+        close_term_ln' ret_is x i
 #pop-options
 let close_comp_ln (c:comp) (v:var)
   : Lemma 

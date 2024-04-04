@@ -158,10 +158,10 @@ let bind_t (case_c1 case_c2:comp_st -> bool) =
       (post_typing:tot_typing (push_binding g (snd px) (fst px) (comp_res c2))
                               (open_term_nv (comp_post c2) px)
                                       tm_vprop) ->
-      (bias_towards_continuation:bool) ->
+      (post_hint:post_hint_opt g { comp_post_matches_hint c2 post_hint }) ->
     T.TacH (t:st_term &
             c:comp_st { st_comp_of_comp c == st_comp_with_pre (st_comp_of_comp c2) pre  /\
-                        (bias_towards_continuation ==> effect_annot_of_comp c == effect_annot_of_comp c2) } &
+                        comp_post_matches_hint c post_hint } &
             st_typing g t c)
            (requires fun _ ->
               let _, x = px in
@@ -236,7 +236,7 @@ let lift_ghost_atomic (#g:env) (#e:st_term) (#c:comp_st { C_STGhost? c }) (d:st_
     d
 
 let mk_bind_ghost_ghost : bind_t C_STGhost? C_STGhost? =
-  fun g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing bias_k ->
+  fun g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing post_hint ->
   let _, x = px in
   let b = nvar_as_binder px (comp_res c1) in
   let C_STGhost inames1 sc1 = c1 in
@@ -246,7 +246,7 @@ let mk_bind_ghost_ghost : bind_t C_STGhost? C_STGhost? =
     let bc = Bind_comp g x c1 c2 res_typing x post_typing in
     (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
   end
-  else if bias_k
+  else if (Some? post_hint)
   then (
     let d_e1 = T_Sub _ _ _ _ d_e1 (STS_GhostInvs _ sc1 inames1 inames2 (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
     let c1 = C_STGhost inames2 sc1 in
@@ -266,7 +266,7 @@ let mk_bind_ghost_ghost : bind_t C_STGhost? C_STGhost? =
 #push-options "--query_stats"
 let mk_bind_atomic_atomic
   : bind_t C_STAtomic? C_STAtomic?
-  = fun g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing bias_k ->
+  = fun g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing post_hint ->
       let _, x = px in
       let b = nvar_as_binder px (comp_res c1) in
       let C_STAtomic inames1 obs1 sc1 = c1 in
@@ -278,7 +278,7 @@ let mk_bind_atomic_atomic
           let bc = Bind_comp g x c1 c2 res_typing x post_typing in
           (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
         end
-        else if bias_k
+        else if (Some? post_hint)
         then (
           let d_e1 = T_Sub _ _ _ _ d_e1 (STS_AtomicInvs _ sc1 inames1 inames2 obs1 obs1 (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
           let c1 = C_STAtomic inames2 obs1 sc1 in
@@ -313,11 +313,11 @@ let rec mk_bind (g:env)
                 (post_typing:tot_typing (push_binding g (snd px) (fst px) (comp_res c2))
                                         (open_term_nv (comp_post c2) px)
                                         tm_vprop)
-                (bias_towards_continuation:bool)
+                (post_hint:post_hint_opt g { comp_post_matches_hint c2 post_hint })
   : T.TacH (t:st_term &
             c:comp_st {
               st_comp_of_comp c == st_comp_with_pre (st_comp_of_comp c2) pre /\
-              (bias_towards_continuation ==> effect_annot_of_comp c == effect_annot_of_comp c2) } &
+              comp_post_matches_hint c post_hint } &
             st_typing g t c)
            (requires fun _ ->
               let _, x = px in
@@ -334,87 +334,97 @@ let rec mk_bind (g:env)
   = let open Pulse.PP in
     fail_doc g (Some e1.range)
       [text "Cannot compose computations in this " ^/^ text tag ^/^ text " block:";
-       prefix 4 1 (text "This computation has effect: ") (pp (effect_annot_of_comp c1));
-       prefix 4 1 (text "The continuation has effect: ") (pp (effect_annot_of_comp c2))]
+       prefix 4 1 (text "This computation has effect: ") (pp e1);
+       prefix 4 1 (text "The continuation has effect: ") (pp e2)]
   in
+  T.print (FStar.Printf.sprintf "Trying mk bind for %s and %s and post_hint: %s\n" (P.comp_to_string c1) (P.comp_to_string c2)
+             (match post_hint with
+              | Some post -> P.effect_annot_to_string post.effect_annot
+              | None -> "<>"
+   ));
   match c1, c2 with
   | C_ST _, C_ST _ ->
-    mk_bind_st_st g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing bias_towards_continuation
+    mk_bind_st_st g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing post_hint
 
   | C_STGhost _ _, C_STGhost _ _ ->
-    mk_bind_ghost_ghost g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing bias_towards_continuation
+    mk_bind_ghost_ghost g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing post_hint
 
   | C_STAtomic inames1 obs1 sc1, C_STAtomic inames2 obs2 sc2 ->
     if at_most_one_observable obs1 obs2
     then (
-      mk_bind_atomic_atomic g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing bias_towards_continuation
+      mk_bind_atomic_atomic g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing post_hint
     ) 
-    else if bias_towards_continuation
+    else if (Some? post_hint)
     then fail_bias "atomic"
     else (
       let d_e1 = T_Lift _ _ _ _ d_e1 (Lift_STAtomic_ST _ c1) in
-      mk_bind g pre e1 e2 _ c2 px d_e1 d_c1res d_e2 res_typing post_typing bias_towards_continuation
+      mk_bind g pre e1 e2 _ c2 px d_e1 d_c1res d_e2 res_typing post_typing post_hint
     )
 
   | C_STAtomic inames _ _, C_ST _ ->
     let d_e1 = T_Lift _ _ _ _ d_e1 (Lift_STAtomic_ST _ c1) in
-    mk_bind g pre e1 e2 _ c2 px d_e1 d_c1res d_e2 res_typing post_typing bias_towards_continuation
+    mk_bind g pre e1 e2 _ c2 px d_e1 d_c1res d_e2 res_typing post_typing post_hint
 
   | C_ST _, C_STAtomic inames _ _ ->
-    if bias_towards_continuation
+    if (Some? post_hint)
     then fail_bias "atomic"
     else (
       let d_e2  = T_Lift _ _ _ _ d_e2 (Lift_STAtomic_ST _ c2) in
-      let (| t, c, d |) = mk_bind g pre e1 e2 _ _ px d_e1 d_c1res d_e2 res_typing post_typing bias_towards_continuation in
+      let (| t, c, d |) = mk_bind g pre e1 e2 _ _ px d_e1 d_c1res d_e2 res_typing post_typing post_hint in
       (| t, c, d |)
     )
 
   | C_STGhost _ _, C_STAtomic _ Neutral _ -> (
+    T.print (FStar.Printf.sprintf "try_lift_ghost_atomic with res : %s\n" (T.term_to_string (comp_res c1)));
     match try_lift_ghost_atomic d_e1 with
     | Some d_e1 ->
-      mk_bind g pre e1 e2 _ c2 px d_e1 d_c1res d_e2 res_typing post_typing bias_towards_continuation
+      T.print ("Returned some\n");
+      mk_bind g pre e1 e2 _ c2 px d_e1 d_c1res d_e2 res_typing post_typing post_hint
     | None ->
-      if bias_towards_continuation
-      then fail_bias "atomic"
-      else (
+      T.print ("Returned none\n");
+      match post_hint with
+      | None
+      | Some { effect_annot = EffectAnnotAtomicOrGhost _ } ->
         let d_e2 = T_Lift _ _ _ _ d_e2 (Lift_Neutral_Ghost _ c2) in
-        let (| t, c, d |) = mk_bind g pre e1 e2 _ _ px d_e1 d_c1res d_e2 res_typing post_typing bias_towards_continuation in
+        let (| t, c, d |) = mk_bind g pre e1 e2 _ _ px d_e1 d_c1res d_e2 res_typing post_typing post_hint in
         (| t, c, d |)
-      )
+      | _ -> fail_bias "atomic"
   )
 
   | C_STAtomic _ Neutral _, C_STGhost _ _ -> (
-    if bias_towards_continuation
-    then (
+    match post_hint with
+    | Some { effect_annot = EffectAnnotGhost _ } ->
       let d_e1 = T_Lift _ _ _ _ d_e1 (Lift_Neutral_Ghost _ c1) in
-      mk_bind g pre e1 e2 _ c2 px d_e1 d_c1res d_e2 res_typing post_typing bias_towards_continuation
-    )
-    else (
+      mk_bind g pre e1 e2 _ c2 px d_e1 d_c1res d_e2 res_typing post_typing post_hint
+
+    | _ ->
       match try_lift_ghost_atomic d_e2 with
       | Some d_e2 ->
-        let (| t, c, d |) = mk_bind g pre e1 e2 _ _ px d_e1 d_c1res d_e2 res_typing post_typing bias_towards_continuation in
+        let (| t, c, d |) = mk_bind g pre e1 e2 _ _ px d_e1 d_c1res d_e2 res_typing post_typing post_hint in
         (| t, c, d |)
       | None ->
         let d_e1 = T_Lift _ _ _ _ d_e1 (Lift_Neutral_Ghost _ c1) in
-        mk_bind g pre e1 e2 _ c2 px d_e1 d_c1res d_e2 res_typing post_typing bias_towards_continuation
-    )
+        mk_bind g pre e1 e2 _ c2 px d_e1 d_c1res d_e2 res_typing post_typing post_hint
   )
 
   | C_STGhost _ _, C_ST _
   | C_STGhost _ _, C_STAtomic _ _ _ ->
+    T.print ("Trying lift_ghost_atomic 1\n");
     let d_e1 = lift_ghost_atomic d_e1 in
-    mk_bind g pre e1 e2 _ c2 px d_e1 d_c1res d_e2 res_typing post_typing bias_towards_continuation
+    T.print ("Trying lift_ghost_atomic 1 DONE\n");
+    mk_bind g pre e1 e2 _ c2 px d_e1 d_c1res d_e2 res_typing post_typing post_hint
 
   | C_ST _, C_STGhost _ _
   | C_STAtomic _ _ _, C_STGhost _ _ ->
-    if bias_towards_continuation
+    if (Some? post_hint)
     then fail_bias "ghost"
     else (
+      T.print ("Trying lift_ghost_atomic 2\n");
       let d_e2 = lift_ghost_atomic d_e2 in
-      let (| t, c, d |) = mk_bind g pre e1 e2 _ _ px d_e1 d_c1res d_e2 res_typing post_typing bias_towards_continuation in
+      T.print ("Trying lift_ghost_atomic 2 DONE\n");
+      let (| t, c, d |) = mk_bind g pre e1 e2 _ _ px d_e1 d_c1res d_e2 res_typing post_typing post_hint in
       (| t, c, d |)
     )
-
 #pop-options
 
 let bind_res_and_post_typing g c2 x post_hint 

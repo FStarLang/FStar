@@ -391,10 +391,11 @@ let rec st_term_to_string' (level:string) (t:st_term)
         (st_term_to_string' level body)
         (match returns_inv with
          | None -> ""
-         | Some (b, t) ->
-          sprintf "\nreturns %s\nensures %s"
+         | Some (b, t, is) ->
+          sprintf "\nreturns %s\nensures %s\nopens %s"
             (binder_to_string b)
-            (term_to_string t))
+            (term_to_string t)
+            (term_to_string is))
 
 and branches_to_string brs : T.Tac _ =
   match brs with

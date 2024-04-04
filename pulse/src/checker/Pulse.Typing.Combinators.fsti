@@ -51,10 +51,10 @@ val mk_bind (g:env)
             (post_typing:tot_typing (push_binding g (snd px) (fst px) (comp_res c2))
                                      (open_term_nv (comp_post c2) px)
                                      tm_vprop)
-            (bias_towards_continuation:bool)
+            (post_hint:post_hint_opt g { comp_post_matches_hint c2 post_hint })
   : T.TacH (t:st_term &
             c:comp_st { st_comp_of_comp c == st_comp_with_pre (st_comp_of_comp c2) pre /\
-                        (bias_towards_continuation ==> effect_annot_of_comp c == effect_annot_of_comp c2) } &
+                        comp_post_matches_hint c post_hint } &
             st_typing g t c)
            (requires fun _ ->
               let _, x = px in

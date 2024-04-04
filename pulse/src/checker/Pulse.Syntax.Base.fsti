@@ -284,7 +284,7 @@ type st_term' =
   | Tm_WithInv {
       name : term; // invariant name is an F* term that is an Tm_fvar or Tm_name
       body : st_term;
-      returns_inv : option (binder & vprop);
+      returns_inv : option (binder & vprop & term);  // returns _:t ensures p opens is
     }
 
 and st_term = {

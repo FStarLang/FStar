@@ -459,7 +459,7 @@ let try_get_non_informative_witness g u ty ty_typing
     let r = T.call_subtac r_env FStar.Tactics.Typeclasses.tcresolve u r_goal in
     match r with
     | None, issues ->
-      T.log_issues issues;
+      // T.log_issues issues;
       None
     | Some r_dict, _ -> (
       // T.print (Printf.sprintf "Resolved to %s" (T.term_to_string r_dict));

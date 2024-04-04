@@ -86,13 +86,19 @@ let post_typing_as_abstraction
   : FStar.Ghost.erased (RT.tot_typing (elab_env g) (mk_abs ty t) (mk_arrow ty tm_vprop))                                 
   = admit()
 
-let check_effect_annot (g:env) (e:effect_annot) : T.Tac (effect_annot_typing g e) =
+let check_effect_annot (g:env) (e:effect_annot) : T.Tac (e:effect_annot & effect_annot_typing g e) =
+  let check_opens opens : T.Tac _ = CP.check_term g opens T.E_Total tm_inames in
   match e with
-  | EffectAnnotSTT -> ()
-  | EffectAnnotGhost { opens }
-  | EffectAnnotAtomic { opens }
+  | EffectAnnotSTT -> (| e, () |)
+  | EffectAnnotGhost { opens } ->
+    let (| opens, d |) = check_opens opens in
+    (| EffectAnnotGhost { opens }, d |)
+  | EffectAnnotAtomic { opens } ->
+    let (| opens, d |) = check_opens opens in
+    (| EffectAnnotAtomic { opens }, d |)
   | EffectAnnotAtomicOrGhost { opens } ->
-    CP.core_check_term g opens T.E_Total tm_inames
+    let (| opens, d |) = check_opens opens in
+    (| EffectAnnotAtomicOrGhost { opens }, d |)
 
 let intro_post_hint g effect_annot ret_ty_opt post =
   let x = fresh g in
@@ -106,7 +112,7 @@ let intro_post_hint g effect_annot ret_ty_opt post =
   let (| post, post_typing |) = CP.check_vprop (push_binding g x ppname_default ret_ty) (open_term_nv post (v_as_nv x)) in 
   let post' = close_term post x in
   Pulse.Typing.FV.freevars_close_term post x 0;
-  let effect_annot_typing = check_effect_annot g effect_annot in
+  let (| effect_annot, effect_annot_typing |) = check_effect_annot g effect_annot in
   assume (open_term post' x == post);
   { g;
     effect_annot;
@@ -427,7 +433,7 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
           e2_typing
           t_typing
           post_typing
-          (Some? post_hint)
+          post_hint
       in
       (| e, c, e_typing |)
     )

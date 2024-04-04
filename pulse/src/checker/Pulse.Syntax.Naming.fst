@@ -225,9 +225,10 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse_st' body x i;
       match returns_inv with
       | None -> ()
-      | Some (b, r) ->
+      | Some (b, r, is) ->
         close_open_inverse' b.binder_ty x i;
-        close_open_inverse' r x (i + 1)
+        close_open_inverse' r x (i + 1);
+        close_open_inverse' is x i
    
 let close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )
   : Lemma (ensures close_term (open_term t x) x == t)

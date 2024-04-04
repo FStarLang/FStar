@@ -45,7 +45,6 @@ let check
   let (| preR, preR_typing |) = check_tot_term g preR tm_vprop in
 
   let postL_hint = intro_post_hint g EffectAnnotSTT None postL in
-
   let (| eL, cL, eL_typing |) =
     let ppname = mk_ppname_no_range "_par_l" in
     let r = check g preL preL_typing (Some postL_hint) ppname eL in

@@ -215,9 +215,10 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_st_term' body x i;
       match returns_inv with
       | None -> ()
-      | Some (b, r) ->
+      | Some (b, r, is) ->
         freevars_close_term' b.binder_ty x i;
-        freevars_close_term' r x (i + 1)
+        freevars_close_term' r x (i + 1);
+        freevars_close_term' is x i
 #pop-options
 
 let freevars_close_term (e:term) (x:var) (i:index)
