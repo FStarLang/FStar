@@ -168,7 +168,8 @@ fn cancel_aux (#v:vprop) (c:cinv)
 {
   with_invariants (iref_of c)
     returns _:unit
-    ensures v {
+    ensures inv (iref_of c) (cinv_vp c v) ** v
+    opens (add_inv emp_inames (iref_of c)) {
     cancel_ c
   };
   drop_ (inv (iref_of c) _)

@@ -86,7 +86,8 @@ let post_typing_as_abstraction
   : FStar.Ghost.erased (RT.tot_typing (elab_env g) (mk_abs ty t) (mk_arrow ty tm_vprop))                                 
   = admit()
 
-let check_effect_annot (g:env) (e:effect_annot) : T.Tac (e:effect_annot & effect_annot_typing g e) =
+let check_effect_annot (g:env) (e:effect_annot)
+  : T.Tac (e':effect_annot { effect_annot_labels_match e e' } & effect_annot_typing g e') =
   let check_opens opens : T.Tac _ = CP.check_term g opens T.E_Total tm_inames in
   match e with
   | EffectAnnotSTT -> (| e, () |)
@@ -121,7 +122,6 @@ let intro_post_hint g effect_annot ret_ty_opt post =
     post=post';
     x; post_typing_src=post_typing;
     post_typing=post_typing_as_abstraction #_ #_ #_ #post' post_typing }
-
 
 let comp_typing_as_effect_annot_typing (#g:env) (#c:comp_st) (ct:comp_typing_u g c)
 : effect_annot_typing g (effect_annot_of_comp c)

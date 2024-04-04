@@ -389,12 +389,8 @@ let check
 
   let (| body, c_body, body_typing |) =
     let ppname = mk_ppname_no_range "with_inv_body" in
-    T.print "Checking withinv body\n";
     let r = check g pre_body pre_body_typing (Some post_hint_body) ppname body in
-    T.print "Checked withinv body\n";
-    let r = apply_checker_result_k r ppname in
-    T.print "Applied checker result\n";
-    r
+    apply_checker_result_k r ppname
   in
 
   assert (comp_inames c_body == opens_remove_i);
@@ -467,9 +463,7 @@ let check
           STS_GhostInvs _ st add_inv opens tok |) in
     let d : st_typing _ _ c_out_opens =
       T_Sub _ _ _ _ d d_sub_c in
-    let r = checker_result_for_st_typing (| _, _, d |) res_ppname in
-    T.print "Returning from withinv\n";
-    r
+    checker_result_for_st_typing (| _, _, d |) res_ppname
 
   | EffectAnnotSTT ->
     let d = T_Lift _ _ _ _ d (Lift_STAtomic_ST _ c_out) in

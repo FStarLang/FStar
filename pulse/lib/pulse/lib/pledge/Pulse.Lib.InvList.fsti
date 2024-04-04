@@ -1,4 +1,3 @@
-
 (*
    Copyright 2024 Microsoft Research
 
@@ -45,6 +44,11 @@ let rec invlist_v (is : invlist) : vprop =
   | [] -> emp
   | i :: is -> fst i ** invlist_v is
 
+let rec invlist_inv (is:invlist) : vprop =
+  match is with
+  | [] -> emp
+  | i :: is -> inv (snd i) (fst i) ** invlist_inv is
+
 val shift_invlist_one
   (#a:Type0)
   (p : vprop)
@@ -52,19 +56,20 @@ val shift_invlist_one
   (is : invlist{not (mem_inv (invlist_names is) i)})
   (#pre:vprop)
   (#post : a -> vprop)
-  (f : unit -> stt_ghost a emp_inames (invlist_v ((| p, i |) :: is) ** pre) (fun v -> invlist_v ((| p, i |) :: is) ** post v)) :
-       unit -> stt_ghost a emp_inames (invlist_v is ** (p ** pre)) (fun v -> invlist_v is ** (p ** post v))
+  (f : unit -> stt_ghost a emp_inames (invlist_v (( p, i ) :: is) ** pre) (fun v -> invlist_v (( p, i ) :: is) ** post v))
+  
+  : unit -> stt_ghost a emp_inames (invlist_v is ** (p ** pre)) (fun v -> invlist_v is ** (p ** post v))
 
 val with_invlist (#a:Type0) (#pre : vprop) (#post : a -> vprop)
   (is : invlist)
-  (f : unit -> stt_atomic a #Unobservable emp_inames (invlist_v is ** pre) (fun v -> invlist_v is ** post v))
-  : stt_atomic a #Unobservable (invlist_names is) pre (fun v -> post v)
+  (f : unit -> stt_ghost a emp_inames (invlist_v is ** pre) (fun v -> invlist_v is ** post v))
+  : stt_ghost a (invlist_names is) (invlist_inv is ** pre) (fun v -> invlist_inv is ** post v)
 
 (* A helper for a ghost-unit function. *)
-val with_invlist_ghost (#pre : vprop) (#post : vprop)
-  (is : invlist)
-  (f : unit -> stt_ghost unit (invlist_v is ** pre) (fun _ -> invlist_v is ** post))
-  : stt_atomic unit #Unobservable (invlist_names is) pre (fun _ -> post)
+// val with_invlist_ghost (#pre : vprop) (#post : vprop)
+//   (is : invlist)
+//   (f : unit -> stt_ghost unit (invlist_v is ** pre) (fun _ -> invlist_v is ** post))
+//   : stt_atomic unit #Unobservable (invlist_names is) pre (fun _ -> post)
 
 // TODO: change to just subset so invlist_sub_split is implementable in Ghost.
 // In unobservable, we should be able to prove that the names being a subset
@@ -80,6 +85,6 @@ lists at runtime. *)
 val invlist_reveal (is : erased invlist) : (is':invlist{reveal is == is'})
 
 val invlist_sub_split (is1 is2 : invlist) :
-  stt_ghost unit
+  stt_ghost unit emp_inames
     (pure (invlist_sub is1 is2) ** invlist_v is2)
     (fun _ -> invlist_v is1 ** Pulse.Lib.Priv.Trade0.stick (invlist_v is1) (invlist_v is2))

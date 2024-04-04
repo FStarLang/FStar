@@ -298,7 +298,9 @@ let mk_bind_atomic_atomic
       else (
         T.fail "Should have been handled separately"
       )
+#pop-options
 
+#push-options "--z3rlimit_factor 10 --fuel 0 --ifuel 1"
 let rec mk_bind (g:env) 
                 (pre:term)
                 (e1:st_term)
@@ -334,14 +336,9 @@ let rec mk_bind (g:env)
   = let open Pulse.PP in
     fail_doc g (Some e1.range)
       [text "Cannot compose computations in this " ^/^ text tag ^/^ text " block:";
-       prefix 4 1 (text "This computation has effect: ") (pp e1);
-       prefix 4 1 (text "The continuation has effect: ") (pp e2)]
+       prefix 4 1 (text "This computation has effect: ") (pp (effect_annot_of_comp c1));
+       prefix 4 1 (text "The continuation has effect: ") (pp (effect_annot_of_comp c2))]
   in
-  T.print (FStar.Printf.sprintf "Trying mk bind for %s and %s and post_hint: %s\n" (P.comp_to_string c1) (P.comp_to_string c2)
-             (match post_hint with
-              | Some post -> P.effect_annot_to_string post.effect_annot
-              | None -> "<>"
-   ));
   match c1, c2 with
   | C_ST _, C_ST _ ->
     mk_bind_st_st g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing post_hint
@@ -375,13 +372,10 @@ let rec mk_bind (g:env)
     )
 
   | C_STGhost _ _, C_STAtomic _ Neutral _ -> (
-    T.print (FStar.Printf.sprintf "try_lift_ghost_atomic with res : %s\n" (T.term_to_string (comp_res c1)));
     match try_lift_ghost_atomic d_e1 with
     | Some d_e1 ->
-      T.print ("Returned some\n");
       mk_bind g pre e1 e2 _ c2 px d_e1 d_c1res d_e2 res_typing post_typing post_hint
     | None ->
-      T.print ("Returned none\n");
       match post_hint with
       | None
       | Some { effect_annot = EffectAnnotAtomicOrGhost _ } ->
@@ -409,9 +403,7 @@ let rec mk_bind (g:env)
 
   | C_STGhost _ _, C_ST _
   | C_STGhost _ _, C_STAtomic _ _ _ ->
-    T.print ("Trying lift_ghost_atomic 1\n");
     let d_e1 = lift_ghost_atomic d_e1 in
-    T.print ("Trying lift_ghost_atomic 1 DONE\n");
     mk_bind g pre e1 e2 _ c2 px d_e1 d_c1res d_e2 res_typing post_typing post_hint
 
   | C_ST _, C_STGhost _ _
@@ -419,9 +411,7 @@ let rec mk_bind (g:env)
     if (Some? post_hint)
     then fail_bias "ghost"
     else (
-      T.print ("Trying lift_ghost_atomic 2\n");
       let d_e2 = lift_ghost_atomic d_e2 in
-      T.print ("Trying lift_ghost_atomic 2 DONE\n");
       let (| t, c, d |) = mk_bind g pre e1 e2 _ _ px d_e1 d_c1res d_e2 res_typing post_typing post_hint in
       (| t, c, d |)
     )
