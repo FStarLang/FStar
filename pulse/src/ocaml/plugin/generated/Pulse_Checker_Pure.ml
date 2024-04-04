@@ -4964,57 +4964,24 @@ let (try_get_non_informative_witness :
                                                               r_env
                                                               FStar_Tactics_Typeclasses.tcresolve
                                                               u r_goal))
-                                                        (fun uu___ ->
-                                                           (fun r ->
-                                                              match r with
-                                                              | (FStar_Pervasives_Native.None,
-                                                                 issues) ->
-                                                                  Obj.magic
-                                                                    (
-                                                                    Obj.repr
-                                                                    (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "Pulse.Checker.Pure.fst"
-                                                                    (Prims.of_int (462))
-                                                                    (Prims.of_int (6))
-                                                                    (Prims.of_int (462))
-                                                                    (Prims.of_int (25)))))
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "Pulse.Checker.Pure.fst"
-                                                                    (Prims.of_int (463))
-                                                                    (Prims.of_int (6))
-                                                                    (Prims.of_int (463))
-                                                                    (Prims.of_int (10)))))
-                                                                    (Obj.magic
-                                                                    (FStar_Tactics_V2_Builtins.log_issues
-                                                                    issues))
-                                                                    (fun
-                                                                    uu___ ->
-                                                                    FStar_Tactics_Effect.lift_div_tac
-                                                                    (fun
-                                                                    uu___1 ->
-                                                                    FStar_Pervasives_Native.None))))
-                                                              | (FStar_Pervasives_Native.Some
-                                                                 r_dict,
-                                                                 uu___) ->
-                                                                  Obj.magic
-                                                                    (
-                                                                    Obj.repr
-                                                                    (FStar_Tactics_Effect.lift_div_tac
-                                                                    (fun
-                                                                    uu___1 ->
+                                                        (fun r ->
+                                                           FStar_Tactics_Effect.lift_div_tac
+                                                             (fun uu___ ->
+                                                                match r with
+                                                                | (FStar_Pervasives_Native.None,
+                                                                   issues) ->
+                                                                    FStar_Pervasives_Native.None
+                                                                | (FStar_Pervasives_Native.Some
+                                                                   r_dict,
+                                                                   uu___1) ->
                                                                     FStar_Pervasives_Native.Some
                                                                     (Prims.Mkdtuple2
                                                                     ((Pulse_Syntax_Pure.wr
                                                                     r_dict
                                                                     (Pulse_RuntimeUtils.range_of_term
                                                                     ty)), ()))))))
-                                                             uu___))) uu___)))
-                                       uu___))) uu___))) uu___)
+                                                  uu___))) uu___))) uu___)))
+                 uu___)
 let (get_non_informative_witness :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.universe ->

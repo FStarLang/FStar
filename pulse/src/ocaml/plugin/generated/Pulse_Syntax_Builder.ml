@@ -168,8 +168,9 @@ let (tm_par :
 let (tm_with_inv :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.st_term ->
-      (Pulse_Syntax_Base.binder * Pulse_Syntax_Base.vprop)
-        FStar_Pervasives_Native.option -> Pulse_Syntax_Base.st_term')
+      (Pulse_Syntax_Base.binder * Pulse_Syntax_Base.vprop *
+        Pulse_Syntax_Base.term) FStar_Pervasives_Native.option ->
+        Pulse_Syntax_Base.st_term')
   =
   fun name ->
     fun body ->

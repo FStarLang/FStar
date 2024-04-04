@@ -133,8 +133,8 @@ let (check :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Par.fst"
-                                                                    (Prims.of_int (47))
-                                                                    (Prims.of_int (65))
+                                                                    (Prims.of_int (48))
+                                                                    (Prims.of_int (11))
                                                                     (Prims.of_int (67))
                                                                     (Prims.of_int (117)))))
                                                                     (Obj.magic
@@ -162,8 +162,8 @@ let (check :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Par.fst"
-                                                                    (Prims.of_int (47))
-                                                                    (Prims.of_int (65))
+                                                                    (Prims.of_int (48))
+                                                                    (Prims.of_int (11))
                                                                     (Prims.of_int (67))
                                                                     (Prims.of_int (117)))))
                                                                     (Obj.magic

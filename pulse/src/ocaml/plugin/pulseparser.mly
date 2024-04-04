@@ -235,8 +235,8 @@ withBindersOpt:
   | { [] }
 
 ensuresVprop:
-  | ret=option(RETURNS i=lidentOrUnderscore COLON r=term { (i, r) }) ENSURES s=pulseVprop
-    { ret, s }
+  | ret=option(RETURNS i=lidentOrUnderscore COLON r=term { (i, r) }) ENSURES s=pulseVprop maybe_opens=option(OPENS inv=appTermNoRecordExp { inv })
+    { ret, s, maybe_opens }
 
 pulseMatchBranch:
   | pat=pulsePattern RARROW LBRACE e=pulseStmt RBRACE

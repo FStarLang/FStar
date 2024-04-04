@@ -428,7 +428,7 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       let! join_vprop =
         match join_vprop with
         | None -> return None
-        | Some (None, t) -> 
+        | Some (None, t, _opens) -> 
           let! vp = desugar_vprop env t in
           return (Some vp)
       in
@@ -444,7 +444,7 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
 
     | Match { head; returns_annot; branches } ->
       let! head = desugar_term env head in
-      let! returns_annot = map_err_opt (fun (_, t) -> desugar_vprop env t) returns_annot in
+      let! returns_annot = map_err_opt (fun (_, t, _opens) -> desugar_vprop env t) returns_annot in
       let! branches = branches |> mapM (desugar_branch env) in
       return (SW.tm_match head returns_annot branches s.range)
 
@@ -488,20 +488,26 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       let! n1 = tosyntax env n1 in
       let! names = names |> mapM (tosyntax env) in
       let! body = desugar_stmt env body in
-      let! returns_ = 
+      let! returns_ =
+        let opens_tm opens_opt =
+          match opens_opt with
+          | Some opens -> desugar_term env opens
+          | None -> return SW.tm_emp_inames in
         match returns_ with
         | None -> return None
-        | Some (None, v) -> 
+        | Some (None, v, opens_opt) -> 
           let! v = desugar_vprop env v in
           let b = SW.mk_binder (Ident.id_of_text "_") (SW.tm_unknown s.range) in
-          return (Some (b, v))
-        | Some (Some (x, t), v) ->
+          let! opens = opens_tm opens_opt in
+          return (Some (b, v, opens))
+        | Some (Some (x, t), v, opens_opt) ->
           let! t = desugar_term env t in
           let env, bv = push_bv env x in
           let! v = desugar_vprop env v in
           let v = SW.close_term v bv.index in
           let b = SW.mk_binder x t in
-          return (Some (b, v))
+          let! opens = opens_tm opens_opt in
+          return (Some (b, v, opens))
       in
       (* the returns_ goes only to the outermost with_inv *)
       let tt = L.fold_right (fun nm body -> let nm : term = tm_expr nm s.range in SW.tm_with_inv nm body None s.range) names body in

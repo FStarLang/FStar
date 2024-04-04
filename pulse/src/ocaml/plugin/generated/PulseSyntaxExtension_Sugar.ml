@@ -160,7 +160,7 @@ let (__proj__Mkarray_init__item__len : array_init -> FStar_Parser_AST.term) =
   fun projectee -> match projectee with | { init; len;_} -> len
 type ensures_vprop =
   ((FStar_Ident.ident * FStar_Parser_AST.term) FStar_Pervasives_Native.option
-    * vprop)
+    * vprop * FStar_Parser_AST.term FStar_Pervasives_Native.option)
 type stmt'__Expr__payload = {
   e: FStar_Parser_AST.term }
 and stmt'__Assignment__payload =
