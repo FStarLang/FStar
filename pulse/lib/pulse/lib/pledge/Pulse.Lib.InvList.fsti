@@ -49,6 +49,11 @@ let rec invlist_inv (is:invlist) : vprop =
   | [] -> emp
   | i :: is -> inv (snd i) (fst i) ** invlist_inv is
 
+val dup_invlist_inv (is:invlist)
+  : stt_ghost unit emp_inames
+      (requires invlist_inv is)
+      (ensures fun _ -> invlist_inv is ** invlist_inv is)
+
 val shift_invlist_one
   (#a:Type0)
   (p : vprop)

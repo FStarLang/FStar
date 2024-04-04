@@ -21,6 +21,30 @@ module T0 = Pulse.Lib.Priv.Trade0
 
 ```pulse
 ghost
+fn rec dup_invlist_inv_aux (is:invlist)
+  requires invlist_inv is
+  ensures invlist_inv is ** invlist_inv is
+  decreases is
+{
+  match is {
+    Nil -> {
+      rewrite invlist_inv is as emp;
+      rewrite emp as invlist_inv is;
+      rewrite emp as invlist_inv is
+    }
+    Cons h t -> {
+      rewrite invlist_inv is as inv (snd h) (fst h) ** invlist_inv t;
+      dup_invlist_inv_aux t;
+      dup_inv (snd h) (fst h);
+      rewrite (inv (snd h) (fst h) ** invlist_inv t) as invlist_inv is;
+      rewrite (inv (snd h) (fst h) ** invlist_inv t) as invlist_inv is
+    }
+  }
+}
+```
+
+```pulse
+ghost
 fn __shift_invlist_one
   (#a:Type0)
   (p : vprop)
