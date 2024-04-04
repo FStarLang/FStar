@@ -27,8 +27,11 @@ let trade_elim_t is hyp extra concl : Type u#4 =
 let trade_elim_exists (is:invlist) (hyp extra concl : vprop) : vprop =
   pure (squash (trade_elim_t is hyp extra concl))
 
-let trade (#is : invlist) (hyp : vprop) (concl : vprop) =
+let trade_elim_exists_with_extra (is : invlist) (hyp : vprop) (concl : vprop) =
   exists* extra. extra ** trade_elim_exists is hyp extra concl
+
+let trade (#is : invlist) (hyp : vprop) (concl : vprop) =
+  invlist_inv is ** trade_elim_exists_with_extra is hyp concl
 
 ```pulse
 ghost
@@ -41,11 +44,12 @@ fn __intro_trade
     (invlist_v is ** extra ** hyp)
     (fun _ -> invlist_v is ** concl)
   ))
-  requires extra
+  requires invlist_inv is ** extra
   ensures trade #is hyp concl
 {
   fold (trade_elim_exists is hyp extra concl);
   assert (extra ** trade_elim_exists is hyp extra concl); // FIXME: why is this needed? somehow guiding the prover?
+  fold (trade_elim_exists_with_extra is hyp concl);
   fold (trade #is hyp concl);
 }
 ```
@@ -77,10 +81,10 @@ fn elim_trade_helper
   (#is : invlist)
   (hyp concl : vprop)
   (_:unit)
-  requires invlist_v is ** (trade #is hyp concl ** hyp)
+  requires invlist_v is ** (trade_elim_exists_with_extra is hyp concl ** hyp)
   ensures invlist_v is ** concl
 {
-  unfold (trade #is hyp concl);
+  unfold (trade_elim_exists_with_extra is hyp concl);
 
   with extra. assert (extra ** trade_elim_exists is hyp extra concl);
   
@@ -118,11 +122,13 @@ ghost
 fn __elim_trade
   (#is : invlist)
   (hyp concl : vprop)
-  requires invlist_inv is ** trade #is hyp concl ** hyp
-  ensures invlist_inv is ** concl
+  requires trade #is hyp concl ** hyp
+  ensures concl
   opens (invlist_names is)
 {
+  unfold (trade #is hyp concl);
   with_invlist is (elim_trade_helper #is hyp concl);
+  drop_ (invlist_inv is)
 }
 ```
 
@@ -134,20 +140,22 @@ fn __trade_sub_inv
   (#os1 : invlist)
   (#os2 : invlist{invlist_sub os1 os2})
   (hyp concl: vprop)
-  requires invlist_inv os1 ** trade #os1 hyp concl
-  ensures  invlist_inv os1 ** trade #os2 hyp concl
+  requires invlist_inv os2 ** trade #os1 hyp concl
+  ensures  trade #os2 hyp concl
   opens (invlist_names os1)
 {
   ghost
   fn aux (_:unit)
-    requires invlist_v os2 ** trade #os1 hyp concl ** hyp
+    requires invlist_v os2 ** trade_elim_exists_with_extra os1 hyp concl ** hyp
     ensures  invlist_v os2 ** concl
   {
     invlist_sub_split os1 os2;
     elim_trade_helper #os1 hyp concl ();
     Pulse.Lib.Priv.Trade0.elim_stick (invlist_v os1) (invlist_v os2);
   };
-  intro_trade hyp concl (trade #os1 hyp concl) aux;
+  unfold trade #os1 hyp concl;
+  drop_ (invlist_inv os1);
+  intro_trade hyp concl (trade_elim_exists_with_extra os1 hyp concl) aux;
 }
 ```
 let trade_sub_inv = __trade_sub_inv
