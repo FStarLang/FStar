@@ -15,9 +15,10 @@
 *)
 
 module Pulse.Lib.Mutex
-open Pulse.Lib.Core
 
-open Pulse.Lib.Reference
+open Pulse.Lib.Pervasives
+
+module T = FStar.Tactics.V2
 
 //
 // A model of Rust mutex
@@ -29,21 +30,37 @@ open Pulse.Lib.Reference
 //   of the log?
 //
 
-val mutex (#a:Type0) (p:a -> vprop) : Type0
+val mutex (a:Type0) : Type0
 
-val new_mutex (#a:Type0) (p:a -> vprop) (x:a)
-  : stt (mutex p)
-        (requires p x)
-        (ensures fun _ -> emp)
+val mutex_live
+  (#a:Type0)
+  (m:mutex a)
+  (#[T.exact (`full_perm)] p:perm)
+  (v:a -> vprop)  : vprop
 
-val belongs_to_mutex (#a:Type0) (#p:a -> vprop) (r:ref a) (m:mutex p) : vprop
+val new_mutex (#a:Type0) (v:a -> vprop { forall x. is_big (v x) }) (x:a)
+  : stt (mutex a)
+        (requires v x)
+        (ensures fun m -> mutex_live m v)
 
-val lock (#a:Type0) (#p:a -> vprop) (m:mutex p)
+val belongs_to_mutex (#a:Type0) (r:ref a) (m:mutex a) : vprop
+
+val lock (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a)
   : stt (ref a)
-        (requires emp)
-        (ensures fun r -> r `belongs_to_mutex` m ** (exists* v. pts_to r v ** p v))
+        (requires mutex_live m #p v)
+        (ensures fun r -> mutex_live m #p v ** r `belongs_to_mutex` m ** (exists* x. pts_to r x ** v x))
 
-val unlock (#a:Type0) (#p:a -> vprop) (m:mutex p) (r:ref a)
+val unlock (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a) (r:ref a)
   : stt unit
-        (requires r `belongs_to_mutex` m ** (exists* v. pts_to r v ** p v))
-        (ensures fun _ -> emp)
+        (requires mutex_live m #p v ** r `belongs_to_mutex` m ** (exists* x. pts_to r x ** v x))
+        (ensures fun _ -> mutex_live m #p v)
+
+val share (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a)
+  : stt_ghost unit emp_inames
+      (requires mutex_live m #p v)
+      (ensures fun _ -> mutex_live m #(half_perm p) v ** mutex_live m #(half_perm p) v)
+
+val gather (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a)
+  : stt_ghost unit emp_inames
+      (requires mutex_live m #(half_perm p) v ** mutex_live m #(half_perm p) v)
+      (ensures fun _ -> mutex_live m #p v)

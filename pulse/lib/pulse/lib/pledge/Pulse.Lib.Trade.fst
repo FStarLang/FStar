@@ -21,8 +21,8 @@ open Pulse.Lib.Pervasives
 open Pulse.Lib.InvList
 module T = FStar.Tactics
 
-let trade_elim_t is hyp extra concl : Type u#3 =
-  unit -> stt_ghost unit (invlist_v is ** extra ** hyp) (fun _ -> invlist_v is ** concl)
+let trade_elim_t is hyp extra concl : Type u#4 =
+  unit -> stt_ghost unit emp_inames (invlist_v is ** extra ** hyp) (fun _ -> invlist_v is ** concl)
 
 let trade_elim_exists (is:invlist) (hyp extra concl : vprop) : vprop =
   pure (squash (trade_elim_t is hyp extra concl))
@@ -37,7 +37,7 @@ fn __intro_trade
   (hyp concl : vprop)
   (extra : vprop)
   (f_elim: unit -> (
-    stt_ghost unit
+    stt_ghost unit emp_inames
     (invlist_v is ** extra ** hyp)
     (fun _ -> invlist_v is ** concl)
   ))
@@ -58,7 +58,7 @@ let psquash (a:Type u#a) : prop = squash a
 
 ```pulse
 ghost
-fn pextract (a:Type u#3) (_:squash a)
+fn pextract (a:Type u#4) (_:squash a)
 requires emp
 returns i:a
 ensures emp
@@ -73,10 +73,11 @@ ensures emp
 
 ```pulse
 ghost
-fn __elim_trade_ghost
+fn elim_trade_helper
   (#is : invlist)
   (hyp concl : vprop)
-  requires invlist_v is ** trade #is hyp concl ** hyp
+  (_:unit)
+  requires invlist_v is ** (trade #is hyp concl ** hyp)
   ensures invlist_v is ** concl
 {
   unfold (trade #is hyp concl);
@@ -96,33 +97,35 @@ fn __elim_trade_ghost
   f();
 }
 ```
-let elim_trade_ghost #is = __elim_trade_ghost #is
+
+// let elim_trade_ghost #is = __elim_trade_ghost #is
+
+// ```pulse
+// unobservable
+// fn elim_trade_helper
+//   (#is : invlist)
+//   (hyp concl : vprop)
+//   (_ : unit)
+//   requires invlist_v is ** (trade #is hyp concl ** hyp)
+//   ensures invlist_v is ** concl
+// {
+//   elim_trade_ghost #is hyp concl;
+// }
+// ```
 
 ```pulse
-unobservable
-fn elim_trade_helper
-  (#is : invlist)
-  (hyp concl : vprop)
-  (_ : unit)
-  requires invlist_v is ** (trade #is hyp concl ** hyp)
-  ensures invlist_v is ** concl
-{
-  elim_trade_ghost #is hyp concl;
-}
-```
-
-```pulse
-unobservable
+ghost
 fn __elim_trade
   (#is : invlist)
   (hyp concl : vprop)
-  requires trade #is hyp concl ** hyp
-  ensures concl
+  requires invlist_inv is ** trade #is hyp concl ** hyp
+  ensures invlist_inv is ** concl
   opens (invlist_names is)
 {
   with_invlist is (elim_trade_helper #is hyp concl);
 }
 ```
+
 let elim_trade #is = __elim_trade #is
 
 ```pulse
@@ -131,16 +134,17 @@ fn __trade_sub_inv
   (#os1 : invlist)
   (#os2 : invlist{invlist_sub os1 os2})
   (hyp concl: vprop)
-  requires trade #os1 hyp concl
-  ensures  trade #os2 hyp concl
+  requires invlist_inv os1 ** trade #os1 hyp concl
+  ensures  invlist_inv os1 ** trade #os2 hyp concl
+  opens (invlist_names os1)
 {
   ghost
   fn aux (_:unit)
-    requires (invlist_v os2 ** trade #os1 hyp concl) ** hyp
+    requires invlist_v os2 ** trade #os1 hyp concl ** hyp
     ensures  invlist_v os2 ** concl
   {
     invlist_sub_split os1 os2;
-    elim_trade_ghost #os1 hyp concl;
+    elim_trade_helper #os1 hyp concl ();
     Pulse.Lib.Priv.Trade0.elim_stick (invlist_v os1) (invlist_v os2);
   };
   intro_trade hyp concl (trade #os1 hyp concl) aux;
