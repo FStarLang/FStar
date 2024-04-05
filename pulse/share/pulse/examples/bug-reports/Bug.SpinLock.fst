@@ -26,10 +26,10 @@ let test_fstar (r:R.ref int) =
 ```pulse
 fn lock_ref (r:R.ref int) (#v_:Ghost.erased int)
   requires R.pts_to r v_
-  ensures emp
+  returns l:lock
+  ensures lock_alive l (exists* v. R.pts_to r v)
 {
-  let my_lock = new_lock (exists* v. R.pts_to r v);
-  ()
+  new_lock (exists* v. R.pts_to r v)
 }
 ```
 

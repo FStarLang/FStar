@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module PulseTutorial.ParallelIncrement
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
@@ -58,30 +74,34 @@ ensures pts_to x ('i + 2)
 ```pulse //attempt$
 fn attempt (x:ref int)
 requires pts_to x 'i
-ensures emp
+ensures exists* v. pts_to x v
 {
   let l = L.new_lock (exists* v. pts_to x v);
   fn incr ()
-  requires emp
-  ensures emp
+  requires L.lock_alive l #(half_perm full_perm) (exists* v. pts_to x v)
+  ensures L.lock_alive l #(half_perm full_perm) (exists* v. pts_to x v)
   {
     L.acquire l;
     let v = !x;
     x := v + 1;
-    L.release l
+    L.release #(exists* v. pts_to x v) l
   };
-  par incr incr
+  L.share l;
+  par incr incr;
+  L.gather l;
+  L.acquire l;
+  L.free l
 }
 ```
 
 //lock_inv$
-let contributions (left right: GR.ref int) (i v:int)=
+let contributions (left right: GR.ref int) (i v:int) : v:vprop { is_big v }=
   exists* (vl vr:int).
     GR.pts_to left #one_half vl **
     GR.pts_to right #one_half vr **
     pure (v == i + vl + vr)
 
-let lock_inv (x:ref int) (init:int) (left right:GR.ref int) =
+let lock_inv (x:ref int) (init:int) (left right:GR.ref int) : v:vprop { is_big v } =
   exists* v. 
     pts_to x v **
     contributions left right init v
@@ -89,12 +109,13 @@ let lock_inv (x:ref int) (init:int) (left right:GR.ref int) =
 
 ```pulse //incr_left$
 fn incr_left (x:ref int)
+             (#p:perm)
              (#left:GR.ref int)
              (#right:GR.ref int)
              (#i:erased int)
-             (lock:L.lock (lock_inv x i left right))
-requires GR.pts_to left #one_half 'vl
-ensures  GR.pts_to left #one_half ('vl + 1)
+             (lock:L.lock )
+requires L.lock_alive lock #p (lock_inv x i left right) ** GR.pts_to left #one_half 'vl
+ensures L.lock_alive lock #p (lock_inv x i left right) ** GR.pts_to left #one_half ('vl + 1)
 {
   L.acquire lock;
   unfold lock_inv;
@@ -106,18 +127,19 @@ ensures  GR.pts_to left #one_half ('vl + 1)
   GR.share left;
   fold (contributions left right i (v + 1));
   fold lock_inv;
-  L.release lock
+  L.release #(lock_inv x i left right) lock
 }
 ```
 
 ```pulse //incr_right$
 fn incr_right (x:ref int)
+              (#p:perm)
               (#left:GR.ref int)
               (#right:GR.ref int)
               (#i:erased int)
-              (lock:L.lock (lock_inv x i left right))
-requires GR.pts_to right #one_half 'vl
-ensures  GR.pts_to right #one_half ('vl + 1)
+              (lock:L.lock)
+requires L.lock_alive lock #p (lock_inv x i left right) ** GR.pts_to right #one_half 'vl
+ensures L.lock_alive lock #p (lock_inv x i left right) ** GR.pts_to right #one_half ('vl + 1)
 {
   L.acquire lock;
   unfold lock_inv;
@@ -129,7 +151,7 @@ ensures  GR.pts_to right #one_half ('vl + 1)
   GR.share right;
   fold (contributions left right i (v + 1));
   fold (lock_inv x i left right);
-  L.release lock
+  L.release #(lock_inv x i left right) lock
 }
 ```
 
@@ -145,9 +167,12 @@ ensures  pts_to x ('i + 2)
   fold (contributions left right 'i 'i);
   fold (lock_inv x 'i left right);
   let lock = L.new_lock (lock_inv x 'i left right);
+  L.share lock;
   par (fun _ -> incr_left x lock)
       (fun _ -> incr_right x lock);
+  L.gather lock;
   L.acquire lock;
+  L.free lock;
   unfold lock_inv;
   unfold contributions;
   GR.gather left;

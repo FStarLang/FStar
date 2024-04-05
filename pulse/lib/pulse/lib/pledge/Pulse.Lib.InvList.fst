@@ -43,6 +43,8 @@ fn rec dup_invlist_inv_aux (is:invlist)
 }
 ```
 
+let dup_invlist_inv = dup_invlist_inv_aux
+
 ```pulse
 ghost
 fn __shift_invlist_one
@@ -191,3 +193,5 @@ fn __invlist_sub_split_wrap
 }
 ```
 let invlist_sub_split = __invlist_sub_split_wrap
+
+let invlist_sub_inv = admit ()

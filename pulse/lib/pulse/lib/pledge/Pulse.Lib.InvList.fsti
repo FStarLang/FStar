@@ -93,3 +93,8 @@ val invlist_sub_split (is1 is2 : invlist) :
   stt_ghost unit emp_inames
     (pure (invlist_sub is1 is2) ** invlist_v is2)
     (fun _ -> invlist_v is1 ** Pulse.Lib.Priv.Trade0.stick (invlist_v is1) (invlist_v is2))
+
+val invlist_sub_inv (is1 is2:invlist)
+  : stt_ghost unit emp_inames
+      (invlist_inv is2 ** pure (invlist_sub is1 is2))
+      (fun _ -> invlist_inv is1 ** Pulse.Lib.Priv.Trade0.stick (invlist_inv is1) (invlist_inv is2))

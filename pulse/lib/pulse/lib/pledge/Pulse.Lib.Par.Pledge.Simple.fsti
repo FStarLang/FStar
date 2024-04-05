@@ -28,16 +28,18 @@ val pledge (f:vprop) (v:vprop) : vprop
 
 (* An unobservable step to rewrite the context. *)
 let ustep (is:invlist) (p q : vprop)
-  = unit -> stt_ghost unit (invlist_v is ** p) (fun _ -> invlist_v is ** q)
+  = unit -> stt_ghost unit (invlist_names is)
+                           (invlist_inv is ** p)
+                           (fun _ -> invlist_inv is ** q)
 
 (* Anything that holds now holds in the future too. *)
 val return_pledge (f:vprop) (v:vprop)
-  : stt_ghost unit v (fun _ -> pledge f v)
+  : stt_ghost unit emp_inames v (fun _ -> pledge f v)
 
 (* The function proving a pledge can use any invariants. *)
 val make_pledge (#is:invlist) (f:vprop) (v:vprop) (extra:vprop)
   ($k : ustep is (f ** extra) (f ** v))
-  : stt_ghost unit extra (fun _ -> pledge f v)
+  : stt_ghost unit emp_inames (invlist_inv is ** extra) (fun _ -> pledge f v)
 
 (* Redeem is stateful in this simple variant, which is what
 allows to ignore the opened invariants. *)
@@ -48,7 +50,7 @@ val redeem_pledge (f:vprop) (v:vprop)
 val bind_pledge (#is:invlist) (#f:vprop) (#v1:vprop) (#v2:vprop)
         (extra : vprop)
         (k : ustep is (f ** extra ** v1) (f ** pledge f v2))
-  : stt_ghost unit (pledge f v1 ** extra) (fun () -> pledge f v2)
+  : stt_ghost unit emp_inames (pledge f v1 ** extra) (fun () -> pledge f v2)
 
 (* Weaker variant, the proof does not use f. It's implemented
 by framing k with f and then using the above combinator. Exposing
@@ -56,20 +58,23 @@ only in case it's useful for inference. *)
 val bind_pledge' (#is:invlist) (#f:vprop) (#v1:vprop) (#v2:vprop)
         (extra : vprop)
         (k : ustep is (extra ** v1) (pledge f v2))
-  : stt_ghost unit (pledge f v1 ** extra) (fun () -> pledge f v2)
+  : stt_ghost unit emp_inames (pledge f v1 ** extra) (fun () -> pledge f v2)
 
 val join_pledge (#f:vprop) (v1:vprop) (v2:vprop)
   : stt_ghost unit
+              emp_inames
               (pledge f v1 ** pledge f v2)
               (fun () -> pledge f (v1 ** v2))
 
-val split_pledge (#f:vprop) (v1:vprop) (v2:vprop)
-  : stt_atomic unit #Unobservable emp_inames
-              (pledge f (v1 ** v2))
-              (fun () -> pledge f v1 ** pledge f v2)
+// See Pulse.Lib.Par.Pledge.fst
+// val split_pledge (#f:vprop) (v1:vprop) (v2:vprop)
+//   : stt_atomic unit #Unobservable emp_inames
+//               (pledge f (v1 ** v2))
+//               (fun () -> pledge f v1 ** pledge f v2)
 
 val rewrite_pledge (#is:invlist) (#f:vprop) (v1 : vprop) (v2 : vprop)
   (k : ustep is v1 v2)
   : stt_ghost unit
+              emp_inames
               (pledge f v1)
               (fun _ -> pledge f v2)

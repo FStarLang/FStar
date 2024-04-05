@@ -33,7 +33,7 @@ let stick (p q : vprop) =
   T.trade p q
 
 let elim_stick p q =
-  T.elim_trade_ghost p q
+  T.elim_trade p q
 
 let intro_stick p q v f =
   T.intro_trade p q v f

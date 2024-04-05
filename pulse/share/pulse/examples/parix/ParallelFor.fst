@@ -23,14 +23,17 @@ open FStar.Real
 open Pulse.Lib.Par.Pledge
 open Pulse.Lib.InvList
 
+module P = Pulse.Lib.Par.Pledge
+
 ```pulse
 ghost
 fn aux_squash_pledge (f v : vprop) (_:unit)
-  requires invlist_v [] ** (f ** pledge [] f (pledge [] f v))
-  ensures  invlist_v [] ** (f ** v)
+  requires f ** pledge [] f (pledge [] f v)
+  ensures  f ** v
 {
-  redeem_pledge_ghost [] f (pledge [] f v);
-  redeem_pledge_ghost [] f v;
+  P.squash_pledge [] f v;
+  P.redeem_pledge [] f v;
+  drop_ (invlist_inv [])
 }
 ```
 
@@ -40,9 +43,7 @@ fn squash_pledge (f v : vprop)
   requires pledge [] f (pledge [] f v)
   ensures pledge [] f v
 {
-  make_pledge [] f v
-   (pledge [] f (pledge [] f v))
-   (aux_squash_pledge f v)
+  Pulse.Lib.Par.Pledge.squash_pledge [] f v
 }
 ```
 
@@ -125,7 +126,6 @@ fn p_join (p : (nat->vprop)) (i j k : nat) (_ : squash (i <= j /\ j <= k))
 ```
 
 ```pulse
-unobservable
 fn p_split (p : (nat->vprop)) (i j k : nat) (_ : squash (i <= j /\ j <= k))
   requires range p i k
   ensures range p i j ** range p j k
@@ -276,6 +276,7 @@ fn __redeem_range
     redeem_pledge _ f (p (n-1));
     kk (n-1);
     p_join_last p n ();
+    drop_ (invlist_inv []);
     ()
   }
 }
@@ -404,7 +405,7 @@ fn
 __ffold
   (p : (nat -> vprop))
   (fp : (nat -> vprop))
-  (ss : (i:nat -> stt_ghost unit (p i ** fp i) (fun () -> fp (i+1))))
+  (ss : (i:nat -> stt_ghost unit emp_inames (p i ** fp i) (fun () -> fp (i+1))))
   (n : nat)
   (kk: (
         (i:nat) -> stt unit (pure (i <= n) ** fp i ** range p i n) (fun _ -> fp n)
@@ -429,7 +430,7 @@ __ffold
 let ffold
   (p : (nat -> vprop))
   (fp : (nat -> vprop))
-  (ss : (i:nat -> stt_ghost unit (p i ** fp i) (fun () -> fp (i+1))))
+  (ss : (i:nat -> stt_ghost unit emp_inames (p i ** fp i) (fun () -> fp (i+1))))
   (n:nat)
   : (i:nat) -> stt unit (pure (i <= n) ** fp i ** range p i n) (fun _ -> fp n)
   = fix_stt_1 (__ffold p fp ss n)
@@ -440,7 +441,7 @@ fn
 __funfold
   (p : (nat -> vprop))
   (fp : (nat -> vprop))
-  (ss : (i:nat -> stt_ghost unit (fp (i+1)) (fun () -> p i ** fp i)))
+  (ss : (i:nat -> stt_ghost unit emp_inames (fp (i+1)) (fun () -> p i ** fp i)))
   (kk: (
         (n:nat) -> stt unit (fp n) (fun _ -> fp 0 ** range p 0 n)
   ))
@@ -465,7 +466,7 @@ __funfold
 let funfold
   (p : (nat -> vprop))
   (fp : (nat -> vprop))
-  (ss : (i:nat -> stt_ghost unit (fp (i+1)) (fun () -> p i ** fp i)))
+  (ss : (i:nat -> stt_ghost unit emp_inames (fp (i+1)) (fun () -> p i ** fp i)))
   : (n:nat) -> stt unit (fp n) (fun _ -> fp 0 ** range p 0 n)
   = fix_stt_1 (__funfold p fp ss)
 
@@ -477,8 +478,8 @@ parallel_for_wsr
   (full_pre : (nat -> vprop))
   (full_post : (nat -> vprop))
   (f : (i:nat -> stt unit (pre i) (fun () -> post i)))
-  (unfold_pre : (i:nat -> stt_ghost unit (full_pre (i+1)) (fun () -> pre i ** full_pre i)))
-  (fold_post : (i:nat -> stt_ghost unit (post i ** full_post i) (fun () -> full_post (i+1))))
+  (unfold_pre : (i:nat -> stt_ghost unit emp_inames (full_pre (i+1)) (fun () -> pre i ** full_pre i)))
+  (fold_post : (i:nat -> stt_ghost unit emp_inames (post i ** full_post i) (fun () -> full_post (i+1))))
   (n : pos)
   requires full_pre n ** full_post 0
   ensures full_pre 0 ** full_post n
@@ -533,6 +534,7 @@ fn h_for_task
     for_loop pre post emp
              (fun i -> frame_stt_left emp (f i)) lo hi;
 
+    rewrite emp as (invlist_inv []);
     return_pledge [] (pool_done p) (range post lo hi)
   } else {
     let mid = (hi+lo)/2;
@@ -631,7 +633,7 @@ parallel_for_hier
 
     redeem_pledge [] (pool_done p) (range post 0 n);
 
-    drop_ (pool_done p);
+    drop_ (pool_done p ** invlist_inv [])
   } else {
     (* Directly calling is much easier, and actually better all around. *)
     share_alive p full_perm;
@@ -643,7 +645,7 @@ parallel_for_hier
 
     redeem_pledge [] (pool_done p) (range post 0 n);
 
-    drop_ (pool_done p);
+    drop_ (pool_done p ** invlist_inv [])
   }
 }
 ```

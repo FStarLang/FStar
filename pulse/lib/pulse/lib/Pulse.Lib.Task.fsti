@@ -66,7 +66,7 @@ val must_be_done
   (#a: Type0)
   (#post : a -> vprop)
   (th : task_handle p a post)
-  : stt_ghost unit (pool_done p ** joinable th) (fun () -> pool_done p ** handle_solved th)
+  : stt_ghost unit emp_inames (pool_done p ** joinable th) (fun () -> pool_done p ** handle_solved th)
 
 val join0
   (#p:pool)
@@ -86,6 +86,7 @@ val share_alive
   (p:pool)
   (e:perm)
   : stt_ghost unit
+              emp_inames
               (pool_alive #e p)
               (fun () -> pool_alive #(half_perm e) p ** pool_alive #(half_perm e) p)
 
@@ -93,6 +94,7 @@ val gather_alive
   (p:pool)
   (e:perm)
   : stt_ghost unit
+              emp_inames
               (pool_alive #(half_perm e) p ** pool_alive #(half_perm e) p)
               (fun () -> pool_alive #e p)
 

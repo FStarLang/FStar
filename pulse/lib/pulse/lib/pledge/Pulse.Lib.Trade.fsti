@@ -39,9 +39,9 @@ val intro_trade
   (hyp concl: vprop)
   (extra: vprop)
   (f_elim: unit -> (
-    stt_ghost unit emp_inames
-    (invlist_v is ** extra ** hyp)
-    (fun _ -> invlist_v is ** concl)
+    stt_ghost unit (invlist_names is)
+    (invlist_inv is ** extra ** hyp)
+    (fun _ -> invlist_inv is ** concl)
   ))
 : stt_ghost unit emp_inames
     (invlist_inv is ** extra)
@@ -52,7 +52,7 @@ val elim_trade
   (hyp concl: vprop)
 : stt_ghost unit (invlist_names is)
     (trade #is hyp concl ** hyp)
-    (fun _ -> concl)
+    (fun _ -> invlist_inv is ** concl)
 
 val trade_sub_inv
   (#os1 : invlist)
@@ -60,4 +60,12 @@ val trade_sub_inv
   (hyp concl: vprop)
 : stt_ghost unit (invlist_names os1)
     (invlist_inv os2 ** trade #os1 hyp concl)
-    (fun _ -> trade #os2 hyp concl)
+    (fun _ -> invlist_inv os1 ** trade #os2 hyp concl)
+
+val trade_invs
+  (#is: invlist)
+  (#hyp #concl:vprop)
+  ()
+: stt_ghost unit emp_inames
+    (trade #is hyp concl)
+    (fun _ -> trade #is hyp concl ** invlist_inv is)
