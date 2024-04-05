@@ -191,14 +191,16 @@ ensures  pts_to x ('i + 2)
 //give it an abstract spec in terms of some call-provided aspec
 ```pulse //incr$
 fn incr (x: ref int)
+        (#p:perm)
         (#refine #aspec: int -> vprop)
-        (l:L.lock (exists* v. pts_to x v ** refine v))
+        (l:L.lock)
         (ghost_steps: 
-          (v:int -> vq:int -> stt_ghost unit 
+          (v:int -> vq:int -> stt_ghost unit
+               emp_inames
                (refine v ** aspec vq ** pts_to x (v + 1))
                (fun _ -> refine (v + 1) ** aspec (vq + 1) ** pts_to x (v + 1))))
-requires aspec 'i
-ensures aspec ('i + 1)
+requires L.lock_alive l #p (exists* v. pts_to x v ** refine v) ** aspec 'i
+ensures L.lock_alive l #p (exists* v. pts_to x v ** refine v) ** aspec ('i + 1)
  {
     L.acquire l;
     with _v. _;
@@ -206,7 +208,7 @@ ensures aspec ('i + 1)
     rewrite each _v as vx;
     x := vx + 1;
     ghost_steps vx 'i;
-    L.release l;
+    L.release #(exists* v. pts_to x v ** refine v) l;
 }
 ```
 
@@ -260,12 +262,13 @@ ensures pts_to x ('i + 2)
         fold (contributions left right 'i (v + 1));
       }
     };
-
+    L.share lock;
     par (fun _ -> incr x lock (step left true))
         (fun _ -> incr x lock (step right false));
-
-    L.acquire lock; //we leak the lock here, but we can do better, below
-    unfold contributions;
+    L.gather lock;
+    L.acquire lock;
+    L.free lock;
+    unfold (contributions left right 'i);
     GR.gather left;
     GR.gather right;
     GR.free left;
@@ -307,29 +310,29 @@ module C = Pulse.Lib.CancellableInvariant
 fn incr_atomic
         (x: ref int)
         (#p:perm)
-        (#t:erased C.token)
         (#refine #aspec: int -> vprop)
-        (l:inv (C.cancellable t (exists* v. pts_to x v ** refine v)))
-        (f: (v:int -> vq:int -> stt_ghost unit 
+        (c:C.cinv)
+        (f: (v:int -> vq:int -> stt_ghost unit
+                  emp_inames
                   (refine v ** aspec vq ** pts_to x (v + 1))
                   (fun _ -> refine (v + 1) ** aspec (vq + 1) ** pts_to x (v + 1))))
-requires aspec 'i ** C.active p t
-ensures aspec ('i + 1) ** C.active p t
+requires inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** aspec 'i ** C.active p c
+ensures inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** aspec ('i + 1) ** C.active p c
 //incr_atomic_body$
 {
   //incr_atomic_body_read$
   atomic
   fn read ()
-  requires C.active p t
+  requires inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** C.active p c
   returns v:int
-  ensures C.active p t
-  opens (add_inv emp_inames l)
+  ensures inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** C.active p c
+  opens (add_inv emp_inames (C.iref_of c))
   {
-    with_invariants l
+    with_invariants (C.iref_of c)
     {
-        C.take _;
+        C.unpack_cinv_vp #p c;
         let v = atomic_read x;
-        C.restore (exists* v. pts_to x v ** refine v);
+        C.pack_cinv_vp #(exists* v. pts_to x v ** refine v) c;
         v
     }
   };
@@ -344,19 +347,22 @@ ensures aspec ('i + 1) ** C.active p t
     b
   )
   invariant b.
+    inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) **
     pts_to continue b **
-    C.active p t **
+    C.active p c **
     cond b (aspec 'i) (aspec ('i + 1))
   {
     let v = read ();
     let next = 
-      with_invariants l
+      with_invariants (C.iref_of c)
       returns b1:bool
-      ensures cond b1 (aspec 'i) (aspec ('i + 1))
+      ensures inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v))
+          ** cond b1 (aspec 'i) (aspec ('i + 1))
           ** pts_to continue true
-          ** C.active p t
+          ** C.active p c
+      opens (add_inv emp_inames (C.iref_of c))
       {
-        C.take _;
+        C.unpack_cinv_vp c;
         let b = cas x v (v + 1);
         if b
         { 
@@ -364,13 +370,13 @@ ensures aspec ('i + 1) ** C.active p t
           elim_cond_true true _ _;
           f _ _;
           intro_cond_false (aspec 'i) (aspec ('i + 1));
-          C.restore (exists* v. pts_to x v ** refine v);
+          C.pack_cinv_vp #(exists* v. pts_to x v ** refine v) c;
           false
         }
         else
         {
           with p q. rewrite (cond b p q) as q;
-          C.restore (exists* v. pts_to x v ** refine v);
+          C.pack_cinv_vp #(exists* v. pts_to x v ** refine v) c;
           true
         }
       };
@@ -392,13 +398,11 @@ ensures pts_to x ('i + 2)
     GR.share left;
     GR.share right;
     fold (contributions left right 'i 'i);
-    let tok = C.create2 (
+    let c = C.new_cancellable_invariant (
       exists* (v:int).
           pts_to x v **
           contributions left right 'i v
     );
-    C.share tok; 
-    let inv = new_invariant (C.cancellable tok _);
     ghost
     fn step
         (lr:GR.ref int)
@@ -433,17 +437,19 @@ ensures pts_to x ('i + 2)
         fold (contributions left right 'i (v + 1));
       }
     };
-
-    par (fun _ -> incr_atomic x inv (step left true))
-        (fun _ -> incr_atomic x inv (step right false));
-
-    C.gather tok;
-    C.cancel_inv inv;
+    C.share c;
+    with pred. assert (inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
+    dup_inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v));
+    par (fun _ -> incr_atomic x c (step left true))
+        (fun _ -> incr_atomic x c (step right false));
+    
+    C.gather c;
+    C.cancel c;
     unfold contributions;
     GR.gather left;
     GR.gather right;
     GR.free left;
     GR.free right;
-
+    drop_ (inv _ _)
 }
 ```
