@@ -77,10 +77,12 @@ let _eq : squash (slprop == state.pred) = ()
 let big_slprop = big_slprop
 let down = down
 let up = up
+let up_big_is_big = up_big_is_big
 
 let small_slprop = small_slprop
 let down2 = down2
 let up2 = up2
+let up2_small_is_small = up2_small_is_small
 
 let small_is_also_big (s:slprop)
   : Lemma (is_small s ==> is_big s) = small_is_also_big s

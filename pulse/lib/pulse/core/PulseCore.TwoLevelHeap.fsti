@@ -169,6 +169,8 @@ val down (s:slprop u#a) : small_slprop u#a
 val up (s:small_slprop u#a) : slprop u#a
 let is_small (s:slprop u#a) = s == up (down s)
 let vprop = s:slprop { is_small s }
+val up_small_is_small (s:small_slprop) : Lemma (is_small (up s))
+
 
 (** [emp] is the empty [slprop], valid on all heaps. It acts as the unit element *)
 val emp : vprop

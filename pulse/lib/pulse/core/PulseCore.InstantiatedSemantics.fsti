@@ -24,12 +24,15 @@ val down (s:slprop) : big_slprop
 val up (s:big_slprop) : slprop
 let is_big (s:slprop) = s == up (down s)
 let big_vprop = s:slprop { is_big s }
+val up_big_is_big (b:big_slprop) : Lemma (is_big (up b))
 
 [@@erasable]
 val small_slprop : Type u#2
 val down2 (s:slprop) : small_slprop
 val up2 (s:small_slprop) : slprop
 let is_small (s:slprop) : prop = up2 (down2 s) == s
+val up2_small_is_small (s:small_slprop) : Lemma (is_small (up2 s))
+
 let vprop = s:slprop { is_small s }
 
 val small_is_also_big (s:slprop)

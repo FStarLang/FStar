@@ -303,11 +303,15 @@ let down_up (p:big_slprop)
     ()
   );
   H2.slprop_extensionality (down (up p)) p
+let up_big_is_big b = ()
 
 let small_slprop = H2.small_slprop
 let down2 (s:slprop) = H2.down (down s)
 let up2 (s:small_slprop) = up (H2.up s)
 let small_is_also_big (s:slprop) = ()
+let up2_small_is_small s = 
+  H2.up_small_is_small s
+
 let interp p m = p m.iheap
 
 let equiv p1 p2 = forall m. p1 m <==> p2 m

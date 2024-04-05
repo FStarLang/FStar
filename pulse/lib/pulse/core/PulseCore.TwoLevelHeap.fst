@@ -165,6 +165,7 @@ let h2_of_slprop (p:H2.slprop u#a) : H2.a_heap_prop u#a =
 let big_up (p:H2.slprop u#(a + 1))
 : slprop u#a
 = as_slprop (fun h -> h2_of_slprop p h.big)
+let up_small_is_small s = ()
 
 (* Four main connectives *)
 let emp = up H2.emp

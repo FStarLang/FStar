@@ -58,6 +58,7 @@ val down (s:slprop u#a) : big_slprop u#a
 val up (s:big_slprop u#a) : slprop u#a
 let is_big (s:slprop u#a) = s == up (down s) //any slprop that has no invariants in it, satisfies is_big
 let big_vprop = s:slprop u#a { is_big s }
+val up_big_is_big (b:big_slprop) : Lemma (is_big (up b))
 //big slprops can be turned into invariants, but are not otherwise storeable in the heap
 
 [@@erasable]
@@ -69,6 +70,7 @@ let is_small (s:slprop u#a) = s == up2 (down2 s)
 val small_is_also_big (s:slprop)
   : Lemma (is_small s ==> is_big s)
 let vprop = s:slprop u#a { is_small s }
+val up2_small_is_small (s:small_slprop) : Lemma (is_small (up2 s))
 
 (** Interpreting mem assertions as memory predicates *)
 val interp (p:slprop u#a) (m:mem u#a) : prop
