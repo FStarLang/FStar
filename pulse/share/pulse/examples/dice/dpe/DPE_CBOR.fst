@@ -82,9 +82,11 @@ fn initialize_context (len:SZ.t)
                       (#s:erased (Seq.seq U8.t))
                       (#p:perm)
     requires
+        Pulse.Lib.Mutex.mutex_live DPE.global_state DPE.global_state_mutex_pred **
         A.pts_to input #p s
     returns _:option ctxt_hndl_t
     ensures
+        Pulse.Lib.Mutex.mutex_live DPE.global_state DPE.global_state_mutex_pred **
         A.pts_to input #p s
 {
     let read = parse_dpe_cmd len input;

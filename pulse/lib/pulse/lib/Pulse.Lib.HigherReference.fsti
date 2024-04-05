@@ -26,6 +26,7 @@ val pts_to (#a:Type) (r:ref a) (#[T.exact (`full_perm)] p:perm) (n:a) : vprop
 
 val pts_to_is_small (#a:Type) (r:ref a) (p:perm) (n:a)
   : Lemma (is_small (pts_to r #p n))
+          [SMTPat (is_small (pts_to r #p n))]
 
 val alloc (#a:Type) (x:a)
   : stt (ref a) emp (fun r -> pts_to r x)

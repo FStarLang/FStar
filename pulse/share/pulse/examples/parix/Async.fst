@@ -117,6 +117,7 @@ fn __await
     Some v -> {
       rewrite (post vv) as (post v);
       assert (post v);
+      rewrite (Pulse.Lib.InvList.invlist_inv []) as emp;
       v
     }
   }

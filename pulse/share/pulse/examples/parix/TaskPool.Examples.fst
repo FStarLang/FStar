@@ -44,6 +44,7 @@ fn qs (n:nat)
   redeem_pledge [] (pool_done p) (qsv 3);
   redeem_pledge [] (pool_done p) (qsv 4);
   drop_ (pool_done p);
+  rewrite each (Pulse.Lib.InvList.invlist_inv []) as emp;
   ()
 }
 ```
@@ -65,6 +66,7 @@ fn qs_joinpromises (n:nat)
   redeem_pledge [] (pool_done p) (qsv 1 ** qsv 2);
   redeem_pledge [] (pool_done p) (qsv 3 ** qsv 4);
   drop_ (pool_done p);
+  rewrite each (Pulse.Lib.InvList.invlist_inv []) as emp;
   ()
 }
 ```
@@ -97,6 +99,7 @@ fn qsh (n:nat)
   redeem_pledge [] (pool_done p) (qsv 3);
   redeem_pledge [] (pool_done p) (qsv 4);
   drop_ (pool_done p);
+  rewrite each (Pulse.Lib.InvList.invlist_inv []) as emp;
   ()
 }
 ```
@@ -135,6 +138,7 @@ fn qsh_par (n:nat)
   redeem_pledge (pool_done p) (qsv 3);
   redeem_pledge (pool_done p) (qsv 4);
   drop_ (pool_done p);
+  rewrite each (Pulse.Lib.InvList.invlist_inv []) as emp;
   ()
 }
 ```

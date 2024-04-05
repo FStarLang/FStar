@@ -674,7 +674,7 @@ val cbor_gather
   (c: cbor)
   (v1 v2: Cbor.raw_data_item)
   (p1 p2: perm)
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (raw_data_item_match p1 c v1 ** raw_data_item_match p2 c v2)
     (fun _ -> raw_data_item_match (p1 `sum_perm` p2) c v1 ** pure (v1 == v2))
 
@@ -682,6 +682,6 @@ val cbor_share
   (c: cbor)
   (v1: Cbor.raw_data_item)
   (p p1 p2: perm)
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (raw_data_item_match p c v1 ** pure (p == p1 `sum_perm` p2))
     (fun _ -> raw_data_item_match p1 c v1 ** raw_data_item_match p2 c v1)

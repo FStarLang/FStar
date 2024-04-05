@@ -21,28 +21,28 @@ open Pulse.Lib.Par.Pledge
 
 (* Assuming invariants *)
 
-[@@erasable]
-assume val inv : vprop -> Type0
+// [@@erasable]
+// assume val inv : vprop -> Type0
 
-// should be ghost
-assume val mk_inv : p:vprop -> stt (inv p) p (fun _ -> emp)
+// // should be ghost
+// assume val mk_inv : p:vprop -> stt (inv p) p (fun _ -> emp)
 
-assume val with_inv
-  (#a:Type0) (#pre : vprop) (#post : (a -> vprop))
-  (#p:vprop)
-  (i:inv p)
-  ($f : unit -> stt_ghost a (p ** pre) (fun r -> p ** post r))
-  : stt_ghost a pre post
+// assume val with_inv
+//   (#a:Type0) (#pre : vprop) (#post : (a -> vprop))
+//   (#p:vprop)
+//   (i:inv p)
+//   ($f : unit -> stt_ghost a (p ** pre) (fun r -> p ** post r))
+//   : stt_ghost a pre post
 
-assume val admit_ghost
-  (#a:Type0) (#pre : vprop) (#post : (a -> vprop))
-  (_:unit)
-  : stt_ghost a pre post
+// assume val admit_ghost
+//   (#a:Type0) (#pre : vprop) (#post : (a -> vprop))
+//   (_:unit)
+//   : stt_ghost a pre post
 
-type abc = | A | B | C
+// type abc = | A | B | C
 
-let invp (b:ref abc) (y:ref int) =
-  exists* (bb:abc). pts_to b #(half_perm full_perm) bb ** (if bb =B then pts_to y 42 else emp)
+// let invp (b:ref abc) (y:ref int) =
+//   exists* (bb:abc). pts_to b #(half_perm full_perm) bb ** (if bb =B then pts_to y 42 else emp)
 
 (*
 ```pulse
