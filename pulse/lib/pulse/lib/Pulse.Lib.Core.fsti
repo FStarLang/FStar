@@ -796,6 +796,15 @@ val big_pcm_pts_to
     (v:a)
 : vprop
 
+
+val is_big_big_pcm_pts_to
+    (#a:Type u#2)
+    (#p:pcm a)
+    (r:pcm_ref p)
+    (v:a)
+: Lemma (is_big (big_pcm_pts_to r v))
+        [SMTPat (is_big (big_pcm_pts_to r v))]
+
 val big_pts_to_not_null
     (#a:Type)
     (#p:FStar.PCM.pcm a)

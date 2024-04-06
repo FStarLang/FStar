@@ -24,6 +24,8 @@ let ref (a:Type u#2) = pcm_ref (pcm_frac #a)
 let pts_to (#a:Type) (r:ref a) (#[T.exact (`full_perm)] p:perm) (n:a)
 = big_pcm_pts_to r (Some (n, p)) ** pure (perm_ok p)
 
+let pts_to_is_big (#a:Type) (r:ref a) (p:perm) (x:a) = ()
+
 ```pulse
 fn alloc' (#a:Type u#2) (x:a)
 requires emp

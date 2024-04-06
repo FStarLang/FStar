@@ -21,10 +21,16 @@ open Pulse.Lib.BigReference
 module B = Pulse.Lib.BigReference
 module L = Pulse.Lib.SpinLock
 
-let thunk (p q : small_vprop) = unit -> stt unit (up p) (fun _ -> up q)
+let thunk (p q : small_vprop) = unit -> stt unit (up2 p) (fun _ -> up2 q)
 let closure = (p:small_vprop & q:small_vprop & thunk p q)
 let closure_list = B.ref (list closure)
 let vprop0 = v:vprop { is_small v }
+
+//
+// This is proven in memory, needs to be propagated up to core
+//
+assume val _small_is_small
+  : squash (forall (v:small_vprop).{:pattern is_small (up2 v) } is_small (up2 v))
 
 ```pulse
 fn mk_closure_list ()
@@ -40,7 +46,7 @@ let mk_closure
     (#p #q:vprop0)
     (f: unit -> stt unit p (fun _ -> q))
 : closure
-= (| down p, down q, f |)
+= (| down2 p, down2 q, f |)
 
 
 ```pulse
@@ -58,9 +64,9 @@ ensures B.pts_to l (mk_closure f :: 'xs)
 
 let pre_of (c:closure) =
   let (| p, _, _ |) = c in
-  up p
+  up2 p
 
-let rec inv (l:list closure) =
+let rec inv (l:list closure) : v:vprop { is_small v } =
   match l with
   | [] -> emp
   | hd :: tl -> pre_of hd ** inv tl
@@ -111,7 +117,7 @@ ensures pre_of c ** inv tl
 }
 ```
 
-let lock_inv (r:closure_list) =
+let lock_inv (r:closure_list) : v:vprop { is_big v } =
   exists* (l:list closure). 
     B.pts_to r l **
     inv l
@@ -119,27 +125,29 @@ let lock_inv (r:closure_list) =
 noeq
 type taskp = {
   task_list: closure_list;
-  lock: Pulse.Lib.SpinLock.lock (lock_inv task_list)
+  lock: Pulse.Lib.SpinLock.lock
 }
 
 ```pulse
 fn create_taskp ()
 requires emp
 returns t:taskp
-ensures emp
+ensures L.lock_alive t.lock #full_perm (lock_inv t.task_list)
 {
   let task_list = mk_closure_list();
   intro_inv_nil [];
   fold (lock_inv task_list);
   let lock = L.new_lock (lock_inv task_list);
   let l : taskp = { task_list; lock };
+  rewrite each task_list as l.task_list;
+  rewrite each lock as l.lock;
   l
 }
 ```
 
 let post_of (c:closure) =
   let (| _, q, _ |) = c in
-  up q
+  up2 q
 
 let run_thunk_of_closure (c:closure) 
 : unit -> stt unit (pre_of c) (fun _ -> post_of c)
@@ -156,8 +164,8 @@ ensures emp
 ```
 
 ```pulse
-fn run_task (t:taskp)
-requires emp
+fn rec run_task (t:taskp)
+requires L.lock_alive t.lock #full_perm (lock_inv t.task_list)
 ensures emp
 {
   open B;
@@ -166,8 +174,9 @@ ensures emp
   let thunks = !t.task_list;
   match thunks {
     Nil -> {
-      fold (lock_inv t.task_list);
-      L.release t.lock;
+      L.free t.lock;
+      B.free t.task_list;
+      elim_inv_nil thunks;
     }
     Cons hd tl -> {
       elim_inv_cons thunks hd tl;
@@ -175,6 +184,7 @@ ensures emp
       fold (lock_inv t.task_list);
       L.release t.lock;
       run_closure hd;
+      run_task t
     }
   }
 }

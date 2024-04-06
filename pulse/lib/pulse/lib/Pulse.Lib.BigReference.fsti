@@ -24,6 +24,10 @@ val ref ([@@@unused]a:Type u#2) : Type u#0
 
 val pts_to (#a:Type) (r:ref a) (#[T.exact (`full_perm)] p:perm) (n:a) : vprop
 
+val pts_to_is_big (#a:Type) (r:ref a) (p:perm) (x:a)
+  : Lemma (is_big (pts_to r #p x))
+          [SMTPat (is_big (pts_to r #p x))]
+
 val alloc (#a:Type) (x:a)
   : stt (ref a) emp (fun r -> pts_to r x)
 

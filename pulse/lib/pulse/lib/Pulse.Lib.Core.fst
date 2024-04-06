@@ -336,6 +336,7 @@ let return_stt (#a:Type u#a) (x:a) (p:a -> vprop)
 // big refs
 ////////////////////////////////////////////////////////
 let big_pcm_pts_to #a #p r v = PulseCore.Action.big_pts_to #a #p r v
+let is_big_big_pcm_pts_to _ _ = ()
 let big_pts_to_not_null #a #p r v = A.big_pts_to_not_null #a #p r v
 
 let big_alloc
