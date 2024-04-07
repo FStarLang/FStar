@@ -129,6 +129,14 @@ instance deq_delta_level : deq delta_level = {
     | _ -> false);
 }
 
+instance showable_delta_level : showable delta_level = {
+  show = (function
+          | NoDelta -> "NoDelta"
+          | InliningDelta -> "Inlining"
+          | Eager_unfolding_only -> "Eager_unfolding_only"
+          | Unfold d -> "Unfold " ^ show d);
+}
+
 let preprocess env tau tm  = env.mpreprocess env tau tm
 let postprocess env tau ty tm = env.postprocess env tau ty tm
 
@@ -1768,12 +1776,6 @@ let univnames env =
         | Binding_var({sort=t})::tl -> aux (ext out (Free.univnames t)) tl
     in
     aux no_univ_names env.gamma
-
-let string_of_delta_level = function
-  | NoDelta -> "NoDelta"
-  | InliningDelta -> "Inlining"
-  | Eager_unfolding_only -> "Eager_unfolding_only"
-  | Unfold d -> "Unfold " ^ show d
 
 let lidents env : list lident =
   let keys = List.collect fst env.gamma_sig in

@@ -943,7 +943,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
         log_unfolding cfg (fun () -> BU.print3 "should_unfold: Reached a %s with delta_depth = %s\n >> Our delta_level is %s\n"
                                                (Print.fv_to_string fv)
                                                (show (Env.delta_depth_of_fv cfg.tcenv fv))
-                                               (FStar.Common.string_of_list Env.string_of_delta_level cfg.delta_level));
+                                               (show cfg.delta_level));
         yesno <| (cfg.delta_level |> BU.for_some (function
              | NoDelta -> false
              | InliningDelta

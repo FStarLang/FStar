@@ -77,6 +77,7 @@ type delta_level =
   | Unfold of delta_depth
 
 instance val deq_delta_level : deq delta_level
+instance val showable_delta_level : showable delta_level
 
 // A name prefix, such as ["FStar";"Math"]
 type name_prefix = FStar.Ident.path
@@ -273,7 +274,6 @@ val initial_env : FStar.Parser.Dep.deps ->
 (* Some utilities *)
 val should_verify   : env -> bool
 val incr_query_index: env -> env
-val string_of_delta_level : delta_level -> string
 val rename_gamma : subst_t -> gamma -> gamma
 val rename_env : subst_t -> env -> env
 val set_dep_graph: env -> FStar.Parser.Dep.deps -> env
