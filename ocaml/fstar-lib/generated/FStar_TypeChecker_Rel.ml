@@ -14242,15 +14242,6 @@ let (discharge_guard' :
     fun env ->
       fun g ->
         fun use_smt ->
-          let debug1 =
-            ((FStar_TypeChecker_Env.debug env (FStar_Options.Other "Rel")) ||
-               (FStar_TypeChecker_Env.debug env
-                  (FStar_Options.Other "SMTQuery")))
-              ||
-              (FStar_TypeChecker_Env.debug env (FStar_Options.Other "Disch")) in
-          let diag_doc =
-            let uu___ = FStar_TypeChecker_Env.get_range env in
-            FStar_Errors.diag_doc uu___ in
           (let uu___1 =
              FStar_TypeChecker_Env.debug env
                (FStar_Options.Other "ResolveImplicitsHook") in
@@ -14263,9 +14254,22 @@ let (discharge_guard' :
            else ());
           (let g1 =
              let defer_ok = NoDefer in
+             let smt_ok =
+               (let uu___1 = FStar_Options.ml_ish () in
+                Prims.op_Negation uu___1) && use_smt in
              let deferred_to_tac_ok = true in
-             try_solve_deferred_constraints defer_ok use_smt
+             try_solve_deferred_constraints defer_ok smt_ok
                deferred_to_tac_ok env g in
+           let debug1 =
+             ((FStar_TypeChecker_Env.debug env (FStar_Options.Other "Rel"))
+                ||
+                (FStar_TypeChecker_Env.debug env
+                   (FStar_Options.Other "SMTQuery")))
+               ||
+               (FStar_TypeChecker_Env.debug env (FStar_Options.Other "Disch")) in
+           let diag_doc =
+             let uu___1 = FStar_TypeChecker_Env.get_range env in
+             FStar_Errors.diag_doc uu___1 in
            let ret_g =
              {
                FStar_TypeChecker_Common.guard_f =
@@ -14279,55 +14283,45 @@ let (discharge_guard' :
                FStar_TypeChecker_Common.implicits =
                  (g1.FStar_TypeChecker_Common.implicits)
              } in
-           let g2 = simplify_guard_full_norm env g1 in
-           match g2.FStar_TypeChecker_Common.guard_f with
-           | FStar_TypeChecker_Common.Trivial ->
-               FStar_Pervasives_Native.Some ret_g
-           | FStar_TypeChecker_Common.NonTrivial vc when
-               let uu___1 = FStar_TypeChecker_Env.should_verify env in
-               Prims.op_Negation uu___1 ->
-               (if debug1
-                then
-                  (let uu___2 =
-                     let uu___3 =
-                       FStar_Errors_Msg.text
-                         "Skipping VC because verification is disabled" in
-                     [uu___3] in
-                   diag_doc uu___2)
-                else ();
-                FStar_Pervasives_Native.Some ret_g)
-           | FStar_TypeChecker_Common.NonTrivial vc when
-               Prims.op_Negation use_smt ->
-               (if debug1
-                then
-                  (let uu___2 =
-                     let uu___3 =
-                       let uu___4 =
-                         FStar_Errors_Msg.text "Cannot solve without SMT:" in
-                       let uu___5 =
-                         FStar_Class_PP.pp FStar_Syntax_Print.pretty_term vc in
-                       FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
-                     [uu___3] in
-                   diag_doc uu___2)
-                else ();
-                FStar_Pervasives_Native.None)
-           | FStar_TypeChecker_Common.NonTrivial vc ->
-               (do_discharge_vc use_env_range_msg env vc;
-                FStar_Pervasives_Native.Some ret_g))
-let (discharge_guard_no_smt :
-  FStar_TypeChecker_Env.env ->
-    FStar_TypeChecker_Common.guard_t -> FStar_TypeChecker_Common.guard_t)
-  =
-  fun env ->
-    fun g ->
-      let uu___ = discharge_guard' FStar_Pervasives_Native.None env g false in
-      match uu___ with
-      | FStar_Pervasives_Native.Some g1 -> g1
-      | FStar_Pervasives_Native.None ->
-          let uu___1 = FStar_TypeChecker_Env.get_range env in
-          FStar_Errors.raise_error
-            (FStar_Errors_Codes.Fatal_ExpectTrivialPreCondition,
-              "Expected a trivial pre-condition") uu___1
+           let uu___1 =
+             let uu___2 = FStar_TypeChecker_Env.should_verify env in
+             Prims.op_Negation uu___2 in
+           if uu___1
+           then
+             (if debug1
+              then
+                (let uu___3 =
+                   let uu___4 =
+                     FStar_Errors_Msg.text
+                       "Skipping VC because verification is disabled" in
+                   [uu___4] in
+                 diag_doc uu___3)
+              else ();
+              FStar_Pervasives_Native.Some ret_g)
+           else
+             (let g2 = simplify_guard_full_norm env g1 in
+              match g2.FStar_TypeChecker_Common.guard_f with
+              | FStar_TypeChecker_Common.Trivial ->
+                  FStar_Pervasives_Native.Some ret_g
+              | FStar_TypeChecker_Common.NonTrivial vc when
+                  Prims.op_Negation use_smt ->
+                  (if debug1
+                   then
+                     (let uu___4 =
+                        let uu___5 =
+                          let uu___6 =
+                            FStar_Errors_Msg.text "Cannot solve without SMT:" in
+                          let uu___7 =
+                            FStar_Class_PP.pp FStar_Syntax_Print.pretty_term
+                              vc in
+                          FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                        [uu___5] in
+                      diag_doc uu___4)
+                   else ();
+                   FStar_Pervasives_Native.None)
+              | FStar_TypeChecker_Common.NonTrivial vc ->
+                  (do_discharge_vc use_env_range_msg env vc;
+                   FStar_Pervasives_Native.Some ret_g)))
 let (discharge_guard :
   FStar_TypeChecker_Env.env ->
     FStar_TypeChecker_Common.guard_t -> FStar_TypeChecker_Common.guard_t)
@@ -14340,6 +14334,24 @@ let (discharge_guard :
       | FStar_Pervasives_Native.None ->
           FStar_Compiler_Effect.failwith
             "Impossible, with use_smt = true, discharge_guard' should never have returned None"
+let (discharge_guard_no_smt :
+  FStar_TypeChecker_Env.env ->
+    FStar_TypeChecker_Common.guard_t -> FStar_TypeChecker_Common.guard_t)
+  =
+  fun env ->
+    fun g ->
+      let uu___ = discharge_guard' FStar_Pervasives_Native.None env g false in
+      match uu___ with
+      | FStar_Pervasives_Native.Some g1 -> g1
+      | FStar_Pervasives_Native.None ->
+          let uu___1 =
+            let uu___2 =
+              let uu___3 =
+                FStar_Errors_Msg.text "Expected a trivial pre-condition" in
+              [uu___3] in
+            (FStar_Errors_Codes.Fatal_ExpectTrivialPreCondition, uu___2) in
+          let uu___2 = FStar_TypeChecker_Env.get_range env in
+          FStar_Errors.raise_error_doc uu___1 uu___2
 let (teq_nosmt :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.typ ->

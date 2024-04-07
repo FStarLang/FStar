@@ -401,58 +401,79 @@ let (steps_to_string : fsteps -> Prims.string) =
           FStar_Compiler_String.op_Hat "Some (" uu___ in
     let b = FStar_Compiler_Util.string_of_bool in
     let uu___ =
-      let uu___1 = b f.beta in
+      let uu___1 =
+        FStar_Class_Show.show
+          (FStar_Class_Show.printableshow
+             FStar_Class_Printable.printable_bool) f.beta in
       let uu___2 =
-        let uu___3 = b f.iota in
+        let uu___3 =
+          FStar_Class_Show.show
+            (FStar_Class_Show.printableshow
+               FStar_Class_Printable.printable_bool) f.iota in
         let uu___4 =
-          let uu___5 = b f.zeta in
+          let uu___5 =
+            FStar_Class_Show.show
+              (FStar_Class_Show.printableshow
+                 FStar_Class_Printable.printable_bool) f.zeta in
           let uu___6 =
-            let uu___7 = b f.zeta_full in
+            let uu___7 =
+              FStar_Class_Show.show
+                (FStar_Class_Show.printableshow
+                   FStar_Class_Printable.printable_bool) f.zeta_full in
             let uu___8 =
-              let uu___9 = b f.weak in
+              let uu___9 =
+                FStar_Class_Show.show
+                  (FStar_Class_Show.printableshow
+                     FStar_Class_Printable.printable_bool) f.weak in
               let uu___10 =
-                let uu___11 = b f.hnf in
+                let uu___11 =
+                  FStar_Class_Show.show
+                    (FStar_Class_Show.printableshow
+                       FStar_Class_Printable.printable_bool) f.hnf in
                 let uu___12 =
-                  let uu___13 = b f.primops in
+                  let uu___13 =
+                    FStar_Class_Show.show
+                      (FStar_Class_Show.printableshow
+                         FStar_Class_Printable.printable_bool) f.primops in
                   let uu___14 =
-                    let uu___15 = b f.do_not_unfold_pure_lets in
+                    let uu___15 =
+                      FStar_Class_Show.show
+                        (FStar_Class_Show.printableshow
+                           FStar_Class_Printable.printable_bool)
+                        f.do_not_unfold_pure_lets in
                     let uu___16 =
                       let uu___17 =
-                        format_opt
-                          (FStar_Class_Show.show
+                        FStar_Class_Show.show
+                          (FStar_Class_Show.show_option
                              FStar_Syntax_Syntax.showable_delta_depth)
                           f.unfold_until in
                       let uu___18 =
                         let uu___19 =
-                          format_opt
-                            (fun x ->
-                               let uu___20 =
-                                 FStar_Compiler_List.map
-                                   FStar_Ident.string_of_lid x in
-                               FStar_Compiler_String.concat ", " uu___20)
-                            f.unfold_only in
+                          FStar_Class_Show.show
+                            (FStar_Class_Show.show_option
+                               (FStar_Class_Show.show_list
+                                  FStar_Ident.showable_lident)) f.unfold_only in
                         let uu___20 =
                           let uu___21 =
-                            format_opt
-                              (fun x ->
-                                 let uu___22 =
-                                   FStar_Compiler_List.map
-                                     FStar_Ident.string_of_lid x in
-                                 FStar_Compiler_String.concat ", " uu___22)
+                            FStar_Class_Show.show
+                              (FStar_Class_Show.show_option
+                                 (FStar_Class_Show.show_list
+                                    FStar_Ident.showable_lident))
                               f.unfold_fully in
                           let uu___22 =
                             let uu___23 =
-                              format_opt
-                                (fun x ->
-                                   let uu___24 =
-                                     FStar_Compiler_List.map
-                                       FStar_Ident.string_of_lid x in
-                                   FStar_Compiler_String.concat ", " uu___24)
+                              FStar_Class_Show.show
+                                (FStar_Class_Show.show_option
+                                   (FStar_Class_Show.show_list
+                                      FStar_Ident.showable_lident))
                                 f.unfold_attr in
                             let uu___24 =
                               let uu___25 =
-                                format_opt
-                                  (FStar_Compiler_String.concat ", ")
+                                FStar_Class_Show.show
+                                  (FStar_Class_Show.show_option
+                                     (FStar_Class_Show.show_list
+                                        (FStar_Class_Show.printableshow
+                                           FStar_Class_Printable.printable_string)))
                                   f.unfold_qual in
                               let uu___26 =
                                 let uu___27 =
@@ -470,51 +491,101 @@ let (steps_to_string : fsteps -> Prims.string) =
                                              FStar_Class_Printable.printable_bool)))
                                     f.unfold_namespace in
                                 let uu___28 =
-                                  let uu___29 = b f.unfold_tac in
+                                  let uu___29 =
+                                    FStar_Class_Show.show
+                                      (FStar_Class_Show.printableshow
+                                         FStar_Class_Printable.printable_bool)
+                                      f.unfold_tac in
                                   let uu___30 =
                                     let uu___31 =
-                                      b f.pure_subterms_within_computations in
+                                      FStar_Class_Show.show
+                                        (FStar_Class_Show.printableshow
+                                           FStar_Class_Printable.printable_bool)
+                                        f.pure_subterms_within_computations in
                                     let uu___32 =
-                                      let uu___33 = b f.simplify in
+                                      let uu___33 =
+                                        FStar_Class_Show.show
+                                          (FStar_Class_Show.printableshow
+                                             FStar_Class_Printable.printable_bool)
+                                          f.simplify in
                                       let uu___34 =
-                                        let uu___35 = b f.erase_universes in
+                                        let uu___35 =
+                                          FStar_Class_Show.show
+                                            (FStar_Class_Show.printableshow
+                                               FStar_Class_Printable.printable_bool)
+                                            f.erase_universes in
                                         let uu___36 =
                                           let uu___37 =
-                                            b f.allow_unbound_universes in
+                                            FStar_Class_Show.show
+                                              (FStar_Class_Show.printableshow
+                                                 FStar_Class_Printable.printable_bool)
+                                              f.allow_unbound_universes in
                                           let uu___38 =
-                                            let uu___39 = b f.reify_ in
+                                            let uu___39 =
+                                              FStar_Class_Show.show
+                                                (FStar_Class_Show.printableshow
+                                                   FStar_Class_Printable.printable_bool)
+                                                f.reify_ in
                                             let uu___40 =
                                               let uu___41 =
-                                                b f.compress_uvars in
+                                                FStar_Class_Show.show
+                                                  (FStar_Class_Show.printableshow
+                                                     FStar_Class_Printable.printable_bool)
+                                                  f.compress_uvars in
                                               let uu___42 =
                                                 let uu___43 =
-                                                  b f.no_full_norm in
+                                                  FStar_Class_Show.show
+                                                    (FStar_Class_Show.printableshow
+                                                       FStar_Class_Printable.printable_bool)
+                                                    f.no_full_norm in
                                                 let uu___44 =
                                                   let uu___45 =
-                                                    b f.check_no_uvars in
+                                                    FStar_Class_Show.show
+                                                      (FStar_Class_Show.printableshow
+                                                         FStar_Class_Printable.printable_bool)
+                                                      f.check_no_uvars in
                                                   let uu___46 =
-                                                    let uu___47 = b f.unmeta in
+                                                    let uu___47 =
+                                                      FStar_Class_Show.show
+                                                        (FStar_Class_Show.printableshow
+                                                           FStar_Class_Printable.printable_bool)
+                                                        f.unmeta in
                                                     let uu___48 =
                                                       let uu___49 =
-                                                        b f.unascribe in
+                                                        FStar_Class_Show.show
+                                                          (FStar_Class_Show.printableshow
+                                                             FStar_Class_Printable.printable_bool)
+                                                          f.unascribe in
                                                       let uu___50 =
                                                         let uu___51 =
-                                                          b
+                                                          FStar_Class_Show.show
+                                                            (FStar_Class_Show.printableshow
+                                                               FStar_Class_Printable.printable_bool)
                                                             f.in_full_norm_request in
                                                         let uu___52 =
                                                           let uu___53 =
-                                                            b
+                                                            FStar_Class_Show.show
+                                                              (FStar_Class_Show.printableshow
+                                                                 FStar_Class_Printable.printable_bool)
                                                               f.weakly_reduce_scrutinee in
                                                           let uu___54 =
                                                             let uu___55 =
-                                                              b
+                                                              FStar_Class_Show.show
+                                                                (FStar_Class_Show.printableshow
+                                                                   FStar_Class_Printable.printable_bool)
                                                                 f.for_extraction in
                                                             let uu___56 =
                                                               let uu___57 =
-                                                                b f.unrefine in
+                                                                FStar_Class_Show.show
+                                                                  (FStar_Class_Show.printableshow
+                                                                    FStar_Class_Printable.printable_bool)
+                                                                  f.unrefine in
                                                               let uu___58 =
                                                                 let uu___59 =
-                                                                  b
+                                                                  FStar_Class_Show.show
+                                                                    (
+                                                                    FStar_Class_Show.printableshow
+                                                                    FStar_Class_Printable.printable_bool)
                                                                     f.default_univs_to_zero in
                                                                 [uu___59] in
                                                               uu___57 ::
@@ -2130,8 +2201,17 @@ let (showable_cfg : cfg FStar_Class_Show.showable) =
            let uu___1 =
              let uu___2 =
                let uu___3 = steps_to_string cfg1.steps in
-               FStar_Compiler_Util.format1 "  steps = %s" uu___3 in
-             [uu___2; "}"] in
+               FStar_Compiler_Util.format1 "  steps = %s;" uu___3 in
+             let uu___3 =
+               let uu___4 =
+                 let uu___5 =
+                   FStar_Class_Show.show
+                     (FStar_Class_Show.show_list
+                        FStar_TypeChecker_Env.showable_delta_level)
+                     cfg1.delta_level in
+                 FStar_Compiler_Util.format1 "  delta_level = %s;" uu___5 in
+               [uu___4; "}"] in
+             uu___2 :: uu___3 in
            "{" :: uu___1 in
          FStar_Compiler_String.concat "\n" uu___)
   }
