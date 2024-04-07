@@ -154,21 +154,19 @@ let env_to_string env = //BU.format1 "(%s elements)" (string_of_int <| List.leng
              env
             |> String.concat "; "
 
-let stack_elt_to_string = function
-    | Arg (c, _, _) -> BU.format1 "Closure %s" (closure_to_string c)
-    | MemoLazy _ -> "MemoLazy"
-    | Abs (_, bs, _, _, _) -> BU.format1 "Abs %s" (string_of_int <| List.length bs)
-    | UnivArgs _ -> "UnivArgs"
-    | Match   _ -> "Match"
-    | App (_, t,_,_) -> BU.format1 "App %s" (Print.term_to_string t)
-    | CBVApp (_, t,_,_) -> BU.format1 "CBVApp %s" (Print.term_to_string t)
-    | Meta (_, m,_) -> "Meta"
-    | Let  _ -> "Let"
-    | Cfg _ -> "Cfg"
-    // | _ -> "Match"
-
-let stack_to_string s =
-    List.map stack_elt_to_string s |> String.concat "; "
+instance showable_stack_elt : showable stack_elt = {
+  show = (function
+          | Arg (c, _, _) -> BU.format1 "Closure %s" (closure_to_string c)
+          | MemoLazy _ -> "MemoLazy"
+          | Abs (_, bs, _, _, _) -> BU.format1 "Abs %s" (string_of_int <| List.length bs)
+          | UnivArgs _ -> "UnivArgs"
+          | Match   _ -> "Match"
+          | App (_, t,_,_) -> BU.format1 "App %s" (Print.term_to_string t)
+          | CBVApp (_, t,_,_) -> BU.format1 "CBVApp %s" (Print.term_to_string t)
+          | Meta (_, m,_) -> "Meta"
+          | Let  _ -> "Let"
+          | Cfg _ -> "Cfg");
+}
 
 let is_empty = function
     | [] -> true
@@ -460,7 +458,7 @@ and non_tail_inline_closure_env cfg env t =
     inline_closure_env cfg env [] t
 
 and rebuild_closure cfg env stack t =
-    log cfg (fun () -> BU.print4 ">>> %s (env=%s, stack=%s)\nRebuild closure_as_term %s\n" (Print.tag_of_term t) (env_to_string env) (stack_to_string stack) (Print.term_to_string t));
+    log cfg (fun () -> BU.print4 ">>> %s (env=%s, stack=%s)\nRebuild closure_as_term %s\n" (Print.tag_of_term t) (env_to_string env) (show stack) (Print.term_to_string t));
     match stack with
     | [] -> t
 
@@ -1345,10 +1343,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
         log cfg (fun () ->
           BU.print5 ">>> %s (no_full_norm=%s)\nNorm %s with %s env elements; top of the stack = %s\n"
                                         (Print.tag_of_term t)
-                                        (BU.string_of_bool (cfg.steps.no_full_norm))
-                                        (Print.term_to_string t)
+                                        (show cfg.steps.no_full_norm)
+                                        (show t)
                                         (show (List.length env))
-                                        (stack_to_string (fst <| firstn 4 stack)));
+                                        (show (fst <| firstn 4 stack)));
         log_cfg cfg (fun () -> BU.print1 ">>> cfg = %s\n" (show cfg));
         match t.n with
           // Values
@@ -1642,9 +1640,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
               norm cfg env stack head
 
             | Some strict_args ->
-              // BU.print2 "%s has strict args [%s]\n"
-              //   (Print.term_to_string head)
-              //   (List.map string_of_int strict_args |> String.concat "; ");
+              // BU.print2 "%s has strict args %s\n" (show head) (show strict_args);
               let norm_args = args |> List.map (fun (a, i) -> (norm cfg env [] a, i)) in
               let norm_args_len = List.length norm_args in
               if strict_args
@@ -1670,8 +1666,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                    let term = S.mk_Tm_app head norm_args t.pos in
                    // let _ =
                    //   BU.print3 "Rebuilding %s as %s\n%s\n"
-                   //     (Print.term_to_string t)
-                   //     (Print.term_to_string term)
+                   //     (show t)
+                   //     (show term)
                    //     (BU.stack_dump())
                    // in
                    rebuild cfg env stack term
@@ -2013,7 +2009,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
     (* Precondition: the stack head is an App (reify, ...) *)
     begin match stack with
     | App (_, {n=Tm_constant (FC.Const_reify _)}, _, _) :: _ -> ()
-    | _ -> failwith (BU.format1 "INTERNAL ERROR: do_reify_monadic: bad stack: %s" (stack_to_string stack))
+    | _ -> failwith (BU.format1 "INTERNAL ERROR: do_reify_monadic: bad stack: %s" (show stack))
     end;
     let top0 = top in
     let top = U.unascribe top in
@@ -2690,19 +2686,19 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
   (* whether cfg.steps constains WHNF In either case, it has no free de Bruijn *)
   (* indices *)
   log cfg (fun () ->
-    BU.print4 ">>> %s\nRebuild %s with %s env elements and top of the stack %s \n"
+    BU.print4 ">>> %s\nRebuild %s with %s env elements and top of the stack %s\n"
                                         (Print.tag_of_term t)
-                                        (Print.term_to_string t)
+                                        (show t)
                                         (show (List.length env))
-                                        (stack_to_string (fst <| firstn 4 stack));
+                                        (show (fst <| firstn 4 stack));
     if Env.debug cfg.tcenv (Options.Other "NormRebuild")
     then match FStar.Syntax.Util.unbound_variables t with
          | [] -> ()
          | bvs ->
            BU.print3 "!!! Rebuild (%s) %s, free vars=%s\n"
                                (Print.tag_of_term t)
-                               (Print.term_to_string t)
-                               (bvs |> List.map Print.bv_to_string |> String.concat ", ");
+                               (show t)
+                               (show bvs);
            failwith "DIE!");
 
   let f_opt = is_fext_on_domain t in
