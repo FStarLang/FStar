@@ -1426,7 +1426,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
               let fin = BU.now () in
               if cfg.debug.print_normalized
               then begin
-                let cfg' = Cfg.config' [] s cfg.tcenv in
+                let cfg' = Cfg.config s cfg.tcenv in
                 // BU.print1 "NBE result timing (%s ms)\n"
                 //        (show (snd (BU.time_diff start fin)))
                 BU.print4 "NBE result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
@@ -1944,14 +1944,14 @@ let rec norm : cfg -> env -> stack -> term -> term =
 and do_unfold_fv cfg stack (t0:term) (qninfo : qninfo) (f:fv) : term =
     match Env.lookup_definition_qninfo cfg.delta_level f.fv_name.v qninfo with
        | None ->
-         log_unfolding cfg (fun () -> // printfn "delta_level = %A, qninfo=%A" cfg.delta_level qninfo;
-                                      BU.print1 " >> No definition found for %s\n" (Print.fv_to_string f));
+         log_unfolding cfg (fun () ->
+           BU.print2 " >> No definition found for %s (delta_level = %s)\n"
+             (Print.fv_to_string f) (show cfg.delta_level));
          rebuild cfg empty_env stack t0
 
        | Some (us, t) ->
          begin
-         log_unfolding cfg (fun () -> BU.print2 " >> Unfolded %s to %s\n"
-                       (Print.term_to_string t0) (Print.term_to_string t));
+         log_unfolding cfg (fun () -> BU.print2 " >> Unfolded %s to %s\n" (show t0) (show t));
          // preserve the range info on the returned term
          let t =
            if cfg.steps.unfold_until = Some delta_constant
