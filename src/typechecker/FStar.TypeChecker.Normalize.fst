@@ -1438,8 +1438,13 @@ let rec norm : cfg -> env -> stack -> term -> term =
               rebuild cfg env stack tm_norm
 
             | Some (s, tm) ->
-              // if cfg.debug.print_normalized
-              // then BU.print1 "Starting norm request on %s ... \n" (Print.term_to_string tm);
+              let open FStar.Errors.Msg in
+              let open FStar.Pprint in
+              if cfg.debug.print_normalized then
+                Errors.diag_doc tm.pos [
+                  text <| BU.format1 "Starting norm request on `%s`." (show tm);
+                  text "Steps =" ^/^ text (show s);
+                  ];
               let delta_level =
                 if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ | UnfoldFully _ -> true | _ -> false)
                 then [Unfold delta_constant]
