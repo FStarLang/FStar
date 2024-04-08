@@ -17,7 +17,7 @@
 module PulseCore.Action
 
 module Sem = PulseCore.Semantics
-module Mem = PulseCore.MemoryAlt
+module Mem = PulseCore.Memory
 module I = PulseCore.InstantiatedSemantics
 module F = FStar.FunctionalExtensionality
 module PST = PulseCore.PreorderStateMonad
@@ -26,7 +26,7 @@ friend PulseCore.InstantiatedSemantics
 
 open FStar.PCM
 open FStar.Ghost
-open PulseCore.MemoryAlt
+open PulseCore.Memory
 open PulseCore.InstantiatedSemantics
 
 //////////////////////////////////////////////////////

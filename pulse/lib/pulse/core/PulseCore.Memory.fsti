@@ -1,5 +1,5 @@
 (*
-   Copyright 2019 Microsoft Research
+   Copyright 2024 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -13,12 +13,13 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+
 module PulseCore.Memory
 open FStar.Ghost
 open FStar.PCM
 module PP = PulseCore.Preorder
 module PST = PulseCore.PreorderStateMonad
-module MSTTotal = PulseCore.MonotonicStateMonad
+// module MSTTotal = PulseCore.MonotonicStateMonad
 module U = FStar.Universe
 module S = FStar.Set
 
@@ -28,7 +29,7 @@ module S = FStar.Set
 (**** Basic memory properties *)
 
 (** Abstract type of memories *)
-val mem  : Type u#(a + 2)
+val mem  : Type u#(a + 3)
 
 val is_ghost_action (m0 m1:mem u#a) : prop
 let maybe_ghost_action (b:bool) (m0 m1:mem u#a) = b ==> is_ghost_action m0 m1
@@ -49,16 +50,27 @@ val core_mem (m:mem u#a) : mem u#a
 
 (** The type of separation logic propositions. Based on Steel.Heap.slprop *)
 [@@erasable]
-val slprop : Type u#(a + 2)
+val slprop : Type u#(a + 3) //invariant predicates, i --> p, live in u#a+3
 
 [@@erasable]
-val small_slprop : Type u#(a + 1)
+val big_slprop : Type u#(a + 2) //all other predicates live in u#a+2, e.g., big_pts_to, pts_to
+val down (s:slprop u#a) : big_slprop u#a
+val up (s:big_slprop u#a) : slprop u#a
+let is_big (s:slprop u#a) = s == up (down s) //any slprop that has no invariants in it, satisfies is_big
+let big_vprop = s:slprop u#a { is_big s }
+val up_big_is_big (b:big_slprop) : Lemma (is_big (up b))
+//big slprops can be turned into invariants, but are not otherwise storeable in the heap
 
-val down (s:slprop u#a) : small_slprop u#a
-val up (s:small_slprop u#a) : slprop u#a
-let is_small (s:slprop u#a) = s == up (down s)
-
+[@@erasable]
+val small_slprop : Type u#(a + 1) //small slprops are heap storeable; these are the most common ones e.g., pts_to etc
+//e.g., one can write `r:BigRef.ref small_slprop` and write `big_pts_to r `
+val down2 (s:slprop u#a) : small_slprop u#a
+val up2 (s:small_slprop u#a) : slprop u#a
+let is_small (s:slprop u#a) = s == up2 (down2 s)
+val small_is_also_big (s:slprop)
+  : Lemma (is_small s ==> is_big s)
 let vprop = s:slprop u#a { is_small s }
+val up2_small_is_small (s:small_slprop) : Lemma (is_small (up2 s))
 
 (** Interpreting mem assertions as memory predicates *)
 val interp (p:slprop u#a) (m:mem u#a) : prop
@@ -139,6 +151,14 @@ val star_congruence (p1 p2 p3 p4:slprop)
   : Lemma (requires p1 `equiv` p3 /\ p2 `equiv` p4)
           (ensures (p1 `star` p2) `equiv` (p3 `star` p4))
 
+val big_star_congruence (p1 p2:big_vprop u#a)
+  : Lemma (is_big (p1 `star` p2))
+
+val big_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
+  : Lemma
+    (requires forall x. is_big (p x))
+    (ensures is_big (h_exists p))
+
 val small_star_congruence (p1 p2:vprop u#a)
   : Lemma (is_small (p1 `star` p2))
 
@@ -146,6 +166,11 @@ val small_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
   : Lemma
     (requires forall x. is_small (p x))
     (ensures is_small (h_exists p))
+
+val h_exists_equiv (#a:Type) (p q : a -> slprop)
+: Lemma
+    (requires (forall x. p x `equiv` q x))
+    (ensures (h_exists p == h_exists q))
 
 (**** Memory invariants *)
 
@@ -166,7 +191,7 @@ val inames_ok_empty (m:mem)
   This separation logic proposition asserts that all the invariants whose names are in [e]
   are in effect and satisfied on the heap inside the memory [m]
 *)
-val locks_invariant (e:inames) (m:mem u#a) : slprop u#a
+val mem_invariant (e:inames) (m:mem u#a) : slprop u#a
 
 val full_mem_pred: mem -> prop
 let full_mem = m:mem{full_mem_pred m}
@@ -178,27 +203,6 @@ let full_mem = m:mem{full_mem_pred m}
 *)
 val mem_evolves : FStar.Preorder.preorder full_mem
 
-(**
-  To guarantee that the memory always evolve according to frame-preserving updates,
-  we encode it into the [MstTot] effect build on top of the non-deterministic state total
-  effect MSTATETOT. The effect is indexed by [except], which is the set of invariants that
-  are currently opened.
-*)
-let _MstTot
-  (a:Type u#a)
-  (except:inames)
-  (expects:slprop u#m)
-  (provides: a -> slprop u#m)
-  (frame:slprop u#m)
-  = MSTTotal.mst #(full_mem u#m) mem_evolves a
-    (requires fun m0 ->
-        inames_ok except m0 /\
-        interp (expects `star` frame `star` locks_invariant except m0) m0)
-    (ensures fun m0 x m1 ->
-        inames_ok except m1 /\
-        interp (expects `star` frame `star` locks_invariant except m0) m0 /\  //TODO: fix the effect so as not to repeat this
-        interp (provides x `star` frame `star` locks_invariant except m1) m1)
-
 let _PST 
   (a:Type u#a)
   (maybe_ghost:bool)
@@ -209,17 +213,17 @@ let _PST
 = PST.pst #(full_mem u#m) a mem_evolves
     (requires fun m0 ->
         inames_ok except m0 /\
-        interp (expects `star` frame `star` locks_invariant except m0) m0)
+        interp (expects `star` frame `star` mem_invariant except m0) m0)
     (ensures fun m0 x m1 ->
         maybe_ghost_action maybe_ghost m0 m1 /\
         inames_ok except m1 /\
-        interp (expects `star` frame `star` locks_invariant except m0) m0 /\  //TODO: fix the effect so as not to repeat this
-        interp (provides x `star` frame `star` locks_invariant except m1) m1)
+        interp (expects `star` frame `star` mem_invariant except m0) m0 /\  //TODO: fix the effect so as not to repeat this
+        interp (provides x `star` frame `star` mem_invariant except m1) m1)
 
-(** An action is just a thunked computation in [MstTot] that takes a frame as argument *)
-let action_except (a:Type u#a) (except:inames) (expects:slprop u#um) (provides: a -> slprop u#um)
-  : Type u#(max a (um + 2)) =
-  frame:slprop -> _MstTot a except expects provides frame
+// (** An action is just a thunked computation in [MstTot] that takes a frame as argument *)
+// let action_except (a:Type u#a) (except:inames) (expects:slprop u#um) (provides: a -> slprop u#um)
+//   : Type u#(max a (um + 3)) =
+//   frame:slprop -> _MstTot a except expects provides frame
 
 (** An action is just a thunked computation in [MstTot] that takes a frame as argument *)
 let _pst_action_except 
@@ -228,7 +232,7 @@ let _pst_action_except
     (except:inames)
     (expects:slprop u#um)
     (provides: a -> slprop u#um)
- : Type u#(max a (um + 2)) 
+ : Type u#(max a (um + 3)) 
  = frame:slprop -> _PST a maybe_ghost except expects provides frame
 
 let pst_action_except (a:Type u#a) (except:inames) (expects:slprop u#um) (provides: a -> slprop u#um) =
@@ -240,69 +244,80 @@ let pst_ghost_action_except (a:Type u#a) (except:inames) (expects:slprop u#um) (
 
 (**** Invariants *)
 
-(**[i : inv p] is an invariant whose content is [p] *)
-val pre_inv_aux (p:slprop u#a) : Type0
-let pre_inv : Type0 = pre_inv_aux (emp u#a)
+[@@erasable]
+val iref : Type0
 
-val inv (p:slprop u#a) : Type0
+val iname_of (i:iref) : GTot iname
 
-val pre_inv_of_inv (#p:slprop u#a) (i:inv p) : pre_inv u#a
+val inv (i:iref) (p:slprop u#a) : slprop u#a
 
-val name_of_pre_inv (i:pre_inv u#a) : GTot iname
+let live (i:iref) = h_exists (fun p -> inv i p)
 
-let name_of_inv (#p:slprop) (i:inv p)
-  : GTot iname
-  = name_of_pre_inv (pre_inv_of_inv i)
+let add_inv (e:inames) (i:iref) : inames = S.add (iname_of i) e
+let mem_inv (e:inames) (i:iref) : GTot bool = S.mem (iname_of i) e
 
-let mem_inv (#p:slprop) (e:inames) (i:inv p) : erased bool = elift2 (fun e i -> Set.mem i e) e (name_of_inv i)
+val dup_inv (e:inames) (i:iref) (p:slprop u#a)
+: pst_ghost_action_except unit e 
+    (inv i p) 
+    (fun _ -> inv i p `star` inv i p)
 
-let add_inv (#p:slprop) (e:inames) (i:inv p) : inames =
-  Set.union (Set.singleton (name_of_inv i)) (reveal e)
-
-(** Creates a new invariant from a separation logic predicate [p] owned at the time of the call *)
-let fresh_wrt (ctx:list pre_inv)
-              (i:iname)
-  = forall i'. List.Tot.memP i' ctx ==> name_of_pre_inv i' <> i
-
-val distinct_invariants_have_distinct_names
-      (e:inames)
-      (p:slprop u#m)
-      (q:slprop u#m { p =!= q })
-      (i:inv p)
-      (j:inv q)
-  : action_except u#0 u#m (squash (name_of_inv i =!= name_of_inv j)) e (emp u#m) (fun _ -> emp u#m)
-
-val invariant_name_identifies_invariant
-      (e:inames)
-      (p q:slprop u#m)
-      (i:inv p)
-      (j:inv q { name_of_inv i == name_of_inv j } )
-  : action_except (squash (p == q /\ i == j)) e (emp u#m) (fun _ -> emp u#m)
-
-val fresh_invariant (e:inames) (p:slprop u#m) (ctx:list (pre_inv u#m))
-  : action_except (i:inv p { fresh_wrt ctx (name_of_inv i) }) e p (fun _ -> emp)
-
-val new_invariant (e:inames) (p:slprop)
-  : action_except (inv p) e p (fun _ -> emp)
+val new_invariant (e:inames) (p:slprop { is_big p })
+  : pst_ghost_action_except iref e
+    p
+    (fun i -> inv i p)
 
 val with_invariant (#a:Type)
                    (#fp:slprop)
                    (#fp':a -> slprop)
                    (#opened_invariants:inames)
                    (#p:slprop)
-                   (i:inv p{not (mem_inv opened_invariants i)})
-                   (f:action_except a (add_inv opened_invariants i) (p `star` fp) (fun x -> p `star` fp' x))
-  : action_except a opened_invariants fp fp'
+                   (#maybe_ghost:bool)
+                   (i:iref{not (mem_inv opened_invariants i)})
+                   (f:_pst_action_except a maybe_ghost
+                        (add_inv opened_invariants i) 
+                        (p `star` fp)
+                        (fun x -> p `star` fp' x))
+  : _pst_action_except a maybe_ghost opened_invariants 
+      (inv i p `star` fp)
+      (fun x -> inv i p `star` fp' x)
+
+
+val distinct_invariants_have_distinct_names
+      (e:inames)
+      (p:slprop u#m)
+      (q:slprop u#m { p =!= q })
+      (i j: iref)
+: pst_ghost_action_except u#0 u#m 
+    (squash (iname_of i =!= iname_of j))
+    e 
+    (inv i p `star` inv j q)
+    (fun _ -> inv i p `star` inv j q)
+
+val invariant_name_identifies_invariant
+      (e:inames)
+      (p q:slprop u#m)
+      (i:iref)
+      (j:iref { iname_of i == iname_of j } )
+: pst_ghost_action_except (squash (p == q /\ i == j)) e
+   (inv i p `star` inv j q)
+   (fun _ -> inv i p `star` inv j q)
+   
+let rec all_live (ctx:list iref) =
+  match ctx with
+  | [] -> emp
+  | hd::tl -> live hd `star` all_live tl
+
+let fresh_wrt (ctx:list iref)
+              (i:iref)
+  = forall i'. List.Tot.memP i' ctx ==> iname_of i' <> iname_of i
+
+val fresh_invariant (e:inames) (p:big_vprop u#m) (ctx:list iref)
+  : pst_ghost_action_except (i:iref { fresh_wrt ctx i }) e
+       (p `star` all_live ctx)
+       (fun i -> inv i p)
+
 
 (* Some generic actions and combinators *)
-
-val frame (#a:Type)
-          (#opened_invariants:inames)
-          (#pre:slprop)
-          (#post:a -> slprop)
-          (frame:slprop)
-          ($f:action_except a opened_invariants pre post)
-  : action_except a opened_invariants (pre `star` frame) (fun x -> post x `star` frame)
 
 val pst_frame (#a:Type)
               (#maybe_ghost:bool)
@@ -484,7 +499,7 @@ val ghost_gather
     (fun _ -> ghost_pts_to r (op pcm v0 v1))
 
 (* Concrete references to "big" types *)
-val big_pts_to (#a:Type u#(a + 1)) (#pcm:_) (r:ref a pcm) (v:a) : slprop u#a
+val big_pts_to (#a:Type u#(a + 1)) (#pcm:_) (r:ref a pcm) (v:a) : big_vprop u#a
 
 val big_sel_action
       (#a:Type u#(a + 1))
@@ -583,7 +598,7 @@ val big_pts_to_not_null_action
     (fun _ -> big_pts_to r v)
 
 (* Ghost references to "small" types *)
-val big_ghost_pts_to (#a:Type u#(a + 1)) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop u#a
+val big_ghost_pts_to (#a:Type u#(a + 1)) (#p:pcm a) (r:ghost_ref p) (v:a) : big_vprop u#a
 
 val big_ghost_alloc
     (#o:_)
