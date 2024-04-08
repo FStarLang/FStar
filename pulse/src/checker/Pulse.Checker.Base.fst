@@ -567,7 +567,7 @@ let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctx
     | EffectAnnotAtomic _ -> STT_Atomic
     | EffectAnnotGhost _ -> STT_Ghost
     | EffectAnnotAtomicOrGhost _ -> STT_Atomic
-    | _ -> STT
+    | EffectAnnotSTT -> STT
   in
   let y_tm = tm_var {nm_index=y;nm_ppname=y_ppname} in
   let d = T_Return g ctag false u ty y_tm post_hint.post x ty_typing

@@ -301,7 +301,7 @@ let weaken
 
 let sub_pre_act_reifiable 
     (#a:Type)
-    (#r:reifiability)  //{ r =!= UsesInvariants})
+    (#r:reifiability)
     (#pre:slprop)
     (#post:a -> slprop)
     (#opens:inames)

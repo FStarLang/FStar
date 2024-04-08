@@ -118,11 +118,8 @@ fn init ()
   locked_st
 }
 ```
-// let init = init'
 
 let global_locked_state : locked_state_t = run_stt (init ())
-
-// val next () : stt unit (pure_handle_has_state global_locked_state.ph Init) (fun st -> pure_handle_has_state global_locked_state.ph Next)
 
 ```pulse
 fn next ()
@@ -158,9 +155,6 @@ fn next ()
   release global_locked_state.lk;
 }
 ```
-// let next = next'
-
-// val close () : stt unit (pure_handle_has_state global_locked_state.ph Next) (fun st -> pure_handle_has_state global_locked_state.ph Final)
 
 ```pulse
 fn close ()
@@ -196,4 +190,3 @@ fn close ()
   release global_locked_state.lk;
 }
 ```
-// let close = close'

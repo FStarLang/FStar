@@ -31,7 +31,6 @@ neutral _, ghost a |> ghost a
 type observability =
   | Neutral
   | Observable
-  // | Unobservable
 
 let at_most_one_observable o1 o2 =
   match o1, o2 with
@@ -42,9 +41,3 @@ let join_obs o1 o2 =
   match o1, o2 with
   | Neutral, Neutral -> Neutral
   | _ -> Observable
-  // | Observable, _
-  // | _, Observable -> Observable
-  // | _, _
-  // | Neutral, n
-  // | n, Neutral -> n
-  // | _ -> Unobservable

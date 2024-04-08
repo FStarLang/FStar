@@ -2128,7 +2128,8 @@ let (return_in_ctxt :
                             Pulse_Syntax_Base.STT_Ghost
                         | Pulse_Syntax_Base.EffectAnnotAtomicOrGhost uu___1
                             -> Pulse_Syntax_Base.STT_Atomic
-                        | uu___1 -> Pulse_Syntax_Base.STT in
+                        | Pulse_Syntax_Base.EffectAnnotSTT ->
+                            Pulse_Syntax_Base.STT in
                       let y_tm =
                         Pulse_Syntax_Pure.tm_var
                           {

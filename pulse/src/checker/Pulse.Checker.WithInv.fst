@@ -31,51 +31,12 @@ module MT = Pulse.Typing.Metatheory
 
 let rt_recheck (gg:env) (#g:T.env) (#e:T.term) (#ty: T.typ) () : T.Tac (RT.tot_typing g e ty) =
   let open Pulse.PP in
-  // info_doc gg (Some (T.range_of_term e)) [
-  //   doc_of_string "Re-checking" ^/^
-  //     pp e ^/^
-  //   doc_of_string "at type" ^/^
-  //     pp ty
-  //  ];
   match T.core_check_term g e ty T.E_Total with
   | Some tok, _ -> RT.T_Token _ _ _ ()
   | None, _ -> T.fail "Checker.WithInv: rt_recheck failed" // fixme add a range
 
 let recheck (#g:env) (#e:term) (#ty: typ) () : T.Tac (tot_typing g e ty) =
   core_check_tot_term g e ty
-
-// let term_remove_inv (inv:vprop) (tm:term) : T.Tac (tm':term { tm_star tm' inv == tm}) =
-//   match inspect_term tm with
-//   | Tm_Star tm inv' ->
-//     if eq_tm inv inv' then tm
-//     else T.fail "term_remove_inv"
-//   | _ ->
-//     T.fail "term_remove_inv: not a star?"
-
-// let st_comp_remove_inv (inv:vprop) (c:st_comp) : T.Tac (s:st_comp { add_frame (C_ST s) inv == (C_ST c) }) =
-//   { c with pre = term_remove_inv inv c.pre
-//          ; post = term_remove_inv inv c.post }
-
-// #push-options "--z3rlimit 50 --query_stats --split_queries no --max_fuel 2 --max_ifuel 1"  
-// let check_iname_disjoint (g:env) (r:range) (inv_p inames inv:term)
-// : T.Tac (Pulse.Typing.prop_validity g (inv_disjointness inv_p inames inv))
-// = let goal = inv_disjointness inv_p inames inv in
-//   let (| tag, goal_typing |) =
-//     Pulse.Checker.Pure.core_check_term_at_type g goal tm_prop
-//   in
-//   if tag <> T.E_Total
-//   then T.fail "Impossible: prop typing is always total"
-//   else (
-//     let tok = Pulse.Checker.Pure.try_check_prop_validity g goal goal_typing in
-//     match tok with
-//     | None ->
-//       fail_doc g (Some r) [
-//         Pulse.PP.text "Failed to prove that an invariant is not recursively opened:";
-//         Pulse.PP.prefix 4 1 (Pulse.PP.text "The set of invariant names: ") (Pulse.PP.pp inames);
-//         Pulse.PP.prefix 4 1 (Pulse.PP.text "may contain the invariant: ") (Pulse.PP.pp inv);
-//       ]
-//     | Some tok -> tok
-//   )
 
 let remove_iname (inames i:term)
 : term
@@ -159,18 +120,6 @@ let add_remove_inverse (g:env)
       
   | Some tok -> tok
 
-// module R = FStar.Reflection.V2
-
-// #push-options "--warn_error -271"
-// let tm_star_inj (p1 p2 q:term)
-//   : Lemma (requires tm_star p1 q == tm_star p2 q)
-//           (ensures p1 == p2) =
-//   let aux tv
-//     : Lemma (ensures R.inspect_ln (R.pack_ln tv) == tv)
-//             [SMTPat ()] = R.inspect_pack_inv tv in
-//   ()
-// #pop-options
-
 //
 // Find i -~- p in pre, where pre is well-typed
 //
@@ -232,38 +181,6 @@ let find_inv_post (#g:env) (x:var { lookup g x == None})
     let tm_inv_typing : tot_typing g (tm_inv i p) tm_vprop = recheck () in
     Some (| p, close_term frame x, tm_inv_typing, frame_typing, d_eq |)
 
-// (#pre:term) (pre_typing:tot_typing g pre tm_vprop) (i:term)
-//   : option (p:term &
-//             frame:term &
-//             tot_typing g (tm_inv i p) tm_vprop &
-//             tot_typing g frame tm_vprop &
-//             vprop_equiv g pre (tm_star (tm_inv i p) frame)) =
-
-//   match inspect_term pre with
-//   | Tm_Inv i' p ->
-//     if eq_tm i i'
-//     then let frame = tm_emp in
-//          let tm_inv_typing = magic () in
-//          let frame_typing = magic () in
-//          let d_eq = magic () in
-//          Some (| p, frame, tm_inv_typing, frame_typing, d_eq |)
-//     else None
-  
-//   | Tm_Star l r -> begin
-//     match find_inv_pre #g #l (magic ()) i with
-//     | Some res ->
-//       let (| p, frame, _, _, _ |) = res in
-//      Some (| p, tm_star frame r, magic (), magic (), magic () |)
-//     | None ->
-//       match find_inv_pre #g #l (magic ()) i with
-//       | Some res ->
-//         let (| p, frame, _, _, _ |) = res in
-//         Some (| p, tm_star l frame, magic (), magic (), magic () |)
-//       | _ -> None
-//     end
-    
-//   | _ -> None
-
 let atomic_or_ghost_with_inames_and_pre_post
   (c:comp { C_STAtomic? c \/ C_STGhost? c})
   (inames pre post:term) =
@@ -288,7 +205,11 @@ let check
   let (| i, _ |) = check_tot_term g i tm_iname_ref in
   let i_range = Pulse.RuntimeUtils.range_of_term i in
   let res = find_inv pre_typing i in
-  if None? res then fail g (Some i_range) "Cannot find inv in the context";
+  if None? res
+  then fail g (Some i_range)
+         (FStar.Printf.sprintf "Cannot find invariant resource for iref %s in the precondition %s"
+            (show i)
+            (show pre));
     
   let Some (| p, pre_frame, inv_typing, pre_frame_typing, d_pre_frame_eq |) = res in
 
@@ -343,7 +264,11 @@ let check
     post_hint_post_typing
     i in
 
-  if None? res then fail g (Some i_range) "Cannot find inv in the postcondition";
+  if None? res
+  then fail g (Some i_range)
+         (FStar.Printf.sprintf "Cannot find invariant resource for iref %s in the postcondition %s"
+            (show i) (show post_hint.post));
+         
 
   let Some (| p', post_frame, _, post_frame_typing, d_post_frame_equiv |) = res in
   assume (p' == p);

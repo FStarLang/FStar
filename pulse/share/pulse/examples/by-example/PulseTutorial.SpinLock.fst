@@ -15,94 +15,117 @@
 *)
 
 module PulseTutorial.SpinLock
-// open Pulse.Lib.Pervasives
-// module Box = Pulse.Lib.Box
-// module U32 = FStar.UInt32
 
-// module L = Pulse.Lib.SpinLock
+open Pulse.Lib.Pervasives
 
-// //lock$
-// let maybe (b:bool) (p:vprop) =
-//     if b then p else emp
+module B = Pulse.Lib.Box
 
-// let lock_inv (r:ref U32.t) (p:vprop) =
-//   exists* v. pts_to r v ** maybe (v = 0ul) p
+module U32 = FStar.UInt32
 
-// noeq
-// type lock (p:vprop) = {
-//   r:ref U32.t;
-//   i:inv (lock_inv r p);
-// }
-// //lock$
+//lock$
+let maybe (b:bool) (p:vprop) =
+  if b then p else emp
 
-// ```pulse //new_lock$
-// fn new_lock (p:vprop)
-// requires p
-// returns l:lock p
-// ensures emp
-// {
-//    let r = Box.alloc 0ul;
-//    Box.to_ref_pts_to r;
-//    fold (maybe (0ul = 0ul) p);
-//    fold (lock_inv (Box.box_to_ref r) p);
-//    let i = new_invariant (lock_inv (Box.box_to_ref r) p);
-//    let l = { r = Box.box_to_ref r; i };
-//    l
-// }
-// ```
+let lock_inv (r:B.box U32.t) (p:vprop) : v:vprop { is_big p ==> is_big v } =
+  exists* v. B.pts_to r v ** maybe (v = 0ul) p
 
+noeq
+type lock = {
+  r:B.box U32.t;
+  i:iref;
+}
 
+let lock_alive (l:lock) (p:vprop) =
+  inv l.i (lock_inv l.r p)
 
-// ```pulse
-// //acquire_sig$
-// fn rec acquire #p (l:lock p)
-// requires emp
-// ensures p
-// //acquire_sig$
-// //acquire_body$
-// {
-//   let b = 
-//     with_invariants l.i
-//     returns b:bool
-//     ensures maybe b p 
-//     {
-//       unfold lock_inv;
-//       let b = cas l.r 0ul 1ul;
-//       if b
-//       { 
-//         elim_cond_true _ _ _;
-//         with _b. rewrite (maybe _b p) as p;
-//         fold (maybe false p);
-//         rewrite (maybe false p) as (maybe (1ul = 0ul) p);
-//         fold (lock_inv l.r p);
-//         fold (maybe true p);
-//         true
-//       }
-//       else
-//       {
-//         elim_cond_false _ _ _;
-//         fold (lock_inv l.r p);
-//         fold (maybe false p);
-//         false
-//       }
-//     };
-//   if b { rewrite (maybe b p) as p; }
-//   else { rewrite (maybe b p) as emp; acquire l }
-// }
-// ```
+```pulse
+ghost
+fn dup_lock_alive (l:lock) (p:vprop)
+  requires lock_alive l p
+  ensures lock_alive l p ** lock_alive l p
+{
+  unfold lock_alive;
+  dup_inv l.i (lock_inv l.r p);
+  fold lock_alive;
+  fold lock_alive
+}
+```
+//lock$
 
-// ```pulse //release$
-// fn release #p (l:lock p)
-// requires p
-// ensures emp
-// {
-//   with_invariants l.i {
-//     unfold lock_inv;
-//     write_atomic l.r 0ul;
-//     drop_ (maybe _ _); //double release
-//     fold (maybe (0ul = 0ul) p);
-//     fold (lock_inv l.r p);
-//   }
-// }
-// ```
+```pulse //new_lock$
+fn new_lock (p:vprop { is_big p })
+requires p
+returns l:lock
+ensures lock_alive l p
+{
+   let r = B.alloc 0ul;
+   fold (maybe (0ul = 0ul) p);
+   fold (lock_inv r p);
+   let i = new_invariant (lock_inv r p);
+   let l = {r;i};
+   rewrite (inv i (lock_inv r p)) as
+           (inv l.i (lock_inv l.r p));
+   fold lock_alive;
+   l
+}
+```
 
+```pulse
+//acquire_sig$
+fn rec acquire (#p:vprop) (l:lock)
+requires lock_alive l p
+ensures lock_alive l p ** p
+//acquire_sig$
+//acquire_body$
+{
+  unfold lock_alive;
+  let b = 
+    with_invariants l.i
+      returns b:bool
+      ensures inv l.i (lock_inv l.r p) ** maybe b p
+      opens (add_inv emp_inames l.i) {
+      unfold lock_inv;
+      let b = cas_box l.r 0ul 1ul;
+      if b
+      { 
+        elim_cond_true _ _ _;
+        with _b. rewrite (maybe _b p) as p;
+        fold (maybe false p);
+        rewrite (maybe false p) as (maybe (1ul = 0ul) p);
+        fold (lock_inv l.r p);
+        fold (maybe true p);
+        true
+      }
+      else
+      {
+        elim_cond_false _ _ _;
+        fold (lock_inv l.r p);
+        fold (maybe false p);
+        false
+      }
+    };
+  fold lock_alive;
+  if b { rewrite (maybe b p) as p; }
+  else { rewrite (maybe b p) as emp; acquire l }
+}
+```
+
+```pulse //release$
+fn release (#p:vprop) (l:lock)
+requires lock_alive l p ** p
+ensures lock_alive l p
+{
+  unfold lock_alive;
+  with_invariants l.i
+    returns _:unit
+    ensures inv l.i (lock_inv l.r p)
+    opens (add_inv emp_inames l.i) {
+    unfold lock_inv;
+    write_atomic_box l.r 0ul;
+    drop_ (maybe _ _); //double release
+    fold (maybe (0ul = 0ul) p);
+    fold (lock_inv l.r p);
+  };
+  fold lock_alive
+}
+```

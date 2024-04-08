@@ -15,60 +15,63 @@
 *)
 
 module DependentTuples
+
 open Pulse.Lib.Pervasives
-open Pulse.Lib.Reference
-open Pulse.Lib.SpinLock
 
 //
 // The locks are no longer indexed by vprops
 // Would need another instance of this problem
 //
 
-// let exists_n (r:ref nat) : vprop = exists* n. pts_to r n
+let exists_n (r:ref nat) : vprop = exists* n. pts_to r n
 
-// type tup_t = r:ref nat & lock (exists_n r)
-// let mk_tup r lk : tup_t = (| r, lk |)
+assume val t (v:vprop) : Type0
 
-// assume
-// val global_tup : tup_t
+type tup_t = r:ref nat & t (exists_n r)
+let mk_tup r x : tup_t = (| r, x |)
 
-// #set-options "--print_implicits"
+assume
+val global_tup : tup_t
 
-// [@@expect_failure]
-// ```pulse
-// fn tuple ()
-//   requires emp
-//   ensures emp
-// {
-//   acquire global_tup._2;
-//   assert (exists_n global_tup._1);
-//   unfold exists_n global_tup._1;  // this unfold affects the type of the dependent 
-//                                   // tuple, so we lost syntactic equality and the 
-//                                   // following assertion fails
-//   assert ((exists* n. pts_to global_tup._1 n));
-//   admit()
-// }
-// ```
+assume val get_v #v (l:t v) : stt unit emp (fun _ -> v)
 
-// // the same program with a record instead of a dependent tuple works
+#set-options "--print_implicits"
 
-// noeq
-// type rec_t = 
-// { r:ref nat;
-//   lk:lock (exists_n r); }
+[@@expect_failure]
+```pulse
+fn tuple ()
+  requires emp
+  ensures emp
+{
+  get_v global_tup._2;
+  assert (exists_n global_tup._1);
+  unfold exists_n global_tup._1;  // this unfold affects the type of the dependent 
+                                  // tuple, so we lost syntactic equality and the 
+                                  // following assertion fails
+  assert ((exists* n. pts_to global_tup._1 n));
+  admit()
+}
+```
 
-// assume
-// val global_rec : rec_t
+// the same program with a record instead of a dependent tuple works
 
-// ```pulse
-// fn record ()
-//   requires emp
-//   ensures emp
-// {
-//   acquire global_rec.lk;
-//   assert (exists_n global_rec.r);
-//   unfold exists_n global_rec.r;
-//   assert (exists* n. pts_to global_rec.r n);
-//   admit()
-// }
-// ```
+noeq
+type rec_t = 
+{ r:ref nat;
+  lk:t (exists_n r); }
+
+assume
+val global_rec : rec_t
+
+```pulse
+fn record ()
+  requires emp
+  ensures emp
+{
+  get_v global_rec.lk;
+  assert (exists_n global_rec.r);
+  unfold exists_n global_rec.r;
+  assert (exists* n. pts_to global_rec.r n);
+  admit()
+}
+```
