@@ -360,7 +360,6 @@ ensures inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** a
           ** cond b1 (aspec 'i) (aspec ('i + 1))
           ** pts_to continue true
           ** C.active p c
-      opens (add_inv emp_inames (C.iref_of c))
       {
         C.unpack_cinv_vp c;
         let b = cas x v (v + 1);

@@ -105,6 +105,7 @@ val tm_admit (_:range) : st_term
 val tm_unreachable (_:range) : st_term
 val tm_proof_hint_with_binders (_:hint_type) (_:list binder) (body:st_term) (_:range) : st_term
 val tm_with_inv (iname:term) (body:st_term) (returns_:option (binder & term & term)) (_:range) : st_term
+val tm_add_inv (inames:term) (n:term) (_:range) : term
 val close_binders (bs:list binder) (xs:list var) : list binder
 val close_term (t:term) (v:var) : term
 val close_st_term (t:st_term) (v:var) : st_term

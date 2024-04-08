@@ -62,8 +62,7 @@ let (add_iname :
   fun inames ->
     fun i ->
       Pulse_Syntax_Pure.wr
-        (Pulse_Reflection_Util.add_inv_tm
-           (Pulse_Elaborate_Pure.elab_term inames)
+        (Pulse_Syntax_Pure.tm_add_inv (Pulse_Elaborate_Pure.elab_term inames)
            (Pulse_Elaborate_Pure.elab_term i))
         (Pulse_RuntimeUtils.range_of_term inames)
 let (all_inames : Pulse_Syntax_Base.term) =
@@ -2252,7 +2251,7 @@ let (check :
                                                                     ->
                                                                     atomic_or_ghost_with_inames_and_pre_post
                                                                     c_body
-                                                                    (Pulse_Reflection_Util.add_inv_tm
+                                                                    (Pulse_Syntax_Pure.tm_add_inv
                                                                     (Pulse_Syntax_Base.comp_inames
                                                                     c_body)
                                                                     i1) pre
@@ -2375,7 +2374,7 @@ let (check :
                                                                     })),
                                                                     (atomic_or_ghost_with_inames_and_pre_post
                                                                     c_body
-                                                                    (Pulse_Reflection_Util.add_inv_tm
+                                                                    (Pulse_Syntax_Pure.tm_add_inv
                                                                     (Pulse_Syntax_Base.comp_inames
                                                                     c_body)
                                                                     i1)
@@ -2404,7 +2403,7 @@ let (check :
                                                                     (g,
                                                                     (atomic_or_ghost_with_inames_and_pre_post
                                                                     c_body
-                                                                    (Pulse_Reflection_Util.add_inv_tm
+                                                                    (Pulse_Syntax_Pure.tm_add_inv
                                                                     (Pulse_Syntax_Base.comp_inames
                                                                     c_body)
                                                                     i1)
@@ -2426,7 +2425,7 @@ let (check :
                                                                     (Pulse_Syntax_Base.comp_res
                                                                     (atomic_or_ghost_with_inames_and_pre_post
                                                                     c_body
-                                                                    (Pulse_Reflection_Util.add_inv_tm
+                                                                    (Pulse_Syntax_Pure.tm_add_inv
                                                                     (Pulse_Syntax_Base.comp_inames
                                                                     c_body)
                                                                     i1)

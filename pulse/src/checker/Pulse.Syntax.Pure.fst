@@ -349,6 +349,9 @@ let tm_inv (i p:term) : term =
   pack_term_view (Tm_Inv i p)
                  (union_ranges (range_of_term i) (range_of_term p))
 let tm_all_inames = tm_fvar (as_fv all_inames_lid)
+let tm_add_inv (is iref:R.term) : R.term =
+  let h = R.pack_ln (R.Tv_FVar (R.pack_fv add_inv_lid)) in
+  R.mk_app h [ex is; ex iref]
 
 let is_view_of (tv:term_view) (t:term) : prop =
   match tv with

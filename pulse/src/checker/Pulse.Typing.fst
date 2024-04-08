@@ -255,7 +255,7 @@ let join_obs (o1 o2:observability) : observability =
   else Observable
 
 let comp_with_inv (s:comp_st {C_STAtomic? s || C_STGhost? s}) (i p:term) =
-  let add_inv inames = add_inv_tm inames i in
+  let add_inv inames = tm_add_inv inames i in
   let add_inv_st_comp (s:st_comp) =
     let frame = tm_inv i p in
     { s with pre = tm_star frame s.pre;

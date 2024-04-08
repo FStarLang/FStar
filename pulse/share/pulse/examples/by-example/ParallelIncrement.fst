@@ -336,7 +336,6 @@ ensures inv l invp ** qpred ('i + 1)
       ensures inv l invp 
           ** cond b1 (qpred 'i) (qpred ('i + 1))
           ** pts_to continue true
-      opens (add_inv emp_inames l)
       {
         elim_inv ();
         let b = cas x v (v + 1);

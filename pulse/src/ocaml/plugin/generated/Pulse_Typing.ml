@@ -353,7 +353,7 @@ let (comp_with_inv :
   fun s ->
     fun i ->
       fun p ->
-        let add_inv1 inames = Pulse_Reflection_Util.add_inv_tm inames i in
+        let add_inv1 inames = Pulse_Syntax_Pure.tm_add_inv inames i in
         let add_inv_st_comp s1 =
           let frame = Pulse_Syntax_Pure.tm_inv i p in
           {

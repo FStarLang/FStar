@@ -206,8 +206,7 @@ fn t2 ()
   let j = new_invariant emp;
   with_invariants j 
     returns _:unit
-    ensures inv j emp
-    opens (add_inv emp_inames j) {
+    ensures inv j emp {
     ()
   };
   drop_ (inv j _);
@@ -230,8 +229,7 @@ fn test_returns0 (i:iref) (b:bool)
   unfold folded_inv i;
   with_invariants i
     returns _:unit
-    ensures inv i p ** q
-    opens (add_inv emp_inames i) {
+    ensures inv i p ** q {
     if b {
       p_to_q ()
     } else {
@@ -252,8 +250,7 @@ fn test_returns1 (i:iref)
   unfold folded_inv i;
   with_invariants i
     returns _:unit
-    ensures inv i p ** q
-    opens (add_inv emp_inames i) {
+    ensures inv i p ** q {
     ghost_p_to_q ()
   };
   fold folded_inv i

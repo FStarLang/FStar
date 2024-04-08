@@ -49,7 +49,7 @@ let remove_iname (inames i:term)
 let add_iname (inames i:term)
 : term
 = wr 
-    (Pulse.Reflection.Util.add_inv_tm
+    (tm_add_inv
       (elab_term inames)
       (elab_term i))
   (Pulse.RuntimeUtils.range_of_term inames)
@@ -326,7 +326,7 @@ let check
   assert (comp_post c_body == tm_star p post_frame);
 
   let c_out = atomic_or_ghost_with_inames_and_pre_post c_body
-    (Pulse.Reflection.Util.add_inv_tm (comp_inames c_body) i)
+    (tm_add_inv (comp_inames c_body) i)
     pre
     post_hint.post in 
 
@@ -341,7 +341,7 @@ let check
       post_frame in
     let c_out_eq = atomic_or_ghost_with_inames_and_pre_post
       c_body
-      (Pulse.Reflection.Util.add_inv_tm (comp_inames c_body) i)
+      (tm_add_inv (comp_inames c_body) i)
       (tm_star (tm_inv i p) pre_frame)
       (tm_star (tm_inv i p) post_frame) in
     

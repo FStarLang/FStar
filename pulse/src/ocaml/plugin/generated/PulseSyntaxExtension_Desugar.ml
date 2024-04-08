@@ -1643,8 +1643,25 @@ let rec (desugar_stmt :
                                                              opens
                                                        | FStar_Pervasives_Native.None
                                                            ->
+                                                           let all_names =
+                                                             n11 :: names1 in
+                                                           let opens_tm1 =
+                                                             FStar_Compiler_List.fold_left
+                                                               (fun names2 ->
+                                                                  fun n ->
+                                                                    let uu___4
+                                                                    =
+                                                                    PulseSyntaxExtension_SyntaxWrapper.tm_expr
+                                                                    n
+                                                                    s.PulseSyntaxExtension_Sugar.range1 in
+                                                                    PulseSyntaxExtension_SyntaxWrapper.tm_add_inv
+                                                                    names2
+                                                                    uu___4
+                                                                    s.PulseSyntaxExtension_Sugar.range1)
+                                                               PulseSyntaxExtension_SyntaxWrapper.tm_emp_inames
+                                                               all_names in
                                                            PulseSyntaxExtension_Err.return
-                                                             PulseSyntaxExtension_SyntaxWrapper.tm_emp_inames in
+                                                             opens_tm1 in
                                                      match returns_ with
                                                      | FStar_Pervasives_Native.None
                                                          ->
