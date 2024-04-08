@@ -50,8 +50,8 @@ let format_failed_goal (g:env) (ctxt:list term) (goal:list term) =
     (env_to_string g)
 
 
-let mk_arrow ty t = RT.mk_arrow (elab_term ty) T.Q_Explicit (elab_term t)
-let mk_abs ty t = RT.(mk_abs (elab_term ty) T.Q_Explicit (elab_term t))
+let mk_arrow ty t = RT.mk_arrow ty T.Q_Explicit t
+let mk_abs ty t = RT.(mk_abs ty T.Q_Explicit t)
 
 let intro_comp_typing (g:env) 
                       (c:comp_st)
@@ -442,8 +442,9 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
 #pop-options
 
 module LN = Pulse.Typing.LN
-#push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 1"
+#push-options "--z3rlimit_factor 8 --fuel 1 --ifuel 1"
 
+let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
 
 let st_comp_typing_with_post_hint 
       (#g:env) (#ctxt:_)
@@ -478,7 +479,7 @@ let st_comp_typing_with_post_hint
         assert (subst_term tm_vprop (renaming ph.x x) == tm_vprop);
         assume (subst_term (open_term ph.post ph.x) (renaming ph.x x) ==
                 open_term ph.post x);
-        tt
+        coerce_eq tt ()
   in
   let post_typing_src
     : tot_typing (push_binding g x ppname_default ph.ret_ty)
@@ -617,7 +618,7 @@ let match_comp_res_with_post_hint (#g:env) (#t:st_term) (#c:comp_st)
                 (P.term_to_string ret_ty))
          | Some tok ->
            let d_equiv
-             : RT.equiv _ (elab_term cres) (elab_term ret_ty) =
+             : RT.equiv _ cres ret_ty =
              RT.Rel_eq_token _ _ _ (FStar.Squash.return_squash tok) in
            
            let c' = with_st_comp c {(st_comp_of_comp c) with res = ret_ty } in
@@ -776,23 +777,22 @@ let apply_conversion
       (#g:env) (#e:term) (#eff:_) (#t0:term)
       (d:typing g e eff t0)
       (#t1:term)
-      (eq:Ghost.erased (RT.related (elab_env g) (elab_term t0) RT.R_Eq (elab_term t1)))
+      (eq:Ghost.erased (RT.related (elab_env g) t0 RT.R_Eq t1))
   : typing g e eff t1
-  = let d : RT.typing (elab_env g) (elab_term e) (eff, (elab_term t0)) = d._0 in
-    let r : RT.related (elab_env g) (elab_term t0) RT.R_Eq (elab_term t1) = eq in
+  = let d : RT.typing (elab_env g) e (eff, t0) = d._0 in
+    let r : RT.related (elab_env g) t0 RT.R_Eq t1 = eq in
     let r  = RT.Rel_equiv _ _ _ RT.R_Sub r in
-    let s : RT.sub_comp (elab_env g) (eff, (elab_term t0)) (eff, elab_term t1) = 
+    let s : RT.sub_comp (elab_env g) (eff, t0) (eff, t1) = 
         RT.Relc_typ _ _ _ _ _ r
     in
     E (RT.T_Sub _ _ _ _ d s)
-    
+
 let norm_typing
       (g:env) (e:term) (eff:_) (t0:term)
       (d:typing g e eff t0)
       (steps:list norm_step)
   : T.Tac (t':term & typing g e eff t')
-  = let t = elab_term t0 in
-    let u_t_typing : Ghost.erased (u:R.universe & RT.typing _ _ _) = 
+  = let u_t_typing : Ghost.erased (u:R.universe & RT.typing _ _ _) = 
       Pulse.Typing.Metatheory.Base.typing_correctness d._0
     in
     let (| t', t'_typing, related_t_t' |) =
@@ -814,7 +814,7 @@ let norm_typing_inverse
       let d1 = Ghost.hide d1._0 in
       Pulse.RuntimeUtils.norm_well_typed_term d1 steps
     in
-    if TermEq.term_eq (elab_term t0) t1'
+    if TermEq.term_eq t0 t1'
     then (
       let related_t1'_t1 = Ghost.hide (RT.Rel_sym _ _ _ related_t1_t1') in
       Some (apply_conversion d related_t1'_t1)
@@ -831,24 +831,24 @@ let norm_st_typing_inverse
       (steps:list norm_step)
   : T.Tac (option (st_typing g e (C_Tot t1)))
   = let d1 
-      : Ghost.erased (RT.tot_typing (elab_env g) (elab_term t1) (RT.tm_type u))
-      = Ghost.hide d1._0
+      : Ghost.erased (RT.tot_typing (elab_env g) t1 (RT.tm_type u))
+      = Ghost.hide (coerce_eq d1._0 ())
     in
     let (| t1', t1'_typing, related_t1_t1' |) =
       Pulse.RuntimeUtils.norm_well_typed_term d1 steps
     in
-    if TermEq.term_eq (elab_term t0) t1'
+    if TermEq.term_eq t0 t1'
     then (
       let t0_typing 
-        : Ghost.erased (RT.tot_typing (elab_env g) (elab_term t0) (RT.tm_type u)) =
-        rt_equiv_typing #_ #_ #(elab_term t0) related_t1_t1' d1
+        : Ghost.erased (RT.tot_typing (elab_env g) t0 (RT.tm_type u)) =
+        rt_equiv_typing #_ #_ #t0 related_t1_t1' d1
       in
       let eq
-        : Ghost.erased (RT.equiv (elab_env g) (elab_term t0) (elab_term t1))
+        : Ghost.erased (RT.equiv (elab_env g) t0 t1)
         = Ghost.hide (RT.Rel_sym _ _ _ related_t1_t1')
       in
       let steq : st_equiv g (C_Tot t0) (C_Tot t1) =
-        ST_TotEquiv _ _ _ u (E (Ghost.reveal t0_typing)) eq
+        ST_TotEquiv _ _ _ u (E (coerce_eq (Ghost.reveal t0_typing) ())) eq
       in
       Some (T_Equiv _ _ _ _ d steq)
     )

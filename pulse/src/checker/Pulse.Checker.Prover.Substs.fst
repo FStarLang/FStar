@@ -173,14 +173,14 @@ let rec ss_term (t:term) (ss:ss_t) : Tot term (decreases L.length ss.l) =
   match ss.l with
   | [] -> t
   | y::tl ->
-    let t = subst_term t [ NT y (Map.sel ss.m y) ] in
+    let t = subst_term t [ RT.NT y (Map.sel ss.m y) ] in
     ss_term t (tail ss)
 
 let rec ss_st_term (t:st_term) (ss:ss_t) : Tot st_term (decreases L.length ss.l) =
   match ss.l with
   | [] -> t
   | y::tl ->
-    let t = subst_st_term t [ NT y (Map.sel ss.m y) ] in
+    let t = subst_st_term t [ RT.NT y (Map.sel ss.m y) ] in
     ss_st_term t (tail ss)
 
 let rec ss_st_comp (s:st_comp) (ss:ss_t)
@@ -188,7 +188,7 @@ let rec ss_st_comp (s:st_comp) (ss:ss_t)
   match ss.l with
   | [] -> s
   | y::tl ->
-    let s = subst_st_comp s [ NT y (Map.sel ss.m y) ] in
+    let s = subst_st_comp s [ RT.NT y (Map.sel ss.m y) ] in
     ss_st_comp s (tail ss)
 
 let rec ss_comp (c:comp) (ss:ss_t)
@@ -196,7 +196,7 @@ let rec ss_comp (c:comp) (ss:ss_t)
   match ss.l with
   | [] -> c
   | y::tl ->
-    let c = subst_comp c [ NT y (Map.sel ss.m y) ] in
+    let c = subst_comp c [ RT.NT y (Map.sel ss.m y) ] in
     ss_comp c (tail ss)
 
 let rec ss_binder (b:binder) (ss:ss_t)
@@ -204,7 +204,7 @@ let rec ss_binder (b:binder) (ss:ss_t)
   match ss.l with
   | [] -> b
   | y::tl ->
-    let b = subst_binder b [ NT y (Map.sel ss.m y) ] in
+    let b = subst_binder b [ RT.NT y (Map.sel ss.m y) ] in
     ss_binder b (tail ss)
 
 let rec ss_env (g:env) (ss:ss_t)
@@ -214,7 +214,7 @@ let rec ss_env (g:env) (ss:ss_t)
   admit ();
   match ss.l with
   | [] -> g
-  | y::tl -> ss_env (subst_env g [ NT y (Map.sel ss.m y) ]) (tail ss)
+  | y::tl -> ss_env (subst_env g [ RT.NT y (Map.sel ss.m y) ]) (tail ss)
 
 let rec ss_st_comp_commutes (s:st_comp) (ss:ss_t)
   : Lemma (ensures
@@ -226,7 +226,7 @@ let rec ss_st_comp_commutes (s:st_comp) (ss:ss_t)
           [SMTPat (ss_st_comp s ss)] =
   match ss.l with
   | [] -> ()
-  | y::tl -> ss_st_comp_commutes (subst_st_comp s [ NT y (Map.sel ss.m y) ]) (tail ss)
+  | y::tl -> ss_st_comp_commutes (subst_st_comp s [ RT.NT y (Map.sel ss.m y) ]) (tail ss)
 
 let rec ss_comp_commutes (c:comp) (ss:ss_t)
   : Lemma (ensures
@@ -242,7 +242,7 @@ let rec ss_comp_commutes (c:comp) (ss:ss_t)
           [SMTPat (ss_comp c ss)] =
   match ss.l with
   | [] -> ()
-  | y::tl -> ss_comp_commutes (subst_comp c [ NT y (Map.sel ss.m y) ]) (tail ss)
+  | y::tl -> ss_comp_commutes (subst_comp c [ RT.NT y (Map.sel ss.m y) ]) (tail ss)
 
 let rec nt_substs_st_comp_commutes (s:st_comp) (nts:nt_substs)
   : Lemma (ensures
@@ -254,7 +254,7 @@ let rec nt_substs_st_comp_commutes (s:st_comp) (nts:nt_substs)
           [SMTPat (nt_subst_st_comp s nts)] =
   match nts with
   | [] -> ()
-  | (NT x e)::nts_tl -> nt_substs_st_comp_commutes (nt_subst_st_comp s [ NT x e ]) nts_tl
+  | (RT.NT x e)::nts_tl -> nt_substs_st_comp_commutes (nt_subst_st_comp s [ RT.NT x e ]) nts_tl
 
 let rec nt_subst_comp_commutes (c:comp) (nts:nt_substs)
   : Lemma (ensures
@@ -270,12 +270,12 @@ let rec nt_subst_comp_commutes (c:comp) (nts:nt_substs)
           [SMTPat (nt_subst_comp c nts)] =
   match nts with
   | [] -> ()
-  | (NT x e)::nts_tl -> nt_subst_comp_commutes (nt_subst_comp c [ NT x e ]) nts_tl
+  | (RT.NT x e)::nts_tl -> nt_subst_comp_commutes (nt_subst_comp c [ RT.NT x e ]) nts_tl
 
 let rec is_permutation (nts:nt_substs) (ss:ss_t) : Type0 =
   match nts, ss.l with
   | [], [] -> True
-  | (NT x e)::nts_rest, _::_ ->
+  | (RT.NT x e)::nts_rest, _::_ ->
     Map.contains ss.m x /\
     Map.sel ss.m x == e /\
     is_permutation nts_rest ({l=remove_l ss.l x; m=remove_map ss.m x})
@@ -304,7 +304,7 @@ let rec ss_to_nt_substs (g:env) (uvs:env) (ss:ss_t)
          let (| eff, d |) = core_check_term_at_type g t ty in
          let _ = FStar.Squash.return_squash d in
          let ropt =
-           ss_to_nt_substs g (subst_env rest_uvs [ NT x t ]) {l=remove_l ss.l x;
+           ss_to_nt_substs g (subst_env rest_uvs [ RT.NT x t ]) {l=remove_l ss.l x;
                                                               m=remove_map ss.m x} in
          match ropt with
          | Inr e -> Inr e
@@ -313,7 +313,7 @@ let rec ss_to_nt_substs (g:env) (uvs:env) (ss:ss_t)
                     effect_labels:list T.tot_or_ghost {
                       well_typed_nt_substs g uvs nts effect_labels /\
                       is_permutation nts ss
-                    }) = (| (NT x t)::nts, eff::effect_labels |) in
+                    }) = (| (RT.NT x t)::nts, eff::effect_labels |) in
            Inl r
     else Inr (Printf.sprintf "prover could not prove uvar _#%d" x)
 #pop-options
@@ -334,17 +334,17 @@ let rec well_typed_nt_substs_prefix
     let x1, ty1, rest_uvs1 = remove_binding uvs1 in
     let x, ty, rest_uvs = remove_binding uvs in
     assume (x1 == x /\ ty1 == ty);
-    let (NT y e)::nts_rest = nts in
+    let (RT.NT y e)::nts_rest = nts in
     let eff::effect_labels_rest = effect_labels in
-    assume (env_extends (subst_env rest_uvs [ NT y e ]) (subst_env rest_uvs1 [ NT y e ]));
+    assume (env_extends (subst_env rest_uvs [ RT.NT y e ]) (subst_env rest_uvs1 [ RT.NT y e ]));
     let nts, labs =
       well_typed_nt_substs_prefix
         g
-        (subst_env rest_uvs [ NT y e ])
+        (subst_env rest_uvs [ RT.NT y e ])
         nts_rest
         effect_labels_rest
-        (subst_env rest_uvs1 [ NT y e ]) in
-    ((NT y e)::nts),
+        (subst_env rest_uvs1 [ RT.NT y e ]) in
+    ((RT.NT y e)::nts),
     (eff::labs)
 
 let ss_nt_subst (g:env) (uvs:env) (ss:ss_t) (nts:nt_substs) (effect_labels:list T.tot_or_ghost)
@@ -377,7 +377,7 @@ let rec st_typing_nt_substs
     Inl t_typing
   | _ ->
     let x, ty, uvs_rest = remove_binding uvs in
-    let (NT _ e)::nts_rest = nts in
+    let (RT.NT _ e)::nts_rest = nts in
     let eff::effect_labels_rest = effect_labels in
     let e_typing : typing g e eff ty = FStar.IndefiniteDescription.elim_squash () in
     if (not (eff = T.E_Ghost)) || C_STGhost? c
@@ -387,18 +387,18 @@ let rec st_typing_nt_substs
         : st_typing (push_env g (push_env (singleton_env (fstar_env g) x ty) (push_env uvs_rest g'))) t c
         = coerce_eq t_typing () in
       let t_typing
-        : st_typing (push_env g (subst_env (push_env uvs_rest g') [ NT x e ]))
-                    (subst_st_term t [ NT x e ])
-                    (subst_comp c [ NT x e ])
+        : st_typing (push_env g (subst_env (push_env uvs_rest g') [ RT.NT x e ]))
+                    (subst_st_term t [ RT.NT x e ])
+                    (subst_comp c [ RT.NT x e ])
         = Metatheory.st_typing_subst g x ty (push_env uvs_rest g') e_typing t_typing () in
 
-      assume (subst_env (push_env uvs_rest g') [ NT x e ] ==
-              push_env (subst_env uvs_rest [ NT x e ]) (subst_env g' [ NT x e ]));
+      assume (subst_env (push_env uvs_rest g') [ RT.NT x e ] ==
+              push_env (subst_env uvs_rest [ RT.NT x e ]) (subst_env g' [ RT.NT x e ]));
 
 
       st_typing_nt_substs g
-        (subst_env uvs_rest [ NT x e ])
-        (subst_env g' [ NT x e ])
+        (subst_env uvs_rest [ RT.NT x e ])
+        (subst_env g' [ RT.NT x e ])
         t_typing nts_rest effect_labels_rest
     end
     else Inr (x, e)

@@ -98,12 +98,12 @@ let (tm_exists_inversion :
   = fun g -> fun u -> fun ty -> fun p -> fun uu___ -> fun x -> ((), ())
 
 let (renaming :
-  Pulse_Syntax_Base.var ->
-    Pulse_Syntax_Base.var -> Pulse_Syntax_Naming.subst_elt Prims.list)
+  FStar_Reflection_V2_Data.var ->
+    Pulse_Syntax_Base.var -> FStar_Reflection_Typing.subst_elt Prims.list)
   =
   fun x ->
     fun y ->
-      [Pulse_Syntax_Naming.NT
+      [FStar_Reflection_Typing.NT
          (x,
            (Pulse_Syntax_Pure.tm_var
               {
@@ -237,8 +237,7 @@ let (st_equiv_weakening :
                          ((Pulse_Typing.elab_env
                              (Pulse_Typing_Env.push_env
                                 (Pulse_Typing_Env.push_env g g1) g')),
-                           (Pulse_Elaborate_Pure.elab_term
-                              (Pulse_Syntax_Base.comp_res c11)),
+                           (Pulse_Syntax_Base.comp_res c11),
                            FStar_Reflection_Typing.R_Eq)), (), ())
 
 let rec (st_sub_weakening :
@@ -603,8 +602,8 @@ let rec (st_typing_weakening :
                          g1), ())
 let (nt :
   Pulse_Syntax_Base.var ->
-    Pulse_Syntax_Base.term -> Pulse_Syntax_Naming.subst_elt Prims.list)
-  = fun x -> fun t -> [Pulse_Syntax_Naming.NT (x, t)]
+    Pulse_Syntax_Base.term -> FStar_Reflection_Typing.subst_elt Prims.list)
+  = fun x -> fun t -> [FStar_Reflection_Typing.NT (x, t)]
 let (non_informative_t_subst :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.var ->
@@ -772,10 +771,9 @@ let (st_equiv_subst :
                                ((Pulse_Typing.elab_env
                                    (Pulse_Typing_Env.push_env g
                                       (Pulse_Typing_Env.subst_env g' (nt x e)))),
-                                 (Pulse_Elaborate_Pure.elab_term
-                                    (Pulse_Syntax_Base.comp_res
-                                       (Pulse_Syntax_Naming.subst_comp c11
-                                          (nt x e)))),
+                                 (Pulse_Syntax_Base.comp_res
+                                    (Pulse_Syntax_Naming.subst_comp c11
+                                       (nt x e))),
                                  FStar_Reflection_Typing.R_Eq)), (), ())
 let (st_comp_typing_subst :
   Pulse_Typing_Env.env ->

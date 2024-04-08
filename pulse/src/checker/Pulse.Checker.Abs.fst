@@ -24,6 +24,7 @@ open Pulse.Typing.Combinators
 open Pulse.Checker.Pure
 open Pulse.Checker.Base
 
+module RT = FStar.Reflection.Typing
 module P = Pulse.Syntax.Printer
 module FV = Pulse.Typing.FV
 module T = FStar.Tactics.V2
@@ -77,7 +78,7 @@ let rec arrow_of_abs (env:_) (prog:st_term { Tm_Abs? prog.term })
         let c = open_comp_with c (U.term_of_nvar px) in
         match c with
         | C_Tot tannot -> (
-          let t = RU.hnf_lax (elab_env env) (elab_term tannot) in
+          let t = RU.hnf_lax (elab_env env) tannot in
           //retain the original annotation, so that we check it wrt the inferred type in maybe_rewrite_body_typing
           let t = close_term t x in
           let annot = close_comp c x in
@@ -296,9 +297,9 @@ let maybe_rewrite_body_typing
 
 let open_ascription (c:comp_ascription) (nv:nvar) : comp_ascription =
   let t = term_of_nvar nv in
-  subst_ascription c [DT 0 t]
+  subst_ascription c [RT.DT 0 t]
 let close_ascription (c:comp_ascription) (nv:nvar) : comp_ascription =
-  subst_ascription c [ND (snd nv) 0]
+  subst_ascription c [RT.ND (snd nv) 0]
 
 #push-options "--z3rlimit_factor 4"
 let rec check_abs_core

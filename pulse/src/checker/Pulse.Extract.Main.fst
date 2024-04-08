@@ -55,16 +55,14 @@ let debug (g:env) (f: unit -> T.Tac string)
 
 let term_as_mlexpr (g:env) (t:term)
   : T.Tac mlexpr
-  = let t = Elab.elab_term t in
-    let uenv = uenv_of_env g in
+  = let uenv = uenv_of_env g in
     let t = normalize_for_extraction uenv t in
     let mlt, _, _ = term_as_mlexpr uenv t in
     mlt
 
 let term_as_mlty (g:env) (t:term)
   : T.Tac mlty
-  = let t = Elab.elab_term t in
-    term_as_mlty (uenv_of_env g) t
+  = term_as_mlty (uenv_of_env g) t
 
 let extend_env (g:env) (b:binder)
   : T.Tac (env & mlident & mlty & name)
@@ -247,7 +245,7 @@ let maybe_inline (g:env) (head:term) (arg:term) :T.Tac (option st_term) =
           L.fold_right
             (fun arg (i, subst) ->
               i + 1,
-              LN.DT i (fst arg)::subst)
+              RT.DT i (fst arg)::subst)
             args
             (0, [])
       in
@@ -292,7 +290,7 @@ let maybe_inline (g:env) (head:term) (arg:term) :T.Tac (option st_term) =
             L.fold_left 
               (fun head (tm, qual) ->
                 R.pack_ln (
-                  R.Tv_App head (Pulse.Elaborate.Pure.elab_term tm, (if Some? qual then R.Q_Implicit else R.Q_Explicit))
+                  R.Tv_App head (tm, (if Some? qual then R.Q_Implicit else R.Q_Explicit))
                 ))
               applied_body
               rest
@@ -385,7 +383,7 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
     else if is_internal_binder &&
             Some? (is_return head)
     then let Some head = is_return head in
-         simplify_st_term g (LN.subst_st_term body [LN.DT 0 head])
+         simplify_st_term g (LN.subst_st_term body [RT.DT 0 head])
     else begin
       match simplify_nested_let e binder head body with
       | Some e -> simplify_st_term g e
@@ -471,7 +469,7 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
 
     | Tm_Bind { binder; head; body } ->
       if is_erasable head
-      then let body = LN.subst_st_term body [LN.DT 0 unit_val] in
+      then let body = LN.subst_st_term body [RT.DT 0 unit_val] in
            erase_ghost_subterms g body
       else let head = erase_ghost_subterms g head in
            let body = open_erase_close g binder body in
@@ -479,7 +477,7 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
 
     | Tm_TotBind { binder; head; body } ->
       if erase_type_for_extraction g binder.binder_ty
-      then let body = LN.subst_st_term body [LN.DT 0 unit_val] in
+      then let body = LN.subst_st_term body [RT.DT 0 unit_val] in
            erase_ghost_subterms g body
       else let body = open_erase_close g binder body in
            ret (Tm_TotBind { binder; head; body })
@@ -575,7 +573,7 @@ let rec extract (g:env) (p:st_term)
       | Tm_Bind { binder; head; body } ->
         if is_erasable head
         then (
-          let body = LN.subst_st_term body [LN.DT 0 unit_val] in
+          let body = LN.subst_st_term body [RT.DT 0 unit_val] in
           debug g (fun _ -> Printf.sprintf "Erasing head of bind %s\nopened body to %s"
                               (st_term_to_string head)
                               (st_term_to_string body));
@@ -706,7 +704,7 @@ let rec generalize (g:env) (t:R.typ) (e:option st_term)
            let e, attrs =
              match e with
              | Some {term=Tm_Abs {b; body}} ->
-               Some (LN.subst_st_term body [LN.DT 0 (wr xt Range.range_0)]),
+               Some (LN.subst_st_term body [RT.DT 0 (wr xt Range.range_0)]),
                b.binder_attrs
              | _ -> e, binder_attrs_default in
            let mlattrs = attrs |> T.unseal |> T.map (term_as_mlexpr g) in

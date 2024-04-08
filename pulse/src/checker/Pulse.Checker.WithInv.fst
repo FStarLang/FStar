@@ -42,16 +42,16 @@ let remove_iname (inames i:term)
 : term
 = wr 
     (Pulse.Reflection.Util.remove_inv_tm
-      (elab_term inames)
-      (elab_term i))
+      inames
+      i)
   (Pulse.RuntimeUtils.range_of_term inames)
 
 let add_iname (inames i:term)
 : term
 = wr 
     (Pulse.Reflection.Util.add_inv_tm
-      (elab_term inames)
-      (elab_term i))
+      inames
+      i)
   (Pulse.RuntimeUtils.range_of_term inames)
 
 module RU = Pulse.RuntimeUtils

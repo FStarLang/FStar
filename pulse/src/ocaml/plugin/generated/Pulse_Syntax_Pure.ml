@@ -92,11 +92,10 @@ let (tm_refine :
       let rb =
         FStar_Reflection_Typing.mk_simple_binder
           (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name
-          (Pulse_Elaborate_Pure.elab_term b.Pulse_Syntax_Base.binder_ty) in
+          b.Pulse_Syntax_Base.binder_ty in
       Pulse_RuntimeUtils.set_range
         (FStar_Reflection_V2_Builtins.pack_ln
-           (FStar_Reflection_V2_Data.Tv_Refine
-              (rb, (Pulse_Elaborate_Pure.elab_term t)))) FStar_Range.range_0
+           (FStar_Reflection_V2_Data.Tv_Refine (rb, t))) FStar_Range.range_0
 let (tm_let :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.term ->
@@ -107,13 +106,11 @@ let (tm_let :
       fun e2 ->
         let rb =
           FStar_Reflection_Typing.mk_simple_binder
-            FStar_Reflection_Typing.pp_name_default
-            (Pulse_Elaborate_Pure.elab_term t) in
+            FStar_Reflection_Typing.pp_name_default t in
         Pulse_RuntimeUtils.set_range
           (FStar_Reflection_V2_Builtins.pack_ln
-             (FStar_Reflection_V2_Data.Tv_Let
-                (false, [], rb, (Pulse_Elaborate_Pure.elab_term e1),
-                  (Pulse_Elaborate_Pure.elab_term e2)))) FStar_Range.range_0
+             (FStar_Reflection_V2_Data.Tv_Let (false, [], rb, e1, e2)))
+          FStar_Range.range_0
 let (tm_pureapp :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option ->
@@ -123,10 +120,8 @@ let (tm_pureapp :
     fun q ->
       fun arg ->
         Pulse_RuntimeUtils.set_range
-          (FStar_Reflection_V2_Derived.mk_app
-             (Pulse_Elaborate_Pure.elab_term head)
-             [((Pulse_Elaborate_Pure.elab_term arg),
-                (Pulse_Elaborate_Pure.elab_qual q))]) FStar_Range.range_0
+          (FStar_Reflection_V2_Derived.mk_app head
+             [(arg, (Pulse_Elaborate_Pure.elab_qual q))]) FStar_Range.range_0
 let (tm_pureabs :
   FStar_Reflection_V2_Data.ppname_t ->
     Pulse_Syntax_Base.term ->
@@ -141,16 +136,14 @@ let (tm_pureabs :
             {
               FStar_Tactics_NamedView.uniq = Prims.int_zero;
               FStar_Tactics_NamedView.ppname = ppname;
-              FStar_Tactics_NamedView.sort =
-                (Pulse_Elaborate_Pure.elab_term ty);
+              FStar_Tactics_NamedView.sort = ty;
               FStar_Tactics_NamedView.qual =
                 (Pulse_Elaborate_Pure.elab_qual q);
               FStar_Tactics_NamedView.attrs = []
             } in
           let r =
             FStar_Tactics_NamedView.pack
-              (FStar_Tactics_NamedView.Tv_Abs
-                 (b, (Pulse_Elaborate_Pure.elab_term body))) in
+              (FStar_Tactics_NamedView.Tv_Abs (b, body)) in
           Pulse_RuntimeUtils.set_range r FStar_Range.range_0
 let (tm_arrow :
   Pulse_Syntax_Base.binder ->
@@ -163,7 +156,7 @@ let (tm_arrow :
         Pulse_RuntimeUtils.set_range
           (Pulse_Reflection_Util.mk_arrow_with_name
              (b.Pulse_Syntax_Base.binder_ppname).Pulse_Syntax_Base.name
-             ((Pulse_Elaborate_Pure.elab_term b.Pulse_Syntax_Base.binder_ty),
+             ((b.Pulse_Syntax_Base.binder_ty),
                (Pulse_Elaborate_Pure.elab_qual q))
              (Pulse_Elaborate_Pure.elab_comp c)) FStar_Range.range_0
 let (tm_type : Pulse_Syntax_Base.universe -> Pulse_Syntax_Base.term) =

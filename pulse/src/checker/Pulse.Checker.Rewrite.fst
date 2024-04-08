@@ -27,9 +27,7 @@ module P = Pulse.Syntax.Printer
 
 let check_vprop_equiv_ext r (g:env) (p q:vprop)
 : T.Tac (vprop_equiv g p q)
-= let elab_p = elab_term p in
-  let elab_q = elab_term q in
-  let res, issues = T.check_equiv (elab_env g) elab_p elab_q in
+= let res, issues = T.check_equiv (elab_env g) p q in
   T.log_issues issues;
   match res with
   | None -> 

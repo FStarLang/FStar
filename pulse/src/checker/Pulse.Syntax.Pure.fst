@@ -65,21 +65,21 @@ let tm_constant (c:constant) : term =
   set_range (R.pack_ln (R.Tv_Const c)) FStar.Range.range_0
 
 let tm_refine (b:binder) (t:term) : term =
-  let rb : R.simple_binder = RT.mk_simple_binder b.binder_ppname.name (elab_term b.binder_ty) in
-  set_range (R.pack_ln (R.Tv_Refine rb (elab_term t)))
+  let rb : R.simple_binder = RT.mk_simple_binder b.binder_ppname.name b.binder_ty in
+  set_range (R.pack_ln (R.Tv_Refine rb t))
             FStar.Range.range_0
 
 let tm_let (t e1 e2:term) : term =
-  let rb : R.simple_binder = RT.mk_simple_binder RT.pp_name_default (elab_term t) in
+  let rb : R.simple_binder = RT.mk_simple_binder RT.pp_name_default t in
   set_range (R.pack_ln (R.Tv_Let false
                                  []
                                  rb
-                                 (elab_term e1)
-                                 (elab_term e2)))
+                                 e1
+                                 e2))
            FStar.Range.range_0
 
 let tm_pureapp (head:term) (q:option qualifier) (arg:term) : term =
-  set_range (R.mk_app (elab_term head) [(elab_term arg, elab_qual q)])
+  set_range (R.mk_app head [(arg, elab_qual q)])
             FStar.Range.range_0
 
 let tm_pureabs (ppname:R.ppname_t) (ty : term) (q : option qualifier) (body:term) : term =
@@ -88,17 +88,17 @@ let tm_pureabs (ppname:R.ppname_t) (ty : term) (q : option qualifier) (body:term
   let b : T.binder = {
       uniq = 0;
       ppname = ppname;
-      sort = elab_term ty;
+      sort = ty;
       qual = elab_qual q;
       attrs = [];
   }
   in
-  let r = pack (Tv_Abs b (elab_term body)) in
+  let r = pack (Tv_Abs b body) in
   assume (~(R.Tv_Unknown? (R.inspect_ln r))); // NamedView API doesn't ensure this, it should
   set_range r FStar.Range.range_0
 
 let tm_arrow (b:binder) (q:option qualifier) (c:comp) : term =
-  set_range (mk_arrow_with_name b.binder_ppname.name (elab_term b.binder_ty, elab_qual q)
+  set_range (mk_arrow_with_name b.binder_ppname.name (b.binder_ty, elab_qual q)
                                                      (elab_comp c))
             FStar.Range.range_0
 

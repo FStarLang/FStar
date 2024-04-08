@@ -30,16 +30,15 @@ val stc_soundness
   (#st:st_comp)
   (d_st:st_comp_typing g st)
   
-  : GTot (RT.tot_typing ( elab_env g)
-                        (elab_term st.res)
+  : GTot (RT.tot_typing (elab_env g)
+                        st.res
                         (RT.tm_type st.u) &
           RT.tot_typing (elab_env g)
-                        (elab_term st.pre)
+                        st.pre
                         vprop_tm &
           RT.tot_typing (elab_env g)
-                        (mk_abs (elab_term st.res) R.Q_Explicit
-                           (elab_term st.post))
-                        (post1_type_bind (elab_term st.res)))
+                        (mk_abs st.res R.Q_Explicit st.post)
+                        (post1_type_bind st.res))
 
 val comp_typing_soundness (g:stt_env)
                           (c:comp)

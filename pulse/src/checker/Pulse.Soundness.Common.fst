@@ -37,12 +37,6 @@ let rec extend_env_l_lookup_fvar (g:R.env) (sg:env_bindings) (fv:R.fv) (us:R.uni
     | [] -> ()
     | hd::tl -> extend_env_l_lookup_fvar g tl fv us
 
-
-let elab_term_opt (b:option term) =
-  match b with
-  | Some b -> Some (elab_term b)
-  | None -> None
-
 // let rec extend_env_l_lookup_bvar (g:R.env) (sg:env_bindings) (x:var)
 //   : Lemma 
 //     (requires (forall x. RT.lookup_bvar g x == None))
@@ -55,7 +49,7 @@ let elab_term_opt (b:option term) =
 
 let lookup_elab_env (g:env) (x:var)
   : Lemma 
-    (ensures (RT.lookup_bvar (elab_env g) x == elab_term_opt (lookup g x)))
+    (ensures (RT.lookup_bvar (elab_env g) x == lookup g x))
     [SMTPat (RT.lookup_bvar (elab_env g) x)]
   = admit ()  // TODO: FIX ME!!!!
   
@@ -63,7 +57,7 @@ let tot_typing_soundness (#g:env)
                          (#e:term)
                          (#t:term)
                          (d:tot_typing g e t)
-  : GTot (RT.tot_typing (elab_env g) (elab_term e) (elab_term t))
+  : GTot (RT.tot_typing (elab_env g) e t)
   = let E d = d in
     d
 
@@ -71,7 +65,7 @@ let ghost_typing_soundness (#g:env)
                            (#e:term)
                            (#t:term)
                            (d:ghost_typing g e t)
-  : GTot (RT.ghost_typing (elab_env g) (elab_term e) (elab_term t))
+  : GTot (RT.ghost_typing (elab_env g) e t)
   = let E d = d in
     d
 
@@ -87,11 +81,10 @@ let mk_t_abs_tot (g:env)
                  (#x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars body) })
                  (body_typing:tot_typing (push_binding g x ppname ty) (open_term body x) body_ty)
   : GTot (RT.tot_typing (elab_env g)
-            (mk_abs_with_name ppname.name (elab_term ty) (elab_qual q) (elab_term body))
-            (elab_term (tm_arrow (mk_binder_ppname ty ppname) q (close_comp (C_Tot body_ty) x))))
+            (mk_abs_with_name ppname.name ty (elab_qual q) body)
+            (tm_arrow (mk_binder_ppname ty ppname) q (close_comp (C_Tot body_ty) x)))
   = let c = C_Tot body_ty in
-    let r_ty = elab_term ty in
-    let r_body = elab_term (open_term body x) in
+    let r_body = open_term body x in
     let r_c = elab_comp c in
     let r_t_typing = tot_typing_soundness t_typing in
     let r_body_typing = tot_typing_soundness body_typing in
@@ -99,21 +92,20 @@ let mk_t_abs_tot (g:env)
     RT.open_close_inverse r_body x;
     elab_comp_close_commute c x;      
     elab_freevars body;
-    assert (~ (x `Set.mem` RT.freevars (elab_term body)));
+    assert (~ (x `Set.mem` RT.freevars body));
     assume (~ (x `Set.mem` RT.freevars (RT.close_term r_body x)));
     RT.close_term_spec (elab_comp c) x;
-    assert (elab_term (tm_type u) == RT.tm_type u);
-    let r_t_typing : RT.tot_typing (elab_env g) r_ty (RT.tm_type u)
+    let r_t_typing : RT.tot_typing (elab_env g) ty (RT.tm_type u)
       = coerce_eq () r_t_typing //strange that this coercion is needed
     in
     let d : RT.tot_typing (elab_env g)
-              (mk_abs_with_name ppname.name (elab_term ty) (elab_qual q)
-                 (RT.close_term (elab_term (open_term body x)) x))
-              (elab_term (tm_arrow (mk_binder_ppname ty ppname) q (close_comp (C_Tot body_ty) x)))
+              (mk_abs_with_name ppname.name ty (elab_qual q)
+                 (RT.close_term (open_term body x) x))
+              (tm_arrow (mk_binder_ppname ty ppname) q (close_comp (C_Tot body_ty) x))
           = 
     RT.T_Abs (elab_env g)
              x
-             r_ty
+             ty
              (RT.close_term r_body x)
              (T.E_Total, r_c)
              u ppname.name (elab_qual q)
@@ -122,16 +114,14 @@ let mk_t_abs_tot (g:env)
              r_body_typing
     in
     elab_open_commute' body (null_var x) 0;
-    RT.open_term_spec (elab_term body) x;
-    assert (elab_term (open_term body x) ==
-            RT.open_term (elab_term body) x);
+    RT.open_term_spec body x;
     let d : RT.typing _
-                      (mk_abs_with_name ppname.name (elab_term ty) (elab_qual q)
-                              (RT.close_term (RT.open_term (elab_term body) x) x))
+                      (mk_abs_with_name ppname.name ty (elab_qual q)
+                              (RT.close_term (RT.open_term body x) x))
                       _
           = d 
     in
-    RT.close_open_inverse (elab_term body) x;
+    RT.close_open_inverse body x;
     d
 
 let mk_t_abs (g:env)
@@ -141,7 +131,7 @@ let mk_t_abs (g:env)
              (#t_typing:typing g ty T.E_Total (tm_type u))
              (ppname:ppname)
              (r_t_typing:RT.tot_typing (elab_env g)
-                                       (elab_term ty)
+                                       ty
                                        (elab_comp (C_Tot (tm_type u))))
              (#body:st_term)
              (#x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars_st body) })
@@ -151,10 +141,9 @@ let mk_t_abs (g:env)
                                           (elab_st_typing body_typing)
                                           (elab_comp c))
   : GTot (RT.tot_typing (elab_env g)
-            (mk_abs_with_name ppname.name (elab_term ty) (elab_qual q) (RT.close_term (elab_st_typing body_typing) x))
-            (elab_term (tm_arrow (mk_binder_ppname ty ppname) q (close_comp c x))))
-  = let r_ty = elab_term ty in
-    let r_body = elab_st_typing body_typing in
+            (mk_abs_with_name ppname.name ty (elab_qual q) (RT.close_term (elab_st_typing body_typing) x))
+            (tm_arrow (mk_binder_ppname ty ppname) q (close_comp c x)))
+  = let r_body = elab_st_typing body_typing in
     let r_c = elab_comp c in
     RT.well_typed_terms_are_ln _ _ _ r_body_typing;
     RT.open_close_inverse r_body x;
@@ -163,7 +152,7 @@ let mk_t_abs (g:env)
     RT.close_term_spec (elab_comp c) x;
     RT.T_Abs (elab_env g)
              x
-             r_ty
+             ty
              (RT.close_term r_body x)
              (T.E_Total, r_c)
              u ppname.name (elab_qual q)
@@ -348,12 +337,12 @@ let check_top_level_environment (f:RT.fstar_top_env)
   = admit(); Some (mk_env f) //we should implement this as a runtime check
 
 let elab_comp_post (c:comp_st) : R.term =
-  let t = elab_term (comp_res c) in
-  let post = elab_term (comp_post c) in
+  let t = comp_res c in
+  let post = comp_post c in
   mk_abs t R.Q_Explicit post
 
 let comp_post_type (c:comp_st) : R.term = 
-  let t = elab_term (comp_res c) in
+  let t = comp_res c in
   mk_arrow (t, R.Q_Explicit) vprop_tm
 
 assume
@@ -363,16 +352,16 @@ val inversion_of_stt_typing (g:env) (c:comp_st)
                             (_:RT.tot_typing (elab_env g) (elab_comp c) (RT.tm_type u))
   : GTot (x:( // _ |- t : Type u#u
           RT.tot_typing (elab_env g)
-                        (elab_term (comp_res c))
+                        (comp_res c)
                         (RT.tm_type (comp_u c)) &
           // _ |- pre : vprop
           RT.tot_typing (elab_env g)
-                        (elab_term (comp_pre c))
-                        (elab_term (tm_vprop)) &
+                        (comp_pre c)
+                        tm_vprop &
           // _ |- (fun (x:t) -> post) : t -> vprop
           RT.tot_typing (elab_env g)
                         (elab_comp_post c)
-                        (elab_term (tm_arrow (null_binder (comp_res c)) None (C_Tot tm_vprop)))){ u == universe_of_comp c })
+                        (tm_arrow (null_binder (comp_res c)) None (C_Tot tm_vprop))){ u == universe_of_comp c })
 
 let soundness_t (d:'a) = 
     g:stt_env ->
@@ -385,17 +374,17 @@ let soundness_t (d:'a) =
 
 let elab_open_commute' (e:term) (v:term) (n:index)
   : Lemma (ensures
-             RT.subst_term (elab_term e)
-                           [ RT.DT n (elab_term v)] ==
-             elab_term (open_term' e v n))
-          [SMTPat (elab_term (open_term' e v n))] =
+             RT.subst_term e
+                           [ RT.DT n v] ==
+             (open_term' e v n))
+          [SMTPat (open_term' e v n)] =
 
   elab_open_commute' e v n
 
 let elab_close_commute' (e:term) (v:var) (n:index)
-  : Lemma (RT.subst_term (elab_term e) [ RT.ND v n ] ==
-           elab_term (close_term' e v n))
-          [SMTPat (elab_term (close_term' e v n))] =
+  : Lemma (RT.subst_term e [ RT.ND v n ] ==
+           (close_term' e v n))
+          [SMTPat (close_term' e v n)] =
 
   elab_close_commute' e v n
 
@@ -406,7 +395,7 @@ let elab_comp_close_commute (c:comp) (x:var)
   elab_comp_close_commute c x
 
 let elab_comp_open_commute (c:comp) (x:term)
-  : Lemma (ensures elab_comp (open_comp_with c x) == RT.open_with (elab_comp c) (elab_term x))
+  : Lemma (ensures elab_comp (open_comp_with c x) == RT.open_with (elab_comp c) x)
           [SMTPat (elab_comp (open_comp_with c x))] =
 
   elab_comp_open_commute c x

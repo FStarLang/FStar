@@ -33,27 +33,27 @@ open Pulse.Reflection.Util
 
 let elab_frame (c:comp_st) (frame:term) (e:R.term) =
   let u = comp_u c in
-  let ty = elab_term (comp_res c) in
-  let pre = elab_term (comp_pre c) in
-  let post = elab_term (comp_post c) in
+  let ty = comp_res c in
+  let pre = comp_pre c in
+  let post = comp_post c in
   if C_ST? c
-  then mk_frame_stt u ty pre (mk_abs ty R.Q_Explicit post) (elab_term frame) e
+  then mk_frame_stt u ty pre (mk_abs ty R.Q_Explicit post) frame e
   else if C_STAtomic? c
-  then let opened = elab_term (comp_inames c) in      
-       mk_frame_stt_atomic u ty opened pre (mk_abs ty R.Q_Explicit post) (elab_term frame) e
-  else mk_frame_stt_ghost u ty pre (mk_abs ty R.Q_Explicit post) (elab_term frame) e
+  then let opened = comp_inames c in
+       mk_frame_stt_atomic u ty opened pre (mk_abs ty R.Q_Explicit post) frame e
+  else mk_frame_stt_ghost u ty pre (mk_abs ty R.Q_Explicit post) frame e
 
 let elab_sub (c1 c2:comp_st) (e:R.term) =
-  let ty = elab_term (comp_res c1) in
+  let ty = comp_res c1 in
   let u = comp_u c1 in
-  let pre1 = elab_term (comp_pre c1) in
-  let pre2 = elab_term (comp_pre c2) in
-  let post1 = mk_abs ty R.Q_Explicit (elab_term (comp_post c1)) in
-  let post2 = mk_abs ty R.Q_Explicit (elab_term (comp_post c2)) in
+  let pre1 = comp_pre c1 in
+  let pre2 = comp_pre c2 in
+  let post1 = mk_abs ty R.Q_Explicit (comp_post c1) in
+  let post2 = mk_abs ty R.Q_Explicit (comp_post c2) in
   if C_ST? c1
   then mk_sub_stt u ty pre1 pre2 post1 post2 e
   else if C_STAtomic? c1
-  then let opened = elab_term (comp_inames c1) in
+  then let opened = comp_inames c1 in
        mk_sub_stt_atomic u ty opened pre1 pre2 post1 post2 e
   else mk_sub_stt_ghost u ty pre1 pre2 post1 post2 e
 
@@ -62,27 +62,27 @@ let elab_bind #g #x #c1 #c2 #c
               (bc:bind_comp g x c1 c2 c)
               (e1 e2:R.term)
   : R.term
-  = let t1 = elab_term (comp_res c1) in
-    let t2 = elab_term (comp_res c2) in
+  = let t1 = comp_res c1 in
+    let t2 = comp_res c2 in
     match c1 with
     | C_ST _ ->
       mk_bind_stt
           (comp_u c1)
           (comp_u c2)
           t1 t2
-          (elab_term (comp_pre c1))
-          (mk_abs t1 R.Q_Explicit (elab_term (comp_post c1)))
-          (mk_abs t2 R.Q_Explicit (elab_term (comp_post c2)))
+          (comp_pre c1)
+          (mk_abs t1 R.Q_Explicit (comp_post c1))
+          (mk_abs t2 R.Q_Explicit (comp_post c2))
           e1 e2
     | C_STGhost inames _ ->
         mk_bind_ghost
           (comp_u c1)
           (comp_u c2)
           t1 t2
-          (elab_term inames)
-          (elab_term (comp_pre c1))
-          (mk_abs t1 R.Q_Explicit (elab_term (comp_post c1)))
-          (mk_abs t2 R.Q_Explicit (elab_term (comp_post c2)))
+          inames
+          (comp_pre c1)
+          (mk_abs t1 R.Q_Explicit (comp_post c1))
+          (mk_abs t2 R.Q_Explicit (comp_post c2))
           e1 e2
     | C_STAtomic inames obs1 _ ->
       let C_STAtomic _ obs2 _ = c2 in      
@@ -91,54 +91,54 @@ let elab_bind #g #x #c1 #c2 #c
           (comp_u c2)
           (elab_observability obs1)
           (elab_observability obs2)
-          (elab_term (comp_inames c1))
+          (comp_inames c1)
           t1 t2
-          (elab_term (comp_pre c1))
-          (mk_abs t1 R.Q_Explicit (elab_term (comp_post c1)))
-          (mk_abs t2 R.Q_Explicit (elab_term (comp_post c2)))
+          (comp_pre c1)
+          (mk_abs t1 R.Q_Explicit (comp_post c1))
+          (mk_abs t2 R.Q_Explicit (comp_post c2))
           e1 e2
   
 let elab_lift #g #c1 #c2 (d:lift_comp g c1 c2) (e:R.term)
   : Tot R.term
   = match d with
     | Lift_STAtomic_ST _ _ ->
-      let t = elab_term (comp_res c1) in
+      let t = comp_res c1 in
       mk_lift_atomic_stt
         (comp_u c1)
-        (elab_term (comp_res c1))
+        (comp_res c1)
         t
-        (mk_abs t R.Q_Explicit (elab_term (comp_post c1)))
+        (mk_abs t R.Q_Explicit (comp_post c1))
         e
 
     | Lift_Observability _ c o2 ->
-      let t = elab_term (comp_res c1) in
+      let t = comp_res c1 in
       mk_lift_observability
         (comp_u c1)
         (elab_observability (C_STAtomic?.obs c))
         (elab_observability o2)
-        (elab_term (comp_inames c1))
+        (comp_inames c1)
         t
-        (elab_term (comp_pre c1))
-        (mk_abs t R.Q_Explicit (elab_term (comp_post c1)))
+        (comp_pre c1)
+        (mk_abs t R.Q_Explicit (comp_post c1))
         e
             
     | Lift_Ghost_Neutral _ _ (| reveal_a, reveal_a_typing |) ->
-      let t = elab_term (comp_res c1) in
+      let t = comp_res c1 in
       mk_lift_ghost_neutral
         (comp_u c1)
         t
-        (elab_term (comp_pre c1))
-        (mk_abs t R.Q_Explicit (elab_term (comp_post c1)))
+        (comp_pre c1)
+        (mk_abs t R.Q_Explicit (comp_post c1))
         e
-        (elab_term reveal_a)
+        reveal_a
 
     | Lift_Neutral_Ghost _ c ->
-      let t = elab_term (comp_res c1) in
+      let t = comp_res c1 in
       mk_lift_neutral_ghost
         (comp_u c1)
         t
-        (elab_term (comp_pre c1))
-        (mk_abs t R.Q_Explicit (elab_term (comp_post c1)))
+        (comp_pre c1)
+        (mk_abs t R.Q_Explicit (comp_post c1))
         e
 
 let intro_pure_tm (p:term) =
@@ -172,10 +172,8 @@ let rec elab_st_typing (#g:env)
                        (d:st_typing g t c)
   : Tot R.term (decreases d)
   = match d with
-    // | T_Tot _ t _ _ -> elab_term t
-
     | T_Abs _ x qual b _u body _c ty_typing body_typing ->
-      let ty = elab_term b.binder_ty in
+      let ty = b.binder_ty in
       let ppname = b.binder_ppname.name in
       let body = elab_st_typing body_typing in
       mk_abs_with_name ppname ty (elab_qual qual) (RT.close_term body x) //this closure should be provably redundant by strengthening the conditions on x
@@ -183,34 +181,28 @@ let rec elab_st_typing (#g:env)
 
     | T_STApp _ head _ qual _ arg _ _
     | T_STGhostApp _ head _ qual _ arg _ _ _ _ ->
-      let head = elab_term head in
-      let arg = elab_term arg in
       R.mk_app head [(arg, elab_qual qual)]
 
     | T_Return _ c use_eq u ty t post _ _ _ _ ->
-      let ru = u in
-      let rty = elab_term ty in
-      let rt = elab_term t in
-      let rp = elab_term post in
-      let rp = mk_abs rty R.Q_Explicit rp in
+      let rp = mk_abs ty R.Q_Explicit post in
       (match c, use_eq with
-       | STT, true -> mk_stt_return ru rty rt rp
-       | STT, false -> mk_stt_return_noeq ru rty rt rp
-       | STT_Atomic, true -> mk_stt_atomic_return ru rty rt rp
-       | STT_Atomic, false -> mk_stt_atomic_return_noeq ru rty rt rp
-       | STT_Ghost, true -> mk_stt_ghost_return ru rty rt rp
-       | STT_Ghost, false -> mk_stt_ghost_return_noeq ru rty rt rp)
+       | STT, true -> mk_stt_return u ty t rp
+       | STT, false -> mk_stt_return_noeq u ty t rp
+       | STT_Atomic, true -> mk_stt_atomic_return u ty t rp
+       | STT_Atomic, false -> mk_stt_atomic_return_noeq u ty t rp
+       | STT_Ghost, true -> mk_stt_ghost_return u ty t rp
+       | STT_Ghost, false -> mk_stt_ghost_return_noeq u ty t rp)
 
     | T_Bind _ e1 e2 c1 c2 b x c e1_typing t_typing e2_typing bc ->
       let e1 = elab_st_typing e1_typing in
       let e2 = elab_st_typing e2_typing in
-      let ty1 = elab_term (comp_res c1) in
+      let ty1 = comp_res c1 in
       elab_bind bc e1 (mk_abs_with_name b.binder_ppname.name ty1 R.Q_Explicit (RT.close_term e2 x))
 
     | T_BindFn _ _ _ c1 c2 b x e1_typing _u t_typing e2_typing c2_typing ->
       let e1 = elab_st_typing e1_typing in
       let e2 = elab_st_typing e2_typing in
-      let ty1 = elab_term (comp_res c1) in
+      let ty1 = comp_res c1 in
       RT.mk_let RT.pp_name_default e1 ty1 (RT.close_term e2 x)
       
     | T_Frame _ _ c frame _frame_typing e_typing ->
@@ -235,13 +227,11 @@ let rec elab_st_typing (#g:env)
       elab_lift lc e
 
     | T_If _ b _ _ _ _ _ e1_typing e2_typing _c_typing ->
-      let rb = elab_term b in
       let re1 = elab_st_typing e1_typing in
       let re2 = elab_st_typing e2_typing in
-      RT.mk_if rb re1 re2
+      RT.mk_if b re1 re2
 
     | T_Match _ _ _ sc _ _ _ _ _ brty  _ ->
-      let sc = elab_term sc in
       let brs = elab_branches brty in
       R.pack_ln (R.Tv_Match sc None brs)
 
@@ -252,35 +242,28 @@ let rec elab_st_typing (#g:env)
                        p
       in
       let arg = (`()) in
-      R.mk_app (elab_term head) [(arg, elab_qual None)]
+      R.mk_app head [(arg, elab_qual None)]
 
     | T_ElimExists _ u t p _ d_t d_exists ->
-      let ru = u in
-      let rt = elab_term t in
-      let rp = elab_term p in
-      mk_elim_exists ru rt (mk_abs rt R.Q_Explicit rp)
+      mk_elim_exists u t (mk_abs t R.Q_Explicit p)
 
     | T_IntroExists _ u b p e _ _ _ ->
-      let ru = u in
-      let rt = elab_term b.binder_ty in
-      let rp = elab_term p in
-      let re = elab_term e in
-      mk_intro_exists ru rt (mk_abs rt R.Q_Explicit rp) re
+      let rt = b.binder_ty in
+      mk_intro_exists u rt (mk_abs rt R.Q_Explicit p) e
 
     | T_While _ inv _ _ _ cond_typing body_typing ->
-      let inv = elab_term inv in
       let cond = elab_st_typing cond_typing in
       let body = elab_st_typing body_typing in
       mk_while (mk_abs bool_tm R.Q_Explicit inv) cond body
 
     | T_Par _ eL cL eR cR _ _ _ eL_typing eR_typing ->
       let ru = comp_u cL in
-      let raL = elab_term (comp_res cL) in
-      let raR = elab_term (comp_res cR) in
-      let rpreL = elab_term (comp_pre cL) in
-      let rpostL = elab_term (comp_post cL) in
-      let rpreR = elab_term (comp_pre cR) in
-      let rpostR = elab_term (comp_post cR) in
+      let raL = comp_res cL in
+      let raR = comp_res cR in
+      let rpreL = comp_pre cL in
+      let rpostL = comp_post cL in
+      let rpreR = comp_pre cR in
+      let rpostR = comp_post cR in
       let reL = elab_st_typing eL_typing in
       let reR = elab_st_typing eR_typing in
       mk_par ru
@@ -293,45 +276,35 @@ let rec elab_st_typing (#g:env)
         reL reR
 
 				| T_Rewrite _ p q _ _ ->
-				  let rp = elab_term p in
-						let rq = elab_term q in
-						mk_rewrite rp rq
+				  mk_rewrite p q
 
     | T_WithLocal _ _ init _ init_t c x _ _ _ body_typing ->
       let rret_u = comp_u c in
-      let ra = elab_term init_t in
-      let rinit = elab_term init in
-      let rret_t = elab_term (comp_res c) in
-      let rpre = elab_term (comp_pre c) in
-      let rpost = mk_abs rret_t R.Q_Explicit (elab_term (comp_post c)) in
+      let rret_t = comp_res c in
+      let rpre = comp_pre c in
+      let rpost = mk_abs rret_t R.Q_Explicit (comp_post c) in
       let rbody = elab_st_typing body_typing in
       let rbody = RT.close_term rbody x in
-      let rbody = mk_abs (mk_ref ra) R.Q_Explicit rbody in
-      mk_withlocal rret_u ra rinit rpre rret_t rpost rbody
+      let rbody = mk_abs (mk_ref init_t) R.Q_Explicit rbody in
+      mk_withlocal rret_u init_t init rpre rret_t rpost rbody
 
     | T_WithLocalArray _ _ init len _ init_t c x _ _ _ _ body_typing ->
       let rret_u = comp_u c in
-      let ra = elab_term init_t in
-      let rinit = elab_term init in
-      let rlen = elab_term len in
-      let rret_t = elab_term (comp_res c) in
-      let rpre = elab_term (comp_pre c) in
-      let rpost = mk_abs rret_t R.Q_Explicit (elab_term (comp_post c)) in
+      let rret_t = comp_res c in
+      let rpre = comp_pre c in
+      let rpost = mk_abs rret_t R.Q_Explicit (comp_post c) in
       let rbody = elab_st_typing body_typing in
       let rbody = RT.close_term rbody x in
-      let rbody = mk_abs (mk_array ra) R.Q_Explicit rbody in
-      mk_withlocalarray rret_u ra rinit rlen rpre rret_t rpost rbody
+      let rbody = mk_abs (mk_array init_t) R.Q_Explicit rbody in
+      mk_withlocalarray rret_u init_t init len rpre rret_t rpost rbody
 
     | T_Admit _ {u;res;pre;post} c _ ->
       let ru = u in
-      let rres = elab_term res in
-      let rpre = elab_term pre in
-      let rpost = elab_term post in
-      let rpost = mk_abs rres R.Q_Explicit rpost in
+      let rpost = mk_abs res R.Q_Explicit post in
       (match c with
-       | STT -> mk_stt_admit ru rres rpre rpost
-       | STT_Atomic -> mk_stt_atomic_admit ru rres rpre rpost
-       | STT_Ghost -> mk_stt_ghost_admit ru rres rpre rpost)
+       | STT -> mk_stt_admit ru res pre rpost
+       | STT_Atomic -> mk_stt_atomic_admit ru res pre rpost
+       | STT_Ghost -> mk_stt_ghost_admit ru res pre rpost)
 
     | T_Unreachable _ _ _ _ _ ->
       `("IOU: elab_st_typing of T_Unreachable")

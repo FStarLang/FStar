@@ -222,15 +222,15 @@ let try_solve_uvars (g:env) (uvs:env { disjoint uvs g }) (p q:term)
     |> L.map (fun (({name}, x, t):(ppname & _ & _)) ->
          let nv_view = {
            R.uniq = x;
-           R.sort = elab_term t;
+           R.sort = t;
            R.ppname = name;
          } in
          let nv = R.pack_namedv nv_view in
-         nv, elab_term t
+         nv, t
        ) in
 
   let l, issues = RU.with_context (get_context g) (fun _ ->
-    T.try_unify (elab_env g) uvs (elab_term p) (elab_term q))
+    T.try_unify (elab_env g) uvs p q)
   in
 
   T.log_issues issues;
@@ -257,7 +257,7 @@ let try_solve_uvars (g:env) (uvs:env { disjoint uvs g }) (p q:term)
     ) ss l
 
 let eq_tm_unascribe (g:env) (p q:term)
-  : option (RT.equiv (elab_env g) (elab_term p) (elab_term q)) =
+  : option (RT.equiv (elab_env g) p q) =
 
   let rec unascribe (t:term) : term =
     match R.inspect_ln t with
@@ -278,7 +278,7 @@ let eq_tm_unascribe (g:env) (p q:term)
 let unify (g:env) (uvs:env { disjoint uvs g})
   (p q:term)
   : T.Tac (ss:PS.ss_t { PS.dom ss `Set.subset` freevars q } &
-           option (RT.equiv (elab_env g) (elab_term p) (elab_term ss.(q)))) =
+           option (RT.equiv (elab_env g) p ss.(q))) =
 
   let ss = try_solve_uvars g uvs p q in
   let q = ss.(q) in
@@ -289,9 +289,7 @@ let unify (g:env) (uvs:env { disjoint uvs g})
     if contains_uvar q uvs g
     then (| ss, None |)
     else if eligible_for_smt_equality g p q
-    then let v0 = elab_term p in
-         let v1 = elab_term q in
-         match check_equiv_now (elab_env g) v0 v1 with
+    then match check_equiv_now (elab_env g) p q with
          | Some token, _ -> (| ss, Some (RT.Rel_eq_token _ _ _ (FStar.Squash.return_squash token)) |)
          | None, _ -> (| ss, None |)
     else (| ss, None |)

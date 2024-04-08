@@ -30,30 +30,30 @@ val elab_open_commute' (e:term)
                        (v:term)
                        (n:index)
   : Lemma (ensures
-              RT.subst_term (elab_term e) [ RT.DT n (elab_term v) ] ==
-              elab_term (open_term' e v n))
+              RT.subst_term e [ RT.DT n v ] ==
+              (open_term' e v n))
 
 val elab_close_commute' (e:term)
                         (v:var)
                         (n:index)
-  : Lemma (RT.subst_term (elab_term e) [ RT.ND v n ] ==
-           elab_term (close_term' e v n))
+  : Lemma (RT.subst_term e [ RT.ND v n ] ==
+           (close_term' e v n))
 
 val elab_open_commute (t:term) (x:var)
-  : Lemma (elab_term (open_term t x) == RT.open_term (elab_term t) x)
+  : Lemma (open_term t x == RT.open_term t x)
 
 val elab_comp_close_commute (c:comp) (x:var)
   : Lemma (elab_comp (close_comp c x) == RT.close_term (elab_comp c) x)
 
 val elab_comp_open_commute (c:comp) (x:term)
-  : Lemma (elab_comp (open_comp_with c x) == RT.open_with (elab_comp c) (elab_term x))
+  : Lemma (elab_comp (open_comp_with c x) == RT.open_with (elab_comp c) x)
 
 val elab_ln (t:term) (i:int)
   : Lemma (requires ln' t i)
-          (ensures RT.ln' (elab_term t) i)
+          (ensures RT.ln' t i)
 
 val elab_ln_comp (c:comp) (i:int)
   : Lemma (requires ln_c' c i) (ensures RT.ln' (elab_comp c) i)
 
 val elab_freevars (e:term)
-  : Lemma (freevars e == RT.freevars (elab_term e))
+  : Lemma (freevars e == RT.freevars e)

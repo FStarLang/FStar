@@ -38,13 +38,16 @@ let complete_soundness
   (d : brs_typing g sc_u sc_ty sc brs c)
   (comp : pats_complete g sc sc_ty (L.map (fun (p, _) -> elab_pat p) brs))
   (bs : list (list R.binding))
-  : RT.match_is_complete (elab_env g) (elab_term sc) (elab_term sc_ty)
+  : RT.match_is_complete (elab_env g) sc sc_ty
                                  (List.Tot.map fst (elab_branches d))
                                  bs
   = let PC_Elab _ _ _ _ bs' s = comp in
     assume (L.map fst (elab_branches d) == L.map (fun (p, _) -> elab_pat p) brs); // FIXME
     assume (bs == bs'); // FIXME
     s
+
+
+let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
 
 let match_soundness
   (g:stt_env)
@@ -63,22 +66,21 @@ let match_soundness
   =
   let T_Match _g sc_u sc_ty sc (E sc_ty_d) (E sc_d) _c _ctyping brs brs_ty brs_complete = d in
 
-  let sc_e_ty : R.typ = elab_term sc_ty in
-  let sc_e_ty_t : RT.typing (elab_env g) sc_e_ty (T.E_Total, RT.tm_type sc_u) = sc_ty_d in
+  let sc_e_ty_t : RT.typing (elab_env g) sc_ty (T.E_Total, RT.tm_type sc_u) = coerce_eq sc_ty_d () in
 
-  let sc_e = elab_term sc in
-  let sc_e_t : RT.typing (elab_env g) sc_e (T.E_Total, sc_e_ty) = sc_d in
+  let sc_e = sc in
+  let sc_e_t : RT.typing (elab_env g) sc_e (T.E_Total, sc_ty) = sc_d in
 
   let brs_e : list R.branch =
     elab_branches brs_ty
   in
   let rcty = (T.E_Total, elab_comp c) in
   let PC_Elab _ _ _ _ bnds _ = brs_complete in
-  let brs_e_ty : RT.branches_typing (elab_env g) sc_u sc_e_ty sc_e rcty brs_e bnds =
+  let brs_e_ty : RT.branches_typing (elab_env g) sc_u sc_ty sc_e rcty brs_e bnds =
     RU.magic ()
   in
   let brs_complete
-     : RT.match_is_complete (elab_env g) (elab_term sc) (elab_term sc_ty) (List.Tot.map fst brs_e) bnds
+     : RT.match_is_complete (elab_env g) sc sc_ty (List.Tot.map fst brs_e) bnds
    = assume (L.map fst (elab_branches brs_ty) == L.map fst brs_e);
      complete_soundness g brs c brs_ty brs_complete bnds
   in

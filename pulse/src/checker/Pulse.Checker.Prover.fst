@@ -290,7 +290,7 @@ let prove
 
 let canon_post (c:comp_st) : comp_st =
   let canon_st_comp_post (c:st_comp) : st_comp =
-    match inspect_term (elab_term c.post) with
+    match inspect_term c.post with
     | Tm_FStar _ -> c
     | post_v -> { c with post=pack_term_view_wr post_v (RU.range_of_term c.post) }
   in

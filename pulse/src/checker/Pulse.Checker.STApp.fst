@@ -39,7 +39,7 @@ let canon_comp (c:comp_st) : comp_st =
 
 #push-options "--admit_smt_queries true"
 let canon_comp_eq_res (g:env) (c:comp_st)
-  : RT.equiv (elab_env g) (elab_term (comp_res c)) (elab_term (comp_res (canon_comp c)))
+  : RT.equiv (elab_env g) (comp_res c) (comp_res (canon_comp c))
   = RT.Rel_refl _ _ _ 
 #pop-options
 

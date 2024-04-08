@@ -45,8 +45,8 @@ val post_typing_as_abstraction
   (#g:env) (#x:var) (#ty:term) (#t:term { fresh_wrt x g (freevars t) })
   (_:tot_typing (push_binding g x ppname_default ty) (open_term t x) tm_vprop)
   : FStar.Ghost.erased (RT.tot_typing (elab_env g)
-                             (RT.mk_abs (elab_term ty) T.Q_Explicit (elab_term t))
-                             (RT.mk_arrow (elab_term ty) T.Q_Explicit (elab_term tm_vprop)))
+                             (RT.mk_abs ty T.Q_Explicit t)
+                             (RT.mk_arrow ty T.Q_Explicit tm_vprop))
 
 let effect_annot_labels_match (a1 a2:effect_annot) =
   match a1, a2 with
