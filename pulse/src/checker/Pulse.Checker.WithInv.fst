@@ -191,7 +191,7 @@ let atomic_or_ghost_with_inames_and_pre_post
     C_STGhost inames { s with pre; post }
 
 #restart-solver
-#push-options "--z3rlimit_factor 15 --split_queries no"
+#push-options "--z3rlimit_factor 20 --split_queries no"
 let check
   (g:env)
   (pre:term)
@@ -271,8 +271,11 @@ let check
          
 
   let Some (| p', post_frame, _, post_frame_typing, d_post_frame_equiv |) = res in
-  assume (p' == p);
-
+  if not (eq_tm p p')
+  then fail g (Some i_range)
+         (FStar.Printf.sprintf "Inconsistent vprops for iref %s in pre (%s) and post (%s)"
+            (show i) (show p) (show p'));
+  assert (p == p');
   let post_body = tm_star p post_frame in
   
   let (| opens, opens_typing |) 
