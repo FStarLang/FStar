@@ -67,36 +67,36 @@ let steps_to_string f =
     unrefine = %s;\n\
     default_univs_to_zero = %s;\n\
   }"
-  [ f.beta |> b;
-    f.iota |> b;
-    f.zeta |> b;
-    f.zeta_full |> b;
-    f.weak |> b;
-    f.hnf  |> b;
-    f.primops |> b;
-    f.do_not_unfold_pure_lets |> b;
-    f.unfold_until |> format_opt show;
-    f.unfold_only |> format_opt (fun x -> List.map Ident.string_of_lid x |> String.concat ", ");
-    f.unfold_fully |> format_opt (fun x -> List.map Ident.string_of_lid x |> String.concat ", ");
-    f.unfold_attr |> format_opt (fun x -> List.map Ident.string_of_lid x |> String.concat ", ");
-    f.unfold_qual |> format_opt (String.concat ", ");
+  [ f.beta |> show;
+    f.iota |> show;
+    f.zeta |> show;
+    f.zeta_full |> show;
+    f.weak |> show;
+    f.hnf  |> show;
+    f.primops |> show;
+    f.do_not_unfold_pure_lets |> show;
+    f.unfold_until |> show;
+    f.unfold_only |> show;
+    f.unfold_fully |> show;
+    f.unfold_attr |> show;
+    f.unfold_qual |> show;
     f.unfold_namespace |> show;
-    f.unfold_tac |> b;
-    f.pure_subterms_within_computations |> b;
-    f.simplify |> b;
-    f.erase_universes |> b;
-    f.allow_unbound_universes |> b;
-    f.reify_ |> b;
-    f.compress_uvars |> b;
-    f.no_full_norm |> b;
-    f.check_no_uvars |> b;
-    f.unmeta |> b;
-    f.unascribe |> b;
-    f.in_full_norm_request |> b;
-    f.weakly_reduce_scrutinee |> b;
-    f.for_extraction |> b;
-    f.unrefine |> b;
-    f.default_univs_to_zero |> b;
+    f.unfold_tac |> show;
+    f.pure_subterms_within_computations |> show;
+    f.simplify |> show;
+    f.erase_universes |> show;
+    f.allow_unbound_universes |> show;
+    f.reify_ |> show;
+    f.compress_uvars |> show;
+    f.no_full_norm |> show;
+    f.check_no_uvars |> show;
+    f.unmeta |> show;
+    f.unascribe |> show;
+    f.in_full_norm_request |> show;
+    f.weakly_reduce_scrutinee |> show;
+    f.for_extraction |> show;
+    f.unrefine |> show;
+    f.default_univs_to_zero |> show;
    ]
 
 instance deq_fsteps : deq fsteps = {
@@ -257,7 +257,8 @@ instance showable_cfg : showable cfg = {
   show = (fun cfg ->
              String.concat "\n"
                  ["{";
-                 BU.format1 "  steps = %s" (steps_to_string cfg.steps);
+                 BU.format1 "  steps = %s;" (steps_to_string cfg.steps);
+                 BU.format1 "  delta_level = %s;" (show cfg.delta_level);
                  "}" ]);
 }
 

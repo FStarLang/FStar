@@ -26,5 +26,5 @@ let bar () = foo (fun x -> false)
 val f : p1:(True \/ True) -> p2:(True \/ True) -> Lemma (p1 = p2)
 let f p1 p2 = ()
 val absurd : unit -> Lemma False
-[@@expect_failure] // this raises 2 errors on 1-phase, and 4 on 2-phases
+[@@expect_failure [12;12]]
 let absurd () = f (Prims.Left #_ #True T) (Prims.Right #True #_ T) //adding implicits to get 2 typing errors

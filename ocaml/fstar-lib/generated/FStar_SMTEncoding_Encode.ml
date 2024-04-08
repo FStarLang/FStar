@@ -7477,79 +7477,83 @@ let (encode_modul :
       if uu___
       then ([], [])
       else
-        FStar_Syntax_Unionfind.with_uf_enabled
-          (fun uu___2 ->
-             FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.reset_fresh
-               ();
-             (let name =
-                let uu___4 =
-                  FStar_Ident.string_of_lid modul.FStar_Syntax_Syntax.name in
-                FStar_Compiler_Util.format2 "%s %s"
-                  (if modul.FStar_Syntax_Syntax.is_interface
-                   then "interface"
-                   else "module") uu___4 in
-              (let uu___5 =
-                 FStar_TypeChecker_Env.debug tcenv FStar_Options.Medium in
-               if uu___5
-               then
-                 FStar_Compiler_Util.print2
-                   "+++++++++++Encoding externals for %s ... %s declarations\n"
-                   name
-                   (Prims.string_of_int
-                      (FStar_Compiler_List.length
-                         modul.FStar_Syntax_Syntax.declarations))
-               else ());
-              (let env =
-                 let uu___5 = get_env modul.FStar_Syntax_Syntax.name tcenv in
-                 FStar_SMTEncoding_Env.reset_current_module_fvbs uu___5 in
-               let encode_signature env1 ses =
-                 FStar_Compiler_List.fold_left
-                   (fun uu___5 ->
-                      fun se ->
-                        match uu___5 with
-                        | (g, env2) ->
-                            let uu___6 = encode_top_level_facts env2 se in
-                            (match uu___6 with
-                             | (g', env3) ->
-                                 ((FStar_Compiler_List.op_At g g'), env3)))
-                   ([], env1) ses in
-               let uu___5 =
-                 encode_signature
-                   {
-                     FStar_SMTEncoding_Env.bvar_bindings =
-                       (env.FStar_SMTEncoding_Env.bvar_bindings);
-                     FStar_SMTEncoding_Env.fvar_bindings =
-                       (env.FStar_SMTEncoding_Env.fvar_bindings);
-                     FStar_SMTEncoding_Env.depth =
-                       (env.FStar_SMTEncoding_Env.depth);
-                     FStar_SMTEncoding_Env.tcenv =
-                       (env.FStar_SMTEncoding_Env.tcenv);
-                     FStar_SMTEncoding_Env.warn = false;
-                     FStar_SMTEncoding_Env.nolabels =
-                       (env.FStar_SMTEncoding_Env.nolabels);
-                     FStar_SMTEncoding_Env.use_zfuel_name =
-                       (env.FStar_SMTEncoding_Env.use_zfuel_name);
-                     FStar_SMTEncoding_Env.encode_non_total_function_typ =
-                       (env.FStar_SMTEncoding_Env.encode_non_total_function_typ);
-                     FStar_SMTEncoding_Env.current_module_name =
-                       (env.FStar_SMTEncoding_Env.current_module_name);
-                     FStar_SMTEncoding_Env.encoding_quantifier =
-                       (env.FStar_SMTEncoding_Env.encoding_quantifier);
-                     FStar_SMTEncoding_Env.global_cache =
-                       (env.FStar_SMTEncoding_Env.global_cache)
-                   } modul.FStar_Syntax_Syntax.declarations in
-               match uu___5 with
-               | (decls, env1) ->
-                   (give_decls_to_z3_and_set_env env1 name decls;
-                    (let uu___8 =
-                       FStar_TypeChecker_Env.debug tcenv FStar_Options.Medium in
-                     if uu___8
-                     then
-                       FStar_Compiler_Util.print1
-                         "Done encoding externals for %s\n" name
-                     else ());
-                    (decls,
-                      (FStar_SMTEncoding_Env.get_current_module_fvbs env1))))))
+        (let tcenv1 =
+           FStar_TypeChecker_Env.set_current_module tcenv
+             modul.FStar_Syntax_Syntax.name in
+         FStar_Syntax_Unionfind.with_uf_enabled
+           (fun uu___2 ->
+              FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.reset_fresh
+                ();
+              (let name =
+                 let uu___4 =
+                   FStar_Ident.string_of_lid modul.FStar_Syntax_Syntax.name in
+                 FStar_Compiler_Util.format2 "%s %s"
+                   (if modul.FStar_Syntax_Syntax.is_interface
+                    then "interface"
+                    else "module") uu___4 in
+               (let uu___5 =
+                  FStar_TypeChecker_Env.debug tcenv1 FStar_Options.Medium in
+                if uu___5
+                then
+                  FStar_Compiler_Util.print2
+                    "+++++++++++Encoding externals for %s ... %s declarations\n"
+                    name
+                    (Prims.string_of_int
+                       (FStar_Compiler_List.length
+                          modul.FStar_Syntax_Syntax.declarations))
+                else ());
+               (let env =
+                  let uu___5 = get_env modul.FStar_Syntax_Syntax.name tcenv1 in
+                  FStar_SMTEncoding_Env.reset_current_module_fvbs uu___5 in
+                let encode_signature env1 ses =
+                  FStar_Compiler_List.fold_left
+                    (fun uu___5 ->
+                       fun se ->
+                         match uu___5 with
+                         | (g, env2) ->
+                             let uu___6 = encode_top_level_facts env2 se in
+                             (match uu___6 with
+                              | (g', env3) ->
+                                  ((FStar_Compiler_List.op_At g g'), env3)))
+                    ([], env1) ses in
+                let uu___5 =
+                  encode_signature
+                    {
+                      FStar_SMTEncoding_Env.bvar_bindings =
+                        (env.FStar_SMTEncoding_Env.bvar_bindings);
+                      FStar_SMTEncoding_Env.fvar_bindings =
+                        (env.FStar_SMTEncoding_Env.fvar_bindings);
+                      FStar_SMTEncoding_Env.depth =
+                        (env.FStar_SMTEncoding_Env.depth);
+                      FStar_SMTEncoding_Env.tcenv =
+                        (env.FStar_SMTEncoding_Env.tcenv);
+                      FStar_SMTEncoding_Env.warn = false;
+                      FStar_SMTEncoding_Env.nolabels =
+                        (env.FStar_SMTEncoding_Env.nolabels);
+                      FStar_SMTEncoding_Env.use_zfuel_name =
+                        (env.FStar_SMTEncoding_Env.use_zfuel_name);
+                      FStar_SMTEncoding_Env.encode_non_total_function_typ =
+                        (env.FStar_SMTEncoding_Env.encode_non_total_function_typ);
+                      FStar_SMTEncoding_Env.current_module_name =
+                        (env.FStar_SMTEncoding_Env.current_module_name);
+                      FStar_SMTEncoding_Env.encoding_quantifier =
+                        (env.FStar_SMTEncoding_Env.encoding_quantifier);
+                      FStar_SMTEncoding_Env.global_cache =
+                        (env.FStar_SMTEncoding_Env.global_cache)
+                    } modul.FStar_Syntax_Syntax.declarations in
+                match uu___5 with
+                | (decls, env1) ->
+                    (give_decls_to_z3_and_set_env env1 name decls;
+                     (let uu___8 =
+                        FStar_TypeChecker_Env.debug tcenv1
+                          FStar_Options.Medium in
+                      if uu___8
+                      then
+                        FStar_Compiler_Util.print1
+                          "Done encoding externals for %s\n" name
+                      else ());
+                     (decls,
+                       (FStar_SMTEncoding_Env.get_current_module_fvbs env1)))))))
 let (encode_modul_from_cache :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.modul ->
@@ -7565,7 +7569,10 @@ let (encode_modul_from_cache :
             if uu___1
             then ()
             else
-              (let name =
+              (let tcenv1 =
+                 FStar_TypeChecker_Env.set_current_module tcenv
+                   tcmod.FStar_Syntax_Syntax.name in
+               let name =
                  let uu___3 =
                    FStar_Ident.string_of_lid tcmod.FStar_Syntax_Syntax.name in
                  FStar_Compiler_Util.format2 "%s %s"
@@ -7573,7 +7580,7 @@ let (encode_modul_from_cache :
                     then "interface"
                     else "module") uu___3 in
                (let uu___4 =
-                  FStar_TypeChecker_Env.debug tcenv FStar_Options.Medium in
+                  FStar_TypeChecker_Env.debug tcenv1 FStar_Options.Medium in
                 if uu___4
                 then
                   FStar_Compiler_Util.print2
@@ -7582,7 +7589,7 @@ let (encode_modul_from_cache :
                     (Prims.string_of_int (FStar_Compiler_List.length decls))
                 else ());
                (let env =
-                  let uu___4 = get_env tcmod.FStar_Syntax_Syntax.name tcenv in
+                  let uu___4 = get_env tcmod.FStar_Syntax_Syntax.name tcenv1 in
                   FStar_SMTEncoding_Env.reset_current_module_fvbs uu___4 in
                 let env1 =
                   FStar_Compiler_List.fold_left
@@ -7592,7 +7599,7 @@ let (encode_modul_from_cache :
                            env2) env (FStar_Compiler_List.rev fvbs) in
                 give_decls_to_z3_and_set_env env1 name decls;
                 (let uu___5 =
-                   FStar_TypeChecker_Env.debug tcenv FStar_Options.Medium in
+                   FStar_TypeChecker_Env.debug tcenv1 FStar_Options.Medium in
                  if uu___5
                  then
                    FStar_Compiler_Util.print1

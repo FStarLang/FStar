@@ -560,6 +560,7 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
         | _ ->
           failwith "no way, not a let?"
     in
+    Errors.stop_if_err ();
     let r =
         //We already generalized phase1; don't need to generalize again
       let should_generalize = not (do_two_phases env') in

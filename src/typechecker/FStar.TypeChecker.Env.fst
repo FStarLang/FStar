@@ -74,10 +74,50 @@ let rec eq_step s1 s2 =
   | UnfoldAttr lids1, UnfoldAttr lids2 -> lids1 =? lids2
   | UnfoldQual strs1, UnfoldQual strs2 -> strs1 =? strs2
   | UnfoldNamespace strs1, UnfoldNamespace strs2 -> strs1 =? strs2
-  | _ -> false
+  | _ -> false // fixme: others ?
 
 instance deq_step : deq step = {
   (=?) = eq_step;
+}
+
+let rec step_to_string (s:step) : string =
+  match s with
+  | Beta -> "Beta"
+  | Iota -> "Iota"
+  | Zeta -> "Zeta"
+  | ZetaFull -> "ZetaFull"
+  | Exclude s1 -> "Exclude " ^ step_to_string s1
+  | Weak -> "Weak"
+  | HNF -> "HNF"
+  | Primops -> "Primops"
+  | Eager_unfolding -> "Eager_unfolding"
+  | Inlining -> "Inlining"
+  | DoNotUnfoldPureLets -> "DoNotUnfoldPureLets"
+  | UnfoldUntil s1 -> "UnfoldUntil " ^ show s1
+  | UnfoldOnly lids1 -> "UnfoldOnly " ^ show lids1
+  | UnfoldFully lids1 -> "UnfoldFully " ^ show lids1
+  | UnfoldAttr lids1 -> "UnfoldAttr " ^ show lids1
+  | UnfoldQual strs1 -> "UnfoldQual " ^ show strs1
+  | UnfoldNamespace strs1 -> "UnfoldNamespace " ^ show strs1
+  | UnfoldTac -> "UnfoldTac"
+  | PureSubtermsWithinComputations -> "PureSubtermsWithinComputations"
+  | Simplify -> "Simplify"
+  | EraseUniverses -> "EraseUniverses"
+  | AllowUnboundUniverses -> "AllowUnboundUniverses"
+  | Reify -> "Reify"
+  | CompressUvars -> "CompressUvars"
+  | NoFullNorm -> "NoFullNorm"
+  | CheckNoUvars -> "CheckNoUvars"
+  | Unmeta -> "Unmeta"
+  | Unascribe -> "Unascribe"
+  | NBE -> "NBE"
+  | ForExtraction -> "ForExtraction"
+  | Unrefine -> "Unrefine"
+  | NormDebug -> "NormDebug"
+  | DefaultUnivsToZero -> "DefaultUnivsToZero"
+
+instance showable_step : showable step = {
+  show = step_to_string;
 }
 
 instance deq_delta_level : deq delta_level = {
@@ -87,6 +127,14 @@ instance deq_delta_level : deq delta_level = {
     | Eager_unfolding_only, Eager_unfolding_only -> true
     | Unfold x, Unfold y -> x =? y
     | _ -> false);
+}
+
+instance showable_delta_level : showable delta_level = {
+  show = (function
+          | NoDelta -> "NoDelta"
+          | InliningDelta -> "Inlining"
+          | Eager_unfolding_only -> "Eager_unfolding_only"
+          | Unfold d -> "Unfold " ^ show d);
 }
 
 let preprocess env tau tm  = env.mpreprocess env tau tm
@@ -1728,12 +1776,6 @@ let univnames env =
         | Binding_var({sort=t})::tl -> aux (ext out (Free.univnames t)) tl
     in
     aux no_univ_names env.gamma
-
-let string_of_delta_level = function
-  | NoDelta -> "NoDelta"
-  | InliningDelta -> "Inlining"
-  | Eager_unfolding_only -> "Eager_unfolding_only"
-  | Unfold d -> "Unfold " ^ show d
 
 let lidents env : list lident =
   let keys = List.collect fst env.gamma_sig in
