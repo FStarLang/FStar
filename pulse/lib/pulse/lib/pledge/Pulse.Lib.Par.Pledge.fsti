@@ -50,9 +50,6 @@ val make_pledge_invs (is:invlist) (f v extra:vprop)
 val redeem_pledge (is:inames) (f v:vprop)
   : stt_ghost unit is (f ** pledge is f v) (fun () -> f ** v)
 
-// val pledge_invs (is:invlist) (f:vprop) (v:vprop)
-//   : stt_ghost unit emp_inames (pledge is f v) (fun _ -> pledge is f v ** invlist_inv is)
-
 // Unclear how useful/convenient this is
 val bind_pledge (#is:inames) (#f:vprop) (#v1:vprop) (#v2:vprop)
         (extra : vprop)
