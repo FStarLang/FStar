@@ -17,7 +17,6 @@
 module Pulse.Lib.Par.Pledge.Simple
 
 open Pulse.Lib.Pervasives
-open Pulse.Lib.InvList
 
 (* In this this version of the pledge library, pledges
 are not indexed by invariants. The actual invariants are existentially
@@ -27,54 +26,53 @@ effectful operations to manipulate them. *)
 val pledge (f:vprop) (v:vprop) : vprop
 
 (* An unobservable step to rewrite the context. *)
-let ustep (is:invlist) (p q : vprop)
-  = unit -> stt_ghost unit (invlist_names is)
-                           (invlist_inv is ** p)
-                           (fun _ -> invlist_inv is ** q)
+// let ustep (is:invlist) (p q : vprop)
+//   = unit -> stt_ghost unit (invlist_names is)
+//                            (invlist_inv is ** p)
+//                            (fun _ -> invlist_inv is ** q)
 
 (* Anything that holds now holds in the future too. *)
-val return_pledge (f:vprop) (v:vprop)
+val return_pledge (f v:vprop)
   : stt_ghost unit emp_inames v (fun _ -> pledge f v)
 
 (* The function proving a pledge can use any invariants. *)
-val make_pledge (#is:invlist) (f:vprop) (v:vprop) (extra:vprop)
-  ($k : ustep is (f ** extra) (f ** v))
-  : stt_ghost unit emp_inames (invlist_inv is ** extra) (fun _ -> pledge f v)
+val make_pledge (#is:inames) (f v extra:vprop)
+  (k:unit -> stt_ghost unit is (f ** extra) (fun _ -> f ** v))
+  : stt_ghost unit emp_inames extra (fun _ -> pledge f v)
 
 (* Redeem is stateful in this simple variant, which is what
 allows to ignore the opened invariants. *)
-val redeem_pledge (f:vprop) (v:vprop)
-  : stt unit (f ** pledge f v) (fun () -> f ** v)
+val redeem_pledge (f v:vprop)
+  : stt unit (f ** pledge f v) (fun _ -> f ** v)
 
-// Unclear how useful/convenient this is
-val bind_pledge (#is:invlist) (#f:vprop) (#v1:vprop) (#v2:vprop)
-        (extra : vprop)
-        (k : ustep is (f ** extra ** v1) (f ** pledge f v2))
-  : stt_ghost unit emp_inames (pledge f v1 ** extra) (fun () -> pledge f v2)
+//
+// Unclear if we can define this since we
+//   would have to know the invariants that second pledge would use,
+//   but nothing prevents them from depending on whenever the function
+//   is called (i.e. classical order of quantifiers problem.)
+// val bind_pledge (#f #v1 #v2:vprop)
+//   (extra : vprop)
+//   (#is_k:inames)
+//   (k:unit -> stt_ghost unit is_k (f ** extra ** v1) (fun _ -> f ** pledge f v2))
+//   : stt_ghost unit emp_inames (pledge f v1 ** extra) (fun _ -> pledge f v2)
 
-(* Weaker variant, the proof does not use f. It's implemented
-by framing k with f and then using the above combinator. Exposing
-only in case it's useful for inference. *)
-val bind_pledge' (#is:invlist) (#f:vprop) (#v1:vprop) (#v2:vprop)
-        (extra : vprop)
-        (k : ustep is (extra ** v1) (pledge f v2))
-  : stt_ghost unit emp_inames (pledge f v1 ** extra) (fun () -> pledge f v2)
+val join_pledge (#f v1 v2:vprop)
+  : stt_ghost unit emp_inames
+      (pledge f v1 ** pledge f v2)
+      (fun _ -> pledge f (v1 ** v2))
 
-val join_pledge (#f:vprop) (v1:vprop) (v2:vprop)
-  : stt_ghost unit
-              emp_inames
-              (pledge f v1 ** pledge f v2)
-              (fun () -> pledge f (v1 ** v2))
-
+//
 // See Pulse.Lib.Par.Pledge.fst
+// This requires pledges to be boxable,
+//
 // val split_pledge (#f:vprop) (v1:vprop) (v2:vprop)
 //   : stt_atomic unit #Unobservable emp_inames
 //               (pledge f (v1 ** v2))
 //               (fun () -> pledge f v1 ** pledge f v2)
 
-val rewrite_pledge (#is:invlist) (#f:vprop) (v1 : vprop) (v2 : vprop)
-  (k : ustep is v1 v2)
-  : stt_ghost unit
-              emp_inames
-              (pledge f v1)
-              (fun _ -> pledge f v2)
+val rewrite_pledge (#f v1 v2:vprop)
+  (#is_k:inames)
+  (k:unit -> stt_ghost unit is_k v1 (fun _ -> v2))
+  : stt_ghost unit emp_inames
+      (pledge f v1)
+      (fun _ -> pledge f v2)

@@ -39,7 +39,7 @@ let asynch (a:Type0) (post : a -> vprop) : Type0 =
   ref (option a) & thread
 
 let async_joinable #a #post h =
-  joinable (snd h) ** pledge [] (done (snd h)) (ref_solves_post (fst h) post)
+  joinable (snd h) ** pledge emp_inames (done (snd h)) (ref_solves_post (fst h) post)
 
 ```pulse
 fn async_fill
@@ -78,8 +78,8 @@ fn __async
   let res = ( r, th );
   
   assert (joinable th);
-  assert (pledge [] (done th) (ref_solves_post r post));
-  rewrite (joinable th ** pledge [] (done th) (ref_solves_post r post))
+  assert (pledge emp_inames (done th) (ref_solves_post r post));
+  rewrite (joinable th ** pledge emp_inames (done th) (ref_solves_post r post))
        as (async_joinable #_ #post res);
   res
 }
@@ -102,7 +102,7 @@ fn __await
   join th; (* join the thread *)
   assert (done th);
   rewrite (done th) as (done (snd h));
-  redeem_pledge [] (done (snd h)) (ref_solves_post r post);
+  redeem_pledge emp_inames (done (snd h)) (ref_solves_post r post);
   assert (ref_solves_post r post);
   unfold ref_solves_post;
   with vv. assert (pts_to r (Some vv));
@@ -117,7 +117,6 @@ fn __await
     Some v -> {
       rewrite (post vv) as (post v);
       assert (post v);
-      rewrite (Pulse.Lib.InvList.invlist_inv []) as emp;
       v
     }
   }

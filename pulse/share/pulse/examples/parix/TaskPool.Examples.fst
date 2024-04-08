@@ -39,13 +39,11 @@ fn qs (n:nat)
   spawn_ p (fun () -> qsc 3);
   spawn_ p (fun () -> qsc 4);
   teardown_pool p;
-  redeem_pledge [] (pool_done p) (qsv 1);
-  redeem_pledge [] (pool_done p) (qsv 2);
-  redeem_pledge [] (pool_done p) (qsv 3);
-  redeem_pledge [] (pool_done p) (qsv 4);
-  drop_ (pool_done p);
-  rewrite each (Pulse.Lib.InvList.invlist_inv []) as emp;
-  ()
+  redeem_pledge emp_inames (pool_done p) (qsv 1);
+  redeem_pledge emp_inames (pool_done p) (qsv 2);
+  redeem_pledge emp_inames (pool_done p) (qsv 3);
+  redeem_pledge emp_inames (pool_done p) (qsv 4);
+  drop_ (pool_done p)
 }
 ```
 
@@ -60,14 +58,12 @@ fn qs_joinpromises (n:nat)
   spawn_ p (fun () -> qsc 2);
   spawn_ p (fun () -> qsc 3);
   spawn_ p (fun () -> qsc 4);
-  join_pledge #[] #(pool_done p) (qsv 1) (qsv 2);
-  join_pledge #[] #(pool_done p) (qsv 3) (qsv 4);
+  join_pledge #emp_inames #(pool_done p) (qsv 1) (qsv 2);
+  join_pledge #emp_inames #(pool_done p) (qsv 3) (qsv 4);
   teardown_pool p;
-  redeem_pledge [] (pool_done p) (qsv 1 ** qsv 2);
-  redeem_pledge [] (pool_done p) (qsv 3 ** qsv 4);
-  drop_ (pool_done p);
-  rewrite each (Pulse.Lib.InvList.invlist_inv []) as emp;
-  ()
+  redeem_pledge emp_inames (pool_done p) (qsv 1 ** qsv 2);
+  redeem_pledge emp_inames (pool_done p) (qsv 3 ** qsv 4);
+  drop_ (pool_done p)
 }
 ```
 
@@ -95,12 +91,10 @@ fn qsh (n:nat)
   spawn_ p (fun () -> qsc 3);
   spawn_ p (fun () -> qsc 4);
   teardown_pool p;
-  redeem_pledge [] (pool_done p) (qsv 1 ** qsv 2);
-  redeem_pledge [] (pool_done p) (qsv 3);
-  redeem_pledge [] (pool_done p) (qsv 4);
-  drop_ (pool_done p);
-  rewrite each (Pulse.Lib.InvList.invlist_inv []) as emp;
-  ()
+  redeem_pledge emp_inames (pool_done p) (qsv 1 ** qsv 2);
+  redeem_pledge emp_inames (pool_done p) (qsv 3);
+  redeem_pledge emp_inames (pool_done p) (qsv 4);
+  drop_ (pool_done p)
 }
 ```
 
@@ -108,7 +102,7 @@ fn qsh (n:nat)
 fn qs12_par (p:pool)
   requires pool_alive p
   returns _:unit
-  ensures pool_alive p ** pledge [] (pool_done p) (qsv 1) ** pledge [] (pool_done p) (qsv 2)
+  ensures pool_alive p ** pledge emp_inames (pool_done p) (qsv 1) ** pledge emp_inames (pool_done p) (qsv 2)
   {
     spawn_ p (fun () -> qsc 1);
     spawn_ p (fun () -> qsc 2);
@@ -137,8 +131,6 @@ fn qsh_par (n:nat)
   redeem_pledge (pool_done p) (qsv 2);
   redeem_pledge (pool_done p) (qsv 3);
   redeem_pledge (pool_done p) (qsv 4);
-  drop_ (pool_done p);
-  rewrite each (Pulse.Lib.InvList.invlist_inv []) as emp;
-  ()
+  drop_ (pool_done p)
 }
 ```

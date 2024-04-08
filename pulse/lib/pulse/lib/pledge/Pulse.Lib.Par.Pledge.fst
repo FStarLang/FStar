@@ -18,8 +18,8 @@ module Pulse.Lib.Par.Pledge
 
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Trade
+
 module GR = Pulse.Lib.GhostReference
-open Pulse.Class.PtsTo
 
 open FStar.Tactics.V2
 
@@ -29,26 +29,25 @@ let vprop_equiv_refl_eq (v1 v2 : vprop) (_ : squash (v1 == v2)) : vprop_equiv v1
 let __tac () : Tac unit =
   apply (`vprop_equiv_refl_eq)
 
-let pledge opens f v = (==>*) #opens f (f ** v)
+let pledge is f v = (==>*) #is f (f ** v)
 
-let pledge_sub_inv os1 os2 (f:vprop) (v:vprop) = trade_sub_inv _ _
+let pledge_sub_inv is1 is2 (f:vprop) (v:vprop) = trade_sub_inv _ _
 
 ```pulse
 ghost
-fn __return_pledge (is:invlist) (f v : vprop)
-  requires invlist_inv is ** v
-  ensures pledge is f v
+fn __return_pledge (f v : vprop)
+  requires v
+  ensures pledge emp_inames f v
 {
   ghost
   fn aux ()
-    requires invlist_inv is ** v ** f
-    ensures invlist_inv is ** (f ** v)
-    opens (invlist_names is)
+    requires v ** f
+    ensures f ** v
   {
     ()
   };
-  intro_trade #is f (f ** v) v aux;
-  fold ((==>*) #is f (f ** v));
+  intro_trade #emp_inames f (f ** v) v aux;
+  fold ((==>*) #emp_inames f (f ** v));
   fold pledge;
 }
 ```
@@ -57,16 +56,16 @@ let return_pledge = __return_pledge
 ```pulse
 ghost
 fn __make_pledge
-  (is:invlist) (f v extra : vprop)
-  (k : ustep is (f ** extra) (f ** v))
-  requires invlist_inv is ** extra
+  (is:inames) (f v extra:vprop)
+  (k:unit -> stt_ghost unit is (f ** extra) (fun _ -> f ** v))
+  requires extra
   ensures pledge is f v
 {
   ghost
   fn aux ()
-    requires invlist_inv is ** extra ** f
-    ensures invlist_inv is ** (f ** v)
-    opens (invlist_names is)
+    requires extra ** f
+    ensures f ** v
+    opens is
   {
     k ()
   };
@@ -76,14 +75,38 @@ fn __make_pledge
   fold pledge;
 }
 ```
-let make_pledge os f v extra k = __make_pledge os f v extra k  // eta-expansion to account for $ on k
+let make_pledge = __make_pledge  // eta-expansion to account for $ on k
 
 ```pulse
 ghost
-fn __redeem_pledge (is : invlist) (f v : vprop)
+fn make_pledge_invs_aux
+  (is:invlist)
+  (f v extra:vprop)
+  (k:unit -> stt_ghost unit emp_inames (invlist_v is ** f ** extra) (fun _ -> invlist_v is ** f ** v))
+  requires invlist_inv is ** extra
+  ensures pledge (invlist_names is) f v
+{
+  ghost
+  fn aux ()
+    requires invlist_v is ** extra ** f
+    ensures invlist_v is ** (f ** v)
+  {
+    k ()
+  };
+  intro_trade_invs #is f (f ** v) extra aux;
+  fold ((==>*) #(invlist_names is) f (f ** v));
+  fold pledge
+}
+```
+
+let make_pledge_invs = make_pledge_invs_aux
+
+```pulse
+ghost
+fn __redeem_pledge (is:inames) (f v:vprop)
   requires f ** pledge is f v
-  ensures f ** v ** invlist_inv is
-  opens (invlist_names is)
+  ensures f ** v
+  opens is
 {
   unfold pledge;
   unfold ((==>*) #is f (f ** v));
@@ -92,41 +115,37 @@ fn __redeem_pledge (is : invlist) (f v : vprop)
 ```
 let redeem_pledge = __redeem_pledge
 
+// ```pulse
+// ghost
+// fn pledge_invs_aux (is:invlist) (f:vprop) (v:vprop)
+//   requires pledge is f v
+//   ensures pledge is f v ** invlist_inv is
+// {
+//   unfold pledge;
+//   unfold ((==>*) #is f (f ** v));
+//   trade_invs ();
+//   fold ((==>*) #is f (f ** v));
+//   fold pledge
+// }
+// ```
+
+// let pledge_invs = pledge_invs_aux
+
 ```pulse
 ghost
-fn pledge_invs_aux (is:invlist) (f:vprop) (v:vprop)
-  requires pledge is f v
-  ensures pledge is f v ** invlist_inv is
-{
-  unfold pledge;
-  unfold ((==>*) #is f (f ** v));
-  trade_invs ();
-  fold ((==>*) #is f (f ** v));
-  fold pledge
-}
-```
-
-let pledge_invs = pledge_invs_aux
-
-```pulse
-ghost
-fn squash_pledge_aux (is:invlist) (f:vprop) (v1:vprop)
+fn squash_pledge_aux (is:inames) (f:vprop) (v1:vprop)
   requires pledge is f (pledge is f v1)
   ensures pledge is f v1
 {
   ghost
   fn aux ()
-    requires invlist_inv is ** (f ** pledge is f (pledge is f v1))
-    ensures invlist_inv is ** (f ** v1)
-    opens (invlist_names is)
+    requires f ** pledge is f (pledge is f v1)
+    ensures f ** v1
+    opens is
   {
     redeem_pledge is f (pledge is f v1);
-    drop_ (invlist_inv is);
-    redeem_pledge is f v1;
-    drop_ (invlist_inv is)
-
+    redeem_pledge is f v1
   };
-  pledge_invs is f _;
   make_pledge is f v1 (pledge is f (pledge is f v1)) aux
 }
 ```
@@ -134,24 +153,23 @@ fn squash_pledge_aux (is:invlist) (f:vprop) (v1:vprop)
 ```pulse
 ghost
 fn bind_pledge_aux
-  (#is : invlist)
-  (#f #v1 #v2 extra : vprop)
-  (k : ustep is (f ** extra ** v1) (f ** pledge is f v2))
+  (#is:inames)
+  (#f #v1 #v2 extra:vprop)
+  (#is_k:inames { inames_subset is_k is })
+  (k:unit -> stt_ghost unit is_k (f ** extra ** v1) (fun _ -> f ** pledge is f v2))
   requires pledge is f v1 ** extra
   ensures pledge is f v2
 {
   ghost
   fn aux ()
-    requires invlist_inv is ** (f ** (extra ** pledge is f v1))
-    ensures invlist_inv is ** (f ** pledge is f v2)
-    opens (invlist_names is)
+    requires f ** (extra ** pledge is f v1)
+    ensures f ** pledge is f v2
+    opens is
   {
     redeem_pledge is f v1;
-    k ();
-    drop_ (invlist_inv is)
+    k ()
   };
 
-  pledge_invs is f v1;
   make_pledge is f (pledge is f v2) (extra ** pledge is f v1) aux;
   squash_pledge_aux is f v2
 }
@@ -162,17 +180,18 @@ let bind_pledge = bind_pledge_aux
 ```pulse
 ghost
 fn bind_pledge'_aux
-  (#is : invlist)
-  (#f #v1 #v2 extra : vprop)
-  (k : ustep is (extra ** v1) (pledge is f v2))
+  (#is:inames)
+  (#f #v1 #v2 extra:vprop)
+  (#is_k:inames { inames_subset is_k is })
+  (k:unit -> stt_ghost unit is_k (extra ** v1) (fun _ -> pledge is f v2))
   requires pledge is f v1 ** extra
   ensures pledge is f v2
 {
   ghost
   fn aux ()
-    requires invlist_inv is ** (f ** extra ** v1)
-    ensures invlist_inv is ** (f ** pledge is f v2)
-    opens (invlist_names is)
+    requires f ** extra ** v1
+    ensures f ** pledge is f v2
+    opens is
   {
     k ()
   };
@@ -180,29 +199,28 @@ fn bind_pledge'_aux
 }
 ```
 
-let bind_pledge' = bind_pledge'_aux
+let bind_pledge' #is #f #v1 #v2 extra k = bind_pledge'_aux #is #f #v1 #v2 extra k
 
 ```pulse
 ghost
 fn rewrite_pledge_full_aux
-  (#is:invlist)
+  (#is:inames)
   (#f v1 v2:vprop)
-  (k : ustep is (f ** v1) (f ** v2))
+  (#is_k:inames { inames_subset is_k is })
+  (k:unit -> stt_ghost unit is_k (f ** v1) (fun _ -> f ** v2))
   requires pledge is f v1
   ensures pledge is f v2
 {
   ghost
   fn aux ()
-    requires invlist_inv is ** (f ** pledge is f v1)
-    ensures invlist_inv is ** (f ** v2)
-    opens (invlist_names is)
+    requires f ** pledge is f v1
+    ensures f ** v2
+    opens is
   {
     redeem_pledge is f v1;
-    k ();
-    drop_ (invlist_inv is)
+    k ()
   };
   
-  pledge_invs is f v1;
   make_pledge is f v2 (pledge is f v1) aux;
 }
 ```
@@ -212,17 +230,18 @@ let rewrite_pledge_full = rewrite_pledge_full_aux
 ```pulse
 ghost
 fn rewrite_pledge_aux
-  (#is:invlist)
+  (#is:inames)
   (#f v1 v2:vprop)
-  (k : ustep is v1 v2)
+  (#is_k:inames { inames_subset is_k is })
+  (k:unit -> stt_ghost unit is_k v1 (fun _ -> v2))
   requires pledge is f v1
   ensures pledge is f v2
 {
   ghost
   fn aux ()
-    requires invlist_inv is ** (f ** v1)
-    ensures invlist_inv is ** (f ** v2)
-    opens (invlist_names is)
+    requires f ** v1
+    ensures f ** v2
+    opens is
   {
     k ()
   };
@@ -235,49 +254,22 @@ let rewrite_pledge = rewrite_pledge_aux
 
 ```pulse
 ghost
-fn rewrite_pledge0_aux
-  (#is:invlist)
-  (#f v1 v2:vprop)
-  (k : ustep0 v1 v2)
-  requires pledge is f v1
-  ensures pledge is f v2
-{
-  ghost
-  fn aux ()
-    requires invlist_inv is ** (f ** v1)
-    ensures invlist_inv is ** (f ** v2)
-    opens (invlist_names is)
-  {
-    k ()
-  };
-
-  rewrite_pledge_full #is #f v1 v2 aux  
-}
-```
-
-let rewrite_pledge0 = rewrite_pledge0_aux
-
-```pulse
-ghost
 fn join_pledge_aux
-  (#is:invlist)
+  (#is:inames)
   (#f v1 v2:vprop)
   requires pledge is f v1 ** pledge is f v2
   ensures pledge is f (v1 ** v2)
 {
   ghost
   fn aux ()
-    requires invlist_inv is ** (f ** (pledge is f v1 ** pledge is f v2))
-    ensures invlist_inv is ** (f ** (v1 ** v2))
-    opens (invlist_names is)
+    requires f ** (pledge is f v1 ** pledge is f v2)
+    ensures f ** (v1 ** v2)
+    opens is
   {
     redeem_pledge is f v1;
     redeem_pledge is f v2;
-    drop_ (invlist_inv is);
-    drop_ (invlist_inv is)
   };
   
-  pledge_invs is f v1;
   make_pledge is f (v1 ** v2) (pledge is f v1 ** pledge is f v2) aux;
 }
 ```
@@ -289,24 +281,21 @@ let squash_pledge = squash_pledge_aux
 ```pulse
 ghost
 fn squash_pledge'_aux
-  (is1 is2 is:invlist)
+  (is1 is2 is:inames)
   (f v1:vprop)
-  requires invlist_inv is **
-           pure (invlist_sub is1 is) **
-           pure (invlist_sub is2 is) **
+  requires pure (inames_subset is1 is) **
+           pure (inames_subset is2 is) **
            pledge is1 f (pledge is2 f v1)
   ensures pledge is f v1
 {
   ghost
   fn aux ()
-    requires invlist_inv is ** (f ** (pledge is1 f (pledge is2 f v1)))
-    ensures invlist_inv is ** (f ** v1)
-    opens (invlist_names is)
+    requires f ** (pledge is1 f (pledge is2 f v1))
+    ensures f ** v1
+    opens is
   {
     redeem_pledge is1 f (pledge is2 f v1);
-    redeem_pledge is2 f v1;
-    drop_ (invlist_inv is1);
-    drop_ (invlist_inv is2)
+    redeem_pledge is2 f v1
   };
   
   make_pledge is f v1 (pledge is1 f (pledge is2 f v1)) aux
@@ -315,9 +304,8 @@ fn squash_pledge'_aux
 
 let squash_pledge' = squash_pledge'_aux
 
-
 //
-// This proof below requires inv_p to be big ... which I think it is not
+// This proof below requires inv_p to be big ...
 //
 
 (* A big chunk follows for split_pledge *)

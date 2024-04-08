@@ -43,7 +43,7 @@ fn rec t_quicksort
     A.pts_to_range a lo hi s0 **
     pure (pure_pre_quicksort a lo hi lb rb s0)
   ensures 
-    pledge [] (T.pool_done p) (
+    pledge emp_inames (T.pool_done p) (
       T.pool_alive #f p **
       quicksort_post a lo hi s0 lb rb
     )
@@ -61,8 +61,7 @@ fn rec t_quicksort
     T.spawn_ p #(half_perm f) (fun () -> t_quicksort p #(half_perm f) a lo r._1 #lb #pivot);
     t_quicksort p #(half_perm f) a r._2 hi #pivot #rb;
     
-    rewrite emp as (invlist_inv []);
-    return_pledge [] (T.pool_done p) (A.pts_to_range a r._1 r._2 s2);
+    return_pledge (T.pool_done p) (A.pts_to_range a r._1 r._2 s2);
     squash_pledge _ _ _;
     join_pledge _ _;
     join_pledge _ _;
@@ -89,12 +88,11 @@ fn rec t_quicksort
       (* Permission accounting *)
       T.gather_alive p f;
     };
-    rewrite_pledge0 _ _ rewrite_pf;
+    rewrite_pledge _ _ rewrite_pf;
 
     ()
   } else {
-    rewrite emp as (invlist_inv []);
-    return_pledge [] (T.pool_done p) (
+    return_pledge (T.pool_done p) (
       T.pool_alive #f p **
       (exists* s. A.pts_to_range a lo hi s ** pure (pure_post_quicksort a lo hi lb rb s0 s))
     );
@@ -102,11 +100,11 @@ fn rec t_quicksort
 }
 ```
 
-assume val split_pledge (#is:invlist) (#f:vprop) (v1:vprop) (v2:vprop)
-  : stt_atomic (pi:invlist_elem { not (mem_inv (invlist_names is) (snd pi)) })
-               (invlist_names is)
+assume val split_pledge (#is:inames) (#f:vprop) (v1:vprop) (v2:vprop)
+  : stt_atomic (pi:invlist_elem { not (mem_inv is (snd pi)) })
+               is
                (pledge is f (v1 ** v2))
-               (fun pi -> pledge (add_one pi is) f v1 ** pledge (add_one pi is) f v2)
+               (fun pi -> pledge (Set.add (iname_of (snd pi)) is) f v1 ** pledge (Set.add (iname_of (snd pi)) is) f v2)
 
 ```pulse
 fn rec quicksort
@@ -133,7 +131,6 @@ fn rec quicksort
 
   T.teardown_pool' p _;
   redeem_pledge _ _ _;
-  drop_ (T.pool_done p);
-  drop_ (invlist_inv _)
+  drop_ (T.pool_done p)
 }
 ```
