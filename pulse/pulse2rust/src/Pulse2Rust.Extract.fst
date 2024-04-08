@@ -576,7 +576,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     when S.string_of_mlpath p = "Pulse.Lib.Mutex.new_mutex" ->
     let e = extract_mlexpr g e in
     mk_new_mutex e
-  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, _::e::_)
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, _::_::e::_)
     when S.string_of_mlpath p = "Pulse.Lib.Mutex.lock" ->
     let e = extract_mlexpr g e in
     mk_lock_mutex e
