@@ -425,7 +425,7 @@ let rec st_typing_weakening g g' t c d g1
 
   | T_Rewrite _ p q _ _ -> T_Rewrite _ p q (RU.magic ()) (RU.magic ())
 
-  | T_Admit _ s c d_s -> T_Admit _ s c (st_comp_typing_weakening g g' d_s g1)
+  | T_Admit _ c d_c -> T_Admit _ c (comp_typing_weakening g g' d_c g1)
 
   | T_Unreachable _ s c d_s tok ->
     T_Unreachable _ s c (st_comp_typing_weakening g g' d_s g1) (RU.magic())//weaken tok
@@ -732,6 +732,6 @@ let rec st_typing_subst g x t g' #e #eff e_typing #e1 #c1 e1_typing _
                 (RU.magic ())
                 (RU.magic ())
 
-  | T_Admit _ s c d_s ->
-    T_Admit _ (subst_st_comp s ss) c (st_comp_typing_subst g x t g' e_typing d_s)
+  | T_Admit _ c d_c ->
+    T_Admit _ (subst_comp c ss) (comp_typing_subst g x t g' e_typing d_c)
 #pop-options

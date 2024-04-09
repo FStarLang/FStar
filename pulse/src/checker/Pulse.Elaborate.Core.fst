@@ -298,13 +298,13 @@ let rec elab_st_typing (#g:env)
       let rbody = mk_abs (mk_array init_t) R.Q_Explicit rbody in
       mk_withlocalarray rret_u init_t init len rpre rret_t rpost rbody
 
-    | T_Admit _ {u;res;pre;post} c _ ->
-      let ru = u in
+    | T_Admit _ c _ ->
+      let {u; res; pre; post} = st_comp_of_comp c in
       let rpost = mk_abs res R.Q_Explicit post in
       (match c with
-       | STT -> mk_stt_admit ru res pre rpost
-       | STT_Atomic -> mk_stt_atomic_admit ru res pre rpost
-       | STT_Ghost -> mk_stt_ghost_admit ru res pre rpost)
+       | C_ST _ -> mk_stt_admit u res pre rpost
+       | C_STAtomic _ _ _ -> mk_stt_atomic_admit u res pre rpost
+       | C_STGhost _ _ -> mk_stt_ghost_admit u res pre rpost)
 
     | T_Unreachable _ _ _ _ _ ->
       `("IOU: elab_st_typing of T_Unreachable")

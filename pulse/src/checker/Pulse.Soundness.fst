@@ -404,7 +404,7 @@ let rec soundness (g:stt_env)
     | T_Rewrite _ _ _ _ _ ->
       Rewrite.rewrite_soundness d
 
-    | T_Admit _ _ _ _ -> Admit.admit_soundess d
+    | T_Admit _ _ _ -> Admit.admit_soundess d
 
     | T_Unreachable _ _ _ _ _ -> RU.magic()
 

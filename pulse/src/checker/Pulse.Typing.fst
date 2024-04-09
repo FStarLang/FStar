@@ -497,7 +497,7 @@ let comp_rewrite (p q:vprop) : comp =
 			post = q;
 		}
 
-let comp_admit (c:ctag) (s:st_comp) : comp =
+let comp_unreachable (c:ctag) (s:st_comp) : comp =
   match c with
   | STT -> C_ST s
   | STT_Atomic -> C_STAtomic tm_emp_inames Neutral s
@@ -1018,11 +1018,14 @@ type st_typing : env -> st_term -> comp -> Type =
 
   | T_Admit:
       g:env ->
-      s:st_comp ->
-      c:ctag ->
-      st_comp_typing g s ->
-      st_typing g (wtag (Some c) (Tm_Admit { ctag=c; u=s.u; typ=s.res; post=None }))
-                  (comp_admit c s)
+      c:comp_st ->
+      comp_typing g c (universe_of_comp c) ->
+      st_typing g (wtag (Some (ctag_of_comp_st c))
+                        (Tm_Admit { ctag=ctag_of_comp_st c;
+                                    u=comp_u c;
+                                    typ=comp_res c;
+                                    post=None }))
+                  c
 
   | T_Unreachable:
       g:env ->
@@ -1030,7 +1033,7 @@ type st_typing : env -> st_term -> comp -> Type =
       c:ctag ->
       st_comp_typing g s ->
       prop_validity g (S.wr (`False) FStar.Range.range_0) -> 
-      st_typing g (wtag (Some c) Tm_Unreachable) (comp_admit c s)
+      st_typing g (wtag (Some c) Tm_Unreachable) (comp_unreachable c s)
 
   | T_WithInv:
       g:env ->

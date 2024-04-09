@@ -39,13 +39,13 @@ let admit_soundess
                         (elab_st_typing d)
                         (elab_comp c)) =
 
-  let T_Admit _ s c st_typing = d in
+  let T_Admit _ c c_typing = d in
+  let st_typing, _ = Pulse.Typing.Metatheory.Base.comp_typing_inversion c_typing in
 
   let rt_typing, rpre_typing, rpost_typing = Comp.stc_soundness st_typing in
   match c with
-  | STT ->
+  | C_ST _ ->
     WT.stt_admit_typing rt_typing rpre_typing rpost_typing
-  | STT_Atomic ->
-    WT.stt_atomic_admit_typing rt_typing rpre_typing rpost_typing
-  | STT_Ghost ->
-    WT.stt_ghost_admit_typing rt_typing rpre_typing rpost_typing
+  | C_STAtomic _ _ _ -> admit ()
+  | C_STGhost _ _ -> admit ()
+
