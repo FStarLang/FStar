@@ -5117,6 +5117,17 @@ let do_discharge_vc use_env_range_msg env vc : unit =
 // In every case, when this function returns [Some g], then the logical
 // part of [g] is [Trivial].
 let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option guard_t =
+  if Env.debug env <| Options.Other "ResolveImplicitsHook"
+  then BU.print1 "///////////////////ResolveImplicitsHook: discharge_guard'\n\
+                  guard = %s\n"
+                  (guard_to_string env g);
+
+  let g =
+    let defer_ok = NoDefer in
+    let smt_ok = not (Options.ml_ish ()) && use_smt in
+    let deferred_to_tac_ok = true in
+    try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env g
+  in
   let open FStar.Pprint in
   let open FStar.Errors.Msg in
   let open FStar.Class.PP in
@@ -5126,47 +5137,39 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option g
     || (Env.debug env <| Options.Other "Disch")
   in
   let diag_doc = Errors.diag_doc (Env.get_range env) in
-
-  if Env.debug env <| Options.Other "ResolveImplicitsHook"
-  then BU.print1 "///////////////////ResolveImplicitsHook: discharge_guard'\n\
-                  guard = %s\n"
-                  (guard_to_string env g);
-
-  let g =
-    let defer_ok = NoDefer in
-    let deferred_to_tac_ok = true in
-    try_solve_deferred_constraints defer_ok use_smt deferred_to_tac_ok env g
-  in
   let ret_g = {g with guard_f = Trivial} in
-  let g = simplify_guard_full_norm env g in
-  match g.guard_f with
-  | Trivial ->
-    Some ret_g
-
-  | NonTrivial vc when not (Env.should_verify env) ->
-    // GM: not sure if this is the right place for this check.
+  if not (Env.should_verify env) then (
     if debug then
       diag_doc [text "Skipping VC because verification is disabled"];
     Some ret_g
+  ) else (
+    let g = simplify_guard_full_norm env g in
+    match g.guard_f with
+    | Trivial ->
+      Some ret_g
 
-  | NonTrivial vc when not use_smt ->
-    if debug then
-      diag_doc [text "Cannot solve without SMT:" ^/^ pp vc];
-    None
+    | NonTrivial vc when not use_smt ->
+      if debug then
+        diag_doc [text "Cannot solve without SMT:" ^/^ pp vc];
+      None
 
-  | NonTrivial vc ->
-    do_discharge_vc use_env_range_msg env vc;
-    Some ret_g
-
-let discharge_guard_no_smt env g =
-  match discharge_guard' None env g false with
-  | Some g -> g
-  | None  -> raise_error (Errors.Fatal_ExpectTrivialPreCondition, "Expected a trivial pre-condition") (Env.get_range env)
+    | NonTrivial vc ->
+      do_discharge_vc use_env_range_msg env vc;
+      Some ret_g
+  )
 
 let discharge_guard env g =
   match discharge_guard' None env g true with
   | Some g -> g
   | None  -> failwith "Impossible, with use_smt = true, discharge_guard' should never have returned None"
+
+let discharge_guard_no_smt env g =
+  match discharge_guard' None env g false with
+  | Some g -> g
+  | None ->
+    raise_error_doc
+      (Errors.Fatal_ExpectTrivialPreCondition, [text "Expected a trivial pre-condition"])
+      (Env.get_range env)
 
 let teq_nosmt (env:env) (t1:typ) (t2:typ) : option guard_t =
   match try_teq false env t1 t2 with

@@ -91,6 +91,8 @@ let cases f d = function
  * exact same object in memory. See read_memo and set_memo below. *)
 type cfg_memo 'a = memo (Cfg.cfg * 'a)
 
+let fresh_memo (#a:Type) () : cfg_memo a = BU.mk_ref None
+
 type closure =
   | Clos of env * term * cfg_memo (env * term) * bool //memo for lazy evaluation; bool marks whether or not this is a fixpoint
   | Univ of universe                               //universe terms do not have free variables
@@ -146,37 +148,31 @@ let closure_to_string = function
     | Univ _ -> "Univ"
     | Dummy -> "dummy"
 
-let env_to_string env = //BU.format1 "(%s elements)" (string_of_int <| List.length env)
-    List.map (fun (bopt, c) ->
-                BU.format2 "(%s, %s)"
-                   (match bopt with None -> "." | Some x -> FStar.Syntax.Print.binder_to_string x)
-                   (closure_to_string c))
-             env
-            |> String.concat "; "
+instance showable_closure : showable closure = {
+  show = closure_to_string;
+}
 
-let stack_elt_to_string = function
-    | Arg (c, _, _) -> BU.format1 "Closure %s" (closure_to_string c)
-    | MemoLazy _ -> "MemoLazy"
-    | Abs (_, bs, _, _, _) -> BU.format1 "Abs %s" (string_of_int <| List.length bs)
-    | UnivArgs _ -> "UnivArgs"
-    | Match   _ -> "Match"
-    | App (_, t,_,_) -> BU.format1 "App %s" (Print.term_to_string t)
-    | CBVApp (_, t,_,_) -> BU.format1 "CBVApp %s" (Print.term_to_string t)
-    | Meta (_, m,_) -> "Meta"
-    | Let  _ -> "Let"
-    | Cfg _ -> "Cfg"
-    // | _ -> "Match"
-
-let stack_to_string s =
-    List.map stack_elt_to_string s |> String.concat "; "
+instance showable_stack_elt : showable stack_elt = {
+  show = (function
+          | Arg (c, _, _) -> BU.format1 "Closure %s" (show c)
+          | MemoLazy _ -> "MemoLazy"
+          | Abs (_, bs, _, _, _) -> BU.format1 "Abs %s" (show <| List.length bs)
+          | UnivArgs _ -> "UnivArgs"
+          | Match   _ -> "Match"
+          | App (_, t,_,_) -> BU.format1 "App %s" (show t)
+          | CBVApp (_, t,_,_) -> BU.format1 "CBVApp %s" (show t)
+          | Meta (_, m,_) -> "Meta"
+          | Let  _ -> "Let"
+          | Cfg _ -> "Cfg");
+}
 
 let is_empty = function
     | [] -> true
     | _ -> false
 
-let lookup_bvar env x =
+let lookup_bvar (env : env) x =
     try snd (List.nth env x.index)
-    with _ -> failwith (BU.format2 "Failed to find %s\nEnv is %s\n" (Print.db_to_string x) (env_to_string env))
+    with _ -> failwith (BU.format2 "Failed to find %s\nEnv is %s\n" (Print.db_to_string x) (show env))
 
 let downgrade_ghost_effect_name l =
     if Ident.lid_equals l PC.effect_Ghost_lid
@@ -282,7 +278,7 @@ let norm_universe cfg (env:env) u =
 (* This is used when computing WHNFs                               *)
 (*******************************************************************)
 let rec inline_closure_env cfg (env:env) stack t =
-    log cfg (fun () -> BU.print3 ">>> %s (env=%s)\nClosure_as_term %s\n" (Print.tag_of_term t) (env_to_string env) (Print.term_to_string t));
+    log cfg (fun () -> BU.print3 ">>> %s (env=%s)\nClosure_as_term %s\n" (Print.tag_of_term t) (show env) (show t));
     match env with
     | [] when not <| cfg.steps.compress_uvars ->
       rebuild_closure cfg env stack t
@@ -355,7 +351,7 @@ let rec inline_closure_env cfg (env:env) stack t =
       | Tm_app {hd=head; args} ->
         let stack =
             stack |> List.fold_right
-            (fun (a, aq) stack -> Arg (Clos(env, a, BU.mk_ref None, false),aq,t.pos)::stack)
+            (fun (a, aq) stack -> Arg (Clos(env, a, fresh_memo (), false),aq,t.pos)::stack)
             args
         in
         inline_closure_env cfg env stack head
@@ -460,7 +456,7 @@ and non_tail_inline_closure_env cfg env t =
     inline_closure_env cfg env [] t
 
 and rebuild_closure cfg env stack t =
-    log cfg (fun () -> BU.print4 ">>> %s (env=%s, stack=%s)\nRebuild closure_as_term %s\n" (Print.tag_of_term t) (env_to_string env) (stack_to_string stack) (Print.term_to_string t));
+    log cfg (fun () -> BU.print4 ">>> %s (env=%s, stack=%s)\nRebuild closure_as_term %s\n" (Print.tag_of_term t) (show env) (show stack) (show t));
     match stack with
     | [] -> t
 
@@ -943,7 +939,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
         log_unfolding cfg (fun () -> BU.print3 "should_unfold: Reached a %s with delta_depth = %s\n >> Our delta_level is %s\n"
                                                (Print.fv_to_string fv)
                                                (show (Env.delta_depth_of_fv cfg.tcenv fv))
-                                               (FStar.Common.string_of_list Env.string_of_delta_level cfg.delta_level));
+                                               (show cfg.delta_level));
         yesno <| (cfg.delta_level |> BU.for_some (function
              | NoDelta -> false
              | InliningDelta
@@ -1345,10 +1341,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
         log cfg (fun () ->
           BU.print5 ">>> %s (no_full_norm=%s)\nNorm %s with %s env elements; top of the stack = %s\n"
                                         (Print.tag_of_term t)
-                                        (BU.string_of_bool (cfg.steps.no_full_norm))
-                                        (Print.term_to_string t)
+                                        (show cfg.steps.no_full_norm)
+                                        (show t)
                                         (show (List.length env))
-                                        (stack_to_string (fst <| firstn 4 stack)));
+                                        (show (fst <| firstn 4 stack)));
         log_cfg cfg (fun () -> BU.print1 ">>> cfg = %s\n" (show cfg));
         match t.n with
           // Values
@@ -1413,7 +1409,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
               let stack =
                 stack |>
                 List.fold_right
-                  (fun (a, aq) stack -> Arg (Clos(env, a, BU.mk_ref None, false),aq,t.pos)::stack)
+                  (fun (a, aq) stack -> Arg (Clos(env, a, fresh_memo (), false),aq,t.pos)::stack)
                   args
               in
               log cfg  (fun () -> BU.print1 "\tPushed %s arguments\n" (string_of_int <| List.length args));
@@ -1426,7 +1422,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
               let fin = BU.now () in
               if cfg.debug.print_normalized
               then begin
-                let cfg' = Cfg.config' [] s cfg.tcenv in
+                let cfg' = Cfg.config s cfg.tcenv in
                 // BU.print1 "NBE result timing (%s ms)\n"
                 //        (show (snd (BU.time_diff start fin)))
                 BU.print4 "NBE result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
@@ -1438,8 +1434,13 @@ let rec norm : cfg -> env -> stack -> term -> term =
               rebuild cfg env stack tm_norm
 
             | Some (s, tm) ->
-              // if cfg.debug.print_normalized
-              // then BU.print1 "Starting norm request on %s ... \n" (Print.term_to_string tm);
+              let open FStar.Errors.Msg in
+              let open FStar.Pprint in
+              if cfg.debug.print_normalized then
+                Errors.diag_doc tm.pos [
+                  text <| BU.format1 "Starting norm request on `%s`." (show tm);
+                  text "Steps =" ^/^ text (show s);
+                  ];
               let delta_level =
                 if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ | UnfoldFully _ -> true | _ -> false)
                 then [Unfold delta_constant]
@@ -1568,10 +1569,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       begin match bs with
                         | [] -> failwith "Impossible"
                         | [b] ->
-                          log cfg  (fun () -> BU.print1 "\tShifted %s\n" (closure_to_string c));
+                          log cfg  (fun () -> BU.print1 "\tShifted %s\n" (show c));
                           norm cfg ((Some b, c) :: env) stack_rest body
                         | b::tl ->
-                          log cfg  (fun () -> BU.print1 "\tShifted %s\n" (closure_to_string c));
+                          log cfg  (fun () -> BU.print1 "\tShifted %s\n" (show c));
                           let body = mk (Tm_abs {bs=tl; body; rc_opt=lopt}) t.pos in
                           norm cfg ((Some b, c) :: env) stack_rest body
                       end
@@ -1629,7 +1630,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       | Tm_fvar _ -> empty_env
                       | _ -> env
                     in
-                    Arg (Clos(env, a, BU.mk_ref None, false),aq,t.pos)::stack)
+                    Arg (Clos(env, a, fresh_memo (), false),aq,t.pos)::stack)
                   args
                   stack
               in
@@ -1637,9 +1638,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
               norm cfg env stack head
 
             | Some strict_args ->
-              // BU.print2 "%s has strict args [%s]\n"
-              //   (Print.term_to_string head)
-              //   (List.map string_of_int strict_args |> String.concat "; ");
+              // BU.print2 "%s has strict args %s\n" (show head) (show strict_args);
               let norm_args = args |> List.map (fun (a, i) -> (norm cfg env [] a, i)) in
               let norm_args_len = List.length norm_args in
               if strict_args
@@ -1665,8 +1664,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                    let term = S.mk_Tm_app head norm_args t.pos in
                    // let _ =
                    //   BU.print3 "Rebuilding %s as %s\n%s\n"
-                   //     (Print.term_to_string t)
-                   //     (Print.term_to_string term)
+                   //     (show t)
+                   //     (show term)
                    //     (BU.stack_dump())
                    // in
                    rebuild cfg env stack term
@@ -1759,7 +1758,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   * computation. We need to remove it to maintain a proper
                   * term structure. See the discussion in PR #2024. *)
                  let def = U.unmeta_lift lb.lbdef in
-                 let env = (Some binder, Clos(env, def, BU.mk_ref None, false))::env in
+                 let env = (Some binder, Clos(env, def, fresh_memo(), false))::env in
                  log cfg (fun () -> BU.print_string "+++ Reducing Tm_let\n");
                  norm cfg env stack body
 
@@ -1840,13 +1839,13 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     let bv = {left lb.lbname with index=i} in
                     let f_i = Syntax.bv_to_tm bv in
                     let fix_f_i = mk (Tm_let {lbs; body=f_i}) t.pos in
-                    let memo = BU.mk_ref None in
+                    let memo = fresh_memo () in
                     let rec_env = (None, Clos(env, fix_f_i, memo, true))::rec_env in
                     rec_env, memo::memos, i + 1) (snd lbs) (env, [], 0) in
             let _ = List.map2 (fun lb memo -> memo := Some (cfg, (rec_env, lb.lbdef))) (snd lbs) memos in //tying the knot
             // NB: fold_left, since the binding structure of lbs is that righmost is closer, while in the env leftmost
             // is closer. In other words, the last element of lbs is index 0 for body, hence needs to be pushed last.
-            let body_env = List.fold_left (fun env lb -> (None, Clos(rec_env, lb.lbdef, BU.mk_ref None, false))::env)
+            let body_env = List.fold_left (fun env lb -> (None, Clos(rec_env, lb.lbdef, fresh_memo(), false))::env)
                                env (snd lbs) in
             log cfg (fun () -> BU.print1 "reducing with knot %s\n" "");
             norm cfg body_env stack body
@@ -1944,14 +1943,14 @@ let rec norm : cfg -> env -> stack -> term -> term =
 and do_unfold_fv cfg stack (t0:term) (qninfo : qninfo) (f:fv) : term =
     match Env.lookup_definition_qninfo cfg.delta_level f.fv_name.v qninfo with
        | None ->
-         log_unfolding cfg (fun () -> // printfn "delta_level = %A, qninfo=%A" cfg.delta_level qninfo;
-                                      BU.print1 " >> No definition found for %s\n" (Print.fv_to_string f));
+         log_unfolding cfg (fun () ->
+           BU.print2 " >> No definition found for %s (delta_level = %s)\n"
+             (Print.fv_to_string f) (show cfg.delta_level));
          rebuild cfg empty_env stack t0
 
        | Some (us, t) ->
          begin
-         log_unfolding cfg (fun () -> BU.print2 " >> Unfolded %s to %s\n"
-                       (Print.term_to_string t0) (Print.term_to_string t));
+         log_unfolding cfg (fun () -> BU.print2 " >> Unfolded %s to %s\n" (show t0) (show t));
          // preserve the range info on the returned term
          let t =
            if cfg.steps.unfold_until = Some delta_constant
@@ -2008,7 +2007,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
     (* Precondition: the stack head is an App (reify, ...) *)
     begin match stack with
     | App (_, {n=Tm_constant (FC.Const_reify _)}, _, _) :: _ -> ()
-    | _ -> failwith (BU.format1 "INTERNAL ERROR: do_reify_monadic: bad stack: %s" (stack_to_string stack))
+    | _ -> failwith (BU.format1 "INTERNAL ERROR: do_reify_monadic: bad stack: %s" (show stack))
     end;
     let top0 = top in
     let top = U.unascribe top in
@@ -2685,19 +2684,19 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
   (* whether cfg.steps constains WHNF In either case, it has no free de Bruijn *)
   (* indices *)
   log cfg (fun () ->
-    BU.print4 ">>> %s\nRebuild %s with %s env elements and top of the stack %s \n"
+    BU.print4 ">>> %s\nRebuild %s with %s env elements and top of the stack %s\n"
                                         (Print.tag_of_term t)
-                                        (Print.term_to_string t)
+                                        (show t)
                                         (show (List.length env))
-                                        (stack_to_string (fst <| firstn 4 stack));
+                                        (show (fst <| firstn 4 stack));
     if Env.debug cfg.tcenv (Options.Other "NormRebuild")
     then match FStar.Syntax.Util.unbound_variables t with
          | [] -> ()
          | bvs ->
            BU.print3 "!!! Rebuild (%s) %s, free vars=%s\n"
                                (Print.tag_of_term t)
-                               (Print.term_to_string t)
-                               (bvs |> List.map Print.bv_to_string |> String.concat ", ");
+                               (show t)
+                               (show bvs);
            failwith "DIE!");
 
   let f_opt = is_fext_on_domain t in
@@ -2889,7 +2888,7 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         rebuild cfg env stack t
 
       | CBVApp(env', head, aq, r)::stack ->
-        norm cfg env' (Arg (Clos (env, t, BU.mk_ref None, false), aq, t.pos) :: stack) head
+        norm cfg env' (Arg (Clos (env, t, fresh_memo (), false), aq, t.pos) :: stack) head
 
       | Match(env', asc_opt, branches, lopt, cfg, r) :: stack ->
         let lopt = BU.map_option (norm_residual_comp cfg env') lopt in

@@ -635,6 +635,15 @@ let (error_context : error_context_t) =
   { push; pop; clear = clear1; get; set }
 let (get_ctx : unit -> Prims.string Prims.list) =
   fun uu___ -> error_context.get ()
+let (maybe_add_backtrace :
+  FStar_Errors_Msg.error_message -> FStar_Errors_Msg.error_message) =
+  fun msg ->
+    let uu___ = FStar_Options.trace_error () in
+    if uu___
+    then
+      let uu___1 = let uu___2 = FStar_Errors_Msg.backtrace_doc () in [uu___2] in
+      FStar_Compiler_List.op_At msg uu___1
+    else msg
 let (diag_doc :
   FStar_Compiler_Range_Type.range -> FStar_Errors_Msg.error_message -> unit)
   =
@@ -643,9 +652,11 @@ let (diag_doc :
       let uu___ = FStar_Options.debug_any () in
       if uu___
       then
+        let msg1 = maybe_add_backtrace msg in
+        let ctx = get_ctx () in
         add_one
-          (mk_issue EInfo (FStar_Pervasives_Native.Some r) msg
-             FStar_Pervasives_Native.None [])
+          (mk_issue EInfo (FStar_Pervasives_Native.Some r) msg1
+             FStar_Pervasives_Native.None ctx)
       else ()
 let (diag : FStar_Compiler_Range_Type.range -> Prims.string -> unit) =
   fun r ->
@@ -729,7 +740,7 @@ let (set_option_warning_callback_range :
   FStar_Compiler_Range_Type.range FStar_Pervasives_Native.option -> unit) =
   fun ropt ->
     FStar_Options.set_option_warning_callback (warn_unsafe_options ropt)
-let (uu___381 :
+let (uu___385 :
   (((Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) *
     (unit -> FStar_Errors_Codes.error_setting Prims.list)))
   =
@@ -775,10 +786,10 @@ let (uu___381 :
   (set_callbacks, get_error_flags)
 let (t_set_parse_warn_error :
   (Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) =
-  match uu___381 with
+  match uu___385 with
   | (t_set_parse_warn_error1, error_flags) -> t_set_parse_warn_error1
 let (error_flags : unit -> FStar_Errors_Codes.error_setting Prims.list) =
-  match uu___381 with
+  match uu___385 with
   | (t_set_parse_warn_error1, error_flags1) -> error_flags1
 let (set_parse_warn_error :
   (Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) =
@@ -815,15 +826,6 @@ let (lookup :
                | FStar_Pervasives_Native.Some uu___2 -> level in
              with_level level'
          | uu___1 -> with_level level)
-let (maybe_add_backtrace :
-  FStar_Errors_Msg.error_message -> FStar_Errors_Msg.error_message) =
-  fun msg ->
-    let uu___ = FStar_Options.trace_error () in
-    if uu___
-    then
-      let uu___1 = let uu___2 = FStar_Errors_Msg.backtrace_doc () in [uu___2] in
-      FStar_Compiler_List.op_At msg uu___1
-    else msg
 let (log_issue_ctx :
   FStar_Compiler_Range_Type.range ->
     (FStar_Errors_Codes.raw_error * FStar_Errors_Msg.error_message) ->

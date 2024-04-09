@@ -345,9 +345,17 @@ let error_context : error_context_t =
 let get_ctx () : list string =
   error_context.get ()
 
+let maybe_add_backtrace (msg : error_message) : error_message =
+  if Options.trace_error () then
+    msg @ [backtrace_doc ()]
+  else
+    msg
+
 let diag_doc r msg =
-  if Options.debug_any()
-  then add_one (mk_issue EInfo (Some r) msg None [])
+  if Options.debug_any() then
+    let msg = maybe_add_backtrace msg in
+    let ctx = get_ctx () in
+    add_one (mk_issue EInfo (Some r) msg None ctx)
 
 let diag r msg =
   diag_doc r (mkmsg msg)
@@ -463,12 +471,6 @@ let lookup err =
 
   | _ ->
     with_level level
-
-let maybe_add_backtrace (msg : error_message) : error_message =
-  if Options.trace_error () then
-    msg @ [backtrace_doc ()]
-  else
-    msg
 
 let log_issue_ctx r (e, msg) ctx =
   let msg = maybe_add_backtrace msg in
