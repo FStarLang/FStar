@@ -778,7 +778,7 @@ let rec extract_recursive g (p:st_term) (rec_name:R.fv)
         let res = mle_fun [mlident, mlty, attrs] body in
         res, e_tag_pure
       | _ -> //last binder used for knot; replace it with the recursively bound name
-        let body = LN.subst_st_term body [LN.DT 0 (wr R.(pack_ln (Tv_FVar rec_name)) Range.range_0)] in
+        let body = LN.subst_st_term body [RT.DT 0 (wr R.(pack_ln (Tv_FVar rec_name)) Range.range_0)] in
         let body, tag = extract g body in
         body, tag
     )

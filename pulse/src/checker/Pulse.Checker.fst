@@ -126,7 +126,7 @@ let rec transform_to_unary_intro_exists (g:env) (t:term) (ws:list term)
   | w::ws ->
     match inspect_term t with
     | Tm_ExistsSL u b body ->
-      let body = subst_term body [ DT 0 w ] in
+      let body = subst_term body [ RT.DT 0 w ] in
       let st = transform_to_unary_intro_exists g body ws in
       // w is the witness
       let intro = wtag None (Tm_IntroExists {p=t;witnesses=[w]}) in

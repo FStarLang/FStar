@@ -59,8 +59,8 @@ let tabs_t (d:'a) =
     #c:comp ->
     body_typing:st_typing (push_binding g x ppname ty) (open_st_term body x) c { body_typing << d } ->
     GTot (RT.tot_typing (elab_env g)
-            (mk_abs_with_name ppname.name (elab_term ty) (elab_qual q) (RT.close_term (elab_st_typing body_typing) x))
-            (elab_term (tm_arrow (mk_binder_ppname ty ppname) q (close_comp c x))))
+            (mk_abs_with_name ppname.name ty (elab_qual q) (RT.close_term (elab_st_typing body_typing) x))
+            (tm_arrow (mk_binder_ppname ty ppname) q (close_comp c x)))
 
 #push-options "--z3rlimit_factor 4 --split_queries no"
 let lift_soundness
@@ -115,15 +115,13 @@ let stapp_soundness
   : GTot (RT.tot_typing (elab_env g) (elab_st_typing d) (elab_comp c)) =
 
   let T_STApp _ head formal q res arg head_typing arg_typing = d in
-  let r_head = elab_term head in
-  let r_arg = elab_term arg in
   let r_head_typing
-    : RT.tot_typing _ r_head
-        (elab_term (tm_arrow (mk_binder_ppname formal ppname_default) q res))
+    : RT.tot_typing _ head
+        (tm_arrow (mk_binder_ppname formal ppname_default) q res)
     = tot_typing_soundness head_typing
   in
   let r_arg_typing = tot_typing_soundness arg_typing in
-  RT.T_App _ _ _ (binder_of_t_q_s (elab_term formal) (elab_qual q) RT.pp_name_default)
+  RT.T_App _ _ _ (binder_of_t_q_s formal (elab_qual q) RT.pp_name_default)
                  (elab_comp res)
                  _
                  r_head_typing
@@ -148,18 +146,16 @@ let stghostapp_soundness
   : GTot (RT.tot_typing (elab_env g) (elab_st_typing d) (elab_comp c)) =
 
   let T_STGhostApp _ head formal q res arg x head_typing d_non_info arg_typing = d in
-  let r_head = elab_term head in
-  let r_arg = elab_term arg in
   let r_binder = mk_binder_ppname formal ppname_default in
   let head_t = tm_arrow r_binder q res in
-  let r_head_t = mk_arrow_with_name ppname_default.name (elab_term formal, elab_qual q)
+  let r_head_t = mk_arrow_with_name ppname_default.name (formal, elab_qual q)
                                                         (elab_comp res) in
-  let r_head_typing : RT.ghost_typing _ r_head r_head_t
+  let r_head_typing : RT.ghost_typing _ head r_head_t
     = ghost_typing_soundness head_typing in
   let r_arg_typing = ghost_typing_soundness arg_typing in
   
   assume (elab_env (push_binding g x ppname_default formal) ==
-          RT.extend_env (elab_env g) x (elab_term formal));
+          RT.extend_env (elab_env g) x formal);
   assume ((T.E_Total, elab_comp (open_comp_with res (null_var x))) ==
           RT.open_comp_typ (T.E_Total, elab_comp res) x);
   assume ((T.E_Ghost, elab_comp (open_comp_with res (null_var x))) ==
@@ -171,12 +167,12 @@ let stghostapp_soundness
                       (T.E_Ghost, elab_comp (open_comp_with res (null_var x))) =
     RT.Relc_total_ghost _ _ in
 
-  let r_head_t_ghost = mk_ghost_arrow_with_name ppname_default.name (elab_term formal, elab_qual q)
+  let r_head_t_ghost = mk_ghost_arrow_with_name ppname_default.name (formal, elab_qual q)
                                                                     (elab_comp res) in
 
 
-  assert (r_head_t == RT.mk_arrow_ct (elab_term formal) (elab_qual q) (T.E_Total, elab_comp res));
-  assert (r_head_t_ghost == RT.mk_arrow_ct (elab_term formal) (elab_qual q) (T.E_Ghost, elab_comp res));
+  assert (r_head_t == RT.mk_arrow_ct formal (elab_qual q) (T.E_Total, elab_comp res));
+  assert (r_head_t_ghost == RT.mk_arrow_ct formal (elab_qual q) (T.E_Ghost, elab_comp res));
 
   assume (None? (RT.lookup_bvar (elab_env g) x) /\
           ~ (x `Set.mem` ((RT.freevars_comp_typ (T.E_Total, elab_comp res)) `Set.union`
@@ -186,15 +182,15 @@ let stghostapp_soundness
                  r_head_t
                  RT.R_Sub
                  r_head_t_ghost
-    = RT.Rel_arrow _ (elab_term formal) (elab_term formal) (elab_qual q) (T.E_Total, elab_comp res) (T.E_Ghost, elab_comp res)
+    = RT.Rel_arrow _ formal formal (elab_qual q) (T.E_Total, elab_comp res) (T.E_Ghost, elab_comp res)
         RT.R_Sub x (RT.Rel_equiv _ _ _ _ (RT.Rel_refl _ _ _))
         d_rel_comp in
 
-  let r_head_typing : RT.ghost_typing _ r_head r_head_t_ghost =
+  let r_head_typing : RT.ghost_typing _ head r_head_t_ghost =
     RT.T_Sub _ _ _ _ r_head_typing (RT.Relc_typ _ _ _ T.E_Ghost _ d_rel_t_arrow) in
 
   let d : RT.typing (elab_env g) (elab_st_typing d) (T.E_Ghost, elab_comp (open_comp_with res arg)) =
-    RT.T_App _ _ _ (binder_of_t_q_s (elab_term formal) (elab_qual q) RT.pp_name_default)
+    RT.T_App _ _ _ (binder_of_t_q_s formal (elab_qual q) RT.pp_name_default)
       (elab_comp res)
       _
       r_head_typing
@@ -226,7 +222,7 @@ let stequiv_soundness
   let r_e_typing = soundness _ _ _ e_typing in
   match equiv with
   | ST_TotEquiv _ t1 t2 _ _ eq ->
-    let r_e_typing : RT.tot_typing (elab_env g) (elab_st_typing e_typing) (elab_term t1) = 
+    let r_e_typing : RT.tot_typing (elab_env g) (elab_st_typing e_typing) t1 = 
         r_e_typing
     in
     let eq = RT.Rel_equiv _ _ _ RT.R_Sub eq in
@@ -256,7 +252,7 @@ let bind_soundness
       = soundness _ _ _ e1_typing
     in
     let r2_typing
-      : RT.tot_typing _ _ (elab_term (tm_arrow (null_binder (comp_res c1)) None (close_comp c2 x)))
+      : RT.tot_typing _ _ (tm_arrow (null_binder (comp_res c1)) None (close_comp c2 x))
       = mk_t_abs None _ t_typing e2_typing
     in
     match bc with
@@ -284,7 +280,7 @@ let if_soundness
 
   let T_If _ b e1 e2  _ hyp b_typing e1_typing e2_typing (E c_typing) = d in
   let rb_typing : RT.tot_typing (elab_env g)
-                                (elab_term b)
+                                b
                                 RT.bool_ty =
     tot_typing_soundness b_typing in
   let g_then = push_binding g hyp ppname_default (mk_eq2 u0 tm_bool b tm_true) in
@@ -295,7 +291,7 @@ let if_soundness
                                hyp
                                (RT.eq2 (R.pack_universe R.Uv_Zero)
                                        RT.bool_ty
-                                       (elab_term b)
+                                       b
                                        RT.true_bool))
                 (elab_st_typing e1_typing)
                 (elab_comp c) =
@@ -307,7 +303,7 @@ let if_soundness
                                hyp
                                (RT.eq2 (R.pack_universe R.Uv_Zero)
                                        RT.bool_ty
-                                       (elab_term b)
+                                       b
                                        RT.false_bool))
                 (elab_st_typing e2_typing)
                 (elab_comp c) =
@@ -338,8 +334,8 @@ let rec soundness (g:stt_env)
                  (#c:comp)
                  (body_typing:st_typing (push_binding g x ppname ty) (open_st_term body x) c { body_typing << d })
       : GTot (RT.tot_typing (elab_env g)
-                (mk_abs_with_name ppname.name (elab_term ty) (elab_qual q) (RT.close_term (elab_st_typing body_typing) x))
-                (elab_term (tm_arrow (mk_binder_ppname ty ppname) q (close_comp c x))))
+                (mk_abs_with_name ppname.name ty (elab_qual q) (RT.close_term (elab_st_typing body_typing) x))
+                (tm_arrow (mk_binder_ppname ty ppname) q (close_comp c x)))
       = let r_t_typing = tot_typing_soundness t_typing in
         let r_body_typing = soundness _ _ _ body_typing in
         mk_t_abs g #_ #_ #_ #t_typing ppname r_t_typing r_body_typing

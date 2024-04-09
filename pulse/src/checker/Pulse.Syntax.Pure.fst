@@ -102,8 +102,7 @@ let tm_arrow (b:binder) (q:option qualifier) (c:comp) : term =
                                                      (elab_comp c))
             FStar.Range.range_0
 
-let tm_type (u:universe) : term =
-  set_range (R.pack_ln (R.Tv_Type u)) FStar.Range.range_0
+let tm_type (u:universe) : term = RT.tm_type u
 
 let mk_bvar (s:string) (r:Range.range) (i:index) : term =
   tm_bvar {bv_index=i;bv_ppname=mk_ppname (RT.seal_pp_name s) r}

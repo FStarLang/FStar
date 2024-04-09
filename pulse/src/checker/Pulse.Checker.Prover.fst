@@ -195,7 +195,7 @@ let rec get_q_at_hd (g:env) (l:list vprop) (q:vprop { L.existsb (fun v -> eq_tm 
     else let (| tl', _ |) = get_q_at_hd g tl q in
          (| hd::tl', RU.magic #(vprop_equiv _ _ _) () |)
 
-#push-options "--z3rlimit_factor 4"
+#push-options "--z3rlimit_factor 4 --ifuel 2 --fuel 1 --split_queries no"
 let prove
   (#g:env) (#ctxt:vprop) (ctxt_typing:vprop_typing g ctxt)
   (uvs:env { disjoint g uvs })

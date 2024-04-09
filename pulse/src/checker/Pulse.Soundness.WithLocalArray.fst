@@ -32,12 +32,9 @@ let withlocalarray_soundness #g #t #c d soundness =
   
   let rg =  elab_env g in
   let ru = comp_u c in
-  let ra = elab_term init_t in
-  let rinit = elab_term init in
-  let rlen = elab_term len in
-  let rpre = elab_term (comp_pre c) in
-  let rret_t = elab_term (comp_res c) in
-  let rpost = elab_term (comp_post c) in
+  let rpre = comp_pre c in
+  let rret_t = comp_res c in
+  let rpost = comp_post c in
   let rbody = elab_st_typing body_typing in
 
   let a_typing = tot_typing_soundness init_t_typing in
@@ -56,9 +53,9 @@ let withlocalarray_soundness #g #t #c d soundness =
   WT.with_localarray_typing
     #rg
     #ru
-    #ra
-    #rinit
-    #rlen
+    #init_t
+    #init
+    #len
     #rpre
     #rret_t
     #rpost
