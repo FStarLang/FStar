@@ -28,65 +28,19 @@ module P = Pulse.Syntax.Printer
 module Metatheory = Pulse.Typing.Metatheory
 module RU = Pulse.RuntimeUtils
 
-(* For now we just create a term with the union,
-but this could potentially be smarter *)
-let compute_iname_join (is1 is2 : term) : term =
-  tm_join_inames is1 is2
-  
-let lift_atomic_to_st
-  (g : env)
-  (e : st_term)
-  (c : comp_st{C_STAtomic? c})
-  (d : st_typing g e c)
-  : Pure (c':comp_st & st_typing g e c')
-         (requires True)
-         (ensures fun (| c', _ |) ->
-             st_comp_of_comp c' == st_comp_of_comp c /\
-             ctag_of_comp_st c' == STT)
-= let C_STAtomic _ _ c_st = c in
-  let c' = C_ST c_st in
-  let d' : st_typing g e c' =
-    T_Lift g e c c' d (Lift_STAtomic_ST g c)
-  in
-  (| c', d' |)
-
-let lift_ghost_to_atomic
-  (g : env)
-  (e : st_term)
-  (c : comp_st{C_STGhost? c})
-  (d : st_typing g e c)
-  : TacS (c':comp_st & st_typing g e c')
-         (requires True)
-         (ensures fun (| c', _ |) ->
-             st_comp_of_comp c' == st_comp_of_comp c /\
-             ctag_of_comp_st c' == STT_Atomic /\
-             tm_emp_inames == C_STAtomic?.inames c')
-= let C_STGhost c_st = c in
-  let comp_res_typing : universe_of g (comp_res c) (comp_u c) =
-    let open Metatheory in
-    let d = st_typing_correctness d in
-    let d, _ = comp_typing_inversion d in
-    let (| d, _, _, _ |) = st_comp_typing_inversion d in
-    d
-  in
-  let w : non_informative_c g c = get_non_informative_witness g (comp_u c) (comp_res c) comp_res_typing in
-  FStar.Tactics.BreakVC.break_vc(); // somehow this proof is unstable, this helps
-  let c' = C_STAtomic tm_emp_inames Neutral c_st in
-  let d' : st_typing g e c' =
-    T_Lift g e c c' d (Lift_Ghost_Neutral g c w)
-  in
-  assert (st_comp_of_comp c' == st_comp_of_comp c);
-  assert (ctag_of_comp_st c' == STT_Atomic);
-  assert (tm_emp_inames == C_STAtomic?.inames c');
-  (| c', d' |)
+let st_ghost_as_atomic_matches_post_hint
+  (c:comp { C_STGhost? c })
+  (post:post_hint_t { EffectAnnotAtomicOrGhost? post.effect_annot })
+  : Lemma (requires comp_post_matches_hint c (Some post))
+          (ensures comp_post_matches_hint (st_ghost_as_atomic c) (Some post)) = ()
 
 (* This matches the effects of the two branches, without
 necessarily matching inames. *)
-#push-options "--z3rlimit 20"
+#push-options "--z3rlimit_factor 4"
 open Pulse.Checker.Base
 (* NB: g_then and g_else are equal except for containing one extra
 hypothesis according to which branch was taken. *)
-let join_comps
+let rec join_comps
   (g_then:env)
   (e_then:st_term)
   (c_then:comp_st)
@@ -114,6 +68,20 @@ let join_comps
     let e_then_typing = T_Lift _ _ _ _ e_then_typing (Lift_Observability g_then c_then obs) in
     let e_else_typing = T_Lift _ _ _ _ e_else_typing (Lift_Observability g_else c_else obs) in
     (| _, e_then_typing, e_else_typing |)
-  | _ -> 
-    (| _, e_then_typing, e_else_typing |)
+  | C_STGhost _ _, C_STGhost _ _
+  | C_ST _, C_ST _ -> (| _, e_then_typing, e_else_typing |)
+
+  | _ ->
+    assert (EffectAnnotAtomicOrGhost? post.effect_annot);
+    match c_then, c_else with
+    | C_STGhost _ _, C_STAtomic _ _ _ ->
+      let d : st_typing g_then e_then (st_ghost_as_atomic c_then) =
+        lift_ghost_atomic e_then_typing in
+      st_ghost_as_atomic_matches_post_hint c_then post;
+      join_comps _ _ _ d _ _ _ e_else_typing post
+
+    | C_STAtomic _ _ _, C_STGhost _ _ ->
+      let d = lift_ghost_atomic e_else_typing in
+      st_ghost_as_atomic_matches_post_hint c_else post;
+      join_comps _ _ _ e_then_typing _ _ _ d post
 #pop-options

@@ -23,6 +23,8 @@ open Pulse.Lib.PCM.Fraction
 let ref (a:Type u#1) = pcm_ref (pcm_frac #a)
 let pts_to (#a:Type) (r:ref a) (#[T.exact (`full_perm)] p:perm) (n:a)
 = pcm_pts_to r (Some (n, p)) ** pure (perm_ok p)
+let pts_to_is_small _ _ _ = ()
+
 
 ```pulse
 fn alloc' (#a:Type u#1) (x:a)

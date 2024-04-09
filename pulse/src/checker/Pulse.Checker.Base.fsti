@@ -48,8 +48,20 @@ val post_typing_as_abstraction
                              (RT.mk_abs (elab_term ty) T.Q_Explicit (elab_term t))
                              (RT.mk_arrow (elab_term ty) T.Q_Explicit (elab_term tm_vprop)))
 
-val intro_post_hint (g:env) (effect_annot:effect_annot) (ret_ty:option term) (post:term)
-  : T.Tac (h:post_hint_for_env g{h.effect_annot == effect_annot})
+let effect_annot_labels_match (a1 a2:effect_annot) =
+  match a1, a2 with
+  | EffectAnnotAtomic _, EffectAnnotAtomic _
+  | EffectAnnotGhost _, EffectAnnotGhost _
+  | EffectAnnotAtomicOrGhost _, EffectAnnotAtomicOrGhost _
+  | EffectAnnotSTT, EffectAnnotSTT -> True
+  | _ -> False
+
+val intro_post_hint
+  (g:env)
+  (effect_annot:effect_annot)
+  (ret_ty:option term)
+  (post:term)
+  : T.Tac (h:post_hint_for_env g {effect_annot_labels_match h.effect_annot effect_annot})
 
 val post_hint_from_comp_typing (#g:env) (#c:comp_st) (ct:comp_typing_u g c)
   : post_hint_for_env g

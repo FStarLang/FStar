@@ -33,12 +33,9 @@ let (readback_observability :
         if fv_lid = Pulse_Reflection_Util.observable_lid
         then FStar_Pervasives_Native.Some Pulse_Syntax_Base.Observable
         else
-          if fv_lid = Pulse_Reflection_Util.unobservable_lid
-          then FStar_Pervasives_Native.Some Pulse_Syntax_Base.Unobservable
-          else
-            if fv_lid = Pulse_Reflection_Util.neutral_lid
-            then FStar_Pervasives_Native.Some Pulse_Syntax_Base.Neutral
-            else FStar_Pervasives_Native.None
+          if fv_lid = Pulse_Reflection_Util.neutral_lid
+          then FStar_Pervasives_Native.Some Pulse_Syntax_Base.Neutral
+          else FStar_Pervasives_Native.None
     | uu___ -> FStar_Pervasives_Native.None
 let (try_readback_st_comp :
   FStar_Reflection_Types.term ->
@@ -123,7 +120,7 @@ let (try_readback_st_comp :
                  if fv_lid = Pulse_Reflection_Util.stt_ghost_lid
                  then
                    (match args with
-                    | res::pre::post::[] ->
+                    | res::inames::pre::post::[] ->
                         (match FStar_Reflection_V2_Builtins.inspect_ln
                                  (FStar_Pervasives_Native.fst post)
                          with
@@ -137,16 +134,19 @@ let (try_readback_st_comp :
                                   FStar_Reflection_V2_Data.ppname2 = uu___5;_}
                                   ->
                                   let res' = FStar_Pervasives_Native.fst res in
+                                  let inames' =
+                                    FStar_Pervasives_Native.fst inames in
                                   let pre' = FStar_Pervasives_Native.fst pre in
                                   let post' = body in
                                   let c =
                                     Pulse_Syntax_Base.C_STGhost
-                                      {
-                                        Pulse_Syntax_Base.u = u;
-                                        Pulse_Syntax_Base.res = res';
-                                        Pulse_Syntax_Base.pre = pre';
-                                        Pulse_Syntax_Base.post = post'
-                                      } in
+                                      (inames',
+                                        {
+                                          Pulse_Syntax_Base.u = u;
+                                          Pulse_Syntax_Base.res = res';
+                                          Pulse_Syntax_Base.pre = pre';
+                                          Pulse_Syntax_Base.post = post'
+                                        }) in
                                   FStar_Pervasives_Native.Some c)
                          | uu___3 -> FStar_Pervasives_Native.None)
                     | uu___3 -> FStar_Pervasives_Native.None)

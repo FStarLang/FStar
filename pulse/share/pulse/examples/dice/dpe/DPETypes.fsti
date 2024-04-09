@@ -399,9 +399,9 @@ fn get_l1_context_perm (r:l1_context_t) (repr':erased context_repr_t)
 // In the implmentation, we store contexts as values in a global hash table
 // so we need a way to store and retrieve permission on the context. We do this
 // by keeping a tuple of the context along with a lock on the context permission
-let locked_context_t = c:context_t 
-                     & r:erased context_repr_t 
-                     & L.lock (context_perm c r)
+// let locked_context_t = c:context_t 
+//                      & r:erased context_repr_t 
+//                      & L.lock (context_perm c r)
 
 (* Record *)
 noeq

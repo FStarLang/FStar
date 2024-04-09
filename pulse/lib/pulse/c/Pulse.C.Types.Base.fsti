@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.C.Types.Base
 open Pulse.Lib.Pervasives
 
@@ -223,7 +239,7 @@ val pts_to_equiv
   (#td: typedef t)
   (r1 r2: ref td)
   (v: Ghost.erased t)
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (ref_equiv r1 r2 ** pts_to r1 v)
     (fun _ -> ref_equiv r1 r2 ** pts_to r2 v)
 
@@ -237,7 +253,7 @@ val freeable_dup
   (#t: Type)
   (#td: typedef t)
   (r: ref td)
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (freeable r)
     (fun _ -> freeable r ** freeable r)
 
@@ -245,7 +261,7 @@ val freeable_equiv
   (#t: Type)
   (#td: typedef t)
   (r1 r2: ref td)
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (ref_equiv r1 r2 ** freeable r1)
     (fun _ -> ref_equiv r1 r2 ** freeable r2)
 
@@ -294,7 +310,7 @@ val free
 
 val mk_fraction_split_gen
   (#t: Type) (#td: typedef t) (r: ref td) (v: t { fractionable td v }) (p p1 p2: perm)
-: stt_ghost unit
+: stt_ghost unit emp_inames
   (pts_to r (mk_fraction td v p) ** pure (
     p == p1 `sum_perm` p2 /\ p `lesser_equal_perm` full_perm
   ))
@@ -302,7 +318,7 @@ val mk_fraction_split_gen
 
 val mk_fraction_split
   (#t: Type) (#td: typedef t) (r: ref td) (v: Ghost.erased t { fractionable td v }) (p1 p2: perm)
-: stt_ghost unit
+: stt_ghost unit emp_inames
   (pts_to r v ** pure (
     full_perm == p1 `sum_perm` p2
   ))
@@ -315,7 +331,7 @@ val mk_fraction_split
 
 val mk_fraction_join
   (#t: Type) (#td: typedef t) (r: ref td) (v: t { fractionable td v }) (p1 p2: perm)
-: stt_ghost unit
+: stt_ghost unit emp_inames
   (pts_to r (mk_fraction td v p1) ** pts_to r (mk_fraction td v p2))
   (fun _ -> pts_to r (mk_fraction td v (p1 `sum_perm` p2)))
 
@@ -326,7 +342,7 @@ val fractional_permissions_theorem
   (v2: t { fractionable td v2 })
   (p1 p2: perm)
   (r: ref td)
-: stt_ghost unit
+: stt_ghost unit emp_inames
     (pts_to r (mk_fraction td v1 p1) ** pts_to r (mk_fraction td v2 p2) ** pure (
       full td v1 /\ full td v2
     ))

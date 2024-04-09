@@ -46,7 +46,8 @@ val st_typing_correctness_ctot (#g:env) (#t:st_term) (#c:comp{C_Tot? c})
 
 let inames_of_comp_st (c:comp_st) =
   match c with
-  | C_STAtomic _ _ _ -> comp_inames c
+  | C_STAtomic _ _ _
+  | C_STGhost _ _ -> comp_inames c
   | _ -> tm_emp_inames
 
 let iname_typing (g:env) (c:comp_st) = tot_typing g (inames_of_comp_st c) tm_inames

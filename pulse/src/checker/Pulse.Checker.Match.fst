@@ -297,13 +297,11 @@ let check_branches_aux
   assume (samepats brs0 (L.map Mkdtuple3?._1 r));
   r
 
-let comp_observability (c:comp_st) =
-  match c with
-  | C_ST _ -> Observable
-  | C_STGhost _ -> Unobservable
-  | C_STAtomic _ obs _ -> obs
+let comp_observability (c:comp_st {C_STAtomic? c}) =
+  let C_STAtomic _ obs _ = c in
+  obs
 
-let weaken_branch_observability 
+let weaken_branch_observability
       (obs:observability)
       (#g #pre:_) (#post_hint:post_hint_for_env g) 
       (#sc_u #sc_ty #sc:_)
@@ -311,6 +309,7 @@ let weaken_branch_observability
           C_STAtomic? c /\
           comp_pre c == pre /\
           comp_post_matches_hint c (Some post_hint) /\
+          (~ (EffectAnnotAtomicOrGhost? post_hint.effect_annot)) /\
           comp_observability c == obs
         })
       (checked_br : check_branches_aux_t #g pre post_hint sc_u sc_ty sc)
@@ -335,13 +334,14 @@ let rec max_obs
   | c'::rest -> 
     match c' with
     | C_ST _
-    | C_STGhost _ ->
+    | C_STGhost _ _ ->
       max_obs rest obs
     | C_STAtomic _ obs' _ ->
       max_obs rest (join_obs obs obs')
 
 let join_branches (#g #pre #post_hint #sc_u #sc_ty #sc:_)
                   (checked_brs : list (check_branches_aux_t #g pre post_hint sc_u sc_ty sc))
+                  (_:squash (~ (EffectAnnotAtomicOrGhost? post_hint.effect_annot)))
 : T.Tac (c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c (Some post_hint) } &
          list (br:branch & br_typing g sc_u sc_ty sc (fst br) (snd br) c))
 = match checked_brs with
@@ -350,7 +350,7 @@ let join_branches (#g #pre #post_hint #sc_u #sc_ty #sc:_)
     let (| br, c, d |) = checked_br in
     match c with
     | C_ST _ 
-    | C_STGhost _ ->
+    | C_STGhost _ _ ->
       let rest = 
         List.Tot.map 
           #(check_branches_aux_t #g pre post_hint sc_u sc_ty sc)
@@ -369,7 +369,7 @@ let check_branches
         (g:env)
         (pre:term)
         (pre_typing: tot_typing g pre tm_vprop)
-        (post_hint:post_hint_for_env g)
+        (post_hint:post_hint_for_env g { ~ (EffectAnnotAtomicOrGhost? post_hint.effect_annot) })
         (check:check_t)
         (sc_u : universe)
         (sc_ty : typ)
@@ -380,7 +380,7 @@ let check_branches
          & c:comp_st{comp_pre c == pre /\ comp_post_matches_hint c (Some post_hint)}
          & brs_typing g sc_u sc_ty sc brs c)
 = let checked_brs = check_branches_aux g pre pre_typing post_hint check sc_u sc_ty sc brs0 bnds in
-  let (| c0, checked_brs |) = join_branches checked_brs in
+  let (| c0, checked_brs |) = join_branches checked_brs () in
   let brs = List.Tot.map dfst checked_brs in
   let d : brs_typing g sc_u sc_ty sc brs c0 =
     let rec aux (brs : list (br:branch & br_typing g sc_u sc_ty sc (fst br) (snd br) c0))
@@ -407,6 +407,9 @@ let check
   =
 
   let g = Pulse.Typing.Env.push_context_no_range g "check_match" in
+
+  if EffectAnnotAtomicOrGhost? post_hint.effect_annot
+  then fail g None "Cannot check match with (atomic_or_ghost) post effect annotation";
 
   let sc_range = Pulse.RuntimeUtils.range_of_term sc in // save range, it gets lost otherwise
   let orig_brs = brs in
@@ -448,7 +451,8 @@ let check
   assert (L.length elab_pats' == nbr);
   assert (L.length (zip elab_pats' bnds') == nbr);
 
-  let (| brs, c, brs_d |) = check_branches g pre pre_typing post_hint check sc_u sc_ty sc brs (zip elab_pats' bnds') in
+  let (| brs, c, brs_d |) =
+    check_branches g pre pre_typing post_hint check sc_u sc_ty sc brs (zip elab_pats' bnds') in
   
   (* Provable *)
   assume (L.map (fun (p, _) -> elab_pat p) brs == elab_pats');

@@ -1061,10 +1061,10 @@ and (extract_mlexpr :
                 uu___2::[]);
              FStar_Extraction_ML_Syntax.mlty = uu___3;
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
-           uu___5::e1::uu___6)
+           uu___5::uu___6::e1::uu___7)
           when
-          let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___7 = "Pulse.Lib.Mutex.lock" ->
+          let uu___8 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___8 = "Pulse.Lib.Mutex.lock" ->
           let e2 = extract_mlexpr g e1 in
           Pulse2Rust_Rust_Syntax.mk_lock_mutex e2
       | FStar_Extraction_ML_Syntax.MLE_App

@@ -168,8 +168,9 @@ let (tm_par :
 let (tm_with_inv :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.st_term ->
-      (Pulse_Syntax_Base.binder * Pulse_Syntax_Base.vprop)
-        FStar_Pervasives_Native.option -> Pulse_Syntax_Base.st_term')
+      (Pulse_Syntax_Base.binder * Pulse_Syntax_Base.vprop *
+        Pulse_Syntax_Base.term) FStar_Pervasives_Native.option ->
+        Pulse_Syntax_Base.st_term')
   =
   fun name ->
     fun body ->
@@ -180,6 +181,11 @@ let (tm_with_inv :
             Pulse_Syntax_Base.body6 = body;
             Pulse_Syntax_Base.returns_inv = returns_inv
           }
+let tm_add_inv :
+  'uuuuu .
+    FStar_Reflection_Types.term ->
+      FStar_Reflection_Types.term -> 'uuuuu -> FStar_Reflection_Types.term
+  = fun names -> fun n -> fun r -> Pulse_Syntax_Pure.tm_add_inv names n
 let (tm_with_local :
   Pulse_Syntax_Base.binder ->
     Pulse_Syntax_Base.term ->

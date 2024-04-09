@@ -1,45 +1,91 @@
+(*
+   Copyright 2024 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Lib.InvList
 
 open Pulse.Lib.Pervasives
 module T0 = Pulse.Lib.Priv.Trade0
 
 ```pulse
-unobservable
+ghost
+fn rec dup_invlist_inv_aux (is:invlist)
+  requires invlist_inv is
+  ensures invlist_inv is ** invlist_inv is
+  decreases is
+{
+  match is {
+    Nil -> {
+      rewrite invlist_inv is as emp;
+      rewrite emp as invlist_inv is;
+      rewrite emp as invlist_inv is
+    }
+    Cons h t -> {
+      rewrite invlist_inv is as inv (snd h) (fst h) ** invlist_inv t;
+      dup_invlist_inv_aux t;
+      dup_inv (snd h) (fst h);
+      rewrite (inv (snd h) (fst h) ** invlist_inv t) as invlist_inv is;
+      rewrite (inv (snd h) (fst h) ** invlist_inv t) as invlist_inv is
+    }
+  }
+}
+```
+
+let dup_invlist_inv = dup_invlist_inv_aux
+
+```pulse
+ghost
 fn __shift_invlist_one
   (#a:Type0)
   (p : vprop)
-  (i : inv p)
+  (i : iref)
   (is : invlist{not (mem_inv (invlist_names is) i)})
   (#pre:vprop)
   (#post : a -> vprop)
-  (f : unit -> stt_atomic a #Unobservable emp_inames (invlist_v (add_one (| p, i |) is) ** pre) (fun v -> invlist_v (add_one (| p, i |) is) ** post v))
+  (f : unit -> stt_ghost a emp_inames
+                 (invlist_v (add_one ( p, i ) is) ** pre)
+                 (fun v -> invlist_v (add_one ( p, i ) is) ** post v))
   (_:unit)
   requires invlist_v is ** (p ** pre)
   returns v:a
   ensures invlist_v is ** (p ** post v)
+  opens emp_inames
 {
   rewrite
     (p ** invlist_v is)
   as
-    (invlist_v (add_one (|p, i|) is));
+    (invlist_v (add_one (p, i) is));
   let v = f ();
   rewrite
-    (invlist_v (add_one (|p, i|) is))
+    (invlist_v (add_one (p, i) is))
   as
     (p ** invlist_v is);
   v
 }
 ```
+
 let shift_invlist_one = __shift_invlist_one
 
 ```pulse
-unobservable
+ghost
 fn rec __with_invlist (#a:Type0) (#pre : vprop) (#post : a -> vprop)
   (is : invlist)
-  (f : unit -> stt_atomic a #Unobservable emp_inames (invlist_v is ** pre) (fun v -> invlist_v is ** post v))
-  requires pre
+  (f : unit -> stt_ghost a emp_inames (invlist_v is ** pre) (fun v -> invlist_v is ** post v))
+  requires invlist_inv is ** pre
   returns v:a
-  ensures post v
+  ensures invlist_inv is ** post v
   opens (invlist_names is)
   decreases is
 {
@@ -51,55 +97,45 @@ fn rec __with_invlist (#a:Type0) (#pre : vprop) (#post : a -> vprop)
       r
     }
     Cons h t -> {
-      let p = dfst h;
-      let i : inv p = dsnd h;
-      with_invariants (i <: inv p) {
-        assert (p ** pre);
-        let fw : (unit -> stt_atomic a #Unobservable emp_inames (invlist_v t ** (p ** pre))
-                (fun v -> invlist_v t ** (p ** post v))) = shift_invlist_one #a p i t #pre #post f;
-        let v = __with_invlist #a #(p ** pre) #(fun v -> p ** post v) t fw;
-        assert (p ** post v);
+      rewrite (invlist_inv is) as (inv (snd h) (fst h) ** invlist_inv t);
+      let r = with_invariants (snd h)
+        returns v:a
+        ensures inv (snd h) (fst h) ** invlist_inv t ** post v
+        opens (add_inv (invlist_names t) (snd h)) {
+        let fw : (unit -> stt_ghost a emp_inames
+                            (invlist_v t ** (fst h ** pre))
+                            (fun v -> invlist_v t ** (fst h ** post v))) = shift_invlist_one #a (fst h) (snd h) t #pre #post f;
+        let v = __with_invlist #a #((fst h) ** pre) #(fun v -> (fst h) ** post v) t fw;
         v
-      }
+      };
+      rewrite (inv (snd h) (fst h) ** invlist_inv t) as invlist_inv is;
+      r
     }
   }
 }
 ```
 let with_invlist = __with_invlist
 
-let lift_ghost_unobservable #pre #post (f:stt_ghost unit pre post) 
-  : stt_atomic unit #Unobservable emp_inames pre post
-  = lift_observability #_ #_ #Unobservable (lift_ghost_neutral f FStar.Tactics.Typeclasses.solve)
-
-```pulse
-unobservable
-fn __with_invlist_ghost (#pre : vprop) (#post : vprop)
-  (is : invlist)
-  (f : unit -> stt_ghost unit (invlist_v is ** pre) (fun _ -> invlist_v is ** post))
-  requires pre
-  ensures post
-  opens (invlist_names is)
-{
-  with_invlist is (fun () -> lift_ghost_unobservable (f ()));
-}
-```
-let with_invlist_ghost = __with_invlist_ghost
-
 let invlist_reveal = admit()
 
-let iname_inj
+```pulse
+ghost
+fn iname_inj
   (p1 p2 : vprop)
-  (i1 : inv p1) (i2 : inv p2)
-  : stt_ghost unit
-     (pure (name_of_inv i1 = name_of_inv i2))
-     (fun _ -> pure (p1 == p2))
-    = admit() // We should bubble this fact up from the memory model
+  (i1 i2 : iref)
+  requires (inv i1 p1 ** inv i2 p2 ** pure (iname_of i1 = iname_of i2))
+  ensures (inv i1 p1 ** inv i2 p2 ** pure (p1 == p2))
+{
+  invariant_name_identifies_invariant #p1 #p2 i1 i2;
+  ()
+}
+```
 
 let invlist_mem_split (i : iname) (is : invlist)
     (_ : squash (Set.mem i (invlist_names is)))
-    : squash (exists l r p (ii : inv p).
-              name_of_inv ii == i /\
-              is == l @ [(| p, ii |)] @ r)
+    : squash (exists l r p (ii : iref).
+              iname_of ii == i /\
+              is == l @ [( p, ii )] @ r)
   = admit()
 
 ```pulse
@@ -123,9 +159,9 @@ fn __invlist_sub_split
       rewrite emp as invlist_v is1;
     }
     Cons h t -> {
-      let p = dfst h;
-      let i : inv p = dsnd h;
-      let name = name_of_inv i;
+      let p = fst h;
+      let i = snd h;
+      let name = iname_of i;
       (* This is the interesting case, but it's rather hard to prove right now
       due to some pulse limitations (#151, #163). The idea is that (p, i) must
       also be in is2, so we can rewrite
@@ -157,3 +193,5 @@ fn __invlist_sub_split_wrap
 }
 ```
 let invlist_sub_split = __invlist_sub_split_wrap
+
+let invlist_sub_inv = admit ()

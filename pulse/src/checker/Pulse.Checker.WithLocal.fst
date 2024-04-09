@@ -65,8 +65,9 @@ let check
     fail g (Some <| head_range t)
       "Allocating a mutable local variable expects an annotated post-condition"
 
-  | Some { effect_annot = EffectAnnotGhost }
-  | Some { effect_annot = EffectAnnotAtomic _ } ->
+  | Some { effect_annot = EffectAnnotGhost _ }
+  | Some { effect_annot = EffectAnnotAtomic _ }
+  | Some { effect_annot = EffectAnnotAtomicOrGhost _ } ->
     fail g (Some <| head_range t)
       "Allocating a mutable local variable is only allowed in non-ghost and non-atomic code"
 
@@ -111,6 +112,7 @@ let check
         then fail g None "Impossible! check_withlocal: unexpected name clash in with_local,\
                           please file a bug-report"
         else
+          let open Pulse.Typing.Combinators in
           let body_post = extend_post_hint_for_local g post init_t x in
           let (| opened_body, c_body, body_typing |) =
             let r =
@@ -120,9 +122,9 @@ let check
           assume (open_st_term (close_st_term opened_body x) x == opened_body);
           let c = C_ST {u=comp_u c_body;res=comp_res c_body;pre;post=post.post} in
           let c_typing =
-            let post_typing_rec = post_hint_typing g post x in
+            let post_typing_rec :post_hint_typing_t g post x = post_hint_typing g post x in
             intro_comp_typing g c pre_typing 
-              post_typing_rec.effect_annot_typing 
+              post_typing_rec.effect_annot_typing
               post_typing_rec.ty_typing
               x post_typing_rec.post_typing
           in

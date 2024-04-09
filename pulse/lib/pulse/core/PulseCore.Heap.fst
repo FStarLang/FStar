@@ -22,16 +22,6 @@ module PP = PulseCore.Preorder
 
 #set-options "--fuel 1 --ifuel 1"
 
-// In the future, we may have other cases of cells
-// for arrays and structs
-noeq
-type cell : Type u#(a + 1) =
-  | Ref : a:Type u#a ->
-          p:pcm a ->
-          frac:Frac.perm{ frac `Frac.lesser_equal_perm` Frac.full_perm } ->
-          v:a { frac == Frac.full_perm ==> p.refine v } ->
-          cell
-
 let addr = nat
 
 /// This is just the core of a memory, about which one can write
@@ -39,7 +29,11 @@ let addr = nat
 /// with a freshness counter, a lock store etc.
 let heap : Type u#(a + 1) = addr ^-> option (cell u#a)
 
+let select i h = h i
+
 let empty_heap : heap = F.on _ (fun _ -> None)
+
+let sel_empty i = ()
 
 let contains_addr (m:heap) (a:addr)
   : bool
@@ -91,6 +85,19 @@ type core_ref : Type u#0 =
 let core_ref_null = Null
 
 let core_ref_is_null (r:core_ref) = Null? r
+
+let addr_as_core_ref n = Addr n
+let core_ref_as_addr (c:core_ref) =
+  match c with
+  | Null -> 0
+  | Addr n -> n
+
+let addr_core_ref_injective (n:nat)
+: Lemma (core_ref_as_addr (addr_as_core_ref n) == n)
+= ()
+let addr_core_ref_injective_2 (c:core_ref { not (core_ref_is_null c) })
+: Lemma (addr_as_core_ref (core_ref_as_addr c) == c)
+= ()
 
 let disjoint (m0 m1:heap u#h)
   : prop
@@ -694,6 +701,10 @@ let heap_evolves : FStar.Preorder.preorder full_heap =
 let free_above_addr h a =
   forall (i:nat). i >= a ==> h i == None
 
+let interp_free_above (h:heap u#a) (a:nat)
+: Lemma (free_above_addr h a <==> (forall i. i >= a ==> select i h == None))
+= ()
+
 let weaken_free_above (h:heap) (a b:nat)
   : Lemma (free_above_addr h a /\ a <= b ==> free_above_addr h b)
   = ()
@@ -708,6 +719,25 @@ let sel #a #pcm (r:ref a pcm) (m:full_hheap (ptr r))
     v
 
 let sel_v #a #pcm r v m = sel r m
+
+ 
+let interp_pts_to (i:core_ref)
+                  (#a:Type)
+                  (#pcm:FStar.PCM.pcm a)
+                  (v:a)
+                  (h0:heap)
+: Lemma
+  (requires interp (pts_to #a #pcm i v) h0)
+  (ensures (
+    not (core_ref_is_null i) /\ (
+    match select (core_ref_as_addr i) h0 with
+    | None -> False
+    | Some c ->
+      let Ref a' pcm' _ v' = c in
+      a == a' /\
+      pcm == pcm' /\
+      compatible pcm v v')))
+= ()
 
 let sel_lemma (#a:_) (#pcm:_) (r:ref a pcm) (m:full_hheap (ptr r))
   : Lemma (interp (pts_to r (sel r m)) m)
@@ -1166,6 +1196,18 @@ let extend #a #pcm
         (x:a{pcm.refine x})
         (addr:nat)
  = refined_pre_action_as_action (extend_alt x addr)
+
+let extend_modifies_nothing
+      #a #pcm (x:a { pcm.refine x })
+      (addr:nat) (h:full_hheap emp { free_above_addr h addr })
+: Lemma (
+      let (| r, h1 |) = extend #a #pcm x addr h in
+      (forall (a:nat). a <> addr ==> select a h == select a h1) /\
+      select addr h1 == Some (Ref a pcm Frac.full_perm x) /\
+      not (core_ref_is_null r) /\
+      addr == core_ref_as_addr r
+  )
+= ()
 
 let hprop_sub (p q:slprop) (h0 h1:heap)
   : Lemma (requires (forall (hp:hprop (p `star` q)). hp h0 == hp h1))

@@ -83,6 +83,10 @@ val join_associative (h0 h1 h2:heap u#a)
        disjoint (join h0 h1) h2 /\
        join h0 (join h1 h2) == join (join h0 h1) h2))
 
+val join_empty (h:heap u#a)
+  : Lemma (disjoint h empty_heap /\
+           join h empty_heap == h)
+
 (**** Separation logic over heaps *)
 
 (**
@@ -165,6 +169,8 @@ val down (s:slprop u#a) : small_slprop u#a
 val up (s:small_slprop u#a) : slprop u#a
 let is_small (s:slprop u#a) = s == up (down s)
 let vprop = s:slprop { is_small s }
+val up_small_is_small (s:small_slprop) : Lemma (is_small (up s))
+
 
 (** [emp] is the empty [slprop], valid on all heaps. It acts as the unit element *)
 val emp : vprop
@@ -414,10 +420,11 @@ let frame_related_heaps (h0 h1:full_heap) (fp0 fp1 frame:slprop)
 let action_framing
   (#a: Type)
   (#mut #allocates:_)
+  (#pre #post:_)
   (#fp: slprop)
   (#fp': a -> slprop)
-  ($f:action #mut #allocates fp a fp')
-  (frame:slprop) (h0:full_hheap (fp `star` frame))
+  ($f:action #mut #allocates #pre #post fp a fp')
+  (frame:slprop) (h0:full_hheap (fp `star` frame) { pre h0 })
     : Lemma (
       affine_star fp frame h0;
       let (| x, h1 |) = f h0 in

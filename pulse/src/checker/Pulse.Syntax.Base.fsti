@@ -104,14 +104,13 @@ type st_comp = { (* ST pre (x:res) post ... x is free in post *)
 type observability =
   | Neutral
   | Observable
-  | Unobservable
 
 noeq
 type comp =
   | C_Tot      : term -> comp
   | C_ST       : st_comp -> comp
   | C_STAtomic : inames:term -> obs:observability -> st_comp -> comp
-  | C_STGhost  : st_comp -> comp
+  | C_STGhost  : inames:term -> st_comp -> comp
 
 
 let comp_st = c:comp {not (C_Tot? c) }
@@ -136,26 +135,28 @@ let ctag_of_comp_st (c:comp_st) : ctag =
   match c with
   | C_ST _ -> STT
   | C_STAtomic _ _ _ -> STT_Atomic
-  | C_STGhost _ -> STT_Ghost
+  | C_STGhost _ _ -> STT_Ghost
 
 noeq
 type effect_annot =
   | EffectAnnotSTT
-  | EffectAnnotGhost
+  | EffectAnnotGhost { opens:term }
   | EffectAnnotAtomic { opens:term }
+  | EffectAnnotAtomicOrGhost { opens:term }
 
 let effect_annot_of_comp (c:comp_st)
 : effect_annot
 = match c with
   | C_ST _ -> EffectAnnotSTT
-  | C_STGhost _ -> EffectAnnotGhost
+  | C_STGhost opens _ -> EffectAnnotGhost { opens }
   | C_STAtomic opens _ _ -> EffectAnnotAtomic { opens }
 
-let ctag_of_effect_annot =
-  function
-  | EffectAnnotSTT -> STT
-  | EffectAnnotGhost -> STT_Ghost
-  | _ -> STT_Atomic
+let ctag_of_effect_annot (x:effect_annot) : option ctag =
+  match x with
+  | EffectAnnotSTT -> Some STT
+  | EffectAnnotGhost _ -> Some STT_Ghost
+  | EffectAnnotAtomic _ -> Some STT_Atomic
+  | EffectAnnotAtomicOrGhost _ -> None
 
 noeq
 type proof_hint_type =
@@ -283,7 +284,7 @@ type st_term' =
   | Tm_WithInv {
       name : term; // invariant name is an F* term that is an Tm_fvar or Tm_name
       body : st_term;
-      returns_inv : option (binder & vprop);
+      returns_inv : option (binder & vprop & term);  // returns _:t ensures p opens is
     }
 
 and st_term = {
@@ -352,7 +353,7 @@ let comp_res (c:comp) : term =
   | C_Tot ty -> ty
   | C_ST s
   | C_STAtomic _ _ s
-  | C_STGhost s -> s.res
+  | C_STGhost _ s -> s.res
 
 let stateful_comp (c:comp) =
   C_ST? c || C_STAtomic? c || C_STGhost? c
@@ -361,13 +362,13 @@ let st_comp_of_comp (c:comp{stateful_comp c}) : st_comp =
   match c with
   | C_ST s
   | C_STAtomic _ _ s
-  | C_STGhost s -> s
+  | C_STGhost _ s -> s
 
 let with_st_comp (c:comp{stateful_comp c}) (s:st_comp) : comp =
   match c with
   | C_ST _ -> C_ST s
   | C_STAtomic inames obs _ -> C_STAtomic inames obs s
-  | C_STGhost _ -> C_STGhost s
+  | C_STGhost inames _ -> C_STGhost inames s
 
 let comp_u (c:comp { stateful_comp c }) = (st_comp_of_comp c).u
 
@@ -380,8 +381,9 @@ let comp_pre (c:comp { stateful_comp c }) = (st_comp_of_comp c).pre
 
 let comp_post (c:comp { stateful_comp c }) = (st_comp_of_comp c).post
 
-let comp_inames (c:comp { C_STAtomic? c }) : term =
+let comp_inames (c:comp { C_STAtomic? c || C_STGhost? c }) : term =
   match c with
+  | C_STGhost inames _
   | C_STAtomic inames _ _ -> inames
 
 let nvar = ppname & var 

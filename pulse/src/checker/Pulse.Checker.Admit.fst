@@ -107,7 +107,10 @@ let check
   = let Tm_Admit r = t.term in
     match post_hint with
     | Some p ->
-      let ct = ctag_of_effect_annot p.effect_annot in
+      let ct =
+        match ctag_of_effect_annot p.effect_annot with
+        | Some c -> c
+        | None -> STT_Atomic in
       check_core g pre pre_typing post_hint res_ppname ({ t with term=Tm_Admit {r with ctag=ct}})
     | _ ->
       check_core g pre pre_typing post_hint res_ppname t

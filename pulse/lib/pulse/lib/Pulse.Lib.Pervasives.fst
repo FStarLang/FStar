@@ -34,9 +34,9 @@ val perform
 let perform f = f ()
 
 val perform_ghost
-  (#a #pre #post : _)
-  (f : unit -> stt_ghost a pre post)
-  : stt_ghost a pre post
+  (#a #opens #pre #post : _)
+  (f : unit -> stt_ghost a opens pre post)
+  : stt_ghost a opens pre post
 let perform_ghost f = f ()
 
 (* TEMPORARY! REMOVE! *)
@@ -90,7 +90,7 @@ fn call_ghost
       (#b: a -> Type0)
       (#pre: a -> vprop)
       (#post: (x:a -> b x -> vprop))
-      (f:(x:a -> stt_ghost (b x) (pre x) (fun y -> post x y)))
+      (f:(x:a -> stt_ghost (b x) emp_inames (pre x) (fun y -> post x y)))
       (x:a)
 requires pre x
 returns y:erased (b x)

@@ -26,10 +26,44 @@ open Pulse.Lib.Pervasives
 open Pulse.Lib.Reference
 open Pulse.Lib
 
-let test (i:inv emp) = assert (
-  (add_inv emp_inames i)
+assume val p : vprop
+assume val q : vprop
+assume val r : vprop
+
+assume val f () : stt_atomic unit emp_inames (p ** q) (fun _ -> p ** r)
+
+```pulse
+atomic
+fn g (i:iref)
+  requires (inv i p ** q)
+  ensures (r ** inv i p)
+  opens (add_inv emp_inames i)
+{
+  with_invariants i {
+    f ()
+  }
+}
+```
+
+assume val f_ghost () : stt_ghost unit emp_inames (p ** q) (fun _ -> p ** r)
+
+```pulse
+ghost
+fn g_ghost (i:iref)
+  requires (inv i p ** q)
+  ensures (r ** inv i p)
+  opens (add_inv emp_inames i)
+{
+  with_invariants i {
+    f_ghost ()
+  }
+}
+```
+
+let test (i:iref) = assert (
+  add_inv emp_inames i
   ==
-  ((join_inames (((add_inv #emp) emp_inames) i)) emp_inames)
+  join_inames (add_inv emp_inames i) emp_inames
 )
 
 assume
@@ -46,77 +80,82 @@ fn test_atomic (r : ref int)
 }
 ```
 
-assume
-val unobservable_write_int (r : ref int) (v : int) :
-  stt_atomic unit #Unobservable emp_inames (exists* v0. pts_to r v0) (fun _ -> pts_to r v)
-
-```pulse
-unobservable
-fn test_unobservable (r : ref int)
-  requires pts_to r 'v
-  ensures pts_to r 0
-{
-  unobservable_write_int r 0;
-}
-```
-
 ```pulse
 fn package (r:ref int)
    requires pts_to r 123
-   returns i : inv (pts_to r 123)
-   ensures emp
+   returns i : iref
+   ensures inv i (pts_to r 123)
 {
-  let i : inv (pts_to r 123) = new_invariant (pts_to r 123);
+  let i = new_invariant (pts_to r 123);
   i
 }
 ```
 
-// Fails as it is not atomic
-[@@expect_failure]
 ```pulse
 fn test2 ()
   requires emp
   ensures emp
 {
-  let r = alloc #int 123;
-  let i : inv (pts_to r 123) = package r;
-  with_invariants i {
-    r := 124;
-    r := 123;
-    ()
-  }
+  let r = alloc #int 0;
+  let i = new_invariant (exists* v. pts_to r v);
+  with_invariants i
+    returns _:unit
+    ensures inv i (exists* v. pts_to r v)
+    opens (add_inv emp_inames i) {
+      atomic_write_int r 1;
+  };
+  drop_ (inv i _)
 }
 ```
 
- ```pulse
+// Fails as the with_invariants block is not atomic/ghost
+[@@expect_failure]
+```pulse
+fn test3 ()
+  requires emp
+  ensures emp
+{
+  let r = alloc #int 0;
+  let i = new_invariant (exists* v. pts_to r v);
+  with_invariants i
+    returns _:unit
+    ensures emp {
+      r := 1;
+  };
+  drop_ (inv i _)
+}
+```
+
+//
+// Ghost code overclaiming
+//
+```pulse
  ghost
- fn t00 () (i:inv emp)
-   requires emp
-   ensures emp
+ fn t00 () (i:iref)
+   requires (inv i emp)
+   ensures (inv i emp)
    opens (add_inv emp_inames i)
  {
   ()
  }
 ```
 
-// FIXME: crashes
- ```pulse
- atomic
- fn t0 () (i:inv emp)
-   requires emp
-   ensures emp
-   opens (add_inv emp_inames i)
- {
-   with_invariants i {
-     ()
-   }
- }
+```pulse
+atomic
+fn t0 () (i:iref)
+  requires inv i emp
+  ensures inv i emp
+  opens (add_inv emp_inames i)
+{
+  with_invariants i {
+    ()
+  }
+}
 ```
 
 
-assume val i : inv emp
-assume val i2 : inv emp
-
+assume val i : iref
+assume val i2 : iref
 
 ```pulse
 ghost
@@ -133,8 +172,8 @@ fn basic_ghost ()
 ```pulse
 atomic
 fn t1 ()
-  requires emp
-  ensures emp
+  requires inv i emp
+  ensures inv i emp
   opens emp_inames
 {
   with_invariants i {
@@ -147,8 +186,8 @@ fn t1 ()
 ```pulse
 atomic
 fn t3 ()
-  requires emp
-  ensures emp
+  requires inv i emp
+  ensures inv i emp
   opens (add_inv (add_inv emp_inames i) i2)
 {
   with_invariants i {
@@ -167,9 +206,53 @@ fn t2 ()
   let j = new_invariant emp;
   with_invariants j 
     returns _:unit
-    ensures emp {
+    ensures inv j emp {
     ()
   };
+  drop_ (inv j _);
   123
+}
+```
+
+assume val p_to_q : unit -> stt_atomic unit emp_inames p (fun _ -> p ** q)
+assume val ghost_p_to_q : unit -> stt_ghost unit emp_inames p (fun _ -> p ** q)
+
+let folded_inv (i:iref) = inv i p
+
+```pulse
+atomic
+fn test_returns0 (i:iref) (b:bool)
+  requires folded_inv i
+  ensures folded_inv i ** q
+  opens (add_inv emp_inames i)
+{
+  unfold folded_inv i;
+  with_invariants i
+    returns _:unit
+    ensures inv i p ** q {
+    if b {
+      p_to_q ()
+    } else {
+      ghost_p_to_q ()
+    }
+  };
+  fold folded_inv i
+}
+```
+
+```pulse
+ghost
+fn test_returns1 (i:iref)
+  requires folded_inv i
+  ensures folded_inv i ** q
+  opens (add_inv emp_inames i)
+{
+  unfold folded_inv i;
+  with_invariants i
+    returns _:unit
+    ensures inv i p ** q {
+    ghost_p_to_q ()
+  };
+  fold folded_inv i
 }
 ```

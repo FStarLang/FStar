@@ -58,7 +58,7 @@ val spawn_
   (#[T.exact (`full_perm)] e : perm)
   (f : unit -> stt unit pre (fun _ -> post))
   : stt unit (pool_alive #e p ** pre)
-             (fun prom -> pool_alive #e p ** pledge [] (pool_done p) post)
+             (fun prom -> pool_alive #e p ** pledge emp_inames (pool_done p) post)
 
 (* If the pool is done, all pending joinable threads must be done *)
 val must_be_done
@@ -66,7 +66,7 @@ val must_be_done
   (#a: Type0)
   (#post : a -> vprop)
   (th : task_handle p a post)
-  : stt_ghost unit (pool_done p ** joinable th) (fun () -> pool_done p ** handle_solved th)
+  : stt_ghost unit emp_inames (pool_done p ** joinable th) (fun () -> pool_done p ** handle_solved th)
 
 val join0
   (#p:pool)
@@ -86,6 +86,7 @@ val share_alive
   (p:pool)
   (e:perm)
   : stt_ghost unit
+              emp_inames
               (pool_alive #e p)
               (fun () -> pool_alive #(half_perm e) p ** pool_alive #(half_perm e) p)
 
@@ -93,6 +94,7 @@ val gather_alive
   (p:pool)
   (e:perm)
   : stt_ghost unit
+              emp_inames
               (pool_alive #(half_perm e) p ** pool_alive #(half_perm e) p)
               (fun () -> pool_alive #e p)
 
@@ -111,7 +113,7 @@ val teardown_pool
 (* Or, have at least an epsilon of permission over it, and know that
 the rest of it (1-e) is "sunk" into the pool itself. *)
 val teardown_pool'
-  (#is : Pulse.Lib.InvList.invlist)
+  (#is:inames)
   (p:pool) (f:perm{f `lesser_perm` full_perm})
   : stt unit (pool_alive #f p ** pledge is (pool_done p) (pool_alive #(comp_perm f) p))
              (fun _ -> pool_done p)

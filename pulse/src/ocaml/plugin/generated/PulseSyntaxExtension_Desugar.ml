@@ -70,37 +70,6 @@ let (comp_to_ast_term :
              FStar_Parser_AST.mk_term
                (FStar_Parser_AST.App (h1, is, FStar_Parser_AST.Nothing)) r
                FStar_Parser_AST.Expr
-         | PulseSyntaxExtension_Sugar.STUnobservable ->
-             let is =
-               let uu___ =
-                 let uu___1 =
-                   FStar_Ident.lid_of_str "Pulse.Lib.Core.emp_inames" in
-                 FStar_Parser_AST.Var uu___1 in
-               FStar_Parser_AST.mk_term uu___ r FStar_Parser_AST.Expr in
-             let unobs =
-               let uu___ =
-                 let uu___1 =
-                   FStar_Ident.lid_of_str
-                     "PulseCore.Observability.Unobservable" in
-                 FStar_Parser_AST.Var uu___1 in
-               FStar_Parser_AST.mk_term uu___ r FStar_Parser_AST.Expr in
-             let h =
-               FStar_Parser_AST.mk_term
-                 (FStar_Parser_AST.Var
-                    PulseSyntaxExtension_Env.stt_atomic_lid) r
-                 FStar_Parser_AST.Expr in
-             let h1 =
-               FStar_Parser_AST.mk_term
-                 (FStar_Parser_AST.App
-                    (h, return_ty, FStar_Parser_AST.Nothing)) r
-                 FStar_Parser_AST.Expr in
-             let h2 =
-               FStar_Parser_AST.mk_term
-                 (FStar_Parser_AST.App (h1, unobs, FStar_Parser_AST.Hash)) r
-                 FStar_Parser_AST.Expr in
-             FStar_Parser_AST.mk_term
-               (FStar_Parser_AST.App (h2, is, FStar_Parser_AST.Nothing)) r
-               FStar_Parser_AST.Expr
          | PulseSyntaxExtension_Sugar.STGhost ->
              let h =
                FStar_Parser_AST.mk_term
@@ -740,24 +709,6 @@ let (desugar_computation_type :
                                                                     post1 in
                                                                     PulseSyntaxExtension_Err.return
                                                                     uu___5))
-                                                           | PulseSyntaxExtension_Sugar.STUnobservable
-                                                               ->
-                                                               Obj.magic
-                                                                 (Obj.repr
-                                                                    (
-                                                                    let uu___5
-                                                                    =
-                                                                    let uu___6
-                                                                    =
-                                                                    PulseSyntaxExtension_SyntaxWrapper.mk_binder
-                                                                    c.PulseSyntaxExtension_Sugar.return_name
-                                                                    ret1 in
-                                                                    PulseSyntaxExtension_SyntaxWrapper.unobservable_comp
-                                                                    opens pre
-                                                                    uu___6
-                                                                    post1 in
-                                                                    PulseSyntaxExtension_Err.return
-                                                                    uu___5))
                                                            | PulseSyntaxExtension_Sugar.STGhost
                                                                ->
                                                                Obj.magic
@@ -1281,7 +1232,8 @@ let rec (desugar_stmt :
                                         (PulseSyntaxExtension_Err.return
                                            FStar_Pervasives_Native.None))
                                | FStar_Pervasives_Native.Some
-                                   (FStar_Pervasives_Native.None, t) ->
+                                   (FStar_Pervasives_Native.None, t, _opens)
+                                   ->
                                    Obj.magic
                                      (Obj.repr
                                         (let uu___2 = desugar_vprop env t in
@@ -1369,8 +1321,8 @@ let rec (desugar_stmt :
                                PulseSyntaxExtension_Err.map_err_opt
                                  (fun uu___2 ->
                                     match uu___2 with
-                                    | (uu___3, t) -> desugar_vprop env t)
-                                 returns_annot in
+                                    | (uu___3, t, _opens) ->
+                                        desugar_vprop env t) returns_annot in
                              Obj.magic
                                (FStar_Class_Monad.op_let_Bang
                                   PulseSyntaxExtension_Err.err_monad () ()
@@ -1683,6 +1635,33 @@ let rec (desugar_stmt :
                                                    let body1 =
                                                      Obj.magic body1 in
                                                    let uu___3 =
+                                                     let opens_tm opens_opt =
+                                                       match opens_opt with
+                                                       | FStar_Pervasives_Native.Some
+                                                           opens ->
+                                                           desugar_term env
+                                                             opens
+                                                       | FStar_Pervasives_Native.None
+                                                           ->
+                                                           let all_names =
+                                                             n11 :: names1 in
+                                                           let opens_tm1 =
+                                                             FStar_Compiler_List.fold_left
+                                                               (fun names2 ->
+                                                                  fun n ->
+                                                                    let uu___4
+                                                                    =
+                                                                    PulseSyntaxExtension_SyntaxWrapper.tm_expr
+                                                                    n
+                                                                    s.PulseSyntaxExtension_Sugar.range1 in
+                                                                    PulseSyntaxExtension_SyntaxWrapper.tm_add_inv
+                                                                    names2
+                                                                    uu___4
+                                                                    s.PulseSyntaxExtension_Sugar.range1)
+                                                               PulseSyntaxExtension_SyntaxWrapper.tm_emp_inames
+                                                               all_names in
+                                                           PulseSyntaxExtension_Err.return
+                                                             opens_tm1 in
                                                      match returns_ with
                                                      | FStar_Pervasives_Native.None
                                                          ->
@@ -1692,7 +1671,7 @@ let rec (desugar_stmt :
                                                                  FStar_Pervasives_Native.None))
                                                      | FStar_Pervasives_Native.Some
                                                          (FStar_Pervasives_Native.None,
-                                                          v)
+                                                          v, opens_opt)
                                                          ->
                                                          Obj.magic
                                                            (Obj.repr
@@ -1723,14 +1702,35 @@ let rec (desugar_stmt :
                                                                     PulseSyntaxExtension_SyntaxWrapper.mk_binder
                                                                     uu___5
                                                                     uu___6 in
+                                                                    let uu___5
+                                                                    =
+                                                                    opens_tm
+                                                                    opens_opt in
+                                                                    Obj.magic
+                                                                    (FStar_Class_Monad.op_let_Bang
+                                                                    PulseSyntaxExtension_Err.err_monad
+                                                                    () ()
+                                                                    (Obj.magic
+                                                                    uu___5)
+                                                                    (fun
+                                                                    uu___6 ->
+                                                                    (fun
+                                                                    opens ->
+                                                                    let opens
+                                                                    =
+                                                                    Obj.magic
+                                                                    opens in
                                                                     Obj.magic
                                                                     (PulseSyntaxExtension_Err.return
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (b, v1))))
+                                                                    (b, v1,
+                                                                    opens))))
+                                                                    uu___6)))
                                                                     uu___5)))
                                                      | FStar_Pervasives_Native.Some
                                                          (FStar_Pervasives_Native.Some
-                                                          (x, t), v)
+                                                          (x, t), v,
+                                                          opens_opt)
                                                          ->
                                                          Obj.magic
                                                            (Obj.repr
@@ -1782,10 +1782,30 @@ let rec (desugar_stmt :
                                                                     let b =
                                                                     PulseSyntaxExtension_SyntaxWrapper.mk_binder
                                                                     x t1 in
+                                                                    let uu___7
+                                                                    =
+                                                                    opens_tm
+                                                                    opens_opt in
+                                                                    Obj.magic
+                                                                    (FStar_Class_Monad.op_let_Bang
+                                                                    PulseSyntaxExtension_Err.err_monad
+                                                                    () ()
+                                                                    (Obj.magic
+                                                                    uu___7)
+                                                                    (fun
+                                                                    uu___8 ->
+                                                                    (fun
+                                                                    opens ->
+                                                                    let opens
+                                                                    =
+                                                                    Obj.magic
+                                                                    opens in
                                                                     Obj.magic
                                                                     (PulseSyntaxExtension_Err.return
                                                                     (FStar_Pervasives_Native.Some
-                                                                    (b, v2))))
+                                                                    (b, v2,
+                                                                    opens))))
+                                                                    uu___8)))
                                                                     uu___7)))
                                                                     uu___5))) in
                                                    Obj.magic

@@ -74,11 +74,12 @@ let elab_bind #g #x #c1 #c2 #c
           (mk_abs t1 R.Q_Explicit (elab_term (comp_post c1)))
           (mk_abs t2 R.Q_Explicit (elab_term (comp_post c2)))
           e1 e2
-    | C_STGhost _ ->
+    | C_STGhost inames _ ->
         mk_bind_ghost
           (comp_u c1)
           (comp_u c2)
           t1 t2
+          (elab_term inames)
           (elab_term (comp_pre c1))
           (mk_abs t1 R.Q_Explicit (elab_term (comp_post c1)))
           (mk_abs t2 R.Q_Explicit (elab_term (comp_post c2)))

@@ -277,10 +277,9 @@ type term_view =
   | Tm_ExistsSL   : u:universe -> b:binder -> body:vprop -> term_view
   | Tm_ForallSL   : u:universe -> b:binder -> body:vprop -> term_view
   | Tm_VProp      : term_view
-  | Tm_Inv        : vprop -> term_view
+  | Tm_Inv        : iref:term -> p:vprop -> term_view
   | Tm_Inames     : term_view  // type inames
   | Tm_EmpInames  : term_view
-  | Tm_AddInv     : i:term -> is:term -> term_view
   | Tm_Unknown    : term_view
   | Tm_FStar      : term -> term_view  // catch all
 
@@ -297,9 +296,10 @@ let pack_term_view (top:term_view) (r:range)
     | Tm_Emp ->
       w (pack_ln (Tv_FVar (pack_fv emp_lid)))
       
-    | Tm_Inv p ->
+    | Tm_Inv i p ->
       let head = pack_ln (Tv_FVar (pack_fv inv_lid)) in
-      w (pack_ln (Tv_App head (p, Q_Explicit)))
+      let t = pack_ln (Tv_App head (i, Q_Explicit)) in
+      pack_ln (Tv_App t (p, Q_Explicit))
 
     | Tm_Pure p ->
       let head = pack_ln (Tv_FVar (pack_fv pure_lid)) in
@@ -320,10 +320,7 @@ let pack_term_view (top:term_view) (r:range)
       w (pack_ln (Tv_FVar (pack_fv inames_lid)))
 
     | Tm_EmpInames ->
-      w (emp_inames_tm)
-
-    | Tm_AddInv i is ->
-      w (add_inv_tm (`_) is i) // Careful on the order flip
+      w (pack_ln (Tv_FVar (pack_fv emp_inames_lid)))
 
     | Tm_Unknown ->
       w (pack_ln R.Tv_Unknown)
@@ -333,7 +330,6 @@ let pack_term_view (top:term_view) (r:range)
 let term_range (t:term) = range_of_term t
 let pack_term_view_wr (t:term_view) (r:range) = pack_term_view t r
 let tm_vprop = pack_term_view_wr Tm_VProp FStar.Range.range_0
-let tm_inv p = pack_term_view_wr (Tm_Inv p) FStar.Range.range_0
 let tm_inames = pack_term_view_wr Tm_Inames FStar.Range.range_0
 let tm_emp = pack_term_view_wr Tm_Emp FStar.Range.range_0
 let tm_emp_inames = pack_term_view_wr Tm_EmpInames FStar.Range.range_0
@@ -348,7 +344,14 @@ let tm_exists_sl (u:universe) (b:binder) (body:vprop) : term =
 let tm_forall_sl (u:universe) (b:binder) (body:vprop) : term =
   pack_term_view (Tm_ForallSL u b body)
                  (union_ranges (range_of_term b.binder_ty) (range_of_term body))
-
+let tm_iname_ref = tm_fvar (as_fv iname_ref_lid)
+let tm_inv (i p:term) : term =
+  pack_term_view (Tm_Inv i p)
+                 (union_ranges (range_of_term i) (range_of_term p))
+let tm_all_inames = tm_fvar (as_fv all_inames_lid)
+let tm_add_inv (is iref:R.term) : R.term =
+  let h = R.pack_ln (R.Tv_FVar (R.pack_fv add_inv_lid)) in
+  R.mk_app h [ex is; ex iref]
 
 let is_view_of (tv:term_view) (t:term) : prop =
   match tv with
@@ -368,11 +371,10 @@ let is_view_of (tv:term_view) (t:term) : prop =
   | Tm_Pure p ->
     t == tm_pure p /\
     p << t
-  | Tm_Inv p ->
-    t == tm_inv p /\
-    p << t
+  | Tm_Inv i p ->
+    t == tm_inv i p /\
+    i << t /\ p << t
   | Tm_Unknown -> t == tm_unknown
-  | Tm_AddInv i is -> True
   | Tm_FStar t' -> t' == t
 
 let rec inspect_term (t:R.term)
@@ -406,6 +408,8 @@ let rec inspect_term (t:R.term)
       | Tv_FVar fv, [a1; a2] ->
         if inspect_fv fv = star_lid
         then Tm_Star (fst a1) (fst a2)
+        else if inspect_fv fv = inv_lid
+        then Tm_Inv (fst a1) (fst a2)
         else default_view
       | Tv_UInst fv [u], [a1; a2] ->
         if inspect_fv fv = exists_lid ||
@@ -426,8 +430,6 @@ let rec inspect_term (t:R.term)
      | Tv_FVar fv, [a] ->
         if inspect_fv fv = pure_lid
         then Tm_Pure (fst a)
-        else if inspect_fv fv = inv_lid
-        then Tm_Inv (fst a)
         else default_view
      | _ -> default_view
     end

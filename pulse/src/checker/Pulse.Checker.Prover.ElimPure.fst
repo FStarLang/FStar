@@ -44,7 +44,7 @@ let elim_pure_head_ty =
     let post =
       mk_abs squash_p R.Q_Explicit (R.pack_ln (R.Tv_FVar (R.pack_fv emp_lid)))
     in
-    let cod = mk_stt_ghost_comp u0 squash_p pure_p post in
+    let cod = mk_stt_ghost_comp u0 squash_p tm_emp_inames pure_p post in
     mk_arrow
       (R.pack_ln (R.Tv_FVar (R.pack_fv R.prop_qn)), R.Q_Explicit)
       cod
@@ -75,7 +75,7 @@ let elim_pure_comp (p:term) =
         pre=tm_pure (wr p);
         post=tm_emp
     } in
-    C_STGhost st
+    C_STGhost tm_emp_inames st
 
 #push-options "--admit_smt_queries true"    
 let elim_pure_typing (g:env) (p:term)

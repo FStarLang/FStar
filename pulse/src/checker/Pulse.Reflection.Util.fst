@@ -24,7 +24,8 @@ open FStar.List.Tot
 
 let u_two = RT.(u_succ (u_succ u_zero))
 let u_three = RT.(u_succ (u_succ (u_succ u_zero)))
-let u_atomic_ghost u = (RT.u_max u_three u)
+let u_four = RT.(u_succ (u_succ (u_succ (u_succ u_zero))))
+let u_atomic_ghost u = (RT.u_max u_four u)
 
 let pulse_lib_core = ["Pulse"; "Lib"; "Core"]
 let mk_pulse_lib_core_lid s = pulse_lib_core@[s]
@@ -42,6 +43,7 @@ let reveal_lid = ["FStar"; "Ghost"; "reveal"]
 let vprop_lid = mk_pulse_lib_core_lid "vprop"
 let vprop_fv = R.pack_fv vprop_lid
 let vprop_tm = R.pack_ln (R.Tv_FVar vprop_fv)
+let emp_lid = mk_pulse_lib_core_lid "emp"
 let unit_fv = R.pack_fv unit_lid
 let unit_tm = R.pack_ln (R.Tv_FVar unit_fv)
 let bool_fv = R.pack_fv bool_lid
@@ -90,10 +92,6 @@ let mk_snd (u1 u2:R.universe) (a1 a2 e:R.term) : R.term =
 
 let true_tm = R.pack_ln (R.Tv_Const (R.C_True))
 let false_tm = R.pack_ln (R.Tv_Const (R.C_False))
-
-let inv_lid = mk_pulse_lib_core_lid "inv"
-let emp_lid = mk_pulse_lib_core_lid "emp"
-let inames_lid = mk_pulse_lib_core_lid "inames"
 
 let star_lid = mk_pulse_lib_core_lid "op_Star_Star"
 
@@ -159,10 +157,6 @@ let mk_stt_ghost_admit (u:R.universe) (t pre post:R.term) : R.term =
   let t = pack_ln (Tv_App t (pre, Q_Explicit)) in
   pack_ln (Tv_App t (post, Q_Explicit))
 
-let emp_inames_lid = mk_pulse_lib_core_lid "emp_inames"
-let all_inames_lid = mk_pulse_lib_core_lid "all_inames"
-let add_inv_lid = mk_pulse_lib_core_lid "add_inv"
-let remove_inv_lid = mk_pulse_lib_core_lid "remove_inv"
 let elim_pure_lid = mk_pulse_lib_core_lid "elim_pure"
 
  //the thunked, value-type counterpart of the effect STT
@@ -178,9 +172,6 @@ let mk_stt_comp (u:R.universe) (res pre post:R.term) : Tot R.term =
 let stt_atomic_lid = mk_pulse_lib_core_lid "stt_atomic"
 let stt_atomic_fv = R.pack_fv stt_atomic_lid
 let stt_atomic_tm = R.pack_ln (R.Tv_FVar stt_atomic_fv)
-let stt_unobservable_lid = mk_pulse_lib_core_lid "stt_unobservable"
-let stt_unobservable_fv = R.pack_fv stt_unobservable_lid
-let stt_unobservable_tm = R.pack_ln (R.Tv_FVar stt_unobservable_fv)
 let mk_stt_atomic_comp (obs:R.term) (u:R.universe) (a inames pre post:R.term) =
   let head = stt_atomic_fv in
   let t = R.pack_ln (R.Tv_UInst head [u]) in
@@ -194,20 +185,22 @@ let mk_stt_atomic_comp (obs:R.term) (u:R.universe) (a inames pre post:R.term) =
 let stt_ghost_lid = mk_pulse_lib_core_lid "stt_ghost"
 let stt_ghost_fv = R.pack_fv stt_ghost_lid
 let stt_ghost_tm = R.pack_ln (R.Tv_FVar stt_ghost_fv)
-let mk_stt_ghost_comp (u:R.universe) (a pre post:R.term) =
+let mk_stt_ghost_comp (u:R.universe) (a inames pre post:R.term) =
   let t = R.pack_ln (R.Tv_UInst stt_ghost_fv [u]) in
   let t = R.pack_ln (R.Tv_App t (a, R.Q_Explicit)) in
+  let t = R.pack_ln (R.Tv_App t (inames, R.Q_Explicit)) in
   let t = R.pack_ln (R.Tv_App t (pre, R.Q_Explicit)) in
   R.pack_ln (R.Tv_App t (post, R.Q_Explicit))
 
-let mk_stt_ghost_comp_post_equiv (g:R.env) (u:R.universe) (a pre post1 post2:R.term)
+let mk_stt_ghost_comp_post_equiv (g:R.env) (u:R.universe) (a inames pre post1 post2:R.term)
   (posts_equiv:RT.equiv g post1 post2)
-  : RT.equiv g (mk_stt_ghost_comp u a pre post1)
-               (mk_stt_ghost_comp u a pre post2) =
+  : RT.equiv g (mk_stt_ghost_comp u a inames pre post1)
+               (mk_stt_ghost_comp u a inames pre post2) =
   let open R in
   let open RT in
   let t = R.pack_ln (R.Tv_UInst stt_ghost_fv [u]) in
   let t = R.pack_ln (R.Tv_App t (a, R.Q_Explicit)) in
+  let t = R.pack_ln (R.Tv_App t (inames, R.Q_Explicit)) in
   let t = R.pack_ln (R.Tv_App t (pre, R.Q_Explicit)) in
   Rel_ctxt g post1 post2
     (Ctxt_app_arg t Q_Explicit Ctxt_hole)
@@ -294,17 +287,6 @@ let vprop_eq_tm t1 t2 =
   let t = pack_ln (Tv_App t (t1, Q_Explicit)) in
   let t = pack_ln (Tv_App t (t2, Q_Explicit)) in
   t
-
-let emp_inames_tm : R.term = R.pack_ln (R.Tv_FVar (R.pack_fv emp_inames_lid))
-let all_inames_tm : R.term = R.pack_ln (R.Tv_FVar (R.pack_fv all_inames_lid))
-
-let add_inv_tm (p is i : R.term) : R.term =
-  let h = R.pack_ln (R.Tv_FVar (R.pack_fv add_inv_lid)) in
-  R.mk_app h [im p; ex is; ex i]
-
-let remove_inv_tm (p is i : R.term) : R.term =
-  let h = R.pack_ln (R.Tv_FVar (R.pack_fv remove_inv_lid)) in
-  R.mk_app h [im p; ex is; ex i]
 
 let non_informative_lid = mk_pulse_lib_noninformative_lid "non_informative"
 let non_informative_rt (u:R.universe) (a:R.term) : R.term =
@@ -446,12 +428,13 @@ let mk_bind_stt
 
 let mk_bind_ghost
   (u1 u2:R.universe)
-  (a b pre1 post1 post2 e1 e2:R.term) =
+  (a b opens pre1 post1 post2 e1 e2:R.term) =
   let open R in
   let bind_lid = mk_pulse_lib_core_lid "bind_ghost" in
   let t = R.pack_ln (R.Tv_UInst (R.pack_fv bind_lid) [u1;u2]) in
   let t = pack_ln (R.Tv_App t (a, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (b, Q_Implicit)) in
+  let t = pack_ln (R.Tv_App t (opens, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (pre1, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (post1, Q_Implicit)) in
   let t = pack_ln (R.Tv_App t (post2, Q_Implicit)) in
@@ -644,11 +627,11 @@ let mk_stt_atomic_comp_equiv (g:R.env) obs (u:R.universe) (res inames pre1 post1
                (mk_stt_atomic_comp obs u res inames pre2 post2)
   = admit ()
 
-let mk_stt_ghost_comp_equiv (g:R.env) (u:R.universe) (res pre1 post1 pre2 post2:R.term)
+let mk_stt_ghost_comp_equiv (g:R.env) (u:R.universe) (res inames pre1 post1 pre2 post2:R.term)
   (pre_eq:RT.equiv g pre1 pre2)
   (post_eq:RT.equiv g post1 post2)
-  : RT.equiv g (mk_stt_ghost_comp u res pre1 post1)
-               (mk_stt_ghost_comp u res pre2 post2)
+  : RT.equiv g (mk_stt_ghost_comp u res inames pre1 post1)
+               (mk_stt_ghost_comp u res inames pre2 post2)
   = admit ()
 
 let ref_lid = mk_pulse_lib_reference_lid "ref"
@@ -742,19 +725,28 @@ let mk_opaque_let (g:R.env) (nm:string) (tm:Ghost.erased R.term) (ty:R.typ{RT.ty
   in
   (true, se, None)
 
-let mk_mem_inv (invP inames inv:R.term) : R.term =
+let mk_observability_lid l = ["PulseCore"; "Observability"; l]
+let observable_lid = mk_observability_lid "Observable"
+let neutral_lid = mk_observability_lid "Neutral"
+
+let inames_lid = mk_pulse_lib_core_lid "inames"
+let iname_ref_lid = mk_pulse_lib_core_lid "iref"
+let inv_lid = mk_pulse_lib_core_lid "inv"
+let emp_inames_lid = mk_pulse_lib_core_lid "emp_inames"
+let all_inames_lid = mk_pulse_lib_core_lid "all_inames"
+let add_inv_lid = mk_pulse_lib_core_lid "add_inv"
+let remove_inv_lid = mk_pulse_lib_core_lid "remove_inv"
+
+let remove_inv_tm (is iref:R.term) : R.term =
+  let h = R.pack_ln (R.Tv_FVar (R.pack_fv remove_inv_lid)) in
+  R.mk_app h [ex is; ex iref]
+let mk_mem_inv (is iref:R.term) : R.term =
   let mem_inv_tm = mk_pulse_lib_core_lid "mem_inv" in
   let t = R.pack_ln (R.Tv_FVar (R.pack_fv mem_inv_tm)) in
-  R.mk_app t [ im invP; ex inames; ex inv ]
+  R.mk_app t [ ex is; ex iref ]
 
-let inv_disjointness_goal (inv_p:T.term) (inames:T.term) (inv:T.term) 
-: R.term 
-= let p = mk_mem_inv inv_p inames inv in
+let inv_disjointness_goal (is iref:R.term) : R.term =
+  let p = mk_mem_inv is iref in
   let u0 = R.pack_universe R.Uv_Zero in
   let p = mk_reveal u0 bool_tm p in
   mk_eq2 u0 bool_tm (`false) p
-
-let mk_observability_lid l = ["PulseCore"; "Observability"; l]
-let observable_lid = mk_observability_lid "Observable"
-let unobservable_lid = mk_observability_lid "Unobservable"
-let neutral_lid = mk_observability_lid "Neutral"

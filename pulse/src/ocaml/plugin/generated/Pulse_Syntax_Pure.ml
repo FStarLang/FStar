@@ -408,10 +408,9 @@ type term_view =
   | Tm_ForallSL of Pulse_Syntax_Base.universe * Pulse_Syntax_Base.binder *
   Pulse_Syntax_Base.vprop 
   | Tm_VProp 
-  | Tm_Inv of Pulse_Syntax_Base.vprop 
+  | Tm_Inv of Pulse_Syntax_Base.term * Pulse_Syntax_Base.vprop 
   | Tm_Inames 
   | Tm_EmpInames 
-  | Tm_AddInv of Pulse_Syntax_Base.term * Pulse_Syntax_Base.term 
   | Tm_Unknown 
   | Tm_FStar of Pulse_Syntax_Base.term 
 let uu___is_Tm_Emp uu___ = match uu___ with | Tm_Emp _ -> true | _ -> false
@@ -428,8 +427,6 @@ let uu___is_Tm_Inames uu___ =
   match uu___ with | Tm_Inames _ -> true | _ -> false
 let uu___is_Tm_EmpInames uu___ =
   match uu___ with | Tm_EmpInames _ -> true | _ -> false
-let uu___is_Tm_AddInv uu___ =
-  match uu___ with | Tm_AddInv _ -> true | _ -> false
 let uu___is_Tm_Unknown uu___ =
   match uu___ with | Tm_Unknown _ -> true | _ -> false
 let uu___is_Tm_FStar uu___ =
@@ -455,16 +452,19 @@ let (pack_term_view :
                (FStar_Reflection_V2_Data.Tv_FVar
                   (FStar_Reflection_V2_Builtins.pack_fv
                      Pulse_Reflection_Util.emp_lid)))
-      | Tm_Inv p ->
+      | Tm_Inv (i, p) ->
           let head =
             FStar_Reflection_V2_Builtins.pack_ln
               (FStar_Reflection_V2_Data.Tv_FVar
                  (FStar_Reflection_V2_Builtins.pack_fv
                     Pulse_Reflection_Util.inv_lid)) in
-          w
-            (FStar_Reflection_V2_Builtins.pack_ln
-               (FStar_Reflection_V2_Data.Tv_App
-                  (head, (p, FStar_Reflection_V2_Data.Q_Explicit))))
+          let t =
+            FStar_Reflection_V2_Builtins.pack_ln
+              (FStar_Reflection_V2_Data.Tv_App
+                 (head, (i, FStar_Reflection_V2_Data.Q_Explicit))) in
+          FStar_Reflection_V2_Builtins.pack_ln
+            (FStar_Reflection_V2_Data.Tv_App
+               (t, (p, FStar_Reflection_V2_Data.Q_Explicit)))
       | Tm_Pure p ->
           let head =
             FStar_Reflection_V2_Builtins.pack_ln
@@ -502,12 +502,12 @@ let (pack_term_view :
                (FStar_Reflection_V2_Data.Tv_FVar
                   (FStar_Reflection_V2_Builtins.pack_fv
                      Pulse_Reflection_Util.inames_lid)))
-      | Tm_EmpInames -> w Pulse_Reflection_Util.emp_inames_tm
-      | Tm_AddInv (i, is) ->
+      | Tm_EmpInames ->
           w
-            (Pulse_Reflection_Util.add_inv_tm
-               (FStar_Reflection_V2_Builtins.pack_ln
-                  FStar_Reflection_V2_Data.Tv_Unknown) is i)
+            (FStar_Reflection_V2_Builtins.pack_ln
+               (FStar_Reflection_V2_Data.Tv_FVar
+                  (FStar_Reflection_V2_Builtins.pack_fv
+                     Pulse_Reflection_Util.emp_inames_lid)))
       | Tm_Unknown ->
           w
             (FStar_Reflection_V2_Builtins.pack_ln
@@ -520,8 +520,6 @@ let (pack_term_view_wr :
   fun t -> fun r -> pack_term_view t r
 let (tm_vprop : Pulse_Syntax_Base.term) =
   pack_term_view_wr Tm_VProp FStar_Range.range_0
-let (tm_inv : Pulse_Syntax_Base.vprop -> Pulse_Syntax_Base.term) =
-  fun p -> pack_term_view_wr (Tm_Inv p) FStar_Range.range_0
 let (tm_inames : Pulse_Syntax_Base.term) =
   pack_term_view_wr Tm_Inames FStar_Range.range_0
 let (tm_emp : Pulse_Syntax_Base.term) =
@@ -565,6 +563,31 @@ let (tm_forall_sl :
           (Pulse_RuntimeUtils.union_ranges
              (Pulse_RuntimeUtils.range_of_term b.Pulse_Syntax_Base.binder_ty)
              (Pulse_RuntimeUtils.range_of_term body))
+let (tm_iname_ref : Pulse_Syntax_Base.term) =
+  tm_fvar (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.iname_ref_lid)
+let (tm_inv :
+  Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
+  =
+  fun i ->
+    fun p ->
+      pack_term_view (Tm_Inv (i, p))
+        (Pulse_RuntimeUtils.union_ranges (Pulse_RuntimeUtils.range_of_term i)
+           (Pulse_RuntimeUtils.range_of_term p))
+let (tm_all_inames : Pulse_Syntax_Base.term) =
+  tm_fvar (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.all_inames_lid)
+let (tm_add_inv :
+  FStar_Reflection_Types.term ->
+    FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+  =
+  fun is ->
+    fun iref ->
+      let h =
+        FStar_Reflection_V2_Builtins.pack_ln
+          (FStar_Reflection_V2_Data.Tv_FVar
+             (FStar_Reflection_V2_Builtins.pack_fv
+                Pulse_Reflection_Util.add_inv_lid)) in
+      FStar_Reflection_V2_Derived.mk_app h
+        [Pulse_Reflection_Util.ex is; Pulse_Reflection_Util.ex iref]
 type ('tv, 't) is_view_of = Obj.t
 let rec (inspect_term : FStar_Reflection_Types.term -> term_view) =
   fun t ->
@@ -598,7 +621,15 @@ let rec (inspect_term : FStar_Reflection_Types.term -> term_view) =
                     Tm_Star
                       ((FStar_Pervasives_Native.fst a1),
                         (FStar_Pervasives_Native.fst a2))
-                  else default_view
+                  else
+                    if
+                      (FStar_Reflection_V2_Builtins.inspect_fv fv) =
+                        Pulse_Reflection_Util.inv_lid
+                    then
+                      Tm_Inv
+                        ((FStar_Pervasives_Native.fst a1),
+                          (FStar_Pervasives_Native.fst a2))
+                    else default_view
               | (FStar_Reflection_V2_Data.Tv_UInst (fv, u::[]), a1::a2::[])
                   ->
                   if
@@ -631,12 +662,7 @@ let rec (inspect_term : FStar_Reflection_Types.term -> term_view) =
                     (FStar_Reflection_V2_Builtins.inspect_fv fv) =
                       Pulse_Reflection_Util.pure_lid
                   then Tm_Pure (FStar_Pervasives_Native.fst a1)
-                  else
-                    if
-                      (FStar_Reflection_V2_Builtins.inspect_fv fv) =
-                        Pulse_Reflection_Util.inv_lid
-                    then Tm_Inv (FStar_Pervasives_Native.fst a1)
-                    else default_view
+                  else default_view
               | uu___1 -> default_view))
     | FStar_Reflection_V2_Data.Tv_Refine (uu___, uu___1) -> default_view
     | FStar_Reflection_V2_Data.Tv_Arrow (uu___, uu___1) -> default_view

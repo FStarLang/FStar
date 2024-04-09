@@ -37,7 +37,6 @@ let as_vprop (v:vprop') (r:rng) = { v; vrange=r}
 type st_comp_tag = 
   | ST
   | STAtomic
-  | STUnobservable
   | STGhost
 
 type computation_type = {
@@ -74,7 +73,7 @@ type array_init = {
   len : A.term;
 }
 
-let ensures_vprop = option (ident & A.term) & vprop
+let ensures_vprop = option (ident & A.term) & vprop & option A.term
 
 type stmt' =
   | Open of lident

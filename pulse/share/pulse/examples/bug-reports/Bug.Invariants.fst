@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Bug.Invariants
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
@@ -79,10 +95,10 @@ ensures emp
 ```pulse
 fn return_with_invariant
       (p:vprop)
-      (i:inv p)
-requires emp
+      (i:iref)
+requires inv i p
 returns x:bool
-ensures emp
+ensures inv i p
 {
     with_invariants i { 
       atomic_step_res();
@@ -93,10 +109,10 @@ ensures emp
 ```pulse
 fn return_with_invariant2
       (x:ref U32.t)
-      (i:inv (pts_to x 1ul))
-requires emp
-returns x:U32.t
-ensures emp
+      (i:iref)
+requires inv i (pts_to x 1ul)
+returns _:U32.t
+ensures inv i (pts_to x 1ul)
 {
     with_invariants i {
         read_atomic x;
@@ -105,14 +121,15 @@ ensures emp
 ```
 
 ```pulse
-fn test_invariant_annot (x:ref U32.t) (i:inv (pts_to x 0ul)) (y:ref U32.t)
-requires pts_to y 'w
-ensures pts_to y 0ul
+fn test_invariant_annot (x:ref U32.t) (i:iref) (y:ref U32.t)
+requires inv i (pts_to x 0ul) ** pts_to y 'w
+ensures inv i (pts_to x 0ul) ** pts_to y 0ul
 {
     let n = 
         with_invariants i
-        returns x:U32.t
-        ensures pure (x == 0ul) ** pts_to y 'w {
+        returns r:U32.t
+        ensures inv i (pts_to x 0ul) ** pure (r == 0ul) ** pts_to y 'w
+        opens (add_inv emp_inames i) {
             read_atomic x
         };
     y := n;

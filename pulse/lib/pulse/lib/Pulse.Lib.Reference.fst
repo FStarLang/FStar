@@ -27,6 +27,7 @@ let pts_to
     (#[exact (`full_perm)] [@@@equate_by_smt] p:perm)
     ([@@@equate_by_smt] v:a)
   = H.pts_to r #p (U.raise_val v)
+let pts_to_is_small r p x = H.pts_to_is_small r p (U.raise_val x)
 
 ```pulse
 fn alloc' (#a:Type u#0) (v:a)
@@ -122,13 +123,13 @@ ensures pts_to r #(sum_perm p0 p1) x0 ** pure (x0 == x1)
 let gather = gather'
 
 let share2 (#a:Type) (r:ref a) (#v:erased a)
-: stt_ghost unit
+: stt_ghost unit emp_inames
   (pts_to r v)
   (fun _ -> pts_to r #one_half v ** pts_to r #one_half v)
 = share #a r #v
 
 let gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a)
-: stt_ghost unit
+: stt_ghost unit emp_inames
       (pts_to r #one_half x0 ** pts_to r #one_half x1)
       (fun () -> pts_to r x0  ** pure (x0 == x1))
 = gather r

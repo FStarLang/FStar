@@ -17,56 +17,52 @@
 module Pulse.Lib.SmallTrade
 
 open Pulse.Lib.Core
-open Pulse.Lib.Pervasives
 open Pulse.Lib.InvList
+
 module T = FStar.Tactics
 
-let vprop' = v:vprop{is_small v}
-
 val trade :
-  (#[T.exact (`invlist_empty)] is : invlist) ->
-  (hyp : vprop) ->
-  (concl : vprop) ->
-  vprop'
-
-let ( ==>* ) :
-  (#[T.exact (`invlist_empty)] is : invlist) ->
-  (hyp : vprop) ->
-  (concl : vprop) ->
+  (#[T.exact (`[])] is:invlist) ->
+  (hyp:vprop) ->
+  (concl:vprop) ->
   vprop
-  = fun #is -> trade #is
+
+val trade_is_small (#is:invlist) (hyp concl:vprop)
+  : Lemma (is_small (trade #is hyp concl))
 
 val intro_trade
-  (#[T.exact (`invlist_empty)] is : invlist)
-  (hyp concl: vprop)
-  (extra: vprop')
-  (f_elim: unit -> (
-    stt_ghost unit
-    (invlist_v is ** extra ** hyp)
-    (fun _ -> invlist_v is ** concl)
+  (#is:invlist)
+  (hyp concl:vprop)
+  (extra:vprop { is_small extra })
+  (f_elim:unit -> (
+    stt_ghost unit (invlist_names is)
+    (invlist_inv is ** extra ** hyp)
+    (fun _ -> invlist_inv is ** concl)
   ))
-: stt_ghost unit
-    extra
-    (fun _ -> trade #is hyp concl)
+: stt_ghost unit emp_inames extra (fun _ -> trade #is hyp concl)
 
-val elim_trade_ghost
-  (#[T.exact (`invlist_empty)] is : invlist)
-  (hyp concl: vprop)
-: stt_ghost unit
-    (invlist_v is ** (trade #is hyp concl) ** hyp)
-    (fun _ -> invlist_v is ** concl)
+val intro_trade_invs
+  (#is:invlist)
+  (hyp concl:vprop)
+  (extra:vprop { is_small extra })
+  (f_elim:unit -> (
+    stt_ghost unit emp_inames
+      (invlist_v is ** extra ** hyp)
+      (fun _ -> invlist_v is ** concl)
+  ))
+: stt_ghost unit emp_inames extra (fun _ -> trade #is hyp concl)
 
 val elim_trade
-  (#[T.exact (`invlist_empty)] is : invlist)
-  (hyp concl: vprop)
-: stt_atomic unit #Unobservable (invlist_names is)
-    ((trade #is hyp concl) ** hyp)
-    (fun _ -> concl)
+  (#is:invlist)
+  (hyp concl:vprop)
+: stt_ghost unit (invlist_names is)
+    (invlist_inv is ** trade #is hyp concl ** hyp)
+    (fun _ -> invlist_inv is ** concl)
 
 val trade_sub_inv
-  (#os1 : invlist)
-  (#os2 : invlist{invlist_sub os1 os2})
-  (hyp concl: vprop)
-: stt_ghost unit
-    (trade #os1 hyp concl)
-    (fun _ -> trade #os2 hyp concl)
+  (#is1:invlist)
+  (#is2:invlist { invlist_sub is1 is2 })
+  (hyp concl:vprop)
+: stt_ghost unit emp_inames
+    (trade #is1 hyp concl)
+    (fun _ -> trade #is2 hyp concl)

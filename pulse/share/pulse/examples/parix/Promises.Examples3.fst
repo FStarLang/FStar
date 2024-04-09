@@ -25,7 +25,7 @@ assume val done : ref bool
 assume val res : ref (option int)
 assume val claimed : GR.ref bool
 
-let inv_p : vprop =
+let inv_p : v:vprop { is_big v } =
   exists* (v_done:bool) (v_res:option int) (v_claimed:bool).
        pts_to done #one_half v_done
     ** pts_to res #one_half v_res
@@ -41,9 +41,9 @@ let goal : vprop =
 ```pulse
 atomic
 fn proof
-   (i : inv inv_p) (_:unit)
-   requires pts_to done #one_half true ** GR.pts_to claimed #one_half false
-   ensures pts_to done #one_half true ** goal
+   (i : iref) (_:unit)
+   requires inv i inv_p ** pts_to done #one_half true ** GR.pts_to claimed #one_half false
+   ensures inv i inv_p ** pts_to done #one_half true ** goal
    opens add_inv emp_inames i
 {
   with_invariants i {
@@ -83,11 +83,13 @@ fn proof
 }
 ```
 
-let cheat_proof (i:inv inv_p)
+let is (i:iref) : invlist = [(inv_p <: vprop), i]
+
+let cheat_proof (i:iref)
   : (_:unit) ->
-      stt_ghost unit
-        (requires         invlist_v [(| _, i |)] ** (pts_to done #one_half true ** GR.pts_to claimed #one_half false))
-        (ensures fun _ -> invlist_v [(| _, i |)] ** (pts_to done #one_half true ** goal))
+      stt_ghost unit (add_inv emp_inames i)
+        (requires pts_to done #one_half true ** (inv i inv_p ** GR.pts_to claimed #one_half false))
+        (ensures fun _ -> pts_to done #one_half true ** goal)
   = admit() //proof is atomic, not ghost
 
 #set-options "--debug Promises.Examples3 --debug_level SMTQuery"
@@ -95,8 +97,9 @@ let cheat_proof (i:inv inv_p)
 ```pulse
 fn setup (_:unit)
    requires pts_to done v_done ** pts_to res v_res ** GR.pts_to claimed v_claimed
-   returns i:inv inv_p
-   ensures pts_to done #one_half false ** pledge (add_one (|inv_p, i|) []) (pts_to done #one_half true) goal
+   returns i:iref
+   ensures pts_to done #one_half false **
+           pledge (add_inv emp_inames i) (pts_to done #one_half true) goal
 {
   done := false;
   res := None;
@@ -112,12 +115,12 @@ fn setup (_:unit)
   fold inv_p;
   
   let i = new_invariant inv_p;
-  
+
   make_pledge
-    (add_one (|inv_p, i|) [])
-    (pts_to done #one_half true)
-    goal
-    (GR.pts_to claimed #one_half false)
+    (add_inv emp_inames i)
+    (pts_to done #one_half true) //f
+    goal  //v
+    (inv i inv_p ** GR.pts_to claimed #one_half false)  //extra
     (cheat_proof i);
 
   i

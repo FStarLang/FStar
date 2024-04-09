@@ -16,6 +16,7 @@
 module PulseCore.Heap
 open FStar.Ghost
 open FStar.PCM
+module Frac = PulseCore.FractionalPermission
 
 /// This module defines the behavior of a structured heap where each memory cell is governed by
 /// a partial commutative monoid. This PCM structure is reused for the entire heap as it is possible
@@ -33,14 +34,29 @@ open FStar.PCM
 
 (**** The base : partial heaps *)
 
+(** [sel] is a ghost read of the value contained in a heap reference *)
+noeq
+type cell : Type u#(a + 1) =
+  | Ref : a:Type u#a ->
+          p:pcm a ->
+          frac:Frac.perm{ frac `Frac.lesser_equal_perm` Frac.full_perm } ->
+          v:a { frac == Frac.full_perm ==> p.refine v } ->
+          cell
+
 (**
   Abstract type of heaps. Can conceptually be thought of as a map from addresses to
   contents of memory cells.
 *)
 val heap  : Type u#(a + 1)
 
+val select (i:nat) (m:heap u#a) : option (cell u#a)
+
 (* An empty heap *)
 val empty_heap : heap u#a
+
+val sel_empty (i:nat)
+  : Lemma 
+    (ensures select i empty_heap == None)
 
 (** A [core_ref] is a key into the [heap] or [null] *)
 val core_ref : Type u#0
@@ -58,6 +74,13 @@ let null (#a:Type u#a) (#pcm:pcm a) : ref a pcm = core_ref_null
 (** Checking whether [r] is the null pointer is decidable through [is_null]
 *)
 val core_ref_is_null (r:core_ref) : b:bool { b <==> r == core_ref_null }
+
+val addr_as_core_ref (n:nat) : GTot core_ref
+val core_ref_as_addr (c:core_ref) : GTot nat
+val addr_core_ref_injective (n:nat)
+: Lemma (core_ref_as_addr (addr_as_core_ref n) == n)
+val addr_core_ref_injective_2 (c:core_ref { not (core_ref_is_null c) })
+: Lemma (addr_as_core_ref (core_ref_as_addr c) == c)
 
 (** Checking whether [r] is the null pointer is decidable through [is_null]
 *)
@@ -404,6 +427,10 @@ val heap_evolves : FStar.Preorder.preorder full_heap
 *)
 val free_above_addr (h:heap u#a) (a:nat) : prop
 
+val interp_free_above (h:heap u#a) (a:nat)
+: Lemma (free_above_addr h a <==> (forall i. i >= a ==> select i h == None))
+
+
 (** [free_above_addr] is abstract but can be weakened consistently with its intended behavior *)
 val weaken_free_above (h:heap) (a b:nat)
   : Lemma (free_above_addr h a /\ a <= b ==> free_above_addr h b)
@@ -506,11 +533,13 @@ let action_framing
   (#immut #allocates:bool)
   (#fp: slprop u#b)
   (#fp': a -> slprop u#b)
-  ($f:action #immut #allocates fp a fp')
-  (frame:slprop) (h0:full_hheap (fp `star` frame))
+  (#pre #post: heap u#b -> prop)
+  ($f:action #immut #allocates #pre #post fp a fp')
+  (frame:slprop) (h0:full_hheap (fp `star` frame) { pre h0 })
     : Lemma (
       affine_star fp frame h0;
       let (| x, h1 |) = f h0 in
+      post h1 /\
       frame_related_heaps h0 h1 fp (fp' x) frame immut allocates
     )
   =
@@ -526,6 +555,23 @@ val sel_v (#a:Type u#h) (#pcm:pcm a) (r:ref a pcm) (v:erased a) (m:full_hheap (p
           pcm.refine v' /\
           interp (ptr r) m /\
           v' == sel r m }
+
+val interp_pts_to (i:core_ref)
+                  (#a:Type)
+                  (#pcm:FStar.PCM.pcm a)
+                  (v:a)
+                  (h0:heap)
+: Lemma
+  (requires interp (pts_to #a #pcm i v) h0)
+  (ensures (
+    not (core_ref_is_null i) /\ (
+    match select (core_ref_as_addr i) h0 with
+    | None -> False
+    | Some c ->
+      let Ref a' pcm' _ v' = c in
+      a == a' /\
+      pcm == pcm' /\
+      compatible pcm v v')))
 
 (** [sel] respect [pts_to] *)
 val sel_lemma (#a:_) (#pcm:_) (r:ref a pcm) (m:full_hheap (ptr r))
@@ -642,6 +688,17 @@ val extend
       (ref a pcm)
       (fun r -> pts_to r x)
 
+val extend_modifies_nothing
+      #a #pcm (x:a { pcm.refine x })
+      (addr:nat) (h:full_hheap emp { free_above_addr h addr })
+: Lemma (
+      let (| r, h1 |) = extend #a #pcm x addr h in
+      (forall (a:nat). a <> addr ==> select a h == select a h1) /\
+      select addr h1 == Some (Ref a pcm Frac.full_perm x) /\
+      not (core_ref_is_null r) /\
+      addr == core_ref_as_addr r
+  )
+
 val frame (#a:Type)
           #immut #allocates #hpre #hpost
           (#pre:slprop)
@@ -653,32 +710,6 @@ val frame (#a:Type)
 val change_slprop (p q:slprop)
                   (proof: (h:heap -> Lemma (requires interp p h) (ensures interp q h)))
   : action #immut_heap #no_allocs p unit (fun _ -> q)
-
-// module U = FStar.Universe
-
-// val id_elim_star (p q:slprop) (h:heap)
-//   : Pure (erased heap & erased heap )
-//          (requires (interp (p `star` q) h))
-//          (ensures (fun (hl, hr) -> disjoint hl hr
-//                               /\ h == join hl hr
-//                               /\ interp p hl
-//                               /\ interp q hr))
-
-// val id_elim_exists (#a:Type) (p : a -> slprop) (h:heap)
-//   : Pure (erased a)
-//          (requires (interp (h_exists p) h))
-//          (ensures (fun x -> interp (p x) h))
-
-
-// let is_frame_monotonic #a (p : a -> slprop) : prop =
-//   forall x y m frame. interp (p x `star` frame) m /\ interp (p y) m ==> interp (p y `star` frame) m
-
-// let is_witness_invariant #a (p : a -> slprop) =
-//   forall x y m. interp (p x) m /\ interp (p y) m ==> x == y
-
-// val witinv_framon (#a:_) (p : a -> slprop)
-//   : Lemma (requires (is_witness_invariant p))
-//           (ensures (is_frame_monotonic p))
 
 
 (**

@@ -113,13 +113,10 @@ and term_to_string' (level:string) (t:term) : T.Tac string
     | Tm_Inames -> "inames"
     | Tm_EmpInames -> "emp_inames"
     | Tm_Unknown -> "_"
-    | Tm_AddInv i is ->
-      sprintf "add_inv %s %s"
+    | Tm_Inv i p ->
+      sprintf "%s -~- %s"
         (term_to_string' level i)
-        (term_to_string' level is)
-    | Tm_Inv i ->
-      sprintf "inv %s"
-        (term_to_string' level i)
+        (term_to_string' level p)
     | Tm_FStar t -> T.term_to_string t
 
 let term_to_string t = term_to_string' "" t
@@ -154,10 +151,11 @@ and term_to_doc t : T.Tac document
     | Tm_VProp -> doc_of_string "vprop"
     | Tm_Inames -> doc_of_string "inames"
     | Tm_EmpInames -> doc_of_string "emp_inames"
-    | Tm_AddInv i is ->
-      doc_of_string "add_inv" ^/^ parens (term_to_doc i ^^ doc_of_string "," ^^ term_to_doc is)
-    | Tm_Inv i ->
-      doc_of_string "inv" ^/^ parens (term_to_doc i)
+    | Tm_Inv i p ->
+      infix 2 1 (doc_of_string "-~-")
+                (term_to_doc i)
+                (term_to_doc p)
+
     | Tm_Unknown -> doc_of_string "_"
     | Tm_FStar t -> doc_of_string (T.term_to_string t) 
 
@@ -178,14 +176,14 @@ let ctag_to_string = function
 let observability_to_string =
   function
   | Observable -> "Observable"
-  | Unobservable -> "Unobservable"
   | Neutral -> "Neutral"
 
 let effect_annot_to_string = function
   | EffectAnnotSTT -> "stt"
-  | EffectAnnotGhost -> "stt_ghost"
+  | EffectAnnotGhost { opens } -> sprintf "stt_ghost %s" (term_to_string opens)
   | EffectAnnotAtomic { opens } -> sprintf "stt_atomic %s" (term_to_string opens)
-  
+  | EffectAnnotAtomicOrGhost { opens } -> sprintf "stt_atomic_or_ghost %s" (term_to_string opens)  
+
 let comp_to_string (c:comp)
   : T.Tac string
   = match c with
@@ -206,9 +204,10 @@ let comp_to_string (c:comp)
               (term_to_string s.pre)
               (term_to_string s.post)
 
-    | C_STGhost s ->
-      sprintf "stt_ghost %s (requires\n%s) (ensures\n%s)"
+    | C_STGhost inames s ->
+      sprintf "stt_ghost %s %s (requires\n%s) (ensures\n%s)"
               (term_to_string s.res)
+              (term_to_string inames)
               (term_to_string s.pre)
               (term_to_string s.post)
 
@@ -392,10 +391,11 @@ let rec st_term_to_string' (level:string) (t:st_term)
         (st_term_to_string' level body)
         (match returns_inv with
          | None -> ""
-         | Some (b, t) ->
-          sprintf "\nreturns %s\nensures %s"
+         | Some (b, t, is) ->
+          sprintf "\nreturns %s\nensures %s\nopens %s"
             (binder_to_string b)
-            (term_to_string t))
+            (term_to_string t)
+            (term_to_string is))
 
 and branches_to_string brs : T.Tac _ =
   match brs with
@@ -438,8 +438,7 @@ let tag_of_term (t:term) =
   | Tm_Inames -> "Tm_Inames"
   | Tm_EmpInames -> "Tm_EmpInames"
   | Tm_Unknown -> "Tm_Unknown"
-  | Tm_AddInv _ _ -> "Tm_AddInv"
-  | Tm_Inv _ -> "Tm_Inv"
+  | Tm_Inv _ _ -> "Tm_Inv"
   | Tm_FStar _ -> "Tm_FStar"
 
 let tag_of_st_term (t:st_term) =
@@ -470,7 +469,7 @@ let tag_of_comp (c:comp) : T.Tac string =
   | C_ST _ -> "ST"
   | C_STAtomic i obs _ ->
     Printf.sprintf "%s %s" (observability_to_string obs) (term_to_string i)
-  | C_STGhost _ ->
+  | C_STGhost _ _ ->
     "Ghost" 
     
 let rec print_st_head (t:st_term)

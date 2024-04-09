@@ -30,7 +30,7 @@ val done     : thread -> vprop (* i.e. reapable/zombie *)
 val fork 
   (#pre #post : vprop)
   (f : unit -> stt unit pre (fun () -> post))
-  : stt thread pre (fun th -> joinable th ** pledge [] (done th) post)
+  : stt thread pre (fun th -> joinable th ** pledge emp_inames (done th) post)
 
 val join
   (th : thread)

@@ -32,6 +32,8 @@ let pts_to
     ([@@@equate_by_smt] v:a)
   = H.pts_to r #p (U.raise_val v)
 
+let pts_to_is_small r p x = H.pts_to_is_small r p (U.raise_val x)
+
 ```pulse
 ghost
 fn alloc' (#a:Type u#0) (v:a)

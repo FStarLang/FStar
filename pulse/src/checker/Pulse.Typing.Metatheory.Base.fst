@@ -34,8 +34,8 @@ let admit_comp_typing (g:env) (c:comp_st)
       CT_ST g st (admit_st_comp_typing g st)
     | C_STAtomic inames obs st ->
       CT_STAtomic g inames obs st (admit()) (admit_st_comp_typing g st)
-    | C_STGhost st ->
-      CT_STGhost g st (admit_st_comp_typing g st)      
+    | C_STGhost inames st ->
+      CT_STGhost g inames st (admit ()) (admit_st_comp_typing g st)      
 
 let st_typing_correctness_ctot (#g:env) (#t:st_term) (#c:comp{C_Tot? c}) 
                                (_:st_typing g t c)
@@ -58,10 +58,10 @@ let emp_inames_typing (g:env) : tot_typing g tm_emp_inames tm_inames = RU.magic(
 
 let comp_typing_inversion #g #c ct = 
   match ct with
-  | CT_ST _ _ st
-  | CT_STGhost _ _ st -> st, emp_inames_typing g
+  | CT_ST _ _ st -> st, emp_inames_typing g
+  | CT_STGhost _ _ _ it st
   | CT_STAtomic _ _ _ _ it st -> st, it
- 
+
 let st_comp_typing_inversion_cofinite (#g:env) (#st:_) (ct:st_comp_typing g st) = 
   admit(), admit(), (fun _ -> admit())
 
@@ -156,6 +156,9 @@ let rec st_sub_weakening (g:env) (g':env { disjoint g g' })
     STS_Refl _ _
   | STS_Trans _ _ _ _ dl dr ->
     STS_Trans _ _ _ _ (st_sub_weakening g g' dl g1) (st_sub_weakening g g' dr g1)
+  | STS_GhostInvs _ stc is1 is2 tok ->
+    let tok : prop_validity g'' (tm_inames_subset is1 is2) = prop_validity_token_weakening tok g'' in
+    STS_GhostInvs g'' stc is1 is2 tok
   | STS_AtomicInvs _ stc is1 is2 o1 o2 tok ->
     let tok : prop_validity g'' (tm_inames_subset is1 is2) = prop_validity_token_weakening tok g'' in
     STS_AtomicInvs g'' stc is1 is2 o1 o2 tok
@@ -179,8 +182,8 @@ let comp_typing_weakening (g:env) (g':env { disjoint g g' })
   | CT_ST _ _ d -> CT_ST _ _ (st_comp_typing_weakening g g' d g1)
   | CT_STAtomic _ inames obs _ _ d ->
     CT_STAtomic _ inames obs _ (RU.magic ()) (st_comp_typing_weakening g g' d g1)
-  | CT_STGhost _ _ d ->
-    CT_STGhost _ _ (st_comp_typing_weakening g g' d g1)
+  | CT_STGhost _ inames _ _ d ->
+    CT_STGhost _ inames _ (RU.magic ()) (st_comp_typing_weakening g g' d g1)
 
 #push-options "--split_queries no --z3rlimit_factor 8 --fuel 1 --ifuel 1"
 let rec st_typing_weakening g g' t c d g1
@@ -427,12 +430,11 @@ let rec st_typing_weakening g g' t c d g1
   | T_Unreachable _ s c d_s tok ->
     T_Unreachable _ s c (st_comp_typing_weakening g g' d_s g1) (RU.magic())//weaken tok
 
-  | T_WithInv  _ _ _ p_typing inv_typing _ _ body_typing tok ->
-    T_WithInv _ _ _ (tot_typing_weakening g g' _ _ p_typing g1)
-                    (tot_typing_weakening g g' _ _ inv_typing g1)
-                    _ _
-                    (st_typing_weakening g g' _ _ body_typing g1)
-                    (prop_validity_token_weakening tok _)
+  | T_WithInv  _ _ _ _ _ i_typing p_typing body_typing tok ->
+    T_WithInv _ _ _ _ _ (tot_typing_weakening g g' _ _ i_typing g1)
+                        (tot_typing_weakening g g' _ _ p_typing g1)
+                        (st_typing_weakening g g' _ _ body_typing g1)
+                        (prop_validity_token_weakening tok _)
 #pop-options
 
 #push-options "--admit_smt_queries true"
@@ -553,9 +555,9 @@ let comp_typing_subst (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (sin
   | CT_ST _ s d_s ->
     CT_ST _ (subst_st_comp s (nt x e)) (st_comp_typing_subst g x t g' e_typing d_s)
   | CT_STAtomic _ inames obs s _ d_s ->
-    CT_STAtomic _ inames obs (subst_st_comp s (nt x e)) (RU.magic ()) (st_comp_typing_subst g x t g' e_typing d_s)
-  | CT_STGhost _ _ d_s ->
-    CT_STGhost _ _ (st_comp_typing_subst g x t g' e_typing d_s)
+    CT_STAtomic _ (subst_term inames (nt x e)) obs (subst_st_comp s (nt x e)) (RU.magic ()) (st_comp_typing_subst g x t g' e_typing d_s)
+  | CT_STGhost _ inames s _ d_s ->
+    CT_STGhost _ (subst_term inames (nt x e)) (subst_st_comp s (nt x e)) (RU.magic ()) (st_comp_typing_subst g x t g' e_typing d_s)
   
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b { y == x } = x

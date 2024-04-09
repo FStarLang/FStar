@@ -35,8 +35,6 @@ let readback_observability (t:R.term)
     let fv_lid = inspect_fv fv in
     if fv_lid = observable_lid
     then Some Observable
-    else if fv_lid = unobservable_lid
-    then Some Unobservable
     else if fv_lid = neutral_lid
     then Some Neutral
     else None
@@ -96,17 +94,18 @@ let try_readback_st_comp (t:R.term)
          | _ -> None
     else if fv_lid = stt_ghost_lid
     then match args with
-         | [res; pre; post] ->
+         | [res; inames; pre; post] ->
            (match inspect_ln (fst post) with
             | Tv_Abs b body ->
               let { qual=aq; attrs=attrs }
                   = inspect_binder b
               in    
               let res' = fst res in
+              let inames' = fst inames in
               let pre' = fst pre in
               let post' = body in
-              assume (t == mk_stt_ghost_comp u (fst res) (fst pre) (mk_abs (fst res) R.Q_Explicit body));
-              let c = C_STGhost ({u; res=res'; pre=pre';post=post'}) in
+              assume (t == mk_stt_ghost_comp u (fst res) inames' (fst pre) (mk_abs (fst res) R.Q_Explicit body));
+              let c = C_STGhost inames' ({u; res=res'; pre=pre';post=post'}) in
               Some (c <: c:Pulse.Syntax.Base.comp { elab_comp c == t })
             | _ -> None)
          | _ -> None    

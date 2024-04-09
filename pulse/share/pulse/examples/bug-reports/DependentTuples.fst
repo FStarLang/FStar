@@ -15,17 +15,25 @@
 *)
 
 module DependentTuples
+
 open Pulse.Lib.Pervasives
-open Pulse.Lib.Reference
-open Pulse.Lib.SpinLock
+
+//
+// The locks are no longer indexed by vprops
+// Would need another instance of this problem
+//
 
 let exists_n (r:ref nat) : vprop = exists* n. pts_to r n
 
-type tup_t = r:ref nat & lock (exists_n r)
-let mk_tup r lk : tup_t = (| r, lk |)
+assume val t (v:vprop) : Type0
+
+type tup_t = r:ref nat & t (exists_n r)
+let mk_tup r x : tup_t = (| r, x |)
 
 assume
 val global_tup : tup_t
+
+assume val get_v #v (l:t v) : stt unit emp (fun _ -> v)
 
 #set-options "--print_implicits"
 
@@ -35,7 +43,7 @@ fn tuple ()
   requires emp
   ensures emp
 {
-  acquire global_tup._2;
+  get_v global_tup._2;
   assert (exists_n global_tup._1);
   unfold exists_n global_tup._1;  // this unfold affects the type of the dependent 
                                   // tuple, so we lost syntactic equality and the 
@@ -50,7 +58,7 @@ fn tuple ()
 noeq
 type rec_t = 
 { r:ref nat;
-  lk:lock (exists_n r); }
+  lk:t (exists_n r); }
 
 assume
 val global_rec : rec_t
@@ -60,7 +68,7 @@ fn record ()
   requires emp
   ensures emp
 {
-  acquire global_rec.lk;
+  get_v global_rec.lk;
   assert (exists_n global_rec.r);
   unfold exists_n global_rec.r;
   assert (exists* n. pts_to global_rec.r n);

@@ -25,38 +25,51 @@ module B = Pulse.Lib.Box
 open Pulse.Main
 
 noeq
-type mutex (#a:Type0) (p:a -> vprop) : Type0 = {
+type mutex (a:Type0) : Type0 = {
   r:B.box a;
-  l:lock (exists* v. B.pts_to r v ** p v)
+  l:lock;
 }
 
+let lock_inv (#a:Type0) (r:B.box a) (v:a -> vprop)
+  : (w:vprop { (forall x. is_big (v x)) ==> is_big w }) =
+  exists* x. B.pts_to r x ** v x
+
+let mutex_live #a m #p v = lock_alive m.l #p (lock_inv m.r v)
+
 ```pulse
-fn new_mutex' (#a:Type0) (p:a -> vprop) (x:a)
-  requires p x
-  returns m:mutex p
-  ensures emp
+fn new_mutex' (#a:Type0) (v:a -> vprop { forall x. is_big (v x) }) (x:a)
+  requires v x
+  returns m:mutex a
+  ensures mutex_live m v
 {
   let r = B.alloc x;
-  let l = new_lock (exists* v. B.pts_to r v ** p v);
-  let m = {r; l};
+  fold (lock_inv r v);
+  let l = new_lock (lock_inv r v);
+  let m = {r;l};
+  rewrite (lock_alive l (lock_inv r v)) as
+          (lock_alive m.l (lock_inv m.r v));
+  fold (mutex_live m v);
   m
 }
 ```
 
 let new_mutex = new_mutex'
 
-let belongs_to_mutex (#a:Type0) (#p:a -> vprop) (r:ref a) (m:mutex p) : vprop =
-  pure (r == B.box_to_ref m.r)
+let belongs_to_mutex (#a:Type0) (r:ref a) (m:mutex a) : vprop =
+  pure (r == B.box_to_ref m.r) ** lock_acquired m.l
 
 ```pulse
-fn lock' (#a:Type0) (#p:a -> vprop) (m:mutex p)
-  requires emp
+fn lock' (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a)
+  requires mutex_live m #p v
   returns r:ref a
-  ensures r `belongs_to_mutex` m ** (exists* v. pts_to r v ** p v)
+  ensures mutex_live m #p v ** r `belongs_to_mutex` m ** (exists* x. pts_to r x ** v x)
 {
+  unfold (mutex_live m#p v);
   acquire m.l;
-  B.to_ref_pts_to m.r;
+  unfold lock_inv;
   fold (belongs_to_mutex (B.box_to_ref m.r) m);
+  fold (mutex_live m #p v);
+  B.to_ref_pts_to m.r;
   B.box_to_ref m.r
 } 
 ```
@@ -64,15 +77,48 @@ fn lock' (#a:Type0) (#p:a -> vprop) (m:mutex p)
 let lock = lock'
 
 ```pulse
-fn unlock' (#a:Type0) (#p:a -> vprop) (m:mutex p) (r:ref a)
-  requires r `belongs_to_mutex` m ** (exists* v. pts_to r v ** p v)
-  ensures emp
+fn unlock' (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a) (r:ref a)
+  requires mutex_live m #p v ** r `belongs_to_mutex` m ** (exists* x. pts_to r x ** v x)
+  ensures mutex_live m #p v
 {
-  unfold (belongs_to_mutex r m);
-  with v. rewrite (pts_to r v) as (pts_to (B.box_to_ref m.r) v);
+  unfold (mutex_live m #p v);
+  unfold (r `belongs_to_mutex` m);
+  with x. rewrite (pts_to r x) as (pts_to (B.box_to_ref m.r) x);
   B.to_box_pts_to m.r;
+  fold lock_inv;
   release m.l;
+  fold (mutex_live m #p v)
 }
 ```
 
 let unlock = unlock'
+
+```pulse
+ghost
+fn share_aux (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a)
+  requires mutex_live m #p v
+  ensures mutex_live m #(half_perm p) v ** mutex_live m #(half_perm p) v
+{
+  unfold (mutex_live m #p v);
+  Pulse.Lib.SpinLock.share m.l;
+  fold (mutex_live m #(half_perm p) v);
+  fold (mutex_live m #(half_perm p) v);
+}
+```
+
+let share = share_aux
+
+```pulse
+ghost
+fn gather_aux (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a)
+  requires mutex_live m #(half_perm p) v ** mutex_live m #(half_perm p) v
+  ensures mutex_live m #p v
+{
+  unfold (mutex_live m #(half_perm p) v);
+  unfold (mutex_live m #(half_perm p) v);
+  Pulse.Lib.SpinLock.gather m.l;
+  fold (mutex_live m #p v)
+}
+```
+
+let gather = gather_aux

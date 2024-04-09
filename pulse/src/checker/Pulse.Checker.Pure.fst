@@ -447,8 +447,8 @@ let non_informative_class_typing
 To do so, we simply create that constraint (and prove it's well-typed), and then
 call the tcresolve typeclass resolution tactic on it to obtain a dictionary and
 a proof of typing for the dictionary. *)
-let try_get_non_informative_witness g u ty ty_typing
-  : T.Tac (option (non_informative_t g u ty))
+let try_get_non_informative_witness_aux (g:env) (u:universe) (ty:term) (ty_typing:universe_of g ty u)
+  : T.Tac (option (non_informative_t g u ty) & issues)
   = let goal = non_informative_class u ty in
     let r_goal = elab_term goal in
     let r_env = elab_env g in
@@ -459,9 +459,8 @@ let try_get_non_informative_witness g u ty ty_typing
     let r = T.call_subtac r_env FStar.Tactics.Typeclasses.tcresolve u r_goal in
     match r with
     | None, issues ->
-      T.log_issues issues;
-      None
-    | Some r_dict, _ -> (
+      None, issues
+    | Some r_dict, issues -> (
       // T.print (Printf.sprintf "Resolved to %s" (T.term_to_string r_dict));
       assert (typing_token r_env r_dict (E_Total, r_goal));
       assume (~(Tv_Unknown? (inspect_ln r_dict)));
@@ -469,19 +468,26 @@ let try_get_non_informative_witness g u ty ty_typing
       let r_dict_typing_token : squash (typing_token r_env r_dict (E_Total, r_goal)) = () in
       let r_dict_typing : RT.typing r_env r_dict (E_Total, r_goal) = RT.T_Token _ _ _ () in
       let dict_typing : tot_typing g dict (non_informative_class u ty) = E r_dict_typing in
-      Some (| dict, dict_typing |)
+      Some (| dict, dict_typing |), issues
     )
+
+let try_get_non_informative_witness g u ty ty_typing =
+  let ropt, _ = try_get_non_informative_witness_aux g u ty ty_typing in
+  ropt
 
 let get_non_informative_witness g u t t_typing
   : T.Tac (non_informative_t g u t)
-  = match try_get_non_informative_witness g u t t_typing with
-    | None ->
+  = match try_get_non_informative_witness_aux g u t t_typing with
+    | None, issues ->
+      T.log_issues issues;
       let open Pulse.PP in
       fail_doc g (Some (RU.range_of_term t)) [
         text "Expected a term with a non-informative (e.g., erased) type; got"
           ^/^ pp t
       ]
-    | Some e -> e
+    | Some e, issues ->
+      T.log_issues issues;
+      e
 
 let try_check_prop_validity (g:env) (p:term) (_:tot_typing g p tm_prop)
   : T.Tac (option (Pulse.Typing.prop_validity g p))

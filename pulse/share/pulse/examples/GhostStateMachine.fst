@@ -72,11 +72,14 @@ noeq
 type locked_state_t = 
 { h:handle_t; 
   ph:pure_handle_t; 
-  lk:lock (exists* s ps. 
-          handle_has_state h s **
-          pure_handle_has_state ph ps **
-          pure (states_correspond s ps));}
+  lk:lock }
 let mk_locked_st h ph lk = {h; ph; lk;}
+
+let lock_inv (h:handle_t) (ph:pure_handle_t) : v:vprop { is_big v } =
+  exists* s ps. 
+  handle_has_state h s **
+  pure_handle_has_state ph ps **
+  pure (states_correspond s ps)
 
 assume
 val some_payload : payload_t
@@ -86,13 +89,13 @@ val some_payload : payload_t
 // TODO: init establishes the global state, so we cannot reference global state
 // before this function. the next and close signatures reference the global state,
 // so we can't include the API before the implementation of init
-val init () : stt locked_state_t emp (fun st -> pure_handle_has_state st.ph Init)
+// val init () : stt locked_state_t emp (fun st -> pure_handle_has_state st.ph Init)
 
 ```pulse
-fn init' ()
+fn init ()
   requires emp
   returns st:locked_state_t
-  ensures pure_handle_has_state st.ph Init
+  ensures pure_handle_has_state st.ph Init ** lock_alive st.lk #full_perm (lock_inv st.h st.ph)
 {
   let ph = alloc Init;
   let h = alloc CInit;
@@ -102,30 +105,32 @@ fn init' ()
   fold pure_handle_has_state ph Init;
   fold handle_has_state h CInit;
 
-  let lk = new_lock (exists* s ps.
-                        handle_has_state h s **
-                        pure_handle_has_state ph ps **
-                        pure (states_correspond s ps));
+  fold (lock_inv h ph);
+  let lk = new_lock (lock_inv h ph);
 
   let locked_st = mk_locked_st h ph lk;
   rewrite (pure_handle_has_state ph Init)
        as (pure_handle_has_state locked_st.ph Init);
 
+  rewrite (lock_alive lk #full_perm (lock_inv h ph)) as
+          (lock_alive locked_st.lk (lock_inv locked_st.h locked_st.ph));
+
   locked_st
 }
 ```
-let init = init'
 
-let global_locked_state : locked_state_t = run_stt (init' ())
-
-val next () : stt unit (pure_handle_has_state global_locked_state.ph Init) (fun st -> pure_handle_has_state global_locked_state.ph Next)
+let global_locked_state : locked_state_t = run_stt (init ())
 
 ```pulse
-fn next' ()
-  requires pure_handle_has_state global_locked_state.ph Init
-  ensures pure_handle_has_state global_locked_state.ph Next
+fn next ()
+  requires pure_handle_has_state global_locked_state.ph Init **
+           lock_alive global_locked_state.lk #full_perm (lock_inv global_locked_state.h global_locked_state.ph)
+  ensures pure_handle_has_state global_locked_state.ph Next **
+          lock_alive global_locked_state.lk #full_perm (lock_inv global_locked_state.h global_locked_state.ph)
+
 {
   acquire global_locked_state.lk;
+  unfold (lock_inv global_locked_state.h global_locked_state.ph);
   with s. assert (handle_has_state global_locked_state.h s);
   with ps. assert (pure_handle_has_state global_locked_state.ph ps);
   unfold handle_has_state global_locked_state.h s;
@@ -146,19 +151,21 @@ fn next' ()
   fold pure_handle_has_state global_locked_state.ph Next;
   fold handle_has_state global_locked_state.h st;
 
+  fold (lock_inv global_locked_state.h global_locked_state.ph);
   release global_locked_state.lk;
 }
 ```
-let next = next'
-
-val close () : stt unit (pure_handle_has_state global_locked_state.ph Next) (fun st -> pure_handle_has_state global_locked_state.ph Final)
 
 ```pulse
-fn close' ()
-  requires pure_handle_has_state global_locked_state.ph Next
-  ensures pure_handle_has_state global_locked_state.ph Final
+fn close ()
+  requires pure_handle_has_state global_locked_state.ph Next **
+           lock_alive global_locked_state.lk #full_perm (lock_inv global_locked_state.h global_locked_state.ph)
+  ensures pure_handle_has_state global_locked_state.ph Final **
+          lock_alive global_locked_state.lk #full_perm (lock_inv global_locked_state.h global_locked_state.ph)
+
 {
   acquire global_locked_state.lk;
+  unfold (lock_inv global_locked_state.h global_locked_state.ph);
   with s. assert (handle_has_state global_locked_state.h s);
   with ps. assert (pure_handle_has_state global_locked_state.ph ps);
   unfold handle_has_state global_locked_state.h s;
@@ -179,7 +186,7 @@ fn close' ()
   fold pure_handle_has_state global_locked_state.ph Final;
   fold handle_has_state global_locked_state.h st;
 
+  fold (lock_inv global_locked_state.h global_locked_state.ph);
   release global_locked_state.lk;
 }
 ```
-let close = close'

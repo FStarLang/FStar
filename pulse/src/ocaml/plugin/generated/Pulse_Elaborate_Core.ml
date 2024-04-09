@@ -108,10 +108,11 @@ let (elab_bind :
                            FStar_Reflection_V2_Data.Q_Explicit
                            (Pulse_Elaborate_Pure.elab_term
                               (Pulse_Syntax_Base.comp_post c2))) e1 e2
-                  | Pulse_Syntax_Base.C_STGhost uu___ ->
+                  | Pulse_Syntax_Base.C_STGhost (inames, uu___) ->
                       Pulse_Reflection_Util.mk_bind_ghost
                         (Pulse_Syntax_Base.comp_u c1)
                         (Pulse_Syntax_Base.comp_u c2) t1 t2
+                        (Pulse_Elaborate_Pure.elab_term inames)
                         (Pulse_Elaborate_Pure.elab_term
                            (Pulse_Syntax_Base.comp_pre c1))
                         (Pulse_Reflection_Util.mk_abs t1

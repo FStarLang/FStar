@@ -39,8 +39,8 @@ let freevars_st_comp (s:st_comp) : Set.set var =
 let freevars_comp (c:comp) : Tot (Set.set var) (decreases c) =
   match c with
   | C_Tot t -> freevars t
-  | C_ST s
-  | C_STGhost s -> freevars_st_comp s
+  | C_ST s -> freevars_st_comp s
+  | C_STGhost inames s
   | C_STAtomic inames _ s ->
     freevars inames `Set.union` freevars_st_comp s
 
@@ -155,9 +155,10 @@ let rec freevars_st (t:st_term)
     | Tm_WithInv { name; body; returns_inv } ->
       Set.union (Set.union (freevars name) (freevars_st body))
                 (freevars_opt 
-                  (fun (b, r) ->
+                  (fun (b, r, is) ->
                     (Set.union (freevars b.binder_ty) 
-                               (freevars r)))
+                               (Set.union (freevars r)
+                                          (freevars is))))
                   returns_inv)
 
 and freevars_branches (t:list (pattern & st_term)) : Set.set var =
@@ -178,8 +179,8 @@ let ln_c' (c:comp) (i:int)
   : bool
   = match c with
     | C_Tot t -> ln' t i
-    | C_ST s
-    | C_STGhost s -> ln_st_comp s i
+    | C_ST s -> ln_st_comp s i
+    | C_STGhost inames s
     | C_STAtomic inames _ s ->
       ln' inames i &&
       ln_st_comp s i
@@ -345,9 +346,10 @@ let rec ln_st' (t:st_term) (i:int)
       ln' name i &&
       ln_st' body i &&
       ln_opt'
-        (fun (b, r) i ->
+        (fun (b, r, is) i ->
           ln' b.binder_ty i &&
-          ln' r (i + 1))
+          ln' r (i + 1) &&
+          ln' is i)
         returns_inv i
 
 and ln_branch' (b : pattern & st_term) (i:int) : Tot bool (decreases b) =
@@ -416,8 +418,8 @@ let subst_comp (c:comp) (ss:subst)
       C_STAtomic (subst_term inames ss) obs
                  (subst_st_comp s ss)
 
-    | C_STGhost s ->
-      C_STGhost (subst_st_comp s ss)
+    | C_STGhost inames s ->
+      C_STGhost (subst_term inames ss) (subst_st_comp s ss)
 
 let open_comp' (c:comp) (v:term) (i:index) : comp =
   subst_comp c [ DT i v ]
@@ -612,9 +614,10 @@ let rec subst_st_term (t:st_term) (ss:subst)
       let returns_inv =
         match returns_inv with
         | None -> None
-        | Some (b, r) ->
+        | Some (b, r, is) ->
           Some (subst_binder b ss, 
-                subst_term r (shift_subst ss))
+                subst_term r (shift_subst ss),
+                subst_term is ss)
       in
       Tm_WithInv { name; body; returns_inv }
 

@@ -67,7 +67,7 @@ let mk_fn_decl q id is_rec bs body range =
 
 /* pulse specific tokens; rest are inherited from F* */
 %token MUT FN INVARIANT WHILE REF PARALLEL REWRITE FOLD EACH
-%token GHOST ATOMIC UNOBSERVABLE
+%token GHOST ATOMIC
 %token WITH_INVS OPENS  SHOW_PROOF_STATE
 
 %start pulseDecl
@@ -90,7 +90,6 @@ peekFnId:
 qual:
   | GHOST { PulseSyntaxExtension_Sugar.STGhost }
   | ATOMIC { PulseSyntaxExtension_Sugar.STAtomic }
-  | UNOBSERVABLE { PulseSyntaxExtension_Sugar.STUnobservable }
 
 /* This is the main entry point for the pulse parser */
 pulseDecl:
@@ -236,8 +235,8 @@ withBindersOpt:
   | { [] }
 
 ensuresVprop:
-  | ret=option(RETURNS i=lidentOrUnderscore COLON r=term { (i, r) }) ENSURES s=pulseVprop
-    { ret, s }
+  | ret=option(RETURNS i=lidentOrUnderscore COLON r=term { (i, r) }) ENSURES s=pulseVprop maybe_opens=option(OPENS inv=appTermNoRecordExp { inv })
+    { ret, s, maybe_opens }
 
 pulseMatchBranch:
   | pat=pulsePattern RARROW LBRACE e=pulseStmt RBRACE

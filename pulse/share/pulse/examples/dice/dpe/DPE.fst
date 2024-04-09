@@ -159,16 +159,17 @@ assume val sid_hash : sid_t -> SZ.t  // TODO
 ```pulse
 fn initialize_global_state ()
   requires emp
-  returns m:mutex global_state_mutex_pred
-  ensures emp
+  returns m:mutex (option global_state_t)
+  ensures mutex_live m global_state_mutex_pred
 {
   let res = None #global_state_t;
   rewrite emp as (global_state_mutex_pred res);
+  assume_ (pure (forall st. is_big (global_state_mutex_pred st)));
   new_mutex global_state_mutex_pred res
 }
 ```
 
-let global_state : mutex global_state_mutex_pred = run_stt (initialize_global_state ())
+let global_state : mutex (option global_state_t) = run_stt (initialize_global_state ())
 
 ```pulse
 fn mk_global_state ()
@@ -437,9 +438,9 @@ fn open_session_aux (st:global_state_t)
 
 ```pulse
 fn open_session ()
-  requires emp
+  requires mutex_live global_state global_state_mutex_pred
   returns _:option sid_t
-  ensures emp
+  ensures mutex_live global_state global_state_mutex_pred
 {
   let r = lock global_state;
   let st_opt = R.replace r None;
@@ -546,16 +547,18 @@ fn take_session_state_aux #stm #sid v
 #push-options "--z3rlimit_factor 2"
 ```pulse
 fn take_session_state (sid:sid_t) (replace_with:session_state)
-   requires session_state_perm replace_with
+   requires mutex_live global_state global_state_mutex_pred **
+            session_state_perm replace_with
    returns r:option session_state
-   ensures session_state_perm (dflt r replace_with)
+   ensures mutex_live global_state global_state_mutex_pred **
+           session_state_perm (dflt r replace_with)
   {
     let r = lock global_state;
     let st_opt = R.replace r None;
 
     match st_opt {
       None -> {
-        unlock global_state r;
+        unlock #_ #global_state_mutex_pred global_state r;
         None #session_state
       }
       Some st -> {
@@ -660,9 +663,9 @@ fn take_session_state (sid:sid_t) (replace_with:session_state)
 *)
 ```pulse
 fn destroy_context (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
-  requires emp
+  requires mutex_live global_state global_state_mutex_pred
   returns b:bool
-  ensures emp
+  ensures mutex_live global_state global_state_mutex_pred
 {
   rewrite emp as (session_state_perm InUse);
   let st = take_session_state sid InUse;
@@ -744,9 +747,9 @@ fn destroy_session_state (st:session_state)
 *)
 ```pulse
 fn close_session (sid:sid_t)
-  requires emp
+  requires mutex_live global_state global_state_mutex_pred
   returns b:bool
-  ensures emp
+  ensures mutex_live global_state global_state_mutex_pred
 {
   rewrite emp as (session_state_perm InUse);
   let st = take_session_state sid InUse;
@@ -962,9 +965,11 @@ fn initialize_context
   (#p:perm) (#uds_bytes:Ghost.erased (Seq.seq U8.t))
   (sid:sid_t) (uds:A.larray U8.t (SZ.v uds_len)) 
                        
-  requires A.pts_to uds #p uds_bytes
+  requires mutex_live global_state global_state_mutex_pred **
+           A.pts_to uds #p uds_bytes
   returns _:option ctxt_hndl_t
-  ensures A.pts_to uds #p uds_bytes
+  ensures mutex_live global_state global_state_mutex_pred **
+          A.pts_to uds #p uds_bytes
 {
   rewrite emp as (session_state_perm InUse);
   let st = take_session_state sid InUse;
@@ -1012,9 +1017,9 @@ fn initialize_context
 *)
 ```pulse
 fn rotate_context_handle (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
-  requires emp
+  requires mutex_live global_state global_state_mutex_pred
   returns _:option ctxt_hndl_t
-  ensures emp
+  ensures mutex_live global_state global_state_mutex_pred
 {
   rewrite emp as (session_state_perm InUse);
   let st = take_session_state sid InUse;
@@ -1303,9 +1308,11 @@ fn derive_child_from_context
 ```pulse
 fn derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t)
                 (#repr:erased repr_t) (#p:perm)
-  requires record_perm record p repr
+  requires mutex_live global_state global_state_mutex_pred **
+           record_perm record p repr
   returns res:(record_t & option ctxt_hndl_t)
-  ensures record_perm (fst res) p repr
+  ensures mutex_live global_state global_state_mutex_pred **
+          record_perm (fst res) p repr
 {
   rewrite emp as (session_state_perm InUse);
   let st = take_session_state sid InUse;

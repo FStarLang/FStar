@@ -51,12 +51,11 @@ let freevars_close_comp (c:comp)
     | C_Tot t ->
       freevars_close_term' t x i
 
-    | C_ST s
-    | C_STGhost s ->    
+    | C_ST s ->
       freevars_close_term' s.res x i;
       freevars_close_term' s.pre x i;      
       freevars_close_term' s.post x (i + 1)
-
+    | C_STGhost n s
     | C_STAtomic n _ s ->
       freevars_close_term' n x i;    
       freevars_close_term' s.res x i;
@@ -216,9 +215,10 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_st_term' body x i;
       match returns_inv with
       | None -> ()
-      | Some (b, r) ->
+      | Some (b, r, is) ->
         freevars_close_term' b.binder_ty x i;
-        freevars_close_term' r x (i + 1)
+        freevars_close_term' r x (i + 1);
+        freevars_close_term' is x i
 #pop-options
 
 let freevars_close_term (e:term) (x:var) (i:index)
@@ -366,6 +366,7 @@ let rec st_sub_freevars #g (#c1 #c2:_)
   | STS_Trans _ _ _ _ d1 d2 ->
     st_sub_freevars d1;
     st_sub_freevars d2
+  | STS_GhostInvs _ _ is1 is2 tok
   | STS_AtomicInvs _ _ is1 is2 _ _ tok ->
     assume (freevars is2 `Set.subset` freevars (tm_inames_subset is1 is2));
     prop_validity_fv g (tm_inames_subset is1 is2)
@@ -397,11 +398,9 @@ let comp_typing_freevars  (#g:_) (#c:_) (#u:_)
     | CT_ST _ _ dst -> 
       st_comp_typing_freevars dst
 
+    | CT_STGhost _ _ _ it dst
     | CT_STAtomic _ _ _ _ it dst -> 
       tot_or_ghost_typing_freevars it;
-      st_comp_typing_freevars dst
-
-    | CT_STGhost _ _ dst -> 
       st_comp_typing_freevars dst
 
 let freevars_open_st_term_inv (e:st_term) 

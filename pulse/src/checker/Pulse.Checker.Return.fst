@@ -132,7 +132,10 @@ let check_core
     let (| _, c, _ |) = dd in
     Printf.sprintf "Return comp is: %s"
       (Pulse.Syntax.Printer.comp_to_string c));
-  prove_post_hint #g (try_frame_pre #g ctxt_typing dd res_ppname) post_hint (Pulse.RuntimeUtils.range_of_term t)
+  prove_post_hint #g
+    (try_frame_pre #g ctxt_typing dd res_ppname)
+    post_hint
+    (Pulse.RuntimeUtils.range_of_term t)
 #pop-options
 
 let check
@@ -152,7 +155,11 @@ let check
     | None -> (
       match post_hint with
       | Some p -> (
-        check_core g ctxt ctxt_typing post_hint res_ppname st (Some <| ctag_of_effect_annot p.effect_annot)
+        let ctag =
+          match ctag_of_effect_annot p.effect_annot with
+          | Some c -> c
+          | None -> STT_Atomic in
+        check_core g ctxt ctxt_typing post_hint res_ppname st (Some ctag)
         
       )
       | _ ->  check_core g ctxt ctxt_typing post_hint res_ppname st None

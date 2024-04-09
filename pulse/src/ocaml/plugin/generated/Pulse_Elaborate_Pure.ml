@@ -28,11 +28,6 @@ let (elab_observability :
           (FStar_Reflection_V2_Data.Tv_FVar
              (FStar_Reflection_V2_Builtins.pack_fv
                 Pulse_Reflection_Util.neutral_lid))
-    | Pulse_Syntax_Base.Unobservable ->
-        FStar_Reflection_V2_Builtins.pack_ln
-          (FStar_Reflection_V2_Data.Tv_FVar
-             (FStar_Reflection_V2_Builtins.pack_fv
-                Pulse_Reflection_Util.unobservable_lid))
     | Pulse_Syntax_Base.Observable ->
         FStar_Reflection_V2_Builtins.pack_ln
           (FStar_Reflection_V2_Data.Tv_FVar
@@ -100,11 +95,12 @@ let (elab_comp : Pulse_Syntax_Base.comp -> FStar_Reflection_Types.term) =
                  FStar_Reflection_V2_Data.Q_Explicit post in
              Pulse_Reflection_Util.mk_stt_atomic_comp
                (elab_observability obs) u res inames1 pre post1)
-    | Pulse_Syntax_Base.C_STGhost c1 ->
+    | Pulse_Syntax_Base.C_STGhost (inames, c1) ->
+        let inames1 = elab_term inames in
         let uu___ = elab_st_comp c1 in
         (match uu___ with
          | (u, res, pre, post) ->
-             Pulse_Reflection_Util.mk_stt_ghost_comp u res pre
+             Pulse_Reflection_Util.mk_stt_ghost_comp u res inames1 pre
                (Pulse_Reflection_Util.mk_abs res
                   FStar_Reflection_V2_Data.Q_Explicit post))
 let (elab_stt_equiv :
@@ -188,10 +184,11 @@ let (elab_stghost_equiv :
             fun eq_post ->
               let uu___ = c in
               match uu___ with
-              | Pulse_Syntax_Base.C_STGhost uu___1 ->
+              | Pulse_Syntax_Base.C_STGhost (inames, uu___1) ->
                   Pulse_Reflection_Util.mk_stt_ghost_comp_equiv g
                     (Pulse_Syntax_Base.comp_u c)
-                    (elab_term (Pulse_Syntax_Base.comp_res c)) pre post
+                    (elab_term (Pulse_Syntax_Base.comp_res c))
+                    (elab_term inames) pre post
                     (elab_term (Pulse_Syntax_Base.comp_pre c))
                     (Pulse_Reflection_Util.mk_abs
                        (elab_term (Pulse_Syntax_Base.comp_res c))

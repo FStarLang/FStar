@@ -46,7 +46,10 @@ let check
     if x `Set.mem` freevars post.post
     then fail g None "Impossible: unexpected freevar clash in Tm_Unreachable, please file a bug-report"
     else
-        let ctag = ctag_of_effect_annot post.effect_annot in
+        let ctag =
+          match ctag_of_effect_annot post.effect_annot with
+          | Some c -> c
+          | None -> STT_Atomic in
         let post_typing_rec = post_hint_typing g post x in
         let post_opened = open_term_nv post.post px in              
         assume (close_term post_opened x == post.post);
@@ -63,9 +66,7 @@ let check
         else
             let ff_validity = Pulse.Checker.Pure.check_prop_validity g ff ff_typing in
             let dt = T_Unreachable g s ctag stc ff_validity in
-            prove_post_hint (try_frame_pre pre_typing (match_comp_res_with_post_hint dt post_hint) res_ppname)
-                            post_hint
-                            (Pulse.RuntimeUtils.range_of_term t)
-    
-
-  
+            prove_post_hint
+              (try_frame_pre pre_typing (match_comp_res_with_post_hint dt post_hint) res_ppname)
+              post_hint
+              (Pulse.RuntimeUtils.range_of_term t)

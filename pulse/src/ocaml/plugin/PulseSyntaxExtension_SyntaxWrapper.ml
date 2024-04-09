@@ -63,7 +63,8 @@ let tm_arrow (b:binder) (q:S.aqual) (body:comp) : term =
 let tm_expr (t:S.term) r : term = Pulse_Syntax_Pure.wr t r
 let tm_unknown r : term = wr r Tm_Unknown
 let tm_emp_inames :term = wr FStar_Range.range_0 Tm_EmpInames
-let tm_add_inv i is r : term = wr r (Tm_AddInv (i, is))
+let tm_add_inv (names:term) (n:term) r : term =
+  Pulse_RuntimeUtils.set_range (Pulse_Syntax_Pure.tm_add_inv names n) r
 
 let is_tm_exists (t:term) : bool =
   match Pulse_Syntax_Pure.inspect_term t with
@@ -83,13 +84,10 @@ let mk_comp (pre:term) (ret:binder) (post:term) : comp =
    C_ST (mk_st_comp pre ret post)
 
 let ghost_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp =
-   C_STGhost (mk_st_comp pre ret post)
+   C_STGhost (inames, mk_st_comp pre ret post)
 
 let neutral_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp =
    C_STAtomic (inames, Neutral, mk_st_comp pre ret post)
-
-let unobservable_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp =
-   C_STAtomic (inames, Unobservable, mk_st_comp pre ret post)
 
 let atomic_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp =
    C_STAtomic (inames, Observable, mk_st_comp pre ret post)
@@ -197,21 +195,21 @@ let comp_pre c =
   match c with
    | C_ST st
    | C_STAtomic (_, _, st)
-   | C_STGhost st -> st.pre
+   | C_STGhost (_, st) -> st.pre
    | _ -> Pulse_Syntax_Pure.tm_emp
 
 let comp_res c =
   match c with
    | C_ST st
    | C_STAtomic (_, _, st)
-   | C_STGhost st -> st.res
+   | C_STGhost (_, st) -> st.res
    | C_Tot t -> t
 
 let comp_post c =
   match c with
    | C_ST st
    | C_STAtomic (_, _, st)
-   | C_STGhost st -> st.post
+   | C_STGhost (_, st) -> st.post
    | _ -> Pulse_Syntax_Pure.tm_emp
 
 let print_exn (e:exn) = Printexc.to_string e

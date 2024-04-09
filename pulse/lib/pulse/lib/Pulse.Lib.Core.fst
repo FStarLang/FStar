@@ -25,16 +25,22 @@ open PulseCore.Observability
 let double_one_half () = ()
 let equate_by_smt = ()
 let vprop = slprop
-let small_vprop = small_slprop
+let big_vprop = big_slprop
 let down = down
 let up = up
+let small_vprop = small_slprop
+let down2 = down2
+let up2 = up2
+let small_is_also_big v = small_is_also_big v
 let emp = emp
 let emp_is_small = ()
 let pure = pure
 let pure_is_small p = ()
 let op_Star_Star = op_Star_Star
+let big_star p q = big_star p q
 let small_star p q = small_star p q
 let op_exists_Star = op_exists_Star
+let big_exists #a p = big_exists #a p
 let small_exists #a p = small_exists #a p
 let vprop_equiv = slprop_equiv
 let elim_vprop_equiv #p #q pf = slprop_equiv_elim p q
@@ -113,12 +119,12 @@ let join_emp is =
   Set.lemma_equal_intro (join_inames is emp_inames) (reveal is);
   Set.lemma_equal_intro (join_inames emp_inames is) (reveal is)
 
-let inv = Act.inv
-let allocated_name = Act.allocated_name
-let name_of_inv = Act.name_of_inv
-let allocated_name_of_inv = Act.allocated_name_of_inv
-let name_of_allocated_name = Act.name_of_allocated_name
-let allocated_name_of_inv_equiv #p i = ()
+let iref = Act.iref
+instance non_informative_iref = {
+  reveal = (fun r -> Ghost.reveal r) <: NonInformative.revealer iref;
+}
+let inv i p = Act.(inv i p)
+let iname_of i = Act.iname_of i
 let add_already_there i is = Set.lemma_equal_intro (add_inv is i) is
 
 ////////////////////////////////////////////////////////////////////
@@ -147,13 +153,7 @@ let sub_invs_atomic = A.sub_invs_stt_atomic
 let lift_atomic0 = A.lift_atomic0
 let lift_atomic1 = A.lift_atomic1
 let lift_atomic2 = A.lift_atomic2
-let new_invariant = A.new_invariant
-let fresh_wrt = PulseCore.Action.fresh_wrt
-let fresh_wrt_def i c = ()
-let fresh_invariant = A.fresh_invariant
-let with_invariant = A.with_invariant
-let distinct_invariants_have_distinct_names #p #q i j = A.distinct_invariants_have_distinct_names #p #q i j ()
-let invariant_name_identifies_invariant #p #q i j = A.invariant_name_identifies_invariant p q i j
+
 ////////////////////////////////////////////////////////////////////
 // Ghost computations
 ////////////////////////////////////////////////////////////////////
@@ -165,13 +165,39 @@ let lift_ghost_neutral #a #pre #post e ni_a = A.lift_ghost_neutral #a #pre #post
 let lift_neutral_ghost = A.lift_neutral_ghost
 let frame_ghost = A.frame_ghost
 let sub_ghost = A.sub_ghost
+let sub_invs_ghost = A.sub_invs_stt_ghost
+
+////////////////////////////////////////////////////////////////////
+// Invariants
+////////////////////////////////////////////////////////////////////
+let dup_inv = A.dup_inv
+let new_invariant = A.new_invariant
+let fresh_wrt = PulseCore.Action.fresh_wrt
+let fresh_wrt_def i c = ()
+let all_live = Act.all_live
+let all_live_nil () = ()
+
+let live_eq (i:iref)
+  : Lemma (Act.live i == (exists* (p:vprop). inv i p)) =
+  calc (==) {
+    Act.live i;
+  (==) { _ by (T.trefl ()) }
+    exists* (p:vprop). inv i p;
+  }
+let all_live_cons hd tl = live_eq hd
+let fresh_invariant = A.fresh_invariant
+let with_invariant = A.with_invariant
+let with_invariant_g = A.with_invariant_g
+let distinct_invariants_have_distinct_names #p #q i j _ =
+  A.distinct_invariants_have_distinct_names #p #q i j _
+let invariant_name_identifies_invariant #p #q i j = A.invariant_name_identifies_invariant p q i j
 
 //////////////////////////////////////////////////////////////////////////
 // Some basic actions and ghost operations
 //////////////////////////////////////////////////////////////////////////
 
 let rewrite p q (pf:vprop_equiv p q)
-  : stt_ghost unit p (fun _ -> q)
+  : stt_ghost unit emp_inames p (fun _ -> q)
   = slprop_equiv_elim p q;
     A.noop q
 
@@ -179,7 +205,7 @@ let rewrite p q (pf:vprop_equiv p q)
 let rewrite_by (p:vprop) (q:vprop) 
                (t:unit -> T.Tac unit)
                (_:unit { T.with_tactic t (vprop_equiv p q) })
-  : stt_ghost unit p (fun _ -> q)
+  : stt_ghost unit emp_inames p (fun _ -> q)
   = let pf : squash (vprop_equiv p q) = T.by_tactic_seman t (vprop_equiv p q) in
     prop_squash_idem (vprop_equiv p q);
     rewrite p q (coerce_eq () pf)
@@ -203,7 +229,7 @@ let assume_ (p:vprop) = admit() //intentional
 let drop_ (p:vprop) = A.drop p
 
 let unreachable (#a:Type) (#p:vprop) (#q:a -> vprop) (_:squash False)
-  : stt_ghost a p q
+  : stt_ghost a emp_inames p q
   = let v = FStar.Pervasives.false_elim #a () in
     let m = A.return_ghost v q in
     coerce_eq () m
@@ -284,7 +310,7 @@ let return_stt_alt (#a:Type u#a) (x:a) (p:a -> vprop)
 
 let refl_stt (#a:Type u#a) (x:a)
 : stt unit emp (fun _ -> pure (x == x))
-= let m : stt_ghost unit emp (fun _ -> pure (x == x)) = intro_pure (x == x) () in
+= let m : stt_ghost unit emp_inames emp (fun _ -> pure (x == x)) = intro_pure (x == x) () in
   let m : stt_atomic unit #Neutral emp_inames emp (fun _ -> pure (x == x)) = lift_ghost_neutral m FStar.Tactics.Typeclasses.solve in
   lift_atomic0 m
 
@@ -310,6 +336,7 @@ let return_stt (#a:Type u#a) (x:a) (p:a -> vprop)
 // big refs
 ////////////////////////////////////////////////////////
 let big_pcm_pts_to #a #p r v = PulseCore.Action.big_pts_to #a #p r v
+let is_big_big_pcm_pts_to _ _ = ()
 let big_pts_to_not_null #a #p r v = A.big_pts_to_not_null #a #p r v
 
 let big_alloc
@@ -355,4 +382,4 @@ let big_ghost_write = A.big_ghost_write
 let big_ghost_share = A.big_ghost_share
 let big_ghost_gather = A.big_ghost_gather
 
-let as_atomic #a pre post (e:stt a pre post) = admit() //intentional
+let as_atomic #a pre post (e:stt a pre post) = admit () // intentional since it is an assumption

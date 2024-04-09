@@ -20,15 +20,11 @@ let (as_vprop : vprop' -> rng -> vprop) = fun v -> fun r -> { v; vrange = r }
 type st_comp_tag =
   | ST 
   | STAtomic 
-  | STUnobservable 
   | STGhost 
 let (uu___is_ST : st_comp_tag -> Prims.bool) =
   fun projectee -> match projectee with | ST -> true | uu___ -> false
 let (uu___is_STAtomic : st_comp_tag -> Prims.bool) =
   fun projectee -> match projectee with | STAtomic -> true | uu___ -> false
-let (uu___is_STUnobservable : st_comp_tag -> Prims.bool) =
-  fun projectee ->
-    match projectee with | STUnobservable -> true | uu___ -> false
 let (uu___is_STGhost : st_comp_tag -> Prims.bool) =
   fun projectee -> match projectee with | STGhost -> true | uu___ -> false
 type computation_type =
@@ -164,7 +160,7 @@ let (__proj__Mkarray_init__item__len : array_init -> FStar_Parser_AST.term) =
   fun projectee -> match projectee with | { init; len;_} -> len
 type ensures_vprop =
   ((FStar_Ident.ident * FStar_Parser_AST.term) FStar_Pervasives_Native.option
-    * vprop)
+    * vprop * FStar_Parser_AST.term FStar_Pervasives_Native.option)
 type stmt'__Expr__payload = {
   e: FStar_Parser_AST.term }
 and stmt'__Assignment__payload =
