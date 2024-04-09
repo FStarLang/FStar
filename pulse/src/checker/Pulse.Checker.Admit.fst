@@ -26,15 +26,7 @@ open Pulse.Checker.Prover
 
 module P = Pulse.Syntax.Printer
 
-let post_hint_compatible (p:option post_hint_t) (x:var) (t:term) (u:universe) (post:vprop) =
-  match p with
-  | None -> True
-  | Some p ->
-    p.post== close_term post x /\
-    p.u == u /\
-    p.ret_ty == t
-
-let check_core
+let check
   (g:env)
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
@@ -51,11 +43,8 @@ let check_core
   let x = fresh g in
   let px = v_as_nv x in
   let res
-    : (t:term &
-       u:universe &
-       universe_of g t u &
-       post:vprop { post_hint_compatible post_hint x t u post } &
-       tot_typing (push_binding g x (fst px) t) post tm_vprop)
+    : (c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c post_hint } &
+       comp_typing g c (universe_of_comp c))
     = match post, post_hint with
       | None, None ->
         fail g None "could not find a post annotation on admit, please add one"
@@ -69,48 +58,20 @@ let check_core
       | Some post, _ ->
         let (| u, t_typing |) = check_universe g t in    
         let post_opened = open_term_nv post px in      
-        let (| post, post_typing |) = 
-            check_tot_term (push_binding g x (fst px) t) post_opened tm_vprop
+        let (| post_opened, post_typing |) = 
+          check_tot_term (push_binding g x (fst px) t) post_opened tm_vprop
         in
-        (| t, u, t_typing, post, post_typing |)
+        let post = close_term post_opened x in
+        let s : st_comp = {u;res=t;pre;post} in
+        assume (open_term (close_term post_opened x) x == post_opened);
+        let d_s : st_comp_typing _ s = STC _ s x t_typing pre_typing post_typing in
+        (match c with
+         | STT -> (| _,  CT_ST _ _ d_s |)
+         | STT_Ghost -> (| _, CT_STGhost _ tm_emp_inames _ (magic ()) d_s |)
+         | STT_Atomic -> (| _, CT_STAtomic _ tm_emp_inames Neutral _ (magic ()) d_s |))
 
-      | _, Some post ->
-        let post : post_hint_t = post in
-        if x `Set.mem` freevars post.post
-        then fail g None "Impossible: unexpected freevar clash in Tm_Admit, please file a bug-report"
-        else (
-          let post_typing_rec = post_hint_typing g post x in
-          let post_opened = open_term_nv post.post px in              
-          assume (close_term post_opened x == post.post);
-          (| post.ret_ty, post.u, post_typing_rec.ty_typing, post_opened, post_typing_rec.post_typing |)
-        )
+      | _, Some post -> Pulse.Typing.Combinators.comp_for_post_hint pre_typing post x
   in
-  let (| t, u, t_typing, post_opened, post_typing |) = res in
-  let post = close_term post_opened x in
-  let s : st_comp = {u;res=t;pre;post} in
-
-  assume (open_term (close_term post_opened x) x == post_opened);
-  let d = T_Admit _ _ c (STC _ s x t_typing pre_typing post_typing) in
-  prove_post_hint (try_frame_pre pre_typing (match_comp_res_with_post_hint d post_hint) res_ppname)
-                  post_hint
-                  (Pulse.RuntimeUtils.range_of_term t)
-
-let check
-    (g:env)
-    (pre:term)
-    (pre_typing:tot_typing g pre tm_vprop)
-    (post_hint:post_hint_opt g)
-    (res_ppname:ppname)
-    (t:st_term { Tm_Admit? t.term })
-
-  : T.Tac (checker_result_t g pre post_hint) 
-  = let Tm_Admit r = t.term in
-    match post_hint with
-    | Some p ->
-      let ct =
-        match ctag_of_effect_annot p.effect_annot with
-        | Some c -> c
-        | None -> STT_Atomic in
-      check_core g pre pre_typing post_hint res_ppname ({ t with term=Tm_Admit {r with ctag=ct}})
-    | _ ->
-      check_core g pre pre_typing post_hint res_ppname t
+  let (| c, d_c |) = res in
+  let d = T_Admit _ _ d_c in
+  checker_result_for_st_typing (| _, _, d |) res_ppname

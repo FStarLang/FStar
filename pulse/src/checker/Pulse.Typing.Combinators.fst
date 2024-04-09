@@ -482,3 +482,34 @@ let apply_frame (#g:env)
     let st_equiv = ST_VPropEquiv g c' c'' x pre_typing res_typing post_typing (RT.Rel_refl _ _ _) ve (VE_Refl _ _) in
     let t_typing = T_Equiv _ _ _ _ t_typing st_equiv in
     (| c'', t_typing |)
+
+let comp_for_post_hint #g (#pre:vprop) (pre_typing:tot_typing g pre tm_vprop)
+  (post:post_hint_t { g `env_extends` post.g })
+  (x:var { lookup g x == None })
+  : T.Tac (c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c (Some post) } &
+           comp_typing g c (universe_of_comp c)) =
+
+  if x `Set.mem` freevars post.post
+  then fail g None "Impossible: unexpected freevar clash in comp_for_post_hint, please file a bug-report";
+
+  let px = v_as_nv x in
+  let post_typing_rec = post_hint_typing g post x in
+  let post_opened = open_term_nv post.post px in              
+  assume (close_term post_opened x == post.post);
+  let s : st_comp = {u=post.u;res=post.ret_ty;pre;post=post.post} in
+  let d_s : st_comp_typing _ s =
+  STC _ s x post_typing_rec.ty_typing pre_typing post_typing_rec.post_typing in
+          
+  match post.effect_annot with
+  | EffectAnnotSTT -> (| _,  CT_ST _ _ d_s |)
+  | EffectAnnotGhost { opens } ->
+    let d_opens : tot_typing post.g opens tm_inames = post.effect_annot_typing in
+    assert (g `env_extends` post.g);
+    let d_opens : tot_typing g opens tm_inames = magic () in  // weakening
+    (| _, CT_STGhost _ opens _ d_opens d_s |)
+  | EffectAnnotAtomic { opens }
+  | EffectAnnotAtomicOrGhost { opens } ->
+    let d_opens : tot_typing post.g opens tm_inames = post.effect_annot_typing in
+    assert (g `env_extends` post.g);
+    let d_opens : tot_typing g opens tm_inames = magic () in  // weakening
+    (| _, CT_STAtomic _ opens Neutral _ d_opens d_s |)

@@ -464,7 +464,7 @@ let freevars_array (t:term)
   = admit()
 
 // FIXME: tame this proof
-#push-options "--fuel 3 --ifuel 1 --z3rlimit_factor 15 --query_stats --retry 5"
+#push-options "--fuel 3 --ifuel 1 --z3rlimit_factor 15 --query_stats --retry 5 --split_queries no"
 let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
                            (d:st_typing g t c)
 : Lemma 
@@ -647,12 +647,14 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
     tot_or_ghost_typing_freevars u_typing;
     freevars_array init_t
 
-  | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing)
-  | T_Unreachable _ s _ (STC _ _ x t_typing pre_typing post_typing) _ ->
+  | T_Admit _ c c_typing
+  | T_Unreachable _ c c_typing _ ->
+    comp_typing_freevars c_typing;
+    let st_typing, _ = Pulse.Typing.Metatheory.Base.comp_typing_inversion c_typing in
+    let STC _ _ x t_typing pre_typing post_typing = st_typing in
     tot_or_ghost_typing_freevars t_typing;
-    tot_or_ghost_typing_freevars pre_typing;
     tot_or_ghost_typing_freevars post_typing;
-    freevars_open_term s.post (term_of_no_name_var x) 0
+    freevars_open_term (comp_post c) (term_of_no_name_var x) 0
 
   | T_WithInv _ _ _ _ _ _ _ _ _ ->
     admit () // IOU

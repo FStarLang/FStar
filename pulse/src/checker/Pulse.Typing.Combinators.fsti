@@ -118,3 +118,9 @@ let rec list_as_vprop (vps:list term)
     | [] -> tm_emp
     | [hd] -> hd
     | hd::tl -> tm_star hd (list_as_vprop tl)
+
+val comp_for_post_hint #g (#pre:vprop) (pre_typing:tot_typing g pre tm_vprop)
+  (post:post_hint_t { g `env_extends` post.g })
+  (x:var { lookup g x == None })
+  : T.Tac (c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c (Some post) } &
+           comp_typing g c (universe_of_comp c))

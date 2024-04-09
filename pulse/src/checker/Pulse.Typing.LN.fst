@@ -1191,12 +1191,15 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       tot_or_ghost_typing_ln init_t_typing;
       ln_mk_array init_t (-1)
 
-    | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing)
-    | T_Unreachable _ s _ (STC _ _ x t_typing pre_typing post_typing) _ ->
+    | T_Admit _ c c_typing
+    | T_Unreachable _ c c_typing _ ->
+      comp_typing_ln c_typing;
+      let st_typing, _ = Pulse.Typing.Metatheory.Base.comp_typing_inversion c_typing in
+      let STC _ _ x t_typing pre_typing post_typing = st_typing in
       tot_or_ghost_typing_ln t_typing;
       tot_or_ghost_typing_ln pre_typing;
       tot_or_ghost_typing_ln post_typing;
-      open_term_ln' s.post (term_of_no_name_var x) 0
+      open_term_ln' (comp_post c) (term_of_no_name_var x) 0
 
     | T_Sub _ e c c' d d_sub ->
       st_typing_ln d;

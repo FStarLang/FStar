@@ -3431,3 +3431,186 @@ let rec (list_as_vprop :
     | [] -> Pulse_Syntax_Pure.tm_emp
     | hd::[] -> hd
     | hd::tl -> Pulse_Syntax_Pure.tm_star hd (list_as_vprop tl)
+let (comp_for_post_hint :
+  Pulse_Typing_Env.env ->
+    Pulse_Syntax_Base.vprop ->
+      unit ->
+        Pulse_Typing.post_hint_t ->
+          Pulse_Syntax_Base.var ->
+            ((Pulse_Syntax_Base.comp_st,
+               (unit, unit, unit) Pulse_Typing.comp_typing) Prims.dtuple2,
+              unit) FStar_Tactics_Effect.tac_repr)
+  =
+  fun g ->
+    fun pre ->
+      fun pre_typing ->
+        fun post ->
+          fun x ->
+            FStar_Tactics_Effect.tac_bind
+              (FStar_Sealed.seal
+                 (Obj.magic
+                    (FStar_Range.mk_range "Pulse.Typing.Combinators.fst"
+                       (Prims.of_int (492)) (Prims.of_int (2))
+                       (Prims.of_int (493)) (Prims.of_int (105)))))
+              (FStar_Sealed.seal
+                 (Obj.magic
+                    (FStar_Range.mk_range "Pulse.Typing.Combinators.fst"
+                       (Prims.of_int (493)) (Prims.of_int (106))
+                       (Prims.of_int (515)) (Prims.of_int (54)))))
+              (if
+                 FStar_Set.mem x
+                   (Pulse_Syntax_Naming.freevars post.Pulse_Typing.post)
+               then
+                 Obj.magic
+                   (Obj.repr
+                      (Pulse_Typing_Env.fail g FStar_Pervasives_Native.None
+                         "Impossible: unexpected freevar clash in comp_for_post_hint, please file a bug-report"))
+               else
+                 Obj.magic
+                   (Obj.repr
+                      (FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> ()))))
+              (fun uu___ ->
+                 FStar_Tactics_Effect.lift_div_tac
+                   (fun uu___1 ->
+                      match post.Pulse_Typing.effect_annot with
+                      | Pulse_Syntax_Base.EffectAnnotSTT ->
+                          Prims.Mkdtuple2
+                            ((Pulse_Syntax_Base.C_ST
+                                {
+                                  Pulse_Syntax_Base.u = (post.Pulse_Typing.u);
+                                  Pulse_Syntax_Base.res =
+                                    (post.Pulse_Typing.ret_ty);
+                                  Pulse_Syntax_Base.pre = pre;
+                                  Pulse_Syntax_Base.post =
+                                    (post.Pulse_Typing.post)
+                                }),
+                              (Pulse_Typing.CT_ST
+                                 (g,
+                                   {
+                                     Pulse_Syntax_Base.u =
+                                       (post.Pulse_Typing.u);
+                                     Pulse_Syntax_Base.res =
+                                       (post.Pulse_Typing.ret_ty);
+                                     Pulse_Syntax_Base.pre = pre;
+                                     Pulse_Syntax_Base.post =
+                                       (post.Pulse_Typing.post)
+                                   },
+                                   (Pulse_Typing.STC
+                                      (g,
+                                        {
+                                          Pulse_Syntax_Base.u =
+                                            (post.Pulse_Typing.u);
+                                          Pulse_Syntax_Base.res =
+                                            (post.Pulse_Typing.ret_ty);
+                                          Pulse_Syntax_Base.pre = pre;
+                                          Pulse_Syntax_Base.post =
+                                            (post.Pulse_Typing.post)
+                                        }, x, (), (), ())))))
+                      | Pulse_Syntax_Base.EffectAnnotGhost
+                          { Pulse_Syntax_Base.opens = opens;_} ->
+                          Prims.Mkdtuple2
+                            ((Pulse_Syntax_Base.C_STGhost
+                                (opens,
+                                  {
+                                    Pulse_Syntax_Base.u =
+                                      (post.Pulse_Typing.u);
+                                    Pulse_Syntax_Base.res =
+                                      (post.Pulse_Typing.ret_ty);
+                                    Pulse_Syntax_Base.pre = pre;
+                                    Pulse_Syntax_Base.post =
+                                      (post.Pulse_Typing.post)
+                                  })),
+                              (Pulse_Typing.CT_STGhost
+                                 (g, opens,
+                                   {
+                                     Pulse_Syntax_Base.u =
+                                       (post.Pulse_Typing.u);
+                                     Pulse_Syntax_Base.res =
+                                       (post.Pulse_Typing.ret_ty);
+                                     Pulse_Syntax_Base.pre = pre;
+                                     Pulse_Syntax_Base.post =
+                                       (post.Pulse_Typing.post)
+                                   }, (),
+                                   (Pulse_Typing.STC
+                                      (g,
+                                        {
+                                          Pulse_Syntax_Base.u =
+                                            (post.Pulse_Typing.u);
+                                          Pulse_Syntax_Base.res =
+                                            (post.Pulse_Typing.ret_ty);
+                                          Pulse_Syntax_Base.pre = pre;
+                                          Pulse_Syntax_Base.post =
+                                            (post.Pulse_Typing.post)
+                                        }, x, (), (), ())))))
+                      | Pulse_Syntax_Base.EffectAnnotAtomic
+                          { Pulse_Syntax_Base.opens1 = opens;_} ->
+                          Prims.Mkdtuple2
+                            ((Pulse_Syntax_Base.C_STAtomic
+                                (opens, Pulse_Syntax_Base.Neutral,
+                                  {
+                                    Pulse_Syntax_Base.u =
+                                      (post.Pulse_Typing.u);
+                                    Pulse_Syntax_Base.res =
+                                      (post.Pulse_Typing.ret_ty);
+                                    Pulse_Syntax_Base.pre = pre;
+                                    Pulse_Syntax_Base.post =
+                                      (post.Pulse_Typing.post)
+                                  })),
+                              (Pulse_Typing.CT_STAtomic
+                                 (g, opens, Pulse_Syntax_Base.Neutral,
+                                   {
+                                     Pulse_Syntax_Base.u =
+                                       (post.Pulse_Typing.u);
+                                     Pulse_Syntax_Base.res =
+                                       (post.Pulse_Typing.ret_ty);
+                                     Pulse_Syntax_Base.pre = pre;
+                                     Pulse_Syntax_Base.post =
+                                       (post.Pulse_Typing.post)
+                                   }, (),
+                                   (Pulse_Typing.STC
+                                      (g,
+                                        {
+                                          Pulse_Syntax_Base.u =
+                                            (post.Pulse_Typing.u);
+                                          Pulse_Syntax_Base.res =
+                                            (post.Pulse_Typing.ret_ty);
+                                          Pulse_Syntax_Base.pre = pre;
+                                          Pulse_Syntax_Base.post =
+                                            (post.Pulse_Typing.post)
+                                        }, x, (), (), ())))))
+                      | Pulse_Syntax_Base.EffectAnnotAtomicOrGhost
+                          { Pulse_Syntax_Base.opens2 = opens;_} ->
+                          Prims.Mkdtuple2
+                            ((Pulse_Syntax_Base.C_STAtomic
+                                (opens, Pulse_Syntax_Base.Neutral,
+                                  {
+                                    Pulse_Syntax_Base.u =
+                                      (post.Pulse_Typing.u);
+                                    Pulse_Syntax_Base.res =
+                                      (post.Pulse_Typing.ret_ty);
+                                    Pulse_Syntax_Base.pre = pre;
+                                    Pulse_Syntax_Base.post =
+                                      (post.Pulse_Typing.post)
+                                  })),
+                              (Pulse_Typing.CT_STAtomic
+                                 (g, opens, Pulse_Syntax_Base.Neutral,
+                                   {
+                                     Pulse_Syntax_Base.u =
+                                       (post.Pulse_Typing.u);
+                                     Pulse_Syntax_Base.res =
+                                       (post.Pulse_Typing.ret_ty);
+                                     Pulse_Syntax_Base.pre = pre;
+                                     Pulse_Syntax_Base.post =
+                                       (post.Pulse_Typing.post)
+                                   }, (),
+                                   (Pulse_Typing.STC
+                                      (g,
+                                        {
+                                          Pulse_Syntax_Base.u =
+                                            (post.Pulse_Typing.u);
+                                          Pulse_Syntax_Base.res =
+                                            (post.Pulse_Typing.ret_ty);
+                                          Pulse_Syntax_Base.pre = pre;
+                                          Pulse_Syntax_Base.post =
+                                            (post.Pulse_Typing.post)
+                                        }, x, (), (), ())))))))

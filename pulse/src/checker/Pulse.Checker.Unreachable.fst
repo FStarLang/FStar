@@ -38,35 +38,13 @@ let check
   match post_hint with
   | None ->
     fail g (Some t.range)
-        "Expected a postcondition to be annotated when unreachable is used"
+      "Expected a postcondition to be annotated when unreachable is used"
   | Some post ->
-    let x = fresh g in
-    let px = v_as_nv x in
-    let post : post_hint_t = post in
-    if x `Set.mem` freevars post.post
-    then fail g None "Impossible: unexpected freevar clash in Tm_Unreachable, please file a bug-report"
-    else
-        let ctag =
-          match ctag_of_effect_annot post.effect_annot with
-          | Some c -> c
-          | None -> STT_Atomic in
-        let post_typing_rec = post_hint_typing g post x in
-        let post_opened = open_term_nv post.post px in              
-        assume (close_term post_opened x == post.post);
-        let t : term = post.ret_ty in
-        let u = post.u in
-        let t_typing : universe_of g t u = post_typing_rec.ty_typing in
-        let post_typing = post_typing_rec.post_typing in
-        assume (close_term post_opened x == post.post);
-        let s : st_comp = {u; res=t; pre; post=post.post} in
-        let stc : st_comp_typing g s = (STC _ s x t_typing pre_typing post_typing) in
-        let ff = (wr (`False) rng) in
-        let (|eff, ff_typing |) = Pulse.Checker.Pure.core_check_term_at_type g ff tm_prop in
-        if eff <> T.E_Total then T.fail "Impossible: False has effect Ghost"
-        else
-            let ff_validity = Pulse.Checker.Pure.check_prop_validity g ff ff_typing in
-            let dt = T_Unreachable g s ctag stc ff_validity in
-            prove_post_hint
-              (try_frame_pre pre_typing (match_comp_res_with_post_hint dt post_hint) res_ppname)
-              post_hint
-              (Pulse.RuntimeUtils.range_of_term t)
+    let ff = (wr (`False) rng) in
+    let (|eff, ff_typing |) = Pulse.Checker.Pure.core_check_term_at_type g ff tm_prop in
+    if eff <> T.E_Total then T.fail "Impossible: False has effect Ghost"
+    else let ff_validity = Pulse.Checker.Pure.check_prop_validity g ff ff_typing in
+         let x = fresh g in
+         let (| c, c_typing |) = Pulse.Typing.Combinators.comp_for_post_hint pre_typing post x in
+         let d = T_Unreachable _ _ c_typing ff_validity in
+         checker_result_for_st_typing (| _, _, d |) res_ppname

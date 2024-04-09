@@ -471,26 +471,26 @@ let rec (elab_st_typing :
                   FStar_Reflection_V2_Data.Q_Explicit rbody1 in
               Pulse_Reflection_Util.mk_withlocalarray rret_u init_t init len
                 rpre rret_t rpost rbody2
-          | Pulse_Typing.T_Admit
-              (uu___,
-               { Pulse_Syntax_Base.u = u; Pulse_Syntax_Base.res = res;
-                 Pulse_Syntax_Base.pre = pre;
-                 Pulse_Syntax_Base.post = post;_},
-               c1, uu___1)
-              ->
-              let ru = u in
-              let rpost =
-                Pulse_Reflection_Util.mk_abs res
-                  FStar_Reflection_V2_Data.Q_Explicit post in
-              (match c1 with
-               | Pulse_Syntax_Base.STT ->
-                   Pulse_Reflection_Util.mk_stt_admit ru res pre rpost
-               | Pulse_Syntax_Base.STT_Atomic ->
-                   Pulse_Reflection_Util.mk_stt_atomic_admit ru res pre rpost
-               | Pulse_Syntax_Base.STT_Ghost ->
-                   Pulse_Reflection_Util.mk_stt_ghost_admit ru res pre rpost)
-          | Pulse_Typing.T_Unreachable
-              (uu___, uu___1, uu___2, uu___3, uu___4) ->
+          | Pulse_Typing.T_Admit (uu___, c1, uu___1) ->
+              let uu___2 = Pulse_Syntax_Base.st_comp_of_comp c1 in
+              (match uu___2 with
+               | { Pulse_Syntax_Base.u = u; Pulse_Syntax_Base.res = res;
+                   Pulse_Syntax_Base.pre = pre;
+                   Pulse_Syntax_Base.post = post;_} ->
+                   let rpost =
+                     Pulse_Reflection_Util.mk_abs res
+                       FStar_Reflection_V2_Data.Q_Explicit post in
+                   (match c1 with
+                    | Pulse_Syntax_Base.C_ST uu___3 ->
+                        Pulse_Reflection_Util.mk_stt_admit u res pre rpost
+                    | Pulse_Syntax_Base.C_STAtomic (uu___3, uu___4, uu___5)
+                        ->
+                        Pulse_Reflection_Util.mk_stt_atomic_admit u res pre
+                          rpost
+                    | Pulse_Syntax_Base.C_STGhost (uu___3, uu___4) ->
+                        Pulse_Reflection_Util.mk_stt_ghost_admit u res pre
+                          rpost))
+          | Pulse_Typing.T_Unreachable (uu___, uu___1, uu___2, uu___3) ->
               FStar_Reflection_V2_Builtins.pack_ln
                 (FStar_Reflection_V2_Data.Tv_Const
                    (FStar_Reflection_V2_Data.C_String
