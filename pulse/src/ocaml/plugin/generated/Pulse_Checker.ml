@@ -377,18 +377,18 @@ let rec (transform_to_unary_intro_exists :
                                        (Prims.of_int (129))
                                        (Prims.of_int (17))
                                        (Prims.of_int (129))
-                                       (Prims.of_int (43)))))
+                                       (Prims.of_int (46)))))
                               (FStar_Sealed.seal
                                  (Obj.magic
                                     (FStar_Range.mk_range "Pulse.Checker.fst"
                                        (Prims.of_int (129))
-                                       (Prims.of_int (46))
+                                       (Prims.of_int (49))
                                        (Prims.of_int (136))
                                        (Prims.of_int (34)))))
                               (FStar_Tactics_Effect.lift_div_tac
                                  (fun uu___ ->
                                     Pulse_Syntax_Naming.subst_term body
-                                      [Pulse_Syntax_Naming.DT
+                                      [FStar_Reflection_Typing.DT
                                          (Prims.int_zero, w)]))
                               (fun uu___ ->
                                  (fun body1 ->

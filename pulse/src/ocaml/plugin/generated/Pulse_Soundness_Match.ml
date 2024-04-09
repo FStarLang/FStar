@@ -25,3 +25,5 @@ let (complete_soundness :
                     match uu___ with
                     | Pulse_Typing.PC_Elab
                         (uu___1, uu___2, uu___3, uu___4, bs', s) -> s
+let coerce_eq : 'a 'b . 'a -> unit -> 'b =
+  fun uu___1 -> fun uu___ -> (fun x -> fun uu___ -> Obj.magic x) uu___1 uu___

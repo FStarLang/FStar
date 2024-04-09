@@ -32,8 +32,7 @@ let (canon_comp_eq_res :
   fun g ->
     fun c ->
       FStar_Reflection_Typing.Rel_refl
-        ((Pulse_Typing.elab_env g),
-          (Pulse_Elaborate_Pure.elab_term (Pulse_Syntax_Base.comp_res c)),
+        ((Pulse_Typing.elab_env g), (Pulse_Syntax_Base.comp_res c),
           FStar_Reflection_Typing.R_Eq)
 let (canonicalize_st_typing :
   Pulse_Typing_Env.env ->

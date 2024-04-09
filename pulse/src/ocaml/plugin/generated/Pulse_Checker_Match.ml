@@ -63,7 +63,7 @@ let (open_st_term_bs :
         match bs1 with
         | [] -> []
         | b::bs2 ->
-            (Pulse_Syntax_Naming.DT
+            (FStar_Reflection_Typing.DT
                (i,
                  (Pulse_Syntax_Pure.term_of_nvar
                     (Pulse_Syntax_Base.ppname_default,
@@ -1812,7 +1812,7 @@ let (check :
                                                                     (Prims.of_int (431))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (431))
-                                                                    (Prims.of_int (88)))))
+                                                                    (Prims.of_int (64)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -1824,11 +1824,8 @@ let (check :
                                                                     (Obj.magic
                                                                     (FStar_Tactics_V2_Builtins.check_match_complete
                                                                     (Pulse_Typing.elab_env
-                                                                    g1)
-                                                                    (Pulse_Elaborate_Pure.elab_term
-                                                                    sc1)
-                                                                    (Pulse_Elaborate_Pure.elab_term
-                                                                    sc_ty)
+                                                                    g1) sc1
+                                                                    sc_ty
                                                                     elab_pats))
                                                                     (fun
                                                                     uu___2 ->
@@ -1865,11 +1862,8 @@ let (check :
                                                                     bnds,
                                                                     (FStar_Reflection_Typing.MC_Tok
                                                                     ((Pulse_Typing.elab_env
-                                                                    g1),
-                                                                    (Pulse_Elaborate_Pure.elab_term
-                                                                    sc1),
-                                                                    (Pulse_Elaborate_Pure.elab_term
-                                                                    sc_ty),
+                                                                    g1), sc1,
+                                                                    sc_ty,
                                                                     elab_pats',
                                                                     bnds, ())))))))))
                                                                     uu___2)))

@@ -65,18 +65,14 @@ let (debug_log :
 let (tm_unit : Pulse_Syntax_Base.term) =
   Pulse_Syntax_Pure.tm_fvar
     (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.unit_lid)
-let (tm_bool : Pulse_Syntax_Base.term) =
-  Pulse_Syntax_Pure.tm_fvar
-    (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.bool_lid)
+let (tm_bool : FStar_Reflection_Types.term) = FStar_Reflection_Typing.bool_ty
 let (tm_int : Pulse_Syntax_Base.term) =
   Pulse_Syntax_Pure.tm_fvar
     (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.int_lid)
 let (tm_nat : Pulse_Syntax_Base.term) =
   Pulse_Syntax_Pure.tm_fvar
     (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.nat_lid)
-let (tm_szt : Pulse_Syntax_Base.term) =
-  Pulse_Syntax_Pure.tm_fvar
-    (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.szt_lid)
+let (tm_szt : FStar_Reflection_Types.term) = Pulse_Reflection_Util.szt_tm
 let (tm_true : Pulse_Syntax_Base.term) =
   Pulse_Syntax_Pure.tm_constant FStar_Reflection_V2_Data.C_True
 let (tm_false : Pulse_Syntax_Base.term) =
@@ -351,7 +347,7 @@ let (comp_with_inv :
   fun s ->
     fun i ->
       fun p ->
-        let add_inv1 inames = Pulse_Reflection_Util.add_inv_tm inames i in
+        let add_inv1 inames = Pulse_Syntax_Pure.tm_add_inv inames i in
         let add_inv_st_comp s1 =
           let frame = Pulse_Syntax_Pure.tm_inv i p in
           {

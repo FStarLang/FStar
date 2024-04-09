@@ -160,10 +160,7 @@ let (tm_arrow :
                (Pulse_Elaborate_Pure.elab_qual q))
              (Pulse_Elaborate_Pure.elab_comp c)) FStar_Range.range_0
 let (tm_type : Pulse_Syntax_Base.universe -> Pulse_Syntax_Base.term) =
-  fun u ->
-    Pulse_RuntimeUtils.set_range
-      (FStar_Reflection_V2_Builtins.pack_ln
-         (FStar_Reflection_V2_Data.Tv_Type u)) FStar_Range.range_0
+  fun u -> FStar_Reflection_Typing.tm_type u
 let (mk_bvar :
   Prims.string ->
     FStar_Range.range -> Pulse_Syntax_Base.index -> Pulse_Syntax_Base.term)
@@ -568,6 +565,19 @@ let (tm_inv :
            (Pulse_RuntimeUtils.range_of_term p))
 let (tm_all_inames : Pulse_Syntax_Base.term) =
   tm_fvar (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.all_inames_lid)
+let (tm_add_inv :
+  FStar_Reflection_Types.term ->
+    FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+  =
+  fun is ->
+    fun iref ->
+      let h =
+        FStar_Reflection_V2_Builtins.pack_ln
+          (FStar_Reflection_V2_Data.Tv_FVar
+             (FStar_Reflection_V2_Builtins.pack_fv
+                Pulse_Reflection_Util.add_inv_lid)) in
+      FStar_Reflection_V2_Derived.mk_app h
+        [Pulse_Reflection_Util.ex is; Pulse_Reflection_Util.ex iref]
 type ('tv, 't) is_view_of = Obj.t
 let rec (inspect_term : FStar_Reflection_Types.term -> term_view) =
   fun t ->
