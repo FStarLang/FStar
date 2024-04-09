@@ -427,8 +427,8 @@ let rec st_typing_weakening g g' t c d g1
 
   | T_Admit _ c d_c -> T_Admit _ c (comp_typing_weakening g g' d_c g1)
 
-  | T_Unreachable _ s c d_s tok ->
-    T_Unreachable _ s c (st_comp_typing_weakening g g' d_s g1) (RU.magic())//weaken tok
+  | T_Unreachable _ c d_c tok ->
+    T_Unreachable _ c (comp_typing_weakening g g' d_c g1) (RU.magic ())  // weaken tok
 
   | T_WithInv  _ _ _ _ _ i_typing p_typing body_typing tok ->
     T_WithInv _ _ _ _ _ (tot_typing_weakening g g' _ _ i_typing g1)

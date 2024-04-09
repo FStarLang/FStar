@@ -585,11 +585,12 @@ let rec (st_typing_weakening :
                         (Pulse_Typing_Env.push_env g g1) g'), c1,
                       (comp_typing_weakening g g' c1
                          (Pulse_Syntax_Base.universe_of_comp c1) d_c g1))
-              | Pulse_Typing.T_Unreachable (uu___, s, c1, d_s, tok) ->
+              | Pulse_Typing.T_Unreachable (uu___, c1, d_c, tok) ->
                   Pulse_Typing.T_Unreachable
                     ((Pulse_Typing_Env.push_env
-                        (Pulse_Typing_Env.push_env g g1) g'), s, c1,
-                      (st_comp_typing_weakening g g' s d_s g1), ())
+                        (Pulse_Typing_Env.push_env g g1) g'), c1,
+                      (comp_typing_weakening g g' c1
+                         (Pulse_Syntax_Base.universe_of_comp c1) d_c g1), ())
               | Pulse_Typing.T_WithInv
                   (uu___, uu___1, uu___2, uu___3, uu___4, i_typing, p_typing,
                    body_typing, tok)

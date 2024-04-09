@@ -836,19 +836,6 @@ let (comp_rewrite :
             Pulse_Syntax_Base.pre = p;
             Pulse_Syntax_Base.post = q
           })
-let (comp_unreachable :
-  Pulse_Syntax_Base.ctag ->
-    Pulse_Syntax_Base.st_comp -> Pulse_Syntax_Base.comp)
-  =
-  fun c ->
-    fun s ->
-      match c with
-      | Pulse_Syntax_Base.STT -> Pulse_Syntax_Base.C_ST s
-      | Pulse_Syntax_Base.STT_Atomic ->
-          Pulse_Syntax_Base.C_STAtomic
-            (Pulse_Syntax_Pure.tm_emp_inames, Pulse_Syntax_Base.Neutral, s)
-      | Pulse_Syntax_Base.STT_Ghost ->
-          Pulse_Syntax_Base.C_STGhost (Pulse_Syntax_Pure.tm_emp_inames, s)
 type ('g, 'e, 'eff, 't) typing = unit
 type ('g, 'e, 't) tot_typing = unit
 type ('g, 'e, 't) ghost_typing = unit
@@ -1118,8 +1105,8 @@ type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   Pulse_Syntax_Base.vprop * unit * unit 
   | T_Admit of Pulse_Typing_Env.env * Pulse_Syntax_Base.comp_st * (unit,
   unit, unit) comp_typing 
-  | T_Unreachable of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_comp *
-  Pulse_Syntax_Base.ctag * (unit, unit) st_comp_typing * unit 
+  | T_Unreachable of Pulse_Typing_Env.env * Pulse_Syntax_Base.comp_st *
+  (unit, unit, unit) comp_typing * unit 
   | T_WithInv of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
   Pulse_Syntax_Base.term * Pulse_Syntax_Base.st_term *
   Pulse_Syntax_Base.comp_st * unit * unit * (unit, unit, unit) st_typing *

@@ -497,12 +497,6 @@ let comp_rewrite (p q:vprop) : comp =
 			post = q;
 		}
 
-let comp_unreachable (c:ctag) (s:st_comp) : comp =
-  match c with
-  | STT -> C_ST s
-  | STT_Atomic -> C_STAtomic tm_emp_inames Neutral s
-  | STT_Ghost -> C_STGhost tm_emp_inames s
-
 [@@erasable]
 noeq
 type my_erased (a:Type) = | E of a
@@ -1029,11 +1023,10 @@ type st_typing : env -> st_term -> comp -> Type =
 
   | T_Unreachable:
       g:env ->
-      s:st_comp ->
-      c:ctag ->
-      st_comp_typing g s ->
+      c:comp_st ->
+      comp_typing g c (universe_of_comp c) ->
       prop_validity g (S.wr (`False) FStar.Range.range_0) -> 
-      st_typing g (wtag (Some c) Tm_Unreachable) (comp_unreachable c s)
+      st_typing g (wtag (Some (ctag_of_comp_st c)) Tm_Unreachable) c
 
   | T_WithInv:
       g:env ->

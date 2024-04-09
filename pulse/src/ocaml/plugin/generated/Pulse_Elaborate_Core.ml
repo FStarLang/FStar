@@ -490,8 +490,7 @@ let rec (elab_st_typing :
                     | Pulse_Syntax_Base.C_STGhost (uu___3, uu___4) ->
                         Pulse_Reflection_Util.mk_stt_ghost_admit u res pre
                           rpost))
-          | Pulse_Typing.T_Unreachable
-              (uu___, uu___1, uu___2, uu___3, uu___4) ->
+          | Pulse_Typing.T_Unreachable (uu___, uu___1, uu___2, uu___3) ->
               FStar_Reflection_V2_Builtins.pack_ln
                 (FStar_Reflection_V2_Data.Tv_Const
                    (FStar_Reflection_V2_Data.C_String

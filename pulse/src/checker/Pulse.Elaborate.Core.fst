@@ -306,7 +306,7 @@ let rec elab_st_typing (#g:env)
        | C_STAtomic _ _ _ -> mk_stt_atomic_admit u res pre rpost
        | C_STGhost _ _ -> mk_stt_ghost_admit u res pre rpost)
 
-    | T_Unreachable _ _ _ _ _ ->
+    | T_Unreachable _ _ _ _ ->
       `("IOU: elab_st_typing of T_Unreachable")
 
     | T_WithInv _ _ _ _ _ _ _ _ _ ->

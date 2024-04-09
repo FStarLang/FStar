@@ -43,7 +43,7 @@ let check
   let x = fresh g in
   let px = v_as_nv x in
   let res
-    : (c:comp_st { comp_post_matches_hint c post_hint } &
+    : (c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c post_hint } &
        comp_typing g c (universe_of_comp c))
     = match post, post_hint with
       | None, None ->
@@ -70,32 +70,7 @@ let check
          | STT_Ghost -> (| _, CT_STGhost _ tm_emp_inames _ (magic ()) d_s |)
          | STT_Atomic -> (| _, CT_STAtomic _ tm_emp_inames Neutral _ (magic ()) d_s |))
 
-      | _, Some post ->
-        let post : post_hint_t = post in
-        if x `Set.mem` freevars post.post
-        then fail g None "Impossible: unexpected freevar clash in Tm_Admit, please file a bug-report"
-        else (
-          let post_typing_rec = post_hint_typing g post x in
-          let post_opened = open_term_nv post.post px in              
-          assume (close_term post_opened x == post.post);
-          let s : st_comp = {u=post.u;res=post.ret_ty;pre;post=post.post} in
-          let d_s : st_comp_typing _ s =
-            STC _ s x post_typing_rec.ty_typing pre_typing post_typing_rec.post_typing in
-          
-          match post.effect_annot with
-          | EffectAnnotSTT -> (| _,  CT_ST _ _ d_s |)
-          | EffectAnnotGhost { opens } ->
-            let d_opens : tot_typing post.g opens tm_inames = post.effect_annot_typing in
-            assert (g `env_extends` post.g);
-            let d_opens : tot_typing g opens tm_inames = magic () in  // weakening
-            (| _, CT_STGhost _ opens _ d_opens d_s |)
-          | EffectAnnotAtomic { opens }
-          | EffectAnnotAtomicOrGhost { opens } ->
-            let d_opens : tot_typing post.g opens tm_inames = post.effect_annot_typing in
-            assert (g `env_extends` post.g);
-            let d_opens : tot_typing g opens tm_inames = magic () in  // weakening
-            (| _, CT_STAtomic _ opens Neutral _ d_opens d_s |)
-        )
+      | _, Some post -> Pulse.Typing.Combinators.comp_for_post_hint pre_typing post x
   in
   let (| c, d_c |) = res in
   let d = T_Admit _ _ d_c in

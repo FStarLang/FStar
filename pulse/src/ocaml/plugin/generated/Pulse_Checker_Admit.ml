@@ -25,7 +25,7 @@ let (check :
                    (Obj.magic
                       (FStar_Range.mk_range "Pulse.Checker.Admit.fst"
                          (Prims.of_int (39)) (Prims.of_int (66))
-                         (Prims.of_int (102)) (Prims.of_int (55)))))
+                         (Prims.of_int (77)) (Prims.of_int (55)))))
                 (FStar_Tactics_Effect.lift_div_tac
                    (fun uu___ ->
                       Pulse_Typing_Env.push_context g "check_admit"
@@ -45,7 +45,7 @@ let (check :
                                  (FStar_Range.mk_range
                                     "Pulse.Checker.Admit.fst"
                                     (Prims.of_int (39)) (Prims.of_int (66))
-                                    (Prims.of_int (102)) (Prims.of_int (55)))))
+                                    (Prims.of_int (77)) (Prims.of_int (55)))))
                            (FStar_Tactics_Effect.lift_div_tac
                               (fun uu___ -> t.Pulse_Syntax_Base.term1))
                            (fun uu___ ->
@@ -73,7 +73,7 @@ let (check :
                                                    "Pulse.Checker.Admit.fst"
                                                    (Prims.of_int (43))
                                                    (Prims.of_int (20))
-                                                   (Prims.of_int (102))
+                                                   (Prims.of_int (77))
                                                    (Prims.of_int (55)))))
                                           (FStar_Tactics_Effect.lift_div_tac
                                              (fun uu___2 ->
@@ -96,7 +96,7 @@ let (check :
                                                               "Pulse.Checker.Admit.fst"
                                                               (Prims.of_int (44))
                                                               (Prims.of_int (23))
-                                                              (Prims.of_int (102))
+                                                              (Prims.of_int (77))
                                                               (Prims.of_int (55)))))
                                                      (FStar_Tactics_Effect.lift_div_tac
                                                         (fun uu___2 ->
@@ -112,15 +112,15 @@ let (check :
                                                                     "Pulse.Checker.Admit.fst"
                                                                     (Prims.of_int (48))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (98))
-                                                                    (Prims.of_int (9)))))
+                                                                    (Prims.of_int (73))
+                                                                    (Prims.of_int (85)))))
                                                                 (FStar_Sealed.seal
                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Admit.fst"
-                                                                    (Prims.of_int (99))
+                                                                    (Prims.of_int (74))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (102))
+                                                                    (Prims.of_int (77))
                                                                     (Prims.of_int (55)))))
                                                                 (match 
                                                                    (post,
@@ -516,268 +516,9 @@ let (check :
                                                                     FStar_Pervasives_Native.Some
                                                                     post1) ->
                                                                     Obj.magic
-                                                                    (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "Pulse.Checker.Admit.fst"
-                                                                    (Prims.of_int (74))
-                                                                    (Prims.of_int (33))
-                                                                    (Prims.of_int (74))
-                                                                    (Prims.of_int (37)))))
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "Pulse.Checker.Admit.fst"
-                                                                    (Prims.of_int (75))
-                                                                    (Prims.of_int (8))
-                                                                    (Prims.of_int (98))
-                                                                    (Prims.of_int (9)))))
-                                                                    (FStar_Tactics_Effect.lift_div_tac
-                                                                    (fun
-                                                                    uu___3 ->
-                                                                    post1))
-                                                                    (fun
-                                                                    uu___3 ->
-                                                                    (fun
-                                                                    post2 ->
-                                                                    if
-                                                                    FStar_Set.mem
-                                                                    x
-                                                                    (Pulse_Syntax_Naming.freevars
-                                                                    post2.Pulse_Typing.post)
-                                                                    then
-                                                                    Obj.magic
-                                                                    (Obj.repr
-                                                                    (Pulse_Typing_Env.fail
-                                                                    g1
-                                                                    FStar_Pervasives_Native.None
-                                                                    "Impossible: unexpected freevar clash in Tm_Admit, please file a bug-report"))
-                                                                    else
-                                                                    Obj.magic
-                                                                    (Obj.repr
-                                                                    (FStar_Tactics_Effect.lift_div_tac
-                                                                    (fun
-                                                                    uu___4 ->
-                                                                    match 
-                                                                    post2.Pulse_Typing.effect_annot
-                                                                    with
-                                                                    | 
-                                                                    Pulse_Syntax_Base.EffectAnnotSTT
-                                                                    ->
-                                                                    Prims.Mkdtuple2
-                                                                    ((Pulse_Syntax_Base.C_ST
-                                                                    {
-                                                                    Pulse_Syntax_Base.u
-                                                                    =
-                                                                    (post2.Pulse_Typing.u);
-                                                                    Pulse_Syntax_Base.res
-                                                                    =
-                                                                    (post2.Pulse_Typing.ret_ty);
-                                                                    Pulse_Syntax_Base.pre
-                                                                    = pre;
-                                                                    Pulse_Syntax_Base.post
-                                                                    =
-                                                                    (post2.Pulse_Typing.post)
-                                                                    }),
-                                                                    (Pulse_Typing.CT_ST
-                                                                    (g1,
-                                                                    {
-                                                                    Pulse_Syntax_Base.u
-                                                                    =
-                                                                    (post2.Pulse_Typing.u);
-                                                                    Pulse_Syntax_Base.res
-                                                                    =
-                                                                    (post2.Pulse_Typing.ret_ty);
-                                                                    Pulse_Syntax_Base.pre
-                                                                    = pre;
-                                                                    Pulse_Syntax_Base.post
-                                                                    =
-                                                                    (post2.Pulse_Typing.post)
-                                                                    },
-                                                                    (Pulse_Typing.STC
-                                                                    (g1,
-                                                                    {
-                                                                    Pulse_Syntax_Base.u
-                                                                    =
-                                                                    (post2.Pulse_Typing.u);
-                                                                    Pulse_Syntax_Base.res
-                                                                    =
-                                                                    (post2.Pulse_Typing.ret_ty);
-                                                                    Pulse_Syntax_Base.pre
-                                                                    = pre;
-                                                                    Pulse_Syntax_Base.post
-                                                                    =
-                                                                    (post2.Pulse_Typing.post)
-                                                                    }, x, (),
-                                                                    (), ())))))
-                                                                    | 
-                                                                    Pulse_Syntax_Base.EffectAnnotGhost
-                                                                    {
-                                                                    Pulse_Syntax_Base.opens
-                                                                    = opens;_}
-                                                                    ->
-                                                                    Prims.Mkdtuple2
-                                                                    ((Pulse_Syntax_Base.C_STGhost
-                                                                    (opens,
-                                                                    {
-                                                                    Pulse_Syntax_Base.u
-                                                                    =
-                                                                    (post2.Pulse_Typing.u);
-                                                                    Pulse_Syntax_Base.res
-                                                                    =
-                                                                    (post2.Pulse_Typing.ret_ty);
-                                                                    Pulse_Syntax_Base.pre
-                                                                    = pre;
-                                                                    Pulse_Syntax_Base.post
-                                                                    =
-                                                                    (post2.Pulse_Typing.post)
-                                                                    })),
-                                                                    (Pulse_Typing.CT_STGhost
-                                                                    (g1,
-                                                                    opens,
-                                                                    {
-                                                                    Pulse_Syntax_Base.u
-                                                                    =
-                                                                    (post2.Pulse_Typing.u);
-                                                                    Pulse_Syntax_Base.res
-                                                                    =
-                                                                    (post2.Pulse_Typing.ret_ty);
-                                                                    Pulse_Syntax_Base.pre
-                                                                    = pre;
-                                                                    Pulse_Syntax_Base.post
-                                                                    =
-                                                                    (post2.Pulse_Typing.post)
-                                                                    }, (),
-                                                                    (Pulse_Typing.STC
-                                                                    (g1,
-                                                                    {
-                                                                    Pulse_Syntax_Base.u
-                                                                    =
-                                                                    (post2.Pulse_Typing.u);
-                                                                    Pulse_Syntax_Base.res
-                                                                    =
-                                                                    (post2.Pulse_Typing.ret_ty);
-                                                                    Pulse_Syntax_Base.pre
-                                                                    = pre;
-                                                                    Pulse_Syntax_Base.post
-                                                                    =
-                                                                    (post2.Pulse_Typing.post)
-                                                                    }, x, (),
-                                                                    (), ())))))
-                                                                    | 
-                                                                    Pulse_Syntax_Base.EffectAnnotAtomic
-                                                                    {
-                                                                    Pulse_Syntax_Base.opens1
-                                                                    = opens;_}
-                                                                    ->
-                                                                    Prims.Mkdtuple2
-                                                                    ((Pulse_Syntax_Base.C_STAtomic
-                                                                    (opens,
-                                                                    Pulse_Syntax_Base.Neutral,
-                                                                    {
-                                                                    Pulse_Syntax_Base.u
-                                                                    =
-                                                                    (post2.Pulse_Typing.u);
-                                                                    Pulse_Syntax_Base.res
-                                                                    =
-                                                                    (post2.Pulse_Typing.ret_ty);
-                                                                    Pulse_Syntax_Base.pre
-                                                                    = pre;
-                                                                    Pulse_Syntax_Base.post
-                                                                    =
-                                                                    (post2.Pulse_Typing.post)
-                                                                    })),
-                                                                    (Pulse_Typing.CT_STAtomic
-                                                                    (g1,
-                                                                    opens,
-                                                                    Pulse_Syntax_Base.Neutral,
-                                                                    {
-                                                                    Pulse_Syntax_Base.u
-                                                                    =
-                                                                    (post2.Pulse_Typing.u);
-                                                                    Pulse_Syntax_Base.res
-                                                                    =
-                                                                    (post2.Pulse_Typing.ret_ty);
-                                                                    Pulse_Syntax_Base.pre
-                                                                    = pre;
-                                                                    Pulse_Syntax_Base.post
-                                                                    =
-                                                                    (post2.Pulse_Typing.post)
-                                                                    }, (),
-                                                                    (Pulse_Typing.STC
-                                                                    (g1,
-                                                                    {
-                                                                    Pulse_Syntax_Base.u
-                                                                    =
-                                                                    (post2.Pulse_Typing.u);
-                                                                    Pulse_Syntax_Base.res
-                                                                    =
-                                                                    (post2.Pulse_Typing.ret_ty);
-                                                                    Pulse_Syntax_Base.pre
-                                                                    = pre;
-                                                                    Pulse_Syntax_Base.post
-                                                                    =
-                                                                    (post2.Pulse_Typing.post)
-                                                                    }, x, (),
-                                                                    (), ())))))
-                                                                    | 
-                                                                    Pulse_Syntax_Base.EffectAnnotAtomicOrGhost
-                                                                    {
-                                                                    Pulse_Syntax_Base.opens2
-                                                                    = opens;_}
-                                                                    ->
-                                                                    Prims.Mkdtuple2
-                                                                    ((Pulse_Syntax_Base.C_STAtomic
-                                                                    (opens,
-                                                                    Pulse_Syntax_Base.Neutral,
-                                                                    {
-                                                                    Pulse_Syntax_Base.u
-                                                                    =
-                                                                    (post2.Pulse_Typing.u);
-                                                                    Pulse_Syntax_Base.res
-                                                                    =
-                                                                    (post2.Pulse_Typing.ret_ty);
-                                                                    Pulse_Syntax_Base.pre
-                                                                    = pre;
-                                                                    Pulse_Syntax_Base.post
-                                                                    =
-                                                                    (post2.Pulse_Typing.post)
-                                                                    })),
-                                                                    (Pulse_Typing.CT_STAtomic
-                                                                    (g1,
-                                                                    opens,
-                                                                    Pulse_Syntax_Base.Neutral,
-                                                                    {
-                                                                    Pulse_Syntax_Base.u
-                                                                    =
-                                                                    (post2.Pulse_Typing.u);
-                                                                    Pulse_Syntax_Base.res
-                                                                    =
-                                                                    (post2.Pulse_Typing.ret_ty);
-                                                                    Pulse_Syntax_Base.pre
-                                                                    = pre;
-                                                                    Pulse_Syntax_Base.post
-                                                                    =
-                                                                    (post2.Pulse_Typing.post)
-                                                                    }, (),
-                                                                    (Pulse_Typing.STC
-                                                                    (g1,
-                                                                    {
-                                                                    Pulse_Syntax_Base.u
-                                                                    =
-                                                                    (post2.Pulse_Typing.u);
-                                                                    Pulse_Syntax_Base.res
-                                                                    =
-                                                                    (post2.Pulse_Typing.ret_ty);
-                                                                    Pulse_Syntax_Base.pre
-                                                                    = pre;
-                                                                    Pulse_Syntax_Base.post
-                                                                    =
-                                                                    (post2.Pulse_Typing.post)
-                                                                    }, x, (),
-                                                                    (), ())))))))))
-                                                                    uu___3)))
+                                                                    (Pulse_Typing_Combinators.comp_for_post_hint
+                                                                    g pre ()
+                                                                    post1 x))
                                                                 (fun uu___2
                                                                    ->
                                                                    (fun res
@@ -788,17 +529,17 @@ let (check :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Admit.fst"
-                                                                    (Prims.of_int (100))
+                                                                    (Prims.of_int (75))
                                                                     (Prims.of_int (21))
-                                                                    (Prims.of_int (100))
+                                                                    (Prims.of_int (75))
                                                                     (Prims.of_int (24)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Admit.fst"
-                                                                    (Prims.of_int (99))
+                                                                    (Prims.of_int (74))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (102))
+                                                                    (Prims.of_int (77))
                                                                     (Prims.of_int (55)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -820,17 +561,17 @@ let (check :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Admit.fst"
-                                                                    (Prims.of_int (101))
+                                                                    (Prims.of_int (76))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (101))
+                                                                    (Prims.of_int (76))
                                                                     (Prims.of_int (25)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Admit.fst"
-                                                                    (Prims.of_int (102))
+                                                                    (Prims.of_int (77))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (102))
+                                                                    (Prims.of_int (77))
                                                                     (Prims.of_int (55)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
