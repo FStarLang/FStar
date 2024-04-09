@@ -45,10 +45,9 @@ let stc_soundness
   let pre_typing = tot_typing_soundness dpre in      
   calc (==) {
     RT.close_term (open_term st.post x) x;
-       (==) { elab_open_commute st.post x }
+       (==) { RT.open_term_spec st.post x }
     RT.close_term (RT.open_term st.post x) x;
        (==) { 
-              elab_freevars st.post;
               RT.close_open_inverse st.post x
             }
     st.post;

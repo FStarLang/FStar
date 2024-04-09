@@ -91,7 +91,6 @@ let mk_t_abs_tot (g:env)
     RT.well_typed_terms_are_ln _ _ _ r_body_typing;
     RT.open_close_inverse r_body x;
     elab_comp_close_commute c x;      
-    elab_freevars body;
     assert (~ (x `Set.mem` RT.freevars body));
     assume (~ (x `Set.mem` RT.freevars (RT.close_term r_body x)));
     RT.close_term_spec (elab_comp c) x;

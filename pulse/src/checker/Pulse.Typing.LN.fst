@@ -525,8 +525,7 @@ let open_term_ln_inv' (e:term)
     (requires ln' e i)
     (ensures ln' (open_term' e x i) (i - 1))
     (decreases e)
-  =  Pulse.Elaborate.elab_ln x (-1);
-     r_open_term_ln_inv' e x i
+  =  r_open_term_ln_inv' e x i
 
 let open_comp_ln_inv' (c:comp)
                       (x:term { ln x })
@@ -1076,7 +1075,6 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       st_typing_ln db;
       open_st_term_ln body x;
       close_comp_ln c x;
-      Pulse.Elaborate.elab_ln ty.binder_ty (-1);
       Pulse.Elaborate.elab_ln_comp (close_comp c x) 0
 
     | T_STApp _ _ _ _ res arg st at

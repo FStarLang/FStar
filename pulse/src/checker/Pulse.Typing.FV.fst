@@ -278,9 +278,7 @@ let tot_or_ghost_typing_freevars
   : Lemma 
     (ensures freevars t `Set.subset` vars_of_env g /\
              freevars ty `Set.subset` vars_of_env g)
-  = elab_freevars t;
-    elab_freevars ty;      
-    let E d = d in
+  = let E d = d in
     refl_typing_freevars d;
     assert (vars_of_env_r (elab_env g) `Set.equal` (vars_of_env g))
 
@@ -340,9 +338,7 @@ let st_equiv_freevars #g (#c1 #c2:_)
       vprop_equiv_freevars eq_post;
       freevars_open_term_inv (comp_post c1) x;
       freevars_open_term_inv (comp_post c2) x;
-      Pulse.Elaborate.elab_freevars (comp_res c1);
-      refl_equiv_freevars eq_res;
-      Pulse.Elaborate.elab_freevars (comp_res c2)
+      refl_equiv_freevars eq_res
     )
     | ST_TotEquiv _ t1 t2 u t1_typing eq ->
       let t2_typing = Pulse.Typing.Metatheory.Base.rt_equiv_typing eq t1_typing._0 in

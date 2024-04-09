@@ -115,8 +115,6 @@ let st_equiv_soundness_aux (g:stt_env)
       in
       let pre_equiv = VPropEquiv.vprop_equiv_unit_soundness pre_typing eq_pre in
       let g' = push_binding g x ppname_default (comp_res c0) in
-      elab_open_commute (comp_post c0) x;
-      elab_open_commute (comp_post c1) x;      
       let post_equiv
         : RT.tot_typing (RT.extend_env (elab_env g) x (comp_res c0))
                     (`())
