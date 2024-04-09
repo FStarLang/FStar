@@ -489,10 +489,14 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       let! names = names |> mapM (tosyntax env) in
       let! body = desugar_stmt env body in
       let! returns_ =
-        let opens_tm opens_opt =
+        let opens_tm opens_opt : err SW.term =
           match opens_opt with
           | Some opens -> desugar_term env opens
-          | None -> return SW.tm_emp_inames in
+          | None ->
+            let all_names = n1::names in
+            let opens_tm = L.fold_left (fun names n ->
+              SW.tm_add_inv names (tm_expr n s.range) s.range) SW.tm_emp_inames all_names in
+            return opens_tm in
         match returns_ with
         | None -> return None
         | Some (None, v, opens_opt) -> 

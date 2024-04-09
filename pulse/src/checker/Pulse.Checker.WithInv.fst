@@ -49,10 +49,8 @@ let remove_iname (inames i:term)
 let add_iname (inames i:term)
 : term
 = wr 
-    (Pulse.Reflection.Util.add_inv_tm
-      inames
-      i)
-  (Pulse.RuntimeUtils.range_of_term inames)
+    (tm_add_inv inames i)
+    (Pulse.RuntimeUtils.range_of_term inames)
 
 module RU = Pulse.RuntimeUtils
 let all_inames =
@@ -191,7 +189,7 @@ let atomic_or_ghost_with_inames_and_pre_post
     C_STGhost inames { s with pre; post }
 
 #restart-solver
-#push-options "--z3rlimit_factor 15 --split_queries no"
+#push-options "--z3rlimit_factor 20 --split_queries no"
 let check
   (g:env)
   (pre:term)
@@ -271,8 +269,11 @@ let check
          
 
   let Some (| p', post_frame, _, post_frame_typing, d_post_frame_equiv |) = res in
-  assume (p' == p);
-
+  if not (eq_tm p p')
+  then fail g (Some i_range)
+         (FStar.Printf.sprintf "Inconsistent vprops for iref %s in pre (%s) and post (%s)"
+            (show i) (show p) (show p'));
+  assert (p == p');
   let post_body = tm_star p post_frame in
   
   let (| opens, opens_typing |) 
@@ -323,7 +324,7 @@ let check
   assert (comp_post c_body == tm_star p post_frame);
 
   let c_out = atomic_or_ghost_with_inames_and_pre_post c_body
-    (Pulse.Reflection.Util.add_inv_tm (comp_inames c_body) i)
+    (tm_add_inv (comp_inames c_body) i)
     pre
     post_hint.post in 
 
@@ -338,7 +339,7 @@ let check
       post_frame in
     let c_out_eq = atomic_or_ghost_with_inames_and_pre_post
       c_body
-      (Pulse.Reflection.Util.add_inv_tm (comp_inames c_body) i)
+      (tm_add_inv (comp_inames c_body) i)
       (tm_star (tm_inv i p) pre_frame)
       (tm_star (tm_inv i p) post_frame) in
     

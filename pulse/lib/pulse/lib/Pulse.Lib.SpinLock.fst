@@ -83,8 +83,7 @@ fn rec acquire_aux (#v:vprop) (#p:perm) (l:lock)
       returns b:bool
       ensures inv (iref_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v)) **
               active p l.i **
-              (if b then v ** GR.pts_to l.gr #(half_perm full_perm) 1ul else emp)
-      opens (add_inv emp_inames (iref_of l.i)) {
+              (if b then v ** GR.pts_to l.gr #(half_perm full_perm) 1ul else emp) {
       unpack_cinv_vp l.i;
       unfold lock_inv;
       unfold lock_inv_aux;
@@ -146,8 +145,7 @@ fn release_aux (#v:vprop) (#p:perm) (l:lock)
   with_invariants (iref_of l.i)
     returns _:unit
     ensures inv (iref_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v)) **
-            active p l.i
-    opens (add_inv emp_inames (iref_of l.i)) {
+            active p l.i {
     unpack_cinv_vp l.i;
     unfold (lock_inv l.r l.gr v);
     unfold (lock_inv_aux l.r l.gr v);

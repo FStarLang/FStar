@@ -737,9 +737,6 @@ let all_inames_lid = mk_pulse_lib_core_lid "all_inames"
 let add_inv_lid = mk_pulse_lib_core_lid "add_inv"
 let remove_inv_lid = mk_pulse_lib_core_lid "remove_inv"
 
-let add_inv_tm (is iref:R.term) : R.term =
-  let h = R.pack_ln (R.Tv_FVar (R.pack_fv add_inv_lid)) in
-  R.mk_app h [ex is; ex iref]
 let remove_inv_tm (is iref:R.term) : R.term =
   let h = R.pack_ln (R.Tv_FVar (R.pack_fv remove_inv_lid)) in
   R.mk_app h [ex is; ex iref]

@@ -2166,17 +2166,6 @@ let (all_inames_lid : Prims.string Prims.list) =
 let (add_inv_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "add_inv"
 let (remove_inv_lid : Prims.string Prims.list) =
   mk_pulse_lib_core_lid "remove_inv"
-let (add_inv_tm :
-  FStar_Reflection_Types.term ->
-    FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
-  =
-  fun is ->
-    fun iref ->
-      let h =
-        FStar_Reflection_V2_Builtins.pack_ln
-          (FStar_Reflection_V2_Data.Tv_FVar
-             (FStar_Reflection_V2_Builtins.pack_fv add_inv_lid)) in
-      FStar_Reflection_V2_Derived.mk_app h [ex is; ex iref]
 let (remove_inv_tm :
   FStar_Reflection_Types.term ->
     FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
