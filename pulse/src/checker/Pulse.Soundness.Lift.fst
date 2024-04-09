@@ -45,7 +45,7 @@ let elab_lift_ghost_neutral_typing
       (reveal_a:R.term)
       (reveal_a_typing:RT.tot_typing (elab_env g) reveal_a
                                      (non_informative_rt (comp_u c1)
-                                                         (elab_term (comp_res c1))))
+                                                         (comp_res c1)))
     : Ghost (RT.tot_typing (elab_env g) (elab_lift lc e) (elab_comp c2))
           (requires Lift_Ghost_Neutral? lc)
           (ensures fun _ -> True)

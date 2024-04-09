@@ -3406,8 +3406,7 @@ let (apply_frame :
                              (g, c', c'', x, (), (), (),
                                (FStar_Reflection_Typing.Rel_refl
                                   ((Pulse_Typing.elab_env g),
-                                    (Pulse_Elaborate_Pure.elab_term
-                                       (Pulse_Syntax_Base.comp_res c')),
+                                    (Pulse_Syntax_Base.comp_res c'),
                                     FStar_Reflection_Typing.R_Eq)), (), ()) in
                          let t_typing2 =
                            Pulse_Typing.T_Equiv

@@ -194,7 +194,7 @@ let open_st_term_bs (t:st_term) (bs:list binding) : st_term =
     match bs with
     | [] -> []
     | b::bs ->
-      (DT i (Pulse.Syntax.Pure.term_of_nvar (ppname_default, fst b))) :: aux bs (i+1)
+      (RT.DT i (Pulse.Syntax.Pure.term_of_nvar (ppname_default, fst b))) :: aux bs (i+1)
   in
   let ss = aux (List.rev bs) 0 in
   subst_st_term t ss
@@ -428,7 +428,7 @@ let check
         & bnds : (list (list R.binding)){L.length bnds == nbr}
         & pats_complete g sc sc_ty pats)
   =
-    match T.check_match_complete (elab_env g) (elab_term sc) (elab_term sc_ty) elab_pats with
+    match T.check_match_complete (elab_env g) sc sc_ty elab_pats with
     | None -> fail g (Some sc_range) "Could not check that match is correct/complete"
     | Some (elab_pats', bnds) ->
       (| elab_pats', bnds, PC_Elab _ _ _ _ _ (RT.MC_Tok _ _ _ _ bnds ()) |)

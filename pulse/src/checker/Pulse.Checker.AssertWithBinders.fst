@@ -25,6 +25,7 @@ open Pulse.Typing.Env
 module L = FStar.List.Tot
 module T = FStar.Tactics.V2
 module R = FStar.Reflection.V2
+module RT = FStar.Reflection.Typing
 module PC = Pulse.Checker.Pure
 module P = Pulse.Syntax.Printer
 module N = Pulse.Syntax.Naming
@@ -59,11 +60,10 @@ let infer_binder_types (g:env) (bs:list binder) (v:vprop)
   | _ ->
     let v_rng = Pulse.RuntimeUtils.range_of_term v in
     let g = push_context g "infer_binder_types" v_rng in
-    let tv = elab_term v in
     let as_binder (b:binder) : R.binder =
       let open R in
       let bv : binder_view = 
-        { sort = elab_term b.binder_ty;
+        { sort = b.binder_ty;
           ppname = b.binder_ppname.name;
           qual = Q_Explicit;
           attrs = [] } in
@@ -75,7 +75,7 @@ let infer_binder_types (g:env) (bs:list binder) (v:vprop)
          let b = as_binder b in
          R.pack_ln (R.Tv_Abs b tv))
         bs
-        tv
+        v
     in
     let inst_abstraction, _ = PC.instantiate_term_implicits g (wr abstraction v_rng) in
     refl_abs_binders inst_abstraction []
@@ -89,7 +89,7 @@ let rec open_binders (g:env) (bs:list binder) (uvs:env { disjoint uvs g }) (v:te
     // these binders are only lax checked so far
     let _ = PC.check_universe (push_env g uvs) b.binder_ty in
     let x = fresh (push_env g uvs) in
-    let ss = [ DT 0 (tm_var {nm_index=x;nm_ppname=b.binder_ppname}) ] in
+    let ss = [ RT.DT 0 (tm_var {nm_index=x;nm_ppname=b.binder_ppname}) ] in
     let bs = L.mapi (fun i b ->
       assume (i >= 0);
       subst_binder b (shift_subst_n i ss)) bs in
@@ -100,7 +100,7 @@ let rec open_binders (g:env) (bs:list binder) (uvs:env { disjoint uvs g }) (v:te
 let closing (bs:list (ppname & var & typ)) : subst =
   L.fold_right (fun (_, x, _) (n, ss) ->
     n+1,
-    (ND x n)::ss
+    (RT.ND x n)::ss
   ) bs (0, []) |> snd
 
 let rec close_binders (bs:list (ppname & var & typ))
@@ -110,15 +110,14 @@ let rec close_binders (bs:list (ppname & var & typ))
   | (name, x, t)::bs ->
     let bss = L.mapi (fun n (n1, x1, t1) ->
       assume (n >= 0);
-      n1, x1, subst_term t1 [ND x n]) bs in
+      n1, x1, subst_term t1 [RT.ND x n]) bs in
     let b = mk_binder_ppname t name in
     assume (L.length bss == L.length bs);
     b::(close_binders bss)
 
 let unfold_defs (g:env) (defs:option (list string)) (t:term) 
   : T.Tac term
-  = let t = elab_term t in
-    let head, _ = T.collect_app t in
+  = let head, _ = T.collect_app t in
     match R.inspect_ln head with
     | R.Tv_FVar fv
     | R.Tv_UInst fv _ -> (
@@ -156,7 +155,7 @@ let visit_and_rewrite (p: (R.term & R.term)) (t:term) : T.Tac term =
   | R.Tv_Var n -> (
     let nv = R.inspect_namedv n in
     assume (is_host_term rhs);
-    subst_term t [NT nv.uniq (wr rhs (Pulse.RuntimeUtils.range_of_term t))]
+    subst_term t [RT.NT nv.uniq (wr rhs (Pulse.RuntimeUtils.range_of_term t))]
     ) 
   | _ -> FStar.Tactics.Visit.visit_tm visitor t
     
@@ -197,7 +196,7 @@ let rec as_subst (p : list (term & term))
     | R.Tv_Var n -> (
       let nv = R.inspect_namedv n in
       as_subst p 
-        (NT nv.uniq e2::out) 
+        (RT.NT nv.uniq e2::out) 
         (nv.uniq ::domain )
         (Set.union codomain (freevars e2))
     ) 
@@ -214,8 +213,8 @@ let rewrite_all (g:env) (p: list (term & term)) (t:term) : T.Tac (term & term) =
     let p : list (R.term & R.term) = 
       T.map 
         (fun (e1, e2) -> 
-          elab_term (fst (Pulse.Checker.Pure.instantiate_term_implicits g e1)),
-          elab_term (fst (Pulse.Checker.Pure.instantiate_term_implicits g e2)))
+          (fst (Pulse.Checker.Pure.instantiate_term_implicits g e1)),
+          (fst (Pulse.Checker.Pure.instantiate_term_implicits g e2)))
         p
     in
     let lhs, rhs = visit_and_rewrite_conjuncts_all p t in

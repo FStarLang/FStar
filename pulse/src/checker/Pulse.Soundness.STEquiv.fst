@@ -48,20 +48,20 @@ let abs_and_app0 (ty:R.term) (b:R.term) =
 let stt_vprop_equiv_abstract (#g:stt_env) (#post0 #post1:term) (#pf:_) (#ty:_)
                              (d:RT.tot_typing (elab_env g) pf 
                                   (mk_arrow (ty, R.Q_Explicit)
-                                     (stt_vprop_equiv (elab_term post0) (elab_term post1))))
+                                     (stt_vprop_equiv post0 post1)))
   : GTot (RT.tot_typing (elab_env g) pf
             (mk_arrow (ty, R.Q_Explicit)
-                      (stt_vprop_equiv (abs_and_app0 ty (elab_term post0))
-                                       (abs_and_app0 ty (elab_term post1)))))
+                      (stt_vprop_equiv (abs_and_app0 ty post0)
+                                       (abs_and_app0 ty post1))))
   = admit()
 
 let inst_intro_vprop_post_equiv (#g:R.env) (#ty:R.term) (#u:_)
                                 (d_ty:RT.tot_typing g ty (RT.tm_type u))
                                 (#post0 #post1:R.term)
                                 (d_0:RT.tot_typing g post0 
-                                       (mk_arrow (ty, R.Q_Explicit) (elab_term tm_vprop)))
+                                       (mk_arrow (ty, R.Q_Explicit) tm_vprop))
                                 (d_1:RT.tot_typing g post1 
-                                       (mk_arrow (ty, R.Q_Explicit) (elab_term tm_vprop)))
+                                       (mk_arrow (ty, R.Q_Explicit) tm_vprop))
                                 (#pf:_)
                                 (eq:RT.tot_typing g pf (mk_arrow (ty, R.Q_Explicit) 
                                       (stt_vprop_equiv (app0 post0) (app0 post1))))
@@ -74,18 +74,18 @@ let stt_vprop_post_equiv_is_prop (#g:R.env) (#ty:R.term) (#u:_)
                                  (d_ty:RT.tot_typing g ty (RT.tm_type u))
                                  (#post0 #post1:R.term)
                                  (d_0:RT.tot_typing g post0 
-                                                (mk_arrow (ty, R.Q_Explicit) (elab_term tm_vprop)))
+                                                (mk_arrow (ty, R.Q_Explicit) tm_vprop))
                                  (d_1:RT.tot_typing g post1 
-                                                (mk_arrow (ty, R.Q_Explicit) (elab_term tm_vprop)))
+                                                (mk_arrow (ty, R.Q_Explicit) tm_vprop))
   : GTot (RT.tot_typing g (stt_vprop_post_equiv u ty post0 post1) RT.tm_prop)
   = admit()
 
 let inst_sub_stt (#g:R.env) (#u:_) (#a #pre1 #pre2 #post1 #post2 #r:R.term)
                  (d_a: RT.tot_typing g a (RT.tm_type u))
-                 (d_pre1: RT.tot_typing g pre1 (elab_term tm_vprop))
-                 (d_pre2: RT.tot_typing g pre2 (elab_term tm_vprop))
-                 (d_post1:RT.tot_typing g post1 (mk_arrow (a, R.Q_Explicit) (elab_term tm_vprop)))
-                 (d_post2:RT.tot_typing g post2 (mk_arrow (a, R.Q_Explicit) (elab_term tm_vprop)))
+                 (d_pre1: RT.tot_typing g pre1 tm_vprop)
+                 (d_pre2: RT.tot_typing g pre2 tm_vprop)
+                 (d_post1:RT.tot_typing g post1 (mk_arrow (a, R.Q_Explicit) tm_vprop))
+                 (d_post2:RT.tot_typing g post2 (mk_arrow (a, R.Q_Explicit) tm_vprop))
                  (pre_equiv:RT.tot_typing g (`()) (stt_vprop_equiv pre1 pre2))
                  (post_equiv:RT.tot_typing g (`()) (stt_vprop_post_equiv u a post1 post2))
                  (d_r:RT.tot_typing g r (mk_stt_comp u a pre1 post1))
@@ -105,8 +105,8 @@ let st_equiv_soundness_aux (g:stt_env)
       let ST_VPropEquiv _ _ _ x pre_typing res_typing post_typing _eq_res eq_pre eq_post = d in
       // assert (None? (lookup_ty g x));
       assert (None? (lookup g x));
-      assume (~(x `Set.mem` RT.freevars (elab_term (comp_post c0))));
-      assume (~(x `Set.mem` RT.freevars (elab_term (comp_post c1))));      
+      assume (~(x `Set.mem` RT.freevars (comp_post c0)));
+      assume (~(x `Set.mem` RT.freevars (comp_post c1)));
       let open_term_spec (e:R.term) (x:var)
           : Lemma 
             (RT.open_term e x == RT.subst_term e (RT.open_with_var x 0))
@@ -115,31 +115,29 @@ let st_equiv_soundness_aux (g:stt_env)
       in
       let pre_equiv = VPropEquiv.vprop_equiv_unit_soundness pre_typing eq_pre in
       let g' = push_binding g x ppname_default (comp_res c0) in
-      elab_open_commute (comp_post c0) x;
-      elab_open_commute (comp_post c1) x;      
       let post_equiv
-        : RT.tot_typing (RT.extend_env (elab_env g) x (elab_term (comp_res c0)))
+        : RT.tot_typing (RT.extend_env (elab_env g) x (comp_res c0))
                     (`())
                     (stt_vprop_equiv 
-                      (RT.open_term (elab_term (comp_post c0)) x)
-                      (RT.open_term (elab_term (comp_post c1)) x))
+                      (RT.open_term (comp_post c0) x)
+                      (RT.open_term (comp_post c1) x))
           = VPropEquiv.vprop_equiv_unit_soundness post_typing eq_post
       in
-      let t0 = elab_term (comp_res c0)  in
+      let t0 = comp_res c0 in
       let r_res_typing = tot_typing_soundness res_typing in
-      RT.close_open_inverse (elab_term (comp_post c0)) x;
-      RT.close_open_inverse (elab_term (comp_post c1)) x;
+      RT.close_open_inverse (comp_post c0) x;
+      RT.close_open_inverse (comp_post c1) x;
       let d 
         : RT.tot_typing (elab_env g) _ 
                     (mk_arrow (t0, R.Q_Explicit)
-                              (stt_vprop_equiv (elab_term (comp_post c0))
-                                              (elab_term (comp_post c1))))
-          = assume (stt_vprop_equiv (elab_term (comp_post c0))
-                                    (elab_term (comp_post c1)) ==
+                              (stt_vprop_equiv (comp_post c0)
+                                               (comp_post c1)))
+          = assume (stt_vprop_equiv (comp_post c0)
+                                    (comp_post c1) ==
                     RT.subst_term
                       (stt_vprop_equiv
-                        (RT.open_term (elab_term (comp_post c0)) x)
-                        (RT.open_term (elab_term (comp_post c1)) x))
+                        (RT.open_term (comp_post c0) x)
+                        (RT.open_term (comp_post c1) x))
                       [ RT.ND x 0 ]);
             RT.T_Abs _ _ _ (`()) _ (comp_u c1) _ R.Q_Explicit _ r_res_typing post_equiv
       in
@@ -147,13 +145,13 @@ let st_equiv_soundness_aux (g:stt_env)
       let abs_post0_typing
         : RT.tot_typing (elab_env g)
                         (elab_comp_post c0) // mk_abs t0 (elab_pure (comp_post c0)))
-                        (elab_term (vprop_arrow (comp_res c0)))
+                        (vprop_arrow (comp_res c0))
         = mk_t_abs_tot _ _ res_typing post_typing
       in
       let abs_post1_typing
         : RT.tot_typing (elab_env g)
                         (elab_comp_post c1) //mk_abs t0 (elab_pure (comp_post c1)))
-                        (elab_term (vprop_arrow (comp_res c0)))
+                        (vprop_arrow (comp_res c0))
         = mk_t_abs_tot _ _ res_typing (fst (vprop_equiv_typing eq_post) post_typing)
       in
       let (| pf, d |) =
@@ -190,23 +188,23 @@ let st_equiv_soundness (g:stt_env)
     assert (comp_post c1 == comp_post c1');
     let rpost1' =
       Pulse.Reflection.Util.mk_abs
-        (elab_term (comp_res c1')) R.Q_Explicit (elab_term (comp_post c1')) in
+        (comp_res c1') R.Q_Explicit (comp_post c1') in
     let rpost1 =
       Pulse.Reflection.Util.mk_abs
-        (elab_term (comp_res c1)) R.Q_Explicit (elab_term (comp_post c1)) in
+        (comp_res c1) R.Q_Explicit (comp_post c1) in
     
     // these two should follow, since we know x is not free in comp_post c1 and c2
     //   from the ST_VPropEquiv rule
-    assume (~ (x `Set.mem` (RT.freevars (elab_term (comp_post c1)))));
-    assume (~ (x `Set.mem` (RT.freevars (elab_term (comp_post c1')))));
+    assume (~ (x `Set.mem` (RT.freevars (comp_post c1))));
+    assume (~ (x `Set.mem` (RT.freevars (comp_post c1'))));
     
     let d : RT.equiv (elab_env g) rpost1' rpost1 =
       RT.Rel_abs (elab_env g)
-                 (elab_term (comp_res c1'))
-                 (elab_term (comp_res c1))
+                 (comp_res c1')
+                 (comp_res c1)
                  R.Q_Explicit
-                 (elab_term (comp_post c1'))
-                 (elab_term (comp_post c1))
+                 (comp_post c1')
+                 (comp_post c1)
                  x
                  eq_res
                  (RT.Rel_refl _ _ _) in
@@ -214,11 +212,11 @@ let st_equiv_soundness (g:stt_env)
     let d_eq : RT.equiv (elab_env g) (elab_comp c1') (elab_comp c1) =
       mk_stt_comp_equiv (elab_env g)
         (comp_u c1)
-        (elab_term (comp_res c1'))
-        (elab_term (comp_pre c1'))
+        (comp_res c1')
+        (comp_pre c1')
         rpost1'
-        (elab_term (comp_res c1))
-        (elab_term (comp_pre c1))
+        (comp_res c1)
+        (comp_pre c1)
         rpost1
         eq_res
         (RT.Rel_refl _ _ _)

@@ -31,28 +31,26 @@ let stc_soundness
   (d_st:st_comp_typing g st)
   
   : GTot (RT.tot_typing (elab_env g)
-                        (elab_term st.res)
+                        st.res
                         (RT.tm_type st.u) &
           RT.tot_typing (elab_env g)
-                        (elab_term st.pre)
+                        st.pre
                         vprop_tm &
           RT.tot_typing (elab_env g)
-                        (mk_abs (elab_term st.res) R.Q_Explicit
-                           (elab_term st.post))
-                        (post1_type_bind (elab_term st.res))) =
+                        (mk_abs st.res R.Q_Explicit st.post)
+                        (post1_type_bind st.res)) =
    
   let STC _ st x dres dpre dpost = d_st in
   let res_typing = tot_typing_soundness dres in
   let pre_typing = tot_typing_soundness dpre in      
   calc (==) {
-    RT.close_term (elab_term (open_term st.post x)) x;
-       (==) { elab_open_commute st.post x }
-    RT.close_term (RT.open_term (elab_term st.post) x) x;
+    RT.close_term (open_term st.post x) x;
+       (==) { RT.open_term_spec st.post x }
+    RT.close_term (RT.open_term st.post x) x;
        (==) { 
-              elab_freevars st.post;
-              RT.close_open_inverse (elab_term st.post) x
+              RT.close_open_inverse st.post x
             }
-    elab_term st.post;
+    st.post;
   };
   let post_typing  = mk_t_abs_tot g ppname_default dres dpost in
   res_typing, pre_typing, post_typing

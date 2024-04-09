@@ -124,12 +124,12 @@ let elab_bind_typing (g:stt_env)
                      (r1_typing: RT.tot_typing (elab_env g) r1 (elab_comp c1))
                      (r2:R.term)
                      (r2_typing: RT.tot_typing (elab_env g) r2 
-                                               (elab_term (tm_arrow (null_binder (comp_res c1)) None (close_comp c2 x))))
+                                               (tm_arrow (null_binder (comp_res c1)) None (close_comp c2 x)))
                      (bc:bind_comp g x c1 c2 c)
-                     (t2_typing : RT.tot_typing (elab_env g) (elab_term (comp_res c2)) (RT.tm_type (comp_u c2)))
+                     (t2_typing : RT.tot_typing (elab_env g) (comp_res c2) (RT.tm_type (comp_u c2)))
                      (post2_typing: RT.tot_typing (elab_env g) 
                                                   (elab_comp_post c2)
-                                                  (post2_type_bind (elab_term (comp_res c2))))
+                                                  (post2_type_bind (comp_res c2)))
   = assume (C_ST? c1 /\ C_ST? c2);
     let rg = elab_env g in
     let u1 = comp_u c1 in
@@ -141,8 +141,8 @@ let elab_bind_typing (g:stt_env)
     let head_typing : RT.tot_typing _ _ (bind_type u1 u2) = RT.T_UInst rg bind_fv [u1;u2] in
     let (| _, c1_typing |) = RT.type_correctness _ _ _ r1_typing in
     let t1_typing, pre_typing, post_typing = inversion_of_stt_typing _ _ c1_typing in
-    let t1 = (elab_term (comp_res c1)) in
-    let t2 = (elab_term (comp_res c2)) in
+    let t1 = (comp_res c1) in
+    let t2 = (comp_res c2) in
     let t1_typing : RT.tot_typing rg t1 (RT.tm_type u1) = t1_typing in
     let post1 = elab_comp_post c1 in
     let c2_x = close_comp c2 x in
@@ -152,19 +152,19 @@ let elab_bind_typing (g:stt_env)
     assert (~ (x `Set.mem` freevars (comp_post c1)));
     close_open_inverse (comp_post c1) x;
     assert (comp_post c1 == close_term (comp_pre c2) x);
-    assert (post1 == mk_abs t1 R.Q_Explicit (elab_term (comp_post c1)));
-    assert (elab_term (comp_post c1) == elab_term (comp_pre (close_comp c2 x)));
+    assert (post1 == mk_abs t1 R.Q_Explicit (comp_post c1));
+    assert (comp_post c1 == comp_pre (close_comp c2 x));
     //ln (comp_post c1) 0
     let g_typing
       : RT.tot_typing _ _ 
                   (mk_arrow (t1, R.Q_Explicit)
-                            (mk_stt_comp u2 t2 (elab_term (comp_post c1)) (elab_comp_post c2)))
+                            (mk_stt_comp u2 t2 (comp_post c1) (elab_comp_post c2)))
        = r2_typing in
     let g_typing 
       : RT.tot_typing _ _ 
                   (mk_arrow (t1, R.Q_Explicit)
                             (mk_stt_comp u2 t2
-                                            (R.mk_app (mk_abs t1 R.Q_Explicit (elab_term (comp_post c1)))
+                                            (R.mk_app (mk_abs t1 R.Q_Explicit (comp_post c1))
                                                      [bound_var 0, R.Q_Explicit])
                                                 (elab_comp_post c2)))
       = RT.T_Sub _ _ _ _ r2_typing
@@ -200,10 +200,9 @@ let bind_fn_typing #g #t #c d soundness =
   let g_x = push_binding g x ppname_default t1 in
 
   let re1 = elab_st_typing e1_typing in
-  let rt1 = elab_term t1 in
   let re2 = elab_st_typing e2_typing in
 
-  let re1_typing : RT.tot_typing (elab_env g) re1 rt1 =
+  let re1_typing : RT.tot_typing (elab_env g) re1 t1 =
     soundness g e1 c1 e1_typing in
   
   let re2_typing : RT.tot_typing (elab_env g_x) re2 (elab_comp c2) =
@@ -219,10 +218,10 @@ let bind_fn_typing #g #t #c d soundness =
        (==) { RT.open_close_inverse' 0 re2 x }
     re2;
   };
-  let elab_t = RT.mk_let RT.pp_name_default re1 rt1 (RT.close_term re2 x) in
+  let elab_t = RT.mk_let RT.pp_name_default re1 t1 (RT.close_term re2 x) in
   let res
     : RT.tot_typing (elab_env g) elab_t (RT.open_with (RT.close_term (elab_comp c2) x) re1)
-    = RT.T_Let (elab_env g) x re1 rt1 (RT.close_term re2 x) (elab_comp c2) T.E_Total RT.pp_name_default re1_typing re2_typing in
+    = RT.T_Let (elab_env g) x re1 t1 (RT.close_term re2 x) (elab_comp c2) T.E_Total RT.pp_name_default re1_typing re2_typing in
   Pulse.Typing.LN.comp_typing_ln c2_typing;
   Pulse.Elaborate.elab_ln_comp c (-1);
   assert (RT.ln (elab_comp c2));

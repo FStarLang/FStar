@@ -27,16 +27,16 @@ module RU = Pulse.RuntimeUtils
 let r_subst_of_rt_subst_elt (x:subst_elt)
   : FStar.Reflection.V2.subst_elt
   = match x with
-    | DT i t -> R2.DT i (E.elab_term t)
-    | NT x t -> R2.NT (RT.var_as_namedv x) (E.elab_term t) 
-    | ND x i -> R2.NM (RT.var_as_namedv x) i
+    | RT.DT i t -> R2.DT i t
+    | RT.NT x t -> R2.NT (RT.var_as_namedv x) t
+    | RT.ND x i -> R2.NM (RT.var_as_namedv x) i
 
 let subst_host_term' (t:term) (ss:subst) =
   R2.subst_term (L.map r_subst_of_rt_subst_elt ss) t
 
 let subst_host_term (t:term) (ss:subst) =
   let res0 = subst_host_term' t ss in
-  assume (res0 == RT.subst_term t (rt_subst ss));
+  assume (res0 == RT.subst_term t ss);
   res0
 
 let close_open_inverse' (t:term) 
@@ -114,9 +114,9 @@ let close_open_inverse_proof_hint_type' (ht:proof_hint_type)
     | SHOW_PROOF_STATE _ -> ()
 
 let open_ascription' (t:comp_ascription) (v:term) (i:index) : comp_ascription =
-  subst_ascription t [DT i v]
+  subst_ascription t [RT.DT i v]
 let close_ascription' (t:comp_ascription) (x:var) (i:index) : comp_ascription =
-  subst_ascription t [ND x i]
+  subst_ascription t [RT.ND x i]
 
 let close_open_inverse_ascription' (t:comp_ascription)
                                    (x:var { ~(x `Set.mem` freevars_ascription t) } )
@@ -128,7 +128,8 @@ let close_open_inverse_ascription' (t:comp_ascription)
     (match t.elaborated with
      | None -> ()
      | Some c -> close_open_inverse_comp' c x i)
-          
+
+#push-options "--z3rlimit_factor 8 --fuel 2 --ifuel 2 --split_queries no"
 let rec close_open_inverse_st'  (t:st_term) 
                                 (x:var { ~(x `Set.mem` freevars_st t) } )
                                 (i:index)
@@ -229,7 +230,8 @@ let rec close_open_inverse_st'  (t:st_term)
         close_open_inverse' b.binder_ty x i;
         close_open_inverse' r x (i + 1);
         close_open_inverse' is x i
-   
+#pop-options
+
 let close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )
   : Lemma (ensures close_term (open_term t x) x == t)
           (decreases t)
@@ -298,7 +300,7 @@ let close_binders (bs:list binder) (xs:list var { L.length bs == L.length xs }) 
     | [], [] -> L.rev out
     | b::bs, x::xs ->
       let b = { b with binder_ty = subst_term b.binder_ty s } in
-      let s = ND x 0 :: shift_subst s in
+      let s = RT.ND x 0 :: shift_subst s in
       aux s (b::out) bs xs
   in
   aux [] [] bs xs

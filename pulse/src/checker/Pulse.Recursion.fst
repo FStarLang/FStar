@@ -74,7 +74,7 @@ let elab_b (qbv : option qualifier & binder & bv) : Tot Tactics.NamedView.binder
   {
     uniq = bv.bv_index;
     ppname = b.binder_ppname.name;
-    sort = elab_term b.binder_ty;
+    sort = b.binder_ty;
     qual = elab_qual q;
     attrs = [];
   }
@@ -160,7 +160,6 @@ let add_knot (g : env) (rng : R.range)
         }
         in
         let meas = Some?.v meas in
-        let meas = elab_term meas in
         let meas' = R.subst_term prime_subst meas in
         let ref = `(`#meas' << `#meas) in
         (* TODO: this is not always printed *)

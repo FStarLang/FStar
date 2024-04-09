@@ -441,65 +441,29 @@ let (ln_st : Pulse_Syntax_Base.st_term -> Prims.bool) =
   fun t -> ln_st' t (Prims.of_int (-1))
 let (ln_c : Pulse_Syntax_Base.comp -> Prims.bool) =
   fun c -> ln_c' c (Prims.of_int (-1))
-type subst_elt =
-  | DT of Prims.nat * Pulse_Syntax_Base.term 
-  | NT of Pulse_Syntax_Base.var * Pulse_Syntax_Base.term 
-  | ND of Pulse_Syntax_Base.var * Prims.nat 
-let (uu___is_DT : subst_elt -> Prims.bool) =
-  fun projectee ->
-    match projectee with | DT (_0, _1) -> true | uu___ -> false
-let (__proj__DT__item___0 : subst_elt -> Prims.nat) =
-  fun projectee -> match projectee with | DT (_0, _1) -> _0
-let (__proj__DT__item___1 : subst_elt -> Pulse_Syntax_Base.term) =
-  fun projectee -> match projectee with | DT (_0, _1) -> _1
-let (uu___is_NT : subst_elt -> Prims.bool) =
-  fun projectee ->
-    match projectee with | NT (_0, _1) -> true | uu___ -> false
-let (__proj__NT__item___0 : subst_elt -> Pulse_Syntax_Base.var) =
-  fun projectee -> match projectee with | NT (_0, _1) -> _0
-let (__proj__NT__item___1 : subst_elt -> Pulse_Syntax_Base.term) =
-  fun projectee -> match projectee with | NT (_0, _1) -> _1
-let (uu___is_ND : subst_elt -> Prims.bool) =
-  fun projectee ->
-    match projectee with | ND (_0, _1) -> true | uu___ -> false
-let (__proj__ND__item___0 : subst_elt -> Pulse_Syntax_Base.var) =
-  fun projectee -> match projectee with | ND (_0, _1) -> _0
-let (__proj__ND__item___1 : subst_elt -> Prims.nat) =
-  fun projectee -> match projectee with | ND (_0, _1) -> _1
-let (shift_subst_elt : Prims.nat -> subst_elt -> subst_elt) =
-  fun n ->
-    fun uu___ ->
-      match uu___ with
-      | DT (i, t) -> DT ((i + n), t)
-      | NT (x, t) -> NT (x, t)
-      | ND (x, i) -> ND (x, (i + n))
-type subst = subst_elt Prims.list
+type subst_elt = FStar_Reflection_Typing.subst_elt
+let (shift_subst_elt :
+  Prims.nat ->
+    FStar_Reflection_Typing.subst_elt -> FStar_Reflection_Typing.subst_elt)
+  = FStar_Reflection_Typing.shift_subst_elt
+type subst = FStar_Reflection_Typing.subst
 let (shift_subst_n :
-  Prims.nat -> subst_elt Prims.list -> subst_elt Prims.list) =
-  fun n -> FStar_List_Tot_Base.map (shift_subst_elt n)
-let (shift_subst : subst_elt Prims.list -> subst_elt Prims.list) =
-  shift_subst_n Prims.int_one
-let (rt_subst_elt : subst_elt -> FStar_Reflection_Typing.subst_elt) =
-  fun uu___ ->
-    match uu___ with
-    | DT (i, t) ->
-        FStar_Reflection_Typing.DT (i, (Pulse_Elaborate_Pure.elab_term t))
-    | NT (x, t) ->
-        FStar_Reflection_Typing.NT (x, (Pulse_Elaborate_Pure.elab_term t))
-    | ND (x, i) -> FStar_Reflection_Typing.ND (x, i)
-let (rt_subst :
-  subst_elt Prims.list -> FStar_Reflection_Typing.subst_elt Prims.list) =
-  FStar_List_Tot_Base.map rt_subst_elt
+  Prims.nat ->
+    FStar_Reflection_Typing.subst_elt Prims.list ->
+      FStar_Reflection_Typing.subst_elt Prims.list)
+  = fun n -> FStar_Reflection_Typing.shift_subst_n n
+let (shift_subst :
+  FStar_Reflection_Typing.subst_elt Prims.list ->
+    FStar_Reflection_Typing.subst_elt Prims.list)
+  = FStar_Reflection_Typing.shift_subst
 let (r_subst_of_rt_subst_elt : subst_elt -> FStar_Syntax_Syntax.subst_elt) =
   fun x ->
     match x with
-    | DT (i, t) ->
-        FStar_Syntax_Syntax.DT (i, (Pulse_Elaborate_Pure.elab_term t))
-    | NT (x1, t) ->
+    | FStar_Reflection_Typing.DT (i, t) -> FStar_Syntax_Syntax.DT (i, t)
+    | FStar_Reflection_Typing.NT (x1, t) ->
         FStar_Syntax_Syntax.NT
-          ((FStar_Reflection_Typing.var_as_namedv x1),
-            (Pulse_Elaborate_Pure.elab_term t))
-    | ND (x1, i) ->
+          ((FStar_Reflection_Typing.var_as_namedv x1), t)
+    | FStar_Reflection_Typing.ND (x1, i) ->
         FStar_Syntax_Syntax.NM
           ((FStar_Reflection_Typing.var_as_namedv x1), i)
 let (subst_host_term' :
@@ -517,7 +481,8 @@ let (open_term' :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.index -> Pulse_Syntax_Base.term)
-  = fun t -> fun v -> fun i -> subst_term t [DT (i, v)]
+  =
+  fun t -> fun v -> fun i -> subst_term t [FStar_Reflection_Typing.DT (i, v)]
 let (subst_st_comp :
   Pulse_Syntax_Base.st_comp -> subst -> Pulse_Syntax_Base.st_comp) =
   fun s ->
@@ -533,7 +498,9 @@ let (open_st_comp' :
   Pulse_Syntax_Base.st_comp ->
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.index -> Pulse_Syntax_Base.st_comp)
-  = fun s -> fun v -> fun i -> subst_st_comp s [DT (i, v)]
+  =
+  fun s ->
+    fun v -> fun i -> subst_st_comp s [FStar_Reflection_Typing.DT (i, v)]
 let (subst_comp : Pulse_Syntax_Base.comp -> subst -> Pulse_Syntax_Base.comp)
   =
   fun c ->
@@ -553,7 +520,8 @@ let (open_comp' :
   Pulse_Syntax_Base.comp ->
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.index -> Pulse_Syntax_Base.comp)
-  = fun c -> fun v -> fun i -> subst_comp c [DT (i, v)]
+  =
+  fun c -> fun v -> fun i -> subst_comp c [FStar_Reflection_Typing.DT (i, v)]
 let (subst_term_opt :
   Pulse_Syntax_Base.term FStar_Pervasives_Native.option ->
     subst -> Pulse_Syntax_Base.term FStar_Pervasives_Native.option)
@@ -569,7 +537,9 @@ let (open_term_opt' :
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.index ->
         Pulse_Syntax_Base.term FStar_Pervasives_Native.option)
-  = fun t -> fun v -> fun i -> subst_term_opt t [DT (i, v)]
+  =
+  fun t ->
+    fun v -> fun i -> subst_term_opt t [FStar_Reflection_Typing.DT (i, v)]
 let rec (subst_term_list :
   Pulse_Syntax_Base.term Prims.list ->
     subst -> Pulse_Syntax_Base.term Prims.list)
@@ -583,7 +553,9 @@ let (open_term_list' :
   Pulse_Syntax_Base.term Prims.list ->
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.index -> Pulse_Syntax_Base.term Prims.list)
-  = fun t -> fun v -> fun i -> subst_term_list t [DT (i, v)]
+  =
+  fun t ->
+    fun v -> fun i -> subst_term_list t [FStar_Reflection_Typing.DT (i, v)]
 let (subst_binder :
   Pulse_Syntax_Base.binder -> subst -> Pulse_Syntax_Base.binder) =
   fun b ->
@@ -665,23 +637,31 @@ let (open_term_pairs' :
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.index ->
         (Pulse_Syntax_Base.term * Pulse_Syntax_Base.term) Prims.list)
-  = fun t -> fun v -> fun i -> subst_term_pairs t [DT (i, v)]
+  =
+  fun t ->
+    fun v -> fun i -> subst_term_pairs t [FStar_Reflection_Typing.DT (i, v)]
 let (close_term_pairs' :
   (Pulse_Syntax_Base.term * Pulse_Syntax_Base.term) Prims.list ->
     Pulse_Syntax_Base.var ->
       Pulse_Syntax_Base.index ->
         (Pulse_Syntax_Base.term * Pulse_Syntax_Base.term) Prims.list)
-  = fun t -> fun x -> fun i -> subst_term_pairs t [ND (x, i)]
+  =
+  fun t ->
+    fun x -> fun i -> subst_term_pairs t [FStar_Reflection_Typing.ND (x, i)]
 let (open_proof_hint' :
   Pulse_Syntax_Base.proof_hint_type ->
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.index -> Pulse_Syntax_Base.proof_hint_type)
-  = fun ht -> fun v -> fun i -> subst_proof_hint ht [DT (i, v)]
+  =
+  fun ht ->
+    fun v -> fun i -> subst_proof_hint ht [FStar_Reflection_Typing.DT (i, v)]
 let (close_proof_hint' :
   Pulse_Syntax_Base.proof_hint_type ->
     Pulse_Syntax_Base.var ->
       Pulse_Syntax_Base.index -> Pulse_Syntax_Base.proof_hint_type)
-  = fun ht -> fun x -> fun i -> subst_proof_hint ht [ND (x, i)]
+  =
+  fun ht ->
+    fun x -> fun i -> subst_proof_hint ht [FStar_Reflection_Typing.ND (x, i)]
 let rec (subst_pat :
   Pulse_Syntax_Base.pattern -> subst -> Pulse_Syntax_Base.pattern) =
   fun p ->
@@ -692,7 +672,7 @@ let rec (subst_pat :
       | Pulse_Syntax_Base.Pat_Var (n, t) ->
           let t1 =
             Pulse_RuntimeUtils.map_seal t
-              (fun t2 -> FStar_Reflection_Typing.subst_term t2 (rt_subst ss)) in
+              (fun t2 -> FStar_Reflection_Typing.subst_term t2 ss) in
           Pulse_Syntax_Base.Pat_Var (n, t1)
       | Pulse_Syntax_Base.Pat_Dot_Term (FStar_Pervasives_Native.Some e) ->
           Pulse_Syntax_Base.Pat_Dot_Term
@@ -987,7 +967,9 @@ let (open_st_term' :
   Pulse_Syntax_Base.st_term ->
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.index -> Pulse_Syntax_Base.st_term)
-  = fun t -> fun v -> fun i -> subst_st_term t [DT (i, v)]
+  =
+  fun t ->
+    fun v -> fun i -> subst_st_term t [FStar_Reflection_Typing.DT (i, v)]
 let (open_term_nv :
   Pulse_Syntax_Base.term -> Pulse_Syntax_Base.nvar -> Pulse_Syntax_Base.term)
   =
@@ -1012,37 +994,49 @@ let (close_term' :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.var ->
       Pulse_Syntax_Base.index -> Pulse_Syntax_Base.term)
-  = fun t -> fun v -> fun i -> subst_term t [ND (v, i)]
+  =
+  fun t -> fun v -> fun i -> subst_term t [FStar_Reflection_Typing.ND (v, i)]
 let (close_st_comp' :
   Pulse_Syntax_Base.st_comp ->
     Pulse_Syntax_Base.var ->
       Pulse_Syntax_Base.index -> Pulse_Syntax_Base.st_comp)
-  = fun s -> fun v -> fun i -> subst_st_comp s [ND (v, i)]
+  =
+  fun s ->
+    fun v -> fun i -> subst_st_comp s [FStar_Reflection_Typing.ND (v, i)]
 let (close_comp' :
   Pulse_Syntax_Base.comp ->
     Pulse_Syntax_Base.var ->
       Pulse_Syntax_Base.index -> Pulse_Syntax_Base.comp)
-  = fun c -> fun v -> fun i -> subst_comp c [ND (v, i)]
+  =
+  fun c -> fun v -> fun i -> subst_comp c [FStar_Reflection_Typing.ND (v, i)]
 let (close_term_opt' :
   Pulse_Syntax_Base.term FStar_Pervasives_Native.option ->
     Pulse_Syntax_Base.var ->
       Pulse_Syntax_Base.index ->
         Pulse_Syntax_Base.term FStar_Pervasives_Native.option)
-  = fun t -> fun v -> fun i -> subst_term_opt t [ND (v, i)]
+  =
+  fun t ->
+    fun v -> fun i -> subst_term_opt t [FStar_Reflection_Typing.ND (v, i)]
 let (close_term_list' :
   Pulse_Syntax_Base.term Prims.list ->
     Pulse_Syntax_Base.var ->
       Pulse_Syntax_Base.index -> Pulse_Syntax_Base.term Prims.list)
-  = fun t -> fun v -> fun i -> subst_term_list t [ND (v, i)]
+  =
+  fun t ->
+    fun v -> fun i -> subst_term_list t [FStar_Reflection_Typing.ND (v, i)]
 let (close_binder :
   Pulse_Syntax_Base.binder ->
-    Pulse_Syntax_Base.var -> Prims.nat -> Pulse_Syntax_Base.binder)
-  = fun b -> fun v -> fun i -> subst_binder b [ND (v, i)]
+    FStar_Reflection_V2_Data.var -> Prims.nat -> Pulse_Syntax_Base.binder)
+  =
+  fun b ->
+    fun v -> fun i -> subst_binder b [FStar_Reflection_Typing.ND (v, i)]
 let (close_st_term' :
   Pulse_Syntax_Base.st_term ->
     Pulse_Syntax_Base.var ->
       Pulse_Syntax_Base.index -> Pulse_Syntax_Base.st_term)
-  = fun t -> fun v -> fun i -> subst_st_term t [ND (v, i)]
+  =
+  fun t ->
+    fun v -> fun i -> subst_st_term t [FStar_Reflection_Typing.ND (v, i)]
 let (close_term :
   Pulse_Syntax_Base.term -> Pulse_Syntax_Base.var -> Pulse_Syntax_Base.term)
   = fun t -> fun v -> close_term' t v Prims.int_zero
@@ -1079,12 +1073,16 @@ let (open_ascription' :
   Pulse_Syntax_Base.comp_ascription ->
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.index -> Pulse_Syntax_Base.comp_ascription)
-  = fun t -> fun v -> fun i -> subst_ascription t [DT (i, v)]
+  =
+  fun t ->
+    fun v -> fun i -> subst_ascription t [FStar_Reflection_Typing.DT (i, v)]
 let (close_ascription' :
   Pulse_Syntax_Base.comp_ascription ->
     Pulse_Syntax_Base.var ->
       Pulse_Syntax_Base.index -> Pulse_Syntax_Base.comp_ascription)
-  = fun t -> fun x -> fun i -> subst_ascription t [ND (x, i)]
+  =
+  fun t ->
+    fun x -> fun i -> subst_ascription t [FStar_Reflection_Typing.ND (x, i)]
 let (close_binders :
   Pulse_Syntax_Base.binder Prims.list ->
     Pulse_Syntax_Base.var Prims.list -> Pulse_Syntax_Base.binder Prims.list)
@@ -1104,6 +1102,7 @@ let (close_binders :
                 Pulse_Syntax_Base.binder_attrs =
                   (b.Pulse_Syntax_Base.binder_attrs)
               } in
-            let s1 = (ND (x, Prims.int_zero)) :: (shift_subst s) in
+            let s1 = (FStar_Reflection_Typing.ND (x, Prims.int_zero)) ::
+              (shift_subst s) in
             aux s1 (b1 :: out) bs2 xs2 in
       aux [] [] bs xs

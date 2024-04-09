@@ -65,18 +65,14 @@ let (debug_log :
 let (tm_unit : Pulse_Syntax_Base.term) =
   Pulse_Syntax_Pure.tm_fvar
     (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.unit_lid)
-let (tm_bool : Pulse_Syntax_Base.term) =
-  Pulse_Syntax_Pure.tm_fvar
-    (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.bool_lid)
+let (tm_bool : FStar_Reflection_Types.term) = FStar_Reflection_Typing.bool_ty
 let (tm_int : Pulse_Syntax_Base.term) =
   Pulse_Syntax_Pure.tm_fvar
     (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.int_lid)
 let (tm_nat : Pulse_Syntax_Base.term) =
   Pulse_Syntax_Pure.tm_fvar
     (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.nat_lid)
-let (tm_szt : Pulse_Syntax_Base.term) =
-  Pulse_Syntax_Pure.tm_fvar
-    (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.szt_lid)
+let (tm_szt : FStar_Reflection_Types.term) = Pulse_Reflection_Util.szt_tm
 let (tm_true : Pulse_Syntax_Base.term) =
   Pulse_Syntax_Pure.tm_constant FStar_Reflection_V2_Data.C_True
 let (tm_false : Pulse_Syntax_Base.term) =
@@ -266,9 +262,7 @@ let (extend_env_l :
         (fun uu___ ->
            fun g1 ->
              match uu___ with
-             | (x, b) ->
-                 let t = Pulse_Elaborate_Pure.elab_term b in
-                 FStar_Reflection_Typing.extend_env g1 x t) g f
+             | (x, b) -> FStar_Reflection_Typing.extend_env g1 x b) g f
 let (elab_env : Pulse_Typing_Env.env -> FStar_Reflection_Types.env) =
   fun e ->
     extend_env_l (Pulse_Typing_Env.fstar_env e) (Pulse_Typing_Env.bindings e)
@@ -877,25 +871,20 @@ let (tm_join_inames :
           if Pulse_Syntax_Base.eq_tm inames1 inames2
           then inames1
           else
-            (let inames11 = Pulse_Elaborate_Pure.elab_term inames1 in
-             let inames21 = Pulse_Elaborate_Pure.elab_term inames2 in
-             let join_lid =
+            (let join_lid =
                Pulse_Reflection_Util.mk_pulse_lib_core_lid "join_inames" in
              let join =
                FStar_Reflection_V2_Builtins.pack_ln
                  (FStar_Reflection_V2_Data.Tv_FVar
                     (FStar_Reflection_V2_Builtins.pack_fv join_lid)) in
              Pulse_Syntax_Pure.wr
-               (FStar_Reflection_V2_Derived.mk_e_app join
-                  [inames11; inames21])
-               (FStar_Reflection_V2_Builtins.range_of_term inames11))
+               (FStar_Reflection_V2_Derived.mk_e_app join [inames1; inames2])
+               (FStar_Reflection_V2_Builtins.range_of_term inames1))
 let (tm_inames_subset :
   Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
   =
   fun inames1 ->
     fun inames2 ->
-      let inames11 = Pulse_Elaborate_Pure.elab_term inames1 in
-      let inames21 = Pulse_Elaborate_Pure.elab_term inames2 in
       let join_lid =
         Pulse_Reflection_Util.mk_pulse_lib_core_lid "inames_subset" in
       let join =
@@ -903,8 +892,8 @@ let (tm_inames_subset :
           (FStar_Reflection_V2_Data.Tv_FVar
              (FStar_Reflection_V2_Builtins.pack_fv join_lid)) in
       Pulse_Syntax_Pure.wr
-        (FStar_Reflection_V2_Derived.mk_e_app join [inames11; inames21])
-        (FStar_Reflection_V2_Builtins.range_of_term inames11)
+        (FStar_Reflection_V2_Derived.mk_e_app join [inames1; inames2])
+        (FStar_Reflection_V2_Builtins.range_of_term inames1)
 
 type ('g, 't) prop_validity = unit
 type ('dummyV0, 'dummyV1, 'dummyV2) st_equiv =
@@ -1003,7 +992,7 @@ let (tr_binding :
     | (v, t) ->
         {
           FStar_Reflection_V2_Data.uniq1 = v;
-          FStar_Reflection_V2_Data.sort3 = (Pulse_Elaborate_Pure.elab_term t);
+          FStar_Reflection_V2_Data.sort3 = t;
           FStar_Reflection_V2_Data.ppname3 =
             (Pulse_Syntax_Base.ppname_default.Pulse_Syntax_Base.name)
         }
@@ -1042,10 +1031,7 @@ let (inv_disjointness :
   =
   fun inames ->
     fun i ->
-      let g =
-        Pulse_Reflection_Util.inv_disjointness_goal
-          (Pulse_Elaborate_Pure.elab_term inames)
-          (Pulse_Elaborate_Pure.elab_term i) in
+      let g = Pulse_Reflection_Util.inv_disjointness_goal inames i in
       Pulse_Syntax_Pure.wr g (Pulse_RuntimeUtils.range_of_term i)
 let (eff_of_ctag :
   Pulse_Syntax_Base.ctag -> FStar_TypeChecker_Core.tot_or_ghost) =

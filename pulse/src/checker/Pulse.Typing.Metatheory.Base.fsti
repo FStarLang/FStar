@@ -89,7 +89,7 @@ val typing_correctness
   (_:erased (RT.typing g t (eff, ty)))
   : erased (u:R.universe & RT.typing g ty (C.E_Total, RT.tm_type u))
 
-let renaming x y = [NT x (tm_var {nm_index=y; nm_ppname=ppname_default})]
+let renaming x y = [RT.NT x (tm_var {nm_index=y; nm_ppname=ppname_default})]
 val tot_typing_renaming1
   (g:env) (x:var {None? (lookup g x)}) (tx e ty:term)
   (_:tot_typing (push_binding g x ppname_default tx) e ty)
@@ -117,7 +117,7 @@ let veq_weakening
   (g1:env { pairwise_disjoint g g1 g' })
   : vprop_equiv (push_env (push_env g g1) g') v1 v2 = RU.magic ()
 
-let nt (x:var) (t:term) = [ NT x t ]
+let nt (x:var) (t:term) = [ RT.NT x t ]
 
 val st_typing_subst
   (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (singleton_env (fstar_env g) x t) g' })

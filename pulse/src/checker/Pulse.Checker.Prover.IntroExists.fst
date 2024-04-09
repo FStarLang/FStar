@@ -24,6 +24,7 @@ open Pulse.Checker.VPropEquiv
 open Pulse.Checker.Prover.Base
 open Pulse.Checker.Base
 
+module RT = FStar.Reflection.Typing
 module RU = Pulse.RuntimeUtils
 module T = FStar.Tactics.V2
 module PS = Pulse.Checker.Prover.Substs
@@ -38,7 +39,7 @@ let k_intro_exists (#g:env) (#u:universe) (#b:binder) (#p:vprop)
   (e_typing:tot_typing g e b.binder_ty)
   (#frame:vprop)
   (frame_typing:tot_typing g frame tm_vprop)
-  : T.Tac (continuation_elaborator g (frame * subst_term p [ DT 0 e ])
+  : T.Tac (continuation_elaborator g (frame * subst_term p [ RT.DT 0 e ])
                                    g (frame * tm_exists_sl u b p)) =
   
   let t = wtag (Some STT_Ghost) (Tm_IntroExists { p = tm_exists_sl u b p;
@@ -48,7 +49,7 @@ let k_intro_exists (#g:env) (#u:universe) (#b:binder) (#p:vprop)
 
   let t_typing = T_IntroExists g u b p e (RU.magic ()) ex_typing (lift_typing_to_ghost_typing e_typing) in
 
-  assert (comp_pre c == subst_term p [ DT 0 e ]);
+  assert (comp_pre c == subst_term p [ RT.DT 0 e ]);
   assert (comp_post c == tm_exists_sl u b p);
 
   let x = fresh g in
@@ -57,13 +58,13 @@ let k_intro_exists (#g:env) (#u:universe) (#b:binder) (#p:vprop)
   let ppname = mk_ppname_no_range "_pintroe" in
   let k
     : continuation_elaborator
-        g (frame * subst_term p [ DT 0 e ])
+        g (frame * subst_term p [ RT.DT 0 e ])
         (push_binding g x ppname_default (comp_res c)) (tm_exists_sl u b p * frame) =
     continuation_elaborator_with_bind frame t_typing (RU.magic ()) (ppname, x) in
 
   let k
     : continuation_elaborator
-        g (frame * subst_term p [ DT 0 e ])
+        g (frame * subst_term p [ RT.DT 0 e ])
         (push_binding g x ppname_default (comp_res c)) (frame * tm_exists_sl u b p) =
     k_elab_equiv k (VE_Refl _ _) (VE_Comm _ _ _) in
 
@@ -189,13 +190,13 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
   assume (pst_sub.ss.(open_term_nv body px * (list_as_vprop unsolved')) ==
           pst_sub.ss.(open_term_nv body px) * pst_sub.ss.(list_as_vprop unsolved'));
   let witness = pst_sub.ss.(null_var x) in
-  assume (pst_sub.ss.(open_term_nv body px) == subst_term (pst_sub.ss.(body)) [DT 0 witness]);
+  assume (pst_sub.ss.(open_term_nv body px) == subst_term (pst_sub.ss.(body)) [RT.DT 0 witness]);
   // rewrite
   let k_sub
     : continuation_elaborator
         preamble_sub.g0 (preamble_sub.ctxt * preamble_sub.frame)
         pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt * preamble_sub.frame) *
-                    (subst_term (pst_sub.ss.(body)) [DT 0 witness] * pst_sub.ss.(list_as_vprop unsolved'))) =
+                    (subst_term (pst_sub.ss.(body)) [RT.DT 0 witness] * pst_sub.ss.(list_as_vprop unsolved'))) =
     coerce_eq k_sub () in
   // some * rearrangement
   let k_sub
@@ -204,7 +205,7 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
         pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt *
                      preamble_sub.frame *
                      pst_sub.ss.(list_as_vprop unsolved')) *
-                    (subst_term (pst_sub.ss.(body)) [DT 0 witness])) =
+                    (subst_term (pst_sub.ss.(body)) [RT.DT 0 witness])) =
     k_elab_equiv k_sub (VE_Refl _ _) (RU.magic ()) in
 
   let k_intro_exists
@@ -212,7 +213,7 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
         pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt *
                      preamble_sub.frame *
                      pst_sub.ss.(list_as_vprop unsolved')) *
-                    (subst_term (pst_sub.ss.(body)) [DT 0 witness]))
+                    (subst_term (pst_sub.ss.(body)) [RT.DT 0 witness]))
         pst_sub.pg ( _ *
                     (tm_exists_sl u (PS.nt_subst_binder b nt) pst_sub.ss.(body))) =
     k_intro_exists
@@ -236,7 +237,7 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
         pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt *
                      preamble_sub.frame *
                      pst_sub.ss.(list_as_vprop unsolved')) *
-                    (subst_term (pst_sub.ss.(body)) [DT 0 witness]))
+                    (subst_term (pst_sub.ss.(body)) [RT.DT 0 witness]))
         pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt *
                      (preamble.frame * pst_sub.ss.(pst.solved)) *
                      pst_sub.ss.(list_as_vprop unsolved')) *
@@ -248,7 +249,7 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
         pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt *
                      preamble_sub.frame *
                      pst_sub.ss.(list_as_vprop unsolved')) *
-                    (subst_term (pst_sub.ss.(body)) [DT 0 witness]))
+                    (subst_term (pst_sub.ss.(body)) [RT.DT 0 witness]))
         pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt * preamble.frame) *
                     (pst_sub.ss.(pst.solved) *
                      pst_sub.ss.(tm_exists_sl u b body) *
@@ -263,7 +264,7 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
         pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt *
                      preamble_sub.frame *
                      pst_sub.ss.(list_as_vprop unsolved')) *
-                    (subst_term (pst_sub.ss.(body)) [DT 0 witness]))
+                    (subst_term (pst_sub.ss.(body)) [RT.DT 0 witness]))
         pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt * preamble.frame) *
                     (pst_sub.ss.(pst.solved * tm_exists_sl u b body * list_as_vprop unsolved'))) =
     coerce_eq k_intro_exists () in

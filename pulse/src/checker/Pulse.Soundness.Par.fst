@@ -44,12 +44,12 @@ let par_soundness
 
   let uL = comp_u cL in
   let uR = comp_u cR in
-  let raL = elab_term (comp_res cL) in
-  let raR = elab_term (comp_res cR) in
-  let rpreL = elab_term (comp_pre cL) in
-  let rpostL = mk_abs raL R.Q_Explicit (elab_term (comp_post cL)) in
-  let rpreR = elab_term (comp_pre cR) in
-  let rpostR = mk_abs raR R.Q_Explicit (elab_term (comp_post cR)) in
+  let raL = comp_res cL in
+  let raR = comp_res cR in
+  let rpreL = comp_pre cL in
+  let rpostL = mk_abs raL R.Q_Explicit (comp_post cL) in
+  let rpreR = comp_pre cR in
+  let rpostR = mk_abs raR R.Q_Explicit (comp_post cR) in
   let reL = elab_st_typing eL_typing in
   let reR = elab_st_typing eR_typing in
 
@@ -88,15 +88,15 @@ let par_soundness
   let post_body_eq : RT.equiv (RT.extend_env (elab_env g) x _)
     (mk_star (R.pack_ln (R.Tv_App rpostL (PReflUtil.mk_fst uL uR raL raR rx_tm, R.Q_Explicit)))
              (R.pack_ln (R.Tv_App rpostR (PReflUtil.mk_snd uL uR raL raR rx_tm, R.Q_Explicit))))
-    (elab_term (tm_star (open_term' postL (mk_fst uL uR aL aR x_tm) 0)
-                        (open_term' postR (mk_snd uL uR aL aR x_tm) 0)))
-    = assume (RT.ln' (elab_term postL) 0);
-      assume (RT.ln (elab_term (mk_fst uL uR aL aR x_tm)));
-      assume (RT.ln' (elab_term postR) 0);
-      assume (RT.ln (elab_term (mk_snd uL uR aL aR x_tm)));
+    (tm_star (open_term' postL (mk_fst uL uR aL aR x_tm) 0)
+             (open_term' postR (mk_snd uL uR aL aR x_tm) 0))
+    = assume (RT.ln' postL 0);
+      assume (RT.ln (mk_fst uL uR aL aR x_tm));
+      assume (RT.ln' postR 0);
+      assume (RT.ln (mk_snd uL uR aL aR x_tm));
       mk_star_equiv _ _ _ _ _
-        (RT.Rel_beta _ raL _ (elab_term postL) _)
-        (RT.Rel_beta _ raR _ (elab_term postR) _) in
+        (RT.Rel_beta _ raL _  postL _)
+        (RT.Rel_beta _ raR _ postR _) in
 
   let post_eq
     : RT.equiv (elab_env g)

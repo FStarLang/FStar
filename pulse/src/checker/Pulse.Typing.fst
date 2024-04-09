@@ -35,10 +35,10 @@ let debug_log (level:string)  (g:env) (f: unit -> T.Tac string) : T.Tac unit =
   then T.print (Printf.sprintf "Debug@%s:{ %s }\n" level (f ()))
 
 let tm_unit = tm_fvar (as_fv unit_lid)
-let tm_bool = tm_fvar (as_fv bool_lid)
+let tm_bool = RT.bool_ty
 let tm_int  = tm_fvar (as_fv int_lid)
 let tm_nat  = tm_fvar (as_fv nat_lid)
-let tm_szt  = tm_fvar (as_fv szt_lid)
+let tm_szt  = szt_tm
 let tm_true = tm_constant R.C_True
 let tm_false = tm_constant R.C_False
 
@@ -111,8 +111,7 @@ module L = FStar.List.Tot
 let extend_env_l (f:R.env) (g:env_bindings) : R.env = 
   L.fold_right 
     (fun (x, b) g ->  
-      let t = elab_term b in
-      RT.extend_env g x t)
+      RT.extend_env g x b)
      g
      f
 let elab_env (e:env) : R.env = extend_env_l (fstar_env e) (bindings e)
@@ -138,7 +137,7 @@ let rec push_bindings (g:env) (bs:list binding{all_fresh g bs}) : Tot (g':env{en
 
 let elab_push_binding (g:env) (x:var { ~ (Set.mem x (dom g)) }) (t:typ)
   : Lemma (elab_env (push_binding g x ppname_default t) ==
-           RT.extend_env (elab_env g) x (elab_term t)) = ()
+           RT.extend_env (elab_env g) x t) = ()
 
 [@@ erasable; no_auto_projectors]
 noeq
@@ -196,7 +195,7 @@ type vprop_equiv : env -> term -> term -> Type =
      g:env ->
      t0:term ->
      t1:term ->
-     FTB.equiv_token (elab_env g) (elab_term t0) (elab_term t1) ->
+     FTB.equiv_token (elab_env g) t0 t1 ->
      vprop_equiv g t0 t1
 
   // | VE_Ex:
@@ -509,7 +508,7 @@ noeq
 type my_erased (a:Type) = | E of a
 
 let typing (g:env) (e:term) (eff:T.tot_or_ghost) (t:term) =
-  my_erased (RT.typing (elab_env g) (elab_term e) (eff, elab_term t))
+  my_erased (RT.typing (elab_env g) e (eff, t))
 
 let tot_typing (g:env) (e:term) (t:term) =
   typing g e T.E_Total t
@@ -540,16 +539,12 @@ let tm_join_inames (inames1 inames2 : term) : term =
   if eq_tm inames2 tm_emp_inames then inames1 else
   if eq_tm inames1 inames2 then inames1 else
 
-  let inames1 = elab_term inames1 in
-  let inames2 = elab_term inames2 in
   let join_lid = Pulse.Reflection.Util.mk_pulse_lib_core_lid "join_inames" in
   let join : R.term = R.pack_ln (R.Tv_FVar (R.pack_fv join_lid)) in
   wr (R.mk_e_app join [inames1; inames2])
      (T.range_of_term inames1)
 
 let tm_inames_subset (inames1 inames2 : term) : term =
-  let inames1 = elab_term inames1 in
-  let inames2 = elab_term inames2 in
   let join_lid = Pulse.Reflection.Util.mk_pulse_lib_core_lid "inames_subset" in
   let join : R.term = R.pack_ln (R.Tv_FVar (R.pack_fv join_lid)) in
   wr (R.mk_e_app join [inames1; inames2])
@@ -562,7 +557,7 @@ let tm_inames_subset_typing (g:env) (inames1 inames2 : term) : tot_typing g (tm_
   RU.magic()
 
 let prop_validity (g:env) (t:term) =
-  FTB.prop_validity_token (elab_env g) (elab_term t)
+  FTB.prop_validity_token (elab_env g) t
 
 [@@ no_auto_projectors]
 noeq
@@ -577,7 +572,7 @@ type st_equiv : env -> comp -> comp -> Type =
       tot_typing g (comp_pre c1) tm_vprop ->
       tot_typing g (comp_res c1) (tm_type (comp_u c1)) ->
       tot_typing (push_binding g x ppname_default (comp_res c1)) (open_term (comp_post c1) x) tm_vprop ->
-      RT.equiv (elab_env g) (elab_term (comp_res c1)) (elab_term (comp_res c2)) ->
+      RT.equiv (elab_env g) (comp_res c1) (comp_res c2) ->
       vprop_equiv g (comp_pre c1) (comp_pre c2) ->
       vprop_equiv (push_binding g x ppname_default (comp_res c1))
                   (open_term (comp_post c1) x)
@@ -590,7 +585,7 @@ type st_equiv : env -> comp -> comp -> Type =
       t2:term ->
       u:_ ->
       universe_of g t1 u ->
-      Ghost.erased (RT.equiv (elab_env g) (elab_term t1) (elab_term t2)) ->
+      Ghost.erased (RT.equiv (elab_env g) t1 t2) ->
       st_equiv g (C_Tot t1) (C_Tot t2)
 
 let sub_observability (o1 o2:observability) = o1 = Neutral || o1 = o2 || o2 = Observable
@@ -693,7 +688,7 @@ let tr_binding (vt : var & typ) : Tot R.binding =
   let v, t = vt in
   { 
     uniq = v;
-    sort = elab_term t;
+    sort = t;
     ppname = ppname_default.name;
  }
 
@@ -735,7 +730,7 @@ type comp_typing : env -> comp -> universe -> Type =
 let comp_typing_u (e:env) (c:comp_st) = comp_typing e c (universe_of_comp c)
 
 let subtyping_token g t1 t2 =
-  T.subtyping_token (elab_env g) (elab_term t1) (elab_term t2)
+  T.subtyping_token (elab_env g) t1 t2
 
 val readback_binding : R.binding -> binding
 let readback_binding b = (b.uniq, b.sort)
@@ -744,7 +739,7 @@ let non_informative (g:env) (c:comp) =
   my_erased (RT.non_informative (elab_env g) (elab_comp c))
 
 let inv_disjointness (inames i:term) = 
-  let g = Pulse.Reflection.Util.inv_disjointness_goal (elab_term inames) (elab_term i) in 
+  let g = Pulse.Reflection.Util.inv_disjointness_goal inames i in 
   S.wr g (RU.range_of_term i)
 
 let eff_of_ctag = function
@@ -1058,7 +1053,7 @@ and pats_complete : env -> term -> typ -> list R.pattern -> Type0 =
     sc_ty:typ ->
     pats:list R.pattern ->
     bnds:list (list R.binding) ->
-    RT.match_is_complete (elab_env g) (elab_term sc) (elab_term sc_ty) pats bnds ->
+    RT.match_is_complete (elab_env g) sc sc_ty pats bnds ->
     pats_complete g sc sc_ty pats
 
 and brs_typing (g:env) (sc_u:universe) (sc_ty:typ) (sc:term) : list branch -> comp_st -> Type =
@@ -1129,8 +1124,8 @@ let star_typing_inversion (#g:_) (#t0 #t1:term) (d:tot_typing g (tm_star t0 t1) 
 
 let vprop_eq_typing_inversion g (t0 t1:term)
                               (token:FTB.equiv_token (elab_env g)
-                                                     (elab_term t0)
-                                                     (elab_term t1))
+                                                     t0
+                                                     t1)
   : GTot (tot_typing g t0 tm_vprop &
           tot_typing g t1 tm_vprop)
   = admit ()
@@ -1171,8 +1166,8 @@ type post_hint_t = {
   post_typing_src:tot_typing (push_binding g x ppname_default ret_ty) (open_term post x) tm_vprop;
   post_typing:
     FStar.Ghost.erased (RT.tot_typing (elab_env g)
-                                      (RT.(mk_abs (elab_term ret_ty) T.Q_Explicit (elab_term post)))
-                                      (RT.mk_arrow (elab_term ret_ty) T.Q_Explicit (elab_term tm_vprop)))
+                                      (RT.(mk_abs ret_ty T.Q_Explicit post))
+                                      (RT.mk_arrow ret_ty T.Q_Explicit tm_vprop))
 }
 
 let post_hint_for_env_p (g:env) (p:post_hint_t) = g `env_extends` p.g

@@ -1,14 +1,5 @@
 open Prims
 type ln_comp = Pulse_Syntax_Base.comp_st
-let (elab_term_opt :
-  Pulse_Syntax_Base.term FStar_Pervasives_Native.option ->
-    FStar_Reflection_Types.term FStar_Pervasives_Native.option)
-  =
-  fun b ->
-    match b with
-    | FStar_Pervasives_Native.Some b1 ->
-        FStar_Pervasives_Native.Some (Pulse_Elaborate_Pure.elab_term b1)
-    | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
 let (bind_res :
   FStar_Reflection_Types.universe ->
     FStar_Reflection_Types.term ->
@@ -437,13 +428,13 @@ let (check_top_level_environment :
 let (elab_comp_post :
   Pulse_Syntax_Base.comp_st -> FStar_Reflection_Types.term) =
   fun c ->
-    let t = Pulse_Elaborate_Pure.elab_term (Pulse_Syntax_Base.comp_res c) in
-    let post = Pulse_Elaborate_Pure.elab_term (Pulse_Syntax_Base.comp_post c) in
+    let t = Pulse_Syntax_Base.comp_res c in
+    let post = Pulse_Syntax_Base.comp_post c in
     Pulse_Reflection_Util.mk_abs t FStar_Reflection_V2_Data.Q_Explicit post
 let (comp_post_type :
   Pulse_Syntax_Base.comp_st -> FStar_Reflection_Types.term) =
   fun c ->
-    let t = Pulse_Elaborate_Pure.elab_term (Pulse_Syntax_Base.comp_res c) in
+    let t = Pulse_Syntax_Base.comp_res c in
     Pulse_Reflection_Util.mk_arrow (t, FStar_Reflection_V2_Data.Q_Explicit)
       Pulse_Reflection_Util.vprop_tm
 type ('a, 'd) soundness_t = unit

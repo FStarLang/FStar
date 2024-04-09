@@ -37,12 +37,6 @@ let rt_equiv_ln (g:R.env) (e1 e2:R.term) (d:RT.equiv g e1 e2)
   : Lemma (RT.ln e1 /\ RT.ln e2) = admit ()
 
 assume
-val elab_ln_inverse (e:term)
-  : Lemma 
-    (requires RT.ln (elab_term e))
-    (ensures ln e)
-
-assume
 val open_term_ln_host' (t:term) (x:R.term) (i:index)
   : Lemma 
     (requires RT.ln' (RT.subst_term t [ RT.DT i x ]) (i - 1))
@@ -55,7 +49,7 @@ let open_term_ln' (e:term)
     (requires ln' (open_term' e x i) (i - 1))
     (ensures ln' e i)
     (decreases e)
-  = open_term_ln_host' e (elab_term x) i
+  = open_term_ln_host' e x i
 
 let open_comp_ln' (c:comp)
                   (x:term)
@@ -104,7 +98,7 @@ let rec open_term_ln_list' (t:list term) (x:term) (i:index)
 
 let open_term_pairs' (t:list (term & term)) (v:term) (i:index)
   : Tot (list (term & term))
-  = subst_term_pairs t [ DT i v ]
+  = subst_term_pairs t [ RT.DT i v ]
 
 let rec open_term_ln_pairs (t:list (term & term)) (x:term) (i:index)
   : Lemma
@@ -137,13 +131,13 @@ let open_proof_hint_ln (t:proof_hint_type) (x:term) (i:index)
     | SHOW_PROOF_STATE _ -> ()
 
 let open_pattern'  (p:pattern) (v:term) (i:index) =
-  subst_pat p [DT i v]
+  subst_pat p [RT.DT i v]
 let close_pattern' (p:pattern) (x:var) (i:index) =
-  subst_pat p [ND x i]
+  subst_pat p [RT.ND x i]
 let open_pattern_args' (ps:list (pattern & bool)) (v:term) (i:index) =
-  subst_pat_args ps [DT i v]
+  subst_pat_args ps [RT.DT i v]
 let close_pattern_args' (ps:list (pattern & bool)) (x:var) (i:index) =
-  subst_pat_args ps [ND x i]
+  subst_pat_args ps [RT.ND x i]
 
 let rec pattern_shift_subst_invariant (p:pattern) (s:subst)
   : Lemma
@@ -307,20 +301,20 @@ and open_branches_ln' (t:st_term{Tm_Match? t.term})
                       (i:index)
   : Lemma 
     (requires (
-      assert (subst_branches t [DT i x] brs == __brs_of (subst_st_term t [DT i x])); // hint
-      ln_branches' (open_st_term' t x i) (subst_branches t [DT i x] brs) (i - 1)))
+      assert (subst_branches t [RT.DT i x] brs == __brs_of (subst_st_term t [RT.DT i x])); // hint
+      ln_branches' (open_st_term' t x i) (subst_branches t [RT.DT i x] brs) (i - 1)))
     (ensures ln_branches' t brs i)
     (decreases brs)
   = match brs with
     | [] -> ()
     | br::brs ->
-      assume (ln_branch' (subst_branch [DT i x] br) (i - 1)); // Should be immediate. Unfold
+      assume (ln_branch' (subst_branch [RT.DT i x] br) (i - 1)); // Should be immediate. Unfold
       open_branch_ln' br x i;
       admit ()
 
 and open_branch_ln' (br : branch) (x:term) (i:index)
   : Lemma
-    (requires ln_branch' (subst_branch [DT i x] br) (i - 1))
+    (requires ln_branch' (subst_branch [RT.DT i x] br) (i - 1))
     (ensures ln_branch' br i)
   = let (p, e) = br in
     open_pattern_ln p x i;
@@ -531,8 +525,7 @@ let open_term_ln_inv' (e:term)
     (requires ln' e i)
     (ensures ln' (open_term' e x i) (i - 1))
     (decreases e)
-  =  Pulse.Elaborate.elab_ln x (-1);
-     r_open_term_ln_inv' e (elab_term x) i
+  =  r_open_term_ln_inv' e x i
 
 let open_comp_ln_inv' (c:comp)
                       (x:term { ln x })
@@ -768,7 +761,7 @@ let rec close_term_ln_list' (t:list term) (x:var) (i:index)
 
 let close_term_pairs' (t:list (term & term)) (v:var) (i:index)
   : Tot (list (term & term))
-  = subst_term_pairs t [ ND v i ]
+  = subst_term_pairs t [ RT.ND v i ]
 
 let rec close_term_ln_pairs (t:list (term & term)) (x:var) (i:index)
   : Lemma
@@ -917,9 +910,7 @@ let tot_or_ghost_typing_ln
   : Lemma 
     (ensures ln e /\ ln t)
   = let E dt = d in
-    well_typed_terms_are_ln _ _ _ dt;
-    elab_ln_inverse e;
-    elab_ln_inverse t
+    well_typed_terms_are_ln _ _ _ dt
 
 let tot_typing_ln
   (#g:_) (#e:_) (#t:_)
@@ -975,7 +966,6 @@ let st_equiv_ln #g #c1 #c2 (d:st_equiv g c1 c2)
       open_term_ln_inv' (comp_post c1) (term_of_no_name_var x) 0;
       vprop_equiv_ln eq_post;
       rt_equiv_ln _ _ _ eq_res;
-      elab_ln_inverse (comp_res c2);
       open_term_ln' (comp_post c2) (term_of_no_name_var x) 0
 
     | ST_TotEquiv g t1 t2 u t1_typing eq ->
@@ -1060,7 +1050,7 @@ let ln_mk_array (t:term) (n:int)
       (ensures ln' (mk_array t) n) =
   admit ()
 
-#push-options "--z3rlimit_factor 12 --fuel 4 --ifuel 1 --query_stats"
+#push-options "--z3rlimit_factor 15 --fuel 4 --ifuel 1 --query_stats --split_queries no"
 let rec st_typing_ln (#g:_) (#t:_) (#c:_)
                      (d:st_typing g t c)
   : Lemma 
@@ -1085,7 +1075,6 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       st_typing_ln db;
       open_st_term_ln body x;
       close_comp_ln c x;
-      Pulse.Elaborate.elab_ln ty.binder_ty (-1);
       Pulse.Elaborate.elab_ln_comp (close_comp c x) 0
 
     | T_STApp _ _ _ _ res arg st at

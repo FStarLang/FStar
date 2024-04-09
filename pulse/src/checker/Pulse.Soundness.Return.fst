@@ -40,45 +40,41 @@ let return_soundness
                         (elab_comp c)) =
 
   let T_Return _ ctag use_eq u t e post x t_typing e_typing post_typing = d in
-  let ru = u in
-  let rt = elab_term t in
-  let re = elab_term e in
-  let rpost = elab_term post in
-  let rpost_abs = mk_abs rt R.Q_Explicit rpost in
-  let rt_typing : RT.tot_typing _ rt (R.pack_ln (R.Tv_Type ru)) =
+  let rpost_abs = mk_abs t R.Q_Explicit post in
+  let rt_typing : RT.tot_typing _ t (R.pack_ln (R.Tv_Type u)) =
     tot_typing_soundness t_typing in
-  let re_typing : RT.typing _ re (eff_of_ctag ctag, rt) =
+  let re_typing : RT.typing _ e (eff_of_ctag ctag, t) =
     match ctag with
     | STT_Ghost -> ghost_typing_soundness e_typing
     | _ -> tot_typing_soundness e_typing in
   let rpost_abs_typing
     : RT.tot_typing _ rpost_abs
-                      (mk_arrow (rt, R.Q_Explicit) vprop_tm) =
+                      (mk_arrow (t, R.Q_Explicit) vprop_tm) =
     mk_t_abs_tot g #_ #None ppname_default t_typing post_typing in
   
   let rx_tm = RT.var_as_term x in
-  let elab_c_pre = RT.subst_term rpost [ RT.DT 0 re ] in
+  let elab_c_pre = RT.subst_term post [ RT.DT 0 e ] in
   let pre_eq
     : RT.equiv (elab_env g)
-               (R.pack_ln (R.Tv_App rpost_abs (re, R.Q_Explicit)))
+               (R.pack_ln (R.Tv_App rpost_abs (e, R.Q_Explicit)))
                elab_c_pre
-    = assume (RT.ln' rpost 0);
-      assume (RT.ln re);
-      RT.Rel_beta (elab_env g) rt R.Q_Explicit rpost re in  
+    = assume (RT.ln' post 0);
+      assume (RT.ln e);
+      RT.Rel_beta (elab_env g) t R.Q_Explicit post e in
   
   let comp_equiv_noeq (_:unit{use_eq == false})
     : (match ctag with
        | STT -> RT.equiv (elab_env g)
-                         (WT.return_stt_noeq_comp ru rt re rpost_abs)
+                         (WT.return_stt_noeq_comp u t e rpost_abs)
                          (elab_comp c)
        | STT_Atomic ->
          RT.equiv (elab_env g)
-                  (WT.return_stt_atomic_noeq_comp ru rt re rpost_abs)
+                  (WT.return_stt_atomic_noeq_comp u t e rpost_abs)
                   (elab_comp c)
 
        | STT_Ghost ->
          RT.equiv (elab_env g)
-                  (WT.return_stt_ghost_noeq_comp ru rt re rpost_abs)
+                  (WT.return_stt_ghost_noeq_comp u t e rpost_abs)
                   (elab_comp c)) =
 
     
@@ -90,55 +86,55 @@ let return_soundness
   let comp_equiv_eq (_:unit{use_eq == true})
     : (match ctag with
        | STT -> RT.equiv (elab_env g)
-                         (WT.return_stt_comp ru rt re rpost_abs x)
+                         (WT.return_stt_comp u t e rpost_abs x)
                          (elab_comp c)
        | STT_Atomic ->
           RT.equiv (elab_env g)
-                   (WT.return_stt_atomic_comp ru rt re rpost_abs x)
+                   (WT.return_stt_atomic_comp u t e rpost_abs x)
                    (elab_comp c)
        | STT_Ghost ->
           RT.equiv (elab_env g)
-                   (WT.return_stt_ghost_comp ru rt re rpost_abs x)
+                   (WT.return_stt_ghost_comp u t e rpost_abs x)
                    (elab_comp c)) =
     
-    assert (elab_term (close_term' (tm_star (open_term' post (null_var x) 0)
-                                            (tm_pure (mk_eq2 u t (null_var x) e))) x 0) ==
-            RT.subst_term (elab_term (tm_star (open_term' post (null_var x) 0)
-                                              (tm_pure (mk_eq2 u t (null_var x) e))))
+    assert (close_term' (tm_star (open_term' post (null_var x) 0)
+                                 (tm_pure (mk_eq2 u t (null_var x) e))) x 0 ==
+            RT.subst_term (tm_star (open_term' post (null_var x) 0)
+                                   (tm_pure (mk_eq2 u t (null_var x) e)))
                           [ RT. ND x 0 ]);
     let elab_c_post =
-      mk_abs rt R.Q_Explicit
+      mk_abs t R.Q_Explicit
         (RT.subst_term
            (mk_star
-              (RT.subst_term rpost [ RT.DT 0 rx_tm ])
-              (PReflUtil.mk_pure (PReflUtil.mk_eq2 ru rt rx_tm re)))
+              (RT.subst_term post [ RT.DT 0 rx_tm ])
+              (PReflUtil.mk_pure (PReflUtil.mk_eq2 u t rx_tm e)))
            [ RT.ND x 0 ]) in
 
     let post_body_eq
       : RT.equiv (RT.extend_env (elab_env g) x _)
                  (mk_star
                     (R.pack_ln (R.Tv_App rpost_abs (rx_tm, R.Q_Explicit)))
-                    (PReflUtil.mk_pure (PReflUtil.mk_eq2 ru rt rx_tm re)))
+                    (PReflUtil.mk_pure (PReflUtil.mk_eq2 u t rx_tm e)))
                  (mk_star
-                    (RT.subst_term rpost [ RT.DT 0 rx_tm ])
-                    (PReflUtil.mk_pure (PReflUtil.mk_eq2 ru rt rx_tm re)))
-      = mk_star_equiv _ _ _ _ _ (RT.Rel_beta _ rt _ _ _) (RT.Rel_refl _ _ _) in
+                    (RT.subst_term post [ RT.DT 0 rx_tm ])
+                    (PReflUtil.mk_pure (PReflUtil.mk_eq2 u t rx_tm e)))
+      = mk_star_equiv _ _ _ _ _ (RT.Rel_beta _ t _ _ _) (RT.Rel_refl _ _ _) in
 
     let post_eq
       : RT.equiv (elab_env g)
-                 (WT.return_post_with_eq ru rt re rpost_abs x)
+                 (WT.return_post_with_eq u t e rpost_abs x)
                  elab_c_post
-      = RT.equiv_abs_close rt R.Q_Explicit x post_body_eq in
+      = RT.equiv_abs_close t R.Q_Explicit x post_body_eq in
 
     match ctag with
     | STT ->
-      assert (elab_comp c == mk_stt_comp ru rt elab_c_pre elab_c_post);
+      assert (elab_comp c == mk_stt_comp u t elab_c_pre elab_c_post);
       elab_stt_equiv _ c _ _ pre_eq post_eq
     | STT_Atomic ->
-      assert (elab_comp c == mk_stt_atomic_comp WT.neutral_fv ru rt tm_emp_inames elab_c_pre elab_c_post);
+      assert (elab_comp c == mk_stt_atomic_comp WT.neutral_fv u t tm_emp_inames elab_c_pre elab_c_post);
       elab_statomic_equiv _ c _ _ pre_eq post_eq
     | STT_Ghost ->
-      assert (elab_comp c == mk_stt_ghost_comp ru rt tm_emp_inames elab_c_pre elab_c_post);
+      assert (elab_comp c == mk_stt_ghost_comp u t tm_emp_inames elab_c_pre elab_c_post);
       elab_stghost_equiv _ c _ _ pre_eq post_eq
   in
   match ctag, use_eq with

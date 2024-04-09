@@ -32,11 +32,9 @@ let withlocal_soundness #g #t #c d soundness =
   
   let rg =  elab_env g in
   let ru = comp_u c in
-  let ra = elab_term init_t in
-  let rinit = elab_term init in
-  let rpre = elab_term (comp_pre c) in
-  let rret_t = elab_term (comp_res c) in
-  let rpost = elab_term (comp_post c) in
+  let rpre = comp_pre c in
+  let rret_t = comp_res c in
+  let rpost = comp_post c in
   let rbody = elab_st_typing body_typing in
 
   let a_typing = tot_typing_soundness init_t_typing in
@@ -54,8 +52,8 @@ let withlocal_soundness #g #t #c d soundness =
   WT.with_local_typing
     #rg
     #ru
-    #ra
-    #rinit
+    #init_t
+    #init
     #rpre
     #rret_t
     #rpost

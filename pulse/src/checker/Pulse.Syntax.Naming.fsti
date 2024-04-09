@@ -9,7 +9,7 @@
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   WITHOUT WARRANTIES OR CORT.NDITIONS OF ANY KIRT.ND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
@@ -364,37 +364,23 @@ let ln (t:term) = ln' t (-1)
 let ln_st (t:st_term) = ln_st' t (-1)
 let ln_c (c:comp) = ln_c' c (-1)
 
-noeq
-type subst_elt =
-  | DT : nat -> term -> subst_elt
-  | NT : var -> term -> subst_elt
-  | ND : var -> nat -> subst_elt
+type subst_elt = RT.subst_elt
 
-let shift_subst_elt (n:nat) = function
-  | DT i t -> DT (i + n) t
-  | NT x t -> NT x t
-  | ND x i -> ND x (i + n)
+let shift_subst_elt = RT.shift_subst_elt
 
-let subst = list subst_elt
+let subst = RT.subst
 
-let shift_subst_n (n:nat) = L.map (shift_subst_elt n)
+let shift_subst_n (n:nat) = RT.shift_subst_n n
 
-let shift_subst = shift_subst_n 1
-
-let rt_subst_elt = function
-  | DT i t -> RT.DT i (E.elab_term t)
-  | NT x t -> RT.NT x (E.elab_term t)
-  | ND x i -> RT.ND x i
-
-let rt_subst = L.map rt_subst_elt
+let shift_subst = RT.shift_subst
 
 val subst_host_term (t:term) (ss:subst)
-  : Tot (t':term { t' == RT.subst_term t (rt_subst ss) })
+  : Tot (t':term { t' == RT.subst_term t ss })
 
 let subst_term (t:term) (ss:subst) : term = subst_host_term t ss
 
 let open_term' (t:term) (v:term) (i:index) =
-  subst_term t [ DT i v ]
+  subst_term t [ RT.DT i v ]
 
 let subst_st_comp (s:st_comp) (ss:subst)
  : st_comp =
@@ -404,7 +390,7 @@ let subst_st_comp (s:st_comp) (ss:subst)
           post = subst_term s.post (shift_subst ss) }
 
 let open_st_comp' (s:st_comp) (v:term) (i:index) : st_comp =
-  subst_st_comp s [ DT i v ]
+  subst_st_comp s [ RT.DT i v ]
 
 let subst_comp (c:comp) (ss:subst)
   : comp
@@ -422,7 +408,7 @@ let subst_comp (c:comp) (ss:subst)
       C_STGhost (subst_term inames ss) (subst_st_comp s ss)
 
 let open_comp' (c:comp) (v:term) (i:index) : comp =
-  subst_comp c [ DT i v ]
+  subst_comp c [ RT.DT i v ]
 
 let subst_term_opt (t:option term) (ss:subst)
   : Tot (option term)
@@ -431,7 +417,7 @@ let subst_term_opt (t:option term) (ss:subst)
     | Some t -> Some (subst_term t ss)
 
 let open_term_opt' (t:option term) (v:term) (i:index)
-  : Tot (option term) = subst_term_opt t [ DT i v ]
+  : Tot (option term) = subst_term_opt t [ RT.DT i v ]
 
 let rec subst_term_list (t:list term) (ss:subst)
   : Tot (list term)
@@ -440,7 +426,7 @@ let rec subst_term_list (t:list term) (ss:subst)
     | hd::tl -> subst_term hd ss :: subst_term_list tl ss
 
 let open_term_list' (t:list term) (v:term) (i:index)
-  : Tot (list term) = subst_term_list t [ DT i v ]
+  : Tot (list term) = subst_term_list t [ RT.DT i v ]
 
 let subst_binder b ss = 
   {b with binder_ty=subst_term b.binder_ty ss}
@@ -468,16 +454,16 @@ let subst_proof_hint (ht:proof_hint_type) (ss:subst)
     | SHOW_PROOF_STATE _ -> ht
 
 let open_term_pairs' (t:list (term * term)) (v:term) (i:index) =
-  subst_term_pairs t [DT i v]
+  subst_term_pairs t [RT.DT i v]
 
 let close_term_pairs' (t:list (term * term)) (x:var) (i:index) =
-  subst_term_pairs t [ND x i]
+  subst_term_pairs t [RT.ND x i]
 
 let open_proof_hint'  (ht:proof_hint_type) (v:term) (i:index) =
-  subst_proof_hint ht [DT i v]
+  subst_proof_hint ht [RT.DT i v]
 
 let close_proof_hint' (ht:proof_hint_type) (x:var) (i:index) =
-  subst_proof_hint ht [ND x i]
+  subst_proof_hint ht [RT.ND x i]
 
 let rec subst_pat (p:pattern) (ss:subst)
   : Tot pattern (decreases p)
@@ -486,7 +472,7 @@ let rec subst_pat (p:pattern) (ss:subst)
     | Pat_Dot_Term None ->
       p
     | Pat_Var n t -> 
-      let t = RU.map_seal t (fun t -> RT.subst_term t (rt_subst ss)) in
+      let t = RU.map_seal t (fun t -> RT.subst_term t ss) in
       Pat_Var n t
     | Pat_Dot_Term (Some e) ->
       Pat_Dot_Term (Some (subst_term e ss))
@@ -636,7 +622,7 @@ and subst_branch (ss:subst) (b : pattern & st_term) : Tot (pattern & st_term) (d
 
 
 let open_st_term' (t:st_term) (v:term) (i:index) : st_term =
-  subst_st_term t [ DT i v ]
+  subst_st_term t [ RT.DT i v ]
 
 let open_term_nv t nv =
     open_term' t (U.term_of_nvar nv) 0
@@ -658,25 +644,25 @@ let open_comp_nv c nv =
     open_comp' c (U.term_of_nvar nv) 0
 
 let close_term' (t:term) (v:var) (i:index) : term =
-  subst_term t [ ND v i ]
+  subst_term t [ RT.ND v i ]
 
 let close_st_comp' (s:st_comp) (v:var) (i:index) : st_comp =
-  subst_st_comp s [ ND v i ]
+  subst_st_comp s [ RT.ND v i ]
 
 let close_comp' (c:comp) (v:var) (i:index) : comp =
-  subst_comp c [ ND v i ]
+  subst_comp c [ RT.ND v i ]
 
 let close_term_opt' (t:option term) (v:var) (i:index) : option term =
-  subst_term_opt t [ ND v i ]
+  subst_term_opt t [ RT.ND v i ]
 
 let close_term_list' (t:list term) (v:var) (i:index) : list term =
-  subst_term_list t [ ND v i ]
+  subst_term_list t [ RT.ND v i ]
 
 let close_binder b v i =
-  subst_binder b [ ND v i ]
+  subst_binder b [ RT.ND v i ]
              
 let close_st_term' (t:st_term) (v:var) (i:index) : st_term =
-  subst_st_term t [ ND v i ]
+  subst_st_term t [ RT.ND v i ]
       
 let close_term t v = close_term' t v 0
 let close_st_term t v = close_st_term' t v 0
