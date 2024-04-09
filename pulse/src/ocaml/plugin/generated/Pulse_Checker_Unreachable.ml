@@ -551,7 +551,7 @@ let (check :
                                                                     (FStar_Pervasives_Native.Some
                                                                     ctag)
                                                                     Pulse_Syntax_Base.Tm_Unreachable)
-                                                                    (Pulse_Typing.comp_admit
+                                                                    (Pulse_Typing.comp_unreachable
                                                                     ctag s)
                                                                     dt
                                                                     post_hint))

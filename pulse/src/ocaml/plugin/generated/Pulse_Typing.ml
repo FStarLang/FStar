@@ -836,7 +836,7 @@ let (comp_rewrite :
             Pulse_Syntax_Base.pre = p;
             Pulse_Syntax_Base.post = q
           })
-let (comp_admit :
+let (comp_unreachable :
   Pulse_Syntax_Base.ctag ->
     Pulse_Syntax_Base.st_comp -> Pulse_Syntax_Base.comp)
   =
@@ -1116,8 +1116,8 @@ type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   st_typing 
   | T_Rewrite of Pulse_Typing_Env.env * Pulse_Syntax_Base.vprop *
   Pulse_Syntax_Base.vprop * unit * unit 
-  | T_Admit of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_comp *
-  Pulse_Syntax_Base.ctag * (unit, unit) st_comp_typing 
+  | T_Admit of Pulse_Typing_Env.env * Pulse_Syntax_Base.comp_st * (unit,
+  unit, unit) comp_typing 
   | T_Unreachable of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_comp *
   Pulse_Syntax_Base.ctag * (unit, unit) st_comp_typing * unit 
   | T_WithInv of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
