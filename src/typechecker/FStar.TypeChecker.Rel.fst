@@ -5139,7 +5139,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option g
   let diag_doc = Errors.diag_doc (Env.get_range env) in
   let ret_g = {g with guard_f = Trivial} in
   if not (Env.should_verify env) then (
-    if debug then
+    if debug && not env.phase1 then
       diag_doc [text "Skipping VC because verification is disabled"];
     Some ret_g
   ) else (
