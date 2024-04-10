@@ -4009,7 +4009,7 @@ let rec (norm :
            | FStar_Syntax_Syntax.Tm_abs
                { FStar_Syntax_Syntax.bs = bs;
                  FStar_Syntax_Syntax.body = body;
-                 FStar_Syntax_Syntax.rc_opt = lopt;_}
+                 FStar_Syntax_Syntax.rc_opt = rc_opt;_}
                ->
                let rec maybe_strip_meta_divs stack3 =
                  match stack3 with
@@ -4048,23 +4048,32 @@ let rec (norm :
                           FStar_Compiler_List.fold_left
                             (fun env2 -> fun uu___5 -> dummy :: env2) env1
                             bs1 in
-                        let lopt1 =
-                          let uu___5 =
-                            FStar_Compiler_Util.map_option
-                              (maybe_drop_rc_typ cfg) lopt in
-                          FStar_Compiler_Util.map_option
-                            (fun rc ->
-                               let uu___6 =
-                                 FStar_Compiler_Util.map_option
-                                   (FStar_Syntax_Subst.subst opening)
-                                   rc.FStar_Syntax_Syntax.residual_typ in
-                               {
-                                 FStar_Syntax_Syntax.residual_effect =
-                                   (rc.FStar_Syntax_Syntax.residual_effect);
-                                 FStar_Syntax_Syntax.residual_typ = uu___6;
-                                 FStar_Syntax_Syntax.residual_flags =
-                                   (rc.FStar_Syntax_Syntax.residual_flags)
-                               }) uu___5 in
+                        let rc_opt1 =
+                          Obj.magic
+                            (FStar_Class_Monad.op_let_Bang
+                               FStar_Class_Monad.monad_option () ()
+                               (Obj.magic rc_opt)
+                               (fun uu___5 ->
+                                  (fun rc ->
+                                     let rc = Obj.magic rc in
+                                     let rc1 = maybe_drop_rc_typ cfg rc in
+                                     let uu___5 =
+                                       let uu___6 =
+                                         FStar_Compiler_Util.map_option
+                                           (FStar_Syntax_Subst.subst opening)
+                                           rc1.FStar_Syntax_Syntax.residual_typ in
+                                       {
+                                         FStar_Syntax_Syntax.residual_effect
+                                           =
+                                           (rc1.FStar_Syntax_Syntax.residual_effect);
+                                         FStar_Syntax_Syntax.residual_typ =
+                                           uu___6;
+                                         FStar_Syntax_Syntax.residual_flags =
+                                           (rc1.FStar_Syntax_Syntax.residual_flags)
+                                       } in
+                                     Obj.magic
+                                       (FStar_Pervasives_Native.Some uu___5))
+                                    uu___5)) in
                         (FStar_TypeChecker_Cfg.log cfg
                            (fun uu___6 ->
                               let uu___7 =
@@ -4099,7 +4108,7 @@ let rec (norm :
                             } in
                           norm cfg1 env'
                             ((Abs
-                                (env1, bs1, env', lopt1,
+                                (env1, bs1, env', rc_opt1,
                                   (t1.FStar_Syntax_Syntax.pos))) :: stack3)
                             body1))) in
                (match stack2 with
@@ -4139,7 +4148,7 @@ let rec (norm :
                                        {
                                          FStar_Syntax_Syntax.bs = tl;
                                          FStar_Syntax_Syntax.body = body;
-                                         FStar_Syntax_Syntax.rc_opt = lopt
+                                         FStar_Syntax_Syntax.rc_opt = rc_opt
                                        }) t1.FStar_Syntax_Syntax.pos in
                                 norm cfg
                                   (((FStar_Pervasives_Native.Some b), c) ::
@@ -10389,7 +10398,7 @@ let (get_n_binders :
       FStar_Syntax_Syntax.term ->
         (FStar_Syntax_Syntax.binder Prims.list * FStar_Syntax_Syntax.comp))
   = fun env1 -> fun n -> fun t -> get_n_binders' env1 [] n t
-let (uu___3993 : unit) =
+let (uu___3994 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals __get_n_binders get_n_binders'
 let (maybe_unfold_head_fv :
   FStar_TypeChecker_Env.env ->
