@@ -1496,7 +1496,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                    else norm cfg env stack t0 //Fixpoint steps are excluded; so don't take the recursive knot
             end
 
-          | Tm_abs {bs; body; rc_opt=lopt} ->
+          | Tm_abs {bs; body; rc_opt=rc_opt} ->
             //
             //AR/NS: 04/26/2022:
             //       In the case of metaprograms, we reduce DIV computations in the
@@ -1542,15 +1542,16 @@ let rec norm : cfg -> env -> stack -> term -> term =
                    rebuild cfg env stack t
               else let bs, body, opening = open_term' bs body in
                    let env' = bs |> List.fold_left (fun env _ -> dummy::env) env in
-                   let lopt = lopt
-                     |> BU.map_option (maybe_drop_rc_typ cfg)
-                     |> BU.map_option (fun rc ->
-                                      {rc with
-                                       residual_typ = BU.map_option (SS.subst opening) rc.residual_typ}) in
+                   let rc_opt =
+                     let open FStar.Class.Monad in
+                     let! rc = rc_opt in
+                     let rc = maybe_drop_rc_typ cfg rc in
+                     Some {rc with residual_typ = BU.map_option (SS.subst opening) rc.residual_typ}
+                   in
                    log cfg  (fun () -> BU.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
                    let stack = (Cfg (cfg, None))::stack in
                    let cfg = { cfg with strong = true } in
-                   norm cfg env' (Abs(env, bs, env', lopt, t.pos)::stack) body
+                   norm cfg env' (Abs(env, bs, env', rc_opt, t.pos)::stack) body
             in
             begin match stack with
                 | UnivArgs _::_ ->
@@ -1573,7 +1574,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                           norm cfg ((Some b, c) :: env) stack_rest body
                         | b::tl ->
                           log cfg  (fun () -> BU.print1 "\tShifted %s\n" (show c));
-                          let body = mk (Tm_abs {bs=tl; body; rc_opt=lopt}) t.pos in
+                          let body = mk (Tm_abs {bs=tl; body; rc_opt}) t.pos in
                           norm cfg ((Some b, c) :: env) stack_rest body
                       end
                   end
