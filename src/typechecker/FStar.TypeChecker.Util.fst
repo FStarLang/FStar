@@ -2821,18 +2821,18 @@ let maybe_instantiate (env:Env.env) e t =
         * recursively to catch all the binders across type
         * definitions. TODO: Move to library? Revise other uses
         * of arrow_formals{,_comp}?*)
-       let unfolded_arrow_formals (t:term) : list binder =
-         let rec aux (bs:list binder) (t:term) : list binder =
+       let unfolded_arrow_formals env (t:term) : list binder =
+         let rec aux (env:Env.env) (bs:list binder) (t:term) : list binder =
            let t = N.unfold_whnf env t in
            let bs', t = U.arrow_formals t in
            match bs' with
            | [] -> bs
-           | bs' -> aux (bs@bs') t
+           | bs' -> aux (Env.push_binders env bs') (bs@bs') t
          in
-         aux [] t
+         aux env [] t
        in
        let number_of_implicits t =
-            let formals = unfolded_arrow_formals t in
+            let formals = unfolded_arrow_formals env t in
             let n_implicits =
             match formals |> BU.prefix_until (fun ({binder_qual=imp}) -> Option.isNone imp || U.eq_bqual imp (Some Equality) = U.Equal) with
                 | None -> List.length formals

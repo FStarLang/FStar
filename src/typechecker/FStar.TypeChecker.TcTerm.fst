@@ -3450,11 +3450,13 @@ and tc_pat env (pat_t:typ) (p0:pat) :
             (PatternUtils.elaborate_pat env p0)
             (expected_pat_typ env p0.p pat_t)
     in
+    let extended_env = Env.push_bvs env bvs in
+    let pat_e_norm = N.normalize [Env.Beta] extended_env pat_e in
     if Env.debug env <| Options.Other "Patterns"
     then BU.print2 "Done checking pattern %s as expression %s\n"
                     (Print.pat_to_string pat)
                     (Print.term_to_string pat_e);
-    pat, bvs, tms, Env.push_bvs env bvs, pat_e, N.normalize [Env.Beta] env pat_e, g, erasable
+    pat, bvs, tms, extended_env, pat_e, pat_e_norm, g, erasable
 
 
 (********************************************************************************************************************)
@@ -3771,7 +3773,7 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
        let c_weak =
          if should_return &&
             TcComm.is_pure_or_ghost_lcomp c_weak
-         then TcUtil.maybe_assume_result_eq_pure_term env branch_exp c_weak
+         then TcUtil.maybe_assume_result_eq_pure_term (Env.push_bvs scrutinee_env pat_bvs) branch_exp c_weak
          else c_weak in
        if close_branch_with_substitutions
        then
