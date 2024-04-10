@@ -6302,18 +6302,21 @@ let (maybe_instantiate :
                 "maybe_instantiate: starting check for (%s) of type (%s), expected type is %s\n"
                 uu___3 uu___4 uu___5
             else ());
-           (let unfolded_arrow_formals t1 =
-              let rec aux bs t2 =
-                let t3 = FStar_TypeChecker_Normalize.unfold_whnf env t2 in
+           (let unfolded_arrow_formals env1 t1 =
+              let rec aux env2 bs t2 =
+                let t3 = FStar_TypeChecker_Normalize.unfold_whnf env2 t2 in
                 let uu___2 = FStar_Syntax_Util.arrow_formals t3 in
                 match uu___2 with
                 | (bs', t4) ->
                     (match bs' with
                      | [] -> bs
-                     | bs'1 -> aux (FStar_Compiler_List.op_At bs bs'1) t4) in
-              aux [] t1 in
+                     | bs'1 ->
+                         let uu___3 =
+                           FStar_TypeChecker_Env.push_binders env2 bs'1 in
+                         aux uu___3 (FStar_Compiler_List.op_At bs bs'1) t4) in
+              aux env1 [] t1 in
             let number_of_implicits t1 =
-              let formals = unfolded_arrow_formals t1 in
+              let formals = unfolded_arrow_formals env t1 in
               let n_implicits =
                 let uu___2 =
                   FStar_Compiler_Util.prefix_until
@@ -6348,17 +6351,39 @@ let (maybe_instantiate :
                     let uu___4 =
                       let uu___5 =
                         let uu___6 =
-                          FStar_Compiler_Util.string_of_int n_expected in
-                        let uu___7 = FStar_Syntax_Print.term_to_string e in
-                        let uu___8 =
-                          FStar_Compiler_Util.string_of_int n_available in
-                        FStar_Compiler_Util.format3
-                          "Expected a term with %s implicit arguments, but %s has only %s"
-                          uu___6 uu___7 uu___8 in
+                          let uu___7 =
+                            FStar_Errors_Msg.text "Expected a term with " in
+                          let uu___8 =
+                            let uu___9 =
+                              FStar_Class_PP.pp FStar_Class_PP.pp_int
+                                n_expected in
+                            let uu___10 =
+                              let uu___11 =
+                                FStar_Errors_Msg.text
+                                  " implicit arguments, but " in
+                              let uu___12 =
+                                let uu___13 =
+                                  FStar_Class_PP.pp
+                                    FStar_Syntax_Print.pretty_term e in
+                                let uu___14 =
+                                  let uu___15 =
+                                    FStar_Errors_Msg.text " has only " in
+                                  let uu___16 =
+                                    let uu___17 =
+                                      FStar_Class_PP.pp FStar_Class_PP.pp_int
+                                        n_available in
+                                    let uu___18 = FStar_Errors_Msg.text "." in
+                                    FStar_Pprint.op_Hat_Hat uu___17 uu___18 in
+                                  FStar_Pprint.op_Hat_Hat uu___15 uu___16 in
+                                FStar_Pprint.op_Hat_Hat uu___13 uu___14 in
+                              FStar_Pprint.op_Hat_Hat uu___11 uu___12 in
+                            FStar_Pprint.op_Hat_Hat uu___9 uu___10 in
+                          FStar_Pprint.op_Hat_Hat uu___7 uu___8 in
+                        [uu___6] in
                       (FStar_Errors_Codes.Fatal_MissingImplicitArguments,
                         uu___5) in
                     let uu___5 = FStar_TypeChecker_Env.get_range env in
-                    FStar_Errors.raise_error uu___4 uu___5
+                    FStar_Errors.raise_error_doc uu___4 uu___5
                   else
                     FStar_Pervasives_Native.Some (n_available - n_expected) in
             let decr_inst uu___2 =
