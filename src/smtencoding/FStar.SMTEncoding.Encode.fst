@@ -305,9 +305,6 @@ let primitive_type_axioms : env -> lident -> string -> term -> list decl =
         let valid = mkApp("Valid", [l_not_a]) in
         let not_valid_a = mkNot <| mkApp("Valid", [a]) in
         [Util.mkAssume(mkForall (Env.get_range env) ([[l_not_a]], [aa], mkIff(not_valid_a, valid)), Some "not interpretation", "l_not-interp")] in
-   let mk_range_interp : env -> string -> term -> list decl = fun env range tt ->
-        let range_ty = mkApp(range, []) in
-        [Util.mkAssume(mk_HasTypeZ (mk_Range_const ()) range_ty, Some "Range_const typing", (varops.mk_unique "typing_range_const"))] in
    let mk_inversion_axiom : env -> string -> term -> list decl = fun env inversion tt ->
        // (assert (forall ((t Term))
        //            (! (implies (Valid (FStar.Pervasives.inversion t))
@@ -344,7 +341,6 @@ let primitive_type_axioms : env -> lident -> string -> term -> list decl =
                  (Const.not_lid,    mk_not_interp);
                  //(Const.forall_lid, mk_forall_interp);
                  //(Const.exists_lid, mk_exists_interp);
-                 (Const.range_lid,  mk_range_interp);
                  (Const.inversion_lid,mk_inversion_axiom);
                 ] in
     (fun (env:env) (t:lident) (s:string) (tt:term) ->
@@ -1094,6 +1090,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
             let env, decls2 = BU.fold_map encode_action env ed.actions in
             List.flatten decls2, env
+
+     | Sig_declare_typ {lid} when (lid_equals lid Const.is_primitive_range_lid) ->
+        let tname, ttok, env = new_term_constant_and_tok_from_lid env lid 1 in
+        [], env
 
      | Sig_declare_typ {lid} when (lid_equals lid Const.precedes_lid) ->
         //precedes is added in the prelude, see FStar.SMTEncoding.Term.fs

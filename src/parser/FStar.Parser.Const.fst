@@ -61,6 +61,7 @@ let monadic_lid      = pconst "M"
 let spinoff_lid      = psconst "spinoff"
 let inl_lid          = psconst "Inl"
 let inr_lid          = psconst "Inr"
+let is_primitive_range_lid = pconst "isPrimitiveRangeType"
 
 let int8_lid   = p2l ["FStar"; "Int8"; "t"]
 let uint8_lid  = p2l ["FStar"; "UInt8"; "t"]
