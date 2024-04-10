@@ -1471,18 +1471,28 @@ let rank_leq r1 r2 = rank_t_num r1 <= rank_t_num r2
 let rank_less_than r1 r2 =
     r1 <> r2 &&
     rank_t_num r1 <= rank_t_num r2
-let compress_tprob tcenv p = {p with lhs=whnf tcenv p.lhs; rhs=whnf tcenv p.rhs}
+let compress_tprob wl p =
+  let env = p_env wl (TProb p) in
+  {p with lhs=whnf env p.lhs; rhs=whnf env p.rhs}
 
-let compress_prob tcenv p =
+let compress_cprob wl p =
+  let whnf_c env c =
+    match c.n with
+    | Total ty -> S.mk_Total (whnf env ty)
+    | _ -> c
+  in
+  let env = p_env wl (CProb p) in
+  {p with lhs = whnf_c env p.lhs; rhs = whnf_c env p.rhs}
+
+let compress_prob wl p =
     match p with
-    | TProb p -> compress_tprob tcenv p |> TProb
-    | CProb _ -> p
+    | TProb p -> compress_tprob wl p |> TProb
+    | CProb p -> compress_cprob wl p |> CProb
 
-
-let rank tcenv pr : rank_t    //the rank
-                  * prob   //the input problem, pre-processed a bit (the wl is needed for the pre-processing)
-                  =
-   let prob = compress_prob tcenv pr |> maybe_invert_p in
+let rank wl pr : rank_t //the rank
+                * prob   //the input problem, pre-processed a bit (the wl is needed for the pre-processing)
+                =
+   let prob = compress_prob wl pr |> maybe_invert_p in
    match prob with
     | TProb tp ->
       let lh, lhs_args = U.head_and_args tp.lhs in
@@ -1539,7 +1549,7 @@ let next_prob wl : option (prob * list prob * rank_t) =
           | _ -> None
           end
         | hd::tl ->
-          let rank, hd = rank wl.tcenv hd in
+          let rank, hd = rank wl hd in
           if rank_leq rank Flex_rigid_eq
           then match min with
                | None -> Some (hd, out@tl, rank)
@@ -1562,7 +1572,8 @@ let flex_prob_closing tcenv (bs:binders) (p:prob) =
           bs |> BU.for_some (fun ({binder_bv=x}) -> S.bv_eq x y))
         | _ -> false
     in
-    let r, p = rank tcenv p in
+    let wl = empty_worklist tcenv in
+    let r, p = rank wl p in
     match p with
     | CProb _ ->
       true
@@ -2799,7 +2810,7 @@ and try_solve_probs_without_smt
       
 and solve_t (problem:tprob) (wl:worklist) : solution =
     def_check_prob "solve_t" (TProb problem);
-    solve_t' (compress_tprob wl.tcenv problem) wl
+    solve_t' (compress_tprob wl problem) wl
 
 and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
     : solution =
