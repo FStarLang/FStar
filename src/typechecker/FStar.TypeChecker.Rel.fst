@@ -126,7 +126,7 @@ environment (Env.env) in order to call into functions such as type_of,
 universe_of, and normalization. Hence, it is important to respect
 scoping, particularly so after the removal of the use_bv_sorts flag.
 
-Functions in this module used to explcitly pass around an Env.env, and
+Functions in this module used to explicitly pass around an Env.env, and
 used that to call into Tc/Norm. However, while some of them pushed
 binders as needed, some of them did not, and the result was a flurry of
 subtle scoping bugs. And while those were fixed, we decided to just be
@@ -265,6 +265,9 @@ let p_env wl prob =
   (* Note: ctx_uvar_gamma should be an extension of tcenv.gamma,
    * since we created this uvar during this unification run. *)
   { wl.tcenv with gamma=(p_guard_uvar prob).ctx_uvar_gamma}
+
+let p_guard_env wl prob =
+  { wl.tcenv with gamma=(match p_element prob with | None -> [] | Some x -> [Binding_var x]) @ (p_guard_uvar prob).ctx_uvar_gamma}
 
 (* ------------------------------------------------*)
 (* </prob/problem ops>                             *)
@@ -1019,7 +1022,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
               [])
     in
     let wl =
-        let g = whnf (p_env wl prob) (p_guard prob) in
+        let g = whnf (p_guard_env wl prob) (p_guard prob) in
         if not (is_flex g)
         then if resolve_ok
              then wl
@@ -4766,6 +4769,7 @@ let with_guard env prob dopt =
     match dopt with
     | None -> None
     | Some (deferred, defer_to_tac, implicits) ->
+      def_check_scoped (p_loc prob) "with_guard" env (p_guard prob);
       Some <| simplify_guard env
                 ({guard_f=(p_guard prob |> NonTrivial);
                   deferred=deferred;
@@ -5194,14 +5198,15 @@ let check_subtyping env t1 t2 =
 
     then BU.print2 "check_subtyping of %s and %s\n" (N.term_to_string env t1) (N.term_to_string env t2);
     let prob, x, wl = new_t_prob (empty_worklist env) env t1 SUB t2 in
+    let env_x = Env.push_bv env x in
     let smt_ok = not (Options.ml_ish ()) in
-    let g = with_guard env prob <| solve_and_commit (singleton wl prob smt_ok) (fun _ -> None) in
+    let g = with_guard env_x prob <| solve_and_commit (singleton wl prob smt_ok) (fun _ -> None) in
     if (Env.debug env <| Options.Other "Rel" || Env.debug env <| Options.Other "RelTop")
         && BU.is_some g
     then BU.print3 "check_subtyping succeeded: %s <: %s\n\tguard is %s\n"
-                    (N.term_to_string env t1)
-                    (N.term_to_string env t2)
-                    (guard_to_string env (BU.must g));
+                    (N.term_to_string env_x t1)
+                    (N.term_to_string env_x t2)
+                    (guard_to_string env_x (BU.must g));
     match g with
     | None -> None
     | Some g -> Some (x, g)
