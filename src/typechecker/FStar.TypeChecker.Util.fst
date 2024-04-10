@@ -2840,16 +2840,19 @@ let maybe_instantiate (env:Env.env) e t =
             n_implicits
        in
        let inst_n_binders t =
+           let open FStar.Errors.Msg in
+           let open FStar.Pprint in
+           let open FStar.Class.PP in
            match Env.expected_typ env with
            | None -> None
            | Some (expected_t, _) ->  //the use_eq flag is irrelevant for instantiation
              let n_expected = number_of_implicits expected_t in
              let n_available = number_of_implicits t in
              if n_available < n_expected
-             then raise_error (Errors.Fatal_MissingImplicitArguments, (BU.format3 "Expected a term with %s implicit arguments, but %s has only %s"
-                                        (BU.string_of_int n_expected)
-                                        (Print.term_to_string e)
-                                        (BU.string_of_int n_available))) (Env.get_range env)
+             then raise_error_doc (Errors.Fatal_MissingImplicitArguments, [
+                    text "Expected a term with " ^^ pp #int n_expected ^^ text " implicit arguments, but " ^^
+                      pp e ^^ text " has only " ^^ pp #int n_available ^^ text "."])
+                    (Env.get_range env)
              else Some (n_available - n_expected)
         in
         let decr_inst = function
