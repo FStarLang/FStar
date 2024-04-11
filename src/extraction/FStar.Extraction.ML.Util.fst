@@ -49,7 +49,6 @@ let pruneNones (l : list (option 'a)) : list 'a =
 
 let mk_range_mle = with_ty MLTY_Top <| MLE_Name (["FStar"; "Range"], "mk_range")
 let dummy_range_mle = with_ty MLTY_Top <| MLE_Name (["FStar"; "Range"], "dummyRange")
-let fstar_real_of_string = with_ty MLTY_Top <| MLE_Name (["FStar";"Real"], "of_string")
 
 (* private *)
 let mlconst_of_const' (sctt : sconst) =
@@ -106,10 +105,6 @@ let mlexpr_of_const (p:Range.range) (c:sconst) : mlexpr' =
     match c with
     | Const_range r ->
         mlexpr_of_range r
-
-    | Const_real s ->
-        let str = mlconst_of_const p (Const_string(s, p)) in
-        MLE_App(fstar_real_of_string, [with_ty ml_string_ty <| MLE_Const str])
 
     | _ ->
         MLE_Const (mlconst_of_const p c)
