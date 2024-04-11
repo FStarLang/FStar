@@ -45,7 +45,7 @@ let collect_abs t =
 
 (* Copied from FStar.Tactics.Derived *)
 private
-let fail (#a:Type) (m:string) = raise #a (TacticFailure m)
+let fail (#a:Type) (m:string) = raise #a (TacticFailure (mkmsg m))
 
 let rec mk_arr (bs: list binder) (cod : comp) : Tac term =
     match bs with

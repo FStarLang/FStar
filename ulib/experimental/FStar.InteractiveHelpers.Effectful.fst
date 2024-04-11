@@ -216,7 +216,7 @@ let compute_eterm_info (dbg : bool) (e : env) (t : term) =
     end
   with
   | TacticFailure msg ->
-    mfail ("compute_eterm_info: failure: '" ^ msg ^ "'")
+    mfail_doc ([text "compute_eterm_info: failure"] @ msg)
   | e -> raise e
 #pop-options
 

@@ -29,6 +29,7 @@ open FStar.Tactics.Result
 open FStar.Tactics.Printing
 open FStar.Tactics.Common
 open FStar.Class.Show
+open FStar.Errors.Msg
 
 module O       = FStar.Options
 module BU      = FStar.Compiler.Util
@@ -148,12 +149,14 @@ let log ps (f : unit -> unit) : unit =
     then f ()
     else ()
 
-let fail (msg:string) =
+let fail_doc (msg:error_message) =
     mk_tac (fun ps ->
         if Env.debug ps.main_context (Options.Other "TacFail") then
-          do_dump_proofstate ps ("TACTIC FAILING: " ^ msg);
+          do_dump_proofstate ps ("TACTIC FAILING: " ^ renderdoc (hd msg));
         Failed (TacticFailure msg, ps)
     )
+
+let fail msg = fail_doc [text msg]
 
 let catch (t : tac 'a) : tac (either exn 'a) =
     mk_tac (fun ps ->
@@ -355,18 +358,21 @@ let goal_of_guard (reason:string) (e:Env.env)
   let goal = { goal with is_guard = true } in
   ret goal))
 
-let wrap_err (pref:string) (t : tac 'a) : tac 'a =
+let wrap_err_doc (pref:error_message) (t : tac 'a) : tac 'a =
     mk_tac (fun ps ->
             match run t ps with
             | Success (a, q) ->
                 Success (a, q)
 
             | Failed (TacticFailure msg, q) ->
-                Failed (TacticFailure (pref ^ ": " ^ msg), q)
+                Failed (TacticFailure (pref @ msg), q)
 
             | Failed (e, q) ->
                 Failed (e, q)
            )
+
+let wrap_err (pref:string) (t : tac 'a) : tac 'a =
+  wrap_err_doc [text (pref ^ " failed")] t
 
 let mlog f (cont : unit -> tac 'a) : tac 'a =
   let! ps = get in

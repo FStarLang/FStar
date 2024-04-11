@@ -990,11 +990,6 @@ let sigelt_to_doc t =
   then Pprint.arbitrary_string (sigelt_to_string t)
   else Pretty.sigelt_to_doc t
 
-instance pretty_term     = { pp   = term_to_doc; }
-instance pretty_univ     = { pp   = univ_to_doc; }
-instance pretty_sigelt   = { pp   = sigelt_to_doc; }
-instance pretty_comp     = { pp   = comp_to_doc; }
-
 instance showable_term   = { show = term_to_string; }
 instance showable_univ   = { show = univ_to_string; }
 instance showable_comp   = { show = comp_to_string; }
@@ -1014,3 +1009,10 @@ instance showable_pragma = { show = pragma_to_string; }
 instance showable_subst_elt = { show = subst_elt_to_string; }
 instance showable_branch = { show = branch_to_string; }
 instance showable_qualifier = { show = qual_to_string; }
+
+instance pretty_term     = { pp   = term_to_doc; }
+instance pretty_univ     = { pp   = univ_to_doc; }
+instance pretty_sigelt   = { pp   = sigelt_to_doc; }
+instance pretty_comp     = { pp   = comp_to_doc; }
+instance pretty_ctxu     = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
+instance pretty_uvar     = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
