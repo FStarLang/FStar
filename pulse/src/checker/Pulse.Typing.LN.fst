@@ -793,7 +793,7 @@ let close_proof_hint_ln (ht:proof_hint_type) (v:var) (i:index)
     | WILD
     | SHOW_PROOF_STATE _ -> ()
 
-#push-options "--query_stats --fuel 2 --ifuel 2 --z3rlimit_factor 4 --split_queries no"
+#push-options "--query_stats --fuel 2 --ifuel 2 --z3rlimit_factor 8 --split_queries no"
 let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
   : Lemma
     (requires ln_st' t (i - 1))

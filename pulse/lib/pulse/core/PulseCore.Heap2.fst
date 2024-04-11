@@ -630,6 +630,7 @@ let lift_action_ghost
     )
   );
   p
+#pop-options
 
 let ni_erased a : non_informative (erased a) = fun x -> reveal x
 let ni_unit : non_informative unit = fun x -> reveal x
@@ -690,6 +691,7 @@ let ghost_share
 
 let ni_squash #a : non_informative (squash a) = fun x -> reveal x
 
+#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 8 --retry 3" // flaky
 let ghost_gather
     (#a:Type)
     (#pcm:pcm a)
@@ -703,3 +705,4 @@ let ghost_gather
 = lift_erased #_ #(ni_squash ) #None
     (Ghost.hide <|
       lift_action_ghost ni_squash (H.gather_action #a #pcm r v0 v1))
+#pop-options
