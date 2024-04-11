@@ -22,9 +22,14 @@ module FStar.Real
 
   All these operations are mapped to the corresponding primitives
   in Z3's theory of real arithmetic.
+
+  This is only a logical model of the reals. There is no extraction
+  for them, as they are an erasable type. Any operation that can observe
+  a real (comparisons, to_string, etc) must be Ghost.
 *)
 
-val real : eqtype
+[@@erasable]
+val real : Type0
 
 val of_int : int -> Tot real
 
@@ -35,73 +40,22 @@ val of_int : int -> Tot real
   *)
 val of_string: string -> Tot real
 
+val to_string: real -> GTot string
+
 val ( +. ) : real -> real -> Tot real
 val ( -. ) : real -> real -> Tot real
 val ( *. ) : real -> real -> Tot real
-val ( /. ) : real -> d:real{d <> 0.0R} -> Tot real
+val ( /. ) : real -> d:real{d =!= 0.0R} -> Tot real
 
-val ( >.  ) : real -> real -> Tot bool
-val ( >=. ) : real -> real -> Tot bool
+val ( =.  ) : real -> real -> GTot bool
 
-val ( <.  ) : real -> real -> Tot bool
-val ( <=. ) : real -> real -> Tot bool
+val ( >.  ) : real -> real -> GTot bool
+val ( >=. ) : real -> real -> GTot bool
 
-#reset-options "--smtencoding.elim_box true --smtencoding.l_arith_repr native --smtencoding.nl_arith_repr native"
-//Tests
+val ( <.  ) : real -> real -> GTot bool
+val ( <=. ) : real -> real -> GTot bool
+
 let zero : real = of_int 0
-let one : real = of_int 1
-let two : real = of_int 2
-
-val sqrt_2 : r:real{r *. r = two}
-
-let n_over_n2 (n:real{n <> 0.0R /\ n*.n <> 0.0R}) = assert (n /. (n *. n) == 1.0R /. n)
-
-let test = assert (two >. one)
-let test1 = assert (one = 1.0R)
-
-let test_lt1 = assert (1.0R <. 2.0R)
-let test_lt2 = assert (~ (1.0R <. 1.0R))
-let test_lt3 = assert (~ (2.0R <. 1.0R))
-
-let test_le1 = assert (1.0R <=. 2.0R)
-let test_le2 = assert (1.0R <=. 1.0R)
-let test_le3 = assert (~ (2.0R <=. 1.0R))
-
-let test_gt1 = assert (~ (1.0R >. 2.0R))
-let test_gt2 = assert (~ (1.0R >. 1.0R))
-let test_gt3 = assert (2.0R >. 1.0R)
-
-let test_ge1 = assert (~ (1.0R >=. 2.0R))
-let test_ge2 = assert (1.0R >=. 1.0R)
-let test_ge3 = assert (2.0R >=. 1.0R)
-
-let test_add_eq = assert (1.0R +. 1.0R = 2.0R)
-let test_add_eq' = assert (1.0R +. 3.0R = 4.0R)
-let test_add_lt = assert (1.0R +. 1.0R <. 3.0R)
-
-let test_mul_eq = assert (2.0R *. 2.0R = 4.0R)
-let test_mul_lt = assert (2.0R *. 2.0R <. 5.0R)
-
-let test_div_eq = assert (8.0R /. 2.0R = 4.0R)
-let test_div_lt = assert (8.0R /. 2.0R <. 5.0R)
-
-let test_sqrt_2_mul = assert (sqrt_2 *. sqrt_2 = 2.0R)
-//let test_sqrt_2_add = assert (sqrt_2 +. sqrt_2 >. 2.0R) // Fails
-let test_sqrt_2_scale = assert (1.0R /. sqrt_2 = sqrt_2 /. 2.0R)
-
-// Common identities
-let add_id_l = assert (forall n. 0.0R +. n = n)
-let add_id_r = assert (forall n. n +. 0.0R = n)
-
-let mul_nil_l = assert (forall n. 0.0R *. n = 0.0R)
-let mul_nil_r = assert (forall n. n *. 0.0R = 0.0R)
-
-let mul_id_l = assert (forall n. 1.0R *. n = n)
-let mul_id_r = assert (forall n. n *. 1.0R = n)
-
-let add_comm = assert (forall x y. x +. y = y +.x)
-let add_assoc = assert (forall x y z. ((x +. y) +.z) = (x +. (y +. z)))
-
-let mul_comm = assert (forall x y. x *. y = y *.x)
-let mul_assoc = assert (forall x y z. ((x *. y) *.z) = (x *. (y *. z)))
-let mul_dist = assert (forall x y z. x *. (y +. z) = (x *. y) +. (x *.z))
+let one  : real = of_int 1
+let two  : real = of_int 2
+val sqrt_2 : r:real{r *. r == two}

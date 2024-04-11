@@ -138,6 +138,7 @@ let prims =
         (Const.op_Division,    (quant xy  (boxInt  <| mkDiv(unboxInt x, unboxInt y))));
         (Const.op_Modulus,     (quant xy  (boxInt  <| mkMod(unboxInt x, unboxInt y))));
         //real ops
+        (Const.real_op_EQ,          (quant xy  (boxBool <| mkEq(unboxReal x, unboxReal y))));
         (Const.real_op_LT,          (quant xy  (boxBool <| mkLT(unboxReal x, unboxReal y))));
         (Const.real_op_LTE,         (quant xy  (boxBool <| mkLTE(unboxReal x, unboxReal y))));
         (Const.real_op_GT,          (quant xy  (boxBool <| mkGT(unboxReal x, unboxReal y))));
