@@ -452,3 +452,207 @@ ensures pts_to x ('i + 2)
     drop_ (inv _ _)
 }
 ```
+
+///////////////////////////////////////////////////////////////////////////////
+// Using single ghost state with a pcm to manage the views of the two threads
+// We pick product of two fractional permission PCMs as the ghost state
+///////////////////////////////////////////////////////////////////////////////
+
+open FStar.PCM
+
+module U = FStar.Universe
+module G = FStar.Ghost
+module Prod = Pulse.Lib.PCM.Product
+module Frac = Pulse.Lib.PCM.Fraction
+
+type int1 : Type u#1 = U.raise_t int
+
+type ghost_st : Type u#1 = Frac.fractional int1 & Frac.fractional int1
+
+let pcm : pcm ghost_st = Prod.pcm_prod Frac.pcm_frac Frac.pcm_frac
+
+let with_p (n:int1) (p:perm) : Frac.fractional int1 = Some (n, p)
+let full (n:int1) : Frac.fractional int1 = Some (n, full_perm)
+let half (n:int1) : Frac.fractional int1 = Some (n, half_perm full_perm)
+
+let fp_upd_t1
+  (t1_old:G.erased int1) 
+  (t1_new:int1)
+  (t2:int1)
+  (p2:perm)
+  
+  : frame_preserving_upd pcm (full t1_old, with_p t2 p2) (full t1_new, with_p t2 p2) =
+  
+  Prod.mk_frame_preserving_upd_fst
+    #_
+    #_
+    #Frac.pcm_frac
+    #Frac.pcm_frac
+    _
+    _
+    (with_p t2 p2)
+    (Frac.mk_frame_preserving_upd t1_old t1_new)
+
+let fp_upd_t2
+  (t1:int1)
+  (p1:perm)
+  (t2_old:G.erased int1) 
+  (t2_new:int1)
+  
+  : frame_preserving_upd pcm (with_p t1 p1, full t2_old) (with_p t1 p1, full t2_new) =
+  
+  Prod.mk_frame_preserving_upd_snd
+    #_
+    #_
+    #Frac.pcm_frac
+    #Frac.pcm_frac
+    (with_p t1 p1)
+    _
+    _
+    (Frac.mk_frame_preserving_upd t2_old t2_new)
+
+```pulse
+ghost
+fn share (r:ghost_pcm_ref pcm) (#n1 #n2:int1)
+  requires ghost_pcm_pts_to r (full n1, full n2)
+  ensures ghost_pcm_pts_to r (half n1, None) **
+          ghost_pcm_pts_to r (None, half n2) **
+          ghost_pcm_pts_to r (half n1, half n2)
+{
+  rewrite (ghost_pcm_pts_to r (full n1, full n2)) as
+          (ghost_pcm_pts_to r ((half n1, None) `op pcm` (half n1, full n2)));
+  ghost_share r (half n1, None) (half n1, full n2);
+  rewrite (ghost_pcm_pts_to r (half n1, full n2)) as
+          (ghost_pcm_pts_to r ((None, half n2) `op pcm` (half n1, half n2)));
+  ghost_share r (None, half n2) (half n1, half n2)
+}
+```
+
+```pulse
+ghost
+fn gather (r:ghost_pcm_ref pcm) (#n1 #n2:int1) (#v1 #v2:int1)
+  requires ghost_pcm_pts_to r (half n1, None) **
+           ghost_pcm_pts_to r (None, half n2) **
+           ghost_pcm_pts_to r (half v1, half v2)
+  returns _:squash (v1 == n1 /\ v2 == n2)
+  ensures ghost_pcm_pts_to r (full n1, full n2)
+
+{
+  ghost_gather r (None, half n2) (half v1, half v2);
+  rewrite (ghost_pcm_pts_to r ((None, half n2) `op pcm` (half v1, half v2))) as
+          (ghost_pcm_pts_to r (half v1, full n2));
+  ghost_gather r (half n1, None) (half v1, full n2);
+  rewrite (ghost_pcm_pts_to r ((half n1, None) `op pcm` (half v1, full n2))) as
+          (ghost_pcm_pts_to r (full n1, full n2))
+}
+```
+
+let lock_inv_pcm (r:ref int) (ghost_r:ghost_pcm_ref pcm) : v:vprop { is_big v } =
+  exists* n n1 n2. pts_to r n **
+                   ghost_pcm_pts_to ghost_r (half n1, half n2) **
+                   pure (n == U.downgrade_val n1 + U.downgrade_val n2)
+
+let t1_perm (ghost_r:ghost_pcm_ref pcm) (n:int1) (t1:bool) =
+  if t1
+  then ghost_pcm_pts_to ghost_r (half n, None)
+  else ghost_pcm_pts_to ghost_r (None, half n)
+
+let add_one (n:int1) : int1 = U.raise_val (U.downgrade_val n + 1)
+
+//
+// Lock, increment the reference, and
+//  update the ghost state's first component if t1 = true, else the second
+// 
+```pulse
+fn incr_pcm_t (r:ref int) (ghost_r:ghost_pcm_ref pcm) (l:L.lock) (t1:bool) (#n:int1)
+  requires L.lock_alive l #(half_perm full_perm) (lock_inv_pcm r ghost_r) **
+           t1_perm ghost_r n t1
+  ensures L.lock_alive l #(half_perm full_perm) (lock_inv_pcm r ghost_r) **
+          t1_perm ghost_r (add_one n) t1
+{
+  L.acquire l;
+  unfold lock_inv_pcm;
+  let v = !r;
+  r := v + 1;
+  if t1 {
+    rewrite (t1_perm ghost_r n t1) as
+            (ghost_pcm_pts_to ghost_r (half n, None));
+    with n1 n2. assert (ghost_pcm_pts_to ghost_r (half n1, half n2));
+    ghost_gather ghost_r (half n, None) (half n1, half n2);
+    rewrite (ghost_pcm_pts_to ghost_r ((half n, None) `op pcm` (half n1, half n2))) as
+            (ghost_pcm_pts_to ghost_r (full n1, half n2));
+    ghost_write ghost_r
+      (full n1, half n2)
+      (full (add_one n1), half n2)
+      (fp_upd_t1 n1 (add_one n1) n2 (half_perm full_perm));
+    rewrite (ghost_pcm_pts_to ghost_r (full (add_one n1), half n2)) as
+            (ghost_pcm_pts_to ghost_r ((half (add_one n1), half n2) `op pcm` (half (add_one n1), None)));
+    ghost_share ghost_r (half (add_one n1), half n2) (half (add_one n1), None);
+    fold lock_inv_pcm;
+    L.release l;
+    fold (t1_perm ghost_r (add_one n) t1)
+  } else {
+    rewrite (t1_perm ghost_r n t1) as
+            (ghost_pcm_pts_to ghost_r (None, half n));
+    with n1 n2. assert (ghost_pcm_pts_to ghost_r (half n1, half n2));
+    ghost_gather ghost_r (None, half n) (half n1, half n2);
+    rewrite (ghost_pcm_pts_to ghost_r ((None, half n2) `op pcm` (half n1, half n2))) as
+            (ghost_pcm_pts_to ghost_r (half n1, full n2));
+    ghost_write ghost_r
+      (half n1, full n2)
+      (half n1, full (add_one n2))
+      (fp_upd_t2 n1 (half_perm full_perm) n2 (add_one n2));
+    rewrite (ghost_pcm_pts_to ghost_r (half n1, full (add_one n2))) as
+            (ghost_pcm_pts_to ghost_r ((half n1, half (add_one n2)) `op pcm` (None, half (add_one n2))));
+    ghost_share ghost_r (half n1, half (add_one n2)) (None, half (add_one n2));
+    fold lock_inv_pcm;
+    L.release l;
+    fold (t1_perm ghost_r (add_one n) t1)
+  }
+}
+```
+
+let zero1 : int1 = U.raise_val 0
+
+```pulse
+fn incr_pcm (r:ref int) (#n:erased int)
+  requires pts_to r 0
+  ensures pts_to r 2
+{
+  let ghost_r = ghost_alloc #_ #pcm (G.hide (full zero1, full zero1));
+  with _v. rewrite (ghost_pcm_pts_to ghost_r (G.reveal (G.hide _v))) as
+                   (ghost_pcm_pts_to ghost_r _v);
+  share ghost_r;
+  fold lock_inv_pcm;
+
+  rewrite (ghost_pcm_pts_to ghost_r (half zero1, None)) as
+          (t1_perm ghost_r zero1 true);
+  rewrite (ghost_pcm_pts_to ghost_r (None, half zero1)) as
+          (t1_perm ghost_r zero1 false);
+
+  let l = L.new_lock (lock_inv_pcm r ghost_r);
+  
+  L.share l;
+
+  parallel
+    requires L.lock_alive l #(half_perm full_perm) (lock_inv_pcm r ghost_r) **
+             t1_perm ghost_r zero1 true and
+             L.lock_alive l #(half_perm full_perm) (lock_inv_pcm r ghost_r) **
+             t1_perm ghost_r zero1 false
+    ensures L.lock_alive l #(half_perm full_perm) (lock_inv_pcm r ghost_r) **
+            t1_perm ghost_r (add_one zero1) true and
+            L.lock_alive l #(half_perm full_perm) (lock_inv_pcm r ghost_r) **
+            t1_perm ghost_r (add_one zero1) false
+    { incr_pcm_t r ghost_r l true }
+    { incr_pcm_t r ghost_r l false };
+
+  L.gather l;
+  L.acquire l;
+  unfold lock_inv_pcm;
+  unfold t1_perm;
+  unfold t1_perm;
+  gather ghost_r;
+  L.free l;
+  drop_ (ghost_pcm_pts_to ghost_r _)
+}
+```
