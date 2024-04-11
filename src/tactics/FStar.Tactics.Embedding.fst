@@ -89,6 +89,7 @@ let fstar_tactics_proofstate    = fstar_tactics_const ["Types"; "proofstate"]
 let fstar_tactics_goal          = fstar_tactics_const ["Types"; "goal"]
 
 let fstar_tactics_TacticFailure = fstar_tactics_data  ["Common"; "TacticFailure"]
+let fstar_tactics_SKIP          = fstar_tactics_data  ["Common"; "SKIP"]
 
 let fstar_tactics_result        = fstar_tactics_const ["Result"; "__result"]
 let fstar_tactics_Success       = fstar_tactics_data  ["Result"; "Success"]
@@ -215,19 +216,33 @@ instance e_exn : embedding exn =
             S.mk_Tm_app fstar_tactics_TacticFailure.t
                 [S.as_arg (embed rng s)]
                 rng
+        | SKIP ->
+            { fstar_tactics_SKIP.t with pos = rng }
+
         | EExn t ->
             { t with pos = rng }
+
         | e ->
-            let s = "uncaught exception: " ^ (BU.message_of_exn e) in
-            S.mk_Tm_app fstar_tactics_TacticFailure.t
-                [S.as_arg (embed rng s)]
-                rng
+          let open FStar.Pprint in
+          let open FStar.Class.PP in
+          let open FStar.Errors.Msg in
+          let msg : error_message = [
+            text "Uncaught exception";
+            arbitrary_string (BU.message_of_exn e);
+           ]
+          in
+          S.mk_Tm_app fstar_tactics_TacticFailure.t
+              [S.as_arg (embed rng msg)]
+              rng
     in
     let unembed_exn (t:term) _ : option exn =
         match hd'_and_args t with
         | Tm_fvar fv, [(s, _)] when S.fv_eq_lid fv fstar_tactics_TacticFailure.lid ->
             BU.bind_opt (unembed' s) (fun s ->
             Some (TacticFailure s))
+
+        | Tm_fvar fv, [] when S.fv_eq_lid fv fstar_tactics_SKIP.lid ->
+          Some SKIP
 
         | _ ->
             (* Anything else, we just pass-through *)
@@ -246,7 +261,10 @@ let e_exn_nbe =
         | TacticFailure s ->
             mkConstruct fstar_tactics_TacticFailure.fv
               []
-              [ NBETerm.as_arg (NBETerm.embed NBETerm.e_string cb s) ]
+              [ NBETerm.as_arg (NBETerm.embed FStar.Tactics.Typeclasses.solve cb s) ]
+
+        | SKIP ->
+            mkConstruct fstar_tactics_SKIP.fv [] []
 
         | _ ->
             failwith (BU.format1 "cannot embed exn (NBE) : %s" (BU.message_of_exn e))
@@ -254,8 +272,11 @@ let e_exn_nbe =
     let unembed_exn cb (t:NBET.t) : option exn =
         match NBETerm.nbe_t_of_t t with
         | NBETerm.Construct (fv, _, [(s, _)]) when S.fv_eq_lid fv fstar_tactics_TacticFailure.lid ->
-            BU.bind_opt (NBETerm.unembed NBETerm.e_string cb s) (fun s ->
+            BU.bind_opt (NBETerm.unembed FStar.Tactics.Typeclasses.solve cb s) (fun s ->
             Some (TacticFailure s))
+
+        | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_SKIP.lid ->
+            Some SKIP
 
         | _ ->
             None

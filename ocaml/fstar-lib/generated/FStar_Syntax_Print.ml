@@ -1930,14 +1930,6 @@ let (sigelt_to_doc : FStar_Syntax_Syntax.sigelt -> FStar_Pprint.document) =
     then
       let uu___1 = sigelt_to_string t in FStar_Pprint.arbitrary_string uu___1
     else FStar_Syntax_Print_Pretty.sigelt_to_doc t
-let (pretty_term : FStar_Syntax_Syntax.term FStar_Class_PP.pretty) =
-  { FStar_Class_PP.pp = term_to_doc }
-let (pretty_univ : FStar_Syntax_Syntax.universe FStar_Class_PP.pretty) =
-  { FStar_Class_PP.pp = univ_to_doc }
-let (pretty_sigelt : FStar_Syntax_Syntax.sigelt FStar_Class_PP.pretty) =
-  { FStar_Class_PP.pp = sigelt_to_doc }
-let (pretty_comp : FStar_Syntax_Syntax.comp FStar_Class_PP.pretty) =
-  { FStar_Class_PP.pp = comp_to_doc }
 let (showable_term : FStar_Syntax_Syntax.term FStar_Class_Show.showable) =
   { FStar_Class_Show.show = term_to_string }
 let (showable_univ : FStar_Syntax_Syntax.universe FStar_Class_Show.showable)
@@ -1987,3 +1979,32 @@ let (showable_branch : FStar_Syntax_Syntax.branch FStar_Class_Show.showable)
 let (showable_qualifier :
   FStar_Syntax_Syntax.qualifier FStar_Class_Show.showable) =
   { FStar_Class_Show.show = qual_to_string }
+let (pretty_term : FStar_Syntax_Syntax.term FStar_Class_PP.pretty) =
+  { FStar_Class_PP.pp = term_to_doc }
+let (pretty_univ : FStar_Syntax_Syntax.universe FStar_Class_PP.pretty) =
+  { FStar_Class_PP.pp = univ_to_doc }
+let (pretty_sigelt : FStar_Syntax_Syntax.sigelt FStar_Class_PP.pretty) =
+  { FStar_Class_PP.pp = sigelt_to_doc }
+let (pretty_comp : FStar_Syntax_Syntax.comp FStar_Class_PP.pretty) =
+  { FStar_Class_PP.pp = comp_to_doc }
+let (pretty_ctxu : FStar_Syntax_Syntax.ctx_uvar FStar_Class_PP.pretty) =
+  {
+    FStar_Class_PP.pp =
+      (fun x ->
+         let uu___ = FStar_Class_Show.show showable_ctxu x in
+         FStar_Pprint.doc_of_string uu___)
+  }
+let (pretty_uvar : FStar_Syntax_Syntax.uvar FStar_Class_PP.pretty) =
+  {
+    FStar_Class_PP.pp =
+      (fun x ->
+         let uu___ = FStar_Class_Show.show showable_uvar x in
+         FStar_Pprint.doc_of_string uu___)
+  }
+let (pretty_binder : FStar_Syntax_Syntax.binder FStar_Class_PP.pretty) =
+  {
+    FStar_Class_PP.pp =
+      (fun x ->
+         let uu___ = FStar_Class_Show.show showable_binder x in
+         FStar_Pprint.doc_of_string uu___)
+  }

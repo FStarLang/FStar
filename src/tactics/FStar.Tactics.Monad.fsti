@@ -20,6 +20,7 @@ open FStar.TypeChecker.Env
 open FStar.Tactics.Result
 open FStar.Tactics.Types
 open FStar.Class.Monad
+open FStar.Errors.Msg
 
 module Range = FStar.Compiler.Range
 module BU    = FStar.Compiler.Util
@@ -45,8 +46,10 @@ val cur_goal : tac goal
 (* Raise an exception *)
 val traise : exn -> tac 'a
 
-(* A common failure. TODO: stop using string errors so much
- * and provide more structure. *)
+(* A common failure. *)
+val fail_doc : error_message -> tac 'a
+
+(* A common failure. *)
 val fail : string -> tac 'a
 
 (* Catch exceptions, restore UF graph on a failure *)
@@ -117,9 +120,13 @@ val add_irrelevant_goal : goal -> string -> env -> typ -> option should_check_uv
 (* Create a goal from a typechecking guard. *)
 val goal_of_guard : string -> env -> term -> option should_check_uvar -> Range.range -> tac goal
 
-(* Run a tactic [t], and it fails with a [TacticFailure] exception,
- * add a note in the error message. *)
-val wrap_err : string -> tac 'a -> tac 'a
+(* Run a tactic [t], and if it fails with a [TacticFailure] exception,
+ * add a prefix to the error message. *)
+val wrap_err_doc : pref:error_message -> tac 'a -> tac 'a
+
+(* Run a tactic [t], and if it fails with a [TacticFailure] exception,
+ * add a small string prefix to the first component of the error. *)
+val wrap_err : pref:string -> tac 'a -> tac 'a
 
 (* Call a (logging) function is verbose debugging is on *)
 val log : proofstate -> (unit -> unit) -> unit

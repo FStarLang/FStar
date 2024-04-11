@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Syntax
+module SyntaxTest
 
 open FStar.Tactics.V2
 open FStar.Reflection.V2.Arith

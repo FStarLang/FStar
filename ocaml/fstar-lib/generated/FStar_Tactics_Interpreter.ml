@@ -522,68 +522,114 @@ let (report_implicits :
                     let uu___2 =
                       let uu___3 =
                         let uu___4 =
-                          FStar_Class_Show.show
-                            FStar_Syntax_Print.showable_uvar
-                            (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
+                          let uu___5 =
+                            FStar_Errors_Msg.text
+                              "Tactic left uninstantiated unification variable:" in
+                          let uu___6 =
+                            FStar_Class_PP.pp FStar_Syntax_Print.pretty_uvar
+                              (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
+                          FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
                         let uu___5 =
                           let uu___6 =
-                            FStar_Syntax_Util.ctx_uvar_typ
-                              imp.FStar_TypeChecker_Common.imp_uvar in
-                          FStar_Class_Show.show
-                            FStar_Syntax_Print.showable_term uu___6 in
-                        FStar_Compiler_Util.format3
-                          "Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")"
-                          uu___4 uu___5
-                          imp.FStar_TypeChecker_Common.imp_reason in
+                            let uu___7 = FStar_Errors_Msg.text "Type:" in
+                            let uu___8 =
+                              let uu___9 =
+                                FStar_Syntax_Util.ctx_uvar_typ
+                                  imp.FStar_TypeChecker_Common.imp_uvar in
+                              FStar_Class_PP.pp
+                                FStar_Syntax_Print.pretty_term uu___9 in
+                            FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                          let uu___7 =
+                            let uu___8 =
+                              let uu___9 = FStar_Errors_Msg.text "Reason:" in
+                              let uu___10 =
+                                let uu___11 =
+                                  FStar_Pprint.doc_of_string
+                                    imp.FStar_TypeChecker_Common.imp_reason in
+                                FStar_Pprint.dquotes uu___11 in
+                              FStar_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
+                            [uu___8] in
+                          uu___6 :: uu___7 in
+                        uu___4 :: uu___5 in
                       (FStar_Errors_Codes.Error_UninstantiatedUnificationVarInTactic,
                         uu___3) in
-                    FStar_Errors.log_issue rng uu___2
+                    FStar_Errors.log_issue_doc rng uu___2
                 | FStar_TypeChecker_Rel.Implicit_checking_defers_univ_constraint
                     ->
                     let uu___2 =
                       let uu___3 =
                         let uu___4 =
-                          FStar_Class_Show.show
-                            FStar_Syntax_Print.showable_uvar
-                            (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
+                          let uu___5 =
+                            FStar_Errors_Msg.text
+                              "Tactic left uninstantiated unification variable:" in
+                          let uu___6 =
+                            FStar_Class_PP.pp FStar_Syntax_Print.pretty_uvar
+                              (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
+                          FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
                         let uu___5 =
                           let uu___6 =
-                            FStar_Syntax_Util.ctx_uvar_typ
-                              imp.FStar_TypeChecker_Common.imp_uvar in
-                          FStar_Class_Show.show
-                            FStar_Syntax_Print.showable_term uu___6 in
-                        FStar_Compiler_Util.format3
-                          "Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")"
-                          uu___4 uu___5
-                          imp.FStar_TypeChecker_Common.imp_reason in
+                            let uu___7 = FStar_Errors_Msg.text "Type:" in
+                            let uu___8 =
+                              let uu___9 =
+                                FStar_Syntax_Util.ctx_uvar_typ
+                                  imp.FStar_TypeChecker_Common.imp_uvar in
+                              FStar_Class_PP.pp
+                                FStar_Syntax_Print.pretty_term uu___9 in
+                            FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                          let uu___7 =
+                            let uu___8 =
+                              let uu___9 = FStar_Errors_Msg.text "Reason:" in
+                              let uu___10 =
+                                let uu___11 =
+                                  FStar_Pprint.doc_of_string
+                                    imp.FStar_TypeChecker_Common.imp_reason in
+                                FStar_Pprint.dquotes uu___11 in
+                              FStar_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
+                            [uu___8] in
+                          uu___6 :: uu___7 in
+                        uu___4 :: uu___5 in
                       (FStar_Errors_Codes.Error_UninstantiatedUnificationVarInTactic,
                         uu___3) in
-                    FStar_Errors.log_issue rng uu___2
+                    FStar_Errors.log_issue_doc rng uu___2
                 | FStar_TypeChecker_Rel.Implicit_has_typing_guard (tm, ty) ->
                     let uu___2 =
                       let uu___3 =
                         let uu___4 =
-                          FStar_Class_Show.show
-                            FStar_Syntax_Print.showable_uvar
-                            (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
+                          let uu___5 =
+                            FStar_Errors_Msg.text "Tactic solved goal:" in
+                          let uu___6 =
+                            FStar_Class_PP.pp FStar_Syntax_Print.pretty_uvar
+                              (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
+                          FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
                         let uu___5 =
                           let uu___6 =
-                            FStar_Syntax_Util.ctx_uvar_typ
-                              imp.FStar_TypeChecker_Common.imp_uvar in
-                          FStar_Class_Show.show
-                            FStar_Syntax_Print.showable_term uu___6 in
-                        let uu___6 =
-                          FStar_Class_Show.show
-                            FStar_Syntax_Print.showable_term tm in
-                        let uu___7 =
-                          FStar_Class_Show.show
-                            FStar_Syntax_Print.showable_term ty in
-                        FStar_Compiler_Util.format4
-                          "Tactic solved goal %s of type %s to %s : %s, but it has a non-trivial typing guard. Use gather_or_solve_explicit_guards_for_resolved_goals to inspect and prove these goals"
-                          uu___4 uu___5 uu___6 uu___7 in
+                            let uu___7 = FStar_Errors_Msg.text "Type:" in
+                            let uu___8 =
+                              let uu___9 =
+                                FStar_Syntax_Util.ctx_uvar_typ
+                                  imp.FStar_TypeChecker_Common.imp_uvar in
+                              FStar_Class_PP.pp
+                                FStar_Syntax_Print.pretty_term uu___9 in
+                            FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                          let uu___7 =
+                            let uu___8 =
+                              let uu___9 =
+                                FStar_Errors_Msg.text "To the term:" in
+                              let uu___10 =
+                                FStar_Class_PP.pp
+                                  FStar_Syntax_Print.pretty_term tm in
+                              FStar_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
+                            let uu___9 =
+                              let uu___10 =
+                                FStar_Errors_Msg.text
+                                  "But it has a non-trivial typing guard. Use gather_or_solve_explicit_guards_for_resolved_goals to inspect and prove these goals" in
+                              [uu___10] in
+                            uu___8 :: uu___9 in
+                          uu___6 :: uu___7 in
+                        uu___4 :: uu___5 in
                       (FStar_Errors_Codes.Error_UninstantiatedUnificationVarInTactic,
                         uu___3) in
-                    FStar_Errors.log_issue rng uu___2)) is;
+                    FStar_Errors.log_issue_doc rng uu___2)) is;
       FStar_Errors.stop_if_err ()
 let run_unembedded_tactic_on_ps :
   'a 'b .
@@ -1024,15 +1070,18 @@ let run_unembedded_tactic_on_ps :
                | FStar_Tactics_Result.Failed (e, ps3) ->
                    (FStar_Tactics_Printing.do_dump_proofstate ps3
                       "at the time of failure";
-                    (let texn_to_string e1 =
+                    (let texn_to_doc e1 =
                        match e1 with
-                       | FStar_Tactics_Common.TacticFailure s ->
-                           Prims.strcat "\"" (Prims.strcat s "\"")
+                       | FStar_Tactics_Common.TacticFailure msg -> msg
                        | FStar_Tactics_Common.EExn t ->
                            let uu___2 =
-                             FStar_Class_Show.show
-                               FStar_Syntax_Print.showable_term t in
-                           Prims.strcat "Uncaught exception: " uu___2
+                             let uu___3 =
+                               let uu___4 =
+                                 FStar_Class_Show.show
+                                   FStar_Syntax_Print.showable_term t in
+                               Prims.strcat "Uncaught exception: " uu___4 in
+                             FStar_Pprint.doc_of_string uu___3 in
+                           [uu___2]
                        | e2 -> FStar_Compiler_Effect.raise e2 in
                      let rng =
                        if background
@@ -1045,13 +1094,11 @@ let run_unembedded_tactic_on_ps :
                      let uu___2 =
                        let uu___3 =
                          let uu___4 =
-                           FStar_Pprint.doc_of_string "Tactic failed" in
-                         let uu___5 =
-                           let uu___6 =
-                             let uu___7 = texn_to_string e in
-                             FStar_Pprint.doc_of_string uu___7 in
-                           [uu___6] in
-                         uu___4 :: uu___5 in
+                           let uu___5 =
+                             FStar_Pprint.doc_of_string "Tactic failed" in
+                           [uu___5] in
+                         let uu___5 = texn_to_doc e in
+                         FStar_Compiler_List.op_At uu___4 uu___5 in
                        (FStar_Errors_Codes.Fatal_UserTacticFailure, uu___3) in
                      FStar_Errors.raise_error_doc uu___2 rng)))
 let run_tactic_on_ps' :

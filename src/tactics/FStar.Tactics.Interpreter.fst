@@ -262,25 +262,29 @@ let e_tactic_1_alt (ea: embedding 'a) (er:embedding 'r): embedding ('a -> (proof
     mk_emb em un (FStar.Syntax.Embeddings.term_as_fv t_unit)
 
 let report_implicits rng (is : TcRel.tagged_implicits) : unit =
+  let open FStar.Pprint in
+  let open FStar.Errors.Msg in
+  let open FStar.Class.PP in
   is |> List.iter
     (fun (imp, tag) ->
       match tag with
       | TcRel.Implicit_unresolved
       | TcRel.Implicit_checking_defers_univ_constraint ->
-        Errors.log_issue rng
-                (Err.Error_UninstantiatedUnificationVarInTactic,
-                 BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
-                             (show imp.imp_uvar.ctx_uvar_head)
-                             (show (U.ctx_uvar_typ imp.imp_uvar))
-                             imp.imp_reason)
+        Errors.log_issue_doc rng
+                (Err.Error_UninstantiatedUnificationVarInTactic, [
+                  text "Tactic left uninstantiated unification variable:" ^/^ pp (imp.imp_uvar.ctx_uvar_head);
+                  text "Type:" ^/^ pp (U.ctx_uvar_typ imp.imp_uvar);
+                  text "Reason:" ^/^ dquotes (doc_of_string imp.imp_reason);
+                ])
       | TcRel.Implicit_has_typing_guard (tm, ty) ->
-        Errors.log_issue rng
-                (Err.Error_UninstantiatedUnificationVarInTactic,
-                 BU.format4 ("Tactic solved goal %s of type %s to %s : %s, but it has a non-trivial typing guard. Use gather_or_solve_explicit_guards_for_resolved_goals to inspect and prove these goals")
-                             (show imp.imp_uvar.ctx_uvar_head)
-                             (show (U.ctx_uvar_typ imp.imp_uvar))
-                             (show tm)
-                             (show ty)));
+        Errors.log_issue_doc rng
+                (Err.Error_UninstantiatedUnificationVarInTactic, [
+                  text "Tactic solved goal:" ^/^ pp (imp.imp_uvar.ctx_uvar_head);
+                  text "Type:" ^/^ pp (U.ctx_uvar_typ imp.imp_uvar);
+                  text "To the term:" ^/^ pp tm;
+                  text "But it has a non-trivial typing guard. Use gather_or_solve_explicit_guards_for_resolved_goals to inspect and prove these goals";
+                ])
+    );
   Err.stop_if_err ()
 
 let run_unembedded_tactic_on_ps
@@ -363,14 +367,15 @@ let run_unembedded_tactic_on_ps
     (* Any other error, including exceptions being raised by the metaprograms. *)
     | Failed (e, ps) ->
         do_dump_proofstate ps "at the time of failure";
-        let texn_to_string e =
-            match e with
-            | TacticFailure s ->
-                "\"" ^ s ^ "\""
-            | EExn t ->
-                "Uncaught exception: " ^ (show t)
-            | e ->
-                raise e
+        let open FStar.Pprint in
+        let texn_to_doc e =
+          match e with
+          | TacticFailure msg ->
+              msg
+          | EExn t ->
+              [doc_of_string <| "Uncaught exception: " ^ (show t)]
+          | e ->
+              raise e
         in
         let rng =
           if background
@@ -380,10 +385,10 @@ let run_unembedded_tactic_on_ps
           else ps.entry_range
         in
         let open FStar.Pprint in
-        Err.raise_error_doc (Err.Fatal_UserTacticFailure,
-                            [doc_of_string "Tactic failed";
-                             doc_of_string (texn_to_string e);
-                            ])
+        Err.raise_error_doc (Err.Fatal_UserTacticFailure, (
+                              [doc_of_string "Tactic failed"]
+                              @ texn_to_doc e)
+                            )
                           rng
 
 let run_tactic_on_ps'

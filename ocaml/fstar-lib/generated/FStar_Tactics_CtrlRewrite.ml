@@ -377,8 +377,7 @@ let (do_rewrite :
                               let uu___1 = Obj.magic uu___1 in
                               match uu___1 with
                               | FStar_Pervasives.Inl
-                                  (FStar_Tactics_Common.TacticFailure "SKIP")
-                                  ->
+                                  (FStar_Tactics_Common.SKIP) ->
                                   Obj.magic
                                     (Obj.repr
                                        (FStar_Class_Monad.return
