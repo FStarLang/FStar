@@ -24,6 +24,8 @@ open FStar.Sealed
    internally, set_range_of is not an identity function.  *)
 assume new type __range
 
+assume RangePrimitive : isPrimitiveRangeType __range
+
 type range = sealed __range
 
 (** A dummy range constant *)

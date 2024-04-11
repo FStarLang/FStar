@@ -1231,19 +1231,6 @@ let (primitive_type_axioms :
           "l_not-interp") in
       FStar_SMTEncoding_Util.mkAssume uu___1 in
     [uu___] in
-  let mk_range_interp env range tt =
-    let range_ty = FStar_SMTEncoding_Util.mkApp (range, []) in
-    let uu___ =
-      let uu___1 =
-        let uu___2 =
-          let uu___3 = FStar_SMTEncoding_Term.mk_Range_const () in
-          FStar_SMTEncoding_Term.mk_HasTypeZ uu___3 range_ty in
-        let uu___3 =
-          FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.mk_unique
-            "typing_range_const" in
-        (uu___2, (FStar_Pervasives_Native.Some "Range_const typing"), uu___3) in
-      FStar_SMTEncoding_Util.mkAssume uu___1 in
-    [uu___] in
   let mk_inversion_axiom env inversion tt =
     let tt1 =
       FStar_SMTEncoding_Term.mk_fv ("t", FStar_SMTEncoding_Term.Term_sort) in
@@ -1289,7 +1276,6 @@ let (primitive_type_axioms :
     (FStar_Parser_Const.imp_lid, mk_imp_interp);
     (FStar_Parser_Const.iff_lid, mk_iff_interp);
     (FStar_Parser_Const.not_lid, mk_not_interp);
-    (FStar_Parser_Const.range_lid, mk_range_interp);
     (FStar_Parser_Const.inversion_lid, mk_inversion_axiom)] in
   fun env ->
     fun t ->
@@ -4004,6 +3990,18 @@ and (encode_sigelt' :
               match uu___3 with
               | (env1, decls2) ->
                   ((FStar_Compiler_List.flatten decls2), env1))
+       | FStar_Syntax_Syntax.Sig_declare_typ
+           { FStar_Syntax_Syntax.lid2 = lid;
+             FStar_Syntax_Syntax.us2 = uu___1;
+             FStar_Syntax_Syntax.t2 = uu___2;_}
+           when
+           FStar_Ident.lid_equals lid
+             FStar_Parser_Const.is_primitive_range_lid
+           ->
+           let uu___3 =
+             FStar_SMTEncoding_Env.new_term_constant_and_tok_from_lid env lid
+               Prims.int_one in
+           (match uu___3 with | (tname, ttok, env1) -> ([], env1))
        | FStar_Syntax_Syntax.Sig_declare_typ
            { FStar_Syntax_Syntax.lid2 = lid;
              FStar_Syntax_Syntax.us2 = uu___1;
