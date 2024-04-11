@@ -86,10 +86,10 @@ install-sides:
 	@# Then the tutorial
 ifeq ($(MADOKO),Madoko)
 	@# Build the tutorial first
-	+$(MAKE) -C ../../doc/tutorial
+	+$(MAKE) -C ../../doc/old/tutorial
 endif
 	$(INSTALL_EXEC) -m 644 -D ../../doc/Makefile.include $(PREFIX)/share/fstar/doc/Makefile.include
-	$(call install_dir,doc/tutorial,share/fstar/doc/tutorial)
+	$(call install_dir,doc/old/tutorial,share/fstar/doc/old/tutorial)
 
 PACKAGE_NAME ?= fstar
 
