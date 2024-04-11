@@ -24,6 +24,7 @@ open FStar.Compiler.Util
 open FStar.Ident
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
+open FStar.Pprint
 open FStar.Reflection.V2.Data
 open FStar.Reflection.V2.Builtins
 open FStar.Tactics.Result
@@ -32,6 +33,7 @@ open FStar.Tactics.Monad
 open FStar.Tactics.Printing
 open FStar.Syntax.Syntax
 open FStar.VConfig
+open FStar.Errors.Msg
 
 friend FStar.Pervasives (* to expose norm_step *)
 
@@ -60,6 +62,7 @@ module PO     = FStar.TypeChecker.Primops
 
 open FStar.Class.Show
 open FStar.Class.Monad
+open FStar.Class.PP
 
 let compress (t:term) : tac term =
   return ();!
@@ -109,6 +112,7 @@ let whnf e t = N.unfold_whnf e t
  * term_to_string, we don't want to cause normalization with debug
  * flags. *)
 let tts = N.term_to_string
+let ttd = N.term_to_doc
 
 let bnorm_goal g = goal_with_type g (bnorm (goal_env g) (goal_type g))
 
@@ -311,10 +315,11 @@ let tc_unifier_solved_implicits env (must_tot:bool) (allow_guards:bool) (uvs:lis
           && not allow_guards
           && NonTrivial? guard.guard_f
           then (
-            fail3 "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed;guard is\n%s"
-                (show u.ctx_uvar_head)
-                (show sol)
-                (show g)
+            fail_doc [
+              text "Could not typecheck unifier solved implicit" ^/^ pp u.ctx_uvar_head ^/^
+              text "to" ^/^ pp sol ^/^ text "since it produced a guard and guards were not allowed";
+              text "Guard =" ^/^ pp g
+            ]
           )
           else (
             proc_guard' false "guard for implicit" env guard (Some sc) u.ctx_uvar_range ;!
@@ -323,10 +328,10 @@ let tc_unifier_solved_implicits env (must_tot:bool) (allow_guards:bool) (uvs:lis
           )
 
         | Inr failed ->
-          fail3 "Could not typecheck unifier solved implicit %s to %s because %s"
-            (show u.ctx_uvar_head)
-            (show sol)
-            (Core.print_error failed)
+          fail_doc [
+            text "Could not typecheck unifier solved implicit" ^/^ pp u.ctx_uvar_head ^/^
+            text "to" ^/^ pp sol ^/^ text "because" ^/^ doc_of_string (Core.print_error failed)
+          ]
   in
   if env.phase1 //phase1 is untrusted
   then return ()
@@ -514,11 +519,13 @@ let solve (goal : goal) (solution : term) : tac unit =
     let! b = trysolve goal solution in
     if b
     then (dismiss;! remove_solved_goals)
-    else fail (BU.format3 "%s does not solve %s : %s"
-              (tts (goal_env goal) solution)
-              (tts (goal_env goal) (goal_witness goal))
-              (tts (goal_env goal) (goal_type goal))))
-
+    else
+      fail_doc [
+        ttd (goal_env goal) solution ^/^
+        text "does not solve" ^/^
+        ttd (goal_env goal) (goal_witness goal) ^/^ text ":" ^/^ ttd (goal_env goal) (goal_type goal)
+      ]
+    )
 
 let solve' (goal : goal) (solution : term) : tac unit =
   set_solution goal solution;!
@@ -587,11 +594,11 @@ let __tc (e : env) (t : term) : tac (term * typ * guard_t) =
     let e = {e with uvar_subtyping=false} in
     try return (TcTerm.typeof_tot_or_gtot_term e t true)
     with | Errors.Err (_, msg, _)
-         | Errors.Error (_, msg, _, _) -> begin
-           fail3 "Cannot type (1) %s in context (%s). Error = (%s)" (tts e t)
-                                                  (Env.all_binders e |> Print.binders_to_string ", ")
-                                                  (Errors.rendermsg msg) // FIXME
-           end)
+         | Errors.Error (_, msg, _, _) ->
+           fail_doc ([
+              prefix 2 1 (text "Cannot type") (ttd e t) ^/^
+              prefix 2 1 (text "in context") (pp (Env.all_binders e))
+             ] @ msg))
 
 let __tc_ghost (e : env) (t : term) : tac (term * typ * guard_t) =
     let! ps = get in
@@ -601,11 +608,11 @@ let __tc_ghost (e : env) (t : term) : tac (term * typ * guard_t) =
     try let t, lc, g = TcTerm.tc_tot_or_gtot_term e t in
         return (t, lc.res_typ, g)
     with | Errors.Err (_, msg ,_)
-         | Errors.Error (_, msg, _ ,_) -> begin
-           fail3 "Cannot type (2) %s in context (%s). Error = (%s)" (tts e t)
-                                                  (Env.all_binders e |> Print.binders_to_string ", ")
-                                                  (Errors.rendermsg msg) // FIXME
-           end)
+         | Errors.Error (_, msg, _ ,_) ->
+           fail_doc ([
+              prefix 2 1 (text "Cannot type") (ttd e t) ^/^
+              prefix 2 1 (text "in context") (pp (Env.all_binders e))
+             ] @ msg))
 
 let __tc_lax (e : env) (t : term) : tac (term * lcomp * guard_t) =
     let! ps = get in
@@ -617,11 +624,11 @@ let __tc_lax (e : env) (t : term) : tac (term * lcomp * guard_t) =
     let e = {e with letrecs=[]} in
     try return (TcTerm.tc_term e t)
     with | Errors.Err (_, msg, _)
-         | Errors.Error (_, msg, _, _) -> begin
-           fail3 "Cannot type (3) %s in context (%s). Error = (%s)" (tts e t)
-                                                  (Env.all_binders e |> Print.binders_to_string ", ")
-                                                  (Errors.rendermsg msg) // FIXME
-           end)
+         | Errors.Error (_, msg, _, _) ->
+           fail_doc ([
+              prefix 2 1 (text "Cannot type") (ttd e t) ^/^
+              prefix 2 1 (text "in context") (pp (Env.all_binders e))
+             ] @ msg))
 
 let tcc (e : env) (t : term) : tac comp = wrap_err "tcc" <| (
   let! (_, lc, _) = __tc_lax e t in
@@ -1081,11 +1088,17 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
         cmp_func must_tot env (goal_type goal) (U.mk_squash post_u post) in
       if not b
       then (
-        let post, goalt = TypeChecker.Err.print_discrepancy (tts env)
-                                                            (U.mk_squash post_u post)
-                                                            (goal_type goal) in
-        fail3 "Cannot instantiate lemma %s (with postcondition: %s) to match goal (%s)"
-                            (tts env tm) post goalt
+        let open FStar.Class.PP in
+        let open FStar.Pprint in
+        let open FStar.Errors.Msg in
+        // let post, goalt = TypeChecker.Err.print_discrepancy (tts env)
+        //                                                     (U.mk_squash post_u post)
+        //                                                     (goal_type goal) in
+        fail_doc [
+          prefix 2 1 (text "Cannot instantiate lemma:") (pp tm) ^/^
+          prefix 2 1 (text "with postcondition:") (N.term_to_doc env post) ^/^
+          prefix 2 1 (text "to match goal:") (pp (goal_type goal))
+        ]
       )
       else (
         // We solve with (), we don't care about the witness if applying a lemma

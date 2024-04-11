@@ -1016,3 +1016,4 @@ instance pretty_sigelt   = { pp   = sigelt_to_doc; }
 instance pretty_comp     = { pp   = comp_to_doc; }
 instance pretty_ctxu     = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
 instance pretty_uvar     = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
+instance pretty_binder   = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
