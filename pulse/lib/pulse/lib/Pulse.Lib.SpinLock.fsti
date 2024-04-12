@@ -32,7 +32,7 @@ val acquire (#v:vprop) (#p:perm) (l:lock)
   : stt unit (lock_alive l #p v) (fun _ -> v ** lock_alive l #p v ** lock_acquired l)
 
 val release (#v:vprop) (#p:perm) (l:lock)
-  : stt unit (v ** lock_alive l #p v ** lock_acquired l) (fun _ -> lock_alive l #p v)
+  : stt unit (lock_alive l #p v ** lock_acquired l ** v) (fun _ -> lock_alive l #p v)
 
 val share (#v:vprop) (#p:perm) (l:lock)
   : stt_ghost unit emp_inames

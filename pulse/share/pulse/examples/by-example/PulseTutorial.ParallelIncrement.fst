@@ -84,7 +84,7 @@ ensures exists* v. pts_to x v
     L.acquire l;
     let v = !x;
     x := v + 1;
-    L.release #(exists* v. pts_to x v) l
+    L.release l
   };
   L.share l;
   par incr incr;
@@ -127,7 +127,7 @@ ensures L.lock_alive lock #p (lock_inv x i left right) ** GR.pts_to left #one_ha
   GR.share left;
   fold (contributions left right i (v + 1));
   fold lock_inv;
-  L.release #(lock_inv x i left right) lock
+  L.release lock
 }
 ```
 
@@ -151,7 +151,7 @@ ensures L.lock_alive lock #p (lock_inv x i left right) ** GR.pts_to right #one_h
   GR.share right;
   fold (contributions left right i (v + 1));
   fold (lock_inv x i left right);
-  L.release #(lock_inv x i left right) lock
+  L.release lock
 }
 ```
 
@@ -208,7 +208,7 @@ ensures L.lock_alive l #p (exists* v. pts_to x v ** refine v) ** aspec ('i + 1)
     rewrite each _v as vx;
     x := vx + 1;
     ghost_steps vx 'i;
-    L.release #(exists* v. pts_to x v ** refine v) l;
+    L.release l;
 }
 ```
 
