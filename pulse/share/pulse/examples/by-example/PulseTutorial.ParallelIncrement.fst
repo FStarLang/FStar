@@ -547,10 +547,12 @@ fn gather (r:ghost_pcm_ref pcm) (#n1 #n2:int1) (#v1 #v2:int1)
 }
 ```
 
+let lock_inv_ghost (ghost_r:ghost_pcm_ref pcm) (n:int) : v:vprop { is_big v } =
+  exists* n1 n2. ghost_pcm_pts_to ghost_r (half n1, half n2) **
+                 pure (n == U.downgrade_val n1 + U.downgrade_val n2)
+
 let lock_inv_pcm (r:ref int) (ghost_r:ghost_pcm_ref pcm) : v:vprop { is_big v } =
-  exists* n n1 n2. pts_to r n **
-                   ghost_pcm_pts_to ghost_r (half n1, half n2) **
-                   pure (n == U.downgrade_val n1 + U.downgrade_val n2)
+  exists* n. pts_to r n ** lock_inv_ghost ghost_r n
 
 let t1_perm (ghost_r:ghost_pcm_ref pcm) (n:int1) (t1:bool) =
   if t1
@@ -572,6 +574,7 @@ fn incr_pcm_t (r:ref int) (ghost_r:ghost_pcm_ref pcm) (l:L.lock) (t1:bool) (#n:i
 {
   L.acquire l;
   unfold lock_inv_pcm;
+  unfold lock_inv_ghost;
   let v = !r;
   r := v + 1;
   if t1 {
@@ -588,6 +591,7 @@ fn incr_pcm_t (r:ref int) (ghost_r:ghost_pcm_ref pcm) (l:L.lock) (t1:bool) (#n:i
     rewrite (ghost_pcm_pts_to ghost_r (full (add_one n1), half n2)) as
             (ghost_pcm_pts_to ghost_r ((half (add_one n1), half n2) `op pcm` (half (add_one n1), None)));
     ghost_share ghost_r (half (add_one n1), half n2) (half (add_one n1), None);
+    fold lock_inv_ghost;
     fold lock_inv_pcm;
     L.release l;
     fold (t1_perm ghost_r (add_one n) t1)
@@ -605,6 +609,7 @@ fn incr_pcm_t (r:ref int) (ghost_r:ghost_pcm_ref pcm) (l:L.lock) (t1:bool) (#n:i
     rewrite (ghost_pcm_pts_to ghost_r (half n1, full (add_one n2))) as
             (ghost_pcm_pts_to ghost_r ((half n1, half (add_one n2)) `op pcm` (None, half (add_one n2))));
     ghost_share ghost_r (half n1, half (add_one n2)) (None, half (add_one n2));
+    fold lock_inv_ghost;
     fold lock_inv_pcm;
     L.release l;
     fold (t1_perm ghost_r (add_one n) t1)
@@ -623,6 +628,7 @@ fn incr_pcm (r:ref int) (#n:erased int)
   with _v. rewrite (ghost_pcm_pts_to ghost_r (G.reveal (G.hide _v))) as
                    (ghost_pcm_pts_to ghost_r _v);
   share ghost_r;
+  fold lock_inv_ghost;
   fold lock_inv_pcm;
 
   rewrite (ghost_pcm_pts_to ghost_r (half zero1, None)) as
@@ -649,8 +655,115 @@ fn incr_pcm (r:ref int) (#n:erased int)
   L.gather l;
   L.acquire l;
   unfold lock_inv_pcm;
+  unfold lock_inv_ghost;
   unfold t1_perm;
   unfold t1_perm;
+  gather ghost_r;
+  L.free l;
+  drop_ (ghost_pcm_pts_to ghost_r _)
+}
+```
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Passing ghost steps to incr, a similar style to Bart Jacobs & Frank Piessens POPL '11
+//////////////////////////////////////////////////////////////////////////////////////////
+
+```pulse
+fn incr_pcm_t_abstract (r:ref int) (l:L.lock)
+  (#ghost_inv:int -> vprop)
+  (#ghost_pre:vprop)
+  (#ghost_post:vprop)
+  ($ghost_steps:
+     (v:int ->
+      stt_ghost unit emp_inames
+        (ghost_pre ** ghost_inv v)
+        (fun _ -> ghost_post ** ghost_inv (v + 1))))
+  requires L.lock_alive l #(half_perm full_perm) (exists* v. pts_to r v ** ghost_inv v) **
+           ghost_pre
+  ensures L.lock_alive l #(half_perm full_perm) (exists* v. pts_to r v ** ghost_inv v) **
+          ghost_post
+{
+  L.acquire l;
+  let v = !r;
+  r := v + 1;
+  with _v. rewrite (ghost_inv _v) as (ghost_inv v);
+  ghost_steps v;
+  L.release #(exists* v. pts_to r v ** ghost_inv v) l
+}
+```
+
+```pulse
+fn incr_pcm_abstract (r:ref int)
+  requires pts_to r 0
+  ensures pts_to r 2
+{
+  let ghost_r = ghost_alloc #_ #pcm (G.hide (full zero1, full zero1));
+
+  ghost
+  fn t1 (v:int)
+    requires ghost_pcm_pts_to ghost_r (half zero1, None) ** lock_inv_ghost ghost_r v
+    ensures ghost_pcm_pts_to ghost_r (half (add_one  zero1), None) ** lock_inv_ghost ghost_r (v + 1)
+  {
+    unfold lock_inv_ghost;
+    with n1 n2. assert (ghost_pcm_pts_to ghost_r (half n1, half n2));
+    ghost_gather ghost_r (half zero1, None) (half n1, half n2);
+    rewrite (ghost_pcm_pts_to ghost_r ((half zero1, None) `op pcm` (half n1, half n2))) as
+            (ghost_pcm_pts_to ghost_r (full n1, half n2));
+    ghost_write ghost_r
+      (full n1, half n2)
+      (full (add_one n1), half n2)
+      (fp_upd_t1 n1 (add_one n1) n2 (half_perm full_perm));
+    rewrite (ghost_pcm_pts_to ghost_r (full (add_one n1), half n2)) as
+            (ghost_pcm_pts_to ghost_r ((half (add_one n1), half n2) `op pcm` (half (add_one n1), None)));
+    ghost_share ghost_r (half (add_one n1), half n2) (half (add_one n1), None);
+    fold ((lock_inv_ghost ghost_r) (v + 1))
+  };
+
+  ghost
+  fn t2 (v:int)
+    requires ghost_pcm_pts_to ghost_r (None, half zero1) ** lock_inv_ghost ghost_r v
+    ensures ghost_pcm_pts_to ghost_r (None, half (add_one  zero1)) ** lock_inv_ghost ghost_r (v +1)
+  {
+    unfold lock_inv_ghost;
+    with n1 n2. assert (ghost_pcm_pts_to ghost_r (half n1, half n2));
+    ghost_gather ghost_r (None, half zero1) (half n1, half n2);
+    rewrite (ghost_pcm_pts_to ghost_r ((None, half n2) `op pcm` (half n1, half n2))) as
+            (ghost_pcm_pts_to ghost_r (half n1, full n2));
+    ghost_write ghost_r
+      ((None, half n2) `op pcm` (half n1, half n2))
+      (half n1, full n2)
+      (half n1, full (add_one n2))
+      (fp_upd_t2 n1 (half_perm full_perm) n2 (add_one n2));
+    rewrite (ghost_pcm_pts_to ghost_r (half n1, full (add_one n2))) as
+            (ghost_pcm_pts_to ghost_r ((half n1, half (add_one n2)) `op pcm` (None, half (add_one n2))));
+    ghost_share ghost_r (half n1, half (add_one n2)) (None, half (add_one n2));
+    fold ((lock_inv_ghost ghost_r) (v + 1))
+  };
+
+  with _v. rewrite (ghost_pcm_pts_to ghost_r (G.reveal (G.hide _v))) as
+                   (ghost_pcm_pts_to ghost_r _v);
+  share ghost_r;
+  fold lock_inv_ghost;
+  let l = L.new_lock (exists* v. pts_to r v ** lock_inv_ghost ghost_r v);
+  L.share l;
+
+  parallel
+    requires L.lock_alive l #(half_perm full_perm) (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
+             ghost_pcm_pts_to ghost_r (half zero1, None) and
+             L.lock_alive l #(half_perm full_perm) (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
+             ghost_pcm_pts_to ghost_r (None, half zero1)
+    
+    ensures L.lock_alive l #(half_perm full_perm) (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
+            ghost_pcm_pts_to ghost_r (half (add_one zero1), None) and
+            L.lock_alive l #(half_perm full_perm) (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
+            ghost_pcm_pts_to ghost_r (None, half (add_one zero1))
+
+    { incr_pcm_t_abstract r l t1 }
+    { incr_pcm_t_abstract r l t2 };
+
+  L.gather l;
+  L.acquire l;
+  unfold lock_inv_ghost;
   gather ghost_r;
   L.free l;
   drop_ (ghost_pcm_pts_to ghost_r _)
