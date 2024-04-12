@@ -730,7 +730,6 @@ fn incr_pcm_abstract (r:ref int)
     rewrite (ghost_pcm_pts_to ghost_r ((None, half n2) `op pcm` (half n1, half n2))) as
             (ghost_pcm_pts_to ghost_r (half n1, full n2));
     ghost_write ghost_r
-      ((None, half n2) `op pcm` (half n1, half n2))
       (half n1, full n2)
       (half n1, full (add_one n2))
       (fp_upd_t2 n1 (half_perm full_perm) n2 (add_one n2));
