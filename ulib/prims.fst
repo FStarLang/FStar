@@ -705,8 +705,6 @@ val string_of_bool: bool -> Tot string
 assume
 val string_of_int: int -> Tot string
 
-assume val isPrimitiveRangeType : Type -> prop
-
 (** THIS IS MEANT TO BE KEPT IN SYNC WITH FStar.CheckedFiles.fs
     Incrementing this forces all .checked files to be invalidated *)
 irreducible

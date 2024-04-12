@@ -887,14 +887,7 @@ and mkPrelude z3options =
                 (declare-fun Tm_uvar (Int) Term)\n\
                 (define-fun Reify ((x Term)) Term x)\n\
                 (declare-fun Prims.precedes (Term Term Term Term) Term)\n\
-                (declare-fun Prims.isPrimitiveRangeType (Term) Term)\n\
                 (declare-fun Range_const (Int) Term)\n\
-                (assert (forall ((i Int) (ty Term))\n\
-                  (! (implies\n\
-                      (Valid (Prims.isPrimitiveRangeType ty))\n\
-                      (HasTypeZ (Range_const i) ty))\n\
-                      :pattern ((Prims.isPrimitiveRangeType ty) (Range_const i))\n\
-                      )))\n\
                 (declare-fun _mul (Int Int) Int)\n\
                 (declare-fun _div (Int Int) Int)\n\
                 (declare-fun _mod (Int Int) Int)\n\
