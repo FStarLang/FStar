@@ -184,20 +184,34 @@ let share = share_aux
 
 ```pulse
 ghost
-fn gather_aux (#v:vprop) (#p:perm) (l:lock)
+fn gather_aux (#v:vprop) (#p1 #p2 :perm) (l:lock)
+  requires lock_alive l #p1 v ** lock_alive l #p2 v
+  ensures lock_alive l #(sum_perm p1 p2) v
+  opens emp_inames
+{
+  unfold (lock_alive l #p1 v);
+  unfold (lock_alive l #p2 v);
+  Pulse.Lib.CancellableInvariant.gather #p1 #p2 l.i;
+  fold (lock_alive l #(sum_perm p1 p2) v);
+  drop_ (inv _ _)
+} 
+```
+let gather = gather_aux
+
+#restart-solver
+```pulse
+ghost
+fn __gather2
+(#v:vprop) (#p :perm) (l:lock)
   requires lock_alive l #(half_perm p) v ** lock_alive l #(half_perm p) v
   ensures lock_alive l #p v
   opens emp_inames
 {
-  unfold (lock_alive l #(half_perm p) v);
-  unfold (lock_alive l #(half_perm p) v);
-  Pulse.Lib.CancellableInvariant.gather l.i;
-  fold (lock_alive l #p v);
-  drop_ (inv _ _)
-} 
+  gather #v #(half_perm p) #(half_perm p) l;
+  rewrite each (sum_perm (half_perm p) (half_perm p)) as p;
+}
 ```
-
-let gather = gather_aux
+let gather2 = __gather2
 
 ```pulse
 fn free_aux (#v:vprop) (l:lock)

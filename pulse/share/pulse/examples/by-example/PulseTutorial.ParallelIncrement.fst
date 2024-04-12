@@ -88,7 +88,7 @@ ensures exists* v. pts_to x v
   };
   L.share l;
   par incr incr;
-  L.gather l;
+  L.gather2 l;
   L.acquire l;
   L.free l
 }
@@ -170,7 +170,7 @@ ensures  pts_to x ('i + 2)
   L.share lock;
   par (fun _ -> incr_left x lock)
       (fun _ -> incr_right x lock);
-  L.gather lock;
+  L.gather2 lock;
   L.acquire lock;
   L.free lock;
   unfold lock_inv;
@@ -265,7 +265,7 @@ ensures pts_to x ('i + 2)
     L.share lock;
     par (fun _ -> incr x lock (step left true))
         (fun _ -> incr x lock (step right false));
-    L.gather lock;
+    L.gather2 lock;
     L.acquire lock;
     L.free lock;
     unfold (contributions left right 'i);
@@ -442,7 +442,7 @@ ensures pts_to x ('i + 2)
     par (fun _ -> incr_atomic x c (step left true))
         (fun _ -> incr_atomic x c (step right false));
     
-    C.gather c;
+    C.gather2 c;
     C.cancel c;
     unfold contributions;
     GR.gather left;
