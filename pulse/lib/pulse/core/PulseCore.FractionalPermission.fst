@@ -64,3 +64,8 @@ let sum_comp (p:perm{p `lesser_perm` full_perm})
   : Lemma (sum_perm p (comp_perm p) == full_perm)
           [SMTPat (sum_perm p (comp_perm p))]
   = ()
+
+let sum_lemma (f1 f2 : perm)
+  : Lemma (sum_perm (half_perm f1) (half_perm f2) == half_perm (sum_perm f1 f2))
+          [SMTPat (sum_perm (half_perm f1) (half_perm f2))]
+  = assert (forall x y. (x +. y) /. 2.0R == x /. 2.0R +. y /. 2.0R)
