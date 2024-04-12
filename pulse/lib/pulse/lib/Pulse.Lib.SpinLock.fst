@@ -231,3 +231,27 @@ fn free_aux (#v:vprop) (l:lock)
 ```
 
 let free = free_aux
+
+```pulse
+ghost
+fn __lock_alive_inj
+  (l:lock) (#p1 #p2 :perm) (#v1 #v2 :vprop)
+  requires lock_alive l #p1 v1 ** lock_alive l #p2 v2
+  ensures  lock_alive l #p1 v1 ** lock_alive l #p2 v1
+{
+  unfold (lock_alive l #p1 v1);
+  unfold (lock_alive l #p2 v2);
+  invariant_name_identifies_invariant
+    (iref_of l.i) (iref_of l.i);
+  assert (
+    pure (
+      cinv_vp l.i (lock_inv l.r l.gr v1)
+      ==
+      cinv_vp l.i (lock_inv l.r l.gr v2)
+    )
+  );
+  fold (lock_alive l #p1 v1);
+  fold (lock_alive l #p2 v1);
+}
+```
+let lock_alive_inj = __lock_alive_inj

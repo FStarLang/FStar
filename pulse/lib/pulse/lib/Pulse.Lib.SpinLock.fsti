@@ -51,3 +51,10 @@ val gather2 (#v:vprop) (#p : perm) (l:lock)
 
 val free (#v:vprop) (l:lock)
   : stt unit (lock_alive l #full_perm v ** lock_acquired l) (fun _ -> emp)
+
+(* A given lock is associated to a single vprop, roughly.
+I'm not sure if we can prove v1 == v2 here. *)
+val lock_alive_inj (l:lock) (#p1 #p2 : perm) (#v1 #v2 : vprop)
+  : stt_ghost unit emp_inames
+              (lock_alive l #p1 v1 ** lock_alive l #p2 v2)
+              (fun _ -> lock_alive l #p1 v1 ** lock_alive l #p2 v1)
