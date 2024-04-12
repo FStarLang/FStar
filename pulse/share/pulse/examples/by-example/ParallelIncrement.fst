@@ -37,7 +37,7 @@ ensures (L.lock_alive l #p (exists* v. pts_to x #one_half v)) ** pts_to x #one_h
     x := (v + 1);
     R.share x;
     with p _v. rewrite (pts_to x #p _v) as (pts_to x #one_half _v);
-    L.release #(exists* v. pts_to x #one_half v) l;
+    L.release l;
     with p _v. rewrite (pts_to x #p _v) as (pts_to x #one_half _v);
 }
 ```
@@ -65,7 +65,7 @@ ensures L.lock_alive l #p (exists* v. pts_to x #one_half v ** pred v) ** pts_to 
     with p _v. rewrite (pts_to x #p _v) as (pts_to x #one_half _v);
     with _v. rewrite (pred _v) as (pred vx);
     f vx;
-    L.release #(exists* v. pts_to x #one_half v ** pred v) l;
+    L.release l;
     with p _v. rewrite (pts_to x #p _v) as (pts_to x #one_half _v);
     rewrite (qpred (vx + 1)) as (qpred ('i + 1));
 }
@@ -88,7 +88,7 @@ ensures L.lock_alive l #p (exists* v. pts_to x v ** pred v) ** qpred ('i + 1)
     with _v. rewrite (pred _v) as (pred vx);
     x := vx + 1;
     f vx 'i;
-    L.release #(exists* v. pts_to x v ** pred v)  l;
+    L.release l;
 }
 ```
 

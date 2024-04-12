@@ -413,10 +413,12 @@ let rec match_q_aux (#preamble:_) (pst:prover_state preamble)
 
 let has_structure (q:vprop) : bool =
   match inspect_term q with
-  | Tm_Star _ _ -> true
+  | Tm_Pure _
+  | Tm_Star _ _
+  | Tm_ExistsSL _ _ _ -> true
   | _ -> false
 
-#push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 2"
+#push-options "--z3rlimit_factor 8 --fuel 1 --ifuel 2"
 let match_q (#preamble:preamble) (pst:prover_state preamble)
   (q:vprop) (unsolved':list vprop)
   (_:squash (pst.unsolved == q::unsolved'))
@@ -457,7 +459,7 @@ then begin
     ss = pst.ss;
     nts = None;
     solved = tm_emp;
-    unsolved = vprop_as_list q_ss;
+    unsolved = (vprop_as_list q_ss) @ unsolved';
     k = k_sub;
     goals_inv = RU.magic ();
     solved_inv = ();
@@ -471,7 +473,7 @@ then begin
     pst.pg (list_as_vprop pst.remaining_ctxt * (preamble.frame * pst.ss.(pst.solved)))
     pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt * (preamble.frame * pst.ss.(pst.solved))) * pst_sub.ss.(pst_sub.solved)) =
     pst_sub.k in
-
+  
   // AC
   let k_pre_eq : vprop_equiv pst.pg
     (list_as_vprop pst.remaining_ctxt * (preamble.frame * pst.ss.(pst.solved)))

@@ -136,7 +136,7 @@ let acquire = acquire_aux
 
 ```pulse
 fn release_aux (#v:vprop) (#p:perm) (l:lock)
-  requires v ** lock_alive l #p v ** lock_acquired l
+  requires lock_alive l #p v ** lock_acquired l ** v
   ensures lock_alive l #p v
 {
   unfold (lock_alive l #p v);
