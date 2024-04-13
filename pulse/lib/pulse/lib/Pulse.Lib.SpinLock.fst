@@ -198,7 +198,6 @@ fn gather_aux (#v:vprop) (#p1 #p2 :perm) (l:lock)
 ```
 let gather = gather_aux
 
-#restart-solver
 ```pulse
 ghost
 fn __gather2
@@ -208,6 +207,7 @@ fn __gather2
   opens emp_inames
 {
   gather #v #(half_perm p) #(half_perm p) l;
+  sum_halves p;
   rewrite each (sum_perm (half_perm p) (half_perm p)) as p;
 }
 ```
