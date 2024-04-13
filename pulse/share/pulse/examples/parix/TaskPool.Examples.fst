@@ -17,7 +17,7 @@
 module TaskPool.Examples
 
 open Pulse.Lib.Pervasives
-open Pulse.Lib.Par.Pledge
+open Pulse.Lib.Pledge
 open Pulse.Lib.Task
 
 assume

@@ -20,10 +20,10 @@ open Pulse.Lib.Pervasives
 open Pulse.Lib.Fixpoints
 open Pulse.Lib.Task
 open FStar.Real
-open Pulse.Lib.Par.Pledge
+open Pulse.Lib.Pledge
 open Pulse.Lib.InvList
 
-module P = Pulse.Lib.Par.Pledge
+module P = Pulse.Lib.Pledge
 
 ```pulse
 ghost
@@ -42,7 +42,7 @@ fn squash_pledge (f v : vprop)
   requires pledge emp_inames f (pledge emp_inames f v)
   ensures pledge emp_inames f v
 {
-  Pulse.Lib.Par.Pledge.squash_pledge emp_inames f v
+  Pulse.Lib.Pledge.squash_pledge emp_inames f v
 }
 ```
 

@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Pulse.Lib.Par.Pledge.Simple
+module Pulse.Lib.Pledge.Simple
 
 open Pulse.Lib.Pervasives
 
@@ -62,7 +62,7 @@ val join_pledge (#f v1 v2:vprop)
       (fun _ -> pledge f (v1 ** v2))
 
 //
-// See Pulse.Lib.Par.Pledge.fst
+// See Pulse.Lib.Pledge.fst
 // This requires pledges to be boxable,
 //
 // val split_pledge (#f:vprop) (v1:vprop) (v2:vprop)

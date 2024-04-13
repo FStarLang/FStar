@@ -17,7 +17,7 @@
 module Pulse.Lib.Task
 
 open Pulse.Lib.Pervasives
-open Pulse.Lib.Par.Pledge
+open Pulse.Lib.Pledge
 module T = FStar.Tactics
 
 val pool : Type0
