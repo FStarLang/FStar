@@ -17,7 +17,7 @@
 module Async
 
 open Pulse.Lib.Pervasives
-open Pulse.Lib.Par.Pledge
+open Pulse.Lib.Pledge
 open UnixFork
 
 (* Pulse will currently not recognize calls to anything other than
