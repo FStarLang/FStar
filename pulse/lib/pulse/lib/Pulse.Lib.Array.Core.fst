@@ -55,6 +55,8 @@ let pts_to #a
     (v:FStar.Seq.seq a)
 = H.pts_to r #p (raise_seq v)
 
+let pts_to_is_small _ _ _ = ()
+
 ```pulse
 ghost
 fn pts_to_len' (#t:Type) (a:array t) (#p:perm) (#x:FStar.Seq.seq t)
@@ -189,6 +191,8 @@ let pts_to_range
   ([@@@ equate_by_smt] s: Seq.seq a)
 : vprop
 = H.pts_to_range x i j #p (raise_seq s)
+
+let pts_to_range_is_small _ _ _ _ _ = ()
 
 ```pulse
 ghost
