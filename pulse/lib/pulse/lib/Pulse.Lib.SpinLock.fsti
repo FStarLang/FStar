@@ -39,7 +39,12 @@ val share (#v:vprop) (#p:perm) (l:lock)
       (lock_alive l #p v)
       (fun _ -> lock_alive l #(half_perm p) v ** lock_alive l #(half_perm p) v)
 
-val gather (#v:vprop) (#p:perm) (l:lock)
+val gather (#v:vprop) (#p1 #p2:perm) (l:lock)
+  : stt_ghost unit emp_inames
+      (lock_alive l #p1 v ** lock_alive l #p2 v)
+      (fun _ -> lock_alive l #(sum_perm p1 p2) v)
+
+val gather2 (#v:vprop) (#p : perm) (l:lock)
   : stt_ghost unit emp_inames
       (lock_alive l #(half_perm p) v ** lock_alive l #(half_perm p) v)
       (fun _ -> lock_alive l #p v)

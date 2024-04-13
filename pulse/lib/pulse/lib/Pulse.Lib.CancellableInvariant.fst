@@ -120,21 +120,30 @@ let share = share_aux
 
 ```pulse
 ghost
-fn gather_aux (#p:perm) (c:cinv)
-  requires active (half_perm p) c ** active (half_perm p) c
-  ensures active p c
+fn gather_aux (#p1 #p2:perm) (c:cinv)
+  requires active p1 c ** active p2 c
+  ensures active (sum_perm p1 p2) c
   opens emp_inames
 {
   unfold active;
   unfold active;
-  GR.gather c.r;
-  with _p _v. rewrite (GR.pts_to c.r #_p _v) as (GR.pts_to c.r #(half_perm p) _v);
-  fold active;
+  GR.gather c.r #_ #_ #(half_perm p1) #(half_perm p2);
+  fold active (sum_perm p1 p2) c;
 }
 ```
-
 let gather = gather_aux
 
+```pulse
+ghost
+fn __gather2 (#p : perm) (c:cinv)
+  requires active (half_perm p) c ** active (half_perm p) c
+  ensures active p c
+{
+  gather c;
+  rewrite each (sum_perm (half_perm p) (half_perm p)) as p;
+}
+```
+let gather2 = __gather2
 
 ```pulse
 ghost

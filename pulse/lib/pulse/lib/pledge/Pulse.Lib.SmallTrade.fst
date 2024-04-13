@@ -154,7 +154,6 @@ fn elim_trade_aux
   f ()
 }
 ```
-
 let elim_trade = elim_trade_aux
 
 ```pulse
@@ -185,3 +184,49 @@ fn trade_sub_inv_aux
 ```
 
 let trade_sub_inv = trade_sub_inv_aux
+
+```pulse
+ghost
+fn __trade_map
+  (#os : invlist)
+  (p q r : vprop)
+  (f : unit -> stt_ghost unit emp_inames q (fun _ -> r))
+  requires trade #os p q
+  ensures trade #os p r
+{
+  ghost
+  fn aux ()
+    requires (invlist_inv os ** trade #os p q) ** p
+    ensures  (invlist_inv os ** r)
+    opens (invlist_names os)
+  {
+    elim_trade #os p q;
+    f ();
+  };
+  intro_trade #os p r (trade #os p q) aux;
+}
+```
+let trade_map = __trade_map
+
+```pulse
+ghost
+fn __trade_compose
+  (#os : invlist)
+  (p q r : vprop)
+  requires trade #os p q ** trade #os q r
+  ensures trade #os p r
+{
+  ghost
+  fn aux ()
+    requires (invlist_inv os ** (trade #os p q ** trade #os q r)) ** p
+    ensures  (invlist_inv os ** r)
+    opens (invlist_names os)
+  {
+    elim_trade #os _ _;
+    elim_trade #os _ _;
+  };
+  small_star (trade #os p q) (trade #os q r);
+  intro_trade #os p r (trade #os p q ** trade #os q r) aux;
+}
+```
+let trade_compose = __trade_compose

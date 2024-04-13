@@ -55,7 +55,12 @@ val share (#p:perm) (c:cinv)
       (active p c)
       (fun _ -> active (half_perm p) c ** active (half_perm p) c)
 
-val gather (#p:perm) (c:cinv)
+val gather (#p1 #p2 :perm) (c:cinv)
+  : stt_ghost unit emp_inames
+      (active p1 c ** active p2 c)
+      (fun _ -> active (sum_perm p1 p2) c)
+
+val gather2 (#p :perm) (c:cinv)
   : stt_ghost unit emp_inames
       (active (half_perm p) c ** active (half_perm p) c)
       (fun _ -> active p c)

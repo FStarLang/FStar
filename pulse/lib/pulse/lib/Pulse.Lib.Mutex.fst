@@ -116,7 +116,7 @@ fn gather_aux (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a)
 {
   unfold (mutex_live m #(half_perm p) v);
   unfold (mutex_live m #(half_perm p) v);
-  Pulse.Lib.SpinLock.gather m.l;
+  Pulse.Lib.SpinLock.gather2 m.l;
   fold (mutex_live m #p v)
 }
 ```
