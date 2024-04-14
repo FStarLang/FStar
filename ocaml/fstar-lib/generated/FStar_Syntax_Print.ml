@@ -1942,6 +1942,8 @@ let (showable_args : FStar_Syntax_Syntax.args FStar_Class_Show.showable) =
   { FStar_Class_Show.show = args_to_string }
 let (showable_bv : FStar_Syntax_Syntax.bv FStar_Class_Show.showable) =
   { FStar_Class_Show.show = bv_to_string }
+let (showable_fv : FStar_Syntax_Syntax.fv FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = fv_to_string }
 let (showable_binder : FStar_Syntax_Syntax.binder FStar_Class_Show.showable)
   = { FStar_Class_Show.show = binder_to_string }
 let (showable_uvar : FStar_Syntax_Syntax.uvar FStar_Class_Show.showable) =
