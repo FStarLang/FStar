@@ -1703,14 +1703,26 @@ let rec norm : cfg -> env -> stack -> term -> term =
             norm cfg env stack t1
 
           | Tm_ascribed {tm=t1; asc; eff_opt=l} ->
-            begin match stack with
+            let rec stack_may_reduce s =
+              (* Decides if the ascription would block a reduction that would
+              otherwise happen. For instance if the stack begins with Arg it's
+              possible that t1 reduces to a lambda, so we should beta reduce.
+              Q: This may be better done in the rebuild phase, once we know the normal
+              form of t1? *)
+              match s with
               | Match _ :: _
               | Arg _ :: _
-              | App (_, {n=Tm_constant (FC.Const_reify _)}, _, _) :: _
-              | MemoLazy _ :: _ when cfg.steps.beta ->
-                log cfg  (fun () -> BU.print_string "+++ Dropping ascription \n");
-                norm cfg env stack t1 //ascriptions should not block reduction
+              | App (_, {n=Tm_constant (FC.Const_reify _)}, _, _) :: _ when cfg.steps.beta ->
+                true
+              | MemoLazy _ :: s ->
+                stack_may_reduce s
               | _ ->
+                false
+            in
+            if stack_may_reduce stack then (
+                log cfg  (fun () -> BU.print_string "+++ Dropping ascription \n");
+                norm cfg env stack t1 // Ascriptions should not block reduction
+            ) else (
                 (* Drops stack *)
                 log cfg  (fun () -> BU.print_string "+++ Keeping ascription \n");
                 let t1 = norm cfg env [] t1 in
@@ -1723,7 +1735,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   norm cfg' env stack t
                 | _ ->
                   rebuild cfg env stack (mk (Tm_ascribed {tm=U.unascribe t1; asc; eff_opt=l}) t.pos)
-            end
+            )
 
           | Tm_match {scrutinee=head; ret_opt=asc_opt; brs=branches; rc_opt=lopt} ->
             let lopt = BU.map_option (maybe_drop_rc_typ cfg) lopt in
@@ -2761,32 +2773,41 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         rebuild cfg env stack t
 
       | Arg (Clos(env_arg, tm, m, _), aq, r) :: stack ->
-        log cfg (fun () -> BU.print1 "Rebuilding with arg %s\n" (Print.term_to_string tm));
-        // this needs to be tail recursive for reducing large terms
+        log cfg (fun () -> BU.print1 "Rebuilding with arg %s\n" (show tm));
 
-        // GM: This is basically saying "if exclude iota, don't memoize".
-        // what's up with that?
-        // GM: I actually get a regression if I just keep the second branch.
-        if not cfg.steps.iota
-        then if cfg.steps.hnf && not (is_partial_primop_app cfg t)
-             then let arg = closure_as_term cfg env_arg tm in
-                  let t = extend_app t (arg, aq) r in
-                  rebuild cfg env_arg stack t
-             else let stack = App(env, t, aq, r)::stack in
-                  norm cfg env_arg stack tm
-        else begin match read_memo cfg m with
-          | None ->
-            if cfg.steps.hnf && not (is_partial_primop_app cfg t)
-            then let arg = closure_as_term cfg env_arg tm in
-                 let t = extend_app t (arg, aq) r in
-                 rebuild cfg env_arg stack t
-            else let stack = MemoLazy m::App(env, t, aq, r)::stack in
-                 norm cfg env_arg stack tm
-
+        (* If we are doing hnf (and the head is not a primop), then there is
+        no need to normalize the argument. *)
+        if cfg.steps.hnf && not (is_partial_primop_app cfg t) then (
+           let arg = closure_as_term cfg env_arg tm in
+           let t = extend_app t (arg, aq) r in
+           rebuild cfg env_arg stack t
+        ) else (
+          (* If the argument was already normalized+memoized, reuse it. *)
+          match read_memo cfg m with
           | Some (_, a) ->
-            let t = S.extend_app t (a,aq) r in
+            let t = S.extend_app t (a, aq) r in
             rebuild cfg env_arg stack t
-        end
+
+          | None when not cfg.steps.iota ->
+            (* If we are not doing iota, do not memoize the partial solution.
+            I do not understand exactly why this is needed, but I'm retaining
+            the logic. Removing this branch in fact leads to a failure, when
+            trying to typecheck the following:
+
+            private let fa_intro_lem (#a:Type) (#p:a -> Type) (f:(x:a -> squash (p x))) : Lemma (forall (x:a). p x) =
+              Classical.lemma_forall_intro_gtot
+                ((fun x -> IndefiniteDescription.elim_squash (f x)) <: (x:a -> GTot (p x)))
+
+            because the ascription gets dropped. I don't see why iota would matter,
+            perhaps it's a flag that happens to be there. *)
+            let stack = App(env, t, aq, r)::stack in
+            norm cfg env_arg stack tm
+
+          | None ->
+            (* Otherwise normalize the argument and memoize it. *)
+            let stack = MemoLazy m::App(env, t, aq, r)::stack in
+            norm cfg env_arg stack tm
+        )
 
       | App(env, head, aq, r)::stack' when should_reify cfg stack ->
         let t0 = t in
