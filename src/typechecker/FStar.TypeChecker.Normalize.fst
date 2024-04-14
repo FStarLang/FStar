@@ -1712,10 +1712,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
               match s with
               | Match _ :: _
               | Arg _ :: _
-              | App (_, {n=Tm_constant (FC.Const_reify _)}, _, _) :: _ when cfg.steps.beta ->
+              | App (_, {n=Tm_constant (FC.Const_reify _)}, _, _) :: _
+              | MemoLazy _ :: _ when cfg.steps.beta ->
                 true
-              | MemoLazy _ :: s ->
-                stack_may_reduce s
               | _ ->
                 false
             in
