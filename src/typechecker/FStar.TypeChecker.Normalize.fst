@@ -1071,7 +1071,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
       plugin_unfold_warn_ctr := !plugin_unfold_warn_ctr - 1
     end;
     r
-let decide_unfolding cfg stack rng fv qninfo (* : option (cfg * stack) *) =
+let decide_unfolding cfg stack fv qninfo (* : option (cfg * stack) *) =
     let res =
         should_unfold cfg (fun cfg -> should_reify cfg stack) fv qninfo
     in
@@ -1372,7 +1372,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
               log_unfolding cfg (fun () -> BU.print1 " >> This is a constant: %s\n" (Print.term_to_string t));
               rebuild cfg empty_env stack t
             | _ ->
-              match decide_unfolding cfg stack t.pos fv qninfo with
+              match decide_unfolding cfg stack fv qninfo with
               | Some (cfg, stack) -> do_unfold_fv cfg stack t qninfo fv
               | None -> rebuild cfg empty_env stack t
             end
