@@ -155,6 +155,7 @@ let (op_Negation : FStar_Ident.lident) = pconst "op_Negation"
 let (subtype_of_lid : FStar_Ident.lident) = pconst "subtype_of"
 let (real_const : Prims.string -> FStar_Ident.lident) =
   fun s -> p2l ["FStar"; "Real"; s]
+let (real_op_EQ : FStar_Ident.lident) = real_const "op_Equals_Dot"
 let (real_op_LT : FStar_Ident.lident) = real_const "op_Less_Dot"
 let (real_op_LTE : FStar_Ident.lident) = real_const "op_Less_Equals_Dot"
 let (real_op_GT : FStar_Ident.lident) = real_const "op_Greater_Dot"

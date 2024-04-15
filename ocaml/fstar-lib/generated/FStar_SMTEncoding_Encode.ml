@@ -59,6 +59,29 @@ let (__proj__Mkprims_t__item__mk :
 let (__proj__Mkprims_t__item__is :
   prims_t -> FStar_Ident.lident -> Prims.bool) =
   fun projectee -> match projectee with | { mk; is;_} -> is
+type defn_rel_type =
+  | Eq 
+  | ValidIff 
+let (uu___is_Eq : defn_rel_type -> Prims.bool) =
+  fun projectee -> match projectee with | Eq -> true | uu___ -> false
+let (uu___is_ValidIff : defn_rel_type -> Prims.bool) =
+  fun projectee -> match projectee with | ValidIff -> true | uu___ -> false
+let (rel_type_f :
+  defn_rel_type ->
+    (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+      FStar_SMTEncoding_Term.term)
+  =
+  fun uu___ ->
+    match uu___ with
+    | Eq -> FStar_SMTEncoding_Util.mkEq
+    | ValidIff ->
+        (fun uu___1 ->
+           match uu___1 with
+           | (x, y) ->
+               let uu___2 =
+                 let uu___3 = FStar_SMTEncoding_Term.mk_Valid x in
+                 (uu___3, y) in
+               FStar_SMTEncoding_Util.mkEq uu___2)
 let (prims : prims_t) =
   let module_name = "Prims" in
   let uu___ =
@@ -76,7 +99,7 @@ let (prims : prims_t) =
                FStar_SMTEncoding_Term.Term_sort in
            (match uu___2 with
             | (ysym, y) ->
-                let quant vars body rng x1 =
+                let quant rel vars body rng x1 =
                   let xname_decl =
                     let uu___3 =
                       let uu___4 =
@@ -147,6 +170,7 @@ let (prims : prims_t) =
                                  (uu___5, app1, vars2))
                         ([tot_fun_axiom_for_x], xtok1, []) all_vars_but_one in
                     match uu___3 with | (axioms, uu___4, uu___5) -> axioms in
+                  let rel_body = rel_type_f rel (xapp, body) in
                   let uu___3 =
                     let uu___4 =
                       let uu___5 =
@@ -154,11 +178,8 @@ let (prims : prims_t) =
                           let uu___7 =
                             let uu___8 =
                               let uu___9 =
-                                let uu___10 =
-                                  let uu___11 =
-                                    FStar_SMTEncoding_Util.mkEq (xapp, body) in
-                                  ([[xapp]], vars, uu___11) in
-                                FStar_SMTEncoding_Term.mkForall rng uu___10 in
+                                FStar_SMTEncoding_Term.mkForall rng
+                                  ([[xapp]], vars, rel_body) in
                               (uu___9, FStar_Pervasives_Native.None,
                                 (Prims.strcat "primitive_" x1)) in
                             FStar_SMTEncoding_Util.mkAssume uu___8 in
@@ -203,7 +224,7 @@ let (prims : prims_t) =
                       let uu___5 =
                         let uu___6 = FStar_SMTEncoding_Util.mkEq (x, y) in
                         FStar_SMTEncoding_Term.boxBool uu___6 in
-                      quant axy uu___5 in
+                      quant Eq axy uu___5 in
                     (FStar_Parser_Const.op_Eq, uu___4) in
                   let uu___4 =
                     let uu___5 =
@@ -213,7 +234,7 @@ let (prims : prims_t) =
                             let uu___9 = FStar_SMTEncoding_Util.mkEq (x, y) in
                             FStar_SMTEncoding_Util.mkNot uu___9 in
                           FStar_SMTEncoding_Term.boxBool uu___8 in
-                        quant axy uu___7 in
+                        quant Eq axy uu___7 in
                       (FStar_Parser_Const.op_notEq, uu___6) in
                     let uu___6 =
                       let uu___7 =
@@ -228,7 +249,7 @@ let (prims : prims_t) =
                                 (uu___12, uu___13) in
                               FStar_SMTEncoding_Util.mkAnd uu___11 in
                             FStar_SMTEncoding_Term.boxBool uu___10 in
-                          quant xy uu___9 in
+                          quant Eq xy uu___9 in
                         (FStar_Parser_Const.op_And, uu___8) in
                       let uu___8 =
                         let uu___9 =
@@ -243,7 +264,7 @@ let (prims : prims_t) =
                                   (uu___14, uu___15) in
                                 FStar_SMTEncoding_Util.mkOr uu___13 in
                               FStar_SMTEncoding_Term.boxBool uu___12 in
-                            quant xy uu___11 in
+                            quant Eq xy uu___11 in
                           (FStar_Parser_Const.op_Or, uu___10) in
                         let uu___10 =
                           let uu___11 =
@@ -254,7 +275,7 @@ let (prims : prims_t) =
                                     FStar_SMTEncoding_Term.unboxBool x in
                                   FStar_SMTEncoding_Util.mkNot uu___15 in
                                 FStar_SMTEncoding_Term.boxBool uu___14 in
-                              quant qx uu___13 in
+                              quant Eq qx uu___13 in
                             (FStar_Parser_Const.op_Negation, uu___12) in
                           let uu___12 =
                             let uu___13 =
@@ -269,7 +290,7 @@ let (prims : prims_t) =
                                       (uu___18, uu___19) in
                                     FStar_SMTEncoding_Util.mkLT uu___17 in
                                   FStar_SMTEncoding_Term.boxBool uu___16 in
-                                quant xy uu___15 in
+                                quant Eq xy uu___15 in
                               (FStar_Parser_Const.op_LT, uu___14) in
                             let uu___14 =
                               let uu___15 =
@@ -284,7 +305,7 @@ let (prims : prims_t) =
                                         (uu___20, uu___21) in
                                       FStar_SMTEncoding_Util.mkLTE uu___19 in
                                     FStar_SMTEncoding_Term.boxBool uu___18 in
-                                  quant xy uu___17 in
+                                  quant Eq xy uu___17 in
                                 (FStar_Parser_Const.op_LTE, uu___16) in
                               let uu___16 =
                                 let uu___17 =
@@ -299,7 +320,7 @@ let (prims : prims_t) =
                                           (uu___22, uu___23) in
                                         FStar_SMTEncoding_Util.mkGT uu___21 in
                                       FStar_SMTEncoding_Term.boxBool uu___20 in
-                                    quant xy uu___19 in
+                                    quant Eq xy uu___19 in
                                   (FStar_Parser_Const.op_GT, uu___18) in
                                 let uu___18 =
                                   let uu___19 =
@@ -318,7 +339,7 @@ let (prims : prims_t) =
                                             uu___23 in
                                         FStar_SMTEncoding_Term.boxBool
                                           uu___22 in
-                                      quant xy uu___21 in
+                                      quant Eq xy uu___21 in
                                     (FStar_Parser_Const.op_GTE, uu___20) in
                                   let uu___20 =
                                     let uu___21 =
@@ -337,7 +358,7 @@ let (prims : prims_t) =
                                               uu___25 in
                                           FStar_SMTEncoding_Term.boxInt
                                             uu___24 in
-                                        quant xy uu___23 in
+                                        quant Eq xy uu___23 in
                                       (FStar_Parser_Const.op_Subtraction,
                                         uu___22) in
                                     let uu___22 =
@@ -352,7 +373,7 @@ let (prims : prims_t) =
                                                 uu___27 in
                                             FStar_SMTEncoding_Term.boxInt
                                               uu___26 in
-                                          quant qx uu___25 in
+                                          quant Eq qx uu___25 in
                                         (FStar_Parser_Const.op_Minus,
                                           uu___24) in
                                       let uu___24 =
@@ -372,7 +393,7 @@ let (prims : prims_t) =
                                                   uu___29 in
                                               FStar_SMTEncoding_Term.boxInt
                                                 uu___28 in
-                                            quant xy uu___27 in
+                                            quant Eq xy uu___27 in
                                           (FStar_Parser_Const.op_Addition,
                                             uu___26) in
                                         let uu___26 =
@@ -392,7 +413,7 @@ let (prims : prims_t) =
                                                     uu___31 in
                                                 FStar_SMTEncoding_Term.boxInt
                                                   uu___30 in
-                                              quant xy uu___29 in
+                                              quant Eq xy uu___29 in
                                             (FStar_Parser_Const.op_Multiply,
                                               uu___28) in
                                           let uu___28 =
@@ -412,7 +433,7 @@ let (prims : prims_t) =
                                                       uu___33 in
                                                   FStar_SMTEncoding_Term.boxInt
                                                     uu___32 in
-                                                quant xy uu___31 in
+                                                quant Eq xy uu___31 in
                                               (FStar_Parser_Const.op_Division,
                                                 uu___30) in
                                             let uu___30 =
@@ -432,7 +453,7 @@ let (prims : prims_t) =
                                                         uu___35 in
                                                     FStar_SMTEncoding_Term.boxInt
                                                       uu___34 in
-                                                  quant xy uu___33 in
+                                                  quant Eq xy uu___33 in
                                                 (FStar_Parser_Const.op_Modulus,
                                                   uu___32) in
                                               let uu___32 =
@@ -441,18 +462,15 @@ let (prims : prims_t) =
                                                     let uu___35 =
                                                       let uu___36 =
                                                         let uu___37 =
-                                                          let uu___38 =
-                                                            FStar_SMTEncoding_Term.unboxReal
-                                                              x in
-                                                          let uu___39 =
-                                                            FStar_SMTEncoding_Term.unboxReal
-                                                              y in
-                                                          (uu___38, uu___39) in
-                                                        FStar_SMTEncoding_Util.mkLT
-                                                          uu___37 in
-                                                      FStar_SMTEncoding_Term.boxBool
+                                                          FStar_SMTEncoding_Term.unboxReal
+                                                            x in
+                                                        let uu___38 =
+                                                          FStar_SMTEncoding_Term.unboxReal
+                                                            y in
+                                                        (uu___37, uu___38) in
+                                                      FStar_SMTEncoding_Util.mkLT
                                                         uu___36 in
-                                                    quant xy uu___35 in
+                                                    quant ValidIff xy uu___35 in
                                                   (FStar_Parser_Const.real_op_LT,
                                                     uu___34) in
                                                 let uu___34 =
@@ -461,19 +479,16 @@ let (prims : prims_t) =
                                                       let uu___37 =
                                                         let uu___38 =
                                                           let uu___39 =
-                                                            let uu___40 =
-                                                              FStar_SMTEncoding_Term.unboxReal
-                                                                x in
-                                                            let uu___41 =
-                                                              FStar_SMTEncoding_Term.unboxReal
-                                                                y in
-                                                            (uu___40,
-                                                              uu___41) in
-                                                          FStar_SMTEncoding_Util.mkLTE
-                                                            uu___39 in
-                                                        FStar_SMTEncoding_Term.boxBool
+                                                            FStar_SMTEncoding_Term.unboxReal
+                                                              x in
+                                                          let uu___40 =
+                                                            FStar_SMTEncoding_Term.unboxReal
+                                                              y in
+                                                          (uu___39, uu___40) in
+                                                        FStar_SMTEncoding_Util.mkLTE
                                                           uu___38 in
-                                                      quant xy uu___37 in
+                                                      quant ValidIff xy
+                                                        uu___37 in
                                                     (FStar_Parser_Const.real_op_LTE,
                                                       uu___36) in
                                                   let uu___36 =
@@ -482,19 +497,17 @@ let (prims : prims_t) =
                                                         let uu___39 =
                                                           let uu___40 =
                                                             let uu___41 =
-                                                              let uu___42 =
-                                                                FStar_SMTEncoding_Term.unboxReal
-                                                                  x in
-                                                              let uu___43 =
-                                                                FStar_SMTEncoding_Term.unboxReal
-                                                                  y in
-                                                              (uu___42,
-                                                                uu___43) in
-                                                            FStar_SMTEncoding_Util.mkGT
-                                                              uu___41 in
-                                                          FStar_SMTEncoding_Term.boxBool
+                                                              FStar_SMTEncoding_Term.unboxReal
+                                                                x in
+                                                            let uu___42 =
+                                                              FStar_SMTEncoding_Term.unboxReal
+                                                                y in
+                                                            (uu___41,
+                                                              uu___42) in
+                                                          FStar_SMTEncoding_Util.mkGT
                                                             uu___40 in
-                                                        quant xy uu___39 in
+                                                        quant ValidIff xy
+                                                          uu___39 in
                                                       (FStar_Parser_Const.real_op_GT,
                                                         uu___38) in
                                                     let uu___38 =
@@ -503,19 +516,17 @@ let (prims : prims_t) =
                                                           let uu___41 =
                                                             let uu___42 =
                                                               let uu___43 =
-                                                                let uu___44 =
-                                                                  FStar_SMTEncoding_Term.unboxReal
-                                                                    x in
-                                                                let uu___45 =
-                                                                  FStar_SMTEncoding_Term.unboxReal
-                                                                    y in
-                                                                (uu___44,
-                                                                  uu___45) in
-                                                              FStar_SMTEncoding_Util.mkGTE
-                                                                uu___43 in
-                                                            FStar_SMTEncoding_Term.boxBool
+                                                                FStar_SMTEncoding_Term.unboxReal
+                                                                  x in
+                                                              let uu___44 =
+                                                                FStar_SMTEncoding_Term.unboxReal
+                                                                  y in
+                                                              (uu___43,
+                                                                uu___44) in
+                                                            FStar_SMTEncoding_Util.mkGTE
                                                               uu___42 in
-                                                          quant xy uu___41 in
+                                                          quant ValidIff xy
+                                                            uu___41 in
                                                         (FStar_Parser_Const.real_op_GTE,
                                                           uu___40) in
                                                       let uu___40 =
@@ -538,7 +549,8 @@ let (prims : prims_t) =
                                                                   uu___45 in
                                                               FStar_SMTEncoding_Term.boxReal
                                                                 uu___44 in
-                                                            quant xy uu___43 in
+                                                            quant Eq xy
+                                                              uu___43 in
                                                           (FStar_Parser_Const.real_op_Subtraction,
                                                             uu___42) in
                                                         let uu___42 =
@@ -562,7 +574,7 @@ let (prims : prims_t) =
                                                                     uu___47 in
                                                                 FStar_SMTEncoding_Term.boxReal
                                                                   uu___46 in
-                                                              quant xy
+                                                              quant Eq xy
                                                                 uu___45 in
                                                             (FStar_Parser_Const.real_op_Addition,
                                                               uu___44) in
@@ -588,7 +600,7 @@ let (prims : prims_t) =
                                                                     uu___49 in
                                                                   FStar_SMTEncoding_Term.boxReal
                                                                     uu___48 in
-                                                                quant xy
+                                                                quant Eq xy
                                                                   uu___47 in
                                                               (FStar_Parser_Const.real_op_Multiply,
                                                                 uu___46) in
@@ -615,7 +627,7 @@ let (prims : prims_t) =
                                                                     uu___51 in
                                                                     FStar_SMTEncoding_Term.boxReal
                                                                     uu___50 in
-                                                                  quant xy
+                                                                  quant Eq xy
                                                                     uu___49 in
                                                                 (FStar_Parser_Const.real_op_Division,
                                                                   uu___48) in
@@ -636,7 +648,8 @@ let (prims : prims_t) =
                                                                     FStar_Compiler_Range_Type.dummyRange in
                                                                     FStar_SMTEncoding_Term.boxReal
                                                                     uu___52 in
-                                                                    quant qx
+                                                                    quant Eq
+                                                                    qx
                                                                     uu___51 in
                                                                   (FStar_Parser_Const.real_of_int,
                                                                     uu___50) in
