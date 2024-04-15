@@ -1975,6 +1975,9 @@ let (splice :
                                                   FStar_Syntax_Syntax.sigmeta_admit
                                                     =
                                                     (uu___10.FStar_Syntax_Syntax.sigmeta_admit);
+                                                  FStar_Syntax_Syntax.sigmeta_spliced
+                                                    =
+                                                    (uu___10.FStar_Syntax_Syntax.sigmeta_spliced);
                                                   FStar_Syntax_Syntax.sigmeta_already_checked
                                                     = checked;
                                                   FStar_Syntax_Syntax.sigmeta_extension_data
