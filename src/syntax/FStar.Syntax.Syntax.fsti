@@ -628,6 +628,7 @@ type sig_metadata = {
     sigmeta_fact_db_ids:list string;
     sigmeta_admit:bool; //An internal flag to record that a sigelt's SMT proof should be admitted
                         //Used in DM4Free
+    sigmeta_spliced:bool;
     sigmeta_already_checked:bool;
     // ^ This sigelt was created from a splice_t with a proof of well-typing,
     // and does not need to be checked again.
