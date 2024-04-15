@@ -996,6 +996,7 @@ instance showable_comp   = { show = comp_to_string; }
 instance showable_sigelt = { show = sigelt_to_string; }
 instance showable_args   = { show = args_to_string; }
 instance showable_bv     = { show = bv_to_string; }
+instance showable_fv     = { show = fv_to_string; }
 instance showable_binder = { show = binder_to_string; }
 instance showable_uvar   = { show = uvar_to_string; }
 instance showable_ctxu   = { show = ctx_uvar_to_string; }

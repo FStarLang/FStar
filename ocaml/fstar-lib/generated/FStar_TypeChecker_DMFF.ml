@@ -183,6 +183,8 @@ let (gen_wps_for_free :
                              FStar_Syntax_Syntax.sigmeta_fact_db_ids =
                                (uu___3.FStar_Syntax_Syntax.sigmeta_fact_db_ids);
                              FStar_Syntax_Syntax.sigmeta_admit = true;
+                             FStar_Syntax_Syntax.sigmeta_spliced =
+                               (uu___3.FStar_Syntax_Syntax.sigmeta_spliced);
                              FStar_Syntax_Syntax.sigmeta_already_checked =
                                (uu___3.FStar_Syntax_Syntax.sigmeta_already_checked);
                              FStar_Syntax_Syntax.sigmeta_extension_data =
@@ -4485,6 +4487,9 @@ let (cps_and_elaborate :
                                                                  (uu___16.FStar_Syntax_Syntax.sigmeta_fact_db_ids);
                                                                FStar_Syntax_Syntax.sigmeta_admit
                                                                  = true;
+                                                               FStar_Syntax_Syntax.sigmeta_spliced
+                                                                 =
+                                                                 (uu___16.FStar_Syntax_Syntax.sigmeta_spliced);
                                                                FStar_Syntax_Syntax.sigmeta_already_checked
                                                                  =
                                                                  (uu___16.FStar_Syntax_Syntax.sigmeta_already_checked);

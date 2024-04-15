@@ -40,8 +40,6 @@ let (monadic_lid : FStar_Ident.lident) = pconst "M"
 let (spinoff_lid : FStar_Ident.lident) = psconst "spinoff"
 let (inl_lid : FStar_Ident.lident) = psconst "Inl"
 let (inr_lid : FStar_Ident.lident) = psconst "Inr"
-let (is_primitive_range_lid : FStar_Ident.lident) =
-  pconst "isPrimitiveRangeType"
 let (int8_lid : FStar_Ident.lident) = p2l ["FStar"; "Int8"; "t"]
 let (uint8_lid : FStar_Ident.lident) = p2l ["FStar"; "UInt8"; "t"]
 let (int16_lid : FStar_Ident.lident) = p2l ["FStar"; "Int16"; "t"]

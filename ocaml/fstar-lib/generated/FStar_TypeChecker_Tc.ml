@@ -2632,6 +2632,8 @@ let (tc_decl' :
                                     FStar_Syntax_Syntax.sigmeta_fact_db_ids =
                                       (uu___3.FStar_Syntax_Syntax.sigmeta_fact_db_ids);
                                     FStar_Syntax_Syntax.sigmeta_admit = true;
+                                    FStar_Syntax_Syntax.sigmeta_spliced =
+                                      (uu___3.FStar_Syntax_Syntax.sigmeta_spliced);
                                     FStar_Syntax_Syntax.sigmeta_already_checked
                                       =
                                       (uu___3.FStar_Syntax_Syntax.sigmeta_already_checked);
@@ -3522,10 +3524,42 @@ let (tc_decl' :
                               (se3.FStar_Syntax_Syntax.sigopts)
                           }
                         else se3) ses1 in
+                 let ses3 =
+                   FStar_Compiler_List.map
+                     (fun se3 ->
+                        {
+                          FStar_Syntax_Syntax.sigel =
+                            (se3.FStar_Syntax_Syntax.sigel);
+                          FStar_Syntax_Syntax.sigrng =
+                            (se3.FStar_Syntax_Syntax.sigrng);
+                          FStar_Syntax_Syntax.sigquals =
+                            (se3.FStar_Syntax_Syntax.sigquals);
+                          FStar_Syntax_Syntax.sigmeta =
+                            (let uu___3 = se3.FStar_Syntax_Syntax.sigmeta in
+                             {
+                               FStar_Syntax_Syntax.sigmeta_active =
+                                 (uu___3.FStar_Syntax_Syntax.sigmeta_active);
+                               FStar_Syntax_Syntax.sigmeta_fact_db_ids =
+                                 (uu___3.FStar_Syntax_Syntax.sigmeta_fact_db_ids);
+                               FStar_Syntax_Syntax.sigmeta_admit =
+                                 (uu___3.FStar_Syntax_Syntax.sigmeta_admit);
+                               FStar_Syntax_Syntax.sigmeta_spliced = true;
+                               FStar_Syntax_Syntax.sigmeta_already_checked =
+                                 (uu___3.FStar_Syntax_Syntax.sigmeta_already_checked);
+                               FStar_Syntax_Syntax.sigmeta_extension_data =
+                                 (uu___3.FStar_Syntax_Syntax.sigmeta_extension_data)
+                             });
+                          FStar_Syntax_Syntax.sigattrs =
+                            (se3.FStar_Syntax_Syntax.sigattrs);
+                          FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                            (se3.FStar_Syntax_Syntax.sigopens_and_abbrevs);
+                          FStar_Syntax_Syntax.sigopts =
+                            (se3.FStar_Syntax_Syntax.sigopts)
+                        }) ses2 in
                  let dsenv =
                    FStar_Compiler_List.fold_left
                      FStar_Syntax_DsEnv.push_sigelt_force
-                     env.FStar_TypeChecker_Env.dsenv ses2 in
+                     env.FStar_TypeChecker_Env.dsenv ses3 in
                  let env1 =
                    {
                      FStar_TypeChecker_Env.solver =
@@ -3640,12 +3674,12 @@ let (tc_decl' :
                     let uu___5 =
                       let uu___6 =
                         FStar_Compiler_List.map
-                          FStar_Syntax_Print.sigelt_to_string ses2 in
+                          FStar_Syntax_Print.sigelt_to_string ses3 in
                       FStar_Compiler_String.concat "\n" uu___6 in
                     FStar_Compiler_Util.print1
                       "Splice returned sigelts {\n%s\n}\n" uu___5
                   else ());
-                 ([], ses2, env1)))
+                 ([], ses3, env1)))
            | FStar_Syntax_Syntax.Sig_let
                { FStar_Syntax_Syntax.lbs1 = lbs;
                  FStar_Syntax_Syntax.lids1 = lids;_}
@@ -4807,9 +4841,12 @@ let (tc_decls :
                     let uu___8 =
                       let uu___9 =
                         FStar_Syntax_Print.sigelt_to_string_short se in
-                      FStar_Compiler_Util.format1
-                        "While typechecking the top-level declaration `%s`"
-                        uu___9 in
+                      FStar_Compiler_Util.format2
+                        "While typechecking the %stop-level declaration `%s`"
+                        (if
+                           (se.FStar_Syntax_Syntax.sigmeta).FStar_Syntax_Syntax.sigmeta_spliced
+                         then "(spliced) "
+                         else "") uu___9 in
                     FStar_Errors.with_ctx uu___8
                       (fun uu___9 -> tc_decl env1 se) in
                   match uu___7 with
@@ -4925,7 +4962,7 @@ let (tc_decls :
                ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_Compiler_List.rev_append ses1 []), env1)
-let (uu___915 : unit) =
+let (uu___920 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :

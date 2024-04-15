@@ -226,6 +226,7 @@ let mk_Tac t =
 let default_sigmeta = {
     sigmeta_active=true;
     sigmeta_fact_db_ids=[];
+    sigmeta_spliced=false;
     sigmeta_admit=false;
     sigmeta_already_checked=false;
     sigmeta_extension_data=[]
