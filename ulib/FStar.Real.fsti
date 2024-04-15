@@ -49,4 +49,4 @@ val ( <=. ) : real -> real -> prop
 let zero : real = of_int 0
 let one  : real = of_int 1
 let two  : real = of_int 2
-val sqrt_2 : r:real{r *. r == two}
+val sqrt_2 : r:real{r >=. 0.0R /\ r *. r == two}

@@ -36,7 +36,18 @@ let test_div_eq = assert (8.0R /. 2.0R == 4.0R)
 let test_div_lt = assert (8.0R /. 2.0R <. 5.0R)
 
 let test_sqrt_2_mul = assert (sqrt_2 *. sqrt_2 == 2.0R)
-// let test_sqrt_2_add = assert (sqrt_2 +. sqrt_2 >. 2.0R) // Fails
+
+[@@expect_failure] // should hopefully work...
+let test_sqrt_2_add = assert (sqrt_2 >. 1.0R)
+
+let test_sqrt_2_add_explicit =
+  (* A bit of SMT wrestling can prove it *)
+  let mlem (x y : (r:real{r >=. 0.0R})) : Lemma (requires x*.x >. y*.y) (ensures x >. y) =
+    ()
+  in
+  mlem sqrt_2 1.0R;
+  assert (sqrt_2 >. 1.0R)
+
 #push-options "--smtencoding.elim_box true --smtencoding.l_arith_repr native --smtencoding.nl_arith_repr native"
 let test_sqrt_2_scale = assert (1.0R /. sqrt_2 == sqrt_2 /. 2.0R)
 #pop-options
