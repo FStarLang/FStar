@@ -25,15 +25,13 @@ module FStar.Real
 
   This is only a logical model of the reals. There is no extraction
   for them, as they are an erasable type. Any operation that can observe
-  a real (comparisons, to_string, etc) must be Ghost or a proposition.
+  a real (comparisons, etc) must be Ghost or a proposition.
 *)
 
 [@@erasable]
 val real : Type0
 
 val of_int : int -> Tot real
-
-val to_string: real -> GTot string
 
 val ( +. ) : real -> real -> Tot real
 val ( -. ) : real -> real -> Tot real
