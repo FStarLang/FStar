@@ -190,7 +190,7 @@ verify it, in case someone prefers emacs over the online editor.
 [Vim]: https://github.com/FStarLang/VimFStar
 [editor support]: https://github.com/FStarLang/FStar/wiki/Editor-support-for-F*
 [F\* wiki]: https://github.com/FStarLang/FStar/wiki
-[F\* repository]: https://github.com/FStarLang/FStar/tree/master/doc/tutorial/code/
+[F\* repository]: https://github.com/FStarLang/FStar/tree/master/doc/old/tutorial/code/
 
 By default F\* only verifies the input code, **it does not execute it**.
 To execute F\* code one needs to extract it to OCaml or F# and then
@@ -5887,7 +5887,7 @@ this is how you do it:
 2. Select the folder icon in the top-left corner, then "Open ... (Alt-O)"
 3. Select the "GitHub" icon
 4. Authorize the Madoko application to access your GitHub repositories
-5. Open <github>/FStarLang/FStar/doc/tutorial/tutorial.mdk, or your fork of the FStar repo
+5. Open <github>/FStarLang/FStar/doc/old/tutorial/tutorial.mdk, or your fork of the FStar repo
    if you don't have access, and start editing.
 6. Ctrl+S (or Synchronize from the folder tab) will bring up a dialog to
    commit and push this file to GitHub after merging with the latest changes there.
@@ -5896,7 +5896,7 @@ For included code snippets:
 
 The snippets must be derived from files that are stored in the same
 subtree of the git repo i.e, all the samples should be in
-sub-directories of FStarLang/FStar/doc/tutorial/code
+sub-directories of FStarLang/FStar/doc/old/tutorial/code
 
 Note: in this mode (i.e., github instead of dropbox), the document
 will not live update with the changes that anyone else may be making

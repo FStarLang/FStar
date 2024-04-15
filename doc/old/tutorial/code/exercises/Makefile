@@ -34,7 +34,7 @@ LowStar.Ex1.fst \
 LowStar.Ex2.fst \
 LowStar.Ex3.fst
 
-include ../../../Makefile.include
+include ../../../../Makefile.include
 
 # exercises have val without definitions, by design
 OTHERFLAGS+=--warn_error -240
