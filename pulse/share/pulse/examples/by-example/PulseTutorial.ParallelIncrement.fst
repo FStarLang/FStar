@@ -652,7 +652,7 @@ fn incr_pcm (r:ref int) (#n:erased int)
     { incr_pcm_t r ghost_r l true }
     { incr_pcm_t r ghost_r l false };
 
-  L.gather l;
+  L.gather2 l;
   L.acquire l;
   unfold lock_inv_pcm;
   unfold lock_inv_ghost;
@@ -760,7 +760,7 @@ fn incr_pcm_abstract (r:ref int)
     { incr_pcm_t_abstract r l t1 }
     { incr_pcm_t_abstract r l t2 };
 
-  L.gather l;
+  L.gather2 l;
   L.acquire l;
   unfold lock_inv_ghost;
   gather ghost_r;
