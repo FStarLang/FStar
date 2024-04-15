@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Pulse.Lib.Par.Pledge
+module Pulse.Lib.Pledge
 
 open Pulse.Lib.Pervasives
 open Pulse.Lib.InvList

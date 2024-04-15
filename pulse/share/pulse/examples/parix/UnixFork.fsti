@@ -19,7 +19,7 @@ module UnixFork
 (* This module assumes an unstructured unix-style fork *)
 
 open Pulse.Lib.Pervasives
-open Pulse.Lib.Par.Pledge
+open Pulse.Lib.Pledge
 
 new
 val thread : Type0

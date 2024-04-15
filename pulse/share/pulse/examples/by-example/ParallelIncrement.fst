@@ -165,7 +165,7 @@ ensures pts_to x ('i + 2)
     { increment_f2 x lock (step left true) }
     { increment_f2 x lock (step right false) };
 
-    L.gather lock;
+    L.gather2 lock;
     L.acquire lock;
     GR.gather left;
     GR.gather right;
@@ -466,7 +466,7 @@ ensures pts_to x ('i + 2)
     { atomic_increment_f6 x c (step left true) }
     { atomic_increment_f6 x c (step right false) };
 
-    C.gather c;
+    C.gather2 c;
     drop_ (inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
     C.cancel c;
     GR.gather left;

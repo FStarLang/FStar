@@ -23,6 +23,8 @@ open Pulse.Checker.Base
 open Pulse.Checker.Prover
 open Pulse.Checker.Comp
 open Pulse.Show
+open FStar.Stubs.Pprint
+open Pulse.PP
 
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
@@ -30,7 +32,6 @@ module RT = FStar.Reflection.Typing
 module MT = Pulse.Typing.Metatheory
 
 let rt_recheck (gg:env) (#g:T.env) (#e:T.term) (#ty: T.typ) () : T.Tac (RT.tot_typing g e ty) =
-  let open Pulse.PP in
   match T.core_check_term g e ty T.E_Total with
   | Some tok, _ -> RT.T_Token _ _ _ ()
   | None, _ -> T.fail "Checker.WithInv: rt_recheck failed" // fixme add a range
@@ -106,9 +107,8 @@ let add_remove_inverse (g:env)
   in
   match Pulse.Checker.Pure.try_check_prop_validity g _ typing with
   | None -> 
-    let open Pulse.PP in
     fail_doc g None [
-      Pulse.PP.text "Failed to prove that only the following invariants are opened";
+      text "Failed to prove that only the following invariants are opened";
       prefix 4 1 (text "Inferred the following invariants were opened: ") 
         (pp (add_iname
               (remove_iname inames i)
@@ -203,11 +203,11 @@ let check
   let (| i, _ |) = check_tot_term g i tm_iname_ref in
   let i_range = Pulse.RuntimeUtils.range_of_term i in
   let res = find_inv pre_typing i in
-  if None? res
-  then fail g (Some i_range)
-         (FStar.Printf.sprintf "Cannot find invariant resource for iref %s in the precondition %s"
-            (show i)
-            (show pre));
+  if None? res then
+    fail_doc g (Some i_range) [
+        prefix 2 1 (text "Cannot find invariant resource for iref ") (pp i) ^/^
+        prefix 2 1 (text " in the precondition ") (pp pre)
+      ];
     
   let Some (| p, pre_frame, inv_typing, pre_frame_typing, d_pre_frame_eq |) = res in
 
@@ -220,7 +220,6 @@ let check
         (Some b.binder_ty)
         post
     | Some (_, post, _), Some q ->
-      let open Pulse.PP in
       fail_doc g (Some t.range) 
         [ doc_of_string "Fatal: multiple annotated postconditions on with_invariant";
           prefix 4 1 (text "First postcondition:") (pp post);
@@ -262,10 +261,11 @@ let check
     post_hint_post_typing
     i in
 
-  if None? res
-  then fail g (Some i_range)
-         (FStar.Printf.sprintf "Cannot find invariant resource for iref %s in the postcondition %s"
-            (show i) (show post_hint.post));
+  if None? res then
+    fail_doc g (Some i_range) [
+        prefix 2 1 (text "Cannot find invariant resource for iref ") (pp i) ^/^
+        prefix 2 1 (text " in the postcondition ") (pp post_hint.post)
+      ];
          
 
   let Some (| p', post_frame, _, post_frame_typing, d_post_frame_equiv |) = res in

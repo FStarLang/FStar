@@ -34,6 +34,10 @@ val is_full_array (#a:Type) (x:array a) : prop
 
 val pts_to (#a:Type) (x:array a) (#[exact (`full_perm)] p:perm) (s: Seq.seq a) : vprop
 
+val pts_to_is_small (#a:Type) (x:array a) (p:perm) (s:Seq.seq a)
+  : Lemma (is_small (pts_to x #p s))
+          [SMTPat (is_small (pts_to x #p s))]
+
 val pts_to_len (#t:Type) (a:array t) (#p:perm) (#x:Seq.seq t)
     : stt_ghost unit emp_inames
           (pts_to a #p x)
@@ -113,6 +117,10 @@ val pts_to_range
   ([@@@ equate_by_smt] j: nat)
   (#[exact (`full_perm)] p:perm)
   ([@@@ equate_by_smt] s: Seq.seq a) : vprop
+
+val pts_to_range_is_small (#a:Type) (x:array a) (i j : nat) (p:perm) (s:Seq.seq a)
+  : Lemma (is_small (pts_to_range x i j #p s))
+          [SMTPat (is_small (pts_to_range x i j #p s))]
 
 val pts_to_range_prop
   (#elt: Type) (a: array elt) (#i #j: nat)

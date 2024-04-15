@@ -39,10 +39,22 @@ val share (#v:vprop) (#p:perm) (l:lock)
       (lock_alive l #p v)
       (fun _ -> lock_alive l #(half_perm p) v ** lock_alive l #(half_perm p) v)
 
-val gather (#v:vprop) (#p:perm) (l:lock)
+val gather (#v:vprop) (#p1 #p2:perm) (l:lock)
+  : stt_ghost unit emp_inames
+      (lock_alive l #p1 v ** lock_alive l #p2 v)
+      (fun _ -> lock_alive l #(sum_perm p1 p2) v)
+
+val gather2 (#v:vprop) (#p : perm) (l:lock)
   : stt_ghost unit emp_inames
       (lock_alive l #(half_perm p) v ** lock_alive l #(half_perm p) v)
       (fun _ -> lock_alive l #p v)
 
 val free (#v:vprop) (l:lock)
   : stt unit (lock_alive l #full_perm v ** lock_acquired l) (fun _ -> emp)
+
+(* A given lock is associated to a single vprop, roughly.
+I'm not sure if we can prove v1 == v2 here. *)
+val lock_alive_inj (l:lock) (#p1 #p2 : perm) (#v1 #v2 : vprop)
+  : stt_ghost unit emp_inames
+              (lock_alive l #p1 v1 ** lock_alive l #p2 v2)
+              (fun _ -> lock_alive l #p1 v1 ** lock_alive l #p2 v1)

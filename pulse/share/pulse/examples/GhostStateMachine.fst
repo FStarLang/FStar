@@ -140,7 +140,7 @@ fn next ()
   pts_to_injective_eq #pure_st_t #one_half #one_half #Init #ps global_locked_state.ph;
   rewrite (pts_to global_locked_state.ph #one_half ps)
        as (pts_to global_locked_state.ph #one_half Init);
-  gather2 #pure_st_t global_locked_state.ph #Init;
+  Pulse.Lib.Reference.gather2 #pure_st_t global_locked_state.ph #Init;
 
   let st = CNext some_payload;
   global_locked_state.h := st;
@@ -175,7 +175,7 @@ fn close ()
   pts_to_injective_eq #pure_st_t #one_half #one_half #Next #ps global_locked_state.ph;
   rewrite (pts_to global_locked_state.ph #one_half ps)
        as (pts_to global_locked_state.ph #one_half Next);
-  gather2 #pure_st_t global_locked_state.ph #Next;
+  Pulse.Lib.Reference.gather2 #pure_st_t global_locked_state.ph #Next;
 
   let st = CFinal some_payload;
   global_locked_state.h := st;

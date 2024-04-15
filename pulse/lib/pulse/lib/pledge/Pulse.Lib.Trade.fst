@@ -168,3 +168,48 @@ fn trade_sub_inv_aux
 }
 ```
 let trade_sub_inv = trade_sub_inv_aux
+
+```pulse
+ghost
+fn __trade_map
+  (#is : inames)
+  (p q r : vprop)
+  (f : unit -> stt_ghost unit emp_inames q (fun _ -> r))
+  requires trade #is p q
+  ensures  trade #is p r
+{
+  ghost
+  fn aux ()
+    requires trade #is p q ** p
+    ensures  r
+    opens is
+  {
+    elim_trade #is _ _;
+    f ();
+  };
+  intro_trade #is p r (trade #is p q) aux;
+}
+```
+let trade_map = __trade_map
+
+```pulse
+ghost
+fn __trade_compose
+  (#is : inames)
+  (p q r : vprop)
+  requires trade #is p q ** trade #is q r
+  ensures  trade #is p r
+{
+  ghost
+  fn aux ()
+    requires (trade #is p q ** trade #is q r) ** p
+    ensures  r
+    opens is
+  {
+    elim_trade #is _ _;
+    elim_trade #is _ _;
+  };
+  intro_trade #is p r (trade #is p q ** trade #is q r) aux;
+}
+```
+let trade_compose = __trade_compose

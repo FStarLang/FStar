@@ -14,11 +14,11 @@
    limitations under the License.
 *)
 
-module Pulse.Lib.Par.Pledge.Simple
+module Pulse.Lib.Pledge.Simple
 
 open Pulse.Lib.Pervasives
 
-module P = Pulse.Lib.Par.Pledge
+module P = Pulse.Lib.Pledge
 
 let pledge (f:vprop) (v:vprop) : vprop =
   exists* is. P.pledge is f v
