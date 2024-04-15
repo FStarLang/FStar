@@ -136,7 +136,7 @@ let acquire = acquire_aux
 
 ```pulse
 fn release_aux (#v:vprop) (#p:perm) (l:lock)
-  requires v ** lock_alive l #p v ** lock_acquired l
+  requires lock_alive l #p v ** lock_acquired l ** v
   ensures lock_alive l #p v
 {
   unfold (lock_alive l #p v);
@@ -184,20 +184,34 @@ let share = share_aux
 
 ```pulse
 ghost
-fn gather_aux (#v:vprop) (#p:perm) (l:lock)
+fn gather_aux (#v:vprop) (#p1 #p2 :perm) (l:lock)
+  requires lock_alive l #p1 v ** lock_alive l #p2 v
+  ensures lock_alive l #(sum_perm p1 p2) v
+  opens emp_inames
+{
+  unfold (lock_alive l #p1 v);
+  unfold (lock_alive l #p2 v);
+  Pulse.Lib.CancellableInvariant.gather #p1 #p2 l.i;
+  fold (lock_alive l #(sum_perm p1 p2) v);
+  drop_ (inv _ _)
+} 
+```
+let gather = gather_aux
+
+```pulse
+ghost
+fn __gather2
+(#v:vprop) (#p :perm) (l:lock)
   requires lock_alive l #(half_perm p) v ** lock_alive l #(half_perm p) v
   ensures lock_alive l #p v
   opens emp_inames
 {
-  unfold (lock_alive l #(half_perm p) v);
-  unfold (lock_alive l #(half_perm p) v);
-  Pulse.Lib.CancellableInvariant.gather l.i;
-  fold (lock_alive l #p v);
-  drop_ (inv _ _)
-} 
+  gather #v #(half_perm p) #(half_perm p) l;
+  sum_halves p;
+  rewrite each (sum_perm (half_perm p) (half_perm p)) as p;
+}
 ```
-
-let gather = gather_aux
+let gather2 = __gather2
 
 ```pulse
 fn free_aux (#v:vprop) (l:lock)
@@ -217,3 +231,27 @@ fn free_aux (#v:vprop) (l:lock)
 ```
 
 let free = free_aux
+
+```pulse
+ghost
+fn __lock_alive_inj
+  (l:lock) (#p1 #p2 :perm) (#v1 #v2 :vprop)
+  requires lock_alive l #p1 v1 ** lock_alive l #p2 v2
+  ensures  lock_alive l #p1 v1 ** lock_alive l #p2 v1
+{
+  unfold (lock_alive l #p1 v1);
+  unfold (lock_alive l #p2 v2);
+  invariant_name_identifies_invariant
+    (iref_of l.i) (iref_of l.i);
+  assert (
+    pure (
+      cinv_vp l.i (lock_inv l.r l.gr v1)
+      ==
+      cinv_vp l.i (lock_inv l.r l.gr v2)
+    )
+  );
+  fold (lock_alive l #p1 v1);
+  fold (lock_alive l #p2 v1);
+}
+```
+let lock_alive_inj = __lock_alive_inj

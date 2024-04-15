@@ -124,6 +124,8 @@ let pts_to (#elt: Type u#1) (a: array elt) (#p: perm) (s: Seq.seq elt) : Tot vpr
     Seq.length s == length a
   )
 
+let pts_to_is_small _ _ _ = ()
+
 let mk_array
     (#elt: Type u#1)
     (base_len: SZ.t)
@@ -502,6 +504,18 @@ let pts_to_range
   ([@@@ equate_by_smt] s: Seq.seq a)
 : vprop
 = exists* (q:in_bounds i j x). pts_to (array_slice x i j) #p s ** token q
+
+let pts_to_range_is_small (#a:Type) (x:array a) (i j : nat) (p:perm) (s:Seq.seq a)
+  : Lemma (is_small (pts_to_range x i j #p s))
+          [SMTPat (is_small (pts_to_range x i j #p s))]
+  =
+    let aux (q:in_bounds i j x) : Lemma (is_small (pts_to (array_slice x i j) #p s ** token q))
+    =
+      ()
+    in
+    Classical.forall_intro aux;
+    assert_norm (pts_to_range x i j #p s == (exists* (q:in_bounds i j x). pts_to (array_slice x i j) #p s ** token q));
+    small_exists (fun (q: in_bounds i j x) -> pts_to (array_slice x i j) #p s ** token q)
 
 ```pulse
 ghost

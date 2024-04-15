@@ -37,7 +37,7 @@ ensures (L.lock_alive l #p (exists* v. pts_to x #one_half v)) ** pts_to x #one_h
     x := (v + 1);
     R.share x;
     with p _v. rewrite (pts_to x #p _v) as (pts_to x #one_half _v);
-    L.release #(exists* v. pts_to x #one_half v) l;
+    L.release l;
     with p _v. rewrite (pts_to x #p _v) as (pts_to x #one_half _v);
 }
 ```
@@ -65,7 +65,7 @@ ensures L.lock_alive l #p (exists* v. pts_to x #one_half v ** pred v) ** pts_to 
     with p _v. rewrite (pts_to x #p _v) as (pts_to x #one_half _v);
     with _v. rewrite (pred _v) as (pred vx);
     f vx;
-    L.release #(exists* v. pts_to x #one_half v ** pred v) l;
+    L.release l;
     with p _v. rewrite (pts_to x #p _v) as (pts_to x #one_half _v);
     rewrite (qpred (vx + 1)) as (qpred ('i + 1));
 }
@@ -88,7 +88,7 @@ ensures L.lock_alive l #p (exists* v. pts_to x v ** pred v) ** qpred ('i + 1)
     with _v. rewrite (pred _v) as (pred vx);
     x := vx + 1;
     f vx 'i;
-    L.release #(exists* v. pts_to x v ** pred v)  l;
+    L.release l;
 }
 ```
 
@@ -165,7 +165,7 @@ ensures pts_to x ('i + 2)
     { increment_f2 x lock (step left true) }
     { increment_f2 x lock (step right false) };
 
-    L.gather lock;
+    L.gather2 lock;
     L.acquire lock;
     GR.gather left;
     GR.gather right;
@@ -466,7 +466,7 @@ ensures pts_to x ('i + 2)
     { atomic_increment_f6 x c (step left true) }
     { atomic_increment_f6 x c (step right false) };
 
-    C.gather c;
+    C.gather2 c;
     drop_ (inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
     C.cancel c;
     GR.gather left;

@@ -25,7 +25,7 @@ open Pulse.Lib.InvList
 
 module T = Pulse.Lib.Task
 open Quicksort.Base
-open Pulse.Lib.Par.Pledge
+open Pulse.Lib.Pledge
 
 let quicksort_post a lo hi s0 lb rb : vprop =
   exists* s. (A.pts_to_range a lo hi s ** pure (pure_post_quicksort a lo hi lb rb s0 s))

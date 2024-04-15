@@ -84,11 +84,11 @@ ensures exists* v. pts_to x v
     L.acquire l;
     let v = !x;
     x := v + 1;
-    L.release #(exists* v. pts_to x v) l
+    L.release l
   };
   L.share l;
   par incr incr;
-  L.gather l;
+  L.gather2 l;
   L.acquire l;
   L.free l
 }
@@ -127,7 +127,7 @@ ensures L.lock_alive lock #p (lock_inv x i left right) ** GR.pts_to left #one_ha
   GR.share left;
   fold (contributions left right i (v + 1));
   fold lock_inv;
-  L.release #(lock_inv x i left right) lock
+  L.release lock
 }
 ```
 
@@ -151,7 +151,7 @@ ensures L.lock_alive lock #p (lock_inv x i left right) ** GR.pts_to right #one_h
   GR.share right;
   fold (contributions left right i (v + 1));
   fold (lock_inv x i left right);
-  L.release #(lock_inv x i left right) lock
+  L.release lock
 }
 ```
 
@@ -170,7 +170,7 @@ ensures  pts_to x ('i + 2)
   L.share lock;
   par (fun _ -> incr_left x lock)
       (fun _ -> incr_right x lock);
-  L.gather lock;
+  L.gather2 lock;
   L.acquire lock;
   L.free lock;
   unfold lock_inv;
@@ -208,7 +208,7 @@ ensures L.lock_alive l #p (exists* v. pts_to x v ** refine v) ** aspec ('i + 1)
     rewrite each _v as vx;
     x := vx + 1;
     ghost_steps vx 'i;
-    L.release #(exists* v. pts_to x v ** refine v) l;
+    L.release l;
 }
 ```
 
@@ -265,7 +265,7 @@ ensures pts_to x ('i + 2)
     L.share lock;
     par (fun _ -> incr x lock (step left true))
         (fun _ -> incr x lock (step right false));
-    L.gather lock;
+    L.gather2 lock;
     L.acquire lock;
     L.free lock;
     unfold (contributions left right 'i);
@@ -442,7 +442,7 @@ ensures pts_to x ('i + 2)
     par (fun _ -> incr_atomic x c (step left true))
         (fun _ -> incr_atomic x c (step right false));
     
-    C.gather c;
+    C.gather2 c;
     C.cancel c;
     unfold contributions;
     GR.gather left;

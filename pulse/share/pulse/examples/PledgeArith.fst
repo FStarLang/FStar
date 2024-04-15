@@ -21,7 +21,7 @@ module PledgeArith
 open Pulse.Lib.Pervasives
 open Pulse.Lib.InvList
 module T = Pulse.Lib.Task
-open Pulse.Lib.Par.Pledge
+open Pulse.Lib.Pledge
 
 ```pulse
 ghost
