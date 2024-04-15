@@ -43,11 +43,11 @@ val open_binders_in_term (g:Env.env) (bs:binders) (t:term)
 val open_binders_in_comp (g:Env.env) (bs:binders) (c:comp)
   : Env.env & binders & comp
 
-(* for unit testing *)
-val check_term_equality (g:Env.env) (t0 t1:typ)
+(* For unit testing, and exposed to tactics *)
+val check_term_equality (guard_ok:bool) (unfolding_ok:bool) (g:Env.env) (t0 t1:typ)
   : either (option typ) error
 
-val check_term_subtyping (g:Env.env) (t0 t1:typ)
+val check_term_subtyping (guard_ok:bool) (unfolding_ok:bool) (g:Env.env) (t0 t1:typ)
   : either (option typ) error
 
 val print_error (err:error)

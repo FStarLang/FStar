@@ -487,6 +487,9 @@ val check_subtyping (g:env) (t0 t1:typ)
 val check_equiv (g:env) (t0 t1:typ)
   : Tac (ret_t (equiv_token g t0 t1))
 
+val check_equiv_nosmt (g:env) (t0 t1:typ)
+  : Tac (ret_t (equiv_token g t0 t1))
+
 //
 // Compute the type of e using the core typechecker
 //
