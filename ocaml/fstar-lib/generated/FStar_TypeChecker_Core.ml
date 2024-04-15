@@ -5805,8 +5805,10 @@ and (do_check :
                                     match uu___8 with
                                     | (g_as_x, as_x2, returns_ty1) ->
                                         let uu___9 =
-                                          check "return type" g_as_x
-                                            returns_ty1 in
+                                          let uu___10 =
+                                            check "return type" g_as_x
+                                              returns_ty1 in
+                                          with_binders [as_x2] [x1] uu___10 in
                                         (fun ctx02 ->
                                            let uu___10 = uu___9 ctx02 in
                                            match uu___10 with

@@ -560,6 +560,7 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
         | _ ->
           failwith "no way, not a let?"
     in
+    Errors.stop_if_err ();
     let r =
         //We already generalized phase1; don't need to generalize again
       let should_generalize = not (do_two_phases env') in
@@ -876,6 +877,7 @@ let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
       then { se with sigquals = Assumption :: (List.filter (fun q -> q <> Irreducible) se.sigquals) }
       else se)
     in
+    let ses = ses |> List.map (fun se -> { se with sigmeta = { se.sigmeta with sigmeta_spliced = true } }) in
 
     let dsenv = List.fold_left DsEnv.push_sigelt_force env.dsenv ses in
     let env = { env with dsenv = dsenv } in
@@ -1081,7 +1083,9 @@ let tc_decls env ses =
     if Env.debug env (Options.Other "IdInfoOn") then Env.toggle_id_info env true;
 
     let ses', ses_elaborated, env =
-            Errors.with_ctx (BU.format1 "While typechecking the top-level declaration `%s`" (Print.sigelt_to_string_short se))
+            Errors.with_ctx (BU.format2 "While typechecking the %stop-level declaration `%s`"
+                                  (if se.sigmeta.sigmeta_spliced then "(spliced) " else "")
+                                  (Print.sigelt_to_string_short se))
                     (fun () -> tc_decl env se)
     in
 

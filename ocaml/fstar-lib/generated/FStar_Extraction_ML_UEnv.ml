@@ -307,15 +307,32 @@ let (try_lookup_fv :
         | FStar_Pervasives.Inl (true) ->
             ((let uu___2 =
                 let uu___3 =
-                  let uu___4 = FStar_Syntax_Print.fv_to_string fv in
+                  let uu___4 =
+                    let uu___5 =
+                      let uu___6 = FStar_Syntax_Print.fv_to_string fv in
+                      FStar_Compiler_Util.format1
+                        "Will not extract reference to variable `%s` since it has the `noextract` qualifier."
+                        uu___6 in
+                    FStar_Errors_Msg.text uu___5 in
                   let uu___5 =
-                    FStar_Compiler_Util.string_of_int
-                      FStar_Errors.call_to_erased_errno in
-                  FStar_Compiler_Util.format2
-                    "Will not extract reference to variable `%s` since it is noextract; either remove its qualifier or add it to this definition. This error can be ignored with `--warn_error -%s`."
-                    uu___4 uu___5 in
+                    let uu___6 =
+                      FStar_Errors_Msg.text
+                        "Either remove its qualifier or add it to this definition." in
+                    let uu___7 =
+                      let uu___8 =
+                        let uu___9 =
+                          let uu___10 =
+                            FStar_Compiler_Util.string_of_int
+                              FStar_Errors.call_to_erased_errno in
+                          FStar_Compiler_Util.format1
+                            "This error can be ignored with `--warn_error -%s`."
+                            uu___10 in
+                        FStar_Errors_Msg.text uu___9 in
+                      [uu___8] in
+                    uu___6 :: uu___7 in
+                  uu___4 :: uu___5 in
                 (FStar_Errors_Codes.Error_CallToErased, uu___3) in
-              FStar_Errors.log_issue r uu___2);
+              FStar_Errors.log_issue_doc r uu___2);
              FStar_Pervasives_Native.None)
         | FStar_Pervasives.Inl (false) -> FStar_Pervasives_Native.None
 let (lookup_fv :

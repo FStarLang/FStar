@@ -137,7 +137,7 @@ let __do_rewrite
     return ut
   end
 
-(* If __do_rewrite fails with "SKIP" we do nothing *)
+(* If __do_rewrite fails with the SKIP exception we do nothing *)
 let do_rewrite
     (g0:goal)
     (rewriter : rewriter_ty)
@@ -145,7 +145,7 @@ let do_rewrite
     (tm : term)
   : tac term
   = match! catch (__do_rewrite g0 rewriter env tm) with
-    | Inl (TacticFailure "SKIP") -> return tm
+    | Inl SKIP -> return tm
     | Inl e -> traise e
     | Inr tm' -> return tm'
 

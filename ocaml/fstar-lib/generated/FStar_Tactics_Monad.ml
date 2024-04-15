@@ -285,7 +285,7 @@ let traise : 'a . Prims.exn -> 'a tac =
   fun e -> mk_tac (fun ps -> FStar_Tactics_Result.Failed (e, ps))
 let (log : FStar_Tactics_Types.proofstate -> (unit -> unit) -> unit) =
   fun ps -> fun f -> if ps.FStar_Tactics_Types.tac_verb_dbg then f () else ()
-let fail : 'a . Prims.string -> 'a tac =
+let fail_doc : 'a . FStar_Errors_Msg.error_message -> 'a tac =
   fun msg ->
     mk_tac
       (fun ps ->
@@ -294,11 +294,19 @@ let fail : 'a . Prims.string -> 'a tac =
               (FStar_Options.Other "TacFail") in
           if uu___1
           then
-            FStar_Tactics_Printing.do_dump_proofstate ps
-              (Prims.strcat "TACTIC FAILING: " msg)
+            let uu___2 =
+              let uu___3 =
+                let uu___4 = FStar_Compiler_List.hd msg in
+                FStar_Errors_Msg.renderdoc uu___4 in
+              Prims.strcat "TACTIC FAILING: " uu___3 in
+            FStar_Tactics_Printing.do_dump_proofstate ps uu___2
           else ());
          FStar_Tactics_Result.Failed
            ((FStar_Tactics_Common.TacticFailure msg), ps))
+let fail : 'a . Prims.string -> 'a tac =
+  fun msg ->
+    let uu___ = let uu___1 = FStar_Errors_Msg.text msg in [uu___1] in
+    fail_doc uu___
 let catch : 'a . 'a tac -> (Prims.exn, 'a) FStar_Pervasives.either tac =
   fun t ->
     mk_tac
@@ -910,7 +918,7 @@ let (goal_of_guard :
                             (goal.FStar_Tactics_Types.label)
                         } in
                       ret goal1))
-let wrap_err : 'a . Prims.string -> 'a tac -> 'a tac =
+let wrap_err_doc : 'a . FStar_Errors_Msg.error_message -> 'a tac -> 'a tac =
   fun pref ->
     fun t ->
       mk_tac
@@ -923,9 +931,16 @@ let wrap_err : 'a . Prims.string -> 'a tac -> 'a tac =
                (FStar_Tactics_Common.TacticFailure msg, q) ->
                FStar_Tactics_Result.Failed
                  ((FStar_Tactics_Common.TacticFailure
-                     (Prims.strcat pref (Prims.strcat ": " msg))), q)
+                     (FStar_Compiler_List.op_At pref msg)), q)
            | FStar_Tactics_Result.Failed (e, q) ->
                FStar_Tactics_Result.Failed (e, q))
+let wrap_err : 'a . Prims.string -> 'a tac -> 'a tac =
+  fun pref ->
+    fun t ->
+      let uu___ =
+        let uu___1 = FStar_Errors_Msg.text (Prims.strcat pref " failed") in
+        [uu___1] in
+      wrap_err_doc uu___ t
 let mlog : 'a . (unit -> unit) -> (unit -> 'a tac) -> 'a tac =
   fun uu___1 ->
     fun uu___ ->

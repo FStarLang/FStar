@@ -126,7 +126,7 @@ environment (Env.env) in order to call into functions such as type_of,
 universe_of, and normalization. Hence, it is important to respect
 scoping, particularly so after the removal of the use_bv_sorts flag.
 
-Functions in this module used to explcitly pass around an Env.env, and
+Functions in this module used to explicitly pass around an Env.env, and
 used that to call into Tc/Norm. However, while some of them pushed
 binders as needed, some of them did not, and the result was a flurry of
 subtle scoping bugs. And while those were fixed, we decided to just be
@@ -265,6 +265,9 @@ let p_env wl prob =
   (* Note: ctx_uvar_gamma should be an extension of tcenv.gamma,
    * since we created this uvar during this unification run. *)
   { wl.tcenv with gamma=(p_guard_uvar prob).ctx_uvar_gamma}
+
+let p_guard_env wl prob =
+  { wl.tcenv with gamma=(match p_element prob with | None -> [] | Some x -> [Binding_var x]) @ (p_guard_uvar prob).ctx_uvar_gamma}
 
 (* ------------------------------------------------*)
 (* </prob/problem ops>                             *)
@@ -1019,7 +1022,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
               [])
     in
     let wl =
-        let g = whnf (p_env wl prob) (p_guard prob) in
+        let g = whnf (p_guard_env wl prob) (p_guard prob) in
         if not (is_flex g)
         then if resolve_ok
              then wl
@@ -1468,18 +1471,28 @@ let rank_leq r1 r2 = rank_t_num r1 <= rank_t_num r2
 let rank_less_than r1 r2 =
     r1 <> r2 &&
     rank_t_num r1 <= rank_t_num r2
-let compress_tprob tcenv p = {p with lhs=whnf tcenv p.lhs; rhs=whnf tcenv p.rhs}
+let compress_tprob wl p =
+  let env = p_env wl (TProb p) in
+  {p with lhs=whnf env p.lhs; rhs=whnf env p.rhs}
 
-let compress_prob tcenv p =
+let compress_cprob wl p =
+  let whnf_c env c =
+    match c.n with
+    | Total ty -> S.mk_Total (whnf env ty)
+    | _ -> c
+  in
+  let env = p_env wl (CProb p) in
+  {p with lhs = whnf_c env p.lhs; rhs = whnf_c env p.rhs}
+
+let compress_prob wl p =
     match p with
-    | TProb p -> compress_tprob tcenv p |> TProb
-    | CProb _ -> p
+    | TProb p -> compress_tprob wl p |> TProb
+    | CProb p -> compress_cprob wl p |> CProb
 
-
-let rank tcenv pr : rank_t    //the rank
-                  * prob   //the input problem, pre-processed a bit (the wl is needed for the pre-processing)
-                  =
-   let prob = compress_prob tcenv pr |> maybe_invert_p in
+let rank wl pr : rank_t //the rank
+                * prob   //the input problem, pre-processed a bit (the wl is needed for the pre-processing)
+                =
+   let prob = compress_prob wl pr |> maybe_invert_p in
    match prob with
     | TProb tp ->
       let lh, lhs_args = U.head_and_args tp.lhs in
@@ -1536,7 +1549,7 @@ let next_prob wl : option (prob * list prob * rank_t) =
           | _ -> None
           end
         | hd::tl ->
-          let rank, hd = rank wl.tcenv hd in
+          let rank, hd = rank wl hd in
           if rank_leq rank Flex_rigid_eq
           then match min with
                | None -> Some (hd, out@tl, rank)
@@ -1559,7 +1572,8 @@ let flex_prob_closing tcenv (bs:binders) (p:prob) =
           bs |> BU.for_some (fun ({binder_bv=x}) -> S.bv_eq x y))
         | _ -> false
     in
-    let r, p = rank tcenv p in
+    let wl = empty_worklist tcenv in
+    let r, p = rank wl p in
     match p with
     | CProb _ ->
       true
@@ -2796,7 +2810,7 @@ and try_solve_probs_without_smt
       
 and solve_t (problem:tprob) (wl:worklist) : solution =
     def_check_prob "solve_t" (TProb problem);
-    solve_t' (compress_tprob wl.tcenv problem) wl
+    solve_t' (compress_tprob wl problem) wl
 
 and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
     : solution =
@@ -4766,6 +4780,7 @@ let with_guard env prob dopt =
     match dopt with
     | None -> None
     | Some (deferred, defer_to_tac, implicits) ->
+      def_check_scoped (p_loc prob) "with_guard" env (p_guard prob);
       Some <| simplify_guard env
                 ({guard_f=(p_guard prob |> NonTrivial);
                   deferred=deferred;
@@ -5117,6 +5132,17 @@ let do_discharge_vc use_env_range_msg env vc : unit =
 // In every case, when this function returns [Some g], then the logical
 // part of [g] is [Trivial].
 let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option guard_t =
+  if Env.debug env <| Options.Other "ResolveImplicitsHook"
+  then BU.print1 "///////////////////ResolveImplicitsHook: discharge_guard'\n\
+                  guard = %s\n"
+                  (guard_to_string env g);
+
+  let g =
+    let defer_ok = NoDefer in
+    let smt_ok = not (Options.ml_ish ()) && use_smt in
+    let deferred_to_tac_ok = true in
+    try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env g
+  in
   let open FStar.Pprint in
   let open FStar.Errors.Msg in
   let open FStar.Class.PP in
@@ -5126,47 +5152,39 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option g
     || (Env.debug env <| Options.Other "Disch")
   in
   let diag_doc = Errors.diag_doc (Env.get_range env) in
-
-  if Env.debug env <| Options.Other "ResolveImplicitsHook"
-  then BU.print1 "///////////////////ResolveImplicitsHook: discharge_guard'\n\
-                  guard = %s\n"
-                  (guard_to_string env g);
-
-  let g =
-    let defer_ok = NoDefer in
-    let deferred_to_tac_ok = true in
-    try_solve_deferred_constraints defer_ok use_smt deferred_to_tac_ok env g
-  in
   let ret_g = {g with guard_f = Trivial} in
-  let g = simplify_guard_full_norm env g in
-  match g.guard_f with
-  | Trivial ->
-    Some ret_g
-
-  | NonTrivial vc when not (Env.should_verify env) ->
-    // GM: not sure if this is the right place for this check.
-    if debug then
+  if not (Env.should_verify env) then (
+    if debug && not env.phase1 then
       diag_doc [text "Skipping VC because verification is disabled"];
     Some ret_g
+  ) else (
+    let g = simplify_guard_full_norm env g in
+    match g.guard_f with
+    | Trivial ->
+      Some ret_g
 
-  | NonTrivial vc when not use_smt ->
-    if debug then
-      diag_doc [text "Cannot solve without SMT:" ^/^ pp vc];
-    None
+    | NonTrivial vc when not use_smt ->
+      if debug then
+        diag_doc [text "Cannot solve without SMT:" ^/^ pp vc];
+      None
 
-  | NonTrivial vc ->
-    do_discharge_vc use_env_range_msg env vc;
-    Some ret_g
-
-let discharge_guard_no_smt env g =
-  match discharge_guard' None env g false with
-  | Some g -> g
-  | None  -> raise_error (Errors.Fatal_ExpectTrivialPreCondition, "Expected a trivial pre-condition") (Env.get_range env)
+    | NonTrivial vc ->
+      do_discharge_vc use_env_range_msg env vc;
+      Some ret_g
+  )
 
 let discharge_guard env g =
   match discharge_guard' None env g true with
   | Some g -> g
   | None  -> failwith "Impossible, with use_smt = true, discharge_guard' should never have returned None"
+
+let discharge_guard_no_smt env g =
+  match discharge_guard' None env g false with
+  | Some g -> g
+  | None ->
+    raise_error_doc
+      (Errors.Fatal_ExpectTrivialPreCondition, [text "Expected a trivial pre-condition"])
+      (Env.get_range env)
 
 let teq_nosmt (env:env) (t1:typ) (t2:typ) : option guard_t =
   match try_teq false env t1 t2 with
@@ -5191,14 +5209,15 @@ let check_subtyping env t1 t2 =
 
     then BU.print2 "check_subtyping of %s and %s\n" (N.term_to_string env t1) (N.term_to_string env t2);
     let prob, x, wl = new_t_prob (empty_worklist env) env t1 SUB t2 in
+    let env_x = Env.push_bv env x in
     let smt_ok = not (Options.ml_ish ()) in
-    let g = with_guard env prob <| solve_and_commit (singleton wl prob smt_ok) (fun _ -> None) in
+    let g = with_guard env_x prob <| solve_and_commit (singleton wl prob smt_ok) (fun _ -> None) in
     if (Env.debug env <| Options.Other "Rel" || Env.debug env <| Options.Other "RelTop")
         && BU.is_some g
     then BU.print3 "check_subtyping succeeded: %s <: %s\n\tguard is %s\n"
-                    (N.term_to_string env t1)
-                    (N.term_to_string env t2)
-                    (guard_to_string env (BU.must g));
+                    (N.term_to_string env_x t1)
+                    (N.term_to_string env_x t2)
+                    (guard_to_string env_x (BU.must g));
     match g with
     | None -> None
     | Some g -> Some (x, g)

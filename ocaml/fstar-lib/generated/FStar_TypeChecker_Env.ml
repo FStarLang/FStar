@@ -189,6 +189,72 @@ let rec (eq_step : step -> step -> Prims.bool) =
       | uu___ -> false
 let (deq_step : step FStar_Class_Deq.deq) =
   { FStar_Class_Deq.op_Equals_Question = eq_step }
+let rec (step_to_string : step -> Prims.string) =
+  fun s ->
+    match s with
+    | Beta -> "Beta"
+    | Iota -> "Iota"
+    | Zeta -> "Zeta"
+    | ZetaFull -> "ZetaFull"
+    | Exclude s1 ->
+        let uu___ = step_to_string s1 in Prims.strcat "Exclude " uu___
+    | Weak -> "Weak"
+    | HNF -> "HNF"
+    | Primops -> "Primops"
+    | Eager_unfolding -> "Eager_unfolding"
+    | Inlining -> "Inlining"
+    | DoNotUnfoldPureLets -> "DoNotUnfoldPureLets"
+    | UnfoldUntil s1 ->
+        let uu___ =
+          FStar_Class_Show.show FStar_Syntax_Syntax.showable_delta_depth s1 in
+        Prims.strcat "UnfoldUntil " uu___
+    | UnfoldOnly lids1 ->
+        let uu___ =
+          FStar_Class_Show.show
+            (FStar_Class_Show.show_list FStar_Ident.showable_lident) lids1 in
+        Prims.strcat "UnfoldOnly " uu___
+    | UnfoldFully lids1 ->
+        let uu___ =
+          FStar_Class_Show.show
+            (FStar_Class_Show.show_list FStar_Ident.showable_lident) lids1 in
+        Prims.strcat "UnfoldFully " uu___
+    | UnfoldAttr lids1 ->
+        let uu___ =
+          FStar_Class_Show.show
+            (FStar_Class_Show.show_list FStar_Ident.showable_lident) lids1 in
+        Prims.strcat "UnfoldAttr " uu___
+    | UnfoldQual strs1 ->
+        let uu___ =
+          FStar_Class_Show.show
+            (FStar_Class_Show.show_list
+               (FStar_Class_Show.printableshow
+                  FStar_Class_Printable.printable_string)) strs1 in
+        Prims.strcat "UnfoldQual " uu___
+    | UnfoldNamespace strs1 ->
+        let uu___ =
+          FStar_Class_Show.show
+            (FStar_Class_Show.show_list
+               (FStar_Class_Show.printableshow
+                  FStar_Class_Printable.printable_string)) strs1 in
+        Prims.strcat "UnfoldNamespace " uu___
+    | UnfoldTac -> "UnfoldTac"
+    | PureSubtermsWithinComputations -> "PureSubtermsWithinComputations"
+    | Simplify -> "Simplify"
+    | EraseUniverses -> "EraseUniverses"
+    | AllowUnboundUniverses -> "AllowUnboundUniverses"
+    | Reify -> "Reify"
+    | CompressUvars -> "CompressUvars"
+    | NoFullNorm -> "NoFullNorm"
+    | CheckNoUvars -> "CheckNoUvars"
+    | Unmeta -> "Unmeta"
+    | Unascribe -> "Unascribe"
+    | NBE -> "NBE"
+    | ForExtraction -> "ForExtraction"
+    | Unrefine -> "Unrefine"
+    | NormDebug -> "NormDebug"
+    | DefaultUnivsToZero -> "DefaultUnivsToZero"
+let (showable_step : step FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = step_to_string }
 type sig_binding =
   (FStar_Ident.lident Prims.list * FStar_Syntax_Syntax.sigelt)
 type delta_level =
@@ -222,6 +288,20 @@ let (deq_delta_level : delta_level FStar_Class_Deq.deq) =
                FStar_Class_Deq.op_Equals_Question
                  FStar_Syntax_Syntax.deq_delta_depth x1 y1
            | uu___ -> false)
+  }
+let (showable_delta_level : delta_level FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | NoDelta -> "NoDelta"
+         | InliningDelta -> "Inlining"
+         | Eager_unfolding_only -> "Eager_unfolding_only"
+         | Unfold d ->
+             let uu___1 =
+               FStar_Class_Show.show FStar_Syntax_Syntax.showable_delta_depth
+                 d in
+             Prims.strcat "Unfold " uu___1)
   }
 type name_prefix = FStar_Ident.path
 type proof_namespace = (name_prefix * Prims.bool) Prims.list
@@ -6193,16 +6273,6 @@ let (univnames : env -> FStar_Syntax_Syntax.univ_name FStar_Compiler_Set.set)
             let uu___3 = FStar_Syntax_Free.univnames t in ext out uu___3 in
           aux uu___2 tl in
     aux no_univ_names env1.gamma
-let (string_of_delta_level : delta_level -> Prims.string) =
-  fun uu___ ->
-    match uu___ with
-    | NoDelta -> "NoDelta"
-    | InliningDelta -> "Inlining"
-    | Eager_unfolding_only -> "Eager_unfolding_only"
-    | Unfold d ->
-        let uu___1 =
-          FStar_Class_Show.show FStar_Syntax_Syntax.showable_delta_depth d in
-        Prims.strcat "Unfold " uu___1
 let (lidents : env -> FStar_Ident.lident Prims.list) =
   fun env1 ->
     let keys =

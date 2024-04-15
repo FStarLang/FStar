@@ -1934,6 +1934,7 @@ let give_decls_to_z3_and_set_env (env:env_t) (name:string) (decls:decls_t) :unit
 let encode_modul tcenv modul =
   if Options.lax() && Options.ml_ish() then [], []
   else begin
+    let tcenv = Env.set_current_module tcenv modul.name in
     UF.with_uf_enabled (fun () ->
     varops.reset_fresh ();
     let name = BU.format2 "%s %s" (if modul.is_interface then "interface" else "module")  (string_of_lid modul.name) in
@@ -1954,6 +1955,7 @@ let encode_modul tcenv modul =
 let encode_modul_from_cache tcenv tcmod (decls, fvbs) =
   if Options.lax () && Options.ml_ish () then ()
   else
+    let tcenv = Env.set_current_module tcenv tcmod.name in
     let name = BU.format2 "%s %s" (if tcmod.is_interface then "interface" else "module") (string_of_lid tcmod.name) in
     if Env.debug tcenv Options.Medium
     then BU.print2 "+++++++++++Encoding externals from cache for %s ... %s decls\n" name (List.length decls |> string_of_int);

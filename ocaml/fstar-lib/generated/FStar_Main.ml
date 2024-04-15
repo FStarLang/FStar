@@ -280,14 +280,14 @@ let (lazy_chooser :
           FStar_Tactics_Embedding.unfold_lazy_proofstate i
       | FStar_Syntax_Syntax.Lazy_goal ->
           FStar_Tactics_Embedding.unfold_lazy_goal i
+      | FStar_Syntax_Syntax.Lazy_doc ->
+          FStar_Reflection_V2_Embeddings.unfold_lazy_doc i
       | FStar_Syntax_Syntax.Lazy_uvar ->
           FStar_Syntax_Util.exp_string "((uvar))"
       | FStar_Syntax_Syntax.Lazy_universe_uvar ->
           FStar_Syntax_Util.exp_string "((universe_uvar))"
       | FStar_Syntax_Syntax.Lazy_issue ->
           FStar_Syntax_Util.exp_string "((issue))"
-      | FStar_Syntax_Syntax.Lazy_doc ->
-          FStar_Syntax_Util.exp_string "((document))"
       | FStar_Syntax_Syntax.Lazy_ident ->
           FStar_Syntax_Util.exp_string "((ident))"
       | FStar_Syntax_Syntax.Lazy_tref ->

@@ -571,7 +571,7 @@ let (term_as_formula' :
          (Obj.magic
             (FStar_Range.mk_range "FStar.Reflection.V2.Formula.fst"
                (Prims.of_int (87)) (Prims.of_int (4)) (Prims.of_int (163))
-               (Prims.of_int (38))))) (Obj.magic (inspect_unascribe t))
+               (Prims.of_int (46))))) (Obj.magic (inspect_unascribe t))
       (fun uu___ ->
          (fun uu___ ->
             match uu___ with
@@ -985,7 +985,8 @@ let (term_as_formula' :
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.raise
-                        (FStar_Tactics_Common.TacticFailure "???")))) uu___)
+                        (FStar_Tactics_Common.TacticFailure
+                           (FStar_Errors_Msg.mkmsg "???"))))) uu___)
 let _ =
   FStar_Tactics_Native.register_tactic
     "FStar.Reflection.V2.Formula.term_as_formula'" (Prims.of_int (2))
