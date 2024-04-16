@@ -242,13 +242,13 @@ let elim_false (a:Type) (p:a -> vprop) =
 //////////////////////////////////////////////////////////////////////////
 // References
 //////////////////////////////////////////////////////////////////////////
-let pcm_ref #a p = PulseCore.Action.ref a p
+let core_pcm_ref = PulseCore.Action.core_ref
+let null_core_pcm_ref = PulseCore.Action.core_ref_null
+let is_null_core_pcm_ref r = PulseCore.Action.is_core_ref_null r
 
 let pcm_pts_to (#a:Type u#1) (#p:pcm a) (r:pcm_ref p) (v:a) =
-  PulseCore.Action.pts_to r v
+  PulseCore.Action.pts_to #a #p r v
 let is_small_pcm_pts_to #a #p r v = ()
-let pcm_ref_null #a p = PulseCore.Action.ref_null #a p
-let is_pcm_ref_null #a #p r = PulseCore.Action.is_ref_null #a #p r
 let pts_to_not_null #a #p r v = A.pts_to_not_null #a #p r v
 
 let alloc
@@ -290,7 +290,7 @@ let gather = A.gather
 ////////////////////////////////////////////////////////
 // ghost refs
 ////////////////////////////////////////////////////////
-let ghost_pcm_ref #a p = PulseCore.Action.ghost_ref #a p
+let core_ghost_pcm_ref = PulseCore.Action.core_ghost_ref
 
 instance non_informative_ghost_pcm_ref a p = {
   reveal = (fun r -> Ghost.reveal r) <: NonInformative.revealer (ghost_pcm_ref p);

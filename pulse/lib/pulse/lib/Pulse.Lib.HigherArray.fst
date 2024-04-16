@@ -31,37 +31,6 @@ module PA = Pulse.Lib.PCM.Array
 
 /// An abstract type to represent a base array (whole allocation
 /// unit), exposed for proof purposes only
-assume
-val core_pcm_ref : Type0
-assume
-val as_core (#a:_) (#p:FStar.PCM.pcm a) (r:pcm_ref p) 
-  : core_pcm_ref
-assume
-val of_core (#a:_) (p:FStar.PCM.pcm a) (r:core_pcm_ref) 
-  : pcm_ref p
-assume
-val as_core_of_core (#a:_) (#p:FStar.PCM.pcm a) (r:core_pcm_ref)
-  : Lemma (ensures as_core (of_core p r) == r)
-          [SMTPat (as_core (of_core p r))]
-
-assume
-val of_core_as_core (#a:_) (#p:FStar.PCM.pcm a) (r:pcm_ref p)
-  : Lemma (ensures of_core p (as_core r) == r)
-          [SMTPat (of_core p (as_core r))]
-assume
-val null_core_pcm_ref : core_pcm_ref
-assume
-val is_null_core_pcm_ref (p:core_pcm_ref)
-  : b:bool { b <==> p == null_core_pcm_ref }
-
-assume
-val relate_null
-    (#a:Type)
-    (#p:FStar.PCM.pcm a)
-    (r:pcm_ref p)
-: Lemma (is_pcm_ref_null r <==> (as_core r == null_core_pcm_ref))
-        [SMTPat (is_pcm_ref_null r)]
-
 [@@erasable]
 let base_t
 : Type0
@@ -73,7 +42,7 @@ let base_len (b: base_t) : GTot nat = SZ.v (fst b)
 /// into its base
 let l_pcm_ref (elt:Type u#a) (base_len:SZ.t) =
   r:pcm_ref (PA.pcm elt (SZ.v base_len)){ 
-      as_core r =!= null_core_pcm_ref \/
+      r =!= null_core_pcm_ref \/
       base_len = 0sz
   }
 
@@ -85,13 +54,6 @@ type ptr : Type0 = {
   offset: (offset: nat { offset <= SZ.v base_len });
 }
 
-// noeq
-// type ptr ([@@@strictly_positive]elt: Type u#a) : Type0 = {
-//   base_len: Ghost.erased SZ.t;
-//   base: l_pcm_ref elt base_len;
-//   offset: (offset: nat { offset <= SZ.v base_len });
-// }
-// #pop-options
 
 let null_ptr
 : ptr
@@ -162,9 +124,7 @@ let l_pcm_ref' (elt:Type u#a) (base_len:SZ.t) =
 
 let lptr_of (#elt:Type u#1) (a:array elt)
   : Tot (l_pcm_ref elt ( (ptr_of a).base_len))
-  = of_core 
-       ((PA.pcm elt (SZ.v (ptr_of a).base_len)))
-       (ptr_of a).base
+  = (ptr_of a).base
 
 let pts_to (#elt: Type u#1) (a: array elt) (#p: perm) (s: Seq.seq elt) : Tot vprop =
   pcm_pts_to
@@ -183,7 +143,7 @@ let mk_array
     (base:l_pcm_ref elt base_len)
     (offset:nat { offset <= SZ.v base_len})
 : array elt
-= { p = { base_len; base=as_core base; offset} ; length = Ghost.hide (SZ.v base_len - offset) }
+= { p = { base_len; base; offset} ; length = Ghost.hide (SZ.v base_len - offset) }
 
 ```pulse
 ghost
