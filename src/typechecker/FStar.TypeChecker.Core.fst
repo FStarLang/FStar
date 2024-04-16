@@ -875,8 +875,8 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
           None
           "FStar.TypeChecker.Core.beta_iota_reduce"
     in
-    let t0 = Subst.compress (beta_iota_reduce t0) in
-    let t1 = Subst.compress (beta_iota_reduce t1) in
+    let t0 = Subst.compress (beta_iota_reduce t0) |> U.unlazy_emb in
+    let t1 = Subst.compress (beta_iota_reduce t1) |> U.unlazy_emb in
     let check_relation g rel t0 t1 =
       with_context "check_relation" (Some (CtxRel t0 rel t1))
         (fun _ -> check_relation g rel t0 t1)
