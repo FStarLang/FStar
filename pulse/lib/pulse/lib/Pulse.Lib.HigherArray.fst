@@ -31,70 +31,88 @@ module PA = Pulse.Lib.PCM.Array
 
 /// An abstract type to represent a base array (whole allocation
 /// unit), exposed for proof purposes only
-[@@erasable]
-let base_t (elt: Type u#a)
-: Tot Type0
-= Ghost.erased (base_len: SZ.t & pcm_ref (PA.pcm elt (SZ.v base_len)))
+assume
+val core_pcm_ref : Type0
+assume
+val as_core (#a:_) (#p:FStar.PCM.pcm a) (r:pcm_ref p) 
+  : core_pcm_ref
+assume
+val of_core (#a:_) (p:FStar.PCM.pcm a) (r:core_pcm_ref) 
+  : pcm_ref p
+assume
+val as_core_of_core (#a:_) (#p:FStar.PCM.pcm a) (r:core_pcm_ref)
+  : Lemma (ensures as_core (of_core p r) == r)
+          [SMTPat (as_core (of_core p r))]
 
-let base_len (#elt: Type) (b: base_t elt) : GTot nat = SZ.v (dfst b)
+assume
+val of_core_as_core (#a:_) (#p:FStar.PCM.pcm a) (r:pcm_ref p)
+  : Lemma (ensures of_core p (as_core r) == r)
+          [SMTPat (of_core p (as_core r))]
+assume
+val null_core_pcm_ref : core_pcm_ref
+assume
+val is_null_core_pcm_ref (p:core_pcm_ref)
+  : b:bool { b <==> p == null_core_pcm_ref }
+
+assume
+val relate_null
+    (#a:Type)
+    (#p:FStar.PCM.pcm a)
+    (r:pcm_ref p)
+: Lemma (is_pcm_ref_null r <==> (as_core r == null_core_pcm_ref))
+        [SMTPat (is_pcm_ref_null r)]
+
+[@@erasable]
+let base_t
+: Type0
+= Ghost.erased (SZ.t & core_pcm_ref)
+
+let base_len (b: base_t) : GTot nat = SZ.v (fst b)
 
 /// An abstract type to represent a C pointer, as a base and an offset
 /// into its base
 let l_pcm_ref (elt:Type u#a) (base_len:SZ.t) =
-  r:pcm_ref (PA.pcm elt (SZ.v base_len)){ is_pcm_ref_null r = false || base_len = 0sz }
+  r:pcm_ref (PA.pcm elt (SZ.v base_len)){ 
+      as_core r =!= null_core_pcm_ref \/
+      base_len = 0sz
+  }
 
-#push-options "--ext 'compat:injectivity'"
+
 noeq
-type ptr ([@@@strictly_positive]elt: Type u#a) : Type0 = {
+type ptr : Type0 = {
   base_len: Ghost.erased SZ.t;
-  base: l_pcm_ref elt base_len;
+  base: (base:core_pcm_ref { base == null_core_pcm_ref ==> SZ.v base_len == 0});
   offset: (offset: nat { offset <= SZ.v base_len });
 }
-#pop-options
 
-let null_ptr (a:Type u#a)
-: ptr a
-= { base_len = 0sz; base = pcm_ref_null (PA.pcm a 0) ; offset = 0 }
+// noeq
+// type ptr ([@@@strictly_positive]elt: Type u#a) : Type0 = {
+//   base_len: Ghost.erased SZ.t;
+//   base: l_pcm_ref elt base_len;
+//   offset: (offset: nat { offset <= SZ.v base_len });
+// }
+// #pop-options
 
-// assume
-// val core_pcm_ref : Type0
+let null_ptr
+: ptr
+= { base_len = 0sz; base = null_core_pcm_ref ; offset = 0 }
 
-// assume
-// val as_core (#a:_) (#p:FStar.PCM.pcm a) (r:pcm_ref p) 
-//   : core_pcm_ref
-// assume
-// val of_core (#a:_) (p:FStar.PCM.pcm a) (r:core_pcm_ref) 
-//   : pcm_ref p
-// assume
-// val as_core_of_core (#a:_) (#p:FStar.PCM.pcm a) (r:core_pcm_ref)
-//   : Lemma (as_core (of_core p r) == r)
-// assume
-// val of_core_as_core (#a:_) (#p:FStar.PCM.pcm a) (r:pcm_ref p)
-//   : Lemma (of_core p (as_core r) == r)
 
-// assume
-// val is_pcm_ref_null
-//     (#a:Type)
-//     (#p:FStar.PCM.pcm a)
-//     (r:pcm_ref q)
-// : b:bool { b <==> r == pcm_ref_null p }
-
-let is_null_ptr (#elt: Type u#a) (p: ptr elt)
+let is_null_ptr (p:ptr)
 : Pure bool
   (requires True)
-  (ensures (fun res -> res == true <==> p == null_ptr elt))
-= is_pcm_ref_null p.base
-  
+  (ensures (fun res -> res == true <==> p == null_ptr))
+= is_null_core_pcm_ref p.base
 
-let base (#elt: Type) (p: ptr elt)
-: Tot (base_t elt)
-= (| Ghost.reveal p.base_len, p.base |)
+let base (p: ptr)
+: Tot base_t
+= ( Ghost.reveal p.base_len, p.base )
 
-let offset (#elt: Type) (p: ptr elt)
+let offset (p: ptr)
 : Ghost nat (requires True) (ensures (fun offset -> offset <= base_len (base p)))
 = p.offset
 
-let ptr_base_offset_inj (#elt: Type) (p1 p2: ptr elt) : Lemma
+let ptr_base_offset_inj (p1 p2: ptr) : Lemma
   (requires (
     base p1 == base p2 /\
     offset p1 == offset p2
@@ -102,34 +120,31 @@ let ptr_base_offset_inj (#elt: Type) (p1 p2: ptr elt) : Lemma
   (ensures (
     p1 == p2
   ))
-= admit()
+= ()
 
-let base_len_null_ptr (elt: Type u#a)
-: Lemma
-  (base_len (base (null_ptr elt)) == 0)
-  [SMTPat (base_len (base (null_ptr elt)))]
+let base_len_null_ptr : squash  (base_len (base (null_ptr)) == 0)
 = ()
 
 noeq
-type array ([@@@strictly_positive] elt: Type u#1)
+type array'
 : Type0
-= { p: ptr elt;
+= { p: ptr;
     length: (l:Ghost.erased nat {offset p + l <= base_len (base p)})
   }
-
+let array ([@@@strictly_positive] elt: Type u#1) : Type0 = array'
 let length (#elt: Type) (a: array elt) = a.length
 
 let ptr_of
   (#elt: Type)
   (a: array elt)
-: Tot (ptr elt)
+: Tot (ptr)
 = a.p
 
 let is_full_array (#elt: Type) (a: array elt) : Tot prop =
   length a == base_len (base (ptr_of a))
 
 let null (#a: Type u#1) : array a
-= { p = null_ptr a; length =Ghost.hide 0 }
+= { p = null_ptr; length =Ghost.hide 0 }
 
 let length_fits #elt a = ()
 
@@ -142,9 +157,19 @@ let valid_perm
 = let open FStar.Real in
   ((offset + slice_len <= len /\ slice_len > 0) ==> (p.v <=. one))
 
+let l_pcm_ref' (elt:Type u#a) (base_len:SZ.t) =
+  r:pcm_ref (PA.pcm elt (SZ.v base_len))
+
+let lptr_of (#elt:Type u#1) (a:array elt)
+  : Tot (l_pcm_ref elt ( (ptr_of a).base_len))
+  = of_core 
+       ((PA.pcm elt (SZ.v (ptr_of a).base_len)))
+       (ptr_of a).base
 
 let pts_to (#elt: Type u#1) (a: array elt) (#p: perm) (s: Seq.seq elt) : Tot vprop =
-  pcm_pts_to (ptr_of a).base (mk_carrier (SZ.v (ptr_of a).base_len) (ptr_of a).offset s p) **
+  pcm_pts_to
+    (lptr_of a)
+    (mk_carrier (SZ.v (ptr_of a).base_len) (ptr_of a).offset s p) **
   pure (
     valid_perm (SZ.v (ptr_of a).base_len) (ptr_of a).offset (Seq.length s) p /\
     Seq.length s == length a
@@ -158,7 +183,7 @@ let mk_array
     (base:l_pcm_ref elt base_len)
     (offset:nat { offset <= SZ.v base_len})
 : array elt
-= { p = { base_len; base; offset} ; length = Ghost.hide (SZ.v base_len - offset) }
+= { p = { base_len; base=as_core base; offset} ; length = Ghost.hide (SZ.v base_len - offset) }
 
 ```pulse
 ghost
@@ -176,7 +201,7 @@ ensures
 {
   let a = (mk_array base_len base offset);
   rewrite (pcm_pts_to base (mk_carrier (SZ.v base_len) offset s p))
-      as pcm_pts_to (ptr_of a).base
+      as pcm_pts_to (lptr_of a)
             (mk_carrier (SZ.v (ptr_of a).base_len) 
                         (ptr_of a).offset
                         s p);
@@ -202,6 +227,7 @@ ensures pts_to a #p x ** pure (length a == Seq.length x)
 }
 ```
 let pts_to_len = pts_to_len'
+
 
 ```pulse
 fn alloc' 
@@ -238,8 +264,8 @@ ensures
     pure (res == Seq.index s (SZ.v i))
 {
   unfold pts_to a #p s;
-  with w. assert (pcm_pts_to (ptr_of a).base w);
-  let v = Pulse.Lib.Core.read (ptr_of a).base w (fun _ -> w);
+  with w. assert (pcm_pts_to (lptr_of a) w);
+  let v = Pulse.Lib.Core.read (lptr_of a) w (fun _ -> w);
   fold (pts_to a #p s);
   fst (Some?.v (FStar.Map.sel v ((ptr_of a).offset + SZ.v i)));
 }
@@ -276,9 +302,9 @@ requires pts_to a s
 ensures pts_to a (Seq.upd s (SZ.v i) v)
 {
   unfold pts_to a #full_perm s;
-  with w. assert (pcm_pts_to (ptr_of a).base w);
+  with w. assert (pcm_pts_to (lptr_of a) w);
   mk_carrier_upd (SZ.v (ptr_of a).base_len) ((ptr_of a).offset) s (SZ.v i) v ();
-  Pulse.Lib.Core.write (ptr_of a).base w _
+  Pulse.Lib.Core.write (lptr_of a) w _
       (PM.lift_frame_preserving_upd
         _ _
         (Frac.mk_frame_preserving_upd
@@ -311,9 +337,9 @@ ensures
   emp
 {
   unfold pts_to a #full_perm s;
-  with w. assert (pcm_pts_to (ptr_of a).base w);
+  with w. assert (pcm_pts_to (lptr_of a) w);
   // Pulse.Lib.Core.write (ptr_of a).base w (PA.one #elt #(length a)) (frame_preserving_upd_one #elt (length a) s);
-  drop_ (pcm_pts_to (ptr_of a).base _)
+  drop_ (pcm_pts_to (lptr_of a) _)
 }
 ```
 let free = free'
@@ -365,13 +391,13 @@ requires pts_to arr #p s
 ensures pts_to arr #(half_perm p) s ** pts_to arr #(half_perm p) s
 {
   unfold pts_to arr #p s;
-  with w. assert (pcm_pts_to (ptr_of arr).base w);
+  with w. assert (pcm_pts_to (lptr_of arr) w);
   mk_carrier_share (SZ.v (ptr_of arr).base_len)
        (ptr_of arr).offset
        s 
        (half_perm p) 
        (half_perm p) ();
-  Pulse.Lib.Core.share (ptr_of arr).base
+  Pulse.Lib.Core.share (lptr_of arr)
     (mk_carrier (SZ.v (ptr_of arr).base_len) (ptr_of arr).offset s (half_perm p))
     (mk_carrier (SZ.v (ptr_of arr).base_len) (ptr_of arr).offset s (half_perm p));
   fold pts_to arr #(half_perm p) s;
@@ -449,10 +475,10 @@ requires pts_to arr #p0 s0 ** pts_to arr #p1 s1
 ensures pts_to arr #(sum_perm p0 p1) s0 ** pure (s0 == s1)
 {
   unfold pts_to arr #p0 s0;
-  with w0. assert (pcm_pts_to (ptr_of arr).base w0);
+  with w0. assert (pcm_pts_to (lptr_of arr) w0);
   unfold pts_to arr #p1 s1;
-  with w1. assert (pcm_pts_to (ptr_of arr).base w1);
-  Pulse.Lib.Core.gather (ptr_of arr).base w0 w1;
+  with w1. assert (pcm_pts_to (lptr_of arr) w1);
+  Pulse.Lib.Core.gather (lptr_of arr) w0 w1;
   of_squash (mk_carrier_gather (SZ.v (ptr_of arr).base_len) ((ptr_of arr).offset) s0 s1 p0 p1 ());
   of_squash (mk_carrier_valid_sum_perm (SZ.v (ptr_of arr).base_len) ((ptr_of arr).offset) s0 p0 p1);
   fold pts_to arr #(sum_perm p0 p1) s0;
@@ -461,10 +487,9 @@ ensures pts_to arr #(sum_perm p0 p1) s0 ** pure (s0 == s1)
 let gather = gather'
 
 let ptr_shift
-  (#elt: Type)
-  (p: ptr elt)
+  (p: ptr)
   (off: nat {offset p + off <= base_len (base p)})
-: ptr elt
+: ptr
 = {
     base_len = p.base_len;
     base = p.base;
@@ -651,11 +676,11 @@ ensures
   let xr = Seq.slice x i (Seq.length x);
   let vl = mk_carrier (SZ.v (ptr_of a).base_len) ((ptr_of a).offset) xl p;
   let vr = mk_carrier (SZ.v (ptr_of a).base_len) ((ptr_of a).offset + i) xr p;
-  Pulse.Lib.Core.share (ptr_of a).base vl vr;
-  rewrite pcm_pts_to (ptr_of a).base vl
-      as  pcm_pts_to (ptr_of (split_l a i)).base vl;
-  rewrite pcm_pts_to (ptr_of a).base vr
-      as  pcm_pts_to (ptr_of (split_r a i)).base vr;
+  Pulse.Lib.Core.share (lptr_of a) vl vr;
+  rewrite pcm_pts_to (lptr_of a) vl
+      as  pcm_pts_to (lptr_of (split_l a i)) vl;
+  rewrite pcm_pts_to (lptr_of a) vr
+      as  pcm_pts_to (lptr_of (split_r a i)) vr;
   fold (pts_to (split_l a i) #p xl);
   fold (pts_to (split_r a i) #p xr);
 }
@@ -764,7 +789,7 @@ let merge' (#elt: Type) (a1: array elt) (a2:array elt { adjacent a1 a2 })
 = { p = ptr_of a1; length=Ghost.hide (length a1 + length a2) }
 
 irreducible
-let merge #elt a1 a2
+let merge #elt (a1:array elt) (a2:array elt{ adjacent a1 a2})
 : i:array elt{ i == merge' a1 a2 } 
 = merge' a1 a2
 
@@ -783,14 +808,17 @@ ensures pts_to (merge a1 a2) #p (x1 `Seq.append` x2)
   unfold pts_to a2 #p x2;
   use_squash (mk_carrier_merge (SZ.v (ptr_of a1).base_len) ((ptr_of a1).offset) x1 x2 p ());
   with w. rewrite 
-          pcm_pts_to (ptr_of a2).base w
-      as  pcm_pts_to (ptr_of a1).base (mk_carrier (SZ.v (ptr_of a1).base_len) ((ptr_of a1).offset + Seq.length x1) x2 p);
-  Pulse.Lib.Core.gather (ptr_of a1).base
+          pcm_pts_to (lptr_of a2) w
+      as  pcm_pts_to (lptr_of a1) (mk_carrier (SZ.v (ptr_of a1).base_len) ((ptr_of a1).offset + Seq.length x1) x2 p);
+  Pulse.Lib.Core.gather (lptr_of a1)
     (mk_carrier (SZ.v (ptr_of a1).base_len) ((ptr_of a1).offset) x1 (p))
     (mk_carrier (SZ.v (ptr_of a1).base_len) ((ptr_of a1).offset + Seq.length x1) x2 (p));
   with w. rewrite
-          pcm_pts_to (ptr_of a1).base w
-      as  pcm_pts_to (ptr_of (merge a1 a2)).base (mk_carrier (SZ.v (ptr_of (merge a1 a2)).base_len) ((ptr_of (merge a1 a2)).offset) (x1 `Seq.append` x2) (p));
+          pcm_pts_to (lptr_of a1) w
+      as  pcm_pts_to 
+              (lptr_of (merge a1 a2))
+              (mk_carrier (SZ.v (ptr_of (merge a1 a2)).base_len)
+                          ((ptr_of (merge a1 a2)).offset) (x1 `Seq.append` x2) (p));
   fold (pts_to (merge a1 a2) #p (Seq.append x1 x2));
 }
 ```
