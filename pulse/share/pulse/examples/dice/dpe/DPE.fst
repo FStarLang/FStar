@@ -128,26 +128,77 @@ fn elim_session_state_perm_available (s:(s:session_state { Available? s }))
 noextract
 let session_table_map = PHT.pht_t sid_t session_state
 
-let session_perm (stm:session_table_map) (sid:nat) =
-  if not(UInt.fits sid 32) then emp
-  else let sid = U32.uint_to_t sid in
-       match PHT.lookup stm sid with
-       | None -> emp
-       | Some s -> session_state_perm s
-
 noeq
 type global_state_t = {
   session_id_counter:sid_t;
   session_table:ht_t sid_t session_state;
 }
 
+module PP = PulseCore.Preorder
+module FP = Pulse.Lib.PCM.FractionalPreorder
+module PM = Pulse.Lib.PCMMap
+module DT = DPE.Trace
+module PCM = FStar.PCM
+
+type pcm_t : Type u#1 = PM.map sid_t (FP.pcm_carrier DT.trace_preorder)
+type pcm : PCM.pcm pcm_t = PM.pointwise sid_t (FP.fp_pcm DT.trace_preorder)
+
+let emp_trace : PP.hist DT.trace_preorder = []
+
+let sid_pts_to (r:ghost_pcm_ref pcm) (sid:sid_t) (p:perm) (tr:PP.hist DT.trace_preorder) : vprop =
+  ghost_pcm_pts_to r (Map.upd (Map.const (None, emp_trace)) sid (Some p, tr))
+
+let pt_five : perm = half_perm full_perm
+let pt_seven : perm = MkPerm 0.7R
+
+let context_repr_and_trace_related (repr:context_repr_t) (tr:PP.hist DT.trace_preorder) : prop =
+  True  // TODO: functional correctness
+
+let session_perm (r:ghost_pcm_ref pcm) (pht:session_table_map) (sid:nat) =
+  if not (UInt.fits sid 32) then emp
+  else let sid = U32.uint_to_t sid in
+       match PHT.lookup pht sid with
+       | None -> emp
+       | Some s ->
+         match s with
+         | SessionStart
+         | SessionClosed
+         | SessionError ->
+           exists* tr. sid_pts_to r sid full_perm tr
+         | InUse ->
+           exists* (inuse:bool) (tr:PP.hist DT.trace_preorder).
+             sid_pts_to r sid (if inuse then pt_five else pt_seven) tr
+         
+         | Available _ ->
+           exists* (inuse:bool) (tr:PP.hist DT.trace_preorder) repr.
+             sid_pts_to r sid (if inuse then pt_seven else pt_five) tr **
+             context_perm (ctxt_of s) repr **
+             pure (context_repr_and_trace_related repr tr)
+
+let inv (r:ghost_pcm_ref pcm) (st_opt:option global_state_t) : vprop =
+  match st_opt with
+  | None ->
+    ghost_pcm_pts_to r (Map.map_literal (fun _ -> Some full_perm, emp_trace))
+  
+  | Some st ->
+    ghost_pcm_pts_to r (Map.map_literal (fun sid ->
+      if U32.lt sid st.session_id_counter
+      then None, emp_trace
+      else Some full_perm, emp_trace)) **
+    
+    (exists* pht. models st.session_table pht **
+                  on_range (session_perm r pht) 0 (U32.v st.session_id_counter))
+
+let client_perm (r:ghost_pcm_ref pcm) (sid:sid_t) (tr:PP.hist DT.trace_preorder) : vprop =
+  sid_pts_to r sid pt_five tr
+
 let global_state_mutex_pred (gst:option global_state_t) : vprop =
   match gst with
   | None -> emp
   | Some gst ->
-    exists* stm.
-      models gst.session_table stm **
-      on_range (session_perm stm) 0 (U32.v gst.session_id_counter)
+    exists* pht.
+      models gst.session_table pht **
+      on_range (session_perm pht) 0 (U32.v gst.session_id_counter)
 
 
 // assume Fits_size_t_u32 : squash (US.fits_u32)

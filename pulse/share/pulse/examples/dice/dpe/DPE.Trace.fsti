@@ -28,7 +28,7 @@ let uds_t = lbytes (SZ.v uds_len)
 val ctxt_hndl_t : Type0
 val sid_t : eqtype
 noeq
-type state_t =
+type state_t : Type u#1 =
   | SessionStart:
       history:option state_t ->
       state_t
@@ -92,7 +92,7 @@ let rec well_formed_trace (l:list state_t) =
     | s1::s0::tl -> next s0 s1 /\ well_formed_trace (s0::tl)
     | _ -> False
 
-let trace = l:list state_t { well_formed_trace l }
+type trace : Type u#1 = l:list state_t { well_formed_trace l }
 
 let trace_extension (t0 t1:trace)
   : prop
