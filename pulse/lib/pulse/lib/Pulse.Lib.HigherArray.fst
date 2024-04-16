@@ -43,22 +43,48 @@ let base_len (#elt: Type) (b: base_t elt) : GTot nat = SZ.v (dfst b)
 let l_pcm_ref (elt:Type u#a) (base_len:SZ.t) =
   r:pcm_ref (PA.pcm elt (SZ.v base_len)){ is_pcm_ref_null r = false || base_len = 0sz }
 
+#push-options "--ext 'compat:injectivity'"
 noeq
 type ptr ([@@@strictly_positive]elt: Type u#a) : Type0 = {
   base_len: Ghost.erased SZ.t;
   base: l_pcm_ref elt base_len;
   offset: (offset: nat { offset <= SZ.v base_len });
 }
+#pop-options
 
 let null_ptr (a:Type u#a)
 : ptr a
 = { base_len = 0sz; base = pcm_ref_null (PA.pcm a 0) ; offset = 0 }
+
+// assume
+// val core_pcm_ref : Type0
+
+// assume
+// val as_core (#a:_) (#p:FStar.PCM.pcm a) (r:pcm_ref p) 
+//   : core_pcm_ref
+// assume
+// val of_core (#a:_) (p:FStar.PCM.pcm a) (r:core_pcm_ref) 
+//   : pcm_ref p
+// assume
+// val as_core_of_core (#a:_) (#p:FStar.PCM.pcm a) (r:core_pcm_ref)
+//   : Lemma (as_core (of_core p r) == r)
+// assume
+// val of_core_as_core (#a:_) (#p:FStar.PCM.pcm a) (r:pcm_ref p)
+//   : Lemma (of_core p (as_core r) == r)
+
+// assume
+// val is_pcm_ref_null
+//     (#a:Type)
+//     (#p:FStar.PCM.pcm a)
+//     (r:pcm_ref q)
+// : b:bool { b <==> r == pcm_ref_null p }
 
 let is_null_ptr (#elt: Type u#a) (p: ptr elt)
 : Pure bool
   (requires True)
   (ensures (fun res -> res == true <==> p == null_ptr elt))
 = is_pcm_ref_null p.base
+  
 
 let base (#elt: Type) (p: ptr elt)
 : Tot (base_t elt)
@@ -76,7 +102,7 @@ let ptr_base_offset_inj (#elt: Type) (p1 p2: ptr elt) : Lemma
   (ensures (
     p1 == p2
   ))
-= ()
+= admit()
 
 let base_len_null_ptr (elt: Type u#a)
 : Lemma
