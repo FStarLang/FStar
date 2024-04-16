@@ -21,11 +21,11 @@ open Pulse.Lib.Pledge
 module T = FStar.Tactics
 
 val pool : Type0
-val pool_alive : (#[T.exact (`full_perm)]p : perm) -> pool -> vprop
+val pool_alive : (#[T.exact (`1.0R)]p : perm) -> pool -> vprop
 val pool_done : pool -> vprop
 
 val setup_pool (n:pos)
-  : stt pool emp (fun p -> pool_alive #full_perm p)
+  : stt pool emp (fun p -> pool_alive #1.0R p)
 
 val task_handle : pool -> a:Type0 -> (a -> vprop) -> Type0
 val joinable : #p:pool -> #a:Type0 -> #post:_ -> th:(task_handle p a post) -> vprop
@@ -45,7 +45,7 @@ val spawn
   (#a : Type0)
   (#pre : vprop) (#post : a -> vprop)
   (p : pool)
-  (#[T.exact (`full_perm)] e : perm)
+  (#[T.exact (`1.0R)] e : perm)
   ($f : unit -> stt a pre (fun (x:a) -> post x))
   : stt (task_handle p a post)
         (pool_alive #e p ** pre)
@@ -55,7 +55,7 @@ val spawn
 val spawn_
   (#pre #post : _)
   (p:pool)
-  (#[T.exact (`full_perm)] e : perm)
+  (#[T.exact (`1.0R)] e : perm)
   (f : unit -> stt unit pre (fun _ -> post))
   : stt unit (pool_alive #e p ** pre)
              (fun prom -> pool_alive #e p ** pledge emp_inames (pool_done p) post)
@@ -88,14 +88,14 @@ val share_alive
   : stt_ghost unit
               emp_inames
               (pool_alive #e p)
-              (fun () -> pool_alive #(half_perm e) p ** pool_alive #(half_perm e) p)
+              (fun () -> pool_alive #(e /. 2.0R) p ** pool_alive #(e /. 2.0R) p)
 
 val gather_alive
   (p:pool)
   (e:perm)
   : stt_ghost unit
               emp_inames
-              (pool_alive #(half_perm e) p ** pool_alive #(half_perm e) p)
+              (pool_alive #(e /. 2.0R) p ** pool_alive #(e /. 2.0R) p)
               (fun () -> pool_alive #e p)
 
 val join
@@ -108,12 +108,12 @@ val join
 (* We must exclusively own the pool in order to terminate it. *)
 val teardown_pool
   (p:pool)
-  : stt unit (pool_alive #full_perm p) (fun _ -> pool_done p)
+  : stt unit (pool_alive #1.0R p) (fun _ -> pool_done p)
 
 (* Or, have at least an epsilon of permission over it, and know that
 the rest of it (1-e) is "sunk" into the pool itself. *)
 val teardown_pool'
   (#is:inames)
-  (p:pool) (f:perm{f `lesser_perm` full_perm})
-  : stt unit (pool_alive #f p ** pledge is (pool_done p) (pool_alive #(comp_perm f) p))
+  (p:pool) (f:perm{f <. 1.0R})
+  : stt unit (pool_alive #f p ** pledge is (pool_done p) (pool_alive #(1.0R -. f) p))
              (fun _ -> pool_done p)

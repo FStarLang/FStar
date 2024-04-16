@@ -24,11 +24,11 @@ module B = Pulse.Lib.Box
 module GR = Pulse.Lib.GhostReference
 
 let lock_inv_aux (r:B.box U32.t) (gr:GR.ref U32.t) (v:vprop) : (w:vprop { is_big v ==> is_big w })  =
-  exists* i p. B.pts_to r #full_perm i **
+  exists* i p. B.pts_to r #1.0R i **
                GR.pts_to gr #p i **
                (if i = 0ul then v else emp) **
-               pure ((i == 0ul ==> p == full_perm) /\
-                     (i =!= 0ul ==> p == half_perm full_perm)) 
+               pure ((i == 0ul ==> p == 1.0R) /\
+                     (i =!= 0ul ==> p == 0.5R)) 
 
 let lock_inv (r:B.box U32.t) (gr:GR.ref U32.t) (v:vprop) : vprop =
   lock_inv_aux r gr v
@@ -46,7 +46,7 @@ type lock = {
 let lock_alive l #p v =
   inv (iref_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v)) ** active p l.i
 
-let lock_acquired l = GR.pts_to l.gr #(half_perm full_perm) 1ul
+let lock_acquired l = GR.pts_to l.gr #0.5R 1ul
 
 ```pulse
 fn new_lock_aux (v:vprop { is_big v })
@@ -65,7 +65,7 @@ fn new_lock_aux (v:vprop { is_big v })
   rewrite each r as l.r;
   rewrite each gr as l.gr;
   rewrite each i as l.i;
-  fold (lock_alive l #full_perm v);
+  fold (lock_alive l #1.0R v);
   l
 }
 ```
@@ -83,7 +83,7 @@ fn rec acquire_aux (#v:vprop) (#p:perm) (l:lock)
       returns b:bool
       ensures inv (iref_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v)) **
               active p l.i **
-              (if b then v ** GR.pts_to l.gr #(half_perm full_perm) 1ul else emp) {
+              (if b then v ** GR.pts_to l.gr #0.5R 1ul else emp) {
       unpack_cinv_vp l.i;
       unfold lock_inv;
       unfold lock_inv_aux;
@@ -98,11 +98,11 @@ fn rec acquire_aux (#v:vprop) (#p:perm) (l:lock)
         pack_cinv_vp l.i;
         assert (cinv_vp l.i (lock_inv l.r l.gr v) **
                 active p l.i **
-                GR.pts_to l.gr #(half_perm full_perm) 1ul **
+                GR.pts_to l.gr #0.5R 1ul **
                 v);
         let b = true;
-        rewrite (v ** GR.pts_to l.gr #(half_perm full_perm) 1ul)
-             as (if b then v ** GR.pts_to l.gr #(half_perm full_perm) 1ul else emp);
+        rewrite (v ** GR.pts_to l.gr #0.5R 1ul)
+             as (if b then v ** GR.pts_to l.gr #0.5R 1ul else emp);
         b
       } else {
         elim_cond_false _ _ _;
@@ -113,18 +113,18 @@ fn rec acquire_aux (#v:vprop) (#p:perm) (l:lock)
                 active p l.i);
         let b = false;
         rewrite emp as
-                (if b then v ** GR.pts_to l.gr #(half_perm full_perm) 1ul else emp);
+                (if b then v ** GR.pts_to l.gr #0.5R 1ul else emp);
         b
       }
     };
 
   if b {
-    rewrite (if b then v ** GR.pts_to l.gr #(half_perm full_perm) 1ul else emp) as
-            (v ** GR.pts_to l.gr #(half_perm full_perm) 1ul);
+    rewrite (if b then v ** GR.pts_to l.gr #0.5R 1ul else emp) as
+            (v ** GR.pts_to l.gr #0.5R 1ul);
     fold (lock_alive l #p v);
     fold (lock_acquired l)
   } else {
-    rewrite (if b then v ** GR.pts_to l.gr #(half_perm full_perm) 1ul else emp) as
+    rewrite (if b then v ** GR.pts_to l.gr #0.5R 1ul else emp) as
             emp;
     fold (lock_alive l #p v);
     acquire_aux l
@@ -169,63 +169,49 @@ let release = release_aux
 ghost
 fn share_aux (#v:vprop) (#p:perm) (l:lock)
   requires lock_alive l #p v
-  ensures lock_alive l #(half_perm p) v ** lock_alive l #(half_perm p) v
-  opens emp_inames
+  ensures lock_alive l #(p /. 2.0R) v ** lock_alive l #(p /. 2.0R) v
 {
   unfold (lock_alive l #p v);
   Pulse.Lib.CancellableInvariant.share l.i;
   dup_inv (iref_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v));  // make this arg implicit
-  fold (lock_alive l #(half_perm p) v);
-  fold (lock_alive l #(half_perm p) v)
+  fold (lock_alive l #(p /. 2.0R) v);
+  fold (lock_alive l #(p /. 2.0R) v)
 } 
 ```
 
 let share = share_aux
 
+let share2 #v l = share #v #1.0R l
+
 ```pulse
 ghost
 fn gather_aux (#v:vprop) (#p1 #p2 :perm) (l:lock)
   requires lock_alive l #p1 v ** lock_alive l #p2 v
-  ensures lock_alive l #(sum_perm p1 p2) v
-  opens emp_inames
+  ensures lock_alive l #(p1 +. p2) v
 {
   unfold (lock_alive l #p1 v);
   unfold (lock_alive l #p2 v);
   Pulse.Lib.CancellableInvariant.gather #p1 #p2 l.i;
-  fold (lock_alive l #(sum_perm p1 p2) v);
+  fold (lock_alive l #(p1 +. p2) v);
   drop_ (inv _ _)
 } 
 ```
 let gather = gather_aux
 
-```pulse
-ghost
-fn __gather2
-(#v:vprop) (#p :perm) (l:lock)
-  requires lock_alive l #(half_perm p) v ** lock_alive l #(half_perm p) v
-  ensures lock_alive l #p v
-  opens emp_inames
-{
-  gather #v #(half_perm p) #(half_perm p) l;
-  sum_halves p;
-  rewrite each (sum_perm (half_perm p) (half_perm p)) as p;
-}
-```
-let gather2 = __gather2
+let gather2 #v l = gather #v #0.5R #0.5R l
 
 ```pulse
 fn free_aux (#v:vprop) (l:lock)
-  requires lock_alive l #full_perm v ** lock_acquired l
+  requires lock_alive l #1.0R v ** lock_acquired l
   ensures emp
 {
-  unfold (lock_alive l #full_perm v);
+  unfold (lock_alive l #1.0R v);
   unfold (lock_acquired l);
   cancel l.i;
   unfold (lock_inv l.r l.gr v);
   unfold (lock_inv_aux l.r l.gr v);
   B.free l.r;
   GR.gather l.gr;
-  admit ();
   GR.free l.gr;
   rewrite (if (1ul = 0ul) then v else emp) as emp
 }

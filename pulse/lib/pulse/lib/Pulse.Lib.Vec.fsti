@@ -36,7 +36,7 @@ type lvec (a:Type0) (n:nat) = v:vec a { length v == n }
 
 val is_full_vec (#a:Type0) (v:vec a) : prop
 
-val pts_to (#a:Type0) (v:vec a) (#[T.exact (`full_perm)] p:perm) (s:Seq.seq a) : vprop
+val pts_to (#a:Type0) (v:vec a) (#[T.exact (`1.0R)] p:perm) (s:Seq.seq a) : vprop
 
 val pts_to_len (#a:Type0) (v:vec a) (#p:perm) (#s:Seq.seq a)
   : stt_ghost unit emp_inames
@@ -95,7 +95,7 @@ val share
   (#p:perm)
   : stt_ghost unit emp_inames
       (requires pts_to v #p s)
-      (ensures fun _ -> pts_to v #(half_perm p) s ** pts_to v #(half_perm p) s)
+      (ensures fun _ -> pts_to v #(p /. 2.0R) s ** pts_to v #(p /. 2.0R) s)
 
 val gather
   (#a:Type)
@@ -104,7 +104,7 @@ val gather
   (#p0 #p1:perm)
   : stt_ghost unit emp_inames
       (requires pts_to v #p0 s0 ** pts_to v #p1 s1)
-      (ensures fun _ -> pts_to v #(sum_perm p0 p1) s0 ** pure (s0 == s1))
+      (ensures fun _ -> pts_to v #(p0 +. p1) s0 ** pure (s0 == s1))
 
 val vec_to_array (#a:Type0) (v:vec a) : arr:A.array a { A.length arr == length v }
 

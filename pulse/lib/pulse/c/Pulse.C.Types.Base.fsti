@@ -21,8 +21,8 @@ open Pulse.Lib.Pervasives
 val prod_perm (p1 p2: perm) : Pure perm
   (requires True)
   (ensures (fun p ->
-    ((p1 `lesser_equal_perm` full_perm /\ p2 `lesser_equal_perm` full_perm) ==>
-    p `lesser_equal_perm` full_perm) /\
+    ((p1 <=. 1.0R /\ p2 <=. 1.0R) ==>
+    p <=. 1.0R) /\
     p == (let open FStar.Real in p1 *. p2)
   ))
 
@@ -36,15 +36,15 @@ val fractionable (#t: Type0) (td: typedef t) (x: t) : GTot prop
 
 val mk_fraction (#t: Type0) (td: typedef t) (x: t) (p: perm) : Ghost t
   (requires (fractionable td x))
-  (ensures (fun y -> p `lesser_equal_perm` full_perm ==> fractionable td y))
+  (ensures (fun y -> p <=. 1.0R ==> fractionable td y))
 
 val mk_fraction_full (#t: Type0) (td: typedef t) (x: t) : Lemma
   (requires (fractionable td x))
-  (ensures (mk_fraction td x full_perm == x))
-  [SMTPat (mk_fraction td x full_perm)]
+  (ensures (mk_fraction td x 1.0R == x))
+  [SMTPat (mk_fraction td x 1.0R)]
 
 val mk_fraction_compose (#t: Type0) (td: typedef t) (x: t) (p1 p2: perm) : Lemma
-  (requires (fractionable td x /\ p1 `lesser_equal_perm` full_perm /\ p2 `lesser_equal_perm` full_perm))
+  (requires (fractionable td x /\ p1 <=. 1.0R /\ p2 <=. 1.0R))
   (ensures (mk_fraction td (mk_fraction td x p1) p2 == mk_fraction td x (p1 `prod_perm` p2)))
 
 val full (#t: Type0) (td: typedef t) (v: t) : GTot prop
@@ -312,7 +312,7 @@ val mk_fraction_split_gen
   (#t: Type) (#td: typedef t) (r: ref td) (v: t { fractionable td v }) (p p1 p2: perm)
 : stt_ghost unit emp_inames
   (pts_to r (mk_fraction td v p) ** pure (
-    p == p1 `sum_perm` p2 /\ p `lesser_equal_perm` full_perm
+    p == p1 +. p2 /\ p <=. 1.0R
   ))
   (fun _ -> pts_to r (mk_fraction td v p1) ** pts_to r (mk_fraction td v p2))
 
@@ -320,20 +320,20 @@ val mk_fraction_split
   (#t: Type) (#td: typedef t) (r: ref td) (v: Ghost.erased t { fractionable td v }) (p1 p2: perm)
 : stt_ghost unit emp_inames
   (pts_to r v ** pure (
-    full_perm == p1 `sum_perm` p2
+    1.0R == p1 +. p2
   ))
   (fun _ -> pts_to r (mk_fraction td v p1) ** pts_to r (mk_fraction td v p2))
 (*
 = mk_fraction_full td v;
   rewrite (pts_to _ _) (pts_to _ _);
-  mk_fraction_split_gen r v full_perm p1 p2
+  mk_fraction_split_gen r v 1.0R p1 p2
 *)
 
 val mk_fraction_join
   (#t: Type) (#td: typedef t) (r: ref td) (v: t { fractionable td v }) (p1 p2: perm)
 : stt_ghost unit emp_inames
   (pts_to r (mk_fraction td v p1) ** pts_to r (mk_fraction td v p2))
-  (fun _ -> pts_to r (mk_fraction td v (p1 `sum_perm` p2)))
+  (fun _ -> pts_to r (mk_fraction td v (p1 +. p2)))
 
 val fractional_permissions_theorem
   (#t: Type)
@@ -347,7 +347,7 @@ val fractional_permissions_theorem
       full td v1 /\ full td v2
     ))
     (fun _ -> pts_to r (mk_fraction td v1 p1) ** pts_to r (mk_fraction td v2 p2) ** pure (
-      v1 == v2 /\ (p1 `sum_perm` p2) `lesser_equal_perm` full_perm
+      v1 == v2 /\ (p1 +. p2) <=. 1.0R
     ))
 
 [@@noextract_to "krml"] // primitive

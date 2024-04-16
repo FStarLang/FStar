@@ -311,8 +311,8 @@ let squash_pledge' = squash_pledge'_aux
 (* A big chunk follows for split_pledge *)
 
 // let inv_p' (is:invlist) (f v1 v2 : vprop) (r1 r2 : GR.ref bool) (b1 b2 : bool) =
-//      GR.pts_to r1 #one_half b1
-//   ** GR.pts_to r2 #one_half b2
+//      GR.pts_to r1 #0.5R b1
+//   ** GR.pts_to r2 #0.5R b2
 //   ** (match b1, b2 with
 //       | false, false -> pledge is f (v1 ** v2)
 //       | false, true -> v1
@@ -327,7 +327,7 @@ let squash_pledge' = squash_pledge'_aux
 // fn elim_body_l
 //   (#is:invlist) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool)
 //   ()
-//   requires (inv_p is f v1 v2 r1 r2 ** invlist_v is) ** (f ** GR.pts_to r1 #one_half false)
+//   requires (inv_p is f v1 v2 r1 r2 ** invlist_v is) ** (f ** GR.pts_to r1 #0.5R false)
 //   ensures  (inv_p is f v1 v2 r1 r2 ** invlist_v is) ** (f ** v1)
 //   opens (invlist_names is)
 // {
@@ -372,7 +372,7 @@ let squash_pledge' = squash_pledge'_aux
 //     fold (inv_p' is f v1 v2 r1 r2 true true);
 //     fold inv_p;
 //     assert (f ** v1 ** inv_p is f v1 v2 r1 r2);
-//     drop_ (pts_to r1 #one_half true);
+//     drop_ (pts_to r1 #0.5R true);
 //   } else {
 //     (* The "hard" case: the big pledge has not been claimed.
 //     Claim it, split it, and store the leftover in the invariant. *)
@@ -394,7 +394,7 @@ let squash_pledge' = squash_pledge'_aux
 //     fold (inv_p' is f v1 v2 r1 r2 true false);
 //     fold inv_p;
 //     assert (f ** v1 ** inv_p is f v1 v2 r1 r2);
-//     drop_ (pts_to r1 #one_half true);
+//     drop_ (pts_to r1 #0.5R true);
 //     drop_ (invlist_inv _)
 //   }
 // }
@@ -441,7 +441,7 @@ let squash_pledge' = squash_pledge'_aux
 // fn elim_body_r
 //   (#is:invlist) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool)
 //   ()
-//   requires (inv_p is f v1 v2 r1 r2 ** invlist_v is) ** (f ** GR.pts_to r2 #one_half false)
+//   requires (inv_p is f v1 v2 r1 r2 ** invlist_v is) ** (f ** GR.pts_to r2 #0.5R false)
 //   ensures  (inv_p is f v1 v2 r1 r2 ** invlist_v is) ** (f ** v2)
 //   opens (invlist_names is)
 // {
@@ -481,14 +481,14 @@ let squash_pledge' = squash_pledge'_aux
 //   //   is'
 //   //   f
 //   //   v1
-//   //   (GR.pts_to r1 #one_half false)
+//   //   (GR.pts_to r1 #0.5R false)
 //   //   (elim_body_l #is #f v1 v2 r1 r2);
 
 //   // make_pledge
 //   //   is'
 //   //   f
 //   //   v2
-//   //   (GR.pts_to r2 #one_half false)
+//   //   (GR.pts_to r2 #0.5R false)
 //   //   (elim_body_r #is #f v1 v2 r1 r2);
 
 //   // rewrite each

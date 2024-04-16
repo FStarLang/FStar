@@ -125,7 +125,7 @@ let avalue (#v:Type) (#p:preorder v) (anchors:anchor_rel p)
 #push-options "--fuel 1"
 let initial_value (#v:Type) (#p:preorder v) (#anchors:anchor_rel p) (value:v { anchors value value })
   : avalue anchors
-  = (Some full_perm, Some value), [value]
+  = (Some 1.0R, Some value), [value]
 #pop-options
 
 /// We add a unit element to [avalue], as needed for a PCM
@@ -141,15 +141,15 @@ let perm_opt_composable (p0 p1:option perm)
   = match p0, p1 with
     | None, None -> True
     | Some p, None
-    | None, Some p -> p `lesser_equal_perm` full_perm
-    | Some p0, Some p1 -> sum_perm p0 p1 `lesser_equal_perm` full_perm
+    | None, Some p -> p <=. 1.0R
+    | Some p0, Some p1 -> (p0 +. p1) <=. 1.0R
 
 /// Composing them sums the permissions
 let compose_perm_opt (p0 p1:option perm) =
   match p0, p1 with
   | None, p
   | p, None -> p
-  | Some p0, Some p1 -> Some (sum_perm p0 p1)
+  | Some p0, Some p1 -> Some (p0 +. p1)
 
 /// Anchored permissions are composable when at most one of them has the anchor set
 let permission_composable #v (p0 p1 : permission v)
@@ -382,7 +382,7 @@ let avalue_owns (#v:Type)
                 (#s:anchor_rel p)
                 (m:avalue s)
   : prop
-  = fst (avalue_perm m) == Some full_perm /\
+  = fst (avalue_perm m) == Some 1.0R /\
     Some? (snd (avalue_perm m))
 
 let full_knowledge #v #p #s (kn:knowledge #v #p s)
@@ -487,7 +487,7 @@ let avalue_owns_anchored (#v:Type)
                          (#p:preorder v)
                          (#s:anchor_rel p)
                          (m:avalue s)
-    = fst (avalue_perm m) == Some full_perm /\
+    = fst (avalue_perm m) == Some 1.0R /\
       None? (snd (avalue_perm m))
 
 /// [v1] is compatible with (i.e., not too far from) any anchor of [v0]

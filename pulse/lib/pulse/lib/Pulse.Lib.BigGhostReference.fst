@@ -26,16 +26,16 @@ instance non_informative_gref (a:Type u#2) : NonInformative.non_informative (ref
   reveal = (fun x -> reveal x) <: NonInformative.revealer (ref a);
 }
 
-let pts_to (#a:Type) (r:ref a) (#[T.exact (`full_perm)] p:perm) (n:a)
+let pts_to (#a:Type) (r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a)
 = big_ghost_pcm_pts_to r (Some (n, p)) ** pure (perm_ok p)
 
 ```pulse
 ghost
 fn full_values_compatible (#a:Type u#2) (x:a)
 requires emp
-ensures pure (compatible pcm_frac (Some (x, full_perm)) (Some (x, full_perm)))
+ensures pure (compatible pcm_frac (Some (x, 1.0R)) (Some (x, 1.0R)))
 {
-   assert pure (FStar.PCM.composable pcm_frac (Some(x, full_perm)) None);
+   assert pure (FStar.PCM.composable pcm_frac (Some(x, 1.0R)) None);
 }
 ```
 
@@ -47,8 +47,8 @@ returns r:ref a
 ensures pts_to r x
 {
   full_values_compatible x;
-  let r = Pulse.Lib.Core.big_ghost_alloc #_ #(pcm_frac #a) (Some (x, full_perm));
-  fold (pts_to r #full_perm x);
+  let r = Pulse.Lib.Core.big_ghost_alloc #_ #(pcm_frac #a) (Some (x, 1.0R));
+  fold (pts_to r #1.0R x);
   r
 }
 ```
@@ -82,13 +82,13 @@ let ( ! ) #a = read #a
 ```pulse
 ghost
 fn write' (#a:Type u#2) (r:ref a) (x:erased a) (#n:erased a)
-requires pts_to r #full_perm n
-ensures pts_to r #full_perm x
+requires pts_to r #1.0R n
+ensures pts_to r #1.0R x
 {
-  unfold pts_to r #full_perm n;
+  unfold pts_to r #1.0R n;
   with w. assert (big_ghost_pcm_pts_to r w);
   Pulse.Lib.Core.big_ghost_write r _ _ (mk_frame_preserving_upd n x);
-  fold pts_to r #full_perm x;
+  fold pts_to r #1.0R x;
 }
 ```
 let ( := ) #a = write' #a
@@ -96,10 +96,10 @@ let ( := ) #a = write' #a
 ```pulse
 ghost
 fn free' (#a:Type u#2) (r:ref a) (#n:erased a)
-requires pts_to r #full_perm n
+requires pts_to r #1.0R n
 ensures emp
 {
-  unfold pts_to r #full_perm n;
+  unfold pts_to r #1.0R n;
   Pulse.Lib.Core.big_ghost_write r _ _ (mk_frame_preserving_upd_none n);
   Pulse.Lib.Core.drop_ _;
 }
@@ -110,14 +110,14 @@ let free = free'
 ghost
 fn share' #a (r:ref a) (#v:erased a) (#p:perm)
 requires pts_to r #p v
-ensures pts_to r #(half_perm p) v ** pts_to r #(half_perm p) v
+ensures pts_to r #(p /. 2.0R) v ** pts_to r #(p /. 2.0R) v
 {
   unfold pts_to r #p v;
   rewrite big_ghost_pcm_pts_to r (Some (reveal v, p))
-      as  big_ghost_pcm_pts_to r (Some (reveal v, half_perm p) `op pcm_frac` Some(reveal v, half_perm p));
-  Pulse.Lib.Core.big_ghost_share r (Some (reveal v, half_perm p)) _; //writing an underscore for the first arg also causes a crash
-  fold (pts_to r #(half_perm p) v);
-  fold (pts_to r #(half_perm p) v);
+      as  big_ghost_pcm_pts_to r (Some (reveal v, p /. 2.0R) `op pcm_frac` Some(reveal v, p /. 2.0R));
+  Pulse.Lib.Core.big_ghost_share r (Some (reveal v, p /. 2.0R)) _; //writing an underscore for the first arg also causes a crash
+  fold (pts_to r #(p /. 2.0R) v);
+  fold (pts_to r #(p /. 2.0R) v);
 }
 ```
 let share = share'
@@ -126,18 +126,18 @@ let share = share'
 ghost
 fn gather' #a (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
 requires pts_to r #p0 x0 ** pts_to r #p1 x1
-ensures pts_to r #(sum_perm p0 p1) x0 ** pure (x0 == x1)
+ensures pts_to r #(p0 +. p1) x0 ** pure (x0 == x1)
 { 
   unfold pts_to r #p0 x0;
   unfold pts_to r #p1 x1;
   Pulse.Lib.Core.big_ghost_gather r (Some (reveal x0, p0)) (Some (reveal x1, p1));
-  fold (pts_to r #(sum_perm p0 p1) x0)
+  fold (pts_to r #(p0 +. p1) x0)
 }
 ```
 let gather = gather'
 
-let share2 (#a:Type) (r:ref a) (#v:erased a) = share r #v #full_perm
-let gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a) = admit ()  // gather r #x0 #x1 #one_half #one_half
+let share2 (#a:Type) (r:ref a) (#v:erased a) = share r #v #1.0R
+let gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a) = gather r #x0 #x1 #0.5R #0.5R
          
 ```pulse
 ghost
@@ -163,7 +163,7 @@ let pts_to_injective_eq = pts_to_injective_eq'
 ghost
 fn pts_to_perm_bound' (#a:_) (#p:_) (r:ref a) (#v:a)
 requires pts_to r #p v
-ensures pts_to r #p v ** pure (p `lesser_equal_perm` full_perm)
+ensures pts_to r #p v ** pure (p <=. 1.0R)
 {
   unfold pts_to r #p v;
   fold pts_to r #p v;

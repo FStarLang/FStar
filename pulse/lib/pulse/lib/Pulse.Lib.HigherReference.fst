@@ -33,8 +33,8 @@ returns r:ref a
 ensures pts_to r x
 {
   full_values_compatible x;
-  let r = Pulse.Lib.Core.alloc #_ #(pcm_frac #a) (Some (x, full_perm));
-  fold (pts_to r #full_perm x);
+  let r = Pulse.Lib.Core.alloc #_ #(pcm_frac #a) (Some (x, 1.0R));
+  fold (pts_to r #1.0R x);
   r
 }
 ```
@@ -66,23 +66,23 @@ let ( ! ) #a = read #a
 
 ```pulse
 fn write (#a:Type u#1) (r:ref a) (x:a) (#n:erased a)
-requires pts_to r #full_perm n
-ensures pts_to r #full_perm x
+requires pts_to r #1.0R n
+ensures pts_to r #1.0R x
 {
-  unfold pts_to r #full_perm n;
+  unfold pts_to r #1.0R n;
   with w. assert (pcm_pts_to r w);
   Pulse.Lib.Core.write r _ _ (mk_frame_preserving_upd n x);
-  fold pts_to r #full_perm x;
+  fold pts_to r #1.0R x;
 }
 ```
 let ( := ) #a = write #a
 
 ```pulse
 fn free' #a (r:ref a) (#n:erased a)
-requires pts_to r #full_perm n
+requires pts_to r #1.0R n
 ensures emp
 {
-  unfold pts_to r #full_perm n;
+  unfold pts_to r #1.0R n;
   with w. assert (pcm_pts_to r w);
   Pulse.Lib.Core.write r _ _ (mk_frame_preserving_upd_none n);
   Pulse.Lib.Core.drop_ _;
@@ -94,14 +94,14 @@ let free = free'
 ghost
 fn share' #a (r:ref a) (#v:erased a) (#p:perm)
 requires pts_to r #p v
-ensures pts_to r #(half_perm p) v ** pts_to r #(half_perm p) v
+ensures pts_to r #(p /. 2.0R) v ** pts_to r #(p /. 2.0R) v
 {
   unfold pts_to r #p v;
   rewrite pcm_pts_to r (Some (reveal v, p))
-      as  pcm_pts_to r (Some (reveal v, half_perm p) `op pcm_frac` Some(reveal v, half_perm p));
-  Pulse.Lib.Core.share r (Some (reveal v, half_perm p)) _; //writing an underscore for the first arg also causes a crash
-  fold (pts_to r #(half_perm p) v);
-  fold (pts_to r #(half_perm p) v);
+      as  pcm_pts_to r (Some (reveal v, p /. 2.0R) `op pcm_frac` Some(reveal v, p /. 2.0R));
+  Pulse.Lib.Core.share r (Some (reveal v, p /. 2.0R)) _; //writing an underscore for the first arg also causes a crash
+  fold (pts_to r #(p /. 2.0R) v);
+  fold (pts_to r #(p /. 2.0R) v);
 }
 ```
 let share = share'
@@ -110,18 +110,18 @@ let share = share'
 ghost
 fn gather' #a (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
 requires pts_to r #p0 x0 ** pts_to r #p1 x1
-ensures pts_to r #(sum_perm p0 p1) x0 ** pure (x0 == x1)
+ensures pts_to r #(p0 +. p1) x0 ** pure (x0 == x1)
 { 
   unfold pts_to r #p0 x0;
   unfold pts_to r #p1 x1;
   Pulse.Lib.Core.gather r (Some (reveal x0, p0)) (Some (reveal x1, p1));
-  fold (pts_to r #(sum_perm p0 p1) x0)
+  fold (pts_to r #(p0 +. p1) x0)
 }
 ```
 let gather = gather'
 
-let share2 (#a:Type) (r:ref a) (#v:erased a) = share r #v #full_perm
-let gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a) = admit ()  //gather r #x0 #x1 #one_half #one_half
+let share2 (#a:Type) (r:ref a) (#v:erased a) = share r #v #1.0R
+let gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a) = gather r #x0 #x1 #0.5R #0.5R
 
 ```pulse
 fn free_with_frame #a (r:ref a) (frame:vprop)
@@ -145,7 +145,7 @@ let with_local
     = frame_stt pre (alloc init)
   in
   let pf_post : vprop_post_equiv (fun r -> pts_to r init ** pre) (fun r -> pre ** pts_to r init)
-    = intro_vprop_post_equiv _ _ (fun r -> vprop_equiv_comm (pts_to r #full_perm init) pre)
+    = intro_vprop_post_equiv _ _ (fun r -> vprop_equiv_comm (pts_to r #1.0R init) pre)
   in
   let m1 
     : stt (ref a) pre (fun r -> pre ** pts_to r init)
@@ -156,8 +156,7 @@ let with_local
     = bind_stt (body r) (fun v -> bind_stt (free_with_frame #a r (post v)) (fun _ -> return_stt_noeq v post))
   in
   bind_stt m1 body
-
-         
+  
 ```pulse
 ghost
 fn pts_to_injective_eq'
@@ -182,7 +181,7 @@ let pts_to_injective_eq = pts_to_injective_eq'
 ghost
 fn pts_to_perm_bound' (#a:_) (#p:_) (r:ref a) (#v:a)
 requires pts_to r #p v
-ensures pts_to r #p v ** pure (p `lesser_equal_perm` full_perm)
+ensures pts_to r #p v ** pure (p <=. 1.0R)
 {
   unfold pts_to r #p v;
   fold pts_to r #p v;

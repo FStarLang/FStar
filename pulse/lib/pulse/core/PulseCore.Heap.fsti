@@ -39,8 +39,8 @@ noeq
 type cell : Type u#(a + 1) =
   | Ref : a:Type u#a ->
           p:pcm a ->
-          frac:Frac.perm{ frac `Frac.lesser_equal_perm` Frac.full_perm } ->
-          v:a { frac == Frac.full_perm ==> p.refine v } ->
+          frac:Frac.perm{ Frac.(frac <=. 1.0R) } ->
+          v:a { frac == 1.0R ==> p.refine v } ->
           cell
 
 (**
@@ -694,7 +694,7 @@ val extend_modifies_nothing
 : Lemma (
       let (| r, h1 |) = extend #a #pcm x addr h in
       (forall (a:nat). a <> addr ==> select a h == select a h1) /\
-      select addr h1 == Some (Ref a pcm Frac.full_perm x) /\
+      select addr h1 == Some (Ref a pcm 1.0R x) /\
       not (core_ref_is_null r) /\
       addr == core_ref_as_addr r
   )

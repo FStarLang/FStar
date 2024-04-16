@@ -22,7 +22,6 @@ open PulseCore.InstantiatedSemantics
 open PulseCore.FractionalPermission
 open PulseCore.Observability
 
-let double_one_half () = ()
 let equate_by_smt = ()
 let vprop = slprop
 let big_vprop = big_slprop

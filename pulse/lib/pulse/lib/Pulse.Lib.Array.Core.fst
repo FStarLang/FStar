@@ -51,7 +51,7 @@ let raise_seq_index #a (x:FStar.Seq.seq a) (i:nat)
 =  ()//FStar.Seq.map_seq_index (U.raise_val u#0 u#1) x i
 let pts_to #a 
     (r:array a)
-    (#[exact (`full_perm)] p:perm)
+    (#[exact (`1.0R)] p:perm)
     (v:FStar.Seq.seq a)
 = H.pts_to r #p (raise_seq v)
 
@@ -172,12 +172,12 @@ fn gather'
   (#s0 #s1:Ghost.erased (Seq.seq a))
   (#p0 #p1:perm)
 requires pts_to arr #p0 s0 ** pts_to arr #p1 s1
-ensures pts_to arr #(sum_perm p0 p1) s0 ** pure (s0 == s1)
+ensures pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1)
 {
   unfold (pts_to arr #p0 s0);
   unfold (pts_to arr #p1 s1);
   H.gather arr #_ #_ #p0 #p1;
-  fold (pts_to arr #(sum_perm p0 p1) s0);
+  fold (pts_to arr #(p0 +. p1) s0);
 }
 ```
 let gather = gather'
@@ -187,7 +187,7 @@ let pts_to_range
   (x:array a)
   ([@@@ equate_by_smt] i:nat)
   ([@@@ equate_by_smt] j: nat)
-  (#[exact (`full_perm)] p:perm)
+  (#[exact (`1.0R)] p:perm)
   ([@@@ equate_by_smt] s: Seq.seq a)
 : vprop
 = H.pts_to_range x i j #p (raise_seq s)

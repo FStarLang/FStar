@@ -141,7 +141,7 @@ fn fold_pts_to
     (base_len: SZ.t)
     (base:l_pcm_ref elt base_len)
     (offset:nat { offset <= SZ.v base_len})
-    (#p: perm { p `lesser_equal_perm` full_perm})
+    (#p: perm { p <=. 1.0R})
     (s: Seq.seq elt { Seq.length s == SZ.v base_len - offset})
 requires
   pcm_pts_to base (mk_carrier (SZ.v base_len) offset s p)
@@ -188,11 +188,11 @@ ensures
   pts_to a (Seq.create (SZ.v n) x) **
   pure (length a == SZ.v n /\ is_full_array a)
 {
-  let v = (mk_carrier (SZ.v n) 0 (Seq.create (SZ.v n) x) full_perm);
+  let v = (mk_carrier (SZ.v n) 0 (Seq.create (SZ.v n) x) 1.0R);
   FStar.PCM.compatible_refl (PA.pcm elt (SZ.v n)) v;
   let b = Pulse.Lib.Core.alloc #_ #(PA.pcm elt (SZ.v n)) v;
   pts_to_not_null b _;
-  fold_pts_to n b 0 #full_perm (Seq.create (SZ.v n) x);
+  fold_pts_to n b 0 #1.0R (Seq.create (SZ.v n) x);
   mk_array n b 0;
 }
 ```
@@ -233,9 +233,9 @@ let mk_carrier_upd
   ))
 : Lemma
   (ensures (
-    let o = mk_carrier len offset s full_perm in
-    let o' = mk_carrier len offset (Seq.upd s i v) full_perm in
-    o' `Map.equal` Map.upd o (offset + i) (Some (v, full_perm))
+    let o = mk_carrier len offset s 1.0R in
+    let o' = mk_carrier len offset (Seq.upd s i v) 1.0R in
+    o' `Map.equal` Map.upd o (offset + i) (Some (v, 1.0R))
   ))
 = ()
 
@@ -249,7 +249,7 @@ fn write
 requires pts_to a s
 ensures pts_to a (Seq.upd s (SZ.v i) v)
 {
-  unfold pts_to a #full_perm s;
+  unfold pts_to a #1.0R s;
   with w. assert (pcm_pts_to (ptr_of a).base w);
   mk_carrier_upd (SZ.v (ptr_of a).base_len) ((ptr_of a).offset) s (SZ.v i) v ();
   Pulse.Lib.Core.write (ptr_of a).base w _
@@ -260,7 +260,7 @@ ensures pts_to a (Seq.upd s (SZ.v i) v)
           v
         )
         _ ((ptr_of a).offset + SZ.v i));
-  fold (pts_to a #full_perm (Seq.upd s (SZ.v i) v));
+  fold (pts_to a #1.0R (Seq.upd s (SZ.v i) v));
 }
 ```
 let op_Array_Assignment = write
@@ -268,7 +268,7 @@ let op_Array_Assignment = write
 (*
 let frame_preserving_upd_one (#elt:Type) (n:erased nat) (s:erased (Seq.seq elt) { Seq.length s == reveal n })
  : FStar.PCM.frame_preserving_upd (PA.pcm elt n)
-      (mk_carrier n 0 s full_perm)
+      (mk_carrier n 0 s 1.0R)
       (PA.one #elt #n)
 = fun _ -> admit(); (PA.one #elt #n) 
  *)
@@ -284,7 +284,7 @@ requires
 ensures 
   emp
 {
-  unfold pts_to a #full_perm s;
+  unfold pts_to a #1.0R s;
   with w. assert (pcm_pts_to (ptr_of a).base w);
   // Pulse.Lib.Core.write (ptr_of a).base w (PA.one #elt #(length a)) (frame_preserving_upd_one #elt (length a) s);
   drop_ (pcm_pts_to (ptr_of a).base _)
@@ -299,7 +299,7 @@ let valid_sum_perm
   (p1 p2: perm)
 : Tot prop
 = let open FStar.Real in
-  valid_perm len offset slice_len (sum_perm p1 p2)
+  valid_perm len offset slice_len (p1 +. p2)
 
 ```pulse
 ghost
@@ -317,7 +317,7 @@ ensures
   pure (
     composable (mk_carrier len offset s p1)
                (mk_carrier len offset s p2) /\
-    mk_carrier len offset s (p1 `sum_perm` p2) 
+    mk_carrier len offset s (p1 +. p2) 
       `Map.equal` 
     ((mk_carrier len offset s p1) `compose` (mk_carrier len offset s p2))
   )
@@ -336,20 +336,20 @@ fn share'
   (#s:Ghost.erased (Seq.seq elt))
   (#p:perm)
 requires pts_to arr #p s
-ensures pts_to arr #(half_perm p) s ** pts_to arr #(half_perm p) s
+ensures pts_to arr #(p /. 2.0R) s ** pts_to arr #(p /. 2.0R) s
 {
   unfold pts_to arr #p s;
   with w. assert (pcm_pts_to (ptr_of arr).base w);
   mk_carrier_share (SZ.v (ptr_of arr).base_len)
        (ptr_of arr).offset
-       s 
-       (half_perm p) 
-       (half_perm p) ();
+       s
+       (p /. 2.0R) 
+       (p /. 2.0R) ();
   Pulse.Lib.Core.share (ptr_of arr).base
-    (mk_carrier (SZ.v (ptr_of arr).base_len) (ptr_of arr).offset s (half_perm p))
-    (mk_carrier (SZ.v (ptr_of arr).base_len) (ptr_of arr).offset s (half_perm p));
-  fold pts_to arr #(half_perm p) s;
-  fold pts_to arr #(half_perm p) s;
+    (mk_carrier (SZ.v (ptr_of arr).base_len) (ptr_of arr).offset s (p /. 2.0R))
+    (mk_carrier (SZ.v (ptr_of arr).base_len) (ptr_of arr).offset s (p /. 2.0R));
+  fold pts_to arr #(p /. 2.0R) s;
+  fold pts_to arr #(p /. 2.0R) s;
 }
 ```
 let share = share'
@@ -371,17 +371,17 @@ let mk_carrier_gather
     let c1 = mk_carrier len offset s1 p1 in
     let c2 = mk_carrier len offset s2 p2 in
       composable c1 c2 /\
-      mk_carrier len offset s1 (p1 `sum_perm` p2) == (c1 `compose` c2) /\
-      mk_carrier len offset s2 (p1 `sum_perm` p2) == (c1 `compose` c2) /\
+      mk_carrier len offset s1 (p1 +. p2) == (c1 `compose` c2) /\
+      mk_carrier len offset s2 (p1 +. p2) == (c1 `compose` c2) /\
       s1 == s2
   )
 =
   let c1 = mk_carrier len offset s1 p1 in
   let c2 = mk_carrier len offset s2 p2 in
   assert (composable c1 c2);
-  assert (mk_carrier len offset s1 (p1 `sum_perm` p2) `Map.equal` (c1 `compose` c2));
-  assert (mk_carrier len offset s2 (p1 `sum_perm` p2) `Map.equal` (c1 `compose` c2));
-  mk_carrier_inj len offset s1 s2 (p1 `sum_perm` p2) (p1 `sum_perm` p2)
+  assert (mk_carrier len offset s1 (p1 +. p2) `Map.equal` (c1 `compose` c2));
+  assert (mk_carrier len offset s2 (p1 +. p2) `Map.equal` (c1 `compose` c2));
+  mk_carrier_inj len offset s1 s2 (p1 +. p2) (p1 +. p2)
 
 
 let mk_carrier_valid_sum_perm
@@ -399,7 +399,7 @@ let mk_carrier_valid_sum_perm
   if Seq.length s > 0 && offset + Seq.length s <= len
   then
     let open FStar.Real in
-    assert (Frac.composable (Map.sel c1 offset) (Map.sel c2 offset) <==> valid_perm len offset (Seq.length s) (sum_perm p1 p2))
+    assert (Frac.composable (Map.sel c1 offset) (Map.sel c2 offset) <==> valid_perm len offset (Seq.length s) (p1 +. p2))
   else ()
 
 ```pulse
@@ -420,7 +420,7 @@ fn gather'
   (#s0 #s1:Ghost.erased (Seq.seq a))
   (#p0 #p1:perm)
 requires pts_to arr #p0 s0 ** pts_to arr #p1 s1
-ensures pts_to arr #(sum_perm p0 p1) s0 ** pure (s0 == s1)
+ensures pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1)
 {
   unfold pts_to arr #p0 s0;
   with w0. assert (pcm_pts_to (ptr_of arr).base w0);
@@ -429,7 +429,7 @@ ensures pts_to arr #(sum_perm p0 p1) s0 ** pure (s0 == s1)
   Pulse.Lib.Core.gather (ptr_of arr).base w0 w1;
   of_squash (mk_carrier_gather (SZ.v (ptr_of arr).base_len) ((ptr_of arr).offset) s0 s1 p0 p1 ());
   of_squash (mk_carrier_valid_sum_perm (SZ.v (ptr_of arr).base_len) ((ptr_of arr).offset) s0 p0 p1);
-  fold pts_to arr #(sum_perm p0 p1) s0;
+  fold pts_to arr #(p0 +. p1) s0;
 }
 ```
 let gather = gather'
@@ -500,7 +500,7 @@ let pts_to_range
   (x:array a)
   ([@@@ equate_by_smt] i:nat)
   ([@@@ equate_by_smt] j: nat)
-  (#[exact (`full_perm)] p:perm)
+  (#[exact (`1.0R)] p:perm)
   ([@@@ equate_by_smt] s: Seq.seq a)
 : vprop
 = exists* (q:in_bounds i j x). pts_to (array_slice x i j) #p s ** token q
@@ -863,7 +863,7 @@ fn pts_to_range_upd'
   (#l: Ghost.erased nat{l <= SZ.v i})
   (#r: Ghost.erased nat{SZ.v i < r})
   (#s0: Ghost.erased (Seq.seq t))
-requires pts_to_range a l r #full_perm s0
+requires pts_to_range a l r #1.0R s0
 ensures
   exists* s.
     pts_to_range a l r s **
@@ -874,7 +874,7 @@ ensures
 {
   pts_to_range_split a l (SZ.v i) r;
   with s1 s2. _;
-  unfold pts_to_range a (SZ.v i) r #full_perm s2;
+  unfold pts_to_range a (SZ.v i) r #1.0R s2;
   unfold (token #(in_bounds (SZ.v i) r a) _);
   let a' = array_slice_impl a i r ();
   rewrite each (array_slice a (SZ.v i) r) as a';

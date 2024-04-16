@@ -88,4 +88,4 @@ val pts_to_injective_eq (#a:_)
 val pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
   : stt_ghost unit emp_inames
       (pts_to r #p v)
-      (fun _ -> pts_to r #p v ** pure (p <. 1.0R))
+      (fun _ -> pts_to r #p v ** pure (p <=. 1.0R))
