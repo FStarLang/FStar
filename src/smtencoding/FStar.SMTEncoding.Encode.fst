@@ -1288,21 +1288,21 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                    if inj
                    then (
                      match (SS.compress t).n with
-                     | Tm_type _ -> (* this parameter is an "arity", i.e., a type function *)
-                       true
+                     | Tm_type u -> 
+                      (* retain injectivity for parameters that are type functions
+                         from small universes (i.e., all formals are smaller than the constructed type)
+                         to a universe <= the universe of the constructed type.
+                         See BugBoxInjectivity.fst *)
+                       u_leq_u_k u
                      | Tm_name _ -> (* this is a value of another type parameter in scope *)
                        true
                      | _ ->
-                      //  BU.print5 "No injectivity for %s because of parameter %s : %s @ universe %s </= %s\n"
-                      //             (Ident.string_of_lid t_lid)
-                      //             (Print.binder_to_string tp)
-                      //             (Print.term_to_string t_tp)
-                      //             (Print.univ_to_string (N.normalize_universe env_tps u_tp))
-                      //             (Print.univ_to_string u_k);
                        false
                    )
-                   else
+                   else (
                       false
+                   )
+
                  )
              in
              List.forall2 tp_ok tps us
