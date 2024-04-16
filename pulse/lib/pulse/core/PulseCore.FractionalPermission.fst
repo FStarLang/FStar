@@ -27,6 +27,7 @@ open FStar.Real
 /// permission.
 /// Note: Does not use real literals, but rather the wrappers one, zero, two, …
 /// Real literals are currently not supported by Meta-F*'s reflection framework
+[@@ erasable]
 type perm : Type0 = r:real { r >. zero }
 
 // /// A reference is only safely writeable if we have full permission
