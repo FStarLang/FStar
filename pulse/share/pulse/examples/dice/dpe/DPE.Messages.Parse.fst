@@ -205,8 +205,8 @@ let parse_dpe_cmd_post
 = match res with
   | None -> A.pts_to input #p s ** pure (parse_dpe_cmd_failure_postcond s)
   | Some cmd -> exists* vargs.
-      raw_data_item_match full_perm cmd.dpe_cmd_args vargs **
-      (raw_data_item_match full_perm cmd.dpe_cmd_args vargs @==>
+      raw_data_item_match 1.0R cmd.dpe_cmd_args vargs **
+      (raw_data_item_match 1.0R cmd.dpe_cmd_args vargs @==>
         A.pts_to input #p s
       ) **
       pure (
@@ -236,10 +236,10 @@ fn parse_dpe_cmd (#s:erased (Seq.seq U8.t))
     } else {
         unfold (cbor_read_deterministically_encoded_with_typ_post Spec.session_message input p s c);
         unfold (cbor_read_deterministically_encoded_with_typ_success_post Spec.session_message input p s c);
-        with vc . assert (raw_data_item_match full_perm c.cbor_read_payload vc);
+        with vc . assert (raw_data_item_match 1.0R c.cbor_read_payload vc);
         with vrem1 . assert (A.pts_to c.cbor_read_remainder #p vrem1);
         stick_consume_r ()
-          #(raw_data_item_match full_perm c.cbor_read_payload vc)
+          #(raw_data_item_match 1.0R c.cbor_read_payload vc)
           #(A.pts_to c.cbor_read_remainder #p vrem1)
           #(A.pts_to input #p s)
         ;
@@ -263,10 +263,10 @@ fn parse_dpe_cmd (#s:erased (Seq.seq U8.t))
         } else {
             unfold (cbor_read_deterministically_encoded_with_typ_post Spec.command_message cbor_str.cbor_string_payload ps cs msg);
             unfold (cbor_read_deterministically_encoded_with_typ_success_post Spec.command_message cbor_str.cbor_string_payload ps cs msg);
-            with vmsg . assert (raw_data_item_match full_perm msg.cbor_read_payload vmsg);
+            with vmsg . assert (raw_data_item_match 1.0R msg.cbor_read_payload vmsg);
             with vrem2 . assert (A.pts_to msg.cbor_read_remainder #ps vrem2);
             stick_consume_r ()
-              #(raw_data_item_match full_perm msg.cbor_read_payload vmsg)
+              #(raw_data_item_match 1.0R msg.cbor_read_payload vmsg)
               #(A.pts_to msg.cbor_read_remainder #ps vrem2)
               #(A.pts_to cbor_str.cbor_string_payload #ps cs)
             ;
@@ -284,15 +284,15 @@ fn parse_dpe_cmd (#s:erased (Seq.seq U8.t))
               elim_implies ();
               let cmd_args = cbor_array_index msg.cbor_read_payload 1sz;
               stick_trans ();
-              with vargs . assert (raw_data_item_match full_perm cmd_args vargs);
+              with vargs . assert (raw_data_item_match 1.0R cmd_args vargs);
 
               let res = {
                 dpe_cmd_sid = sid;
                 dpe_cmd_cid = cmd_id;
                 dpe_cmd_args = cmd_args;
               };
-              rewrite (raw_data_item_match full_perm cmd_args vargs ** (raw_data_item_match full_perm cmd_args vargs @==> A.pts_to input #p s)) // FIXME: should `fold` honor projectors and not just `match`?
-                as (raw_data_item_match full_perm res.dpe_cmd_args vargs ** (raw_data_item_match full_perm res.dpe_cmd_args vargs @==> A.pts_to input #p s));
+              rewrite (raw_data_item_match 1.0R cmd_args vargs ** (raw_data_item_match 1.0R cmd_args vargs @==> A.pts_to input #p s)) // FIXME: should `fold` honor projectors and not just `match`?
+                as (raw_data_item_match 1.0R res.dpe_cmd_args vargs ** (raw_data_item_match 1.0R res.dpe_cmd_args vargs @==> A.pts_to input #p s));
               fold (parse_dpe_cmd_post len input s p (Some res));
               Some res
             }
