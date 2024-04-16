@@ -47,13 +47,15 @@ let ceq_eq #a #x #y h = let Refl = h in ()
 
 val ceq_congruence : #a:Type -> #b:Type -> #x:a -> #y:a -> ceq x y ->
                      f:(a -> GTot b) -> GTot (ceq (f x) (f y))
-let ceq_congruence #a #b #x #y h f = Refl #_ #(f x) //refuse to infer terms with non-Tot effect
+let ceq_congruence #a #b #x #y h f =
+  let Refl = h in
+  Refl #_ #(f x) //refuse to infer terms with non-Tot effect
 
 val ceq_symm : #a:Type -> #x:a -> #y:a -> ceq x y -> Tot (ceq y x)
-let ceq_symm #a #x #y h = Refl
+let ceq_symm #a #x #y h = let Refl = h in Refl
 
 val ceq_trans : #a:Type -> #x:a -> #y:a -> #z:a -> ceq x y -> ceq y z -> Tot (ceq x z)
-let ceq_trans #a #x #y #z hxy hyz = Refl
+let ceq_trans #a #x #y #z hxy hyz = let Refl = hxy in let Refl = hyz in Refl
 
 type ctrue =
   | I : ctrue
