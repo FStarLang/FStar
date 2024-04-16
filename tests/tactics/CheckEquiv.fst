@@ -31,13 +31,6 @@ let _ = assert True by begin
   ()
 end
 
-#pop-options
-
-(* This one creates a guard for:
-
-  1 == (match hide 1 with | 1 -> 1 | _ -> 0)
-
-*)
 let _ = assert True by begin
   let env = cur_env () in
   let _ = must <| check_equiv env (`1) (`(reveal u#0 #int (hide u#0 #int 1))) in
