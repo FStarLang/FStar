@@ -80,6 +80,15 @@ let rec first (f : 'a -> Tac 'b) (l : list 'a) : Tac 'b =
     | [] -> raise NoInst
     | x::xs -> (fun () -> f x) `or_else` (fun () -> first f xs)
 
+private
+let rec maybe_intros () : Tac unit =
+  let g = cur_goal () in
+  match inspect g with
+  | Tv_Arrow _ _ ->
+    ignore (intro ());
+    maybe_intros ()
+  | _ -> ()
+
 (*
  tcresolve': the main typeclass instantiation function.
 
@@ -97,6 +106,7 @@ let rec tcresolve' (seen : list term) (glb : list fv) (fuel : int) : Tac unit =
       raise NoInst;
     debug (fun () -> "fuel = " ^ string_of_int fuel);
 
+    maybe_intros();
     let g = cur_goal () in
 
     (* Try to detect loops *)
@@ -130,7 +140,7 @@ and global (head_fv : fv) (seen : list term) (glb : list fv) (fuel : int) () : T
           glb
 
 and trywith (head_fv : fv) (seen:list term) (glb : list fv) (fuel:int) (t typ : term) : Tac unit =
-    debug (fun () -> "trywith " ^ term_to_string t);
+    //debug (fun () -> "trywith " ^ term_to_string t);
     match head_of (res_typ typ) with
     | None ->
       debug (fun () -> "no head for typ of this? " ^ term_to_string t ^ "    typ=" ^ term_to_string typ);
@@ -143,18 +153,9 @@ and trywith (head_fv : fv) (seen:list term) (glb : list fv) (fuel:int) (t typ : 
           debug (fun () -> dump "next"; "apply seems to have worked");
           tcresolve' seen glb (fuel-1))
       ) else (
-        debug (fun () -> "different class: " ^ fv_to_string fv' ^ " <> " ^ fv_to_string head_fv);
+        //debug (fun () -> "different class: " ^ fv_to_string fv' ^ " <> " ^ fv_to_string head_fv);
         raise NoInst
       )
-
-private
-let rec maybe_intros () : Tac unit =
-  let g = cur_goal () in
-  match inspect g with
-  | Tv_Arrow _ _ ->
-    ignore (intro ());
-    maybe_intros ()
-  | _ -> ()
 
 [@@plugin]
 let tcresolve () : Tac unit =
@@ -175,9 +176,13 @@ let tcresolve () : Tac unit =
       debug (fun () -> "Solved to:\n\t" ^ term_to_string w)
     with
     | NoInst ->
-      fail ("Could not solve constraint " ^ term_to_string (cur_goal ()))
-    | TacticFailure s ->
-      fail ("Typeclass resolution failed: " ^ s)
+      let open FStar.Stubs.Pprint in
+      fail_doc [
+        prefix 2 1 (text "Could not solve constraint")
+          (arbitrary_string (term_to_string (cur_goal ())));
+      ]
+    | TacticFailure msg ->
+      fail_doc ([text "Typeclass resolution failed"] @ msg)
     | e -> raise e
 
 (**** Generating methods from a class ****)

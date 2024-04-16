@@ -1146,7 +1146,9 @@ let (built_in_primitive_steps_list :
                       FStar_TypeChecker_Primops_Docs.ops
                       (FStar_Compiler_List.op_At
                          FStar_TypeChecker_Primops_MachineInts.ops
-                         FStar_TypeChecker_Primops_Eq.dec_eq_ops)))))))
+                         (FStar_Compiler_List.op_At
+                            FStar_TypeChecker_Primops_Eq.dec_eq_ops
+                            FStar_TypeChecker_Primops_Errors_Msg.ops))))))))
 let (equality_ops_list :
   FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
   FStar_TypeChecker_Primops_Eq.prop_eq_ops

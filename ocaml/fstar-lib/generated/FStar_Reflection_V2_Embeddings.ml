@@ -2640,3 +2640,17 @@ let (unfold_lazy_universe :
     FStar_Syntax_Syntax.mk_Tm_app
       FStar_Reflection_V2_Constants.fstar_refl_pack_universe.FStar_Reflection_V2_Constants.t
       uu___ i.FStar_Syntax_Syntax.rng
+let (unfold_lazy_doc :
+  FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term) =
+  fun i ->
+    let d = FStar_Compiler_Dyn.undyn i.FStar_Syntax_Syntax.blob in
+    let lid = FStar_Ident.lid_of_str "FStar.Stubs.Pprint.arbitrary_string" in
+    let s = FStar_Pprint.render d in
+    let uu___ = FStar_Syntax_Syntax.fvar lid FStar_Pervasives_Native.None in
+    let uu___1 =
+      let uu___2 =
+        let uu___3 =
+          embed FStar_Syntax_Embeddings.e_string i.FStar_Syntax_Syntax.rng s in
+        FStar_Syntax_Syntax.as_arg uu___3 in
+      [uu___2] in
+    FStar_Syntax_Syntax.mk_Tm_app uu___ uu___1 i.FStar_Syntax_Syntax.rng

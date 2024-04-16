@@ -15,7 +15,8 @@
 *)
 module FStar.Reflection.V2.Embeddings
 
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
 open FStar.Order
@@ -76,3 +77,4 @@ val unfold_lazy_env    : lazyinfo -> term
 val unfold_lazy_sigelt : lazyinfo -> term
 val unfold_lazy_letbinding : lazyinfo -> term
 val unfold_lazy_universe   : lazyinfo -> term
+val unfold_lazy_doc        : lazyinfo -> term

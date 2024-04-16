@@ -20,5 +20,5 @@ RUN rm -rf FStar
 RUN cp -p -r $(opam config var fstar:share)/examples $HOME/examples
 RUN cp -p -r $(opam config var fstar:share)/doc $HOME/doc
 RUN eval $(opam env) && make -C $HOME/examples -j $opamthreads
-RUN eval $(opam env) && make -C $HOME/doc/tutorial -j $opamthreads regressions
+RUN eval $(opam env) && make -C $HOME/doc/old/tutorial -j $opamthreads regressions
 RUN opam uninstall -v -v -v fstar

@@ -91,6 +91,10 @@ let (whnf :
 let (tts :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.string) =
   FStar_TypeChecker_Normalize.term_to_string
+let (ttd :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.term -> FStar_Pprint.document)
+  = FStar_TypeChecker_Normalize.term_to_doc
 let (bnorm_goal : FStar_Tactics_Types.goal -> FStar_Tactics_Types.goal) =
   fun g ->
     let uu___ =
@@ -840,18 +844,41 @@ let (tc_unifier_solved_implicits :
                           if uu___3
                           then
                             let uu___4 =
-                              FStar_Class_Show.show
-                                FStar_Syntax_Print.showable_uvar
-                                u.FStar_Syntax_Syntax.ctx_uvar_head in
-                            let uu___5 =
-                              FStar_Class_Show.show
-                                FStar_Syntax_Print.showable_term sol in
-                            let uu___6 =
-                              FStar_Class_Show.show
-                                FStar_Syntax_Print.showable_term g in
-                            fail3
-                              "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed;guard is\n%s"
-                              uu___4 uu___5 uu___6
+                              let uu___5 =
+                                let uu___6 =
+                                  FStar_Errors_Msg.text
+                                    "Could not typecheck unifier solved implicit" in
+                                let uu___7 =
+                                  let uu___8 =
+                                    FStar_Class_PP.pp
+                                      FStar_Syntax_Print.pretty_uvar
+                                      u.FStar_Syntax_Syntax.ctx_uvar_head in
+                                  let uu___9 =
+                                    let uu___10 = FStar_Errors_Msg.text "to" in
+                                    let uu___11 =
+                                      let uu___12 =
+                                        FStar_Class_PP.pp
+                                          FStar_Syntax_Print.pretty_term sol in
+                                      let uu___13 =
+                                        FStar_Errors_Msg.text
+                                          "since it produced a guard and guards were not allowed" in
+                                      FStar_Pprint.op_Hat_Slash_Hat uu___12
+                                        uu___13 in
+                                    FStar_Pprint.op_Hat_Slash_Hat uu___10
+                                      uu___11 in
+                                  FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                                FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                              let uu___6 =
+                                let uu___7 =
+                                  let uu___8 =
+                                    FStar_Errors_Msg.text "Guard =" in
+                                  let uu___9 =
+                                    FStar_Class_PP.pp
+                                      FStar_Syntax_Print.pretty_term g in
+                                  FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                                [uu___7] in
+                              uu___5 :: uu___6 in
+                            FStar_Tactics_Monad.fail_doc uu___4
                           else
                             (let uu___5 =
                                proc_guard' false "guard for implicit" env2
@@ -870,17 +897,39 @@ let (tc_unifier_solved_implicits :
                                           (Obj.repr ()))) uu___6))
                       | FStar_Pervasives.Inr failed ->
                           let uu___3 =
-                            FStar_Class_Show.show
-                              FStar_Syntax_Print.showable_uvar
-                              u.FStar_Syntax_Syntax.ctx_uvar_head in
-                          let uu___4 =
-                            FStar_Class_Show.show
-                              FStar_Syntax_Print.showable_term sol in
-                          let uu___5 =
-                            FStar_TypeChecker_Core.print_error failed in
-                          fail3
-                            "Could not typecheck unifier solved implicit %s to %s because %s"
-                            uu___3 uu___4 uu___5)) in
+                            let uu___4 =
+                              let uu___5 =
+                                FStar_Errors_Msg.text
+                                  "Could not typecheck unifier solved implicit" in
+                              let uu___6 =
+                                let uu___7 =
+                                  FStar_Class_PP.pp
+                                    FStar_Syntax_Print.pretty_uvar
+                                    u.FStar_Syntax_Syntax.ctx_uvar_head in
+                                let uu___8 =
+                                  let uu___9 = FStar_Errors_Msg.text "to" in
+                                  let uu___10 =
+                                    let uu___11 =
+                                      FStar_Class_PP.pp
+                                        FStar_Syntax_Print.pretty_term sol in
+                                    let uu___12 =
+                                      let uu___13 =
+                                        FStar_Errors_Msg.text "because" in
+                                      let uu___14 =
+                                        let uu___15 =
+                                          FStar_TypeChecker_Core.print_error
+                                            failed in
+                                        FStar_Pprint.doc_of_string uu___15 in
+                                      FStar_Pprint.op_Hat_Slash_Hat uu___13
+                                        uu___14 in
+                                    FStar_Pprint.op_Hat_Slash_Hat uu___11
+                                      uu___12 in
+                                  FStar_Pprint.op_Hat_Slash_Hat uu___9
+                                    uu___10 in
+                                FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                              FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+                            [uu___4] in
+                          FStar_Tactics_Monad.fail_doc uu___3)) in
           if env1.FStar_TypeChecker_Env.phase1
           then
             FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac ()
@@ -1499,19 +1548,34 @@ let (solve :
                    else
                      (let uu___3 =
                         let uu___4 =
-                          let uu___5 = FStar_Tactics_Types.goal_env goal in
-                          tts uu___5 solution in
-                        let uu___5 =
-                          let uu___6 = FStar_Tactics_Types.goal_env goal in
-                          let uu___7 = FStar_Tactics_Types.goal_witness goal in
-                          tts uu___6 uu___7 in
-                        let uu___6 =
-                          let uu___7 = FStar_Tactics_Types.goal_env goal in
-                          let uu___8 = FStar_Tactics_Types.goal_type goal in
-                          tts uu___7 uu___8 in
-                        FStar_Compiler_Util.format3
-                          "%s does not solve %s : %s" uu___4 uu___5 uu___6 in
-                      Obj.magic (FStar_Tactics_Monad.fail uu___3))) uu___2))
+                          let uu___5 =
+                            let uu___6 = FStar_Tactics_Types.goal_env goal in
+                            ttd uu___6 solution in
+                          let uu___6 =
+                            let uu___7 =
+                              FStar_Errors_Msg.text "does not solve" in
+                            let uu___8 =
+                              let uu___9 =
+                                let uu___10 =
+                                  FStar_Tactics_Types.goal_env goal in
+                                let uu___11 =
+                                  FStar_Tactics_Types.goal_witness goal in
+                                ttd uu___10 uu___11 in
+                              let uu___10 =
+                                let uu___11 = FStar_Errors_Msg.text ":" in
+                                let uu___12 =
+                                  let uu___13 =
+                                    FStar_Tactics_Types.goal_env goal in
+                                  let uu___14 =
+                                    FStar_Tactics_Types.goal_type goal in
+                                  ttd uu___13 uu___14 in
+                                FStar_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
+                              FStar_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
+                            FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                          FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+                        [uu___4] in
+                      Obj.magic (FStar_Tactics_Monad.fail_doc uu___3)))
+                  uu___2))
 let (solve' :
   FStar_Tactics_Types.goal ->
     FStar_Syntax_Syntax.term -> unit FStar_Tactics_Monad.tac)
@@ -1820,29 +1884,71 @@ let (__tc :
                                   ()
                               with
                               | FStar_Errors.Err (uu___2, msg, uu___3) ->
-                                  let uu___4 = tts e1 t in
-                                  let uu___5 =
-                                    let uu___6 =
-                                      FStar_TypeChecker_Env.all_binders e1 in
-                                    FStar_Syntax_Print.binders_to_string ", "
-                                      uu___6 in
-                                  let uu___6 = FStar_Errors_Msg.rendermsg msg in
-                                  fail3
-                                    "Cannot type (1) %s in context (%s). Error = (%s)"
-                                    uu___4 uu___5 uu___6
+                                  let uu___4 =
+                                    let uu___5 =
+                                      let uu___6 =
+                                        let uu___7 =
+                                          let uu___8 =
+                                            FStar_Errors_Msg.text
+                                              "Cannot type" in
+                                          let uu___9 = ttd e1 t in
+                                          FStar_Pprint.prefix
+                                            (Prims.of_int (2)) Prims.int_one
+                                            uu___8 uu___9 in
+                                        let uu___8 =
+                                          let uu___9 =
+                                            FStar_Errors_Msg.text
+                                              "in context" in
+                                          let uu___10 =
+                                            let uu___11 =
+                                              FStar_TypeChecker_Env.all_binders
+                                                e1 in
+                                            FStar_Class_PP.pp
+                                              (FStar_Class_PP.pp_list
+                                                 FStar_Syntax_Print.pretty_binder)
+                                              uu___11 in
+                                          FStar_Pprint.prefix
+                                            (Prims.of_int (2)) Prims.int_one
+                                            uu___9 uu___10 in
+                                        FStar_Pprint.op_Hat_Slash_Hat uu___7
+                                          uu___8 in
+                                      [uu___6] in
+                                    FStar_Compiler_List.op_At uu___5 msg in
+                                  FStar_Tactics_Monad.fail_doc uu___4
                               | FStar_Errors.Error
                                   (uu___2, msg, uu___3, uu___4) ->
-                                  let uu___5 = tts e1 t in
-                                  let uu___6 =
-                                    let uu___7 =
-                                      FStar_TypeChecker_Env.all_binders e1 in
-                                    FStar_Syntax_Print.binders_to_string ", "
-                                      uu___7 in
-                                  let uu___7 = FStar_Errors_Msg.rendermsg msg in
-                                  fail3
-                                    "Cannot type (1) %s in context (%s). Error = (%s)"
-                                    uu___5 uu___6 uu___7))) uu___))) uu___1
-        uu___
+                                  let uu___5 =
+                                    let uu___6 =
+                                      let uu___7 =
+                                        let uu___8 =
+                                          let uu___9 =
+                                            FStar_Errors_Msg.text
+                                              "Cannot type" in
+                                          let uu___10 = ttd e1 t in
+                                          FStar_Pprint.prefix
+                                            (Prims.of_int (2)) Prims.int_one
+                                            uu___9 uu___10 in
+                                        let uu___9 =
+                                          let uu___10 =
+                                            FStar_Errors_Msg.text
+                                              "in context" in
+                                          let uu___11 =
+                                            let uu___12 =
+                                              FStar_TypeChecker_Env.all_binders
+                                                e1 in
+                                            FStar_Class_PP.pp
+                                              (FStar_Class_PP.pp_list
+                                                 FStar_Syntax_Print.pretty_binder)
+                                              uu___12 in
+                                          FStar_Pprint.prefix
+                                            (Prims.of_int (2)) Prims.int_one
+                                            uu___10 uu___11 in
+                                        FStar_Pprint.op_Hat_Slash_Hat uu___8
+                                          uu___9 in
+                                      [uu___7] in
+                                    FStar_Compiler_List.op_At uu___6 msg in
+                                  FStar_Tactics_Monad.fail_doc uu___5)))
+                     uu___))) uu___1 uu___
 let (__tc_ghost :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -2111,29 +2217,71 @@ let (__tc_ghost :
                                                          g))))) uu___1) ()
                               with
                               | FStar_Errors.Err (uu___2, msg, uu___3) ->
-                                  let uu___4 = tts e2 t in
-                                  let uu___5 =
-                                    let uu___6 =
-                                      FStar_TypeChecker_Env.all_binders e2 in
-                                    FStar_Syntax_Print.binders_to_string ", "
-                                      uu___6 in
-                                  let uu___6 = FStar_Errors_Msg.rendermsg msg in
-                                  fail3
-                                    "Cannot type (2) %s in context (%s). Error = (%s)"
-                                    uu___4 uu___5 uu___6
+                                  let uu___4 =
+                                    let uu___5 =
+                                      let uu___6 =
+                                        let uu___7 =
+                                          let uu___8 =
+                                            FStar_Errors_Msg.text
+                                              "Cannot type" in
+                                          let uu___9 = ttd e2 t in
+                                          FStar_Pprint.prefix
+                                            (Prims.of_int (2)) Prims.int_one
+                                            uu___8 uu___9 in
+                                        let uu___8 =
+                                          let uu___9 =
+                                            FStar_Errors_Msg.text
+                                              "in context" in
+                                          let uu___10 =
+                                            let uu___11 =
+                                              FStar_TypeChecker_Env.all_binders
+                                                e2 in
+                                            FStar_Class_PP.pp
+                                              (FStar_Class_PP.pp_list
+                                                 FStar_Syntax_Print.pretty_binder)
+                                              uu___11 in
+                                          FStar_Pprint.prefix
+                                            (Prims.of_int (2)) Prims.int_one
+                                            uu___9 uu___10 in
+                                        FStar_Pprint.op_Hat_Slash_Hat uu___7
+                                          uu___8 in
+                                      [uu___6] in
+                                    FStar_Compiler_List.op_At uu___5 msg in
+                                  FStar_Tactics_Monad.fail_doc uu___4
                               | FStar_Errors.Error
                                   (uu___2, msg, uu___3, uu___4) ->
-                                  let uu___5 = tts e2 t in
-                                  let uu___6 =
-                                    let uu___7 =
-                                      FStar_TypeChecker_Env.all_binders e2 in
-                                    FStar_Syntax_Print.binders_to_string ", "
-                                      uu___7 in
-                                  let uu___7 = FStar_Errors_Msg.rendermsg msg in
-                                  fail3
-                                    "Cannot type (2) %s in context (%s). Error = (%s)"
-                                    uu___5 uu___6 uu___7))) uu___))) uu___1
-        uu___
+                                  let uu___5 =
+                                    let uu___6 =
+                                      let uu___7 =
+                                        let uu___8 =
+                                          let uu___9 =
+                                            FStar_Errors_Msg.text
+                                              "Cannot type" in
+                                          let uu___10 = ttd e2 t in
+                                          FStar_Pprint.prefix
+                                            (Prims.of_int (2)) Prims.int_one
+                                            uu___9 uu___10 in
+                                        let uu___9 =
+                                          let uu___10 =
+                                            FStar_Errors_Msg.text
+                                              "in context" in
+                                          let uu___11 =
+                                            let uu___12 =
+                                              FStar_TypeChecker_Env.all_binders
+                                                e2 in
+                                            FStar_Class_PP.pp
+                                              (FStar_Class_PP.pp_list
+                                                 FStar_Syntax_Print.pretty_binder)
+                                              uu___12 in
+                                          FStar_Pprint.prefix
+                                            (Prims.of_int (2)) Prims.int_one
+                                            uu___10 uu___11 in
+                                        FStar_Pprint.op_Hat_Slash_Hat uu___8
+                                          uu___9 in
+                                      [uu___7] in
+                                    FStar_Compiler_List.op_At uu___6 msg in
+                                  FStar_Tactics_Monad.fail_doc uu___5)))
+                     uu___))) uu___1 uu___
 let (__tc_lax :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -2514,29 +2662,71 @@ let (__tc_lax :
                                   ()
                               with
                               | FStar_Errors.Err (uu___2, msg, uu___3) ->
-                                  let uu___4 = tts e3 t in
-                                  let uu___5 =
-                                    let uu___6 =
-                                      FStar_TypeChecker_Env.all_binders e3 in
-                                    FStar_Syntax_Print.binders_to_string ", "
-                                      uu___6 in
-                                  let uu___6 = FStar_Errors_Msg.rendermsg msg in
-                                  fail3
-                                    "Cannot type (3) %s in context (%s). Error = (%s)"
-                                    uu___4 uu___5 uu___6
+                                  let uu___4 =
+                                    let uu___5 =
+                                      let uu___6 =
+                                        let uu___7 =
+                                          let uu___8 =
+                                            FStar_Errors_Msg.text
+                                              "Cannot type" in
+                                          let uu___9 = ttd e3 t in
+                                          FStar_Pprint.prefix
+                                            (Prims.of_int (2)) Prims.int_one
+                                            uu___8 uu___9 in
+                                        let uu___8 =
+                                          let uu___9 =
+                                            FStar_Errors_Msg.text
+                                              "in context" in
+                                          let uu___10 =
+                                            let uu___11 =
+                                              FStar_TypeChecker_Env.all_binders
+                                                e3 in
+                                            FStar_Class_PP.pp
+                                              (FStar_Class_PP.pp_list
+                                                 FStar_Syntax_Print.pretty_binder)
+                                              uu___11 in
+                                          FStar_Pprint.prefix
+                                            (Prims.of_int (2)) Prims.int_one
+                                            uu___9 uu___10 in
+                                        FStar_Pprint.op_Hat_Slash_Hat uu___7
+                                          uu___8 in
+                                      [uu___6] in
+                                    FStar_Compiler_List.op_At uu___5 msg in
+                                  FStar_Tactics_Monad.fail_doc uu___4
                               | FStar_Errors.Error
                                   (uu___2, msg, uu___3, uu___4) ->
-                                  let uu___5 = tts e3 t in
-                                  let uu___6 =
-                                    let uu___7 =
-                                      FStar_TypeChecker_Env.all_binders e3 in
-                                    FStar_Syntax_Print.binders_to_string ", "
-                                      uu___7 in
-                                  let uu___7 = FStar_Errors_Msg.rendermsg msg in
-                                  fail3
-                                    "Cannot type (3) %s in context (%s). Error = (%s)"
-                                    uu___5 uu___6 uu___7))) uu___))) uu___1
-        uu___
+                                  let uu___5 =
+                                    let uu___6 =
+                                      let uu___7 =
+                                        let uu___8 =
+                                          let uu___9 =
+                                            FStar_Errors_Msg.text
+                                              "Cannot type" in
+                                          let uu___10 = ttd e3 t in
+                                          FStar_Pprint.prefix
+                                            (Prims.of_int (2)) Prims.int_one
+                                            uu___9 uu___10 in
+                                        let uu___9 =
+                                          let uu___10 =
+                                            FStar_Errors_Msg.text
+                                              "in context" in
+                                          let uu___11 =
+                                            let uu___12 =
+                                              FStar_TypeChecker_Env.all_binders
+                                                e3 in
+                                            FStar_Class_PP.pp
+                                              (FStar_Class_PP.pp_list
+                                                 FStar_Syntax_Print.pretty_binder)
+                                              uu___12 in
+                                          FStar_Pprint.prefix
+                                            (Prims.of_int (2)) Prims.int_one
+                                            uu___10 uu___11 in
+                                        FStar_Pprint.op_Hat_Slash_Hat uu___8
+                                          uu___9 in
+                                      [uu___7] in
+                                    FStar_Compiler_List.op_At uu___6 msg in
+                                  FStar_Tactics_Monad.fail_doc uu___5)))
+                     uu___))) uu___1 uu___
 let (tcc :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -4477,32 +4667,70 @@ let (t_apply_lemma :
                                                                     =
                                                                     let uu___14
                                                                     =
-                                                                    FStar_Syntax_Util.mk_squash
-                                                                    post_u
-                                                                    post1 in
                                                                     let uu___15
+                                                                    =
+                                                                    let uu___16
+                                                                    =
+                                                                    FStar_Errors_Msg.text
+                                                                    "Cannot instantiate lemma:" in
+                                                                    let uu___17
+                                                                    =
+                                                                    FStar_Class_PP.pp
+                                                                    FStar_Syntax_Print.pretty_term
+                                                                    tm1 in
+                                                                    FStar_Pprint.prefix
+                                                                    (Prims.of_int (2))
+                                                                    Prims.int_one
+                                                                    uu___16
+                                                                    uu___17 in
+                                                                    let uu___16
+                                                                    =
+                                                                    let uu___17
+                                                                    =
+                                                                    let uu___18
+                                                                    =
+                                                                    FStar_Errors_Msg.text
+                                                                    "with postcondition:" in
+                                                                    let uu___19
+                                                                    =
+                                                                    FStar_TypeChecker_Normalize.term_to_doc
+                                                                    env1
+                                                                    post1 in
+                                                                    FStar_Pprint.prefix
+                                                                    (Prims.of_int (2))
+                                                                    Prims.int_one
+                                                                    uu___18
+                                                                    uu___19 in
+                                                                    let uu___18
+                                                                    =
+                                                                    let uu___19
+                                                                    =
+                                                                    FStar_Errors_Msg.text
+                                                                    "to match goal:" in
+                                                                    let uu___20
+                                                                    =
+                                                                    let uu___21
                                                                     =
                                                                     FStar_Tactics_Types.goal_type
                                                                     goal in
-                                                                    FStar_TypeChecker_Err.print_discrepancy
-                                                                    (tts env1)
-                                                                    uu___14
-                                                                    uu___15 in
-                                                                    match uu___13
-                                                                    with
-                                                                    | 
-                                                                    (post2,
-                                                                    goalt) ->
-                                                                    let uu___14
-                                                                    =
-                                                                    tts env1
-                                                                    tm1 in
+                                                                    FStar_Class_PP.pp
+                                                                    FStar_Syntax_Print.pretty_term
+                                                                    uu___21 in
+                                                                    FStar_Pprint.prefix
+                                                                    (Prims.of_int (2))
+                                                                    Prims.int_one
+                                                                    uu___19
+                                                                    uu___20 in
+                                                                    FStar_Pprint.op_Hat_Slash_Hat
+                                                                    uu___17
+                                                                    uu___18 in
+                                                                    FStar_Pprint.op_Hat_Slash_Hat
+                                                                    uu___15
+                                                                    uu___16 in
+                                                                    [uu___14] in
                                                                     Obj.magic
-                                                                    (fail3
-                                                                    "Cannot instantiate lemma %s (with postcondition: %s) to match goal (%s)"
-                                                                    uu___14
-                                                                    post2
-                                                                    goalt)
+                                                                    (FStar_Tactics_Monad.fail_doc
+                                                                    uu___13)
                                                                     else
                                                                     (let goal_sc
                                                                     =

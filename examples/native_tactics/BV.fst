@@ -253,7 +253,7 @@ let unfold64 () : Tac unit =
           (fun () -> or_else (fun () -> mapply (`unfold_logor64))
                              (fun () -> mapply (`unfold_logxor64)))
 
-let aux () : Tac unit = or_else unfold64 (fun () -> fail "SKIP")
+let aux () : Tac unit = or_else unfold64 (fun () -> raise SKIP)
 
 /// Finally, a tactic for bitwise operations on U64.t
 [@@plugin]

@@ -1,13 +1,13 @@
 proof-state: State dump @ depth 0 (at the time of failure):
-Location: FStar.Tactics.Typeclasses.fst(178,6-178,73)
+Location: FStar.Tactics.Typeclasses.fst(180,6-183,7)
 Goal 1/1:
  |- _ : Bug1918.mon
 
 >> Got issues: [
 * Error 228 at Bug1918.fst(11,13-11,14):
   - Tactic failed
-  - "Could not solve constraint Bug1918.mon"
-  - See also FStar.Tactics.Typeclasses.fst(178,6-178,73)
+  - Could not solve constraint Bug1918.mon
+  - See also FStar.Tactics.Typeclasses.fst(180,6-183,7)
 
 >>]
 Verified module: Bug1918

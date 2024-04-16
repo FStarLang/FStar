@@ -41,7 +41,7 @@ module Z = FStar.BigInt
 module C = FStar.Const
 module Cfg = FStar.TypeChecker.Cfg
 module PO = FStar.TypeChecker.Primops
-module N = FStar.TypeChecker.Normalize
+module NU = FStar.TypeChecker.Normalize.Unfolding
 module FC = FStar.Const
 module EMB = FStar.Syntax.Embeddings
 module PC = FStar.Parser.Const
@@ -871,11 +871,11 @@ and translate_fv (cfg: config) (bs:list t) (fvar:fv): t =
    let qninfo = Env.lookup_qname (Cfg.cfg_env cfg.core_cfg) (S.lid_of_fv fvar) in
    if is_constr qninfo || is_constr_fv fvar then mkConstruct fvar [] []
    else
-     match N.should_unfold cfg.core_cfg (fun _ -> cfg.core_cfg.reifying) fvar qninfo with
-     | N.Should_unfold_fully  ->
+     match NU.should_unfold cfg.core_cfg (fun _ -> cfg.core_cfg.reifying) fvar qninfo with
+     | NU.Should_unfold_fully  ->
        failwith "Not yet handled"
 
-     | N.Should_unfold_no ->
+     | NU.Should_unfold_no ->
        debug (fun () -> BU.print1 "(1) Decided to not unfold %s\n" (P.fv_to_string fvar));
        begin match Cfg.find_prim_step cfg.core_cfg fvar with
        | Some prim_step when prim_step.strong_reduction_ok (* TODO : || not cfg.strong *) ->
@@ -907,8 +907,8 @@ and translate_fv (cfg: config) (bs:list t) (fvar:fv): t =
        end
 
 
-     | N.Should_unfold_reify
-     | N.Should_unfold_yes ->
+     | NU.Should_unfold_reify
+     | NU.Should_unfold_yes ->
        let t =
          let is_qninfo_visible =
            Option.isSome (Env.lookup_definition_qninfo cfg.core_cfg.delta_level fvar.fv_name.v qninfo)

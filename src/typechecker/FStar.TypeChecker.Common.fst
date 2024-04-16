@@ -394,6 +394,7 @@ let simplify (debug:bool) (tm:term) : term =
         if debug then
             BU.print2 "WPE> is_applied_maybe_squashed %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t);
         match is_squash t with
+
         | Some (_, t') -> is_applied bs t'
         | _ -> begin match is_auto_squash t with
                | Some (_, t') -> is_applied bs t'
