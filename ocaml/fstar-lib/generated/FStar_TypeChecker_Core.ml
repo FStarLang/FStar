@@ -1873,16 +1873,19 @@ let rec (check_relation :
                             | FStar_Syntax_Syntax.Tm_abs uu___6 ->
                                 FStar_TypeChecker_Normalize.normalize
                                   [FStar_TypeChecker_Env.Beta;
-                                  FStar_TypeChecker_Env.Iota] g.tcenv t2
+                                  FStar_TypeChecker_Env.Iota;
+                                  FStar_TypeChecker_Env.Primops] g.tcenv t2
                             | uu___6 -> t2)
                        | FStar_Syntax_Syntax.Tm_let uu___4 ->
                            FStar_TypeChecker_Normalize.normalize
                              [FStar_TypeChecker_Env.Beta;
-                             FStar_TypeChecker_Env.Iota] g.tcenv t2
+                             FStar_TypeChecker_Env.Iota;
+                             FStar_TypeChecker_Env.Primops] g.tcenv t2
                        | FStar_Syntax_Syntax.Tm_match uu___4 ->
                            FStar_TypeChecker_Normalize.normalize
                              [FStar_TypeChecker_Env.Beta;
-                             FStar_TypeChecker_Env.Iota] g.tcenv t2
+                             FStar_TypeChecker_Env.Iota;
+                             FStar_TypeChecker_Env.Primops] g.tcenv t2
                        | FStar_Syntax_Syntax.Tm_refine uu___4 ->
                            FStar_Syntax_Util.flatten_refinement t2
                        | uu___4 -> t2 in

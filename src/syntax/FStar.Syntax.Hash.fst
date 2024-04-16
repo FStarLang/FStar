@@ -549,7 +549,10 @@ and equal_meta m1 m2 =
     Ident.lid_equals n1 n2 &&
     equal_term t1 t2
 
-and equal_lazyinfo l1 l2 = l1 = l2
+and equal_lazyinfo l1 l2 =
+  (* We cannot really compare the blobs. Just try physical
+  equality (first matching kinds). *)
+  l1.lkind = l1.lkind && BU.physical_equality l1.blob l2.blob
 
 and equal_quoteinfo q1 q2 =
   q1.qkind = q2.qkind &&

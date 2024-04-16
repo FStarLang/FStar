@@ -857,12 +857,12 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
         | Tm_app _ ->
           let head = U.leftmost_head t in
           (match (Subst.compress head).n with
-           | Tm_abs _ -> N.normalize [Env.Beta; Env.Iota] g.tcenv t
+           | Tm_abs _ -> N.normalize [Env.Beta; Env.Iota; Env.Primops] g.tcenv t
            | _ -> t)
 
         | Tm_let _
         | Tm_match _ ->
-          N.normalize [Env.Beta;Env.Iota] g.tcenv t
+          N.normalize [Env.Beta;Env.Iota;Env.Primops] g.tcenv t
 
         | Tm_refine _ ->
           U.flatten_refinement t
