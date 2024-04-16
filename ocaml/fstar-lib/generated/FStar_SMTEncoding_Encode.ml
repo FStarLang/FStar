@@ -4674,54 +4674,9 @@ and (encode_sigelt' :
                                                       | FStar_Syntax_Syntax.Tm_type
                                                           u -> u_leq_u_k u
                                                       | FStar_Syntax_Syntax.Tm_name
-                                                          uu___18 ->
-                                                          ((let uu___20 =
-                                                              FStar_Syntax_Print.binder_to_string
-                                                                tp in
-                                                            let uu___21 =
-                                                              FStar_Syntax_Print.term_to_string
-                                                                t_tp1 in
-                                                            FStar_Compiler_Util.print2
-                                                              "Retaining injectivity for name parameter %s : %s\n"
-                                                              uu___20 uu___21);
-                                                           true)
-                                                      | uu___18 ->
-                                                          ((let uu___20 =
-                                                              FStar_Ident.string_of_lid
-                                                                t_lid in
-                                                            let uu___21 =
-                                                              FStar_Syntax_Print.binder_to_string
-                                                                tp in
-                                                            let uu___22 =
-                                                              FStar_Syntax_Print.term_to_string
-                                                                t_tp1 in
-                                                            let uu___23 =
-                                                              let uu___24 =
-                                                                FStar_TypeChecker_Normalize.normalize_universe
-                                                                  env_tps
-                                                                  u_tp in
-                                                              FStar_Syntax_Print.univ_to_string
-                                                                uu___24 in
-                                                            let uu___24 =
-                                                              FStar_Syntax_Print.univ_to_string
-                                                                u_k in
-                                                            FStar_Compiler_Util.print5
-                                                              "No injectivity for %s because of parameter %s : %s @ universe %s </= %s\n"
-                                                              uu___20 uu___21
-                                                              uu___22 uu___23
-                                                              uu___24);
-                                                           false))
-                                                   else
-                                                     ((let uu___19 =
-                                                         FStar_Syntax_Print.binder_to_string
-                                                           tp in
-                                                       let uu___20 =
-                                                         FStar_Syntax_Print.term_to_string
-                                                           t_tp1 in
-                                                       FStar_Compiler_Util.print2
-                                                         "No injectivity for parameter %s : %s\n"
-                                                         uu___19 uu___20);
-                                                      false))) in
+                                                          uu___18 -> true
+                                                      | uu___18 -> false)
+                                                   else false)) in
                                      FStar_Compiler_List.forall2 tp_ok tps3
                                        us)))) in
            ((let uu___4 =
