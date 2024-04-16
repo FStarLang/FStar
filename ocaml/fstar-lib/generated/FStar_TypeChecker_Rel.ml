@@ -5025,6 +5025,25 @@ let (gamma_has_free_uvars :
          | FStar_Syntax_Syntax.Binding_var bv ->
              has_free_uvars bv.FStar_Syntax_Syntax.sort
          | uu___1 -> false) g
+type reveal_hide_t =
+  | Hide of (FStar_Syntax_Syntax.universe * FStar_Syntax_Syntax.typ *
+  FStar_Syntax_Syntax.term) 
+  | Reveal of (FStar_Syntax_Syntax.universe * FStar_Syntax_Syntax.typ *
+  FStar_Syntax_Syntax.term) 
+let (uu___is_Hide : reveal_hide_t -> Prims.bool) =
+  fun projectee -> match projectee with | Hide _0 -> true | uu___ -> false
+let (__proj__Hide__item___0 :
+  reveal_hide_t ->
+    (FStar_Syntax_Syntax.universe * FStar_Syntax_Syntax.typ *
+      FStar_Syntax_Syntax.term))
+  = fun projectee -> match projectee with | Hide _0 -> _0
+let (uu___is_Reveal : reveal_hide_t -> Prims.bool) =
+  fun projectee -> match projectee with | Reveal _0 -> true | uu___ -> false
+let (__proj__Reveal__item___0 :
+  reveal_hide_t ->
+    (FStar_Syntax_Syntax.universe * FStar_Syntax_Syntax.typ *
+      FStar_Syntax_Syntax.term))
+  = fun projectee -> match projectee with | Reveal _0 -> _0
 let rec (solve : worklist -> solution) =
   fun probs ->
     (let uu___1 = debug probs (FStar_Options.Other "Rel") in
@@ -8968,8 +8987,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                               | FStar_Pervasives_Native.None ->
                                   FStar_Pervasives_Native.None
                               | FStar_Pervasives_Native.Some t3 ->
-                                  FStar_Pervasives_Native.Some
-                                    (FStar_Pervasives.Inl t3))
+                                  FStar_Pervasives_Native.Some (Reveal t3))
                            else
                              (let uu___8 =
                                 FStar_Syntax_Util.is_fvar
@@ -8981,8 +8999,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                                 | FStar_Pervasives_Native.None ->
                                     FStar_Pervasives_Native.None
                                 | FStar_Pervasives_Native.Some t3 ->
-                                    FStar_Pervasives_Native.Some
-                                      (FStar_Pervasives.Inr t3)
+                                    FStar_Pervasives_Native.Some (Hide t3)
                               else FStar_Pervasives_Native.None) in
                      let mk_fv_app lid u args r =
                        let fv =
@@ -8994,28 +9011,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                        let uu___6 = is_reveal_or_hide t11 in
                        let uu___7 = is_reveal_or_hide t21 in (uu___6, uu___7) in
                      match uu___5 with
-                     | (FStar_Pervasives_Native.None,
-                        FStar_Pervasives_Native.None) ->
-                         FStar_Pervasives_Native.None
-                     | (FStar_Pervasives_Native.Some (FStar_Pervasives.Inl
-                        uu___6), FStar_Pervasives_Native.Some
-                        (FStar_Pervasives.Inl uu___7)) ->
-                         FStar_Pervasives_Native.None
-                     | (FStar_Pervasives_Native.Some (FStar_Pervasives.Inr
-                        uu___6), FStar_Pervasives_Native.Some
-                        (FStar_Pervasives.Inr uu___7)) ->
-                         FStar_Pervasives_Native.None
-                     | (FStar_Pervasives_Native.Some (FStar_Pervasives.Inl
-                        uu___6), FStar_Pervasives_Native.Some
-                        (FStar_Pervasives.Inr uu___7)) ->
-                         FStar_Pervasives_Native.None
-                     | (FStar_Pervasives_Native.Some (FStar_Pervasives.Inr
-                        uu___6), FStar_Pervasives_Native.Some
-                        (FStar_Pervasives.Inl uu___7)) ->
-                         FStar_Pervasives_Native.None
-                     | (FStar_Pervasives_Native.Some (FStar_Pervasives.Inl
-                        (u, ty, lhs)), FStar_Pervasives_Native.None) when
-                         is_flex lhs ->
+                     | (FStar_Pervasives_Native.Some (Reveal (u, ty, lhs)),
+                        FStar_Pervasives_Native.None) when is_flex lhs ->
                          let rhs =
                            let uu___6 =
                              let uu___7 =
@@ -9027,8 +9024,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                              t21.FStar_Syntax_Syntax.pos in
                          FStar_Pervasives_Native.Some (lhs, rhs)
                      | (FStar_Pervasives_Native.None,
-                        FStar_Pervasives_Native.Some (FStar_Pervasives.Inl
-                        (u, ty, rhs))) when is_flex rhs ->
+                        FStar_Pervasives_Native.Some (Reveal (u, ty, rhs)))
+                         when is_flex rhs ->
                          let lhs =
                            let uu___6 =
                              let uu___7 =
@@ -9039,8 +9036,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                            mk_fv_app FStar_Parser_Const.hide u uu___6
                              t11.FStar_Syntax_Syntax.pos in
                          FStar_Pervasives_Native.Some (lhs, rhs)
-                     | (FStar_Pervasives_Native.Some (FStar_Pervasives.Inr
-                        (u, ty, lhs)), FStar_Pervasives_Native.None) ->
+                     | (FStar_Pervasives_Native.Some (Hide (u, ty, lhs)),
+                        FStar_Pervasives_Native.None) ->
                          let rhs =
                            let uu___6 =
                              let uu___7 =
@@ -9052,8 +9049,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                              t21.FStar_Syntax_Syntax.pos in
                          FStar_Pervasives_Native.Some (lhs, rhs)
                      | (FStar_Pervasives_Native.None,
-                        FStar_Pervasives_Native.Some (FStar_Pervasives.Inr
-                        (u, ty, rhs))) ->
+                        FStar_Pervasives_Native.Some (Hide (u, ty, rhs))) ->
                          let lhs =
                            let uu___6 =
                              let uu___7 =
