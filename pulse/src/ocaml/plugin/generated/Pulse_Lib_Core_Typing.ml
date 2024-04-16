@@ -217,7 +217,7 @@ let (with_local_body_pre :
         fun init ->
           let pts_to =
             Pulse_Reflection_Util.mk_pts_to a x
-              Pulse_Reflection_Util.full_perm_tm init in
+              Pulse_Syntax_Pure.tm_full_perm init in
           Pulse_Reflection_Util.mk_star pre pts_to
 let (with_local_body_post_body :
   FStar_Reflection_Types.term ->
@@ -234,7 +234,7 @@ let (with_local_body_post_body :
             (Pulse_Reflection_Util.mk_abs a
                FStar_Reflection_V2_Data.Q_Explicit
                (Pulse_Reflection_Util.mk_pts_to a x
-                  Pulse_Reflection_Util.full_perm_tm
+                  Pulse_Syntax_Pure.tm_full_perm
                   (FStar_Reflection_Typing.bound_var Prims.int_zero))) in
         Pulse_Reflection_Util.mk_star post exists_tm
 let (with_local_body_post :
@@ -264,7 +264,7 @@ let (with_localarray_body_pre :
           fun len ->
             let pts_to =
               Pulse_Reflection_Util.mk_array_pts_to a arr
-                Pulse_Reflection_Util.full_perm_tm
+                Pulse_Syntax_Pure.tm_full_perm
                 (Pulse_Reflection_Util.mk_seq_create
                    Pulse_Reflection_Util.uzero a
                    (Pulse_Reflection_Util.mk_szv len) init) in
@@ -291,7 +291,7 @@ let (with_localarray_body_post_body :
                (Pulse_Reflection_Util.mk_seq Pulse_Reflection_Util.uzero a)
                FStar_Reflection_V2_Data.Q_Explicit
                (Pulse_Reflection_Util.mk_array_pts_to a arr
-                  Pulse_Reflection_Util.full_perm_tm
+                  Pulse_Syntax_Pure.tm_full_perm
                   (FStar_Reflection_Typing.bound_var Prims.int_zero))) in
         Pulse_Reflection_Util.mk_star post exists_tm
 let (with_localarray_body_post :
