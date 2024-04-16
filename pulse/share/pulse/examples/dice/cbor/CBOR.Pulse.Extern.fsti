@@ -123,9 +123,9 @@ let cbor_read_success_post
   (c: cbor_read_t)
 : Tot vprop
 = exists* v rem.
-    raw_data_item_match full_perm c.cbor_read_payload v **
+    raw_data_item_match 1.0R c.cbor_read_payload v **
     A.pts_to c.cbor_read_remainder #p rem **
-    ((raw_data_item_match full_perm c.cbor_read_payload v ** A.pts_to c.cbor_read_remainder #p rem) @==>
+    ((raw_data_item_match 1.0R c.cbor_read_payload v ** A.pts_to c.cbor_read_remainder #p rem) @==>
       A.pts_to a #p va) **
     pure (cbor_read_success_postcond va c v rem)
 
@@ -181,9 +181,9 @@ let cbor_read_deterministically_encoded_success_post
   (c: cbor_read_t)
 : Tot vprop
 = ((exists* v rem.
-    raw_data_item_match full_perm c.cbor_read_payload v **
+    raw_data_item_match 1.0R c.cbor_read_payload v **
     A.pts_to c.cbor_read_remainder #p rem **
-    ((raw_data_item_match full_perm c.cbor_read_payload v ** A.pts_to c.cbor_read_remainder #p rem) @==>
+    ((raw_data_item_match 1.0R c.cbor_read_payload v ** A.pts_to c.cbor_read_remainder #p rem) @==>
       A.pts_to a #p va) **
     pure (cbor_read_deterministically_encoded_success_postcond va c v rem)
   ))
@@ -239,7 +239,7 @@ val cbor_constr_int64
   (value: U64.t)
 : stt cbor
     emp
-    (fun c -> raw_data_item_match full_perm c (Cbor.Int64 ty value))
+    (fun c -> raw_data_item_match 1.0R c (Cbor.Int64 ty value))
 
 val cbor_destr_simple_value
   (c: cbor)
@@ -258,7 +258,7 @@ val cbor_constr_simple_value
   (value: Cbor.simple_value)
 : stt cbor
     emp
-    (fun c -> raw_data_item_match full_perm c (Cbor.Simple value))
+    (fun c -> raw_data_item_match 1.0R c (Cbor.Simple value))
 
 noextract
 let cbor_destr_string_post
@@ -297,8 +297,8 @@ val cbor_constr_string
       U64.v len == Seq.length va
     ))
     (fun c' -> exists* vc'.
-      raw_data_item_match full_perm c' vc' **
-      (raw_data_item_match full_perm c' vc' @==>
+      raw_data_item_match 1.0R c' vc' **
+      (raw_data_item_match 1.0R c' vc' @==>
         A.pts_to a #p va
       ) ** pure (
       U64.v len == Seq.length va /\
@@ -312,15 +312,15 @@ val cbor_constr_array
   (#v': Ghost.erased (list Cbor.raw_data_item))
 : stt cbor
     (A.pts_to a c' **
-      raw_data_item_array_match full_perm c' v' **
+      raw_data_item_array_match 1.0R c' v' **
       pure (
         U64.v len == List.Tot.length v'
     ))
     (fun res -> exists* vres.
-      raw_data_item_match full_perm res vres **
-      (raw_data_item_match full_perm res vres @==>
+      raw_data_item_match 1.0R res vres **
+      (raw_data_item_match 1.0R res vres @==>
         (A.pts_to a c' **
-          raw_data_item_array_match full_perm c' v')
+          raw_data_item_array_match 1.0R c' v')
       ) ** pure (
       U64.v len == List.Tot.length v' /\
       vres == Cbor.Array v'
@@ -441,7 +441,7 @@ val cbor_read_array
       ((A.pts_to res vres **
         raw_data_item_array_match p vres (maybe_cbor_array v)) @==> (
         raw_data_item_match p a v **
-        (exists* _x. (A.pts_to dest #full_perm _x))
+        (exists* _x. (A.pts_to dest #1.0R _x))
       )) ** pure (
       Cbor.Array? v /\
       U64.v len == A.length dest /\
@@ -496,12 +496,12 @@ val cbor_constr_tagged
   (#v': Ghost.erased (Cbor.raw_data_item))
 : stt cbor
     (R.pts_to a c' **
-      raw_data_item_match full_perm c' v')
+      raw_data_item_match 1.0R c' v')
     (fun res ->
-      raw_data_item_match full_perm res (Cbor.Tagged tag v') **
-      (raw_data_item_match full_perm res (Cbor.Tagged tag v') @==>
+      raw_data_item_match 1.0R res (Cbor.Tagged tag v') **
+      (raw_data_item_match 1.0R res (Cbor.Tagged tag v') @==>
         (R.pts_to a c' **
-          raw_data_item_match full_perm c' v')
+          raw_data_item_match 1.0R c' v')
       )
     )
 
@@ -512,15 +512,15 @@ val cbor_constr_map
   (#v': Ghost.erased (list (Cbor.raw_data_item & Cbor.raw_data_item)))
 : stt cbor
     (A.pts_to a c' **
-      raw_data_item_map_match full_perm c' v' **
+      raw_data_item_map_match 1.0R c' v' **
       pure (
         U64.v len == List.Tot.length v'
     ))
     (fun res -> exists* vres.
-      raw_data_item_match full_perm res vres **
-      (raw_data_item_match full_perm res vres @==>
+      raw_data_item_match 1.0R res vres **
+      (raw_data_item_match 1.0R res vres @==>
         (A.pts_to a c' **
-          raw_data_item_map_match full_perm c' v')
+          raw_data_item_map_match 1.0R c' v')
       ) ** pure (
       U64.v len == List.Tot.length v' /\
       vres == Cbor.Map v'
@@ -676,12 +676,12 @@ val cbor_gather
   (p1 p2: perm)
 : stt_ghost unit emp_inames
     (raw_data_item_match p1 c v1 ** raw_data_item_match p2 c v2)
-    (fun _ -> raw_data_item_match (p1 `sum_perm` p2) c v1 ** pure (v1 == v2))
+    (fun _ -> raw_data_item_match (p1 +. p2) c v1 ** pure (v1 == v2))
 
 val cbor_share
   (c: cbor)
   (v1: Cbor.raw_data_item)
   (p p1 p2: perm)
 : stt_ghost unit emp_inames
-    (raw_data_item_match p c v1 ** pure (p == p1 `sum_perm` p2))
+    (raw_data_item_match p c v1 ** pure (p == p1 +. p2))
     (fun _ -> raw_data_item_match p1 c v1 ** raw_data_item_match p2 c v1)

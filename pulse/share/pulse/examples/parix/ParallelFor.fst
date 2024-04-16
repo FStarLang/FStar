@@ -302,20 +302,20 @@ parallel_for
   (* Use a normal for loop to *spawn* each task *)
   
   (* First, share the pool_alive permission among all n tasks. *)
-  assert (pool_alive #full_perm p);
-  frac_n n p full_perm;
+  assert (pool_alive #1.0R p);
+  frac_n n p 1.0R;
   
-  p_combine pre (fun i -> pool_alive #(div_perm full_perm n) p) 0 n;
+  p_combine pre (fun i -> pool_alive #(div_perm 1.0R n) p) 0 n;
 
   simple_for
-    (fun i -> pre i ** pool_alive #(div_perm full_perm n) p)
-    (fun i -> pledge emp_inames (pool_done p) (post i) ** pool_alive #(div_perm full_perm n) p)
+    (fun i -> pre i ** pool_alive #(div_perm 1.0R n) p)
+    (fun i -> pledge emp_inames (pool_done p) (post i) ** pool_alive #(div_perm 1.0R n) p)
     emp // Alternative: pass pool_alive p here and forget about the n-way split. See below.
-    (spawned_f_i p pre post (div_perm full_perm n) f)
+    (spawned_f_i p pre post (div_perm 1.0R n) f)
     n;
     
-  p_uncombine (fun i -> pledge emp_inames (pool_done p) (post i)) (fun i -> pool_alive #(div_perm full_perm n) p) 0 n;
-  unfrac_n n p full_perm;
+  p_uncombine (fun i -> pledge emp_inames (pool_done p) (post i)) (fun i -> pool_alive #(div_perm 1.0R n) p) 0 n;
+  unfrac_n n p 1.0R;
   teardown_pool p;
   
   redeem_range post (pool_done p) n;
@@ -337,7 +337,7 @@ fn spawned_f_i_alt
   requires pool_alive p ** pre i
   ensures pool_alive p ** pledge emp_inames (pool_done p) (post i)
 {
-  spawn_ #(pre i) #(post i) p #full_perm (fun () -> f i)
+  spawn_ #(pre i) #(post i) p #1.0R (fun () -> f i)
 }
 ```
 
@@ -537,21 +537,21 @@ fn h_for_task
     assert (pure (lo <= mid /\ mid <= hi));
 
     share_alive p e;
-    share_alive p (half_perm e);
+    share_alive p (e /. 2.0R);
 
     p_split pre lo mid hi ();
 
-    spawn_ #(pool_alive #(half_perm (half_perm e)) p ** range pre lo mid)
+    spawn_ #(pool_alive #((e /. 2.0R) /. 2.0R) p ** range pre lo mid)
             #(pledge emp_inames (pool_done p) (range post lo mid))
             p
-            #(half_perm e)
-            (h_for_task__ p (half_perm (half_perm e)) pre post f lo mid);
+            #(e /. 2.0R)
+            (h_for_task__ p ((e /. 2.0R) /. 2.0R) pre post f lo mid);
 
-    spawn_ #(pool_alive #(half_perm (half_perm e)) p ** range pre mid hi)
+    spawn_ #(pool_alive #((e /. 2.0R) /. 2.0R) p ** range pre mid hi)
             #(pledge emp_inames (pool_done p) (range post mid hi))
             p
-            #(half_perm e)
-            (h_for_task__ p (half_perm (half_perm e)) pre post f mid hi);
+            #(e /. 2.0R)
+            (h_for_task__ p ((e /. 2.0R) /. 2.0R) pre post f mid hi);
 
     (* We get this complicated pledge emp_inames from the spawns above. We can
     massage it before even waiting. *)
@@ -572,7 +572,7 @@ fn h_for_task
     (* Better *)
     assert (pledge emp_inames (pool_done p) (range post lo hi));
 
-    drop_ (pool_alive #(half_perm e) p);
+    drop_ (pool_alive #(e /. 2.0R) p);
 
     ()
   }
@@ -589,6 +589,7 @@ val wait_pool
   (e:perm)
   : stt unit (pool_alive #e p) (fun _ -> pool_done p)
 
+#push-options "--print_implicits --ugly"
 ```pulse
 fn
 parallel_for_hier
@@ -603,19 +604,19 @@ parallel_for_hier
 
   if (false) { // Checking that both branches would work
     (* Spawning the first task: useless! Just call it! *)
-    assert (pool_alive #full_perm p);
-    share_alive p full_perm;
+    assert (pool_alive #1.0R p);
+    share_alive p 1.0R;
 
-    rewrite (pool_alive #(half_perm full_perm) p ** pool_alive #(half_perm full_perm) p)
-        as (pool_alive #one_half p ** pool_alive #one_half p);
-    assert (pool_alive #one_half p ** pool_alive #one_half p);
+    rewrite (pool_alive #(1.0R /. 2.0R) p ** pool_alive #(1.0R /. 2.0R) p)
+        as (pool_alive #0.5R p ** pool_alive #0.5R p);
+    assert (pool_alive #0.5R p ** pool_alive #0.5R p);
 
 
-    spawn_ #(pool_alive #one_half p ** range pre 0 n)
+    spawn_ #(pool_alive #0.5R p ** range pre 0 n)
             #(pledge emp_inames (pool_done p) (range post 0 n))
             p
-            #one_half
-            (h_for_task p one_half pre post f 0 n);
+            #0.5R
+            (h_for_task p 0.5R pre post f 0 n);
 
     (* We get this complicated pledge emp_inames from the spawn above. We can
     massage it before even waiting. *)
@@ -625,17 +626,17 @@ parallel_for_hier
 
     assert (pledge emp_inames (pool_done p) (range post 0 n));
 
-    wait_pool p one_half;
+    wait_pool p 0.5R;
 
     redeem_pledge emp_inames (pool_done p) (range post 0 n);
 
     drop_ (pool_done p)
   } else {
     (* Directly calling is much easier, and actually better all around. *)
-    share_alive p full_perm;
-    h_for_task p (half_perm full_perm) pre post f 0 n ();
+    share_alive p 1.0R;
+    h_for_task p (1.0R /. 2.0R) pre post f 0 n ();
 
-    wait_pool p (half_perm full_perm);
+    wait_pool p (1.0R /. 2.0R);
 
     assert (pool_done p);
 

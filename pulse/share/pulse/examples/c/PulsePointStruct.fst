@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module PulsePointStruct
 open Pulse.Lib.Pervasives
 open Pulse.C.Types
@@ -12,7 +28,7 @@ requires
 ensures
   ((r1 `pts_to` mk_scalar (Ghost.reveal v2)) ** (r2 `pts_to` mk_scalar (Ghost.reveal v1)))
 {
-  let _ : squash (mk_scalar (Ghost.reveal v1) == mk_fraction (scalar U32.t) (mk_scalar (Ghost.reveal v1)) full_perm) = (); // FIXME: WHY WHY WHY does the pattern on mk_fraction_full_scalar not trigger?
+  let _ : squash (mk_scalar (Ghost.reveal v1) == mk_fraction (scalar U32.t) (mk_scalar (Ghost.reveal v1)) 1.0R) = (); // FIXME: WHY WHY WHY does the pattern on mk_fraction_full_scalar not trigger?
   let x1 = read r1;
   let x2 = read r2;
   write r1 x2;

@@ -58,8 +58,8 @@ fn rec t_quicksort
 
     T.share_alive p f;
 
-    T.spawn_ p #(half_perm f) (fun () -> t_quicksort p #(half_perm f) a lo r._1 #lb #pivot);
-    t_quicksort p #(half_perm f) a r._2 hi #pivot #rb;
+    T.spawn_ p #(f /. 2.0R) (fun () -> t_quicksort p #(f /. 2.0R) a lo r._1 #lb #pivot);
+    t_quicksort p #(f /. 2.0R) a r._2 hi #pivot #rb;
     
     return_pledge (T.pool_done p) (A.pts_to_range a r._1 r._2 s2);
     squash_pledge _ _ _;
@@ -72,9 +72,9 @@ fn rec t_quicksort
       // above must also be in this exact shape. To obtain the shape, I just manually looked
       // at the context. Automation should likely help here.
       requires
-        (T.pool_alive #(half_perm f) p ** quicksort_post a lo r._1 s1 lb pivot) **
+        (T.pool_alive #(f /. 2.0R) p ** quicksort_post a lo r._1 s1 lb pivot) **
         A.pts_to_range a r._1 r._2 s2 **
-        (T.pool_alive #(half_perm f) p ** quicksort_post a r._2 hi s3 pivot rb)
+        (T.pool_alive #(f /. 2.0R) p ** quicksort_post a r._2 hi s3 pivot rb)
       ensures
         T.pool_alive #f p **
         quicksort_post a lo hi s0 lb rb
@@ -127,9 +127,6 @@ fn rec quicksort
 
   let i = split_pledge _ _;
   
-  assume_ (pure (comp_perm (half_perm full_perm) == half_perm full_perm)); // F* limitation, real arith
-
-  admit ();
   T.teardown_pool' p _;
   redeem_pledge _ _ _;
   drop_ (T.pool_done p)

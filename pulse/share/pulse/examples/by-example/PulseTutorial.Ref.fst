@@ -147,10 +147,10 @@ ensures pts_to r (4 * 'v)
 
 
 
-```pulse //assign_full_perm$
+```pulse //assign_1.0R$
 fn assign_full_perm (#a:Type) (r:ref a) (v:a)
-requires pts_to r #full_perm 'v
-ensures pts_to r #full_perm v
+requires pts_to r #1.0R 'v
+ensures pts_to r #1.0R v
 {
     r := v;
 }
@@ -184,28 +184,28 @@ ensures pts_to r #p w
 ```pulse //share_ref$
 fn share_ref #a #p (r:ref a)
 requires pts_to r #p 'v
-ensures pts_to r #(half_perm p) 'v ** pts_to r #(half_perm p) 'v
+ensures pts_to r #(p /. 2.0R) 'v ** pts_to r #(p /. 2.0R) 'v
 {
     share r;
 }
 ```
 
 ```pulse //gather_ref$
-fn gather_ref #a #p (r:ref a)
+fn gather_ref #a (#p:perm) (r:ref a)
 requires
-    pts_to r #(half_perm p) 'v0 **
-    pts_to r #(half_perm p) 'v1
+    pts_to r #(p /. 2.0R) 'v0 **
+    pts_to r #(p /. 2.0R) 'v1
 ensures
     pts_to r #p 'v0 **
     pure ('v0 == 'v1)
 {
-    gather r;
+    gather r
 }
 ```
 
 ```pulse
 fn max_perm #a (r:ref a) #p anything
-requires pts_to r #p 'v ** pure (~ (p `lesser_equal_perm` full_perm))
+requires pts_to r #p 'v ** pure (~ (p <=. 1.0R))
 returns _:squash False
 ensures anything
 {
@@ -219,8 +219,8 @@ fn alias_ref #a #p (r:ref a)
 requires pts_to r #p 'v
 returns s:ref a
 ensures
-    pts_to r #(half_perm p) 'v **
-    pts_to s #(half_perm p) 'v **
+    pts_to r #(p /. 2.0R) 'v **
+    pts_to s #(p /. 2.0R) 'v **
     pure (r == s)
 {
     share r;
