@@ -1211,7 +1211,7 @@ let (tcresolve : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                     FStar_Pprint.prefix
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
-                                                                    (FStar_Errors_Msg.text
+                                                                    (FStar_Pprint.arbitrary_string
                                                                     "Could not solve constraint")
                                                                     uu___4))))
                                                                     (fun
@@ -1233,7 +1233,7 @@ let (tcresolve : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                     (
                                                                     (op_At ())
                                                                     [
-                                                                    FStar_Errors_Msg.text
+                                                                    FStar_Pprint.arbitrary_string
                                                                     "Typeclass resolution failed"]
                                                                     msg)))
                                                         | e ->

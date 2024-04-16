@@ -986,7 +986,7 @@ let (term_as_formula' :
                   (Obj.repr
                      (FStar_Tactics_Effect.raise
                         (FStar_Tactics_Common.TacticFailure
-                           (FStar_Errors_Msg.mkmsg "???"))))) uu___)
+                           [FStar_Pprint.arbitrary_string "???"])))) uu___)
 let _ =
   FStar_Tactics_Native.register_tactic
     "FStar.Reflection.V2.Formula.term_as_formula'" (Prims.of_int (2))

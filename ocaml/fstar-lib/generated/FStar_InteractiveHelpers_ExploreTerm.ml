@@ -1820,7 +1820,7 @@ let rec (inst_comp :
                                              (Obj.repr
                                                 (FStar_InteractiveHelpers_Base.mfail_doc
                                                    (FStar_List_Tot_Base.op_At
-                                                      [FStar_Errors_Msg.text
+                                                      [FStar_Pprint.arbitrary_string
                                                          "inst_comp: error"]
                                                       msg)))
                                        | err ->
