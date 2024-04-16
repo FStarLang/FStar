@@ -2137,6 +2137,10 @@ let gamma_has_free_uvars (g:list binding) : bool =
   List.existsb (function Binding_var bv -> has_free_uvars bv.sort
                        | _ -> false) g
 
+type reveal_hide_t =
+  | Hide of (universe & typ & term)
+  | Reveal of (universe & typ & term)
+
 (******************************************************************************************************)
 (* Main solving algorithm begins here *)
 (******************************************************************************************************)
@@ -3779,17 +3783,15 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                     | _ -> None
                 in
                 let is_reveal_or_hide t =
-                  // Returns Inl (u, ty, t) for reveal u#u #ty t
-                  // Returns Inr (u, ty, t) for hide u#u #ty t
                   let h, args = U.head_and_args t in
                   if U.is_fvar PC.reveal h
                   then match payload_of_hide_reveal h args with
                        | None -> None
-                       | Some t -> Some (Inl t)
+                       | Some t -> Some (Reveal t)
                   else if U.is_fvar PC.hide h
                   then match payload_of_hide_reveal h args with
                        | None -> None
-                       | Some t -> Some (Inr t)
+                       | Some t -> Some (Hide t)
                   else None
                 in
                 let mk_fv_app lid u args r =
@@ -3798,44 +3800,31 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                   S.mk_Tm_app head args r
                 in
                 match is_reveal_or_hide t1, is_reveal_or_hide t2 with
-                | None, None -> None
-
-                | Some (Inl _), Some (Inl _)
-                | Some (Inr _), Some (Inr _) ->
-                  //reveal/reveal, or hide/hide; impossible, head_matches_delta
-                  //would have matched
-                  None
-
-                | Some (Inl _), Some (Inr _)
-                | Some (Inr _), Some (Inl _) ->
-                  //reveal/hide, or hide/reveal; inapplicable
-                  None
-
-                (* We only apply these rules when the arg to reveal
+                (* We only apply these first two rules when the arg to reveal
                 is a flex, to avoid loops such as:
                      reveal t1 =?= t2
                   ~> t1        =?= hide t2
                   ~> reveal t1 =?= t2
                 *)
-                | Some (Inl (u, ty, lhs)), None when is_flex lhs ->
+                | Some (Reveal (u, ty, lhs)), None when is_flex lhs ->
                   // reveal (?u _) / _
                   //add hide to rhs and simplify lhs
                   let rhs = mk_fv_app PC.hide u [(ty, S.as_aqual_implicit true); (t2, None)] t2.pos in
                   Some (lhs, rhs)
 
-                | None, Some (Inl (u, ty, rhs)) when is_flex rhs ->
+                | None, Some (Reveal (u, ty, rhs)) when is_flex rhs ->
                   // _ / reveal (?u _)
                   //add hide to lhs and simplify rhs
                   let lhs = mk_fv_app PC.hide u [(ty, S.as_aqual_implicit true); (t1, None)] t1.pos in
                   Some (lhs, rhs)
 
-                | Some (Inr (u, ty, lhs)), None ->
+                | Some (Hide (u, ty, lhs)), None ->
                   // hide _ / _
                   //add reveal to rhs and simplify lhs
                   let rhs = mk_fv_app PC.reveal u [(ty,S.as_aqual_implicit true); (t2, None)] t2.pos in
                   Some (lhs, rhs)
 
-                | None, Some (Inr (u, ty, rhs)) ->
+                | None, Some (Hide (u, ty, rhs)) ->
                   // _ / hide _
                   //add reveal to lhs and simplify rhs
                   let lhs = mk_fv_app PC.reveal u [(ty,S.as_aqual_implicit true); (t1, None)] t1.pos in
