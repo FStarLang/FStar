@@ -23,7 +23,7 @@ val prod_perm (p1 p2: perm) : Pure perm
   (ensures (fun p ->
     ((p1 `lesser_equal_perm` full_perm /\ p2 `lesser_equal_perm` full_perm) ==>
     p `lesser_equal_perm` full_perm) /\
-    p.v == (let open FStar.Real in p1.v *. p2.v)
+    p == (let open FStar.Real in p1 *. p2)
   ))
 
 [@@noextract_to "krml"] // proof-only

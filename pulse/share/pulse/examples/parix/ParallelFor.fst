@@ -48,7 +48,7 @@ fn squash_pledge (f v : vprop)
 
 let div_perm (p:perm) (n:pos) : perm =
   let open PulseCore.FractionalPermission in
-  MkPerm ((MkPerm?.v p) /. of_int n)
+  p /. (of_int n)
 
 (* Basic sketch of a parallel for *)
 

@@ -114,7 +114,7 @@ let valid_perm
   (p: perm)
 : prop
 = let open FStar.Real in
-  ((offset + slice_len <= len /\ slice_len > 0) ==> (p.v <=. one))
+  ((offset + slice_len <= len /\ slice_len > 0) ==> (p <=. one))
 
 
 let pts_to (#elt: Type u#1) (a: array elt) (#p: perm) (s: Seq.seq elt) : Tot vprop =

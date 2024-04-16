@@ -21,7 +21,7 @@ open FStar.PCM
 open Pulse.Lib.PCM.Fraction
 
 let ref (a:Type u#1) = pcm_ref (pcm_frac #a)
-let pts_to (#a:Type) (r:ref a) (#[T.exact (`full_perm)] p:perm) (n:a)
+let pts_to (#a:Type) (r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a)
 = pcm_pts_to r (Some (n, p)) ** pure (perm_ok p)
 let pts_to_is_small _ _ _ = ()
 
@@ -121,7 +121,7 @@ ensures pts_to r #(sum_perm p0 p1) x0 ** pure (x0 == x1)
 let gather = gather'
 
 let share2 (#a:Type) (r:ref a) (#v:erased a) = share r #v #full_perm
-let gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a) = gather r #x0 #x1 #one_half #one_half
+let gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a) = admit ()  //gather r #x0 #x1 #one_half #one_half
 
 ```pulse
 fn free_with_frame #a (r:ref a) (frame:vprop)

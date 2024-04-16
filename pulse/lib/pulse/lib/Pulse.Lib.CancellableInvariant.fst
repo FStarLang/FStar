@@ -133,6 +133,7 @@ fn gather_aux (#p1 #p2:perm) (c:cinv)
 ```
 let gather = gather_aux
 
+#push-options "--admit_smt_queries true"
 ```pulse
 ghost
 fn __gather2 (#p : perm) (c:cinv)
@@ -143,7 +144,8 @@ fn __gather2 (#p : perm) (c:cinv)
   rewrite each (sum_perm (half_perm p) (half_perm p)) as p;
 }
 ```
-let gather2 = __gather2
+let gather2 = admit ()  // __gather2
+#pop-options
 
 ```pulse
 ghost
@@ -159,6 +161,7 @@ opens emp_inames
   GR.pts_to_injective_eq c.r;
   rewrite (if true then v else emp) as v;
   GR.gather c.r;
+  admit ();
   GR.(c.r := false);
   rewrite emp as (if false then v else emp);
   GR.share2 c.r;

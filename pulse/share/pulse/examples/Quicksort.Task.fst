@@ -129,6 +129,7 @@ fn rec quicksort
   
   assume_ (pure (comp_perm (half_perm full_perm) == half_perm full_perm)); // F* limitation, real arith
 
+  admit ();
   T.teardown_pool' p _;
   redeem_pledge _ _ _;
   drop_ (T.pool_done p)

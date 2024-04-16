@@ -59,13 +59,13 @@ let gbag_pcm_composable #a : symrel (gbag_pcm_carrier a) =
     forall (x:a).
     (Map.sel m1 x == None) \/
     (Map.sel m2 x == None) \/
-    (sum_perm (Some?.v (Map.sel m1 x)) (Some?.v ((Map.sel m2 x)))).v <=. 1.0R
+    (sum_perm (Some?.v (Map.sel m1 x)) (Some?.v ((Map.sel m2 x)))) <=. 1.0R
   
   | F m1, P m2
   | P m2, F m1 ->
     forall (x:a).
     (Map.sel m2 x == None) \/
-    (Some? (Map.sel m1 x) /\ (sum_perm (Some?.v (Map.sel m1 x)) (Some?.v ((Map.sel m2 x)))).v <=. 1.0R)
+    (Some? (Map.sel m1 x) /\ (sum_perm (Some?.v (Map.sel m1 x)) (Some?.v ((Map.sel m2 x)))) <=. 1.0R)
 
   | _ -> False
 

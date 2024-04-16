@@ -135,18 +135,14 @@ type knowledge (#v:Type) (#p:preorder v) (anchors:anchor_rel p) =
   | Owns     : avalue anchors -> knowledge anchors
   | Nothing  : knowledge anchors
 
-let b2p (b:bool)
-  : prop
-  = b == true
-
 /// Fractional permissions are composable when their sum <= 1.0
 let perm_opt_composable (p0 p1:option perm)
   : prop
   = match p0, p1 with
     | None, None -> True
     | Some p, None
-    | None, Some p -> b2p (p `lesser_equal_perm` full_perm)
-    | Some p0, Some p1 -> b2p (sum_perm p0 p1 `lesser_equal_perm` full_perm)
+    | None, Some p -> p `lesser_equal_perm` full_perm
+    | Some p0, Some p1 -> sum_perm p0 p1 `lesser_equal_perm` full_perm
 
 /// Composing them sums the permissions
 let compose_perm_opt (p0 p1:option perm) =

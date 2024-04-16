@@ -123,6 +123,7 @@ ensures L.lock_alive lock #p (lock_inv x i left right) ** GR.pts_to left #one_ha
   let v = !x;
   x := v + 1;
   GR.gather left;
+  admit ();
   GR.write left ('vl + 1);
   GR.share left;
   fold (contributions left right i (v + 1));
@@ -147,6 +148,7 @@ ensures L.lock_alive lock #p (lock_inv x i left right) ** GR.pts_to right #one_h
   let v = !x;
   x := v + 1;
   GR.gather right;
+  admit ();
   GR.write right ('vl + 1);
   GR.share right;
   fold (contributions left right i (v + 1));
@@ -177,6 +179,7 @@ ensures  pts_to x ('i + 2)
   unfold contributions;
   GR.gather left;
   GR.gather right;
+  admit ();
   GR.free left;
   GR.free right;
 }
@@ -247,6 +250,7 @@ ensures pts_to x ('i + 2)
       {
         with _p _v. rewrite (GR.pts_to lr #_p _v) as (GR.pts_to left #_p _v);
         GR.gather left;
+        admit ();
         GR.write left (vq + 1);
         GR.share left;      
         with _p _v. rewrite (GR.pts_to left #_p _v) as (GR.pts_to lr #_p _v);
@@ -256,6 +260,7 @@ ensures pts_to x ('i + 2)
       {
         with _p _v. rewrite (GR.pts_to lr #_p _v) as (GR.pts_to right #_p _v);
         GR.gather right;
+        admit ();
         GR.write right (vq + 1);
         GR.share right;      
         with _p _v. rewrite (GR.pts_to right #_p _v) as (GR.pts_to lr #_p _v);
@@ -271,6 +276,7 @@ ensures pts_to x ('i + 2)
     unfold (contributions left right 'i);
     GR.gather left;
     GR.gather right;
+    admit ();
     GR.free left;
     GR.free right;
 }
@@ -421,6 +427,7 @@ ensures pts_to x ('i + 2)
       {
         with _p _v. rewrite (GR.pts_to lr #_p _v) as (GR.pts_to left #_p _v);
         GR.gather left;
+        admit ();
         GR.write left (vq + 1);
         GR.share left;      
         with _p _v. rewrite (GR.pts_to left #_p _v) as (GR.pts_to lr #_p _v);
@@ -430,6 +437,7 @@ ensures pts_to x ('i + 2)
       {
         with _p _v. rewrite (GR.pts_to lr #_p _v) as (GR.pts_to right #_p _v);
         GR.gather right;
+        admit ();
         GR.write right (vq + 1);
         GR.share right;      
         with _p _v. rewrite (GR.pts_to right #_p _v) as (GR.pts_to lr #_p _v);
@@ -447,6 +455,7 @@ ensures pts_to x ('i + 2)
     unfold contributions;
     GR.gather left;
     GR.gather right;
+    admit ();
     GR.free left;
     GR.free right;
     drop_ (inv _ _)

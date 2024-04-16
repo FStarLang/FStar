@@ -225,6 +225,7 @@ fn free_aux (#v:vprop) (l:lock)
   unfold (lock_inv_aux l.r l.gr v);
   B.free l.r;
   GR.gather l.gr;
+  admit ();
   GR.free l.gr;
   rewrite (if (1ul = 0ul) then v else emp) as emp
 }

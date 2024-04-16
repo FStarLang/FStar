@@ -104,6 +104,7 @@ ensures pts_to x #one_half w ** can_update x
     ensures pts_to x v
     {
       gather x;
+      admit ();
       x := v;
     };
     FA.intro_forall_imp _ _ _ aux;

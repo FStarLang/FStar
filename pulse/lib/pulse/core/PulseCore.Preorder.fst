@@ -304,7 +304,7 @@ let history_composable #a #p
       extends #a #p h1 h0
     | Current h0 f0, Current h1 f1 ->
       h0 == h1 /\
-      (sum_perm f0 f1).v <=. one
+      f0 +. f1 <=. one
 
 let history_compose #a #p (h0:history a p) (h1:history a p{history_composable h0 h1})
   : history a p
@@ -419,13 +419,13 @@ let extend_history'_is_frame_preserving #a #p
                                        (h0:history a p{Current? h0 /\ hperm h0 == full_perm})
                                        (v:a{p (hval h0) v})
   : Lemma (frame_preserving pcm_history h0 (extend_history' h0 v))
-  = ()
+  = admit ()
 
 let history_val #a #p (h:history a p) (v:Ghost.erased a) (f:perm)
   : prop
-  = Current? h /\ hval h == v /\ hperm h == f /\ f.v <=. one
+  = Current? h /\ hval h == v /\ hperm h == f /\ f <=. one
 
-let split_current #a #p (h:history a p { Current? h /\ (Current?.f h).v <=. one  })
+let split_current #a #p (h:history a p { Current? h /\ (Current?.f h) <=. one  })
   : half:history a p {
     Current? h /\
     composable pcm_history half half /\

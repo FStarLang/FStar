@@ -205,7 +205,7 @@ ensures
 
 ```pulse
 fn max_perm #a (r:ref a) #p anything
-requires pts_to r #p 'v ** pure (not (p `lesser_equal_perm` full_perm))
+requires pts_to r #p 'v ** pure (~ (p `lesser_equal_perm` full_perm))
 returns _:squash False
 ensures anything
 {
