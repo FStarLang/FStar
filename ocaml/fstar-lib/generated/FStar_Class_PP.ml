@@ -192,3 +192,11 @@ let pp_tuple6 :
                            FStar_Pprint.separate FStar_Pprint.comma uu___8 in
                          FStar_Pprint.parens uu___7)
               }
+let from_showable : 'a . 'a FStar_Class_Show.showable -> 'a pretty =
+  fun uu___ ->
+    {
+      pp =
+        (fun x ->
+           let uu___1 = FStar_Class_Show.show uu___ x in
+           FStar_Pprint.arbitrary_string uu___1)
+    }
