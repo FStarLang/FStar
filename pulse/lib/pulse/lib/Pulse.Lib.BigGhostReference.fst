@@ -20,7 +20,7 @@ open Pulse.Main
 open FStar.PCM
 open Pulse.Lib.PCM.Fraction
 module T = FStar.Tactics
-let ref (a:Type u#2) = ghost_pcm_ref (pcm_frac #a)
+let ref (a:Type u#2) = ghost_pcm_ref #(fractional a) (pcm_frac #a)
 
 instance non_informative_gref (a:Type u#2) : NonInformative.non_informative (ref a) = {
   reveal = (fun x -> reveal x) <: NonInformative.revealer (ref a);

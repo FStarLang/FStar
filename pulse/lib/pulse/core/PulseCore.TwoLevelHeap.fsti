@@ -582,7 +582,8 @@ val extend
 
 (* Small ghost references *)
 [@@erasable]
-val ghost_ref (#[@@@unused] a:Type u#a) ([@@@unused]p:pcm a) : Type0
+val core_ghost_ref : Type0
+let ghost_ref (#[@@@unused] a:Type u#a) ([@@@unused]p:pcm a) : Type0 = core_ghost_ref
 
 (*** ghost_pts_to: Ownership of a ghost reference on the small heap *)
 val ghost_pts_to (#a:Type u#a) (#p:pcm a) (r:ghost_ref p) (v:a) : vprop u#a

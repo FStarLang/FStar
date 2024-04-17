@@ -199,13 +199,16 @@ val invariant_name_identifies_invariant
 ////////////////////////////////////////////////////////////////////////
 // References
 ////////////////////////////////////////////////////////////////////////
+val core_ref : Type u#0
+val core_ref_null : core_ref
+val is_core_ref_null (r:core_ref) : b:bool { b <==> r == core_ref_null }
 
-val ref ([@@@unused] a:Type u#a) ([@@@unused] p:pcm a) : Type u#0
+let ref (a:Type u#a) (p:pcm a) : Type u#0 = core_ref
+let ref_null (#a:Type u#a) (p:pcm a) : ref a p = core_ref_null
 
-val ref_null (#a:Type u#a) (p:pcm a) : ref a p
-
-val is_ref_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p)
+let is_ref_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p)
 : b:bool { b <==> r == ref_null p }
+= is_core_ref_null r
 
 val pts_to (#a:Type u#1) (#p:pcm a) (r:ref a p) (v:a) : vprop
 
@@ -380,7 +383,8 @@ val drop (p:slprop)
 // Ghost References
 ////////////////////////////////////////////////////////////////////////
 [@@erasable]
-val ghost_ref (#[@@@unused] a:Type u#a) ([@@@unused] p:pcm a) : Type u#0
+val core_ghost_ref : Type u#0
+let ghost_ref (#a:Type u#a) (p:pcm a) : Type u#0 = core_ghost_ref
 val ghost_pts_to (#a:Type u#1) (#p:pcm a) (r:ghost_ref p) (v:a) : vprop
 
 val ghost_alloc
