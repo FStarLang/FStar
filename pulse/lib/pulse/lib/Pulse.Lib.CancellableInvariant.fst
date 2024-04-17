@@ -132,19 +132,7 @@ fn gather_aux (#p1 #p2:perm) (c:cinv)
 ```
 let gather = gather_aux
 
-#push-options "--admit_smt_queries true"
-```pulse
-ghost
-fn __gather2 (#p : perm) (c:cinv)
-  requires active (half_perm p) c ** active (half_perm p) c
-  ensures active p c
-{
-  gather c;
-  rewrite each (sum_perm (half_perm p) (half_perm p)) as p;
-}
-```
-#pop-options
-let gather2 = __gather2
+let gather2 #p c = gather #(half_perm p) #(half_perm p) c
 
 ```pulse
 ghost

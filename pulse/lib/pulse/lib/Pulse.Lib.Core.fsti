@@ -717,8 +717,8 @@ val gather
 val core_ghost_pcm_ref : Type0
 
 let ghost_pcm_ref
-    (#[@@@unused] a:Type u#a)
-    ([@@@unused] p:FStar.PCM.pcm a)
+    (#a:Type u#a)
+    (p:FStar.PCM.pcm a)
 : Type0
 = core_ghost_pcm_ref
 
