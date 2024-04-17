@@ -33,6 +33,7 @@ module BU = FStar.Compiler.Util
 module U  = FStar.Syntax.Util
 module N  = FStar.TypeChecker.Normalize
 module C  = FStar.Parser.Const
+module TcUtil = FStar.TypeChecker.Util
 
 let check_sigelt_quals_pre (env:FStar.TypeChecker.Env.env) se =
     let visibility = function Private -> true | _ -> false in
@@ -222,7 +223,116 @@ let check_erasable env quals r se =
         ]) r
   end
 
+(*
+ *  Given `val t : Type` in an interface
+ *  and   `let t = e`    in the corresponding implementation
+ *  The val declaration should contains the `must_erase_for_extraction` attribute
+ *  if and only if `e` is a type that's non-informative (e..g., unit, t -> unit, etc.)
+ *)
+let check_must_erase_attribute env se =
+    match se.sigel with
+    | Sig_let {lbs; lids=l} ->
+        if not (Options.ide())
+        then
+        begin
+          match DsEnv.iface_decls (Env.dsenv env) (Env.current_module env) with
+          | None ->
+            ()
+
+          | Some iface_decls ->
+            snd lbs |> List.iter (fun lb ->
+                let lbname = BU.right lb.lbname in
+                let has_iface_val =
+                    iface_decls |> BU.for_some (FStar.Parser.AST.decl_is_val (ident_of_lid lbname.fv_name.v))
+                in
+                if has_iface_val
+                then
+                    let must_erase =
+                      TcUtil.must_erase_for_extraction env lb.lbdef in
+                    let has_attr =
+                      Env.fv_has_attr env
+                                      lbname
+                                      FStar.Parser.Const.must_erase_for_extraction_attr in
+                    if must_erase && not has_attr
+                    then
+                        FStar.Errors.log_issue_doc
+                            (range_of_fv lbname)
+                            (FStar.Errors.Error_MustEraseMissing,
+                               [Errors.text (BU.format2
+                                    "Values of type `%s` will be erased during extraction, \
+                                    but its interface hides this fact. Add the `must_erase_for_extraction` \
+                                    attribute to the `val %s` declaration for this symbol in the interface"
+                                    (Print.fv_to_string lbname)
+                                    (Print.fv_to_string lbname)
+                                    )])
+                    else if has_attr && not must_erase
+                    then FStar.Errors.log_issue_doc
+                        (range_of_fv lbname)
+                        (FStar.Errors.Error_MustEraseMissing,
+                           [Errors.text (BU.format1
+                                "Values of type `%s` cannot be erased during extraction, \
+                                but the `must_erase_for_extraction` attribute claims that it can. \
+                                Please remove the attribute."
+                                (Print.fv_to_string lbname)
+                                )]))
+    end
+
+    | _ -> ()
+
+let check_typeclass_instance_attribute env rng se =
+  let is_tc_instance =
+      se.sigattrs |> BU.for_some
+        (fun t ->
+          match t.n with
+          | Tm_fvar fv -> S.fv_eq_lid fv FStar.Parser.Const.tcinstance_lid
+          | _ -> false)
+  in
+  let check_instance_typ (ty:typ) : unit =
+    let _, res = U.arrow_formals_comp ty in
+    if U.is_total_comp res
+    then let t = U.comp_result res in
+         let head, _ = U.head_and_args t in
+         let err () =
+           FStar.Errors.log_issue_doc rng (FStar.Errors.Error_UnexpectedTypeclassInstance, [
+               text "Instances must define instances of `class` types.";
+               text "Type" ^/^ pp t ^/^ text "is not a class.";
+             ])
+         in
+         match (U.un_uinst head).n with
+         | Tm_fvar fv ->
+           if not (Env.fv_has_attr env fv FStar.Parser.Const.tcclass_lid)
+           then err ()
+         | _ ->
+           err ()
+    else
+      FStar.Errors.log_issue_doc rng (FStar.Errors.Error_UnexpectedTypeclassInstance, [
+          text "Instances are expected to be total.";
+          text "This instance has effect" ^^ pp (U.comp_effect_name res);
+      ])
+  in
+  if is_tc_instance then
+    match se.sigel with
+    | Sig_let {lbs=(false, [lb])} ->
+      check_instance_typ lb.lbtyp
+
+    | Sig_let _ ->
+      FStar.Errors.log_issue_doc rng (FStar.Errors.Error_UnexpectedTypeclassInstance, [
+          text "An `instance` definition is expected to be non-recursive and of a type that is a `class`."
+        ])
+
+    | Sig_declare_typ {t} ->
+      check_instance_typ t
+
+    | _ ->
+      FStar.Errors.log_issue_doc rng (FStar.Errors.Error_UnexpectedTypeclassInstance, [
+          text "The `instance` attribute is only allowed on `let` and `val` declarations.";	
+          text "It is not allowed for" ^/^ squotes (arbitrary_string <| Print.sigelt_to_string_short se);
+        ])
+
 let check_sigelt_quals_post env se =
   let quals = se.sigquals in
   let r = se.sigrng in
-  check_erasable env quals r se
+  check_erasable env quals r se;
+  check_must_erase_attribute env se;
+  check_typeclass_instance_attribute env r se;
+  ()

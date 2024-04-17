@@ -27,9 +27,10 @@ _pre and _post, as some qualifier/attributes must be checked before the function
 is typechecked (or at least it's better/faster to do so) and some can only be checked
 after the function is typechecked.
 
-Currently, the only thing that must be checked after the function is typechecked
-is the "erasable" attribute, which can only be checked when the body of the definition
-is fully elaborated. See #3252.
+Currently, the only things that must be checked after the function is typechecked are:
+- The erasable attribute, since the defn must be elaborated. See #3253.
+- The must_erase attribute
+- The instance attribute for typeclasses
 *)
 
 val check_sigelt_quals_pre  : env -> sigelt -> unit
