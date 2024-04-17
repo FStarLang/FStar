@@ -651,7 +651,7 @@ let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
          | Sig_fail _ -> se
          | _ -> tc_decl_attributes env se
   in
-  TcUtil.check_sigelt_quals env se;
+  Quals.check_sigelt_quals_pre env se;
   proc_check_with se.sigattrs (fun () ->
   let r = se.sigrng in
   let se =
@@ -970,26 +970,32 @@ let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
  * the list of typechecked sig_elts, and a list of new sig_elts elaborated
  * during typechecking but not yet typechecked *)
 let tc_decl env se: list sigelt * list sigelt * Env.env =
-   let env = set_hint_correlator env se in
-   if Options.debug_module (string_of_lid env.curmodule) then
-     BU.print1 "Processing %s\n"
-        (if Options.debug_at_level (string_of_lid env.curmodule) Options.High
-         then Print.sigelt_to_string se
-         else Print.sigelt_to_string_short se);
-   if Env.debug env Options.Low then
-     BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
-   if se.sigmeta.sigmeta_already_checked then
-     [se], [], env
-   else if se.sigmeta.sigmeta_admit
-   then begin
-     let old = Options.admit_smt_queries () in
-     Options.set_admit_smt_queries true;
-     let result = tc_decl' env se in
-     Options.set_admit_smt_queries old;
-     result
-   end
-   else tc_decl' env se
-
+  let env = set_hint_correlator env se in
+  if Options.debug_module (string_of_lid env.curmodule) then
+    BU.print1 "Processing %s\n"
+       (if Options.debug_at_level (string_of_lid env.curmodule) Options.High
+        then Print.sigelt_to_string se
+        else Print.sigelt_to_string_short se);
+  if Env.debug env Options.Low then
+    BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (show se);
+  let result =
+    if se.sigmeta.sigmeta_already_checked then
+      [se], [], env
+    else if se.sigmeta.sigmeta_admit then (
+      let old = Options.admit_smt_queries () in
+      Options.set_admit_smt_queries true;
+      let result = tc_decl' env se in
+      Options.set_admit_smt_queries old;
+      result
+    ) else
+      tc_decl' env se
+  in
+  let () =
+    (* Do the post-tc attribute/qualifier check. *)
+    let (ses, _, _) = result in
+    List.iter (Quals.check_sigelt_quals_post env) ses
+  in
+  result
 
 (* adds the typechecked sigelt to the env, also performs any processing required in the env (such as reset options) *)
 (* AR: we now call this function when loading checked modules as well to be more consistent *)
