@@ -581,162 +581,6 @@ let (tc_inductive :
                         let uu___3 = tc_inductive' env1 ses quals attrs lids in
                         (pop (); uu___3)) ()
                with | uu___2 -> (pop (); FStar_Compiler_Effect.raise uu___2))
-let (check_must_erase_attribute :
-  FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.sigelt -> unit) =
-  fun env ->
-    fun se ->
-      match se.FStar_Syntax_Syntax.sigel with
-      | FStar_Syntax_Syntax.Sig_let
-          { FStar_Syntax_Syntax.lbs1 = lbs; FStar_Syntax_Syntax.lids1 = l;_}
-          ->
-          let uu___ =
-            let uu___1 = FStar_Options.ide () in Prims.op_Negation uu___1 in
-          if uu___
-          then
-            let uu___1 =
-              let uu___2 = FStar_TypeChecker_Env.dsenv env in
-              let uu___3 = FStar_TypeChecker_Env.current_module env in
-              FStar_Syntax_DsEnv.iface_decls uu___2 uu___3 in
-            (match uu___1 with
-             | FStar_Pervasives_Native.None -> ()
-             | FStar_Pervasives_Native.Some iface_decls ->
-                 FStar_Compiler_List.iter
-                   (fun lb ->
-                      let lbname =
-                        FStar_Compiler_Util.right
-                          lb.FStar_Syntax_Syntax.lbname in
-                      let has_iface_val =
-                        let uu___2 =
-                          let uu___3 =
-                            FStar_Ident.ident_of_lid
-                              (lbname.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-                          FStar_Parser_AST.decl_is_val uu___3 in
-                        FStar_Compiler_Util.for_some uu___2 iface_decls in
-                      if has_iface_val
-                      then
-                        let must_erase =
-                          FStar_TypeChecker_Util.must_erase_for_extraction
-                            env lb.FStar_Syntax_Syntax.lbdef in
-                        let has_attr =
-                          FStar_TypeChecker_Env.fv_has_attr env lbname
-                            FStar_Parser_Const.must_erase_for_extraction_attr in
-                        (if must_erase && (Prims.op_Negation has_attr)
-                         then
-                           let uu___2 =
-                             FStar_Syntax_Syntax.range_of_fv lbname in
-                           let uu___3 =
-                             let uu___4 =
-                               let uu___5 =
-                                 let uu___6 =
-                                   let uu___7 =
-                                     FStar_Syntax_Print.fv_to_string lbname in
-                                   let uu___8 =
-                                     FStar_Syntax_Print.fv_to_string lbname in
-                                   FStar_Compiler_Util.format2
-                                     "Values of type `%s` will be erased during extraction, but its interface hides this fact. Add the `must_erase_for_extraction` attribute to the `val %s` declaration for this symbol in the interface"
-                                     uu___7 uu___8 in
-                                 FStar_Errors_Msg.text uu___6 in
-                               [uu___5] in
-                             (FStar_Errors_Codes.Error_MustEraseMissing,
-                               uu___4) in
-                           FStar_Errors.log_issue_doc uu___2 uu___3
-                         else
-                           if has_attr && (Prims.op_Negation must_erase)
-                           then
-                             (let uu___3 =
-                                FStar_Syntax_Syntax.range_of_fv lbname in
-                              let uu___4 =
-                                let uu___5 =
-                                  let uu___6 =
-                                    let uu___7 =
-                                      let uu___8 =
-                                        FStar_Syntax_Print.fv_to_string
-                                          lbname in
-                                      FStar_Compiler_Util.format1
-                                        "Values of type `%s` cannot be erased during extraction, but the `must_erase_for_extraction` attribute claims that it can. Please remove the attribute."
-                                        uu___8 in
-                                    FStar_Errors_Msg.text uu___7 in
-                                  [uu___6] in
-                                (FStar_Errors_Codes.Error_MustEraseMissing,
-                                  uu___5) in
-                              FStar_Errors.log_issue_doc uu___3 uu___4)
-                           else ())
-                      else ()) (FStar_Pervasives_Native.snd lbs))
-          else ()
-      | uu___ -> ()
-let (check_typeclass_instance_attribute :
-  FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.sigelt -> unit) =
-  fun env ->
-    fun se ->
-      let is_tc_instance =
-        FStar_Compiler_Util.for_some
-          (fun t ->
-             match t.FStar_Syntax_Syntax.n with
-             | FStar_Syntax_Syntax.Tm_fvar fv ->
-                 FStar_Syntax_Syntax.fv_eq_lid fv
-                   FStar_Parser_Const.tcinstance_lid
-             | uu___ -> false) se.FStar_Syntax_Syntax.sigattrs in
-      if Prims.op_Negation is_tc_instance
-      then ()
-      else
-        (match se.FStar_Syntax_Syntax.sigel with
-         | FStar_Syntax_Syntax.Sig_let
-             { FStar_Syntax_Syntax.lbs1 = (false, lb::[]);
-               FStar_Syntax_Syntax.lids1 = uu___1;_}
-             ->
-             let uu___2 =
-               FStar_Syntax_Util.arrow_formals_comp
-                 lb.FStar_Syntax_Syntax.lbtyp in
-             (match uu___2 with
-              | (uu___3, res) ->
-                  let uu___4 = FStar_Syntax_Util.is_total_comp res in
-                  if uu___4
-                  then
-                    let t = FStar_Syntax_Util.comp_result res in
-                    let uu___5 = FStar_Syntax_Util.head_and_args t in
-                    (match uu___5 with
-                     | (head, uu___6) ->
-                         let err uu___7 =
-                           let uu___8 =
-                             let uu___9 =
-                               let uu___10 =
-                                 FStar_Syntax_Print.term_to_string t in
-                               FStar_Compiler_Util.format1
-                                 "Instances must define instances of `class` types. Type %s is not a class"
-                                 uu___10 in
-                             (FStar_Errors_Codes.Error_UnexpectedTypeclassInstance,
-                               uu___9) in
-                           FStar_Errors.log_issue
-                             (FStar_Syntax_Util.range_of_sigelt se) uu___8 in
-                         let uu___7 =
-                           let uu___8 = FStar_Syntax_Util.un_uinst head in
-                           uu___8.FStar_Syntax_Syntax.n in
-                         (match uu___7 with
-                          | FStar_Syntax_Syntax.Tm_fvar fv ->
-                              let uu___8 =
-                                let uu___9 =
-                                  FStar_TypeChecker_Env.fv_has_attr env fv
-                                    FStar_Parser_Const.tcclass_lid in
-                                Prims.op_Negation uu___9 in
-                              if uu___8 then err () else ()
-                          | uu___8 -> err ()))
-                  else
-                    (let uu___6 =
-                       let uu___7 =
-                         let uu___8 =
-                           FStar_Ident.string_of_lid
-                             (FStar_Syntax_Util.comp_effect_name res) in
-                         FStar_Compiler_Util.format1
-                           "Instances are expected to be total. This instance has effect %s"
-                           uu___8 in
-                       (FStar_Errors_Codes.Error_UnexpectedTypeclassInstance,
-                         uu___7) in
-                     FStar_Errors.log_issue
-                       (FStar_Syntax_Util.range_of_sigelt se) uu___6))
-         | uu___1 ->
-             FStar_Errors.log_issue (FStar_Syntax_Util.range_of_sigelt se)
-               (FStar_Errors_Codes.Error_UnexpectedTypeclassInstance,
-                 "An `instance` is expected to be a non-recursive definition whose type is an instance of a `class`"))
 let proc_check_with :
   'a . FStar_Syntax_Syntax.attribute Prims.list -> (unit -> 'a) -> 'a =
   fun attrs ->
@@ -2115,8 +1959,6 @@ let (tc_sig_let :
                                      FStar_Compiler_Util.print1 "%s\n"
                                        uu___10
                                    else ());
-                                  check_must_erase_attribute env0 se3;
-                                  check_typeclass_instance_attribute env0 se3;
                                   ([se3], [], env0)))))))
 let (tc_decl' :
   FStar_TypeChecker_Env.env ->
@@ -2131,7 +1973,7 @@ let (tc_decl' :
         match se.FStar_Syntax_Syntax.sigel with
         | FStar_Syntax_Syntax.Sig_fail uu___ -> se
         | uu___ -> tc_decl_attributes env se in
-      FStar_TypeChecker_Util.check_sigelt_quals env se1;
+      FStar_TypeChecker_Quals.check_sigelt_quals_pre env se1;
       proc_check_with se1.FStar_Syntax_Syntax.sigattrs
         (fun uu___1 ->
            let r = se1.FStar_Syntax_Syntax.sigrng in
@@ -4205,20 +4047,29 @@ let (tc_decl :
       (let uu___2 = FStar_TypeChecker_Env.debug env1 FStar_Options.Low in
        if uu___2
        then
-         let uu___3 = FStar_Syntax_Print.sigelt_to_string se in
+         let uu___3 =
+           FStar_Class_Show.show FStar_Syntax_Print.showable_sigelt se in
          FStar_Compiler_Util.print1 ">>>>>>>>>>>>>>tc_decl %s\n" uu___3
        else ());
-      if
-        (se.FStar_Syntax_Syntax.sigmeta).FStar_Syntax_Syntax.sigmeta_already_checked
-      then ([se], [], env1)
-      else
-        if (se.FStar_Syntax_Syntax.sigmeta).FStar_Syntax_Syntax.sigmeta_admit
-        then
-          (let old = FStar_Options.admit_smt_queries () in
-           FStar_Options.set_admit_smt_queries true;
-           (let result = tc_decl' env1 se in
-            FStar_Options.set_admit_smt_queries old; result))
-        else tc_decl' env1 se
+      (let result =
+         if
+           (se.FStar_Syntax_Syntax.sigmeta).FStar_Syntax_Syntax.sigmeta_already_checked
+         then ([se], [], env1)
+         else
+           if
+             (se.FStar_Syntax_Syntax.sigmeta).FStar_Syntax_Syntax.sigmeta_admit
+           then
+             (let old = FStar_Options.admit_smt_queries () in
+              FStar_Options.set_admit_smt_queries true;
+              (let result1 = tc_decl' env1 se in
+               FStar_Options.set_admit_smt_queries old; result1))
+           else tc_decl' env1 se in
+       (let uu___3 = result in
+        match uu___3 with
+        | (ses, uu___4, uu___5) ->
+            FStar_Compiler_List.iter
+              (FStar_TypeChecker_Quals.check_sigelt_quals_post env1) ses);
+       (match () with | () -> result))
 let (add_sigelt_to_env :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.sigelt -> Prims.bool -> FStar_TypeChecker_Env.env)
@@ -4962,7 +4813,7 @@ let (tc_decls :
                ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_Compiler_List.rev_append ses1 []), env1)
-let (uu___920 : unit) =
+let (uu___876 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :

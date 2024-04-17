@@ -145,9 +145,6 @@ val remove_reify: term -> term
 val maybe_lift: env -> term -> lident -> lident -> typ -> term
 val maybe_monadic: env -> term -> lident -> typ -> term
 
-//qualifiers
-val check_sigelt_quals: env -> sigelt -> unit
-
 val must_erase_for_extraction: env -> term -> bool
 
 //layered effect utilities
