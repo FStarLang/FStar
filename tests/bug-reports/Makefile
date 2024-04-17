@@ -77,7 +77,7 @@ SHOULD_VERIFY_CLOSED=\
 	Bug2980.fst Bug3115.fst Bug2083.fst Bug2002.fst Bug1482.fst Bug1066.fst		\
 	Bug3120a.fst Bug3120b.fst Bug3186.fst Bug3185.fst Bug3210.fst			\
 	Bug3213.fst Bug3213b.fst Bug3207.fst Bug3207b.fst Bug3207c.fst			\
-	Bug2155.fst Bug3224a.fst Bug3224b.fst Bug3236.fst
+	Bug2155.fst Bug3224a.fst Bug3224b.fst Bug3236.fst Bug3252.fst
 
 SHOULD_VERIFY_INTERFACE_CLOSED=Bug771.fsti Bug771b.fsti
 SHOULD_VERIFY_AND_WARN_CLOSED=Bug016.fst
