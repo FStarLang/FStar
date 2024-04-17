@@ -15,18 +15,21 @@
 *)
 
 module DPE.Trace
-open Pulse.Lib.Pervasives
+
+open HACL
 open DPETypes
 open EngineTypes
 open EngineCore
-open HACL
+
 module SZ = FStar.SizeT
 module U8 = FStar.UInt8
+
 let bytes = Seq.seq U8.t
 let lbytes (n:nat) = b:bytes { Seq.length b == n }
 let uds_t = lbytes (SZ.v uds_len)
+
 val ctxt_hndl_t : Type0
-val sid_t : eqtype
+
 noeq
 type state_t : Type u#1 =
   | SessionStart:
@@ -101,15 +104,123 @@ let trace_extension (t0 t1:trace)
 let trace_preorder
   : FStar.Preorder.preorder trace
   = FStar.ReflexiveTransitiveClosure.closure trace_extension
-module FRAP = Pulse.Lib.FractionalAnchoredPreorder
-let degenerate_anchor
-  : FRAP.anchor_rel trace_preorder
-  = fun x y -> trace_preorder x y /\ True
-let carrier = FRAP.knowledge degenerate_anchor
-let trace_pcm
-  : FStar.PCM.pcm carrier
-  = FRAP.pcm #trace #trace_preorder #degenerate_anchor
-module PM = Pulse.Lib.PCMMap
-let session_trace_pcm : PCM.pcm (PM.map sid_t carrier) = PM.pointwise sid_t trace_pcm
+
+open FStar.PCM
+open FStar.Preorder
+open PulseCore.Preorder
+open PulseCore.FractionalPermission
+
+type pcm_carrier (#a:Type u#a) (p:preorder a) : Type u#a =
+  option (perm & bool) & hist p
+
+let pcm_composable #a (p:preorder a) : symrel (pcm_carrier p) =
+  fun x0 x1 -> 
+  match x0, x1 with
+  | (None, t0), (None, t1) -> t0 `extends` t1 \/ t1 `extends` t0
+  | (Some _, t0), (None, t1) -> t0 `extends` t1
+  | (None, t0), (Some _, t1) -> t1 `extends` t0
+  | (Some (p0, b0), t0), (Some (p1, b1), t1) ->
+    b0 == b1 /\
+    t0 == t1 /\
+    sum_perm p0 p1 `lesser_equal_perm` full_perm
+
+let pcm_op #a (p:preorder a)
+  (x:pcm_carrier p)
+  (y:pcm_carrier p { pcm_composable p x y })
+  : pcm_carrier p =
+
+  match x, y with
+  | (None, t0), (None, t1) -> None, p_op p t0 t1
+  | (Some _, _), (None, _) -> x
+  | (None, _), (Some _, _) -> y
+  | (Some (p0, b0), t0), (Some (p1, _), t1) -> Some (sum_perm p0 p1, b0), t0
+
+let pcm_one (#a:Type) (p:preorder a) : pcm_carrier p = None, []
+
+let pcm' (#a:Type) (p:preorder a) : pcm' (pcm_carrier p) = {
+  composable = pcm_composable p;
+  op = pcm_op p;
+  one = pcm_one p;
+}
+
+let lem_commutative (#a:Type) (p:preorder a) : lem_commutative (pcm' p) =
+  fun _ _ -> ()
+
+let lem_assoc_l (#a:Type) (p:preorder a) : lem_assoc_l (pcm' p) =
+  fun x y z ->
+  match x, y, z with
+  | (Some (_, _), _), (Some (_, _), _), (Some (_, _), _) -> ()
+  | _ -> ()
+
+let lem_assoc_r (#a:Type) (p:preorder a) : lem_assoc_r (pcm' p) =
+  fun x y z ->
+  match x, y, z with
+  | (Some (_, _), _), (Some (_, _), _), (Some (_, _), _) -> ()
+  | _ -> ()
+
+let rec extends_nil (#a:Type) (#p:preorder a) (l:hist p)
+  : Lemma (l `extends` []) =
+
+  match l with
+  | [] -> ()
+  | _::tl -> extends_nil #a #p tl
+
+let lem_is_unit (#a:Type) (p:preorder a) : FStar.PCM.lem_is_unit (pcm' p) =
+  fun x ->
+  match x with
+  | Some _, t -> extends_nil t
+  | None, t -> p_op_nil p t
+
+let pcm (#a:Type) (p:preorder a) : pcm (pcm_carrier p) = {
+  p = pcm' p;
+  comm = lem_commutative p;
+  assoc = lem_assoc_l p;
+  assoc_r = lem_assoc_r p;
+  is_unit = lem_is_unit p;
+  refine = (fun _ -> True);
+}
+
+let mk_frame_preserving_upd (#a:Type) (p:preorder a)
+  (t0:hist p) (x:a { qhistory p (x::t0) })
+  (b0 b1:bool)
+  : frame_preserving_upd (pcm p) (Some (full_perm, b0), t0) (Some (full_perm, b1), x::t0) =
+  fun _ ->
+  assert (forall frame. pcm_composable p frame (Some (full_perm, b0), t0) ==> fst frame == None);
+  Some (full_perm, b1), x::t0
+
+let mk_frame_preserving_upd_b (#a:Type) (p:preorder a)
+  (t:hist p)
+  (b0 b1:bool)
+  : frame_preserving_upd (pcm p) (Some (full_perm, b0), t) (Some (full_perm, b1), t) =
+  fun _ ->
+  assert (forall frame. pcm_composable p frame (Some (full_perm, b0), t) ==> fst frame == None);
+  Some (full_perm, b1), t
+
+let snapshot (#a:Type) (#p:preorder a) (x:pcm_carrier p) : pcm_carrier p =
+  None, snd x
+
+let snapshot_idempotent (#a:Type) (#p:preorder a) (x:pcm_carrier p)
+  : Lemma (snapshot x == snapshot (snapshot x)) = ()
+
+let snapshot_duplicable (#a:Type) (#p:preorder a) (x:pcm_carrier p)
+  : Lemma
+      (requires True)
+      (ensures x `pcm_composable p` snapshot x) = ()
+
+let full_perm_empty_history_compatible (#a:Type) (p:preorder a) (b:bool)
+  : Lemma (compatible (pcm p) (Some (full_perm, b), []) (Some (full_perm, b), [])) =
+  ()
+
+
+// module FRAP = Pulse.Lib.FractionalAnchoredPreorder
+// let degenerate_anchor
+//   : FRAP.anchor_rel trace_preorder
+//   = fun x y -> trace_preorder x y /\ True
+// let carrier = FRAP.knowledge degenerate_anchor
+// let trace_pcm
+//   : FStar.PCM.pcm carrier
+//   = FRAP.pcm #trace #trace_preorder #degenerate_anchor
+// module PM = Pulse.Lib.PCMMap
+// let session_trace_pcm : PCM.pcm (PM.map sid_t carrier) = PM.pointwise sid_t trace_pcm
 // let trace_ref = 
 // let snapshot_value (t:trace) = (None, None), 
