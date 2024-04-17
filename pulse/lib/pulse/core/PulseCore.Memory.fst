@@ -2131,7 +2131,7 @@ let pts_to_not_null_action
     (fun _ -> pts_to r v)
 = lift_tot_action (lift_heap_action e (H2.pts_to_not_null_action #a #pcm r v))
 
-let ghost_ref = H2.ghost_ref
+let core_ghost_ref = H2.core_ghost_ref
 let ghost_pts_to #a #pcm r v = up (H2.ghost_pts_to #a #pcm r v)
 
 let with_fresh_ghost_counter (#t:Type u#t) (#post:t -> H2.slprop u#a) (e:inames)
