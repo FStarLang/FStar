@@ -117,22 +117,21 @@ let check_sigelt_quals_pre (env:FStar.TypeChecker.Env.env) se =
     then
       let r = U.range_of_sigelt se in
       let no_dup_quals = BU.remove_dups (fun x y -> x=y) quals in
-      let err' msg =
-          raise_error (Errors.Fatal_QulifierListNotPermitted, (BU.format2
-                          "The qualifier list \"[%s]\" is not permissible for this element%s"
-                          (Print.quals_to_string quals) msg)) r in
-      let err msg = err' (": " ^ msg) in
-      let err' () = err' "" in
+      let err msg =
+        raise_error_doc (Errors.Fatal_QulifierListNotPermitted,
+          [text "The qualifier list" ^/^ doc_of_string (show quals) ^/^ text "is not permissible for this element"]
+          @ msg) r
+      in
       if List.length quals <> List.length no_dup_quals
-      then err "duplicate qualifiers";
+      then err [text "Duplicate qualifiers."];
       if not (quals |> List.for_all (quals_combo_ok quals))
-      then err "ill-formed combination";
+      then err [text "Ill-formed combination."];
       match se.sigel with
       | Sig_let {lbs=(is_rec, _)} -> //let rec
         if is_rec && quals |> List.contains Unfold_for_unification_and_vcgen
-        then err "recursive definitions cannot be marked inline";
+        then err [text "Recursive definitions cannot be marked inline."];
         if quals |> BU.for_some (fun x -> assumption x || has_eq x)
-        then err "definitions cannot be assumed or marked with equality qualifiers"
+        then err [text "Definitions cannot be assumed or marked with equality qualifiers."]
       | Sig_bundle _ ->
         if not (quals |> BU.for_all (fun x ->
               x=Inline_for_extraction
@@ -140,26 +139,26 @@ let check_sigelt_quals_pre (env:FStar.TypeChecker.Env.env) se =
               || inferred x
               || visibility x
               || has_eq x))
-        then err' ();
+        then err [];
         if quals |> List.existsb (function Unopteq -> true | _ -> false) &&
            U.has_attribute se.sigattrs FStar.Parser.Const.erasable_attr
-        then err "unopteq is not allowed on an erasable inductives since they don't have decidable equality"
+        then err [text "The `unopteq` qualifier is not allowed on erasable inductives since they don't have decidable equality."]
       | Sig_declare_typ _ ->
         if quals |> BU.for_some has_eq
-        then err' ()
+        then err []
       | Sig_assume _ ->
         if not (quals |> BU.for_all (fun x -> visibility x || x=Assumption || x=InternalAssumption))
-        then err' ()
+        then err []
       | Sig_new_effect _ ->
         if not (quals |> BU.for_all (fun x ->
               x=TotalEffect
               || inferred x
               || visibility x
               || reification x))
-        then err' ()
+        then err []
       | Sig_effect_abbrev _ ->
         if not (quals |> BU.for_all (fun x -> inferred x || visibility x))
-        then err' ()
+        then err []
       | _ -> ()
 
 let check_erasable env quals r se =
