@@ -56,10 +56,10 @@ let mlconst_of_const' (sctt : sconst) =
   | Const_effect       -> failwith "Unsupported constant"
 
   | Const_range _
-  | Const_unit         -> MLC_Unit
-  | Const_char   c     -> MLC_Char  c
-  | Const_int    (s, i)-> MLC_Int   (s, i)
-  | Const_bool   b     -> MLC_Bool  b
+  | Const_unit          -> MLC_Unit
+  | Const_char   c      -> MLC_Char  c
+  | Const_int    (s, i) -> MLC_Int   (s, i)
+  | Const_bool   b      -> MLC_Bool  b
   | Const_string (s, _) -> MLC_String (s)
 
   | Const_range_of
