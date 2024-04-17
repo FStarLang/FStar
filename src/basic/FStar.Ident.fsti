@@ -19,6 +19,7 @@ open FStar.Compiler.Range
 open FStar.Class.Show
 open FStar.Class.HasRange
 open FStar.Class.Deq
+open FStar.Class.PP
 
 (** A (short) identifier for a local name.
  *  e.g. x in `fun x -> ...` *)
@@ -137,6 +138,8 @@ val ml_path_of_lid      : lident -> string
 (* Showable instances *)
 instance val showable_ident  : showable ident
 instance val showable_lident : showable lident
+instance val pretty_ident    : pretty ident
+instance val pretty_lident   : pretty lident
 instance val hasrange_ident  : hasRange ident
 instance val hasrange_lident : hasRange lident
 instance val deq_ident  : deq ident
