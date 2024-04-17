@@ -39,8 +39,7 @@ noeq
 type cell : Type u#(a + 1) =
   | Ref : a:Type u#a ->
           p:pcm a ->
-          frac:Frac.perm{ frac `Frac.lesser_equal_perm` Frac.full_perm } ->
-          v:a { frac == Frac.full_perm ==> p.refine v } ->
+          v:a ->
           cell
 
 (**
@@ -568,7 +567,7 @@ val interp_pts_to (i:core_ref)
     match select (core_ref_as_addr i) h0 with
     | None -> False
     | Some c ->
-      let Ref a' pcm' _ v' = c in
+      let Ref a' pcm' v' = c in
       a == a' /\
       pcm == pcm' /\
       compatible pcm v v')))
@@ -694,7 +693,7 @@ val extend_modifies_nothing
 : Lemma (
       let (| r, h1 |) = extend #a #pcm x addr h in
       (forall (a:nat). a <> addr ==> select a h == select a h1) /\
-      select addr h1 == Some (Ref a pcm Frac.full_perm x) /\
+      select addr h1 == Some (Ref a pcm x) /\
       not (core_ref_is_null r) /\
       addr == core_ref_as_addr r
   )
