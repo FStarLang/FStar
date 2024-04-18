@@ -127,8 +127,7 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
               let uu___14 =
                 let uu___15 =
                   FStar_Tactics_InterpFuns.mk_tot_step_1 Prims.int_zero
-                    "goal_type" FStar_Tactics_Embedding.e_goal
-                    FStar_Reflection_V2_Embeddings.e_term
+                    "goal_type" FStar_Tactics_Embedding.e_goal uu___2
                     FStar_Tactics_Embedding.e_goal_nbe
                     FStar_Reflection_V2_NBEEmbeddings.e_attribute
                     FStar_Tactics_Types.goal_type
@@ -136,8 +135,7 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                 let uu___16 =
                   let uu___17 =
                     FStar_Tactics_InterpFuns.mk_tot_step_1 Prims.int_zero
-                      "goal_witness" FStar_Tactics_Embedding.e_goal
-                      FStar_Reflection_V2_Embeddings.e_term
+                      "goal_witness" FStar_Tactics_Embedding.e_goal uu___2
                       FStar_Tactics_Embedding.e_goal_nbe
                       FStar_Reflection_V2_NBEEmbeddings.e_attribute
                       FStar_Tactics_Types.goal_witness
@@ -176,9 +174,7 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                           let uu___25 =
                             let uu___26 =
                               FStar_Tactics_InterpFuns.mk_tac_step_1
-                                Prims.int_zero "compress"
-                                FStar_Reflection_V2_Embeddings.e_term
-                                FStar_Reflection_V2_Embeddings.e_term
+                                Prims.int_zero "compress" uu___2 uu___2
                                 FStar_Reflection_V2_NBEEmbeddings.e_attribute
                                 FStar_Reflection_V2_NBEEmbeddings.e_attribute
                                 FStar_Tactics_V2_Basic.compress
@@ -296,8 +292,7 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                 FStar_Reflection_V2_Embeddings.e_env
                                                 (FStar_Syntax_Embeddings.e_list
                                                    FStar_Syntax_Embeddings.e_norm_step)
-                                                FStar_Reflection_V2_Embeddings.e_term
-                                                FStar_Reflection_V2_Embeddings.e_term
+                                                uu___2 uu___2
                                                 FStar_Reflection_V2_NBEEmbeddings.e_env
                                                 (FStar_TypeChecker_NBETerm.e_list
                                                    FStar_TypeChecker_NBETerm.e_norm_step)
@@ -406,7 +401,7 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                   "t_exact"
                                                                   FStar_Syntax_Embeddings.e_bool
                                                                   FStar_Syntax_Embeddings.e_bool
-                                                                  FStar_Reflection_V2_Embeddings.e_term
+                                                                  uu___2
                                                                   FStar_Syntax_Embeddings.e_unit
                                                                   FStar_TypeChecker_NBETerm.e_bool
                                                                   FStar_TypeChecker_NBETerm.e_bool
@@ -422,7 +417,7 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     FStar_Syntax_Embeddings.e_bool
                                                                     FStar_Syntax_Embeddings.e_bool
                                                                     FStar_Syntax_Embeddings.e_bool
-                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___2
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                     FStar_TypeChecker_NBETerm.e_bool
                                                                     FStar_TypeChecker_NBETerm.e_bool
@@ -439,7 +434,7 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     "t_apply_lemma"
                                                                     FStar_Syntax_Embeddings.e_bool
                                                                     FStar_Syntax_Embeddings.e_bool
-                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___2
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                     FStar_TypeChecker_NBETerm.e_bool
                                                                     FStar_TypeChecker_NBETerm.e_bool
@@ -468,7 +463,7 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     Prims.int_zero
                                                                     "tcc"
                                                                     FStar_Reflection_V2_Embeddings.e_env
-                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___2
                                                                     FStar_Reflection_V2_Embeddings.e_comp
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_env
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_attribute
@@ -483,8 +478,8 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     Prims.int_zero
                                                                     "tc"
                                                                     FStar_Reflection_V2_Embeddings.e_env
-                                                                    FStar_Reflection_V2_Embeddings.e_term
-                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___2
+                                                                    uu___2
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_env
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_attribute
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_attribute
@@ -497,7 +492,7 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
                                                                     "unshelve"
-                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___2
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_attribute
                                                                     FStar_TypeChecker_NBETerm.e_unit
@@ -692,7 +687,7 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
                                                                     "tadmit_t"
-                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___2
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_attribute
                                                                     FStar_TypeChecker_NBETerm.e_unit
@@ -718,7 +713,7 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
                                                                     "t_destruct"
-                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___2
                                                                     (FStar_Syntax_Embeddings.e_list
                                                                     (FStar_Syntax_Embeddings.e_tuple2
                                                                     FStar_Reflection_V2_Embeddings.e_fv
@@ -778,8 +773,8 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     "uvar_env"
                                                                     FStar_Reflection_V2_Embeddings.e_env
                                                                     (FStar_Syntax_Embeddings.e_option
-                                                                    FStar_Reflection_V2_Embeddings.e_term)
-                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___2)
+                                                                    uu___2
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_env
                                                                     (FStar_TypeChecker_NBETerm.e_option
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_attribute)
@@ -794,8 +789,8 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     Prims.int_zero
                                                                     "ghost_uvar_env"
                                                                     FStar_Reflection_V2_Embeddings.e_env
-                                                                    FStar_Reflection_V2_Embeddings.e_term
-                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___2
+                                                                    uu___2
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_env
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_attribute
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_attribute
@@ -809,7 +804,7 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     Prims.int_zero
                                                                     "fresh_universe_uvar"
                                                                     FStar_Syntax_Embeddings.e_unit
-                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___2
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_attribute
                                                                     FStar_Tactics_V2_Basic.fresh_universe_uvar
@@ -822,8 +817,8 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     Prims.int_zero
                                                                     "unify_env"
                                                                     FStar_Reflection_V2_Embeddings.e_env
-                                                                    FStar_Reflection_V2_Embeddings.e_term
-                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___2
+                                                                    uu___2
                                                                     FStar_Syntax_Embeddings.e_bool
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_env
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_attribute
@@ -839,8 +834,8 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     Prims.int_zero
                                                                     "unify_guard_env"
                                                                     FStar_Reflection_V2_Embeddings.e_env
-                                                                    FStar_Reflection_V2_Embeddings.e_term
-                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___2
+                                                                    uu___2
                                                                     FStar_Syntax_Embeddings.e_bool
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_env
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_attribute
@@ -856,8 +851,8 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     Prims.int_zero
                                                                     "match_env"
                                                                     FStar_Reflection_V2_Embeddings.e_env
-                                                                    FStar_Reflection_V2_Embeddings.e_term
-                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___2
+                                                                    uu___2
                                                                     FStar_Syntax_Embeddings.e_bool
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_env
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_attribute
@@ -889,7 +884,7 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
                                                                     "change"
-                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___2
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_attribute
                                                                     FStar_TypeChecker_NBETerm.e_unit
@@ -1031,7 +1026,7 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     "string_to_term"
                                                                     FStar_Reflection_V2_Embeddings.e_env
                                                                     FStar_Syntax_Embeddings.e_string
-                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___2
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_env
                                                                     FStar_TypeChecker_NBETerm.e_string
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_attribute
@@ -1063,7 +1058,7 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
                                                                     "term_to_string"
-                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___2
                                                                     FStar_Syntax_Embeddings.e_string
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_attribute
                                                                     FStar_TypeChecker_NBETerm.e_string
@@ -1089,7 +1084,7 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
                                                                     "term_to_doc"
-                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___2
                                                                     FStar_Syntax_Embeddings.e_document
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_attribute
                                                                     FStar_TypeChecker_NBETerm.e_document
@@ -1128,8 +1123,8 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
                                                                     "term_eq_old"
-                                                                    FStar_Reflection_V2_Embeddings.e_term
-                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___2
+                                                                    uu___2
                                                                     FStar_Syntax_Embeddings.e_bool
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_attribute
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_attribute
@@ -1213,7 +1208,7 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
                                                                     "free_uvars"
-                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___2
                                                                     (FStar_Syntax_Embeddings.e_list
                                                                     FStar_Syntax_Embeddings.e_int)
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_attribute
@@ -1351,7 +1346,7 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     Prims.int_zero
                                                                     "is_non_informative"
                                                                     FStar_Reflection_V2_Embeddings.e_env
-                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___2
                                                                     (FStar_Syntax_Embeddings.e_tuple2
                                                                     (FStar_Syntax_Embeddings.e_option
                                                                     FStar_Syntax_Embeddings.e_unit)
@@ -1374,8 +1369,8 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     Prims.int_zero
                                                                     "check_subtyping"
                                                                     FStar_Reflection_V2_Embeddings.e_env
-                                                                    FStar_Reflection_V2_Embeddings.e_term
-                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___2
+                                                                    uu___2
                                                                     (FStar_Syntax_Embeddings.e_tuple2
                                                                     (FStar_Syntax_Embeddings.e_option
                                                                     FStar_Syntax_Embeddings.e_unit)
@@ -1395,17 +1390,21 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     =
                                                                     let uu___182
                                                                     =
-                                                                    FStar_Tactics_InterpFuns.mk_tac_step_3
+                                                                    FStar_Tactics_InterpFuns.mk_tac_step_5
                                                                     Prims.int_zero
-                                                                    "check_equiv"
+                                                                    "t_check_equiv"
+                                                                    FStar_Syntax_Embeddings.e_bool
+                                                                    FStar_Syntax_Embeddings.e_bool
                                                                     FStar_Reflection_V2_Embeddings.e_env
-                                                                    FStar_Reflection_V2_Embeddings.e_term
-                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___2
+                                                                    uu___2
                                                                     (FStar_Syntax_Embeddings.e_tuple2
                                                                     (FStar_Syntax_Embeddings.e_option
                                                                     FStar_Syntax_Embeddings.e_unit)
                                                                     (FStar_Syntax_Embeddings.e_list
                                                                     FStar_Syntax_Embeddings.e_issue))
+                                                                    FStar_TypeChecker_NBETerm.e_bool
+                                                                    FStar_TypeChecker_NBETerm.e_bool
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_env
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_attribute
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_attribute
@@ -1414,25 +1413,24 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     FStar_TypeChecker_NBETerm.e_unit)
                                                                     (FStar_TypeChecker_NBETerm.e_list
                                                                     FStar_TypeChecker_NBETerm.e_issue))
-                                                                    FStar_Tactics_V2_Basic.refl_check_equiv
-                                                                    FStar_Tactics_V2_Basic.refl_check_equiv in
+                                                                    FStar_Tactics_V2_Basic.t_refl_check_equiv
+                                                                    FStar_Tactics_V2_Basic.t_refl_check_equiv in
                                                                     let uu___183
                                                                     =
                                                                     let uu___184
                                                                     =
-                                                                    let uu___185
-                                                                    =
-                                                                    e_ret_t
-                                                                    (FStar_Syntax_Embeddings.e_tuple2
-                                                                    (solve
-                                                                    FStar_Tactics_Embedding.e_tot_or_ghost)
-                                                                    FStar_Reflection_V2_Embeddings.e_term) in
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
                                                                     "core_compute_term_type"
                                                                     FStar_Reflection_V2_Embeddings.e_env
-                                                                    FStar_Reflection_V2_Embeddings.e_term
-                                                                    uu___185
+                                                                    uu___2
+                                                                    (FStar_Syntax_Embeddings.e_tuple2
+                                                                    (FStar_Syntax_Embeddings.e_option
+                                                                    (FStar_Syntax_Embeddings.e_tuple2
+                                                                    FStar_Tactics_Embedding.e_tot_or_ghost
+                                                                    uu___2))
+                                                                    (FStar_Syntax_Embeddings.e_list
+                                                                    FStar_Syntax_Embeddings.e_issue))
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_env
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_attribute
                                                                     (FStar_TypeChecker_NBETerm.e_tuple2
@@ -1452,8 +1450,8 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     Prims.int_zero
                                                                     "core_check_term"
                                                                     FStar_Reflection_V2_Embeddings.e_env
-                                                                    FStar_Reflection_V2_Embeddings.e_term
-                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___2
+                                                                    uu___2
                                                                     FStar_Tactics_Embedding.e_tot_or_ghost
                                                                     (FStar_Syntax_Embeddings.e_tuple2
                                                                     (FStar_Syntax_Embeddings.e_option
@@ -1479,8 +1477,8 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     Prims.int_zero
                                                                     "core_check_term_at_type"
                                                                     FStar_Reflection_V2_Embeddings.e_env
-                                                                    FStar_Reflection_V2_Embeddings.e_term
-                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___2
+                                                                    uu___2
                                                                     (FStar_Syntax_Embeddings.e_tuple2
                                                                     (FStar_Syntax_Embeddings.e_option
                                                                     FStar_Tactics_Embedding.e_tot_or_ghost)
@@ -1500,21 +1498,20 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     =
                                                                     let uu___190
                                                                     =
-                                                                    let uu___191
-                                                                    =
-                                                                    e_ret_t
-                                                                    (FStar_Syntax_Embeddings.e_tuple2
-                                                                    FStar_Reflection_V2_Embeddings.e_term
-                                                                    (FStar_Syntax_Embeddings.e_tuple2
-                                                                    (solve
-                                                                    FStar_Tactics_Embedding.e_tot_or_ghost)
-                                                                    FStar_Reflection_V2_Embeddings.e_term)) in
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
                                                                     "tc_term"
                                                                     FStar_Reflection_V2_Embeddings.e_env
-                                                                    FStar_Reflection_V2_Embeddings.e_term
-                                                                    uu___191
+                                                                    uu___2
+                                                                    (FStar_Syntax_Embeddings.e_tuple2
+                                                                    (FStar_Syntax_Embeddings.e_option
+                                                                    (FStar_Syntax_Embeddings.e_tuple2
+                                                                    uu___2
+                                                                    (FStar_Syntax_Embeddings.e_tuple2
+                                                                    FStar_Tactics_Embedding.e_tot_or_ghost
+                                                                    uu___2)))
+                                                                    (FStar_Syntax_Embeddings.e_list
+                                                                    FStar_Syntax_Embeddings.e_issue))
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_env
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_attribute
                                                                     (FStar_TypeChecker_NBETerm.e_tuple2
@@ -1536,7 +1533,7 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     Prims.int_zero
                                                                     "universe_of"
                                                                     FStar_Reflection_V2_Embeddings.e_env
-                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___2
                                                                     (FStar_Syntax_Embeddings.e_tuple2
                                                                     (FStar_Syntax_Embeddings.e_option
                                                                     FStar_Reflection_V2_Embeddings.e_universe)
@@ -1559,7 +1556,7 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     Prims.int_zero
                                                                     "check_prop_validity"
                                                                     FStar_Reflection_V2_Embeddings.e_env
-                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___2
                                                                     (FStar_Syntax_Embeddings.e_tuple2
                                                                     (FStar_Syntax_Embeddings.e_option
                                                                     FStar_Syntax_Embeddings.e_unit)
@@ -1582,8 +1579,8 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     Prims.int_zero
                                                                     "check_match_complete"
                                                                     FStar_Reflection_V2_Embeddings.e_env
-                                                                    FStar_Reflection_V2_Embeddings.e_term
-                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___2
+                                                                    uu___2
                                                                     (FStar_Syntax_Embeddings.e_list
                                                                     FStar_Reflection_V2_Embeddings.e_pattern)
                                                                     (FStar_Syntax_Embeddings.e_option
@@ -1674,16 +1671,16 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     (FStar_Syntax_Embeddings.e_tuple2
                                                                     FStar_Reflection_V2_Embeddings.e_namedv
                                                                     FStar_Reflection_V2_Embeddings.e_term))
-                                                                    FStar_Reflection_V2_Embeddings.e_term
-                                                                    FStar_Reflection_V2_Embeddings.e_term
+                                                                    uu___2
+                                                                    uu___2
                                                                     uu___201
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_env
                                                                     (FStar_TypeChecker_NBETerm.e_list
                                                                     (FStar_TypeChecker_NBETerm.e_tuple2
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_namedv
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_term))
-                                                                    FStar_Reflection_V2_NBEEmbeddings.e_term
-                                                                    FStar_Reflection_V2_NBEEmbeddings.e_term
+                                                                    FStar_Reflection_V2_NBEEmbeddings.e_attribute
+                                                                    FStar_Reflection_V2_NBEEmbeddings.e_attribute
                                                                     uu___202
                                                                     FStar_Tactics_V2_Basic.refl_try_unify
                                                                     FStar_Tactics_V2_Basic.refl_try_unify in

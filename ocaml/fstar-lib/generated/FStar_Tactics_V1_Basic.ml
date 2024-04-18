@@ -5418,7 +5418,7 @@ let (_t_trefl :
                                 | FStar_Pervasives.Inl (uu___13, t_ty) ->
                                     let uu___14 =
                                       FStar_TypeChecker_Core.check_term_subtyping
-                                        env1 ty t_ty in
+                                        true true env1 ty t_ty in
                                     (match uu___14 with
                                      | FStar_Pervasives.Inl
                                          (FStar_Pervasives_Native.None) ->
