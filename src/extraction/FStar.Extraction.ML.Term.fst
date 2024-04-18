@@ -1491,14 +1491,17 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                |_ -> term_as_mlexpr g t)
             | _ -> term_as_mlexpr g t)
 
-        | Tm_meta {tm=t} //TODO: handle the resugaring in case it's a 'Meta_desugared' ... for more readable output
+        | Tm_meta {tm=t}  //TODO: handle the resugaring in case it's a 'Meta_desugared' ... for more readable output
         | Tm_uinst(t, _) ->
           term_as_mlexpr g t
 
         | Tm_constant c ->
-          let _, ty, _ = TcTerm.typeof_tot_or_gtot_term (tcenv_of_uenv g) t true in  //AR: TODO: type_of_well_typed?
-          let ml_ty = term_as_mlty g ty in
-          with_ty ml_ty (mlexpr_of_const t.pos c), E_PURE, ml_ty
+          let tcenv = tcenv_of_uenv g in
+          let _, ty, _ = TcTerm.typeof_tot_or_gtot_term tcenv t true in  //AR: TODO: type_of_well_typed?
+          if TcUtil.must_erase_for_extraction tcenv ty
+          then ml_unit, E_PURE, MLTY_Erased
+          else let ml_ty = term_as_mlty g ty in
+               with_ty ml_ty (mlexpr_of_const t.pos c), E_PURE, ml_ty
 
         | Tm_name _ -> //lookup in g; decide if its in left or right; tag is Pure because it's just a variable
           if is_type g t //Here, we really need to be certain that g is a type; unclear if level ensures it

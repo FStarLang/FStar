@@ -2931,18 +2931,26 @@ and (term_as_mlexpr' :
            -> term_as_mlexpr g t1
        | FStar_Syntax_Syntax.Tm_uinst (t1, uu___1) -> term_as_mlexpr g t1
        | FStar_Syntax_Syntax.Tm_constant c ->
+           let tcenv = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
            let uu___1 =
-             let uu___2 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
-             FStar_TypeChecker_TcTerm.typeof_tot_or_gtot_term uu___2 t true in
+             FStar_TypeChecker_TcTerm.typeof_tot_or_gtot_term tcenv t true in
            (match uu___1 with
             | (uu___2, ty, uu___3) ->
-                let ml_ty = term_as_mlty g ty in
                 let uu___4 =
-                  let uu___5 =
-                    FStar_Extraction_ML_Util.mlexpr_of_const
-                      t.FStar_Syntax_Syntax.pos c in
-                  FStar_Extraction_ML_Syntax.with_ty ml_ty uu___5 in
-                (uu___4, FStar_Extraction_ML_Syntax.E_PURE, ml_ty))
+                  FStar_TypeChecker_Util.must_erase_for_extraction tcenv ty in
+                if uu___4
+                then
+                  (FStar_Extraction_ML_Syntax.ml_unit,
+                    FStar_Extraction_ML_Syntax.E_PURE,
+                    FStar_Extraction_ML_Syntax.MLTY_Erased)
+                else
+                  (let ml_ty = term_as_mlty g ty in
+                   let uu___6 =
+                     let uu___7 =
+                       FStar_Extraction_ML_Util.mlexpr_of_const
+                         t.FStar_Syntax_Syntax.pos c in
+                     FStar_Extraction_ML_Syntax.with_ty ml_ty uu___7 in
+                   (uu___6, FStar_Extraction_ML_Syntax.E_PURE, ml_ty)))
        | FStar_Syntax_Syntax.Tm_name uu___1 ->
            let uu___2 = is_type g t in
            if uu___2
