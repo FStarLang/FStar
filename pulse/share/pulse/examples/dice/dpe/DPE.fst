@@ -80,7 +80,6 @@ type session_state =
 // These two definitions extract to non-exhaustive patterns in Rust
 //   which fails to typecheck
 //
-
 noextract
 let ctxt_of (s:session_state { Available? s })
   : context_t
@@ -175,11 +174,22 @@ let context_repr_and_trace_related (repr:context_repr_t) (tr:PP.hist DT.trace_pr
 let session_idle = true
 let session_unavailable = false
 
+let session_ctxt_perm (s:session_state) (tr:PP.hist DT.trace_preorder) : vprop =
+  match s with
+  | SessionStart
+  | InUse
+  | SessionClosed
+  | SessionError -> emp
+  | Available _ ->
+    exists* repr.
+    context_perm (ctxt_of s) repr **
+    pure (context_repr_and_trace_related repr tr)
+
 let session_perm (r:ghost_pcm_ref pcm) (pht:session_table_map) (sid:nat) =
   if not (UInt.fits sid 32) then emp
   else let sid = U32.uint_to_t sid in
        match PHT.lookup pht sid with
-       | None -> emp
+       | None -> pure False
        | Some s ->
          match s with
          | SessionStart ->
@@ -192,10 +202,9 @@ let session_perm (r:ghost_pcm_ref pcm) (pht:session_table_map) (sid:nat) =
            sid_pts_to r sid (half_perm full_perm) session_unavailable tr
          
          | Available _ ->
-           exists* (tr:PP.hist DT.trace_preorder) repr.
+           exists* (tr:PP.hist DT.trace_preorder).
            sid_pts_to r sid (half_perm full_perm) session_idle tr **
-           context_perm (ctxt_of s) repr **
-           pure (context_repr_and_trace_related repr tr)
+           session_ctxt_perm s tr
 
 let all_sids_unused : pcm_t = Map.map_literal (fun _ ->
   Some (full_perm, session_unavailable), emp_trace)
@@ -248,34 +257,6 @@ fn initialize_global_state ()
 ```
 
 let global_state : st = run_stt (initialize_global_state ())
-
-```pulse
-fn mk_session_tbl (r:ghost_pcm_ref pcm)
-  requires ghost_pcm_pts_to r all_sids_unused
-  returns s:global_state_t
-  ensures inv r (Some s)
-{
-  let session_table = HT.alloc #sid_t #session_state sid_hash 256sz;
-  let st = {
-    session_id_counter = 0ul;
-    session_table;
-  };
-
-  rewrite each session_table as st.session_table;
-
-  assert (pure (Map.equal all_sids_unused (sids_above_unused st.session_id_counter)));
-  rewrite (ghost_pcm_pts_to r all_sids_unused) as
-          (ghost_pcm_pts_to r (sids_above_unused st.session_id_counter));
-
-  with pht. assert (models st.session_table pht);
-  on_range_empty (session_perm r pht) 0;
-  rewrite (on_range (session_perm r pht) 0 0) as
-          (on_range (session_perm r pht) 0 (U32.v st.session_id_counter));
-  
-  fold (inv r (Some st));
-  st
-}
-```
 
 ```pulse
 fn insert_if_not_full
@@ -522,7 +503,127 @@ fn __open_session (r:ghost_pcm_ref pcm) (s:global_state_t)
 }
 ```
 
+```pulse
+fn maybe_mk_session_tbl (r:ghost_pcm_ref pcm) (gst_opt:option global_state_t)
+  requires inv r gst_opt
+  returns gst:global_state_t
+  ensures inv r (Some gst)
+{
+  match gst_opt {
+    None -> {
+      let session_table = HT.alloc #sid_t #session_state sid_hash 256sz;
+      let gst = {
+        session_id_counter = 0ul;
+        session_table;
+      };
 
+      rewrite each session_table as gst.session_table;
+
+      unfold inv;
+      assert (pure (Map.equal all_sids_unused (sids_above_unused gst.session_id_counter)));
+      rewrite (ghost_pcm_pts_to r all_sids_unused) as
+              (ghost_pcm_pts_to r (sids_above_unused gst.session_id_counter));
+
+      with pht. assert (models gst.session_table pht);
+      on_range_empty (session_perm r pht) 0;
+      rewrite (on_range (session_perm r pht) 0 0) as
+              (on_range (session_perm r pht) 0 (U32.v gst.session_id_counter));
+  
+      fold (inv r (Some gst));
+      gst
+    }
+    Some gst -> {
+      gst
+    }
+  }
+}
+```
+
+```pulse
+fn open_session (s:st)
+  requires st_perm s
+  returns b:(st & option sid_t)
+  ensures st_perm (fst b) **
+          open_session_client_perm (dfst (fst b)) (snd b) **
+          pure (fst b == s)
+{
+  let r = dfst s;
+  let l = dsnd s;
+  unfold st_perm;
+  rewrite (mutex_live (dsnd s) (inv (dfst s))) as
+          (mutex_live l (inv r));
+
+  let mr = lock l;
+  let gst_opt = R.replace mr None;
+
+  let gst = maybe_mk_session_tbl r gst_opt;
+  let res = __open_session r gst;
+  mr := Some (fst res);
+  unlock l mr;
+
+  let s = ((| r, l |) <: st);
+  let ret = (s, snd res);
+
+  rewrite (mutex_live l (inv r)) as
+          (mutex_live (dsnd s) (inv (dfst s)));
+  fold (st_perm s);
+  rewrite (st_perm s) as (st_perm (fst ret));
+  rewrite (open_session_client_perm r (snd res)) as
+          (open_session_client_perm (dfst (fst ret)) (snd ret));
+  ret
+}
+```
+
+```pulse
+fn mark_session_inuse (s:st) (sid:sid_t) (tr:PP.hist DT.trace_preorder)
+  requires st_perm s **
+           sid_pts_to (dfst s) sid (half_perm full_perm) session_idle tr
+  returns b:(st & session_state)
+  ensures st_perm (fst b) **
+          sid_pts_to (dfst s) sid (half_perm full_perm) session_unavailable tr **
+          session_ctxt_perm (snd b) tr **
+          pure (fst b == s)
+{
+  let r = dfst s;
+  let l = dsnd s;
+  rewrite (sid_pts_to (dfst s) sid (half_perm full_perm) session_idle tr)
+       as (sid_pts_to r sid (half_perm full_perm) session_idle tr);
+
+  unfold st_perm;
+  rewrite (mutex_live (dsnd s) (inv (dfst s))) as
+          (mutex_live l (inv r));
+
+  let mr = lock l;
+  let gstopt = R.replace mr None;
+  
+  match gstopt {
+    None -> {
+      rewrite (inv r gstopt) as
+              (ghost_pcm_pts_to r all_sids_unused);
+      unfold sid_pts_to;
+      rewrite (ghost_pcm_pts_to r (singleton sid (half_perm full_perm) session_idle tr)) as
+              (ghost_pcm_pts_to r (G.reveal (G.hide (singleton sid (half_perm full_perm) session_idle tr))));
+      ghost_gather r (singleton sid (half_perm full_perm) session_idle tr)
+                     all_sids_unused;
+      unreachable ()
+    }
+
+    Some gst -> {
+      let ctr = gst.session_id_counter;
+      let tbl = gst.session_table;
+      unfold (inv r (Some gst));
+      rewrite each gst.session_table as tbl;
+      rewrite each gst.session_id_counter as ctr;
+      with pht. assert (models tbl pht ** on_range (session_perm r pht) 0 (U32.v ctr));
+      let ss = HT.lookup tbl sid;
+      assert (models (tfst ss) pht);
+      // match       
+
+      admit ()
+    }
+  }
+}
+```
 
 #push-options "--ext 'pulse:env_on_err' --print_implicits --warn_error -342"
 
