@@ -21,14 +21,6 @@ open Pulse.Lib.Pledge
 open UnixFork
 module Box = Pulse.Lib.Box
 
-(* Pulse will currently not recognize calls to anything other than
-top-level names, so this allows to force it. *)
-val now
-  (#a #pre #post : _)
-  (f : unit -> stt a pre post)
-  : unit -> stt a pre post
-let now f () = f ()
-
 let box_solves_post (#a:Type0) (r:Box.box (option a)) (post : a -> vprop) : vprop =
   exists* (v:a). Box.pts_to r (Some v) ** post v
 
