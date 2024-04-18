@@ -19,6 +19,7 @@ module Async
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Pledge
 open UnixFork
+module Box = Pulse.Lib.Box
 
 (* Pulse will currently not recognize calls to anything other than
 top-level names, so this allows to force it. *)
@@ -28,18 +29,18 @@ val now
   : unit -> stt a pre post
 let now f () = f ()
 
-let ref_solves_post (#a:Type0) (r:ref (option a)) (post : a -> vprop) : vprop =
-  exists* (v:a). pts_to r (Some v) ** post v
+let box_solves_post (#a:Type0) (r:Box.box (option a)) (post : a -> vprop) : vprop =
+  exists* (v:a). Box.pts_to r (Some v) ** post v
 
 (* NB: The vprop is not used here, so why the index? Only to make
 it easier for users to call await, as the post should be unified
 and hence the user would not need to explicitly repeat it. Unless
 we can fill it from the context...? *)
 let asynch (a:Type0) (post : a -> vprop) : Type0 =
-  ref (option a) & thread
+  Box.box (option a) & thread
 
 let async_joinable #a #post h =
-  joinable (snd h) ** pledge emp_inames (done (snd h)) (ref_solves_post (fst h) post)
+  joinable (snd h) ** pledge emp_inames (done (snd h)) (box_solves_post (fst h) post)
 
 (* Ugly, but at least it works fine. *)
 let eta_post #a #b #pre #post (f : (x:a -> stt b (pre x) (post x)))
@@ -56,17 +57,17 @@ fn async_fill
   (#pre : vprop)
   (#post : (a -> vprop))
   (f : (unit -> stt a pre post))
-  (r : ref (option a))
+  (r : Box.box (option a))
   (_:unit)
-  requires pre ** pts_to r None
+  requires pre ** Box.pts_to r None
   returns _ : unit
-  ensures ref_solves_post r post
+  ensures box_solves_post r post
 {
   let f = eta_post f;
   // Very nice!
   let v : a = f ();
-  r := Some v;
-  fold (ref_solves_post r post)
+  Box.op_Colon_Equals r (Some v);
+  fold (box_solves_post r post)
 }
 ```
 
@@ -80,14 +81,14 @@ fn __async
   returns h : asynch a post
   ensures async_joinable h
 {
-  let r = alloc (None #a);
-  let th = fork #(pre ** pts_to r None) #(ref_solves_post r post)
+  let r = Box.alloc (None #a);
+  let th = fork #(pre ** Box.pts_to r None) #(box_solves_post r post)
                 (async_fill #a #pre #post f r);
   let res = ( r, th );
   
   assert (joinable th);
-  assert (pledge emp_inames (done th) (ref_solves_post r post));
-  rewrite (joinable th ** pledge emp_inames (done th) (ref_solves_post r post))
+  assert (pledge emp_inames (done th) (box_solves_post r post));
+  rewrite (joinable th ** pledge emp_inames (done th) (box_solves_post r post))
        as (async_joinable #_ #post res);
   res
 }
@@ -110,17 +111,17 @@ fn __await
   join th; (* join the thread *)
   assert (done th);
   rewrite (done th) as (done (snd h));
-  redeem_pledge emp_inames (done (snd h)) (ref_solves_post r post);
-  assert (ref_solves_post r post);
-  unfold ref_solves_post;
-  with vv. assert (pts_to r (Some vv));
+  redeem_pledge emp_inames (done (snd h)) (box_solves_post r post);
+  assert (box_solves_post r post);
+  unfold box_solves_post;
+  with vv. assert (Box.pts_to r (Some vv));
   drop_ (done th);
   
   assert (post vv);
-  assert (pts_to r (Some vv));
+  assert (Box.pts_to r (Some vv));
 
-  let vo = !r;
-  free r;
+  let vo = Box.op_Bang r;
+  Box.free r;
   match vo {
     Some v -> {
       rewrite (post vv) as (post v);
@@ -144,16 +145,16 @@ fn __map
   returns  h' : asynch b post2
   ensures  async_joinable h'
 {
-  let r' = alloc (None #b);
+  let r' = Box.alloc (None #b);
   fn filler (_:unit)
-    requires async_joinable h ** pts_to r' None
-    ensures ref_solves_post r' post2
+    requires async_joinable h ** Box.pts_to r' None
+    ensures box_solves_post r' post2
   {
     let x = await h;
     let f = eta_post f;
     let y : b = f x;
-    r' := Some y;
-    fold (ref_solves_post r' post2)
+    Box.op_Colon_Equals r' (Some y);
+    fold (box_solves_post r' post2)
   };
   let waiter = fork filler;
   let h' : asynch b post2 = (r', waiter);
