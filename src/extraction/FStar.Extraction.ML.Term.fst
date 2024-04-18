@@ -958,15 +958,10 @@ let rec extract_one_pat (imp : bool)
       //Karamel supports native integer constants in patterns
       //Don't convert them into `when` clauses
         let mlc, ml_ty =
-            match swopt with
-            | None ->
-              with_ty ml_int_ty <| (MLE_Const (mlconst_of_const p.p (Const_int (c, None)))),
-              ml_int_ty
-            | Some sw ->
-              let source_term =
-                  FStar.ToSyntax.ToSyntax.desugar_machine_integer (tcenv_of_uenv g).dsenv c sw Range.dummyRange in
-              let mlterm, _, mlty = term_as_mlexpr g source_term in
-              mlterm, mlty
+          let cc = Const_int (c, swopt) in
+          let ty = TcTerm.tc_constant (tcenv_of_uenv g) p.p cc in
+          let ml_ty = term_as_mlty g ty in
+          with_ty ml_ty (mlexpr_of_const p.p cc), ml_ty
         in
         //these may be extracted to bigint, in which case, we need to emit a when clause
         let g, x = UEnv.new_mlident g in
@@ -1358,6 +1353,16 @@ and term_as_mlexpr (g:uenv) (e:term) : (mlexpr * e_tag * mlty) =
     e, f, t
 
 
+and mlexpr_of_const' (g:uenv) (p:Range.range) (c:sconst) : mlexpr' =
+    (* As mlexpr_of_const, but handles UInt128 *)
+    match c with
+    | Const_int (s, Some (Unsigned, Int128)) ->
+      let tm = FStar.ToSyntax.ToSyntax.unfold_machine_integer (tcenv_of_uenv g).dsenv s (Unsigned, Int128) p in
+      let mle, _, _ = term_as_mlexpr' g tm in
+      mle.expr
+
+    | _ -> mlexpr_of_const p c
+
 and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
     let top = SS.compress top in
     (debug g (fun u -> BU.print_string (BU.format3 "%s: term_as_mlexpr' (%s) :  %s \n"
@@ -1472,25 +1477,6 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
            *)
           ml_unit, E_ERASABLE, MLTY_Erased
 
-        | Tm_meta {tm=t; meta=Meta_desugared (Machine_integer (signedness, width))} ->
-
-            let t = SS.compress t in
-            let t = U.unascribe t in
-            (match t.n with
-             (* Should we check if hd here is [__][u]int_to_t? *)
-            | Tm_app {hd; args=[x, _]} ->
-              (let x = SS.compress x in
-               let x = U.unascribe x in
-               match x.n with
-               | Tm_constant (Const_int (repr, _)) ->
-                 (let _, ty, _ =
-                   TcTerm.typeof_tot_or_gtot_term (tcenv_of_uenv g) t true in
-                 let ml_ty = term_as_mlty g ty in
-                 let ml_const = Const_int (repr, Some (signedness, width)) in
-                 with_ty ml_ty (mlexpr_of_const t.pos ml_const), E_PURE, ml_ty)
-               |_ -> term_as_mlexpr g t)
-            | _ -> term_as_mlexpr g t)
-
         | Tm_meta {tm=t} //TODO: handle the resugaring in case it's a 'Meta_desugared' ... for more readable output
         | Tm_uinst(t, _) ->
           term_as_mlexpr g t
@@ -1498,7 +1484,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
         | Tm_constant c ->
           let _, ty, _ = TcTerm.typeof_tot_or_gtot_term (tcenv_of_uenv g) t true in  //AR: TODO: type_of_well_typed?
           let ml_ty = term_as_mlty g ty in
-          with_ty ml_ty (mlexpr_of_const t.pos c), E_PURE, ml_ty
+          with_ty ml_ty (mlexpr_of_const' g t.pos c), E_PURE, ml_ty
 
         | Tm_name _ -> //lookup in g; decide if its in left or right; tag is Pure because it's just a variable
           if is_type g t //Here, we really need to be certain that g is a type; unclear if level ensures it

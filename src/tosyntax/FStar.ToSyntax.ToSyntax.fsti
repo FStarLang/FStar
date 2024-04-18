@@ -32,9 +32,6 @@ module U = FStar.Syntax.Util
 
 val as_interface:            AST.modul -> AST.modul
 val desugar_term:            env -> term -> S.term
-val desugar_machine_integer: env -> repr:string
-                           -> (FStar.Const.signedness * FStar.Const.width)
-                           -> Range.range -> Syntax.term
 val free_vars (tvars_only:bool) (e:env) (t:term) : list ident
 val close:                   env -> term -> term
 
@@ -55,3 +52,7 @@ val parse_attr_with_list : bool -> S.term -> lident -> option (list int) * bool
 
 val get_fail_attr1 : bool -> S.term       -> option (list int * bool)
 val get_fail_attr  : bool -> list S.term -> option (list int * bool)
+
+val unfold_machine_integer: env -> repr:string
+                           -> (FStar.Const.signedness * FStar.Const.width)
+                           -> Range.range -> Syntax.term

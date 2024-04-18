@@ -683,7 +683,7 @@ let rec (encode_const :
                (uu___1, [])
            | FStar_Const.Const_int (repr, FStar_Pervasives_Native.Some sw) ->
                let syntax_term =
-                 FStar_ToSyntax_ToSyntax.desugar_machine_integer
+                 FStar_ToSyntax_ToSyntax.unfold_machine_integer
                    (env.FStar_SMTEncoding_Env.tcenv).FStar_TypeChecker_Env.dsenv
                    repr sw FStar_Compiler_Range_Type.dummyRange in
                encode_term syntax_term env

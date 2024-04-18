@@ -70,6 +70,7 @@ let int32_lid   = p2l ["FStar"; "Int32"; "t"]
 let uint32_lid  = p2l ["FStar"; "UInt32"; "t"]
 let int64_lid   = p2l ["FStar"; "Int64"; "t"]
 let uint64_lid  = p2l ["FStar"; "UInt64"; "t"]
+let uint128_lid  = p2l ["FStar"; "UInt128"; "t"]
 let sizet_lid  = p2l ["FStar"; "SizeT"; "t"]
 
 let salloc_lid = p2l ["FStar"; "ST"; "salloc"]
@@ -402,7 +403,7 @@ let const_to_string x = match x with
   | Const_bool b -> if b then "true" else "false"
   | Const_real r -> r^"R"
   | Const_string(s, _) -> U.format1 "\"%s\"" s
-  | Const_int (x, _) -> x
+  | Const_int (x, _) -> x // FIXME
   | Const_char c -> "'" ^ U.string_of_char c ^ "'"
   | Const_range r -> FStar.Compiler.Range.string_of_range r
   | Const_range_of -> "range_of"

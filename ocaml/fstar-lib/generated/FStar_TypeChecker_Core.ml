@@ -6486,7 +6486,7 @@ and (check_pat :
               match c with
               | FStar_Const.Const_int (repr, FStar_Pervasives_Native.Some sw)
                   ->
-                  FStar_ToSyntax_ToSyntax.desugar_machine_integer
+                  FStar_ToSyntax_ToSyntax.unfold_machine_integer
                     (g.tcenv).FStar_TypeChecker_Env.dsenv repr sw
                     p.FStar_Syntax_Syntax.p
               | uu___ ->
