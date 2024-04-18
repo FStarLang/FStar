@@ -231,106 +231,6 @@ let tc_inductive env ses quals attrs lids =
     try tc_inductive' env ses quals attrs lids |> (fun r -> pop (); r)
     with e -> pop (); raise e
 
-(*
- *  Given `val t : Type` in an interface
- *  and   `let t = e`    in the corresponding implementation
- *  The val declaration should contains the `must_erase_for_extraction` attribute
- *  if and only if `e` is a type that's non-informative (e..g., unit, t -> unit, etc.)
- *)
-let check_must_erase_attribute env se =
-    match se.sigel with
-    | Sig_let {lbs; lids=l} ->
-        if not (Options.ide())
-        then
-        begin
-          match DsEnv.iface_decls (Env.dsenv env) (Env.current_module env) with
-          | None ->
-            ()
-
-          | Some iface_decls ->
-            snd lbs |> List.iter (fun lb ->
-                let lbname = BU.right lb.lbname in
-                let has_iface_val =
-                    iface_decls |> BU.for_some (FStar.Parser.AST.decl_is_val (ident_of_lid lbname.fv_name.v))
-                in
-                if has_iface_val
-                then
-                    let must_erase =
-                      TcUtil.must_erase_for_extraction env lb.lbdef in
-                    let has_attr =
-                      Env.fv_has_attr env
-                                      lbname
-                                      FStar.Parser.Const.must_erase_for_extraction_attr in
-                    if must_erase && not has_attr
-                    then
-                        FStar.Errors.log_issue_doc
-                            (range_of_fv lbname)
-                            (FStar.Errors.Error_MustEraseMissing,
-                               [Errors.text (BU.format2
-                                    "Values of type `%s` will be erased during extraction, \
-                                    but its interface hides this fact. Add the `must_erase_for_extraction` \
-                                    attribute to the `val %s` declaration for this symbol in the interface"
-                                    (Print.fv_to_string lbname)
-                                    (Print.fv_to_string lbname)
-                                    )])
-                    else if has_attr && not must_erase
-                    then FStar.Errors.log_issue_doc
-                        (range_of_fv lbname)
-                        (FStar.Errors.Error_MustEraseMissing,
-                           [Errors.text (BU.format1
-                                "Values of type `%s` cannot be erased during extraction, \
-                                but the `must_erase_for_extraction` attribute claims that it can. \
-                                Please remove the attribute."
-                                (Print.fv_to_string lbname)
-                                )]))
-    end
-
-    | _ -> ()
-
-let check_typeclass_instance_attribute env se =
-    let is_tc_instance =
-        se.sigattrs |> BU.for_some
-          (fun t ->
-            match t.n with
-            | Tm_fvar fv -> S.fv_eq_lid fv FStar.Parser.Const.tcinstance_lid
-            | _ -> false)
-    in
-    if not is_tc_instance then ()
-    else (
-      match se.sigel with
-      | Sig_let {lbs=(false, [lb])} ->
-        let _, res = U.arrow_formals_comp lb.lbtyp in
-        if is_total_comp res
-        then let t = comp_result res in
-             let head, _ = U.head_and_args t in
-             let err () =
-               FStar.Errors.log_issue
-                      (range_of_sigelt se)
-                      (FStar.Errors.Error_UnexpectedTypeclassInstance,
-                        (BU.format1 "Instances must define instances of `class` types. Type %s is not a class"
-                                               (Print.term_to_string t)))
-             in
-             match (U.un_uinst head).n with
-             | Tm_fvar fv ->
-               if not (Env.fv_has_attr env fv FStar.Parser.Const.tcclass_lid)
-               then err ()
-             | _ ->
-               err ()
-        else
-          FStar.Errors.log_issue
-            (range_of_sigelt se)
-            (FStar.Errors.Error_UnexpectedTypeclassInstance,
-                 (BU.format1 "Instances are expected to be total. This instance has effect %s"
-                             (Ident.string_of_lid (U.comp_effect_name res))))
-
-      | _ ->
-        FStar.Errors.log_issue
-          (range_of_sigelt se)
-          (FStar.Errors.Error_UnexpectedTypeclassInstance,
-                 "An `instance` is expected to be a non-recursive definition whose type is an instance of a `class`")
-    )
-
-
 let proc_check_with (attrs:list attribute) (kont : unit -> 'a) : 'a =
   match U.get_attribute PC.check_with_lid attrs with
   | None -> kont ()
@@ -636,9 +536,6 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
           then BU.format2 "let %s : %s" (Print.lbname_to_string lb.lbname) (Print.term_to_string (*env*) lb.lbtyp)
           else "") |> String.concat "\n");
 
-    check_must_erase_attribute env0 se;
-    check_typeclass_instance_attribute env0 se;
-
     [se], [], env0
 
 let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
@@ -651,7 +548,7 @@ let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
          | Sig_fail _ -> se
          | _ -> tc_decl_attributes env se
   in
-  TcUtil.check_sigelt_quals env se;
+  Quals.check_sigelt_quals_pre env se;
   proc_check_with se.sigattrs (fun () ->
   let r = se.sigrng in
   let se =
@@ -970,26 +867,32 @@ let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
  * the list of typechecked sig_elts, and a list of new sig_elts elaborated
  * during typechecking but not yet typechecked *)
 let tc_decl env se: list sigelt * list sigelt * Env.env =
-   let env = set_hint_correlator env se in
-   if Options.debug_module (string_of_lid env.curmodule) then
-     BU.print1 "Processing %s\n"
-        (if Options.debug_at_level (string_of_lid env.curmodule) Options.High
-         then Print.sigelt_to_string se
-         else Print.sigelt_to_string_short se);
-   if Env.debug env Options.Low then
-     BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
-   if se.sigmeta.sigmeta_already_checked then
-     [se], [], env
-   else if se.sigmeta.sigmeta_admit
-   then begin
-     let old = Options.admit_smt_queries () in
-     Options.set_admit_smt_queries true;
-     let result = tc_decl' env se in
-     Options.set_admit_smt_queries old;
-     result
-   end
-   else tc_decl' env se
-
+  let env = set_hint_correlator env se in
+  if Options.debug_module (string_of_lid env.curmodule) then
+    BU.print1 "Processing %s\n"
+       (if Options.debug_at_level (string_of_lid env.curmodule) Options.High
+        then Print.sigelt_to_string se
+        else Print.sigelt_to_string_short se);
+  if Env.debug env Options.Low then
+    BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (show se);
+  let result =
+    if se.sigmeta.sigmeta_already_checked then
+      [se], [], env
+    else if se.sigmeta.sigmeta_admit then (
+      let old = Options.admit_smt_queries () in
+      Options.set_admit_smt_queries true;
+      let result = tc_decl' env se in
+      Options.set_admit_smt_queries old;
+      result
+    ) else
+      tc_decl' env se
+  in
+  let () =
+    (* Do the post-tc attribute/qualifier check. *)
+    let (ses, _, _) = result in
+    List.iter (Quals.check_sigelt_quals_post env) ses
+  in
+  result
 
 (* adds the typechecked sigelt to the env, also performs any processing required in the env (such as reset options) *)
 (* AR: we now call this function when loading checked modules as well to be more consistent *)

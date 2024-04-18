@@ -1459,6 +1459,13 @@ let (collect_one :
                      (false, uu___4) in
                    P_dep uu___3 in
                  add_to_parsing_data uu___2
+             | FStar_Const.Const_real uu___2 ->
+                 let uu___3 =
+                   let uu___4 =
+                     let uu___5 = FStar_Ident.lid_of_str "fstar.real" in
+                     (false, uu___5) in
+                   P_dep uu___4 in
+                 add_to_parsing_data uu___3
              | uu___2 -> ()
            and collect_term' uu___1 =
              match uu___1 with
