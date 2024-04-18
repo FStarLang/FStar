@@ -34,35 +34,31 @@ let to_tac_1 (t: 'b -> 'a __tac): 'b -> 'a TM.tac = fun x ->
   (fun (ps: proofstate) ->
     uninterpret_tac (t x) ps) |> TM.mk_tac
 
-let from_tac_1 s (t: 'a -> 'b TM.tac): 'a  -> 'b __tac =
-  fun (x: 'a) ->
-    fun (ps: proofstate) ->
-      let m = t x in
-      interpret_tac s m ps
+let from_tac_1 s (t: 'a -> 'r TM.tac): 'a  -> 'r __tac =
+  fun (xa: 'a) (ps : proofstate) ->
+    let m = t xa in
+    interpret_tac s m ps
 
-let from_tac_2 s (t: 'a -> 'b -> 'c TM.tac): 'a  -> 'b -> 'c __tac =
-  fun (x: 'a) ->
-    fun (y: 'b) ->
-      fun (ps: proofstate) ->
-        let m = t x y in
-        interpret_tac s m ps
+let from_tac_2 s (t: 'a -> 'b -> 'r TM.tac): 'a  -> 'b -> 'r __tac =
+  fun (xa: 'a) (xb: 'b) (ps : proofstate) ->
+    let m = t xa xb in
+    interpret_tac s m ps
 
-let from_tac_3 s (t: 'a -> 'b -> 'c -> 'd TM.tac): 'a  -> 'b -> 'c -> 'd __tac =
-  fun (x: 'a) ->
-    fun (y: 'b) ->
-      fun (z: 'c) ->
-        fun (ps: proofstate) ->
-          let m = t x y z in
-          interpret_tac s m ps
+let from_tac_3 s (t: 'a -> 'b -> 'c -> 'r TM.tac): 'a  -> 'b -> 'c -> 'r __tac =
+  fun (xa: 'a) (xb: 'b) (xc: 'c) (ps : proofstate) ->
+    let m = t xa xb xc in
+    interpret_tac s m ps
 
-let from_tac_4 s (t: 'a -> 'b -> 'c -> 'd -> 'e TM.tac): 'a  -> 'b -> 'c -> 'd -> 'e __tac =
-  fun (x: 'a) ->
-  fun (y: 'b) ->
-  fun (z: 'c) ->
-  fun (w: 'd) ->
-  fun (ps: proofstate) ->
-  let m = t x y z w in
-  interpret_tac s m ps
+let from_tac_4 s (t: 'a -> 'b -> 'c -> 'd -> 'r TM.tac): 'a  -> 'b -> 'c -> 'd -> 'r __tac =
+  fun (xa: 'a) (xb: 'b) (xc: 'c) (xd: 'd)  (ps : proofstate) ->
+    let m = t xa xb xc xd in
+    interpret_tac s m ps
+
+let from_tac_5 s (t: 'a -> 'b -> 'c -> 'd -> 'e -> 'r TM.tac): 'a  -> 'b -> 'c -> 'd -> 'e -> 'r __tac =
+  fun (xa: 'a) (xb: 'b) (xc: 'c) (xd: 'd) (xe: 'e) (ps : proofstate) ->
+    let m = t xa xb xc xd xe in
+    interpret_tac s m ps
+
 
 (* Pointing to the internal primitives *)
 let compress                = from_tac_1 "B.compress" B.compress

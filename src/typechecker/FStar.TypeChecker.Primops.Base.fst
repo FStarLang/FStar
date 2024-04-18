@@ -424,3 +424,36 @@ let mk5' #a #b #c #d #e #r #na #nb #nc #nd #ne #nr
       | _ -> failwith "arity"
   in
   as_primitive_step_nbecbs true (name, 5, u_arity, interp, nbe_interp)
+
+let mk6' #a #b #c #d #e #f #r #na #nb #nc #nd #ne #nf #nr
+  (u_arity : int)
+  (name : Ident.lid)
+  {| EMB.embedding a |} {| NBE.embedding na |}
+  {| EMB.embedding b |} {| NBE.embedding nb |}
+  {| EMB.embedding c |} {| NBE.embedding nc |}
+  {| EMB.embedding d |} {| NBE.embedding nd |}
+  {| EMB.embedding e |} {| NBE.embedding ne |}
+  {| EMB.embedding f |} {| NBE.embedding nf |}
+  {| EMB.embedding r |} {| NBE.embedding nr |}
+  (ff : a -> b -> c -> d -> e -> f -> option r)
+  (nbe_ff : na -> nb -> nc -> nd -> ne -> nf -> option nr)
+  : primitive_step =
+  let interp : interp_t =
+    fun psc cb us args ->
+      match args with
+      | [(a, _); (b, _); (c, _); (d, _); (e, _); (f, _)] ->
+        let! r = ff <$> try_unembed_simple a <*> try_unembed_simple b <*> try_unembed_simple c <*> try_unembed_simple d <*> try_unembed_simple e <*> try_unembed_simple f in
+        let! r = r in
+        return (embed_simple psc.psc_range r)
+      | _ -> failwith "arity"
+  in
+  let nbe_interp : nbe_interp_t =
+    fun cbs us args ->
+      match args with
+      | [(a, _); (b, _); (c, _); (d, _); (e, _); (f, _)] ->
+        let! r = nbe_ff <$> NBE.unembed solve cbs a <*> NBE.unembed solve cbs b <*> NBE.unembed solve cbs c <*> NBE.unembed solve cbs d <*> NBE.unembed solve cbs e <*> NBE.unembed solve cbs f in
+        let! r = r in
+        return (NBE.embed solve cbs r)
+      | _ -> failwith "arity"
+  in
+  as_primitive_step_nbecbs true (name, 6, u_arity, interp, nbe_interp)
