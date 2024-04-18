@@ -351,6 +351,8 @@ let tm_all_inames = tm_fvar (as_fv all_inames_lid)
 let tm_add_inv (is iref:R.term) : R.term =
   let h = R.pack_ln (R.Tv_FVar (R.pack_fv add_inv_lid)) in
   R.mk_app h [ex is; ex iref]
+let tm_full_perm = tm_constant (R.C_Real "1.0")
+
 
 let is_view_of (tv:term_view) (t:term) : prop =
   match tv with

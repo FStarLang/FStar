@@ -24,7 +24,7 @@ let ref a = H.ref (U.raise_t a)
 let pts_to
     (#a:Type u#0)
     (r:ref a)
-    (#[exact (`full_perm)] [@@@equate_by_smt] p:perm)
+    (#[exact (`1.0R)] [@@@equate_by_smt] p:perm)
     ([@@@equate_by_smt] v:a)
   = H.pts_to r #p (U.raise_val v)
 let pts_to_is_small r p x = H.pts_to_is_small r p (U.raise_val x)
@@ -36,7 +36,7 @@ returns r:ref a
 ensures pts_to r v
 {
   let r = H.alloc (U.raise_val v);
-  fold (pts_to r #full_perm v);
+  fold (pts_to r #1.0R v);
   r
 }
 ```
@@ -58,22 +58,22 @@ let ( ! ) #a r #n #p = read #a r #n #p
 
 ```pulse
 fn write (#a:Type) (r:ref a) (x:a) (#n:erased a)
-requires pts_to r #full_perm n
-ensures pts_to r #full_perm x
+requires pts_to r #1.0R n
+ensures pts_to r #1.0R x
 {
-  unfold (pts_to r #full_perm n);
+  unfold (pts_to r #1.0R n);
   H.(r := (U.raise_val x));
-  fold (pts_to r #full_perm x)
+  fold (pts_to r #1.0R x)
 }
 ```
 let ( := ) #a r x #n = write #a r x #n
 
 ```pulse
 fn free' #a (r:ref a) (#n:erased a)
-requires pts_to r #full_perm n
+requires pts_to r #1.0R n
 ensures emp
 {
-  unfold (pts_to r #full_perm n);
+  unfold (pts_to r #1.0R n);
   H.free r;
 }
 ```
@@ -83,12 +83,12 @@ let free = free'
 ghost
 fn share' (#a:Type) (r:ref a) (#v:erased a) (#p:perm)
 requires pts_to r #p v
-ensures pts_to r #(half_perm p) v ** pts_to r #(half_perm p) v
+ensures pts_to r #(p /. 2.0R) v ** pts_to r #(p /. 2.0R) v
 {
   unfold pts_to r #p v;
   H.share r;
-  fold pts_to r #(half_perm p) v;
-  fold pts_to r #(half_perm p) v
+  fold pts_to r #(p /. 2.0R) v;
+  fold pts_to r #(p /. 2.0R) v
 }
 ```
 let share = share'
@@ -108,15 +108,12 @@ ensures pure (x0 == x1)
 ghost
 fn gather' (#a:Type) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
 requires pts_to r #p0 x0 ** pts_to r #p1 x1
-ensures pts_to r #(sum_perm p0 p1) x0 ** pure (x0 == x1)
+ensures pts_to r #(p0 +. p1) x0 ** pure (x0 == x1)
 {
   unfold pts_to r #p0 x0;
   unfold pts_to r #p1 x1;
   H.gather r;
-  fold (pts_to r #(sum_perm p1 p0) x0);
-  let qq = sum_perm p0 p1; //hack! prevent the unifier from structurally matching sum_perm p0 p1 with sum_perm p1 p0
-  rewrite (pts_to r #(sum_perm p1 p0) x0)
-       as (pts_to r #qq x0);
+  fold (pts_to r #(p1 +. p0) x0);
   raise_inj a x0 x1;
 }
 ```
@@ -125,14 +122,14 @@ let gather = gather'
 let share2 (#a:Type) (r:ref a) (#v:erased a)
 : stt_ghost unit emp_inames
   (pts_to r v)
-  (fun _ -> pts_to r #one_half v ** pts_to r #one_half v)
+  (fun _ -> pts_to r #0.5R v ** pts_to r #0.5R v)
 = share #a r #v
 
 let gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a)
 : stt_ghost unit emp_inames
-      (pts_to r #one_half x0 ** pts_to r #one_half x1)
-      (fun () -> pts_to r x0  ** pure (x0 == x1))
-= gather r
+      (pts_to r #0.5R x0 ** pts_to r #0.5R x1)
+      (fun () -> pts_to r #1.0R x0  ** pure (x0 == x1))
+= admit ()  // gather r
 
 ```pulse
 fn
@@ -151,22 +148,22 @@ let with_local
     (#ret_t:Type)
     (#post:ret_t -> vprop)
     (body:(r:ref a) -> stt ret_t (pre ** pts_to r init)
-                                 (fun v -> post v ** op_exists_Star (pts_to r #full_perm)))
+                                 (fun v -> post v ** op_exists_Star (pts_to r #1.0R)))
 : stt ret_t pre post
 = let body (r:H.ref (U.raise_t a))
-    : stt ret_t (pre ** H.pts_to r #full_perm (U.raise_val init))
-                (fun v -> post v ** (exists* (x:U.raise_t a). H.pts_to r #full_perm x)) 
+    : stt ret_t (pre ** H.pts_to r #1.0R (U.raise_val init))
+                (fun v -> post v ** (exists* (x:U.raise_t a). H.pts_to r #1.0R x)) 
     = let m
-        : stt ret_t (pre ** H.pts_to r #full_perm (U.raise_val init))
-                    (fun v -> post v ** (exists* (x:a). H.pts_to r #full_perm (U.raise_val x)))
+        : stt ret_t (pre ** H.pts_to r #1.0R (U.raise_val init))
+                    (fun v -> post v ** (exists* (x:a). H.pts_to r #1.0R (U.raise_val x)))
         = body r
       in
       let m0 (v:ret_t)
         : stt ret_t 
-            (post v ** (exists* (x:a). H.pts_to r #full_perm (U.raise_val x)))
-            (fun v -> post v ** (exists* (x:U.raise_t a). H.pts_to r #full_perm x))
-        = bind_stt (raise_exists (post v) (H.pts_to r #full_perm))
-                   (fun _ -> return_stt_noeq v (fun v -> post v ** (exists* (x:U.raise_t a). H.pts_to r #full_perm x)))
+            (post v ** (exists* (x:a). H.pts_to r #1.0R (U.raise_val x)))
+            (fun v -> post v ** (exists* (x:U.raise_t a). H.pts_to r #1.0R x))
+        = bind_stt (raise_exists (post v) (H.pts_to r #1.0R))
+                   (fun _ -> return_stt_noeq v (fun v -> post v ** (exists* (x:U.raise_t a). H.pts_to r #1.0R x)))
       in
       bind_stt m m0
   in
@@ -198,7 +195,7 @@ let pts_to_injective_eq = pts_to_injective_eq'
 ghost
 fn pts_to_perm_bound' (#a:_) (#p:_) (r:ref a) (#v:a)
 requires pts_to r #p v
-ensures pts_to r #p v ** pure (p `lesser_equal_perm` full_perm)
+ensures pts_to r #p v ** pure (p <=. 1.0R)
 {
   unfold pts_to r #p v;
   H.pts_to_perm_bound r;

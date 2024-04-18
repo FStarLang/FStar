@@ -34,7 +34,6 @@ module GhostBag
 //    { gbag (r, Set.remove x S) ** pure (x \in S) }
 //
 
-open FStar.Real
 open FStar.PCM
 open Pulse.Lib.Pervasives
 
@@ -59,23 +58,24 @@ let gbag_pcm_composable #a : symrel (gbag_pcm_carrier a) =
     forall (x:a).
     (Map.sel m1 x == None) \/
     (Map.sel m2 x == None) \/
-    (sum_perm (Some?.v (Map.sel m1 x)) (Some?.v ((Map.sel m2 x)))).v <=. 1.0R
+    ((Some?.v (Map.sel m1 x)) +. (Some?.v ((Map.sel m2 x)))) <=. 1.0R
   
   | F m1, P m2
   | P m2, F m1 ->
     forall (x:a).
     (Map.sel m2 x == None) \/
-    (Some? (Map.sel m1 x) /\ (sum_perm (Some?.v (Map.sel m1 x)) (Some?.v ((Map.sel m2 x)))).v <=. 1.0R)
+    (Some? (Map.sel m1 x) /\ ((Some?.v (Map.sel m1 x)) +. (Some?.v ((Map.sel m2 x)))) <=. 1.0R)
 
   | _ -> False
 
 let op_maps #a (m1:map a) (m2:map a) : map a =
-  Map.map_literal (fun x ->
+  Map.map_literal #a #(option perm) (fun x ->
     match Map.sel m1 x, Map.sel m2 x with
     | None, None -> None
     | Some p, None -> Some p
     | None, Some p -> Some p
-    | Some p1, Some p2 -> Some (sum_perm p1 p2)
+    | Some p1, Some p2 ->
+      Some (p1 +. p2)
   )
 
 let gbag_pcm_op #a (x:gbag_pcm_carrier a) (y:gbag_pcm_carrier a { gbag_pcm_composable x y })
@@ -157,20 +157,20 @@ let gbag_pcm a : pcm (gbag_pcm_carrier a) = {
 let fp_upd_add #a
   (m:map a)
   (x:a { Map.sel m x == None })
-  : frame_preserving_upd (gbag_pcm a) (F m) (F (Map.upd m x (Some full_perm))) =
+  : frame_preserving_upd (gbag_pcm a) (F m) (F (Map.upd m x (Some 1.0R))) =
 
   fun v ->
   let F mv = v in
-  let v_new = F (Map.upd mv x (Some full_perm)) in
+  let v_new = F (Map.upd mv x (Some 1.0R)) in
 
   eliminate exists (frame:gbag_pcm_carrier a). composable (gbag_pcm a) (F m) frame /\
                                                op (gbag_pcm a) frame (F m) == v
-  returns compatible (gbag_pcm a) (F (Map.upd m x (Some full_perm))) v_new
+  returns compatible (gbag_pcm a) (F (Map.upd m x (Some 1.0R))) v_new
   with _. (match frame with
            | P m_frame
            | F m_frame ->
-             assert (Map.equal (op_maps m_frame (Map.upd m x (Some full_perm)))
-                               (Map.upd mv x (Some full_perm))));
+             assert (Map.equal (op_maps m_frame (Map.upd m x (Some 1.0R)))
+                               (Map.upd mv x (Some 1.0R))));
 
   let aux (frame:gbag_pcm_carrier a)
     : Lemma
@@ -178,15 +178,15 @@ let fp_upd_add #a
          gbag_pcm_composable (F m) frame /\
          gbag_pcm_op (F m) frame == v)
       (ensures
-         gbag_pcm_composable (F (Map.upd m x (Some full_perm))) frame /\
-         gbag_pcm_op (F (Map.upd m x (Some full_perm))) frame == v_new)
+         gbag_pcm_composable (F (Map.upd m x (Some 1.0R))) frame /\
+         gbag_pcm_op (F (Map.upd m x (Some 1.0R))) frame == v_new)
       [SMTPat ()] =
 
       match frame with
       | P m_frame
       | F m_frame ->
-        assert (Map.equal (op_maps (Map.upd m x (Some full_perm)) m_frame)
-                          (Map.upd mv x (Some full_perm)));
+        assert (Map.equal (op_maps (Map.upd m x (Some 1.0R)) m_frame)
+                          (Map.upd mv x (Some 1.0R)));
         ()
   in
 
@@ -195,7 +195,7 @@ let fp_upd_add #a
 
 let fp_upd_rem #a
   (m:map a)
-  (x:a { Map.sel m x == Some full_perm })
+  (x:a { Map.sel m x == Some 1.0R })
   : frame_preserving_upd (gbag_pcm a) (F m) (F (Map.upd m x None)) =
 
   fun v ->
@@ -237,10 +237,10 @@ let gbag #a (r:ghost_pcm_ref (gbag_pcm a)) (s:Set.set a) : vprop =
   exists* (m:map a).
           ghost_pcm_pts_to r (F m) **
           (pure (forall (x:a). (~ (Set.mem x s)) ==> Map.sel m x == None)) **
-          (pure (forall (x:a). Set.mem x s ==> Map.sel m x == Some (half_perm full_perm)))
+          (pure (forall (x:a). Set.mem x s ==> Map.sel m x == Some 0.5R))
 
 let gbagh #a (r:ghost_pcm_ref (gbag_pcm a)) (x:a) : vprop =
-  ghost_pcm_pts_to r (P (Map.upd (Map.const None) x (Some (half_perm full_perm))))
+  ghost_pcm_pts_to r (P (Map.upd (Map.const None) x (Some 0.5R)))
 
 
 ```pulse
@@ -268,16 +268,16 @@ fn gbag_add #a (r:ghost_pcm_ref (gbag_pcm a)) (s:Set.set a) (x:a)
 {
   unfold gbag;
   with mf. assert (ghost_pcm_pts_to r (F mf));
-  ghost_write r (F mf) (F (Map.upd mf x (Some full_perm))) (fp_upd_add mf x);
-  assert (pure (Map.equal (Map.upd mf x (Some full_perm))
-                          (op_maps (Map.upd mf x (Some (half_perm full_perm)))
-                                   (Map.upd (Map.const None) x (Some (half_perm full_perm))))));
-  rewrite (ghost_pcm_pts_to r (F (Map.upd mf x (Some full_perm)))) as
+  ghost_write r (F mf) (F (Map.upd mf x (Some 1.0R))) (fp_upd_add mf x);
+  assert (pure (Map.equal (Map.upd mf x (Some 1.0R))
+                          (op_maps (Map.upd mf x (Some 0.5R))
+                                   (Map.upd (Map.const None) x (Some 0.5R)))));
+  rewrite (ghost_pcm_pts_to r (F (Map.upd mf x (Some 1.0R)))) as
           (ghost_pcm_pts_to r (op (gbag_pcm a)
-                              (F (Map.upd mf x (Some (half_perm full_perm))))
-                              (P (Map.upd (Map.const None) x (Some (half_perm full_perm))))));
-  ghost_share r (F (Map.upd mf x (Some (half_perm full_perm))))
-                (P (Map.upd (Map.const None) x (Some (half_perm full_perm))));
+                              (F (Map.upd mf x (Some 0.5R)))
+                              (P (Map.upd (Map.const None) x (Some 0.5R)))));
+  ghost_share r (F (Map.upd mf x (Some 0.5R)))
+                (P (Map.upd (Map.const None) x (Some 0.5R)));
   fold (gbag r (Set.add x s));
   with _v. rewrite (ghost_pcm_pts_to r (Ghost.reveal (Ghost.hide _v))) as
                    (gbagh r x)
@@ -295,7 +295,7 @@ fn gbag_remove #a (r:ghost_pcm_ref (gbag_pcm a)) (s:Set.set a) (x:a)
   unfold gbag;
   with mf. assert (ghost_pcm_pts_to r (F mf));
   unfold gbagh;
-  let mp = Map.upd (Map.const None) x (Some (half_perm full_perm));
+  let mp = Map.upd (Map.const #_ #(option perm) None) x (Some 0.5R);
   with _m. rewrite (ghost_pcm_pts_to r (P _m)) as
                    (ghost_pcm_pts_to r (P mp));
   ghost_gather r (F mf) (P mp);

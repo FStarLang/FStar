@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.C.Types.Scalar
 open Pulse.Lib.Pervasives
 include Pulse.C.Types.Base
@@ -20,7 +36,7 @@ val mk_scalar_fractionable
   (p: perm)
 : Lemma
   (requires (fractionable (scalar t) (mk_fraction (scalar t) (mk_scalar v) p)))
-  (ensures (p `lesser_equal_perm` full_perm))
+  (ensures (p <=. 1.0R))
 
 val mk_scalar_inj
   (#t: Type)
@@ -42,11 +58,11 @@ requires
     (pts_to r (mk_fraction (scalar t) (mk_scalar v1) p1) ** pts_to r (mk_fraction (scalar t) (mk_scalar v2) p2))
 ensures
     (pts_to r (mk_fraction (scalar t) (mk_scalar v1) p1) ** pts_to r (mk_fraction (scalar t) (mk_scalar v2) p2) ** pure (
-      v1 == v2 /\ (p1 `sum_perm` p2) `lesser_equal_perm` full_perm
+      v1 == v2 /\ (p1 +. p2) <=. 1.0R
     ))
 {
   fractional_permissions_theorem (mk_scalar v1) (mk_scalar v2) p1 p2 r;
-  let _ = mk_scalar_inj v1 v2 full_perm full_perm;
+  let _ = mk_scalar_inj v1 v2 1.0R 1.0R;
   ()
 }
 ```
@@ -60,7 +76,7 @@ val read0 (#t: Type) (#v: Ghost.erased t) (#p: perm) (r: ref (scalar t))
   ))
 
 let mk_fraction_full_scalar (#t: Type) (v: t) : Lemma
-  (mk_scalar v == mk_fraction (scalar t) (mk_scalar v) full_perm)
+  (mk_scalar v == mk_fraction (scalar t) (mk_scalar v) 1.0R)
   [SMTPat (mk_scalar v)]
 = ()
 

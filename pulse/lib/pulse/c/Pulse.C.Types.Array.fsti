@@ -992,15 +992,15 @@ let mk_fraction_seq (#t: Type) (td: typedef t) (s: Seq.seq t) (p: perm) : Ghost 
 
 let mk_fraction_seq_full (#t: Type0) (td: typedef t) (x: Seq.seq t) : Lemma
   (requires (fractionable_seq td x))
-  (ensures (mk_fraction_seq td x full_perm == x))
-  [SMTPat (mk_fraction_seq td x full_perm)]
-= assert (mk_fraction_seq td x full_perm `Seq.equal` x)
+  (ensures (mk_fraction_seq td x 1.0R == x))
+  [SMTPat (mk_fraction_seq td x 1.0R)]
+= assert (mk_fraction_seq td x 1.0R `Seq.equal` x)
 
 val mk_fraction_seq_split_gen
   (#t: Type) (#td: typedef t) (r: array td) (v: Seq.seq t { fractionable_seq td v }) (p p1 p2: perm)
 : stt_ghost unit emp_inames
   (array_pts_to r (mk_fraction_seq td v p) ** pure (
-    p == p1 `sum_perm` p2 /\ (p `lesser_equal_perm` full_perm \/ Seq.length v == 0)
+    p == p1 +. p2 /\ (p <=. 1.0R \/ Seq.length v == 0)
   ))
   (fun _ -> array_pts_to r (mk_fraction_seq td v p1) ** array_pts_to r (mk_fraction_seq td v p2))
 
@@ -1008,20 +1008,20 @@ val mk_fraction_seq_split
   (#t: Type) (#td: typedef t) (r: array td) (v: Ghost.erased (Seq.seq t) { fractionable_seq td v }) (p1 p2: perm)
 : stt_ghost unit emp_inames
   (array_pts_to r v ** pure (
-    full_perm == p1 `sum_perm` p2
+    1.0R == p1 +. p2
   ))
   (fun _ -> array_pts_to r (mk_fraction_seq td v p1) ** array_pts_to r (mk_fraction_seq td v p2))
 (*
 = mk_fraction_seq_full td v;
   rewrite (array_pts_to _ _) (array_pts_to _ _);
-  mk_fraction_seq_split_gen r v full_perm p1 p2
+  mk_fraction_seq_split_gen r v 1.0R p1 p2
 *)
 
 val mk_fraction_seq_join
   (#t: Type) (#td: typedef t) (r: array td) (v: Seq.seq t { fractionable_seq td v }) (p1 p2: perm)
 : stt_ghost unit emp_inames
   (array_pts_to r (mk_fraction_seq td v p1) ** array_pts_to r (mk_fraction_seq td v p2))
-  (fun _ -> array_pts_to r (mk_fraction_seq td v (p1 `sum_perm` p2)))
+  (fun _ -> array_pts_to r (mk_fraction_seq td v (p1 +. p2)))
 
 val array_fractional_permissions_theorem
   (#t: Type)
@@ -1035,7 +1035,7 @@ val array_fractional_permissions_theorem
       full_seq td v1 /\ full_seq td v2
     ))
     (fun _ -> array_pts_to r (mk_fraction_seq td v1 p1) ** array_pts_to r (mk_fraction_seq td v2 p2) ** pure (
-      v1 == v2 /\ (array_length r > 0 ==> (p1 `sum_perm` p2) `lesser_equal_perm` full_perm)
+      v1 == v2 /\ (array_length r > 0 ==> (p1 +. p2) <=. 1.0R)
     ))
 
 let fractionable_seq_seq_of_base_array

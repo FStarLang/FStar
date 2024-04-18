@@ -344,10 +344,10 @@ val rewrite_typing
               p
               (mk_abs unit_tm Q_Explicit q)))
 
-// mk_star pre (mk_pts_to a (RT.bound_var 0) full_perm_tm init
+// mk_star pre (mk_pts_to a (RT.bound_var 0) tm_full_perm init
 let with_local_body_pre (pre:term) (a:term) (x:term) (init:term) : term =
   let pts_to : term =
-    mk_pts_to a x full_perm_tm init in
+    mk_pts_to a x tm_full_perm init in
   mk_star pre pts_to
 
 //
@@ -358,7 +358,7 @@ let with_local_body_post_body (post:term) (a:term) (x:term) : term =
   let exists_tm =
     mk_exists (pack_universe Uv_Zero) a
       (mk_abs a Q_Explicit
-         (mk_pts_to a x full_perm_tm (RT.bound_var 0))) in
+         (mk_pts_to a x tm_full_perm (RT.bound_var 0))) in
   mk_star post exists_tm
 
 let with_local_body_post (post:term) (a:term) (ret_t:term) (x:term) : term =
@@ -392,7 +392,7 @@ val with_local_typing
 
 let with_localarray_body_pre (pre:term) (a:term) (arr:term) (init:term) (len:term) : term =
   let pts_to : term =
-    mk_array_pts_to a arr full_perm_tm (mk_seq_create uzero a (mk_szv len) init) in
+    mk_array_pts_to a arr tm_full_perm (mk_seq_create uzero a (mk_szv len) init) in
   let len_vp : term =
     mk_pure (mk_eq2 uzero nat_tm (mk_array_length a arr) (mk_szv len)) in
   mk_star pre (mk_star pts_to len_vp)
@@ -405,7 +405,7 @@ let with_localarray_body_post_body (post:term) (a:term) (arr:term) : term =
   let exists_tm =
     mk_exists uzero (mk_seq uzero a)
       (mk_abs (mk_seq uzero a) Q_Explicit
-         (mk_array_pts_to a arr full_perm_tm (RT.bound_var 0))) in
+         (mk_array_pts_to a arr tm_full_perm (RT.bound_var 0))) in
   mk_star post exists_tm
 
 let with_localarray_body_post (post:term) (a:term) (ret_t:term) (arr:term) : term =

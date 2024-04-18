@@ -132,7 +132,7 @@ type taskp = {
 fn create_taskp ()
 requires emp
 returns t:taskp
-ensures L.lock_alive t.lock #full_perm (lock_inv t.task_list)
+ensures L.lock_alive t.lock (lock_inv t.task_list)
 {
   let task_list = mk_closure_list();
   intro_inv_nil [];
@@ -165,7 +165,7 @@ ensures emp
 
 ```pulse
 fn rec run_task (t:taskp)
-requires L.lock_alive t.lock #full_perm (lock_inv t.task_list)
+requires L.lock_alive t.lock (lock_inv t.task_list)
 ensures emp
 {
   open B;

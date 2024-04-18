@@ -636,7 +636,6 @@ let mk_stt_ghost_comp_equiv (g:R.env) (u:R.universe) (res inames pre1 post1 pre2
 
 let ref_lid = mk_pulse_lib_reference_lid "ref"
 let pts_to_lid = mk_pulse_lib_reference_lid "pts_to"
-let full_perm_lid = ["PulseCore"; "FractionalPermission"; "full_perm"]
 
 let mk_ref (a:R.term) : R.term =
   let open R in
@@ -651,9 +650,6 @@ let mk_pts_to (a:R.term) (r:R.term) (perm:R.term) (v:R.term) : R.term =
   let t = pack_ln (Tv_App t (perm, Q_Implicit)) in
   pack_ln (Tv_App t (v, Q_Explicit))
 
-let full_perm_tm : R.term =
-  let open R in
-  pack_ln (Tv_FVar (pack_fv full_perm_lid))
 let pulse_lib_array_core = ["Pulse"; "Lib"; "Array"; "Core"]
 let mk_pulse_lib_array_core_lid s = pulse_lib_array_core @ [s]
 

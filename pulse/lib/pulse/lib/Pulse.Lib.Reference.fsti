@@ -26,7 +26,7 @@ val ref ([@@@unused] a:Type u#0) : Type u#0
 
 val pts_to
     (#a:Type) (r:ref a) 
-    (#[exact (`full_perm)] [@@@equate_by_smt] p:perm)
+    (#[exact (`1.0R)] [@@@equate_by_smt] p:perm)
     ([@@@equate_by_smt] n:a)
   : vprop
 
@@ -56,23 +56,23 @@ val share (#a:Type) (r:ref a) (#v:erased a) (#p:perm)
   : stt_ghost unit emp_inames
       (pts_to r #p v)
       (fun _ ->
-       pts_to r #(half_perm p) v **
-       pts_to r #(half_perm p) v)
+       pts_to r #(p /. 2.0R) v **
+       pts_to r #(p /. 2.0R) v)
 
 val gather (#a:Type) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
   : stt_ghost unit emp_inames
       (pts_to r #p0 x0 ** pts_to r #p1 x1)
-      (fun _ -> pts_to r #(sum_perm p0 p1) x0 ** pure (x0 == x1))
+      (fun _ -> pts_to r #(p0 +. p1) x0 ** pure (x0 == x1))
 
 (* Share/gather specialized to half permission *)
 val share2 (#a:Type) (r:ref a) (#v:erased a)
   : stt_ghost unit emp_inames
       (pts_to r v)
-      (fun _ -> pts_to r #one_half v ** pts_to r #one_half v)
+      (fun _ -> pts_to r #0.5R v ** pts_to r #0.5R v)
 
 val gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a)
   : stt_ghost unit emp_inames
-      (pts_to r #one_half x0 ** pts_to r #one_half x1)
+      (pts_to r #0.5R x0 ** pts_to r #0.5R x1)
       (fun _ -> pts_to r x0 ** pure (x0 == x1))
 
 let cond b (p q:vprop) = if b then p else q
@@ -99,7 +99,7 @@ val pts_to_injective_eq (#a:_)
 val pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
   : stt_ghost unit emp_inames
       (pts_to r #p v)
-      (fun _ -> pts_to r #p v ** pure (p `lesser_equal_perm` full_perm))
+      (fun _ -> pts_to r #p v ** pure (p <=. 1.0R))
 
 val replace (#a:Type0) (r:ref a) (x:a) (#v:erased a)
   : stt a

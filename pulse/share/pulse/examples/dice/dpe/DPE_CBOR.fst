@@ -56,16 +56,16 @@ fn finish (c:cbor_read_t)
           (#v:erased (raw_data_item))
           (#s:erased (Seq.seq U8.t))
           (#rem:erased (Seq.seq U8.t))
-  requires ((raw_data_item_match full_perm c.cbor_read_payload v **
+  requires ((raw_data_item_match 1.0R c.cbor_read_payload v **
                A.pts_to c.cbor_read_remainder #p rem) @==>
               A.pts_to input #p s) **
-            raw_data_item_match full_perm c.cbor_read_payload v **
+            raw_data_item_match 1.0R c.cbor_read_payload v **
             A.pts_to c.cbor_read_remainder #p rem **
             uds_is_enabled
   returns _:option ctxt_hndl_t
   ensures A.pts_to input #p s
 {
-   elim_implies ()  #(raw_data_item_match full_perm c.cbor_read_payload v **
+   elim_implies ()  #(raw_data_item_match 1.0R c.cbor_read_payload v **
                             A.pts_to c.cbor_read_remainder #p rem)
                             #(A.pts_to input #p s);
     drop uds_is_enabled;
@@ -106,22 +106,22 @@ fn initialize_context (len:SZ.t)
           None #ctxt_hndl_t
         } else {
           let sid : FStar.UInt32.t = Cast.uint64_to_uint32 cmd.dpe_cmd_sid;
-          with vargs . assert (raw_data_item_match full_perm cmd.dpe_cmd_args vargs);
+          with vargs . assert (raw_data_item_match 1.0R cmd.dpe_cmd_args vargs);
           let key = cbor_constr_int64 cbor_major_type_uint64 MsgSpec.initialize_context_seed;
-          with vkey . assert (raw_data_item_match full_perm key vkey);
+          with vkey . assert (raw_data_item_match 1.0R key vkey);
           let read_uds = cbor_map_get_with_typ (impl_str_size cbor_major_type_byte_string EngineTypes.uds_len) key cmd.dpe_cmd_args;
-          drop (raw_data_item_match full_perm key vkey); // FIXME: HOW HOW HOW can I avoid the arguments to raw_data_item_match, like in Steel?
+          drop (raw_data_item_match 1.0R key vkey); // FIXME: HOW HOW HOW can I avoid the arguments to raw_data_item_match, like in Steel?
           match read_uds
           {
             NotFound ->
             {
-              unfold (cbor_map_get_with_typ_post (Cddl.str_size cbor_major_type_byte_string (SZ.v EngineTypes.uds_len)) full_perm (Ghost.reveal vkey) vargs cmd.dpe_cmd_args NotFound); // same here; also WHY WHY WHY the explicit Ghost.reveal
+              unfold (cbor_map_get_with_typ_post (Cddl.str_size cbor_major_type_byte_string (SZ.v EngineTypes.uds_len)) 1.0R (Ghost.reveal vkey) vargs cmd.dpe_cmd_args NotFound); // same here; also WHY WHY WHY the explicit Ghost.reveal
               elim_stick0 ();
               None #ctxt_hndl_t
             }
             Found uds_cbor ->
             {
-              unfold (cbor_map_get_with_typ_post (Cddl.str_size cbor_major_type_byte_string (SZ.v EngineTypes.uds_len)) full_perm (Ghost.reveal vkey) vargs cmd.dpe_cmd_args (Found uds_cbor)); // same here; also WHY WHY WHY the explicit Ghost.reveal
+              unfold (cbor_map_get_with_typ_post (Cddl.str_size cbor_major_type_byte_string (SZ.v EngineTypes.uds_len)) 1.0R (Ghost.reveal vkey) vargs cmd.dpe_cmd_args (Found uds_cbor)); // same here; also WHY WHY WHY the explicit Ghost.reveal
               let uds = cbor_destr_string uds_cbor;
               A.pts_to_len uds.cbor_string_payload;
               let res = DPE.initialize_context sid uds.cbor_string_payload;

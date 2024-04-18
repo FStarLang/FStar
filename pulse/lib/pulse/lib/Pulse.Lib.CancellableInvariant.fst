@@ -31,14 +31,14 @@ instance non_informative_cinv = {
 }
 
 let cinv_vp_aux (r:GR.ref bool) (v:vprop) : (w:vprop { is_big v ==> is_big w }) =
-  exists* (b:bool). GR.pts_to r #(half_perm full_perm) b **
+  exists* (b:bool). GR.pts_to r #0.5R b **
                     (if b then v else emp)
 
 let cinv_vp c v = cinv_vp_aux c.r v
 
 let is_big_cinv_vp _ _ = ()
 
-let active p c = GR.pts_to c.r #(half_perm p) true
+let active p c = GR.pts_to c.r #(p /. 2.0R) true
 
 let iref_of c = c.i
 
@@ -47,7 +47,7 @@ ghost
 fn new_cancellable_invariant_aux (v:vprop { is_big v })
   requires v
   returns c:cinv
-  ensures inv (iref_of c) (cinv_vp c v) ** active full_perm c
+  ensures inv (iref_of c) (cinv_vp c v) ** active 1.0R c
   opens emp_inames
 {
   let r = GR.alloc true;
@@ -57,14 +57,14 @@ fn new_cancellable_invariant_aux (v:vprop { is_big v })
   let i = new_invariant (cinv_vp_aux r v);
   let c = {i;r};
   rewrite (inv i (cinv_vp_aux r v)) as (inv (iref_of c) (cinv_vp c v));
-  with _p _v. rewrite (GR.pts_to r #_p _v) as (active full_perm c);
+  with _p _v. rewrite (GR.pts_to r #_p _v) as (active 1.0R c);
   c
 }
 ```
 
 let new_cancellable_invariant = new_cancellable_invariant_aux
 
-let unpacked c = GR.pts_to c.r #(half_perm full_perm) true
+let unpacked c = GR.pts_to c.r #0.5R true
 
 
 ```pulse
@@ -106,7 +106,7 @@ let pack_cinv_vp = pack_cinv_vp_aux
 ghost
 fn share_aux (#p:perm) (c:cinv)
   requires active p c
-  ensures active (half_perm p) c ** active (half_perm p) c
+  ensures active (p /. 2.0R) c ** active (p /. 2.0R) c
   opens emp_inames
 {
   unfold active;
@@ -118,27 +118,29 @@ fn share_aux (#p:perm) (c:cinv)
 
 let share = share_aux
 
+let share2 c = share #1.0R c
+
 ```pulse
 ghost
 fn gather_aux (#p1 #p2:perm) (c:cinv)
   requires active p1 c ** active p2 c
-  ensures active (sum_perm p1 p2) c
+  ensures active (p1 +. p2) c
 {
   unfold active;
   unfold active;
-  GR.gather c.r #_ #_ #(half_perm p1) #(half_perm p2);
-  fold active (sum_perm p1 p2) c;
+  GR.gather c.r #_ #_ #(p1 /. 2.0R) #(p2 /. 2.0R);
+  fold active (p1 +. p2) c;
 }
 ```
 let gather = gather_aux
 
-let gather2 #p c = gather #(half_perm p) #(half_perm p) c
+let gather2 c = gather #0.5R #0.5R c
 
 ```pulse
 ghost
 fn cancel_ (#v:vprop) (c:cinv)
 requires cinv_vp c v **
-         active full_perm c
+         active 1.0R c
 ensures cinv_vp c v ** v
 opens emp_inames
 {
@@ -153,14 +155,14 @@ opens emp_inames
   GR.share2 c.r;
   fold (cinv_vp_aux c.r v);
   fold (cinv_vp c v);
-  drop_ (GR.pts_to c.r #(half_perm full_perm) _)
+  drop_ (GR.pts_to c.r #0.5R _)
 }
 ```
 
 ```pulse
 ghost
 fn cancel_aux (#v:vprop) (c:cinv)
-  requires inv (iref_of c) (cinv_vp c v) ** active full_perm c
+  requires inv (iref_of c) (cinv_vp c v) ** active 1.0R c
   ensures v
   opens (add_inv emp_inames (iref_of c))
 {

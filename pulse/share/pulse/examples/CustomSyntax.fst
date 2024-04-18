@@ -420,7 +420,7 @@ fn test_ghost_ref_non_informative (#a:Type u#1) (y:a)
   ensures emp
 {
   full_values_compatible y;
-  let r = ghost_alloc #_ #(pcm_frac #a) (hide (Some (y, full_perm)));
+  let r = ghost_alloc #_ #(pcm_frac #a) (hide (Some (y, 1.0R)));
   drop_ (ghost_pcm_pts_to r _);
 }
 ```
