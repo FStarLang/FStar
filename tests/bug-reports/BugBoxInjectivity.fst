@@ -1,6 +1,6 @@
 module BugBoxInjectivity
-// #restart-solver
-// #push-options "--log_queries --query_stats --debug BugBoxInjectivity --debug_level SMTEncoding"
+#restart-solver
+#push-options "--log_queries --query_stats --debug BugBoxInjectivity --debug_level SMTEncoding"
 module CC = FStar.Cardinality.Universes
 noeq
 type test (a:Type u#0 -> Type u#1) : Type u#1 =
@@ -34,39 +34,29 @@ let itest_injective' : squash (is_inj itest) =
   )
 [@@expect_failure [189]] //itest is not in the right universe to use this lemma
 let fals : squash False =
-  CC.no_inj_universes itest
+  CC.no_inj_universes_suc itest
 
 
 #push-options "--ext 'compat:injectivity'"
 noeq
-type test2 (a:Type u#0 -> Type u#2) : Type u#1 =
+type test2 (a:Type u#2) : Type u#1 =
   | Mk2 : test2 a
 #pop-options
-let const2 (f:Type u#2) : Type u#0 -> Type u#2 = fun _ -> f
-let itest2 (f:Type u#2) : Type u#1 = test2 (const2 f)
-let itest2_inhabited (f:Type u#2) : itest2 f = Mk2
-let const2_inversion (f0 f1:Type u#2)
-: Lemma 
-  (requires const2 f0 == const2 f1)
-  (ensures f0 == f1)
-= let _f0 = const2 f0 (FStar.Universe.raise_t int) in
-  let _f1 = const2 f1 (FStar.Universe.raise_t int) in
-  assert (_f0 == _f1);
-  ()
-let itest2_injective (f0 f1:Type u#2) 
+
+let test2_inhabited (f:Type u#2) : test2 f = Mk2
+let test2_injective (f0 f1:Type u#2) 
 : Lemma
-  (ensures itest2 f0 == itest2 f1 ==> const2 f0 == const2 f1)
-= let x : test2 (const2 f0) = itest2_inhabited f0 in
+  (ensures test2 f0 == test2 f1 ==> f0 == f1)
+= let x : test2 f0 = test2_inhabited f0 in
   let Mk2 #_ = x in
   ()
 open FStar.Functions
-let itest2_injective' : squash (is_inj itest2) = 
+let itest2_injective' : squash (is_inj test2) = 
   introduce forall f0 f1.
-      itest2 f0 == itest2 f1 ==> f0 == f1
+      test2 f0 == test2 f1 ==> f0 == f1
   with introduce _ ==> _
   with _ . (
-    itest2_injective f0 f1;
-    const2_inversion f0 f1
+    test2_injective f0 f1
   )
 let fals () : squash False =
-  CC.no_inj_universes itest2
+  CC.no_inj_universes_suc test2
