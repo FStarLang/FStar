@@ -419,7 +419,7 @@ let extend_history'_is_frame_preserving #a #p
                                        (h0:history a p{Current? h0 /\ hperm h0 == 1.0R})
                                        (v:a{p (hval h0) v})
   : Lemma (frame_preserving pcm_history h0 (extend_history' h0 v))
-  = admit ()
+  = ()
 
 let history_val #a #p (h:history a p) (v:Ghost.erased a) (f:perm)
   : prop

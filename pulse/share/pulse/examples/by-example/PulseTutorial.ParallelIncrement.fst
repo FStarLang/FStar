@@ -147,7 +147,6 @@ ensures L.lock_alive lock #p (lock_inv x i left right) ** GR.pts_to right #0.5R 
   let v = !x;
   x := v + 1;
   GR.gather right;
-  admit ();
   GR.write right ('vl + 1);
   GR.share right;
   fold (contributions left right i (v + 1));

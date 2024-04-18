@@ -129,7 +129,7 @@ let gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a)
 : stt_ghost unit emp_inames
       (pts_to r #0.5R x0 ** pts_to r #0.5R x1)
       (fun () -> pts_to r #1.0R x0  ** pure (x0 == x1))
-= admit ()  // gather r
+= gather r
 
 ```pulse
 fn
