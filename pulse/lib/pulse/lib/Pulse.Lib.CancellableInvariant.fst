@@ -15,7 +15,7 @@
 *)
 
 module Pulse.Lib.CancellableInvariant
-
+#push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 open Pulse.Lib.Pervasives
 
 module GR = Pulse.Lib.GhostReference
@@ -123,7 +123,6 @@ ghost
 fn gather_aux (#p1 #p2:perm) (c:cinv)
   requires active p1 c ** active p2 c
   ensures active (sum_perm p1 p2) c
-  opens emp_inames
 {
   unfold active;
   unfold active;
@@ -133,17 +132,7 @@ fn gather_aux (#p1 #p2:perm) (c:cinv)
 ```
 let gather = gather_aux
 
-```pulse
-ghost
-fn __gather2 (#p : perm) (c:cinv)
-  requires active (half_perm p) c ** active (half_perm p) c
-  ensures active p c
-{
-  gather c;
-  rewrite each (sum_perm (half_perm p) (half_perm p)) as p;
-}
-```
-let gather2 = __gather2
+let gather2 #p c = gather #(half_perm p) #(half_perm p) c
 
 ```pulse
 ghost

@@ -653,8 +653,7 @@ let extend
           (| y, h1 |)
     in
     ff
-
-let ghost_ref = H2.ghost_ref
+let core_ghost_ref = H2.core_ghost_ref
 let ghost_pts_to #a #pcm r v = up (H2.ghost_pts_to #a #pcm r v)
 let ghost_extend
   (#a:Type u#a)
