@@ -625,22 +625,6 @@ let filter_out_lcomp_cflags flags =
 
 let closure_as_term cfg env t = non_tail_inline_closure_env cfg env t
 
-let binder_closure_as_term cfg env (b : binder) =
-  let x = { b.binder_bv with sort = closure_as_term cfg env b.binder_bv.sort } in
-  let imp = match b.binder_qual with
-            | Some (S.Meta t) -> Some (S.Meta (closure_as_term cfg env t))
-            | i -> i in
-  let attrs = List.map (closure_as_term cfg env) b.binder_attrs in
-  S.mk_binder_with_attrs x imp b.binder_positivity attrs
-
-let binders_closure_as_term cfg env (bs : binders) =
-  let nbs, _ = List.fold_left (fun (nbs', env) b ->
-      let b = binder_closure_as_term cfg env b in
-      (b::nbs', dummy::env) (* crossing a binder, so shift environment *))
-      ([], env)
-      bs in
-  List.rev nbs
-
 (* A hacky knot, set by FStar.Main *)
 let unembed_binder_knot : ref (option (EMB.embedding binder)) = BU.mk_ref None
 let unembed_binder (t : term) : option S.binder =
@@ -1550,7 +1534,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             then rebuild cfg env stack (closure_as_term cfg env t)
             else let bs, c = open_comp bs c in
                  let c = norm_comp cfg (bs |> List.fold_left (fun env _ -> dummy::env) env) c in
-                 let bs = if cfg.steps.hnf then binders_closure_as_term cfg env bs else norm_binders cfg env bs in
+                 let bs = if cfg.steps.hnf then (close_binders cfg env bs)._1 else norm_binders cfg env bs in
                  let t = arrow bs c in
                  rebuild cfg env stack t
 

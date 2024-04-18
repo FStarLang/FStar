@@ -1305,54 +1305,6 @@ let (closure_as_term :
       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
         FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   = fun cfg -> fun env1 -> fun t -> non_tail_inline_closure_env cfg env1 t
-let (binder_closure_as_term :
-  FStar_TypeChecker_Cfg.cfg ->
-    env -> FStar_Syntax_Syntax.binder -> FStar_Syntax_Syntax.binder)
-  =
-  fun cfg ->
-    fun env1 ->
-      fun b ->
-        let x =
-          let uu___ = b.FStar_Syntax_Syntax.binder_bv in
-          let uu___1 =
-            closure_as_term cfg env1
-              (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-          {
-            FStar_Syntax_Syntax.ppname = (uu___.FStar_Syntax_Syntax.ppname);
-            FStar_Syntax_Syntax.index = (uu___.FStar_Syntax_Syntax.index);
-            FStar_Syntax_Syntax.sort = uu___1
-          } in
-        let imp =
-          match b.FStar_Syntax_Syntax.binder_qual with
-          | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta t) ->
-              let uu___ =
-                let uu___1 = closure_as_term cfg env1 t in
-                FStar_Syntax_Syntax.Meta uu___1 in
-              FStar_Pervasives_Native.Some uu___
-          | i -> i in
-        let attrs =
-          FStar_Compiler_List.map (closure_as_term cfg env1)
-            b.FStar_Syntax_Syntax.binder_attrs in
-        FStar_Syntax_Syntax.mk_binder_with_attrs x imp
-          b.FStar_Syntax_Syntax.binder_positivity attrs
-let (binders_closure_as_term :
-  FStar_TypeChecker_Cfg.cfg ->
-    (FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option * closure)
-      Prims.list ->
-      FStar_Syntax_Syntax.binders -> FStar_Syntax_Syntax.binder Prims.list)
-  =
-  fun cfg ->
-    fun env1 ->
-      fun bs ->
-        let uu___ =
-          FStar_Compiler_List.fold_left
-            (fun uu___1 ->
-               fun b ->
-                 match uu___1 with
-                 | (nbs', env2) ->
-                     let b1 = binder_closure_as_term cfg env2 b in
-                     ((b1 :: nbs'), (dummy :: env2))) ([], env1) bs in
-        match uu___ with | (nbs, uu___1) -> FStar_Compiler_List.rev nbs
 let (unembed_binder_knot :
   FStar_Syntax_Syntax.binder FStar_Syntax_Embeddings_Base.embedding
     FStar_Pervasives_Native.option FStar_Compiler_Effect.ref)
@@ -3702,7 +3654,10 @@ let rec (norm :
                       let bs2 =
                         if
                           (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.hnf
-                        then binders_closure_as_term cfg env1 bs1
+                        then
+                          let uu___4 = close_binders cfg env1 bs1 in
+                          FStar_Pervasives_Native.__proj__Mktuple2__item___1
+                            uu___4
                         else norm_binders cfg env1 bs1 in
                       let t2 = FStar_Syntax_Util.arrow bs2 c2 in
                       rebuild cfg env1 stack2 t2)
@@ -9678,7 +9633,7 @@ let (get_n_binders :
       FStar_Syntax_Syntax.term ->
         (FStar_Syntax_Syntax.binder Prims.list * FStar_Syntax_Syntax.comp))
   = fun env1 -> fun n -> fun t -> get_n_binders' env1 [] n t
-let (uu___3815 : unit) =
+let (uu___3792 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals __get_n_binders get_n_binders'
 let (maybe_unfold_head_fv :
   FStar_TypeChecker_Env.env ->
