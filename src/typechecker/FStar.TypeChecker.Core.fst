@@ -842,7 +842,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
         else return None
     in
     let emit_guard t0 t1 =
-       let! _, t_typ = do_check g t0 in
+       let! _, t_typ = with_context "checking lhs while emitting guard" None (fun _ -> do_check g t0) in
        let! u = universe_of g t_typ in
        guard (U.mk_eq2 u t_typ t0 t1)
     in
@@ -950,7 +950,10 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
         )
         else (
           match! maybe_unfold x0.sort x1.sort with
-          | None -> fallback t0 t1
+          | None ->
+            if Env.debug g.tcenv (Options.Other "Core") then
+              BU.print2 "Cannot match ref heads %s and %s\n" (show x0.sort) (show x1.sort);
+            fallback t0 t1
           | Some (t0, t1) ->
             let lhs = S.mk (Tm_refine {b={x0 with sort = t0}; phi=f0}) t0.pos in
             let rhs = S.mk (Tm_refine {b={x1 with sort = t1}; phi=f1}) t1.pos in
@@ -1105,7 +1108,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
                   let bs0 = List.map S.mk_binder bvs0 in
                   // We need universes for the binders
                   let! us = check_binders g bs0 in
-                  with_binders bs0 us (check_relation g' rel body0 body1)
+                  with_context "relate_branch" None (fun _ -> with_binders bs0 us (check_relation g' rel body0 body1))
              | _ -> fail "raw_pat_as_exp failed in check_equality match rule"
              end
             | _ -> fail "Core does not support branches with when"
@@ -1375,7 +1378,7 @@ and do_check (g:env) (e:term)
       let! eff, te = check "ascription head" g e in
       let! _ = with_context "ascription comp" None (fun _ -> check_comp g c) in
       let c_e = as_comp g (eff, te) in
-      check_relation_comp g (SUBTYPING (Some e)) c_e c;!
+      with_context "ascription subtyping (comp)" None (fun _ -> check_relation_comp g (SUBTYPING (Some e)) c_e c);!
       let Some (eff, t) = comp_as_tot_or_ghost_and_type c in
       return (eff, t)
     )
@@ -1524,7 +1527,7 @@ and do_check (g:env) (e:term)
                     then EQUALITY
                     else SUBTYPING (Some b)
                   in
-                  check_relation g' rel tbr expect_tbr;!
+                  with_context "branch check relation" None (fun _ -> check_relation g' rel tbr expect_tbr);!
                   return (join_eff eff_br acc_eff, expect_tbr))) in
           match p.v with
           | Pat_var _ ->
@@ -1616,7 +1619,7 @@ and check_pat (g:env) (p:pat) (t_sc:typ) : result (binders & universes) =
       | _ ->
         mk (Tm_constant c) p.p in
     let! _, t_const = check "pat_const" g e in
-    let! _ = check_subtype g (Some e) t_const (unrefine_tsc t_sc) in
+    let! _ = with_context "check_pat constant" None (fun () -> check_subtype g (Some e) t_const (unrefine_tsc t_sc)) in
     return ([], [])
 
   | Pat_var bv ->
@@ -1650,7 +1653,7 @@ and check_pat (g:env) (p:pat) (t_sc:typ) : result (binders & universes) =
         | _ -> fail "check_pat in core has unset dot pattern" in
 
       let! _, p_t = check "pat dot term" g pat_dot_t in
-      let!_ = check_subtype g (Some pat_dot_t) p_t expected_t in
+      let!_ = with_context "check_pat cons" None (fun _ -> check_subtype g (Some pat_dot_t) p_t expected_t) in
 
       return (ss@[NT (f, pat_dot_t)])) [] dot_formals dot_pats in
 
