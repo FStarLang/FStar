@@ -131,3 +131,36 @@ fn __await
 }
 ```
 let await = __await
+
+```pulse
+fn __map
+  (#a : Type0)
+  (#b : Type0)
+  (#post1 : (a -> vprop))
+  (#post2 : (b -> vprop))
+  (f : (x:a -> stt b (post1 x) post2))
+  (h : asynch a post1)
+  requires async_joinable h
+  returns  h' : asynch b post2
+  ensures  async_joinable h'
+{
+  let r' = alloc (None #b);
+  fn filler (_:unit)
+    requires async_joinable h ** pts_to r' None
+    ensures ref_solves_post r' post2
+  {
+    let x = await h;
+    let f = eta_post f;
+    let y : b = f x;
+    r' := Some y;
+    fold (ref_solves_post r' post2)
+  };
+  let waiter = fork filler;
+  let h' : asynch b post2 = (r', waiter);
+  rewrite each r' as (fst h');
+  rewrite each waiter as (snd h');
+  fold (async_joinable h');
+  h'
+}
+```
+let map = __map
