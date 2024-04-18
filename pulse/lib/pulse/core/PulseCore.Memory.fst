@@ -686,12 +686,12 @@ let sl_pure_imp (p:prop) (q: squash p -> slprop) : slprop =
   as_slprop (fun (h:iheap) -> p ==> q () h)
 
 let cell_pred_pre (c:H0.cell) =
-  let H0.Ref a pcm _ _ = c in
+  let H0.Ref a pcm _ = c in
   a == PA.agreement H2.slprop /\
   pcm == PA.pcm_agreement #H2.slprop
 
 let cell_pred_post (c:H0.cell) (_:squash (cell_pred_pre c)) =
-  let H0.Ref _ _ _ v = c in
+  let H0.Ref _ _ v = c in
   let v : PA.agreement H2.slprop = v in
   match v with
   | None -> emp
@@ -767,7 +767,7 @@ let iname_for_p (i:iname) (p:slprop) (m:istore) =
   match H0.select i m with
   | None -> False
   | Some cell ->
-    let H0.Ref a pcm _ v = cell in
+    let H0.Ref a pcm v = cell in
     a == PA.agreement H2.slprop /\
     pcm == PA.pcm_agreement #H2.slprop /\ (
     let v : PA.agreement H2.slprop = cell.v in
@@ -1125,7 +1125,7 @@ let invariant_of_one_cell_is_big (from:nat) (e:inames) (i:istore)
        | Some c ->
          introduce cell_pred_pre c ==> is_big (cell_pred_post c ())
          with _ . (
-            let H0.Ref _ _ _ v = c in
+            let H0.Ref _ _ v = c in
             let v : PA.agreement H2.slprop = v in
             match v with
             | None -> ()
@@ -2131,7 +2131,7 @@ let pts_to_not_null_action
     (fun _ -> pts_to r v)
 = lift_tot_action (lift_heap_action e (H2.pts_to_not_null_action #a #pcm r v))
 
-let ghost_ref = H2.ghost_ref
+let core_ghost_ref = H2.core_ghost_ref
 let ghost_pts_to #a #pcm r v = up (H2.ghost_pts_to #a #pcm r v)
 
 let with_fresh_ghost_counter (#t:Type u#t) (#post:t -> H2.slprop u#a) (e:inames)

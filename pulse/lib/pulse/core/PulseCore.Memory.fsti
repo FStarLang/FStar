@@ -435,7 +435,8 @@ val pts_to_not_null_action
 
 (* Ghost references to "small" types *)
 [@@erasable]
-val ghost_ref (#[@@@unused] a:Type u#a) ([@@@unused]p:pcm a) : Type0
+val core_ghost_ref : Type0
+let ghost_ref (#a:Type u#a) (p:pcm a) : Type0 = core_ghost_ref
 val ghost_pts_to (#a:Type u#a) (#p:pcm a) (r:ghost_ref p) (v:a) : vprop u#a
 
 val ghost_alloc

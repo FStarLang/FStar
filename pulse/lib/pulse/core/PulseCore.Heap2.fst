@@ -530,7 +530,7 @@ let lift_erased
   in
   refined_pre_action_as_action g
 
-let ghost_ref #a p = erased H.core_ref
+let core_ghost_ref = erased H.core_ref
 let ghost_pts_to #a #p r v = llift GHOST (H.pts_to #a #p r v)
 let ghost_free_above_addr h addr = H.free_above_addr h.ghost addr
 

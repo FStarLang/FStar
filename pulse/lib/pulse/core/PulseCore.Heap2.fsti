@@ -743,7 +743,8 @@ val lift_erased
 : action #ONLY_GHOST #allocs #hpre #hpost pre a post
 
 [@@erasable]
-val ghost_ref (#[@@@unused] a:Type u#a) ([@@@unused]p:pcm a) : Type0
+val core_ghost_ref : Type0
+let ghost_ref (#[@@@unused] a:Type u#a) ([@@@unused]p:pcm a) : Type0 = core_ghost_ref
 val ghost_pts_to (#a:Type u#a) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop u#a
 
 val ghost_extend

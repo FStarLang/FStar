@@ -409,10 +409,9 @@ let invariant_name_identifies_invariant p q i j =
 ///////////////////////////////////////////////////////////////////
 // Core operations on references
 ///////////////////////////////////////////////////////////////////
-
-let ref (a:Type u#a) (p:pcm a) = ref a p
-let ref_null (#a:Type u#a) (p:pcm a) = core_ref_null
-let is_ref_null (#a:Type u#a) (#p:pcm a) (r:ref a p) = core_ref_is_null r
+let core_ref = core_ref
+let core_ref_null = core_ref_null
+let is_core_ref_null = core_ref_is_null
 let pts_to = Mem.pts_to
 let pts_to_not_null #a #p r v #ictx = pts_to_not_null_action ictx r v
 
@@ -589,7 +588,7 @@ let elim_exists (#a:Type u#a) (p:a -> slprop)
 
 let drop p = fun #ictx -> drop #ictx p
 
-let ghost_ref = Mem.ghost_ref
+let core_ghost_ref = Mem.core_ghost_ref
 let ghost_pts_to = Mem.ghost_pts_to
 let ghost_alloc #a #pcm x = fun #ictx -> ghost_alloc #ictx #a #pcm x
 let ghost_read #a #p r x f = fun #ictx -> ghost_read #ictx #a #p r x f
