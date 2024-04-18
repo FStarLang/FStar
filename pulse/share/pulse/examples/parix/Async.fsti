@@ -38,3 +38,12 @@ val await
   (#post : (a -> vprop))
   (h : asynch a post)
   : stt a (async_joinable h) (fun x -> post x)
+
+val map
+  (#a : Type0)
+  (#b : Type0)
+  (#post1 : (a -> vprop))
+  (#post2 : (b -> vprop))
+  (f : (x:a -> stt b (post1 x) post2))
+  (h : asynch a post1)
+  : stt (asynch b post2) (async_joinable h) (fun x -> async_joinable x)
