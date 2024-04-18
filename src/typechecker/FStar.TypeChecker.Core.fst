@@ -1387,7 +1387,7 @@ and do_check (g:env) (e:term)
   | Tm_let {lbs=(false, [lb]); body} ->
     let Inl x = lb.lbname in
     let g', x, body = open_term g (S.mk_binder x) body in
-    if I.lid_equals lb.lbeff PC.effect_Tot_lid
+    if U.is_pure_or_ghost_effect lb.lbeff
     then (
       let! eff_def, tdef = check "let definition" g lb.lbdef in
       let! _, ttyp = check "let type" g lb.lbtyp in
