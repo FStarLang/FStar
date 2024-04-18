@@ -41,23 +41,32 @@ let asynch (a:Type0) (post : a -> vprop) : Type0 =
 let async_joinable #a #post h =
   joinable (snd h) ** pledge emp_inames (done (snd h)) (ref_solves_post (fst h) post)
 
+(* Ugly, but at least it works fine. *)
+let eta_post #a #b #pre #post (f : (x:a -> stt b (pre x) (post x)))
+  : x:a -> stt b (pre x) (fun y -> post x y)
+  = fun x ->
+      sub_stt _ _
+        (vprop_equiv_refl _)
+        (intro_vprop_post_equiv _ _ (fun y -> vprop_equiv_refl _))
+        (f x)
+
 ```pulse
 fn async_fill
   (#a : Type0)
   (#pre : vprop)
   (#post : (a -> vprop))
-  (f : (unit -> stt a pre (fun x -> post x)))
+  (f : (unit -> stt a pre post))
   (r : ref (option a))
   (_:unit)
   requires pre ** pts_to r None
   returns _ : unit
   ensures ref_solves_post r post
 {
+  let f = eta_post f;
   // Very nice!
   let v : a = f ();
   r := Some v;
-  fold ref_solves_post;
-  ()
+  fold (ref_solves_post r post)
 }
 ```
 
@@ -72,7 +81,6 @@ fn __async
   ensures async_joinable h
 {
   let r = alloc (None #a);
-  assume_ (pure (post == (fun x -> post x))); // Crucial for the call below to work, review
   let th = fork #(pre ** pts_to r None) #(ref_solves_post r post)
                 (async_fill #a #pre #post f r);
   let res = ( r, th );
