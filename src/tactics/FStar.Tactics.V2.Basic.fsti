@@ -127,7 +127,7 @@ val write                  : tref 'a -> 'a -> tac unit
 let issues = list FStar.Errors.issue
 val refl_is_non_informative           : env -> typ -> tac (option unit & issues)
 val refl_check_subtyping              : env -> typ -> typ -> tac (option unit & issues)
-val refl_check_equiv                  : env -> typ -> typ -> tac (option unit & issues)
+val t_refl_check_equiv                : smt_ok:bool -> unfolding_ok:bool -> env -> typ -> typ -> tac (option unit & issues)
 val refl_core_compute_term_type       : env -> term -> tac (option (Core.tot_or_ghost & typ) & issues)
 val refl_core_check_term              : env -> term -> typ -> Core.tot_or_ghost -> tac (option unit & issues)
 val refl_core_check_term_at_type      : env -> term -> typ -> tac (option Core.tot_or_ghost & issues)

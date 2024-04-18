@@ -484,10 +484,7 @@ val is_non_informative (g:env) (t:typ)
 val check_subtyping (g:env) (t0 t1:typ)
   : Tac (ret_t (subtyping_token g t0 t1))
 
-val check_equiv (g:env) (t0 t1:typ)
-  : Tac (ret_t (equiv_token g t0 t1))
-
-val check_equiv_nosmt (g:env) (t0 t1:typ)
+val t_check_equiv (smt_ok:bool) (unfolding_ok:bool) (g:env) (t0 t1:typ)
   : Tac (ret_t (equiv_token g t0 t1))
 
 //

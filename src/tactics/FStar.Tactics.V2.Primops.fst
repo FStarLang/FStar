@@ -242,7 +242,7 @@ let ops = [
 
   mk_tac_step_2 0 "is_non_informative" #_ #RE.e_term refl_is_non_informative refl_is_non_informative;
   mk_tac_step_3 0 "check_subtyping" #_ #RE.e_term #RE.e_term refl_check_subtyping refl_check_subtyping;
-  mk_tac_step_3 0 "check_equiv"  #_ #RE.e_term #RE.e_term refl_check_equiv refl_check_equiv;
+  mk_tac_step_5 0 "t_check_equiv" #_ #_ #_ #RE.e_term #RE.e_term t_refl_check_equiv t_refl_check_equiv;
   mk_tac_step_2 0 "core_compute_term_type" #_ #RE.e_term #(e_ret_t (e_tuple2 solve RE.e_term)) refl_core_compute_term_type refl_core_compute_term_type;
   mk_tac_step_4 0 "core_check_term" #_ #RE.e_term #RE.e_term refl_core_check_term refl_core_check_term;
   mk_tac_step_3 0 "core_check_term_at_type" #_ #RE.e_term #RE.e_term refl_core_check_term_at_type refl_core_check_term_at_type;
