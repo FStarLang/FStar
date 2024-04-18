@@ -23,12 +23,6 @@ module U32 = FStar.UInt32
 module G = FStar.Ghost
 module Set = FStar.Set
 module T = FStar.Tactics.V2
-(* Common alias *)
-let one_half =
-  half_perm full_perm
-
-val double_one_half ()
-  : Lemma (sum_perm one_half one_half == full_perm)
 
 (* This attribute can be used on the indexes of a vprop
    to instruct the checker to call the SMT solver to relate

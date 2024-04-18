@@ -472,7 +472,7 @@ ensures exists* s' .
   A.pts_to a s'
 {
   A.pts_to_len a;
-  A.pts_to_range_intro a full_perm s;
+  A.pts_to_range_intro a 1.0R s;
   A.pts_to_range_upd a 1sz 42ul;
   A.pts_to_range_upd a 1sz 42ul;
   A.pts_to_range_elim a _ _;

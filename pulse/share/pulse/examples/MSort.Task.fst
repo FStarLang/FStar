@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module MSort.Task
 
 open Pulse.Lib.Pervasives
@@ -32,8 +48,8 @@ fn rec t_msort_par
     
     share_alive p f;
 
-    let h = spawn p #(half_perm f) (fun () -> t_msort_par p (half_perm f) a lo mid s1);
-    t_msort_par p (half_perm f) a mid hi s2;
+    let h = spawn p #(f /. 2.0R) (fun () -> t_msort_par p (f /. 2.0R) a lo mid s1);
+    t_msort_par p (f /. 2.0R) a mid hi s2;
     join h;
     
     gather_alive p f;
@@ -55,7 +71,7 @@ fn rec msort
   // No need for pledge reasoning here as t_msort_par is synchronous, even
   // if it parallelizes internally.
   let p = setup_pool nthr;
-  t_msort_par p full_perm a lo hi s;
+  t_msort_par p 1.0R a lo hi s;
   teardown_pool p;
   drop_ (pool_done p);
 }

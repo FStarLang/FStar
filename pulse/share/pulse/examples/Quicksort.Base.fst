@@ -340,7 +340,7 @@ let transfer_equal_slice
   transfer_larger_slice s shift l r rb;
   ()
 
-#push-options "--z3rlimit_factor 4 --retry 5"
+#push-options "--z3rlimit_factor 8 --retry 5"
 ```pulse
 fn partition_wrapper (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi}))
   (lb rb: erased int)

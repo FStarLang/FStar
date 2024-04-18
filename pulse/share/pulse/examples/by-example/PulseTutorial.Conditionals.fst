@@ -101,7 +101,7 @@ let nullable_ref a = option (ref a)
 
 let pts_to_or_null #a
         (x:nullable_ref a) 
-        (#[default_arg (`full_perm)] p:perm) //implicit argument with a default
+        (#[default_arg (`1.0R)] p:perm) //implicit argument with a default
         (v:option a)
 : vprop
 = match x with

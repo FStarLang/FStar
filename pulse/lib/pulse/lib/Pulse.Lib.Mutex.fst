@@ -97,12 +97,12 @@ let unlock = unlock'
 ghost
 fn share_aux (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a)
   requires mutex_live m #p v
-  ensures mutex_live m #(half_perm p) v ** mutex_live m #(half_perm p) v
+  ensures mutex_live m #(p /. 2.0R) v ** mutex_live m #(p /. 2.0R) v
 {
   unfold (mutex_live m #p v);
   Pulse.Lib.SpinLock.share m.l;
-  fold (mutex_live m #(half_perm p) v);
-  fold (mutex_live m #(half_perm p) v);
+  fold (mutex_live m #(p /. 2.0R) v);
+  fold (mutex_live m #(p /. 2.0R) v);
 }
 ```
 
@@ -110,14 +110,14 @@ let share = share_aux
 
 ```pulse
 ghost
-fn gather_aux (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a)
-  requires mutex_live m #(half_perm p) v ** mutex_live m #(half_perm p) v
-  ensures mutex_live m #p v
+fn gather_aux (#a:Type0) (#v:a -> vprop) (#p1 #p2:perm) (m:mutex a)
+  requires mutex_live m #p1 v ** mutex_live m #p2 v
+  ensures mutex_live m #(p1 +. p2) v
 {
-  unfold (mutex_live m #(half_perm p) v);
-  unfold (mutex_live m #(half_perm p) v);
-  Pulse.Lib.SpinLock.gather2 m.l;
-  fold (mutex_live m #p v)
+  unfold (mutex_live m #p2 v);
+  unfold (mutex_live m #p1 v);
+  Pulse.Lib.SpinLock.gather m.l;
+  fold (mutex_live m #(p1 +. p2) v)
 }
 ```
 

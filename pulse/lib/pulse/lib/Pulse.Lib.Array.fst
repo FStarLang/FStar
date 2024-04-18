@@ -26,8 +26,9 @@ open Pulse.Lib.BoundedIntegers
 module A = Pulse.Lib.Array.Core
 module R = Pulse.Lib.Reference
 
+#set-options "--print_implicits"
 ```pulse
-fn compare' (#t:eqtype) (l:US.t) (a1 a2:larray t (US.v l))
+fn compare' (#t:eqtype) (l:US.t) (a1 a2:larray t (US.v l)) (#p1 #p2:perm)
   requires pts_to a1 #p1 's1
         ** pts_to a2 #p2 's2
   returns res:bool
@@ -71,7 +72,7 @@ fn memcpy' (#t:eqtype) (l:US.t) (src dst:larray t (US.v l))
        ** A.pts_to dst src0
 {
   pts_to_len src #p #src0;
-  pts_to_len dst #full_perm #dst0;
+  pts_to_len dst #1.0R #dst0;
   let mut i = 0sz;
   while (let vi = !i; (vi < l) )
   invariant b. exists* (vi:US.t) (s:Seq.seq t). ( 
@@ -103,7 +104,7 @@ fn fill' (#t:Type0) (l:US.t) (a:larray t (US.v l)) (v:t)
     A.pts_to a s **
     pure (s `Seq.equal` Seq.create (US.v l) v)
 {
-  pts_to_len a #full_perm #'s;
+  pts_to_len a #1.0R #'s;
   let mut i = 0sz;
   while (let vi = !i; (vi < l))
   invariant b. exists* (vi:US.t) (s:Seq.seq t). ( 
@@ -129,7 +130,7 @@ fn zeroize' (l:US.t) (a:larray U8.t (US.v l))
     A.pts_to a s **
     pure (s `Seq.equal` Seq.create (US.v l) 0uy)
 {
-  pts_to_len a #full_perm #'s;
+  pts_to_len a #1.0R #'s;
   fill' l a 0uy
 }
 ```

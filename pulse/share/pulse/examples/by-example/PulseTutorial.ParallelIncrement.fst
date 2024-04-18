@@ -78,15 +78,15 @@ ensures exists* v. pts_to x v
 {
   let l = L.new_lock (exists* v. pts_to x v);
   fn incr ()
-  requires L.lock_alive l #(half_perm full_perm) (exists* v. pts_to x v)
-  ensures L.lock_alive l #(half_perm full_perm) (exists* v. pts_to x v)
+  requires L.lock_alive l #0.5R (exists* v. pts_to x v)
+  ensures L.lock_alive l #0.5R (exists* v. pts_to x v)
   {
     L.acquire l;
     let v = !x;
     x := v + 1;
     L.release l
   };
-  L.share l;
+  L.share2 l;
   par incr incr;
   L.gather2 l;
   L.acquire l;
@@ -97,8 +97,8 @@ ensures exists* v. pts_to x v
 //lock_inv$
 let contributions (left right: GR.ref int) (i v:int) : v:vprop { is_big v }=
   exists* (vl vr:int).
-    GR.pts_to left #one_half vl **
-    GR.pts_to right #one_half vr **
+    GR.pts_to left #0.5R vl **
+    GR.pts_to right #0.5R vr **
     pure (v == i + vl + vr)
 
 let lock_inv (x:ref int) (init:int) (left right:GR.ref int) : v:vprop { is_big v } =
@@ -114,8 +114,8 @@ fn incr_left (x:ref int)
              (#right:GR.ref int)
              (#i:erased int)
              (lock:L.lock )
-requires L.lock_alive lock #p (lock_inv x i left right) ** GR.pts_to left #one_half 'vl
-ensures L.lock_alive lock #p (lock_inv x i left right) ** GR.pts_to left #one_half ('vl + 1)
+requires L.lock_alive lock #p (lock_inv x i left right) ** GR.pts_to left #0.5R 'vl
+ensures L.lock_alive lock #p (lock_inv x i left right) ** GR.pts_to left #0.5R ('vl + 1)
 {
   L.acquire lock;
   unfold lock_inv;
@@ -138,8 +138,8 @@ fn incr_right (x:ref int)
               (#right:GR.ref int)
               (#i:erased int)
               (lock:L.lock)
-requires L.lock_alive lock #p (lock_inv x i left right) ** GR.pts_to right #one_half 'vl
-ensures L.lock_alive lock #p (lock_inv x i left right) ** GR.pts_to right #one_half ('vl + 1)
+requires L.lock_alive lock #p (lock_inv x i left right) ** GR.pts_to right #0.5R 'vl
+ensures L.lock_alive lock #p (lock_inv x i left right) ** GR.pts_to right #0.5R ('vl + 1)
 {
   L.acquire lock;
   unfold lock_inv;
@@ -167,7 +167,7 @@ ensures  pts_to x ('i + 2)
   fold (contributions left right 'i 'i);
   fold (lock_inv x 'i left right);
   let lock = L.new_lock (lock_inv x 'i left right);
-  L.share lock;
+  L.share2 lock;
   par (fun _ -> incr_left x lock)
       (fun _ -> incr_right x lock);
   L.gather2 lock;
@@ -235,11 +235,11 @@ ensures pts_to x ('i + 2)
         (v vq:int)
       requires 
         contributions left right 'i v **
-        GR.pts_to lr #one_half vq **
+        GR.pts_to lr #0.5R vq **
         pts_to x (v + 1)
       ensures
         contributions left right 'i (v + 1) **
-        GR.pts_to lr #one_half (vq + 1) **
+        GR.pts_to lr #0.5R (vq + 1) **
         pts_to x (v + 1)
     { 
       unfold contributions;
@@ -262,7 +262,7 @@ ensures pts_to x ('i + 2)
         fold (contributions left right 'i (v + 1));
       }
     };
-    L.share lock;
+    L.share2 lock;
     par (fun _ -> incr x lock (step left true))
         (fun _ -> incr x lock (step right false));
     L.gather2 lock;
@@ -409,11 +409,11 @@ ensures pts_to x ('i + 2)
         (v vq:int)
       requires 
         contributions left right 'i v **
-        GR.pts_to lr #one_half vq **
+        GR.pts_to lr #0.5R vq **
         pts_to x (v + 1)
       ensures
         contributions left right 'i (v + 1) **
-        GR.pts_to lr #one_half (vq + 1) **
+        GR.pts_to lr #0.5R (vq + 1) **
         pts_to x (v + 1)
     { 
       unfold contributions;
@@ -436,7 +436,7 @@ ensures pts_to x ('i + 2)
         fold (contributions left right 'i (v + 1));
       }
     };
-    C.share c;
+    C.share2 c;
     with pred. assert (inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
     dup_inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v));
     par (fun _ -> incr_atomic x c (step left true))
@@ -472,8 +472,8 @@ type ghost_st : Type u#1 = Frac.fractional int1 & Frac.fractional int1
 let pcm : pcm ghost_st = Prod.pcm_prod Frac.pcm_frac Frac.pcm_frac
 
 let with_p (n:int1) (p:perm) : Frac.fractional int1 = Some (n, p)
-let full (n:int1) : Frac.fractional int1 = Some (n, full_perm)
-let half (n:int1) : Frac.fractional int1 = Some (n, half_perm full_perm)
+let full (n:int1) : Frac.fractional int1 = Some (n, 1.0R)
+let half (n:int1) : Frac.fractional int1 = Some (n, 0.5R)
 
 let fp_upd_t1
   (t1_old:G.erased int1) 
@@ -567,9 +567,9 @@ let add_one (n:int1) : int1 = U.raise_val (U.downgrade_val n + 1)
 // 
 ```pulse
 fn incr_pcm_t (r:ref int) (ghost_r:ghost_pcm_ref pcm) (l:L.lock) (t1:bool) (#n:int1)
-  requires L.lock_alive l #(half_perm full_perm) (lock_inv_pcm r ghost_r) **
+  requires L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
            t1_perm ghost_r n t1
-  ensures L.lock_alive l #(half_perm full_perm) (lock_inv_pcm r ghost_r) **
+  ensures L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
           t1_perm ghost_r (add_one n) t1
 {
   L.acquire l;
@@ -587,7 +587,7 @@ fn incr_pcm_t (r:ref int) (ghost_r:ghost_pcm_ref pcm) (l:L.lock) (t1:bool) (#n:i
     ghost_write ghost_r
       (full n1, half n2)
       (full (add_one n1), half n2)
-      (fp_upd_t1 n1 (add_one n1) n2 (half_perm full_perm));
+      (fp_upd_t1 n1 (add_one n1) n2 0.5R);
     rewrite (ghost_pcm_pts_to ghost_r (full (add_one n1), half n2)) as
             (ghost_pcm_pts_to ghost_r ((half (add_one n1), half n2) `op pcm` (half (add_one n1), None)));
     ghost_share ghost_r (half (add_one n1), half n2) (half (add_one n1), None);
@@ -605,7 +605,7 @@ fn incr_pcm_t (r:ref int) (ghost_r:ghost_pcm_ref pcm) (l:L.lock) (t1:bool) (#n:i
     ghost_write ghost_r
       (half n1, full n2)
       (half n1, full (add_one n2))
-      (fp_upd_t2 n1 (half_perm full_perm) n2 (add_one n2));
+      (fp_upd_t2 n1 0.5R n2 (add_one n2));
     rewrite (ghost_pcm_pts_to ghost_r (half n1, full (add_one n2))) as
             (ghost_pcm_pts_to ghost_r ((half n1, half (add_one n2)) `op pcm` (None, half (add_one n2))));
     ghost_share ghost_r (half n1, half (add_one n2)) (None, half (add_one n2));
@@ -638,16 +638,16 @@ fn incr_pcm (r:ref int) (#n:erased int)
 
   let l = L.new_lock (lock_inv_pcm r ghost_r);
   
-  L.share l;
+  L.share2 l;
 
   parallel
-    requires L.lock_alive l #(half_perm full_perm) (lock_inv_pcm r ghost_r) **
+    requires L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
              t1_perm ghost_r zero1 true and
-             L.lock_alive l #(half_perm full_perm) (lock_inv_pcm r ghost_r) **
+             L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
              t1_perm ghost_r zero1 false
-    ensures L.lock_alive l #(half_perm full_perm) (lock_inv_pcm r ghost_r) **
+    ensures L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
             t1_perm ghost_r (add_one zero1) true and
-            L.lock_alive l #(half_perm full_perm) (lock_inv_pcm r ghost_r) **
+            L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
             t1_perm ghost_r (add_one zero1) false
     { incr_pcm_t r ghost_r l true }
     { incr_pcm_t r ghost_r l false };
@@ -678,9 +678,9 @@ fn incr_pcm_t_abstract (r:ref int) (l:L.lock)
       stt_ghost unit emp_inames
         (ghost_pre ** ghost_inv v)
         (fun _ -> ghost_post ** ghost_inv (v + 1))))
-  requires L.lock_alive l #(half_perm full_perm) (exists* v. pts_to r v ** ghost_inv v) **
+  requires L.lock_alive l #0.5R (exists* v. pts_to r v ** ghost_inv v) **
            ghost_pre
-  ensures L.lock_alive l #(half_perm full_perm) (exists* v. pts_to r v ** ghost_inv v) **
+  ensures L.lock_alive l #0.5R (exists* v. pts_to r v ** ghost_inv v) **
           ghost_post
 {
   L.acquire l;
@@ -712,7 +712,7 @@ fn incr_pcm_abstract (r:ref int)
     ghost_write ghost_r
       (full n1, half n2)
       (full (add_one n1), half n2)
-      (fp_upd_t1 n1 (add_one n1) n2 (half_perm full_perm));
+      (fp_upd_t1 n1 (add_one n1) n2 0.5R);
     rewrite (ghost_pcm_pts_to ghost_r (full (add_one n1), half n2)) as
             (ghost_pcm_pts_to ghost_r ((half (add_one n1), half n2) `op pcm` (half (add_one n1), None)));
     ghost_share ghost_r (half (add_one n1), half n2) (half (add_one n1), None);
@@ -732,7 +732,7 @@ fn incr_pcm_abstract (r:ref int)
     ghost_write ghost_r
       (half n1, full n2)
       (half n1, full (add_one n2))
-      (fp_upd_t2 n1 (half_perm full_perm) n2 (add_one n2));
+      (fp_upd_t2 n1 0.5R n2 (add_one n2));
     rewrite (ghost_pcm_pts_to ghost_r (half n1, full (add_one n2))) as
             (ghost_pcm_pts_to ghost_r ((half n1, half (add_one n2)) `op pcm` (None, half (add_one n2))));
     ghost_share ghost_r (half n1, half (add_one n2)) (None, half (add_one n2));
@@ -744,17 +744,17 @@ fn incr_pcm_abstract (r:ref int)
   share ghost_r;
   fold lock_inv_ghost;
   let l = L.new_lock (exists* v. pts_to r v ** lock_inv_ghost ghost_r v);
-  L.share l;
+  L.share2 l;
 
   parallel
-    requires L.lock_alive l #(half_perm full_perm) (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
+    requires L.lock_alive l #0.5R (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
              ghost_pcm_pts_to ghost_r (half zero1, None) and
-             L.lock_alive l #(half_perm full_perm) (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
+             L.lock_alive l #0.5R (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
              ghost_pcm_pts_to ghost_r (None, half zero1)
     
-    ensures L.lock_alive l #(half_perm full_perm) (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
+    ensures L.lock_alive l #0.5R (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
             ghost_pcm_pts_to ghost_r (half (add_one zero1), None) and
-            L.lock_alive l #(half_perm full_perm) (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
+            L.lock_alive l #0.5R (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
             ghost_pcm_pts_to ghost_r (None, half (add_one zero1))
 
     { incr_pcm_t_abstract r l t1 }

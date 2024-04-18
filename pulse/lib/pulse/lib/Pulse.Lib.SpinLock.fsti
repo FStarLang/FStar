@@ -21,7 +21,7 @@ module T = FStar.Tactics.V2
 
 val lock : Type0
 
-val lock_alive (l:lock) (#[T.exact (`full_perm)] p:perm)  (v:vprop) : vprop
+val lock_alive (l:lock) (#[T.exact (`1.0R)] p:perm)  (v:vprop) : vprop
 
 val lock_acquired (l:lock) : vprop
 
@@ -37,20 +37,25 @@ val release (#v:vprop) (#p:perm) (l:lock)
 val share (#v:vprop) (#p:perm) (l:lock)
   : stt_ghost unit emp_inames
       (lock_alive l #p v)
-      (fun _ -> lock_alive l #(half_perm p) v ** lock_alive l #(half_perm p) v)
+      (fun _ -> lock_alive l #(p /. 2.0R) v ** lock_alive l #(p /. 2.0R) v)
+
+val share2 (#v:vprop) (l:lock)
+  : stt_ghost unit emp_inames
+      (lock_alive l v)
+      (fun _ -> lock_alive l #0.5R v ** lock_alive l #0.5R v)
 
 val gather (#v:vprop) (#p1 #p2:perm) (l:lock)
   : stt_ghost unit emp_inames
       (lock_alive l #p1 v ** lock_alive l #p2 v)
-      (fun _ -> lock_alive l #(sum_perm p1 p2) v)
+      (fun _ -> lock_alive l #(p1 +. p2) v)
 
-val gather2 (#v:vprop) (#p : perm) (l:lock)
+val gather2 (#v:vprop) (l:lock)
   : stt_ghost unit emp_inames
-      (lock_alive l #(half_perm p) v ** lock_alive l #(half_perm p) v)
-      (fun _ -> lock_alive l #p v)
+      (lock_alive l #0.5R v ** lock_alive l #0.5R v)
+      (fun _ -> lock_alive l v)
 
 val free (#v:vprop) (l:lock)
-  : stt unit (lock_alive l #full_perm v ** lock_acquired l) (fun _ -> emp)
+  : stt unit (lock_alive l #1.0R v ** lock_acquired l) (fun _ -> emp)
 
 (* A given lock is associated to a single vprop, roughly.
 I'm not sure if we can prove v1 == v2 here. *)

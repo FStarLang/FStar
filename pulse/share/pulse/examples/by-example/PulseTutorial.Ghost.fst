@@ -256,7 +256,7 @@ ensures pts_to x 'v ** GR.pts_to r 'v
 
 //correlated$
 let correlated #a (x:ref a) (y:GR.ref a) (v:a)=
-  pts_to x v ** GR.pts_to y #one_half v
+  pts_to x v ** GR.pts_to y #0.5R v
 //correlated$
 
 ```pulse
@@ -285,9 +285,9 @@ ensures emp
   let mut x = 17;
   let g = GR.alloc 17;
   GR.share g;
-  fold correlated;  // GR.pts_to g #one_half 17 ** correlated x g 17
-  use_temp x g;     // GR.pts_to g #one_half 17 ** correlated x g ?v1
-  unfold correlated; // GR.pts_to g #one_half 17 ** GR.pts_to g #one_half ?v1 ** pts_to x ?v1
+  fold correlated;  // GR.pts_to g #0.5R 17 ** correlated x g 17
+  use_temp x g;     // GR.pts_to g #0.5R 17 ** correlated x g ?v1
+  unfold correlated; // GR.pts_to g #0.5R 17 ** GR.pts_to g #0.5R ?v1 ** pts_to x ?v1
   GR.gather g;       //this is the crucial step
                      // GT.pts_to g 17 ** pure (?v1 == 17) ** pts_to x ?v1
   assert (pts_to x 17);

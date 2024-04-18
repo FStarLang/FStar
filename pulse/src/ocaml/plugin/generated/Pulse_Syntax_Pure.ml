@@ -578,6 +578,8 @@ let (tm_add_inv :
                 Pulse_Reflection_Util.add_inv_lid)) in
       FStar_Reflection_V2_Derived.mk_app h
         [Pulse_Reflection_Util.ex is; Pulse_Reflection_Util.ex iref]
+let (tm_full_perm : Pulse_Syntax_Base.term) =
+  tm_constant (FStar_Reflection_V2_Data.C_Real "1.0")
 type ('tv, 't) is_view_of = Obj.t
 let rec (inspect_term : FStar_Reflection_Types.term -> term_view) =
   fun t ->

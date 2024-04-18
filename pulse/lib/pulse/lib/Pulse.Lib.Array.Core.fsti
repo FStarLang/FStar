@@ -33,7 +33,7 @@ type larray t (n:nat) = a:array t { length a == n }
 
 val is_full_array (#a:Type u#0) (x:array a) : prop
 
-val pts_to (#a:Type u#0) (x:array a) (#[exact (`full_perm)] p:perm) (s: Seq.seq a) : vprop
+val pts_to (#a:Type u#0) (x:array a) (#[exact (`1.0R)] p:perm) (s: Seq.seq a) : vprop
 
 val pts_to_is_small (#a:Type) (x:array a) (p:perm) (s:Seq.seq a)
   : Lemma (is_small (pts_to x #p s))
@@ -100,7 +100,7 @@ val share
   (#p:perm)
 : stt_ghost unit emp_inames
       (requires pts_to arr #p s)
-      (ensures fun _ -> pts_to arr #(half_perm p) s ** pts_to arr #(half_perm p) s)
+      (ensures fun _ -> pts_to arr #(p /. 2.0R) s ** pts_to arr #(p /. 2.0R) s)
 
 val gather
   (#a:Type)
@@ -109,14 +109,14 @@ val gather
   (#p0 #p1:perm)
 : stt_ghost unit emp_inames
       (requires pts_to arr #p0 s0 ** pts_to arr #p1 s1)
-      (ensures fun _ -> pts_to arr #(sum_perm p0 p1) s0 ** pure (s0 == s1))
+      (ensures fun _ -> pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1))
 
 val pts_to_range
   (#a:Type u#0)
   (x:array a)
   ([@@@ equate_by_smt] i:nat)
   ([@@@ equate_by_smt] j: nat)
-  (#[exact (`full_perm)] p:perm)
+  (#[exact (`1.0R)] p:perm)
   ([@@@ equate_by_smt] s: Seq.seq a) : vprop
 
 val pts_to_range_is_small (#a:Type) (x:array a) (i j : nat) (p:perm) (s:Seq.seq a)
