@@ -4673,8 +4673,6 @@ and (encode_sigelt' :
                                                      (match uu___17 with
                                                       | FStar_Syntax_Syntax.Tm_type
                                                           u -> u_leq_u_k u
-                                                      | FStar_Syntax_Syntax.Tm_name
-                                                          uu___18 -> true
                                                       | uu___18 -> false)
                                                    else false)) in
                                      FStar_Compiler_List.forall2 tp_ok tps3

@@ -1294,8 +1294,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                          to a universe <= the universe of the constructed type.
                          See BugBoxInjectivity.fst *)
                        u_leq_u_k u
-                     | Tm_name _ -> (* this is a value of another type parameter in scope *)
-                       true
+                     // | Tm_name _ -> (* this is a value of another type parameter in scope *)
+                     //   true
                      | _ ->
                        false
                    )
