@@ -110,72 +110,73 @@ let rec (resugar_universe :
   fun u ->
     fun r ->
       let mk a r1 = FStar_Parser_AST.mk_term a r1 FStar_Parser_AST.Un in
-      match u with
+      let uu___ = FStar_Syntax_Subst.compress_univ u in
+      match uu___ with
       | FStar_Syntax_Syntax.U_zero ->
           mk
             (FStar_Parser_AST.Const
                (FStar_Const.Const_int ("0", FStar_Pervasives_Native.None))) r
-      | FStar_Syntax_Syntax.U_succ uu___ ->
-          let uu___1 = universe_to_int Prims.int_zero u in
-          (match uu___1 with
+      | FStar_Syntax_Syntax.U_succ uu___1 ->
+          let uu___2 = universe_to_int Prims.int_zero u in
+          (match uu___2 with
            | (n, u1) ->
                (match u1 with
                 | FStar_Syntax_Syntax.U_zero ->
-                    let uu___2 =
-                      let uu___3 =
-                        let uu___4 =
-                          let uu___5 = FStar_Compiler_Util.string_of_int n in
-                          (uu___5, FStar_Pervasives_Native.None) in
-                        FStar_Const.Const_int uu___4 in
-                      FStar_Parser_AST.Const uu___3 in
-                    mk uu___2 r
-                | uu___2 ->
-                    let e1 =
-                      let uu___3 =
-                        let uu___4 =
-                          let uu___5 =
-                            let uu___6 = FStar_Compiler_Util.string_of_int n in
-                            (uu___6, FStar_Pervasives_Native.None) in
-                          FStar_Const.Const_int uu___5 in
-                        FStar_Parser_AST.Const uu___4 in
-                      mk uu___3 r in
-                    let e2 = resugar_universe u1 r in
                     let uu___3 =
                       let uu___4 =
-                        let uu___5 = FStar_Ident.id_of_text "+" in
-                        (uu___5, [e1; e2]) in
-                      FStar_Parser_AST.Op uu___4 in
-                    mk uu___3 r))
+                        let uu___5 =
+                          let uu___6 = FStar_Compiler_Util.string_of_int n in
+                          (uu___6, FStar_Pervasives_Native.None) in
+                        FStar_Const.Const_int uu___5 in
+                      FStar_Parser_AST.Const uu___4 in
+                    mk uu___3 r
+                | uu___3 ->
+                    let e1 =
+                      let uu___4 =
+                        let uu___5 =
+                          let uu___6 =
+                            let uu___7 = FStar_Compiler_Util.string_of_int n in
+                            (uu___7, FStar_Pervasives_Native.None) in
+                          FStar_Const.Const_int uu___6 in
+                        FStar_Parser_AST.Const uu___5 in
+                      mk uu___4 r in
+                    let e2 = resugar_universe u1 r in
+                    let uu___4 =
+                      let uu___5 =
+                        let uu___6 = FStar_Ident.id_of_text "+" in
+                        (uu___6, [e1; e2]) in
+                      FStar_Parser_AST.Op uu___5 in
+                    mk uu___4 r))
       | FStar_Syntax_Syntax.U_max l ->
           (match l with
            | [] ->
                FStar_Compiler_Effect.failwith
                  "Impossible: U_max without arguments"
-           | uu___ ->
+           | uu___1 ->
                let t =
-                 let uu___1 =
-                   let uu___2 = FStar_Ident.lid_of_path ["max"] r in
-                   FStar_Parser_AST.Var uu___2 in
-                 mk uu___1 r in
+                 let uu___2 =
+                   let uu___3 = FStar_Ident.lid_of_path ["max"] r in
+                   FStar_Parser_AST.Var uu___3 in
+                 mk uu___2 r in
                FStar_Compiler_List.fold_left
                  (fun acc ->
                     fun x ->
-                      let uu___1 =
-                        let uu___2 =
-                          let uu___3 = resugar_universe x r in
-                          (acc, uu___3, FStar_Parser_AST.Nothing) in
-                        FStar_Parser_AST.App uu___2 in
-                      mk uu___1 r) t l)
+                      let uu___2 =
+                        let uu___3 =
+                          let uu___4 = resugar_universe x r in
+                          (acc, uu___4, FStar_Parser_AST.Nothing) in
+                        FStar_Parser_AST.App uu___3 in
+                      mk uu___2 r) t l)
       | FStar_Syntax_Syntax.U_name u1 -> mk (FStar_Parser_AST.Uvar u1) r
-      | FStar_Syntax_Syntax.U_unif uu___ -> mk FStar_Parser_AST.Wild r
+      | FStar_Syntax_Syntax.U_unif uu___1 -> mk FStar_Parser_AST.Wild r
       | FStar_Syntax_Syntax.U_bvar x ->
           let id =
-            let uu___ =
-              let uu___1 =
-                let uu___2 = FStar_Compiler_Util.string_of_int x in
-                FStar_Compiler_Util.strcat "uu__univ_bvar_" uu___2 in
-              (uu___1, r) in
-            FStar_Ident.mk_ident uu___ in
+            let uu___1 =
+              let uu___2 =
+                let uu___3 = FStar_Compiler_Util.string_of_int x in
+                FStar_Compiler_Util.strcat "uu__univ_bvar_" uu___3 in
+              (uu___2, r) in
+            FStar_Ident.mk_ident uu___1 in
           mk (FStar_Parser_AST.Uvar id) r
       | FStar_Syntax_Syntax.U_unknown -> mk FStar_Parser_AST.Wild r
 let (resugar_universe' :
@@ -1436,17 +1437,11 @@ let rec (resugar_term' :
             | FStar_Syntax_Syntax.Masked_effect -> resugar_term' env e
             | FStar_Syntax_Syntax.Meta_smt_pat -> resugar_term' env e in
           (match m with
-           | FStar_Syntax_Syntax.Meta_pattern (uu___1, pats) ->
-               let pats1 =
-                 FStar_Compiler_List.map
-                   (fun uu___2 ->
-                      match uu___2 with | (x, uu___3) -> resugar_term' env x)
-                   (FStar_Compiler_List.flatten pats) in
-               mk (FStar_Parser_AST.Attributes pats1)
            | FStar_Syntax_Syntax.Meta_labeled uu___1 -> resugar_term' env e
            | FStar_Syntax_Syntax.Meta_desugared i -> resugar_meta_desugared i
            | FStar_Syntax_Syntax.Meta_named t1 ->
                mk (FStar_Parser_AST.Name t1)
+           | FStar_Syntax_Syntax.Meta_pattern uu___1 -> resugar_term' env e
            | FStar_Syntax_Syntax.Meta_monadic uu___1 -> resugar_term' env e
            | FStar_Syntax_Syntax.Meta_monadic_lift uu___1 ->
                resugar_term' env e)

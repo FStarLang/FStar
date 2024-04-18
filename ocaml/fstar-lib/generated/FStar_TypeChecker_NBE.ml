@@ -217,7 +217,9 @@ let (zeta_false : config -> config) =
                FStar_TypeChecker_Cfg.for_extraction =
                  (uu___.FStar_TypeChecker_Cfg.for_extraction);
                FStar_TypeChecker_Cfg.unrefine =
-                 (uu___.FStar_TypeChecker_Cfg.unrefine)
+                 (uu___.FStar_TypeChecker_Cfg.unrefine);
+               FStar_TypeChecker_Cfg.default_univs_to_zero =
+                 (uu___.FStar_TypeChecker_Cfg.default_univs_to_zero)
              });
           FStar_TypeChecker_Cfg.tcenv =
             (cfg_core.FStar_TypeChecker_Cfg.tcenv);
@@ -1733,13 +1735,13 @@ and (translate_fv :
         then FStar_TypeChecker_NBETerm.mkConstruct fvar [] []
         else
           (let uu___2 =
-             FStar_TypeChecker_Normalize.should_unfold cfg.core_cfg
+             FStar_TypeChecker_Normalize_Unfolding.should_unfold cfg.core_cfg
                (fun uu___3 -> (cfg.core_cfg).FStar_TypeChecker_Cfg.reifying)
                fvar qninfo in
            match uu___2 with
-           | FStar_TypeChecker_Normalize.Should_unfold_fully ->
+           | FStar_TypeChecker_Normalize_Unfolding.Should_unfold_fully ->
                FStar_Compiler_Effect.failwith "Not yet handled"
-           | FStar_TypeChecker_Normalize.Should_unfold_no ->
+           | FStar_TypeChecker_Normalize_Unfolding.Should_unfold_no ->
                (debug1
                   (fun uu___4 ->
                      let uu___5 = FStar_Syntax_Print.fv_to_string fvar in
@@ -1861,7 +1863,7 @@ and (translate_fv :
                            FStar_Compiler_Util.print1
                              "(3) Decided to not unfold %s\n" uu___8);
                       FStar_TypeChecker_NBETerm.mkFV fvar [] [])))
-           | FStar_TypeChecker_Normalize.Should_unfold_reify ->
+           | FStar_TypeChecker_Normalize_Unfolding.Should_unfold_reify ->
                let t =
                  let is_qninfo_visible =
                    let uu___3 =
@@ -1931,7 +1933,7 @@ and (translate_fv :
                            uu___6);
                     FStar_TypeChecker_NBETerm.mkFV fvar [] []) in
                (cache_add cfg fvar t; t)
-           | FStar_TypeChecker_Normalize.Should_unfold_yes ->
+           | FStar_TypeChecker_Normalize_Unfolding.Should_unfold_yes ->
                let t =
                  let is_qninfo_visible =
                    let uu___3 =
@@ -3333,7 +3335,9 @@ let (normalize :
                    FStar_TypeChecker_Cfg.for_extraction =
                      (uu___.FStar_TypeChecker_Cfg.for_extraction);
                    FStar_TypeChecker_Cfg.unrefine =
-                     (uu___.FStar_TypeChecker_Cfg.unrefine)
+                     (uu___.FStar_TypeChecker_Cfg.unrefine);
+                   FStar_TypeChecker_Cfg.default_univs_to_zero =
+                     (uu___.FStar_TypeChecker_Cfg.default_univs_to_zero)
                  });
               FStar_TypeChecker_Cfg.tcenv = (cfg.FStar_TypeChecker_Cfg.tcenv);
               FStar_TypeChecker_Cfg.debug = (cfg.FStar_TypeChecker_Cfg.debug);
@@ -3445,7 +3449,9 @@ let (normalize_for_unit_test :
                  FStar_TypeChecker_Cfg.for_extraction =
                    (uu___.FStar_TypeChecker_Cfg.for_extraction);
                  FStar_TypeChecker_Cfg.unrefine =
-                   (uu___.FStar_TypeChecker_Cfg.unrefine)
+                   (uu___.FStar_TypeChecker_Cfg.unrefine);
+                 FStar_TypeChecker_Cfg.default_univs_to_zero =
+                   (uu___.FStar_TypeChecker_Cfg.default_univs_to_zero)
                });
             FStar_TypeChecker_Cfg.tcenv = (cfg.FStar_TypeChecker_Cfg.tcenv);
             FStar_TypeChecker_Cfg.debug = (cfg.FStar_TypeChecker_Cfg.debug);

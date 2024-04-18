@@ -1141,7 +1141,11 @@ and (equal_meta :
             && (equal_term t1 t2)
 and (equal_lazyinfo :
   FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.lazyinfo -> Prims.bool)
-  = fun l1 -> fun l2 -> l1 = l2
+  =
+  fun l1 ->
+    fun l2 ->
+      FStar_Compiler_Util.physical_equality l1.FStar_Syntax_Syntax.blob
+        l2.FStar_Syntax_Syntax.blob
 and (equal_quoteinfo :
   FStar_Syntax_Syntax.quoteinfo ->
     FStar_Syntax_Syntax.quoteinfo -> Prims.bool)

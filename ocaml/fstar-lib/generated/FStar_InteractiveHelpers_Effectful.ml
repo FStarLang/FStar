@@ -1674,10 +1674,11 @@ let (compute_eterm_info :
                                | FStar_Tactics_Common.TacticFailure msg ->
                                    Obj.magic
                                      (Obj.repr
-                                        (FStar_InteractiveHelpers_Base.mfail
-                                           (Prims.strcat
-                                              "compute_eterm_info: failure: '"
-                                              (Prims.strcat msg "'"))))
+                                        (FStar_InteractiveHelpers_Base.mfail_doc
+                                           (FStar_List_Tot_Base.op_At
+                                              [FStar_Pprint.arbitrary_string
+                                                 "compute_eterm_info: failure"]
+                                              msg)))
                                | e1 ->
                                    Obj.magic
                                      (Obj.repr

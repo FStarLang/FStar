@@ -23,19 +23,6 @@ open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Cfg
 
-type should_unfold_res =
-    | Should_unfold_no
-    | Should_unfold_yes
-    | Should_unfold_fully
-    | Should_unfold_reify
-
-val should_unfold : cfg
-                 -> should_reify:(cfg -> bool)
-                 -> fv
-                 -> Env.qninfo
-                 -> should_unfold_res
-
-
 val eta_expand_with_type :Env.env -> term -> typ -> term
 val eta_expand:           Env.env -> term -> term
 val normalize:            steps -> Env.env -> term -> term
@@ -72,6 +59,7 @@ val comp_to_string:  Env.env -> comp -> string
 val elim_uvars: Env.env -> sigelt -> sigelt
 val erase_universes: Env.env -> term -> term
 
+(* Note: This will default any unresolved universe variables to U_zero. *)
 val remove_uvar_solutions: Env.env -> term -> term
 
 val unfold_head_once: Env.env -> term -> option term

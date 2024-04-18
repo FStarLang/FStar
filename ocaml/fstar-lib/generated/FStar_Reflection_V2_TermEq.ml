@@ -233,6 +233,8 @@ let (const_cmp : FStar_Reflection_V2_Data.vconst comparator_for) =
       | (FStar_Reflection_V2_Data.C_Reflect n1,
          FStar_Reflection_V2_Data.C_Reflect n2) ->
           Obj.magic (Obj.repr (eq_cmp n1 n2))
+      | (FStar_Reflection_V2_Data.C_Real s1, FStar_Reflection_V2_Data.C_Real
+         s2) -> Obj.magic (Obj.repr (eq_cmp s1 s2))
       | uu___ -> Obj.magic (Obj.repr Neq)
 let (ctxu_cmp : FStar_Reflection_Types.ctx_uvar_and_subst comparator_for) =
   fun uu___ -> fun uu___1 -> Unknown
@@ -474,6 +476,7 @@ and (pat_arg_cmp :
 type 'r defined = unit
 type ('uuuuu, 'uuuuu1, 'f, 'l1, 'l2) def2 = unit
 type 'u faithful_univ = Obj.t
+type 'c faithful_const = unit
 type 't faithful = Obj.t
 type 'a faithful_arg = Obj.t
 type 'q faithful_qual = Obj.t

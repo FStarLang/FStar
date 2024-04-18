@@ -628,6 +628,7 @@ type sig_metadata = {
     sigmeta_fact_db_ids:list string;
     sigmeta_admit:bool; //An internal flag to record that a sigelt's SMT proof should be admitted
                         //Used in DM4Free
+    sigmeta_spliced:bool;
     sigmeta_already_checked:bool;
     // ^ This sigelt was created from a splice_t with a proof of well-typing,
     // and does not need to be checked again.
@@ -907,11 +908,12 @@ instance val showable_should_check_uvar : showable should_check_uvar
 
 instance val showable_lazy_kind : showable lazy_kind
 
-instance val deq_lazy_kind : deq lazy_kind
-instance val deq_bv         : deq bv
-instance val deq_ident      : deq ident
-instance val deq_fv         : deq lident
-instance val deq_univ_name  : deq univ_name
+instance val deq_lazy_kind   : deq lazy_kind
+instance val deq_bv          : deq bv
+instance val deq_ident       : deq ident
+instance val deq_fv          : deq lident
+instance val deq_univ_name   : deq univ_name
+instance val deq_delta_depth : deq delta_depth
 
 instance val ord_bv         : ord bv
 instance val ord_ident      : ord ident

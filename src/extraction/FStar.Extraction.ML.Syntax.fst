@@ -96,8 +96,6 @@ type mlty =
 | MLTY_Top  (* \mathbb{T} type in the thesis, to be used when OCaml is not expressive enough for the source type *)
 | MLTY_Erased //a type that extracts to unit
 
-type mltyscheme = mlidents * mlty   //forall a1..an. t  (the list of binders can be empty)
-
 type mlconstant =
 | MLC_Unit
 | MLC_Bool   of bool
@@ -202,6 +200,13 @@ and mlletbinding = mlletflavor * list mllb
 
 and mlattribute = mlexpr
 
+and ty_param = {
+  ty_param_name : mlident;
+  ty_param_attrs : list mlattribute;
+}
+
+and mltyscheme = list ty_param * mlty   //forall a1..an. t  (the list of binders can be empty)
+
 type mltybody =
 | MLTD_Abbrev of mlty
 | MLTD_Record of list (mlsymbol * mlty)
@@ -210,12 +215,11 @@ type mltybody =
         One could have instead used a mlty and tupled the argument types?
      *)
 
-
 type one_mltydecl = {
   tydecl_assumed : bool; // bool: this was assumed (C backend)
   tydecl_name    : mlsymbol;
   tydecl_ignored : option mlsymbol;
-  tydecl_parameters : mlidents;
+  tydecl_parameters : list ty_param;
   tydecl_meta    : metadata;
   tydecl_defn    : option mltybody
 }
@@ -271,6 +275,9 @@ let apply_obj_repr :  mlexpr -> mlty -> mlexpr = fun x t ->
     let obj_repr = with_ty (MLTY_Fun(t, E_PURE, MLTY_Top)) repr_name in
     with_ty_loc MLTY_Top (MLE_App(obj_repr, [x])) x.loc
 
+let ty_param_names (tys:list ty_param) =
+  tys |> List.map (fun {ty_param_name} -> ty_param_name)
+
 open FStar.Syntax.Syntax
 
 let push_unit (ts : mltyscheme) : mltyscheme =
@@ -304,7 +311,7 @@ let rec mlty_to_string (t:mlty) =
 
 let mltyscheme_to_string (tsc:mltyscheme) =
   BU.format2 "(<MLTY_Scheme> [%s], %s)"
-    (String.concat ", " (fst tsc))
+    (String.concat ", " (tsc |> fst |> ty_param_names))
     (mlty_to_string (snd tsc))
 
 let rec mlexpr_to_string (e:mlexpr) =
@@ -404,7 +411,7 @@ let mltybody_to_string (d:mltybody) : string =
 let one_mltydecl_to_string (d:one_mltydecl) : string =
   BU.format3 "{tydecl_name = %s; tydecl_parameters = %s; tydecl_defn = %s}"
     d.tydecl_name
-    (String.concat "," d.tydecl_parameters)
+    (String.concat "," (d.tydecl_parameters |> ty_param_names))
     (match d.tydecl_defn with
      | None -> "<none>"
      | Some d -> mltybody_to_string d)

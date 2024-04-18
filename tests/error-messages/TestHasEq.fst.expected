@@ -16,7 +16,9 @@
 >>]
 >> Got issues: [
 * Error 162 at TestHasEq.fst(88,8-89,30):
-  - Incompatible attributes and qualifiers: erasable types do not support decidable equality and must be marked `noeq`
+  - The qualifier list [unopteq] is not permissible for this element
+  - The `unopteq` qualifier is not allowed on erasable inductives since they
+    don't have decidable equality.
 
 >>]
 Verified module: TestHasEq

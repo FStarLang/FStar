@@ -1711,39 +1711,46 @@ type sig_metadata =
   sigmeta_active: Prims.bool ;
   sigmeta_fact_db_ids: Prims.string Prims.list ;
   sigmeta_admit: Prims.bool ;
+  sigmeta_spliced: Prims.bool ;
   sigmeta_already_checked: Prims.bool ;
   sigmeta_extension_data: (Prims.string * FStar_Compiler_Dyn.dyn) Prims.list }
 let (__proj__Mksig_metadata__item__sigmeta_active :
   sig_metadata -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit;
+    | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit; sigmeta_spliced;
         sigmeta_already_checked; sigmeta_extension_data;_} -> sigmeta_active
 let (__proj__Mksig_metadata__item__sigmeta_fact_db_ids :
   sig_metadata -> Prims.string Prims.list) =
   fun projectee ->
     match projectee with
-    | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit;
+    | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit; sigmeta_spliced;
         sigmeta_already_checked; sigmeta_extension_data;_} ->
         sigmeta_fact_db_ids
 let (__proj__Mksig_metadata__item__sigmeta_admit :
   sig_metadata -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit;
+    | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit; sigmeta_spliced;
         sigmeta_already_checked; sigmeta_extension_data;_} -> sigmeta_admit
+let (__proj__Mksig_metadata__item__sigmeta_spliced :
+  sig_metadata -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit; sigmeta_spliced;
+        sigmeta_already_checked; sigmeta_extension_data;_} -> sigmeta_spliced
 let (__proj__Mksig_metadata__item__sigmeta_already_checked :
   sig_metadata -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit;
+    | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit; sigmeta_spliced;
         sigmeta_already_checked; sigmeta_extension_data;_} ->
         sigmeta_already_checked
 let (__proj__Mksig_metadata__item__sigmeta_extension_data :
   sig_metadata -> (Prims.string * FStar_Compiler_Dyn.dyn) Prims.list) =
   fun projectee ->
     match projectee with
-    | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit;
+    | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit; sigmeta_spliced;
         sigmeta_already_checked; sigmeta_extension_data;_} ->
         sigmeta_extension_data
 type open_kind =
@@ -2321,6 +2328,8 @@ let (deq_univ_name : univ_name FStar_Class_Deq.deq) =
        fun y ->
          let uu___ = order_univ_name x y in
          FStar_Compiler_Order.order_from_int uu___)
+let (deq_delta_depth : delta_depth FStar_Class_Deq.deq) =
+  { FStar_Class_Deq.op_Equals_Question = (fun x -> fun y -> x = y) }
 let (ord_bv : bv FStar_Class_Ord.ord) =
   ord_instance_from_cmp
     (fun x ->
@@ -2451,6 +2460,7 @@ let (default_sigmeta : sig_metadata) =
     sigmeta_active = true;
     sigmeta_fact_db_ids = [];
     sigmeta_admit = false;
+    sigmeta_spliced = false;
     sigmeta_already_checked = false;
     sigmeta_extension_data = []
   }

@@ -72,7 +72,7 @@ let or_intro_left #p #q (pf_p:squash p)
   : squash (p \/ q)
   = ()
 
-let or_intro_right #p #q (pf_p:squash p)
+let or_intro_right #p #q (pf_q:squash q)
   : squash (p \/ q)
   = ()
 //SNIPPET_END: or_intro$
@@ -83,10 +83,10 @@ let or_intro_sugar_left #p #q (pf_p:squash p)
   = introduce p \/ q
     with Left pf_p
 
-let or_intro_sugar_right #p #q (pf_p:squash p)
+let or_intro_sugar_right #p #q (pf_q:squash q)
   : squash (p \/ q)
   = introduce p \/ q
-    with Right pf_p
+    with Right pf_q
 //SNIPPET_END: or_intro_sugar$
 
 //SNIPPET_START: sum_elim$
@@ -214,9 +214,9 @@ let forall_elim_2_desugar
                   (f : squash (forall x0 x1. q x0 x1))
                   (v0: t0)
                   (v1: t1 v0)
-  : squash (q v0 v1) 
+  : squash (q v0 v1)
   =
-//SNIPPET_START: forall_elim_2_desugar$  
+//SNIPPET_START: forall_elim_2_desugar$
    FStar.Classical.Sugar.forall_elim
            #(t1 v0)
            #(fun x1 -> q v0 x1)

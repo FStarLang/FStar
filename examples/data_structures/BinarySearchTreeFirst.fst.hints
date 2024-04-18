@@ -12,7 +12,7 @@
         "int_inversion", "kinding_BinarySearchTreeFirst.tree@tok"
       ],
       0,
-      "cd02994f99b2dcf69ee423cbaf32901a"
+      "b13e423d97b41c79742a4289c8dc494a"
     ],
     [
       "BinarySearchTreeFirst.leaf",
@@ -25,7 +25,7 @@
         "projection_inverse_FStar.Pervasives.Native.None_a"
       ],
       0,
-      "681d3edecbcb8e256f5f3f336b849f87"
+      "a5321b30bbcf24683da8fc7ec4dc3424"
     ],
     [
       "BinarySearchTreeFirst.insert",
@@ -43,25 +43,23 @@
         "data_elim_FStar.Pervasives.Native.Some",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "equation_BinarySearchTreeFirst.leaf",
         "equation_BinarySearchTreeFirst.max",
         "fuel_guarded_inversion_BinarySearchTreeFirst.tree",
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "kinding_BinarySearchTreeFirst.tree@tok",
         "lemma_FStar.Pervasives.invertOption", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_LessThan",
-        "projection_inverse_BinarySearchTreeFirst.Node_r",
-        "projection_inverse_BoxBool_proj_0",
+        "primitive_Prims.op_LessThan", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "refinement_interpretation_Tm_refine_7a476e5b2b868d61b32adab1246770c5",
         "subterm_ordering_BinarySearchTreeFirst.Node",
         "subterm_ordering_FStar.Pervasives.Native.Some",
+        "typing_BinarySearchTreeFirst.max",
         "typing_FStar.Pervasives.Native.uu___is_None",
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "6083beb0285c16bad98dfdcf72a299cc"
+      "bc336ce1197bf5dc6f9ec803361c96de"
     ],
     [
       "BinarySearchTreeFirst.contains",
@@ -79,7 +77,7 @@
         "subterm_ordering_FStar.Pervasives.Native.Some"
       ],
       0,
-      "abffa6199383d375c8114c04688a4623"
+      "82b41229881248d4724bc11ff0bc99e7"
     ],
     [
       "BinarySearchTreeFirst.in_order_opt",
@@ -97,7 +95,7 @@
         "subterm_ordering_FStar.Pervasives.Native.Some"
       ],
       0,
-      "eacdd9d7efdab2cdea20752a41e1b017"
+      "8030ae2aada71e244a4e6aaa8a883b53"
     ]
   ]
 ]

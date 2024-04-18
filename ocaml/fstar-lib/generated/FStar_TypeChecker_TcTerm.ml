@@ -9101,6 +9101,10 @@ and (tc_pat :
            check_nested_pattern uu___2 uu___3 uu___4 in
          match uu___1 with
          | (bvs, tms, pat_e, pat, g, erasable) ->
+             let extended_env = FStar_TypeChecker_Env.push_bvs env bvs in
+             let pat_e_norm =
+               FStar_TypeChecker_Normalize.normalize
+                 [FStar_TypeChecker_Env.Beta] extended_env pat_e in
              ((let uu___3 =
                  FStar_TypeChecker_Env.debug env
                    (FStar_Options.Other "Patterns") in
@@ -9112,11 +9116,7 @@ and (tc_pat :
                    "Done checking pattern %s as expression %s\n" uu___4
                    uu___5
                else ());
-              (let uu___3 = FStar_TypeChecker_Env.push_bvs env bvs in
-               let uu___4 =
-                 FStar_TypeChecker_Normalize.normalize
-                   [FStar_TypeChecker_Env.Beta] env pat_e in
-               (pat, bvs, tms, uu___3, pat_e, uu___4, g, erasable))))
+              (pat, bvs, tms, extended_env, pat_e, pat_e_norm, g, erasable)))
 and (tc_eqn :
   FStar_Syntax_Syntax.bv ->
     FStar_TypeChecker_Env.env ->
@@ -9865,8 +9865,13 @@ and (tc_eqn :
                                                                     c_weak) in
                                                                if uu___15
                                                                then
+                                                                 let uu___16
+                                                                   =
+                                                                   FStar_TypeChecker_Env.push_bvs
+                                                                    scrutinee_env
+                                                                    pat_bvs in
                                                                  FStar_TypeChecker_Util.maybe_assume_result_eq_pure_term
-                                                                   env
+                                                                   uu___16
                                                                    branch_exp1
                                                                    c_weak
                                                                else c_weak in

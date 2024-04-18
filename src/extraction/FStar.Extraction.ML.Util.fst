@@ -49,7 +49,6 @@ let pruneNones (l : list (option 'a)) : list 'a =
 
 let mk_range_mle = with_ty MLTY_Top <| MLE_Name (["FStar"; "Range"], "mk_range")
 let dummy_range_mle = with_ty MLTY_Top <| MLE_Name (["FStar"; "Range"], "dummyRange")
-let fstar_real_of_string = with_ty MLTY_Top <| MLE_Name (["FStar";"Real"], "of_string")
 
 (* private *)
 let mlconst_of_const' (sctt : sconst) =
@@ -57,10 +56,10 @@ let mlconst_of_const' (sctt : sconst) =
   | Const_effect       -> failwith "Unsupported constant"
 
   | Const_range _
-  | Const_unit         -> MLC_Unit
-  | Const_char   c     -> MLC_Char  c
-  | Const_int    (s, i)-> MLC_Int   (s, i)
-  | Const_bool   b     -> MLC_Bool  b
+  | Const_unit          -> MLC_Unit
+  | Const_char   c      -> MLC_Char  c
+  | Const_int    (s, i) -> MLC_Int   (s, i)
+  | Const_bool   b      -> MLC_Bool  b
   | Const_string (s, _) -> MLC_String (s)
 
   | Const_range_of
@@ -107,10 +106,6 @@ let mlexpr_of_const (p:Range.range) (c:sconst) : mlexpr' =
     | Const_range r ->
         mlexpr_of_range r
 
-    | Const_real s ->
-        let str = mlconst_of_const p (Const_string(s, p)) in
-        MLE_App(fstar_real_of_string, [with_ty ml_string_ty <| MLE_Const str])
-
     | _ ->
         MLE_Const (mlconst_of_const p c)
 
@@ -128,7 +123,7 @@ let rec subst_aux (subst:list (mlident * mlty)) (t:mlty)  : mlty =
 let try_subst ((formals, t):mltyscheme) (args:list mlty) : option mlty =
     if List.length formals <> List.length args
     then None
-    else Some (subst_aux (List.zip formals args) t)
+    else Some (subst_aux (List.zip (ty_param_names formals) args) t)
 
 let subst ts args =
     match try_subst ts args with

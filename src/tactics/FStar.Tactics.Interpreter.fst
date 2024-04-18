@@ -33,7 +33,6 @@ open FStar.Tactics.Result
 open FStar.Tactics.Types
 open FStar.Tactics.Printing
 open FStar.Tactics.Monad
-open FStar.Tactics.V2.Basic
 open FStar.Tactics.CtrlRewrite
 open FStar.Tactics.Native
 open FStar.Tactics.Common
@@ -263,36 +262,37 @@ let e_tactic_1_alt (ea: embedding 'a) (er:embedding 'r): embedding ('a -> (proof
     mk_emb em un (FStar.Syntax.Embeddings.term_as_fv t_unit)
 
 let report_implicits rng (is : TcRel.tagged_implicits) : unit =
+  let open FStar.Pprint in
+  let open FStar.Errors.Msg in
+  let open FStar.Class.PP in
   is |> List.iter
     (fun (imp, tag) ->
       match tag with
       | TcRel.Implicit_unresolved
       | TcRel.Implicit_checking_defers_univ_constraint ->
-        Errors.log_issue rng
-                (Err.Error_UninstantiatedUnificationVarInTactic,
-                 BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
-                             (show imp.imp_uvar.ctx_uvar_head)
-                             (show (U.ctx_uvar_typ imp.imp_uvar))
-                             imp.imp_reason)
+        Errors.log_issue_doc rng
+                (Err.Error_UninstantiatedUnificationVarInTactic, [
+                  text "Tactic left uninstantiated unification variable:" ^/^ pp (imp.imp_uvar.ctx_uvar_head);
+                  text "Type:" ^/^ pp (U.ctx_uvar_typ imp.imp_uvar);
+                  text "Reason:" ^/^ dquotes (doc_of_string imp.imp_reason);
+                ])
       | TcRel.Implicit_has_typing_guard (tm, ty) ->
-        Errors.log_issue rng
-                (Err.Error_UninstantiatedUnificationVarInTactic,
-                 BU.format4 ("Tactic solved goal %s of type %s to %s : %s, but it has a non-trivial typing guard. Use gather_or_solve_explicit_guards_for_resolved_goals to inspect and prove these goals")
-                             (show imp.imp_uvar.ctx_uvar_head)
-                             (show (U.ctx_uvar_typ imp.imp_uvar))
-                             (show tm)
-                             (show ty)));
+        Errors.log_issue_doc rng
+                (Err.Error_UninstantiatedUnificationVarInTactic, [
+                  text "Tactic solved goal:" ^/^ pp (imp.imp_uvar.ctx_uvar_head);
+                  text "Type:" ^/^ pp (U.ctx_uvar_typ imp.imp_uvar);
+                  text "To the term:" ^/^ pp tm;
+                  text "But it has a non-trivial typing guard. Use gather_or_solve_explicit_guards_for_resolved_goals to inspect and prove these goals";
+                ])
+    );
   Err.stop_if_err ()
 
-let run_tactic_on_ps'
+let run_unembedded_tactic_on_ps
   (rng_call : Range.range)
   (rng_goal : Range.range)
   (background : bool)
-  (e_arg : embedding 'a)
   (arg : 'a)
-  (e_res : embedding 'b)
-  (tactic:term)
-  (tactic_already_typed:bool)
+  (tau: 'a -> tac 'b)
   (ps:proofstate)
   : list goal // remaining goals
   * 'b // return value
@@ -300,27 +300,6 @@ let run_tactic_on_ps'
     let ps = { ps with main_context = { ps.main_context with intactics = true } } in
     let ps = { ps with main_context = { ps.main_context with range = rng_goal } } in
     let env = ps.main_context in
-    if !tacdbg then
-        BU.print2 "Typechecking tactic: (%s) (already_typed: %s) {\n"
-          (show tactic)
-          (show tactic_already_typed);
-
-    (* Do NOT use the returned tactic, the typechecker is not idempotent and
-     * will mess up the monadic lifts. We're just making sure it's well-typed
-     * so it won't get stuck. c.f #1307 *)
-    let g =
-      if tactic_already_typed
-      then Env.trivial_guard
-      else let _, _, g = TcTerm.tc_tactic (type_of e_arg) (type_of e_res) env tactic in
-           g in
-
-    if !tacdbg then
-        BU.print_string "}\n";
-
-    TcRel.force_trivial_guard env g;
-    Err.stop_if_err ();
-    let tau = unembed_tactic_1 e_arg e_res tactic FStar.Syntax.Embeddings.id_norm_cb in
-
     (* if !tacdbg then *)
     (*     BU.print1 "Running tactic with goal = (%s) {\n" (show typ); *)
     let res =
@@ -342,7 +321,7 @@ let run_tactic_on_ps'
         let remaining_smt_goals = ps.goals@ps.smt_goals in
         List.iter
           (fun g ->
-            FStar.Tactics.V2.Basic.mark_goal_implicit_already_checked g;//all of these will be fed to SMT anyway
+            mark_goal_implicit_already_checked g;//all of these will be fed to SMT anyway
             if is_irrelevant g
             then (
               if !tacdbg then BU.print1 "Assigning irrelevant goal %s\n" (show (goal_witness g));
@@ -388,14 +367,15 @@ let run_tactic_on_ps'
     (* Any other error, including exceptions being raised by the metaprograms. *)
     | Failed (e, ps) ->
         do_dump_proofstate ps "at the time of failure";
-        let texn_to_string e =
-            match e with
-            | TacticFailure s ->
-                "\"" ^ s ^ "\""
-            | EExn t ->
-                "Uncaught exception: " ^ (show t)
-            | e ->
-                raise e
+        let open FStar.Pprint in
+        let texn_to_doc e =
+          match e with
+          | TacticFailure msg ->
+              msg
+          | EExn t ->
+              [doc_of_string <| "Uncaught exception: " ^ (show t)]
+          | e ->
+              raise e
         in
         let rng =
           if background
@@ -405,11 +385,51 @@ let run_tactic_on_ps'
           else ps.entry_range
         in
         let open FStar.Pprint in
-        Err.raise_error_doc (Err.Fatal_UserTacticFailure,
-                            [doc_of_string "Tactic failed";
-                             doc_of_string (texn_to_string e);
-                            ])
+        Err.raise_error_doc (Err.Fatal_UserTacticFailure, (
+                              [doc_of_string "Tactic failed"]
+                              @ texn_to_doc e)
+                            )
                           rng
+
+let run_tactic_on_ps'
+  (rng_call : Range.range)
+  (rng_goal : Range.range)
+  (background : bool)
+  (e_arg : embedding 'a)
+  (arg : 'a)
+  (e_res : embedding 'b)
+  (tactic:term)
+  (tactic_already_typed:bool)
+  (ps:proofstate)
+  : list goal // remaining goals
+  * 'b // return value
+  =
+    let env = ps.main_context in
+    if !tacdbg then
+        BU.print2 "Typechecking tactic: (%s) (already_typed: %s) {\n"
+          (show tactic)
+          (show tactic_already_typed);
+
+    (* Do NOT use the returned tactic, the typechecker is not idempotent and
+     * will mess up the monadic lifts. We're just making sure it's well-typed
+     * so it won't get stuck. c.f #1307 *)
+    let g =
+      if tactic_already_typed
+      then Env.trivial_guard
+      else let _, _, g = TcTerm.tc_tactic (type_of e_arg) (type_of e_res) env tactic in
+           g
+    in
+
+    if !tacdbg then
+        BU.print_string "}\n";
+
+    TcRel.force_trivial_guard env g;
+    Err.stop_if_err ();
+    let tau = unembed_tactic_1 e_arg e_res tactic FStar.Syntax.Embeddings.id_norm_cb in
+
+    run_unembedded_tactic_on_ps
+        rng_call rng_goal background
+        arg tau ps
 
 let run_tactic_on_ps
           (rng_call : Range.range)

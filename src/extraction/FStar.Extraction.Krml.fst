@@ -1115,7 +1115,7 @@ let translate_type_decl' env ty: option decl =
        tydecl_meta=flags;
        tydecl_defn= Some (MLTD_Abbrev t)} ->
         let name = env.module_name, name in
-        let env = List.fold_left (fun env name -> extend_t env name) env args in
+        let env = List.fold_left (fun env {ty_param_name} -> extend_t env ty_param_name) env args in
         if assumed && List.mem Syntax.CAbstract flags then
           Some (DTypeAbstractStruct name)
         else if assumed then
@@ -1131,7 +1131,7 @@ let translate_type_decl' env ty: option decl =
        tydecl_meta=flags;
        tydecl_defn=Some (MLTD_Record fields)} ->
         let name = env.module_name, name in
-        let env = List.fold_left (fun env name -> extend_t env name) env args in
+        let env = List.fold_left (fun env {ty_param_name} -> extend_t env ty_param_name) env args in
         Some (DTypeFlat (name, translate_flags flags, List.length args, List.map (fun (f, t) ->
           f, (translate_type_without_decay env t, false)) fields))
 
@@ -1141,7 +1141,7 @@ let translate_type_decl' env ty: option decl =
        tydecl_defn=Some (MLTD_DType branches)} ->
         let name = env.module_name, name in
         let flags = translate_flags flags in
-        let env = List.fold_left extend_t env args in
+        let env = args |> ty_param_names |> List.fold_left extend_t env in
         Some (DTypeVariant (name, flags, List.length args, List.map (fun (cons, ts) ->
           cons, List.map (fun (name, t) ->
             name, (translate_type_without_decay env t, false)
@@ -1183,7 +1183,7 @@ let translate_let' env flavor lb: option decl =
       else
         // Case 1: a possibly-polymorphic function.
         let env = if flavor = Rec then extend env name else env in
-        let env = List.fold_left (fun env name -> extend_t env name) env tvars in
+        let env = tvars |> ty_param_names |> List.fold_left (fun env name -> extend_t env name) env in
         let rec find_return_type eff i = function
           | MLTY_Fun (_, eff, t) when i > 0 ->
               find_return_type eff (i - 1) t
@@ -1230,7 +1230,7 @@ let translate_let' env flavor lb: option decl =
       else
         // Case 2: this is a global
         let meta = translate_flags meta in
-        let env = List.fold_left (fun env name -> extend_t env name) env tvars in
+        let env = tvars |> ty_param_names |> List.fold_left (fun env name -> extend_t env name) env in
         let t = translate_type env t in
         let name = env.module_name, name in
         begin try
@@ -1245,9 +1245,9 @@ let translate_let' env flavor lb: option decl =
       // TODO JP: figure out what exactly we're hitting here...?
       Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format1 "Not extracting %s to KaRaMeL\n" name));
       begin match ts with
-      | Some (idents, t) ->
+      | Some (tps, t) ->
           BU.print2 "Type scheme is: forall %s. %s\n"
-            (String.concat ", " idents)
+            (String.concat ", " (ty_param_names tps))
             (ML.Code.string_of_mlty ([], "") t)
       | None ->
           ()

@@ -150,8 +150,8 @@ let printout_success (ge:genv) (a:assertions) : Tac unit =
   printout_result "ainfo" (ESuccess ge a)
 
 /// The function to use to communicate failure in case of error
-let printout_failure (err : string) : Tac unit =
-  printout_result "ainfo" (EFailure err)
+let printout_failure (err : error_message) : Tac unit =
+  printout_result "ainfo" (EFailure (rendermsg err))
 
 let _debug_print_var (name : string) (t : term) : Tac unit =
   print ("_debug_print_var: " ^ name ^ ": " ^ term_to_string t);

@@ -22,6 +22,8 @@ open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.TypeChecker.Common
 open FStar.Class.Binders
+open FStar.Class.Deq
+open FStar.Class.Show
 
 module BU = FStar.Compiler.Util
 module S = FStar.Syntax.Syntax
@@ -60,9 +62,11 @@ type step =
   | ForExtraction   //marking an invocation of the normalizer for extraction
   | Unrefine
   | NormDebug       //force debugging
+  | DefaultUnivsToZero // default al unresolved universe uvars to zero
 and steps = list step
 
-val eq_step : step -> step -> bool
+instance val deq_step : deq step
+instance val showable_step : showable step
 
 type sig_binding = list lident * sigelt
 
@@ -71,6 +75,9 @@ type delta_level =
   | InliningDelta // ZP : Trying to resolve name clash
   | Eager_unfolding_only
   | Unfold of delta_depth
+
+instance val deq_delta_level : deq delta_level
+instance val showable_delta_level : showable delta_level
 
 // A name prefix, such as ["FStar";"Math"]
 type name_prefix = FStar.Ident.path
@@ -267,7 +274,6 @@ val initial_env : FStar.Parser.Dep.deps ->
 (* Some utilities *)
 val should_verify   : env -> bool
 val incr_query_index: env -> env
-val string_of_delta_level : delta_level -> string
 val rename_gamma : subst_t -> gamma -> gamma
 val rename_env : subst_t -> env -> env
 val set_dep_graph: env -> FStar.Parser.Dep.deps -> env

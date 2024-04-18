@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_754b00004f4a881ff74d076ab276dfe1"
       ],
       0,
-      "d27d29cec97284a6d5dfdf7995f61172"
+      "610815a8c6e6d82b54923b726e5785d4"
     ],
     [
       "GTWP.bind_wp",
@@ -30,7 +30,7 @@
         "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
       ],
       0,
-      "83c43d786d9430ffe23b013da35dcf8c"
+      "c5dcc77fa04cfbda2f95aae1dad828ae"
     ],
     [
       "GTWP.m",
@@ -44,7 +44,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "12b90e0e2b3e24e585d990571ddf5554"
+      "2ab43456d303d67f3c5db97856933970"
     ],
     [
       "GTWP.t_return",
@@ -53,7 +53,7 @@
       1,
       [ "@query" ],
       0,
-      "db11388edc34bec5a9ddcdcfe0ed99c9"
+      "bd9664985dc34c8890da1f48eee530cd"
     ],
     [
       "GTWP.g_return",
@@ -62,7 +62,7 @@
       1,
       [ "@query" ],
       0,
-      "db20ae665fbec858f260463d10cdd4c0"
+      "5905d01cc6141e108f8ebdce050677ee"
     ],
     [
       "GTWP.d_return",
@@ -71,7 +71,7 @@
       1,
       [ "@query" ],
       0,
-      "f10fa4e8b2607fc90a16b81d133064f7"
+      "ce0a52b2c3164f29113ed28d23303e1a"
     ],
     [
       "GTWP.return_wp",
@@ -80,7 +80,7 @@
       1,
       [ "@query" ],
       0,
-      "89f600c50061c004c6d5a7a76d358b02"
+      "5468e0338fd7a8d87c24642caebde70a"
     ],
     [
       "GTWP.return",
@@ -91,25 +91,24 @@
         "@MaxIFuel_assumption", "@query",
         "FStar.Monotonic.Pure_interpretation_Tm_arrow_c4804ca26ade2f3859400eebcb37ddbd",
         "GTWP_interpretation_Tm_arrow_a66aaac61ed3af0f156f5eaa34a59c50",
+        "GTWP_interpretation_Tm_ghost_arrow_1b34d770eae996d893e6f3801f526d85",
         "GTWP_interpretation_Tm_ghost_arrow_e5ba12d5f2bbe3a2f42d8d827ca663d6",
         "constructor_distinct_GTWP.G", "constructor_distinct_GTWP.T",
         "disc_equation_GTWP.D", "disc_equation_GTWP.G",
-        "disc_equation_GTWP.T", "eq2-interp", "equality_tok_GTWP.G@tok",
+        "disc_equation_GTWP.T", "equality_tok_GTWP.G@tok",
         "equality_tok_GTWP.T@tok", "equation_GTWP.g_return",
         "equation_GTWP.m", "equation_GTWP.return_wp",
         "equation_GTWP.t_return", "fuel_guarded_inversion_GTWP.idx",
+        "function_token_typing_GTWP.return_wp",
         "interpretation_Tm_abs_4f3e95b98e4b31b4a7b4b15900a308b9",
-        "interpretation_Tm_abs_6ffc06f5d789cf42c73d4f163a977cc0",
-        "interpretation_Tm_abs_f3056a04e181d2653e84c2b3364e2be2",
-        "l_not-interp", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_1b237475ae034049a85eadfc6231a7c3",
         "refinement_interpretation_Tm_refine_9d7e1da4c8ccc98f1562bffecfa030b6",
-        "token_correspondence_GTWP.return_wp",
         "tot_fun_Tm_abs_4f3e95b98e4b31b4a7b4b15900a308b9",
-        "typing_GTWP.t_return"
+        "typing_GTWP.g_return", "typing_GTWP.t_return"
       ],
       0,
-      "c75214335d698a9bec4246cf2c4a7915"
+      "2fd4f01b08b498cc48d4af098ab01ab1"
     ],
     [
       "GTWP.t_bind",
@@ -134,7 +133,7 @@
         "typing_Tm_abs_f8e7b716a282654c9757509b2a0f7de3"
       ],
       0,
-      "84e24e9e670686707608ec94ac98ac9d"
+      "18009ff941243df53d804c2f9fe11008"
     ],
     [
       "GTWP.g_bind",
@@ -159,7 +158,7 @@
         "typing_Tm_abs_e93a7dc38d53ba477737b29daf01ffde"
       ],
       0,
-      "f1268ba74a72f9456e4e3ff6a17c01f9"
+      "cb6d900096c47a1ad6edea2b09e98501"
     ],
     [
       "GTWP.bind",
@@ -197,7 +196,7 @@
         "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
       ],
       0,
-      "27ae0a5d45a1ee2e32363c706c7196ac"
+      "a497da34606c1dfe9890e0e8b0faa72c"
     ],
     [
       "GTWP.subcomp",
@@ -228,7 +227,7 @@
         "typing_Tm_abs_735bfa0400a12573ed48312f042e45e7"
       ],
       0,
-      "0079f7e5633e23faa83032f348e2331d"
+      "e396c29a872a73ccc4d15b37402a9b76"
     ],
     [
       "GTWP.ite_wp",
@@ -237,7 +236,7 @@
       1,
       [ "@query", "equation_GTWP.wp" ],
       0,
-      "b1e464d4821cd07044deabff54173480"
+      "17cb6de992c0cc57a7acc5427fc3065f"
     ],
     [
       "GTWP.GTD",
@@ -246,7 +245,7 @@
       1,
       [ "@query" ],
       0,
-      "bd443a5d562e8dd3adec06d5b61b13c0"
+      "25adde5363050995d31d19df3e7a5ae3"
     ],
     [
       "GTWP.GTD",
@@ -259,7 +258,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "1e4b3cb1f5e9271cd5fe432873361796"
+      "92ff737f7215604dfe2e5da7b966fae0"
     ],
     [
       "GTWP.GTD",
@@ -272,7 +271,7 @@
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "2413149b2a08ec43c9f8e3551b009545"
+      "aa1020cdd15d7b50b2fd20f281551eef"
     ],
     [
       "GTWP.lift_pure_gtd",
@@ -301,16 +300,16 @@
         "typing_Tm_abs_b66a28ec01f7bbb11191891e2b8510ec"
       ],
       0,
-      "b54b0fc8651b0fce5be69c87ce4551c1"
+      "86151799e91336c15bd81ec9a3748b15"
     ],
     [
-      "GTWP.18792",
+      "GTWP.19285",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "129fdcee7c19fa2651920f082e5d6ebc"
+      "59622cfa8155059c7d6b629d9597e147"
     ],
     [
       "GTWP.null_wp",
@@ -319,7 +318,7 @@
       1,
       [ "@query" ],
       0,
-      "3b1a8b3d3d90674ebf0301deaf9c3303"
+      "2882bc8843e49341e578e7daec273ffe"
     ],
     [
       "GTWP.map",
@@ -327,16 +326,15 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "equation_GTWP.return_wp",
-        "fuel_guarded_inversion_Prims.list",
-        "interpretation_Tm_abs_df9fff3ef36dbbe023909a07749bae99",
+        "@MaxIFuel_assumption", "@query", "data_typing_intro_Prims.Cons@tok",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_GTWP.return_wp", "fuel_guarded_inversion_Prims.list",
         "interpretation_Tm_abs_f3056a04e181d2653e84c2b3364e2be2",
         "projection_inverse_BoxBool_proj_0",
-        "token_correspondence_GTWP.return_wp", "true_interp"
+        "token_correspondence_GTWP.return_wp"
       ],
       0,
-      "dd584c5994b13c2d5afce3582686f9df"
+      "2f300b56ab20844fb2834a5641fdde50"
     ],
     [
       "GTWP.appn",
@@ -350,7 +348,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "1f84d23ff800c200429dcea0392eafcd"
+      "f7d9170ce24086df15fbe0b35cd8702e"
     ],
     [
       "GTWP.labs",
@@ -364,7 +362,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "0aa071e1c6e203cd506f944f5af78377"
+      "80899c284ebd8b49e815fc8e5dfee6ba"
     ],
     [
       "GTWP.test",
@@ -372,13 +370,14 @@
       2,
       1,
       [
-        "@query", "equation_GTWP.return_wp", "equation_Prims.nat",
-        "interpretation_Tm_abs_09b386911dac9b1410a9e8a99c8454c7",
+        "@MaxIFuel_assumption", "@query", "equation_GTWP.return_wp",
+        "equation_Prims.nat",
         "interpretation_Tm_abs_f3056a04e181d2653e84c2b3364e2be2",
-        "token_correspondence_GTWP.return_wp", "true_interp"
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_GTWP.return_wp"
       ],
       0,
-      "bd6b0817fda449cb38cc616aeb0b127e"
+      "3905e990eea87b873d987558c24c9968"
     ]
   ]
 ]

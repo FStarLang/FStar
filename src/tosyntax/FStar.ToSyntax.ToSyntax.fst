@@ -246,11 +246,14 @@ let op_as_term env arity op : option S.term =
     | "%" ->
       r C.op_Modulus delta_equational
     | "@" ->
-      FStar.Errors.log_issue
+      FStar.Errors.log_issue_doc
         (range_of_id op)
-        (FStar.Errors.Warning_DeprecatedGeneric,
-         "The operator '@' has been resolved to FStar.List.Tot.append even though FStar.List.Tot is not in scope. Please add an 'open FStar.List.Tot' to stop relying on this deprecated, special treatment of '@'");
+        (FStar.Errors.Warning_DeprecatedGeneric, [
+          Errors.Msg.text "The operator '@' has been resolved to FStar.List.Tot.append even though \
+                           FStar.List.Tot is not in scope. Please add an 'open FStar.List.Tot' to \
+                           stop relying on this deprecated, special treatment of '@'."]);
       r C.list_tot_append_lid (Delta_equational_at_level 2)
+
     | "<>" ->
       r C.op_notEq delta_equational
     | "~"   ->

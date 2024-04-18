@@ -136,7 +136,7 @@ let (module_name_of_file : Prims.string -> Prims.string) =
     | FStar_Pervasives_Native.None ->
         let uu___1 =
           let uu___2 =
-            FStar_Compiler_Util.format1 "not a valid FStar file: %s" f in
+            FStar_Compiler_Util.format1 "Not a valid FStar file: '%s'" f in
           (FStar_Errors_Codes.Fatal_NotValidFStarFile, uu___2) in
         FStar_Errors.raise_err uu___1
 let (lowercase_module_name : Prims.string -> Prims.string) =
@@ -1459,6 +1459,13 @@ let (collect_one :
                      (false, uu___4) in
                    P_dep uu___3 in
                  add_to_parsing_data uu___2
+             | FStar_Const.Const_real uu___2 ->
+                 let uu___3 =
+                   let uu___4 =
+                     let uu___5 = FStar_Ident.lid_of_str "fstar.real" in
+                     (false, uu___5) in
+                   P_dep uu___4 in
+                 add_to_parsing_data uu___3
              | uu___2 -> ()
            and collect_term' uu___1 =
              match uu___1 with

@@ -10,5 +10,6 @@ each other. *)
 open FStar.Syntax.Syntax
 
 exception NotAListLiteral
-exception TacticFailure of string
+exception TacticFailure of FStar.Errors.Msg.error_message
 exception EExn of term
+exception SKIP (* used by ctrl_rewrite *)

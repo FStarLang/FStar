@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_754b00004f4a881ff74d076ab276dfe1"
       ],
       0,
-      "10f007852c7e532f2f2256d496b8cf59"
+      "79bc5901a59a92a1eafc2990cf3e72d4"
     ],
     [
       "GT.m",
@@ -24,7 +24,7 @@
         "fuel_guarded_inversion_GT.idx", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "3d7773a4d2eefc0456c0ccf5b24f0ef5"
+      "f7ecfe90d9073de4bd18bc57454410e9"
     ],
     [
       "GT.return",
@@ -32,18 +32,13 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "constructor_distinct_GT.D",
-        "constructor_distinct_GT.G", "constructor_distinct_GT.T",
-        "disc_equation_GT.D", "disc_equation_GT.G", "disc_equation_GT.T",
-        "equality_tok_GT.D@tok", "equality_tok_GT.G@tok",
-        "equality_tok_GT.T@tok", "equation_GT.g_return", "equation_GT.m",
-        "equation_GT.t_return", "fuel_guarded_inversion_GT.idx",
-        "projection_inverse_BoxBool_proj_0", "typing_GT.d_return",
-        "typing_Tm_abs_37cc05fd6587f4b80a4634e02197b8ac",
-        "typing_Tm_abs_b68e73a4efe6a575c72f28a07914e6c3"
+        "@MaxIFuel_assumption", "@query", "disc_equation_GT.D",
+        "disc_equation_GT.G", "disc_equation_GT.T", "equation_GT.m",
+        "fuel_guarded_inversion_GT.idx", "projection_inverse_BoxBool_proj_0",
+        "typing_GT.d_return", "typing_GT.g_return", "typing_GT.t_return"
       ],
       0,
-      "39993f88e7eac9409d835a319cb51f5b"
+      "5c30612940490991ec25ced21a08845d"
     ],
     [
       "GT.bind",
@@ -55,12 +50,11 @@
         "constructor_distinct_GT.G", "constructor_distinct_GT.T",
         "disc_equation_GT.D", "disc_equation_GT.G", "disc_equation_GT.T",
         "equality_tok_GT.D@tok", "equality_tok_GT.G@tok",
-        "equality_tok_GT.T@tok", "equation_GT.g_bind", "equation_GT.m",
-        "fuel_guarded_inversion_GT.idx", "projection_inverse_BoxBool_proj_0",
-        "typing_Tm_abs_24309c3cadd869b94b5601201277f265"
+        "equality_tok_GT.T@tok", "equation_GT.m",
+        "fuel_guarded_inversion_GT.idx", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "a78db7ecff51861ece27c9e59a235bac"
+      "4f1c0d7d2b1072171b4cdb11255d230d"
     ],
     [
       "GT.r_map",
@@ -75,7 +69,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "4a7464658e689d5f695e90e215c88208"
+      "88920891935fbec8c93d0bed52df272e"
     ],
     [
       "GT.lift_pure_gtd",
@@ -106,10 +100,16 @@
         "typing_Tm_abs_735bfa0400a12573ed48312f042e45e7"
       ],
       0,
-      "f02e9c91cb43dd449028d8e374c2182e"
+      "41be38a9a5e7c95ac0f3581e4caa81cd"
     ],
     [
-      "GT.9761", 1, 2, 1, [ "@query" ], 0, "f1cd196c7bd85344a432e754375af274"
+      "GT.10039",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ea91e9eb821077c18c69589e7000423f"
     ],
     [
       "GT.map",
@@ -122,7 +122,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "264fc62c43f55c1ab66557ebff39d34f"
+      "5c286d63dd9e52c634dceb09760f896c"
     ],
     [
       "GT.appn",
@@ -136,7 +136,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "4a962310a50d5b9d4a7658e246489d7b"
+      "35b892565052a010c388b9d6d5011cf2"
     ],
     [
       "GT.labs",
@@ -150,7 +150,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "b7dc23c1f9ba5f572f6967e3c8ffa35e"
+      "bf8468a9780ba5570d829090ea89e5c0"
     ]
   ]
 ]

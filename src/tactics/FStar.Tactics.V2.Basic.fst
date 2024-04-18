@@ -24,6 +24,7 @@ open FStar.Compiler.Util
 open FStar.Ident
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
+open FStar.Pprint
 open FStar.Reflection.V2.Data
 open FStar.Reflection.V2.Builtins
 open FStar.Tactics.Result
@@ -32,6 +33,7 @@ open FStar.Tactics.Monad
 open FStar.Tactics.Printing
 open FStar.Syntax.Syntax
 open FStar.VConfig
+open FStar.Errors.Msg
 
 friend FStar.Pervasives (* to expose norm_step *)
 
@@ -60,11 +62,7 @@ module PO     = FStar.TypeChecker.Primops
 
 open FStar.Class.Show
 open FStar.Class.Monad
-
-(* Internal, repeated from V2 too. Could be in Types, but that
-constrains dependencies and F* claims a cycle. *)
-let get_phi (g:goal) : option term = U.un_squash (N.unfold_whnf (goal_env g) (goal_type g))
-let is_irrelevant (g:goal) : bool = Option.isSome (get_phi g)
+open FStar.Class.PP
 
 let compress (t:term) : tac term =
   return ();!
@@ -114,30 +112,7 @@ let whnf e t = N.unfold_whnf e t
  * term_to_string, we don't want to cause normalization with debug
  * flags. *)
 let tts = N.term_to_string
-
-let set_uvar_expected_typ (u:ctx_uvar) (t:typ)
-  : unit
-  = let dec = UF.find_decoration u.ctx_uvar_head in
-    UF.change_decoration u.ctx_uvar_head ({dec with uvar_decoration_typ = t })
-
-let mark_uvar_with_should_check_tag (u:ctx_uvar) (sc:should_check_uvar)
-  : unit
-  = let dec = UF.find_decoration u.ctx_uvar_head in
-    UF.change_decoration u.ctx_uvar_head ({dec with uvar_decoration_should_check = sc })
-
-let mark_uvar_as_already_checked (u:ctx_uvar)
-  : unit
-  = mark_uvar_with_should_check_tag u Already_checked
-
-let mark_goal_implicit_already_checked (g:goal)
-  : unit
-  = mark_uvar_as_already_checked g.goal_ctx_uvar
-
-let goal_with_type g t
-  : goal
-  = let u = g.goal_ctx_uvar in
-    set_uvar_expected_typ u t;
-    g
+let ttd = N.term_to_doc
 
 let bnorm_goal g = goal_with_type g (bnorm (goal_env g) (goal_type g))
 
@@ -340,10 +315,11 @@ let tc_unifier_solved_implicits env (must_tot:bool) (allow_guards:bool) (uvs:lis
           && not allow_guards
           && NonTrivial? guard.guard_f
           then (
-            fail3 "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed;guard is\n%s"
-                (show u.ctx_uvar_head)
-                (show sol)
-                (show g)
+            fail_doc [
+              text "Could not typecheck unifier solved implicit" ^/^ pp u.ctx_uvar_head ^/^
+              text "to" ^/^ pp sol ^/^ text "since it produced a guard and guards were not allowed";
+              text "Guard =" ^/^ pp g
+            ]
           )
           else (
             proc_guard' false "guard for implicit" env guard (Some sc) u.ctx_uvar_range ;!
@@ -352,10 +328,10 @@ let tc_unifier_solved_implicits env (must_tot:bool) (allow_guards:bool) (uvs:lis
           )
 
         | Inr failed ->
-          fail3 "Could not typecheck unifier solved implicit %s to %s because %s"
-            (show u.ctx_uvar_head)
-            (show sol)
-            (Core.print_error failed)
+          fail_doc [
+            text "Could not typecheck unifier solved implicit" ^/^ pp u.ctx_uvar_head ^/^
+            text "to" ^/^ pp sol ^/^ text "because" ^/^ doc_of_string (Core.print_error failed)
+          ]
   in
   if env.phase1 //phase1 is untrusted
   then return ()
@@ -543,11 +519,13 @@ let solve (goal : goal) (solution : term) : tac unit =
     let! b = trysolve goal solution in
     if b
     then (dismiss;! remove_solved_goals)
-    else fail (BU.format3 "%s does not solve %s : %s"
-              (tts (goal_env goal) solution)
-              (tts (goal_env goal) (goal_witness goal))
-              (tts (goal_env goal) (goal_type goal))))
-
+    else
+      fail_doc [
+        ttd (goal_env goal) solution ^/^
+        text "does not solve" ^/^
+        ttd (goal_env goal) (goal_witness goal) ^/^ text ":" ^/^ ttd (goal_env goal) (goal_type goal)
+      ]
+    )
 
 let solve' (goal : goal) (solution : term) : tac unit =
   set_solution goal solution;!
@@ -616,11 +594,11 @@ let __tc (e : env) (t : term) : tac (term * typ * guard_t) =
     let e = {e with uvar_subtyping=false} in
     try return (TcTerm.typeof_tot_or_gtot_term e t true)
     with | Errors.Err (_, msg, _)
-         | Errors.Error (_, msg, _, _) -> begin
-           fail3 "Cannot type (1) %s in context (%s). Error = (%s)" (tts e t)
-                                                  (Env.all_binders e |> Print.binders_to_string ", ")
-                                                  (Errors.rendermsg msg) // FIXME
-           end)
+         | Errors.Error (_, msg, _, _) ->
+           fail_doc ([
+              prefix 2 1 (text "Cannot type") (ttd e t) ^/^
+              prefix 2 1 (text "in context") (pp (Env.all_binders e))
+             ] @ msg))
 
 let __tc_ghost (e : env) (t : term) : tac (term * typ * guard_t) =
     let! ps = get in
@@ -630,11 +608,11 @@ let __tc_ghost (e : env) (t : term) : tac (term * typ * guard_t) =
     try let t, lc, g = TcTerm.tc_tot_or_gtot_term e t in
         return (t, lc.res_typ, g)
     with | Errors.Err (_, msg ,_)
-         | Errors.Error (_, msg, _ ,_) -> begin
-           fail3 "Cannot type (2) %s in context (%s). Error = (%s)" (tts e t)
-                                                  (Env.all_binders e |> Print.binders_to_string ", ")
-                                                  (Errors.rendermsg msg) // FIXME
-           end)
+         | Errors.Error (_, msg, _ ,_) ->
+           fail_doc ([
+              prefix 2 1 (text "Cannot type") (ttd e t) ^/^
+              prefix 2 1 (text "in context") (pp (Env.all_binders e))
+             ] @ msg))
 
 let __tc_lax (e : env) (t : term) : tac (term * lcomp * guard_t) =
     let! ps = get in
@@ -646,11 +624,11 @@ let __tc_lax (e : env) (t : term) : tac (term * lcomp * guard_t) =
     let e = {e with letrecs=[]} in
     try return (TcTerm.tc_term e t)
     with | Errors.Err (_, msg, _)
-         | Errors.Error (_, msg, _, _) -> begin
-           fail3 "Cannot type (3) %s in context (%s). Error = (%s)" (tts e t)
-                                                  (Env.all_binders e |> Print.binders_to_string ", ")
-                                                  (Errors.rendermsg msg) // FIXME
-           end)
+         | Errors.Error (_, msg, _, _) ->
+           fail_doc ([
+              prefix 2 1 (text "Cannot type") (ttd e t) ^/^
+              prefix 2 1 (text "in context") (pp (Env.all_binders e))
+             ] @ msg))
 
 let tcc (e : env) (t : term) : tac comp = wrap_err "tcc" <| (
   let! (_, lc, _) = __tc_lax e t in
@@ -665,33 +643,6 @@ let tc (e : env) (t : term) : tac typ = wrap_err "tc" <| (
   let! c = tcc e t in
   return (U.comp_result c)
 )
-
-let divide (n:Z.t) (l : tac 'a) (r : tac 'b) : tac ('a * 'b) =
-  let! p = get in
-  let! lgs, rgs =
-    try return (List.splitAt (Z.to_int_fs n) p.goals) with
-    | _ -> fail "divide: not enough goals"
-  in
-  let lp = { p with goals = lgs; smt_goals = [] } in
-  set lp;!
-  let! a = l in
-  let! lp' = get in
-  let rp = { lp' with goals = rgs; smt_goals = [] } in
-  set rp;!
-  let! b = r in
-  let! rp' = get in
-  let p' = { rp' with goals = lp'.goals @ rp'.goals;
-                      smt_goals = lp'.smt_goals @ rp'.smt_goals @ p.smt_goals }
-  in
-  set p';!
-  remove_solved_goals;!
-  return (a, b)
-
-(* focus: runs f on the current goal only, and then restores all the goals *)
-(* There is a user defined version as well, we just use this one internally, but can't mark it as private *)
-let focus (f:tac 'a) : tac 'a =
-    let! (a, _) = divide Z.one f (return ()) in
-    return a
 
 (* Applies t to each of the current goals
       fails if t fails on any of the goals
@@ -713,7 +664,6 @@ let seq (t1:tac unit) (t2:tac unit) : tac unit =
   focus (t1 ;! map t2 ;! return ())
 
 let should_check_goal_uvar (g:goal) = U.ctx_uvar_should_check g.goal_ctx_uvar
-let goal_typedness_deps (g:goal) = U.ctx_uvar_typedness_deps g.goal_ctx_uvar
 
 let bnorm_and_replace g = replace_cur (bnorm_goal g)
 
@@ -1138,11 +1088,17 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
         cmp_func must_tot env (goal_type goal) (U.mk_squash post_u post) in
       if not b
       then (
-        let post, goalt = TypeChecker.Err.print_discrepancy (tts env)
-                                                            (U.mk_squash post_u post)
-                                                            (goal_type goal) in
-        fail3 "Cannot instantiate lemma %s (with postcondition: %s) to match goal (%s)"
-                            (tts env tm) post goalt
+        let open FStar.Class.PP in
+        let open FStar.Pprint in
+        let open FStar.Errors.Msg in
+        // let post, goalt = TypeChecker.Err.print_discrepancy (tts env)
+        //                                                     (U.mk_squash post_u post)
+        //                                                     (goal_type goal) in
+        fail_doc [
+          prefix 2 1 (text "Cannot instantiate lemma:") (pp tm) ^/^
+          prefix 2 1 (text "with postcondition:") (N.term_to_doc env post) ^/^
+          prefix 2 1 (text "to match goal:") (pp (goal_type goal))
+        ]
       )
       else (
         // We solve with (), we don't care about the witness if applying a lemma
@@ -2758,8 +2714,7 @@ let refl_maybe_relate_after_unfolding (g:env) (t0 t1:typ)
              (show t1));
          let s = Core.maybe_relate_after_unfolding g t0 t1 in
          dbg_refl g (fun _ ->
-           BU.format1 "} returning side: %s\n"
-             (Core.side_to_string s));
+           BU.format1 "} returning side: %s\n" (show s));
          s, [])
   else return (None, [unexpected_uvars_issue (Env.get_range g)])
 
@@ -2864,3 +2819,43 @@ let proofstate_of_all_implicits rng env imps =
     }
     in
     (ps, w)
+
+let getprop (e:Env.env) (t:term) : option term =
+    let tn = N.normalize [Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant] e t in
+    U.un_squash tn
+
+let run_unembedded_tactic_on_ps_and_solve_remaining
+    (t_range g_range : Range.range)
+    (background : bool)
+    (t : 'a)
+    (f : 'a -> tac 'b)
+    (ps : proofstate)
+    : 'b
+=
+  let remaining_goals, r = FStar.Tactics.Interpreter.run_unembedded_tactic_on_ps t_range g_range background t f ps in
+  // Check that all goals left are irrelevant and provable
+  remaining_goals |> List.iter (fun g ->
+      match getprop (goal_env g) (goal_type g) with
+      | Some vc ->
+          let guard = { guard_f = NonTrivial vc
+                      ; deferred_to_tac = []
+                      ; deferred = []
+                      ; univ_ineqs = [], []
+                      ; implicits = [] } in
+          Rel.force_trivial_guard (goal_env g) guard
+      | None ->
+          Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "tactic left a computationally-relevant goal unsolved") g_range);
+  r
+
+(* One last primitive in this file *)
+let call_subtac (g:env) (f : tac unit) (_u:universe) (goal_ty : typ) : tac (option term & issues) =
+  return ();! // thunk
+  let rng = Env.get_range g in
+  let ps, w = proofstate_of_goal_ty rng g goal_ty in
+  match Errors.catch_errors_and_ignore_rest (fun () ->
+          run_unembedded_tactic_on_ps_and_solve_remaining rng rng false () (fun () -> f) ps)
+  with
+  | [], Some () ->
+    return (Some w, [])
+  | issues, _ ->
+    return (None, issues)

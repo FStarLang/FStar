@@ -51,7 +51,7 @@
         "subterm_ordering_Part2.HOAS.Arrow"
       ],
       0,
-      "c42d8dfda7feaa12998286bb48d4c07c"
+      "12c643377a04c483a0184233c17a677a"
     ],
     [
       "Part2.HOAS.__proj__Var__item__t",
@@ -197,8 +197,7 @@
         "binder_x_9a376b73d8acd1a292693d4dea650d5b_1", "bool_inversion",
         "bool_typing", "constructor_distinct_Part2.HOAS.Arrow",
         "constructor_distinct_Part2.HOAS.Bool",
-        "constructor_distinct_Part2.HOAS.Int",
-        "constructor_distinct_Part2.HOAS.TT", "data_elim_Part2.HOAS.App",
+        "constructor_distinct_Part2.HOAS.Int", "data_elim_Part2.HOAS.App",
         "data_elim_Part2.HOAS.I", "data_elim_Part2.HOAS.Lam",
         "data_elim_Part2.HOAS.TT", "data_elim_Part2.HOAS.Var",
         "data_typing_intro_Part2.HOAS.FF@tok",
@@ -219,7 +218,7 @@
         "well_founded_ordering_on_codomain_Part2.HOAS.Lam"
       ],
       0,
-      "e1715219d25a518cde65c809fa0956c4"
+      "70e6536caab193637c6b4653b5336d84"
     ]
   ]
 ]

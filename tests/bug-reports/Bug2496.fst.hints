@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "e2b96e2d4e05a12fd341d91d90584bd8"
+      "912c849492ec90d10a103e6048ab94af"
     ],
     [
       "Bug2496.set_as_list",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Tm_refine_ea7377a3fd2bd1599ea6567f21fbd5cb"
       ],
       0,
-      "ffe863fe9179ddc3d979e358013222a5"
+      "fe6112e853a0053c2f94e6332860a3d0"
     ],
     [
       "Bug2496.empty",
@@ -47,7 +47,7 @@
         "typing_Tm_abs_6326eea4887383ba76f88bbb04bea6d8"
       ],
       0,
-      "629eaae3dc8e03fc004c4780f30f0dda"
+      "c797057ef4d35fab191b588feaa9b0c1"
     ],
     [
       "Bug2496.insert",
@@ -91,7 +91,7 @@
         "typing_Tm_abs_6326eea4887383ba76f88bbb04bea6d8"
       ],
       0,
-      "5f299322b0983f7ffec80ae16189bdcc"
+      "73ed0873ecfa68fd74f7afa362c71926"
     ],
     [
       "Bug2496.singleton_includes_argument_lemma",
@@ -120,7 +120,7 @@
         "typing_Tm_abs_6326eea4887383ba76f88bbb04bea6d8"
       ],
       0,
-      "ae672a838a58e0289dec3a5b0996a3a0"
+      "83c13a5777ba0894a3ec80801acb2ac3"
     ],
     [
       "Bug2496.singleton_includes_argument_lemma_bad",
@@ -150,7 +150,7 @@
         "typing_Tm_abs_6326eea4887383ba76f88bbb04bea6d8"
       ],
       0,
-      "f74ca0547a451ff63a4f7692b594e2bc"
+      "8c7a225fe10c8236a934510240a31bcd"
     ]
   ]
 ]

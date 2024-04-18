@@ -163,12 +163,12 @@ let try_lookup_fv (r:Range.range) (g:uenv) (fv:fv) : option exp_binding =
   | Inr r -> Some r
   | Inl true ->
     (* Log an error/warning and return None *)
-    Errors.log_issue r
-      (Errors.Error_CallToErased,
-       BU.format2 "Will not extract reference to variable `%s` since it is noextract; either remove its qualifier \
-                   or add it to this definition. This error can be ignored with `--warn_error -%s`."
-                   (Print.fv_to_string fv)
-                   (string_of_int Errors.call_to_erased_errno));
+    let open FStar.Errors.Msg in
+    Errors.log_issue_doc r
+      (Errors.Error_CallToErased, [
+       text <| BU.format1 "Will not extract reference to variable `%s` since it has the `noextract` qualifier." (Print.fv_to_string fv);
+       text <| "Either remove its qualifier or add it to this definition.";
+       text <| BU.format1 "This error can be ignored with `--warn_error -%s`." (string_of_int Errors.call_to_erased_errno)]);
     None
   | Inl false ->
     None
@@ -484,7 +484,7 @@ let extend_fv (g:uenv) (x:fv) (t_x:mltyscheme) (add_unit:bool)
       | [] -> true
     in
     let tySchemeIsClosed (tys : mltyscheme) : bool =
-      subsetMlidents  (mltyFvars (snd tys)) (fst tys)
+      subsetMlidents  (mltyFvars (snd tys)) (tys |> fst |> ty_param_names)
     in
     if tySchemeIsClosed t_x
     then
@@ -631,7 +631,8 @@ let new_uenv (e:TypeChecker.Env.env)
     (* We handle [failwith] specially, extracting it to OCaml's 'failwith'
        rather than FStar.Compiler.Effect.failwith. Not sure this is necessary *)
     let a = "'a" in
-    let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in
+    let failwith_ty = ([{ty_param_name=a; ty_param_attrs=[]}],
+                        MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in
     let g, _, _ =
         extend_lb env (Inr (lid_as_fv (Const.failwith_lid()) None)) tun failwith_ty false
     in

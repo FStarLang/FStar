@@ -188,6 +188,7 @@ let op_Negation        = pconst "op_Negation"
 let subtype_of_lid     = pconst "subtype_of"
 
 let real_const  s        = p2l ["FStar";"Real";s]
+let real_op_EQ           = real_const "op_Equals_Dot"
 let real_op_LT           = real_const "op_Less_Dot"
 let real_op_LTE          = real_const "op_Less_Equals_Dot"
 let real_op_GT           = real_const "op_Greater_Dot"

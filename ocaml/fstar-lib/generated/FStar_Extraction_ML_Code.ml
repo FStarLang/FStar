@@ -1071,12 +1071,15 @@ and (doc_of_lets :
                                   (min_op_prec, NonAssoc) ty in
                               let vars =
                                 let uu___8 =
+                                  let uu___9 =
+                                    FStar_Extraction_ML_Syntax.ty_param_names
+                                      vs in
                                   FStar_Compiler_List.map
                                     (fun x ->
                                        doc_of_mltype currentModule
                                          (min_op_prec, NonAssoc)
                                          (FStar_Extraction_ML_Syntax.MLTY_Var
-                                            x)) vs in
+                                            x)) uu___9 in
                                 reduce1 uu___8 in
                               reduce1 [text ":"; vars; text "."; ty1])
                        else text "") in
@@ -1136,12 +1139,14 @@ let (doc_of_mltydecl :
               | FStar_Pervasives_Native.None -> x
               | FStar_Pervasives_Native.Some y -> y in
             let tparams1 =
-              match tparams with
+              let tparams2 =
+                FStar_Extraction_ML_Syntax.ty_param_names tparams in
+              match tparams2 with
               | [] -> empty
               | x2::[] -> text x2
               | uu___3 ->
                   let doc1 =
-                    FStar_Compiler_List.map (fun x2 -> text x2) tparams in
+                    FStar_Compiler_List.map (fun x2 -> text x2) tparams2 in
                   let uu___4 = combine (text ", ") doc1 in parens uu___4 in
             let forbody body1 =
               match body1 with

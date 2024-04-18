@@ -33,6 +33,7 @@ type vconst =
   | C_Range     : range -> vconst
   | C_Reify     : vconst
   | C_Reflect   : name -> vconst
+  | C_Real      : string -> vconst (* Real literals are represented as a string e.g. "1.2" *)
   (* TODO: complete *)
 
 type universes = list universe

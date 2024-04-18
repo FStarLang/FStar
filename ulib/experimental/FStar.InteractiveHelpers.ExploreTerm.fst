@@ -268,7 +268,7 @@ let rec inst_comp e c tl =
   | [] -> c
   | t :: tl' ->
     let c' = try inst_comp_once e c t
-             with | MetaAnalysis msg -> mfail ("inst_comp: error: " ^ msg)
+             with | MetaAnalysis msg -> mfail_doc ([text "inst_comp: error"] @ msg)
                   | err -> raise err
     in
     inst_comp e c' tl'
@@ -296,7 +296,10 @@ let _abs_update_typ (b:binder) (ty:typ) (pl:list binder) (e:env) :
     end
   with
   | MetaAnalysis msg ->
-    mfail ("_abs_update_typ: could not find an arrow in: " ^ term_to_string ty ^ ":\n" ^ msg)
+    mfail_doc (
+      [text ("_abs_update_typ: could not find an arrow in " ^ term_to_string ty)]
+      @ msg
+    )
   | err -> raise err
 
 let abs_update_typ_or_comp (b:binder) (c : typ_or_comp) (e:env) : Tac typ_or_comp =
@@ -372,7 +375,7 @@ let flush_typ_or_comp dbg e tyc =
   | TC_Comp c pl n -> flush_comp pl n c
   end
   with | MetaAnalysis msg ->
-         mfail ("flush_typ_or_comp failed on: " ^ typ_or_comp_to_string tyc ^ ":\n" ^ msg)
+         mfail_doc ([text ("flush_typ_or_comp failed on: " ^ typ_or_comp_to_string tyc)] @  msg)
        | err -> raise err
 
 /// Compute the target ``typ_or_comp`` for an argument by the type of the head:

@@ -24,13 +24,10 @@ let badtm () : Tac term =
                               sort = seal (pack Tv_Unknown);
                               ppname = seal "ouch"})))
 
-(* We do get a warning about the normalizer failing though, so
-silence it. *)
-#push-options "--warn_error -264"
+[@@expect_failure [228]]
+let _ = assert True by (exact (badtm ()))
 
 let _ =
     assert True 
         by (let _ = trytac (fun () -> exact (badtm ())) in
              trivial ())
-
-#pop-options

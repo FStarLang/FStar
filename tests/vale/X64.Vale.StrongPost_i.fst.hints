@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_X64.Machine_s.operand__uu___haseq" ],
       0,
-      "8f1d9c162f810b302b35a1852691f397"
+      "f480afa098f7e7daed2e597a72605e43"
     ],
     [
       "X64.Vale.StrongPost_i.__proj__Mov64__item__dst",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Tm_refine_40cd61a9068cbeed2a346b66c4d06035"
       ],
       0,
-      "27ebeb7cbfd3299c14f385ba4d5f0390"
+      "43065bdf93c611ca21d97f59311d46e0"
     ],
     [
       "X64.Vale.StrongPost_i.__proj__Mov64__item__src",
@@ -32,7 +32,7 @@
         "refinement_interpretation_Tm_refine_40cd61a9068cbeed2a346b66c4d06035"
       ],
       0,
-      "59ac3081c20510242bb2865901dbd01b"
+      "8771e0b0c71696cf0a196ed0b365e005"
     ],
     [
       "X64.Vale.StrongPost_i.__proj__Load64__item__dst",
@@ -44,7 +44,7 @@
         "refinement_interpretation_Tm_refine_328c39e52cac4f714a2fd55744d2632c"
       ],
       0,
-      "1d8e81de2d07a9dedb060bb1462d9081"
+      "6ff25cc26abc5912454bed2724b0ec2e"
     ],
     [
       "X64.Vale.StrongPost_i.__proj__Load64__item__src",
@@ -56,7 +56,7 @@
         "refinement_interpretation_Tm_refine_328c39e52cac4f714a2fd55744d2632c"
       ],
       0,
-      "83b015cebe536416bf45ecd7f0268dd1"
+      "ff3de554c729c29891ce1dc53f0310f1"
     ],
     [
       "X64.Vale.StrongPost_i.__proj__Load64__item__offset",
@@ -68,7 +68,7 @@
         "refinement_interpretation_Tm_refine_328c39e52cac4f714a2fd55744d2632c"
       ],
       0,
-      "feb15c751604901a18fc4434ab0a10b2"
+      "141372b024d9668d4d2444a210397704"
     ],
     [
       "X64.Vale.StrongPost_i.__proj__Store64__item__dst",
@@ -80,7 +80,7 @@
         "refinement_interpretation_Tm_refine_f5d1e4d4ea78ee50a5c8db0f990998d3"
       ],
       0,
-      "4aeed362dd881b8a05033d44ad056671"
+      "03057c4245052523213ae00fe1b739cc"
     ],
     [
       "X64.Vale.StrongPost_i.__proj__Store64__item__src",
@@ -92,7 +92,7 @@
         "refinement_interpretation_Tm_refine_f5d1e4d4ea78ee50a5c8db0f990998d3"
       ],
       0,
-      "f85ef7a7e12921c7d984f61772e37f94"
+      "516135e1d3cf65204e9f94a5f9c16fa6"
     ],
     [
       "X64.Vale.StrongPost_i.__proj__Store64__item__offset",
@@ -104,7 +104,7 @@
         "refinement_interpretation_Tm_refine_f5d1e4d4ea78ee50a5c8db0f990998d3"
       ],
       0,
-      "7d66b7b355fcbacd5955f68f5fb60f01"
+      "0582e0d1a9e4764bcdf812e7a36aa5ef"
     ],
     [
       "X64.Vale.StrongPost_i.__proj__Add64Wrap__item__dst",
@@ -116,7 +116,7 @@
         "refinement_interpretation_Tm_refine_8af824417febca2dd666f55860e37123"
       ],
       0,
-      "38311f289d124deb553707c4a63f35d6"
+      "6d13999e6cd8a4f59c3770f93cc1cbe4"
     ],
     [
       "X64.Vale.StrongPost_i.__proj__Add64Wrap__item__src",
@@ -128,7 +128,7 @@
         "refinement_interpretation_Tm_refine_8af824417febca2dd666f55860e37123"
       ],
       0,
-      "0f147af6552deea8dc333e3c51c3dc64"
+      "fcb6f5d6b877d76d727199188f64a204"
     ],
     [
       "X64.Vale.StrongPost_i.__proj__Adc64Wrap__item__dst",
@@ -140,7 +140,7 @@
         "refinement_interpretation_Tm_refine_ecd294cd2663e86c405e1ba18cfc9132"
       ],
       0,
-      "26ca15800ecce9ac1d83be927c825b1e"
+      "fb69c50d59af44404cece15462978fbe"
     ],
     [
       "X64.Vale.StrongPost_i.__proj__Adc64Wrap__item__src",
@@ -152,7 +152,7 @@
         "refinement_interpretation_Tm_refine_ecd294cd2663e86c405e1ba18cfc9132"
       ],
       0,
-      "675b9a2b097b6927b6050144cdba2d46"
+      "1ded1e78f829a7261bebe927288c7442"
     ],
     [
       "X64.Vale.StrongPost_i.__proj__Mul64Wrap__item__src",
@@ -164,7 +164,7 @@
         "refinement_interpretation_Tm_refine_cdee9644b84d60ced7b907e879e8f711"
       ],
       0,
-      "67d57acc1dcb77d6c4a1d1bb4ceba64e"
+      "15f25a59148d212dd027356a4d94da7f"
     ],
     [
       "X64.Vale.StrongPost_i.__proj__IMul64__item__dst",
@@ -176,7 +176,7 @@
         "refinement_interpretation_Tm_refine_682d3d695d007eebd7b34b81e68201a2"
       ],
       0,
-      "69f5426d1d2bfa91c568b14e33a13c95"
+      "087b7399e358ffe500715746b50575ce"
     ],
     [
       "X64.Vale.StrongPost_i.__proj__IMul64__item__src",
@@ -188,7 +188,7 @@
         "refinement_interpretation_Tm_refine_682d3d695d007eebd7b34b81e68201a2"
       ],
       0,
-      "6a329c5e160b0505975eb6c7b1d189ba"
+      "e5b626a81817d57baef423ad49279595"
     ],
     [
       "X64.Vale.StrongPost_i.__proj__And64__item__dst",
@@ -200,7 +200,7 @@
         "refinement_interpretation_Tm_refine_5dc689cbcdb3326b49d445a095bac099"
       ],
       0,
-      "70605feac1fa0d7f22c58c6adda983e6"
+      "d500e496ebc3c83099972a42c066133d"
     ],
     [
       "X64.Vale.StrongPost_i.__proj__And64__item__amt",
@@ -212,7 +212,7 @@
         "refinement_interpretation_Tm_refine_5dc689cbcdb3326b49d445a095bac099"
       ],
       0,
-      "028cf3ba7106b4f6f66e11d8eb5e6466"
+      "a34b66510daa3885956c14b3573fa340"
     ],
     [
       "X64.Vale.StrongPost_i.__proj__Shr64__item__dst",
@@ -224,7 +224,7 @@
         "refinement_interpretation_Tm_refine_9d8aaa9f141413804a9831bfdf4fa3af"
       ],
       0,
-      "b9f9328907cd3318cc4037ab7e02bd1f"
+      "dbc22b68cbf7a6cc64d79e85eb648ff5"
     ],
     [
       "X64.Vale.StrongPost_i.__proj__Shr64__item__amt",
@@ -236,7 +236,7 @@
         "refinement_interpretation_Tm_refine_9d8aaa9f141413804a9831bfdf4fa3af"
       ],
       0,
-      "eb44bdbfc64756ada8e5b5709011d191"
+      "6f946a2fdaa6ec4d7c084a5e0272c263"
     ],
     [
       "X64.Vale.StrongPost_i.__proj__Sub64__item__dst",
@@ -248,7 +248,7 @@
         "refinement_interpretation_Tm_refine_8a2af6d0ec73b071a6dcad5176f1f0e2"
       ],
       0,
-      "ad8541f57f8b3f11a3b3c0a3417c007e"
+      "31bc2dbbacef9f9a63677be0975c06c8"
     ],
     [
       "X64.Vale.StrongPost_i.__proj__Sub64__item__src",
@@ -260,7 +260,7 @@
         "refinement_interpretation_Tm_refine_8a2af6d0ec73b071a6dcad5176f1f0e2"
       ],
       0,
-      "3bc787163a0cabbe79ebf9ecd859d072"
+      "63ea027e2da290e24a26078bd8afb8f8"
     ],
     [
       "X64.Vale.StrongPost_i.valid_operand_norm",
@@ -276,7 +276,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "78bfafb6585bd2fc145a3de8af68a475"
+      "99994bd672b8f1ddf40ca8ff30f4f85b"
     ],
     [
       "X64.Vale.StrongPost_i.eval_operand_norm",
@@ -295,7 +295,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "a7fab8e4eb4b1868dfb7afba552b0905"
+      "5f7462a7d8a52b503facb2e0bb25b77b"
     ],
     [
       "X64.Vale.StrongPost_i.regs_match",
@@ -310,7 +310,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "dedb1e1818212e27d7a1a66585daec9a"
+      "fa5e1904e7838d6793fbe301ae7b24b3"
     ],
     [
       "X64.Vale.StrongPost_i.inss_to_codes",
@@ -379,7 +379,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "8c450fb31878870019124ff7828f2ec1"
+      "14fa6fbd36cf83c9e1a5a7b104d90a12"
     ],
     [
       "X64.Vale.StrongPost_i.wp_code",
@@ -394,7 +394,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ed9cd3bfe1b968db00f038508685cdbe"
+      "3381e28b694442332d61b11eef20b278"
     ],
     [
       "X64.Vale.StrongPost_i.va_lemma_weakest_pre_norm_wp",
@@ -403,7 +403,7 @@
       1,
       [ "@query" ],
       0,
-      "91bdac309ecfd3c72b5b5085731ca03e"
+      "767d3cde86d8360849f9a68b9154942e"
     ],
     [
       "X64.Vale.StrongPost_i.lemma_regs_match_self",
@@ -429,7 +429,7 @@
         "subterm_ordering_Prims.Cons", "true_interp"
       ],
       0,
-      "1fd6d20f8ab98c209030fe4c6e642b74"
+      "4224b6a1a9c84b9ec513f42db7deafb4"
     ],
     [
       "X64.Vale.StrongPost_i.lemma_update_reg_equal",
@@ -442,7 +442,7 @@
         "typing_X64.Vale.State_i.update_reg"
       ],
       0,
-      "9771eddd1bfb7a3c9ecd2beb50b079c0"
+      "1c89a4243dfd82c8894952c9c246f7b2"
     ],
     [
       "X64.Vale.StrongPost_i.assert_from_norm'",
@@ -451,7 +451,7 @@
       1,
       [ "@query" ],
       0,
-      "f2ea2cc42f1e70de8364eee773f1d7db"
+      "45a6a3863f69df381acb228f82188198"
     ],
     [
       "X64.Vale.StrongPost_i.assert_to_norm'",
@@ -460,7 +460,7 @@
       1,
       [ "@query" ],
       0,
-      "6a8acb499620522ebfbb4aabb7bd540a"
+      "d0a51e35597565086b6249d6ea011c43"
     ],
     [
       "X64.Vale.StrongPost_i.lemma_weak_pre_ins",
@@ -517,6 +517,7 @@
         "equation_Prims.nat", "equation_X64.Machine_s.dst_op",
         "equation_X64.Machine_s.nat64", "equation_X64.Machine_s.valid_dst",
         "equation_X64.Vale.Decls.va_ensure",
+        "equation_X64.Vale.Decls.va_reg_operand",
         "equation_X64.Vale.Decls.va_require",
         "equation_X64.Vale.Decls.va_state_eq",
         "equation_X64.Vale.Decls.va_update_operand",
@@ -598,9 +599,11 @@
         "projection_inverse_X64.Vale.StrongPost_i.Store64_src",
         "projection_inverse_X64.Vale.StrongPost_i.Sub64_dst",
         "projection_inverse_X64.Vale.StrongPost_i.Sub64_src",
+        "refinement_interpretation_Tm_refine_059fb7e36b37aa500817c1dfb9940fd8",
         "refinement_interpretation_Tm_refine_33c23e946048d3d79f362ad9f81ccafe",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_7e4a6c5999db731b5d17d0418dfeea3e",
+        "refinement_interpretation_Tm_refine_7e7d860c9a7f82e99838e098518d6f0b",
         "refinement_interpretation_Tm_refine_a608a89bbc0a207d5920d37d906f7f40",
         "refinement_interpretation_Tm_refine_e85c4468bd6fa895770a44e5ae1526dc",
         "refinement_interpretation_Tm_refine_e9b3e2ef72d43c9aa6ae2a423112456c",
@@ -610,6 +613,8 @@
         "true_interp", "typing_FStar.Map.contains", "typing_FStar.Map.upd",
         "typing_X64.Machine_s.int_to_nat64",
         "typing_X64.Vale.Decls.va_lemma_Adc64Wrap",
+        "typing_X64.Vale.Decls.va_lemma_Add64Wrap",
+        "typing_X64.Vale.Decls.va_lemma_Load64",
         "typing_X64.Vale.Decls.va_update_operand",
         "typing_X64.Vale.State_i.__proj__Mkstate__item__flags",
         "typing_X64.Vale.State_i.__proj__Mkstate__item__mem",
@@ -625,7 +630,7 @@
         "typing_tok_X64.Machine_s.Rdx@tok"
       ],
       0,
-      "4ea727cc070910abfd23907225fadcc8"
+      "6bf91a34e7db636a2b73a5e98d5cd91e"
     ],
     [
       "X64.Vale.StrongPost_i.lemma_weak_pre",
@@ -661,7 +666,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "f867ad0531505a86274f5004413d43e8"
+      "3cbdbf8a8737fc60d20100e640b784d3"
     ],
     [
       "X64.Vale.StrongPost_i.lemma_weakest_pre_norm'",
@@ -698,7 +703,7 @@
         "typing_X64.Vale.State_i.__proj__Mkstate__item__regs"
       ],
       0,
-      "3a825c09682ed11bffe8f41c87a005b5"
+      "54a8de396a71f57739e18355ccfa10bf"
     ]
   ]
 ]

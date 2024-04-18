@@ -401,6 +401,7 @@ let built_in_primitive_steps_list : list primitive_step =
   @ Primops.Docs.ops
   @ Primops.MachineInts.ops
   @ Primops.Eq.dec_eq_ops
+  @ Primops.Errors.Msg.ops
 
 let equality_ops_list : list primitive_step =
   Primops.Eq.prop_eq_ops

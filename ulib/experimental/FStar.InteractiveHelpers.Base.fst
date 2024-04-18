@@ -123,9 +123,11 @@ let acomp_to_string (c:comp) : Tac string =
     let args_str = List.Tot.fold_left (fun x y -> x ^ y) "" args_str in
     "C_Eff (" ^ flatten_name eff_name ^ ") (" ^ term_to_string result ^ ")" ^ args_str
 
-exception MetaAnalysis of string
+exception MetaAnalysis of error_message
+let mfail_doc m =
+  raise (MetaAnalysis m)
 let mfail str =
-  raise (MetaAnalysis str)
+  raise (MetaAnalysis (mkmsg str))
 
 (*** Debugging *)
 /// Some debugging facilities

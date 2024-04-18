@@ -19,7 +19,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "099955731f6ec05bdd9dd34c5020f313"
+      "12b3c1a649445d910a39609943fbf27c"
     ],
     [
       "Dec.f1",
@@ -39,7 +39,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "cc81aca144b1dcafae085186effbf257"
+      "97440792d61a8a119400da78fc720424"
     ],
     [
       "Dec.f1",
@@ -59,7 +59,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "cb17e381943551c86d07e3fc7fd16e2d"
+      "7bb0921d7e7a6df318b8e327faccb0e9"
     ],
     [
       "Dec.g",
@@ -123,7 +123,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "bd990f94707582d648862a904ca2f25d"
+      "7ebfbd450f29b7100f5a659cff1fe11c"
     ],
     [
       "Dec.old2",
@@ -143,7 +143,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "b206bf9a9c8823e49e2aa0b86e8f1f44"
+      "210017ddf5afcb8e00f4a5c411f076ee"
     ],
     [
       "Dec.simple",
@@ -161,7 +161,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "169ba9dc1ad8c525d16c46c50902f507"
+      "ce9f38e20b663bcfde4d7c3fd9ccc4f1"
     ],
     [
       "Dec.last",
@@ -181,7 +181,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "0ddc5e1bc5784de539e4fb7757880449"
+      "30b3cdb40fe0e5ae7c07e9c2fb93b057"
     ],
     [
       "Dec.test_inner_let_rec",
@@ -221,7 +221,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "6b32da5c2fd633a5c6f9942ae1c80c90"
+      "e1a8933fa08188758a2f2260e4547ba6"
     ],
     [
       "Dec.test_inner_let_rec_with_wf",
@@ -240,7 +240,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "2257bb2dc13aeda1a9199b485ab12e0d"
+      "bf2a2bd6f872260d98a0fd5be5c6a957"
     ]
   ]
 ]

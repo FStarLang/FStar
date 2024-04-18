@@ -215,7 +215,6 @@ let (uu___is_MLTY_Top : mlty -> Prims.bool) =
 let (uu___is_MLTY_Erased : mlty -> Prims.bool) =
   fun projectee ->
     match projectee with | MLTY_Erased -> true | uu___ -> false
-type mltyscheme = (mlidents * mlty)
 type mlconstant =
   | MLC_Unit 
   | MLC_Bool of Prims.bool 
@@ -448,12 +447,15 @@ and mlexpr = {
 and mllb =
   {
   mllb_name: mlident ;
-  mllb_tysc: mltyscheme FStar_Pervasives_Native.option ;
+  mllb_tysc: (ty_param Prims.list * mlty) FStar_Pervasives_Native.option ;
   mllb_add_unit: Prims.bool ;
   mllb_def: mlexpr ;
   mllb_attrs: mlexpr Prims.list ;
   mllb_meta: metadata ;
   print_typ: Prims.bool }
+and ty_param = {
+  ty_param_name: mlident ;
+  ty_param_attrs: mlexpr Prims.list }
 let (__proj__Mkmlbinder__item__mlbinder_name : mlbinder -> mlident) =
   fun projectee ->
     match projectee with
@@ -569,7 +571,7 @@ let (__proj__Mkmllb__item__mllb_name : mllb -> mlident) =
     | { mllb_name; mllb_tysc; mllb_add_unit; mllb_def; mllb_attrs; mllb_meta;
         print_typ;_} -> mllb_name
 let (__proj__Mkmllb__item__mllb_tysc :
-  mllb -> mltyscheme FStar_Pervasives_Native.option) =
+  mllb -> (ty_param Prims.list * mlty) FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with
     | { mllb_name; mllb_tysc; mllb_add_unit; mllb_def; mllb_attrs; mllb_meta;
@@ -599,9 +601,19 @@ let (__proj__Mkmllb__item__print_typ : mllb -> Prims.bool) =
     match projectee with
     | { mllb_name; mllb_tysc; mllb_add_unit; mllb_def; mllb_attrs; mllb_meta;
         print_typ;_} -> print_typ
+let (__proj__Mkty_param__item__ty_param_name : ty_param -> mlident) =
+  fun projectee ->
+    match projectee with
+    | { ty_param_name; ty_param_attrs;_} -> ty_param_name
+let (__proj__Mkty_param__item__ty_param_attrs :
+  ty_param -> mlexpr Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { ty_param_name; ty_param_attrs;_} -> ty_param_attrs
 type mlbranch = (mlpattern * mlexpr FStar_Pervasives_Native.option * mlexpr)
 type mlletbinding = (mlletflavor * mllb Prims.list)
 type mlattribute = mlexpr
+type mltyscheme = (ty_param Prims.list * mlty)
 type mltybody =
   | MLTD_Abbrev of mlty 
   | MLTD_Record of (mlsymbol * mlty) Prims.list 
@@ -628,7 +640,7 @@ type one_mltydecl =
   tydecl_assumed: Prims.bool ;
   tydecl_name: mlsymbol ;
   tydecl_ignored: mlsymbol FStar_Pervasives_Native.option ;
-  tydecl_parameters: mlidents ;
+  tydecl_parameters: ty_param Prims.list ;
   tydecl_meta: metadata ;
   tydecl_defn: mltybody FStar_Pervasives_Native.option }
 let (__proj__Mkone_mltydecl__item__tydecl_assumed :
@@ -649,7 +661,7 @@ let (__proj__Mkone_mltydecl__item__tydecl_ignored :
     | { tydecl_assumed; tydecl_name; tydecl_ignored; tydecl_parameters;
         tydecl_meta; tydecl_defn;_} -> tydecl_ignored
 let (__proj__Mkone_mltydecl__item__tydecl_parameters :
-  one_mltydecl -> mlidents) =
+  one_mltydecl -> ty_param Prims.list) =
   fun projectee ->
     match projectee with
     | { tydecl_assumed; tydecl_name; tydecl_ignored; tydecl_parameters;
@@ -763,6 +775,12 @@ let (apply_obj_repr : mlexpr -> mlty -> mlexpr) =
         if uu___ then MLE_Name ([], "box") else MLE_Name (["Obj"], "repr") in
       let obj_repr = with_ty (MLTY_Fun (t, E_PURE, MLTY_Top)) repr_name in
       with_ty_loc MLTY_Top (MLE_App (obj_repr, [x])) x.loc
+let (ty_param_names : ty_param Prims.list -> mlident Prims.list) =
+  fun tys ->
+    FStar_Compiler_List.map
+      (fun uu___ ->
+         match uu___ with
+         | { ty_param_name; ty_param_attrs = uu___1;_} -> ty_param_name) tys
 let (push_unit : mltyscheme -> mltyscheme) =
   fun ts ->
     let uu___ = ts in
@@ -811,10 +829,11 @@ let rec (mlty_to_string : mlty -> Prims.string) =
     | MLTY_Erased -> "MLTY_Erased"
 let (mltyscheme_to_string : mltyscheme -> Prims.string) =
   fun tsc ->
-    let uu___ = mlty_to_string (FStar_Pervasives_Native.snd tsc) in
-    FStar_Compiler_Util.format2 "(<MLTY_Scheme> [%s], %s)"
-      (FStar_Compiler_String.concat ", " (FStar_Pervasives_Native.fst tsc))
-      uu___
+    let uu___ =
+      let uu___1 = ty_param_names (FStar_Pervasives_Native.fst tsc) in
+      FStar_Compiler_String.concat ", " uu___1 in
+    let uu___1 = mlty_to_string (FStar_Pervasives_Native.snd tsc) in
+    FStar_Compiler_Util.format2 "(<MLTY_Scheme> [%s], %s)" uu___ uu___1
 let rec (mlexpr_to_string : mlexpr -> Prims.string) =
   fun e ->
     match e.expr with
@@ -1055,13 +1074,15 @@ let (mltybody_to_string : mltybody -> Prims.string) =
 let (one_mltydecl_to_string : one_mltydecl -> Prims.string) =
   fun d ->
     let uu___ =
+      let uu___1 = ty_param_names d.tydecl_parameters in
+      FStar_Compiler_String.concat "," uu___1 in
+    let uu___1 =
       match d.tydecl_defn with
       | FStar_Pervasives_Native.None -> "<none>"
       | FStar_Pervasives_Native.Some d1 -> mltybody_to_string d1 in
     FStar_Compiler_Util.format3
       "{tydecl_name = %s; tydecl_parameters = %s; tydecl_defn = %s}"
-      d.tydecl_name (FStar_Compiler_String.concat "," d.tydecl_parameters)
-      uu___
+      d.tydecl_name uu___ uu___1
 let (mlmodule1_to_string : mlmodule1 -> Prims.string) =
   fun m ->
     match m.mlmodule1_m with

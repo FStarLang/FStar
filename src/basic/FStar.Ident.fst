@@ -80,6 +80,8 @@ instance showable_ident = {
 instance showable_lident = {
   show = string_of_lid;
 }
+let pretty_ident = from_showable ident
+let pretty_lident = from_showable lident
 instance hasrange_ident = {
   pos = range_of_id;
   setPos = (fun rng id -> { id with idRange = rng });
@@ -87,4 +89,10 @@ instance hasrange_ident = {
 instance hasrange_lident = {
   pos = (fun lid -> Class.HasRange.pos lid.ident);
   setPos = (fun rng id -> { id with ident = setPos rng id.ident });
+}
+instance deq_ident = {
+  (=?) = ident_equals;
+}
+instance deq_lident = {
+  (=?) = lid_equals;
 }

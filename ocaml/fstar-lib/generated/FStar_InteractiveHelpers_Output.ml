@@ -1349,8 +1349,11 @@ let (printout_success :
       (unit, unit) FStar_Tactics_Effect.tac_repr)
   = fun ge -> fun a -> printout_result "ainfo" (ESuccess (ge, a))
 let (printout_failure :
-  Prims.string -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
-  fun err -> printout_result "ainfo" (EFailure err)
+  FStar_Errors_Msg.error_message ->
+    (unit, unit) FStar_Tactics_Effect.tac_repr)
+  =
+  fun err ->
+    printout_result "ainfo" (EFailure (FStar_Errors_Msg.rendermsg err))
 let (_debug_print_var :
   Prims.string ->
     FStar_Reflection_Types.term -> (unit, unit) FStar_Tactics_Effect.tac_repr)

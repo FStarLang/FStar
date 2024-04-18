@@ -154,7 +154,7 @@ let unmeta_lift (t:term) : term =
 (* kernel u = (k_u, n)
         where u is of the form S^n k_u
         i.e., k_u is the "kernel" and n is the offset *)
-let rec univ_kernel u = match u with
+let rec univ_kernel u = match Subst.compress_univ u with
     | U_unknown
     | U_name _
     | U_unif _
@@ -175,7 +175,7 @@ let constant_univ_as_nat u = snd (univ_kernel u)
 //e.g, [Z; S Z; S S Z; u1; S u1; u2; S u2; S S u2; ?v1; S ?v1; ?v2]
 let rec compare_univs (u1:universe) (u2:universe) : int =
   let rec compare_kernel (uk1:universe) (uk2:universe) : int =
-    match uk1, uk2 with
+    match Subst.compress_univ uk1, Subst.compress_univ uk2 with
     | U_bvar _, _
     | _, U_bvar _  -> failwith "Impossible: compare_kernel bvar"
 

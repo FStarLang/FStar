@@ -48,13 +48,13 @@ let goals () : Tac (list goal) = goals_of (get ())
 let smt_goals () : Tac (list goal) = smt_goals_of (get ())
 
 let fail (#a:Type) (m:string)
-  : TAC a (fun ps post -> post (Failed (TacticFailure m) ps))
-  = raise #a (TacticFailure m)
+  : TAC a (fun ps post -> post (Failed (TacticFailure (mkmsg m)) ps))
+  = raise #a (TacticFailure (mkmsg m))
 
 let fail_silently (#a:Type) (m:string)
-  : TAC a (fun _ post -> forall ps. post (Failed (TacticFailure m) ps))
+  : TAC a (fun _ post -> forall ps. post (Failed (TacticFailure (mkmsg m)) ps))
   = set_urgency 0;
-    raise #a (TacticFailure m)
+    raise #a (TacticFailure (mkmsg m))
 
 (** Return the current *goal*, not its type. (Ignores SMT goals) *)
 let _cur_goal () : Tac goal =

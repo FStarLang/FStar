@@ -6,7 +6,7 @@ Goal 1/1 (Instantiation of meta argument):
 >> Got issues: [
 * Error 228 at ResolveImplicitsErrorPos.fst(15,10-15,11):
   - Tactic failed
-  - "oops"
+  - oops
 
 >>]
 Verified module: ResolveImplicitsErrorPos

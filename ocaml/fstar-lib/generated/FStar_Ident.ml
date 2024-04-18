@@ -132,6 +132,10 @@ let (showable_ident : ident FStar_Class_Show.showable) =
   { FStar_Class_Show.show = string_of_id }
 let (showable_lident : lident FStar_Class_Show.showable) =
   { FStar_Class_Show.show = string_of_lid }
+let (pretty_ident : ident FStar_Class_PP.pretty) =
+  FStar_Class_PP.from_showable showable_ident
+let (pretty_lident : lident FStar_Class_PP.pretty) =
+  FStar_Class_PP.from_showable showable_lident
 let (hasrange_ident : ident FStar_Class_HasRange.hasRange) =
   {
     FStar_Class_HasRange.pos = range_of_id;
@@ -150,3 +154,7 @@ let (hasrange_lident : lident FStar_Class_HasRange.hasRange) =
            { ns = (id.ns); ident = uu___; nsstr = (id.nsstr); str = (id.str)
            })
   }
+let (deq_ident : ident FStar_Class_Deq.deq) =
+  { FStar_Class_Deq.op_Equals_Question = ident_equals }
+let (deq_lident : lident FStar_Class_Deq.deq) =
+  { FStar_Class_Deq.op_Equals_Question = lid_equals }

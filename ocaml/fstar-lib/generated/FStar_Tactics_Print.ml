@@ -2130,4 +2130,6 @@ and (const_to_ast_string :
                | FStar_Reflection_V2_Data.C_Reify -> "C_Reify"
                | FStar_Reflection_V2_Data.C_Reflect name ->
                    Prims.strcat "C_Reflect "
-                     (FStar_Reflection_V2_Builtins.implode_qn name)))) uu___
+                     (FStar_Reflection_V2_Builtins.implode_qn name)
+               | FStar_Reflection_V2_Data.C_Real r ->
+                   Prims.strcat "C_Real \"" (Prims.strcat r "\"")))) uu___

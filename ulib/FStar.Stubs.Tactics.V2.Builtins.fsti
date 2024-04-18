@@ -583,3 +583,10 @@ val resolve_name (g:env) (n:name)
 
 val log_issues (issues:list FStar.Issue.issue)
   : Tac unit
+
+(* Reentrancy: a metaprogram can spawn a sub-metaprogram to
+solve a goal, starting from a clean state, and obtain the witness
+that solves it. *)
+val call_subtac (g:env) (t : unit -> Tac unit) (u:universe)
+                (goal_ty : term{typing_token g goal_ty (E_Total, pack_ln (Tv_Type u))})
+  : Tac (ret_t (w:term{typing_token g w (E_Total, goal_ty)}))

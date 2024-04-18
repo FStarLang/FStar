@@ -62,6 +62,8 @@ let (fstar_tactics_goal : tac_constant) =
   fstar_tactics_const ["Types"; "goal"]
 let (fstar_tactics_TacticFailure : tac_constant) =
   fstar_tactics_data ["Common"; "TacticFailure"]
+let (fstar_tactics_SKIP : tac_constant) =
+  fstar_tactics_data ["Common"; "SKIP"]
 let (fstar_tactics_result : tac_constant) =
   fstar_tactics_const ["Result"; "__result"]
 let (fstar_tactics_Success : tac_constant) =
@@ -327,11 +329,23 @@ let (e_exn : Prims.exn FStar_Syntax_Embeddings_Base.embedding) =
     | FStar_Tactics_Common.TacticFailure s ->
         let uu___2 =
           let uu___3 =
-            let uu___4 = embed FStar_Syntax_Embeddings.e_string rng s in
+            let uu___4 =
+              embed
+                (FStar_Syntax_Embeddings.e_list
+                   FStar_Syntax_Embeddings.e_document) rng s in
             FStar_Syntax_Syntax.as_arg uu___4 in
           [uu___3] in
         FStar_Syntax_Syntax.mk_Tm_app fstar_tactics_TacticFailure.t uu___2
           rng
+    | FStar_Tactics_Common.SKIP ->
+        let uu___2 = fstar_tactics_SKIP.t in
+        {
+          FStar_Syntax_Syntax.n = (uu___2.FStar_Syntax_Syntax.n);
+          FStar_Syntax_Syntax.pos = rng;
+          FStar_Syntax_Syntax.vars = (uu___2.FStar_Syntax_Syntax.vars);
+          FStar_Syntax_Syntax.hash_code =
+            (uu___2.FStar_Syntax_Syntax.hash_code)
+        }
     | FStar_Tactics_Common.EExn t ->
         {
           FStar_Syntax_Syntax.n = (t.FStar_Syntax_Syntax.n);
@@ -340,12 +354,20 @@ let (e_exn : Prims.exn FStar_Syntax_Embeddings_Base.embedding) =
           FStar_Syntax_Syntax.hash_code = (t.FStar_Syntax_Syntax.hash_code)
         }
     | e1 ->
-        let s =
-          let uu___2 = FStar_Compiler_Util.message_of_exn e1 in
-          Prims.strcat "uncaught exception: " uu___2 in
+        let msg =
+          let uu___2 = FStar_Errors_Msg.text "Uncaught exception" in
+          let uu___3 =
+            let uu___4 =
+              let uu___5 = FStar_Compiler_Util.message_of_exn e1 in
+              FStar_Pprint.arbitrary_string uu___5 in
+            [uu___4] in
+          uu___2 :: uu___3 in
         let uu___2 =
           let uu___3 =
-            let uu___4 = embed FStar_Syntax_Embeddings.e_string rng s in
+            let uu___4 =
+              embed
+                (FStar_Syntax_Embeddings.e_list
+                   FStar_Syntax_Embeddings.e_document) rng msg in
             FStar_Syntax_Syntax.as_arg uu___4 in
           [uu___3] in
         FStar_Syntax_Syntax.mk_Tm_app fstar_tactics_TacticFailure.t uu___2
@@ -355,11 +377,17 @@ let (e_exn : Prims.exn FStar_Syntax_Embeddings_Base.embedding) =
     match uu___1 with
     | (FStar_Syntax_Syntax.Tm_fvar fv, (s, uu___2)::[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_TacticFailure.lid ->
-        let uu___3 = unembed' FStar_Syntax_Embeddings.e_string s in
+        let uu___3 =
+          unembed'
+            (FStar_Syntax_Embeddings.e_list
+               FStar_Syntax_Embeddings.e_document) s in
         FStar_Compiler_Util.bind_opt uu___3
           (fun s1 ->
              FStar_Pervasives_Native.Some
                (FStar_Tactics_Common.TacticFailure s1))
+    | (FStar_Syntax_Syntax.Tm_fvar fv, []) when
+        FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_SKIP.lid ->
+        FStar_Pervasives_Native.Some FStar_Tactics_Common.SKIP
     | uu___2 -> FStar_Pervasives_Native.Some (FStar_Tactics_Common.EExn t) in
   FStar_Syntax_Embeddings_Base.mk_emb_full embed_exn unembed_exn
     (fun uu___ -> FStar_Syntax_Syntax.t_exn) (fun uu___ -> "(exn)")
@@ -378,10 +406,12 @@ let (e_exn_nbe : Prims.exn FStar_TypeChecker_NBETerm.embedding) =
           let uu___1 =
             let uu___2 =
               FStar_TypeChecker_NBETerm.embed
-                FStar_TypeChecker_NBETerm.e_string cb s in
+                (FStar_TypeChecker_NBETerm.e_list
+                   FStar_TypeChecker_NBETerm.e_document) cb s in
             FStar_TypeChecker_NBETerm.as_arg uu___2 in
           [uu___1] in
         mkConstruct fstar_tactics_TacticFailure.fv [] uu___
+    | FStar_Tactics_Common.SKIP -> mkConstruct fstar_tactics_SKIP.fv [] []
     | uu___ ->
         let uu___1 =
           let uu___2 = FStar_Compiler_Util.message_of_exn e in
@@ -394,11 +424,15 @@ let (e_exn_nbe : Prims.exn FStar_TypeChecker_NBETerm.embedding) =
         FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_TacticFailure.lid ->
         let uu___3 =
           FStar_TypeChecker_NBETerm.unembed
-            FStar_TypeChecker_NBETerm.e_string cb s in
+            (FStar_TypeChecker_NBETerm.e_list
+               FStar_TypeChecker_NBETerm.e_document) cb s in
         FStar_Compiler_Util.bind_opt uu___3
           (fun s1 ->
              FStar_Pervasives_Native.Some
                (FStar_Tactics_Common.TacticFailure s1))
+    | FStar_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
+        FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_SKIP.lid ->
+        FStar_Pervasives_Native.Some FStar_Tactics_Common.SKIP
     | uu___1 -> FStar_Pervasives_Native.None in
   let fv_exn = FStar_Syntax_Syntax.fvconst FStar_Parser_Const.exn_lid in
   {

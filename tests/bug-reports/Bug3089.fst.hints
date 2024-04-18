@@ -14,7 +14,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "39561c7103bef7415ceee507994571f1"
+      "352a72b4b40daaae9f420fde98293a80"
     ],
     [
       "Bug3089.index",
@@ -58,7 +58,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "4dd29fcd3121789247f71a566611732d"
+      "343257aacb39afa835914141bfd3055c"
     ],
     [
       "Bug3089.index",
@@ -67,7 +67,7 @@
       1,
       [ "@query" ],
       0,
-      "da8aa58953a68e70dc2e09950343d8bb"
+      "ad7039f0197775ef7ec10c168df4f804"
     ],
     [
       "Bug3089.stepx",
@@ -110,7 +110,7 @@
         "typing_Bug3089.row", "unit_typing"
       ],
       0,
-      "700e5911f3bc01d6eb23d79e36357326"
+      "3ffd658fd16ac8999d56ece66ce5f5fb"
     ]
   ]
 ]

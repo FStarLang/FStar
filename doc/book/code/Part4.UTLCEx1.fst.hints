@@ -93,7 +93,7 @@
         "subterm_ordering_Part4.UTLCEx1.Lam"
       ],
       0,
-      "0c558806a594359eac0aa77ffecb6e0d"
+      "b32fbd5ba51791dbae7695b07cb147dd"
     ],
     [
       "Part4.UTLCEx1.closed'_weaken",
@@ -183,7 +183,7 @@
         "typing_Part4.UTLCEx1.uu___is_Var"
       ],
       0,
-      "e576c5044041c31ac48a4ee3d3443493"
+      "3af136269d711ea7024296d2cee55e05"
     ],
     [
       "Part4.UTLCEx1.interpret",
@@ -217,7 +217,7 @@
         "typing_Part4.UTLCEx1.closed"
       ],
       0,
-      "8d7f488d8f801e6f9a26567d398d493e"
+      "758c37bcf13a18c33b09abbbfcfb3868"
     ]
   ]
 ]

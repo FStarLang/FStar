@@ -16,7 +16,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "7efbc8fc68f579a7e15d080f742b031a"
+      "5754c6c89045dd4811ae1930b855a9d9"
     ],
     [
       "Queens.no_clash_minus",
@@ -33,7 +33,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "fed8f1c6173006eb62aafcef25eff93a"
+      "c78d03bca8737b889a93cb5344ad2f07"
     ],
     [
       "Queens.valid",
@@ -50,7 +50,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c7024b440e6aece7574deb4693cc146d"
+      "612652318917f6050015cc32b31a30df"
     ],
     [
       "Queens.pickn",
@@ -83,7 +83,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "404c2dabf4f09fbe8c44d5d26ca054da"
+      "7aed1bc5534fc3075339f14cc7c353b0"
     ],
     [
       "Queens._queens",
@@ -155,7 +155,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "33248ea5cdde95a2258da64a6c649455"
+      "3cbc99f6cdf23cb44d6799d19a44c499"
     ],
     [
       "Queens.queens",
@@ -175,9 +175,10 @@
         "data_typing_intro_Alg.Write@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "disc_equation_Alg.Other",
-        "eq2-interp", "equation_Alg.sublist", "equation_Prims.eqtype",
-        "equation_Prims.pos", "equation_Queens.board",
-        "equation_Queens.flipOp", "equation_Queens.quitOp",
+        "eq2-interp", "equation_Alg.ops", "equation_Alg.sublist",
+        "equation_Prims.eqtype", "equation_Prims.pos",
+        "equation_Queens.board", "equation_Queens.flipOp",
+        "equation_Queens.quitOp",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
         "equation_with_fuel_Queens.valid.fuel_instrumented", "false_interp",
@@ -196,7 +197,7 @@
         "true_interp", "typing_Queens.flipOp", "typing_Queens.quitOp"
       ],
       0,
-      "f23f991d735d8d159e84e5c2b7aee9ce"
+      "48d2848a2f315ca099de271b6d22ddb0"
     ]
   ]
 ]

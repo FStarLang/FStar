@@ -146,6 +146,10 @@ instance deq_fv : deq lident =
   deq_instance_from_cmp (fun x y -> Order.order_from_int (order_fv x y))
 instance deq_univ_name : deq univ_name =
   deq_instance_from_cmp (fun x y -> Order.order_from_int (order_univ_name x y))
+instance deq_delta_depth : deq delta_depth = {
+  (=?) = (fun x y -> x = y);
+}
+
 instance ord_bv : ord bv =
   ord_instance_from_cmp (fun x y -> Order.order_from_int (order_bv x y))
 instance ord_ident : ord ident =
@@ -222,6 +226,7 @@ let mk_Tac t =
 let default_sigmeta = {
     sigmeta_active=true;
     sigmeta_fact_db_ids=[];
+    sigmeta_spliced=false;
     sigmeta_admit=false;
     sigmeta_already_checked=false;
     sigmeta_extension_data=[]

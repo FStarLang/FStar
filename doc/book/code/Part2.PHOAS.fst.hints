@@ -167,7 +167,7 @@
         "typing_tok_Part2.PHOAS.Bool@tok"
       ],
       0,
-      "d276b3704d42d5e4e8850194ac11c770"
+      "14277bc5b426825af1de998f62fcdc06"
     ],
     [
       "Part2.PHOAS.denote_term0",
@@ -203,7 +203,7 @@
         "well_founded_ordering_on_codomain_Part2.PHOAS.Lam"
       ],
       0,
-      "89b320c49030ae21f0a3662dd22aa1b3"
+      "a608198cb33131aa0bbb347e8369ddfc"
     ]
   ]
 ]

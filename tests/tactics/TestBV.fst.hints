@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "246fb641689151e09ce6566e65a4d93d"
+      "00aaf9c7d7a2319a2f59c38cb3a7aa91"
     ],
     [
       "TestBV.test2",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "ec43a2f3bb6ac3a18382a365a0cc888c"
+      "52967d068d55f346d9c0156c264f5474"
     ],
     [
       "TestBV.test3",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "41327c184896ed3efc816f8dcbca2d75"
+      "59d84c489df19739d05dc1a5b77e9e23"
     ],
     [
       "TestBV.test4",
@@ -35,7 +35,7 @@
       1,
       [ "@query" ],
       0,
-      "057bfb4ddede4777461234f0ff519f40"
+      "cef868107af2dc08787db38d19622c69"
     ],
     [
       "TestBV.test5",
@@ -44,7 +44,7 @@
       1,
       [ "@query" ],
       0,
-      "9046c54f4d7fd3f80c704e5464bf3982"
+      "24e20356e759342fb3a15b63d8893842"
     ],
     [
       "TestBV.v64_eq",
@@ -53,7 +53,7 @@
       1,
       [ "@query", "lemma_FStar.UInt64.uv_inv" ],
       0,
-      "9776530594b4cf409ed778492fd0c638"
+      "03dd5bf88fafd71f7328bcb83c5852db"
     ],
     [
       "TestBV.unfold_logand64",
@@ -66,7 +66,7 @@
         "typing_FStar.UInt64.logand"
       ],
       0,
-      "a56540a64b8175c3ce07c2c3bf291c80"
+      "3781cc51f6c7d84194626b087bc2fcd7"
     ],
     [
       "TestBV.unfold_logor64",
@@ -79,7 +79,7 @@
         "typing_FStar.UInt64.logor"
       ],
       0,
-      "5fa99705add0318c9278ef32218b256f"
+      "09c6780460d03146f98a3a073b8a72c8"
     ],
     [
       "TestBV.unfold_logxor64",
@@ -92,7 +92,7 @@
         "typing_FStar.UInt64.logxor"
       ],
       0,
-      "909c92bd424c6b8cde9845f1710a2787"
+      "d3dca405bb04e366aafb37fd664d4cbc"
     ],
     [
       "TestBV.test6",
@@ -101,7 +101,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "eb840877f854da444d85538a50e82bb9"
+      "b389db7b4e77afb9cccbe0326126a19e"
     ],
     [
       "TestBV.test6",
@@ -110,7 +110,7 @@
       1,
       [ "@query" ],
       0,
-      "ea62b04ca20a1276340bcabde46b5a01"
+      "608780d643b9f3df556c7eab43407752"
     ],
     [
       "TestBV.test7",
@@ -119,7 +119,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "0d22e610ff8165e00650826a363ede22"
+      "7aeea8875c204e0df49c790703c4b04b"
     ],
     [
       "TestBV.test7",
@@ -128,7 +128,7 @@
       1,
       [ "@query" ],
       0,
-      "eb4832ddd33cb16cc8c1a0b18cbbe8a2"
+      "741aa7171c90c4fe77a6d2ace24f28d2"
     ]
   ]
 ]

@@ -47,7 +47,7 @@ let _calc_step (#t:Type) (#rs:list (relation t)) (#x #y:t)
   (pf:calc_chain rs x y)
   (j:squash (p y z))
   : GTot (calc_chain (p::rs) x z)
-  = CalcStep rs #p pf j //Need to annotate #p seemingly due to #1486
+  = CalcStep rs pf j
 
 let calc_step #a #x #y p z #rs pf j =
   bind_squash (pf ()) (fun pk -> return_squash (_calc_step p z pk (j ())))

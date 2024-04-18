@@ -155,6 +155,7 @@ let inspect_const (c:sconst) : vconst =
     | FStar.Const.Const_range r -> C_Range r
     | FStar.Const.Const_reify _ -> C_Reify
     | FStar.Const.Const_reflect l -> C_Reflect (Ident.path_of_lid l)
+    | FStar.Const.Const_real s -> C_Real s
     | _ -> failwith (BU.format1 "unknown constant: %s" (Print.const_to_string c))
 
 let inspect_universe u =
@@ -361,6 +362,7 @@ let pack_const (c:vconst) : sconst =
     | C_Range  r     -> C.Const_range r
     | C_Reify        -> C.Const_reify None
     | C_Reflect ns   -> C.Const_reflect (Ident.lid_of_path ns Range.dummyRange)
+    | C_Real r       -> C.Const_real r
 
 let rec pack_pat p : S.pat =
   let wrap v = {v=v;p=Range.dummyRange} in

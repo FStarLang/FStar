@@ -125,7 +125,7 @@ let module_name_of_file f =
     | Some longname ->
       longname
     | None ->
-      raise_err (Errors.Fatal_NotValidFStarFile, (Util.format1 "not a valid FStar file: %s" f))
+      raise_err (Errors.Fatal_NotValidFStarFile, (Util.format1 "Not a valid FStar file: '%s'" f))
 
 (* In public interface *)
 let lowercase_module_name f = String.lowercase (module_name_of_file f)
@@ -914,6 +914,8 @@ let collect_one
         | Const_range_of
         | Const_set_range_of ->
             add_to_parsing_data (P_dep (false, ("fstar.range" |> Ident.lid_of_str)))
+        | Const_real _ ->
+            add_to_parsing_data (P_dep (false, ("fstar.real" |> Ident.lid_of_str)))
         | _ ->
             ()
 

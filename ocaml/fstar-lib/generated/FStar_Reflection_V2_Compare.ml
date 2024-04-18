@@ -42,6 +42,10 @@ let (compare_const :
           -> FStar_Order.Eq
       | (FStar_Reflection_V2_Data.C_Reflect l1,
          FStar_Reflection_V2_Data.C_Reflect l2) -> compare_name l1 l2
+      | (FStar_Reflection_V2_Data.C_Real r1, FStar_Reflection_V2_Data.C_Real
+         r2) ->
+          FStar_Order.order_from_int
+            (FStar_Reflection_V2_Builtins.compare_string r1 r2)
       | (FStar_Reflection_V2_Data.C_Unit, uu___) -> FStar_Order.Lt
       | (uu___, FStar_Reflection_V2_Data.C_Unit) -> FStar_Order.Gt
       | (FStar_Reflection_V2_Data.C_Int uu___, uu___1) -> FStar_Order.Lt
@@ -58,6 +62,8 @@ let (compare_const :
       | (uu___, FStar_Reflection_V2_Data.C_Reify) -> FStar_Order.Gt
       | (FStar_Reflection_V2_Data.C_Reflect uu___, uu___1) -> FStar_Order.Lt
       | (uu___, FStar_Reflection_V2_Data.C_Reflect uu___1) -> FStar_Order.Gt
+      | (FStar_Reflection_V2_Data.C_Real uu___, uu___1) -> FStar_Order.Lt
+      | (uu___, FStar_Reflection_V2_Data.C_Real uu___1) -> FStar_Order.Gt
 let (compare_ident :
   FStar_Reflection_Types.ident ->
     FStar_Reflection_Types.ident -> FStar_Order.order)

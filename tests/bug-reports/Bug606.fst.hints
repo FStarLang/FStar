@@ -15,7 +15,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "b557078deceacc8ae74451efa50071de"
+      "22703f91b64505be7ea32ea0d9c3591c"
     ],
     [
       "Bug606.g",
@@ -31,7 +31,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "4375801f9c9b80a37061fbb8031a9ef8"
+      "dcb81aa8072d1801edc35db1f66bf83f"
     ],
     [
       "Bug606.f_eq_g",
@@ -58,7 +58,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "fec1a276bb4fe18b2f61e35cc436bb32"
+      "985036877dea6f558132243212ee7ea7"
     ],
     [
       "Bug606.h",
@@ -74,7 +74,7 @@
         "lemma_Bug606.f_eq_g"
       ],
       0,
-      "54d37186c8f34111bc5614e58d88edc5"
+      "7340c6d974ece45993f39785284211b2"
     ],
     [
       "Bug606.uint64_to_uint32",
@@ -83,7 +83,7 @@
       1,
       [ "@query" ],
       0,
-      "0ab3f0903b3fa667bad19582467155bd"
+      "d1cf76515a46f8ac4ca30bebb18c5e4c"
     ],
     [
       "Bug606.uint64_to_uint32",
@@ -101,7 +101,7 @@
         "typing_FStar.UInt64.v"
       ],
       0,
-      "c6c3ea474da750368e66314b09276bc3"
+      "fbb67f138fb03d495511c7c422fe3eb6"
     ],
     [
       "Bug606.uint64_to_uint32",
@@ -119,7 +119,7 @@
         "typing_FStar.UInt64.v"
       ],
       0,
-      "811526ba376dc02aa5b3e69b575939c5"
+      "520e0002c64f62ade54debc1d50e3c8d"
     ],
     [
       "Bug606.uint64_to_uint32'",
@@ -128,7 +128,7 @@
       1,
       [ "@query" ],
       0,
-      "e8766fadd3fb7514afdb5d678c1b6e4f"
+      "023480a2e3f7d2080dcf4b0b94855ee2"
     ],
     [
       "Bug606.uint64_to_uint32'",
@@ -142,7 +142,7 @@
         "refinement_interpretation_Tm_refine_3ef4a51931da44c64f612b2a96bb7412"
       ],
       0,
-      "09f767d9efbc1df5bfb895457baab4fa"
+      "4fd957ed5a7d36416fa9a47f5bcac0af"
     ],
     [
       "Bug606.uint64_to_uint32'",
@@ -156,7 +156,7 @@
         "refinement_interpretation_Tm_refine_3ef4a51931da44c64f612b2a96bb7412"
       ],
       0,
-      "f72f4a7aa5b280976904ad18bef1635d"
+      "9ea8141a4ee56c4afa983eb58a1c9602"
     ]
   ]
 ]

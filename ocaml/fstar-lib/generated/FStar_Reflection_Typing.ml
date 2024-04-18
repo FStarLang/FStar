@@ -1874,3 +1874,10 @@ let (mk_unchecked_let :
                                    FStar_Reflection_V2_Data.lb_typ = ty;
                                    FStar_Reflection_V2_Data.lb_def = tm
                                  }]))), FStar_Pervasives_Native.None)))
+let (typing_to_token :
+  FStar_Reflection_Types.env ->
+    FStar_Reflection_Types.term ->
+      comp_typ ->
+        (unit, unit, unit) typing ->
+          (unit, unit, unit) FStar_Tactics_Types.typing_token)
+  = fun g -> fun e -> fun c -> fun uu___ -> Prims.magic ()

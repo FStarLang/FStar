@@ -2729,7 +2729,14 @@ let (translate_type_decl' :
           let name2 = ((env1.module_name), name1) in
           let env2 =
             FStar_Compiler_List.fold_left
-              (fun env3 -> fun name3 -> extend_t env3 name3) env1 args in
+              (fun env3 ->
+                 fun uu___1 ->
+                   match uu___1 with
+                   | {
+                       FStar_Extraction_ML_Syntax.ty_param_name =
+                         ty_param_name;
+                       FStar_Extraction_ML_Syntax.ty_param_attrs = uu___2;_}
+                       -> extend_t env3 ty_param_name) env1 args in
           if
             assumed &&
               (FStar_Compiler_List.mem FStar_Extraction_ML_Syntax.CAbstract
@@ -2763,7 +2770,14 @@ let (translate_type_decl' :
           let name2 = ((env1.module_name), name1) in
           let env2 =
             FStar_Compiler_List.fold_left
-              (fun env3 -> fun name3 -> extend_t env3 name3) env1 args in
+              (fun env3 ->
+                 fun uu___2 ->
+                   match uu___2 with
+                   | {
+                       FStar_Extraction_ML_Syntax.ty_param_name =
+                         ty_param_name;
+                       FStar_Extraction_ML_Syntax.ty_param_attrs = uu___3;_}
+                       -> extend_t env3 ty_param_name) env1 args in
           let uu___2 =
             let uu___3 =
               let uu___4 = translate_flags flags in
@@ -2790,7 +2804,9 @@ let (translate_type_decl' :
           ->
           let name2 = ((env1.module_name), name1) in
           let flags1 = translate_flags flags in
-          let env2 = FStar_Compiler_List.fold_left extend_t env1 args in
+          let env2 =
+            let uu___2 = FStar_Extraction_ML_Syntax.ty_param_names args in
+            FStar_Compiler_List.fold_left extend_t env1 uu___2 in
           let uu___2 =
             let uu___3 =
               let uu___4 =
@@ -2903,8 +2919,9 @@ let (translate_let' :
                  then extend env1 name1
                  else env1 in
                let env3 =
+                 let uu___6 = FStar_Extraction_ML_Syntax.ty_param_names tvars in
                  FStar_Compiler_List.fold_left
-                   (fun env4 -> fun name2 -> extend_t env4 name2) env2 tvars in
+                   (fun env4 -> fun name2 -> extend_t env4 name2) env2 uu___6 in
                let rec find_return_type eff i uu___6 =
                  match uu___6 with
                  | FStar_Extraction_ML_Syntax.MLTY_Fun (uu___7, eff1, t) when
@@ -2987,8 +3004,9 @@ let (translate_let' :
             else
               (let meta1 = translate_flags meta in
                let env2 =
+                 let uu___4 = FStar_Extraction_ML_Syntax.ty_param_names tvars in
                  FStar_Compiler_List.fold_left
-                   (fun env3 -> fun name2 -> extend_t env3 name2) env1 tvars in
+                   (fun env3 -> fun name2 -> extend_t env3 name2) env1 uu___4 in
                let t1 = translate_type env2 t in
                let name2 = ((env2.module_name), name1) in
                try
@@ -3034,12 +3052,15 @@ let (translate_let' :
               FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
                 uu___6);
              (match ts with
-              | FStar_Pervasives_Native.Some (idents, t) ->
+              | FStar_Pervasives_Native.Some (tps, t) ->
                   let uu___7 =
+                    let uu___8 =
+                      FStar_Extraction_ML_Syntax.ty_param_names tps in
+                    FStar_Compiler_String.concat ", " uu___8 in
+                  let uu___8 =
                     FStar_Extraction_ML_Code.string_of_mlty ([], "") t in
                   FStar_Compiler_Util.print2
-                    "Type scheme is: forall %s. %s\n"
-                    (FStar_Compiler_String.concat ", " idents) uu___7
+                    "Type scheme is: forall %s. %s\n" uu___7 uu___8
               | FStar_Pervasives_Native.None -> ());
              FStar_Pervasives_Native.None)
 type translate_let_t =
@@ -3135,7 +3156,7 @@ let (translate : FStar_Extraction_ML_Syntax.mllib -> file Prims.list) =
                      "Unable to translate module: %s because:\n  %s\n" m_name
                      uu___3);
                   FStar_Pervasives_Native.None)) modules
-let (uu___1700 : unit) =
+let (uu___1702 : unit) =
   register_post_translate_type_without_decay translate_type_without_decay';
   register_post_translate_type translate_type';
   register_post_translate_type_decl translate_type_decl';

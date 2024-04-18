@@ -108,3 +108,4 @@ and const_to_ast_string (c:vconst) : Tac string =
   | C_Range _ -> "C_Range _"
   | C_Reify -> "C_Reify"
   | C_Reflect name -> "C_Reflect " ^ implode_qn name
+  | C_Real r -> "C_Real \"" ^ r ^ "\""

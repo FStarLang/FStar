@@ -54,8 +54,21 @@ val guard_to_string           : env -> guard_t -> string
 val simplify_guard            : env -> guard_t -> guard_t
 val solve_deferred_constraints: env -> guard_t -> guard_t
 val solve_non_tactic_deferred_constraints: maybe_defer_flex_flex:bool -> env -> guard_t -> guard_t
-val discharge_guard_no_smt    : env -> guard_t -> guard_t
+
+
+(* These functions attempt to discharge the logical part of a guard
+by simplifying it and calling the SMT if needed (except the _no_smt one,
+which will fail raising an error if SMT is needed). The first may *log*
+an error if SMT fails to prove the guard.
+
+Also, before that, they will try to solve all deferred constraints
+in the guard, raising an error if one cannot be solved just like
+solve_deferred_constraints does.
+
+In any case, if these functions return, they return a guard with guard_f = Trivial. *)
 val discharge_guard           : env -> guard_t -> guard_t
+val discharge_guard_no_smt    : env -> guard_t -> guard_t
+
 val force_trivial_guard       : env -> guard_t -> unit
 val resolve_implicits         : env -> guard_t -> guard_t
 val resolve_generalization_implicits : env -> guard_t -> guard_t

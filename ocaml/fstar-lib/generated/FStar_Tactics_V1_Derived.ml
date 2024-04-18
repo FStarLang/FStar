@@ -65,7 +65,9 @@ let (smt_goals :
          FStar_Tactics_Effect.lift_div_tac
            (fun uu___2 -> FStar_Tactics_Types.smt_goals_of uu___1))
 let fail : 'a . Prims.string -> ('a, Obj.t) FStar_Tactics_Effect.tac_repr =
-  fun m -> FStar_Tactics_Effect.raise (FStar_Tactics_Common.TacticFailure m)
+  fun m ->
+    FStar_Tactics_Effect.raise
+      (FStar_Tactics_Common.TacticFailure (FStar_Errors_Msg.mkmsg m))
 let fail_silently :
   'a . Prims.string -> ('a, unit) FStar_Tactics_Effect.tac_repr =
   fun m ->
@@ -79,10 +81,11 @@ let fail_silently :
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.V1.Derived.fst"
                (Prims.of_int (57)) (Prims.of_int (4)) (Prims.of_int (57))
-               (Prims.of_int (30)))))
+               (Prims.of_int (38)))))
       (Obj.magic (FStar_Tactics_V1_Builtins.set_urgency Prims.int_zero))
       (fun uu___ ->
-         FStar_Tactics_Effect.raise (FStar_Tactics_Common.TacticFailure m))
+         FStar_Tactics_Effect.raise
+           (FStar_Tactics_Common.TacticFailure (FStar_Errors_Msg.mkmsg m)))
 let (_cur_goal :
   unit -> (FStar_Tactics_Types.goal, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
