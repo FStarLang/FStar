@@ -118,6 +118,7 @@ let (inspect_const :
     | FStar_Const.Const_reflect l ->
         let uu___ = FStar_Ident.path_of_lid l in
         FStar_Reflection_V2_Data.C_Reflect uu___
+    | FStar_Const.Const_real s -> FStar_Reflection_V2_Data.C_Real s
     | uu___ ->
         let uu___1 =
           let uu___2 = FStar_Syntax_Print.const_to_string c in
@@ -443,6 +444,7 @@ let (pack_const :
         let uu___ =
           FStar_Ident.lid_of_path ns FStar_Compiler_Range_Type.dummyRange in
         FStar_Const.Const_reflect uu___
+    | FStar_Reflection_V2_Data.C_Real r -> FStar_Const.Const_real r
 let rec (pack_pat :
   FStar_Reflection_V2_Data.pattern -> FStar_Syntax_Syntax.pat) =
   fun p ->

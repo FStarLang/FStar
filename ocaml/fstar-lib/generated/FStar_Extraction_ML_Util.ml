@@ -18,9 +18,6 @@ let (mk_range_mle : FStar_Extraction_ML_Syntax.mlexpr) =
 let (dummy_range_mle : FStar_Extraction_ML_Syntax.mlexpr) =
   FStar_Extraction_ML_Syntax.with_ty FStar_Extraction_ML_Syntax.MLTY_Top
     (FStar_Extraction_ML_Syntax.MLE_Name (["FStar"; "Range"], "dummyRange"))
-let (fstar_real_of_string : FStar_Extraction_ML_Syntax.mlexpr) =
-  FStar_Extraction_ML_Syntax.with_ty FStar_Extraction_ML_Syntax.MLTY_Top
-    (FStar_Extraction_ML_Syntax.MLE_Name (["FStar"; "Real"], "of_string"))
 let (mlconst_of_const' :
   FStar_Const.sconst -> FStar_Extraction_ML_Syntax.mlconstant) =
   fun sctt ->
@@ -130,13 +127,6 @@ let (mlexpr_of_const :
     fun c ->
       match c with
       | FStar_Const.Const_range r -> mlexpr_of_range r
-      | FStar_Const.Const_real s ->
-          let str = mlconst_of_const p (FStar_Const.Const_string (s, p)) in
-          FStar_Extraction_ML_Syntax.MLE_App
-            (fstar_real_of_string,
-              [FStar_Extraction_ML_Syntax.with_ty
-                 FStar_Extraction_ML_Syntax.ml_string_ty
-                 (FStar_Extraction_ML_Syntax.MLE_Const str)])
       | uu___ ->
           let uu___1 = mlconst_of_const p c in
           FStar_Extraction_ML_Syntax.MLE_Const uu___1
