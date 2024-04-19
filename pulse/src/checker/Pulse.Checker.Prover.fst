@@ -171,7 +171,7 @@ let rec prover
                 text "Cannot prove:" ^^
                     indent (pp q);
                 text "In the context:" ^^
-                    indent (pp (list_as_vprop pst.remaining_ctxt))
+                    indent (P.term_to_doc (list_as_vprop pst.remaining_ctxt))
               ] @ (if Pulse.Config.debug_flag "initial_solver_state" then [
                     text "The prover was started with goal:" ^^
                         indent (pp preamble.goals);
