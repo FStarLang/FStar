@@ -22,13 +22,12 @@ module L = Pulse.Lib.SpinLock
 module GR = Pulse.Lib.GhostReference
 module R = Pulse.Lib.Reference
 
-#push-options "--print_implicits"
 ```pulse
 fn increment (#p:perm)
              (x:ref nat)
              (l:L.lock)
-requires (L.lock_alive l #p (exists* v. pts_to x #one_half v)) ** pts_to x #one_half 'i
-ensures (L.lock_alive l #p (exists* v. pts_to x #one_half v)) ** pts_to x #one_half ('i + 1)
+requires (L.lock_alive l #p (exists* v. pts_to x #0.5R v)) ** pts_to x #0.5R 'i
+ensures (L.lock_alive l #p (exists* v. pts_to x #0.5R v)) ** pts_to x #0.5R ('i + 1)
  {
     let v = !x;
     L.acquire l;
@@ -36,9 +35,9 @@ ensures (L.lock_alive l #p (exists* v. pts_to x #one_half v)) ** pts_to x #one_h
     with p _v. rewrite (pts_to x #p _v) as (pts_to x _v);
     x := (v + 1);
     R.share x;
-    with p _v. rewrite (pts_to x #p _v) as (pts_to x #one_half _v);
+    with p _v. rewrite (pts_to x #p _v) as (pts_to x #0.5R _v);
     L.release l;
-    with p _v. rewrite (pts_to x #p _v) as (pts_to x #one_half _v);
+    with p _v. rewrite (pts_to x #p _v) as (pts_to x #0.5R _v);
 }
 ```
 
@@ -50,10 +49,10 @@ fn increment_f (x: ref nat)
                (l:L.lock)
                (f: (v:nat -> stt_ghost unit
                         emp_inames
-                        (pred v ** qpred v ** pts_to x #one_half (v + 1))
-                        (fun _ -> pred (v + 1) ** qpred (v + 1) ** pts_to x #one_half (v + 1))))
-requires L.lock_alive l #p (exists* v. pts_to x #one_half v ** pred v) ** pts_to x #one_half 'i ** qpred 'i
-ensures L.lock_alive l #p (exists* v. pts_to x #one_half v ** pred v) ** pts_to x #one_half ('i + 1) ** qpred ('i + 1)
+                        (pred v ** qpred v ** pts_to x #0.5R (v + 1))
+                        (fun _ -> pred (v + 1) ** qpred (v + 1) ** pts_to x #0.5R (v + 1))))
+requires L.lock_alive l #p (exists* v. pts_to x #0.5R v ** pred v) ** pts_to x #0.5R 'i ** qpred 'i
+ensures L.lock_alive l #p (exists* v. pts_to x #0.5R v ** pred v) ** pts_to x #0.5R ('i + 1) ** qpred ('i + 1)
  {
     let vx = !x;
     rewrite (qpred 'i) as (qpred vx);
@@ -62,11 +61,11 @@ ensures L.lock_alive l #p (exists* v. pts_to x #one_half v ** pred v) ** pts_to 
     with p v. rewrite (pts_to x #p v) as (pts_to x v);
     x := (vx + 1);
     R.share x;
-    with p _v. rewrite (pts_to x #p _v) as (pts_to x #one_half _v);
+    with p _v. rewrite (pts_to x #p _v) as (pts_to x #0.5R _v);
     with _v. rewrite (pred _v) as (pred vx);
     f vx;
     L.release l;
-    with p _v. rewrite (pts_to x #p _v) as (pts_to x #one_half _v);
+    with p _v. rewrite (pts_to x #p _v) as (pts_to x #0.5R _v);
     rewrite (qpred (vx + 1)) as (qpred ('i + 1));
 }
 ```
@@ -107,8 +106,8 @@ ensures pts_to x ('i + 2)
       exists* (v:int).
         pts_to x v **
         (exists* (vl vr:int).
-          GR.pts_to left #(half_perm full_perm) vl **
-          GR.pts_to right #(half_perm full_perm) vr **
+          GR.pts_to left #0.5R vl **
+          GR.pts_to right #0.5R vr **
           pure (v == 'i + vl + vr))
     );
     ghost
@@ -118,17 +117,17 @@ ensures pts_to x ('i + 2)
         (v vq:int)
       requires 
         (exists* (vl vr:int).
-            GR.pts_to left #(half_perm full_perm) vl **
-            GR.pts_to right #(half_perm full_perm) vr **
+            GR.pts_to left #0.5R vl **
+            GR.pts_to right #0.5R vr **
             pure (v == 'i + vl + vr)) **
-        GR.pts_to lr #(half_perm full_perm) vq **
+        GR.pts_to lr #0.5R vq **
         pts_to x (v + 1)
       ensures
         (exists* (vl vr:int).
-            GR.pts_to left #(half_perm full_perm) vl **
-            GR.pts_to right #(half_perm full_perm) vr **
+            GR.pts_to left #0.5R vl **
+            GR.pts_to right #0.5R vr **
             pure (v + 1 == 'i + vl + vr)) **
-        GR.pts_to lr #(half_perm full_perm) (vq + 1) **
+        GR.pts_to lr #0.5R (vq + 1) **
         pts_to x (v + 1)
     { 
       if b
@@ -151,17 +150,17 @@ ensures pts_to x ('i + 2)
       }
     };
 
-    with pred. assert (L.lock_alive lock #full_perm (exists* v. pts_to x v ** pred v));
-    L.share lock;
+    with pred. assert (L.lock_alive lock #1.0R (exists* v. pts_to x v ** pred v));
+    L.share2 lock;
     parallel
-    requires GR.pts_to left #(half_perm full_perm) 0 **
-             L.lock_alive lock #(half_perm full_perm) (exists* v. pts_to x v ** pred v)
-         and GR.pts_to right #(half_perm full_perm) 0 **
-             L.lock_alive lock #(half_perm full_perm) (exists* v. pts_to x v ** pred v)
-    ensures  GR.pts_to left #(half_perm full_perm) 1 **
-             L.lock_alive lock #(half_perm full_perm) (exists* v. pts_to x v ** pred v)
-         and GR.pts_to right #(half_perm full_perm) 1 **
-             L.lock_alive lock #(half_perm full_perm) (exists* v. pts_to x v ** pred v)
+    requires GR.pts_to left #0.5R 0 **
+             L.lock_alive lock #0.5R (exists* v. pts_to x v ** pred v)
+         and GR.pts_to right #0.5R 0 **
+             L.lock_alive lock #0.5R (exists* v. pts_to x v ** pred v)
+    ensures  GR.pts_to left #0.5R 1 **
+             L.lock_alive lock #0.5R (exists* v. pts_to x v ** pred v)
+         and GR.pts_to right #0.5R 1 **
+             L.lock_alive lock #0.5R (exists* v. pts_to x v ** pred v)
     { increment_f2 x lock (step left true) }
     { increment_f2 x lock (step right false) };
 
@@ -401,8 +400,8 @@ ensures pts_to x ('i + 2)
       exists* (v:int).
           pts_to x v **
           (exists* (vl vr:int).
-            GR.pts_to left #(half_perm full_perm) vl **
-            GR.pts_to right #(half_perm full_perm) vr **
+            GR.pts_to left #0.5R vl **
+            GR.pts_to right #0.5R vr **
             pure (v == 'i + vl + vr))
 
     );
@@ -413,17 +412,17 @@ ensures pts_to x ('i + 2)
         (v vq:int)
       requires 
         (exists* (vl vr:int).
-            GR.pts_to left #(half_perm full_perm) vl **
-            GR.pts_to right #(half_perm full_perm) vr **
+            GR.pts_to left #0.5R vl **
+            GR.pts_to right #0.5R vr **
             pure (v == 'i + vl + vr)) **
-        GR.pts_to lr #(half_perm full_perm) vq **
+        GR.pts_to lr #0.5R vq **
         pts_to x (v + 1)
       ensures
         (exists* (vl vr:int).
-            GR.pts_to left #(half_perm full_perm) vl **
-            GR.pts_to right #(half_perm full_perm) vr **
+            GR.pts_to left #0.5R vl **
+            GR.pts_to right #0.5R vr **
             pure (v + 1 == 'i + vl + vr)) **
-        GR.pts_to lr #(half_perm full_perm) (vq + 1) **
+        GR.pts_to lr #0.5R (vq + 1) **
         pts_to x (v + 1)
     { 
       if b
@@ -446,22 +445,22 @@ ensures pts_to x ('i + 2)
       }
     };
 
-    C.share c;
+    C.share2 c;
     with pred. assert (inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
     dup_inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v));
 
     parallel
-    requires GR.pts_to left #(half_perm full_perm) 0 **
-             C.active (half_perm full_perm) c **
+    requires GR.pts_to left #0.5R 0 **
+             C.active 0.5R c **
              inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
-         and GR.pts_to right #(half_perm full_perm) 0 **
-             C.active (half_perm full_perm) c **
+         and GR.pts_to right #0.5R 0 **
+             C.active 0.5R c **
              inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
-    ensures  GR.pts_to left #(half_perm full_perm) 1 **
-             C.active (half_perm full_perm) c **
+    ensures  GR.pts_to left #0.5R 1 **
+             C.active 0.5R c **
              inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
-         and GR.pts_to right #(half_perm full_perm) 1 **
-             C.active (half_perm full_perm) c **
+         and GR.pts_to right #0.5R 1 **
+             C.active 0.5R c **
              inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
     { atomic_increment_f6 x c (step left true) }
     { atomic_increment_f6 x c (step right false) };

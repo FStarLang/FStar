@@ -7,7 +7,7 @@ open FStar.Tactics.V2
 early in the typechecking process, or we make the pulse checker normalize
 (and unfold) the contexts. *)
 
-let full_default () : Tac unit = exact (`full_perm)
+let full_default () : Tac unit = exact (`1.0R)
 
 class pointer (r v : Type) = {
   pts_to : r -> (#[full_default()] f : perm) -> v -> vprop;

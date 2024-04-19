@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module MSort.Base
 
 open FStar.Ghost
@@ -80,13 +96,13 @@ merge_impl
   let sw1 = A.alloc 0 (mid `SZ.sub` lo);
   let sw2 = A.alloc 0 (hi `SZ.sub` mid);
 
-  pts_to_range_intro sw1 full_perm (S.create (SZ.v l1) 0);
+  pts_to_range_intro sw1 1.0R (S.create (SZ.v l1) 0);
   copy_array a sw1 lo 0sz (mid `SZ.sub` lo);
-  pts_to_range_elim sw1 full_perm s1;
+  pts_to_range_elim sw1 1.0R s1;
 
-  pts_to_range_intro sw2 full_perm (S.create (SZ.v l2) 0);
+  pts_to_range_intro sw2 1.0R (S.create (SZ.v l2) 0);
   copy_array a sw2 mid 0sz (hi `SZ.sub` mid);
-  pts_to_range_elim sw2 full_perm s2;
+  pts_to_range_elim sw2 1.0R s2;
 
   let mut i = 0sz;
   let mut j = 0sz;

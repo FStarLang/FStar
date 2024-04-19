@@ -1,3 +1,19 @@
+(*
+   Copyright 2024 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Lib.PCM.Fraction
 open FStar.PCM
 open FStar.Real
@@ -10,12 +26,12 @@ let composable #a : symrel (fractional a) =
     match f0, f1 with
     | None, _
     | _, None -> True
-    | Some (x0, p0), Some (x1, p1) -> x0==x1 /\ (sum_perm p0 p1).v <=. one
+    | Some (x0, p0), Some (x1, p1) -> x0==x1 /\ p0 +. p1 <=. one
 let compose #a (f0:fractional a) (f1:fractional a{composable f0 f1}) : fractional a =
   match f0, f1 with
   | None, f
   | f, None -> f
-  | Some (x0, p0), Some (_, p1) -> Some (x0, sum_perm p0 p1)
+  | Some (x0, p0), Some (_, p1) -> Some (x0, p0 +. p1)
 
 let pcm_frac #a : pcm (fractional a) = {
   p = {
@@ -34,18 +50,18 @@ let mk_frame_preserving_upd
   (#a: Type)
   (v0: Ghost.erased a)
   (v1: a)
-: Tot (frame_preserving_upd pcm_frac (Some (Ghost.reveal v0, full_perm)) (Some (v1, full_perm)))
-= fun _ -> Some (v1, full_perm)
+: Tot (frame_preserving_upd pcm_frac (Some (Ghost.reveal v0, 1.0R)) (Some (v1, 1.0R)))
+= fun _ -> Some (v1, 1.0R)
 
 let mk_frame_preserving_upd_none
   (#a: Type)
   (v0: Ghost.erased a)
-: Tot (frame_preserving_upd pcm_frac (Some (Ghost.reveal v0, full_perm)) None)
+: Tot (frame_preserving_upd pcm_frac (Some (Ghost.reveal v0, 1.0R)) None)
 = fun _ -> None
 
-let perm_ok p : prop = (p.v <=. one == true)
+let perm_ok p : prop = p <=. 1.0R
 
 let full_values_compatible (#a:Type u#a) (x:a)
-: Lemma (compatible pcm_frac (Some (x, full_perm)) (Some (x, full_perm)))
-= let v = Some (x, full_perm) in
+: Lemma (compatible pcm_frac (Some (x, 1.0R)) (Some (x, 1.0R)))
+= let v = Some (x, 1.0R) in
   assert (FStar.PCM.composable pcm_frac v None)

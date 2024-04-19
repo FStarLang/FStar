@@ -27,36 +27,36 @@ assume val claimed : GR.ref bool
 
 let inv_p : v:vprop { is_big v } =
   exists* (v_done:bool) (v_res:option int) (v_claimed:bool).
-       pts_to done #one_half v_done
-    ** pts_to res #one_half v_res
-    ** GR.pts_to claimed #one_half v_claimed
-    ** (if not v_claimed then pts_to res #one_half v_res else emp)
+       pts_to done #0.5R v_done
+    ** pts_to res #0.5R v_res
+    ** GR.pts_to claimed #0.5R v_claimed
+    ** (if not v_claimed then pts_to res #0.5R v_res else emp)
     ** pure (v_claimed ==> v_done)
     ** pure (v_done ==> Some? v_res)
 
 let goal : vprop =
-  exists* v_res. pts_to res #one_half v_res ** pure (Some? v_res)
+  exists* v_res. pts_to res #0.5R v_res ** pure (Some? v_res)
 
 
 ```pulse
 atomic
 fn proof
    (i : iref) (_:unit)
-   requires inv i inv_p ** pts_to done #one_half true ** GR.pts_to claimed #one_half false
-   ensures inv i inv_p ** pts_to done #one_half true ** goal
+   requires inv i inv_p ** pts_to done #0.5R true ** GR.pts_to claimed #0.5R false
+   ensures inv i inv_p ** pts_to done #0.5R true ** goal
    opens add_inv emp_inames i
 {
   with_invariants i {
     unfold inv_p;
     with v_done v_res v_claimed.
-      assert (pts_to done #one_half v_done
-              ** pts_to res #one_half v_res
-              ** GR.pts_to claimed #one_half v_claimed
-              ** (if not v_claimed then pts_to res #one_half v_res else emp)
+      assert (pts_to done #0.5R v_done
+              ** pts_to res #0.5R v_res
+              ** GR.pts_to claimed #0.5R v_claimed
+              ** (if not v_claimed then pts_to res #0.5R v_res else emp)
               ** pure (v_claimed ==> v_done)
               ** pure (v_done ==> Some? v_res));
 
-    pts_to_injective_eq #_ #one_half #one_half #v_done #true done;
+    pts_to_injective_eq #_ #0.5R #0.5R #v_done #true done;
     assert (pure (v_done == true));
     
     GR.gather2 #bool
@@ -65,8 +65,8 @@ fn proof
     assert (pure (v_claimed == false));
 
     // NB: this step is very sensitive to ordering
-    rewrite ((if not v_claimed then pts_to res #one_half v_res else emp) ** emp)
-         as (pts_to res #one_half v_res ** (if not true then pts_to res #one_half v_res else emp));
+    rewrite ((if not v_claimed then pts_to res #0.5R v_res else emp) ** emp)
+         as (pts_to res #0.5R v_res ** (if not true then pts_to res #0.5R v_res else emp));
 
     GR.op_Colon_Equals claimed true;
     
@@ -76,7 +76,7 @@ fn proof
     
     fold inv_p;
     
-    drop_ (GR.pts_to claimed #one_half true);
+    drop_ (GR.pts_to claimed #0.5R true);
 
     ()
   }
@@ -88,8 +88,8 @@ let is (i:iref) : invlist = [(inv_p <: vprop), i]
 let cheat_proof (i:iref)
   : (_:unit) ->
       stt_ghost unit (add_inv emp_inames i)
-        (requires pts_to done #one_half true ** (inv i inv_p ** GR.pts_to claimed #one_half false))
-        (ensures fun _ -> pts_to done #one_half true ** goal)
+        (requires pts_to done #0.5R true ** (inv i inv_p ** GR.pts_to claimed #0.5R false))
+        (ensures fun _ -> pts_to done #0.5R true ** goal)
   = admit() //proof is atomic, not ghost
 
 #set-options "--debug Promises.Examples3 --debug_level SMTQuery"
@@ -98,8 +98,8 @@ let cheat_proof (i:iref)
 fn setup (_:unit)
    requires pts_to done v_done ** pts_to res v_res ** GR.pts_to claimed v_claimed
    returns i:iref
-   ensures pts_to done #one_half false **
-           pledge (add_inv emp_inames i) (pts_to done #one_half true) goal
+   ensures pts_to done #0.5R false **
+           pledge (add_inv emp_inames i) (pts_to done #0.5R true) goal
 {
   done := false;
   res := None;
@@ -109,8 +109,8 @@ fn setup (_:unit)
   share2 #_ res;
   GR.share2 #_ claimed;
   
-  rewrite (pts_to res #one_half None)
-       as (if not false then  pts_to res #one_half None else emp);
+  rewrite (pts_to res #0.5R None)
+       as (if not false then  pts_to res #0.5R None else emp);
        
   fold inv_p;
   
@@ -118,9 +118,9 @@ fn setup (_:unit)
 
   make_pledge
     (add_inv emp_inames i)
-    (pts_to done #one_half true) //f
+    (pts_to done #0.5R true) //f
     goal  //v
-    (inv i inv_p ** GR.pts_to claimed #one_half false)  //extra
+    (inv i inv_p ** GR.pts_to claimed #0.5R false)  //extra
     (cheat_proof i);
 
   i
@@ -130,16 +130,16 @@ fn setup (_:unit)
 [@@expect_failure] // block is not atomic/ghost
 ```pulse
 fn worker (i : inv inv_p) (_:unit)
-   requires pts_to done #one_half false
-   ensures pts_to done #one_half true
+   requires pts_to done #0.5R false
+   ensures pts_to done #0.5R true
 {
   with_invariants i {
     unfold inv_p;
     with v_done v_res v_claimed.
-      assert (pts_to done #one_half v_done
-              ** pts_to res #one_half v_res
-              ** GR.pts_to claimed #one_half v_claimed
-              ** (if not v_claimed then pts_to res #one_half v_res else emp)
+      assert (pts_to done #0.5R v_done
+              ** pts_to res #0.5R v_res
+              ** GR.pts_to claimed #0.5R v_claimed
+              ** (if not v_claimed then pts_to res #0.5R v_res else emp)
               ** pure (v_claimed ==> v_done)
               ** pure (v_done ==> Some? v_res));
 
@@ -148,8 +148,8 @@ fn worker (i : inv inv_p) (_:unit)
     
     assert (pure (not v_claimed)); // contrapositive from v_done=false
 
-    rewrite (if not v_claimed then pts_to res #one_half v_res else emp)
-         as pts_to res #one_half v_res;
+    rewrite (if not v_claimed then pts_to res #0.5R v_res else emp)
+         as pts_to res #0.5R v_res;
          
     gather2 #_ res #v_res #v_res;
     assert (pts_to res v_res);
@@ -168,8 +168,8 @@ fn worker (i : inv inv_p) (_:unit)
     
     share2 #_ res;
 
-    rewrite (pts_to res #one_half (Some 42))
-        as (if not v_claimed then pts_to res #one_half (Some 42) else emp);
+    rewrite (pts_to res #0.5R (Some 42))
+        as (if not v_claimed then pts_to res #0.5R (Some 42) else emp);
         
     share2 #_ done;
     

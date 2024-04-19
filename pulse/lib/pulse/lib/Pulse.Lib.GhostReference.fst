@@ -28,7 +28,7 @@ instance non_informative_gref (a:Type0) : NonInformative.non_informative (ref a)
 let pts_to
     (#a:Type u#0)
     (r:ref a)
-    (#[exact (`full_perm)] [@@@equate_by_smt] p:perm)
+    (#[exact (`1.0R)] [@@@equate_by_smt] p:perm)
     ([@@@equate_by_smt] v:a)
   = H.pts_to r #p (U.raise_val v)
 
@@ -42,7 +42,7 @@ returns r:ref a
 ensures pts_to r v
 {
   let r = H.alloc (U.raise_val v);
-  fold (pts_to r #full_perm v);
+  fold (pts_to r #1.0R v);
   r
 }
 ```
@@ -67,12 +67,12 @@ let ( ! ) #a = read #a
 ```pulse
 ghost
 fn write' (#a:Type) (r:ref a) (x:erased a) (#n:erased a)
-requires pts_to r #full_perm n
-ensures pts_to r #full_perm x
+requires pts_to r #1.0R n
+ensures pts_to r #1.0R x
 {
-  unfold (pts_to r #full_perm n);
+  unfold (pts_to r #1.0R n);
   H.(r := (U.raise_val x));
-  fold (pts_to r #full_perm x)
+  fold (pts_to r #1.0R x)
 }
 ```
 let ( := ) #a r x #n = write' #a r x #n
@@ -80,10 +80,10 @@ let ( := ) #a r x #n = write' #a r x #n
 ```pulse
 ghost
 fn free' #a (r:ref a) (#n:erased a)
-requires pts_to r #full_perm n
+requires pts_to r #1.0R n
 ensures emp
 {
-  unfold (pts_to r #full_perm n);
+  unfold (pts_to r #1.0R n);
   H.free r;
 }
 ```
@@ -93,12 +93,12 @@ let free = free'
 ghost
 fn share' (#a:Type) (r:ref a) (#v:erased a) (#p:perm)
 requires pts_to r #p v
-ensures pts_to r #(half_perm p) v ** pts_to r #(half_perm p) v
+ensures pts_to r #(p /. 2.0R) v ** pts_to r #(p /. 2.0R) v
 {
   unfold pts_to r #p v;
   H.share r;
-  fold pts_to r #(half_perm p) v;
-  fold pts_to r #(half_perm p) v
+  fold pts_to r #(p /. 2.0R) v;
+  fold pts_to r #(p /. 2.0R) v
 }
 ```
 let share = share'
@@ -118,15 +118,12 @@ ensures pure (x0 == x1)
 ghost
 fn gather' (#a:Type) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
 requires pts_to r #p0 x0 ** pts_to r #p1 x1
-ensures pts_to r #(sum_perm p0 p1) x0 ** pure (x0 == x1)
+ensures pts_to r #(p0 +. p1) x0 ** pure (x0 == x1)
 {
   unfold pts_to r #p0 x0;
   unfold pts_to r #p1 x1;
   H.gather r;
-  fold (pts_to r #(sum_perm p1 p0) x0);
-  let qq = sum_perm p0 p1; //hack! prevent the unifier from structurally matching sum_perm p0 p1 with sum_perm p1 p0
-  rewrite (pts_to r #(sum_perm p1 p0) x0)
-       as (pts_to r #qq x0);
+  fold (pts_to r #(p1 +. p0) x0);
   raise_inj a x0 x1;
 }
 ```
@@ -163,7 +160,7 @@ let pts_to_injective_eq = pts_to_injective_eq'
 ghost
 fn pts_to_perm_bound' (#a:_) (#p:_) (r:ref a) (#v:a)
 requires pts_to r #p v
-ensures pts_to r #p v ** pure (p `lesser_equal_perm` full_perm)
+ensures pts_to r #p v ** pure (p <=. 1.0R)
 {
   unfold pts_to r #p v;
   H.pts_to_perm_bound r;

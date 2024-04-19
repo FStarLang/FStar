@@ -35,7 +35,7 @@ val mutex (a:Type0) : Type0
 val mutex_live
   (#a:Type0)
   (m:mutex a)
-  (#[T.exact (`full_perm)] p:perm)
+  (#[T.exact (`1.0R)] p:perm)
   (v:a -> vprop)  : vprop
 
 val new_mutex (#a:Type0) (v:a -> vprop { forall x. is_big (v x) }) (x:a)
@@ -58,9 +58,9 @@ val unlock (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a) (r:ref a)
 val share (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a)
   : stt_ghost unit emp_inames
       (requires mutex_live m #p v)
-      (ensures fun _ -> mutex_live m #(half_perm p) v ** mutex_live m #(half_perm p) v)
+      (ensures fun _ -> mutex_live m #(p /. 2.0R) v ** mutex_live m #(p /. 2.0R) v)
 
-val gather (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a)
+val gather (#a:Type0) (#v:a -> vprop) (#p1 #p2:perm) (m:mutex a)
   : stt_ghost unit emp_inames
-      (requires mutex_live m #(half_perm p) v ** mutex_live m #(half_perm p) v)
-      (ensures fun _ -> mutex_live m #p v)
+      (requires mutex_live m #p1 v ** mutex_live m #p2 v)
+    (ensures fun _ -> mutex_live m #(p1 +. p2) v)

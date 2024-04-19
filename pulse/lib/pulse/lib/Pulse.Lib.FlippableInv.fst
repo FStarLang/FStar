@@ -20,7 +20,7 @@ open Pulse.Lib.Pervasives
 module GR = Pulse.Lib.GhostReference
 
 let finv_p (p:vprop { is_big p }) (r : GR.ref bool) : v:vprop { is_big v } =
-  exists* (b:bool). GR.pts_to r #one_half b ** (if b then p else emp)
+  exists* (b:bool). GR.pts_to r #0.5R b ** (if b then p else emp)
 
 noeq
 type finv (p:vprop) = {
@@ -30,9 +30,9 @@ type finv (p:vprop) = {
 }
 
 let off #p (fi : finv p) : vprop =
-  GR.pts_to fi.r #one_half false ** inv fi.i (finv_p p fi.r)
+  GR.pts_to fi.r #0.5R false ** inv fi.i (finv_p p fi.r)
 let on  #p (fi : finv p) : vprop =
-  GR.pts_to fi.r #one_half true ** inv fi.i (finv_p p fi.r)
+  GR.pts_to fi.r #0.5R true ** inv fi.i (finv_p p fi.r)
 
 ```pulse
 fn __mk_finv (p:vprop { is_big p })
@@ -47,8 +47,8 @@ fn __mk_finv (p:vprop { is_big p })
    fold finv_p p r;
    let i = new_invariant (finv_p p r);
    let fi = Mkfinv r i (() <: squash (is_big p)); // See #121
-   rewrite (GR.pts_to r #one_half false)
-        as (GR.pts_to fi.r #one_half false);
+   rewrite (GR.pts_to r #0.5R false)
+        as (GR.pts_to fi.r #0.5R false);
    rewrite (inv i (finv_p p r))
         as (inv fi.i (finv_p p fi.r));
    fold (off #p fi);
@@ -71,7 +71,7 @@ fn _flip_on (#p:vprop) (fi:finv p)
   with_invariants fi.i
     returns _:unit
     ensures inv fi.i (finv_p p fi.r) **
-            GR.pts_to fi.r #one_half true
+            GR.pts_to fi.r #0.5R true
     opens (add_inv emp_inames fi.i) {
     unfold finv_p;
     GR.gather2 fi.r;
@@ -98,7 +98,7 @@ fn _flip_off (#p:vprop) (fi : finv p)
   with_invariants fi.i
     returns _:unit
     ensures inv fi.i (finv_p p fi.r) **
-            GR.pts_to fi.r #one_half false ** p
+            GR.pts_to fi.r #0.5R false ** p
     opens (add_inv emp_inames fi.i) {
     unfold finv_p;
     GR.gather2 fi.r;
