@@ -371,6 +371,90 @@ let mk_tac_step_4 :
                                              FStar_Pervasives_Native.Some
                                                uu___11) in
                               set_auto_reflect (Prims.of_int (4)) uu___10
+let mk_tac_step_5 :
+  'nres 'nt1 'nt2 'nt3 'nt4 'nt5 'res 't1 't2 't3 't4 't5 .
+    Prims.int ->
+      Prims.string ->
+        't1 FStar_Syntax_Embeddings_Base.embedding ->
+          't2 FStar_Syntax_Embeddings_Base.embedding ->
+            't3 FStar_Syntax_Embeddings_Base.embedding ->
+              't4 FStar_Syntax_Embeddings_Base.embedding ->
+                't5 FStar_Syntax_Embeddings_Base.embedding ->
+                  'res FStar_Syntax_Embeddings_Base.embedding ->
+                    'nt1 FStar_TypeChecker_NBETerm.embedding ->
+                      'nt2 FStar_TypeChecker_NBETerm.embedding ->
+                        'nt3 FStar_TypeChecker_NBETerm.embedding ->
+                          'nt4 FStar_TypeChecker_NBETerm.embedding ->
+                            'nt5 FStar_TypeChecker_NBETerm.embedding ->
+                              'nres FStar_TypeChecker_NBETerm.embedding ->
+                                ('t1 ->
+                                   't2 ->
+                                     't3 ->
+                                       't4 ->
+                                         't5 -> 'res FStar_Tactics_Monad.tac)
+                                  ->
+                                  ('nt1 ->
+                                     'nt2 ->
+                                       'nt3 ->
+                                         'nt4 ->
+                                           'nt5 ->
+                                             'nres FStar_Tactics_Monad.tac)
+                                    ->
+                                    FStar_TypeChecker_Primops_Base.primitive_step
+  =
+  fun univ_arity ->
+    fun nm ->
+      fun uu___ ->
+        fun uu___1 ->
+          fun uu___2 ->
+            fun uu___3 ->
+              fun uu___4 ->
+                fun uu___5 ->
+                  fun uu___6 ->
+                    fun uu___7 ->
+                      fun uu___8 ->
+                        fun uu___9 ->
+                          fun uu___10 ->
+                            fun uu___11 ->
+                              fun f ->
+                                fun nbe_f ->
+                                  let lid = builtin_lid nm in
+                                  let uu___12 =
+                                    FStar_TypeChecker_Primops_Base.mk6'
+                                      univ_arity lid uu___ uu___6 uu___1
+                                      uu___7 uu___2 uu___8 uu___3 uu___9
+                                      uu___4 uu___10
+                                      FStar_Tactics_Embedding.e_proofstate
+                                      FStar_Tactics_Embedding.e_proofstate_nbe
+                                      (FStar_Tactics_Embedding.e_result
+                                         uu___5)
+                                      (FStar_Tactics_Embedding.e_result_nbe
+                                         uu___11)
+                                      (fun a ->
+                                         fun b ->
+                                           fun c ->
+                                             fun d ->
+                                               fun e ->
+                                                 fun ps ->
+                                                   let uu___13 =
+                                                     let uu___14 =
+                                                       f a b c d e in
+                                                     run_wrap nm uu___14 ps in
+                                                   FStar_Pervasives_Native.Some
+                                                     uu___13)
+                                      (fun a ->
+                                         fun b ->
+                                           fun c ->
+                                             fun d ->
+                                               fun e ->
+                                                 fun ps ->
+                                                   let uu___13 =
+                                                     let uu___14 =
+                                                       nbe_f a b c d e in
+                                                     run_wrap nm uu___14 ps in
+                                                   FStar_Pervasives_Native.Some
+                                                     uu___13) in
+                                  set_auto_reflect (Prims.of_int (5)) uu___12
 let (max_tac_arity : Prims.int) = (Prims.of_int (20))
 let mk_tactic_interpretation_1 :
   'r 't1 .

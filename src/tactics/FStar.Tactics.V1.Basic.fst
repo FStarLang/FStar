@@ -1423,7 +1423,7 @@ let _t_trefl (allow_guards:bool) (l : term) (r : term) : tac unit =
             with
             | Inr _ -> false
             | Inl (_, t_ty) -> (  // ignoring the effect, ghost is ok
-              match Core.check_term_subtyping env ty t_ty with
+              match Core.check_term_subtyping true true env ty t_ty with
               | Inl None -> //unconditional subtype
                 mark_uvar_as_already_checked u;
                 true

@@ -96,8 +96,8 @@ let check_core i subtyping guard_ok x y =
   let env = tcenv () in
   let res = 
     if subtyping
-    then FStar.TypeChecker.Core.check_term_subtyping env x y
-    else FStar.TypeChecker.Core.check_term_equality env x y
+    then FStar.TypeChecker.Core.check_term_subtyping true true env x y
+    else FStar.TypeChecker.Core.check_term_equality  true true env x y
   in
   let _ = 
     match res with
