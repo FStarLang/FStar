@@ -467,7 +467,8 @@ fn rewrite_inv_predicates (r:gref)
 let open_session_client_perm (r:gref) (s:option sid_t) : vprop =
   match s with
   | None -> emp
-  | Some s -> sid_pts_to r s [[T.G_SessionStart]]
+  | Some s ->
+    exists* t. sid_pts_to r s t ** pure (T.current_state t == T.G_SessionStart)
 
 let emp_to_start_valid () : Lemma (T.valid_transition emp_trace T.G_SessionStart) = ()
 
@@ -545,8 +546,7 @@ fn __open_session (r:gref) (s:st)
           ctr1 as (fst ret).st_ctr,
           tbl1 as (fst ret).st_tbl;
         fold (inv r (Some (fst ret)));
-        rewrite (sid_pts_to r ctr (T.next_trace emp_trace T.G_SessionStart)) as
-                (open_session_client_perm r (snd ret));
+        fold (open_session_client_perm r (Some ctr));
         ret
       }
     }
@@ -621,8 +621,6 @@ fn open_session (r:gref) (m:mutex (option st))
 }
 ```
 
-#restart-solver
-
 ```pulse
 ghost
 fn sid_pts_to_contra (r:gref) (sid:sid_t)
@@ -644,11 +642,6 @@ fn sid_pts_to_contra (r:gref) (sid:sid_t)
   unreachable ()
 }
 ```
-
-let t_can_be_moved_to_inuse (t:T.trace) : prop =
-  let open T in
-  let s = current_state t in
-  G_SessionStart? s \/ G_Available? s
 
 ```pulse
 ghost
@@ -809,6 +802,41 @@ fn replace_session
 ```
 #pop-options
 
+module V = Pulse.Lib.Vec
+
+```pulse
+fn init_engine_ctxt
+  (uds:A.array U8.t { A.length uds == SZ.v uds_len })
+  (#p:perm)
+  (#uds_bytes:Ghost.erased (Seq.seq U8.t))
+  requires A.pts_to uds #p uds_bytes
+  returns ctxt:context_t
+  ensures A.pts_to uds #p uds_bytes **
+          context_perm ctxt (Engine_context_repr uds_bytes)
+{ 
+  let uds_buf = V.alloc 0uy uds_len;
+  A.pts_to_len uds;
+  V.pts_to_len uds_buf;
+
+  // V.to_array_pts_to uds;
+  V.to_array_pts_to uds_buf;
+  A.memcpy uds_len uds (V.vec_to_array uds_buf);
+  // V.to_vec_pts_to uds;
+  V.to_vec_pts_to uds_buf;
+
+  let engine_context = mk_engine_context_t uds_buf;
+
+  rewrite each uds_buf as (engine_context.uds);
+  fold (engine_context_perm engine_context uds_bytes);
+
+  let ctxt = mk_context_t_engine engine_context;
+  rewrite (engine_context_perm engine_context uds_bytes) 
+       as (context_perm ctxt (Engine_context_repr uds_bytes));
+  ctxt
+}
+```
+
+assume val prng () : ctxt_hndl_t
 
 (*
   InitializeContext: Part of DPE API 
@@ -816,53 +844,115 @@ fn replace_session
   in the current session's context table. Return the context handle upon
   success and None upon failure. 
 *)
+
 ```pulse
-fn initialize_context
-  (#p:perm) (#uds_bytes:Ghost.erased (Seq.seq U8.t))
-  (sid:sid_t) (uds:A.larray U8.t (SZ.v uds_len)) 
-                       
-  requires mutex_live global_state global_state_mutex_pred **
-           A.pts_to uds #p uds_bytes
-  returns _:option ctxt_hndl_t
-  ensures mutex_live global_state global_state_mutex_pred **
-          A.pts_to uds #p uds_bytes
+ghost
+fn elim_session_state_related_inuse (s:session_state) (gs:T.g_session_state)
+  requires session_state_related s (T.G_InUse gs)
+  ensures pure (s == InUse)
 {
-  rewrite emp as (session_state_perm InUse);
-  let st = take_session_state sid InUse;
-  match st
-  {
-    None ->
-    {
-      with s. rewrite (session_state_perm s) as emp;
-      None #ctxt_hndl_t
+  match s {
+    SessionStart -> {
+      with _x _y. rewrite (session_state_related _x _y) as (pure False);
+      unreachable ()
     }
-    
-    Some st ->
-    {
-      match st {
-        SessionStart -> {
-          rewrite (session_state_perm st) as emp;
-          let ctxt = init_engine_ctxt uds;
-          let ctxt_hndl = prng ();
-          let st' = intro_session_state_perm_available ctxt ctxt_hndl;
-          let st'' = take_session_state sid st';
-          //TODO: prove that st'' is InUse
-          drop_ (session_state_perm (dflt st'' st'));
-          Some ctxt_hndl
-        }
-        _ -> {
-          destroy_session_state st;
-          rewrite emp as (session_state_perm SessionError);
-          let st' = take_session_state sid SessionError;
-          //TODO: prove st' is InUse
-          drop_ (session_state_perm (dflt st' SessionError));
-          None #ctxt_hndl_t
-        }
-      }
+    Available _ -> {
+      with _x _y. rewrite (session_state_related _x _y) as (pure False);
+      unreachable ()
+    }
+    InUse -> {
+      with _x _y. rewrite (session_state_related _x _y) as emp
+    }
+    SessionClosed -> {
+      with _x _y. rewrite (session_state_related _x _y) as (pure False);
+      unreachable ()
+    }
+    SessionError -> {
+      with _x _y. rewrite (session_state_related _x _y) as (pure False);
+      unreachable ()
     }
   }
 }
 ```
+
+let initialize_context_client_perm (r:gref) (sid:sid_t) (uds:Seq.seq U8.t) =
+  exists* t. sid_pts_to r sid t **
+             pure (T.current_state t == T.G_Available (Engine_context_repr uds))
+
+#push-options "--fuel 2 --ifuel 2"
+```pulse
+fn initialize_context (r:gref) (m:mutex (option st))
+  (sid:sid_t) 
+  (t:T.trace { T.current_state t == T.G_SessionStart })
+  (#p:perm) (#uds_bytes:Ghost.erased (Seq.seq U8.t))
+  (uds:A.larray U8.t (SZ.v uds_len)) 
+                       
+  requires mutex_live m (inv r) **
+           A.pts_to uds #p uds_bytes **
+           sid_pts_to r sid t
+
+  returns b:(mutex (option st) & ctxt_hndl_t)
+
+  ensures mutex_live (fst b) (inv r) **
+          A.pts_to uds #p uds_bytes **
+          initialize_context_client_perm r sid uds_bytes
+{
+  rewrite emp as (session_state_related InUse (T.G_InUse (T.current_state t)));
+  let ret = replace_session r m sid t InUse (T.G_InUse (T.current_state t));
+  with t1. assert (sid_pts_to r sid t1);
+
+  let m = fst ret;
+  let s = snd ret;
+
+  rewrite each
+    fst ret as m,
+    snd ret as s;
+  
+  match s {
+    SessionStart -> {
+      rewrite (session_state_related s (T.current_state t)) as emp;
+      let context = init_engine_ctxt uds;
+      let handle = prng ();
+      let s = Available { handle; context };
+      rewrite (context_perm context (Engine_context_repr uds_bytes)) as
+              (session_state_related s (T.G_Available (Engine_context_repr uds_bytes)));
+      let ret = replace_session r m sid t1 s (T.G_Available (Engine_context_repr uds_bytes));
+      elim_session_state_related_inuse (snd ret) (T.G_InUse (T.current_state t));
+      let m = fst ret;
+      rewrite each
+        fst ret as m,
+        snd ret as InUse;
+      let ret = (m, handle);
+      rewrite each
+        m as fst ret,
+        handle as snd ret;
+      fold (initialize_context_client_perm r sid uds_bytes);
+      ret
+    }
+    InUse -> {
+      rewrite (session_state_related s (T.current_state t)) as
+              (pure False);
+      unreachable ()
+    }
+    SessionClosed -> {
+      rewrite (session_state_related s (T.current_state t)) as
+              (pure False);
+      unreachable ()
+    }
+    SessionError -> {
+      rewrite (session_state_related s (T.current_state t)) as
+              (pure False);
+      unreachable ()
+    }
+    Available _ -> {
+      rewrite (session_state_related s (T.current_state t)) as
+              (pure False);
+      unreachable ()
+    }
+  }
+}
+```
+#pop-options
 
 
 
@@ -1402,39 +1492,6 @@ fn initialize_context
 // ```
 // // let close_session = close_session'
 
-// module V = Pulse.Lib.Vec
-
-// ```pulse
-// fn init_engine_ctxt
-//   (uds:A.array U8.t { A.length uds == SZ.v uds_len })
-//   (#p:perm)
-//   (#uds_bytes:Ghost.erased (Seq.seq U8.t))
-//   requires A.pts_to uds #p uds_bytes
-//   returns ctxt:context_t
-//   ensures A.pts_to uds #p uds_bytes **
-//           context_perm ctxt (Engine_context_repr uds_bytes)
-// { 
-//   let uds_buf = V.alloc 0uy uds_len;
-//   A.pts_to_len uds;
-//   V.pts_to_len uds_buf;
-
-//   // V.to_array_pts_to uds;
-//   V.to_array_pts_to uds_buf;
-//   A.memcpy uds_len uds (V.vec_to_array uds_buf);
-//   // V.to_vec_pts_to uds;
-//   V.to_vec_pts_to uds_buf;
-
-//   let engine_context = mk_engine_context_t uds_buf;
-
-//   rewrite each uds_buf as (engine_context.uds);
-//   fold (engine_context_perm engine_context uds_bytes);
-
-//   let ctxt = mk_context_t_engine engine_context;
-//   rewrite (engine_context_perm engine_context uds_bytes) 
-//        as (context_perm ctxt (Engine_context_repr uds_bytes));
-//   ctxt
-// }
-// ```
 
 // ```pulse
 // fn init_l0_ctxt
@@ -1578,8 +1635,6 @@ fn initialize_context
 //   ctxt  
 // }
 // ```
-
-// assume val prng () : U32.t
 
 // (*
 //   InitializeContext: Part of DPE API 

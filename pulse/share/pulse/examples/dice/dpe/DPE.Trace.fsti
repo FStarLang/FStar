@@ -31,6 +31,7 @@ let uds_t = lbytes (SZ.v uds_len)
 
 type ctxt_hndl_t : Type0 = U32.t
 
+[@@ erasable]
 noeq
 type g_session_state : Type u#1 =
   | G_UnInitialized : g_session_state
