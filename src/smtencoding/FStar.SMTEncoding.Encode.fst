@@ -1227,10 +1227,17 @@ let encode_datacon (is_injective_on_tparams:bool) (env:env_t) (se:sigelt)
   let fuel_var, fuel_tm = fresh_fvar env.current_module_name "f" Fuel_sort in
   let s_fuel_tm = mkApp("SFuel", [fuel_tm]) in
   let vars, guards, env', binder_decls, names = encode_binders (Some fuel_tm) formals env in
-  let fields = names |> List.mapi (fun n x ->
-      { field_name=mk_term_projector_name d x;
-        field_sort=Term_sort;
-        field_projectible=true })
+  let fields =
+    names |>
+    List.mapi
+      (fun n x ->
+        let field_projectible =
+          n >= n_tps || //either this field is not a type parameter
+          is_injective_on_tparams //or we are allowed to be injective on parameters
+        in
+        { field_name=mk_term_projector_name d x;
+          field_sort=Term_sort;
+          field_projectible })
   in
   let datacons = 
     {constr_name=ddconstrsym;
@@ -1753,7 +1760,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
       let tycon = List.tryFind (fun se -> Sig_inductive_typ? se.sigel) ses in
       let is_injective_on_params =
         match tycon with
-        | None -> failwith "Impossible: Sig_bundle without a Sig_inductive_typ"
+        | None ->
+          //Exceptions appear as Sig_bundle without an inductive type
+          false
         | Some se ->
           is_sig_inductive_injective_on_params env se
       in

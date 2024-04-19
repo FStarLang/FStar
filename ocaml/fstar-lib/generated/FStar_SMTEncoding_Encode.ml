@@ -4510,6 +4510,9 @@ let (encode_datacon :
                                   FStar_Compiler_List.mapi
                                     (fun n ->
                                        fun x ->
+                                         let field_projectible =
+                                           (n >= n_tps) ||
+                                             is_injective_on_tparams in
                                          let uu___7 =
                                            FStar_SMTEncoding_Env.mk_term_projector_name
                                              d x in
@@ -4520,7 +4523,7 @@ let (encode_datacon :
                                              =
                                              FStar_SMTEncoding_Term.Term_sort;
                                            FStar_SMTEncoding_Term.field_projectible
-                                             = true
+                                             = field_projectible
                                          }) names in
                                 let datacons =
                                   let uu___7 = FStar_Ident.range_of_lid d in
@@ -7033,9 +7036,7 @@ and (encode_sigelt' :
                     se1.FStar_Syntax_Syntax.sigel) ses in
            let is_injective_on_params =
              match tycon with
-             | FStar_Pervasives_Native.None ->
-                 FStar_Compiler_Effect.failwith
-                   "Impossible: Sig_bundle without a Sig_inductive_typ"
+             | FStar_Pervasives_Native.None -> false
              | FStar_Pervasives_Native.Some se1 ->
                  is_sig_inductive_injective_on_params env se1 in
            let uu___2 =

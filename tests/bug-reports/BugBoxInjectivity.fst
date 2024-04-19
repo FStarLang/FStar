@@ -5,41 +5,20 @@ module CC = FStar.Cardinality.Universes
 type t (a:Type u#1) : Type u#0 =
   | Mk : t a
 
-//We can get the problematic axiom by 
-//relying on an equation introduced by the pattern
-//match and give it to SMT 
 let inj_t (#a:Type u#1) (x:t a)
 : Lemma (x == Mk #a)
-        [SMTPat (has_type x (t a))]
 = let Mk #_ = x in ()
 
-#push-options "--log_queries"
-#restart-solver
-let t_injective_alt (f0 f1:Type u#1) (x: t f0) (y:t f1)
-: Lemma
-  (ensures t f0 == t f1 ==> f0 == f1)
-= ()
+[@@expect_failure]
+let t_injective : squash (is_inj t) = 
+  introduce forall f0 f1.
+      t f0 == t f1 ==> f0 == f1
+  with introduce _ ==> _
+  with _ . (
+    inj_t #f0 Mk;
+    inj_t #f1 (coerce_eq () (Mk #f0)) 
+  )
 
-// let t_injective (f0 f1:Type u#1)
-// : Lemma
-//   (ensures t f0 == t f1 ==> f0 == f1)
-// = t_injective_alt f0 f1 Mk Mk
-
-// let t_injective' : squash (is_inj t) = 
-//   introduce forall f0 f1.
-//       t f0 == t f1 ==> f0 == f1
-//   with introduce _ ==> _
-//   with _ . (
-//     t_injective f0 f1
-//   )
-// let fals : squash False =
-//   CC.no_inj_universes_suc t
-
-// ///////////////////
-// let test (#a:Type) (x:t a) =
-//   match x with 
-//   | Mkt #_ f ->
-//     assert (x == Mkt #a f)
 
 // #restart-solver
 // #push-options "--log_queries --query_stats --debug BugBoxInjectivity --debug_level SMTEncoding"
