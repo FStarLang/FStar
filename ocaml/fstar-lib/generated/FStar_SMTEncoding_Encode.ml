@@ -4306,7 +4306,8 @@ let (encode_sig_inductive :
                                      uu___9;
                                    FStar_SMTEncoding_Term.constr_sort =
                                      FStar_SMTEncoding_Term.Term_sort;
-                                   FStar_SMTEncoding_Term.constr_id = uu___10
+                                   FStar_SMTEncoding_Term.constr_id = uu___10;
+                                   FStar_SMTEncoding_Term.constr_base = false
                                  } in
                                constructor_or_logic_type_decl uu___8 in
                              let uu___8 =
@@ -4506,13 +4507,19 @@ let (encode_datacon :
                                env1 in
                            (match uu___6 with
                             | (vars, guards, env', binder_decls, names) ->
+                                let is_injective_on_tparams1 =
+                                  is_injective_on_tparams ||
+                                    (let uu___7 =
+                                       FStar_Options.ext_getv
+                                         "compat:injectivity" in
+                                     uu___7 <> "") in
                                 let fields =
                                   FStar_Compiler_List.mapi
                                     (fun n ->
                                        fun x ->
                                          let field_projectible =
                                            (n >= n_tps) ||
-                                             is_injective_on_tparams in
+                                             is_injective_on_tparams1 in
                                          let uu___7 =
                                            FStar_SMTEncoding_Env.mk_term_projector_name
                                              d x in
@@ -4541,7 +4548,10 @@ let (encode_datacon :
                                       FStar_SMTEncoding_Term.constr_sort =
                                         FStar_SMTEncoding_Term.Term_sort;
                                       FStar_SMTEncoding_Term.constr_id =
-                                        uu___9
+                                        uu___9;
+                                      FStar_SMTEncoding_Term.constr_base =
+                                        (Prims.op_Negation
+                                           is_injective_on_tparams1)
                                     } in
                                   FStar_SMTEncoding_Term.constructor_to_decl
                                     uu___7 uu___8 in

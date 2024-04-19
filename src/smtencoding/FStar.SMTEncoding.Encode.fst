@@ -1174,7 +1174,8 @@ let encode_sig_inductive (is_injective_on_params:bool) (env:env_t) (se:sigelt)
           constr_fields = vars |> List.map (fun fv -> {field_name=tname^fv_name fv; field_sort=fv_sort fv; field_projectible=false}) ;
           //The field_projectible=false above is extremely important; it makes sure that type-formers are not injective
           constr_sort=Term_sort;
-          constr_id=Some (varops.next_id())
+          constr_id=Some (varops.next_id());
+          constr_base=false
         }
     in
     let tok_decls, env =
@@ -1227,6 +1228,9 @@ let encode_datacon (is_injective_on_tparams:bool) (env:env_t) (se:sigelt)
   let fuel_var, fuel_tm = fresh_fvar env.current_module_name "f" Fuel_sort in
   let s_fuel_tm = mkApp("SFuel", [fuel_tm]) in
   let vars, guards, env', binder_decls, names = encode_binders (Some fuel_tm) formals env in
+  let is_injective_on_tparams =
+    is_injective_on_tparams || Options.ext_getv "compat:injectivity" <> ""
+  in
   let fields =
     names |>
     List.mapi
@@ -1239,12 +1243,13 @@ let encode_datacon (is_injective_on_tparams:bool) (env:env_t) (se:sigelt)
           field_sort=Term_sort;
           field_projectible })
   in
-  let datacons = 
-    {constr_name=ddconstrsym;
-      constr_fields=fields;
-      constr_sort=Term_sort;
-      constr_id=Some (varops.next_id())
-      } |> Term.constructor_to_decl (Ident.range_of_lid d) in
+  let datacons = {
+    constr_name=ddconstrsym;
+    constr_fields=fields;
+    constr_sort=Term_sort;
+    constr_id=Some (varops.next_id());
+    constr_base=not is_injective_on_tparams
+  } |> Term.constructor_to_decl (Ident.range_of_lid d) in
   let app = mk_Apply ddtok_tm vars in
   let guard = mk_and_l guards in
   let xvars = List.map mkFreeV vars in
