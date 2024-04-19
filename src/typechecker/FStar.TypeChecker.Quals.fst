@@ -289,26 +289,26 @@ let check_typeclass_instance_attribute env rng se =
   in
   let check_instance_typ (ty:typ) : unit =
     let _, res = U.arrow_formals_comp ty in
-    if U.is_total_comp res
-    then let t = U.comp_result res in
-         let head, _ = U.head_and_args t in
-         let err () =
-           FStar.Errors.log_issue_doc rng (FStar.Errors.Error_UnexpectedTypeclassInstance, [
-               text "Instances must define instances of `class` types.";
-               text "Type" ^/^ pp t ^/^ text "is not a class.";
-             ])
-         in
-         match (U.un_uinst head).n with
-         | Tm_fvar fv ->
-           if not (Env.fv_has_attr env fv FStar.Parser.Const.tcclass_lid)
-           then err ()
-         | _ ->
-           err ()
-    else
-      FStar.Errors.log_issue_doc rng (FStar.Errors.Error_UnexpectedTypeclassInstance, [
+    if not (U.is_total_comp res) then
+      log_issue_doc rng (FStar.Errors.Error_UnexpectedTypeclassInstance, [
           text "Instances are expected to be total.";
           text "This instance has effect" ^^ pp (U.comp_effect_name res);
-      ])
+      ]);
+
+    let t = U.comp_result res in
+    let head, _ = U.head_and_args t in
+    let err () =
+      FStar.Errors.log_issue_doc rng (FStar.Errors.Error_UnexpectedTypeclassInstance, [
+          text "Instances must define instances of `class` types.";
+          text "Type" ^/^ pp t ^/^ text "is not a class.";
+        ])
+    in
+    match (U.un_uinst head).n with
+    | Tm_fvar fv ->
+      if not (Env.fv_has_attr env fv FStar.Parser.Const.tcclass_lid) then
+        err ()
+    | _ ->
+      err ()
   in
   if is_tc_instance then
     match se.sigel with
