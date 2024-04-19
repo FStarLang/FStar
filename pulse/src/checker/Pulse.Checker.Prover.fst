@@ -396,6 +396,16 @@ let try_frame_pre (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop
   assert (equal g (push_env g uvs));
   try_frame_pre_uvs ctxt_typing uvs d res_ppname
 
+(* Checks if `p` is equivalent to emp, using the core checker. *)
+let check_equiv_emp' (g:env) (p:vprop) : T.Tac (option (vprop_equiv g p tm_emp)) =
+  match check_equiv_emp g p with
+  | Some t -> Some t
+  | None ->
+    match Pulse.Typing.Util.check_equiv_now_nosmt (elab_env g) p tm_emp with
+    | Some tok, _ ->
+      Some (VE_Ext _ _ _ tok)
+    | None, _ -> None
+
 let prove_post_hint (#g:env) (#ctxt:vprop)
   (r:checker_result_t g ctxt None)
   (post_hint:post_hint_opt g)
@@ -435,13 +445,13 @@ let prove_post_hint (#g:env) (#ctxt:vprop)
         : continuation_elaborator g2 ctxt' g3 (post_hint_opened * remaining_ctxt) =
         coerce_eq k_post () in
 
-      match check_equiv_emp g3 remaining_ctxt with
+      match check_equiv_emp' g3 remaining_ctxt with
       | None -> 
         let open Pulse.PP in
         fail_doc g (Some rng) [
           text "Error in proving postcondition";
-          text "Inferred postcondition additionally contains" ^^
-            indent (pp remaining_ctxt);
+          prefix 2 1 (text "Inferred postcondition additionally contains")
+                     (align (P.term_to_doc remaining_ctxt));
           (let tv = inspect_term remaining_ctxt in
            if Tm_Star? tv
            then text "Did you forget to free these resources?"
