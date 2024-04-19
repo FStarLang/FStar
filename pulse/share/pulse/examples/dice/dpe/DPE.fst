@@ -702,18 +702,25 @@ fn upd_singleton
 }
 ```
 
-#push-options "--fuel 1"
-let trace_extended_with_inuse (t:T.trace { t_can_be_moved_to_inuse t }) : T.trace =
-  T.next_trace t (T.G_InUse (T.current_state t))
-
+#push-options "--fuel 0 --ifuel 2 --split_queries no --z3rlimit_factor 2"
 ```pulse
-fn mark_session_inuse (r:gref) (m:mutex (option st)) (sid:sid_t) (t:T.trace { t_can_be_moved_to_inuse t })
+fn replace_session
+  (r:gref)
+  (m:mutex (option st))
+  (sid:sid_t)
+  (t:T.trace)
+  (sst:session_state)
+  (gsst:T.g_session_state { T.valid_transition t gsst})
+
   requires mutex_live m (inv r) **
-           sid_pts_to r sid t
+           sid_pts_to r sid t **
+           session_state_related sst gsst
+
   returns b:(mutex (option st) & session_state)
+
   ensures mutex_live (fst b) (inv r) **
           session_state_related (snd b) (T.current_state t) **
-          sid_pts_to r sid (trace_extended_with_inuse t)
+          sid_pts_to r sid (T.next_trace t gsst)
 {
   let mr = lock m;
   let sopt = R.replace mr None;
@@ -752,7 +759,7 @@ fn mark_session_inuse (r:gref) (m:mutex (option st)) (sid:sid_t) (t:T.trace { t_
         if b {
           match idx {
             Some idx -> {
-              let ret = HT.replace #_ #_ #pht tbl idx sid InUse ();
+              let ret = HT.replace #_ #_ #pht tbl idx sid sst ();
               let tbl = fst ret;
               let st = snd ret;
               rewrite each
@@ -761,72 +768,28 @@ fn mark_session_inuse (r:gref) (m:mutex (option st)) (sid:sid_t) (t:T.trace { t_
               with _s. rewrite (session_state_related _s (T.current_state t1)) as
                                (session_state_related st (T.current_state t1));
               with pht. assert (models tbl pht);
-              match st {
-                SessionStart -> {
-                  upd_singleton r sid #t1 (T.G_InUse (T.current_state t1));
-                  share_sid_pts_to r sid;
-                  rewrite emp as
-                          (session_state_related InUse (T.current_state (trace_extended_with_inuse t1)));
-                  fold (session_state_perm r pht sid);
-                  rewrite (session_state_perm r pht sid) as
-                          (session_perm r pht (U32.v sid));
-                  frame_session_perm_on_range r pht0 pht 0 (U32.v sid);
-                  frame_session_perm_on_range r pht0 pht (U32.v sid + 1) (U32.v ctr);
-                  on_range_put 0 (U32.v sid) (U32.v ctr) #(session_perm r pht);
-                  let s = { st_ctr = ctr; st_tbl = tbl };
-                  rewrite each
-                    ctr as s.st_ctr,
-                    tbl as s.st_tbl;
-                  fold (inv r (Some s));
-                  mr := Some s;
-                  unlock m mr;
-                  let ret = (m, SessionStart);
-                  rewrite each
-                    m as fst ret,
-                    st as snd ret;
-                  ret
-                }
-                Available ctxt -> {
-                  upd_singleton r sid #t1 (T.G_InUse (T.current_state t1));
-                  share_sid_pts_to r sid;
-                  rewrite emp as
-                          (session_state_related InUse (T.current_state (trace_extended_with_inuse t1)));
-                  fold (session_state_perm r pht sid);
-                  rewrite (session_state_perm r pht sid) as
-                          (session_perm r pht (U32.v sid));
-                  frame_session_perm_on_range r pht0 pht 0 (U32.v sid);
-                  frame_session_perm_on_range r pht0 pht (U32.v sid + 1) (U32.v ctr);
-                  on_range_put 0 (U32.v sid) (U32.v ctr) #(session_perm r pht);
-                  let s = { st_ctr = ctr; st_tbl = tbl };
-                  rewrite each
-                    ctr as s.st_ctr,
-                    tbl as s.st_tbl;
-                  fold (inv r (Some s));
-                  mr := Some s;
-                  unlock m mr;
-                  let ret = (m, Available ctxt);
-                  rewrite each
-                    m as fst ret,
-                    st as snd ret;
-                  ret
-                }
-                InUse -> {
-                  rewrite (session_state_related st (T.current_state t)) as
-                          (pure False);
-                  unreachable ()
-                }
-                SessionClosed -> {
-                  rewrite (session_state_related st (T.current_state t)) as
-                          (pure False);
-                  unreachable ()
-                }
-                SessionError -> {
-                  rewrite (session_state_related st (T.current_state t)) as
-                          (pure False);
-                  unreachable ()
-                }
-
-              }
+              upd_singleton r sid #t1 gsst;
+              share_sid_pts_to r sid;
+              rewrite (session_state_related sst gsst) as
+                      (session_state_related sst (T.current_state (T.next_trace t1 gsst)));
+              fold (session_state_perm r pht sid);
+              rewrite (session_state_perm r pht sid) as
+                      (session_perm r pht (U32.v sid));
+              frame_session_perm_on_range r pht0 pht 0 (U32.v sid);
+              frame_session_perm_on_range r pht0 pht (U32.v sid + 1) (U32.v ctr);
+              on_range_put 0 (U32.v sid) (U32.v ctr) #(session_perm r pht);
+              let s = { st_ctr = ctr; st_tbl = tbl };
+              rewrite each
+                ctr as s.st_ctr,
+                tbl as s.st_tbl;
+              fold (inv r (Some s));
+              mr := Some s;
+              unlock m mr;
+              let ret = (m, st);
+              rewrite each
+                m as fst ret,
+                st as snd ret;
+              ret
             }
             None -> {
               unreachable ()
@@ -846,207 +809,62 @@ fn mark_session_inuse (r:gref) (m:mutex (option st)) (sid:sid_t) (t:T.trace { t_
 ```
 #pop-options
 
-let t_can_be_moved_to_available (t:T.trace) (repr:context_repr_t) : prop =
-  let open T in
-  match current_state t with
-  | G_InUse s0 -> next s0 (T.G_Available repr)
-  | _ -> False
 
-let trace_extended_with_available
-  (t:T.trace)
-  (repr:context_repr_t { t_can_be_moved_to_available t repr })
-  : T.trace =
-  T.next_trace t (T.G_Available repr)
-
+(*
+  InitializeContext: Part of DPE API 
+  Create a context in the initial state (engine context) and store the context
+  in the current session's context table. Return the context handle upon
+  success and None upon failure. 
+*)
 ```pulse
-fn mark_session_available (r:gref) (m:mutex (option st)) (sid:sid_t)
-  (t:T.trace)
-  (hndl:ctxt_hndl_t) (ctxt:context_t)
-  (repr:context_repr_t { t_can_be_moved_to_available t repr })
-  requires mutex_live m (inv r) **
-           sid_pts_to r sid t **
-           session_state_related s gs
-  returns m:mutex (option st)
-  ensures mutex_live m (inv r) **
-          sid_pts_to r sid (trace_extended_with_available t repr)
+fn initialize_context
+  (#p:perm) (#uds_bytes:Ghost.erased (Seq.seq U8.t))
+  (sid:sid_t) (uds:A.larray U8.t (SZ.v uds_len)) 
+                       
+  requires mutex_live global_state global_state_mutex_pred **
+           A.pts_to uds #p uds_bytes
+  returns _:option ctxt_hndl_t
+  ensures mutex_live global_state global_state_mutex_pred **
+          A.pts_to uds #p uds_bytes
 {
-  let mr = lock m;
-  let sopt = R.replace mr None;
-  match sopt {
-    None -> {
-      unfold (inv r None);
-      unfold sid_pts_to;
-      gather_ r all_sids_unused (singleton sid 0.5R t);
-      unreachable ()
+  rewrite emp as (session_state_perm InUse);
+  let st = take_session_state sid InUse;
+  match st
+  {
+    None ->
+    {
+      with s. rewrite (session_state_perm s) as emp;
+      None #ctxt_hndl_t
     }
-    Some s -> {
-      unfold (inv r (Some s));
-      let ctr = s.st_ctr;
-      let tbl = s.st_tbl;
-      rewrite each
-        s.st_ctr as ctr,
-        s.st_tbl as tbl;
-
-      with pht0. assert (models tbl pht0);
-      assert (on_range (session_perm r pht0) 0 (U32.v ctr));
-
-      if U32.lt sid ctr {
-
-      } else {
-        admit ()
-      }
-    }
-  }
-}
-```
-
-#push-options "--print_implicits --fuel 0 --ifuel 2"
-```pulse
-fn mark_session_inuse (s:st) (sid:sid_t) (tr:PP.hist DT.trace_preorder)
-  requires st_perm s **
-           sid_pts_to (dfst s) sid 0.5R session_idle tr
-  returns b:(st & session_state)
-  ensures st_perm (fst b) **
-          sid_pts_to (dfst (fst b)) sid 0.5R session_unavailable tr **
-          session_ctxt_perm (snd b) tr **
-          pure (fst b == s /\ (tr == emp_trace ==> SessionStart? (snd b)))
-{
-  let r = dfst s;
-  let l = dsnd s;
-  rewrite (sid_pts_to (dfst s) sid 0.5R session_idle tr)
-       as (sid_pts_to r sid 0.5R session_idle tr);
-
-  unfold st_perm;
-  rewrite (mutex_live (dsnd s) (inv (dfst s))) as
-          (mutex_live l (inv r));
-
-  let mr = lock l;
-  let gstopt = R.replace mr None;
-  
-  match gstopt {
-    None -> {
-      unfold (inv r None);
-      unfold sid_pts_to;
-      gather_ r (singleton sid 0.5R session_idle tr)
-                all_sids_unused;
-      unreachable ()
-    }
-
-    Some gst -> {
-      let ctr = gst.session_id_counter;
-      let tbl = gst.session_table;
-      unfold (inv r (Some gst));
-      rewrite each gst.session_table as tbl;
-      rewrite each gst.session_id_counter as ctr;
-      with pht. assert (models tbl pht ** on_range (session_perm r pht) 0 (U32.v ctr));
-
-      if U32.lt sid ctr {
-        on_range_get (U32.v sid) #(session_perm r pht) #0 #(U32.v ctr);
-        rewrite (session_perm r pht (U32.v sid)) as
-                (pure (Some? (PHT.lookup pht sid)) **
-                 session_state_perm r sid (PHT.lookup pht sid));
-
-        let ss = HT.lookup tbl sid;
-
-        if tsnd ss {
-          match tthd ss {
-            Some idx -> {
-              let ss = HT.replace #_ #_ #pht (tfst ss) idx sid InUse ();
-              with pht1. assert (models (fst ss) pht1);
-              match (snd ss) {
-                SessionError -> {
-                  unfold (session_state_perm r sid (Some SessionError));
-                  with tr1. assert (sid_pts_to r sid 1.0R session_unavailable tr1);
-                  sid_pts_to_contra r sid
-                    1.0R session_unavailable tr1
-                    0.5R session_idle tr;
-                  unreachable ()
-                }
-                SessionClosed -> {
-                  unfold (session_state_perm r sid (Some SessionClosed));
-                  with tr1. assert (sid_pts_to r sid 1.0R session_unavailable tr1);
-                  sid_pts_to_contra r sid
-                    1.0R session_unavailable tr1
-                    0.5R session_idle tr;
-                  unreachable ()
-                }
-                InUse -> {
-                  unfold (session_state_perm r sid (Some InUse));
-                  with tr1. assert (sid_pts_to r sid 0.5R session_unavailable tr1);
-                  sid_pts_to_contra r sid
-                    0.5R session_unavailable tr1
-                    0.5R session_idle tr;
-                  unreachable ()
-                }
-                SessionStart -> {
-                  unfold (session_state_perm r sid (Some SessionStart));
-                  unfold sid_pts_to;
-                  unfold sid_pts_to;
-                  gather_ r (singleton sid 0.5R session_idle tr)
-                            (singleton sid 0.5R session_idle emp_trace);
-
-                  assume_ (pure (Map.equal (PM.compose_maps (DT.pcm DT.trace_preorder)
-                                                            (singleton sid 0.5R session_idle emp_trace)
-                                                            (singleton sid 0.5R session_idle emp_trace))
-                                           (singleton sid 1.0R session_idle emp_trace)));
-                  assert (ghost_pcm_pts_to r (singleton sid 1.0R session_idle emp_trace));
-                  upd_singleton r sid
-                    #1.0R #session_idle #emp_trace
-                    #1.0R #session_unavailable #emp_trace
-                    (DT.mk_frame_preserving_upd_b DT.trace_preorder emp_trace session_idle session_unavailable);
-
-                  share_ r (singleton sid 1.0R session_unavailable emp_trace)
-                           (singleton sid 0.5R session_unavailable emp_trace)
-                           (singleton sid 0.5R session_unavailable emp_trace);
-
-                  fold (sid_pts_to r sid 0.5R session_unavailable emp_trace);
-                  fold (session_state_perm r sid (Some InUse));
-                  rewrite (pure (Some? (PHT.lookup pht1 sid)) **
-                           session_state_perm r sid (Some InUse)) as
-                          (session_perm r pht1 (U32.v sid));
-
-                  frame_session_perm_on_range r pht pht1 0 (U32.v sid);
-                  frame_session_perm_on_range r pht pht1 (U32.v sid + 1) (U32.v ctr);
-                  on_range_put 0 (U32.v sid) (U32.v ctr) #(session_perm r pht1);
-                  let gst = { session_id_counter = ctr; session_table = fst ss };
-                  rewrite_inv_predicates r ctr gst.session_id_counter (fst ss) gst.session_table pht1;
-                  fold (inv r (Some gst));
-                  mr := Some gst;
-                  unlock l mr;
-
-                  let s = ((| r, l |) <: st);
-                  let ret = (s, SessionStart);
-                  rewrite (mutex_live l (inv r)) as
-                          (st_perm (fst ret));
-                  rewrite (ghost_pcm_pts_to r (singleton sid 0.5R session_unavailable emp_trace)) as
-                          (sid_pts_to (dfst (fst ret)) sid 0.5R session_unavailable tr);
-                  rewrite emp as session_ctxt_perm (snd ret) tr;
-                  ret
-                }
-                _ -> {
-                  admit ()
-                }
-              }
-            }
-            None -> {
-              unreachable ()
-            }
-          }
-        } else {
-          admit ()
+    
+    Some st ->
+    {
+      match st {
+        SessionStart -> {
+          rewrite (session_state_perm st) as emp;
+          let ctxt = init_engine_ctxt uds;
+          let ctxt_hndl = prng ();
+          let st' = intro_session_state_perm_available ctxt ctxt_hndl;
+          let st'' = take_session_state sid st';
+          //TODO: prove that st'' is InUse
+          drop_ (session_state_perm (dflt st'' st'));
+          Some ctxt_hndl
         }
-      } else {
-        unfold sid_pts_to;
-        gather_ r (sids_above_unused ctr)
-                  (singleton sid 0.5R session_idle tr);
-        unreachable ()
+        _ -> {
+          destroy_session_state st;
+          rewrite emp as (session_state_perm SessionError);
+          let st' = take_session_state sid SessionError;
+          //TODO: prove st' is InUse
+          drop_ (session_state_perm (dflt st' SessionError));
+          None #ctxt_hndl_t
+        }
       }
-
     }
   }
 }
 ```
-#pop-options
+
+
 
 // #push-options "--ext 'pulse:env_on_err' --print_implicits --warn_error -342"
 

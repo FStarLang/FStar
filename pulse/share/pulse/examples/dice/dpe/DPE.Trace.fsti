@@ -78,66 +78,15 @@ let trace_extension (t0 t1:trace_elt) : prop =
 let trace_preorder : FStar.Preorder.preorder trace_elt =
   FStar.ReflexiveTransitiveClosure.closure trace_extension
 
-open FStar.PCM
-open FStar.Preorder
 open PulseCore.Preorder
-open PulseCore.FractionalPermission
+
+module FP = Pulse.Lib.PCM.FractionalPreorder
 
 type trace = hist trace_preorder
 
-type pcm_t : Type u#1 = option perm & trace
+type pcm_t : Type u#1 = FP.pcm_carrier trace_preorder
 
-let pcm_composable : symrel pcm_t =
-  fun x0 x1 -> 
-  match x0, x1 with
-  | (None, t0), (None, t1) -> t0 `extends` t1 \/ t1 `extends` t0
-  | (Some _, t0), (None, t1) -> t0 `extends` t1
-  | (None, t0), (Some _, t1) -> t1 `extends` t0
-  | (Some p0, t0), (Some p1, t1) -> t0 == t1 /\ (p0 +. p1) <=. 1.0R
-
-let pcm_op (x:pcm_t) (y:pcm_t { pcm_composable x y }) : pcm_t =
-  match x, y with
-  | (None, t0), (None, t1) -> None, p_op trace_preorder t0 t1
-  | (Some _, _), (None, _) -> x
-  | (None, _), (Some _, _) -> y
-  | (Some p0, t0), (Some p1, t1) -> Some (p0 +. p1), t0
-
-let pcm_one : pcm_t = None, []
-
-let pcm' : pcm' pcm_t = {
-  composable = pcm_composable;
-  op = pcm_op;
-  one = pcm_one;
-}
-
-let lem_commutative : lem_commutative pcm' =
-  fun _ _ -> ()
-
-let lem_assoc_l : lem_assoc_l pcm' =
-  fun _ _ _ -> ()
-
-let lem_assoc_r : lem_assoc_r pcm' =
-  fun _ _ _ -> ()
-
-let rec extends_nil (l:trace) : Lemma (l `extends` []) =
-  match l with
-  | [] -> ()
-  | _::tl -> extends_nil tl
-
-let lem_is_unit : FStar.PCM.lem_is_unit pcm' =
-  fun x ->
-  match x with
-  | Some _, t -> extends_nil t
-  | None, t -> p_op_nil trace_preorder t
-
-let pcm : pcm pcm_t = {
-  p = pcm';
-  comm = lem_commutative;
-  assoc = lem_assoc_l;
-  assoc_r = lem_assoc_r;
-  is_unit = lem_is_unit;
-  refine = (fun _ -> True);
-}
+let pcm : FStar.PCM.pcm pcm_t = FP.fp_pcm trace_preorder
 
 let current_state (t:trace) : g_session_state =
   match t with
@@ -160,7 +109,7 @@ let next_trace (t:trace) (s:g_session_state { valid_transition t s }) : trace =
 let mk_frame_preserving_upd
   (t:hist trace_preorder)
   (s:g_session_state { valid_transition t s })
-  : frame_preserving_upd pcm (Some 1.0R, t) (Some 1.0R, next_trace t s) =
+  : FStar.PCM.frame_preserving_upd pcm (Some 1.0R, t) (Some 1.0R, next_trace t s) =
   fun _ -> Some 1.0R, next_trace t s
 
 let snapshot (x:pcm_t) : pcm_t = None, snd x
@@ -171,22 +120,8 @@ let snapshot_idempotent (x:pcm_t)
 let snapshot_duplicable (x:pcm_t)
   : Lemma
       (requires True)
-      (ensures x `pcm_composable` snapshot x) = ()
+      (ensures x `FStar.PCM.composable pcm` snapshot x) = ()
 
 let full_perm_empty_history_compatible ()
-  : Lemma (compatible pcm (Some 1.0R, []) (Some 1.0R, [])) =
+  : Lemma (FStar.PCM.compatible pcm (Some 1.0R, []) (Some 1.0R, [])) =
   ()
-
-
-// module FRAP = Pulse.Lib.FractionalAnchoredPreorder
-// let degenerate_anchor
-//   : FRAP.anchor_rel trace_preorder
-//   = fun x y -> trace_preorder x y /\ True
-// let carrier = FRAP.knowledge degenerate_anchor
-// let trace_pcm
-//   : FStar.PCM.pcm carrier
-//   = FRAP.pcm #trace #trace_preorder #degenerate_anchor
-// module PM = Pulse.Lib.PCMMap
-// let session_trace_pcm : PCM.pcm (PM.map sid_t carrier) = PM.pointwise sid_t trace_pcm
-// let trace_ref = 
-// let snapshot_value (t:trace) = (None, None), 
