@@ -54,7 +54,6 @@ let live_addrs_codom
           (non_live_addrs_codom regions region_liveness_tags))
       (r:addrs_dom regions) = (y: GSet.set nat { GSet.subset (non_live_addrs r) y } )
 
-#push-options "--ext 'compat:injectivity'"
 noeq
 type loc' (#al: aloc_t u#x) (c: cls al) : Type u#x =
   | Loc:
@@ -73,7 +72,6 @@ type loc' (#al: aloc_t u#x) (c: cls al) : Type u#x =
         Ghost.reveal aux `GSet.subset` (aloc_domain c regions (fun _ -> GSet.complement GSet.empty))
       } ) ->
       loc' c
-#pop-options
 
 let loc = loc'
 
@@ -958,9 +956,9 @@ let modifies_intro_strong #al #c l h h' regions mrefs lives unused_ins alocs =
     assert_norm (Loc?.region_liveness_tags (loc_mreference #_ #c p) == Ghost.hide Set.empty);
     assert (loc_disjoint_region_liveness_tags (loc_mreference p) l);
     // FIXME: WHY WHY WHY is this assert necessary?
-    assert_spinoff (loc_aux_disjoint (Ghost.reveal (Loc?.aux (loc_mreference p))) (Ghost.reveal (Loc?.aux l)));
+    assert (loc_aux_disjoint (Ghost.reveal (Loc?.aux (loc_mreference p))) (Ghost.reveal (Loc?.aux l)));
     // FIXME: Now this one is too :)
-    assert (loc_disjoint_addrs (loc_mreference p) l);
+    assert_spinoff (loc_disjoint_addrs (loc_mreference p) l);
     assert ((loc_disjoint (loc_mreference p) l));
     mrefs t pre p
   in
@@ -1315,6 +1313,7 @@ let modifies_loc_addresses_intro_weak
   modifies_preserves_alocs_intro (loc_union (loc_addresses true r s) l) h1 h2 () (fun r' a b -> if r = r' then f a b else ()
   )
 
+#push-options "--z3rlimit_factor 4"
 let modifies_loc_addresses_intro #al #c r s l h1 h2 =
   loc_includes_loc_regions_restrict_to_regions l (Set.singleton r);
   loc_includes_loc_union_restrict_to_regions l (Set.singleton r);
@@ -1472,6 +1471,8 @@ let disjoint_addrs_of_loc_loc_disjoint
   ))
   (ensures (loc_disjoint l1 l2))
 = // FIXME: WHY WHY WHY do I need this assert?
+  let Loc _ _ _ _ _ = l1 in
+  let Loc _ _ _ _ _ = l2 in
   let l1' = Ghost.reveal (Loc?.aux l1) in
   let l2' = Ghost.reveal (Loc?.aux l2) in
   assert (forall (b1 b2: aloc c) . (GSet.mem b1 l1' /\ GSet.mem b2 l2') ==> aloc_disjoint b1 b2)
