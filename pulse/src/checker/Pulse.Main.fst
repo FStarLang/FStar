@@ -195,6 +195,8 @@ let check_pulse (namespaces:list string)
                 (nm:string)
   : RT.dsl_tac_t
   = fun env ->
+      if ext_getv "pulse:dump_on_failure" <> "1" then
+        set_dump_on_failure false;
       match PulseSyntaxExtension.ASTBuilder.parse_pulse env namespaces module_abbrevs content file_name line col with
       | Inl decl ->
         main nm decl tm_emp env
