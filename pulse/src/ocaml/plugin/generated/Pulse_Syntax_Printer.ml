@@ -1382,23 +1382,7 @@ and (term_to_doc :
                 (FStar_Tactics_Effect.lift_div_tac
                    (fun uu___ -> FStar_Pprint.doc_of_string "_")))
        | Pulse_Syntax_Pure.Tm_FStar t1 ->
-           Obj.magic
-             (Obj.repr
-                (FStar_Tactics_Effect.tac_bind
-                   (FStar_Sealed.seal
-                      (Obj.magic
-                         (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
-                            (Prims.of_int (169)) (Prims.of_int (37))
-                            (Prims.of_int (169)) (Prims.of_int (57)))))
-                   (FStar_Sealed.seal
-                      (Obj.magic
-                         (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
-                            (Prims.of_int (169)) (Prims.of_int (20))
-                            (Prims.of_int (169)) (Prims.of_int (57)))))
-                   (Obj.magic (FStar_Tactics_V2_Builtins.term_to_string t1))
-                   (fun uu___ ->
-                      FStar_Tactics_Effect.lift_div_tac
-                        (fun uu___1 -> FStar_Pprint.arbitrary_string uu___)))))
+           Obj.magic (Obj.repr (FStar_Tactics_V2_Builtins.term_to_doc t1)))
       uu___
 let (binder_to_string :
   Pulse_Syntax_Base.binder ->
