@@ -54,6 +54,7 @@ let live_addrs_codom
           (non_live_addrs_codom regions region_liveness_tags))
       (r:addrs_dom regions) = (y: GSet.set nat { GSet.subset (non_live_addrs r) y } )
 
+#push-options "--ext 'compat:injectivity'"
 noeq
 type loc' (#al: aloc_t u#x) (c: cls al) : Type u#x =
   | Loc:
@@ -72,6 +73,7 @@ type loc' (#al: aloc_t u#x) (c: cls al) : Type u#x =
         Ghost.reveal aux `GSet.subset` (aloc_domain c regions (fun _ -> GSet.complement GSet.empty))
       } ) ->
       loc' c
+#pop-options
 
 let loc = loc'
 
@@ -618,7 +620,11 @@ let loc_disjoint_aloc_elim #al #c #r1 #a1 #r2 #a2 b1 b2 =
 #push-options "--z3rlimit 15"
 let loc_disjoint_addresses_intro #al #c preserve_liveness1 preserve_liveness2 r1 r2 n1 n2 =
   // FIXME: WHY WHY WHY this assert?
-  assert (loc_aux_disjoint (Ghost.reveal (Loc?.aux (loc_addresses #_ #c preserve_liveness1 r1 n1))) (Ghost.reveal (Loc?.aux (loc_addresses #_ #c preserve_liveness2 r2 n2))))
+  let Loc _ _ _ _ _ = (loc_addresses #_ #c preserve_liveness1 r1 n1) in
+  let Loc _ _ _ _ _ = (loc_addresses #_ #c preserve_liveness2 r2 n2) in
+  assert (loc_aux_disjoint 
+                (Ghost.reveal (Loc?.aux (loc_addresses #_ #c preserve_liveness1 r1 n1))) 
+                (Ghost.reveal (Loc?.aux (loc_addresses #_ #c preserve_liveness2 r2 n2))))
 #pop-options
 
 let loc_disjoint_addresses_elim #al #c preserve_liveness1 preserve_liveness2 r1 r2 n1 n2 = ()
@@ -947,6 +953,8 @@ let modifies_intro_strong #al #c l h h' regions mrefs lives unused_ins alocs =
                       (Set.mem (HS.frameOf p) (regions_of_loc l) ==> ~ (GSet.mem (HS.as_addr p) (addrs_of_loc l (HS.frameOf p))))))
            (ensures  (HS.contains h' p /\ HS.sel h' p == HS.sel h p))
     =
+    let Loc _ _ _ _ _ = (loc_mreference #_ #c p) in
+    let Loc _ _ _ _ _ = l in
     assert_norm (Loc?.region_liveness_tags (loc_mreference #_ #c p) == Ghost.hide Set.empty);
     assert (loc_disjoint_region_liveness_tags (loc_mreference p) l);
     // FIXME: WHY WHY WHY is this assert necessary?
