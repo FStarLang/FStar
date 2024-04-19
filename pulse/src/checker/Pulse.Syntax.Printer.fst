@@ -166,7 +166,7 @@ and term_to_doc t : T.Tac document
                 (term_to_doc p)
 
     | Tm_Unknown -> doc_of_string "_"
-    | Tm_FStar t -> arbitrary_string (T.term_to_string t) // TODO: expose and use T.term_to_doc
+    | Tm_FStar t -> T.term_to_doc t
 
 let binder_to_string (b:binder)
   : T.Tac string
