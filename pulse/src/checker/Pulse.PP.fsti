@@ -49,7 +49,11 @@ instance val printable_ctag   : printable ctag
 instance val printable_option (a:Type) (_ : printable a) : printable (option a)
 instance val printable_list (a:Type) (_ : printable a) : printable (list a)
 
+(* NOTE!! Pulse.term and FStar.Reflection.term are the same type. This instance
+is used to pretty-print pulse terms and fstar terms. Its implementation is Pulse-aware,
+however, and will use the view to show the pulse term structure. *)
 instance val printable_term     : printable term
+
 instance val printable_st_term  : printable st_term
 instance val printable_universe : printable universe
 instance val printable_comp     : printable comp
@@ -59,8 +63,6 @@ instance val printable_env : printable env
 instance val pp_effect_annot : printable effect_annot
 
 instance val printable_post_hint_t : printable post_hint_t
-
-instance val printable_fstar_term : printable Reflection.V2.term
 
 instance val printable_tuple2 (a b:Type)
           (_:printable a) (_:printable b)
