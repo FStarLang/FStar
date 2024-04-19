@@ -21,7 +21,7 @@ let (check_vprop_equiv_ext :
                      (Prims.of_int (30)) Prims.int_one (Prims.of_int (39))
                      (Prims.of_int (22)))))
             (Obj.magic
-               (FStar_Tactics_V2_Builtins.check_equiv
+               (FStar_Tactics_V2_Derived.check_equiv
                   (Pulse_Typing.elab_env g) p q))
             (fun uu___ ->
                (fun uu___ ->
