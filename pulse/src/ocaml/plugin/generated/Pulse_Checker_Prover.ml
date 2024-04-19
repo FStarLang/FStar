@@ -1094,7 +1094,7 @@ let rec (prover :
                                                                     (Prims.of_int (173))
                                                                     (Prims.of_int (16))
                                                                     (Prims.of_int (174))
-                                                                    (Prims.of_int (66)))))
+                                                                    (Prims.of_int (77)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -1112,7 +1112,7 @@ let rec (prover :
                                                                     (Prims.of_int (174))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (174))
-                                                                    (Prims.of_int (66)))))
+                                                                    (Prims.of_int (77)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -1120,7 +1120,7 @@ let rec (prover :
                                                                     (Prims.of_int (173))
                                                                     (Prims.of_int (16))
                                                                     (Prims.of_int (174))
-                                                                    (Prims.of_int (66)))))
+                                                                    (Prims.of_int (77)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -1130,7 +1130,7 @@ let rec (prover :
                                                                     (Prims.of_int (174))
                                                                     (Prims.of_int (27))
                                                                     (Prims.of_int (174))
-                                                                    (Prims.of_int (66)))))
+                                                                    (Prims.of_int (77)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -1138,10 +1138,9 @@ let rec (prover :
                                                                     (Prims.of_int (174))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (174))
-                                                                    (Prims.of_int (66)))))
+                                                                    (Prims.of_int (77)))))
                                                                     (Obj.magic
-                                                                    (Pulse_PP.pp
-                                                                    Pulse_PP.printable_fstar_term
+                                                                    (Pulse_Syntax_Printer.term_to_doc
                                                                     (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst3.Pulse_Checker_Prover_Base.remaining_ctxt)))
                                                                     (fun

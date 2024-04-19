@@ -130,23 +130,32 @@ and term_to_doc t : T.Tac document
   = match inspect_term t with
     | Tm_Emp -> doc_of_string "emp"
 
-    | Tm_Pure p -> doc_of_string "pure" ^^ parens (term_to_doc p)
+    | Tm_Pure p -> doc_of_string "pure " ^^ parens (term_to_doc p)
     | Tm_Star p1 p2 ->
-      infix 2 1 (doc_of_string "**")
+      // 0 below means we lay a non-flat sequence of stars in the same column, like:
+      // p **
+      // q **
+      // r
+      infix 0 1 (doc_of_string "**")
                 (term_to_doc p1)
                 (term_to_doc p2)
 
     | Tm_ExistsSL _ _ _ ->
       let bs, body = collect_binders Tm_ExistsSL? t in
-      parens (doc_of_string "exists*" ^/^ (separate (doc_of_string " ") (T.map binder_to_doc bs))
-              ^^ doc_of_string "."
-              ^/^ term_to_doc body)
+      let bs_doc = align (group (separate (doc_of_string " ") (T.map binder_to_doc bs))) in
+      parens <|
+        prefix 2 1 (prefix 2 1 (doc_of_string "exists*") bs_doc ^^ dot)
+                   (term_to_doc body)
+      // parens (doc_of_string "exists*" ^/^ (separate (doc_of_string " ") (T.map binder_to_doc bs))
+      //         ^^ doc_of_string "."
+      //         ^/^ term_to_doc body)
 
     | Tm_ForallSL _ _ _ ->
       let bs, body = collect_binders Tm_ForallSL? t in
-      parens (doc_of_string "forall*" ^/^ (separate (doc_of_string " ") (T.map binder_to_doc bs))
-              ^^ doc_of_string "."
-              ^/^ term_to_doc body)
+      let bs_doc = align (group (separate (doc_of_string " ") (T.map binder_to_doc bs))) in
+      parens <|
+        prefix 2 1 (prefix 2 1 (doc_of_string "forall*") bs_doc ^^ dot)
+                   (term_to_doc body)
 
     | Tm_VProp -> doc_of_string "vprop"
     | Tm_Inames -> doc_of_string "inames"
@@ -157,7 +166,7 @@ and term_to_doc t : T.Tac document
                 (term_to_doc p)
 
     | Tm_Unknown -> doc_of_string "_"
-    | Tm_FStar t -> doc_of_string (T.term_to_string t) 
+    | Tm_FStar t -> T.term_to_doc t
 
 let binder_to_string (b:binder)
   : T.Tac string
