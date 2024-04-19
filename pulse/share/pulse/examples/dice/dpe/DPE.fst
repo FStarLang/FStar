@@ -39,22 +39,22 @@ open Pulse.Lib.HashTable.Type
 open Pulse.Lib.HashTable
 open Pulse.Lib.Mutex
 
-noeq
-type cell (a:Type0) = {
-  v : a;
-  next : ref (cell a);
-  lock : L.lock;
-}
+// noeq
+// type cell (a:Type0) = {
+//   v : a;
+//   next : ref (cell a);
+//   lock : L.lock;
+// }
 
-let rec llist (#a:Type) (cref:ref (cell a)) (repr:list a) : Tot vprop (decreases repr) =
-  match repr with
-  | [] -> emp
-  | hd::tl ->
-    exists* c.
-    pts_to cref #(half_perm full_perm) c **
-    pure (hd == c.v) **
-    L.lock_alive c.lock (exists* cnext. pts_to c.next cnext) **
-    llist c.next tl
+// let rec llist (#a:Type) (cref:ref (cell a)) (repr:list a) : Tot vprop (decreases repr) =
+//   match repr with
+//   | [] -> emp
+//   | hd::tl ->
+//     exists* c.
+//     pts_to cref #0.5R c **
+//     pure (hd == c.v) **
+//     L.lock_alive c.lock (exists* cnext. pts_to c.next cnext) **
+//     llist c.next tl
 
 
 assume
@@ -74,7 +74,6 @@ type session_state =
   | InUse
   | SessionClosed
   | SessionError //error description
-
 
 //
 // These two definitions extract to non-exhaustive patterns in Rust
@@ -141,108 +140,188 @@ let mk_available (hndl:ctxt_hndl_t) (ctxt:context_t)
 
 // Marking this noextract since this spec only
 // What will krml do?
+
 noextract
-let session_table_map = PHT.pht_t sid_t session_state
+type ht_t = ht_t sid_t session_state
+
+noextract
+type pht_t = PHT.pht_t sid_t session_state
 
 noeq
-type global_state_t = {
-  session_id_counter:sid_t;
-  session_table:ht_t sid_t session_state;
-}
+type st = { st_ctr:sid_t; st_tbl:ht_t; }
 
 module G = FStar.Ghost
 module PP = PulseCore.Preorder
 // module FP = Pulse.Lib.PCM.FractionalPreorder
 module PM = Pulse.Lib.PCMMap
-module DT = DPE.Trace
+module T = DPE.Trace
 module PCM = FStar.PCM
 
-type pcm_t : Type u#1 = PM.map sid_t (DT.pcm_carrier DT.trace_preorder)
-let pcm : PCM.pcm pcm_t = PM.pointwise sid_t (DT.pcm DT.trace_preorder)
+type pcm_t : Type u#1 = PM.map sid_t (T.pcm_t)
+let pcm : PCM.pcm pcm_t = PM.pointwise sid_t T.pcm
+type gref = ghost_pcm_ref pcm
 
-let emp_trace : PP.hist DT.trace_preorder = []
+let emp_trace : T.trace = []
 
-let singleton (sid:sid_t) (p:perm) (b:bool) (tr:PP.hist DT.trace_preorder) : pcm_t =
-  Map.upd (Map.const (None, emp_trace)) sid (Some (p, b), tr)
+let singleton (sid:sid_t) (p:perm) (t:T.trace) : pcm_t =
+  Map.upd (Map.const (None, emp_trace)) sid (Some p, t)
 
-let sid_pts_to (r:ghost_pcm_ref pcm) (sid:sid_t) (p:perm) (b:bool) (tr:PP.hist DT.trace_preorder) : vprop =
-  ghost_pcm_pts_to r (singleton sid p b tr)
+let sid_pts_to (r:gref) (sid:sid_t) (t:T.trace) : vprop =
+  ghost_pcm_pts_to r (singleton sid 0.5R t)
 
-let context_repr_and_trace_related (repr:context_repr_t) (tr:PP.hist DT.trace_preorder) : prop =
-  True  // TODO: functional correctness
+// let context_repr_and_trace_related (repr:context_repr_t) (tr:PP.hist DT.trace_preorder) : prop =
+//   True  // TODO: functional correctness
 
-let session_idle = true
-let session_unavailable = false
+let session_state_related (s:session_state) (gs:T.g_session_state) : vprop =
+  let open T in
+  match s, gs with
+  | SessionStart, G_SessionStart
+  | InUse, G_InUse _
+  | SessionClosed, G_SessionClosed _
+  | SessionError, G_SessionError _ -> emp
 
-let session_ctxt_perm (s:session_state) (tr:PP.hist DT.trace_preorder) : vprop =
-  match s with
-  | SessionStart
-  | InUse
-  | SessionClosed
-  | SessionError -> emp
-  | Available _ ->
-    exists* repr.
-    context_perm (ctxt_of s) repr **
-    pure (context_repr_and_trace_related repr tr)
+  | Available _, G_Available repr -> context_perm (ctxt_of s) repr
 
-let session_state_perm (r:ghost_pcm_ref pcm) (sid:sid_t) (s:option session_state) =
-  match s with
-  | None -> emp
-  | Some SessionStart ->
-    sid_pts_to r sid (half_perm full_perm) session_idle emp_trace
-  | Some SessionClosed
-  | Some SessionError ->
-    exists* tr. sid_pts_to r sid full_perm session_unavailable tr
-  | Some InUse ->
-    exists* tr.
-    sid_pts_to r sid (half_perm full_perm) session_unavailable tr
-         
-  | Some (Available _) ->
-    exists* (tr:PP.hist DT.trace_preorder).
-    sid_pts_to r sid (half_perm full_perm) session_idle tr **
-    session_ctxt_perm (Some?.v s) tr
+  | _ -> pure False
+  
+let session_state_perm (r:gref) (pht:pht_t) (sid:sid_t) =
+  exists* (s:session_state) (t:T.trace). pure (PHT.lookup pht sid == Some s) **
+                                         sid_pts_to r sid t **
+                                         session_state_related s (T.current_state t)
 
-let session_perm (r:ghost_pcm_ref pcm) (pht:session_table_map) (sid:nat) =
+let session_perm (r:gref) (pht:pht_t) (sid:nat) =
   if UInt.fits sid 32
-  then pure (Some? (PHT.lookup pht (U32.uint_to_t sid))) **
-       session_state_perm r (U32.uint_to_t sid) (PHT.lookup pht (U32.uint_to_t sid))
+  then session_state_perm r pht (U32.uint_to_t sid)
   else emp
 
-let all_sids_unused : pcm_t = Map.map_literal (fun _ ->
-  Some (full_perm, session_unavailable), emp_trace)
+let map_literal (f:sid_t -> T.pcm_t) = Map.map_literal f
 
-let sids_above_unused (s:sid_t) : pcm_t = Map.map_literal (fun sid ->
+let all_sids_unused : pcm_t = map_literal (fun _ -> Some 1.0R, emp_trace)
+
+let sids_above_unused (s:sid_t) : pcm_t = map_literal (fun sid ->
   if U32.lt sid s then None, emp_trace
-  else Some (full_perm, session_unavailable), emp_trace)
+  else Some 1.0R, emp_trace)
 
-let inv (r:ghost_pcm_ref pcm) (st_opt:option global_state_t) : vprop =
-  match st_opt with
+let inv (r:gref) (s:option st) : vprop =
+  match s with
   | None -> ghost_pcm_pts_to r all_sids_unused
   
-  | Some st ->
-    ghost_pcm_pts_to r (sids_above_unused st.session_id_counter) **
+  | Some s ->
+    ghost_pcm_pts_to r (sids_above_unused s.st_ctr) **
     
-    (exists* pht. models st.session_table pht **
-                  on_range (session_perm r pht) 0 (U32.v st.session_id_counter))
+    (exists* pht. models s.st_tbl pht **
+                  on_range (session_perm r pht) 0 (U32.v s.st_ctr))
 
-let client_perm (r:ghost_pcm_ref pcm) (sid:sid_t) (tr:PP.hist DT.trace_preorder) : vprop =
-  sid_pts_to r sid (half_perm full_perm) session_idle tr
+type dpe_t = gref & mutex (option st)
 
-type st = r:ghost_pcm_ref pcm & mutex (option global_state_t)
+let dpe_inv (s:dpe_t) = mutex_live (snd s) (inv (fst s))
 
-let st_perm (s:st) = mutex_live (dsnd s) (inv (dfst s))
+```pulse
+ghost
+fn gather_ (r:gref)
+  (v0 v1:pcm_t)
+  requires ghost_pcm_pts_to r v0 **
+           ghost_pcm_pts_to r v1
+  returns _:squash (PCM.composable pcm v0 v1)
+  ensures ghost_pcm_pts_to r (PCM.op pcm v0 v1)
+{
+  ghost_gather r v0 v1;
+  with _v. rewrite (ghost_pcm_pts_to r _v) as
+                   (ghost_pcm_pts_to r (PCM.op pcm v0 v1))
+}
+```
 
-// assume Fits_size_t_u32 : squash (US.fits_u32)
-// let sid_hash (x:sid_t) : US.t = US.of_u32 x
+```pulse
+ghost
+fn gather_v (r:gref)
+  (v0 v1 v:pcm_t)
+  requires ghost_pcm_pts_to r v0 **
+           ghost_pcm_pts_to r v1 **
+           pure (PCM.composable pcm v0 v1 ==> Map.equal (PCM.op pcm v0 v1) v)
+  ensures ghost_pcm_pts_to r v **
+          pure (PCM.composable pcm v0 v1)
+{
+  ghost_gather r v0 v1;
+  with _v. rewrite (ghost_pcm_pts_to r _v) as
+                   (ghost_pcm_pts_to r v)
+}
+```
 
-assume val sid_hash : sid_t -> SZ.t  // TODO
+```pulse
+ghost
+fn share_ (r:gref)
+  (v v0 v1:pcm_t)
+  requires ghost_pcm_pts_to r v **
+           pure (PCM.composable pcm v0 v1 /\
+                 Map.equal (PCM.op pcm v0 v1) v)
+  ensures ghost_pcm_pts_to r v0 **
+          ghost_pcm_pts_to r v1
+{
+  rewrite (ghost_pcm_pts_to r v) as
+          (ghost_pcm_pts_to r (PCM.op pcm v0 v1));
+  ghost_share r v0 v1;
+}
+```
+
+
+let full (t0:T.trace) = Some #perm 1.0R, t0
+let half (t0:T.trace) = Some #perm 0.5R, t0
+
+```pulse
+ghost
+fn upd_sid_pts_to
+  (r:gref) (sid:sid_t)
+  (#t0 #t1:T.trace)
+  (s:T.g_session_state { T.valid_transition t0 s })
+
+  requires sid_pts_to r sid t0 **
+           sid_pts_to r sid t1
+  ensures sid_pts_to r sid (T.next_trace t0 s) **
+          sid_pts_to r sid (T.next_trace t0 s) **
+          pure (t0 == t1)
+{
+  unfold sid_pts_to;
+  unfold sid_pts_to;
+
+  gather_v r (singleton sid 0.5R t0)
+             (singleton sid 0.5R t1)
+             (singleton sid 1.0R t0);
+
+  let fp : PCM.frame_preserving_upd T.pcm (full t0) (full (T.next_trace t0 s)) =
+    T.mk_frame_preserving_upd t0 s;
+
+  assert (pure (Map.equal (Map.upd (singleton sid 1.0R t0) sid (full (T.next_trace t0 s)))
+                          (singleton sid 1.0R (T.next_trace t0 s))));
+
+  let fp : PCM.frame_preserving_upd pcm (singleton sid 1.0R t0) (singleton sid 1.0R (T.next_trace t0 s)) =
+    PM.lift_frame_preserving_upd #_ #_ #T.pcm
+      (full t0)
+      (full (T.next_trace t0 s))
+      fp
+      (singleton sid 1.0R t0) sid;
+
+  ghost_write r
+    (singleton sid 1.0R t0)
+    (singleton sid 1.0R (T.next_trace t0 s))
+    fp;
+
+  share_ r (singleton sid 1.0R (T.next_trace t0 s))
+           (singleton sid 0.5R (T.next_trace t0 s))
+           (singleton sid 0.5R (T.next_trace t0 s));
+
+  fold (sid_pts_to r sid (T.next_trace t0 s));
+  fold (sid_pts_to r sid (T.next_trace t0 s));
+}
+```
+
+assume val sid_hash : sid_t -> SZ.t
 
 [@@ Rust_const_fn]
 ```pulse
 fn initialize_global_state ()
   requires emp
-  returns s:st
-  ensures st_perm s
+  returns s:dpe_t
+  ensures dpe_inv s
 {
   let r = ghost_alloc #_ #pcm all_sids_unused;
   with _v. rewrite (ghost_pcm_pts_to r (G.reveal (G.hide _v))) as
@@ -250,103 +329,72 @@ fn initialize_global_state ()
   fold (inv r None);
   assume_ (pure (forall s. is_big (inv r s)));
   let m = new_mutex (inv r) None;
-  let s = (| r, m |);
-  rewrite each r as dfst s;
-  rewrite each m as dsnd s;
-  fold (st_perm s);
+  let s = ((r, m) <: dpe_t);
+  rewrite each r as fst s;
+  rewrite each m as snd s;
+  fold (dpe_inv s);
   s
 }
 ```
 
-let global_state : st = run_stt (initialize_global_state ())
-
-```pulse
-fn insert_if_not_full
-  (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
-  (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
-  (ht:ht_t kt vt) (k:kt) (v:vt)
-  (#pht:erased (PHT.pht_t kt vt))
-  requires models ht pht
-  returns b:(ht_t kt vt & bool)
-  ensures
-    exists* pht'.
-      models (fst b) pht' **
-      pure (same_sz_and_hashf (fst b) ht /\
-            (if snd b
-             then (PHT.not_full (reveal pht).repr /\
-                   pht'==PHT.insert pht k v)
-             else pht'==pht))
-{
-  let b = not_full ht;
-  if snd b
-  {
-    Pulse.Lib.HashTable.insert (fst b) k v
-  }
-  else
-  {
-    let res = (fst b, false);
-    rewrite (models (fst b) pht) as (models (fst res) pht);
-    res
-  }
-}
-```
+let global_state : dpe_t = run_stt (initialize_global_state ())
 
 assume val safe_add (i j:U32.t)
   : o:option U32.t { Some? o ==> U32.v (Some?.v o) == U32.v i + U32.v j }
 
         // ghost_write r
-        //   (singleton ctr full_perm session_unavailable emp_trace)
-        //   (singleton ctr full_perm session_idle emp_trace)
-        //   (PM.lift_frame_preserving_upd (singleton ctr full_perm session_unavailable emp_trace) (singleton ctr full_perm session_idle emp_trace)
+        //   (singleton ctr 1.0R session_unavailable emp_trace)
+        //   (singleton ctr 1.0R session_idle emp_trace)
+        //   (PM.lift_frame_preserving_upd (singleton ctr 1.0R session_unavailable emp_trace) (singleton ctr 1.0R session_idle emp_trace)
         //      (DT.mk_frame_preserving_upd_b DT.trace_preorder emp_trace session_unavailable session_idle)
-        //      (singleton ctr full_perm session_unavailable emp_trace) ctr);
+        //      (singleton ctr 1.0R session_unavailable emp_trace) ctr);
 
 
-```pulse
-ghost
-fn upd_singleton (r:ghost_pcm_ref pcm) (ctr:sid_t)
-  (#p0:perm) (#b0:bool) (#tr0:PP.hist DT.trace_preorder)
-  (#p1:perm) (#b1:bool) (#tr1:PP.hist DT.trace_preorder)
-  (fp_upd:PCM.frame_preserving_upd (DT.pcm DT.trace_preorder) (Some (p0, b0), tr0) (Some (p1, b1), tr1))
+// ```pulse
+// ghost
+// fn upd_singleton (r:gref) (ctr:sid_t)
+//   (#p0:perm) (#b0:bool) (#tr0:PP.hist DT.trace_preorder)
+//   (#p1:perm) (#b1:bool) (#tr1:PP.hist DT.trace_preorder)
+//   (fp_upd:PCM.frame_preserving_upd (DT.pcm DT.trace_preorder) (Some (p0, b0), tr0) (Some (p1, b1), tr1))
 
-  requires ghost_pcm_pts_to r (singleton ctr p0 b0 tr0)
-  ensures ghost_pcm_pts_to r (singleton ctr p1 b1 tr1)
-{
-  assert (pure (Map.equal (Map.upd (singleton ctr p0 b0 tr0) ctr (Some (p1, b1), tr1))
-                          (singleton ctr p1 b1 tr1)));
+//   requires ghost_pcm_pts_to r (singleton ctr p0 b0 tr0)
+//   ensures ghost_pcm_pts_to r (singleton ctr p1 b1 tr1)
+// {
+//   assert (pure (Map.equal (Map.upd (singleton ctr p0 b0 tr0) ctr (Some (p1, b1), tr1))
+//                           (singleton ctr p1 b1 tr1)));
 
-  ghost_write r
-    (singleton ctr p0 b0 tr0)
-    (singleton ctr p1 b1 tr1)
-    (PM.lift_frame_preserving_upd #_ #_ #(DT.pcm DT.trace_preorder)  // Why can't we infer the implicits here?
-       (Some (p0, b0), tr0)
-       (Some (p1, b1), tr1)
-       fp_upd
-       (singleton ctr p0 b0 tr0) ctr)
+//   ghost_write r
+//     (singleton ctr p0 b0 tr0)
+//     (singleton ctr p1 b1 tr1)
+//     (PM.lift_frame_preserving_upd #_ #_ #(DT.pcm DT.trace_preorder)  // Why can't we infer the implicits here?
+//        (Some (p0, b0), tr0)
+//        (Some (p1, b1), tr1)
+//        fp_upd
+//        (singleton ctr p0 b0 tr0) ctr)
 
-}
-```
+// }
+// ```
 
-```pulse
-ghost
-fn share_ (r:ghost_pcm_ref pcm) (v0:pcm_t)
-  (v1:pcm_t) (v2:pcm_t { PM.composable_maps (DT.pcm DT.trace_preorder) v1 v2 })
-  requires ghost_pcm_pts_to r v0 **
-           pure (Map.equal v0 (PM.compose_maps (DT.pcm DT.trace_preorder) v1 v2))
-  ensures ghost_pcm_pts_to r v1 **
-          ghost_pcm_pts_to r v2
-{
-  rewrite (ghost_pcm_pts_to r v0) as
-          (ghost_pcm_pts_to r (PM.compose_maps (DT.pcm DT.trace_preorder) v1 v2));
-  ghost_share r v1 v2  
-}
-```
+// ```pulse
+// ghost
+// fn share_ (r:gref) (v0:pcm_t)
+//   (v1:pcm_t) (v2:pcm_t { PM.composable_maps (DT.pcm DT.trace_preorder) v1 v2 })
+//   requires ghost_pcm_pts_to r v0 **
+//            pure (Map.equal v0 (PM.compose_maps (DT.pcm DT.trace_preorder) v1 v2))
+//   ensures ghost_pcm_pts_to r v1 **
+//           ghost_pcm_pts_to r v2
+// {
+//   rewrite (ghost_pcm_pts_to r v0) as
+//           (ghost_pcm_pts_to r (PM.compose_maps (DT.pcm DT.trace_preorder) v1 v2));
+//   ghost_share r v1 v2  
+// }
+// ```
 
 (* Utilities to work with on_range (session_perm stm) *)
 (* <utilities on on_range> *)
 noextract  // TODO: why do we extract this at all, it is a prop
 let session_table_eq_on_range
-  (pht0 pht1:session_table_map)
+  (pht0 pht1:pht_t)
   (i j:nat)
   : prop =
   forall (k:sid_t). i <= U32.v k && U32.v k < j ==> PHT.lookup pht0 k == PHT.lookup pht1 k
@@ -354,24 +402,34 @@ let session_table_eq_on_range
 ```pulse
 ghost
 fn frame_session_perm_at_sid
-  (r:ghost_pcm_ref pcm)
-  (pht0 pht1:session_table_map)
+  (r:gref)
+  (pht0 pht1:pht_t)
   (i j:nat)
   (_:squash (session_table_eq_on_range pht0 pht1 i j))
   (sid:(sid:nat { i <= sid /\ sid < j }))
   requires session_perm r pht0 sid
   ensures session_perm r pht1 sid
 {
-  rewrite (session_perm r pht0 sid)
-      as  (session_perm r pht1 sid)
+  if (UInt.fits sid 32) {
+    let sid32 = U32.uint_to_t sid;
+    rewrite (session_perm r pht0 sid) as
+            (session_state_perm r pht0 sid32);
+    unfold session_state_perm;
+    fold (session_state_perm r pht1 sid32);
+    rewrite (session_state_perm r pht1 sid32) as
+            (session_perm r pht1 sid)
+  } else {
+    rewrite (session_perm r pht0 sid) as
+            (session_perm r pht1 sid)
+  }
 }
 ```
 
 ```pulse
 ghost
 fn frame_session_perm_on_range
-  (r:ghost_pcm_ref pcm)
-  (pht0 pht1:session_table_map)
+  (r:gref)
+  (pht0 pht1:pht_t)
   (i j:nat)
   requires on_range (session_perm r pht0) i j **
            pure (session_table_eq_on_range pht0 pht1 i j)
@@ -387,7 +445,7 @@ fn frame_session_perm_on_range
 
 ```pulse
 ghost
-fn rewrite_inv_predicates (r:ghost_pcm_ref pcm)
+fn rewrite_inv_predicates (r:gref)
   (ctr0 ctr1:sid_t)
   (tbl0 tbl1:_)
   (pht:_)
@@ -399,182 +457,166 @@ fn rewrite_inv_predicates (r:ghost_pcm_ref pcm)
           models tbl1 pht **
           on_range (session_perm r pht) 0 (U32.v ctr1)
 {
-  rewrite (models tbl0 pht) as (models tbl1 pht);
-  rewrite (on_range (session_perm r pht) 0 (U32.v ctr0)) as
-          (on_range (session_perm r pht) 0 (U32.v ctr1));
-  rewrite (ghost_pcm_pts_to r (sids_above_unused ctr0)) as
-          (ghost_pcm_pts_to r (sids_above_unused ctr1))
+  rewrite each ctr0 as ctr1;
+  rewrite each tbl0 as tbl1;
 }
 ```
 
 (* </utilities on on_range> *)
 
-let open_session_client_perm (r:ghost_pcm_ref pcm) (s:option sid_t) : vprop =
+let open_session_client_perm (r:gref) (s:option sid_t) : vprop =
   match s with
   | None -> emp
-  | Some s -> sid_pts_to r s (half_perm full_perm) session_idle emp_trace
+  | Some s -> sid_pts_to r s [[T.G_SessionStart]]
 
+let emp_to_start_valid () : Lemma (T.valid_transition emp_trace T.G_SessionStart) = ()
+
+#push-options "--fuel 0 --ifuel 2 --split_queries no --z3rlimit_factor 2"
 ```pulse
-fn __open_session (r:ghost_pcm_ref pcm) (s:global_state_t)
+fn __open_session (r:gref) (s:st)
   requires inv r (Some s)
-  returns b:(global_state_t & option sid_t)
+  returns b:(st & option sid_t)
   ensures inv r (Some (fst b)) **
           open_session_client_perm r (snd b)
 {
   unfold (inv r (Some s));
-  with pht. assert (models s.session_table pht);
-  
-  let ctr = s.session_id_counter;
-  let tbl = s.session_table;
 
-  rewrite (models s.session_table pht) as (models tbl pht);
-  rewrite (on_range (session_perm r pht) 0 (U32.v s.session_id_counter))
-       as (on_range (session_perm r pht) 0 (U32.v ctr));
+  let ctr = s.st_ctr;
+  let tbl = s.st_tbl;
+
+  rewrite each
+    s.st_ctr as ctr,
+    s.st_tbl as tbl;
+
+  with pht. assert (models tbl pht);
+  assert (on_range (session_perm r pht) 0 (U32.v ctr));
+  assert (ghost_pcm_pts_to r (sids_above_unused ctr));
 
   let copt = ctr `safe_add` 1ul;
 
   match copt {
     None -> {
-      let s = { session_id_counter = ctr; session_table = tbl };
-      let res = s, None #sid_t;
-      rewrite_inv_predicates r
-        ctr (fst res).session_id_counter
-        tbl (fst res).session_table
-        pht;
-      fold (inv r (Some (fst res)));
-      rewrite emp as (open_session_client_perm r (snd res));
-      res
+      let s = { st_ctr = ctr; st_tbl = tbl };
+      let ret = s, None #sid_t;
+      rewrite each
+        ctr as (fst ret).st_ctr,
+        tbl as (fst ret).st_tbl;
+      fold (inv r (Some (fst ret)));
+      rewrite emp as (open_session_client_perm r (snd ret));
+      ret
     }
 
     Some ctr1 -> {
-      let res = insert_if_not_full tbl ctr SessionStart;
-      if (snd res) {
-        with pht1. assert (models (fst res) pht1);
-        assert (pure (pht1 == PHT.insert pht ctr SessionStart));
-        assert (ghost_pcm_pts_to r (sids_above_unused ctr));
-        assert (on_range (session_perm r pht) 0 (U32.v ctr));
-
-        share_ r (sids_above_unused ctr)
-                 (sids_above_unused ctr1)
-                 (singleton ctr full_perm session_unavailable emp_trace);
-
-        upd_singleton r ctr
-          #full_perm #session_unavailable #emp_trace
-          #full_perm #session_idle #emp_trace
-          (DT.mk_frame_preserving_upd_b DT.trace_preorder emp_trace session_unavailable session_idle);
-
-        share_ r (singleton ctr full_perm session_idle emp_trace)
-                 (singleton ctr (half_perm full_perm) session_idle emp_trace)
-                 (singleton ctr (half_perm full_perm) session_idle emp_trace);
-
-        fold (sid_pts_to r ctr (half_perm full_perm) session_idle emp_trace);
-        fold (sid_pts_to r ctr (half_perm full_perm) session_idle emp_trace);
-
-        fold (session_state_perm r ctr (PHT.lookup pht1 ctr));
-        rewrite (pure (Some? (PHT.lookup pht1 ctr)) **
-                 session_state_perm r ctr (PHT.lookup pht1 ctr)) as
-                session_perm r pht1 (U32.v ctr);
-
-        frame_session_perm_on_range r pht pht1 0 (U32.v ctr);
-        on_range_snoc () #(session_perm r pht1) #0 #(U32.v ctr);
-        rewrite (on_range (session_perm r pht1) 0 (U32.v ctr + 1)) as
-                (on_range (session_perm r pht1) 0 (U32.v ctr1));
-        
-        let s = { session_id_counter = ctr1; session_table = fst res };
-        let ret = (s, Some ctr);
-
-        rewrite_inv_predicates r
-          ctr1 (fst ret).session_id_counter
-          (fst res) (fst ret).session_table
-          pht1;
-        
-        fold (inv r (Some (fst ret)));
-        rewrite (sid_pts_to r ctr (half_perm full_perm) session_idle emp_trace) as
-                (open_session_client_perm r (snd ret));
-        ret
-      } else {
-        let s = { session_id_counter = ctr; session_table = fst res };
+      let ret = HT.insert_if_not_full tbl ctr SessionStart;
+      let tbl1 = fst ret;
+      let b = snd ret;
+      rewrite each fst ret as tbl1;
+      with pht1. assert (models tbl1 pht1);
+      if not b {
+        let s = { st_ctr = ctr; st_tbl = tbl1 };
         let ret = s, None #sid_t;
-        rewrite_inv_predicates r
-          ctr (fst ret).session_id_counter
-          (fst res) (fst ret).session_table
-          pht;
+        rewrite each
+          tbl1 as (fst ret).st_tbl,
+          pht1 as pht,
+          ctr as (fst ret).st_ctr;
         fold (inv r (Some (fst ret)));
         rewrite emp as (open_session_client_perm r (snd ret));
+        ret        
+      } else {
+        share_ r (sids_above_unused ctr)
+                 (sids_above_unused ctr1)
+                 (singleton ctr 1.0R emp_trace);
+        share_ r (singleton ctr 1.0R emp_trace)
+                 (singleton ctr 0.5R emp_trace)
+                 (singleton ctr 0.5R emp_trace);
+        fold (sid_pts_to r ctr emp_trace);
+        fold (sid_pts_to r ctr emp_trace);
+        emp_to_start_valid ();
+        upd_sid_pts_to r ctr #emp_trace #emp_trace T.G_SessionStart;
+        rewrite emp as (session_state_related SessionStart T.G_SessionStart);
+        fold (session_state_perm r pht1 ctr);
+        rewrite (session_state_perm r pht1 ctr) as
+                (session_perm r pht1 (U32.v ctr));
+        frame_session_perm_on_range r pht pht1 0 (U32.v ctr);
+        on_range_snoc () #(session_perm r pht1) #0 #(U32.v ctr);
+        let s = { st_ctr = ctr1; st_tbl = tbl1 };
+        let ret = s, Some ctr;
+        rewrite each
+          ctr1 as (fst ret).st_ctr,
+          tbl1 as (fst ret).st_tbl;
+        fold (inv r (Some (fst ret)));
+        rewrite (sid_pts_to r ctr (T.next_trace emp_trace T.G_SessionStart)) as
+                (open_session_client_perm r (snd ret));
         ret
       }
     }
   }
 }
 ```
+#pop-options
 
 ```pulse
-fn maybe_mk_session_tbl (r:ghost_pcm_ref pcm) (gst_opt:option global_state_t)
-  requires inv r gst_opt
-  returns gst:global_state_t
-  ensures inv r (Some gst)
+fn maybe_mk_session_tbl (r:gref) (sopt:option st)
+  requires inv r sopt
+  returns s:st
+  ensures inv r (Some s)
 {
-  match gst_opt {
+  match sopt {
     None -> {
-      let session_table = HT.alloc #sid_t #session_state sid_hash 256sz;
-      let gst = {
-        session_id_counter = 0ul;
-        session_table;
+      let tbl = HT.alloc #sid_t #session_state sid_hash 256sz;
+      let s = {
+        st_ctr = 0ul;
+        st_tbl = tbl;
       };
 
-      rewrite each session_table as gst.session_table;
+      rewrite each tbl as s.st_tbl;
 
       unfold inv;
-      assert (pure (Map.equal all_sids_unused (sids_above_unused gst.session_id_counter)));
+      assert (pure (Map.equal all_sids_unused (sids_above_unused s.st_ctr)));
       rewrite (ghost_pcm_pts_to r all_sids_unused) as
-              (ghost_pcm_pts_to r (sids_above_unused gst.session_id_counter));
+              (ghost_pcm_pts_to r (sids_above_unused s.st_ctr));
 
-      with pht. assert (models gst.session_table pht);
+      with pht. assert (models s.st_tbl pht);
       on_range_empty (session_perm r pht) 0;
       rewrite (on_range (session_perm r pht) 0 0) as
-              (on_range (session_perm r pht) 0 (U32.v gst.session_id_counter));
+              (on_range (session_perm r pht) 0 (U32.v s.st_ctr));
   
-      fold (inv r (Some gst));
-      gst
+      fold (inv r (Some s));
+      s
     }
-    Some gst -> {
-      gst
+    Some s -> {
+      s
     }
   }
 }
 ```
 
 ```pulse
-fn open_session (s:st)
-  requires st_perm s
-  returns b:(st & option sid_t)
-  ensures st_perm (fst b) **
-          open_session_client_perm (dfst (fst b)) (snd b) **
-          pure (fst b == s)
+fn open_session (r:gref) (m:mutex (option st))
+  requires mutex_live m (inv r)
+  returns b:(mutex (option st) & option sid_t)
+  ensures mutex_live (fst b) (inv r) **
+          open_session_client_perm r (snd b) **
+          pure (fst b == m)
 {
-  let r = dfst s;
-  let l = dsnd s;
-  unfold st_perm;
-  rewrite (mutex_live (dsnd s) (inv (dfst s))) as
-          (mutex_live l (inv r));
+  let mr = lock m;
+  let sopt = R.replace mr None;
 
-  let mr = lock l;
-  let gst_opt = R.replace mr None;
+  let s = maybe_mk_session_tbl r sopt;
+  let ret = __open_session r s;
+  let s = fst ret;
+  let sid_opt = snd ret;
+  rewrite each
+    fst ret as s,
+    snd ret as sid_opt;
+  mr := Some s;
+  unlock m mr;
 
-  let gst = maybe_mk_session_tbl r gst_opt;
-  let res = __open_session r gst;
-  mr := Some (fst res);
-  unlock l mr;
+  let ret = (m, sid_opt);
 
-  let s = ((| r, l |) <: st);
-  let ret = (s, snd res);
-
-  rewrite (mutex_live l (inv r)) as
-          (mutex_live (dsnd s) (inv (dfst s)));
-  fold (st_perm s);
-  rewrite (st_perm s) as (st_perm (fst ret));
-  rewrite (open_session_client_perm r (snd res)) as
-          (open_session_client_perm (dfst (fst ret)) (snd ret));
+  rewrite each
+    m as fst ret,
+    sid_opt as snd ret;
   ret
 }
 ```
@@ -583,57 +625,296 @@ fn open_session (s:st)
 
 ```pulse
 ghost
-fn sid_pts_to_contra (r:ghost_pcm_ref pcm) (sid:sid_t)
-  (p0:_) (b0:_) (tr0:_)
-  (p1:_) (b1:_) (tr1:_)
-  requires sid_pts_to r sid p0 b0 tr0 **
-           sid_pts_to r sid p1 b1 tr1 **
-           pure (PCM.composable pcm (singleton sid p0 b0 tr0)
-                                    (singleton sid p1 b1 tr1) ==> False)
+fn sid_pts_to_contra (r:gref) (sid:sid_t)
+  (t0:_)
+  (t1:_)
+  requires sid_pts_to r sid t0 **
+           sid_pts_to r sid t1 **
+           pure (t0 =!= t1)
   ensures pure False
 {
   unfold sid_pts_to;
   unfold sid_pts_to;
-  rewrite (ghost_pcm_pts_to r (singleton sid p0 b0 tr0)) as
-          (ghost_pcm_pts_to r (G.reveal (G.hide (singleton sid p0 b0 tr0))));
-  rewrite (ghost_pcm_pts_to r (singleton sid p1 b1 tr1)) as
-          (ghost_pcm_pts_to r (G.reveal (G.hide (singleton sid p1 b1 tr1))));
-  ghost_gather r (singleton sid p0 b0 tr0)
-                 (singleton sid p1 b1 tr1);
+  rewrite (ghost_pcm_pts_to r (singleton sid 0.5R t0)) as
+          (ghost_pcm_pts_to r (G.reveal (G.hide (singleton sid 0.5R t0))));
+  rewrite (ghost_pcm_pts_to r (singleton sid 0.5R t1)) as
+          (ghost_pcm_pts_to r (G.reveal (G.hide (singleton sid 0.5R t1))));
+  ghost_gather r (singleton sid 0.5R t0)
+                 (singleton sid 0.5R t1);
   unreachable ()
 }
 ```
 
+let t_can_be_moved_to_inuse (t:T.trace) : prop =
+  let open T in
+  let s = current_state t in
+  G_SessionStart? s \/ G_Available? s
+
 ```pulse
-fn gather_ (#a:Type u#1) (#pcm:FStar.PCM.pcm a)
-  (r:ghost_pcm_ref pcm)
-  (v0 v1:a)
-  requires ghost_pcm_pts_to r v0 **
-           ghost_pcm_pts_to r v1
-  returns _:squash (FStar.PCM.composable pcm v0 v1)
-  ensures ghost_pcm_pts_to r (FStar.PCM.op pcm v0 v1)
- {
-   ghost_gather r v0 v1;
-   with _v. rewrite (ghost_pcm_pts_to r _v) as
-                    (ghost_pcm_pts_to r (FStar.PCM.op pcm v0 v1))
+ghost
+fn gather_sid_pts_to (r:gref) (sid:sid_t) (#t0 #t1:T.trace)
+  requires sid_pts_to r sid t0 **
+           sid_pts_to r sid t1
+  ensures ghost_pcm_pts_to r (singleton sid 1.0R t0) **
+          pure (t0 == t1)
+{
+  admit ()
 }
- ```
+```
+
+```pulse
+ghost
+fn share_sid_pts_to (r:gref) (sid:sid_t) (#t:T.trace)
+  requires ghost_pcm_pts_to r (singleton sid 1.0R t)
+  ensures sid_pts_to r sid t **
+          sid_pts_to r sid t
+{
+  admit ()
+}
+```
+
+```pulse
+ghost
+fn upd_singleton
+  (r:gref) (sid:sid_t)
+  (#t:T.trace)
+  (s:T.g_session_state { T.valid_transition t s })
+  requires ghost_pcm_pts_to r (singleton sid 1.0R t)
+  ensures ghost_pcm_pts_to r (singleton sid 1.0R (T.next_trace t s))
+{
+  let fp : PCM.frame_preserving_upd T.pcm (full t) (full (T.next_trace t s)) =
+    T.mk_frame_preserving_upd t s;
+
+  assert (pure (Map.equal (Map.upd (singleton sid 1.0R t) sid (full (T.next_trace t s)))
+                          (singleton sid 1.0R (T.next_trace t s))));
+
+  let fp : PCM.frame_preserving_upd pcm (singleton sid 1.0R t) (singleton sid 1.0R (T.next_trace t s)) =
+    PM.lift_frame_preserving_upd #_ #_ #T.pcm
+      (full t)
+      (full (T.next_trace t s))
+      fp
+      (singleton sid 1.0R t) sid;
+
+  ghost_write r
+    (singleton sid 1.0R t)
+    (singleton sid 1.0R (T.next_trace t s))
+    fp;
+}
+```
+
+#push-options "--fuel 1"
+let trace_extended_with_inuse (t:T.trace { t_can_be_moved_to_inuse t }) : T.trace =
+  T.next_trace t (T.G_InUse (T.current_state t))
+
+```pulse
+fn mark_session_inuse (r:gref) (m:mutex (option st)) (sid:sid_t) (t:T.trace { t_can_be_moved_to_inuse t })
+  requires mutex_live m (inv r) **
+           sid_pts_to r sid t
+  returns b:(mutex (option st) & session_state)
+  ensures mutex_live (fst b) (inv r) **
+          session_state_related (snd b) (T.current_state t) **
+          sid_pts_to r sid (trace_extended_with_inuse t)
+{
+  let mr = lock m;
+  let sopt = R.replace mr None;
+  match sopt {
+    None -> {
+      unfold (inv r None);
+      unfold sid_pts_to;
+      gather_ r all_sids_unused (singleton sid 0.5R t);
+      unreachable ()
+    }
+    Some s -> {
+      unfold (inv r (Some s));
+      let ctr = s.st_ctr;
+      let tbl = s.st_tbl;
+      rewrite each
+        s.st_ctr as ctr,
+        s.st_tbl as tbl;
+      with pht0. assert (models tbl pht0);
+      assert (on_range (session_perm r pht0) 0 (U32.v ctr));
+      if U32.lt sid ctr {
+        on_range_get (U32.v sid) #(session_perm r pht0) #0 #(U32.v ctr);
+        rewrite (session_perm r pht0 (U32.v sid)) as (session_state_perm r pht0 sid);
+        unfold session_state_perm;
+        gather_sid_pts_to r sid;
+        with t1. assert (ghost_pcm_pts_to r (singleton sid 1.0R t1));
+        assert (pure (t1 == t));
+        let ret = HT.lookup tbl sid;
+        let tbl = tfst ret;
+        let b = tsnd ret;
+        let idx = tthd ret;
+        rewrite each
+          tfst ret as tbl,
+          tsnd ret as b,
+          tthd ret as idx;
+        with pht. assert (models tbl pht);
+        if b {
+          match idx {
+            Some idx -> {
+              let ret = HT.replace #_ #_ #pht tbl idx sid InUse ();
+              let tbl = fst ret;
+              let st = snd ret;
+              rewrite each
+                fst ret as tbl,
+                snd ret as st;
+              with _s. rewrite (session_state_related _s (T.current_state t1)) as
+                               (session_state_related st (T.current_state t1));
+              with pht. assert (models tbl pht);
+              match st {
+                SessionStart -> {
+                  upd_singleton r sid #t1 (T.G_InUse (T.current_state t1));
+                  share_sid_pts_to r sid;
+                  rewrite emp as
+                          (session_state_related InUse (T.current_state (trace_extended_with_inuse t1)));
+                  fold (session_state_perm r pht sid);
+                  rewrite (session_state_perm r pht sid) as
+                          (session_perm r pht (U32.v sid));
+                  frame_session_perm_on_range r pht0 pht 0 (U32.v sid);
+                  frame_session_perm_on_range r pht0 pht (U32.v sid + 1) (U32.v ctr);
+                  on_range_put 0 (U32.v sid) (U32.v ctr) #(session_perm r pht);
+                  let s = { st_ctr = ctr; st_tbl = tbl };
+                  rewrite each
+                    ctr as s.st_ctr,
+                    tbl as s.st_tbl;
+                  fold (inv r (Some s));
+                  mr := Some s;
+                  unlock m mr;
+                  let ret = (m, SessionStart);
+                  rewrite each
+                    m as fst ret,
+                    st as snd ret;
+                  ret
+                }
+                Available ctxt -> {
+                  upd_singleton r sid #t1 (T.G_InUse (T.current_state t1));
+                  share_sid_pts_to r sid;
+                  rewrite emp as
+                          (session_state_related InUse (T.current_state (trace_extended_with_inuse t1)));
+                  fold (session_state_perm r pht sid);
+                  rewrite (session_state_perm r pht sid) as
+                          (session_perm r pht (U32.v sid));
+                  frame_session_perm_on_range r pht0 pht 0 (U32.v sid);
+                  frame_session_perm_on_range r pht0 pht (U32.v sid + 1) (U32.v ctr);
+                  on_range_put 0 (U32.v sid) (U32.v ctr) #(session_perm r pht);
+                  let s = { st_ctr = ctr; st_tbl = tbl };
+                  rewrite each
+                    ctr as s.st_ctr,
+                    tbl as s.st_tbl;
+                  fold (inv r (Some s));
+                  mr := Some s;
+                  unlock m mr;
+                  let ret = (m, Available ctxt);
+                  rewrite each
+                    m as fst ret,
+                    st as snd ret;
+                  ret
+                }
+                InUse -> {
+                  rewrite (session_state_related st (T.current_state t)) as
+                          (pure False);
+                  unreachable ()
+                }
+                SessionClosed -> {
+                  rewrite (session_state_related st (T.current_state t)) as
+                          (pure False);
+                  unreachable ()
+                }
+                SessionError -> {
+                  rewrite (session_state_related st (T.current_state t)) as
+                          (pure False);
+                  unreachable ()
+                }
+
+              }
+            }
+            None -> {
+              unreachable ()
+            }
+          }
+        } else {
+          admit ()
+        }
+      } else {
+        unfold sid_pts_to;
+        gather_ r (sids_above_unused ctr) (singleton sid 0.5R t);
+        unreachable ()
+      }
+    }
+  }
+}
+```
+#pop-options
+
+let t_can_be_moved_to_available (t:T.trace) (repr:context_repr_t) : prop =
+  let open T in
+  match current_state t with
+  | G_InUse s0 -> next s0 (T.G_Available repr)
+  | _ -> False
+
+let trace_extended_with_available
+  (t:T.trace)
+  (repr:context_repr_t { t_can_be_moved_to_available t repr })
+  : T.trace =
+  T.next_trace t (T.G_Available repr)
+
+```pulse
+fn mark_session_available (r:gref) (m:mutex (option st)) (sid:sid_t)
+  (t:T.trace)
+  (hndl:ctxt_hndl_t) (ctxt:context_t)
+  (repr:context_repr_t { t_can_be_moved_to_available t repr })
+  requires mutex_live m (inv r) **
+           sid_pts_to r sid t **
+           session_state_related s gs
+  returns m:mutex (option st)
+  ensures mutex_live m (inv r) **
+          sid_pts_to r sid (trace_extended_with_available t repr)
+{
+  let mr = lock m;
+  let sopt = R.replace mr None;
+  match sopt {
+    None -> {
+      unfold (inv r None);
+      unfold sid_pts_to;
+      gather_ r all_sids_unused (singleton sid 0.5R t);
+      unreachable ()
+    }
+    Some s -> {
+      unfold (inv r (Some s));
+      let ctr = s.st_ctr;
+      let tbl = s.st_tbl;
+      rewrite each
+        s.st_ctr as ctr,
+        s.st_tbl as tbl;
+
+      with pht0. assert (models tbl pht0);
+      assert (on_range (session_perm r pht0) 0 (U32.v ctr));
+
+      if U32.lt sid ctr {
+
+      } else {
+        admit ()
+      }
+    }
+  }
+}
+```
 
 #push-options "--print_implicits --fuel 0 --ifuel 2"
 ```pulse
 fn mark_session_inuse (s:st) (sid:sid_t) (tr:PP.hist DT.trace_preorder)
   requires st_perm s **
-           sid_pts_to (dfst s) sid (half_perm full_perm) session_idle tr
+           sid_pts_to (dfst s) sid 0.5R session_idle tr
   returns b:(st & session_state)
   ensures st_perm (fst b) **
-          sid_pts_to (dfst (fst b)) sid (half_perm full_perm) session_unavailable tr **
+          sid_pts_to (dfst (fst b)) sid 0.5R session_unavailable tr **
           session_ctxt_perm (snd b) tr **
           pure (fst b == s /\ (tr == emp_trace ==> SessionStart? (snd b)))
 {
   let r = dfst s;
   let l = dsnd s;
-  rewrite (sid_pts_to (dfst s) sid (half_perm full_perm) session_idle tr)
-       as (sid_pts_to r sid (half_perm full_perm) session_idle tr);
+  rewrite (sid_pts_to (dfst s) sid 0.5R session_idle tr)
+       as (sid_pts_to r sid 0.5R session_idle tr);
 
   unfold st_perm;
   rewrite (mutex_live (dsnd s) (inv (dfst s))) as
@@ -646,7 +927,7 @@ fn mark_session_inuse (s:st) (sid:sid_t) (tr:PP.hist DT.trace_preorder)
     None -> {
       unfold (inv r None);
       unfold sid_pts_to;
-      gather_ r (singleton sid (half_perm full_perm) session_idle tr)
+      gather_ r (singleton sid 0.5R session_idle tr)
                 all_sids_unused;
       unreachable ()
     }
@@ -675,50 +956,50 @@ fn mark_session_inuse (s:st) (sid:sid_t) (tr:PP.hist DT.trace_preorder)
               match (snd ss) {
                 SessionError -> {
                   unfold (session_state_perm r sid (Some SessionError));
-                  with tr1. assert (sid_pts_to r sid full_perm session_unavailable tr1);
+                  with tr1. assert (sid_pts_to r sid 1.0R session_unavailable tr1);
                   sid_pts_to_contra r sid
-                    full_perm session_unavailable tr1
-                    (half_perm full_perm) session_idle tr;
+                    1.0R session_unavailable tr1
+                    0.5R session_idle tr;
                   unreachable ()
                 }
                 SessionClosed -> {
                   unfold (session_state_perm r sid (Some SessionClosed));
-                  with tr1. assert (sid_pts_to r sid full_perm session_unavailable tr1);
+                  with tr1. assert (sid_pts_to r sid 1.0R session_unavailable tr1);
                   sid_pts_to_contra r sid
-                    full_perm session_unavailable tr1
-                    (half_perm full_perm) session_idle tr;
+                    1.0R session_unavailable tr1
+                    0.5R session_idle tr;
                   unreachable ()
                 }
                 InUse -> {
                   unfold (session_state_perm r sid (Some InUse));
-                  with tr1. assert (sid_pts_to r sid (half_perm full_perm) session_unavailable tr1);
+                  with tr1. assert (sid_pts_to r sid 0.5R session_unavailable tr1);
                   sid_pts_to_contra r sid
-                    (half_perm full_perm) session_unavailable tr1
-                    (half_perm full_perm) session_idle tr;
+                    0.5R session_unavailable tr1
+                    0.5R session_idle tr;
                   unreachable ()
                 }
                 SessionStart -> {
                   unfold (session_state_perm r sid (Some SessionStart));
                   unfold sid_pts_to;
                   unfold sid_pts_to;
-                  gather_ r (singleton sid (half_perm full_perm) session_idle tr)
-                            (singleton sid (half_perm full_perm) session_idle emp_trace);
+                  gather_ r (singleton sid 0.5R session_idle tr)
+                            (singleton sid 0.5R session_idle emp_trace);
 
                   assume_ (pure (Map.equal (PM.compose_maps (DT.pcm DT.trace_preorder)
-                                                            (singleton sid (half_perm full_perm) session_idle emp_trace)
-                                                            (singleton sid (half_perm full_perm) session_idle emp_trace))
-                                           (singleton sid full_perm session_idle emp_trace)));
-                  assert (ghost_pcm_pts_to r (singleton sid full_perm session_idle emp_trace));
+                                                            (singleton sid 0.5R session_idle emp_trace)
+                                                            (singleton sid 0.5R session_idle emp_trace))
+                                           (singleton sid 1.0R session_idle emp_trace)));
+                  assert (ghost_pcm_pts_to r (singleton sid 1.0R session_idle emp_trace));
                   upd_singleton r sid
-                    #full_perm #session_idle #emp_trace
-                    #full_perm #session_unavailable #emp_trace
+                    #1.0R #session_idle #emp_trace
+                    #1.0R #session_unavailable #emp_trace
                     (DT.mk_frame_preserving_upd_b DT.trace_preorder emp_trace session_idle session_unavailable);
 
-                  share_ r (singleton sid full_perm session_unavailable emp_trace)
-                           (singleton sid (half_perm full_perm) session_unavailable emp_trace)
-                           (singleton sid (half_perm full_perm) session_unavailable emp_trace);
+                  share_ r (singleton sid 1.0R session_unavailable emp_trace)
+                           (singleton sid 0.5R session_unavailable emp_trace)
+                           (singleton sid 0.5R session_unavailable emp_trace);
 
-                  fold (sid_pts_to r sid (half_perm full_perm) session_unavailable emp_trace);
+                  fold (sid_pts_to r sid 0.5R session_unavailable emp_trace);
                   fold (session_state_perm r sid (Some InUse));
                   rewrite (pure (Some? (PHT.lookup pht1 sid)) **
                            session_state_perm r sid (Some InUse)) as
@@ -737,8 +1018,8 @@ fn mark_session_inuse (s:st) (sid:sid_t) (tr:PP.hist DT.trace_preorder)
                   let ret = (s, SessionStart);
                   rewrite (mutex_live l (inv r)) as
                           (st_perm (fst ret));
-                  rewrite (ghost_pcm_pts_to r (singleton sid (half_perm full_perm) session_unavailable emp_trace)) as
-                          (sid_pts_to (dfst (fst ret)) sid (half_perm full_perm) session_unavailable tr);
+                  rewrite (ghost_pcm_pts_to r (singleton sid 0.5R session_unavailable emp_trace)) as
+                          (sid_pts_to (dfst (fst ret)) sid 0.5R session_unavailable tr);
                   rewrite emp as session_ctxt_perm (snd ret) tr;
                   ret
                 }
@@ -757,7 +1038,7 @@ fn mark_session_inuse (s:st) (sid:sid_t) (tr:PP.hist DT.trace_preorder)
       } else {
         unfold sid_pts_to;
         gather_ r (sids_above_unused ctr)
-                  (singleton sid (half_perm full_perm) session_idle tr);
+                  (singleton sid 0.5R session_idle tr);
         unreachable ()
       }
 

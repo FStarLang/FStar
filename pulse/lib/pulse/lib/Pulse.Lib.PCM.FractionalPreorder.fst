@@ -33,7 +33,7 @@ let pcm_composable (#a:Type) (p:preorder a) : symrel (pcm_carrier p) =
   | (None, t0), (Some _, t1) -> t1 `extends` t0
   | (Some p0, t0), (Some p1, t1) ->
     t0 == t1 /\
-    sum_perm p0 p1 `lesser_equal_perm` full_perm
+    (p0 +. p1) <=. 1.0R
 
 let pcm_op (#a:Type) (p:preorder a)
   (x:pcm_carrier p)
@@ -44,7 +44,7 @@ let pcm_op (#a:Type) (p:preorder a)
   | (None, t0), (None, t1) -> None, p_op p t0 t1
   | (Some _, _), (None, _) -> x
   | (None, _), (Some _, _) -> y
-  | (Some p0, t0), (Some p1, t1) -> Some (sum_perm p0 p1), t0
+  | (Some p0, t0), (Some p1, t1) -> Some (p0 +. p1), t0
 
 let pcm_one (#a:Type) (p:preorder a) : pcm_carrier p = None, []
 
@@ -89,8 +89,8 @@ let fp_pcm (#a:Type) (p:preorder a) : pcm (pcm_carrier p) = {
 
 let mk_frame_preserving_upd (#a:Type) (p:preorder a)
   (t0:hist p) (v:a { qhistory p (v::t0) })
-  : frame_preserving_upd (fp_pcm p) (Some full_perm, t0) (Some full_perm, v::t0) =
-  fun _ -> Some full_perm, v::t0
+  : frame_preserving_upd (fp_pcm p) (Some 1.0R, t0) (Some 1.0R, v::t0) =
+  fun _ -> Some 1.0R, v::t0
 
 let snapshot (#a:Type) (#p:preorder a) (x:pcm_carrier p) : pcm_carrier p =
   None, snd x
@@ -104,5 +104,5 @@ let snapshot_duplicable (#a:Type) (#p:preorder a) (x:pcm_carrier p)
       (ensures x `pcm_composable p` snapshot x) = ()
 
 let full_perm_empty_history_compatible (#a:Type) (p:preorder a)
-  : Lemma (compatible (fp_pcm p) (Some full_perm, []) (Some full_perm, [])) =
+  : Lemma (compatible (fp_pcm p) (Some 1.0R, []) (Some 1.0R, [])) =
   ()

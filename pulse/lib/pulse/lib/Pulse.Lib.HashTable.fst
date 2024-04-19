@@ -701,6 +701,37 @@ fn not_full
 }
 ```
 
+```pulse
+fn insert_if_not_full
+  (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
+  (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
+  (ht:ht_t kt vt) (k:kt) (v:vt)
+  (#pht:erased (PHT.pht_t kt vt))
+  requires models ht pht
+  returns b:(ht_t kt vt & bool)
+  ensures
+    exists* pht'.
+      models (fst b) pht' **
+      pure (same_sz_and_hashf (fst b) ht /\
+            (if snd b
+             then (PHT.not_full (reveal pht).repr /\
+                   pht'==PHT.insert pht k v)
+             else pht'==pht))
+{
+  let b = not_full ht;
+  if snd b
+  {
+    Pulse.Lib.HashTable.insert (fst b) k v
+  }
+  else
+  {
+    let res = (fst b, false);
+    rewrite (models (fst b) pht) as (models (fst res) pht);
+    res
+  }
+}
+```
+
 // ```pulse
 // fn test_mono ()
 //   requires emp
