@@ -6004,7 +6004,7 @@ let (_t_trefl :
                                 | FStar_Pervasives.Inl (uu___13, t_ty) ->
                                     let uu___14 =
                                       FStar_TypeChecker_Core.check_term_subtyping
-                                        env1 ty t_ty in
+                                        true true env1 ty t_ty in
                                     (match uu___14 with
                                      | FStar_Pervasives.Inl
                                          (FStar_Pervasives_Native.None) ->
@@ -9957,117 +9957,136 @@ let (refl_is_non_informative :
                    FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac ()
                      (Obj.magic uu___2)))) uu___1 uu___
 let (refl_check_relation :
-  env ->
-    FStar_Syntax_Syntax.typ ->
-      FStar_Syntax_Syntax.typ ->
-        relation ->
-          (unit FStar_Pervasives_Native.option * issues)
-            FStar_Tactics_Monad.tac)
+  relation ->
+    Prims.bool ->
+      Prims.bool ->
+        env ->
+          FStar_Syntax_Syntax.typ ->
+            FStar_Syntax_Syntax.typ ->
+              (unit FStar_Pervasives_Native.option * issues)
+                FStar_Tactics_Monad.tac)
   =
-  fun uu___3 ->
-    fun uu___2 ->
-      fun uu___1 ->
-        fun uu___ ->
-          (fun g ->
-             fun t0 ->
-               fun t1 ->
-                 fun rel ->
-                   let uu___ =
-                     ((no_uvars_in_g g) && (no_uvars_in_term t0)) &&
-                       (no_uvars_in_term t1) in
-                   if uu___
-                   then
-                     Obj.magic
-                       (Obj.repr
-                          (refl_typing_builtin_wrapper "refl_check_relation"
-                             (fun uu___1 ->
-                                let g1 =
-                                  FStar_TypeChecker_Env.set_range g
-                                    t0.FStar_Syntax_Syntax.pos in
-                                dbg_refl g1
-                                  (fun uu___3 ->
-                                     let uu___4 =
-                                       FStar_Class_Show.show
-                                         FStar_Syntax_Print.showable_term t0 in
-                                     let uu___5 =
-                                       FStar_Class_Show.show
-                                         FStar_Syntax_Print.showable_term t1 in
-                                     FStar_Compiler_Util.format3
-                                       "refl_check_relation: %s %s %s\n"
-                                       uu___4
-                                       (if rel = Subtyping
-                                        then "<:?"
-                                        else "=?=") uu___5);
-                                (let f =
-                                   if rel = Subtyping
-                                   then
-                                     FStar_TypeChecker_Core.check_term_subtyping
-                                   else
-                                     FStar_TypeChecker_Core.check_term_equality in
-                                 let uu___3 = f g1 t0 t1 in
-                                 match uu___3 with
-                                 | FStar_Pervasives.Inl
-                                     (FStar_Pervasives_Native.None) ->
-                                     (dbg_refl g1
-                                        (fun uu___5 ->
-                                           "refl_check_relation: succeeded (no guard)");
-                                      ((), []))
-                                 | FStar_Pervasives.Inl
-                                     (FStar_Pervasives_Native.Some guard_f)
-                                     ->
-                                     (dbg_refl g1
-                                        (fun uu___5 ->
-                                           "refl_check_relation: succeeded");
-                                      ((), [(g1, guard_f)]))
-                                 | FStar_Pervasives.Inr err ->
-                                     (dbg_refl g1
-                                        (fun uu___5 ->
-                                           let uu___6 =
-                                             FStar_TypeChecker_Core.print_error
-                                               err in
-                                           FStar_Compiler_Util.format1
-                                             "refl_check_relation failed: %s\n"
-                                             uu___6);
-                                      (let uu___5 =
-                                         let uu___6 =
-                                           let uu___7 =
-                                             FStar_TypeChecker_Core.print_error
-                                               err in
-                                           Prims.strcat
-                                             "check_relation failed: " uu___7 in
-                                         (FStar_Errors_Codes.Fatal_IllTyped,
-                                           uu___6) in
-                                       let uu___6 =
-                                         FStar_TypeChecker_Env.get_range g1 in
-                                       FStar_Errors.raise_error uu___5 uu___6))))))
-                   else
-                     Obj.magic
-                       (Obj.repr
-                          (let uu___2 =
-                             let uu___3 =
-                               let uu___4 =
-                                 let uu___5 =
-                                   FStar_TypeChecker_Env.get_range g in
-                                 unexpected_uvars_issue uu___5 in
-                               [uu___4] in
-                             (FStar_Pervasives_Native.None, uu___3) in
-                           FStar_Class_Monad.return
-                             FStar_Tactics_Monad.monad_tac ()
-                             (Obj.magic uu___2)))) uu___3 uu___2 uu___1 uu___
+  fun uu___5 ->
+    fun uu___4 ->
+      fun uu___3 ->
+        fun uu___2 ->
+          fun uu___1 ->
+            fun uu___ ->
+              (fun rel ->
+                 fun smt_ok ->
+                   fun unfolding_ok ->
+                     fun g ->
+                       fun t0 ->
+                         fun t1 ->
+                           let uu___ =
+                             ((no_uvars_in_g g) && (no_uvars_in_term t0)) &&
+                               (no_uvars_in_term t1) in
+                           if uu___
+                           then
+                             Obj.magic
+                               (Obj.repr
+                                  (refl_typing_builtin_wrapper
+                                     "refl_check_relation"
+                                     (fun uu___1 ->
+                                        let g1 =
+                                          FStar_TypeChecker_Env.set_range g
+                                            t0.FStar_Syntax_Syntax.pos in
+                                        dbg_refl g1
+                                          (fun uu___3 ->
+                                             let uu___4 =
+                                               FStar_Class_Show.show
+                                                 FStar_Syntax_Print.showable_term
+                                                 t0 in
+                                             let uu___5 =
+                                               FStar_Class_Show.show
+                                                 FStar_Syntax_Print.showable_term
+                                                 t1 in
+                                             FStar_Compiler_Util.format3
+                                               "refl_check_relation: %s %s %s\n"
+                                               uu___4
+                                               (if rel = Subtyping
+                                                then "<:?"
+                                                else "=?=") uu___5);
+                                        (let f =
+                                           if rel = Subtyping
+                                           then
+                                             FStar_TypeChecker_Core.check_term_subtyping
+                                           else
+                                             FStar_TypeChecker_Core.check_term_equality in
+                                         let uu___3 =
+                                           f smt_ok unfolding_ok g1 t0 t1 in
+                                         match uu___3 with
+                                         | FStar_Pervasives.Inl
+                                             (FStar_Pervasives_Native.None)
+                                             ->
+                                             (dbg_refl g1
+                                                (fun uu___5 ->
+                                                   "refl_check_relation: succeeded (no guard)");
+                                              ((), []))
+                                         | FStar_Pervasives.Inl
+                                             (FStar_Pervasives_Native.Some
+                                             guard_f) ->
+                                             (dbg_refl g1
+                                                (fun uu___5 ->
+                                                   "refl_check_relation: succeeded");
+                                              ((), [(g1, guard_f)]))
+                                         | FStar_Pervasives.Inr err ->
+                                             (dbg_refl g1
+                                                (fun uu___5 ->
+                                                   let uu___6 =
+                                                     FStar_TypeChecker_Core.print_error
+                                                       err in
+                                                   FStar_Compiler_Util.format1
+                                                     "refl_check_relation failed: %s\n"
+                                                     uu___6);
+                                              (let uu___5 =
+                                                 let uu___6 =
+                                                   let uu___7 =
+                                                     FStar_TypeChecker_Core.print_error
+                                                       err in
+                                                   Prims.strcat
+                                                     "check_relation failed: "
+                                                     uu___7 in
+                                                 (FStar_Errors_Codes.Fatal_IllTyped,
+                                                   uu___6) in
+                                               let uu___6 =
+                                                 FStar_TypeChecker_Env.get_range
+                                                   g1 in
+                                               FStar_Errors.raise_error
+                                                 uu___5 uu___6))))))
+                           else
+                             Obj.magic
+                               (Obj.repr
+                                  (let uu___2 =
+                                     let uu___3 =
+                                       let uu___4 =
+                                         let uu___5 =
+                                           FStar_TypeChecker_Env.get_range g in
+                                         unexpected_uvars_issue uu___5 in
+                                       [uu___4] in
+                                     (FStar_Pervasives_Native.None, uu___3) in
+                                   FStar_Class_Monad.return
+                                     FStar_Tactics_Monad.monad_tac ()
+                                     (Obj.magic uu___2)))) uu___5 uu___4
+                uu___3 uu___2 uu___1 uu___
 let (refl_check_subtyping :
   env ->
     FStar_Syntax_Syntax.typ ->
       FStar_Syntax_Syntax.typ ->
         (unit FStar_Pervasives_Native.option * issues)
           FStar_Tactics_Monad.tac)
-  = fun g -> fun t0 -> fun t1 -> refl_check_relation g t0 t1 Subtyping
-let (refl_check_equiv :
-  env ->
-    FStar_Syntax_Syntax.typ ->
-      FStar_Syntax_Syntax.typ ->
-        (unit FStar_Pervasives_Native.option * issues)
-          FStar_Tactics_Monad.tac)
-  = fun g -> fun t0 -> fun t1 -> refl_check_relation g t0 t1 Equality
+  =
+  fun g ->
+    fun t0 -> fun t1 -> refl_check_relation Subtyping true true g t0 t1
+let (t_refl_check_equiv :
+  Prims.bool ->
+    Prims.bool ->
+      env ->
+        FStar_Syntax_Syntax.typ ->
+          FStar_Syntax_Syntax.typ ->
+            (unit FStar_Pervasives_Native.option * issues)
+              FStar_Tactics_Monad.tac)
+  = refl_check_relation Equality
 let (to_must_tot : FStar_TypeChecker_Core.tot_or_ghost -> Prims.bool) =
   fun eff ->
     match eff with

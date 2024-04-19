@@ -222,3 +222,17 @@ val mk5' #a #b #c #d #e #r #na #nb #nc #nd #ne #nr
   (f : a -> b -> c -> d -> e -> option r)
   (f : na -> nb -> nc -> nd -> ne -> option nr)
   : primitive_step
+
+val mk6' #a #b #c #d #e #f #r #na #nb #nc #nd #ne #nf #nr
+  (u_arity : int)
+  (name : Ident.lid)
+  {| EMB.embedding a |} {| NBE.embedding na |}
+  {| EMB.embedding b |} {| NBE.embedding nb |}
+  {| EMB.embedding c |} {| NBE.embedding nc |}
+  {| EMB.embedding d |} {| NBE.embedding nd |}
+  {| EMB.embedding e |} {| NBE.embedding ne |}
+  {| EMB.embedding f |} {| NBE.embedding nf |}
+  {| EMB.embedding r |} {| NBE.embedding nr |}
+  (f : a -> b -> c -> d -> e -> f -> option r)
+  (f : na -> nb -> nc -> nd -> ne -> nf -> option nr)
+  : primitive_step

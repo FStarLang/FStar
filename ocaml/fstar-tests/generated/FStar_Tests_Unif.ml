@@ -155,8 +155,11 @@ let (check_core :
             (let env = tcenv () in
              let res =
                if subtyping
-               then FStar_TypeChecker_Core.check_term_subtyping env x y
-               else FStar_TypeChecker_Core.check_term_equality env x y in
+               then
+                 FStar_TypeChecker_Core.check_term_subtyping true true env x
+                   y
+               else
+                 FStar_TypeChecker_Core.check_term_equality true true env x y in
              (match res with
               | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) ->
                   let uu___2 = FStar_Compiler_Util.string_of_int i in

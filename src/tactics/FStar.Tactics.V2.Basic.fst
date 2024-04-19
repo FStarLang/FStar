@@ -1426,7 +1426,7 @@ let _t_trefl (allow_guards:bool) (l : term) (r : term) : tac unit =
             with
             | Inr _ -> false
             | Inl (_, t_ty) -> (  // ignoring effect, ghost is ok
-              match Core.check_term_subtyping env ty t_ty with
+              match Core.check_term_subtyping true true env ty t_ty with
               | Inl None -> //unconditional subtype
                 mark_uvar_as_already_checked u;
                 true
@@ -2268,7 +2268,7 @@ let refl_is_non_informative (g:env) (t:typ) : tac (option unit & issues) =
     return (None, [unexpected_uvars_issue (Env.get_range g)])
   )
 
-let refl_check_relation (g:env) (t0 t1:typ) (rel:relation)
+let refl_check_relation (rel:relation) (smt_ok:bool) (unfolding_ok:bool) (g:env) (t0 t1:typ)
   : tac (option unit * issues) =
 
   if no_uvars_in_g g &&
@@ -2285,7 +2285,7 @@ let refl_check_relation (g:env) (t0 t1:typ) (rel:relation)
            if rel = Subtyping
            then Core.check_term_subtyping
            else Core.check_term_equality in
-         match f g t0 t1 with
+         match f smt_ok unfolding_ok g t0 t1 with
          | Inl None ->
            dbg_refl g (fun _ -> "refl_check_relation: succeeded (no guard)");
            ((), [])
@@ -2301,10 +2301,9 @@ let refl_check_relation (g:env) (t0 t1:typ) (rel:relation)
   )
 
 let refl_check_subtyping (g:env) (t0 t1:typ) : tac (option unit & issues) =
-  refl_check_relation g t0 t1 Subtyping
+  refl_check_relation Subtyping true true g t0 t1
 
-let refl_check_equiv (g:env) (t0 t1:typ) : tac (option unit & issues) =
-  refl_check_relation g t0 t1 Equality
+let t_refl_check_equiv = refl_check_relation Equality
 
 let to_must_tot (eff:Core.tot_or_ghost) : bool =
   match eff with
