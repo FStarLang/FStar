@@ -169,7 +169,7 @@ let rec prover
               let open Pulse.PP in
               let msg = [
                 text "Cannot prove:" ^^
-                    indent (pp q);
+                    indent (pp pst.ss.(q));
                 text "In the context:" ^^
                     indent (P.term_to_doc (list_as_vprop pst.remaining_ctxt))
               ] @ (if Pulse.Config.debug_flag "initial_solver_state" then [
