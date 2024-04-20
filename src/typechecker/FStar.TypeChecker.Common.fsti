@@ -192,7 +192,7 @@ val mk_lcomp:
 
 val lcomp_comp: lcomp -> (comp * guard_t)
 val apply_lcomp : (comp -> comp) -> (guard_t -> guard_t) -> lcomp -> lcomp
-val lcomp_to_string : lcomp -> string
+val lcomp_to_string : lcomp -> string (* CAUTION! can have side effects of forcing the lcomp *)
 val lcomp_set_flags : lcomp -> list S.cflag -> lcomp
 val is_total_lcomp : lcomp -> bool
 val is_tot_or_gtot_lcomp : lcomp -> bool
