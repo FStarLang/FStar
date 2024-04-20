@@ -104,7 +104,7 @@ let (check_vprop_equiv_ext :
                                                                   (Prims.of_int (17)))))
                                                          (Obj.magic
                                                             (Pulse_PP.pp
-                                                               Pulse_PP.printable_fstar_term
+                                                               Pulse_PP.printable_term
                                                                p))
                                                          (fun uu___2 ->
                                                             (fun uu___2 ->
@@ -149,7 +149,7 @@ let (check_vprop_equiv_ext :
                                                                     (Prims.of_int (17)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.printable_fstar_term
+                                                                    Pulse_PP.printable_term
                                                                     q))
                                                                     (fun
                                                                     uu___3 ->

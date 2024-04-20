@@ -316,7 +316,7 @@ let (check_ln :
                                                                     (Prims.of_int (37)))))
                                                                    (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.printable_fstar_term
+                                                                    Pulse_PP.printable_term
                                                                     t))
                                                                    (fun
                                                                     uu___2 ->
@@ -2039,7 +2039,7 @@ let (ill_typed_term :
                           (FStar_Range.mk_range "Pulse.Checker.Pure.fst"
                              (Prims.of_int (169)) (Prims.of_int (5))
                              (Prims.of_int (169)) (Prims.of_int (36)))))
-                    (Obj.magic (Pulse_PP.pp Pulse_PP.printable_fstar_term t))
+                    (Obj.magic (Pulse_PP.pp Pulse_PP.printable_term t))
                     (fun uu___1 ->
                        FStar_Tactics_Effect.lift_div_tac
                          (fun uu___2 ->
@@ -2104,8 +2104,7 @@ let (ill_typed_term :
                                          (Prims.of_int (171))
                                          (Prims.of_int (51)))))
                                 (Obj.magic
-                                   (Pulse_PP.pp Pulse_PP.printable_fstar_term
-                                      ty))
+                                   (Pulse_PP.pp Pulse_PP.printable_term ty))
                                 (fun uu___ ->
                                    FStar_Tactics_Effect.lift_div_tac
                                      (fun uu___1 ->
@@ -2173,8 +2172,7 @@ let (ill_typed_term :
                                                     (Prims.of_int (37)))))
                                            (Obj.magic
                                               (Pulse_PP.pp
-                                                 Pulse_PP.printable_fstar_term
-                                                 t))
+                                                 Pulse_PP.printable_term t))
                                            (fun uu___1 ->
                                               FStar_Tactics_Effect.lift_div_tac
                                                 (fun uu___2 ->
@@ -2250,8 +2248,7 @@ let (ill_typed_term :
                                          (Prims.of_int (174))
                                          (Prims.of_int (51)))))
                                 (Obj.magic
-                                   (Pulse_PP.pp Pulse_PP.printable_fstar_term
-                                      ty))
+                                   (Pulse_PP.pp Pulse_PP.printable_term ty))
                                 (fun uu___ ->
                                    FStar_Tactics_Effect.lift_div_tac
                                      (fun uu___1 ->
@@ -2337,7 +2334,7 @@ let (ill_typed_term :
                                                           (Prims.of_int (37)))))
                                                  (Obj.magic
                                                     (Pulse_PP.pp
-                                                       Pulse_PP.printable_fstar_term
+                                                       Pulse_PP.printable_term
                                                        t))
                                                  (fun uu___1 ->
                                                     FStar_Tactics_Effect.lift_div_tac
@@ -2408,7 +2405,7 @@ let (ill_typed_term :
                                                                     (Prims.of_int (38)))))
                                                             (Obj.magic
                                                                (Pulse_PP.pp
-                                                                  Pulse_PP.printable_fstar_term
+                                                                  Pulse_PP.printable_term
                                                                   ty'))
                                                             (fun uu___2 ->
                                                                FStar_Tactics_Effect.lift_div_tac
@@ -2690,7 +2687,7 @@ let (instantiate_term_implicits :
                                                                     (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.printable_fstar_term
+                                                                    Pulse_PP.printable_term
                                                                     t0))
                                                                     (fun
                                                                     uu___2 ->
@@ -2788,7 +2785,7 @@ let (instantiate_term_implicits :
                                                                     (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.printable_fstar_term
+                                                                    Pulse_PP.printable_term
                                                                     t0))
                                                                     (fun
                                                                     uu___2 ->
@@ -3020,7 +3017,7 @@ let (instantiate_term_implicits_uvs :
                                                                     (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.printable_fstar_term
+                                                                    Pulse_PP.printable_term
                                                                     t0))
                                                                     (fun
                                                                     uu___2 ->
@@ -4626,7 +4623,7 @@ let (get_non_informative_witness :
                                                            (Prims.of_int (18)))))
                                                   (Obj.magic
                                                      (Pulse_PP.pp
-                                                        Pulse_PP.printable_fstar_term
+                                                        Pulse_PP.printable_term
                                                         t))
                                                   (fun uu___2 ->
                                                      FStar_Tactics_Effect.lift_div_tac
@@ -4792,7 +4789,7 @@ let (check_prop_validity :
                                                                 (Prims.of_int (63)))))
                                                        (Obj.magic
                                                           (Pulse_PP.pp
-                                                             Pulse_PP.printable_fstar_term
+                                                             Pulse_PP.printable_term
                                                              p))
                                                        (fun uu___3 ->
                                                           FStar_Tactics_Effect.lift_div_tac
@@ -5156,7 +5153,7 @@ let (check_subtyping :
                                                                     (Prims.of_int (46)))))
                                                                   (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.printable_fstar_term
+                                                                    Pulse_PP.printable_term
                                                                     t1))
                                                                   (fun uu___3
                                                                     ->
@@ -5200,7 +5197,7 @@ let (check_subtyping :
                                                                     (Prims.of_int (46)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.printable_fstar_term
+                                                                    Pulse_PP.printable_term
                                                                     t2))
                                                                     (fun
                                                                     uu___4 ->
