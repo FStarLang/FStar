@@ -2828,10 +2828,7 @@ let maybe_instantiate (env:Env.env) e t =
   else begin
        if Env.debug env Options.High then
          BU.print3 "maybe_instantiate: starting check for (%s) of type (%s), expected type is %s\n"
-                 (Print.term_to_string e) (Print.term_to_string t)
-                 (match Env.expected_typ env with
-                  | None -> "None"
-                  | Some (t, _) -> Print.term_to_string t);
+                 (show e) (show t) (show (Env.expected_typ env));
        (* Similar to U.arrow_formals, but makes sure to unfold
         * recursively to catch all the binders across type
         * definitions. TODO: Move to library? Revise other uses
@@ -2885,8 +2882,7 @@ let maybe_instantiate (env:Env.env) e t =
                       let t = SS.subst subst x.sort in
                       let v, _, g = new_implicit_var "Instantiation of implicit argument" e.pos env t in
                       if Env.debug env Options.High then
-                        BU.print1 "maybe_instantiate: Instantiating implicit with %s\n"
-                                (Print.term_to_string v);
+                        BU.print1 "maybe_instantiate: Instantiating implicit with %s\n" (show v);
                       let subst = NT(x, v)::subst in
                       let aq = U.aqual_of_binder (List.hd bs) in
                       let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
@@ -2915,8 +2911,7 @@ let maybe_instantiate (env:Env.env) e t =
                                                              e.pos env t Strict
                                                              (Some meta_t) in
                       if Env.debug env Options.High then
-                        BU.print1 "maybe_instantiate: Instantiating meta argument with %s\n"
-                                (Print.term_to_string v);
+                        BU.print1 "maybe_instantiate: Instantiating meta argument with %s\n" (show v);
                       let subst = NT(x, v)::subst in
                       let aq = U.aqual_of_binder (List.hd bs) in
                       let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in

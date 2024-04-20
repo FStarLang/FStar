@@ -2441,7 +2441,8 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
     let n_args = List.length args in
     let r = Env.get_range env in
     let thead = U.comp_result chead in
-    if debug env Options.High then BU.print2 "(%s) Type of head is %s\n" (Range.string_of_range head.pos) (Print.term_to_string thead);
+    if debug env Options.High then
+      BU.print3 "(%s) Type of head is %s\nArgs = %s\n" (show head.pos) (show thead) (show args);
 
     (* given |- head : chead | ghead
            where head is a computation returning a function of type (bs0@bs -> cres)
@@ -2462,7 +2463,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
     let monadic_application
       (head, chead, ghead, cres)                        (* the head of the application, its lcomp chead, and guard ghead, returning a bs -> cres *)
       subst                                             (* substituting actuals for formals seen so far, when actual is pure *)
-      (arg_comps_rev:list (arg * option bv * lcomp))  (* type-checked actual arguments, so far; in reverse order *)
+      (arg_comps_rev:list (arg * option bv * lcomp))    (* type-checked actual arguments, so far; in reverse order *)
       arg_rets_rev                                      (* The results of each argument at the logic level, in reverse order *)
       guard                                             (* conjoined guard formula for all the actuals *)
       fvs                                               (* unsubstituted formals, to check that they do not occur free elsewhere in the type of f *)
@@ -2672,7 +2673,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                    if warn_effectful_args then
                      Errors.log_issue e.pos (Errors.Warning_EffectfulArgumentToErasedFunction,
                                              (format3 "Effectful argument %s (%s) to erased function %s, consider let binding it"
-                                                      (Print.term_to_string e) (string_of_lid c.eff_name) (Print.term_to_string head)));
+                                                        (show e) (show c.eff_name) (show head)));
                    if Env.debug env Options.Extreme then
                        BU.print_string "... lifting!\n";
                    let x = S.new_bv None c.res_typ in
@@ -2707,7 +2708,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
       // let comp, g = comp, guard in
       let comp, g = TcUtil.strengthen_precondition None env app comp guard in
       if Env.debug env Options.Extreme then BU.print2 "(d) Monadic app: type of app\n\t(%s)\n\t: %s\n"
-        (Print.term_to_string app)
+        (show app)
         (TcComm.lcomp_to_string comp);
       app, comp, g
     in
@@ -2816,11 +2817,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
             let x = {x with sort=targ} in
             if debug env Options.Extreme
             then BU.print5 "\tFormal is %s : %s\tType of arg %s (after subst %s) = %s\n"
-                           (Print.bv_to_string x)
-                           (Print.term_to_string x.sort)
-                           (Print.term_to_string e)
-                           (Print.subst_to_string subst)
-                           (Print.term_to_string targ);
+                             (show x) (show x.sort) (show e) (show subst) (show targ);
             let targ, g_ex = check_no_escape (Some head) env fvs targ in
             let env = Env.set_expected_typ_maybe_eq env targ (is_eq bqual) in
             if debug env Options.High
