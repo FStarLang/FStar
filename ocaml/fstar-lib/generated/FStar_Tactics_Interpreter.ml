@@ -777,7 +777,9 @@ let run_unembedded_tactic_on_ps :
                   FStar_Tactics_Types.local_state =
                     (ps.FStar_Tactics_Types.local_state);
                   FStar_Tactics_Types.urgency =
-                    (ps.FStar_Tactics_Types.urgency)
+                    (ps.FStar_Tactics_Types.urgency);
+                  FStar_Tactics_Types.dump_on_failure =
+                    (ps.FStar_Tactics_Types.dump_on_failure)
                 } in
               let ps2 =
                 {
@@ -909,7 +911,9 @@ let run_unembedded_tactic_on_ps :
                   FStar_Tactics_Types.local_state =
                     (ps1.FStar_Tactics_Types.local_state);
                   FStar_Tactics_Types.urgency =
-                    (ps1.FStar_Tactics_Types.urgency)
+                    (ps1.FStar_Tactics_Types.urgency);
+                  FStar_Tactics_Types.dump_on_failure =
+                    (ps1.FStar_Tactics_Types.dump_on_failure)
                 } in
               let env = ps2.FStar_Tactics_Types.main_context in
               let res =
@@ -1068,8 +1072,11 @@ let run_unembedded_tactic_on_ps :
                    FStar_Compiler_Effect.raise
                      (FStar_Errors.Err (code, msg1, ctx))
                | FStar_Tactics_Result.Failed (e, ps3) ->
-                   (FStar_Tactics_Printing.do_dump_proofstate ps3
-                      "at the time of failure";
+                   (if ps3.FStar_Tactics_Types.dump_on_failure
+                    then
+                      FStar_Tactics_Printing.do_dump_proofstate ps3
+                        "at the time of failure"
+                    else ();
                     (let texn_to_doc e1 =
                        match e1 with
                        | FStar_Tactics_Common.TacticFailure msg -> msg

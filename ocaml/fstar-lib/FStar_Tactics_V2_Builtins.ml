@@ -111,6 +111,7 @@ let tadmit_t                = from_tac_1 "B.tadmit_t" B.tadmit_t
 let join                    = from_tac_1 "B.join" B.join
 let curms                   = from_tac_1 "B.curms" B.curms
 let set_urgency             = from_tac_1 "B.set_urgency" B.set_urgency
+let set_dump_on_failure     = from_tac_1 "B.set_dump_on_failure" B.set_dump_on_failure
 let t_commute_applied_match = from_tac_1 "B.t_commute_applied_match" B.t_commute_applied_match
 let gather_or_solve_explicit_guards_for_resolved_goals = from_tac_1 "B.gather_explicit_guards_for_resolved_goals" B.gather_explicit_guards_for_resolved_goals
 let string_to_term          = from_tac_2 "B.string_to_term" B.string_to_term
