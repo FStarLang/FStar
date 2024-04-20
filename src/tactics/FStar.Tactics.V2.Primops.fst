@@ -193,6 +193,7 @@ let ops = [
     (fun _ _ _ -> fail "sorry, `lset` does not work in NBE");
 
   mk_tac_step_1 1 "set_urgency" set_urgency set_urgency;
+  mk_tac_step_1 1 "set_dump_on_failure" set_dump_on_failure set_dump_on_failure;
   mk_tac_step_1 1 "t_commute_applied_match" t_commute_applied_match t_commute_applied_match;
   mk_tac_step_1 0 "gather_or_solve_explicit_guards_for_resolved_goals"
     gather_explicit_guards_for_resolved_goals

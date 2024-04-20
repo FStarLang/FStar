@@ -597,67 +597,68 @@ let (check_typeclass_instance_attribute :
           let uu___ = FStar_Syntax_Util.arrow_formals_comp ty in
           match uu___ with
           | (uu___1, res) ->
-              let uu___2 = FStar_Syntax_Util.is_total_comp res in
-              if uu___2
-              then
-                let t = FStar_Syntax_Util.comp_result res in
+              ((let uu___3 =
+                  let uu___4 = FStar_Syntax_Util.is_total_comp res in
+                  Prims.op_Negation uu___4 in
+                if uu___3
+                then
+                  let uu___4 =
+                    let uu___5 =
+                      let uu___6 =
+                        FStar_Errors_Msg.text
+                          "Instances are expected to be total." in
+                      let uu___7 =
+                        let uu___8 =
+                          let uu___9 =
+                            FStar_Errors_Msg.text "This instance has effect" in
+                          let uu___10 =
+                            FStar_Class_PP.pp FStar_Ident.pretty_lident
+                              (FStar_Syntax_Util.comp_effect_name res) in
+                          FStar_Pprint.op_Hat_Hat uu___9 uu___10 in
+                        [uu___8] in
+                      uu___6 :: uu___7 in
+                    (FStar_Errors_Codes.Error_UnexpectedTypeclassInstance,
+                      uu___5) in
+                  FStar_Errors.log_issue_doc rng uu___4
+                else ());
+               (let t = FStar_Syntax_Util.comp_result res in
                 let uu___3 = FStar_Syntax_Util.head_and_args t in
-                (match uu___3 with
-                 | (head, uu___4) ->
-                     let err uu___5 =
-                       let uu___6 =
-                         let uu___7 =
-                           let uu___8 =
-                             FStar_Errors_Msg.text
-                               "Instances must define instances of `class` types." in
-                           let uu___9 =
-                             let uu___10 =
-                               let uu___11 = FStar_Errors_Msg.text "Type" in
-                               let uu___12 =
-                                 let uu___13 =
-                                   FStar_Class_PP.pp
-                                     FStar_Syntax_Print.pretty_term t in
-                                 let uu___14 =
-                                   FStar_Errors_Msg.text "is not a class." in
-                                 FStar_Pprint.op_Hat_Slash_Hat uu___13
-                                   uu___14 in
-                               FStar_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
-                             [uu___10] in
-                           uu___8 :: uu___9 in
-                         (FStar_Errors_Codes.Error_UnexpectedTypeclassInstance,
-                           uu___7) in
-                       FStar_Errors.log_issue_doc rng uu___6 in
-                     let uu___5 =
-                       let uu___6 = FStar_Syntax_Util.un_uinst head in
-                       uu___6.FStar_Syntax_Syntax.n in
-                     (match uu___5 with
-                      | FStar_Syntax_Syntax.Tm_fvar fv ->
-                          let uu___6 =
-                            let uu___7 =
-                              FStar_TypeChecker_Env.fv_has_attr env fv
-                                FStar_Parser_Const.tcclass_lid in
-                            Prims.op_Negation uu___7 in
-                          if uu___6 then err () else ()
-                      | uu___6 -> err ()))
-              else
-                (let uu___4 =
-                   let uu___5 =
-                     let uu___6 =
-                       FStar_Errors_Msg.text
-                         "Instances are expected to be total." in
-                     let uu___7 =
-                       let uu___8 =
-                         let uu___9 =
-                           FStar_Errors_Msg.text "This instance has effect" in
-                         let uu___10 =
-                           FStar_Class_PP.pp FStar_Ident.pretty_lident
-                             (FStar_Syntax_Util.comp_effect_name res) in
-                         FStar_Pprint.op_Hat_Hat uu___9 uu___10 in
-                       [uu___8] in
-                     uu___6 :: uu___7 in
-                   (FStar_Errors_Codes.Error_UnexpectedTypeclassInstance,
-                     uu___5) in
-                 FStar_Errors.log_issue_doc rng uu___4) in
+                match uu___3 with
+                | (head, uu___4) ->
+                    let err uu___5 =
+                      let uu___6 =
+                        let uu___7 =
+                          let uu___8 =
+                            FStar_Errors_Msg.text
+                              "Instances must define instances of `class` types." in
+                          let uu___9 =
+                            let uu___10 =
+                              let uu___11 = FStar_Errors_Msg.text "Type" in
+                              let uu___12 =
+                                let uu___13 =
+                                  FStar_Class_PP.pp
+                                    FStar_Syntax_Print.pretty_term t in
+                                let uu___14 =
+                                  FStar_Errors_Msg.text "is not a class." in
+                                FStar_Pprint.op_Hat_Slash_Hat uu___13 uu___14 in
+                              FStar_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
+                            [uu___10] in
+                          uu___8 :: uu___9 in
+                        (FStar_Errors_Codes.Error_UnexpectedTypeclassInstance,
+                          uu___7) in
+                      FStar_Errors.log_issue_doc rng uu___6 in
+                    let uu___5 =
+                      let uu___6 = FStar_Syntax_Util.un_uinst head in
+                      uu___6.FStar_Syntax_Syntax.n in
+                    (match uu___5 with
+                     | FStar_Syntax_Syntax.Tm_fvar fv ->
+                         let uu___6 =
+                           let uu___7 =
+                             FStar_TypeChecker_Env.fv_has_attr env fv
+                               FStar_Parser_Const.tcclass_lid in
+                           Prims.op_Negation uu___7 in
+                         if uu___6 then err () else ()
+                     | uu___6 -> err ()))) in
         if is_tc_instance
         then
           match se.FStar_Syntax_Syntax.sigel with

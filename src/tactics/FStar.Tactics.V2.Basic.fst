@@ -1960,6 +1960,11 @@ let set_urgency (u:Z.t) : tac unit =
     let ps = { ps with urgency = Z.to_int_fs u } in
     set ps
 
+let set_dump_on_failure (b:bool) : tac unit =
+    let! ps = get in
+    let ps = { ps with dump_on_failure = b } in
+    set ps
+
 let t_commute_applied_match () : tac unit = wrap_err "t_commute_applied_match" <| (
   let! g = cur_goal in
   match destruct_eq (goal_env g) (goal_type g) with
@@ -2786,6 +2791,7 @@ let proofstate_of_goals rng env goals imps =
         tac_verb_dbg = Env.debug env (Options.Other "TacVerbose");
         local_state = BU.psmap_empty ();
         urgency = 1;
+        dump_on_failure = true;
     }
     in
     ps
@@ -2815,6 +2821,7 @@ let proofstate_of_all_implicits rng env imps =
         tac_verb_dbg = Env.debug env (Options.Other "TacVerbose");
         local_state = BU.psmap_empty ();
         urgency = 1;
+        dump_on_failure = true;
     }
     in
     (ps, w)
@@ -2851,6 +2858,7 @@ let call_subtac (g:env) (f : tac unit) (_u:universe) (goal_ty : typ) : tac (opti
   return ();! // thunk
   let rng = Env.get_range g in
   let ps, w = proofstate_of_goal_ty rng g goal_ty in
+  let ps = { ps with dump_on_failure = false } in // subtacs can fail gracefully, do not dump the failed proofstate.
   match Errors.catch_errors_and_ignore_rest (fun () ->
           run_unembedded_tactic_on_ps_and_solve_remaining rng rng false () (fun () -> f) ps)
   with

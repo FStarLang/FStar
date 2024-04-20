@@ -366,7 +366,8 @@ let run_unembedded_tactic_on_ps
 
     (* Any other error, including exceptions being raised by the metaprograms. *)
     | Failed (e, ps) ->
-        do_dump_proofstate ps "at the time of failure";
+        if ps.dump_on_failure then
+          do_dump_proofstate ps "at the time of failure";
         let open FStar.Pprint in
         let texn_to_doc e =
           match e with

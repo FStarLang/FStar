@@ -383,6 +383,11 @@ val curms : unit -> Tac int
 before raising an exception (see e.g. [fail_silently]). *)
 val set_urgency : int -> TacS unit
 
+(** [set_dump_failure b] controls whether the engine will dump out
+the proofstate if a tactic fails during exception. This is true by
+default, but can be disabled to get less verbosity. *)
+val set_dump_on_failure : bool -> TacS unit
+
 (** [string_to_term e s] runs the F* parser on the string [s] in the
 environment [e], and produces a term. *)
 val string_to_term : env -> string -> Tac term
