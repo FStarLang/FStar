@@ -7,9 +7,6 @@ let base2 (x:int) (hyp: equals x 0) =
   let Refl = hyp in 
   assert (x == 0)
 
- //fails since the inversion on equals is not strong enough
- //to be usable directly, since df6fb0d52e52289db625cbdbc7c34d975801d819
-[@@expect_failure [19]]
 let base2' (x:int) (hyp: equals x 0) =
   assert (x == 0)
 

@@ -1,23 +1,36 @@
 module BugBoxInjectivity
-open FStar.Functions
-module CC = FStar.Cardinality.Universes
 
-type t (a:Type u#1) : Type u#0 =
-  | Mk : t a
+noeq
+type ceq (#a:Type) x : a -> Type =
+  | Refl : ceq #a x x
 
-let inj_t (#a:Type u#1) (x:t a)
-: Lemma (x == Mk #a)
-= let Mk #_ = x in ()
+let test a (x y:a) (h:ceq #a x y) : Lemma (x == y) = ()
+ 
+[@expect_failure]
+let bad (h0:ceq true true) (h1:ceq false false) : Lemma (true == false) =
+  let Refl = h0 in
+  let Refl = h1 in
+  ()
 
-[@@expect_failure]
-let t_injective : squash (is_inj t) = 
-  introduce forall f0 f1.
-      t f0 == t f1 ==> f0 == f1
-  with introduce _ ==> _
-  with _ . (
-    inj_t #f0 Mk;
-    inj_t #f1 (coerce_eq () (Mk #f0)) 
-  )
+// open FStar.Functions
+// module CC = FStar.Cardinality.Universes
+
+// type t (a:Type u#1) : Type u#0 =
+//   | Mk : t a
+
+// let inj_t (#a:Type u#1) (x:t a)
+// : Lemma (x == Mk #a)
+// = let Mk #_ = x in ()
+
+// [@@expect_failure]
+// let t_injective : squash (is_inj t) = 
+//   introduce forall f0 f1.
+//       t f0 == t f1 ==> f0 == f1
+//   with introduce _ ==> _
+//   with _ . (
+//     inj_t #f0 Mk;
+//     inj_t #f1 (coerce_eq () (Mk #f0)) 
+//   )
 
 
 // #restart-solver

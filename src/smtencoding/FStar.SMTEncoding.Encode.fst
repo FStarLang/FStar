@@ -1118,13 +1118,13 @@ let encode_sig_inductive (is_injective_on_params:bool) (env:env_t) (se:sigelt)
                 if is_injective_on_params
                 || Options.ext_getv "compat:injectivity" <> ""
                 then List.map2 (fun v a -> mkEq(mkFreeV v, a)) vars indices
-                else (
-                    //only injectivity on indices
-                    let num_params = List.length tps in
-                    let _var_params, var_indices = List.splitAt num_params vars in
-                    let _i_params, indices = List.splitAt num_params indices in
-                    List.map2 (fun v a -> mkEq(mkFreeV v, a)) var_indices indices
-                )
+                else []
+                //     //only injectivity on indices
+                //     let num_params = List.length tps in
+                //     let _var_params, var_indices = List.splitAt num_params vars in
+                //     let _i_params, indices = List.splitAt num_params indices in
+                //     List.map2 (fun v a -> mkEq(mkFreeV v, a)) var_indices indices
+                // )
             in
             mkOr(out, mkAnd(mk_data_tester env l xx, eqs |> mk_and_l)), decls@decls')
           (mkFalse, [])
@@ -1290,6 +1290,9 @@ let encode_datacon (is_injective_on_tparams:bool) (env:env_t) (se:sigelt)
         let encoded_head_fvb = lookup_free_var_name env' fv.fv_name in
         let encoded_args, arg_decls = encode_args args env' in
         let guards_for_parameter (orig_arg:S.term)(arg:term) xv =
+          if not is_injective_on_tparams
+          then mkTrue
+          else (
             let fv =
                 match arg.tm with
                 | FreeV fv -> fv
@@ -1305,6 +1308,7 @@ let encode_datacon (is_injective_on_tparams:bool) (env:env_t) (se:sigelt)
                   else [])
             in
             mk_and_l guards
+          )
         in
         let _, arg_vars, elim_eqns_or_guards, _ =
             List.fold_left
@@ -1322,6 +1326,16 @@ let encode_datacon (is_injective_on_tparams:bool) (env:env_t) (se:sigelt)
               (FStar.Compiler.List.zip args encoded_args)
         in
         let arg_vars = List.rev arg_vars in
+        let arg_params, _ = List.splitAt n_tps arg_vars in
+        let data_arg_params, _ = List.splitAt n_tps vars in
+        let elim_eqns_and_guards =
+          List.fold_left2 
+            (fun elim_eqns_and_guards data_arg_param arg_param ->
+                Term.subst elim_eqns_and_guards data_arg_param arg_param)
+            (mk_and_l (elim_eqns_or_guards@guards))
+            data_arg_params
+            arg_params
+        in
         let ty = maybe_curry_fvb fv.fv_name.p encoded_head_fvb arg_vars in
         let xvars = List.map mkFreeV vars in
         let dapp =  mkApp(ddconstrsym, xvars) in //arity ok; |xvars| = |formals| = arity
@@ -1330,7 +1344,7 @@ let encode_datacon (is_injective_on_tparams:bool) (env:env_t) (se:sigelt)
         let typing_inversion =
               Util.mkAssume(mkForall (Ident.range_of_lid d) ([[ty_pred]],
                                   add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders),
-                                  mkImp(ty_pred, mk_and_l (elim_eqns_or_guards@guards))),
+                                  mkImp(ty_pred, elim_eqns_and_guards)),
                           Some "data constructor typing elim",
                           ("data_elim_" ^ ddconstrsym)) in
         let lex_t = mkFreeV <| mk_fv (string_of_lid Const.lex_t_lid, Term_sort) in
