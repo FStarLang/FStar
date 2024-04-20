@@ -583,17 +583,18 @@ let injective_constructor
     let capp = mkApp(name, bvars) norng in
     fields
     |> List.mapi (fun i {field_projectible=projectible; field_name=name; field_sort=s} ->
-            let cproj_app = mkApp(name, [capp]) norng in
-            let proj_name = DeclFun(name, [sort], s, Some "Projector") in
             if projectible
-            then let a = {
+            then
+              let cproj_app = mkApp(name, [capp]) norng in
+              let proj_name = DeclFun(name, [sort], s, Some "Projector") in
+              let a = {
                     assumption_name = escape ("projection_inverse_"^name);
                     assumption_caption = Some "Projection inverse";
                     assumption_term = mkForall rng ([[capp]], bvar_names, mkEq(cproj_app, bvar i s norng) norng);
                     assumption_fact_ids = []
                  } in
-                 [proj_name; Assume a]
-            else [proj_name])
+              [proj_name; Assume a]
+            else [])
     |> List.flatten
 
 let discriminator_name constr = "is-"^constr.constr_name
