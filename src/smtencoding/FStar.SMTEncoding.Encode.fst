@@ -1777,14 +1777,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
     | Sig_bundle {ses} ->
       let tycon = List.tryFind (fun se -> Sig_inductive_typ? se.sigel) ses in
-      let is_injective_on_params =
-        match tycon with
-        | None ->
-          //Exceptions appear as Sig_bundle without an inductive type
-          false
-        | Some se ->
-          is_sig_inductive_injective_on_params env se
-      in
+      let is_injective_on_params = false in
       let g, env =
         ses |>
         List.fold_left
