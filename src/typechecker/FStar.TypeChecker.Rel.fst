@@ -39,6 +39,7 @@ open FStar.Common
 
 open FStar.Class.Deq
 open FStar.Class.Show
+open FStar.Class.Setlike
 
 module BU = FStar.Compiler.Util //basic util
 module U = FStar.Syntax.Util
@@ -66,8 +67,8 @@ let is_base_type env typ =
     | Tm_type _ -> true
     | _ -> false
 
-let binders_as_bv_set (bs:binders) =
-  Set.from_list (List.map (fun b -> b.binder_bv) bs)
+let binders_as_bv_set (bs:binders) : FlatSet.t bv =
+  from_list (List.map (fun b -> b.binder_bv) bs)
 
 (* lazy string, for error reporting *)
 type lstring = Thunk.t string
@@ -116,7 +117,7 @@ type worklist = {
                                                 //is allowed; disabled by default, enabled in
                                                 //sub_comp which is called by the typechecker, and
                                                 //will insert the appropriate lifts.
-    typeclass_variables: Set.t ctx_uvar         //variables that will be solved by typeclass instantiation
+    typeclass_variables: FlatSet.t ctx_uvar     //variables that will be solved by typeclass instantiation
 }
 
 (* A NOTE ON ENVIRONMENTS
@@ -290,7 +291,7 @@ let def_scope_wf msg rng r =
     in aux [] r
 
 instance hasBinders_prob : Class.Binders.hasBinders prob = {
-  boundNames = (fun prob -> Set.from_list (List.map (fun b -> b.binder_bv) <| p_scope prob));
+  boundNames = (fun prob -> from_list (List.map (fun b -> b.binder_bv) <| p_scope prob));
 }
 
 let def_check_term_scoped_in_prob msg prob phi =
@@ -390,7 +391,7 @@ let empty_worklist env = {
     umax_heuristic_ok=true;
     wl_implicits=[];
     repr_subcomp_allowed=false;
-    typeclass_variables = Set.empty();
+    typeclass_variables = empty();
 }
 
 let giveup wl (reason : lstring) prob =
@@ -919,7 +920,7 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
                            (Print.tag_of_term head)
                            (Print.tag_of_term (SS.compress head)))
 
-let no_free_uvars t = Set.is_empty (Free.uvars t) && Set.is_empty (Free.univs t)
+let no_free_uvars t = is_empty (Free.uvars t) && is_empty (Free.univs t)
 
 (* Deciding when it's okay to issue an SMT query for
  * equating a term whose head symbol is `head` with another term
@@ -1060,7 +1061,7 @@ let solve_prob (prob : prob) (logical_guard : option term) (uvis : list uvi) (wl
 let occurs (uk:ctx_uvar) t =
     let uvars =
         Free.uvars t
-        |> Set.elems // Bad: order dependent
+        |> elems // Bad: order dependent
     in
     let occurs =
         (uvars
@@ -1079,7 +1080,7 @@ let occurs_check (uk:ctx_uvar) t =
 let occurs_full (uk:ctx_uvar) t =
     let uvars =
         Free.uvars_full t
-        |> Set.elems // Bad: order dependent
+        |> elems // Bad: order dependent
     in
     let occurs =
         (uvars
@@ -1165,7 +1166,7 @@ let restrict_all_uvars env (tgt:ctx_uvar) (bs:binders) (sources:list ctx_uvar) w
     List.fold_right 
       (fun (src:ctx_uvar) wl ->
         let ctx_src = binders_as_bv_set src.ctx_uvar_binders in
-        if Set.subset ctx_src ctx_tgt
+        if subset ctx_src ctx_tgt
         then wl // no need to restrict source, it's context is included in the context of the tgt
         else restrict_ctx env tgt [] src wl)
       sources
@@ -1176,23 +1177,23 @@ let restrict_all_uvars env (tgt:ctx_uvar) (bs:binders) (sources:list ctx_uvar) w
 
 let intersect_binders (g:gamma) (v1:binders) (v2:binders) : binders =
     let as_set v =
-        v |> List.fold_left (fun out x -> Set.add x.binder_bv out) S.no_names in
+        v |> List.fold_left (fun out x -> add x.binder_bv out) S.no_names in
     let v1_set = as_set v1 in
     let ctx_binders =
-        List.fold_left (fun out b -> match b with Binding_var x -> Set.add x out | _ -> out)
+        List.fold_left (fun out b -> match b with Binding_var x -> add x out | _ -> out)
                         S.no_names
                         g
     in
     let isect, _ =
         v2 |> List.fold_left (fun (isect, isect_set) b ->
             let x, imp = b.binder_bv, b.binder_qual in
-            if not <| Set.mem x v1_set
+            if not <| mem x v1_set
             then //definitely not in the intersection
                  isect, isect_set
             else //maybe in the intersect, if its type is only dependent on prior elements in the telescope
                  let fvs = Free.names x.sort in
-                 if Set.subset fvs isect_set
-                 then b::isect, Set.add x isect_set
+                 if subset fvs isect_set
+                 then b::isect, add x isect_set
                  else isect, isect_set)
         ([], ctx_binders) in
     List.rev isect
@@ -2105,7 +2106,7 @@ let apply_ad_hoc_indexed_subcomp (env:Env.env)
 
 let has_typeclass_constraint (u:ctx_uvar) (wl:worklist)
   : bool
-  = wl.typeclass_variables |> Set.for_any (fun v -> UF.equiv v.ctx_uvar_head u.ctx_uvar_head)
+  = wl.typeclass_variables |> for_any (fun v -> UF.equiv v.ctx_uvar_head u.ctx_uvar_head)
 
 (* This function returns true for those lazykinds that
 are "complete" in the sense that unfolding them does not
@@ -2128,7 +2129,7 @@ let lazy_complete_repr (k:lazy_kind) : bool =
   | _ -> false
 
 let has_free_uvars (t:term) : bool =
-  not (Set.is_empty (Free.uvars_uncached t))
+  not (is_empty (Free.uvars_uncached t))
 
 let env_has_free_uvars (e:env_t) : bool =
   List.existsb (fun b -> has_free_uvars b.binder_bv.sort) (Env.all_binders e)
@@ -2846,7 +2847,7 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
         let (Flex (_, ctx_u, args)) = lhs in
         let bs, rhs =
           let bv_not_free_in_arg x arg =
-              not (Set.mem x (Free.names (fst arg)))
+              not (mem x (Free.names (fst arg)))
           in
           let bv_not_free_in_args x args =
               BU.for_all (bv_not_free_in_arg x) args
@@ -2954,7 +2955,7 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
           then Inl ("quasi-pattern, occurs-check failed: " ^ (Option.get msg)), wl
           else let fvs_lhs = binders_as_bv_set (ctx_u.ctx_uvar_binders@bs) in
                let fvs_rhs = Free.names rhs in
-               if not (Set.subset fvs_rhs fvs_lhs)
+               if not (subset fvs_rhs fvs_lhs)
                then Inl ("quasi-pattern, free names on the RHS are not included in the LHS"), wl
                else Inr (mk_solution env lhs bs rhs), restrict_all_uvars env ctx_u [] uvars wl
     in
@@ -3135,8 +3136,7 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
         let uvars_head, occurs_ok, _ = occurs_check ctx_uv head in
         if not occurs_ok
         then inapplicable "occurs check failed" None
-        else if not (Set.subset (Free.names head)
-                                         (binders_as_bv_set ctx_uv.ctx_uvar_binders))
+        else if not (Free.names head `subset` binders_as_bv_set ctx_uv.ctx_uvar_binders)
         then inapplicable "free name inclusion failed" None
         else (
           let t_head, _ =
@@ -3198,7 +3198,7 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
                 //   will also try to restrict them
                 //
                 solve_sub_probs_if_head_types_equal
-                  (head |> Free.uvars |> Set.elems)
+                  (head |> Free.uvars |> elems)
                   wl
               | Inr msg ->
                 UF.rollback tx;
@@ -3237,7 +3237,7 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
         then giveup_or_defer orig wl
                Deferred_occur_check_failed
                (Thunk.mkv <| "occurs-check failed: " ^ (Option.get msg))
-        else if Set.subset fvs2 fvs1
+        else if subset fvs2 fvs1
         then let sol = mk_solution env lhs lhs_binders rhs in
              let wl = restrict_all_uvars env ctx_uv lhs_binders uvars wl in
              solve (solve_prob orig None sol wl)
@@ -4011,8 +4011,8 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                 solve (attempt [base_prob] wl)
              in
         let has_uvars =
-            not (Set.is_empty (FStar.Syntax.Free.uvars phi1))
-            || not (Set.is_empty (FStar.Syntax.Free.uvars phi2))
+            not (is_empty (FStar.Syntax.Free.uvars phi1))
+            || not (is_empty (FStar.Syntax.Free.uvars phi2))
         in
         if problem.relation = EQ
         || (not env.uvar_subtyping && has_uvars)
@@ -4954,10 +4954,10 @@ let try_solve_deferred_constraints (defer_ok:defer_ok_t) smt_ok deferred_to_tac_
               then (
                 let goal_type = U.ctx_uvar_typ i.imp_uvar in
                 let uvs = Free.uvars goal_type in
-                Set.elems uvs
+                elems uvs
               )
               else []
-            | _ -> []) |> Set.from_list
+            | _ -> []) |> from_list
    in
    let wl = {wl_of_guard env g.deferred with defer_ok=defer_ok
                                            ; smt_ok=smt_ok
@@ -5437,7 +5437,7 @@ let pick_a_univ_deffered_implicit (out : tagged_implicits)
 let is_tac_implicit_resolved (env:env) (i:implicit) : bool =
     i.imp_tm
     |> Free.uvars
-    |> Set.for_all (fun uv -> Allow_unresolved? (U.ctx_uvar_should_check uv))
+    |> for_all (fun uv -> Allow_unresolved? (U.ctx_uvar_should_check uv))
 
 
 // is_tac: this is a call from within the tactic engine, hence do not use

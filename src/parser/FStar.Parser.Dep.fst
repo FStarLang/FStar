@@ -39,7 +39,7 @@ open FStar.Class.Show
 module Const = FStar.Parser.Const
 module BU = FStar.Compiler.Util
 
-module Set = FStar.Compiler.Set
+module FlatSet = FStar.Compiler.FlatSet
 
 let profile f c = Profiling.profile f None c
 

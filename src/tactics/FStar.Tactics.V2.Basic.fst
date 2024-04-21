@@ -63,6 +63,7 @@ module PO     = FStar.TypeChecker.Primops
 open FStar.Class.Show
 open FStar.Class.Monad
 open FStar.Class.PP
+open FStar.Class.Setlike
 
 let compress (t:term) : tac term =
   return ();!
@@ -156,7 +157,7 @@ let dump_all (print_resolved:bool) (msg:string) : tac unit =
 
 let dump_uvars_of (g:goal) (msg:string) : tac unit =
   mk_tac (fun ps ->
-    let uvs = SF.uvars (goal_type g) |> Set.elems in // Set.elems order dependent but OK
+    let uvs = SF.uvars (goal_type g) |> elems in // elems order dependent but OK
     let gs = List.map (goal_of_ctx_uvar g) uvs in
     let gs = List.filter (fun g -> not (check_goal_solved g)) gs in
     let ps' = { ps with smt_goals = [] ; goals = gs } in
@@ -366,8 +367,8 @@ let __do_unify_wflags
        | Check_none -> Free.new_uv_set ()
        | Check_left_only -> Free.uvars t1
        | Check_right_only -> Free.uvars t2
-       | Check_both -> Set.union (Free.uvars t1) (Free.uvars t2))
-      |> Set.elems /// GGG order dependent but does not seem too bad
+       | Check_both -> union (Free.uvars t1) (Free.uvars t2))
+      |> elems /// GGG order dependent but does not seem too bad
     in
 
     match!
@@ -457,7 +458,7 @@ let do_match (must_tot:bool) (env:Env.env) (t1:term) (t2:term) : tac bool =
   let! r = do_unify_aux must_tot Check_right_only env t1 t2 in
   if r then begin
       let uvs2 = SF.uvars_uncached t1 in
-      if not (Set.equal uvs1 uvs2)
+      if not (equal uvs1 uvs2)
       then (UF.rollback tx; return false)
       else return true
   end
@@ -477,7 +478,7 @@ let do_match_on_lhs (must_tot:bool) (env:Env.env) (t1:term) (t2:term) : tac bool
     let! r = do_unify_aux must_tot Check_right_only env t1 t2 in
     if r then begin
         let uvs2 = SF.uvars_uncached lhs in
-        if not (Set.equal uvs1 uvs2)
+        if not (equal uvs1 uvs2)
         then (UF.rollback tx; return false)
         else return true
     end
@@ -976,7 +977,7 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : t
                         (Rel.guard_to_string e guard)) ;!
     // Focus helps keep the goal order
     let typ = bnorm e typ in
-    if only_match && not (Set.is_empty (Free.uvars_uncached typ)) then
+    if only_match && not (is_empty (Free.uvars_uncached typ)) then
       fail "t_apply: only_match is on, but the type of the term to apply is not a uvar"
     else return ();!
     let! uvs = try_unify_by_application (Some should_check) only_match e typ (goal_type goal) (rangeof goal) in
@@ -986,11 +987,11 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : t
     let w = List.fold_right (fun (uvt, q, _) w -> U.mk_app w [(uvt, q)]) uvs tm in
     let uvset =
       List.fold_right
-        (fun (_, _, uv) s -> Set.union s (SF.uvars (U.ctx_uvar_typ uv)))
+        (fun (_, _, uv) s -> union s (SF.uvars (U.ctx_uvar_typ uv)))
         uvs
         (SF.new_uv_set ())
     in
-    let free_in_some_goal uv = Set.mem uv uvset in
+    let free_in_some_goal uv = mem uv uvset in
     solve' goal w ;!
     //
     //process uvs
@@ -1105,7 +1106,7 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
         let goal_sc = should_check_goal_uvar goal in
         solve' goal U.exp_unit ;!
         let is_free_uvar uv t =
-            Set.for_any (fun u -> UF.equiv u.ctx_uvar_head uv) (SF.uvars t)
+            for_any (fun u -> UF.equiv u.ctx_uvar_head uv) (SF.uvars t)
         in
         let appears uv goals = List.existsML (fun g' -> is_free_uvar uv (goal_type g')) goals in
         let checkone t goals =
@@ -1301,7 +1302,7 @@ let revert () : tac unit =
       let g = mk_goal env' u_r goal.opts goal.is_guard goal.label in
       replace_cur g
 
-let free_in bv t = Set.mem bv (SF.names t)
+let free_in bv t = mem bv (SF.names t)
 
 let clear (b : RD.binding) : tac unit =
     let bv = binding_to_bv b in
@@ -1395,7 +1396,7 @@ let _t_trefl (allow_guards:bool) (l : term) (r : term) : tac unit =
       in
       let t = U.ctx_uvar_typ g.goal_ctx_uvar in
       let uvars = FStar.Syntax.Free.uvars t in
-      if Set.for_all is_uvar_untyped_or_already_checked uvars
+      if for_all is_uvar_untyped_or_already_checked uvars
       then skip_register //all the uvars are already checked or untyped
       else (
         let head, args =
@@ -2109,7 +2110,7 @@ let t_smt_sync (vcfg : vconfig) : tac unit = wrap_err "t_smt_sync" <| (
 let free_uvars (tm : term) : tac (list Z.t)
   = return ();!
     let uvs = Free.uvars_uncached tm
-               |> Set.elems // GGG bad, order dependent, but userspace does not have sets
+               |> elems // GGG bad, order dependent, but userspace does not have sets
                |> List.map (fun u -> Z.of_int_fs (UF.uvar_id u.ctx_uvar_head))
     in
     return uvs
@@ -2228,11 +2229,11 @@ let refl_typing_builtin_wrapper (label:string) (f:unit -> 'a & list (env & typ))
   return (o, errs)
 
 let no_uvars_in_term (t:term) : bool =
-  t |> Free.uvars |> Set.is_empty &&
-  t |> Free.univs |> Set.is_empty
+  t |> Free.uvars |> is_empty &&
+  t |> Free.univs |> is_empty
 
 let no_univ_uvars_in_term (t:term) : bool =
-  t |> Free.univs |> Set.is_empty
+  t |> Free.univs |> is_empty
 
 let no_uvars_in_g (g:env) : bool =
   g.gamma |> BU.for_all (function
@@ -2693,7 +2694,7 @@ let refl_try_unify (g:env) (uvs:list (bv & typ)) (t0 t1:term)
               let allow_uvars = true in
               let allow_names = true in
               let t = SC.deep_compress allow_uvars allow_names t in
-              if t |> Syntax.Free.uvars_full |> Set.is_empty
+              if t |> Syntax.Free.uvars_full |> is_empty
               then (bv, t)::l
               else l
             | None -> l

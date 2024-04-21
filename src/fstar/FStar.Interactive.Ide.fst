@@ -968,7 +968,7 @@ let st_cost = function
 
 type search_candidate = { sc_lid: lid; sc_typ:
                           ref (option Syntax.Syntax.typ);
-                          sc_fvars: ref (option (Set.t lid)) }
+                          sc_fvars: ref (option (FlatSet.t lid)) }
 
 let sc_of_lid lid = { sc_lid = lid;
                       sc_typ = Util.mk_ref None;
@@ -1003,7 +1003,7 @@ let run_search st search_str =
     let found =
       match term.st_term with
       | NameContainsStr str -> Util.contains (string_of_lid candidate.sc_lid) str
-      | TypeContainsLid lid -> Set.mem lid (sc_fvars tcenv candidate) in
+      | TypeContainsLid lid -> Class.Setlike.mem lid (sc_fvars tcenv candidate) in
     found <> term.st_negate in
 
   let parse search_str =

@@ -28,8 +28,10 @@ open FStar.Tactics.Types
 open FStar.Tactics.Result
 open FStar.Tactics.Printing
 open FStar.Tactics.Common
-open FStar.Class.Show
 open FStar.Errors.Msg
+
+open FStar.Class.Show
+open FStar.Class.Setlike
 
 module O       = FStar.Options
 module BU      = FStar.Compiler.Util
@@ -53,7 +55,7 @@ let is_goal_safe_as_well_typed (g:goal) =
       List.for_all 
           (fun uv -> 
             match UF.find uv.ctx_uvar_head with
-            | Some t -> Set.is_empty (FStar.Syntax.Free.uvars t)
+            | Some t -> is_empty (FStar.Syntax.Free.uvars t)
             | _ -> false)
           (U.ctx_uvar_typedness_deps uv)
   in

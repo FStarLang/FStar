@@ -25,6 +25,7 @@ open FStar.Compiler.Util
 open FStar.Const
 open FStar.BaseTypes
 open FStar.Extraction.ML.Syntax
+open FStar.Class.Setlike
 
 (**
   This module implements a transformation on the FStar.Extraction.ML.Syntax
@@ -75,12 +76,12 @@ let lookup_tyname (env:env_t) (name:mlpath)
   = BU.psmap_try_find env.tydef_map (string_of_mlpath name)
 
 (** Free variables of a type: Computed to check which parameters are used *)
-type var_set = Set.set mlident
-let empty_var_set : Set.set string = Set.empty ()
+type var_set = FlatSet.t mlident
+let empty_var_set : FlatSet.t string = empty ()
 let rec freevars_of_mlty' (vars:var_set) (t:mlty) =
   match t with
   | MLTY_Var i ->
-    Set.add i vars
+    add i vars
   | MLTY_Fun (t0, _, t1) ->
     freevars_of_mlty' (freevars_of_mlty' vars t0) t1
   | MLTY_Named (tys, _)
@@ -206,7 +207,7 @@ let elim_tydef (env:env_t) name metadata parameters mlty
         List.fold_left
           (fun (i, params, entry) param ->
              let p = param.ty_param_name in
-             if Set.mem p freevars
+             if mem p freevars
              then begin
                if must_eliminate i
                then begin

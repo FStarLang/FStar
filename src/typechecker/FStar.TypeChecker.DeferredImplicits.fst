@@ -36,6 +36,8 @@ module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module SS = FStar.Syntax.Subst
 
+open FStar.Class.Setlike
+
 let is_flex t =
   let head, _args = U.head_and_args_full t in
   match (SS.compress head).n with
@@ -59,15 +61,15 @@ type goal_dep =
     goal_dep_id    : int;             // Assign each goal an id, for cycle detection
     goal_type      : goal_type;       // What sort of goal ...
     goal_imp       : implicit;        // The entire implicit from which this was generated
-    assignees      : Set.t ctx_uvar;  // The set of uvars assigned by the goal
-    goal_dep_uvars : Set.t ctx_uvar;  // The set of uvars this goal depends on
+    assignees      : FlatSet.t ctx_uvar;  // The set of uvars assigned by the goal
+    goal_dep_uvars : FlatSet.t ctx_uvar;  // The set of uvars this goal depends on
     dependences    : ref goal_deps;   // NB: mutable; the goals that must precede this one in the order
     visited        : ref int          // NB: mutable; a field to mark visited goals during the sort
   }
 and goal_deps = list goal_dep
 
-let print_uvar_set (s:Set.t ctx_uvar) =
-    (Set.elems s
+let print_uvar_set (s:FlatSet.t ctx_uvar) =
+    (elems s
      |> List.map (fun u -> "?" ^ (string_of_int <| Unionfind.uvar_id u.ctx_uvar_head))
      |> String.concat "; ")
 

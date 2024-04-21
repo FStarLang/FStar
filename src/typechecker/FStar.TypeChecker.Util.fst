@@ -47,6 +47,8 @@ module P = FStar.Syntax.Print
 module C = FStar.Parser.Const
 module UF = FStar.Syntax.Unionfind
 
+open FStar.Class.Setlike
+
 //Reporting errors
 let report env errs =
     Errors.log_issue (Env.get_range env)
@@ -80,7 +82,7 @@ let close_guard_implicits env solve_deferred (xs:binders) (g:guard_t) : guard_t 
 
 let check_uvars r t =
   let uvs = Free.uvars t in
-  if not (Set.is_empty uvs) then begin
+  if not (is_empty uvs) then begin
     (* ignoring the hide_uvar_nums and print_implicits flags here *)
     Options.push();
     Options.set_option "hide_uvar_nums" (Options.Bool false);
@@ -2392,7 +2394,7 @@ let rec check_erased (env:Env.env) (t:term) : isErased =
             |> check_erased
                 (br_body
                  |> Free.names
-                 |> Set.elems // GGG: bad, order-depending
+                 |> elems // GGG: bad, order-depending
                  |> Env.push_bvs env) with
           | No -> No
           | _ -> Maybe) No

@@ -9,6 +9,7 @@ open FStar.Class.Ord
 open FStar.Errors
 open FStar.Errors.Msg
 open FStar.Pprint
+open FStar.Class.Setlike
 
 let () = let open FStar.Syntax.Print in ()
 
@@ -24,24 +25,24 @@ instance pp_bv : pretty FStar.Syntax.Syntax.bv = {
   pp = (fun bv -> arbitrary_string (show bv));
 }
 
-instance pp_set #a (_ : ord a) (_ : pretty a) : Tot (pretty (Set.set a)) = {
+instance pp_set #a (_ : ord a) (_ : pretty a) : Tot (pretty (FlatSet.t a)) = {
   pp = (fun s ->
     let doclist (ds : list Pprint.document) : Pprint.document =
       surround_separate 2 0 (doc_of_string "[]") lbracket (semi ^^ break_ 1) rbracket ds
     in
-    doclist (Set.elems s |> List.map pp))
+    doclist (elems s |> List.map pp))
 }
 
 let __def_check_scoped rng msg env thing =
   let free = freeNames thing in
   let scope = boundNames env in
-  if not (Set.subset free scope) then
+  if not (subset free scope) then
     Errors.log_issue_doc rng (Errors.Warning_Defensive, [
          text "Internal: term is not well-scoped " ^/^ parens (doc_of_string msg);
          text "t =" ^/^ pp thing;
          text "FVs =" ^/^ pp free;
          text "Scope =" ^/^ pp scope;
-         text "Diff =" ^/^ pp (Set.diff free scope);
+         text "Diff =" ^/^ pp (diff free scope);
        ])
 
 let def_check_scoped rng msg env thing =

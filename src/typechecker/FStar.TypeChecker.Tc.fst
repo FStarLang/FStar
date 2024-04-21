@@ -32,7 +32,9 @@ open FStar.Syntax.Subst
 open FStar.Syntax.Util
 open FStar.Const
 open FStar.TypeChecker.TcTerm
+
 open FStar.Class.Show
+open FStar.Class.Setlike
 
 module S  = FStar.Syntax.Syntax
 module SP  = FStar.Syntax.Print
@@ -505,7 +507,7 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
         then err ("no_subtype annotation on a non-lemma") lb.lbpos
         else let lid_opt =
                    Free.fvars lb.lbtyp
-                   |> Set.elems
+                   |> elems
                    |> List.tryFind (fun lid ->
                                    not (lid |> Ident.path_of_lid |> List.hd = "Prims" ||
                                         lid_equals lid PC.pattern_lid)) in

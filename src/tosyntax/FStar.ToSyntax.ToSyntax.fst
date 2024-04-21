@@ -30,6 +30,7 @@ open FStar.Ident
 open FStar.Const
 open FStar.Errors
 open FStar.Syntax
+open FStar.Class.Setlike
 
 module C = FStar.Parser.Const
 module S = FStar.Syntax.Syntax
@@ -515,7 +516,7 @@ let rec destruct_app_pattern (env:env_t) (is_top_level:bool) (p:pattern)
   | _ ->
     failwith "Not an app pattern"
 
-let rec gather_pattern_bound_vars_maybe_top acc p =
+let rec gather_pattern_bound_vars_maybe_top (acc : FlatSet.t ident) p =
   let gather_pattern_bound_vars_from_list =
       List.fold_left gather_pattern_bound_vars_maybe_top acc
   in
@@ -527,15 +528,15 @@ let rec gather_pattern_bound_vars_maybe_top acc p =
   | PatOp _ -> acc
   | PatApp (phead, pats) -> gather_pattern_bound_vars_from_list (phead::pats)
   | PatTvar (x, _, _)
-  | PatVar (x, _, _) -> Set.add x acc
+  | PatVar (x, _, _) -> add x acc
   | PatList pats
   | PatTuple  (pats, _)
   | PatOr pats -> gather_pattern_bound_vars_from_list pats
   | PatRecord guarded_pats -> gather_pattern_bound_vars_from_list (List.map snd guarded_pats)
   | PatAscribed (pat, _) -> gather_pattern_bound_vars_maybe_top acc pat
 
-let gather_pattern_bound_vars : pattern -> Set.set Ident.ident =
-  let acc = Set.empty () in
+let gather_pattern_bound_vars : pattern -> FlatSet.t Ident.ident =
+  let acc = empty #ident () in
   fun p -> gather_pattern_bound_vars_maybe_top acc p
 
 type bnd =
@@ -592,10 +593,10 @@ let rec generalize_annotated_univs (s:sigelt) :sigelt =
     list that we update as we find universes. We also keep a set of 'seen'
     universes, whose order we do not care, just for efficiency. *)
   let vars : ref (list univ_name) = mk_ref [] in
-  let seen : ref (Set.t univ_name) = mk_ref (Set.empty ()) in
+  let seen : ref (FlatSet.t univ_name) = mk_ref (empty ()) in
   let reg (u:univ_name) : unit =
-    if not (Set.mem u !seen) then (
-      seen := Set.add u !seen;
+    if not (mem u !seen) then (
+      seen := add u !seen;
       vars := u::!vars
     )
   in
@@ -663,11 +664,11 @@ let rec generalize_annotated_univs (s:sigelt) :sigelt =
     let generalize_annotated_univs_signature (s : effect_signature) : effect_signature =
       match s with
       | Layered_eff_sig (n, (_, t)) ->
-        let uvs = Free.univnames t |> Set.elems in
+        let uvs = Free.univnames t |> elems in
         let usubst = Subst.univ_var_closing uvs in
         Layered_eff_sig (n, (uvs, Subst.subst usubst t))
       | WP_eff_sig (_, t) ->
-        let uvs = Free.univnames t |> Set.elems in
+        let uvs = Free.univnames t |> elems in
         let usubst = Subst.univ_var_closing uvs in
         WP_eff_sig (uvs, Subst.subst usubst t)
     in
@@ -781,15 +782,15 @@ let check_linear_pattern_variables pats r =
       not wildcards. *)
       if string_of_id x.ppname = Ident.reserved_prefix
       then S.no_names
-      else Set.add x S.no_names
+      else add x S.no_names
     | Pat_cons(_, _, pats) ->
       let aux out (p, _) =
           let p_vars = pat_vars p in
-          let intersection = Set.inter p_vars out in
-          if Set.is_empty intersection
-          then Set.union out p_vars
+          let intersection = inter p_vars out in
+          if is_empty intersection
+          then union out p_vars
           else
-            let duplicate_bv = List.hd (Set.elems intersection) in
+            let duplicate_bv = List.hd (elems intersection) in
             raise_error ( Errors.Fatal_NonLinearPatternNotPermitted,
                           BU.format1
                             "Non-linear patterns are not permitted: `%s` appears more than once in this pattern."
@@ -807,10 +808,10 @@ let check_linear_pattern_variables pats r =
   | p::ps ->
     let pvars = pat_vars p in
     let aux p =
-      if Set.equal pvars (pat_vars p) then () else
-      let symdiff s1 s2 = Set.union (Set.diff s1 s2) (Set.diff s2 s1) in
+      if equal pvars (pat_vars p) then () else
+      let symdiff s1 s2 = union (diff s1 s2) (diff s2 s1) in
       let nonlinear_vars = symdiff pvars (pat_vars p) in
-      let first_nonlinear_var = List.hd (Set.elems nonlinear_vars) in
+      let first_nonlinear_var = List.hd (elems nonlinear_vars) in
       raise_error ( Errors.Fatal_IncoherentPatterns,
                     BU.format1
                       "Patterns in this match are incoherent, variable %s is bound in some but not all patterns."
@@ -1416,17 +1417,17 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
     | Abs(binders, body) ->
       (* First of all, forbid definitions such as `f x x = ...` *)
       let bvss = List.map gather_pattern_bound_vars binders in
-      let check_disjoint (sets : list (Set.set ident)) : option ident =
+      let check_disjoint (sets : list (FlatSet.t ident)) : option ident =
         let rec aux acc sets =
             match sets with
             | [] -> None
             | set::sets ->
-                let i = Set.inter acc set in
-                if Set.is_empty i
-                then aux (Set.union acc set) sets
-                else Some (List.hd (Set.elems i))
+                let i = inter acc set in
+                if is_empty i
+                then aux (union acc set) sets
+                else Some (List.hd (elems i))
         in
-        aux (S.new_id_set ()) sets
+        aux (new_id_set ()) sets
       in
       begin match check_disjoint bvss with
       | None -> ()
@@ -1952,7 +1953,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let tm = SS.close vt_binders tm in // but we need to close the variables in tm
       let () =
         let fvs = Free.names tm in
-        if not (Set.is_empty fvs) then
+        if not (is_empty fvs) then
           raise_error (Errors.Fatal_MissingFieldInRecord,
                      BU.format1 "Static quotation refers to external variables: %s" (Class.Show.show fvs))
                      (e.range)
@@ -4021,7 +4022,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
       let build_projection (env, ses) id  = build_generic_projection (env, ses) (Some id) in
       let build_coverage_check (env, ses) = build_generic_projection (env, ses) None in
 
-      let bvs = gather_pattern_bound_vars pat |> Set.elems in
+      let bvs = gather_pattern_bound_vars pat |> elems in
 
       (* If there are no variables in the pattern (and it is not a
        * wildcard), we should still check to see that it is complete,
