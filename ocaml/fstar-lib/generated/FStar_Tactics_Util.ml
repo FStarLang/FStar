@@ -710,3 +710,37 @@ let rec string_of_list :
                                        (fun uu___2 ->
                                           Prims.strcat uu___ uu___1)))) uu___))))
         uu___1 uu___
+let string_of_option :
+  'a .
+    ('a -> (Prims.string, unit) FStar_Tactics_Effect.tac_repr) ->
+      'a FStar_Pervasives_Native.option ->
+        (Prims.string, unit) FStar_Tactics_Effect.tac_repr
+  =
+  fun uu___1 ->
+    fun uu___ ->
+      (fun f ->
+         fun o ->
+           match o with
+           | FStar_Pervasives_Native.Some x ->
+               Obj.magic
+                 (Obj.repr
+                    (FStar_Tactics_Effect.tac_bind
+                       (FStar_Sealed.seal
+                          (Obj.magic
+                             (FStar_Range.mk_range "FStar.Tactics.Util.fst"
+                                (Prims.of_int (126)) (Prims.of_int (24))
+                                (Prims.of_int (126)) (Prims.of_int (27)))))
+                       (FStar_Sealed.seal
+                          (Obj.magic
+                             (FStar_Range.mk_range "prims.fst"
+                                (Prims.of_int (590)) (Prims.of_int (19))
+                                (Prims.of_int (590)) (Prims.of_int (31)))))
+                       (Obj.magic (f x))
+                       (fun uu___ ->
+                          FStar_Tactics_Effect.lift_div_tac
+                            (fun uu___1 -> Prims.strcat "Some " uu___))))
+           | FStar_Pervasives_Native.None ->
+               Obj.magic
+                 (Obj.repr
+                    (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> "None"))))
+        uu___1 uu___

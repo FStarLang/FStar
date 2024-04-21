@@ -16,6 +16,7 @@
 module FStar.Tactics.Typeclasses
 
 open FStar.Reflection.V2
+module R = FStar.Reflection.V2
 open FStar.Stubs.Tactics.Common
 open FStar.Tactics.Effect
 open FStar.Stubs.Tactics.V2.Builtins
@@ -44,6 +45,19 @@ let tcinstance : unit = ()
    to signal that no method should be generated for them *)
 irreducible
 let no_method : unit = ()
+
+noeq
+type st_t = {
+  seen : list term;
+  glb : list (sigelt & fv);
+  fuel : int;
+}
+
+noeq
+type tc_goal = {
+  g : term;
+  head_fv : fv;
+}
 
 val fv_eq : fv -> fv -> Tot bool
 let fv_eq fv1 fv2 =
@@ -89,6 +103,46 @@ let rec maybe_intros () : Tac unit =
     maybe_intros ()
   | _ -> ()
 
+let sigelt_name (se:sigelt) : list fv =
+  match FStar.Stubs.Reflection.V2.Builtins.inspect_sigelt se with
+  | Stubs.Reflection.V2.Data.Sg_Let _ lbs -> (
+    match lbs with
+    | [lb] -> [(FStar.Stubs.Reflection.V2.Builtins.inspect_lb lb).lb_fv]
+    | _ -> []
+  )
+  | Stubs.Reflection.V2.Data.Sg_Val nm _ _ -> [pack_fv nm]
+  | _ -> []
+
+let trywith (st:st_t) (g:tc_goal) (_:option sigelt) (t typ : term) (k : st_t -> Tac unit) : Tac unit =
+    match head_of (res_typ typ) with
+    | None ->
+      debug (fun () -> "no head for typ of this? " ^ term_to_string t ^ "    typ=" ^ term_to_string typ);
+      raise NoInst
+    | Some fv' ->
+      if not (fv_eq fv' g.head_fv) then
+        raise NoInst; // class mismatch, would be better to not even get here
+      debug (fun () -> "Trying to apply hypothesis/instance: " ^ term_to_string t);
+      (fun () ->
+          apply_noinst t
+      ) `seq` (fun () ->
+        debug (fun () -> dump "next"; "apply seems to have worked");
+        let st = { st with fuel = st.fuel - 1 } in
+        k st)
+
+let local (st:st_t) (g:tc_goal) (k : st_t -> Tac unit) () : Tac unit =
+    debug (fun () -> "local, goal = " ^ term_to_string g.g);
+    let bs = vars_of_env (cur_env ()) in
+    first (fun (b:binding) ->
+              trywith st g None (pack (Tv_Var b)) b.sort k)
+          bs
+
+let global (st:st_t) (g:tc_goal) (k : st_t -> Tac unit) () : Tac unit =
+    debug (fun () -> "global, goal = " ^ term_to_string g.g);
+    first (fun (se, fv) ->
+              let typ = tc (cur_env()) (pack (Tv_FVar fv)) in // FIXME: a bit slow.. but at least it's a simple fvar
+              trywith st g (Some se) (pack (Tv_FVar fv)) typ k)
+          st.glb
+
 (*
  tcresolve': the main typeclass instantiation function.
 
@@ -100,79 +154,58 @@ let rec maybe_intros () : Tac unit =
 
  TODO: some form of memoization
 *)
-private
-let rec tcresolve' (seen : list term) (glb : list fv) (fuel : int) : Tac unit =
-    if fuel <= 0 then
+let rec tcresolve' (st:st_t) : Tac unit =
+    if st.fuel <= 0 then
       raise NoInst;
-    debug (fun () -> "fuel = " ^ string_of_int fuel);
+    debug (fun () -> "fuel = " ^ string_of_int st.fuel);
 
     maybe_intros();
     let g = cur_goal () in
 
     (* Try to detect loops *)
-    if L.existsb (Reflection.V2.TermEq.term_eq g) seen then (
+    if L.existsb (Reflection.V2.TermEq.term_eq g) st.seen then (
       debug (fun () -> "loop");
       raise NoInst
     );
 
     match head_of g with
     | None ->
-      debug (fun () -> "goal does not look like a typeclass");
+      debug (fun () -> "Goal does not look like a typeclass");
       raise NoInst
 
     | Some head_fv ->
       (* ^ Maybe should check is this really is a class too? *)
-      let seen = g :: seen in
-      local head_fv seen glb fuel
-       `or_else`
-      global head_fv seen glb fuel
+      let st = { st with seen = g :: st.seen } in
+      let g = { g = g; head_fv = head_fv; } in
+      local st g tcresolve' `or_else` global st g tcresolve'
 
-and local (head_fv : fv) (seen : list term) (glb : list fv) (fuel : int) () : Tac unit =
-    let bs = vars_of_env (cur_env ()) in
-    first (fun (b:binding) ->
-              trywith head_fv seen glb fuel (pack (Tv_Var b)) b.sort)
-          bs
-
-and global (head_fv : fv) (seen : list term) (glb : list fv) (fuel : int) () : Tac unit =
-    first (fun fv ->
-              let typ = tc (cur_env()) (pack (Tv_FVar fv)) in // FIXME: a bit slow.. but at least it's a simple fvar
-              trywith head_fv seen glb fuel (pack (Tv_FVar fv)) typ)
-          glb
-
-and trywith (head_fv : fv) (seen:list term) (glb : list fv) (fuel:int) (t typ : term) : Tac unit =
-    //debug (fun () -> "trywith " ^ term_to_string t);
-    match head_of (res_typ typ) with
-    | None ->
-      debug (fun () -> "no head for typ of this? " ^ term_to_string t ^ "    typ=" ^ term_to_string typ);
-      raise NoInst
-    | Some fv' ->
-      if fv_eq fv' head_fv
-      then (
-        debug (fun () -> "Trying to apply hypothesis/instance: " ^ term_to_string t);
-        (fun () -> apply_noinst t) `seq` (fun () ->
-          debug (fun () -> dump "next"; "apply seems to have worked");
-          tcresolve' seen glb (fuel-1))
-      ) else (
-        //debug (fun () -> "different class: " ^ fv_to_string fv' ^ " <> " ^ fv_to_string head_fv);
-        raise NoInst
-      )
+let rec concatMap (f : 'a -> Tac (list 'b)) (l : list 'a) : Tac (list 'b) =
+  match l with
+  | [] -> []
+  | x::xs -> f x @ concatMap f xs
 
 [@@plugin]
 let tcresolve () : Tac unit =
     debug (fun () -> dump ""; "tcresolve entry point");
-    // We sometimes get goal type as _ -> t
-    // So intro if that's the case
-    // Not using intros () directly, since that unfolds aggressively if the term is not an arrow
-    // TODO: Should we..?  Why wouldn't the head always be an FV?
     let w = cur_witness () in
+
+    // Not using intros () directly, since that unfolds aggressively if the term is not a literal arrow
     maybe_intros ();
 
     // Fetch a list of all instances in scope right now.
     // TODO: turn this into a hash map per class, ideally one that can be
     // stored.
-    let glb = lookup_attr (`tcinstance) (cur_env ()) in
+    let glb = lookup_attr_ses (`tcinstance) (cur_env ()) in
+    let glb = glb |> concatMap (fun se ->
+              sigelt_name se |> concatMap (fun fv -> [(se, fv)]))
+    in
+    let st0 = {
+      seen = [];
+      glb = glb;
+      fuel = 16;
+    } in
     try
-      tcresolve' [] glb 16;
+      tcresolve' st0;
       debug (fun () -> "Solved to:\n\t" ^ term_to_string w)
     with
     | NoInst ->

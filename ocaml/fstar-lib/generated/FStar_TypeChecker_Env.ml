@@ -2877,16 +2877,19 @@ let (add_se_to_attrtab : env -> FStar_Syntax_Syntax.sigelt -> unit) =
         FStar_Compiler_Util.smap_add (attrtab env2) attr uu___ in
       FStar_Compiler_List.iter
         (fun attr ->
-           let uu___ =
-             let uu___1 = FStar_Syntax_Subst.compress attr in
-             uu___1.FStar_Syntax_Syntax.n in
+           let uu___ = FStar_Syntax_Util.head_and_args attr in
            match uu___ with
-           | FStar_Syntax_Syntax.Tm_fvar fv ->
-               let uu___1 =
-                 let uu___2 = FStar_Syntax_Syntax.lid_of_fv fv in
-                 FStar_Ident.string_of_lid uu___2 in
-               add_one env1 se uu___1
-           | uu___1 -> ()) se.FStar_Syntax_Syntax.sigattrs
+           | (hd, uu___1) ->
+               let uu___2 =
+                 let uu___3 = FStar_Syntax_Subst.compress hd in
+                 uu___3.FStar_Syntax_Syntax.n in
+               (match uu___2 with
+                | FStar_Syntax_Syntax.Tm_fvar fv ->
+                    let uu___3 =
+                      let uu___4 = FStar_Syntax_Syntax.lid_of_fv fv in
+                      FStar_Ident.string_of_lid uu___4 in
+                    add_one env1 se uu___3
+                | uu___3 -> ())) se.FStar_Syntax_Syntax.sigattrs
 let (try_add_sigelt :
   Prims.bool ->
     env -> FStar_Syntax_Syntax.sigelt -> FStar_Ident.lident -> unit)
