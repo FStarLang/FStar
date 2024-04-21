@@ -1116,7 +1116,7 @@ let encode_sig_inductive (is_injective_on_params:bool) (env:env_t) (se:sigelt)
             then failwith "Impossible";
             let eqs =
                 if is_injective_on_params
-                || Options.ext_getv "compat:injectivity" <> ""
+                // || Options.ext_getv "compat:injectivity" <> ""
                 then List.map2 (fun v a -> mkEq(mkFreeV v, a)) vars indices
                 else []
                 //     //only injectivity on indices
@@ -1228,9 +1228,9 @@ let encode_datacon (is_injective_on_tparams:bool) (env:env_t) (se:sigelt)
   let fuel_var, fuel_tm = fresh_fvar env.current_module_name "f" Fuel_sort in
   let s_fuel_tm = mkApp("SFuel", [fuel_tm]) in
   let vars, guards, env', binder_decls, names = encode_binders (Some fuel_tm) formals env in
-  let is_injective_on_tparams =
-    is_injective_on_tparams || Options.ext_getv "compat:injectivity" <> ""
-  in
+  // let is_injective_on_tparams =
+  //   is_injective_on_tparams || Options.ext_getv "compat:injectivity" <> ""
+  // in
   let fields =
     names |>
     List.mapi
@@ -1777,7 +1777,14 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
     | Sig_bundle {ses} ->
       let tycon = List.tryFind (fun se -> Sig_inductive_typ? se.sigel) ses in
-      let is_injective_on_params = false in
+      let is_injective_on_params =
+        match tycon with
+        | None ->
+          //Exceptions appear as Sig_bundle without an inductive type
+          false
+        | Some se ->
+          is_sig_inductive_injective_on_params env se
+      in
       let g, env =
         ses |>
         List.fold_left

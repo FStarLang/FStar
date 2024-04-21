@@ -4101,25 +4101,19 @@ let (encode_sig_inductive :
                                                       "Impossible"
                                                   else ();
                                                   (let eqs =
-                                                     let uu___13 =
+                                                     if
                                                        is_injective_on_params
-                                                         ||
-                                                         (let uu___14 =
-                                                            FStar_Options.ext_getv
-                                                              "compat:injectivity" in
-                                                          uu___14 <> "") in
-                                                     if uu___13
                                                      then
                                                        FStar_Compiler_List.map2
                                                          (fun v ->
                                                             fun a ->
-                                                              let uu___14 =
-                                                                let uu___15 =
+                                                              let uu___13 =
+                                                                let uu___14 =
                                                                   FStar_SMTEncoding_Util.mkFreeV
                                                                     v in
-                                                                (uu___15, a) in
+                                                                (uu___14, a) in
                                                               FStar_SMTEncoding_Util.mkEq
-                                                                uu___14) vars
+                                                                uu___13) vars
                                                          indices1
                                                      else [] in
                                                    let uu___13 =
@@ -4475,19 +4469,13 @@ let (encode_datacon :
                                env1 in
                            (match uu___6 with
                             | (vars, guards, env', binder_decls, names) ->
-                                let is_injective_on_tparams1 =
-                                  is_injective_on_tparams ||
-                                    (let uu___7 =
-                                       FStar_Options.ext_getv
-                                         "compat:injectivity" in
-                                     uu___7 <> "") in
                                 let fields =
                                   FStar_Compiler_List.mapi
                                     (fun n ->
                                        fun x ->
                                          let field_projectible =
                                            (n >= n_tps) ||
-                                             is_injective_on_tparams1 in
+                                             is_injective_on_tparams in
                                          let uu___7 =
                                            FStar_SMTEncoding_Env.mk_term_projector_name
                                              d x in
@@ -4519,7 +4507,7 @@ let (encode_datacon :
                                         uu___9;
                                       FStar_SMTEncoding_Term.constr_base =
                                         (Prims.op_Negation
-                                           is_injective_on_tparams1)
+                                           is_injective_on_tparams)
                                     } in
                                   FStar_SMTEncoding_Term.constructor_to_decl
                                     uu___7 uu___8 in
@@ -4639,7 +4627,7 @@ let (encode_datacon :
                                                             orig_arg arg xv =
                                                             if
                                                               Prims.op_Negation
-                                                                is_injective_on_tparams1
+                                                                is_injective_on_tparams
                                                             then
                                                               FStar_SMTEncoding_Util.mkTrue
                                                             else
@@ -5446,7 +5434,7 @@ let (encode_datacon :
                                                             orig_arg arg xv =
                                                             if
                                                               Prims.op_Negation
-                                                                is_injective_on_tparams1
+                                                                is_injective_on_tparams
                                                             then
                                                               FStar_SMTEncoding_Util.mkTrue
                                                             else
@@ -7118,7 +7106,11 @@ and (encode_sigelt' :
                (fun se1 ->
                   FStar_Syntax_Syntax.uu___is_Sig_inductive_typ
                     se1.FStar_Syntax_Syntax.sigel) ses in
-           let is_injective_on_params = false in
+           let is_injective_on_params =
+             match tycon with
+             | FStar_Pervasives_Native.None -> false
+             | FStar_Pervasives_Native.Some se1 ->
+                 is_sig_inductive_injective_on_params env se1 in
            let uu___2 =
              FStar_Compiler_List.fold_left
                (fun uu___3 ->
