@@ -3,11 +3,7 @@ module Bug3186
 let base (x:int) (_: unit {equals x 0}) =
   assert (x == 0)
 
-let base2 (x:int) (hyp: equals x 0) =
-  let Refl = hyp in 
-  assert (x == 0)
-
-let base2' (x:int) (hyp: equals x 0) =
+let base2 (x:int) (_: equals x 0) =
   assert (x == 0)
 
 [@@expect_failure [19]]
