@@ -76,8 +76,8 @@ let lookup_tyname (env:env_t) (name:mlpath)
   = BU.psmap_try_find env.tydef_map (string_of_mlpath name)
 
 (** Free variables of a type: Computed to check which parameters are used *)
-type var_set = FlatSet.t mlident
-let empty_var_set : FlatSet.t string = empty ()
+type var_set = RBSet.t mlident
+let empty_var_set : RBSet.t string = empty ()
 let rec freevars_of_mlty' (vars:var_set) (t:mlty) =
   match t with
   | MLTY_Var i ->

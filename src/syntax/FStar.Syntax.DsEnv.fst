@@ -51,7 +51,7 @@ type scope_mod =
 | Top_level_def            of ident           (* top-level definition for an unqualified identifier x to be resolved as curmodule.x. *)
 | Record_or_dc             of record_or_dc    (* to honor interleavings of "open" and record definitions *)
 
-type string_set = FlatSet.t string
+type string_set = RBSet.t string
 
 type exported_id_kind = (* kinds of identifiers exported by a module *)
 | Exported_id_term_type (* term and type identifiers *)
@@ -958,7 +958,7 @@ let try_lookup_dc_by_field_name env (fieldname:lident) =
         | Some r -> Some (set_lid_range (lid_of_ids (ns_of_lid r.typename @ [r.constrname])) (range_of_lid fieldname), r.is_record)
         | _ -> None
 
-let string_set_ref_new () : ref (FlatSet.t string) = BU.mk_ref (empty ())
+let string_set_ref_new () : ref string_set = BU.mk_ref (empty ())
 let exported_id_set_new () =
     let term_type_set = string_set_ref_new () in
     let field_set = string_set_ref_new () in

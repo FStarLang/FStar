@@ -146,10 +146,7 @@ let fv_force (x:fv) = let FV (_, _, force) = x in force
 let fv_eq (x:fv) (y:fv) = fv_name x = fv_name y
 let fvs_subset_of (x:fvs) (y:fvs) =
   let open FStar.Class.Setlike in
-  let cmp_fv x y =
-    BU.compare (fv_name x) (fv_name y)
-  in
-  subset (from_list x <: FlatSet.t fv) (from_list y)
+  subset (from_list x <: RBSet.t fv) (from_list y)
 
 let freevar_eq x y = match x.tm, y.tm with
     | FreeV x, FreeV y -> fv_eq x y

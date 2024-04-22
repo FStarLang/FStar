@@ -117,7 +117,7 @@ type worklist = {
                                                 //is allowed; disabled by default, enabled in
                                                 //sub_comp which is called by the typechecker, and
                                                 //will insert the appropriate lifts.
-    typeclass_variables: FlatSet.t ctx_uvar     //variables that will be solved by typeclass instantiation
+    typeclass_variables: RBSet.t ctx_uvar     //variables that will be solved by typeclass instantiation
 }
 
 (* A NOTE ON ENVIRONMENTS

@@ -968,7 +968,7 @@ let st_cost = function
 
 type search_candidate = { sc_lid: lid; sc_typ:
                           ref (option Syntax.Syntax.typ);
-                          sc_fvars: ref (option (FlatSet.t lid)) }
+                          sc_fvars: ref (option (RBSet.t lid)) }
 
 let sc_of_lid lid = { sc_lid = lid;
                       sc_typ = Util.mk_ref None;
