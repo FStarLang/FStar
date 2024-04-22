@@ -1257,12 +1257,12 @@ let finish_module_or_interface env modul =
   finish env modul, modul
 
 type exported_ids = {
-    exported_id_terms:list string;
-    exported_id_fields:list string
+    exported_id_terms : string_set;
+    exported_id_fields: string_set;
 }
 let as_exported_ids (e:exported_id_set) =
-    let terms  = elems (!(e Exported_id_term_type)) in
-    let fields = elems (!(e Exported_id_field)) in
+    let terms  = (!(e Exported_id_term_type)) in
+    let fields = (!(e Exported_id_field)) in
     {exported_id_terms=terms;
      exported_id_fields=fields}
 
@@ -1271,9 +1271,9 @@ let as_exported_id_set (e:option exported_ids) =
     | None -> exported_id_set_new ()
     | Some e ->
       let terms =
-          BU.mk_ref (from_list e.exported_id_terms) in
+          BU.mk_ref (e.exported_id_terms) in
       let fields =
-          BU.mk_ref (from_list e.exported_id_fields) in
+          BU.mk_ref (e.exported_id_fields) in
       function
         | Exported_id_term_type -> terms
         | Exported_id_field -> fields
