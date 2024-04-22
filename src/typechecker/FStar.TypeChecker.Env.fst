@@ -494,7 +494,8 @@ let lookup_attr (env:env) (attr:string) : list sigelt =
 let add_se_to_attrtab env se =
     let add_one env se attr = BU.smap_add (attrtab env) attr (se :: lookup_attr env attr) in
     List.iter (fun attr ->
-                match (Subst.compress attr).n with
+                let hd, _ = U.head_and_args attr in
+                match (Subst.compress hd).n with
                 | Tm_fvar fv -> add_one env se (string_of_lid (lid_of_fv fv))
                 | _ -> ()) se.sigattrs
 

@@ -448,14 +448,16 @@ let compare_namedv (x:bv) (y:bv) : order =
     else if n = 0 then Eq
     else Gt
 
+let lookup_attr_ses (attr:term) (env:Env.env) : list sigelt =
+  match (SS.compress_subst attr).n with
+  | Tm_fvar fv -> Env.lookup_attr env (Ident.string_of_lid (lid_of_fv fv))
+  | _ -> []
+
 let lookup_attr (attr:term) (env:Env.env) : list fv =
-    match (SS.compress_subst attr).n with
-    | Tm_fvar fv ->
-        let ses = Env.lookup_attr env (Ident.string_of_lid (lid_of_fv fv)) in
-        List.concatMap (fun se -> match U.lid_of_sigelt se with
-                                  | None -> []
-                                  | Some l -> [S.lid_as_fv l None]) ses
-    | _ -> []
+  let ses = lookup_attr_ses attr env in
+  List.concatMap (fun se -> match U.lid_of_sigelt se with
+                            | None -> []
+                            | Some l -> [S.lid_as_fv l None]) ses
 
 let all_defs_in_env (env:Env.env) : list fv =
     List.map (fun l -> S.lid_as_fv l None) (Env.lidents env) // |> take 10
