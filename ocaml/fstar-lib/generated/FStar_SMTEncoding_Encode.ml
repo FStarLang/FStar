@@ -6990,7 +6990,11 @@ and (encode_sigelt' :
                (fun se1 ->
                   FStar_Syntax_Syntax.uu___is_Sig_inductive_typ
                     se1.FStar_Syntax_Syntax.sigel) ses in
-           let is_injective_on_params = false in
+           let is_injective_on_params =
+             match tycon with
+             | FStar_Pervasives_Native.None -> false
+             | FStar_Pervasives_Native.Some se1 ->
+                 is_sig_inductive_injective_on_params env se1 in
            let uu___2 =
              FStar_Compiler_List.fold_left
                (fun uu___3 ->
