@@ -8,10 +8,7 @@ class setlike (e:Type) (s:Type) = {
   empty         : unit -> s;
   singleton     : e -> s;
   is_empty      : s -> bool;
-  from_list     : list e -> s;
-  elems         : s -> list e;
   add           : e -> s -> s;
-  addn          : list e -> s -> s;
   remove        : e -> s -> s;
   mem           : e -> s -> bool;
   equal         : s -> s -> bool;
@@ -19,9 +16,13 @@ class setlike (e:Type) (s:Type) = {
   union         : s -> s -> s;
   inter         : s -> s -> s;
   diff          : s -> s -> s;
-  collect       : (e -> s) -> list e -> s;
   for_all       : (e -> bool) -> s -> bool;
   for_any       : (e -> bool) -> s -> bool;
+  elems         : s -> list e;
+
+  collect       : (e -> s) -> list e -> s;
+  from_list     : list e -> s;
+  addn          : list e -> s -> s;
 }
 
 val symdiff (#e #s : Type) {| setlike e s |} : s -> s -> s
