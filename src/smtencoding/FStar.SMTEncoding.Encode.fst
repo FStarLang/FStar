@@ -1119,12 +1119,6 @@ let encode_sig_inductive (is_injective_on_params:bool) (env:env_t) (se:sigelt)
                 || Options.ext_getv "compat:injectivity" <> ""
                 then List.map2 (fun v a -> mkEq(mkFreeV v, a)) vars indices
                 else []
-                //     //only injectivity on indices
-                //     let num_params = List.length tps in
-                //     let _var_params, var_indices = List.splitAt num_params vars in
-                //     let _i_params, indices = List.splitAt num_params indices in
-                //     List.map2 (fun v a -> mkEq(mkFreeV v, a)) var_indices indices
-                // )
             in
             mkOr(out, mkAnd(mk_data_tester env l xx, eqs |> mk_and_l)), decls@decls')
           (mkFalse, [])
@@ -1801,7 +1795,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
           g
       in
       //2. decls are all the function symbol declarations
-      //   elts: not sure what this represents
+      //   elts: all elements that have a key and which contain function declarations (not sure why this class is important to pull out)
       //   rest: all the non-declarations, excepting the inversion axiom which is already identified above
       let decls, elts, rest =
         List.fold_left
