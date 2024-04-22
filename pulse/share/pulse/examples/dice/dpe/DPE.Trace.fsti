@@ -52,16 +52,11 @@ let rec next (s0 s1:g_session_state) : prop =
   | G_Available (Engine_context_repr _), G_Available (L0_context_repr _)
   | G_Available (L0_context_repr _), G_Available (L1_context_repr _) -> True
 
-  | G_SessionClosed _, _
-  | G_SessionError _, _ -> False
-
-  | G_InUse s0, G_SessionClosed s
-  | G_InUse s0, G_SessionError s -> s == s0
-
-  | _, G_SessionClosed s
-  | _, G_SessionError s -> s == s0
+  | G_SessionClosed _, _ -> False
 
   | _, G_InUse s -> s == s0
+  | _, G_SessionClosed s
+  | _, G_SessionError s -> s == s0
 
   | G_InUse s, s1 -> next s s1
 

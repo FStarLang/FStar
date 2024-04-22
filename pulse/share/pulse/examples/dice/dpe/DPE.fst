@@ -845,8 +845,9 @@ assume val prng () : ctxt_hndl_t
 
 ```pulse
 ghost
-fn elim_session_state_related_inuse (s:session_state) (gs:T.g_session_state)
-  requires session_state_related s (T.G_InUse gs)
+fn elim_session_state_related_inuse (s:session_state) (t:T.trace)
+  requires session_state_related s (T.current_state t) **
+           pure (T.G_InUse? (T.current_state t))
   ensures pure (s == InUse)
 {
   match s {
@@ -918,7 +919,7 @@ fn initialize_context (r:gref) (m:mutex (option st))
       rewrite (context_perm context (Engine_context_repr uds_bytes)) as
               (session_state_related s (T.G_Available (Engine_context_repr uds_bytes)));
       let ret = replace_session r m sid t1 s (T.G_Available (Engine_context_repr uds_bytes));
-      elim_session_state_related_inuse (snd ret) (T.G_InUse (T.current_state t));
+      elim_session_state_related_inuse (snd ret) t1;
       let m = fst ret;
       rewrite each
         fst ret as m,
@@ -1360,7 +1361,7 @@ let derive_child_client_perm (r:gref) (sid:sid_t) (t0:T.trace) (c:option ctxt_hn
   match c with
   | None ->
     exists* t1. sid_pts_to r sid t1 **
-                pure (T.current_state t1 == T.G_SessionError (T.current_state t0))
+                pure (T.current_state t1 == T.G_SessionError (T.G_InUse (T.current_state t0)))
   | Some _ ->
     exists* t1. sid_pts_to r sid t1 **
                 pure (derive_child_pre_post_traces t0 t1)
@@ -1432,6 +1433,12 @@ fn destroy_ctxt (ctxt:context_t) (#repr:erased context_repr_t)
 }
 ```
 
+let is_engine_or_l0_context (c:context_t) : bool =
+  match c with
+  | Engine_context _
+  | L0_context _ -> true
+  | _ -> false
+
 (*
   DeriveChild: Part of DPE API 
   Execute the DICE layer associated with the current context and produce a 
@@ -1439,6 +1446,7 @@ fn destroy_ctxt (ctxt:context_t) (#repr:erased context_repr_t)
   and store the new context in the table. Return the new context handle upon
   success and None upon failure. 
 *)
+#push-options "--fuel 2 --ifuel 2"
 ```pulse
 fn derive_child (r:gref) (m:mutex (option st)) (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
   (t:T.trace)
@@ -1466,12 +1474,19 @@ fn derive_child (r:gref) (m:mutex (option st)) (sid:sid_t) (ctxt_hndl:ctxt_hndl_
   match s {
     Available hc -> {
       match hc.context {
-        Engine_context ec -> {
-          let repr = rewrite_available_session_state_related hc.handle (Engine_context ec) s t;
-          // TODO: context_perm with st = Available (Engine_context _) should give this
-          assume_ (pure (Engine_context_repr? repr));
-          let ret = derive_child_from_context (Engine_context ec) record p ();
-          
+        L1_context _ -> {
+          admit ();
+          rewrite (session_state_related s (T.current_state t)) as
+                  (pure False);
+          unreachable ()
+        }
+        _ -> {
+          assume_ (pure (~ (L1_context? hc.context)));
+          let repr = rewrite_available_session_state_related hc.handle hc.context s t;
+          assume_ (pure ((Engine_context? hc.context ==> Engine_context_repr? repr) /\
+                         (L0_context? hc.context ==> L0_context_repr? repr)));
+          let ret = derive_child_from_context hc.context record p ();
+
           let octxt = tfst ret;
           let record = tsnd ret;
           let nctxt = tthd ret;
@@ -1481,19 +1496,18 @@ fn derive_child (r:gref) (m:mutex (option st)) (sid:sid_t) (ctxt_hndl:ctxt_hndl_
             tthd ret as nctxt;
           
           destroy_ctxt octxt;
-
           match nctxt {
             Some nctxt -> {
-              unfold (maybe_context_perm (Engine_context ec) (Some nctxt));
-              assert_ (pure (L0_context? nctxt));
+              unfold (maybe_context_perm hc.context (Some nctxt));
               with nrepr. assert (context_perm nctxt nrepr);
-              assume_ (pure (L0_context_repr? nrepr));
               let handle = prng ();
               let s = Available { handle; context = nctxt };
               rewrite (context_perm nctxt nrepr) as
                       (session_state_related s (T.G_Available nrepr));
+              assume_ (pure ((L0_context? nctxt ==> L0_context_repr? nrepr) /\
+                             (L1_context? nctxt ==> L1_context_repr? nrepr)));
               let ret = replace_session r m sid t1 s (T.G_Available nrepr);
-              elim_session_state_related_inuse (snd ret) (T.G_InUse (T.current_state t1));
+              elim_session_state_related_inuse (snd ret) t1;
               let m = fst ret;
               rewrite each
                 fst ret as m,
@@ -1506,11 +1520,10 @@ fn derive_child (r:gref) (m:mutex (option st)) (sid:sid_t) (ctxt_hndl:ctxt_hndl_
               ret
             }
             None -> {
-              admit ();
               let s = SessionError;
               rewrite emp as (session_state_related s (T.G_SessionError (T.current_state t1)));
-              let ret = replace_session r m sid t1 s (T.G_SessionError (T.current_state t));
-              elim_session_state_related_inuse (snd ret) (T.G_InUse (T.current_state t1));
+              let ret = replace_session r m sid t1 s (T.G_SessionError (T.current_state t1));
+              elim_session_state_related_inuse (snd ret) t1;
               let m = fst ret;
               rewrite each
                 fst ret as m,
@@ -1519,121 +1532,114 @@ fn derive_child (r:gref) (m:mutex (option st)) (sid:sid_t) (ctxt_hndl:ctxt_hndl_
               rewrite each
                 m as tfst ret,
                 record as tsnd ret;
-              rewrite (maybe_context_perm nctxt) as emp;
+              rewrite (maybe_context_perm hc.context nctxt) as emp;
               fold (derive_child_client_perm r sid t None);
               ret
             }
           }
         }
-        L0_context lc -> {
-          admit ()
-        }
-        L1_context _ -> {
-          admit ();
-          rewrite (session_state_related s (T.current_state t)) as
-                  (pure False);
-          unreachable ()
-        }
       }
     }
     SessionStart -> {
-      admit ();
       rewrite (session_state_related s (T.current_state t)) as
               (pure False);
       unreachable ()
     }
     InUse -> {
-      admit ();
       rewrite (session_state_related s (T.current_state t)) as
               (pure False);
       unreachable ()
     }
     SessionClosed -> {
-      admit ();
       rewrite (session_state_related s (T.current_state t)) as
               (pure False);
       unreachable ()
     }
     SessionError -> {
-      admit ();
       rewrite (session_state_related s (T.current_state t)) as
               (pure False);
       unreachable ()
     }
   }
+}
+```
+
+// ```pulse
+// fn destroy_session_state (st:session_state)
+//   requires session_state_perm st
+//   ensures emp
+// {
+//   match st {
+//     Available st1 -> {
+//       elim_session_state_perm_available st;
+//       with e. rewrite (context_perm (ctxt_of st) e) as (context_perm st1.context e);
+//       destroy_ctxt st1.context;
+//     }
+//     _ -> {
+//       assume_ (pure (~ (Available? st)));
+//       rewrite (session_state_perm st) as emp
+//     }
+//   }
+// }
+// ```
+
+let trace_valid_for_close (t:T.trace) : prop =
+  let open T in
+  match current_state t with
+  | G_UnInitialized
+  | G_SessionClosed _ -> False
+  | _ -> True
+
+(* 
+  CloseSession: Part of DPE API 
+  Destroy the context table for the session and remove the reference
+  to it from the session table. Return boolean indicating success. 
+  NOTE: Current implementation disregards session protocol 
+*)
+```pulse
+fn close_session (r:gref) (m:mutex (option st)) (sid:sid_t)
+  (t:T.trace { trace_valid_for_close t })
+  requires mutex_live m (inv r) **
+           sid_pts_to r sid t
+  ensures exists* t1. sid_pts_to r sid t1 **
+                      pure (T.current_state t1 == T.G_SessionClosed (T.current_state t))
+{
+  rewrite emp as (session_state_related InUse (T.G_InUse (T.current_state t)));
+  let ret = replace_session r m sid t InUse (T.G_InUse (T.current_state t));
+
+  admit ()
+  // match ret {
+  //   Available hc -> {
+  //     rewrite_available_session_state_related hc.handle
+  //     admit ()
+  //   }
+  //   _ -> {
+  //     admit ()
+  //   }
+  // }
   // rewrite emp as (session_state_perm InUse);
   // let st = take_session_state sid InUse;
-  // match st
+  // match st 
   // {
-  //   None ->
+  //   None -> 
   //   {
   //     with s. rewrite (session_state_perm s) as emp;
-  //     let res = (record, None #ctxt_hndl_t);
-  //     rewrite (record_perm record p repr)
-  //          as (record_perm (fst res) p repr);
-  //     res
+  //     false 
   //   }
 
   //   Some st ->
   //   {
-  //     match st {
-  //       InUse -> {
-  //         //block concurrent access
-  //         rewrite (session_state_perm st) as emp;
-  //         let res = (record, None #ctxt_hndl_t);
-  //         rewrite (record_perm record p repr)
-  //              as (record_perm (fst res) p repr);
-  //         res
-  //       }
-  //       Available st1 -> {
-  //         elim_session_state_perm_available st;
-  //         with e. rewrite (context_perm (ctxt_of st) e) as (context_perm st1.context e);
-  //         let next_ctxt = derive_child_from_context st1.context record p;
-  //         destroy_ctxt (tfst next_ctxt);
-  //         match tthd next_ctxt {
-  //           None -> {
-  //             rewrite emp as (session_state_perm SessionError);
-  //             rewrite (maybe_context_perm (tthd next_ctxt)) as emp;
-  //             let st' = take_session_state sid SessionError;
-  //             //TODO: prove st' is InUse
-  //             drop_ (session_state_perm (dflt st' SessionError));
-  //             let res = (tsnd next_ctxt, None #ctxt_hndl_t);
-  //             rewrite (record_perm (tsnd next_ctxt) p repr)
-  //                  as (record_perm (fst res) p repr);
-  //             res
-  //           }
-  //           Some next_ctxt1 -> {
-  //             elim_maybe_context_perm next_ctxt1;
-  //             let next_ctxt_hndl = prng();
-  //             let st' = intro_session_state_perm_available next_ctxt1 next_ctxt_hndl;
-  //             let st'' = take_session_state sid st';
-  //             //TODO: prove st'' is InUse
-  //             drop_ (session_state_perm (dflt st'' st'));
-  //             let res = (tsnd next_ctxt, Some (next_ctxt_hndl <: ctxt_hndl_t));
-  //             rewrite (record_perm (tsnd next_ctxt) p repr)
-  //                  as (record_perm (fst res) p repr);
-  //             res
-  //           }
-  //         }
-  //       }
-  //       _ -> {
-  //         assume_ (pure (~ (Available? st || InUse? st)));
-  //         rewrite (session_state_perm st) as emp;
-  //         rewrite emp as (session_state_perm SessionError);
-  //         let st' = take_session_state sid SessionError;
-  //         //TODO: prove st' is InUse
-  //         drop_ (session_state_perm (dflt st' SessionError));
-  //         let res = (record, None #ctxt_hndl_t);
-  //         rewrite (record_perm record p repr)
-  //              as (record_perm (fst res) p repr);
-  //         res
-  //       }
-  //     }
+  //     destroy_session_state st;
+  //     rewrite emp as (session_state_perm SessionClosed);
+  //     let st' = take_session_state sid SessionClosed;
+  //     //TODO: Fix this by proving that st' must be present and InUse
+  //     drop_ (session_state_perm (dflt st' SessionClosed));
+  //     true
   //   }
   // }
 }
 ```
-// let derive_child = derive_child'
+
 
 
 // #push-options "--ext 'pulse:env_on_err' --print_implicits --warn_error -342"
@@ -2077,60 +2083,6 @@ fn derive_child (r:gref) (m:mutex (option st)) (sid:sid_t) (ctxt_hndl:ctxt_hndl_
 
 // // let destroy_context = destroy_context'
 
-
-// ```pulse
-// fn destroy_session_state (st:session_state)
-//   requires session_state_perm st
-//   ensures emp
-// {
-//   match st {
-//     Available st1 -> {
-//       elim_session_state_perm_available st;
-//       with e. rewrite (context_perm (ctxt_of st) e) as (context_perm st1.context e);
-//       destroy_ctxt st1.context;
-//     }
-//     _ -> {
-//       assume_ (pure (~ (Available? st)));
-//       rewrite (session_state_perm st) as emp
-//     }
-//   }
-// }
-// ```
-
-// (* 
-//   CloseSession: Part of DPE API 
-//   Destroy the context table for the session and remove the reference
-//   to it from the session table. Return boolean indicating success. 
-//   NOTE: Current implementation disregards session protocol 
-// *)
-// ```pulse
-// fn close_session (sid:sid_t)
-//   requires mutex_live global_state global_state_mutex_pred
-//   returns b:bool
-//   ensures mutex_live global_state global_state_mutex_pred
-// {
-//   rewrite emp as (session_state_perm InUse);
-//   let st = take_session_state sid InUse;
-//   match st 
-//   {
-//     None -> 
-//     {
-//       with s. rewrite (session_state_perm s) as emp;
-//       false 
-//     }
-
-//     Some st ->
-//     {
-//       destroy_session_state st;
-//       rewrite emp as (session_state_perm SessionClosed);
-//       let st' = take_session_state sid SessionClosed;
-//       //TODO: Fix this by proving that st' must be present and InUse
-//       drop_ (session_state_perm (dflt st' SessionClosed));
-//       true
-//     }
-//   }
-// }
-// ```
 // // let close_session = close_session'
 
 // (*
