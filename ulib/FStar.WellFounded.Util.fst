@@ -52,7 +52,7 @@ let lift_binrel_well_founded (#a:Type u#a)
         : Tot (acc (lift_binrel r) y)
               (decreases pf)
         = AccIntro (fun (z:top) (p:lift_binrel r z y) ->
-            aux z (match pf with | AccIntro access_smaller -> access_smaller (dsnd z) (lower_binrel z y p)))
+            aux z (pf.access_smaller (dsnd z) (lower_binrel z y p)))
     in
     let aux' (y:top{dfst y =!= a})
         : acc (lift_binrel r) y
@@ -83,7 +83,7 @@ let lift_binrel_squashed_well_founded (#a:Type u#a)
               (decreases pf)
         = AccIntro (fun (z:top) (p:lift_binrel_squashed r z y) ->
                 let p =  lower_binrel_squashed z y p in
-                aux z (match pf with AccIntro access_smaller -> access_smaller (dsnd z) (FStar.Squash.join_squash p)))
+                aux z (pf.access_smaller (dsnd z) (FStar.Squash.join_squash p)))
     in
     let aux' (y:top{dfst y =!= a})
         : acc (lift_binrel_squashed r) y

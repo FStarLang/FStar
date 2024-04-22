@@ -50,13 +50,7 @@ let rec fix_F (#aa:Type) (#r:binrel aa) (#p:(aa -> Type))
               (f: (x:aa -> (y:aa -> r y x -> p y) -> p x))
               (x:aa) (a:acc r x)
   : Tot (p x) (decreases a)
-  = f x (fun y h -> 
-          let v : acc r y = 
-            match a with
-            | AccIntro access_smaller -> 
-              access_smaller y h
-          in
-          fix_F f y v)
+  = f x (fun y h -> fix_F f y (a.access_smaller y h))
 
 let fix (#aa:Type) (#r:binrel aa) (rwf:well_founded r)
         (p:aa -> Type) (f:(x:aa -> (y:aa -> r y x -> p y) -> p x))
@@ -107,12 +101,9 @@ let subrelation_squash_wf (#a:Type u#a)
       let rec acc_y (x:a) (acc_r:acc r x) (y:a) (p:sub_r y x)
         : Tot (acc sub_r y)
               (decreases acc_r)
-        = let v : acc _ y =
-            match acc_r with
-            | AccIntro access_smaller ->
-              access_smaller y (elim_squash (sub_w y x p))
-          in
-          AccIntro (acc_y y v)          
+        = AccIntro (acc_y y (acc_r.access_smaller
+                                   y
+                                   (elim_squash (sub_w y x p))))
       in
       FStar.Squash.return_squash (FStar.Squash.return_squash (AccIntro (acc_y x (r_wf x))))
     )
@@ -135,12 +126,6 @@ let inverse_image_wf (#a:Type u#a) (#b:Type u#b) (#r_b:binrel u#b u#r b)
   = let rec aux (x:a) (acc_r_b:acc r_b (f x))
       : Tot (acc (inverse_image r_b f) x)
             (decreases acc_r_b) =
-      AccIntro (fun y p -> 
-                let v =
-                  match acc_r_b with
-                  | AccIntro access_smaller ->
-                    access_smaller (f y) p
-                in
-                aux y v)
+      AccIntro (fun y p -> aux y (acc_r_b.access_smaller (f y) p))
     in
     fun x -> aux x (r_b_wf (f x))
