@@ -55,6 +55,9 @@ let rec next (s0 s1:g_session_state) : prop =
   | G_SessionClosed _, _
   | G_SessionError _, _ -> False
 
+  | G_InUse s0, G_SessionClosed s
+  | G_InUse s0, G_SessionError s -> s == s0
+
   | _, G_SessionClosed s
   | _, G_SessionError s -> s == s0
 

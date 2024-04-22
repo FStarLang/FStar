@@ -410,7 +410,7 @@ type record_t =
   | L0_record     : r:l0_record_t -> record_t
 
 noeq
-type repr_t = 
+type repr_t =
   | Engine_repr : r:engine_record_repr -> repr_t
   | L0_repr     : r:l0_record_repr_t -> repr_t
 
