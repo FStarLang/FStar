@@ -1105,22 +1105,26 @@ let encode_sig_inductive (is_injective_on_params:bool) (env:env_t) (se:sigelt)
         datas |>
         List.fold_left
           (fun (out, decls) l ->
-            let _, data_t = Env.lookup_datacon env.tcenv l in
-            let args, res = U.arrow_formals data_t in
-            let indices = res |> U.head_and_args_full |> snd in
-            let env = args |> List.fold_left
-                (fun env ({binder_bv=x}) -> push_term_var env x (mkApp(mk_term_projector_name l x, [xx])))
-                env in
-            let indices, decls' = encode_args indices env in
-            if List.length indices <> List.length vars
-            then failwith "Impossible";
-            let eqs =
-                if is_injective_on_params
-                || Options.ext_getv "compat:injectivity" <> ""
-                then List.map2 (fun v a -> mkEq(mkFreeV v, a)) vars indices
-                else []
+            let is_l = mk_data_tester env l xx in
+            let inversion_case, decls' =
+              if is_injective_on_params
+              || Options.ext_getv "compat:injectivity" <> ""
+              then (
+                let _, data_t = Env.lookup_datacon env.tcenv l in
+                let args, res = U.arrow_formals data_t in
+                let indices = res |> U.head_and_args_full |> snd in
+                let env = args |> List.fold_left
+                    (fun env ({binder_bv=x}) -> push_term_var env x (mkApp(mk_term_projector_name l x, [xx])))
+                    env in
+                let indices, decls' = encode_args indices env in
+                if List.length indices <> List.length vars
+                then failwith "Impossible";
+                let eqs = List.map2 (fun v a -> mkEq(mkFreeV v, a)) vars indices in
+                mkAnd(is_l, mk_and_l eqs), decls'
+              )
+              else is_l, []
             in
-            mkOr(out, mkAnd(mk_data_tester env l xx, eqs |> mk_and_l)), decls@decls')
+            mkOr(out, inversion_case), decls@decls')
           (mkFalse, [])
       in
       let ffsym, ff = fresh_fvar env.current_module_name "f" Fuel_sort in
