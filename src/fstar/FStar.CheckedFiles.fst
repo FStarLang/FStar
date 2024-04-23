@@ -16,15 +16,10 @@
 
 module FStar.CheckedFiles
 open FStar
-open FStar.Pervasives
-open FStar.Compiler.Effect
 open FStar.Compiler
-open FStar.Errors
+open FStar.Compiler.Effect
 open FStar.Compiler.Util
-open FStar.Getopt
-open FStar.Syntax.Syntax
-open FStar.TypeChecker.Env
-open FStar.Syntax.DsEnv
+
 open FStar.Class.Show
 
 (* Module abbreviations for the universal type-checker  *)
