@@ -593,7 +593,7 @@ let rec generalize_annotated_univs (s:sigelt) :sigelt =
     list that we update as we find universes. We also keep a set of 'seen'
     universes, whose order we do not care, just for efficiency. *)
   let vars : ref (list univ_name) = mk_ref [] in
-  let seen : ref (FlatSet.t univ_name) = mk_ref (empty ()) in
+  let seen : ref (RBSet.t univ_name) = mk_ref (empty ()) in
   let reg (u:univ_name) : unit =
     if not (mem u !seen) then (
       seen := add u !seen;

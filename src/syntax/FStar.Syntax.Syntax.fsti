@@ -753,7 +753,7 @@ val lookup_aq : bv -> antiquotations -> term
 val lazy_chooser : ref (option (lazy_kind -> lazyinfo -> term))
 val new_bv_set: unit -> FlatSet.t bv
 val new_id_set: unit -> FlatSet.t ident
-val new_fv_set: unit -> FlatSet.t lident
+val new_fv_set: unit -> RBSet.t lident
 val new_universe_names_set: unit -> FlatSet.t univ_name
 
 val mod_name: modul -> lident
@@ -806,7 +806,7 @@ val is_type:  term -> bool
 
 val no_names:          freenames
 val no_universe_names: FlatSet.t univ_name
-val no_fvars:          FlatSet.t lident
+val no_fvars:          RBSet.t lident
 
 val freenames_of_list:    list bv -> freenames
 val freenames_of_binders: binders -> freenames

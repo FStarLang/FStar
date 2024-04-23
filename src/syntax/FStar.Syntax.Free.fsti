@@ -32,7 +32,7 @@ val uvars: term -> flat_set ctx_uvar
 val univs: term -> flat_set universe_uvar
 val univnames: term -> flat_set univ_name
 val univnames_comp: comp -> flat_set univ_name
-val fvars: term -> flat_set Ident.lident
+val fvars: term -> RBSet.t Ident.lident
 val names_of_binders: binders -> flat_set bv
 
 val uvars_uncached: term -> flat_set ctx_uvar

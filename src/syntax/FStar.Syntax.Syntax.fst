@@ -162,7 +162,7 @@ let mk_fvs () = Util.mk_ref None
 let mk_uvs () = Util.mk_ref None
 let new_bv_set () : FlatSet.t bv     = empty ()
 let new_id_set () : FlatSet.t ident  = empty ()
-let new_fv_set () : FlatSet.t lident = empty ()
+let new_fv_set () : RBSet.t lident   = empty ()
 let new_universe_names_set () : FlatSet.t univ_name = empty ()
 
 let no_names  = new_bv_set()

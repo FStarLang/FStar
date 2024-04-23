@@ -22,7 +22,6 @@ open FStar.Compiler.List
 open FStar
 open FStar.Compiler
 open FStar.Compiler.Util
-open FStar.Compiler.FlatSet
 open FStar.Syntax
 open FStar.Syntax.Syntax
 module Util = FStar.Compiler.Util
@@ -30,6 +29,7 @@ module UF = FStar.Syntax.Unionfind
 
 open FStar.Class.Ord
 open FStar.Class.Show
+open FStar.Class.Setlike
 
 let compare_uv uv1 uv2 = UF.uvar_id uv1.ctx_uvar_head - UF.uvar_id uv2.ctx_uvar_head
 let compare_universe_uvar x y = UF.univ_uvar_id x - UF.univ_uvar_id y
@@ -62,7 +62,9 @@ type use_cache_t =
   | NoCache
   | Full
 
-type free_vars_and_fvars = free_vars * flat_set Ident.lident
+(* We use an RBSet for the fvars, as order definitely does not matter here
+and it's faster. *)
+type free_vars_and_fvars = free_vars * RBSet.t Ident.lident
 
 (* Snoc without duplicates *)
 val snoc : #a:Type -> {| deq a |} -> list a -> a -> list a
@@ -98,7 +100,7 @@ let union (f1 : free_vars_and_fvars) (f2 : free_vars_and_fvars) = {
     free_univs=(fst f1).free_univs @@ (fst f2).free_univs;
     free_univ_names=(fst f1).free_univ_names @@ (fst f2).free_univ_names; //THE ORDER HERE IS IMPORTANT!
     //We expect the free_univ_names list to be in fifo order to get the right order of universe generalization
-}, union #Ident.lident (snd f1) (snd f2)
+}, union (snd f1) (snd f2)
 
 let rec free_univs u = match Subst.compress_univ u with
   | U_zero
@@ -240,7 +242,7 @@ and free_names_and_uvars t use_cache =
       if use_cache <> Full then t.vars := Some (fst n);
       n
 
-and free_names_and_uvars_args args (acc:free_vars * flat_set Ident.lident) use_cache =
+and free_names_and_uvars_args args (acc : free_vars_and_fvars) use_cache =
         args |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x use_cache)) acc
 
 and free_names_and_uvars_comp c use_cache =
