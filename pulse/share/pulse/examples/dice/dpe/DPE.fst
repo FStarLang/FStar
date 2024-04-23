@@ -959,22 +959,25 @@ fn l0_record_perm_aux (r1 r2:l0_record_t) (#p:perm) (#repr:l0_record_repr_t)
 }
 ```
 
-let next_context (oc:context_t) (c:context_t) : prop =
-  match oc, c with
-  | Engine_context _, L0_context _
-  | L0_context _, L1_context _ -> True
-  | _ -> False
-
-let maybe_context_perm (oc:context_t) (c:option context_t) =
+let context_derives_from_input (r:context_repr_t) (rrepr:repr_t) : prop =
+  match r, rrepr with
+  | L0_context_repr l0_repr, Engine_repr erepr ->
+    l0_repr.repr == erepr
+  | L1_context_repr l1_repr, L0_repr lrepr ->
+    l1_repr.repr == lrepr
+  | _ -> False    
+    
+let maybe_context_perm (r:context_repr_t) (rrepr:repr_t) (c:option context_t) =
   match c with
   | Some c ->
-    pure (next_context oc c) ** (exists* repr. context_perm c repr)
+    exists* repr. context_perm c repr **
+                  pure (T.next_repr r repr /\ context_derives_from_input repr rrepr)
   | None -> emp
 
-let valid_context_and_record_for_derive_child (c:context_t) (r:record_t) : prop =
+let valid_context_and_record_for_derive_child (c:context_repr_t) (r:repr_t) : prop =
   match c, r with
-  | Engine_context _, Engine_record _ -> True
-  | L0_context _, L0_record _ -> True
+  | Engine_context_repr _, Engine_repr _ -> True
+  | L0_context_repr _, L0_repr _ -> True
   | _ -> False
 
 ```pulse
@@ -984,7 +987,7 @@ fn derive_child_from_context
     p
     (#record_repr: erased repr_t)
     (#context_repr:erased (context_repr_t))
-    (_:squash (valid_context_and_record_for_derive_child context record))
+    (_:squash (valid_context_and_record_for_derive_child context_repr record_repr))
 
   requires
     context_perm context context_repr **
@@ -993,8 +996,11 @@ fn derive_child_from_context
   ensures
     context_perm (tfst res) context_repr **
     record_perm (tsnd res) p record_repr **
-    maybe_context_perm context (tthd res)
+    maybe_context_perm context_repr record_repr (tthd res)
 {
+  intro_context_and_repr_tag_related context context_repr;
+  intro_record_and_repr_tag_related record p record_repr;
+ 
   match context {
     Engine_context c -> {
       match record {
@@ -1026,7 +1032,7 @@ fn derive_child_from_context
               let l0_ctxt = init_l0_ctxt cdi #engine_record_repr #s #uds_bytes ();
               with l0_ctxt_repr. assert (l0_context_perm l0_ctxt l0_ctxt_repr);
               fold (context_perm (L0_context l0_ctxt) (L0_context_repr l0_ctxt_repr));
-              fold (maybe_context_perm context (Some (L0_context l0_ctxt)));
+              fold (maybe_context_perm context_repr record_repr (Some (L0_context l0_ctxt)));
               let ret = (Engine_context c, Engine_record r, Some (L0_context l0_ctxt));
               rewrite each
                 Engine_context c as tfst ret,
@@ -1038,7 +1044,7 @@ fn derive_child_from_context
             DICE_ERROR -> {
               A.zeroize dice_digest_len cdi;
               let ret = (Engine_context c, Engine_record r, None #context_t);
-              rewrite emp as (maybe_context_perm context (tthd ret));
+              rewrite emp as (maybe_context_perm context_repr record_repr (tthd ret));
               rewrite each
                 Engine_context c as tfst ret,
                 Engine_record r as tsnd ret;
@@ -1133,7 +1139,7 @@ fn derive_child_from_context
           V.free deviceIDCSR;
           V.free aliasKeyCRT;
 
-          fold (maybe_context_perm context (Some (L1_context l1_context)));
+          fold (maybe_context_perm context_repr record_repr (Some (L1_context l1_context)));
           let ret = (L0_context c, L0_record r2, Some (L1_context l1_context));
           rewrite each
             L0_context c as tfst ret,
@@ -1209,28 +1215,29 @@ fn destroy_ctxt (ctxt:context_t) (#repr:erased context_repr_t)
 }
 ```
 
-let trace_and_record_valid_for_derive_child (t:T.trace) (r:record_t) : prop =
+let trace_and_record_valid_for_derive_child (t:T.trace) (r:repr_t) : prop =
   let open T in
   match current_state t, r with
-  | G_Available (Engine_context_repr _), Engine_record _
-  | G_Available (L0_context_repr _), L0_record _ -> True
+  | G_Available (Engine_context_repr _), Engine_repr _
+  | G_Available (L0_context_repr _), L0_repr _ -> True
   | _ -> False
 
-let derive_child_pre_post_traces (t0:T.trace) (t1:T.trace) =
+let derive_child_post_trace (r:repr_t) (t:T.trace) =
   let open T in
-  match current_state t0, current_state t1 with
-  | G_Available (Engine_context_repr _), G_Available (L0_context_repr _)
-  | G_Available (L0_context_repr _), G_Available (L1_context_repr _) -> True
+  match r, current_state t with
+  | Engine_repr r, G_Available (L0_context_repr lrepr)
+  | L0_repr r, G_Available (L1_context_repr lrepr) -> lrepr.repr == r
   | _ -> False
 
-let derive_child_client_perm (r:gref) (sid:sid_t) (t0:T.trace) (c:option ctxt_hndl_t) : vprop =
+let derive_child_client_perm (r:gref) (sid:sid_t) (t0:T.trace) (repr:repr_t) (c:option ctxt_hndl_t)
+  : vprop =
   match c with
   | None ->
     exists* t1. sid_pts_to r sid t1 **
                 pure (T.current_state t1 == T.G_SessionError (T.G_InUse (T.current_state t0)))
   | Some _ ->
     exists* t1. sid_pts_to r sid t1 **
-                pure (derive_child_pre_post_traces t0 t1)
+                pure (derive_child_post_trace repr t1)
 
 (*
   DeriveChild: Part of DPE API 
@@ -1239,20 +1246,23 @@ let derive_child_client_perm (r:gref) (sid:sid_t) (t0:T.trace) (c:option ctxt_hn
   and store the new context in the table. Return the new context handle upon
   success and None upon failure. 
 *)
-#push-options "--fuel 2 --ifuel 2"
+#push-options "--fuel 2 --ifuel 2 --split_queries no"
 ```pulse
 fn derive_child (r:gref) (m:mutex (option st)) (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
   (t:T.trace)
-  (record:record_t { trace_and_record_valid_for_derive_child t record })
-  (#repr:erased repr_t) (#p:perm)
+  (record:record_t)
+  (#rrepr:erased repr_t { trace_and_record_valid_for_derive_child t rrepr })
+  (#p:perm)
   requires mutex_live m (inv r) **
-           record_perm record p repr **
+           record_perm record p rrepr **
            sid_pts_to r sid t
   returns b:(mutex (option st) & record_t & option ctxt_hndl_t)
   ensures mutex_live (tfst b) (inv r) **
-          record_perm (tsnd b) p repr **
-          derive_child_client_perm r sid t (tthd b)
+          record_perm (tsnd b) p rrepr **
+          derive_child_client_perm r sid t rrepr (tthd b)
 {
+  intro_record_and_repr_tag_related record p rrepr;
+
   rewrite emp as (session_state_related InUse (T.G_InUse (T.current_state t)));
   let ret = replace_session r m sid t InUse (T.G_InUse (T.current_state t));
   with t1. assert (sid_pts_to r sid t1);
@@ -1276,7 +1286,7 @@ fn derive_child (r:gref) (m:mutex (option st)) (sid:sid_t) (ctxt_hndl:ctxt_hndl_
           assume_ (pure (~ (L1_context? hc.context)));
           let repr = rewrite_session_state_related_available hc.handle hc.context s t;
           intro_context_and_repr_tag_related hc.context repr;
-          let ret = derive_child_from_context hc.context record p ();
+          let ret = derive_child_from_context hc.context record p #rrepr #repr ();
 
           let octxt = tfst ret;
           let record = tsnd ret;
@@ -1289,7 +1299,7 @@ fn derive_child (r:gref) (m:mutex (option st)) (sid:sid_t) (ctxt_hndl:ctxt_hndl_
           destroy_ctxt octxt;
           match nctxt {
             Some nctxt -> {
-              unfold (maybe_context_perm hc.context (Some nctxt));
+              unfold (maybe_context_perm repr rrepr (Some nctxt));
               with nrepr. assert (context_perm nctxt nrepr);
               intro_context_and_repr_tag_related nctxt nrepr;
               let handle = prng ();
@@ -1306,7 +1316,7 @@ fn derive_child (r:gref) (m:mutex (option st)) (sid:sid_t) (ctxt_hndl:ctxt_hndl_
               rewrite each
                 m as tfst ret,
                 record as tsnd ret;
-              fold (derive_child_client_perm r sid t (Some handle));
+              fold (derive_child_client_perm r sid t rrepr (Some handle));
               with _x _y. rewrite (session_state_related _x _y) as emp;
               ret
             }
@@ -1323,8 +1333,8 @@ fn derive_child (r:gref) (m:mutex (option st)) (sid:sid_t) (ctxt_hndl:ctxt_hndl_
               rewrite each
                 m as tfst ret,
                 record as tsnd ret;
-              rewrite (maybe_context_perm hc.context nctxt) as emp;
-              fold (derive_child_client_perm r sid t None);
+              rewrite (maybe_context_perm repr rrepr nctxt) as emp;
+              fold (derive_child_client_perm r sid t rrepr None);
               with _x _y. rewrite (session_state_related _x _y) as emp;
               ret
             }

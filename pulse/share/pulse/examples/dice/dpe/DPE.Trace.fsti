@@ -41,6 +41,14 @@ type g_session_state : Type u#1 =
   | G_SessionClosed : g_session_state -> g_session_state
   | G_SessionError : g_session_state -> g_session_state
 
+let next_repr (r1 r2:context_repr_t) : prop =
+  match r1, r2 with
+  | Engine_context_repr uds, L0_context_repr l0_repr ->
+    uds == l0_repr.uds
+  | L0_context_repr l0_repr, L1_context_repr l1_repr ->
+    l0_repr.cdi == l1_repr.cdi
+  | _ -> False
+
 let rec next (s0 s1:g_session_state) : prop =
   match s0, s1 with
   | G_UnInitialized, G_SessionStart -> True
@@ -48,9 +56,9 @@ let rec next (s0 s1:g_session_state) : prop =
   | G_UnInitialized, _
   | _, G_UnInitialized -> False
 
-  | G_SessionStart, G_Available (Engine_context_repr _)
-  | G_Available (Engine_context_repr _), G_Available (L0_context_repr _)
-  | G_Available (L0_context_repr _), G_Available (L1_context_repr _) -> True
+  | G_SessionStart, G_Available (Engine_context_repr _) -> True
+
+  | G_Available r0, G_Available r1 -> next_repr r0 r1
 
   | G_SessionClosed _, _ -> False
 

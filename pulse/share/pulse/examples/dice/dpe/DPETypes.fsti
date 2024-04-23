@@ -417,6 +417,28 @@ let record_perm (record:record_t) (p:perm) (repr:repr_t)  : vprop =
   | L0_record r, L0_repr r0 -> l0_record_perm r p r0
   | _ -> pure False
 
+let record_perm_and_repr_tag_related (r:record_t) (repr:repr_t) : bool =
+  match r, repr with
+  | Engine_record _, Engine_repr _
+  | L0_record _, L0_repr _ -> true
+  | _ -> false
+
+```pulse
+ghost
+fn intro_record_and_repr_tag_related (r:record_t) (p:perm) (repr:repr_t)
+  requires record_perm r p repr
+  ensures record_perm r p repr **
+          pure (record_perm_and_repr_tag_related r repr)
+{
+  let b = record_perm_and_repr_tag_related r repr;
+  if b {
+    ()
+  } else {
+    rewrite (record_perm r p repr) as (pure False);
+    unreachable ()
+  }
+}
+```
 
 ```pulse
 ghost
