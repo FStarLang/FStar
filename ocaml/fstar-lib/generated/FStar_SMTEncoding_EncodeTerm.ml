@@ -2939,18 +2939,9 @@ and (encode_term :
                                                     FStar_SMTEncoding_Term.mkForall
                                                       t0.FStar_Syntax_Syntax.pos
                                                       uu___13 in
-                                                  let uu___13 =
-                                                    let uu___14 =
-                                                      let uu___15 =
-                                                        FStar_Class_Show.show
-                                                          FStar_Syntax_Print.showable_term
-                                                          t0 in
-                                                      FStar_Compiler_Util.format2
-                                                        "%s\n;; %s\n" a_name
-                                                        uu___15 in
-                                                    FStar_Pervasives_Native.Some
-                                                      uu___14 in
-                                                  (uu___12, uu___13, a_name) in
+                                                  (uu___12,
+                                                    (FStar_Pervasives_Native.Some
+                                                       a_name), a_name) in
                                                 FStar_SMTEncoding_Util.mkAssume
                                                   uu___11 in
                                               let f_decls =
