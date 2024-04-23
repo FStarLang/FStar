@@ -15429,15 +15429,9 @@ let (resolve_implicits' :
                                            (has_free_uvars typ) ||
                                              (gamma_has_free_uvars
                                                 ctx_u.FStar_Syntax_Syntax.ctx_uvar_gamma) in
-                                         let uu___6 =
-                                           (defer_open_metas && is_open) &&
-                                             (let uu___7 =
-                                                FStar_Options.ext_getv
-                                                  "compat:open_metas" in
-                                              uu___7 = "") in
-                                         if uu___6
+                                         if defer_open_metas && is_open
                                          then
-                                           ((let uu___8 =
+                                           ((let uu___7 =
                                                (FStar_TypeChecker_Env.debug
                                                   env1
                                                   (FStar_Options.Other "Rel"))
@@ -15446,28 +15440,33 @@ let (resolve_implicits' :
                                                     env1
                                                     (FStar_Options.Other
                                                        "Imps")) in
-                                             if uu___8
+                                             if uu___7
                                              then
-                                               let uu___9 =
+                                               let uu___8 =
                                                  FStar_Class_Show.show
                                                    FStar_Syntax_Print.showable_ctxu
                                                    ctx_u in
                                                FStar_Compiler_Util.print1
                                                  "Deferring implicit due to open ctx/typ %s\n"
-                                                 uu___9
+                                                 uu___8
                                              else ());
                                             until_fixpoint
                                               (((hd, Implicit_unresolved) ::
                                                 out), changed,
                                                 defer_open_metas) tl)
                                          else
-                                           (let uu___8 =
-                                              is_open &&
-                                                (let uu___9 =
-                                                   meta_tac_allowed_for_open_problem
-                                                     tac in
-                                                 Prims.op_Negation uu___9) in
-                                            if uu___8
+                                           (let uu___7 =
+                                              (is_open &&
+                                                 (let uu___8 =
+                                                    meta_tac_allowed_for_open_problem
+                                                      tac in
+                                                  Prims.op_Negation uu___8))
+                                                &&
+                                                (let uu___8 =
+                                                   FStar_Options.ext_getv
+                                                     "compat:open_metas" in
+                                                 uu___8 = "") in
+                                            if uu___7
                                             then
                                               until_fixpoint
                                                 (((hd, Implicit_unresolved)
@@ -15476,9 +15475,9 @@ let (resolve_implicits' :
                                             else
                                               (let solve_with t =
                                                  let extra =
-                                                   let uu___10 =
+                                                   let uu___9 =
                                                      teq_nosmt env1 t tm in
-                                                   match uu___10 with
+                                                   match uu___9 with
                                                    | FStar_Pervasives_Native.None
                                                        ->
                                                        FStar_Compiler_Effect.failwith
@@ -15491,13 +15490,13 @@ let (resolve_implicits' :
                                                      defer_open_metas)
                                                    (FStar_Compiler_List.op_At
                                                       extra tl) in
-                                               let uu___10 = cacheable tac in
-                                               if uu___10
+                                               let uu___9 = cacheable tac in
+                                               if uu___9
                                                then
-                                                 let uu___11 =
+                                                 let uu___10 =
                                                    meta_arg_cache_lookup tac
                                                      env1 typ in
-                                                 match uu___11 with
+                                                 match uu___10 with
                                                  | FStar_Pervasives_Native.Some
                                                      res -> solve_with res
                                                  | FStar_Pervasives_Native.None
