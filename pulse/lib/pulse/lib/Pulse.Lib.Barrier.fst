@@ -5,6 +5,19 @@ module M = Pulse.Lib.PCM.MonoidShares
 module U32 = FStar.UInt32
 
 assume
+val big_ghost_read_simple
+    (#a:Type)
+    (#p:FStar.PCM.pcm a)
+    (r:ghost_pcm_ref p)
+    (#x:erased a)
+: stt_ghost (erased (v:a{FStar.PCM.compatible p x v /\ p.refine v}))
+    emp_inames
+    (big_ghost_pcm_pts_to r x)
+    (fun v -> big_ghost_pcm_pts_to r x)
+
+let storable = p:vprop { is_small p }
+
+assume
 val small_star (p q:small_vprop) : small_vprop
 assume
 val small_emp : small_vprop
@@ -20,6 +33,22 @@ let small_star_comm (x y:small_vprop)
 : Lemma (small_star x y == small_star y x)
         [SMTPat (small_star x y)]
 = admit()
+
+
+let down2_star (p q:storable)
+: Lemma (down2 (p ** q) == down2 p `small_star` down2 q)
+= admit()
+
+let small_star_inj (p q r0 r1:small_vprop)
+: Lemma 
+  (p == q `small_star` r0 /\
+   p == q `small_star` r1 ==> r0 == r1)
+= admit()
+
+let up2_small_star (p q:small_vprop)
+: Lemma (up2 (p `small_star` q) == (up2 p ** up2 q))
+= admit()
+
 let small_vprop_cm
 : CM.cm small_vprop
 = CM.CM small_emp small_star
@@ -27,7 +56,6 @@ let small_vprop_cm
     small_star_assoc
     small_star_comm
 
-let storable = p:vprop { is_small p }
 
 noeq
 type barrier_t_core = {
@@ -134,38 +162,23 @@ let pcm_refine (#p:storable) (x:small_vprop)
   : Lemma ((pcm_of p).refine x ==> x == down2 p)
   = ()
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --fuel 0 --ifuel 2"
-assume
-val big_ghost_read_simple
-    (#a:Type)
-    (#p:FStar.PCM.pcm a)
-    (r:ghost_pcm_ref p)
-    (#x:erased a)
-: stt_ghost (erased (v:a{FStar.PCM.compatible p x v /\ p.refine v}))
-    emp_inames
-    (big_ghost_pcm_pts_to r x)
-    (fun v -> big_ghost_pcm_pts_to r x)
 
-```pulse
-ghost
-fn extract_frame (p:storable) (claim:storable) (q:small_vprop)
-requires pure (FStar.PCM.compatible (pcm_of p) (small_star (down2 claim) q) (down2 p))
-returns frame:erased small_vprop
-ensures pure (q `small_star` (frame `small_star` down2 claim) == down2 p /\
-              (down2 claim `small_star` q) `small_star` frame == down2 p)
-{
-  admit()
-}
-```
-
-let small_star_inj (p q r0 r1:small_vprop)
-: Lemma 
-  (p == q `small_star` r0 /\
-   p == q `small_star` r1 ==> r0 == r1)
-= admit()
-
-let up2_small_star (p q:small_vprop)
-: Lemma (up2 (p `small_star` q) == (up2 p ** up2 q))
-= admit()
+let extract_frame 
+      (p:storable) (claim:storable) (q:small_vprop)
+      (_:squash (FStar.PCM.compatible (pcm_of p) (small_star (down2 claim) q) (down2 p)))
+: Tot 
+  (frame:small_vprop {
+    q `small_star` (frame `small_star` down2 claim) == down2 p /\
+    (down2 claim `small_star` q) `small_star` frame == down2 p
+  })
+= let open FStar.PCM in
+  let frame = FStar.IndefiniteDescription.indefinite_description_tot _
+    (fun frame -> 
+      composable (pcm_of p)
+                 (small_star (down2 claim) q) frame /\
+      small_star frame (small_star (down2 claim) q) == (down2 p)) in
+  FStar.Classical.forall_intro_3 small_star_assoc;
+  frame
 
 ```pulse
 fn rec wait (b:barrier_t) (p claim:storable)
@@ -200,7 +213,7 @@ ensures claim
         pcm_refine #p x;
         assert pure (x == down2 p);
         assert pure (FStar.PCM.compatible (pcm_of p) (small_star (down2 claim) q) (down2 p));
-        let frame = extract_frame p claim q;
+        let frame = extract_frame p claim q ();
         small_star_inj (down2 p) q (small_star frame (down2 claim)) r;
         rewrite (up2 r) as (up2 (small_star frame (down2 claim)));
         up2_small_star frame (down2 claim);
@@ -229,10 +242,31 @@ ensures claim
 ```
 
 ```pulse
-fn split (b:barrier_t) (q r s:storable)
-requires recv b 'p q ** pure (q == r ** s)
-ensures recv b 'p r ** recv b 'p s
+ghost
+fn dup_barrier (b:barrier_t) (#p:storable)
+requires barrier b p
+ensures barrier b p ** barrier b p
 {
-  admit()
+  unfold barrier;
+  dup_inv _ _;
+  fold (barrier b p);
+  fold (barrier b p);
+}
+```
+
+```pulse
+ghost
+fn split (b:barrier_t) (#p #q r s:storable)
+requires recv b p q ** pure (q == r ** s)
+ensures recv b p r ** recv b p s
+{
+  unfold recv;
+  rewrite each q as (r ** s);
+  down2_star r s;
+  rewrite each (down2 (r ** s)) as (down2 r `small_star` down2 s);
+  big_ghost_share #_ #(pcm_of p) b.core.gref (down2 r) (down2 s);
+  dup_barrier b;
+  fold (recv b p r);
+  fold (recv b p s)
 }
 ```
