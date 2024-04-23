@@ -858,28 +858,27 @@ fn init_l1_ctxt (deviceIDCSR_len: SZ.t) (aliasKeyCRT_len: SZ.t)
                 (aliasKeyCRT_ingredients:erased aliasKeyCRT_ingredients_t)
                 (#deviceID_priv0 #deviceID_pub0 #aliasKey_priv0 #aliasKey_pub0
                  #deviceIDCSR0 #aliasKeyCRT0:erased (Seq.seq U8.t))
+                (_:squash (
+                   valid_hkdf_ikm_len dice_digest_len /\
+                   aliasKey_functional_correctness
+                     dice_hash_alg dice_digest_len cdi repr.fwid
+                     aliasKey_label_len repr.aliasKey_label 
+                     aliasKey_pub0 aliasKey_priv0 /\
+                   deviceIDCSR_functional_correctness
+                     dice_hash_alg dice_digest_len cdi
+                     deviceID_label_len repr.deviceID_label deviceIDCSR_ingredients 
+                     deviceIDCSR_len deviceIDCSR0 /\
+                   aliasKeyCRT_functional_correctness
+                     dice_hash_alg dice_digest_len cdi repr.fwid
+                     deviceID_label_len repr.deviceID_label aliasKeyCRT_ingredients 
+                     aliasKeyCRT_len aliasKeyCRT0 aliasKey_pub0))
               
   requires A.pts_to deviceID_priv deviceID_priv0 ** 
            A.pts_to deviceID_pub deviceID_pub0 ** 
            A.pts_to aliasKey_priv aliasKey_priv0 ** 
            A.pts_to aliasKey_pub aliasKey_pub0 ** 
            A.pts_to deviceIDCSR deviceIDCSR0 **
-           A.pts_to aliasKeyCRT aliasKeyCRT0 **
-           pure (
-            valid_hkdf_ikm_len dice_digest_len
-                       /\ aliasKey_functional_correctness
-                            dice_hash_alg dice_digest_len cdi repr.fwid
-                            aliasKey_label_len repr.aliasKey_label 
-                            aliasKey_pub0 aliasKey_priv0
-                       /\ deviceIDCSR_functional_correctness 
-                            dice_hash_alg dice_digest_len cdi
-                            deviceID_label_len repr.deviceID_label deviceIDCSR_ingredients 
-                            deviceIDCSR_len deviceIDCSR0 
-                       /\ aliasKeyCRT_functional_correctness 
-                            dice_hash_alg dice_digest_len cdi repr.fwid
-                            deviceID_label_len repr.deviceID_label aliasKeyCRT_ingredients 
-                            aliasKeyCRT_len aliasKeyCRT0 aliasKey_pub0
-           )
+           A.pts_to aliasKeyCRT aliasKeyCRT0
   returns ctxt:l1_context_t
   ensures 
     A.pts_to deviceID_priv deviceID_priv0 ** 
@@ -1109,11 +1108,23 @@ fn derive_child_from_context
           rewrite (l0_record_perm r2 p r0)
                as (record_perm (L0_record r2) p record_repr);
 
+
+          with deviceID_priv0. assert (A.pts_to deviceID_priv deviceID_priv0);
+          with deviceID_pub0. assert (A.pts_to deviceID_pub deviceID_pub0);
+          with aliasKey_priv0. assert (A.pts_to aliasKey_priv aliasKey_priv0);
+          with aliasKey_pub0. assert (A.pts_to aliasKey_pub aliasKey_pub0);
+          with deviceIDCSR0. assert (A.pts_to (V.vec_to_array deviceIDCSR) deviceIDCSR0);
+          with aliasKeyCRT0. assert (A.pts_to (V.vec_to_array aliasKeyCRT) aliasKeyCRT0);
+
           let l1_context = init_l1_ctxt 
                       deviceIDCSR_len aliasKeyCRT_len deviceID_priv deviceID_pub
                       aliasKey_priv aliasKey_pub (V.vec_to_array deviceIDCSR) (V.vec_to_array aliasKeyCRT)
                       (hide r2.deviceID_label_len)
-                      (hide r2.aliasKey_label_len) s r0 (hide r2.deviceIDCSR_ingredients) (hide r2.aliasKeyCRT_ingredients);
+                      (hide r2.aliasKey_label_len) s r0 (hide r2.deviceIDCSR_ingredients) (hide r2.aliasKeyCRT_ingredients)
+                      #deviceID_priv0 #deviceID_pub0 #aliasKey_priv0 #aliasKey_pub0
+                      #deviceIDCSR0 #aliasKeyCRT0
+                      ();
+
           with l1_context_repr. assert (l1_context_perm l1_context l1_context_repr);
           fold (context_perm (L1_context l1_context) (L1_context_repr l1_context_repr));
 
