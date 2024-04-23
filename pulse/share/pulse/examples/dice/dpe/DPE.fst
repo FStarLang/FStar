@@ -1451,30 +1451,12 @@ fn derive_child (r:gref) (m:mutex (option st)) (sid:sid_t) (ctxt_hndl:ctxt_hndl_
 }
 ```
 
-// ```pulse
-// fn destroy_session_state (st:session_state)
-//   requires session_state_perm st
-//   ensures emp
-// {
-//   match st {
-//     Available st1 -> {
-//       elim_session_state_perm_available st;
-//       with e. rewrite (context_perm (ctxt_of st) e) as (context_perm st1.context e);
-//       destroy_ctxt st1.context;
-//     }
-//     _ -> {
-//       assume_ (pure (~ (Available? st)));
-//       rewrite (session_state_perm st) as emp
-//     }
-//   }
-// }
-// ```
-
 let trace_valid_for_close (t:T.trace) : prop =
   let open T in
   match current_state t with
   | G_UnInitialized
-  | G_SessionClosed _ -> False
+  | G_SessionClosed _
+  | G_InUse _ -> False
   | _ -> True
 
 (* 
@@ -1483,51 +1465,65 @@ let trace_valid_for_close (t:T.trace) : prop =
   to it from the session table. Return boolean indicating success. 
   NOTE: Current implementation disregards session protocol 
 *)
+
+let session_closed_client_perm (r:gref) (sid:sid_t) (t0:T.trace) =
+  exists* t1. sid_pts_to r sid t1 **
+              pure (T.current_state t1 == T.G_SessionClosed (T.G_InUse (T.current_state t0)))
+
+```pulse
+fn destroy_session_state (s:session_state) (t:T.trace)
+  requires session_state_related s (T.current_state t)
+  ensures emp
+{
+  intro_session_state_tag_related s (T.current_state t);
+  match s {
+    Available hc -> {
+      rewrite_session_state_related_available hc.handle hc.context s t;
+      destroy_ctxt hc.context
+    }
+    _ -> {
+      assume_ (pure (~ (Available? s)));
+      with _x _y. rewrite (session_state_related _x _y) as emp
+    }
+  }
+}
+```
+
 ```pulse
 fn close_session (r:gref) (m:mutex (option st)) (sid:sid_t)
   (t:T.trace { trace_valid_for_close t })
   requires mutex_live m (inv r) **
            sid_pts_to r sid t
-  ensures exists* t1. sid_pts_to r sid t1 **
-                      pure (T.current_state t1 == T.G_SessionClosed (T.current_state t))
+  returns m:mutex (option st)
+  ensures mutex_live m (inv r) **
+          session_closed_client_perm r sid t
 {
   rewrite emp as (session_state_related InUse (T.G_InUse (T.current_state t)));
   let ret = replace_session r m sid t InUse (T.G_InUse (T.current_state t));
+  with t1. assert (sid_pts_to r sid t1);
 
-  admit ()
-  // match ret {
-  //   Available hc -> {
-  //     rewrite_available_session_state_related hc.handle
-  //     admit ()
-  //   }
-  //   _ -> {
-  //     admit ()
-  //   }
-  // }
-  // rewrite emp as (session_state_perm InUse);
-  // let st = take_session_state sid InUse;
-  // match st 
-  // {
-  //   None -> 
-  //   {
-  //     with s. rewrite (session_state_perm s) as emp;
-  //     false 
-  //   }
+  let m = fst ret;
+  let s = snd ret;
+  rewrite each
+    fst ret as m,
+    snd ret as s;
 
-  //   Some st ->
-  //   {
-  //     destroy_session_state st;
-  //     rewrite emp as (session_state_perm SessionClosed);
-  //     let st' = take_session_state sid SessionClosed;
-  //     //TODO: Fix this by proving that st' must be present and InUse
-  //     drop_ (session_state_perm (dflt st' SessionClosed));
-  //     true
-  //   }
-  // }
+  intro_session_state_tag_related s (T.current_state t);
+
+  destroy_session_state s t;
+
+  rewrite emp as (session_state_related SessionClosed (T.G_SessionClosed (T.current_state t1)));
+  let ret = replace_session r m sid t1 SessionClosed (T.G_SessionClosed (T.current_state t1));
+  intro_session_state_tag_related (snd ret) (T.current_state t1);
+  let m = fst ret;
+  rewrite each
+    fst ret as m,
+    snd ret as InUse;
+  with _x _y. rewrite (session_state_related _x _y) as emp;
+  fold (session_closed_client_perm r sid t);
+  m
 }
 ```
-
-
 
 // #push-options "--ext 'pulse:env_on_err' --print_implicits --warn_error -342"
 
@@ -1616,470 +1612,3 @@ fn close_session (r:gref) (m:mutex (option st)) (sid:sid_t)
 // }
 // ```
 // // let get_profile = get_profile'
-
-
-// //
-// // Wrapper over hash table insert that first checks if the table is full
-// // Move to hashtable?
-// //
-
-// ```pulse
-// fn insert_if_not_full
-//   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
-//   (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
-//   (ht:ht_t kt vt) (k:kt) (v:vt)
-//   (#pht:erased (PHT.pht_t kt vt))
-//   requires models ht pht
-//   returns b:(ht_t kt vt & bool)
-//   ensures
-//     exists* pht'.
-//       models (fst b) pht' **
-//       pure (same_sz_and_hashf (fst b) ht /\
-//             (if snd b
-//             then (PHT.not_full (reveal pht).repr /\
-//                   pht'==PHT.insert pht k v)
-//             else pht'==pht))
-// {
-//   let b = not_full ht;
-//   if snd b
-//   {
-//     Pulse.Lib.HashTable.insert (fst b) k v
-//   }
-//   else
-//   {
-//     let res = (fst b, false);
-//     rewrite (models (fst b) pht) as (models (fst res) pht);
-//     res
-//   }
-// }
-// ```
-
-// (*
-//   OpenSession: Part of DPE API 
-//   Create a context table and context table lock for the new session. 
-//   Add the context table lock to the session table. Return the session
-//   ID or None upon failure
-//   NOTE: Current implementation disregards session protocol 
-// *)
-
-// assume val safe_add (i j:U32.t)
-//   : o:option U32.t { Some? o ==> U32.v (Some?.v o) == U32.v i + U32.v j }
-
-// #push-options "--z3rlimit_factor 2"
-// ```pulse
-// fn open_session_aux (st:global_state_t)
-//   requires global_state_mutex_pred (Some st)
-//   returns b:(global_state_t & option sid_t)
-//   ensures global_state_mutex_pred (Some (fst b))
-// {
-//   unfold (global_state_mutex_pred (Some st));
-//   let ctr = st.session_id_counter;
-//   let tbl = st.session_table;
-//   with stm. rewrite (models st.session_table stm) as (models tbl stm);
-//   with stm. rewrite (on_range (session_perm stm) 0 (U32.v st.session_id_counter))
-//                  as (on_range (session_perm stm) 0 (U32.v ctr));
-
-//   with pht0. assert (models tbl pht0);
-//   with i j. assert (on_range (session_perm pht0) i j);
-//   assert (pure (U32.v ctr == j));
-
-//   let opt_inc = ctr `safe_add` 1ul;
-  
-//   match opt_inc {
-//     None -> {
-//       let st = { session_id_counter = ctr; session_table = tbl };
-//       with stm. rewrite (models tbl stm) as (models st.session_table stm);
-//       with stm. rewrite (on_range (session_perm stm) 0 (U32.v ctr))
-//                      as (on_range (session_perm stm) 0 (U32.v st.session_id_counter));
-//       fold (global_state_mutex_pred (Some st));
-//       let res = (st, None #sid_t);
-//       rewrite (global_state_mutex_pred (Some st)) as (global_state_mutex_pred (Some (fst res)));
-//       res
-//     }
-//     Some next_sid -> {
-//       let res = insert_if_not_full tbl ctr SessionStart;
-//       if snd res {
-//         let st = { session_id_counter = next_sid; session_table = fst res };
-//         with pht1. assert (models (fst res) pht1);
-//         rewrite (models (fst res) pht1) as (models st.session_table pht1);
-//         frame_session_perm_on_range pht0 pht1 i j;
-//         rewrite emp as (session_perm pht1 j);
-//         Pulse.Lib.OnRange.on_range_snoc () #(session_perm pht1);
-//         fold (global_state_mutex_pred (Some st));
-//         let res = (st, Some next_sid);
-//         rewrite (global_state_mutex_pred (Some st)) as (global_state_mutex_pred (Some (fst res)));
-//         res
-//       } else {
-//         let st = { session_id_counter = ctr; session_table = fst res };
-//         with stm. rewrite (models (fst res) stm) as (models st.session_table stm);
-//         with stm1. assert (models st.session_table stm1);
-//         with stm. rewrite (on_range (session_perm stm) 0 (U32.v ctr))
-//                        as (on_range (session_perm stm1) 0 (U32.v st.session_id_counter));
-//         fold (global_state_mutex_pred (Some st));
-//         let res = (st, None #sid_t);
-//         rewrite (global_state_mutex_pred (Some st)) as (global_state_mutex_pred (Some (fst res)));
-//         res
-//       }
-//     }
-//   }
-// }
-// ```
-// #pop-options
-
-// ```pulse
-// fn open_session ()
-//   requires mutex_live global_state global_state_mutex_pred
-//   returns _:option sid_t
-//   ensures mutex_live global_state global_state_mutex_pred
-// {
-//   let r = lock global_state;
-//   let st_opt = R.replace r None;
-
-//   match st_opt {
-//     None -> {
-//       rewrite (global_state_mutex_pred None) as emp;
-//       let st = mk_global_state ();
-//       let res = open_session_aux st;
-//       r := Some (fst res);
-//       unlock global_state r;
-//       (snd res)
-//     }
-//     Some st -> {
-//       let res = open_session_aux st;
-//       r := Some (fst res);
-//       unlock global_state r;
-//       (snd res)
-//     }
-//   }
-// }
-// ```
-// // let open_session = open_session'
-
-// // assume val dbg : vprop
-
-// module V = Pulse.Lib.Vec
-
-// //
-// // TODO: zeroize
-// //
-
-// let opt #a (p:a -> vprop) (x:option a) : vprop =
-//   match x with
-//   | None -> emp
-//   | Some x -> p x
-
-// ```pulse
-// fn return_none (a:Type0) (#p:(a -> vprop))
-//   requires emp
-//   returns o:option a
-//   ensures opt p o
-// {
-//   rewrite emp as (opt p (None #a));
-//   None #a
-// }
-// ```
-
-// let dflt #a (x:option a) (y:a) =
-//   match x with
-//   | Some v -> v
-//   | _ -> y
-
-// ```pulse
-// ghost
-// fn take_session_state_aux #stm #sid v
-//   requires pure (session_perm stm (U32.v sid) == session_state_perm v) **
-//            session_perm stm (U32.v sid)
-//   ensures session_state_perm v
-// {
-//   rewrite (session_perm stm (U32.v sid)) as (session_state_perm v);
-// }
-// ```
-
-// #push-options "--z3rlimit_factor 2"
-// ```pulse
-// fn take_session_state (sid:sid_t) (replace_with:session_state)
-//    requires mutex_live global_state global_state_mutex_pred **
-//             session_state_perm replace_with
-//    returns r:option session_state
-//    ensures mutex_live global_state global_state_mutex_pred **
-//            session_state_perm (dflt r replace_with)
-//   {
-//     let r = lock global_state;
-//     let st_opt = R.replace r None;
-
-//     match st_opt {
-//       None -> {
-//         unlock #_ #global_state_mutex_pred global_state r;
-//         None #session_state
-//       }
-//       Some st -> {
-//         unfold (global_state_mutex_pred (Some st));
-//         let ctr = st.session_id_counter;
-//         let tbl = st.session_table;
-//         if UInt32.lt sid ctr {
-//           with stm. assert (models st.session_table stm);
-//           rewrite (models st.session_table stm) as (models tbl stm);
-//           assert (on_range (session_perm stm) 0 (U32.v st.session_id_counter));
-//           rewrite (on_range (session_perm stm) 0 (U32.v st.session_id_counter))
-//                as (on_range (session_perm stm) 0 (U32.v ctr));
-//           let ss = HT.lookup tbl sid;
-//           assert (models (tfst ss) stm);
-//           if tsnd ss {
-//             match tthd ss {
-//               Some idx -> {
-//                 let ok = HT.replace #_ #_ #stm (tfst ss) idx sid replace_with ();
-//                 Pulse.Lib.OnRange.on_range_get (U32.v sid);
-//                 let st1 = { session_id_counter = ctr; session_table = fst ok };
-//                 assert (session_perm stm (U32.v sid));
-//                 assert (pure (Some (snd ok) == PHT.lookup stm (UInt32.uint_to_t (U32.v sid))));
-//                 assert (pure (UInt.fits (U32.v sid) 32));
-//                 assert (pure (session_perm stm (U32.v sid) == session_state_perm (snd ok)));
-//                 take_session_state_aux (snd ok);
-//                 with stm'. assert (models (fst ok) stm');
-//                 frame_session_perm_on_range stm stm' 0 (U32.v sid);
-//                 frame_session_perm_on_range stm stm' (U32.v sid `Prims.op_Addition` 1) (U32.v ctr);
-
-//                 rewrite (session_state_perm replace_with)
-//                     as  (session_perm stm' (U32.v sid));
-
-//                 Pulse.Lib.OnRange.on_range_put 
-//                   0 (U32.v sid) (U32.v ctr)
-//                   #(session_perm stm');
-
-//                 rewrite (models (fst ok) stm') as (models st1.session_table stm');
-//                 fold (global_state_mutex_pred (Some st1));
-//                 r := Some st1;
-//                 unlock global_state r;
-//                 Some (snd ok)
-//               }
-//               None ->  {
-//                 let st1 = { session_id_counter = ctr; session_table = tfst ss };
-//                 rewrite (models (tfst ss) stm) as (models st1.session_table stm);
-//                 rewrite (on_range (session_perm stm) 0 (U32.v ctr))
-//                      as (on_range (session_perm stm) 0 (U32.v st1.session_id_counter));
-//                 fold (global_state_mutex_pred (Some st1));
-//                 r := Some st1;
-//                 unlock global_state r;
-//                 None #session_state
-//               }
-//             }
-//           } else  {
-//             let st1 = { session_id_counter = ctr; session_table = tfst ss };
-//             rewrite (models (tfst ss) stm) as (models st1.session_table stm);
-//             rewrite (on_range (session_perm stm) 0 (U32.v ctr))
-//                  as (on_range (session_perm stm) 0 (U32.v st1.session_id_counter));
-//             fold (global_state_mutex_pred (Some st1));
-//             r := Some st1;
-//             unlock global_state r;
-//             None #session_state
-//           }
-//         } else {
-//           let st1 = { session_id_counter = ctr; session_table = tbl };
-//           with stm. rewrite (models st.session_table stm) as (models st1.session_table stm);
-//           with stm. rewrite (on_range (session_perm stm) 0 (U32.v st.session_id_counter))
-//                          as (on_range (session_perm stm) 0 (U32.v st1.session_id_counter));
-//           fold (global_state_mutex_pred (Some st1));
-//           r := Some st1;
-//           unlock global_state r;
-//           None #session_state
-//         }
-//       }
-//     }
-//   }
-// ```
-// #pop-options
-
-// // // ```pulse 
-// // // fn destroy_locked_ctxt (locked_ctxt:locked_context_t)
-// // //   requires emp
-// // //   ensures emp
-// // // {
-// // //   let ctxt = locked_ctxt._1;
-// // //   let repr = locked_ctxt._2;
-// // //   let ctxt_lk = locked_ctxt._3;
-// // //   // TODO: would be nice to use a rename here, to transfer ownership to ctxt_lk
-// // //   L.acquire locked_ctxt._3;
-// // //   destroy_ctxt locked_ctxt._1;
-// // // }
-// // // ```
-
-
-
-// (*
-//   DestroyContext: Part of DPE API 
-//   Destroy the context pointed to by the handle by freeing the
-//   arrays in the context (zeroize the UDS, if applicable). Return
-//   boolean indicating success. 
-//   NOTE: Current implementation disregards session protocol 
-// *)
-// ```pulse
-// fn destroy_context (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
-//   requires mutex_live global_state global_state_mutex_pred
-//   returns b:bool
-//   ensures mutex_live global_state global_state_mutex_pred
-// {
-//   rewrite emp as (session_state_perm InUse);
-//   let st = take_session_state sid InUse;
-//   match st
-//   {
-//     None ->
-//     {
-//       with s. rewrite (session_state_perm s) as emp;
-//       false
-//     }
-
-//     Some st ->
-//     {
-//       with s. rewrite (session_state_perm s)
-//                    as (session_state_perm st);
-//       match st {
-//         Available st1 -> {
-//           if (ctxt_hndl = st1.handle) {
-//             elim_session_state_perm_available st;
-//             with e. rewrite (context_perm (ctxt_of st) e) as (context_perm st1.context e);
-//             destroy_ctxt (st1.context);
-//             //reset the session to the start state
-//             rewrite emp as (session_state_perm SessionStart);
-//             let st' = take_session_state sid SessionStart;
-//             //TODO: Fix this by proving that st' must be present and InUse
-//             drop_ (session_state_perm (dflt st' SessionStart));
-//             true
-//           } else {
-//             //context handle mismatch; put back st
-//             //and return false
-//             let st' = take_session_state sid (Available st1);
-//             //TODO: Fix this by proving that st' must be present and InUse
-//             drop_ (session_state_perm (dflt st' st));
-//             false
-//           }
-//         }
-//         _ -> {
-//           assume_ (pure (~ (Available? st)));
-//           rewrite (session_state_perm st) as emp;
-//           rewrite emp as (session_state_perm SessionError);
-//           let st' = take_session_state sid SessionError;
-//           //TODO: Fix this by proving that st' must be present and InUse
-//           drop_ (session_state_perm (dflt st' SessionError));
-//           false
-//         }
-//       }
-//     }
-//   }
-// }
-// ```
-
-// // let destroy_context = destroy_context'
-
-// // let close_session = close_session'
-
-// (*
-//   InitializeContext: Part of DPE API 
-//   Create a context in the initial state (engine context) and store the context
-//   in the current session's context table. Return the context handle upon
-//   success and None upon failure. 
-// *)
-// ```pulse
-// fn initialize_context
-//   (#p:perm) (#uds_bytes:Ghost.erased (Seq.seq U8.t))
-//   (sid:sid_t) (uds:A.larray U8.t (SZ.v uds_len)) 
-                       
-//   requires mutex_live global_state global_state_mutex_pred **
-//            A.pts_to uds #p uds_bytes
-//   returns _:option ctxt_hndl_t
-//   ensures mutex_live global_state global_state_mutex_pred **
-//           A.pts_to uds #p uds_bytes
-// {
-//   rewrite emp as (session_state_perm InUse);
-//   let st = take_session_state sid InUse;
-//   match st
-//   {
-//     None ->
-//     {
-//       with s. rewrite (session_state_perm s) as emp;
-//       None #ctxt_hndl_t
-//     }
-    
-//     Some st ->
-//     {
-//       match st {
-//         SessionStart -> {
-//           rewrite (session_state_perm st) as emp;
-//           let ctxt = init_engine_ctxt uds;
-//           let ctxt_hndl = prng ();
-//           let st' = intro_session_state_perm_available ctxt ctxt_hndl;
-//           let st'' = take_session_state sid st';
-//           //TODO: prove that st'' is InUse
-//           drop_ (session_state_perm (dflt st'' st'));
-//           Some ctxt_hndl
-//         }
-//         _ -> {
-//           destroy_session_state st;
-//           rewrite emp as (session_state_perm SessionError);
-//           let st' = take_session_state sid SessionError;
-//           //TODO: prove st' is InUse
-//           drop_ (session_state_perm (dflt st' SessionError));
-//           None #ctxt_hndl_t
-//         }
-//       }
-//     }
-//   }
-// }
-// ```
-
-// // let initialize_context = initialize_context'
-
-// (*
-//   RotateContextHandle: Part of DPE API 
-//   Invalidate the current context handle and replace it with a new context
-//   handle. Return the context handle upon success and None upon failure.
-// *)
-// ```pulse
-// fn rotate_context_handle (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
-//   requires mutex_live global_state global_state_mutex_pred
-//   returns _:option ctxt_hndl_t
-//   ensures mutex_live global_state global_state_mutex_pred
-// {
-//   rewrite emp as (session_state_perm InUse);
-//   let st = take_session_state sid InUse;
-//   match st 
-//   {
-//     None ->
-//     {
-//       with s. rewrite (session_state_perm s) as emp;
-//       None #ctxt_hndl_t
-//     }
-
-//     Some st ->
-//     {
-//       match st {
-//         InUse -> {
-//           rewrite (session_state_perm st) as emp;
-//           None #ctxt_hndl_t
-//         }
-//         Available st1 -> {
-//           let new_ctxt_hndl = prng ();
-//           elim_session_state_perm_available st;
-//           with e. rewrite (context_perm (ctxt_of st) e) as (context_perm st1.context e);
-//           let st' = intro_session_state_perm_available st1.context new_ctxt_hndl;
-//           let st'' = take_session_state sid st';
-//           //TODO: prove st'' is InUse
-//           drop_ (session_state_perm (dflt st'' st'));
-//           Some new_ctxt_hndl
-//         }
-//         _ -> {
-//           //session error
-//           assume_ (pure (~ (Available? st || InUse? st)));
-//           rewrite (session_state_perm st) as emp;
-//           rewrite emp as (session_state_perm SessionError);
-//           let st' = take_session_state sid SessionError;
-//           //TODO: prove st' is InUse
-//           drop_ (session_state_perm (dflt st' SessionError));
-//           None #ctxt_hndl_t
-//         }
-//       }
-//     }
-//   }
-// }
-// ```
-// // let rotate_context_handle = rotate_context_handle'
-
