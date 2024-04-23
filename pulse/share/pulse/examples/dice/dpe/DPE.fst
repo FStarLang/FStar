@@ -1440,90 +1440,86 @@ fn close_session (r:gref) (m:mutex (option st)) (sid:sid_t)
 }
 ```
 
-// #push-options "--ext 'pulse:env_on_err' --print_implicits --warn_error -342"
-
-// (* ----------- IMPLEMENTATION ----------- *)
-
-// (*
-//   GetProfile: Part of DPE API 
-//   Get the DPE's profile. 
-// *)
-// ```pulse
-// fn get_profile ()
-//   requires emp
-//   returns d:profile_descriptor_t
-//   ensures emp
-// {
-//   mk_profile_descriptor
-//     (*name=*)""
-//     (*dpe_spec_version=*)1ul
-//     (*max_message_size=*)0ul // irrelevant: using direct interface
-//     (*uses_multi_part_messages=*)false
-//     (*supports_concurrent_operations=*)false // irrelevant by uses_multi_part_messages
-//     (*supports_encrypted_sessions=*)false // irrelevant by uses_multi_part_messages
-//     (*supports_derived_sessions=*)false // irrelevant by supports_encrypted_sessions
-//     (*max_sessions=*)0sz // irrelevant by supports_encrypted_sessions
-//     (*session_protocol=*)"" // irrelevant by supports_encrypted_sessions
-//     (*supports_session_sync=*)false // by supports_encrypted_sessions
-//     (*session_sync_policy=*)"" // irrelevant by supports_session_sync
-//     (*session_migration_protocol=*)"" // irrelevant by supports_session_migration
-//     (*supports_default_context=*)false
-//     (*supports_context_handles=*)true 
-//     (*max_contexts_per_session=*)1sz // 1 context per session
-//     (*max_context_handle_size=*)16sz // 16 bits
-//     (*supports_auto_init=*)false // irrelevant by supports_default_context
-//     (*supports_simulation=*)false
-//     (*supports_attestation=*)false
-//     (*supports_sealing=*)false 
-//     (*supports_get_profile=*)true
-//     (*supports_open_session=*)false // irrelevant by supports_encrypted_sessions
-//     (*supports_close_session=*)false // irrelevant by supports_encrypted_sessions
-//     (*supports_sync_session=*)false // irrelevant by supports_encrypted_sessions
-//     (*supports_export_session=*)false
-//     (*supports_import_session=*)false
-//     (*supports_init_context=*)true
-//     (*supports_certify_key=*)false // irrelevant by supports_attestation
-//     (*supports_sign=*)false // irrelevant by supports_attestation
-//     (*supports_seal=*)false // irrelevant by supports_sealing
-//     (*supports_unseal=*)false // irrelevant by supports_sealing
-//     (*supports_sealing_public=*)false // irrelevant by supports_sealing
-//     (*supports_rotate_context_handle=*)true
-//     (*dice_derivation=*)"" // FIXME: name for DICE algorithms
-//     (*asymmetric_derivation=*)"" // irrelevant by supports_attestation
-//     (*symmetric_derivation=*)"" // irrelevant by supports_attestation
-//     (*supports_any_label=*)false
-//     (*supported_labels=*)"" // FIXME: what are lables?
-//     (*initial_derivation=*)"" // FIXME: name?
-//     (*input_format=*)"" // FIXME: create CDDL spec for input record formats
-//     (*supports_internal_inputs=*)false
-//     (*supports_internal_dpe_info=*)false // irrelevant by supports_internal_inputs
-//     (*supports_internal_dpe_dice=*)false // irrelevant by supports_internal_inputs
-//     (*internal_dpe_info_type=*)"" // irrelevant by supports_internal_inputs
-//     (*internal_dpe_dice_type=*)"" // irrelevant by supports_internal_inputs
-//     (*internal_inputs=*)"" // irrelevant by supports_internal_inputs
-//     (*supports_certificates=*)false // irrelevant by supports_attestation
-//     (*max_certificate_size=*)0sz // irrelevant by supports_certificates
-//     (*max_certificate_chain_size=*)0sz // irrelevant by supports_certificates
-//     (*appends_more_certificates=*)false // irrelevant by supports_certificates
-//     (*supports_certificate_policies=*)false // irrelevant by supports_certificates
-//     (*supports_policy_identity_init=*)false // irrelevant by supports_certificate_policies
-//     (*supports_policy_identity_loc=*)false // irrelevant by supports_certificate_policies
-//     (*supports_policy_attest_init=*)false // irrelevant by supports_certificate_policies
-//     (*supports_policy_attest_loc=*)false // irrelevant by supports_certificate_policies
-//     (*supports_policy_assert_init=*)false // irrelevant by supports_certificate_policies
-//     (*supports_policy_assert_loc=*)false // irrelevant by supports_certificate_policies
-//     (*certificate_policies=*)"" // irrelevant by supports_certificate_policies
-//     (*supports_eca_certificates=*)false // irrelevant by supports_certificate_policies
-//     (*eca_certificate_format=*)"" // irrelevant by supports_eca_certificates
-//     (*leaf_certificate_format=*)"" // irrelevant by supports_certificates
-//     (*public_key_format=*)"" // irrelevant by supports_asymmetric_unseal
-//     (*supports_external_key=*)false // irrelevant by supports_certificates
-//     (*to_be_signed_format=*)"" // irrelevant by supports_sign
-//     (*signature_format=*)"" // irrelevant by supports_sign
-//     (*supports_symmetric_sign=*)false // irrelevant by supports_attestation
-//     (*supports_asymmetric_unseal=*)false // irrelevant by supports_attestation
-//     (*supports_unseal_policy=*)false// irrelevant by supports_sealing
-//     (*unseal_policy_format=*)"" // irrelevant by supports_unseal_policy 
-// }
-// ```
-// // let get_profile = get_profile'
+(*
+  GetProfile: Part of DPE API 
+  Get the DPE's profile. 
+*)
+```pulse
+fn get_profile ()
+  requires emp
+  returns d:profile_descriptor_t
+  ensures emp
+{
+  mk_profile_descriptor
+    (*name=*)""
+    (*dpe_spec_version=*)1ul
+    (*max_message_size=*)0ul // irrelevant: using direct interface
+    (*uses_multi_part_messages=*)false
+    (*supports_concurrent_operations=*)false // irrelevant by uses_multi_part_messages
+    (*supports_encrypted_sessions=*)false // irrelevant by uses_multi_part_messages
+    (*supports_derived_sessions=*)false // irrelevant by supports_encrypted_sessions
+    (*max_sessions=*)0sz // irrelevant by supports_encrypted_sessions
+    (*session_protocol=*)"" // irrelevant by supports_encrypted_sessions
+    (*supports_session_sync=*)false // by supports_encrypted_sessions
+    (*session_sync_policy=*)"" // irrelevant by supports_session_sync
+    (*session_migration_protocol=*)"" // irrelevant by supports_session_migration
+    (*supports_default_context=*)false
+    (*supports_context_handles=*)true 
+    (*max_contexts_per_session=*)1sz // 1 context per session
+    (*max_context_handle_size=*)16sz // 16 bits
+    (*supports_auto_init=*)false // irrelevant by supports_default_context
+    (*supports_simulation=*)false
+    (*supports_attestation=*)false
+    (*supports_sealing=*)false 
+    (*supports_get_profile=*)true
+    (*supports_open_session=*)false // irrelevant by supports_encrypted_sessions
+    (*supports_close_session=*)false // irrelevant by supports_encrypted_sessions
+    (*supports_sync_session=*)false // irrelevant by supports_encrypted_sessions
+    (*supports_export_session=*)false
+    (*supports_import_session=*)false
+    (*supports_init_context=*)true
+    (*supports_certify_key=*)false // irrelevant by supports_attestation
+    (*supports_sign=*)false // irrelevant by supports_attestation
+    (*supports_seal=*)false // irrelevant by supports_sealing
+    (*supports_unseal=*)false // irrelevant by supports_sealing
+    (*supports_sealing_public=*)false // irrelevant by supports_sealing
+    (*supports_rotate_context_handle=*)true
+    (*dice_derivation=*)"" // FIXME: name for DICE algorithms
+    (*asymmetric_derivation=*)"" // irrelevant by supports_attestation
+    (*symmetric_derivation=*)"" // irrelevant by supports_attestation
+    (*supports_any_label=*)false
+    (*supported_labels=*)"" // FIXME: what are lables?
+    (*initial_derivation=*)"" // FIXME: name?
+    (*input_format=*)"" // FIXME: create CDDL spec for input record formats
+    (*supports_internal_inputs=*)false
+    (*supports_internal_dpe_info=*)false // irrelevant by supports_internal_inputs
+    (*supports_internal_dpe_dice=*)false // irrelevant by supports_internal_inputs
+    (*internal_dpe_info_type=*)"" // irrelevant by supports_internal_inputs
+    (*internal_dpe_dice_type=*)"" // irrelevant by supports_internal_inputs
+    (*internal_inputs=*)"" // irrelevant by supports_internal_inputs
+    (*supports_certificates=*)false // irrelevant by supports_attestation
+    (*max_certificate_size=*)0sz // irrelevant by supports_certificates
+    (*max_certificate_chain_size=*)0sz // irrelevant by supports_certificates
+    (*appends_more_certificates=*)false // irrelevant by supports_certificates
+    (*supports_certificate_policies=*)false // irrelevant by supports_certificates
+    (*supports_policy_identity_init=*)false // irrelevant by supports_certificate_policies
+    (*supports_policy_identity_loc=*)false // irrelevant by supports_certificate_policies
+    (*supports_policy_attest_init=*)false // irrelevant by supports_certificate_policies
+    (*supports_policy_attest_loc=*)false // irrelevant by supports_certificate_policies
+    (*supports_policy_assert_init=*)false // irrelevant by supports_certificate_policies
+    (*supports_policy_assert_loc=*)false // irrelevant by supports_certificate_policies
+    (*certificate_policies=*)"" // irrelevant by supports_certificate_policies
+    (*supports_eca_certificates=*)false // irrelevant by supports_certificate_policies
+    (*eca_certificate_format=*)"" // irrelevant by supports_eca_certificates
+    (*leaf_certificate_format=*)"" // irrelevant by supports_certificates
+    (*public_key_format=*)"" // irrelevant by supports_asymmetric_unseal
+    (*supports_external_key=*)false // irrelevant by supports_certificates
+    (*to_be_signed_format=*)"" // irrelevant by supports_sign
+    (*signature_format=*)"" // irrelevant by supports_sign
+    (*supports_symmetric_sign=*)false // irrelevant by supports_attestation
+    (*supports_asymmetric_unseal=*)false // irrelevant by supports_attestation
+    (*supports_unseal_policy=*)false// irrelevant by supports_sealing
+    (*unseal_policy_format=*)"" // irrelevant by supports_unseal_policy 
+}
+```
+// let get_profile = get_profile'
