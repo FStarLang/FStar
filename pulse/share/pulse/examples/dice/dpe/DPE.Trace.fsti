@@ -70,7 +70,7 @@ let rec next (s0 s1:g_session_state) : prop =
 
   | _ -> False
 
-let rec well_formed_trace (l:list g_session_state) =
+let rec well_formed_trace (l:list g_session_state) : prop =
   match l with
   | []
   | [G_SessionStart] -> True

@@ -264,10 +264,6 @@ let l1_context_perm (c:l1_context_t) (r:l1_context_repr_t)
        /\ V.is_full_vec c.aliasKeyCRT
        /\ V.is_full_vec c.deviceIDCSR)  
 
-(* Generic Context *)
-// unlike record_t (below), we require full permission on the resources inside
-// the context because we will eventually free the resources when we destroy
-// the context
 [@@ Rust_derive "Clone"]
 noeq
 type context_t = 
@@ -393,14 +389,6 @@ fn rewrite_context_perm_l1 (c:context_t) (lc:l1_context_t) (#r:context_repr_t)
 }
 ```
 
-// In the implmentation, we store contexts as values in a global hash table
-// so we need a way to store and retrieve permission on the context. We do this
-// by keeping a tuple of the context along with a lock on the context permission
-// let locked_context_t = c:context_t 
-//                      & r:erased context_repr_t 
-//                      & L.lock (context_perm c r)
-
-(* Record *)
 noeq
 type record_t =
   | Engine_record : r:engine_record_t -> record_t

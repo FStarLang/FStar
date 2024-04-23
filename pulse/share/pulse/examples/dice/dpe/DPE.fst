@@ -106,9 +106,10 @@ type pcm_t : Type u#1 = PM.map sid_t (T.pcm_t)
 let pcm : PCM.pcm pcm_t = PM.pointwise sid_t T.pcm
 type gref = ghost_pcm_ref pcm
 
+noextract
 let emp_trace : T.trace = []
 
-let singleton (sid:sid_t) (p:perm) (t:T.trace) : pcm_t =
+let singleton (sid:sid_t) (p:perm) (t:T.trace) : GTot pcm_t =
   Map.upd (Map.const (None, emp_trace)) sid (Some p, t)
 
 let sid_pts_to (r:gref) (sid:sid_t) (t:T.trace) : vprop =
@@ -146,11 +147,13 @@ let session_perm (r:gref) (pht:pht_t) (sid:nat) =
   then session_state_perm r pht (U32.uint_to_t sid)
   else emp
 
+noextract
 let map_literal (f:sid_t -> T.pcm_t) = Map.map_literal f
 
+noextract
 let all_sids_unused : pcm_t = map_literal (fun _ -> Some 1.0R, emp_trace)
 
-let sids_above_unused (s:sid_t) : pcm_t = map_literal (fun sid ->
+let sids_above_unused (s:sid_t) : GTot pcm_t = map_literal (fun sid ->
   if U32.lt sid s then None, emp_trace
   else Some 1.0R, emp_trace)
 
@@ -219,8 +222,10 @@ fn share_ (r:gref)
 }
 ```
 
-
+noextract
 let full (t0:T.trace) = Some #perm 1.0R, t0
+
+noextract
 let half (t0:T.trace) = Some #perm 0.5R, t0
 
 ```pulse
@@ -577,7 +582,7 @@ fn replace_session
   (r:gref)
   (m:mutex (option st))
   (sid:sid_t)
-  (t:T.trace)
+  (t:G.erased T.trace)
   (sst:session_state)
   (gsst:T.g_session_state { T.valid_transition t gsst})
 
@@ -744,7 +749,7 @@ let initialize_context_client_perm (r:gref) (sid:sid_t) (uds:Seq.seq U8.t) =
 ```pulse
 fn initialize_context (r:gref) (m:mutex (option st))
   (sid:sid_t) 
-  (t:T.trace { trace_valid_for_initialize_context t })
+  (t:G.erased T.trace { trace_valid_for_initialize_context t })
   (#p:perm) (#uds_bytes:Ghost.erased (Seq.seq U8.t))
   (uds:A.larray U8.t (SZ.v uds_len)) 
                        
@@ -1249,7 +1254,7 @@ let derive_child_client_perm (r:gref) (sid:sid_t) (t0:T.trace) (repr:repr_t) (c:
 #push-options "--fuel 2 --ifuel 2 --split_queries no"
 ```pulse
 fn derive_child (r:gref) (m:mutex (option st)) (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
-  (t:T.trace)
+  (t:G.erased T.trace)
   (record:record_t)
   (#rrepr:erased repr_t { trace_and_record_valid_for_derive_child t rrepr })
   (#p:perm)
@@ -1386,7 +1391,7 @@ let session_closed_client_perm (r:gref) (sid:sid_t) (t0:T.trace) =
               pure (T.current_state t1 == T.G_SessionClosed (T.G_InUse (T.current_state t0)))
 
 ```pulse
-fn destroy_session_state (s:session_state) (t:T.trace)
+fn destroy_session_state (s:session_state) (t:G.erased T.trace)
   requires session_state_related s (T.current_state t)
   ensures emp
 {
@@ -1406,7 +1411,7 @@ fn destroy_session_state (s:session_state) (t:T.trace)
 
 ```pulse
 fn close_session (r:gref) (m:mutex (option st)) (sid:sid_t)
-  (t:T.trace { trace_valid_for_close t })
+  (t:G.erased T.trace { trace_valid_for_close t })
   requires mutex_live m (inv r) **
            sid_pts_to r sid t
   returns m:mutex (option st)
