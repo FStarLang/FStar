@@ -1105,28 +1105,26 @@ let encode_sig_inductive (is_injective_on_params:bool) (env:env_t) (se:sigelt)
         datas |>
         List.fold_left
           (fun (out, decls) l ->
-            let _, data_t = Env.lookup_datacon env.tcenv l in
-            let args, res = U.arrow_formals data_t in
-            let indices = res |> U.head_and_args_full |> snd in
-            let env = args |> List.fold_left
-                (fun env ({binder_bv=x}) -> push_term_var env x (mkApp(mk_term_projector_name l x, [xx])))
-                env in
-            let indices, decls' = encode_args indices env in
-            if List.length indices <> List.length vars
-            then failwith "Impossible";
-            let eqs =
-                if is_injective_on_params
-                || Options.ext_getv "compat:injectivity" <> ""
-                then List.map2 (fun v a -> mkEq(mkFreeV v, a)) vars indices
-                else []
-                //     //only injectivity on indices
-                //     let num_params = List.length tps in
-                //     let _var_params, var_indices = List.splitAt num_params vars in
-                //     let _i_params, indices = List.splitAt num_params indices in
-                //     List.map2 (fun v a -> mkEq(mkFreeV v, a)) var_indices indices
-                // )
+            let is_l = mk_data_tester env l xx in
+            let inversion_case, decls' =
+              if is_injective_on_params
+              || Options.ext_getv "compat:injectivity" <> ""
+              then (
+                let _, data_t = Env.lookup_datacon env.tcenv l in
+                let args, res = U.arrow_formals data_t in
+                let indices = res |> U.head_and_args_full |> snd in
+                let env = args |> List.fold_left
+                    (fun env ({binder_bv=x}) -> push_term_var env x (mkApp(mk_term_projector_name l x, [xx])))
+                    env in
+                let indices, decls' = encode_args indices env in
+                if List.length indices <> List.length vars
+                then failwith "Impossible";
+                let eqs = List.map2 (fun v a -> mkEq(mkFreeV v, a)) vars indices in
+                mkAnd(is_l, mk_and_l eqs), decls'
+              )
+              else is_l, []
             in
-            mkOr(out, mkAnd(mk_data_tester env l xx, eqs |> mk_and_l)), decls@decls')
+            mkOr(out, inversion_case), decls@decls')
           (mkFalse, [])
       in
       let ffsym, ff = fresh_fvar env.current_module_name "f" Fuel_sort in
@@ -1289,27 +1287,6 @@ let encode_datacon (is_injective_on_tparams:bool) (env:env_t) (se:sigelt)
       | Tm_fvar fv ->
         let encoded_head_fvb = lookup_free_var_name env' fv.fv_name in
         let encoded_args, arg_decls = encode_args args env' in
-        let guards_for_parameter (orig_arg:S.term)(arg:term) xv =
-          if not is_injective_on_tparams
-          then mkTrue
-          else (
-            let fv =
-                match arg.tm with
-                | FreeV fv -> fv
-                | _ ->
-                    Errors.raise_error (Errors.Fatal_NonVariableInductiveTypeParameter,
-                      BU.format1 "Inductive type parameter %s must be a variable ; \
-                                  You may want to change it to an index."
-                                (FStar.Syntax.Print.term_to_string orig_arg)) orig_arg.pos
-            in
-            let guards = guards |> List.collect (fun g ->
-                  if List.contains fv (Term.free_variables g)
-                  then [Term.subst g fv xv]
-                  else [])
-            in
-            mk_and_l guards
-          )
-        in
         let _, arg_vars, elim_eqns_or_guards, _ =
             List.fold_left
               (fun (env, arg_vars, eqns_or_guards, i) (orig_arg, arg) ->
@@ -1318,7 +1295,7 @@ let encode_datacon (is_injective_on_tparams:bool) (env:env_t) (se:sigelt)
                 (* Also see https://github.com/FStarLang/FStar/issues/349 *)
                 let eqns =
                   if i < n_tps
-                  then guards_for_parameter (fst orig_arg) arg xv::eqns_or_guards
+                  then eqns_or_guards
                   else mkEq(arg, xv)::eqns_or_guards
                 in
                 (env, xv::arg_vars, eqns, i + 1))
@@ -1328,6 +1305,8 @@ let encode_datacon (is_injective_on_tparams:bool) (env:env_t) (se:sigelt)
         let arg_vars = List.rev arg_vars in
         let arg_params, _ = List.splitAt n_tps arg_vars in
         let data_arg_params, _ = List.splitAt n_tps vars in
+        //Express the guards in terms of the parameters of the type constructor
+        //not the arguments of the data constructor
         let elim_eqns_and_guards =
           List.fold_left2 
             (fun elim_eqns_and_guards data_arg_param arg_param ->
@@ -1820,7 +1799,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
           g
       in
       //2. decls are all the function symbol declarations
-      //   elts: not sure what this represents
+      //   elts: all elements that have a key and which contain function declarations (not sure why this class is important to pull out)
       //   rest: all the non-declarations, excepting the inversion axiom which is already identified above
       let decls, elts, rest =
         List.fold_left

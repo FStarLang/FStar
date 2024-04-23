@@ -1490,13 +1490,13 @@ let (injective_constructor :
                    match uu___2 with
                    | { field_name = name1; field_sort = s;
                        field_projectible = projectible;_} ->
-                       let cproj_app = mkApp (name1, [capp]) norng in
-                       let proj_name =
-                         DeclFun
-                           (name1, [sort1], s,
-                             (FStar_Pervasives_Native.Some "Projector")) in
                        if projectible
                        then
+                         let cproj_app = mkApp (name1, [capp]) norng in
+                         let proj_name =
+                           DeclFun
+                             (name1, [sort1], s,
+                               (FStar_Pervasives_Native.Some "Projector")) in
                          let a =
                            let uu___3 =
                              let uu___4 =
@@ -1520,7 +1520,7 @@ let (injective_constructor :
                              assumption_fact_ids = []
                            } in
                          [proj_name; Assume a]
-                       else [proj_name]) fields in
+                       else []) fields in
           FStar_Compiler_List.flatten uu___1
 let (discriminator_name : constructor_t -> Prims.string) =
   fun constr -> Prims.strcat "is-" constr.constr_name

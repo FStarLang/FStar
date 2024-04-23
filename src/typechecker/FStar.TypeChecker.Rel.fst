@@ -5550,15 +5550,14 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
         let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
         let typ = U.ctx_uvar_typ ctx_u in
         let is_open = has_free_uvars typ || gamma_has_free_uvars ctx_u.ctx_uvar_gamma in
-        if defer_open_metas && is_open
-            && Options.ext_getv "compat:open_metas" = "" then // i.e. compat option unset
-        (
+        if defer_open_metas && is_open then (
           (* If the result type or env for this meta arg has a free uvar, delay it.
           Some other meta arg being solved may instantiate the uvar. See #3130. *)
           if Env.debug env <| Options.Other "Rel" || Env.debug env <| Options.Other "Imps" then
             BU.print1 "Deferring implicit due to open ctx/typ %s\n" (show ctx_u);
           until_fixpoint ((hd, Implicit_unresolved)::out, changed, defer_open_metas) tl
-        ) else if is_open && not (meta_tac_allowed_for_open_problem tac) then (
+        ) else if is_open && not (meta_tac_allowed_for_open_problem tac)
+            && Options.ext_getv "compat:open_metas" = "" then ( // i.e. compat option unset
           (* If the tactic is not explicitly whitelisted to run with open problems,
           then defer. *)
           until_fixpoint ((hd, Implicit_unresolved)::out, changed, defer_open_metas) tl

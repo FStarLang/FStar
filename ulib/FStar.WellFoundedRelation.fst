@@ -62,14 +62,7 @@ let rec acc_decreaser
   let smaller (y: a{(acc_relation r) y x}) : (acc_classical (acc_relation r) y) = (
     eliminate exists (p: r y x). True
     returns   f y << f x
-    with _.   assert (
-        let v =
-          match f x with
-          | WF.AccIntro access_smaller ->
-            access_smaller y p
-        in
-        v == f y
-    );
+    with _.   assert ((f x).access_smaller y p == f y);
     acc_decreaser r f y
   ) in
   AccClassicalIntro smaller
